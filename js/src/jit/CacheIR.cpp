@@ -1730,7 +1730,7 @@ GetPropIRGenerator::tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
 }
 
 static bool
-CanAttachDenseElementHole(JSObject* obj, bool ownProp)
+CanAttachDenseElementHole(NativeObject* obj, bool ownProp, bool allowIndexedReceiver = false)
 {
     // Make sure the objects on the prototype don't have any indexed properties
     // or that such properties can't appear without a shape change.
@@ -1738,8 +1738,9 @@ CanAttachDenseElementHole(JSObject* obj, bool ownProp)
     // because we would have to lookup a property on the prototype instead.
     do {
         // The first two checks are also relevant to the receiver object.
-        if (obj->isNative() && obj->as<NativeObject>().isIndexed())
+        if (!allowIndexedReceiver && obj->isIndexed())
             return false;
+        allowIndexedReceiver = false;
 
         if (ClassCanHaveExtraProperties(obj->getClass()))
             return false;
@@ -1759,7 +1760,7 @@ CanAttachDenseElementHole(JSObject* obj, bool ownProp)
         if (proto->as<NativeObject>().getDenseInitializedLength() != 0)
             return false;
 
-        obj = proto;
+        obj = &proto->as<NativeObject>();
     } while (true);
 
     return true;
@@ -1775,7 +1776,7 @@ GetPropIRGenerator::tryAttachDenseElementHole(HandleObject obj, ObjOperandId obj
     if (obj->as<NativeObject>().containsDenseElement(index))
         return false;
 
-    if (!CanAttachDenseElementHole(obj, false))
+    if (!CanAttachDenseElementHole(&obj->as<NativeObject>(), false))
         return false;
 
     // Guard on the shape, to prevent non-dense elements from appearing.
@@ -2430,7 +2431,7 @@ HasPropIRGenerator::tryAttachDenseHole(HandleObject obj, ObjOperandId objId,
         return false;
     if (obj->as<NativeObject>().containsDenseElement(index))
         return false;
-    if (!CanAttachDenseElementHole(obj, hasOwn))
+    if (!CanAttachDenseElementHole(&obj->as<NativeObject>(), hasOwn))
         return false;
 
     // Guard shape to ensure class is NativeObject and to prevent non-dense
@@ -2449,6 +2450,46 @@ HasPropIRGenerator::tryAttachDenseHole(HandleObject obj, ObjOperandId objId,
     trackAttached("DenseHasPropHole");
     return true;
 }
+
+bool
+HasPropIRGenerator::tryAttachSparse(HandleObject obj, ObjOperandId objId,
+                                    uint32_t index, Int32OperandId indexId)
+{
+    bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
+
+    if (!obj->isNative())
+        return false;
+    if (!obj->as<NativeObject>().isIndexed())
+        return false;
+    if (!CanAttachDenseElementHole(&obj->as<NativeObject>(), hasOwn,
+        /* allowIndexedReceiver = */ true))
+    {
+        return false;
+    }
+
+    // Guard that this is a native object.
+    writer.guardIsNativeObject(objId);
+
+    // Generate prototype guards if needed. This includes monitoring that
+    // properties were not added in the chain.
+    if (!hasOwn) {
+        if (!obj->hasUncacheableProto()) {
+            // Make sure the proto does not change without checking the shape.
+            writer.guardProto(objId, obj->staticPrototype());
+        }
+
+        GeneratePrototypeHoleGuards(writer, obj, objId);
+    }
+
+    // Because of the prototype guard we know that the prototype chain
+    // does not include any dense or sparse (i.e indexed) properties.
+    writer.callObjectHasSparseElementResult(objId, indexId);
+    writer.returnFromIC();
+
+    trackAttached("Sparse");
+    return true;
+}
+
 
 bool
 HasPropIRGenerator::tryAttachNamedProp(HandleObject obj, ObjOperandId objId,
@@ -2717,6 +2758,8 @@ HasPropIRGenerator::tryAttachStub()
         if (tryAttachDenseHole(obj, objId, index, indexId))
             return true;
         if (tryAttachTypedArray(obj, objId, index, indexId))
+            return true;
+        if (tryAttachSparse(obj, objId, index, indexId))
             return true;
 
         trackNotAttached();

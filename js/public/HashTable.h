@@ -226,11 +226,9 @@ class HashMap
         return mallocSizeOf(this) + impl.sizeOfExcludingThis(mallocSizeOf);
     }
 
-#ifdef JS_DEBUG
     Generation generation() const {
         return impl.generation();
     }
-#endif
 
     /************************************************** Shorthand operations */
 
@@ -475,11 +473,9 @@ class HashSet
         return mallocSizeOf(this) + impl.sizeOfExcludingThis(mallocSizeOf);
     }
 
-#ifdef JS_DEBUG
     Generation generation() const {
         return impl.generation();
     }
-#endif
 
     /************************************************** Shorthand operations */
 
@@ -1129,9 +1125,7 @@ class HashTable : private AllocPolicy
         // Potentially rehashes the table.
         ~Enum() {
             if (rekeyed) {
-#ifdef JS_DEBUG
                 table_.gen++;
-#endif
                 table_.checkOverRemoved();
             }
 
@@ -1164,14 +1158,13 @@ class HashTable : private AllocPolicy
     static const size_t CAP_BITS = 30;
 
   public:
+    uint64_t    gen:56;                 // entry storage generation number
+    uint64_t    hashShift:8;            // multiplicative hash shift
     Entry*      table;                  // entry storage
-    uint32_t    hashShift;              // multiplicative hash shift
-    uint32_t    minCapacity;            // minimum table capacity
     uint32_t    entryCount;             // number of entries in table
     uint32_t    removedCount;           // removed entry sentinels in table
 
 #ifdef JS_DEBUG
-    uint64_t     gen;                   // entry storage generation number
     uint64_t     mutationCount;
     mutable bool mEntered;
     // Note that some updates to these stats are not thread-safe. See the
@@ -1264,12 +1257,12 @@ class HashTable : private AllocPolicy
   public:
     explicit HashTable(AllocPolicy ap)
       : AllocPolicy(ap)
-      , table(nullptr)
+      , gen(0)
       , hashShift(sHashBits)
+      , table(nullptr)
       , entryCount(0)
       , removedCount(0)
 #ifdef JS_DEBUG
-      , gen(0)
       , mutationCount(0)
       , mEntered(false)
 #endif
@@ -1307,11 +1300,11 @@ class HashTable : private AllocPolicy
             ++roundUpLog2;
         }
 
-        minCapacity = roundUp;
-        MOZ_ASSERT(minCapacity >= length);
-        MOZ_ASSERT(minCapacity <= sMaxCapacity);
+        newCapacity = roundUp;
+        MOZ_ASSERT(newCapacity >= length);
+        MOZ_ASSERT(newCapacity <= sMaxCapacity);
 
-        table = createTable(*this, minCapacity);
+        table = createTable(*this, newCapacity);
         if (!table)
             return false;
 
@@ -1366,19 +1359,18 @@ class HashTable : private AllocPolicy
                capacity() * sMaxAlphaNumerator / sAlphaDenominator;
     }
 
-    // Considering its current entryCount, would the table be underloaded if it
-    // had the given capacity?
-    bool wouldBeUnderloaded(uint32_t capacity)
+    // Would the table be underloaded if it had the given capacity and entryCount?
+    static bool wouldBeUnderloaded(uint32_t capacity, uint32_t entryCount)
     {
         static_assert(sMaxCapacity <= UINT32_MAX / sMinAlphaNumerator,
                       "multiplication below could overflow");
-        return capacity > minCapacity &&
+        return capacity > sMinCapacity &&
                entryCount <= capacity * sMinAlphaNumerator / sAlphaDenominator;
     }
 
     bool underloaded()
     {
-        return wouldBeUnderloaded(capacity());
+        return wouldBeUnderloaded(capacity(), entryCount);
     }
 
     static MOZ_ALWAYS_INLINE bool match(Entry& e, const Lookup& l)
@@ -1511,11 +1503,8 @@ class HashTable : private AllocPolicy
         // We can't fail from here on, so update table parameters.
         setTableSizeLog2(newLog2);
         removedCount = 0;
-        table = newTable;
-
-#ifdef JS_DEBUG
         gen++;
-#endif
+        table = newTable;
 
         // Copy only live entries, leaving removed ones behind.
         Entry* end = oldTable + oldCap;
@@ -1598,7 +1587,7 @@ class HashTable : private AllocPolicy
     {
         int32_t resizeLog2 = 0;
         uint32_t newCapacity = capacity();
-        while (wouldBeUnderloaded(newCapacity)) {
+        while (wouldBeUnderloaded(newCapacity, entryCount)) {
             newCapacity = newCapacity >> 1;
             resizeLog2--;
         }
@@ -1616,9 +1605,7 @@ class HashTable : private AllocPolicy
     {
         METER(stats.rehashes++);
         removedCount = 0;
-#ifdef JS_DEBUG
         gen++;
-#endif
         for (size_t i = 0; i < capacity(); ++i)
             table[i].unsetCollision();
 
@@ -1714,10 +1701,10 @@ class HashTable : private AllocPolicy
 
         destroyTable(*this, table, capacity());
         table = nullptr;
+        gen++;
         entryCount = 0;
         removedCount = 0;
 #ifdef JS_DEBUG
-        gen++;
         mutationCount++;
 #endif
     }
@@ -1746,13 +1733,11 @@ class HashTable : private AllocPolicy
         return JS_BIT(sHashBits - hashShift);
     }
 
-#ifdef JS_DEBUG
     Generation generation() const
     {
         MOZ_ASSERT(table);
         return Generation(gen);
     }
-#endif
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
     {

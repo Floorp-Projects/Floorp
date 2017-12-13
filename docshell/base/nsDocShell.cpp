@@ -15279,18 +15279,13 @@ nsDocShell::ChannelIntercepted(nsIInterceptedChannel* aChannel)
     if (!doc) {
       return NS_ERROR_NOT_AVAILABLE;
     }
-  } else {
-    // For top-level navigations, save a document ID which will be passed to
-    // the FetchEvent as the clientId later on.
-    rv = nsIDocument::GenerateDocumentId(mInterceptedDocumentId);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   bool isReload = mLoadType & LOAD_CMD_RELOAD;
 
   ErrorResult error;
-  swm->DispatchFetchEvent(mOriginAttributes, doc, mInterceptedDocumentId,
-                          aChannel, isReload, isSubresourceLoad, error);
+  swm->DispatchFetchEvent(mOriginAttributes, doc, aChannel, isReload,
+                          isSubresourceLoad, error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
