@@ -57,6 +57,13 @@ treeherder:
         'Snap': 'Snap image generation'
 
 index:
+    products:
+        - 'firefox'
+        - 'fennec'
+        - 'mobile'
+        - 'static-analysis'
+        - 'devedition'
+        - 'source'
     job-names:
         # This list contains a whitelist of gecko.v2 index route job names.  The intent
         # of this whitelist is to raise an alarm when new jobs are added.  If those jobs

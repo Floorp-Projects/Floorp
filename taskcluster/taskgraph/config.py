@@ -16,6 +16,8 @@ graph_config_schema = Schema({
         Required('group-names'): {basestring: basestring}
     },
     Required('index'): {
+
+        Required('products'): [basestring],
         # A whitelist of gecko.v2 index route job names.
         Optional('job-names'): [basestring],
     },
