@@ -129,6 +129,7 @@ qr-tests:
     - gtest
     - jittest
     - jsreftest
+    - mochitest
     - mochitest-a11y
     - mochitest-gpu
     - mochitest-media
