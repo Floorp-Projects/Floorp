@@ -2001,18 +2001,10 @@ class Instruction
     }
     // Since almost all instructions have condition codes, the condition code
     // extractor resides in the base class.
-    Assembler::Condition extractCond() {
+    Assembler::Condition extractCond() const {
         MOZ_ASSERT(data >> 28 != 0xf, "The instruction does not have condition code");
         return (Assembler::Condition)(data & 0xf0000000);
     }
-
-    // Get the next intentionally-placed instruction in the instruction stream.
-    // Artificial pool guards and automatically-placed NOP instructions are skipped.
-    Instruction* next();
-
-    // If the current instruction was automatically-inserted (pool guards and NOPs),
-    // advance to the next instruction that was inserted intentionally.
-    Instruction* maybeSkipAutomaticInstructions();
 
     // Sometimes, an api wants a uint32_t (or a pointer to it) rather than an
     // instruction. raw() just coerces this into a pointer to a uint32_t.
@@ -2275,17 +2267,26 @@ class InstructionIterator
         maybeSkipAutomaticInstructions();
     }
 
-    void maybeSkipAutomaticInstructions() {
-        inst_ = inst_->maybeSkipAutomaticInstructions();
-    }
+    // Advances to the next intentionally-inserted instruction.
+    Instruction* next();
 
-    Instruction* next() {
-        inst_ = inst_->next();
-        return inst_;
-    }
+    // Advances past any automatically-inserted instructions.
+    Instruction* maybeSkipAutomaticInstructions();
 
     Instruction* cur() const {
         return inst_;
+    }
+
+  protected:
+    // Advances past the given number of instruction-length bytes.
+    void advanceRaw(ptrdiff_t instructions = 1) {
+        inst_ = inst_ + instructions;
+    }
+
+    // Look ahead, including automatically-inserted instructions
+    // and PoolHeaders.
+    Instruction* peekRaw(ptrdiff_t instructions = 1) const {
+        return inst_ + instructions;
     }
 };
 

@@ -356,7 +356,7 @@ MacroAssemblerARM::ma_mov_patch(Imm32 imm32, Register dest, Assembler::Condition
     // The current instruction must be an actual instruction,
     // not automatically-inserted boilerplate.
     MOZ_ASSERT(iter.cur());
-    MOZ_ASSERT(iter.cur() == iter.cur()->maybeSkipAutomaticInstructions());
+    MOZ_ASSERT(iter.cur() == iter.maybeSkipAutomaticInstructions());
 
     int32_t imm = imm32.value;
     switch(rs) {
