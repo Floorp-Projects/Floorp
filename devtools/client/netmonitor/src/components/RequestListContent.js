@@ -9,10 +9,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { HTMLTooltip } = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
-const {
-  setImageTooltip,
-  getImageDimensions,
-} = require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper");
+
 const Actions = require("../actions/index");
 const { formDataURI } = require("../utils/request-utils");
 const {
@@ -21,6 +18,15 @@ const {
   getSortedRequests,
   getWaterfallScale,
 } = require("../selectors/index");
+
+loader.lazyGetter(this, "setImageTooltip", function () {
+  return require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper")
+    .setImageTooltip;
+});
+loader.lazyGetter(this, "getImageDimensions", function () {
+  return require("devtools/client/shared/widgets/tooltip/ImageTooltipHelper")
+    .getImageDimensions;
+});
 
 // Components
 const RequestListHeader = createFactory(require("./RequestListHeader"));

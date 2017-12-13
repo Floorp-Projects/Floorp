@@ -6,6 +6,7 @@
 
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const { div } = dom;
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   fetchNetworkUpdatePacket,
@@ -14,28 +15,56 @@ const {
 const { RESPONSE_HEADERS } = require("../constants");
 
 // Components
-const RequestListColumnCause = createFactory(require("./RequestListColumnCause"));
-const RequestListColumnContentSize = createFactory(require("./RequestListColumnContentSize"));
-const RequestListColumnCookies = createFactory(require("./RequestListColumnCookies"));
-const RequestListColumnDomain = createFactory(require("./RequestListColumnDomain"));
-const RequestListColumnDuration = createFactory(require("./RequestListColumnDuration"));
-const RequestListColumnEndTime = createFactory(require("./RequestListColumnEndTime"));
-const RequestListColumnFile = createFactory(require("./RequestListColumnFile"));
-const RequestListColumnLatency = createFactory(require("./RequestListColumnLatency"));
-const RequestListColumnMethod = createFactory(require("./RequestListColumnMethod"));
-const RequestListColumnProtocol = createFactory(require("./RequestListColumnProtocol"));
-const RequestListColumnRemoteIP = createFactory(require("./RequestListColumnRemoteIp"));
-const RequestListColumnResponseHeader = createFactory(require("./RequestListColumnResponseHeader"));
-const RequestListColumnResponseTime = createFactory(require("./RequestListColumnResponseTime"));
-const RequestListColumnScheme = createFactory(require("./RequestListColumnScheme"));
-const RequestListColumnSetCookies = createFactory(require("./RequestListColumnSetCookies"));
-const RequestListColumnStartTime = createFactory(require("./RequestListColumnStartTime"));
-const RequestListColumnStatus = createFactory(require("./RequestListColumnStatus"));
-const RequestListColumnTransferredSize = createFactory(require("./RequestListColumnTransferredSize"));
-const RequestListColumnType = createFactory(require("./RequestListColumnType"));
-const RequestListColumnWaterfall = createFactory(require("./RequestListColumnWaterfall"));
+/* global
+  RequestListColumnCause,
+  RequestListColumnContentSize,
+  RequestListColumnCookies,
+  RequestListColumnDomain,
+  RequestListColumnDuration,
+  RequestListColumnEndTime,
+  RequestListColumnFile,
+  RequestListColumnLatency,
+  RequestListColumnMethod,
+  RequestListColumnProtocol,
+  RequestListColumnRemoteIP,
+  RequestListColumnResponseHeader,
+  RequestListColumnResponseTime,
+  RequestListColumnScheme,
+  RequestListColumnSetCookies,
+  RequestListColumnStartTime,
+  RequestListColumnStatus,
+  RequestListColumnTransferredSize,
+  RequestListColumnType,
+  RequestListColumnWaterfall
+*/
 
-const { div } = dom;
+const COLUMNS = [
+  "Cause",
+  "ContentSize",
+  "Cookies",
+  "Domain",
+  "Duration",
+  "EndTime",
+  "File",
+  "Latency",
+  "Method",
+  "Protocol",
+  "RemoteIP",
+  "ResponseHeader",
+  "ResponseTime",
+  "Scheme",
+  "SetCookies",
+  "StartTime",
+  "Status",
+  "TransferredSize",
+  "Type",
+  "Waterfall"
+];
+for (let name of COLUMNS) {
+  loader.lazyGetter(this, "RequestListColumn" + name, function () {
+    return createFactory(require("./RequestListColumn" + name));
+  });
+}
 
 /**
  * Used by shouldComponentUpdate: compare two items, and compare only properties
