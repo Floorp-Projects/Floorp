@@ -12,7 +12,6 @@
 #include "VideoUtils.h"
 #include "VPXDecoder.h"
 
-#include "mozilla/Telemetry.h"
 #include "nsIGfxInfo.h"
 #include "nsPromiseFlatString.h"
 #include "nsThreadUtils.h"
@@ -215,9 +214,6 @@ public:
     }
     mIsCodecSupportAdaptivePlayback =
       mJavaDecoder->IsAdaptivePlaybackSupported();
-    Telemetry::Accumulate(Telemetry::MEDIA_ANDROID_VIDEO_TUNNELING_SUPPORT,
-                          mJavaDecoder->IsTunneledPlaybackSupported());
-
     return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
   }
 
