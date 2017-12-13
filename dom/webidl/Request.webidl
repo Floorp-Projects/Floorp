@@ -61,7 +61,7 @@ dictionary RequestInit {
 
   AbortSignal? signal;
 
-  [Func="FetchObserver::IsEnabled"]
+  [Func="mozilla::dom::DOMPreferences::FetchObserverEnabled"]
   ObserverCallback observe;
 };
 
