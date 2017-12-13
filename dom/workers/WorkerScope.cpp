@@ -12,6 +12,7 @@
 #include "mozilla/dom/Clients.h"
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/DedicatedWorkerGlobalScopeBinding.h"
+#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/IDBFactory.h"
@@ -370,7 +371,7 @@ WorkerGlobalScope::Dump(const Optional<nsAString>& aString) const
   }
 
 #if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-  if (!mWorkerPrivate->DumpEnabled()) {
+  if (!DOMPreferences::DumpEnabled()) {
     return;
   }
 #endif
