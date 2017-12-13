@@ -332,6 +332,11 @@ nsMultiplexInputStream::Available(uint64_t* aResult)
     rv = AvailableMaybeSeek(mStreams[i], &streamAvail);
     if (rv == NS_BASE_STREAM_CLOSED) {
       // If a stream is closed, we continue with the next one.
+      // If this is the current stream we move to the following stream.
+      if (mCurrentStream == i) {
+        ++mCurrentStream;
+      }
+
       // If this is the last stream, we want to return this error code.
       continue;
     }
