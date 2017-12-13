@@ -319,6 +319,9 @@ nsLayoutStatics::Initialize()
   mozilla::dom::IPCBlobInputStreamStorage::Initialize();
 
   mozilla::dom::U2FTokenManager::Initialize();
+
+  mozilla::dom::DOMPreferences::Initialize();
+
   return NS_OK;
 }
 
