@@ -767,13 +767,7 @@ Connection::initializeInternal()
   MOZ_ASSERT(mDBConn);
 
   auto guard = MakeScopeExit([&]() {
-    {
-      MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
-      mConnectionClosed = true;
-    }
-    MOZ_ALWAYS_TRUE(::sqlite3_close(mDBConn) == SQLITE_OK);
-    mDBConn = nullptr;
-    sharedDBMutex.destroy();
+    initializeFailed();
   });
 
   if (mFileURL) {
@@ -886,6 +880,18 @@ Connection::initializeOnAsyncThread(nsIFile* aStorageFile) {
     Unused << NS_DispatchToMainThread(event);
   }
   return rv;
+}
+
+void
+Connection::initializeFailed()
+{
+  {
+    MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
+    mConnectionClosed = true;
+  }
+  MOZ_ALWAYS_TRUE(::sqlite3_close(mDBConn) == SQLITE_OK);
+  mDBConn = nullptr;
+  sharedDBMutex.destroy();
 }
 
 nsresult
@@ -1526,38 +1532,9 @@ Connection::initializeClone(Connection* aClone, bool aReadOnly)
     return rv;
   }
 
-  // Copy over temporary tables, triggers, and views from the original
-  // connections. Entities in `sqlite_temp_master` are only visible to the
-  // connection that created them.
-  if (!aReadOnly) {
-    nsCOMPtr<mozIStorageStatement> stmt;
-    rv = CreateStatement(NS_LITERAL_CSTRING("SELECT sql FROM sqlite_temp_master "
-                                            "WHERE type IN ('table', 'view', "
-                                                           "'index', 'trigger')"),
-                         getter_AddRefs(stmt));
-    // Propagate errors, because failing to copy triggers might cause schema
-    // coherency issues when writing to the database from the cloned connection.
-    NS_ENSURE_SUCCESS(rv, rv);
-    bool hasResult = false;
-    while (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-      nsAutoCString query;
-      rv = stmt->GetUTF8String(0, query);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // The `CREATE` SQL statements in `sqlite_temp_master` omit the `TEMP`
-      // keyword. We need to add it back, or we'll recreate temporary entities
-      // as persistent ones. `sqlite_temp_master` also holds `CREATE INDEX`
-      // statements, but those don't need `TEMP` keywords.
-      if (StringBeginsWith(query, NS_LITERAL_CSTRING("CREATE TABLE ")) ||
-          StringBeginsWith(query, NS_LITERAL_CSTRING("CREATE TRIGGER ")) ||
-          StringBeginsWith(query, NS_LITERAL_CSTRING("CREATE VIEW "))) {
-        query.Replace(0, 6, "CREATE TEMP");
-      }
-
-      rv = aClone->ExecuteSimpleSQL(query);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-  }
+  auto guard = MakeScopeExit([&]() {
+    aClone->initializeFailed();
+  });
 
   // Re-attach on-disk databases that were attached to the original connection.
   {
@@ -1623,6 +1600,45 @@ Connection::initializeClone(Connection* aClone, bool aReadOnly)
     }
   }
 
+  // Copy over temporary tables, triggers, and views from the original
+  // connections. Entities in `sqlite_temp_master` are only visible to the
+  // connection that created them.
+  if (!aReadOnly) {
+    rv = aClone->ExecuteSimpleSQL(NS_LITERAL_CSTRING("BEGIN TRANSACTION"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = CreateStatement(NS_LITERAL_CSTRING("SELECT sql FROM sqlite_temp_master "
+                                            "WHERE type IN ('table', 'view', "
+                                                           "'index', 'trigger')"),
+                         getter_AddRefs(stmt));
+    // Propagate errors, because failing to copy triggers might cause schema
+    // coherency issues when writing to the database from the cloned connection.
+    NS_ENSURE_SUCCESS(rv, rv);
+    bool hasResult = false;
+    while (stmt && NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+      nsAutoCString query;
+      rv = stmt->GetUTF8String(0, query);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // The `CREATE` SQL statements in `sqlite_temp_master` omit the `TEMP`
+      // keyword. We need to add it back, or we'll recreate temporary entities
+      // as persistent ones. `sqlite_temp_master` also holds `CREATE INDEX`
+      // statements, but those don't need `TEMP` keywords.
+      if (StringBeginsWith(query, NS_LITERAL_CSTRING("CREATE TABLE ")) ||
+          StringBeginsWith(query, NS_LITERAL_CSTRING("CREATE TRIGGER ")) ||
+          StringBeginsWith(query, NS_LITERAL_CSTRING("CREATE VIEW "))) {
+        query.Replace(0, 6, "CREATE TEMP");
+      }
+
+      rv = aClone->ExecuteSimpleSQL(query);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    rv = aClone->ExecuteSimpleSQL(NS_LITERAL_CSTRING("COMMIT"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   // Copy any functions that have been added to this connection.
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
   for (auto iter = mFunctions.Iter(); !iter.Done(); iter.Next()) {
@@ -1651,6 +1667,7 @@ Connection::initializeClone(Connection* aClone, bool aReadOnly)
     }
   }
 
+  guard.release();
   return NS_OK;
 }
 

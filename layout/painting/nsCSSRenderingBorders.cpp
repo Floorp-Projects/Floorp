@@ -3645,12 +3645,12 @@ nsCSSBorderImageRenderer::CreateBorderImageRenderer(nsPresContext* aPresContext,
                                                     const nsRect& aDirtyRect,
                                                     Sides aSkipSides,
                                                     uint32_t aFlags,
-                                                    DrawResult* aDrawResult)
+                                                    ImgDrawResult* aDrawResult)
 {
   MOZ_ASSERT(aDrawResult);
 
   if (aDirtyRect.IsEmpty()) {
-    *aDrawResult = DrawResult::SUCCESS;
+    *aDrawResult = ImgDrawResult::SUCCESS;
     return Nothing();
   }
 
@@ -3670,11 +3670,11 @@ nsCSSBorderImageRenderer::CreateBorderImageRenderer(nsPresContext* aPresContext,
 
   nsCSSBorderImageRenderer renderer(aForFrame, aBorderArea,
                                     aStyleBorder, aSkipSides, imgRenderer);
-  *aDrawResult = DrawResult::SUCCESS;
+  *aDrawResult = ImgDrawResult::SUCCESS;
   return Some(renderer);
 }
 
-DrawResult
+ImgDrawResult
 nsCSSBorderImageRenderer::DrawBorderImage(nsPresContext* aPresContext,
                                           gfxContext& aRenderingContext,
                                           nsIFrame* aForFrame,
@@ -3750,7 +3750,7 @@ nsCSSBorderImageRenderer::DrawBorderImage(nsPresContext* aPresContext,
     mSlice.bottom,
   };
 
-  DrawResult result = DrawResult::SUCCESS;
+  ImgDrawResult result = ImgDrawResult::SUCCESS;
 
   for (int i = LEFT; i <= RIGHT; i++) {
     for (int j = TOP; j <= BOTTOM; j++) {

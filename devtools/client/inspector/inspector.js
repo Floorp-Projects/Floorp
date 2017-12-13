@@ -1409,7 +1409,7 @@ Inspector.prototype = {
       id: "node-menu-delete",
       label: INSPECTOR_L10N.getStr("inspectorHTMLDelete.label"),
       accesskey: INSPECTOR_L10N.getStr("inspectorHTMLDelete.accesskey"),
-      disabled: !isEditableElement,
+      disabled: !this.isDeletable(this.selection.nodeFront),
       click: () => this.deleteNode(),
     }));
 
@@ -2294,6 +2294,18 @@ Inspector.prototype = {
   onShowBoxModelHighlighterForNode(nodeFront, options) {
     let toolbox = this.toolbox;
     toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
+  },
+
+  /**
+   * Returns a value indicating whether a node can be deleted.
+   *
+   * @param {NodeFront} nodeFront
+   *        The node to test for deletion
+   */
+  isDeletable(nodeFront) {
+    return !(nodeFront.isDocumentElement ||
+           nodeFront.nodeType == nodeConstants.DOCUMENT_TYPE_NODE ||
+           nodeFront.isAnonymous);
   },
 
   async inspectNodeActor(nodeActor, inspectFromAnnotation) {

@@ -232,7 +232,7 @@ ImageWrapper::GetImageContainerAtSize(LayerManager* aManager,
                                               aSVGContext, aFlags);
 }
 
-NS_IMETHODIMP_(DrawResult)
+NS_IMETHODIMP_(ImgDrawResult)
 ImageWrapper::Draw(gfxContext* aContext,
                    const nsIntSize& aSize,
                    const ImageRegion& aRegion,

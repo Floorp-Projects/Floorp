@@ -76,6 +76,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsISupportsUtils.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMDocument.h"
+#include "nsIDocumentObserver.h"
 #include "nsISelectionListener.h"
 #include "nsISelectionPrivate.h"
 #include "nsIDOMRange.h"
@@ -83,6 +84,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsLayoutCID.h"
 #include "nsContentUtils.h"
 #include "nsIPresShell.h"
+#include "nsLayoutStylesheetCache.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/Preferences.h"
 #include "Text.h"
@@ -2278,6 +2280,13 @@ nsPrintEngine::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO)
   NS_ENSURE_SUCCESS(rv,rv);
 
   StyleSetHandle styleSet = mDocViewerPrint->CreateStyleSet(aPO->mDocument);
+
+  if (aPO->mDocument->IsSVGDocument()) {
+    // The SVG document only loads minimal-xul.css, so it doesn't apply other
+    // styles. We should add ua.css for applying style which related to print.
+    auto cache = nsLayoutStylesheetCache::For(aPO->mDocument->GetStyleBackendType());
+    styleSet->PrependStyleSheet(SheetType::Agent, cache->UASheet());
+  }
 
   aPO->mPresShell = aPO->mDocument->CreateShell(aPO->mPresContext,
                                                 aPO->mViewManager, styleSet);

@@ -40,7 +40,7 @@ public:
 
   virtual bool HonorPrintBackgroundSettings() override { return false; }
 
-  DrawResult PaintBorder(gfxContext& aRenderingContext,
+  ImgDrawResult PaintBorder(gfxContext& aRenderingContext,
                                    nsPoint aPt,
                                    const nsRect& aDirtyRect);
   nsRect GetBackgroundRectRelativeToSelf(nscoord* aOutYOffset = nullptr, nsRect* aOutGroupRect = nullptr);
@@ -138,7 +138,7 @@ void
 nsDisplayXULGroupBorder::Paint(nsDisplayListBuilder* aBuilder,
                                    gfxContext* aCtx)
 {
-  DrawResult result = static_cast<nsGroupBoxFrame*>(mFrame)
+  ImgDrawResult result = static_cast<nsGroupBoxFrame*>(mFrame)
     ->PaintBorder(*aCtx, ToReferenceFrame(), mVisibleRect);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
@@ -193,7 +193,7 @@ nsGroupBoxFrame::GetBackgroundRectRelativeToSelf(nscoord* aOutYOffset, nsRect* a
   return nsRect(0, yoff, mRect.width, mRect.height - yoff);
 }
 
-DrawResult
+ImgDrawResult
 nsGroupBoxFrame::PaintBorder(gfxContext& aRenderingContext,
     nsPoint aPt, const nsRect& aDirtyRect) {
 
@@ -211,7 +211,7 @@ nsGroupBoxFrame::PaintBorder(gfxContext& aRenderingContext,
   nsRect rect = GetBackgroundRectRelativeToSelf(&yoff, &groupRect) + aPt;
   groupRect += aPt;
 
-  DrawResult result = DrawResult::SUCCESS;
+  ImgDrawResult result = ImgDrawResult::SUCCESS;
   if (groupBox) {
     int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
 
