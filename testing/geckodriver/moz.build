@@ -4,8 +4,6 @@
 
 RUST_PROGRAMS += ["geckodriver"]
 
-RustTest("geckodriver")
-
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Marionette")
 
