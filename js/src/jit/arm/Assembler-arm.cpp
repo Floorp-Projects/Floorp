@@ -3163,16 +3163,26 @@ Assembler::PatchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newVal
 
     Register dest;
     Assembler::RelocStyle rs;
-    DebugOnly<const uint32_t*> val = GetPtr32Target(InstructionIterator(ptr), &dest, &rs);
-    MOZ_ASSERT(uint32_t((const uint32_t*)val) == uint32_t(expectedValue.value));
 
-    MacroAssembler::ma_mov_patch(Imm32(int32_t(newValue.value)), dest, Always, rs,
-                                 InstructionIterator(ptr));
+#ifdef DEBUG
+    {
+        InstructionIterator iter(ptr);
+        const uint32_t* val = GetPtr32Target(iter, &dest, &rs);
+        MOZ_ASSERT(uint32_t((const uint32_t*)val) == uint32_t(expectedValue.value));
+    }
+#endif
+
+    // Patch over actual instructions.
+    {
+        InstructionIterator iter(ptr);
+        MacroAssembler::ma_mov_patch(Imm32(int32_t(newValue.value)), dest, Always, rs, iter);
+    }
 
     // L_LDR won't cause any instructions to be updated.
     if (rs != L_LDR) {
-        AutoFlushICache::flush(uintptr_t(ptr), 4);
-        AutoFlushICache::flush(uintptr_t(ptr->next()), 4);
+        InstructionIterator iter(ptr);
+        AutoFlushICache::flush(uintptr_t(iter.cur()), 4);
+        AutoFlushICache::flush(uintptr_t(iter.next()), 4);
     }
 }
 
