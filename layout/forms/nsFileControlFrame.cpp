@@ -12,7 +12,6 @@
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/DataTransfer.h"
-#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/HTMLButtonElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/Preferences.h"
@@ -355,7 +354,7 @@ nsFileControlFrame::DnDListener::GetBlobImplForWebkitDirectory(nsIDOMFileList* a
   HTMLInputElement* inputElement =
     HTMLInputElement::FromContent(mFrame->GetContent());
   bool webkitDirPicker =
-    DOMPreferences::WebkitBlinkDirectoryPickerEnabled() &&
+    Preferences::GetBool("dom.webkitBlink.dirPicker.enabled", false) &&
     inputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory);
   if (!webkitDirPicker) {
     return NS_OK;

@@ -37,6 +37,8 @@ public:
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
+  static bool IsEnabled(JSContext* aCx, JSObject* aObj);
+
   static Connection*
   CreateForWindow(nsPIDOMWindowInner* aWindow);
 

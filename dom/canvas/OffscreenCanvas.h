@@ -9,7 +9,6 @@
 
 #include "gfxTypes.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/RefPtr.h"
 #include "CanvasRenderingContextHelper.h"
@@ -130,6 +129,8 @@ public:
 
   static already_AddRefed<OffscreenCanvas>
   CreateFromCloneData(nsIGlobalObject* aGlobal, OffscreenCanvasCloneData* aData);
+
+  static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
 
   // Return true on main-thread, and return gfx.offscreencanvas.enabled
   // on worker thread.

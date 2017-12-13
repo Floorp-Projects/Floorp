@@ -6,7 +6,6 @@
 
 #include "OffscreenCanvas.h"
 
-#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerScope.h"
@@ -334,13 +333,25 @@ OffscreenCanvas::CreateFromCloneData(nsIGlobalObject* aGlobal, OffscreenCanvasCl
 }
 
 /* static */ bool
+OffscreenCanvas::PrefEnabled(JSContext* aCx, JSObject* aObj)
+{
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("gfx.offscreencanvas.enabled");
+  } else {
+    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+    MOZ_ASSERT(workerPrivate);
+    return workerPrivate->OffscreenCanvasEnabled();
+  }
+}
+
+/* static */ bool
 OffscreenCanvas::PrefEnabledOnWorkerThread(JSContext* aCx, JSObject* aObj)
 {
   if (NS_IsMainThread()) {
     return true;
   }
 
-  return DOMPreferences::OffscreenCanvasEnabled(aCx, aObj);
+  return PrefEnabled(aCx, aObj);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(OffscreenCanvas, DOMEventTargetHelper, mCurrentContext)

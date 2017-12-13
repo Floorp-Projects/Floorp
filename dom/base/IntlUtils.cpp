@@ -10,10 +10,6 @@
 #include "mozIMozIntl.h"
 #include "nsContentUtils.h"
 
-#ifdef XP_WIN
-#undef GetLocaleInfo
-#endif
-
 namespace mozilla {
 namespace dom {
 

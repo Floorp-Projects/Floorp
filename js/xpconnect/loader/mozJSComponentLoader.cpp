@@ -50,7 +50,6 @@
 #include "mozilla/MacroForEach.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ScriptPreloader.h"
-#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Unused.h"
@@ -89,7 +88,7 @@ static LazyLogModule gJSCLLog("JSComponentLoader");
 static bool
 Dump(JSContext* cx, unsigned argc, Value* vp)
 {
-    if (!mozilla::dom::DOMPreferences::DumpEnabled()) {
+    if (!nsContentUtils::DOMWindowDumpEnabled()) {
         return true;
     }
 

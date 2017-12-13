@@ -25,6 +25,10 @@ class StorageManager final
   nsCOMPtr<nsIGlobalObject> mOwner;
 
 public:
+  // Return dom.quota.storageManager.enabled on main/worker thread.
+  static bool
+  PrefEnabled(JSContext* aCx, JSObject* aObj);
+
   explicit
   StorageManager(nsIGlobalObject* aGlobal);
 

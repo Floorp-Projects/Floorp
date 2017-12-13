@@ -12,7 +12,6 @@
 #include "mozilla/dom/Clients.h"
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/DedicatedWorkerGlobalScopeBinding.h"
-#include "mozilla/dom/DOMPreferences.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/IDBFactory.h"
@@ -371,7 +370,7 @@ WorkerGlobalScope::Dump(const Optional<nsAString>& aString) const
   }
 
 #if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-  if (!DOMPreferences::DumpEnabled()) {
+  if (!mWorkerPrivate->DumpEnabled()) {
     return;
   }
 #endif
@@ -480,7 +479,7 @@ WorkerGlobalScope::CreateImageBitmap(JSContext* aCx,
                                      const Sequence<ChannelPixelLayout>& aLayout,
                                      ErrorResult& aRv)
 {
-  if (!DOMPreferences::ImageBitmapExtensionsEnabled()) {
+  if (!ImageBitmap::ExtensionsEnabled(aCx)) {
     aRv.Throw(NS_ERROR_TYPE_ERR);
     return nullptr;
   }
