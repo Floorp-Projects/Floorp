@@ -48,17 +48,18 @@ public:
   SetSignature(CryptoBuffer& aBuffer);
 
   void
-  GetUserId(DOMString& aRetVal);
+  GetUserHandle(JSContext* aCx, JS::MutableHandle<JSObject*> aRetVal);
 
   nsresult
-  SetUserId(const nsAString& aUserId);
+  SetUserHandle(CryptoBuffer& aUserHandle);
 
 private:
   CryptoBuffer mAuthenticatorData;
   JS::Heap<JSObject*> mAuthenticatorDataCachedObj;
   CryptoBuffer mSignature;
   JS::Heap<JSObject*> mSignatureCachedObj;
-  nsString mUserId;
+  CryptoBuffer mUserHandle;
+  JS::Heap<JSObject*> mUserHandleCachedObj;
 };
 
 } // namespace dom
