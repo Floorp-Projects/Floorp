@@ -3164,8 +3164,6 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           suppressBlur = nsContentUtils::IsUserFocusIgnored(activeContent);
         }
 
-        nsIFrame* currFrame = mCurrentTarget;
-
         // When a root content which isn't editable but has an editable HTML
         // <body> element is clicked, we should redirect the focus to the
         // the <body> element.  E.g., when an user click bottom of the editor
@@ -3179,35 +3177,37 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           if (doc && newFocus == doc->GetRootElement()) {
             nsIContent *bodyContent =
               nsLayoutUtils::GetEditableRootContentByContentEditable(doc);
-            if (bodyContent) {
-              nsIFrame* bodyFrame = bodyContent->GetPrimaryFrame();
-              if (bodyFrame) {
-                currFrame = bodyFrame;
-                newFocus = bodyContent;
-              }
+            if (bodyContent && bodyContent->GetPrimaryFrame()) {
+              newFocus = bodyContent;
             }
           }
         }
 
         // When the mouse is pressed, the default action is to focus the
         // target. Look for the nearest enclosing focusable frame.
-        while (currFrame) {
-          // If the mousedown happened inside a popup, don't
-          // try to set focus on one of its containing elements
-          const nsStyleDisplay* display = currFrame->StyleDisplay();
-          if (display->mDisplay == StyleDisplay::MozPopup) {
+        //
+        // TODO: Probably this should be moved to Element::PostHandleEvent.
+        for (; newFocus; newFocus = newFocus->GetFlattenedTreeParent()) {
+          if (!newFocus->IsElement()) {
+            continue;
+          }
+
+          nsIFrame* frame = newFocus->GetPrimaryFrame();
+          if (!frame) {
+            continue;
+          }
+
+          // If the mousedown happened inside a popup, don't try to set focus on
+          // one of its containing elements
+          if (frame->StyleDisplay()->mDisplay == StyleDisplay::MozPopup) {
             newFocus = nullptr;
             break;
           }
 
           int32_t tabIndexUnused;
-          if (currFrame->IsFocusable(&tabIndexUnused, true)) {
-            newFocus = currFrame->GetContent();
-            nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(newFocus));
-            if (domElement)
-              break;
+          if (frame->IsFocusable(&tabIndexUnused, true)) {
+            break;
           }
-          currFrame = currFrame->GetParent();
         }
 
         nsIFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -3221,7 +3221,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // clicked. Because the focus is cleared when clicking on a
           // non-focusable node, the next press of the tab key will cause
           // focus to be shifted from the caret position instead of the root.
-          if (newFocus && currFrame) {
+          if (newFocus) {
             // use the mouse flag and the noscroll flag so that the content
             // doesn't unexpectedly scroll when clicking an element that is
             // only half visible
