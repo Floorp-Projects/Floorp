@@ -16,4 +16,6 @@ function test() {
     }
     f(80);
 }
-test();
+try {
+    test();
+} catch(e) {}
