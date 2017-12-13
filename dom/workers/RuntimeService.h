@@ -91,7 +91,6 @@ class RuntimeService final : public nsIObserver
   nsCOMPtr<nsITimer> mIdleThreadTimer;
 
   static JSSettings sDefaultJSSettings;
-  static bool sDefaultPreferences[WORKERPREF_COUNT];
 
 public:
   struct NavigatorProperties
@@ -174,13 +173,6 @@ public:
   }
 
   static void
-  GetDefaultPreferences(bool aPreferences[WORKERPREF_COUNT])
-  {
-    AssertIsOnMainThread();
-    memcpy(aPreferences, sDefaultPreferences, WORKERPREF_COUNT * sizeof(bool));
-  }
-
-  static void
   SetDefaultContextOptions(const JS::ContextOptions& aContextOptions)
   {
     AssertIsOnMainThread();
@@ -201,9 +193,6 @@ public:
 
   void
   UpdateAllWorkerLanguages(const nsTArray<nsString>& aLanguages);
-
-  void
-  UpdateAllWorkerPreference(WorkerPreference aPref, bool aValue);
 
   static void
   SetDefaultJSGCSettings(JSGCParamKey aKey, uint32_t aValue)
@@ -269,9 +258,6 @@ private:
 
   static void
   ShutdownIdleThreads(nsITimer* aTimer, void* aClosure);
-
-  static void
-  WorkerPrefChanged(const char* aPrefName, void* aClosure);
 
   nsresult
   CreateSharedWorkerFromLoadInfo(JSContext* aCx,
