@@ -21,7 +21,6 @@
 //   * First argument is the name of the pref.
 //   * The name of the function that updates the new value of a pref.
 
-WORKER_SIMPLE_PREF("dom.push.enabled", PushEnabled, PUSH_ENABLED)
 WORKER_SIMPLE_PREF("dom.streams.enabled", StreamsEnabled, STREAMS_ENABLED)
 WORKER_SIMPLE_PREF("dom.requestcontext.enabled", RequestContextEnabled, REQUESTCONTEXT_ENABLED)
 WORKER_SIMPLE_PREF("gfx.offscreencanvas.enabled", OffscreenCanvasEnabled, OFFSCREENCANVAS_ENABLED)
