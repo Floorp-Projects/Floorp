@@ -4,7 +4,6 @@
 
 "use strict";
 
-const Services = require("Services");
 const { AutoRefreshHighlighter } = require("./auto-refresh");
 const {
   CANVAS_SIZE,
@@ -37,8 +36,6 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const LAYOUT_STRINGS_URI = "devtools/client/locales/layout.properties";
 const LAYOUT_L10N = new LocalizationHelper(LAYOUT_STRINGS_URI);
-
-const NEGATIVE_LINE_NUMBERS_PREF = "devtools.gridinspector.showNegativeLineNumbers";
 
 const COLUMNS = "cols";
 const ROWS = "rows";
@@ -743,13 +740,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     if (this.options.showGridLineNumbers) {
       this.renderLineNumbers(fragment.cols, COLUMNS, this.getFirstRowLinePos(fragment));
       this.renderLineNumbers(fragment.rows, ROWS, this.getFirstColLinePos(fragment));
-
-      if (Services.prefs.getBoolPref(NEGATIVE_LINE_NUMBERS_PREF)) {
-        this.renderNegativeLineNumbers(fragment.cols, COLUMNS,
-          this.getLastRowLinePos(fragment));
-        this.renderNegativeLineNumbers(fragment.rows, ROWS,
-          this.getLastColLinePos(fragment));
-      }
+      this.renderNegativeLineNumbers(fragment.cols, COLUMNS,
+        this.getLastRowLinePos(fragment));
+      this.renderNegativeLineNumbers(fragment.rows, ROWS,
+        this.getLastColLinePos(fragment));
     }
   }
 
