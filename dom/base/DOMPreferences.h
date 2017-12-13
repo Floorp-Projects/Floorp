@@ -67,6 +67,10 @@ public:
   // Returns true if the dom.streams.enabled pref is set.
   static bool StreamsEnabled();
   static bool StreamsEnabled(JSContext* aCx, JSObject* aObj);
+
+  // Returns true if the dom.requestcontext.enabled pref is set.
+  static bool RequestContextEnabled();
+  static bool RequestContextEnabled(JSContext* aCx, JSObject* aObj);
 };
 
 } // dom namespace
