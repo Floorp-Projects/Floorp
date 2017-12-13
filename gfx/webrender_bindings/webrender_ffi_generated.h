@@ -225,6 +225,7 @@ enum class WrFilterOpType : uint32_t {
   Opacity = 6,
   Saturate = 7,
   Sepia = 8,
+  DropShadow = 9,
 
   Sentinel /* this must be last for serialization purposes. */
 };
@@ -691,10 +692,14 @@ struct WrAnimationProperty {
 struct WrFilterOp {
   WrFilterOpType filter_type;
   float argument;
+  LayoutVector2D offset;
+  ColorF color;
 
   bool operator==(const WrFilterOp& aOther) const {
     return filter_type == aOther.filter_type &&
-           argument == aOther.argument;
+           argument == aOther.argument &&
+           offset == aOther.offset &&
+           color == aOther.color;
   }
 };
 

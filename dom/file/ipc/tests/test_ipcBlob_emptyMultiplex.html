@@ -30,6 +30,10 @@ script.addMessageListener("emptyfile.opened", message => {
   then(() => checkContent("begin", [message.file, "Hello world!"])).
   then(() => checkContent("end", ["Hello world!", message.file])).
   then(() => checkContent("random", [message.file, message.file, "Hello world!", message.file])).
+  then(() => checkContent("random 2", [message.file, message.file, "Hello ",
+                                       message.file, "world", message.file,
+                                       message.file, "!", message.file, "",
+                                       message.file, message.file])).
   then(SimpleTest.finish);
 });
 
