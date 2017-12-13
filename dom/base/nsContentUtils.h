@@ -2957,6 +2957,8 @@ public:
     eSessionScoped = 2,
     // Allow access to the storage
     eAllow = 3,
+    // Keep this at the end.  Used for serialization, but not a valid value.
+    eNumValues = 4,
   };
 
   /*

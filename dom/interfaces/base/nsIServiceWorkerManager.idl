@@ -148,7 +148,7 @@ interface nsIServiceWorkerManager : nsISupports
    *
    * This MUST only be called once per document!
    */
-  [notxpcom,nostdcall] void MaybeStartControlling(in nsIDocument aDoc, in DOMString aDocumentId);
+  [notxpcom,nostdcall] void MaybeStartControlling(in nsIDocument aDoc);
 
   /**
    * Documents that have called MaybeStartControlling() should call this when

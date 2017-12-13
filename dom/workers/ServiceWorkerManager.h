@@ -46,7 +46,6 @@ class ServiceWorkerRegistrationListener;
 
 namespace workers {
 
-class ServiceWorkerClientInfo;
 class ServiceWorkerInfo;
 class ServiceWorkerJobQueue;
 class ServiceWorkerManagerChild;
@@ -151,7 +150,6 @@ public:
   void
   DispatchFetchEvent(const OriginAttributes& aOriginAttributes,
                      nsIDocument* aDoc,
-                     const nsAString& aDocumentIdForTopLevelNavigation,
                      nsIInterceptedChannel* aChannel,
                      bool aIsReload,
                      bool aIsSubresourceLoad,
@@ -273,24 +271,13 @@ public:
               uint32_t aFlags,
               JSExnType aExnType);
 
-  UniquePtr<ServiceWorkerClientInfo>
-  GetClient(nsIPrincipal* aPrincipal,
-            const nsAString& aClientId,
-            ErrorResult& aRv);
-
-  void
-  GetAllClients(nsIPrincipal* aPrincipal,
-                const nsCString& aScope,
-                uint64_t aServiceWorkerID,
-                bool aIncludeUncontrolled,
-                nsTArray<ServiceWorkerClientInfo>& aDocuments);
-
-  void
+  already_AddRefed<GenericPromise>
   MaybeClaimClient(nsIDocument* aDocument,
                    ServiceWorkerRegistrationInfo* aWorkerRegistration);
 
-  nsresult
-  ClaimClients(nsIPrincipal* aPrincipal, const nsCString& aScope, uint64_t aId);
+  already_AddRefed<GenericPromise>
+  MaybeClaimClient(nsIDocument* aDoc,
+                   const ServiceWorkerDescriptor& aServiceWorker);
 
   void
   SetSkipWaitingFlag(nsIPrincipal* aPrincipal, const nsCString& aScope,
@@ -393,8 +380,7 @@ private:
 
   RefPtr<GenericPromise>
   StartControllingADocument(ServiceWorkerRegistrationInfo* aRegistration,
-                            nsIDocument* aDoc,
-                            const nsAString& aDocumentId);
+                            nsIDocument* aDoc);
 
   void
   StopControllingADocument(ServiceWorkerRegistrationInfo* aRegistration);
@@ -441,7 +427,7 @@ private:
   FireUpdateFoundOnServiceWorkerRegistrations(ServiceWorkerRegistrationInfo* aRegistration);
 
   void
-  FireControllerChange(ServiceWorkerRegistrationInfo* aRegistration);
+  UpdateClientControllers(ServiceWorkerRegistrationInfo* aRegistration);
 
   void
   StorePendingReadyPromise(nsPIDOMWindowInner* aWindow, nsIURI* aURI,

@@ -27,10 +27,6 @@
 #include "sunos4.h"
 #endif
 
-#ifndef D_INO
-#define D_INO	d_ino
-#endif
-
 char *program;
 
 void
@@ -108,7 +104,7 @@ ino2name(ino_t ino)
     for (;;) {
 	if (!(ep = readdir(dp)))
 	    fail("cannot find current directory");
-	if (ep->D_INO == ino)
+	if (ep->d_ino == ino)
 	    break;
     }
     name = xstrdup(ep->d_name);
