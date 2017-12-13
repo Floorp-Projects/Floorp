@@ -274,13 +274,8 @@ ServiceWorkerRegistrationInfo::Activate()
   // FIXME(nsm): Unlink appcache if there is one.
 
   // "Queue a task to fire a simple event named controllerchange..."
-  nsCOMPtr<nsIRunnable> controllerChangeRunnable =
-    NewRunnableMethod<RefPtr<ServiceWorkerRegistrationInfo>>(
-      "dom::workers::ServiceWorkerManager::FireControllerChange",
-      swm,
-      &ServiceWorkerManager::FireControllerChange,
-      this);
-  NS_DispatchToMainThread(controllerChangeRunnable);
+  MOZ_DIAGNOSTIC_ASSERT(mActiveWorker);
+  swm->UpdateClientControllers(this);
 
   nsCOMPtr<nsIRunnable> failRunnable = NewRunnableMethod<bool>(
     "dom::workers::ServiceWorkerRegistrationInfo::FinishActivate",
