@@ -157,10 +157,8 @@
 #include "signaling/src/peerconnection/WebrtcGlobalChild.h"
 #endif
 
-#ifdef MOZ_PERMISSIONS
 #include "nsPermission.h"
 #include "nsPermissionManager.h"
-#endif
 
 #include "PermissionMessageUtils.h"
 
@@ -2546,7 +2544,6 @@ ContentChild::RecvUpdateRequestedLocales(nsTArray<nsCString>&& aRequestedLocales
 mozilla::ipc::IPCResult
 ContentChild::RecvAddPermission(const IPC::Permission& permission)
 {
-#if MOZ_PERMISSIONS
   nsCOMPtr<nsIPermissionManager> permissionManagerIface =
     services::GetPermissionManager();
   nsPermissionManager* permissionManager =
@@ -2579,7 +2576,6 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
                                  modificationTime,
                                  nsPermissionManager::eNotify,
                                  nsPermissionManager::eNoDBOperation);
-#endif
 
   return IPC_OK();
 }
