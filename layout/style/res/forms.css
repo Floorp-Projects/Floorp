@@ -422,6 +422,13 @@ optgroup:before {
   border-inline-start-width: 2px ! important;
 }
 
+@supports -moz-bool-pref("dom.select_popup_in_content.enabled") {
+  select::-moz-dropdown-list {
+    -moz-top-layer: top !important;
+    position: absolute !important;
+  }
+}
+
 input:disabled,
 textarea:disabled,
 option:disabled,
