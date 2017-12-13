@@ -17,6 +17,7 @@ from mach.decorators import (
     CommandArgument,
     CommandProvider,
     Command,
+    SettingsProvider,
 )
 
 from mozbuild.base import MachCommandBase, MachCommandConditions as conditions
@@ -49,6 +50,23 @@ name or suite alias.
 The following test suites and aliases are supported: %s
 ''' % ', '.join(sorted(TEST_SUITES))
 TEST_HELP = TEST_HELP.strip()
+
+
+@SettingsProvider
+class TestConfig(object):
+
+    @classmethod
+    def config_settings(cls):
+        from mozlog.commandline import log_formatters
+        from mozlog.structuredlog import log_levels
+        format_desc = "The default format to use when running tests with `mach test`."
+        format_choices = log_formatters.keys()
+        level_desc = "The default log level to use when running tests with `mach test`."
+        level_choices = [l.lower() for l in log_levels]
+        return [
+            ('test.format', 'string', format_desc, 'tbpl', {'choices': format_choices}),
+            ('test.level', 'string', level_desc, 'info', {'choices': level_choices}),
+        ]
 
 
 @CommandProvider
@@ -84,7 +102,11 @@ class Test(MachCommandBase):
         you specify a directory with xpcshell and browser chrome mochitests,
         both harnesses will be invoked.
         """
+        from mozlog.commandline import log_formatters
+        from mozlog.handlers import StreamHandler, LogLevelFilter
+        from mozlog.structuredlog import StructuredLogger
         from moztest.resolve import TestResolver, TEST_FLAVORS, TEST_SUITES
+
         resolver = self._spawn(TestResolver)
         run_suites, run_tests = resolver.resolve_metadata(what)
 
@@ -92,14 +114,24 @@ class Test(MachCommandBase):
             print(UNKNOWN_TEST)
             return 1
 
+        # Create shared logger
+        formatter = log_formatters[self._mach_context.settings['test']['format']][0]()
+        formatter.summary_on_shutdown = True
+
+        level = self._mach_context.settings['test']['level']
+        log = StructuredLogger('mach-test')
+        log.add_handler(StreamHandler(sys.stdout, LogLevelFilter(formatter, level)))
+
         status = None
         for suite_name in run_suites:
             suite = TEST_SUITES[suite_name]
+            kwargs = suite['kwargs']
+            kwargs['log'] = log
 
             if 'mach_command' in suite:
                 res = self._mach_context.commands.dispatch(
                     suite['mach_command'], self._mach_context,
-                    argv=extra_args, **suite['kwargs'])
+                    argv=extra_args, **kwargs)
                 if res:
                     status = res
 
@@ -121,6 +153,7 @@ class Test(MachCommandBase):
                 continue
 
             kwargs = dict(m['kwargs'])
+            kwargs['log'] = log
             kwargs['subsuite'] = subsuite
 
             res = self._mach_context.commands.dispatch(
@@ -129,6 +162,7 @@ class Test(MachCommandBase):
             if res:
                 status = res
 
+        log.shutdown()
         return status
 
 
@@ -142,9 +176,12 @@ class MachCommands(MachCommandBase):
                      'executed.')
     def run_cppunit_test(self, **params):
         from mozlog import commandline
-        log = commandline.setup_logging("cppunittest",
-                                        {},
-                                        {"tbpl": sys.stdout})
+
+        log = params.get('log')
+        if not log:
+            log = commandline.setup_logging("cppunittest",
+                                            {},
+                                            {"tbpl": sys.stdout})
 
         # See if we have crash symbols
         symbols_path = os.path.join(self.distdir, 'crashreporter-symbols')

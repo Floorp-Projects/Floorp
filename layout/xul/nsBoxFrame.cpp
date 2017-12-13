@@ -1333,10 +1333,10 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 #ifdef DEBUG_LAYOUT
   if (mState & NS_STATE_CURRENTLY_IN_DEBUG) {
-    destination.BorderBackground()->AppendNewToTop(new (aBuilder)
+    destination.BorderBackground()->AppendToTop(new (aBuilder)
       nsDisplayGeneric(aBuilder, this, PaintXULDebugBackground,
                        "XULDebugBackground"));
-    destination.Outlines()->AppendNewToTop(new (aBuilder)
+    destination.Outlines()->AppendToTop(new (aBuilder)
       nsDisplayXULDebug(aBuilder, this));
   }
 #endif
@@ -1369,7 +1369,7 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     DisplayListClipState::AutoSaveRestore ownLayerClipState(aBuilder);
 
     // Wrap the list to make it its own layer
-    aLists.Content()->AppendNewToTop(new (aBuilder)
+    aLists.Content()->AppendToTop(new (aBuilder)
       nsDisplayOwnLayer(aBuilder, this, &masterList, ownLayerASR,
                         nsDisplayOwnLayerFlags::eNone,
                         mozilla::layers::FrameMetrics::NULL_SCROLL_ID,

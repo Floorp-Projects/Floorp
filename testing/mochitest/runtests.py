@@ -172,9 +172,6 @@ class MessageLogger(object):
         # Message buffering
         self.buffered_messages = []
 
-        # Failures reporting, after the end of the tests execution
-        self.errors = []
-
     def validate(self, obj):
         """Tests whether the given object is a valid structured message
         (only does a superficial validation)"""
@@ -245,8 +242,6 @@ class MessageLogger(object):
         # manually dump 'TEST-UNEXPECTED-FAIL'.
         if ('expected' in message or (message['action'] == 'log' and message[
                 'message'].startswith('TEST-UNEXPECTED'))):
-            # Saving errors/failures to be shown at the end of the test run
-            self.errors.append(message)
             self.restore_buffering = self.restore_buffering or self.buffering
             self.buffering = False
             if self.buffered_messages:
@@ -865,10 +860,13 @@ class MochitestDesktop(object):
         self.start_script_kwargs = {}
         self.urlOpts = []
 
-        commandline.log_formatters["tbpl"] = (
-            MochitestFormatter,
-            "Mochitest specific tbpl formatter")
-        self.log = commandline.setup_logging("mochitest", logger_options, {"tbpl": sys.stdout})
+        if logger_options.get('log'):
+            self.log = logger_options['log']
+        else:
+            commandline.log_formatters["tbpl"] = (
+                MochitestFormatter,
+                "Mochitest specific tbpl formatter")
+            self.log = commandline.setup_logging("mochitest", logger_options, {"tbpl": sys.stdout})
 
         self.message_logger = MessageLogger(
                 logger=self.log, buffering=quiet, structured=True)
@@ -1343,7 +1341,7 @@ toolbar#nav-bar {
     def logPreamble(self, tests):
         """Logs a suite_start message and test_start/test_end at the beginning of a run.
         """
-        self.log.suite_start(self.tests_by_manifest)
+        self.log.suite_start(self.tests_by_manifest, name='mochitest-{}'.format(self.flavor))
         for test in tests:
             if 'disabled' in test:
                 self.log.test_start(test['path'])
@@ -2563,7 +2561,7 @@ toolbar#nav-bar {
 
         # code for --run-by-manifest
         manifests = set(t['manifest'] for t in tests)
-        result = 1  # default value, if no tests are run.
+        result = 0
         origPrefs = options.extraPrefs[:]
         for m in sorted(manifests):
             self.log.info("Running manifest: {}".format(m))
@@ -2580,12 +2578,13 @@ toolbar#nav-bar {
             # by the user, since we need to create a new directory for each run. We would face
             # problems if we use the directory provided by the user.
             tests_in_manifest = [t['path'] for t in tests if t['manifest'] == m]
-            result = self.runMochitests(options, tests_in_manifest)
+            res = self.runMochitests(options, tests_in_manifest)
+            result = result or res
 
             # Dump the logging buffer
             self.message_logger.dump_buffered()
 
-            if result == -1:
+            if res == -1:
                 break
 
         e10s_mode = "e10s" if options.e10s else "non-e10s"
@@ -2606,6 +2605,10 @@ toolbar#nav-bar {
             print("3 INFO Todo:    %s" % self.counttodo)
             print("4 INFO Mode:    %s" % e10s_mode)
             print("5 INFO SimpleTest FINISHED")
+
+        if not result and not self.countpass:
+            # either tests failed or no tests run
+            result = 1
 
         return result
 
@@ -3050,17 +3053,7 @@ def run_test_harness(parser, options):
                 logzip.write(logfile)
                 os.remove(logfile)
             logzip.close()
-
-    # don't dump failures if running from automation as treeherder already displays them
-    if build_obj:
-        if runner.message_logger.errors:
-            result = 1
-            runner.message_logger.logger.warning("The following tests failed:")
-            for error in runner.message_logger.errors:
-                runner.message_logger.logger.log_raw(error)
-
     runner.message_logger.finish()
-
     return result
 
 

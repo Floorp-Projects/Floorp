@@ -5203,7 +5203,7 @@ PresShell::AddPrintPreviewBackgroundItem(nsDisplayListBuilder& aBuilder,
                                          nsIFrame*             aFrame,
                                          const nsRect&         aBounds)
 {
-  aList.AppendNewToBottom(new (&aBuilder)
+  aList.AppendToBottom(new (&aBuilder)
     nsDisplaySolidColor(&aBuilder, aFrame, aBounds, NS_RGB(115, 115, 115)));
 }
 
@@ -5287,7 +5287,7 @@ PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
   }
 
   if (!addedScrollingBackgroundColor || forceUnscrolledItem) {
-    aList.AppendNewToBottom(
+    aList.AppendToBottom(
       new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor));
   }
 }

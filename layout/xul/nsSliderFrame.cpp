@@ -326,7 +326,7 @@ nsSliderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (aBuilder->IsForEventDelivery() && isDraggingThumb()) {
     // This is EVIL, we shouldn't be messing with event delivery just to get
     // thumb mouse drag events to arrive at the slider!
-    aLists.Outlines()->AppendNewToTop(new (aBuilder)
+    aLists.Outlines()->AppendToTop(new (aBuilder)
       nsDisplayEventReceiver(aBuilder, this));
     return;
   }
@@ -458,7 +458,7 @@ nsSliderFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 
       // Wrap the list to make it its own layer.
       const ActiveScrolledRoot* ownLayerASR = contASRTracker.GetContainerASR();
-      aLists.Content()->AppendNewToTop(new (aBuilder)
+      aLists.Content()->AppendToTop(new (aBuilder)
         nsDisplayOwnLayer(aBuilder, this, &masterList, ownLayerASR,
                           flags, scrollTargetId,
                           ScrollThumbData{scrollDirection,
