@@ -51,7 +51,7 @@ interface Notification : EventTarget {
   [Pure]
   readonly attribute DOMString? icon;
 
-  [Constant, Func="mozilla::dom::Notification::RequireInteractionEnabled"]
+  [Constant, Func="mozilla::dom::DOMPreferences::NotificationRIEnabled"]
   readonly attribute boolean requireInteraction;
 
   [Constant]
