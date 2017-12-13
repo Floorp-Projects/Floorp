@@ -159,13 +159,4 @@ BaseMediaResource::ModifyLoadFlags(nsLoadFlags aFlags)
   }
 }
 
-void
-BaseMediaResource::DispatchBytesConsumed(int64_t aNumBytes, int64_t aOffset)
-{
-  if (aNumBytes <= 0) {
-    return;
-  }
-  mCallback->NotifyBytesConsumed(aNumBytes, aOffset);
-}
-
 } // namespace mozilla

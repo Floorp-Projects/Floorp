@@ -421,6 +421,8 @@ public:
         file.write(data, getSize());
     }
 
+    ElfSegment *getSegmentByType(unsigned int type);
+
 private:
     friend class ElfSegment;
 
@@ -432,8 +434,6 @@ private:
         std::vector<ElfSegment *>::iterator i = std::find(segments.begin(), segments.end(), segment);
         segments.erase(i, i + 1);
     }
-
-    ElfSegment *getSegmentByType(unsigned int type);
 
     void insertInSegments(std::vector<ElfSegment *> &segs);
 

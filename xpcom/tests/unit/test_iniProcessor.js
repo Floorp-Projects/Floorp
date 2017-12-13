@@ -1,7 +1,3 @@
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var Cr = Components.results;
-
 var testnum = 0;
 var factory;
 
@@ -129,6 +125,8 @@ var testdata = [
     testdata.push( { filename: "data/iniparser16-utf8BOM.ini",
                      reference: testdata[15].reference } );
 
+    // Intentional test for appInfo that can't be preloaded.
+    // eslint-disable-next-line mozilla/use-services
     let os = Cc["@mozilla.org/xre/app-info;1"]
              .getService(Ci.nsIXULRuntime).OS;
     if ("WINNT" === os) {

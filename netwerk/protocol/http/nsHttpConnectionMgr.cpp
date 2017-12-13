@@ -2160,13 +2160,15 @@ nsHttpConnectionMgr::GetSpdyActiveConn(nsConnectionEntry *ent)
 //-----------------------------------------------------------------------------
 
 void
-nsHttpConnectionMgr::OnMsgShutdown(int32_t, ARefBase *param)
+nsHttpConnectionMgr::AbortAndCloseAllConnections(int32_t, ARefBase *)
 {
+    if (!OnSocketThread()) {
+        Unused << PostEvent(&nsHttpConnectionMgr::AbortAndCloseAllConnections);
+        return;
+    }
+
     MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-    LOG(("nsHttpConnectionMgr::OnMsgShutdown\n"));
-
-    gHttpHandler->StopRequestTokenBucket();
-
+    LOG(("nsHttpConnectionMgr::AbortAndCloseAllConnections\n"));
     for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
         RefPtr<nsConnectionEntry> ent = iter.Data();
 
@@ -2224,6 +2226,23 @@ nsHttpConnectionMgr::OnMsgShutdown(int32_t, ARefBase *param)
         iter.Remove();
     }
 
+    mActiveTransactions[false].Clear();
+    mActiveTransactions[true].Clear();
+}
+
+void
+nsHttpConnectionMgr::OnMsgShutdown(int32_t, ARefBase *param)
+{
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+    LOG(("nsHttpConnectionMgr::OnMsgShutdown\n"));
+
+    gHttpHandler->StopRequestTokenBucket();
+    AbortAndCloseAllConnections(0, nullptr);
+
+    // If all idle connections are removed we can stop pruning dead
+    // connections.
+    ConditionallyStopPruneDeadConnectionsTimer();
+
     if (mTimeoutTick) {
         mTimeoutTick->Cancel();
         mTimeoutTick = nullptr;
@@ -2238,8 +2257,6 @@ nsHttpConnectionMgr::OnMsgShutdown(int32_t, ARefBase *param)
       mTrafficTimer = nullptr;
     }
     DestroyThrottleTicker();
-    mActiveTransactions[false].Clear();
-    mActiveTransactions[true].Clear();
 
     mCoalescingHash.Clear();
 

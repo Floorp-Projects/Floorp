@@ -420,6 +420,18 @@ void Elf::normalize()
     ehdr->e_shoff = shdr_section->getOffset();
     ehdr->e_entry = eh_entry.getValue();
     ehdr->e_shstrndx = eh_shstrndx->getIndex();
+
+    // Check sections consistency
+    unsigned int minOffset = 0;
+    for (ElfSection *section = ehdr; section != nullptr; section = section->getNext()) {
+        unsigned int offset = section->getOffset();
+        if (offset < minOffset) {
+           throw std::runtime_error("Sections overlap");
+        }
+        if (section->getType() != SHT_NOBITS) {
+           minOffset = offset + section->getSize();
+        }
+    }
 }
 
 void Elf::write(std::ofstream &file)

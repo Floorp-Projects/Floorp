@@ -417,8 +417,7 @@ TextEditor::TypedText(const nsAString& aString, ETypingAction aAction)
 }
 
 already_AddRefed<Element>
-TextEditor::CreateBR(nsINode* aNode,
-                     int32_t aOffset,
+TextEditor::CreateBR(const EditorRawDOMPoint& aPointToInsert,
                      EDirection aSelect /* = eNone */)
 {
   RefPtr<Selection> selection = GetSelection();
@@ -426,7 +425,7 @@ TextEditor::CreateBR(nsINode* aNode,
     return nullptr;
   }
   // We assume everything is fine if newBRElement is not null.
-  return CreateBRImpl(*selection, EditorRawDOMPoint(aNode, aOffset), aSelect);
+  return CreateBRImpl(*selection, aPointToInsert, aSelect);
 }
 
 already_AddRefed<Element>

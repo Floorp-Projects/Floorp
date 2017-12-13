@@ -11,6 +11,7 @@ import android.os.HandlerThread;
 import android.util.Log;
 
 import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -28,6 +29,7 @@ import com.google.android.exoplayer2.trackselection.MappingTrackSelector.MappedT
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.upstream.DataSource;
+import com.google.android.exoplayer2.upstream.DefaultAllocator;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
@@ -560,8 +562,19 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         mRenderers[0] = mVRenderer;
         mRenderers[1] = mARenderer;
 
+        // Use default values for constructing DefaultLoadControl except maxBufferMs.
+        // See Bug 1424168.
+        int maxBufferMs = Math.max(DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
+                                   DefaultLoadControl.DEFAULT_MAX_BUFFER_MS / 2);
+        DefaultLoadControl dlc =
+            new DefaultLoadControl(
+                new DefaultAllocator(true, C.DEFAULT_BUFFER_SEGMENT_SIZE),
+                DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
+                maxBufferMs, /*this value can eliminate the memory usage immensely by experiment*/
+                DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
+                DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS);
         // Create ExoPlayer instance with specific components.
-        mPlayer = ExoPlayerFactory.newInstance(mRenderers, mTrackSelector);
+        mPlayer = ExoPlayerFactory.newInstance(mRenderers, mTrackSelector, dlc);
         mPlayer.addListener(this);
 
         Uri uri = Uri.parse(url);

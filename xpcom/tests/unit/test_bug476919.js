@@ -1,6 +1,3 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-
 /* global __LOCATION__ */
 
 function run_test() {

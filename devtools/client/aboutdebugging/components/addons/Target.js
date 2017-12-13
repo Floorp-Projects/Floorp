@@ -9,8 +9,14 @@
 const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { debugLocalAddon, debugRemoteAddon, isTemporaryID, parseFileUri, uninstallAddon } =
-  require("../../modules/addon");
+const {
+  debugLocalAddon,
+  debugRemoteAddon,
+  isLegacyTemporaryExtension,
+  isTemporaryID,
+  parseFileUri,
+  uninstallAddon
+} = require("../../modules/addon");
 const Services = require("Services");
 
 loader.lazyImporter(this, "BrowserToolboxProcess",
@@ -24,6 +30,7 @@ const Strings = Services.strings.createBundle(
 
 const TEMP_ID_URL = "https://developer.mozilla.org/Add-ons" +
                     "/WebExtensions/WebExtensions_and_the_Add-on_ID";
+const LEGACY_WARNING_URL = "https://wiki.mozilla.org/Add-ons/Future_of_Bootstrap";
 
 function filePathForTarget(target) {
   // Only show file system paths, and only for temporarily installed add-ons.
@@ -90,7 +97,7 @@ function internalIDForTarget(target) {
 
 function showMessages(target) {
   const messages = [
-    ...warningMessages(target.warnings),
+    ...warningMessages(target),
     ...infoMessages(target),
   ];
   if (messages.length > 0) {
@@ -112,15 +119,37 @@ function infoMessages(target) {
         Strings.GetStringFromName("temporaryID.learnMore")
       )));
   }
+
   return messages;
 }
 
-function warningMessages(warnings = []) {
-  return warnings.map((warning) => {
+function warningMessages(target) {
+  let messages = [];
+
+  if (isLegacyTemporaryExtension(target.form)) {
+    messages.push(dom.li(
+      {
+        className: "addon-target-warning-message addon-target-message"
+      },
+      Strings.GetStringFromName("legacyExtensionWarning"),
+      " ",
+      dom.a(
+        {
+          href: LEGACY_WARNING_URL,
+          target: "_blank"
+        },
+        Strings.GetStringFromName("legacyExtensionWarning.learnMore"))
+    ));
+  }
+
+  let warnings = target.warnings || [];
+  messages = messages.concat(warnings.map((warning) => {
     return dom.li(
       { className: "addon-target-warning-message addon-target-message" },
       warning);
-  });
+  }));
+
+  return messages;
 }
 
 class AddonTarget extends Component {

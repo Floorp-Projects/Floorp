@@ -50,7 +50,6 @@ class ChannelMediaDecoder
     void NotifyDataEnded(nsresult aStatus) override;
     void NotifyPrincipalChanged() override;
     void NotifySuspendedStatusChanged(bool aSuspendedByCache) override;
-    void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset) override;
 
     static void TimerCallback(nsITimer* aTimer, void* aClosure);
 
@@ -121,8 +120,6 @@ private:
   // by the MediaResource read functions.
   void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset);
 
-  void SeekingChanged();
-
   bool CanPlayThroughImpl() override final;
 
   bool IsLiveStream() override final;
@@ -133,27 +130,25 @@ private:
     bool mReliable; // True if mRate is a reliable estimate.
   };
   // The actual playback rate computation.
-  PlaybackRateInfo ComputePlaybackRate();
+  static PlaybackRateInfo ComputePlaybackRate(
+    const MediaChannelStatistics& aStats,
+    BaseMediaResource* aResource,
+    double aDuration);
 
   // Something has changed that could affect the computed playback rate,
   // so recompute it.
-  void UpdatePlaybackRate(const PlaybackRateInfo& aInfo);
+  static void UpdatePlaybackRate(const PlaybackRateInfo& aInfo,
+                                 BaseMediaResource* aResource);
 
   // Return statistics. This is used for progress events and other things.
   // This can be called from any thread. It's only a snapshot of the
   // current state, since other threads might be changing the state
   // at any time.
-  MediaStatistics GetStatistics(const PlaybackRateInfo& aInfo);
+  static MediaStatistics GetStatistics(const PlaybackRateInfo& aInfo,
+                                       BaseMediaResource* aRes,
+                                       int64_t aPlaybackPosition);
 
   bool ShouldThrottleDownload(const MediaStatistics& aStats);
-
-  WatchManager<ChannelMediaDecoder> mWatchManager;
-
-  // True when seeking or otherwise moving the play position around in
-  // such a manner that progress event data is inaccurate. This is set
-  // during seek and duration operations to prevent the progress indicator
-  // from jumping around. Read/Write on the main thread only.
-  bool mIgnoreProgressData = false;
 
   // Data needed to estimate playback data rate. The timeline used for
   // this estimate is "decode time" (where the "current time" is the
@@ -169,6 +164,8 @@ private:
   // during decoder seek operations, but it's updated at the end when we
   // start playing back again.
   int64_t mPlaybackPosition = 0;
+
+  bool mCanPlayThrough = false;
 };
 
 } // namespace mozilla

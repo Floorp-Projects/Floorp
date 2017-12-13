@@ -165,7 +165,7 @@ impl BlobImageRenderer for Moz2dImageRenderer {
             let buf_size = (descriptor.width
                 * descriptor.height
                 * descriptor.format.bytes_per_pixel()) as usize;
-            let mut output = vec![255u8; buf_size];
+            let mut output = vec![0u8; buf_size];
 
             let result = unsafe {
                 if wr_moz2d_render_cb(

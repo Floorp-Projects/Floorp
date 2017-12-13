@@ -5,12 +5,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var Cr = Components.results;
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var Cu = Components.utils;
-var CC = Components.Constructor;
-
 const LocalFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 
 Cu.import("resource://gre/modules/Services.jsm");
