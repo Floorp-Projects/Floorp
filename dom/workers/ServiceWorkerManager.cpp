@@ -68,7 +68,6 @@
 
 #include "RuntimeService.h"
 #include "ServiceWorker.h"
-#include "ServiceWorkerClient.h"
 #include "ServiceWorkerContainer.h"
 #include "ServiceWorkerInfo.h"
 #include "ServiceWorkerJobQueue.h"
@@ -2302,8 +2301,7 @@ ServiceWorkerManager::MaybeRemoveRegistrationInfo(const nsACString& aScopeKey)
 }
 
 void
-ServiceWorkerManager::MaybeStartControlling(nsIDocument* aDoc,
-                                            const nsAString& aDocumentId)
+ServiceWorkerManager::MaybeStartControlling(nsIDocument* aDoc)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aDoc);
@@ -2311,7 +2309,7 @@ ServiceWorkerManager::MaybeStartControlling(nsIDocument* aDoc,
     GetServiceWorkerRegistrationInfo(aDoc);
   if (registration) {
     MOZ_ASSERT(!mControlledDocuments.Contains(aDoc));
-    StartControllingADocument(registration, aDoc, aDocumentId);
+    StartControllingADocument(registration, aDoc);
   }
 }
 
@@ -2353,8 +2351,7 @@ ServiceWorkerManager::MaybeCheckNavigationUpdate(nsIDocument* aDoc)
 
 RefPtr<GenericPromise>
 ServiceWorkerManager::StartControllingADocument(ServiceWorkerRegistrationInfo* aRegistration,
-                                                nsIDocument* aDoc,
-                                                const nsAString& aDocumentId)
+                                                nsIDocument* aDoc)
 {
   MOZ_ASSERT(aRegistration);
   MOZ_ASSERT(aDoc);
@@ -2368,9 +2365,6 @@ ServiceWorkerManager::StartControllingADocument(ServiceWorkerRegistrationInfo* a
 
   aRegistration->StartControllingADocument();
   mControlledDocuments.Put(aDoc, aRegistration);
-  if (!aDocumentId.IsEmpty()) {
-    aDoc->SetId(aDocumentId);
-  }
 
   // Mark the document's ClientSource as controlled using the ClientHandle
   // interface.  While we could get at the ClientSource directly from the
@@ -2564,20 +2558,17 @@ class ContinueDispatchFetchEventRunnable : public Runnable
   RefPtr<ServiceWorkerPrivate> mServiceWorkerPrivate;
   nsCOMPtr<nsIInterceptedChannel> mChannel;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
-  nsString mDocumentId;
   bool mIsReload;
 public:
   ContinueDispatchFetchEventRunnable(
     ServiceWorkerPrivate* aServiceWorkerPrivate,
     nsIInterceptedChannel* aChannel,
     nsILoadGroup* aLoadGroup,
-    const nsAString& aDocumentId,
     bool aIsReload)
     : Runnable("dom::workers::ContinueDispatchFetchEventRunnable")
     , mServiceWorkerPrivate(aServiceWorkerPrivate)
     , mChannel(aChannel)
     , mLoadGroup(aLoadGroup)
-    , mDocumentId(aDocumentId)
     , mIsReload(aIsReload)
   {
     MOZ_ASSERT(aServiceWorkerPrivate);
@@ -2618,8 +2609,19 @@ public:
       return NS_OK;
     }
 
-    rv = mServiceWorkerPrivate->SendFetchEvent(mChannel, mLoadGroup,
-                                               mDocumentId, mIsReload);
+    nsString clientId;
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+    if (loadInfo) {
+      Maybe<ClientInfo> clientInfo = loadInfo->GetClientInfo();
+      if (clientInfo.isSome()) {
+        char buf[NSID_LENGTH];
+        clientInfo.ref().Id().ToProvidedString(buf);
+        CopyUTF8toUTF16(nsDependentCString(buf), clientId);
+      }
+    }
+
+    rv = mServiceWorkerPrivate->SendFetchEvent(mChannel, mLoadGroup, clientId,
+                                               mIsReload);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       HandleError();
     }
@@ -2633,7 +2635,6 @@ public:
 void
 ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttributes,
                                          nsIDocument* aDoc,
-                                         const nsAString& aDocumentIdForTopLevelNavigation,
                                          nsIInterceptedChannel* aChannel,
                                          bool aIsReload,
                                          bool aIsSubresourceLoad,
@@ -2644,7 +2645,6 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
 
   RefPtr<ServiceWorkerInfo> serviceWorker;
   nsCOMPtr<nsILoadGroup> loadGroup;
-  nsAutoString documentId;
 
   if (aIsSubresourceLoad) {
     MOZ_ASSERT(aDoc);
@@ -2656,10 +2656,6 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
     }
 
     loadGroup = aDoc->GetDocumentLoadGroup();
-    nsresult rv = aDoc->GetOrCreateId(documentId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
   } else {
     nsCOMPtr<nsIChannel> internalChannel;
     aRv = aChannel->GetChannel(getter_AddRefs(internalChannel));
@@ -2668,9 +2664,6 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
     }
 
     internalChannel->GetLoadGroup(getter_AddRefs(loadGroup));
-
-    // TODO: Use aDocumentIdForTopLevelNavigation for potentialClientId, pending
-    // the spec change.
 
     nsCOMPtr<nsIURI> uri;
     aRv = aChannel->GetSecureUpgradedChannelURI(getter_AddRefs(uri));
@@ -2751,8 +2744,7 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
 
   nsCOMPtr<nsIRunnable> continueRunnable =
     new ContinueDispatchFetchEventRunnable(serviceWorker->WorkerPrivate(),
-                                           aChannel, loadGroup,
-                                           documentId, aIsReload);
+                                           aChannel, loadGroup, aIsReload);
 
   // When this service worker was registered, we also sent down the permissions
   // for the runnable. They should have arrived by now, but we still need to
@@ -2846,22 +2838,42 @@ ServiceWorkerManager::GetDocumentController(nsPIDOMWindowInner* aWindow,
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
-  if (!doc) {
+  Maybe<ServiceWorkerDescriptor> controller = aWindow->GetController();
+  if (controller.isNothing()) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  RefPtr<ServiceWorkerRegistrationInfo> registration;
-  nsresult rv = GetDocumentRegistration(doc, getter_AddRefs(registration));
+  nsCOMPtr<nsIDocument> doc = aWindow->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+  if (NS_WARN_IF(!principal)) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  nsAutoCString scopeKey;
+  nsresult rv = PrincipalToScopeKey(principal, scopeKey);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 
-  MOZ_ASSERT(registration->GetActive());
-  RefPtr<ServiceWorker> serviceWorker =
-    registration->GetActive()->GetOrCreateInstance(aWindow);
+  RefPtr<ServiceWorkerRegistrationInfo> registration =
+    GetRegistration(scopeKey, controller.ref().Scope());
+  if (NS_WARN_IF(!registration)) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
 
+  RefPtr<ServiceWorkerInfo> active = registration->GetActive();
+  if (NS_WARN_IF(!active) ||
+      NS_WARN_IF(active->Descriptor().Id() != controller.ref().Id())) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
+
+  RefPtr<ServiceWorker> serviceWorker = active->GetOrCreateInstance(aWindow);
   serviceWorker.forget(aServiceWorker);
+
   return NS_OK;
 }
 
@@ -3166,208 +3178,19 @@ ServiceWorkerManager::UpdateInternal(nsIPrincipal* aPrincipal,
   queue->ScheduleJob(job);
 }
 
-namespace {
-
-static void
-FireControllerChangeOnDocument(nsIDocument* aDocument)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(aDocument);
-
-  nsCOMPtr<nsPIDOMWindowInner> w = aDocument->GetInnerWindow();
-  if (!w) {
-    NS_WARNING("Failed to dispatch controllerchange event");
-    return;
-  }
-
-  auto* window = nsGlobalWindowInner::Cast(w.get());
-  dom::Navigator* navigator = window->Navigator();
-  if (!navigator) {
-    return;
-  }
-
-  RefPtr<ServiceWorkerContainer> container = navigator->ServiceWorker();
-  ErrorResult result;
-  container->ControllerChanged(result);
-  if (result.Failed()) {
-    NS_WARNING("Failed to dispatch controllerchange event");
-  }
-}
-
-} // anonymous namespace
-
-UniquePtr<ServiceWorkerClientInfo>
-ServiceWorkerManager::GetClient(nsIPrincipal* aPrincipal,
-                                const nsAString& aClientId,
-                                ErrorResult& aRv)
-{
-  AssertIsOnMainThread();
-  UniquePtr<ServiceWorkerClientInfo> clientInfo;
-  nsCOMPtr<nsISupportsInterfacePointer> ifptr =
-    do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
-  if (NS_WARN_IF(!ifptr)) {
-    return clientInfo;
-  }
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (NS_WARN_IF(!obs)) {
-    return clientInfo;
-  }
-
-  nsresult rv = obs->NotifyObservers(ifptr, "service-worker-get-client",
-                                     PromiseFlatString(aClientId).get());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return clientInfo;
-  }
-
-  nsCOMPtr<nsISupports> ptr;
-  ifptr->GetData(getter_AddRefs(ptr));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(ptr);
-  if (NS_WARN_IF(!doc || !doc->GetInnerWindow())) {
-    return clientInfo;
-  }
-
-  bool equals = false;
-  aPrincipal->Equals(doc->NodePrincipal(), &equals);
-  if (!equals) {
-    return clientInfo;
-  }
-
-  if (!IsFromAuthenticatedOrigin(doc)) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-    return clientInfo;
-  }
-
-  // Don't let service worker see 3rd party iframes that are denied storage
-  // access.  We don't want these to communicate.
-  auto storageAccess =
-    nsContentUtils::StorageAllowedForWindow(doc->GetInnerWindow());
-  if (storageAccess != nsContentUtils::StorageAccess::eAllow) {
-    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                    NS_LITERAL_CSTRING("Service Workers"), doc,
-                                    nsContentUtils::eDOM_PROPERTIES,
-                                    "ServiceWorkerGetClientStorageError");
-    return clientInfo;
-  }
-
-  clientInfo.reset(new ServiceWorkerClientInfo(doc));
-  return clientInfo;
-}
-
-void
-ServiceWorkerManager::GetAllClients(nsIPrincipal* aPrincipal,
-                                    const nsCString& aScope,
-                                    uint64_t aServiceWorkerID,
-                                    bool aIncludeUncontrolled,
-                                    nsTArray<ServiceWorkerClientInfo>& aDocuments)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(aPrincipal);
-
-  RefPtr<ServiceWorkerRegistrationInfo> registration =
-    GetRegistration(aPrincipal, aScope);
-
-  if (!registration) {
-    // The registration was removed, leave the array empty.
-    return;
-  }
-
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (NS_WARN_IF(!obs)) {
-    return;
-  }
-
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  nsresult rv = obs->EnumerateObservers("service-worker-get-client",
-                                        getter_AddRefs(enumerator));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  // Get a list of Client documents out of the observer service
-  AutoTArray<nsCOMPtr<nsIDocument>, 32> docList;
-  bool loop = true;
-  while (NS_SUCCEEDED(enumerator->HasMoreElements(&loop)) && loop) {
-    nsCOMPtr<nsISupports> ptr;
-    rv = enumerator->GetNext(getter_AddRefs(ptr));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      continue;
-    }
-
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(ptr);
-    if (!doc || !doc->GetWindow() || !doc->GetInnerWindow()) {
-      continue;
-    }
-
-    bool equals = false;
-    Unused << aPrincipal->Equals(doc->NodePrincipal(), &equals);
-    if (!equals) {
-      continue;
-    }
-
-    // Treat http windows with devtools opened as secure if the correct devtools
-    // setting is enabled.
-    if (!doc->GetWindow()->GetServiceWorkersTestingEnabled() &&
-        !Preferences::GetBool("dom.serviceWorkers.testing.enabled") &&
-        !IsFromAuthenticatedOrigin(doc)) {
-      continue;
-    }
-
-    // Don't let service worker find 3rd party iframes that are denied storage
-    // access.  We don't want these to communicate.
-    auto storageAccess =
-      nsContentUtils::StorageAllowedForWindow(doc->GetInnerWindow());
-    if (storageAccess != nsContentUtils::StorageAccess::eAllow) {
-      nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
-                                      NS_LITERAL_CSTRING("Service Workers"),
-                                      doc, nsContentUtils::eDOM_PROPERTIES,
-                                      "ServiceWorkerGetClientStorageError");
-      continue;
-    }
-
-    // If we are only returning controlled Clients then skip any documents
-    // that are for different registrations.  We also skip service workers
-    // that don't match the ID of our calling service worker.  We should
-    // only return Clients controlled by that precise service worker.
-    if (!aIncludeUncontrolled) {
-      ServiceWorkerRegistrationInfo* reg = mControlledDocuments.GetWeak(doc);
-      if (!reg || reg->mScope != aScope || !reg->GetActive() ||
-          reg->GetActive()->ID() != aServiceWorkerID) {
-        continue;
-      }
-    }
-
-    if (!aIncludeUncontrolled && !mControlledDocuments.Contains(doc)) {
-      continue;
-    }
-
-    docList.AppendElement(doc.forget());
-  }
-
-  // The observer service gives us the list in reverse creation order.
-  // We need to maintain creation order, so reverse the list before
-  // processing.
-  docList.Reverse();
-
-  // Finally convert to the list of ServiceWorkerClientInfo objects.
-  uint32_t ordinal = 0;
-  for (uint32_t i = 0; i < docList.Length(); ++i) {
-    aDocuments.AppendElement(ServiceWorkerClientInfo(docList[i], ordinal));
-    ordinal += 1;
-  }
-
-  aDocuments.Sort();
-}
-
-void
+already_AddRefed<GenericPromise>
 ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDocument,
                                        ServiceWorkerRegistrationInfo* aWorkerRegistration)
 {
   MOZ_ASSERT(aWorkerRegistration);
   MOZ_ASSERT(aWorkerRegistration->GetActive());
 
+  RefPtr<GenericPromise> ref;
+
   // Same origin check
   if (!aWorkerRegistration->mPrincipal->Equals(aDocument->NodePrincipal())) {
-    return;
+    ref = GenericPromise::CreateAndReject(NS_ERROR_DOM_SECURITY_ERR, __func__);
+    return ref.forget();
   }
 
   // The registration that should be controlling the client
@@ -3379,56 +3202,41 @@ ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDocument,
   GetDocumentRegistration(aDocument, getter_AddRefs(controllingRegistration));
 
   if (aWorkerRegistration != matchingRegistration ||
-        aWorkerRegistration == controllingRegistration) {
-    return;
+      aWorkerRegistration == controllingRegistration) {
+    ref = GenericPromise::CreateAndResolve(true, __func__);
+    return ref.forget();
   }
 
   if (controllingRegistration) {
     StopControllingADocument(controllingRegistration);
   }
 
-  StartControllingADocument(aWorkerRegistration, aDocument, NS_LITERAL_STRING(""));
-  FireControllerChangeOnDocument(aDocument);
+  ref = StartControllingADocument(aWorkerRegistration, aDocument);
+  return ref.forget();
 }
 
-nsresult
-ServiceWorkerManager::ClaimClients(nsIPrincipal* aPrincipal,
-                                   const nsCString& aScope, uint64_t aId)
+already_AddRefed<GenericPromise>
+ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDoc,
+                                       const ServiceWorkerDescriptor& aServiceWorker)
 {
+  RefPtr<GenericPromise> ref;
+
+  nsCOMPtr<nsIPrincipal> principal =
+    PrincipalInfoToPrincipal(aServiceWorker.PrincipalInfo());
+  if (!principal) {
+    ref = GenericPromise::CreateAndResolve(false, __func__);
+    return ref.forget();
+  }
+
   RefPtr<ServiceWorkerRegistrationInfo> registration =
-    GetRegistration(aPrincipal, aScope);
-
-  if (!registration || !registration->GetActive() ||
-      !(registration->GetActive()->ID() == aId)) {
-    // The worker is not active.
-    return NS_ERROR_DOM_INVALID_STATE_ERR;
+    GetRegistration(principal, aServiceWorker.Scope());
+  if (!registration) {
+    ref = GenericPromise::CreateAndResolve(false, __func__);
+    return ref.forget();
   }
 
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  if (NS_WARN_IF(!obs)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  nsresult rv = obs->EnumerateObservers("service-worker-get-client",
-                                        getter_AddRefs(enumerator));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool loop = true;
-  while (NS_SUCCEEDED(enumerator->HasMoreElements(&loop)) && loop) {
-    nsCOMPtr<nsISupports> ptr;
-    rv = enumerator->GetNext(getter_AddRefs(ptr));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      continue;
-    }
-
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(ptr);
-    MaybeClaimClient(doc, registration);
-  }
-
-  return NS_OK;
+  ref = MaybeClaimClient(aDoc, registration);
+  return ref.forget();
 }
 
 void
@@ -3457,11 +3265,14 @@ ServiceWorkerManager::SetSkipWaitingFlag(nsIPrincipal* aPrincipal,
 }
 
 void
-ServiceWorkerManager::FireControllerChange(ServiceWorkerRegistrationInfo* aRegistration)
+ServiceWorkerManager::UpdateClientControllers(ServiceWorkerRegistrationInfo* aRegistration)
 {
   AssertIsOnMainThread();
 
-  AutoTArray<nsCOMPtr<nsIDocument>, 16> documents;
+  RefPtr<ServiceWorkerInfo> activeWorker = aRegistration->GetActive();
+  MOZ_DIAGNOSTIC_ASSERT(activeWorker);
+
+  AutoTArray<nsCOMPtr<nsPIDOMWindowInner>, 16> innerWindows;
   for (auto iter = mControlledDocuments.Iter(); !iter.Done(); iter.Next()) {
     if (iter.UserData() != aRegistration) {
       continue;
@@ -3472,13 +3283,24 @@ ServiceWorkerManager::FireControllerChange(ServiceWorkerRegistrationInfo* aRegis
       continue;
     }
 
-    documents.AppendElement(doc);
+    nsPIDOMWindowInner* innerWindow = doc->GetInnerWindow();
+    if (NS_WARN_IF(!innerWindow)) {
+      continue;
+    }
+
+    innerWindows.AppendElement(innerWindow);
   }
 
   // Fire event after iterating mControlledDocuments is done to prevent
   // modification by reentering from the event handlers during iteration.
-  for (auto& doc : documents) {
-    FireControllerChangeOnDocument(doc);
+  for (auto& innerWindow : innerWindows) {
+    Maybe<ClientInfo> clientInfo = innerWindow->GetClientInfo();
+    if (clientInfo.isSome()) {
+      RefPtr<ClientHandle> clientHandle =
+        ClientManager::CreateHandle(clientInfo.ref(),
+                                    innerWindow->EventTargetFor(TaskCategory::Other));
+      clientHandle->Control(activeWorker->Descriptor());
+    }
   }
 }
 

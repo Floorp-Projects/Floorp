@@ -925,6 +925,9 @@ template <bool HasOwn>
 bool
 HasNativeDataProperty(JSContext* cx, JSObject* obj, Value* vp);
 
+bool
+HasNativeElement(JSContext* cx, NativeObject* obj, int32_t index, Value* vp);
+
 template <bool NeedsTypeBarrier>
 bool
 SetNativeDataProperty(JSContext* cx, JSObject* obj, PropertyName* name, Value* val);

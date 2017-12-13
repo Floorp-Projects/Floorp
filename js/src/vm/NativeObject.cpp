@@ -125,17 +125,18 @@ ObjectElements::FreezeElements(JSContext* cx, HandleNativeObject obj)
 }
 
 #ifdef DEBUG
+static mozilla::Atomic<bool, mozilla::Relaxed> gShapeConsistencyChecksEnabled(false);
+
+/* static */ void
+js::NativeObject::enableShapeConsistencyChecks()
+{
+    gShapeConsistencyChecksEnabled = true;
+}
+
 void
 js::NativeObject::checkShapeConsistency()
 {
-    static int throttle = -1;
-    if (throttle < 0) {
-        if (const char* var = getenv("JS_CHECK_SHAPE_THROTTLE"))
-            throttle = atoi(var);
-        if (throttle < 0)
-            throttle = 0;
-    }
-    if (throttle == 0)
+    if (!gShapeConsistencyChecksEnabled)
         return;
 
     MOZ_ASSERT(isNative());
@@ -153,18 +154,20 @@ js::NativeObject::checkShapeConsistency()
                 MOZ_ASSERT(fslot < slotSpan());
             }
 
-            for (int n = throttle; --n >= 0 && shape->parent; shape = shape->parent) {
+            while (shape->parent) {
                 MOZ_ASSERT_IF(lastProperty() != shape, !shape->hasTable());
 
                 ShapeTable::Entry& entry = table->search<MaybeAdding::NotAdding>(shape->propid(),
                                                                                  nogc);
                 MOZ_ASSERT(entry.shape() == shape);
+                shape = shape->parent;
             }
         }
 
         shape = lastProperty();
-        for (int n = throttle; --n >= 0 && shape; shape = shape->parent) {
-            MOZ_ASSERT_IF(shape->slot() != SHAPE_INVALID_SLOT, shape->slot() < slotSpan());
+        while (shape) {
+            MOZ_ASSERT_IF(!shape->isEmptyShape() && shape->isDataProperty(),
+                          shape->slot() < slotSpan());
             if (!prev) {
                 MOZ_ASSERT(lastProperty() == shape);
                 MOZ_ASSERT(shape->listp == &shape_);
@@ -172,9 +175,10 @@ js::NativeObject::checkShapeConsistency()
                 MOZ_ASSERT(shape->listp == &prev->parent);
             }
             prev = shape;
+            shape = shape->parent;
         }
     } else {
-        for (int n = throttle; --n >= 0 && shape->parent; shape = shape->parent) {
+        while (shape->parent) {
             if (ShapeTable* table = shape->maybeTable(nogc)) {
                 MOZ_ASSERT(shape->parent);
                 for (Shape::Range<NoGC> r(shape); !r.empty(); r.popFront()) {
@@ -184,10 +188,11 @@ js::NativeObject::checkShapeConsistency()
                 }
             }
             if (prev) {
-                MOZ_ASSERT(prev->maybeSlot() >= shape->maybeSlot());
+                MOZ_ASSERT_IF(shape->isDataProperty(), prev->maybeSlot() >= shape->maybeSlot());
                 shape->kids.checkConsistency(prev);
             }
             prev = shape;
+            shape = shape->parent;
         }
     }
 }
