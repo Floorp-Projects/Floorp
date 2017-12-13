@@ -683,6 +683,21 @@ TypeScript::SetArgument(JSContext* cx, JSScript* script, unsigned arg, const js:
     SetArgument(cx, script, arg, TypeSet::GetValueType(value));
 }
 
+inline
+AutoKeepTypeScripts::AutoKeepTypeScripts(JSContext* cx)
+  : zone_(cx->zone()->types),
+    prev_(zone_.keepTypeScripts)
+{
+    zone_.keepTypeScripts = true;
+}
+
+inline
+AutoKeepTypeScripts::~AutoKeepTypeScripts()
+{
+    MOZ_ASSERT(zone_.keepTypeScripts);
+    zone_.keepTypeScripts = prev_;
+}
+
 /////////////////////////////////////////////////////////////////////
 // TypeHashSet
 /////////////////////////////////////////////////////////////////////
@@ -1202,7 +1217,7 @@ JSScript::types()
 }
 
 inline bool
-JSScript::ensureHasTypes(JSContext* cx)
+JSScript::ensureHasTypes(JSContext* cx, js::AutoKeepTypeScripts&)
 {
     return types() || makeTypes(cx);
 }
