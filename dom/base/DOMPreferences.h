@@ -13,6 +13,9 @@ namespace dom {
 class DOMPreferences final
 {
 public:
+  // This must be called on the main-thread.
+  static void Initialize();
+
   // Returns true if the browser.dom.window.dump.enabled pref is set.
   static bool DumpEnabled();
 

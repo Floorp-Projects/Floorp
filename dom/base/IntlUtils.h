@@ -10,6 +10,10 @@
 #include "nsWrapperCache.h"
 #include "xpcprivate.h"
 
+#ifdef XP_WIN
+#undef GetLocaleInfo
+#endif
+
 class nsPIDOMWindowInner;
 
 namespace mozilla {
