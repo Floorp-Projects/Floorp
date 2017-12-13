@@ -45,6 +45,7 @@ PREF(NotificationRIEnabled, "dom.webnotifications.requireinteraction.enabled")
 PREF(ServiceWorkersEnabled, "dom.serviceWorkers.enabled")
 PREF(ServiceWorkersTestingEnabled, "dom.serviceWorkers.testing.enabled")
 PREF(StorageManagerEnabled, "dom.storageManager.enabled")
+PREF(PromiseRejectionEventsEnabled, "dom.promise_rejection_events.enabled")
 
 #undef PREF
 
@@ -61,6 +62,7 @@ PREF_WEBIDL(NotificationEnabledInServiceWorkers)
 PREF_WEBIDL(NotificationRIEnabled)
 PREF_WEBIDL(ServiceWorkersEnabled)
 PREF_WEBIDL(StorageManagerEnabled)
+PREF_WEBIDL(PromiseRejectionEventsEnabled)
 
 #undef PREF_WEBIDL
 
