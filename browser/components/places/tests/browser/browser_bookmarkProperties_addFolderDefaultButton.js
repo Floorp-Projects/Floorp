@@ -13,11 +13,10 @@ add_task(async function() {
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: "http://example.com/",
   });
-  let newBookmarkId = await PlacesUtils.promiseItemId(newBookmark.guid);
 
   await withSidebarTree("bookmarks", async function(tree) {
     // Select the new bookmark in the sidebar.
-    tree.selectItems([newBookmarkId]);
+    tree.selectItems([newBookmark.guid]);
     ok(tree.controller.isCommandEnabled("placesCmd_new:folder"),
        "'placesCmd_new:folder' on current selected node is enabled");
 

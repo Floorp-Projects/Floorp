@@ -51,12 +51,10 @@ async function move_bookmarks_to(sourceFolders, folderGuid) {
 
   let folderId = await PlacesUtils.promiseItemId(folderGuid);
 
-  let itemIds = [];
   let promiseMoveNotifications = [];
   for (let bm of bookmarks) {
     let guid = bm.guid;
 
-    itemIds.push(await PlacesUtils.promiseItemId(guid));
     promiseMoveNotifications.push(PlacesTestUtils.waitForNotification(
       "onItemMoved",
       (itemId, parentId, oldIndex, newParentId, newIndex, itemType, itemGuid,
@@ -65,7 +63,7 @@ async function move_bookmarks_to(sourceFolders, folderGuid) {
     ));
   }
 
-  library.ContentTree.view.selectItems(itemIds);
+  library.ContentTree.view.selectItems(bookmarks.map(bm => bm.guid));
 
   await withBookmarksDialog(
     false,

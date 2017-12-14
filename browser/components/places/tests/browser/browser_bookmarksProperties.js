@@ -58,16 +58,12 @@ gTests.push({
   itemType: null,
   window: null,
   _bookmark: null,
-  _itemId: null,
   _cleanShutdown: false,
 
   async setup() {
     // Add a bookmark in unsorted bookmarks folder.
     this._bookmark = await add_bookmark(TEST_URL);
     Assert.ok(this._bookmark, "Correctly added a bookmark");
-
-    this._itemId = await PlacesUtils.promiseItemId(this._bookmark.guid);
-    Assert.ok(this._itemId > 0, "Got an item id for the bookmark");
 
     // Add a tag to this bookmark.
     PlacesUtils.tagging.tagURI(PlacesUtils._uri(TEST_URL),
@@ -77,10 +73,10 @@ gTests.push({
   },
 
   selectNode(tree) {
-    tree.selectItems([PlacesUtils.unfiledBookmarksFolderId]);
+    tree.selectItems([PlacesUtils.bookmarks.unfiledGuid]);
     PlacesUtils.asContainer(tree.selectedNode).containerOpen = true;
-    tree.selectItems([this._itemId]);
-    Assert.equal(tree.selectedNode.itemId, this._itemId, "Bookmark has been selected");
+    tree.selectItems([this._bookmark.guid]);
+    Assert.equal(tree.selectedNode.bookmarkGuid, this._bookmark.guid, "Bookmark has been selected");
   },
 
   async run() {
@@ -169,16 +165,12 @@ gTests.push({
   itemType: null,
   window: null,
   _bookmark: null,
-  _itemId: null,
   _cleanShutdown: false,
 
   async setup() {
     // Add a bookmark in unsorted bookmarks folder.
     this._bookmark = await add_bookmark(TEST_URL);
     Assert.ok(this._bookmark, "Correctly added a bookmark");
-
-    this._itemId = await PlacesUtils.promiseItemId(this._bookmark.guid);
-    Assert.ok(this._itemId > 0, "Got an item id for the bookmark");
 
     // Add a tag to this bookmark.
     PlacesUtils.tagging.tagURI(PlacesUtils._uri(TEST_URL),
@@ -188,10 +180,10 @@ gTests.push({
   },
 
   selectNode(tree) {
-    tree.selectItems([PlacesUtils.unfiledBookmarksFolderId]);
+    tree.selectItems([PlacesUtils.bookmarks.unfiledGuid]);
     PlacesUtils.asContainer(tree.selectedNode).containerOpen = true;
-    tree.selectItems([this._itemId]);
-    Assert.equal(tree.selectedNode.itemId, this._itemId, "Bookmark has been selected");
+    tree.selectItems([this._bookmark.guid]);
+    Assert.equal(tree.selectedNode.bookmarkGuid, this._bookmark.guid, "Bookmark has been selected");
   },
 
   async run() {

@@ -55,7 +55,7 @@ async function run_drag_test(startBookmarkIndex, newParentGuid) {
   let dragBookmark = bookmarks[startBookmarkIndex];
 
   await withSidebarTree("bookmarks", async (tree) => {
-    tree.selectItems([PlacesUtils.unfiledBookmarksFolderId]);
+    tree.selectItems([PlacesUtils.bookmarks.unfiledGuid]);
     PlacesUtils.asContainer(tree.selectedNode).containerOpen = true;
 
     // Simulating a drag-drop with a tree view turns out to be really difficult
