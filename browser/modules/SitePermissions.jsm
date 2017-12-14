@@ -180,7 +180,7 @@ this.SitePermissions = {
         }
 
         // Hide canvas permission when privacy.resistFingerprinting is false.
-        if ((permission.type == "canvas/extractData") &&
+        if ((permission.type == "canvas") &&
             !Services.prefs.getBoolPref("privacy.resistFingerprinting")) {
           continue;
         }
@@ -275,7 +275,7 @@ this.SitePermissions = {
 
     // Hide canvas permission when privacy.resistFingerprinting is false.
     if (!Services.prefs.getBoolPref("privacy.resistFingerprinting")) {
-      permissions = permissions.filter(permission => permission !== "canvas/extractData");
+      permissions = permissions.filter(permission => permission !== "canvas");
     }
 
     return permissions;
@@ -646,8 +646,7 @@ var gPermissionObject = {
     states: [ SitePermissions.ALLOW, SitePermissions.BLOCK ],
   },
 
-  "canvas/extractData": {
-    labelID: "canvas"
+  "canvas": {
   },
 };
 

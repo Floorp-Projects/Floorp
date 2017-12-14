@@ -36,7 +36,7 @@
 #include "jsapi.h"
 
 #define TOPIC_CANVAS_PERMISSIONS_PROMPT "canvas-permissions-prompt"
-#define PERMISSION_CANVAS_EXTRACT_DATA "canvas/extractData"
+#define PERMISSION_CANVAS_EXTRACT_DATA "canvas"
 
 using namespace mozilla::gfx;
 
