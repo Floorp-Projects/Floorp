@@ -147,6 +147,10 @@ Release Promotion
 ``next_version``
    Specify the next version for version bump tasks.
 
+``desktop_release_type``
+   The type of desktop release being promoted. One of "beta", "devedition", "esr", "rc",
+   or "release".
+
 Comm Push Information
 ---------------------
 

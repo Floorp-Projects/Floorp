@@ -29,8 +29,8 @@
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsAttrName.h"
-#include "nsILineBreaker.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/intl/LineBreaker.h"
 #include "nsParserConstants.h"
 #include "mozilla/Encoding.h"
 
@@ -1600,7 +1600,8 @@ nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
         int32_t wrapPosition = 0;
 
         if (mAllowLineBreaking) {
-          nsILineBreaker *lineBreaker = nsContentUtils::LineBreaker();
+          mozilla::intl::LineBreaker* lineBreaker =
+            nsContentUtils::LineBreaker();
 
           wrapPosition = lineBreaker->Prev(aSequenceStart,
                                            (aEnd - aSequenceStart),

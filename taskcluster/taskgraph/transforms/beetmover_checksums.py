@@ -31,6 +31,9 @@ beetmover_checksums_description_schema = Schema({
     Optional('label'): basestring,
     Optional('treeherder'): task_description_schema['treeherder'],
     Optional('locale'): basestring,
+    Optional('shipping-phase'): task_description_schema['shipping-phase'],
+    Optional('shipping-product'): task_description_schema['shipping-product'],
+    Optional('notifications'): task_description_schema['notifications'],
 })
 
 
@@ -104,6 +107,15 @@ def make_beetmover_checksums_description(config, jobs):
             'treeherder': treeherder,
             'extra': extra,
         }
+
+        if 'shipping-phase' in job:
+            task['shipping-phase'] = job['shipping-phase']
+
+        if 'shipping-product' in job:
+            task['shipping-product'] = job['shipping-product']
+
+        if 'notifications' in job:
+            task['notifications'] = job['notifications']
 
         yield task
 

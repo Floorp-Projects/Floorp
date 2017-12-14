@@ -120,6 +120,96 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       prefix: this.ID_CLASS_PREFIX
     });
 
+    // This clipPath and its children make sure the element quad outline
+    // is only shown when the shape extends past the element quads.
+    let clipSvg = createSVGNode(this.win, {
+      nodeType: "clipPath",
+      parent: mainSvg,
+      attributes: {
+        "id": "clip-path",
+        "class": "clip-path",
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
+    createSVGNode(this.win, {
+      nodeType: "polygon",
+      parent: clipSvg,
+      attributes: {
+        "id": "clip-polygon",
+        "class": "clip-polygon",
+        "hidden": "true"
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
+    createSVGNode(this.win, {
+      nodeType: "ellipse",
+      parent: clipSvg,
+      attributes: {
+        "id": "clip-ellipse",
+        "class": "clip-ellipse",
+        "hidden": true
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
+    createSVGNode(this.win, {
+      nodeType: "rect",
+      parent: clipSvg,
+      attributes: {
+        "id": "clip-rect",
+        "class": "clip-rect",
+        "hidden": true
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
+    // Rectangle that displays the element quads. Only shown for shape-outside.
+    // Only the parts of the rectangle's outline that overlap with the shape is shown.
+    createSVGNode(this.win, {
+      nodeType: "rect",
+      parent: mainSvg,
+      attributes: {
+        "id": "quad",
+        "class": "quad",
+        "hidden": "true",
+        "clip-path": "url(#shapes-clip-path)",
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 100
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
+    // clipPath that corresponds to the element's quads. Only applied for shape-outside.
+    // This ensures only the parts of the shape that are within the element's quads are
+    // outlined by a solid line.
+    let shapeClipSvg = createSVGNode(this.win, {
+      nodeType: "clipPath",
+      parent: mainSvg,
+      attributes: {
+        "id": "quad-clip-path",
+        "class": "quad-clip-path",
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
+    createSVGNode(this.win, {
+      nodeType: "rect",
+      parent: shapeClipSvg,
+      attributes: {
+        "id": "quad-clip",
+        "class": "quad-clip",
+        "x": -1,
+        "y": -1,
+        "width": 102,
+        "height": 102
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
     let mainGroup = createSVGNode(this.win, {
       nodeType: "g",
       parent: mainSvg,
@@ -161,6 +251,44 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
         "id": "rect",
         "class": "rect",
         "hidden": true
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
+    // Dashed versions of each shape. Only shown for the parts of the shape
+    // that extends past the element's quads.
+    createSVGNode(this.win, {
+      nodeType: "polygon",
+      parent: mainGroup,
+      attributes: {
+        "id": "dashed-polygon",
+        "class": "polygon",
+        "hidden": "true",
+        "stroke-dasharray": "5, 5",
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
+    createSVGNode(this.win, {
+      nodeType: "ellipse",
+      parent: mainGroup,
+      attributes: {
+        "id": "dashed-ellipse",
+        "class": "ellipse",
+        "hidden": "true",
+        "stroke-dasharray": "5, 5",
+      },
+      prefix: this.ID_CLASS_PREFIX
+    });
+
+    createSVGNode(this.win, {
+      nodeType: "rect",
+      parent: mainGroup,
+      attributes: {
+        "id": "dashed-rect",
+        "class": "rect",
+        "hidden": "true",
+        "stroke-dasharray": "5, 5",
       },
       prefix: this.ID_CLASS_PREFIX
     });
@@ -319,14 +447,15 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     let nodeDocument = this.currentNode.ownerDocument;
     if (target !== nodeDocument && target.ownerDocument !== nodeDocument) {
       let [xOffset, yOffset] = getFrameOffsets(target.ownerGlobal, this.currentNode);
+      let zoom = getCurrentZoom(this.win);
       // xOffset/yOffset are relative to the viewport, so first find the top/left
       // edges of the viewport relative to the page.
       let viewportLeft = pageX - event.clientX;
       let viewportTop = pageY - event.clientY;
       // Also adjust for scrolling in the iframe.
       let { scrollTop, scrollLeft } = nodeDocument.documentElement;
-      pageX -= viewportLeft + xOffset - scrollLeft;
-      pageY -= viewportTop + yOffset - scrollTop;
+      pageX -= viewportLeft + xOffset / zoom - scrollLeft;
+      pageY -= viewportTop + yOffset / zoom - scrollTop;
     }
 
     switch (type) {
@@ -2012,6 +2141,13 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     this.getElement("markers").setAttribute("d", "");
     this.getElement("markers-outline").setAttribute("d", "");
     this.getElement("rotate-line").setAttribute("d", "");
+    this.getElement("quad").setAttribute("hidden", true);
+    this.getElement("clip-ellipse").setAttribute("hidden", true);
+    this.getElement("clip-polygon").setAttribute("hidden", true);
+    this.getElement("clip-rect").setAttribute("hidden", true);
+    this.getElement("dashed-polygon").setAttribute("hidden", true);
+    this.getElement("dashed-ellipse").setAttribute("hidden", true);
+    this.getElement("dashed-rect").setAttribute("hidden", true);
   }
 
   /**
@@ -2044,6 +2180,22 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       this._updateEllipseShape(width, height, zoom);
     } else if (this.shapeType === "inset") {
       this._updateInsetShape(width, height, zoom);
+    }
+
+    if (this.property === "shape-outside") {
+      // For shape-outside, the element's quads are displayed for the parts that overlap
+      // with the shape, and the parts of the shape that extend past the element's quads
+      // are shown with a dashed line.
+      let quadRect = this.getElement("quad");
+      quadRect.removeAttribute("hidden");
+
+      this.getElement("polygon").setAttribute("clip-path", "url(#shapes-quad-clip-path)");
+      this.getElement("ellipse").setAttribute("clip-path", "url(#shapes-quad-clip-path)");
+      this.getElement("rect").setAttribute("clip-path", "url(#shapes-quad-clip-path)");
+    } else {
+      this.getElement("polygon").removeAttribute("clip-path");
+      this.getElement("ellipse").removeAttribute("clip-path");
+      this.getElement("rect").removeAttribute("clip-path");
     }
 
     let { width: winWidth, height: winHeight } = this._winDimensions;
@@ -2084,6 +2236,14 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       polygonEl.setAttribute("points", points);
       polygonEl.removeAttribute("hidden");
 
+      let clipPolygon = this.getElement("clip-polygon");
+      clipPolygon.setAttribute("points", points);
+      clipPolygon.removeAttribute("hidden");
+
+      let dashedPolygon = this.getElement("dashed-polygon");
+      dashedPolygon.setAttribute("points", points);
+      dashedPolygon.removeAttribute("hidden");
+
       markerPoints.push(rotatePoint);
       let rotateLine = `M ${center.join(" ")} L ${rotatePoint.join(" ")}`;
       this.getElement("rotate-line").setAttribute("d", rotateLine);
@@ -2095,6 +2255,20 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
       ellipseEl.setAttribute("cx", cx);
       ellipseEl.setAttribute("cy", cy);
       ellipseEl.removeAttribute("hidden");
+
+      let clipEllipse = this.getElement("clip-ellipse");
+      clipEllipse.setAttribute("rx", rx);
+      clipEllipse.setAttribute("ry", ry);
+      clipEllipse.setAttribute("cx", cx);
+      clipEllipse.setAttribute("cy", cy);
+      clipEllipse.removeAttribute("hidden");
+
+      let dashedEllipse = this.getElement("dashed-ellipse");
+      dashedEllipse.setAttribute("rx", rx);
+      dashedEllipse.setAttribute("ry", ry);
+      dashedEllipse.setAttribute("cx", cx);
+      dashedEllipse.setAttribute("cy", cy);
+      dashedEllipse.removeAttribute("hidden");
     }
     this._drawMarkers(markerPoints, width, height, zoom);
   }
@@ -2113,6 +2287,13 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     polygonEl.setAttribute("points", points);
     polygonEl.removeAttribute("hidden");
 
+    let clipPolygon = this.getElement("clip-polygon");
+    clipPolygon.setAttribute("points", points);
+    clipPolygon.removeAttribute("hidden");
+
+    let dashedPolygon = this.getElement("dashed-polygon");
+    dashedPolygon.setAttribute("points", points);
+    dashedPolygon.removeAttribute("hidden");
     this._drawMarkers(this.coordinates, width, height, zoom);
   }
 
@@ -2130,6 +2311,20 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     ellipseEl.setAttribute("cx", cx);
     ellipseEl.setAttribute("cy", cy);
     ellipseEl.removeAttribute("hidden");
+
+    let clipEllipse = this.getElement("clip-ellipse");
+    clipEllipse.setAttribute("rx", rx);
+    clipEllipse.setAttribute("ry", ry);
+    clipEllipse.setAttribute("cx", cx);
+    clipEllipse.setAttribute("cy", cy);
+    clipEllipse.removeAttribute("hidden");
+
+    let dashedEllipse = this.getElement("dashed-ellipse");
+    dashedEllipse.setAttribute("rx", rx);
+    dashedEllipse.setAttribute("ry", ry);
+    dashedEllipse.setAttribute("cx", cx);
+    dashedEllipse.setAttribute("cy", cy);
+    dashedEllipse.removeAttribute("hidden");
 
     this._drawMarkers([[cx, cy], [cx + rx, cy]], width, height, zoom);
   }
@@ -2149,6 +2344,19 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     ellipseEl.setAttribute("cy", cy);
     ellipseEl.removeAttribute("hidden");
 
+    let clipEllipse = this.getElement("clip-ellipse");
+    clipEllipse.setAttribute("rx", rx);
+    clipEllipse.setAttribute("ry", ry);
+    clipEllipse.setAttribute("cx", cx);
+    clipEllipse.setAttribute("cy", cy);
+    clipEllipse.removeAttribute("hidden");
+
+    let dashedEllipse = this.getElement("dashed-ellipse");
+    dashedEllipse.setAttribute("rx", rx);
+    dashedEllipse.setAttribute("ry", ry);
+    dashedEllipse.setAttribute("cx", cx);
+    dashedEllipse.setAttribute("cy", cy);
+    dashedEllipse.removeAttribute("hidden");
     let markerCoords = [ [cx, cy], [cx + rx, cy], [cx, cy + ry] ];
     this._drawMarkers(markerCoords, width, height, zoom);
   }
@@ -2167,6 +2375,20 @@ class ShapesHighlighter extends AutoRefreshHighlighter {
     rectEl.setAttribute("width", 100 - left - right);
     rectEl.setAttribute("height", 100 - top - bottom);
     rectEl.removeAttribute("hidden");
+
+    let clipRect = this.getElement("clip-rect");
+    clipRect.setAttribute("x", left);
+    clipRect.setAttribute("y", top);
+    clipRect.setAttribute("width", 100 - left - right);
+    clipRect.setAttribute("height", 100 - top - bottom);
+    clipRect.removeAttribute("hidden");
+
+    let dashedRect = this.getElement("dashed-rect");
+    dashedRect.setAttribute("x", left);
+    dashedRect.setAttribute("y", top);
+    dashedRect.setAttribute("width", 100 - left - right);
+    dashedRect.setAttribute("height", 100 - top - bottom);
+    dashedRect.removeAttribute("hidden");
 
     let centerX = (left + (100 - right)) / 2;
     let centerY = (top + (100 - bottom)) / 2;

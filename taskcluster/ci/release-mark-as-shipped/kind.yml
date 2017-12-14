@@ -11,55 +11,87 @@ transforms:
 
 kind-dependencies:
    - push-apk
+   - release-balrog-publishing
    - release-bouncer-aliases
    - release-version-bump
 
 job-defaults:
+   description: mark release as shipped in Ship-It
+   worker-type: buildbot-bridge/buildbot-bridge
+   run-on-projects: []
    shipping-phase: ship
+   run:
+      using: buildbot
+      release-promotion: true
+   index:
+      type: release
+   notifications:
+      completed:
+         subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect"]
+               mozilla-release: ["log_collect"]
+               default: []
+
+      failed:
+         subject: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+      exception:
+         subject: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+   routes:
+      - index.releases.v1.{branch}.latest.{product}.latest.mark_as_shipped
+      - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.mark_as_shipped
 
 jobs:
    fennec:
       name: release-fennec_mark_as_shipped
-      description: mark release as shipped in Ship-It
-      worker-type: buildbot-bridge/buildbot-bridge
-      run-on-projects: []
       shipping-product: fennec
       run:
-         using: buildbot
          product: fennec
          buildername: release-{branch}-fennec_mark_as_shipped
-         release-promotion: true
-      routes:
-         - index.releases.v1.{branch}.latest.fennec.latest.mark_as_shipped
-         - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.mark_as_shipped
       index:
-         type: release
          product: fennec
-         job-name: android-api-16-opt
-      notifications:
-         completed:
-            by-project:
-               maple:
-                  - "release-drivers-staging"
-               try:
-               #  - "{task[tags][createdForUser]}"
-               default:
-                  - "release-drivers"
-         failed:
-            by-project:
-               maple:
-                  - "release-drivers-staging"
-               try:
-               #  - "{task[tags][createdForUser]}"
-               default:
-                  - "release-drivers"
-         exception:
-            by-project:
-               maple:
-                  - "release-drivers-staging"
-               try:
-               #  - "{task[tags][createdForUser]}"
-               default:
-                  - "release-drivers"
-      extra:
-         product: fennec
+   firefox:
+      name: release-firefox_mark_as_shipped
+      shipping-product: firefox
+      run:
+         product: firefox
+         buildername: release-{branch}-firefox_mark_as_shipped
+      index:
+         product: firefox
+   devedition:
+      name: release-devedition_mark_as_shipped
+      shipping-product: devedition
+      run:
+         product: devedition
+         buildername: release-{branch}-devedition_mark_as_shipped
+      index:
+         product: devedition

@@ -79,9 +79,9 @@ cat signing_manifest.json
 # TODO: Don't filter out non-beta releases
 # TODO: Parametrize channel depending on beta vs release
 # TODO: Make this part an independent task
-if [[ $VERSION =~ ^[0-9]+\.0b[0-9]+$ ]]; then
+if [ "$PUSH_TO_CHANNEL" != "" ]; then
   echo "Beta version detected. Uploading to Ubuntu Store (no channel)..."
-  bash "$SCRIPT_DIRECTORY/fetch_macaroons.sh" 'http://taskcluster/secrets/v1/secret/project/releng/snapcraft/firefox/edge'
+  bash "$SCRIPT_DIRECTORY/fetch_macaroons.sh" 'http://taskcluster/secrets/v1/secret/project/releng/snapcraft/firefox/$PUSH_TO_CHANNEL'
   snapcraft push "$TARGET_FULL_PATH"
 else
   echo "Non-beta version detected. Nothing else to do."

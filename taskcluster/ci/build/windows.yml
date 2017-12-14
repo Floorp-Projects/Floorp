@@ -206,6 +206,8 @@ win32-nightly/opt:
         type: nightly
     attributes:
         nightly: true
+    shipping-phase: build
+    shipping-product: firefox
     treeherder:
         platform: windows2012-32/opt
         symbol: tc(N)
@@ -240,6 +242,8 @@ win64-nightly/opt:
         type: nightly
     attributes:
         nightly: true
+    shipping-phase: build
+    shipping-product: firefox
     treeherder:
         platform: windows2012-64/opt
         symbol: tc(N)
@@ -567,6 +571,8 @@ win32-devedition-nightly/opt:
         type: nightly
     attributes:
         nightly: true
+    shipping-phase: build
+    shipping-product: devedition
     treeherder:
         platform: windows2012-32-devedition/opt
         symbol: tc(N)
@@ -602,6 +608,8 @@ win64-devedition-nightly/opt:
         type: nightly
     attributes:
         nightly: true
+    shipping-phase: build
+    shipping-product: devedition
     treeherder:
         platform: windows2012-64-devedition/opt
         symbol: tc(N)

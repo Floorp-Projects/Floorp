@@ -1,11 +1,11 @@
-// |reftest| skip -- class-fields is not supported
+// |reftest| skip -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-fields/computed-names.case
-// - src/class-fields/default/cls-expr-new-sc-line-method.template
+// - src/class-fields/productions/cls-expr-new-sc-line-method.template
 /*---
 description: Computed property names (field definitions followed by a method in a new line with a semicolon)
 esid: prod-FieldDefinition
-features: [computed-property-names, class-fields]
+features: [computed-property-names, class, class-fields-public]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
@@ -27,6 +27,7 @@ var x = "b";
 var C = class {
   static ["a"] = 39; [x] = 42; [10] = "meep"; ["not initialized"];
   m() { return 42; }
+
 }
 
 var c = new C();

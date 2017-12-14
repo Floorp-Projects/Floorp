@@ -1737,7 +1737,7 @@ class ASTSerializer
 
     void setParser(Parser<FullParseHandler, char16_t>* p) {
         parser = p;
-        builder.setTokenStream(&p->tokenStream);
+        builder.setTokenStream(&p->anyChars);
     }
 
     bool program(ParseNode* pn, MutableHandleValue dst);
@@ -1914,7 +1914,7 @@ ASTSerializer::blockStatement(ParseNode* pn, MutableHandleValue dst)
 bool
 ASTSerializer::program(ParseNode* pn, MutableHandleValue dst)
 {
-    MOZ_ASSERT(parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin) == lineno);
+    MOZ_ASSERT(parser->anyChars.srcCoords.lineNum(pn->pn_pos.begin) == lineno);
 
     NodeVector stmts(cx);
     return statements(pn, stmts) &&
@@ -3491,7 +3491,7 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
         if (!module)
             return false;
 
-        ModuleBuilder builder(cx, module, parser.tokenStream);
+        ModuleBuilder builder(cx, module, parser.anyChars);
         if (!builder.init())
             return false;
 
