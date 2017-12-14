@@ -2876,6 +2876,15 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
   MOZ_ASSERT(!mMediaCache, "Has been initialized.");
   MOZ_ASSERT(aOriginal->mMediaCache, "Don't clone an uninitialized stream.");
 
+  // Use the same MediaCache as our clone.
+  mMediaCache = aOriginal->mMediaCache;
+  // This needs to be done before OpenStream() to avoid data race.
+  mClientSuspended = true;
+  // Cloned streams are initially suspended, since there is no channel open
+  // initially for a clone.
+  mCacheSuspended = true;
+  mChannelEnded = true;
+
   AutoLock lock(aOriginal->mMediaCache->Monitor());
 
   if (aOriginal->mDidNotifyDataEnded &&
@@ -2884,12 +2893,6 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
     return NS_ERROR_FAILURE;
   }
 
-  // This needs to be done before OpenStream() to avoid data race.
-  mClientSuspended = true;
-
-  // Use the same MediaCache as our clone.
-  mMediaCache = aOriginal->mMediaCache;
-
   mResourceID = aOriginal->mResourceID;
 
   // Grab cache blocks from aOriginal as readahead blocks for our stream
@@ -2897,11 +2900,6 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
   mIsTransportSeekable = aOriginal->mIsTransportSeekable;
   mDownloadStatistics = aOriginal->mDownloadStatistics;
   mDownloadStatistics.Stop();
-
-  // Cloned streams are initially suspended, since there is no channel open
-  // initially for a clone.
-  mCacheSuspended = true;
-  mChannelEnded = true;
 
   if (aOriginal->mDidNotifyDataEnded) {
     mNotifyDataEndedStatus = aOriginal->mNotifyDataEndedStatus;

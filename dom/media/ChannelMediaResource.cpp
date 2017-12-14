@@ -30,7 +30,7 @@ ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
                                            bool aIsPrivateBrowsing)
   : BaseMediaResource(aCallback, aChannel, aURI)
   , mCacheStream(this, aIsPrivateBrowsing)
-  , mSuspendAgent(mCacheStream)
+  , mSuspendAgent(mCacheStream, !aChannel /*aSuspended*/)
 {
 }
 
@@ -585,10 +585,6 @@ ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
     resource->Close();
     return nullptr;
   }
-  // mSuspendAgent.Suspend() accesses mCacheStream which is not ready
-  // until InitAsClone() is done.
-  resource->mSuspendAgent.Suspend();
-
   return resource.forget();
 }
 
