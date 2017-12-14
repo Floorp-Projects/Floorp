@@ -228,8 +228,7 @@ HashCompleter.prototype = {
       // Using the V4 backoff algorithm for both V2 and V4. See bug 1273398.
       this._backoffs[aGethashUrl] = new jslib.RequestBackoffV4(
         10 /* keep track of max requests */,
-        0 /* don't throttle on successful requests per time period */,
-        gUrlUtil.getProvider(aTableName) /* used by testcase */);
+        0 /* don't throttle on successful requests per time period */);
     }
 
     if (!this._nextGethashTimeMs[aGethashUrl]) {

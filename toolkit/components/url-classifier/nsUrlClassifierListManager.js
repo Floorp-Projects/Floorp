@@ -101,8 +101,7 @@ PROT_ListManager.prototype.registerTable = function(tableName,
     // Using the V4 backoff algorithm for both V2 and V4. See bug 1273398.
     this.requestBackoffs_[updateUrl] = new RequestBackoffV4(
                                             4 /* num requests */,
-                               60 * 60 * 1000 /* request time, 60 min */,
-                                 providerName /* used by testcase */);
+                               60 * 60 * 1000 /* request time, 60 min */);
   }
   this.needsUpdate_[updateUrl][tableName] = false;
 
