@@ -81,9 +81,7 @@ var gTest = {
 
       buffer.getChannelData(1)[i] = buffer.getChannelData(0)[i];
 
-      // TODO: We need to scale by a factor of two to make the results work
-      //       out here. This seems suspicious, see Bug 1266737.
-      buffer.getChannelData(2)[i] = 2.0 *
+      buffer.getChannelData(2)[i] =
         (real[1] * Math.cos(2 * Math.PI * realFundamental * i /
                             context.sampleRate) +
          real[realMax] * Math.cos(2 * Math.PI * realMax * realFundamental * i /
