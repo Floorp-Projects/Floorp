@@ -784,16 +784,7 @@ function canRunInSafeMode(aAddon) {
 function isDisabledLegacy(addon) {
   return (!AddonSettings.ALLOW_LEGACY_EXTENSIONS &&
           LEGACY_TYPES.has(addon.type) &&
-
-          // Legacy add-ons are allowed in the system location.
           !addon._installLocation.isSystem &&
-
-          // Legacy extensions may be installed temporarily in
-          // non-release builds.
-          !(AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS &&
-            addon._installLocation.name == KEY_APP_TEMPORARY) &&
-
-          // Properly signed legacy extensions are allowed.
           addon.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED);
 }
 
