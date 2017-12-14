@@ -72,3 +72,11 @@ def test_xhtml_namespace(session, using, value):
     response = find_element(session, from_element.id, using, value)
     value = assert_success(response)
     assert_same_element(session, value, expected)
+
+
+def test_parent_htmldocument(session):
+    session.url = inline("")
+    from_element = session.execute_script("return document.documentElement")
+
+    response = find_element(session, from_element.id, "xpath", "..")
+    assert_success(response)
