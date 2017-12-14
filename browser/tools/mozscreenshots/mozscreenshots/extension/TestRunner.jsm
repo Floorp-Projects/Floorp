@@ -205,9 +205,10 @@ this.TestRunner = {
     windowType = windowType || "navigator:browser";
     let browserWindow = Services.wm.getMostRecentWindow(windowType);
     // Scale for high-density displays
-    const scale = browserWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIDocShell).QueryInterface(Ci.nsIBaseWindow)
-                        .devicePixelsPerDesktopPixel;
+    const scale = Cc["@mozilla.org/gfx/screenmanager;1"]
+                    .getService(Ci.nsIScreenManager)
+                    .screenForRect(browserWindow.screenX, browserWindow.screenY, 1, 1)
+                    .defaultCSSScaleFactor;
 
     const windowLeft = browserWindow.screenX * scale;
     const windowTop = browserWindow.screenY * scale;
