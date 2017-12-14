@@ -267,7 +267,7 @@ nsRange::IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
                 static_cast<int32_t>(middleMinus1->EndOffset())) < 0) {
             result = -1;
           } else {
-            return false;
+            break;
           }
         }
 
