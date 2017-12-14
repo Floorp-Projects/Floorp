@@ -329,7 +329,7 @@
   -moz-appearance: -moz-window-button-close;
 }
 
-@media not all and (-moz-windows-classic) {
+@media (-moz-windows-classic: 0) {
   #titlebar-min {
     margin-inline-end: 2px;
   }

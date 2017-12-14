@@ -786,7 +786,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
       ReflowOutput desiredSize(aReflowInput);
       nsReflowStatus  status;
       ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowInput, 0, 0, 0, status);
-      kidFrame->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
+      kidFrame->DidReflow(aPresContext, nullptr);
 
       continue;
     }
@@ -1151,7 +1151,7 @@ nsTableRowFrame::ReflowCellFrame(nsPresContext*           aPresContext,
                                      aCellFrame->
                                        HasAnyStateBits(NS_FRAME_FIRST_REFLOW));
 
-  aCellFrame->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
+  aCellFrame->DidReflow(aPresContext, nullptr);
 
   return desiredSize.BSize(wm);
 }

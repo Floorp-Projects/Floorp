@@ -91,7 +91,7 @@
 
 /* The fullscreen button doesnt show on Yosemite(10.10) or above so dont give it a
    border there */
-@media not all and (-moz-mac-yosemite-theme) {
+@media (-moz-mac-yosemite-theme: 0) {
   .titlebar-placeholder[type="fullscreen-button"] {
     margin-right: 4px;
   }

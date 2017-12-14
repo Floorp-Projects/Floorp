@@ -833,25 +833,18 @@ nsPluginFrame::GetWindowOriginInPixels(bool aWindowless)
 }
 
 void
-nsPluginFrame::DidReflow(nsPresContext*            aPresContext,
-                         const ReflowInput*  aReflowInput,
-                         nsDidReflowStatus         aStatus)
+nsPluginFrame::DidReflow(nsPresContext*     aPresContext,
+                         const ReflowInput* aReflowInput)
 {
   // Do this check before calling the superclass, as that clears
   // NS_FRAME_FIRST_REFLOW
-  if (aStatus == nsDidReflowStatus::FINISHED &&
-      (GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+  if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
     nsCOMPtr<nsIObjectLoadingContent> objContent(do_QueryInterface(mContent));
     NS_ASSERTION(objContent, "Why not an object loading content?");
     objContent->HasNewFrame(this);
   }
 
-  nsFrame::DidReflow(aPresContext, aReflowInput, aStatus);
-
-  // The view is created hidden; once we have reflowed it and it has been
-  // positioned then we show it.
-  if (aStatus != nsDidReflowStatus::FINISHED)
-    return;
+  nsFrame::DidReflow(aPresContext, aReflowInput);
 
   if (HasView()) {
     nsView* view = GetView();
@@ -1314,9 +1307,7 @@ nsPluginFrame::PrintPlugin(gfxContext& aRenderingContext,
 
   // XXX Nav 4.x always sent a SetWindow call after print. Should we do the same?
   // XXX Calling DidReflow here makes no sense!!!
-  nsDidReflowStatus status = nsDidReflowStatus::FINISHED; // should we use a special status?
-  frame->DidReflow(presContext,
-                   nullptr, status);  // DidReflow will take care of it
+  frame->DidReflow(presContext, nullptr);  // DidReflow will take care of it
 }
 
 nsRect

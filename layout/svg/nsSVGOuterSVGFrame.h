@@ -63,8 +63,7 @@ public:
                       nsReflowStatus&          aStatus) override;
 
   virtual void DidReflow(nsPresContext*   aPresContext,
-                         const ReflowInput*  aReflowInput,
-                         nsDidReflowStatus aStatus) override;
+                         const ReflowInput*  aReflowInput) override;
 
   virtual void UnionChildOverflow(nsOverflowAreas& aOverflowAreas) override;
 
