@@ -32,6 +32,7 @@ PARAMETERS = {
     'base_repository': 'https://hg.mozilla.org/mozilla-unified',
     'build_date': lambda: int(time.time()),
     'build_number': 1,
+    'desktop_release_type': '',
     'do_not_optimize': [],
     'existing_tasks': {},
     'filters': ['check_servo', 'target_tasks_method'],

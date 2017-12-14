@@ -241,7 +241,7 @@ def add_s3_uploader_task(taskgraph, label_to_taskid):
             taskgraph, label_to_taskid = amend_taskgraph(
                 taskgraph, label_to_taskid, [added])
             update_test_tasks(added.task_id, task.task_id, taskgraph)
-            logger.info('Added s3-uploader task')
+            logger.info('Added s3-uploader task for %s' % task.task_id)
     return taskgraph, label_to_taskid
 
 

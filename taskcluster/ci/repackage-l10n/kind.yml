@@ -20,3 +20,8 @@ only-for-build-platforms:
    - macosx64-nightly/opt
    - win32-nightly/opt
    - win64-nightly/opt
+   - linux-devedition-nightly/opt
+   - linux64-devedition-nightly/opt
+   - macosx64-devedition-nightly/opt
+   - win32-devedition-nightly/opt
+   - win64-devedition-nightly/opt

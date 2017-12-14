@@ -10,6 +10,7 @@ info: >
 
   The production ClassAtomNoDash :: `\` evaluates as follows:
     1. Return the CharSet containing the single character `\`.
+features: [generators]
 ---*/
 
 function* invalidControls() {

@@ -21,6 +21,11 @@ only-for-build-platforms:
    - macosx64-nightly/opt
    - win32-nightly/opt
    - win64-nightly/opt
+   - linux64-devedition-nightly/opt
+   - linux-devedition-nightly/opt
+   - macosx64-devedition-nightly/opt
+   - win32-devedition-nightly/opt
+   - win64-devedition-nightly/opt
 
 job-template:
    description:
@@ -33,6 +38,8 @@ job-template:
          android-api-16-nightly: mobile/locales/l10n-changesets.json
    locales-per-chunk: 5
    run-on-projects: ['release']
+   attributes:
+      shipping_phase: promote
    ignore-locales:
       by-build-platform:
          # OSX has a special locale for japanese
@@ -65,13 +72,17 @@ job-template:
          default: public
          android-api-16-nightly: internal
          macosx64-nightly: internal
+         macosx64-devedition-nightly: internal
          win32-nightly: internal
+         win32-devedition-nightly: internal
          win64-nightly: internal
+         win64-devedition-nightly: internal
    index:
       type: nightly-l10n
       product:
          by-build-platform:
             default: firefox
+            .*-devedition-.*: devedition
             android-api-16-nightly: mobile
       job-name:
          by-build-platform:
@@ -80,6 +91,11 @@ job-template:
             macosx64-nightly: macosx64-opt
             win32-nightly: win32-opt
             win64-nightly: win64-opt
+            linux-devedition-nightly: linux-devedition-opt
+            linux64-devedition-nightly: linux64-devedition-opt
+            macosx64-devedition-nightly: macosx64-devedition-opt
+            win32-devedition-nightly: win32-devedition-opt
+            win64-devedition-nightly: win64-devedition-opt
             android-api-16-nightly: android-api-16-opt
    worker-type:
       by-build-platform:
@@ -96,6 +112,11 @@ job-template:
             macosx64-nightly: osx-cross/opt
             win32-nightly: windows2012-32/opt
             win64-nightly: windows2012-64/opt
+            linux64-devedition-nightly: linux64-devedition/opt
+            linux-devedition-nightly: linux32-devedition/opt
+            macosx64-devedition-nightly: osx-cross-devedition/opt
+            win32-devedition-nightly: windows2012-32-devedition/opt
+            win64-devedition-nightly: windows2012-64-devedition/opt
             android-api-16-nightly: android-4-0-armv7-api16/opt
    env:
       by-build-platform:
@@ -105,7 +126,7 @@ job-template:
                task-reference: https://queue.taskcluster.net/v1/task/<signed-build>/artifacts/public/build
             MAR_TOOLS_URL:
                task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/public/build/host/bin
-         macosx64-nightly:
+         macosx64.*:
             EN_US_PACKAGE_NAME: target.dmg
             EN_US_BINARY_URL:
                task-reference: https://queue.taskcluster.net/v1/task/<repackage>/artifacts/public/build
@@ -137,6 +158,17 @@ job-template:
                - taskcluster_nightly.py
             win32-nightly: []
             win64-nightly: []
+            linux-devedition-nightly:
+               - single_locale/tc_linux32.py
+               - taskcluster_nightly.py
+            linux64-devedition-nightly:
+               - single_locale/tc_linux64.py
+               - taskcluster_nightly.py
+            macosx64-devedition-nightly:
+               - single_locale/tc_macosx64.py
+               - taskcluster_nightly.py
+            win32-devedition-nightly: []
+            win64-devedition-nightly: []
             android-api-16-nightly:
                - taskcluster_nightly.py
                - single_locale/{project}_android-api-16.py
@@ -170,6 +202,32 @@ job-template:
                - config=single_locale/tc_win64.py
                - config=taskcluster_nightly.py
                - revision=$GECKO_HEAD_REV
+            linux-devedition-nightly:
+               - environment-config=single_locale/production.py
+               - branch-config=single_locale/{project}.py
+               - platform-config=single_locale/linux_devedition.py
+            linux64-devedition-nightly:
+               - environment-config=single_locale/production.py
+               - branch-config=single_locale/{project}.py
+               - platform-config=single_locale/linux64_devedition.py
+            macosx64-devedition-nightly:
+               - environment-config=single_locale/production.py
+               - branch-config=single_locale/{project}.py
+               - platform-config=single_locale/macosx64_devedition.py
+            win32-devedition-nightly:
+               - environment-config=single_locale/production.py
+               - branch-config=single_locale/{project}.py
+               - platform-config=single_locale/win32_devedition.py
+               - config=single_locale/tc_win32.py
+               - config=taskcluster_nightly.py
+               - revision=$GECKO_HEAD_REV
+            win64-devedition-nightly:
+               - environment-config=single_locale/production.py
+               - branch-config=single_locale/{project}.py
+               - platform-config=single_locale/win64_devedition.py
+               - config=single_locale/tc_win64.py
+               - config=taskcluster_nightly.py
+               - revision=$GECKO_HEAD_REV
             default: []
       actions:
          by-build-platform:
@@ -182,3 +240,44 @@ job-template:
          by-build-platform:
             default: mozharness/scripts/desktop_l10n.py
             android-api-16-nightly: mozharness/scripts/mobile_l10n.py
+   notifications:
+      completed:
+         subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect"]
+               mozilla-release: ["log_collect"]
+               default: []
+
+      failed:
+         subject: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+      exception:
+         subject: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []

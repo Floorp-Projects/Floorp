@@ -622,7 +622,8 @@
 :-moz-native-anonymous .shapes-ellipse,
 :-moz-native-anonymous .shapes-rect,
 :-moz-native-anonymous .shapes-bounding-box,
-:-moz-native-anonymous .shapes-rotate-line {
+:-moz-native-anonymous .shapes-rotate-line,
+:-moz-native-anonymous .shapes-quad {
   fill: transparent;
   stroke: var(--highlighter-guide-color);
   shape-rendering: geometricPrecision;

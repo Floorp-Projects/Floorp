@@ -107,7 +107,6 @@ void AudioInputCubeb::UpdateDeviceList()
 
 MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
   : mMutex("mozilla::MediaEngineWebRTC"),
-    mVoiceEngine(nullptr),
     mAudioInput(nullptr),
     mFullDuplex(aPrefs.mFullDuplex),
     mDelayAgnostic(aPrefs.mDelayAgnostic),
@@ -280,43 +279,11 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
     return;
   }
 
-#ifdef MOZ_WIDGET_ANDROID
-  JavaVM* jvm = mozilla::jni::GetVM();
-  jobject context = mozilla::AndroidBridge::Bridge()->GetGlobalContextRef();
-
-  if (webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
-    LOG(("VoiceEngine:SetAndroidObjects Failed"));
-    return;
-  }
-#endif
-
-  if (!mVoiceEngine) {
-    mVoiceEngine = webrtc::VoiceEngine::Create();
-    if (!mVoiceEngine) {
+  if (!mAudioInput) {
+    if (!SupportsDuplex()) {
       return;
     }
-  }
-
-  ptrVoEBase = webrtc::VoEBase::GetInterface(mVoiceEngine);
-  if (!ptrVoEBase) {
-    return;
-  }
-
-  // Always re-init the voice engine, since if we close the last use we
-  // DeInitEngine() and Terminate(), which shuts down Process() - but means
-  // we have to Init() again before using it.  Init() when already inited is
-  // just a no-op, so call always.
-  if (ptrVoEBase->Init() < 0) {
-    return;
-  }
-
-  if (!mAudioInput) {
-    if (SupportsDuplex()) {
-      // The platform_supports_full_duplex.
-      mAudioInput = new mozilla::AudioInputCubeb(mVoiceEngine);
-    } else {
-      mAudioInput = new mozilla::AudioInputWebRTC(mVoiceEngine);
-    }
+    mAudioInput = new mozilla::AudioInputCubeb();
   }
 
   int nDevices = 0;
@@ -344,7 +311,6 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
 
     if (uniqueId[0] == '\0') {
       // Mac and Linux don't set uniqueId!
-      MOZ_ASSERT(sizeof(deviceName) == sizeof(uniqueId)); // total paranoia
       strcpy(uniqueId, deviceName); // safe given assert and initialization/error-check
     }
 
@@ -354,16 +320,7 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
       // We've already seen this device, just append.
       aASources->AppendElement(aSource.get());
     } else {
-      AudioInput* audioinput = mAudioInput;
-      if (SupportsDuplex()) {
-        // The platform_supports_full_duplex.
-
-        // For cubeb, it has state (the selected ID)
-        // XXX just use the uniqueID for cubeb and support it everywhere, and get rid of this
-        // XXX Small window where the device list/index could change!
-        audioinput = new mozilla::AudioInputCubeb(mVoiceEngine, i);
-      }
-      aSource = new MediaEngineWebRTCMicrophoneSource(mVoiceEngine, audioinput,
+      aSource = new MediaEngineWebRTCMicrophoneSource(new mozilla::AudioInputCubeb(i),
                                                       i, deviceName, uniqueId,
                                                       mDelayAgnostic, mExtendedFilter);
       mAudioSources.Put(uuid, aSource); // Hashtable takes ownership.
@@ -400,13 +357,6 @@ MediaEngineWebRTC::Shutdown()
   }
   mVideoSources.Clear();
   mAudioSources.Clear();
-
-  if (mVoiceEngine) {
-    mVoiceEngine->SetTraceCallback(nullptr);
-    webrtc::VoiceEngine::Delete(mVoiceEngine);
-  }
-
-  mVoiceEngine = nullptr;
 
   mozilla::camera::Shutdown();
   AudioInputCubeb::CleanupGlobalData();

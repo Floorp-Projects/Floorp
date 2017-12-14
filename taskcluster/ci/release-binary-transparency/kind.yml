@@ -1,0 +1,73 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - post-beetmover-checksums-dummy
+
+job-defaults:
+   name: release-binary-transparency
+   description: Binary transparency to issue a certificate
+   run-on-projects: []
+   shipping-phase: promote
+   routes:
+      - index.releases.v1.{branch}.latest.{product}.latest.binary_transparency
+      - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.binary_transparency
+   index:
+      type: release
+   worker-type: scriptworker-prov-v1/dummy-worker-transpar
+   worker:
+      implementation: binary-transparency
+   notifications:
+      completed:
+         subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect"]
+               mozilla-release: ["log_collect"]
+               default: []
+
+      failed:
+         subject: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+      exception:
+         subject: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+jobs:
+   firefox:
+      shipping-product: firefox
+      index:
+         product: firefox

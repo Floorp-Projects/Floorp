@@ -1,0 +1,117 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.release_snap:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - post-beetmover-dummy
+
+job-defaults:
+   description: Generates snap image
+   run-on-projects: []  # to make sure this never runs as part of CI
+   shipping-phase: promote
+   scopes:
+      by-project:
+         mozilla-beta: ["secrets:get:project/releng/snapcraft/firefox/edge"]
+         default: []
+   treeherder:
+      platform: linux64/opt
+      kind: build
+      tier: 3
+   index:
+      type: release
+   routes:
+      - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.snap
+      - index.releases.v1.{branch}.latest.{product}.latest.snap
+   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+   worker:
+      implementation: docker-worker
+      os: linux
+      max-run-time: 7200
+      docker-image: mozillareleases/firefox-snapcraft@sha256:107cc7a89d45ce6df30f44fe0dfd0b375b3ab443b75e92efc77c4f7bc5da8717
+      artifacts:
+         - name: public/build
+           type: directory
+           path: /home/worker/artifacts/
+      command:
+         - /bin/bash
+         - -cx
+         - >
+           apt-get update &&
+           apt-get dist-upgrade -y &&
+           curl -o scripts.tar.bz2 {config_params[head_repository]}/archive/{config_params[head_rev]}.tar.bz2/taskcluster/docker/firefox-snap/ &&
+           mkdir scripts &&
+           tar xvfj scripts.tar.bz2 -C scripts --strip-components 4 &&
+           cd scripts &&
+           ./runme.sh
+      env:
+         VERSION: "{release_config[version]}"
+         BUILD_NUMBER: "{release_config[build_number]}"
+         PUSH_TO_CHANNEL:
+            by-project:
+               mozilla-beta: "edge"
+               default: ""
+         CANDIDATES_DIR:
+            by-project:
+               maple:
+                  https://net-mozaws-stage-delivery-firefox.s3.amazonaws.com/pub/{task[shipping-product]}/candidates
+               default:
+                  https://net-mozaws-prod-delivery-firefox.s3.amazonaws.com/pub/{task[shipping-product]}/candidates
+         LC_ALL: C.UTF-8
+         LANG: C.UTF-8
+      taskcluster-proxy: true
+   notifications:
+      completed:
+         subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect"]
+               mozilla-release: ["log_collect"]
+               default: []
+
+      failed:
+         subject: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+      exception:
+         subject: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+jobs:
+   firefox:
+      shipping-product: firefox
+      treeherder:
+         symbol: Snap(BF)
+      index:
+         product: firefox

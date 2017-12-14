@@ -11,7 +11,6 @@
  */
 
 #include "nsPlainTextSerializer.h"
-#include "nsLWBrkCIID.h"
 #include "nsIServiceManager.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"

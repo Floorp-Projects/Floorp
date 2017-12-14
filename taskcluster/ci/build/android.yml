@@ -101,6 +101,8 @@ android-x86-nightly/opt:
     description: "Android 4.2 x86 Nightly"
     attributes:
         nightly: true
+    shipping-phase: promote
+    shipping-product: fennec
     index:
         product: mobile
         job-name: android-x86-opt
@@ -204,6 +206,8 @@ android-api-16-nightly/opt:
     description: "Android 4.0 api-16+ Nightly"
     attributes:
         nightly: true
+    shipping-phase: promote
+    shipping-product: fennec
     index:
         product: mobile
         job-name: android-api-16-opt
@@ -558,6 +562,8 @@ android-aarch64-nightly/opt:
     description: "Android 5.0 AArch64 Nightly"
     attributes:
         nightly: true
+    shipping-phase: promote
+    shipping-product: fennec
     index:
         product: mobile
         job-name: android-aarch64-opt

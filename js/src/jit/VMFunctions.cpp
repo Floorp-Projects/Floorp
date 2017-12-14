@@ -653,7 +653,8 @@ CreateThis(JSContext* cx, HandleObject callee, HandleObject newTarget, MutableHa
         RootedFunction fun(cx, &callee->as<JSFunction>());
         if (fun->isInterpreted() && fun->isConstructor()) {
             JSScript* script = JSFunction::getOrCreateScript(cx, fun);
-            if (!script || !script->ensureHasTypes(cx))
+            AutoKeepTypeScripts keepTypes(cx);
+            if (!script || !script->ensureHasTypes(cx, keepTypes))
                 return false;
             if (!js::CreateThis(cx, fun, script, newTarget, GenericObject, rval))
                 return false;

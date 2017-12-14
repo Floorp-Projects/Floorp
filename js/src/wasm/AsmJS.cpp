@@ -761,7 +761,7 @@ NextNonEmptyStatement(ParseNode* pn)
 static bool
 GetToken(AsmJSParser& parser, TokenKind* tkp)
 {
-    TokenStream& ts = parser.tokenStream;
+    auto& ts = parser.tokenStream;
     TokenKind tk;
     while (true) {
         if (!ts.getToken(&tk, TokenStream::Operand))
@@ -776,7 +776,7 @@ GetToken(AsmJSParser& parser, TokenKind* tkp)
 static bool
 PeekToken(AsmJSParser& parser, TokenKind* tkp)
 {
-    TokenStream& ts = parser.tokenStream;
+    auto& ts = parser.tokenStream;
     TokenKind tk;
     while (true) {
         if (!ts.peekToken(&tk, TokenStream::Operand))
@@ -1789,10 +1789,10 @@ class MOZ_STACK_CLASS ModuleValidator
         va_list args;
         va_start(args, offset);
 
-        TokenStream& ts = tokenStream();
+        auto& ts = tokenStream();
         ErrorMetadata metadata;
         if (ts.computeErrorMetadata(&metadata, offset)) {
-            if (ts.options().throwOnAsmJSValidationFailureOption) {
+            if (ts.anyCharsAccess().options().throwOnAsmJSValidationFailureOption) {
                 ReportCompileError(cx_, Move(metadata), nullptr, JSREPORT_ERROR,
                                    JSMSG_USE_ASM_TYPE_FAIL, args);
             } else {
@@ -1804,8 +1804,9 @@ class MOZ_STACK_CLASS ModuleValidator
                 // If warning succeeds, no exception is set.  If warning fails,
                 // an exception is set and execution will halt.  Thus it's safe
                 // and correct to ignore the return value here.
-                Unused << ts.compileWarning(Move(metadata), nullptr, JSREPORT_WARNING,
-                                            JSMSG_USE_ASM_TYPE_FAIL, args);
+                Unused << ts.anyCharsAccess().compileWarning(Move(metadata), nullptr,
+                                                             JSREPORT_WARNING,
+                                                             JSMSG_USE_ASM_TYPE_FAIL, args);
             }
         }
 
@@ -1902,8 +1903,15 @@ class MOZ_STACK_CLASS ModuleValidator
     PropertyName* importArgumentName() const { return importArgumentName_; }
     PropertyName* bufferArgumentName() const { return bufferArgumentName_; }
     const ModuleEnvironment& env()           { return env_; }
-    AsmJSParser& parser() const              { return parser_; }
-    TokenStream& tokenStream() const         { return parser_.tokenStream; }
+
+    AsmJSParser& parser() const { return parser_; }
+
+    auto tokenStream() const
+      -> decltype(parser_.tokenStream)&
+    {
+        return parser_.tokenStream;
+    }
+
     RootedFunction& dummyFunction()          { return dummyFunction_; }
     bool supportsSimd() const                { return cx_->jitSupportsSimd(); }
     bool atomicsPresent() const              { return atomicsPresent_; }
@@ -2301,7 +2309,7 @@ class MOZ_STACK_CLASS ModuleValidator
     }
 
     bool failCurrentOffset(const char* str) {
-        return failOffset(tokenStream().currentToken().pos.begin, str);
+        return failOffset(tokenStream().anyCharsAccess().currentToken().pos.begin, str);
     }
 
     bool fail(ParseNode* pn, const char* str) {
@@ -2443,7 +2451,7 @@ class MOZ_STACK_CLASS ModuleValidator
                 return nullptr;
         }
 
-        uint32_t endBeforeCurly = tokenStream().currentToken().pos.end;
+        uint32_t endBeforeCurly = tokenStream().anyCharsAccess().currentToken().pos.end;
         asmJSMetadata_->srcLength = endBeforeCurly - asmJSMetadata_->srcStart;
 
         TokenPos pos;
@@ -3283,15 +3291,22 @@ class MOZ_STACK_CLASS FunctionValidator
         MOZ_CRASH("unexpected literal type");
     }
     MOZ_MUST_USE bool writeCall(ParseNode* pn, Op op) {
-        return encoder().writeOp(op) &&
-               callSiteLineNums_.append(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
+        if (!encoder().writeOp(op))
+            return false;
+
+        TokenStreamAnyChars& anyChars = m().tokenStream().anyCharsAccess();
+        return callSiteLineNums_.append(anyChars.srcCoords.lineNum(pn->pn_pos.begin));
     }
     MOZ_MUST_USE bool writeCall(ParseNode* pn, MozOp op) {
-        return encoder().writeOp(op) &&
-               callSiteLineNums_.append(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
+        if (!encoder().writeOp(op))
+            return false;
+
+        TokenStreamAnyChars& anyChars = m().tokenStream().anyCharsAccess();
+        return callSiteLineNums_.append(anyChars.srcCoords.lineNum(pn->pn_pos.begin));
     }
     MOZ_MUST_USE bool prepareCall(ParseNode* pn) {
-        return callSiteLineNums_.append(m().tokenStream().srcCoords.lineNum(pn->pn_pos.begin));
+        TokenStreamAnyChars& anyChars = m().tokenStream().anyCharsAccess();
+        return callSiteLineNums_.append(anyChars.srcCoords.lineNum(pn->pn_pos.begin));
     }
     MOZ_MUST_USE bool writeSimdOp(SimdType simdType, SimdOperation simdOp) {
         MozOp op = SimdToOp(simdType, simdOp);
@@ -3826,7 +3841,7 @@ CheckModuleGlobal(ModuleValidator& m, ParseNode* var, bool isConst)
 static bool
 CheckModuleProcessingDirectives(ModuleValidator& m)
 {
-    TokenStream& ts = m.parser().tokenStream;
+    auto& ts = m.parser().tokenStream;
     while (true) {
         bool matched;
         if (!ts.matchToken(&matched, TOK_STRING, TokenStream::Operand))
@@ -3834,7 +3849,7 @@ CheckModuleProcessingDirectives(ModuleValidator& m)
         if (!matched)
             return true;
 
-        if (!IsIgnoredDirectiveName(m.cx(), ts.currentToken().atom()))
+        if (!IsIgnoredDirectiveName(m.cx(), ts.anyCharsAccess().currentToken().atom()))
             return m.failCurrentOffset("unsupported processing directive");
 
         TokenKind tt;
@@ -7129,11 +7144,13 @@ CheckStatement(FunctionValidator& f, ParseNode* stmt)
 static bool
 ParseFunction(ModuleValidator& m, ParseNode** fnOut, unsigned* line)
 {
-    TokenStream& tokenStream = m.tokenStream();
+    auto& tokenStream = m.tokenStream();
 
     tokenStream.consumeKnownToken(TOK_FUNCTION, TokenStream::Operand);
-    uint32_t toStringStart = tokenStream.currentToken().pos.begin;
-    *line = tokenStream.srcCoords.lineNum(tokenStream.currentToken().pos.end);
+
+    auto& anyChars = tokenStream.anyCharsAccess();
+    uint32_t toStringStart = anyChars.currentToken().pos.begin;
+    *line = anyChars.srcCoords.lineNum(anyChars.currentToken().pos.end);
 
     TokenKind tk;
     if (!tokenStream.getToken(&tk, TokenStream::Operand))
@@ -7170,13 +7187,13 @@ ParseFunction(ModuleValidator& m, ParseNode** fnOut, unsigned* line)
         return false;
 
     if (!m.parser().functionFormalParametersAndBody(InAllowed, YieldIsName, fn, Statement)) {
-        if (tokenStream.hadError() || directives == newDirectives)
+        if (anyChars.hadError() || directives == newDirectives)
             return false;
 
         return m.fail(fn, "encountered new directive in function");
     }
 
-    MOZ_ASSERT(!tokenStream.hadError());
+    MOZ_ASSERT(!anyChars.hadError());
     MOZ_ASSERT(directives == newDirectives);
 
     *fnOut = fn;
@@ -7391,13 +7408,13 @@ CheckModuleReturn(ModuleValidator& m)
     TokenKind tk;
     if (!GetToken(m.parser(), &tk))
         return false;
-    TokenStream& ts = m.parser().tokenStream;
+    auto& ts = m.parser().tokenStream;
     if (tk != TOK_RETURN) {
         return m.failCurrentOffset((tk == TOK_RC || tk == TOK_EOF)
                                    ? "expecting return statement"
                                    : "invalid asm.js. statement");
     }
-    ts.ungetToken();
+    ts.anyCharsAccess().ungetToken();
 
     ParseNode* returnStmt = m.parser().statementListItem(YieldIsName);
     if (!returnStmt)
@@ -7428,7 +7445,7 @@ CheckModuleEnd(ModuleValidator &m)
     if (tk != TOK_EOF && tk != TOK_RC)
         return m.failCurrentOffset("top-level export (return) must be the last statement");
 
-    m.parser().tokenStream.ungetToken();
+    m.parser().tokenStream.anyCharsAccess().ungetToken();
     return true;
 }
 
@@ -8667,13 +8684,23 @@ NoExceptionPending(JSContext* cx)
 }
 
 static bool
-Warn(AsmJSParser& parser, int errorNumber, const char* str)
+SuccessfulValidation(AsmJSParser& parser, UniqueChars str)
 {
-    ParseReportKind reportKind = parser.options().throwOnAsmJSValidationFailureOption &&
-                                 errorNumber == JSMSG_USE_ASM_TYPE_FAIL
-                                 ? ParseError
-                                 : ParseWarning;
-    parser.reportNoOffset(reportKind, /* strict = */ false, errorNumber, str ? str : "");
+    return parser.warningNoOffset(JSMSG_USE_ASM_TYPE_OK, str.get());
+}
+
+static bool
+TypeFailureWarning(AsmJSParser& parser, const char* str)
+{
+    if (parser.options().throwOnAsmJSValidationFailureOption) {
+        parser.errorNoOffset(JSMSG_USE_ASM_TYPE_FAIL, str ? str : "");
+        return false;
+    }
+
+    // Per the asm.js standard convention, whether failure sets a pending
+    // exception determines whether to attempt non-asm.js reparsing, so ignore
+    // the return value below.
+    Unused << parser.warningNoOffset(JSMSG_USE_ASM_TYPE_FAIL, str ? str : "");
     return false;
 }
 
@@ -8681,29 +8708,29 @@ static bool
 EstablishPreconditions(JSContext* cx, AsmJSParser& parser)
 {
     if (!HasCompilerSupport(cx))
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by lack of compiler support");
+        return TypeFailureWarning(parser, "Disabled by lack of compiler support");
 
     switch (parser.options().asmJSOption) {
       case AsmJSOption::Disabled:
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by 'asmjs' runtime option");
+        return TypeFailureWarning(parser, "Disabled by 'asmjs' runtime option");
       case AsmJSOption::DisabledByDebugger:
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by debugger");
+        return TypeFailureWarning(parser, "Disabled by debugger");
       case AsmJSOption::Enabled:
         break;
     }
 
     if (parser.pc->isGenerator())
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by generator context");
+        return TypeFailureWarning(parser, "Disabled by generator context");
 
     if (parser.pc->isAsync())
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by async context");
+        return TypeFailureWarning(parser, "Disabled by async context");
 
     if (parser.pc->isArrowFunction())
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by arrow function context");
+        return TypeFailureWarning(parser, "Disabled by arrow function context");
 
     // Class constructors are also methods
     if (parser.pc->isMethod() || parser.pc->isGetterOrSetter())
-        return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by class constructor or method context");
+        return TypeFailureWarning(parser, "Disabled by class constructor or method context");
 
     return true;
 }
@@ -8817,7 +8844,7 @@ js::CompileAsmJS(JSContext* cx, AsmJSParser& parser, ParseNode* stmtList, bool* 
 
     // Success! Write to the console with a "warning" message.
     *validated = true;
-    Warn(parser, JSMSG_USE_ASM_TYPE_OK, message.get());
+    SuccessfulValidation(parser, Move(message));
     return NoExceptionPending(cx);
 }
 
