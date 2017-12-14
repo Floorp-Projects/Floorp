@@ -441,10 +441,6 @@ body {
   justify-content: center;
 }
 
-.modal .close-btn {
-  padding: 6px;
-}
-
 .modal .result-list {
   height: calc(100% - 28px);
   overflow-y: auto;
@@ -529,6 +525,7 @@ body {
 
 :root {
   --arrow-width: 10px;
+  --icon-size: 13px;
 }
 
 :root.theme-light,
@@ -1069,6 +1066,26 @@ html .arrow.expanded svg {
 .theme-dark .webpack {
   opacity: 0.5;
 }
+
+.function svg {
+  height: 10px;
+  width: 15px;
+}
+
+.function path {
+  fill: var(--theme-body-color);
+}
+
+.angular svg {
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  vertical-align: sub;
+}
+
+.theme-dark .angular {
+  opacity: 0.5;
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -1118,52 +1135,44 @@ html[dir="rtl"] .managed-tree .tree .node > div {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-.close-btn path {
-  fill: var(--theme-comment-alt);
+.close-btn {
+  width: 14px;
+  height: 14px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
 }
 
 .close-btn .close {
-  width: 14px;
-  height: 14px;
+  mask: url("chrome://devtools/skin/images/debugger/close.svg") no-repeat;
+  mask-size: 100%;
+  background-color: var(--theme-comment-alt);
+  width: 8px;
+  height: 8px;
   transition: all 0.15s ease-in-out;
-  border: 1px solid transparent;
-  border-radius: 2px;
   padding: 0;
   margin-top: 0;
-  display: inline-flex;
-  justify-content: center;
 }
 
-.close-btn .close svg {
-  width: 8px;
+.close-btn:hover img.close {
+  background-color: white;
 }
 
 .close-btn:hover {
-  display: block;
-}
-
-.close-btn:hover .close {
-  background: var(--theme-selection-background);
-}
-
-.close-btn:hover .close path {
-  fill: white;
+  background-color: var(--theme-selection-background);
 }
 
 .close-btn.big {
-  padding: 11px;
-  margin-right: 7px;
-  width: 27px;
-  height: 40px;
-}
-
-.close-btn.big .close {
   width: 16px;
   height: 16px;
 }
 
-.close-btn.big .close svg {
+.close-btn.big .close {
   width: 9px;
+  height: 9px;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1359,9 +1368,13 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   flex-grow: 1;
 }
 
+.project-text-search .search-field .close-btn.big {
+  margin-top: 12px;
+}
+
 .project-text-search .managed-tree {
   overflow-y: auto;
-  height: calc(100% - 81px);
+  height: 100%;
 }
 
 .project-text-search .managed-tree .tree {
@@ -1478,7 +1491,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   -moz-user-select: none;
   user-select: none;
   box-sizing: border-box;
-  height: 29px;
+  height: 30px;
 }
 
 .source-outline-tabs .tab {
@@ -1575,7 +1588,6 @@ html[dir="rtl"] .managed-tree .tree .node > div {
   list-style: none;
   margin: 0;
   padding: 0;
-  padding-left: 10px;
 }
 
 .outline-list h2 {
@@ -1586,11 +1598,11 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 }
 
 .outline-list__element {
-  color: blue;
-  padding-bottom: 0.2rem;
+  padding-bottom: 0.5rem;
   padding-right: 0.5rem;
   padding-top: 0.2rem;
   cursor: default;
+  white-space: nowrap;
 }
 
 .outline-list__element:hover {
@@ -1609,7 +1621,7 @@ html[dir="rtl"] .managed-tree .tree .node > div {
 }
 
 .function-signature .param {
-  color: var(--string-color);
+  color: var(--theme-highlight-red);
 }
 
 .function-signature .paren {
@@ -1777,8 +1789,8 @@ html .toggle-button-end.vertical svg {
   height: var(--editor-searchbar-height);
 }
 
-.search-bar .close-btn {
-  padding: 6px;
+.search-field .close-btn {
+  margin-top: 7px;
 }
 
 .search-bottom-bar * {
@@ -2206,6 +2218,14 @@ html[dir="rtl"] .arrow svg,
   height: 5px;
   padding-top: 5px;
 }
+
+.popover .preview-popup {
+  margin-left: -55px;
+}
+
+.popover .add-to-expression-bar {
+  margin-left: -55px;
+}
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -2403,6 +2423,7 @@ html[dir="rtl"] .arrow svg,
   background: var(--theme-toolbar-background);
   border-top: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid var(--theme-splitter-color);
+  padding-right: 16px;
 }
 
 .conditional-breakpoint-panel .prompt {
@@ -2449,6 +2470,11 @@ html[dir="rtl"] .arrow svg,
 
 .editor-wrapper .CodeMirror-linewidget {
   margin-right: -7px;
+  overflow: visible;
+}
+
+.editor-wrapper .CodeMirror-sizer {
+  min-width: 0 !important;
 }
 
 .theme-dark {
@@ -2854,7 +2880,7 @@ html .breakpoints-list .breakpoint.paused {
 .expression-container__close-btn {
   position: absolute;
   offset-inline-end: 0px;
-  top: 4px;
+  top: 0px;
 }
 
 .expression-content {
@@ -2868,10 +2894,6 @@ html .breakpoints-list .breakpoint.paused {
 
 .expression-content .tree-node {
   overflow-x: hidden;
-}
-
-.expression-container:hover .close-btn {
-  display: block;
 }
 
 .expression-input {
@@ -3204,7 +3226,7 @@ html .breakpoints-list .breakpoint.paused {
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .command-bar {
-  flex: 0 0 29px;
+  flex: 0 0 30px;
   border-bottom: 1px solid var(--theme-splitter-color);
   display: flex;
   overflow: hidden;
@@ -3335,6 +3357,141 @@ img.resume {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+.dropdown {
+  --width: 150px;
+  background: var(--theme-body-background);
+  border: 1px solid var(--theme-splitter-color);
+  box-shadow: 0 4px 4px 0 var(--search-overlays-semitransparent);
+  max-height: 300px;
+  position: absolute;
+  right: 0;
+  top: 23px;
+  width: var(--width);
+  z-index: 1000;
+  overflow: auto;
+}
+
+html[dir="rtl"] .dropdown {
+  right: calc((var(--width) - 11px) * (-1));
+}
+
+.dropdown-block {
+  padding: 0px 2px;
+  position: relative;
+  align-self: center;
+}
+
+.dropdown-button {
+  color: var(--theme-content-color3);
+  background: none;
+  border: none;
+  padding: 0;
+  font-weight: 100;
+  font-size: 14px;
+}
+
+.dropdown li {
+  transition: all 0.25s ease;
+  padding: 2px 10px 10px 5px;
+  overflow: hidden;
+  height: 30px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown li:hover {
+  background-color: var(--search-overlays-semitransparent);
+}
+
+.dropdown-icon {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.dropdown-icon.prettyPrint {
+  mask: url("chrome://devtools/skin/images/debugger/prettyPrint.svg") no-repeat;
+  mask-size: 100%;
+  background: var(--theme-highlight-blue);
+}
+
+.dropdown-icon.blackBox {
+  mask: url("chrome://devtools/skin/images/debugger/blackBox.svg") no-repeat;
+  mask-size: 100%;
+  background: var(--theme-highlight-blue);
+}
+
+.dropdown-icon.file {
+  mask: url("chrome://devtools/skin/images/debugger/file.svg") no-repeat;
+  mask-size: 100%;
+}
+
+.dropdown ul {
+  list-style: none;
+  line-height: 2em;
+  font-size: 1em;
+  margin: 0;
+  padding: 0;
+}
+
+.dropdown-mask {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  z-index: 999;
+  left: 0;
+  top: 0;
+}
+.dropdown span.icon-spacer {
+  margin-left: 8px;
+}
+
+.dropdown li.first {
+  border-bottom: 1px solid var(--theme-toolbar-background-hover);
+}
+
+img.pause-next,
+img.pause-on-exceptions,
+img.pause-uncaught-exceptions,
+img.ignore-exceptions {
+  vertical-align: middle;
+  width: 16px;
+  height: 20px;
+  display: inline-block;
+}
+
+.dropdown div > img.pause-next {
+  mask: url("chrome://devtools/skin/images/debugger/pause.svg") no-repeat;
+  background-color: var(--theme-body-color);
+}
+
+.dropdown div > img.ignore-exceptions {
+  mask: url("chrome://devtools/skin/images/debugger/pause-exceptions.svg") no-repeat;
+  background-color: var(--theme-body-color);
+}
+
+.dropdown div > img.pause-uncaught-exceptions {
+  mask: url("chrome://devtools/skin/images/debugger/pause-exceptions.svg") no-repeat;
+  background-color: var(--theme-highlight-purple);
+}
+
+.dropdown div > img.pause-on-exceptions {
+  mask: url("chrome://devtools/skin/images/debugger/pause-exceptions.svg") no-repeat;
+  background-color: var(--theme-highlight-blue);
+}
+
+.dropdown div.pause-next.active,
+.dropdown div.pause-on-exceptions.active,
+.dropdown div.pause-uncaught-exceptions.active,
+.dropdown div.ignore-exceptions.active > span.icon-spacer {
+  color: var(--theme-highlight-blue);
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 .object-node.default-property {
   opacity: 0.6;
 }
@@ -3412,6 +3569,25 @@ img.resume {
 
 .theme-dark .secondary-panes .accordion .arrow svg {
   fill: var(--theme-content-color3);
+}
+
+.secondary-panes .breakpoints-buttons {
+  display: flex;
+}
+
+.secondary-panes .accordion .plus svg {
+  width: 12px;
+  margin-top: 3px;
+  fill: var(--theme-comment-alt);
+}
+
+.secondary-panes .accordion .plus.active svg {
+  fill: var(--theme-highlight-blue);
+}
+
+.dropdown {
+  width: 20em;
+  overflow: auto;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -3505,7 +3681,7 @@ html .welcomebox .toggle-button-end.collapsed {
 .source-header {
   border-bottom: 1px solid var(--theme-splitter-color);
   width: 100%;
-  height: 29px;
+  height: 30px;
   display: flex;
   align-items: flex-end;
 }
@@ -3543,7 +3719,7 @@ html .welcomebox .toggle-button-end.collapsed {
   border-top-left-radius: 2px;
   border-top-right-radius: 2px;
   display: inline-flex;
-  align-items: flex-end;
+  align-items: center;
   position: relative;
   transition: all 0.15s ease;
   min-width: 40px;
@@ -3602,6 +3778,15 @@ html .welcomebox .toggle-button-end.collapsed {
   background: var(--theme-highlight-blue);
 }
 
+.source-tab img.react {
+  mask: url("chrome://devtools/skin/images/debugger/react.svg") no-repeat;
+  mask-size: 100%;
+  padding-top: 12px;
+  height: 14px;
+  width: 14px;
+  background: var(--theme-highlight-bluegrey);
+}
+
 .source-tab .blackBox path {
   fill: var(--theme-textbox-box-shadow);
 }
@@ -3629,73 +3814,6 @@ html .welcomebox .toggle-button-end.collapsed {
 
 .source-tab:hover .close-btn {
   visibility: visible;
-}
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-.dropdown {
-  --width: 150px;
-  background: var(--theme-body-background);
-  border: 1px solid var(--theme-splitter-color);
-  box-shadow: 0 4px 4px 0 var(--search-overlays-semitransparent);
-  max-height: 300px;
-  position: absolute;
-  right: 0;
-  top: 23px;
-  width: var(--width);
-  z-index: 1000;
-  overflow: auto;
-}
-
-html[dir="rtl"] .dropdown {
-  right: calc((var(--width) - 11px) * (-1));
-}
-
-.dropdown-block {
-  padding: 0px 2px;
-  position: relative;
-  align-self: center;
-}
-
-.dropdown-button {
-  color: var(--theme-content-color3);
-  background: none;
-  border: none;
-  padding: 0;
-  font-weight: 100;
-  font-size: 14px;
-}
-
-.dropdown li {
-  transition: all 0.25s ease;
-  padding: 2px 10px 10px 5px;
-  overflow: hidden;
-  height: 30px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dropdown li:hover {
-  background-color: var(--search-overlays-semitransparent);
-}
-
-.dropdown ul {
-  list-style: none;
-  line-height: 2em;
-  font-size: 1em;
-  margin: 0;
-  padding: 0;
-}
-
-.dropdown-mask {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  z-index: 999;
-  left: 0;
-  top: 0;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

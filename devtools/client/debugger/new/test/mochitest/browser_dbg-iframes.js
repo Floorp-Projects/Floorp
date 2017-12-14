@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// Test is taking too much time to complete on some hardware since
+// release at https://bugzilla.mozilla.org/show_bug.cgi?id=1423158
+requestLongerTimeout(3);
+
 /**
  * Test debugging a page with iframes
  *  1. pause in the main thread
