@@ -408,7 +408,6 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'gfx/SurfaceTextureListener.java',
     'gfx/VsyncSource.java',
     'HapticFeedbackDelegate.java',
-    'InputConnectionListener.java',
     'InputMethods.java',
     'media/AsyncCodec.java',
     'media/AsyncCodecFactory.java',
