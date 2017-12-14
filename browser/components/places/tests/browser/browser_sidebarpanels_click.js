@@ -42,8 +42,7 @@ add_task(async function test_sidebarpanels_click() {
     prepare() {
     },
     async selectNode(tree) {
-      let bookmarkId = await PlacesUtils.promiseItemId(this._bookmark.guid);
-      tree.selectItems([bookmarkId]);
+      tree.selectItems([this._bookmark.guid]);
     },
     cleanup(aCallback) {
       return PlacesUtils.bookmarks.remove(this._bookmark);

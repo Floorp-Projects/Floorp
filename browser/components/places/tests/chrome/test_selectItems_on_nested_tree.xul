@@ -77,9 +77,8 @@
         tree.place = "place:folder=UNFILED_BOOKMARKS";
 
         // Select the last bookmark.
-        let itemId = await PlacesUtils.promiseItemId(bm.guid);
-        tree.selectItems([itemId]);
-        is (tree.selectedNode.itemId, itemId, "The right node was selected");
+        tree.selectItems([bm.guid]);
+        is (tree.selectedNode.bookmarkGuid, bm.guid, "The right node was selected");
       })().then(SimpleTest.finish);
     }
   ]]></script>

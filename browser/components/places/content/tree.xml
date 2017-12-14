@@ -550,8 +550,10 @@
       </method>
 
       <!-- This method will select the first node in the tree that matches
-           each given item id. It will open any folder nodes that it needs
+           each given item guid. It will open any folder nodes that it needs
            to in order to show the selected items.
+           Note: An array of ids or guids (or a mixture) may be passed as aIDs.
+           Passing IDs should be considered deprecated.
       -->
       <method name="selectItems">
         <parameter name="aIDs"/>
@@ -597,6 +599,16 @@
             if (index == -1 &&
                 node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT)
               index = ids.indexOf(PlacesUtils.asQuery(node).folderItemId);
+
+            if (index == -1) {
+              index = ids.indexOf(node.bookmarkGuid);
+              if (index == -1) {
+                let concreteGuid = PlacesUtils.getConcreteItemGuid(node);
+                if (concreteGuid != node.bookmarkGuid) {
+                  index = ids.indexOf(concreteGuid);
+                }
+              }
+            }
 
             if (index != -1) {
               nodes.push(node);

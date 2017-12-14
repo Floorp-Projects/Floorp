@@ -13,7 +13,6 @@ registerCleanupFunction(async function() {
 });
 
 let bookmarks; // Bookmarks added via insertTree.
-let bookmarkIds; // Map of Guids to Ids.
 
 add_task(async function setup() {
   bookmarks = await PlacesUtils.bookmarks.insertTree({
@@ -26,10 +25,6 @@ add_task(async function setup() {
       url: "http://example.com/2",
     }]
   });
-
-  bookmarkIds = await PlacesUtils.promiseManyItemIds([
-    bookmarks[0].guid, bookmarks[1].guid
-  ]);
 
   // Undo is called asynchronously - and not waited for. Since we're not
   // expecting undo to be called, we can only tell this by stubbing it.
@@ -45,7 +40,7 @@ add_task(async function test_cancel_with_no_changes() {
   }
 
   await withSidebarTree("bookmarks", async (tree) => {
-    tree.selectItems([bookmarkIds.get(bookmarks[0].guid)]);
+    tree.selectItems([bookmarks[0].guid]);
 
     // Delete the bookmark to put something in the undo history.
     // Rather than calling cmd_delete, we call the remove directly, so that we
@@ -53,7 +48,7 @@ add_task(async function test_cancel_with_no_changes() {
     // in the history.
     await tree.controller.remove("Remove Selection");
 
-    tree.selectItems([bookmarkIds.get(bookmarks[1].guid)]);
+    tree.selectItems([bookmarks[1].guid]);
 
     // Now open the bookmarks dialog and cancel it.
     await withBookmarksDialog(
@@ -86,7 +81,7 @@ add_task(async function test_cancel_with_changes() {
   }
 
   await withSidebarTree("bookmarks", async (tree) => {
-    tree.selectItems([bookmarkIds.get(bookmarks[1].guid)]);
+    tree.selectItems([bookmarks[1].guid]);
 
     // Now open the bookmarks dialog and cancel it.
     await withBookmarksDialog(

@@ -59,16 +59,14 @@ var selectBookmarksIn = async function(organizer, bookmarks, aLeftPaneQuery) {
   info("Selecting " + aLeftPaneQuery + " in the left pane");
   PlacesOrganizer.selectLeftPaneQuery(aLeftPaneQuery);
 
-  let ids = [];
   for (let {guid} of bookmarks) {
     let bookmark = await PlacesUtils.bookmarks.fetch(guid);
     is(bookmark.parentGuid, PlacesOrganizer._places.selectedNode.targetFolderGuid,
         "Bookmark has the right parent");
-    ids.push(await PlacesUtils.promiseItemId(bookmark.guid));
   }
 
   info("Selecting the bookmarks in the right pane");
-  ContentTree.view.selectItems(ids);
+  ContentTree.view.selectItems(bookmarks.map(bm => bm.guid));
 
   for (let node of ContentTree.view.selectedNodes) {
     is(node.bookmarkIndex, node.title,
