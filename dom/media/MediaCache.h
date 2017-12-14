@@ -227,11 +227,10 @@ public:
   // used to create this MediaCacheStream is deleted.
   void Close();
   // This returns true when the stream has been closed.
-  // Must be used on the main thread or while holding the cache lock.
-  bool IsClosed() const { return mClosed; }
+  bool IsClosed(AutoLock&) const { return mClosed; }
   // Returns true when this stream is can be shared by a new resource load.
   // Called on the main thread only.
-  bool IsAvailableForSharing() const { return !mClosed && !mIsPrivateBrowsing; }
+  bool IsAvailableForSharing() const { return !mIsPrivateBrowsing; }
 
   // These callbacks are called on the main thread by the client
   // when data has been received via the channel.
