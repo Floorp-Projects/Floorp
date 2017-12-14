@@ -218,7 +218,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     kid->SetRect(nsRect(bp.IStart(wm), bp.BStart(wm),
                         convertedSize.ISize(wm), convertedSize.BSize(wm)));
     kid->FinishAndStoreOverflow(&kidMetrics, rs.mStyleDisplay);
-    kid->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
+    kid->DidReflow(aPresContext, nullptr);
 
     convertedSize.ISize(wm) += bp.IStartEnd(wm);
     convertedSize.BSize(wm) += bp.BStartEnd(wm);
