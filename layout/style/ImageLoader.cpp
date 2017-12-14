@@ -451,6 +451,20 @@ ImageLoader::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
 
   aImage->SetAnimationMode(presContext->ImageAnimationMode());
 
+  FrameSet* frameSet = nullptr;
+  if (!mRequestToFrameMap.Get(aRequest, &frameSet)) {
+    return NS_OK;
+  }
+
+  FrameSet::size_type length = frameSet->Length();
+  for (FrameSet::size_type i = 0; i < length; i++) {
+    nsIFrame* frame = frameSet->ElementAt(i);
+
+    if (frame->StyleVisibility()->IsVisible()) {
+      frame->MarkNeedsDisplayItemRebuild();
+    }
+  }
+
   return NS_OK;
 }
 
