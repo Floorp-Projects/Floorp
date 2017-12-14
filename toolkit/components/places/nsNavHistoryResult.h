@@ -296,7 +296,6 @@ protected:
 public:
 
   nsNavHistoryResult* GetResult();
-  nsNavHistoryQueryOptions* GetGeneratingOptions();
 
   // These functions test the type. We don't use a virtual function since that
   // would take a vtable slot for every one of (potentially very many) nodes.
@@ -471,9 +470,18 @@ public:
   // Filled in by the result type generator in nsNavHistory.
   nsCOMArray<nsNavHistoryResultNode> mChildren;
 
+  // mOriginalOptions is the options object used to _define_ this specific
+  // container node. It may differ from mOptions, that is the options used
+  // to _fill_ this container node, because mOptions may be modified by
+  // the direct parent of this container node, see SetAsParentOfNode. For
+  // example, if the parent has excludeItems, options will have it too, even if
+  // originally this object was not defined with that option.
+  nsCOMPtr<nsNavHistoryQueryOptions> mOriginalOptions;
   nsCOMPtr<nsNavHistoryQueryOptions> mOptions;
 
   void FillStats();
+  // Sets this container as parent of aNode, propagating the appropriate options.
+  void SetAsParentOfNode(nsNavHistoryResultNode* aNode);
   nsresult ReverseUpdateStats(int32_t aAccessCountChange);
 
   // Sorting methods.

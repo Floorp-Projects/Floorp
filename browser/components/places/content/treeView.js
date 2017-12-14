@@ -1319,26 +1319,21 @@ PlacesTreeView.prototype = {
   isContainer: function PTV_isContainer(aRow) {
     // Only leaf nodes aren't listed in the rows array.
     let node = this._rows[aRow];
-    if (node === undefined)
+    if (node === undefined || !PlacesUtils.nodeIsContainer(node))
       return false;
 
-    if (PlacesUtils.nodeIsContainer(node)) {
-      // Flat-lists may ignore expandQueries and other query options when
-      // they are asked to open a container.
-      if (this._flatList)
-        return true;
-
-      // treat non-expandable childless queries as non-containers
-      if (PlacesUtils.nodeIsQuery(node)) {
-        let parent = node.parent;
-        if ((PlacesUtils.nodeIsQuery(parent) ||
-             PlacesUtils.nodeIsFolder(parent)) &&
-            !PlacesUtils.asQuery(node).hasChildren)
-          return PlacesUtils.asQuery(parent).queryOptions.expandQueries;
-      }
+    // Flat-lists may ignore expandQueries and other query options when
+    // they are asked to open a container.
+    if (this._flatList)
       return true;
+
+    // Treat non-expandable childless queries as non-containers, unless they
+    // are tags.
+    if (PlacesUtils.nodeIsQuery(node) && !PlacesUtils.nodeIsTagQuery(node)) {
+      PlacesUtils.asQuery(node);
+      return node.queryOptions.expandQueries || node.hasChildren;
     }
-    return false;
+    return true;
   },
 
   isContainerOpen: function PTV_isContainerOpen(aRow) {
