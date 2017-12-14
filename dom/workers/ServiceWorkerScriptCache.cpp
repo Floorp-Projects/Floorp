@@ -468,6 +468,16 @@ private:
 
     mState = WaitingForScriptOrComparisonResult;
 
+    // Always make sure to fetch the main script.  If the old cache has
+    // no entries or the main script entry is missing, then the loop below
+    // may not trigger it.  This should not really happen, but we handle it
+    // gracefully if it does occur.  Its possible the bad cache state is due
+    // to a crash or shutdown during an update, etc.
+    rv = FetchScript(mURL, true /* aIsMainScript */, mOldCache);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
     for (uint32_t i = 0; i < len; ++i) {
       JS::Rooted<JS::Value> val(aCx);
       if (NS_WARN_IF(!JS_GetElement(aCx, obj, i, &val)) ||
@@ -484,7 +494,12 @@ private:
       nsString URL;
       request->GetUrl(URL);
 
-      rv = FetchScript(URL, mURL == URL /* aIsMainScript */, mOldCache);
+      // We explicitly start the fetch for the main script above.
+      if (mURL == URL) {
+        continue;
+      }
+
+      rv = FetchScript(URL, false /* aIsMainScript */, mOldCache);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return;
       }
