@@ -643,11 +643,13 @@ class DeviceManagerADB(DeviceManager):
         if directive == "systime" or directive == "all":
             ret["systime"] = self.shellCheckOutput(["date"], timeout=self.short_timeout)
         if directive == "memtotal" or directive == "all":
-            meminfo = {}
-            for line in self.pullFile("/proc/meminfo").splitlines():
-                key, value = line.split(":")
-                meminfo[key] = value.strip()
-            ret["memtotal"] = meminfo["MemTotal"]
+            out = self.shellCheckOutput(["cat", "/proc/meminfo"], timeout=self.short_timeout)
+            out = out.replace('\r\n', '\n').splitlines(True)
+            for line in out:
+                parts = line.split(":")
+                if len(parts) == 2 and parts[0] == "MemTotal":
+                    ret["memtotal"] = parts[1].strip()
+                    break
         if directive == "disk" or directive == "all":
             data = self.shellCheckOutput(
                 ["df", "/data", "/system", "/sdcard"], timeout=self.short_timeout)
