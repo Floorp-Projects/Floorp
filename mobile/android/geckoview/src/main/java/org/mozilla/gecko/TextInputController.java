@@ -5,11 +5,14 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.graphics.RectF;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.Editable;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -23,6 +26,7 @@ import android.view.inputmethod.InputConnection;
  */
 public final class TextInputController {
 
+    // Interface to access GeckoInputConnection from TextInputController.
     /* package */ interface Delegate {
         View getView();
         Handler getHandler(Handler defHandler);
@@ -33,6 +37,56 @@ public final class TextInputController {
         boolean onKeyLongPress(int keyCode, KeyEvent event);
         boolean onKeyMultiple(int keyCode, int repeatCount, KeyEvent event);
         boolean isInputActive();
+    }
+
+    // Interface to access GeckoEditable from GeckoInputConnection.
+    /* package */ interface EditableClient {
+        // The following value is used by requestCursorUpdates
+        // ONE_SHOT calls updateCompositionRects() after getting current composing
+        // character rects.
+        @WrapForJNI final int ONE_SHOT = 1;
+        // START_MONITOR start the monitor for composing character rects.  If is is
+        // updaed,  call updateCompositionRects()
+        @WrapForJNI final int START_MONITOR = 2;
+        // ENDT_MONITOR stops the monitor for composing character rects.
+        @WrapForJNI final int END_MONITOR = 3;
+
+        void sendKeyEvent(KeyEvent event, int action, int metaState);
+        Editable getEditable();
+        void setBatchMode(boolean isBatchMode);
+        void setSuppressKeyUp(boolean suppress);
+        Handler setInputConnectionHandler(Handler handler);
+        void postToInputConnection(Runnable runnable);
+        void requestCursorUpdates(int requestMode);
+    }
+
+    // Interface to access GeckoInputConnection from GeckoEditable.
+    /* package */ interface EditableListener {
+        // IME notification type for notifyIME(), corresponding to NotificationToIME enum.
+        @WrapForJNI final int NOTIFY_IME_OF_TOKEN = -3;
+        @WrapForJNI final int NOTIFY_IME_OPEN_VKB = -2;
+        @WrapForJNI final int NOTIFY_IME_REPLY_EVENT = -1;
+        @WrapForJNI final int NOTIFY_IME_OF_FOCUS = 1;
+        @WrapForJNI final int NOTIFY_IME_OF_BLUR = 2;
+        @WrapForJNI final int NOTIFY_IME_TO_COMMIT_COMPOSITION = 8;
+        @WrapForJNI final int NOTIFY_IME_TO_CANCEL_COMPOSITION = 9;
+
+        // IME enabled state for notifyIMEContext().
+        final int IME_STATE_DISABLED = 0;
+        final int IME_STATE_ENABLED = 1;
+        final int IME_STATE_PASSWORD = 2;
+
+        // Flags for notifyIMEContext().
+        @WrapForJNI final int IME_FLAG_PRIVATE_BROWSING = 1;
+        @WrapForJNI final int IME_FLAG_USER_ACTION = 2;
+
+        void notifyIME(int type);
+        void notifyIMEContext(int state, String typeHint, String modeHint,
+                              String actionHint, int flag);
+        void onSelectionChange();
+        void onTextChange();
+        void onDefaultKeyEvent(KeyEvent event);
+        void updateCompositionRects(final RectF[] aRects);
     }
 
     private final GeckoSession mSession;
@@ -88,7 +142,7 @@ public final class TextInputController {
             mInputConnection = GeckoInputConnection.create(mSession,
                                                            /* view */ null,
                                                            mEditable);
-            mEditable.setListener((GeckoEditableListener) mInputConnection);
+            mEditable.setListener((EditableListener) mInputConnection);
         }
     }
 
@@ -117,7 +171,7 @@ public final class TextInputController {
         } else if (mInputConnection == null || mInputConnection.getView() != view) {
             mInputConnection = GeckoInputConnection.create(mSession, view, mEditable);
         }
-        mEditable.setListener((GeckoEditableListener) mInputConnection);
+        mEditable.setListener((EditableListener) mInputConnection);
     }
 
     /**

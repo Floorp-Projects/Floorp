@@ -378,8 +378,6 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'GeckoBatteryManager.java',
     'GeckoEditable.java',
     'GeckoEditableChild.java',
-    'GeckoEditableClient.java',
-    'GeckoEditableListener.java',
     'GeckoHalDefines.java',
     'GeckoInputConnection.java',
     'GeckoNetworkManager.java',
