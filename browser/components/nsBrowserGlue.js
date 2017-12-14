@@ -1115,10 +1115,9 @@ BrowserGlue.prototype = {
       SafeBrowsing.init();
 
       // Login reputation depends on the Safe Browsing API.
-      if (Services.prefs.getBoolPref("browser.safebrowsing.passwords.enabled")) {
-        Cc["@mozilla.org/reputationservice/login-reputation-service;1"]
+      let reputationService = Cc["@mozilla.org/reputationservice/login-reputation-service;1"]
         .getService(Ci.ILoginReputationService);
-      }
+      reputationService.init();
     }, 5000);
 
     if (AppConstants.MOZ_CRASHREPORTER) {
