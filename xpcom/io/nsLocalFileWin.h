@@ -33,6 +33,7 @@ public:
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
 
   nsLocalFile();
+  explicit nsLocalFile(const nsAString& aFilePath);
 
   static nsresult nsLocalFileConstructor(nsISupports* aOuter,
                                          const nsIID& aIID,

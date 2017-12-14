@@ -31,11 +31,12 @@ static already_AddRefed<nsIFile> NewFile(nsIFile* aBase)
   return file.forget();
 }
 
-static nsCString FixName(const char* aName)
+template <typename char_type>
+static nsTString<char_type> FixName(const char_type* aName)
 {
-  nsCString name;
+  nsTString<char_type> name;
   for (uint32_t i = 0; aName[i]; ++i) {
-    char ch = aName[i];
+    char_type ch = aName[i];
     // PR_GetPathSeparator returns the wrong value on Mac so don't use it
 #if defined(XP_WIN)
     if (ch == '/') {
@@ -379,22 +380,26 @@ static bool TestNormalizeNativePath(nsIFile* aBase, nsIFile* aStart)
   if (!file)
     return false;
 
-  nsAutoCString path;
-  nsresult rv = file->GetNativePath(path);
-  VerifyResult(rv, "GetNativePath");
+  auto path = file->NativePath();
+#ifdef XP_WIN
+  path.Append(FixName(u"/./.."));
+  nsresult rv = file->InitWithPath(path);
+  VerifyResult(rv, "InitWithPath");
+#else
   path.Append(FixName("/./.."));
-  rv = file->InitWithNativePath(path);
+  nsresult rv = file->InitWithNativePath(path);
   VerifyResult(rv, "InitWithNativePath");
+#endif
   rv = file->Normalize();
   VerifyResult(rv, "Normalize");
-  rv = file->GetNativePath(path);
-  VerifyResult(rv, "GetNativePath (after normalization)");
+  path = file->NativePath();
 
-  nsAutoCString basePath;
-  rv = aBase->GetNativePath(basePath);
+  auto basePath = aBase->NativePath();
   VerifyResult(rv, "GetNativePath (base)");
 
-  EXPECT_TRUE(path.Equals(basePath)) << "Incorrect normalization: " << path.get() << " - " << basePath.get();
+  EXPECT_TRUE(path.Equals(basePath)) << "Incorrect normalization: " <<
+    file->HumanReadablePath().get() << " - " <<
+    aBase->HumanReadablePath().get();
   if (!path.Equals(basePath)) {
     return false;
   }

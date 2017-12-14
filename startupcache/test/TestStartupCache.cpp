@@ -65,12 +65,18 @@ TestStartupCache::TestStartupCache()
 {
   NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mSCFile));
   mSCFile->AppendNative(NS_LITERAL_CSTRING("test-startupcache.tmp"));
+#ifdef XP_WIN
+  nsAutoString env(NS_LITERAL_STRING("MOZ_STARTUP_CACHE="));
+  env.Append(mSCFile->NativePath());
+  _wputenv(env.get());
+#else
   nsAutoCString path;
   mSCFile->GetNativePath(path);
   char* env = mozilla::Smprintf("MOZ_STARTUP_CACHE=%s", path.get()).release();
   PR_SetEnv(env);
   // We intentionally leak `env` here because it is required by PR_SetEnv
   MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(env);
+#endif
   StartupCache::GetSingleton()->InvalidateCache();
 }
 TestStartupCache::~TestStartupCache()
