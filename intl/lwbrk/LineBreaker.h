@@ -2,24 +2,21 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsILineBreaker_h__
-#define nsILineBreaker_h__
-
-#include "nsISupports.h"
+#ifndef mozilla_intl_LineBreaker_h__
+#define mozilla_intl_LineBreaker_h__
 
 #include "nscore.h"
+#include "nsISupports.h"
 
 #define NS_LINEBREAKER_NEED_MORE_TEXT -1
 
-// 	{0x4b0b9e04-6ffb-4647-aa5f-2fa2ebd883e8}
-#define NS_ILINEBREAKER_IID \
-{0x4b0b9e04, 0x6ffb, 0x4647, \
-    {0xaa, 0x5f, 0x2f, 0xa2, 0xeb, 0xd8, 0x83, 0xe8}}
+namespace mozilla {
+namespace intl {
 
-class nsILineBreaker : public nsISupports
+class LineBreaker
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ILINEBREAKER_IID)
+  NS_INLINE_DECL_REFCOUNTING(LineBreaker)
 
   enum {
     kWordBreak_Normal   = 0, // default
@@ -27,11 +24,11 @@ public:
     kWordBreak_KeepAll  = 2  // always keep
   };
 
-  virtual int32_t Next( const char16_t* aText, uint32_t aLen,
-                        uint32_t aPos) = 0;
+  static already_AddRefed<LineBreaker> Create();
 
-  virtual int32_t Prev( const char16_t* aText, uint32_t aLen,
-                        uint32_t aPos) = 0;
+  int32_t Next(const char16_t* aText, uint32_t aLen, uint32_t aPos);
+
+  int32_t Prev( const char16_t* aText, uint32_t aLen, uint32_t aPos);
 
   // Call this on a word with whitespace at either end. We will apply JISx4051
   // rules to find breaks inside the word. aBreakBefore is set to the break-
@@ -39,15 +36,19 @@ public:
   // because we never return a break before the first character.
   // aLength is the length of the aText array and also the length of the aBreakBefore
   // output array.
-  virtual void GetJISx4051Breaks(const char16_t* aText, uint32_t aLength,
-                                 uint8_t aWordBreak,
-                                 uint8_t* aBreakBefore) = 0;
-  virtual void GetJISx4051Breaks(const uint8_t* aText, uint32_t aLength,
-                                 uint8_t aWordBreak,
-                                 uint8_t* aBreakBefore) = 0;
-};
+  void GetJISx4051Breaks(const char16_t* aText, uint32_t aLength,
+                         uint8_t aWordBreak,
+                         uint8_t* aBreakBefore);
+  void GetJISx4051Breaks(const uint8_t* aText, uint32_t aLength,
+                         uint8_t aWordBreak,
+                         uint8_t* aBreakBefore);
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsILineBreaker, NS_ILINEBREAKER_IID)
+private:
+  ~LineBreaker() { }
+
+  int32_t WordMove(const char16_t* aText, uint32_t aLen, uint32_t aPos,
+                   int8_t aDirection);
+};
 
 static inline bool
 NS_IsSpace(char16_t u)
@@ -72,4 +73,7 @@ NS_NeedsPlatformNativeHandling(char16_t aChar)
          (0x1780 <= aChar && aChar <= 0x17ff);   // Khmer
 }
 
-#endif  /* nsILineBreaker_h__ */
+} // namespace intl
+} // namespace mozilla
+
+#endif  /* mozilla_intl_LineBreaker_h__ */

@@ -9,13 +9,13 @@
 #include "nsIComponentManager.h"
 #include "nsISupports.h"
 #include "nsServiceManagerUtils.h"
-#include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
 #include "nsLWBrkCIID.h"
 #include "nsString.h"
 #include "gtest/gtest.h"
 
-NS_DEFINE_CID(kLBrkCID, NS_LBRK_CID);
+#include "mozilla/intl/LineBreaker.h"
+
 NS_DEFINE_CID(kWBrkCID, NS_WBRK_CID);
 
 static char teng1[] =
@@ -108,7 +108,7 @@ Check(const char* in, const uint32_t* out, uint32_t outlen, uint32_t i,
 }
 
 bool
-TestASCIILB(nsILineBreaker *lb,
+TestASCIILB(mozilla::intl::LineBreaker *lb,
             const char* in,
             const uint32_t* out, uint32_t outlen)
 {
@@ -149,19 +149,13 @@ TestASCIIWB(nsIWordBreaker *lb,
 
 TEST(LineBreak, LineBreaker)
 {
-  nsILineBreaker *t = nullptr;
-  nsresult res = CallGetService(kLBrkCID, &t);
-  ASSERT_TRUE(NS_SUCCEEDED(res) && t);
-  NS_IF_RELEASE(t);
+  RefPtr<mozilla::intl::LineBreaker> t = mozilla::intl::LineBreaker::Create();
 
-  res = CallGetService(kLBrkCID, &t);
-  ASSERT_TRUE(NS_SUCCEEDED(res) && t);
+  ASSERT_TRUE(t);
 
   ASSERT_TRUE(TestASCIILB(t, teng1, lexp1, sizeof(lexp1) / sizeof(uint32_t)));
   ASSERT_TRUE(TestASCIILB(t, teng2, lexp2, sizeof(lexp2) / sizeof(uint32_t)));
   ASSERT_TRUE(TestASCIILB(t, teng3, lexp3, sizeof(lexp3) / sizeof(uint32_t)));
-
-  NS_RELEASE(t);
 }
 
 TEST(LineBreak, WordBreaker)
