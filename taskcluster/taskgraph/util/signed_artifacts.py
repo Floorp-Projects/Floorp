@@ -9,9 +9,16 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 
 def generate_specifications_of_artifacts_to_sign(
-    build_platform, is_nightly=False, keep_locale_template=True
+    build_platform, is_nightly=False, keep_locale_template=True, kind=None
 ):
-    if 'android' in build_platform:
+    if kind == 'release-source-signing':
+        artifacts_specifications = [{
+            'artifacts': [
+                'public/build/SOURCE'
+            ],
+            'formats': ['gpg'],
+        }]
+    elif 'android' in build_platform:
         artifacts_specifications = [{
             'artifacts': [
                 'public/build/{locale}/target.apk',

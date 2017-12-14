@@ -29,9 +29,29 @@ class MacroAssembler;
 class PatchableBackedge;
 class IonBuilder;
 class IonICEntry;
+class JitCode;
 
 typedef Vector<JSObject*, 4, JitAllocPolicy> ObjectVector;
 typedef Vector<TraceLoggerEvent, 0, SystemAllocPolicy> TraceLoggerEventVector;
+
+// Header at start of raw code buffer
+struct JitCodeHeader
+{
+    // Link back to corresponding gcthing
+    JitCode*    jitCode_;
+
+    // !!! NOTE !!!
+    // If we are running on AMD Bobcat, insert a NOP-slide at end of the JitCode
+    // header so we can try to recover when the CPU screws up the branch landing
+    // site. See Bug 1281759.
+    void*       nops_;
+
+    void init(JitCode* jitCode);
+
+    static JitCodeHeader* FromExecutable(uint8_t* buffer) {
+        return (JitCodeHeader*)(buffer - sizeof(JitCodeHeader));
+    }
+};
 
 class JitCode : public gc::TenuredCell
 {
@@ -129,7 +149,7 @@ class JitCode : public gc::TenuredCell
     void copyFrom(MacroAssembler& masm);
 
     static JitCode* FromExecutable(uint8_t* buffer) {
-        JitCode* code = *(JitCode**)(buffer - sizeof(JitCode*));
+        JitCode* code = JitCodeHeader::FromExecutable(buffer)->jitCode_;
         MOZ_ASSERT(code->raw() == buffer);
         return code;
     }

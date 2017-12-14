@@ -1,0 +1,101 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - beetmover-source
+   - post-beetmover-checksums-dummy
+
+job-defaults:
+   description: generates checksums
+   worker-type: buildbot-bridge/buildbot-bridge
+   run-on-projects: []
+   shipping-phase: promote
+   index:
+      type: release
+   run:
+      using: buildbot
+      release-promotion: true
+   notifications:
+      completed:
+         subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect"]
+               mozilla-release: ["log_collect"]
+               default: []
+
+      failed:
+         subject: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+      exception:
+         subject: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+jobs:
+   firefox:
+      name: release-firefox_chcksms
+      shipping-product: firefox
+      run:
+         product: firefox
+         buildername: release-{branch}-firefox_chcksms
+      routes:
+         - index.releases.v1.{branch}.latest.firefox.latest.checksums
+         - index.releases.v1.{branch}.{revision}.firefox.{underscore_version}.build{build_number}.checksums
+      index:
+         product: firefox
+   fennec:
+      name: release-fennec_chcksms
+      shipping-product: fennec
+      run:
+         product: fennec
+         buildername: release-{branch}-fennec_chcksms
+      routes:
+         - index.releases.v1.{branch}.latest.fennec.latest.checksums
+         - index.releases.v1.{branch}.{revision}.fennec.{underscore_version}.build{build_number}.checksums
+      index:
+         product: fennec
+   devedition:
+      name: devedition_release_chcksms
+      shipping-product: devedition
+      run:
+         product: devedition
+         buildername: release-{branch}-devedition_chcksms
+      routes:
+         - index.releases.v1.{branch}.latest.devedition.latest.checksums
+         - index.releases.v1.{branch}.{revision}.devedition.{underscore_version}.build{build_number}.checksums
+      index:
+         product: devedition

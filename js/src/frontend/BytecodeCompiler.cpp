@@ -105,8 +105,7 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextI
         line = errorReporter.options().lineno;
         column = errorReporter.options().column;
     } else {
-        uint32_t offset = errorReporter.offset();
-        errorReporter.lineNumAndColumnIndex(offset, &line, &column);
+        errorReporter.currentLineAndColumn(&line, &column);
     }
     frontendEvent_.emplace(TraceLogger_Frontend, errorReporter.getFilename(), line, column);
     frontendLog_.emplace(logger_, *frontendEvent_);
@@ -137,7 +136,7 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx, const TraceLoggerTextI
   : logger_(TraceLoggerForCurrentThread(cx))
 {
     uint32_t line, column;
-    errorReporter.lineNumAndColumnIndex(pn->pn_pos.begin, &line, &column);
+    errorReporter.lineAndColumnAt(pn->pn_pos.begin, &line, &column);
     frontendEvent_.emplace(TraceLogger_Frontend, errorReporter.getFilename(), line, column);
     frontendLog_.emplace(logger_, *frontendEvent_);
     typeLog_.emplace(logger_, id);
@@ -279,7 +278,7 @@ BytecodeCompiler::handleParseFailure(const Directives& newDirectives)
         // Syntax parsing has now been disabled in the parser, so retry
         // the parse.
         parser->clearAbortedSyntaxParse();
-    } else if (parser->tokenStream.hadError() || directives == newDirectives) {
+    } else if (parser->anyChars.hadError() || directives == newDirectives) {
         return false;
     }
 
@@ -403,7 +402,7 @@ BytecodeCompiler::compileModule()
 
     module->init(script);
 
-    ModuleBuilder builder(cx, module, parser->tokenStream);
+    ModuleBuilder builder(cx, module, parser->anyChars);
     if (!builder.init())
         return nullptr;
 

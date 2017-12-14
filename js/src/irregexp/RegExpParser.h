@@ -40,22 +40,22 @@
 namespace js {
 
 namespace frontend {
-    class TokenStream;
+    class TokenStreamAnyChars;
 }
 
 namespace irregexp {
 
-bool
-ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str,
+extern bool
+ParsePattern(frontend::TokenStreamAnyChars& ts, LifoAlloc& alloc, JSAtom* str,
              bool multiline, bool match_only, bool unicode, bool ignore_case,
              bool global, bool sticky, RegExpCompileData* data);
 
-bool
-ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str,
+extern bool
+ParsePatternSyntax(frontend::TokenStreamAnyChars& ts, LifoAlloc& alloc, JSAtom* str,
                    bool unicode);
 
-bool
-ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc,
+extern bool
+ParsePatternSyntax(frontend::TokenStreamAnyChars& ts, LifoAlloc& alloc,
                    const mozilla::Range<const char16_t> chars, bool unicode);
 
 // A BufferedVector is an automatically growing list, just like (and backed
@@ -184,7 +184,7 @@ template <typename CharT>
 class RegExpParser
 {
   public:
-    RegExpParser(frontend::TokenStream& ts, LifoAlloc* alloc,
+    RegExpParser(frontend::TokenStreamAnyChars& ts, LifoAlloc* alloc,
                  const CharT* chars, const CharT* end, bool multiline_mode, bool unicode,
                  bool ignore_case);
 
@@ -302,7 +302,7 @@ class RegExpParser
     }
     void ScanForCaptures();
 
-    frontend::TokenStream& ts;
+    frontend::TokenStreamAnyChars& ts;
     LifoAlloc* alloc;
     RegExpCaptureVector* captures_;
     const CharT* const start_;

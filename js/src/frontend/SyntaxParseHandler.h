@@ -348,7 +348,7 @@ class SyntaxParseHandler
         return node == NodeFunctionExpressionClosure;
     }
 
-    void setFunctionFormalParametersAndBody(Node pn, Node kid) {}
+    void setFunctionFormalParametersAndBody(Node funcNode, Node kid) {}
     void setFunctionBody(Node pn, Node kid) {}
     void setFunctionBox(Node pn, FunctionBox* funbox) {}
     void addFunctionFormalParameter(Node pn, Node argpn) {}

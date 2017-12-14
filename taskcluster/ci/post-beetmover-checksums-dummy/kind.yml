@@ -1,0 +1,62 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.reverse_chunk_deps:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - beetmover-checksums
+
+jobs:
+   firefox-promote:
+      name: post-beetmover-checksums-dummy
+      description: Dummy task to deal with max_dependencies
+      run-on-projects: []
+      shipping-phase: promote
+      shipping-product: firefox
+      worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+      worker:
+         implementation: docker-worker
+         os: linux
+         docker-image: "ubuntu:16.10"
+         max-run-time: 600
+         command:
+            - /bin/bash
+            - -c
+            - echo "Dummy task"
+   devedition-promote:
+      name: post-beetmover-checksums-dummy
+      description: Dummy task to deal with max_dependencies
+      run-on-projects: []
+      shipping-phase: promote
+      shipping-product: devedition
+      worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+      worker:
+         implementation: docker-worker
+         os: linux
+         docker-image: "ubuntu:16.10"
+         max-run-time: 600
+         command:
+            - /bin/bash
+            - -c
+            - echo "Dummy task"
+   fennec-promote:
+      name: post-beetmover-checksums-dummy
+      description: Dummy task to deal with max_dependencies
+      run-on-projects: []
+      shipping-phase: promote
+      shipping-product: fennec
+      worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+      worker:
+         implementation: docker-worker
+         os: linux
+         docker-image: "ubuntu:16.10"
+         max-run-time: 600
+         command:
+            - /bin/bash
+            - -c
+            - echo "Dummy task"

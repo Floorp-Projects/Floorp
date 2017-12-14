@@ -3524,8 +3524,8 @@ BytecodeEmitter::maybeSetSourceMap()
     if (parser.options().sourceMapURL()) {
         // Warn about the replacement, but use the new one.
         if (parser.ss()->hasSourceMapURL()) {
-            if (!parser.reportNoOffset(ParseWarning, false, JSMSG_ALREADY_HAS_PRAGMA,
-                                       parser.ss()->filename(), "//# sourceMappingURL"))
+            if (!parser.warningNoOffset(JSMSG_ALREADY_HAS_PRAGMA,
+                                        parser.ss()->filename(), "//# sourceMappingURL"))
             {
                 return false;
             }
@@ -3581,10 +3581,7 @@ BytecodeEmitter::reportExtraWarning(ParseNode* pn, unsigned errorNumber, ...)
     va_list args;
     va_start(args, errorNumber);
 
-    // FIXME: parser.tokenStream() should be a TokenStreamAnyChars for bug 1351107,
-    // but caused problems, cf. bug 1363116.
-    bool result = parser.tokenStream()
-                        .reportExtraWarningErrorNumberVA(nullptr, pos.begin, errorNumber, args);
+    bool result = parser.reportExtraWarningErrorNumberVA(nullptr, pos.begin, errorNumber, &args);
 
     va_end(args);
     return result;

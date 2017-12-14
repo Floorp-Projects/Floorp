@@ -1,0 +1,137 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+   # For the $platform_info.txt files.
+   - beetmover-repackage
+
+transforms:
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.release_updates:transforms
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+   name: updates
+   run-on-projects: []  # to make sure this never runs in CI
+   shipping-phase: promote
+   worker-type: buildbot-bridge/buildbot-bridge
+   run:
+      using: buildbot
+      release-promotion: true
+   worker:
+      properties:
+         platforms: "linux,linux64,macosx64,win32,win64"
+   notifications:
+      completed:
+         subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect"]
+               mozilla-release: ["log_collect"]
+               default: []
+
+      failed:
+         subject: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+      exception:
+         subject: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+jobs:
+   firefox:
+      description: updates builder
+      shipping-product: firefox
+      scopes:
+         - project:releng:buildbot-bridge:builder-name:release-{project}_firefox_updates
+      run:
+         product: firefox
+         buildername: release-{branch}-firefox_updates
+      worker:
+         properties:
+            generate_bz2_blob:
+               by-project:
+                  mozilla-release: true
+                  default: false
+            product: firefox
+            balrog_api_root:
+               by-project:
+                  mozilla-beta: https://aus4-admin.mozilla.org/api
+                  mozilla-release: https://aus4-admin.mozilla.org/api
+                  mozilla-esr52: https://aus4-admin.mozilla.org/api
+                  default: https://balrog-admin.stage.mozaws.net/api
+            channels:
+               by-project:
+                  jamun: "beta"
+                  maple: "beta"
+                  mozilla-beta: "beta"
+                  # beta gets removed for non RCs by the
+                  # release_updates transform
+                  mozilla-release: "beta,release"
+                  mozilla-esr52: "esr"
+                  default: "default"
+            repo_path:
+               by-project:
+                  jamun: "projects/jamun"
+                  maple: "projects/maple"
+                  mozilla-beta: "releases/mozilla-beta"
+                  mozilla-release: "releases/mozilla-release"
+                  mozilla-esr52: "releases/mozilla-esr52"
+                  default: "default"
+
+   devedition:
+      description: updates builder
+      shipping-product: devedition
+      scopes:
+         - project:releng:buildbot-bridge:builder-name:release-{project}_devedition_updates
+      run:
+         product: devedition
+         buildername: release-{branch}-devedition_updates
+      worker:
+         properties:
+            product: devedition
+            balrog_api_root:
+               by-project:
+                  mozilla-beta: https://aus4-admin.mozilla.org/api
+                  default: https://balrog-admin.stage.mozaws.net/api
+            channels:
+               by-project:
+                  jamun: "aurora"
+                  maple: "aurora"
+                  mozilla-aurora: "aurora"
+                  default: "default"
+            repo_path:
+               by-project:
+                  jamun: "projects/jamun"
+                  maple: "projects/maple"
+                  mozilla-beta: "releases/mozilla-beta"
+                  default: "default"

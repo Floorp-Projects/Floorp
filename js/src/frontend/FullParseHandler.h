@@ -16,6 +16,9 @@
 #include "frontend/SharedContext.h"
 
 namespace js {
+
+class RegExpObject;
+
 namespace frontend {
 
 // Parse handler used when generating a full parse tree for all code which the
@@ -221,26 +224,37 @@ class FullParseHandler
     }
 
     MOZ_MUST_USE bool addElision(ParseNode* literal, const TokenPos& pos) {
+        MOZ_ASSERT(literal->isKind(PNK_ARRAY));
+        MOZ_ASSERT(literal->isArity(PN_LIST));
+
         ParseNode* elision = new_<NullaryNode>(PNK_ELISION, pos);
         if (!elision)
             return false;
+
         literal->append(elision);
         literal->pn_xflags |= PNX_ARRAYHOLESPREAD | PNX_NONCONST;
         return true;
     }
 
     MOZ_MUST_USE bool addSpreadElement(ParseNode* literal, uint32_t begin, ParseNode* inner) {
+        MOZ_ASSERT(literal->isKind(PNK_ARRAY));
+        MOZ_ASSERT(literal->isArity(PN_LIST));
+
         ParseNode* spread = newSpread(begin, inner);
         if (!spread)
             return false;
+
         literal->append(spread);
         literal->pn_xflags |= PNX_ARRAYHOLESPREAD | PNX_NONCONST;
         return true;
     }
 
     void addArrayElement(ParseNode* literal, ParseNode* element) {
+        MOZ_ASSERT(literal->isArity(PN_LIST));
+
         if (!element->isConstant())
             literal->pn_xflags |= PNX_NONCONST;
+
         literal->append(element);
     }
 
@@ -282,6 +296,9 @@ class FullParseHandler
     }
 
     MOZ_MUST_USE bool addPrototypeMutation(ParseNode* literal, uint32_t begin, ParseNode* expr) {
+        MOZ_ASSERT(literal->isKind(PNK_OBJECT));
+        MOZ_ASSERT(literal->isArity(PN_LIST));
+
         // Object literals with mutated [[Prototype]] are non-constant so that
         // singleton objects will have Object.prototype as their [[Prototype]].
         setListFlag(literal, PNX_NONCONST);
@@ -338,17 +355,19 @@ class FullParseHandler
     MOZ_MUST_USE bool addObjectMethodDefinition(ParseNode* literal, ParseNode* key, ParseNode* fn,
                                                 AccessorType atype)
     {
+        MOZ_ASSERT(literal->isKind(PNK_OBJECT));
         MOZ_ASSERT(literal->isArity(PN_LIST));
         MOZ_ASSERT(key->isKind(PNK_NUMBER) ||
                    key->isKind(PNK_OBJECT_PROPERTY_NAME) ||
                    key->isKind(PNK_STRING) ||
                    key->isKind(PNK_COMPUTED_NAME));
-        literal->pn_xflags |= PNX_NONCONST;
 
         ParseNode* propdef = newBinary(PNK_COLON, key, fn, AccessorTypeToJSOp(atype));
         if (!propdef)
             return false;
+
         literal->append(propdef);
+        literal->pn_xflags |= PNX_NONCONST;
         return true;
     }
 
@@ -431,6 +450,7 @@ class FullParseHandler
 
     MOZ_MUST_USE bool prependInitialYield(ParseNode* stmtList, ParseNode* genName) {
         MOZ_ASSERT(stmtList->isKind(PNK_STATEMENTLIST));
+        MOZ_ASSERT(stmtList->isArity(PN_LIST));
 
         TokenPos yieldPos(stmtList->pn_pos.begin, stmtList->pn_pos.begin + 1);
         ParseNode* makeGen = new_<NullaryNode>(PNK_GENERATOR, yieldPos);
@@ -439,6 +459,7 @@ class FullParseHandler
 
         MOZ_ASSERT(genName->getOp() == JSOP_GETNAME);
         genName->setOp(JSOP_SETNAME);
+
         ParseNode* genInit = newBinary(PNK_ASSIGN, genName, makeGen);
         if (!genInit)
             return false;
@@ -650,9 +671,9 @@ class FullParseHandler
                !node->pn_funbox->isArrow();
     }
 
-    void setFunctionFormalParametersAndBody(ParseNode* pn, ParseNode* kid) {
+    void setFunctionFormalParametersAndBody(ParseNode* funcNode, ParseNode* kid) {
         MOZ_ASSERT_IF(kid, kid->isKind(PNK_PARAMSBODY));
-        pn->pn_body = kid;
+        funcNode->pn_body = kid;
     }
     void setFunctionBox(ParseNode* pn, FunctionBox* funbox) {
         MOZ_ASSERT(pn->isKind(PNK_FUNCTION));
@@ -862,6 +883,9 @@ inline bool
 FullParseHandler::setLastFunctionFormalParameterDefault(ParseNode* funcpn,
                                                         ParseNode* defaultValue)
 {
+    MOZ_ASSERT(funcpn->isKind(PNK_FUNCTION));
+    MOZ_ASSERT(funcpn->isArity(PN_CODE));
+
     ParseNode* arg = funcpn->pn_body->last();
     ParseNode* pn = newBinary(PNK_ASSIGN, arg, defaultValue);
     if (!pn)

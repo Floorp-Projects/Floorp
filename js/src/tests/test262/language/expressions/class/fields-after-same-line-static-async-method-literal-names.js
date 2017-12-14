@@ -1,11 +1,11 @@
-// |reftest| skip -- class-fields is not supported
+// |reftest| skip -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-fields/literal-names.case
-// - src/class-fields/default/cls-expr-after-same-line-static-async-method.template
+// - src/class-fields/productions/cls-expr-after-same-line-static-async-method.template
 /*---
 description: Literal property names (field definitions after a static async method in the same line)
 esid: prod-FieldDefinition
-features: [class-fields, async-functions]
+features: [class, class-fields-public, async-functions]
 flags: [generated, async]
 includes: [propertyHelper.js]
 info: |
@@ -27,6 +27,7 @@ const fn = function() {}
 var C = class {
   static async m() { return 42; } a; b = 42;
   c = fn;
+
 }
 
 var c = new C();

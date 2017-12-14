@@ -1695,7 +1695,7 @@ class JSScript : public js::gc::TenuredCell
     bool isTopLevel() { return code() && !functionNonDelazifying(); }
 
     /* Ensure the script has a TypeScript. */
-    inline bool ensureHasTypes(JSContext* cx);
+    inline bool ensureHasTypes(JSContext* cx, js::AutoKeepTypeScripts&);
 
     inline js::TypeScript* types();
 

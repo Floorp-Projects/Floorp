@@ -17,13 +17,13 @@ class SingleRwFifo;
 namespace mozilla {
 
 typedef struct FarEndAudioChunk_ {
-  uint16_t mSamples;
+  size_t mSamples;
   bool mOverrun;
-  int16_t mData[1]; // variable-length
+  AudioDataValue mData[1]; // variable-length
 } FarEndAudioChunk;
 
 // This class is used to packetize and send the mixed audio from an MSG, in
-// int16, to the AEC module of WebRTC.org.
+// float, to the AEC module of WebRTC.org.
 class AudioOutputObserver
 {
 public:

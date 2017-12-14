@@ -4442,6 +4442,7 @@ JSScript::maybeSweepTypes(AutoClearTypeInferenceStateOnOOM* oom)
     // only do this if nothing has been compiled for the script, which will be
     // the case unless the script has been compiled since we started sweeping.
     if (types.sweepReleaseTypes &&
+        !types.keepTypeScripts &&
         !hasBaselineScript() &&
         !hasIonScript())
     {
@@ -4509,6 +4510,7 @@ TypeZone::TypeZone(Zone* zone)
     sweepCompilerOutputs(zone->group(), nullptr),
     sweepReleaseTypes(zone->group(), false),
     sweepingTypes(zone->group(), false),
+    keepTypeScripts(zone->group(), false),
     activeAnalysis(zone->group(), nullptr)
 {
 }
@@ -4518,6 +4520,7 @@ TypeZone::~TypeZone()
     js_delete(compilerOutputs.ref());
     js_delete(sweepCompilerOutputs.ref());
     MOZ_RELEASE_ASSERT(!sweepingTypes);
+    MOZ_ASSERT(!keepTypeScripts);
 }
 
 void
