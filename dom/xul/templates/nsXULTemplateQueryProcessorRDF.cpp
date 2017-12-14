@@ -1495,8 +1495,6 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
             return rv;
     }
 
-    bool hasContainerTest = false;
-
     TestNode* prevnode = mSimpleRuleMemberTest;
 
     // Add constraints for the LHS
@@ -1524,11 +1522,6 @@ nsXULTemplateQueryProcessorRDF::CompileSimpleQuery(nsRDFQuery* aQuery,
 
         if (name->Equals(nsGkAtoms::iscontainer, kNameSpaceID_None) ||
             name->Equals(nsGkAtoms::isempty, kNameSpaceID_None)) {
-            // Tests about containerhood and emptiness. These can be
-            // globbed together, mostly. Check to see if we've already
-            // added a container test: we only need one.
-            if (hasContainerTest)
-                continue;
 
             nsRDFConInstanceTestNode::Test iscontainer =
                 nsRDFConInstanceTestNode::eDontCare;
