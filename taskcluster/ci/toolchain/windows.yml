@@ -114,6 +114,7 @@ win64-rust-1.22:
             '--channel', '1.22.1',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
+            '--target', 'i686-pc-windows-msvc',
         ]
         toolchain-alias: win64-rust
         toolchain-artifact: public/build/rustc.tar.bz2
