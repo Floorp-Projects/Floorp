@@ -286,7 +286,7 @@ function promisePanelElementHidden(win, aPanel) {
     function onPanelClose(e) {
       aPanel.removeEventListener("popuphidden", onPanelClose);
       win.clearTimeout(timeoutId);
-      resolve();
+      executeSoon(resolve);
     }
     aPanel.addEventListener("popuphidden", onPanelClose);
   });
