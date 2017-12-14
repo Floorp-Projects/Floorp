@@ -26,6 +26,7 @@ def rustc_info(rustc):
     return namespace(
         version=Version(info.get('release', '0')),
         commit=info.get('commit-hash', 'unknown'),
+        host=info['host'],
     )
 
 
@@ -263,3 +264,39 @@ option('--enable-rust-tests',
        help='Enable building of Rust tests, and build-time execution of them')
 
 set_config('MOZ_RUST_TESTS', depends('--enable-rust-tests')(lambda v: bool(v)))
+
+option(env='WIN64_LINK', nargs=1, help='Path to link.exe that targets win64')
+option(env='WIN64_LIB', nargs=1, help='Paths to libraries for the win64 linker')
+
+set_config('WIN64_LINK', depends('WIN64_LINK')(lambda x: x))
+set_config('WIN64_LIB', depends('WIN64_LIB')(lambda x: x))
+
+
+@depends(target, rustc_info, c_compiler, 'WIN64_LINK', 'WIN64_LIB')
+def win64_cargo_linker(target, rustc_info, compiler_info, link, lib):
+    # When we're building a 32-bit Windows build with a 64-bit rustc, we
+    # need to configure the linker it will use for host binaries (build scripts)
+    # specially because the compiler configuration we use for the build is for
+    # MSVC targeting 32-bit binaries.
+    if target.kernel == 'WINNT' and target.cpu == 'x86' and \
+       compiler_info.type in ('msvc', 'clang-cl') and \
+       rustc_info.host == 'x86_64-pc-windows-msvc' and link and lib:
+        return True
+
+
+set_config('WIN64_CARGO_LINKER', win64_cargo_linker)
+
+
+@depends(win64_cargo_linker, check_build_environment)
+@imports(_from='textwrap', _import='dedent')
+def win64_cargo_linker_config(linker, env):
+    if linker:
+        return dedent('''\
+        [target.x86_64-pc-windows-msvc]
+        linker = "{objdir}/build/win64/cargo-linker.bat"
+        '''.format(objdir=env.topobjdir))
+    # We want an empty string here so we don't leave the @ variable in the config file.
+    return ''
+
+
+set_config('WIN64_CARGO_LINKER_CONFIG', win64_cargo_linker_config)
