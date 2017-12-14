@@ -10028,12 +10028,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
   FrameConstructionItemList& aItems,
   nsIFrame* aParentFrame)
 {
-  if (aItems.IsEmpty()) {
-    return;
-  }
-  const LayoutFrameType parentType = aParentFrame->Type();
-  if (parentType != LayoutFrameType::FlexContainer &&
-      parentType != LayoutFrameType::GridContainer) {
+  if (aItems.IsEmpty() || !::IsFlexOrGridContainer(aParentFrame)) {
     return;
   }
 
@@ -10717,8 +10712,7 @@ static bool
 FrameWantsToBeInAnonymousItem(const nsIFrame* aContainerFrame,
                               const nsIFrame* aFrame)
 {
-  MOZ_ASSERT(aContainerFrame->Type() == LayoutFrameType::FlexContainer ||
-             aContainerFrame->Type() == LayoutFrameType::GridContainer);
+  MOZ_ASSERT(::IsFlexOrGridContainer(aContainerFrame));
 
   // Any line-participant frames (e.g. text) definitely want to be wrapped in
   // an anonymous flex/grid item.
@@ -10742,9 +10736,7 @@ VerifyGridFlexContainerChildren(nsIFrame* aParentFrame,
                                 const nsFrameList& aChildren)
 {
 #ifdef DEBUG
-  auto parentType = aParentFrame->Type();
-  if (parentType != LayoutFrameType::FlexContainer &&
-      parentType != LayoutFrameType::GridContainer) {
+  if (!::IsFlexOrGridContainer(aParentFrame)) {
     return;
   }
 
