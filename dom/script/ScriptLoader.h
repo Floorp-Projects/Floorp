@@ -471,8 +471,8 @@ private:
 
   bool IsFetchingModule(ModuleLoadRequest* aRequest) const;
 
-  bool ModuleMapContainsModule(ModuleLoadRequest* aRequest) const;
-  RefPtr<mozilla::GenericPromise> WaitForModuleFetch(ModuleLoadRequest* aRequest);
+  bool ModuleMapContainsURL(nsIURI* aURL) const;
+  RefPtr<mozilla::GenericPromise> WaitForModuleFetch(nsIURI* aURL);
   ModuleScript* GetFetchedModule(nsIURI* aURL) const;
 
   friend bool
