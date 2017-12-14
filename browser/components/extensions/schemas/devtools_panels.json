@@ -334,12 +334,15 @@
           },
           {
             "name": "iconPath",
-            "type": "string",
-            "description": "Path of the panel's icon relative to the extension directory."
+            "description": "Path of the panel's icon relative to the extension directory, or an empty string to use the default extension icon as the panel icon.",
+            "choices": [
+              {"type": "string", "enum": [""]},
+              {"$ref": "manifest.ExtensionURL"}
+            ]
           },
           {
             "name": "pagePath",
-            "type": "string",
+            "$ref": "manifest.ExtensionURL",
             "description": "Path of the panel's HTML page relative to the extension directory."
           },
           {
