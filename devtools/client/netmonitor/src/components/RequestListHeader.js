@@ -44,6 +44,8 @@ class RequestListHeader extends Component {
     this.onContextMenu = this.onContextMenu.bind(this);
     this.drawBackground = this.drawBackground.bind(this);
     this.resizeWaterfall = this.resizeWaterfall.bind(this);
+    this.waterfallDivisionLabels = this.waterfallDivisionLabels.bind(this);
+    this.waterfallLabel = this.waterfallLabel.bind(this);
   }
 
   componentWillMount() {
@@ -98,6 +100,69 @@ class RequestListHeader extends Component {
     }
   }
 
+  /**
+   * Build the waterfall header - timing tick marks with the right spacing
+   */
+  waterfallDivisionLabels(waterfallWidth, scale) {
+    let labels = [];
+
+    // Build new millisecond tick labels...
+    let timingStep = REQUESTS_WATERFALL.HEADER_TICKS_MULTIPLE;
+    let scaledStep = scale * timingStep;
+
+    // Ignore any divisions that would end up being too close to each other.
+    while (scaledStep < REQUESTS_WATERFALL.HEADER_TICKS_SPACING_MIN) {
+      scaledStep *= 2;
+    }
+
+    // Insert one label for each division on the current scale.
+    for (let x = 0; x < waterfallWidth; x += scaledStep) {
+      let millisecondTime = x / scale;
+      let divisionScale = "millisecond";
+
+      // If the division is greater than 1 minute.
+      if (millisecondTime > 60000) {
+        divisionScale = "minute";
+      } else if (millisecondTime > 1000) {
+        // If the division is greater than 1 second.
+        divisionScale = "second";
+      }
+
+      let width = (x + scaledStep | 0) - (x | 0);
+      // Adjust the first marker for the borders
+      if (x == 0) {
+        width -= 2;
+      }
+      // Last marker doesn't need a width specified at all
+      if (x + scaledStep >= waterfallWidth) {
+        width = undefined;
+      }
+
+      labels.push(div(
+        {
+          key: labels.length,
+          className: "requests-list-timings-division",
+          "data-division-scale": divisionScale,
+          style: { width }
+        },
+        getFormattedTime(millisecondTime)
+      ));
+    }
+
+    return labels;
+  }
+
+  waterfallLabel(waterfallWidth, scale, label) {
+    let className = "button-text requests-list-waterfall-label-wrapper";
+
+    if (waterfallWidth !== null && scale !== null) {
+      label = this.waterfallDivisionLabels(waterfallWidth, scale);
+      className += " requests-list-waterfall-visible";
+    }
+
+    return div({ className }, label);
+  }
+
   render() {
     let { columns, scale, sort, sortBy, waterfallWidth } = this.props;
 
@@ -139,7 +204,7 @@ class RequestListHeader extends Component {
                   onClick: () => sortBy(name),
                 },
                   name === "waterfall"
-                    ? WaterfallLabel(waterfallWidth, scale, label)
+                    ? this.waterfallLabel(waterfallWidth, scale, label)
                     : div({ className: "button-text" }, label),
                   div({ className: "button-icon" })
                 )
@@ -150,69 +215,6 @@ class RequestListHeader extends Component {
       )
     );
   }
-}
-
-/**
- * Build the waterfall header - timing tick marks with the right spacing
- */
-function waterfallDivisionLabels(waterfallWidth, scale) {
-  let labels = [];
-
-  // Build new millisecond tick labels...
-  let timingStep = REQUESTS_WATERFALL.HEADER_TICKS_MULTIPLE;
-  let scaledStep = scale * timingStep;
-
-  // Ignore any divisions that would end up being too close to each other.
-  while (scaledStep < REQUESTS_WATERFALL.HEADER_TICKS_SPACING_MIN) {
-    scaledStep *= 2;
-  }
-
-  // Insert one label for each division on the current scale.
-  for (let x = 0; x < waterfallWidth; x += scaledStep) {
-    let millisecondTime = x / scale;
-    let divisionScale = "millisecond";
-
-    // If the division is greater than 1 minute.
-    if (millisecondTime > 60000) {
-      divisionScale = "minute";
-    } else if (millisecondTime > 1000) {
-      // If the division is greater than 1 second.
-      divisionScale = "second";
-    }
-
-    let width = (x + scaledStep | 0) - (x | 0);
-    // Adjust the first marker for the borders
-    if (x == 0) {
-      width -= 2;
-    }
-    // Last marker doesn't need a width specified at all
-    if (x + scaledStep >= waterfallWidth) {
-      width = undefined;
-    }
-
-    labels.push(div(
-      {
-        key: labels.length,
-        className: "requests-list-timings-division",
-        "data-division-scale": divisionScale,
-        style: { width }
-      },
-      getFormattedTime(millisecondTime)
-    ));
-  }
-
-  return labels;
-}
-
-function WaterfallLabel(waterfallWidth, scale, label) {
-  let className = "button-text requests-list-waterfall-label-wrapper";
-
-  if (waterfallWidth !== null && scale !== null) {
-    label = waterfallDivisionLabels(waterfallWidth, scale);
-    className += " requests-list-waterfall-visible";
-  }
-
-  return div({ className }, label);
 }
 
 module.exports = connect(
