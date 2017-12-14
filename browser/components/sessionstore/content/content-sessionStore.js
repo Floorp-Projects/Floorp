@@ -234,15 +234,7 @@ var MessageListener = {
         break;
       case "SessionStore:becomeActiveProcess":
         let shistory = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory;
-        // Check if we are at the end of the current session history, if we are,
-        // it is safe for us to collect and transmit our session history, so
-        // transmit all of it. Otherwise, we only want to transmit our index changes,
-        // so collect from kLastIndex.
-        if (shistory.globalCount - shistory.globalIndexOffset == shistory.count) {
-          SessionHistoryListener.collect();
-        } else {
-          SessionHistoryListener.collectFrom(kLastIndex);
-        }
+        SessionHistoryListener.collect();
         break;
       default:
         debug("received unknown message '" + name + "'");
