@@ -1,11 +1,11 @@
-// |reftest| skip -- class-fields is not supported
+// |reftest| skip -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-fields/computed-symbol-names.case
-// - src/class-fields/default/cls-decl-after-same-line-gen.template
+// - src/class-fields/productions/cls-decl-after-same-line-gen.template
 /*---
 description: Computed property symbol names (field definitions after a generator in the same line)
 esid: prod-FieldDefinition
-features: [Symbol, computed-property-names, class-fields]
+features: [Symbol, computed-property-names, generators, class, class-fields-public]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
@@ -27,6 +27,7 @@ var y = Symbol();
 
 class C {
   *m() { return 42; } [x]; [y] = 42;
+
 }
 
 var c = new C();

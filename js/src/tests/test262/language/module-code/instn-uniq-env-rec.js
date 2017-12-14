@@ -15,6 +15,7 @@ info: |
     1. Let env be a new Lexical Environment.
     [...]
 flags: [module]
+features: [generators]
 ---*/
 
 import './instn-uniq-env-rec-other_FIXTURE.js'

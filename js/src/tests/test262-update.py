@@ -21,8 +21,8 @@ from itertools import chain, imap
 UNSUPPORTED_FEATURES = set([
                             "tail-call-optimization",
                             "BigInt",
-                            "class-fields",
-                            "optional-catch-binding",
+                            "class-fields-public",
+                            "class-fields-private",
                             "regexp-dotall",
                             "regexp-lookbehind",
                             "regexp-named-groups",

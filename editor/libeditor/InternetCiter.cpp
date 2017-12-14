@@ -11,8 +11,7 @@
 #include "nsDebug.h"
 #include "nsDependentSubstring.h"
 #include "nsError.h"
-#include "nsILineBreaker.h"
-#include "nsLWBrkCIID.h"
+#include "mozilla/intl/LineBreaker.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsStringIterator.h"
@@ -167,8 +166,10 @@ InternetCiter::Rewrap(const nsAString& aInString,
   aOutString.Truncate();
 
   nsresult rv;
-  nsCOMPtr<nsILineBreaker> lineBreaker = do_GetService(NS_LBRK_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  RefPtr<mozilla::intl::LineBreaker> lineBreaker =
+    mozilla::intl::LineBreaker::Create();
+  MOZ_ASSERT(lineBreaker);
 
   // Loop over lines in the input string, rewrapping each one.
   uint32_t length;

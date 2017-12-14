@@ -59,6 +59,9 @@ signing_description_schema = Schema({
 
     # Routes specific to this task, if defined
     Optional('routes'): [basestring],
+
+    Optional('shipping-phase'): task_description_schema['shipping-phase'],
+    Optional('shipping-product'): task_description_schema['shipping-product'],
 })
 
 

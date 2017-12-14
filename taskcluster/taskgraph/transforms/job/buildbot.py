@@ -34,16 +34,19 @@ buildbot_run_schema = Schema({
 
 def bb_release_worker(config, worker, run):
     # props
-    release_props = get_release_config(config, force=True)
+    release_props = get_release_config(config)
     repo_path = urlparse(config.params['head_repository']).path.lstrip('/')
     revision = config.params['head_rev']
     release_props.update({
         'release_promotion': True,
         'repo_path': repo_path,
         'revision': revision,
-        'script_repo_revision': revision,
     })
     worker['properties'].update(release_props)
+    # Setting script_repo_revision to the gecko revision doesn't work for
+    # jobs that clone build/tools or other repos instead of gecko.
+    if 'script_repo_revision' not in worker['properties']:
+        worker['properties']['script_repo_revision'] = revision
 
 
 def bb_ci_worker(config, worker):

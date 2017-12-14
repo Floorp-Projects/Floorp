@@ -27,7 +27,6 @@
 #include "nsEscape.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"
-#include "nsLWBrkCIID.h"
 #include "nsIScriptElement.h"
 #include "nsAttrName.h"
 #include "nsIDocShell.h"

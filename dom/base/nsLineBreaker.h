@@ -9,7 +9,6 @@
 
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsILineBreaker.h"
 
 class nsAtom;
 class nsHyphenator;
@@ -53,7 +52,7 @@ public:
  * into AppendText calls.
  *
  * The current strategy is that we break the overall text into
- * whitespace-delimited "words". Then those words are passed to the nsILineBreaker
+ * whitespace-delimited "words". Then those words are passed to the LineBreaker
  * service for deeper analysis if they contain a "complex" character as described
  * below.
  *
@@ -66,7 +65,7 @@ public:
   nsLineBreaker();
   ~nsLineBreaker();
 
-  static inline bool IsSpace(char16_t u) { return NS_IsSpace(u); }
+  static inline bool IsSpace(char16_t u) { return mozilla::intl::NS_IsSpace(u); }
 
   static inline bool IsComplexASCIIChar(char16_t u)
   {
@@ -79,7 +78,7 @@ public:
   static inline bool IsComplexChar(char16_t u)
   {
     return IsComplexASCIIChar(u) ||
-           NS_NeedsPlatformNativeHandling(u) ||
+           mozilla::intl::NS_NeedsPlatformNativeHandling(u) ||
            (0x1100 <= u && u <= 0x11ff) || // Hangul Jamo
            (0x2000 <= u && u <= 0x21ff) || // Punctuations and Symbols
            (0x2e80 <= u && u <= 0xd7ff) || // several CJK blocks
@@ -89,8 +88,9 @@ public:
 
   // Break opportunities exist at the end of each run of breakable whitespace
   // (see IsSpace above). Break opportunities can also exist between pairs of
-  // non-whitespace characters, as determined by nsILineBreaker. We pass a whitespace-
-  // delimited word to nsILineBreaker if it contains at least one character
+  // non-whitespace characters, as determined by mozilla::intl::LineBreaker.
+  // We pass a whitespace-
+  // delimited word to LineBreaker if it contains at least one character
   // matching IsComplexChar.
   // We provide flags to control on a per-chunk basis where breaks are allowed.
   // At any character boundary, exactly one text chunk governs whether a
@@ -172,7 +172,7 @@ public:
 
   /*
    * Set word-break mode for linebreaker.  This is set by word-break property.
-   * @param aMode is nsILineBreaker::kWordBreak_* value.
+   * @param aMode is LineBreaker::kWordBreak_* value.
    */
   void SetWordBreak(uint8_t aMode) { mWordBreak = aMode; }
 

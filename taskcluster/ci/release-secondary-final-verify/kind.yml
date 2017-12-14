@@ -1,0 +1,90 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+   - post-balrog-dummy
+   - post-beetmover-dummy
+   - release-updates-builder
+
+transforms:
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.final_verify:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+   name: secondary-final-verify
+   run-on-projects: []  # to make sure this never runs as part of CI
+   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+   worker:
+      implementation: docker-worker
+      os: linux
+      docker-image: mozillareleases/python-test-runner@sha256:0729c2e6e7bc0d6a4cbccb2e66a78e1d8e8cbb5e44105d56e3c9c610230ebd69
+      max-run-time: 7200
+      retry-exit-status: 1
+      env:
+         BUILD_TOOLS_REPO:
+            by-project:
+               jamun: https://hg.mozilla.org/users/stage-ffxbld/tools
+               maple: https://hg.mozilla.org/users/asasaki_mozilla.com/tools
+               default: https://hg.mozilla.org/build/tools
+   notifications:
+      completed:
+         subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect"]
+               mozilla-release: ["log_collect"]
+               default: []
+
+      failed:
+         subject: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+      exception:
+         subject: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+jobs:
+   firefox:
+      description: secondary final verify
+      shipping-phase: promote
+      shipping-product: firefox
+      worker:
+         env:
+            FINAL_VERIFY_CONFIGS:
+               by-project:
+                  mozilla-beta: "beta-firefox-linux.cfg beta-firefox-linux64.cfg beta-firefox-macosx64.cfg beta-firefox-win32.cfg beta-firefox-win64.cfg"
+                  default: ""
+      treeherder:
+         platform: linux64/opt
+         kind: test
+         symbol: Rel(FVS)
+         tier: 1

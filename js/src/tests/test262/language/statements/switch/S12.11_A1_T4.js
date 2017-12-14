@@ -41,9 +41,11 @@ function SwitchTest(value){
   
   return result;
 }
-        
-if(!(SwitchTest(eval('Number(false)')) === 6)){
-  $ERROR("#1: SwitchTest(0) === 6. Actual:  SwitchTest(0) ==="+ SwitchTest(0)  );
+
+var n = Number(false);
+
+if(!(SwitchTest(n) === 6)){
+  $ERROR("#1: SwitchTest(Number(false)) === 6. Actual:  SwitchTest(Number(false)) ==="+ SwitchTest(n)  );
 }
 
 if(!(SwitchTest(parseInt) === 32)){

@@ -1,11 +1,11 @@
-// |reftest| skip -- class-fields is not supported
+// |reftest| skip -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-fields/static-literal-names.case
-// - src/class-fields/default/cls-expr-regular-definitions.template
+// - src/class-fields/productions/cls-expr-regular-definitions.template
 /*---
 description: Static literal property names (regular fields defintion)
 esid: prod-FieldDefinition
-features: [class-fields]
+features: [class, class-fields-public]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
@@ -27,6 +27,7 @@ const fn = function() {}
 var C = class {
   static a; b = 42;
   static c = fn
+
 }
 
 var c = new C();

@@ -161,6 +161,11 @@ MacroAssemblerX86::loadConstantSimd128Float(const SimdConstant& v, FloatRegister
 void
 MacroAssemblerX86::finish()
 {
+    // Last instruction may be an indirect jump so eagerly insert an undefined
+    // instruction byte to prevent processors from decoding data values into
+    // their pipelines. See Intel performance guides.
+    masm.ud2();
+
     if (!doubles_.empty())
         masm.haltingAlign(sizeof(double));
     for (const Double& d : doubles_) {

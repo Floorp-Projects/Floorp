@@ -37,5 +37,7 @@ def make_beetmover_description(config, jobs):
             'dependent-task': dep_job,
             'treeherder': treeherder,
             'locale': locale,
+            'shipping-phase': job.get('shipping-phase'),
+            'shipping-product': job.get('shipping-product'),
         }
         yield beet_description
