@@ -44,9 +44,10 @@ import android.view.inputmethod.ExtractedTextRequest;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 
-class GeckoInputConnection
+/* package */ class GeckoInputConnection
     extends BaseInputConnection
-    implements InputConnectionListener, GeckoEditableListener {
+    implements TextInputController.Delegate,
+               GeckoEditableListener {
 
     private static final boolean DEBUG = false;
     protected static final String LOGTAG = "GeckoInputConnection";
@@ -70,7 +71,8 @@ class GeckoInputConnection
 
     private String mCurrentInputMethod = "";
 
-    private final GeckoView mView;
+    private final GeckoSession mSession;
+    private final View mView;
     private final GeckoEditableClient mEditableClient;
     protected int mBatchEditCount;
     private ExtractedTextRequest mUpdateRequest;
@@ -81,17 +83,21 @@ class GeckoInputConnection
     // Prevent showSoftInput and hideSoftInput from causing reentrant calls on some devices.
     private volatile boolean mSoftInputReentrancyGuard;
 
-    public static GeckoEditableListener create(GeckoView targetView,
-                                               GeckoEditableClient editable) {
-        if (DEBUG)
-            return DebugGeckoInputConnection.create(targetView, editable);
-        else
-            return new GeckoInputConnection(targetView, editable);
+    public static TextInputController.Delegate create(GeckoSession session,
+                                                      View targetView,
+                                                      GeckoEditableClient editable) {
+        if (DEBUG) {
+            return DebugGeckoInputConnection.create(session, targetView, editable);
+        } else {
+            return new GeckoInputConnection(session, targetView, editable);
+        }
     }
 
-    protected GeckoInputConnection(GeckoView targetView,
+    protected GeckoInputConnection(GeckoSession session,
+                                   View targetView,
                                    GeckoEditableClient editable) {
         super(targetView, true);
+        mSession = session;
         mView = targetView;
         mEditableClient = editable;
         mIMEState = IME_STATE_DISABLED;
@@ -202,7 +208,8 @@ class GeckoInputConnection
         return extract;
     }
 
-    private GeckoView getView() {
+    @Override // TextInputController.Delegate
+    public View getView() {
         return mView;
     }
 
@@ -234,13 +241,12 @@ class GeckoInputConnection
                     v.clearFocus();
                     v.requestFocus();
                 }
-                final GeckoView view = getView();
-                if (view != null && view.getSession() != null) {
-                    if (showToolbar) {
-                        view.getDynamicToolbarAnimator().showToolbar(/*immediately*/ true);
-                    }
-                    view.getEventDispatcher().dispatch("GeckoView:ZoomToInput", null);
+
+                if (showToolbar) {
+                    mSession.getDynamicToolbarAnimator().showToolbar(/* immediately */ true);
                 }
+                mSession.getEventDispatcher().dispatch("GeckoView:ZoomToInput", null);
+
                 mSoftInputReentrancyGuard = true;
                 imm.showSoftInput(v, 0);
                 mSoftInputReentrancyGuard = false;
@@ -357,7 +363,7 @@ class GeckoInputConnection
             return;
         }
 
-        final GeckoView view = getView();
+        final View view = getView();
         if (view == null) {
             return;
         }
@@ -387,20 +393,16 @@ class GeckoInputConnection
     }
 
     @TargetApi(21)
-    /* package */ void updateCompositionRectsOnUi(final GeckoView view,
+    /* package */ void updateCompositionRectsOnUi(final View view,
                                                   final RectF[] rects,
                                                   final CharSequence composition) {
-        if (view.getSession() == null) {
-            return;
-        }
-
         if (mCursorAnchorInfoBuilder == null) {
             mCursorAnchorInfoBuilder = new CursorAnchorInfo.Builder();
         }
         mCursorAnchorInfoBuilder.reset();
 
         final Matrix matrix = new Matrix();
-        view.getSession().getClientToScreenMatrix(matrix);
+        mSession.getClientToScreenMatrix(matrix);
         mCursorAnchorInfoBuilder.setMatrix(matrix);
 
         for (int i = 0; i < rects.length; i++) {
@@ -477,7 +479,7 @@ class GeckoInputConnection
         return sBackgroundHandler;
     }
 
-    private boolean canReturnCustomHandler() {
+    private synchronized boolean canReturnCustomHandler() {
         if (mIMEState == IME_STATE_DISABLED) {
             return false;
         }
@@ -490,8 +492,8 @@ class GeckoInputConnection
             // changes, we gracefully fall back to using the regular Handler.
             if ("startInputInner".equals(frame.getMethodName()) &&
                 "android.view.inputmethod.InputMethodManager".equals(frame.getClassName())) {
-                // only return our own Handler to InputMethodManager
-                return true;
+                // Only return our own Handler to InputMethodManager and only prior to 24.
+                return Build.VERSION.SDK_INT < 24;
             }
             if (CUSTOM_HANDLER_TEST_METHOD.equals(frame.getMethodName()) &&
                 CUSTOM_HANDLER_TEST_CLASS.equals(frame.getClassName())) {
@@ -517,24 +519,26 @@ class GeckoInputConnection
     // Once we update to 24, we can use the actual override annotation and remove the lint suppression.
     @SuppressLint("Override")
     public Handler getHandler() {
+        final Handler handler;
         if (isPhysicalKeyboardPresent()) {
-            return ThreadUtils.getUiHandler();
+            handler = ThreadUtils.getUiHandler();
+        } else {
+            handler = getBackgroundHandler();
         }
-
-        return getBackgroundHandler();
+        return mEditableClient.setInputConnectionHandler(handler);
     }
 
-    @Override // InputConnectionListener
+    @Override // TextInputController.Delegate
     public Handler getHandler(Handler defHandler) {
         if (!canReturnCustomHandler()) {
             return defHandler;
         }
 
-        return mEditableClient.setInputConnectionHandler(getHandler());
+        return getHandler();
     }
 
-    @Override
-    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+    @Override // TextInputController.Delegate
+    public synchronized InputConnection onCreateInputConnection(EditorInfo outAttrs) {
         // Some keyboards require us to fill out outAttrs even if we return null.
         outAttrs.inputType = InputType.TYPE_CLASS_TEXT;
         outAttrs.imeOptions = EditorInfo.IME_ACTION_NONE;
@@ -746,7 +750,7 @@ class GeckoInputConnection
         return false; // seems to always return false
     }
 
-    @Override
+    @Override // TextInputController.Delegate
     public boolean onKeyPreIme(int keyCode, KeyEvent event) {
         return false;
     }
@@ -847,12 +851,12 @@ class GeckoInputConnection
         return true;
     }
 
-    @Override
+    @Override // TextInputController.Delegate
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         return processKey(KeyEvent.ACTION_DOWN, keyCode, event);
     }
 
-    @Override
+    @Override // TextInputController.Delegate
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         return processKey(KeyEvent.ACTION_UP, keyCode, event);
     }
@@ -876,7 +880,7 @@ class GeckoInputConnection
         };
     }
 
-    @Override
+    @Override // TextInputController.Delegate
     public boolean onKeyMultiple(int keyCode, int repeatCount, final KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_UNKNOWN) {
             // KEYCODE_UNKNOWN means the characters are in KeyEvent.getCharacters()
@@ -900,7 +904,7 @@ class GeckoInputConnection
         return true;
     }
 
-    @Override
+    @Override // TextInputController.Delegate
     public boolean onKeyLongPress(int keyCode, KeyEvent event) {
         View v = getView();
         switch (keyCode) {
@@ -915,8 +919,8 @@ class GeckoInputConnection
         return false;
     }
 
-    @Override
-    public boolean isIMEEnabled() {
+    @Override // TextInputController.Delegate
+    public synchronized boolean isInputActive() {
         // make sure this picks up PASSWORD and PLUGIN states as well
         return mIMEState != IME_STATE_DISABLED;
     }
@@ -973,8 +977,9 @@ class GeckoInputConnection
     }
 
     @Override
-    public void notifyIMEContext(int state, String typeHint, String modeHint, String actionHint,
-                                 boolean inPrivateBrowsing, boolean isUserAction) {
+    public synchronized void notifyIMEContext(int state, String typeHint, String modeHint,
+                                              String actionHint, boolean inPrivateBrowsing,
+                                              boolean isUserAction) {
         // For some input type we will use a widget to display the ui, for those we must not
         // display the ime. We can display a widget for date and time types and, if the sdk version
         // is 11 or greater, for datetime/month/week as well.
@@ -1035,23 +1040,25 @@ final class DebugGeckoInputConnection
     private InputConnection mProxy;
     private final StringBuilder mCallLevel;
 
-    private DebugGeckoInputConnection(GeckoView targetView,
+    private DebugGeckoInputConnection(GeckoSession session,
+                                      View targetView,
                                       GeckoEditableClient editable) {
-        super(targetView, editable);
+        super(session, targetView, editable);
         mCallLevel = new StringBuilder();
     }
 
-    public static GeckoEditableListener create(GeckoView targetView,
-                                               GeckoEditableClient editable) {
+    public static TextInputController.Delegate create(GeckoSession session,
+                                                      View targetView,
+                                                      GeckoEditableClient editable) {
         final Class<?>[] PROXY_INTERFACES = { InputConnection.class,
-                InputConnectionListener.class,
+                TextInputController.Delegate.class,
                 GeckoEditableListener.class };
         DebugGeckoInputConnection dgic =
-                new DebugGeckoInputConnection(targetView, editable);
-        dgic.mProxy = (InputConnection)Proxy.newProxyInstance(
+                new DebugGeckoInputConnection(session, targetView, editable);
+        dgic.mProxy = (InputConnection) Proxy.newProxyInstance(
                 GeckoInputConnection.class.getClassLoader(),
                 PROXY_INTERFACES, dgic);
-        return (GeckoEditableListener)dgic.mProxy;
+        return (TextInputController.Delegate) dgic.mProxy;
     }
 
     @Override
