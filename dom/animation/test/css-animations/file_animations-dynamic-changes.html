@@ -100,7 +100,7 @@ promise_test(function(t) {
   var secondAnimation = div.getAnimations()[1];
 
   // Wait before continuing so we can compare start times
-  return secondAnimation.ready.then(waitForFrame).then(function() {
+  return secondAnimation.ready.then(waitForNextFrame).then(function() {
     // Trim list of animations
     div.style.animationName = 'anim1';
     var animations = div.getAnimations();
