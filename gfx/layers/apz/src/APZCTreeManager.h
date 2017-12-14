@@ -51,6 +51,7 @@ class InputQueue;
 class GeckoContentController;
 class HitTestingTreeNode;
 class WebRenderScrollData;
+struct AncestorTransform;
 
 /**
  * ****************** NOTE ON LOCK ORDERING IN APZ **************************
@@ -601,7 +602,7 @@ private:
   HitTestingTreeNode* PrepareNodeForLayer(const ScrollNode& aLayer,
                                           const FrameMetrics& aMetrics,
                                           uint64_t aLayersId,
-                                          const gfx::Matrix4x4& aAncestorTransform,
+                                          const AncestorTransform& aAncestorTransform,
                                           HitTestingTreeNode* aParent,
                                           HitTestingTreeNode* aNextSibling,
                                           TreeBuildingState& aState);

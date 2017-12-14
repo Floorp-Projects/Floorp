@@ -70,6 +70,27 @@ public:
   virtual AndroidSpecificState* AsAndroidSpecificState() { return nullptr; }
 };
 
+/*
+ * Represents a transform from the ParentLayer coordinate space of an APZC
+ * to the ParentLayer coordinate space of its parent APZC.
+ * Each layer along the way contributes to the transform. We track whether
+ * one of these contributions is a perspective transform, as those require
+ * some special handling.
+ */
+struct AncestorTransform {
+  gfx::Matrix4x4 mTransform;
+  bool mContainsPerspectiveTransform;
+
+  friend AncestorTransform operator*(const AncestorTransform& aA,
+                                     const AncestorTransform& aB)
+  {
+    return AncestorTransform{
+      aA.mTransform * aB.mTransform,
+      aA.mContainsPerspectiveTransform || aB.mContainsPerspectiveTransform
+    };
+  }
+};
+
 /**
  * Controller for all panning and zooming logic. Any time a user input is
  * detected and it must be processed in some way to affect what the user sees,
@@ -1198,12 +1219,16 @@ private:
    * hit-testing to see which APZC instance should handle touch events.
    */
 public:
-  void SetAncestorTransform(const Matrix4x4& aTransformToLayer) {
-    mAncestorTransform = aTransformToLayer;
+  void SetAncestorTransform(const AncestorTransform& aAncestorTransform) {
+    mAncestorTransform = aAncestorTransform;
   }
 
   Matrix4x4 GetAncestorTransform() const {
-    return mAncestorTransform;
+    return mAncestorTransform.mTransform;
+  }
+
+  bool AncestorTransformContainsPerspective() const {
+    return mAncestorTransform.mContainsPerspectiveTransform;
   }
 
   // Returns whether or not this apzc contains the given screen point within
@@ -1220,7 +1245,7 @@ private:
   /* This is the cumulative CSS transform for all the layers from (and including)
    * the parent APZC down to (but excluding) this one, and excluding any
    * perspective transforms. */
-  Matrix4x4 mAncestorTransform;
+  AncestorTransform mAncestorTransform;
 
 
   /* ===================================================================
