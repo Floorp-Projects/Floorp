@@ -993,16 +993,19 @@ nsHttpChannelAuthProvider::BlockPrompt()
     bool nonWebContent = false;
 
     if (loadInfo) {
-        nsCOMPtr<nsIPrincipal> triggeringPrinc =
-            loadInfo->TriggeringPrincipal();
-        if (nsContentUtils::IsSystemPrincipal(triggeringPrinc)) {
-            nonWebContent = true;
-        }
-
         if (loadInfo->GetExternalContentPolicyType() !=
             nsIContentPolicy::TYPE_DOCUMENT) {
             topDoc = false;
         }
+
+        if (!topDoc) {
+            nsCOMPtr<nsIPrincipal> triggeringPrinc =
+                loadInfo->TriggeringPrincipal();
+            if (nsContentUtils::IsSystemPrincipal(triggeringPrinc)) {
+                nonWebContent = true;
+            }
+        }
+
         if (loadInfo->GetExternalContentPolicyType() ==
             nsIContentPolicy::TYPE_XMLHTTPREQUEST) {
             xhr = true;
@@ -1027,12 +1030,12 @@ nsHttpChannelAuthProvider::BlockPrompt()
     }
 
     if (gHttpHandler->IsTelemetryEnabled()) {
-        if (nonWebContent) {
-            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_3,
-                                  HTTP_AUTH_DIALOG_NON_WEB_CONTENT);
-        } else if (topDoc) {
+        if (topDoc) {
             Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_3,
                                   HTTP_AUTH_DIALOG_TOP_LEVEL_DOC);
+        } else if (nonWebContent) {
+            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_3,
+                                   HTTP_AUTH_DIALOG_NON_WEB_CONTENT);
         } else if (!mCrossOrigin) {
             if (xhr) {
                 Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_3,
@@ -1047,7 +1050,7 @@ nsHttpChannelAuthProvider::BlockPrompt()
         }
     }
 
-    if (!sNonWebContentTriggeredAuthAllow && nonWebContent) {
+    if (!topDoc && !sNonWebContentTriggeredAuthAllow && nonWebContent) {
         return true;
     }
 
@@ -1065,7 +1068,8 @@ nsHttpChannelAuthProvider::BlockPrompt()
         // If pref network.auth.subresource-img-cross-origin-http-auth-allow
         // is set, http-authentication dialog for image subresources is
         // blocked.
-        if (!sImgCrossOriginAuthAllowPref &&
+        if (mCrossOrigin &&
+            !sImgCrossOriginAuthAllowPref &&
             loadInfo &&
             ((loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_IMAGE) ||
              (loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_IMAGESET))) {
