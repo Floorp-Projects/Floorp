@@ -14,7 +14,7 @@ add_task(async function() {
     PlacesUtils.history.addObserver({
       __proto__: NavHistoryObserver.prototype,
       _notified: [],
-      onVisit(uri, id, time, sessionId, referrerId, transition) {
+      onVisit(uri, id, time, referrerId, transition) {
         info("Received onVisit: " + uri.spec);
         this._notified.push(uri);
 
@@ -44,6 +44,17 @@ add_task(async function() {
 
           resolve();
         })();
+      },
+      onVisits(visits) {
+        is(visits.length, 1, "Right number of visits notified");
+        let {
+          uri,
+          visitId,
+          time,
+          referrerId,
+          transitionType,
+        } = visits[0];
+        this.onVisit(uri, visitId, time, referrerId, transitionType);
       }
     });
   });

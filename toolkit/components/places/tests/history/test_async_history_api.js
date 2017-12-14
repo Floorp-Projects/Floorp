@@ -92,23 +92,30 @@ function VisitObserver(aURI,
 }
 VisitObserver.prototype = {
   __proto__: NavHistoryObserver.prototype,
-  onVisit(aURI,
-                    aVisitId,
-                    aTime,
-                    aSessionId,
-                    aReferringId,
-                    aTransitionType,
-                    aGUID,
-                    aHidden,
-                    aVisitCount,
-                    aTyped,
-                    aLastKnownTitle) {
-    let args = [...arguments].slice(1);
-    info("onVisit(" + aURI.spec + args.join(", ") + ")");
-    if (!this.uri.equals(aURI) || this.guid != aGUID) {
+  onVisits(aVisits) {
+    info("onVisits()!!!");
+    Assert.equal(aVisits.length, 1, "Right number of visits notified");
+    let {
+      uri,
+      visitId,
+      time,
+      referrerId,
+      transitionType,
+      guid,
+      hidden,
+      visitCount,
+      typed,
+      lastKnownTitle,
+    } = aVisits[0];
+    let args = [
+      visitId, time, referrerId, transitionType, guid,
+      hidden, visitCount, typed, lastKnownTitle,
+    ];
+    info("onVisit(" + uri.spec + args.join(", ") + ")");
+    if (!this.uri.equals(uri) || this.guid != guid) {
       return;
     }
-    this.callback(aTime, aTransitionType, aLastKnownTitle);
+    this.callback(time, transitionType, lastKnownTitle);
   },
 };
 
@@ -975,7 +982,9 @@ add_task(async function test_title_change_notifies() {
 
   let visitPromise = new Promise(resolve => {
     PlacesUtils.history.addObserver({
-      onVisit(uri) {
+      onVisits(visits) {
+        Assert.equal(visits.length, 1, "Should only get notified for one visit.");
+        let {uri} = visits[0];
         Assert.equal(uri.spec, place.uri.spec, "Should get notified for visiting the new URI.");
         PlacesUtils.history.removeObserver(this);
         resolve();

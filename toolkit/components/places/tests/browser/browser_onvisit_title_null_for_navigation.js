@@ -4,11 +4,15 @@ add_task(async function checkTitleNotificationForNavigation() {
   const EXPECTED_URL = Services.io.newURI(TEST_PATH + "empty_page.html");
   let promiseTitleChanged = new Promise(resolve => {
     let obs = {
-      onVisit(aURI, aVisitId, aTime, aSessionId, aReferrerVisitId, aTransitionType,
-              aGuid, aHidden, aVisitCount, aTyped, aLastKnownTitle) {
-        info("onVisit: " + aURI.spec);
-        if (aURI.equals(EXPECTED_URL)) {
-          Assert.equal(aLastKnownTitle, null, "Should not have a title");
+      onVisits(aVisits) {
+        Assert.equal(aVisits.length, 1, "Right number of visits notified");
+        let {
+          uri,
+          lastKnownTitle,
+        } = aVisits[0];
+        info("onVisits: " + uri.spec);
+        if (uri.equals(EXPECTED_URL)) {
+          Assert.equal(lastKnownTitle, null, "Should not have a title");
         }
       },
 

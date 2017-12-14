@@ -47,7 +47,7 @@
          onBeginUpdateBatch: function PEX_onBeginUpdateBatch() {},
          onEndUpdateBatch: function PEX_onEndUpdateBatch() {},
          onClearHistory() {},
-         onVisit() {},
+         onVisits() {},
          onTitleChanged() {},
          onDeleteURI(aURI, aGUID, aReason) {
            PlacesUtils.history.removeObserver(historyObserver);

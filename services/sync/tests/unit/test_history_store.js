@@ -20,7 +20,7 @@ function promiseOnVisitObserved() {
       onPageChanged: function onPageChanged() {},
       onTitleChanged: function onTitleChanged() {
       },
-      onVisit: function onVisit() {
+      onVisits: function onVisits() {
         PlacesUtils.history.removeObserver(this);
         res();
       },

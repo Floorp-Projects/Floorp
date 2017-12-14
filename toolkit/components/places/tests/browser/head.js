@@ -78,7 +78,7 @@ function NavHistoryObserver() {}
 NavHistoryObserver.prototype = {
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
-  onVisit() {},
+  onVisits() {},
   onTitleChanged() {},
   onDeleteURI() {},
   onClearHistory() {},

@@ -22,9 +22,24 @@ const PRIVATE_URI = NetUtil.newURI("http://www.example.net/");
 function waitForOnVisit(aCallback) {
   let historyObserver = {
     __proto__: NavHistoryObserver.prototype,
-    onVisit: function HO_onVisit() {
+    onVisits: function HO_onVisit(aVisits) {
+      Assert.equal(aVisits.length, 1, "Right number of visits notified");
+      let {
+        uri,
+        visitId,
+        time,
+        referrerId,
+        transitionType,
+        guid,
+        hidden,
+        visitCount,
+        typed,
+        lastKnownTitle,
+      } = aVisits[0];
       PlacesUtils.history.removeObserver(this);
-      aCallback.apply(null, arguments);
+      aCallback(uri, visitId, time, 0, referrerId,
+                transitionType, guid, hidden, visitCount,
+                typed, lastKnownTitle);
     }
   };
   PlacesUtils.history.addObserver(historyObserver);
@@ -159,7 +174,7 @@ add_test(function test_dh_addDownload_referrer() {
   });
 
   // Note that we don't pass the optional callback argument here because we must
-  // ensure that we receive the onVisit notification before we call addDownload.
+  // ensure that we receive the onVisits notification before we call addDownload.
   PlacesUtils.asyncHistory.updatePlaces({
     uri: REFERRER_URI,
     visits: [{
@@ -238,7 +253,7 @@ add_test(function test_dh_details() {
   let historyObserver = {
     onBeginUpdateBatch() {},
     onEndUpdateBatch() {},
-    onVisit() {},
+    onVisits() {},
     onTitleChanged: function HO_onTitleChanged(aURI, aPageTitle) {
       if (aURI.equals(SOURCE_URI)) {
         titleSet = true;
