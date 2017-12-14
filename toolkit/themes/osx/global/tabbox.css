@@ -55,7 +55,7 @@ tab[visuallyselected="true"]:not(:-moz-window-inactive) {
   color: #FFF;
 }
 
-@media not all and (-moz-mac-yosemite-theme) {
+@media (-moz-mac-yosemite-theme: 0) {
   tab[visuallyselected="true"] {
     color: #FFF;
     text-shadow: rgba(0, 0, 0, 0.4) 0 1px;
