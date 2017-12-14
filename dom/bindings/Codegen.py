@@ -7725,23 +7725,6 @@ class CGPerSignatureCall(CGThing):
         self.isConstructor = isConstructor
         cgThings = []
 
-        # Here, we check if the current getter, setter, method, interface or
-        # inherited interfaces have the UnsafeInPrerendering extended attribute
-        # and if so, we add a check to make sure it is safe.
-        if (idlNode.getExtendedAttribute("UnsafeInPrerendering") or
-            descriptor.interface.getExtendedAttribute("UnsafeInPrerendering") or
-            any(i.getExtendedAttribute("UnsafeInPrerendering")
-                for i in descriptor.interface.getInheritedInterfaces())):
-                cgThings.append(CGGeneric(dedent(
-                    """
-                    if (!mozilla::dom::EnforceNotInPrerendering(cx, obj)) {
-                        // Return false from the JSNative in order to trigger
-                        // an uncatchable exception.
-                        MOZ_ASSERT(!JS_IsExceptionPending(cx));
-                        return false;
-                    }
-                    """)))
-
         deprecated = (idlNode.getExtendedAttribute("Deprecated") or
                       (idlNode.isStatic() and descriptor.interface.getExtendedAttribute("Deprecated")))
         if deprecated:

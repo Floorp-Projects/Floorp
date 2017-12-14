@@ -188,14 +188,6 @@ Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender()
     }
   }
 
-  if (linkTypes & nsStyleLinkElement::ePRERENDER) {
-    nsCOMPtr<nsIURI> uri(GetURI());
-    if (uri && mElement->OwnerDoc()) {
-      mElement->OwnerDoc()->PrerenderHref(uri);
-      return;
-    }
-  }
-
   if (linkTypes & nsStyleLinkElement::eDNS_PREFETCH) {
     if (nsHTMLDNSPrefetch::IsAllowed(mElement->OwnerDoc())) {
       nsHTMLDNSPrefetch::PrefetchLow(this);

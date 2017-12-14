@@ -1431,12 +1431,6 @@ nsXULElement::LoadSrc()
         (new AsyncEventDispatcher(this,
                                   NS_LITERAL_STRING("XULFrameLoaderCreated"),
                                   /* aBubbles */ true))->RunDOMEventWhenSafe();
-
-        if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::prerendered,
-                        NS_LITERAL_STRING("true"), eIgnoreCase)) {
-            nsresult rv = frameLoader->SetIsPrerendered();
-            NS_ENSURE_SUCCESS(rv,rv);
-        }
     }
 
     return frameLoader->LoadFrame(false);
@@ -1467,13 +1461,6 @@ nsXULElement::PresetOpenerWindow(mozIDOMWindowProxy* aWindow, ErrorResult& aRv)
     MOZ_ASSERT(!slots->mFrameLoaderOrOpener, "A frameLoader or opener is present when calling PresetOpenerWindow");
 
     slots->mFrameLoaderOrOpener = aWindow;
-}
-
-nsresult
-nsXULElement::SetIsPrerendered()
-{
-  return SetAttr(kNameSpaceID_None, nsGkAtoms::prerendered, nullptr,
-                 NS_LITERAL_STRING("true"), true);
 }
 
 void

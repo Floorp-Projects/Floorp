@@ -33,7 +33,6 @@
 #include "nsWeakReference.h"
 #include "Units.h"
 #include "nsIWidget.h"
-#include "nsIPartialSHistory.h"
 
 class nsFrameLoader;
 class nsIFrameLoader;
@@ -643,11 +642,6 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvGetTabCount(uint32_t* aValue) override;
 
-  virtual mozilla::ipc::IPCResult RecvSHistoryUpdate(const uint32_t& aCount,
-                                                     const uint32_t& aLocalIndex,
-                                                     const bool& aTruncate) override;
-
-  virtual mozilla::ipc::IPCResult RecvRequestCrossBrowserNavigation(const uint32_t& aGlobalIndex) override;
   virtual mozilla::ipc::IPCResult RecvShowCanvasPermissionPrompt(const nsCString& aFirstPartyURI) override;
 
   ContentCacheInParent mContentCache;
