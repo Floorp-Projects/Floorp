@@ -138,7 +138,7 @@
   padding-inline-end: 9px;
 }
 
-@media not all and (-moz-windows-classic) {
+@media (-moz-windows-classic: 0) {
   #placesToolbox {
     -moz-appearance: none;
     background-color: transparent;
