@@ -602,98 +602,6 @@ addMessageListener("Browser:AppTab", function(message) {
   }
 });
 
-let PrerenderContentHandler = {
-  init() {
-    this._pending = [];
-    this._idMonotonic = 0;
-    this._initialized = true;
-    addMessageListener("Prerender:Canceled", this);
-    addMessageListener("Prerender:Swapped", this);
-  },
-
-  get initialized() {
-    return !!this._initialized;
-  },
-
-  receiveMessage(aMessage) {
-    switch (aMessage.name) {
-      case "Prerender:Canceled": {
-        for (let i = 0; i < this._pending.length; ++i) {
-          if (this._pending[i].id === aMessage.data.id) {
-            if (this._pending[i].failure) {
-              this._pending[i].failure.run();
-            }
-            // Remove the item from the array
-            this._pending.splice(i, 1);
-            break;
-          }
-        }
-        break;
-      }
-      case "Prerender:Swapped": {
-        for (let i = 0; i < this._pending.length; ++i) {
-          if (this._pending[i].id === aMessage.data.id) {
-            if (this._pending[i].success) {
-              this._pending[i].success.run();
-            }
-            // Remove the item from the array
-            this._pending.splice(i, 1);
-            break;
-          }
-        }
-        break;
-      }
-    }
-  },
-
-  startPrerenderingDocument(aHref, aReferrer, aTriggeringPrincipal) {
-    // XXX: Make this constant a pref
-    if (this._pending.length >= 2) {
-      return;
-    }
-
-    let id = ++this._idMonotonic;
-    sendAsyncMessage("Prerender:Request", {
-      href: aHref.spec,
-      referrer: aReferrer ? aReferrer.spec : null,
-      id,
-      triggeringPrincipal: Utils.serializePrincipal(aTriggeringPrincipal),
-    });
-
-    this._pending.push({
-      href: aHref,
-      referrer: aReferrer,
-      id,
-      success: null,
-      failure: null,
-    });
-  },
-
-  shouldSwitchToPrerenderedDocument(aHref, aReferrer, aSuccess, aFailure) {
-    // Check if we think there is a prerendering document pending for the given
-    // href and referrer. If we think there is one, we will send a message to
-    // the parent process asking it to do a swap, and hook up the success and
-    // failure listeners.
-    for (let i = 0; i < this._pending.length; ++i) {
-      let p = this._pending[i];
-      if (p.href.equals(aHref) && p.referrer.equals(aReferrer)) {
-        p.success = aSuccess;
-        p.failure = aFailure;
-        sendAsyncMessage("Prerender:Swap", {id: p.id});
-        return true;
-      }
-    }
-
-    return false;
-  }
-};
-
-if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
-  // We only want to initialize the PrerenderContentHandler in the content
-  // process. Outside of the content process, this should be unused.
-  PrerenderContentHandler.init();
-}
-
 var WebBrowserChrome = {
   onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab) {
     return BrowserUtils.onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab);
@@ -717,20 +625,6 @@ var WebBrowserChrome = {
   reloadInFreshProcess(aDocShell, aURI, aReferrer, aTriggeringPrincipal, aLoadFlags) {
     E10SUtils.redirectLoad(aDocShell, aURI, aReferrer, aTriggeringPrincipal, true, aLoadFlags);
     return true;
-  },
-
-  startPrerenderingDocument(aHref, aReferrer, aTriggeringPrincipal) {
-    if (PrerenderContentHandler.initialized) {
-      PrerenderContentHandler.startPrerenderingDocument(aHref, aReferrer, aTriggeringPrincipal);
-    }
-  },
-
-  shouldSwitchToPrerenderedDocument(aHref, aReferrer, aSuccess, aFailure) {
-    if (PrerenderContentHandler.initialized) {
-      return PrerenderContentHandler.shouldSwitchToPrerenderedDocument(
-        aHref, aReferrer, aSuccess, aFailure);
-    }
-    return false;
   }
 };
 
