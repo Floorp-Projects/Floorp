@@ -7,13 +7,16 @@
 TEST_DIRS += ['gtest']
 
 EXPORTS += [
-    'nsILineBreaker.h',
     'nsIWordBreaker.h',
     'nsLWBrkCIID.h',
 ]
 
+EXPORTS.mozilla.intl += [
+    'LineBreaker.h',
+]
+
 UNIFIED_SOURCES += [
-    'nsJISx4051LineBreaker.cpp',
+    'LineBreaker.cpp',
     'nsSampleWordBreaker.cpp',
 ]
 
