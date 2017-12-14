@@ -180,10 +180,8 @@
 #include "nsIURL.h"
 #include "nsIWebNavigation.h"
 #include "nsIWindowMediator.h"
-#include "nsIWordBreaker.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
-#include "nsLWBrkCIID.h"
 #include "nsMappedAttributes.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -267,7 +265,7 @@ nsIStringBundle *nsContentUtils::sStringBundles[PropertiesFile_COUNT];
 nsIContentPolicy *nsContentUtils::sContentPolicyService;
 bool nsContentUtils::sTriedToGetContentPolicy = false;
 RefPtr<mozilla::intl::LineBreaker> nsContentUtils::sLineBreaker;
-nsIWordBreaker *nsContentUtils::sWordBreaker;
+RefPtr<mozilla::intl::WordBreaker> nsContentUtils::sWordBreaker;
 nsIBidiKeyboard *nsContentUtils::sBidiKeyboard = nullptr;
 uint32_t nsContentUtils::sScriptBlockerCount = 0;
 uint32_t nsContentUtils::sDOMNodeRemovedSuppressCount = 0;
@@ -608,8 +606,7 @@ nsContentUtils::Init()
 
   sLineBreaker = mozilla::intl::LineBreaker::Create();
 
-  rv = CallGetService(NS_WBRK_CONTRACTID, &sWordBreaker);
-  NS_ENSURE_SUCCESS(rv, rv);
+  sWordBreaker = mozilla::intl::WordBreaker::Create();
 
   if (!InitializeEventTable())
     return NS_ERROR_FAILURE;
@@ -2119,7 +2116,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sIOService);
   NS_IF_RELEASE(sUUIDGenerator);
   sLineBreaker = nullptr;
-  NS_IF_RELEASE(sWordBreaker);
+  sWordBreaker = nullptr;
   NS_IF_RELEASE(sBidiKeyboard);
 
   delete sAtomEventTable;

@@ -3,19 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/intl/WordBreaker.h"
 
-#include "nsSampleWordBreaker.h"
+using mozilla::intl::WordBreaker;
+using mozilla::intl::WordBreakClass;
+using mozilla::intl::WordRange;
 
-nsSampleWordBreaker::nsSampleWordBreaker()
+/*static*/
+already_AddRefed<WordBreaker>
+WordBreaker::Create()
 {
-}
-nsSampleWordBreaker::~nsSampleWordBreaker()
-{
+  return RefPtr<WordBreaker>(new WordBreaker()).forget();
 }
 
-NS_IMPL_ISUPPORTS(nsSampleWordBreaker, nsIWordBreaker)
 
-bool nsSampleWordBreaker::BreakInBetween(
+bool WordBreaker::BreakInBetween(
   const char16_t* aText1 , uint32_t aTextLen1,
   const char16_t* aText2 , uint32_t aTextLen2)
 {
@@ -42,8 +44,8 @@ bool nsSampleWordBreaker::BreakInBetween(
 #define IS_HALFWIDTHKATAKANA(c)         (( 0xFF60 <= (c)) && ((c) <= 0xFF9F))
 #define IS_THAI(c)         (0x0E00 == (0xFF80 & (c) )) // Look at the higest 9 bits
 
-/* static */ nsWordBreakClass
-nsIWordBreaker::GetClass(char16_t c)
+/* static */ WordBreakClass
+WordBreaker::GetClass(char16_t c)
 {
   // begin of the hack
 
@@ -76,14 +78,14 @@ nsIWordBreaker::GetClass(char16_t c)
 		  return kWbClassAlphaLetter;
 	  }
   }
-  return static_cast<nsWordBreakClass>(0);
+  return static_cast<WordBreakClass>(0);
 }
 
-nsWordRange nsSampleWordBreaker::FindWord(
+WordRange WordBreaker::FindWord(
   const char16_t* aText , uint32_t aTextLen,
   uint32_t aOffset)
 {
-  nsWordRange range;
+  WordRange range;
   NS_PRECONDITION( nullptr != aText, "null ptr");
   NS_PRECONDITION( 0 != aTextLen, "len = 0");
   NS_PRECONDITION( aOffset <= aTextLen, "aOffset > aTextLen");
@@ -94,7 +96,7 @@ nsWordRange nsSampleWordBreaker::FindWord(
   if(!aText || aOffset > aTextLen)
     return range;
 
-  nsWordBreakClass c = GetClass(aText[aOffset]);
+  WordBreakClass c = GetClass(aText[aOffset]);
   uint32_t i;
   // Scan forward
   range.mEnd--;
@@ -125,10 +127,10 @@ nsWordRange nsSampleWordBreaker::FindWord(
   return range;
 }
 
-int32_t nsSampleWordBreaker::NextWord(
+int32_t WordBreaker::NextWord(
   const char16_t* aText, uint32_t aLen, uint32_t aPos)
 {
-  nsWordBreakClass c1, c2;
+  WordBreakClass c1, c2;
   uint32_t cur = aPos;
   if (cur == aLen)
     return NS_WORDBREAKER_NEED_MORE_TEXT;

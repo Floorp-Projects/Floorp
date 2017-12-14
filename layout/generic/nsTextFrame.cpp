@@ -64,8 +64,8 @@
 #include "nsCSSRendering.h"
 #include "nsContentUtils.h"
 #include "nsLineBreaker.h"
-#include "nsIWordBreaker.h"
 #include "nsIFrameInlines.h"
+#include "mozilla/intl/WordBreaker.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/layers/LayersMessages.h"
@@ -8207,7 +8207,7 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
     mFrag->AppendTo(str, textOffset, textLen);
     aContext.Insert(str, 0);
   }
-  nsIWordBreaker* wordBreaker = nsContentUtils::WordBreaker();
+  mozilla::intl::WordBreaker* wordBreaker = nsContentUtils::WordBreaker();
   for (int32_t i = 0; i <= textLen; ++i) {
     int32_t indexInText = i + textStart;
     mWordBreaks[i] |=

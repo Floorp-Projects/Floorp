@@ -35,6 +35,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/intl/LineBreaker.h"
+#include "mozilla/intl/WordBreaker.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/Logging.h"
 #include "mozilla/NotNull.h"
@@ -100,7 +101,6 @@ class nsISupportsHashKey;
 class nsIURI;
 class nsIUUIDGenerator;
 class nsIWidget;
-class nsIWordBreaker;
 class nsIXPConnect;
 class nsNodeInfoManager;
 class nsPIDOMWindowInner;
@@ -757,9 +757,9 @@ public:
     return sLineBreaker.get();
   }
 
-  static nsIWordBreaker* WordBreaker()
+  static mozilla::intl::WordBreaker* WordBreaker()
   {
-    return sWordBreaker;
+    return sWordBreaker.get();
   }
 
   /**
@@ -3395,7 +3395,7 @@ private:
   static bool sTriedToGetContentPolicy;
 
   static RefPtr<mozilla::intl::LineBreaker> sLineBreaker;
-  static nsIWordBreaker* sWordBreaker;
+  static RefPtr<mozilla::intl::WordBreaker> sWordBreaker;
 
   static nsIBidiKeyboard* sBidiKeyboard;
 
