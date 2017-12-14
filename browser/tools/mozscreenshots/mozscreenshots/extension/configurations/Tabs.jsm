@@ -10,11 +10,11 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const CUST_TAB = "chrome://browser/skin/customize.svg";
 const PREFS_TAB = "chrome://browser/skin/settings.svg";
-const DEFAULT_FAVICON_TAB = `data:text/html,<meta charset="utf-8">
-<title>No favicon</title>`;
+const DEFAULT_FAVICON_TAB = `data:text/html,<meta%20charset="utf-8"><title>No%20favicon</title>`;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://testing-common/TestUtils.jsm");
 
 this.Tabs = {
   init(libDir) {},
@@ -29,6 +29,7 @@ this.Tabs = {
         await new Promise((resolve, reject) => {
           setTimeout(resolve, 3000);
         });
+        await allTabTitlesDisplayed(browserWindow);
       },
     },
 
@@ -53,9 +54,11 @@ this.Tabs = {
         hoverTab(newTabButton);
         browserWindow.gBrowser.tabs[browserWindow.gBrowser.tabs.length - 1].
                       setAttribute("beforehovered", true);
+
         await new Promise((resolve, reject) => {
           setTimeout(resolve, 3000);
         });
+        await allTabTitlesDisplayed(browserWindow);
       },
     },
 
@@ -105,9 +108,11 @@ this.Tabs = {
         browserWindow.gBrowser.pinTab(browserWindow.gBrowser.tabs[2]);
         browserWindow.gBrowser.selectTabAtIndex(3);
         hoverTab(browserWindow.gBrowser.tabs[5]);
+
         await new Promise((resolve, reject) => {
           setTimeout(resolve, 3000);
         });
+        await allTabTitlesDisplayed(browserWindow);
       },
     },
   },
@@ -115,6 +120,34 @@ this.Tabs = {
 
 
 /* helpers */
+
+async function allTabTitlesDisplayed(browserWindow) {
+  let specToTitleMap = {
+    "about:home": "New Tab",
+    "about:newtab": "New Tab",
+    "about:addons": "Add-ons Manager",
+  };
+  specToTitleMap[PREFS_TAB] = "browser/skin/settings.svg";
+  specToTitleMap[CUST_TAB] = "browser/skin/customize.svg";
+  specToTitleMap[DEFAULT_FAVICON_TAB] = "No favicon";
+
+  let tabTitlePromises = [];
+  for (let tab of browserWindow.gBrowser.tabs) {
+    function tabTitleLoaded(spec) {
+      return () => {
+        return spec ? tab.label == specToTitleMap[spec] : false;
+      };
+    }
+    let spec = tab.linkedBrowser &&
+               tab.linkedBrowser.documentURI &&
+               tab.linkedBrowser.documentURI.spec;
+    let promise =
+      TestUtils.waitForCondition(tabTitleLoaded(spec), `Tab (${spec}) should be showing "${specToTitleMap[spec]}". Got "${tab.label}"`);
+    tabTitlePromises.push(promise);
+  }
+
+  return Promise.all(tabTitlePromises);
+}
 
 function fiveTabsHelper() {
   // some with no favicon and some with. Selected tab in middle.
