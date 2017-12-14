@@ -17,8 +17,6 @@ class nsPresContext;
 namespace mozilla {
 namespace dom {
 
-struct PointerEventInit;
-
 class PointerEvent : public MouseEvent
 {
 public:
@@ -26,12 +24,10 @@ public:
                nsPresContext* aPresContext,
                WidgetPointerEvent* aEvent);
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(PointerEvent, MouseEvent)
-
-  virtual JSObject* WrapObjectInternal(
-                      JSContext* aCx,
-                      JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
+  {
+    return PointerEventBinding::Wrap(aCx, this, aGivenProto);
+  }
 
   static already_AddRefed<PointerEvent>
   Constructor(const GlobalObject& aGlobal,
@@ -54,13 +50,6 @@ public:
   int32_t Twist();
   bool IsPrimary();
   void GetPointerType(nsAString& aPointerType);
-  void GetCoalescedEvents(nsTArray<RefPtr<PointerEvent>>& aPointerEvents);
-
-protected:
-  ~PointerEvent() {}
-
-private:
-  nsTArray<RefPtr<PointerEvent>> mCoalescedEvents;
 };
 
 void ConvertPointerTypeToString(uint16_t aPointerTypeSrc, nsAString& aPointerTypeDest);
