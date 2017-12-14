@@ -1081,6 +1081,16 @@ public:
     return mRule ? mRule->GetDocument() : nullptr;
   }
 
+  virtual DocGroup* GetDocGroup() const override
+  {
+    if (!mRule) {
+      return nullptr;
+    }
+
+    nsIDocument* document = mRule->GetDocument();
+    return document ? document->GetDocGroup() : nullptr;
+  }
+
 protected:
   // This reference is not reference-counted. The rule object owns us and we go
   // away when it does.

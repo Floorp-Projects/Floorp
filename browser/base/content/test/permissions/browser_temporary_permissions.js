@@ -3,7 +3,7 @@
 
 "use strict";
 
-Cu.import("resource:///modules/E10SUtils.jsm");
+Cu.import("resource://gre/modules/E10SUtils.jsm");
 
 const ORIGIN = "https://example.com";
 const PERMISSIONS_PAGE = getRootDirectory(gTestPath).replace("chrome://mochitests/content", ORIGIN) + "permissions.html";

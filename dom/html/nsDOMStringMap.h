@@ -16,6 +16,9 @@
 
 namespace mozilla {
 class ErrorResult;
+namespace dom {
+class DocGroup;
+} // namespace dom
 } // namespace mozilla
 
 class nsDOMStringMap : public nsStubMutationObserver,
@@ -31,6 +34,8 @@ public:
   {
     return mElement;
   }
+
+  mozilla::dom::DocGroup* GetDocGroup() const;
 
   explicit nsDOMStringMap(mozilla::dom::Element* aElement);
 

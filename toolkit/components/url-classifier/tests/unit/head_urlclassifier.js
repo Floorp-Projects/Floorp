@@ -26,6 +26,7 @@ Services.prefs.setIntPref("urlclassifier.gethashnoise", 0);
 Services.prefs.setBoolPref("browser.safebrowsing.malware.enabled", true);
 Services.prefs.setBoolPref("browser.safebrowsing.blockedURIs.enabled", true);
 Services.prefs.setBoolPref("browser.safebrowsing.phishing.enabled", true);
+Services.prefs.setBoolPref("browser.safebrowsing.provider.test.disableBackoff", true);
 
 // Enable all completions for tests
 Services.prefs.setCharPref("urlclassifier.disallow_completions", "");

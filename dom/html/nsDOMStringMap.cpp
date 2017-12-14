@@ -62,6 +62,12 @@ nsDOMStringMap::~nsDOMStringMap()
   }
 }
 
+DocGroup*
+nsDOMStringMap::GetDocGroup() const
+{
+  return mElement ? mElement->GetDocGroup() : nullptr;
+}
+
 /* virtual */
 JSObject*
 nsDOMStringMap::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)

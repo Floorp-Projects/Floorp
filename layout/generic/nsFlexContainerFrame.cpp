@@ -2684,11 +2684,15 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize,
             // structure; likewise if any item is shrinking. Items in
             // a line can't be both growing and shrinking.
             if (deltaSize > 0) {
+              MOZ_ASSERT(item->IsFrozen() || isUsingFlexGrow,
+                "Unfrozen items shouldn't grow without isUsingFlexGrow.");
               MOZ_ASSERT(aLineInfo->mGrowthState !=
                          ComputedFlexLineInfo::GrowthState::SHRINKING);
               aLineInfo->mGrowthState =
                 ComputedFlexLineInfo::GrowthState::GROWING;
             } else if (deltaSize < 0) {
+              MOZ_ASSERT(item->IsFrozen() || !isUsingFlexGrow,
+               "Unfrozen items shouldn't shrink with isUsingFlexGrow.");
               MOZ_ASSERT(aLineInfo->mGrowthState !=
                          ComputedFlexLineInfo::GrowthState::GROWING);
               aLineInfo->mGrowthState =

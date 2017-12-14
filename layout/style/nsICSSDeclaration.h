@@ -33,6 +33,11 @@
 
 class nsINode;
 class nsIPrincipal;
+namespace mozilla {
+namespace dom {
+class DocGroup;
+} // namespace dom
+} // namespace mozilla
 
 // dbeabbfa-6cb3-4f5c-aec2-dd558d9d681f
 #define NS_ICSSDECLARATION_IID \
@@ -62,6 +67,7 @@ public:
                               nsIPrincipal* aSubjectPrincipal = nullptr) = 0;
 
   virtual nsINode *GetParentObject() = 0;
+  virtual mozilla::dom::DocGroup* GetDocGroup() const = 0;
 
   // Also have to declare all the nsIDOMCSSStyleDeclaration methods,
   // since we want to be able to call them from the WebIDL versions.

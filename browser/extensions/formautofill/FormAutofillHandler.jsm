@@ -324,12 +324,38 @@ class FormAutofillSection {
     }
   }
 
+  _adaptFieldMaxLength(profile) {
+    for (let key in profile) {
+      let detail = this.getFieldDetailByName(key);
+      if (!detail) {
+        continue;
+      }
+
+      let element = detail.elementWeakRef.get();
+      if (!element) {
+        continue;
+      }
+
+      let maxLength = element.maxLength;
+      if (maxLength === undefined || maxLength < 0 || profile[key].length <= maxLength) {
+        continue;
+      }
+
+      if (maxLength) {
+        profile[key] = profile[key].substr(0, maxLength);
+      } else {
+        delete profile[key];
+      }
+    }
+  }
+
   getAdaptedProfiles(originalProfiles) {
     for (let profile of originalProfiles) {
       this._addressTransformer(profile);
       this._telTransformer(profile);
       this._matchSelectOptions(profile);
       this._creditCardExpDateTransformer(profile);
+      this._adaptFieldMaxLength(profile);
     }
     return originalProfiles;
   }

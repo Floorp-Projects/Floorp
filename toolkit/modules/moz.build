@@ -70,6 +70,9 @@ with Files('DateTimePickerHelper.jsm'):
 with Files('DeferredTask.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Async Tooling')
 
+with Files("E10SUtils.jsm"):
+    BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
+
 with Files('Finder*.jsm'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
@@ -187,6 +190,7 @@ EXTRA_JS_MODULES += [
     'debug.js',
     'DeferredTask.jsm',
     'Deprecated.jsm',
+    'E10SUtils.jsm',
     'EventEmitter.jsm',
     'FileUtils.jsm',
     'Finder.jsm',

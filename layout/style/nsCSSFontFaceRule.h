@@ -14,6 +14,10 @@
 
 namespace mozilla {
 
+namespace dom {
+class DocGroup;
+} // namespace dom
+
 struct CSSFontFaceDescriptors
 {
 #define CSS_FONT_DESC(name_, method_) nsCSSValue m##method_;
@@ -43,6 +47,7 @@ public:
   using nsICSSDeclaration::GetPropertyCSSValue;
 
   virtual nsINode *GetParentObject() override;
+  virtual mozilla::dom::DocGroup* GetDocGroup() const override;
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName) override;
 
   nsresult GetPropertyValue(nsCSSFontDesc aFontDescID,

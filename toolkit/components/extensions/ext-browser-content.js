@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   clearTimeout: "resource://gre/modules/Timer.jsm",
-  E10SUtils: "resource:///modules/E10SUtils.jsm",
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
 });

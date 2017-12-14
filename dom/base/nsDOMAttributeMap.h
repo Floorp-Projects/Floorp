@@ -22,6 +22,11 @@
 
 class nsAtom;
 class nsIDocument;
+namespace mozilla {
+namespace dom {
+class DocGroup;
+} // namespace dom
+} // namespace mozilla
 
 /**
  * Structure used as a key for caching Attrs in nsDOMAttributeMap's mAttributeCache.
@@ -87,6 +92,7 @@ class nsDOMAttributeMap final : public nsIDOMMozNamedAttrMap
 {
 public:
   typedef mozilla::dom::Attr Attr;
+  typedef mozilla::dom::DocGroup DocGroup;
   typedef mozilla::dom::Element Element;
   typedef mozilla::ErrorResult ErrorResult;
 
@@ -135,6 +141,7 @@ public:
     return mContent;
   }
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  DocGroup* GetDocGroup() const;
 
   // WebIDL
   Attr* GetNamedItem(const nsAString& aAttrName);

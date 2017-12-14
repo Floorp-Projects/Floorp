@@ -132,7 +132,8 @@ class WasmToken
         UnsignedInteger,
         ValueType,
         Wait,
-        Wake
+        Wake,
+        Invalid
     };
   private:
     Kind kind_;
@@ -149,7 +150,7 @@ class WasmToken
     } u;
   public:
     WasmToken()
-      : kind_(Kind(-1)),
+      : kind_(Kind::Invalid),
         begin_(nullptr),
         end_(nullptr),
         u()
@@ -160,6 +161,7 @@ class WasmToken
         end_(end)
     {
         MOZ_ASSERT(kind_ != Error);
+        MOZ_ASSERT(kind_ != Invalid);
         MOZ_ASSERT((kind == EndOfFile) == (begin == end));
     }
     explicit WasmToken(uint32_t index, const char16_t* begin, const char16_t* end)
@@ -231,7 +233,7 @@ class WasmToken
         end_(begin)
     {}
     Kind kind() const {
-        MOZ_ASSERT(kind_ != Kind(-1));
+        MOZ_ASSERT(kind_ != Kind::Invalid);
         return kind_;
     }
     const char16_t* begin() const {
@@ -353,6 +355,8 @@ class WasmToken
           case UnsignedInteger:
           case ValueType:
             return false;
+          case Invalid:
+            break;
         }
         MOZ_CRASH("unexpected token kind");
     }

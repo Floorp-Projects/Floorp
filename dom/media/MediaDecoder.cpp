@@ -565,11 +565,6 @@ MediaDecoder::CallSeek(const SeekTarget& aTarget)
   AbstractThread::AutoEnter context(AbstractMainThread());
   DiscardOngoingSeekIfExists();
 
-  // Since we don't have a listener for changes in IsLiveStream, our best bet
-  // is to ensure IsLiveStream is uptodate when seek begins. This value will be
-  // checked when seek is completed.
-  mDecoderStateMachine->DispatchIsLiveStream(IsLiveStream());
-
   mDecoderStateMachine->InvokeSeek(aTarget)
   ->Then(mAbstractMainThread, __func__, this,
          &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected)
