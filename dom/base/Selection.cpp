@@ -778,6 +778,18 @@ Selection::GetParentObject() const
   return nullptr;
 }
 
+DocGroup*
+Selection::GetDocGroup() const
+{
+  nsIPresShell* shell = GetPresShell();
+  if (!shell) {
+    return nullptr;
+  }
+
+  nsIDocument* doc = shell->GetDocument();
+  return doc ? doc->GetDocGroup() : nullptr;
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(Selection)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)

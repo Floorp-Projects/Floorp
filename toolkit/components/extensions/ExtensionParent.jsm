@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
-  E10SUtils: "resource:///modules/E10SUtils.jsm",
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   ExtensionData: "resource://gre/modules/Extension.jsm",
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   OS: "resource://gre/modules/osfile.jsm",

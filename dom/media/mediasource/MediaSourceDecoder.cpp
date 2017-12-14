@@ -81,6 +81,7 @@ MediaSourceDecoder::Load(nsIPrincipal* aPrincipal)
   rv = GetStateMachine()->Init(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  GetStateMachine()->DispatchIsLiveStream(!mEnded);
   SetStateMachineParameters();
   return NS_OK;
 }
@@ -216,6 +217,7 @@ MediaSourceDecoder::Ended(bool aEnded)
     NotifyDataArrived();
   }
   mEnded = aEnded;
+  GetStateMachine()->DispatchIsLiveStream(!mEnded);
 }
 
 void

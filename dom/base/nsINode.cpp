@@ -3126,3 +3126,9 @@ nsINode::IsStyledByServo() const
   return OwnerDoc()->IsStyledByServo();
 }
 #endif
+
+DocGroup*
+nsINode::GetDocGroup() const
+{
+  return OwnerDoc()->GetDocGroup();
+}

@@ -59,8 +59,6 @@ private:
     return true;
   }
 
-  bool IsLiveStream() override final { return false; }
-
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIURI> mURI;
   java::GeckoHLSResourceWrapper::GlobalRef mHLSResourceWrapper;

@@ -64,9 +64,6 @@ with Files("ContentWebRTC.jsm"):
 with Files("DirectoryLinksProvider.jsm"):
     BUG_COMPONENT = ("Firefox", "New Tab Page")
 
-with Files("E10SUtils.jsm"):
-    BUG_COMPONENT = ("Core", "Security: Process Sandboxing")
-
 with Files("ExtensionsUI.jsm"):
     BUG_COMPONENT = ("Toolkit", "WebExtensions: General")
 
@@ -137,7 +134,6 @@ EXTRA_JS_MODULES += [
     'ContentWebRTC.jsm',
     'ContextMenu.jsm',
     'DirectoryLinksProvider.jsm',
-    'E10SUtils.jsm',
     'ExtensionsUI.jsm',
     'Feeds.jsm',
     'FormSubmitObserver.jsm',

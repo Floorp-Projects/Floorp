@@ -18,17 +18,15 @@ updateAppInfo({
   platformVersion: "1.9",
 });
 
-var gIOS = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
 var chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
                  .getService(Ci.nsIChromeRegistry);
 chromeReg.checkForNewChrome();
 
-var target = gIOS.newFileURI(do_get_file("data"));
+var target = Services.io.newFileURI(do_get_file("data"));
 target = target.spec + "test/test.xul";
 
 function test_succeeded_mapping(namespace) {
-  var uri = gIOS.newURI("chrome://" + namespace + "/content/test.xul");
+  var uri = Services.io.newURI("chrome://" + namespace + "/content/test.xul");
   try {
     var result = chromeReg.convertChromeURL(uri);
     do_check_eq(result.spec, target);
@@ -38,7 +36,7 @@ function test_succeeded_mapping(namespace) {
 }
 
 function test_failed_mapping(namespace) {
-  var uri = gIOS.newURI("chrome://" + namespace + "/content/test.xul");
+  var uri = Services.io.newURI("chrome://" + namespace + "/content/test.xul");
   try {
     chromeReg.convertChromeURL(uri);
     do_throw(namespace);

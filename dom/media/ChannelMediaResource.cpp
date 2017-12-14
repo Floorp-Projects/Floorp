@@ -463,6 +463,7 @@ ChannelMediaResource::Open(nsIStreamListener** aStreamListener)
     return rv;
   }
 
+  mIsLiveStream = cl < 0;
   MOZ_ASSERT(GetOffset() == 0, "Who set offset already?");
   mListener = new Listener(this, 0, ++mLoadID);
   *aStreamListener = mListener;
@@ -565,6 +566,7 @@ ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
   RefPtr<ChannelMediaResource> resource =
     new ChannelMediaResource(aCallback, nullptr, mURI);
 
+  resource->mIsLiveStream = mIsLiveStream;
   resource->mIsTransportSeekable = mIsTransportSeekable;
 
   // Initially the clone is treated as suspended by the cache, because
@@ -782,11 +784,14 @@ ChannelMediaResource::CacheClientNotifyDataReceived()
 void
 ChannelMediaResource::CacheClientNotifyDataEnded(nsresult aStatus)
 {
-  mCallback->AbstractMainThread()->Dispatch(
-    NewRunnableMethod<nsresult>("MediaResourceCallback::NotifyDataEnded",
-                                mCallback.get(),
-                                &MediaResourceCallback::NotifyDataEnded,
-                                aStatus));
+  mCallback->AbstractMainThread()->Dispatch(NS_NewRunnableFunction(
+    "ChannelMediaResource::CacheClientNotifyDataEnded",
+    [ self = RefPtr<ChannelMediaResource>(this), aStatus ]() {
+      if (NS_SUCCEEDED(aStatus)) {
+        self->mIsLiveStream = false;
+      }
+      self->mCallback->NotifyDataEnded(aStatus);
+    }));
 }
 
 void

@@ -17,7 +17,7 @@
   let Cu = Components.utils;
 
   Cu.import("resource://gre/modules/Integration.jsm");
-  Cu.import("resource:///modules/E10SUtils.jsm");
+  Cu.import("resource://gre/modules/E10SUtils.jsm");
 
   SimpleTest.waitForExplicitFinish();
 

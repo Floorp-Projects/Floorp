@@ -22,7 +22,7 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/addons/AddonRepository.jsm");
 Cu.import("resource://gre/modules/addons/AddonSettings.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils", "resource:///modules/E10SUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils", "resource://gre/modules/E10SUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Extension",
                                   "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",

@@ -178,13 +178,11 @@ function run_test() {
           break;
       }
       try {
-        let ios = Cc["@mozilla.org/network/io-service;1"].
-                  getService(Ci.nsIIOService);
-        sourceURI = ios.newURI(sourceURI);
+        sourceURI = Services.io.newURI(sourceURI);
         let uri;
         if (type == "resource") {
           // resources go about a slightly different way than everything else
-          let rph = ios.getProtocolHandler("resource").
+          let rph = Services.io.getProtocolHandler("resource").
                     QueryInterface(Ci.nsIResProtocolHandler);
           // this throws for packages that are not registered
           uri = rph.resolveURI(sourceURI);

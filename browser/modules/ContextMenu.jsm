@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  E10SUtils: "resource:///modules/E10SUtils.jsm",
+  E10SUtils: "resource://gre/modules/E10SUtils.jsm",
   CastingApps: "resource:///modules/CastingApps.jsm",
   BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.jsm",

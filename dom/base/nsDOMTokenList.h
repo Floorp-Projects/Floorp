@@ -22,7 +22,9 @@
 
 namespace mozilla {
 class ErrorResult;
-
+namespace dom {
+class DocGroup;
+} // namespace dom
 } // namespace mozilla
 
 class nsAttrValue;
@@ -35,6 +37,7 @@ class nsDOMTokenList : public nsISupports,
 {
 protected:
   typedef mozilla::dom::Element Element;
+  typedef mozilla::dom::DocGroup DocGroup;
   typedef nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace>
     WhitespaceTokenizer;
 
@@ -51,6 +54,8 @@ public:
   {
     return mElement;
   }
+
+  DocGroup* GetDocGroup() const;
 
   void RemoveDuplicates(const nsAttrValue* aAttr);
   uint32_t Length();

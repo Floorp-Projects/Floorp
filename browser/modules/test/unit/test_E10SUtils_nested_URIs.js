@@ -3,7 +3,7 @@
 
 const {utils: Cu, interfaces: Ci} = Components;
 
-Cu.import("resource:///modules/E10SUtils.jsm");
+Cu.import("resource://gre/modules/E10SUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 var TEST_PREFERRED_REMOTE_TYPES = [
