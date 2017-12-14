@@ -6385,8 +6385,7 @@ nsIFrame::ComputeISizeValue(gfxContext*         aRenderingContext,
 
 void
 nsFrame::DidReflow(nsPresContext*           aPresContext,
-                   const ReflowInput*  aReflowInput,
-                   nsDidReflowStatus         aStatus)
+                   const ReflowInput*  aReflowInput)
 {
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("nsFrame::DidReflow: aStatus=%d", static_cast<uint32_t>(aStatus)));
