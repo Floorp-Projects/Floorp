@@ -123,17 +123,7 @@ var SessionHistoryInternal = {
       }
     }
 
-    // Transform the entries from local to global index space.
-    data.index += ihistory.globalIndexOffset;
-    data.fromIdx = aFromIdx + ihistory.globalIndexOffset;
-
-    // If we are not the most recent partialSHistory in our groupedSHistory, we
-    // need to make certain that we don't replace the entries from the following
-    // SHistories - so we replace only the number of entries which our SHistory
-    // takes up.
-    if (ihistory.globalIndexOffset + ihistory.count < ihistory.globalCount) {
-      data.toIdx = data.fromIdx + ihistory.count;
-    }
+    data.fromIdx = aFromIdx;
 
     return data;
   },

@@ -1732,7 +1732,6 @@
             var aOriginPrincipal;
             var aOpener;
             var aOpenerBrowser;
-            var aIsPrerendered;
             var aCreateLazyBrowser;
             var aNextTabParentId;
             var aFocusUrlBar;
@@ -1760,7 +1759,6 @@
               aOriginPrincipal          = params.originPrincipal;
               aOpener                   = params.opener;
               aOpenerBrowser            = params.openerBrowser;
-              aIsPrerendered            = params.isPrerendered;
               aCreateLazyBrowser        = params.createLazyBrowser;
               aNextTabParentId          = params.nextTabParentId;
               aFocusUrlBar              = params.focusUrlBar;
@@ -1792,7 +1790,6 @@
                                   sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
                                   opener: aOpener,
                                   openerBrowser: aOpenerBrowser,
-                                  isPrerendered: aIsPrerendered,
                                   nextTabParentId: aNextTabParentId,
                                   focusUrlBar: aFocusUrlBar,
                                   name: aName });
@@ -2201,7 +2198,7 @@
           <![CDATA[
             // Supported parameters:
             // userContextId, remote, remoteType, isPreloadBrowser,
-            // uriIsAboutBlank, sameProcessAsFrameLoader, isPrerendered
+            // uriIsAboutBlank, sameProcessAsFrameLoader
 
             const NS_XUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -2212,10 +2209,6 @@
             b.setAttribute("messagemanagergroup", "browsers");
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
-
-            if (aParams.isPrerendered) {
-              b.setAttribute("prerendered", "true");
-            }
 
             if (aParams.userContextId) {
               b.setAttribute("usercontextid", aParams.userContextId);
@@ -2605,7 +2598,6 @@
             var aDisallowInheritPrincipal;
             var aOpener;
             var aOpenerBrowser;
-            var aIsPrerendered;
             var aCreateLazyBrowser;
             var aSkipBackgroundNotify;
             var aNextTabParentId;
@@ -2637,7 +2629,6 @@
               aDisallowInheritPrincipal = params.disallowInheritPrincipal;
               aOpener                   = params.opener;
               aOpenerBrowser            = params.openerBrowser;
-              aIsPrerendered            = params.isPrerendered;
               aCreateLazyBrowser        = params.createLazyBrowser;
               aSkipBackgroundNotify     = params.skipBackgroundNotify;
               aNextTabParentId          = params.nextTabParentId;
@@ -2693,10 +2684,6 @@
                 // Set URL as label so that the tab isn't empty initially.
                 this.setInitialTabTitle(t, aURI, { beforeTabOpen: true });
               }
-            }
-
-            if (aIsPrerendered) {
-              t.setAttribute("hidden", "true");
             }
 
             // Related tab inherits current tab's user context unless a different
@@ -2795,7 +2782,6 @@
                                           userContextId: aUserContextId,
                                           sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
                                           openerWindow: aOpener,
-                                          isPrerendered: aIsPrerendered,
                                           nextTabParentId: aNextTabParentId,
                                           name: aName });
               }
@@ -5824,76 +5810,6 @@
               }
               break;
             }
-
-            case "Prerender:Request": {
-              let sendCancelPrerendering = () => {
-                browser.frameloader.messageManager.
-                  sendAsyncMessage("Prerender:Canceled", { id: data.id });
-              };
-
-              let tab = this.getTabForBrowser(browser);
-              if (!tab) {
-                // No tab?
-                sendCancelPrerendering();
-                break;
-              }
-
-              if (tab.hidden) {
-                // Skip prerender on hidden tab.
-                sendCancelPrerendering();
-                break;
-              }
-
-              if (browser.canGoForward) {
-                // Skip prerender on history navigation as we don't support it
-                // yet. Remove this check once bug 1323650 is implemented.
-                sendCancelPrerendering();
-                break;
-              }
-
-              if (!data.href) {
-                // If we don't have data.href, loadOneTab will load about:blank
-                // which is meaningless for prerendering.
-                sendCancelPrerendering();
-                break;
-              }
-
-              let groupedSHistory = browser.frameLoader.ensureGroupedSHistory();
-
-              let newTab = this.loadOneTab(data.href, {
-                referrerURI: (data.referrer ? makeURI(data.referrer) : null),
-                referrerPolicy: Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-                postData: null,
-                allowThirdPartyFixup: true,
-                relatedToCurrent: true,
-                isPrerendered: true,
-                triggeringPrincipal: Utils.deserializePrincipal(data.triggeringPrincipal),
-              });
-              let partialSHistory = newTab.linkedBrowser.frameLoader.partialSHistory;
-              groupedSHistory.addPrerenderingPartialSHistory(partialSHistory, data.id);
-              break;
-            }
-
-            case "Prerender:Cancel": {
-              let groupedSHistory = browser.frameLoader.groupedSHistory;
-              if (groupedSHistory) {
-                groupedSHistory.cancelPrerendering(data.id);
-              }
-              break;
-            }
-
-            case "Prerender:Swap": {
-              let frameloader = browser.frameLoader;
-              let groupedSHistory = browser.frameLoader.groupedSHistory;
-              if (groupedSHistory) {
-                groupedSHistory.activatePrerendering(data.id).then(
-                  () => frameloader.messageManager.sendAsyncMessage("Prerender:Swapped", data),
-                  () => frameloader.messageManager.sendAsyncMessage("Prerender:Canceled", data),
-                );
-              }
-              break;
-            }
-
           }
           return undefined;
         ]]></body>
@@ -6059,11 +5975,6 @@
           this._findAsYouType = Services.prefs.getBoolPref("accessibility.typeaheadfind");
           Services.prefs.addObserver("accessibility.typeaheadfind", this);
           messageManager.addMessageListener("Findbar:Keypress", this);
-
-          // Add listeners for prerender messages
-          messageManager.addMessageListener("Prerender:Request", this);
-          messageManager.addMessageListener("Prerender:Cancel", this);
-          messageManager.addMessageListener("Prerender:Swap", this);
 
           XPCOMUtils.defineLazyPreferenceGetter(this, "animationsEnabled",
                                                 "toolkit.cosmeticAnimations.enabled", true);
