@@ -1509,7 +1509,7 @@ nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
   bool wasInterrupted = !mHasPendingInterruptAtStartOfReflow &&
                           aPresContext->HasPendingInterrupt();
 
-  nsHTMLScrollFrame::DidReflow(aPresContext, aReflowInput, aStatus);
+  nsHTMLScrollFrame::DidReflow(aPresContext, aReflowInput);
 
   if (mNeedToReset && !wasInterrupted) {
     mNeedToReset = false;
