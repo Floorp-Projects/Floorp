@@ -59,7 +59,7 @@ this.TestRunner = {
       screenshotPath = MOZ_UPLOAD_DIR;
     }
 
-    this.mochitestScope.info("Saving screenshots to:", screenshotPath);
+    this.mochitestScope.info(`Saving screenshots to: ${screenshotPath}`);
 
     let screenshotPrefix = Services.appinfo.appBuildID;
     if (jobName) {
@@ -74,7 +74,7 @@ this.TestRunner = {
 
     let sets = this.loadSets(setNames);
 
-    this.mochitestScope.info(sets.length + " sets:", setNames);
+    this.mochitestScope.info(`${sets.length} sets: ${setNames}`);
     this.combos = new LazyProduct(sets);
     this.mochitestScope.info(this.combos.length + " combinations");
 
