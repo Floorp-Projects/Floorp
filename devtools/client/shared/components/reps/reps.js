@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 16);
+/******/ 	return __webpack_require__(__webpack_require__.s = 17);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -87,6 +87,7 @@ return /******/ (function(modules) { // webpackBootstrap
 // Dependencies
 const validProtocols = /^(http|https|ftp|data|javascript|resource|chrome):/i;
 const tokenSplitRegex = /(\s|\'|\"|\\)+/;
+const ELLIPSIS = "\u2026";
 const dom = __webpack_require__(1);
 const { span } = dom;
 
@@ -218,11 +219,7 @@ function cropMultipleLines(text, limit) {
   return escapeNewLines(cropString(text, limit));
 }
 
-function rawCropString(text, limit, alternativeText) {
-  if (!alternativeText) {
-    alternativeText = "\u2026";
-  }
-
+function rawCropString(text, limit, alternativeText = ELLIPSIS) {
   // Crop the string only if a limit is actually specified.
   if (!limit || limit <= 0) {
     return text;
@@ -485,7 +482,8 @@ module.exports = {
   maybeEscapePropertyName,
   getGripPreviewItems,
   getGripType,
-  tokenSplitRegex
+  tokenSplitRegex,
+  ELLIPSIS
 };
 
 /***/ }),
@@ -530,40 +528,40 @@ module.exports = {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-__webpack_require__(17);
+__webpack_require__(18);
 
 // Load all existing rep templates
-const Undefined = __webpack_require__(18);
-const Null = __webpack_require__(19);
+const Undefined = __webpack_require__(19);
+const Null = __webpack_require__(20);
 const StringRep = __webpack_require__(7);
-const LongStringRep = __webpack_require__(20);
-const Number = __webpack_require__(21);
-const ArrayRep = __webpack_require__(9);
-const Obj = __webpack_require__(22);
-const SymbolRep = __webpack_require__(23);
-const InfinityRep = __webpack_require__(24);
-const NaNRep = __webpack_require__(25);
-const Accessor = __webpack_require__(26);
+const LongStringRep = __webpack_require__(21);
+const Number = __webpack_require__(22);
+const ArrayRep = __webpack_require__(10);
+const Obj = __webpack_require__(23);
+const SymbolRep = __webpack_require__(24);
+const InfinityRep = __webpack_require__(25);
+const NaNRep = __webpack_require__(26);
+const Accessor = __webpack_require__(27);
 
 // DOM types (grips)
-const Attribute = __webpack_require__(27);
-const DateTime = __webpack_require__(28);
-const Document = __webpack_require__(29);
-const Event = __webpack_require__(30);
-const Func = __webpack_require__(31);
-const PromiseRep = __webpack_require__(32);
-const RegExp = __webpack_require__(33);
-const StyleSheet = __webpack_require__(34);
-const CommentNode = __webpack_require__(35);
-const ElementNode = __webpack_require__(36);
-const TextNode = __webpack_require__(40);
-const ErrorRep = __webpack_require__(41);
-const Window = __webpack_require__(42);
-const ObjectWithText = __webpack_require__(43);
-const ObjectWithURL = __webpack_require__(44);
-const GripArray = __webpack_require__(12);
-const GripMap = __webpack_require__(13);
-const GripMapEntry = __webpack_require__(14);
+const Attribute = __webpack_require__(28);
+const DateTime = __webpack_require__(29);
+const Document = __webpack_require__(30);
+const Event = __webpack_require__(31);
+const Func = __webpack_require__(32);
+const PromiseRep = __webpack_require__(36);
+const RegExp = __webpack_require__(37);
+const StyleSheet = __webpack_require__(38);
+const CommentNode = __webpack_require__(39);
+const ElementNode = __webpack_require__(40);
+const TextNode = __webpack_require__(41);
+const ErrorRep = __webpack_require__(42);
+const Window = __webpack_require__(43);
+const ObjectWithText = __webpack_require__(44);
+const ObjectWithURL = __webpack_require__(45);
+const GripArray = __webpack_require__(13);
+const GripMap = __webpack_require__(14);
+const GripMapEntry = __webpack_require__(15);
 const Grip = __webpack_require__(8);
 
 // List of all registered template.
@@ -772,7 +770,8 @@ const {
   rawCropString,
   sanitizeString,
   wrapRender,
-  tokenSplitRegex
+  tokenSplitRegex,
+  ELLIPSIS
 } = __webpack_require__(0);
 
 const dom = __webpack_require__(1);
@@ -821,43 +820,117 @@ function StringRep(props) {
     text = sanitizeString(text);
   }
 
-  if ((!member || !member.open) && cropLimit) {
-    text = rawCropString(text, cropLimit);
-  }
-
+  const shouldCrop = (!member || !member.open) && cropLimit;
   if (!containsURL(text)) {
+    if (shouldCrop) {
+      text = rawCropString(text, cropLimit);
+    }
     return span(config, text);
   }
 
-  const items = [];
+  return span(config, ...getLinkifiedElements(text, shouldCrop && cropLimit, omitLinkHref, openLink));
+}
+
+/**
+ * Get an array of the elements representing the string, cropped if needed,
+ * with actual links.
+ *
+ * @param {String} text: The actual string to linkify.
+ * @param {Integer | null} cropLimit
+ * @param {Boolean} omitLinkHref: Do not create an href attribute if true.
+ * @param {Function} openLink: Function handling the link opening.
+ * @returns {Array<String|ReactElement>}
+ */
+function getLinkifiedElements(text, cropLimit, omitLinkHref, openLink) {
+  const halfLimit = Math.ceil((cropLimit - ELLIPSIS.length) / 2);
+  const startCropIndex = halfLimit;
+  const endCropIndex = text.length - halfLimit;
 
   // As we walk through the tokens of the source string, we make sure to preserve
   // the original whitespace that separated the tokens.
-  let tokens = text.split(tokenSplitRegex);
-  let textIndex = 0;
-  let tokenStart;
-  tokens.forEach((token, i) => {
-    tokenStart = text.indexOf(token, textIndex);
+  let currentIndex = 0;
+  const items = [];
+  for (let token of text.split(tokenSplitRegex)) {
     if (isURL(token)) {
-      items.push(text.slice(textIndex, tokenStart));
-      textIndex = tokenStart + token.length;
+      // Let's grab all the non-url strings before the link.
+      const tokenStart = text.indexOf(token, currentIndex);
+      let nonUrlText = text.slice(currentIndex, tokenStart);
+      nonUrlText = getCroppedString(nonUrlText, currentIndex, startCropIndex, endCropIndex);
+      if (nonUrlText) {
+        items.push(nonUrlText);
+      }
 
-      items.push(a({
-        className: "url",
-        title: token,
-        href: omitLinkHref === true ? null : token,
-        draggable: false,
-        onClick: openLink ? e => {
-          e.preventDefault();
-          openLink(token);
-        } : null
-      }, token));
+      // Update the index to match the beginning of the token.
+      currentIndex = tokenStart;
+
+      let linkText = getCroppedString(token, currentIndex, startCropIndex, endCropIndex);
+      if (linkText) {
+        items.push(a({
+          className: "url",
+          title: token,
+          href: omitLinkHref === true ? null : token,
+          draggable: false,
+          onClick: openLink ? e => {
+            e.preventDefault();
+            openLink(token);
+          } : null
+        }, linkText));
+      }
+
+      currentIndex = tokenStart + token.length;
     }
-  });
+  }
 
-  // Clean up any non-URL text at the end of the source string.
-  items.push(text.slice(textIndex, text.length));
-  return span(config, ...items);
+  // Clean up any non-URL text at the end of the source string,
+  // i.e. not handled in the loop.
+  if (currentIndex !== text.length) {
+    let nonUrlText = text.slice(currentIndex, text.length);
+    if (currentIndex < endCropIndex) {
+      const cutIndex = endCropIndex - currentIndex;
+      nonUrlText = nonUrlText.substring(cutIndex);
+    }
+    items.push(nonUrlText);
+  }
+
+  return items;
+}
+
+/**
+ * Returns a cropped substring given an offset, start and end crop indices in a parent
+ * string.
+ *
+ * @param {String} text: The substring to crop.
+ * @param {Integer} offset: The offset corresponding to the index at which the substring
+ *                          is in the parent string.
+ * @param {Integer} startCropIndex: the index where the start of the crop should happen
+ *                                  in the parent string
+ * @param {Integer} endCropIndex: the index where the end of the crop should happen
+ *                                  in the parent string
+ * @returns {String|null} The cropped substring, or null if the text is completly cropped.
+ */
+function getCroppedString(text, offset = 0, startCropIndex, endCropIndex) {
+  const start = offset;
+  const end = offset + text.length;
+
+  const shouldBeVisible = !(start >= startCropIndex && end <= endCropIndex);
+  if (!shouldBeVisible) {
+    return null;
+  }
+
+  const shouldCropEnd = start < startCropIndex && end > startCropIndex;
+  const shouldCropStart = start < endCropIndex && end > endCropIndex;
+  if (shouldCropEnd) {
+    const cutIndex = startCropIndex - start;
+    return text.substring(0, cutIndex) + ELLIPSIS + (shouldCropStart ? text.substring(endCropIndex - start) : "");
+  }
+
+  if (shouldCropStart) {
+    // The string should be cropped at the beginning.
+    const cutIndex = endCropIndex - start;
+    return text.substring(cutIndex);
+  }
+
+  return text;
 }
 
 function supportsObject(object, noGrip = false) {
@@ -1196,6 +1269,53 @@ module.exports = Grip;
 "use strict";
 
 
+var _svgInlineReact = __webpack_require__(11);
+
+var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+const React = __webpack_require__(6);
+const PropTypes = __webpack_require__(2);
+
+
+const svg = {
+  "open-inspector": __webpack_require__(34),
+  "jump-definition": __webpack_require__(35)
+};
+
+Svg.propTypes = {
+  className: PropTypes.string
+};
+
+function Svg(name, props) {
+  if (!svg[name]) {
+    throw new Error("Unknown SVG: " + name);
+  }
+  let className = name;
+  if (props && props.className) {
+    className = `${name} ${props.className}`;
+  }
+  if (name === "subSettings") {
+    className = "";
+  }
+  props = Object.assign({}, props, { className, src: svg[name] });
+  return React.createElement(_svgInlineReact2.default, props);
+}
+
+module.exports = Svg;
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1336,7 +1456,105 @@ module.exports = {
 };
 
 /***/ }),
-/* 10 */
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(6);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _propTypes = __webpack_require__(2);
+
+var _util = __webpack_require__(33);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var process = process || { env: {} };
+
+var InlineSVG = function (_React$Component) {
+    _inherits(InlineSVG, _React$Component);
+
+    function InlineSVG() {
+        _classCallCheck(this, InlineSVG);
+
+        return _possibleConstructorReturn(this, (InlineSVG.__proto__ || Object.getPrototypeOf(InlineSVG)).apply(this, arguments));
+    }
+
+    _createClass(InlineSVG, [{
+        key: 'componentWillReceiveProps',
+        value: function componentWillReceiveProps(_ref) {
+            var children = _ref.children;
+
+            if ("production" !== process.env.NODE_ENV && children != null) {
+                console.info('<InlineSVG />: `children` prop will be ignored.');
+            }
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var Element = void 0,
+                __html = void 0,
+                svgProps = void 0;
+
+            var _props = this.props,
+                element = _props.element,
+                raw = _props.raw,
+                src = _props.src,
+                otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
+
+            if (raw === true) {
+                Element = 'svg';
+                svgProps = (0, _util.extractSVGProps)(src);
+                __html = (0, _util.getSVGFromSource)(src).innerHTML;
+            }
+            __html = __html || src;
+            Element = Element || element;
+            svgProps = svgProps || {};
+
+            return _react2.default.createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
+                dangerouslySetInnerHTML: { __html: __html } }));
+        }
+    }]);
+
+    return InlineSVG;
+}(_react2.default.Component);
+
+exports.default = InlineSVG;
+
+
+InlineSVG.defaultProps = {
+    element: 'i',
+    raw: false,
+    src: ''
+};
+
+InlineSVG.propTypes = {
+    src: _propTypes.string.isRequired,
+    element: _propTypes.string,
+    raw: _propTypes.bool
+};
+
+/***/ }),
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1370,53 +1588,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _svgInlineReact = __webpack_require__(37);
-
-var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const React = __webpack_require__(6);
-const PropTypes = __webpack_require__(2);
-
-
-const svg = {
-  "open-inspector": __webpack_require__(39)
-};
-
-Svg.propTypes = {
-  className: PropTypes.string
-};
-
-function Svg(name, props) {
-  if (!svg[name]) {
-    throw new Error("Unknown SVG: " + name);
-  }
-  let className = name;
-  if (props && props.className) {
-    className = `${name} ${props.className}`;
-  }
-  if (name === "subSettings") {
-    className = "";
-  }
-  props = Object.assign({}, props, { className, src: svg[name] });
-  return React.createElement(_svgInlineReact2.default, props);
-}
-
-module.exports = Svg;
-
-/***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1624,7 +1796,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1832,7 +2004,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1910,7 +2082,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1922,10 +2094,10 @@ module.exports = {
 
 const { get, has } = __webpack_require__(53);
 const { maybeEscapePropertyName } = __webpack_require__(0);
-const ArrayRep = __webpack_require__(9);
-const GripArrayRep = __webpack_require__(12);
-const GripMap = __webpack_require__(13);
-const GripMapEntryRep = __webpack_require__(14);
+const ArrayRep = __webpack_require__(10);
+const GripArrayRep = __webpack_require__(13);
+const GripMap = __webpack_require__(14);
+const GripMapEntryRep = __webpack_require__(15);
 
 const MAX_NUMERICAL_PROPERTIES = 100;
 
@@ -2587,7 +2759,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2599,8 +2771,8 @@ module.exports = {
 
 const { MODE } = __webpack_require__(3);
 const { REPS, getRep } = __webpack_require__(4);
-const ObjectInspector = __webpack_require__(45);
-const ObjectInspectorUtils = __webpack_require__(15);
+const ObjectInspector = __webpack_require__(46);
+const ObjectInspectorUtils = __webpack_require__(16);
 
 const {
   parseURLEncodedText,
@@ -2622,13 +2794,13 @@ module.exports = {
 };
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2670,7 +2842,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2712,7 +2884,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2789,7 +2961,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2841,7 +3013,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2924,94 +3096,35 @@ function safePropIterator(props, object, max) {
 }
 
 function propIterator(props, object, max) {
-  let isInterestingProp = (type, value) => {
-    // Do not pick objects, it could cause recursion.
-    return type == "boolean" || type == "number" || type == "string" && value;
-  };
-
   // Work around https://bugzilla.mozilla.org/show_bug.cgi?id=945377
   if (Object.prototype.toString.call(object) === "[object Generator]") {
     object = Object.getPrototypeOf(object);
   }
 
-  // Object members with non-empty values are preferred since it gives the
-  // user a better overview of the object.
-  let interestingObject = getFilteredObject(object, max, isInterestingProp);
+  const elements = [];
+  const unimportantProperties = [];
+  let propertiesNumber = 0;
+  const propertiesNames = Object.keys(object);
 
-  if (Object.keys(interestingObject).length < max) {
-    // There are not enough props yet (or at least, not enough props to
-    // be able to know whether we should print "more…" or not).
-    // Let's display also empty members and functions.
-    interestingObject = Object.assign({}, interestingObject, getFilteredObject(object, max - Object.keys(interestingObject).length, (type, value) => !isInterestingProp(type, value)));
-  }
+  const pushPropRep = (name, value) => {
+    elements.push(PropRep(Object.assign({}, props, {
+      key: name,
+      mode: MODE.TINY,
+      name,
+      object: value,
+      equal: ": "
+    })));
+    propertiesNumber++;
 
-  let propsArray = getPropsArray(interestingObject, props);
-  if (Object.keys(object).length > max) {
-    propsArray.push(span({
-      className: "more-ellipsis",
-      title: "more…"
-    }, "…"));
-  }
-
-  return unfoldProps(propsArray);
-}
-
-function unfoldProps(items) {
-  return items.reduce((res, item, index) => {
-    if (Array.isArray(item)) {
-      res = res.concat(item);
-    } else {
-      res.push(item);
+    if (propertiesNumber < propertiesNames.length) {
+      elements.push(", ");
     }
-
-    // Interleave commas between elements
-    if (index !== items.length - 1) {
-      res.push(", ");
-    }
-    return res;
-  }, []);
-}
-
-/**
- * Get an array of components representing the properties of the object
- *
- * @param {Object} object
- * @param {Object} props
- * @return {Array} Array of PropRep.
- */
-function getPropsArray(object, props) {
-  let propsArray = [];
-
-  if (!object) {
-    return propsArray;
-  }
-
-  // Hardcode tiny mode to avoid recursive handling.
-  let mode = MODE.TINY;
-  const objectKeys = Object.keys(object);
-  return objectKeys.map((name, i) => PropRep(Object.assign({}, props, {
-    mode,
-    name,
-    object: object[name],
-    equal: ": "
-  })));
-}
-
-/**
- * Get a copy of the object filtered by a given predicate.
- *
- * @param {Object} object.
- * @param {Number} max The maximum length of keys array.
- * @param {Function} filter Filter the props you want.
- * @return {Object} the filtered object.
- */
-function getFilteredObject(object, max, filter) {
-  let filteredObject = {};
+  };
 
   try {
-    for (let name in object) {
-      if (Object.keys(filteredObject).length >= max) {
-        return filteredObject;
+    for (let name of propertiesNames) {
+      if (propertiesNumber >= max) {
+        break;
       }
 
       let value;
@@ -3021,15 +3134,50 @@ function getFilteredObject(object, max, filter) {
         continue;
       }
 
-      let t = typeof value;
-      if (filter(t, value)) {
-        filteredObject[name] = value;
+      // Object members with non-empty values are preferred since it gives the
+      // user a better overview of the object.
+      if (isInterestingProp(value)) {
+        pushPropRep(name, value);
+      } else {
+        // If the property is not important, put its name on an array for later use.
+        unimportantProperties.push(name);
       }
     }
   } catch (err) {
     console.error(err);
   }
-  return filteredObject;
+
+  if (propertiesNumber < max) {
+    for (let name of unimportantProperties) {
+      if (propertiesNumber >= max) {
+        break;
+      }
+
+      let value;
+      try {
+        value = object[name];
+      } catch (exc) {
+        continue;
+      }
+
+      pushPropRep(name, value);
+    }
+  }
+
+  if (propertiesNumber < propertiesNames.length) {
+    elements.push(span({
+      key: "more",
+      className: "more-ellipsis",
+      title: ", more…"
+    }, "…"));
+  }
+
+  return elements;
+}
+
+function isInterestingProp(value) {
+  const type = typeof value;
+  return type == "boolean" || type == "number" || type == "string" && value;
 }
 
 function supportsObject(object) {
@@ -3043,7 +3191,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3092,7 +3240,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3140,7 +3288,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3177,7 +3325,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3247,7 +3395,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3308,7 +3456,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3375,7 +3523,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3442,7 +3590,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3549,7 +3697,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3570,6 +3718,7 @@ const {
   wrapRender
 } = __webpack_require__(0);
 const { MODE } = __webpack_require__(3);
+const Svg = __webpack_require__(9);
 
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -3579,11 +3728,29 @@ const { span } = dom;
  */
 FunctionRep.propTypes = {
   object: PropTypes.object.isRequired,
-  parameterNames: PropTypes.array
+  parameterNames: PropTypes.array,
+  onViewSourceInDebugger: PropTypes.func
 };
 
 function FunctionRep(props) {
-  let grip = props.object;
+  let {
+    object: grip,
+    onViewSourceInDebugger
+  } = props;
+
+  let jumpToDefinitionButton;
+  if (onViewSourceInDebugger && grip.location && grip.location.url) {
+    jumpToDefinitionButton = Svg("jump-definition", {
+      element: "a",
+      draggable: false,
+      title: "Jump to definition",
+      onClick: e => {
+        // Stop the event propagation so we don't trigger ObjectInspector expand/collapse.
+        e.stopPropagation();
+        onViewSourceInDebugger(grip.location);
+      }
+    });
+  }
 
   return span({
     "data-link-actor-id": grip.actor,
@@ -3591,7 +3758,7 @@ function FunctionRep(props) {
     // Set dir="ltr" to prevent function parentheses from
     // appearing in the wrong direction
     dir: "ltr"
-  }, getTitle(grip, props), getFunctionName(grip, props), "(", ...renderParams(props), ")");
+  }, getTitle(grip, props), getFunctionName(grip, props), "(", ...renderParams(props), ")", jumpToDefinitionButton);
 }
 
 function getTitle(grip, props) {
@@ -3618,8 +3785,28 @@ function getTitle(grip, props) {
   }, title);
 }
 
+// Decodes an anonymous naming scheme that
+// spider monkey implements based on "Naming Anonymous JavaScript Functions"
+// http://johnjbarton.github.io/nonymous/index.html
+const objectProperty = /([\w\d]+)$/;
+const arrayProperty = /\[(.*?)\]$/;
+const functionProperty = /([\w\d]+)[\/\.<]*?$/;
+const annonymousProperty = /([\w\d]+)\(\^\)$/;
+
 function getFunctionName(grip, props) {
   let name = grip.userDisplayName || grip.displayName || grip.name || props.functionName || "";
+
+  const scenarios = [objectProperty, arrayProperty, functionProperty, annonymousProperty];
+
+  scenarios.some(reg => {
+    const match = reg.exec(name);
+    if (match) {
+      name = match[1];
+      return true;
+    }
+    return false;
+  });
+
   return cropString(name, 100);
 }
 
@@ -3651,11 +3838,80 @@ function supportsObject(grip, noGrip = false) {
 
 module.exports = {
   rep: wrapRender(FunctionRep),
-  supportsObject
+  supportsObject,
+  // exported for testing purpose.
+  getFunctionName
 };
 
 /***/ }),
-/* 32 */
+/* 33 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.convertReactSVGDOMProperty = convertReactSVGDOMProperty;
+exports.startsWith = startsWith;
+exports.serializeAttrs = serializeAttrs;
+exports.getSVGFromSource = getSVGFromSource;
+exports.extractSVGProps = extractSVGProps;
+// Transform DOM prop/attr names applicable to `<svg>` element but react-limited
+
+function convertReactSVGDOMProperty(str) {
+    return str.replace(/[-|:]([a-z])/g, function (g) {
+        return g[1].toUpperCase();
+    });
+}
+
+function startsWith(str, substring) {
+    return str.indexOf(substring) === 0;
+}
+
+var DataPropPrefix = 'data-';
+// Serialize `Attr` objects in `NamedNodeMap`
+function serializeAttrs(map) {
+    var ret = {};
+    for (var prop, i = 0; i < map.length; i++) {
+        var key = map[i].name;
+        if (!startsWith(key, DataPropPrefix)) {
+            prop = convertReactSVGDOMProperty(key);
+        }
+        ret[prop] = map[i].value;
+    }
+    return ret;
+}
+
+function getSVGFromSource(src) {
+    var svgContainer = document.createElement('div');
+    svgContainer.innerHTML = src;
+    var svg = svgContainer.firstElementChild;
+    svg.remove(); // deref from parent element
+    return svg;
+}
+
+// get <svg /> element props
+function extractSVGProps(src) {
+    var map = getSVGFromSource(src).attributes;
+    return map.length > 0 ? serializeAttrs(map) : null;
+}
+
+/***/ }),
+/* 34 */
+/***/ (function(module, exports) {
+
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M8,3L12,3L12,7L14,7L14,8L12,8L12,12L8,12L8,14L7,14L7,12L3,12L3,8L1,8L1,7L3,7L3,3L7,3L7,1L8,1L8,3ZM10,10L10,5L5,5L5,10L10,10Z\"></path></svg>"
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports) {
+
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><g stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" stroke-linecap=\"round\"><g id=\"arrow\" transform=\"translate(1.000000, 3.000000)\"><path d=\"M4.5,0.5 L6.5,2.5\"></path><path d=\"M4.5,2.5 L6.5,4.5\" transform=\"translate(5.500000, 3.500000) scale(1, -1) translate(-5.500000, -3.500000) \"></path><path d=\"M6.00090144,2.5 C4.67806937,2.5 3.67938478,2.5 3.00484766,2.5 C1.99304199,2.5 1.01049805,3.5168457 0.993840144,4.52403846 C0.988750751,4.54723808 0.988750751,5.87097168 0.993840144,8.49523926\" id=\"Path-2\" stroke-linejoin=\"round\"></path></g><g id=\"content-lines\" transform=\"translate(9.000000, 2.000000)\"><path d=\"M1.5,3.5 L5.5,3.5\"></path><path d=\"M0.5,1.5 L5.5,1.5\"></path><path d=\"M0.5,5.5 L5.5,5.5\"></path></g></g></svg>"
+
+/***/ }),
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3765,7 +4021,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 33 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3824,7 +4080,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 34 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3892,7 +4148,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 35 */
+/* 39 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3911,7 +4167,7 @@ const {
   wrapRender
 } = __webpack_require__(0);
 const { MODE } = __webpack_require__(3);
-const nodeConstants = __webpack_require__(10);
+const nodeConstants = __webpack_require__(12);
 const dom = __webpack_require__(1);
 const { span } = dom;
 
@@ -3958,7 +4214,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 36 */
+/* 40 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3978,8 +4234,8 @@ const {
 } = __webpack_require__(0);
 const { rep: StringRep } = __webpack_require__(7);
 const { MODE } = __webpack_require__(3);
-const nodeConstants = __webpack_require__(10);
-const Svg = __webpack_require__(11);
+const nodeConstants = __webpack_require__(12);
+const Svg = __webpack_require__(9);
 
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -4090,166 +4346,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 37 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(6);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _propTypes = __webpack_require__(2);
-
-var _util = __webpack_require__(38);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var process = process || { env: {} };
-
-var InlineSVG = function (_React$Component) {
-    _inherits(InlineSVG, _React$Component);
-
-    function InlineSVG() {
-        _classCallCheck(this, InlineSVG);
-
-        return _possibleConstructorReturn(this, (InlineSVG.__proto__ || Object.getPrototypeOf(InlineSVG)).apply(this, arguments));
-    }
-
-    _createClass(InlineSVG, [{
-        key: 'componentWillReceiveProps',
-        value: function componentWillReceiveProps(_ref) {
-            var children = _ref.children;
-
-            if ("production" !== process.env.NODE_ENV && children != null) {
-                console.info('<InlineSVG />: `children` prop will be ignored.');
-            }
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var Element = void 0,
-                __html = void 0,
-                svgProps = void 0;
-
-            var _props = this.props,
-                element = _props.element,
-                raw = _props.raw,
-                src = _props.src,
-                otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
-
-            if (raw === true) {
-                Element = 'svg';
-                svgProps = (0, _util.extractSVGProps)(src);
-                __html = (0, _util.getSVGFromSource)(src).innerHTML;
-            }
-            __html = __html || src;
-            Element = Element || element;
-            svgProps = svgProps || {};
-
-            return _react2.default.createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
-                dangerouslySetInnerHTML: { __html: __html } }));
-        }
-    }]);
-
-    return InlineSVG;
-}(_react2.default.Component);
-
-exports.default = InlineSVG;
-
-
-InlineSVG.defaultProps = {
-    element: 'i',
-    raw: false,
-    src: ''
-};
-
-InlineSVG.propTypes = {
-    src: _propTypes.string.isRequired,
-    element: _propTypes.string,
-    raw: _propTypes.bool
-};
-
-/***/ }),
-/* 38 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.convertReactSVGDOMProperty = convertReactSVGDOMProperty;
-exports.startsWith = startsWith;
-exports.serializeAttrs = serializeAttrs;
-exports.getSVGFromSource = getSVGFromSource;
-exports.extractSVGProps = extractSVGProps;
-// Transform DOM prop/attr names applicable to `<svg>` element but react-limited
-
-function convertReactSVGDOMProperty(str) {
-    return str.replace(/[-|:]([a-z])/g, function (g) {
-        return g[1].toUpperCase();
-    });
-}
-
-function startsWith(str, substring) {
-    return str.indexOf(substring) === 0;
-}
-
-var DataPropPrefix = 'data-';
-// Serialize `Attr` objects in `NamedNodeMap`
-function serializeAttrs(map) {
-    var ret = {};
-    for (var prop, i = 0; i < map.length; i++) {
-        var key = map[i].name;
-        if (!startsWith(key, DataPropPrefix)) {
-            prop = convertReactSVGDOMProperty(key);
-        }
-        ret[prop] = map[i].value;
-    }
-    return ret;
-}
-
-function getSVGFromSource(src) {
-    var svgContainer = document.createElement('div');
-    svgContainer.innerHTML = src;
-    var svg = svgContainer.firstElementChild;
-    svg.remove(); // deref from parent element
-    return svg;
-}
-
-// get <svg /> element props
-function extractSVGProps(src) {
-    var map = getSVGFromSource(src).attributes;
-    return map.length > 0 ? serializeAttrs(map) : null;
-}
-
-/***/ }),
-/* 39 */
-/***/ (function(module, exports) {
-
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M8,3L12,3L12,7L14,7L14,8L12,8L12,12L8,12L8,14L7,14L7,12L3,12L3,8L1,8L1,7L3,7L3,3L7,3L7,1L8,1L8,3ZM10,10L10,5L5,5L5,10L10,10Z\"></path></svg>"
-
-/***/ }),
-/* 40 */
+/* 41 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4269,7 +4366,7 @@ const {
   wrapRender
 } = __webpack_require__(0);
 const { MODE } = __webpack_require__(3);
-const Svg = __webpack_require__(11);
+const Svg = __webpack_require__(9);
 
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -4358,7 +4455,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4393,7 +4490,22 @@ ErrorRep.propTypes = {
 function ErrorRep(props) {
   let object = props.object;
   let preview = object.preview;
-  let name = preview && preview.name ? preview.name : "Error";
+
+  let name;
+  if (preview && preview.name && preview.kind) {
+    switch (preview.kind) {
+      case "Error":
+        name = preview.name;
+        break;
+      case "DOMException":
+        name = preview.kind;
+        break;
+      default:
+        throw new Error("Unknown preview kind for the Error rep.");
+    }
+  } else {
+    name = "Error";
+  }
 
   let content = props.mode === MODE.TINY ? name : `${name}: ${preview.message}`;
 
@@ -4417,7 +4529,7 @@ function supportsObject(object, noGrip = false) {
   if (noGrip === true || !isGrip(object)) {
     return false;
   }
-  return object.preview && getGripType(object, noGrip) === "Error";
+  return object.preview && getGripType(object, noGrip) === "Error" || object.class === "DOMException";
 }
 
 // Exports from this module
@@ -4427,7 +4539,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4505,7 +4617,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4566,7 +4678,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4632,13 +4744,13 @@ module.exports = {
 };
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _devtoolsComponents = __webpack_require__(46);
+var _devtoolsComponents = __webpack_require__(47);
 
 var _devtoolsComponents2 = _interopRequireDefault(_devtoolsComponents);
 
@@ -4689,7 +4801,7 @@ const {
   shouldLoadItemNonIndexedProperties,
   shouldLoadItemPrototype,
   shouldLoadItemSymbols
-} = __webpack_require__(15);
+} = __webpack_require__(16);
 
 const {
   enumEntries,
@@ -5068,7 +5180,7 @@ ObjectInspector.propTypes = {
 module.exports = ObjectInspector;
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5078,7 +5190,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _tree = __webpack_require__(47);
+var _tree = __webpack_require__(48);
 
 var _tree2 = _interopRequireDefault(_tree);
 
@@ -5091,7 +5203,7 @@ exports.default = {
     * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5105,7 +5217,15 @@ var _react = __webpack_require__(6);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _svgInlineReact = __webpack_require__(48);
+var _reactDomFactories = __webpack_require__(1);
+
+var _reactDomFactories2 = _interopRequireDefault(_reactDomFactories);
+
+var _propTypes = __webpack_require__(2);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+var _svgInlineReact = __webpack_require__(11);
 
 var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
 
@@ -5115,9 +5235,9 @@ var _arrow2 = _interopRequireDefault(_arrow);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const { DOM: dom, createClass, createFactory, createElement, PropTypes } = _react2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                             * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                             * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+const { Component, createFactory, createElement } = _react2.default; /* This Source Code Form is subject to the terms of the Mozilla Public
+                                                                      * License, v. 2.0. If a copy of the MPL was not distributed with this
+                                                                      * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 __webpack_require__(50);
 
@@ -5127,16 +5247,16 @@ const AUTO_EXPAND_DEPTH = 0; // depth
  * An arrow that displays whether its node is expanded (▼) or collapsed
  * (▶). When its node has no children, it is hidden.
  */
-const ArrowExpander = createFactory(createClass({
-  displayName: "ArrowExpander",
-
-  propTypes: {
-    expanded: PropTypes.bool
-  },
+class ArrowExpander extends Component {
+  static get propTypes() {
+    return {
+      expanded: _propTypes2.default.bool
+    };
+  }
 
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.expanded !== nextProps.expanded;
-  },
+  }
 
   render() {
     const {
@@ -5152,26 +5272,28 @@ const ArrowExpander = createFactory(createClass({
       src: _arrow2.default
     });
   }
-}));
+}
 
-const TreeNode = createFactory(createClass({
-  displayName: "TreeNode",
+const treeIndent = _reactDomFactories2.default.span({ className: "tree-indent" }, "\u200B");
 
-  propTypes: {
-    id: PropTypes.any.isRequired,
-    index: PropTypes.number.isRequired,
-    depth: PropTypes.number.isRequired,
-    focused: PropTypes.bool.isRequired,
-    expanded: PropTypes.bool.isRequired,
-    item: PropTypes.any.isRequired,
-    isExpandable: PropTypes.bool.isRequired,
-    onClick: PropTypes.func,
-    renderItem: PropTypes.func.isRequired
-  },
+class TreeNode extends Component {
+  static get propTypes() {
+    return {
+      id: _propTypes2.default.any.isRequired,
+      index: _propTypes2.default.number.isRequired,
+      depth: _propTypes2.default.number.isRequired,
+      focused: _propTypes2.default.bool.isRequired,
+      expanded: _propTypes2.default.bool.isRequired,
+      item: _propTypes2.default.any.isRequired,
+      isExpandable: _propTypes2.default.bool.isRequired,
+      onClick: _propTypes2.default.func,
+      renderItem: _propTypes2.default.func.isRequired
+    };
+  }
 
   shouldComponentUpdate(nextProps) {
     return this.props.item !== nextProps.item || this.props.focused !== nextProps.focused || this.props.expanded !== nextProps.expanded;
-  },
+  }
 
   render() {
     const {
@@ -5184,38 +5306,10 @@ const TreeNode = createFactory(createClass({
       isExpandable
     } = this.props;
 
-    const arrow = isExpandable ? ArrowExpander({
+    const arrow = isExpandable ? ArrowExpanderFactory({
       item,
       expanded
     }) : null;
-
-    const treeIndentWidthVar = "var(--tree-indent-width)";
-    const treeBorderColorVar = "var(--tree-indent-border-color, black)";
-    const treeBorderWidthVar = "var(--tree-indent-border-width, 1px)";
-
-    const paddingInlineStart = `calc(
-      (${treeIndentWidthVar} * ${depth})
-      ${isExpandable ? "" : "+ var(--arrow-total-width)"}
-    )`;
-
-    // This is the computed border that will mimic a border on tree nodes.
-    // This allow us to have as many "borders" as we need without adding
-    // specific elements for that purpose only.
-    // it's a gradient with "hard stops" which will give us as much plain
-    // lines as we need given the depth of the node.
-    // The gradient uses CSS custom properties so everything is customizable
-    // by consumers if needed.
-    const backgroundBorder = depth === 0 ? null : "linear-gradient(90deg, " + Array.from({ length: depth }).map((_, i) => {
-      const indentWidth = `(${i} * ${treeIndentWidthVar})`;
-      const alignIndent = `(var(--arrow-width) / 2)`;
-      const start = `calc(${indentWidth} + ${alignIndent})`;
-      const end = `calc(${indentWidth} + ${alignIndent} + ${treeBorderWidthVar})`;
-
-      return `transparent ${start},
-              ${treeBorderColorVar} ${start},
-              ${treeBorderColorVar} ${end},
-              transparent ${end}`;
-    }).join(",") + ")";
 
     let ariaExpanded;
     if (this.props.isExpandable) {
@@ -5225,21 +5319,23 @@ const TreeNode = createFactory(createClass({
       ariaExpanded = true;
     }
 
-    return dom.div({
+    const indents = Array.from({ length: depth }).fill(treeIndent);
+    let items = indents.concat(renderItem(item, depth, focused, arrow, expanded));
+
+    return _reactDomFactories2.default.div({
       id,
       className: "tree-node" + (focused ? " focused" : ""),
-      style: {
-        paddingInlineStart,
-        backgroundImage: backgroundBorder
-      },
       onClick: this.props.onClick,
       role: "treeitem",
       "aria-level": depth,
       "aria-expanded": ariaExpanded,
       "data-expandable": this.props.isExpandable
-    }, renderItem(item, depth, focused, arrow, expanded));
+    }, ...items);
   }
-}));
+}
+
+const ArrowExpanderFactory = createFactory(ArrowExpander);
+const TreeNodeFactory = createFactory(TreeNode);
 
 /**
  * Create a function that calls the given function `fn` only once per animation
@@ -5285,19 +5381,7 @@ function oncePerAnimationFrame(fn) {
  * restrict you to only one certain kind of tree.
  *
  * The tree comes with basic styling for the indent, the arrow, as well as hovered
- * and focused styles.
- * All of this can be customize on the customer end, by overriding the following
- * CSS custom properties :
- *   --arrow-width: the width of the arrow.
- *   --arrow-single-margin: the end margin between the arrow and the item that follows.
- *   --arrow-fill-color: the fill-color of the arrow.
- *   --tree-indent-width: the width of a 1-level-deep item.
- *   --tree-indent-border-color: the color of the indent border.
- *   --tree-indent-border-width: the width of the indent border.
- *   --tree-node-hover-background-color: the background color of a hovered node.
- *   --tree-node-focus-color: the color of a focused node.
- *   --tree-node-focus-background-color: the background color of a focused node.
- *
+ * and focused styles which can be override in CSS.
  *
  * ### Example Usage
  *
@@ -5313,12 +5397,12 @@ function oncePerAnimationFrame(fn) {
  *
  * Here is how we could render that data with this component:
  *
- *     const MyTree = createClass({
- *       displayName: "MyTree",
- *
- *       propTypes: {
+ *     class MyTree extends Component {
+ *       static get propTypes() {
  *         // The root item of the tree, with the form described above.
- *         root: PropTypes.object.isRequired
+ *         return {
+ *           root: PropTypes.object.isRequired
+ *         };
  *       },
  *
  *       render() {
@@ -5350,165 +5434,183 @@ function oncePerAnimationFrame(fn) {
  *           onCollapse: item => dispatchCollapseActionToRedux(item),
  *         });
  *       }
- *     });
+ *     }
  */
-const Tree = createClass({
-  displayName: "Tree",
+class Tree extends Component {
+  static get propTypes() {
+    return {
+      // Required props
 
-  propTypes: {
-    // Required props
+      // A function to get an item's parent, or null if it is a root.
+      //
+      // Type: getParent(item: Item) -> Maybe<Item>
+      //
+      // Example:
+      //
+      //     // The parent of this item is stored in its `parent` property.
+      //     getParent: item => item.parent
+      getParent: _propTypes2.default.func.isRequired,
 
-    // A function to get an item's parent, or null if it is a root.
-    //
-    // Type: getParent(item: Item) -> Maybe<Item>
-    //
-    // Example:
-    //
-    //     // The parent of this item is stored in its `parent` property.
-    //     getParent: item => item.parent
-    getParent: PropTypes.func.isRequired,
+      // A function to get an item's children.
+      //
+      // Type: getChildren(item: Item) -> [Item]
+      //
+      // Example:
+      //
+      //     // This item's children are stored in its `children` property.
+      //     getChildren: item => item.children
+      getChildren: _propTypes2.default.func.isRequired,
 
-    // A function to get an item's children.
-    //
-    // Type: getChildren(item: Item) -> [Item]
-    //
-    // Example:
-    //
-    //     // This item's children are stored in its `children` property.
-    //     getChildren: item => item.children
-    getChildren: PropTypes.func.isRequired,
+      // A function which takes an item and ArrowExpander component instance and
+      // returns a component, or text, or anything else that React considers
+      // renderable.
+      //
+      // Type: renderItem(item: Item,
+      //                  depth: Number,
+      //                  isFocused: Boolean,
+      //                  arrow: ReactComponent,
+      //                  isExpanded: Boolean) -> ReactRenderable
+      //
+      // Example:
+      //
+      //     renderItem: (item, depth, isFocused, arrow, isExpanded) => {
+      //       let className = "my-tree-item";
+      //       if (isFocused) {
+      //         className += " focused";
+      //       }
+      //       return dom.div(
+      //         {
+      //           className,
+      //           style: { marginLeft: depth * 10 + "px" }
+      //         },
+      //         arrow,
+      //         dom.span({ className: "my-tree-item-label" }, item.label)
+      //       );
+      //     },
+      renderItem: _propTypes2.default.func.isRequired,
 
-    // A function which takes an item and ArrowExpander component instance and
-    // returns a component, or text, or anything else that React considers
-    // renderable.
-    //
-    // Type: renderItem(item: Item,
-    //                  depth: Number,
-    //                  isFocused: Boolean,
-    //                  arrow: ReactComponent,
-    //                  isExpanded: Boolean) -> ReactRenderable
-    //
-    // Example:
-    //
-    //     renderItem: (item, depth, isFocused, arrow, isExpanded) => {
-    //       let className = "my-tree-item";
-    //       if (isFocused) {
-    //         className += " focused";
-    //       }
-    //       return dom.div(
-    //         {
-    //           className,
-    //           style: { marginLeft: depth * 10 + "px" }
-    //         },
-    //         arrow,
-    //         dom.span({ className: "my-tree-item-label" }, item.label)
-    //       );
-    //     },
-    renderItem: PropTypes.func.isRequired,
+      // A function which returns the roots of the tree (forest).
+      //
+      // Type: getRoots() -> [Item]
+      //
+      // Example:
+      //
+      //     // In this case, we only have one top level, root item. You could
+      //     // return multiple items if you have many top level items in your
+      //     // tree.
+      //     getRoots: () => [this.props.rootOfMyTree]
+      getRoots: _propTypes2.default.func.isRequired,
 
-    // A function which returns the roots of the tree (forest).
-    //
-    // Type: getRoots() -> [Item]
-    //
-    // Example:
-    //
-    //     // In this case, we only have one top level, root item. You could
-    //     // return multiple items if you have many top level items in your
-    //     // tree.
-    //     getRoots: () => [this.props.rootOfMyTree]
-    getRoots: PropTypes.func.isRequired,
+      // A function to get a unique key for the given item. This helps speed up
+      // React's rendering a *TON*.
+      //
+      // Type: getKey(item: Item) -> String
+      //
+      // Example:
+      //
+      //     getKey: item => `my-tree-item-${item.uniqueId}`
+      getKey: _propTypes2.default.func.isRequired,
 
-    // A function to get a unique key for the given item. This helps speed up
-    // React's rendering a *TON*.
-    //
-    // Type: getKey(item: Item) -> String
-    //
-    // Example:
-    //
-    //     getKey: item => `my-tree-item-${item.uniqueId}`
-    getKey: PropTypes.func.isRequired,
+      // A function to get whether an item is expanded or not. If an item is not
+      // expanded, then it must be collapsed.
+      //
+      // Type: isExpanded(item: Item) -> Boolean
+      //
+      // Example:
+      //
+      //     isExpanded: item => item.expanded,
+      isExpanded: _propTypes2.default.func.isRequired,
 
-    // A function to get whether an item is expanded or not. If an item is not
-    // expanded, then it must be collapsed.
-    //
-    // Type: isExpanded(item: Item) -> Boolean
-    //
-    // Example:
-    //
-    //     isExpanded: item => item.expanded,
-    isExpanded: PropTypes.func.isRequired,
+      // Optional props
 
-    // Optional props
+      // The currently focused item, if any such item exists.
+      focused: _propTypes2.default.any,
 
-    // The currently focused item, if any such item exists.
-    focused: PropTypes.any,
+      // Handle when a new item is focused.
+      onFocus: _propTypes2.default.func,
 
-    // Handle when a new item is focused.
-    onFocus: PropTypes.func,
+      // The depth to which we should automatically expand new items.
+      autoExpandDepth: _propTypes2.default.number,
+      // Should auto expand all new items or just the new items under the first
+      // root item.
+      autoExpandAll: _propTypes2.default.bool,
 
-    // The depth to which we should automatically expand new items.
-    autoExpandDepth: PropTypes.number,
-    // Should auto expand all new items or just the new items under the first
-    // root item.
-    autoExpandAll: PropTypes.bool,
+      // Note: the two properties below are mutually exclusive. Only one of the
+      // label properties is necessary.
+      // ID of an element whose textual content serves as an accessible label for
+      // a tree.
+      labelledby: _propTypes2.default.string,
+      // Accessibility label for a tree widget.
+      label: _propTypes2.default.string,
 
-    // Note: the two properties below are mutually exclusive. Only one of the
-    // label properties is necessary.
-    // ID of an element whose textual content serves as an accessible label for
-    // a tree.
-    labelledby: PropTypes.string,
-    // Accessibility label for a tree widget.
-    label: PropTypes.string,
+      // Optional event handlers for when items are expanded or collapsed. Useful
+      // for dispatching redux events and updating application state, maybe lazily
+      // loading subtrees from a worker, etc.
+      //
+      // Type:
+      //     onExpand(item: Item)
+      //     onCollapse(item: Item)
+      //
+      // Example:
+      //
+      //     onExpand: item => dispatchExpandActionToRedux(item)
+      onExpand: _propTypes2.default.func,
+      onCollapse: _propTypes2.default.func,
+      isExpandable: _propTypes2.default.func,
+      // Additional classes to add to the root element.
+      className: _propTypes2.default.string,
+      // style object to be applied to the root element.
+      style: _propTypes2.default.object
+    };
+  }
 
-    // Optional event handlers for when items are expanded or collapsed. Useful
-    // for dispatching redux events and updating application state, maybe lazily
-    // loading subtrees from a worker, etc.
-    //
-    // Type:
-    //     onExpand(item: Item)
-    //     onCollapse(item: Item)
-    //
-    // Example:
-    //
-    //     onExpand: item => dispatchExpandActionToRedux(item)
-    onExpand: PropTypes.func,
-    onCollapse: PropTypes.func,
-    isExpandable: PropTypes.func,
-    // Additional classes to add to the root element.
-    className: PropTypes.string,
-    // style object to be applied to the root element.
-    style: PropTypes.object
-  },
-
-  getDefaultProps() {
+  static get defaultProps() {
     return {
       autoExpandDepth: AUTO_EXPAND_DEPTH,
       autoExpandAll: true
     };
-  },
+  }
 
-  getInitialState() {
-    return {
+  constructor(props) {
+    super(props);
+
+    this.state = {
       seen: new Set()
     };
-  },
+
+    this._onExpand = oncePerAnimationFrame(this._onExpand).bind(this);
+    this._onCollapse = oncePerAnimationFrame(this._onCollapse).bind(this);
+    this._focusPrevNode = oncePerAnimationFrame(this._focusPrevNode).bind(this);
+    this._focusNextNode = oncePerAnimationFrame(this._focusNextNode).bind(this);
+    this._focusParentNode = oncePerAnimationFrame(this._focusParentNode).bind(this);
+
+    this._autoExpand = this._autoExpand.bind(this);
+    this._preventArrowKeyScrolling = this._preventArrowKeyScrolling.bind(this);
+    this._dfs = this._dfs.bind(this);
+    this._dfsFromRoots = this._dfsFromRoots.bind(this);
+    this._focus = this._focus.bind(this);
+    this._scrollNodeIntoView = this._scrollNodeIntoView.bind(this);
+    this._onBlur = this._onBlur.bind(this);
+    this._onKeyDown = this._onKeyDown.bind(this);
+    this._nodeIsExpandable = this._nodeIsExpandable.bind(this);
+  }
 
   componentDidMount() {
     this._autoExpand();
     if (this.props.focused) {
       this._scrollNodeIntoView(this.props.focused);
     }
-  },
+  }
 
   componentWillReceiveProps(nextProps) {
     this._autoExpand();
-  },
+  }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.focused !== this.props.focused) {
       this._scrollNodeIntoView(this.props.focused);
     }
-  },
+  }
 
   _autoExpand() {
     if (!this.props.autoExpandDepth) {
@@ -5542,7 +5644,7 @@ const Tree = createClass({
     } else if (length != 0) {
       autoExpand(roots[0], 0);
     }
-  },
+  }
 
   _preventArrowKeyScrolling(e) {
     switch (e.key) {
@@ -5561,7 +5663,7 @@ const Tree = createClass({
           }
         }
     }
-  },
+  }
 
   /**
    * Perform a pre-order depth-first search from item.
@@ -5586,7 +5688,7 @@ const Tree = createClass({
     }
 
     return traversal;
-  },
+  }
 
   /**
    * Perform a pre-order depth-first search over the whole forest.
@@ -5601,7 +5703,7 @@ const Tree = createClass({
     }
 
     return traversal;
-  },
+  }
 
   /**
    * Expands current row.
@@ -5609,7 +5711,7 @@ const Tree = createClass({
    * @param {Object} item
    * @param {Boolean} expandAllChildren
    */
-  _onExpand: oncePerAnimationFrame(function (item, expandAllChildren) {
+  _onExpand(item, expandAllChildren) {
     if (this.props.onExpand) {
       this.props.onExpand(item);
 
@@ -5621,18 +5723,18 @@ const Tree = createClass({
         }
       }
     }
-  }),
+  }
 
   /**
    * Collapses current row.
    *
    * @param {Object} item
    */
-  _onCollapse: oncePerAnimationFrame(function (item) {
+  _onCollapse(item) {
     if (this.props.onCollapse) {
       this.props.onCollapse(item);
     }
-  }),
+  }
 
   /**
    * Sets the passed in item to be the focused item.
@@ -5651,7 +5753,7 @@ const Tree = createClass({
     if (this.props.onFocus) {
       this.props.onFocus(item);
     }
-  },
+  }
 
   /**
    * Sets the passed in item to be the focused item.
@@ -5667,7 +5769,7 @@ const Tree = createClass({
    */
   _scrollNodeIntoView(item, options = {}) {
     if (item !== undefined) {
-      const treeElement = this.refs.tree;
+      const treeElement = this.treeRef;
       const element = document.getElementById(this.props.getKey(item));
       if (element) {
         const { top, bottom } = element.getBoundingClientRect();
@@ -5690,14 +5792,14 @@ const Tree = createClass({
         }
       }
     }
-  },
+  }
 
   /**
    * Sets the state to have no focused item.
    */
   _onBlur() {
     this._focus(undefined);
-  },
+  }
 
   /**
    * Handles key down events in the tree's container.
@@ -5740,12 +5842,12 @@ const Tree = createClass({
           this._focusNextNode();
         }
     }
-  },
+  }
 
   /**
    * Sets the previous node relative to the currently focused item, to focused.
    */
-  _focusPrevNode: oncePerAnimationFrame(function () {
+  _focusPrevNode() {
     // Start a depth first search and keep going until we reach the currently
     // focused node. Focus the previous node in the DFS, if it exists. If it
     // doesn't exist, we're at the first node already.
@@ -5766,13 +5868,13 @@ const Tree = createClass({
     }
 
     this._focus(prev, { alignTo: "top" });
-  }),
+  }
 
   /**
    * Handles the down arrow key which will focus either the next child
    * or sibling row.
    */
-  _focusNextNode: oncePerAnimationFrame(function () {
+  _focusNextNode() {
     // Start a depth first search and keep going until we reach the currently
     // focused node. Focus the next node in the DFS, if it exists. If it
     // doesn't exist, we're at the last node already.
@@ -5790,13 +5892,13 @@ const Tree = createClass({
     if (i + 1 < traversal.length) {
       this._focus(traversal[i + 1].item, { alignTo: "bottom" });
     }
-  }),
+  }
 
   /**
    * Handles the left arrow key, going back up to the current rows'
    * parent row.
    */
-  _focusParentNode: oncePerAnimationFrame(function () {
+  _focusParentNode() {
     const parent = this.props.getParent(this.props.focused);
     if (!parent) {
       this._focusPrevNode(this.props.focused);
@@ -5813,11 +5915,11 @@ const Tree = createClass({
     }
 
     this._focus(parent, { alignTo: "top" });
-  }),
+  }
 
-  _nodeIsExpandable: function (item) {
+  _nodeIsExpandable(item) {
     return this.props.isExpandable ? this.props.isExpandable(item) : !!this.props.getChildren(item).length;
-  },
+  }
 
   render() {
     const traversal = this._dfsFromRoots();
@@ -5828,7 +5930,7 @@ const Tree = createClass({
     const nodes = traversal.map((v, i) => {
       const { item, depth } = traversal[i];
       const key = this.props.getKey(item, i);
-      return TreeNode({
+      return TreeNodeFactory({
         key,
         id: key,
         index: i,
@@ -5856,16 +5958,18 @@ const Tree = createClass({
       margin: 0
     });
 
-    return dom.div({
+    return _reactDomFactories2.default.div({
       className: `tree ${this.props.className ? this.props.className : ""}`,
-      ref: "tree",
+      ref: el => {
+        this.treeRef = el;
+      },
       role: "tree",
       tabIndex: "0",
       onKeyDown: this._onKeyDown,
       onKeyPress: this._preventArrowKeyScrolling,
       onKeyUp: this._preventArrowKeyScrolling,
       onFocus: ({ nativeEvent }) => {
-        if (focused || !nativeEvent || !this.refs.tree) {
+        if (focused || !nativeEvent || !this.treeRef) {
           return;
         }
 
@@ -5873,14 +5977,14 @@ const Tree = createClass({
         // Only set default focus to the first tree node if the focus came
         // from outside the tree (e.g. by tabbing to the tree from other
         // external elements).
-        if (explicitOriginalTarget !== this.refs.tree && !this.refs.tree.contains(explicitOriginalTarget)) {
+        if (explicitOriginalTarget !== this.treeRef && !this.treeRef.contains(explicitOriginalTarget)) {
           this._focus(traversal[0].item);
         }
       },
       onBlur: this._onBlur,
       onClick: () => {
         // Focus should always remain on the tree container itself.
-        this.refs.tree.focus();
+        this.treeRef.focus();
       },
       "aria-label": this.props.label,
       "aria-labelledby": this.props.labelledby,
@@ -5888,210 +5992,9 @@ const Tree = createClass({
       style
     }, nodes);
   }
-});
+}
 
 exports.default = Tree;
-
-/***/ }),
-/* 48 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, '__esModule', {
-    value: true
-});
-
-var _extends = Object.assign || function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i];for (var key in source) {
-            if (Object.prototype.hasOwnProperty.call(source, key)) {
-                target[key] = source[key];
-            }
-        }
-    }return target;
-};
-
-var _createClass = function () {
-    function defineProperties(target, props) {
-        for (var i = 0; i < props.length; i++) {
-            var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ('value' in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
-        }
-    }return function (Constructor, protoProps, staticProps) {
-        if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
-    };
-}();
-
-var _get = function get(_x, _x2, _x3) {
-    var _again = true;_function: while (_again) {
-        var object = _x,
-            property = _x2,
-            receiver = _x3;_again = false;if (object === null) object = Function.prototype;var desc = Object.getOwnPropertyDescriptor(object, property);if (desc === undefined) {
-            var parent = Object.getPrototypeOf(object);if (parent === null) {
-                return undefined;
-            } else {
-                _x = parent;_x2 = property;_x3 = receiver;_again = true;desc = parent = undefined;continue _function;
-            }
-        } else if ('value' in desc) {
-            return desc.value;
-        } else {
-            var getter = desc.get;if (getter === undefined) {
-                return undefined;
-            }return getter.call(receiver);
-        }
-    }
-};
-
-function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : { 'default': obj };
-}
-
-function _objectWithoutProperties(obj, keys) {
-    var target = {};for (var i in obj) {
-        if (keys.indexOf(i) >= 0) continue;if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;target[i] = obj[i];
-    }return target;
-}
-
-function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-        throw new TypeError('Cannot call a class as a function');
-    }
-}
-
-function _inherits(subClass, superClass) {
-    if (typeof superClass !== 'function' && superClass !== null) {
-        throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass);
-    }subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-}
-
-var _react = __webpack_require__(6);
-
-var _react2 = _interopRequireDefault(_react);
-
-var DOMParser = typeof window !== 'undefined' && window.DOMParser;
-var process = process || {};
-process.env = process.env || {};
-var parserAvailable = typeof DOMParser !== 'undefined' && DOMParser.prototype != null && DOMParser.prototype.parseFromString != null;
-
-function isParsable(src) {
-    // kinda naive but meh, ain't gonna use full-blown parser for this
-    return parserAvailable && typeof src === 'string' && src.trim().substr(0, 4) === '<svg';
-}
-
-// parse SVG string using `DOMParser`
-function parseFromSVGString(src) {
-    var parser = new DOMParser();
-    return parser.parseFromString(src, "image/svg+xml");
-}
-
-// Transform DOM prop/attr names applicable to `<svg>` element but react-limited
-function switchSVGAttrToReactProp(propName) {
-    switch (propName) {
-        case 'class':
-            return 'className';
-        default:
-            return propName;
-    }
-}
-
-var InlineSVG = function (_React$Component) {
-    _inherits(InlineSVG, _React$Component);
-
-    _createClass(InlineSVG, null, [{
-        key: 'defaultProps',
-        value: {
-            element: 'i',
-            raw: false,
-            src: ''
-        },
-        enumerable: true
-    }, {
-        key: 'propTypes',
-        value: {
-            src: _react2['default'].PropTypes.string.isRequired,
-            element: _react2['default'].PropTypes.string,
-            raw: _react2['default'].PropTypes.bool
-        },
-        enumerable: true
-    }]);
-
-    function InlineSVG(props) {
-        _classCallCheck(this, InlineSVG);
-
-        _get(Object.getPrototypeOf(InlineSVG.prototype), 'constructor', this).call(this, props);
-        this._extractSVGProps = this._extractSVGProps.bind(this);
-    }
-
-    // Serialize `Attr` objects in `NamedNodeMap`
-
-    _createClass(InlineSVG, [{
-        key: '_serializeAttrs',
-        value: function _serializeAttrs(map) {
-            var ret = {};
-            var prop = undefined;
-            for (var i = 0; i < map.length; i++) {
-                prop = switchSVGAttrToReactProp(map[i].name);
-                ret[prop] = map[i].value;
-            }
-            return ret;
-        }
-
-        // get <svg /> element props
-    }, {
-        key: '_extractSVGProps',
-        value: function _extractSVGProps(src) {
-            var map = parseFromSVGString(src).documentElement.attributes;
-            return map.length > 0 ? this._serializeAttrs(map) : null;
-        }
-
-        // get content inside <svg> element.
-    }, {
-        key: '_stripSVG',
-        value: function _stripSVG(src) {
-            return parseFromSVGString(src).documentElement.innerHTML;
-        }
-    }, {
-        key: 'componentWillReceiveProps',
-        value: function componentWillReceiveProps(_ref) {
-            var children = _ref.children;
-
-            if ("production" !== process.env.NODE_ENV && children != null) {
-                console.info('<InlineSVG />: `children` prop will be ignored.');
-            }
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var Element = undefined,
-                __html = undefined,
-                svgProps = undefined;
-            var _props = this.props;
-            var element = _props.element;
-            var raw = _props.raw;
-            var src = _props.src;
-
-            var otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
-
-            if (raw === true && isParsable(src)) {
-                Element = 'svg';
-                svgProps = this._extractSVGProps(src);
-                __html = this._stripSVG(src);
-            }
-            __html = __html || src;
-            Element = Element || element;
-            svgProps = svgProps || {};
-
-            return _react2['default'].createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
-                dangerouslySetInnerHTML: { __html: __html } }));
-        }
-    }]);
-
-    return InlineSVG;
-}(_react2['default'].Component);
-
-exports['default'] = InlineSVG;
-module.exports = exports['default'];
 
 /***/ }),
 /* 49 */

@@ -61,6 +61,13 @@ ServoStyleRuleDeclaration::GetParentObject()
   return Rule()->GetDocument();
 }
 
+DocGroup*
+ServoStyleRuleDeclaration::GetDocGroup() const
+{
+  nsIDocument* document = Rule()->GetDocument();
+  return document ? document->GetDocGroup() : nullptr;
+}
+
 DeclarationBlock*
 ServoStyleRuleDeclaration::GetCSSDeclaration(Operation aOperation)
 {

@@ -29,6 +29,7 @@ namespace mozilla {
 class ErrorResult;
 namespace dom {
 struct ClientRectsAndTexts;
+class DocGroup;
 class DocumentFragment;
 class DOMRect;
 class DOMRectList;
@@ -43,6 +44,7 @@ class nsRange final : public nsIDOMRange,
                       public mozilla::LinkedListElement<nsRange>
 {
   typedef mozilla::ErrorResult ErrorResult;
+  typedef mozilla::dom::DocGroup DocGroup;
   typedef mozilla::dom::DOMRect DOMRect;
   typedef mozilla::dom::DOMRectList DOMRectList;
   typedef mozilla::RangeBoundary RangeBoundary;
@@ -368,6 +370,7 @@ public:
 
   nsINode* GetParentObject() const { return mOwner; }
   virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override final;
+  DocGroup* GetDocGroup() const;
 
 private:
   // no copy's or assigns

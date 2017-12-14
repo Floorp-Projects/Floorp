@@ -122,8 +122,6 @@ private:
 
   bool CanPlayThroughImpl() override final;
 
-  bool IsLiveStream() override final;
-
   struct PlaybackRateInfo
   {
     uint32_t mRate; // Estimate of the current playback rate (bytes/second).
