@@ -44,7 +44,8 @@ def define_upstream_artifacts(config, jobs):
         artifacts_specifications = generate_specifications_of_artifacts_to_sign(
             build_platform,
             dep_job.attributes.get('nightly'),
-            keep_locale_template=False
+            keep_locale_template=False,
+            kind=config.kind,
         )
 
         if 'android' in build_platform:

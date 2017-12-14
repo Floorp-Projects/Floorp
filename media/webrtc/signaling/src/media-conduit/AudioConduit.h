@@ -17,6 +17,7 @@
 
 // Audio Engine Includes
 #include "webrtc/common_types.h"
+#include "webrtc/modules/audio_device/include/fake_audio_device.h"
 #include "webrtc/voice_engine/include/voe_base.h"
 #include "webrtc/voice_engine/include/voe_volume_control.h"
 #include "webrtc/voice_engine/include/voe_codec.h"
@@ -174,6 +175,7 @@ public:
 
   explicit WebrtcAudioConduit():
                       mVoiceEngine(nullptr),
+                      mFakeAudioDevice(new webrtc::FakeAudioDeviceModule()),
                       mTransportMonitor("WebrtcAudioConduit"),
                       mTransmitterTransport(nullptr),
                       mReceiverTransport(nullptr),
@@ -297,6 +299,7 @@ private:
   void DumpCodecDB() const;
 
   webrtc::VoiceEngine* mVoiceEngine;
+  UniquePtr<webrtc::FakeAudioDeviceModule> mFakeAudioDevice;
   mozilla::ReentrantMonitor mTransportMonitor;
   RefPtr<TransportInterface> mTransmitterTransport;
   RefPtr<TransportInterface> mReceiverTransport;
@@ -333,6 +336,8 @@ private:
   int32_t mCaptureDelay;
 
   uint32_t mLastTimestamp;
+
+  webrtc::AudioFrame mAudioFrame; // for output pulls
 
   uint32_t mSamples;
   uint32_t mLastSyncLog;

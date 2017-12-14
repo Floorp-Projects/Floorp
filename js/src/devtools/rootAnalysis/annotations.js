@@ -332,7 +332,7 @@ function extraRootedPointers()
         // These are not actually rooted, but are only used in the context of
         // AutoKeepAtoms.
         'js::frontend::TokenStream',
-        'js::frontend::TokenStream::Position',
+        'js::frontend::TokenStreamAnyChars',
 
         'mozilla::ErrorResult',
         'mozilla::IgnoredErrorResult',

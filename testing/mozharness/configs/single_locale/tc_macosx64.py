@@ -5,7 +5,6 @@ EN_US_BINARY_URL = "%(en_us_binary_url)s"
 config = {
     "locales_file": "src/browser/locales/all-locales",
     "tools_repo": "https://hg.mozilla.org/build/tools",
-    "mozconfig": "src/browser/config/mozconfigs/macosx64/l10n-mozconfig",
     "bootstrap_env": {
         "NO_MERCURIAL_SETUP_CHECK": "1",
         "MOZ_OBJDIR": "obj-firefox",

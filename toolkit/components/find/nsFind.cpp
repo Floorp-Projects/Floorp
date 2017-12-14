@@ -22,7 +22,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIDOMElement.h"
-#include "nsIWordBreaker.h"
 #include "nsCRT.h"
 #include "nsRange.h"
 #include "nsContentUtils.h"
@@ -471,6 +470,7 @@ NS_IMPL_CYCLE_COLLECTION(nsFind, mLastBlockParent, mIterNode, mIterator)
 nsFind::nsFind()
   : mFindBackward(false)
   , mCaseSensitive(false)
+  , mWordBreaker(nullptr)
   , mIterOffset(0)
 {
 }

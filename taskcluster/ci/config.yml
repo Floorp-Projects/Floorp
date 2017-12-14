@@ -54,6 +54,7 @@ treeherder:
         'p': 'Partial generation'
         'ps': 'Partials signing'
         'Rel': 'Release promotion'
+        'Snap': 'Snap image generation'
 
 try:
     # We have a few platforms for which we want to do some "extra" builds, or at

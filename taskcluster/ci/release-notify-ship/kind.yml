@@ -1,0 +1,69 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - push-apk
+   - release-balrog-publishing
+   - release-bouncer-aliases
+   - release-version-bump
+   - release-mark-as-shipped
+
+job-defaults:
+   name: notify-release-drivers-ship
+   description: Sends email to release-drivers telling release was shipped.
+   run-on-projects: []
+   shipping-phase: ship
+   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+   worker:
+      implementation: docker-worker
+      os: linux
+      docker-image: "ubuntu:16.10"
+      max-run-time: 600
+      command:
+         - /bin/bash
+         - -c
+         - echo "Dummy task"
+   notifications:
+      completed:
+         subject: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
+         message: "{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]} has shipped!"
+         plugins: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-signoff@mozilla.org"]
+               mozilla-release: ["release-signoff@mozilla.org"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+   routes:
+      - index.releases.v1.{branch}.{revision}.{product}.{underscore_version}.build{build_number}.email-{channel}
+      - index.releases.v1.{branch}.latest.{product}.latest.email-{channel}
+   index:
+      type: release
+      channel:
+         by-project:
+            mozilla-beta: beta
+            mozilla-release: release
+            maple: maple
+            default: unknown
+
+jobs:
+   fennec:
+      shipping-product: fennec
+      index:
+         product: fennec
+   firefox:
+      shipping-product: firefox
+      index:
+         product: firefox
+   devedition:
+      shipping-product: devedition
+      index:
+         product: devedition
