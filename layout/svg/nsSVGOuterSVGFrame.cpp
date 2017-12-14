@@ -507,8 +507,7 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
 
 void
 nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
-                              const ReflowInput*  aReflowInput,
-                              nsDidReflowStatus aStatus)
+                              const ReflowInput*  aReflowInput)
 {
   nsSVGDisplayContainerFrame::DidReflow(aPresContext,aReflowInput,aStatus);
 

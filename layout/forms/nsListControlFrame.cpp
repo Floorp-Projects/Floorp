@@ -1504,8 +1504,7 @@ nsListControlFrame::AboutToRollup()
 
 void
 nsListControlFrame::DidReflow(nsPresContext*           aPresContext,
-                              const ReflowInput* aReflowInput,
-                              nsDidReflowStatus        aStatus)
+                              const ReflowInput* aReflowInput)
 {
   bool wasInterrupted = !mHasPendingInterruptAtStartOfReflow &&
                           aPresContext->HasPendingInterrupt();
