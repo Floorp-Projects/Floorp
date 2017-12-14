@@ -10,8 +10,8 @@ with Files('*'):
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 XPIDL_SOURCES += [
-    'ILoginReputation.idl',
     'nsIApplicationReputation.idl',
+    'nsILoginReputation.idl',
 ]
 
 XPIDL_MODULE = 'reputationservice'
