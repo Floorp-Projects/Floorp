@@ -582,8 +582,9 @@ async function promiseVisit(expectedType, expectedURI) {
       }
     }
     let observer = {
-      onVisit(uri) {
-        done("added", uri);
+      onVisits(visits) {
+        Assert.equal(visits.length, 1);
+        done("added", visits[0].uri);
       },
       onBeginUpdateBatch() {},
       onEndUpdateBatch() {},

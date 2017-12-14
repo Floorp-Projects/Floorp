@@ -18,10 +18,12 @@ add_task(async function() {
   let historyObserver = {
     count: 0,
     expectedURI: null,
-    onVisit(aURI) {
-      info("Received onVisit: " + aURI.spec);
-      if (aURI.equals(this.expectedURI)) {
-        this.count++;
+    onVisits(aVisits) {
+      for (let {uri} of aVisits) {
+        info("Received onVisits: " + uri.spec);
+        if (uri.equals(this.expectedURI)) {
+          this.count++;
+        }
       }
     },
     onBeginUpdateBatch() {},

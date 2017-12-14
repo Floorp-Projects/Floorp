@@ -15,8 +15,7 @@ add_task(async function() {
         var historyObserver = {
             onBeginUpdateBatch: function() {},
             onEndUpdateBatch: function() {},
-            onVisit: function(aURI, aVisitID, aTime, aSessionId, aReferringId,
-                              aTransitionType, _added) {},
+            onVisits: function() {},
             onTitleChanged: function(aURI, aPageTitle) {
                 aURI = aURI.spec;
                 switch (aURI) {
