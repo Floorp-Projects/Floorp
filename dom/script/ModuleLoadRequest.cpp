@@ -21,26 +21,49 @@ NS_INTERFACE_MAP_END_INHERITING(ScriptLoadRequest)
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ModuleLoadRequest, ScriptLoadRequest,
                                    mBaseURL,
                                    mLoader,
-                                   mParent,
                                    mModuleScript,
                                    mImports)
 
 NS_IMPL_ADDREF_INHERITED(ModuleLoadRequest, ScriptLoadRequest)
 NS_IMPL_RELEASE_INHERITED(ModuleLoadRequest, ScriptLoadRequest)
 
-ModuleLoadRequest::ModuleLoadRequest(nsIScriptElement* aElement,
+ModuleLoadRequest::ModuleLoadRequest(nsIURI* aURI,
+                                     nsIScriptElement* aElement,
                                      ValidJSVersion aValidJSVersion,
                                      CORSMode aCORSMode,
                                      const SRIMetadata& aIntegrity,
                                      ScriptLoader* aLoader)
   : ScriptLoadRequest(ScriptKind::Module,
+                      aURI,
                       aElement,
                       aValidJSVersion,
                       aCORSMode,
                       aIntegrity),
     mIsTopLevel(true),
-    mLoader(aLoader)
-{}
+    mLoader(aLoader),
+    mVisitedSet(new VisitedURLSet())
+{
+  mVisitedSet->PutEntry(aURI);
+}
+
+ModuleLoadRequest::ModuleLoadRequest(nsIURI* aURI,
+                                     ModuleLoadRequest* aParent)
+  : ScriptLoadRequest(ScriptKind::Module,
+                      aURI,
+                      aParent->mElement,
+                      aParent->mValidJSVersion,
+                      aParent->mCORSMode,
+                      aParent->mIntegrity),
+    mIsTopLevel(false),
+    mLoader(aParent->mLoader),
+    mVisitedSet(aParent->mVisitedSet)
+{
+  MOZ_ASSERT(mVisitedSet->Contains(aURI));
+
+  mTriggeringPrincipal = aParent->mTriggeringPrincipal;
+  mIsInline = false;
+  mReferrerPolicy = aParent->mReferrerPolicy;
+}
 
 void
 ModuleLoadRequest::Cancel()
@@ -146,7 +169,6 @@ ModuleLoadRequest::LoadFinished()
   mLoader->ProcessLoadedModuleTree(this);
 
   mLoader = nullptr;
-  mParent = nullptr;
 }
 
 } // dom namespace
