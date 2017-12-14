@@ -64,29 +64,21 @@ class TestConfig(object):
         level_desc = "The default log level to use when running tests with `mach test`."
         level_choices = [l.lower() for l in log_levels]
         return [
-            ('test.format', 'string', format_desc, 'mach', {'choices': format_choices}),
+            ('test.format', 'string', format_desc, 'tbpl', {'choices': format_choices}),
             ('test.level', 'string', level_desc, 'info', {'choices': level_choices}),
         ]
-
-
-def get_test_parser():
-    from mozlog.commandline import add_logging_group
-    parser = argparse.ArgumentParser()
-    parser.add_argument('what', default=None, nargs='*', help=TEST_HELP)
-    parser.add_argument('extra_args', default=None, nargs=argparse.REMAINDER,
-                        help="Extra arguments to pass to the underlying test command(s). "
-                             "If an underlying command doesn't recognize the argument, it "
-                             "will fail.")
-    add_logging_group(parser)
-    return parser
 
 
 @CommandProvider
 class Test(MachCommandBase):
     @Command('test', category='testing',
-             description='Run tests (detects the kind of test and runs it).',
-             parser=get_test_parser)
-    def test(self, what, extra_args, **log_args):
+             description='Run tests (detects the kind of test and runs it).')
+    @CommandArgument('what', default=None, nargs='*', help=TEST_HELP)
+    @CommandArgument('extra_args', default=None, nargs=argparse.REMAINDER,
+                     help="Extra arguments to pass to the underlying test command(s). "
+                          "If an underlying command doesn't recognize the argument, it "
+                          "will fail.")
+    def test(self, what, extra_args):
         """Run tests from names or paths.
 
         mach test accepts arguments specifying which tests to run. Each argument
@@ -110,7 +102,9 @@ class Test(MachCommandBase):
         you specify a directory with xpcshell and browser chrome mochitests,
         both harnesses will be invoked.
         """
-        from mozlog.commandline import setup_logging
+        from mozlog.commandline import log_formatters
+        from mozlog.handlers import StreamHandler, LogLevelFilter
+        from mozlog.structuredlog import StructuredLogger
         from moztest.resolve import TestResolver, TEST_FLAVORS, TEST_SUITES
 
         resolver = self._spawn(TestResolver)
@@ -121,11 +115,12 @@ class Test(MachCommandBase):
             return 1
 
         # Create shared logger
-        default_format = self._mach_context.settings['test']['format']
-        default_level = self._mach_context.settings['test']['level']
-        log = setup_logging('mach-test', log_args, {default_format: sys.stdout},
-                            {'level': default_level})
-        log.handlers[0].formatter.inner.summary_on_shutdown = True
+        formatter = log_formatters[self._mach_context.settings['test']['format']][0]()
+        formatter.summary_on_shutdown = True
+
+        level = self._mach_context.settings['test']['level']
+        log = StructuredLogger('mach-test')
+        log.add_handler(StreamHandler(sys.stdout, LogLevelFilter(formatter, level)))
 
         status = None
         for suite_name in run_suites:
