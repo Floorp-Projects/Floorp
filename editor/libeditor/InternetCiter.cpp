@@ -12,7 +12,6 @@
 #include "nsDependentSubstring.h"
 #include "nsError.h"
 #include "mozilla/intl/LineBreaker.h"
-#include "nsLWBrkCIID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsStringIterator.h"
