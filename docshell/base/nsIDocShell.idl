@@ -219,7 +219,6 @@ interface nsIDocShell : nsIDocShellTreeItem
                               in AString aSrcdoc,
                               in nsIDocShell aSourceDocShell,
                               in nsIURI aBaseURI,
-                              in boolean aCheckForPrerender,
                               out nsIDocShell aDocShell,
                               out nsIRequest aRequest);
 
@@ -676,17 +675,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    * like image frame discarding. Docshells are active unless told otherwise.
    */
   attribute boolean isActive;
-
-  /**
-   * Puts the docshell in prerendering mode. noscript because we want only
-   * native code to be able to put a docshell in prerendering.
-   */
-  [noscript] void SetIsPrerendered();
-
-  /**
-   * Whether this docshell is in prerender mode.
-   */
-  [infallible] readonly attribute boolean isPrerendered;
 
   /**
    * The ID of the docshell in the session history.
