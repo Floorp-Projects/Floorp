@@ -786,14 +786,16 @@ Animation::SilentlySetPlaybackRate(double aPlaybackRate)
 void
 Animation::CancelNoUpdate()
 {
-  ResetPendingTasks();
+  if (PlayState() != AnimationPlayState::Idle) {
+    ResetPendingTasks();
 
-  if (mFinished) {
-    mFinished->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    if (mFinished) {
+      mFinished->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    }
+    ResetFinishedPromise();
+
+    DispatchPlaybackEvent(NS_LITERAL_STRING("cancel"));
   }
-  ResetFinishedPromise();
-
-  DispatchPlaybackEvent(NS_LITERAL_STRING("cancel"));
 
   StickyTimeDuration activeTime = mEffect
                                   ? mEffect->GetComputedTiming().mActiveTime
