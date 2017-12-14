@@ -37,7 +37,7 @@ async_test(function(t) {
                   'margin-left does not increase after calling pause()');
     previousAnimVal = getMarginLeft(cs);
     animation.play();
-    return animation.ready.then(waitForFrame);
+    return animation.ready.then(waitForNextFrame);
   })).then(t.step_func(function() {
     assert_greater_than(getMarginLeft(cs), previousAnimVal,
                         'margin-left increases after calling play()');
