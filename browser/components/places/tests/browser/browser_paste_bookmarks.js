@@ -31,9 +31,8 @@ add_task(async function paste() {
     url: TEST_URL,
     title: "0"
   });
-  let bookmarkId = await PlacesUtils.promiseItemId(bookmark.guid);
 
-  ContentTree.view.selectItems([bookmarkId]);
+  ContentTree.view.selectItems([bookmark.guid]);
 
   await promiseClipboard(() => {
     info("Cutting selection");
@@ -86,18 +85,11 @@ add_task(async function paste_check_indexes() {
     children: targetChildren
   });
 
-  let bookmarkIds = await PlacesUtils.promiseManyItemIds([
+  ContentTree.view.selectItems([
     copyBookmarks[0].guid,
     copyBookmarks[3].guid,
     copyBookmarks[6].guid,
-    copyBookmarks[9].guid
-  ]);
-
-  ContentTree.view.selectItems([
-    bookmarkIds.get(copyBookmarks[0].guid),
-    bookmarkIds.get(copyBookmarks[3].guid),
-    bookmarkIds.get(copyBookmarks[6].guid),
-    bookmarkIds.get(copyBookmarks[9].guid),
+    copyBookmarks[9].guid,
   ]);
 
   await promiseClipboard(() => {
@@ -108,9 +100,7 @@ add_task(async function paste_check_indexes() {
   info("Selecting UnfiledBookmarks in the left pane");
   PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
 
-  let insertionBookmarkId = await PlacesUtils.promiseItemId(targetBookmarks[4].guid);
-
-  ContentTree.view.selectItems([insertionBookmarkId]);
+  ContentTree.view.selectItems([targetBookmarks[4].guid]);
 
   info("Pasting clipboard");
   await ContentTree.view.controller.paste();
@@ -162,18 +152,11 @@ add_task(async function paste_check_indexes_same_folder() {
     children: copyChildren
   });
 
-  let bookmarkIds = await PlacesUtils.promiseManyItemIds([
+  ContentTree.view.selectItems([
     copyBookmarks[0].guid,
     copyBookmarks[3].guid,
     copyBookmarks[6].guid,
-    copyBookmarks[9].guid
-  ]);
-
-  ContentTree.view.selectItems([
-    bookmarkIds.get(copyBookmarks[0].guid),
-    bookmarkIds.get(copyBookmarks[3].guid),
-    bookmarkIds.get(copyBookmarks[6].guid),
-    bookmarkIds.get(copyBookmarks[9].guid),
+    copyBookmarks[9].guid,
   ]);
 
   await promiseClipboard(() => {
@@ -181,9 +164,7 @@ add_task(async function paste_check_indexes_same_folder() {
     ContentTree.view.controller.cut();
   }, PlacesUtils.TYPE_X_MOZ_PLACE);
 
-  let insertionBookmarkId = await PlacesUtils.promiseItemId(copyBookmarks[4].guid);
-
-  ContentTree.view.selectItems([insertionBookmarkId]);
+  ContentTree.view.selectItems([copyBookmarks[4].guid]);
 
   info("Pasting clipboard");
   await ContentTree.view.controller.paste();

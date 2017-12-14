@@ -24,7 +24,7 @@ add_task(async function() {
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
     });
     let folderId = await PlacesUtils.promiseItemId(folder.guid);
-    tree.selectItems([folderId]);
+    tree.selectItems([folder.guid]);
     Assert.equal(tree.selectedNode.bookmarkGuid, folder.guid,
                  "Selected the expected node");
     Assert.equal(tree.selectedNode.type, 6, "node is a folder");
@@ -37,8 +37,7 @@ add_task(async function() {
       title: "bar",
       url: `place:folder=${folderId}`
     });
-    let shortcutId = await PlacesUtils.promiseItemId(shortcut.guid);
-    tree.selectItems([shortcutId]);
+    tree.selectItems([shortcut.guid]);
     Assert.equal(tree.selectedNode.bookmarkGuid, shortcut.guid,
                  "Selected the expected node");
     Assert.equal(tree.selectedNode.type, 9, "node is a folder shortcut");
@@ -53,8 +52,7 @@ add_task(async function() {
       title: "",
       url: "http://foo.com",
     });
-    let bookmarkId = await PlacesUtils.promiseItemId(bookmark.guid);
-    tree.selectItems([bookmarkId]);
+    tree.selectItems([bookmark.guid]);
     Assert.equal(tree.selectedNode.bookmarkGuid, bookmark.guid,
                  "Selected the expected node");
     let query = await PlacesUtils.bookmarks.insert({
@@ -62,8 +60,7 @@ add_task(async function() {
       title: "bar",
       url: `place:terms=foo`
     });
-    let queryId = await PlacesUtils.promiseItemId(query.guid);
-    tree.selectItems([queryId]);
+    tree.selectItems([query.guid]);
     Assert.equal(tree.selectedNode.bookmarkGuid, query.guid,
                  "Selected the expected node");
     Assert.ok(PlacesControllerDragHelper.canMoveNode(tree.selectedNode, tree),
@@ -78,8 +75,7 @@ add_task(async function() {
       title: "",
       url: "place:type=" + Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY,
     });
-    let tagsQueryId = await PlacesUtils.promiseItemId(tagsQuery.guid);
-    tree.selectItems([tagsQueryId]);
+    tree.selectItems([tagsQuery.guid]);
     PlacesUtils.asQuery(tree.selectedNode).containerOpen = true;
     Assert.equal(tree.selectedNode.childCount, 1, "has tags");
     let tagNode = tree.selectedNode.getChild(0);
@@ -103,8 +99,7 @@ add_task(async function() {
         title: "bar",
         url: `place:folder=${id}`,
       });
-      let sid = await PlacesUtils.promiseItemId(s.guid);
-      tree.selectItems([sid]);
+      tree.selectItems([s.guid]);
       Assert.equal(tree.selectedNode.bookmarkGuid, s.guid,
                    "Selected the expected node");
       Assert.ok(PlacesControllerDragHelper.canMoveNode(tree.selectedNode, tree),

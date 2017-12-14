@@ -105,10 +105,9 @@ function getNodeForToolbarItem(guid) {
  * @returns DOM Node of the element.
  */
 async function getRectForSidebarItem(guid) {
-  let itemId = await PlacesUtils.promiseItemId(guid);
   let sidebar = document.getElementById("sidebar");
   let tree = sidebar.contentDocument.getElementById("bookmarks-view");
-  tree.selectItems([itemId]);
+  tree.selectItems([guid]);
   let rect = {};
   [rect.left, rect.top, rect.width, rect.height] = tree.treeBoxObject
                                                        .selectionRegion
