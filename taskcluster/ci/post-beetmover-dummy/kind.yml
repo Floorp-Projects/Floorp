@@ -46,11 +46,6 @@ jobs:
             - /bin/bash
             - -c
             - echo "Dummy task"
-      treeherder:
-         symbol: Rel(BMD)
-         platform: linux/opt
-         kind: test
-         tier: 1
 
    devedition-ship:
       name: post-beetmover-dummy
@@ -85,8 +80,3 @@ jobs:
             - /bin/bash
             - -c
             - echo "Dummy task"
-      treeherder:
-         symbol: Rel(BMD)
-         platform: linux-devedition/opt
-         kind: test
-         tier: 1
