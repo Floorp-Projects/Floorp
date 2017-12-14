@@ -3250,7 +3250,9 @@ Http2Session::WriteSegmentsAgain(nsAHttpSegmentWriter *writer,
             "stream->writeSegments returning code %" PRIx32 "\n",
             this, streamID, mNeedsCleanup, static_cast<uint32_t>(rv)));
       MOZ_ASSERT(!mNeedsCleanup || mNeedsCleanup->StreamID() == streamID);
-      CleanupStream(streamID, NS_OK, CANCEL_ERROR);
+      CleanupStream(streamID,
+                    (rv == NS_BINDING_RETARGETED) ? NS_BINDING_RETARGETED : NS_OK,
+                    CANCEL_ERROR);
       mNeedsCleanup = nullptr;
       *again = false;
       rv = ResumeRecv();
