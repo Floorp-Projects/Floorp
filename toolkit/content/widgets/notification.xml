@@ -12,7 +12,8 @@
 <bindings id="notificationBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
-          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:html = "http://www.w3.org/1999/xhtml">
 
   <binding id="notificationbox">
     <content>
@@ -511,8 +512,11 @@
               <xul:label class="popup-notification-origin header"
                          xbl:inherits="value=origin,tooltiptext=origin"
                          crop="center"/>
-              <xul:description class="popup-notification-description"
-                               xbl:inherits="xbl:text=label,popupid"/>
+              <xul:description>
+                <html:span xbl:inherits="xbl:text=startlabel,popupid"/>
+                <html:b    xbl:inherits="xbl:text=hostname,popupid"/>
+                <html:span xbl:inherits="xbl:text=endlabel,popupid"/>
+              </xul:description>
             </xul:vbox>
             <xul:toolbarbutton anonid="closebutton"
                                class="messageCloseButton close-icon popup-notification-closebutton tabbable"
