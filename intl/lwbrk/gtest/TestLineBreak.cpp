@@ -9,14 +9,11 @@
 #include "nsIComponentManager.h"
 #include "nsISupports.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIWordBreaker.h"
-#include "nsLWBrkCIID.h"
 #include "nsString.h"
 #include "gtest/gtest.h"
 
 #include "mozilla/intl/LineBreaker.h"
-
-NS_DEFINE_CID(kWBrkCID, NS_WBRK_CID);
+#include "mozilla/intl/WordBreaker.h"
 
 static char teng1[] =
 //          1         2         3         4         5         6         7
@@ -128,7 +125,7 @@ TestASCIILB(mozilla::intl::LineBreaker *lb,
 }
 
 bool
-TestASCIIWB(nsIWordBreaker *lb,
+TestASCIIWB(mozilla::intl::WordBreaker *lb,
             const char* in,
             const uint32_t* out, uint32_t outlen)
 {
@@ -160,19 +157,12 @@ TEST(LineBreak, LineBreaker)
 
 TEST(LineBreak, WordBreaker)
 {
-  nsIWordBreaker *t = nullptr;
-  nsresult res = CallGetService(kWBrkCID, &t);
-  ASSERT_TRUE(NS_SUCCEEDED(res) && t);
-  NS_IF_RELEASE(t);
-
-  res = CallGetService(kWBrkCID, &t);
-  ASSERT_TRUE(NS_SUCCEEDED(res) && t);
+  RefPtr<mozilla::intl::WordBreaker> t = mozilla::intl::WordBreaker::Create();
+  ASSERT_TRUE(t);
 
   ASSERT_TRUE(TestASCIIWB(t, teng1, wexp1, sizeof(wexp1) / sizeof(uint32_t)));
   ASSERT_TRUE(TestASCIIWB(t, teng2, wexp2, sizeof(wexp2) / sizeof(uint32_t)));
   ASSERT_TRUE(TestASCIIWB(t, teng3, wexp3, sizeof(wexp3) / sizeof(uint32_t)));
-
-  NS_RELEASE(t);
 }
 
 //                         012345678901234
@@ -188,9 +178,7 @@ void
 TestPrintWordWithBreak()
 {
   uint32_t numOfFragment = sizeof(wb) / sizeof(char*);
-  nsIWordBreaker* wbk = nullptr;
-
-  CallGetService(kWBrkCID, &wbk);
+  RefPtr<mozilla::intl::WordBreaker> wbk = mozilla::intl::WordBreaker::Create();
 
   nsAutoString result;
 
@@ -225,8 +213,6 @@ TestPrintWordWithBreak()
   }
   ASSERT_STREQ("is^   ^is^ ^a^ ^  is a intzation^ ^work^ation work.",
                NS_ConvertUTF16toUTF8(result).get());
-
-  NS_IF_RELEASE(wbk);
 }
 
 void
@@ -234,13 +220,11 @@ TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
                               const char* expected)
 {
   uint32_t numOfFragment = sizeof(wb) / sizeof(char*);
-  nsIWordBreaker* wbk = nullptr;
-
-  CallGetService(kWBrkCID, &wbk);
+  RefPtr<mozilla::intl::WordBreaker> wbk = mozilla::intl::WordBreaker::Create();
 
   NS_ConvertASCIItoUTF16 fragText(wb[fragN]);
 
-  nsWordRange res = wbk->FindWord(fragText.get(), fragText.Length(), offset);
+  mozilla::intl::WordRange res = wbk->FindWord(fragText.get(), fragText.Length(), offset);
 
   bool canBreak;
   nsAutoString result(Substring(fragText, res.mBegin, res.mEnd-res.mBegin));
@@ -258,7 +242,7 @@ TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
       if (canBreak) {
         break;
       }
-      nsWordRange r = wbk->FindWord(nextFragText.get(), nextFragText.Length(),
+      mozilla::intl::WordRange r = wbk->FindWord(nextFragText.get(), nextFragText.Length(),
                                     0);
 
       result.Append(Substring(nextFragText, r.mBegin, r.mEnd - r.mBegin));
@@ -282,7 +266,7 @@ TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
       if (canBreak) {
         break;
       }
-      nsWordRange r = wbk->FindWord(prevFragText.get(), prevFragText.Length(),
+      mozilla::intl::WordRange r = wbk->FindWord(prevFragText.get(), prevFragText.Length(),
                                     prevFragText.Length());
 
       result.Insert(Substring(prevFragText, r.mBegin, r.mEnd - r.mBegin), 0);
@@ -296,8 +280,6 @@ TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
 
   ASSERT_STREQ(expected, NS_ConvertUTF16toUTF8(result).get())
     << "FindWordBreakFromPosition(" << fragN << ", " << offset << ")";
-
-  NS_IF_RELEASE(wbk);
 }
 
 TEST(LineBreak, WordBreakUsage)

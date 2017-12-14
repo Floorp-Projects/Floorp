@@ -31,7 +31,6 @@
 #include "nsIClipboard.h"
 #include "ContentEventHandler.h"
 #include "nsContentUtils.h"
-#include "nsIWordBreaker.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/TextEvents.h"
@@ -1129,12 +1128,12 @@ nsLookUpDictionaryCommand::DoCommandParams(const char* aCommandName,
 
   // XXX nsIWordBreaker doesn't use contextual breaker.
   // If OS provides it, widget should use it if contextual breaker is needed.
-  nsCOMPtr<nsIWordBreaker> wordBreaker = nsContentUtils::WordBreaker();
+  RefPtr<mozilla::intl::WordBreaker> wordBreaker = nsContentUtils::WordBreaker();
   if (NS_WARN_IF(!wordBreaker)) {
     return NS_ERROR_FAILURE;
   }
 
-  nsWordRange range =
+  mozilla::intl::WordRange range =
     wordBreaker->FindWord(textContent.mReply.mString.get(),
                           textContent.mReply.mString.Length(),
                           charAt.mReply.mOffset - offset);
