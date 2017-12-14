@@ -124,12 +124,6 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
       nsNodeUtils::AnimationAdded(mAnimation);
     }
   }
-
-  // If the new target frame is also oversized we should probably record that
-  // too so we have a more complete picture of the type of frame sizes we
-  // encounter, hence we reset the telemetry flag here.
-  mRecordedContentTooLarge = false;
-  mRecordedFrameSize = false;
 }
 
 void
