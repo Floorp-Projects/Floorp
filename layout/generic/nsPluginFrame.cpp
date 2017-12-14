@@ -834,8 +834,7 @@ nsPluginFrame::GetWindowOriginInPixels(bool aWindowless)
 
 void
 nsPluginFrame::DidReflow(nsPresContext*            aPresContext,
-                         const ReflowInput*  aReflowInput,
-                         nsDidReflowStatus         aStatus)
+                         const ReflowInput*  aReflowInput)
 {
   // Do this check before calling the superclass, as that clears
   // NS_FRAME_FIRST_REFLOW

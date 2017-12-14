@@ -134,8 +134,7 @@ public:
 #endif
 
   virtual void DidReflow(nsPresContext*           aPresContext,
-                         const ReflowInput* aReflowInput,
-                         nsDidReflowStatus        aStatus) override;
+                         const ReflowInput* aReflowInput) override;
 
   virtual bool HonorPrintBackgroundSettings() override;
 

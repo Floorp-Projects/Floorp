@@ -368,8 +368,7 @@ public:
               const ReflowInput& aReflowInput,
               nsReflowStatus&    aStatus) override;
   void DidReflow(nsPresContext*     aPresContext,
-                 const ReflowInput* aReflowInput,
-                 nsDidReflowStatus  aStatus) override;
+                 const ReflowInput* aReflowInput) override;
 
   /**
    * NOTE: aStatus is assumed to be already-initialized. The reflow statuses of
