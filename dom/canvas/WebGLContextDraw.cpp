@@ -469,6 +469,13 @@ public:
     }
 };
 
+static bool
+HasInstancedDrawing(const WebGLContext& webgl)
+{
+    return webgl.IsWebGL2() ||
+           webgl.IsExtensionEnabled(WebGLExtensionID::ANGLE_instanced_arrays);
+}
+
 ////////////////////////////////////////
 
 bool
@@ -507,53 +514,10 @@ WebGLContext::DrawArrays_check(const char* const funcName, const GLint first,
 }
 
 void
-WebGLContext::DrawArrays(GLenum mode, GLint first, GLsizei vertCount)
-{
-    AUTO_PROFILER_LABEL("WebGLContext::DrawArrays", GRAPHICS);
-    const char funcName[] = "drawArrays";
-    if (IsContextLost())
-        return;
-
-    MakeContextCurrent();
-
-    bool error = false;
-    ScopedResolveTexturesForDraw scopedResolve(this, funcName, &error);
-    if (error)
-        return;
-
-    const GLsizei instanceCount = 1;
-    Maybe<uint32_t> lastVert;
-    if (!DrawArrays_check(funcName, first, vertCount, instanceCount, &lastVert))
-        return;
-
-    const ScopedDrawHelper scopedHelper(this, funcName, mode, lastVert, instanceCount,
-                                        &error);
-    if (error)
-        return;
-
-    const ScopedDrawWithTransformFeedback scopedTF(this, funcName, mode, vertCount,
-                                                   instanceCount, &error);
-    if (error)
-        return;
-
-    {
-        ScopedDrawCallWrapper wrapper(*this);
-        if (vertCount) {
-            AUTO_PROFILER_LABEL("glDrawArrays", GRAPHICS);
-            gl->fDrawArrays(mode, first, vertCount);
-        }
-    }
-
-    Draw_cleanup(funcName);
-    scopedTF.Advance();
-}
-
-void
 WebGLContext::DrawArraysInstanced(GLenum mode, GLint first, GLsizei vertCount,
-                                  GLsizei instanceCount)
+                                  GLsizei instanceCount, const char* const funcName)
 {
     AUTO_PROFILER_LABEL("WebGLContext::DrawArraysInstanced", GRAPHICS);
-    const char funcName[] = "drawArraysInstanced";
     if (IsContextLost())
         return;
 
@@ -582,7 +546,12 @@ WebGLContext::DrawArraysInstanced(GLenum mode, GLint first, GLsizei vertCount,
         ScopedDrawCallWrapper wrapper(*this);
         if (vertCount && instanceCount) {
             AUTO_PROFILER_LABEL("glDrawArraysInstanced", GRAPHICS);
-            gl->fDrawArraysInstanced(mode, first, vertCount, instanceCount);
+            if (HasInstancedDrawing(*this)) {
+                gl->fDrawArraysInstanced(mode, first, vertCount, instanceCount);
+            } else {
+                MOZ_ASSERT(instanceCount == 1);
+                gl->fDrawArrays(mode, first, vertCount);
+            }
         }
     }
 
@@ -702,66 +671,11 @@ HandleDrawElementsErrors(WebGLContext* webgl, const char* funcName,
 }
 
 void
-WebGLContext::DrawElements(GLenum mode, GLsizei indexCount, GLenum type,
-                           WebGLintptr byteOffset, const char* funcName)
-{
-    AUTO_PROFILER_LABEL("WebGLContext::DrawElements", GRAPHICS);
-    if (!funcName) {
-        funcName = "drawElements";
-    }
-    if (IsContextLost())
-        return;
-
-    MakeContextCurrent();
-
-    bool error = false;
-    ScopedResolveTexturesForDraw scopedResolve(this, funcName, &error);
-    if (error)
-        return;
-
-    const GLsizei instanceCount = 1;
-    Maybe<uint32_t> lastVert;
-    if (!DrawElements_check(funcName, indexCount, type, byteOffset, instanceCount,
-                            &lastVert))
-    {
-        return;
-    }
-
-    const ScopedDrawHelper scopedHelper(this, funcName, mode, lastVert, instanceCount,
-                                        &error);
-    if (error)
-        return;
-
-    {
-        ScopedDrawCallWrapper wrapper(*this);
-        {
-            UniquePtr<gl::GLContext::LocalErrorScope> errorScope;
-
-            if (gl->IsANGLE()) {
-                errorScope.reset(new gl::GLContext::LocalErrorScope(*gl));
-            }
-
-            if (indexCount) {
-                AUTO_PROFILER_LABEL("glDrawElements", GRAPHICS);
-                gl->fDrawElements(mode, indexCount, type,
-                                  reinterpret_cast<GLvoid*>(byteOffset));
-            }
-
-            if (errorScope) {
-                HandleDrawElementsErrors(this, funcName, *errorScope);
-            }
-        }
-    }
-
-    Draw_cleanup(funcName);
-}
-
-void
 WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei indexCount, GLenum type,
-                                    WebGLintptr byteOffset, GLsizei instanceCount)
+                                    WebGLintptr byteOffset, GLsizei instanceCount,
+                                    const char* const funcName)
 {
     AUTO_PROFILER_LABEL("WebGLContext::DrawElementsInstanced", GRAPHICS);
-    const char funcName[] = "drawElementsInstanced";
     if (IsContextLost())
         return;
 
@@ -795,9 +709,15 @@ WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei indexCount, GLenum type
 
             if (indexCount && instanceCount) {
                 AUTO_PROFILER_LABEL("glDrawElementsInstanced", GRAPHICS);
-                gl->fDrawElementsInstanced(mode, indexCount, type,
-                                           reinterpret_cast<GLvoid*>(byteOffset),
-                                           instanceCount);
+                if (HasInstancedDrawing(*this)) {
+                    gl->fDrawElementsInstanced(mode, indexCount, type,
+                                               reinterpret_cast<GLvoid*>(byteOffset),
+                                               instanceCount);
+                } else {
+                    MOZ_ASSERT(instanceCount == 1);
+                    gl->fDrawElements(mode, indexCount, type,
+                                      reinterpret_cast<GLvoid*>(byteOffset));
+                }
             }
 
             if (errorScope) {
