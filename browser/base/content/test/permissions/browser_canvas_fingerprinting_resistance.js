@@ -8,7 +8,7 @@
 
 const kUrl = "https://example.com/";
 const kPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(Services.io.newURI(kUrl), {});
-const kPermission = "canvas/extractData";
+const kPermission = "canvas";
 
 function initTab() {
   let contentWindow = content.wrappedJSObject;

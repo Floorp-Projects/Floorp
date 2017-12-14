@@ -21,7 +21,7 @@ add_task(async function testPermissionsListing() {
   if (RESIST_FINGERPRINTING_ENABLED) {
     // Canvas permission should be hidden unless privacy.resistFingerprinting
     // is true.
-    expectedPermissions.push("canvas/extractData");
+    expectedPermissions.push("canvas");
   }
   Assert.deepEqual(SitePermissions.listPermissions().sort(), expectedPermissions.sort(),
     "Correct list of all permissions");
@@ -117,7 +117,7 @@ add_task(async function testExactHostMatch() {
   if (RESIST_FINGERPRINTING_ENABLED) {
     // Canvas permission should be hidden unless privacy.resistFingerprinting
     // is true.
-    exactHostMatched.push("canvas/extractData");
+    exactHostMatched.push("canvas");
   }
   let nonExactHostMatched = ["image", "cookie", "popup", "install", "shortcuts"];
 
@@ -203,19 +203,19 @@ add_task(async function testCanvasPermission() {
   let resistFingerprinting = Services.prefs.getBoolPref("privacy.resistFingerprinting", false);
   let uri = Services.io.newURI("https://example.com");
 
-  SitePermissions.set(uri, "canvas/extractData", SitePermissions.ALLOW);
+  SitePermissions.set(uri, "canvas", SitePermissions.ALLOW);
 
   // Canvas permission is hidden when privacy.resistFingerprinting is false.
   Services.prefs.setBoolPref("privacy.resistFingerprinting", false);
-  Assert.equal(SitePermissions.listPermissions().indexOf("canvas/extractData"), -1);
-  Assert.equal(SitePermissions.getAllByURI(uri).filter(permission => permission.id === "canvas/extractData").length, 0);
+  Assert.equal(SitePermissions.listPermissions().indexOf("canvas"), -1);
+  Assert.equal(SitePermissions.getAllByURI(uri).filter(permission => permission.id === "canvas").length, 0);
 
   // Canvas permission is visible when privacy.resistFingerprinting is true.
   Services.prefs.setBoolPref("privacy.resistFingerprinting", true);
-  Assert.notEqual(SitePermissions.listPermissions().indexOf("canvas/extractData"), -1);
-  Assert.notEqual(SitePermissions.getAllByURI(uri).filter(permission => permission.id === "canvas/extractData").length, 0);
+  Assert.notEqual(SitePermissions.listPermissions().indexOf("canvas"), -1);
+  Assert.notEqual(SitePermissions.getAllByURI(uri).filter(permission => permission.id === "canvas").length, 0);
 
-  SitePermissions.remove(uri, "canvas/extractData");
+  SitePermissions.remove(uri, "canvas");
   Services.prefs.setBoolPref("privacy.resistFingerprinting", resistFingerprinting);
 });
 
