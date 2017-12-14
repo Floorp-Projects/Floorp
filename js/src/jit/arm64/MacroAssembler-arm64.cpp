@@ -1367,100 +1367,335 @@ MacroAssembler::convertInt64ToFloat32(Register64 src, FloatRegister dest)
 // ========================================================================
 // Primitive atomic operations.
 
+// The computed MemOperand must be Reg+0 because the load/store exclusive
+// instructions only take a single pointer register.
+
+enum class Width {
+    _32 = 32,
+    _64 = 64
+};
+
+static inline ARMRegister
+X(Register r) {
+    return ARMRegister(r, 64);
+}
+
+static inline ARMRegister
+X(MacroAssembler& masm, RegisterOrSP r) {
+    return masm.toARMRegister(r, 64);
+}
+
+static inline ARMRegister
+W(Register r) {
+    return ARMRegister(r, 32);
+}
+
+static inline ARMRegister
+R(Register r, Width w) {
+    return ARMRegister(r, unsigned(w));
+}
+
+static MemOperand
+ComputePointerForAtomic(MacroAssembler& masm, const Address& address, Register scratch)
+{
+    if (address.offset == 0)
+        return MemOperand(X(masm, address.base), 0);
+
+    masm.Add(X(scratch), X(masm, address.base), address.offset);
+    return MemOperand(X(scratch), 0);
+}
+
+static MemOperand
+ComputePointerForAtomic(MacroAssembler& masm, const BaseIndex& address, Register scratch)
+{
+    masm.Add(X(scratch), X(masm, address.base), Operand(X(address.index), vixl::LSL, address.scale));
+    if (address.offset)
+        masm.Add(X(scratch), X(scratch), address.offset);
+    return MemOperand(X(scratch), 0);
+}
+
+// This sign extends to targetWidth and leaves any higher bits zero.
+
+static void
+SignOrZeroExtend(MacroAssembler& masm, Scalar::Type srcType, Width targetWidth, Register src,
+                 Register dest)
+{
+    bool signExtend = Scalar::isSignedIntType(srcType);
+
+    switch (Scalar::byteSize(srcType)) {
+      case 1:
+        if (signExtend)
+            masm.Sbfm(R(dest, targetWidth), R(src, targetWidth), 0, 7);
+        else
+            masm.Ubfm(R(dest, targetWidth), R(src, targetWidth), 0, 7);
+        break;
+      case 2:
+        if (signExtend)
+            masm.Sbfm(R(dest, targetWidth), R(src, targetWidth), 0, 15);
+        else
+            masm.Ubfm(R(dest, targetWidth), R(src, targetWidth), 0, 15);
+        break;
+      case 4:
+        if (targetWidth == Width::_64) {
+            if (signExtend)
+                masm.Sbfm(X(dest), X(src), 0, 31);
+            else
+                masm.Ubfm(X(dest), X(src), 0, 31);
+        } else if (src != dest) {
+            masm.Mov(R(dest, targetWidth), R(src, targetWidth));
+        }
+        break;
+      case 8:
+        if (src != dest)
+            masm.Mov(R(dest, targetWidth), R(src, targetWidth));
+        break;
+      default:
+        MOZ_CRASH();
+    }
+}
+
+// Exclusive-loads zero-extend their values to the full width of the X register.
+//
+// Note, we've promised to leave the high bits of the 64-bit register clear if
+// the targetWidth is 32.
+
+static void
+LoadExclusive(MacroAssembler& masm, Scalar::Type srcType, Width targetWidth, MemOperand ptr,
+              Register dest)
+{
+    bool signExtend = Scalar::isSignedIntType(srcType);
+
+    switch (Scalar::byteSize(srcType)) {
+      case 1:
+        masm.Ldxrb(W(dest), ptr);
+        if (signExtend)
+            masm.Sbfm(R(dest, targetWidth), R(dest, targetWidth), 0, 7);
+        break;
+      case 2:
+        masm.Ldxrh(W(dest), ptr);
+        if (signExtend)
+            masm.Sbfm(R(dest, targetWidth), R(dest, targetWidth), 0, 15);
+        break;
+      case 4:
+        masm.Ldxr(W(dest), ptr);
+        if (targetWidth == Width::_64 && signExtend)
+            masm.Sbfm(X(dest), X(dest), 0, 31);
+        break;
+      case 8:
+        masm.Ldxr(X(dest), ptr);
+        break;
+      default:
+        MOZ_CRASH();
+    }
+}
+
+static void
+StoreExclusive(MacroAssembler& masm, Scalar::Type type, Register status, Register src,
+               MemOperand ptr)
+{
+    switch (Scalar::byteSize(type)) {
+      case 1:
+        masm.Stxrb(W(status), W(src), ptr);
+        break;
+      case 2:
+        masm.Stxrh(W(status), W(src), ptr);
+        break;
+      case 4:
+        masm.Stxr(W(status), W(src), ptr);
+        break;
+      case 8:
+        masm.Stxr(W(status), X(src), ptr);
+        break;
+    }
+}
+
+template<typename T>
+static void
+CompareExchange(MacroAssembler& masm, Scalar::Type type, Width targetWidth,
+                const Synchronization& sync, const T& mem, Register oldval,
+                Register newval, Register output)
+{
+    Label again;
+    Label done;
+
+    vixl::UseScratchRegisterScope temps(&masm);
+
+    Register scratch2 = temps.AcquireX().asUnsized();
+    MemOperand ptr = ComputePointerForAtomic(masm, mem, scratch2);
+
+    masm.memoryBarrierBefore(sync);
+
+    Register scratch = temps.AcquireX().asUnsized();
+
+    masm.bind(&again);
+    SignOrZeroExtend(masm, type, targetWidth, oldval, scratch);
+    LoadExclusive(masm, type, targetWidth, ptr, output);
+    masm.Cmp(R(output, targetWidth), R(scratch, targetWidth));
+    masm.B(&done, MacroAssembler::NotEqual);
+    StoreExclusive(masm, type, scratch, newval, ptr);
+    masm.Cbnz(W(scratch), &again);
+    masm.bind(&done);
+
+    masm.memoryBarrierAfter(sync);
+}
+
+template<typename T>
+static void
+AtomicExchange(MacroAssembler& masm, Scalar::Type type, Width targetWidth,
+               const Synchronization& sync, const T& mem, Register value,
+               Register output)
+{
+    Label again;
+
+    vixl::UseScratchRegisterScope temps(&masm);
+
+    Register scratch2 = temps.AcquireX().asUnsized();
+    MemOperand ptr = ComputePointerForAtomic(masm, mem, scratch2);
+
+    masm.memoryBarrierBefore(sync);
+
+    Register scratch = temps.AcquireX().asUnsized();
+
+    masm.bind(&again);
+    LoadExclusive(masm, type, targetWidth, ptr, output);
+    StoreExclusive(masm, type, scratch, value, ptr);
+    masm.Cbnz(W(scratch), &again);
+
+    masm.memoryBarrierAfter(sync);
+}
+
+template<bool wantResult, typename T>
+static void
+AtomicFetchOp(MacroAssembler& masm, Scalar::Type type, Width targetWidth,
+              const Synchronization& sync, AtomicOp op, const T& mem,
+              Register value, Register temp, Register output)
+{
+    Label again;
+
+    vixl::UseScratchRegisterScope temps(&masm);
+
+    Register scratch2 = temps.AcquireX().asUnsized();
+    MemOperand ptr = ComputePointerForAtomic(masm, mem, scratch2);
+
+    masm.memoryBarrierBefore(sync);
+
+    Register scratch = temps.AcquireX().asUnsized();
+
+    masm.bind(&again);
+    LoadExclusive(masm, type, targetWidth, ptr, output);
+    switch (op) {
+      case AtomicFetchAddOp: masm.Add(X(temp), X(output), X(value)); break;
+      case AtomicFetchSubOp: masm.Sub(X(temp), X(output), X(value)); break;
+      case AtomicFetchAndOp: masm.And(X(temp), X(output), X(value)); break;
+      case AtomicFetchOrOp:  masm.Orr(X(temp), X(output), X(value)); break;
+      case AtomicFetchXorOp: masm.Eor(X(temp), X(output), X(value)); break;
+    }
+    StoreExclusive(masm, type, scratch, temp, ptr);
+    masm.Cbnz(W(scratch), &again);
+    if (wantResult)
+        SignOrZeroExtend(masm, type, targetWidth, output, output);
+
+    masm.memoryBarrierAfter(sync);
+}
+
 void
 MacroAssembler::compareExchange(Scalar::Type type, const Synchronization& sync, const Address& mem,
                                 Register oldval, Register newval, Register output)
 {
-    MOZ_CRASH("NYI");
+    CompareExchange(*this, type, Width::_32, sync, mem, oldval, newval, output);
 }
 
 void
 MacroAssembler::compareExchange(Scalar::Type type, const Synchronization& sync, const BaseIndex& mem,
                                 Register oldval, Register newval, Register output)
 {
-    MOZ_CRASH("NYI");
+    CompareExchange(*this, type, Width::_32, sync, mem, oldval, newval, output);
 }
 
 void
 MacroAssembler::atomicExchange(Scalar::Type type, const Synchronization& sync, const Address& mem,
                                Register value, Register output)
 {
-    MOZ_CRASH("NYI");
+    AtomicExchange(*this, type, Width::_32, sync, mem, value, output);
 }
 
 void
 MacroAssembler::atomicExchange(Scalar::Type type, const Synchronization& sync, const BaseIndex& mem,
                                Register value, Register output)
 {
-    MOZ_CRASH("NYI");
+    AtomicExchange(*this, type, Width::_32, sync, mem, value, output);
 }
 
 void
 MacroAssembler::atomicFetchOp(Scalar::Type type, const Synchronization& sync, AtomicOp op,
                               Register value, const Address& mem, Register temp, Register output)
 {
-    MOZ_CRASH("NYI");
+    AtomicFetchOp<true>(*this, type, Width::_32, sync, op, mem, value, temp, output);
 }
 
 void
 MacroAssembler::atomicFetchOp(Scalar::Type type, const Synchronization& sync, AtomicOp op,
                               Register value, const BaseIndex& mem, Register temp, Register output)
 {
-    MOZ_CRASH("NYI");
+    AtomicFetchOp<true>(*this, type, Width::_32, sync, op, mem, value, temp, output);
 }
 
 void
 MacroAssembler::atomicEffectOp(Scalar::Type type, const Synchronization& sync, AtomicOp op,
                                Register value, const Address& mem, Register temp)
 {
-    MOZ_CRASH("NYI");
+    AtomicFetchOp<false>(*this, type, Width::_32, sync, op, mem, value, temp, temp);
 }
 
 void
 MacroAssembler::atomicEffectOp(Scalar::Type type, const Synchronization& sync, AtomicOp op,
                                Register value, const BaseIndex& mem, Register temp)
 {
-    MOZ_CRASH("NYI");
+    AtomicFetchOp<false>(*this, type, Width::_32, sync, op, mem, value, temp, temp);
 }
 
 void
 MacroAssembler::compareExchange64(const Synchronization& sync, const Address& mem, Register64 expect,
                                   Register64 replace, Register64 output)
 {
-    MOZ_CRASH("NYI");
+    CompareExchange(*this, Scalar::Int64, Width::_64, sync, mem, expect.reg, replace.reg, output.reg);
 }
 
 void
 MacroAssembler::compareExchange64(const Synchronization& sync, const BaseIndex& mem, Register64 expect,
                                   Register64 replace, Register64 output)
 {
-    MOZ_CRASH("NYI");
+    CompareExchange(*this, Scalar::Int64, Width::_64, sync, mem, expect.reg, replace.reg, output.reg);
 }
 
 void
-MacroAssembler::atomicExchange64(const Synchronization& sync, const Address& mem, Register64 value, Register64 output)
+MacroAssembler::atomicExchange64(const Synchronization& sync, const Address& mem, Register64 value,
+                                 Register64 output)
 {
-    MOZ_CRASH("NYI");
+    AtomicExchange(*this, Scalar::Int64, Width::_64, sync, mem, value.reg, output.reg);
 }
 
 void
-MacroAssembler::atomicExchange64(const Synchronization& sync, const BaseIndex& mem, Register64 value, Register64 output)
+MacroAssembler::atomicExchange64(const Synchronization& sync, const BaseIndex& mem, Register64 value,
+                                 Register64 output)
 {
-    MOZ_CRASH("NYI");
+    AtomicExchange(*this, Scalar::Int64, Width::_64, sync, mem, value.reg, output.reg);
 }
 
 void
-MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op, Register64 value, const Address& mem,
-                                Register64 temp, Register64 output)
+MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op, Register64 value,
+                                const Address& mem, Register64 temp, Register64 output)
 {
-    MOZ_CRASH("NYI");
+    AtomicFetchOp<true>(*this, Scalar::Int64, Width::_64, sync, op, mem, value.reg, temp.reg,
+                        output.reg);
 }
 
 void
-MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op, Register64 value, const BaseIndex& mem,
-                                Register64 temp, Register64 output)
+MacroAssembler::atomicFetchOp64(const Synchronization& sync, AtomicOp op, Register64 value,
+                                const BaseIndex& mem, Register64 temp, Register64 output)
 {
-    MOZ_CRASH("NYI");
+    AtomicFetchOp<true>(*this, Scalar::Int64, Width::_64, sync, op, mem, value.reg, temp.reg,
+                        output.reg);
 }
 
 // ========================================================================

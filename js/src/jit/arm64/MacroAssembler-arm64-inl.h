@@ -1913,7 +1913,12 @@ MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest)
 void
 MacroAssembler::memoryBarrier(MemoryBarrierBits barrier)
 {
-    MOZ_CRASH("NYI");
+    if (barrier == MembarStoreStore)
+        Dmb(vixl::InnerShareable, vixl::BarrierWrites);
+    else if (barrier == MembarLoadLoad)
+        Dmb(vixl::InnerShareable, vixl::BarrierReads);
+    else if (barrier)
+        Dmb(vixl::InnerShareable, vixl::BarrierAll);
 }
 
 // ===============================================================
