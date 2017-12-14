@@ -583,6 +583,8 @@ nsImageFrame::OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage)
     intrinsicSizeChanged = true;
   }
 
+  MarkNeedsDisplayItemRebuild();
+
   if (intrinsicSizeChanged && (mState & IMAGE_GOTINITIALREFLOW)) {
     // Now we need to reflow if we have an unconstrained size and have
     // already gotten the initial reflow
