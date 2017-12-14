@@ -22,10 +22,10 @@ interface AudioContext : BaseAudioContext {
     [Throws]
     Promise<void> close();
 
-    [NewObject, Throws, UnsafeInPrerendering]
+    [NewObject, Throws]
     MediaElementAudioSourceNode createMediaElementSource(HTMLMediaElement mediaElement);
 
-    [NewObject, Throws, UnsafeInPrerendering]
+    [NewObject, Throws]
     MediaStreamAudioSourceNode createMediaStreamSource(MediaStream mediaStream);
 
     // Bug 1324548: MediaStreamTrackAudioSourceNode createMediaStreamTrackSource (AudioMediaStreamTrack mediaStreamTrack);

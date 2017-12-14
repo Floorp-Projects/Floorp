@@ -80,10 +80,6 @@ EXPORTS.mozilla += [
     'LoadContext.h',
 ]
 
-EXPORTS.mozilla.dom += [
-    'PendingGlobalHistoryEntry.h',
-]
-
 UNIFIED_SOURCES += [
     'LoadContext.cpp',
     'nsAboutRedirector.cpp',
@@ -98,7 +94,6 @@ UNIFIED_SOURCES += [
     'nsPingListener.cpp',
     'nsRefreshTimer.cpp',
     'nsWebNavigationInfo.cpp',
-    'PendingGlobalHistoryEntry.cpp',
     'SerializedLoadContext.cpp',
 ]
 

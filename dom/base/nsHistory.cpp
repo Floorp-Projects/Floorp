@@ -78,7 +78,7 @@ nsHistory::GetLength(ErrorResult& aRv) const
   }
 
   int32_t len;
-  nsresult rv = sHistory->GetGlobalCount(&len);
+  nsresult rv = sHistory->GetCount(&len);
 
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
@@ -210,8 +210,8 @@ nsHistory::Go(int32_t aDelta, ErrorResult& aRv)
 
   int32_t curIndex = -1;
   int32_t len = 0;
-  session_history->GetGlobalIndex(&curIndex);
-  session_history->GetGlobalCount(&len);
+  session_history->GetIndex(&curIndex);
+  session_history->GetCount(&len);
 
   int32_t index = curIndex + aDelta;
   if (index > -1 && index < len)
