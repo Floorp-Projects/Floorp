@@ -23,7 +23,6 @@ interface PointerEvent : MouseEvent
   readonly attribute long twist;
   readonly attribute DOMString pointerType;
   readonly attribute boolean isPrimary;
-  sequence<PointerEvent> getCoalescedEvents();
 };
 
 dictionary PointerEventInit : MouseEventInit
@@ -38,5 +37,5 @@ dictionary PointerEventInit : MouseEventInit
   long twist = 0;
   DOMString pointerType = "";
   boolean isPrimary = false;
-  sequence<PointerEvent> coalescedEvents = [];
 };
+
