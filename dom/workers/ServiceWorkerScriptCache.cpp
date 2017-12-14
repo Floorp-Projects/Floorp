@@ -164,6 +164,12 @@ public:
     return NS_SUCCEEDED(mNetworkResult);
   }
 
+  const nsTArray<nsCString>&
+  URLList() const
+  {
+    return mURLList;
+  }
+
 private:
   ~CompareNetwork()
   {
@@ -187,6 +193,7 @@ private:
   ChannelInfo mChannelInfo;
   RefPtr<InternalHeaders> mInternalHeaders;
   UniquePtr<PrincipalInfo> mPrincipalInfo;
+  nsTArray<nsCString> mURLList;
 
   nsCString mMaxScope;
   nsLoadFlags mLoadFlags;
@@ -602,6 +609,7 @@ private:
     RefPtr<InternalResponse> ir =
       new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
     ir->SetBody(body, aCN->Buffer().Length());
+    ir->SetURLList(aCN->URLList());
 
     ir->InitChannelInfo(aCN->GetChannelInfo());
     UniquePtr<PrincipalInfo> principalInfo = aCN->TakePrincipalInfo();
@@ -687,6 +695,7 @@ CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
   }
 
   mURL = aURL;
+  mURLList.AppendElement(NS_ConvertUTF16toUTF8(mURL));
 
   nsCOMPtr<nsILoadGroup> loadGroup;
   rv = NS_NewLoadGroup(getter_AddRefs(loadGroup), aPrincipal);
@@ -780,7 +789,7 @@ CompareNetwork::Finish()
   nsresult rv = NS_OK;
 
   // mNetworkResult is prior to mCacheResult, since it's needed for reporting
-  // various errors to web contenet.
+  // various errors to web content.
   if (NS_FAILED(mNetworkResult)) {
     // An imported script could become offline, since it might no longer be
     // needed by the new importing script. In that case, the importing script
@@ -989,14 +998,14 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
   }
 
   nsAutoCString mimeType;
-  nsresult rv2 = httpChannel->GetContentType(mimeType);
+  rv = httpChannel->GetContentType(mimeType);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     // We should only end up here if !mResponseHead in the channel.  If headers
     // were received but no content type was specified, we'll be given
     // UNKNOWN_CONTENT_TYPE "application/x-unknown-content-type" and so fall
     // into the next case with its better error message.
     rv = NS_ERROR_DOM_SECURITY_ERR;
-    return rv2;
+    return rv;
   }
 
   if (!mimeType.LowerCaseEqualsLiteral("text/javascript") &&
@@ -1007,7 +1016,24 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
       nsTArray<nsString> { NS_ConvertUTF8toUTF16(mRegistration->mScope),
         NS_ConvertUTF8toUTF16(mimeType), mURL });
     rv = NS_ERROR_DOM_SECURITY_ERR;
-    return rv2;
+    return rv;
+  }
+
+  nsCOMPtr<nsIURI> channelURL;
+  rv = httpChannel->GetURI(getter_AddRefs(channelURL));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsCString channelURLSpec;
+  MOZ_ALWAYS_SUCCEEDS(channelURL->GetSpec(channelURLSpec));
+
+  // Append the final URL if its different from the original
+  // request URL.  This lets us note that a redirect occurred
+  // even though we don't track every redirect URL here.
+  MOZ_DIAGNOSTIC_ASSERT(!mURLList.IsEmpty());
+  if (channelURLSpec != mURLList[0]) {
+    mURLList.AppendElement(channelURLSpec);
   }
 
   char16_t* buffer = nullptr;
