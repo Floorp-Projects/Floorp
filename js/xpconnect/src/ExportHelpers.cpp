@@ -329,11 +329,20 @@ NewFunctionForwarder(JSContext* cx, HandleId idArg, HandleObject callable,
     if (id == JSID_VOIDHANDLE)
         id = GetJSIDByIndex(cx, XPCJSContext::IDX_EMPTYSTRING);
 
+    // If our callable is a (possibly wrapped) function, we can give
+    // the exported thing the right number of args.
+    unsigned nargs = 0;
+    RootedObject unwrapped(cx, js::UncheckedUnwrap(callable));
+    if (unwrapped) {
+        if (JSFunction* fun = JS_GetObjectFunction(unwrapped))
+            nargs = JS_GetFunctionArity(fun);
+    }
+
     // We have no way of knowing whether the underlying function wants to be a
     // constructor or not, so we just mark all forwarders as constructors, and
     // let the underlying function throw for construct calls if it wants.
     JSFunction* fun = js::NewFunctionByIdWithReserved(cx, FunctionForwarder,
-                                                      0, JSFUN_CONSTRUCTOR, id);
+                                                      nargs, JSFUN_CONSTRUCTOR, id);
     if (!fun)
         return false;
 
