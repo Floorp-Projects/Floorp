@@ -799,6 +799,12 @@ nsLocalFile::nsLocalFile()
 {
 }
 
+nsLocalFile::nsLocalFile(const nsAString& aFilePath)
+  : mFollowSymlinks(false)
+{
+  InitWithPath(aFilePath);
+}
+
 nsresult
 nsLocalFile::nsLocalFileConstructor(nsISupports* aOuter, const nsIID& aIID,
                                     void** aInstancePtr)
