@@ -3,9 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-
-#include "nsJISx4051LineBreaker.h"
+#include "mozilla/intl/LineBreaker.h"
 
 #include "jisx4051class.h"
 #include "nsComplexBreaker.h"
@@ -13,6 +11,14 @@
 #include "nsUnicodeProperties.h"
 
 using namespace mozilla::unicode;
+using namespace mozilla::intl;
+
+/*static*/
+already_AddRefed<LineBreaker>
+LineBreaker::Create()
+{
+  return RefPtr<LineBreaker>(new LineBreaker()).forget();
+}
 
 /*
 
@@ -582,16 +588,6 @@ GetPairConservative(int8_t c1, int8_t c2)
   return (0 == ((gPairConservative[c1] >> c2) & 0x0001));
 }
 
-nsJISx4051LineBreaker::nsJISx4051LineBreaker()
-{
-}
-
-nsJISx4051LineBreaker::~nsJISx4051LineBreaker()
-{
-}
-
-NS_IMPL_ISUPPORTS(nsJISx4051LineBreaker, nsILineBreaker)
-
 class ContextState {
 public:
   ContextState(const char16_t* aText, uint32_t aLength)
@@ -878,8 +874,8 @@ ContextualAnalysis(char32_t prev, char32_t cur, char32_t next,
 
 
 int32_t
-nsJISx4051LineBreaker::WordMove(const char16_t* aText, uint32_t aLen,
-                                uint32_t aPos, int8_t aDirection)
+LineBreaker::WordMove(const char16_t* aText, uint32_t aLen,
+                      uint32_t aPos, int8_t aDirection)
 {
   bool    textNeedsJISx4051 = false;
   int32_t begin, end;
@@ -907,7 +903,7 @@ nsJISx4051LineBreaker::WordMove(const char16_t* aText, uint32_t aLen,
       ret = end;
     }
   } else {
-    GetJISx4051Breaks(aText + begin, end - begin, nsILineBreaker::kWordBreak_Normal,
+    GetJISx4051Breaks(aText + begin, end - begin, LineBreaker::kWordBreak_Normal,
                       breakState.Elements());
 
     ret = aPos;
@@ -920,8 +916,8 @@ nsJISx4051LineBreaker::WordMove(const char16_t* aText, uint32_t aLen,
 }
 
 int32_t
-nsJISx4051LineBreaker::Next(const char16_t* aText, uint32_t aLen,
-                            uint32_t aPos)
+LineBreaker::Next(const char16_t* aText, uint32_t aLen,
+                  uint32_t aPos)
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
   NS_ASSERTION(aLen > aPos, "Bad position passed to nsJISx4051LineBreaker::Next");
@@ -931,8 +927,8 @@ nsJISx4051LineBreaker::Next(const char16_t* aText, uint32_t aLen,
 }
 
 int32_t
-nsJISx4051LineBreaker::Prev(const char16_t* aText, uint32_t aLen,
-                            uint32_t aPos)
+LineBreaker::Prev(const char16_t* aText, uint32_t aLen,
+                  uint32_t aPos)
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
   NS_ASSERTION(aLen >= aPos && aPos > 0,
@@ -943,9 +939,9 @@ nsJISx4051LineBreaker::Prev(const char16_t* aText, uint32_t aLen,
 }
 
 void
-nsJISx4051LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
-                                         uint8_t aWordBreak,
-                                         uint8_t* aBreakBefore)
+LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
+                               uint8_t aWordBreak,
+                               uint8_t* aBreakBefore)
 {
   uint32_t cur;
   int8_t lastClass = CLASS_NONE;
@@ -986,10 +982,10 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLengt
     if (cur > 0) {
       NS_ASSERTION(CLASS_COMPLEX != lastClass || CLASS_COMPLEX != cl,
                    "Loop should have prevented adjacent complex chars here");
-      if (aWordBreak == nsILineBreaker::kWordBreak_Normal) {
+      if (aWordBreak == LineBreaker::kWordBreak_Normal) {
         allowBreak = (state.UseConservativeBreaking()) ?
           GetPairConservative(lastClass, cl) : GetPair(lastClass, cl);
-      } else if (aWordBreak == nsILineBreaker::kWordBreak_BreakAll) {
+      } else if (aWordBreak == LineBreaker::kWordBreak_BreakAll) {
         allowBreak = true;
       }
     }
@@ -1014,10 +1010,10 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLengt
       NS_GetComplexLineBreaks(aChars + cur, end - cur, aBreakBefore + cur);
 
       // We have to consider word-break value again for complex characters
-      if (aWordBreak != nsILineBreaker::kWordBreak_Normal) {
+      if (aWordBreak != LineBreaker::kWordBreak_Normal) {
         // Respect word-break property
         for (uint32_t i = cur; i < end; i++)
-          aBreakBefore[i] = (aWordBreak == nsILineBreaker::kWordBreak_BreakAll);
+          aBreakBefore[i] = (aWordBreak == LineBreaker::kWordBreak_BreakAll);
       }
 
       // restore breakability at chunk begin, which was always set to false
@@ -1038,9 +1034,9 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLengt
 }
 
 void
-nsJISx4051LineBreaker::GetJISx4051Breaks(const uint8_t* aChars, uint32_t aLength,
-                                         uint8_t aWordBreak,
-                                         uint8_t* aBreakBefore)
+LineBreaker::GetJISx4051Breaks(const uint8_t* aChars, uint32_t aLength,
+                               uint8_t aWordBreak,
+                               uint8_t* aBreakBefore)
 {
   uint32_t cur;
   int8_t lastClass = CLASS_NONE;
@@ -1064,10 +1060,10 @@ nsJISx4051LineBreaker::GetJISx4051Breaks(const uint8_t* aChars, uint32_t aLength
 
     bool allowBreak = false;
     if (cur > 0) {
-      if (aWordBreak == nsILineBreaker::kWordBreak_Normal) {
+      if (aWordBreak == LineBreaker::kWordBreak_Normal) {
         allowBreak = (state.UseConservativeBreaking()) ?
           GetPairConservative(lastClass, cl) : GetPair(lastClass, cl);
-      } else if (aWordBreak == nsILineBreaker::kWordBreak_BreakAll) {
+      } else if (aWordBreak == LineBreaker::kWordBreak_BreakAll) {
         allowBreak = true;
       }
     }

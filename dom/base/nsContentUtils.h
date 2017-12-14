@@ -34,6 +34,7 @@
 #include "mozilla/dom/BindingDeclarations.h" // For CallerType
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/intl/LineBreaker.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "mozilla/Logging.h"
 #include "mozilla/NotNull.h"
@@ -80,7 +81,6 @@ class nsIFrame;
 class nsIImageLoadingContent;
 class nsIInterfaceRequestor;
 class nsIIOService;
-class nsILineBreaker;
 class nsILoadInfo;
 class nsILoadGroup;
 class nsIMessageBroadcaster;
@@ -752,9 +752,9 @@ public:
   // Returns true if aDoc1 and aDoc2 have equal NodePrincipal()s.
   static bool HaveEqualPrincipals(nsIDocument* aDoc1, nsIDocument* aDoc2);
 
-  static nsILineBreaker* LineBreaker()
+  static mozilla::intl::LineBreaker* LineBreaker()
   {
-    return sLineBreaker;
+    return sLineBreaker.get();
   }
 
   static nsIWordBreaker* WordBreaker()
@@ -3394,7 +3394,7 @@ private:
   static nsIContentPolicy* sContentPolicyService;
   static bool sTriedToGetContentPolicy;
 
-  static nsILineBreaker* sLineBreaker;
+  static RefPtr<mozilla::intl::LineBreaker> sLineBreaker;
   static nsIWordBreaker* sWordBreaker;
 
   static nsIBidiKeyboard* sBidiKeyboard;
