@@ -9134,9 +9134,7 @@ nsDisplayPerspective::nsDisplayPerspective(nsDisplayListBuilder* aBuilder,
   MOZ_ASSERT(mList.GetChildren()->Count() == 1);
   MOZ_ASSERT(mList.GetChildren()->GetTop()->GetType() == DisplayItemType::TYPE_TRANSFORM);
 
-  if (aBuilder->IsRetainingDisplayList()) {
-    mTransformFrame->AddDisplayItem(this);
-  }
+  mTransformFrame->AddDisplayItem(this);
 }
 
 already_AddRefed<Layer>
