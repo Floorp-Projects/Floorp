@@ -5056,6 +5056,24 @@ NotifyActivityChanged(nsISupports *aSupports, void *aUnused)
   }
 }
 
+bool
+nsIDocument::IsTopLevelWindowInactive() const
+{
+  nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShell();
+  if (!treeItem) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+  if (!rootItem) {
+    return false;
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> domWindow = rootItem->GetWindow();
+  return domWindow && !domWindow->IsActive();
+}
+
 void
 nsIDocument::SetContainer(nsDocShell* aContainer)
 {
@@ -5751,10 +5769,7 @@ nsDocument::ContentStateChanged(nsIContent* aContent, EventStates aStateMask)
 void
 nsDocument::DocumentStatesChanged(EventStates aStateMask)
 {
-  // Invalidate our cached state.
-  mGotDocumentState &= ~aStateMask;
-  mDocumentState &= ~aStateMask;
-
+  UpdateDocumentStates(aStateMask);
   NS_DOCUMENT_NOTIFY_OBSERVERS(DocumentStatesChanged, (this, aStateMask));
 }
 
@@ -9875,21 +9890,22 @@ nsDocument::ForgetImagePreload(nsIURI* aURI)
 }
 
 void
-nsIDocument::UpdatePossiblyStaleDocumentState()
+nsIDocument::UpdateDocumentStates(EventStates aChangedStates)
 {
-  if (!mGotDocumentState.HasState(NS_DOCUMENT_STATE_RTL_LOCALE)) {
+  if (aChangedStates.HasState(NS_DOCUMENT_STATE_RTL_LOCALE)) {
     if (IsDocumentRightToLeft()) {
       mDocumentState |= NS_DOCUMENT_STATE_RTL_LOCALE;
+    } else {
+      mDocumentState &= ~NS_DOCUMENT_STATE_RTL_LOCALE;
     }
-    mGotDocumentState |= NS_DOCUMENT_STATE_RTL_LOCALE;
   }
-  if (!mGotDocumentState.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
-    nsIPresShell* shell = GetShell();
-    if (shell && shell->GetPresContext() &&
-        shell->GetPresContext()->IsTopLevelWindowInactive()) {
+
+  if (aChangedStates.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
+    if (IsTopLevelWindowInactive()) {
       mDocumentState |= NS_DOCUMENT_STATE_WINDOW_INACTIVE;
+    } else {
+      mDocumentState &= ~NS_DOCUMENT_STATE_WINDOW_INACTIVE;
     }
-    mGotDocumentState |= NS_DOCUMENT_STATE_WINDOW_INACTIVE;
   }
 }
 

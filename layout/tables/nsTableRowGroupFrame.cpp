@@ -1163,7 +1163,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsPresContext*           aPresContext,
         ReflowChild(rowFrame, aPresContext, rowMetrics, rowReflowInput,
                     0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
         rowFrame->SetSize(nsSize(rowMetrics.Width(), rowMetrics.Height()));
-        rowFrame->DidReflow(aPresContext, nullptr, nsDidReflowStatus::FINISHED);
+        rowFrame->DidReflow(aPresContext, nullptr);
         rowFrame->DidResize();
 
         if (!aRowForcedPageBreak && !aStatus.IsFullyComplete() &&

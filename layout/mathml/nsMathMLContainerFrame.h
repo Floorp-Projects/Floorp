@@ -107,12 +107,11 @@ public:
          nsReflowStatus&          aStatus) override;
 
   virtual void DidReflow(nsPresContext*           aPresContext,
-            const ReflowInput*  aReflowInput,
-            nsDidReflowStatus         aStatus) override
+            const ReflowInput*  aReflowInput) override
 
   {
     mPresentationData.flags &= ~NS_MATHML_STRETCH_DONE;
-    return nsContainerFrame::DidReflow(aPresContext, aReflowInput, aStatus);
+    return nsContainerFrame::DidReflow(aPresContext, aReflowInput);
   }
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,

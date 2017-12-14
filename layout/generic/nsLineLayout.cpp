@@ -1042,8 +1042,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
   // Tell the frame that we're done reflowing it
   aFrame->DidReflow(mPresContext,
-                    isText ? nullptr : reflowInputHolder.ptr(),
-                    nsDidReflowStatus::FINISHED);
+                    isText ? nullptr : reflowInputHolder.ptr());
 
   if (aMetrics) {
     *aMetrics = reflowOutput;
