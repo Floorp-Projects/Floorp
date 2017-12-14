@@ -297,10 +297,6 @@ public:
                   jni::Object::Param aDispatcher,
                   jni::Object::Param aSettings);
 
-    // Reattach this nsWindow to a new GeckoView.
-    void Attach(const GeckoSession::Window::LocalRef& inst,
-                jni::Object::Param aView);
-
     void AttachEditable(const GeckoSession::Window::LocalRef& inst,
                         jni::Object::Param aEditableParent,
                         jni::Object::Param aEditableChild);
@@ -1369,12 +1365,6 @@ nsWindow::GeckoViewSupport::Transfer(const GeckoSession::Window::LocalRef& inst,
     if (RefPtr<CompositorBridgeChild> bridge = window.GetCompositorBridgeChild()) {
         bridge->SendForceIsFirstPaint();
     }
-}
-
-void
-nsWindow::GeckoViewSupport::Attach(const GeckoSession::Window::LocalRef& inst,
-                                   jni::Object::Param aView)
-{
 }
 
 void
