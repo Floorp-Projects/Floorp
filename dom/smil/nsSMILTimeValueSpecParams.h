@@ -20,10 +20,9 @@ class nsSMILTimeValueSpecParams
 {
 public:
   nsSMILTimeValueSpecParams()
-  :
-    mType(INDEFINITE),
-    mSyncBegin(false),
-    mRepeatIterationOrAccessKey(0)
+    : mType(INDEFINITE)
+    , mSyncBegin(false)
+    , mRepeatIteration(0)
   { }
 
   // The type of value this specification describes
@@ -32,7 +31,6 @@ public:
     SYNCBASE,
     EVENT,
     REPEAT,
-    ACCESSKEY,
     WALLCLOCK,
     INDEFINITE
   } mType;
@@ -42,7 +40,6 @@ public:
   // - type SYNCBASE: the timebase's begin or end time
   // - type EVENT: the event time
   // - type REPEAT: the repeat time
-  // - type ACCESSKEY: the keypress time
   // It is not used for WALLCLOCK or INDEFINITE times
   nsSMILTimeValue   mOffset;
 
@@ -60,9 +57,9 @@ public:
   // Only used for SYNCBASE types.
   bool              mSyncBegin;
 
-  // The repeat iteration (type=REPEAT) or access key (type=ACCESSKEY) to
-  // respond to.
-  uint32_t          mRepeatIterationOrAccessKey;
+  // The repeat iteration to respond to.
+  // Only used for mType=REPEAT.
+  uint32_t mRepeatIteration;
 };
 
 #endif // NS_SMILTIMEVALUESPECPARAMS_H_
