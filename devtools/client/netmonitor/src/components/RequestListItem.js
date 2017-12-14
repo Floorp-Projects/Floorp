@@ -254,9 +254,12 @@ class RequestListItem extends Component {
         ...RESPONSE_HEADERS.filter(header => columns[header]).map(
           header => RequestListColumnResponseHeader({ item, header }),
         ),
-        columns.waterfall &&
-          RequestListColumnWaterfall({ item, firstRequestStartedMillis,
-                                       onWaterfallMouseDown }),
+        columns.waterfall && RequestListColumnWaterfall({
+          connector,
+          firstRequestStartedMillis,
+          item,
+          onWaterfallMouseDown,
+        }),
       )
     );
   }
