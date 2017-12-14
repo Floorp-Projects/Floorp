@@ -65,9 +65,10 @@ def get_secret(secret_name):
     r = requests.get(secrets_url.format(secret_name))
     # 403: If unauthorized, just give up.
     if r.status_code == 403:
+        log.info("Unable to get secret key")
         return {}
     r.raise_for_status()
-    return r.json()
+    return r.json().get('secret', {})
 
 
 @redo.retriable()
