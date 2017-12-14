@@ -7,7 +7,7 @@
 %define glassInactiveBorderColor rgb(102, 102, 102)
 
 @media (-moz-os-version: windows-win7) {
-  @media not all and (-moz-windows-classic) {
+  @media (-moz-windows-classic: 0) {
     #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel > #navigator-toolbox > #toolbar-menubar {
       margin-top: 1px;
     }
