@@ -28,11 +28,6 @@ jobs:
             - /bin/bash
             - -c
             - echo "Dummy task"
-      treeherder:
-         symbol: Rel(BD)
-         platform: linux/opt
-         kind: test
-         tier: 1
 
    devedition:
       name: post-balrog-dummy
@@ -50,8 +45,3 @@ jobs:
             - /bin/bash
             - -c
             - echo "Dummy task"
-      treeherder:
-         symbol: Rel(BD)
-         platform: linux-devedition/opt
-         kind: test
-         tier: 1
