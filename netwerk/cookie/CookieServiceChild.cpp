@@ -181,7 +181,7 @@ CookieServiceChild::RecvAddCookie(const CookieStruct     &aCookie,
                                              aCookie.creationTime(),
                                              aCookie.isSession(),
                                              aCookie.isSecure(),
-                                             false,
+                                             aCookie.isHttpOnly(),
                                              aAttrs,
                                              aCookie.sameSite());
   RecordDocumentCookie(cookie, aAttrs);
@@ -362,9 +362,6 @@ CookieServiceChild::SetCookieInternal(nsCookieAttributes              &aCookieAt
                                       bool                             aFromHttp,
                                       nsICookiePermission             *aPermissionService)
 {
-  if (aCookieAttributes.isHttpOnly) {
-    return;
-  }
   int64_t currentTimeInUsec = PR_Now();
   RefPtr<nsCookie> cookie =
     nsCookie::Create(aCookieAttributes.name,
@@ -430,7 +427,9 @@ CookieServiceChild::RecordDocumentCookie(nsCookie               *aCookie,
     return;
   }
 
-  cookiesList->AppendElement(aCookie);
+  if (!aCookie->IsHttpOnly()) {
+    cookiesList->AppendElement(aCookie);
+  }
 }
 
 nsresult
