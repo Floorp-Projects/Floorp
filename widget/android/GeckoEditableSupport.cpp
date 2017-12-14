@@ -1339,10 +1339,6 @@ GeckoEditableSupport::WillDispatchKeyboardEvent(
 NS_IMETHODIMP_(IMENotificationRequests)
 GeckoEditableSupport::GetIMENotificationRequests()
 {
-    // While a plugin has focus, Listener doesn't need any notifications.
-    if (GetInputContext().mIMEState.mEnabled == IMEState::PLUGIN) {
-      return IMENotificationRequests();
-    }
     return IMENotificationRequests(IMENotificationRequests::NOTIFY_TEXT_CHANGE);
 }
 
@@ -1358,7 +1354,7 @@ GeckoEditableSupport::SetInputContext(const InputContext& aContext,
 
     mInputContext = aContext;
 
-    if (mInputContext.mIMEState.mEnabled == IMEState::ENABLED &&
+    if (mInputContext.mIMEState.mEnabled != IMEState::DISABLED &&
         aAction.UserMightRequestOpenVKB()) {
         // Don't reset keyboard when we should simply open the vkb
         mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_OPEN_VKB);
