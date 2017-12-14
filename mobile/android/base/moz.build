@@ -451,6 +451,7 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'sqlite/MatrixBlobCursor.java',
     'sqlite/SQLiteBridge.java',
     'sqlite/SQLiteBridgeException.java',
+    'TextInputController.java',
     'TouchEventInterceptor.java',
     'WakeLockDelegate.java',
 ]]

@@ -16,6 +16,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -28,6 +29,7 @@ import android.os.IInterface;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -64,6 +66,8 @@ public class GeckoSession extends LayerSession
 
     private final EventDispatcher mEventDispatcher =
         new EventDispatcher(mNativeQueue);
+
+    private final TextInputController mTextInput = new TextInputController(this);
 
     private final GeckoSessionHandler<ContentListener> mContentHandler =
         new GeckoSessionHandler<ContentListener>(
@@ -328,6 +332,10 @@ public class GeckoSession extends LayerSession
         @WrapForJNI(dispatchTo = "proxy")
         public native void attach(GeckoView view);
 
+        @WrapForJNI(dispatchTo = "proxy")
+        public native void attachEditable(IGeckoEditableParent parent,
+                                          GeckoEditableChild child);
+
         @WrapForJNI(calledFrom = "gecko")
         private synchronized void onReady() {
             if (mNativeQueue.checkAndSetState(State.INITIAL, State.READY)) {
@@ -471,6 +479,8 @@ public class GeckoSession extends LayerSession
     }
 
     public void openWindow(final Context appContext) {
+        ThreadUtils.assertOnUiThread();
+
         if (isOpen()) {
             throw new IllegalStateException("Session is open");
         }
@@ -501,6 +511,10 @@ public class GeckoSession extends LayerSession
                 String.class, chromeUri,
                 screenId, isPrivate);
         }
+
+        if (mTextInput != null) {
+            mTextInput.onWindowReady(mNativeQueue, mWindow);
+        }
     }
 
     public void attachView(final GeckoView view) {
@@ -529,6 +543,16 @@ public class GeckoSession extends LayerSession
         }
 
         mWindow = null;
+    }
+
+    /**
+     * Get the TextInputController instance for this session.
+     *
+     * @return TextInputController instance.
+     */
+    public @NonNull TextInputController getTextInputController() {
+        // May be called on any thread.
+        return mTextInput;
     }
 
     /**
