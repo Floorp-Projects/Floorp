@@ -144,9 +144,9 @@ browser-screenshots:
     loopback-video: true
     run-on-projects:
         by-test-platform:
-            windows.*/opt: ['mozilla-central']
-            linux64/opt: ['mozilla-central']
-            macosx.*/opt: ['mozilla-central']
+            windows.*/opt: ['mozilla-central', 'integration']
+            linux64/opt: ['mozilla-central', 'integration']
+            macosx.*/opt: ['mozilla-central', 'integration']
             windows7-32-devedition/opt: []
             windows10-64-devedition/opt: []
             default: []
