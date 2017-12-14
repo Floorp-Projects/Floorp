@@ -566,12 +566,6 @@ private:
   /* True if this driver was created from a driver created because of a previous
    * AudioCallbackDriver failure. */
   bool mFromFallback;
-  /* Whether or not the Gecko profiler has been registered for this thread.
-   * We reset this on device change, because the underlying thread is going to
-   * change.
-   * We de-register on the last iteration, and re-register on the first
-   * iteration of a new driver. */
-  Atomic<bool> mProfilerRegistered;
 };
 
 class AsyncCubebTask : public Runnable

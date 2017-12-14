@@ -539,7 +539,6 @@ AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl)
   , mMicrophoneActive(false)
   , mShouldFallbackIfError(false)
   , mFromFallback(false)
-  , mProfilerRegistered(false)
 {
   LOG(LogLevel::Debug, ("AudioCallbackDriver ctor for graph %p", aGraphImpl));
 #if defined(XP_WIN)
@@ -898,11 +897,6 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
   AutoInCallback aic(this);
 #endif
 
-  if (!mProfilerRegistered) {
-    mProfilerRegistered = true;
-    PROFILER_REGISTER_THREAD("AudioCallback");
-  }
-
   GraphTime stateComputedTime = StateComputedTime();
   if (stateComputedTime == 0) {
     MonitorAutoLock mon(mGraphImpl->GetMonitor());
@@ -1008,8 +1002,6 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     // Enter shutdown mode. The stable-state handler will detect this
     // and complete shutdown if the graph does not get restarted.
     mGraphImpl->SignalMainThreadCleanup();
-
-    PROFILER_UNREGISTER_THREAD();
     return aFrames - 1;
   }
 
@@ -1032,7 +1024,6 @@ AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
     NextDriver()->SetGraphTime(this, mIterationStart, mIterationEnd);
     mGraphImpl->SetCurrentDriver(NextDriver());
     NextDriver()->Start();
-    PROFILER_UNREGISTER_THREAD();
     // Returning less than aFrames starts the draining and eventually stops the
     // audio thread. This function will never get called again.
     return aFrames - 1;
@@ -1124,8 +1115,6 @@ AudioCallbackDriver::DeviceChangedCallback() {
 #ifdef XP_MACOSX
   PanOutputIfNeeded(mMicrophoneActive);
 #endif
-
-  mProfilerRegistered = false;
 }
 
 void
