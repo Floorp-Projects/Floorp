@@ -1,11 +1,11 @@
-// |reftest| skip -- class-fields is not supported
+// |reftest| skip -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-fields/literal-names.case
-// - src/class-fields/default/cls-decl-regular-definitions.template
+// - src/class-fields/productions/cls-decl-regular-definitions.template
 /*---
 description: Literal property names (regular fields defintion)
 esid: prod-FieldDefinition
-features: [class-fields]
+features: [class, class-fields-public]
 flags: [generated]
 includes: [propertyHelper.js]
 info: |
@@ -27,6 +27,7 @@ const fn = function() {}
 class C {
   a; b = 42;
   c = fn
+
 }
 
 var c = new C();

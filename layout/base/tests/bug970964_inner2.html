@@ -1,0 +1,354 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=970964
+-->
+<head>
+  <title>Test for Bug 970964</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=970964">Mozilla Bug 970964</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 970964 **/
+
+function ok(condition, msg) {
+  parent.ok(condition, msg);
+}
+
+function is(a, b, msg) {
+  parent.is(a, b, msg);
+}
+
+function testtouch(aOptions) {
+  if (!aOptions)
+    aOptions = {};
+  this.identifier = aOptions.identifier || 0;
+  this.target = aOptions.target || 0;
+  this.page = aOptions.page || {x: 0, y: 0};
+  this.radius = aOptions.radius || {x: 0, y: 0};
+  this.rotationAngle = aOptions.rotationAngle || 0;
+  this.force = aOptions.force || 1;
+}
+
+function touchEvent(aOptions) {
+  if (!aOptions) {
+    aOptions = {};
+  }
+  this.ctrlKey = aOptions.ctrlKey || false;
+  this.altKey = aOptions.altKey || false;
+  this.shiftKey = aOptions.shiftKey || false;
+  this.metaKey = aOptions.metaKey || false;
+  this.touches = aOptions.touches || [];
+  this.targetTouches = aOptions.targetTouches || [];
+  this.changedTouches = aOptions.changedTouches || [];
+}
+
+function sendTouchEvent(windowUtils, aType, aEvent, aModifiers) {
+  var ids = [], xs=[], ys=[], rxs = [], rys = [],
+      rotations = [], forces = [];
+
+  for (var touchType of ["touches", "changedTouches", "targetTouches"]) {
+    for (var i = 0; i < aEvent[touchType].length; i++) {
+      if (ids.indexOf(aEvent[touchType][i].identifier) == -1) {
+        ids.push(aEvent[touchType][i].identifier);
+        xs.push(aEvent[touchType][i].page.x);
+        ys.push(aEvent[touchType][i].page.y);
+        rxs.push(aEvent[touchType][i].radius.x);
+        rys.push(aEvent[touchType][i].radius.y);
+        rotations.push(aEvent[touchType][i].rotationAngle);
+        forces.push(aEvent[touchType][i].force);
+      }
+    }
+  }
+  return windowUtils.sendTouchEvent(aType,
+                                    ids, xs, ys, rxs, rys,
+                                    rotations, forces,
+                                    ids.length, aModifiers, 0);
+}
+
+function getDefaultArgEvent(eventname) {
+  return new PointerEvent(eventname, {
+    bubbles: true, cancelable: true, view: window,
+    detail: 0, screenX: 0, screenY: 0, clientX: 0, clientY: 0,
+    ctrlKey: false, altKey: false, shiftKey: false, metaKey: false,
+    button: 0, relatedTarget: null, pointerId: 0
+  });
+}
+
+function getTouchEventForTarget(target, cwu, id) {
+  var bcr = target.getBoundingClientRect();
+  var touch = new testtouch({
+    page: {x: Math.round(bcr.left + bcr.width/2),
+           y: Math.round(bcr.top  + bcr.height/2)},
+    target: target,
+    identifier: id,
+  });
+  var event = new touchEvent({
+    touches: [touch],
+    targetTouches: [touch],
+    changedTouches: [touch]
+  });
+  return event;
+}
+
+function runTests() {
+  var d0 = document.getElementById("d0");
+  var d1 = document.getElementById("d1");
+  var d2 = document.getElementById("d2");
+  var d3 = document.getElementById("d3");
+
+  // Test Pointer firing before any mouse/touch original source
+
+  var mouseDownTriggered = 0;
+  var pointerDownTriggered = 0;
+  var touchDownTriggered = 0;
+  var touchCancelTriggered = 0;
+  var pointerCancelTriggered = 0;
+
+  // Test pointer event generated from mouse event
+  d0.addEventListener("mousedown", (e) => {
+    ++mouseDownTriggered;
+    is(pointerDownTriggered , mouseDownTriggered, "Mouse event must be triggered after pointer event!");
+  }, {once: true});
+
+  d0.addEventListener("pointerdown", (e) => {
+    ++pointerDownTriggered;
+    is(pointerDownTriggered, mouseDownTriggered + 1, "Pointer event must be triggered before mouse event!");
+  }, {once: true});
+
+  synthesizeMouse(d1, 3, 3, { type: "mousemove"});
+  synthesizeMouse(d1, 3, 3, { type: "mousedown"});
+  synthesizeMouse(d1, 3, 3, { type: "mouseup"});
+
+  // Test pointer event generated from touch event
+  mouseDownTriggered = 0;
+  pointerDownTriggered = 0;
+
+  d0.addEventListener("touchstart", (e) => {
+    ++touchDownTriggered;
+    is(pointerDownTriggered, touchDownTriggered,  "Touch event must be triggered after pointer event!");
+  }, {once: true});
+
+  d0.addEventListener("mousedown", (e) => {
+    ++mouseDownTriggered;
+    is(pointerDownTriggered , mouseDownTriggered, "Mouse event must be triggered after pointer event!");
+  }, {once: true});
+
+  d0.addEventListener("pointerdown", (e) => {
+    ++pointerDownTriggered;
+    is(pointerDownTriggered, touchDownTriggered + 1, "Pointer event must be triggered before mouse event!");
+    is(pointerDownTriggered, mouseDownTriggered + 1, "Pointer event must be triggered before mouse event!");
+  }, {once: true});
+
+  d0.addEventListener("touchcancel", (e) => {
+    ++touchCancelTriggered;
+    is(pointerCancelTriggered, touchCancelTriggered, "Touch cancel event must be triggered after pointer event!");
+  }, {once: true});
+
+  d0.addEventListener("pointercancel", function(ev) {
+    is(ev.pointerId, 0, "Correct default pointerId");
+    is(ev.bubbles, true, "bubbles should be true");
+    is(ev.cancelable, false, "pointercancel cancelable should be false ");
+    ++pointerCancelTriggered;
+    is(pointerCancelTriggered, touchCancelTriggered + 1, "Pointer event must be triggered before touch event!");
+  }, {once: true});
+
+  var cwu = SpecialPowers.getDOMWindowUtils(window);
+  var event1 = getTouchEventForTarget(d1, cwu, 0);
+  sendTouchEvent(cwu, "touchstart", event1, 0);
+  sendTouchEvent(cwu, "touchmove", event1, 0);
+  // Test Touch to Pointer Cancel
+  sendTouchEvent(cwu, "touchcancel", event1, 0);
+
+  // Check Pointer enter/leave from mouse generated event
+  var mouseEnterTriggered = 0;
+  var pointerEnterTriggered = 0;
+  d2.onpointerenter = function(e) {
+    pointerEnterTriggered = 1;
+    is(e.bubbles, false, "bubbles should be false");
+    is(e.cancelable, false, "cancelable should be false");
+    is(mouseEnterTriggered, 0, "Pointer event must be triggered before mouse event!");
+  };
+  d2.onmouseenter = function(e) {
+    mouseEnterTriggered = 1;
+    is(pointerEnterTriggered , 1, "Mouse event must be triggered after pointer event!");
+  };
+  synthesizeMouse(d2, 3, 3, { type: "mousemove"});
+  d2.onmouseenter = function(e) {}
+
+  // Test Multi Pointer enter/leave for pointers generated from Mouse and Touch at the same time
+  // Enter mouse and touch generated pointers to different elements
+  var d1enterCount = 0;
+  var d2enterCount = 0;
+  var d3enterCount = 0;
+  var d1leaveCount = 0;
+  var d2leaveCount = 0;
+  var d3leaveCount = 0;
+  var mousePointerEnterLeaveCount = 0;
+  var touchPointerEnterLeaveCount = 0;
+
+  var checkPointerType = function(pointerType) {
+    if (pointerType == "mouse") {
+      ++mousePointerEnterLeaveCount;
+    } else if (pointerType == "touch") {
+      ++touchPointerEnterLeaveCount;
+    }
+  };
+
+  d1.onpointerenter = function(e) {
+    ++d1enterCount;
+    is(e.bubbles, false, "bubbles should be false");
+    is(e.cancelable, false, "cancelable should be false");
+    checkPointerType(e.pointerType);
+  };
+  d2.onpointerenter = function(e) {
+    ++d2enterCount;
+    is(e.bubbles, false, "bubbles should be false");
+    is(e.cancelable, false, "cancelable should be false");
+    checkPointerType(e.pointerType);
+  };
+  d3.onpointerenter = function(e) {
+    ++d3enterCount;
+    is(e.bubbles, false, "bubbles should be false");
+    is(e.cancelable, false, "cancelable should be false");
+    checkPointerType(e.pointerType);
+  };
+  d1.onpointerleave = function(e) {
+    ++d1leaveCount;
+    is(e.bubbles, false, "bubbles should be false");
+    is(e.cancelable, false, "cancelable should be false");
+    checkPointerType(e.pointerType);
+  };
+  d2.onpointerleave = function(e) {
+    ++d2leaveCount;
+    is(e.bubbles, false, "bubbles should be false");
+    is(e.cancelable, false, "cancelable should be false");
+    checkPointerType(e.pointerType);
+  };
+  d3.onpointerleave = function(e) {
+    ++d3leaveCount;
+    is(e.bubbles, false, "bubbles should be false");
+    is(e.cancelable, false, "cancelable should be false");
+    checkPointerType(e.pointerType);
+  };
+
+  synthesizeMouse(d1, 3, 3, { type: "mousemove"});
+  sendTouchEvent(cwu, "touchstart", getTouchEventForTarget(d3, cwu, 3), 0);
+  sendTouchEvent(cwu, "touchmove", getTouchEventForTarget(d3, cwu, 3), 0);
+  is(touchPointerEnterLeaveCount, 1, "Wrong touch enterLeave count for!");
+  is(mousePointerEnterLeaveCount, 2, "Wrong mouse enterLeave count for!");
+
+  is(d1enterCount, 1, "Wrong enter count for! d1");
+  is(d2leaveCount, 1, "Wrong leave count for! d2");
+  is(d3enterCount, 1, "Wrong enter count for! d3");
+
+  sendTouchEvent(cwu, "touchmove", getTouchEventForTarget(d1, cwu, 3), 0);
+  synthesizeMouse(d3, 3, 3, { type: "mousemove"});
+  is(touchPointerEnterLeaveCount, 1, "Wrong touch enterLeave count for!");
+  is(mousePointerEnterLeaveCount, 4, "Wrong mouse enterLeave count for!");
+
+  is(d3leaveCount, 0, "Wrong leave count for! d3");
+  is(d1leaveCount, 1, "Wrong leave count for! d1");
+  is(d1enterCount, 1, "Wrong enter count for! d1");
+  is(d3enterCount, 2, "Wrong enter count for! d3");
+
+  sendTouchEvent(cwu, "touchmove", getTouchEventForTarget(d2, cwu, 3), 0);
+  synthesizeMouse(d2, 3, 3, { type: "mousemove"});
+  is(touchPointerEnterLeaveCount, 1, "Wrong touch enterLeave count for!");
+  is(mousePointerEnterLeaveCount, 6, "Wrong mouse enterLeave count for!");
+
+  is(d1leaveCount, 1, "Wrong leave count for! d1");
+  is(d2enterCount, 1, "Wrong enter count for! d2");
+  is(d3leaveCount, 1, "Wrong leave count for! d3");
+
+  sendTouchEvent(cwu, "touchmove", getTouchEventForTarget(d1, cwu, 3), 0);
+  synthesizeMouse(d1, 3, 3, { type: "mousemove"});
+  is(touchPointerEnterLeaveCount, 1, "Wrong touch enterLeave count for!");
+  is(mousePointerEnterLeaveCount, 8, "Wrong mouse enterLeave count for!");
+
+  is(d2leaveCount, 2, "Wrong leave count for! d2");
+  is(d1enterCount, 2, "Wrong enter count for! d1");
+
+  // Test for pointer buttons when it generated from mousemove event
+  d1.onpointermove = function(e) {
+    is(e.buttons, 0, "Buttons must be 0 on pointer generated from mousemove");
+    is(e.button, -1, "Button must be -1 on pointer generated from mousemove when no buttons pressed");
+    is(e.pointerType, "mouse", "Pointer type must be mouse");
+  };
+  cwu.sendMouseEvent("mousemove", 4, 4, 0, 0, 0, false, 0, 0);
+
+  d1.onpointermove = function(e) {
+    is(e.buttons, 1, "Buttons must be 1 on pointermove generated from touch event");
+    is(e.button, -1, "Button must be -1 on pointermove generated from touch event");
+    is(e.pointerType, "touch", "Pointer type must be touch");
+  };
+  sendTouchEvent(cwu, "touchmove", getTouchEventForTarget(d1, cwu, 2), 0);
+
+  // Test for cancel trigger pointerOut (Touch Pointer must be at d1 now)
+  pointerCancelTriggered = 0;
+  var pointerOutTriggeredForCancelEvent = 0;
+  var pointerLeaveTriggeredForCancelEvent = 0;
+  d3.onpointerout = function(e) {
+    if (pointerOutTriggeredForCancelEvent == 0) {
+      is(e.pointerId, 3, "Wrong Pointer type, should be id from Touch event");
+      is(e.pointerType, "touch", "Wrong Pointer type, should be touch type");
+    } else {
+      is(e.pointerId, 0, "Wrong Pointer type, should be id from mouse event");
+      is(e.pointerType, "mouse", "Wrong Pointer type, should be mouse type");
+    }
+    pointerOutTriggeredForCancelEvent = 1;
+  };
+  d3.onpointerleave = function(e) {
+    is(pointerOutTriggeredForCancelEvent, 1, "Pointer Out must be dispatched bedore Pointer leave");
+    if (pointerLeaveTriggeredForCancelEvent == 0) {
+      is(e.pointerId, 3, "Wrong Pointer type, should be id from Touch event");
+      is(e.pointerType, "touch", "Wrong Pointer type, should be touch type");
+    } else {
+      is(e.pointerId, 0, "Wrong Pointer type, should be id from mouse event");
+      is(e.pointerType, "mouse", "Wrong Pointer type, should be mouse type");
+    }
+    pointerLeaveTriggeredForCancelEvent = 1;
+  }
+  sendTouchEvent(cwu, "touchcancel", getTouchEventForTarget(d1, cwu, 3), 0);
+  is(pointerOutTriggeredForCancelEvent, 1, "Pointer Out not dispatched on PointerCancel");
+  is(pointerLeaveTriggeredForCancelEvent, 1, "Pointer Leave not dispatched on PointerCancel");
+
+  finishTest();
+}
+
+function finishTest() {
+  // Let window.onerror have a chance to fire
+  setTimeout(function() {
+    setTimeout(function() {
+      window.parent.postMessage("finishTest", "*");
+    }, 0);
+  }, 0);
+}
+
+window.onload = function () {
+  SpecialPowers.pushPrefEnv({
+    "set": [
+      ["dom.w3c_pointer_events.enabled", true],
+      ["dom.w3c_pointer_events.implicit_capture", true]
+    ]
+  }, runTests);
+}
+
+</script>
+</pre>
+<div id="d0">
+Test divs --
+<div id="d1">t</div><div id="d2">t</div><div id="d3">t</div>
+--
+</div>
+</body>
+</html>

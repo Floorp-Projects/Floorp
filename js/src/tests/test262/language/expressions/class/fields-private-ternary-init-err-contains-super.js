@@ -1,11 +1,11 @@
-// |reftest| skip error:SyntaxError -- class-fields is not supported
+// |reftest| skip error:SyntaxError -- class-fields-private,class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-fields/init-err-contains-super.case
 // - src/class-fields/initializer-error/cls-expr-fields-private-ternary.template
 /*---
 description: Syntax error if `super()` used in class field (private field, ternary expression)
 esid: sec-class-definitions-static-semantics-early-errors
-features: [class-fields]
+features: [class, class-fields-public, class-fields-private]
 flags: [generated]
 negative:
   phase: early

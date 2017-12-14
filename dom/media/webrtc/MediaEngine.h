@@ -53,8 +53,6 @@ public:
   static const int DEFAULT_169_VIDEO_WIDTH = 1280;
   static const int DEFAULT_169_VIDEO_HEIGHT = 720;
 
-  static const int DEFAULT_SAMPLE_RATE = 32000;
-
   // This allows using whatever rate the graph is using for the
   // MediaStreamTrack. This is useful for microphone data, we know it's already
   // at the correct rate for insertion in the MSG.

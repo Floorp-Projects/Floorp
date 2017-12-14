@@ -3163,16 +3163,24 @@ Assembler::PatchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newVal
 
     Register dest;
     Assembler::RelocStyle rs;
-    DebugOnly<const uint32_t*> val = GetPtr32Target(InstructionIterator(ptr), &dest, &rs);
-    MOZ_ASSERT(uint32_t((const uint32_t*)val) == uint32_t(expectedValue.value));
 
-    MacroAssembler::ma_mov_patch(Imm32(int32_t(newValue.value)), dest, Always, rs,
-                                 InstructionIterator(ptr));
+    {
+        InstructionIterator iter(ptr);
+        DebugOnly<const uint32_t*> val = GetPtr32Target(iter, &dest, &rs);
+        MOZ_ASSERT(uint32_t((const uint32_t*)val) == uint32_t(expectedValue.value));
+    }
+
+    // Patch over actual instructions.
+    {
+        InstructionIterator iter(ptr);
+        MacroAssembler::ma_mov_patch(Imm32(int32_t(newValue.value)), dest, Always, rs, iter);
+    }
 
     // L_LDR won't cause any instructions to be updated.
     if (rs != L_LDR) {
-        AutoFlushICache::flush(uintptr_t(ptr), 4);
-        AutoFlushICache::flush(uintptr_t(ptr->next()), 4);
+        InstructionIterator iter(ptr);
+        AutoFlushICache::flush(uintptr_t(iter.cur()), 4);
+        AutoFlushICache::flush(uintptr_t(iter.next()), 4);
     }
 }
 
@@ -3201,10 +3209,11 @@ Assembler::PatchWrite_Imm32(CodeLocationLabel label, Imm32 imm) {
 uint8_t*
 Assembler::NextInstruction(uint8_t* inst_, uint32_t* count)
 {
-    Instruction* inst = reinterpret_cast<Instruction*>(inst_);
     if (count != nullptr)
         *count += sizeof(Instruction);
-    return reinterpret_cast<uint8_t*>(inst->next());
+
+    InstructionIterator iter(reinterpret_cast<Instruction*>(inst_));
+    return reinterpret_cast<uint8_t*>(iter.next());
 }
 
 static bool
@@ -3234,71 +3243,63 @@ InstIsGuard(BufferInstructionIterator& iter, const PoolHeader** ph)
     return *ph != nullptr;
 }
 
+template <class T>
 static bool
-InstIsBNop(Instruction* inst)
+InstIsBNop(const T& iter)
 {
     // In some special situations, it is necessary to insert a NOP into the
     // instruction stream that nobody knows about, since nobody should know
     // about it, make sure it gets skipped when Instruction::next() is called.
     // this generates a very specific nop, namely a branch to the next
     // instruction.
-    Assembler::Condition c = inst->extractCond();
+    const Instruction* cur = iter.cur();
+    Assembler::Condition c = cur->extractCond();
     if (c != Assembler::Always)
         return false;
-    if (!inst->is<InstBImm>())
+    if (!cur->is<InstBImm>())
         return false;
-    InstBImm* b = inst->as<InstBImm>();
+    InstBImm* b = cur->as<InstBImm>();
     BOffImm offset;
     b->extractImm(&offset);
     return offset.decode() == 4;
 }
 
-static bool
-InstIsArtificialGuard(Instruction* inst, const PoolHeader** ph)
-{
-    if (!InstIsGuard(inst, ph))
-        return false;
-    return !(*ph)->isNatural();
-}
-
-// If the instruction points to a artificial pool guard then skip the pool.
 Instruction*
-Instruction::skipPool()
+InstructionIterator::maybeSkipAutomaticInstructions()
 {
+    // If the current instruction was automatically-inserted, skip past it.
     const PoolHeader* ph;
-    // If this is a guard, and the next instruction is a header, always work
-    // around the pool. If it isn't a guard, then start looking ahead.
-    if (InstIsGuard(this, &ph)) {
-        // Don't skip a natural guard.
-        if (ph->isNatural())
-            return this;
-        return (this + 1 + ph->size())->skipPool();
+
+    // Loop until an intentionally-placed instruction is found.
+    while (true) {
+        if (InstIsGuard(cur(), &ph)) {
+            // Don't skip a natural guard.
+            if (ph->isNatural())
+                return cur();
+            advanceRaw(1 + ph->size());
+        } else if (InstIsBNop<InstructionIterator>(*this)) {
+            advanceRaw(1);
+        } else {
+            return cur();
+        }
     }
-    if (InstIsBNop(this))
-        return (this + 1)->skipPool();
-    return this;
 }
 
-void
-BufferInstructionIterator::skipPool()
+Instruction*
+BufferInstructionIterator::maybeSkipAutomaticInstructions()
 {
+    const PoolHeader* ph;
     // If this is a guard, and the next instruction is a header, always work
     // around the pool. If it isn't a guard, then start looking ahead.
-
-    const PoolHeader* ph;
     if (InstIsGuard(*this, &ph)) {
         // Don't skip a natural guard.
         if (ph->isNatural())
-            return;
-        advance(sizeof(Instruction) * (1 + ph->size()));
-        skipPool();
-        return;
+            return cur();
+        return next();
     }
-
-    if (InstIsBNop(cur())) {
-        next();
-        skipPool();
-    }
+    if (InstIsBNop<BufferInstructionIterator>(*this))
+        return next();
+    return cur();
 }
 
 // Cases to be handled:
@@ -3333,17 +3334,20 @@ BufferInstructionIterator::skipPool()
 //    add r4, r4, r4  <= returned value
 
 Instruction*
-Instruction::next()
+InstructionIterator::next()
 {
-    Instruction* ret = this+1;
     const PoolHeader* ph;
-    // If this is a guard, and the next instruction is a header, always work
-    // around the pool. If it isn't a guard, then start looking ahead.
-    if (InstIsGuard(this, &ph))
-        return (ret + ph->size())->skipPool();
-    if (InstIsArtificialGuard(ret, &ph))
-        return (ret + 1 + ph->size())->skipPool();
-    return ret->skipPool();
+
+    // If the current instruction is followed by a pool header,
+    // move past the current instruction and the pool.
+    if (InstIsGuard(cur(), &ph)) {
+        advanceRaw(1 + ph->size());
+        return maybeSkipAutomaticInstructions();
+    }
+
+    // The next instruction is then known to not be a PoolHeader.
+    advanceRaw(1);
+    return maybeSkipAutomaticInstructions();
 }
 
 void
@@ -3386,25 +3390,25 @@ Assembler::ToggleToCmp(CodeLocationLabel inst_)
 void
 Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
 {
-    Instruction* inst = (Instruction*)inst_.raw();
-    // Skip a pool with an artificial guard.
-    inst = inst->skipPool();
-    MOZ_ASSERT(inst->is<InstMovW>() || inst->is<InstLDR>());
+    InstructionIterator iter(reinterpret_cast<Instruction*>(inst_.raw()));
+    MOZ_ASSERT(iter.cur()->is<InstMovW>() || iter.cur()->is<InstLDR>());
 
-    if (inst->is<InstMovW>()) {
+    if (iter.cur()->is<InstMovW>()) {
         // If it looks like the start of a movw/movt sequence, then make sure we
         // have all of it (and advance the iterator past the full sequence).
-        inst = inst->next();
-        MOZ_ASSERT(inst->is<InstMovT>());
+        iter.next();
+        MOZ_ASSERT(iter.cur()->is<InstMovT>());
     }
 
-    inst = inst->next();
-    MOZ_ASSERT(inst->is<InstNOP>() || inst->is<InstBLXReg>());
+    iter.next();
+    MOZ_ASSERT(iter.cur()->is<InstNOP>() || iter.cur()->is<InstBLXReg>());
 
-    if (enabled == inst->is<InstBLXReg>()) {
+    if (enabled == iter.cur()->is<InstBLXReg>()) {
         // Nothing to do.
         return;
     }
+
+    Instruction* inst = iter.cur();
 
     if (enabled)
         *inst = InstBLXReg(ScratchRegister, Always);
@@ -3417,31 +3421,28 @@ Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
 size_t
 Assembler::ToggledCallSize(uint8_t* code)
 {
-    Instruction* inst = (Instruction*)code;
-    // Skip a pool with an artificial guard.
-    inst = inst->skipPool();
-    MOZ_ASSERT(inst->is<InstMovW>() || inst->is<InstLDR>());
+    InstructionIterator iter(reinterpret_cast<Instruction*>(code));
+    MOZ_ASSERT(iter.cur()->is<InstMovW>() || iter.cur()->is<InstLDR>());
 
-    if (inst->is<InstMovW>()) {
+    if (iter.cur()->is<InstMovW>()) {
         // If it looks like the start of a movw/movt sequence, then make sure we
         // have all of it (and advance the iterator past the full sequence).
-        inst = inst->next();
-        MOZ_ASSERT(inst->is<InstMovT>());
+        iter.next();
+        MOZ_ASSERT(iter.cur()->is<InstMovT>());
     }
 
-    inst = inst->next();
-    MOZ_ASSERT(inst->is<InstNOP>() || inst->is<InstBLXReg>());
-    return uintptr_t(inst) + 4 - uintptr_t(code);
+    iter.next();
+    MOZ_ASSERT(iter.cur()->is<InstNOP>() || iter.cur()->is<InstBLXReg>());
+    return uintptr_t(iter.cur()) + 4 - uintptr_t(code);
 }
 
 uint8_t*
 Assembler::BailoutTableStart(uint8_t* code)
 {
-    Instruction* inst = (Instruction*)code;
-    // Skip a pool with an artificial guard or NOP fill.
-    inst = inst->skipPool();
-    MOZ_ASSERT(inst->is<InstBLImm>());
-    return (uint8_t*) inst;
+    // The iterator skips over any automatically-inserted instructions.
+    InstructionIterator iter(reinterpret_cast<Instruction*>(code));
+    MOZ_ASSERT(iter.cur()->is<InstBLImm>());
+    return reinterpret_cast<uint8_t*>(iter.cur());
 }
 
 uint32_t Assembler::NopFill = 0;

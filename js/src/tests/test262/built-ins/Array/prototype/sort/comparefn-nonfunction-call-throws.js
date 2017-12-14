@@ -15,42 +15,83 @@ info: >
 features: [Symbol]
 ---*/
 
-var sample = [1, 2, 3];
+var sample = [1];
+var poisoned = {
+  get length() {
+    throw new Test262Error("IsCallable(comparefn) should be observed before this.length");
+  }
+};
 
 assert.throws(TypeError, function() {
  sample.sort(null);
-});
+}, "sample.sort(null);");
+
+assert.throws(TypeError, function() {
+  [].sort.call(poisoned, null);
+}, "[].sort.call(poisoned, null);");
 
 assert.throws(TypeError, function() {
   sample.sort(true);
-});
+}, "sample.sort(true);");
+
+assert.throws(TypeError, function() {
+  [].sort.call(poisoned, true);
+}, "[].sort.call(poisoned, true);");
 
 assert.throws(TypeError, function() {
   sample.sort(false);
-});
+}, "sample.sort(false);");
+
+assert.throws(TypeError, function() {
+  [].sort.call(poisoned, false);
+}, "[].sort.call(poisoned, false);");
 
 assert.throws(TypeError, function() {
   sample.sort('');
-});
+}, "sample.sort('');");
+
+assert.throws(TypeError, function() {
+  [].sort.call(poisoned, '');
+}, "[].sort.call(poisoned, '');");
 
 assert.throws(TypeError, function() {
   sample.sort(/a/g);
-});
+}, "sample.sort(/a/g);");
+
+assert.throws(TypeError, function() {
+  [].sort.call(poisoned, /a/g);
+}, "[].sort.call(poisoned, /a/g);");
 
 assert.throws(TypeError, function() {
   sample.sort(42);
-});
+}, "sample.sort(42);");
+
+assert.throws(TypeError, function() {
+  [].sort.call(poisoned, 42);
+}, "[].sort.call(poisoned, 42);");
 
 assert.throws(TypeError, function() {
   sample.sort([]);
-});
+}, "sample.sort([]);");
+
+assert.throws(TypeError, function() {
+  [].sort.call(poisoned, []);
+}, "[].sort.call(poisoned, []);");
 
 assert.throws(TypeError, function() {
   sample.sort({});
-});
+}, "sample.sort({});");
+
+assert.throws(TypeError, function() {
+  [].sort.call(poisoned, {});
+}, "[].sort.call(poisoned, {});");
 
 assert.throws(TypeError, function() {
   sample.sort(Symbol());
-});
+}, "sample.sort(Symbol());");
+
+assert.throws(TypeError, function() {
+  [].sort.call(poisoned, Symbol());
+}, "[].sort.call(poisoned, Symbol());");
 
 reportCompare(0, 0);

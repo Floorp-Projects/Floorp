@@ -1,0 +1,238 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+   - post-balrog-dummy
+   - post-beetmover-dummy
+   - release-updates-builder
+
+transforms:
+   - taskgraph.transforms.release_deps:transforms
+   - taskgraph.transforms.update_verify:transforms
+   - taskgraph.transforms.task:transforms
+
+job-defaults:
+   name: update-verify
+   run-on-projects: []  # to make sure this never runs as part of CI
+   shipping-phase: promote
+   worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+   worker:
+      implementation: docker-worker
+      os: linux
+      docker-image:
+         in-tree: "update-verify"
+      max-run-time: 7200
+      retry-exit-status:
+         - 255
+      env:
+         NO_BBCONFIG: "1"
+         BUILD_TOOLS_REPO:
+            by-project:
+               jamun: https://hg.mozilla.org/users/stage-ffxbld/tools
+               maple: https://hg.mozilla.org/users/asasaki_mozilla.com/tools
+               default: https://hg.mozilla.org/build/tools
+   extra:
+      chunks: 12
+   notifications:
+      completed:
+         subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect"]
+               mozilla-release: ["log_collect"]
+               default: []
+
+      failed:
+         subject: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "FAILED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+      exception:
+         subject: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         message: "EXCEPTION: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
+         plugins:
+            by-project:
+               mozilla-beta: ["log_collect", "ses"]
+               mozilla-release: ["log_collect", "ses"]
+               default: ["ses"]
+         emails:
+            by-project:
+               mozilla-beta: ["release-automation-notifications@mozilla.com"]
+               mozilla-release: ["release-automation-notifications@mozilla.com"]
+               try: ["{task_def[metadata][owner]}"]
+               maple: ["release+tcstaging@mozilla.com"]
+               default: []
+
+jobs:
+   firefox-linux64:
+      description: linux64 update verify
+      shipping-product: firefox
+      worker:
+         env:
+            CHANNEL:
+               by-project:
+                  jamun: "beta-localtest"
+                  maple: "beta-localtest"
+                  mozilla-beta: "beta-localtest"
+                  mozilla-release: "release-localtest"
+                  mozilla-esr52: "esr-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  jamun: "beta-firefox-linux64.cfg"
+                  maple: "beta-firefox-linux64.cfg"
+                  mozilla-beta: "beta-firefox-linux64.cfg"
+                  mozilla-release: "release-firefox-linux64.cfg"
+                  mozilla-esr52: "esr-firefox-linux64.cfg"
+                  default: "none"
+      treeherder:
+         symbol: UV
+         platform: linux64/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: linux64
+
+   firefox-linux:
+      description: linux update verify
+      shipping-product: firefox
+      worker:
+         env:
+            CHANNEL:
+               by-project:
+                  jamun: "beta-localtest"
+                  maple: "beta-localtest"
+                  mozilla-beta: "beta-localtest"
+                  mozilla-release: "release-localtest"
+                  mozilla-esr52: "esr-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  jamun: "beta-firefox-linux.cfg"
+                  maple: "beta-firefox-linux.cfg"
+                  mozilla-beta: "beta-firefox-linux.cfg"
+                  mozilla-release: "release-firefox-linux.cfg"
+                  mozilla-esr52: "esr-firefox-linux.cfg"
+                  default: "none"
+      treeherder:
+         symbol: UV
+         platform: linux/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: linux
+
+   firefox-secondary-linux64:
+      description: linux64 secondary channel update verify
+      shipping-product: firefox
+      worker:
+         env:
+            CHANNEL:
+               by-project:
+                  mozilla-release: "beta-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  mozilla-release: "beta-firefox-linux64.cfg"
+                  default: "none"
+      treeherder:
+         symbol: UVS
+         platform: linux64/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: linux64
+
+   firefox-secondary-linux:
+      description: linux secondary channel update verify
+      shipping-product: firefox
+      worker:
+         env:
+            CHANNEL:
+               by-project:
+                  mozilla-release: "beta-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  mozilla-release: "beta-firefox-linux.cfg"
+                  default: "none"
+      treeherder:
+         symbol: UVS
+         platform: linux/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: linux
+
+   devedition-linux64:
+      description: linux64 update verify
+      shipping-product: devedition
+      worker:
+         env:
+            CHANNEL:
+               by-project:
+                  jamun: "aurora-localtest"
+                  maple: "aurora-localtest"
+                  mozilla-aurora: "aurora-localtest"
+                  mozilla-release: "release-localtest"
+                  mozilla-esr52: "esr-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  jamun: "aurora-devedition-linux64.cfg"
+                  maple: "aurora-devedition-linux64.cfg"
+                  mozilla-aurora: "aurora-devedition-linux64.cfg"
+                  mozilla-release: "release-devedition-linux64.cfg"
+                  mozilla-esr52: "esr-devedition-linux64.cfg"
+                  default: "none"
+      treeherder:
+         symbol: UV
+         platform: linux64-devedition/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: linux64-devedition
+
+   devedition-linux:
+      description: linux update verify
+      shipping-product: devedition
+      worker:
+         env:
+            CHANNEL:
+               by-project:
+                  jamun: "aurora-localtest"
+                  maple: "aurora-localtest"
+                  mozilla-aurora: "aurora-localtest"
+                  mozilla-release: "release-localtest"
+                  mozilla-esr52: "esr-localtest"
+                  default: "default"
+            VERIFY_CONFIG:
+               by-project:
+                  jamun: "aurora-devedition-linux.cfg"
+                  maple: "aurora-devedition-linux.cfg"
+                  mozilla-aurora: "aurora-devedition-linux.cfg"
+                  mozilla-release: "release-devedition-linux.cfg"
+                  mozilla-esr52: "esr-devedition-linux.cfg"
+                  default: "none"
+      treeherder:
+         symbol: UV
+         platform: linux-devedition/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: linux-devedition

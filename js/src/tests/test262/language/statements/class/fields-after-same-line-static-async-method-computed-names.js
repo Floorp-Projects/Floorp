@@ -1,11 +1,11 @@
-// |reftest| skip -- class-fields is not supported
+// |reftest| skip -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-fields/computed-names.case
-// - src/class-fields/default/cls-decl-after-same-line-static-async-method.template
+// - src/class-fields/productions/cls-decl-after-same-line-static-async-method.template
 /*---
 description: Computed property names (field definitions after a static async method in the same line)
 esid: prod-FieldDefinition
-features: [computed-property-names, class-fields, async-functions]
+features: [computed-property-names, class, class-fields-public, async-functions]
 flags: [generated, async]
 includes: [propertyHelper.js]
 info: |
@@ -26,6 +26,7 @@ var x = "b";
 
 class C {
   static async m() { return 42; } static ["a"] = 39; [x] = 42; [10] = "meep"; ["not initialized"];
+
 }
 
 var c = new C();

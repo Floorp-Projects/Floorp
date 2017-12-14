@@ -30,7 +30,7 @@
 #include "nsISupportsBase.h"            // for nsISupports
 #include "nsISupportsUtils.h"           // for NS_IF_ADDREF, NS_ADDREF, etc
 #include "nsITextServicesFilter.h"      // for nsITextServicesFilter
-#include "nsIWordBreaker.h"             // for nsWordRange, nsIWordBreaker
+#include "mozilla/intl/WordBreaker.h"   // for WordRange, WordBreaker
 #include "nsRange.h"                    // for nsRange
 #include "nsStaticAtom.h"               // for NS_STATIC_ATOM_SETUP, etc
 #include "nsString.h"                   // for nsString, nsAutoString
@@ -3154,8 +3154,8 @@ nsTextServicesDocument::FindWordBounds(nsTArray<OffsetEntry*> *aOffsetTable,
   const char16_t *str = aBlockStr->get();
   uint32_t strLen = aBlockStr->Length();
 
-  nsIWordBreaker* wordBreaker = nsContentUtils::WordBreaker();
-  nsWordRange res = wordBreaker->FindWord(str, strLen, strOffset);
+  mozilla::intl::WordBreaker* wordBreaker = nsContentUtils::WordBreaker();
+  mozilla::intl::WordRange res = wordBreaker->FindWord(str, strLen, strOffset);
   if (res.mBegin > strLen) {
     return str ? NS_ERROR_ILLEGAL_VALUE : NS_ERROR_NULL_POINTER;
   }

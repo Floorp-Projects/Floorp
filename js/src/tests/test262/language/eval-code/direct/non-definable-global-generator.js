@@ -20,6 +20,7 @@ info: >
           c. If fnDefinable is false, throw TypeError exception.
         ...
 flags: [noStrict]
+features: [generators]
 ---*/
 
 var error;

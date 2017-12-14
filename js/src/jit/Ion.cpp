@@ -739,6 +739,18 @@ JitRuntime::getVMWrapper(const VMFunction& f) const
     return trampolineCode(p->value());
 }
 
+void
+JitCodeHeader::init(JitCode* jitCode)
+{
+    jitCode_ = jitCode;
+
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    // On AMD Bobcat processors that may have eratas, insert a NOP slide to reduce crashes
+    if (CPUInfo::NeedAmdBugWorkaround())
+        memset((char *)&nops_, X86Encoding::OneByteOpcodeID::OP_NOP, sizeof(nops_));
+#endif
+}
+
 template <AllowGC allowGC>
 JitCode*
 JitCode::New(JSContext* cx, uint8_t* code, uint32_t bufferSize, uint32_t headerSize,
@@ -767,9 +779,10 @@ JitCode::New<NoGC>(JSContext* cx, uint8_t* code, uint32_t bufferSize, uint32_t h
 void
 JitCode::copyFrom(MacroAssembler& masm)
 {
-    // Store the JitCode pointer right before the code buffer, so we can
-    // recover the gcthing from relocation tables.
-    *(JitCode**)(code_ - sizeof(JitCode*)) = this;
+    // Store the JitCode pointer in the JitCodeHeader so we can recover the
+    // gcthing from relocation tables.
+    JitCodeHeader::FromExecutable(code_)->init(this);
+
     insnSize_ = masm.instructionsSize();
     masm.executableCopy(code_);
 

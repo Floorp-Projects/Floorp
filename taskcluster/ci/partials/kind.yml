@@ -5,19 +5,27 @@
 loader: taskgraph.loader.single_dep:loader
 
 transforms:
-  - taskgraph.transforms.name_sanity:transforms
-  - taskgraph.transforms.partials:transforms
-  - taskgraph.transforms.task:transforms
+   - taskgraph.transforms.name_sanity:transforms
+   - taskgraph.transforms.partials:transforms
+   - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-  - repackage-signing
+   - repackage-signing
 
 only-for-attributes:
-  - nightly
+   - nightly
 
 only-for-build-platforms:
-  - macosx64-nightly/opt
-  - win32-nightly/opt
-  - win64-nightly/opt
-  - linux-nightly/opt
-  - linux64-nightly/opt
+   - macosx64-nightly/opt
+   - macosx64-devedition-nightly/opt
+   - win32-nightly/opt
+   - win32-devedition-nightly/opt
+   - win64-nightly/opt
+   - win64-devedition-nightly/opt
+   - linux-nightly/opt
+   - linux-devedition-nightly/opt
+   - linux64-nightly/opt
+   - linux64-devedition-nightly/opt
+
+job-template:
+   shipping-phase: promote

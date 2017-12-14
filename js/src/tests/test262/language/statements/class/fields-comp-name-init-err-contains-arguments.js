@@ -1,11 +1,11 @@
-// |reftest| skip error:SyntaxError -- class-fields is not supported
+// |reftest| skip error:SyntaxError -- class-fields-public is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-fields/init-err-contains-arguments.case
 // - src/class-fields/initializer-error/cls-decl-fields-comp-name.template
 /*---
 description: Syntax error if `arguments` used in class field (computed ClassElementName)
 esid: sec-class-definitions-static-semantics-early-errors
-features: [class-fields]
+features: [class, class-fields-public]
 flags: [generated]
 negative:
   phase: early
