@@ -119,6 +119,7 @@ const UPDATE_PROPS = [
   "transferredSize",
   "totalTime",
   "eventTimings",
+  "eventTimingsAvailable",
   "headersSize",
   "customQueryValue",
   "requestHeaders",

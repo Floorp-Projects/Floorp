@@ -313,7 +313,7 @@ class FirefoxDataProvider {
    * @param {object} packet the message received from the server.
    * @param {object} networkInfo the network request information.
    */
-  async onNetworkEventUpdate(type, data) {
+  onNetworkEventUpdate(type, data) {
     let { packet, networkInfo } = data;
     let { actor } = networkInfo;
     let { updateType } = packet;
@@ -345,10 +345,9 @@ class FirefoxDataProvider {
         // in Console panel is using this method to fetch data when network log
         // is expanded. So, make sure to not push undefined into the payload queue
         // (it could overwrite an existing value).
-        if (typeof networkInfo.totalTime != "undefined") {
+        if (typeof networkInfo.totalTime !== "undefined") {
           this.pushRequestToQueue(actor, { totalTime: networkInfo.totalTime });
         }
-        await this._requestData(actor, updateType);
         break;
     }
 
