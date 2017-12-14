@@ -34,7 +34,9 @@ child:
   async __delete__(IPCBlobOrError aBlobOrError);
 
 parent:
-  async OperationDone(bool aSuccess, nsCString aContentType);
+  async OperationFailed();
+
+  async OperationDone(nsCString aContentType, FileDescriptor aFD);
 };
 
 } // namespace dom
