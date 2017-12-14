@@ -330,9 +330,6 @@ public class GeckoSession extends LayerSession
         }
 
         @WrapForJNI(dispatchTo = "proxy")
-        public native void attach(GeckoView view);
-
-        @WrapForJNI(dispatchTo = "proxy")
         public native void attachEditable(IGeckoEditableParent parent,
                                           GeckoEditableChild child);
 
@@ -514,20 +511,6 @@ public class GeckoSession extends LayerSession
 
         if (mTextInput != null) {
             mTextInput.onWindowReady(mNativeQueue, mWindow);
-        }
-    }
-
-    public void attachView(final GeckoView view) {
-        if (view == null) {
-            return;
-        }
-
-        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            mWindow.attach(view);
-        } else {
-            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                    mWindow, "attach",
-                    GeckoView.class, view);
         }
     }
 
