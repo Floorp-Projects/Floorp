@@ -552,8 +552,6 @@ import android.view.inputmethod.InputMethodManager;
         if (mIMEState == IME_STATE_PASSWORD ||
             "password".equalsIgnoreCase(mIMETypeHint))
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_PASSWORD;
-        else if (mIMEState == IME_STATE_PLUGIN)
-            outAttrs.inputType = InputType.TYPE_NULL; // "send key events" mode
         else if (mIMETypeHint.equalsIgnoreCase("url") ||
                  mIMETypeHint.equalsIgnoreCase("mozAwesomebar"))
             outAttrs.inputType |= InputType.TYPE_TEXT_VARIATION_URI;
@@ -639,12 +637,6 @@ import android.view.inputmethod.InputMethodManager;
             Log.d(LOGTAG, "IME: CurrentInputMethod=" + mCurrentInputMethod);
         }
 
-        if (mIMEState == IME_STATE_PLUGIN) {
-            // Since we are using a temporary string as the editable, the selection is at 0
-            outAttrs.initialSelStart = 0;
-            outAttrs.initialSelEnd = 0;
-            return mKeyInputConnection;
-        }
         Editable editable = getEditable();
         outAttrs.initialSelStart = Selection.getSelectionStart(editable);
         outAttrs.initialSelEnd = Selection.getSelectionEnd(editable);
@@ -770,8 +762,7 @@ import android.view.inputmethod.InputMethodManager;
     }
 
     private boolean shouldSkipKeyListener(int keyCode, KeyEvent event) {
-        if (mIMEState == IME_STATE_DISABLED ||
-            mIMEState == IME_STATE_PLUGIN) {
+        if (mIMEState == IME_STATE_DISABLED) {
             return true;
         }
         // Preserve enter and tab keys for the browser
@@ -921,7 +912,7 @@ import android.view.inputmethod.InputMethodManager;
 
     @Override // TextInputController.Delegate
     public synchronized boolean isInputActive() {
-        // make sure this picks up PASSWORD and PLUGIN states as well
+        // Make sure this picks up PASSWORD state as well.
         return mIMEState != IME_STATE_DISABLED;
     }
 
