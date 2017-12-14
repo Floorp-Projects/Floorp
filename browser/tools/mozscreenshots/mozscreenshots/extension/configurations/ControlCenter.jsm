@@ -13,6 +13,7 @@ Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://testing-common/BrowserTestUtils.jsm");
 Cu.import("resource:///modules/SitePermissions.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 let {UrlClassifierTestUtils} = Cu.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});
 
@@ -259,6 +260,10 @@ async function openIdentityPopup(expand) {
   let gBrowser = browserWindow.gBrowser;
   let { gIdentityHandler } = gBrowser.ownerGlobal;
   gIdentityHandler._identityPopup.hidePopup();
+  // Disable the popup shadow on OSX until we have figured out bug 1425253.
+  if (AppConstants.platform == "macosx") {
+    gIdentityHandler._identityPopup.style["-moz-window-shadow"] = "none";
+  }
   gIdentityHandler._identityBox.querySelector("#identity-icon").click();
   if (expand) {
     // give some time for opening to avoid weird style issues
