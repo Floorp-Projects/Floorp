@@ -12,6 +12,8 @@ SPHINX_TREES['buildsystem'] = 'docs'
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['win32']
+    if CONFIG['WIN64_CARGO_LINKER']:
+        CONFIGURE_SUBST_FILES += ['win64/cargo-linker.bat']
 else:
     DIRS += ['unix']
 
