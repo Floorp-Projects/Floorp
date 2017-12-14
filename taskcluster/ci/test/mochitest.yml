@@ -144,11 +144,11 @@ browser-screenshots:
     loopback-video: true
     run-on-projects:
         by-test-platform:
-            windows.*/opt: ['mozilla-central', 'integration']
+            # We don't want debug, pgo, devedition or nightly builds
+            windows7-32/opt: ['mozilla-central', 'integration']
+            windows10-64/opt: ['mozilla-central', 'integration']
             linux64/opt: ['mozilla-central', 'integration']
-            macosx.*/opt: ['mozilla-central', 'integration']
-            windows7-32-devedition/opt: []
-            windows10-64-devedition/opt: []
+            macosx64/opt: ['mozilla-central', 'integration']
             default: []
     max-run-time: 3600
     mozharness:
