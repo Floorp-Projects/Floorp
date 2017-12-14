@@ -10717,9 +10717,8 @@ static bool
 FrameWantsToBeInAnonymousItem(const nsIFrame* aContainerFrame,
                               const nsIFrame* aFrame)
 {
-  LayoutFrameType containerType = aContainerFrame->Type();
-  MOZ_ASSERT(containerType == LayoutFrameType::FlexContainer ||
-             containerType == LayoutFrameType::GridContainer);
+  MOZ_ASSERT(aContainerFrame->Type() == LayoutFrameType::FlexContainer ||
+             aContainerFrame->Type() == LayoutFrameType::GridContainer);
 
   // Any line-participant frames (e.g. text) definitely want to be wrapped in
   // an anonymous flex/grid item.
@@ -10729,8 +10728,7 @@ FrameWantsToBeInAnonymousItem(const nsIFrame* aContainerFrame,
 
   // If the container is a -webkit-box/-webkit-inline-box, then placeholders
   // also need to be wrapped, for compatibility.
-  if (containerType == LayoutFrameType::FlexContainer &&
-      aContainerFrame->HasAnyStateBits(NS_STATE_FLEX_IS_LEGACY_WEBKIT_BOX) &&
+  if (IsFlexContainerForLegacyBox(aContainerFrame) &&
       aFrame->IsPlaceholderFrame()) {
     return true;
   }
