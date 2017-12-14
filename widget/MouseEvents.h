@@ -36,17 +36,6 @@ namespace dom {
   class PBrowserChild;
 } // namespace dom
 
-class WidgetPointerEvent;
-class WidgetPointerEventHolder final
-{
-public:
-  nsTArray<WidgetPointerEvent> mEvents;
-  NS_INLINE_DECL_REFCOUNTING(WidgetPointerEventHolder)
-
-private:
-  virtual ~WidgetPointerEventHolder() {}
-};
-
 /******************************************************************************
  * mozilla::WidgetPointerHelper
  ******************************************************************************/
@@ -60,7 +49,6 @@ public:
   uint32_t twist;
   float tangentialPressure;
   bool convertToPointer;
-  RefPtr<WidgetPointerEventHolder> mCoalescedWidgetEvents;
 
   WidgetPointerHelper()
     : pointerId(0)
@@ -83,19 +71,7 @@ public:
   {
   }
 
-  explicit WidgetPointerHelper(const WidgetPointerHelper& aHelper)
-    : pointerId(aHelper.pointerId)
-    , tiltX(aHelper.tiltX)
-    , tiltY(aHelper.tiltY)
-    , twist(aHelper.twist)
-    , tangentialPressure(aHelper.tangentialPressure)
-    , convertToPointer(aHelper.convertToPointer)
-    , mCoalescedWidgetEvents(aHelper.mCoalescedWidgetEvents)
-  {
-  }
-
-  void AssignPointerHelperData(const WidgetPointerHelper& aEvent,
-                               bool aCopyCoalescedEvents = false)
+  void AssignPointerHelperData(const WidgetPointerHelper& aEvent)
   {
     pointerId = aEvent.pointerId;
     tiltX = aEvent.tiltX;
@@ -103,9 +79,6 @@ public:
     twist = aEvent.twist;
     tangentialPressure = aEvent.tangentialPressure;
     convertToPointer = aEvent.convertToPointer;
-    if (aCopyCoalescedEvents) {
-      mCoalescedWidgetEvents = aEvent.mCoalescedWidgetEvents;
-    }
   }
 };
 
@@ -345,7 +318,7 @@ public:
   void AssignMouseEventData(const WidgetMouseEvent& aEvent, bool aCopyTargets)
   {
     AssignMouseEventBaseData(aEvent, aCopyTargets);
-    AssignPointerHelperData(aEvent, /* aCopyCoalescedEvents */ true);
+    AssignPointerHelperData(aEvent);
 
     mIgnoreRootScrollFrame = aEvent.mIgnoreRootScrollFrame;
     mClickCount = aEvent.mClickCount;
