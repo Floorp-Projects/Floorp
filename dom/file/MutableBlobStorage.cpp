@@ -302,8 +302,6 @@ public:
   {
     MOZ_ASSERT(!NS_IsMainThread());
 
-    mBlobStorage->CloseFD();
-
     RefPtr<Runnable> runnable =
       new CreateBlobRunnable(mBlobStorage, mParent.forget(),
                              mContentType, mCallback.forget());
@@ -593,7 +591,7 @@ MutableBlobStorage::TemporaryFileCreated(PRFileDesc* aFD)
     Unused << DispatchToIOThread(runnable.forget());
 
     // Let's inform the parent that we have nothing else to do.
-    mActor->SendOperationDone(false, EmptyCString());
+    mActor->SendOperationFailed();
     mActor = nullptr;
     return;
   }
@@ -644,11 +642,21 @@ MutableBlobStorage::AskForBlob(TemporaryIPCBlobChildCallback* aCallback,
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mStorageState == eClosed);
-  MOZ_ASSERT(!mFD);
+  MOZ_ASSERT(mFD);
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(aCallback);
 
-  mActor->AskForBlob(aCallback, aContentType);
+  // Let's pass the FileDescriptor to the parent actor in order to keep the file
+  // locked on windows.
+  mActor->AskForBlob(aCallback, aContentType, mFD);
+
+  // The previous operation has duplicated the file descriptor. Now we can close
+  // mFD. The parent will take care of closing the duplicated file descriptor on
+  // its side.
+  RefPtr<Runnable> runnable = new CloseFileRunnable(mFD);
+  Unused << DispatchToIOThread(runnable.forget());
+
+  mFD = nullptr;
   mActor = nullptr;
 }
 
@@ -659,7 +667,7 @@ MutableBlobStorage::ErrorPropagated(nsresult aRv)
   mErrorResult = aRv;
 
   if (mActor) {
-    mActor->SendOperationDone(false, EmptyCString());
+    mActor->SendOperationFailed();
     mActor = nullptr;
   }
 }

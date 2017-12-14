@@ -55,23 +55,36 @@ TemporaryIPCBlobParent::CreateAndShareFile()
 }
 
 mozilla::ipc::IPCResult
-TemporaryIPCBlobParent::RecvOperationDone(const bool& aSuccess,
-                                          const nsCString& aContentType)
+TemporaryIPCBlobParent::RecvOperationFailed()
 {
   MOZ_ASSERT(mActive);
   mActive = false;
 
-  if (!aSuccess) {
-    // Nothing to do.
-    Unused << Send__delete__(this, NS_ERROR_FAILURE);
-    return IPC_OK();
-  }
+  // Nothing to do.
+  Unused << Send__delete__(this, NS_ERROR_FAILURE);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+TemporaryIPCBlobParent::RecvOperationDone(const nsCString& aContentType,
+                                          const FileDescriptor& aFD)
+{
+  MOZ_ASSERT(mActive);
+  mActive = false;
+
+  // We have received a file descriptor because in this way we have kept the
+  // file locked on windows during the IPC communication. After the creation of
+  // the TemporaryFileBlobImpl, this prfile can be closed.
+  auto rawFD = aFD.ClonePlatformHandle();
+  PRFileDesc* prfile = PR_ImportFile(PROsfd(rawFD.release()));
 
   // Let's create the BlobImpl.
   nsCOMPtr<nsIFile> file = Move(mFile);
 
   RefPtr<TemporaryFileBlobImpl> blobImpl =
     new TemporaryFileBlobImpl(file, NS_ConvertUTF8toUTF16(aContentType));
+
+  PR_Close(prfile);
 
   IPCBlob ipcBlob;
   nsresult rv = IPCBlobUtils::Serialize(blobImpl, Manager(), ipcBlob);
