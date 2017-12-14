@@ -15,6 +15,9 @@ if [ -d "${VSPATH}" ]; then
 
     export INCLUDE="${VSPATH}/VC/include:${VSPATH}/VC/atlmfc/include:${VSPATH}/SDK/Include/10.0.15063.0/ucrt:${VSPATH}/SDK/Include/10.0.15063.0/shared:${VSPATH}/SDK/Include/10.0.15063.0/um:${VSPATH}/SDK/Include/10.0.15063.0/winrt:${VSPATH}/DIA SDK/include"
     export LIB="${VSPATH}/VC/lib/x86:${VSPATH}/VC/atlmfc/lib/x86:${VSPATH}/SDK/Lib/10.0.15063.0/ucrt/x86:${VSPATH}/SDK/Lib/10.0.15063.0/um/x86:${VSPATH}/DIA SDK/lib"
+
+    export WIN64_LINK="${VSPATH}/VC/bin/Hostx64/x64/link.exe"
+    export WIN64_LIB="${VSPATH}/VC/lib/x64:${VSPATH}/VC/atlmfc/lib/x64:${VSPATH}/SDK/Lib/10.0.15063.0/ucrt/x64:${VSPATH}/SDK/Lib/10.0.15063.0/um/x64:${VSPATH}/DIA SDK/lib/amd64"
 fi
 
 . $topsrcdir/build/mozconfig.vs-common
