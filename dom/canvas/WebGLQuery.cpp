@@ -205,9 +205,6 @@ WebGLQuery::GetQueryParameter(GLenum pname, JS::MutableHandleValue retval) const
         switch (mTarget) {
         case LOCAL_GL_ANY_SAMPLES_PASSED:
         case LOCAL_GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
-            retval.set(JS::BooleanValue(bool(val)));
-            break;
-
         case LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
         case LOCAL_GL_TIME_ELAPSED_EXT:
         case LOCAL_GL_TIMESTAMP_EXT:
