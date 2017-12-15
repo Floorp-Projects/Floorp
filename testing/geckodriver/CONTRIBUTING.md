@@ -124,12 +124,11 @@ you put this in your [mozconfig]:
 
 When you have, you are ready to start off your first build:
 
-	% ./mach geckodriver build
+	% ./mach build testing/geckodriver
 
-The geckodriver executable will appear in `${objdir}/dist/bin/geckodriver`
-alongside firefox-bin.  To run it you can use mach:
+To run the executable from the objdir:
 
-	% ./mach geckodriver run -- --version
+	% ./mach geckodriver -- --version
 	 0:00.27 /home/ato/src/gecko/obj-x86_64-pc-linux-gnu/dist/bin/geckodriver --version --binary /home/ato/src/gecko/obj-x86_64-pc-linux-gnu/dist/bin/firefox
 	geckodriver 0.19.0 (f3e939a81ee1169f9501ad96eb43bbf4bf4a1bde 2017-10-11)
 
@@ -155,9 +154,9 @@ compatibility between _different_ WebDriver implementations for
 different browsers.
 
 In addition to the WPT tests, geckodriver and webdriver have unit tests.
-You can also use the mach geckodriver command to run geckodriver tests:
+You can use a mach command to run them:
 
-	% ./mach geckodriver test
+	% ./mach test testing/geckodriver
 
 The webdriver crate tests are unfortunately not yet runnable through mach.
 Work to make this possible is tracked in [[https://bugzil.la/1424369]].

@@ -22,17 +22,11 @@ from mozbuild.base import (
 
 
 @CommandProvider
-class GeckoDriver(MachCommandBase):
+class GeckoDriover(MachCommandBase):
 
     @Command("geckodriver",
         category="post-build",
-        description="WebDriver implementation for Gecko",
-        conditions=[conditions.is_firefox])
-    def geckodriver(self):
-        pass
-
-    @SubCommand("geckodriver", "run",
-        description="Run geckodriver.")
+        description="Run the WebDriver implementation for Gecko.")
     @CommandArgument("--binary", type=str,
         help="Firefox binary (defaults to the local build).")
     @CommandArgument("params", nargs="...",
@@ -98,26 +92,16 @@ class GeckoDriver(MachCommandBase):
         return self.run_process(args=args, ensure_exit_code=False,
             pass_thru=True)
 
-    @SubCommand("geckodriver", "build",
-        description="Build geckodriver.")
-    @CommandArgument("-v", "--verbose", action="store_true",
-        help="Verbose output for what commands the build is running.")
-    def build(self, verbose=False):
-        from mozbuild.controller.building import BuildDriver
 
-        self.log_manager.enable_all_structured_loggers()
+@CommandProvider
+class GeckoDriverTest(MachCommandBase):
 
-        driver = self._spawn(BuildDriver)
-        return driver.build(
-            what=["testing/geckodriver"],
-            verbose=verbose,
-            mach_context=self._mach_context)
-
-    @SubCommand("geckodriver", "test",
+    @Command("geckodriver-test",
+        category="post-build",
         description="Run geckodriver unit tests.")
     @CommandArgument("-v", "--verbose", action="store_true",
         help="Verbose output for what commands the build is running.")
-    def test(self, verbose=False):
+    def test(self, verbose=False, **kwargs):
         from mozbuild.controller.building import BuildDriver
 
         self.log_manager.enable_all_structured_loggers()
