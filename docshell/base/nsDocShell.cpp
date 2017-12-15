@@ -749,24 +749,37 @@ DecreasePrivateDocShellCount()
 
 nsDocShell::nsDocShell()
   : nsDocLoader()
-  , mDefaultScrollbarPref(Scrollbar_Auto, Scrollbar_Auto)
-  , mReferrerPolicy(0)
-  , mFailedLoadType(0)
+  , mForcedCharset(nullptr)
+  , mParentCharset(nullptr)
   , mTreeOwner(nullptr)
   , mChromeEventHandler(nullptr)
+  , mDefaultScrollbarPref(Scrollbar_Auto, Scrollbar_Auto)
   , mCharsetReloadState(eCharsetReloadInit)
-  , mChildOffset(0)
-  , mBusyFlags(BUSY_FLAGS_NONE)
-  , mAppType(nsIDocShell::APP_TYPE_UNKNOWN)
-  , mLoadType(0)
+  , mOrientationLock(eScreenOrientation_None)
+  , mParentCharsetSource(0)
   , mMarginWidth(-1)
   , mMarginHeight(-1)
   , mItemType(typeContent)
   , mPreviousTransIndex(-1)
   , mLoadedTransIndex(-1)
+  , mChildOffset(0)
   , mSandboxFlags(0)
-  , mOrientationLock(eScreenOrientation_None)
+  , mBusyFlags(BUSY_FLAGS_NONE)
+  , mAppType(nsIDocShell::APP_TYPE_UNKNOWN)
+  , mLoadType(0)
+  , mDefaultLoadFlags(nsIRequest::LOAD_NORMAL)
+  , mReferrerPolicy(0)
+  , mFailedLoadType(0)
+  , mFrameType(FRAME_TYPE_REGULAR)
+  , mPrivateBrowsingId(0)
+  , mDisplayMode(nsIDocShell::DISPLAY_MODE_BROWSER)
+  , mJSRunToCompletionDepth(0)
+  , mTouchEventsOverride(nsIDocShell::TOUCHEVENTS_OVERRIDE_NONE)
   , mFullscreenAllowed(CHECK_ATTRIBUTES)
+  , mCreatingDocument(false)
+#ifdef DEBUG
+  , mInEnsureScriptEnv(false)
+#endif
   , mCreated(false)
   , mAllowSubframes(true)
   , mAllowPlugins(true)
@@ -807,19 +820,6 @@ nsDocShell::nsDocShell()
   , mInvisible(false)
   , mHasLoadedNonBlankURI(false)
   , mBlankTiming(false)
-  , mCreatingDocument(false)
-#ifdef DEBUG
-  , mInEnsureScriptEnv(false)
-#endif
-  , mDefaultLoadFlags(nsIRequest::LOAD_NORMAL)
-  , mFrameType(FRAME_TYPE_REGULAR)
-  , mPrivateBrowsingId(0)
-  , mDisplayMode(nsIDocShell::DISPLAY_MODE_BROWSER)
-  , mForcedCharset(nullptr)
-  , mParentCharset(nullptr)
-  , mParentCharsetSource(0)
-  , mJSRunToCompletionDepth(0)
-  , mTouchEventsOverride(nsIDocShell::TOUCHEVENTS_OVERRIDE_NONE)
 {
   AssertOriginAttributesMatchPrivateBrowsing();
 
@@ -5490,7 +5490,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
 
 #define PREF_SAFEBROWSING_ALLOWOVERRIDE "browser.safebrowsing.allowOverride"
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
                           const char* aErrorPage,
                           const char* aErrorType,
@@ -13721,7 +13721,7 @@ nsDocShell::ConfirmRepost(bool* aRepost)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::GetPromptAndStringBundle(nsIPrompt** aPrompt,
                                      nsIStringBundle** aStringBundle)
 {
@@ -13776,7 +13776,7 @@ nsDocShell::GetRootScrollFrame()
   return shell->GetRootScrollFrameAsScrollable();
 }
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::EnsureScriptEnvironment()
 {
   if (mScriptGlobal) {
@@ -13815,7 +13815,7 @@ nsDocShell::EnsureScriptEnvironment()
   return mScriptGlobal->EnsureScriptEnvironment();
 }
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::EnsureEditorData()
 {
   bool openDocHasDetachedEditor = mOSHE && mOSHE->HasDetachedEditor();
@@ -13840,7 +13840,7 @@ nsDocShell::EnsureTransferableHookData()
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDocShell::EnsureFind()
 {
   nsresult rv;
