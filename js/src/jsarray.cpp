@@ -171,7 +171,7 @@ ToLength(JSContext* cx, HandleValue v, uint64_t* out)
     return true;
 }
 
-static bool
+static MOZ_ALWAYS_INLINE bool
 GetLengthProperty(JSContext* cx, HandleObject obj, uint64_t* lengthp)
 {
     if (obj->is<ArrayObject>()) {
