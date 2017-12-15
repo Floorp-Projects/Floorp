@@ -2383,6 +2383,16 @@
     "labels": ["NotSent", "CachedContentUsed", "CachedContentNotUsed"],
     "description": "Stats for validation requests when cache won the race."
   },
+  "NETWORK_HTTP_REDIRECT_TO_SCHEME" :{
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "seceng-telemetry@mozilla.com", "jkt@mozilla.com"],
+    "bug_numbers": [1413512],
+    "expires_in_version": "64",
+    "kind": "categorical",
+    "keyed": true,
+    "description": "Count of the HTTP redirection that triggered by top-level document or by subresource, keyed by the URL scheme redirected to.",
+    "labels": ["topLevel", "subresource"]
+  },
   "HTTP_AUTH_DIALOG_STATS_3": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "61",
