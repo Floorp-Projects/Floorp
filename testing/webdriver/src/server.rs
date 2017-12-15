@@ -25,7 +25,7 @@ enum DispatchMessage<U: WebDriverExtensionRoute> {
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Session {
-    pub id: String
+    id: String
 }
 
 impl Session {
