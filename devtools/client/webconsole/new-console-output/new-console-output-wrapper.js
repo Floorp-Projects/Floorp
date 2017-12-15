@@ -211,8 +211,8 @@ NewConsoleOutputWrapper.prototype = {
         { store },
         dom.div(
           {className: "webconsole-output-wrapper"},
-          consoleOutput,
           filterBar,
+          consoleOutput,
           sideBar
         ));
       this.body = ReactDOM.render(provider, this.parentNode);
