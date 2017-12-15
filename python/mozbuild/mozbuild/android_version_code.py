@@ -16,7 +16,7 @@ V1_CUTOFF = 20150801000000 # YYYYmmddHHMMSS
 def android_version_code_v0(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
     base = int(str(buildid)[:10])
     # None is interpreted as arm.
-    if not cpu_arch or cpu_arch in ['armeabi', 'armeabi-v7a']:
+    if not cpu_arch or cpu_arch == 'armeabi-v7a':
         # Increment by MIN_SDK_VERSION -- this adds 9 to every build ID as a
         # minimum.  Our split APK starts at 15.
         return base + min_sdk + 0
@@ -114,7 +114,7 @@ def android_version_code_v1(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
     version |= base << 3
 
     # None is interpreted as arm.
-    if not cpu_arch or cpu_arch in ['armeabi', 'armeabi-v7a']:
+    if not cpu_arch or cpu_arch == 'armeabi-v7a':
         # 0 is interpreted as SDK 9.
         if not min_sdk or min_sdk == 9:
             pass
