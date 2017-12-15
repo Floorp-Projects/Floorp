@@ -167,66 +167,29 @@ treecolpicker {
   -moz-appearance: treeheadercell;
   -moz-box-align: center;
   -moz-box-pack: center;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
-  background-color: -moz-Dialog;
   color: -moz-DialogText;
-  padding: 0px 4px;
+  padding: 0 4px;
 }
 
 .treecol-image {
-  padding: 0px 1px;
+  padding: 0 1px;
 }
 
 .treecol-text {
-  margin: 0px !important;
+  margin: 0 !important;
 }
 
 treecol[hideheader="true"] {
   -moz-appearance: none;
   border: none;
   padding: 0;
-  max-height: 0px;
-}
-
-/* ..... internal box ..... */
-
-treecol:hover:active,
-treecolpicker:hover:active {
-  border-top: 2px solid;
-  border-bottom: 1px solid;
-  border-inline-start: 2px solid;
-  border-inline-end: 1px solid;
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-right-colors: ThreeDDarkShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
-  background-color: #666666;
+  max-height: 0;
 }
 
 /* ::::: column drag and drop styles ::::: */
 
 treecol[dragging="true"] {
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow !important;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow!important;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow !important;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow !important;
-  padding: 0px 4px !important;
-  background-color: ThreeDShadow !important;
-  color: ThreeDHighlight !important;
-}
-
-treecol[insertafter="true"]:-moz-locale-dir(ltr),
-treecol[insertbefore="true"]:-moz-locale-dir(rtl) {
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-}
-
-treecol[insertafter="true"]:-moz-locale-dir(rtl),
-treecol[insertbefore="true"]:-moz-locale-dir(ltr) {
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
+  color: GrayText;
 }
 
 treechildren::-moz-tree-column(insertbefore) {
