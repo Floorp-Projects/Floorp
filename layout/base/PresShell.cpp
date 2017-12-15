@@ -9010,7 +9010,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
                                          target->GetView(), rcx,
                                          nsContainerFrame::SET_ASYNC);
 
-  target->DidReflow(mPresContext, nullptr, nsDidReflowStatus::FINISHED);
+  target->DidReflow(mPresContext, nullptr);
   if (target == rootFrame && size.BSize(wm) == NS_UNCONSTRAINEDSIZE) {
     mPresContext->SetVisibleArea(boundsRelativeToTarget);
   }

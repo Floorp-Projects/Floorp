@@ -1,0 +1,96 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test updating a service worker with a bad script cache.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script src='utils.js'></script>
+<script class="testbody" type="text/javascript">
+
+async function deleteCaches(cacheStorage) {
+  let keyList = await cacheStorage.keys();
+  let promiseList = [];
+  keyList.forEach(key => {
+    promiseList.push(cacheStorage.delete(key));
+  });
+  return await Promise.all(keyList);
+}
+
+function waitForUpdate(reg) {
+  return new Promise(resolve => {
+    reg.addEventListener('updatefound', resolve, { once: true });
+  });
+}
+
+async function runTest() {
+  let reg;
+  try {
+    const script = 'update_worker.sjs';
+    const scope = 'bad-script-cache';
+
+    reg = await navigator.serviceWorker.register(script, { scope: scope });
+    await waitForState(reg.installing, 'activated');
+
+    // Verify the service worker script cache has the worker script stored.
+    let chromeCaches = SpecialPowers.createChromeCache('chrome', window.origin);
+    let scriptURL = new URL(script, window.location.href);
+    let response = await chromeCaches.match(scriptURL.href);
+    is(response.url, scriptURL.href, 'worker script should be stored');
+
+    // Force delete the service worker script out from under the service worker.
+    // Note: Prefs are set to kill the SW thread immediately on idle.
+    await deleteCaches(chromeCaches);
+
+    // Verify the service script cache no longer knows about the worker script.
+    response = await chromeCaches.match(scriptURL.href);
+    is(response, undefined, 'worker script should not be stored');
+
+    // Force an update and wait for it to fire an update event.
+    reg.update();
+    await waitForUpdate(reg);
+    await waitForState(reg.installing, 'activated');
+
+    // Verify that the script cache knows about the worker script again.
+    response = await chromeCaches.match(scriptURL.href);
+    is(response.url, scriptURL.href, 'worker script should be stored');
+  } catch (e) {
+    ok(false, e);
+  }
+  if (reg) {
+    await reg.unregister();
+  }
+
+  // If this test is run on windows and the process shuts down immediately after, then
+  // we may fail to remove some of the Cache API body files.  This is because the GC
+  // runs late causing Cache API to cleanup after shutdown begins.  It seems something
+  // during shutdown scans these files and conflicts with removing the file on windows.
+  //
+  // To avoid this we perform an explict GC here to ensure that Cache API can cleanup
+  // earlier.
+  await new Promise(resolve => SpecialPowers.exactGC(resolve));
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [
+  // standard prefs
+  ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+  ["dom.serviceWorkers.enabled", true],
+  ["dom.serviceWorkers.testing.enabled", true],
+  ["dom.caches.enabled", true],
+
+  // immediately kill the service worker thread when idle
+  ["dom.serviceWorkers.idle_timeout", 0],
+
+]}, runTest);
+</script>
+</pre>
+</body>
+</html>

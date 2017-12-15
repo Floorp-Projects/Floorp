@@ -10,12 +10,14 @@ function run_test() {
   epsb.do_check_true = do_check_true;
   epsb.do_check_eq = do_check_eq;
   subsb.do_check_true = do_check_true;
+  subsb.do_check_eq = do_check_eq;
 
   // Exporting should work if prinicipal of the source sandbox
   // subsumes the principal of the target sandbox.
   Cu.evalInSandbox("(" + function() {
     var wasCalled = false;
     this.funToExport = function(expectedThis, a, obj, native, mixed, callback) {
+      do_check_eq(arguments.callee.length, 6);
       do_check_eq(a, 42);
       do_check_eq(obj, subsb.tobecloned);
       do_check_eq(obj.cloned, "cloned");
@@ -53,6 +55,7 @@ function run_test() {
     invokedCallback = false;
     callback = function() { invokedCallback = true; };
     imported(this, 42, tobecloned, native, mixed, callback);
+    do_check_eq(imported.length, 6);
     do_check_true(invokedCallback);
   }.toSource() + ")()", subsb);
 
