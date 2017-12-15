@@ -292,6 +292,48 @@ function testAttributeChangedExtended() {
   elem.setAttribute("foo", "bar");
 }
 
+function testStyleAttributeChange() {
+  var expectedCallbackArguments = [
+    // [name, oldValue, newValue]
+    // This is an additional attributeChangedCallback from *first* style
+    // attribute change, see https://bugzilla.mozilla.org/show_bug.cgi?id=1428246.
+    ["style", null, ""],
+    ["style", "", "font-size: 10px;"],
+    ["style", "font-size: 10px;", "font-size: 20px;"],
+    ["style", "font-size: 20px;", "font-size: 30px;"],
+  ];
+
+  customElements.define("x-style-attribute-change", class extends HTMLElement {
+    attributeChangedCallback(name, oldValue, newValue) {
+      if (expectedCallbackArguments.length === 0) {
+        ok(false, "Got unexpected attributeChangedCallback?");
+        return;
+      }
+
+      let expectedArgument = expectedCallbackArguments.shift();
+      is(name, expectedArgument[0],
+         "The name argument should match the expected value.");
+      is(oldValue, expectedArgument[1],
+         "The old value argument should match the expected value.");
+      is(newValue, expectedArgument[2],
+         "The new value argument should match the expected value.");
+    }
+
+    static get observedAttributes() {
+      return ["style"];
+    }
+  });
+
+  var elem = document.createElement("x-style-attribute-change");
+  elem.style.fontSize = "10px";
+  elem.style.fontSize = "20px";
+  elem.style.fontSize = "30px";
+
+  ok(expectedCallbackArguments.length === 0,
+     "The attributeChangedCallback should be fired synchronously.");
+  runNextTest();
+}
+
 // Creates a custom element that is an upgrade candidate (no registration)
 // and mutate the element in ways that would call callbacks for registered
 // elements.
@@ -368,6 +410,7 @@ var testFunctions = [
   testRegisterResolved,
   testAttributeChanged,
   testAttributeChangedExtended,
+  testStyleAttributeChange,
   testUpgradeCandidate,
   testChangingCallback,
   testNotInDocEnterLeave,

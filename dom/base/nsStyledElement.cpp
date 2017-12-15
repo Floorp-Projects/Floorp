@@ -86,7 +86,7 @@ nsStyledElement::SetInlineStyleDeclaration(DeclarationBlock* aDeclaration,
   // getting a new stylerule here. And we can't compare the stringvalues of
   // the old and the new rules since both will point to the same declaration
   // and thus will be the same.
-  if (hasListeners) {
+  if (hasListeners || GetCustomElementData()) {
     // save the old attribute so we can set up the mutation event properly
     nsAutoString oldValueStr;
     modification = GetAttr(kNameSpaceID_None, nsGkAtoms::style,
