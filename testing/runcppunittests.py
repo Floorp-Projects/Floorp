@@ -8,7 +8,6 @@ from __future__ import with_statement
 import sys
 import os
 from optparse import OptionParser
-from os import environ as env
 import manifestparser
 import mozprocess
 import mozinfo
@@ -17,9 +16,6 @@ import mozfile
 import mozlog
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
-
-# Export directory js/src for tests that need it.
-env['CPP_UNIT_TESTS_DIR_JS_SRC'] = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
 
 
 class CPPUnitTests(object):

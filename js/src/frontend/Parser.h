@@ -49,6 +49,20 @@ public:
     { }
 };
 
+template <>
+inline bool
+ParseContext::Statement::is<ParseContext::LabelStatement>() const
+{
+    return kind_ == StatementKind::Label;
+}
+
+template <>
+inline bool
+ParseContext::Statement::is<ParseContext::ClassStatement>() const
+{
+    return kind_ == StatementKind::Class;
+}
+
 template <typename T>
 inline T&
 ParseContext::Statement::as()
@@ -255,13 +269,6 @@ ParseContext::VarScope::VarScope(ParserBase* parser)
   : Scope(parser)
 {
     useAsVarScope(parser->pc);
-}
-
-inline
-ParseContext::VarScope::VarScope(JSContext* cx, ParseContext* pc, UsedNameTracker& usedNames)
-  : Scope(cx, pc, usedNames)
-{
-    useAsVarScope(pc);
 }
 
 enum class ExpressionClosure { Allowed, Forbidden };
@@ -1281,21 +1288,6 @@ class MOZ_STACK_CLASS AutoAwaitIsKeyword
         parser_->setAwaitHandling(oldAwaitHandling_);
     }
 };
-
-template <typename Scope>
-extern typename Scope::Data*
-NewEmptyBindingData(JSContext* cx, LifoAlloc& alloc, uint32_t numBindings);
-
-Maybe<GlobalScope::Data*>
-NewGlobalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc);
-Maybe<EvalScope::Data*>
-NewEvalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc);
-Maybe<FunctionScope::Data*>
-NewFunctionScopeData(JSContext* context, ParseContext::Scope& scope, bool hasParameterExprs, LifoAlloc& alloc, ParseContext* pc);
-Maybe<VarScope::Data*>
-NewVarScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc);
-Maybe<LexicalScope::Data*>
-NewLexicalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc);
 
 } /* namespace frontend */
 } /* namespace js */
