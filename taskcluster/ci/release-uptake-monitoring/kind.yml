@@ -52,7 +52,7 @@ jobs:
                try:
                   #- "{task[tags][createdForUser]}"
                default:
-                  - "release-drivers"
+                  - "releasetasks"
          failed:
             by-project:
                maple:
@@ -60,7 +60,7 @@ jobs:
                try:
                   #- "{task[tags][createdForUser]}"
                default:
-                  - "release-drivers"
+                  - "releasetasks"
          exception:
             by-project:
                maple:
@@ -68,4 +68,4 @@ jobs:
                try:
                   #- "{task[tags][createdForUser]}"
                default:
-                  - "release-drivers"
+                  - "releasetasks"
