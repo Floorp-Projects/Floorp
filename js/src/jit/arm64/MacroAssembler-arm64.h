@@ -783,14 +783,14 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     void loadPrivate(const Address& src, Register dest);
 
     void store8(Register src, const Address& address) {
-        Strb(ARMRegister(src, 32), MemOperand(ARMRegister(address.base, 64), address.offset));
+        Strb(ARMRegister(src, 32), toMemOperand(address));
     }
     void store8(Imm32 imm, const Address& address) {
         vixl::UseScratchRegisterScope temps(this);
         const ARMRegister scratch32 = temps.AcquireW();
         MOZ_ASSERT(scratch32.asUnsized() != address.base);
         move32(imm, scratch32.asUnsized());
-        Strb(scratch32, MemOperand(ARMRegister(address.base, 64), address.offset));
+        Strb(scratch32, toMemOperand(address));
     }
     void store8(Register src, const BaseIndex& address) {
         doBaseIndex(ARMRegister(src, 32), address, vixl::STRB_w);
@@ -805,14 +805,14 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
 
     void store16(Register src, const Address& address) {
-        Strh(ARMRegister(src, 32), MemOperand(ARMRegister(address.base, 64), address.offset));
+        Strh(ARMRegister(src, 32), toMemOperand(address));
     }
     void store16(Imm32 imm, const Address& address) {
         vixl::UseScratchRegisterScope temps(this);
         const ARMRegister scratch32 = temps.AcquireW();
         MOZ_ASSERT(scratch32.asUnsized() != address.base);
         move32(imm, scratch32.asUnsized());
-        Strh(scratch32, MemOperand(ARMRegister(address.base, 64), address.offset));
+        Strh(scratch32, toMemOperand(address));
     }
     void store16(Register src, const BaseIndex& address) {
         doBaseIndex(ARMRegister(src, 32), address, vixl::STRH_w);
@@ -838,7 +838,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         const ARMRegister scratch64 = temps.AcquireX();
         MOZ_ASSERT(scratch64.asUnsized() != address.base);
         Mov(scratch64, uint64_t(imm.value));
-        Str(scratch64, MemOperand(ARMRegister(address.base, 64), address.offset));
+        Str(scratch64, toMemOperand(address));
     }
     void storePtr(ImmGCPtr imm, const Address& address) {
         vixl::UseScratchRegisterScope temps(this);
@@ -848,7 +848,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         storePtr(scratch, address);
     }
     void storePtr(Register src, const Address& address) {
-        Str(ARMRegister(src, 64), MemOperand(ARMRegister(address.base, 64), address.offset));
+        Str(ARMRegister(src, 64), toMemOperand(address));
     }
 
     void storePtr(ImmWord imm, const BaseIndex& address) {
@@ -889,10 +889,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         const ARMRegister scratch32 = temps.AcquireW();
         MOZ_ASSERT(scratch32.asUnsized() != address.base);
         Mov(scratch32, uint64_t(imm.value));
-        Str(scratch32, MemOperand(ARMRegister(address.base, 64), address.offset));
+        Str(scratch32, toMemOperand(address));
     }
     void store32(Register r, const Address& address) {
-        Str(ARMRegister(r, 32), MemOperand(ARMRegister(address.base, 64), address.offset));
+        Str(ARMRegister(r, 32), toMemOperand(address));
     }
     void store32(Imm32 imm, const BaseIndex& address) {
         vixl::UseScratchRegisterScope temps(this);
@@ -913,7 +913,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
         MOZ_ASSERT(scratch32.asUnsized() != address.base);
         Mov(scratch32, uint64_t(imm.value));
-        Str(scratch32, MemOperand(ARMRegister(address.base, 64), address.offset));
+        Str(scratch32, toMemOperand(address));
     }
 
     void store64(Register64 src, Address address) {
@@ -1048,21 +1048,21 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         const ARMRegister scratch64 = temps.AcquireX();
         MOZ_ASSERT(scratch64.asUnsized() != lhs.base);
         MOZ_ASSERT(scratch64.asUnsized() != rhs);
-        Ldr(scratch64, MemOperand(ARMRegister(lhs.base, 64), lhs.offset));
+        Ldr(scratch64, toMemOperand(lhs));
         Cmp(scratch64, Operand(ARMRegister(rhs, 64)));
     }
     void cmpPtr(const Address& lhs, ImmWord rhs) {
         vixl::UseScratchRegisterScope temps(this);
         const ARMRegister scratch64 = temps.AcquireX();
         MOZ_ASSERT(scratch64.asUnsized() != lhs.base);
-        Ldr(scratch64, MemOperand(ARMRegister(lhs.base, 64), lhs.offset));
+        Ldr(scratch64, toMemOperand(lhs));
         Cmp(scratch64, Operand(rhs.value));
     }
     void cmpPtr(const Address& lhs, ImmPtr rhs) {
         vixl::UseScratchRegisterScope temps(this);
         const ARMRegister scratch64 = temps.AcquireX();
         MOZ_ASSERT(scratch64.asUnsized() != lhs.base);
-        Ldr(scratch64, MemOperand(ARMRegister(lhs.base, 64), lhs.offset));
+        Ldr(scratch64, toMemOperand(lhs));
         Cmp(scratch64, Operand(uint64_t(rhs.value)));
     }
     void cmpPtr(const Address& lhs, ImmGCPtr rhs) {
@@ -1094,7 +1094,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         Ldr(ARMFPRegister(dest, 64), MemOperand(scratch64, src.offset));
     }
     void loadFloatAsDouble(const Address& addr, FloatRegister dest) {
-        Ldr(ARMFPRegister(dest, 32), MemOperand(ARMRegister(addr.base,64), addr.offset));
+        Ldr(ARMFPRegister(dest, 32), toMemOperand(addr));
         fcvt(ARMFPRegister(dest, 64), ARMFPRegister(dest, 32));
     }
     void loadFloatAsDouble(const BaseIndex& src, FloatRegister dest) {
@@ -1115,7 +1115,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
 
     void loadFloat32(const Address& addr, FloatRegister dest) {
-        Ldr(ARMFPRegister(dest, 32), MemOperand(ARMRegister(addr.base,64), addr.offset));
+        Ldr(ARMFPRegister(dest, 32), toMemOperand(addr));
     }
     void loadFloat32(const BaseIndex& src, FloatRegister dest) {
         ARMRegister base(src.base, 64);
@@ -1175,7 +1175,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
 
     void load32(const Address& address, Register dest) {
-        Ldr(ARMRegister(dest, 32), MemOperand(ARMRegister(address.base, 64), address.offset));
+        Ldr(ARMRegister(dest, 32), toMemOperand(address));
     }
     void load32(const BaseIndex& src, Register dest) {
         doBaseIndex(ARMRegister(dest, 32), src, vixl::LDR_w);
@@ -1191,28 +1191,28 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
 
     void load8SignExtend(const Address& address, Register dest) {
-        Ldrsb(ARMRegister(dest, 32), MemOperand(ARMRegister(address.base, 64), address.offset));
+        Ldrsb(ARMRegister(dest, 32), toMemOperand(address));
     }
     void load8SignExtend(const BaseIndex& src, Register dest) {
         doBaseIndex(ARMRegister(dest, 32), src, vixl::LDRSB_w);
     }
 
     void load8ZeroExtend(const Address& address, Register dest) {
-        Ldrb(ARMRegister(dest, 32), MemOperand(ARMRegister(address.base, 64), address.offset));
+        Ldrb(ARMRegister(dest, 32), toMemOperand(address));
     }
     void load8ZeroExtend(const BaseIndex& src, Register dest) {
         doBaseIndex(ARMRegister(dest, 32), src, vixl::LDRB_w);
     }
 
     void load16SignExtend(const Address& address, Register dest) {
-        Ldrsh(ARMRegister(dest, 32), MemOperand(ARMRegister(address.base, 64), address.offset));
+        Ldrsh(ARMRegister(dest, 32), toMemOperand(address));
     }
     void load16SignExtend(const BaseIndex& src, Register dest) {
         doBaseIndex(ARMRegister(dest, 32), src, vixl::LDRSH_w);
     }
 
     void load16ZeroExtend(const Address& address, Register dest) {
-        Ldrh(ARMRegister(dest, 32), MemOperand(ARMRegister(address.base, 64), address.offset));
+        Ldrh(ARMRegister(dest, 32), toMemOperand(address));
     }
     void load16ZeroExtend(const BaseIndex& src, Register dest) {
         doBaseIndex(ARMRegister(dest, 32), src, vixl::LDRH_w);
@@ -1229,9 +1229,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         const ARMRegister scratch32 = temps.AcquireW();
         MOZ_ASSERT(scratch32.asUnsized() != dest.base);
 
-        Ldr(scratch32, MemOperand(ARMRegister(dest.base, 64), dest.offset));
+        Ldr(scratch32, toMemOperand(dest));
         Adds(scratch32, scratch32, Operand(imm.value));
-        Str(scratch32, MemOperand(ARMRegister(dest.base, 64), dest.offset));
+        Str(scratch32, toMemOperand(dest));
     }
 
     void subs32(Imm32 imm, Register dest) {
