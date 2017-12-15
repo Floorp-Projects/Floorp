@@ -7,6 +7,7 @@
 
 #include "mozilla/EditorBase.h"         // mEditorBase
 #include "mozilla/SelectionState.h"     // RangeUpdater
+#include "mozilla/TextComposition.h"    // TextComposition
 #include "mozilla/dom/Selection.h"      // local var
 #include "mozilla/dom/Text.h"           // mTextNode
 #include "nsAString.h"                  // params
@@ -21,17 +22,14 @@ namespace mozilla {
 using namespace dom;
 
 CompositionTransaction::CompositionTransaction(
-                          Text& aTextNode,
-                          uint32_t aOffset,
-                          uint32_t aReplaceLength,
-                          TextRangeArray* aTextRangeArray,
-                          const nsAString& aStringToInsert,
                           EditorBase& aEditorBase,
+                          const nsAString& aStringToInsert,
+                          const TextComposition& aTextComposition,
                           RangeUpdater* aRangeUpdater)
-  : mTextNode(&aTextNode)
-  , mOffset(aOffset)
-  , mReplaceLength(aReplaceLength)
-  , mRanges(aTextRangeArray)
+  : mTextNode(aTextComposition.GetContainerTextNode())
+  , mOffset(aTextComposition.XPOffsetInTextNode())
+  , mReplaceLength(aTextComposition.XPLengthInTextNode())
+  , mRanges(aTextComposition.GetRanges())
   , mStringToInsert(aStringToInsert)
   , mEditorBase(&aEditorBase)
   , mRangeUpdater(aRangeUpdater)

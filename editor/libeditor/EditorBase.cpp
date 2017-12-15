@@ -4694,12 +4694,7 @@ EditorBase::CreateTxnForComposition(const nsAString& aStringToInsert)
   // TODO: We can simplify CompositionTransaction::Init() with TextComposition
   //       class.
   RefPtr<CompositionTransaction> transaction =
-    new CompositionTransaction(*mComposition->GetContainerTextNode(),
-                               mComposition->XPOffsetInTextNode(),
-                               mComposition->XPLengthInTextNode(),
-                               mComposition->GetRanges(),
-                               aStringToInsert,
-                               *this,
+    new CompositionTransaction(*this, aStringToInsert, *mComposition,
                                &mRangeUpdater);
   return transaction.forget();
 }
