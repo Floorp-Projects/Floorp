@@ -1,0 +1,26 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+
+namespace mozilla {
+namespace dom {
+
+// PLoginReputation allows child to send URL to parent when user focuses
+// on a password field. Right now this is an one way IPC call (No callback
+// will return after parent receives the IPC message) since we just process
+// the URL in parent (LoginReputationService) and stores the result to telemetry.
+protocol PLoginReputation
+{
+  manager PContent;
+
+child:
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

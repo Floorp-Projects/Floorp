@@ -63,9 +63,19 @@ add_task(async function () {
 });
 
 async function showSidebar(hud) {
-  let toggleButton = hud.ui.document.querySelector(".webconsole-sidebar-button");
+  let onMessage = waitForMessage(hud, "Object");
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
+    content.wrappedJSObject.console.log({a: 1});
+  });
+  await onMessage;
+
+  let objectNode = hud.ui.outputNode.querySelector(".object-inspector .objectBox");
   let wrapper = hud.ui.document.querySelector(".webconsole-output-wrapper");
   let onSidebarShown = waitForNodeMutation(wrapper, { childList: true });
-  toggleButton.click();
+
+  let contextMenu = await openContextMenu(hud, objectNode);
+  let openInSidebar = contextMenu.querySelector("#console-menu-open-sidebar");
+  openInSidebar.click();
   await onSidebarShown;
+  await hideContextMenu(hud);
 }

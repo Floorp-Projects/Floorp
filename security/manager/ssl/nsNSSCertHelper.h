@@ -22,5 +22,8 @@ GetCertFingerprintByOidTag(CERTCertificate* nsscert, SECOidTag aOidTag,
 // Must be used on the main thread only.
 nsresult
 GetPIPNSSBundleString(const char* stringName, nsAString& result);
+nsresult
+PIPBundleFormatStringFromName(const char* stringName, const char16_t** params,
+                              uint32_t numParams, nsAString& result);
 
 #endif // nsNSSCertHelper_h

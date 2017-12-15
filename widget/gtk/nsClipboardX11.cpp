@@ -281,7 +281,7 @@ nsRetrievalContextX11::GetTargets(int32_t aWhichClipboard, int* aTargetNums)
   return targets;
 }
 
-guchar*
+const char*
 nsRetrievalContextX11::WaitForClipboardContext(const char* aMimeType,
                                                int32_t aWhichClipboard,
                                                uint32_t* aContentLength)
@@ -293,12 +293,16 @@ nsRetrievalContextX11::WaitForClipboardContext(const char* aMimeType,
     if (!selectionData)
         return nullptr;
 
+    char* clipboardData = nullptr;
     int contentLength = gtk_selection_data_get_length(selectionData);
-    guchar* data = reinterpret_cast<guchar*>(g_malloc(sizeof(guchar)*contentLength));
-    memcpy(data, gtk_selection_data_get_data(selectionData),
-           sizeof(guchar)*contentLength);
+    if (contentLength > 0) {
+        clipboardData = reinterpret_cast<char*>(
+            moz_xmalloc(sizeof(char)*contentLength));
+        memcpy(clipboardData, gtk_selection_data_get_data(selectionData),
+            sizeof(char)*contentLength);
+    }
     gtk_selection_data_free(selectionData);
 
     *aContentLength = contentLength;
-    return data;
+    return (const char*)clipboardData;
 }

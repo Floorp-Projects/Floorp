@@ -606,6 +606,16 @@ public:
                                      const URIParams& aURI,
                                      const nsCString& aTables) override;
 
+  virtual PLoginReputationParent*
+  AllocPLoginReputationParent(const URIParams& aURI) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvPLoginReputationConstructor(PLoginReputationParent* aActor,
+                                  const URIParams& aURI) override;
+
+  virtual bool
+  DeallocPLoginReputationParent(PLoginReputationParent* aActor) override;
+
   virtual bool SendActivate(PBrowserParent* aTab) override
   {
     return PContentParent::SendActivate(aTab);
