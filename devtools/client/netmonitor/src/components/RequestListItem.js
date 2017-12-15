@@ -7,7 +7,10 @@
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { propertiesEqual } = require("../utils/request-utils");
+const {
+  fetchNetworkUpdatePacket,
+  propertiesEqual,
+} = require("../utils/request-utils");
 const { RESPONSE_HEADERS } = require("../constants");
 
 // Components
@@ -57,13 +60,16 @@ const UPDATED_REQ_ITEM_PROPS = [
   "startedMillis",
   "totalTime",
   "requestCookies",
+  "requestHeaders",
   "responseCookies",
+  "responseHeaders",
 ];
 
 const UPDATED_REQ_PROPS = [
   "firstRequestStartedMillis",
   "index",
   "isSelected",
+  "requestFilterTypes",
   "waterfallWidth",
 ];
 
@@ -86,6 +92,7 @@ class RequestListItem extends Component {
       onMouseDown: PropTypes.func.isRequired,
       onSecurityIconMouseDown: PropTypes.func.isRequired,
       onWaterfallMouseDown: PropTypes.func.isRequired,
+      requestFilterTypes: PropTypes.string.isRequired,
       waterfallWidth: PropTypes.number,
     };
   }
@@ -93,6 +100,26 @@ class RequestListItem extends Component {
   componentDidMount() {
     if (this.props.isSelected) {
       this.refs.listItem.focus();
+    }
+
+    let { connector, item, requestFilterTypes } = this.props;
+    // Filtering XHR & WS require to lazily fetch requestHeaders & responseHeaders
+    if (requestFilterTypes.get("xhr") || requestFilterTypes.get("ws")) {
+      fetchNetworkUpdatePacket(connector.requestData, item, [
+        "requestHeaders",
+        "responseHeaders",
+      ]);
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    let { connector, item, requestFilterTypes } = nextProps;
+    // Filtering XHR & WS require to lazily fetch requestHeaders & responseHeaders
+    if (requestFilterTypes.get("xhr") || requestFilterTypes.get("ws")) {
+      fetchNetworkUpdatePacket(connector.requestData, item, [
+        "requestHeaders",
+        "responseHeaders",
+      ]);
     }
   }
 

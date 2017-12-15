@@ -42,6 +42,10 @@ class ConcurrentStatementsHolder;
 // A commonly found case is to reload a page every 5 minutes, so we pick a time
 // larger than that.
 #define RECENTLY_VISITED_URIS_MAX_AGE 6 * 60 * PR_USEC_PER_SEC
+// When notifying the main thread after inserting visits, we chunk the visits
+// into medium-sized groups so that we can amortize the cost of the runnable
+// without janking the main thread by expecting it to process hundreds at once.
+#define NOTIFY_VISITS_CHUNK_SIZE 100
 
 class History final : public IHistory
                     , public nsIDownloadHistory

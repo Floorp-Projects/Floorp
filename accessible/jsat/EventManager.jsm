@@ -239,7 +239,7 @@ this.EventManager.prototype = {
         let hidden = Utils.isHidden(aEvent.accessible);
         this[hidden ? "_handleHide" : "_handleShow"](evt);
         if (this.inTest) {
-          this.sendMsgFunc("AccessFu:AriaHidden", { hidden: hidden });
+          this.sendMsgFunc("AccessFu:AriaHidden", { hidden });
         }
         break;
       }

@@ -482,20 +482,20 @@ function testTextRange(aRange, aRangeDescr, aStartContainer, aStartOffset,
 function testTextSuperHelper(aFuncName, aArgs) {
   // List of tests.
   if (aArgs[2] instanceof Array) {
-    var ids = (aArgs[0] instanceof Array) ? aArgs[0] : [ aArgs[0] ];
-    var boundaryType = aArgs[1];
-    var list = aArgs[2];
-    for (var i = 0; i < list.length; i++) {
-      var offset1 = list[i][0], offset2 = list[i][1];
-      var text = list[i][2], startOffset = list[i][3], endOffset = list[i][4];
-      var failureList = list[i][5];
-      for (var offset = offset1; offset <= offset2; offset++) {
-        for (var idIdx = 0; idIdx < ids.length; idIdx++) {
-          var id = ids[idIdx];
+    let ids = (aArgs[0] instanceof Array) ? aArgs[0] : [ aArgs[0] ];
+    let boundaryType = aArgs[1];
+    let list = aArgs[2];
+    for (let i = 0; i < list.length; i++) {
+      let offset1 = list[i][0], offset2 = list[i][1];
+      let text = list[i][2], startOffset = list[i][3], endOffset = list[i][4];
+      let failureList = list[i][5];
+      for (let offset = offset1; offset <= offset2; offset++) {
+        for (let idIdx = 0; idIdx < ids.length; idIdx++) {
+          let id = ids[idIdx];
 
-          var flagOk1 = kOk, flagOk2 = kOk, flagOk3 = kOk;
+          let flagOk1 = kOk, flagOk2 = kOk, flagOk3 = kOk;
           if (failureList) {
-            for (var fIdx = 0; fIdx < failureList.length; fIdx++) {
+            for (let fIdx = 0; fIdx < failureList.length; fIdx++) {
               if (offset == failureList[fIdx][0] && id == failureList[fIdx][1]) {
                 flagOk1 = failureList[fIdx][2];
                 flagOk2 = failureList[fIdx][3];
@@ -505,7 +505,7 @@ function testTextSuperHelper(aFuncName, aArgs) {
             }
           }
 
-          var acc = getAccessible(id, nsIAccessibleText);
+          let acc = getAccessible(id, nsIAccessibleText);
           testTextHelper(id, offset, boundaryType,
                          text, startOffset, endOffset,
                          flagOk1, flagOk2, flagOk3,
@@ -523,9 +523,9 @@ function testTextSuperHelper(aFuncName, aArgs) {
   var startOffset = aArgs[3];
   var endOffset = aArgs[4];
   if (aArgs[5] instanceof Array) {
-    var ids = aArgs[5];
-    for (var i = 0; i < ids.length; i++) {
-      var acc = getAccessible(ids[i], nsIAccessibleText);
+    let ids = aArgs[5];
+    for (let i = 0; i < ids.length; i++) {
+      let acc = getAccessible(ids[i], nsIAccessibleText);
       testTextHelper(ids[i], offset, boundaryType,
                      text, startOffset, endOffset,
                      kOk, kOk, kOk,
@@ -536,12 +536,12 @@ function testTextSuperHelper(aFuncName, aArgs) {
   }
 
   // Each ID is tested separately.
-  for (var i = 5; i < aArgs.length; i = i + 4) {
-    var ID = aArgs[i];
-    var acc = getAccessible(ID, nsIAccessibleText);
-    var toDoFlag1 = aArgs[i + 1];
-    var toDoFlag2 = aArgs[i + 2];
-    var toDoFlag3 = aArgs[i + 3];
+  for (let i = 5; i < aArgs.length; i = i + 4) {
+    let ID = aArgs[i];
+    let acc = getAccessible(ID, nsIAccessibleText);
+    let toDoFlag1 = aArgs[i + 1];
+    let toDoFlag2 = aArgs[i + 2];
+    let toDoFlag3 = aArgs[i + 3];
 
     testTextHelper(ID, offset, boundaryType,
                    text, startOffset, endOffset,

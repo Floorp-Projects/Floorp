@@ -24,8 +24,8 @@ function doTest() {
   if (tableInterfaceExposed) {
     testRole(accTable3, ROLE_ALERT);
 
-    is(accTable3.getCellAt(0,0).firstChild.name, "cell0", "wrong cell");
-    is(accTable3.getCellAt(0,1).firstChild.name, "cell1", "wrong cell");
+    is(accTable3.getCellAt(0, 0).firstChild.name, "cell0", "wrong cell");
+    is(accTable3.getCellAt(0, 1).firstChild.name, "cell1", "wrong cell");
   }
 
   // Test table with role=log and aria property in tr. We create accessible for
@@ -42,10 +42,10 @@ function doTest() {
 
     testRole(accTable4, ROLE_TABLE);
 
-    is(accTable4.getCellAt(0,0).firstChild.name, "cell0", "wrong cell");
-    is(accTable4.getCellAt(0,1).firstChild.name, "cell1", "wrong cell");
-    is(accTable4.getCellAt(1,0).firstChild.name, "cell2", "wrong cell");
-    is(accTable4.getCellAt(1,1).firstChild.name, "cell3", "wrong cell");
+    is(accTable4.getCellAt(0, 0).firstChild.name, "cell0", "wrong cell");
+    is(accTable4.getCellAt(0, 1).firstChild.name, "cell1", "wrong cell");
+    is(accTable4.getCellAt(1, 0).firstChild.name, "cell2", "wrong cell");
+    is(accTable4.getCellAt(1, 1).firstChild.name, "cell3", "wrong cell");
   }
 
   SimpleTest.finish();

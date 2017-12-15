@@ -23,13 +23,11 @@ class PDFiumParent final : public PPDFiumParent,
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PDFiumParent)
 
   typedef mozilla::gfx::PrintTargetEMF PrintTargetEMF;
-  typedef std::function<void()> ConversionDoneCallback;
 
   explicit PDFiumParent(PrintTargetEMF* aTarget);
 
   bool Init(IPC::Channel* aChannel, base::ProcessId aPid);
 
-  void AbortConversion(ConversionDoneCallback aCallback);
   void EndConversion();
 
   FORWARD_SHMEM_ALLOCATOR_TO(PPDFiumParent)
@@ -45,7 +43,6 @@ private:
   void DeallocPPDFiumParent() override;
 
   PrintTargetEMF* mTarget;
-  ConversionDoneCallback mConversionDoneCallback;
 };
 
 } // namespace widget

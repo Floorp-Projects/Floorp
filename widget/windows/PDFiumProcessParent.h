@@ -37,7 +37,7 @@ public:
 
   bool Launch(PrintTargetEMF* aTarget);
 
-  void Delete(bool aWaitingForEMFConversion);
+  void Delete();
 
   bool CanShutdown() override { return true; }
 

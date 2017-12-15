@@ -132,10 +132,10 @@ function main() {
   testCases.push(StartTimeTest('3;', 3));
   testCases.push(StartTimeTest('3; ', 3));
   testCases.push(StartTimeTest('3 ; ', 3));
-  testCases.push(StartTimeTest('3;;', 'none'));
-  testCases.push(StartTimeTest('3;; ', 'none'));
-  testCases.push(StartTimeTest(';3', 'none'));
-  testCases.push(StartTimeTest(' ;3', 'none'));
+  testCases.push(StartTimeTest('3;;', 3));
+  testCases.push(StartTimeTest('3;; ', 3));
+  testCases.push(StartTimeTest(';3', 3));
+  testCases.push(StartTimeTest(' ;3', 3));
   testCases.push(StartTimeTest('3;4', 3));
   testCases.push(StartTimeTest(' 3 ; 4 ', 3));
 

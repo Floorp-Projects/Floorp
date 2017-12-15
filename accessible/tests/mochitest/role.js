@@ -167,7 +167,7 @@ function getRole(aAccOrElmOrID) {
  */
 function isRole(aIdentifier, aRole, aMsg) {
   var role = getRole(aIdentifier);
-  if (role == - 1)
+  if (role == -1)
     return;
 
   if (role == aRole) {

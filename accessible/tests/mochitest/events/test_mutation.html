@@ -71,7 +71,7 @@
 
         var type = this.getA11yEventType(aEventType);
         for (var i = 1; i < aTargets.length; i++) {
-          var checker = new invokerChecker(type, aTargets[i]);
+          let checker = new invokerChecker(type, aTargets[i]);
           this.getEventSeq().splice(++targetIdx, 0, checker);
         }
       };
@@ -93,19 +93,19 @@
       };
 
       if (aEventTypes & kHideEvent) {
-        var checker = new invokerChecker(this.getA11yEventType(kHideEvent),
+        let checker = new invokerChecker(this.getA11yEventType(kHideEvent),
                                          this.DOMNode);
         this.getEventSeq().push(checker);
       }
 
       if (aEventTypes & kShowEvent) {
-        var checker = new invokerChecker(this.getA11yEventType(kShowEvent),
+        let checker = new invokerChecker(this.getA11yEventType(kShowEvent),
                                          this.DOMNode);
         this.getEventSeq().push(checker);
       }
 
       if (aEventTypes & kReorderEvent) {
-        var checker = new invokerChecker(this.getA11yEventType(kReorderEvent),
+        let checker = new invokerChecker(this.getA11yEventType(kReorderEvent),
                                          this.DOMNode.parentNode);
         this.getEventSeq().push(checker);
       }
@@ -432,51 +432,51 @@
 
       // Show/hide events by changing of display style of accessible DOM node
       // from 'inline' to 'none', 'none' to 'inline'.
-      var id = "link1";
+      let id = "link1";
       getAccessible(id); // ensure accessible is created
       gQueue.push(new changeStyle(id, "display", "none", kHideEvents));
       gQueue.push(new changeStyle(id, "display", "inline", kShowEvents));
 
       // Show/hide events by changing of visibility style of accessible DOM node
       // from 'visible' to 'hidden', 'hidden' to 'visible'.
-      var id = "link2";
+      id = "link2";
       getAccessible(id);
       gQueue.push(new changeStyle(id, "visibility", "hidden", kHideEvents));
       gQueue.push(new changeStyle(id, "visibility", "visible", kShowEvents));
 
       // Show/hide events by changing of display style of accessible DOM node
       // from 'inline' to 'block', 'block' to 'inline'.
-      var id = "link3";
+      id = "link3";
       getAccessible(id); // ensure accessible is created
       gQueue.push(new changeStyle(id, "display", "block", kHideAndShowEvents));
       gQueue.push(new changeStyle(id, "display", "inline", kHideAndShowEvents));
 
       // Show/hide events by changing of visibility style of accessible DOM node
       // from 'collapse' to 'visible', 'visible' to 'collapse'.
-      var id = "link4";
+      id = "link4";
       gQueue.push(new changeStyle(id, "visibility", "visible", kShowEvents));
       gQueue.push(new changeStyle(id, "visibility", "collapse", kHideEvents));
 
       // Show/hide events by adding new accessible DOM node and removing old one.
-      var id = "link5";
+      id = "link5";
       gQueue.push(new cloneAndAppendToDOM(id));
       gQueue.push(new removeFromDOM(id));
 
       // No show/hide events by adding new not accessible DOM node and removing
       // old one, no reorder event for their parent.
-      var id = "child1";
+      id = "child1";
       gQueue.push(new cloneAndAppendToDOM(id, kNoEvents));
       gQueue.push(new removeFromDOM(id, kNoEvents));
 
       // Show/hide events by adding new accessible DOM node and removing
       // old one, there is reorder event for their parent.
-      var id = "child2";
+      id = "child2";
       gQueue.push(new cloneAndAppendToDOM(id));
       gQueue.push(new removeFromDOM(id));
 
       // Show/hide events by adding new DOM node containing accessible DOM and
       // removing old one, there is reorder event for their parent.
-      var id = "child3";
+      id = "child3";
       gQueue.push(new cloneAndAppendToDOM(id, kShowEvents, getFirstChild,
                                           getParent));
 

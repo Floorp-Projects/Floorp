@@ -89,8 +89,8 @@ promise_test(function(t) {
     // TODO: Check that animations[0].startTime === null
     return animations[0].ready;
   }).then(function() {
-    assert_true(animations[0].startTime > animations[1].startTime,
-                'New Animation has later start time');
+    assert_greater_than(animations[0].startTime, animations[1].startTime,
+                        'New Animation has later start time');
   });
 }, 'Only the startTimes of existing animations are preserved');
 
@@ -100,7 +100,7 @@ promise_test(function(t) {
   var secondAnimation = div.getAnimations()[1];
 
   // Wait before continuing so we can compare start times
-  return secondAnimation.ready.then(waitForFrame).then(function() {
+  return secondAnimation.ready.then(waitForNextFrame).then(function() {
     // Trim list of animations
     div.style.animationName = 'anim1';
     var animations = div.getAnimations();
@@ -109,8 +109,9 @@ promise_test(function(t) {
                   'Remaining Animation is the second one in the list');
     assert_equals(typeof(animations[0].startTime), 'number',
                   'Remaining Animation has resolved startTime');
-    assert_true(animations[0].startTime < animations[0].timeline.currentTime,
-                'Remaining Animation preserves startTime');
+    assert_less_than(animations[0].startTime,
+                     animations[0].timeline.currentTime,
+                     'Remaining Animation preserves startTime');
   });
 }, 'Animations are removed from the start of the list while preserving'
    + ' the state of existing Animations');
@@ -142,10 +143,11 @@ promise_test(function(t) {
                   + ' interleaving');
     return animations[1].ready;
   }).then(function() {
-    assert_true(animations[1].startTime > animations[0].startTime,
-                'Interleaved animation starts later than existing animations');
-    assert_true(animations[0].startTime > animations[2].startTime,
-                'Original animations retain their start time');
+    assert_greater_than(animations[1].startTime, animations[0].startTime,
+                        'Interleaved animation starts later than existing ' +
+                        'animations');
+    assert_greater_than(animations[0].startTime, animations[2].startTime,
+                        'Original animations retain their start time');
   });
 }, 'Animation state is preserved when interleaving animations in list');
 

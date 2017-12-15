@@ -3,8 +3,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from ../../netmonitor/test/shared-head.js */
-
 // Tests that network log messages bring up the network panel and select the
 // right request even if it was previously filtered off.
 
@@ -14,9 +12,6 @@ const TEST_FILE_URI =
   "http://example.com/browser/devtools/client/webconsole/test/" +
   "test-network.html";
 const TEST_URI = "data:text/html;charset=utf8,<p>test file URI";
-
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/netmonitor/test/shared-head.js", this);
 
 var hud;
 
@@ -69,8 +64,6 @@ add_task(function* () {
   // All tests are done. Shutdown.
   HUDService.lastFinishedRequest.callback = null;
   htmlRequest = browser = requests = hud = null;
-
-  yield waitForExistingRequests(monitor);
 });
 
 function testMessages() {

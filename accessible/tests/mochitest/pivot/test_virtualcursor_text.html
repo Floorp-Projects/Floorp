@@ -37,175 +37,175 @@
 
       gQueue.push(new setVCPosInvoker(docAcc, null, null,
                                       getAccessible(doc.getElementById("paragraph-1"))));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,4],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 4],
                   getAccessible(doc.getElementById("paragraph-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [4,5],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [4, 5],
                   getAccessible(doc.getElementById("paragraph-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", CHAR_BOUNDARY, [3,4],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", CHAR_BOUNDARY, [3, 4],
                   getAccessible(doc.getElementById("paragraph-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [5,7],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [5, 7],
                   getAccessible(doc.getElementById("paragraph-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,3],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 3],
                   getAccessible(doc.getElementById("p1-link-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [10,14],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [10, 14],
                   getAccessible(doc.getElementById("paragraph-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,3],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 3],
                   getAccessible(doc.getElementById("p1-link-1"), nsIAccessibleText)));
       // set user input to false, and see if it works
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [5,7],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [5, 7],
                   getAccessible(doc.getElementById("paragraph-1"), nsIAccessibleText)),
                   false);
 
       gQueue.push(new setVCPosInvoker(docAcc, null, null,
                                       getAccessible(doc.getElementById("section-1"))));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,1],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 1],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,9],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 9],
                   getAccessible(doc.getElementById("s1-link-1"), nsIAccessibleText)));
       // set user input to false, and see if it works
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [10,14],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [10, 14],
                   getAccessible(doc.getElementById("s1-link-1"), nsIAccessibleText),
                   false));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [4,6],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [4, 6],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [7,12],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [7, 12],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,2],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 2],
                   getAccessible(doc.getElementById("s1-link-2"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [15,19],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [15, 19],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [20,28],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [20, 28],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,5],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 5],
                   getAccessible(doc.getElementById("section-2"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [6,10],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [6, 10],
                   getAccessible(doc.getElementById("section-2"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,5],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 5],
                   getAccessible(doc.getElementById("section-2"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [20,28],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [20, 28],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [15,19],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [15, 19],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,2],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 2],
                   getAccessible(doc.getElementById("s1-link-2"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [7,12],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [7, 12],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [4,6],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [4, 6],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [10,14],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [10, 14],
                   getAccessible(doc.getElementById("s1-link-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,9],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 9],
                   getAccessible(doc.getElementById("s1-link-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,1],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 1],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
 
       gQueue.push(new setVCPosInvoker(docAcc, null, null,
                                       getAccessible(doc.getElementById("s1-link-1"))));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", CHAR_BOUNDARY, [1,2],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", CHAR_BOUNDARY, [1, 2],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", CHAR_BOUNDARY, [0,1],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", CHAR_BOUNDARY, [0, 1],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [1,2],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [1, 2],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [0,1],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [0, 1],
                   getAccessible(doc.getElementById("s1-link-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [1,2],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [1, 2],
                   getAccessible(doc.getElementById("s1-link-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [2,9],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [2, 9],
                   getAccessible(doc.getElementById("s1-link-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [10,14],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [10, 14],
                   getAccessible(doc.getElementById("s1-link-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [3,4],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [3, 4],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", CHAR_BOUNDARY, [13,14],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", CHAR_BOUNDARY, [13, 14],
                   getAccessible(doc.getElementById("s1-link-1"), nsIAccessibleText)));
       gQueue.push(new setVCPosInvoker(docAcc, null, null,
                                       getAccessible(doc.getElementById("section-2"))));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", CHAR_BOUNDARY, [27,28],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", CHAR_BOUNDARY, [27, 28],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [0,1],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", CHAR_BOUNDARY, [0, 1],
                   getAccessible(doc.getElementById("section-2"), nsIAccessibleText)));
 
       gQueue.push(new setVCPosInvoker(docAcc, null, null,
                                       getAccessible(doc.getElementById("paragraph-2"))));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,12],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 12],
                   getAccessible(doc.getElementById("paragraph-2"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,7],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 7],
                   getAccessible(doc.getElementById("cell-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,8],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 8],
                   getAccessible(doc.getElementById("cell-2"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,3],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 3],
                   getAccessible(doc.getElementById("cell-3"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [4,11],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [4, 11],
                   getAccessible(doc.getElementById("cell-3"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,6],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 6],
                   getAccessible(doc.getElementById("cell-4"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [7,13],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [7, 13],
                   getAccessible(doc.getElementById("cell-4"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,7],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 7],
                   getAccessible(doc.getElementById("section-3"), nsIAccessibleText)));
 
       gQueue.push(new setVCPosInvoker(docAcc, null, null,
                                       getAccessible(doc.getElementById("section-3"))));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,7],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 7],
                   getAccessible(doc.getElementById("section-3"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [7,13],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [7, 13],
                   getAccessible(doc.getElementById("cell-4"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,6],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 6],
                   getAccessible(doc.getElementById("cell-4"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [4,11],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [4, 11],
                   getAccessible(doc.getElementById("cell-3"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,3],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 3],
                   getAccessible(doc.getElementById("cell-3"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,8],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 8],
                   getAccessible(doc.getElementById("cell-2"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,7],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 7],
                   getAccessible(doc.getElementById("cell-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,12],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 12],
                   getAccessible(doc.getElementById("paragraph-2"), nsIAccessibleText)));
 
       gQueue.push(new setVCPosInvoker(docAcc, null, null,
                                       getAccessible(doc.getElementById("paragraph-3"))));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,7],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 7],
                   getAccessible(doc.getElementById("paragraph-3"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,8],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 8],
                   getAccessible(doc.getElementById("p3-link-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [8,10],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [8, 10],
                   getAccessible(doc.getElementById("paragraph-3"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,4],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 4],
                   getAccessible(doc.getElementById("p3-link-2"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,5],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 5],
                   getAccessible(doc.getElementById("p3-link-3"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [14,20],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [14, 20],
                   getAccessible(doc.getElementById("paragraph-3"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,5],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 5],
                   getAccessible(doc.getElementById("p3-link-3"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,4],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 4],
                   getAccessible(doc.getElementById("p3-link-2"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [8,10],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [8, 10],
                   getAccessible(doc.getElementById("paragraph-3"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,8],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 8],
                   getAccessible(doc.getElementById("p3-link-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,7],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 7],
                   getAccessible(doc.getElementById("paragraph-3"), nsIAccessibleText)));
 
       gQueue.push(new setVCPosInvoker(docAcc, null, null,
                                       getAccessible(doc.getElementById("s1-link-2"))));
       // Start with the pivot in the middle of the paragraph
       gQueue.push(new setVCPosInvoker(docAcc, "moveNext", ObjectTraversalRule, " will traverse"));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [15,19],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [15, 19],
                   getAccessible(doc.getElementById("section-1"), nsIAccessibleText)));
-      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0,2],
+      gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, [0, 2],
                   getAccessible(doc.getElementById("s1-link-2"), nsIAccessibleText)));
 
       gQueue.push(new setVCPosInvoker(docAcc, null, null,
                                       getAccessible(doc.getElementById("end-block"))));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,4],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 4],
                   getAccessible(doc.getElementById("end-block"), nsIAccessibleText)));
       gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, null, false));
       gQueue.push(new setVCPosInvoker(docAcc, null, null,
                                       getAccessible(doc.getElementById("start-block"))));
-      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0,4],
+      gQueue.push(new setVCTextInvoker(docAcc, "moveNextByText", WORD_BOUNDARY, [0, 4],
                   getAccessible(doc.getElementById("start-block"), nsIAccessibleText)));
       gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, null, false));
       gQueue.push(new setVCTextInvoker(docAcc, "movePreviousByText", WORD_BOUNDARY, null, false));

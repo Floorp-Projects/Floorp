@@ -31,8 +31,8 @@
 
     // //////////////////////////////////////////////////////////////////////////
     // 'required', 'readonly' and 'unavailable' states.
-    var maybe_required = ["input","search","radio","checkbox","textarea"];
-    var never_required = ["submit","button","reset","image"];
+    var maybe_required = ["input", "search", "radio", "checkbox", "textarea"];
+    var never_required = ["submit", "button", "reset", "image"];
 
     var i;
     for (i in maybe_required) {
@@ -74,7 +74,7 @@
 
     // //////////////////////////////////////////////////////////////////////////
     // 'invalid' state
-    var invalid = ["pattern","email","url"];
+    var invalid = ["pattern", "email", "url"];
     for (i in invalid) {
       testStates(invalid[i], STATE_INVALID);
       testStates(invalid[i] + "2", 0, 0, STATE_INVALID);
@@ -95,7 +95,7 @@
     ok(validInput2.validity.valid,
        "input should be valid despite minlength (no interactive edits)");
 
-    var valid = ["minlength","maxlength"];
+    var valid = ["minlength", "maxlength"];
     for (i in valid) {
       testStates(valid[i], 0, 0, STATE_INVALID);
       testStates(valid[i] + "2", 0, 0, STATE_INVALID);
