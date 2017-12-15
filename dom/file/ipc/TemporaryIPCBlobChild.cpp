@@ -72,7 +72,8 @@ TemporaryIPCBlobChild::ActorDestroy(ActorDestroyReason aWhy)
 
 void
 TemporaryIPCBlobChild::AskForBlob(TemporaryIPCBlobChildCallback* aCallback,
-                                  const nsACString& aContentType)
+                                  const nsACString& aContentType,
+                                  PRFileDesc* aFD)
 {
   MOZ_ASSERT(aCallback);
   MOZ_ASSERT(!mCallback);
@@ -82,8 +83,11 @@ TemporaryIPCBlobChild::AskForBlob(TemporaryIPCBlobChildCallback* aCallback,
     return;
   }
 
+  FileDescriptor fdd =
+    FileDescriptor(FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(aFD)));
+
   mCallback = aCallback;
-  SendOperationDone(true, nsCString(aContentType));
+  SendOperationDone(nsCString(aContentType), fdd);
 }
 
 } // dom namespace

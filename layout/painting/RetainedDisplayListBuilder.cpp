@@ -790,9 +790,6 @@ RetainedDisplayListBuilder::ClearModifiedFrameProps()
 bool
 RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
 {
-  const bool hasInvalidations =
-    mBuilder.RootReferenceFrame()->HasProperty(nsIFrame::ModifiedFrameList());
-
   mBuilder.RemoveModifiedWindowDraggingRegion();
   if (mBuilder.ShouldSyncDecodeImages()) {
     MarkFramesWithItemsAndImagesModified(&mList);
@@ -805,8 +802,7 @@ RetainedDisplayListBuilder::AttemptPartialUpdate(nscolor aBackstop)
 
   // Do not allow partial builds if the retained display list is empty, or if
   // ShouldBuildPartial heuristic fails.
-  const bool shouldBuildPartial =
-    hasInvalidations && !mList.IsEmpty() && ShouldBuildPartial(modifiedFrames);
+  const bool shouldBuildPartial = !mList.IsEmpty() && ShouldBuildPartial(modifiedFrames);
 
   if (mPreviousCaret != mBuilder.GetCaretFrame()) {
     if (mPreviousCaret) {

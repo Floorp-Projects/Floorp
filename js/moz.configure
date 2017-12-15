@@ -282,6 +282,17 @@ set_define('JS_GC_ZEAL',
            depends_if('--enable-gczeal')(lambda _: True))
 
 
+# Use a smaller chunk size for GC chunks
+# ========================================================
+# Use large (1MB) chunks by default.  This option can be used to give
+# smaller (currently 256K) chunks.
+js_option('--enable-small-chunk-size',
+          help='Allocate memory for JS GC things in smaller chunks')
+
+set_define('JS_GC_SMALL_CHUNK_SIZE',
+           depends(when='--enable-small-chunk-size')(lambda: True))
+
+
 # Trace logging.
 # =======================================================
 js_option('--enable-trace-logging',
