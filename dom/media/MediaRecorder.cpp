@@ -13,6 +13,7 @@
 #include "MediaDecoder.h"
 #include "MediaEncoder.h"
 #include "MediaStreamGraphImpl.h"
+#include "VideoUtils.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/BlobEvent.h"
@@ -867,7 +868,7 @@ private:
     // Create a TaskQueue to read encode media data from MediaEncoder.
     MOZ_RELEASE_ASSERT(!mEncoderThread);
     RefPtr<SharedThreadPool> pool =
-      SharedThreadPool::Get(NS_LITERAL_CSTRING("MediaRecorderReadThread"));
+      GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER);
     if (!pool) {
       LOG(LogLevel::Debug, ("Session.InitEncoder %p Failed to create "
                             "MediaRecorderReadThread thread pool", this));
@@ -875,7 +876,8 @@ private:
       return;
     }
 
-    mEncoderThread = MakeAndAddRef<TaskQueue>(pool.forget());
+    mEncoderThread =
+      MakeAndAddRef<TaskQueue>(pool.forget(), "MediaRecorderReadThread");
 
     if (!gMediaRecorderShutdownBlocker) {
       // Add a shutdown blocker so mEncoderThread can be shutdown async.
