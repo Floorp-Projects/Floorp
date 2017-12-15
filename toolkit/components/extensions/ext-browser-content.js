@@ -250,8 +250,24 @@ const BrowserListener = {
 
       // Compensate for any offsets (margin, padding, ...) between the scroll
       // area of the body and the outer height of the document.
+      // This calculation is hard to get right for all cases, so take the lower
+      // number of the combination of all padding and margins of the document
+      // and body elements, or the difference between their heights.
       let getHeight = elem => elem.getBoundingClientRect(elem).height;
       let bodyPadding = getHeight(doc.documentElement) - getHeight(body);
+
+      if (body !== doc.documentElement) {
+        let bs = content.getComputedStyle(body);
+        let ds = content.getComputedStyle(doc.documentElement);
+
+        let p = (parseFloat(bs.marginTop) +
+                 parseFloat(bs.marginBottom) +
+                 parseFloat(ds.marginTop) +
+                 parseFloat(ds.marginBottom) +
+                 parseFloat(ds.paddingTop) +
+                 parseFloat(ds.paddingBottom));
+        bodyPadding = Math.min(p, bodyPadding);
+      }
 
       let height = Math.ceil(body.scrollHeight + bodyPadding);
 
