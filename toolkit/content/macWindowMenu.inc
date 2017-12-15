@@ -15,20 +15,9 @@
     </keyset>
     <menu id="windowMenu"
           label="&windowMenu.label;"
-          datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
           onpopupshowing="macWindowMenuDidShow();"
-          hidden="false">
-        <template>
-        <rule>
-            <menupopup>
-                <menuitem uri="rdf:*"
-                          label="rdf:http://home.netscape.com/NC-rdf#Name"
-                          type="radio"
-                          name="windowList"
-                          oncommand="ShowWindowFromResource(event.target)"/>
-            </menupopup>
-        </rule>
-        </template>
+          onpopuphidden="macWindowMenuDidHide();"
+          >
         <menupopup id="windowPopup">
             <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
             <menuitem command="zoomWindow"/>
