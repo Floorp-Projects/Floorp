@@ -160,11 +160,11 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(
       static_cast<nsGenericDOMDataNode*>(aStart.Container());
 
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
-      new DeleteTextTransaction(*mEditorBase, *charDataNode, aStart.Offset(),
-                                numToDel, mRangeUpdater);
+      DeleteTextTransaction::MaybeCreate(*mEditorBase, *charDataNode,
+                                         aStart.Offset(), numToDel);
     // If the text node isn't editable, it should be never undone/redone.
     // So, the transaction shouldn't be recorded.
-    if (NS_WARN_IF(!deleteTextTransaction->CanDoIt())) {
+    if (NS_WARN_IF(!deleteTextTransaction)) {
       return NS_ERROR_FAILURE;
     }
     AppendChild(deleteTextTransaction);
@@ -224,11 +224,11 @@ DeleteRangeTransaction::CreateTxnsToDeleteContent(
   RefPtr<nsGenericDOMDataNode> dataNode =
     static_cast<nsGenericDOMDataNode*>(aPoint.Container());
   RefPtr<DeleteTextTransaction> deleteTextTransaction =
-    new DeleteTextTransaction(*mEditorBase, *dataNode, startOffset, numToDelete,
-                              mRangeUpdater);
+    DeleteTextTransaction::MaybeCreate(*mEditorBase, *dataNode,
+                                       startOffset, numToDelete);
   // If the text node isn't editable, it should be never undone/redone.
   // So, the transaction shouldn't be recorded.
-  if (NS_WARN_IF(!deleteTextTransaction->CanDoIt())) {
+  if (NS_WARN_IF(!deleteTextTransaction)) {
     return NS_ERROR_FAILURE;
   }
   AppendChild(deleteTextTransaction);

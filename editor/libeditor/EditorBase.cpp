@@ -3006,8 +3006,10 @@ EditorBase::DeleteText(nsGenericDOMDataNode& aCharData,
                        uint32_t aLength)
 {
   RefPtr<DeleteTextTransaction> transaction =
-    CreateTxnForDeleteText(aCharData, aOffset, aLength);
-  NS_ENSURE_STATE(transaction);
+    DeleteTextTransaction::MaybeCreate(*this, aCharData, aOffset, aLength);
+  if (NS_WARN_IF(!transaction)) {
+    return NS_ERROR_FAILURE;
+  }
 
   AutoRules beginRulesSniffing(this, EditAction::deleteText,
                                nsIEditor::ePrevious);
@@ -3035,22 +3037,6 @@ EditorBase::DeleteText(nsGenericDOMDataNode& aCharData,
   }
 
   return rv;
-}
-
-already_AddRefed<DeleteTextTransaction>
-EditorBase::CreateTxnForDeleteText(nsGenericDOMDataNode& aCharData,
-                                   uint32_t aOffset,
-                                   uint32_t aLength)
-{
-  RefPtr<DeleteTextTransaction> deleteTextTransaction =
-    new DeleteTextTransaction(*this, aCharData, aOffset, aLength,
-                              &mRangeUpdater);
-  // If it's not editable, the transaction shouldn't be recorded since it
-  // should never be undone/redone.
-  if (NS_WARN_IF(!deleteTextTransaction->CanDoIt())) {
-    return nullptr;
-  }
-  return deleteTextTransaction.forget();
 }
 
 already_AddRefed<SplitNodeTransaction>
@@ -4722,40 +4708,6 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
   return aggregateTransaction.forget();
 }
 
-already_AddRefed<DeleteTextTransaction>
-EditorBase::CreateTxnForDeleteCharacter(nsGenericDOMDataNode& aData,
-                                        uint32_t aOffset,
-                                        EDirection aDirection)
-{
-  NS_ASSERTION(aDirection == eNext || aDirection == ePrevious,
-               "Invalid direction");
-  nsAutoString data;
-  aData.GetData(data);
-  NS_ASSERTION(data.Length(), "Trying to delete from a zero-length node");
-  NS_ENSURE_TRUE(data.Length(), nullptr);
-
-  uint32_t segOffset = aOffset, segLength = 1;
-  if (aDirection == eNext) {
-    if (segOffset + 1 < data.Length() &&
-        NS_IS_HIGH_SURROGATE(data[segOffset]) &&
-        NS_IS_LOW_SURROGATE(data[segOffset+1])) {
-      // Delete both halves of the surrogate pair
-      ++segLength;
-    }
-  } else if (aOffset > 0) {
-    --segOffset;
-    if (segOffset > 0 &&
-      NS_IS_LOW_SURROGATE(data[segOffset]) &&
-      NS_IS_HIGH_SURROGATE(data[segOffset-1])) {
-      ++segLength;
-      --segOffset;
-    }
-  } else {
-    return nullptr;
-  }
-  return CreateTxnForDeleteText(aData, segOffset, segLength);
-}
-
 //XXX: currently, this doesn't handle edge conditions because GetNext/GetPrior
 //are not implemented
 already_AddRefed<EditTransactionBase>
@@ -4808,12 +4760,13 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
         return nullptr;
       }
       RefPtr<DeleteTextTransaction> deleteTextTransaction =
-        CreateTxnForDeleteCharacter(*priorNodeAsCharData, length, ePrevious);
+        DeleteTextTransaction::MaybeCreateForPreviousCharacter(
+                                 *this, *priorNodeAsCharData, length);
       if (NS_WARN_IF(!deleteTextTransaction)) {
         return nullptr;
       }
-      *aOffset = deleteTextTransaction->GetOffset();
-      *aLength = deleteTextTransaction->GetNumCharsToDelete();
+      *aOffset = deleteTextTransaction->Offset();
+      *aLength = deleteTextTransaction->LengthToDelete();
       priorNode.forget(aRemovingNode);
       return deleteTextTransaction.forget();
     }
@@ -4847,12 +4800,13 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
         return nullptr;
       }
       RefPtr<DeleteTextTransaction> deleteTextTransaction =
-        CreateTxnForDeleteCharacter(*nextNodeAsCharData, 0, eNext);
+        DeleteTextTransaction::MaybeCreateForNextCharacter(
+                                 *this, *nextNodeAsCharData, 0);
       if (NS_WARN_IF(!deleteTextTransaction)) {
         return nullptr;
       }
-      *aOffset = deleteTextTransaction->GetOffset();
-      *aLength = deleteTextTransaction->GetNumCharsToDelete();
+      *aOffset = deleteTextTransaction->Offset();
+      *aLength = deleteTextTransaction->LengthToDelete();
       nextNode.forget(aRemovingNode);
       return deleteTextTransaction.forget();
     }
@@ -4868,16 +4822,23 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
   }
 
   if (node->IsNodeOfType(nsINode::eDATA_NODE)) {
+    if (NS_WARN_IF(aAction != ePrevious && aAction != eNext)) {
+      return nullptr;
+    }
     RefPtr<nsGenericDOMDataNode> nodeAsCharData =
       static_cast<nsGenericDOMDataNode*>(node.get());
-    // we have chardata, so delete a char at the proper offset
+    // We have chardata, so delete a char at the proper offset
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
-      CreateTxnForDeleteCharacter(*nodeAsCharData, offset, aAction);
+      aAction == ePrevious ?
+        DeleteTextTransaction::MaybeCreateForPreviousCharacter(
+                                 *this, *nodeAsCharData, offset) :
+        DeleteTextTransaction::MaybeCreateForNextCharacter(
+                                 *this, *nodeAsCharData, offset);
     if (NS_WARN_IF(!deleteTextTransaction)) {
       return nullptr;
     }
-    *aOffset = deleteTextTransaction->GetOffset();
-    *aLength = deleteTextTransaction->GetNumCharsToDelete();
+    *aOffset = deleteTextTransaction->Offset();
+    *aLength = deleteTextTransaction->LengthToDelete();
     node.forget(aRemovingNode);
     return deleteTextTransaction.forget();
   }
@@ -4908,6 +4869,9 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
   }
 
   if (selectedNode->IsNodeOfType(nsINode::eDATA_NODE)) {
+    if (NS_WARN_IF(aAction != ePrevious && aAction != eNext)) {
+      return nullptr;
+    }
     RefPtr<nsGenericDOMDataNode> selectedNodeAsCharData =
       static_cast<nsGenericDOMDataNode*>(selectedNode.get());
     // we are deleting from a chardata node, so do a character deletion
@@ -4916,13 +4880,16 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
       position = selectedNode->Length();
     }
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
-      CreateTxnForDeleteCharacter(*selectedNodeAsCharData, position,
-                                  aAction);
+      aAction == ePrevious ?
+        DeleteTextTransaction::MaybeCreateForPreviousCharacter(
+                                 *this, *selectedNodeAsCharData, position) :
+        DeleteTextTransaction::MaybeCreateForNextCharacter(
+                                 *this, *selectedNodeAsCharData, position);
     if (NS_WARN_IF(!deleteTextTransaction)) {
       return nullptr;
     }
-    *aOffset = deleteTextTransaction->GetOffset();
-    *aLength = deleteTextTransaction->GetNumCharsToDelete();
+    *aOffset = deleteTextTransaction->Offset();
+    *aLength = deleteTextTransaction->LengthToDelete();
     selectedNode.forget(aRemovingNode);
     return deleteTextTransaction.forget();
   }

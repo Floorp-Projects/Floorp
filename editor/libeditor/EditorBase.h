@@ -596,14 +596,6 @@ protected:
   nsresult DeleteText(nsGenericDOMDataNode& aElement,
                       uint32_t aOffset, uint32_t aLength);
 
-  already_AddRefed<DeleteTextTransaction>
-    CreateTxnForDeleteText(nsGenericDOMDataNode& aElement,
-                           uint32_t aOffset, uint32_t aLength);
-
-  already_AddRefed<DeleteTextTransaction>
-    CreateTxnForDeleteCharacter(nsGenericDOMDataNode& aData, uint32_t aOffset,
-                                EDirection aDirection);
-
   /**
    * CreateTxnForSplitNode() creates a transaction to create a new node
    * (left node) identical to an existing node (right node), and split the
