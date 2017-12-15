@@ -14,9 +14,6 @@ Unreleased
 - Backtraces from geckodriver no longer substitute for missing
   Marionette stacktraces
 
-- `Delete Session` now allows Firefox to safely shutdown within 130s before
-  force-killing the process
-
 
 0.19.1 (2017-10-30)
 -------------------
