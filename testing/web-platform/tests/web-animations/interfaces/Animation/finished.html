@@ -163,7 +163,7 @@ promise_test(t => {
   animation.cancel();
 
   return retPromise;
-}, 'finished promise is rejected when an animation is cancelled by calling ' +
+}, 'finished promise is rejected when an animation is canceled by calling ' +
    'cancel()');
 
 promise_test(t => {
@@ -175,9 +175,9 @@ promise_test(t => {
     animation.cancel();
     assert_not_equals(animation.finished, previousFinishedPromise,
                       'A new finished promise should be created when'
-                      + ' cancelling a finished animation');
+                      + ' canceling a finished animation');
   });
-}, 'cancelling an already-finished animation replaces the finished promise');
+}, 'canceling an already-finished animation replaces the finished promise');
 
 promise_test(t => {
   const div = createDiv(t);
