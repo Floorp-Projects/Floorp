@@ -13739,34 +13739,6 @@ nsDocShell::GetPromptAndStringBundle(nsIPrompt** aPrompt,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocShell::GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent,
-                           int32_t* aOffset)
-{
-  NS_ENSURE_ARG_POINTER(aChild || aParent);
-
-  nsCOMPtr<nsIDOMNodeList> childNodes;
-  NS_ENSURE_SUCCESS(aParent->GetChildNodes(getter_AddRefs(childNodes)),
-                    NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(childNodes, NS_ERROR_FAILURE);
-
-  int32_t i = 0;
-
-  for (; true; i++) {
-    nsCOMPtr<nsIDOMNode> childNode;
-    NS_ENSURE_SUCCESS(childNodes->Item(i, getter_AddRefs(childNode)),
-                      NS_ERROR_FAILURE);
-    NS_ENSURE_TRUE(childNode, NS_ERROR_FAILURE);
-
-    if (childNode.get() == aChild) {
-      *aOffset = i;
-      return NS_OK;
-    }
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
 nsIScrollableFrame*
 nsDocShell::GetRootScrollFrame()
 {
