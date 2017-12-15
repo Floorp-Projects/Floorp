@@ -65,6 +65,33 @@ __aeabi_uidivmod(int x, int y)
 namespace js {
 namespace jit {
 
+// For decoding load-exclusive and store-exclusive instructions.
+namespace excl {
+
+// Bit positions.
+enum {
+    ExclusiveOpHi = 24,         // Hi bit of opcode field
+    ExclusiveOpLo = 23,         // Lo bit of opcode field
+    ExclusiveSizeHi = 22,       // Hi bit of operand size field
+    ExclusiveSizeLo = 21,       // Lo bit of operand size field
+    ExclusiveLoad = 20          // Bit indicating load
+};
+
+// Opcode bits for exclusive instructions.
+enum {
+    ExclusiveOpcode = 3
+};
+
+// Operand size, Bits(ExclusiveSizeHi,ExclusiveSizeLo).
+enum {
+    ExclusiveWord = 0,
+    ExclusiveDouble = 1,
+    ExclusiveByte = 2,
+    ExclusiveHalf = 3
+};
+
+}
+
 // Load/store multiple addressing mode.
 enum BlockAddrMode {
     // Alias modes for comparison when writeback does not matter.
@@ -413,6 +440,7 @@ Simulator::Destroy(Simulator* sim)
 void
 Simulator::disassemble(SimInstruction* instr, size_t n)
 {
+#ifdef JS_DISASM_ARM
     disasm::NameConverter converter;
     disasm::Disassembler dasm(converter);
     disasm::EmbeddedVector<char, disasm::ReasonableBufferSize> buffer;
@@ -422,6 +450,7 @@ Simulator::disassemble(SimInstruction* instr, size_t n)
         fprintf(stderr, "  0x%08x  %s\n", uint32_t(instr), buffer.start());
         instr = reinterpret_cast<SimInstruction*>(reinterpret_cast<uint8_t*>(instr) + 4);
     }
+#endif
 }
 
 void
@@ -3104,17 +3133,17 @@ Simulator::decodeType01(SimInstruction* instr)
                         MOZ_CRASH();
                 }
             } else {
-                if (instr->bits(disasm::ExclusiveOpHi, disasm::ExclusiveOpLo) == disasm::ExclusiveOpcode) {
+                if (instr->bits(excl::ExclusiveOpHi, excl::ExclusiveOpLo) == excl::ExclusiveOpcode) {
                     // Load-exclusive / store-exclusive.
-                    if (instr->bit(disasm::ExclusiveLoad)) {
+                    if (instr->bit(excl::ExclusiveLoad)) {
                         int rn = instr->rnValue();
                         int rt = instr->rtValue();
                         int32_t address = get_register(rn);
-                        switch (instr->bits(disasm::ExclusiveSizeHi, disasm::ExclusiveSizeLo)) {
-                          case disasm::ExclusiveWord:
+                        switch (instr->bits(excl::ExclusiveSizeHi, excl::ExclusiveSizeLo)) {
+                          case excl::ExclusiveWord:
                             set_register(rt, readExW(address, instr));
                             break;
-                          case disasm::ExclusiveDouble: {
+                          case excl::ExclusiveDouble: {
                             MOZ_ASSERT((rt % 2) == 0);
                             int32_t hibits;
                             int32_t lobits = readExDW(address, &hibits);
@@ -3122,10 +3151,10 @@ Simulator::decodeType01(SimInstruction* instr)
                             set_register(rt+1, hibits);
                             break;
                           }
-                          case disasm::ExclusiveByte:
+                          case excl::ExclusiveByte:
                             set_register(rt, readExBU(address));
                             break;
-                          case disasm::ExclusiveHalf:
+                          case excl::ExclusiveHalf:
                             set_register(rt, readExHU(address, instr));
                             break;
                         }
@@ -3136,20 +3165,20 @@ Simulator::decodeType01(SimInstruction* instr)
                         int32_t address = get_register(rn);
                         int32_t value = get_register(rt);
                         int32_t result = 0;
-                        switch (instr->bits(disasm::ExclusiveSizeHi, disasm::ExclusiveSizeLo)) {
-                          case disasm::ExclusiveWord:
+                        switch (instr->bits(excl::ExclusiveSizeHi, excl::ExclusiveSizeLo)) {
+                          case excl::ExclusiveWord:
                             result = writeExW(address, value, instr);
                             break;
-                          case disasm::ExclusiveDouble: {
+                          case excl::ExclusiveDouble: {
                             MOZ_ASSERT((rt % 2) == 0);
                             int32_t value2 = get_register(rt+1);
                             result = writeExDW(address, value, value2);
                             break;
                           }
-                          case disasm::ExclusiveByte:
+                          case excl::ExclusiveByte:
                             result = writeExB(address, (uint8_t)value);
                             break;
-                          case disasm::ExclusiveHalf:
+                          case excl::ExclusiveHalf:
                             result = writeExH(address, (uint16_t)value, instr);
                             break;
                         }
