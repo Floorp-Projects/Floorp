@@ -378,7 +378,6 @@ SchedulerGroup::Runnable::GetName(nsACString& aName)
     aName.AssignLiteral("anonymous");
   }
 
-  aName.AppendASCII("(labeled)");
   return NS_OK;
 }
 

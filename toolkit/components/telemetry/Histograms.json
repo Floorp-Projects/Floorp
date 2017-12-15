@@ -13168,7 +13168,7 @@
   },
   "MAIN_THREAD_RUNNABLE_MS": {
     "record_in_processes": ["main", "content", "gpu"],
-    "alert_emails": ["wmccloskey@mozilla.com"],
+    "alert_emails": ["wmccloskey@mozilla.com", "farre@mozilla.com"],
     "expires_in_version": "60",
     "kind": "exponential",
     "keyed": true,
