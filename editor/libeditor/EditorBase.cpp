@@ -1662,6 +1662,10 @@ EditorBase::DeleteNode(nsIDOMNode* aNode)
 nsresult
 EditorBase::DeleteNode(nsINode* aNode)
 {
+  if (NS_WARN_IF(!aNode)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   AutoRules beginRulesSniffing(this, EditAction::createNode,
                                nsIEditor::ePrevious);
 
@@ -1674,7 +1678,7 @@ EditorBase::DeleteNode(nsINode* aNode)
   }
 
   RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-    CreateTxnForDeleteNode(aNode);
+    DeleteNodeTransaction::MaybeCreate(*this, *aNode);
   nsresult rv = deleteNodeTransaction ? DoTransaction(deleteNodeTransaction) :
                                         NS_ERROR_FAILURE;
 
@@ -4619,23 +4623,6 @@ EditorBase::CreateTxnForRemoveAttribute(Element& aElement,
   return transaction.forget();
 }
 
-already_AddRefed<DeleteNodeTransaction>
-EditorBase::CreateTxnForDeleteNode(nsINode* aNode)
-{
-  if (NS_WARN_IF(!aNode)) {
-    return nullptr;
-  }
-
-  RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-    new DeleteNodeTransaction(*this, *aNode, &mRangeUpdater);
-  // This should be OK because if currently it cannot delete the node,
-  // it should never be able to undo/redo.
-  if (!deleteNodeTransaction->CanDoIt()) {
-    return nullptr;
-  }
-  return deleteNodeTransaction.forget();
-}
-
 already_AddRefed<AddStyleSheetTransaction>
 EditorBase::CreateTxnForAddStyleSheet(StyleSheet* aSheet)
 {
@@ -4773,7 +4760,7 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
 
     // priorNode is not chardata, so tell its parent to delete it
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-      CreateTxnForDeleteNode(priorNode);
+      DeleteNodeTransaction::MaybeCreate(*this, *priorNode);
     if (NS_WARN_IF(!deleteNodeTransaction)) {
       return nullptr;
     }
@@ -4813,7 +4800,7 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
 
     // nextNode is not chardata, so tell its parent to delete it
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-      CreateTxnForDeleteNode(nextNode);
+      DeleteNodeTransaction::MaybeCreate(*this, *nextNode);
     if (NS_WARN_IF(!deleteNodeTransaction)) {
       return nullptr;
     }
@@ -4895,7 +4882,7 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
   }
 
   RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-    CreateTxnForDeleteNode(selectedNode);
+    DeleteNodeTransaction::MaybeCreate(*this, *selectedNode);
   if (NS_WARN_IF(!deleteNodeTransaction)) {
     return nullptr;
   }

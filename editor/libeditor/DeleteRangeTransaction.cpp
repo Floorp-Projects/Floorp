@@ -177,12 +177,12 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(
        child && child != aEnd.GetChildAtOffset();
        child = child->GetNextSibling()) {
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-      new DeleteNodeTransaction(*mEditorBase, *child, mRangeUpdater);
+      DeleteNodeTransaction::MaybeCreate(*mEditorBase, *child);
     // XXX This is odd handling.  Even if some children are not editable,
     //     editor should append transactions because they could be editable
     //     at undoing/redoing.  Additionally, if the transaction needs to
     //     delete/restore all nodes, it should at undoing/redoing.
-    if (deleteNodeTransaction->CanDoIt()) {
+    if (deleteNodeTransaction) {
       AppendChild(deleteNodeTransaction);
     }
   }
@@ -255,12 +255,12 @@ DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween(nsRange* aRangeToDelete)
     }
 
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-      new DeleteNodeTransaction(*mEditorBase, *node, mRangeUpdater);
+      DeleteNodeTransaction::MaybeCreate(*mEditorBase, *node);
     // XXX This is odd handling.  Even if some nodes in the range are not
     //     editable, editor should append transactions because they could
     //     at undoing/redoing.  Additionally, if the transaction needs to
     //     delete/restore all nodes, it should at undoing/redoing.
-    if (NS_WARN_IF(!deleteNodeTransaction->CanDoIt())) {
+    if (NS_WARN_IF(!deleteNodeTransaction)) {
       return NS_ERROR_FAILURE;
     }
     AppendChild(deleteNodeTransaction);

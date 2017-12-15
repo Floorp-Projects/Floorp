@@ -537,12 +537,6 @@ protected:
                                        const EditorRawDOMPoint& aPointToInsert);
 
   /**
-   * Create a transaction for removing aNode from its parent.
-   */
-  already_AddRefed<DeleteNodeTransaction>
-    CreateTxnForDeleteNode(nsINode* aNode);
-
-  /**
    * Create an aggregate transaction for delete selection.  The result may
    * include DeleteNodeTransactions and/or DeleteTextTransactions as its
    * children.
