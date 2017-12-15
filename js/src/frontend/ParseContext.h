@@ -7,11 +7,7 @@
 #ifndef frontend_ParseContext_h
 #define frontend_ParseContext_h
 
-#include "ds/Nestable.h"
-
-#include "frontend/BytecodeCompiler.h"
 #include "frontend/ErrorReporter.h"
-#include "frontend/SharedContext.h"
 
 namespace js {
 
@@ -293,10 +289,6 @@ class ParseContext : public Nestable<ParseContext>
             return declared_.acquire(pc->sc()->context);
         }
 
-        bool isEmpty() const {
-            return declared_->all().empty();
-        }
-
         DeclaredNamePtr lookupDeclaredName(JSAtom* name) {
             return declared_->lookup(name);
         }
@@ -410,7 +402,6 @@ class ParseContext : public Nestable<ParseContext>
     {
       public:
         explicit inline VarScope(ParserBase* parser);
-        explicit inline VarScope(JSContext* cx, ParseContext* pc, UsedNameTracker& usedNames);
     };
 
   private:
@@ -526,7 +517,6 @@ class ParseContext : public Nestable<ParseContext>
         return sc_;
     }
 
-    // `true` if we are in the body of a function definition.
     bool isFunctionBox() const {
         return sc_->isFunctionBox();
     }
@@ -587,22 +577,6 @@ class ParseContext : public Nestable<ParseContext>
     AtomVector& closedOverBindingsForLazy() {
         return *closedOverBindingsForLazy_;
     }
-
-    enum class BreakStatementError {
-        // Unlabeled break must be inside loop or switch.
-        ToughBreak,
-        LabelNotFound,
-    };
-
-    // Return Err(true) if we have encountered at least one loop,
-    // Err(false) otherwise.
-    MOZ_MUST_USE inline JS::Result<Ok, BreakStatementError> checkBreakStatement(PropertyName* label);
-
-    enum class ContinueStatementError {
-        NotInALoop,
-        LabelNotFound,
-    };
-    MOZ_MUST_USE inline JS::Result<Ok, ContinueStatementError> checkContinueStatement(PropertyName* label);
 
     // True if we are at the topmost level of a entire script or function body.
     // For example, while parsing this code we would encounter f1 and f2 at

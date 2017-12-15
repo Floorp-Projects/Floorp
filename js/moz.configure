@@ -408,18 +408,3 @@ def enable_pipeline_operator(value):
 
 set_config('ENABLE_PIPELINE_OPERATOR', enable_pipeline_operator)
 set_define('ENABLE_PIPELINE_OPERATOR', enable_pipeline_operator)
-
-
-
-# Experimental support for BinAST
-# ==============================================================
-
-@depends(target, milestone)
-def enable_build_binast(target, milestone):
-    # For reasons unknown at this time, BinAST causes timeouts on win32
-    # and failures on Android.
-    if milestone.is_nightly and not (target.kernel == 'WINNT' and target.cpu == 'x86') and not (target.os == 'Android'):
-        return True
-
-set_define('JS_BUILD_BINAST', enable_build_binast)
-set_config('JS_BUILD_BINAST', enable_build_binast)
