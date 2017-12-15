@@ -312,11 +312,6 @@ add_task(function* () {
       yield waitUntil(() => requestsListStatus.title);
     }
 
-    isnot(getSelectedRequest(store.getState()), undefined,
-      "There should still be a selected item after filtering.");
-    is(getSelectedIndex(store.getState()), 0,
-      "The first item should be still selected after filtering.");
-
     let items = getSortedRequests(store.getState());
     let visibleItems;
 
