@@ -161,6 +161,21 @@ jobs:
         run:
             spidermonkey-variant: plain
 
+    sm-nojit-linux64/opt:
+        description: "Spidermonkey no JIT"
+        index:
+            job-name: sm-nojit-linux64-opt
+        treeherder:
+            symbol: SM-tc(nojit)
+            platform: linux64/opt
+        worker:
+            max-run-time: 3600
+            docker-image: {in-tree: desktop-build}
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/jsshell.manifest"
+        run:
+            spidermonkey-variant: nojit
+
     sm-plain-win32/opt:
         description: "Spidermonkey Plain"
         index:
