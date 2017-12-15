@@ -45,15 +45,19 @@ HTMLEditor::GetInlineTableEditingEnabled(bool* aIsEnabled)
 NS_IMETHODIMP
 HTMLEditor::ShowInlineTableEditingUI(nsIDOMElement* aCell)
 {
-  NS_ENSURE_ARG_POINTER(aCell);
-
-  // do nothing if aCell is not a table cell...
   nsCOMPtr<Element> cell = do_QueryInterface(aCell);
-  if (!cell || !HTMLEditUtils::IsTableCell(cell)) {
+  return ShowInlineTableEditingUI(cell);
+}
+
+nsresult
+HTMLEditor::ShowInlineTableEditingUI(Element* aCell)
+{
+  // do nothing if aCell is not a table cell...
+  if (!aCell || !HTMLEditUtils::IsTableCell(aCell)) {
     return NS_OK;
   }
 
-  if (NS_WARN_IF(!IsDescendantOfEditorRoot(cell))) {
+  if (NS_WARN_IF(!IsDescendantOfEditorRoot(aCell))) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -141,14 +145,13 @@ HTMLEditor::DoInlineTableEditingAction(nsIDOMElement* aElement)
     if (!StringBeginsWith(anonclass, NS_LITERAL_STRING("mozTable")))
       return NS_OK;
 
-    nsCOMPtr<nsIDOMNode> tableNode = GetEnclosingTable(mInlineEditedCell);
-    nsCOMPtr<nsIDOMElement> tableElement = do_QueryInterface(tableNode);
+    RefPtr<Element> tableElement = GetEnclosingTable(mInlineEditedCell);
     int32_t rowCount, colCount;
     rv = GetTableSize(tableElement, &rowCount, &colCount);
     NS_ENSURE_SUCCESS(rv, rv);
 
     bool hideUI = false;
-    bool hideResizersWithInlineTableUI = (GetAsDOMNode(mResizedObject) == tableElement);
+    bool hideResizersWithInlineTableUI = (mResizedObject == tableElement);
 
     if (anonclass.EqualsLiteral("mozTableAddColumnBefore"))
       InsertTableColumn(1, false);
@@ -211,17 +214,17 @@ HTMLEditor::RemoveMouseClickListener(Element* aElement)
 NS_IMETHODIMP
 HTMLEditor::RefreshInlineTableEditingUI()
 {
+  if (!mInlineEditedCell) {
+   return NS_OK;
+  }
+
   nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(mInlineEditedCell);
   if (!htmlElement) {
     return NS_ERROR_NULL_POINTER;
   }
 
   int32_t xCell, yCell, wCell, hCell;
-  nsCOMPtr<Element> element = do_QueryInterface(mInlineEditedCell);
-  if (NS_WARN_IF(!element)) {
-   return NS_ERROR_FAILURE;
-  }
-  GetElementOrigin(*element, xCell, yCell);
+  GetElementOrigin(*mInlineEditedCell, xCell, yCell);
 
   nsresult rv = htmlElement->GetOffsetWidth(&wCell);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -231,8 +234,7 @@ HTMLEditor::RefreshInlineTableEditingUI()
   int32_t xHoriz = xCell + wCell/2;
   int32_t yVert  = yCell + hCell/2;
 
-  nsCOMPtr<nsIDOMNode> tableNode = GetEnclosingTable(mInlineEditedCell);
-  nsCOMPtr<nsIDOMElement> tableElement = do_QueryInterface(tableNode);
+  RefPtr<Element> tableElement = GetEnclosingTable(mInlineEditedCell);
   int32_t rowCount, colCount;
   rv = GetTableSize(tableElement, &rowCount, &colCount);
   NS_ENSURE_SUCCESS(rv, rv);
