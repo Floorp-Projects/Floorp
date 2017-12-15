@@ -19,6 +19,8 @@
 #include "nsISupportsImpl.h"
 #include "nsThreadUtils.h"
 
+class nsIEventTarget;
+
 namespace mozilla {
 namespace media {
 
@@ -429,13 +431,13 @@ template<typename ResolveValueType,
          typename RejectFunction>
 void
 Await(
+  already_AddRefed<nsIEventTarget> aPool,
   RefPtr<MozPromise<ResolveValueType, RejectValueType, true>> aPromise,
   ResolveFunction&& aResolveFunction,
   RejectFunction&& aRejectFunction)
 {
   Monitor mon(__func__);
-  RefPtr<AutoTaskQueue> taskQueue = new AutoTaskQueue(
-    SharedThreadPool::Get(NS_LITERAL_CSTRING("AwaitMozPromise")));
+  RefPtr<AutoTaskQueue> taskQueue = new AutoTaskQueue(Move(aPool));
   bool done = false;
 
   aPromise->Then(taskQueue,
@@ -462,11 +464,11 @@ Await(
 template<typename ResolveValueType, typename RejectValueType, bool Excl>
 typename MozPromise<ResolveValueType, RejectValueType, Excl>::
   ResolveOrRejectValue
-Await(RefPtr<MozPromise<ResolveValueType, RejectValueType, Excl>> aPromise)
+Await(already_AddRefed<nsIEventTarget> aPool,
+      RefPtr<MozPromise<ResolveValueType, RejectValueType, Excl>> aPromise)
 {
   Monitor mon(__func__);
-  RefPtr<AutoTaskQueue> taskQueue = new AutoTaskQueue(
-    SharedThreadPool::Get(NS_LITERAL_CSTRING("AwaitMozPromise")));
+  RefPtr<AutoTaskQueue> taskQueue = new AutoTaskQueue(Move(aPool));
   bool done = false;
 
   typename MozPromise<ResolveValueType, RejectValueType, Excl>::ResolveOrRejectValue val;
@@ -502,16 +504,17 @@ template<typename ResolveValueType,
          typename ResolveFunction,
          typename RejectFunction>
 void
-AwaitAll(nsTArray<RefPtr<MozPromise<ResolveValueType, RejectValueType, true>>>&
+AwaitAll(already_AddRefed<nsIEventTarget> aPool,
+         nsTArray<RefPtr<MozPromise<ResolveValueType, RejectValueType, true>>>&
            aPromises,
          ResolveFunction&& aResolveFunction,
          RejectFunction&& aRejectFunction)
 {
   typedef MozPromise<ResolveValueType, RejectValueType, true> Promise;
-  RefPtr<AutoTaskQueue> taskQueue = new AutoTaskQueue(
-    SharedThreadPool::Get(NS_LITERAL_CSTRING("AwaitMozPromise")));
+  RefPtr<nsIEventTarget> pool = aPool;
+  RefPtr<AutoTaskQueue> taskQueue = new AutoTaskQueue(do_AddRef(pool));
   RefPtr<typename Promise::AllPromiseType> p = Promise::All(taskQueue, aPromises);
-  Await(p, Move(aResolveFunction), Move(aRejectFunction));
+  Await(pool.forget(), p, Move(aResolveFunction), Move(aRejectFunction));
 }
 
 // Note: only works with exclusive MozPromise, as Promise::All would attempt
@@ -520,15 +523,16 @@ template<typename ResolveValueType, typename RejectValueType>
 typename MozPromise<ResolveValueType,
                     RejectValueType,
                     true>::AllPromiseType::ResolveOrRejectValue
-AwaitAll(nsTArray<RefPtr<MozPromise<ResolveValueType, RejectValueType, true>>>&
+AwaitAll(already_AddRefed<nsIEventTarget> aPool,
+         nsTArray<RefPtr<MozPromise<ResolveValueType, RejectValueType, true>>>&
            aPromises)
 {
   typedef MozPromise<ResolveValueType, RejectValueType, true> Promise;
-  RefPtr<AutoTaskQueue> taskQueue = new AutoTaskQueue(
-    SharedThreadPool::Get(NS_LITERAL_CSTRING("AwaitMozPromise")));
+  RefPtr<nsIEventTarget> pool = aPool;
+  RefPtr<AutoTaskQueue> taskQueue = new AutoTaskQueue(do_AddRef(pool));
   RefPtr<typename Promise::AllPromiseType> p =
     Promise::All(taskQueue, aPromises);
-  return Await(p);
+  return Await(pool.forget(), p);
 }
 
 } // namespace media

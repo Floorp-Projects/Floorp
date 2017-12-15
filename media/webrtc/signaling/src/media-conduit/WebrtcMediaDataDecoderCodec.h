@@ -22,6 +22,7 @@ namespace layers {
 }
 
 class PDMFactory;
+class SharedThreadPool;
 class TaskQueue;
 
 class ImageBuffer : public webrtc::NativeHandleBuffer
@@ -62,6 +63,7 @@ private:
   AbstractThread* OwnerThread() const { return mTaskQueue; }
   bool OnTaskQueue() const;
 
+  const RefPtr<SharedThreadPool> mThreadPool;
   const RefPtr<TaskQueue> mTaskQueue;
   const RefPtr<layers::ImageContainer> mImageContainer;
   const RefPtr<PDMFactory> mFactory;
