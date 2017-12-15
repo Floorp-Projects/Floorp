@@ -39,7 +39,7 @@
       ok(isAccessible("pawn"),
          "Must be accessible because referred by another element.");
 
-      for (var idx = 0; idx < globalIds.length; idx++) {
+      for (let idx = 0; idx < globalIds.length; idx++) {
         ok(isAccessible(globalIds[idx]),
            "Must be accessible becuase of aria-" + globalIds[idx] +
            " presence");
@@ -51,7 +51,7 @@
       ok(!isAccessible("td_nothing", nsIAccessibleTableCell),
          "inherited presentation role takes a place");
 
-      for (var idx = 0; idx < globalIds.length; idx++) {
+      for (let idx = 0; idx < globalIds.length; idx++) {
         ok(isAccessible("td_" + globalIds[idx]),
            "Inherited presentation role must be ignored becuase of " +
            "aria-" + globalIds[idx] + " presence");

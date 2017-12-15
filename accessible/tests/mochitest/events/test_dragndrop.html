@@ -66,13 +66,13 @@
       // Test aria attribute mutation events
       gQueue = new eventQueue(nsIAccessibleEvent.EVENT_OBJECT_ATTRIBUTE_CHANGED);
 
-      var id = "grabbable";
+      let id = "grabbable";
       gQueue.push(new changeGrabbed(id, "true"));
       gQueue.push(new changeGrabbed(id, "false"));
       todo(false, "uncomment this test when 472142 is fixed.");
       // gQueue.push(new changeGrabbed(id, "undefined"));
 
-      var id = "dropregion";
+      id = "dropregion";
       gQueue.push(new changeDropeffect(id, "copy"));
       gQueue.push(new changeDropeffect(id, "execute"));
 

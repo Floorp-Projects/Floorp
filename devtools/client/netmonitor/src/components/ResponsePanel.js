@@ -10,6 +10,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { L10N } = require("../utils/l10n");
 const {
   decodeUnicodeBase64,
+  fetchNetworkUpdatePacket,
   formDataURI,
   getUrlBaseName,
 } = require("../utils/request-utils");
@@ -57,26 +58,13 @@ class ResponsePanel extends Component {
   }
 
   componentDidMount() {
-    this.maybeFetchResponseContent(this.props);
+    let { request, connector } = this.props;
+    fetchNetworkUpdatePacket(connector.requestData, request, ["responseContent"]);
   }
 
   componentWillReceiveProps(nextProps) {
-    this.maybeFetchResponseContent(nextProps);
-  }
-
-  /**
-   * When switching to another request, lazily fetch response content
-   * from the backend. The Response Panel will first be empty and then
-   * display the content.
-   */
-  maybeFetchResponseContent(props) {
-    if (props.request.responseContentAvailable &&
-        (!props.request.responseContent ||
-         !props.request.responseContent.content)) {
-      // This method will set `props.request.responseContent.content`
-      // asynchronously and force another render.
-      props.connector.requestData(props.request.id, "responseContent");
-    }
+    let { request, connector } = nextProps;
+    fetchNetworkUpdatePacket(connector.requestData, request, ["responseContent"]);
   }
 
   updateImageDimemsions({ target }) {

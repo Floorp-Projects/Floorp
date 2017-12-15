@@ -72,7 +72,7 @@
         ok(false, "Unexpected amount of states");
     }
     if (states) {
-      for (var i = 0; i < states.length; i++) {
+      for (let i = 0; i < states.length; i++) {
         is(anode.states[i], states[i], `${states[i]} state is expected at ${i}th index`);
       }
     }
@@ -96,7 +96,7 @@
     }
 
     is(anode.attributes.length, attrs.length, "correct number of attributes");
-    for (var i = 0; i < attrs.length; i++) {
+    for (let i = 0; i < attrs.length; i++) {
       ok(attrs.indexOf(anode.attributes[i]) >= 0,
          `${anode.attributes[i]} attribute is expected and found`);
     }

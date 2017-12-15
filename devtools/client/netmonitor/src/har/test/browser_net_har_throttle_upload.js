@@ -47,11 +47,13 @@ function* throttleUploadTest(actuallyThrottle) {
   });
 
   // Execute one POST request on the page and wait till its done.
+  let onEventTimings = monitor.panelWin.once(EVENTS.RECEIVED_EVENT_TIMINGS);
   let wait = waitForNetworkEvents(monitor, 1);
   yield ContentTask.spawn(tab.linkedBrowser, { size }, function* (args) {
     content.wrappedJSObject.executeTest2(args.size);
   });
   yield wait;
+  yield onEventTimings;
 
   // Copy HAR into the clipboard (asynchronous).
   let contextMenu = new RequestListContextMenu({ connector });

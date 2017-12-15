@@ -11,13 +11,12 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
 
   store.dispatch(Actions.batchEnable(false));
 
   info("Requesting a resource that has a certificate problem.");
 
-  let requestsDone = waitForSecurityBrokenNetworkEvent();
+  let requestsDone = waitForNetworkEvents(monitor, 1);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
     content.wrappedJSObject.performRequests(1, "https://nocert.example.com");
   });
@@ -36,25 +35,4 @@ add_task(function* () {
   isnot(errormsg.textContent, "", "Error message is not empty.");
 
   return teardown(monitor);
-
-  /**
-   * Returns a promise that's resolved once a request with security issues is
-   * completed.
-   */
-  function waitForSecurityBrokenNetworkEvent() {
-    let awaitedEvents = [
-      "UPDATING_REQUEST_HEADERS",
-      "RECEIVED_REQUEST_HEADERS",
-      "UPDATING_REQUEST_COOKIES",
-      "RECEIVED_REQUEST_COOKIES",
-      "UPDATING_EVENT_TIMINGS",
-      "RECEIVED_EVENT_TIMINGS",
-    ];
-
-    let promises = awaitedEvents.map((event) => {
-      return monitor.panelWin.once(EVENTS[event]);
-    });
-
-    return Promise.all(promises);
-  }
 });

@@ -18,9 +18,9 @@ const {
   getTypeFilteredRequests,
   isNetworkDetailsToggleButtonDisabled,
 } = require("../selectors/index");
-
 const { autocompleteProvider } = require("../utils/filter-autocomplete-provider");
 const { L10N } = require("../utils/l10n");
+const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 
 // Components
 const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
@@ -135,9 +135,12 @@ class Toolbar extends Component {
   onSearchBoxFocus() {
     let { connector, filteredRequests } = this.props;
 
-    // Fetch responseCookies for building autocomplete list
+    // Fetch responseCookies & responseHeaders for building autocomplete list
     filteredRequests.forEach((request) => {
-      connector.requestData(request.id, "responseCookies");
+      fetchNetworkUpdatePacket(connector.requestData, request, [
+        "responseCookies",
+        "responseHeaders",
+      ]);
     });
   }
 

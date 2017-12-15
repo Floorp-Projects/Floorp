@@ -305,7 +305,7 @@ function compileDetail(aType, aPoints, keyMap = {x: "startX", y: "startY"}) {
   }
   return {
     type: aType,
-    touches: touches,
+    touches,
     deltaX: maxDeltaX,
     deltaY: maxDeltaY
   };

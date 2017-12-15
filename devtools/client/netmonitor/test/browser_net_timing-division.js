@@ -13,10 +13,6 @@ add_task(function* () {
 
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let {
-    getSortedRequests,
-  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
-
   store.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 2);
@@ -43,14 +39,6 @@ add_task(function* () {
 
   is(store.getState().requests.requests.size, 2,
      "There should be only two requests made.");
-
-  let firstRequest = getSortedRequests(store.getState()).get(0);
-  let lastRequest = getSortedRequests(store.getState()).get(1);
-
-  info("First request happened at: " +
-       firstRequest.responseHeaders.headers.find(e => e.name == "date").value);
-  info("Last request happened at: " +
-       lastRequest.responseHeaders.headers.find(e => e.name == "date").value);
 
   ok(secDivs.length,
      "There should be at least one division on the seconds time scale.");

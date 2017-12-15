@@ -1324,21 +1324,23 @@ nsSMILTimedElement::SetBeginOrEndSpec(const nsAString& aSpec,
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = NS_OK;
-  while (tokenizer.hasMoreTokens() && NS_SUCCEEDED(rv)) {
+  bool hadFailure = false;
+  while (tokenizer.hasMoreTokens()) {
     nsAutoPtr<nsSMILTimeValueSpec>
       spec(new nsSMILTimeValueSpec(*this, aIsBegin));
-    rv = spec->SetSpec(tokenizer.nextToken(), aContextNode);
+    nsresult rv = spec->SetSpec(tokenizer.nextToken(), aContextNode);
     if (NS_SUCCEEDED(rv)) {
       timeSpecsList.AppendElement(spec.forget());
+    } else {
+      hadFailure = true;
     }
   }
 
-  if (NS_FAILED(rv)) {
-    ClearSpecs(timeSpecsList, instances, aRemove);
-  }
-
-  return rv;
+  // The return value from this function is only used to determine if we should
+  // print a console message or not, so we return failure if we had one or more
+  // failures but we don't need to differentiate between different types of
+  // failures or the number of failures.
+  return hadFailure ? NS_ERROR_FAILURE : NS_OK;
 }
 
 namespace
