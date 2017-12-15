@@ -56,14 +56,7 @@ public:
   bool IsCurrentThreadIn() override { return mTaskQueue->IsCurrentThreadIn(); }
 
 private:
-  ~AutoTaskQueue()
-  {
-    RefPtr<TaskQueue> taskqueue = mTaskQueue;
-    nsCOMPtr<nsIRunnable> task =
-      NS_NewRunnableFunction("AutoTaskQueue::~AutoTaskQueue",
-                             [taskqueue]() { taskqueue->BeginShutdown(); });
-    SystemGroup::Dispatch(TaskCategory::Other, task.forget());
-  }
+  ~AutoTaskQueue() { mTaskQueue->BeginShutdown(); }
   RefPtr<TaskQueue> mTaskQueue;
 };
 
