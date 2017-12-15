@@ -2685,7 +2685,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
   // Copy aParsedValue for later use since it will be lost when we call
   // SetAndSwapMappedAttr below
   nsAttrValue valueForAfterSetAttr;
-  if (aCallAfterSetAttr) {
+  if (aCallAfterSetAttr || GetCustomElementData()) {
     valueForAfterSetAttr.SetTo(aParsedValue);
   }
 
