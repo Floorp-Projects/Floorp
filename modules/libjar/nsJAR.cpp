@@ -211,11 +211,7 @@ nsJAR::Extract(const nsACString &aEntryName, nsIFile* outFile)
     if (NS_FAILED(rv)) return rv;
 
     // ExtractFile also closes the fd handle and resolves the symlink if needed
-    nsAutoCString path;
-    rv = outFile->GetNativePath(path);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = mZip->ExtractFile(item, path.get(), fd);
+    rv = mZip->ExtractFile(item, outFile, fd);
   }
   if (NS_FAILED(rv)) return rv;
 
@@ -301,7 +297,7 @@ nsJAR::GetJarPath(nsACString& aResult)
 {
   NS_ENSURE_ARG_POINTER(mZipFile);
 
-  return mZipFile->GetNativePath(aResult);
+  return mZipFile->GetPersistentDescriptor(aResult);
 }
 
 nsresult
@@ -607,7 +603,7 @@ nsZipReaderCache::IsCached(nsIFile* zipFile, bool* aResult)
   MutexAutoLock lock(mLock);
 
   nsAutoCString uri;
-  rv = zipFile->GetNativePath(uri);
+  rv = zipFile->GetPersistentDescriptor(uri);
   if (NS_FAILED(rv))
     return rv;
 
@@ -630,7 +626,7 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result,
 #endif
 
   nsAutoCString uri;
-  rv = zipFile->GetNativePath(uri);
+  rv = zipFile->GetPersistentDescriptor(uri);
   if (NS_FAILED(rv)) return rv;
 
   uri.InsertLiteral("file:", 0);
@@ -690,7 +686,7 @@ nsZipReaderCache::GetInnerZip(nsIFile* zipFile, const nsACString &entry,
 #endif
 
   nsAutoCString uri;
-  rv = zipFile->GetNativePath(uri);
+  rv = zipFile->GetPersistentDescriptor(uri);
   if (NS_FAILED(rv)) return rv;
 
   uri.InsertLiteral("jar:", 0);
@@ -733,7 +729,7 @@ nsZipReaderCache::GetFd(nsIFile* zipFile, PRFileDesc** aRetVal)
 
   nsresult rv;
   nsAutoCString uri;
-  rv = zipFile->GetNativePath(uri);
+  rv = zipFile->GetPersistentDescriptor(uri);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -881,7 +877,7 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
       return NS_OK;
 
     nsAutoCString uri;
-    if (NS_FAILED(file->GetNativePath(uri)))
+    if (NS_FAILED(file->GetPersistentDescriptor(uri)))
       return NS_OK;
 
     uri.InsertLiteral("file:", 0);
