@@ -14,9 +14,9 @@
 namespace mozilla {
 
 WebrtcMediaDataDecoder::WebrtcMediaDataDecoder()
-  : mTaskQueue(
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                    "WebrtcMediaDataDecoder::mTaskQueue"))
+  : mThreadPool(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER))
+  , mTaskQueue(new TaskQueue(do_AddRef(mThreadPool),
+                             "WebrtcMediaDataDecoder::mTaskQueue"))
   , mImageContainer(layers::LayerManager::CreateImageContainer(
       layers::ImageContainer::ASYNCHRONOUS))
   , mFactory(new PDMFactory())
@@ -68,7 +68,8 @@ WebrtcMediaDataDecoder::InitDecode(const webrtc::VideoCodec* aCodecSettings,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  media::Await(mDecoder->Init(),
+  media::Await(do_AddRef(mThreadPool),
+               mDecoder->Init(),
                [](TrackInfo::TrackType) {},
                [&](const MediaResult& aError) { mError = aError; });
 
@@ -116,7 +117,8 @@ WebrtcMediaDataDecoder::Decode(
   compressedFrame->mKeyframe =
     aInputImage._frameType == webrtc::FrameType::kVideoFrameKey;
   {
-    media::Await(mDecoder->Decode(compressedFrame),
+    media::Await(do_AddRef(mThreadPool),
+                 mDecoder->Decode(compressedFrame),
                  [&](const MediaDataDecoder::DecodedData& aResults) {
                    mResults = aResults;
                  },
@@ -161,7 +163,7 @@ WebrtcMediaDataDecoder::Release()
                             __func__,
                             [this]() { return mDecoder->Shutdown(); },
                             [this]() { return mDecoder->Shutdown(); });
-  media::Await(p);
+  media::Await(do_AddRef(mThreadPool), p);
 
   mDecoder = nullptr;
   mNeedKeyframe = true;

@@ -817,6 +817,7 @@ public:
   RefPtr<AsyncLatencyLogger> mLatencyLog;
   AudioMixer mMixer;
   const RefPtr<AbstractThread> mAbstractMainThread;
+  RefPtr<SharedThreadPool> mThreadPool;
 #ifdef MOZ_WEBRTC
   RefPtr<AudioOutputObserver> mFarendObserverRef;
 #endif
