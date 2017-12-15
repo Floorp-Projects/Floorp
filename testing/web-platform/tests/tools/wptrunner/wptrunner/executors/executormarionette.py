@@ -568,7 +568,7 @@ class InternalRefTestImplementation(object):
             self.executor.protocol.marionette.set_context(self.executor.protocol.marionette.CONTEXT_CONTENT)
         except Exception as e:
             # Ignore errors during teardown
-            self.logger.warning(traceback.traceback.format_exc(e))
+            self.logger.warning(traceback.format_exc(e))
 
 
 
