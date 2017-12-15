@@ -2012,9 +2012,6 @@ function test_font_weight(prop) {
 }
 
 function test_grid_gap(prop) {
-  if (!SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
-    return;
-  }
   test_length_transition(prop);
   test_length_clamped(prop);
   test_percent_transition(prop);

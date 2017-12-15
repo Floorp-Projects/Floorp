@@ -1,5 +1,3 @@
-default-preferences pref(layout.css.grid.enabled,true)
-
 fails == grid-whitespace-handling-1a.xhtml grid-whitespace-handling-1-ref.xhtml
 fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-whitespace-handling-2.xhtml  grid-whitespace-handling-2-ref.xhtml
