@@ -28,19 +28,27 @@ class Element;
 
 class CreateElementTransaction final : public EditTransactionBase
 {
+protected:
+  CreateElementTransaction(EditorBase& aEditorBase,
+                           nsAtom& aTag,
+                           const EditorRawDOMPoint& aPointToInsert);
+
 public:
   /**
-   * Initialize the transaction.
-   * @param aEditorBase     The provider of basic editing functionality.
+   * Create a transaction for creating a new child node of the container of
+   * aPointToInsert of type aTag.
+   *
+   * @param aEditorBase     The editor which manages the transaction.
    * @param aTag            The tag (P, HR, TABLE, etc.) for the new element.
    * @param aPointToInsert  The new node will be inserted before the child at
    *                        aPointToInsert.  If this refers end of the container
    *                        or after, the new node will be appended to the
    *                        container.
    */
-  CreateElementTransaction(EditorBase& aEditorBase,
-                           nsAtom& aTag,
-                           const EditorRawDOMPoint& aPointToInsert);
+  static already_AddRefed<CreateElementTransaction>
+  Create(EditorBase& aEditorBase,
+         nsAtom& aTag,
+         const EditorRawDOMPoint& aPointToInsert);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CreateElementTransaction,

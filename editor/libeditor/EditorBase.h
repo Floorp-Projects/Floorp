@@ -519,23 +519,6 @@ protected:
     CreateTxnForRemoveAttribute(Element& aElement, nsAtom& aAttribute);
 
   /**
-   * Create a transaction for creating a new child node of the container of
-   * aPointToInsert of type aTag.
-   *
-   * @param aTag            The element name to create.
-   * @param aPointToInsert  The insertion point of new element.  If this refers
-   *                        end of the container or after, the transaction
-   *                        will append the element to the container.
-   *                        Otherwise, will insert the element before the
-   *                        child node referred by this.
-   * @return                A CreateElementTransaction which was initialized
-   *                        with the arguments.
-   */
-  already_AddRefed<CreateElementTransaction>
-    CreateTxnForCreateElement(nsAtom& aTag,
-                              const EditorRawDOMPoint& aPointToInsert);
-
-  /**
    * Create an element node whose name is aTag at before aPointToInsert.  When
    * this succeed to create an element node, this sets aPointToInsert to the
    * new element because the relation of child and offset may be broken.
