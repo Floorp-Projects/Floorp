@@ -8,12 +8,8 @@
 
 menupopup,
 panel {
-  border: 3px solid transparent;
-  -moz-border-top-colors   : ThreeDLightShadow ThreeDHighlight ThreeDFace;
-  -moz-border-left-colors  : ThreeDLightShadow ThreeDHighlight ThreeDFace;
-  -moz-border-right-colors : ThreeDDarkShadow  ThreeDShadow    ThreeDFace;
-  -moz-border-bottom-colors: ThreeDDarkShadow  ThreeDShadow    ThreeDFace;
-  padding: 0px;
+  border: 1px solid ThreeDShadow;
+  padding: 0;
   min-width: 1px;
   background: Menu;
   color: MenuText;
@@ -146,12 +142,6 @@ tooltip[titletip="true"] {
 
 menulist > menupopup {
   -moz-appearance: none;
-  border-width: 1px;
-  -moz-border-top-colors: -moz-FieldText;
-  -moz-border-right-colors: -moz-FieldText;
-  -moz-border-bottom-colors: -moz-FieldText;
-  -moz-border-left-colors: -moz-FieldText;
-  padding: 0px;
-  min-width: 0px;
+  min-width: 0;
   background-color: -moz-Field;
 }
