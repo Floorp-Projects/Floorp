@@ -13,27 +13,6 @@
 #include "frontend/TokenStream.h"
 #include "vm/Printer.h"
 
-// A few notes on lifetime of ParseNode trees:
-//
-// - All the `ParseNode` instances MUST BE explicitly allocated in the context's `LifoAlloc`.
-//   This is typically implemented by the `FullParseHandler` or it can be reimplemented with
-//   a custom `new_`.
-//
-// - The tree is bulk-deallocated when the parser is deallocated. Consequently, references
-//   to a subtree MUST NOT exist once the parser has been deallocated.
-//
-// - This bulk-deallocation DOES NOT run destructors.
-//
-// - Instances of `LexicalScope::Data` MUST BE allocated as instances of `ParseNode`, in the same
-//   `LifoAlloc`. They are bulk-deallocated alongside the rest of the tree.
-//
-// - Instances of `JSAtom` used throughout the tree (including instances of `PropertyName`) MUST
-//   be kept alive by the parser. This is done through an instance of `AutoKeepAtoms` held by
-//   the parser.
-//
-// - Once the parser is deallocated, the `JSAtom` instances MAY be garbage-collected.
-
-
 namespace js {
 namespace frontend {
 
@@ -619,7 +598,6 @@ class ParseNode
     appendOrCreateList(ParseNodeKind kind, ParseNode* left, ParseNode* right,
                        FullParseHandler* handler, ParseContext* pc);
 
-    // include "ParseNode-inl.h" for these methods.
     inline PropertyName* name() const;
     inline JSAtom* atom() const;
 
@@ -753,12 +731,8 @@ class ParseNode
     }
 
     void append(ParseNode* pn) {
-        MOZ_ASSERT(pn->pn_pos.begin >= pn_pos.begin);
-        appendWithoutOrderAssumption(pn);
-    }
-
-    void appendWithoutOrderAssumption(ParseNode* pn) {
         MOZ_ASSERT(pn_arity == PN_LIST);
+        MOZ_ASSERT(pn->pn_pos.begin >= pn_pos.begin);
         pn_pos.end = pn->pn_pos.end;
         *pn_tail = pn;
         pn_tail = &pn->pn_next;

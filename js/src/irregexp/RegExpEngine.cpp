@@ -2323,8 +2323,7 @@ BoyerMoorePositionInfo::SetInterval(const Interval& interval)
         }
         return;
     }
-    MOZ_ASSERT(interval.from() <= interval.to());
-    for (int i = interval.from(); i != interval.to() + 1; i++) {
+    for (int i = interval.from(); i <= interval.to(); i++) {
         int mod_character = (i & kMask);
         if (!map_[mod_character]) {
             map_count_++;
