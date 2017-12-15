@@ -82,7 +82,6 @@ async function waitForViewSourceTabOrWindow(open) {
           }, {once: true});
         },
         onCloseWindow() {},
-        onWindowTitleChange() {}
       };
       Services.wm.addListener(windowListener);
     });

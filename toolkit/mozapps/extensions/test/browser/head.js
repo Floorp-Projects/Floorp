@@ -458,9 +458,6 @@ function wait_for_window_open(aCallback) {
 
     onCloseWindow(aWindow) {
     },
-
-    onWindowTitleChange(aWindow, aTitle) {
-    }
   });
 }
 

@@ -17,7 +17,6 @@ function addWindowListener(aURL, aCallback) {
       }, domwindow);
     },
     onCloseWindow(aXULWindow) { },
-    onWindowTitleChange(aXULWindow, aNewTitle) { }
   });
 }
 

@@ -35,9 +35,6 @@ var windowListener = {
   onCloseWindow(aWindow) {
     aboutNewTabService.resetNewTabURL();
   },
-
-  onWindowTitleChange(aWindow, aTitle) {
-  }
 };
 
 function promiseOneEvent(target, eventName, capture) {
