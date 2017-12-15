@@ -13503,7 +13503,7 @@
   },
   "TIME_BETWEEN_UNLABELED_RUNNABLES_MS": {
     "record_in_processes": ["content"],
-    "alert_emails": ["wmccloskey@mozilla.com"],
+    "alert_emails": ["wmccloskey@mozilla.com", "farre@mozilla.com"],
     "expires_in_version": "60",
     "kind": "exponential",
     "high": 30000,
