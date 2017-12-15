@@ -2145,21 +2145,20 @@ CSS_PROP_SHORTHAND(
     grid,
     Grid,
     CSS_PROPERTY_PARSE_FUNCTION,
-    "layout.css.grid.enabled")
+    "")
 CSS_PROP_SHORTHAND(
     grid-area,
     grid_area,
     GridArea,
     CSS_PROPERTY_PARSE_FUNCTION,
-    "layout.css.grid.enabled")
+    "")
 CSS_PROP_POSITION(
     grid-auto-columns,
     grid_auto_columns,
     GridAutoColumns,
     CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_STORES_CALC |
-        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
-    "layout.css.grid.enabled",
+        CSS_PROPERTY_STORES_CALC,
+    "",
     0,
     kGridTrackBreadthKTable,
     CSS_PROP_NO_OFFSET,
@@ -2168,9 +2167,8 @@ CSS_PROP_POSITION(
     grid-auto-flow,
     grid_auto_flow,
     GridAutoFlow,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
-    "layout.css.grid.enabled",
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "",
     0,
     kGridAutoFlowKTable,
     CSS_PROP_NO_OFFSET,
@@ -2180,9 +2178,8 @@ CSS_PROP_POSITION(
     grid_auto_rows,
     GridAutoRows,
     CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_STORES_CALC |
-        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
-    "layout.css.grid.enabled",
+        CSS_PROPERTY_STORES_CALC,
+    "",
     0,
     kGridTrackBreadthKTable,
     CSS_PROP_NO_OFFSET,
@@ -2192,13 +2189,13 @@ CSS_PROP_SHORTHAND(
     grid_column,
     GridColumn,
     CSS_PROPERTY_PARSE_FUNCTION,
-    "layout.css.grid.enabled")
+    "")
 CSS_PROP_POSITION(
     grid-column-end,
     grid_column_end,
     GridColumnEnd,
     CSS_PROPERTY_PARSE_FUNCTION,
-    "layout.css.grid.enabled",
+    "",
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
@@ -2208,9 +2205,8 @@ CSS_PROP_POSITION(
     grid_column_gap,
     GridColumnGap,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
-        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
-    "layout.css.grid.enabled",
+        CSS_PROPERTY_VALUE_NONNEGATIVE,
+    "",
     VARIANT_HLP | VARIANT_CALC,
     nullptr,
     offsetof(nsStylePosition, mGridColumnGap),
@@ -2220,7 +2216,7 @@ CSS_PROP_POSITION(
     grid_column_start,
     GridColumnStart,
     CSS_PROPERTY_PARSE_FUNCTION,
-    "layout.css.grid.enabled",
+    "",
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
@@ -2230,19 +2226,19 @@ CSS_PROP_SHORTHAND(
     grid_gap,
     GridGap,
     CSS_PROPERTY_PARSE_FUNCTION,
-    "layout.css.grid.enabled")
+    "")
 CSS_PROP_SHORTHAND(
     grid-row,
     grid_row,
     GridRow,
     CSS_PROPERTY_PARSE_FUNCTION,
-    "layout.css.grid.enabled")
+    "")
 CSS_PROP_POSITION(
     grid-row-end,
     grid_row_end,
     GridRowEnd,
     CSS_PROPERTY_PARSE_FUNCTION,
-    "layout.css.grid.enabled",
+    "",
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
@@ -2252,9 +2248,8 @@ CSS_PROP_POSITION(
     grid_row_gap,
     GridRowGap,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_NONNEGATIVE |
-        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
-    "layout.css.grid.enabled",
+        CSS_PROPERTY_VALUE_NONNEGATIVE,
+    "",
     VARIANT_HLP | VARIANT_CALC,
     nullptr,
     offsetof(nsStylePosition, mGridRowGap),
@@ -2264,7 +2259,7 @@ CSS_PROP_POSITION(
     grid_row_start,
     GridRowStart,
     CSS_PROPERTY_PARSE_FUNCTION,
-    "layout.css.grid.enabled",
+    "",
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
@@ -2274,14 +2269,13 @@ CSS_PROP_SHORTHAND(
     grid_template,
     GridTemplate,
     CSS_PROPERTY_PARSE_FUNCTION,
-    "layout.css.grid.enabled")
+    "")
 CSS_PROP_POSITION(
     grid-template-areas,
     grid_template_areas,
     GridTemplateAreas,
-    CSS_PROPERTY_PARSE_FUNCTION |
-        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
-    "layout.css.grid.enabled",
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "",
     0,
     nullptr,
     CSS_PROP_NO_OFFSET,
@@ -2292,9 +2286,8 @@ CSS_PROP_POSITION(
     GridTemplateColumns,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_STORES_CALC |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
-        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
-    "layout.css.grid.enabled",
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
+    "",
     0,
     kGridTrackBreadthKTable,
     CSS_PROP_NO_OFFSET,
@@ -2305,9 +2298,8 @@ CSS_PROP_POSITION(
     GridTemplateRows,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_STORES_CALC |
-        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH |
-        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
-    "layout.css.grid.enabled",
+        CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH,
+    "",
     0,
     kGridTrackBreadthKTable,
     CSS_PROP_NO_OFFSET,
