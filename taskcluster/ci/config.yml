@@ -152,6 +152,7 @@ index:
         - 'sm-fuzzing-linux64'
         - 'sm-mozjs-sys-linux64-debug'
         - 'sm-msan-linux64-opt'
+        - 'sm-nojit-linux64-opt'
         - 'sm-nonunified-linux64-debug'
         - 'sm-package-linux64-opt'
         - 'sm-plain-linux64-opt'
@@ -213,6 +214,7 @@ try:
         'linux64':
             - 'linux64-l10n'
             - 'sm-plain-linux64'
+            - 'sm-nojit-linux64'
             - 'sm-nonunified-linux64'
             - 'sm-arm-sim-linux32'
             - 'sm-arm64-sim-linux64'
