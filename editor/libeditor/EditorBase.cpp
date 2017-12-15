@@ -1441,7 +1441,7 @@ EditorBase::CreateNode(nsAtom* aTag,
   nsCOMPtr<Element> ret;
 
   RefPtr<CreateElementTransaction> transaction =
-    CreateTxnForCreateElement(*aTag, pointToInsert);
+    CreateElementTransaction::Create(*this, *aTag, pointToInsert);
   nsresult rv = DoTransaction(transaction);
   if (NS_SUCCEEDED(rv)) {
     ret = transaction->GetNewNode();
@@ -4628,16 +4628,6 @@ EditorBase::CreateTxnForRemoveAttribute(Element& aElement,
 {
   RefPtr<ChangeAttributeTransaction> transaction =
     new ChangeAttributeTransaction(aElement, aAttribute, nullptr);
-
-  return transaction.forget();
-}
-
-already_AddRefed<CreateElementTransaction>
-EditorBase::CreateTxnForCreateElement(nsAtom& aTag,
-                                      const EditorRawDOMPoint& aPointToInsert)
-{
-  RefPtr<CreateElementTransaction> transaction =
-    new CreateElementTransaction(*this, aTag, aPointToInsert);
 
   return transaction.forget();
 }
