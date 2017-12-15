@@ -17,6 +17,16 @@ namespace mozilla {
 
 using namespace dom;
 
+// static
+already_AddRefed<SplitNodeTransaction>
+SplitNodeTransaction::Create(EditorBase& aEditorBase,
+                             const EditorRawDOMPoint& aStartOfRightNode)
+{
+  RefPtr<SplitNodeTransaction> transaction =
+    new SplitNodeTransaction(aEditorBase, aStartOfRightNode);
+  return transaction.forget();
+}
+
 SplitNodeTransaction::SplitNodeTransaction(
                         EditorBase& aEditorBase,
                         const EditorRawDOMPoint& aStartOfRightNode)

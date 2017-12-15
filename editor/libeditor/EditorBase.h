@@ -590,21 +590,6 @@ protected:
   nsresult DeleteText(nsGenericDOMDataNode& aElement,
                       uint32_t aOffset, uint32_t aLength);
 
-  /**
-   * CreateTxnForSplitNode() creates a transaction to create a new node
-   * (left node) identical to an existing node (right node), and split the
-   * contents between the same point in both nodes.
-   *
-   * @param aStartOfRightNode   The point to split.  Its container will be
-   *                            the right node, i.e., become the new node's
-   *                            next sibling.  And the point will be start
-   *                            of the right node.
-   * @return                    The new transaction to split the container of
-   *                            aStartOfRightNode.
-   */
-  already_AddRefed<SplitNodeTransaction>
-    CreateTxnForSplitNode(const EditorRawDOMPoint& aStartOfRightNode);
-
   already_AddRefed<JoinNodeTransaction>
     CreateTxnForJoinNode(nsINode& aLeftNode, nsINode& aRightNode);
 
