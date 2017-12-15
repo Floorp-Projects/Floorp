@@ -2377,8 +2377,19 @@ MediaCacheStream::Close()
   if (!mMediaCache) {
     return;
   }
+  OwnerThread()->Dispatch(NS_NewRunnableFunction(
+    "MediaCacheStream::Close",
+    [ this, client = RefPtr<ChannelMediaResource>(mClient) ]() {
+      AutoLock lock(mMediaCache->Monitor());
+      CloseInternal(lock);
+    }));
+}
 
-  AutoLock lock(mMediaCache->Monitor());
+void
+MediaCacheStream::CloseInternal(AutoLock& aLock)
+{
+  MOZ_ASSERT(OwnerThread()->IsOnCurrentThread());
+
   if (mClosed) {
     return;
   }
@@ -2386,17 +2397,15 @@ MediaCacheStream::Close()
   // Closing a stream will change the return value of
   // MediaCacheStream::AreAllStreamsForResourceSuspended as well as
   // ChannelMediaResource::IsSuspendedByCache. Let's notify it.
-  mMediaCache->QueueSuspendedStatusUpdate(lock, mResourceID);
+  mMediaCache->QueueSuspendedStatusUpdate(aLock, mResourceID);
 
   mClosed = true;
-  mMediaCache->ReleaseStreamBlocks(lock, this);
+  mMediaCache->ReleaseStreamBlocks(aLock, this);
   // Wake up any blocked readers
-  lock.NotifyAll();
+  aLock.NotifyAll();
 
-  // Queue an Update since we may have created more free space. Don't do
-  // it from CloseInternal since that gets called by Update() itself
-  // sometimes, and we try to not to queue updates from Update().
-  mMediaCache->QueueUpdate(lock);
+  // Queue an Update since we may have created more free space.
+  mMediaCache->QueueUpdate(aLock);
 }
 
 void
