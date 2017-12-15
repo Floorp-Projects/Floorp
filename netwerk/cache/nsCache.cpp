@@ -20,14 +20,7 @@ mozilla::LazyLogModule gCacheLog("cache");
 void
 CacheLogPrintPath(mozilla::LogLevel level, const char * format, nsIFile * item)
 {
-    nsAutoCString path;
-    nsresult rv = item->GetNativePath(path);
-    if (NS_SUCCEEDED(rv)) {
-        MOZ_LOG(gCacheLog, level, (format, path.get()));
-    } else {
-        MOZ_LOG(gCacheLog, level, ("GetNativePath failed: %" PRIx32,
-                                   static_cast<uint32_t>(rv)));
-    }
+    MOZ_LOG(gCacheLog, level, (format, item->HumanReadablePath().get()));
 }
 
 
