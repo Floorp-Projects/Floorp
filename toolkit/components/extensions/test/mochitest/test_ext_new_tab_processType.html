@@ -58,7 +58,7 @@ add_task(async function test_target_blank_link() {
   let iframe = document.createElement("iframe");
   iframe.src = url;
   document.body.appendChild(iframe);
-  await new Promise(resolve => iframe.addEventListener("load", resolve, {once: true}));
+  await new Promise(resolve => iframe.addEventListener("load", () => setTimeout(resolve, 0), {once: true}));
 
   let win = SpecialPowers.wrap(iframe).contentWindow;
   let link = win.document.getElementById("link");

@@ -488,6 +488,20 @@ describe("Top Sites Feed", () => {
       assert.notProperty(link, "screenshot");
       assert.notCalled(fakeScreenshot.getScreenshotForURL);
     });
+    it("should use the link's rich icon even if there's a tippy top", () => {
+      feed._tippyTopProvider.processSite = site => {
+        site.tippyTopIcon = "icon.png";
+        site.backgroundColor = "#fff";
+        return site;
+      };
+      const link = {
+        url: "foo.com",
+        favicon: "data:foo",
+        faviconSize: 196
+      };
+      feed._fetchIcon(link);
+      assert.notProperty(link, "tippyTopIcon");
+    });
   });
   describe("#onAction", () => {
     it("should refresh on SYSTEM_TICK", async () => {

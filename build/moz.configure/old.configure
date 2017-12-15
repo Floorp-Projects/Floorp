@@ -214,7 +214,6 @@ def old_configure_options(*options):
     '--enable-reflow-perf',
     '--enable-sandbox',
     '--enable-signmar',
-    '--enable-small-chunk-size',
     '--enable-startup-notification',
     '--enable-startupcache',
     '--enable-stdcxx-compat',

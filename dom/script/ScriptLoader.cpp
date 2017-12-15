@@ -333,12 +333,12 @@ ScriptLoader::ModuleScriptsEnabled()
 }
 
 bool
-ScriptLoader::ModuleMapContainsModule(ModuleLoadRequest* aRequest) const
+ScriptLoader::ModuleMapContainsURL(nsIURI* aURL) const
 {
   // Returns whether we have fetched, or are currently fetching, a module script
-  // for the request's URL.
-  return mFetchingModules.Contains(aRequest->mURI) ||
-         mFetchedModules.Contains(aRequest->mURI);
+  // for a URL.
+  return mFetchingModules.Contains(aURL) ||
+         mFetchedModules.Contains(aURL);
 }
 
 bool
@@ -355,7 +355,7 @@ ScriptLoader::SetModuleFetchStarted(ModuleLoadRequest* aRequest)
   // Update the module map to indicate that a module is currently being fetched.
 
   MOZ_ASSERT(aRequest->IsLoading());
-  MOZ_ASSERT(!ModuleMapContainsModule(aRequest));
+  MOZ_ASSERT(!ModuleMapContainsURL(aRequest->mURI));
   mFetchingModules.Put(aRequest->mURI, nullptr);
 }
 
@@ -392,11 +392,11 @@ ScriptLoader::SetModuleFetchFinishedAndResumeWaitingRequests(ModuleLoadRequest* 
 }
 
 RefPtr<GenericPromise>
-ScriptLoader::WaitForModuleFetch(ModuleLoadRequest* aRequest)
+ScriptLoader::WaitForModuleFetch(nsIURI* aURL)
 {
-  MOZ_ASSERT(ModuleMapContainsModule(aRequest));
+  MOZ_ASSERT(ModuleMapContainsURL(aURL));
 
-  if (auto entry = mFetchingModules.Lookup(aRequest->mURI)) {
+  if (auto entry = mFetchingModules.Lookup(aURL)) {
     if (!entry.Data()) {
       entry.Data() = new GenericPromise::Private(__func__);
     }
@@ -404,7 +404,7 @@ ScriptLoader::WaitForModuleFetch(ModuleLoadRequest* aRequest)
   }
 
   RefPtr<ModuleScript> ms;
-  MOZ_ALWAYS_TRUE(mFetchedModules.Get(aRequest->mURI, getter_AddRefs(ms)));
+  MOZ_ALWAYS_TRUE(mFetchedModules.Get(aURL, getter_AddRefs(ms)));
   if (!ms) {
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
@@ -452,7 +452,7 @@ ScriptLoader::ProcessFetchedModuleSource(ModuleLoadRequest* aRequest)
 }
 
 static nsresult
-ResolveRequestedModules(ModuleLoadRequest* aRequest, nsCOMArray<nsIURI>& aUrls);
+ResolveRequestedModules(ModuleLoadRequest* aRequest, nsCOMArray<nsIURI>* aUrlsOut);
 
 nsresult
 ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
@@ -527,8 +527,7 @@ ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest)
 
     // Validate requested modules and treat failure to resolve module specifiers
     // the same as a parse error.
-    nsCOMArray<nsIURI> urls;
-    rv = ResolveRequestedModules(aRequest, urls);
+    rv = ResolveRequestedModules(aRequest, nullptr);
     if (NS_FAILED(rv)) {
       aRequest->ModuleErrored();
       return NS_OK;
@@ -612,33 +611,7 @@ ResolveModuleSpecifier(ModuleScript* aScript,
 }
 
 static nsresult
-RequestedModuleIsInAncestorList(ModuleLoadRequest* aRequest, nsIURI* aURL, bool* aResult)
-{
-  const size_t ImportDepthLimit = 100;
-
-  *aResult = false;
-  size_t depth = 0;
-  while (aRequest) {
-    if (depth++ == ImportDepthLimit) {
-      return NS_ERROR_FAILURE;
-    }
-
-    bool equal;
-    nsresult rv = aURL->Equals(aRequest->mURI, &equal);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (equal) {
-      *aResult = true;
-      return NS_OK;
-    }
-
-    aRequest = aRequest->mParent;
-  }
-
-  return NS_OK;
-}
-
-static nsresult
-ResolveRequestedModules(ModuleLoadRequest* aRequest, nsCOMArray<nsIURI>& aUrls)
+ResolveRequestedModules(ModuleLoadRequest* aRequest, nsCOMArray<nsIURI>* aUrlsOut)
 {
   ModuleScript* ms = aRequest->mModuleScript;
 
@@ -684,11 +657,8 @@ ResolveRequestedModules(ModuleLoadRequest* aRequest, nsCOMArray<nsIURI>& aUrls)
       return NS_ERROR_FAILURE;
     }
 
-    bool isAncestor;
-    nsresult rv = RequestedModuleIsInAncestorList(aRequest, uri, &isAncestor);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!isAncestor) {
-      aUrls.AppendElement(uri.forget());
+    if (aUrlsOut) {
+      aUrlsOut->AppendElement(uri.forget());
     }
   }
 
@@ -698,23 +668,39 @@ ResolveRequestedModules(ModuleLoadRequest* aRequest, nsCOMArray<nsIURI>& aUrls)
 void
 ScriptLoader::StartFetchingModuleDependencies(ModuleLoadRequest* aRequest)
 {
+  LOG(("ScriptLoadRequest (%p): Start fetching module dependencies", aRequest));
+
   MOZ_ASSERT(aRequest->mModuleScript);
   MOZ_ASSERT(!aRequest->mModuleScript->HasParseError());
   MOZ_ASSERT(!aRequest->IsReadyToRun());
 
-  LOG(("ScriptLoadRequest (%p): Start fetching module dependencies", aRequest));
+  auto visitedSet = aRequest->mVisitedSet;
+  MOZ_ASSERT(visitedSet->Contains(aRequest->mURI));
 
   aRequest->mProgress = ModuleLoadRequest::Progress::FetchingImports;
 
   nsCOMArray<nsIURI> urls;
-  nsresult rv = ResolveRequestedModules(aRequest, urls);
+  nsresult rv = ResolveRequestedModules(aRequest, &urls);
   if (NS_FAILED(rv)) {
     aRequest->ModuleErrored();
     return;
   }
 
-  if (urls.Length() == 0) {
-    // There are no descendents to load so this request is ready.
+  // Remove already visited URLs from the list. Put unvisited URLs into the
+  // visited set.
+  int32_t i = 0;
+  while (i < urls.Count()) {
+    nsIURI* url = urls[i];
+    if (visitedSet->Contains(url)) {
+      urls.RemoveObjectAt(i);
+    } else {
+      visitedSet->PutEntry(url);
+      i++;
+    }
+  }
+
+  if (urls.Count() == 0) {
+    // There are no descendants to load so this request is ready.
     aRequest->DependenciesLoaded();
     return;
   }
@@ -722,9 +708,9 @@ ScriptLoader::StartFetchingModuleDependencies(ModuleLoadRequest* aRequest)
   // For each url in urls, fetch a module script tree given url, module script's
   // CORS setting, and module script's settings object.
   nsTArray<RefPtr<GenericPromise>> importsReady;
-  for (size_t i = 0; i < urls.Length(); i++) {
+  for (auto url : urls) {
     RefPtr<GenericPromise> childReady =
-      StartFetchingModuleAndDependencies(aRequest, urls[i]);
+      StartFetchingModuleAndDependencies(aRequest, url);
     importsReady.AppendElement(childReady);
   }
 
@@ -737,31 +723,23 @@ ScriptLoader::StartFetchingModuleDependencies(ModuleLoadRequest* aRequest)
 }
 
 RefPtr<GenericPromise>
-ScriptLoader::StartFetchingModuleAndDependencies(ModuleLoadRequest* aRequest,
+ScriptLoader::StartFetchingModuleAndDependencies(ModuleLoadRequest* aParent,
                                                  nsIURI* aURI)
 {
   MOZ_ASSERT(aURI);
 
-  RefPtr<ModuleLoadRequest> childRequest =
-    new ModuleLoadRequest(aRequest->mElement, aRequest->mValidJSVersion,
-                            aRequest->mCORSMode, aRequest->mIntegrity, this);
+  RefPtr<ModuleLoadRequest> childRequest = new ModuleLoadRequest(aURI, aParent);
 
-  childRequest->mIsTopLevel = false;
-  childRequest->mURI = aURI;
-  childRequest->mTriggeringPrincipal = aRequest->mTriggeringPrincipal;
-  childRequest->mIsInline = false;
-  childRequest->mReferrerPolicy = aRequest->mReferrerPolicy;
-  childRequest->mParent = aRequest;
-  aRequest->mImports.AppendElement(childRequest);
+  aParent->mImports.AppendElement(childRequest);
 
   if (LOG_ENABLED()) {
     nsAutoCString url1;
-    aRequest->mURI->GetAsciiSpec(url1);
+    aParent->mURI->GetAsciiSpec(url1);
 
     nsAutoCString url2;
     aURI->GetAsciiSpec(url2);
 
-    LOG(("ScriptLoadRequest (%p): Start fetching dependency %p", aRequest, childRequest.get()));
+    LOG(("ScriptLoadRequest (%p): Start fetching dependency %p", aParent, childRequest.get()));
     LOG(("StartFetchingModuleAndDependencies \"%s\" -> \"%s\"", url1.get(), url2.get()));
   }
 
@@ -770,7 +748,7 @@ ScriptLoader::StartFetchingModuleAndDependencies(ModuleLoadRequest* aRequest,
   nsresult rv = StartLoad(childRequest);
   if (NS_FAILED(rv)) {
     MOZ_ASSERT(!childRequest->mModuleScript);
-    LOG(("ScriptLoadRequest (%p):   rejecting %p", aRequest, &childRequest->mReady));
+    LOG(("ScriptLoadRequest (%p):   rejecting %p", aParent, &childRequest->mReady));
     childRequest->mReady.Reject(rv, __func__);
     return ready;
   }
@@ -988,9 +966,9 @@ ScriptLoader::StartLoad(ScriptLoadRequest* aRequest)
     // Check whether the module has been fetched or is currently being fetched,
     // and if so wait for it.
     ModuleLoadRequest* request = aRequest->AsModuleRequest();
-    if (ModuleMapContainsModule(request)) {
+    if (ModuleMapContainsURL(request->mURI)) {
       LOG(("ScriptLoadRequest (%p): Waiting for module fetch", aRequest));
-      WaitForModuleFetch(request)
+      WaitForModuleFetch(request->mURI)
         ->Then(GetMainThreadSerialEventTarget(), __func__, request,
                &ModuleLoadRequest::ModuleLoaded,
                &ModuleLoadRequest::LoadFailed);
@@ -1281,22 +1259,22 @@ CSPAllowsInlineScript(nsIScriptElement* aElement, nsIDocument* aDocument)
 
 ScriptLoadRequest*
 ScriptLoader::CreateLoadRequest(ScriptKind aKind,
+                                nsIURI* aURI,
                                 nsIScriptElement* aElement,
                                 ValidJSVersion aValidJSVersion,
                                 CORSMode aCORSMode,
                                 const SRIMetadata& aIntegrity)
 {
   if (aKind == ScriptKind::Classic) {
-    ScriptLoadRequest* slr = new ScriptLoadRequest(aKind, aElement,
-                                 aValidJSVersion, aCORSMode,
-                                 aIntegrity);
+    ScriptLoadRequest* slr = new ScriptLoadRequest(aKind, aURI, aElement,
+                                 aValidJSVersion, aCORSMode, aIntegrity);
 
     LOG(("ScriptLoader %p creates ScriptLoadRequest %p", this, slr));
     return slr;
   }
 
   MOZ_ASSERT(aKind == ScriptKind::Module);
-  return new ModuleLoadRequest(aElement, aValidJSVersion, aCORSMode,
+  return new ModuleLoadRequest(aURI, aElement, aValidJSVersion, aCORSMode,
                                aIntegrity, this);
 }
 
@@ -1435,9 +1413,8 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
         principal = scriptContent->NodePrincipal();
       }
 
-      request = CreateLoadRequest(scriptKind, aElement, validJSVersion, ourCORSMode,
-                                  sriMetadata);
-      request->mURI = scriptURI;
+      request = CreateLoadRequest(scriptKind, scriptURI, aElement,
+                                  validJSVersion, ourCORSMode, sriMetadata);
       request->mTriggeringPrincipal = Move(principal);
       request->mIsInline = false;
       request->mReferrerPolicy = ourRefPolicy;
@@ -1578,11 +1555,11 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
   }
 
   // Inline scripts ignore ther CORS mode and are always CORS_NONE
-  request = CreateLoadRequest(scriptKind, aElement, validJSVersion, CORS_NONE,
+  request = CreateLoadRequest(scriptKind, mDocument->GetDocumentURI(), aElement,
+                              validJSVersion, CORS_NONE,
                               SRIMetadata()); // SRI doesn't apply
   request->mValidJSVersion = validJSVersion;
   request->mIsInline = true;
-  request->mURI = mDocument->GetDocumentURI();
   request->mTriggeringPrincipal = mDocument->NodePrincipal();
   request->mLineNo = aElement->GetScriptLineNumber();
   request->mProgress = ScriptLoadRequest::Progress::Loading_Source;
@@ -3167,9 +3144,8 @@ ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
   }
 
   RefPtr<ScriptLoadRequest> request =
-    CreateLoadRequest(ScriptKind::Classic, nullptr, ValidJSVersion::Valid,
+    CreateLoadRequest(ScriptKind::Classic, aURI, nullptr, ValidJSVersion::Valid,
                       Element::StringToCORSMode(aCrossOrigin), sriMetadata);
-  request->mURI = aURI;
   request->mTriggeringPrincipal = mDocument->NodePrincipal();
   request->mIsInline = false;
   request->mReferrerPolicy = aReferrerPolicy;

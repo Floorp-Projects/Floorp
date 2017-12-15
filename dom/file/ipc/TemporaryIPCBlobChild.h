@@ -33,7 +33,8 @@ public:
 
   void
   AskForBlob(TemporaryIPCBlobChildCallback* aCallback,
-             const nsACString& aContentType);
+             const nsACString& aContentType,
+             PRFileDesc* aFD);
 
 private:
   ~TemporaryIPCBlobChild();

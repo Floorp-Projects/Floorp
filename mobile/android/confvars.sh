@@ -40,8 +40,5 @@ MOZ_USE_NATIVE_POPUP_WINDOWS=1
 
 MOZ_APP_ID={aa3c5121-dab2-40e2-81ca-7ea25febc110}
 
-# Use the low-memory GC tuning.
-export JS_GC_SMALL_CHUNK_SIZE=1
-
 # Enable checking that add-ons are signed by the trusted root
 MOZ_ADDON_SIGNING=1
