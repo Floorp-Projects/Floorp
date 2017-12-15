@@ -18,6 +18,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/SharedThreadPool.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
@@ -184,8 +185,6 @@ private:
   T& mVar;
   const T mValue;
 };
-
-class SharedThreadPool;
 
 // The MediaDataDecoder API blocks, with implementations waiting on platform
 // decoder tasks.  These platform decoder tasks are queued on a separate
