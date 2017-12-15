@@ -4,10 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://w3c.github.io/web-animations/#the-compositeoperation-enumeration
- * https://w3c.github.io/web-animations/#dictdef-basepropertyindexedkeyframe
- * https://w3c.github.io/web-animations/#dictdef-basekeyframe
- * https://w3c.github.io/web-animations/#dictdef-basecomputedkeyframe
+ * https://drafts.csswg.org/web-animations/#the-compositeoperation-enumeration
+ * https://drafts.csswg.org/web-animations/#dictdef-basepropertyindexedkeyframe
+ * https://drafts.csswg.org/web-animations/#dictdef-basekeyframe
+ * https://drafts.csswg.org/web-animations/#dictdef-basecomputedkeyframe
  *
  * Copyright © 2016 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.

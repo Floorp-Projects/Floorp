@@ -21,5 +21,5 @@ interface CSSPseudoElement {
   readonly attribute Element parentElement;
 };
 
-// https://w3c.github.io/web-animations/#extensions-to-the-pseudoelement-interface
+// https://drafts.csswg.org/web-animations/#extensions-to-the-pseudoelement-interface
 CSSPseudoElement implements Animatable;
