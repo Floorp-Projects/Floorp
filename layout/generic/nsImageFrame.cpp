@@ -1685,7 +1685,7 @@ nsDisplayImage::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   RefPtr<ImageContainer> container =
     mImage->GetImageContainer(aManager, flags);
-  if (!container) {
+  if (!container || !container->HasCurrentImage()) {
     return nullptr;
   }
 
