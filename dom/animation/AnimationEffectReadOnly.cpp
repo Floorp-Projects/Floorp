@@ -46,7 +46,7 @@ AnimationEffectReadOnly::AnimationEffectReadOnly(
   MOZ_ASSERT(aTiming);
 }
 
-// https://w3c.github.io/web-animations/#current
+// https://drafts.csswg.org/web-animations/#current
 bool
 AnimationEffectReadOnly::IsCurrent() const
 {
@@ -59,7 +59,7 @@ AnimationEffectReadOnly::IsCurrent() const
          computedTiming.mPhase == ComputedTiming::AnimationPhase::Active;
 }
 
-// https://w3c.github.io/web-animations/#in-effect
+// https://drafts.csswg.org/web-animations/#in-effect
 bool
 AnimationEffectReadOnly::IsInEffect() const
 {
@@ -171,7 +171,7 @@ AnimationEffectReadOnly::GetComputedTimingAt(
   }
 
   // Convert active time to a multiple of iterations.
-  // https://w3c.github.io/web-animations/#overall-progress
+  // https://drafts.csswg.org/web-animations/#overall-progress
   double overallProgress;
   if (!result.mDuration) {
     overallProgress = result.mPhase == ComputedTiming::AnimationPhase::Before
@@ -187,7 +187,7 @@ AnimationEffectReadOnly::GetComputedTimingAt(
   }
 
   // Determine the 0-based index of the current iteration.
-  // https://w3c.github.io/web-animations/#current-iteration
+  // https://drafts.csswg.org/web-animations/#current-iteration
   result.mCurrentIteration =
     (result.mIterations >= UINT64_MAX
      && result.mPhase == ComputedTiming::AnimationPhase::After)
@@ -198,7 +198,7 @@ AnimationEffectReadOnly::GetComputedTimingAt(
 
   // Convert the overall progress to a fraction of a single iteration--the
   // simply iteration progress.
-  // https://w3c.github.io/web-animations/#simple-iteration-progress
+  // https://drafts.csswg.org/web-animations/#simple-iteration-progress
   double progress = IsFinite(overallProgress)
                     ? fmod(overallProgress, 1.0)
                     : fmod(result.mIterationStart, 1.0);

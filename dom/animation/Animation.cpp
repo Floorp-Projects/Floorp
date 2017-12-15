@@ -131,7 +131,7 @@ Animation::SetEffect(AnimationEffectReadOnly* aEffect)
   PostUpdate();
 }
 
-// https://w3c.github.io/web-animations/#setting-the-target-effect
+// https://drafts.csswg.org/web-animations/#setting-the-target-effect
 void
 Animation::SetEffectNoUpdate(AnimationEffectReadOnly* aEffect)
 {
@@ -223,7 +223,7 @@ Animation::SetTimeline(AnimationTimeline* aTimeline)
   PostUpdate();
 }
 
-// https://w3c.github.io/web-animations/#setting-the-timeline
+// https://drafts.csswg.org/web-animations/#setting-the-timeline
 void
 Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline)
 {
@@ -251,7 +251,7 @@ Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline)
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
 }
 
-// https://w3c.github.io/web-animations/#set-the-animation-start-time
+// https://drafts.csswg.org/web-animations/#set-the-animation-start-time
 void
 Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
 {
@@ -296,7 +296,7 @@ Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
   PostUpdate();
 }
 
-// https://w3c.github.io/web-animations/#current-time
+// https://drafts.csswg.org/web-animations/#current-time
 Nullable<TimeDuration>
 Animation::GetCurrentTime() const
 {
@@ -316,7 +316,7 @@ Animation::GetCurrentTime() const
   return result;
 }
 
-// https://w3c.github.io/web-animations/#set-the-current-time
+// https://drafts.csswg.org/web-animations/#set-the-current-time
 void
 Animation::SetCurrentTime(const TimeDuration& aSeekTime)
 {
@@ -351,7 +351,7 @@ Animation::SetCurrentTime(const TimeDuration& aSeekTime)
   PostUpdate();
 }
 
-// https://w3c.github.io/web-animations/#set-the-animation-playback-rate
+// https://drafts.csswg.org/web-animations/#set-the-animation-playback-rate
 void
 Animation::SetPlaybackRate(double aPlaybackRate)
 {
@@ -382,7 +382,7 @@ Animation::SetPlaybackRate(double aPlaybackRate)
   PostUpdate();
 }
 
-// https://w3c.github.io/web-animations/#play-state
+// https://drafts.csswg.org/web-animations/#play-state
 AnimationPlayState
 Animation::PlayState() const
 {
@@ -450,7 +450,7 @@ Animation::Cancel()
   PostUpdate();
 }
 
-// https://w3c.github.io/web-animations/#finish-an-animation
+// https://drafts.csswg.org/web-animations/#finish-an-animation
 void
 Animation::Finish(ErrorResult& aRv)
 {
@@ -520,7 +520,7 @@ Animation::Pause(ErrorResult& aRv)
   PostUpdate();
 }
 
-// https://w3c.github.io/web-animations/#reverse-an-animation
+// https://drafts.csswg.org/web-animations/#reverse-an-animation
 void
 Animation::Reverse(ErrorResult& aRv)
 {
@@ -751,7 +751,7 @@ Animation::ElapsedTimeToTimeStamp(
   return AnimationTimeToTimeStamp(aElapsedTime + delay);
 }
 
-// https://w3c.github.io/web-animations/#silently-set-the-current-time
+// https://drafts.csswg.org/web-animations/#silently-set-the-current-time
 void
 Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
 {
@@ -782,7 +782,7 @@ Animation::SilentlySetPlaybackRate(double aPlaybackRate)
   }
 }
 
-// https://w3c.github.io/web-animations/#cancel-an-animation
+// https://drafts.csswg.org/web-animations/#cancel-an-animation
 void
 Animation::CancelNoUpdate()
 {
@@ -1046,7 +1046,7 @@ Animation::NotifyGeometricAnimationsStartingThisFrame()
   mSyncWithGeometricAnimations = true;
 }
 
-// https://w3c.github.io/web-animations/#play-an-animation
+// https://drafts.csswg.org/web-animations/#play-an-animation
 void
 Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior)
 {
@@ -1131,7 +1131,7 @@ Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior)
   }
 }
 
-// https://w3c.github.io/web-animations/#pause-an-animation
+// https://drafts.csswg.org/web-animations/#pause-an-animation
 void
 Animation::PauseNoUpdate(ErrorResult& aRv)
 {
@@ -1244,7 +1244,7 @@ Animation::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
   }
 }
 
-// https://w3c.github.io/web-animations/#update-an-animations-finished-state
+// https://drafts.csswg.org/web-animations/#update-an-animations-finished-state
 void
 Animation::UpdateFinishedState(SeekFlag aSeekFlag,
                                SyncNotifyFlag aSyncNotifyFlag)
@@ -1357,7 +1357,7 @@ Animation::CancelPendingTasks()
   mPendingReadyTime.SetNull();
 }
 
-// https://w3c.github.io/web-animations/#reset-an-animations-pending-tasks
+// https://drafts.csswg.org/web-animations/#reset-an-animations-pending-tasks
 void
 Animation::ResetPendingTasks()
 {

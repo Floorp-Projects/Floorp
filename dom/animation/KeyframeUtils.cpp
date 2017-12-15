@@ -1452,7 +1452,7 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
   // Fill in any specified offsets
   //
   // This corresponds to step 5, "Otherwise," branch, substeps 5-6 of
-  // https://w3c.github.io/web-animations/#processing-a-keyframes-argument
+  // https://drafts.csswg.org/web-animations/#processing-a-keyframes-argument
   const FallibleTArray<Nullable<double>>* offsets = nullptr;
   AutoTArray<Nullable<double>, 1> singleOffset;
   auto& offset = keyframeDict.mOffset;
@@ -1482,7 +1482,7 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
   // are between 0.0 and 1.0 inclusive.
   //
   // This corresponds to steps 6-7 of
-  // https://w3c.github.io/web-animations/#processing-a-keyframes-argument
+  // https://drafts.csswg.org/web-animations/#processing-a-keyframes-argument
   //
   // In the spec, TypeErrors arising from invalid offsets and easings are thrown
   // at the end of the procedure since it assumes we initially store easing
@@ -1502,7 +1502,7 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
   // Fill in any easings.
   //
   // This corresponds to step 5, "Otherwise," branch, substeps 7-11 of
-  // https://w3c.github.io/web-animations/#processing-a-keyframes-argument
+  // https://drafts.csswg.org/web-animations/#processing-a-keyframes-argument
   FallibleTArray<Maybe<ComputedTimingFunction>> easings;
   auto parseAndAppendEasing = [&](const nsString& easingString,
                                   ErrorResult& aRv) {
@@ -1546,7 +1546,7 @@ GetKeyframeListFromPropertyIndexedKeyframe(JSContext* aCx,
   // Fill in any composite operations.
   //
   // This corresponds to step 5, "Otherwise," branch, substep 12 of
-  // https://w3c.github.io/web-animations/#processing-a-keyframes-argument
+  // https://drafts.csswg.org/web-animations/#processing-a-keyframes-argument
   const FallibleTArray<dom::CompositeOperation>* compositeOps;
   AutoTArray<dom::CompositeOperation, 1> singleCompositeOp;
   auto& composite = keyframeDict.mComposite;
