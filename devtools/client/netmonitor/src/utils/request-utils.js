@@ -70,6 +70,30 @@ async function fetchHeaders(headers, getLongString) {
 }
 
 /**
+ * Fetch network event update packets from actor server
+ * Expect to fetch a couple of network update packets from a given request.
+ *
+ * @param {function} requestData - requestData function for lazily fetch data
+ * @param {object} request - request object
+ * @param {array} updateTypes - a list of network event update types
+ */
+function fetchNetworkUpdatePacket(requestData, request, updateTypes) {
+  updateTypes.forEach((updateType) => {
+    // Only stackTrace will be handled differently
+    if (updateType === "stackTrace") {
+      if (request.cause.stacktraceAvailable && !request.stacktrace) {
+        requestData(request.id, updateType);
+      }
+      return;
+    }
+
+    if (request[`${updateType}Available`] && !request[updateType]) {
+      requestData(request.id, updateType);
+    }
+  });
+}
+
+/**
  * Form a data: URI given a mime type, encoding, and some text.
  *
  * @param {string} mimeType - mime type
@@ -396,33 +420,40 @@ function getResponseHeader(item, header) {
 /**
  * Extracts any urlencoded form data sections from a POST request.
  */
-function updateFormDataSections(props) {
+async function updateFormDataSections(props) {
   let {
     connector,
     request = {},
     updateRequest,
   } = props;
   let {
+    id,
     formDataSections,
     requestHeaders,
+    requestHeadersAvailable,
     requestHeadersFromUploadStream,
     requestPostData,
+    requestPostDataAvailable,
   } = request;
 
-  if (!formDataSections && requestHeaders &&
-      requestHeadersFromUploadStream && requestPostData) {
-    getFormDataSections(
+  if (requestHeadersAvailable && !requestHeaders) {
+    requestHeaders = await connector.requestData(id, "requestHeaders");
+  }
+
+  if (requestPostDataAvailable && !requestPostData) {
+    requestPostData = await connector.requestData(id, "requestPostData");
+  }
+
+  if (!formDataSections && requestHeaders && requestPostData &&
+      requestHeadersFromUploadStream) {
+    formDataSections = await getFormDataSections(
       requestHeaders,
       requestHeadersFromUploadStream,
       requestPostData,
       connector.getLongString,
-    ).then((newFormDataSections) => {
-      updateRequest(
-        request.id,
-        { formDataSections: newFormDataSections },
-        true,
-      );
-    });
+    );
+
+    updateRequest(request.id, { formDataSections }, true);
   }
 }
 
@@ -431,7 +462,7 @@ function updateFormDataSections(props) {
  * incoming network update packets. It's used by Network and
  * Console panel reducers.
  */
-function processNetworkUpdates(request) {
+function processNetworkUpdates(request = {}) {
   let result = {};
   for (let [key, value] of Object.entries(request)) {
     if (UPDATE_PROPS.includes(key)) {
@@ -460,6 +491,7 @@ module.exports = {
   decodeUnicodeBase64,
   getFormDataSections,
   fetchHeaders,
+  fetchNetworkUpdatePacket,
   formDataURI,
   writeHeaderText,
   decodeUnicodeUrl,

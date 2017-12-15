@@ -5,9 +5,6 @@
 
 "use strict";
 
-Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/netmonitor/test/shared-head.js", this);
-
 const TEST_URI = "data:text/html;charset=utf8,Test that the netmonitor " +
                  "displays requests that have been recorded in the " +
                  "web console, even if the netmonitor hadn't opened yet.";
@@ -68,17 +65,17 @@ function* testNetmonitor(toolbox) {
 
   let { store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
-  let { getSortedRequests } = windowRequire("devtools/client/netmonitor/src/selectors/index");
+  let { getSortedRequests } =
+    windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 
   yield waitUntil(() => store.getState().requests.requests.size > 0);
 
-  is(store.getState().requests.requests.size, 1, "Network request appears in the network panel");
+  is(store.getState().requests.requests.size, 1,
+    "Network request appears in the network panel");
 
   let item = getSortedRequests(store.getState()).get(0);
   is(item.method, "GET", "The attached method is correct.");
   is(item.url, TEST_PATH, "The attached url is correct.");
-
-  yield waitForExistingRequests(monitor);
 }

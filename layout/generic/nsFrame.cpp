@@ -3470,6 +3470,12 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                !aBuilder->GetIncludeAllOutOfFlows(),
                "It should be held for painting to window");
 
+    if (child->HasPerspective()) {
+      // We need to allocate a perspective index before a potential early
+      // return below.
+      aBuilder->AllocatePerspectiveItemIndex();
+    }
+
     // dirty rect in child-relative coordinates
     nsRect dirty = aBuilder->GetDirtyRect() - child->GetOffsetTo(this);
     nsRect visible = aBuilder->GetVisibleRect() - child->GetOffsetTo(this);
@@ -3571,6 +3577,12 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     }
     pseudoStackingContext = true;
     awayFromCommonPath = true;
+  }
+
+  if (child->HasPerspective()) {
+    // We need to allocate a perspective index before a potential early
+    // return below.
+    aBuilder->AllocatePerspectiveItemIndex();
   }
 
   NS_ASSERTION(!child->IsPlaceholderFrame(),

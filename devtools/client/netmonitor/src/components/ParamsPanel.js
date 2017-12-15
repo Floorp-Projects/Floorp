@@ -9,7 +9,12 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { L10N } = require("../utils/l10n");
-const { getUrlQuery, parseQueryString, parseFormData } = require("../utils/request-utils");
+const {
+  fetchNetworkUpdatePacket,
+  getUrlQuery,
+  parseQueryString,
+  parseFormData,
+} = require("../utils/request-utils");
 const { sortObjectKeys } = require("../utils/sort-utils");
 const { updateFormDataSections } = require("../utils/request-utils");
 const Actions = require("../actions/index");
@@ -51,27 +56,15 @@ class ParamsPanel extends Component {
   }
 
   componentDidMount() {
-    this.maybeFetchPostData(this.props);
+    let { request, connector } = this.props;
+    fetchNetworkUpdatePacket(connector.requestData, request, ["requestPostData"]);
     updateFormDataSections(this.props);
   }
 
   componentWillReceiveProps(nextProps) {
-    this.maybeFetchPostData(nextProps);
+    let { request, connector } = nextProps;
+    fetchNetworkUpdatePacket(connector.requestData, request, ["requestPostData"]);
     updateFormDataSections(nextProps);
-  }
-
-  /**
-   * When switching to another request, lazily fetch request post data
-   * from the backend. The panel will first be empty and then display the content.
-   */
-  maybeFetchPostData(props) {
-    if (props.request.requestPostDataAvailable &&
-        (!props.request.requestPostData ||
-        !props.request.requestPostData.postData.text)) {
-      // This method will set `props.request.requestPostData`
-      // asynchronously and force another render.
-      props.connector.requestData(props.request.id, "requestPostData");
-    }
   }
 
   /**

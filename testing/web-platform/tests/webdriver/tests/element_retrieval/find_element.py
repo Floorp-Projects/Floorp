@@ -71,3 +71,13 @@ def test_xhtml_namespace(session, using, value):
     response = find_element(session, using, value)
     value = assert_success(response)
     assert_same_element(session, value, expected)
+
+
+@pytest.mark.parametrize("using,value",
+                         [("css selector", ":root"),
+                          ("tag name", "html"),
+                          ("xpath", "/html")])
+def test_htmldocument(session, using, value):
+    session.url = inline("")
+    response = find_element(session, using, value)
+    assert_success(response)

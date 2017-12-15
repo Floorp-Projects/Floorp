@@ -34,9 +34,11 @@ class RequestListContextMenu {
       mimeType,
       httpVersion,
       requestHeaders,
+      requestHeadersAvailable,
       requestPostData,
       requestPostDataAvailable,
       responseHeaders,
+      responseHeadersAvailable,
       responseContentAvailable,
       url,
     } = selectedRequest;
@@ -67,6 +69,8 @@ class RequestListContextMenu {
       id: "request-list-context-copy-post-data",
       label: L10N.getStr("netmonitor.context.copyPostData"),
       accesskey: L10N.getStr("netmonitor.context.copyPostData.accesskey"),
+      // Menu item will be visible even if data hasn't arrived, so we need to check
+      // *Available property and then fetch data lazily once user triggers the action.
       visible: !!(selectedRequest && (requestPostDataAvailable || requestPostData)),
       click: () => this.copyPostData(id, formDataSections),
     });
@@ -75,7 +79,9 @@ class RequestListContextMenu {
       id: "request-list-context-copy-as-curl",
       label: L10N.getStr("netmonitor.context.copyAsCurl"),
       accesskey: L10N.getStr("netmonitor.context.copyAsCurl.accesskey"),
-      visible: !!selectedRequest,
+      // Menu item will be visible even if data hasn't arrived, so we need to check
+      // *Available property and then fetch data lazily once user triggers the action.
+      visible: !!(selectedRequest && (requestHeadersAvailable || requestHeaders)),
       click: () => this.copyAsCurl(id, url, method, requestHeaders, httpVersion),
     });
 
@@ -88,22 +94,28 @@ class RequestListContextMenu {
       id: "request-list-context-copy-request-headers",
       label: L10N.getStr("netmonitor.context.copyRequestHeaders"),
       accesskey: L10N.getStr("netmonitor.context.copyRequestHeaders.accesskey"),
-      visible: !!(selectedRequest && requestHeaders && requestHeaders.rawHeaders),
-      click: () => this.copyRequestHeaders(requestHeaders.rawHeaders.trim()),
+      // Menu item will be visible even if data hasn't arrived, so we need to check
+      // *Available property and then fetch data lazily once user triggers the action.
+      visible: !!(selectedRequest && (requestHeadersAvailable || requestHeaders)),
+      click: () => this.copyRequestHeaders(id, requestHeaders),
     });
 
     copySubmenu.push({
       id: "response-list-context-copy-response-headers",
       label: L10N.getStr("netmonitor.context.copyResponseHeaders"),
       accesskey: L10N.getStr("netmonitor.context.copyResponseHeaders.accesskey"),
-      visible: !!(selectedRequest && responseHeaders && responseHeaders.rawHeaders),
-      click: () => this.copyResponseHeaders(responseHeaders.rawHeaders.trim()),
+      // Menu item will be visible even if data hasn't arrived, so we need to check
+      // *Available property and then fetch data lazily once user triggers the action.
+      visible: !!(selectedRequest && (responseHeadersAvailable || responseHeaders)),
+      click: () => this.copyResponseHeaders(id, responseHeaders),
     });
 
     copySubmenu.push({
       id: "request-list-context-copy-response",
       label: L10N.getStr("netmonitor.context.copyResponse"),
       accesskey: L10N.getStr("netmonitor.context.copyResponse.accesskey"),
+      // Menu item will be visible even if data hasn't arrived, so we need to check
+      // *Available property and then fetch data lazily once user triggers the action.
       visible: !!(selectedRequest && responseContentAvailable),
       click: () => this.copyResponse(id),
     });
@@ -280,6 +292,9 @@ class RequestListContextMenu {
    * Copy a cURL command from the currently selected item.
    */
   async copyAsCurl(id, url, method, requestHeaders, httpVersion) {
+    if (!requestHeaders) {
+      requestHeaders = await this.props.connector.requestData(id, "requestHeaders");
+    }
     let { requestPostData } = await this.props.connector
       .requestData(id, "requestPostData");
     // Create a sanitized object for the Curl command generator.
@@ -296,7 +311,12 @@ class RequestListContextMenu {
   /**
    * Copy the raw request headers from the currently selected item.
    */
-  copyRequestHeaders(rawHeaders) {
+  async copyRequestHeaders(id, requestHeaders) {
+    if (!requestHeaders) {
+      requestHeaders = await this.props.connector.requestData(id, "requestHeaders");
+    }
+    let rawHeaders = requestHeaders.rawHeaders.trim();
+
     if (Services.appinfo.OS !== "WINNT") {
       rawHeaders = rawHeaders.replace(/\r/g, "");
     }
@@ -306,7 +326,12 @@ class RequestListContextMenu {
   /**
    * Copy the raw response headers from the currently selected item.
    */
-  copyResponseHeaders(rawHeaders) {
+  async copyResponseHeaders(id, responseHeaders) {
+    if (!responseHeaders) {
+      responseHeaders = await this.props.connector.requestData(id, "responseHeaders");
+    }
+    let rawHeaders = responseHeaders.rawHeaders.trim();
+
     if (Services.appinfo.OS !== "WINNT") {
       rawHeaders = rawHeaders.replace(/\r/g, "");
     }

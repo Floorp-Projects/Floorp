@@ -37,7 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
       testStates("checkbox_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
       testStates("checkbox_checked_mixed", (STATE_CHECKABLE | STATE_MIXED), 0, STATE_CHECKED);
       testStates("checkbox_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
-      testStates("checkbox_checked_empty", STATE_CHECKABLE , 0, STATE_CHECKED);
+      testStates("checkbox_checked_empty", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("checkbox_checked_undefined", STATE_CHECKABLE, 0, STATE_CHECKED);
       testStates("checkbox_checked_absent", STATE_CHECKABLE, 0, STATE_CHECKED);
 
@@ -92,7 +92,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=452388
       // test (option) checkable and checked states
       testStates("option_checked_true", (STATE_CHECKABLE | STATE_CHECKED));
       testStates("option_checked_false", STATE_CHECKABLE, 0, STATE_CHECKED);
-      testStates("option_checked_empty", 0 , 0, STATE_CHECKABLE | STATE_CHECKED);
+      testStates("option_checked_empty", 0, 0, STATE_CHECKABLE | STATE_CHECKED);
       testStates("option_checked_undefined", 0, 0, STATE_CHECKABLE | STATE_CHECKED);
       testStates("option_checked_absent", 0, 0, STATE_CHECKABLE | STATE_CHECKED);
 

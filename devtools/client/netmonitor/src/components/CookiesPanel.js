@@ -8,6 +8,7 @@ const { Component, createFactory } = require("devtools/client/shared/vendor/reac
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { L10N } = require("../utils/l10n");
+const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 const { sortObjectKeys } = require("../utils/sort-utils");
 
 // Component
@@ -38,24 +39,19 @@ class CookiesPanel extends Component {
   }
 
   componentDidMount() {
-    this.maybeFetchCookies(this.props);
+    let { connector, request } = this.props;
+    fetchNetworkUpdatePacket(connector.requestData, request, [
+      "requestCookies",
+      "responseCookies",
+    ]);
   }
 
   componentWillReceiveProps(nextProps) {
-    this.maybeFetchCookies(nextProps);
-  }
-
-  /**
-   * When switching to another request, lazily fetch request cookies
-   * from the backend. The panel will first be empty and then display the content.
-   */
-  maybeFetchCookies(props) {
-    if (props.request.requestCookiesAvailable && !props.request.requestCookies) {
-      props.connector.requestData(props.request.id, "requestCookies");
-    }
-    if (props.request.responseCookiesAvailable && !props.request.responseCookies) {
-      props.connector.requestData(props.request.id, "responseCookies");
-    }
+    let { connector, request } = nextProps;
+    fetchNetworkUpdatePacket(connector.requestData, request, [
+      "requestCookies",
+      "responseCookies",
+    ]);
   }
 
   /**

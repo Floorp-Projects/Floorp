@@ -6,24 +6,24 @@ function loadXULTreeAndDoTest(aDoTestFunc, aTreeID, aTreeView) {
   var treeID = aTreeID ? aTreeID : gXULTreeLoadContext.treeID;
   var treeView = aTreeView ? aTreeView : gXULTreeLoadContext.treeView;
 
-  function loadXULTree(aTreeID, aTreeView) {
-    this.treeNode = getNode(aTreeID);
-
-    this.eventSeq = [
-      new invokerChecker(EVENT_REORDER, this.treeNode)
-    ];
-
-    this.invoke = function loadXULTree_invoke() {
-      this.treeNode.view = aTreeView;
-    };
-
-    this.getID = function loadXULTree_getID() {
-      return "Load XUL tree " + prettyName(aTreeID);
-    };
-  }
+  let treeNode = getNode(treeID);
 
   gXULTreeLoadContext.queue = new eventQueue();
-  gXULTreeLoadContext.queue.push(new loadXULTree(treeID, treeView));
+  gXULTreeLoadContext.queue.push({
+    treeNode,
+
+    eventSeq: [
+        new invokerChecker(EVENT_REORDER, treeNode)
+    ],
+
+    invoke() {
+      this.treeNode.view = treeView;
+    },
+
+    getID() {
+      return "Load XUL tree " + prettyName(treeID);
+    }
+  });
   gXULTreeLoadContext.queue.onFinish = function() {
     SimpleTest.executeSoon(doTestFunc);
     return DO_NOT_FINISH_TEST;

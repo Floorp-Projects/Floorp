@@ -153,18 +153,31 @@ HarBuilder.prototype = {
   },
 
   buildRequest: async function (file) {
+    // When using HarAutomation, HarCollector will automatically fetch requestHeaders
+    // and requestCookies, but when we use it from netmonitor, FirefoxDataProvider
+    // should fetch it itself lazily, via requestData.
+
+    let requestHeaders = file.requestHeaders;
+    if (!requestHeaders && this._options.requestData) {
+      requestHeaders = await this._options.requestData(file.id, "requestHeaders");
+    }
+
+    let requestCookies = file.requestCookies;
+    if (!requestCookies && this._options.requestData) {
+      requestCookies = await this._options.requestData(file.id, "requestCookies");
+    }
+
     let request = {
       bodySize: 0
     };
-
     request.method = file.method;
     request.url = file.url;
     request.httpVersion = file.httpVersion || "";
-    request.headers = this.buildHeaders(file.requestHeaders);
+    request.headers = this.buildHeaders(requestHeaders);
     request.headers = this.appendHeadersPostData(request.headers, file);
-    request.cookies = this.buildCookies(file.requestCookies);
+    request.cookies = this.buildCookies(requestCookies);
     request.queryString = parseQueryString(getUrlQuery(file.url)) || [];
-    request.headersSize = file.requestHeaders.headersSize;
+    request.headersSize = requestHeaders.headersSize;
     request.postData = await this.buildPostData(file);
 
     if (request.postData && request.postData.text) {
@@ -234,9 +247,9 @@ HarBuilder.prototype = {
   },
 
   buildPostData: async function (file) {
-    // When using HarAutomation, HarCollector will automatically fetch requestPostData,
-    // but when we use it from netmonitor, FirefoxDataProvider should fetch it itself
-    // lazily, via requestData.
+    // When using HarAutomation, HarCollector will automatically fetch requestPostData
+    // and requestHeaders, but when we use it from netmonitor, FirefoxDataProvider
+    // should fetch it itself lazily, via requestData.
     let requestPostData = file.requestPostData;
     let requestHeaders = file.requestHeaders;
     let requestHeadersFromUploadStream;
@@ -249,6 +262,10 @@ HarBuilder.prototype = {
 
     if (!requestPostData.postData.text) {
       return undefined;
+    }
+
+    if (!requestHeaders && this._options.requestData) {
+      requestHeaders = await this._options.requestData(file.id, "requestHeaders");
     }
 
     let postData = {
@@ -288,6 +305,20 @@ HarBuilder.prototype = {
   },
 
   buildResponse: async function (file) {
+    // When using HarAutomation, HarCollector will automatically fetch responseHeaders
+    // and responseCookies, but when we use it from netmonitor, FirefoxDataProvider
+    // should fetch it itself lazily, via requestData.
+
+    let responseHeaders = file.responseHeaders;
+    if (!responseHeaders && this._options.requestData) {
+      responseHeaders = await this._options.requestData(file.id, "responseHeaders");
+    }
+
+    let responseCookies = file.responseCookies;
+    if (!responseCookies && this._options.requestData) {
+      responseCookies = await this._options.requestData(file.id, "responseCookies");
+    }
+
     let response = {
       status: 0
     };
@@ -296,14 +327,11 @@ HarBuilder.prototype = {
     if (file.status) {
       response.status = parseInt(file.status, 10);
     }
-
-    let responseHeaders = file.responseHeaders;
-
     response.statusText = file.statusText || "";
     response.httpVersion = file.httpVersion || "";
 
     response.headers = this.buildHeaders(responseHeaders);
-    response.cookies = this.buildCookies(file.responseCookies);
+    response.cookies = this.buildCookies(responseCookies);
     response.content = await this.buildContent(file);
 
     let headers = responseHeaders ? responseHeaders.headers : null;

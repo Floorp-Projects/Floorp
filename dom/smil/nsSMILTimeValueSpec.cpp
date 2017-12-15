@@ -78,8 +78,6 @@ nsSMILTimeValueSpec::SetSpec(const nsAString& aStringSpec,
   // Fill in the event symbol to simplify handling later
   if (mParams.mType == nsSMILTimeValueSpecParams::REPEAT) {
     mParams.mEventSymbol = nsGkAtoms::repeatEvent;
-  } else if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
-    mParams.mEventSymbol = nsGkAtoms::keypress;
   }
 
   ResolveReferences(aContextNode);
@@ -112,10 +110,6 @@ nsSMILTimeValueSpec::ResolveReferences(nsIContent* aContextNode)
   } else if (mParams.mType == nsSMILTimeValueSpecParams::EVENT) {
     Element* target = mOwner->GetTargetElement();
     mReferencedElement.ResetWithElement(target);
-  } else if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
-    nsIDocument* doc = aContextNode->GetUncomposedDoc();
-    MOZ_ASSERT(doc, "We are in the document but current doc is null");
-    mReferencedElement.ResetWithElement(doc->GetRootElement());
   } else {
     MOZ_ASSERT(false, "Syncbase or repeat spec without ID");
   }
@@ -126,8 +120,7 @@ bool
 nsSMILTimeValueSpec::IsEventBased() const
 {
   return mParams.mType == nsSMILTimeValueSpecParams::EVENT ||
-         mParams.mType == nsSMILTimeValueSpecParams::REPEAT ||
-         mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY;
+         mParams.mType == nsSMILTimeValueSpecParams::REPEAT;
 }
 
 void
@@ -239,7 +232,6 @@ nsSMILTimeValueSpec::UpdateReferencedElement(Element* aFrom, Element* aTo)
 
   case nsSMILTimeValueSpecParams::EVENT:
   case nsSMILTimeValueSpecParams::REPEAT:
-  case nsSMILTimeValueSpecParams::ACCESSKEY:
     RegisterEventListener(aTo);
     break;
 
@@ -318,9 +310,10 @@ nsSMILTimeValueSpec::RegisterEventListener(Element* aTarget)
     mEventListener = new EventListener(this);
   }
 
-  EventListenerManager* elm = GetEventListenerManager(aTarget);
-  if (!elm)
+  EventListenerManager* elm = aTarget->GetOrCreateListenerManager();
+  if (!elm) {
     return;
+  }
 
   elm->AddEventListenerByType(mEventListener,
                               nsDependentAtomString(mParams.mEventSymbol),
@@ -330,40 +323,18 @@ nsSMILTimeValueSpec::RegisterEventListener(Element* aTarget)
 void
 nsSMILTimeValueSpec::UnregisterEventListener(Element* aTarget)
 {
-  if (!aTarget || !mEventListener)
+  if (!aTarget || !mEventListener) {
     return;
+  }
 
-  EventListenerManager* elm = GetEventListenerManager(aTarget);
-  if (!elm)
+  EventListenerManager* elm = aTarget->GetOrCreateListenerManager();
+  if (!elm) {
     return;
+  }
 
   elm->RemoveEventListenerByType(mEventListener,
                                  nsDependentAtomString(mParams.mEventSymbol),
                                  AllEventsAtSystemGroupBubble());
-}
-
-EventListenerManager*
-nsSMILTimeValueSpec::GetEventListenerManager(Element* aTarget)
-{
-  MOZ_ASSERT(aTarget, "null target; can't get EventListenerManager");
-
-  nsCOMPtr<EventTarget> target;
-
-  if (mParams.mType == nsSMILTimeValueSpecParams::ACCESSKEY) {
-    nsIDocument* doc = aTarget->GetUncomposedDoc();
-    if (!doc)
-      return nullptr;
-    nsPIDOMWindowOuter* win = doc->GetWindow();
-    if (!win)
-      return nullptr;
-    target = do_QueryInterface(win);
-  } else {
-    target = aTarget;
-  }
-  if (!target)
-    return nullptr;
-
-  return target->GetOrCreateListenerManager();
 }
 
 void
@@ -381,8 +352,10 @@ nsSMILTimeValueSpec::HandleEvent(nsIDOMEvent* aEvent)
   if (!container)
     return;
 
-  if (!CheckEventDetail(aEvent))
+  if (mParams.mType == nsSMILTimeValueSpecParams::REPEAT &&
+      !CheckRepeatEventDetail(aEvent)) {
     return;
+  }
 
   nsSMILTime currentTime = container->GetCurrentTime();
   nsSMILTimeValue newTime(currentTime);
@@ -397,23 +370,6 @@ nsSMILTimeValueSpec::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 bool
-nsSMILTimeValueSpec::CheckEventDetail(nsIDOMEvent *aEvent)
-{
-  switch (mParams.mType)
-  {
-  case nsSMILTimeValueSpecParams::REPEAT:
-    return CheckRepeatEventDetail(aEvent);
-
-  case nsSMILTimeValueSpecParams::ACCESSKEY:
-    return CheckAccessKeyEventDetail(aEvent);
-
-  default:
-    // nothing to check
-    return true;
-  }
-}
-
-bool
 nsSMILTimeValueSpec::CheckRepeatEventDetail(nsIDOMEvent *aEvent)
 {
   nsCOMPtr<nsIDOMTimeEvent> timeEvent = do_QueryInterface(aEvent);
@@ -424,63 +380,7 @@ nsSMILTimeValueSpec::CheckRepeatEventDetail(nsIDOMEvent *aEvent)
 
   int32_t detail;
   timeEvent->GetDetail(&detail);
-  return detail > 0 && (uint32_t)detail == mParams.mRepeatIterationOrAccessKey;
-}
-
-bool
-nsSMILTimeValueSpec::CheckAccessKeyEventDetail(nsIDOMEvent *aEvent)
-{
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
-  if (!keyEvent) {
-    NS_WARNING("Received an accesskey event that was not a DOMKeyEvent");
-    return false;
-  }
-
-  // Ignore the key event if any modifier keys are pressed UNLESS we're matching
-  // on the charCode in which case we ignore the state of the shift and alt keys
-  // since they might be needed to generate the character in question.
-  bool isCtrl;
-  bool isMeta;
-  keyEvent->GetCtrlKey(&isCtrl);
-  keyEvent->GetMetaKey(&isMeta);
-  if (isCtrl || isMeta)
-    return false;
-
-  uint32_t code;
-  keyEvent->GetCharCode(&code);
-  if (code)
-    return code == mParams.mRepeatIterationOrAccessKey;
-
-  // Only match on the keyCode if it corresponds to some ASCII character that
-  // does not produce a charCode.
-  // In this case we can safely bail out if either alt or shift is pressed since
-  // they won't already be incorporated into the keyCode unlike the charCode.
-  bool isAlt;
-  bool isShift;
-  keyEvent->GetAltKey(&isAlt);
-  keyEvent->GetShiftKey(&isShift);
-  if (isAlt || isShift)
-    return false;
-
-  keyEvent->GetKeyCode(&code);
-  switch (code)
-  {
-  case nsIDOMKeyEvent::DOM_VK_BACK_SPACE:
-    return mParams.mRepeatIterationOrAccessKey == 0x08;
-
-  case nsIDOMKeyEvent::DOM_VK_RETURN:
-    return mParams.mRepeatIterationOrAccessKey == 0x0A ||
-           mParams.mRepeatIterationOrAccessKey == 0x0D;
-
-  case nsIDOMKeyEvent::DOM_VK_ESCAPE:
-    return mParams.mRepeatIterationOrAccessKey == 0x1B;
-
-  case nsIDOMKeyEvent::DOM_VK_DELETE:
-    return mParams.mRepeatIterationOrAccessKey == 0x7F;
-
-  default:
-    return false;
-  }
+  return detail > 0 && (uint32_t)detail == mParams.mRepeatIteration;
 }
 
 nsSMILTimeValue

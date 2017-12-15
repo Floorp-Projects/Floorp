@@ -29,14 +29,11 @@ PDFiumParent::Init(IPC::Channel* aChannel, base::ProcessId aPid)
 void
 PDFiumParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  // mTarget is not nullptr, which means the print job is not done
+  // (EndConversion is not called yet). The IPC channel is broken for some
+  // reasons. We should tell mTarget to abort this print job.
   if (mTarget) {
     mTarget->ChannelIsBroken();
-  }
-
-  if (mConversionDoneCallback) {
-    // Since this printing job was aborted, we do not need to report EMF buffer
-    // back to mTarget.
-    mConversionDoneCallback();
   }
 }
 
@@ -47,25 +44,16 @@ PDFiumParent::RecvConvertToEMFDone(const nsresult& aResult,
   MOZ_ASSERT(aEMFContents.IsReadable());
 
   if (mTarget) {
-    MOZ_ASSERT(!mConversionDoneCallback);
     mTarget->ConvertToEMFDone(aResult, Move(aEMFContents));
   }
 
   return IPC_OK();
 }
 
-void
-PDFiumParent::AbortConversion(ConversionDoneCallback aCallback)
-{
-  // There is no need to report EMF contents back to mTarget since the print
-  // job was aborted, unset mTarget.
-  mTarget = nullptr;
-  mConversionDoneCallback = aCallback;
-}
-
 void PDFiumParent::EndConversion()
 {
-  // The printing job is finished correctly, mTarget is no longer needed.
+  // The printing job is done(all pages printed, or print job cancel, or print
+  // job abort), reset mTarget since it may not valid afterward.
   mTarget = nullptr;
 }
 

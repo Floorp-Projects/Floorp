@@ -11,7 +11,10 @@ const {
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { L10N } = require("../utils/l10n");
-const { getUrlHost } = require("../utils/request-utils");
+const {
+  fetchNetworkUpdatePacket,
+  getUrlHost,
+} = require("../utils/request-utils");
 
 // Components
 const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
@@ -60,24 +63,13 @@ class SecurityPanel extends Component {
   }
 
   componentDidMount() {
-    this.maybeFetchSecurityInfo(this.props);
+    let { request, connector } = this.props;
+    fetchNetworkUpdatePacket(connector.requestData, request, ["securityInfo"]);
   }
 
   componentWillReceiveProps(nextProps) {
-    this.maybeFetchSecurityInfo(nextProps);
-  }
-
-  /**
-   * When switching to another request, lazily fetch securityInfo
-   * from the backend. The Security Panel will first be empty and then
-   * display the content.
-   */
-  maybeFetchSecurityInfo(props) {
-    if (!props.request.securityInfo) {
-      // This method will set `props.request.securityInfo`
-      // asynchronously and force another render.
-      props.connector.requestData(props.request.id, "securityInfo");
-    }
+    let { request, connector } = nextProps;
+    fetchNetworkUpdatePacket(connector.requestData, request, ["securityInfo"]);
   }
 
   renderValue(props, weaknessReasons = []) {

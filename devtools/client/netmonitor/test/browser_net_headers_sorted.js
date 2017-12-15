@@ -12,18 +12,25 @@ add_task(function* () {
 
   let { document, store, windowRequire } = monitor.panelWin;
   let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  let {
+    getSortedRequests,
+  } = windowRequire("devtools/client/netmonitor/src/selectors/index");
 
   store.dispatch(Actions.batchEnable(false));
 
-  tab.linkedBrowser.reload();
-
   let wait = waitForNetworkEvents(monitor, 1);
+  tab.linkedBrowser.reload();
   yield wait;
 
   wait = waitForDOM(document, ".headers-overview");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
   yield wait;
+
+  yield waitUntil(() => {
+    let request = getSortedRequests(store.getState()).get(0);
+    return request.requestHeaders && request.responseHeaders;
+  });
 
   info("Check if Request-Headers and Response-Headers are sorted");
   let expectedResponseHeaders = ["cache-control", "connection", "content-length",
