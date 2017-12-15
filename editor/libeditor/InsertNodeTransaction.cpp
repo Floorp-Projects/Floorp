@@ -22,6 +22,17 @@ namespace mozilla {
 
 using namespace dom;
 
+// static
+already_AddRefed<InsertNodeTransaction>
+InsertNodeTransaction::Create(EditorBase& aEditorBase,
+                              nsIContent& aContentToInsert,
+                              const EditorRawDOMPoint& aPointToInsert)
+{
+  RefPtr<InsertNodeTransaction> transaction =
+    new InsertNodeTransaction(aEditorBase, aContentToInsert, aPointToInsert);
+  return transaction.forget();
+}
+
 InsertNodeTransaction::InsertNodeTransaction(
                          EditorBase& aEditorBase,
                          nsIContent& aContentToInsert,
