@@ -314,6 +314,9 @@ class WebGLContext
     mutable uint64_t mNumPerfWarnings;
     const uint32_t mMaxAcceptableFBStatusInvals;
 
+    uint64_t mNextFenceId = 1;
+    uint64_t mCompletedFenceId = 0;
+
 public:
     WebGLContext();
 

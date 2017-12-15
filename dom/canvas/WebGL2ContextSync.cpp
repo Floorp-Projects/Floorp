@@ -74,7 +74,15 @@ WebGL2Context::ClientWaitSync(const WebGLSync& sync, GLbitfield flags, GLuint64 
     }
 
     MakeContextCurrent();
-    return gl->fClientWaitSync(sync.mGLName, flags, timeout);
+    const auto ret = gl->fClientWaitSync(sync.mGLName, flags, timeout);
+
+    if (ret == LOCAL_GL_CONDITION_SATISFIED ||
+        ret == LOCAL_GL_ALREADY_SIGNALED)
+    {
+        sync.MarkSignaled();
+    }
+
+    return ret;
 }
 
 void
@@ -124,6 +132,13 @@ WebGL2Context::GetSyncParameter(JSContext*, const WebGLSync& sync, GLenum pname,
     case LOCAL_GL_SYNC_CONDITION:
     case LOCAL_GL_SYNC_FLAGS:
         gl->fGetSynciv(sync.mGLName, pname, 1, nullptr, &result);
+
+        if (pname == LOCAL_GL_SYNC_STATUS &&
+            result == LOCAL_GL_SIGNALED)
+        {
+            sync.MarkSignaled();
+        }
+
         retval.set(JS::Int32Value(result));
         return;
 

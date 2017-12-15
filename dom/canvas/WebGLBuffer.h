@@ -105,6 +105,7 @@ protected:
     size_t mByteLength;
     size_t mTFBindCount;
     size_t mNonTFBindCount;
+    uint64_t mLastUpdateFenceId = 0;
 
     struct IndexRange final {
         GLenum type;
