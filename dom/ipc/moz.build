@@ -96,6 +96,7 @@ IPDL_SOURCES += [
     'PCycleCollectWithLogs.ipdl',
     'PDocumentRenderer.ipdl',
     'PFilePicker.ipdl',
+    'PLoginReputation.ipdl',
     'PPluginWidget.ipdl',
     'PProcessHangMonitor.ipdl',
     'PTabContext.ipdlh',

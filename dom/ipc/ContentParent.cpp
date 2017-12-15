@@ -79,6 +79,7 @@
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/loader/ScriptCacheActors.h"
+#include "mozilla/LoginReputationIPC.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/media/MediaParent.h"
 #include "mozilla/Move.h"
@@ -5346,6 +5347,42 @@ ContentParent::DeallocPURLClassifierLocalParent(PURLClassifierLocalParent* aActo
 
   RefPtr<URLClassifierLocalParent> actor =
     dont_AddRef(static_cast<URLClassifierLocalParent*>(aActor));
+  return true;
+}
+
+PLoginReputationParent*
+ContentParent::AllocPLoginReputationParent(const URIParams& aURI)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<LoginReputationParent> actor = new LoginReputationParent();
+  return actor.forget().take();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvPLoginReputationConstructor(PLoginReputationParent* aActor,
+                                               const URIParams& aURI)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aActor);
+
+  nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
+  if (!uri) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  auto* actor = static_cast<LoginReputationParent*>(aActor);
+  return actor->QueryReputation(uri);
+}
+
+bool
+ContentParent::DeallocPLoginReputationParent(PLoginReputationParent* aActor)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aActor);
+
+  RefPtr<LoginReputationParent> actor =
+    dont_AddRef(static_cast<LoginReputationParent*>(aActor));
   return true;
 }
 

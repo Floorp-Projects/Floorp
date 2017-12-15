@@ -9,9 +9,13 @@ with Files('*'):
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
+EXPORTS.mozilla += [
+    'LoginReputationIPC.h'
+]
+
 XPIDL_SOURCES += [
-    'ILoginReputation.idl',
     'nsIApplicationReputation.idl',
+    'nsILoginReputation.idl',
 ]
 
 XPIDL_MODULE = 'reputationservice'
@@ -20,6 +24,7 @@ UNIFIED_SOURCES += [
     'ApplicationReputation.cpp',
     'chromium/chrome/common/safe_browsing/csd.pb.cc',
     'LoginReputation.cpp',
+    'LoginReputationIPC.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
@@ -35,3 +40,5 @@ DEFINES['GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER'] = True
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-shadow']
+
+include('/ipc/chromium/chromium-config.mozbuild')

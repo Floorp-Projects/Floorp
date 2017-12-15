@@ -228,9 +228,9 @@ public:
 template<class Impl>
 const JNINativeMethod GeckoSession::Window::Natives<Impl>::methods[] = {
 
-    mozilla::jni::MakeNativeMethod<GeckoSession::Window::Attach_t>(
-            mozilla::jni::NativeStub<GeckoSession::Window::Attach_t, Impl>
-            ::template Wrap<&Impl::Attach>),
+    mozilla::jni::MakeNativeMethod<GeckoSession::Window::AttachEditable_t>(
+            mozilla::jni::NativeStub<GeckoSession::Window::AttachEditable_t, Impl>
+            ::template Wrap<&Impl::AttachEditable>),
 
     mozilla::jni::MakeNativeMethod<GeckoSession::Window::Close_t>(
             mozilla::jni::NativeStub<GeckoSession::Window::Close_t, Impl>

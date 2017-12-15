@@ -44,3 +44,6 @@ pref("devtools.debugger.features.shortcuts", true);
 pref("devtools.debugger.project-directory-root", "");
 pref("devtools.debugger.features.root", false);
 pref("devtools.debugger.features.column-breakpoints", false);
+pref("devtools.debugger.features.map-scopes", true);
+pref("devtools.debugger.features.breakpoints-dropdown", false);
+pref("devtools.debugger.features.remove-command-bar-options", false);

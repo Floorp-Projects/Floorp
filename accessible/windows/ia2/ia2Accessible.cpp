@@ -522,7 +522,7 @@ ia2Accessible::get_accessibleWithCaret(IUnknown** aAccessible,
 
   int32_t caretOffset = -1;
   Accessible* accWithCaret = SelectionMgr()->AccessibleWithCaret(&caretOffset);
-  if (acc->Document() != accWithCaret->Document())
+  if (!accWithCaret || acc->Document() != accWithCaret->Document())
     return S_FALSE;
 
   Accessible* child = accWithCaret;

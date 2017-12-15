@@ -6,28 +6,27 @@
 #ifndef LoginReputation_h__
 #define LoginReputation_h__
 
-#include "ILoginReputation.h"
+#include "nsILoginReputation.h"
 #include "mozilla/Logging.h"
 
-class LoginReputationService final : public ILoginReputationService
+class LoginReputationService final : public nsILoginReputationService
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_ILOGINREPUTATIONSERVICE
+  NS_DECL_NSILOGINREPUTATIONSERVICE
 
 public:
-  static already_AddRefed<LoginReputationService> GetSingleton();
+  static
+  already_AddRefed<LoginReputationService> GetSingleton();
+
+  static
+  already_AddRefed<nsILoginReputationQuery> ConstructQueryParam(nsIURI* aURI);
 
 private:
   /**
    * Global singleton object for holding this factory service.
    */
   static LoginReputationService* gLoginReputationService;
-
-  /**
-   * MOZ_LOG=LoginReputation:5
-   */
-  static mozilla::LazyLogModule prlog;
 
   LoginReputationService();
   ~LoginReputationService();
