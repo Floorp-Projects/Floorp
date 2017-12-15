@@ -128,6 +128,26 @@ WebGL2Context::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
 
     ////
 
+    switch (buffer->mUsage) {
+    case LOCAL_GL_STATIC_READ:
+    case LOCAL_GL_STREAM_READ:
+    case LOCAL_GL_DYNAMIC_READ:
+        if (mCompletedFenceId < buffer->mLastUpdateFenceId) {
+            GeneratePerfWarning("%s: Reading from a buffer without checking for previous"
+                                " command completion likely causes pipeline stalls."
+                                " Please use FenceSync.",
+                                funcName);
+        }
+        break;
+    default:
+        GeneratePerfWarning("%s: Reading from a buffer with usage other than *_READ"
+                            " causes pipeline stalls. Copy through a STREAM_READ buffer.",
+                            funcName);
+        break;
+    }
+
+    ////
+
     gl->MakeCurrent();
     const ScopedLazyBind readBind(gl, target, buffer);
 

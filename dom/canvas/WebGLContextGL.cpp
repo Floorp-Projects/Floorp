@@ -2432,6 +2432,9 @@ WebGLContext::Finish() {
         return;
     MakeContextCurrent();
     gl->fFinish();
+
+    mCompletedFenceId = mNextFenceId;
+    mNextFenceId += 1;
 }
 
 void
