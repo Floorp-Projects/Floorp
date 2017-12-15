@@ -288,9 +288,7 @@ nsOfflineCacheEvictionFunction::Apply()
 
   for (int32_t i = 0; i < items.Count(); i++) {
     if (MOZ_LOG_TEST(gCacheLog, LogLevel::Debug)) {
-      nsAutoCString path;
-      items[i]->GetNativePath(path);
-      LOG(("  removing %s\n", path.get()));
+      LOG(("  removing %s\n", items[i]->HumanReadablePath().get()));
     }
 
     items[i]->Remove(false);
