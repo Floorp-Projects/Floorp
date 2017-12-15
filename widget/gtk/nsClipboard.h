@@ -18,9 +18,10 @@
 
 class nsRetrievalContext {
 public:
-    virtual guchar* WaitForClipboardContext(const char* aMimeType,
-                                            int32_t aWhichClipboard,
-                                            uint32_t* aContentLength) = 0;
+    // Returned data must be released by free()
+    virtual const char* WaitForClipboardContext(const char* aMimeType,
+                                                int32_t aWhichClipboard,
+                                                uint32_t* aContentLength) = 0;
     virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
                                 int* aTargetNum) = 0;
 
@@ -55,11 +56,17 @@ private:
     virtual ~nsClipboard();
 
     // Save global clipboard content to gtk
-    nsresult                     Store            (void);
+    nsresult         Store            (void);
 
     // Get our hands on the correct transferable, given a specific
     // clipboard
-    nsITransferable             *GetTransferable  (int32_t aWhichClipboard);
+    nsITransferable *GetTransferable  (int32_t aWhichClipboard);
+
+    // Send clipboard data by nsITransferable
+    void             SetTransferableData(nsITransferable* aTransferable,
+                                         nsCString& aFlavor,
+                                         const char* aClipboardData,
+                                         uint32_t aClipboardDataLength);
 
     // Hang on to our owners and transferables so we can transfer data
     // when asked.

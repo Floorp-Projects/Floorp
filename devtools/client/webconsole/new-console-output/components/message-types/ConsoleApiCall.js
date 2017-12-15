@@ -117,6 +117,7 @@ function ConsoleApiCall(props) {
     indent,
     timeStamp,
     timestampsVisible,
+    parameters,
   });
 }
 

@@ -652,33 +652,6 @@ const char GeckoBatteryManager::name[] =
 constexpr char GeckoBatteryManager::OnBatteryChange_t::name[];
 constexpr char GeckoBatteryManager::OnBatteryChange_t::signature[];
 
-const char GeckoEditable::name[] =
-        "org/mozilla/gecko/GeckoEditable";
-
-constexpr char GeckoEditable::New_t::name[];
-constexpr char GeckoEditable::New_t::signature[];
-
-auto GeckoEditable::New() -> GeckoEditable::LocalRef
-{
-    return mozilla::jni::Constructor<New_t>::Call(GeckoEditable::Context(), nullptr);
-}
-
-constexpr char GeckoEditable::OnViewChange_t::name[];
-constexpr char GeckoEditable::OnViewChange_t::signature[];
-
-auto GeckoEditable::OnViewChange(mozilla::jni::Object::Param a0) const -> void
-{
-    return mozilla::jni::Method<OnViewChange_t>::Call(GeckoEditable::mCtx, nullptr, a0);
-}
-
-constexpr char GeckoEditable::SetDefaultEditableChild_t::name[];
-constexpr char GeckoEditable::SetDefaultEditableChild_t::signature[];
-
-auto GeckoEditable::SetDefaultEditableChild(mozilla::jni::Object::Param a0) const -> void
-{
-    return mozilla::jni::Method<SetDefaultEditableChild_t>::Call(GeckoEditable::mCtx, nullptr, a0);
-}
-
 const char GeckoEditableChild::name[] =
         "org/mozilla/gecko/GeckoEditableChild";
 
@@ -701,9 +674,9 @@ auto GeckoEditableChild::NotifyIME(int32_t a0) const -> void
 constexpr char GeckoEditableChild::NotifyIMEContext_t::name[];
 constexpr char GeckoEditableChild::NotifyIMEContext_t::signature[];
 
-auto GeckoEditableChild::NotifyIMEContext(int32_t a0, mozilla::jni::String::Param a1, mozilla::jni::String::Param a2, mozilla::jni::String::Param a3, bool a4, bool a5) const -> void
+auto GeckoEditableChild::NotifyIMEContext(int32_t a0, mozilla::jni::String::Param a1, mozilla::jni::String::Param a2, mozilla::jni::String::Param a3, int32_t a4) const -> void
 {
-    return mozilla::jni::Method<NotifyIMEContext_t>::Call(GeckoEditableChild::mCtx, nullptr, a0, a1, a2, a3, a4, a5);
+    return mozilla::jni::Method<NotifyIMEContext_t>::Call(GeckoEditableChild::mCtx, nullptr, a0, a1, a2, a3, a4);
 }
 
 constexpr char GeckoEditableChild::OnDefaultKeyEvent_t::name[];
@@ -756,12 +729,6 @@ auto GeckoEditableChild::UpdateCompositionRects(mozilla::jni::ObjectArray::Param
     return mozilla::jni::Method<UpdateCompositionRects_t>::Call(GeckoEditableChild::mCtx, nullptr, a0);
 }
 
-const char GeckoEditableClient::name[] =
-        "org/mozilla/gecko/GeckoEditableClient";
-
-const char GeckoEditableListener::name[] =
-        "org/mozilla/gecko/GeckoEditableListener";
-
 const char GeckoNetworkManager::name[] =
         "org/mozilla/gecko/GeckoNetworkManager";
 
@@ -783,8 +750,8 @@ const char GeckoSession::name[] =
 const char GeckoSession::Window::name[] =
         "org/mozilla/gecko/GeckoSession$Window";
 
-constexpr char GeckoSession::Window::Attach_t::name[];
-constexpr char GeckoSession::Window::Attach_t::signature[];
+constexpr char GeckoSession::Window::AttachEditable_t::name[];
+constexpr char GeckoSession::Window::AttachEditable_t::signature[];
 
 constexpr char GeckoSession::Window::Close_t::name[];
 constexpr char GeckoSession::Window::Close_t::signature[];
@@ -1103,6 +1070,15 @@ constexpr char SurfaceTextureListener::DisposeNative_t::signature[];
 
 constexpr char SurfaceTextureListener::OnFrameAvailable_t::name[];
 constexpr char SurfaceTextureListener::OnFrameAvailable_t::signature[];
+
+const char TextInputController::name[] =
+        "org/mozilla/gecko/TextInputController";
+
+const char TextInputController::EditableClient::name[] =
+        "org/mozilla/gecko/TextInputController$EditableClient";
+
+const char TextInputController::EditableListener::name[] =
+        "org/mozilla/gecko/TextInputController$EditableListener";
 
 const char GeckoSurface::name[] =
         "org/mozilla/gecko/gfx/GeckoSurface";

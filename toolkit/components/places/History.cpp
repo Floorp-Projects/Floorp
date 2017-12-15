@@ -575,6 +575,11 @@ public:
       History* history = History::GetService();
       NS_ENSURE_STATE(history);
       history->NotifyVisited(mURI);
+      AutoTArray<URIParams, 1> uris;
+      URIParams uri;
+      SerializeURI(mURI, uri);
+      uris.AppendElement(Move(uri));
+      history->NotifyVisitedParent(uris);
     }
 
     nsCOMPtr<nsIObserverService> observerService =
@@ -643,6 +648,7 @@ public:
   nsresult NotifyVisit(nsNavHistory* aNavHistory,
                        nsCOMPtr<nsIObserverService>& aObsService,
                        PRTime aNow,
+                       nsTArray<URIParams>& aNotifyVisitedURIs,
                        VisitData aPlace) {
     nsCOMPtr<nsIURI> uri;
     MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), aPlace.spec));
@@ -675,6 +681,10 @@ public:
       aNavHistory->NotifyTitleChange(uri, aPlace.title, aPlace.guid);
     }
 
+    URIParams serialized;
+    SerializeURI(uri, serialized);
+    aNotifyVisitedURIs.AppendElement(Move(serialized));
+
     return NS_OK;
   }
 
@@ -699,13 +709,17 @@ public:
 
     PRTime now = PR_Now();
     if (mPlaces.Length() > 0) {
+      InfallibleTArray<URIParams> uris(mPlaces.Length());
       for (uint32_t i = 0; i < mPlaces.Length(); ++i) {
-        nsresult rv = NotifyVisit(navHistory, obsService, now, mPlaces[i]);
+        nsresult rv = NotifyVisit(navHistory, obsService, now, uris, mPlaces[i]);
         NS_ENSURE_SUCCESS(rv, rv);
       }
+      mHistory->NotifyVisitedParent(uris);
     } else {
-      nsresult rv = NotifyVisit(navHistory, obsService, now, mPlace);
+      AutoTArray<URIParams, 1> uris;
+      nsresult rv = NotifyVisit(navHistory, obsService, now, uris, mPlace);
       NS_ENSURE_SUCCESS(rv, rv);
+      mHistory->NotifyVisitedParent(uris);
     }
 
     return NS_OK;
@@ -1998,6 +2012,20 @@ GetLinkDocument(Link* aLink)
   return element ? element->OwnerDoc() : nullptr;
 }
 
+void
+History::NotifyVisitedParent(const nsTArray<URIParams>& aURIs)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+  nsTArray<ContentParent*> cplist;
+  ContentParent::GetAll(cplist);
+
+  if (!cplist.IsEmpty()) {
+    for (uint32_t i = 0; i < cplist.Length(); ++i) {
+      Unused << cplist[i]->SendNotifyVisited(aURIs);
+    }
+  }
+}
+
 NS_IMETHODIMP
 History::NotifyVisited(nsIURI* aURI)
 {
@@ -2007,19 +2035,6 @@ History::NotifyVisited(nsIURI* aURI)
   // interact with webpages.
 
   nsAutoScriptBlocker scriptBlocker;
-
-  if (XRE_IsParentProcess()) {
-    nsTArray<ContentParent*> cplist;
-    ContentParent::GetAll(cplist);
-
-    if (!cplist.IsEmpty()) {
-      URIParams uri;
-      SerializeURI(aURI, uri);
-      for (uint32_t i = 0; i < cplist.Length(); ++i) {
-        Unused << cplist[i]->SendNotifyVisited(uri);
-      }
-    }
-  }
 
   // If we have no observers for this URI, we have nothing to notify about.
   KeyClass* key = mObservers.GetEntry(aURI);

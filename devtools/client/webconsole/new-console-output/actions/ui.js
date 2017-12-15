@@ -7,6 +7,7 @@
 "use strict";
 
 const { getAllUi } = require("devtools/client/webconsole/new-console-output/selectors/ui");
+const { getMessage } = require("devtools/client/webconsole/new-console-output/selectors/messages");
 const Services = require("Services");
 
 const {
@@ -15,7 +16,8 @@ const {
   PERSIST_TOGGLE,
   PREFS,
   SELECT_NETWORK_MESSAGE_TAB,
-  SIDEBAR_TOGGLE,
+  SIDEBAR_CLOSE,
+  SHOW_OBJECT_IN_SIDEBAR,
   TIMESTAMPS_TOGGLE,
 } = require("devtools/client/webconsole/new-console-output/constants");
 
@@ -59,9 +61,26 @@ function initialize() {
   };
 }
 
-function sidebarToggle(show) {
+function sidebarClose(show) {
   return {
-    type: SIDEBAR_TOGGLE,
+    type: SIDEBAR_CLOSE,
+  };
+}
+
+function showObjectInSidebar(actorId, messageId) {
+  return (dispatch, getState) => {
+    let { parameters } = getMessage(getState(), messageId);
+    if (Array.isArray(parameters)) {
+      for (let parameter of parameters) {
+        if (parameter.actor === actorId) {
+          dispatch({
+            type: SHOW_OBJECT_IN_SIDEBAR,
+            grip: parameter
+          });
+          return;
+        }
+      }
+    }
   };
 }
 
@@ -70,6 +89,7 @@ module.exports = {
   initialize,
   persistToggle,
   selectNetworkMessageTab,
-  sidebarToggle,
+  sidebarClose,
+  showObjectInSidebar,
   timestampsToggle,
 };
