@@ -551,7 +551,7 @@ public:
   size_t sizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   {
     size_t n = 0;
-    for (const T* t = getFirst(); t; t = t->getNext()) {
+    for (ConstRawType t = getFirst(); t; t = t->getNext()) {
       n += aMallocSizeOf(t);
     }
     return n;
