@@ -13,8 +13,6 @@ config = {
         'UPLOAD_HOST': 'localhost',
         'UPLOAD_PATH': '/builds/worker/artifacts/',
     },
-    "mozilla_dir": "src/",
-    "simple_name_move": True,
     'secret_files': [
         {'filename': '/builds/gapi.data',
          'secret_name': 'project/releng/gecko/build/level-%(scm-level)s/gapi.data',
