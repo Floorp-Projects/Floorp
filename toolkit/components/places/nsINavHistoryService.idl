@@ -1037,17 +1037,6 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short RESULTS_AS_VISIT = 1;
 
   /**
-   * This is identical to RESULT_TYPE_VISIT except that individual result nodes
-   * will have type "FullVisit".  This is used for the attributes that are not
-   * commonly accessed to save space in the common case (the lists can be very
-   * long).
-   *
-   * @note Not yet implemented. See bug 409662.
-   * @note This result type is only supported by QUERY_TYPE_HISTORY.
-   */
-  const unsigned short RESULTS_AS_FULL_VISIT = 2;
-
-  /**
    * This returns query nodes for each predefined date range where we 
    * had visits. The node contains information how to load its content:
    * - visits for the given date range will be loaded.
