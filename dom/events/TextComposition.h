@@ -18,6 +18,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/TextRange.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/Text.h"
 
 namespace mozilla {
 
@@ -39,6 +40,7 @@ class TextComposition final
 
 public:
   typedef dom::TabParent TabParent;
+  typedef dom::Text Text;
 
   static bool IsHandlingSelectionEvent() { return sHandlingSelectionEvent; }
 
@@ -50,6 +52,8 @@ public:
   bool Destroyed() const { return !mPresContext; }
   nsPresContext* GetPresContext() const { return mPresContext; }
   nsINode* GetEventTargetNode() const { return mNode; }
+  // The text node which includes composition string.
+  Text* GetContainerTextNode() const { return mContainerTextNode; }
   // The latest CompositionEvent.data value except compositionstart event.
   // This value is modified at dispatching compositionupdate.
   const nsString& LastData() const { return mLastData; }
@@ -132,6 +136,37 @@ public:
   }
 
   /**
+   * The offset of composition string in the text node.  If composition string
+   * hasn't been inserted in any text node yet, this returns UINT32_MAX.
+   */
+  uint32_t XPOffsetInTextNode() const
+  {
+    return mCompositionStartOffsetInTextNode;
+  }
+
+  /**
+   * The length of composition string in the text node.  If composition string
+   * hasn't been inserted in any text node yet, this returns UINT32_MAX.
+   */
+  uint32_t XPLengthInTextNode() const
+  {
+    return mCompositionLengthInTextNode;
+  }
+
+  /**
+   * The end offset of composition string in the text node.  If composition
+   * string hasn't been inserted in any text node yet, this returns UINT32_MAX.
+   */
+  uint32_t XPEndOffsetInTextNode() const
+  {
+    if (mCompositionStartOffsetInTextNode == UINT32_MAX ||
+        mCompositionLengthInTextNode == UINT32_MAX) {
+      return UINT32_MAX;
+    }
+    return mCompositionStartOffsetInTextNode + mCompositionLengthInTextNode;
+  }
+
+  /**
    * Returns true if there is non-empty composition string and it's not fixed.
    * Otherwise, false.
    */
@@ -144,6 +179,17 @@ public:
   bool IsEditorHandlingEvent() const
   {
     return mIsEditorHandlingEvent;
+  }
+
+  /**
+   * IsMovingToNewTextNode() returns true if editor detects the text node
+   * has been removed and still not insert the composition string into
+   * new text node.
+   */
+  bool IsMovingToNewTextNode() const
+  {
+    return !mContainerTextNode && mCompositionLengthInTextNode &&
+           mCompositionLengthInTextNode != UINT32_MAX;
   }
 
   /**
@@ -189,6 +235,66 @@ public:
       const CompositionChangeEventHandlingMarker& aOther);
   };
 
+  /**
+   * WillCreateCompositionTransaction() is called by the focused editor
+   * immediately before creating CompositionTransaction.
+   *
+   * @param aTextNode       The text node which includes composition string.
+   * @param aOffset         The offset of composition string in aTextNode.
+   */
+  void WillCreateCompositionTransaction(Text* aTextNode,
+                                        uint32_t aOffset)
+  {
+    if (!mContainerTextNode) {
+      mContainerTextNode = aTextNode;
+      mCompositionStartOffsetInTextNode = aOffset;
+      NS_WARNING_ASSERTION(mCompositionStartOffsetInTextNode != UINT32_MAX,
+        "The text node is really too long.");
+    }
+#ifdef DEBUG
+    else {
+      NS_WARNING_ASSERTION(aTextNode == mContainerTextNode,
+        "The editor tries to insert composition string into different node");
+      NS_WARNING_ASSERTION(aOffset == mCompositionStartOffsetInTextNode,
+        "The editor tries to insert composition string into different offset");
+    }
+#endif // #ifdef DEBUG
+    if (mCompositionLengthInTextNode == UINT32_MAX) {
+      mCompositionLengthInTextNode = 0;
+    }
+  }
+
+  /**
+   * DidCreateCompositionTransaction() is called by the focused editor
+   * immediately after creating CompositionTransaction.
+   *
+   * @param aStringToInsert     The string to insert the text node actually.
+   *                            This may be different from the data of
+   *                            dispatching composition event because it may
+   *                            be replaced with different character for
+   *                            passwords, or truncated due to maxlength.
+   */
+  void DidCreateCompositionTransaction(const nsAString& aStringToInsert)
+  {
+    MOZ_ASSERT(mCompositionStartOffsetInTextNode != UINT32_MAX);
+    mCompositionLengthInTextNode = aStringToInsert.Length();
+    NS_WARNING_ASSERTION(mCompositionLengthInTextNode != UINT32_MAX,
+      "The string to insert is really too long.");
+  }
+
+  /**
+   * OnTextNodeRemoved() is called when focused editor is reframed and
+   * mContainerTextNode may be (or have been) replaced with different text
+   * node, or just removes the text node due to empty.
+   */
+  void OnTextNodeRemoved()
+  {
+    mContainerTextNode = nullptr;
+    // Don't reset mCompositionStartOffsetInTextNode nor
+    // mCompositionLengthInTextNode because editor needs them to restore
+    // composition in new text node.
+  }
+
 private:
   // Private destructor, to discourage deletion outside of Release():
   ~TextComposition()
@@ -207,6 +313,9 @@ private:
   nsPresContext* mPresContext;
   nsCOMPtr<nsINode> mNode;
   RefPtr<TabParent> mTabParent;
+
+  // The text node which includes the composition string.
+  RefPtr<Text> mContainerTextNode;
 
   // This is the clause and caret range information which is managed by
   // the focused editor.  This may be null if there is no clauses or caret.
@@ -236,6 +345,18 @@ private:
   // Offset of the selected clause of the composition string from
   // mCompositionStartOffset
   uint32_t mTargetClauseOffsetInComposition;
+  // Offset of the composition string in mContainerTextNode.
+  // NOTE: This is NOT valid in the main process if focused editor is in a
+  //       remote process.
+  uint32_t mCompositionStartOffsetInTextNode;
+  // Length of the composition string in mContainerTextNode.  If this instance
+  // has already dispatched eCompositionCommit(AsIs) and
+  // EditorDidHandleCompositionChangeEvent() has already been called,
+  // this may be different from length of mString because committed string
+  // may be truncated by maxlength attribute of <input> or <textarea>.
+  // NOTE: This is NOT valid in the main process if focused editor is in a
+  //       remote process.
+  uint32_t mCompositionLengthInTextNode;
 
   // See the comment for IsSynthesizedForTests().
   bool mIsSynthesizedForTests;
@@ -286,6 +407,8 @@ private:
     , mNativeContext(nullptr)
     , mCompositionStartOffset(0)
     , mTargetClauseOffsetInComposition(0)
+    , mCompositionStartOffsetInTextNode(UINT32_MAX)
+    , mCompositionLengthInTextNode(UINT32_MAX)
     , mIsSynthesizedForTests(false)
     , mIsComposing(false)
     , mIsEditorHandlingEvent(false)

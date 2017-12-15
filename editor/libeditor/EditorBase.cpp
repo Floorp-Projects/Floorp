@@ -130,8 +130,6 @@ EditorBase::EditorBase()
   , mUpdateCount(0)
   , mPlaceholderBatch(0)
   , mAction(EditAction::none)
-  , mIMETextOffset(0)
-  , mIMETextLength(0)
   , mDirection(eNone)
   , mDocDirtyState(-1)
   , mSpellcheckCheckboxState(eTriUnset)
@@ -168,7 +166,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EditorBase)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mInlineSpellChecker)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTxnMgr)
- NS_IMPL_CYCLE_COLLECTION_UNLINK(mIMETextNode)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mActionListeners)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEditorObservers)
  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocStateListeners)
@@ -191,7 +188,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EditorBase)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInlineSpellChecker)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTxnMgr)
- NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIMETextNode)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mActionListeners)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEditorObservers)
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocStateListeners)
@@ -257,13 +253,14 @@ EditorBase::Init(nsIDOMDocument* aDOMDocument,
 
   mUpdateCount=0;
 
-  // If this is an editor for <input> or <textarea>, mIMETextNode is always
-  // recreated with same content. Therefore, we need to forget mIMETextNode,
-  // but we need to keep storing mIMETextOffset and mIMETextLength becuase
-  // they are necessary to restore IME selection and replacing composing string
-  // when this receives eCompositionChange event next time.
-  if (mIMETextNode && !mIMETextNode->IsInComposedDoc()) {
-    mIMETextNode = nullptr;
+  // If this is an editor for <input> or <textarea>, the text node which
+  // has composition string is always recreated with same content. Therefore,
+  // we need to nodify mComposition of text node destruction and replacing
+  // composing string when this receives eCompositionChange event next time.
+  if (mComposition &&
+      mComposition->GetContainerTextNode() &&
+      !mComposition->GetContainerTextNode()->IsInComposedDoc()) {
+    mComposition->OnTextNodeRemoved();
   }
 
   // Show the caret.
@@ -2362,10 +2359,9 @@ EditorBase::EndIMEComposition()
   // cancel it here.
   HideCaret(false);
 
-  /* reset the data we need to construct a transaction */
-  mIMETextNode = nullptr;
-  mIMETextOffset = 0;
-  mIMETextLength = 0;
+  // FYI: mComposition still keeps storing container text node of committed
+  //      string, its offset and length.  However, they will be invalidated
+  //      soon since its Destroy() will be called by IMEStateManager.
   mComposition->EndHandlingComposition(this);
   mComposition = nullptr;
 
@@ -2788,18 +2784,16 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   // part of the current IME operation. Example: adjusting whitespace around an
   // IME insertion.
   if (ShouldHandleIMEComposition() && !aSuppressIME) {
-    if (!mIMETextNode) {
-      mIMETextNode = &aTextNode;
-      mIMETextOffset = aOffset;
-    }
+    // XXX Here is still ugly.  This should be fixed by a follow up bug.
+    mComposition->WillCreateCompositionTransaction(&aTextNode, aOffset);
     transaction = CreateTxnForComposition(aStringToInsert);
+    mComposition->DidCreateCompositionTransaction(aStringToInsert);
     isIMETransaction = true;
     // All characters of the composition string will be replaced with
     // aStringToInsert.  So, we need to emulate to remove the composition
     // string.
-    insertedTextNode = mIMETextNode;
-    insertedOffset = mIMETextOffset;
-    mIMETextLength = aStringToInsert.Length();
+    insertedTextNode = mComposition->GetContainerTextNode();
+    insertedOffset = mComposition->XPOffsetInTextNode();
   } else {
     transaction = CreateTxnForInsertText(aStringToInsert, aTextNode, aOffset);
   }
@@ -2840,11 +2834,11 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   // already savvy to having multiple ime txns inside them.
 
   // Delete empty IME text node if there is one
-  if (isIMETransaction && mIMETextNode) {
-    uint32_t len = mIMETextNode->Length();
-    if (!len) {
-      DeleteNode(mIMETextNode);
-      mIMETextNode = nullptr;
+  if (isIMETransaction && mComposition) {
+    Text* textNode = mComposition->GetContainerTextNode();
+    if (textNode && !textNode->Length()) {
+      DeleteNode(textNode);
+      mComposition->OnTextNodeRemoved();
       static_cast<CompositionTransaction*>(transaction.get())->MarkFixed();
     }
   }
@@ -4694,14 +4688,19 @@ EditorBase::CreateTxnForDeleteNode(nsINode* aNode)
 already_AddRefed<CompositionTransaction>
 EditorBase::CreateTxnForComposition(const nsAString& aStringToInsert)
 {
-  MOZ_ASSERT(mIMETextNode);
+  MOZ_ASSERT(mComposition);
+  MOZ_ASSERT(mComposition->GetContainerTextNode());
   // During handling IME composition, mComposition must have been initialized.
   // TODO: We can simplify CompositionTransaction::Init() with TextComposition
   //       class.
   RefPtr<CompositionTransaction> transaction =
-    new CompositionTransaction(*mIMETextNode, mIMETextOffset, mIMETextLength,
-                               mComposition->GetRanges(), aStringToInsert,
-                               *this, &mRangeUpdater);
+    new CompositionTransaction(*mComposition->GetContainerTextNode(),
+                               mComposition->XPOffsetInTextNode(),
+                               mComposition->XPLengthInTextNode(),
+                               mComposition->GetRanges(),
+                               aStringToInsert,
+                               *this,
+                               &mRangeUpdater);
   return transaction.forget();
 }
 
@@ -5241,23 +5240,27 @@ EditorBase::InitializeSelection(nsIDOMEventTarget* aFocusEventTarget)
   // If there is composition when this is called, we may need to restore IME
   // selection because if the editor is reframed, this already forgot IME
   // selection and the transaction.
-  if (mComposition && !mIMETextNode && mIMETextLength) {
-    // We need to look for the new mIMETextNode from current selection.
+  if (mComposition && mComposition->IsMovingToNewTextNode()) {
+    // We need to look for the new text node from current selection.
     // XXX If selection is changed during reframe, this doesn't work well!
     nsRange* firstRange = selection->GetRangeAt(0);
-    NS_ENSURE_TRUE(firstRange, NS_ERROR_FAILURE);
+    if (NS_WARN_IF(!firstRange)) {
+      return NS_ERROR_FAILURE;
+    }
     EditorRawDOMPoint atStartOfFirstRange(firstRange->StartRef());
     EditorRawDOMPoint betterInsertionPoint =
       FindBetterInsertionPoint(atStartOfFirstRange);
     Text* textNode = betterInsertionPoint.GetContainerAsText();
     MOZ_ASSERT(textNode,
-               "There must be text node if mIMETextLength is larger than 0");
+               "There must be text node if composition string is not empty");
     if (textNode) {
-      MOZ_ASSERT(textNode->Length() >= mIMETextOffset + mIMETextLength,
-                 "The text node must be different from the old mIMETextNode");
-      CompositionTransaction::SetIMESelection(*this, textNode, mIMETextOffset,
-                                              mIMETextLength,
-                                              mComposition->GetRanges());
+      MOZ_ASSERT(textNode->Length() >= mComposition->XPEndOffsetInTextNode(),
+                 "The text node must be different from the old text node");
+      CompositionTransaction::SetIMESelection(
+                                *this, textNode,
+                                mComposition->XPOffsetInTextNode(),
+                                mComposition->XPLengthInTextNode(),
+                                mComposition->GetRanges());
     }
   }
 
