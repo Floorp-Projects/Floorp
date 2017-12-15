@@ -83,19 +83,23 @@ job-template:
                - single_locale/production.py
                - single_locale/{project}.py
                - single_locale/linux32.py
+               - single_locale/tc_common.py
                - single_locale/tc_linux32.py
             linux64-l10n:
                - single_locale/production.py
                - single_locale/{project}.py
                - single_locale/linux64.py
+               - single_locale/tc_common.py
                - single_locale/tc_linux64.py
             macosx64:
                - single_locale/production.py
                - single_locale/{project}.py
                - single_locale/macosx64.py
+               - single_locale/tc_common.py
                - single_locale/tc_macosx64.py
             android-api-16-l10n:
                - single_locale/{project}_android-api-16.py
+               - single_locale/tc_common.py
                - single_locale/tc_android-api-16.py
       # no default, so we fail on new entries
       options:
