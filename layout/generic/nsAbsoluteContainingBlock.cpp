@@ -775,8 +775,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     nsContainerFrame::PositionChildViews(aKidFrame);
   }
 
-  aKidFrame->DidReflow(aPresContext, &kidReflowInput,
-                       nsDidReflowStatus::FINISHED);
+  aKidFrame->DidReflow(aPresContext, &kidReflowInput);
 
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {

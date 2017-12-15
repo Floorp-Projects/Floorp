@@ -90,7 +90,7 @@ html|a {
   text-decoration: underline;
 }
 
-@media not all and (-moz-touch-enabled) {
+@media (-moz-touch-enabled: 0) {
   :-moz-handler-clicktoplay .msgTapToPlay {
     display: none;
   }

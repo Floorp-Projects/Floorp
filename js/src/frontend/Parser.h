@@ -9,6 +9,161 @@
 #ifndef frontend_Parser_h
 #define frontend_Parser_h
 
+/*
+ * JS parsers capable of generating ASTs from source text.
+ *
+ * A parser embeds token stream information, then gets and matches tokens to
+ * generate a syntax tree that, if desired, BytecodeEmitter will use to compile
+ * bytecode.
+ *
+ * Like token streams (see the comment near the top of TokenStream.h), parser
+ * classes are heavily templatized -- along the token stream's character-type
+ * axis, and also along a full-parse/syntax-parse axis.  Certain limitations of
+ * C++ (primarily the inability to partially specialize function templates),
+ * plus the desire to minimize compiled code size in duplicate function
+ * template instantiations wherever possible, mean that Parser exhibits much of
+ * the same unholy template/inheritance complexity as token streams.
+ *
+ * == ParserBase → JS::AutoGCRooter, StrictModeGetter ==
+ *
+ * ParserBase is the base parser class, shared by all parsers of all character
+ * types and parse-handling behavior.  It stores everything character- and
+ * handler-agnostic.
+ *
+ * ParserBase's most important field is the parser's token stream's
+ * |TokenStreamAnyChars| component, for all tokenizing aspects that are
+ * character-type-agnostic.  The character-type-sensitive components residing
+ * in |TokenStreamSpecific| (see the comment near the top of TokenStream.h)
+ * live elsewhere in this hierarchy.  These separate locations are the reason
+ * for the |AnyCharsAccess| template parameter to |TokenStreamChars| and
+ * |TokenStreamSpecific|.
+ *
+ * Of particular note: making ParserBase inherit JS::AutoGCRooter (rather than
+ * placing it under one of the more-derived parser classes) means that all
+ * parsers can be traced using the same AutoGCRooter mechanism: it's not
+ * necessary to have separate tracing functionality for syntax/full parsers or
+ * parsers of different character types.
+ *
+ * == PerHandlerParser<ParseHandler> → ParserBase ==
+ *
+ * Certain parsing behavior varies between full parsing and syntax-only parsing
+ * but does not vary across source-text character types.  For example, the work
+ * to "create an arguments object for a function" obviously varies between
+ * syntax and full parsing but (because no source characters are examined) does
+ * not vary by source text character type.  Such functionality is implemented
+ * through functions in PerHandlerParser.
+ *
+ * Functionality only used by syntax parsing or full parsing doesn't live here:
+ * it should be implemented in the appropriate Parser<ParseHandler> (described
+ * further below).
+ *
+ * == GeneralParser<ParseHandler, CharT> → PerHandlerParser<ParseHandler> ==
+ *
+ * Most parsing behavior varies across the character-type axis (and possibly
+ * along the full/syntax axis).  For example:
+ *
+ *   * Parsing ECMAScript's Expression production, implemented by
+ *     GeneralParser::expr, varies in this manner: different types are used to
+ *     represent nodes in full and syntax parsing (ParseNode* versus an enum),
+ *     and reading the tokens comprising the expression requires inspecting
+ *     individual characters (necessarily dependent upon character type).
+ *   * Reporting an error or warning does not depend on the full/syntax parsing
+ *     distinction.  But error reports and warnings include a line of context
+ *     (or a slice of one), for pointing out where a mistake was made.
+ *     Computing such line of context requires inspecting the source text to
+ *     make that line/slice of context, which requires knowing the source text
+ *     character type.
+ *
+ * Such functionality, implemented using identical function code across these
+ * axes, should live in GeneralParser.
+ *
+ * GeneralParser's most important field is the parser's token stream's
+ * |TokenStreamSpecific| component, for all aspects of tokenizing that (contra
+ * |TokenStreamAnyChars| in ParserBase above) are character-type-sensitive.  As
+ * noted above, this field's existence separate from that in ParserBase
+ * motivates the |AnyCharsAccess| template parameters on various token stream
+ * classes.
+ *
+ * Everything in PerHandlerParser *could* be folded into GeneralParser (below)
+ * if desired.  We don't fold in this manner because all such functions would
+ * be instantiated once per CharT -- but if exactly equivalent code would be
+ * generated (because PerHandlerParser functions have no awareness of CharT),
+ * it's risky to *depend* upon the compiler coalescing the instantiations into
+ * one in the final binary.  PerHandlerParser guarantees no duplication.
+ *
+ * == Parser<ParseHandler, CharT> final → GeneralParser<ParseHandler, CharT> ==
+ *
+ * The final (pun intended) axis of complexity lies in Parser.
+ *
+ * Some functionality depends on character type, yet also is defined in
+ * significantly different form in full and syntax parsing.  For example,
+ * attempting to parse the source text of a module will do so in full parsing
+ * but immediately fail in syntax parsing -- so the former is a mess'o'code
+ * while the latter is effectively |return null();|.  Such functionality is
+ * defined in Parser<SyntaxParseHandler or FullParseHandler, CharT> as
+ * appropriate.
+ *
+ * There's a crucial distinction between GeneralParser and Parser, that
+ * explains why both must exist (despite taking exactly the same template
+ * parameters, and despite GeneralParser and Parser existing in a one-to-one
+ * relationship).  GeneralParser is one unspecialized template class:
+ *
+ *   template<class ParseHandler, typename CharT>
+ *   class GeneralParser : ...
+ *   {
+ *     ...parsing functions...
+ *   };
+ *
+ * but Parser is one undefined template class with two separate
+ * specializations:
+ *
+ *   // Declare, but do not define.
+ *   template<class ParseHandler, typename CharT> class Parser;
+ *
+ *   // Define a syntax-parsing specialization.
+ *   template<typename CharT>
+ *   class Parser<SyntaxParseHandler, CharT> final
+ *     : public GeneralParser<SyntaxParseHandler, CharT>
+ *   {
+ *     ...parsing functions...
+ *   };
+ *
+ *   // Define a full-parsing specialization.
+ *   template<typename CharT>
+ *   class Parser<SyntaxParseHandler, CharT> final
+ *     : public GeneralParser<SyntaxParseHandler, CharT>
+ *   {
+ *     ...parsing functions...
+ *   };
+ *
+ * This odd distinction is necessary because C++ unfortunately doesn't allow
+ * partial function specialization:
+ *
+ *   // BAD: You can only specialize a template function if you specify *every*
+ *   //      template parameter, i.e. ParseHandler *and* CharT.
+ *   template<typename CharT>
+ *   void
+ *   GeneralParser<SyntaxParseHandler, CharT>::foo() {}
+ *
+ * But if you specialize Parser *as a class*, then this is allowed:
+ *
+ *   template<typename CharT>
+ *   void
+ *   Parser<SyntaxParseHandler, CharT>::foo() {}
+ *
+ *   template<typename CharT>
+ *   void
+ *   Parser<FullParseHandler, CharT>::foo() {}
+ *
+ * because the only template parameter on the function is CharT -- and so all
+ * template parameters *are* varying, not a strict subset of them.
+ *
+ * So -- any parsing functionality that is differently defined for different
+ * ParseHandlers, *but* is defined textually identically for different CharT
+ * (even if different code ends up generated for them by the compiler), should
+ * reside in Parser.
+ */
+
 #include "mozilla/Array.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TypeTraits.h"
@@ -104,28 +259,20 @@ enum class PropertyType {
     DerivedConstructor
 };
 
-// Specify a value for an ES6 grammar parametrization.  We have no enum for
-// [Return] because its behavior is exactly equivalent to checking whether
-// we're in a function box -- easier and simpler than passing an extra
-// parameter everywhere.
-enum YieldHandling { YieldIsName, YieldIsKeyword };
 enum AwaitHandling : uint8_t { AwaitIsName, AwaitIsKeyword, AwaitIsModuleKeyword };
-enum InHandling { InAllowed, InProhibited };
-enum DefaultHandling { NameRequired, AllowDefaultName };
-enum TripledotHandling { TripledotAllowed, TripledotProhibited };
-
-enum FunctionCallBehavior {
-    PermitAssignmentToFunctionCalls,
-    ForbidAssignmentToFunctionCalls
-};
 
 template <class ParseHandler, typename CharT>
 class AutoAwaitIsKeyword;
 
-class ParserBase : public StrictModeGetter
+class ParserBase
+  : public StrictModeGetter,
+    private JS::AutoGCRooter
 {
   private:
     ParserBase* thisForCtor() { return this; }
+
+    // This is needed to cast a parser to JS::AutoGCRooter.
+    friend void js::frontend::TraceParser(JSTracer* trc, JS::AutoGCRooter* parser);
 
   public:
     JSContext* const context;
@@ -174,6 +321,10 @@ class ParserBase : public StrictModeGetter
                const char16_t* chars, size_t length, bool foldConstants,
                UsedNameTracker& usedNames);
     ~ParserBase();
+
+    bool checkOptions();
+
+    void trace(JSTracer* trc);
 
     const char* getFilename() const { return anyChars.getFilename(); }
     TokenPos pos() const { return anyChars.currentToken().pos; }
@@ -246,6 +397,23 @@ class ParserBase : public StrictModeGetter
   protected:
     enum InvokedPrediction { PredictUninvoked = false, PredictInvoked = true };
     enum ForInitLocation { InForInit, NotInForInit };
+
+    // While on a |let| TOK_NAME token, examine |next| (which must already be
+    // gotten).  Indicate whether |next|, the next token already gotten with
+    // modifier TokenStream::None, continues a LexicalDeclaration.
+    bool nextTokenContinuesLetDeclaration(TokenKind next);
+
+    bool noteUsedNameInternal(HandlePropertyName name);
+    bool hasUsedName(HandlePropertyName name);
+    bool hasUsedFunctionSpecialName(HandlePropertyName name);
+
+    bool checkAndMarkSuperScope();
+
+    bool declareDotGeneratorName();
+
+    bool leaveInnerFunction(ParseContext* outerpc);
+
+    JSAtom* prefixAccessorName(PropertyType propType, HandleAtom propAtom);
 };
 
 inline
@@ -271,6 +439,187 @@ ParseContext::VarScope::VarScope(ParserBase* parser)
     useAsVarScope(parser->pc);
 }
 
+enum FunctionCallBehavior {
+    PermitAssignmentToFunctionCalls,
+    ForbidAssignmentToFunctionCalls
+};
+
+template <class ParseHandler>
+class PerHandlerParser
+  : public ParserBase
+{
+  private:
+    using Node = typename ParseHandler::Node;
+
+  protected:
+    /* State specific to the kind of parse being performed. */
+    ParseHandler handler;
+
+    // When ParseHandler is FullParseHandler:
+    //
+    //   If non-null, this field holds the syntax parser used to attempt lazy
+    //   parsing of inner functions. If null, then lazy parsing is disabled.
+    //
+    // When ParseHandler is SyntaxParseHandler:
+    //
+    //   If non-null, this field must be a sentinel value signaling that the
+    //   syntax parse was aborted. If null, then lazy parsing was aborted due
+    //   to encountering unsupported language constructs.
+    //
+    // |internalSyntaxParser_| is really a |Parser<SyntaxParseHandler, CharT>*|
+    // where |CharT| varies per |Parser<ParseHandler, CharT>|.  But this
+    // template class doesn't have access to |CharT|, so we store a |void*|
+    // here, then intermediate all access to this field through accessors in
+    // |GeneralParser<ParseHandler, CharT>| that impose the real type on this
+    // field.
+    void* internalSyntaxParser_;
+
+  protected:
+    PerHandlerParser(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
+                     const char16_t* chars, size_t length, bool foldConstants,
+                     UsedNameTracker& usedNames, LazyScript* lazyOuterFunction);
+
+    static Node null() { return ParseHandler::null(); }
+
+    Node stringLiteral();
+
+    const char* nameIsArgumentsOrEval(Node node);
+
+    bool noteDestructuredPositionalFormalParameter(Node fn, Node destruct);
+
+    bool noteUsedName(HandlePropertyName name) {
+        // If the we are delazifying, the LazyScript already has all the
+        // closed-over info for bindings and there's no need to track used
+        // names.
+        if (handler.canSkipLazyClosedOverBindings())
+            return true;
+
+        return ParserBase::noteUsedNameInternal(name);
+    }
+
+    // Required on Scope exit.
+    bool propagateFreeNamesAndMarkClosedOverBindings(ParseContext::Scope& scope);
+
+    bool finishFunctionScopes(bool isStandaloneFunction);
+    Node finishLexicalScope(ParseContext::Scope& scope, Node body);
+    bool finishFunction(bool isStandaloneFunction = false);
+
+    bool declareFunctionThis();
+    bool declareFunctionArgumentsObject();
+
+    inline Node newName(PropertyName* name);
+    inline Node newName(PropertyName* name, TokenPos pos);
+
+    Node newInternalDotName(HandlePropertyName name);
+    Node newThisName();
+    Node newDotGeneratorName();
+
+    Node identifierReference(Handle<PropertyName*> name);
+
+    Node noSubstitutionTaggedTemplate();
+
+    inline bool processExport(Node node);
+    inline bool processExportFrom(Node node);
+
+    // If ParseHandler is SyntaxParseHandler:
+    //   Do nothing.
+    // If ParseHandler is FullParseHandler:
+    //   Disable syntax parsing of all future inner functions during this
+    //   full-parse.
+    inline void disableSyntaxParser();
+
+    // If ParseHandler is SyntaxParseHandler:
+    //   Flag the current syntax parse as aborted due to unsupported language
+    //   constructs and return false.  Aborting the current syntax parse does
+    //   not disable attempts to syntax-parse future inner functions.
+    // If ParseHandler is FullParseHandler:
+    //    Disable syntax parsing of all future inner functions and return true.
+    inline bool abortIfSyntaxParser();
+
+    // If ParseHandler is SyntaxParseHandler:
+    //   Return whether the last syntax parse was aborted due to unsupported
+    //   language constructs.
+    // If ParseHandler is FullParseHandler:
+    //   Return false.
+    inline bool hadAbortedSyntaxParse();
+
+    // If ParseHandler is SyntaxParseHandler:
+    //   Clear whether the last syntax parse was aborted.
+    // If ParseHandler is FullParseHandler:
+    //   Do nothing.
+    inline void clearAbortedSyntaxParse();
+
+  public:
+    bool isValidSimpleAssignmentTarget(Node node,
+                                       FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
+
+    FunctionBox* newFunctionBox(Node fn, JSFunction* fun, uint32_t toStringStart,
+                                Directives directives, GeneratorKind generatorKind,
+                                FunctionAsyncKind asyncKind);
+};
+
+#define ABORTED_SYNTAX_PARSE_SENTINEL reinterpret_cast<void*>(0x1)
+
+template<>
+inline void
+PerHandlerParser<SyntaxParseHandler>::disableSyntaxParser()
+{
+}
+
+template<>
+inline bool
+PerHandlerParser<SyntaxParseHandler>::abortIfSyntaxParser()
+{
+    internalSyntaxParser_ = ABORTED_SYNTAX_PARSE_SENTINEL;
+    return false;
+}
+
+template<>
+inline bool
+PerHandlerParser<SyntaxParseHandler>::hadAbortedSyntaxParse()
+{
+    return internalSyntaxParser_ == ABORTED_SYNTAX_PARSE_SENTINEL;
+}
+
+template<>
+inline void
+PerHandlerParser<SyntaxParseHandler>::clearAbortedSyntaxParse()
+{
+    internalSyntaxParser_ = nullptr;
+}
+
+#undef ABORTED_SYNTAX_PARSE_SENTINEL
+
+// Disable syntax parsing of all future inner functions during this
+// full-parse.
+template<>
+inline void
+PerHandlerParser<FullParseHandler>::disableSyntaxParser()
+{
+    internalSyntaxParser_ = nullptr;
+}
+
+template<>
+inline bool
+PerHandlerParser<FullParseHandler>::abortIfSyntaxParser()
+{
+    disableSyntaxParser();
+    return true;
+}
+
+template<>
+inline bool
+PerHandlerParser<FullParseHandler>::hadAbortedSyntaxParse()
+{
+    return false;
+}
+
+template<>
+inline void
+PerHandlerParser<FullParseHandler>::clearAbortedSyntaxParse()
+{
+}
+
 enum class ExpressionClosure { Allowed, Forbidden };
 
 template<class Parser>
@@ -284,21 +633,95 @@ class ParserAnyCharsAccess
     static inline const TokenStreamAnyChars& anyChars(const TokenStreamChars* ts);
 };
 
+// Specify a value for an ES6 grammar parametrization.  We have no enum for
+// [Return] because its behavior is exactly equivalent to checking whether
+// we're in a function box -- easier and simpler than passing an extra
+// parameter everywhere.
+enum YieldHandling { YieldIsName, YieldIsKeyword };
+enum InHandling { InAllowed, InProhibited };
+enum DefaultHandling { NameRequired, AllowDefaultName };
+enum TripledotHandling { TripledotAllowed, TripledotProhibited };
+
 template <class ParseHandler, typename CharT>
 class Parser;
 
 template <class ParseHandler, typename CharT>
 class GeneralParser
-  : public ParserBase,
-    private JS::AutoGCRooter
+  : public PerHandlerParser<ParseHandler>
 {
+  private:
+    using Base = PerHandlerParser<ParseHandler>;
+    using FinalParser = Parser<ParseHandler, CharT>;
+    using Node = typename ParseHandler::Node;
+    using typename Base::InvokedPrediction;
+    using SyntaxParser = Parser<SyntaxParseHandler, CharT>;
+
   protected:
     using Modifier = TokenStreamShared::Modifier;
 
-  private:
-    using FinalParser = Parser<ParseHandler, CharT>;
-    using Node = typename ParseHandler::Node;
+    using Base::PredictUninvoked;
+    using Base::PredictInvoked;
 
+    using Base::alloc;
+    using Base::awaitIsKeyword;
+#if DEBUG
+    using Base::checkOptionsCalled;
+#endif
+    using Base::finishFunctionScopes;
+    using Base::finishLexicalScope;
+    using Base::foldConstants;
+    using Base::getFilename;
+    using Base::hasUsedFunctionSpecialName;
+    using Base::hasValidSimpleStrictParameterNames;
+    using Base::isUnexpectedEOF_;
+    using Base::keepAtoms;
+    using Base::nameIsArgumentsOrEval;
+    using Base::newFunction;
+    using Base::newFunctionBox;
+    using Base::newName;
+    using Base::null;
+    using Base::options;
+    using Base::pos;
+    using Base::propagateFreeNamesAndMarkClosedOverBindings;
+    using Base::setLocalStrictMode;
+    using Base::stringLiteral;
+    using Base::traceListHead;
+    using Base::yieldExpressionsSupported;
+
+    using Base::disableSyntaxParser;
+    using Base::abortIfSyntaxParser;
+    using Base::hadAbortedSyntaxParse;
+    using Base::clearAbortedSyntaxParse;
+
+  public:
+    using Base::anyChars;
+    using Base::context;
+    using Base::handler;
+    using Base::isValidSimpleAssignmentTarget;
+    using Base::pc;
+    using Base::usedNames;
+
+  private:
+    using Base::checkAndMarkSuperScope;
+    using Base::declareDotGeneratorName;
+    using Base::declareFunctionArgumentsObject;
+    using Base::declareFunctionThis;
+    using Base::finishFunction;
+    using Base::hasUsedName;
+    using Base::identifierReference;
+    using Base::leaveInnerFunction;
+    using Base::newDotGeneratorName;
+    using Base::newInternalDotName;
+    using Base::newThisName;
+    using Base::nextTokenContinuesLetDeclaration;
+    using Base::noSubstitutionTaggedTemplate;
+    using Base::noteDestructuredPositionalFormalParameter;
+    using Base::noteUsedName;
+    using Base::prefixAccessorName;
+    using Base::processExport;
+    using Base::processExportFrom;
+
+  private:
     inline FinalParser* asFinalParser();
     inline const FinalParser* asFinalParser() const;
 
@@ -429,29 +852,23 @@ class GeneralParser
         void transferErrorsTo(PossibleError* other);
     };
 
-  protected:
-    // When ParseHandler is FullParseHandler:
-    //
-    //   If non-null, this field holds the syntax parser used to attempt lazy
-    //   parsing of inner functions. If null, then lazy parsing is disabled.
-    //
-    // When ParseHandler is SyntaxParseHandler:
-    //
-    //   If non-null, this field must be a sentinel value signaling that the
-    //   syntax parse was aborted. If null, then lazy parsing was aborted due
-    //   to encountering unsupported language constructs.
-    using SyntaxParser = Parser<SyntaxParseHandler, CharT>;
-    SyntaxParser* syntaxParser_;
-
   private:
-    inline bool abortIfSyntaxParser();
+    // DO NOT USE THE syntaxParser_ FIELD DIRECTLY.  Use the accessors defined
+    // below to access this field per its actual type.
+    using Base::internalSyntaxParser_;
+
+  protected:
+    SyntaxParser* getSyntaxParser() const {
+        return reinterpret_cast<SyntaxParser*>(internalSyntaxParser_);
+    }
+
+    void setSyntaxParser(SyntaxParser* syntaxParser) {
+        internalSyntaxParser_ = syntaxParser;
+    }
 
   public:
     using TokenStream = TokenStreamSpecific<CharT, ParserAnyCharsAccess<GeneralParser>>;
     TokenStream tokenStream;
-
-    /* State specific to the kind of parse being performed. */
-    ParseHandler handler;
 
     void prepareNodeForMutation(Node node) { handler.prepareNodeForMutation(node); }
     void freeTree(Node node) { handler.freeTree(node); }
@@ -461,24 +878,13 @@ class GeneralParser
                   const CharT* chars, size_t length, bool foldConstants,
                   UsedNameTracker& usedNames, SyntaxParser* syntaxParser,
                   LazyScript* lazyOuterFunction);
-    ~GeneralParser();
 
     inline void setAwaitHandling(AwaitHandling awaitHandling);
-
-    bool checkOptions();
-
-    friend void js::frontend::TraceParser(JSTracer* trc, JS::AutoGCRooter* parser);
 
     /*
      * Parse a top-level JS script.
      */
     Node parse();
-
-    FunctionBox* newFunctionBox(Node fn, JSFunction* fun, uint32_t toStringStart,
-                                Directives directives,
-                                GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
-
-    void trace(JSTracer* trc);
 
     /* Report the given error at the current offset. */
     void error(unsigned errorNumber, ...);
@@ -526,7 +932,6 @@ class GeneralParser
   private:
     GeneralParser* thisForCtor() { return this; }
 
-    Node noSubstitutionTaggedTemplate();
     Node noSubstitutionUntaggedTemplate();
     Node templateLiteral(YieldHandling yieldHandling);
     bool taggedTemplate(YieldHandling yieldHandling, Node nodeList, TokenKind tt);
@@ -611,16 +1016,9 @@ class GeneralParser
     Node ifStatement(YieldHandling yieldHandling);
     Node consequentOrAlternative(YieldHandling yieldHandling);
 
-    // While on a |let| TOK_NAME token, examine |next|.  Indicate whether
-    // |next|, the next token already gotten with modifier TokenStream::None,
-    // continues a LexicalDeclaration.
-    bool nextTokenContinuesLetDeclaration(TokenKind next);
-
     Node lexicalDeclaration(YieldHandling yieldHandling, DeclarationKind kind);
 
     inline Node importDeclaration();
-    inline bool processExport(Node node);
-    inline bool processExportFrom(Node node);
 
     Node exportFrom(uint32_t begin, Node specList);
     Node exportBatch(uint32_t begin);
@@ -723,7 +1121,6 @@ class GeneralParser
                       TripledotHandling tripledotHandling, PossibleError* possibleError = nullptr);
 
     bool tryNewTarget(Node& newTarget);
-    bool checkAndMarkSuperScope();
 
     Node methodDefinition(uint32_t toStringStart, PropertyType propType, HandleAtom funName);
 
@@ -780,32 +1177,13 @@ class GeneralParser
         return labelOrIdentifierReference(yieldHandling);
     }
 
-    Node identifierReference(Handle<PropertyName*> name);
-
     bool matchLabel(YieldHandling yieldHandling, MutableHandle<PropertyName*> label);
 
     // Indicate if the next token (tokenized as Operand) is |in| or |of|.  If
     // so, consume it.
     bool matchInOrOf(bool* isForInp, bool* isForOfp);
 
-    bool hasUsedFunctionSpecialName(HandlePropertyName name);
-    bool declareFunctionArgumentsObject();
-    bool declareFunctionThis();
-    Node newInternalDotName(HandlePropertyName name);
-    Node newThisName();
-    Node newDotGeneratorName();
-    bool declareDotGeneratorName();
-
-    inline bool finishFunction(bool isStandaloneFunction = false);
-
-    bool leaveInnerFunction(ParseContext* outerpc);
-
-  public:
-    bool isValidSimpleAssignmentTarget(Node node,
-                                       FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
-
   private:
-    const char* nameIsArgumentsOrEval(Node node);
     bool checkIncDecOperand(Node operand, uint32_t operandOffset);
     bool checkStrictAssignment(Node lhs);
 
@@ -815,14 +1193,9 @@ class GeneralParser
                              uint32_t prevPos);
     bool notePositionalFormalParameter(Node fn, HandlePropertyName name, uint32_t beginPos,
                                        bool disallowDuplicateParams, bool* duplicatedParam);
-    bool noteDestructuredPositionalFormalParameter(Node fn, Node destruct);
 
     bool checkLexicalDeclarationDirectlyWithinBlock(ParseContext::Statement& stmt,
                                                     DeclarationKind kind, TokenPos pos);
-    bool noteUsedName(HandlePropertyName name);
-    bool hasUsedName(HandlePropertyName name);
-
-    inline Node finishLexicalScope(ParseContext::Scope& scope, Node body);
 
     Node propertyName(YieldHandling yieldHandling,
                       const mozilla::Maybe<DeclarationKind>& maybeDecl, Node propList,
@@ -860,13 +1233,6 @@ class GeneralParser
     }
 
   protected:
-    static Node null() { return ParseHandler::null(); }
-
-    Node stringLiteral();
-
-    inline Node newName(PropertyName* name);
-    inline Node newName(PropertyName* name, TokenPos pos);
-
     // Match the current token against the BindingIdentifier production with
     // the given Yield parameter.  If there is no match, report a syntax
     // error.
@@ -883,18 +1249,11 @@ class GeneralParser
                        FunctionAsyncKind asyncKind, bool tryAnnexB, Directives inheritedDirectives,
                        Directives* newDirectives);
 
-    bool finishFunctionScopes(bool isStandaloneFunction);
-
     bool matchOrInsertSemicolon();
 
     bool noteDeclaredName(HandlePropertyName name, DeclarationKind kind, TokenPos pos);
 
-    // Required on Scope exit.
-    bool propagateFreeNamesAndMarkClosedOverBindings(ParseContext::Scope& scope);
-
   private:
-    JSAtom* prefixAccessorName(PropertyType propType, HandleAtom propAtom);
-
     inline bool asmJS(Node list);
 };
 
@@ -925,7 +1284,9 @@ class Parser<SyntaxParseHandler, CharT> final
 
   public:
     using Base::anyChars;
+    using Base::clearAbortedSyntaxParse;
     using Base::context;
+    using Base::hadAbortedSyntaxParse;
     using Base::innerFunctionForFunctionBox;
     using Base::tokenStream;
 
@@ -955,8 +1316,11 @@ class Parser<SyntaxParseHandler, CharT> final
     using Base::ss;
     using Base::statementList;
     using Base::stringLiteral;
-    using Base::syntaxParser_;
     using Base::usedNames;
+
+  private:
+    using Base::abortIfSyntaxParser;
+    using Base::disableSyntaxParser;
 
   public:
     // Functions with multiple overloads of different visibility.  We can't
@@ -977,8 +1341,6 @@ class Parser<SyntaxParseHandler, CharT> final
     Node moduleBody(ModuleSharedContext* modulesc);
 
     inline Node importDeclaration();
-    inline bool processExport(Node node);
-    inline bool processExportFrom(Node node);
     inline bool checkLocalExportNames(Node node);
     inline bool checkExportedName(JSAtom* exportName);
     inline bool checkExportedNamesForDeclaration(Node node);
@@ -994,37 +1356,6 @@ class Parser<SyntaxParseHandler, CharT> final
 
     bool skipLazyInnerFunction(Node funcNode, uint32_t toStringStart, FunctionSyntaxKind kind,
                                bool tryAnnexB);
-
-    Node finishLexicalScope(ParseContext::Scope& scope, Node body);
-
-    bool finishFunction(bool isStandaloneFunction = false);
-
-#define ABORTED_SYNTAX_PARSE_SENTINEL reinterpret_cast<SyntaxParser*>(0x1)
-
-    // Flag the current syntax parse as aborted due to unsupported language
-    // constructs and return false.  Aborting the current syntax parse does not
-    // disable attempts to syntax parse future inner functions.
-    bool abortIfSyntaxParser() {
-        syntaxParser_ = ABORTED_SYNTAX_PARSE_SENTINEL;
-        return false;
-    }
-
-    // Return whether the last syntax parse was aborted due to unsupported
-    // language constructs.
-    bool hadAbortedSyntaxParse() {
-        return syntaxParser_ == ABORTED_SYNTAX_PARSE_SENTINEL;
-    }
-
-    // Clear whether the last syntax parse was aborted.
-    void clearAbortedSyntaxParse() {
-        syntaxParser_ = nullptr;
-    }
-
-    // Disable syntax parsing of all future inner functions during this
-    // full-parse.
-    void disableSyntaxParser() {}
-
-#undef ABORTED_SYNTAX_PARSE_SENTINEL
 
     bool asmJS(Node list);
 
@@ -1049,19 +1380,6 @@ class Parser<FullParseHandler, CharT> final
     friend class GeneralParser<FullParseHandler, CharT>;
 
   public:
-    Parser(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
-           const CharT* chars, size_t length, bool foldConstants, UsedNameTracker& usedNames,
-           SyntaxParser* syntaxParser, LazyScript* lazyOuterFunction)
-      : Base(cx, alloc, options, chars, length, foldConstants, usedNames, syntaxParser,
-             lazyOuterFunction)
-    {
-        // The Mozilla specific JSOPTION_EXTRA_WARNINGS option adds extra warnings
-        // which are not generated if functions are parsed lazily. Note that the
-        // standard "use strict" does not inhibit lazy parsing.
-        if (options.extraWarningsOption)
-            disableSyntaxParser();
-    }
-
     using Base::Base;
 
     // Inherited types, listed here to have non-dependent names.
@@ -1071,7 +1389,9 @@ class Parser<FullParseHandler, CharT> final
 
   public:
     using Base::anyChars;
+    using Base::clearAbortedSyntaxParse;
     using Base::functionFormalParametersAndBody;
+    using Base::hadAbortedSyntaxParse;
     using Base::handler;
     using Base::newFunctionBox;
     using Base::options;
@@ -1090,6 +1410,7 @@ class Parser<FullParseHandler, CharT> final
     using Base::error;
     using Base::errorAt;
     using Base::finishFunctionScopes;
+    using Base::finishLexicalScope;
     using Base::innerFunction;
     using Base::innerFunctionForFunctionBox;
     using Base::keepAtoms;
@@ -1106,8 +1427,12 @@ class Parser<FullParseHandler, CharT> final
     using Base::propagateFreeNamesAndMarkClosedOverBindings;
     using Base::statementList;
     using Base::stringLiteral;
-    using Base::syntaxParser_;
     using Base::usedNames;
+
+    using Base::abortIfSyntaxParser;
+    using Base::disableSyntaxParser;
+    using Base::getSyntaxParser;
+    using Base::setSyntaxParser;
 
   public:
     // Functions with multiple overloads of different visibility.  We can't
@@ -1129,8 +1454,6 @@ class Parser<FullParseHandler, CharT> final
     Node moduleBody(ModuleSharedContext* modulesc);
 
     Node importDeclaration();
-    bool processExport(Node node);
-    bool processExportFrom(Node node);
     bool checkLocalExportNames(Node node);
     bool checkExportedName(JSAtom* exportName);
     bool checkExportedNamesForDeclaration(Node node);
@@ -1146,10 +1469,6 @@ class Parser<FullParseHandler, CharT> final
 
     bool skipLazyInnerFunction(Node funcNode, uint32_t toStringStart, FunctionSyntaxKind kind,
                                bool tryAnnexB);
-
-    Node finishLexicalScope(ParseContext::Scope& scope, Node body);
-
-    bool finishFunction(bool isStandaloneFunction = false);
 
     // Functions present only in Parser<FullParseHandler, CharT>.
 
@@ -1171,26 +1490,6 @@ class Parser<FullParseHandler, CharT> final
                             const mozilla::Maybe<uint32_t>& parameterListEnd,
                             GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                             Directives inheritedDirectives, Directives* newDirectives);
-
-    bool abortIfSyntaxParser() {
-        disableSyntaxParser();
-        return true;
-    }
-
-    // Return whether the last syntax parse was aborted due to unsupported
-    // language constructs.
-    bool hadAbortedSyntaxParse() {
-        return false;
-    }
-
-    // Clear whether the last syntax parse was aborted.
-    void clearAbortedSyntaxParse() {}
-
-    // Disable syntax parsing of all future inner functions during this
-    // full-parse.
-    void disableSyntaxParser() {
-        syntaxParser_ = nullptr;
-    }
 
     bool checkStatementsEOF();
 

@@ -297,6 +297,8 @@ BodyMaybeUpdatePaddingSize(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir,
                                  aQuotaInfo.mOrigin, bodyFile, &fileSize);
   MOZ_DIAGNOSTIC_ASSERT(quotaObject);
   MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
+  // XXXtt: bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1422815
+  if (!quotaObject) { return NS_ERROR_UNEXPECTED; }
 
   if (*aPaddingSizeOut == InternalResponse::UNKNOWN_PADDING_SIZE) {
     *aPaddingSizeOut = BodyGeneratePadding(fileSize, aPaddingInfo);
