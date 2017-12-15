@@ -909,9 +909,6 @@ private: // member functions
   nsresult DispatchToTabGroup(mozilla::TaskCategory aCategory,
                               already_AddRefed<nsIRunnable>&& aRunnable);
 
-  NS_IMETHOD GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent,
-                            int32_t* aOffset);
-
   void SetupReferrerFromChannel(nsIChannel* aChannel);
   void SetReferrerURI(nsIURI* aURI);
   void SetReferrerPolicy(uint32_t aReferrerPolicy);
