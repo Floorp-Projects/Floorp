@@ -2,7 +2,7 @@ const React = require("react");
 const {mount, shallow} = require("enzyme");
 const {IntlProvider, intlShape} = require("react-intl");
 const messages = require("data/locales.json")["en-US"];
-const intlProvider = new IntlProvider({locale: "en", messages});
+const intlProvider = new IntlProvider({locale: "en-US", messages});
 const {intl} = intlProvider.getChildContext();
 
 /**

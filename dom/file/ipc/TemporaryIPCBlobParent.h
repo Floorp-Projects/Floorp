@@ -27,8 +27,11 @@ private:
   ~TemporaryIPCBlobParent();
 
   mozilla::ipc::IPCResult
-  RecvOperationDone(const bool& aSuccess,
-                    const nsCString& aContentType) override;
+  RecvOperationFailed() override;
+
+  mozilla::ipc::IPCResult
+  RecvOperationDone(const nsCString& aContentType,
+                    const FileDescriptor& aFD) override;
 
   void
   ActorDestroy(ActorDestroyReason aWhy) override;

@@ -13,6 +13,7 @@
   content/vendor/react-dev.js (./vendor/react-dev.js)
   content/vendor/react-dom-dev.js (./vendor/react-dom-dev.js)
 #endif
+  content/vendor/prop-types.js (./vendor/prop-types.js)
   content/vendor/react-intl.js (./vendor/react-intl.js)
   content/vendor/redux.js (./vendor/redux.js)
   content/vendor/react-redux.js (./vendor/react-redux.js)

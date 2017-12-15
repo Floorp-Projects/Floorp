@@ -165,17 +165,22 @@ this.TopSitesFeed = class TopSitesFeed {
    * Get an image for the link preferring tippy top, rich favicon, screenshots.
    */
   async _fetchIcon(link) {
-    // Check for tippy top icon and rich icon.
-    this._tippyTopProvider.processSite(link);
-    let hasTippyTop = !!link.tippyTopIcon;
-    let hasRichIcon = link.favicon && link.faviconSize >= MIN_FAVICON_SIZE;
-
-    if (!hasTippyTop && !hasRichIcon) {
-      this._requestRichIcon(link.url);
+    // Nothing to do if we already have a rich icon from the page
+    if (link.favicon && link.faviconSize >= MIN_FAVICON_SIZE) {
+      return;
     }
 
-    // Request a screenshot if needed.
-    if (!hasTippyTop && !hasRichIcon && !link.screenshot) {
+    // Nothing more to do if we can use a default tippy top icon
+    this._tippyTopProvider.processSite(link);
+    if (link.tippyTopIcon) {
+      return;
+    }
+
+    // Make a request for a better icon
+    this._requestRichIcon(link.url);
+
+    // Also request a screenshot if we don't have one yet
+    if (!link.screenshot) {
       const {url} = link;
       await Screenshots.maybeCacheScreenshot(link, url, "screenshot",
         screenshot => this.store.dispatch(ac.BroadcastToContent({
