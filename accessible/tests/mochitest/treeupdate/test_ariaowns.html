@@ -406,11 +406,11 @@
 
     function rearrangeARIAOwns(aContainer, aAttr, aIdList, aRoleList) {
       this.eventSeq = [];
-      for (var id of aIdList) {
+      for (let id of aIdList) {
         this.eventSeq.push(new invokerChecker(EVENT_HIDE, getNode(id)));
       }
 
-      for (var id of aIdList) {
+      for (let id of aIdList) {
         this.eventSeq.push(new invokerChecker(EVENT_SHOW, getNode(id)));
       }
       this.eventSeq.push(new invokerChecker(EVENT_REORDER, getNode(aContainer)));

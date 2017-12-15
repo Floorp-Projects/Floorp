@@ -22,7 +22,6 @@ PrintTargetEMF::PrintTargetEMF(HDC aDC, const IntSize& aSize)
   : PrintTarget(/* not using cairo_surface_t */ nullptr, aSize)
   , mPDFiumProcess(nullptr)
   , mPrinterDC(aDC)
-  , mWaitingForEMFConversion(false)
   , mChannelBroken(false)
 {
 }
@@ -30,7 +29,7 @@ PrintTargetEMF::PrintTargetEMF(HDC aDC, const IntSize& aSize)
 PrintTargetEMF::~PrintTargetEMF()
 {
   if (mPDFiumProcess) {
-    mPDFiumProcess->Delete(mWaitingForEMFConversion);
+    mPDFiumProcess->Delete();
   }
 }
 
@@ -137,7 +136,6 @@ PrintTargetEMF::EndPage()
   }
 
   PR_Close(prfile);
-  mWaitingForEMFConversion = true;
 
   return NS_OK;
 }
@@ -173,7 +171,6 @@ PrintTargetEMF::ConvertToEMFDone(const nsresult& aResult,
   MOZ_ASSERT(!mChannelBroken, "It is not possible to get conversion callback "
                               "after the channel was broken.");
 
-  mWaitingForEMFConversion = false;
   if (NS_SUCCEEDED(aResult)) {
     if (::StartPage(mPrinterDC) > 0) {
       mozilla::widget::WindowsEMF emf;

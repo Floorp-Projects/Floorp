@@ -19,14 +19,14 @@
     function doTest() {
       var hyperText = getNode("paragraph");
       var textNode = hyperText.firstChild;
-      var [x, y, width, height] = getBounds(textNode);
+      let [x, y, width, height] = getBounds(textNode);
       testOffsetAtPoint(hyperText, x + width / 2, y + height / 2,
                         COORDTYPE_SCREEN_RELATIVE,
                         hyperText.textContent.length / 2);
 
       zoomDocument(document, 2.0);
 
-      var [x, y, width, height] = getBounds(textNode);
+      [x, y, width, height] = getBounds(textNode);
       testOffsetAtPoint(hyperText, x + width / 2, y + height / 2,
                         COORDTYPE_SCREEN_RELATIVE,
                         hyperText.textContent.length / 2);

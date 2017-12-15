@@ -71,9 +71,9 @@ function grid(aTableIdentifier) {
 
     var cell = aEvent.target;
     switch (aEvent.keyCode) {
-      case nsIDOMKeyEvent.DOM_VK_UP:
-        var colsCount = this.getColsCount();
-        var idx = this.getIndexByCell(cell);
+      case nsIDOMKeyEvent.DOM_VK_UP: {
+        let colsCount = this.getColsCount();
+        let idx = this.getIndexByCell(cell);
         var upidx = idx - colsCount;
         if (upidx >= 0) {
           cell.removeAttribute("tabindex");
@@ -82,10 +82,10 @@ function grid(aTableIdentifier) {
           upcell.focus();
         }
         break;
-
-      case nsIDOMKeyEvent.DOM_VK_DOWN:
-        var colsCount = this.getColsCount();
-        var idx = this.getIndexByCell(cell);
+      }
+      case nsIDOMKeyEvent.DOM_VK_DOWN: {
+        let colsCount = this.getColsCount();
+        let idx = this.getIndexByCell(cell);
         var downidx = idx + colsCount;
         if (downidx <= this.getMaxIndex()) {
           cell.removeAttribute("tabindex");
@@ -94,9 +94,9 @@ function grid(aTableIdentifier) {
           downcell.focus();
         }
         break;
-
-      case nsIDOMKeyEvent.DOM_VK_LEFT:
-        var idx = this.getIndexByCell(cell);
+      }
+      case nsIDOMKeyEvent.DOM_VK_LEFT: {
+        let idx = this.getIndexByCell(cell);
         if (idx > 0) {
           cell.removeAttribute("tabindex");
           var prevcell = this.getCellAtIndex(idx - 1);
@@ -104,9 +104,9 @@ function grid(aTableIdentifier) {
           prevcell.focus();
         }
         break;
-
-      case nsIDOMKeyEvent.DOM_VK_RIGHT:
-        var idx = this.getIndexByCell(cell);
+      }
+      case nsIDOMKeyEvent.DOM_VK_RIGHT: {
+        let idx = this.getIndexByCell(cell);
         if (idx < this.getMaxIndex()) {
           cell.removeAttribute("tabindex");
           var nextcell = this.getCellAtIndex(idx + 1);
@@ -114,6 +114,7 @@ function grid(aTableIdentifier) {
           nextcell.focus();
         }
         break;
+      }
     }
   };
 

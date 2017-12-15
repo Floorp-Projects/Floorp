@@ -145,37 +145,6 @@
     "bug_numbers": [1172689],
     "description": "Recorded when application reputation remote lookup is performed, `true` is recorded if the lookup times out."
   },
-  "ASYNC_ANIMATION_CONTENT_TOO_LARGE_FRAME_SIZE": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["bbirtles@mozilla.com"],
-    "expires_in_version": "59",
-    "kind": "exponential",
-    "high": 80000000,
-    "n_buckets": 100,
-    "bug_numbers": [1100357, 1349808],
-    "description": "The number of pixels of the frame for each time we encountered a layer that was so large we decided not to run its animations on the compositor."
-  },
-  "ASYNC_ANIMATION_CONTENT_TOO_LARGE_PERCENTAGE": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["bbirtles@mozilla.com"],
-    "expires_in_version": "59",
-    "kind": "exponential",
-    "low": 100,
-    "high": 1000,
-    "n_buckets": 50,
-    "bug_numbers": [1100357, 1349808],
-    "description": "The ratio of the frame size (in total number of pixels) to the relative limit (~viewport size plus some tolerance factor, typically 12.5% in each dimension, i.e. ~27% tolerance in total area) for each time we encountered a layer that was so large we decided not to run its animations on the compositor expressed as a percentage (e.g. 130 = frame area was 30% larger than the relative limit)"
-  },
-  "ASYNC_ANIMATION_FRAME_SIZE": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["bbirtles@mozilla.com"],
-    "expires_in_version": "59",
-    "kind": "exponential",
-    "high": 80000000,
-    "n_buckets": 100,
-    "bug_numbers": [1100357, 1361915],
-    "description": "The number of pixels of the frame each time we potentially run a transform animation on the compositor. Intended for comparison with ASYNC_ANIMATION_CONTENT_TOO_LARGE_FRAME_SIZE. "
-  },
   "AUDIOSTREAM_FIRST_OPEN_MS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "50",

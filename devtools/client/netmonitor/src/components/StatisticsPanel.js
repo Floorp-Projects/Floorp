@@ -17,6 +17,7 @@ const { Filters } = require("../utils/filter-predicates");
 const { getSizeWithDecimals, getTimeWithDecimals } = require("../utils/format-utils");
 const { L10N } = require("../utils/l10n");
 const { getPerformanceAnalysisURL } = require("../utils/mdn-utils");
+const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 
 // Components
 const MDNLink = createFactory(require("./MdnLink"));
@@ -61,6 +62,20 @@ class StatisticsPanel extends Component {
 
   componentWillMount() {
     this.mdnLinkContainerNodes = new Map();
+  }
+
+  componentDidMount() {
+    let { requests, connector } = this.props;
+    requests.forEach((request) => {
+      fetchNetworkUpdatePacket(connector.requestData, request, ["responseHeaders"]);
+    });
+  }
+
+  componentWillReceiveProps(nextProps) {
+    let { requests, connector } = nextProps;
+    requests.forEach((request) => {
+      fetchNetworkUpdatePacket(connector.requestData, request, ["responseHeaders"]);
+    });
   }
 
   componentDidUpdate(prevProps) {

@@ -36,8 +36,8 @@
 
       // the range is contained by the accessible
       range.selectNode(a);
-      var a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
-      var a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+      a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
 
       testTextRange(a11yrange, "selection range #2", p, 5, p, 6);
 
@@ -47,8 +47,8 @@
       // the range starts before the accessible and ends inside it
       range.setStart(p, 0);
       range.setEndAfter(a.firstChild, 4);
-      var a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
-      var a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+      a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
 
       testTextRange(a11yrange, "selection range #3", p, 0, a, 4);
 
@@ -58,8 +58,8 @@
       // the range starts inside the accessible and ends after it
       range.setStart(a.firstChild, 1);
       range.setEndAfter(p);
-      var a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
-      var a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+      a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
 
       testTextRange(a11yrange, "selection range #4", a, 1, document, 4);
 
@@ -69,8 +69,8 @@
       // the range ends before the accessible
       range.setStart(p.firstChild, 0);
       range.setEnd(p.firstChild, 4);
-      var a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
-      var a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+      a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
 
       testTextRange(a11yrange, "selection range #5", p, 0, p, 4);
       ok(!a11yrange.crop(getAccessible(a)), "Crop #5 succeeded while it shouldn't");
@@ -78,8 +78,8 @@
       // the range starts after the accessible
       range.setStart(p.lastChild, 0);
       range.setEnd(p.lastChild, 4);
-      var a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
-      var a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+      a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
 
       testTextRange(a11yrange, "selection range #6", p, 6, p, 10);
 
@@ -87,8 +87,8 @@
 
       // crop a range by a table
       range.selectNode(getNode("c2"));
-      var a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
-      var a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
+      a11yranges = getAccessible(document, [nsIAccessibleText]).selectionRanges;
+      a11yrange = a11yranges.queryElementAt(0, nsIAccessibleTextRange);
 
       testTextRange(a11yrange, "selection range #7", document, 4, document, 5);
 

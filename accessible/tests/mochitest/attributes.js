@@ -80,7 +80,7 @@ function testGroupAttrs(aAccOrElmOrID, aPosInSet, aSetSize, aLevel) {
     is(setSizeObj.value, aSetSize,
        "Wrong size of the group (setsize) for " + prettyName(aAccOrElmOrID));
 
-    var attrs = {
+    let attrs = {
       "posinset": String(aPosInSet),
       "setsize": String(aSetSize)
     };
@@ -91,7 +91,7 @@ function testGroupAttrs(aAccOrElmOrID, aPosInSet, aSetSize, aLevel) {
     is(levelObj.value, aLevel,
        "Wrong group level for " + prettyName(aAccOrElmOrID));
 
-    var attrs = { "level": String(aLevel) };
+    let attrs = { "level": String(aLevel) };
     testAttrs(aAccOrElmOrID, attrs, true);
   }
 }
@@ -143,10 +143,10 @@ function testTextAttrs(aID, aOffset, aAttrs, aDefAttrs,
 
   // include attributes exposed on hyper text accessible
   var expectedAttrs = {};
-  for (var name in aAttrs)
+  for (let name in aAttrs)
     expectedAttrs[name] = aAttrs[name];
 
-  for (var name in aDefAttrs) {
+  for (let name in aDefAttrs) {
     if (!(name in expectedAttrs))
       expectedAttrs[name] = aDefAttrs[name];
   }
@@ -199,7 +199,7 @@ function testTextAttrsWrongOffset(aID, aOffset) {
   var s = {}, e = {};
   var acc = getAccessible(ID, [nsIAccessibleText]);
     acc.getTextAttributes(false, 157, s, e);
-  } catch (e) {
+  } catch (ex) {
     res = true;
   }
 
@@ -321,7 +321,7 @@ function compareAttrs(aErrorMsg, aAttrs, aExpectedAttrs, aSkipUnexpectedAttrs,
   // Check if all obtained attributes are expected and have expected value.
   var enumerate = aAttrs.enumerate();
   while (enumerate.hasMoreElements()) {
-    var prop = enumerate.getNext().QueryInterface(nsIPropertyElement);
+    let prop = enumerate.getNext().QueryInterface(nsIPropertyElement);
 
     if (!(prop.key in aExpectedAttrs)) {
       if (!aSkipUnexpectedAttrs)
@@ -339,7 +339,7 @@ function compareAttrs(aErrorMsg, aAttrs, aExpectedAttrs, aSkipUnexpectedAttrs,
   }
 
   // Check if all expected attributes are presented.
-  for (var name in aExpectedAttrs) {
+  for (let name in aExpectedAttrs) {
     var value = "";
     try {
       value = aAttrs.getStringProperty(name);
@@ -355,9 +355,9 @@ function compareAttrs(aErrorMsg, aAttrs, aExpectedAttrs, aSkipUnexpectedAttrs,
     for (var name in aAbsentAttrs) {
       var wasFound = false;
 
-      var enumerate = aAttrs.enumerate();
+      enumerate = aAttrs.enumerate();
       while (enumerate.hasMoreElements()) {
-        var prop = enumerate.getNext().QueryInterface(nsIPropertyElement);
+        let prop = enumerate.getNext().QueryInterface(nsIPropertyElement);
         if (prop.key == name)
           wasFound = true;
       }

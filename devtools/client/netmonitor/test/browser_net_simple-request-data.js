@@ -27,7 +27,7 @@ function test() {
   initNetMonitor(SIMPLE_SJS).then(async ({ tab, monitor }) => {
     info("Starting test... ");
 
-    let { document, store, windowRequire } = monitor.panelWin;
+    let { document, store, windowRequire, connector } = monitor.panelWin;
     let Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
     let { EVENTS } = windowRequire("devtools/client/netmonitor/src/constants");
     let {
@@ -347,7 +347,18 @@ function test() {
       );
     });
 
+    let wait = waitForNetworkEvents(monitor, 1);
     tab.linkedBrowser.reload();
+    await wait;
+
+    let requestItem = getSortedRequests(store.getState()).get(0);
+
+    if (!requestItem.requestHeaders) {
+      connector.requestData(requestItem.id, "requestHeaders");
+    }
+    if (!requestItem.responseHeaders) {
+      connector.requestData(requestItem.id, "responseHeaders");
+    }
 
     await Promise.all(promiseList);
     await teardown(monitor);

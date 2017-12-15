@@ -537,7 +537,7 @@
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
       testDefaultTextAttrs(ID, defAttrs);
 
-      var attrs = {
+      attrs = {
         "auto-generated": "true"
       };
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 3);
@@ -552,7 +552,7 @@
 
       attrs = {};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 10);
-    
+
       tempElem = getNode(ID).firstChild.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = { "background-color": gComputedStyle.backgroundColor };
@@ -644,9 +644,9 @@
     <span style="color: red">Red</span>Normal
   </p>
   <p id="area6">
-    This <sup>sentence</sup> has the word 
-    <span style="vertical-align:super;">sentence</span> in 
-    <sub>superscript</sub> and 
+    This <sup>sentence</sup> has the word
+    <span style="vertical-align:super;">sentence</span> in
+    <sub>superscript</sub> and
     <span style="vertical-align:sub;">subscript</span> and
     <span style="vertical-align:20%;">superscript 20%</span> and
     <span style="vertical-align:-20%;">subscript 20%</span> and

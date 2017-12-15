@@ -68,7 +68,6 @@ private:
   RefPtr<PrintTargetSkPDF> mRefTarget;
   PDFiumProcessParent*     mPDFiumProcess;
   HDC mPrinterDC;
-  bool mWaitingForEMFConversion;
   bool mChannelBroken;
 };
 

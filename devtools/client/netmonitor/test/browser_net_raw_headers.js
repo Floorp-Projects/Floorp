@@ -25,7 +25,7 @@ add_task(function* () {
   });
   yield wait;
 
-  wait = waitForDOM(document, ".headers-overview");
+  wait = waitForDOM(document, "#headers-panel .tree-section", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]);
   yield wait;
