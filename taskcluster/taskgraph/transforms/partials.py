@@ -149,7 +149,10 @@ def make_task_description(config, jobs):
                 dep_job.task["metadata"]["description"]),
             'worker-type': 'aws-provisioner-v1/gecko-%s-b-linux' % level,
             'dependencies': dependencies,
-            'scopes': ['secrets:get:project/releng/gecko/build/level-%s/datadog-api-key' % level],
+            'scopes': [
+                'secrets:get:project/releng/gecko/build/level-%s/datadog-api-key' % level,
+                'auth:aws-s3:read-write:tc-gp-private-1d-us-east-1/releng/mbsdiff-cache/'
+            ],
             'attributes': attributes,
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
             'treeherder': treeherder,
