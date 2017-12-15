@@ -278,9 +278,9 @@ MacroAssembler::add32(Imm32 imm, const Address& dest)
     const ARMRegister scratch32 = temps.AcquireW();
     MOZ_ASSERT(scratch32.asUnsized() != dest.base);
 
-    Ldr(scratch32, MemOperand(ARMRegister(dest.base, 64), dest.offset));
+    Ldr(scratch32, toMemOperand(dest));
     Add(scratch32, scratch32, Operand(imm.value));
-    Str(scratch32, MemOperand(ARMRegister(dest.base, 64), dest.offset));
+    Str(scratch32, toMemOperand(dest));
 }
 
 void
@@ -320,9 +320,9 @@ MacroAssembler::addPtr(Imm32 imm, const Address& dest)
     const ARMRegister scratch64 = temps.AcquireX();
     MOZ_ASSERT(scratch64.asUnsized() != dest.base);
 
-    Ldr(scratch64, MemOperand(ARMRegister(dest.base, 64), dest.offset));
+    Ldr(scratch64, toMemOperand(dest));
     Add(scratch64, scratch64, Operand(imm.value));
-    Str(scratch64, MemOperand(ARMRegister(dest.base, 64), dest.offset));
+    Str(scratch64, toMemOperand(dest));
 }
 
 void
@@ -332,7 +332,7 @@ MacroAssembler::addPtr(const Address& src, Register dest)
     const ARMRegister scratch64 = temps.AcquireX();
     MOZ_ASSERT(scratch64.asUnsized() != src.base);
 
-    Ldr(scratch64, MemOperand(ARMRegister(src.base, 64), src.offset));
+    Ldr(scratch64, toMemOperand(src));
     Add(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(scratch64));
 }
 
@@ -413,9 +413,9 @@ MacroAssembler::subPtr(Register src, const Address& dest)
     const ARMRegister scratch64 = temps.AcquireX();
     MOZ_ASSERT(scratch64.asUnsized() != dest.base);
 
-    Ldr(scratch64, MemOperand(ARMRegister(dest.base, 64), dest.offset));
+    Ldr(scratch64, toMemOperand(dest));
     Sub(scratch64, scratch64, Operand(ARMRegister(src, 64)));
-    Str(scratch64, MemOperand(ARMRegister(dest.base, 64), dest.offset));
+    Str(scratch64, toMemOperand(dest));
 }
 
 void
@@ -431,7 +431,7 @@ MacroAssembler::subPtr(const Address& addr, Register dest)
     const ARMRegister scratch64 = temps.AcquireX();
     MOZ_ASSERT(scratch64.asUnsized() != addr.base);
 
-    Ldr(scratch64, MemOperand(ARMRegister(addr.base, 64), addr.offset));
+    Ldr(scratch64, toMemOperand(addr));
     Sub(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(scratch64));
 }
 
@@ -1715,7 +1715,7 @@ MacroAssembler::branchToComputedAddress(const BaseIndex& addr)
 void
 MacroAssembler::storeUncanonicalizedDouble(FloatRegister src, const Address& dest)
 {
-    Str(ARMFPRegister(src, 64), MemOperand(ARMRegister(dest.base, 64), dest.offset));
+    Str(ARMFPRegister(src, 64), toMemOperand(dest));
 }
 void
 MacroAssembler::storeUncanonicalizedDouble(FloatRegister src, const BaseIndex& dest)
@@ -1726,7 +1726,7 @@ MacroAssembler::storeUncanonicalizedDouble(FloatRegister src, const BaseIndex& d
 void
 MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src, const Address& addr)
 {
-    Str(ARMFPRegister(src, 32), MemOperand(ARMRegister(addr.base, 64), addr.offset));
+    Str(ARMFPRegister(src, 32), toMemOperand(addr));
 }
 void
 MacroAssembler::storeUncanonicalizedFloat32(FloatRegister src, const BaseIndex& addr)
