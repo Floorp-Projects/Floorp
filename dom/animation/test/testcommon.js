@@ -17,7 +17,7 @@ const MS_PER_SEC = 1000;
 
 /* The recommended minimum precision to use for time values[1].
  *
- * [1] https://w3c.github.io/web-animations/#precision-of-time-values
+ * [1] https://drafts.csswg.org/web-animations/#precision-of-time-values
  */
 var TIME_PRECISION = 0.0005; // ms
 

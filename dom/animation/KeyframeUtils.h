@@ -67,7 +67,7 @@ public:
    * Calculate the computed offset of keyframes by evenly distributing keyframes
    * with a missing offset.
    *
-   * @see https://w3c.github.io/web-animations/#calculating-computed-keyframes
+   * @see https://drafts.csswg.org/web-animations/#calculating-computed-keyframes
    *
    * @param aKeyframes The set of keyframes to adjust.
    */

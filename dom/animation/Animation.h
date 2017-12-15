@@ -442,14 +442,14 @@ protected:
   // A Promise that is replaced on each call to Play()
   // and fulfilled when Play() is successfully completed.
   // This object is lazily created by GetReady.
-  // See http://w3c.github.io/web-animations/#current-ready-promise
+  // See http://drafts.csswg.org/web-animations/#current-ready-promise
   RefPtr<Promise> mReady;
 
   // A Promise that is resolved when we reach the end of the effect, or
   // 0 when playing backwards. The Promise is replaced if the animation is
   // finished but then a state change makes it not finished.
   // This object is lazily created by GetFinished.
-  // See http://w3c.github.io/web-animations/#current-finished-promise
+  // See http://drafts.csswg.org/web-animations/#current-finished-promise
   RefPtr<Promise> mFinished;
 
   // Indicates if the animation is in the pending state (and what state it is
