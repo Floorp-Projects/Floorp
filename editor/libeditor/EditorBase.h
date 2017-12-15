@@ -590,9 +590,6 @@ protected:
   nsresult DeleteText(nsGenericDOMDataNode& aElement,
                       uint32_t aOffset, uint32_t aLength);
 
-  already_AddRefed<JoinNodeTransaction>
-    CreateTxnForJoinNode(nsINode& aLeftNode, nsINode& aRightNode);
-
   /**
    * This method first deletes the selection, if it's not collapsed.  Then if
    * the selection lies in a CharacterData node, it splits it.  If the
