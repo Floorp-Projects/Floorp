@@ -68,16 +68,16 @@
         return true;
       };
 
-      Object.defineProperty(this, "offset", { get: function() { return this.mOffset; }
+      Object.defineProperty(this, "offset", { get() { return this.mOffset; }
       });
 
-      Object.defineProperty(this, "offsetDescr", { get: function() {
+      Object.defineProperty(this, "offsetDescr", { get() {
           return this.mOffset + " offset (" + this.mLine.number + " line, " +
             (this.mOffset - this.mLine.start) + " offset on the line)";
         }
       });
 
-      Object.defineProperty(this, "tests", { get: function() {
+      Object.defineProperty(this, "tests", { get() {
           // Line boundary tests.
           var cLine = this.mLine;
           var pLine = cLine.prevLine;
@@ -162,7 +162,7 @@
         }
       });
 
-      Object.defineProperty(this, "failures", { get: function() {
+      Object.defineProperty(this, "failures", { get() {
           if (this.mOffset == this.mLine.start)
             return this.mLine.lineStartFailures;
           if (this.mOffset == this.mLine.end)
@@ -181,16 +181,16 @@
      * A line object. Allows to navigate by lines and by words.
      */
     function line(aWholeText, aLines, aIndex) {
-      Object.defineProperty(this, "prevLine", { get: function() {
+      Object.defineProperty(this, "prevLine", { get() {
           return new line(aWholeText, aLines, aIndex - 1);
         }
       });
-      Object.defineProperty(this, "nextLine", { get: function() {
+      Object.defineProperty(this, "nextLine", { get() {
           return new line(aWholeText, aLines, aIndex + 1);
         }
       });
 
-      Object.defineProperty(this, "start", { get: function() {
+      Object.defineProperty(this, "start", { get() {
           if (aIndex < 0)
             return 0;
 
@@ -200,7 +200,7 @@
           return aLines[aIndex][2];
         }
       });
-      Object.defineProperty(this, "end", { get: function() {
+      Object.defineProperty(this, "end", { get() {
           if (aIndex < 0)
             return 0;
 
@@ -211,15 +211,15 @@
         }
       });
 
-      Object.defineProperty(this, "number", { get: function() { return aIndex; }
+      Object.defineProperty(this, "number", { get() { return aIndex; }
       });
-      Object.defineProperty(this, "wholeText", { get: function() { return aWholeText; }
+      Object.defineProperty(this, "wholeText", { get() { return aWholeText; }
       });
       this.isFakeLine = function line_isFakeLine() {
         return aIndex < 0 || aIndex >= aLines.length;
       };
 
-      Object.defineProperty(this, "lastWord", { get: function() {
+      Object.defineProperty(this, "lastWord", { get() {
           if (aIndex < 0)
             return new word(this, [], -1);
           if (aIndex >= aLines.length)
@@ -229,7 +229,7 @@
           return new word(this, words, words.length - 2);
         }
       });
-      Object.defineProperty(this, "firstWord", { get: function() {
+      Object.defineProperty(this, "firstWord", { get() {
           if (aIndex < 0)
             return new word(this, [], -1);
           if (aIndex >= aLines.length)
@@ -245,14 +245,14 @@
         return lastWord.start == aWord.start && lastWord.end == aWord.end;
       };
 
-      Object.defineProperty(this, "lineStartFailures", { get: function() {
+      Object.defineProperty(this, "lineStartFailures", { get() {
           if (aIndex < 0 || aIndex >= aLines.length)
             return [];
 
           return aLines[aIndex][4].lsf || [];
         }
       });
-      Object.defineProperty(this, "lineEndFailures", { get: function() {
+      Object.defineProperty(this, "lineEndFailures", { get() {
           if (aIndex < 0 || aIndex >= aLines.length)
             return [];
 
@@ -265,7 +265,7 @@
      * A word object. Allows to navigate by words.
      */
     function word(aLine, aWords, aIndex) {
-      Object.defineProperty(this, "prevWord", { get: function() {
+      Object.defineProperty(this, "prevWord", { get() {
           if (aIndex >= 2)
             return new word(aLine, aWords, aIndex - 2);
 
@@ -275,7 +275,7 @@
           return prevLineLastWord;
         }
       });
-      Object.defineProperty(this, "nextWord", { get: function() {
+      Object.defineProperty(this, "nextWord", { get() {
           if (aIndex + 2 < aWords.length)
             return new word(aLine, aWords, aIndex + 2);
 
@@ -286,9 +286,9 @@
         }
       });
 
-      Object.defineProperty(this, "line", { get: function() { return aLine; } });
+      Object.defineProperty(this, "line", { get() { return aLine; } });
 
-      Object.defineProperty(this, "start", { get: function() {
+      Object.defineProperty(this, "start", { get() {
           if (this.isFakeStartWord())
             return 0;
 
@@ -297,7 +297,7 @@
            return aWords[aIndex];
         }
       });
-      Object.defineProperty(this, "end", { get: function() {
+      Object.defineProperty(this, "end", { get() {
           if (this.isFakeStartWord())
             return 0;
 

@@ -172,6 +172,9 @@ add_task(function* () {
     EventUtils.sendMouseEvent({ type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]);
 
+    yield waitUntil(() => document.querySelector(
+      "#headers-panel .tabpanel-summary-value.textbox-input"));
+
     let panel = document.querySelector("#headers-panel");
     let summaryValues = panel.querySelectorAll(".tabpanel-summary-value.textbox-input");
     let { method, correctUri, details: { status, statusText } } = data;

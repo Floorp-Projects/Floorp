@@ -32,8 +32,6 @@ add_task(function* () {
 
   let selectedRequest = getSelectedRequest(store.getState());
   is(selectedRequest, requestItem, "Proper request is selected");
-  ok(selectedRequest.requestHeaders, "Selected request should have request headers");
-  ok(selectedRequest.responseHeaders, "Selected request should have response headers");
 
   const EXPECTED_REQUEST_HEADERS = [
     `${method} ${SIMPLE_URL} ${httpVersion}`,

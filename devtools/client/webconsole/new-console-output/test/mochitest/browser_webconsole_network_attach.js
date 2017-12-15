@@ -47,10 +47,8 @@ add_task(async function task() {
   await consoleReady;
 
   info("network-request-payload-ready received");
-
   await testNetworkMessage(messageNode);
-
-  await waitForExistingRequests(monitor);
+  await waitForLazyRequests(toolbox);
 });
 
 async function testNetworkMessage(messageNode) {
@@ -59,7 +57,24 @@ async function testNetworkMessage(messageNode) {
   ok(headersTab, "Headers tab is available");
 
   // Headers tab should be selected by default, so just check its content.
-  let headersContent = messageNode.querySelector(
-    "#headers-panel .headers-overview");
+  let headersContent;
+  await waitUntil(() => {
+    headersContent = messageNode.querySelector(
+      "#headers-panel .headers-overview");
+    return headersContent;
+  });
+
   ok(headersContent, "Headers content is available");
+}
+
+/**
+ * Wait until all lazily fetch requests in netmonitor get finsished.
+ * Otherwise test will be shutdown too early and cause failure.
+ */
+async function waitForLazyRequests(toolbox) {
+  let { ui } = toolbox.getCurrentPanel().hud;
+  let proxy = ui.jsterm.hud.proxy;
+  return waitUntil(() => {
+    return !proxy.networkDataProvider.lazyRequestData.size;
+  });
 }

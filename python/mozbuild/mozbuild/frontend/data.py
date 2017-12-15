@@ -1163,3 +1163,13 @@ class ChromeManifestEntry(ContextDerived):
         entry = entry.rebase(mozpath.dirname(manifest_path))
         # Then add the install_target to the entry base directory.
         self.entry = entry.move(mozpath.dirname(self.path))
+
+
+class GnProjectData(ContextDerived):
+    def __init__(self, context, target_dir, gn_dir_attrs, non_unified_sources):
+        ContextDerived.__init__(self, context)
+        self.target_dir = target_dir
+        self.non_unified_sources = non_unified_sources
+        self.gn_input_variables = gn_dir_attrs.variables
+        self.gn_sandbox_variables = gn_dir_attrs.sandbox_vars
+        self.mozilla_flags = gn_dir_attrs.mozilla_flags

@@ -17,170 +17,26 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 <![CDATA[
-/** Test for SMIL accessKey support **/
+/** Test for lack of SMIL accessKey support **/
 
-const gSvgns = "http://www.w3.org/2000/svg";
-var gSvg = document.getElementById("svg");
+const gSvgns = 'http://www.w3.org/2000/svg';
 SimpleTest.waitForExplicitFinish();
 
 function main()
 {
-  gSvg.pauseAnimations();
+  testBeginValueIsNotSupported('accessKey(a)');
+  testBeginValueIsNotSupported('accesskey(a)');
 
-  // Basic syntax
-  testOk('accessKey(a)', 'a');
-  testOk(' accessKey(a)  ', 'a');
-  testNotOk('accessKey (a)', 'a');
-  testNotOk('accessKey( a)', 'a');
-  testNotOk('accessKey(a )', 'a');
-  testNotOk('accessKey(a)', 'b');
-  testNotOk('accessKey()', ' ');
-
-  // Test the test framework itself
-  testOk('accessKey(a)', 97);
-
-  // Allow for either accessKey (SVG / SMIL Animation) or accesskey (SMIL2+)
-  testOk('accesskey(a)', 'a');
-
-  // Offset
-  testOk('accessKey(a)+0s', 'a');
-  testOk('accessKey(a) + 0min', 'a');
-  testOk('accessKey(a) -0h', 'a');
-  testOk('accessKey(a)+100ms', 'a', 0, 0.1);
-  testOk('accessKey(a)-0.1s', 'a', 0, -0.1);
-
-  // Id references are not allowed
-  testNotOk('svg.accessKey(a)', 'a');
-  testNotOk('window.accessKey(a)', 'a');
-
-  // Case sensitivity
-  testOk('accessKey(A)', 'A');
-  testNotOk('accessKey(a)', 'A');
-  testNotOk('accessKey(A)', 'a');
-
-  // Test unusual characters
-  testOk('accessKey(-)', '-');
-  testOk('accessKey(\\)', '\\');
-  testOk('accessKey( )', ' ');
-  testOk('accessKey(\x0D)', 0, KeyboardEvent.DOM_VK_RETURN);
-  testOk('accessKey(\n)', 0, KeyboardEvent.DOM_VK_RETURN); // New line
-  testOk('accessKey(\r)', 0, KeyboardEvent.DOM_VK_RETURN); // Carriage return
-  testOk('accessKey(\x08)', 0, KeyboardEvent.DOM_VK_BACK_SPACE);
-  testOk('accessKey(\x1B)', 0, KeyboardEvent.DOM_VK_ESCAPE);
-  testOk('accessKey(\x7F)', 0, KeyboardEvent.DOM_VK_DELETE);
-
-  // Check some disallowed keys
-  // -- For now we don't allow tab since the interaction with focus causes
-  //    confusing results
-  testNotOk('accessKey(\x09)', 0, 9);  // Tab
-
-  // Test setting the keyCode field
-  testNotOk('accessKey(a)', 0, 97);
-  testOk('accessKey(a)', 97, 66); // Give priority to charCode field
-  testNotOk('accessKey(a)', 98, 97); // Give priority to charCode field
-
-  // Test unicode
-  testOk("accessKey(\u20AC)", 8364); // euro-symbol
-
-  // Test an astral character just to make sure we don't crash
-  testOk("accessKey(\uD835\uDC00)", 119808); // mathematical bold capital A
-                                             // 0x1D400
-  // Test bad surrogate pairs don't confuse us either
-  testNotOk("accessKey(\uD800\uD800)", 97);
-  testNotOk("accessKey(\uD80020)", 97);
-  testNotOk("accessKey(\uD800)", 97);
-
-  // Test modifiers
-  // -- When matching on charCode ignore shift and alt
-  testNotOk('accessKey(a)', 'a', 0, 0, { ctrl: true });
-  testNotOk('accessKey(a)', 'a', 0, 0, { meta: true });
-  testOk('accessKey(a)', 'a', 0, 0, { alt: true });
-  testOk('accessKey(a)', 'a', 0, 0, { shift: true });
-  testNotOk('accessKey(a)', 'a', 0, 0, { shift: true, ctrl: true });
-  testNotOk('accessKey(a)', 'a', 0, 0, { alt: true, meta: true });
-  // -- When matching on keyCode ignore all
-  testNotOk('accessKey(\x0D)', 0, 13, 0, { ctrl: true });
-  testNotOk('accessKey(\x0D)', 0, 13, 0, { meta: true });
-  testNotOk('accessKey(\x0D)', 0, 13, 0, { alt: true });
-  testNotOk('accessKey(\x0D)', 0, 13, 0, { shift: true });
-  testNotOk('accessKey(\x0D)', 0, 13, 0, { shift: true, ctrl: true });
-
-  testOpenEnd();
-  testPreventDefault();
-  testDispatchToWindow();
-  testAdoptNode();
-  testFauxEvent();
+  is(getStartTime('accesskey(a); 1s'), 1,
+     'Start time for accesskey(a) followed by a literal time');
+  is(getStartTime('3s; accessKey(a)'), 3,
+     'Start time for accesskey(a) preceded by a literal time');
 
   SimpleTest.finish();
 }
 
-function testOk(spec, charCode, keyCode, offset, modifiers)
-{
-  if (typeof offset == 'undefined') offset = 0;
-  var msg = "No interval created for '" + spec +
-    "' with input [charCode: " + charCode + "; keyCode: " + keyCode + "]" +
-    getModifiersDescr(modifiers);
-  ok(test(spec, charCode, keyCode, offset, modifiers), msg);
-}
-
-function testNotOk(spec, charCode, keyCode, offset, modifiers)
-{
-  if (typeof offset == 'undefined') offset = 0;
-  var msg = "Interval unexpectedly created for '" + spec +
-    "' with input [charCode: " + charCode + "; keyCode: " + keyCode + "]" +
-    getModifiersDescr(modifiers);
-  ok(!test(spec, charCode, keyCode, offset, modifiers), msg);
-}
-
-function getModifiersDescr(modifiers)
-{
-  if (typeof modifiers != 'object')
-    return '';
-  var str = ' modifiers set:';
-  for (var key in modifiers) {
-    if (modifiers[key]) str += ' ' + key;
-  }
-  return str;
-}
-
-function test(spec, charCode, keyCode, offset, modifiers)
-{
-  gSvg.setCurrentTime(1);
-  ok(gSvg.animationsPaused(), "Expected animations to be paused");
-
-  var anim = createAnim(spec);
-  var evt = createEvent(charCode, keyCode, modifiers);
-
-  document.getElementById('circle').dispatchEvent(evt);
-
-  var gotStartTimeOk = true;
-  try {
-    var start = anim.getStartTime();
-    if (offset) {
-      var expected = gSvg.getCurrentTime() + offset;
-      ok(Math.abs(expected - start) <= 0.00001,
-        "Unexpected start time for animation with begin: " + spec +
-          " got " + start + ", expected " + expected);
-    } else {
-      is(start, gSvg.getCurrentTime() + offset,
-         "Unexpected start time for animation with begin: " + spec);
-    }
-  } catch(e) {
-    is(e.name, "InvalidStateError",
-       "Unexpected exception: " + e.name);
-    is(e.code, DOMException.INVALID_STATE_ERR,
-       "Unexpected exception code: " + e.code);
-    gotStartTimeOk = false;
-  }
-
-  anim.remove();
-
-  return gotStartTimeOk;
-}
-
-function createAnim(beginSpec)
-{
-  var anim = document.createElementNS(gSvgns, 'animate');
+function createAnim(beginSpec) {
+  const anim = document.createElementNS(gSvgns, 'animate');
   anim.setAttribute('attributeName', 'cx');
   anim.setAttribute('values', '0; 100');
   anim.setAttribute('dur', '10s');
@@ -188,173 +44,34 @@ function createAnim(beginSpec)
   return document.getElementById('circle').appendChild(anim);
 }
 
-function createEvent(charCode, keyCode, modifiers)
-{
-  if (typeof charCode == 'string') {
-    is(charCode.length, 1,
-       "If charCode is a string it should be 1 character long");
-    charCode = charCode.charCodeAt(0);
-  } else if (typeof charCode == 'undefined') {
-    charCode = 0;
-  }
-  args = { ctrl: false, alt: false, shift: false, meta: false };
-  if (typeof modifiers == 'object') {
-    for (var key in modifiers)
-      args[key] = modifiers[key];
-  }
-  if (typeof keyCode == 'undefined') keyCode = 0;
-  var evt = document.createEvent("KeyboardEvent");
-  evt.initKeyEvent("keypress", true, true, window,
-                   args['ctrl'],
-                   args['alt'],
-                   args['shift'],
-                   args['meta'],
-                   keyCode,
-                   charCode);
-  return evt;
-}
-
-function testOpenEnd()
-{
-  // Test that an end specification with an accesskey value is treated as open
-  // ended
-  gSvg.setCurrentTime(0);
-  ok(gSvg.animationsPaused(), "Expected animations to be paused");
-
-  var anim = createAnim('0s; 2s');
-  anim.setAttribute('end', '1s; accessKey(a)');
-
-  gSvg.setCurrentTime(2);
+function testBeginValueIsNotSupported(beginSpec) {
+  const anim = createAnim(beginSpec);
 
   try {
-    is(anim.getStartTime(), 2,
-       "Unexpected start time for second interval of open-ended animation");
+    anim.getStartTime();
+    ok(false,
+       `Should have failed to get start time for begin value: ${beginSpec}`);
   } catch(e) {
-    is(e.name, "InvalidStateError",
-       "Unexpected exception:" + e.name);
+    is(e.name, 'InvalidStateError', `Unexpected exception: ${e.name}`);
     is(e.code, DOMException.INVALID_STATE_ERR,
-       "Unexpected exception code:" + e.code);
-    ok(false, "Failed to recognise accessKey as qualifying for creating an " +
-              "open-ended interval");
+       `Unexpected exception code: ${e.code}`);
   }
 
   anim.remove();
 }
 
-function testPreventDefault()
-{
-  // SVG/SMIL don't specify what should happen if preventDefault is called on
-  // the keypress event. For now, for consistency with event timing we ignore
-  // it.
-  gSvg.setCurrentTime(1);
-  ok(gSvg.animationsPaused(), "Expected animations to be paused");
-
-  var anim = createAnim('accessKey(a)');
-  var evt = createEvent('a');
-
-  var circle = document.getElementById('circle');
-  var func = function(evt) { evt.preventDefault(); }
-  circle.addEventListener('keypress', func);
-  circle.dispatchEvent(evt);
-
+function getStartTime(beginSpec) {
+  const anim = createAnim(beginSpec);
+  let startTime;
   try {
-    var start = anim.getStartTime();
-  } catch(e) {
-    ok(false, "preventDefault() cancelled accessKey handling");
-  }
-
-  circle.removeEventListener('keypress', func);
+    startTime = anim.getStartTime();
+  } catch (e) { }
   anim.remove();
+
+  return startTime;
 }
 
-function testDispatchToWindow()
-{
-  gSvg.setCurrentTime(1);
-  ok(gSvg.animationsPaused(), "Expected animations to be paused");
-
-  var anim = createAnim('accessKey(a)');
-  var evt = createEvent('a');
-
-  window.dispatchEvent(evt);
-
-  try {
-    var start = anim.getStartTime();
-  } catch(e) {
-    ok(false, "Key event dispatched to the window failed to trigger " +
-              "accesskey handling");
-  }
-
-  anim.remove();
-}
-
-function testAdoptNode()
-{
-  gSvg.setCurrentTime(1);
-  ok(gSvg.animationsPaused(), "Expected animations to be paused");
-
-  // Create a new document with an animation element
-  var newdoc = document.implementation.createDocument(gSvgns, 'svg', null);
-  var anim = newdoc.createElementNS(gSvgns, 'animate');
-  anim.setAttribute('attributeName', 'cx');
-  anim.setAttribute('values', '0; 100');
-  anim.setAttribute('dur', '10s');
-  anim.setAttribute('begin', 'accesskey(a)');
-  newdoc.documentElement.appendChild(anim);
-
-  // Adopt
-  ok(anim.ownerDocument !== document,
-     "Expected newly created animation to belong to a different doc");
-  document.adoptNode(anim);
-  document.getElementById('circle').appendChild(anim);
-  ok(anim.ownerDocument === document,
-     "Expected newly created animation to belong to the same doc");
-
-  var evt = createEvent('a');
-
-  // Now fire an event at the original window and check nothing happens
-  newdoc.dispatchEvent(evt);
-  try {
-    var start = anim.getStartTime();
-    ok(false, "Adopted node still receiving accesskey events from old doc");
-  } catch(e) {
-    // Ok
-  }
-
-  // And then fire at our window
-  document.dispatchEvent(evt);
-  try {
-    var start = anim.getStartTime();
-  } catch(e) {
-    ok(false, "Adopted node failed to catch accesskey event");
-  }
-
-  anim.remove();
-}
-
-function testFauxEvent()
-{
-  // Test a non-KeyEvent labelled as a key event
-  gSvg.setCurrentTime(0);
-  ok(gSvg.animationsPaused(), "Expected animations to be paused");
-
-  var anim = createAnim('accessKey(a)');
-  var evt = document.createEvent("SVGEvents");
-  evt.initEvent("keypress", true, true);
-  document.getElementById('circle').dispatchEvent(evt);
-
-  // We're really just testing that the above didn't crash us, but while we're
-  // at it, just do a sanity check that we didn't also create an interval
-  try {
-    var start = anim.getStartTime();
-    ok(false, "Faux event generated interval");
-  } catch(e) {
-    // All is well
-  }
-
-  anim.remove();
-}
-
-window.addEventListener("load", main);
+window.addEventListener('load', main);
 ]]>
 </script>
 </pre>

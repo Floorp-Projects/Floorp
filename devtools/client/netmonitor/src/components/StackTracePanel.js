@@ -7,6 +7,7 @@
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const { fetchNetworkUpdatePacket } = require("../utils/request-utils");
 
 const { div } = dom;
 
@@ -32,7 +33,8 @@ class StackTracePanel extends Component {
    * for the first time
    */
   componentDidMount() {
-    this.maybeFetchStackTrace(this.props);
+    let { request, connector } = this.props;
+    fetchNetworkUpdatePacket(connector.requestData, request, ["stackTrace"]);
   }
 
   /**
@@ -40,26 +42,9 @@ class StackTracePanel extends Component {
    * switching between two requests while this panel is displayed.
    */
   componentWillReceiveProps(nextProps) {
-    this.maybeFetchStackTrace(nextProps);
+    let { request, connector } = nextProps;
+    fetchNetworkUpdatePacket(connector.requestData, request, ["stackTrace"]);
   }
-
-  /**
-   * When switching to another request, lazily fetch stack-trace
-   * from the backend. This Panel will first be empty and then
-   * display the content.
-   */
-  maybeFetchStackTrace(props) {
-    // Fetch stack trace only if it's available and not yet
-    // on the client.
-    if (!props.request.stacktrace &&
-      props.request.cause.stacktraceAvailable) {
-      // This method will set `props.request.stacktrace`
-      // asynchronously and force another render.
-      props.connector.requestData(props.request.id, "stackTrace");
-    }
-  }
-
-  // Rendering
 
   render() {
     let {

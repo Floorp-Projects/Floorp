@@ -101,10 +101,6 @@ add_task(function* () {
    */
   function waitForSecurityBrokenNetworkEvent() {
     let awaitedEvents = [
-      "UPDATING_REQUEST_HEADERS",
-      "RECEIVED_REQUEST_HEADERS",
-      "UPDATING_REQUEST_COOKIES",
-      "RECEIVED_REQUEST_COOKIES",
       "UPDATING_EVENT_TIMINGS",
       "RECEIVED_EVENT_TIMINGS",
     ];

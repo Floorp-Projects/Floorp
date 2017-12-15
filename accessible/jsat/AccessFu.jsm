@@ -298,7 +298,7 @@ this.AccessFu = { // jshint ignore:line
     this._loadFrameScript(aMessageManager);
   },
 
-  onEvent: function(event, data, callback) {
+  onEvent(event, data, callback) {
     switch (event) {
       case "Accessibility:Settings":
         this._systemPref = data.enabled;
@@ -425,8 +425,7 @@ this.AccessFu = { // jshint ignore:line
    * @param {bool} aToCSSPixels whether to convert to CSS pixels (as opposed to
    *               device pixels)
    */
-  adjustContentBounds:
-    function(aJsonBounds, aBrowser, aToCSSPixels) {
+  adjustContentBounds(aJsonBounds, aBrowser, aToCSSPixels) {
       let bounds = new Rect(aJsonBounds.left, aJsonBounds.top,
                             aJsonBounds.right - aJsonBounds.left,
                             aJsonBounds.bottom - aJsonBounds.top);
@@ -879,7 +878,7 @@ var Input = {
                  aData.keyIndex - Output.brailleState.startOffset : -1;
 
     mm.sendAsyncMessage("AccessFu:Activate",
-                        {offset: offset, activateIfKey: aActivateIfKey});
+                        {offset, activateIfKey: aActivateIfKey});
   },
 
   sendContextMenuMessage: function sendContextMenuMessage() {

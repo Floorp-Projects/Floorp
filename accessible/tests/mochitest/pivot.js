@@ -23,14 +23,14 @@ const NS_ERROR_INVALID_ARG = 0x80070057;
  */
 var HeadersTraversalRule =
 {
-  getMatchRoles: function(aRules) {
+  getMatchRoles(aRules) {
     aRules.value = [ROLE_HEADING];
     return aRules.value.length;
   },
 
   preFilter: PREFILTER_INVISIBLE,
 
-  match: function(aAccessible) {
+  match(aAccessible) {
     return FILTER_MATCH;
   },
 
@@ -42,14 +42,14 @@ var HeadersTraversalRule =
  */
 var ObjectTraversalRule =
 {
-  getMatchRoles: function(aRules) {
+  getMatchRoles(aRules) {
     aRules.value = [];
     return 0;
   },
 
   preFilter: PREFILTER_INVISIBLE | PREFILTER_ARIA_HIDDEN | PREFILTER_TRANSPARENT,
 
-  match: function(aAccessible) {
+  match(aAccessible) {
     var rv = FILTER_IGNORE;
     var role = aAccessible.role;
     if (hasState(aAccessible, STATE_FOCUSABLE) &&
@@ -384,8 +384,8 @@ function queueTraversalSequence(aQueue, aDocAcc, aRule, aModalRoot, aSequence) {
 
   aQueue.push(new setVCPosInvoker(aDocAcc, "moveFirst", aRule, aSequence[0]));
 
-  for (var i = 1; i < aSequence.length; i++) {
-    var invoker =
+  for (let i = 1; i < aSequence.length; i++) {
+    let invoker =
       new setVCPosInvoker(aDocAcc, "moveNext", aRule, aSequence[i]);
     aQueue.push(invoker);
   }
@@ -393,8 +393,8 @@ function queueTraversalSequence(aQueue, aDocAcc, aRule, aModalRoot, aSequence) {
   // No further more matches for given rule, expect no virtual cursor changes.
   aQueue.push(new setVCPosInvoker(aDocAcc, "moveNext", aRule, false));
 
-  for (var i = aSequence.length - 2; i >= 0; i--) {
-    var invoker =
+  for (let i = aSequence.length - 2; i >= 0; i--) {
+    let invoker =
       new setVCPosInvoker(aDocAcc, "movePrevious", aRule, aSequence[i]);
     aQueue.push(invoker);
   }

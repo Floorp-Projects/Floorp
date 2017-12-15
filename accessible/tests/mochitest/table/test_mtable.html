@@ -54,9 +54,9 @@
       // 'Simple' table with mlabeledtr
       // At the moment we do not implement mlabeledtr but just hide the label
       // with display: none. Thus we just test the role for now. See bug 689641.
-      var idxes = [[0]];
+      idxes = [[0]];
       testTableIndexes("simple_label", idxes);
-      var cellsArray = [[kDataCell]];
+      cellsArray = [[kDataCell]];
       rowsArray = [ROLE_MATHML_LABELED_ROW];
       testTableStruct("simple_label", cellsArray, kNoColumnHeader,
                       "", "", kMathTable, rowsArray);

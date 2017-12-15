@@ -215,13 +215,13 @@ function getBoundsForDOMElm(aID) {
     var areaWidth = parseInt(areaCoords[2]) - areaX;
     var areaHeight = parseInt(areaCoords[3]) - areaY;
 
-    var rect = img.getBoundingClientRect();
+    let rect = img.getBoundingClientRect();
     x = rect.left + areaX;
     y = rect.top + areaY;
     width = areaWidth;
     height = areaHeight;
   } else {
-    var rect = elm.getBoundingClientRect();
+    let rect = elm.getBoundingClientRect();
     x = rect.left;
     y = rect.top;
     width = rect.width;

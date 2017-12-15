@@ -34,9 +34,9 @@
 
         testStates(aDocNode, 0, EXT_STATE_EDITABLE);
 
-        var event = null;
+        let event = null;
         try {
-          var event = aEvent.QueryInterface(nsIAccessibleStateChangeEvent);
+          event = aEvent.QueryInterface(nsIAccessibleStateChangeEvent);
         } catch (e) {
           ok(false, "State change event was expected");
         }

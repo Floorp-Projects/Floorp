@@ -317,8 +317,15 @@ add_task(function* () {
     is(getSelectedIndex(store.getState()), 0,
       "The first item should be still selected after filtering.");
 
-    const items = getSortedRequests(store.getState());
-    const visibleItems = getDisplayedRequests(store.getState());
+    let items = getSortedRequests(store.getState());
+    let visibleItems;
+
+    // Filter results will be updated asynchronously, so we should wait until
+    // displayed requests reach final state.
+    yield waitUntil(() => {
+      visibleItems = getDisplayedRequests(store.getState());
+      return visibleItems.size === visibility.filter(e => e).length;
+    });
 
     is(items.size, visibility.length,
        "There should be a specific amount of items in the requests menu.");

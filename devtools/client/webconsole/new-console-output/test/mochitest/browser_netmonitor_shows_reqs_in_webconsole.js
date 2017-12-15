@@ -64,6 +64,4 @@ async function testNetmonitor(toolbox) {
   let item = getSortedRequests(store.getState()).get(0);
   is(item.method, "GET", "The attached method is correct.");
   is(item.url, TEST_PATH, "The attached url is correct.");
-
-  await waitForExistingRequests(monitor);
 }
