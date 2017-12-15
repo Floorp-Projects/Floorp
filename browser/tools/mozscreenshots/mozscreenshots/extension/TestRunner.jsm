@@ -378,9 +378,6 @@ this.TestRunner = {
         canvas.height = bounds.height;
         const ctx = canvas.getContext("2d");
 
-        ctx.fillStyle = "hotpink";
-        ctx.fillRect(0, 0, bounds.width, bounds.height);
-
         for (const rect of rects) {
           rect.left = Math.max(0, rect.left);
           rect.right = Math.min(img.naturalWidth, rect.right);
