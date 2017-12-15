@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+</head>
+
+<body>
+<div id="container">
+  <div id="element">
+    <!--
+    The HTML code for this element has no other meaning than to create
+    display items that are merged together.
+    -->
+	<div style="-moz-column-count:2; column-count:2; width:300px; height:100px;">
+	  <div id="o" style="opacity:0.5; width:100px; height:200px; background:lime;">
+		<div id="d" style="height:50px; width:80px; background:red; padding:2px">Text</div>
+	  </div>
+	</div>
+  </div>
+</div>
+
+<script type="text/javascript">
+function redirect() {
+  document.documentElement.removeAttribute("class");
+
+  // Trigger root frame deletion.
+  window.location.replace("about:blank");
+}
+
+function removeElements(container) {
+  document.body.removeChild(container);
+
+  setTimeout(redirect, 0);
+}
+
+function createElements() {
+  var c = document.getElementById("container");
+  var e = document.getElementById("element");
+  for (var i = 0; i < 1000; ++i) {
+    // Populate the container with elements that cause display item merges.
+    c.appendChild(e.cloneNode(true));
+  }
+
+  setTimeout(() => removeElements(c), 0);
+}
+
+document.addEventListener("MozReftestInvalidate", createElements);
+// window.addEventListener("load", createElements);
+</script>
+
+</body>
+</html>
