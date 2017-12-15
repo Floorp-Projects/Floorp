@@ -582,12 +582,6 @@ protected:
                             int32_t* aLength);
 
   /**
-   * Never returns null.
-   */
-  already_AddRefed<mozilla::CompositionTransaction>
-    CreateTxnForComposition(const nsAString& aStringToInsert);
-
-  /**
    * Create a transaction for adding a style sheet.
    */
   already_AddRefed<mozilla::AddStyleSheetTransaction>

@@ -2784,14 +2784,15 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   // part of the current IME operation. Example: adjusting whitespace around an
   // IME insertion.
   if (ShouldHandleIMEComposition() && !aSuppressIME) {
-    // XXX Here is still ugly.  This should be fixed by a follow up bug.
-    mComposition->WillCreateCompositionTransaction(&aTextNode, aOffset);
-    transaction = CreateTxnForComposition(aStringToInsert);
-    mComposition->DidCreateCompositionTransaction(aStringToInsert);
+    transaction =
+      CompositionTransaction::Create(*this, aStringToInsert,
+                                     aTextNode, aOffset);
     isIMETransaction = true;
     // All characters of the composition string will be replaced with
     // aStringToInsert.  So, we need to emulate to remove the composition
     // string.
+    // FYI: The text node information in mComposition has been updated by
+    //      CompositionTransaction::Create().
     insertedTextNode = mComposition->GetContainerTextNode();
     insertedOffset = mComposition->XPOffsetInTextNode();
   } else {
@@ -4647,20 +4648,6 @@ EditorBase::CreateTxnForDeleteNode(nsINode* aNode)
     return nullptr;
   }
   return deleteNodeTransaction.forget();
-}
-
-already_AddRefed<CompositionTransaction>
-EditorBase::CreateTxnForComposition(const nsAString& aStringToInsert)
-{
-  MOZ_ASSERT(mComposition);
-  MOZ_ASSERT(mComposition->GetContainerTextNode());
-  // During handling IME composition, mComposition must have been initialized.
-  // TODO: We can simplify CompositionTransaction::Init() with TextComposition
-  //       class.
-  RefPtr<CompositionTransaction> transaction =
-    new CompositionTransaction(*this, aStringToInsert, *mComposition,
-                               &mRangeUpdater);
-  return transaction.forget();
 }
 
 already_AddRefed<AddStyleSheetTransaction>
