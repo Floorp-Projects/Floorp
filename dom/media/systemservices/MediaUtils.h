@@ -437,7 +437,8 @@ Await(
   RejectFunction&& aRejectFunction)
 {
   Monitor mon(__func__);
-  RefPtr<AutoTaskQueue> taskQueue = new AutoTaskQueue(Move(aPool));
+  RefPtr<AutoTaskQueue> taskQueue =
+    new AutoTaskQueue(Move(aPool), "MozPromiseAwait");
   bool done = false;
 
   aPromise->Then(taskQueue,
@@ -468,7 +469,8 @@ Await(already_AddRefed<nsIEventTarget> aPool,
       RefPtr<MozPromise<ResolveValueType, RejectValueType, Excl>> aPromise)
 {
   Monitor mon(__func__);
-  RefPtr<AutoTaskQueue> taskQueue = new AutoTaskQueue(Move(aPool));
+  RefPtr<AutoTaskQueue> taskQueue =
+    new AutoTaskQueue(Move(aPool), "MozPromiseAwait");
   bool done = false;
 
   typename MozPromise<ResolveValueType, RejectValueType, Excl>::ResolveOrRejectValue val;
@@ -512,7 +514,8 @@ AwaitAll(already_AddRefed<nsIEventTarget> aPool,
 {
   typedef MozPromise<ResolveValueType, RejectValueType, true> Promise;
   RefPtr<nsIEventTarget> pool = aPool;
-  RefPtr<AutoTaskQueue> taskQueue = new AutoTaskQueue(do_AddRef(pool));
+  RefPtr<AutoTaskQueue> taskQueue =
+    new AutoTaskQueue(do_AddRef(pool), "MozPromiseAwaitAll");
   RefPtr<typename Promise::AllPromiseType> p = Promise::All(taskQueue, aPromises);
   Await(pool.forget(), p, Move(aResolveFunction), Move(aRejectFunction));
 }
@@ -529,7 +532,8 @@ AwaitAll(already_AddRefed<nsIEventTarget> aPool,
 {
   typedef MozPromise<ResolveValueType, RejectValueType, true> Promise;
   RefPtr<nsIEventTarget> pool = aPool;
-  RefPtr<AutoTaskQueue> taskQueue = new AutoTaskQueue(do_AddRef(pool));
+  RefPtr<AutoTaskQueue> taskQueue =
+    new AutoTaskQueue(do_AddRef(pool), "MozPromiseAwaitAll");
   RefPtr<typename Promise::AllPromiseType> p =
     Promise::All(taskQueue, aPromises);
   return Await(pool.forget(), p);
