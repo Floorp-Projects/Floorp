@@ -1553,8 +1553,6 @@ protected:
   RefPtr<nsTransactionManager> mTxnMgr;
   // Cached root node.
   nsCOMPtr<Element> mRootElement;
-  // Current IME text node.
-  RefPtr<Text> mIMETextNode;
   // The form field as an event receiver.
   nsCOMPtr<dom::EventTarget> mEventTarget;
   nsCOMPtr<nsIDOMEventListener> mEventListener;
@@ -1597,12 +1595,6 @@ protected:
   int32_t mPlaceholderBatch;
   // The current editor action.
   EditAction mAction;
-
-  // Offset in text node where IME comp string begins.
-  uint32_t mIMETextOffset;
-  // The Length of the composition string or commit string.  If this is length
-  // of commit string, the length is truncated by maxlength attribute.
-  uint32_t mIMETextLength;
 
   // The current direction of editor action.
   EDirection mDirection;

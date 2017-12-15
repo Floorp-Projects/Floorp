@@ -59,6 +59,8 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
   , mNativeContext(aCompositionEvent->mNativeIMEContext)
   , mCompositionStartOffset(0)
   , mTargetClauseOffsetInComposition(0)
+  , mCompositionStartOffsetInTextNode(UINT32_MAX)
+  , mCompositionLengthInTextNode(UINT32_MAX)
   , mIsSynthesizedForTests(aCompositionEvent->mFlags.mIsSynthesizedForTests)
   , mIsComposing(false)
   , mIsEditorHandlingEvent(false)
@@ -81,6 +83,9 @@ TextComposition::Destroy()
   mPresContext = nullptr;
   mNode = nullptr;
   mTabParent = nullptr;
+  mContainerTextNode = nullptr;
+  mCompositionStartOffsetInTextNode = UINT32_MAX;
+  mCompositionLengthInTextNode = UINT32_MAX;
   // TODO: If the editor is still alive and this is held by it, we should tell
   //       this being destroyed for cleaning up the stuff.
 }
