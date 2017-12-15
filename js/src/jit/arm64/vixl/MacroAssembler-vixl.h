@@ -1480,9 +1480,25 @@ class MacroAssembler : public js::jit::Assembler {
 #ifdef JS_SIMULATOR_ARM64
     hlt(kUnreachableOpcode);
 #else
-    // Branch to 0 to generate a segfault.
-    // lr - kInstructionSize is the address of the offending instruction.
-    blr(xzr);
+    // A couple of strategies we can use here.  There are no unencoded
+    // instructions in the instruction set that are guaranteed to remain that
+    // way.  However there are some currently (as of 2018) unencoded
+    // instructions that are good candidates.
+    //
+    // Ideally, unencoded instructions should be non-destructive to the register
+    // state, and should be unencoded at all exception levels.
+    //
+    // At the trap the pc will hold the address of the offending instruction.
+
+    // Some candidates for unencoded instructions:
+    //
+    // 0xd4a00000 (essentially dcps0, a good one since it is nonsensical and may
+    //             remain unencoded in the future for that reason)
+    // 0x33000000 (bfm variant)
+    // 0xd67f0000 (br variant)
+    // 0x5ac00c00 (rbit variant)
+
+    Emit(0xd4a00000);		// "dcps0", also has 16-bit payload if needed
 #endif
   }
   void Uxtb(const Register& rd, const Register& rn) {
