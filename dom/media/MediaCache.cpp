@@ -253,7 +253,7 @@ public:
   /**
    * An iterator that makes it easy to iterate through all streams that
    * have a given resource ID and are not closed.
-   * Can be used on the main thread or while holding the media cache lock.
+   * Must be used while holding the media cache lock.
    */
   class ResourceStreamIterator
   {
@@ -263,6 +263,7 @@ public:
       , mResourceID(aResourceID)
       , mNext(0)
     {
+      aMediaCache->mMonitor.AssertCurrentThreadIn();
     }
     MediaCacheStream* Next(AutoLock& aLock)
     {
@@ -443,8 +444,7 @@ protected:
   // readers that need to block will Wait() on this monitor. When new
   // data becomes available in the cache, we NotifyAll() on this monitor.
   ReentrantMonitor mMonitor;
-  // This is only written while on the main thread and the monitor is held.
-  // Thus, it can be safely read from the main thread or while holding the monitor.
+  // This must always be accessed when the monitor is held.
   nsTArray<MediaCacheStream*> mStreams;
   // The Blocks describing the cache entries.
   nsTArray<Block> mIndex;
@@ -724,11 +724,16 @@ void
 MediaCache::CloseStreamsForPrivateBrowsing()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  for (MediaCacheStream* s : mStreams) {
-    if (s->mIsPrivateBrowsing) {
-      s->mClient->Close();
-    }
-  }
+  sThread->Dispatch(
+    NS_NewRunnableFunction("MediaCache::CloseStreamsForPrivateBrowsing",
+                           [self = RefPtr<MediaCache>(this)]() {
+                             AutoLock lock(self->mMonitor);
+                             for (MediaCacheStream* s : self->mStreams) {
+                               if (s->mIsPrivateBrowsing) {
+                                 s->CloseInternal(lock);
+                               }
+                             }
+                           }));
 }
 
 /* static */ RefPtr<MediaCache>
