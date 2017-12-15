@@ -182,27 +182,6 @@ promise_test(t => {
 promise_test(t => {
   const div = createDiv(t);
   const animation = div.animate({}, 100 * MS_PER_SEC);
-  animation.cancel();
-  // The spec says we still create a new finished promise and reject the old
-  // one even if we're already idle. That behavior might change, but for now
-  // test that we do that.
-  const retPromise = animation.finished.catch(err => {
-    assert_equals(err.name, 'AbortError',
-                  'finished promise is rejected with AbortError');
-  });
-
-  // Redundant call to cancel();
-  const previousFinishedPromise = animation.finished;
-  animation.cancel();
-  assert_not_equals(animation.finished, previousFinishedPromise,
-                    'A redundant call to cancel() should still generate a new'
-                    + ' finished promise');
-  return retPromise;
-}, 'cancelling an idle animation still replaces the finished promise');
-
-promise_test(t => {
-  const div = createDiv(t);
-  const animation = div.animate({}, 100 * MS_PER_SEC);
   const HALF_DUR = 100 * MS_PER_SEC / 2;
   const QUARTER_DUR = 100 * MS_PER_SEC / 4;
   let gotNextFrame = false;
