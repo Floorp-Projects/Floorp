@@ -26,16 +26,25 @@ class EditorBase;
  */
 class SplitNodeTransaction final : public EditTransactionBase
 {
+private:
+  SplitNodeTransaction(EditorBase& aEditorBase,
+                       const EditorRawDOMPoint& aStartOfRightNode);
+
 public:
   /**
+   * Creates a transaction to create a new node (left node) identical to an
+   * existing node (right node), and split the contents between the same point
+   * in both nodes.
+   *
    * @param aEditorBase         The provider of core editing operations.
    * @param aStartOfRightNode   The point to split.  Its container will be
    *                            the right node, i.e., become the new node's
    *                            next sibling.  And the point will be start
    *                            of the right node.
    */
-  SplitNodeTransaction(EditorBase& aEditorBase,
-                       const EditorRawDOMPoint& aStartOfRightNode);
+  static already_AddRefed<SplitNodeTransaction>
+  Create(EditorBase& aEditorBase,
+         const EditorRawDOMPoint& aStartOfRightNode);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SplitNodeTransaction,
