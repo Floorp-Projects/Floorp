@@ -185,6 +185,7 @@ input > .anonymous-div.inherit-overflow {
 textarea > .anonymous-div.inherit-scroll-behavior,
 input > .anonymous-div.inherit-scroll-behavior {
   scroll-behavior: inherit;
+  overscroll-behavior: inherit;
 }
 
 input::placeholder,
