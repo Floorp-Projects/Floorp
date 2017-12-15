@@ -465,6 +465,8 @@ private:
 
   void UpdateDownloadStatistics(AutoLock&);
 
+  void CloseInternal(AutoLock&);
+
   // Instance of MediaCache to use with this MediaCacheStream.
   RefPtr<MediaCache> mMediaCache;
 
