@@ -17,40 +17,35 @@ async function doTests() {
 
   local_is(window.location.origin, "http://test2.example.com", "Is loaded correctly");
 
-  await promiseU2FRegister(null, [{
-    version: version,
-    challenge: bytesToBase64UrlSafe(challenge),
-  }], [], function(res){
-    local_isnot(res.errorCode, 0, "Insecure origin disallowed for null AppID");
-  });
+  local_is('u2f' in window, false, "window.u2f must be undefined when accessed from an insecure origin");
+  local_is('U2F' in window, false, "window.U2F must be undefined when accessed from an insecure origin");
 
-  await promiseU2FRegister("", [{
-    version: version,
-    challenge: bytesToBase64UrlSafe(challenge),
-  }], [], function(res){
-    local_isnot(res.errorCode, 0, "Insecure origin disallowed for empty AppID");
-  });
+  try {
+    u2f.register(null, [], [], function(res) {
+      local_ok(false, "Callbacks should not be called.");
+    });
+  } catch (err) {
+    local_ok(err == "ReferenceError: u2f is not defined", "calling u2f should have thrown from an insecure origin");
+  }
 
-  await promiseU2FRegister("http://example.com/appId", [{
-    version: version,
-    challenge: bytesToBase64UrlSafe(challenge),
-  }], [], function(res){
-    local_isnot(res.errorCode, 0, "Insecure origin disallowed for HTTP AppID");
-  });
+  try {
+    window.u2f.register(null, [], [], function(res) {
+      local_ok(false, "Callbacks should not be called.");
+    });
+  } catch (err) {
+    local_ok(err == "TypeError: window.u2f is undefined", "accessing window.u2f should have thrown from an insecure origin");
+  }
 
-  await promiseU2FRegister("https://example.com/appId", [{
-    version: version,
-    challenge: bytesToBase64UrlSafe(challenge),
-  }], [], function(res){
-    local_isnot(res.errorCode, 0, "Insecure origin disallowed for HTTPS AppID from HTTP origin");
-  });
-
-  await promiseU2FRegister(window.location.origin + "/otherAppId", [{
-    version: version,
-    challenge: bytesToBase64UrlSafe(challenge),
-  }], [], function(res){
-    local_isnot(res.errorCode, 0, "Insecure origin disallowed for HTTP origin");
-  });
+  try {
+    await promiseU2FRegister(null, [{
+      version: version,
+      challenge: bytesToBase64UrlSafe(challenge),
+    }], [], function(res){
+      local_ok(false, "Shouldn't have gotten here on an insecure origin");
+    });
+  } catch (err) {
+    local_ok(err == "ReferenceError: u2f is not defined", "Should have thrown from an insecure origin");
+  }
 
   local_finished();
 };
