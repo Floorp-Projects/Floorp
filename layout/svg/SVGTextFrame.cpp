@@ -5537,7 +5537,7 @@ SVGTextFrame::DoReflow()
                "does not get styled");
 
   kid->Reflow(presContext, desiredSize, reflowInput, status);
-  kid->DidReflow(presContext, &reflowInput, nsDidReflowStatus::FINISHED);
+  kid->DidReflow(presContext, &reflowInput);
   kid->SetSize(wm, desiredSize.Size(wm));
 
   RemoveStateBits(NS_STATE_SVG_TEXT_IN_REFLOW);

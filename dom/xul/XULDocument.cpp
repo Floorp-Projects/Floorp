@@ -1668,6 +1668,10 @@ XULDocument::AddElementToDocumentPre(Element* aElement)
 nsresult
 XULDocument::AddElementToDocumentPost(Element* aElement)
 {
+    if (aElement == GetRootElement()) {
+        ResetDocumentDirection();
+    }
+
     // We need to pay special attention to the keyset tag to set up a listener
     if (aElement->NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
         // Create our XUL key listener and hook it up.

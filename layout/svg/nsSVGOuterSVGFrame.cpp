@@ -507,10 +507,9 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*           aPresContext,
 
 void
 nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
-                              const ReflowInput*  aReflowInput,
-                              nsDidReflowStatus aStatus)
+                              const ReflowInput*  aReflowInput)
 {
-  nsSVGDisplayContainerFrame::DidReflow(aPresContext,aReflowInput,aStatus);
+  nsSVGDisplayContainerFrame::DidReflow(aPresContext,aReflowInput);
 
   // Make sure elements styled by :hover get updated if script/animation moves
   // them under or out from under the pointer:

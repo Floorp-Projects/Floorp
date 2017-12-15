@@ -83,8 +83,7 @@ public:
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
   virtual void DidReflow(nsPresContext* aPresContext,
-                         const ReflowInput* aReflowInput,
-                         nsDidReflowStatus aStatus) override;
+                         const ReflowInput* aReflowInput) override;
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsDisplayListSet& aLists) override;
 

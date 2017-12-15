@@ -2293,6 +2293,11 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
                                           const nsRect* aRange,
                                           nsIScrollbarMediator::ScrollSnapMode aSnap)
 {
+  if (aOrigin != nsGkAtoms::restore) {
+    // If we're doing a non-restore scroll, we don't want to later
+    // override it by restoring our saved scroll position.
+    mRestorePos.x = mRestorePos.y = -1;
+  }
 
   if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
     GetSnapPointForDestination(nsIScrollableFrame::DEVICE_PIXELS,
@@ -4367,6 +4372,8 @@ ScrollFrameHelper::ScrollToRestoredPosition()
           (mScrollPort.XMost() - scrollToPos.x - mScrolledFrame->GetRect().width);
       }
       AutoWeakFrame weakFrame(mOuter);
+      // It's very important to pass nsGkAtoms::restore here, so
+      // ScrollToWithOrigin won't clear out mRestorePos.
       ScrollToWithOrigin(scrollToPos, nsIScrollableFrame::INSTANT,
                          nsGkAtoms::restore, nullptr);
       if (!weakFrame.IsAlive()) {

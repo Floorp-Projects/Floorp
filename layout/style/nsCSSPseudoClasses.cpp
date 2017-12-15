@@ -196,16 +196,8 @@ nsCSSPseudoClasses::StringPseudoMatches(const mozilla::dom::Element* aElement,
   switch (aPseudo) {
     case CSSPseudoClassType::mozLocaleDir:
       {
-        bool docIsRTL;
-        if (ServoStyleSet::IsInServoTraversal()) {
-          docIsRTL = aDocument->ThreadSafeGetDocumentState()
-                              .HasState(NS_DOCUMENT_STATE_RTL_LOCALE);
-        } else {
-          auto doc = const_cast<nsIDocument*>(aDocument);
-          docIsRTL = doc->GetDocumentState()
-                        .HasState(NS_DOCUMENT_STATE_RTL_LOCALE);
-        }
-
+        const bool docIsRTL =
+          aDocument->GetDocumentState().HasState(NS_DOCUMENT_STATE_RTL_LOCALE);
         nsDependentString dirString(aString);
 
         if (dirString.EqualsLiteral("rtl")) {
