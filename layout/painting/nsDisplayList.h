@@ -832,6 +832,11 @@ public:
 
   void FreeClipChains();
 
+  /*
+   * Frees the temporary display items created during merging.
+   */
+  void FreeTemporaryItems();
+
   /**
    * Helper method to generate background painting flags based on the
    * information available in the display list builder. Currently only
@@ -1941,7 +1946,7 @@ public:
 
   virtual void RemoveFrame(nsIFrame* aFrame)
   {
-    if (aFrame == mFrame) {
+    if (mFrame && aFrame == mFrame) {
       MOZ_ASSERT(!mFrame->HasDisplayItem(this));
       mFrame = nullptr;
     }

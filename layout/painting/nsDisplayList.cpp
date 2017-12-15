@@ -1053,7 +1053,7 @@ nsDisplayListBuilder::EndFrame()
   mFrameToAnimatedGeometryRootMap.Clear();
   mActiveScrolledRoots.Clear();
   FreeClipChains();
-
+  FreeTemporaryItems();
   nsCSSRendering::EndFrameTreesLocked();
 }
 
@@ -1299,9 +1299,6 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
                "All presshells should have been exited");
   NS_ASSERTION(!mCurrentTableItem, "No table item should be active");
 
-  for (nsDisplayItem* i : mTemporaryItems) {
-    i->Destroy(this);
-  }
   for (DisplayItemClipChain* c : mClipChainsToDestroy) {
     c->DisplayItemClipChain::~DisplayItemClipChain();
   }
@@ -1496,6 +1493,19 @@ nsDisplayListBuilder::FreeClipChains()
       ++it;
     }
   }
+}
+
+void
+nsDisplayListBuilder::FreeTemporaryItems()
+{
+  for (nsDisplayItem* i : mTemporaryItems) {
+    // Temporary display items are not added to the frames.
+    MOZ_ASSERT(i->Frame());
+    i->RemoveFrame(i->Frame());
+    i->Destroy(this);
+  }
+
+  mTemporaryItems.Clear();
 }
 
 void
