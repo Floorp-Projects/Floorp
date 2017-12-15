@@ -17,16 +17,25 @@
 namespace mozilla {
 
 class EditorBase;
-class RangeUpdater;
 
 /**
  * A transaction that deletes a single element
  */
 class DeleteNodeTransaction final : public EditTransactionBase
 {
+protected:
+  DeleteNodeTransaction(EditorBase& aEditorBase, nsINode& aNodeToDelete);
+
 public:
-  DeleteNodeTransaction(EditorBase& aEditorBase, nsINode& aNodeToDelete,
-                        RangeUpdater* aRangeUpdater);
+  /**
+   * Creates a delete node transaction instance.  This returns nullptr if
+   * it cannot remove the node from its parent.
+   *
+   * @param aEditorBase         The editor.
+   * @param aNodeToDelete       The node to be removed from the DOM tree.
+   */
+  static already_AddRefed<DeleteNodeTransaction>
+  MaybeCreate(EditorBase& aEditorBase, nsINode& aNodeToDelete);
 
   /**
    * CanDoIt() returns true if there are enough members and can modify the
@@ -56,9 +65,6 @@ protected:
 
   // Next sibling to remember for undo/redo purposes.
   nsCOMPtr<nsIContent> mRefNode;
-
-  // Range updater object.
-  RangeUpdater* mRangeUpdater;
 };
 
 } // namespace mozilla
