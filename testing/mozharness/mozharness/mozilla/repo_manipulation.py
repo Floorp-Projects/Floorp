@@ -1,4 +1,5 @@
 import ConfigParser
+import json
 import os
 
 from mozharness.base.errors import HgErrorList
@@ -137,6 +138,24 @@ class MercurialRepoManipulationMixin(object):
             cmd, cwd=cwd, halt_on_failure=halt_on_failure,
             error_list=HgErrorList
         )
+
+    def query_existing_tags(self, cwd, halt_on_failure=True):
+        cmd = self.query_exe('hg', return_type='list') + ['tags']
+        existing_tags = {}
+        output = self.get_output_from_command(
+            cmd, cwd=cwd, halt_on_failure=halt_on_failure
+        )
+        for line in output.splitlines():
+            parts = line.split(' ')
+            if len(parts) > 1:
+                # existing_tags = {TAG: REVISION, ...}
+                existing_tags[parts[0]] = parts[-1].split(':')[-1]
+        self.info(
+            "existing_tags:\n{}".format(
+                json.dumps(existing_tags, sort_keys=True, indent=4)
+            )
+        )
+        return existing_tags
 
     def push(self):
         """
