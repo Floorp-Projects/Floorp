@@ -55,7 +55,7 @@
     "findElementWithSelector": false,
     "findAllElements": false,
     "openNewTabAndToolbox": false,
-    "selectSource": false,
+    "selectLocation": false,
     "stepOver": false,
     "stepIn": false,
     "stepOut": false,

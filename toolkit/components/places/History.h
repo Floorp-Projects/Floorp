@@ -15,6 +15,7 @@
 #include "Database.h"
 
 #include "mozilla/dom/Link.h"
+#include "mozilla/ipc/URIParams.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
 #include "nsURIHashKey.h"
@@ -143,6 +144,7 @@ public:
    */
   void AppendToRecentlyVisitedURIs(nsIURI* aURI);
 
+  void NotifyVisitedParent(const nsTArray<mozilla::ipc::URIParams>& aURIs);
 private:
   virtual ~History();
 

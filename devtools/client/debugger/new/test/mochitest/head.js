@@ -64,6 +64,11 @@ function logThreadEvents(dbg, event) {
   });
 }
 
+async function waitFor(condition) {
+  await BrowserTestUtils.waitForCondition(condition, "waitFor", 10, 500);
+  return condition();
+}
+
 // Wait until an action of `type` is dispatched. This is different
 // then `_afterDispatchDone` because it doesn't wait for async actions
 // to be done/errored. Use this if you want to listen for the "start"
@@ -337,11 +342,16 @@ function assertHighlightLocation(dbg, source, line) {
   source = findSource(dbg, source);
 
   // Check the selected source
-  is(getSelectedSource(getState()).get("url"), source.url);
+  is(
+    getSelectedSource(getState()).get("url"),
+    source.url,
+    "source url is correct"
+  );
 
   // Check the highlight line
   const lineEl = findElement(dbg, "highlightLine");
   ok(lineEl, "Line is highlighted");
+
   ok(isVisibleInEditor(dbg, lineEl), "Highlighted line is visible");
   ok(
     getCM(dbg)
@@ -491,12 +501,15 @@ function clearDebuggerPreferences() {
  * @return {Promise} dbg
  * @static
  */
-function initDebugger(url) {
-  return Task.spawn(function*() {
-    clearDebuggerPreferences();
-    const toolbox = yield openNewTabAndToolbox(EXAMPLE_URL + url, "jsdebugger");
-    return createDebuggerContext(toolbox);
-  });
+async function initDebugger(url) {
+  clearDebuggerPreferences();
+  const toolbox = await openNewTabAndToolbox(EXAMPLE_URL + url, "jsdebugger");
+  return createDebuggerContext(toolbox);
+}
+
+async function initPane(url, pane) {
+  clearDebuggerPreferences();
+  return openNewTabAndToolbox(EXAMPLE_URL + url, pane);
 }
 
 window.resumeTest = undefined;
@@ -578,7 +591,7 @@ function waitForLoadedSources(dbg) {
 function selectSource(dbg, url, line) {
   info(`Selecting source: ${url}`);
   const source = findSource(dbg, url);
-  return dbg.actions.selectSource(source.id, { location: { line } });
+  return dbg.actions.selectLocation({ sourceId: source.id, line });
 }
 
 function closeTab(dbg, url) {
@@ -933,7 +946,9 @@ const selectors = {
   resultItems: ".result-list .result-item",
   fileMatch: ".managed-tree .result",
   popup: ".popover",
-  tooltip: ".tooltip"
+  tooltip: ".tooltip",
+  outlineItem: i => `.outline-list__element:nth-child(${i})`,
+  outlineItems: ".outline-list__element"
 };
 
 function getSelector(elementName, ...args) {

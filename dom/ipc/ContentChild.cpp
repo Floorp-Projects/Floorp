@@ -35,6 +35,7 @@
 #include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/MemoryReportRequest.h"
+#include "mozilla/dom/PLoginReputationChild.h"
 #include "mozilla/dom/ProcessGlobal.h"
 #include "mozilla/dom/PushNotifier.h"
 #include "mozilla/dom/TabGroup.h"
@@ -2452,15 +2453,17 @@ ContentChild::RecvNotifyAlertsObserver(const nsCString& aType, const nsString& a
 // NOTE: This method is being run in the SystemGroup, and thus cannot directly
 // touch pages. See GetSpecificMessageEventTarget.
 mozilla::ipc::IPCResult
-ContentChild::RecvNotifyVisited(const URIParams& aURI)
+ContentChild::RecvNotifyVisited(nsTArray<URIParams>&& aURIs)
 {
-  nsCOMPtr<nsIURI> newURI = DeserializeURI(aURI);
-  if (!newURI) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  nsCOMPtr<IHistory> history = services::GetHistoryService();
-  if (history) {
-    history->NotifyVisited(newURI);
+  for (const URIParams& uri : aURIs) {
+    nsCOMPtr<nsIURI> newURI = DeserializeURI(uri);
+    if (!newURI) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    if (history) {
+      history->NotifyVisited(newURI);
+    }
   }
   return IPC_OK();
 }
@@ -3428,6 +3431,20 @@ ContentChild::AllocPURLClassifierLocalChild(const URIParams& aUri,
 
 bool
 ContentChild::DeallocPURLClassifierLocalChild(PURLClassifierLocalChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+  delete aActor;
+  return true;
+}
+
+PLoginReputationChild*
+ContentChild::AllocPLoginReputationChild(const URIParams& aUri)
+{
+  return new PLoginReputationChild();
+}
+
+bool
+ContentChild::DeallocPLoginReputationChild(PLoginReputationChild* aActor)
 {
   MOZ_ASSERT(aActor);
   delete aActor;

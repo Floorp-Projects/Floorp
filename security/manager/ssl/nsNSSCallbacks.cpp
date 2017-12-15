@@ -24,6 +24,7 @@
 #include "nsITokenDialogs.h"
 #include "nsIUploadChannel.h"
 #include "nsIWebProgressListener.h"
+#include "nsNSSCertHelper.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSComponent.h"
 #include "nsNSSIOLayer.h"
@@ -763,8 +764,6 @@ PK11PasswordPromptRunnable::~PK11PasswordPromptRunnable()
 void
 PK11PasswordPromptRunnable::RunOnTargetThread()
 {
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return;
@@ -791,24 +790,17 @@ PK11PasswordPromptRunnable::RunOnTargetThread()
     return;
   }
 
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID));
-  if (!nssComponent) {
-    return;
-  }
-
   nsAutoString promptString;
   if (PK11_IsInternal(mSlot)) {
-    rv = nssComponent->GetPIPNSSBundleString("CertPassPromptDefault",
-                                             promptString);
+    rv = GetPIPNSSBundleString("CertPassPromptDefault", promptString);
   } else {
     NS_ConvertUTF8toUTF16 tokenName(PK11_GetTokenName(mSlot));
     const char16_t* formatStrings[] = {
       tokenName.get(),
     };
-    rv = nssComponent->PIPBundleFormatStringFromName("CertPassPrompt",
-                                                     formatStrings,
-                                                     ArrayLength(formatStrings),
-                                                     promptString);
+    rv = PIPBundleFormatStringFromName("CertPassPrompt", formatStrings,
+                                       ArrayLength(formatStrings),
+                                       promptString);
   }
   if (NS_FAILED(rv)) {
     return;
