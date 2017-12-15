@@ -518,10 +518,14 @@ Statistics::formatDetailedTotals() const
 void
 Statistics::formatJsonSlice(size_t sliceNum, JSONPrinter& json) const
 {
+    /*
+     * We number each of the slice properties to keep the code in
+     * GCTelemetry.jsm in sync.  See MAX_SLICE_KEYS.
+     */
     json.beginObject();
-    formatJsonSliceDescription(sliceNum, slices_[sliceNum], json);
+    formatJsonSliceDescription(sliceNum, slices_[sliceNum], json); // # 1-11
 
-    json.beginObjectProperty("times");
+    json.beginObjectProperty("times"); // # 12
     formatJsonPhaseTimes(slices_[sliceNum].phaseTimes, json);
     json.endObject();
 
@@ -571,17 +575,17 @@ Statistics::renderJsonMessage(uint64_t timestamp, bool includeSlices) const
     JSONPrinter json(printer);
 
     json.beginObject();
-    json.property("status", "completed");
-    formatJsonDescription(timestamp, json);
+    json.property("status", "completed"); // JSON Key #1
+    formatJsonDescription(timestamp, json); // #2-22
 
     if (includeSlices) {
-        json.beginListProperty("slices_list");
+        json.beginListProperty("slices_list"); // #23
         for (unsigned i = 0; i < slices_.length(); i++)
             formatJsonSlice(i, json);
         json.endList();
     }
 
-    json.beginObjectProperty("totals");
+    json.beginObjectProperty("totals"); // #24
     formatJsonPhaseTimes(phaseTimes, json);
     json.endObject();
 
@@ -598,47 +602,49 @@ Statistics::formatJsonDescription(uint64_t timestamp, JSONPrinter& json) const
     // Telemetry documentation: toolkit/components/telemetry/docs/data/main-ping.rst
     // Telemetry tests: toolkit/components/telemetry/tests/browser/browser_TelemetryGC.js
     // Perf.html: https://github.com/devtools-html/perf.html
+    //
+    // Please also number each property to help correctly maintain the Telemetry ping code
 
-    json.property("timestamp", timestamp);
+    json.property("timestamp", timestamp); // # JSON Key #2
 
     TimeDuration total, longest;
     gcDuration(&total, &longest);
-    json.property("max_pause", longest, JSONPrinter::MILLISECONDS);
-    json.property("total_time", total, JSONPrinter::MILLISECONDS);
+    json.property("max_pause", longest, JSONPrinter::MILLISECONDS); // #3
+    json.property("total_time", total, JSONPrinter::MILLISECONDS); // #4
     // We might be able to omit reason if perf.html was able to retrive it
     // from the first slice.  But it doesn't do this yet.
-    json.property("reason", ExplainReason(slices_[0].reason));
-    json.property("zones_collected", zoneStats.collectedZoneCount);
-    json.property("total_zones", zoneStats.zoneCount);
-    json.property("total_compartments", zoneStats.compartmentCount);
-    json.property("minor_gcs", getCount(STAT_MINOR_GC));
+    json.property("reason", ExplainReason(slices_[0].reason)); // #5
+    json.property("zones_collected", zoneStats.collectedZoneCount); // #6
+    json.property("total_zones", zoneStats.zoneCount); // #7
+    json.property("total_compartments", zoneStats.compartmentCount); // #8
+    json.property("minor_gcs", getCount(STAT_MINOR_GC)); // #9
     uint32_t storebufferOverflows = getCount(STAT_STOREBUFFER_OVERFLOW);
     if (storebufferOverflows)
-        json.property("store_buffer_overflows", storebufferOverflows);
-    json.property("slices", slices_.length());
+        json.property("store_buffer_overflows", storebufferOverflows); // #10
+    json.property("slices", slices_.length()); // #11
 
     const double mmu20 = computeMMU(TimeDuration::FromMilliseconds(20));
     const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));
-    json.property("mmu_20ms", int(mmu20 * 100));
-    json.property("mmu_50ms", int(mmu50 * 100));
+    json.property("mmu_20ms", int(mmu20 * 100)); // #12
+    json.property("mmu_50ms", int(mmu50 * 100)); // #13
 
     TimeDuration sccTotal, sccLongest;
     sccDurations(&sccTotal, &sccLongest);
-    json.property("scc_sweep_total", sccTotal, JSONPrinter::MILLISECONDS);
-    json.property("scc_sweep_max_pause", sccLongest, JSONPrinter::MILLISECONDS);
-
+    json.property("scc_sweep_total", sccTotal, JSONPrinter::MILLISECONDS); // #14
+    json.property("scc_sweep_max_pause", sccLongest, JSONPrinter::MILLISECONDS); // #15
+    
     if (nonincrementalReason_ != AbortReason::None)
-        json.property("nonincremental_reason", ExplainAbortReason(nonincrementalReason_));
-    json.property("allocated_bytes", preBytes);
+        json.property("nonincremental_reason", ExplainAbortReason(nonincrementalReason_)); // #16
+    json.property("allocated_bytes", preBytes); // #17
     uint32_t addedChunks = getCount(STAT_NEW_CHUNK);
     if (addedChunks)
-        json.property("added_chunks", addedChunks);
+        json.property("added_chunks", addedChunks); // #18
     uint32_t removedChunks = getCount(STAT_DESTROY_CHUNK);
     if (removedChunks)
-        json.property("removed_chunks", removedChunks);
-    json.property("major_gc_number", startingMajorGCNumber);
-    json.property("minor_gc_number", startingMinorGCNumber);
-    json.property("slice_number", startingSliceNumber);
+        json.property("removed_chunks", removedChunks); // #19
+    json.property("major_gc_number", startingMajorGCNumber); // #20
+    json.property("minor_gc_number", startingMinorGCNumber); // #21
+    json.property("slice_number", startingSliceNumber); // #22
 }
 
 void
@@ -653,21 +659,21 @@ Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice, JSONP
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
     TimeStamp originTime = TimeStamp::ProcessCreation();
 
-    json.property("slice", i);
-    json.property("pause", slice.duration(), JSONPrinter::MILLISECONDS);
-    json.property("reason", ExplainReason(slice.reason));
-    json.property("initial_state", gc::StateName(slice.initialState));
-    json.property("final_state", gc::StateName(slice.finalState));
-    json.property("budget", budgetDescription);
-    json.property("major_gc_number", startingMajorGCNumber);
+    json.property("slice", i); // JSON Property #1
+    json.property("pause", slice.duration(), JSONPrinter::MILLISECONDS); // #2
+    json.property("reason", ExplainReason(slice.reason)); // #3
+    json.property("initial_state", gc::StateName(slice.initialState)); // #4
+    json.property("final_state", gc::StateName(slice.finalState)); // #5
+    json.property("budget", budgetDescription); // #6
+    json.property("major_gc_number", startingMajorGCNumber); // #7
     if (thresholdTriggered) {
-        json.floatProperty("trigger_amount", triggerAmount, 0);
-        json.floatProperty("trigger_threshold", triggerThreshold, 0);
+        json.floatProperty("trigger_amount", triggerAmount, 0); // #8
+        json.floatProperty("trigger_threshold", triggerThreshold, 0); // #9
     }
     int64_t numFaults = slice.endFaults - slice.startFaults;
     if (numFaults != 0)
-        json.property("page_faults", numFaults);
-    json.property("start_timestamp", slice.start - originTime, JSONPrinter::SECONDS);
+        json.property("page_faults", numFaults); // #10
+    json.property("start_timestamp", slice.start - originTime, JSONPrinter::SECONDS); // #11
 }
 
 void
