@@ -25,7 +25,6 @@ function test () {
         domwindow.addEventListener("load", downloadOnLoad, true);
       },
       onCloseWindow: function(aXULWindow) {},
-      onWindowTitleChange: function(aXULWindow, aNewTitle) {}
     }
 
     Services.wm.addListener(listener);

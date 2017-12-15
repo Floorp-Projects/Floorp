@@ -103,14 +103,6 @@ interface nsIWindowMediator: nsISupports
     */
   [noscript] void updateWindowTimeStamp(in nsIXULWindow aWindow);
 
-  /** Call this method when a window's title changes. Listeners (see
-    * addListener) will be notified through their onWindowTitleChange method.
-    * @param aWindow the window whose title has changed
-    * @param inTitle the window's new title
-    */
-  [noscript] void updateWindowTitle(in nsIXULWindow aWindow,
-                                    in AString inTitle);
-
   /* z-ordering: */
 
   const unsigned long zLevelTop    = 1;
