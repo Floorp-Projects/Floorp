@@ -2795,7 +2795,8 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
     insertedTextNode = mComposition->GetContainerTextNode();
     insertedOffset = mComposition->XPOffsetInTextNode();
   } else {
-    transaction = CreateTxnForInsertText(aStringToInsert, aTextNode, aOffset);
+    transaction =
+      InsertTextTransaction::Create(*this, aStringToInsert, aTextNode, aOffset);
   }
 
   // Let listeners know what's up
@@ -2996,17 +2997,6 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
   }
 
   return rv;
-}
-
-already_AddRefed<InsertTextTransaction>
-EditorBase::CreateTxnForInsertText(const nsAString& aStringToInsert,
-                                   Text& aTextNode,
-                                   int32_t aOffset)
-{
-  RefPtr<InsertTextTransaction> transaction =
-    new InsertTextTransaction(aTextNode, aOffset, aStringToInsert, *this,
-                              &mRangeUpdater);
-  return transaction.forget();
 }
 
 nsresult

@@ -497,6 +497,8 @@ public:
 
   void SwitchTextDirectionTo(uint32_t aDirection);
 
+  RangeUpdater& RangeUpdaterRef() { return mRangeUpdater; }
+
 protected:
   nsresult DetermineCurrentDirection();
   void FireInputEvent();
@@ -612,14 +614,6 @@ protected:
                             nsINode** aRemovingNode,
                             int32_t* aOffset,
                             int32_t* aLength);
-
-  /**
-   * Create a transaction for inserting aStringToInsert into aTextNode.  Never
-   * returns null.
-   */
-  already_AddRefed<mozilla::InsertTextTransaction>
-    CreateTxnForInsertText(const nsAString& aStringToInsert, Text& aTextNode,
-                           int32_t aOffset);
 
   /**
    * Never returns null.
