@@ -1634,11 +1634,13 @@ EditorBase::JoinNodes(nsINode& aLeftNode,
 
   nsresult rv = NS_OK;
   RefPtr<JoinNodeTransaction> transaction =
-    CreateTxnForJoinNode(aLeftNode, aRightNode);
+    JoinNodeTransaction::MaybeCreate(*this, aLeftNode, aRightNode);
   if (transaction)  {
     rv = DoTransaction(transaction);
   }
 
+  // XXX Some other transactions manage range updater by themselves.
+  //     Why doesn't JoinNodeTransaction do it?
   mRangeUpdater.SelAdjJoinNodes(aLeftNode, aRightNode, *parent, offset,
                                 (int32_t)oldLeftNodeLen);
 
@@ -3043,20 +3045,6 @@ EditorBase::DeleteText(nsGenericDOMDataNode& aCharData,
   }
 
   return rv;
-}
-
-already_AddRefed<JoinNodeTransaction>
-EditorBase::CreateTxnForJoinNode(nsINode& aLeftNode,
-                                 nsINode& aRightNode)
-{
-  RefPtr<JoinNodeTransaction> joinNodeTransaction =
-    new JoinNodeTransaction(*this, aLeftNode, aRightNode);
-  // If it's not editable, the transaction shouldn't be recorded since it
-  // should never be undone/redone.
-  if (NS_WARN_IF(!joinNodeTransaction->CanDoIt())) {
-    return nullptr;
-  }
-  return joinNodeTransaction.forget();
 }
 
 struct SavedRange final

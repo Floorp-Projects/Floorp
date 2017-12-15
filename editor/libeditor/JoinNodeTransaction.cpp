@@ -18,6 +18,20 @@ namespace mozilla {
 
 using namespace dom;
 
+// static
+already_AddRefed<JoinNodeTransaction>
+JoinNodeTransaction::MaybeCreate(EditorBase& aEditorBase,
+                                 nsINode& aLeftNode,
+                                 nsINode& aRightNode)
+{
+  RefPtr<JoinNodeTransaction> transaction =
+    new JoinNodeTransaction(aEditorBase, aLeftNode, aRightNode);
+  if (NS_WARN_IF(!transaction->CanDoIt())) {
+    return nullptr;
+  }
+  return transaction.forget();
+}
+
 JoinNodeTransaction::JoinNodeTransaction(EditorBase& aEditorBase,
                                          nsINode& aLeftNode,
                                          nsINode& aRightNode)
