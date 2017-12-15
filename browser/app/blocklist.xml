@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1512488572398" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1511530749075" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i988" id="{b12785f5-d8d0-4530-a3ea-5c4263b85bef}">
       <prefs/>
@@ -3419,9 +3419,6 @@
     <certItem issuerName="MIG9MQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdBgNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOjA4BgNVBAsTMShjKSAyMDA4IFZlcmlTaWduLCBJbmMuIC0gRm9yIGF1dGhvcml6ZWQgdXNlIG9ubHkxODA2BgNVBAMTL1ZlcmlTaWduIFVuaXZlcnNhbCBSb290IENlcnRpZmljYXRpb24gQXV0aG9yaXR5">
       <serialNumber>Ai7cBJYqBE0I9NdyoZfRrw==</serialNumber>
     </certItem>
-    <certItem issuerName="MHYxCzAJBgNVBAYTAlVTMR0wGwYDVQQKExRTeW1hbnRlYyBDb3Jwb3JhdGlvbjEfMB0GA1UECxMWU3ltYW50ZWMgVHJ1c3QgTmV0d29yazEnMCUGA1UEAxMeU3ltYW50ZWMgV2ViIFBLSSBFQ0MgUm9vdCAtIEcx">
-      <serialNumber>KNhgX8XuJduYciIyatpOQg==</serialNumber>
-    </certItem>
     <certItem issuerName="MIGLMQswCQYDVQQGEwJVUzETMBEGA1UECBMKV2FzaGluZ3RvbjEQMA4GA1UEBxMHUmVkbW9uZDEeMBwGA1UEChMVTWljcm9zb2Z0IENvcnBvcmF0aW9uMRUwEwYDVQQLEwxNaWNyb3NvZnQgSVQxHjAcBgNVBAMTFU1pY3Jvc29mdCBJVCBTU0wgU0hBMg==">
       <serialNumber>WgAFElcDxFjoswSzjAABAAUSVw==</serialNumber>
     </certItem>
@@ -4147,6 +4144,9 @@
     </certItem>
     <certItem issuerName="MEUxCzAJBgNVBAYTAkNIMRUwEwYDVQQKEwxTd2lzc1NpZ24gQUcxHzAdBgNVBAMTFlN3aXNzU2lnbiBHb2xkIENBIC0gRzI=">
       <serialNumber>AIZ6Wq/4deFQzwC6NnFpUA==</serialNumber>
+    </certItem>
+    <certItem issuerName="MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy">
+      <serialNumber>AOfHzdPzlvw5</serialNumber>
     </certItem>
     <certItem issuerName="MDsxCzAJBgNVBAYTAkVTMREwDwYDVQQKDAhGTk1ULVJDTTEZMBcGA1UECwwQQUMgUkFJWiBGTk1ULVJDTQ==">
       <serialNumber>BA==</serialNumber>
@@ -5038,6 +5038,9 @@
     </certItem>
     <certItem issuerName="MHYxCzAJBgNVBAYTAlVTMR0wGwYDVQQKExRTeW1hbnRlYyBDb3Jwb3JhdGlvbjEfMB0GA1UECxMWU3ltYW50ZWMgVHJ1c3QgTmV0d29yazEnMCUGA1UEAxMeU3ltYW50ZWMgV2ViIFBLSSBFQ0MgUm9vdCAtIEcx">
       <serialNumber>QspbHxzWb41SX9TUhF1N1A==</serialNumber>
+    </certItem>
+    <certItem issuerName="MHYxCzAJBgNVBAYTAlVTMR0wGwYDVQQKExRTeW1hbnRlYyBDb3Jwb3JhdGlvbjEfMB0GA1UECxMWU3ltYW50ZWMgVHJ1c3QgTmV0d29yazEnMCUGA1UEAxMeU3ltYW50ZWMgV2ViIFBLSSBFQ0MgUm9vdCAtIEcx">
+      <serialNumber>KNhgX8XuJduYciIyatpOQg==</serialNumber>
     </certItem>
   </certItems>
 </blocklist>

@@ -14,12 +14,6 @@
 menulist {
   -moz-appearance: menulist;
   margin: 2px 4px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  background-color: -moz-Field;
   color: -moz-FieldText;
   text-shadow: none;
 }
@@ -48,27 +42,6 @@ menulist {
   font-style: italic;
   color: GrayText;
   margin-inline-start: 1ex !important;
-}
-
-/* ..... dropmarker ..... */
-
-menulist[disabled="true"]:hover:active > .menulist-dropmarker {
-  -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight;
-  padding: 1px;
-}
-
-menulist:hover:active > .menulist-dropmarker {
-  -moz-border-top-colors: ThreeDShadow ThreeDFace;
-  -moz-border-right-colors: ThreeDShadow ThreeDFace;
-  -moz-border-bottom-colors: ThreeDShadow ThreeDFace;
-  -moz-border-left-colors: ThreeDShadow ThreeDFace;
-  padding-top: 2px;
-  padding-bottom: 0px;
-  padding-inline-start: 2px;
-  padding-inline-end: 0px;
 }
 
 /* ..... focused state ..... */

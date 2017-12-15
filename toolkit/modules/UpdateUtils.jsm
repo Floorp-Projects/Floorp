@@ -138,20 +138,7 @@ function getDistributionPrefValue(aPrefName) {
 }
 
 function getSystemCapabilities() {
-  return "ISET:" + gInstructionSet + ",MEM:" + getMemoryMB() + getJAWS();
-}
-
-/**
- * Gets the appropriate update url string for whether a JAWS screen reader that
- * is incompatible with e10s is present on Windows. For platforms other than
- * Windows this returns an empty string which is easier for balrog to detect.
- */
-function getJAWS() {
-  if (AppConstants.platform != "win") {
-    return "";
-  }
-
-  return ",JAWS:" + (Services.appinfo.shouldBlockIncompatJaws ? "1" : "0");
+  return "ISET:" + gInstructionSet + ",MEM:" + getMemoryMB();
 }
 
 /**

@@ -29,35 +29,21 @@ listitem[selected="true"] {
   color: -moz-DialogText;
 }
 
-listbox:focus > listitem[selected="true"] {  
+listbox:focus > listitem[selected="true"] {
    background-color: Highlight;
    color: HighlightText;
 }
 
 /* ::::: listheader ::::: */
 
-listheader { 
+listheader {
   -moz-appearance: treeheadercell;
   -moz-box-align: center;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
-  background-color: -moz-Dialog;
   color: -moz-DialogText;
   padding: 0 4px;
 }
 
 listheader[sortable="true"]:hover:active {
-  border-top: 2px solid;
-  border-right: 1px solid;
-  border-bottom: 1px solid;
-  border-left: 2px solid;
-  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
-  -moz-border-right-colors: ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDShadow;
-  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
   padding-top: 1px;
   padding-inline-start: 5px;
   padding-inline-end: 4px;
