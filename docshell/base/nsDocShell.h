@@ -7,63 +7,63 @@
 #ifndef nsDocShell_h__
 #define nsDocShell_h__
 
-#include "nsITimer.h"
-#include "nsContentPolicyUtils.h"
-#include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIBaseWindow.h"
-#include "nsINetworkInterceptController.h"
-#include "nsIScrollable.h"
-#include "nsITextScroll.h"
-#include "nsIContentViewerContainer.h"
-#include "nsIDOMStorageManager.h"
-#include "nsDocLoader.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
-#include "mozilla/TimeStamp.h"
-#include "GeckoProfiler.h"
-#include "mozilla/dom/ProfileTimelineMarkerBinding.h"
-#include "mozilla/LinkedList.h"
-#include "jsapi.h"
 
-// Helper Classes
-#include "nsCOMPtr.h"
-#include "nsPoint.h" // mCurrent/mDefaultScrollbarPreferences
-#include "nsString.h"
+#include "mozilla/dom/ProfileTimelineMarkerBinding.h"
+
+#include "nsIAuthPromptProvider.h"
+#include "nsIBaseWindow.h"
+#include "nsIClipboardCommands.h"
+#include "nsIContentViewerContainer.h"
+#include "nsIDeprecationWarner.h"
+#include "nsIDocCharset.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellLoadInfo.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDOMStorageManager.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsILinkHandler.h"
+#include "nsILoadContext.h"
+#include "nsILoadURIDelegate.h"
+#include "nsINamed.h"
+#include "nsINetworkInterceptController.h"
+#include "nsIRefreshURI.h"
+#include "nsIScrollable.h"
+#include "nsITabParent.h"
+#include "nsITextScroll.h"
+#include "nsITimer.h"
+#include "nsIWebNavigation.h"
+#include "nsIWebPageDescriptor.h"
+#include "nsIWebProgressListener.h"
+#include "nsIWebShellServices.h"
+
 #include "nsAutoPtr.h"
-#include "nsThreadUtils.h"
+#include "nsCOMPtr.h"
+#include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
+#include "nsCRT.h"
+#include "nsDocLoader.h"
+#include "nsPoint.h" // mCurrent/mDefaultScrollbarPreferences
+#include "nsRect.h"
+#include "nsString.h"
+#include "nsThreadUtils.h"
+
+#include "GeckoProfiler.h"
+#include "jsapi.h"
+#include "prtime.h"
+#include "Units.h"
+
 #include "timeline/ObservedDocShell.h"
 #include "timeline/TimelineConsumers.h"
 #include "timeline/TimelineMarker.h"
 
-// Threshold value in ms for META refresh based redirects
-#define REFRESH_REDIRECT_TIMER 15000
-
 // Interfaces Needed
-#include "nsIDocCharset.h"
-#include "nsIInterfaceRequestor.h"
-#include "nsINamed.h"
-#include "nsIRefreshURI.h"
-#include "nsIWebNavigation.h"
-#include "nsIWebPageDescriptor.h"
-#include "nsIWebProgressListener.h"
-#include "nsIDocShellLoadInfo.h"
-#include "nsIAuthPromptProvider.h"
-#include "nsILoadContext.h"
-#include "nsIWebShellServices.h"
-#include "nsILinkHandler.h"
-#include "nsIClipboardCommands.h"
-#include "nsITabParent.h"
-#include "nsCRT.h"
-#include "prtime.h"
-#include "nsRect.h"
-#include "Units.h"
-#include "nsIDeprecationWarner.h"
-#include "nsILoadURIDelegate.h"
 
 namespace mozilla {
 class Encoding;
@@ -78,33 +78,35 @@ typedef uint32_t ScreenOrientationInternal;
 } // namespace dom
 } // namespace mozilla
 
-class nsDocShell;
-class nsDOMNavigationTiming;
-class nsGlobalWindowOuter;
-class nsGlobalWindowInner;
-class nsIController;
-class nsIScrollableFrame;
-class OnLinkClickEvent;
-class nsDSURIContentListener;
-class nsDocShellEditorData;
 class nsIClipboardDragDropHookList;
 class nsICommandManager;
 class nsIContentViewer;
+class nsIController;
+class nsIDocShellTreeOwner;
 class nsIDocument;
 class nsIDOMNode;
-class nsIDocShellTreeOwner;
 class nsIGlobalHistory2;
 class nsIHttpChannel;
 class nsIMutableArray;
 class nsIPrompt;
-class nsISHistory;
+class nsIScrollableFrame;
 class nsISecureBrowserUI;
+class nsISHistory;
 class nsIStringBundle;
 class nsIURIFixup;
 class nsIURILoader;
 class nsIWebBrowserFind;
 class nsIWidget;
+
+class nsDocShell;
+class nsDocShellEditorData;
+class nsDOMNavigationTiming;
+class nsDSURIContentListener;
+class nsGlobalWindowInner;
+class nsGlobalWindowOuter;
+
 class FramingChecker;
+class OnLinkClickEvent;
 
 /* internally used ViewMode types */
 enum ViewMode
