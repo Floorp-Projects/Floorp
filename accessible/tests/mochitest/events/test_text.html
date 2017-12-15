@@ -64,25 +64,25 @@
       this.invoke = function insertChildSpan_invoke() {
         // <span><span>333</span><span>22</span></span>
         if (aInsertAllTogether) {
-          var topSpan = document.createElement("span");
-          var fSpan = document.createElement("span");
+          let topSpan = document.createElement("span");
+          let fSpan = document.createElement("span");
           fSpan.textContent = "333";
           topSpan.appendChild(fSpan);
-          var sSpan = document.createElement("span");
+          let sSpan = document.createElement("span");
           sSpan.textContent = "22";
           topSpan.appendChild(sSpan);
 
           this.DOMNode.insertBefore(topSpan, this.DOMNode.childNodes[0]);
 
         } else {
-          var topSpan = document.createElement("span");
+          let topSpan = document.createElement("span");
           this.DOMNode.insertBefore(topSpan, this.DOMNode.childNodes[0]);
 
-          var fSpan = document.createElement("span");
+          let fSpan = document.createElement("span");
           fSpan.textContent = "333";
           topSpan.appendChild(fSpan);
 
-          var sSpan = document.createElement("span");
+          let sSpan = document.createElement("span");
           sSpan.textContent = "22";
           topSpan.appendChild(sSpan);
         }

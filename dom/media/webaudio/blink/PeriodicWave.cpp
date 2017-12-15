@@ -274,7 +274,11 @@ void PeriodicWave::createBandLimitedTables(float fundamentalFrequency,
 
     // For the first range (which has the highest power), calculate
     // its peak value then compute normalization scale.
-    if (!m_disableNormalization && !rangeIndex) {
+    if (m_disableNormalization) {
+      // See Bug 1424906, results need to be scaled by 0.5 even
+      // when normalization is disabled.
+      m_normalizationScale = 0.5;
+    } else if (!rangeIndex) {
         float maxValue;
         maxValue = AudioBufferPeakValue(data, m_periodicWaveSize);
 
@@ -283,9 +287,7 @@ void PeriodicWave::createBandLimitedTables(float fundamentalFrequency,
     }
 
     // Apply normalization scale.
-    if (!m_disableNormalization) {
-      AudioBufferInPlaceScale(data, m_normalizationScale, m_periodicWaveSize);
-    }
+    AudioBufferInPlaceScale(data, m_normalizationScale, m_periodicWaveSize);
 }
 
 void PeriodicWave::generateBasicWaveform(OscillatorType shape)

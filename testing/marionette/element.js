@@ -31,6 +31,8 @@ const {
   FIRST_ORDERED_NODE_TYPE,
   ORDERED_NODE_ITERATOR_TYPE,
 } = Ci.nsIDOMXPathResult;
+const ELEMENT_NODE = 1;
+const DOCUMENT_NODE = 9;
 
 const XBLNS = "http://www.mozilla.org/xbl";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -1090,7 +1092,7 @@ element.isDOMElement = function(node) {
   return typeof node == "object" &&
       node !== null &&
       "nodeType" in node &&
-      node.nodeType === node.ELEMENT_NODE &&
+      [ELEMENT_NODE, DOCUMENT_NODE].includes(node.nodeType) &&
       !element.isXULElement(node);
 };
 

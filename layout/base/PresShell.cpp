@@ -4975,7 +4975,7 @@ PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems
   // use the rectangle to create the surface
   nsIntRect pixelArea = aArea.ToOutsidePixels(pc->AppUnitsPerDevPixel());
 
-  // if the image should not be resized, the scale, relative to the original image, must be 1
+  // if the image should not be resized, scale must be 1
   float scale = 1.0;
   nsIntRect rootScreenRect =
     GetRootFrame()->GetScreenRectInAppUnits().ToNearestPixels(
@@ -4997,21 +4997,23 @@ PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems
       // get best height/width relative to screensize
       float bestHeight = float(maxHeight)*RELATIVE_SCALEFACTOR;
       float bestWidth = float(maxWidth)*RELATIVE_SCALEFACTOR;
-      // get scalefactor to reach bestWidth
-      scale = bestWidth / float(pixelArea.width);
+      // calculate scale for bestWidth
+      float adjustedScale = bestWidth / float(pixelArea.width);
       // get the worst height (height when width is perfect)
-      float worstHeight = float(pixelArea.height)*scale;
+      float worstHeight = float(pixelArea.height)*adjustedScale;
       // get the difference of best and worst height
       float difference = bestHeight - worstHeight;
-      // half the difference and add it to worstHeight,
-      // then get scalefactor to reach this
-      scale = (worstHeight + difference / 2) / float(pixelArea.height);
+      // halve the difference and add it to worstHeight to get
+      // the best compromise between bestHeight and bestWidth,
+      // then calculate the corresponding scale factor
+      adjustedScale = (worstHeight + difference / 2) / float(pixelArea.height);
+      // prevent upscaling
+      scale = std::min(scale, adjustedScale);
     } else {
       // get half of max screensize
       nscoord maxWidth = pc->AppUnitsToDevPixels(maxSize.width >> 1);
       nscoord maxHeight = pc->AppUnitsToDevPixels(maxSize.height >> 1);
       if (pixelArea.width > maxWidth || pixelArea.height > maxHeight) {
-        scale = 1.0;
         // divide the maximum size by the image size in both directions. Whichever
         // direction produces the smallest result determines how much should be
         // scaled.

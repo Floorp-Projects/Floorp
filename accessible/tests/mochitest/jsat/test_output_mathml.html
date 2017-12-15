@@ -19,152 +19,152 @@
       var tests = [{
           accOrElmOrID: "math-1",
           expectedUtterance: [
-            [{"string": "open-fence"},"(","x",",","y",{"string": "close-fence"},")"],
-            ["(",{"string": "open-fence"},"x",",","y",")",{"string": "close-fence"}]
+            [{"string": "open-fence"}, "(", "x", ",", "y", {"string": "close-fence"}, ")"],
+            ["(", {"string": "open-fence"}, "x", ",", "y", ")", {"string": "close-fence"}]
           ],
           expectedBraille: [
-            [{"string": "open-fenceAbbr"},"(","x",",","y",{"string": "close-fenceAbbr"},")"],
-            ["(",{"string": "open-fenceAbbr"},"x",",","y",")",{"string": "close-fenceAbbr"}]
+            [{"string": "open-fenceAbbr"}, "(", "x", ",", "y", {"string": "close-fenceAbbr"}, ")"],
+            ["(", {"string": "open-fenceAbbr"}, "x", ",", "y", ")", {"string": "close-fenceAbbr"}]
           ]
         }, {
           accOrElmOrID: "mfrac-1",
           expectedUtterance: [
-            [{"string": "mathmlfraction"},{"string": "numerator"},"a",{"string": "denominator"},"b"],
-            ["a",{"string": "numerator"},"b",{"string": "denominator"},{"string": "mathmlfraction"}]
+            [{"string": "mathmlfraction"}, {"string": "numerator"}, "a", {"string": "denominator"}, "b"],
+            ["a", {"string": "numerator"}, "b", {"string": "denominator"}, {"string": "mathmlfraction"}]
           ],
           expectedBraille: [
-            [{"string": "mathmlfractionAbbr"},{"string": "numeratorAbbr"},"a",{"string": "denominatorAbbr"},"b"],
-            ["a",{"string": "numeratorAbbr"},"b",{"string": "denominatorAbbr"},{"string": "mathmlfractionAbbr"}]
+            [{"string": "mathmlfractionAbbr"}, {"string": "numeratorAbbr"}, "a", {"string": "denominatorAbbr"}, "b"],
+            ["a", {"string": "numeratorAbbr"}, "b", {"string": "denominatorAbbr"}, {"string": "mathmlfractionAbbr"}]
           ]
         }, {
           accOrElmOrID: "mfrac-2",
           expectedUtterance: [
-            [{"string": "mathmlfractionwithoutbar"},{"string": "numerator"},"a",{"string": "denominator"},"b"],
-            ["a",{"string": "numerator"},"b",{"string": "denominator"},{"string": "mathmlfractionwithoutbar"}]
+            [{"string": "mathmlfractionwithoutbar"}, {"string": "numerator"}, "a", {"string": "denominator"}, "b"],
+            ["a", {"string": "numerator"}, "b", {"string": "denominator"}, {"string": "mathmlfractionwithoutbar"}]
           ],
           expectedBraille: [
-            [{"string": "mathmlfractionwithoutbarAbbr"},{"string": "numeratorAbbr"},"a",{"string": "denominatorAbbr"},"b"],
-            ["a",{"string": "numeratorAbbr"},"b",{"string": "denominatorAbbr"},{"string": "mathmlfractionwithoutbarAbbr"}]
+            [{"string": "mathmlfractionwithoutbarAbbr"}, {"string": "numeratorAbbr"}, "a", {"string": "denominatorAbbr"}, "b"],
+            ["a", {"string": "numeratorAbbr"}, "b", {"string": "denominatorAbbr"}, {"string": "mathmlfractionwithoutbarAbbr"}]
           ]
         }, {
           accOrElmOrID: "msub-1",
           expectedUtterance: [
-            [{"string": "mathmlscripted"},{"string": "base"},"a",{"string": "subscript"},"b"],
-            ["a",{"string": "base"},"b",{"string": "subscript"},{"string": "mathmlscripted"}]
+            [{"string": "mathmlscripted"}, {"string": "base"}, "a", {"string": "subscript"}, "b"],
+            ["a", {"string": "base"}, "b", {"string": "subscript"}, {"string": "mathmlscripted"}]
           ],
           expectedBraille: [
-            [{"string": "mathmlscriptedAbbr"},{"string": "baseAbbr"},"a",{"string": "subscriptAbbr"},"b"],
-            ["a",{"string": "baseAbbr"},"b",{"string": "subscriptAbbr"},{"string": "mathmlscriptedAbbr"}]
+            [{"string": "mathmlscriptedAbbr"}, {"string": "baseAbbr"}, "a", {"string": "subscriptAbbr"}, "b"],
+            ["a", {"string": "baseAbbr"}, "b", {"string": "subscriptAbbr"}, {"string": "mathmlscriptedAbbr"}]
           ]
         }, {
           accOrElmOrID: "msup-1",
           expectedUtterance: [
-            [{"string": "mathmlscripted"},{"string": "base"},"a",{"string": "superscript"},"b"],
-            ["a",{"string": "base"},"b",{"string": "superscript"},{"string": "mathmlscripted"}]
+            [{"string": "mathmlscripted"}, {"string": "base"}, "a", {"string": "superscript"}, "b"],
+            ["a", {"string": "base"}, "b", {"string": "superscript"}, {"string": "mathmlscripted"}]
           ],
           expectedBraille: [
-            [{"string": "mathmlscriptedAbbr"},{"string": "baseAbbr"},"a",{"string": "superscriptAbbr"},"b"],
-            ["a",{"string": "baseAbbr"},"b",{"string": "superscriptAbbr"},{"string": "mathmlscriptedAbbr"}]
+            [{"string": "mathmlscriptedAbbr"}, {"string": "baseAbbr"}, "a", {"string": "superscriptAbbr"}, "b"],
+            ["a", {"string": "baseAbbr"}, "b", {"string": "superscriptAbbr"}, {"string": "mathmlscriptedAbbr"}]
           ]
         }, {
           accOrElmOrID: "msubsup-1",
           expectedUtterance: [
-            [{"string": "mathmlscripted"},{"string": "base"},"a",{"string": "subscript"},"b",{"string": "superscript"},"c"],
-            ["a",{"string": "base"},"b",{"string": "subscript"},"c",{"string": "superscript"},{"string": "mathmlscripted"}]
+            [{"string": "mathmlscripted"}, {"string": "base"}, "a", {"string": "subscript"}, "b", {"string": "superscript"}, "c"],
+            ["a", {"string": "base"}, "b", {"string": "subscript"}, "c", {"string": "superscript"}, {"string": "mathmlscripted"}]
           ],
           expectedBraille: [
-            [{"string": "mathmlscriptedAbbr"},{"string": "baseAbbr"},"a",{"string": "subscriptAbbr"},"b",{"string": "superscriptAbbr"},"c"],
-            ["a",{"string": "baseAbbr"},"b",{"string": "subscriptAbbr"},"c",{"string": "superscriptAbbr"},{"string": "mathmlscriptedAbbr"}]
+            [{"string": "mathmlscriptedAbbr"}, {"string": "baseAbbr"}, "a", {"string": "subscriptAbbr"}, "b", {"string": "superscriptAbbr"}, "c"],
+            ["a", {"string": "baseAbbr"}, "b", {"string": "subscriptAbbr"}, "c", {"string": "superscriptAbbr"}, {"string": "mathmlscriptedAbbr"}]
           ]
         }, {
           accOrElmOrID: "mmultiscripts-1",
           expectedUtterance: [
-            [{"string": "mathmlscripted"},{"string": "base"},"a",{"string": "subscript"},"b",{"string": "superscript"},"c",{"string": "superscript"},"d",{"string": "presubscript"},"e",{"string": "presubscript"},"f",{"string": "presuperscript"},"g"],
-            ["a",{"string": "base"},"b",{"string": "subscript"},"c",{"string": "superscript"},"d",{"string": "superscript"},"e",{"string": "presubscript"},"f",{"string": "presubscript"},"g",{"string": "presuperscript"},{"string": "mathmlscripted"}]
+            [{"string": "mathmlscripted"}, {"string": "base"}, "a", {"string": "subscript"}, "b", {"string": "superscript"}, "c", {"string": "superscript"}, "d", {"string": "presubscript"}, "e", {"string": "presubscript"}, "f", {"string": "presuperscript"}, "g"],
+            ["a", {"string": "base"}, "b", {"string": "subscript"}, "c", {"string": "superscript"}, "d", {"string": "superscript"}, "e", {"string": "presubscript"}, "f", {"string": "presubscript"}, "g", {"string": "presuperscript"}, {"string": "mathmlscripted"}]
           ],
           expectedBraille: [
-            [{"string": "mathmlscriptedAbbr"},{"string": "baseAbbr"},"a",{"string": "subscriptAbbr"},"b",{"string": "superscriptAbbr"},"c",{"string": "superscriptAbbr"},"d",{"string": "presubscriptAbbr"},"e",{"string": "presubscriptAbbr"},"f",{"string": "presuperscriptAbbr"},"g"],
-            ["a",{"string": "baseAbbr"},"b",{"string": "subscriptAbbr"},"c",{"string": "superscriptAbbr"},"d",{"string": "superscriptAbbr"},"e",{"string": "presubscriptAbbr"},"f",{"string": "presubscriptAbbr"},"g",{"string": "presuperscriptAbbr"},{"string": "mathmlscriptedAbbr"}]
+            [{"string": "mathmlscriptedAbbr"}, {"string": "baseAbbr"}, "a", {"string": "subscriptAbbr"}, "b", {"string": "superscriptAbbr"}, "c", {"string": "superscriptAbbr"}, "d", {"string": "presubscriptAbbr"}, "e", {"string": "presubscriptAbbr"}, "f", {"string": "presuperscriptAbbr"}, "g"],
+            ["a", {"string": "baseAbbr"}, "b", {"string": "subscriptAbbr"}, "c", {"string": "superscriptAbbr"}, "d", {"string": "superscriptAbbr"}, "e", {"string": "presubscriptAbbr"}, "f", {"string": "presubscriptAbbr"}, "g", {"string": "presuperscriptAbbr"}, {"string": "mathmlscriptedAbbr"}]
           ]
         }, {
           accOrElmOrID: "munder-1",
           expectedUtterance: [
-            [{"string": "mathmlscripted"},{"string": "base"},"a",{"string": "underscript"},"b"],
-            ["a",{"string": "base"},"b",{"string": "underscript"},{"string": "mathmlscripted"}]
+            [{"string": "mathmlscripted"}, {"string": "base"}, "a", {"string": "underscript"}, "b"],
+            ["a", {"string": "base"}, "b", {"string": "underscript"}, {"string": "mathmlscripted"}]
           ],
           expectedBraille: [
-            [{"string": "mathmlscriptedAbbr"},{"string": "baseAbbr"},"a",{"string": "underscriptAbbr"},"b"],
-            ["a",{"string": "baseAbbr"},"b",{"string": "underscriptAbbr"},{"string": "mathmlscriptedAbbr"}]
+            [{"string": "mathmlscriptedAbbr"}, {"string": "baseAbbr"}, "a", {"string": "underscriptAbbr"}, "b"],
+            ["a", {"string": "baseAbbr"}, "b", {"string": "underscriptAbbr"}, {"string": "mathmlscriptedAbbr"}]
           ]
         }, {
           accOrElmOrID: "mover-1",
           expectedUtterance: [
-            [{"string": "mathmlscripted"},{"string": "base"},"a",{"string": "overscript"},"b"],
-            ["a",{"string": "base"},"b",{"string": "overscript"},{"string": "mathmlscripted"}]
+            [{"string": "mathmlscripted"}, {"string": "base"}, "a", {"string": "overscript"}, "b"],
+            ["a", {"string": "base"}, "b", {"string": "overscript"}, {"string": "mathmlscripted"}]
           ],
           expectedBraille: [
-            [{"string": "mathmlscriptedAbbr"},{"string": "baseAbbr"},"a",{"string": "overscriptAbbr"},"b"],
-            ["a",{"string": "baseAbbr"},"b",{"string": "overscriptAbbr"},{"string": "mathmlscriptedAbbr"}]
+            [{"string": "mathmlscriptedAbbr"}, {"string": "baseAbbr"}, "a", {"string": "overscriptAbbr"}, "b"],
+            ["a", {"string": "baseAbbr"}, "b", {"string": "overscriptAbbr"}, {"string": "mathmlscriptedAbbr"}]
           ]
         }, {
           accOrElmOrID: "munderover-1",
           expectedUtterance: [
-            [{"string": "mathmlscripted"},{"string": "base"},"a",{"string": "underscript"},"b",{"string": "overscript"},"c"],
-            ["a",{"string": "base"},"b",{"string": "underscript"},"c",{"string": "overscript"},{"string": "mathmlscripted"}]
+            [{"string": "mathmlscripted"}, {"string": "base"}, "a", {"string": "underscript"}, "b", {"string": "overscript"}, "c"],
+            ["a", {"string": "base"}, "b", {"string": "underscript"}, "c", {"string": "overscript"}, {"string": "mathmlscripted"}]
           ],
           expectedBraille: [
-            [{"string": "mathmlscriptedAbbr"},{"string": "baseAbbr"},"a",{"string": "underscriptAbbr"},"b",{"string": "overscriptAbbr"},"c"],
-            ["a",{"string": "baseAbbr"},"b",{"string": "underscriptAbbr"},"c",{"string": "overscriptAbbr"},{"string": "mathmlscriptedAbbr"}]
+            [{"string": "mathmlscriptedAbbr"}, {"string": "baseAbbr"}, "a", {"string": "underscriptAbbr"}, "b", {"string": "overscriptAbbr"}, "c"],
+            ["a", {"string": "baseAbbr"}, "b", {"string": "underscriptAbbr"}, "c", {"string": "overscriptAbbr"}, {"string": "mathmlscriptedAbbr"}]
           ]
         }, {
           accOrElmOrID: "mroot-1",
           expectedUtterance: [
-            [{"string": "mathmlroot"},{"string": "base"},"a",{"string": "root-index"},"b"],
-            ["a",{"string": "base"},"b",{"string": "root-index"},{"string": "mathmlroot"}]
+            [{"string": "mathmlroot"}, {"string": "base"}, "a", {"string": "root-index"}, "b"],
+            ["a", {"string": "base"}, "b", {"string": "root-index"}, {"string": "mathmlroot"}]
           ],
           expectedBraille: [
-            [{"string": "mathmlrootAbbr"},{"string": "baseAbbr"},"a",{"string": "root-indexAbbr"},"b"],
-            ["a",{"string": "baseAbbr"},"b",{"string": "root-indexAbbr"},{"string": "mathmlrootAbbr"}]
+            [{"string": "mathmlrootAbbr"}, {"string": "baseAbbr"}, "a", {"string": "root-indexAbbr"}, "b"],
+            ["a", {"string": "baseAbbr"}, "b", {"string": "root-indexAbbr"}, {"string": "mathmlrootAbbr"}]
           ]
         }, {
           accOrElmOrID: "mtable-1",
           expectedUtterance: [
-            [{"string": "mathmltable"},{"string": "tblColumnInfo","count": 3},{"string": "tblRowInfo","count": 2},{"string": "columnInfo","args": [1]},{"string": "rowInfo","args": [1]},"a",{"string": "columnInfo","args": [2]},{"string": "rowInfo","args": [1]},"b",{"string": "columnInfo","args": [3]},{"string": "rowInfo","args": [1]},"c",{"string": "columnInfo","args": [1]},{"string": "rowInfo","args": [2]},"d",{"string": "columnInfo","args": [2]},{"string": "rowInfo","args": [2]},"e",{"string": "columnInfo","args": [3]},{"string": "rowInfo","args": [2]},"f"],
-            ["a",{"string": "columnInfo","args": [1]},{"string": "rowInfo","args": [1]},"b",{"string": "columnInfo","args": [2]},{"string": "rowInfo","args": [1]},"c",{"string": "columnInfo","args": [3]},{"string": "rowInfo","args": [1]},"d",{"string": "columnInfo","args": [1]},{"string": "rowInfo","args": [2]},"e",{"string": "columnInfo","args": [2]},{"string": "rowInfo","args": [2]},"f",{"string": "columnInfo","args": [3]},{"string": "rowInfo","args": [2]},{"string": "mathmltable"},{"string": "tblColumnInfo","count": 3},{"string": "tblRowInfo","count": 2}]
+            [{"string": "mathmltable"}, {"string": "tblColumnInfo", "count": 3}, {"string": "tblRowInfo", "count": 2}, {"string": "columnInfo", "args": [1]}, {"string": "rowInfo", "args": [1]}, "a", {"string": "columnInfo", "args": [2]}, {"string": "rowInfo", "args": [1]}, "b", {"string": "columnInfo", "args": [3]}, {"string": "rowInfo", "args": [1]}, "c", {"string": "columnInfo", "args": [1]}, {"string": "rowInfo", "args": [2]}, "d", {"string": "columnInfo", "args": [2]}, {"string": "rowInfo", "args": [2]}, "e", {"string": "columnInfo", "args": [3]}, {"string": "rowInfo", "args": [2]}, "f"],
+            ["a", {"string": "columnInfo", "args": [1]}, {"string": "rowInfo", "args": [1]}, "b", {"string": "columnInfo", "args": [2]}, {"string": "rowInfo", "args": [1]}, "c", {"string": "columnInfo", "args": [3]}, {"string": "rowInfo", "args": [1]}, "d", {"string": "columnInfo", "args": [1]}, {"string": "rowInfo", "args": [2]}, "e", {"string": "columnInfo", "args": [2]}, {"string": "rowInfo", "args": [2]}, "f", {"string": "columnInfo", "args": [3]}, {"string": "rowInfo", "args": [2]}, {"string": "mathmltable"}, {"string": "tblColumnInfo", "count": 3}, {"string": "tblRowInfo", "count": 2}]
           ],
           expectedBraille: [
-            [{"string": "mathmltableAbbr"},{"string": "tblColumnInfoAbbr","count": 3},{"string": "tblRowInfoAbbr","count": 2},{"string": "cellInfoAbbr","args": [1,1]},"a",{"string": "cellInfoAbbr","args": [2,1]},"b",{"string": "cellInfoAbbr","args": [3,1]},"c",{"string": "cellInfoAbbr","args": [1,2]},"d",{"string": "cellInfoAbbr","args": [2,2]},"e",{"string": "cellInfoAbbr","args": [3,2]},"f"],
-            ["a",{"string": "cellInfoAbbr","args": [1,1]},"b",{"string": "cellInfoAbbr","args": [2,1]},"c",{"string": "cellInfoAbbr","args": [3,1]},"d",{"string": "cellInfoAbbr","args": [1,2]},"e",{"string": "cellInfoAbbr","args": [2,2]},"f",{"string": "cellInfoAbbr","args": [3,2]},{"string": "mathmltableAbbr"},{"string": "tblColumnInfoAbbr","count": 3},{"string": "tblRowInfoAbbr","count": 2}]
+            [{"string": "mathmltableAbbr"}, {"string": "tblColumnInfoAbbr", "count": 3}, {"string": "tblRowInfoAbbr", "count": 2}, {"string": "cellInfoAbbr", "args": [1, 1]}, "a", {"string": "cellInfoAbbr", "args": [2, 1]}, "b", {"string": "cellInfoAbbr", "args": [3, 1]}, "c", {"string": "cellInfoAbbr", "args": [1, 2]}, "d", {"string": "cellInfoAbbr", "args": [2, 2]}, "e", {"string": "cellInfoAbbr", "args": [3, 2]}, "f"],
+            ["a", {"string": "cellInfoAbbr", "args": [1, 1]}, "b", {"string": "cellInfoAbbr", "args": [2, 1]}, "c", {"string": "cellInfoAbbr", "args": [3, 1]}, "d", {"string": "cellInfoAbbr", "args": [1, 2]}, "e", {"string": "cellInfoAbbr", "args": [2, 2]}, "f", {"string": "cellInfoAbbr", "args": [3, 2]}, {"string": "mathmltableAbbr"}, {"string": "tblColumnInfoAbbr", "count": 3}, {"string": "tblRowInfoAbbr", "count": 2}]
           ]
       }, {
           accOrElmOrID: "menclose-1",
           expectedUtterance: [
-            [{"string": "mathmlenclosed"},{"string": "notation-longdiv"},"a"],
-            ["a",{"string": "notation-longdiv"},{"string": "mathmlenclosed"}]
+            [{"string": "mathmlenclosed"}, {"string": "notation-longdiv"}, "a"],
+            ["a", {"string": "notation-longdiv"}, {"string": "mathmlenclosed"}]
           ],
           expectedBraille: [
-            [{"string": "mathmlenclosedAbbr"},{"string": "notation-longdivAbbr"},"a"],
-            ["a",{"string": "notation-longdivAbbr"},{"string": "mathmlenclosedAbbr"}]
+            [{"string": "mathmlenclosedAbbr"}, {"string": "notation-longdivAbbr"}, "a"],
+            ["a", {"string": "notation-longdivAbbr"}, {"string": "mathmlenclosedAbbr"}]
           ]
         }, {
           accOrElmOrID: "menclose-2",
           expectedUtterance: [
-            [{"string": "mathmlenclosed"},{"string": "notation-circle"},"a"],
-            ["a",{"string": "notation-circle"},{"string": "mathmlenclosed"}]
+            [{"string": "mathmlenclosed"}, {"string": "notation-circle"}, "a"],
+            ["a", {"string": "notation-circle"}, {"string": "mathmlenclosed"}]
           ],
           expectedBraille: [
-            [{"string": "mathmlenclosedAbbr"},{"string": "notation-circleAbbr"},"a"],
-            ["a",{"string": "notation-circleAbbr"},{"string": "mathmlenclosedAbbr"}]
+            [{"string": "mathmlenclosedAbbr"}, {"string": "notation-circleAbbr"}, "a"],
+            ["a", {"string": "notation-circleAbbr"}, {"string": "mathmlenclosedAbbr"}]
           ]
         }, {
           accOrElmOrID: "menclose-3",
           expectedUtterance: [
-            [{"string": "mathmlenclosed"},{"string": "notation-left"},{"string": "notation-top"},{"string": "notation-bottom"},"a"],
-            ["a",{"string": "notation-left"},{"string": "notation-top"},{"string": "notation-bottom"},{"string": "mathmlenclosed"}]
+            [{"string": "mathmlenclosed"}, {"string": "notation-left"}, {"string": "notation-top"}, {"string": "notation-bottom"}, "a"],
+            ["a", {"string": "notation-left"}, {"string": "notation-top"}, {"string": "notation-bottom"}, {"string": "mathmlenclosed"}]
           ],
           expectedBraille: [
-            [{"string": "mathmlenclosedAbbr"},{"string": "notation-leftAbbr"},{"string": "notation-topAbbr"},{"string": "notation-bottomAbbr"},"a"],
-            ["a",{"string": "notation-leftAbbr"},{"string": "notation-topAbbr"},{"string": "notation-bottomAbbr"},{"string": "mathmlenclosedAbbr"}]
+            [{"string": "mathmlenclosedAbbr"}, {"string": "notation-leftAbbr"}, {"string": "notation-topAbbr"}, {"string": "notation-bottomAbbr"}, "a"],
+            ["a", {"string": "notation-leftAbbr"}, {"string": "notation-topAbbr"}, {"string": "notation-bottomAbbr"}, {"string": "mathmlenclosedAbbr"}]
           ]
         }];
 

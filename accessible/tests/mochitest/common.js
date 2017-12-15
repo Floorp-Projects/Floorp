@@ -424,7 +424,7 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags) {
     case "interfaces": {
       var ifaces = (accTree[prop] instanceof Array) ?
         accTree[prop] : [ accTree[prop] ];
-      for (var i = 0; i < ifaces.length; i++) {
+      for (let i = 0; i < ifaces.length; i++) {
         ok((acc instanceof ifaces[i]),
            "No " + ifaces[i] + " interface on " + prettyName(acc));
       }
@@ -457,8 +457,8 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags) {
     case "textAttrs": {
       var prevOffset = -1;
       for (var offset in accTree[prop]) {
-        if (prevOffset != - 1) {
-          var attrs = accTree[prop][prevOffset];
+        if (prevOffset != -1) {
+          let attrs = accTree[prop][prevOffset];
           testTextAttrs(acc, prevOffset, attrs, { }, prevOffset, +offset, true);
         }
         prevOffset = +offset;
@@ -466,7 +466,7 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags) {
 
       if (prevOffset != -1) {
         var charCount = getAccessible(acc, [nsIAccessibleText]).characterCount;
-        var attrs = accTree[prop][prevOffset];
+        let attrs = accTree[prop][prevOffset];
         testTextAttrs(acc, prevOffset, attrs, { }, prevOffset, charCount, true);
       }
 
@@ -487,7 +487,7 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags) {
     var childCount = children.length;
 
     if (accTree.children.length != childCount) {
-      for (var i = 0; i < Math.max(accTree.children.length, childCount); i++) {
+      for (let i = 0; i < Math.max(accTree.children.length, childCount); i++) {
         var accChild = null, testChild = null;
         try {
           testChild = accTree.children[i];
@@ -516,8 +516,8 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags) {
       }
     } else {
       if (aFlags & kSkipTreeFullCheck) {
-        for (var i = 0; i < childCount; i++) {
-          var child = children.queryElementAt(i, nsIAccessible);
+        for (let i = 0; i < childCount; i++) {
+          let child = children.queryElementAt(i, nsIAccessible);
           testAccessibleTree(child, accTree.children[i], aFlags);
         }
         return;
@@ -540,7 +540,7 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags) {
          "Wrong last child of " + prettyName(acc));
 
       for (var i = 0; i < childCount; i++) {
-        var child = children.queryElementAt(i, nsIAccessible);
+        let child = children.queryElementAt(i, nsIAccessible);
 
         // nsIAccessible::parent
         var parent = null;
@@ -724,8 +724,8 @@ function getTextFromClipboard() {
   trans.addDataFlavor("text/unicode");
   clip.getData(trans, clip.kGlobalClipboard);
 
-  var str = new Object();
-  var strLength = new Object();
+  var str = {};
+  var strLength = {};
   trans.getTransferData("text/unicode", str, strLength);
 
   if (str)
@@ -766,7 +766,7 @@ function getAccessibleDOMNodeID(accessible) {
  */
 function prettyName(aIdentifier) {
   if (aIdentifier instanceof Array) {
-    var msg = "";
+    let msg = "";
     for (var idx = 0; idx < aIdentifier.length; idx++) {
       if (msg != "")
         msg += ", ";
@@ -779,7 +779,7 @@ function prettyName(aIdentifier) {
   if (aIdentifier instanceof nsIAccessible) {
     var acc = getAccessible(aIdentifier);
     var domID = getAccessibleDOMNodeID(acc);
-    var msg = "[";
+    let msg = "[";
     try {
       if (Services.appinfo.browserTabsRemoteAutostart) {
         if (domID) {

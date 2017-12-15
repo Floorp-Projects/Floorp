@@ -43,7 +43,7 @@
       this.__proto__ = new updateAttribute(aID, "aria-hidden",
                                            aIsDefined ? "true" : "false");
 
-      this.finalCheck = function updateARIAHidden() {
+      this.finalCheck = function updateARIAHidden_finalCheck() {
         if (aIsDefined) {
           testAttrs(aID, {"hidden": "true"}, true);
           testAttrs(aChildId, {"hidden": "true"}, true);

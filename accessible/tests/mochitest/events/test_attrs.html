@@ -49,12 +49,12 @@
       gQueue = new eventQueue();
 
       var id = "textbox", noTargetId = "textarea";
-      var checker =
+      let checker =
         new eventFromInputChecker(EVENT_FOCUS, id, "false", noTargetId);
       gQueue.push(new synthFocus(id, checker));
 
       if (!MAC) { // Mac failure is bug 541093
-        var checker =
+        checker =
           new eventFromInputChecker(EVENT_TEXT_CARET_MOVED, id, "true", noTargetId);
         gQueue.push(new synthHomeKey(id, checker));
       }

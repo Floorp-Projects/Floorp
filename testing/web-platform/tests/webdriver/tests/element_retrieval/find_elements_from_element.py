@@ -75,3 +75,13 @@ def test_xhtml_namespace(session, using, value):
 
     found_element = value[0]
     assert_same_element(session, found_element, expected)
+
+
+def test_parent_htmldocument(session):
+    session.url = inline("")
+    from_element = session.execute_script("return document.documentElement")
+
+    response = find_elements(session, from_element.id, "xpath", "..")
+    value = assert_success(response)
+    assert isinstance(value, list)
+    assert len(value) == 1
