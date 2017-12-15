@@ -20,7 +20,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "735bb9022535"
+        "revision": "2f0f1171d4fa"
     }, 
     "as": {
         "platforms": [
@@ -60,7 +60,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "a1bf5a9c10a1"
+        "revision": "b0b362d6ed64"
     }, 
     "bn-BD": {
         "platforms": [
@@ -99,7 +99,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "1c2e6fbc3b53"
+        "revision": "cb189f5889c8"
     }, 
     "cak": {
         "platforms": [
@@ -115,7 +115,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "e456a1253fdd"
+        "revision": "4b0ae535d5cf"
     }, 
     "cy": {
         "platforms": [
@@ -179,7 +179,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "efe9c3496881"
+        "revision": "3b70d9f04291"
     }, 
     "es-AR": {
         "platforms": [
@@ -251,7 +251,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "12fee9bf99c9"
+        "revision": "faada0b76894"
     }, 
     "fr": {
         "platforms": [
@@ -307,7 +307,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "ad5427bbefa0"
+        "revision": "2de6b2e32199"
     }, 
     "he": {
         "platforms": [
@@ -363,7 +363,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "74c3a633a5b3"
+        "revision": "ad56291b05a7"
     }, 
     "is": {
         "platforms": [
@@ -395,7 +395,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "9926214b24b8"
+        "revision": "ce0ebf5ca5a0"
     }, 
     "kab": {
         "platforms": [
@@ -403,7 +403,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "80d6b88b83f2"
+        "revision": "8bf0bda49089"
     }, 
     "kk": {
         "platforms": [
