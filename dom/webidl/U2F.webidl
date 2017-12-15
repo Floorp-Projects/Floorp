@@ -11,7 +11,7 @@
 
 [NoInterfaceObject]
 interface GlobalU2F {
-  [Throws, Pref="security.webauth.u2f"]
+  [SecureContext, Throws, Pref="security.webauth.u2f"]
   readonly attribute U2F u2f;
 };
 
@@ -67,7 +67,7 @@ dictionary SignResponse {
 callback U2FRegisterCallback = void(RegisterResponse response);
 callback U2FSignCallback = void(SignResponse response);
 
-[Pref="security.webauth.u2f"]
+[SecureContext, Pref="security.webauth.u2f"]
 interface U2F {
   // These enumerations are defined in the FIDO U2F Javascript API under the
   // interface "ErrorCode" as constant integers, and also in the U2F.cpp file.

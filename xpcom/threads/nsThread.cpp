@@ -884,7 +884,9 @@ void canary_alarm_handler(int signum)
 
 #ifndef RELEASE_OR_BETA
 static bool
-GetLabeledRunnableName(nsIRunnable* aEvent, nsACString& aName)
+GetLabeledRunnableName(nsIRunnable* aEvent,
+                       nsACString& aName,
+                       EventPriority aPriority)
 {
   bool labeled = false;
   if (RefPtr<SchedulerGroup::Runnable> groupRunnable = do_QueryObject(aEvent)) {
@@ -897,6 +899,10 @@ GetLabeledRunnableName(nsIRunnable* aEvent, nsACString& aName)
   }
   if (aName.IsEmpty()) {
     aName.AssignLiteral("anonymous runnable");
+  }
+
+  if (!labeled && aPriority > EventPriority::Input) {
+    aName.AppendLiteral("(unlabeled)");
   }
 
   return labeled;
@@ -979,7 +985,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 
       nsAutoCString name;
       if ((MAIN_THREAD == mIsMainThread) || mNextIdleDeadline) {
-        bool labeled = GetLabeledRunnableName(event, name);
+        bool labeled = GetLabeledRunnableName(event, name, priority);
 
         if (MAIN_THREAD == mIsMainThread) {
           timer.emplace(name);
