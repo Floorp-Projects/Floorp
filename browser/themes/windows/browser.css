@@ -1169,14 +1169,6 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
   padding-inline-start: 20px;
 }
 
-#ContentSelectDropdown > menupopup {
-  background-color: -moz-field;
-  -moz-border-top-colors: GrayText;
-  -moz-border-right-colors: GrayText;
-  -moz-border-bottom-colors: GrayText;
-  -moz-border-left-colors: GrayText;
-}
-
 #ContentSelectDropdown > menupopup > menucaption,
 #ContentSelectDropdown > menupopup > menuitem {
   padding: 0 6px;

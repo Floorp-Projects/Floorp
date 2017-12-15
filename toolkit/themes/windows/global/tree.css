@@ -11,12 +11,7 @@
 /* ::::: tree ::::: */
 
 tree {
-  margin: 0px 4px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  margin: 0 4px;
   background-color: -moz-Field;
   color: -moz-FieldText;
   -moz-appearance: listbox;
@@ -67,7 +62,7 @@ tree[seltype="text"] > treechildren::-moz-tree-row {
 /* ::::: tree cells ::::: */
 
 treechildren::-moz-tree-cell {
-  padding: 0px 2px 0px 2px;
+  padding: 0 2px;
 }
 
 tree[seltype="cell"] > treechildren::-moz-tree-cell-text,
@@ -203,22 +198,16 @@ treecolpicker {
   -moz-appearance: treeheadercell;
   -moz-box-align: center;
   -moz-box-pack: center;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
-  background-color: -moz-Dialog;
   color: -moz-DialogText;
-  padding: 0px 4px;
+  padding: 0 4px;
 }
 
 .treecol-image {
-  padding: 0px 1px;
+  padding: 0 1px;
 }
 
 .treecol-text {
-  margin: 0px !important;
+  margin: 0 !important;
 }
 
 treecol[hideheader="true"] {
@@ -231,44 +220,23 @@ treecol[hideheader="true"] {
 
 treecol:hover:active,
 treecolpicker:hover:active {
-  border-top: 2px solid;
-  border-bottom: 1px solid;
-  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
-  -moz-border-right-colors: ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDShadow;
-  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
   padding-top: 1px;
-  padding-bottom: 0px;
+  padding-bottom: 0;
   padding-inline-start: 5px;
   padding-inline-end: 3px;
 }
 
 .treecol-image:hover:active {
   padding-top: 1px;
-  padding-bottom: 0px;
+  padding-bottom: 0;
   padding-inline-start: 2px;
-  padding-inline-end: 0px;
+  padding-inline-end: 0;
 }
 
 /* ::::: column drag and drop styles ::::: */
 
 treecol[dragging="true"] {
-  -moz-border-top-colors: ThreeDDarkShadow transparent !important;
-  -moz-border-right-colors: ThreeDDarkShadow transparent!important;
-  -moz-border-bottom-colors: ThreeDDarkShadow transparent !important;
-  -moz-border-left-colors: ThreeDDarkShadow transparent !important;
-  background-color: ThreeDShadow !important;
-  color: ThreeDHighlight !important;
-}
-
-treecol[insertafter="true"]:-moz-locale-dir(ltr),
-treecol[insertbefore="true"]:-moz-locale-dir(rtl) {
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-}
-
-treecol[insertafter="true"]:-moz-locale-dir(rtl),
-treecol[insertbefore="true"]:-moz-locale-dir(ltr) {
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
+  color: GrayText;
 }
 
 treechildren::-moz-tree-column(insertbefore) {
