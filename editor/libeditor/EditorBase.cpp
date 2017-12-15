@@ -1571,12 +1571,14 @@ EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
   }
 
   RefPtr<SplitNodeTransaction> transaction =
-    CreateTxnForSplitNode(aStartOfRightNode);
+    SplitNodeTransaction::Create(*this, aStartOfRightNode);
   aError = DoTransaction(transaction);
 
   nsCOMPtr<nsIContent> newNode = transaction->GetNewNode();
   NS_WARNING_ASSERTION(newNode, "Failed to create a new left node");
 
+  // XXX Some other transactions manage range updater by themselves.
+  //     Why doesn't SplitNodeTransaction do it?
   mRangeUpdater.SelAdjSplitNode(*aStartOfRightNode.GetContainerAsContent(),
                                 newNode);
 
@@ -3041,15 +3043,6 @@ EditorBase::DeleteText(nsGenericDOMDataNode& aCharData,
   }
 
   return rv;
-}
-
-already_AddRefed<SplitNodeTransaction>
-EditorBase::CreateTxnForSplitNode(const EditorRawDOMPoint& aStartOfRightNode)
-{
-  MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
-  RefPtr<SplitNodeTransaction> transaction =
-    new SplitNodeTransaction(*this, aStartOfRightNode);
-  return transaction.forget();
 }
 
 already_AddRefed<JoinNodeTransaction>
