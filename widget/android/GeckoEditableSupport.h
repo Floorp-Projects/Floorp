@@ -40,6 +40,8 @@ class GeckoEditableSupport final
 
     using EditableBase =
             java::GeckoEditableChild::Natives<GeckoEditableSupport>;
+    using EditableClient = java::TextInputController::EditableClient;
+    using EditableListener = java::TextInputController::EditableListener;
 
     // RAII helper class that automatically sends an event reply through
     // OnImeSynchronize, as required by events like OnImeReplaceText.

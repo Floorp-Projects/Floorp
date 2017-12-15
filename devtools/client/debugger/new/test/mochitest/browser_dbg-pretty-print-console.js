@@ -5,11 +5,6 @@
 
 // Tests that pretty-printing updates console messages.
 
-async function waitFor(condition) {
-  await BrowserTestUtils.waitForCondition(condition, "waitFor", 10, 500);
-  return condition();
-}
-
 add_task(async function() {
   const dbg = await initDebugger("doc-minified.html");
   invokeInTab("arithmetic");

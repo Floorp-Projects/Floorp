@@ -5,10 +5,6 @@
 <script>
 'use strict';
 
-function getMarginLeft(cs) {
-  return parseFloat(cs.marginLeft);
-}
-
 async_test(function(t) {
   var div = addDiv(t);
   var cs = getComputedStyle(div);
@@ -20,27 +16,29 @@ async_test(function(t) {
   cs.marginLeft;
 
   var animation = div.getAnimations()[0];
-  assert_equals(getMarginLeft(cs), 0,
-                'Initial value of margin-left is zero');
-  var previousAnimVal = getMarginLeft(cs);
+  var previousProgress = animation.effect.getComputedTiming().progress;
+  assert_equals(previousProgress, 0, 'Initial value of progress is zero');
 
   animation.ready.then(waitForNextFrame).then(t.step_func(function() {
-    assert_greater_than(getMarginLeft(cs), previousAnimVal,
-                        'margin-left is initially increasing');
+    assert_greater_than(animation.effect.getComputedTiming().progress,
+                        previousProgress,
+                        'Iteration progress is initially increasing');
     animation.pause();
     return animation.ready;
   })).then(t.step_func(function() {
-    previousAnimVal = getMarginLeft(cs);
+    previousProgress = animation.effect.getComputedTiming().progress;
     return waitForNextFrame();
   })).then(t.step_func(function() {
-    assert_equals(getMarginLeft(cs), previousAnimVal,
-                  'margin-left does not increase after calling pause()');
-    previousAnimVal = getMarginLeft(cs);
+    assert_equals(animation.effect.getComputedTiming().progress,
+                  previousProgress,
+                  'Iteration progress does not increase after calling pause()');
+    previousProgress = animation.effect.getComputedTiming().progress;
     animation.play();
-    return animation.ready.then(waitForFrame);
+    return animation.ready.then(waitForNextFrame);
   })).then(t.step_func(function() {
-    assert_greater_than(getMarginLeft(cs), previousAnimVal,
-                        'margin-left increases after calling play()');
+    assert_greater_than(animation.effect.getComputedTiming().progress,
+                        previousProgress,
+                        'Iteration progress increases after calling play()');
     t.done();
   }));
 }, 'pause() and play() a transition');

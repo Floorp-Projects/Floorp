@@ -46,13 +46,13 @@ clipboard_clear_cb(GtkClipboard *aGtkClipboard,
                    gpointer user_data);
                    
 static void
-ConvertHTMLtoUCS2          (guchar             *data,
+ConvertHTMLtoUCS2          (const char*         data,
                             int32_t             dataLength,
                             char16_t         **unicodeData,
                             int32_t            &outUnicodeLen);
 
 static void
-GetHTMLCharset             (guchar * data, int32_t dataLength, nsCString& str);
+GetHTMLCharset             (const char* data, int32_t dataLength, nsCString& str);
 
 GdkAtom
 GetSelectionAtom(int32_t aWhichClipboard)
@@ -223,16 +223,26 @@ nsClipboard::SetData(nsITransferable *aTransferable,
     return rv;
 }
 
+void
+nsClipboard::SetTransferableData(nsITransferable* aTransferable,
+                                 nsCString&       aFlavor,
+                                 const char*      aClipboardData,
+                                 uint32_t         aClipboardDataLength)
+{
+  nsCOMPtr<nsISupports> wrapper;
+  nsPrimitiveHelpers::CreatePrimitiveForData(aFlavor,
+                                             aClipboardData,
+                                             aClipboardDataLength,
+                                             getter_AddRefs(wrapper));
+  aTransferable->SetTransferData(aFlavor.get(),
+                                 wrapper, aClipboardDataLength);
+}
+
 NS_IMETHODIMP
 nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
 {
     if (!aTransferable)
         return NS_ERROR_FAILURE;
-
-    guchar        *data = nullptr;
-    uint32_t       length = 0;
-    bool           foundData = false;
-    nsAutoCString  foundFlavor;
 
     // Get a list of flavors this transferable can import
     nsCOMPtr<nsIArray> flavors;
@@ -252,31 +262,6 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
         nsCString flavorStr;
         currentFlavor->ToString(getter_Copies(flavorStr));
 
-        // Special case text/unicode since we can convert any
-        // string into text/unicode
-        if (flavorStr.EqualsLiteral(kUnicodeMime)) {
-            guchar* rawData =
-                mContext->WaitForClipboardContext(GTK_DEFAULT_MIME_TEXT,
-                                                  aWhichClipboard,
-                                                  &length);
-            if (!rawData) {
-                // If the type was text/unicode and we couldn't get
-                // text off the clipboard, run the next loop
-                // iteration.
-                continue;
-            }
-
-            // Convert utf-8 into our unicode format.
-            NS_ConvertUTF8toUTF16 ucs2string((const char *)rawData, length);
-            data = (guchar *)ToNewUnicode(ucs2string);
-            length = ucs2string.Length() * 2;
-            g_free(rawData);
-
-            foundData = true;
-            foundFlavor = kUnicodeMime;
-            break;
-        }
-
         if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
             flavorStr.EqualsLiteral(kJPGImageMime) ||
             flavorStr.EqualsLiteral(kPNGImageMime) ||
@@ -286,58 +271,81 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
                 flavorStr.Assign(kJPEGImageMime);
             }
 
-            data = mContext->WaitForClipboardContext(flavorStr.get(),
-                aWhichClipboard, &length);
-            if (!data)
+            uint32_t    clipboardDataLength;
+            const char* clipboardData =
+                mContext->WaitForClipboardContext(flavorStr.get(),
+                                                  aWhichClipboard,
+                                                  &clipboardDataLength);
+            if (!clipboardData)
                 continue;
 
             nsCOMPtr<nsIInputStream> byteStream;
             NS_NewByteInputStream(getter_AddRefs(byteStream),
-                                  (const char*)data,
-                                  length,
+                                  clipboardData,
+                                  clipboardDataLength,
                                   NS_ASSIGNMENT_COPY);
-            aTransferable->SetTransferData(flavorStr.get(), byteStream, sizeof(nsIInputStream*));
-            g_free(data);
+            aTransferable->SetTransferData(flavorStr.get(), byteStream,
+                                           sizeof(nsIInputStream*));
+            free((void *)clipboardData);
             return NS_OK;
         }
 
-        data = mContext->WaitForClipboardContext(flavorStr.get(),
-            aWhichClipboard, &length);
-        if (!data)
-            continue;
-
-        // Special case text/html since we can convert into UCS2
-        if (flavorStr.EqualsLiteral(kHTMLMime)) {
-            char16_t* htmlBody = nullptr;
-            int32_t htmlBodyLen = 0;
-            // Convert text/html into our unicode format
-            ConvertHTMLtoUCS2(data, length,
-                              &htmlBody, htmlBodyLen);
-            g_free(data);
-
-            // Try next data format?
-            if (!htmlBodyLen)
+        // Special case text/unicode since we can convert any
+        // string into text/unicode
+        if (flavorStr.EqualsLiteral(kUnicodeMime)) {
+            uint32_t    clipboardDataLength;
+            const char* rawData =
+                mContext->WaitForClipboardContext(GTK_DEFAULT_MIME_TEXT,
+                                                  aWhichClipboard,
+                                                  &clipboardDataLength);
+            if (!rawData) {
+                // If the type was text/unicode and we couldn't get
+                // text off the clipboard, run the next loop
+                // iteration.
                 continue;
-            data = (guchar *)htmlBody;
-            length = htmlBodyLen * 2;
+            }
+
+            // Convert utf-8 into our unicode format.
+            NS_ConvertUTF8toUTF16 ucs2string(rawData, clipboardDataLength);
+            const char* clipboardData = (const char *)ToNewUnicode(ucs2string);
+            clipboardDataLength = ucs2string.Length() * 2;
+            SetTransferableData(aTransferable, flavorStr,
+                                clipboardData, clipboardDataLength);
+            free((void *)rawData);
+            free((void *)clipboardData);
+            return NS_OK;
         }
 
-        foundData = true;
-        foundFlavor = flavorStr;
-        break;
-    }
 
-    if (foundData) {
-        nsCOMPtr<nsISupports> wrapper;
-        nsPrimitiveHelpers::CreatePrimitiveForData(foundFlavor,
-                                                   data, length,
-                                                   getter_AddRefs(wrapper));
-        aTransferable->SetTransferData(foundFlavor.get(),
-                                       wrapper, length);
-    }
+        uint32_t clipboardDataLength;
+        const char* clipboardData = mContext->WaitForClipboardContext(
+            flavorStr.get(), aWhichClipboard, &clipboardDataLength);
 
-    if (data)
-        g_free(data);
+        if (clipboardData) {
+            // Special case text/html since we can convert into UCS2
+            if (flavorStr.EqualsLiteral(kHTMLMime)) {
+                char16_t* htmlBody = nullptr;
+                int32_t htmlBodyLen = 0;
+                // Convert text/html into our unicode format
+                ConvertHTMLtoUCS2(clipboardData, clipboardDataLength,
+                                  &htmlBody, htmlBodyLen);
+                free((void *)clipboardData);
+
+                // Try next data format?
+                if (!htmlBodyLen)
+                    continue;
+
+                SetTransferableData(aTransferable, flavorStr,
+                                    (const char*)htmlBody, htmlBodyLen * 2);
+                free(htmlBody);
+            } else {
+                SetTransferableData(aTransferable, flavorStr,
+                                    clipboardData, clipboardDataLength);
+                free((void *)clipboardData);
+            }
+            return NS_OK;
+        }
+    }
 
     return NS_OK;
 }
@@ -639,16 +647,16 @@ clipboard_clear_cb(GtkClipboard *aGtkClipboard,
  * body      : pass to Mozilla
  * bodyLength: pass to Mozilla
  */
-void ConvertHTMLtoUCS2(guchar * data, int32_t dataLength,
+void ConvertHTMLtoUCS2(const char* data, int32_t dataLength,
                        char16_t** unicodeData, int32_t& outUnicodeLen)
 {
     nsAutoCString charset;
     GetHTMLCharset(data, dataLength, charset);// get charset of HTML
     if (charset.EqualsLiteral("UTF-16")) {//current mozilla
         outUnicodeLen = (dataLength / 2) - 1;
-        *unicodeData = reinterpret_cast<char16_t*>
-                                       (g_malloc((outUnicodeLen + sizeof('\0')) *
-                       sizeof(char16_t)));
+        *unicodeData =
+            reinterpret_cast<char16_t*>
+            (moz_xmalloc((outUnicodeLen + sizeof('\0')) * sizeof(char16_t)));
         if (*unicodeData) {
             memcpy(*unicodeData, data + sizeof(char16_t),
                    outUnicodeLen * sizeof(char16_t));
@@ -678,7 +686,7 @@ void ConvertHTMLtoUCS2(guchar * data, int32_t dataLength,
         outUnicodeLen = 0;
         if (needed.value()) {
           *unicodeData = reinterpret_cast<char16_t*>(
-            g_malloc((needed.value() + 1) * sizeof(char16_t)));
+            moz_xmalloc((needed.value() + 1) * sizeof(char16_t)));
           if (*unicodeData) {
             uint32_t result;
             size_t read;
@@ -711,7 +719,7 @@ void ConvertHTMLtoUCS2(guchar * data, int32_t dataLength,
  *  2. "UNKNOWN":     mozilla can't detect what encode it use
  *  3. other:         "text/html" with other charset than utf-16
  */
-void GetHTMLCharset(guchar * data, int32_t dataLength, nsCString& str)
+void GetHTMLCharset(const char* data, int32_t dataLength, nsCString& str)
 {
     // if detect "FFFE" or "FEFF", assume UTF-16
     char16_t* beginChar =  (char16_t*)data;
@@ -720,7 +728,7 @@ void GetHTMLCharset(guchar * data, int32_t dataLength, nsCString& str)
         return;
     }
     // no "FFFE" and "FEFF", assume ASCII first to find "charset" info
-    const nsDependentCString htmlStr((const char *)data, dataLength);
+    const nsDependentCString htmlStr(data, dataLength);
     nsACString::const_iterator start, end;
     htmlStr.BeginReading(start);
     htmlStr.EndReading(end);

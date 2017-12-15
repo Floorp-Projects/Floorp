@@ -1217,6 +1217,7 @@ body #output-container {
   display: grid;
   grid-template-rows: auto 1fr;
   width: 100%;
+  overflow: hidden;
 }
 
 .webconsole-sidebar-toolbar {
@@ -1228,6 +1229,7 @@ body #output-container {
 
 .sidebar-contents {
   grid-row: 2 / 3;
+  overflow: scroll;
 }
 
 .webconsole-sidebar-toolbar .sidebar-close-button {

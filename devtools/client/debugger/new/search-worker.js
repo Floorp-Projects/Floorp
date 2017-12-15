@@ -466,7 +466,7 @@ module.exports = __webpack_require__(1631);
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.isLoaded = exports.getMode = exports.getSourceLineCount = exports.getSourcePath = exports.getFileURL = exports.getFilenameFromURL = exports.getFilename = exports.getRawSourceURL = exports.getPrettySourceURL = exports.shouldPrettyPrint = exports.isThirdParty = exports.isPretty = exports.isJavaScript = undefined;
+exports.isLoading = exports.isLoaded = exports.getMode = exports.getSourceLineCount = exports.getSourcePath = exports.getFileURL = exports.getFilenameFromURL = exports.getFilename = exports.getRawSourceURL = exports.getPrettySourceURL = exports.shouldPrettyPrint = exports.isThirdParty = exports.isPretty = exports.isJavaScript = exports.isMinified = undefined;
 
 var _devtoolsSourceMap = __webpack_require__(1360);
 
@@ -656,6 +656,62 @@ function getSourceLineCount(source) {
   return source.text != undefined ? source.text.split("\n").length : 0;
 }
 
+// Used to detect minification for automatic pretty printing
+const SAMPLE_SIZE = 50;
+const INDENT_COUNT_THRESHOLD = 5;
+const CHARACTER_LIMIT = 250;
+const _minifiedCache = new Map();
+
+/**
+ *
+ * Checks if a source is minified based on some heuristics
+ * @param key
+ * @param text
+ * @return boolean
+ * @memberof utils/source
+ * @static
+ */
+
+function isMinified(key, text) {
+  if (!key || !text) {
+    return false;
+  }
+
+  if (_minifiedCache.has(key)) {
+    return _minifiedCache.get(key);
+  }
+
+  let lineEndIndex = 0;
+  let lineStartIndex = 0;
+  let lines = 0;
+  let indentCount = 0;
+  let overCharLimit = false;
+
+  // Strip comments.
+  text = text.replace(/\/\*[\S\s]*?\*\/|\/\/(.+|\n)/g, "");
+
+  while (lines++ < SAMPLE_SIZE) {
+    lineEndIndex = text.indexOf("\n", lineStartIndex);
+    if (lineEndIndex == -1) {
+      break;
+    }
+    if (/^\s+/.test(text.slice(lineStartIndex, lineEndIndex))) {
+      indentCount++;
+    }
+    // For files with no indents but are not minified.
+    if (lineEndIndex - lineStartIndex > CHARACTER_LIMIT) {
+      overCharLimit = true;
+      break;
+    }
+    lineStartIndex = lineEndIndex + 1;
+  }
+
+  const minified = indentCount / lines * 100 < INDENT_COUNT_THRESHOLD || overCharLimit;
+
+  _minifiedCache.set(key, minified);
+  return minified;
+}
+
 /**
  *
  * Returns Code Mirror mode for source content type
@@ -674,6 +730,17 @@ function getMode(source, sourceMetaData) {
 
   if (url && url.match(/\.jsx$/i) || sourceMetaData && sourceMetaData.isReactComponent) {
     return "jsx";
+  }
+
+  const languageMimeMap = [{ ext: ".c", mode: "text/x-csrc" }, { ext: ".kt", mode: "text/x-kotlin" }, { ext: ".cpp", mode: "text/x-c++src" }, { ext: ".m", mode: "text/x-objectivec" }, { ext: ".rs", mode: "text/x-rustsrc" }];
+
+  // check for C and other non JS languages
+  if (url) {
+    const result = languageMimeMap.find(({ ext }) => url.endsWith(ext));
+
+    if (result !== undefined) {
+      return result.mode;
+    }
   }
 
   // if the url ends with .marko we set the name to Javascript so
@@ -715,7 +782,11 @@ function getMode(source, sourceMetaData) {
 function isLoaded(source) {
   return source.loadedState === "loaded";
 }
+function isLoading(source) {
+  return source.loadedState === "loading";
+}
 
+exports.isMinified = isMinified;
 exports.isJavaScript = isJavaScript;
 exports.isPretty = isPretty;
 exports.isThirdParty = isThirdParty;
@@ -729,6 +800,7 @@ exports.getSourcePath = getSourcePath;
 exports.getSourceLineCount = getSourceLineCount;
 exports.getMode = getMode;
 exports.isLoaded = isLoaded;
+exports.isLoading = isLoading;
 
 /***/ }),
 

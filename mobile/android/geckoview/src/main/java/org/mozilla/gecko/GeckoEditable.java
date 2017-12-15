@@ -37,13 +37,16 @@ import android.util.Log;
 import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 
-/*
-   GeckoEditable implements only some functions of Editable
-   The field mText contains the actual underlying
-   SpannableStringBuilder/Editable that contains our text.
-*/
-final class GeckoEditable extends IGeckoEditableParent.Stub
-        implements InvocationHandler, Editable, GeckoEditableClient {
+/**
+ * GeckoEditable implements only some functions of Editable
+ * The field mText contains the actual underlying
+ * SpannableStringBuilder/Editable that contains our text.
+ */
+/* package */ final class GeckoEditable
+    extends IGeckoEditableParent.Stub
+    implements InvocationHandler,
+               Editable,
+               TextInputController.EditableClient {
 
     private static final boolean DEBUG = false;
     private static final String LOGTAG = "GeckoEditable";
@@ -67,8 +70,7 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
     // Parent or content process child that has the focus.
     /* package */ IGeckoEditableChild mFocusedChild; // Used by IC thread.
     /* package */ IBinder mFocusedToken; // Used by Gecko/binder thread.
-    /* package */ GeckoEditableListener mListener;
-    /* package */ GeckoView mView;
+    /* package */ TextInputController.EditableListener mListener;
 
     /* package */ boolean mInBatchMode; // Used by IC thread
     /* package */ boolean mNeedSync; // Used by IC thread
@@ -274,7 +276,8 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
             return mShadowText;
         }
 
-        public synchronized void syncShadowText(final GeckoEditableListener listener) {
+        public synchronized void syncShadowText(
+                final TextInputController.EditableListener listener) {
             if (DEBUG) {
                 assertOnIcThread();
             }
@@ -597,41 +600,39 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
         }
     }
 
-    @WrapForJNI(calledFrom = "gecko")
-    private GeckoEditable() {
+    /* package */ GeckoEditable() {
         if (DEBUG) {
-            // Called by nsWindow.
-            ThreadUtils.assertOnGeckoThread();
+            // Called by TextInputController.
+            ThreadUtils.assertOnUiThread();
         }
 
         mText = new AsyncText();
         mActions = new ConcurrentLinkedQueue<Action>();
 
         final Class<?>[] PROXY_INTERFACES = { Editable.class };
-        mProxy = (Editable)Proxy.newProxyInstance(
-                Editable.class.getClassLoader(),
-                PROXY_INTERFACES, this);
+        mProxy = (Editable) Proxy.newProxyInstance(Editable.class.getClassLoader(),
+                                                   PROXY_INTERFACES, this);
 
         mIcRunHandler = mIcPostHandler = ThreadUtils.getUiHandler();
     }
 
-    @WrapForJNI(calledFrom = "gecko")
-    private void setDefaultEditableChild(final IGeckoEditableChild child) {
+    /* package */ void setDefaultEditableChild(final IGeckoEditableChild child) {
+        if (DEBUG) {
+            // Called by TextInputController.
+            ThreadUtils.assertOnUiThread();
+            Log.d(LOGTAG, "setDefaultEditableChild " + child);
+        }
         mDefaultChild = child;
     }
 
-    @WrapForJNI(calledFrom = "gecko")
-    private void onViewChange(final GeckoView v) {
+    /* package */ void setListener(final TextInputController.EditableListener newListener) {
         if (DEBUG) {
-            // Called by nsWindow.
-            ThreadUtils.assertOnGeckoThread();
-            Log.d(LOGTAG, "onViewChange(" + v + ")");
+            // Called by TextInputController.
+            ThreadUtils.assertOnUiThread();
+            Log.d(LOGTAG, "setListener " + newListener);
         }
 
-        final GeckoEditableListener newListener =
-            v != null ? GeckoInputConnection.create(v, this) : null;
-
-        final Runnable setListenerRunnable = new Runnable() {
+        mIcPostHandler.post(new Runnable() {
             @Override
             public void run() {
                 if (DEBUG) {
@@ -639,31 +640,6 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
                 }
 
                 mListener = newListener;
-            }
-        };
-
-        // Post to UI thread first to make sure any code that is using the old input
-        // connection has finished running, before we switch to a new input connection or
-        // before we clear the input connection on destruction.
-        final Handler icHandler = mIcPostHandler;
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (DEBUG) {
-                    Log.d(LOGTAG, "onViewChange (set IC)");
-                }
-
-                if (mView != null) {
-                    // Detach the previous view.
-                    mView.setInputConnectionListener(null);
-                }
-                if (v != null) {
-                    // And attach the new view.
-                    v.setInputConnectionListener((InputConnectionListener) newListener);
-                }
-
-                mView = v;
-                icHandler.post(setListenerRunnable);
             }
         });
     }
@@ -869,9 +845,7 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
         } while (rangeStart < composingEnd);
     }
 
-    // GeckoEditableClient interface
-
-    @Override
+    @Override // TextInputController.EditableClient
     public void sendKeyEvent(final KeyEvent event, int action, int metaState) {
         if (DEBUG) {
             assertOnIcThread();
@@ -905,7 +879,7 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
         }
     }
 
-    @Override
+    @Override // TextInputController.EditableClient
     public Editable getEditable() {
         if (!onIcThread()) {
             // Android may be holding an old InputConnection; ignore
@@ -921,7 +895,7 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
         return mProxy;
     }
 
-    @Override
+    @Override // TextInputController.EditableClient
     public void setBatchMode(boolean inBatchMode) {
         if (!onIcThread()) {
             // Android may be holding an old InputConnection; ignore
@@ -953,7 +927,7 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
         mText.syncShadowText(mListener);
     }
 
-    @Override
+    @Override // TextInputController.EditableClient
     public void setSuppressKeyUp(boolean suppress) {
         if (DEBUG) {
             assertOnIcThread();
@@ -963,7 +937,7 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
         mSuppressKeyUp = suppress;
     }
 
-    @Override // GeckoEditableClient
+    @Override // TextInputController.EditableClient
     public Handler setInputConnectionHandler(final Handler handler) {
         if (handler == mIcRunHandler) {
             return mIcRunHandler;
@@ -1003,12 +977,12 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
         return handler;
     }
 
-    @Override // GeckoEditableClient
+    @Override // TextInputController.EditableClient
     public void postToInputConnection(final Runnable runnable) {
         mIcPostHandler.post(runnable);
     }
 
-    @Override // GeckoEditableClient
+    @Override // TextInputController.EditableClient
     public void requestCursorUpdates(int requestMode) {
         try {
             if (mFocusedChild != null) {
@@ -1086,15 +1060,16 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
         // On Gecko or binder thread.
         if (DEBUG) {
             // NOTIFY_IME_REPLY_EVENT is logged separately, inside geckoActionReply()
-            if (type != GeckoEditableListener.NOTIFY_IME_REPLY_EVENT) {
+            if (type != TextInputController.EditableListener.NOTIFY_IME_REPLY_EVENT) {
                 Log.d(LOGTAG, "notifyIME(" +
-                              getConstantName(GeckoEditableListener.class, "NOTIFY_IME_", type) +
+                              getConstantName(TextInputController.EditableListener.class,
+                                              "NOTIFY_IME_", type) +
                               ")");
             }
         }
 
         final IBinder token = child.asBinder();
-        if (type == GeckoEditableListener.NOTIFY_IME_OF_TOKEN) {
+        if (type == TextInputController.EditableListener.NOTIFY_IME_OF_TOKEN) {
             synchronized (this) {
                 if (mFocusedToken != null && mFocusedToken != token &&
                         mFocusedToken.pingBinder()) {
@@ -1105,20 +1080,20 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
                 mFocusedToken = token;
                 return;
             }
-        } else if (type == GeckoEditableListener.NOTIFY_IME_OPEN_VKB) {
+        } else if (type == TextInputController.EditableListener.NOTIFY_IME_OPEN_VKB) {
             // Always from parent process.
             ThreadUtils.assertOnGeckoThread();
         } else if (!binderCheckToken(token, /* allowNull */ false)) {
             return;
         }
 
-        if (type == GeckoEditableListener.NOTIFY_IME_OF_BLUR) {
+        if (type == TextInputController.EditableListener.NOTIFY_IME_OF_BLUR) {
             synchronized (this) {
                 onTextChange(token, "", 0, Integer.MAX_VALUE);
                 mActions.clear();
                 mFocusedToken = null;
             }
-        } else if (type == GeckoEditableListener.NOTIFY_IME_REPLY_EVENT) {
+        } else if (type == TextInputController.EditableListener.NOTIFY_IME_REPLY_EVENT) {
             geckoActionReply(mActions.poll());
             if (!mActions.isEmpty()) {
                 // Only post to IC thread below when the queue is empty.
@@ -1129,18 +1104,19 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
         mIcPostHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (type == GeckoEditableListener.NOTIFY_IME_REPLY_EVENT) {
+                if (type == TextInputController.EditableListener.NOTIFY_IME_REPLY_EVENT) {
                     if (mNeedSync) {
                         icSyncShadowText();
                     }
                     return;
                 }
 
-                if (type == GeckoEditableListener.NOTIFY_IME_OF_FOCUS && mListener != null) {
+                if (type == TextInputController.EditableListener.NOTIFY_IME_OF_FOCUS &&
+                        mListener != null) {
                     mFocusedChild = child;
                     mNeedSync = false;
                     mText.syncShadowText(/* listener */ null);
-                } else if (type == GeckoEditableListener.NOTIFY_IME_OF_BLUR) {
+                } else if (type == TextInputController.EditableListener.NOTIFY_IME_OF_BLUR) {
                     mFocusedChild = null;
                 }
 
@@ -1154,14 +1130,14 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
     @Override // IGeckoEditableParent
     public void notifyIMEContext(final int state, final String typeHint,
                                  final String modeHint, final String actionHint,
-                                 final boolean inPrivateBrowsing,
-                                 final boolean isUserAction) {
+                                 final int flags) {
         // On Gecko or binder thread.
         if (DEBUG) {
             Log.d(LOGTAG, "notifyIMEContext(" +
-                          getConstantName(GeckoEditableListener.class, "IME_STATE_", state) +
-                          ", \"" + typeHint + "\", \"" + modeHint + "\", \"" + actionHint + "\", " +
-                          "inPrivateBrowsing=" + inPrivateBrowsing + ")");
+                          getConstantName(TextInputController.EditableListener.class,
+                                          "IME_STATE_", state) +
+                          ", \"" + typeHint + "\", \"" + modeHint + "\", \"" + actionHint +
+                          "\", 0x" + Integer.toHexString(flags) + ")");
         }
 
         // Don't check token for notifyIMEContext, because the calls all come
@@ -1174,7 +1150,7 @@ final class GeckoEditable extends IGeckoEditableParent.Stub
                 if (mListener == null) {
                     return;
                 }
-                mListener.notifyIMEContext(state, typeHint, modeHint, actionHint, inPrivateBrowsing, isUserAction);
+                mListener.notifyIMEContext(state, typeHint, modeHint, actionHint, flags);
             }
         });
     }

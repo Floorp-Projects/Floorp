@@ -926,7 +926,7 @@ GeckoEditableSupport::OnImeSynchronize()
     if (!mIMEMaskEventsCount) {
         FlushIMEChanges();
     }
-    mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_REPLY_EVENT);
+    mEditable->NotifyIME(EditableListener::NOTIFY_IME_REPLY_EVENT);
 }
 
 void
@@ -1175,13 +1175,12 @@ GeckoEditableSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd,
 void
 GeckoEditableSupport::OnImeRequestCursorUpdates(int aRequestMode)
 {
-    if (aRequestMode == java::GeckoEditableClient::ONE_SHOT) {
+    if (aRequestMode == EditableClient::ONE_SHOT) {
         UpdateCompositionRects();
         return;
     }
 
-    mIMEMonitorCursor =
-            (aRequestMode == java::GeckoEditableClient::START_MONITOR);
+    mIMEMonitorCursor = (aRequestMode == EditableClient::START_MONITOR);
 }
 
 void
@@ -1207,7 +1206,7 @@ GeckoEditableSupport::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
             ALOGIME("IME: REQUEST_TO_COMMIT_COMPOSITION");
 
             RemoveComposition(COMMIT_IME_COMPOSITION);
-            AsyncNotifyIME(GeckoEditableListener::
+            AsyncNotifyIME(EditableListener::
                            NOTIFY_IME_TO_COMMIT_COMPOSITION);
             break;
         }
@@ -1216,7 +1215,7 @@ GeckoEditableSupport::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
             ALOGIME("IME: REQUEST_TO_CANCEL_COMPOSITION");
 
             RemoveComposition(CANCEL_IME_COMPOSITION);
-            AsyncNotifyIME(GeckoEditableListener::
+            AsyncNotifyIME(EditableListener::
                            NOTIFY_IME_TO_CANCEL_COMPOSITION);
             break;
         }
@@ -1239,7 +1238,7 @@ GeckoEditableSupport::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
                 }
 
                 mEditable->NotifyIME(
-                        GeckoEditableListener::NOTIFY_IME_OF_TOKEN);
+                        EditableListener::NOTIFY_IME_OF_TOKEN);
 
                 if (mIsRemote) {
                     if (!mEditableAttached) {
@@ -1262,7 +1261,7 @@ GeckoEditableSupport::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
                 mIMEMonitorCursor = false;
 
                 mEditable->NotifyIME(
-                        GeckoEditableListener::NOTIFY_IME_OF_FOCUS);
+                        EditableListener::NOTIFY_IME_OF_FOCUS);
             });
             break;
         }
@@ -1271,7 +1270,7 @@ GeckoEditableSupport::NotifyIME(TextEventDispatcher* aTextEventDispatcher,
             ALOGIME("IME: NOTIFY_IME_OF_BLUR");
 
             if (!mIMEMaskEventsCount) {
-                mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_OF_BLUR);
+                mEditable->NotifyIME(EditableListener::NOTIFY_IME_OF_BLUR);
                 OnRemovedFrom(mDispatcher);
             }
 
@@ -1339,10 +1338,6 @@ GeckoEditableSupport::WillDispatchKeyboardEvent(
 NS_IMETHODIMP_(IMENotificationRequests)
 GeckoEditableSupport::GetIMENotificationRequests()
 {
-    // While a plugin has focus, Listener doesn't need any notifications.
-    if (GetInputContext().mIMEState.mEnabled == IMEState::PLUGIN) {
-      return IMENotificationRequests();
-    }
     return IMENotificationRequests(IMENotificationRequests::NOTIFY_TEXT_CHANGE);
 }
 
@@ -1358,10 +1353,10 @@ GeckoEditableSupport::SetInputContext(const InputContext& aContext,
 
     mInputContext = aContext;
 
-    if (mInputContext.mIMEState.mEnabled == IMEState::ENABLED &&
+    if (mInputContext.mIMEState.mEnabled != IMEState::DISABLED &&
         aAction.UserMightRequestOpenVKB()) {
         // Don't reset keyboard when we should simply open the vkb
-        mEditable->NotifyIME(GeckoEditableListener::NOTIFY_IME_OPEN_VKB);
+        mEditable->NotifyIME(EditableListener::NOTIFY_IME_OPEN_VKB);
         return;
     }
 
@@ -1371,8 +1366,13 @@ GeckoEditableSupport::SetInputContext(const InputContext& aContext,
     mIMEUpdatingContext = true;
 
     RefPtr<GeckoEditableSupport> self(this);
-    bool isUserAction = aAction.IsHandlingUserInput() || aContext.mHasHandledUserInput;
-    nsAppShell::PostEvent([this, self, isUserAction] {
+    const bool inPrivateBrowsing = mInputContext.mInPrivateBrowsing;
+    const bool isUserAction = aAction.IsHandlingUserInput() || aContext.mHasHandledUserInput;
+    const int32_t flags =
+            (inPrivateBrowsing ? EditableListener::IME_FLAG_PRIVATE_BROWSING : 0) |
+            (isUserAction ? EditableListener::IME_FLAG_USER_ACTION : 0);
+
+    nsAppShell::PostEvent([this, self, flags] {
         nsCOMPtr<nsIWidget> widget = GetWidget();
 
         mIMEUpdatingContext = false;
@@ -1383,8 +1383,7 @@ GeckoEditableSupport::SetInputContext(const InputContext& aContext,
                                     mInputContext.mHTMLInputType,
                                     mInputContext.mHTMLInputInputmode,
                                     mInputContext.mActionHint,
-                                    mInputContext.mInPrivateBrowsing,
-                                    isUserAction);
+                                    flags);
     });
 }
 
