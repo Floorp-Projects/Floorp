@@ -186,18 +186,11 @@ private:
   const T mValue;
 };
 
-// The MediaDataDecoder API blocks, with implementations waiting on platform
-// decoder tasks.  These platform decoder tasks are queued on a separate
-// thread pool to ensure they can run when the MediaDataDecoder clients'
-// thread pool is blocked.  Tasks on the PLATFORM_DECODER thread pool must not
-// wait on tasks in the PLAYBACK thread pool.
-//
-// No new dependencies on this mechanism should be added, as methods are being
-// made async supported by MozPromise, making this unnecessary and
-// permitting unifying the pool.
 enum class MediaThreadType {
   PLAYBACK, // MediaDecoderStateMachine and MediaFormatReader
-  PLATFORM_DECODER
+  PLATFORM_DECODER, // MediaDataDecoder
+  MSG_CONTROL,
+  WEBRTC_DECODER
 };
 // Returns the thread pool that is shared amongst all decoder state machines
 // for decoding streams.
