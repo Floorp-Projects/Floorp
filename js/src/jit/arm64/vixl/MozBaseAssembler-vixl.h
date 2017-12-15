@@ -59,8 +59,8 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
   static const size_t   BufferCodeAlignment = 8;
   static const size_t   BufferMaxPoolOffset = 1024;
   static const unsigned BufferPCBias = 0;
-  static const uint32_t BufferAlignmentFillInstruction = BRK | (0xdead << ImmException_offset);
-  static const uint32_t BufferNopFillInstruction = HINT | (31 << Rt_offset);
+  static const uint32_t BufferAlignmentFillInstruction = HINT | (NOP << ImmHint_offset);
+  static const uint32_t BufferNopFillInstruction = HINT | (NOP << ImmHint_offset);
   static const unsigned BufferNumDebugNopsToInsert = 0;
 
 #ifdef JS_DISASM_ARM64

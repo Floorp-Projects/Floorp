@@ -35,6 +35,7 @@ ABIArgGenerator::next(MIRType type)
 {
     switch (type) {
       case MIRType::Int32:
+      case MIRType::Int64:
       case MIRType::Pointer:
         if (intRegIndex_ == NumIntArgRegs) {
             current_ = ABIArg(stackOffset_);
@@ -85,6 +86,34 @@ Assembler::finish()
         MOZ_ASSERT(jumpRelocations_.length() >= sizeof(uint32_t));
         *(uint32_t*)jumpRelocations_.buffer() = ExtendedJumpTable_.getOffset();
     }
+}
+
+bool
+Assembler::appendRawCode(const uint8_t* code, size_t numBytes)
+{
+    flush();
+    return armbuffer_.appendRawCode(code, numBytes);
+}
+
+bool
+Assembler::reserve(size_t size)
+{
+    // This buffer uses fixed-size chunks so there's no point in reserving
+    // now vs. on-demand.
+    return !oom();
+}
+
+bool
+Assembler::swapBuffer(wasm::Bytes& bytes)
+{
+    // For now, specialize to the one use case. As long as wasm::Bytes is a
+    // Vector, not a linked-list of chunks, there's not much we can do other
+    // than copy.
+    MOZ_ASSERT(bytes.empty());
+    if (!bytes.resize(bytesNeeded()))
+        return false;
+    armbuffer_.executableCopy(bytes.begin());
+    return true;
 }
 
 BufferOffset
@@ -286,6 +315,19 @@ Assembler::bind(RepatchLabel* label)
 }
 
 void
+Assembler::bindLater(Label* label, wasm::OldTrapDesc target)
+{
+    if (label->used()) {
+        BufferOffset b(label);
+        do {
+            append(wasm::OldTrapSite(target, b.getOffset()));
+            b = NextLink(b);
+        } while (b.assigned());
+    }
+    label->reset();
+}
+
+void
 Assembler::trace(JSTracer* trc)
 {
     for (size_t i = 0; i < pendingJumps_.length(); i++) {
@@ -381,6 +423,8 @@ Assembler::ToggleToJmp(CodeLocationLabel inst_)
     MOZ_ASSERT(vixl::is_int19(imm19));
 
     b(i, imm19, Always);
+
+    AutoFlushICache::flush(uintptr_t(i), 4);
 }
 
 void
@@ -405,6 +449,8 @@ Assembler::ToggleToCmp(CodeLocationLabel inst_)
     // From the above, there is a safe 19-bit contiguous region from 5:23.
     Emit(i, vixl::ThirtyTwoBits | vixl::AddSubImmediateFixed | vixl::SUB | Flags(vixl::SetFlags) |
             Rd(vixl::xzr) | (imm19 << vixl::Rn_offset));
+
+    AutoFlushICache::flush(uintptr_t(i), 4);
 }
 
 void
@@ -431,7 +477,7 @@ Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
         return;
 
     if (call->IsBLR()) {
-        // If the second instruction is blr(), then wehave:
+        // If the second instruction is blr(), then we have:
         //   ldr x17, [pc, offset]
         //   blr x17
         MOZ_ASSERT(load->IsLDR());
@@ -455,6 +501,9 @@ Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
         ldr(load, ScratchReg2_64, int32_t(offset));
         blr(call, ScratchReg2_64);
     }
+
+    AutoFlushICache::flush(uintptr_t(first), 4);
+    AutoFlushICache::flush(uintptr_t(call), 8);
 }
 
 class RelocationIterator
