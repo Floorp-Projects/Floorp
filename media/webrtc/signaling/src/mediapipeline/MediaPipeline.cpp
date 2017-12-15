@@ -116,8 +116,9 @@ public:
 
   VideoFrameConverter()
     : mLength(0)
-    , mTaskQueue(new AutoTaskQueue(
-        SharedThreadPool::Get(NS_LITERAL_CSTRING("VideoFrameConverter"))))
+    , mTaskQueue(
+        new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
+                          "VideoFrameConverter"))
     , mLastImage(-1) // -1 is not a guaranteed invalid serial. See bug 1262134.
 #ifdef DEBUG
     , mThrottleCount(0)
@@ -492,8 +493,9 @@ public:
 
   explicit AudioProxyThread(AudioSessionConduit* aConduit)
     : mConduit(aConduit)
-    , mTaskQueue(new AutoTaskQueue(
-        SharedThreadPool::Get(NS_LITERAL_CSTRING("AudioProxy"), 1)))
+    , mTaskQueue(
+        new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
+                          "AudioProxy"))
   {
     MOZ_ASSERT(mConduit);
     MOZ_COUNT_CTOR(AudioProxyThread);
@@ -2170,8 +2172,9 @@ public:
     , mSource(mTrack->GetInputStream()->AsSourceStream())
     , mTrackId(mTrack->GetInputTrackId())
     , mRate(mSource ? mSource->GraphRate() : 0)
-    , mTaskQueue(new AutoTaskQueue(
-        SharedThreadPool::Get(NS_LITERAL_CSTRING("PipelineAudioListener"))))
+    , mTaskQueue(
+        new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
+                          "AudioPipelineListener"))
     , mLastLog(0)
   {
     MOZ_ASSERT(mSource);
