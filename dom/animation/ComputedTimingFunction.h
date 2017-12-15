@@ -45,7 +45,7 @@ public:
   void Init(const nsTimingFunction& aFunction);
 
   // BeforeFlag is used in step timing function.
-  // https://w3c.github.io/web-animations/#before-flag
+  // https://drafts.csswg.org/css-timing/#before-flag
   enum class BeforeFlag {
     Unset,
     Set
