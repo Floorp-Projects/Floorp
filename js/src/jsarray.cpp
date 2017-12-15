@@ -1556,6 +1556,11 @@ ArrayReverseDenseKernel(JSContext* cx, HandleNativeObject obj, uint32_t length)
             return DenseElementResult::Failure;
     }
 
+    if (!MaybeInIteration(obj, cx) && !cx->zone()->needsIncrementalBarrier()) {
+        obj->reverseDenseElementsNoPreBarrier(length);
+        return DenseElementResult::Success;
+    }
+
     RootedValue origlo(cx), orighi(cx);
 
     uint32_t lo = 0, hi = length - 1;
