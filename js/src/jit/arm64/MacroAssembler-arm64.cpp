@@ -81,7 +81,7 @@ MacroAssemblerCompat::movePatchablePtr(ImmPtr ptr, Register dest)
 
     // Scratch space for generating the load instruction.
     //
-    // allocEntry() will use InsertIndexIntoTag() to store a temporary
+    // allocLiteralLoadEntry() will use InsertIndexIntoTag() to store a temporary
     // index to the corresponding PoolEntry in the instruction itself.
     //
     // That index will be fixed up later when finishPool()
@@ -94,8 +94,8 @@ MacroAssemblerCompat::movePatchablePtr(ImmPtr ptr, Register dest)
 
     // Add the entry to the pool, fix up the LDR imm19 offset,
     // and add the completed instruction to the buffer.
-    return allocEntry(numInst, numPoolEntries, (uint8_t*)&instructionScratch,
-                      literalAddr);
+    return allocLiteralLoadEntry(numInst, numPoolEntries, (uint8_t*)&instructionScratch,
+                                 literalAddr);
 }
 
 BufferOffset
@@ -107,7 +107,7 @@ MacroAssemblerCompat::movePatchablePtr(ImmWord ptr, Register dest)
 
     // Scratch space for generating the load instruction.
     //
-    // allocEntry() will use InsertIndexIntoTag() to store a temporary
+    // allocLiteralLoadEntry() will use InsertIndexIntoTag() to store a temporary
     // index to the corresponding PoolEntry in the instruction itself.
     //
     // That index will be fixed up later when finishPool()
@@ -120,8 +120,8 @@ MacroAssemblerCompat::movePatchablePtr(ImmWord ptr, Register dest)
 
     // Add the entry to the pool, fix up the LDR imm19 offset,
     // and add the completed instruction to the buffer.
-    return allocEntry(numInst, numPoolEntries, (uint8_t*)&instructionScratch,
-                      literalAddr);
+    return allocLiteralLoadEntry(numInst, numPoolEntries, (uint8_t*)&instructionScratch,
+                                 literalAddr);
 }
 
 void

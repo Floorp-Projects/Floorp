@@ -10,9 +10,6 @@
 #include "mozilla/MathAlgorithms.h"
 
 #include "jscompartment.h"
-#ifdef JS_DISASM_ARM
-#include "jsprf.h"
-#endif
 #include "jsutil.h"
 
 #include "gc/Marking.h"
@@ -26,6 +23,9 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::CountLeadingZeroes32;
+
+using LabelDoc = DisassemblerSpew::LabelDoc;
+using LiteralDoc = DisassemblerSpew::LiteralDoc;
 
 void dbg_break() {}
 
@@ -1440,241 +1440,6 @@ Assembler::bytesNeeded() const
         dataRelocationTableBytes();
 }
 
-#ifdef JS_DISASM_ARM
-
-void
-Assembler::spewInst(Instruction* i)
-{
-    disasm::NameConverter converter;
-    disasm::Disassembler dasm(converter);
-    disasm::EmbeddedVector<char, disasm::ReasonableBufferSize> buffer;
-    uint8_t* loc = reinterpret_cast<uint8_t*>(const_cast<uint32_t*>(i->raw()));
-    dasm.InstructionDecode(buffer, loc);
-    printf("   %08x  %s\n", reinterpret_cast<uint32_t>(loc), buffer.start());
-}
-
-// Labels are named as they are encountered by adding names to a
-// table, using the Label address as the key.  This is made tricky by
-// the (memory for) Label objects being reused, but reused label
-// objects are recognizable from being marked as not used or not
-// bound.  See spewResolve().
-//
-// In a number of cases there is no information about the target, and
-// we just end up printing "patchable constant load to PC".  This is
-// true especially for jumps to bailout handlers (which have no
-// names).  See spewData() and its callers.  In some cases (loop back
-// edges) some information about the intended target may be propagated
-// from higher levels, and if so it's printed here.
-
-void
-Assembler::spew(Instruction* i)
-{
-    if (spewDisabled() || !i)
-        return;
-    disasm::NameConverter converter;
-    disasm::Disassembler dasm(converter);
-    disasm::EmbeddedVector<char, disasm::ReasonableBufferSize> buffer;
-    uint8_t* loc = reinterpret_cast<uint8_t*>(const_cast<uint32_t*>(i->raw()));
-    dasm.InstructionDecode(buffer, loc);
-    spew("   %08x  %s", reinterpret_cast<uint32_t>(loc), buffer.start());
-}
-
-void
-Assembler::spewTarget(Label* target)
-{
-    if (spewDisabled())
-        return;
-    spew("                        -> %d%s", spewResolve(target), !target->bound() ? "f" : "");
-}
-
-// If a target label is known, always print that and do not attempt to
-// disassemble the branch operands, as they will often be encoding
-// metainformation (pointers for a chain of jump instructions), and
-// not actual branch targets.
-
-void
-Assembler::spewBranch(Instruction* i, Label* target /* may be nullptr */)
-{
-    if (spewDisabled() || !i)
-        return;
-    disasm::NameConverter converter;
-    disasm::Disassembler dasm(converter);
-    disasm::EmbeddedVector<char, disasm::ReasonableBufferSize> buffer;
-    uint8_t* loc = reinterpret_cast<uint8_t*>(const_cast<uint32_t*>(i->raw()));
-    dasm.InstructionDecode(buffer, loc);
-    char labelBuf[128];
-    labelBuf[0] = 0;
-    if (!target)
-        snprintf(labelBuf, sizeof(labelBuf), "  -> (link-time target)");
-    if (InstBranchImm::IsTHIS(*i)) {
-        InstBranchImm* bimm = InstBranchImm::AsTHIS(*i);
-        BOffImm destOff;
-        bimm->extractImm(&destOff);
-        if (destOff.isInvalid() || target) {
-            // The target information in the instruction is likely garbage, so remove it.
-            // The target label will in any case be printed if we have it.
-            //
-            // The format of the instruction disassembly is [0-9a-f]{8}\s+\S+\s+.*,
-            // where the \S+ string is the opcode.  Strip everything after the opcode,
-            // and attach the label if we have it.
-            int i;
-            for ( i=8 ; i < buffer.length() && buffer[i] == ' ' ; i++ )
-                ;
-            for ( ; i < buffer.length() && buffer[i] != ' ' ; i++ )
-                ;
-            buffer[i] = 0;
-            if (target) {
-                snprintf(labelBuf, sizeof(labelBuf), "  -> %d%s", spewResolve(target),
-                         !target->bound() ? "f" : "");
-                target = nullptr;
-            }
-        }
-    }
-    spew("   %08x  %s%s", reinterpret_cast<uint32_t>(loc), buffer.start(), labelBuf);
-    if (target)
-        spewTarget(target);
-}
-
-void
-Assembler::spewLabel(Label* l)
-{
-    if (spewDisabled())
-        return;
-    spew("                        %d:", spewResolve(l));
-}
-
-void
-Assembler::spewRetarget(Label* label, Label* target)
-{
-    if (spewDisabled())
-        return;
-    spew("                        %d: .retarget -> %d%s",
-         spewResolve(label), spewResolve(target), !target->bound() ? "f" : "");
-}
-
-void
-Assembler::spewData(BufferOffset addr, size_t numInstr, bool loadToPC)
-{
-    if (spewDisabled())
-        return;
-    Instruction* inst = m_buffer.getInstOrNull(addr);
-    if (!inst)
-        return;
-    uint32_t *instr = reinterpret_cast<uint32_t*>(inst);
-    for ( size_t k=0 ; k < numInstr ; k++ ) {
-        spew("   %08x  %08x       (patchable constant load%s)",
-             reinterpret_cast<uint32_t>(instr+k), *(instr+k), loadToPC ? " to PC" : "");
-    }
-}
-
-bool
-Assembler::spewDisabled()
-{
-    return !(JitSpewEnabled(JitSpew_Codegen) || printer_);
-}
-
-void
-Assembler::spew(const char* fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    spew(fmt, args);
-    va_end(args);
-}
-
-void
-Assembler::spew(const char* fmt, va_list va)
-{
-    if (printer_) {
-        printer_->vprintf(fmt, va);
-        printer_->put("\n");
-    }
-    js::jit::JitSpewVA(js::jit::JitSpew_Codegen, fmt, va);
-}
-
-uint32_t
-Assembler::spewResolve(Label* l)
-{
-    // Note, spewResolve will sometimes return 0 when it is triggered
-    // by the profiler and not by a full disassembly, since in that
-    // case a label can be used or bound but not previously have been
-    // defined.
-    return l->used() || l->bound() ? spewProbe(l) : spewDefine(l);
-}
-
-uint32_t
-Assembler::spewProbe(Label* l)
-{
-    uint32_t key = reinterpret_cast<uint32_t>(l);
-    uint32_t value = 0;
-    spewNodes_.lookup(key, &value);
-    return value;
-}
-
-uint32_t
-Assembler::spewDefine(Label* l)
-{
-    uint32_t key = reinterpret_cast<uint32_t>(l);
-    spewNodes_.remove(key);
-    uint32_t value = spewNext_++;
-    if (!spewNodes_.add(key, value))
-        return 0;
-    return value;
-}
-
-Assembler::SpewNodes::~SpewNodes()
-{
-    Node* p = nodes;
-    while (p) {
-        Node* victim = p;
-        p = p->next;
-        js_free(victim);
-    }
-}
-
-bool
-Assembler::SpewNodes::lookup(uint32_t key, uint32_t* value)
-{
-    for ( Node* p = nodes ; p ; p = p->next ) {
-        if (p->key == key) {
-            *value = p->value;
-            return true;
-        }
-    }
-    return false;
-}
-
-bool
-Assembler::SpewNodes::add(uint32_t key, uint32_t value)
-{
-    Node* node = (Node*)js_malloc(sizeof(Node));
-    if (!node)
-        return false;
-    node->key = key;
-    node->value = value;
-    node->next = nodes;
-    nodes = node;
-    return true;
-}
-
-bool
-Assembler::SpewNodes::remove(uint32_t key)
-{
-    for ( Node* p = nodes, *pp = nullptr ; p ; pp = p, p = p->next ) {
-        if (p->key == key) {
-            if (pp)
-                pp->next = p->next;
-            else
-                nodes = p->next;
-            js_free(p);
-            return true;
-        }
-    }
-    return false;
-}
-
-#endif // JS_DISASM_ARM
-
 // Allocate memory for a branch instruction, it will be overwritten
 // subsequently and should not be disassembled.
 
@@ -2136,14 +1901,22 @@ Assembler::as_dtm(LoadStore ls, Register rn, uint32_t mask,
 }
 
 BufferOffset
-Assembler::allocEntry(size_t numInst, unsigned numPoolEntries,
-                      uint8_t* inst, uint8_t* data, ARMBuffer::PoolEntry* pe,
-                      bool loadToPC)
+Assembler::allocLiteralLoadEntry(size_t numInst, unsigned numPoolEntries,
+                                 PoolHintPun& php, uint8_t* data,
+                                 const LiteralDoc& doc,
+                                 ARMBuffer::PoolEntry* pe, bool loadToPC)
 {
+    uint8_t* inst = (uint8_t*)&php.raw;
+
+    MOZ_ASSERT(inst);
+    MOZ_ASSERT(numInst == 1);   // Or fix the disassembly
+
     BufferOffset offs = m_buffer.allocEntry(numInst, numPoolEntries, inst, data, pe);
     propagateOOM(offs.assigned());
 #ifdef JS_DISASM_ARM
-    spewData(offs, numInst, loadToPC);
+    Instruction* instruction = m_buffer.getInstOrNull(offs);
+    if (instruction)
+        spewLiteralLoad(php, loadToPC, instruction, doc);
 #endif
     return offs;
 }
@@ -2156,7 +1929,11 @@ Assembler::as_Imm32Pool(Register dest, uint32_t value, Condition c)
 {
     PoolHintPun php;
     php.phd.init(0, c, PoolHintData::PoolDTR, dest);
-    BufferOffset offs = allocEntry(1, 1, (uint8_t*)&php.raw, (uint8_t*)&value, nullptr, dest == pc);
+    BufferOffset offs = allocLiteralLoadEntry(1, 1, php,
+                                              (uint8_t*)&value,
+                                              LiteralDoc(value),
+                                              nullptr,
+                                              dest == pc);
     return offs;
 }
 
@@ -2169,13 +1946,16 @@ Assembler::WritePoolEntry(Instruction* addr, Condition c, uint32_t data)
 }
 
 BufferOffset
-Assembler::as_BranchPool(uint32_t value, RepatchLabel* label, ARMBuffer::PoolEntry* pe, Condition c,
-                         Label* documentation)
+Assembler::as_BranchPool(uint32_t value, RepatchLabel* label,
+                         const LabelDoc& documentation,
+                         ARMBuffer::PoolEntry* pe, Condition c)
 {
     PoolHintPun php;
     php.phd.init(0, c, PoolHintData::PoolBranch, pc);
-    BufferOffset ret = allocEntry(1, 1, (uint8_t*)&php.raw, (uint8_t*)&value, pe,
-                                  /* loadToPC = */ true);
+    BufferOffset ret = allocLiteralLoadEntry(1, 1, php, (uint8_t*)&value,
+                                             LiteralDoc(),
+                                             pe,
+                                             /* loadToPC = */ true);
     // If this label is already bound, then immediately replace the stub load
     // with a correct branch.
     if (label->bound()) {
@@ -2190,8 +1970,7 @@ Assembler::as_BranchPool(uint32_t value, RepatchLabel* label, ARMBuffer::PoolEnt
         label->use(ret.getOffset());
     }
 #ifdef JS_DISASM_ARM
-    if (documentation)
-        spewTarget(documentation);
+    spew_.spewRef(documentation);
 #endif
     return ret;
 }
@@ -2202,7 +1981,7 @@ Assembler::as_FImm64Pool(VFPRegister dest, double d, Condition c)
     MOZ_ASSERT(dest.isDouble());
     PoolHintPun php;
     php.phd.init(0, c, PoolHintData::PoolVDTR, dest);
-    return allocEntry(1, 2, (uint8_t*)&php.raw, (uint8_t*)&d);
+    return allocLiteralLoadEntry(1, 2, php, (uint8_t*)&d, LiteralDoc(d));
 }
 
 BufferOffset
@@ -2214,7 +1993,7 @@ Assembler::as_FImm32Pool(VFPRegister dest, float f, Condition c)
     MOZ_ASSERT(dest.isSingle());
     PoolHintPun php;
     php.phd.init(0, c, PoolHintData::PoolVDTR, dest);
-    return allocEntry(1, 1, (uint8_t*)&php.raw, (uint8_t*)&f);
+    return allocLiteralLoadEntry(1, 1, php, (uint8_t*)&f, LiteralDoc(f));
 }
 
 // Pool callbacks stuff:
@@ -2407,8 +2186,7 @@ Assembler::WritePoolGuard(BufferOffset branch, Instruction* dest, BufferOffset a
 BufferOffset
 Assembler::as_b(BOffImm off, Condition c, Label* documentation)
 {
-    BufferOffset ret = writeBranchInst(((int)c) | OpB | off.encode(), documentation);
-    return ret;
+    return writeBranchInst(((int)c) | OpB | off.encode(), refLabel(documentation));
 }
 
 BufferOffset
@@ -2422,7 +2200,7 @@ Assembler::as_b(Label* l, Condition c)
 
         as_b(BufferOffset(l).diffB<BOffImm>(ret), c, ret);
 #ifdef JS_DISASM_ARM
-        spewBranch(m_buffer.getInstOrNull(ret), l);
+        spewBranch(m_buffer.getInstOrNull(ret), refLabel(l));
 #endif
         return ret;
     }
@@ -2486,7 +2264,7 @@ Assembler::as_blx(Register r, Condition c)
 BufferOffset
 Assembler::as_bl(BOffImm off, Condition c, Label* documentation)
 {
-    return writeBranchInst(((int)c) | OpBl | off.encode(), documentation);
+    return writeBranchInst(((int)c) | OpBl | off.encode(), refLabel(documentation));
 }
 
 BufferOffset
@@ -2506,7 +2284,7 @@ Assembler::as_bl(Label* l, Condition c)
 
         as_bl(offset, c, ret);
 #ifdef JS_DISASM_ARM
-        spewBranch(m_buffer.getInstOrNull(ret), l);
+        spewBranch(m_buffer.getInstOrNull(ret), refLabel(l));
 #endif
         return ret;
     }
@@ -2855,7 +2633,7 @@ void
 Assembler::bind(Label* label, BufferOffset boff)
 {
 #ifdef JS_DISASM_ARM
-    spewLabel(label);
+    spew_.spewBind(label);
 #endif
     if (oom()) {
         // Ensure we always bind the label. This matches what we do on
@@ -2941,7 +2719,7 @@ void
 Assembler::retarget(Label* label, Label* target)
 {
 #ifdef JS_DISASM_ARM
-    spewRetarget(label, target);
+    spew_.spewRetarget(label, target);
 #endif
     if (label->used() && !oom()) {
         if (target->bound()) {
@@ -3491,3 +3269,166 @@ SecondScratchRegisterScope::SecondScratchRegisterScope(MacroAssembler &masm)
   : AutoRegisterScope(masm, masm.getSecondScratchReg())
 {
 }
+
+#ifdef JS_DISASM_ARM
+
+/* static */ void
+Assembler::disassembleInstruction(const Instruction* i, DisasmBuffer& buffer)
+{
+    disasm::NameConverter converter;
+    disasm::Disassembler dasm(converter);
+    uint8_t* loc = reinterpret_cast<uint8_t*>(const_cast<uint32_t*>(i->raw()));
+    dasm.InstructionDecode(buffer, loc);
+}
+
+void
+Assembler::initDisassembler()
+{
+    // The line is normally laid out like this:
+    //
+    // xxxxxxxx        ldr r, op   ; comment
+    //
+    // where xx...x is the instruction bit pattern.
+    //
+    // Labels are laid out by themselves to line up with the instructions above
+    // and below:
+    //
+    //            nnnn:
+    //
+    // Branch targets are normally on the same line as the branch instruction,
+    // but when they cannot be they will be on a line by themselves, indented
+    // significantly:
+    //
+    //                     -> label
+
+    spew_.setLabelIndent("          ");             // 10
+    spew_.setTargetIndent("                    ");  // 20
+}
+
+void
+Assembler::finishDisassembler()
+{
+    spew_.spewOrphans();
+}
+
+// Labels are named as they are encountered by adding names to a
+// table, using the Label address as the key.  This is made tricky by
+// the (memory for) Label objects being reused, but reused label
+// objects are recognizable from being marked as not used or not
+// bound.  See spew_.refLabel().
+//
+// In a number of cases there is no information about the target, and
+// we just end up printing "patchable constant load to PC".  This is
+// true especially for jumps to bailout handlers (which have no
+// names).  See allocLiteralLoadEntry() and its callers.  In some cases
+// (loop back edges) some information about the intended target may be
+// propagated from higher levels, and if so it's printed here.
+
+void
+Assembler::spew(Instruction* i)
+{
+    if (spew_.isDisabled() || !i)
+        return;
+
+    DisasmBuffer buffer;
+    disassembleInstruction(i, buffer);
+    spew_.spew("%s", buffer.start());
+}
+
+// If a target label is known, always print that and do not attempt to
+// disassemble the branch operands, as they will often be encoding
+// metainformation (pointers for a chain of jump instructions), and
+// not actual branch targets.
+
+void
+Assembler::spewBranch(Instruction* i, const LabelDoc& target)
+{
+    if (spew_.isDisabled() || !i)
+        return;
+
+    DisasmBuffer buffer;
+    disassembleInstruction(i, buffer);
+
+    char labelBuf[128];
+    labelBuf[0] = 0;
+
+    bool haveTarget = target.valid;
+    if (!haveTarget)
+        snprintf(labelBuf, sizeof(labelBuf), "  -> (link-time target)");
+
+    if (InstBranchImm::IsTHIS(*i)) {
+        InstBranchImm* bimm = InstBranchImm::AsTHIS(*i);
+        BOffImm destOff;
+        bimm->extractImm(&destOff);
+        if (destOff.isInvalid() || haveTarget) {
+            // The target information in the instruction is likely garbage, so remove it.
+            // The target label will in any case be printed if we have it.
+            //
+            // The format of the instruction disassembly is [0-9a-f]{8}\s+\S+\s+.*,
+            // where the \S+ string is the opcode.  Strip everything after the opcode,
+            // and attach the label if we have it.
+            int i;
+            for ( i=8 ; i < buffer.length() && buffer[i] == ' ' ; i++ )
+                ;
+            for ( ; i < buffer.length() && buffer[i] != ' ' ; i++ )
+                ;
+            buffer[i] = 0;
+            if (haveTarget) {
+                snprintf(labelBuf, sizeof(labelBuf), "  -> %d%s", target.doc,
+                         !target.bound ? "f" : "");
+                haveTarget = false;
+            }
+        }
+    }
+    spew_.spew("%s%s", buffer.start(), labelBuf);
+
+    if (haveTarget)
+        spew_.spewRef(target);
+}
+
+void
+Assembler::spewLiteralLoad(PoolHintPun& php, bool loadToPC, const Instruction* i,
+                           const LiteralDoc& doc)
+{
+    if (spew_.isDisabled())
+        return;
+
+    char litbuf[2048];
+    spew_.formatLiteral(doc, litbuf, sizeof(litbuf));
+
+    // See patchConstantPoolLoad, above.  We assemble the instruction into a
+    // buffer with a zero offset, as documentation, but the offset will be
+    // patched later.
+
+    uint32_t inst;
+    PoolHintData& data = php.phd;
+    switch (php.phd.getLoadType()) {
+      case PoolHintData::PoolDTR:
+        Assembler::as_dtr_patch(IsLoad, 32, Offset, data.getReg(),
+                                DTRAddr(pc, DtrOffImm(0)),
+                                data.getCond(), &inst);
+        break;
+      case PoolHintData::PoolBranch:
+        if (data.isValidPoolHint()) {
+            Assembler::as_dtr_patch(IsLoad, 32, Offset, pc,
+                                    DTRAddr(pc, DtrOffImm(0)),
+                                    data.getCond(), &inst);
+        }
+        break;
+      case PoolHintData::PoolVDTR:
+        Assembler::as_vdtr_patch(IsLoad, data.getVFPReg(), VFPAddr(pc, VFPOffImm(0)),
+                                 data.getCond(), &inst);
+        break;
+
+      default:
+        MOZ_CRASH();
+    }
+
+    DisasmBuffer buffer;
+    disasm::NameConverter converter;
+    disasm::Disassembler dasm(converter);
+    dasm.InstructionDecode(buffer, reinterpret_cast<uint8_t*>(&inst));
+    spew_.spew("%s    ; .const %s", buffer.start(), litbuf);
+}
+
+#endif // JS_DISASM_ARM
