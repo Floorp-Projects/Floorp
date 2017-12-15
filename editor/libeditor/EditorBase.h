@@ -554,23 +554,6 @@ protected:
                                        const EditorRawDOMPoint& aPointToInsert);
 
   /**
-   * Create a transaction for inserting aContentToInsert before the child
-   * at aPointToInsert.
-   *
-   * @param aContentToInsert    The node to be inserted.
-   * @param aPointToInsert      The insertion point of aContentToInsert.
-   *                            If this refers end of the container, the
-   *                            transaction will append the node to the
-   *                            container.  Otherwise, will insert the node
-   *                            before child node referred by this.
-   * @return                    A InsertNodeTranaction which was initialized
-   *                            with the arguments.
-   */
-  already_AddRefed<InsertNodeTransaction>
-    CreateTxnForInsertNode(nsIContent& aContentToInsert,
-                           const EditorRawDOMPoint& aPointToInsert);
-
-  /**
    * Create a transaction for removing aNode from its parent.
    */
   already_AddRefed<DeleteNodeTransaction>

@@ -1505,7 +1505,7 @@ EditorBase::InsertNode(nsIContent& aContentToInsert,
   }
 
   RefPtr<InsertNodeTransaction> transaction =
-    CreateTxnForInsertNode(aContentToInsert, aPointToInsert);
+    InsertNodeTransaction::Create(*this, aContentToInsert, aPointToInsert);
   nsresult rv = DoTransaction(transaction);
 
   mRangeUpdater.SelAdjInsertNode(aPointToInsert.GetContainer(),
@@ -4639,16 +4639,6 @@ EditorBase::CreateTxnForCreateElement(nsAtom& aTag,
   RefPtr<CreateElementTransaction> transaction =
     new CreateElementTransaction(*this, aTag, aPointToInsert);
 
-  return transaction.forget();
-}
-
-
-already_AddRefed<InsertNodeTransaction>
-EditorBase::CreateTxnForInsertNode(nsIContent& aNode,
-                                   const EditorRawDOMPoint& aPointToInsert)
-{
-  RefPtr<InsertNodeTransaction> transaction =
-    new InsertNodeTransaction(*this, aNode, aPointToInsert);
   return transaction.forget();
 }
 
