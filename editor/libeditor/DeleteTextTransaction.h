@@ -24,20 +24,45 @@ class RangeUpdater;
  */
 class DeleteTextTransaction final : public EditTransactionBase
 {
-public:
-  /**
-   * Initialize the transaction.
-   * @param aEditorBase         The provider of basic editing operations.
-   * @param aElement            The content node to remove text from.
-   * @param aOffset             The location in aElement to begin the deletion.
-   * @param aNumCharsToDelete   The number of characters to delete.  Not the
-   *                            number of bytes!
-   */
+protected:
   DeleteTextTransaction(EditorBase& aEditorBase,
                         nsGenericDOMDataNode& aCharData,
                         uint32_t aOffset,
-                        uint32_t aNumCharsToDelete,
-                        RangeUpdater* aRangeUpdater);
+                        uint32_t aLengthToDelete);
+
+public:
+
+  /**
+   * Creates a delete text transaction to remove given range.  This returns
+   * nullptr if it cannot modify the text node.
+   *
+   * @param aEditorBase         The provider of basic editing operations.
+   * @param aCharData           The content node to remove text from.
+   * @param aOffset             The location in aElement to begin the deletion.
+   * @param aLenthToDelete      The length to delete.
+   */
+  static already_AddRefed<DeleteTextTransaction>
+  MaybeCreate(EditorBase& aEditorBase,
+              nsGenericDOMDataNode& aCharData,
+              uint32_t aOffset,
+              uint32_t aLengthToDelete);
+
+  /**
+   * Creates a delete text transaction to remove a previous or next character.
+   * Those methods MAY return nullptr.
+   *
+   * @param aEditorBase         The provider of basic editing operations.
+   * @param aCharData           The content node to remove text from.
+   * @param aOffset             The location in aElement to begin the deletion.
+   */
+  static already_AddRefed<DeleteTextTransaction>
+  MaybeCreateForPreviousCharacter(EditorBase& aEditorBase,
+                                  nsGenericDOMDataNode& aCharData,
+                                  uint32_t aOffset);
+  static already_AddRefed<DeleteTextTransaction>
+  MaybeCreateForNextCharacter(EditorBase& aEditorBase,
+                              nsGenericDOMDataNode& aCharData,
+                              uint32_t aOffset);
 
   /**
    * CanDoIt() returns true if there are enough members and can modify the
@@ -51,9 +76,9 @@ public:
 
   NS_DECL_EDITTRANSACTIONBASE
 
-  uint32_t GetOffset() { return mOffset; }
+  uint32_t Offset() { return mOffset; }
 
-  uint32_t GetNumCharsToDelete() { return mNumCharsToDelete; }
+  uint32_t LengthToDelete() { return mLengthToDelete; }
 
 protected:
   // The provider of basic editing operations.
@@ -65,14 +90,11 @@ protected:
   // The offset into mCharData where the deletion is to take place.
   uint32_t mOffset;
 
-  // The number of characters to delete.
-  uint32_t mNumCharsToDelete;
+  // The length to delete.
+  uint32_t mLengthToDelete;
 
   // The text that was deleted.
   nsString mDeletedText;
-
-  // Range updater object.
-  RangeUpdater* mRangeUpdater;
 };
 
 } // namespace mozilla
