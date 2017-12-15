@@ -402,7 +402,6 @@ WiFiRuntime.prototype = {
         }, {once: true});
       },
       onCloseWindow() {},
-      onWindowTitleChange() {}
     };
     Services.wm.addListener(windowListener);
 

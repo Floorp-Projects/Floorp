@@ -17,7 +17,6 @@ function waitForNewWindow() {
         domwindow.addEventListener("load", downloadOnLoad, true);
       },
       onCloseWindow: aXULWindow => {},
-      onWindowTitleChange: (aXULWindow, aNewTitle) => {}
     };
 
     Services.wm.addListener(listener);

@@ -31,7 +31,6 @@ var windowListener = {
     }, {once: true});
   },
   onCloseWindow: function(aWindow) { },
-  onWindowTitleChange: function(aWindow, aTitle) { }
 };
 
 function startup(aData, aReason) {

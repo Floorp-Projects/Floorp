@@ -43,8 +43,6 @@ function checkInstallConfirmation(...urls) {
         executeSoon(() => handleDialog(window));
       },
 
-      onWindowTitleChange() { },
-
       onOpenWindow(window) {
         windows.add(window);
         let domwindow = window.QueryInterface(Ci.nsIInterfaceRequestor)

@@ -86,5 +86,4 @@ WindowListener.prototype = {
     }, {once: true});
   },
   onCloseWindow: function(aXULWindow) {},
-  onWindowTitleChange: function(aXULWindow, aNewTitle) {}
 }

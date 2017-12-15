@@ -74,7 +74,6 @@ Client.defaultSendOOB = ({ authResult, oob }) => {
       }, {once: true});
     },
     onCloseWindow() {},
-    onWindowTitleChange() {}
   };
   Services.wm.addListener(windowListener);
 
