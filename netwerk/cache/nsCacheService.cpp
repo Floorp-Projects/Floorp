@@ -4,15 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsCacheService.h"
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/FileUtils.h"
 
 #include "necko-config.h"
 
 #include "nsCache.h"
-#include "nsCacheService.h"
 #include "nsCacheRequest.h"
 #include "nsCacheEntry.h"
 #include "nsCacheEntryDescriptor.h"
@@ -1764,10 +1766,8 @@ nsCacheService::CreateCustomOfflineDevice(nsIFile *aProfileDir,
     NS_ENSURE_ARG(aProfileDir);
 
     if (MOZ_LOG_TEST(gCacheLog, LogLevel::Info)) {
-      nsAutoCString profilePath;
-      aProfileDir->GetNativePath(profilePath);
       CACHE_LOG_INFO(("Creating custom offline device, %s, %d",
-                        profilePath.BeginReading(), aQuota));
+                      aProfileDir->HumanReadablePath().get(), aQuota));
     }
 
     if (!mInitialized)         return NS_ERROR_NOT_AVAILABLE;
@@ -3128,10 +3128,7 @@ nsCacheService::MoveOrRemoveDiskCache(nsIFile *aOldCacheDir,
     if (NS_FAILED(rv))
         return;
 
-    nsAutoCString newPath;
-    rv = aNewCacheSubdir->GetNativePath(newPath);
-    if (NS_FAILED(rv))
-        return;
+    PathString newPath = aNewCacheSubdir->NativePath();
 
     if (NS_SUCCEEDED(aNewCacheSubdir->Exists(&exists)) && !exists) {
         // New cache directory does not exist, try to move the old one here
@@ -3140,12 +3137,15 @@ nsCacheService::MoveOrRemoveDiskCache(nsIFile *aOldCacheDir,
         // Make sure the parent of the target sub-dir exists
         rv = aNewCacheDir->Create(nsIFile::DIRECTORY_TYPE, 0777);
         if (NS_SUCCEEDED(rv) || NS_ERROR_FILE_ALREADY_EXISTS == rv) {
-            nsAutoCString oldPath;
-            rv = aOldCacheSubdir->GetNativePath(oldPath);
-            if (NS_FAILED(rv))
-                return;
+            PathString oldPath = aOldCacheSubdir->NativePath();
+#ifdef XP_WIN
+            if (MoveFileW(oldPath.get(), newPath.get()))
+#else
             if (rename(oldPath.get(), newPath.get()) == 0)
+#endif
+            {
                 return;
+            }
         }
     }
 

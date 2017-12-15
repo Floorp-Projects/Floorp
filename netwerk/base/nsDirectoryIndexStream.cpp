@@ -89,11 +89,9 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
         return NS_ERROR_ILLEGAL_VALUE;
 
     if (MOZ_LOG_TEST(gLog, LogLevel::Debug)) {
-        nsAutoCString path;
-        aDir->GetNativePath(path);
         MOZ_LOG(gLog, LogLevel::Debug,
                ("nsDirectoryIndexStream[%p]: initialized on %s",
-                this, path.get()));
+                this, aDir->HumanReadablePath().get()));
     }
 
     // Sigh. We have to allocate on the heap because there are no
@@ -228,11 +226,9 @@ nsDirectoryIndexStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount)
             ++mPos;
 
             if (MOZ_LOG_TEST(gLog, LogLevel::Debug)) {
-                nsAutoCString path;
-                current->GetNativePath(path);
                 MOZ_LOG(gLog, LogLevel::Debug,
                        ("nsDirectoryIndexStream[%p]: iterated %s",
-                        this, path.get()));
+                        this, current->HumanReadablePath().get()));
             }
 
             // rjc: don't return hidden files/directories!
