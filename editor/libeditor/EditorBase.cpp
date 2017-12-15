@@ -1896,7 +1896,10 @@ EditorBase::MoveNode(nsIContent* aNode,
               AssertedCast<uint32_t>(aOffset) <= aParent->Length()));
 
   nsCOMPtr<nsINode> oldParent = aNode->GetParentNode();
-  int32_t oldOffset = oldParent ? oldParent->IndexOf(aNode) : -1;
+  if (NS_WARN_IF(!oldParent)) {
+    return NS_ERROR_FAILURE;
+  }
+  int32_t oldOffset = oldParent->IndexOf(aNode);
 
   if (aOffset == -1) {
     // Magic value meaning "move to end of aParent"
