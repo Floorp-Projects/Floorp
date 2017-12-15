@@ -3885,6 +3885,10 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
             ss << "\n\n*** after-merge retained display items:";
             afterMergeChecker.Dump(ss);
             fprintf(stderr, "%s\n\n", ss.str().c_str());
+#ifdef DEBUG_FRAME_DUMP
+            fprintf(stderr, "*** Frame tree:\n");
+            aFrame->DumpFrameTree();
+#endif
           }
         }
       }
