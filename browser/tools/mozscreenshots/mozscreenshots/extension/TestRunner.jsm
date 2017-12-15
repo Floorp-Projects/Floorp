@@ -55,7 +55,8 @@ this.TestRunner = {
     let screenshotPath = FileUtils.getFile("TmpD", subDirs).path;
 
     const MOZ_UPLOAD_DIR = env.get("MOZ_UPLOAD_DIR");
-    if (MOZ_UPLOAD_DIR) {
+    const MOZ_SOURCE_REPO = env.get("MOZ_SOURCE_REPO");
+    if (MOZ_UPLOAD_DIR && !MOZ_SOURCE_REPO.includes("/integration/")) {
       screenshotPath = MOZ_UPLOAD_DIR;
     }
 
