@@ -1548,7 +1548,7 @@ function TestKeyframe(testProp) {
 }
 
 function propertyToIDL(property) {
-  // https://w3c.github.io/web-animations/#animation-property-name-to-idl-attribute-name
+  // https://drafts.csswg.org/web-animations/#animation-property-name-to-idl-attribute-name
   if (property === 'float') {
     return 'cssFloat';
   }

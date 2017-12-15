@@ -1,7 +1,7 @@
 Web Animations Test Suite
 =========================
 
-Specification: https://w3c.github.io/web-animations/
+Specification: https://drafts.csswg.org/web-animations/
 
 
 Guidelines for writing tests
