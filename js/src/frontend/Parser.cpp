@@ -43,6 +43,7 @@
 #include "jsatominlines.h"
 #include "jsscriptinlines.h"
 
+#include "frontend/ParseContext-inl.h"
 #include "frontend/ParseNode-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 
@@ -1714,7 +1715,7 @@ Parser<FullParseHandler, CharT>::checkStatementsEOF()
 }
 
 template <typename Scope>
-static typename Scope::Data*
+typename Scope::Data*
 NewEmptyBindingData(JSContext* cx, LifoAlloc& alloc, uint32_t numBindings)
 {
     size_t allocSize = Scope::sizeOfData(numBindings);
@@ -1728,8 +1729,9 @@ NewEmptyBindingData(JSContext* cx, LifoAlloc& alloc, uint32_t numBindings)
 }
 
 Maybe<GlobalScope::Data*>
-ParserBase::newGlobalScopeData(ParseContext::Scope& scope)
+NewGlobalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc)
 {
+
     Vector<BindingName> funs(context);
     Vector<BindingName> vars(context);
     Vector<BindingName> lets(context);
@@ -1792,8 +1794,14 @@ ParserBase::newGlobalScopeData(ParseContext::Scope& scope)
     return Some(bindings);
 }
 
+Maybe<GlobalScope::Data*>
+ParserBase::newGlobalScopeData(ParseContext::Scope& scope)
+{
+    return NewGlobalScopeData(context, scope, alloc, pc);
+}
+
 Maybe<ModuleScope::Data*>
-ParserBase::newModuleScopeData(ParseContext::Scope& scope)
+NewModuleScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc)
 {
     Vector<BindingName> imports(context);
     Vector<BindingName> vars(context);
@@ -1858,8 +1866,14 @@ ParserBase::newModuleScopeData(ParseContext::Scope& scope)
     return Some(bindings);
 }
 
+Maybe<ModuleScope::Data*>
+ParserBase::newModuleScopeData(ParseContext::Scope& scope)
+{
+    return NewModuleScopeData(context, scope, alloc, pc);
+}
+
 Maybe<EvalScope::Data*>
-ParserBase::newEvalScopeData(ParseContext::Scope& scope)
+NewEvalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc)
 {
     Vector<BindingName> funs(context);
     Vector<BindingName> vars(context);
@@ -1902,8 +1916,14 @@ ParserBase::newEvalScopeData(ParseContext::Scope& scope)
     return Some(bindings);
 }
 
+Maybe<EvalScope::Data*>
+ParserBase::newEvalScopeData(ParseContext::Scope& scope)
+{
+    return NewEvalScopeData(context, scope, alloc, pc);
+}
+
 Maybe<FunctionScope::Data*>
-ParserBase::newFunctionScopeData(ParseContext::Scope& scope, bool hasParameterExprs)
+NewFunctionScopeData(JSContext* context, ParseContext::Scope& scope, bool hasParameterExprs, LifoAlloc& alloc, ParseContext* pc)
 {
     Vector<BindingName> positionalFormals(context);
     Vector<BindingName> formals(context);
@@ -1996,8 +2016,14 @@ ParserBase::newFunctionScopeData(ParseContext::Scope& scope, bool hasParameterEx
     return Some(bindings);
 }
 
+Maybe<FunctionScope::Data*>
+ParserBase::newFunctionScopeData(ParseContext::Scope& scope, bool hasParameterExprs)
+{
+    return NewFunctionScopeData(context, scope, hasParameterExprs, alloc, pc);
+}
+
 Maybe<VarScope::Data*>
-ParserBase::newVarScopeData(ParseContext::Scope& scope)
+NewVarScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc)
 {
     Vector<BindingName> vars(context);
 
@@ -2028,8 +2054,14 @@ ParserBase::newVarScopeData(ParseContext::Scope& scope)
     return Some(bindings);
 }
 
+Maybe<VarScope::Data*>
+ParserBase::newVarScopeData(ParseContext::Scope& scope)
+{
+    return NewVarScopeData(context, scope, alloc, pc);
+}
+
 Maybe<LexicalScope::Data*>
-ParserBase::newLexicalScopeData(ParseContext::Scope& scope)
+NewLexicalScopeData(JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc, ParseContext* pc)
 {
     Vector<BindingName> lets(context);
     Vector<BindingName> consts(context);
@@ -2077,6 +2109,12 @@ ParserBase::newLexicalScopeData(ParseContext::Scope& scope)
     }
 
     return Some(bindings);
+}
+
+Maybe<LexicalScope::Data*>
+ParserBase::newLexicalScopeData(ParseContext::Scope& scope)
+{
+    return NewLexicalScopeData(context, scope, alloc, pc);
 }
 
 template <>
@@ -6513,44 +6551,16 @@ GeneralParser<ParseHandler, CharT>::continueStatement(YieldHandling yieldHandlin
     if (!matchLabel(yieldHandling, &label))
         return null();
 
-    // Labeled 'continue' statements target the nearest labeled loop
-    // statements with the same label. Unlabeled 'continue' statements target
-    // the innermost loop statement.
-    auto isLoop = [](ParseContext::Statement* stmt) {
-        return StatementKindIsLoop(stmt->kind());
-    };
-
-    if (label) {
-        ParseContext::Statement* stmt = pc->innermostStatement();
-        bool foundLoop = false;
-
-        for (;;) {
-            stmt = ParseContext::Statement::findNearest(stmt, isLoop);
-            if (!stmt) {
-                if (foundLoop)
-                    error(JSMSG_LABEL_NOT_FOUND);
-                else
-                    errorAt(begin, JSMSG_BAD_CONTINUE);
-                return null();
-            }
-
-            foundLoop = true;
-
-            // Is it labeled by our label?
-            bool foundTarget = false;
-            stmt = stmt->enclosing();
-            while (stmt && stmt->is<ParseContext::LabelStatement>()) {
-                if (stmt->as<ParseContext::LabelStatement>().label() == label) {
-                    foundTarget = true;
-                    break;
-                }
-                stmt = stmt->enclosing();
-            }
-            if (foundTarget)
-                break;
+    auto validity = pc->checkContinueStatement(label);
+    if (validity.isErr()) {
+        switch (validity.unwrapErr()) {
+          case ParseContext::ContinueStatementError::NotInALoop:
+            errorAt(begin, JSMSG_BAD_CONTINUE);
+            break;
+          case ParseContext::ContinueStatementError::LabelNotFound:
+            error(JSMSG_LABEL_NOT_FOUND);
+            break;
         }
-    } else if (!pc->findInnermostStatement(isLoop)) {
-        error(JSMSG_BAD_CONTINUE);
         return null();
     }
 

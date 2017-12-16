@@ -517,7 +517,6 @@ size_t MediaCacheStream::SizeOfExcludingThis(
 {
   // Looks like these are not owned:
   // - mClient
-  // - mPrincipal
   size_t size = mBlocks.ShallowSizeOfExcludingThis(aMallocSizeOf);
   size += mReadaheadBlocks.SizeOfExcludingThis(aMallocSizeOf);
   size += mMetadataBlocks.SizeOfExcludingThis(aMallocSizeOf);
@@ -2038,19 +2037,6 @@ MediaCacheStream::NotifyDataStartedInternal(uint32_t aLoadID,
 }
 
 void
-MediaCacheStream::UpdatePrincipal(nsIPrincipal* aPrincipal)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MediaCache::ResourceStreamIterator iter(mMediaCache, mResourceID);
-  while (MediaCacheStream* stream = iter.Next()) {
-    if (nsContentUtils::CombineResourcePrincipals(&stream->mPrincipal,
-                                                  aPrincipal)) {
-      stream->mClient->CacheClientNotifyPrincipalChanged();
-    }
-  }
-}
-
-void
 MediaCacheStream::NotifyDataStarted(uint32_t aLoadID,
                                     int64_t aOffset,
                                     bool aSeekable,
@@ -2880,7 +2866,6 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
   mResourceID = aOriginal->mResourceID;
 
   // Grab cache blocks from aOriginal as readahead blocks for our stream
-  mPrincipal = aOriginal->mPrincipal;
   mStreamLength = aOriginal->mStreamLength;
   mIsTransportSeekable = aOriginal->mIsTransportSeekable;
   mDownloadStatistics = aOriginal->mDownloadStatistics;
