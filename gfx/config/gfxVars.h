@@ -39,7 +39,7 @@ class gfxVarReceiver;
   _(UseWebRenderProgramBinary,  bool,             false)                \
   _(WebRenderDebugFlags,        int32_t,          0)                    \
   _(ScreenDepth,                int32_t,          0)                    \
-  _(GREDirectory,               nsCString,        nsCString())          \
+  _(GREDirectory,               nsString,         nsString())           \
   _(UseOMTP,                    bool,             false)                \
   _(AllowD3D11KeyedMutex,       bool,             false)                \
 

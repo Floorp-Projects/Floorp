@@ -1140,7 +1140,7 @@ Factory::CopyDataSourceSurface(DataSourceSurface* aSource,
 }
 
 already_AddRefed<DrawEventRecorder>
-Factory::CreateEventRecorderForFile(const char *aFilename)
+Factory::CreateEventRecorderForFile(const char_type* aFilename)
 {
   return MakeAndAddRef<DrawEventRecorderFile>(aFilename);
 }
