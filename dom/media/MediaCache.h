@@ -218,7 +218,7 @@ public:
   // as the aOriginal stream.
   // Exactly one of InitAsClone or Init must be called before any other method
   // on this class.
-  nsresult InitAsClone(MediaCacheStream* aOriginal);
+  void InitAsClone(MediaCacheStream* aOriginal);
 
   nsIEventTarget* OwnerThread() const;
 
