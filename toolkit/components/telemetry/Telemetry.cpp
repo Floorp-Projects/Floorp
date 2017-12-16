@@ -6,8 +6,6 @@
 
 #include <algorithm>
 
-#include <fstream>
-
 #include <prio.h>
 #include <prproces.h>
 #ifdef XP_LINUX
@@ -44,10 +42,12 @@
 #include "js/GCAPI.h"
 #include "nsString.h"
 #include "nsITelemetry.h"
-#include "nsIFile.h"
+#include "nsIDirectoryEnumerator.h"
 #include "nsIFileStreams.h"
+#include "nsLocalFile.h"
 #include "nsIMemoryReporter.h"
 #include "nsISeekableStream.h"
+#include "nsISimpleEnumerator.h"
 #include "Telemetry.h"
 #include "TelemetryCommon.h"
 #include "TelemetryHistogram.h"
@@ -73,9 +73,9 @@
 #include "plstr.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/FStream.h"
 #include "mozilla/ProcessedStack.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/FileUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/IOInterposer.h"
@@ -235,10 +235,15 @@ InitHistogramRecordingEnabled()
   TelemetryHistogram::InitHistogramRecordingEnabled();
 }
 
+using PathChar = filesystem::Path::value_type;
+using PathCharPtr = const PathChar*;
+
 static uint32_t
-ReadLastShutdownDuration(const char *filename) {
-  FILE *f = fopen(filename, "r");
-  if (!f) {
+ReadLastShutdownDuration(PathCharPtr filename) {
+  RefPtr<nsLocalFile> file =
+    new nsLocalFile(nsTDependentString<PathChar>(filename));
+  FILE *f;
+  if (NS_FAILED(file->OpenANSIFileDesc("r", &f)) || !f) {
     return 0;
   }
 
@@ -281,7 +286,7 @@ GetFailedProfileLockFile(nsIFile* *aFile, nsIFile* aProfileDir)
 class nsFetchTelemetryData : public Runnable
 {
 public:
-  nsFetchTelemetryData(const char* aShutdownTimeFilename,
+  nsFetchTelemetryData(PathCharPtr aShutdownTimeFilename,
                        nsIFile* aFailedProfileLockFile,
                        nsIFile* aProfileDir)
     : mozilla::Runnable("nsFetchTelemetryData")
@@ -293,7 +298,7 @@ public:
   }
 
 private:
-  const char* mShutdownTimeFilename;
+  PathCharPtr mShutdownTimeFilename;
   nsCOMPtr<nsIFile> mFailedProfileLockFile;
   RefPtr<TelemetryImpl> mTelemetry;
   nsCOMPtr<nsIFile> mProfileDir;
@@ -353,9 +358,9 @@ private:
 
 static TimeStamp gRecordedShutdownStartTime;
 static bool gAlreadyFreedShutdownTimeFileName = false;
-static char *gRecordedShutdownTimeFileName = nullptr;
+static PathCharPtr gRecordedShutdownTimeFileName = nullptr;
 
-static char *
+static PathCharPtr
 GetShutdownTimeFileName()
 {
   if (gAlreadyFreedShutdownTimeFileName) {
@@ -369,12 +374,8 @@ GetShutdownTimeFileName()
       return nullptr;
 
     mozFile->AppendNative(NS_LITERAL_CSTRING("Telemetry.ShutdownTime.txt"));
-    nsAutoCString nativePath;
-    nsresult rv = mozFile->GetNativePath(nativePath);
-    if (!NS_SUCCEEDED(rv))
-      return nullptr;
 
-    gRecordedShutdownTimeFileName = PL_strdup(nativePath.get());
+    gRecordedShutdownTimeFileName = NS_strdup(mozFile->NativePath().get());
   }
 
   return gRecordedShutdownTimeFileName;
@@ -445,7 +446,7 @@ TelemetryImpl::AsyncFetchTelemetryData(nsIFetchTelemetryDataCallback *aCallback)
   }
 
   // We have to get the filename from the main thread.
-  const char *shutdownTimeFilename = GetShutdownTimeFileName();
+  PathCharPtr shutdownTimeFilename = GetShutdownTimeFileName();
   if (!shutdownTimeFilename) {
     mCachedTelemetryData = true;
     aCallback->Complete();
@@ -976,9 +977,9 @@ IsValidBreakpadId(const std::string &breakpadId)
 // Read a stack from the given file name. In case of any error, aStack is
 // unchanged.
 static void
-ReadStack(const char *aFileName, Telemetry::ProcessedStack &aStack)
+ReadStack(PathCharPtr aFileName, Telemetry::ProcessedStack &aStack)
 {
-  std::ifstream file(aFileName);
+  IFStream file(aFileName);
 
   size_t numModules;
   file >> numModules;
@@ -1050,39 +1051,32 @@ ReadStack(const char *aFileName, Telemetry::ProcessedStack &aStack)
 void
 TelemetryImpl::ReadLateWritesStacks(nsIFile* aProfileDir)
 {
-  nsAutoCString nativePath;
-  nsresult rv = aProfileDir->GetNativePath(nativePath);
-  if (NS_FAILED(rv)) {
+  nsCOMPtr<nsISimpleEnumerator> e;
+  if (NS_FAILED(aProfileDir->GetDirectoryEntries(getter_AddRefs(e)))) {
+    return;
+  }
+  nsCOMPtr<nsIDirectoryEnumerator> files(do_QueryInterface(e));
+  if (!files) {
     return;
   }
 
-  const char *name = nativePath.get();
-  PRDir *dir = PR_OpenDir(name);
-  if (!dir) {
-    return;
-  }
-
-  PRDirEntry *ent;
-  const char *prefix = "Telemetry.LateWriteFinal-";
-  unsigned int prefixLen = strlen(prefix);
-  while ((ent = PR_ReadDir(dir, PR_SKIP_NONE))) {
-    if (strncmp(prefix, ent->name, prefixLen) != 0) {
+  NS_NAMED_LITERAL_STRING(prefix, "Telemetry.LateWriteFinal-");
+  nsCOMPtr<nsIFile> file;
+  while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(file))) && file) {
+    nsAutoString leafName;
+    if (NS_FAILED(file->GetLeafName(leafName)) ||
+        !StringBeginsWith(leafName, prefix)) {
       continue;
     }
 
-    nsAutoCString stackNativePath = nativePath;
-    stackNativePath += XPCOM_FILE_PATH_SEPARATOR;
-    stackNativePath += nsDependentCString(ent->name);
-
     Telemetry::ProcessedStack stack;
-    ReadStack(stackNativePath.get(), stack);
+    ReadStack(file->NativePath().get(), stack);
     if (stack.GetStackSize() != 0) {
       mLateWritesStacks.AddStack(stack);
     }
     // Delete the file so that we don't report it again on the next run.
-    PR_Delete(stackNativePath.get());
+    file->Remove(false);
   }
-  PR_CloseDir(dir);
 }
 
 NS_IMETHODIMP
@@ -1878,8 +1872,8 @@ RecordShutdownEndTimeStamp() {
   if (!gRecordedShutdownTimeFileName || gAlreadyFreedShutdownTimeFileName)
     return;
 
-  nsCString name(gRecordedShutdownTimeFileName);
-  PL_strfree(gRecordedShutdownTimeFileName);
+  PathString name(gRecordedShutdownTimeFileName);
+  free(const_cast<PathChar*>(gRecordedShutdownTimeFileName));
   gRecordedShutdownTimeFileName = nullptr;
   gAlreadyFreedShutdownTimeFileName = true;
 
@@ -1891,10 +1885,11 @@ RecordShutdownEndTimeStamp() {
     return;
   }
 
-  nsCString tmpName = name;
-  tmpName += ".tmp";
-  FILE *f = fopen(tmpName.get(), "w");
-  if (!f)
+  nsTAutoString<PathChar> tmpName(name);
+  tmpName.AppendLiteral(".tmp");
+  RefPtr<nsLocalFile> tmpFile = new nsLocalFile(tmpName);
+  FILE *f;
+  if (NS_FAILED(tmpFile->OpenANSIFileDesc("w", &f)) || !f)
     return;
   // On a normal release build this should be called just before
   // calling _exit, but on a debug build or when the user forces a full
@@ -1910,11 +1905,13 @@ RecordShutdownEndTimeStamp() {
   MozillaUnRegisterDebugFILE(f);
   int rv = fclose(f);
   if (written < 0 || rv != 0) {
-    PR_Delete(tmpName.get());
+    tmpFile->Remove(false);
     return;
   }
-  PR_Delete(name.get());
-  PR_Rename(tmpName.get(), name.get());
+  RefPtr<nsLocalFile> file = new nsLocalFile(name);
+  nsAutoString leafName;
+  file->GetLeafName(leafName);
+  tmpFile->RenameTo(nullptr, leafName);
 }
 
 } // namespace mozilla
