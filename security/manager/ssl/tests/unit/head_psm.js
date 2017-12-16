@@ -376,9 +376,7 @@ function add_connection_test(aHost, aExpectedResult,
 
   function Connection(host) {
     this.host = host;
-    let threadManager = Cc["@mozilla.org/thread-manager;1"]
-                          .getService(Ci.nsIThreadManager);
-    this.thread = threadManager.currentThread;
+    this.thread = Services.tm.currentThread;
     this.defer = Promise.defer();
     let sts = Cc["@mozilla.org/network/socket-transport-service;1"]
                 .getService(Ci.nsISocketTransportService);
@@ -471,15 +469,12 @@ function add_connection_test(aHost, aExpectedResult,
 }
 
 function _getBinaryUtil(binaryUtilName) {
-  let directoryService = Cc["@mozilla.org/file/directory_service;1"]
-                           .getService(Ci.nsIProperties);
-
-  let utilBin = directoryService.get("CurProcD", Ci.nsIFile);
+  let utilBin = Services.dirsvc.get("CurProcD", Ci.nsIFile);
   utilBin.append(binaryUtilName + mozinfo.bin_suffix);
   // If we're testing locally, the above works. If not, the server executable
   // is in another location.
   if (!utilBin.exists()) {
-    utilBin = directoryService.get("CurWorkD", Ci.nsIFile);
+    utilBin = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
     while (utilBin.path.indexOf("xpcshell") != -1) {
       utilBin = utilBin.parent;
     }
@@ -504,11 +499,9 @@ function _setupTLSServerTest(serverBinName, certsPath) {
 
   const CALLBACK_PORT = 8444;
 
-  let directoryService = Cc["@mozilla.org/file/directory_service;1"]
-                           .getService(Ci.nsIProperties);
   let envSvc = Cc["@mozilla.org/process/environment;1"]
                  .getService(Ci.nsIEnvironment);
-  let greBinDir = directoryService.get("GreBinD", Ci.nsIFile);
+  let greBinDir = Services.dirsvc.get("GreBinD", Ci.nsIFile);
   envSvc.set("DYLD_LIBRARY_PATH", greBinDir.path);
   // TODO(bug 1107794): Android libraries are in /data/local/xpcb, but "GreBinD"
   // does not return this path on Android, so hard code it here.
@@ -532,7 +525,7 @@ function _setupTLSServerTest(serverBinName, certsPath) {
   let serverBin = _getBinaryUtil(serverBinName);
   let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
   process.init(serverBin);
-  let certDir = directoryService.get("CurWorkD", Ci.nsIFile);
+  let certDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
   certDir.append(`${certsPath}`);
   Assert.ok(certDir.exists(), `certificate folder (${certsPath}) should exist`);
   // Using "sql:" causes the SQL DB to be used so we can run tests on Android.
