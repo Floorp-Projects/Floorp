@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
-Adjust dependencies to not exceed MAX_DEPS
+Adjust dependencies to not exceed MAX_DEPENDENCIES
 """
 
 from __future__ import absolute_import, print_function, unicode_literals
@@ -11,12 +11,9 @@ from copy import deepcopy
 from taskgraph.transforms.base import TransformSequence
 import taskgraph.transforms.release_deps as release_deps
 from taskgraph.util.treeherder import split_symbol, join_symbol
+from taskgraph import MAX_DEPENDENCIES
 
 transforms = TransformSequence()
-
-# Max dependency limit per task.
-# https://docs.taskcluster.net/reference/platform/taskcluster-queue/references/api#createTask
-MAX_DEPS = 100
 
 
 def yield_job(orig_job, deps, count):
@@ -40,7 +37,7 @@ def add_dependencies(config, jobs):
 
         for dep_label in job['dependencies'].keys():
             deps[dep_label] = dep_label
-            if len(deps) == MAX_DEPS:
+            if len(deps) == MAX_DEPENDENCIES:
                 yield yield_job(job, deps, count)
                 deps = {}
                 count += 1
