@@ -74,6 +74,11 @@
 #include "builtin/ModuleObject.h"
 #include "builtin/RegExp.h"
 #include "builtin/TestingFunctions.h"
+
+#if defined(JS_BUILD_BINAST)
+#include "frontend/BinSource.h"
+#endif // defined(JS_BUILD_BINAST)
+
 #include "frontend/Parser.h"
 #include "gc/GCInternals.h"
 #include "jit/arm/Simulator-arm.h"
@@ -4392,6 +4397,64 @@ GetModuleLoadPath(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+#if defined(JS_BUILD_BINAST)
+
+static bool
+BinParse(JSContext* cx, unsigned argc, Value* vp)
+{
+    using namespace js::frontend;
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() < 1) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                                  "parse", "0", "s");
+        return false;
+    }
+    if (!args[0].isObject()) {
+        const char* typeName = InformalValueTypeName(args[0]);
+        JS_ReportErrorASCII(cx, "expected object (typed array) to parse, got %s", typeName);
+        return false;
+    }
+
+    RootedObject obj(cx, &args[0].toObject());
+    if (!JS_IsTypedArrayObject(obj)) {
+        const char* typeName = InformalValueTypeName(args[0]);
+        JS_ReportErrorASCII(cx, "expected typed array to parse, got %s", typeName);
+        return false;
+    }
+
+    uint32_t buf_length = 0;
+    bool buf_isSharedMemory = false;
+    uint8_t* buf_data = nullptr;
+    GetArrayBufferViewLengthAndData(obj, &buf_length, &buf_isSharedMemory, &buf_data);
+    MOZ_ASSERT(buf_data);
+
+    CompileOptions options(cx);
+    options.setIntroductionType("js shell bin parse")
+           .setFileAndLine("<ArrayBuffer>", 1);
+
+    UsedNameTracker usedNames(cx);
+    if (!usedNames.init())
+        return false;
+
+    BinASTParser reader(cx, cx->tempLifoAlloc(), usedNames, options);
+
+    JS::Result<ParseNode*> parsed = reader.parse(buf_data, buf_length);
+    if (parsed.isErr())
+        return false;
+
+#ifdef DEBUG
+    Fprinter out(stderr);
+    DumpParseTree(parsed.unwrap(), out);
+#endif
+
+    args.rval().setUndefined();
+    return true;
+}
+
+#endif // defined(JS_BUILD_BINAST)
+
 static bool
 Parse(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -4424,22 +4487,22 @@ Parse(JSContext* cx, unsigned argc, Value* vp)
     CompileOptions options(cx);
     options.setIntroductionType("js shell parse")
            .setFileAndLine("<string>", 1);
+
     UsedNameTracker usedNames(cx);
     if (!usedNames.init())
         return false;
     Parser<FullParseHandler, char16_t> parser(cx, cx->tempLifoAlloc(), options, chars, length,
-                                              /* foldConstants = */ true, usedNames, nullptr,
+                                              /* foldConstants = */ false, usedNames, nullptr,
                                               nullptr);
     if (!parser.checkOptions())
         return false;
 
-    ParseNode* pn = parser.parse();
+    ParseNode* pn = parser.parse(); // Deallocated once `parser` goes out of scope.
     if (!pn)
         return false;
 #ifdef DEBUG
     js::Fprinter out(stderr);
     DumpParseTree(pn, out);
-    out.putChar('\n');
 #endif
     args.rval().setUndefined();
     return true;
@@ -6745,6 +6808,14 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "getModuleLoadPath()",
 "  Return any --module-load-path argument passed to the shell.  Used by the\n"
 "  module loader.\n"),
+
+#if defined(JS_BUILD_BINAST)
+
+JS_FN_HELP("parseBin", BinParse, 1, 0,
+"parseBin(arraybuffer)",
+"  Parses a Binary AST, potentially throwing."),
+
+#endif // defined(JS_BUILD_BINAST)
 
     JS_FN_HELP("parse", Parse, 1, 0,
 "parse(code)",

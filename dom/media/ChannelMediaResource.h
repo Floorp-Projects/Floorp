@@ -67,6 +67,18 @@ class ChannelMediaResource
   : public BaseMediaResource
   , public DecoderDoctorLifeLogger<ChannelMediaResource>
 {
+  // Store information shared among resources. Main thread only.
+  struct SharedInfo
+  {
+    NS_INLINE_DECL_REFCOUNTING(SharedInfo);
+    nsCOMPtr<nsIPrincipal> mPrincipal;
+    nsTArray<ChannelMediaResource*> mResources;
+
+  private:
+    ~SharedInfo() = default;
+  };
+  RefPtr<SharedInfo> mSharedInfo;
+
 public:
   ChannelMediaResource(MediaResourceCallback* aDecoder,
                        nsIChannel* aChannel,
