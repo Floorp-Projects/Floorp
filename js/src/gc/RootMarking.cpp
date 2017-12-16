@@ -153,6 +153,12 @@ AutoGCRooter::trace(JSTracer* trc)
         frontend::TraceParser(trc, this);
         return;
 
+#if defined(JS_BUILD_BINAST)
+      case BINPARSER:
+        frontend::TraceBinParser(trc, this);
+        return;
+#endif // defined(JS_BUILD_BINAST)
+
       case VALARRAY: {
         /*
          * We don't know the template size parameter, but we can safely treat it
