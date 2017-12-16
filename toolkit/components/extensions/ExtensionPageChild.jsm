@@ -100,7 +100,7 @@ function getFrameData(global) {
 
 var apiManager = new class extends SchemaAPIManager {
   constructor() {
-    super("addon");
+    super("addon", Schemas);
     this.initialized = false;
   }
 
@@ -116,7 +116,7 @@ var apiManager = new class extends SchemaAPIManager {
 
 var devtoolsAPIManager = new class extends SchemaAPIManager {
   constructor() {
-    super("devtools");
+    super("devtools", Schemas);
     this.initialized = false;
   }
 
@@ -172,7 +172,7 @@ class ExtensionBaseContextChild extends BaseContext {
 
     Schemas.exportLazyGetter(contentWindow, "browser", () => {
       let browserObj = Cu.createObjectIn(contentWindow);
-      Schemas.inject(browserObj, this.childManager);
+      this.childManager.inject(browserObj);
       return browserObj;
     });
 
@@ -181,7 +181,7 @@ class ExtensionBaseContextChild extends BaseContext {
       chromeApiWrapper.isChromeCompat = true;
 
       let chromeObj = Cu.createObjectIn(contentWindow);
-      Schemas.inject(chromeObj, chromeApiWrapper);
+      chromeApiWrapper.inject(chromeObj);
       return chromeObj;
     });
   }

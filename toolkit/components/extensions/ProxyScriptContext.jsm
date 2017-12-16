@@ -324,7 +324,7 @@ class ProxyScriptContext extends BaseContext {
 
 class ProxyScriptAPIManager extends SchemaAPIManager {
   constructor() {
-    super("proxy");
+    super("proxy", Schemas);
     this.initialized = false;
   }
 
@@ -388,6 +388,6 @@ defineLazyGetter(ProxyScriptContext.prototype, "browserObj", function() {
 
   let browserObj = Cu.createObjectIn(this.sandbox);
   let injectionContext = new ProxyScriptInjectionContext(this, can);
-  Schemas.inject(browserObj, injectionContext);
+  proxyScriptAPIManager.schema.inject(browserObj, injectionContext);
   return browserObj;
 });

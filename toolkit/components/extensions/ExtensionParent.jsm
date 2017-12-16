@@ -77,7 +77,7 @@ const global = this;
 // This object loads the ext-*.js scripts that define the extension API.
 let apiManager = new class extends SchemaAPIManager {
   constructor() {
-    super("main");
+    super("main", Schemas);
     this.initialized = null;
 
     /* eslint-disable mozilla/balanced-listeners */
