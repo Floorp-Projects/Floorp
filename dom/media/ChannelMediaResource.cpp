@@ -39,6 +39,9 @@ ChannelMediaResource::~ChannelMediaResource()
   MOZ_ASSERT(mClosed);
   MOZ_ASSERT(!mChannel);
   MOZ_ASSERT(!mListener);
+  if (mSharedInfo) {
+    mSharedInfo->mResources.RemoveElement(this);
+  }
 }
 
 // ChannelMediaResource::Listener just observes the channel and
@@ -463,6 +466,9 @@ ChannelMediaResource::Open(nsIStreamListener** aStreamListener)
     return rv;
   }
 
+  mSharedInfo = new SharedInfo;
+  mSharedInfo->mResources.AppendElement(this);
+
   mIsLiveStream = cl < 0;
   MOZ_ASSERT(GetOffset() == 0, "Who set offset already?");
   mListener = new Listener(this, 0, ++mLoadID);
@@ -546,10 +552,8 @@ nsresult ChannelMediaResource::Close()
 already_AddRefed<nsIPrincipal>
 ChannelMediaResource::GetCurrentPrincipal()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
-  nsCOMPtr<nsIPrincipal> principal = mCacheStream.GetCurrentPrincipal();
-  return principal.forget();
+  MOZ_ASSERT(NS_IsMainThread());
+  return do_AddRef(mSharedInfo->mPrincipal);
 }
 
 bool ChannelMediaResource::CanClone()
@@ -568,6 +572,8 @@ ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
 
   resource->mIsLiveStream = mIsLiveStream;
   resource->mIsTransportSeekable = mIsTransportSeekable;
+  resource->mSharedInfo = mSharedInfo;
+  mSharedInfo->mResources.AppendElement(resource.get());
 
   // Initially the clone is treated as suspended by the cache, because
   // we don't have a channel. If the cache needs to read data from the clone
@@ -807,11 +813,17 @@ ChannelMediaResource::UpdatePrincipal()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mChannel);
-  nsCOMPtr<nsIPrincipal> principal;
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  if (secMan) {
-    secMan->GetChannelResultPrincipal(mChannel, getter_AddRefs(principal));
-    mCacheStream.UpdatePrincipal(principal);
+  if (!secMan) {
+    return;
+  }
+  nsCOMPtr<nsIPrincipal> principal;
+  secMan->GetChannelResultPrincipal(mChannel, getter_AddRefs(principal));
+  if (nsContentUtils::CombineResourcePrincipals(&mSharedInfo->mPrincipal,
+                                                principal)) {
+    for (auto* r : mSharedInfo->mResources) {
+      r->CacheClientNotifyPrincipalChanged();
+    }
   }
 }
 
