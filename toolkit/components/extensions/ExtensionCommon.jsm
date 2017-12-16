@@ -952,11 +952,13 @@ class SchemaAPIManager extends EventEmitter {
    *     "content" - A content process.
    *     "devtools" - A devtools process.
    *     "proxy" - A proxy script process.
+   * @param {SchemaRoot} schema
    */
-  constructor(processType) {
+  constructor(processType, schema) {
     super();
     this.processType = processType;
     this.global = this._createExtGlobal();
+    this.schema = schema;
 
     this.modules = new Map();
     this.modulePaths = {children: new Map(), modules: new Set()};

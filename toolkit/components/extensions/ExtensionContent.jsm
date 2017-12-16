@@ -73,7 +73,7 @@ const CONTENT_SCRIPT_INJECTION_HISTOGRAM = "WEBEXT_CONTENT_SCRIPT_INJECTION_MS";
 
 var apiManager = new class extends SchemaAPIManager {
   constructor() {
-    super("content");
+    super("content", Schemas);
     this.initialized = false;
   }
 
@@ -480,7 +480,7 @@ class ContentScriptContextChild extends BaseContext {
     defineLazyGetter(this, "chromeObj", () => {
       let chromeObj = Cu.createObjectIn(this.sandbox);
 
-      Schemas.inject(chromeObj, this.childManager);
+      this.childManager.inject(chromeObj);
       return chromeObj;
     });
 
