@@ -2875,7 +2875,7 @@ MediaCacheStream::Init(int64_t aContentLength)
   return NS_OK;
 }
 
-nsresult
+void
 MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
 {
   MOZ_ASSERT(!mMediaCache, "Has been initialized.");
@@ -2892,12 +2892,6 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
 
   AutoLock lock(aOriginal->mMediaCache->Monitor());
 
-  if (aOriginal->mDidNotifyDataEnded &&
-      NS_FAILED(aOriginal->mNotifyDataEndedStatus)) {
-    // Streams that ended abnormally are ineligible for cloning.
-    return NS_ERROR_FAILURE;
-  }
-
   mResourceID = aOriginal->mResourceID;
 
   // Grab cache blocks from aOriginal as readahead blocks for our stream
@@ -2906,7 +2900,8 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
   mDownloadStatistics = aOriginal->mDownloadStatistics;
   mDownloadStatistics.Stop();
 
-  if (aOriginal->mDidNotifyDataEnded) {
+  if (aOriginal->mDidNotifyDataEnded &&
+      NS_SUCCEEDED(aOriginal->mNotifyDataEndedStatus)) {
     mNotifyDataEndedStatus = aOriginal->mNotifyDataEndedStatus;
     mDidNotifyDataEnded = true;
     mClient->CacheClientNotifyDataEnded(mNotifyDataEndedStatus);
@@ -2925,9 +2920,13 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
     mMediaCache->AddBlockOwnerAsReadahead(lock, cacheBlockIndex, this, i);
   }
 
-  mMediaCache->OpenStream(lock, this, true /* aIsClone */);
+  // Copy the partial block.
+  mChannelOffset = aOriginal->mChannelOffset;
+  memcpy(mPartialBlockBuffer.get(),
+         aOriginal->mPartialBlockBuffer.get(),
+         BLOCK_SIZE);
 
-  return NS_OK;
+  mMediaCache->OpenStream(lock, this, true /* aIsClone */);
 }
 
 nsIEventTarget*
