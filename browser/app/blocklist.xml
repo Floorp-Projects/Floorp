@@ -961,17 +961,9 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="i13" id="{E8E88AB0-7182-11DF-904E-6045E0D72085}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
     <emItem blockID="i226" id="{462be121-2b54-4218-bf00-b9bf8135b23f}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
-    <emItem blockID="i117" id="{ce7e73df-6a44-4028-8079-5927a588c948}">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="1.0.8" severity="1"/>
     </emItem>
     <emItem blockID="i44" id="sigma@labs.mozilla">
       <prefs/>
@@ -2079,6 +2071,10 @@
       </prefs>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
+    <emItem blockID="10d9ce89-b8d4-4b53-b3d7-ecd192681f4e" id="{d03b6b0f-4d44-4666-a6d6-f16ad9483593}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
     <emItem blockID="i842" id="{746505DC-0E21-4667-97F8-72EA6BCF5EEF}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
@@ -2142,6 +2138,14 @@
     <emItem blockID="i446" id="{E90FA778-C2B7-41D0-9FA9-3FEC1CA54D66}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i13" id="{E8E88AB0-7182-11DF-904E-6045E0D72085}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="i117" id="{ce7e73df-6a44-4028-8079-5927a588c948}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.0.8" severity="1"/>
     </emItem>
   </emItems>
   <pluginItems>
