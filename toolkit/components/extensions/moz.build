@@ -90,6 +90,4 @@ XPCSHELL_TESTS_MANIFESTS += [
     'test/xpcshell/xpcshell.ini',
 ]
 
-SPHINX_TREES['webextensions'] = 'docs'
-
 include('/ipc/chromium/chromium-config.mozbuild')
