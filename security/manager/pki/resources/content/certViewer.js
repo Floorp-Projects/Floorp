@@ -1,6 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* import-globals-from pippki.js */
 "use strict";
 
 /**
@@ -10,9 +12,6 @@
  * @argument {nsISupports} window.arguments[0]
  *           The cert to view, queryable to nsIX509Cert.
  */
-
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const nsIX509Cert = Ci.nsIX509Cert;
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
