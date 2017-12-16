@@ -778,6 +778,7 @@ class ChildAPIManager {
     // delegated to the ParentAPIManager.
     this.localApis = localAPICan.root;
     this.apiCan = localAPICan;
+    this.schema = this.apiCan.apiManager.schema;
 
     this.id = `${context.extension.id}.${context.contextId}`;
 
@@ -819,6 +820,10 @@ class ChildAPIManager {
       this.context.extension.on("add-permissions", this.updatePermissions);
       this.context.extension.on("remove-permissions", this.updatePermissions);
     }
+  }
+
+  inject(obj) {
+    this.schema.inject(obj, this);
   }
 
   receiveMessage({name, messageName, data}) {
