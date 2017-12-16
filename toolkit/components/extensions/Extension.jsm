@@ -280,17 +280,15 @@ var UninstallObserver = {
 
 UninstallObserver.init();
 
-/**
- * Represents the data contained in an extension, contained either
- * in a directory or a zip file, which may or may not be installed.
- * This class implements the functionality of the Extension class,
- * primarily related to manifest parsing and localization, which is
- * useful prior to extension installation or initialization.
- *
- * No functionality of this class is guaranteed to work before
- * `loadManifest` has been called, and completed.
- */
-class ExtensionData {
+// Represents the data contained in an extension, contained either
+// in a directory or a zip file, which may or may not be installed.
+// This class implements the functionality of the Extension class,
+// primarily related to manifest parsing and localization, which is
+// useful prior to extension installation or initialization.
+//
+// No functionality of this class is guaranteed to work before
+// |loadManifest| has been called, and completed.
+this.ExtensionData = class {
   constructor(rootURI) {
     this.rootURI = rootURI;
     this.resourceURL = rootURI.spec;
@@ -321,18 +319,11 @@ class ExtensionData {
     return Log.repository.getLogger(LOGGER_ID_BASE + id);
   }
 
-  /**
-   * Report an error about the extension's manifest file.
-   * @param {string} message The error message
-   */
+  // Report an error about the extension's manifest file.
   manifestError(message) {
     this.packagingError(`Reading manifest: ${message}`);
   }
 
-  /**
-   * Report a warning about the extension's manifest file.
-   * @param {string} message The warning message
-   */
   manifestWarning(message) {
     this.packagingWarning(`Reading manifest: ${message}`);
   }
@@ -970,7 +961,7 @@ class ExtensionData {
 
     return result;
   }
-}
+};
 
 const PROXIED_EVENTS = new Set(["test-harness-message", "add-permissions", "remove-permissions"]);
 
@@ -987,7 +978,6 @@ class BootstrapScope {
   }
 
   startup(data, reason) {
-    // eslint-disable-next-line no-use-before-define
     this.extension = new Extension(data, this.BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
     return this.extension.startup();
   }
@@ -1018,7 +1008,6 @@ class LangpackBootstrapScope {
   uninstall(data, reason) {}
 
   startup(data, reason) {
-    // eslint-disable-next-line no-use-before-define
     this.langpack = new Langpack(data);
     return this.langpack.startup();
   }
@@ -1029,12 +1018,9 @@ class LangpackBootstrapScope {
   }
 }
 
-/**
- * This class is the main representation of an active WebExtension
- * in the main process.
- * @extends ExtensionData
- */
-class Extension extends ExtensionData {
+// We create one instance of this class per extension. |addonData|
+// comes directly from bootstrap.js when initializing.
+this.Extension = class extends ExtensionData {
   constructor(addonData, startupReason) {
     super(addonData.resourceURI);
 
@@ -1126,13 +1112,6 @@ class Extension extends ExtensionData {
     });
     /* eslint-enable mozilla/balanced-listeners */
   }
-
-  // Some helpful properties added elsewhere:
-  /**
-   * An object used to map between extension-visible tab ids and
-   * native Tab object
-   * @property {TabManager} tabManager
-   */
 
   static getBootstrapScope(id, file) {
     return new BootstrapScope();
@@ -1373,15 +1352,6 @@ class Extension extends ExtensionData {
     });
   }
 
-  /**
-   * Call the close() method on the given object when this extension
-   * is shut down.  This can happen during browser shutdown, or when
-   * an extension is manually disabled or uninstalled.
-   *
-   * @param {object} obj
-   *        An object on which to call the close() method when this
-   *        extension is shut down.
-   */
   callOnClose(obj) {
     this.onShutdown.add(obj);
   }
@@ -1681,9 +1651,9 @@ class Extension extends ExtensionData {
     }
     return this._optionalOrigins;
   }
-}
+};
 
-class Langpack extends ExtensionData {
+this.Langpack = class extends ExtensionData {
   constructor(addonData, startupReason) {
     super(addonData.resourceURI);
     this.startupData = addonData.startupData;
@@ -1784,4 +1754,4 @@ class Langpack extends ExtensionData {
 
     resourceProtocol.setSubstitution(this.langpackId, null);
   }
-}
+};

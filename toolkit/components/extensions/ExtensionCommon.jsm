@@ -85,11 +85,6 @@ class NoCloneSpreadArgs {
   }
 }
 
-/**
- * Base class for WebExtension APIs.  Each API creates a new class
- * that inherits from this class, the derived class is instantiated
- * once for each extension that uses the API.
- */
 class ExtensionAPI extends ExtensionUtils.EventEmitter {
   constructor(extension) {
     super();
@@ -182,13 +177,6 @@ var ExtensionAPIs = {
   },
 };
 
-/**
- * This class contains the information we have about an individual
- * extension.  It is never instantiated directly, instead subclasses
- * for each type of process extend this class and add members that are
- * relevant for that process.
- * @abstract
- */
 class BaseContext {
   constructor(envType, extension) {
     this.envType = envType;
@@ -1532,38 +1520,27 @@ defineLazyGetter(LocaleData.prototype, "availableLocales", function() {
                  .filter(locale => this.messages.has(locale)));
 });
 
-/**
-* This is a generic class for managing event listeners.
- *
- * @example
- * new EventManager(context, "api.subAPI", fire => {
- *   let listener = (...) => {
- *     // Fire any listeners registered with addListener.
- *     fire.async(arg1, arg2);
- *   };
- *   // Register the listener.
- *   SomehowRegisterListener(listener);
- *   return () => {
- *     // Return a way to unregister the listener.
- *     SomehowUnregisterListener(listener);
- *   };
- * }).api()
- *
- * The result is an object with addListener, removeListener, and
- * hasListener methods. `context` is an add-on scope (either an
- * ExtensionContext in the chrome process or ExtensionContext in a
- * content process). `name` is for debugging. `register` is a function
- * to register the listener. `register` should return an
- * unregister function that will unregister the listener.
- * @constructor
- *
- * @param {BaseContext} context
- *        An object representing the extension instance using this event.
- * @param {string} name
- *        A name used only for debugging.
- * @param {functon} register
- *        A function called whenever a new listener is added.
- */
+// This is a generic class for managing event listeners. Example usage:
+//
+// new EventManager(context, "api.subAPI", fire => {
+//   let listener = (...) => {
+//     // Fire any listeners registered with addListener.
+//     fire.async(arg1, arg2);
+//   };
+//   // Register the listener.
+//   SomehowRegisterListener(listener);
+//   return () => {
+//     // Return a way to unregister the listener.
+//     SomehowUnregisterListener(listener);
+//   };
+// }).api()
+//
+// The result is an object with addListener, removeListener, and
+// hasListener methods. |context| is an add-on scope (either an
+// ExtensionContext in the chrome process or ExtensionContext in a
+// content process). |name| is for debugging. |register| is a function
+// to register the listener. |register| should return an
+// unregister function that will unregister the listener.
 function EventManager(context, name, register) {
   this.context = context;
   this.name = name;
