@@ -1151,19 +1151,19 @@ ICBinaryArith_BooleanWithInt32::Compiler::generateStubCode(MacroAssembler& masm)
         break;
       }
       case JSOP_BITOR: {
-        masm.orPtr(rhsReg, lhsReg);
+        masm.or32(rhsReg, lhsReg);
         masm.tagValue(JSVAL_TYPE_INT32, lhsReg, R0);
         EmitReturnFromIC(masm);
         break;
       }
       case JSOP_BITXOR: {
-        masm.xorPtr(rhsReg, lhsReg);
+        masm.xor32(rhsReg, lhsReg);
         masm.tagValue(JSVAL_TYPE_INT32, lhsReg, R0);
         EmitReturnFromIC(masm);
         break;
       }
       case JSOP_BITAND: {
-        masm.andPtr(rhsReg, lhsReg);
+        masm.and32(rhsReg, lhsReg);
         masm.tagValue(JSVAL_TYPE_INT32, lhsReg, R0);
         EmitReturnFromIC(masm);
         break;
@@ -1213,7 +1213,7 @@ ICBinaryArith_DoubleWithInt32::Compiler::generateStubCode(MacroAssembler& masm)
         masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
         masm.callWithABI(mozilla::BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32),
                          MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
-        masm.storeCallWordResult(scratchReg);
+        masm.storeCallInt32Result(scratchReg);
         masm.pop(intReg);
 
         masm.bind(&doneTruncate);
@@ -1223,13 +1223,13 @@ ICBinaryArith_DoubleWithInt32::Compiler::generateStubCode(MacroAssembler& masm)
     // All handled ops commute, so no need to worry about ordering.
     switch(op) {
       case JSOP_BITOR:
-        masm.orPtr(intReg, intReg2);
+        masm.or32(intReg, intReg2);
         break;
       case JSOP_BITXOR:
-        masm.xorPtr(intReg, intReg2);
+        masm.xor32(intReg, intReg2);
         break;
       case JSOP_BITAND:
-        masm.andPtr(intReg, intReg2);
+        masm.and32(intReg, intReg2);
         break;
       default:
        MOZ_CRASH("Unhandled op for BinaryArith_DoubleWithInt32.");
@@ -1366,7 +1366,7 @@ ICUnaryArith_Double::Compiler::generateStubCode(MacroAssembler& masm)
         masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
         masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32),
                          MoveOp::GENERAL, CheckUnsafeCallWithABI::DontCheckOther);
-        masm.storeCallWordResult(scratchReg);
+        masm.storeCallInt32Result(scratchReg);
 
         masm.bind(&doneTruncate);
         masm.not32(scratchReg);
