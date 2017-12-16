@@ -453,7 +453,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
         masm.setupUnalignedABICall(temp0);
         masm.passABIArg(temp1);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GrowBacktrackStack));
-        masm.storeCallWordResult(temp0);
+        masm.storeCallBoolResult(temp0);
 
         masm.PopRegsInMask(volatileRegs);
 
@@ -882,7 +882,7 @@ NativeRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, Label
             int (*fun)(const char16_t*, const char16_t*, size_t) = CaseInsensitiveCompareUCStrings;
             masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
         }
-        masm.storeCallWordResult(temp0);
+        masm.storeCallInt32Result(temp0);
 
         masm.PopRegsInMask(volatileRegs);
 
