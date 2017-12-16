@@ -124,6 +124,14 @@ IsKeyword(JSLinearString* str);
 void
 TraceParser(JSTracer* trc, JS::AutoGCRooter* parser);
 
+#if defined(JS_BUILD_BINAST)
+
+/* Trace all GC things reachable from binjs parser. Defined in BinSource.cpp. */
+void
+TraceBinParser(JSTracer* trc, JS::AutoGCRooter* parser);
+
+#endif // defined(JS_BUILD_BINAST)
+
 class MOZ_STACK_CLASS AutoFrontendTraceLog
 {
 #ifdef JS_TRACE_LOGGING

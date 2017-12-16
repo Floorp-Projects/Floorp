@@ -232,9 +232,6 @@ public:
   // Returns true when this stream is can be shared by a new resource load.
   // Called on the main thread only.
   bool IsAvailableForSharing() const { return !mClosed && !mIsPrivateBrowsing; }
-  // Get the principal for this stream. Anything accessing the contents of
-  // this stream must have a principal that subsumes this principal.
-  nsIPrincipal* GetCurrentPrincipal() { return mPrincipal; }
 
   // These callbacks are called on the main thread by the client
   // when data has been received via the channel.
@@ -363,10 +360,6 @@ public:
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 
-  // Update mPrincipal for all streams of the same resource given that data has
-  // been received from aPrincipal
-  void UpdatePrincipal(nsIPrincipal* aPrincipal);
-
   nsCString GetDebugInfo();
 
 private:
@@ -476,9 +469,6 @@ private:
   RefPtr<MediaCache> mMediaCache;
 
   ChannelMediaResource* const mClient;
-
-  // These fields are main-thread-only.
-  nsCOMPtr<nsIPrincipal> mPrincipal;
 
   // The following fields must be written holding the cache's monitor and
   // only on the main thread, thus can be read either on the main thread
