@@ -18,10 +18,8 @@
 do_get_profile();
 
 function checkBasicAttributes(token) {
-  let strBundleSvc = Cc["@mozilla.org/intl/stringbundle;1"]
-                       .getService(Ci.nsIStringBundleService);
   let bundle =
-    strBundleSvc.createBundle("chrome://pipnss/locale/pipnss.properties");
+    Services.strings.createBundle("chrome://pipnss/locale/pipnss.properties");
 
   let expectedTokenName = bundle.GetStringFromName("PrivateTokenDescription");
   equal(token.tokenName, expectedTokenName,
