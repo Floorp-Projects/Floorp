@@ -3,8 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Note: All overrides should go to mobile/android/chrome/jar.mn in order to avoid
-# having to create the same override entry for each locale.
+# Note: This file should only contain locale entries. All
+# override and resource entries should go to mobile/android/chrome/jar.mn to avoid
+# having to create the same entry for each locale.
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/@AB_CD@/browser/
@@ -32,7 +33,6 @@
 #ifndef RELEASE_OR_BETA
   locale/@AB_CD@/browser/webcompatReporter.properties (%chrome/webcompatReporter.properties)
 #endif
-% resource search-plugins chrome://browser/locale/searchplugins/
 
 # overrides for toolkit l10n, also for en-US
 # keep this file list in sync with l10n.toml and filter.py
