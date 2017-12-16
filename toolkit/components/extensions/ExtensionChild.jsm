@@ -31,6 +31,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "finalizationService",
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
+  ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.jsm",
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   NativeApp: "resource://gre/modules/NativeMessaging.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
@@ -571,6 +572,8 @@ class BrowserExtensionContent extends EventEmitter {
     this.permissions = data.permissions;
     this.optionalPermissions = data.optionalPermissions;
     this.principal = data.principal;
+
+    this.apiManager = ExtensionPageChild.apiManager;
 
     this.localeData = new LocaleData(data.localeData);
 
