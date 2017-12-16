@@ -22,6 +22,7 @@
 // to be able to hold on to a GLContext.
 #include "mozilla/GenericRefCounted.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Path.h"
 
 // This RefPtr class isn't ideal for usage in Azure, as it doesn't allow T**
 // outparams using the &-operator. But it will have to do as there's no easy
@@ -1534,6 +1535,7 @@ struct Config {
 
 class GFX2D_API Factory
 {
+  using char_type = filesystem::Path::value_type;
 public:
   static void Init(const Config& aConfig);
   static void ShutDown();
@@ -1698,7 +1700,7 @@ public:
 
 
   static already_AddRefed<DrawEventRecorder>
-    CreateEventRecorderForFile(const char *aFilename);
+    CreateEventRecorderForFile(const char_type* aFilename);
 
   static void SetGlobalEventRecorder(DrawEventRecorder *aRecorder);
 
