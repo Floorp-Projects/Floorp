@@ -187,7 +187,7 @@ CertBlocklist::Init()
     return rv;
   }
   nsAutoCString path;
-  rv = mBackingFile->GetNativePath(path);
+  rv = mBackingFile->GetPersistentDescriptor(path);
   if (NS_FAILED(rv)) {
     return rv;
   }
