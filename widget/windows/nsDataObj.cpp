@@ -1215,7 +1215,7 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
 
   const char *shortcutFormatStr;
   int totalLen;
-  nsCString path;
+  nsCString asciiPath;
   if (!Preferences::GetBool(kShellIconPref, true)) {
     shortcutFormatStr = "[InternetShortcut]\r\nURL=%s\r\n";
     const int formatLen = strlen(shortcutFormatStr) - 2;  // don't include %s
@@ -1229,15 +1229,29 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
 
     rv = mozilla::widget::FaviconHelper::GetOutputIconPath(aUri, icoFile, true);
     NS_ENSURE_SUCCESS(rv, E_FAIL);
-    rv = icoFile->GetNativePath(path);
+    nsString path;
+    rv = icoFile->GetPath(path);
     NS_ENSURE_SUCCESS(rv, E_FAIL);
 
-    shortcutFormatStr = "[InternetShortcut]\r\nURL=%s\r\n"
-                        "IDList=\r\nHotKey=0\r\nIconFile=%s\r\n"
-                        "IconIndex=0\r\n";
+    if (NS_IsAscii(path.get())) {
+      LossyCopyUTF16toASCII(path, asciiPath);
+      shortcutFormatStr = "[InternetShortcut]\r\nURL=%s\r\n"
+                          "IDList=\r\nHotKey=0\r\nIconFile=%s\r\n"
+                          "IconIndex=0\r\n";
+    } else {
+      int len = WideCharToMultiByte(CP_UTF7, 0, char16ptr_t(path.BeginReading()),
+                                    path.Length(), nullptr, 0, nullptr, nullptr);
+      NS_ENSURE_TRUE(len > 0, E_FAIL);
+      asciiPath.SetLength(len);
+      WideCharToMultiByte(CP_UTF7, 0, char16ptr_t(path.BeginReading()), path.Length(),
+                          asciiPath.BeginWriting(), len, nullptr, nullptr);
+      shortcutFormatStr = "[InternetShortcut]\r\nURL=%s\r\n"
+                          "IDList=\r\nHotKey=0\r\nIconIndex=0\r\n"
+                          "[InternetShortcut.W]\r\nIconFile=%s\r\n";
+    }
     const int formatLen = strlen(shortcutFormatStr) - 2 * 2; // no %s twice
     totalLen = formatLen + asciiUrl.Length() +
-               path.Length(); // we don't want a null character on the end
+               asciiPath.Length(); // we don't want a null character on the end
   }
 
   // create a global memory area and build up the file contents w/in it
@@ -1259,7 +1273,7 @@ nsDataObj :: GetFileContentsInternetShortcut ( FORMATETC& aFE, STGMEDIUM& aSTG )
   if (!Preferences::GetBool(kShellIconPref, true)) {
     _snprintf(contents, totalLen, shortcutFormatStr, asciiUrl.get());
   } else {
-    _snprintf(contents, totalLen, shortcutFormatStr, asciiUrl.get(), path.get());
+    _snprintf(contents, totalLen, shortcutFormatStr, asciiUrl.get(), asciiPath.get());
   }
 
   ::GlobalUnlock(hGlobalMemory);
