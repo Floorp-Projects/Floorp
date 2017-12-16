@@ -497,7 +497,7 @@ XPCOMUtils.defineLazyGetter(this, "console", () => {
 });
 
 var Printing = {
-  // Bug 1088061: nsPrintEngine's DoCommonPrint currently expects the
+  // Bug 1088061: nsPrintJob's DoCommonPrint currently expects the
   // progress listener passed to it to QI to an nsIPrintingPromptService
   // in order to know that a printing progress dialog has been shown. That's
   // really all the interface is used for, hence the fact that I don't actually

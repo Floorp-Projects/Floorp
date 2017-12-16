@@ -23,7 +23,7 @@ class nsViewManager;
 
 /**
  * A DocumentViewerPrint is an INTERNAL Interface used for interaction
- * between the DocumentViewer and the PrintEngine
+ * between the DocumentViewer and nsPrintJob.
  */
 class nsIDocumentViewerPrint : public nsISupports
 {

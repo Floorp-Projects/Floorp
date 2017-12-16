@@ -3,8 +3,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsPrintEngine_h___
-#define nsPrintEngine_h___
+#ifndef nsPrintJob_h
+#define nsPrintJob_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/UniquePtr.h"
@@ -32,13 +32,13 @@ class nsPrintObject;
 class nsIDocShell;
 class nsIPageSequenceFrame;
 
-//------------------------------------------------------------------------
-// nsPrintEngine Class
-//
-//------------------------------------------------------------------------
-class nsPrintEngine final : public nsIObserver,
-                            public nsIWebProgressListener,
-                            public nsSupportsWeakReference
+/**
+ * A print job may be instantiated either for printing to an actual physical
+ * printer, or for creating a print preview.
+ */
+class nsPrintJob final : public nsIObserver
+                       , public nsIWebProgressListener
+                       , public nsSupportsWeakReference
 {
 public:
   // nsISupports interface...
@@ -74,7 +74,7 @@ public:
     eDocTitleDefURLDoc
   };
 
-  nsPrintEngine();
+  nsPrintJob();
 
   void Destroy();
   void DestroyPrintingData();
@@ -158,9 +158,6 @@ public:
   // get the currently infocus frame for the document viewer
   already_AddRefed<nsPIDOMWindowOuter> FindFocusedDOMWindow();
 
-  //---------------------------------------------------------------------
-  // Static Methods
-  //---------------------------------------------------------------------
   static void GetDocumentTitleAndURL(nsIDocument* aDoc,
                                      nsAString&   aTitle,
                                      nsAString&   aURLStr);
@@ -206,8 +203,10 @@ public:
     mDisallowSelectionPrint = aDisallowSelectionPrint;
   }
 
-protected:
-  ~nsPrintEngine();
+private:
+  nsPrintJob& operator=(const nsPrintJob& aOther) = delete;
+
+  ~nsPrintJob();
 
   nsresult CommonPrint(bool aIsPrintPreview, nsIPrintSettings* aPrintSettings,
                        nsIWebProgressListener* aWebProgressListener,
@@ -232,10 +231,27 @@ protected:
 
   void DisconnectPagePrintTimer();
 
-  // Static member variables
+  nsresult AfterNetworkPrint(bool aHandleError);
+
+  nsresult SetRootView(nsPrintObject* aPO,
+                       bool& aDoReturn,
+                       bool& aDocumentIsTopLevel,
+                       nsSize& aAdjSize);
+  nsView* GetParentViewForRoot();
+  bool DoSetPixelScale();
+  void UpdateZoomRatio(nsPrintObject* aPO, bool aSetPixelScale);
+  nsresult ReconstructAndReflow(bool aDoSetPixelScale);
+  nsresult UpdateSelectionAndShrinkPrintObject(nsPrintObject* aPO,
+                                               bool aDocumentIsTopLevel);
+  nsresult InitPrintDocConstruction(bool aHandleError);
+  void FirePrintPreviewUpdateEvent();
+
+  void PageDone(nsresult aResult);
+
+
   bool mIsCreatingPrintPreview;
   bool mIsDoingPrinting;
-  bool mIsDoingPrintPreview; // per DocumentViewer
+  bool mIsDoingPrintPreview;
   bool mProgressDialogIsShown;
 
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
@@ -245,7 +261,7 @@ protected:
   // We are the primary owner of our nsPrintData member vars.  These vars
   // are refcounted so that functions (e.g. nsPrintData methods) can create
   // temporary owning references when they need to fire a callback that
-  // could conceivably destroy this nsPrintEngine owner object and all its
+  // could conceivably destroy this nsPrintJob owner object and all its
   // member-data.
   RefPtr<nsPrintData> mPrt;
 
@@ -262,24 +278,7 @@ protected:
   bool mDidLoadDataForPrinting;
   bool mIsDestroying;
   bool mDisallowSelectionPrint;
-
-  nsresult AfterNetworkPrint(bool aHandleError);
-
-  nsresult SetRootView(nsPrintObject* aPO,
-                       bool& aDoReturn,
-                       bool& aDocumentIsTopLevel,
-                       nsSize& aAdjSize);
-  nsView* GetParentViewForRoot();
-  bool DoSetPixelScale();
-  void UpdateZoomRatio(nsPrintObject* aPO, bool aSetPixelScale);
-  nsresult ReconstructAndReflow(bool aDoSetPixelScale);
-  nsresult UpdateSelectionAndShrinkPrintObject(nsPrintObject* aPO,
-                                               bool aDocumentIsTopLevel);
-  nsresult InitPrintDocConstruction(bool aHandleError);
-  void FirePrintPreviewUpdateEvent();
-private:
-  nsPrintEngine& operator=(const nsPrintEngine& aOther) = delete;
-  void PageDone(nsresult aResult);
 };
 
-#endif /* nsPrintEngine_h___ */
+#endif // nsPrintJob_h
+
