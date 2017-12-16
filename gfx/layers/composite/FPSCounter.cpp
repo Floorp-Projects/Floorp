@@ -364,11 +364,8 @@ FPSCounter::WriteFrameTimeStamps()
   WriteFrameTimeStamps(fd);
   PR_Close(fd);
 
-  nsAutoCString path;
-  rv = resultFile->GetNativePath(path);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  printf_stderr("Wrote FPS data to file: %s\n", path.get());
+  printf_stderr("Wrote FPS data to file: %s\n",
+                resultFile->HumanReadablePath().get());
   return NS_OK;
 }
 
