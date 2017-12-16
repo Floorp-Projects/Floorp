@@ -85,7 +85,7 @@
                     "type": "any"
                   },
                   "scope": {
-                    "$ref": "SettingScope",
+                    "$ref": "types.SettingScope",
                     "optional": true,
                     "description": "Where to set the setting (default: regular)."
                   }
@@ -112,7 +112,7 @@
                 "description": "Which setting to clear.",
                 "properties": {
                   "scope": {
-                    "$ref": "SettingScope",
+                    "$ref": "types.SettingScope",
                     "optional": true,
                     "description": "Where to clear the setting (default: regular)."
                   }
