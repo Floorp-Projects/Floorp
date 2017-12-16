@@ -8,6 +8,10 @@ import os
 
 GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
 
+# Maximum number of dependencies a single task can have
+# https://docs.taskcluster.net/reference/platform/taskcluster-queue/references/api#createTask
+MAX_DEPENDENCIES = 100
+
 # Enable fast task generation for local debugging
 # This is normally switched on via the --fast/-F flag to `mach taskgraph`
 # Currently this skips toolchain task optimizations
