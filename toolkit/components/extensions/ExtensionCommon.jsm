@@ -972,6 +972,19 @@ class SchemaAPIManager extends EventEmitter {
     this._scriptScopes = [];
   }
 
+  onStartup(extension) {
+    let promises = [];
+    for (let apiName of this.eventModules.get("startup")) {
+      promises.push(this.asyncGetAPI(apiName, extension).then(api => {
+        if (api) {
+          api.onStartup();
+        }
+      }));
+    }
+
+    return Promise.all(promises);
+  }
+
   async loadModuleJSON(urls) {
     function fetchJSON(url) {
       return fetch(url).then(resp => resp.json());

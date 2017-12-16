@@ -997,6 +997,8 @@ class Extension extends ExtensionData {
   constructor(addonData, startupReason) {
     super(addonData.resourceURI);
 
+    this.apiManager = Management;
+
     this.uuid = UUIDMap.get(addonData.id);
     this.instanceId = getUniqueId();
 

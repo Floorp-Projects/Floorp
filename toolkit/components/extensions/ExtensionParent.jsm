@@ -82,16 +82,7 @@ let apiManager = new class extends SchemaAPIManager {
 
     /* eslint-disable mozilla/balanced-listeners */
     this.on("startup", (e, extension) => {
-      let promises = [];
-      for (let apiName of this.eventModules.get("startup")) {
-        promises.push(this.asyncGetAPI(apiName, extension).then(api => {
-          if (api) {
-            api.onStartup();
-          }
-        }));
-      }
-
-      return Promise.all(promises);
+      return extension.apiManager.onStartup(extension);
     });
 
     this.on("update", async (e, {id, resourceURI}) => {
@@ -475,7 +466,7 @@ class ProxyContextParent extends BaseContext {
 
 defineLazyGetter(ProxyContextParent.prototype, "apiCan", function() {
   let obj = {};
-  let can = new CanOfAPIs(this, apiManager, obj);
+  let can = new CanOfAPIs(this, this.extension.apiManager, obj);
   GlobalManager.injectInObject(this, false, obj);
   return can;
 });

@@ -272,10 +272,10 @@ class ExtensionPageContextChild extends ExtensionBaseContextChild {
 }
 
 defineLazyGetter(ExtensionPageContextChild.prototype, "childManager", function() {
-  apiManager.lazyInit();
+  this.extension.apiManager.lazyInit();
 
   let localApis = {};
-  let can = new CanOfAPIs(this, apiManager, localApis);
+  let can = new CanOfAPIs(this, this.extension.apiManager, localApis);
 
   let childManager = new ChildAPIManager(this, this.messageManager, can, {
     envType: "addon_parent",
@@ -345,6 +345,8 @@ ExtensionPageChild = {
   extensionContexts: new Map(),
 
   initialized: false,
+
+  apiManager,
 
   _init() {
     if (this.initialized) {
