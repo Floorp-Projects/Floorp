@@ -38,7 +38,7 @@ PrintProgressDialogChild::~PrintProgressDialogChild()
 mozilla::ipc::IPCResult
 PrintProgressDialogChild::RecvDialogOpened()
 {
-  // nsPrintEngine's observer, which we're reporting to here, doesn't care
+  // nsPrintJob's observer, which we're reporting to here, doesn't care
   // what gets passed as the subject, topic or data, so we'll just send
   // nullptrs.
   mOpenObserver->Observe(nullptr, nullptr, nullptr);

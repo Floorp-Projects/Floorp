@@ -27,7 +27,7 @@ UNIFIED_SOURCES += [
     'ipc/RemotePrintJobParent.cpp',
     'nsPagePrintTimer.cpp',
     'nsPrintData.cpp',
-    'nsPrintEngine.cpp',
+    'nsPrintJob.cpp',
     'nsPrintObject.cpp',
     'nsPrintPreviewListener.cpp',
     'PrintTranslator.cpp',

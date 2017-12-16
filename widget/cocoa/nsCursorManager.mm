@@ -195,19 +195,7 @@ static const nsCursor sCustomCursor = eCursorCount;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  // Some plugins mess with our cursors and set a cursor that even
-  // [NSCursor currentCursor] doesn't know about. In case that happens, just
-  // reset the state.
-  [[NSCursor currentCursor] set];
-
   nsCursor oldType = [mCurrentMacCursor type];
-  if (oldType != aCursor) {
-    if (aCursor == eCursor_none) {
-      [NSCursor hide];
-    } else if (oldType == eCursor_none) {
-      [NSCursor unhide];
-    }
-  }
   [self setMacCursor:[self getCursor:aCursor]];
 
   // if a custom cursor was previously set, release sCursorImgContainer
@@ -222,6 +210,21 @@ static const nsCursor sCustomCursor = eCursorCount;
 - (nsresult) setMacCursor: (nsMacCursor*) aMacCursor
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  // Some plugins mess with our cursors and set a cursor that even
+  // [NSCursor currentCursor] doesn't know about. In case that happens, just
+  // reset the state.
+  [[NSCursor currentCursor] set];
+
+  nsCursor oldType = [mCurrentMacCursor type];
+  nsCursor newType = [aMacCursor type];
+  if (oldType != newType) {
+    if (newType == eCursor_none) {
+      [NSCursor hide];
+    } else if (oldType == eCursor_none) {
+      [NSCursor unhide];
+    }
+  }
 
   if (mCurrentMacCursor != aMacCursor || ![mCurrentMacCursor isSet]) {
     [aMacCursor retain];
@@ -244,8 +247,7 @@ static const nsCursor sCustomCursor = eCursorCount;
     [self setMacCursor:mCurrentMacCursor];
     return NS_OK;
   }
-  
-  [[NSCursor currentCursor] set];
+
   int32_t width = 0, height = 0;
   aCursorImage->GetWidth(&width);
   aCursorImage->GetHeight(&height);

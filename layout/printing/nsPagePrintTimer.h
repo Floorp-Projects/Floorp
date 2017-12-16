@@ -14,7 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "nsThreadUtils.h"
 
-class nsPrintEngine;
+class nsPrintJob;
 class nsIDocument;
 
 //---------------------------------------------------
@@ -27,12 +27,12 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  nsPagePrintTimer(nsPrintEngine* aPrintEngine,
+  nsPagePrintTimer(nsPrintJob* aPrintJob,
                    nsIDocumentViewerPrint* aDocViewerPrint,
                    nsIDocument* aDocument,
                    uint32_t aDelay)
     : Runnable("nsPagePrintTimer")
-    , mPrintEngine(aPrintEngine)
+    , mPrintJob(aPrintJob)
     , mDocViewerPrint(aDocViewerPrint)
     , mDocument(aDocument)
     , mDelay(aDelay)
@@ -58,7 +58,7 @@ public:
 
   void Disconnect()
   {
-    mPrintEngine = nullptr;
+    mPrintJob = nullptr;
     mPrintObj = nullptr;
   }
 
@@ -70,7 +70,7 @@ private:
   void     StopWatchDogTimer();
   void     Fail();
 
-  nsPrintEngine*             mPrintEngine;
+  nsPrintJob*                mPrintJob;
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
   nsCOMPtr<nsIDocument>      mDocument;
   nsCOMPtr<nsITimer>         mTimer;
