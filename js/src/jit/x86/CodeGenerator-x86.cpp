@@ -747,7 +747,7 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate* ool)
             masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32), MoveOp::GENERAL,
                              CheckUnsafeCallWithABI::DontCheckOther);
         }
-        masm.storeCallWordResult(output);
+        masm.storeCallInt32Result(output);
 
         restoreVolatile(output);
     }
@@ -839,7 +839,7 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32* ool)
                              CheckUnsafeCallWithABI::DontCheckOther);
         }
 
-        masm.storeCallWordResult(output);
+        masm.storeCallInt32Result(output);
         masm.Pop(input);
 
         restoreVolatile(output);

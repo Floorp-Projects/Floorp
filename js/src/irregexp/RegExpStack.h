@@ -114,7 +114,7 @@ class RegExpStack
     }
 };
 
-int
+bool
 GrowBacktrackStack(JSRuntime* rt);
 
 }}  // namespace js::irregexp
