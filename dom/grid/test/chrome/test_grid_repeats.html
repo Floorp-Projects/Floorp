@@ -46,7 +46,31 @@ body {
   grid-template-columns: [real-before] repeat(auto-fit, [before] 100px) [real-after];
 }
 .grid11 {
-  grid-template-columns: repeat(auto-fit, 100px);
+  grid-template-columns: 10px [real-before] repeat(auto-fit, [before] 1000px [after]) [real-after];
+}
+.grid12 {
+  grid-template-columns: 10px [real-before] repeat(auto-fit, [before] 1000px [after]) [real-after] 10px;
+}
+.grid13 {
+  grid-template-columns: 10px [real-before] repeat(auto-fit, [before] 1000px [after]) 10px;
+}
+.grid14 {
+  grid-template-columns: [real-before] repeat(auto-fit, [before] 1000px [after]) 10px;
+}
+.grid15 {
+  grid-template-columns: repeat(auto-fit, [before] 1000px [after]) 10px;
+}
+.grid16 {
+  grid-template-columns: repeat(auto-fit, [before] 1000px [after]) [real-after] 10px;
+}
+.grid17 {
+  grid-template-columns: repeat(auto-fit, [before] 1000px [after]) [real-after] 10px [final];
+}
+.grid18 {
+  grid-template-columns: repeat(auto-fit, [before] 1000px [after]) 10px [final];
+}
+.grid19 {
+  grid-template-columns: repeat(auto-fit, [before] 1000px);
 }
 
 .box {
@@ -287,11 +311,31 @@ function runTests() {
   // test starts and names
   expectedValues = [
     { "start": 0,
-      "todo_names": "real-before,before" },
+      "names": "real-before,before" },
     { "start": 0,
-      "todo_names": "after,real-after" },
+      "names": "after,real-after" },
   ];
   testLines("wrapper8", grid, expectedValues);
+
+
+  wrapper = document.getElementById("wrapper8b");
+  grid = wrapper.getGridFragments()[0];
+
+  // test starts and names
+  expectedValues = [
+    { "number": 0 },
+    { "number": 0 },
+    { "number": 0 },
+    { "number": 0 },
+    { "number": 0 },
+    { "number": 0 },
+    { "number": 0 },
+    { "number": 1, 
+      "names": "real-before,before" },
+    { "number": 2,
+      "names": "after,real-after" },
+  ];
+  testLines("wrapper8b", grid, expectedValues);
 
 
   wrapper = document.getElementById("wrapper9");
@@ -338,6 +382,134 @@ function runTests() {
       "names": "real-after" },
   ];
   testLines("wrapper10", grid, expectedValues);
+
+  wrapper = document.getElementById("wrapper11");
+  grid = wrapper.getGridFragments()[0];
+
+  // test starts and names
+  expectedValues = [
+    { "start": 0,
+      "names": "" },
+    { "start": 10,
+      "names": "real-before,before" },
+    { "start": 10,
+      "names": "after,real-after" },
+  ];
+  testLines("wrapper11", grid, expectedValues);
+
+  wrapper = document.getElementById("wrapper12");
+  grid = wrapper.getGridFragments()[0];
+
+  // test starts and names
+  expectedValues = [
+    { "start": 0,
+      "names": "" },
+    { "start": 10,
+      "names": "real-before,before" },
+    { "start": 10,
+      "names": "after,real-after" },
+    { "start": 20,
+      "names": "" },
+  ];
+  testLines("wrapper12", grid, expectedValues);
+
+  wrapper = document.getElementById("wrapper13");
+  grid = wrapper.getGridFragments()[0];
+
+  // test starts and names
+  expectedValues = [
+    { "start": 0,
+      "names": "" },
+    { "start": 10,
+      "names": "real-before,before" },
+    { "start": 10,
+      "names": "after" },
+    { "start": 20,
+      "names": "" },
+  ];
+  testLines("wrapper13", grid, expectedValues);
+
+  wrapper = document.getElementById("wrapper14");
+  grid = wrapper.getGridFragments()[0];
+
+  // test starts and names
+  expectedValues = [
+    { "start": 0,
+      "names": "real-before,before" },
+    { "start": 0,
+      "names": "after" },
+    { "start": 10,
+      "names": "" },
+  ];
+  testLines("wrapper14", grid, expectedValues);
+
+  wrapper = document.getElementById("wrapper15");
+  grid = wrapper.getGridFragments()[0];
+
+  // test starts and names
+  expectedValues = [
+    { "start": 0,
+      "names": "before" },
+    { "start": 0,
+      "names": "after" },
+    { "start": 10,
+      "names": "" },
+  ];
+  testLines("wrapper15", grid, expectedValues);
+
+  wrapper = document.getElementById("wrapper16");
+  grid = wrapper.getGridFragments()[0];
+
+  // test starts and names
+  expectedValues = [
+    { "start": 0,
+      "names": "before" },
+    { "start": 0,
+      "names": "after,real-after" },
+    { "start": 10,
+      "names": "" },
+  ];
+  testLines("wrapper16", grid, expectedValues);
+
+  wrapper = document.getElementById("wrapper17");
+  grid = wrapper.getGridFragments()[0];
+
+  // test starts and names
+  expectedValues = [
+    { "start": 0,
+      "names": "before" },
+    { "start": 0,
+      "names": "after,real-after" },
+    { "start": 10,
+      "names": "final" },
+  ];
+  testLines("wrapper17", grid, expectedValues);
+
+  wrapper = document.getElementById("wrapper18");
+  grid = wrapper.getGridFragments()[0];
+
+  // test starts and names
+  expectedValues = [
+    { "start": 0,
+      "names": "before" },
+    { "start": 0,
+      "names": "after" },
+    { "start": 10,
+      "names": "final" },
+  ];
+  testLines("wrapper18", grid, expectedValues);
+
+  wrapper = document.getElementById("wrapper19");
+  grid = wrapper.getGridFragments()[0];
+
+  // test starts and names
+  expectedValues = [
+    { "start": 0,
+      "names": "before" },
+    { "start": 0,
+      "names": "" },
+  ];
+  testLines("wrapper19", grid, expectedValues);
 
   SimpleTest.finish();
 }
@@ -386,6 +558,11 @@ function runTests() {
   </div>
 
   <br/>
+  <div id="wrapper8b" class="wrapper grid8">
+    <div id="boxF" class="box f">F</div>
+  </div>
+
+  <br/>
   <div id="wrapper9" class="wrapper grid9">
     <div id="boxB" class="box b">B</div>
     <div id="boxE" class="box e">E</div>
@@ -395,6 +572,42 @@ function runTests() {
   <div id="wrapper10" class="wrapper grid10">
     <div id="boxB" class="box b">B</div>
     <div id="boxE" class="box e">E</div>
+  </div>
+
+  <br/>
+  <div id="wrapper11" class="wrapper grid11">
+  </div>
+
+  <br/>
+  <div id="wrapper12" class="wrapper grid12">
+  </div>
+
+  <br/>
+  <div id="wrapper13" class="wrapper grid13">
+  </div>
+
+  <br/>
+  <div id="wrapper14" class="wrapper grid14">
+  </div>
+
+  <br/>
+  <div id="wrapper15" class="wrapper grid15">
+  </div>
+
+  <br/>
+  <div id="wrapper16" class="wrapper grid16">
+  </div>
+
+  <br/>
+  <div id="wrapper17" class="wrapper grid17">
+  </div>
+
+  <br/>
+  <div id="wrapper18" class="wrapper grid18">
+  </div>
+
+  <br/>
+  <div id="wrapper19" class="wrapper grid19">
   </div>
 
 </body>
