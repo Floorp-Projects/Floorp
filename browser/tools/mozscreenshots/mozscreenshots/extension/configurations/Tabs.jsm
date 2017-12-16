@@ -15,6 +15,7 @@ const DEFAULT_FAVICON_TAB = `data:text/html,<meta%20charset="utf-8"><title>No%20
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
+Cu.import("resource://testing-common/BrowserTestUtils.jsm");
 
 this.Tabs = {
   init(libDir) {},
@@ -112,6 +113,11 @@ this.Tabs = {
         await new Promise((resolve, reject) => {
           setTimeout(resolve, 3000);
         });
+        // Make sure the tabstrip is scrolled all the way to the left.
+        let scrolled = BrowserTestUtils.waitForEvent(browserWindow.gBrowser.tabContainer, "scrollend");
+        browserWindow.gBrowser.tabContainer.arrowScrollbox.scrollByIndex(-100);
+        await scrolled;
+
         await allTabTitlesDisplayed(browserWindow);
       },
     },
