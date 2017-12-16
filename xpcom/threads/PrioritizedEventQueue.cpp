@@ -65,6 +65,9 @@ PrioritizedEventQueue<InnerQueueT>::PutEvent(already_AddRefed<nsIRunnable>&& aEv
   case EventPriority::Idle:
     mIdleQueue->PutEvent(event.forget(), priority, aProofOfLock);
     break;
+  case EventPriority::Count:
+    MOZ_CRASH("EventPriority::Count isn't a valid priority");
+    break;
   }
 }
 

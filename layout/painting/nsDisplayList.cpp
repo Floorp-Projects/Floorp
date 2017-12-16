@@ -4561,7 +4561,12 @@ nsDisplayImageContainer::GetContainer(LayerManager* aManager,
     flags |= imgIContainer::FLAG_SYNC_DECODE;
   }
 
-  return image->GetImageContainer(aManager, flags);
+  RefPtr<ImageContainer> container = image->GetImageContainer(aManager, flags);
+  if (!container || !container->HasCurrentImage()) {
+    return nullptr;
+  }
+
+  return container.forget();
 }
 
 bool
