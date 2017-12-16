@@ -44,7 +44,7 @@ RegExpStackScope::~RegExpStackScope()
     regexp_stack->reset();
 }
 
-int
+bool
 irregexp::GrowBacktrackStack(JSRuntime* rt)
 {
     AutoUnsafeCallWithABI unsafe;
