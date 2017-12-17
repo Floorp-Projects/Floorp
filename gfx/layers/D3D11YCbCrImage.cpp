@@ -123,7 +123,7 @@ D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
 }
 
 IntSize
-D3D11YCbCrImage::GetSize()
+D3D11YCbCrImage::GetSize() const
 {
   return mPictureRect.Size();
 }

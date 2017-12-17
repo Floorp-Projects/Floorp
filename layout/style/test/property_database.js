@@ -6676,559 +6676,557 @@ if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
   }
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
-  var isGridTemplateSubgridValueEnabled =
-    IsCSSPropertyPrefEnabled("layout.css.grid-template-subgrid-value.enabled");
+var isGridTemplateSubgridValueEnabled =
+  IsCSSPropertyPrefEnabled("layout.css.grid-template-subgrid-value.enabled");
 
-  gCSSProperties["display"].other_values.push("grid", "inline-grid");
-  gCSSProperties["grid-auto-flow"] = {
-    domProp: "gridAutoFlow",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "row" ],
-    other_values: [
-      "column",
-      "column dense",
-      "row dense",
-      "dense column",
-      "dense row",
-      "dense",
-    ],
-    invalid_values: [
-      "",
-      "auto",
-      "none",
-      "10px",
-      "column row",
-      "dense row dense",
-    ]
-  };
-
-  gCSSProperties["grid-auto-columns"] = {
-    domProp: "gridAutoColumns",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: [
-      "40px",
-      "2em",
-      "2.5fr",
-      "12%",
-      "min-content",
-      "max-content",
-      "calc(2px - 99%)",
-      "minmax(20px, max-content)",
-      "minmax(min-content, auto)",
-      "minmax(auto, max-content)",
-      "m\\69nmax(20px, 4Fr)",
-      "MinMax(min-content, calc(20px + 10%))",
-      "fit-content(1px)",
-      "fit-content(calc(1px - 99%))",
-      "fit-content(10%)",
-    ],
-    invalid_values: [
-      "",
-      "normal",
-      "40ms",
-      "-40px",
-      "-12%",
-      "-2em",
-      "-2.5fr",
-      "minmax()",
-      "minmax(20px)",
-      "mİnmax(20px, 100px)",
-      "minmax(20px, 100px, 200px)",
-      "maxmin(100px, 20px)",
-      "minmax(min-content, minmax(30px, max-content))",
-      "fit-content(-1px)",
-      "fit-content(auto)",
-      "fit-content(min-content)",
-    ]
-  };
-  gCSSProperties["grid-auto-rows"] = {
-    domProp: "gridAutoRows",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: gCSSProperties["grid-auto-columns"].initial_values,
-    other_values: gCSSProperties["grid-auto-columns"].other_values,
-    invalid_values: gCSSProperties["grid-auto-columns"].invalid_values
-  };
-
-  gCSSProperties["grid-template-columns"] = {
-    domProp: "gridTemplateColumns",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "none" ],
-    other_values: [
-      "auto",
-      "40px",
-      "2.5fr",
-      "[normal] 40px [] auto [ ] 12%",
-      "[foo] 40px min-content [ bar ] calc(2px - 99%) max-content",
-      "40px min-content calc(20px + 10%) max-content",
-      "minmax(min-content, auto)",
-      "minmax(auto, max-content)",
-      "m\\69nmax(20px, 4Fr)",
-      "40px MinMax(min-content, calc(20px + 10%)) max-content",
-      "40px 2em",
-      "[] 40px [-foo] 2em [bar baz This\ is\ one\ ident]",
-      // TODO bug 978478: "[a] repeat(3, [b] 20px [c] 40px [d]) [e]",
-      "repeat(1, 20px)",
-      "repeat(1, [a] 20px)",
-      "[a] Repeat(4, [a] 20px [] auto [b c]) [d]",
-      "[a] 2.5fr Repeat(4, [a] 20px [] auto [b c]) [d]",
-      "[a] 2.5fr [z] Repeat(4, [a] 20px [] auto [b c]) [d]",
-      "[a] 2.5fr [z] Repeat(4, [a] 20px [] auto) [d]",
-      "[a] 2.5fr [z] Repeat(4, 20px [b c] auto [b c]) [d]",
-      "[a] 2.5fr [z] Repeat(4, 20px auto) [d]",
-      "repeat(auto-fill, 0)",
-      "[a] repeat( Auto-fill,1%)",
-      "minmax(auto,0) [a] repeat(Auto-fit, 0) minmax(0,auto)",
-      "minmax(calc(1% + 1px),auto) repeat(Auto-fit,[] 1%) minmax(auto,1%)",
-      "[a] repeat( auto-fit,[a b] minmax(0,0) )",
-      "[a] 40px repeat(auto-fit,[a b] minmax(1px, 0) [])",
-      "[a] calc(1px - 99%) [b] repeat(auto-fit,[a b] minmax(1mm, 1%) [c]) [c]",
-      "repeat(auto-fill,minmax(1%,auto))",
-      "repeat(auto-fill,minmax(1em,min-content)) minmax(min-content,0)",
-      "repeat(auto-fill,minmax(max-content,1mm))",
-      "repeat(2, fit-content(1px))",
-      "fit-content(1px) 1fr",
-      "[a] fit-content(calc(1px - 99%)) [b]",
-      "[a] fit-content(10%) [b c] fit-content(1em)",
-    ],
-    invalid_values: [
-      "",
-      "normal",
-      "40ms",
-      "-40px",
-      "-12%",
-      "-2fr",
-      "[foo]",
-      "[inherit] 40px",
-      "[initial] 40px",
-      "[unset] 40px",
-      "[default] 40px",
-      "[span] 40px",
-      "[6%] 40px",
-      "[5th] 40px",
-      "[foo[] bar] 40px",
-      "[foo]] 40px",
-      "(foo) 40px",
-      "[foo] [bar] 40px",
-      "40px [foo] [bar]",
-      "minmax()",
-      "minmax(20px)",
-      "mİnmax(20px, 100px)",
-      "minmax(20px, 100px, 200px)",
-      "maxmin(100px, 20px)",
-      "minmax(min-content, minmax(30px, max-content))",
-      "repeat(0, 20px)",
-      "repeat(-3, 20px)",
-      "rêpeat(1, 20px)",
-      "repeat(1)",
-      "repeat(1, )",
-      "repeat(3px, 20px)",
-      "repeat(2.0, 20px)",
-      "repeat(2.5, 20px)",
-      "repeat(2, (foo))",
-      "repeat(2, foo)",
-      "40px calc(0px + rubbish)",
-      "repeat(1, repeat(1, 20px))",
-      "repeat(auto-fill, auto)",
-      "repeat(auto-fit,auto)",
-      "repeat(auto-fill, fit-content(1px))",
-      "repeat(auto-fit, fit-content(1px))",
-      "repeat(auto-fit,[])",
-      "repeat(auto-fill, 0) repeat(auto-fit, 0) ",
-      "repeat(auto-fit, 0) repeat(auto-fill, 0) ",
-      "[a] repeat(auto-fit, 0) repeat(auto-fit, 0) ",
-      "[a] repeat(auto-fill, 0) [a] repeat(auto-fill, 0) ",
-      "repeat(auto-fill, 0 0)",
-      "repeat(auto-fill, 0 [] 0)",
-      "repeat(auto-fill, min-content)",
-      "repeat(auto-fit,max-content)",
-      "repeat(auto-fit,1fr)",
-      "repeat(auto-fit,minmax(auto,auto))",
-      "repeat(auto-fit,minmax(min-content,1fr))",
-      "repeat(auto-fit,minmax(1fr,auto))",
-      "repeat(auto-fill,minmax(1fr,1em))",
-      "repeat(auto-fill, 10px) auto",
-      "auto repeat(auto-fit, 10px)",
-      "minmax(min-content,max-content) repeat(auto-fit, 0)",
-      "10px [a] 10px [b a] 1fr [b] repeat(auto-fill, 0)",
-      "fit-content(-1px)",
-      "fit-content(auto)",
-      "fit-content(min-content)",
-      "fit-content(1px) repeat(auto-fit, 1px)",
-      "fit-content(1px) repeat(auto-fill, 1px)",
-    ],
-    unbalanced_values: [
-      "(foo] 40px",
-    ]
-  };
-  if (isGridTemplateSubgridValueEnabled) {
-    gCSSProperties["grid-template-columns"].other_values.push(
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=981300
-      "[none auto subgrid min-content max-content foo] 40px",
-
-      "subgrid",
-      "subgrid [] [foo bar]",
-      "subgrid repeat(1, [])",
-      "subgrid Repeat(4, [a] [b c] [] [d])",
-      "subgrid repeat(auto-fill, [])",
-      "subgrid [x] repeat( Auto-fill, [a b c]) []",
-      "subgrid [x] repeat(auto-fill, []) [y z]"
-    );
-    gCSSProperties["grid-template-columns"].invalid_values.push(
-      "subgrid [inherit]",
-      "subgrid [initial]",
-      "subgrid [unset]",
-      "subgrid [default]",
-      "subgrid [span]",
-      "subgrid [foo] 40px",
-      "subgrid [foo 40px]",
-      "[foo] subgrid",
-      "subgrid rêpeat(1, [])",
-      "subgrid repeat(0, [])",
-      "subgrid repeat(-3, [])",
-      "subgrid repeat(2.0, [])",
-      "subgrid repeat(2.5, [])",
-      "subgrid repeat(3px, [])",
-      "subgrid repeat(1)",
-      "subgrid repeat(1, )",
-      "subgrid repeat(2, [40px])",
-      "subgrid repeat(2, foo)",
-      "subgrid repeat(1, repeat(1, []))",
-      "subgrid repeat(auto-fit,[])",
-      "subgrid [] repeat(auto-fit,[])",
-      "subgrid [a] repeat(auto-fit,[])",
-      "subgrid repeat(auto-fill, 1px)",
-      "subgrid repeat(auto-fill, 1px [])",
-      "subgrid repeat(Auto-fill, [a] [b c] [] [d])",
-      "subgrid repeat(auto-fill, []) repeat(auto-fill, [])"
-    );
-  }
-  gCSSProperties["grid-template-rows"] = {
-    domProp: "gridTemplateRows",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: gCSSProperties["grid-template-columns"].initial_values,
-    other_values: gCSSProperties["grid-template-columns"].other_values,
-    invalid_values: gCSSProperties["grid-template-columns"].invalid_values
-  };
-  gCSSProperties["grid-template-areas"] = {
-    domProp: "gridTemplateAreas",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "none" ],
-    other_values: [
-      "''",
-      "'' ''",
-      "'1a-é_ .' \"b .\"",
-      "' Z\t\\aZ' 'Z Z'",
-      " '. . a b'  '. .a b' ",
-      "'a.b' '. . .'",
-      "'.' '..'",
-      "'...' '.'",
-      "'...-blah' '. .'",
-      "'.. ..' '.. ...'",
-    ],
-    invalid_values: [
-      "'a b' 'a/b'",
-      "'a . a'",
-      "'. a a' 'a a a'",
-      "'a a .' 'a a a'",
-      "'a a' 'a .'",
-      "'a a'\n'..'\n'a a'",
-    ]
-  };
-
-  gCSSProperties["grid-template"] = {
-    domProp: "gridTemplate",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [
-      "grid-template-areas",
-      "grid-template-rows",
-      "grid-template-columns",
-    ],
-    initial_values: [
-      "none",
-      "none / none",
-    ],
-    other_values: [
-      // <'grid-template-rows'> / <'grid-template-columns'>
-      "40px / 100px",
-      "[foo] 40px [bar] / [baz] repeat(auto-fill,100px) [fizz]",
-      " none/100px",
-      "40px/none",
-      // [ <line-names>? <string> <track-size>? <line-names>? ]+ [ / <explicit-track-list> ]?
-      "'fizz'",
-      "[bar] 'fizz'",
-      "'fizz' / [foo] 40px",
-      "[bar] 'fizz' / [foo] 40px",
-      "'fizz' 100px / [foo] 40px",
-      "[bar] 'fizz' 100px / [foo] 40px",
-      "[bar] 'fizz' 100px [buzz] / [foo] 40px",
-      "[bar] 'fizz' 100px [buzz] \n [a] '.' 200px [b] / [foo] 40px",
-    ],
-    invalid_values: [
-      "'fizz' / repeat(1, 100px)",
-      "'fizz' repeat(1, 100px) / 0px",
-      "[foo] [bar] 40px / 100px",
-      "[fizz] [buzz] 100px / 40px",
-      "[fizz] [buzz] 'foo' / 40px",
-      "'foo' / none"
-    ]
-  };
-  if (isGridTemplateSubgridValueEnabled) {
-    gCSSProperties["grid-template"].other_values.push(
-      "subgrid",
-      "subgrid/40px 20px",
-      "subgrid [foo] [] [bar baz] / 40px 20px",
-      "40px 20px/subgrid",
-      "40px 20px/subgrid  [foo] [] repeat(3, [a] [b]) [bar baz]",
-      "subgrid/subgrid",
-      "subgrid [foo] [] [bar baz]/subgrid [foo] [] [bar baz]"
-    );
-    gCSSProperties["grid-template"].invalid_values.push(
-      "subgrid []",
-      "subgrid [] / 'fizz'",
-      "subgrid / 'fizz'"
-    );
-  }
-
-  gCSSProperties["grid"] = {
-    domProp: "grid",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [
-      "grid-template-areas",
-      "grid-template-rows",
-      "grid-template-columns",
-      "grid-auto-flow",
-      "grid-auto-rows",
-      "grid-auto-columns",
-    ],
-    initial_values: [
-      "none",
-      "none / none",
-    ],
-    other_values: [
-      "auto-flow 40px / none",
-      "auto-flow / 40px",
-      "auto-flow dense auto / auto",
-      "dense auto-flow minmax(min-content, 2fr) / auto",
-      "dense auto-flow / 100px",
-      "none / auto-flow 40px",
-      "40px / auto-flow",
-      "none / dense auto-flow auto",
-    ].concat(
-      gCSSProperties["grid-template"].other_values
-    ),
-    invalid_values: [
-      "auto-flow",
-      " / auto-flow",
-      "dense 0 / 0",
-      "dense dense 40px / 0",
-      "auto-flow / auto-flow",
-      "auto-flow / dense",
-      "auto-flow [a] 0 / 0",
-      "0 / auto-flow [a] 0",
-      "auto-flow -20px / 0",
-      "auto-flow 200ms / 0",
-      "auto-flow 40px 100px / 0",
-    ].concat(
-      gCSSProperties["grid-template"].invalid_values,
-      gCSSProperties["grid-auto-flow"].other_values,
-      gCSSProperties["grid-auto-flow"].invalid_values
-        .filter((v) => v != 'none')
-    )
-  };
-
-  var gridLineOtherValues = [
-    "foo",
-    "2",
-    "2 foo",
-    "foo 2",
-    "-3",
-    "-3 bar",
-    "bar -3",
-    "span 2",
-    "2 span",
-    "span foo",
-    "foo span",
-    "span 2 foo",
-    "span foo 2",
-    "2 foo span",
-    "foo 2 span",
-  ];
-  var gridLineInvalidValues = [
+gCSSProperties["display"].other_values.push("grid", "inline-grid");
+gCSSProperties["grid-auto-flow"] = {
+  domProp: "gridAutoFlow",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: [ "row" ],
+  other_values: [
+    "column",
+    "column dense",
+    "row dense",
+    "dense column",
+    "dense row",
+    "dense",
+  ],
+  invalid_values: [
     "",
-    "4th",
-    "span",
-    "inherit 2",
-    "2 inherit",
-    "20px",
-    "2 3",
-    "2.5",
-    "2.0",
-    "0",
-    "0 foo",
-    "span 0",
-    "2 foo 3",
-    "foo 2 foo",
-    "2 span foo",
-    "foo span 2",
-    "span -3",
-    "span -3 bar",
-    "span 2 span",
-    "span foo span",
-    "span 2 foo span",
-  ];
+    "auto",
+    "none",
+    "10px",
+    "column row",
+    "dense row dense",
+  ]
+};
 
-  gCSSProperties["grid-column-start"] = {
-    domProp: "gridColumnStart",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: gridLineOtherValues,
-    invalid_values: gridLineInvalidValues
-  };
-  gCSSProperties["grid-column-end"] = {
-    domProp: "gridColumnEnd",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: gridLineOtherValues,
-    invalid_values: gridLineInvalidValues
-  };
-  gCSSProperties["grid-row-start"] = {
-    domProp: "gridRowStart",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: gridLineOtherValues,
-    invalid_values: gridLineInvalidValues
-  };
-  gCSSProperties["grid-row-end"] = {
-    domProp: "gridRowEnd",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "auto" ],
-    other_values: gridLineOtherValues,
-    invalid_values: gridLineInvalidValues
-  };
+gCSSProperties["grid-auto-columns"] = {
+  domProp: "gridAutoColumns",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: [ "auto" ],
+  other_values: [
+    "40px",
+    "2em",
+    "2.5fr",
+    "12%",
+    "min-content",
+    "max-content",
+    "calc(2px - 99%)",
+    "minmax(20px, max-content)",
+    "minmax(min-content, auto)",
+    "minmax(auto, max-content)",
+    "m\\69nmax(20px, 4Fr)",
+    "MinMax(min-content, calc(20px + 10%))",
+    "fit-content(1px)",
+    "fit-content(calc(1px - 99%))",
+    "fit-content(10%)",
+  ],
+  invalid_values: [
+    "",
+    "normal",
+    "40ms",
+    "-40px",
+    "-12%",
+    "-2em",
+    "-2.5fr",
+    "minmax()",
+    "minmax(20px)",
+    "mİnmax(20px, 100px)",
+    "minmax(20px, 100px, 200px)",
+    "maxmin(100px, 20px)",
+    "minmax(min-content, minmax(30px, max-content))",
+    "fit-content(-1px)",
+    "fit-content(auto)",
+    "fit-content(min-content)",
+  ]
+};
+gCSSProperties["grid-auto-rows"] = {
+  domProp: "gridAutoRows",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: gCSSProperties["grid-auto-columns"].initial_values,
+  other_values: gCSSProperties["grid-auto-columns"].other_values,
+  invalid_values: gCSSProperties["grid-auto-columns"].invalid_values
+};
 
-  // The grid-column and grid-row shorthands take values of the form
-  //   <grid-line> [ / <grid-line> ]?
-  var gridColumnRowOtherValues = [].concat(gridLineOtherValues);
-  gridLineOtherValues.concat([ "auto" ]).forEach(function(val) {
-    gridColumnRowOtherValues.push(" foo / " + val);
-    gridColumnRowOtherValues.push(val + "/2");
-  });
-  var gridColumnRowInvalidValues = [
-    "foo, bar",
-    "foo / bar / baz",
-  ].concat(gridLineInvalidValues);
-  gridLineInvalidValues.forEach(function(val) {
-    gridColumnRowInvalidValues.push("span 3 / " + val);
-    gridColumnRowInvalidValues.push(val + " / foo");
-  });
-  gCSSProperties["grid-column"] = {
-    domProp: "gridColumn",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [
-      "grid-column-start",
-      "grid-column-end"
-    ],
-    initial_values: [ "auto", "auto / auto" ],
-    other_values: gridColumnRowOtherValues,
-    invalid_values: gridColumnRowInvalidValues
-  };
-  gCSSProperties["grid-row"] = {
-    domProp: "gridRow",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [
-      "grid-row-start",
-      "grid-row-end"
-    ],
-    initial_values: [ "auto", "auto / auto" ],
-    other_values: gridColumnRowOtherValues,
-    invalid_values: gridColumnRowInvalidValues
-  };
+gCSSProperties["grid-template-columns"] = {
+  domProp: "gridTemplateColumns",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: [ "none" ],
+  other_values: [
+    "auto",
+    "40px",
+    "2.5fr",
+    "[normal] 40px [] auto [ ] 12%",
+    "[foo] 40px min-content [ bar ] calc(2px - 99%) max-content",
+    "40px min-content calc(20px + 10%) max-content",
+    "minmax(min-content, auto)",
+    "minmax(auto, max-content)",
+    "m\\69nmax(20px, 4Fr)",
+    "40px MinMax(min-content, calc(20px + 10%)) max-content",
+    "40px 2em",
+    "[] 40px [-foo] 2em [bar baz This\ is\ one\ ident]",
+    // TODO bug 978478: "[a] repeat(3, [b] 20px [c] 40px [d]) [e]",
+    "repeat(1, 20px)",
+    "repeat(1, [a] 20px)",
+    "[a] Repeat(4, [a] 20px [] auto [b c]) [d]",
+    "[a] 2.5fr Repeat(4, [a] 20px [] auto [b c]) [d]",
+    "[a] 2.5fr [z] Repeat(4, [a] 20px [] auto [b c]) [d]",
+    "[a] 2.5fr [z] Repeat(4, [a] 20px [] auto) [d]",
+    "[a] 2.5fr [z] Repeat(4, 20px [b c] auto [b c]) [d]",
+    "[a] 2.5fr [z] Repeat(4, 20px auto) [d]",
+    "repeat(auto-fill, 0)",
+    "[a] repeat( Auto-fill,1%)",
+    "minmax(auto,0) [a] repeat(Auto-fit, 0) minmax(0,auto)",
+    "minmax(calc(1% + 1px),auto) repeat(Auto-fit,[] 1%) minmax(auto,1%)",
+    "[a] repeat( auto-fit,[a b] minmax(0,0) )",
+    "[a] 40px repeat(auto-fit,[a b] minmax(1px, 0) [])",
+    "[a] calc(1px - 99%) [b] repeat(auto-fit,[a b] minmax(1mm, 1%) [c]) [c]",
+    "repeat(auto-fill,minmax(1%,auto))",
+    "repeat(auto-fill,minmax(1em,min-content)) minmax(min-content,0)",
+    "repeat(auto-fill,minmax(max-content,1mm))",
+    "repeat(2, fit-content(1px))",
+    "fit-content(1px) 1fr",
+    "[a] fit-content(calc(1px - 99%)) [b]",
+    "[a] fit-content(10%) [b c] fit-content(1em)",
+  ],
+  invalid_values: [
+    "",
+    "normal",
+    "40ms",
+    "-40px",
+    "-12%",
+    "-2fr",
+    "[foo]",
+    "[inherit] 40px",
+    "[initial] 40px",
+    "[unset] 40px",
+    "[default] 40px",
+    "[span] 40px",
+    "[6%] 40px",
+    "[5th] 40px",
+    "[foo[] bar] 40px",
+    "[foo]] 40px",
+    "(foo) 40px",
+    "[foo] [bar] 40px",
+    "40px [foo] [bar]",
+    "minmax()",
+    "minmax(20px)",
+    "mİnmax(20px, 100px)",
+    "minmax(20px, 100px, 200px)",
+    "maxmin(100px, 20px)",
+    "minmax(min-content, minmax(30px, max-content))",
+    "repeat(0, 20px)",
+    "repeat(-3, 20px)",
+    "rêpeat(1, 20px)",
+    "repeat(1)",
+    "repeat(1, )",
+    "repeat(3px, 20px)",
+    "repeat(2.0, 20px)",
+    "repeat(2.5, 20px)",
+    "repeat(2, (foo))",
+    "repeat(2, foo)",
+    "40px calc(0px + rubbish)",
+    "repeat(1, repeat(1, 20px))",
+    "repeat(auto-fill, auto)",
+    "repeat(auto-fit,auto)",
+    "repeat(auto-fill, fit-content(1px))",
+    "repeat(auto-fit, fit-content(1px))",
+    "repeat(auto-fit,[])",
+    "repeat(auto-fill, 0) repeat(auto-fit, 0) ",
+    "repeat(auto-fit, 0) repeat(auto-fill, 0) ",
+    "[a] repeat(auto-fit, 0) repeat(auto-fit, 0) ",
+    "[a] repeat(auto-fill, 0) [a] repeat(auto-fill, 0) ",
+    "repeat(auto-fill, 0 0)",
+    "repeat(auto-fill, 0 [] 0)",
+    "repeat(auto-fill, min-content)",
+    "repeat(auto-fit,max-content)",
+    "repeat(auto-fit,1fr)",
+    "repeat(auto-fit,minmax(auto,auto))",
+    "repeat(auto-fit,minmax(min-content,1fr))",
+    "repeat(auto-fit,minmax(1fr,auto))",
+    "repeat(auto-fill,minmax(1fr,1em))",
+    "repeat(auto-fill, 10px) auto",
+    "auto repeat(auto-fit, 10px)",
+    "minmax(min-content,max-content) repeat(auto-fit, 0)",
+    "10px [a] 10px [b a] 1fr [b] repeat(auto-fill, 0)",
+    "fit-content(-1px)",
+    "fit-content(auto)",
+    "fit-content(min-content)",
+    "fit-content(1px) repeat(auto-fit, 1px)",
+    "fit-content(1px) repeat(auto-fill, 1px)",
+  ],
+  unbalanced_values: [
+    "(foo] 40px",
+  ]
+};
+if (isGridTemplateSubgridValueEnabled) {
+  gCSSProperties["grid-template-columns"].other_values.push(
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=981300
+    "[none auto subgrid min-content max-content foo] 40px",
 
-  var gridAreaOtherValues = gridLineOtherValues.slice();
-  gridLineOtherValues.forEach(function(val) {
-    gridAreaOtherValues.push("foo / " + val);
-    gridAreaOtherValues.push(val + "/2/3");
-    gridAreaOtherValues.push("foo / bar / " + val + " / baz");
-  });
-  var gridAreaInvalidValues = [
-    "foo, bar",
-    "foo / bar / baz / fizz / buzz",
-    "default / foo / bar / baz",
-    "foo / initial / bar / baz",
-    "foo / bar / inherit / baz",
-    "foo / bar / baz / unset",
-  ].concat(gridLineInvalidValues);
-  gridLineInvalidValues.forEach(function(val) {
-    gridAreaInvalidValues.push("foo / " + val);
-    gridAreaInvalidValues.push("foo / bar / " + val);
-    gridAreaInvalidValues.push("foo / 4 / bar / " + val);
-  });
-
-  gCSSProperties["grid-area"] = {
-    domProp: "gridArea",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [
-      "grid-row-start",
-      "grid-column-start",
-      "grid-row-end",
-      "grid-column-end"
-    ],
-    initial_values: [
-      "auto",
-      "auto / auto",
-      "auto / auto / auto",
-      "auto / auto / auto / auto"
-    ],
-    other_values: gridAreaOtherValues,
-    invalid_values: gridAreaInvalidValues
-  };
-
-  gCSSProperties["grid-column-gap"] = {
-    domProp: "gridColumnGap",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "0" ],
-    other_values: [ "2px", "2%", "1em", "calc(1px + 1em)", "calc(1%)",
-                    "calc(1% + 1ch)" , "calc(1px - 99%)" ],
-    invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%", "fit-content(1px)" ],
-  };
-  gCSSProperties["grid-row-gap"] = {
-    domProp: "gridRowGap",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "0" ],
-    other_values: [ "2px", "2%", "1em", "calc(1px + 1em)", "calc(1%)",
-                    "calc(1% + 1ch)" , "calc(1px - 99%)" ],
-    invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%", "min-content" ],
-  };
-  gCSSProperties["grid-gap"] = {
-    domProp: "gridGap",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: [ "grid-column-gap", "grid-row-gap" ],
-    initial_values: [ "0", "0 0" ],
-    other_values: [ "1ch 0", "1px 1%", "1em 1px", "calc(1px) calc(1%)" ],
-    invalid_values: [ "-1px", "1px -1px", "1px 1px 1px", "inherit 1px",
-                      "1px auto" ]
-  };
+    "subgrid",
+    "subgrid [] [foo bar]",
+    "subgrid repeat(1, [])",
+    "subgrid Repeat(4, [a] [b c] [] [d])",
+    "subgrid repeat(auto-fill, [])",
+    "subgrid [x] repeat( Auto-fill, [a b c]) []",
+    "subgrid [x] repeat(auto-fill, []) [y z]"
+  );
+  gCSSProperties["grid-template-columns"].invalid_values.push(
+    "subgrid [inherit]",
+    "subgrid [initial]",
+    "subgrid [unset]",
+    "subgrid [default]",
+    "subgrid [span]",
+    "subgrid [foo] 40px",
+    "subgrid [foo 40px]",
+    "[foo] subgrid",
+    "subgrid rêpeat(1, [])",
+    "subgrid repeat(0, [])",
+    "subgrid repeat(-3, [])",
+    "subgrid repeat(2.0, [])",
+    "subgrid repeat(2.5, [])",
+    "subgrid repeat(3px, [])",
+    "subgrid repeat(1)",
+    "subgrid repeat(1, )",
+    "subgrid repeat(2, [40px])",
+    "subgrid repeat(2, foo)",
+    "subgrid repeat(1, repeat(1, []))",
+    "subgrid repeat(auto-fit,[])",
+    "subgrid [] repeat(auto-fit,[])",
+    "subgrid [a] repeat(auto-fit,[])",
+    "subgrid repeat(auto-fill, 1px)",
+    "subgrid repeat(auto-fill, 1px [])",
+    "subgrid repeat(Auto-fill, [a] [b c] [] [d])",
+    "subgrid repeat(auto-fill, []) repeat(auto-fill, [])"
+  );
 }
+gCSSProperties["grid-template-rows"] = {
+  domProp: "gridTemplateRows",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: gCSSProperties["grid-template-columns"].initial_values,
+  other_values: gCSSProperties["grid-template-columns"].other_values,
+  invalid_values: gCSSProperties["grid-template-columns"].invalid_values
+};
+gCSSProperties["grid-template-areas"] = {
+  domProp: "gridTemplateAreas",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: [ "none" ],
+  other_values: [
+    "''",
+    "'' ''",
+    "'1a-é_ .' \"b .\"",
+    "' Z\t\\aZ' 'Z Z'",
+    " '. . a b'  '. .a b' ",
+    "'a.b' '. . .'",
+    "'.' '..'",
+    "'...' '.'",
+    "'...-blah' '. .'",
+    "'.. ..' '.. ...'",
+  ],
+  invalid_values: [
+    "'a b' 'a/b'",
+    "'a . a'",
+    "'. a a' 'a a a'",
+    "'a a .' 'a a a'",
+    "'a a' 'a .'",
+    "'a a'\n'..'\n'a a'",
+  ]
+};
+
+gCSSProperties["grid-template"] = {
+  domProp: "gridTemplate",
+  inherited: false,
+  type: CSS_TYPE_TRUE_SHORTHAND,
+  subproperties: [
+    "grid-template-areas",
+    "grid-template-rows",
+    "grid-template-columns",
+  ],
+  initial_values: [
+    "none",
+    "none / none",
+  ],
+  other_values: [
+    // <'grid-template-rows'> / <'grid-template-columns'>
+    "40px / 100px",
+    "[foo] 40px [bar] / [baz] repeat(auto-fill,100px) [fizz]",
+    " none/100px",
+    "40px/none",
+    // [ <line-names>? <string> <track-size>? <line-names>? ]+ [ / <explicit-track-list> ]?
+    "'fizz'",
+    "[bar] 'fizz'",
+    "'fizz' / [foo] 40px",
+    "[bar] 'fizz' / [foo] 40px",
+    "'fizz' 100px / [foo] 40px",
+    "[bar] 'fizz' 100px / [foo] 40px",
+    "[bar] 'fizz' 100px [buzz] / [foo] 40px",
+    "[bar] 'fizz' 100px [buzz] \n [a] '.' 200px [b] / [foo] 40px",
+  ],
+  invalid_values: [
+    "'fizz' / repeat(1, 100px)",
+    "'fizz' repeat(1, 100px) / 0px",
+    "[foo] [bar] 40px / 100px",
+    "[fizz] [buzz] 100px / 40px",
+    "[fizz] [buzz] 'foo' / 40px",
+    "'foo' / none"
+  ]
+};
+if (isGridTemplateSubgridValueEnabled) {
+  gCSSProperties["grid-template"].other_values.push(
+    "subgrid",
+    "subgrid/40px 20px",
+    "subgrid [foo] [] [bar baz] / 40px 20px",
+    "40px 20px/subgrid",
+    "40px 20px/subgrid  [foo] [] repeat(3, [a] [b]) [bar baz]",
+    "subgrid/subgrid",
+    "subgrid [foo] [] [bar baz]/subgrid [foo] [] [bar baz]"
+  );
+  gCSSProperties["grid-template"].invalid_values.push(
+    "subgrid []",
+    "subgrid [] / 'fizz'",
+    "subgrid / 'fizz'"
+  );
+}
+
+gCSSProperties["grid"] = {
+  domProp: "grid",
+  inherited: false,
+  type: CSS_TYPE_TRUE_SHORTHAND,
+  subproperties: [
+    "grid-template-areas",
+    "grid-template-rows",
+    "grid-template-columns",
+    "grid-auto-flow",
+    "grid-auto-rows",
+    "grid-auto-columns",
+  ],
+  initial_values: [
+    "none",
+    "none / none",
+  ],
+  other_values: [
+    "auto-flow 40px / none",
+    "auto-flow / 40px",
+    "auto-flow dense auto / auto",
+    "dense auto-flow minmax(min-content, 2fr) / auto",
+    "dense auto-flow / 100px",
+    "none / auto-flow 40px",
+    "40px / auto-flow",
+    "none / dense auto-flow auto",
+  ].concat(
+    gCSSProperties["grid-template"].other_values
+  ),
+  invalid_values: [
+    "auto-flow",
+    " / auto-flow",
+    "dense 0 / 0",
+    "dense dense 40px / 0",
+    "auto-flow / auto-flow",
+    "auto-flow / dense",
+    "auto-flow [a] 0 / 0",
+    "0 / auto-flow [a] 0",
+    "auto-flow -20px / 0",
+    "auto-flow 200ms / 0",
+    "auto-flow 40px 100px / 0",
+  ].concat(
+    gCSSProperties["grid-template"].invalid_values,
+    gCSSProperties["grid-auto-flow"].other_values,
+    gCSSProperties["grid-auto-flow"].invalid_values
+      .filter((v) => v != 'none')
+  )
+};
+
+var gridLineOtherValues = [
+  "foo",
+  "2",
+  "2 foo",
+  "foo 2",
+  "-3",
+  "-3 bar",
+  "bar -3",
+  "span 2",
+  "2 span",
+  "span foo",
+  "foo span",
+  "span 2 foo",
+  "span foo 2",
+  "2 foo span",
+  "foo 2 span",
+];
+var gridLineInvalidValues = [
+  "",
+  "4th",
+  "span",
+  "inherit 2",
+  "2 inherit",
+  "20px",
+  "2 3",
+  "2.5",
+  "2.0",
+  "0",
+  "0 foo",
+  "span 0",
+  "2 foo 3",
+  "foo 2 foo",
+  "2 span foo",
+  "foo span 2",
+  "span -3",
+  "span -3 bar",
+  "span 2 span",
+  "span foo span",
+  "span 2 foo span",
+];
+
+gCSSProperties["grid-column-start"] = {
+  domProp: "gridColumnStart",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: [ "auto" ],
+  other_values: gridLineOtherValues,
+  invalid_values: gridLineInvalidValues
+};
+gCSSProperties["grid-column-end"] = {
+  domProp: "gridColumnEnd",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: [ "auto" ],
+  other_values: gridLineOtherValues,
+  invalid_values: gridLineInvalidValues
+};
+gCSSProperties["grid-row-start"] = {
+  domProp: "gridRowStart",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: [ "auto" ],
+  other_values: gridLineOtherValues,
+  invalid_values: gridLineInvalidValues
+};
+gCSSProperties["grid-row-end"] = {
+  domProp: "gridRowEnd",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: [ "auto" ],
+  other_values: gridLineOtherValues,
+  invalid_values: gridLineInvalidValues
+};
+
+// The grid-column and grid-row shorthands take values of the form
+//   <grid-line> [ / <grid-line> ]?
+var gridColumnRowOtherValues = [].concat(gridLineOtherValues);
+gridLineOtherValues.concat([ "auto" ]).forEach(function(val) {
+  gridColumnRowOtherValues.push(" foo / " + val);
+  gridColumnRowOtherValues.push(val + "/2");
+});
+var gridColumnRowInvalidValues = [
+  "foo, bar",
+  "foo / bar / baz",
+].concat(gridLineInvalidValues);
+gridLineInvalidValues.forEach(function(val) {
+  gridColumnRowInvalidValues.push("span 3 / " + val);
+  gridColumnRowInvalidValues.push(val + " / foo");
+});
+gCSSProperties["grid-column"] = {
+  domProp: "gridColumn",
+  inherited: false,
+  type: CSS_TYPE_TRUE_SHORTHAND,
+  subproperties: [
+    "grid-column-start",
+    "grid-column-end"
+  ],
+  initial_values: [ "auto", "auto / auto" ],
+  other_values: gridColumnRowOtherValues,
+  invalid_values: gridColumnRowInvalidValues
+};
+gCSSProperties["grid-row"] = {
+  domProp: "gridRow",
+  inherited: false,
+  type: CSS_TYPE_TRUE_SHORTHAND,
+  subproperties: [
+    "grid-row-start",
+    "grid-row-end"
+  ],
+  initial_values: [ "auto", "auto / auto" ],
+  other_values: gridColumnRowOtherValues,
+  invalid_values: gridColumnRowInvalidValues
+};
+
+var gridAreaOtherValues = gridLineOtherValues.slice();
+gridLineOtherValues.forEach(function(val) {
+  gridAreaOtherValues.push("foo / " + val);
+  gridAreaOtherValues.push(val + "/2/3");
+  gridAreaOtherValues.push("foo / bar / " + val + " / baz");
+});
+var gridAreaInvalidValues = [
+  "foo, bar",
+  "foo / bar / baz / fizz / buzz",
+  "default / foo / bar / baz",
+  "foo / initial / bar / baz",
+  "foo / bar / inherit / baz",
+  "foo / bar / baz / unset",
+].concat(gridLineInvalidValues);
+gridLineInvalidValues.forEach(function(val) {
+  gridAreaInvalidValues.push("foo / " + val);
+  gridAreaInvalidValues.push("foo / bar / " + val);
+  gridAreaInvalidValues.push("foo / 4 / bar / " + val);
+});
+
+gCSSProperties["grid-area"] = {
+  domProp: "gridArea",
+  inherited: false,
+  type: CSS_TYPE_TRUE_SHORTHAND,
+  subproperties: [
+    "grid-row-start",
+    "grid-column-start",
+    "grid-row-end",
+    "grid-column-end"
+  ],
+  initial_values: [
+    "auto",
+    "auto / auto",
+    "auto / auto / auto",
+    "auto / auto / auto / auto"
+  ],
+  other_values: gridAreaOtherValues,
+  invalid_values: gridAreaInvalidValues
+};
+
+gCSSProperties["grid-column-gap"] = {
+  domProp: "gridColumnGap",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: [ "0" ],
+  other_values: [ "2px", "2%", "1em", "calc(1px + 1em)", "calc(1%)",
+                  "calc(1% + 1ch)" , "calc(1px - 99%)" ],
+  invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%", "fit-content(1px)" ],
+};
+gCSSProperties["grid-row-gap"] = {
+  domProp: "gridRowGap",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: [ "0" ],
+  other_values: [ "2px", "2%", "1em", "calc(1px + 1em)", "calc(1%)",
+                  "calc(1% + 1ch)" , "calc(1px - 99%)" ],
+  invalid_values: [ "-1px", "auto", "none", "1px 1px", "-1%", "min-content" ],
+};
+gCSSProperties["grid-gap"] = {
+  domProp: "gridGap",
+  inherited: false,
+  type: CSS_TYPE_TRUE_SHORTHAND,
+  subproperties: [ "grid-column-gap", "grid-row-gap" ],
+  initial_values: [ "0", "0 0" ],
+  other_values: [ "1ch 0", "1px 1%", "1em 1px", "calc(1px) calc(1%)" ],
+  invalid_values: [ "-1px", "1px -1px", "1px 1px 1px", "inherit 1px",
+                    "1px auto" ]
+};
 
 if (IsCSSPropertyPrefEnabled("layout.css.contain.enabled")) {
   gCSSProperties["contain"] = {

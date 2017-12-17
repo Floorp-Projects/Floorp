@@ -600,7 +600,7 @@ RecyclingPlanarYCbCrImage::CopyData(const Data& aData)
 }
 
 gfxImageFormat
-PlanarYCbCrImage::GetOffscreenFormat()
+PlanarYCbCrImage::GetOffscreenFormat() const
 {
   return mOffscreenFormat == SurfaceFormat::UNKNOWN ?
     gfxVars::OffscreenFormat() :
@@ -659,13 +659,13 @@ NVImage::NVImage()
 NVImage::~NVImage() = default;
 
 IntSize
-NVImage::GetSize()
+NVImage::GetSize() const
 {
   return mSize;
 }
 
 IntRect
-NVImage::GetPictureRect()
+NVImage::GetPictureRect() const
 {
   return mData.GetPictureRect();
 }
@@ -740,7 +740,7 @@ NVImage::GetAsSourceSurface()
 }
 
 bool
-NVImage::IsValid()
+NVImage::IsValid() const
 {
   return !!mBufferSize;
 }
@@ -812,19 +812,22 @@ NVImage::AllocateBuffer(uint32_t aSize)
   return buffer;
 }
 
-SourceSurfaceImage::SourceSurfaceImage(const gfx::IntSize& aSize, gfx::SourceSurface* aSourceSurface)
-  : Image(nullptr, ImageFormat::CAIRO_SURFACE),
-    mSize(aSize),
-    mSourceSurface(aSourceSurface),
-    mTextureFlags(TextureFlags::DEFAULT)
-{}
+SourceSurfaceImage::SourceSurfaceImage(const gfx::IntSize& aSize,
+                                       gfx::SourceSurface* aSourceSurface)
+  : Image(nullptr, ImageFormat::CAIRO_SURFACE)
+  , mSize(aSize)
+  , mSourceSurface(aSourceSurface)
+  , mTextureFlags(TextureFlags::DEFAULT)
+{
+}
 
 SourceSurfaceImage::SourceSurfaceImage(gfx::SourceSurface* aSourceSurface)
-  : Image(nullptr, ImageFormat::CAIRO_SURFACE),
-    mSize(aSourceSurface->GetSize()),
-    mSourceSurface(aSourceSurface),
-    mTextureFlags(TextureFlags::DEFAULT)
-{}
+  : Image(nullptr, ImageFormat::CAIRO_SURFACE)
+  , mSize(aSourceSurface->GetSize())
+  , mSourceSurface(aSourceSurface)
+  , mTextureFlags(TextureFlags::DEFAULT)
+{
+}
 
 SourceSurfaceImage::~SourceSurfaceImage() = default;
 

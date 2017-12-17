@@ -301,19 +301,19 @@ class TestAgent {
   }
 
   int GetAudioRtpCountSent() {
-    return audio_pipeline_->rtp_packets_sent();
+    return audio_pipeline_->RtpPacketsSent();
   }
 
   int GetAudioRtpCountReceived() {
-    return audio_pipeline_->rtp_packets_received();
+    return audio_pipeline_->RtpPacketsReceived();
   }
 
   int GetAudioRtcpCountSent() {
-    return audio_pipeline_->rtcp_packets_sent();
+    return audio_pipeline_->RtcpPacketsSent();
   }
 
   int GetAudioRtcpCountReceived() {
-    return audio_pipeline_->rtcp_packets_received();
+    return audio_pipeline_->RtcpPacketsReceived();
   }
 
 

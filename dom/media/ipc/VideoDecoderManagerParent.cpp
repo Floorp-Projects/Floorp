@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "VideoDecoderManagerParent.h"
 #include "VideoDecoderParent.h"
+#include "VideoUtils.h"
 #include "base/thread.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Services.h"
@@ -15,7 +16,6 @@
 #include "nsThreadUtils.h"
 #include "ImageContainer.h"
 #include "mozilla/layers/VideoBridgeChild.h"
-#include "mozilla/SharedThreadPool.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/SyncRunnable.h"
 
@@ -210,7 +210,7 @@ VideoDecoderManagerParent::AllocPVideoDecoderParent(const VideoInfo& aVideoInfo,
                                                     nsCString* aErrorDescription)
 {
   RefPtr<TaskQueue> decodeTaskQueue = new TaskQueue(
-    SharedThreadPool::Get(NS_LITERAL_CSTRING("VideoDecoderParent"), 4),
+    GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
     "VideoDecoderParent::mDecodeTaskQueue");
 
   auto* parent = new VideoDecoderParent(

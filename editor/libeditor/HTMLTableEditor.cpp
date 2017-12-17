@@ -2655,18 +2655,25 @@ HTMLEditor::GetTableSize(nsIDOMElement* aTable,
                          int32_t* aRowCount,
                          int32_t* aColCount)
 {
+  nsCOMPtr<Element> table = do_QueryInterface(aTable);
+  return GetTableSize(table, aRowCount, aColCount);
+}
+
+nsresult
+HTMLEditor::GetTableSize(Element* aTable,
+                         int32_t* aRowCount,
+                         int32_t* aColCount)
+{
   NS_ENSURE_ARG_POINTER(aRowCount);
   NS_ENSURE_ARG_POINTER(aColCount);
   *aRowCount = 0;
   *aColCount = 0;
-  nsCOMPtr<nsIDOMElement> table;
   // Get the selected talbe or the table enclosing the selection anchor
-  nsresult rv = GetElementOrParentByTagName(NS_LITERAL_STRING("table"), aTable,
-                                            getter_AddRefs(table));
-  NS_ENSURE_SUCCESS(rv, rv);
+  RefPtr<Element> table =
+    GetElementOrParentByTagName(NS_LITERAL_STRING("table"), aTable);
   NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
 
-  nsTableWrapperFrame* tableFrame = GetTableFrame(table.get());
+  nsTableWrapperFrame* tableFrame = do_QueryFrame(table->GetPrimaryFrame());
   NS_ENSURE_TRUE(tableFrame, NS_ERROR_FAILURE);
 
   *aRowCount = tableFrame->GetRowCount();

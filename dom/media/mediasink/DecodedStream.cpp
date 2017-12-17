@@ -712,7 +712,7 @@ DecodedStream::SendData()
 
   if (finished && !mData->mHaveSentFinish) {
     mData->mHaveSentFinish = true;
-    mData->mStream->Finish();
+    mData->mStream->FinishPending();
   }
 }
 

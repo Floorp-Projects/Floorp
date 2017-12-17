@@ -65,7 +65,7 @@ public:
 
   nsresult UpdateSendTrack(dom::MediaStreamTrack* aSendTrack);
 
-  nsresult UpdateSinkIdentity(dom::MediaStreamTrack* aTrack,
+  nsresult UpdateSinkIdentity(const dom::MediaStreamTrack* aTrack,
                               nsIPrincipal* aPrincipal,
                               const PeerIdentity* aSinkIdentity);
 

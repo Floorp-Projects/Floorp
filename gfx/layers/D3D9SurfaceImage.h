@@ -93,9 +93,10 @@ protected:
 // passed into SetData(), so that it can be accessed from other D3D devices.
 // This class also manages the synchronization of the copy, to ensure the
 // resource is ready to use.
-class D3D9SurfaceImage : public Image {
+class D3D9SurfaceImage : public Image
+{
 public:
-  explicit D3D9SurfaceImage();
+  D3D9SurfaceImage();
   virtual ~D3D9SurfaceImage();
 
   HRESULT AllocateAndCopy(D3D9RecycleAllocator* aAllocator,
@@ -105,22 +106,21 @@ public:
   // Returns the description of the shared surface.
   const D3DSURFACE_DESC& GetDesc() const;
 
-  gfx::IntSize GetSize() override;
+  gfx::IntSize GetSize() const override;
 
-  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
+  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
-  virtual TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
+  TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
 
-  already_AddRefed<IDirect3DSurface9> GetD3D9Surface();
+  already_AddRefed<IDirect3DSurface9> GetD3D9Surface() const;
 
   HANDLE GetShareHandle() const;
 
-  virtual bool IsValid() override { return mValid; }
+  bool IsValid() const override { return mValid; }
 
   void Invalidate() { mValid = false; }
 
 private:
-
   gfx::IntSize mSize;
   RefPtr<TextureClient> mTextureClient;
   RefPtr<IDirect3DTexture9> mTexture;

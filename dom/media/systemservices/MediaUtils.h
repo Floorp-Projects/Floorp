@@ -7,12 +7,19 @@
 #ifndef mozilla_MediaUtils_h
 #define mozilla_MediaUtils_h
 
+#include "AutoTaskQueue.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Monitor.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/SharedThreadPool.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "nsIAsyncShutdown.h"
 #include "nsISupportsImpl.h"
 #include "nsThreadUtils.h"
+
+class nsIEventTarget;
 
 namespace mozilla {
 namespace media {
@@ -409,6 +416,128 @@ private:
 
   nsCOMPtr<nsIAsyncShutdownBlocker> mBlocker;
 };
+
+/**
+ * Await convenience methods to block until the promise has been resolved or
+ * rejected. The Resolve/Reject functions, while called on a different thread,
+ * would be running just as on the current thread thanks to the memory barrier
+ * provided by the monitor.
+ * For now Await can only be used with an exclusive MozPromise if passed a
+ * Resolve/Reject function.
+ */
+template<typename ResolveValueType,
+         typename RejectValueType,
+         typename ResolveFunction,
+         typename RejectFunction>
+void
+Await(
+  already_AddRefed<nsIEventTarget> aPool,
+  RefPtr<MozPromise<ResolveValueType, RejectValueType, true>> aPromise,
+  ResolveFunction&& aResolveFunction,
+  RejectFunction&& aRejectFunction)
+{
+  Monitor mon(__func__);
+  RefPtr<AutoTaskQueue> taskQueue =
+    new AutoTaskQueue(Move(aPool), "MozPromiseAwait");
+  bool done = false;
+
+  aPromise->Then(taskQueue,
+                 __func__,
+                 [&](ResolveValueType&& aResolveValue) {
+                   MonitorAutoLock lock(mon);
+                   aResolveFunction(Forward<ResolveValueType>(aResolveValue));
+                   done = true;
+                   mon.Notify();
+                 },
+                 [&](RejectValueType&& aRejectValue) {
+                   MonitorAutoLock lock(mon);
+                   aRejectFunction(Forward<RejectValueType>(aRejectValue));
+                   done = true;
+                   mon.Notify();
+                 });
+
+  MonitorAutoLock lock(mon);
+  while (!done) {
+    mon.Wait();
+  }
+}
+
+template<typename ResolveValueType, typename RejectValueType, bool Excl>
+typename MozPromise<ResolveValueType, RejectValueType, Excl>::
+  ResolveOrRejectValue
+Await(already_AddRefed<nsIEventTarget> aPool,
+      RefPtr<MozPromise<ResolveValueType, RejectValueType, Excl>> aPromise)
+{
+  Monitor mon(__func__);
+  RefPtr<AutoTaskQueue> taskQueue =
+    new AutoTaskQueue(Move(aPool), "MozPromiseAwait");
+  bool done = false;
+
+  typename MozPromise<ResolveValueType, RejectValueType, Excl>::ResolveOrRejectValue val;
+  aPromise->Then(taskQueue,
+                 __func__,
+                 [&](ResolveValueType aResolveValue) {
+                   val.SetResolve(Move(aResolveValue));
+                   MonitorAutoLock lock(mon);
+                   done = true;
+                   mon.Notify();
+                 },
+                 [&](RejectValueType aRejectValue) {
+                   val.SetReject(Move(aRejectValue));
+                   MonitorAutoLock lock(mon);
+                   done = true;
+                   mon.Notify();
+                 });
+
+  MonitorAutoLock lock(mon);
+  while (!done) {
+    mon.Wait();
+  }
+
+  return val;
+}
+
+/**
+ * Similar to Await, takes an array of promises of the same type.
+ * MozPromise::All is used to handle the resolution/rejection of the promises.
+ */
+template<typename ResolveValueType,
+         typename RejectValueType,
+         typename ResolveFunction,
+         typename RejectFunction>
+void
+AwaitAll(already_AddRefed<nsIEventTarget> aPool,
+         nsTArray<RefPtr<MozPromise<ResolveValueType, RejectValueType, true>>>&
+           aPromises,
+         ResolveFunction&& aResolveFunction,
+         RejectFunction&& aRejectFunction)
+{
+  typedef MozPromise<ResolveValueType, RejectValueType, true> Promise;
+  RefPtr<nsIEventTarget> pool = aPool;
+  RefPtr<AutoTaskQueue> taskQueue =
+    new AutoTaskQueue(do_AddRef(pool), "MozPromiseAwaitAll");
+  RefPtr<typename Promise::AllPromiseType> p = Promise::All(taskQueue, aPromises);
+  Await(pool.forget(), p, Move(aResolveFunction), Move(aRejectFunction));
+}
+
+// Note: only works with exclusive MozPromise, as Promise::All would attempt
+// to perform copy of nsTArrays which are disallowed.
+template<typename ResolveValueType, typename RejectValueType>
+typename MozPromise<ResolveValueType,
+                    RejectValueType,
+                    true>::AllPromiseType::ResolveOrRejectValue
+AwaitAll(already_AddRefed<nsIEventTarget> aPool,
+         nsTArray<RefPtr<MozPromise<ResolveValueType, RejectValueType, true>>>&
+           aPromises)
+{
+  typedef MozPromise<ResolveValueType, RejectValueType, true> Promise;
+  RefPtr<nsIEventTarget> pool = aPool;
+  RefPtr<AutoTaskQueue> taskQueue =
+    new AutoTaskQueue(do_AddRef(pool), "MozPromiseAwaitAll");
+  RefPtr<typename Promise::AllPromiseType> p =
+    Promise::All(taskQueue, aPromises);
+  return Await(pool.forget(), p);
+}
 
 } // namespace media
 } // namespace mozilla

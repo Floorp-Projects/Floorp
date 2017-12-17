@@ -31,23 +31,23 @@ protected:
   virtual ~SharedPlanarYCbCrImage();
 
 public:
-  virtual TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
-  virtual uint8_t* GetBuffer() override;
+  TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
+  uint8_t* GetBuffer() const override;
 
-  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
-  virtual bool CopyData(const PlanarYCbCrData& aData) override;
-  virtual bool AdoptData(const Data& aData) override;
+  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
+  bool CopyData(const PlanarYCbCrData& aData) override;
+  bool AdoptData(const Data& aData) override;
 
-  virtual bool Allocate(PlanarYCbCrData& aData);
+  bool Allocate(PlanarYCbCrData& aData);
 
-  virtual bool IsValid() override;
+  bool IsValid() const override;
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
 
 private:
   RefPtr<TextureClient> mTextureClient;
