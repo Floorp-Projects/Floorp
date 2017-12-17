@@ -1625,12 +1625,13 @@ class MacroAssembler : public MacroAssemblerSpecific
             storeTypedOrValue(src.reg(), dest);
     }
 
-    void storeCallWordResult(Register reg) {
+    void storeCallPointerResult(Register reg) {
         if (reg != ReturnReg)
             mov(ReturnReg, reg);
     }
 
     inline void storeCallBoolResult(Register reg);
+    inline void storeCallInt32Result(Register reg);
 
     void storeCallFloatResult(FloatRegister reg) {
         if (reg != ReturnDoubleReg)
