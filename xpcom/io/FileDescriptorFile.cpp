@@ -150,6 +150,12 @@ FileDescriptorFile::GetFollowLinks(bool* aFollowLinks)
   return mFile->GetFollowLinks(aFollowLinks);
 }
 
+NS_IMETHODIMP
+FileDescriptorFile::GetPersistentDescriptor(nsACString& aPersistentDescriptor)
+{
+  return mFile->GetPersistentDescriptor(aPersistentDescriptor);
+}
+
 //-----------------------------------------------------------------------------
 // FileDescriptorFile::nsIFile functions that are not currently supported
 //-----------------------------------------------------------------------------
@@ -222,12 +228,6 @@ FileDescriptorFile::AppendRelativePath(const nsAString& aNode)
 
 NS_IMETHODIMP
 FileDescriptorFile::AppendRelativeNativePath(const nsACString& aFragment)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-FileDescriptorFile::GetPersistentDescriptor(nsACString& aPersistentDescriptor)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
