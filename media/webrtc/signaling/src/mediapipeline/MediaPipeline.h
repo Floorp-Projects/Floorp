@@ -396,8 +396,6 @@ public:
                        nsCOMPtr<nsIEventTarget> aStsThread,
                        RefPtr<MediaSessionConduit> aConduit);
 
-  int SegmentsAdded() const { return mSegmentsAdded; }
-
   // Sets the PrincipalHandle we set on the media chunks produced by this
   // pipeline. Must be called on the main thread.
   virtual void SetPrincipalHandle_m(
@@ -405,8 +403,6 @@ public:
 
 protected:
   ~MediaPipelineReceive();
-
-  int mSegmentsAdded;
 };
 
 // A specialization of pipeline for reading from the network and
