@@ -13,6 +13,8 @@ DIRS += [
 
 DevToolsModules(
     'AutoCompletePopup.js',
+    'devtools-components.css',
+    'devtools-components.js',
     'Frame.js',
     'HSplitBox.js',
     'NotificationBox.css',
