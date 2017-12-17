@@ -8,9 +8,10 @@
 #define MOZILLA_AUTOTASKQUEUE_H_
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/SharedThreadPool.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/TaskQueue.h"
+
+class nsIEventTarget;
 
 namespace mozilla {
 
@@ -18,13 +19,13 @@ namespace mozilla {
 class AutoTaskQueue : public AbstractThread
 {
 public:
-  explicit AutoTaskQueue(already_AddRefed<SharedThreadPool> aPool,
+  explicit AutoTaskQueue(already_AddRefed<nsIEventTarget> aPool,
                          bool aSupportsTailDispatch = false)
   : AbstractThread(aSupportsTailDispatch)
   , mTaskQueue(new TaskQueue(Move(aPool), aSupportsTailDispatch))
   {}
 
-  AutoTaskQueue(already_AddRefed<SharedThreadPool> aPool,
+  AutoTaskQueue(already_AddRefed<nsIEventTarget> aPool,
                 const char* aName,
                 bool aSupportsTailDispatch = false)
   : AbstractThread(aSupportsTailDispatch)

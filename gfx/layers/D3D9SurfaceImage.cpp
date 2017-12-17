@@ -183,7 +183,7 @@ D3D9SurfaceImage::AllocateAndCopy(D3D9RecycleAllocator* aAllocator,
 }
 
 already_AddRefed<IDirect3DSurface9>
-D3D9SurfaceImage::GetD3D9Surface()
+D3D9SurfaceImage::GetD3D9Surface() const
 {
   RefPtr<IDirect3DSurface9> textureSurface;
   HRESULT hr = mTexture->GetSurfaceLevel(0, getter_AddRefs(textureSurface));
@@ -204,7 +204,7 @@ D3D9SurfaceImage::GetShareHandle() const
 }
 
 gfx::IntSize
-D3D9SurfaceImage::GetSize()
+D3D9SurfaceImage::GetSize() const
 {
   return mSize;
 }

@@ -589,6 +589,9 @@ protected:
    */
   nsresult SetSelectionAtDocumentStart(Selection* aSelection);
 
+  nsresult GetTableSize(Element* aTable,
+                        int32_t* aRowCount, int32_t* aColCount);
+
   // End of Table Editing utilities
 
   static Element* GetEnclosingTable(nsINode* aNode);
@@ -1098,7 +1101,7 @@ protected:
                                          nsAString& aReturn);
 
   // inline table editing
-  nsCOMPtr<nsIDOMElement> mInlineEditedCell;
+  RefPtr<Element> mInlineEditedCell;
 
   ManualNACPtr mAddColumnBeforeButton;
   ManualNACPtr mRemoveColumnButton;
@@ -1107,6 +1110,8 @@ protected:
   ManualNACPtr mAddRowBeforeButton;
   ManualNACPtr mRemoveRowButton;
   ManualNACPtr mAddRowAfterButton;
+
+  nsresult ShowInlineTableEditingUI(Element* aCell);
 
   void AddMouseClickListener(Element* aElement);
   void RemoveMouseClickListener(Element* aElement);

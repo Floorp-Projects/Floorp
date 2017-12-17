@@ -31,12 +31,12 @@ public:
                         const gfx::IntSize& aSize);
 
 protected:
-  virtual already_AddRefed<TextureClient>
-  Allocate(gfx::SurfaceFormat aFormat,
-           gfx::IntSize aSize,
-           BackendSelector aSelector,
-           TextureFlags aTextureFlags,
-           TextureAllocationFlags aAllocFlags) override;
+  virtual already_AddRefed<TextureClient> Allocate(
+    gfx::SurfaceFormat aFormat,
+    gfx::IntSize aSize,
+    BackendSelector aSelector,
+    TextureFlags aTextureFlags,
+    TextureAllocationFlags aAllocFlags) override;
 
   RefPtr<ID3D11Device> mDevice;
 };
@@ -49,14 +49,14 @@ class D3D11ShareHandleImage final : public Image {
 public:
   D3D11ShareHandleImage(const gfx::IntSize& aSize,
                         const gfx::IntRect& aRect);
-  ~D3D11ShareHandleImage() override {}
+  virtual ~D3D11ShareHandleImage() {}
 
   bool AllocateTexture(D3D11RecycleAllocator* aAllocator, ID3D11Device* aDevice);
 
-  gfx::IntSize GetSize() override;
-  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
-  virtual TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
-  virtual gfx::IntRect GetPictureRect() override { return mPictureRect; }
+  gfx::IntSize GetSize() const override;
+  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
+  TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
+  gfx::IntRect GetPictureRect() const override { return mPictureRect; }
 
   ID3D11Texture2D* GetTexture() const;
 

@@ -140,7 +140,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // black/silence.  Once the peer is identified, re-enable those streams.
   // aTrack will be set if this update came from a principal change on aTrack.
   // TODO: Move to PeerConnectionImpl
-  void UpdateSinkIdentity_m(dom::MediaStreamTrack* aTrack,
+  void UpdateSinkIdentity_m(const dom::MediaStreamTrack* aTrack,
                             nsIPrincipal* aPrincipal,
                             const PeerIdentity* aSinkIdentity);
   // this determines if any track is peerIdentity constrained

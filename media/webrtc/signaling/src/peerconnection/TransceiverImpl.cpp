@@ -120,7 +120,7 @@ TransceiverImpl::InitVideo()
 }
 
 nsresult
-TransceiverImpl::UpdateSinkIdentity(dom::MediaStreamTrack* aTrack,
+TransceiverImpl::UpdateSinkIdentity(const dom::MediaStreamTrack* aTrack,
                                     nsIPrincipal* aPrincipal,
                                     const PeerIdentity* aSinkIdentity)
 {

@@ -77,7 +77,7 @@ SharedRGBImage::Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat)
 }
 
 uint8_t*
-SharedRGBImage::GetBuffer()
+SharedRGBImage::GetBuffer() const
 {
   MappedTextureData mapped;
   if (mTextureClient && mTextureClient->BorrowMappedData(mapped)) {
@@ -87,7 +87,7 @@ SharedRGBImage::GetBuffer()
 }
 
 gfx::IntSize
-SharedRGBImage::GetSize()
+SharedRGBImage::GetSize() const
 {
   return mSize;
 }

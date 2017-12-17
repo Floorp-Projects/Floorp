@@ -18,46 +18,40 @@
 namespace mozilla {
 namespace layers {
 
-class GLImage : public Image {
+class GLImage : public Image
+{
 public:
   explicit GLImage(ImageFormat aFormat) : Image(nullptr, aFormat){}
 
-  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
+  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
-  GLImage* AsGLImage() override {
-    return this;
-  }
+  GLImage* AsGLImage() override { return this; }
 };
 
 #ifdef MOZ_WIDGET_ANDROID
 
-class SurfaceTextureImage : public GLImage {
+class SurfaceTextureImage : public GLImage
+{
 public:
   SurfaceTextureImage(AndroidSurfaceTextureHandle aHandle,
                       const gfx::IntSize& aSize,
                       bool aContinuous,
                       gl::OriginPos aOriginPos);
 
-  gfx::IntSize GetSize() override { return mSize; }
-  AndroidSurfaceTextureHandle GetHandle() const {
-    return mHandle;
-  }
-  bool GetContinuous() const {
-    return mContinuous;
-  }
-  gl::OriginPos GetOriginPos() const {
-    return mOriginPos;
-  }
+  gfx::IntSize GetSize() const override { return mSize; }
+  AndroidSurfaceTextureHandle GetHandle() const { return mHandle; }
+  bool GetContinuous() const { return mContinuous; }
+  gl::OriginPos GetOriginPos() const { return mOriginPos; }
 
-  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override {
-    // We can implement this, but currently don't want to because it will cause the
-    // SurfaceTexture to be permanently bound to the snapshot readback context.
+  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override
+  {
+    // We can implement this, but currently don't want to because it will cause
+    // the SurfaceTexture to be permanently bound to the snapshot readback
+    // context.
     return nullptr;
   }
 
-  SurfaceTextureImage* AsSurfaceTextureImage() override {
-    return this;
-  }
+  SurfaceTextureImage* AsSurfaceTextureImage() override { return this; }
 
 private:
   AndroidSurfaceTextureHandle mHandle;

@@ -20,10 +20,10 @@ class TextureWrapperImage final : public Image
 {
 public:
   TextureWrapperImage(TextureClient* aClient, const gfx::IntRect& aPictureRect);
-  ~TextureWrapperImage() override;
+  virtual ~TextureWrapperImage();
 
-  gfx::IntSize GetSize() override;
-  gfx::IntRect GetPictureRect() override;
+  gfx::IntSize GetSize() const override;
+  gfx::IntRect GetPictureRect() const override;
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
   TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
 

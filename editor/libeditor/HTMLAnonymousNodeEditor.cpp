@@ -363,14 +363,11 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection* aSelection)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsIDOMElement> cellElement;
+  RefPtr<Element> cellElement;
   if (mIsObjectResizingEnabled || mIsInlineTableEditingEnabled) {
     // Resizing or Inline Table Editing is enabled, we need to check if the
     // selection is contained in a table cell
-    rv = GetElementOrParentByTagName(NS_LITERAL_STRING("td"),
-                                     nullptr,
-                                     getter_AddRefs(cellElement));
-    NS_ENSURE_SUCCESS(rv, rv);
+    cellElement = GetElementOrParentByTagName(NS_LITERAL_STRING("td"), nullptr);
   }
 
   if (mIsObjectResizingEnabled && cellElement) {
@@ -381,8 +378,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection* aSelection)
     if (nsGkAtoms::img != focusTagAtom) {
       // the element container of the selection is not an image, so we'll show
       // the resizers around the table
-      nsCOMPtr<nsIDOMNode> tableNode = GetEnclosingTable(cellElement);
-      focusElement = do_QueryInterface(tableNode);
+      focusElement = do_QueryInterface(GetEnclosingTable(cellElement));
       focusTagAtom = nsGkAtoms::table;
     }
   }
@@ -460,7 +456,7 @@ HTMLEditor::CheckSelectionStateForAnonymousButtons(nsISelection* aSelection)
   }
 
   if (mIsInlineTableEditingEnabled && cellElement &&
-      IsModifiableNode(cellElement) && cellElement != hostNode) {
+      IsModifiableNode(cellElement) && cellElement != hostContent) {
     if (mInlineEditedCell) {
       nsresult rv = RefreshInlineTableEditingUI();
       if (NS_WARN_IF(NS_FAILED(rv))) {

@@ -16,25 +16,29 @@ namespace mozilla {
 
 namespace layers {
 
-class MacIOSurfaceImage : public Image {
+class MacIOSurfaceImage : public Image
+{
 public:
   explicit MacIOSurfaceImage(MacIOSurface* aSurface)
-   : Image(nullptr, ImageFormat::MAC_IOSURFACE),
-     mSurface(aSurface)
-  {}
+    : Image(nullptr, ImageFormat::MAC_IOSURFACE)
+    , mSurface(aSurface)
+  {
+  }
 
   MacIOSurface* GetSurface() { return mSurface; }
 
-  gfx::IntSize GetSize() override {
+  gfx::IntSize GetSize() const override
+  {
     return gfx::IntSize::Truncate(mSurface->GetDevicePixelWidth(),
                                   mSurface->GetDevicePixelHeight());
   }
 
-  virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
+  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
-  virtual TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
+  TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
 
-  virtual MacIOSurfaceImage* AsMacIOSurfaceImage() override {
+  MacIOSurfaceImage* AsMacIOSurfaceImage() override
+  {
     return this;
   }
 

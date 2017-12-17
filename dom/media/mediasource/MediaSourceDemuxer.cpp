@@ -10,6 +10,7 @@
 #include "OpusDecoder.h"
 #include "SourceBufferList.h"
 #include "VorbisDecoder.h"
+#include "VideoUtils.h"
 #include "nsPrintfCString.h"
 
 #include <algorithm>
