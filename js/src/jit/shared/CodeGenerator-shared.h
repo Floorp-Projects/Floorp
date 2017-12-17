@@ -454,8 +454,8 @@ class CodeGeneratorShared : public LElementVisitor
         return masm.PushWithPatch(t);
     }
 
-    void storeResultTo(Register reg) {
-        masm.storeCallWordResult(reg);
+    void storePointerResultTo(Register reg) {
+        masm.storeCallPointerResult(reg);
     }
 
     void storeFloatResultTo(FloatRegister reg) {
@@ -725,7 +725,9 @@ class StoreRegisterTo
     { }
 
     inline void generate(CodeGeneratorShared* codegen) const {
-        codegen->storeResultTo(out_);
+        // It's okay to use storePointerResultTo here - the VMFunction wrapper
+        // ensures the upper bytes are zero for bool/int32 return values.
+        codegen->storePointerResultTo(out_);
     }
     inline LiveRegisterSet clobbered() const {
         LiveRegisterSet set;

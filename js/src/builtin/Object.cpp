@@ -1445,6 +1445,59 @@ TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj, MutableHandleV
     return true;
 }
 
+template <EnumerableOwnPropertiesKind kind>
+static bool
+TryEnumerableOwnPropertiesUnboxed(JSContext* cx, HandleObject obj, MutableHandleValue rval,
+                                  bool* optimized)
+{
+    *optimized = false;
+
+    if (!obj->is<UnboxedPlainObject>())
+        return true;
+
+    Handle<UnboxedPlainObject*> uobj = obj.as<UnboxedPlainObject>();
+    if (uobj->maybeExpando())
+        return true;
+
+    *optimized = true;
+
+    AutoValueVector properties(cx);
+    RootedValue key(cx);
+    RootedValue value(cx);
+
+    const UnboxedLayout& layout = uobj->layout();
+
+    for (size_t i = 0, len = layout.properties().length(); i < len; i++) {
+        MOZ_ASSERT(obj->is<UnboxedPlainObject>(),
+                   "Object should still be unboxed");
+
+        const UnboxedLayout::Property& property = layout.properties()[i];
+
+        if (kind == EnumerableOwnPropertiesKind::Keys ||
+            kind == EnumerableOwnPropertiesKind::Names)
+        {
+            value.setString(property.name);
+        } else if (kind == EnumerableOwnPropertiesKind::Values) {
+            value.set(uobj->getValue(property));
+        } else {
+            key.setString(property.name);
+            value.set(uobj->getValue(property));
+            if (!NewValuePair(cx, key, value, &value))
+                return false;
+        }
+
+        if (!properties.append(value))
+            return false;
+    }
+
+    JSObject* array = NewDenseCopiedArray(cx, properties.length(), properties.begin());
+    if (!array)
+        return false;
+
+    rval.setObject(*array);
+    return true;
+}
+
 // ES2018 draft rev c164be80f7ea91de5526b33d54e5c9321ed03d3f
 // 7.3.21 EnumerableOwnProperties ( O, kind )
 template <EnumerableOwnPropertiesKind kind>
@@ -1463,7 +1516,11 @@ EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args)
     bool optimized;
     if (!TryEnumerableOwnPropertiesNative<kind>(cx, obj, args.rval(), &optimized))
         return false;
+    if (optimized)
+        return true;
 
+    if (!TryEnumerableOwnPropertiesUnboxed<kind>(cx, obj, args.rval(), &optimized))
+        return false;
     if (optimized)
         return true;
 
@@ -1566,7 +1623,11 @@ obj_keys(JSContext* cx, unsigned argc, Value* vp)
     static constexpr EnumerableOwnPropertiesKind kind = EnumerableOwnPropertiesKind::Keys;
     if (!TryEnumerableOwnPropertiesNative<kind>(cx, obj, args.rval(), &optimized))
         return false;
+    if (optimized)
+        return true;
 
+    if (!TryEnumerableOwnPropertiesUnboxed<kind>(cx, obj, args.rval(), &optimized))
+        return false;
     if (optimized)
         return true;
 
@@ -1673,7 +1734,11 @@ js::obj_getOwnPropertyNames(JSContext* cx, unsigned argc, Value* vp)
     static constexpr EnumerableOwnPropertiesKind kind = EnumerableOwnPropertiesKind::Names;
     if (!TryEnumerableOwnPropertiesNative<kind>(cx, obj, args.rval(), &optimized))
         return false;
+    if (optimized)
+        return true;
 
+    if (!TryEnumerableOwnPropertiesUnboxed<kind>(cx, obj, args.rval(), &optimized))
+        return false;
     if (optimized)
         return true;
 
