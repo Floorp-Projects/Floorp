@@ -149,36 +149,6 @@ public:
   nsDocHeaderData*  mNext;
 };
 
-class nsDOMStyleSheetList : public mozilla::dom::StyleSheetList,
-                            public nsStubDocumentObserver
-{
-public:
-  explicit nsDOMStyleSheetList(nsIDocument* aDocument);
-
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDocumentObserver
-  NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETADDED
-  NS_DECL_NSIDOCUMENTOBSERVER_STYLESHEETREMOVED
-
-  // nsIMutationObserver
-  NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
-
-  virtual nsINode* GetParentObject() const override
-  {
-    return mDocument;
-  }
-
-  uint32_t Length() override;
-  mozilla::StyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) override;
-
-protected:
-  virtual ~nsDOMStyleSheetList();
-
-  int32_t       mLength;
-  nsIDocument*  mDocument;
-};
-
 class nsOnloadBlocker final : public nsIRequest
 {
 public:
@@ -478,14 +448,6 @@ public:
 
   virtual void EnsureOnDemandBuiltInUASheet(mozilla::StyleSheet* aSheet) override;
 
-  /**
-   * Get the (document) style sheets owned by this document.
-   * These are ordered, highest priority last
-   */
-  virtual int32_t GetNumberOfStyleSheets() const override;
-  virtual mozilla::StyleSheet* GetStyleSheetAt(int32_t aIndex) const override;
-  virtual int32_t GetIndexOfStyleSheet(
-      const mozilla::StyleSheet* aSheet) const override;
   virtual void AddStyleSheet(mozilla::StyleSheet* aSheet) override;
   virtual void RemoveStyleSheet(mozilla::StyleSheet* aSheet) override;
 
@@ -496,7 +458,7 @@ public:
   virtual void RemoveStyleSheetFromStyleSets(mozilla::StyleSheet* aSheet);
 
   virtual void InsertStyleSheetAt(mozilla::StyleSheet* aSheet,
-                                  int32_t aIndex) override;
+                                  size_t aIndex) override;
   virtual void SetStyleSheetApplicableState(mozilla::StyleSheet* aSheet,
                                             bool aApplicable) override;
 
@@ -988,7 +950,7 @@ public:
   // WebIDL bits
   virtual mozilla::dom::DOMImplementation*
     GetImplementation(mozilla::ErrorResult& rv) override;
-  virtual mozilla::dom::StyleSheetList* StyleSheets() override;
+
   virtual void SetSelectedStyleSheetSet(const nsAString& aSheetSet) override;
   virtual void GetLastStyleSheetSet(nsString& aSheetSet) override;
   virtual mozilla::dom::DOMStringList* StyleSheetSets() override;
@@ -1142,7 +1104,6 @@ protected:
   // EndLoad() has already happened.
   nsWeakPtr mWeakSink;
 
-  nsTArray<RefPtr<mozilla::StyleSheet>> mStyleSheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mOnDemandBuiltInUASheets;
   nsTArray<RefPtr<mozilla::StyleSheet>> mAdditionalSheets[AdditionalSheetTypeCount];
 
@@ -1179,7 +1140,6 @@ protected:
 
 public:
   RefPtr<mozilla::EventListenerManager> mListenerManager;
-  RefPtr<mozilla::dom::StyleSheetList> mDOMStyleSheets;
   RefPtr<nsDOMStyleSheetSetList> mStyleSheetSetList;
   RefPtr<mozilla::dom::ScriptLoader> mScriptLoader;
   nsDocHeaderData* mHeaderData;
