@@ -1141,7 +1141,7 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
   MOZ_ASSERT(OnGraphThread());
   MOZ_ASSERT(aEndBlockingDecisions >= mProcessedTime);
   // The next state computed time can be the same as the previous: it
-  // means the driver would be have been blocking indefinitly, but the graph has
+  // means the driver would have been blocking indefinitly, but the graph has
   // been woken up right after having been to sleep.
   MOZ_ASSERT(aEndBlockingDecisions >= mStateComputedTime);
 
@@ -1150,13 +1150,10 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
   bool ensureNextIteration = false;
 
   // Grab pending stream input and compute blocking time
-  // TODO: Ensure that heap memory allocations isn't going to be a problem.
-  // Maybe modify code to use nsAutoTArray as out parameters.
-  nsTArray<RefPtr<SourceMediaStream::NotifyPullPromise>> promises;
+  AutoTArray<RefPtr<SourceMediaStream::NotifyPullPromise>, 64> promises;
   for (MediaStream* stream : mStreams) {
     if (SourceMediaStream* is = stream->AsSourceStream()) {
-      promises.AppendElements(
-        is->PullNewData(aEndBlockingDecisions, &ensureNextIteration));
+      ensureNextIteration |= is->PullNewData(aEndBlockingDecisions, promises);
     }
   }
 
@@ -2712,15 +2709,14 @@ SourceMediaStream::SetPullEnabled(bool aEnabled)
   }
 }
 
-nsTArray<RefPtr<SourceMediaStream::NotifyPullPromise>>
-SourceMediaStream::PullNewData(StreamTime aDesiredUpToTime,
-                               bool* aEnsureNextIteration)
+bool
+SourceMediaStream::PullNewData(
+  StreamTime aDesiredUpToTime,
+  nsTArray<RefPtr<SourceMediaStream::NotifyPullPromise>>& aPromises)
 {
-  // 2 is the average number of listeners per SourceMediaStream.
-  nsTArray<RefPtr<SourceMediaStream::NotifyPullPromise>> promises(2);
   MutexAutoLock lock(mMutex);
   if (!mPullEnabled || mFinished) {
-    return promises;
+    return false;
   }
   // Compute how much stream time we'll need assuming we don't block
   // the stream at all.
@@ -2732,9 +2728,8 @@ SourceMediaStream::PullNewData(StreamTime aDesiredUpToTime,
         GraphImpl()->MediaTimeToSeconds(t),
         GraphImpl()->MediaTimeToSeconds(current)));
   if (t <= current) {
-    return promises;
+    return false;
   }
-  *aEnsureNextIteration = true;
 #ifdef DEBUG
   if (mListeners.Length() == 0) {
     LOG(
@@ -2750,10 +2745,10 @@ SourceMediaStream::PullNewData(StreamTime aDesiredUpToTime,
     MediaStreamListener* l = mListeners[j];
     {
       MutexAutoUnlock unlock(mMutex);
-      promises.AppendElement(l->AsyncNotifyPull(GraphImpl(), t));
+      aPromises.AppendElement(l->AsyncNotifyPull(GraphImpl(), t));
     }
   }
-  return promises;
+  return true;
 }
 
 void
