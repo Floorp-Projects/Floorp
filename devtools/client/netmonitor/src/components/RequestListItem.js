@@ -104,7 +104,7 @@ class RequestListItem extends Component {
 
     let { connector, item, requestFilterTypes } = this.props;
     // Filtering XHR & WS require to lazily fetch requestHeaders & responseHeaders
-    if (requestFilterTypes.get("xhr") || requestFilterTypes.get("ws")) {
+    if (requestFilterTypes.xhr || requestFilterTypes.ws) {
       fetchNetworkUpdatePacket(connector.requestData, item, [
         "requestHeaders",
         "responseHeaders",
@@ -115,7 +115,7 @@ class RequestListItem extends Component {
   componentWillReceiveProps(nextProps) {
     let { connector, item, requestFilterTypes } = nextProps;
     // Filtering XHR & WS require to lazily fetch requestHeaders & responseHeaders
-    if (requestFilterTypes.get("xhr") || requestFilterTypes.get("ws")) {
+    if (requestFilterTypes.xhr || requestFilterTypes.ws) {
       fetchNetworkUpdatePacket(connector.requestData, item, [
         "requestHeaders",
         "responseHeaders",

@@ -25,8 +25,7 @@ function prefsMiddleware(store) {
     switch (action.type) {
       case ENABLE_REQUEST_FILTER_TYPE_ONLY:
       case TOGGLE_REQUEST_FILTER_TYPE:
-        let filters = store.getState().filters.requestFilterTypes
-          .entrySeq().toArray()
+        let filters = Object.entries(store.getState().filters.requestFilterTypes)
           .filter(([type, check]) => check)
           .map(([type, check]) => type);
         Services.prefs.setCharPref(
