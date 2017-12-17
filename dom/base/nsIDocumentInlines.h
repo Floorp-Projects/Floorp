@@ -21,19 +21,19 @@ template<typename T>
 size_t
 nsIDocument::FindDocStyleSheetInsertionPoint(
     const nsTArray<T>& aDocSheets,
-    mozilla::StyleSheet* aSheet)
+    const mozilla::StyleSheet& aSheet)
 {
   nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
 
   // lowest index first
-  int32_t newDocIndex = GetIndexOfStyleSheet(aSheet);
+  int32_t newDocIndex = IndexOfSheet(aSheet);
 
-  int32_t count = aDocSheets.Length();
-  int32_t index;
-  for (index = 0; index < count; index++) {
-    mozilla::StyleSheet* sheet = static_cast<mozilla::StyleSheet*>(
-      aDocSheets[index]);
-    int32_t sheetDocIndex = GetIndexOfStyleSheet(sheet);
+  size_t count = aDocSheets.Length();
+  size_t index = 0;
+  for (; index < count; index++) {
+    auto* sheet = static_cast<mozilla::StyleSheet*>(aDocSheets[index]);
+    MOZ_ASSERT(sheet);
+    int32_t sheetDocIndex = IndexOfSheet(*sheet);
     if (sheetDocIndex > newDocIndex)
       break;
 
