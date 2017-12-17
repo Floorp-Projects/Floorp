@@ -974,7 +974,7 @@ DOMMediaStream::InitOwnedStreamCommon(MediaStreamGraph* aGraph)
   MOZ_ASSERT(!mPlaybackStream, "Owned stream must be initialized before playback stream");
 
   mOwnedStream = aGraph->CreateTrackUnionStream();
-  mOwnedStream->SetAutofinish(true);
+  mOwnedStream->QueueSetAutofinish(true);
   mOwnedStream->RegisterUser();
   if (mInputStream) {
     mOwnedPort = mOwnedStream->AllocateInputPort(mInputStream);
@@ -989,7 +989,7 @@ void
 DOMMediaStream::InitPlaybackStreamCommon(MediaStreamGraph* aGraph)
 {
   mPlaybackStream = aGraph->CreateTrackUnionStream();
-  mPlaybackStream->SetAutofinish(true);
+  mPlaybackStream->QueueSetAutofinish(true);
   mPlaybackStream->RegisterUser();
   if (mOwnedStream) {
     mPlaybackPort = mPlaybackStream->AllocateInputPort(mOwnedStream);

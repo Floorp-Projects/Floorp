@@ -715,7 +715,6 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
 {
 
   CSFLogDebug(LOGTAG,  "%s ", __FUNCTION__);
-  unsigned int numSamples = 0;
 
   //validate params
   if(!speechData )
@@ -726,7 +725,7 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
   }
 
   // Validate sample length
-  if((numSamples = GetNum10msSamplesForFrequency(samplingFreqHz)) == 0  )
+  if(GetNum10msSamplesForFrequency(samplingFreqHz) == 0)
   {
     CSFLogError(LOGTAG,"%s Invalid Sampling Frequency ", __FUNCTION__);
     MOZ_ASSERT(PR_FALSE);
@@ -749,7 +748,7 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
     return kMediaConduitSessionNotInited;
   }
 
-
+  int lengthSamplesAllowed = lengthSamples;
   lengthSamples = 0;  //output paramter
 
   if (mPtrVoEXmedia->GetAudioFrame(mChannel,
@@ -766,8 +765,8 @@ WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
 
   // XXX Annoying, have to copy to our buffers -- refactor?
   lengthSamples = mAudioFrame.samples_per_channel_ * mAudioFrame.num_channels_;
-  PodCopy(speechData, mAudioFrame.data_,
-          lengthSamples);
+  MOZ_RELEASE_ASSERT(lengthSamples <= lengthSamplesAllowed);
+  PodCopy(speechData, mAudioFrame.data_, lengthSamples);
 
   // Not #ifdef DEBUG or on a log module so we can use it for about:webrtc/etc
   mSamples += lengthSamples;

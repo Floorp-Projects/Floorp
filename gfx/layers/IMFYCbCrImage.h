@@ -20,16 +20,16 @@ class IMFYCbCrImage : public RecyclingPlanarYCbCrImage
 public:
   IMFYCbCrImage(IMFMediaBuffer* aBuffer, IMF2DBuffer* a2DBuffer);
 
-  virtual bool IsValid() { return true; }
+  bool IsValid() const override { return true; }
 
-  virtual TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
+  TextureClient* GetTextureClient(KnowsCompositor* aForwarder) override;
 
   static DXGIYCbCrTextureData* GetD3D11TextureData(Data aData,
-                                                  gfx::IntSize aSize);
+                                                   gfx::IntSize aSize);
 protected:
   TextureClient* GetD3D11TextureClient(KnowsCompositor* aForwarder);
 
-  ~IMFYCbCrImage();
+  virtual ~IMFYCbCrImage();
 
   RefPtr<IMFMediaBuffer> mBuffer;
   RefPtr<IMF2DBuffer> m2DBuffer;

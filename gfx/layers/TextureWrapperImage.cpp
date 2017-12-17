@@ -22,13 +22,13 @@ TextureWrapperImage::~TextureWrapperImage()
 }
 
 gfx::IntSize
-TextureWrapperImage::GetSize()
+TextureWrapperImage::GetSize() const
 {
   return mTextureClient->GetSize();
 }
 
 gfx::IntRect
-TextureWrapperImage::GetPictureRect()
+TextureWrapperImage::GetPictureRect() const
 {
   return mPictureRect;
 }

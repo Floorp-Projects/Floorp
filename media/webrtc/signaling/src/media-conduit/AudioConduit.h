@@ -140,6 +140,7 @@ public:
    * @param speechData [in]: Pointer to a array to which a 10ms frame of audio will be copied
    * @param samplingFreqHz [in]: Frequency of the sampling for playback in Hertz (16000, 32000,..)
    * @param capture_delay [in]: Estimated Time between reading of the samples to rendering/playback
+   * @param lengthSamples [in]: Contain maximum length of speechData array.
    * @param lengthSamples [out]: Will contain length of the audio frame in samples at return.
                                  Ex: A value of 160 implies 160 samples each of 16-bits was copied
                                      into speechData

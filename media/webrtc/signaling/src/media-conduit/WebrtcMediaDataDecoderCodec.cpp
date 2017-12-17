@@ -7,19 +7,19 @@
 #include "Layers.h"
 #include "PDMFactory.h"
 #include "VideoUtils.h"
+#include "mozilla/media/MediaUtils.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "webrtc/base/keep_ref_until_done.h"
 
 namespace mozilla {
 
 WebrtcMediaDataDecoder::WebrtcMediaDataDecoder()
-  : mTaskQueue(
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
-                    "WebrtcMediaDataDecoder::mTaskQueue"))
+  : mThreadPool(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER))
+  , mTaskQueue(new TaskQueue(do_AddRef(mThreadPool),
+                             "WebrtcMediaDataDecoder::mTaskQueue"))
   , mImageContainer(layers::LayerManager::CreateImageContainer(
       layers::ImageContainer::ASYNCHRONOUS))
   , mFactory(new PDMFactory())
-  , mMonitor("WebrtcMediaDataDecoder")
 {
 }
 
@@ -68,25 +68,10 @@ WebrtcMediaDataDecoder::InitDecode(const webrtc::VideoCodec* aCodecSettings,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  MonitorAutoLock lock(mMonitor);
-  bool done = false;
-  mDecoder->Init()->Then(mTaskQueue,
-                         __func__,
-                         [&](TrackInfo::TrackType) {
-                           MonitorAutoLock lock(mMonitor);
-                           done = true;
-                           mMonitor.Notify();
-                         },
-                         [&](const MediaResult& aError) {
-                           MonitorAutoLock lock(mMonitor);
-                           done = true;
-                           mError = aError;
-                           mMonitor.Notify();
-                         });
-
-  while (!done) {
-    mMonitor.Wait();
-  }
+  media::Await(do_AddRef(mThreadPool),
+               mDecoder->Init(),
+               [](TrackInfo::TrackType) {},
+               [&](const MediaResult& aError) { mError = aError; });
 
   return NS_SUCCEEDED(mError) ? WEBRTC_VIDEO_CODEC_OK : WEBRTC_VIDEO_CODEC_ERROR;
 }
@@ -132,27 +117,12 @@ WebrtcMediaDataDecoder::Decode(
   compressedFrame->mKeyframe =
     aInputImage._frameType == webrtc::FrameType::kVideoFrameKey;
   {
-    MonitorAutoLock lock(mMonitor);
-    bool done = false;
-    mDecoder->Decode(compressedFrame)->Then(
-      mTaskQueue,
-      __func__,
-      [&](const MediaDataDecoder::DecodedData& aResults) {
-        MonitorAutoLock lock(mMonitor);
-        mResults = aResults;
-        done = true;
-        mMonitor.Notify();
-      },
-      [&](const MediaResult& aError) {
-        MonitorAutoLock lock(mMonitor);
-        mError = aError;
-        done = true;
-        mMonitor.Notify();
-      });
-
-    while (!done) {
-      mMonitor.Wait();
-    }
+    media::Await(do_AddRef(mThreadPool),
+                 mDecoder->Decode(compressedFrame),
+                 [&](const MediaDataDecoder::DecodedData& aResults) {
+                   mResults = aResults;
+                 },
+                 [&](const MediaResult& aError) { mError = aError; });
 
     for (auto& frame : mResults) {
       MOZ_ASSERT(frame->mType == MediaData::VIDEO_DATA);
@@ -188,25 +158,12 @@ WebrtcMediaDataDecoder::RegisterDecodeCompleteCallback(
 int32_t
 WebrtcMediaDataDecoder::Release()
 {
-  MonitorAutoLock lock(mMonitor);
-  bool done = false;
-  mDecoder->Flush()
-    ->Then(mTaskQueue,
-           __func__,
-           [this]() { return mDecoder->Shutdown(); },
-           [this](const MediaResult& aError) { return mDecoder->Shutdown(); })
-    ->Then(mTaskQueue,
-           __func__,
-           [&]() {
-             MonitorAutoLock lock(mMonitor);
-             done = true;
-             mMonitor.Notify();
-           },
-           []() { MOZ_ASSERT_UNREACHABLE("Shutdown promise always resolved"); });
-
-  while (!done) {
-    mMonitor.Wait();
-  }
+  RefPtr<ShutdownPromise> p =
+    mDecoder->Flush()->Then(mTaskQueue,
+                            __func__,
+                            [this]() { return mDecoder->Shutdown(); },
+                            [this]() { return mDecoder->Shutdown(); });
+  media::Await(do_AddRef(mThreadPool), p);
 
   mDecoder = nullptr;
   mNeedKeyframe = true;
