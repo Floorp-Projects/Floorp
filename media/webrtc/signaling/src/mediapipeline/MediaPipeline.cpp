@@ -2201,7 +2201,6 @@ MediaPipelineReceive::MediaPipelineReceive(const std::string& aPc,
                   aMainThread,
                   aStsThread,
                   aConduit)
-  , mSegmentsAdded(0)
 {
 }
 
