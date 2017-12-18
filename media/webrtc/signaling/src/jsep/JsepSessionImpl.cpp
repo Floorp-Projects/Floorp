@@ -364,6 +364,10 @@ JsepSessionImpl::RemoveDuplicateTrackIds(Sdp* sdp)
   for (size_t i = 0; i < sdp->GetMediaSectionCount(); ++i) {
     SdpMediaSection& msection(sdp->GetMediaSection(i));
 
+    if (mSdpHelper.MsectionIsDisabled(msection)) {
+      continue;
+    }
+
     std::vector<std::string> streamIds;
     std::string trackId;
     nsresult rv = mSdpHelper.GetIdsFromMsid(*sdp,
@@ -390,6 +394,9 @@ JsepSessionImpl::RemoveDuplicateTrackIds(Sdp* sdp)
         mediaAttrs.SetAttribute(newMsids.release());
       }
       trackIds.insert(trackId);
+    } else if (rv != NS_ERROR_NOT_AVAILABLE) {
+      // Error has already been set
+      return rv;
     }
   }
 
@@ -1313,18 +1320,6 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
       return NS_ERROR_INVALID_ARG;
     }
 
-    std::vector<std::string> streamIds;
-    std::string trackId;
-    nsresult rv = mSdpHelper.GetIdsFromMsid(*parsed,
-                                            parsed->GetMediaSection(i),
-                                            &streamIds,
-                                            &trackId);
-
-    if (NS_FAILED(rv) && (rv != NS_ERROR_NOT_AVAILABLE)) {
-      // Error has already been set
-      return rv;
-    }
-
     static const std::bitset<128> forbidden = GetForbiddenSdpPayloadTypes();
     if (msection.GetMediaType() == SdpMediaSection::kAudio ||
         msection.GetMediaType() == SdpMediaSection::kVideo) {
@@ -1349,6 +1344,9 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
       }
     }
   }
+
+  nsresult rv = RemoveDuplicateTrackIds(parsed.get());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   *parsedp = Move(parsed);
   return NS_OK;
