@@ -407,7 +407,7 @@ VRDisplayGVR::GetSensorState()
   result.linearVelocity[1] = 0.0f;
   result.linearVelocity[2] = 0.0f;
 
-  UpdateHeadToEye(context, &rot);
+  UpdateHeadToEye(context);
   result.CalcViewMatrices(mHeadToEyes);
 
   return result;
@@ -466,7 +466,7 @@ VRDisplayGVR::SetPresentingContext(void* aGVRPresentingContext)
 }
 
 void
-VRDisplayGVR::UpdateHeadToEye(gvr_context* aContext, gfx::Quaternion* aRot)
+VRDisplayGVR::UpdateHeadToEye(gvr_context* aContext)
 {
   if (!aContext) {
     return;
@@ -477,11 +477,7 @@ VRDisplayGVR::UpdateHeadToEye(gvr_context* aContext, gfx::Quaternion* aRot)
     mDisplayInfo.mEyeTranslation[eyeIndex].x = -eye.m[0][3];
     mDisplayInfo.mEyeTranslation[eyeIndex].y = -eye.m[1][3];
     mDisplayInfo.mEyeTranslation[eyeIndex].z = -eye.m[2][3];
-    if (aRot) {
-      mHeadToEyes[eyeIndex].SetRotationFromQuaternion(*aRot);
-    } else {
-      mHeadToEyes[eyeIndex] = gfx::Matrix4x4();
-    }
+    mHeadToEyes[eyeIndex] = gfx::Matrix4x4();
     mHeadToEyes[eyeIndex].PreTranslate(eye.m[0][3], eye.m[1][3], eye.m[2][3]);
   }
 }
