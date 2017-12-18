@@ -105,6 +105,7 @@ var isAndroid = !!navigator.userAgent.includes("Android");
 var isServo = isStyledByServo();
 var offscreenThrottlingEnabled =
   SpecialPowers.getBoolPref('dom.animations.offscreen-throttling');
+var hasConformantPromiseHandling;
 
 function add_task_if_omta_enabled(test) {
   if (!omtaEnabled) {
@@ -114,9 +115,29 @@ function add_task_if_omta_enabled(test) {
   add_task(test);
 }
 
+function isConformant() {
+  return new Promise(resolve => {
+    let resolvedPromise = false;
+    requestAnimationFrame(() => {
+      Promise.resolve().then(() => {
+        resolvedPromise = true;
+      });
+    });
+
+    requestAnimationFrame(() => {
+      resolve(resolvedPromise);
+    });
+  });
+}
+
 // We need to wait for all paints before running tests to avoid contaminations
 // from styling of this document itself.
 waitForAllPaints(() => {
+  // Drop this once we have the conformant Promise handling(bug 1193394).
+  add_task(async function check_conformant_promise_handling() {
+    hasConformantPromiseHandling = await isConformant();
+  });
+
   add_task(async function restyling_for_main_thread_animations() {
     var div = addDiv(null, { style: 'animation: background-color 100s' });
     var animation = div.getAnimations()[0];
