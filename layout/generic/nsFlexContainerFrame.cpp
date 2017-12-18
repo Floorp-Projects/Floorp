@@ -81,16 +81,19 @@ kAxisOrientationToSidesMap[eNumAxisOrientationTypes][eNumAxisEdges] = {
 
 // Helper structs / classes / methods
 // ==================================
-// Returns true iff the given nsStyleDisplay has display:-webkit-{inline-}-box.
+// Returns true iff the given nsStyleDisplay has display:-webkit-{inline-}box
+// or display:-moz-{inline-}box.
 static inline bool
 IsDisplayValueLegacyBox(const nsStyleDisplay* aStyleDisp)
 {
   return aStyleDisp->mDisplay == mozilla::StyleDisplay::WebkitBox ||
-    aStyleDisp->mDisplay == mozilla::StyleDisplay::WebkitInlineBox;
+    aStyleDisp->mDisplay == mozilla::StyleDisplay::WebkitInlineBox ||
+    aStyleDisp->mDisplay == mozilla::StyleDisplay::MozBox ||
+    aStyleDisp->mDisplay == mozilla::StyleDisplay::MozInlineBox;
 }
 
-// Returns true if aFlexContainer is the frame for an element with
-// "display:-webkit-box" or "display:-webkit-inline-box". aFlexContainer is
+// Returns true if aFlexContainer is a frame for some element that has
+// display:-webkit-{inline-}box (or -moz-{inline-}box). aFlexContainer is
 // expected to be an instance of nsFlexContainerFrame (enforced with an assert);
 // otherwise, this function's state-bit-check here is bogus.
 static bool
@@ -1813,8 +1816,8 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput,
 
   const ReflowInput* containerRS = aFlexItemReflowInput.mParentReflowInput;
   if (IsLegacyBox(containerRS->mFrame)) {
-    // For -webkit-box/-webkit-inline-box, we need to:
-    // (1) Use "-webkit-box-align" instead of "align-items" to determine the
+    // For -webkit-{inline-}box and -moz-{inline-}box, we need to:
+    // (1) Use prefixed "box-align" instead of "align-items" to determine the
     //     container's cross-axis alignment behavior.
     // (2) Suppress the ability for flex items to override that with their own
     //     cross-axis alignment. (The legacy box model doesn't support this.)
@@ -2223,7 +2226,7 @@ nsFlexContainerFrame::Init(nsIContent*       aContent,
   const nsStyleDisplay* styleDisp = StyleContext()->StyleDisplay();
 
   // Figure out if we should set a frame state bit to indicate that this frame
-  // represents a legacy -webkit-{inline-}box container.
+  // represents a legacy -webkit-{inline-}box or -moz-{inline-}box container.
   // First, the trivial case: just check "display" directly.
   bool isLegacyBox = IsDisplayValueLegacyBox(styleDisp);
 
