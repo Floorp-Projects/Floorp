@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1412775
+-->
+<window title="Mozilla Bug 1412775"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="init()">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js"></script>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 1412775 **/
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+  var win;
+  function init() {
+    SimpleTest.waitForExplicitFinish();
+    win = window.open("window_bug1412775.xul", "_new", "chrome");
+    win.onload = function() {
+      var b = win.document.getElementById("browser");
+      var d = b.contentWindow.document;
+      var e = new d.defaultView.Event("foo");
+      var didCallChromeSide = false;
+      var didCallContentSide = false;
+      b.addEventListener("foo", function(e) {
+        didCallChromeSide = true;
+        var path = e.composedPath();
+        var mm = d.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIWebNavigation)
+                              .QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIContentFrameMessageManager);
+        is(path.length, 5, "Should have 5 items in composedPath in chrome.");
+        is(path[0], mm, "TabChildGlobal is the chrome handler.");
+        is(path[1], b, "browser element should be in the path.");
+        is(path[2], b.parentNode, "window element should be in the path.");
+        is(path[3], win.document, "Document object should be in the path.");
+        is(path[4], win, "Window object should be in the path.");
+      }, true, true);
+      d.addEventListener("foo", function(e) {
+        didCallContentSide = true;;
+        var path = e.composedPath();
+        is(path.length, 4, "Should have 4 items in composedPath in content.");
+        is(path[0], d.body, "body element should be in the path.");
+        is(path[1], d.documentElement, "html element should be in the path.");
+        is(path[2], d, "Document object should be in the path.");
+        is(path[3], d.defaultView, "Window object should be in the path.");
+      }, true, true);
+      d.body.dispatchEvent(e);
+      ok(didCallChromeSide, "didCallChromeSide");
+      ok(didCallContentSide, "didCallContentSide");
+      win.close();
+      SimpleTest.finish();
+    }
+  }
+
+  ]]>
+  </script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=1412775"
+     target="_blank">Mozilla Bug 1412775</a>
+  </body>
+</window>

@@ -1291,7 +1291,7 @@ nsXULElement::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     if (IsEventStoppedFromAnonymousScrollbar(aVisitor.mEvent->mMessage)) {
         // Don't propagate these events from native anonymous scrollbar.
         aVisitor.mCanHandle = true;
-        aVisitor.mParentTarget = nullptr;
+        aVisitor.SetParentTarget(nullptr, false);
         return NS_OK;
     }
     if (aVisitor.mEvent->mMessage == eXULCommand &&
