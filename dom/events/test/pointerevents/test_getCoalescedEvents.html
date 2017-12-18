@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1303957
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1303957</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="apz_test_native_event_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1303957">Mozilla Bug 1303957</a>
+<p id="display"></p>
+<div id="target0" style="width: 50px; height: 50px; background: green"></div>
+<script type="text/javascript">
+/** Test for Bug 1303957 **/
+SimpleTest.waitForExplicitFinish();
+
+function runTests() {
+  let target0 = window.document.getElementById("target0");
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.advanceTimeAndRefresh(0);
+
+  SimpleTest.executeSoon(() => {
+    // Flush all pending mouse events before synthesizing events.
+
+    target0.addEventListener("pointermove", (ev) => {
+      let length = ev.getCoalescedEvents().length;
+      ok(length >= 1, "Coalesced events should >= 1, got " + length);
+
+      let rect = target0.getBoundingClientRect();
+      let prevOffsetX = 0;
+      let prevOffsetY = 0;
+
+      for (let i = 0; i < length; ++i) {
+        let coalescedEvent = ev.getCoalescedEvents()[i];
+        is(coalescedEvent.pointerId, ev.pointerId, "getCoalescedEvents()[" + i + "].pointerId");
+        is(coalescedEvent.pointerType, ev.pointerType, "getCoalescedEvents()[" + i + "].pointerType");
+        is(coalescedEvent.isPrimary, ev.isPrimary, "getCoalescedEvents()[" + i + "].isPrimary");
+        is(coalescedEvent.target, ev.target, "getCoalescedEvents()[" + i + "].target");
+        is(coalescedEvent.currentTarget, null, "getCoalescedEvents()[" + i + "].currentTarget");
+        is(coalescedEvent.eventPhase, Event.NONE, "getCoalescedEvents()[" + i + "].eventPhase");
+        is(coalescedEvent.cancelable, false, "getCoalescedEvents()[" + i + "].cancelable");
+        is(coalescedEvent.bubbles, false, "getCoalescedEvents()[" + i + "].bubbles");
+
+        let offsetX = 20 - (length - i - 1) * 5;
+        let offsetY = 20 - (length - i - 1) * 5;
+        ok(coalescedEvent.offsetX > prevOffsetX, "getCoalescedEvents()[" + i + "].offsetX = " + coalescedEvent.offsetX);
+        ok(coalescedEvent.offsetX == 5 || coalescedEvent.offsetX == 10 ||
+           coalescedEvent.offsetX == 15 || coalescedEvent.offsetX == 20, "expected offsetX");
+
+        ok(coalescedEvent.offsetY > prevOffsetY, "getCoalescedEvents()[" + i + "].offsetY = " + coalescedEvent.offsetY);
+        ok(coalescedEvent.offsetY == 5 || coalescedEvent.offsetY == 10 ||
+           coalescedEvent.offsetY == 15 || coalescedEvent.offsetY == 20, "expected offsetY");
+
+        prevOffsetX = coalescedEvent.offsetX;
+        prevOffsetY = coalescedEvent.offsetY;
+
+        let x = rect.left + prevOffsetX;
+        let y = rect.top + prevOffsetY;
+        // coordinates may change slightly due to rounding
+        ok((coalescedEvent.clientX <= x+2) && (coalescedEvent.clientX >= x-2), "getCoalescedEvents()[" + i + "].clientX");
+        ok((coalescedEvent.clientY <= y+2) && (coalescedEvent.clientY >= y-2), "getCoalescedEvents()[" + i + "].clientY");
+      }
+    }, { once: true });
+
+    target0.addEventListener("pointerup", (ev) => {
+      utils.restoreNormalRefresh();
+      SimpleTest.finish();
+    }, { once: true });
+
+    synthesizeNativeMouseEvent(target0, 5, 5, nativeMouseMoveEventMsg(), () => {
+      synthesizeNativeMouseEvent(target0, 10, 10, nativeMouseMoveEventMsg(), () => {
+        synthesizeNativeMouseEvent(target0, 15, 15, nativeMouseMoveEventMsg(), () => {
+          synthesizeNativeMouseEvent(target0, 20, 20, nativeMouseMoveEventMsg(), () => {
+            synthesizeNativeClick(target0, 20, 20);
+          });
+        });
+      });
+    });
+  });
+}
+
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPrefEnv({"set": [["dom.w3c_pointer_events.enabled", true],
+                                     ["dom.event.coalesce_mouse_move", true]]}, runTests);
+});
+
+</script>
+</body>
+</html>

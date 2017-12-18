@@ -273,6 +273,12 @@ Event::GetCurrentTarget() const
   return mEvent->GetCurrentDOMEventTarget();
 }
 
+void
+Event::ComposedPath(nsTArray<RefPtr<EventTarget>>& aPath)
+{
+  EventDispatcher::GetComposedPathFor(mEvent, aPath);
+}
+
 NS_IMETHODIMP
 Event::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
 {

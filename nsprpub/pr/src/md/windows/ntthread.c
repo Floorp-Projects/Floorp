@@ -27,6 +27,9 @@ PRUint32                        _nt_idleCount;
 extern __declspec(thread) PRThread *_pr_io_restarted_io;
 extern DWORD _pr_io_restartedIOIndex;
 
+typedef HRESULT (WINAPI *SETTHREADDESCRIPTION)(HANDLE, PCWSTR);
+static SETTHREADDESCRIPTION sSetThreadDescription = NULL;
+
 /* Must check the restarted_io *before* decrementing no_sched to 0 */
 #define POST_SWITCH_WORK() \
     PR_BEGIN_MACRO \
@@ -79,6 +82,8 @@ _nt_handle_restarted_io(PRThread *restarted_io)
 void
 _PR_MD_EARLY_INIT()
 {
+    HMODULE hModule;
+
     _MD_NEW_LOCK( &_nt_idleLock );
     _nt_idleCount = 0;
     PR_INIT_CLIST(&_nt_idleList);
@@ -97,6 +102,15 @@ _PR_MD_EARLY_INIT()
         _pr_currentCPUIndex = TlsAlloc();
         _pr_intsOffIndex = TlsAlloc();
         _pr_io_restartedIOIndex = TlsAlloc();
+    }
+
+    // SetThreadDescription is Windows 10 build 1607+
+    hModule = GetModuleHandleW(L"kernel32.dll");
+    if (hModule) {
+        sSetThreadDescription =
+            (SETTHREADDESCRIPTION) GetProcAddress(
+                                       hModule,
+                                       "SetThreadDescription");
     }
 }
 
@@ -293,7 +307,16 @@ _PR_MD_SET_CURRENT_THREAD_NAME(const char *name)
 {
 #ifdef _MSC_VER
    THREADNAME_INFO info;
+#endif
 
+   if (sSetThreadDescription) {
+      WCHAR wideName[MAX_PATH];
+      if (MultiByteToWideChar(CP_ACP, 0, name, -1, wideName, MAX_PATH)) {
+         sSetThreadDescription(GetCurrentThread(), wideName);
+      }
+   }
+
+#ifdef _MSC_VER
    if (!IsDebuggerPresent())
       return;
 

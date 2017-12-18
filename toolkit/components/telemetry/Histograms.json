@@ -43,6 +43,16 @@
     "bug_numbers": [1423989],
     "alert_emails": ["dbolter@mozilla.com"]
   },
+  "A11Y_TREE_UPDATE_TIMING_MS" : {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["asurkov@mozilla.com"],
+    "bug_numbers": [1424768],
+    "expires_in_version": "never",
+    "description": "The amount of time taken to update the accessibility tree (ms)",
+    "kind" : "exponential",
+    "high": 60000,
+    "n_buckets": 50
+  },
   "ADDON_CONTENT_POLICY_SHIM_BLOCKING_LOADING_MS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "58",
@@ -1625,22 +1635,6 @@
     "n_values": 110,
     "description": "System font fallback script"
   },
-  "GRADIENT_DURATION": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": 50000000,
-    "n_buckets": 20,
-    "description": "Gradient generation time (us)"
-  },
-  "GRADIENT_RETENTION_TIME": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "never",
-    "kind": "linear",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "Maximum retention time for the gradient cache. (ms)"
-  },
   "FONT_CACHE_HIT": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
@@ -2398,6 +2392,16 @@
     "kind": "categorical",
     "labels": ["NotSent", "CachedContentUsed", "CachedContentNotUsed"],
     "description": "Stats for validation requests when cache won the race."
+  },
+  "NETWORK_HTTP_REDIRECT_TO_SCHEME" :{
+    "record_in_processes": ["main"],
+    "alert_emails": ["necko@mozilla.com", "seceng-telemetry@mozilla.com", "jkt@mozilla.com"],
+    "bug_numbers": [1413512],
+    "expires_in_version": "64",
+    "kind": "categorical",
+    "keyed": true,
+    "description": "Count of the HTTP redirection that triggered by top-level document or by subresource, keyed by the URL scheme redirected to.",
+    "labels": ["topLevel", "subresource"]
   },
   "HTTP_AUTH_DIALOG_STATS_3": {
     "record_in_processes": ["main", "content"],
@@ -7078,7 +7082,7 @@
     "description": "Number of histograms with total count low errors"
   },
   "TELEMETRY_ARCHIVE_DIRECTORIES_COUNT": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -7088,7 +7092,7 @@
     "description": "Number of directories in the archive at scan"
   },
   "TELEMETRY_ARCHIVE_OLDEST_DIRECTORY_AGE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -7098,7 +7102,7 @@
     "description": "The age of the oldest Telemetry archive directory in months"
   },
   "TELEMETRY_ARCHIVE_SCAN_PING_COUNT": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -7108,7 +7112,7 @@
     "description": "Number of Telemetry pings in the archive at scan"
   },
   "TELEMETRY_ARCHIVE_SESSION_PING_COUNT": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
@@ -7116,7 +7120,7 @@
     "description": "Number of Telemetry pings added to the archive during the session"
   },
   "TELEMETRY_ARCHIVE_SIZE_MB": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -7126,7 +7130,7 @@
     "description": "The size of the Telemetry archive (MB)"
   },
   "TELEMETRY_ARCHIVE_EVICTED_OVER_QUOTA": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -7136,7 +7140,7 @@
     "description": "Number of Telemetry pings evicted from the archive during cleanup, because they were over the quota"
   },
   "TELEMETRY_ARCHIVE_EVICTED_OLD_DIRS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -7146,7 +7150,7 @@
     "description": "Number of Telemetry directories evicted from the archive during cleanup, because they were too old"
   },
   "TELEMETRY_ARCHIVE_EVICTING_DIRS_MS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -7156,7 +7160,7 @@
     "description": "Time (ms) it takes for evicting old directories"
   },
   "TELEMETRY_ARCHIVE_CHECKING_OVER_QUOTA_MS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -7166,7 +7170,7 @@
     "description": "Time (ms) it takes for checking if the archive is over-quota"
   },
   "TELEMETRY_ARCHIVE_EVICTING_OVER_QUOTA_MS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -7176,21 +7180,21 @@
     "description": "Time (ms) it takes for evicting over-quota pings"
   },
   "TELEMETRY_PENDING_LOAD_FAILURE_READ": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "description": "Number of pending Telemetry pings that failed to load from the disk"
   },
   "TELEMETRY_PENDING_LOAD_FAILURE_PARSE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "description": "Number of pending Telemetry pings that failed to parse once loaded from the disk"
   },
   "TELEMETRY_PENDING_PINGS_SIZE_MB": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -7199,7 +7203,7 @@
     "description": "The size of the Telemetry pending pings directory (MB). The special value 17 is used to indicate over quota pings."
   },
   "TELEMETRY_PENDING_PINGS_AGE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -7208,7 +7212,7 @@
     "description": "The age, in days, of the pending pings."
   },
   "TELEMETRY_PENDING_PINGS_EVICTED_OVER_QUOTA": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -7217,7 +7221,7 @@
     "description": "Number of Telemetry pings evicted from the pending pings directory during cleanup, because they were over the quota"
   },
   "TELEMETRY_PENDING_EVICTING_OVER_QUOTA_MS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -7226,7 +7230,7 @@
     "description": "Time (ms) it takes for evicting over-quota pending pings"
   },
   "TELEMETRY_PENDING_CHECKING_OVER_QUOTA_MS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -7277,28 +7281,28 @@
     "description": "The size (KB) of the Telemetry unsuccessfully sent pings"
   },
   "TELEMETRY_PING_SIZE_EXCEEDED_SEND": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "description": "Number of Telemetry pings discarded before sending because they exceeded the maximum size"
   },
   "TELEMETRY_PING_SIZE_EXCEEDED_PENDING": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "description": "Number of Telemetry pending pings discarded because they exceeded the maximum size"
   },
   "TELEMETRY_PING_SIZE_EXCEEDED_ARCHIVED": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "description": "Number of archived Telemetry pings discarded because they exceeded the maximum size"
   },
   "TELEMETRY_PING_SUBMISSION_WAITING_CLIENTID": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
@@ -7307,7 +7311,7 @@
     "description": "The number of pings that were submitted and had to wait for a client id (i.e. before it was cached or loaded from disk)"
   },
   "TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -7316,7 +7320,7 @@
     "description": "The size (MB) of the Telemetry pending pings exceeding the maximum file size"
   },
   "TELEMETRY_DISCARDED_ARCHIVED_PINGS_SIZE_MB": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -7334,14 +7338,14 @@
     "description": "The size (MB) of the ping data submitted to Telemetry exceeding the maximum size"
   },
   "TELEMETRY_DISCARDED_CONTENT_PINGS_COUNT": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "description": "Count of discarded content payloads."
   },
   "TELEMETRY_COMPRESS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -7350,7 +7354,7 @@
     "description": "Time taken to compress telemetry object (ms)"
   },
   "TELEMETRY_SEND_SUCCESS" : {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "bug_numbers": [1318284],
     "expires_in_version": "never",
@@ -7360,7 +7364,7 @@
     "description": "Time needed (in ms) for a successful send of a Telemetry ping to the servers and getting a reply back."
   },
   "TELEMETRY_SEND_FAILURE" : {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "bug_numbers": [1318284],
     "expires_in_version": "never",
@@ -7388,7 +7392,7 @@
     "description": "Counts of the different ways sending a Telemetry ping can fail."
   },
   "TELEMETRY_STRINGIFY" : {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -7397,7 +7401,7 @@
     "description": "Time to stringify telemetry object (ms)"
   },
   "TELEMETRY_SUCCESS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "boolean",
@@ -7420,42 +7424,42 @@
     "description": "Count of individual invalid payloads that were submitted to Telemetry."
   },
   "TELEMETRY_PING_EVICTED_FOR_SERVER_ERRORS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "description": "Number of Telemetry ping files evicted due to server errors (4XX HTTP code received)"
   },
   "TELEMETRY_SESSIONDATA_FAILED_LOAD": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Set if Telemetry failed to load the session data from disk."
   },
   "TELEMETRY_SESSIONDATA_FAILED_PARSE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Set if Telemetry failed to parse the session data loaded from disk."
   },
   "TELEMETRY_SESSIONDATA_FAILED_VALIDATION": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Set if Telemetry failed to validate the session data loaded from disk."
   },
   "TELEMETRY_SESSIONDATA_FAILED_SAVE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Set if Telemetry failed to save the session data to disk."
   },
   "TELEMETRY_ASSEMBLE_PAYLOAD_EXCEPTION": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "bug_numbers": [1250640],
     "expires_in_version": "53",
@@ -7463,7 +7467,7 @@
     "description": "Count of exceptions in TelemetrySession.getSessionPayload()."
   },
   "TELEMETRY_SCHEDULER_TICK_EXCEPTION": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "bug_numbers": [1250640],
     "expires_in_version": "53",
@@ -7471,7 +7475,7 @@
     "description": "Count of exceptions during executing the TelemetrySession scheduler tick logic."
   },
   "TELEMETRY_SCHEDULER_WAKEUP": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "bug_numbers": [1250640],
     "expires_in_version": "53",
