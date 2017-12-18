@@ -2802,11 +2802,7 @@ HTMLEditor::RemoveStyleSheet(const nsAString& aURL)
   NS_ENSURE_TRUE(sheet, NS_ERROR_UNEXPECTED);
 
   RefPtr<RemoveStyleSheetTransaction> transaction =
-    CreateTxnForRemoveStyleSheet(sheet);
-  if (!transaction) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
+    RemoveStyleSheetTransaction::Create(*this, *sheet);
   nsresult rv = DoTransaction(transaction);
   if (NS_SUCCEEDED(rv)) {
     mLastStyleSheetURL.Truncate();        // forget it
@@ -3382,11 +3378,7 @@ HTMLEditor::StyleSheetLoaded(StyleSheet* aSheet,
     RemoveStyleSheet(mLastStyleSheetURL);
 
   RefPtr<AddStyleSheetTransaction> transaction =
-    CreateTxnForAddStyleSheet(aSheet);
-  if (!transaction) {
-    return NS_OK;
-  }
-
+    AddStyleSheetTransaction::Create(*this, *aSheet);
   nsresult rv = DoTransaction(transaction);
   if (NS_SUCCEEDED(rv)) {
     // Get the URI, then url spec from the sheet

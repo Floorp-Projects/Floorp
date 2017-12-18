@@ -17,12 +17,23 @@ namespace mozilla {
 
 class AddStyleSheetTransaction final : public EditTransactionBase
 {
+protected:
+  AddStyleSheetTransaction(EditorBase& aEditor, StyleSheet& aStyleSheet);
+
 public:
   /**
-   * @param aEditor     The object providing core editing operations
-   * @param aSheet      The stylesheet to add
-    */
-  AddStyleSheetTransaction(EditorBase& aEditor, StyleSheet* aSheet);
+   * Creates an add style sheet transaction.  This never returns nullptr.
+   *
+   * @param aEditorBase The editor.
+   * @param aSheet      The style sheet to add.
+   */
+  static already_AddRefed<AddStyleSheetTransaction>
+  Create(EditorBase& aEditorBase, StyleSheet& aStyleSheet)
+  {
+    RefPtr<AddStyleSheetTransaction> transaction =
+      new AddStyleSheetTransaction(aEditorBase, aStyleSheet);
+    return transaction.forget();
+  }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(AddStyleSheetTransaction,
                                            EditTransactionBase)
@@ -40,12 +51,23 @@ protected:
 
 class RemoveStyleSheetTransaction final : public EditTransactionBase
 {
+protected:
+  RemoveStyleSheetTransaction(EditorBase& aEditor, StyleSheet& aStyleSheet);
+
 public:
   /**
+   * Creates a remove style sheet transaction.  This never returns nullptr.
+   *
    * @param aEditor     The object providing core editing operations.
    * @param aSheet      The stylesheet to remove.
    */
-  RemoveStyleSheetTransaction(EditorBase& aEditor, StyleSheet* aSheet);
+  static already_AddRefed<RemoveStyleSheetTransaction>
+  Create(EditorBase& aEditorBase, StyleSheet& aStyleSheet)
+  {
+    RefPtr<RemoveStyleSheetTransaction> transaction =
+      new RemoveStyleSheetTransaction(aEditorBase, aStyleSheet);
+    return transaction.forget();
+  }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(RemoveStyleSheetTransaction,
                                            EditTransactionBase)
@@ -58,7 +80,6 @@ protected:
   RefPtr<EditorBase> mEditorBase;
   // The style sheet to remove.
   RefPtr<StyleSheet> mSheet;
-
 };
 
 } // namespace mozilla
