@@ -44,6 +44,15 @@
     return trackEvents;
   };
 
+  let offerAnswer = async (offerer, answerer) => {
+    let offer = await offerer.createOffer();
+    await answerer.setRemoteDescription(offer);
+    await offerer.setLocalDescription(offer);
+    let answer = await answerer.createAnswer();
+    await offerer.setRemoteDescription(answer);
+    await answerer.setLocalDescription(answer);
+  };
+
   let trickle = (pc1, pc2) => {
     pc1.onicecandidate = async e => {
       info("Adding ICE candidate: " + JSON.stringify(e.candidate));
@@ -623,6 +632,76 @@
     hasProps(pc2.getTransceivers(),
       [
         {mid: "sdparta_0", sender: {track}}
+      ]);
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream);
+  };
+
+  let checkRemoveAndReadd = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+    let stream = await getUserMedia({audio: true});
+    let track = stream.getAudioTracks()[0];
+    pc1.addTrack(track, stream);
+
+    await offerAnswer(pc1, pc2);
+
+    pc1.removeTrack(pc1.getSenders()[0]);
+    pc1.addTrack(track, stream);
+
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          sender: {track: null},
+          direction: "recvonly"
+        },
+        {
+          sender: {track},
+          direction: "sendrecv"
+        }
+      ]);
+
+    // pc1 is offerer
+    await offerAnswer(pc1, pc2);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {currentDirection: "inactive"},
+        {currentDirection: "recvonly"}
+      ]);
+
+    pc1.removeTrack(pc1.getSenders()[1]);
+    pc1.addTrack(track, stream);
+
+    hasProps(pc1.getTransceivers(),
+      [
+        {
+          sender: {track: null},
+          direction: "recvonly"
+        },
+        {
+          sender: {track: null},
+          direction: "recvonly"
+        },
+        {
+          sender: {track},
+          direction: "sendrecv"
+        }
+      ]);
+
+    // pc1 is answerer. We need to create a new transceiver so pc1 will have
+    // something to attach the re-added track to
+    pc2.addTransceiver("audio");
+
+    await offerAnswer(pc2, pc1);
+
+    hasProps(pc2.getTransceivers(),
+      [
+        {currentDirection: "inactive"},
+        {currentDirection: "inactive"},
+        {currentDirection: "sendrecv"}
       ]);
 
     pc1.close();
@@ -1856,6 +1935,7 @@
     await checkAddTransceiverThenAddTrackPairs();
     await checkAddTrackPairs();
     await checkReplaceTrackNullDoesntPreventPairing();
+    await checkRemoveAndReadd();
     await checkMute();
     await checkStop();
     await checkStopAfterCreateOffer();
