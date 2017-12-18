@@ -75,13 +75,11 @@ static const char contentSandboxRules[] = R"(
         (subpath "/usr/lib")
         (subpath "/usr/share"))))
 
+  ; Top-level directory metadata access (bug 1404298)
+  (allow file-read-metadata (regex #"^/[^/]+$"))
+
   (allow file-read-metadata
-    (literal "/etc")
-    (literal "/tmp")
-    (literal "/var")
     (literal "/private/etc/localtime")
-    (literal "/home")
-    (literal "/net")
     (regex #"^/private/tmp/KSInstallAction\."))
 
   ; Allow read access to standard special files.
