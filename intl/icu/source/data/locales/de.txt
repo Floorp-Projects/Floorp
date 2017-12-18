@@ -216,7 +216,7 @@ de{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.37.11"}
+    Version{"2.1.37.96"}
     calendar{
         buddhist{
             eras{
@@ -625,12 +625,12 @@ de{
         }
         gregorian{
             AmPmMarkers{
-                "AM",
-                "PM",
+                "vorm.",
+                "nachm.",
             }
             AmPmMarkersAbbr{
-                "AM",
-                "PM",
+                "vorm.",
+                "nachm.",
             }
             AmPmMarkersNarrow{
                 "vm.",

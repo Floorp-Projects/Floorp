@@ -1,6 +1,6 @@
 # © 2016 and later: Unicode, Inc. and others.
 # License & terms of use: http://www.unicode.org/copyright.html#License
-GENRB_CLDR_VERSION = 32
+GENRB_CLDR_VERSION = 32.0.1
 # A list of txt's to build
 # Note:
 #
