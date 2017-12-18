@@ -1929,7 +1929,7 @@ WorkerLoadInfo::GetPrincipalAndLoadGroupFromChannel(nsIChannel* aChannel,
   MOZ_DIAGNOSTIC_ASSERT(aLoadGroupOut);
 
   // Initial triggering principal should be set
-  MOZ_DIAGNOSTIC_ASSERT(mLoadingPrincipal);
+  NS_ENSURE_TRUE(mLoadingPrincipal, NS_ERROR_DOM_INVALID_STATE_ERR);
 
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   MOZ_DIAGNOSTIC_ASSERT(ssm);
