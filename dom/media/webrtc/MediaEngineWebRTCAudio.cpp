@@ -585,6 +585,9 @@ MediaEngineWebRTCMicrophoneSource::Deallocate(const RefPtr<const AllocationHandl
 
   size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
   MOZ_ASSERT(i != mAllocations.NoIndex);
+  MOZ_ASSERT(!mAllocations[i].mEnabled,
+             "Source should be stopped for the track before removing");
+  mAllocations[i].mStream->EndTrack(mAllocations[i].mTrackID);
   {
     MutexAutoLock lock(mMutex);
     mAllocations.RemoveElementAt(i);
@@ -603,9 +606,10 @@ MediaEngineWebRTCMicrophoneSource::Deallocate(const RefPtr<const AllocationHandl
 }
 
 nsresult
-MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
-                                         TrackID aTrackID,
-                                         const PrincipalHandle& aPrincipal)
+MediaEngineWebRTCMicrophoneSource::SetTrack(const RefPtr<const AllocationHandle>& aHandle,
+                                            const RefPtr<SourceMediaStream>& aStream,
+                                            TrackID aTrackID,
+                                            const PrincipalHandle& aPrincipal)
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aStream);
@@ -615,7 +619,8 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
   // from opening an already-open device.  If it's the same tab, they
   // will share a Graph(), and we can allow it.
   if (!mAllocations.IsEmpty() &&
-      aStream->Graph() != mAllocations[0].mStream->Graph()) {
+      mAllocations[0].mStream &&
+      mAllocations[0].mStream->Graph() != aStream->Graph()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -649,23 +654,44 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
   // XXX Make this based on the pref.
   aStream->RegisterForAudioMixing();
 
-  if (!mListener) {
-    mListener = new WebRTCAudioDataListener(this);
+  LOG(("Stream %p registered for microphone capture", aStream.get()));
+  return NS_OK;
+}
+
+nsresult
+MediaEngineWebRTCMicrophoneSource::Start(const RefPtr<const AllocationHandle>& aHandle)
+{
+  AssertIsOnOwningThread();
+
+  if (sChannelsOpen == 0) {
+    return NS_ERROR_FAILURE;
   }
 
-  // Make sure logger starts before capture
-  AsyncLatencyLogger::Get(true);
+  size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
+  MOZ_ASSERT(i != mAllocations.NoIndex, "Can't start track that hasn't been added");
+  Allocation& allocation = mAllocations[i];
 
-  // Must be *before* StartSend() so it will notice we selected external input (full_duplex)
-  mAudioInput->StartRecording(allocation->mStream, mListener);
-
-  if (mState == kStarted) {
-    return NS_OK;
-  }
-  MOZ_ASSERT(mState == kAllocated || mState == kStopped);
-
+  MOZ_ASSERT(!allocation.mEnabled, "Source already started");
   {
+    // This spans setting both the enabled state and mState.
     MutexAutoLock lock(mMutex);
+    allocation.mEnabled = true;
+
+    if (!mListener) {
+      mListener = new WebRTCAudioDataListener(this);
+    }
+
+    // Make sure logger starts before capture
+    AsyncLatencyLogger::Get(true);
+
+    // Must be *before* StartSend() so it will notice we selected external input (full_duplex)
+    mAudioInput->StartRecording(allocation.mStream, mListener);
+
+    if (mState == kStarted) {
+      return NS_OK;
+    }
+    MOZ_ASSERT(mState == kAllocated || mState == kStopped);
+
     mState = kStarted;
   }
 
@@ -673,34 +699,32 @@ MediaEngineWebRTCMicrophoneSource::Start(SourceMediaStream *aStream,
 }
 
 nsresult
-MediaEngineWebRTCMicrophoneSource::Stop(SourceMediaStream *aStream, TrackID aTrackID)
+MediaEngineWebRTCMicrophoneSource::Stop(const RefPtr<const AllocationHandle>& aHandle)
 {
   AssertIsOnOwningThread();
 
-  aStream->EndTrack(aTrackID);
+  size_t i = mAllocations.IndexOf(aHandle, 0, AllocationHandleComparator());
+  MOZ_ASSERT(i != mAllocations.NoIndex, "Cannot stop track that we don't know about");
+  Allocation& allocation = mAllocations[i];
 
-  class StreamComparator {
-  public:
-    bool Equals(const Allocation& aItem,
-                const RefPtr<SourceMediaStream>& aStream) const
-    {
-      return aItem.mStream == aStream;
-    }
-  };
-
-  MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(mAllocations.RemoveElement(aStream, StreamComparator()));
-
-  mAudioInput->StopRecording(aStream);
-
-  if (!mAllocations.IsEmpty()) {
-    // Another track is keeping us from stopping
+  if (!allocation.mEnabled) {
+    // Already stopped - this is allowed
     return NS_OK;
   }
 
-  MOZ_ASSERT(mState == kStarted, "Should be started when stopping");
   {
+    // This spans setting both the enabled state and mState.
     MutexAutoLock lock(mMutex);
+    allocation.mEnabled = false;
+
+    mAudioInput->StopRecording(allocation.mStream);
+
+    if (HasEnabledTrack()) {
+      // Another track is keeping us from stopping
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(mState == kStarted, "Should be started when stopping");
     mState = kStopped;
   }
 
@@ -1103,7 +1127,9 @@ MediaEngineWebRTCMicrophoneSource::Shutdown()
 
   if (mState == kStarted) {
     for (const Allocation& allocation : mAllocations) {
-      Stop(allocation.mStream, allocation.mTrackID);
+      if (allocation.mEnabled) {
+        Stop(allocation.mHandle);
+      }
     }
     MOZ_ASSERT(mState == kStopped);
   }
@@ -1142,22 +1168,40 @@ MediaEngineWebRTCAudioCaptureSource::GetUUID() const
   return nsCString(Substring(asciiString, 1, NSID_LENGTH - 3));
 }
 
-nsresult
-MediaEngineWebRTCAudioCaptureSource::Start(SourceMediaStream *aStream,
-                                           TrackID aTrackID,
-                                           const PrincipalHandle& aPrincipal)
+bool
+MediaEngineWebRTCMicrophoneSource::HasEnabledTrack() const
 {
   AssertIsOnOwningThread();
-  aStream->AddTrack(aTrackID, 0, new AudioSegment());
+  for (const Allocation& allocation : mAllocations) {
+    if (allocation.mEnabled) {
+      return true;
+    }
+  }
+  return false;
+}
+
+nsresult
+MediaEngineWebRTCAudioCaptureSource::SetTrack(const RefPtr<const AllocationHandle>& aHandle,
+                                              const RefPtr<SourceMediaStream>& aStream,
+                                              TrackID aTrackID,
+                                              const PrincipalHandle& aPrincipalHandle)
+{
+  AssertIsOnOwningThread();
+  // Nothing to do here. aStream is a placeholder dummy and not exposed.
   return NS_OK;
 }
 
 nsresult
-MediaEngineWebRTCAudioCaptureSource::Stop(SourceMediaStream *aStream,
-                                          TrackID aTrackID)
+MediaEngineWebRTCAudioCaptureSource::Start(const RefPtr<const AllocationHandle>& aHandle)
 {
   AssertIsOnOwningThread();
-  aStream->EndAllTrackAndFinish();
+  return NS_OK;
+}
+
+nsresult
+MediaEngineWebRTCAudioCaptureSource::Stop(const RefPtr<const AllocationHandle>& aHandle)
+{
+  AssertIsOnOwningThread();
   return NS_OK;
 }
 

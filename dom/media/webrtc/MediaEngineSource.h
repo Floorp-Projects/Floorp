@@ -137,11 +137,24 @@ public:
                             const char** aOutBadConstraint) = 0;
 
   /**
-   * Start the device and add the track to the provided SourceMediaStream, with
-   * the provided TrackID. You may start appending data to the track
-   * immediately after.
+   * Called by MediaEngine when a SourceMediaStream and TrackID have been
+   * provided for the given AllocationHandle to feed data to.
+   *
+   * This must be called before Start for the given AllocationHandle.
    */
-  virtual nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) = 0;
+  virtual nsresult SetTrack(const RefPtr<const AllocationHandle>& aHandle,
+                            const RefPtr<SourceMediaStream>& aStream,
+                            TrackID aTrackID,
+                            const PrincipalHandle& aPrincipal) = 0;
+
+  /**
+   * Called by MediaEngine to start feeding data to the track associated with
+   * the given AllocationHandle.
+   *
+   * If this is the first AllocationHandle to start, the underlying device
+   * will be started.
+   */
+  virtual nsresult Start(const RefPtr<const AllocationHandle>& aHandle) = 0;
 
   /**
    * Applies new constraints to the capability selection for the underlying
@@ -158,9 +171,13 @@ public:
                                const char** aOutBadConstraint) = 0;
 
   /**
-   * Stop the device and release the corresponding MediaStream.
+   * Called by MediaEngine to stop feeding data to the track associated with
+   * the given AllocationHandle.
+   *
+   * If this was the last AllocationHandle that had been started,
+   * the underlying device will be stopped.
    */
-  virtual nsresult Stop(SourceMediaStream *aSource, TrackID aID) = 0;
+  virtual nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) = 0;
 
   /**
    * Called by MediaEngine to deallocate a handle to this source.
