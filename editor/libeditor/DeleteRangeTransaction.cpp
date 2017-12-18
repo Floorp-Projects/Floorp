@@ -24,13 +24,10 @@ namespace mozilla {
 
 using namespace dom;
 
-// note that aEditorBase is not refcounted
 DeleteRangeTransaction::DeleteRangeTransaction(EditorBase& aEditorBase,
-                                               nsRange& aRangeToDelete,
-                                               RangeUpdater* aRangeUpdater)
+                                               nsRange& aRangeToDelete)
   : mEditorBase(&aEditorBase)
   , mRangeToDelete(aRangeToDelete.CloneRange())
-  , mRangeUpdater(aRangeUpdater)
 {
 }
 

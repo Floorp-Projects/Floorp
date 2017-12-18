@@ -24,8 +24,19 @@ namespace mozilla {
  */
 class EditAggregateTransaction : public EditTransactionBase
 {
-public:
+protected:
   EditAggregateTransaction();
+
+public:
+  /**
+   * Creates an edit aggregate transaction.  This never returns nullptr.
+   */
+  static already_AddRefed<EditAggregateTransaction> Create()
+  {
+    RefPtr<EditAggregateTransaction> transaction =
+      new EditAggregateTransaction();
+    return transaction.forget();
+  }
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(EditAggregateTransaction,
