@@ -9,7 +9,7 @@ transforms:
    - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-   - beetmover-checksums
+   - post-beetmover-dummy
    - release-bouncer-sub
 
 job-defaults:
