@@ -14,6 +14,27 @@ namespace mozilla {
 
 using namespace dom;
 
+// static
+already_AddRefed<ChangeAttributeTransaction>
+ChangeAttributeTransaction::Create(Element& aElement,
+                                   nsAtom& aAttribute,
+                                   const nsAString& aValue)
+{
+  RefPtr<ChangeAttributeTransaction> transaction =
+    new ChangeAttributeTransaction(aElement, aAttribute, &aValue);
+  return transaction.forget();
+}
+
+// static
+already_AddRefed<ChangeAttributeTransaction>
+ChangeAttributeTransaction::CreateToRemove(Element& aElement,
+                                           nsAtom& aAttribute)
+{
+  RefPtr<ChangeAttributeTransaction> transaction =
+    new ChangeAttributeTransaction(aElement, aAttribute, nullptr);
+  return transaction.forget();
+}
+
 ChangeAttributeTransaction::ChangeAttributeTransaction(Element& aElement,
                                                        nsAtom& aAttribute,
                                                        const nsAString* aValue)
@@ -23,7 +44,6 @@ ChangeAttributeTransaction::ChangeAttributeTransaction(Element& aElement,
   , mValue(aValue ? *aValue : EmptyString())
   , mRemoveAttribute(!aValue)
   , mAttributeWasSet(false)
-  , mUndoValue()
 {
 }
 

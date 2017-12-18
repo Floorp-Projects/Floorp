@@ -1272,7 +1272,7 @@ EditorBase::SetAttribute(Element* aElement,
                          const nsAString& aValue)
 {
   RefPtr<ChangeAttributeTransaction> transaction =
-    CreateTxnForSetAttribute(*aElement, *aAttribute, aValue);
+    ChangeAttributeTransaction::Create(*aElement, *aAttribute, aValue);
   return DoTransaction(transaction);
 }
 
@@ -1316,7 +1316,7 @@ EditorBase::RemoveAttribute(Element* aElement,
                             nsAtom* aAttribute)
 {
   RefPtr<ChangeAttributeTransaction> transaction =
-    CreateTxnForRemoveAttribute(*aElement, *aAttribute);
+    ChangeAttributeTransaction::CreateToRemove(*aElement, *aAttribute);
   return DoTransaction(transaction);
 }
 
@@ -4581,27 +4581,6 @@ EditorBase::DoAfterRedoTransaction()
 {
   // all redoable transactions are non-transient
   MOZ_ALWAYS_SUCCEEDS(IncrementModificationCount(1));
-}
-
-already_AddRefed<ChangeAttributeTransaction>
-EditorBase::CreateTxnForSetAttribute(Element& aElement,
-                                     nsAtom& aAttribute,
-                                     const nsAString& aValue)
-{
-  RefPtr<ChangeAttributeTransaction> transaction =
-    new ChangeAttributeTransaction(aElement, aAttribute, &aValue);
-
-  return transaction.forget();
-}
-
-already_AddRefed<ChangeAttributeTransaction>
-EditorBase::CreateTxnForRemoveAttribute(Element& aElement,
-                                        nsAtom& aAttribute)
-{
-  RefPtr<ChangeAttributeTransaction> transaction =
-    new ChangeAttributeTransaction(aElement, aAttribute, nullptr);
-
-  return transaction.forget();
 }
 
 already_AddRefed<AddStyleSheetTransaction>
