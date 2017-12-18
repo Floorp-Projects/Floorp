@@ -2085,57 +2085,34 @@ FilterNodeConvolveMatrixSoftware::SetAttribute(uint32_t aIndex,
 }
 
 #ifdef DEBUG
-static bool sColorSamplingAccessControlEnabled = false;
-static uint8_t* sColorSamplingAccessControlStart = nullptr;
-static uint8_t* sColorSamplingAccessControlEnd = nullptr;
-
-struct DebugOnlyAutoColorSamplingAccessControl
-{
-  explicit DebugOnlyAutoColorSamplingAccessControl(DataSourceSurface* aSurface)
-  {
-    sColorSamplingAccessControlStart = aSurface->GetData();
-    sColorSamplingAccessControlEnd = sColorSamplingAccessControlStart +
-      aSurface->Stride() * aSurface->GetSize().height;
-    sColorSamplingAccessControlEnabled = true;
-  }
-
-  ~DebugOnlyAutoColorSamplingAccessControl()
-  {
-    sColorSamplingAccessControlEnabled = false;
-  }
-};
-
 static inline void
-DebugOnlyCheckColorSamplingAccess(const uint8_t* aSampleAddress)
+DebugOnlyCheckColorSamplingAccess(const uint8_t* aSampleAddress, const uint8_t* aBoundsBegin, const uint8_t* aBoundsEnd)
 {
-  if (sColorSamplingAccessControlEnabled) {
-    MOZ_ASSERT(aSampleAddress >= sColorSamplingAccessControlStart, "accessing before start");
-    MOZ_ASSERT(aSampleAddress < sColorSamplingAccessControlEnd, "accessing after end");
-  }
+  MOZ_ASSERT(aSampleAddress >= aBoundsBegin, "accessing before start");
+  MOZ_ASSERT(aSampleAddress < aBoundsEnd, "accessing after end");
 }
 #else
-typedef DebugOnly<DataSourceSurface*> DebugOnlyAutoColorSamplingAccessControl;
-#define DebugOnlyCheckColorSamplingAccess(address)
+#define DebugOnlyCheckColorSamplingAccess(address, boundsBegin, boundsEnd)
 #endif
 
 static inline uint8_t
-ColorComponentAtPoint(const uint8_t *aData, int32_t aStride, int32_t x, int32_t y, size_t bpp, ptrdiff_t c)
+ColorComponentAtPoint(const uint8_t *aData, int32_t aStride, const uint8_t *aBoundsBegin, const uint8_t *aBoundsEnd, int32_t x, int32_t y, size_t bpp, ptrdiff_t c)
 {
-  DebugOnlyCheckColorSamplingAccess(&aData[y * aStride + bpp * x + c]);
+  DebugOnlyCheckColorSamplingAccess(&aData[y * aStride + bpp * x + c], aBoundsBegin, aBoundsEnd);
   return aData[y * aStride + bpp * x + c];
 }
 
 static inline int32_t
-ColorAtPoint(const uint8_t *aData, int32_t aStride, int32_t x, int32_t y)
+ColorAtPoint(const uint8_t *aData, int32_t aStride, const uint8_t *aBoundsBegin, const uint8_t *aBoundsEnd, int32_t x, int32_t y)
 {
-  DebugOnlyCheckColorSamplingAccess(aData + y * aStride + 4 * x);
+  DebugOnlyCheckColorSamplingAccess(aData + y * aStride + 4 * x, aBoundsBegin, aBoundsEnd);
   return *(uint32_t*)(aData + y * aStride + 4 * x);
 }
 
 // Accepts fractional x & y and does bilinear interpolation.
 // Only call this if the pixel (floor(x)+1, floor(y)+1) is accessible.
 static inline uint8_t
-ColorComponentAtPoint(const uint8_t *aData, int32_t aStride, Float x, Float y, size_t bpp, ptrdiff_t c)
+ColorComponentAtPoint(const uint8_t *aData, int32_t aStride, const uint8_t *aBoundsBegin, const uint8_t *aBoundsEnd, Float x, Float y, size_t bpp, ptrdiff_t c)
 {
   const uint32_t f = 256;
   const int32_t lx = floor(x);
@@ -2144,10 +2121,10 @@ ColorComponentAtPoint(const uint8_t *aData, int32_t aStride, Float x, Float y, s
   const int32_t tlx = f - tux;
   const int32_t tuy = uint32_t((y - ly) * f);
   const int32_t tly = f - tuy;
-  const uint8_t &cll = ColorComponentAtPoint(aData, aStride, lx,     ly,     bpp, c);
-  const uint8_t &cul = ColorComponentAtPoint(aData, aStride, lx + 1, ly,     bpp, c);
-  const uint8_t &clu = ColorComponentAtPoint(aData, aStride, lx,     ly + 1, bpp, c);
-  const uint8_t &cuu = ColorComponentAtPoint(aData, aStride, lx + 1, ly + 1, bpp, c);
+  const uint8_t &cll = ColorComponentAtPoint(aData, aStride, aBoundsBegin, aBoundsEnd, lx,     ly,     bpp, c);
+  const uint8_t &cul = ColorComponentAtPoint(aData, aStride, aBoundsBegin, aBoundsEnd, lx + 1, ly,     bpp, c);
+  const uint8_t &clu = ColorComponentAtPoint(aData, aStride, aBoundsBegin, aBoundsEnd, lx,     ly + 1, bpp, c);
+  const uint8_t &cuu = ColorComponentAtPoint(aData, aStride, aBoundsBegin, aBoundsEnd, lx + 1, ly + 1, bpp, c);
   return ((cll * tlx + cul * tux) * tly +
           (clu * tlx + cuu * tux) * tuy + f * f / 2) / (f * f);
 }
@@ -2164,6 +2141,7 @@ ConvolvePixel(const uint8_t *aSourceData,
               uint8_t *aTargetData,
               int32_t aWidth, int32_t aHeight,
               int32_t aSourceStride, int32_t aTargetStride,
+              const uint8_t* aSourceBegin, const uint8_t* aSourceEnd,
               int32_t aX, int32_t aY,
               const int32_t *aKernel,
               int32_t aBias, int32_t shiftL, int32_t shiftR,
@@ -2187,7 +2165,7 @@ ConvolvePixel(const uint8_t *aSourceData,
       CoordType sampleX = aX + (x - aTargetX) * aKernelUnitLengthX;
       for (int32_t i = 0; i < channels; i++) {
         sum[i] += aKernel[aOrderX * y + x] *
-          ColorComponentAtPoint(aSourceData, aSourceStride,
+          ColorComponentAtPoint(aSourceData, aSourceStride, aSourceBegin, aSourceEnd,
                                 sampleX, sampleY, 4, offsets[i]);
       }
     }
@@ -2295,8 +2273,6 @@ FilterNodeConvolveMatrixSoftware::DoRender(const IntRect& aRect,
     return nullptr;
   }
 
-  DebugOnlyAutoColorSamplingAccessControl accessControl(input);
-
   RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8, true);
   if (MOZ2D_WARN_IF(!target)) {
@@ -2313,6 +2289,8 @@ FilterNodeConvolveMatrixSoftware::DoRender(const IntRect& aRect,
 
   uint8_t* sourceData = DataAtOffset(input, sourceMap.GetMappedSurface(), offset);
   int32_t sourceStride = sourceMap.GetStride();
+  uint8_t* sourceBegin = sourceMap.GetData();
+  uint8_t* sourceEnd = sourceBegin + sourceStride * input->GetSize().height;
   uint8_t* targetData = targetMap.GetData();
   int32_t targetStride = targetMap.GetStride();
 
@@ -2339,7 +2317,7 @@ FilterNodeConvolveMatrixSoftware::DoRender(const IntRect& aRect,
   for (int32_t y = 0; y < aRect.Height(); y++) {
     for (int32_t x = 0; x < aRect.Width(); x++) {
       ConvolvePixel(sourceData, targetData,
-                    aRect.Width(), aRect.Height(), sourceStride, targetStride,
+                    aRect.Width(), aRect.Height(), sourceStride, targetStride, sourceBegin, sourceEnd,
                     x, y, intKernel, bias, shiftL, shiftR, mPreserveAlpha,
                     mKernelSize.width, mKernelSize.height, mTarget.x, mTarget.y,
                     aKernelUnitLengthX, aKernelUnitLengthY);
@@ -2458,6 +2436,8 @@ FilterNodeDisplacementMapSoftware::Render(const IntRect& aRect)
 
   uint8_t* sourceData = DataAtOffset(input, inputMap.GetMappedSurface(), offset);
   int32_t sourceStride = inputMap.GetStride();
+  uint8_t* sourceBegin = inputMap.GetData();
+  uint8_t* sourceEnd = sourceBegin + sourceStride * input->GetSize().height;
   uint8_t* mapData = mapMap.GetData();
   int32_t mapStride = mapMap.GetStride();
   uint8_t* targetData = targetMap.GetData();
@@ -2483,7 +2463,7 @@ FilterNodeDisplacementMapSoftware::Render(const IntRect& aRect)
       int32_t sourceY = y +
         scaleOver255 * mapData[mapIndex + yChannel] + scaleAdjustment;
       *(uint32_t*)(targetData + targIndex) =
-        ColorAtPoint(sourceData, sourceStride, sourceX, sourceY);
+        ColorAtPoint(sourceData, sourceStride, sourceBegin, sourceEnd, sourceX, sourceY);
     }
 
     // Keep valgrind happy.
@@ -3208,7 +3188,7 @@ DistantLightSoftware::GetColor(uint32_t aLightColor, const Point3D &aVectorToLig
 
 template<typename CoordType>
 static Point3D
-GenerateNormal(const uint8_t *data, int32_t stride,
+GenerateNormal(const uint8_t *data, int32_t stride, uint8_t* boundsBegin, uint8_t* boundsEnd,
                int32_t x, int32_t y, float surfaceScale,
                CoordType dx, CoordType dy)
 {
@@ -3219,20 +3199,20 @@ GenerateNormal(const uint8_t *data, int32_t stride,
   // See this for source of constants:
   //   http://www.w3.org/TR/SVG11/filters.html#feDiffuseLightingElement
   int16_t normalX =
-    -1 * ColorComponentAtPoint(index, stride, -dx, -dy, 1, 0) +
-     1 * ColorComponentAtPoint(index, stride, dx, -dy, 1, 0) +
-    -2 * ColorComponentAtPoint(index, stride, -dx, zero, 1, 0) +
-     2 * ColorComponentAtPoint(index, stride, dx, zero, 1, 0) +
-    -1 * ColorComponentAtPoint(index, stride, -dx, dy, 1, 0) +
-     1 * ColorComponentAtPoint(index, stride, dx, dy, 1, 0);
+    -1 * ColorComponentAtPoint(index, stride, boundsBegin, boundsEnd, -dx, -dy, 1, 0) +
+     1 * ColorComponentAtPoint(index, stride, boundsBegin, boundsEnd, dx, -dy, 1, 0) +
+    -2 * ColorComponentAtPoint(index, stride, boundsBegin, boundsEnd, -dx, zero, 1, 0) +
+     2 * ColorComponentAtPoint(index, stride, boundsBegin, boundsEnd, dx, zero, 1, 0) +
+    -1 * ColorComponentAtPoint(index, stride, boundsBegin, boundsEnd, -dx, dy, 1, 0) +
+     1 * ColorComponentAtPoint(index, stride, boundsBegin, boundsEnd, dx, dy, 1, 0);
 
   int16_t normalY =
-    -1 * ColorComponentAtPoint(index, stride, -dx, -dy, 1, 0) +
-    -2 * ColorComponentAtPoint(index, stride, zero, -dy, 1, 0) +
-    -1 * ColorComponentAtPoint(index, stride, dx, -dy, 1, 0) +
-     1 * ColorComponentAtPoint(index, stride, -dx, dy, 1, 0) +
-     2 * ColorComponentAtPoint(index, stride, zero, dy, 1, 0) +
-     1 * ColorComponentAtPoint(index, stride, dx, dy, 1, 0);
+    -1 * ColorComponentAtPoint(index, stride, boundsBegin, boundsEnd, -dx, -dy, 1, 0) +
+    -2 * ColorComponentAtPoint(index, stride, boundsBegin, boundsEnd, zero, -dy, 1, 0) +
+    -1 * ColorComponentAtPoint(index, stride, boundsBegin, boundsEnd, dx, -dy, 1, 0) +
+     1 * ColorComponentAtPoint(index, stride, boundsBegin, boundsEnd, -dx, dy, 1, 0) +
+     2 * ColorComponentAtPoint(index, stride, boundsBegin, boundsEnd, zero, dy, 1, 0) +
+     1 * ColorComponentAtPoint(index, stride, boundsBegin, boundsEnd, dx, dy, 1, 0);
 
   Point3D normal;
   normal.x = -surfaceScale * normalX / 4.0f;
@@ -3282,8 +3262,6 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
     input = FilterProcessing::ExtractAlpha(input);
   }
 
-  DebugOnlyAutoColorSamplingAccessControl accessControl(input);
-
   RefPtr<DataSourceSurface> target =
     Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
   if (MOZ2D_WARN_IF(!target)) {
@@ -3301,6 +3279,8 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
 
   uint8_t* sourceData = DataAtOffset(input, sourceMap.GetMappedSurface(), offset);
   int32_t sourceStride = sourceMap.GetStride();
+  uint8_t* sourceBegin = sourceMap.GetData();
+  uint8_t* sourceEnd = sourceBegin + sourceStride * input->GetSize().height;
   uint8_t* targetData = targetMap.GetData();
   int32_t targetStride = targetMap.GetStride();
 
@@ -3315,7 +3295,7 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
       int32_t sourceIndex = y * sourceStride + x;
       int32_t targetIndex = y * targetStride + 4 * x;
 
-      Point3D normal = GenerateNormal(sourceData, sourceStride,
+      Point3D normal = GenerateNormal(sourceData, sourceStride, sourceBegin, sourceEnd,
                                       x, y, mSurfaceScale,
                                       aKernelUnitLengthX, aKernelUnitLengthY);
 
