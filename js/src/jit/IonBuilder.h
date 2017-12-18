@@ -1192,6 +1192,9 @@ class CallInfo
     MDefinition* thisArg_;
     MDefinition* newTargetArg_;
     MDefinitionVector args_;
+    // If non-empty, this corresponds to the stack prior any implicit inlining
+    // such as before JSOP_FUNAPPLY.
+    MDefinitionVector priorArgs_;
 
     bool constructing_:1;
 
@@ -1207,6 +1210,7 @@ class CallInfo
         thisArg_(nullptr),
         newTargetArg_(nullptr),
         args_(alloc),
+        priorArgs_(alloc),
         constructing_(constructing),
         ignoresReturnValue_(ignoresReturnValue),
         setter_(false),
@@ -1250,11 +1254,30 @@ class CallInfo
         return true;
     }
 
-    void popFormals(MBasicBlock* current) {
+    // Before doing any pop to the stack, capture whatever flows into the
+    // instruction, such that we can restore it later.
+    AbortReasonOr<Ok> savePriorCallStack(MIRGenerator* mir, MBasicBlock* current, size_t peekDepth);
+
+    void popPriorCallStack(MBasicBlock* current) {
+        if (priorArgs_.empty())
+            popCallStack(current);
+        else
+            current->popn(priorArgs_.length());
+    }
+
+    AbortReasonOr<Ok> pushPriorCallStack(MIRGenerator* mir, MBasicBlock* current) {
+        if (priorArgs_.empty())
+            return pushCallStack(mir, current);
+        for (MDefinition* def : priorArgs_)
+            current->push(def);
+        return Ok();
+    }
+
+    void popCallStack(MBasicBlock* current) {
         current->popn(numFormals());
     }
 
-    AbortReasonOr<Ok> pushFormals(MIRGenerator* mir, MBasicBlock* current) {
+    AbortReasonOr<Ok> pushCallStack(MIRGenerator* mir, MBasicBlock* current) {
         // Ensure sufficient space in the slots: needed for inlining from FUNAPPLY.
         if (apply_) {
             uint32_t depth = current->stackDepth() + numFormals();
