@@ -521,7 +521,7 @@ WindowBackBuffer::SetImageDataFromBackBuffer(
     Resize(aSourceBuffer->mWidth, aSourceBuffer->mHeight);
   }
 
-  mShmPool.SetImageDataFromPool(aSourceBuffer->mShmPool,
+  mShmPool.SetImageDataFromPool(&aSourceBuffer->mShmPool,
     aSourceBuffer->mWidth * aSourceBuffer->mHeight * BUFFER_BPP);
   return true;
 }
@@ -551,7 +551,7 @@ static const struct wl_callback_listener frame_listener = {
 
 WindowSurfaceWayland::WindowSurfaceWayland(nsWindow *aWindow)
   : mWindow(aWindow)
-  , mWaylandDisplay(WaylandDisplayGet(aWidget->GetWaylandDisplay()))
+  , mWaylandDisplay(WaylandDisplayGet(aWindow->GetWaylandDisplay()))
   , mFrontBuffer(nullptr)
   , mBackBuffer(nullptr)
   , mFrameCallback(nullptr)
@@ -615,7 +615,7 @@ WindowSurfaceWayland::GetBufferToDraw(int aWidth, int aHeight)
     // Former front buffer has the same size as a requested one.
     // Gecko may expect a content already drawn on screen so copy
     // existing data to the new buffer.
-    mFrontBuffer->Sync(mBackBuffer);
+    mFrontBuffer->SetImageDataFromBackBuffer(mBackBuffer);
     // When buffer switches we need to damage whole screen
     // (https://bugzilla.redhat.com/show_bug.cgi?id=1418260)
     mFullScreenDamage = true;
