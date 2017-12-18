@@ -25,7 +25,37 @@ class Element;
  */
 class ChangeStyleTransaction final : public EditTransactionBase
 {
+protected:
+  ChangeStyleTransaction(dom::Element& aElement,
+                         nsAtom& aProperty,
+                         const nsAString& aValue,
+                         bool aRemove);
+
 public:
+  /**
+   * Creates a change style transaction.  This never returns nullptr.
+   *
+   * @param aNode       The node whose style attribute will be changed.
+   * @param aProperty   The name of the property to change.
+   * @param aValue      New value for aProperty.
+   */
+  static already_AddRefed<ChangeStyleTransaction>
+  Create(dom::Element& aElement,
+         nsAtom& aProperty,
+         const nsAString& aValue);
+
+  /**
+   * Creates a change style transaction.  This never returns nullptr.
+   *
+   * @param aNode       The node whose style attribute will be changed.
+   * @param aProperty   The name of the property to change.
+   * @param aValue      The value to remove from aProperty.
+   */
+  static already_AddRefed<ChangeStyleTransaction>
+  CreateToRemove(dom::Element& aElement,
+                 nsAtom& aProperty,
+                 const nsAString& aValue);
+
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ChangeStyleTransaction,
                                            EditTransactionBase)
 
@@ -34,19 +64,6 @@ public:
   NS_DECL_EDITTRANSACTIONBASE
 
   NS_IMETHOD RedoTransaction() override;
-
-  enum EChangeType { eSet, eRemove };
-
-  /**
-   * @param aNode           [IN] the node whose style attribute will be changed
-   * @param aProperty       [IN] the name of the property to change
-   * @param aValue          [IN] new value for aProperty, or value to remove
-   * @param aChangeType     [IN] whether to set or remove
-   */
-  ChangeStyleTransaction(dom::Element& aElement,
-                         nsAtom& aProperty,
-                         const nsAString& aValue,
-                         EChangeType aChangeType);
 
   /**
    * Returns true if the list of white-space separated values contains aValue
