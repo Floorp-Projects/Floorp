@@ -128,8 +128,14 @@ MediaEngineDefaultVideoSource::Deallocate(const RefPtr<const AllocationHandle>& 
   MOZ_ASSERT(mState == kStopped || mState == kAllocated);
 
   MutexAutoLock lock(mMutex);
+  if (mStream && IsTrackIDExplicit(mTrackID)) {
+    mStream->EndTrack(mTrackID);
+    mStream = nullptr;
+    mTrackID = TRACK_NONE;
+  }
   mState = kReleased;
   mImageContainer = nullptr;
+
   return NS_OK;
 }
 
@@ -167,13 +173,35 @@ static void ReleaseFrame(layers::PlanarYCbCrData& aData)
 }
 
 nsresult
-MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream,
-                                     TrackID aTrackID,
-                                     const PrincipalHandle& aPrincipalHandle)
+MediaEngineDefaultVideoSource::SetTrack(const RefPtr<const AllocationHandle>& aHandle,
+                                        const RefPtr<SourceMediaStream>& aStream,
+                                        TrackID aTrackID,
+                                        const PrincipalHandle& aPrincipal)
 {
   AssertIsOnOwningThread();
 
-  MOZ_ASSERT(mState == kAllocated, "Allocate() must happen before Start()");
+  MOZ_ASSERT(mState == kAllocated);
+  MOZ_ASSERT(!mStream);
+  MOZ_ASSERT(mTrackID == TRACK_NONE);
+
+  {
+    MutexAutoLock lock(mMutex);
+    mStream = aStream;
+    mTrackID = aTrackID;
+  }
+  aStream->AddTrack(aTrackID, 0, new VideoSegment(),
+                    SourceMediaStream::ADDTRACK_QUEUED);
+  return NS_OK;
+}
+
+nsresult
+MediaEngineDefaultVideoSource::Start(const RefPtr<const AllocationHandle>& aHandle)
+{
+  AssertIsOnOwningThread();
+
+  MOZ_ASSERT(mState == kAllocated || mState == kStopped);
+  MOZ_ASSERT(mStream, "SetTrack() must happen before Start()");
+  MOZ_ASSERT(IsTrackIDExplicit(mTrackID), "SetTrack() must happen before Start()");
 
   mTimer = NS_NewTimer();
   if (!mTimer) {
@@ -200,38 +228,29 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream,
     }, this, interval, nsITimer::TYPE_REPEATING_SLACK,
     "MediaEngineDefaultVideoSource::GenerateFrame");
 
-  aStream->AddTrack(aTrackID, 0, new VideoSegment(), SourceMediaStream::ADDTRACK_QUEUED);
-
   MutexAutoLock lock(mMutex);
-  // Remember Stream and TrackID so we can end it later
-  mStream = aStream;
-  mTrackID = aTrackID;
-
   mState = kStarted;
   return NS_OK;
 }
 
 nsresult
-MediaEngineDefaultVideoSource::Stop(SourceMediaStream *aStream, TrackID aTrackID)
+MediaEngineDefaultVideoSource::Stop(const RefPtr<const AllocationHandle>& aHandle)
 {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kStarted);
   MOZ_ASSERT(mTimer);
+  MOZ_ASSERT(mStream);
+  MOZ_ASSERT(IsTrackIDExplicit(mTrackID));
 
   mTimer->Cancel();
   mTimer = nullptr;
-  aStream->EndTrack(aTrackID);
 
   MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(mStream == aStream);
-  MOZ_ASSERT(mTrackID == aTrackID);
 
-  mStream = nullptr;
-  mTrackID = TRACK_NONE;
   mImage = nullptr;
-
   mState = kStopped;
+
   return NS_OK;
 }
 
@@ -314,13 +333,19 @@ MediaEngineDefaultVideoSource::Pull(const RefPtr<const AllocationHandle>& aHandl
   RefPtr<layers::Image> image;
   {
     MutexAutoLock lock(mMutex);
-    if (mState != kStarted) {
+    // Started - append real image
+    // Stopped - append null
+    // Released - Track is ended, safe to ignore
+    //            Can happen because NotifyPull comes from a stream listener
+    if (mState == kReleased) {
       return;
     }
-
-    MOZ_ASSERT(mStream == aStream);
-    MOZ_ASSERT(mTrackID == aTrackID);
-    image = mImage;
+    MOZ_ASSERT(mState != kAllocated);
+    if (mState == kStarted) {
+      MOZ_ASSERT(mStream == aStream);
+      MOZ_ASSERT(mTrackID == aTrackID);
+      image = mImage;
+    }
   }
 
   StreamTime delta = aDesiredTime - aStream->GetEndOfAppendedData(aTrackID);
@@ -407,19 +432,26 @@ MediaEngineDefaultAudioSource::Deallocate(const RefPtr<const AllocationHandle>& 
   MOZ_ASSERT(mState == kStopped || mState == kAllocated);
 
   MutexAutoLock lock(mMutex);
+  if (mStream && IsTrackIDExplicit(mTrackID)) {
+    mStream->EndTrack(mTrackID);
+    mStream = nullptr;
+    mTrackID = TRACK_NONE;
+  }
   mState = kReleased;
   return NS_OK;
 }
 
 nsresult
-MediaEngineDefaultAudioSource::Start(SourceMediaStream* aStream,
-                                     TrackID aTrackID,
-                                     const PrincipalHandle& aPrincipalHandle)
+MediaEngineDefaultAudioSource::SetTrack(const RefPtr<const AllocationHandle>& aHandle,
+                                        const RefPtr<SourceMediaStream>& aStream,
+                                        TrackID aTrackID,
+                                        const PrincipalHandle& aPrincipal)
 {
-
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kAllocated);
+  MOZ_ASSERT(!mStream);
+  MOZ_ASSERT(mTrackID == TRACK_NONE);
 
   // AddAudioTrack will take ownership of segment
   mStream = aStream;
@@ -429,10 +461,21 @@ MediaEngineDefaultAudioSource::Start(SourceMediaStream* aStream,
                          0,
                          new AudioSegment(),
                          SourceMediaStream::ADDTRACK_QUEUED);
+  return NS_OK;
+}
+
+nsresult
+MediaEngineDefaultAudioSource::Start(const RefPtr<const AllocationHandle>& aHandle)
+{
+  AssertIsOnOwningThread();
+
+  MOZ_ASSERT(mState == kAllocated || mState == kStopped);
+  MOZ_ASSERT(mStream, "SetTrack() must happen before Start()");
+  MOZ_ASSERT(IsTrackIDExplicit(mTrackID), "SetTrack() must happen before Start()");
 
   if (!mSineGenerator) {
     // generate sine wave (default 1KHz)
-    mSineGenerator = new SineWaveGenerator(aStream->GraphRate(), mFreq);
+    mSineGenerator = new SineWaveGenerator(mStream->GraphRate(), mFreq);
   }
 
   mLastNotify = 0;
@@ -443,14 +486,12 @@ MediaEngineDefaultAudioSource::Start(SourceMediaStream* aStream,
 }
 
 nsresult
-MediaEngineDefaultAudioSource::Stop(SourceMediaStream *aStream,
-                                    TrackID aTrackID)
+MediaEngineDefaultAudioSource::Stop(const RefPtr<const AllocationHandle>& aHandle)
 {
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kStarted);
 
-  aStream->EndTrack(aTrackID);
 
   MutexAutoLock lock(mMutex);
   mState = kStopped;

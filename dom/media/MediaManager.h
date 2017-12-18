@@ -82,14 +82,14 @@ public:
                     const MediaEnginePrefs& aPrefs,
                     const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint);
-  nsresult Start(SourceMediaStream* aStream,
-                 TrackID aTrackID,
-                 const PrincipalHandle& aPrincipal);
+  nsresult SetTrack(const RefPtr<SourceMediaStream>& aStream,
+                    TrackID aTrackID,
+                    const PrincipalHandle& aPrincipal);
+  nsresult Start();
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
                        const MediaEnginePrefs& aPrefs,
                        const char** aOutBadConstraint);
-  nsresult Stop(SourceMediaStream* aStream,
-                TrackID aTrackID);
+  nsresult Stop();
   nsresult Deallocate();
 
   void Pull(const RefPtr<SourceMediaStream>& aStream,

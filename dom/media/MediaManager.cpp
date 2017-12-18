@@ -843,12 +843,16 @@ nsresult MediaDevice::Allocate(const dom::MediaTrackConstraints &aConstraints,
                            aOutBadConstraint);
 }
 
-nsresult MediaDevice::Start(SourceMediaStream* aStream,
-                            TrackID aTrackID,
-                            const PrincipalHandle& aPrincipal)
-
+nsresult MediaDevice::SetTrack(const RefPtr<SourceMediaStream>& aStream,
+                               TrackID aTrackID,
+                               const PrincipalHandle& aPrincipalHandle)
 {
-  return mSource->Start(aStream, aTrackID, aPrincipal);
+  return mSource->SetTrack(mAllocationHandle, aStream, aTrackID, aPrincipalHandle);
+}
+
+nsresult MediaDevice::Start()
+{
+  return mSource->Start(mAllocationHandle);
 }
 
 nsresult MediaDevice::Reconfigure(const dom::MediaTrackConstraints &aConstraints,
@@ -862,9 +866,9 @@ nsresult MediaDevice::Reconfigure(const dom::MediaTrackConstraints &aConstraints
                               aOutBadConstraint);
 }
 
-nsresult MediaDevice::Stop(SourceMediaStream* aStream, TrackID aTrackID)
+nsresult MediaDevice::Stop()
 {
-  return mSource->Stop(aStream, aTrackID);
+  return mSource->Stop(mAllocationHandle);
 }
 
 nsresult MediaDevice::Deallocate()
@@ -1229,10 +1233,12 @@ public:
 
       RefPtr<MediaMgrError> error = nullptr;
       if (self->mAudioDevice) {
-        nsresult rv = self->mAudioDevice->Start(source,
-                                                kAudioTrack,
-                                                self->mSourceListener->GetPrincipalHandle());
-        if (NS_FAILED(rv)) {
+        nsresult rv = self->mAudioDevice->SetTrack(source,
+                                                   kAudioTrack,
+                                                   self->mSourceListener->GetPrincipalHandle());
+        if (NS_SUCCEEDED(rv)) {
+          rv = self->mAudioDevice->Start();
+        } else {
           nsString log;
           if (rv == NS_ERROR_NOT_AVAILABLE) {
             log.AssignASCII("Concurrent mic process limit.");
@@ -1245,9 +1251,12 @@ public:
       }
 
       if (!error && self->mVideoDevice) {
-        nsresult rv = self->mVideoDevice->Start(source,
-                                                kVideoTrack,
-                                                self->mSourceListener->GetPrincipalHandle());
+        nsresult rv = self->mVideoDevice->SetTrack(source,
+                                                   kVideoTrack,
+                                                   self->mSourceListener->GetPrincipalHandle());
+        if (NS_SUCCEEDED(rv)) {
+          rv = self->mVideoDevice->Start();
+        }
         if (NS_FAILED(rv)) {
           nsString log;
           log.AssignASCII("Starting video failed");
@@ -3815,8 +3824,8 @@ SourceListener::StopTrack(TrackID aTrackID)
     }
   }
 
-  MediaManager::PostTask(NewTaskFrom([device, stream = mStream, aTrackID]() {
-    device->Stop(stream, aTrackID);
+  MediaManager::PostTask(NewTaskFrom([device]() {
+    device->Stop();
     device->Deallocate();
   }));
 

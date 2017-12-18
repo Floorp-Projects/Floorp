@@ -81,7 +81,7 @@ MediaEngineRemoteVideoSource::Shutdown()
   // Allocate always returns a null AllocationHandle.
   // We can safely pass nullptr here.
   if (mState == kStarted) {
-    Stop(mStream, mTrackID);
+    Stop(nullptr);
   }
   if (mState == kAllocated || mState == kStopped) {
     Deallocate(nullptr);
@@ -179,11 +179,7 @@ MediaEngineRemoteVideoSource::Allocate(
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
 
-  if (!mInitDone) {
-    LOG(("Init not done"));
-    return NS_ERROR_FAILURE;
-  }
-
+  MOZ_ASSERT(mInitDone);
   MOZ_ASSERT(mState == kReleased);
 
   NormalizedConstraints constraints(aConstraints);
@@ -223,6 +219,8 @@ MediaEngineRemoteVideoSource::Deallocate(const RefPtr<const AllocationHandle>& a
   MOZ_ASSERT(mStream);
   MOZ_ASSERT(IsTrackIDExplicit(mTrackID));
 
+  mStream->EndTrack(mTrackID);
+
   {
     MutexAutoLock lock(mMutex);
 
@@ -247,13 +245,17 @@ MediaEngineRemoteVideoSource::Deallocate(const RefPtr<const AllocationHandle>& a
 }
 
 nsresult
-MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream,
-                                    TrackID aTrackID,
-                                    const PrincipalHandle& aPrincipal)
+MediaEngineRemoteVideoSource::SetTrack(const RefPtr<const AllocationHandle>& aHandle,
+                                       const RefPtr<SourceMediaStream>& aStream,
+                                       TrackID aTrackID,
+                                       const PrincipalHandle& aPrincipal)
 {
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
 
+  MOZ_ASSERT(mState == kAllocated);
+  MOZ_ASSERT(!mStream);
+  MOZ_ASSERT(mTrackID == TRACK_NONE);
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(IsTrackIDExplicit(aTrackID));
 
@@ -267,6 +269,25 @@ MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream,
     mStream = aStream;
     mTrackID = aTrackID;
     mPrincipal = aPrincipal;
+  }
+  aStream->AddTrack(aTrackID, 0, new VideoSegment(),
+                    SourceMediaStream::ADDTRACK_QUEUED);
+  return NS_OK;
+}
+
+nsresult
+MediaEngineRemoteVideoSource::Start(const RefPtr<const AllocationHandle>& aHandle)
+{
+  LOG((__PRETTY_FUNCTION__));
+  AssertIsOnOwningThread();
+
+  MOZ_ASSERT(mInitDone);
+  MOZ_ASSERT(mState == kAllocated || mState == kStopped);
+  MOZ_ASSERT(mStream);
+  MOZ_ASSERT(IsTrackIDExplicit(mTrackID));
+
+  {
+    MutexAutoLock lock(mMutex);
     mState = kStarted;
   }
 
@@ -274,35 +295,26 @@ MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream,
                               mCapEngine, mCaptureIndex, mCapability, this)) {
     LOG(("StartCapture failed"));
     MutexAutoLock lock(mMutex);
-    mStream = nullptr;
-    mTrackID = TRACK_NONE;
-    mPrincipal = PRINCIPAL_HANDLE_NONE;
     mState = kStopped;
     return NS_ERROR_FAILURE;
   }
 
-  NS_DispatchToMainThread(media::NewRunnableFrom([settings = mSettings]() mutable {
-    settings->mWidth.Construct(0);
-    settings->mHeight.Construct(0);
-    settings->mFrameRate.Construct(0);
-    return NS_OK;
-  }));
-
-  mStream->AddTrack(mTrackID, 0, new VideoSegment(), SourceMediaStream::ADDTRACK_QUEUED);
 
   return NS_OK;
 }
 
 nsresult
-MediaEngineRemoteVideoSource::Stop(SourceMediaStream* aStream,
-                                   TrackID aTrackID)
+MediaEngineRemoteVideoSource::Stop(const RefPtr<const AllocationHandle>& aHandle)
 {
   LOG((__PRETTY_FUNCTION__));
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(mState == kStarted);
 
-  aStream->EndTrack(aTrackID);
+  if (camera::GetChildAndCall(&camera::CamerasChild::StopCapture,
+                              mCapEngine, mCaptureIndex)) {
+    MOZ_DIAGNOSTIC_ASSERT(false, "Stopping a started capture failed");
+  }
 
   {
     MutexAutoLock lock(mMutex);
@@ -312,11 +324,6 @@ MediaEngineRemoteVideoSource::Stop(SourceMediaStream* aStream,
     // usage.  Also, gfx gets very upset if these are held until this object
     // is gc'd in final-cc during shutdown (bug 1374164)
     mImage = nullptr;
-  }
-
-  if (camera::GetChildAndCall(&camera::CamerasChild::StopCapture,
-                              mCapEngine, mCaptureIndex)) {
-    MOZ_DIAGNOSTIC_ASSERT(false, "Stopping a started capture failed");
   }
 
   return NS_OK;
@@ -355,12 +362,12 @@ MediaEngineRemoteVideoSource::Reconfigure(const RefPtr<AllocationHandle>& aHandl
   if (mState == kStarted) {
     // Allocate always returns a null AllocationHandle.
     // We can safely pass nullptr below.
-    nsresult rv = Stop(mStream, mTrackID);
+    nsresult rv = Stop(nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    rv = Start(mStream, mTrackID, mPrincipal);
+    rv = Start(nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -410,6 +417,11 @@ MediaEngineRemoteVideoSource::Pull(const RefPtr<const AllocationHandle>& aHandle
                                    const PrincipalHandle& aPrincipalHandle)
 {
   MutexAutoLock lock(mMutex);
+  if (mState == kReleased) {
+    // We end the track before deallocating, so this is safe.
+    return;
+  }
+
   MOZ_ASSERT(mState == kStarted || mState == kStopped);
 
   StreamTime delta = aDesiredTime - aStream->GetEndOfAppendedData(aTrackID);
@@ -419,8 +431,8 @@ MediaEngineRemoteVideoSource::Pull(const RefPtr<const AllocationHandle>& aHandle
 
   VideoSegment segment;
   RefPtr<layers::Image> image = mImage;
-  if (image) {
-    MOZ_ASSERT(mImageSize == image->GetSize());
+  if (mState == kStarted) {
+    MOZ_ASSERT(!image || mImageSize == image->GetSize());
     segment.AppendFrame(image.forget(), delta, mImageSize, aPrincipalHandle);
   } else {
     // nullptr images are allowed, but we force it to black and retain the size.
