@@ -2140,7 +2140,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
     LOGDRAW(("sending expose event [%p] %p 0x%lx (rects follow):\n",
              (void *)this, (void *)mGdkWindow,
-             gdk_x11_window_get_xid(mGdkWindow)));
+             mIsX11Display ? gdk_x11_window_get_xid(mGdkWindow) : 0));
 
     // Our bounds may have changed after calling WillPaintWindow.  Clip
     // to the new bounds here.  The region is relative to this
@@ -4044,7 +4044,7 @@ nsWindow::Create(nsIWidget* aParent,
     if (mShell) {
         LOG(("\tmShell %p mContainer %p mGdkWindow %p 0x%lx\n",
              mShell, mContainer, mGdkWindow,
-             gdk_x11_window_get_xid(mGdkWindow)));
+             mIsX11Display ? gdk_x11_window_get_xid(mGdkWindow) : 0));
     } else if (mContainer) {
         LOG(("\tmContainer %p mGdkWindow %p\n", mContainer, mGdkWindow));
     }
