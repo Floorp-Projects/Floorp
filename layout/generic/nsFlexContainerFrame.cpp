@@ -98,7 +98,7 @@ IsLegacyBox(const nsIFrame* aFlexContainer)
 {
   MOZ_ASSERT(aFlexContainer->IsFlexContainerFrame(),
              "only flex containers may be passed to this function");
-  return aFlexContainer->HasAnyStateBits(NS_STATE_FLEX_IS_LEGACY_WEBKIT_BOX);
+  return aFlexContainer->HasAnyStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX);
 }
 
 // Returns the OrderingProperty enum that we should pass to
@@ -2243,7 +2243,7 @@ nsFlexContainerFrame::Init(nsIContent*       aContent,
   }
 
   if (isLegacyBox) {
-    AddStateBits(NS_STATE_FLEX_IS_LEGACY_WEBKIT_BOX);
+    AddStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX);
   }
 }
 
