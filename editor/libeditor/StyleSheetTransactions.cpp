@@ -45,11 +45,10 @@ RemoveStyleSheet(EditorBase& aEditor, StyleSheet* aSheet)
  ******************************************************************************/
 
 AddStyleSheetTransaction::AddStyleSheetTransaction(EditorBase& aEditorBase,
-                                                   StyleSheet* aSheet)
+                                                   StyleSheet& aStyleSheet)
   : mEditorBase(&aEditorBase)
-  , mSheet(aSheet)
+  , mSheet(&aStyleSheet)
 {
-  MOZ_ASSERT(aSheet);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(AddStyleSheetTransaction,
@@ -93,11 +92,10 @@ AddStyleSheetTransaction::GetTxnDescription(nsAString& aString)
 
 RemoveStyleSheetTransaction::RemoveStyleSheetTransaction(
                                EditorBase& aEditorBase,
-                               StyleSheet* aSheet)
+                               StyleSheet& aStyleSheet)
   : mEditorBase(&aEditorBase)
-  , mSheet(aSheet)
+  , mSheet(&aStyleSheet)
 {
-  MOZ_ASSERT(aSheet);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(RemoveStyleSheetTransaction,
