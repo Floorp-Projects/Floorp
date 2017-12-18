@@ -21,6 +21,10 @@ VSWINPATH="$(cd ${MSVC_DIR} && pwd)"
 
 echo vswinpath ${VSWINPATH}
 
+# LLVM_ENABLE_DIA_SDK is set if the directory "$ENV{VSINSTALLDIR}DIA SDK"
+# exists.
+export VSINSTALLDIR="${VSWINPATH}/"
+
 export WINDOWSSDKDIR="${VSWINPATH}/SDK"
 export WIN32_REDIST_DIR="${VSWINPATH}/VC/redist/x86/Microsoft.VC141.CRT"
 export WIN_UCRT_REDIST_DIR="${VSWINPATH}/SDK/Redist/ucrt/DLLs/x86"
