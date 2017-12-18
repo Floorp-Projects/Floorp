@@ -1395,15 +1395,6 @@ dnl ========================================================
 MOZ_ARG_HEADER(Components and Features)
 
 dnl ========================================================
-dnl = Localization
-dnl ========================================================
-MOZ_ARG_ENABLE_STRING(ui-locale,
-[  --enable-ui-locale=ab-CD
-                          Select the user interface locale (default: en-US)],
-    MOZ_UI_LOCALE=$enableval )
-AC_SUBST(MOZ_UI_LOCALE)
-
-dnl ========================================================
 dnl =
 dnl = Module specific options
 dnl =
