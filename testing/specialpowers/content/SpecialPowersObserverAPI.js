@@ -4,8 +4,14 @@
 
 "use strict";
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/NetUtil.jsm");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  ExtensionData: "resource://gre/modules/Extension.jsm",
+  ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.jsm",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
 
 if (typeof(Ci) == "undefined") {
   var Ci = Components.interfaces;
@@ -572,11 +578,9 @@ SpecialPowersObserverAPI.prototype = {
       }
 
       case "SPLoadExtension": {
-        let {Extension} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
-
         let id = aMessage.data.id;
         let ext = aMessage.data.ext;
-        let extension = Extension.generate(ext);
+        let extension = ExtensionTestCommon.generate(ext);
 
         let resultListener = (...args) => {
           this._sendReply(aMessage, "SPExtensionMessage", {id, type: "testResult", args});
@@ -600,8 +604,6 @@ SpecialPowersObserverAPI.prototype = {
       }
 
       case "SPStartupExtension": {
-        let {ExtensionData} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
-
         let id = aMessage.data.id;
         let extension = this._extensions.get(id);
         extension.on("startup", () => {
