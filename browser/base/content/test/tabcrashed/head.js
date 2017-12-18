@@ -121,3 +121,15 @@ async function setupLocalCrashReportServer() {
     env.set("MOZ_CRASHREPORTER_URL", serverUrl);
   });
 }
+
+/**
+ * Monkey patches TabCrashHandler.getDumpID to return null in order to test
+ * about:tabcrashed when a dump is not available.
+ */
+function prepareNoDump() {
+  let originalGetDumpID = TabCrashHandler.getDumpID;
+  TabCrashHandler.getDumpID = function(browser) { return null; };
+  registerCleanupFunction(() => {
+    TabCrashHandler.getDumpID = originalGetDumpID;
+  });
+}
