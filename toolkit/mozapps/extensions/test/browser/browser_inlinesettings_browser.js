@@ -5,7 +5,7 @@
 
 /* globals TestUtils */
 
-var {Extension} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
+let {ExtensionTestCommon} = Components.utils.import("resource://testing-common/ExtensionTestCommon.jsm", {});
 
 Components.utils.import("resource://testing-common/ContentTask.jsm", {});
 
@@ -21,7 +21,7 @@ function installAddon(details) {
     details.manifest = {};
   }
   details.manifest.applications = {gecko: {id}};
-  let xpi = Extension.generateXPI(details);
+  let xpi = ExtensionTestCommon.generateXPI(details);
 
   return AddonManager.installTemporaryAddon(xpi).then(addon => {
     SimpleTest.registerCleanupFunction(function() {
