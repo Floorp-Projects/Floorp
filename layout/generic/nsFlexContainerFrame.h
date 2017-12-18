@@ -300,6 +300,17 @@ protected:
                                       const FlexboxAxisTracker& aAxisTracker);
 
   /**
+   * Returns true if "this" is the nsFlexContainerFrame for a -moz-box or
+   * a -moz-inline-box -- these boxes have special behavior for flex items with
+   * "visibility:collapse".
+   *
+   * @param aFlexStyleDisp This frame's StyleDisplay(). (Just an optimization to
+   *                       avoid repeated lookup; some callers already have it.)
+   * @return true if "this" is the nsFlexContainerFrame for a -moz-{inline}box.
+   */
+  bool ShouldUseMozBoxCollapseBehavior(const nsStyleDisplay* aFlexStyleDisp);
+
+  /**
    * This method:
    *  - Creates FlexItems for all of our child frames (except placeholders).
    *  - Groups those FlexItems into FlexLines.

@@ -3609,6 +3609,39 @@ AddNewFlexLineToList(LinkedList<FlexLine>& aLines,
   return newLine;
 }
 
+bool
+nsFlexContainerFrame::ShouldUseMozBoxCollapseBehavior(
+  const nsStyleDisplay* aThisStyleDisp)
+{
+  MOZ_ASSERT(StyleDisplay() == aThisStyleDisp, "wrong StyleDisplay passed in");
+
+  // Quick filter to screen out *actual* (not-coopted-for-emulation)
+  // flex containers, using state bit:
+  if (!IsLegacyBox(this)) {
+    return false;
+  }
+
+  // Check our own display value:
+  if (aThisStyleDisp->mDisplay == mozilla::StyleDisplay::MozBox ||
+      aThisStyleDisp->mDisplay == mozilla::StyleDisplay::MozInlineBox) {
+    return true;
+  }
+
+  // Check our parent's display value, if we're an anonymous box (with a
+  // potentially-untrustworthy display value):
+  auto pseudoType = StyleContext()->GetPseudo();
+  if (pseudoType == nsCSSAnonBoxes::scrolledContent ||
+      pseudoType == nsCSSAnonBoxes::buttonContent) {
+    const nsStyleDisplay* disp = GetParent()->StyleDisplay();
+    if (disp->mDisplay == mozilla::StyleDisplay::MozBox ||
+        disp->mDisplay == mozilla::StyleDisplay::MozInlineBox) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void
 nsFlexContainerFrame::GenerateFlexLines(
   nsPresContext* aPresContext,
@@ -3685,6 +3718,9 @@ nsFlexContainerFrame::GenerateFlexLines(
     RemoveStateBits(NS_STATE_FLEX_NORMAL_FLOW_CHILDREN_IN_CSS_ORDER);
   }
 
+  const bool useMozBoxCollapseBehavior =
+    ShouldUseMozBoxCollapseBehavior(aReflowInput.mStyleDisplay);
+
   for (; !iter.AtEnd(); iter.Next()) {
     nsIFrame* childFrame = *iter;
     // Don't create flex items / lines for placeholder frames:
@@ -3700,9 +3736,14 @@ nsFlexContainerFrame::GenerateFlexLines(
     }
 
     UniquePtr<FlexItem> item;
-    if (nextStrutIdx < aStruts.Length() &&
-        aStruts[nextStrutIdx].mItemIdx == itemIdxInContainer) {
-
+    if (useMozBoxCollapseBehavior &&
+        (NS_STYLE_VISIBILITY_COLLAPSE ==
+         childFrame->StyleVisibility()->mVisible)) {
+      // Legacy visibility:collapse behavior: make a 0-sized strut. (No need to
+      // bother with aStruts and remembering cross size.)
+      item = MakeUnique<FlexItem>(childFrame, 0, aReflowInput.GetWritingMode());
+    } else if (nextStrutIdx < aStruts.Length() &&
+               aStruts[nextStrutIdx].mItemIdx == itemIdxInContainer) {
       // Use the simplified "strut" FlexItem constructor:
       item = MakeUnique<FlexItem>(childFrame, aStruts[nextStrutIdx].mStrutCrossSize,
                                   aReflowInput.GetWritingMode());
@@ -4474,7 +4515,8 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   // "align-content:stretch" adjustments, from the CrossAxisPositionTracker
   // constructor), we can create struts for any flex items with
   // "visibility: collapse" (and restart flex layout).
-  if (aStruts.IsEmpty()) { // (Don't make struts if we already did)
+  if (aStruts.IsEmpty() && // (Don't make struts if we already did)
+      !ShouldUseMozBoxCollapseBehavior(aReflowInput.mStyleDisplay)) {
     BuildStrutInfoFromCollapsedItems(lines.getFirst(), aStruts);
     if (!aStruts.IsEmpty()) {
       // Restart flex layout, using our struts.
@@ -4920,20 +4962,29 @@ nsFlexContainerFrame::GetMinISize(gfxContext* aRenderingContext)
   const nsStylePosition* stylePos = StylePosition();
   const FlexboxAxisTracker axisTracker(this, GetWritingMode());
 
+  const bool useMozBoxCollapseBehavior =
+    ShouldUseMozBoxCollapseBehavior(StyleDisplay());
+
   for (nsIFrame* childFrame : mFrames) {
-    nscoord childMinISize =
-      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
-                                           nsLayoutUtils::MIN_ISIZE);
-    // For a horizontal single-line flex container, the intrinsic min
-    // isize is the sum of its items' min isizes.
-    // For a column-oriented flex container, or for a multi-line row-
-    // oriented flex container, the intrinsic min isize is the max of
-    // its items' min isizes.
-    if (axisTracker.IsRowOriented() &&
-        NS_STYLE_FLEX_WRAP_NOWRAP == stylePos->mFlexWrap) {
-      minISize += childMinISize;
-    } else {
-      minISize = std::max(minISize, childMinISize);
+    // If we're using legacy "visibility:collapse" behavior, then we don't
+    // care about the sizes of any collapsed children.
+    if (!useMozBoxCollapseBehavior ||
+        (NS_STYLE_VISIBILITY_COLLAPSE !=
+         childFrame->StyleVisibility()->mVisible)) {
+      nscoord childMinISize =
+        nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
+                                             nsLayoutUtils::MIN_ISIZE);
+      // For a horizontal single-line flex container, the intrinsic min
+      // isize is the sum of its items' min isizes.
+      // For a column-oriented flex container, or for a multi-line row-
+      // oriented flex container, the intrinsic min isize is the max of
+      // its items' min isizes.
+      if (axisTracker.IsRowOriented() &&
+          NS_STYLE_FLEX_WRAP_NOWRAP == stylePos->mFlexWrap) {
+        minISize += childMinISize;
+      } else {
+        minISize = std::max(minISize, childMinISize);
+      }
     }
   }
   return minISize;
@@ -4954,14 +5005,23 @@ nsFlexContainerFrame::GetPrefISize(gfxContext* aRenderingContext)
   // does)
   const FlexboxAxisTracker axisTracker(this, GetWritingMode());
 
+  const bool useMozBoxCollapseBehavior =
+    ShouldUseMozBoxCollapseBehavior(StyleDisplay());
+
   for (nsIFrame* childFrame : mFrames) {
-    nscoord childPrefISize =
-      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
-                                           nsLayoutUtils::PREF_ISIZE);
-    if (axisTracker.IsRowOriented()) {
-      prefISize += childPrefISize;
-    } else {
-      prefISize = std::max(prefISize, childPrefISize);
+    // If we're using legacy "visibility:collapse" behavior, then we don't
+    // care about the sizes of any collapsed children.
+    if (!useMozBoxCollapseBehavior ||
+        (NS_STYLE_VISIBILITY_COLLAPSE !=
+         childFrame->StyleVisibility()->mVisible)) {
+      nscoord childPrefISize =
+        nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
+                                             nsLayoutUtils::PREF_ISIZE);
+      if (axisTracker.IsRowOriented()) {
+        prefISize += childPrefISize;
+      } else {
+        prefISize = std::max(prefISize, childPrefISize);
+      }
     }
   }
   return prefISize;
