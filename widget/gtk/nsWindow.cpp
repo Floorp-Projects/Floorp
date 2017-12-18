@@ -7099,3 +7099,19 @@ nsWindow::IsComposited() const
          (gdk_window_get_visual(mGdkWindow)
             == gdk_screen_get_rgba_visual(gdkScreen));
 }
+
+#ifdef MOZ_WAYLAND
+wl_display*
+nsWindow::GetWaylandDisplay()
+{
+  GdkDisplay* gdkDisplay = gdk_display_get_default();
+  return mIsX11Display ? nullptr :
+                         gdk_wayland_display_get_wl_display(gdkDisplay);
+}
+
+wl_surface*
+nsWindow::GetWaylandSurface()
+{
+  return moz_container_get_wl_surface(MOZ_CONTAINER(mContainer));
+}
+#endif
