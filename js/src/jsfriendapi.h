@@ -28,7 +28,6 @@
 # define JS_CHECK_STACK_SIZE(limit, sp) (MOZ_LIKELY((uintptr_t)(sp) > (limit)))
 #endif
 
-class JSAtom;
 struct JSErrorFormatString;
 class JSLinearString;
 struct JSJitInfo;

@@ -24,11 +24,10 @@
 #if defined(XP_DARWIN)
 # include <mach/mach.h>
 #endif
+
+#include "js/TypeDecls.h"
 #include "threading/Thread.h"
 #include "wasm/WasmTypes.h"
-
-struct JSContext;
-struct JSRuntime;
 
 namespace js {
 

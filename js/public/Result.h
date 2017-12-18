@@ -118,8 +118,6 @@
 
 #include "mozilla/Result.h"
 
-struct JSContext;
-
 /**
  * Evaluate the boolean expression expr. If it's true, do nothing.
  * If it's false, return an error result.

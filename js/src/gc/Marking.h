@@ -12,11 +12,11 @@
 #ifndef gc_Marking_h
 #define gc_Marking_h
 
+#include "js/TypeDecls.h"
 #include "vm/TaggedProto.h"
 
 class JSLinearString;
 class JSRope;
-struct JSRuntime;
 class JSTracer;
 
 namespace js {

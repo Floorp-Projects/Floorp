@@ -11,6 +11,7 @@
 #include "gc/Heap.h"
 #include "js/GCAnnotations.h"
 #include "js/TraceKind.h"
+#include "js/TypeDecls.h"
 
 namespace JS {
 
@@ -19,7 +20,6 @@ struct Zone;
 } /* namespace shadow */
 
 enum class TraceKind;
-struct Zone;
 } /* namespace JS */
 
 namespace js {

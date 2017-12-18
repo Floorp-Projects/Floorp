@@ -25,8 +25,6 @@
 #include "js/Vector.h"
 #include "vm/ArrayObject.h"
 
-struct JSContext;
-
 namespace js {
 
 class ArrayObject;

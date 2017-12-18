@@ -10,15 +10,10 @@
 #include "mozilla/Maybe.h"
 
 #include "gc/Rooting.h"
+#include "js/TypeDecls.h"
 #include "vm/CommonPropertyNames.h"
 
-class JSAtom;
 class JSAutoByteString;
-
-namespace JS {
-class Value;
-struct Zone;
-} // namespace JS
 
 namespace js {
 
