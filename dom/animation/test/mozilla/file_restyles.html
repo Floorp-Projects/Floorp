@@ -99,6 +99,35 @@ function startsRightNow(aAnimation) {
          aAnimation.currentTime === 0;
 }
 
+function tweakExpectedRestyleCount(aAnimation, aExpectedRestyleCount) {
+  // Normally we expect one restyling for each requestAnimationFrame (as
+  // called by observeRestyling) PLUS one for the last frame becasue of bug
+  // 1193394.  However, we won't observe that initial restyling unless BOTH of
+  // the following two conditions hold:
+  //
+  // 1. We are running *before* restyling happens.
+  // 2. The animation actually needs a restyle because it started prior to
+  //    this frame.  Even if (1) is true, in some cases due to aligning with
+  //    the refresh driver, the animation fame in which the ready promise is
+  //    resolved happens to coincide perfectly with the start time of the
+  //    animation.  In this case no restyling is needed so we won't observe
+  //    an additional restyle.
+  if (hasConformantPromiseHandling) {
+    // If we have the conformant Promise handling and |aAnimation| begins at
+    // the current timeline time, we will not process restyling in the initial
+    // frame.
+    if (startsRightNow(aAnimation)) {
+      return aExpectedRestyleCount - 1;
+    }
+  } else if (!startsRightNow(aAnimation)) {
+    // If we don't have the conformant Promise handling and |aAnimation|
+    // doesn't begin at the current timeline time, we will see an additional
+    // restyling in the last frame.
+    return aExpectedRestyleCount + 1;
+  }
+  return aExpectedRestyleCount;
+}
+
 var omtaEnabled = isOMTAEnabled();
 
 var isAndroid = !!navigator.userAgent.includes("Android");
@@ -145,19 +174,9 @@ waitForAllPaints(() => {
     await animation.ready;
     ok(!SpecialPowers.wrap(animation).isRunningOnCompositor);
 
-    // Normally we expect one restyling for each requestAnimationFrame (as
-    // called by observeRestyling) PLUS one for the last frame becasue of bug
-    // 1193394.  However, we won't observe that initial restyling unless BOTH of
-    // the following two conditions hold:
-    //
-    // 1. We are running *before* restyling happens.
-    // 2. The animation actually needs a restyle because it started prior to
-    //    this frame.  Even if (1) is true, in some cases due to aligning with
-    //    the refresh driver, the animation fame in which the ready promise is
-    //    resolved happens to coincide perfectly with the start time of the
-    //    animation.  In this case no restyling is needed so we won't observe
-    //    an additional restyle.
-    const expectedRestyleCount = !startsRightNow(animation) ? 6 : 5;
+    // We need to tweak expected restyle count depending on animation state and
+    // micro task handling.
+    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
     var markers = await observeStyling(5);
     is(markers.length, expectedRestyleCount,
        'CSS animations running on the main-thread should update style ' +
@@ -1005,7 +1024,7 @@ waitForAllPaints(() => {
 
     await animation.ready;
 
-    const expectedRestyleCount = !startsRightNow(animation) ? 6 : 5;
+    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
     var markers = await observeStyling(5);
 
     is(markers.length, expectedRestyleCount,
@@ -1073,7 +1092,7 @@ waitForAllPaints(() => {
     var animation = rect.animate({ fill: ['blue', 'lime'] }, 100 * MS_PER_SEC);
     await animation.ready;
 
-    const expectedRestyleCount = !startsRightNow(animation) ? 6 : 5;
+    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
     var markers = await observeStyling(5);
     is(markers.length, expectedRestyleCount,
        'CSS animations on an in-view svg element with post-transform should ' +
@@ -1134,7 +1153,7 @@ waitForAllPaints(() => {
     var animation = targetDiv.getAnimations()[0];
     await animation.ready;
 
-    const expectedRestyleCount = !startsRightNow(animation) ? 6 : 5;
+    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 5);
     var markers = await observeStyling(5);
     is(markers.length, expectedRestyleCount,
        'CSS animation on an in-view element with pre-transform should not ' +
