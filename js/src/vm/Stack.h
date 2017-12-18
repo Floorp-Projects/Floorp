@@ -24,12 +24,11 @@
 #endif
 #include "jit/JSJitFrameIter.h"
 #include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/SavedFrame.h"
 #include "wasm/WasmFrameIter.h"
 #include "wasm/WasmTypes.h"
-
-struct JSCompartment;
 
 namespace JS {
 namespace dbg {

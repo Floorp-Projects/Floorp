@@ -17,21 +17,9 @@
 #include "gc/GCEnum.h"
 #include "js/TraceKind.h"
 
-struct JSCompartment;
-struct JSContext;
-class JSObject;
 class JSExternalString;
 class JSFatInlineString;
-struct JSPrincipals;
-class JSScript;
-struct JSRuntime;
 class JSTracer;
-
-namespace JS {
-
-struct Zone;
-
-} // namespace JS
 
 namespace js {
 

@@ -13,13 +13,8 @@
 
 #include "gc/AllocKind.h"
 #include "js/SliceBudget.h"
+#include "js/TypeDecls.h"
 #include "threading/ProtectedData.h"
-
-namespace JS {
-
-struct Zone;
-
-} /* namespace JS */
 
 namespace js {
 

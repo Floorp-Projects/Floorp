@@ -12,12 +12,9 @@
 #include "ds/LifoAlloc.h"
 
 #include "js/HashTable.h"
+#include "js/TypeDecls.h"
 
 #include "vm/Printer.h"
-
-struct JSCompartment;
-class JSScript;
-class JSObject;
 
 namespace js {
 

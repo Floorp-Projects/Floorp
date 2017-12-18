@@ -15,10 +15,6 @@
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 
-struct JSContext;
-struct JSRuntime;
-class JSScript;
-
 namespace js {
     class Activation;
     namespace jit {

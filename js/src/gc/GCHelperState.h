@@ -7,10 +7,9 @@
 #ifndef gc_GCHelperState_h
 #define gc_GCHelperState_h
 
+#include "js/TypeDecls.h"
 #include "threading/ConditionVariable.h"
 #include "threading/ProtectedData.h"
-
-struct JSRuntime;
 
 namespace js {
 class AutoLockHelperThreadState;

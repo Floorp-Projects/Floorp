@@ -14,9 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 
-class JSString;
-
-struct JSContext;
+#include "js/TypeDecls.h"
 
 namespace js {
 
