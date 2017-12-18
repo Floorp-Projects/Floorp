@@ -273,9 +273,9 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
 
             uint32_t    clipboardDataLength;
             const char* clipboardData =
-                mContext->WaitForClipboardContext(flavorStr.get(),
-                                                  aWhichClipboard,
-                                                  &clipboardDataLength);
+                mContext->GetClipboardData(flavorStr.get(),
+                                           aWhichClipboard,
+                                           &clipboardDataLength);
             if (!clipboardData)
                 continue;
 
@@ -286,7 +286,8 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
                                   NS_ASSIGNMENT_COPY);
             aTransferable->SetTransferData(flavorStr.get(), byteStream,
                                            sizeof(nsIInputStream*));
-            free((void *)clipboardData);
+
+            mContext->ReleaseClipboardData(clipboardData);
             return NS_OK;
         }
 
@@ -294,11 +295,11 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
         // string into text/unicode
         if (flavorStr.EqualsLiteral(kUnicodeMime)) {
             uint32_t    clipboardDataLength;
-            const char* rawData =
-                mContext->WaitForClipboardContext(GTK_DEFAULT_MIME_TEXT,
-                                                  aWhichClipboard,
-                                                  &clipboardDataLength);
-            if (!rawData) {
+            const char* clipboardData =
+                mContext->GetClipboardData(GTK_DEFAULT_MIME_TEXT,
+                                           aWhichClipboard,
+                                           &clipboardDataLength);
+            if (!clipboardData) {
                 // If the type was text/unicode and we couldn't get
                 // text off the clipboard, run the next loop
                 // iteration.
@@ -306,19 +307,20 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
             }
 
             // Convert utf-8 into our unicode format.
-            NS_ConvertUTF8toUTF16 ucs2string(rawData, clipboardDataLength);
-            const char* clipboardData = (const char *)ToNewUnicode(ucs2string);
-            clipboardDataLength = ucs2string.Length() * 2;
+            NS_ConvertUTF8toUTF16 ucs2string(clipboardData, clipboardDataLength);
+            const char* unicodeData = (const char *)ToNewUnicode(ucs2string);
+            uint32_t unicodeDataLength = ucs2string.Length() * 2;
             SetTransferableData(aTransferable, flavorStr,
-                                clipboardData, clipboardDataLength);
-            free((void *)rawData);
-            free((void *)clipboardData);
+                                unicodeData, unicodeDataLength);
+            free((void *)unicodeData);
+
+            mContext->ReleaseClipboardData(clipboardData);
             return NS_OK;
         }
 
 
         uint32_t clipboardDataLength;
-        const char* clipboardData = mContext->WaitForClipboardContext(
+        const char* clipboardData = mContext->GetClipboardData(
             flavorStr.get(), aWhichClipboard, &clipboardDataLength);
 
         if (clipboardData) {
@@ -329,11 +331,12 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
                 // Convert text/html into our unicode format
                 ConvertHTMLtoUCS2(clipboardData, clipboardDataLength,
                                   &htmlBody, htmlBodyLen);
-                free((void *)clipboardData);
 
                 // Try next data format?
-                if (!htmlBodyLen)
+                if (!htmlBodyLen) {
+                    mContext->ReleaseClipboardData(clipboardData);
                     continue;
+                }
 
                 SetTransferableData(aTransferable, flavorStr,
                                     (const char*)htmlBody, htmlBodyLen * 2);
@@ -341,8 +344,9 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
             } else {
                 SetTransferableData(aTransferable, flavorStr,
                                     clipboardData, clipboardDataLength);
-                free((void *)clipboardData);
             }
+
+            mContext->ReleaseClipboardData(clipboardData);
             return NS_OK;
         }
     }
