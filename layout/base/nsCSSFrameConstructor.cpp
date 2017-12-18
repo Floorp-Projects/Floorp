@@ -4397,22 +4397,24 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
 static
 bool IsXULDisplayType(const nsStyleDisplay* aDisplay)
 {
-  return (aDisplay->mDisplay == StyleDisplay::MozInlineBox ||
+  if  (aDisplay->mDisplay == StyleDisplay::MozInlineBox ||
+       aDisplay->mDisplay == StyleDisplay::MozBox) {
+    return true;
+  }
+
 #ifdef MOZ_XUL
-          aDisplay->mDisplay == StyleDisplay::MozInlineGrid ||
+  return (aDisplay->mDisplay == StyleDisplay::MozInlineGrid ||
           aDisplay->mDisplay == StyleDisplay::MozInlineStack ||
-#endif
-          aDisplay->mDisplay == StyleDisplay::MozBox
-#ifdef MOZ_XUL
-          || aDisplay->mDisplay == StyleDisplay::MozGrid ||
+          aDisplay->mDisplay == StyleDisplay::MozGrid ||
           aDisplay->mDisplay == StyleDisplay::MozStack ||
           aDisplay->mDisplay == StyleDisplay::MozGridGroup ||
           aDisplay->mDisplay == StyleDisplay::MozGridLine ||
           aDisplay->mDisplay == StyleDisplay::MozDeck ||
           aDisplay->mDisplay == StyleDisplay::MozPopup ||
-          aDisplay->mDisplay == StyleDisplay::MozGroupbox
+          aDisplay->mDisplay == StyleDisplay::MozGroupbox);
+#else
+  return false;
 #endif
-          );
 }
 
 
