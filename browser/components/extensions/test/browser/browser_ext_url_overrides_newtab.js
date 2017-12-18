@@ -39,6 +39,34 @@ function waitForNewTab() {
   });
 }
 
+function waitForAddonDisabled(addon) {
+  return new Promise(resolve => {
+    let listener = {
+      onDisabled(disabledAddon) {
+        if (disabledAddon.id == addon.id) {
+          resolve();
+          AddonManager.removeAddonListener(listener);
+        }
+      },
+    };
+    AddonManager.addAddonListener(listener);
+  });
+}
+
+function waitForAddonEnabled(addon) {
+  return new Promise(resolve => {
+    let listener = {
+      onEnabled(enabledAddon) {
+        if (enabledAddon.id == addon.id) {
+          AddonManager.removeAddonListener(listener);
+          resolve();
+        }
+      },
+    };
+    AddonManager.addAddonListener(listener);
+  });
+}
+
 add_task(async function test_new_tab_opens() {
   let panel = getNewTabDoorhanger().closest("panel");
   let extension = ExtensionTestUtils.loadExtension({
@@ -228,8 +256,8 @@ add_task(async function test_new_tab_keep_settings() {
      "The New Tab notification is set after keeping the changes");
 
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  await extension.unload();
   await upgradedExtension.unload();
+  await extension.unload();
 });
 
 add_task(async function test_new_tab_restore_settings() {
@@ -267,28 +295,21 @@ add_task(async function test_new_tab_restore_settings() {
      "The New Tab notification is not set for this extension");
 
   // Click the Restore Changes button.
-  let addonDisabled = new Promise(resolve => {
-    let listener = {
-      onDisabled(disabledAddon) {
-        if (disabledAddon.id == addon.id) {
-          resolve();
-          AddonManager.removeAddonListener(listener);
-        }
-      },
-    };
-    AddonManager.addAddonListener(listener);
-  });
+  let addonDisabled = waitForAddonDisabled(addon);
   let popupHidden = promisePopupHidden(panel);
   clickRestoreSettings(notification);
   await popupHidden;
   await addonDisabled;
+  await BrowserTestUtils.waitForLocationChange(gBrowser, "about:newtab");
 
   // Ensure panel is closed, settings haven't changed and add-on is disabled.
   ok(panel.getAttribute("panelopen") != "true",
      "The notification panel is closed after click");
   is(getNotificationSetting(extensionId), null,
-     "The New Tab notification is not set after resorting the settings");
+     "The New Tab notification is not set after restoring the settings");
   is(addon.userDisabled, true, "The extension is now disabled");
+  is(gBrowser.currentURI.spec, "about:newtab",
+     "The user has been redirected to about:newtab");
 
   // Reopen a browser tab and verify that there's no doorhanger.
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
@@ -316,6 +337,120 @@ add_task(async function test_new_tab_restore_settings() {
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await addonEnabled;
   await extension.unload();
+});
+
+add_task(async function test_new_tab_restore_settings_multiple() {
+  await ExtensionSettingsStore.initialize();
+  let notification = getNewTabDoorhanger();
+  let panel = notification.closest("panel");
+  let extensionOneId = "newtabrestoreone@mochi.test";
+  let extensionOne = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {gecko: {id: extensionOneId}},
+      chrome_url_overrides: {newtab: "restore-one.html"},
+    },
+    files: {
+      "restore-one.html": `
+        <h1 id="extension-new-tab">New Tab!</h1>
+        <script src="newtab.js"></script>
+      `,
+      "newtab.js": function() {
+        browser.test.sendMessage("from-newtab-page", window.location.href);
+      },
+    },
+    useAddonManager: "temporary",
+  });
+  let extensionTwoId = "newtabrestoretwo@mochi.test";
+  let extensionTwo = ExtensionTestUtils.loadExtension({
+    manifest: {
+      applications: {gecko: {id: extensionTwoId}},
+      chrome_url_overrides: {newtab: "restore-two.html"},
+    },
+    files: {"restore-two.html": '<h1 id="extension-new-tab">New Tab!</h1>'},
+    useAddonManager: "temporary",
+  });
+
+  ok(panel.getAttribute("panelopen") != "true",
+     "The notification panel is initially closed");
+  is(getNotificationSetting(extensionOneId), null,
+     "The New Tab notification is not initially set for this extension");
+  is(getNotificationSetting(extensionTwoId), null,
+     "The New Tab notification is not initially set for this extension");
+
+  await extensionOne.startup();
+  await extensionTwo.startup();
+
+  // Simulate opening the newtab open as a user would.
+  let popupShown = promisePopupShown(panel);
+  BrowserOpenTab();
+  await popupShown;
+
+  // Verify that the panel is open and add-on is enabled.
+  let addonTwo = await AddonManager.getAddonByID(extensionTwoId);
+  is(addonTwo.userDisabled, false, "The add-on is enabled at first");
+  is(panel.getAttribute("panelopen"), "true",
+     "The notification panel is open after opening New Tab");
+  is(getNotificationSetting(extensionTwoId), null,
+     "The New Tab notification is not set for this extension");
+
+  // Click the Restore Changes button.
+  let addonDisabled = waitForAddonDisabled(addonTwo);
+  let popupHidden = promisePopupHidden(panel);
+  let newTabUrlPromise = extensionOne.awaitMessage("from-newtab-page");
+  clickRestoreSettings(notification);
+  await popupHidden;
+  await addonDisabled;
+  await promisePopupShown(panel);
+  let newTabUrl = await newTabUrlPromise;
+
+  // Ensure the panel opens again for the next add-on.
+  is(getNotificationSetting(extensionTwoId), null,
+     "The New Tab notification is not set after restoring the settings");
+  is(addonTwo.userDisabled, true, "The extension is now disabled");
+  let addonOne = await AddonManager.getAddonByID(extensionOneId);
+  is(addonOne.userDisabled, false, "The extension is enabled before making a choice");
+  is(getNotificationSetting(extensionOneId), null,
+     "The New Tab notification is not set before making a choice");
+  is(panel.getAttribute("panelopen"), "true",
+     "The notification panel is open after opening New Tab");
+  is(gBrowser.currentURI.spec, newTabUrl,
+     "The user is now on the next extension's New Tab page");
+
+  addonDisabled = waitForAddonDisabled(addonOne);
+  popupHidden = promisePopupHidden(panel);
+  clickRestoreSettings(notification);
+  await popupHidden;
+  await addonDisabled;
+  await BrowserTestUtils.waitForLocationChange(gBrowser, "about:newtab");
+
+  ok(panel.getAttribute("panelopen") != "true",
+     "The notification panel is closed after restoring the second time");
+  is(getNotificationSetting(extensionOneId), null,
+     "The New Tab notification is not set after restoring the settings");
+  is(addonOne.userDisabled, true, "The extension is now disabled");
+  is(gBrowser.currentURI.spec, "about:newtab",
+     "The user is now on the original New Tab URL since all extensions are disabled");
+
+  // Reopen a browser tab and verify that there's no doorhanger.
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  let newTabOpened = waitForNewTab();
+  BrowserOpenTab();
+  await newTabOpened;
+
+  ok(panel.getAttribute("panelopen") != "true",
+     "The notification panel is not opened after keeping the changes");
+
+  await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  // FIXME: We need to enable the add-on so it gets cleared from the
+  // ExtensionSettingsStore for now. See bug 1408226.
+  let addonsEnabled = Promise.all([
+    waitForAddonEnabled(addonOne), waitForAddonEnabled(addonTwo)]);
+  addonOne.userDisabled = false;
+  addonTwo.userDisabled = false;
+  await addonsEnabled;
+  await extensionOne.unload();
+  await extensionTwo.unload();
 });
 
 /**
