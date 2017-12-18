@@ -48,7 +48,8 @@ public:
   bool                Resize(int aSize);
   wl_shm_pool*        GetShmPool()    { return mShmPool;   };
   void*               GetImageData()  { return mImageData; };
-  void                SetImageDataFromPool(class WaylandShmPool* aSourcePool);
+  void                SetImageDataFromPool(class WaylandShmPool* aSourcePool,
+                                           int aImageDataSize);
 
 private:
   int CreateTemporaryFile(int aSize);

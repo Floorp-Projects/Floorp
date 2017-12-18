@@ -25,5 +25,7 @@ MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
 
 JAR_MANIFESTS += ['jar.mn']
 
+SPHINX_TREES['docs'] = 'docs'
+
 with Files('**'):
     BUG_COMPONENT = ('Toolkit', 'Form Autofill')
