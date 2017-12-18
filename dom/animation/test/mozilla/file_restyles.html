@@ -363,6 +363,10 @@ waitForAllPaints(() => {
 
   add_task(
     async function restyling_transform_animations_in_scrolled_out_element() {
+      if (hasConformantPromiseHandling) {
+        return;
+      }
+
       if (!offscreenThrottlingEnabled) {
         return;
       }
@@ -398,6 +402,60 @@ waitForAllPaints(() => {
           break;
         }
 
+        is(markers.length, 0,
+           'Transform animation running on the element which is scrolled out ' +
+           'should be throttled until 200ms is elapsed');
+      }
+
+      is(markers.length, 1,
+         'Transform animation running on the element which is scrolled out ' +
+         'should be unthrottled after around 200ms have elapsed. now: ' +
+         now + ' start time: ' + timeAtStart);
+
+      await ensureElementRemoval(parentElement);
+    }
+  );
+
+  add_task(
+    async function restyling_transform_animations_in_scrolled_out_element() {
+      if (!hasConformantPromiseHandling) {
+        return;
+      }
+
+      if (!offscreenThrottlingEnabled) {
+        return;
+      }
+
+      await SpecialPowers.pushPrefEnv({ set: [["ui.showHideScrollbars", 1]] });
+
+      // Make sure we start from the state right after requestAnimationFrame.
+      await waitForFrame();
+
+      var parentElement = addDiv(null,
+        { style: 'overflow-y: scroll; height: 20px;' });
+      var div = addDiv(null,
+        { style: 'animation: rotate 100s; position: relative; top: 100px;' });
+      parentElement.appendChild(div);
+      var animation = div.getAnimations()[0];
+      var timeAtStart = document.timeline.currentTime;
+
+      ok(!animation.isRunningOnCompositor,
+         'The transform animation is not running on the compositor');
+
+      var markers;
+      var now;
+      while (true) {
+        now = document.timeline.currentTime;
+        if ((now - timeAtStart) >= 200) {
+          // If the current time has elapsed over 200ms since the animation was
+          // created, it means that the animation should have already
+          // unthrottled in this tick, let's see what we observe in this tick's
+          // restyling process.
+          markers = await observeStyling(1);
+          break;
+        }
+
+        markers = await observeStyling(1);
         is(markers.length, 0,
            'Transform animation running on the element which is scrolled out ' +
            'should be throttled until 200ms is elapsed');
