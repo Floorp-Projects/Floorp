@@ -64,6 +64,9 @@ add_task(async function testTabSwitchContext() {
          "title": "Title 2"},
         {"icon": browser.runtime.getURL("2.png"),
          "popup": browser.runtime.getURL("2.html"),
+         "title": ""},
+        {"icon": browser.runtime.getURL("2.png"),
+         "popup": browser.runtime.getURL("2.html"),
          "title": "Default T\u00edtulo \u263a"},
       ];
 
@@ -124,10 +127,16 @@ add_task(async function testTabSwitchContext() {
           expect(details[2]);
         },
         expect => {
-          browser.test.log("Clear the title. Expect default title.");
+          browser.test.log("Set empty title. Expect empty title.");
           browser.pageAction.setTitle({tabId: tabs[1], title: ""});
 
           expect(details[3]);
+        },
+        expect => {
+          browser.test.log("Clear the title. Expect default title.");
+          browser.pageAction.setTitle({tabId: tabs[1], title: null});
+
+          expect(details[4]);
         },
         async expect => {
           browser.test.log("Navigate to a new page. Expect icon hidden.");
@@ -196,6 +205,9 @@ add_task(async function testDefaultTitle() {
         {"title": "Foo Title",
          "popup": "",
          "icon": browser.runtime.getURL("icon.png")},
+        {"title": "",
+         "popup": "",
+         "icon": browser.runtime.getURL("icon.png")},
       ];
 
       return [
@@ -214,8 +226,13 @@ add_task(async function testDefaultTitle() {
           expect(details[1]);
         },
         expect => {
-          browser.test.log("Clear the title. Expect extension title.");
+          browser.test.log("Set empty title. Expect empty title.");
           browser.pageAction.setTitle({tabId: tabs[0], title: ""});
+          expect(details[2]);
+        },
+        expect => {
+          browser.test.log("Clear the title. Expect extension title.");
+          browser.pageAction.setTitle({tabId: tabs[0], title: null});
           expect(details[0]);
         },
       ];
