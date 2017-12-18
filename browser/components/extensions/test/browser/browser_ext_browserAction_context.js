@@ -473,7 +473,7 @@ add_task(async function testPropertyRemoval() {
     },
 
     getTests: function(tabs, expectGlobals) {
-      let contextUri = browser.runtime.getURL("_generated_background_page.html");
+      let defaultIcon = "chrome://browser/content/extension.svg";
       let details = [
         {"icon": browser.runtime.getURL("default.png"),
          "popup": browser.runtime.getURL("default.html"),
@@ -490,7 +490,7 @@ add_task(async function testPropertyRemoval() {
          "title": "t2",
          "badge": "b2",
          "badgeBackgroundColor": [0x22, 0x22, 0x22, 0xFF]},
-        {"icon": contextUri,
+        {"icon": defaultIcon,
          "popup": "",
          "title": "",
          "badge": "",
