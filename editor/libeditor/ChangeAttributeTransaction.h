@@ -27,15 +27,35 @@ class Element;
  */
 class ChangeAttributeTransaction final : public EditTransactionBase
 {
-public:
-  /**
-   * @param aElement   the element whose attribute will be changed
-   * @param aAttribute the name of the attribute to change
-   * @param aValue     the new value for aAttribute, or null to remove
-   */
+protected:
   ChangeAttributeTransaction(dom::Element& aElement,
                              nsAtom& aAttribute,
                              const nsAString* aValue);
+
+public:
+  /**
+   * Creates a change attribute transaction to set an attribute to something.
+   * This method never returns nullptr.
+   *
+   * @param aElement    The element whose attribute will be changed.
+   * @param aAttribute  The name of the attribute to change.
+   * @param aValue      The new value for aAttribute.
+   */
+  static already_AddRefed<ChangeAttributeTransaction>
+  Create(dom::Element& aElement,
+         nsAtom& aAttribute,
+         const nsAString& aValue);
+
+  /**
+   * Creates a change attribute transaction to remove an attribute.  This
+   * method never returns nullptr.
+   *
+   * @param aElement    The element whose attribute will be changed.
+   * @param aAttribute  The name of the attribute to remove.
+   */
+  static already_AddRefed<ChangeAttributeTransaction>
+  CreateToRemove(dom::Element& aElement,
+                 nsAtom& aAttribute);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ChangeAttributeTransaction,
@@ -57,14 +77,14 @@ private:
   // The value to set the attribute to (ignored if mRemoveAttribute==true)
   nsString mValue;
 
+  // The value to set the attribute to for undo
+  nsString mUndoValue;
+
   // True if the operation is to remove mAttribute from mElement
   bool mRemoveAttribute;
 
   // True if the mAttribute was set on mElement at the time of execution
   bool mAttributeWasSet;
-
-  // The value to set the attribute to for undo
-  nsString mUndoValue;
 };
 
 } // namespace mozilla
