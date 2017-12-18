@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,9 +28,14 @@ DWORD _pr_currentCPUIndex;
 int                           _pr_intsOff = 0; 
 _PRInterruptTable             _pr_interruptTable[] = { { 0 } };
 
+typedef HRESULT (WINAPI *SETTHREADDESCRIPTION)(HANDLE, PCWSTR);
+static SETTHREADDESCRIPTION sSetThreadDescription = NULL;
+
 void
 _PR_MD_EARLY_INIT()
 {
+    HMODULE hModule;
+
 #ifndef _PR_USE_STATIC_TLS
     _pr_currentThreadIndex = TlsAlloc();
     _pr_lastThreadIndex = TlsAlloc();
@@ -39,6 +45,15 @@ _PR_MD_EARLY_INIT()
 #if defined(_WIN64) && defined(WIN95)
     _fd_waiting_for_overlapped_done_lock = PR_NewLock();
 #endif
+
+    // SetThreadDescription is Windows 10 build 1607+
+    hModule = GetModuleHandleW(L"kernel32.dll");
+    if (hModule) {
+        sSetThreadDescription =
+            (SETTHREADDESCRIPTION) GetProcAddress(
+                                       hModule,
+                                       "SetThreadDescription");
+    }
 }
 
 void _PR_MD_CLEANUP_BEFORE_EXIT(void)
@@ -217,7 +232,16 @@ _PR_MD_SET_CURRENT_THREAD_NAME(const char *name)
 {
 #ifdef _MSC_VER
    THREADNAME_INFO info;
+#endif
 
+   if (sSetThreadDescription) {
+      WCHAR wideName[MAX_PATH];
+      if (MultiByteToWideChar(CP_ACP, 0, name, -1, wideName, MAX_PATH)) {
+         sSetThreadDescription(GetCurrentThread(), wideName);
+      }
+   }
+
+#ifdef _MSC_VER
    if (!IsDebuggerPresent())
       return;
 
