@@ -368,8 +368,14 @@ this.TabCrashHandler = {
    *        even if they are empty.
    */
   maybeSendCrashReport(message) {
-    if (!AppConstants.MOZ_CRASHREPORTER)
+    if (!AppConstants.MOZ_CRASHREPORTER) {
       return;
+    }
+
+    if (!message.data.hasReport) {
+      // There was no report, so nothing to do.
+      return;
+    }
 
     let browser = message.target.browser;
 
@@ -381,8 +387,9 @@ this.TabCrashHandler = {
 
     let childID = this.browserMap.get(browser);
     let dumpID = this.childMap.get(childID);
-    if (!dumpID)
+    if (!dumpID) {
       return;
+    }
 
     if (!message.data.sendReport) {
       Services.telemetry.getHistogramById("FX_CONTENT_CRASH_NOT_SUBMITTED").add(1);
