@@ -612,6 +612,8 @@ NotificationController::ProcessMutationEvents()
 void
 NotificationController::WillRefresh(mozilla::TimeStamp aTime)
 {
+  Telemetry::AutoTimer<Telemetry::A11Y_TREE_UPDATE_TIMING_MS> timer;
+
   AUTO_PROFILER_LABEL("NotificationController::WillRefresh", OTHER);
 
   // If the document accessible that notification collector was created for is

@@ -43,6 +43,16 @@
     "bug_numbers": [1423989],
     "alert_emails": ["dbolter@mozilla.com"]
   },
+  "A11Y_TREE_UPDATE_TIMING_MS" : {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["asurkov@mozilla.com"],
+    "bug_numbers": [1424768],
+    "expires_in_version": "never",
+    "description": "The amount of time taken to update the accessibility tree (ms)",
+    "kind" : "exponential",
+    "high": 60000,
+    "n_buckets": 50
+  },
   "ADDON_CONTENT_POLICY_SHIM_BLOCKING_LOADING_MS": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "58",
