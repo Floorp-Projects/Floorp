@@ -162,10 +162,6 @@ NS_DEFINE_NAMED_CID(NS_SECURE_BROWSER_UI_CID);
 NS_DEFINE_NAMED_CID(NS_SITE_SECURITY_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_CERT_BLOCKLIST_CID);
 
-// Components that require main thread initialization could cause a deadlock
-// in necko code (bug 1418752). To prevent it we initialize all such components
-// on main thread in advance in net_EnsurePSMInit(). Update that function when
-// new component with ThreadRestriction::MainThreadOnly is added.
 static const mozilla::Module::CIDEntry kNSSCIDs[] = {
   { &kNS_NSSCOMPONENT_CID, false, nullptr, nsNSSComponentConstructor },
   { &kNS_SSLSOCKETPROVIDER_CID, false, nullptr,
