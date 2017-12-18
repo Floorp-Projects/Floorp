@@ -128,13 +128,17 @@ public:
                     AllocationHandle** aOutHandle,
                     const char** aOutBadConstraint) override;
   nsresult Deallocate(const RefPtr<const AllocationHandle>& aHandle) override;
-  nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
+  nsresult SetTrack(const RefPtr<const AllocationHandle>& aHandle,
+                    const RefPtr<SourceMediaStream>& aStream,
+                    TrackID aTrackID,
+                    const PrincipalHandle& aPrincipal) override;
+  nsresult Start(const RefPtr<const AllocationHandle>& aHandle) override;
   nsresult Reconfigure(const RefPtr<AllocationHandle>& aHandle,
                        const dom::MediaTrackConstraints& aConstraints,
                        const MediaEnginePrefs& aPrefs,
                        const nsString& aDeviceId,
                        const char** aOutBadConstraint) override;
-  nsresult Stop(SourceMediaStream*, TrackID) override;
+  nsresult Stop(const RefPtr<const AllocationHandle>& aHandle) override;
   void Pull(const RefPtr<const AllocationHandle>& aHandle,
             const RefPtr<SourceMediaStream>& aStream,
             TrackID aTrackID,
