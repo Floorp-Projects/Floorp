@@ -12,8 +12,8 @@ body {
   display: grid;
   width: 400px;
   grid-gap: 10px;
-  grid-template-columns: 50px [first] repeat(3, [divider] 100px) [last];
-  grid-template-rows: [top1] repeat(1, [top2] 50px) [bot];
+  grid-template-columns: 50px [first first] repeat(3, [divider] 100px) [last last last last];
+  grid-template-rows: [top1 top2] repeat(1, [top2 top2] 50px) [bot];
   background-color: #f00;
 }
 .box {
@@ -55,17 +55,10 @@ function runTests() {
       is(grid.cols.lines[0].names.length, 0, "Grid column line 1 has no names.");
 
       is(grid.cols.lines[1].names.length, 2, "Grid column line 2 has 2 names.");
-      isnot(grid.cols.lines[1].names.indexOf("first"), -1,
-        "Grid column line 2 has the name 'first'."
-      );
-      isnot(grid.cols.lines[1].names.indexOf("divider"), -1,
-        "Grid column line 2 has the name 'divider'."
-      );
+      is(grid.cols.lines[1].names + "", "first,divider", "Grid column line 2 has the names 'first,divider'.");
 
       is(grid.cols.lines[4].names.length, 1, "Grid column line 5 has 1 name.");
-      isnot(grid.cols.lines[4].names.indexOf("last"), -1,
-        "Grid column line 5 has the name 'last'."
-      );
+      is(grid.cols.lines[4].names + "", "last", "Grid column line 5 has the name 'last'.");
     }
   }
 
@@ -81,17 +74,10 @@ function runTests() {
     if (grid.rows.lines.length == 3) {
       // test row line names
       is(grid.rows.lines[0].names.length, 2, "Grid row line 1 has 2 names.");
-      isnot(grid.rows.lines[0].names.indexOf("top1"), -1,
-        "Grid row line 1 has the name 'top1'."
-      );
-      isnot(grid.rows.lines[0].names.indexOf("top2"), -1,
-        "Grid row line 1 has the name 'top2'."
-      );
+      is(grid.rows.lines[0].names + "", "top1,top2", "Grid row line 1 has the names 'top1,top2'.");
 
       is(grid.rows.lines[1].names.length, 1, "Grid row line 2 has 1 name.");
-      isnot(grid.rows.lines[1].names.indexOf("bot"), -1,
-        "Grid row line 2 has the name 'bot'."
-      );
+      is(grid.rows.lines[1].names + "", "bot", "Grid row line 2 has the name 'bot'.");
 
       is(grid.rows.lines[2].names.length, 0, "Grid row line 3 has no names.");
     }
