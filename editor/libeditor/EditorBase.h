@@ -504,21 +504,6 @@ protected:
   void FireInputEvent();
 
   /**
-   * Create a transaction for setting aAttribute to aValue on aElement.  Never
-   * returns null.
-   */
-  already_AddRefed<ChangeAttributeTransaction>
-    CreateTxnForSetAttribute(Element& aElement, nsAtom& aAttribute,
-                             const nsAString& aValue);
-
-  /**
-   * Create a transaction for removing aAttribute on aElement.  Never returns
-   * null.
-   */
-  already_AddRefed<ChangeAttributeTransaction>
-    CreateTxnForRemoveAttribute(Element& aElement, nsAtom& aAttribute);
-
-  /**
    * Create an element node whose name is aTag at before aPointToInsert.  When
    * this succeed to create an element node, this sets aPointToInsert to the
    * new element because the relation of child and offset may be broken.
