@@ -6,7 +6,7 @@
 #ifndef widget_gtk_CompositorWidgetParent_h
 #define widget_gtk_CompositorWidgetParent_h
 
-#include "X11CompositorWidget.h"
+#include "GtkCompositorWidget.h"
 #include "mozilla/widget/PCompositorWidgetParent.h"
 
 namespace mozilla {
@@ -14,7 +14,7 @@ namespace widget {
 
 class CompositorWidgetParent final
  : public PCompositorWidgetParent,
-   public X11CompositorWidget
+   public GtkCompositorWidget
 {
 public:
   explicit CompositorWidgetParent(const CompositorWidgetInitData& aInitData,

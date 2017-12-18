@@ -3,20 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef widget_gtk_InProcessX11CompositorWidgetParent_h
-#define widget_gtk_InProcessX11CompositorWidgetParent_h
+#ifndef widget_gtk_InProcessGtkCompositorWidgetParent_h
+#define widget_gtk_InProcessGtkCompositorWidgetParent_h
 
-#include "X11CompositorWidget.h"
+#include "GtkCompositorWidget.h"
 
 class nsWindow;
 
 namespace mozilla {
 namespace widget {
 
-class InProcessX11CompositorWidget final : public X11CompositorWidget
+class InProcessGtkCompositorWidget final : public GtkCompositorWidget
 {
 public:
-  InProcessX11CompositorWidget(const X11CompositorWidgetInitData& aInitData,
+  InProcessGtkCompositorWidget(const GtkCompositorWidgetInitData& aInitData,
                                const layers::CompositorOptions& aOptions,
                                nsWindow* aWindow);
 
@@ -28,4 +28,4 @@ public:
 } // namespace widget
 } // namespace mozilla
 
-#endif // widget_gtk_InProcessX11CompositorWidgetParent_h
+#endif // widget_gtk_InProcessGtkCompositorWidgetParent_h

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "X11CompositorWidget.h"
+#include "GtkCompositorWidget.h"
 
 #include "gfxPlatformGtk.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -14,8 +14,8 @@
 namespace mozilla {
 namespace widget {
 
-X11CompositorWidget::X11CompositorWidget(const X11CompositorWidgetInitData& aInitData,
-                                         const CompositorOptions& aOptions,
+GtkCompositorWidget::GtkCompositorWidget(const GtkCompositorWidgetInitData& aInitData,
+                                         const layers::CompositorOptions& aOptions,
                                          nsWindow* aWindow)
       : CompositorWidget(aOptions)
       , mWidget(aWindow)
@@ -27,27 +27,36 @@ X11CompositorWidget::X11CompositorWidget(const X11CompositorWidgetInitData& aIni
   } else {
     mXDisplay = XOpenDisplay(aInitData.XDisplayString().get());
   }
-  mXWindow = (Window)aInitData.XWindow();
 
-  // Grab the window's visual and depth
-  XWindowAttributes windowAttrs;
-  XGetWindowAttributes(mXDisplay, mXWindow, &windowAttrs);
+#ifdef MOZ_WAYLAND
+  if (!mXDisplay) {
+    MOZ_RELEASE_ASSERT(aWindow,
+      "We're running on Wayland and but without valid nsWindow.");
+    mProvider.Initialize(aWindow);
+  } else
+#endif
+  {
+    mXWindow = (Window)aInitData.XWindow();
 
-  Visual*   visual = windowAttrs.visual;
-  int       depth = windowAttrs.depth;
+    // Grab the window's visual and depth
+    XWindowAttributes windowAttrs;
+    XGetWindowAttributes(mXDisplay, mXWindow, &windowAttrs);
 
-  // Initialize the window surface provider
-  mProvider.Initialize(
-    mXDisplay,
-    mXWindow,
-    visual,
-    depth
-    );
+    Visual*   visual = windowAttrs.visual;
+    int       depth = windowAttrs.depth;
 
+    // Initialize the window surface provider
+    mProvider.Initialize(
+      mXDisplay,
+      mXWindow,
+      visual,
+      depth
+      );
+  }
   mClientSize = aInitData.InitialClientSize();
 }
 
-X11CompositorWidget::~X11CompositorWidget()
+GtkCompositorWidget::~GtkCompositorWidget()
 {
   mProvider.CleanupResources();
 
@@ -59,49 +68,49 @@ X11CompositorWidget::~X11CompositorWidget()
 }
 
 already_AddRefed<gfx::DrawTarget>
-X11CompositorWidget::StartRemoteDrawing()
+GtkCompositorWidget::StartRemoteDrawing()
 {
   return nullptr;
 }
 void
-X11CompositorWidget::EndRemoteDrawing()
+GtkCompositorWidget::EndRemoteDrawing()
 {
 }
 
 already_AddRefed<gfx::DrawTarget>
-X11CompositorWidget::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
+GtkCompositorWidget::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
                                                 layers::BufferMode* aBufferMode)
 {
   return mProvider.StartRemoteDrawingInRegion(aInvalidRegion,
                                               aBufferMode);
 }
 
-void X11CompositorWidget::EndRemoteDrawingInRegion(gfx::DrawTarget* aDrawTarget,
+void GtkCompositorWidget::EndRemoteDrawingInRegion(gfx::DrawTarget* aDrawTarget,
                               LayoutDeviceIntRegion& aInvalidRegion)
 {
   mProvider.EndRemoteDrawingInRegion(aDrawTarget,
                                      aInvalidRegion);
 }
 
-nsIWidget* X11CompositorWidget::RealWidget()
+nsIWidget* GtkCompositorWidget::RealWidget()
 {
   return mWidget;
 }
 
 void
-X11CompositorWidget::NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize)
+GtkCompositorWidget::NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize)
 {
   mClientSize = aClientSize;
 }
 
 LayoutDeviceIntSize
-X11CompositorWidget::GetClientSize()
+GtkCompositorWidget::GetClientSize()
 {
   return mClientSize;
 }
 
 uintptr_t
-X11CompositorWidget::GetWidgetKey()
+GtkCompositorWidget::GetWidgetKey()
 {
   return reinterpret_cast<uintptr_t>(mWidget);
 }
