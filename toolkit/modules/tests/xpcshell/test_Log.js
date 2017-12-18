@@ -588,3 +588,34 @@ add_task(function* format_errors() {
     do_check_true(str.includes("format_errors"));
   }
 });
+
+/*
+ * Check that automatic support for setting the log level via preferences
+ * works.
+ */
+add_test(function test_prefs() {
+  let log = Log.repository.getLogger("error.logger");
+  log.level = Log.Level.Debug;
+  Services.prefs.setStringPref("logger.test", "Error");
+  log.manageLevelFromPref("logger.test");
+  // check initial pref value is set up.
+  equal(log.level, Log.Level.Error);
+  Services.prefs.setStringPref("logger.test", "Error");
+  // check changing the pref causes the level to change.
+  Services.prefs.setStringPref("logger.test", "Trace");
+  equal(log.level, Log.Level.Trace);
+  // invalid values cause nothing to happen.
+  Services.prefs.setStringPref("logger.test", "invalid-level-value");
+  equal(log.level, Log.Level.Trace);
+  Services.prefs.setIntPref("logger.test", 123);
+  equal(log.level, Log.Level.Trace);
+  // setting a "sub preference" shouldn't impact it.
+  Services.prefs.setStringPref("logger.test.foo", "Debug");
+  equal(log.level, Log.Level.Trace);
+  // clearing the level param should cause it to use the parent level.
+  Log.repository.getLogger("error").level = Log.Level.All;
+  Services.prefs.setStringPref("logger.test", "");
+  equal(log.level, Log.Level.All);
+
+  run_next_test();
+});
