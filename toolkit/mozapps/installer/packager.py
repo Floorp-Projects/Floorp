@@ -23,6 +23,7 @@ from mozpack.copier import (
     Jarrer,
 )
 from mozpack.errors import errors
+from mozpack.files import ExecutableFile
 from mozpack.mozjar import JAR_BROTLI
 import mozpack.path as mozpath
 import buildconfig
@@ -312,6 +313,14 @@ def main():
                     copier.add(libbase + '.chk',
                                LibSignFile(os.path.join(args.destination,
                                                         libname)))
+
+    # Include pdb files for llvm-symbolizer to resolve symbols.
+    if buildconfig.substs.get('LLVM_SYMBOLIZER') and mozinfo.isWin:
+        for p, f in copier:
+            if isinstance(f, ExecutableFile):
+                pdbname = os.path.splitext(f.inputs()[0])[0] + '.pdb'
+                if os.path.exists(pdbname):
+                    copier.add(os.path.basename(pdbname), File(pdbname))
 
     # Setup preloading
     if args.jarlog and os.path.exists(args.jarlog):
