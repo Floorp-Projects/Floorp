@@ -296,8 +296,7 @@ Sync11Service.prototype = {
     this.errorHandler = new ErrorHandler(this);
 
     this._log = Log.repository.getLogger("Sync.Service");
-    this._log.level =
-      Log.Level[Svc.Prefs.get("log.logger.service.main")];
+    this._log.manageLevelFromPref("services.sync.log.logger.service.main");
 
     this._log.info("Loading Weave " + WEAVE_VERSION);
 

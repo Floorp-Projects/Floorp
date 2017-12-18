@@ -25,7 +25,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Doctor",
  */
 this.EngineSynchronizer = function EngineSynchronizer(service) {
   this._log = Log.repository.getLogger("Sync.Synchronizer");
-  this._log.level = Log.Level[Svc.Prefs.get("log.logger.synchronizer")];
+  this._log.manageLevelFromPref("services.sync.log.logger.synchronizer");
 
   this.service = service;
 };
