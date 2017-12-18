@@ -25,6 +25,24 @@ function userWasNotified(extensionId) {
   return setting && setting.value;
 }
 
+function replaceUrlInTab(gBrowser, tab, url) {
+  let loaded = new Promise(resolve => {
+    windowTracker.addListener("progress", {
+      onLocationChange(browser, webProgress, request, locationURI, flags) {
+        if (webProgress.isTopLevel
+            && browser.ownerGlobal.gBrowser.getTabForBrowser(browser) == tab
+            && locationURI.spec == url) {
+          windowTracker.removeListener(this);
+          resolve();
+        }
+      },
+    });
+  });
+  gBrowser.loadURIWithFlags(
+    url, {flags: Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY});
+  return loaded;
+}
+
 async function handleNewTabOpened() {
   // We don't need to open the doorhanger again until the controlling add-on changes.
   // eslint-disable-next-line no-use-before-define
@@ -48,9 +66,24 @@ async function handleNewTabOpened() {
       await ExtensionSettingsStore.addSetting(
         item.id, NEW_TAB_CONFIRMED_TYPE, item.id, true, () => false);
     } else {
-      // Secondary action is to restore settings.
+      // Secondary action is to restore settings. Disabling an add-on should remove
+      // the tabs that it has open, but we want to open the new New Tab in this tab.
+      //   1. Replace the tab's URL with about:blank, wait for it to change
+      //   2. Now that this tab isn't associated with the add-on, disable the add-on
+      //   3. Replace the tab's URL with the new New Tab URL
       ExtensionSettingsStore.removeSetting(NEW_TAB_CONFIRMED_TYPE, item.id);
       let addon = await AddonManager.getAddonByID(item.id);
+      let gBrowser = win.gBrowser;
+      let tab = gBrowser.selectedTab;
+      await replaceUrlInTab(gBrowser, tab, "about:blank");
+      Services.obs.addObserver({
+        async observe() {
+          await replaceUrlInTab(gBrowser, tab, aboutNewTabService.newTabURL);
+          handleNewTabOpened();
+          Services.obs.removeObserver(this, "newtab-url-changed");
+        },
+      }, "newtab-url-changed");
+
       addon.userDisabled = true;
     }
     panel.hidePopup();
@@ -100,12 +133,12 @@ function addNewTabObserver(extensionId) {
 }
 
 function setNewTabURL(extensionId, url) {
-  aboutNewTabService.newTabURL = url;
-  if (aboutNewTabService.overridden) {
+  if (extensionId) {
     addNewTabObserver(extensionId);
   } else {
     removeNewTabObserver();
   }
+  aboutNewTabService.newTabURL = url;
 }
 
 this.urlOverrides = class extends ExtensionAPI {
@@ -164,7 +197,7 @@ this.urlOverrides = class extends ExtensionAPI {
 
       // Set the newTabURL to the current value of the setting.
       if (item) {
-        setNewTabURL(extension.id, item.value || item.initialValue);
+        setNewTabURL(item.id, item.value || item.initialValue);
       }
     }
   }
