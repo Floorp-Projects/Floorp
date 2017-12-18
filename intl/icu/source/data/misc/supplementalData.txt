@@ -1841,7 +1841,7 @@ supplementalData:table(nofallback){
             "islamic-tbla",
         }
     }
-    cldrVersion{"32"}
+    cldrVersion{"32.0.1"}
     codeMappings{
         {
             "AA",
