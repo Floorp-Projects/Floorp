@@ -3662,10 +3662,14 @@ nsWindow::Create(nsIWidget* aParent,
         // which will use a Window with the override-redirect attribute
         // (for temporary windows).
         // For long-lived windows, their stacking order is managed by the
-        // window manager, as indicated by GTK_WINDOW_TOPLEVEL ...
-        GtkWindowType type =
-            mWindowType != eWindowType_popup || aInitData->mNoAutoHide ?
-              GTK_WINDOW_TOPLEVEL : GTK_WINDOW_POPUP;
+        // window manager, as indicated by GTK_WINDOW_TOPLEVEL.
+        // For Wayland we have to always use GTK_WINDOW_POPUP to control
+        // popup window position.
+        GtkWindowType type = GTK_WINDOW_TOPLEVEL;
+        if (mWindowType == eWindowType_popup) {
+            type = (mIsX11Display && aInitData->mNoAutoHide) ?
+                GTK_WINDOW_TOPLEVEL : GTK_WINDOW_POPUP;
+        }
         mShell = gtk_window_new(type);
 
         bool useAlphaVisual = (mWindowType == eWindowType_popup &&
@@ -3753,7 +3757,11 @@ nsWindow::Create(nsIWidget* aParent,
             else {
                 switch (aInitData->mPopupHint) {
                     case ePopupTypeMenu:
-                        gtkTypeHint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
+                        // Use GDK_WINDOW_TYPE_HINT_UTILITY on Wayland which
+                        // guides Gtk to create the popup as subsurface
+                        // instead of xdg_shell popup (see Bug 1423598).
+                        gtkTypeHint = mIsX11Display ? GDK_WINDOW_TYPE_HINT_POPUP_MENU :
+                                                      GDK_WINDOW_TYPE_HINT_UTILITY;
                         break;
                     case ePopupTypeTooltip:
                         gtkTypeHint = GDK_WINDOW_TYPE_HINT_TOOLTIP;
@@ -3805,9 +3813,12 @@ nsWindow::Create(nsIWidget* aParent,
          * 2) We're running on Gtk+ and client side decorations
          *    are drawn by Gtk+ to mShell. Content is rendered to mContainer
          *    and we listen to the Gtk+ events on mContainer.
+         * 3) We're running on Wayland. All gecko content is rendered
+         *    to mContainer and we listen to the Gtk+ events on mContainer.
          */
         GtkStyleContext* style = gtk_widget_get_style_context(mShell);
         drawToContainer =
+            !mIsX11Display ||
             (mIsCSDAvailable && GetCSDSupportLevel() == CSD_SUPPORT_FLAT ) ||
             gtk_style_context_has_class(style, "csd");
 #endif
@@ -4801,6 +4812,12 @@ nsWindow::GrabPointer(guint32 aTime)
     if (!mGdkWindow)
         return;
 
+    if (!mIsX11Display) {
+        // Don't to the grab on Wayland as it causes a regression
+        // from Bug 1377084.
+        return;
+    }
+
     gint retval;
     retval = gdk_pointer_grab(mGdkWindow, TRUE,
                               (GdkEventMask)(GDK_BUTTON_PRESS_MASK |
@@ -4834,6 +4851,13 @@ nsWindow::ReleaseGrabs(void)
     LOG(("ReleaseGrabs\n"));
 
     mRetryPointerGrab = false;
+
+    if (!mIsX11Display) {
+        // Don't to the ungrab on Wayland as it causes a regression
+        // from Bug 1377084.
+        return;
+    }
+
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
 }
 
