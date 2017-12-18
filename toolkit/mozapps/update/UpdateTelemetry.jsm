@@ -176,7 +176,8 @@ this.AUSTLMY = {
   DWNLD_ERR_DOCUMENT_NOT_CACHED: 12,
   DWNLD_ERR_VERIFY_NO_REQUEST: 13,
   DWNLD_ERR_VERIFY_PATCH_SIZE_NOT_EQUAL: 14,
-  DWNLD_RESUME_FAILURE: 15,
+  // DWNLD_ERR_VERIFY_NO_HASH_MATCH: 15 - no longer in use
+  DWNLD_RESUME_FAILURE: 16,
 
   /**
    * Submit a telemetry ping for the update download result code.
