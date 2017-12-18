@@ -537,8 +537,7 @@ function do_test(testcases, testFn) {
         });
 
         let focusedInput = doc.getElementById(testcase.focusedInputId);
-        handler.focusedInput = focusedInput;
-        let [adaptedProfile] = handler.activeSection.getAdaptedProfiles([testcase.profileData]);
+        let [adaptedProfile] = handler.getAdaptedProfiles([testcase.profileData], focusedInput);
         await handler.autofillFormFields(adaptedProfile, focusedInput);
         Assert.equal(handlerInfo.filledRecordGUID, testcase.profileData.guid,
                      "Check if filledRecordGUID is set correctly");
