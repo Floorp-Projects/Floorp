@@ -8,6 +8,8 @@ apps:
   firefox:
     command: desktop-launch firefox
     desktop: opt/firefox/distribution/firefox.desktop
+    environment:
+      DISABLE_WAYLAND: 1
     plugs:
       - browser-sandbox
       - camera
@@ -18,8 +20,8 @@ apps:
       - network
       - opengl
       - pulseaudio
+      - screen-inhibit-control
       - unity7
-      - wayland
       - x11
 
 plugs:
