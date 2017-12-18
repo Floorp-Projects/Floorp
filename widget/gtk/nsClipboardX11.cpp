@@ -282,9 +282,9 @@ nsRetrievalContextX11::GetTargets(int32_t aWhichClipboard, int* aTargetNums)
 }
 
 const char*
-nsRetrievalContextX11::WaitForClipboardContext(const char* aMimeType,
-                                               int32_t aWhichClipboard,
-                                               uint32_t* aContentLength)
+nsRetrievalContextX11::GetClipboardData(const char* aMimeType,
+                                        int32_t aWhichClipboard,
+                                        uint32_t* aContentLength)
 {
     GtkClipboard *clipboard;
     clipboard = gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
@@ -305,4 +305,9 @@ nsRetrievalContextX11::WaitForClipboardContext(const char* aMimeType,
 
     *aContentLength = contentLength;
     return (const char*)clipboardData;
+}
+
+void nsRetrievalContextX11::ReleaseClipboardData(const char* aClipboardData)
+{
+    free((void *)aClipboardData);
 }

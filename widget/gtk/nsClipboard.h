@@ -18,10 +18,11 @@
 
 class nsRetrievalContext {
 public:
-    // Returned data must be released by free()
-    virtual const char* WaitForClipboardContext(const char* aMimeType,
-                                                int32_t aWhichClipboard,
-                                                uint32_t* aContentLength) = 0;
+    virtual const char* GetClipboardData(const char* aMimeType,
+                                         int32_t aWhichClipboard,
+                                         uint32_t* aContentLength) = 0;
+    virtual void ReleaseClipboardData(const char* aClipboardData) = 0;
+
     virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
                                 int* aTargetNum) = 0;
 
