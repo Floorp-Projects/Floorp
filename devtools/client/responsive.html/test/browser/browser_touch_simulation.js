@@ -9,6 +9,8 @@ const TEST_URL = `${URL_ROOT}touch.html`;
 const PREF_DOM_META_VIEWPORT_ENABLED = "dom.meta-viewport.enabled";
 
 addRDMTask(TEST_URL, function* ({ ui }) {
+  yield injectEventUtilsInContentTask(ui.getViewportBrowser());
+
   yield waitBootstrap(ui);
   yield testWithNoTouch(ui);
   yield toggleTouchSimulation(ui);
@@ -19,10 +21,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
 });
 
 function* testWithNoTouch(ui) {
-  yield injectEventUtils(ui);
   yield ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
-    let { EventUtils } = content;
-
     let div = content.document.querySelector("div");
     let x = 0, y = 0;
 
@@ -62,11 +61,7 @@ function* testWithNoTouch(ui) {
 }
 
 function* testWithTouch(ui) {
-  yield injectEventUtils(ui);
-
   yield ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
-    let { EventUtils } = content;
-
     let div = content.document.querySelector("div");
     let x = 0, y = 0;
 
@@ -105,10 +100,8 @@ function* testWithTouch(ui) {
 function* testWithMetaViewportEnabled(ui) {
   yield SpecialPowers.pushPrefEnv({set: [[PREF_DOM_META_VIEWPORT_ENABLED, true]]});
 
-  yield injectEventUtils(ui);
-
   yield ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
-    let { synthesizeClick } = content.EventUtils;
+    let { synthesizeClick } = EventUtils;
 
     let meta = content.document.querySelector("meta[name=viewport]");
     let div = content.document.querySelector("div");
@@ -150,10 +143,8 @@ function* testWithMetaViewportEnabled(ui) {
 function* testWithMetaViewportDisabled(ui) {
   yield SpecialPowers.pushPrefEnv({set: [[PREF_DOM_META_VIEWPORT_ENABLED, false]]});
 
-  yield injectEventUtils(ui);
-
   yield ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
-    let { synthesizeClick } = content.EventUtils;
+    let { synthesizeClick } = EventUtils;
 
     let meta = content.document.querySelector("meta[name=viewport]");
     let div = content.document.querySelector("div");
@@ -190,38 +181,4 @@ function* waitBootstrap(ui) {
 
   yield waitUntilState(store, state => state.viewports.length == 1);
   yield waitForFrameLoad(ui, TEST_URL);
-}
-
-function* injectEventUtils(ui) {
-  yield ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
-    if ("EventUtils" in content) {
-      return;
-    }
-
-    let EventUtils = content.EventUtils = {};
-
-    EventUtils.window = {};
-    EventUtils.parent = EventUtils.window;
-    /* eslint-disable camelcase */
-    EventUtils._EU_Ci = Components.interfaces;
-    EventUtils._EU_Cc = Components.classes;
-    /* eslint-enable camelcase */
-    // EventUtils' `sendChar` function relies on the navigator to synthetize events.
-    EventUtils.navigator = content.navigator;
-    EventUtils.KeyboardEvent = content.KeyboardEvent;
-
-    EventUtils.synthesizeClick = element => new Promise(resolve => {
-      element.addEventListener("click", function () {
-        resolve();
-      }, {once: true});
-
-      EventUtils.synthesizeMouseAtCenter(element,
-        { type: "mousedown", isSynthesized: false }, content);
-      EventUtils.synthesizeMouseAtCenter(element,
-        { type: "mouseup", isSynthesized: false }, content);
-    });
-
-    Services.scriptloader.loadSubScript(
-      "chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
-  });
 }
