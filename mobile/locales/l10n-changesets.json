@@ -20,7 +20,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "773829ad6e89"
+        "revision": "b80e4782fab4"
     }, 
     "as": {
         "platforms": [
@@ -84,7 +84,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "e6f34ba85537"
+        "revision": "5ac6bf4abad9"
     }, 
     "bs": {
         "platforms": [
@@ -107,7 +107,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "addc62cb08ec"
+        "revision": "763acb6c6fb8"
     }, 
     "cs": {
         "platforms": [
@@ -147,7 +147,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "5500658fc139"
+        "revision": "a5151c12f225"
     }, 
     "el": {
         "platforms": [
@@ -259,7 +259,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "4fbce353d3a7"
+        "revision": "fafda4d675e4"
     }, 
     "fy-NL": {
         "platforms": [
@@ -307,7 +307,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "94242064d1a3"
+        "revision": "dcf6cc918142"
     }, 
     "he": {
         "platforms": [
@@ -315,7 +315,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "ce1bf4de8229"
+        "revision": "353bf1a1606b"
     }, 
     "hi-IN": {
         "platforms": [
@@ -395,7 +395,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "ce0ebf5ca5a0"
+        "revision": "49ee518fbf07"
     }, 
     "kab": {
         "platforms": [
@@ -498,7 +498,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "7a589a0c0cd6"
+        "revision": "4dec73f603b2"
     }, 
     "nb-NO": {
         "platforms": [
@@ -641,7 +641,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "4f2891fbfda1"
+        "revision": "b8594d7520df"
     }, 
     "sv-SE": {
         "platforms": [
@@ -657,7 +657,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "e068106c273f"
+        "revision": "c8b9fe31f913"
     }, 
     "te": {
         "platforms": [
