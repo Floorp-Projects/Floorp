@@ -148,9 +148,8 @@ TokenServerClientServerError.prototype._toStringFields = function() {
  *    at fault (e.g. differentiating a 503 from a 401).
  */
 this.TokenServerClient = function TokenServerClient() {
-  this._log = Log.repository.getLogger("Common.TokenServerClient");
-  let level = Services.prefs.getCharPref(PREF_LOG_LEVEL, "Debug");
-  this._log.level = Log.Level[level];
+  this._log = Log.repository.getLogger("Services.Common.TokenServerClient");
+  this._log.manageLevelFromPref(PREF_LOG_LEVEL);
 };
 TokenServerClient.prototype = {
   /**

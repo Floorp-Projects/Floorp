@@ -115,8 +115,7 @@ this.EXPORTED_SYMBOLS = ["AddonsReconciler", "CHANGE_INSTALLED",
  */
 this.AddonsReconciler = function AddonsReconciler() {
   this._log = Log.repository.getLogger("Sync.AddonsReconciler");
-  let level = Svc.Prefs.get("log.logger.addonsreconciler", "Debug");
-  this._log.level = Log.Level[level];
+  this._log.manageLevelFromPref("services.sync.log.logger.addonsreconciler");
 
   Svc.Obs.add("xpcom-shutdown", this.stopListening, this);
 };

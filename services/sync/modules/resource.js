@@ -31,7 +31,7 @@ Cu.importGlobalProperties(["fetch"]);
  */
 this.Resource = function Resource(uri) {
   this._log = Log.repository.getLogger(this._logName);
-  this._log.level = Log.Level[Svc.Prefs.get("log.logger.network.resources")];
+  this._log.manageLevelFromPref("services.sync.log.logger.network.resources");
   this.uri = uri;
   this._headers = {};
 };

@@ -23,7 +23,7 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 
 this.DeclinedEngines = function(service) {
   this._log = Log.repository.getLogger("Sync.Declined");
-  this._log.level = Log.Level[new Preferences(PREFS_BRANCH).get("log.logger.declined")];
+  this._log.manageLevelFromPref("services.sync.log.logger.declined");
 
   this.service = service;
 };

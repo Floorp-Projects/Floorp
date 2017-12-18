@@ -13,9 +13,6 @@ Cu.import("resource://gre/modules/Log.jsm");
 // default.  Note "Debug" is usually appropriate so that when this log is
 // included in the Sync file logs we get verbose output.
 const PREF_LOG_LEVEL = "identity.fxaccounts.loglevel";
-// The level of messages that will be dumped to the console.  If not specified,
-// "Error" will be used.
-const PREF_LOG_LEVEL_DUMP = "identity.fxaccounts.log.appender.dump";
 
 // A pref that can be set so "sensitive" information (eg, personally
 // identifiable info, credentials, etc) will be logged.
@@ -25,30 +22,7 @@ var exports = Object.create(null);
 
 XPCOMUtils.defineLazyGetter(exports, "log", function() {
   let log = Log.repository.getLogger("FirefoxAccounts");
-  // We set the log level to debug, but the default dump appender is set to
-  // the level reflected in the pref.  Other code that consumes FxA may then
-  // choose to add another appender at a different level.
-  log.level = Log.Level.Debug;
-  let appender = new Log.DumpAppender();
-  appender.level = Log.Level.Error;
-
-  log.addAppender(appender);
-  try {
-    // The log itself.
-    let level =
-      Services.prefs.getPrefType(PREF_LOG_LEVEL) == Ci.nsIPrefBranch.PREF_STRING
-      && Services.prefs.getCharPref(PREF_LOG_LEVEL);
-    log.level = Log.Level[level] || Log.Level.Debug;
-
-    // The appender.
-    level =
-      Services.prefs.getPrefType(PREF_LOG_LEVEL_DUMP) == Ci.nsIPrefBranch.PREF_STRING
-      && Services.prefs.getCharPref(PREF_LOG_LEVEL_DUMP);
-    appender.level = Log.Level[level] || Log.Level.Error;
-  } catch (e) {
-    log.error(e);
-  }
-
+  log.manageLevelFromPref(PREF_LOG_LEVEL);
   return log;
 });
 

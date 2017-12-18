@@ -1132,7 +1132,9 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
 });
 
 XPCOMUtils.defineLazyGetter(this, "BookmarkSyncLog", () => {
-  return Log.repository.getLogger("BookmarkSyncUtils");
+  // Use a sub-log of the bookmarks engine, so setting the level for that
+  // engine also adjust the level of this log.
+  return Log.repository.getLogger("Sync.Engine.Bookmarks.BookmarkSyncUtils");
 });
 
 function validateSyncBookmarkObject(name, input, behavior) {
