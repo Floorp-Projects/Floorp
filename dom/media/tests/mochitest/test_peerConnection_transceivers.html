@@ -356,14 +356,18 @@
   let checkAddTransceiverWithOfferToReceive = async kinds => {
     let pc = new RTCPeerConnection();
 
+    let propsToSet = kinds.map(kind => {
+      if (kind == "audio") {
+        return "offerToReceiveAudio";
+      } else if (kind == "video") {
+        return "offerToReceiveVideo";
+      }
+    });
+
     let options = {};
 
-    for (let kind of kinds) {
-      if (kind == "audio") {
-        options.offerToReceiveAudio = true;
-      } else if (kind == "video") {
-        options.offerToReceiveVideo = true;
-      }
+    for (let prop of propsToSet) {
+      options[prop] = true;
     }
 
     let offer = await pc.createOffer(options);
@@ -396,6 +400,35 @@
         });
     }
 
+    hasProps(pc.getTransceivers(), expected);
+
+    // Test offerToReceive: false
+    for (let prop of propsToSet) {
+      options[prop] = false;
+    }
+
+    // Check that sendrecv goes to sendonly
+    for (let transceiver of pc.getTransceivers()) {
+      transceiver.direction = "sendrecv";
+    }
+
+    for (let transceiverCheck of expected) {
+      transceiverCheck.direction = "sendonly";
+    }
+
+    offer = await pc.createOffer(options);
+    hasProps(pc.getTransceivers(), expected);
+
+    // Check that recvonly goes to inactive
+    for (let transceiver of pc.getTransceivers()) {
+      transceiver.direction = "recvonly";
+    }
+
+    for (let transceiverCheck of expected) {
+      transceiverCheck.direction = "inactive";
+    }
+
+    offer = await pc.createOffer(options);
     hasProps(pc.getTransceivers(), expected);
 
     pc.close();
