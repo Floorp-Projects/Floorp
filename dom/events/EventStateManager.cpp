@@ -4087,13 +4087,13 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
     newPointerEvent->mWidth = sourcePointer->mWidth;
     newPointerEvent->mHeight = sourcePointer->mHeight;
     newPointerEvent->inputSource = sourcePointer->inputSource;
-    newPointerEvent->relatedTarget = aRelatedContent;
+    newPointerEvent->mRelatedTarget = aRelatedContent;
     aNewEvent = newPointerEvent.forget();
   } else {
     aNewEvent =
       new WidgetMouseEvent(aMouseEvent->IsTrusted(), aMessage,
                            aMouseEvent->mWidget, WidgetMouseEvent::eReal);
-    aNewEvent->relatedTarget = aRelatedContent;
+    aNewEvent->mRelatedTarget = aRelatedContent;
   }
   aNewEvent->mRefPoint = aMouseEvent->mRefPoint;
   aNewEvent->mModifiers = aMouseEvent->mModifiers;
