@@ -993,6 +993,8 @@ public:
     // The CC is shut down, and the superclass destructor will GC, so make sure
     // we don't try to CC again.
     mWorkerPrivate = nullptr;
+
+    CycleCollectedJSRuntime::Shutdown(cx);
   }
 
   ~WorkerJSRuntime()
