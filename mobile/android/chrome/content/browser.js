@@ -264,9 +264,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "ParentalControls",
 XPCOMUtils.defineLazyServiceGetter(this, "DOMUtils",
   "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
 
-XPCOMUtils.defineLazyServiceGetter(window, "URIFixup",
-  "@mozilla.org/docshell/urifixup;1", "nsIURIFixup");
-
 XPCOMUtils.defineLazyModuleGetter(this, "Log",
   "resource://gre/modules/AndroidLog.jsm", "AndroidLog");
 
@@ -4429,7 +4426,7 @@ Tab.prototype = {
 
     let fixedURI = aLocationURI;
     try {
-      fixedURI = URIFixup.createExposableURI(aLocationURI);
+      fixedURI = Services.uriFixup.createExposableURI(aLocationURI);
     } catch (ex) { }
 
     // In restricted profiles, we refuse to let you open various urls.
@@ -6808,4 +6805,3 @@ HTMLContextMenuItem.prototype = Object.create(ContextMenuItem.prototype, {
     }
   },
 });
-

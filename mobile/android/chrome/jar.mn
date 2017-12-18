@@ -84,6 +84,8 @@ chrome.jar:
 % override chrome://global/locale/dom/dom.properties chrome://browser/locale/overrides/dom/dom.properties
 % override chrome://global/locale/plugins.properties chrome://browser/locale/overrides/plugins.properties
 
-# mobile/locales/jar.mn overrides
+# mobile/locales/jar.mn resources and overrides
 % override chrome://global/locale/netError.dtd    chrome://browser/locale/netError.dtd
 % override chrome://global/locale/appstrings.properties chrome://browser/locale/appstrings.properties
+% resource search-plugins chrome://browser/locale/searchplugins/
+

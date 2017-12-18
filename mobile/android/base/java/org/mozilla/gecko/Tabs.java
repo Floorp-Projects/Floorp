@@ -612,6 +612,7 @@ public class Tabs implements BundleEventListener {
 
         } else if ("Content:SecurityChange".equals(event)) {
             tab.updateIdentityData(message.getBundle("identity"));
+            tab.updatePageAction();
             notifyListeners(tab, TabEvents.SECURITY_CHANGE);
 
         } else if ("Content:StateChange".equals(event)) {

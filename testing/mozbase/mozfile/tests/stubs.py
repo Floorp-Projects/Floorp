@@ -27,7 +27,7 @@ def create_stub():
             if not os.path.exists(dirname):
                 os.makedirs(dirname)
             contents = path[-1]
-            f = file(fullpath, 'w')
+            f = open(fullpath, 'w')
             f.write(contents)
             f.close()
         return tempdir
