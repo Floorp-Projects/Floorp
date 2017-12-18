@@ -44,6 +44,7 @@
 #include "mozilla/dom/FetchUtil.h"
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessageEventBinding.h"
+#include "mozilla/dom/PerformanceService.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
@@ -2021,6 +2022,9 @@ RuntimeService::Init()
   if (NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate())) {
     return NS_ERROR_UNEXPECTED;
   }
+
+  // PerformanceService must be initialized on the main-thread.
+  PerformanceService::GetOrCreate();
 
   return NS_OK;
 }
