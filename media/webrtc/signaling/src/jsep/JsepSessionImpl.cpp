@@ -357,6 +357,46 @@ JsepSessionImpl::GetRemoteIds(const Sdp& sdp,
 }
 
 nsresult
+JsepSessionImpl::RemoveDuplicateTrackIds(Sdp* sdp)
+{
+  std::set<std::string> trackIds;
+
+  for (size_t i = 0; i < sdp->GetMediaSectionCount(); ++i) {
+    SdpMediaSection& msection(sdp->GetMediaSection(i));
+
+    std::vector<std::string> streamIds;
+    std::string trackId;
+    nsresult rv = mSdpHelper.GetIdsFromMsid(*sdp,
+                                            msection,
+                                            &streamIds,
+                                            &trackId);
+
+    if (NS_SUCCEEDED(rv)) {
+      if (trackIds.count(trackId)) {
+        // Re-set trackId
+        if (!mUuidGen->Generate(&trackId)) {
+          JSEP_SET_ERROR("Tried to replace duplicate track id in SDP, but "
+                         "failed to generate a UUID.");
+          return NS_ERROR_FAILURE;
+        }
+
+        auto& mediaAttrs = msection.GetAttributeList();
+        UniquePtr<SdpMsidAttributeList> newMsids(
+            new SdpMsidAttributeList(mediaAttrs.GetMsid()));
+        for (auto& msid : newMsids->mMsids) {
+          msid.appdata = trackId;
+        }
+
+        mediaAttrs.SetAttribute(newMsids.release());
+      }
+      trackIds.insert(trackId);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
 JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
                              std::string* offer)
 {
@@ -387,6 +427,9 @@ JsepSessionImpl::CreateOffer(const JsepOfferOptions& options,
   }
 
   SetupBundle(sdp.get());
+
+  rv = RemoveDuplicateTrackIds(sdp.get());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mCurrentLocalDescription) {
     rv = CopyPreviousTransportParams(*GetAnswer(),
@@ -517,6 +560,9 @@ JsepSessionImpl::CreateAnswer(const JsepAnswerOptions& options,
                               sdp.get());
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  rv = RemoveDuplicateTrackIds(sdp.get());
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (mCurrentLocalDescription) {
     // per discussion with bwc, 3rd parm here should be offer, not *sdp. (mjf)
@@ -1227,8 +1273,6 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
     return NS_ERROR_INVALID_ARG;
   }
 
-  std::set<std::string> trackIds;
-
   for (size_t i = 0; i < parsed->GetMediaSectionCount(); ++i) {
     if (mSdpHelper.MsectionIsDisabled(parsed->GetMediaSection(i))) {
       // Disabled, let this stuff slide.
@@ -1276,15 +1320,7 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
                                             &streamIds,
                                             &trackId);
 
-    if (NS_SUCCEEDED(rv)) {
-      if (trackIds.count(trackId)) {
-        JSEP_SET_ERROR("track id:" << trackId
-                       << " appears in more than one m-section at level " << i);
-        return NS_ERROR_INVALID_ARG;
-      }
-
-      trackIds.insert(trackId);
-    } else if (rv != NS_ERROR_NOT_AVAILABLE) {
+    if (NS_FAILED(rv) && (rv != NS_ERROR_NOT_AVAILABLE)) {
       // Error has already been set
       return rv;
     }
