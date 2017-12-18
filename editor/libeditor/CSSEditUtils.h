@@ -459,20 +459,6 @@ private:
                                             bool aGetOrRemoveRequest);
 
   /**
-   * Creates a Transaction for setting or removing a CSS property.  Never
-   * returns null.
-   *
-   * @param aElement           [IN] A DOM element.
-   * @param aProperty          [IN] A CSS property.
-   * @param aValue             [IN] The value to set for this CSS property.
-   * @param aChangeType        [IN] eSet to set, eRemove to remove.
-   */
-  already_AddRefed<ChangeStyleTransaction>
-  CreateCSSPropertyTxn(dom::Element& aElement,
-                       nsAtom& aProperty, const nsAString& aValue,
-                       ChangeStyleTransaction::EChangeType aChangeType);
-
-  /**
    * Back-end for GetSpecifiedProperty and GetComputedProperty.
    *
    * @param aNode               [IN] A DOM node.
