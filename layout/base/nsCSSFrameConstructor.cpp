@@ -12905,13 +12905,15 @@ nsCSSFrameConstructor::FrameConstructionItem::
       // anonymous flex item.
       return true;
     }
-    if (!(mFCData->mBits & FCDATA_DISALLOW_OUT_OF_FLOW) &&
-        aState.GetGeometricParent(mStyleContext->StyleDisplay(), nullptr)) {
-      // We're abspos or fixedpos, which means we'll spawn a placeholder which
-      // (because our container is an emulated legacy box) we'll need to wrap
-      // in an anonymous flex item.  So, we just treat _this_ frame as if _it_
-      // needs to be wrapped in an anonymous flex item, and then when we spawn
-      // the placeholder, it'll end up in the right spot.
+    if (mIsPopup ||
+        (!(mFCData->mBits & FCDATA_DISALLOW_OUT_OF_FLOW) &&
+         aState.GetGeometricParent(mStyleContext->StyleDisplay(), nullptr))) {
+      // We're abspos or fixedpos (or a XUL popup), which means we'll spawn a
+      // placeholder which (because our container is an emulated legacy box)
+      // we'll need to wrap in an anonymous flex item.  So, we just treat
+      // _this_ frame as if _it_ needs to be wrapped in an anonymous flex item,
+      // and then when we spawn the placeholder, it'll end up in the right
+      // spot.
       return true;
     }
   }
