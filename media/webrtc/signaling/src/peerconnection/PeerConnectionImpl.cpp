@@ -2336,8 +2336,8 @@ PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
     if (transceiver->HasSendTrack(&aTrack)) {
       // TODO(bug 1401983): Move DTMF stuff to TransceiverImpl
       for (size_t i = 0; i < mDTMFStates.Length(); ++i) {
-        if (mDTMFStates[i].mTransceiver.get() == transceiver.get()) {
-          mDTMFStates[i].mSendTimer->Cancel();
+        if (mDTMFStates[i]->mTransceiver.get() == transceiver.get()) {
+          mDTMFStates[i]->mSendTimer->Cancel();
           mDTMFStates.RemoveElementAt(i);
           break;
         }
@@ -2439,17 +2439,17 @@ PeerConnectionImpl::InsertDTMF(TransceiverImpl& transceiver,
 
   // TODO(bug 1401983): Move DTMF stuff to TransceiverImpl
   // Attempt to locate state for the DTMFSender
-  DTMFState* state = nullptr;
+  RefPtr<DTMFState> state;
   for (auto& dtmfState : mDTMFStates) {
-    if (dtmfState.mTransceiver.get() == &transceiver) {
-      state = &dtmfState;
+    if (dtmfState->mTransceiver.get() == &transceiver) {
+      state = dtmfState;
       break;
     }
   }
 
   // No state yet, create a new one
   if (!state) {
-    state = mDTMFStates.AppendElement();
+    state = *mDTMFStates.AppendElement(new DTMFState);
     state->mPCObserver = mPCObserver;
     state->mTransceiver = &transceiver;
     state->mSendTimer = NS_NewTimer();
@@ -2460,9 +2460,7 @@ PeerConnectionImpl::InsertDTMF(TransceiverImpl& transceiver,
   state->mDuration = duration;
   state->mInterToneGap = interToneGap;
   if (!state->mTones.IsEmpty()) {
-    state->mSendTimer->InitWithNamedFuncCallback(DTMFSendTimerCallback_m, state, 0,
-                                                 nsITimer::TYPE_ONE_SHOT,
-                                                 "DTMFSendTimerCallback_m");
+    state->mSendTimer->InitWithCallback(state, 0, nsITimer::TYPE_ONE_SHOT);
   }
   return NS_OK;
 }
@@ -2485,8 +2483,8 @@ PeerConnectionImpl::GetDTMFToneBuffer(mozilla::dom::RTCRtpSender& sender,
   // TODO(bug 1401983): Move DTMF stuff to TransceiverImpl
   // Attempt to locate state for the DTMFSender
   for (auto& dtmfState : mDTMFStates) {
-    if (dtmfState.mTransceiver->HasSendTrack(mst)) {
-      outToneBuffer = dtmfState.mTones;
+    if (dtmfState->mTransceiver->HasSendTrack(mst)) {
+      outToneBuffer = dtmfState->mTones;
       break;
     }
   }
@@ -2514,8 +2512,8 @@ PeerConnectionImpl::ReplaceTrackNoRenegotiation(TransceiverImpl& aTransceiver,
 
   // TODO(bug 1401983): Move DTMF stuff to TransceiverImpl
   for (size_t i = 0; i < mDTMFStates.Length(); ++i) {
-    if (mDTMFStates[i].mTransceiver.get() == &aTransceiver) {
-      mDTMFStates[i].mSendTimer->Cancel();
+    if (mDTMFStates[i]->mTransceiver.get() == &aTransceiver) {
+      mDTMFStates[i]->mSendTimer->Cancel();
       mDTMFStates.RemoveElementAt(i);
       break;
     }
@@ -2804,7 +2802,7 @@ PeerConnectionImpl::CloseInt()
 
   // TODO(bug 1401983): Move DTMF stuff to TransceiverImpl
   for (auto& dtmfState : mDTMFStates) {
-    dtmfState.mSendTimer->Cancel();
+    dtmfState->mSendTimer->Cancel();
   }
 
   // We do this at the end of the call because we want to make sure we've waited
@@ -3798,55 +3796,53 @@ PeerConnectionImpl::startCallTelem() {
   Telemetry::Accumulate(Telemetry::WEBRTC_CALL_COUNT_2, 1);
 }
 
-void
-PeerConnectionImpl::DTMFSendTimerCallback_m(nsITimer* timer, void* closure)
+nsresult
+PeerConnectionImpl::DTMFState::Notify(nsITimer* timer)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  auto state = static_cast<DTMFState*>(closure);
-
   nsString eventTone;
-  if (!state->mTones.IsEmpty()) {
-    uint16_t toneChar = state->mTones.CharAt(0);
+  if (!mTones.IsEmpty()) {
+    uint16_t toneChar = mTones.CharAt(0);
     int tone = GetDTMFToneCode(toneChar);
 
     eventTone.Assign(toneChar);
 
-    state->mTones.Cut(0, 1);
+    mTones.Cut(0, 1);
 
     if (tone == -1) {
-      state->mSendTimer->InitWithNamedFuncCallback(DTMFSendTimerCallback_m, state,
-                                                   2000, nsITimer::TYPE_ONE_SHOT,
-                                                   "DTMFSendTimerCallback_m");
+      mSendTimer->InitWithCallback(this, 2000, nsITimer::TYPE_ONE_SHOT);
     } else {
       // Reset delay if necessary
-      state->mSendTimer->InitWithNamedFuncCallback(DTMFSendTimerCallback_m, state,
-                                                   state->mDuration + state->mInterToneGap,
-                                                   nsITimer::TYPE_ONE_SHOT,
-                                                   "DTMFSendTimerCallback_m");
+      mSendTimer->InitWithCallback(this,
+                                   mDuration + mInterToneGap,
+                                   nsITimer::TYPE_ONE_SHOT);
 
-      state->mTransceiver->InsertDTMFTone(tone, state->mDuration);
+      mTransceiver->InsertDTMFTone(tone, mDuration);
     }
   } else {
-    state->mSendTimer->Cancel();
+    mSendTimer->Cancel();
   }
 
-  RefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(state->mPCObserver);
+  RefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
     NS_WARNING("Failed to dispatch the RTCDTMFToneChange event!");
-    return;
+    return NS_OK; // Return is ignored anyhow
   }
 
   JSErrorResult jrv;
-  pco->OnDTMFToneChange(*state->mTransceiver->GetSendTrack(), eventTone, jrv);
+  pco->OnDTMFToneChange(*mTransceiver->GetSendTrack(), eventTone, jrv);
 
   if (jrv.Failed()) {
     NS_WARNING("Failed to dispatch the RTCDTMFToneChange event!");
-    return;
   }
+
+  return NS_OK;
 }
 
 PeerConnectionImpl::DTMFState::DTMFState() = default;
 PeerConnectionImpl::DTMFState::~DTMFState() = default;
+
+NS_IMPL_ISUPPORTS(PeerConnectionImpl::DTMFState, nsITimerCallback)
 
 }  // end mozilla namespace
