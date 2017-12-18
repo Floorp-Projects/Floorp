@@ -7,7 +7,7 @@
 #include "HeadlessWidget.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 
-#include "InProcessX11CompositorWidget.h"
+#include "InProcessGtkCompositorWidget.h"
 #include "nsWindow.h"
 
 namespace mozilla {
@@ -22,20 +22,20 @@ CompositorWidget::CreateLocal(const CompositorWidgetInitData& aInitData,
     return new HeadlessCompositorWidget(aInitData.get_HeadlessCompositorWidgetInitData(),
                                         aOptions, static_cast<HeadlessWidget*>(aWidget));
   } else {
-    return new InProcessX11CompositorWidget(aInitData.get_X11CompositorWidgetInitData(),
+    return new InProcessGtkCompositorWidget(aInitData.get_GtkCompositorWidgetInitData(),
                                             aOptions, static_cast<nsWindow*>(aWidget));
   }
 }
 
-InProcessX11CompositorWidget::InProcessX11CompositorWidget(const X11CompositorWidgetInitData& aInitData,
+InProcessGtkCompositorWidget::InProcessGtkCompositorWidget(const GtkCompositorWidgetInitData& aInitData,
                                                            const layers::CompositorOptions& aOptions,
                                                            nsWindow* aWindow)
-  : X11CompositorWidget(aInitData, aOptions, aWindow)
+  : GtkCompositorWidget(aInitData, aOptions, aWindow)
 {
 }
 
 void
-InProcessX11CompositorWidget::ObserveVsync(VsyncObserver* aObserver)
+InProcessGtkCompositorWidget::ObserveVsync(VsyncObserver* aObserver)
 {
   if (RefPtr<CompositorVsyncDispatcher> cvd = mWidget->GetCompositorVsyncDispatcher()) {
     cvd->SetCompositorVsyncObserver(aObserver);
