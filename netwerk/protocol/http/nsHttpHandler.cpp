@@ -119,6 +119,8 @@
 
 //-----------------------------------------------------------------------------
 
+using mozilla::Telemetry::LABELS_NETWORK_HTTP_REDIRECT_TO_SCHEME;
+
 namespace mozilla {
 namespace net {
 
@@ -828,14 +830,28 @@ nsHttpHandler::AsyncOnChannelRedirect(nsIChannel* oldChan,
                                       uint32_t flags,
                                       nsIEventTarget* mainThreadEventTarget)
 {
-    // TODO E10S This helper has to be initialized on the other process
-    RefPtr<nsAsyncRedirectVerifyHelper> redirectCallbackHelper =
-        new nsAsyncRedirectVerifyHelper();
+  MOZ_ASSERT(NS_IsMainThread() && (oldChan && newChan));
 
-    return redirectCallbackHelper->Init(oldChan,
-                                        newChan,
-                                        flags,
-                                        mainThreadEventTarget);
+  nsCOMPtr<nsIURI> newURI;
+  newChan->GetURI(getter_AddRefs(newURI));
+  MOZ_ASSERT(newURI);
+
+  nsAutoCString scheme;
+  newURI->GetScheme(scheme);
+  MOZ_ASSERT(!scheme.IsEmpty());
+
+  Telemetry::AccumulateCategoricalKeyed(
+    scheme,
+    oldChan->IsDocument()
+      ? LABELS_NETWORK_HTTP_REDIRECT_TO_SCHEME::topLevel
+      : LABELS_NETWORK_HTTP_REDIRECT_TO_SCHEME::subresource);
+
+  // TODO E10S This helper has to be initialized on the other process
+  RefPtr<nsAsyncRedirectVerifyHelper> redirectCallbackHelper =
+    new nsAsyncRedirectVerifyHelper();
+
+  return redirectCallbackHelper->Init(
+    oldChan, newChan, flags, mainThreadEventTarget);
 }
 
 /* static */ nsresult

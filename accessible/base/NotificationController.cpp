@@ -419,8 +419,7 @@ NotificationController::ScheduleContentInsertion(Accessible* aContainer,
                                                  nsIContent* aStartChildNode,
                                                  nsIContent* aEndChildNode)
 {
-  nsTArray<nsCOMPtr<nsIContent>>* list =
-    mContentInsertions.LookupOrAdd(aContainer);
+  nsTArray<nsCOMPtr<nsIContent>> list;
 
   bool needsProcessing = false;
   nsIContent* node = aStartChildNode;
@@ -429,13 +428,14 @@ NotificationController::ScheduleContentInsertion(Accessible* aContainer,
     // actually inserted, check if the given content has a frame to discard
     // this case early.
     if (node->GetPrimaryFrame()) {
-      if (list->AppendElement(node))
+      if (list.AppendElement(node))
         needsProcessing = true;
     }
     node = node->GetNextSibling();
   }
 
   if (needsProcessing) {
+    mContentInsertions.LookupOrAdd(aContainer)->AppendElements(list);
     ScheduleProcessing();
   }
 }
@@ -459,9 +459,29 @@ NotificationController::IsUpdatePending()
 {
   return mPresShell->IsLayoutFlushObserver() ||
     mObservingState == eRefreshProcessingForUpdate ||
+    WaitingForParent() ||
     mContentInsertions.Count() != 0 || mNotifications.Length() != 0 ||
     mTextHash.Count() != 0 ||
     !mDocument->HasLoadState(DocAccessible::eTreeConstructed);
+}
+
+bool
+NotificationController::WaitingForParent()
+{
+  DocAccessible* parentdoc = mDocument->ParentDocument();
+  if (!parentdoc) {
+    return false;
+  }
+
+  NotificationController* parent = parentdoc->mNotificationController;
+  if (!parent || parent == this) {
+    // Do not wait for nothing or ourselves
+    return false;
+  }
+
+  // Wait for parent's notifications processing
+  return parent->mContentInsertions.Count() != 0 ||
+         parent->mNotifications.Length() != 0;
 }
 
 void
@@ -592,6 +612,8 @@ NotificationController::ProcessMutationEvents()
 void
 NotificationController::WillRefresh(mozilla::TimeStamp aTime)
 {
+  Telemetry::AutoTimer<Telemetry::A11Y_TREE_UPDATE_TIMING_MS> timer;
+
   AUTO_PROFILER_LABEL("NotificationController::WillRefresh", OTHER);
 
   // If the document accessible that notification collector was created for is
@@ -606,6 +628,12 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   if (mObservingState == eRefreshProcessing ||
       mObservingState == eRefreshProcessingForUpdate ||
       mPresShell->IsReflowInterrupted()) {
+    return;
+  }
+
+  // Wait for parent's notifications, to get proper ordering between e.g. tab
+  // event and content event.
+  if (WaitingForParent()) {
     return;
   }
 

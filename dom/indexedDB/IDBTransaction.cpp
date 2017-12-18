@@ -1054,7 +1054,7 @@ IDBTransaction::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   AssertIsOnOwningThread();
 
   aVisitor.mCanHandle = true;
-  aVisitor.mParentTarget = mDatabase;
+  aVisitor.SetParentTarget(mDatabase, false);
   return NS_OK;
 }
 

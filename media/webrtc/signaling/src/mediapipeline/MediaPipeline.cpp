@@ -557,14 +557,15 @@ public:
       // It's ok to drop the audio still in the packetizer here.
       mPacketizer = MakeUnique<AudioPacketizer<int16_t, int16_t>>(
         audio_10ms, outputChannels);
+      mPacket = MakeUnique<int16_t[]>(audio_10ms * outputChannels);
     }
 
     mPacketizer->Input(samples, chunk.mDuration);
 
     while (mPacketizer->PacketsAvailable()) {
-      mPacketizer->Output(mPacket);
+      mPacketizer->Output(mPacket.get());
       mConduit->SendAudioFrame(
-        mPacket, mPacketizer->PacketSize(), rate, mPacketizer->Channels(), 0);
+        mPacket.get(), mPacketizer->PacketSize(), rate, mPacketizer->Channels(), 0);
     }
   }
 
@@ -594,7 +595,7 @@ protected:
   // Only accessed on mTaskQueue
   UniquePtr<AudioPacketizer<int16_t, int16_t>> mPacketizer;
   // A buffer to hold a single packet of audio.
-  int16_t mPacket[AUDIO_SAMPLE_BUFFER_MAX_BYTES / sizeof(int16_t)];
+  UniquePtr<int16_t[]> mPacket;
 };
 
 static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";

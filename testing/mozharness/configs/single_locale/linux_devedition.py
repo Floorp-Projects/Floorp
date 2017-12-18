@@ -93,4 +93,6 @@ config = {
         ('/builds/relengapi.tok', '/builds/relengapi.tok'),
         ('/usr/local/lib/hgext', '/usr/local/lib/hgext'),
     ],
+
+    "update_channel": "aurora",
 }

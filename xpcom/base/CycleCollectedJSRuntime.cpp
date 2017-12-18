@@ -513,6 +513,9 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSContext* aCx)
   , mJSHolderMap(256)
   , mOutOfMemoryState(OOMState::OK)
   , mLargeAllocationFailureState(OOMState::OK)
+#ifdef DEBUG
+  , mShutdownCalled(false)
+#endif
 {
   MOZ_COUNT_CTOR(CycleCollectedJSRuntime);
   MOZ_ASSERT(aCx);
@@ -560,12 +563,16 @@ CycleCollectedJSRuntime::Shutdown(JSContext* cx)
 {
   JS_RemoveExtraGCRootsTracer(cx, TraceBlackJS, this);
   JS_RemoveExtraGCRootsTracer(cx, TraceGrayJS, this);
+#ifdef DEBUG
+  mShutdownCalled = true;
+#endif
 }
 
 CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
 {
   MOZ_COUNT_DTOR(CycleCollectedJSRuntime);
   MOZ_ASSERT(!mDeferredFinalizerTable.Count());
+  MOZ_ASSERT(mShutdownCalled);
 }
 
 void
