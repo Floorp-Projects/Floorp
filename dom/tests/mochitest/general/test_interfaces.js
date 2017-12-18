@@ -1181,21 +1181,21 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "VideoStreamTrack", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRDisplay", insecureContext: true, releaseNonWindows: false},
+    {name: "VRDisplay", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRDisplayCapabilities", insecureContext: true, releaseNonWindows: false},
+    {name: "VRDisplayCapabilities", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRDisplayEvent", insecureContext: true, releaseNonWindows: false},
+    {name: "VRDisplayEvent", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VREyeParameters", insecureContext: true, releaseNonWindows: false},
+    {name: "VREyeParameters", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRFieldOfView", insecureContext: true, releaseNonWindows: false},
+    {name: "VRFieldOfView", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRFrameData", insecureContext: true, releaseNonWindows: false},
+    {name: "VRFrameData", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRPose", insecureContext: true, releaseNonWindows: false},
+    {name: "VRPose", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    {name: "VRStageParameters", insecureContext: true, releaseNonWindows: false},
+    {name: "VRStageParameters", releaseNonWindows: false},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "VTTCue", insecureContext: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
