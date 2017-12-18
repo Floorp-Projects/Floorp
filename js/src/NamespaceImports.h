@@ -48,7 +48,6 @@ class HandleValueArray;
 class ObjectOpResult;
 class PropertyResult;
 
-class Symbol;
 enum class SymbolCode: uint32_t;
 
 } // namespace JS

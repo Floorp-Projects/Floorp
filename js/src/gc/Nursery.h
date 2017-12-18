@@ -14,6 +14,7 @@
 #include "js/Class.h"
 #include "js/HeapAPI.h"
 #include "js/TracingAPI.h"
+#include "js/TypeDecls.h"
 #include "js/Vector.h"
 
 #define FOR_EACH_NURSERY_PROFILE_TIME(_)                                      \
@@ -39,10 +40,6 @@
     _(Pretenure,                "pretnr")
 
 template<typename T> class SharedMem;
-
-namespace JS {
-struct Zone;
-} // namespace JS
 
 namespace js {
 

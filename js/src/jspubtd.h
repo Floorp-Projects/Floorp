@@ -32,17 +32,11 @@ namespace JS {
 class AutoIdVector;
 class CallArgs;
 
-template <typename T>
-class Rooted;
-
 class JS_FRIEND_API(CompileOptions);
 class JS_FRIEND_API(ReadOnlyCompileOptions);
 class JS_FRIEND_API(OwningCompileOptions);
 class JS_FRIEND_API(TransitiveCompileOptions);
 class JS_PUBLIC_API(CompartmentOptions);
-
-class Value;
-struct Zone;
 
 } // namespace JS
 
@@ -69,14 +63,12 @@ enum JSProtoKey {
 
 /* Struct forward declarations. */
 struct JSClass;
-struct JSCompartment;
 class JSErrorReport;
 struct JSExceptionState;
 struct JSFunctionSpec;
 struct JSLocaleCallbacks;
 struct JSPrincipals;
 struct JSPropertySpec;
-struct JSRuntime;
 struct JSSecurityCallbacks;
 struct JSStructuredCloneCallbacks;
 struct JSStructuredCloneReader;

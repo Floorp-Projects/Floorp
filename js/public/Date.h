@@ -35,8 +35,6 @@
 #include "js/Conversions.h"
 #include "js/Value.h"
 
-struct JSContext;
-
 namespace JS {
 
 /**

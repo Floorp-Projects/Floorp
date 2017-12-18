@@ -14,8 +14,6 @@
 #include "jit/MIR.h"
 #include "jit/Snapshots.h"
 
-struct JSContext;
-
 namespace js {
 namespace jit {
 

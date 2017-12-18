@@ -190,14 +190,8 @@
  * is not usually necessary and should be done with caution.
  */
 
-class JSAtom;
-struct JSCompartment;
 class JSFlatString;
 class JSLinearString;
-
-namespace JS {
-class Symbol;
-} // namespace JS
 
 namespace js {
 

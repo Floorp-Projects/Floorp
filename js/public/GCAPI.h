@@ -15,15 +15,11 @@
 #include "mozilla/Vector.h"
 
 #include "js/GCAnnotations.h"
+#include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 
-struct JSCompartment;
-struct JSContext;
 struct JSFreeOp;
-class JSObject;
-struct JSRuntime;
-class JSString;
 
 #ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
 #pragma GCC diagnostic push
@@ -325,8 +321,6 @@ struct JSStringFinalizer {
 };
 
 namespace JS {
-
-struct Zone;
 
 #define GCREASONS(D)                            \
     /* Reasons internal to the JS engine */     \
