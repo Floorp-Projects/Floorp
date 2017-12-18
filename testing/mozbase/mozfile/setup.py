@@ -14,8 +14,7 @@ setup(name=PACKAGE_NAME,
       description="Library of file utilities for use in Mozilla testing",
       long_description="see https://firefox-source-docs.mozilla.org/mozbase/index.html",
       classifiers=['Programming Language :: Python :: 2.7',
-                   'Programming Language :: Python :: 2 :: Only'],
-      # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+                   'Programming Language :: Python :: 3'],
       keywords='mozilla',
       author='Mozilla Automation and Tools team',
       author_email='tools@lists.mozilla.org',
@@ -24,6 +23,6 @@ setup(name=PACKAGE_NAME,
       packages=['mozfile'],
       include_package_data=True,
       zip_safe=False,
-      install_requires=[],
+      install_requires=['six >= 1.10.0'],
       tests_require=['mozhttpd']
       )
