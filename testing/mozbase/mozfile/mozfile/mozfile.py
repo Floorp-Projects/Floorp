@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import, print_function
 
+from six.moves import urllib
 from contextlib import contextmanager
 import errno
 import os
@@ -411,9 +412,7 @@ def is_url(thing):
     Return True if thing looks like a URL.
     """
 
-    import urlparse
-
-    parsed = urlparse.urlparse(thing)
+    parsed = urllib.parse.urlparse(thing)
     if 'scheme' in parsed:
         return len(parsed.scheme) >= 2
     else:
@@ -424,10 +423,8 @@ def load(resource):
     """
     open a file or URL for reading.  If the passed resource string is not a URL,
     or begins with 'file://', return a ``file``.  Otherwise, return the
-    result of urllib2.urlopen()
+    result of urllib.urlopen()
     """
-
-    import urllib2
 
     # handle file URLs separately due to python stdlib limitations
     if resource.startswith('file://'):
@@ -435,6 +432,6 @@ def load(resource):
 
     if not is_url(resource):
         # if no scheme is given, it is a file path
-        return file(resource)
+        return open(resource)
 
-    return urllib2.urlopen(resource)
+    return urllib.request.urlopen(resource)

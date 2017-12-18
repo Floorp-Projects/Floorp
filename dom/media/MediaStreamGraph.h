@@ -702,10 +702,14 @@ public:
   /**
    * Call all MediaStreamListeners to request new data via the NotifyPull API
    * (if enabled).
+   * aDesiredUpToTime (in): end time of new data requested.
+   * aPromises (out): NotifyPullPromises if async API is enabled.
+   *
+   * Returns true if new data is about to be added.
    */
   typedef MozPromise<bool, bool, true /* is exclusive */ > NotifyPullPromise;
-  nsTArray<RefPtr<NotifyPullPromise>> PullNewData(StreamTime aDesiredUpToTime,
-                                                  bool* aEnsureNextIteration);
+  bool PullNewData(StreamTime aDesiredUpToTime,
+                   nsTArray<RefPtr<NotifyPullPromise>>& aPromises);
 
   /**
    * Extract any state updates pending in the stream, and apply them.
