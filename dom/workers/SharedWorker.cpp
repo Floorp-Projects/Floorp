@@ -201,7 +201,7 @@ SharedWorker::GetEventTargetParent(EventChainPreVisitor& aVisitor)
     QueueEvent(event);
 
     aVisitor.mCanHandle = false;
-    aVisitor.mParentTarget = nullptr;
+    aVisitor.SetParentTarget(nullptr, false);
     return NS_OK;
   }
 
