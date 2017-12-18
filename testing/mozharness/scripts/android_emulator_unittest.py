@@ -305,6 +305,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         if not adb_device_ok:
             self.warning('Unable to communicate with emulator via adb')
             return False
+        self._restart_adbd()
         boot_ok = self._retry(30, 10, self._is_boot_completed, "Verify Android boot completed",
                               max_time=330)
         if not boot_ok:
