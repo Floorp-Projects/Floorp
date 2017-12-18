@@ -4583,24 +4583,6 @@ EditorBase::DoAfterRedoTransaction()
   MOZ_ALWAYS_SUCCEEDS(IncrementModificationCount(1));
 }
 
-already_AddRefed<AddStyleSheetTransaction>
-EditorBase::CreateTxnForAddStyleSheet(StyleSheet* aSheet)
-{
-  RefPtr<AddStyleSheetTransaction> transaction =
-    new AddStyleSheetTransaction(*this, aSheet);
-
-  return transaction.forget();
-}
-
-already_AddRefed<RemoveStyleSheetTransaction>
-EditorBase::CreateTxnForRemoveStyleSheet(StyleSheet* aSheet)
-{
-  RefPtr<RemoveStyleSheetTransaction> transaction =
-    new RemoveStyleSheetTransaction(*this, aSheet);
-
-  return transaction.forget();
-}
-
 already_AddRefed<EditAggregateTransaction>
 EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
                                         nsINode** aRemovingNode,
