@@ -24,8 +24,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(EditTransactionBase, nsITransaction)
 
-  virtual void LastRelease() {}
-
   NS_IMETHOD RedoTransaction(void) override;
   NS_IMETHOD GetIsTransient(bool* aIsTransient) override;
   NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;

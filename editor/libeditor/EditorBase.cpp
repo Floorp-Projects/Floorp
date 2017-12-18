@@ -703,7 +703,7 @@ EditorBase::DoTransaction(Selection* aSelection, nsITransaction* aTxn)
 {
   if (mPlaceholderBatch && !mPlaceholderTransaction) {
     mPlaceholderTransaction =
-      new PlaceholderTransaction(*this, mPlaceholderName, Move(mSelState));
+      PlaceholderTransaction::Create(*this, mPlaceholderName, Move(mSelState));
     MOZ_ASSERT(mSelState.isNothing());
 
     // We will recurse, but will not hit this case in the nested call
@@ -4601,7 +4601,7 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
 
   // allocate the out-param transaction
   RefPtr<EditAggregateTransaction> aggregateTransaction =
-    new EditAggregateTransaction();
+    EditAggregateTransaction::Create();
 
   for (uint32_t rangeIdx = 0; rangeIdx < selection->RangeCount(); ++rangeIdx) {
     RefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
@@ -4613,7 +4613,7 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
     // is eNone, do nothing.
     if (!range->Collapsed()) {
       RefPtr<DeleteRangeTransaction> deleteRangeTransaction =
-        new DeleteRangeTransaction(*this, *range, &mRangeUpdater);
+        DeleteRangeTransaction::Create(*this, *range);
       // XXX Oh, not checking if deleteRangeTransaction can modify the range...
       aggregateTransaction->AppendChild(deleteRangeTransaction);
     } else if (aAction != eNone) {
