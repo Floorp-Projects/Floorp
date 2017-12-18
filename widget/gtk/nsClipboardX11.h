@@ -19,7 +19,7 @@ public:
     virtual const char* GetClipboardData(const char* aMimeType,
                                          int32_t aWhichClipboard,
                                          uint32_t* aContentLength) override;
-    virtual void ReleaseClipboardData(const char* aClipboardData);
+    virtual void ReleaseClipboardData(const char* aClipboardData) override;
 
     virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
                                 int* aTargetNums) override;
