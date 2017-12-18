@@ -246,6 +246,36 @@ public:
     return mFlags.mPreHandleEventOnly;
   }
 
+  void SetRootOfClosedTree(bool aSet)
+  {
+    mFlags.mRootOfClosedTree = aSet;
+  }
+
+  bool IsRootOfClosedTree()
+  {
+    return mFlags.mRootOfClosedTree;
+  }
+
+  void SetIsSlotInClosedTree(bool aSet)
+  {
+    mFlags.mIsSlotInClosedTree = aSet;
+  }
+
+  bool IsSlotInClosedTree()
+  {
+    return mFlags.mIsSlotInClosedTree;
+  }
+
+  void SetIsChromeHandler(bool aSet)
+  {
+    mFlags.mIsChromeHandler = aSet;
+  }
+
+  bool IsChromeHandler()
+  {
+    return mFlags.mIsChromeHandler;
+  }
+
   void SetMayHaveListenerManager(bool aMayHave)
   {
     mFlags.mMayHaveManager = aMayHave;
@@ -344,6 +374,9 @@ private:
     bool mIsChromeContent : 1;
     bool mWantsPreHandleEvent : 1;
     bool mPreHandleEventOnly : 1;
+    bool mRootOfClosedTree : 1;
+    bool mIsSlotInClosedTree : 1;
+    bool mIsChromeHandler : 1;
   private:
     typedef uint32_t RawFlags;
     void SetRawFlags(RawFlags aRawFlags)
@@ -390,6 +423,7 @@ EventTargetChainItem::GetEventTargetParent(EventChainPreVisitor& aVisitor)
   SetMayHaveListenerManager(aVisitor.mMayHaveListenerManager);
   SetWantsPreHandleEvent(aVisitor.mWantsPreHandleEvent);
   SetPreHandleEventOnly(aVisitor.mWantsPreHandleEvent && !aVisitor.mCanHandle);
+  SetRootOfClosedTree(aVisitor.mRootOfClosedTree);
   mItemFlags = aVisitor.mItemFlags;
   mItemData = aVisitor.mItemData;
 }
@@ -770,15 +804,18 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
     targetEtci->SetNewTarget(t);
     EventTargetChainItem* topEtci = targetEtci;
     targetEtci = nullptr;
-    while (preVisitor.mParentTarget) {
-      EventTarget* parentTarget = preVisitor.mParentTarget;
+    while (preVisitor.GetParentTarget()) {
+      EventTarget* parentTarget = preVisitor.GetParentTarget();
       EventTargetChainItem* parentEtci =
-        EventTargetChainItem::Create(chain, preVisitor.mParentTarget, topEtci);
+        EventTargetChainItem::Create(chain, parentTarget, topEtci);
       if (!parentEtci->IsValid()) {
         EventTargetChainItem::DestroyLast(chain, parentEtci);
         rv = NS_ERROR_FAILURE;
         break;
       }
+
+      parentEtci->SetIsSlotInClosedTree(preVisitor.mParentIsSlotInClosedTree);
+      parentEtci->SetIsChromeHandler(preVisitor.mParentIsChromeHandler);
 
       // Item needs event retargetting.
       if (preVisitor.mEventTargetAtParent) {
@@ -823,8 +860,11 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
         }
         // Handle the chain.
         EventChainPostVisitor postVisitor(preVisitor);
+        MOZ_RELEASE_ASSERT(!aEvent->mPath);
+        aEvent->mPath = &chain;
         EventTargetChainItem::HandleEventTargetChain(chain, postVisitor,
                                                      aCallback, cd);
+        aEvent->mPath = nullptr;
 
         preVisitor.mEventStatus = postVisitor.mEventStatus;
         // If the DOM event was created during event flow.
@@ -1115,6 +1155,66 @@ EventDispatcher::CreateEvent(EventTarget* aOwner,
   // CONSTRUCTORS
 
   return nullptr;
+}
+
+// static
+void
+EventDispatcher::GetComposedPathFor(WidgetEvent* aEvent,
+                                    nsTArray<RefPtr<EventTarget>>& aPath)
+{
+  nsTArray<EventTargetChainItem>* path = aEvent->mPath;
+  if (!path || path->IsEmpty() || !aEvent->mCurrentTarget) {
+    return;
+  }
+
+  EventTarget* currentTarget =
+    aEvent->mCurrentTarget->GetTargetForEventTargetChain();
+  if (!currentTarget) {
+    return;
+  }
+
+  AutoTArray<EventTarget*, 128> reversedComposedPath;
+  bool hasSeenCurrentTarget = false;
+  uint32_t hiddenSubtreeLevel = 0;
+  for (uint32_t i = path->Length(); i; ) {
+    --i;
+
+    EventTargetChainItem& item = path->ElementAt(i);
+    if (item.PreHandleEventOnly()) {
+      continue;
+    }
+
+    if (!hasSeenCurrentTarget && currentTarget == item.CurrentTarget()) {
+      hasSeenCurrentTarget = true;
+    } else if (hasSeenCurrentTarget && item.IsRootOfClosedTree()) {
+      ++hiddenSubtreeLevel;
+    }
+
+    if (hiddenSubtreeLevel == 0) {
+      reversedComposedPath.AppendElement(item.CurrentTarget());
+    }
+
+    if (item.IsSlotInClosedTree() && hiddenSubtreeLevel > 0) {
+      --hiddenSubtreeLevel;
+    }
+
+    if (item.IsChromeHandler()) {
+      if (hasSeenCurrentTarget) {
+        // The current behavior is to include only EventTargets from
+        // either chrome side of event path or content side, not from both.
+        break;
+      }
+
+      // Need to start all over to collect the composed path on content side.
+      reversedComposedPath.Clear();
+    }
+  }
+
+  aPath.SetCapacity(reversedComposedPath.Length());
+  for (uint32_t i = reversedComposedPath.Length(); i; ) {
+    --i;
+    aPath.AppendElement(reversedComposedPath[i]->GetTargetForDOMEvent());
+  }
 }
 
 } // namespace mozilla

@@ -229,32 +229,36 @@ def release_promotion_action(parameters, input, task_group_id, task_id, task):
                 "targets." % ', '.join(VERSION_BUMP_FLAVORS)
             )
 
-    if release_promotion_flavor in PARTIAL_UPDATES_FLAVORS:
-        partial_updates = json.dumps(input.get('partial_updates', {}))
-        if partial_updates == "{}":
-            raise Exception(
-                "`partial_updates` property needs to be provided for %s "
-                "targets." % ', '.join(PARTIAL_UPDATES_FLAVORS)
-            )
-        os.environ['PARTIAL_UPDATES'] = partial_updates
-        release_history = populate_release_history(
-            'Firefox', parameters['project'], partial_updates=input['partial_updates']
-        )
-
-    if release_promotion_flavor in UPTAKE_MONITORING_PLATFORMS_FLAVORS:
-        uptake_monitoring_platforms = json.dumps(input.get('uptake_monitoring_platforms', []))
-        if partial_updates == "[]":
-            raise Exception(
-                "`uptake_monitoring_platforms` property needs to be provided for %s "
-                "targets." % ', '.join(UPTAKE_MONITORING_PLATFORMS_FLAVORS)
-            )
-        os.environ['UPTAKE_MONITORING_PLATFORMS'] = uptake_monitoring_platforms
-
     if release_promotion_flavor in DESKTOP_RELEASE_TYPE_FLAVORS:
         desktop_release_type = input.get('desktop_release_type', None)
         if desktop_release_type not in VALID_DESKTOP_RELEASE_TYPES:
             raise Exception("`desktop_release_type` must be one of: %s" %
                             ", ".join(VALID_DESKTOP_RELEASE_TYPES))
+
+        if release_promotion_flavor in PARTIAL_UPDATES_FLAVORS:
+            partial_updates = json.dumps(input.get('partial_updates', {}))
+            if partial_updates == "{}":
+                raise Exception(
+                    "`partial_updates` property needs to be provided for %s "
+                    "targets." % ', '.join(PARTIAL_UPDATES_FLAVORS)
+                )
+            balrog_prefix = 'Firefox'
+            if desktop_release_type == 'devedition':
+                balrog_prefix = 'Devedition'
+            os.environ['PARTIAL_UPDATES'] = partial_updates
+            release_history = populate_release_history(
+                balrog_prefix, parameters['project'],
+                partial_updates=input['partial_updates']
+            )
+
+        if release_promotion_flavor in UPTAKE_MONITORING_PLATFORMS_FLAVORS:
+            uptake_monitoring_platforms = json.dumps(input.get('uptake_monitoring_platforms', []))
+            if partial_updates == "[]":
+                raise Exception(
+                    "`uptake_monitoring_platforms` property needs to be provided for %s "
+                    "targets." % ', '.join(UPTAKE_MONITORING_PLATFORMS_FLAVORS)
+                )
+            os.environ['UPTAKE_MONITORING_PLATFORMS'] = uptake_monitoring_platforms
 
     promotion_config = RELEASE_PROMOTION_CONFIG[release_promotion_flavor]
 

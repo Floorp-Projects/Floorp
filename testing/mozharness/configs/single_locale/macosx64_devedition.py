@@ -43,4 +43,6 @@ config = {
     "mar": "mar",
     "mbsdiff": "mbsdiff",
     "localized_mar": "firefox-%(version)s.%(locale)s.mac.complete.mar",
+
+    "update_channel": "aurora",
 }
