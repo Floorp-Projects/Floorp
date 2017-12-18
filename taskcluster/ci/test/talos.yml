@@ -230,7 +230,7 @@ talos-h2:
     run-on-projects:
         by-test-platform:
             linux64-qr/.*: ['mozilla-central', 'try']
-            windows7-32.*: ['try']
+            windows.*: ['try']
             default: ['mozilla-beta', 'mozilla-central', 'mozilla-inbound', 'autoland', 'try']
     mozharness:
         extra-options:
