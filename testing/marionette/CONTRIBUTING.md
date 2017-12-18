@@ -48,37 +48,34 @@ The canonical source code repository is [mozilla-central].  Bugs are
 filed in the [`Testing :: Marionette`] component on Bugzilla.  We also
 have a curated set of [good first bugs] you may consider attempting first.
 
-The purpose of this guide _is not_ to make sure you have a basic
-development environment set up.  For that there is plentiful
-documentation, such as the [Developer Guide] to get you rolling.
-Once you do, we can get started working up your first patch!
-Remember to [reach out to us] at any point if you have questions.
+We have collected a lot of good advice for working on Marionette
+code in <doc/CodeStyle.md>, which we highly recommend you read.
+There is more development documentation archived under <doc/index.rst>
+that you may peruse at your convenience.
 
 [ask questions]: #communication
 [reach out to us]: #communication
 [mozilla-central]: https://searchfox.org/mozilla-central/source/testing/marionette/
 [good first bugs]: https://www.joshmatthews.net/bugsahoy/?automation=1&js=1
-[Developer Guide]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide
 
 
 Building
 --------
 
-As Marionette is built in to Firefox and ships with official Firefox
-releases, it is included in a normal Firefox build.  To get your
-development environment set up you can run this command on any
-system and follow the on-screen instructions:
+Marionette is built in to Firefox and ships in the official
+Firefox binary.  As Marionette is written in [XPCOM] flavoured
+JavaScript, you may choose to rely on so called [artifact builds],
+which will download pre-compiled Firefox blobs to your computer.
+This means you don’t have to compile Firefox locally, but does
+come at the cost of having a good internet connection.  To enable
+[artifact builds] you may choose ‘Firefox for Desktop Artifact
+Mode’ when bootstrapping.
+
+Once you have a clone of [mozilla-unified], you can set up your
+development environment by running this command and following the
+on-screen instructions:
 
 	% ./mach bootstrap
-
-As Marionette is written in [XPCOM] flavoured JavaScript, you may
-choose to rely on so called [artifact builds], which will download
-pre-compiled Firefox blobs to your computer.  This means you don’t
-have to compile Firefox locally, but does come at the cost of having
-a good internet connection.  To enable [artifact builds] you may
-add this line to the _mozconfig_ file in your top source directory:
-
-	ac_add_options --enable-artifact-builds
 
 To perform a regular build, simply do:
 
@@ -103,6 +100,7 @@ If you compile Firefox frequently you will also want to enable
 	mk_add_options 'export CCACHE_CPP2=yes'
 	ac_add_options --with-ccache
 
+[mozilla-unified]: https://hg.mozilla.org/mozilla-unified/
 [artifact builds]: https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Artifact_builds
 [ccache]: https://ccache.samba.org/
 [sccache]: https://github.com/mozilla/sccache
