@@ -3737,9 +3737,11 @@ nsWindow::Create(nsIWidget* aParent,
 #ifdef MOZ_X11
                 // ... but when the window manager offers focus through
                 // WM_TAKE_FOCUS, focus is requested on the parent window.
-                gtk_widget_realize(mShell);
-                gdk_window_add_filter(gtk_widget_get_window(mShell),
-                                      popup_take_focus_filter, nullptr);
+                if (mIsX11Display) {
+                    gtk_widget_realize(mShell);
+                    gdk_window_add_filter(gtk_widget_get_window(mShell),
+                                          popup_take_focus_filter, nullptr);
+                }
 #endif
             }
 
