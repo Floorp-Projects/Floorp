@@ -1255,10 +1255,11 @@ void nsBaseWidget::CreateCompositorVsyncDispatcher()
   }
 }
 
-CompositorVsyncDispatcher*
+already_AddRefed<CompositorVsyncDispatcher>
 nsBaseWidget::GetCompositorVsyncDispatcher()
 {
-  return mCompositorVsyncDispatcher;
+  RefPtr<CompositorVsyncDispatcher> dispatcher = mCompositorVsyncDispatcher;
+  return dispatcher.forget();
 }
 
 already_AddRefed<LayerManager>
