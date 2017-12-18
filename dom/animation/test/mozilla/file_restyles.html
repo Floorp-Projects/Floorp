@@ -241,12 +241,20 @@ waitForAllPaints(() => {
     animation.finish();
 
     var markers = await observeStyling(1);
-    // FIXME: Once we have the conformant Promise handling, we will see two
-    // restyle markers in two different frames for the finish() due to bug
-    // 1415457.
-    todo_is(markers.length, 1,
-            'Bug 1415457: Animations running on the compositor should only ' +
-            'update style once after finish() is called');
+    if (!hasConformantPromiseHandling) {
+      todo_is(markers.length, 1,
+              'Bug 1415457: Animations running on the compositor should only ' +
+              'update style once after finish() is called');
+    } else {
+      is(markers.length, 1,
+         'Animations running on the compositor should only update style once ' +
+         'after finish() is called');
+
+      markers = await observeStyling(1);
+      todo_is(markers.length, 0,
+              'Bug 1415457: Animations running on the compositor should only ' +
+              'update style once after finish() is called');
+    }
 
     markers = await observeStyling(5);
     is(markers.length, 0,
