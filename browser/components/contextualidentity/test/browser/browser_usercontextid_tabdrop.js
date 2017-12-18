@@ -11,7 +11,7 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   let awaitDrop = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "drop");
-  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "http://test1.example.com/");
+  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "http://test1.example.com/", true);
 
   // A drop type of "link" onto an existing tab would normally trigger a
   // load in that same tab, but tabbrowser code in _getDragTargetTab treats
@@ -31,8 +31,6 @@ add_task(async function() {
 
   let tab2 = await newTabPromise;
   Assert.ok(!tab2.hasAttribute("usercontextid"), "Tab shouldn't have usercontextid attribute");
-
-  await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
 
   await ContentTask.spawn(tab2.linkedBrowser, {}, async function() {
     Assert.equal(content.document.documentURI, "http://test1.example.com/");
@@ -58,7 +56,7 @@ add_task(async function() {
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   let awaitDrop = BrowserTestUtils.waitForEvent(gBrowser.tabContainer, "drop");
-  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "http://test1.example.com/");
+  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, "http://test1.example.com/", true);
 
   // A drop type of "link" onto an existing tab would normally trigger a
   // load in that same tab, but tabbrowser code in _getDragTargetTab treats
@@ -78,8 +76,6 @@ add_task(async function() {
 
   let tab2 = await newTabPromise;
   Assert.equal(tab2.getAttribute("usercontextid"), 1);
-
-  await BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
 
   await ContentTask.spawn(tab2.linkedBrowser, {}, async function() {
     Assert.equal(content.document.documentURI, "http://test1.example.com/");

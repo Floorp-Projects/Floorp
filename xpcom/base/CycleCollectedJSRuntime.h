@@ -368,6 +368,10 @@ private:
     void invoke(JS::HandleObject scope, Closure& closure) override;
   };
   EnvironmentPreparer mEnvironmentPreparer;
+
+#ifdef DEBUG
+  bool mShutdownCalled;
+#endif
 };
 
 void TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer);

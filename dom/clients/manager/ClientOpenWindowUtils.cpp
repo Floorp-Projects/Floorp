@@ -8,6 +8,7 @@
 
 #include "ClientInfo.h"
 #include "ClientState.h"
+#include "mozilla/SystemGroup.h"
 #include "nsContentUtils.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDocShell.h"
@@ -425,7 +426,7 @@ ClientOpenWindowInCurrentProcess(const ClientOpenWindowArgs& aArgs)
   // until the launch completes and then try to open the window again.
   if (rv == NS_ERROR_NOT_AVAILABLE && launchObserver) {
     RefPtr<GenericPromise> p = launchObserver->Promise();
-    p->Then(outerWindow->EventTargetFor(TaskCategory::Other), __func__,
+    p->Then(SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
       [aArgs, promise] (bool aResult) {
         nsCOMPtr<nsPIDOMWindowOuter> outerWindow;
         nsresult rv = OpenWindow(aArgs, getter_AddRefs(outerWindow));

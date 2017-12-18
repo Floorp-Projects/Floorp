@@ -138,9 +138,11 @@ add_task(async function() {
   await promiseTabLoadEvent(tab1, "data:text/html," + escape(testPage1));
   await promiseTabLoadEvent(tab2, "data:text/html," + escape(testPage2));
 
-  var childFocusScript = "data:,(" + escape(focusInChild.toString()) + ")();";
-  browser1.messageManager.loadFrameScript(childFocusScript, true);
-  browser2.messageManager.loadFrameScript(childFocusScript, true);
+  if (gMultiProcessBrowser) {
+    var childFocusScript = "data:,(" + escape(focusInChild.toString()) + ")();";
+    browser1.messageManager.loadFrameScript(childFocusScript, true);
+    browser2.messageManager.loadFrameScript(childFocusScript, true);
+  }
 
   gURLBar.focus();
   await SimpleTest.promiseFocus();

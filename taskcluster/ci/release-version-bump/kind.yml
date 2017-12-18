@@ -87,3 +87,14 @@ jobs:
          - index.releases.v1.{branch}.{revision}.firefox.{underscore_version}.build{build_number}.version_bump
       index:
          product: firefox
+   devedition:
+      name: devedition-version-bump
+      shipping-product: devedition
+      run:
+         product: devedition
+         buildername: release-{branch}-devedition_version_bump
+      routes:
+         - index.releases.v1.{branch}.latest.devedition.latest.version_bump
+         - index.releases.v1.{branch}.{revision}.devedition.{underscore_version}.build{build_number}.version_bump
+      index:
+         product: devedition

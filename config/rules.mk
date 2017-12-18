@@ -799,7 +799,9 @@ endif
 define syms_template
 syms:: $(2)
 $(2): $(1)
+ifdef MOZ_CRASHREPORTER
 	$$(call py_action,dumpsymbols,$$(abspath $$<) $$(abspath $$@))
+endif
 endef
 
 ifndef MOZ_PROFILE_GENERATE
@@ -814,7 +816,15 @@ DUMP_SYMS_TARGETS :=
 endif
 endif
 
+ifdef MOZ_CRASHREPORTER
 $(foreach file,$(DUMP_SYMS_TARGETS),$(eval $(call syms_template,$(file),$(file)_syms.track)))
+else ifneq (,$(and $(LLVM_SYMBOLIZER),$(filter WINNT,$(OS_ARCH)),$(MOZ_AUTOMATION)))
+$(foreach file,$(DUMP_SYMS_TARGETS),$(eval $(call syms_template,$(file),$(addsuffix .pdb,$(basename $(file))))))
+PDB_FILES = $(addsuffix .pdb,$(basename $(DUMP_SYMS_TARGETS)))
+PDB_DEST ?= $(FINAL_TARGET)
+PDB_TARGET = target
+INSTALL_TARGETS += PDB
+endif
 
 cargo_host_flag := --target=$(RUST_HOST_TARGET)
 cargo_target_flag := --target=$(RUST_TARGET)
