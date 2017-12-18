@@ -73,7 +73,7 @@ public:
 
 protected:
   virtual ~VRDisplayGVR();
-  void UpdateHeadToEye(gvr_context* aContext, gfx::Quaternion* aRot = nullptr);
+  void UpdateHeadToEye(gvr_context* aContext);
   void UpdateViewport();
   void RecreateSwapChain();
 
