@@ -2,16 +2,8 @@
 
 const PAGE = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
 
-/**
- * Monkey patches TabCrashHandler.getDumpID to return null in order to test
- * about:tabcrashed when a dump is not available.
- */
 add_task(async function setup() {
-  let originalGetDumpID = TabCrashHandler.getDumpID;
-  TabCrashHandler.getDumpID = function(browser) { return null; };
-  registerCleanupFunction(() => {
-    TabCrashHandler.getDumpID = originalGetDumpID;
-  });
+  prepareNoDump();
 });
 
 /**
