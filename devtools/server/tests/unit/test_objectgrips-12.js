@@ -122,7 +122,7 @@ function test_display_string() {
     },
     {
       input: "new Proxy({}, {})",
-      output: "[object Object]"
+      output: "<proxy>"
     },
     {
       input: "Promise.resolve(5)",
