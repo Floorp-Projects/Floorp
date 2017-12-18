@@ -34,11 +34,12 @@ let extData = {
   background: function() {
     browser.test.onMessage.addListener(async ({msg, data}) => {
       if (msg === "set-panel") {
-        await browser.sidebarAction.setPanel({panel: ""}).then(() => {
-          browser.test.notifyFail("empty panel settable");
-        }).catch(() => {
-          browser.test.notifyPass("unable to set empty panel");
-        });
+        await browser.sidebarAction.setPanel({panel: null});
+        browser.test.assertEq(
+          await browser.sidebarAction.getPanel({}),
+          browser.runtime.getURL("sidebar.html"),
+          "Global panel can be reverted to the default."
+        );
       } else if (msg === "isOpen") {
         let {arg = {}, result} = data;
         let isOpen = await browser.sidebarAction.isOpen(arg);
@@ -96,7 +97,6 @@ add_task(async function sidebar_empty_panel() {
   await extension.awaitMessage("sidebar");
   ok(!document.getElementById("sidebar-box").hidden, "sidebar box is visible in first window");
   await sendMessage(extension, "set-panel");
-  await extension.awaitFinish();
   await extension.unload();
 });
 
