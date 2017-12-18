@@ -34,4 +34,6 @@ config = {
         "taskcluster-upload",
         "summary",
     ],
+
+    "update_channel": "aurora",
 }

@@ -55,5 +55,7 @@ config = {
             sys.executable,
             'c:/mozilla-build/buildbotve/virtualenv.py'
         ],
-    }
+    },
+
+    "update_channel": "aurora",
 }

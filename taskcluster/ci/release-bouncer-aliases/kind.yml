@@ -95,3 +95,14 @@ jobs:
          - index.releases.v1.{branch}.{revision}.firefox.{underscore_version}.build{build_number}.bouncer_submitter
       index:
          product: firefox
+   devedition:
+      name: devedition_release_bouncer_aliases
+      shipping-product: devedition
+      run:
+         product: devedition
+         buildername: release-{branch}-devedition_bouncer_aliases
+      routes:
+         - index.releases.v1.{branch}.latest.devedition.latest.bouncer_submitter
+         - index.releases.v1.{branch}.{revision}.devedition.{underscore_version}.build{build_number}.bouncer_submitter
+      index:
+         product: devedition

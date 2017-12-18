@@ -56,6 +56,7 @@ ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue pri
     MOZ_ASSERT(clasp->shouldDelayMetadataBuilder());
     MOZ_ASSERT_IF(proto.isObject(), cx->compartment() == proto.toObject()->compartment());
     MOZ_ASSERT(clasp->hasFinalize());
+    MOZ_ASSERT_IF(priv.isGCThing(), !JS::GCThingIsMarkedGray(JS::GCCellPtr(priv)));
 
     /*
      * Eagerly mark properties unknown for proxies, so we don't try to track

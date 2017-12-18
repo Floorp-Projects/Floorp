@@ -274,6 +274,12 @@ protected:
    */
   bool IsUpdatePending();
 
+  /**
+   * Return true if we should wait for processing from the parent before we can
+   * process our own queue.
+   */
+  bool WaitingForParent();
+
 private:
   NotificationController(const NotificationController&);
   NotificationController& operator = (const NotificationController&);
