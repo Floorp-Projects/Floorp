@@ -70,6 +70,32 @@ let json = [
       },
 
       {
+        id: "basetype3",
+        type: "object",
+        properties: {
+          baseprop: {type: "string"},
+        },
+      },
+
+      {
+        id: "derivedtype1",
+        type: "object",
+        $import: "basetype3",
+        properties: {
+          derivedprop: {type: "string"},
+        },
+      },
+
+      {
+        id: "derivedtype2",
+        type: "object",
+        $import: "basetype3",
+        properties: {
+          derivedprop: {type: "integer"},
+        },
+      },
+
+      {
         id: "submodule",
         type: "object",
         functions: [
@@ -330,6 +356,22 @@ let json = [
         type: "function",
         parameters: [
           {name: "val", $ref: "basetype2"},
+        ],
+      },
+
+      {
+        name: "callderived1",
+        type: "function",
+        parameters: [
+          {name: "value", $ref: "derivedtype1"},
+        ],
+      },
+
+      {
+        name: "callderived2",
+        type: "function",
+        parameters: [
+          {name: "value", $ref: "derivedtype2"},
         ],
       },
     ],
@@ -869,6 +911,36 @@ add_task(async function() {
   root.foreign.foreignRef.sub_foo();
   verify("call", "foreign.foreignRef", "sub_foo", []);
   tallied = null;
+
+  root.testing.callderived1({baseprop: "s1", derivedprop: "s2"});
+  verify("call", "testing", "callderived1",
+         [{baseprop: "s1", derivedprop: "s2"}]);
+  tallied = null;
+
+  Assert.throws(() => root.testing.callderived1({baseprop: "s1", derivedprop: 42}),
+                /Error processing derivedprop: Expected string/,
+                "Two different objects may $import the same base object");
+  Assert.throws(() => root.testing.callderived1({baseprop: "s1"}),
+                /Property "derivedprop" is required/,
+                "Object using $import has its local properites");
+  Assert.throws(() => root.testing.callderived1({derivedprop: "s2"}),
+                /Property "baseprop" is required/,
+                "Object using $import has imported properites");
+
+  root.testing.callderived2({baseprop: "s1", derivedprop: 42});
+  verify("call", "testing", "callderived2",
+         [{baseprop: "s1", derivedprop: 42}]);
+  tallied = null;
+
+  Assert.throws(() => root.testing.callderived2({baseprop: "s1", derivedprop: "s2"}),
+                /Error processing derivedprop: Expected integer/,
+                "Two different objects may $import the same base object");
+  Assert.throws(() => root.testing.callderived2({baseprop: "s1"}),
+                /Property "derivedprop" is required/,
+                "Object using $import has its local properites");
+  Assert.throws(() => root.testing.callderived2({derivedprop: 42}),
+                /Property "baseprop" is required/,
+                "Object using $import has imported properites");
 });
 
 let deprecatedJson = [
