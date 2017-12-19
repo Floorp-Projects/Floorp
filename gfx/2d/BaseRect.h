@@ -225,6 +225,12 @@ struct BaseRect {
   {
     x = aX; y = aY; width = aXMost - aX; height = aYMost - aY;
   }
+  MOZ_ALWAYS_INLINE void SetNonEmptyBox(T aX, T aY, T aXMost, T aYMost)
+  {
+    x = aX; y = aY;
+    width = std::max(0,aXMost - aX);
+    height = std::max(0,aYMost - aY);
+  }
   MOZ_ALWAYS_INLINE void SetBoxX(T aX, T aXMost)
   {
     x = aX; width = aXMost - aX;
@@ -237,7 +243,7 @@ struct BaseRect {
   {
     SetRect(aPt.x, aPt.y, aSize.width, aSize.height);
   }
-  MOZ_ALWAYS_INLINE void GetRect(T* aX, T* aY, T* aWidth, T* aHeight)
+  MOZ_ALWAYS_INLINE void GetRect(T* aX, T* aY, T* aWidth, T* aHeight) const
   {
     *aX = x; *aY = y; *aWidth = width; *aHeight = height;
   }

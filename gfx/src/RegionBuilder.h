@@ -19,7 +19,7 @@ public:
   {}
 
   void OrWith(const RectType& aRect) {
-    pixman_box32_t box = { aRect.x, aRect.y, aRect.XMost(), aRect.YMost() };
+    pixman_box32_t box = { aRect.X(), aRect.Y(), aRect.XMost(), aRect.YMost() };
     mRects.AppendElement(box);
   }
 

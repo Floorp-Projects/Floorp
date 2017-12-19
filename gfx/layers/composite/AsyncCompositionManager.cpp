@@ -535,10 +535,10 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aTransformedSubtreeRoo
     const LayerRect& stickyInner = layer->GetStickyScrollRangeInner();
 
     LayerPoint originalTranslation = translation;
-    translation.y = IntervalOverlap(translation.y, stickyOuter.y, stickyOuter.YMost()) -
-                    IntervalOverlap(translation.y, stickyInner.y, stickyInner.YMost());
-    translation.x = IntervalOverlap(translation.x, stickyOuter.x, stickyOuter.XMost()) -
-                    IntervalOverlap(translation.x, stickyInner.x, stickyInner.XMost());
+    translation.y = IntervalOverlap(translation.y, stickyOuter.Y(), stickyOuter.YMost()) -
+                    IntervalOverlap(translation.y, stickyInner.Y(), stickyInner.YMost());
+    translation.x = IntervalOverlap(translation.x, stickyOuter.X(), stickyOuter.XMost()) -
+                    IntervalOverlap(translation.x, stickyInner.X(), stickyInner.XMost());
     unconsumedTranslation = translation - originalTranslation;
   }
 
@@ -756,7 +756,7 @@ AdjustForClip(const AsyncTransformComponentMatrix& asyncTransform, Layer* aLayer
   // apply the tree transform, and translate back.
   if (const Maybe<ParentLayerIntRect>& shadowClipRect = aLayer->AsHostLayer()->GetShadowClipRect()) {
     if (shadowClipRect->TopLeft() != ParentLayerIntPoint()) {  // avoid a gratuitous change of basis
-      result.ChangeBasis(shadowClipRect->x, shadowClipRect->y, 0);
+      result.ChangeBasis(shadowClipRect->X(), shadowClipRect->Y(), 0);
     }
   }
   return result;

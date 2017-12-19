@@ -607,7 +607,7 @@ gfxUtils::ClipToRegion(gfxContext* aContext, const nsIntRegion& aRegion)
   aContext->NewPath();
   for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
     const IntRect& r = iter.Get();
-    aContext->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
+    aContext->Rectangle(gfxRect(r.X(), r.Y(), r.Width(), r.Height()));
   }
   aContext->Clip();
 }
@@ -706,18 +706,18 @@ gfxUtils::TransformRectToRect(const gfxRect& aFrom, const gfxPoint& aToTopLeft,
   if (aToTopRight.y == aToTopLeft.y && aToTopRight.x == aToBottomRight.x) {
     // Not a rotation, so xy and yx are zero
     m._21 = m._12 = 0.0;
-    m._11 = (aToBottomRight.x - aToTopLeft.x)/aFrom.width;
-    m._22 = (aToBottomRight.y - aToTopLeft.y)/aFrom.height;
-    m._31 = aToTopLeft.x - m._11*aFrom.x;
-    m._32 = aToTopLeft.y - m._22*aFrom.y;
+    m._11 = (aToBottomRight.x - aToTopLeft.x)/aFrom.Width();
+    m._22 = (aToBottomRight.y - aToTopLeft.y)/aFrom.Height();
+    m._31 = aToTopLeft.x - m._11*aFrom.X();
+    m._32 = aToTopLeft.y - m._22*aFrom.Y();
   } else {
     NS_ASSERTION(aToTopRight.y == aToBottomRight.y && aToTopRight.x == aToTopLeft.x,
                  "Destination rectangle not axis-aligned");
     m._11 = m._22 = 0.0;
-    m._21 = (aToBottomRight.x - aToTopLeft.x)/aFrom.height;
-    m._12 = (aToBottomRight.y - aToTopLeft.y)/aFrom.width;
-    m._31 = aToTopLeft.x - m._21*aFrom.y;
-    m._32 = aToTopLeft.y - m._12*aFrom.x;
+    m._21 = (aToBottomRight.x - aToTopLeft.x)/aFrom.Height();
+    m._12 = (aToBottomRight.y - aToTopLeft.y)/aFrom.Width();
+    m._31 = aToTopLeft.x - m._21*aFrom.Y();
+    m._32 = aToTopLeft.y - m._12*aFrom.X();
   }
   return m;
 }
@@ -730,18 +730,18 @@ gfxUtils::TransformRectToRect(const gfxRect& aFrom, const IntPoint& aToTopLeft,
   if (aToTopRight.y == aToTopLeft.y && aToTopRight.x == aToBottomRight.x) {
     // Not a rotation, so xy and yx are zero
     m._12 = m._21 = 0.0;
-    m._11 = (aToBottomRight.x - aToTopLeft.x)/aFrom.width;
-    m._22 = (aToBottomRight.y - aToTopLeft.y)/aFrom.height;
-    m._31 = aToTopLeft.x - m._11*aFrom.x;
-    m._32 = aToTopLeft.y - m._22*aFrom.y;
+    m._11 = (aToBottomRight.x - aToTopLeft.x)/aFrom.Width();
+    m._22 = (aToBottomRight.y - aToTopLeft.y)/aFrom.Height();
+    m._31 = aToTopLeft.x - m._11*aFrom.X();
+    m._32 = aToTopLeft.y - m._22*aFrom.Y();
   } else {
     NS_ASSERTION(aToTopRight.y == aToBottomRight.y && aToTopRight.x == aToTopLeft.x,
                  "Destination rectangle not axis-aligned");
     m._11 = m._22 = 0.0;
-    m._21 = (aToBottomRight.x - aToTopLeft.x)/aFrom.height;
-    m._12 = (aToBottomRight.y - aToTopLeft.y)/aFrom.width;
-    m._31 = aToTopLeft.x - m._21*aFrom.y;
-    m._32 = aToTopLeft.y - m._12*aFrom.x;
+    m._21 = (aToBottomRight.x - aToTopLeft.x)/aFrom.Height();
+    m._12 = (aToBottomRight.y - aToTopLeft.y)/aFrom.Width();
+    m._31 = aToTopLeft.x - m._21*aFrom.Y();
+    m._32 = aToTopLeft.y - m._12*aFrom.X();
   }
   return m;
 }
@@ -754,7 +754,7 @@ gfxUtils::GfxRectToIntRect(const gfxRect& aIn, IntRect* aOut)
 {
   *aOut = IntRect(int32_t(aIn.X()), int32_t(aIn.Y()),
   int32_t(aIn.Width()), int32_t(aIn.Height()));
-  return gfxRect(aOut->x, aOut->y, aOut->width, aOut->height).IsEqualEdges(aIn);
+  return gfxRect(aOut->X(), aOut->Y(), aOut->Width(), aOut->Height()).IsEqualEdges(aIn);
 }
 
 /* Clamp r to CAIRO_COORD_MIN .. CAIRO_COORD_MAX
@@ -770,38 +770,36 @@ gfxUtils::ConditionRect(gfxRect& aRect)
 #define CAIRO_COORD_MIN (-16777216.0)
   // if either x or y is way out of bounds;
   // note that we don't handle negative w/h here
-  if (aRect.x > CAIRO_COORD_MAX) {
-    aRect.x = CAIRO_COORD_MAX;
-    aRect.width = 0.0;
+  if (aRect.X() > CAIRO_COORD_MAX) {
+    aRect.SetRectX(CAIRO_COORD_MAX, 0.0);
   }
 
-  if (aRect.y > CAIRO_COORD_MAX) {
-    aRect.y = CAIRO_COORD_MAX;
-    aRect.height = 0.0;
+  if (aRect.Y() > CAIRO_COORD_MAX) {
+    aRect.SetRectY(CAIRO_COORD_MAX, 0.0);
   }
 
-  if (aRect.x < CAIRO_COORD_MIN) {
-    aRect.width += aRect.x - CAIRO_COORD_MIN;
-    if (aRect.width < 0.0) {
-      aRect.width = 0.0;
+  if (aRect.X() < CAIRO_COORD_MIN) {
+    aRect.SetWidth(aRect.XMost() - CAIRO_COORD_MIN);
+    if (aRect.Width() < 0.0) {
+      aRect.SetWidth(0.0);
     }
-    aRect.x = CAIRO_COORD_MIN;
+    aRect.MoveToX(CAIRO_COORD_MIN);
   }
 
-  if (aRect.y < CAIRO_COORD_MIN) {
-    aRect.height += aRect.y - CAIRO_COORD_MIN;
-    if (aRect.height < 0.0) {
-      aRect.height = 0.0;
+  if (aRect.Y() < CAIRO_COORD_MIN) {
+    aRect.SetHeight(aRect.YMost() - CAIRO_COORD_MIN);
+    if (aRect.Height() < 0.0) {
+      aRect.SetHeight(0.0);
     }
-    aRect.y = CAIRO_COORD_MIN;
+    aRect.MoveToY(CAIRO_COORD_MIN);
   }
 
-  if (aRect.x + aRect.width > CAIRO_COORD_MAX) {
-    aRect.width = CAIRO_COORD_MAX - aRect.x;
+  if (aRect.XMost() > CAIRO_COORD_MAX) {
+    aRect.SetRightEdge(CAIRO_COORD_MAX);
   }
 
-  if (aRect.y + aRect.height > CAIRO_COORD_MAX) {
-    aRect.height = CAIRO_COORD_MAX - aRect.y;
+  if (aRect.YMost() > CAIRO_COORD_MAX) {
+    aRect.SetBottomEdge(CAIRO_COORD_MAX);
   }
 #undef CAIRO_COORD_MAX
 #undef CAIRO_COORD_MIN
@@ -835,7 +833,7 @@ gfxUtils::TransformToQuad(const gfxRect& aRect,
   cairo_set_source_rgba(ctx, 0.0, 0.0, 0.0, 0.0);
   cairo_set_operator(ctx, CAIRO_OPERATOR_SOURCE);
   IntRect bounds(nsIntPoint(0, 0), aSurface->GetSize());
-  cairo_rectangle(ctx, bounds.x, bounds.y, bounds.width, bounds.height);
+  cairo_rectangle(ctx, bounds.X(), bounds.Y(), bounds.Width(), bounds.Height());
   cairo_fill(ctx);
   cairo_destroy(ctx);
 }
