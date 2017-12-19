@@ -14,10 +14,6 @@ contract @mozilla.org/streamconv;1?from=application/vnd.mozilla.maybe.video.feed
 contract @mozilla.org/streamconv;1?from=application/vnd.mozilla.maybe.audio.feed&to=*/* {229fa115-9412-4d32-baf3-2fc407f76fb1}
 component {2376201c-bbc6-472f-9b62-7548040a61c6} FeedConverter.js
 contract @mozilla.org/browser/feeds/result-service;1 {2376201c-bbc6-472f-9b62-7548040a61c6}
-component {4f91ef2e-57ba-472e-ab7a-b4999e42d6c0} FeedConverter.js
-contract @mozilla.org/network/protocol;1?name=feed {4f91ef2e-57ba-472e-ab7a-b4999e42d6c0}
-component {1c31ed79-accd-4b94-b517-06e0c81999d5} FeedConverter.js
-contract @mozilla.org/network/protocol;1?name=pcast {1c31ed79-accd-4b94-b517-06e0c81999d5}
 component {49bb6593-3aff-4eb3-a068-2712c28bd58e} FeedWriter.js
 contract @mozilla.org/browser/feeds/result-writer;1 {49bb6593-3aff-4eb3-a068-2712c28bd58e}
 component {792a7e82-06a0-437c-af63-b2d12e808acc} WebContentConverter.js
