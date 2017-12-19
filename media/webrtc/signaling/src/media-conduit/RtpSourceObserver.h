@@ -62,6 +62,9 @@ private:
       hasAudioLevel = aHasAudioLevel && !(aAudioLevel & 0x80);
       audioLevel = aAudioLevel;
     }
+    // Sets the audio level nullable according to the linear scale
+    // outlined in the webrtc-pc spec.
+    double ToLinearAudioLevel() const;
     // Time this information was received + jitter
     int64_t jitterAdjustedTimestamp = 0;
     bool hasAudioLevel = false;
