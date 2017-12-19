@@ -6,8 +6,7 @@
 const expect = require("expect");
 
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
-const { setupStore } = require("devtools/client/webconsole/new-console-output/test/helpers");
-const { getAllMessagesById } = require("devtools/client/webconsole/new-console-output/selectors/messages");
+const { setupStore, getFirstMessage, getLastMessage } = require("devtools/client/webconsole/new-console-output/test/helpers");
 const { stubPackets, stubPreparedMessages } = require("devtools/client/webconsole/new-console-output/test/fixtures/stubs/index");
 
 describe("Testing UI", () => {
@@ -43,9 +42,8 @@ describe("Testing UI", () => {
       const message = stubPreparedMessages.get("inspect({a: 1})");
       store.dispatch(actions.messageAdd(packet));
 
-      const messages = getAllMessagesById(store.getState());
       const actorId = message.parameters[0].actor;
-      const messageId = messages.first().id;
+      const messageId = getFirstMessage(store.getState()).id;
       store.dispatch(actions.showObjectInSidebar(actorId, messageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
@@ -57,9 +55,8 @@ describe("Testing UI", () => {
       const message = stubPreparedMessages.get("inspect({a: 1})");
       store.dispatch(actions.messageAdd(packet));
 
-      const messages = getAllMessagesById(store.getState());
       const actorId = message.parameters[0].actor;
-      const messageId = messages.first().id;
+      const messageId = getFirstMessage(store.getState()).id;
       store.dispatch(actions.showObjectInSidebar(actorId, messageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
@@ -75,9 +72,8 @@ describe("Testing UI", () => {
       const message = stubPreparedMessages.get("inspect({a: 1})");
       store.dispatch(actions.messageAdd(packet));
 
-      const messages = getAllMessagesById(store.getState());
       const actorId = message.parameters[0].actor;
-      const messageId = messages.first().id;
+      const messageId = getFirstMessage(store.getState()).id;
       store.dispatch(actions.showObjectInSidebar(actorId, messageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);
@@ -87,9 +83,8 @@ describe("Testing UI", () => {
       const newMessage = stubPreparedMessages.get("new Date(0)");
       store.dispatch(actions.messageAdd(newPacket));
 
-      const newMessages = getAllMessagesById(store.getState());
       const newActorId = newMessage.parameters[0].actor;
-      const newMessageId = newMessages.last().id;
+      const newMessageId = getLastMessage(store.getState()).id;
       store.dispatch(actions.showObjectInSidebar(newActorId, newMessageId));
 
       expect(store.getState().ui.sidebarVisible).toEqual(true);

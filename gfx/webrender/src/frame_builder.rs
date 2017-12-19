@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderDetails, BorderDisplayItem, BuiltDisplayList};
-use api::{ClipAndScrollInfo, ClipId, ColorF, PropertyBinding};
+use api::{ClipAndScrollInfo, ClipId, ColorF, ColorU, PropertyBinding};
 use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize};
 use api::{DocumentLayer, ExtendMode, FontRenderMode, LayoutTransform};
 use api::{GlyphInstance, GlyphOptions, GradientStop, HitTestFlags, HitTestItem, HitTestResult};
@@ -202,7 +202,8 @@ impl FrameBuilder {
     ) -> PrimitiveIndex {
         if let &LocalClip::RoundedRect(main, region) = &info.local_clip {
             clip_sources.push(ClipSource::Rectangle(main));
-            clip_sources.push(ClipSource::RoundedRectangle(
+
+            clip_sources.push(ClipSource::new_rounded_rect(
                 region.rect,
                 region.radii,
                 region.mode,
@@ -1345,6 +1346,7 @@ impl FrameBuilder {
             glyph_gpu_blocks: Vec::new(),
             glyph_keys: Vec::new(),
             offset: run_offset,
+            shadow_color: ColorU::new(0, 0, 0, 0),
         };
 
         // Text shadows that have a blur radius of 0 need to be rendered as normal
@@ -1362,7 +1364,7 @@ impl FrameBuilder {
             match picture_prim.kind {
                 PictureKind::TextShadow { offset, color, blur_radius, .. } if blur_radius == 0.0 => {
                     let mut text_prim = prim.clone();
-                    text_prim.font.color = color.into();
+                    text_prim.shadow_color = color.into();
                     text_prim.offset += offset;
                     fast_shadow_prims.push((idx, text_prim));
                 }

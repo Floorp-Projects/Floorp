@@ -1,4 +1,5 @@
 mar==2.1.2
 backports.lzma==0.0.8
 datadog==0.17.0
-redo
+redo==1.6
+awscli==1.14.10

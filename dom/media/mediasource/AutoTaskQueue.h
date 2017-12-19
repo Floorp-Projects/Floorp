@@ -21,16 +21,20 @@ class AutoTaskQueue : public AbstractThread
 public:
   explicit AutoTaskQueue(already_AddRefed<nsIEventTarget> aPool,
                          bool aSupportsTailDispatch = false)
-  : AbstractThread(aSupportsTailDispatch)
-  , mTaskQueue(new TaskQueue(Move(aPool), aSupportsTailDispatch))
-  {}
+    : AbstractThread(aSupportsTailDispatch)
+    , mTaskQueue(new TaskQueue(Move(aPool), aSupportsTailDispatch))
+    , mMonitor("AutoTaskQueue")
+  {
+  }
 
   AutoTaskQueue(already_AddRefed<nsIEventTarget> aPool,
                 const char* aName,
                 bool aSupportsTailDispatch = false)
-  : AbstractThread(aSupportsTailDispatch)
-  , mTaskQueue(new TaskQueue(Move(aPool), aName, aSupportsTailDispatch))
-  {}
+    : AbstractThread(aSupportsTailDispatch)
+    , mTaskQueue(new TaskQueue(Move(aPool), aName, aSupportsTailDispatch))
+    , mMonitor("AutoTaskQueue")
+  {
+  }
 
   TaskDispatcher& TailDispatcher() override
   {
@@ -56,9 +60,12 @@ public:
   // the task queue.
   bool IsCurrentThreadIn() override { return mTaskQueue->IsCurrentThreadIn(); }
 
+  mozilla::Monitor& Monitor() { return mMonitor; }
+
 private:
   ~AutoTaskQueue() { mTaskQueue->BeginShutdown(); }
   RefPtr<TaskQueue> mTaskQueue;
+  mozilla::Monitor mMonitor;
 };
 
 } // namespace mozilla

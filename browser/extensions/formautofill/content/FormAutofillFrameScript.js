@@ -39,6 +39,7 @@ var FormAutofillFrameScript = {
       // This is for testing purpose only which sends a message to indicate that the
       // form has been identified, and ready to open popup.
       sendAsyncMessage("FormAutofill:FieldsIdentified");
+      FormAutofillContent.updateActiveInput();
     });
   },
 
@@ -54,6 +55,7 @@ var FormAutofillFrameScript = {
     if (!evt.isTrusted || !FormAutofillUtils.isAutofillEnabled) {
       return;
     }
+    FormAutofillContent.updateActiveInput();
 
     let element = evt.target;
     if (!FormAutofillUtils.isFieldEligibleForAutofill(element)) {

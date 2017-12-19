@@ -29,14 +29,6 @@ var TEST_CASES = [
     plainURL: "http://some.site/file",
   },
   {
-    nestedURL: "feed:http://some.site",
-    plainURL: "http://some.site",
-  },
-  {
-    nestedURL: "pcast:http://some.site",
-    plainURL: "http://some.site",
-  },
-  {
     nestedURL: "view-source:http://some.site",
     plainURL: "http://some.site",
   },
@@ -51,10 +43,6 @@ var TEST_CASES = [
   {
     nestedURL: "view-source:about:robots",
     plainURL: "about:robots",
-  },
-  {
-    nestedURL: "view-source:feed:http://some.site",
-    plainURL: "http://some.site",
   },
   {
     nestedURL: "view-source:pcast:http://some.site",

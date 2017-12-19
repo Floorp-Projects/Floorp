@@ -9,7 +9,7 @@ RUN apt-get update -q && \
     apt-get install -yyq --no-install-recommends \
     python3.5 python3-setuptools python3-cryptography libgetopt-simple-perl \
     bzip2 clamav clamav-freshclam python3-requests python3-sh curl \
-    python3-dev gcc liblzma-dev xz-utils && \
+    python3-dev gcc liblzma-dev xz-utils jq && \
     apt-get clean
 RUN useradd -d /home/worker -s /bin/bash -m worker
 COPY requirements.txt /tmp/
