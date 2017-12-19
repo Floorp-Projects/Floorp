@@ -17,17 +17,15 @@ class nsPrintSettingsServiceWin final : public nsPrintSettingsService
 {
 public:
   nsPrintSettingsServiceWin() {}
-  virtual ~nsPrintSettingsServiceWin() {}
 
   NS_IMETHODIMP SerializeToPrintData(nsIPrintSettings* aSettings,
                                      nsIWebBrowserPrint* aWBP,
-                                     mozilla::embedding::PrintData* data);
+                                     mozilla::embedding::PrintData* data) override;
+
   NS_IMETHODIMP DeserializeToPrintSettings(const mozilla::embedding::PrintData& data,
-                                           nsIPrintSettings* settings);
+                                           nsIPrintSettings* settings) override;
 
-  virtual nsresult _CreatePrintSettings(nsIPrintSettings **_retval);
+  nsresult _CreatePrintSettings(nsIPrintSettings** _retval) override;
 };
-
-
 
 #endif // nsPrintSettingsServiceWin_h

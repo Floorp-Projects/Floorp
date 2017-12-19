@@ -8,11 +8,9 @@
 
 #include "nsPrintSettingsService.h"
 
-namespace mozilla
-{
-namespace embedding
-{
-  class PrintData;
+namespace mozilla {
+namespace embedding {
+class PrintData;
 } // namespace embedding
 } // namespace mozilla
 
@@ -20,9 +18,8 @@ class nsPrintSettingsServiceX final : public nsPrintSettingsService
 {
 public:
   nsPrintSettingsServiceX() {}
-  virtual ~nsPrintSettingsServiceX() {}
 
-  /*
+  /**
    * These serialize and deserialize methods are not symmetrical in that
    * printSettingsX != deserialize(serialize(printSettingsX)). This is because
    * the native print settings stored in the nsPrintSettingsX's NSPrintInfo
@@ -31,14 +28,21 @@ public:
    */
   NS_IMETHODIMP SerializeToPrintData(nsIPrintSettings* aSettings,
                                      nsIWebBrowserPrint* aWBP,
-                                     mozilla::embedding::PrintData* data);
+                                     mozilla::embedding::PrintData* data) override;
+
   NS_IMETHODIMP DeserializeToPrintSettings(const mozilla::embedding::PrintData& data,
-                                           nsIPrintSettings* settings);
+                                           nsIPrintSettings* settings) override;
 
 protected:
-  nsresult   _CreatePrintSettings(nsIPrintSettings **_retval);
-  nsresult   ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, uint32_t aFlags);
-  nsresult   WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, uint32_t aFlags);
+  nsresult ReadPrefs(nsIPrintSettings* aPS,
+                     const nsAString& aPrinterName,
+                     uint32_t aFlags) override;
+
+  nsresult WritePrefs(nsIPrintSettings* aPS,
+                      const nsAString& aPrinterName,
+                      uint32_t aFlags) override;
+
+  nsresult _CreatePrintSettings(nsIPrintSettings** _retval) override;
 
 private:
   /* Serialization done in child to be deserialized in the parent */

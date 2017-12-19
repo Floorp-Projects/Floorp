@@ -12,10 +12,6 @@
 
 NS_IMPL_ISUPPORTS(nsPrintSettings, nsIPrintSettings)
 
-/** ---------------------------------------------------
- *  See documentation in nsPrintSettingsImpl.h
- *	@update 6/21/00 dwc
- */
 nsPrintSettings::nsPrintSettings() :
   mPrintOptions(0L),
   mPrintRange(kRangeAllPages),
@@ -63,19 +59,11 @@ nsPrintSettings::nsPrintSettings() :
 
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsPrintSettingsImpl.h
- *	@update 6/21/00 dwc
- */
 nsPrintSettings::nsPrintSettings(const nsPrintSettings& aPS)
 {
   *this = aPS;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsPrintSettingsImpl.h
- *	@update 6/21/00 dwc
- */
 nsPrintSettings::~nsPrintSettings()
 {
 }

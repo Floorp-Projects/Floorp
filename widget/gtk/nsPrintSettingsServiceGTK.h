@@ -9,11 +9,9 @@
 
 #include "nsPrintSettingsService.h"
 
-namespace mozilla
-{
-namespace embedding
-{
-  class PrintData;
+namespace mozilla {
+namespace embedding {
+class PrintData;
 } // namespace embedding
 } // namespace mozilla
 
@@ -21,17 +19,15 @@ class nsPrintSettingsServiceGTK final : public nsPrintSettingsService
 {
 public:
   nsPrintSettingsServiceGTK() {}
-  virtual ~nsPrintSettingsServiceGTK() {}
 
   NS_IMETHODIMP SerializeToPrintData(nsIPrintSettings* aSettings,
                                      nsIWebBrowserPrint* aWBP,
-                                     mozilla::embedding::PrintData* data);
+                                     mozilla::embedding::PrintData* data) override;
+
   NS_IMETHODIMP DeserializeToPrintSettings(const mozilla::embedding::PrintData& data,
-                                           nsIPrintSettings* settings);
+                                           nsIPrintSettings* settings) override;
 
-  virtual nsresult _CreatePrintSettings(nsIPrintSettings **_retval);
+  virtual nsresult _CreatePrintSettings(nsIPrintSettings** _retval) override;
 };
-
-
 
 #endif // nsPrintSettingsServiceGTK_h
