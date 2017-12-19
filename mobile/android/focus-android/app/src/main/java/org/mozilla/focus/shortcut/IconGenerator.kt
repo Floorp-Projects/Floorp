@@ -37,7 +37,6 @@ class IconGenerator {
          * Generate an icon with the given character. The icon will be drawn
          * on top of a generic launcher icon shape that we provide.
          */
-        @JvmStatic
         private fun generateCharacterIcon(context: Context, character: Char) =
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                     generateAdaptiveLauncherIcon(context, character)
