@@ -6,6 +6,7 @@
 #include "WebGLContext.h"
 
 #include "GeckoProfiler.h"
+#include "gfx/gl/MozFramebuffer.h"
 #include "GLContext.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -99,23 +100,10 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
 {
     MOZ_ASSERT(mWebGL->gl->IsCurrent());
 
-    if (!mWebGL->mActiveProgramLinkInfo) {
-        mWebGL->ErrorInvalidOperation("%s: The current program is not linked.", funcName);
-        *out_error = true;
-        return;
-    }
-
     const std::vector<const WebGLFBAttachPoint*>* attachList = nullptr;
     const auto& fb = mWebGL->mBoundDrawFramebuffer;
     if (fb) {
-        if (!fb->ValidateAndInitAttachments(funcName)) {
-            *out_error = true;
-            return;
-        }
-
         attachList = &(fb->ResolvedCompleteData()->texDrawBuffers);
-    } else {
-        webgl->ClearBackbufferIfNeeded();
     }
 
     MOZ_ASSERT(mWebGL->mActiveProgramLinkInfo);
@@ -255,6 +243,11 @@ public:
     {
         MOZ_ASSERT(mWebGL->gl->IsCurrent());
 
+        if (!mWebGL->BindCurFBForDraw(funcName)) {
+            *out_error = true;
+            return;
+        }
+
         if (!mWebGL->ValidateDrawModeEnum(mode, funcName)) {
             *out_error = true;
             return;
@@ -265,21 +258,15 @@ public:
             return;
         }
 
-        ////
-
-        if (mWebGL->mBoundDrawFramebuffer) {
-            if (!mWebGL->mBoundDrawFramebuffer->ValidateAndInitAttachments(funcName)) {
-                *out_error = true;
-                return;
-            }
-        } else {
-            mWebGL->ClearBackbufferIfNeeded();
+        if (!mWebGL->mActiveProgramLinkInfo) {
+            mWebGL->ErrorInvalidOperation("%s: The current program is not linked.", funcName);
+            *out_error = true;
+            return;
         }
+        const auto& linkInfo = mWebGL->mActiveProgramLinkInfo;
 
         ////
         // Check UBO sizes.
-
-        const auto& linkInfo = mWebGL->mActiveProgramLinkInfo;
 
         for (const auto& cur : linkInfo->uniformBlocks) {
             const auto& dataSize = cur->mDataSize;
@@ -525,17 +512,17 @@ WebGLContext::DrawArraysInstanced(GLenum mode, GLint first, GLsizei vertCount,
     if (IsContextLost())
         return;
 
-    bool error = false;
-    ScopedResolveTexturesForDraw scopedResolve(this, funcName, &error);
-    if (error)
-        return;
-
     Maybe<uint32_t> lastVert;
     if (!DrawArrays_check(funcName, first, vertCount, instanceCount, &lastVert))
         return;
 
+    bool error = false;
     const ScopedDrawHelper scopedHelper(this, funcName, mode, lastVert, instanceCount,
                                         &error);
+    if (error)
+        return;
+
+    const ScopedResolveTexturesForDraw scopedResolve(this, funcName, &error);
     if (error)
         return;
 
@@ -681,11 +668,6 @@ WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei indexCount, GLenum type
     if (IsContextLost())
         return;
 
-    bool error = false;
-    ScopedResolveTexturesForDraw scopedResolve(this, funcName, &error);
-    if (error)
-        return;
-
     Maybe<uint32_t> lastVert;
     if (!DrawElements_check(funcName, indexCount, type, byteOffset, instanceCount,
                             &lastVert))
@@ -693,8 +675,13 @@ WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei indexCount, GLenum type
         return;
     }
 
+    bool error = false;
     const ScopedDrawHelper scopedHelper(this, funcName, mode, lastVert, instanceCount,
                                         &error);
+    if (error)
+        return;
+
+    const ScopedResolveTexturesForDraw scopedResolve(this, funcName, &error);
     if (error)
         return;
 
@@ -759,8 +746,8 @@ WebGLContext::Draw_cleanup(const char* funcName)
             break;
         }
     } else {
-        destWidth = mWidth;
-        destHeight = mHeight;
+        destWidth = mDefaultFB->mSize.width;
+        destHeight = mDefaultFB->mSize.height;
     }
 
     if (mViewportWidth > int32_t(destWidth) ||

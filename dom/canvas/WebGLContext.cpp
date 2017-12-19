@@ -14,6 +14,7 @@
 #include "gfxPattern.h"
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
+#include "gfx/gl/MozFramebuffer.h"
 #include "GLBlitHelper.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
@@ -119,8 +120,8 @@ WebGLContext::WebGLContext()
     , mNeedsFakeNoAlpha(false)
     , mNeedsFakeNoDepth(false)
     , mNeedsFakeNoStencil(false)
-    , mNeedsEmulatedLoneDepthStencil(false)
     , mAllowFBInvalidation(gfxPrefs::WebGLFBInvalidation())
+    , mMsaaSamples(gfxPrefs::WebGLMsaaSamples())
 {
     mGeneration = 0;
     mInvalidated = false;
@@ -134,17 +135,6 @@ WebGLContext::WebGLContext()
     mWebGLError = 0;
     mUnderlyingGLError = 0;
 
-    mActiveTexture = 0;
-
-    mStencilRefFront = 0;
-    mStencilRefBack = 0;
-    mStencilValueMaskFront = 0;
-    mStencilValueMaskBack = 0;
-    mStencilWriteMaskFront = 0;
-    mStencilWriteMaskBack = 0;
-    mDepthWriteMask = 0;
-    mStencilClearValue = 0;
-    mDepthClearValue = 0;
     mContextLostErrorSet = false;
 
     mViewportX = 0;
@@ -211,6 +201,9 @@ WebGLContext::DestroyResourcesAndContext()
 {
     if (!gl)
         return;
+
+    mDefaultFB = nullptr;
+    mResolvedDefaultFB = nullptr;
 
     mBound2DTextures.Clear();
     mBoundCubeMapTextures.Clear();
@@ -295,6 +288,7 @@ WebGLContext::DestroyResourcesAndContext()
     }
 
     MOZ_ASSERT(gl);
+    gl->MarkDestroyed();
     mGL_OnlyClearInDestroyResourcesAndContext = nullptr;
     MOZ_ASSERT(!gl);
 }
@@ -398,18 +392,6 @@ WebGLContext::SetContextOptions(JSContext* cx, JS::Handle<JS::Value> options,
     return NS_OK;
 }
 
-int32_t
-WebGLContext::GetWidth() const
-{
-    return mWidth;
-}
-
-int32_t
-WebGLContext::GetHeight() const
-{
-    return mHeight;
-}
-
 /* So there are a number of points of failure here. We might fail based
  * on EGL vs. WGL, or we might fail to alloc a too-large size, or we
  * might not be able to create a context with a certain combo of context
@@ -486,30 +468,6 @@ PopulateCapFallbackQueue(const gl::SurfaceCaps& baseCaps,
                          std::queue<gl::SurfaceCaps>* out_fallbackCaps)
 {
     out_fallbackCaps->push(baseCaps);
-
-    // Dropping antialias drops our quality, but not our correctness.
-    // The user basically doesn't have to handle if this fails, they
-    // just get reduced quality.
-    if (baseCaps.antialias) {
-        gl::SurfaceCaps nextCaps(baseCaps);
-        nextCaps.antialias = false;
-        PopulateCapFallbackQueue(nextCaps, out_fallbackCaps);
-    }
-
-    // If we have to drop one of depth or stencil, we'd prefer to keep
-    // depth. However, the client app will need to handle if this
-    // doesn't work.
-    if (baseCaps.stencil) {
-        gl::SurfaceCaps nextCaps(baseCaps);
-        nextCaps.stencil = false;
-        PopulateCapFallbackQueue(nextCaps, out_fallbackCaps);
-    }
-
-    if (baseCaps.depth) {
-        gl::SurfaceCaps nextCaps(baseCaps);
-        nextCaps.depth = false;
-        PopulateCapFallbackQueue(nextCaps, out_fallbackCaps);
-    }
 }
 
 static gl::SurfaceCaps
@@ -518,22 +476,16 @@ BaseCaps(const WebGLContextOptions& options, WebGLContext* webgl)
     gl::SurfaceCaps baseCaps;
 
     baseCaps.color = true;
-    baseCaps.alpha = options.alpha;
-    baseCaps.antialias = options.antialias;
-    baseCaps.depth = options.depth;
+    baseCaps.alpha = true;
+    baseCaps.antialias = false;
+    baseCaps.depth = false;
+    baseCaps.stencil = false;
     baseCaps.premultAlpha = options.premultipliedAlpha;
     baseCaps.preserve = options.preserveDrawingBuffer;
-    baseCaps.stencil = options.stencil;
 
-    if (!baseCaps.alpha)
+    if (!baseCaps.alpha) {
         baseCaps.premultAlpha = true;
-
-    // we should really have this behind a
-    // |gfxPlatform::GetPlatform()->GetScreenDepth() == 16| check, but
-    // for now it's just behind a pref for testing/evaluation.
-    baseCaps.bpp16 = gfxPrefs::WebGLPrefer16bpp();
-
-    // Done with baseCaps construction.
+    }
 
     if (!gfxPrefs::WebGLForceMSAA()) {
         const nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
@@ -772,8 +724,8 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
     //////
 
     if (tryANGLE) {
-        // Force enable alpha channel to make sure ANGLE use correct framebuffer formart
-        gl::SurfaceCaps& angleCaps = const_cast<gl::SurfaceCaps&>(baseCaps);
+        // Force enable alpha channel to make sure ANGLE use correct framebuffer format
+        auto angleCaps = baseCaps;
         angleCaps.alpha = true;
         return CreateAndInitGLWith(CreateGLWithANGLE, angleCaps, flags, out_failReasons);
     }
@@ -786,43 +738,54 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
 }
 
 // Fallback for resizes:
+
 bool
-WebGLContext::ResizeBackbuffer(uint32_t requestedWidth,
-                               uint32_t requestedHeight)
+WebGLContext::EnsureDefaultFB() const
 {
-    uint32_t width = requestedWidth;
-    uint32_t height = requestedHeight;
-
-    bool resized = false;
-    while (width || height) {
-      width = width ? width : 1;
-      height = height ? height : 1;
-
-      gfx::IntSize curSize(width, height);
-      if (gl->ResizeOffscreen(curSize)) {
-          resized = true;
-          break;
-      }
-
-      width /= 2;
-      height /= 2;
+    if (mDefaultFB) {
+        MOZ_ASSERT(mDefaultFB->mSize == mRequestedSize);
+        return true;
     }
 
-    if (!resized)
+    const bool depthStencil = mOptions.depth || mOptions.stencil;
+    auto attemptSize = mRequestedSize;
+
+    while (attemptSize.width || attemptSize.height) {
+        attemptSize.width = std::max(attemptSize.width, 1);
+        attemptSize.height = std::max(attemptSize.height, 1);
+
+        [&]() {
+            if (mOptions.antialias) {
+                MOZ_ASSERT(!mDefaultFB);
+                mDefaultFB = MozFramebuffer::Create(gl, attemptSize, mMsaaSamples,
+                                                    depthStencil);
+                if (mDefaultFB)
+                    return;
+                if (mOptionsFrozen)
+                    return;
+            }
+
+            MOZ_ASSERT(!mDefaultFB);
+            mDefaultFB = MozFramebuffer::Create(gl, attemptSize, 0, depthStencil);
+        }();
+
+        if (mDefaultFB)
+            break;
+
+        attemptSize.width /= 2;
+        attemptSize.height /= 2;
+    }
+
+    if (!mDefaultFB)
         return false;
 
-    mWidth = gl->OffscreenSize().width;
-    mHeight = gl->OffscreenSize().height;
-    MOZ_ASSERT((uint32_t)mWidth == width);
-    MOZ_ASSERT((uint32_t)mHeight == height);
+    mDefaultFB_IsInvalid = true;
 
-    if (width != requestedWidth ||
-        height != requestedHeight)
-    {
+    if (mDefaultFB->mSize != mRequestedSize) {
         GenerateWarning("Requested size %dx%d was too large, but resize"
                           " to %dx%d succeeded.",
-                        requestedWidth, requestedHeight,
-                        width, height);
+                        mRequestedSize.width, mRequestedSize.height,
+                        mDefaultFB->mSize.width, mDefaultFB->mSize.height);
     }
     return true;
 }
@@ -887,8 +850,8 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
 
     // If we already have a gl context, then we just need to resize it
     if (gl) {
-        if ((uint32_t)mWidth == width &&
-            (uint32_t)mHeight == height)
+        if (uint32_t(mRequestedSize.width) == width &&
+            uint32_t(mRequestedSize.height) == height)
         {
             return NS_OK;
         }
@@ -904,19 +867,11 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
             return NS_OK;
         }
 
-        // ResizeOffscreen scraps the current prod buffer before making a new one.
-        if (!ResizeBackbuffer(width, height)) {
-            GenerateWarning("WebGL context failed to resize.");
-            ForceLoseContext();
-            return NS_OK;
-        }
+        // Kill our current default fb(s), for later lazy allocation.
+        mRequestedSize = {width, height};
+        mDefaultFB = nullptr;
 
-        // everything's good, we're done here
         mResetLayer = true;
-        mBackbufferNeedsClear = true;
-
-        gl->ResetSyncCallCount("Existing WebGLContext resized.");
-
         return NS_OK;
     }
 
@@ -1043,7 +998,9 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
 #endif
     }
 
-    if (!ResizeBackbuffer(width, height)) {
+    MOZ_ASSERT(!mDefaultFB);
+    mRequestedSize = {width, height};
+    if (!EnsureDefaultFB()) {
         failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBGL_BACKBUFFER");
         const nsLiteralCString text("Initializing WebGL backbuffer failed.");
         ThrowEvent_WebGLContextCreationError(text);
@@ -1054,75 +1011,46 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
         printf_stderr("--- WebGL context created: %p\n", gl.get());
     }
 
-    mResetLayer = true;
-    mOptionsFrozen = true;
-
     // Update our internal stuff:
-    if (gl->WorkAroundDriverBugs()) {
-        if (!mOptions.alpha && gl->Caps().alpha)
-            mNeedsFakeNoAlpha = true;
+    mOptions.antialias = bool(mDefaultFB->mSamples);
 
-        if (!mOptions.depth && gl->Caps().depth)
-            mNeedsFakeNoDepth = true;
-
-        if (!mOptions.stencil && gl->Caps().stencil)
-            mNeedsFakeNoStencil = true;
-
-#ifdef MOZ_WIDGET_COCOA
-        if (!nsCocoaFeatures::IsAtLeastVersion(10, 12) &&
-            gl->Vendor() == GLVendor::Intel)
-        {
-            mNeedsEmulatedLoneDepthStencil = true;
-        }
-#endif
+    if (!mOptions.alpha) {
+        // We always have alpha.
+        mNeedsFakeNoAlpha = true;
     }
 
-    // Update mOptions.
-    if (!gl->Caps().depth)
-        mOptions.depth = false;
+    if (mOptions.depth || mOptions.stencil) {
+        // We always have depth+stencil if we have either.
+        if (!mOptions.depth) {
+            mNeedsFakeNoDepth = true;
+        }
+        if (!mOptions.stencil) {
+            mNeedsFakeNoStencil = true;
+        }
+    }
 
-    if (!gl->Caps().stencil)
-        mOptions.stencil = false;
-
-    mOptions.antialias = gl->Caps().antialias;
+    mResetLayer = true;
+    mOptionsFrozen = true;
 
     //////
     // Initial setup.
 
     gl->mImplicitMakeCurrent = true;
 
-    gl->fViewport(0, 0, mWidth, mHeight);
-    mViewportX = mViewportY = 0;
-    mViewportWidth = mWidth;
-    mViewportHeight = mHeight;
+    const auto& size = mDefaultFB->mSize;
 
-    gl->fScissor(0, 0, mWidth, mHeight);
-    gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+    mViewportX = mViewportY = 0;
+    mViewportWidth = size.width;
+    mViewportHeight = size.height;
+    gl->fViewport(mViewportX, mViewportY, mViewportWidth, mViewportHeight);
+
+    gl->fScissor(0, 0, size.width, size.height);
 
     //////
     // Check everything
 
     AssertCachedBindings();
     AssertCachedGlobalState();
-
-    MOZ_ASSERT(gl->Caps().color);
-
-    MOZ_ASSERT_IF(!mNeedsFakeNoAlpha, gl->Caps().alpha == mOptions.alpha);
-    MOZ_ASSERT_IF(mNeedsFakeNoAlpha, !mOptions.alpha && gl->Caps().alpha);
-
-    MOZ_ASSERT_IF(!mNeedsFakeNoDepth, gl->Caps().depth == mOptions.depth);
-    MOZ_ASSERT_IF(mNeedsFakeNoDepth, !mOptions.depth && gl->Caps().depth);
-
-    MOZ_ASSERT_IF(!mNeedsFakeNoStencil, gl->Caps().stencil == mOptions.stencil);
-    MOZ_ASSERT_IF(mNeedsFakeNoStencil, !mOptions.stencil && gl->Caps().stencil);
-
-    MOZ_ASSERT(gl->Caps().antialias == mOptions.antialias);
-    MOZ_ASSERT(gl->Caps().preserve == mOptions.preserveDrawingBuffer);
-
-    //////
-    // Clear immediately, because we need to present the cleared initial buffer
-    mBackbufferNeedsClear = true;
-    ClearBackbufferIfNeeded();
 
     mShouldPresent = true;
 
@@ -1134,17 +1062,6 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
 
     gl->ResetSyncCallCount("WebGLContext Initialization");
     return NS_OK;
-}
-
-void
-WebGLContext::ClearBackbufferIfNeeded()
-{
-    if (!mBackbufferNeedsClear)
-        return;
-
-    ClearScreen();
-
-    mBackbufferNeedsClear = false;
 }
 
 void
@@ -1403,8 +1320,8 @@ WebGLContext::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
     }
 
     data.mGLContext = gl;
-    data.mSize = nsIntSize(mWidth, mHeight);
-    data.mHasAlpha = gl->Caps().alpha;
+    data.mSize = DrawingBufferSize();
+    data.mHasAlpha = mOptions.alpha;
     data.mIsGLAlphaPremult = IsPremultAlpha() || !data.mHasAlpha;
 
     aRenderer->Initialize(data);
@@ -1506,31 +1423,8 @@ WebGLContext::MozGetUnderlyingParamString(uint32_t pname, nsAString& retval)
 }
 
 void
-WebGLContext::ClearScreen()
-{
-    ScopedBindFramebuffer autoFB(gl, 0);
-
-    const bool changeDrawBuffers = (mDefaultFB_DrawBuffer0 != LOCAL_GL_BACK);
-    if (changeDrawBuffers) {
-        gl->Screen()->SetDrawBuffer(LOCAL_GL_BACK);
-    }
-
-    GLbitfield bufferBits = LOCAL_GL_COLOR_BUFFER_BIT;
-    if (mOptions.depth)
-        bufferBits |= LOCAL_GL_DEPTH_BUFFER_BIT;
-    if (mOptions.stencil)
-        bufferBits |= LOCAL_GL_STENCIL_BUFFER_BIT;
-
-    ForceClearFramebufferWithDefaultValues(bufferBits, mNeedsFakeNoAlpha);
-
-    if (changeDrawBuffers) {
-        gl->Screen()->SetDrawBuffer(mDefaultFB_DrawBuffer0);
-    }
-}
-
-void
-WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield clearBits,
-                                                     bool fakeNoAlpha)
+WebGLContext::ForceClearFramebufferWithDefaultValues(const GLbitfield clearBits,
+                                                     const bool fakeNoAlpha) const
 {
     const bool initializeColorBuffer = bool(clearBits & LOCAL_GL_COLOR_BUFFER_BIT);
     const bool initializeDepthBuffer = bool(clearBits & LOCAL_GL_DEPTH_BUFFER_BIT);
@@ -1545,6 +1439,7 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield clearBits,
 
     if (initializeColorBuffer) {
         gl->fColorMask(1, 1, 1, 1);
+        mDriverColorMask = 0x0f;
 
         if (fakeNoAlpha) {
             gl->fClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -1583,10 +1478,6 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield clearBits,
 
     // Restore GL state after clearing.
     if (initializeColorBuffer) {
-        gl->fColorMask(mColorWriteMask[0],
-                       mColorWriteMask[1],
-                       mColorWriteMask[2],
-                       mColorWriteMask[3]);
         gl->fClearColor(mColorClearValue[0],
                         mColorClearValue[1],
                         mColorClearValue[2],
@@ -1616,31 +1507,81 @@ WebGLContext::OnEndOfFrame() const
    gl->ResetSyncCallCount("WebGLContext PresentScreenBuffer");
 }
 
+void
+WebGLContext::BlitBackbufferToCurDriverFB() const
+{
+    if (mScissorTestEnabled) {
+        gl->fDisable(LOCAL_GL_SCISSOR_TEST);
+    }
+
+    [&]() {
+        const auto& size = mDefaultFB->mSize;
+
+        if (gl->IsSupported(GLFeature::framebuffer_blit)) {
+            gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, mDefaultFB->mFB);
+            gl->fBlitFramebuffer(0, 0, size.width, size.height,
+                                 0, 0, size.width, size.height,
+                                 LOCAL_GL_COLOR_BUFFER_BIT, LOCAL_GL_NEAREST);
+            return;
+        }
+        if (mDefaultFB->mSamples &&
+            gl->IsExtensionSupported(GLContext::APPLE_framebuffer_multisample))
+        {
+            gl->fBindFramebuffer(LOCAL_GL_READ_FRAMEBUFFER, mDefaultFB->mFB);
+            gl->fResolveMultisampleFramebufferAPPLE();
+            return;
+        }
+
+        gl->BlitHelper()->DrawBlitTextureToFramebuffer(mDefaultFB->ColorTex(), size,
+                                                       size);
+    }();
+
+    if (mScissorTestEnabled) {
+        gl->fEnable(LOCAL_GL_SCISSOR_TEST);
+    }
+}
+
 // For an overview of how WebGL compositing works, see:
 // https://wiki.mozilla.org/Platform/GFX/WebGL/Compositing
 bool
 WebGLContext::PresentScreenBuffer()
 {
-    if (IsContextLost()) {
+    if (IsContextLost())
+        return false;
+
+    if (!mShouldPresent)
+        return false;
+
+    if (!ValidateAndInitFB("Present", nullptr))
+        return false;
+
+    const auto& screen = gl->Screen();
+    if (screen->Size() != mDefaultFB->mSize &&
+        !screen->Resize(mDefaultFB->mSize))
+    {
+        GenerateWarning("screen->Resize failed. Losing context.");
+        ForceLoseContext();
         return false;
     }
 
-    if (!mShouldPresent) {
-        return false;
-    }
-    MOZ_ASSERT(!mBackbufferNeedsClear);
-
-    GLScreenBuffer* screen = gl->Screen();
-    MOZ_ASSERT(screen);
+    gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+    BlitBackbufferToCurDriverFB();
 
     if (!screen->PublishFrame(screen->Size())) {
+        GenerateWarning("PublishFrame failed. Losing context.");
         ForceLoseContext();
         return false;
     }
 
     if (!mOptions.preserveDrawingBuffer) {
-        mBackbufferNeedsClear = true;
+        if (gl->IsSupported(gl::GLFeature::invalidate_framebuffer)) {
+            gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mDefaultFB->mFB);
+            const GLenum attachments[] = { LOCAL_GL_COLOR_ATTACHMENT0 };
+            gl->fInvalidateFramebuffer(LOCAL_GL_FRAMEBUFFER, 1, attachments);
+        }
+        mDefaultFB_IsInvalid = true;
     }
+    mResolvedDefaultFB = nullptr;
 
     mShouldPresent = false;
     OnEndOfFrame();
@@ -1747,7 +1688,7 @@ CheckContextLost(GLContext* gl, bool* const out_isGuilty)
 bool
 WebGLContext::TryToRestoreContext()
 {
-    if (NS_FAILED(SetDimensions(mWidth, mHeight)))
+    if (NS_FAILED(SetDimensions(mRequestedSize.width, mRequestedSize.height)))
         return false;
 
     return true;
@@ -1959,31 +1900,18 @@ WebGLContext::GetSurfaceSnapshot(gfxAlphaType* const out_alphaType)
     if (!gl)
         return nullptr;
 
+    if (!BindDefaultFBForRead("GetSurfaceSnapshot"))
+        return nullptr;
+
     const auto surfFormat = mOptions.alpha ? SurfaceFormat::B8G8R8A8
                                            : SurfaceFormat::B8G8R8X8;
+    const auto& size = mDefaultFB->mSize;
     RefPtr<DataSourceSurface> surf;
-    surf = Factory::CreateDataSourceSurfaceWithStride(IntSize(mWidth, mHeight),
-                                                      surfFormat,
-                                                      mWidth * 4);
+    surf = Factory::CreateDataSourceSurfaceWithStride(size, surfFormat, size.width * 4);
     if (NS_WARN_IF(!surf))
         return nullptr;
 
-    {
-        ScopedBindFramebuffer autoFB(gl, 0);
-        ClearBackbufferIfNeeded();
-
-        // Save, override, then restore glReadBuffer.
-        const GLenum readBufferMode = gl->Screen()->GetReadBufferMode();
-
-        if (readBufferMode != LOCAL_GL_BACK) {
-            gl->Screen()->SetReadBuffer(LOCAL_GL_BACK);
-        }
-        ReadPixelsIntoDataSurface(gl, surf);
-
-        if (readBufferMode != LOCAL_GL_BACK) {
-            gl->Screen()->SetReadBuffer(readBufferMode);
-        }
-    }
+    ReadPixelsIntoDataSurface(gl, surf);
 
     gfxAlphaType alphaType;
     if (!mOptions.alpha) {
@@ -2005,17 +1933,14 @@ WebGLContext::GetSurfaceSnapshot(gfxAlphaType* const out_alphaType)
 
     RefPtr<DrawTarget> dt =
         Factory::CreateDrawTarget(gfxPlatform::GetPlatform()->GetSoftwareBackend(),
-                                  IntSize(mWidth, mHeight),
-                                  SurfaceFormat::B8G8R8A8);
+                                  size, SurfaceFormat::B8G8R8A8);
     if (!dt)
         return nullptr;
 
-    dt->SetTransform(Matrix::Translation(0.0, mHeight).PreScale(1.0, -1.0));
+    dt->SetTransform(Matrix::Translation(0.0, size.height).PreScale(1.0, -1.0));
 
-    dt->DrawSurface(surf,
-                    Rect(0, 0, mWidth, mHeight),
-                    Rect(0, 0, mWidth, mHeight),
-                    DrawSurfaceOptions(),
+    const gfx::Rect rect{0, 0, float(size.width), float(size.height)};
+    dt->DrawSurface(surf, rect, rect, DrawSurfaceOptions(),
                     DrawOptions(1.0f, CompositionOp::OP_SOURCE));
 
     return dt->Snapshot();
@@ -2029,104 +1954,180 @@ WebGLContext::DidRefresh()
     }
 }
 
-bool
-WebGLContext::ValidateCurFBForRead(const char* funcName,
-                                   const webgl::FormatUsageInfo** const out_format,
-                                   uint32_t* const out_width, uint32_t* const out_height)
+////////////////////////////////////////////////////////////////////////////////
+
+gfx::IntSize
+WebGLContext::DrawingBufferSize() const
 {
-    if (!mBoundReadFramebuffer) {
-        const GLenum readBufferMode = gl->Screen()->GetReadBufferMode();
-        if (readBufferMode == LOCAL_GL_NONE) {
-            ErrorInvalidOperation("%s: Can't read from backbuffer when readBuffer mode is"
-                                  " NONE.",
-                                  funcName);
+    const gfx::IntSize zeros{0, 0};
+    if (IsContextLost())
+        return zeros;
+
+    if (!EnsureDefaultFB())
+        return zeros;
+
+    return mDefaultFB->mSize;
+}
+
+bool
+WebGLContext::ValidateAndInitFB(const char* const funcName,
+                                const WebGLFramebuffer* const fb)
+{
+    if (fb)
+        return fb->ValidateAndInitAttachments(funcName);
+
+    if (!EnsureDefaultFB()) {
+        GenerateWarning("%s: Lazy resize failed. Losing context.", funcName);
+        ForceLoseContext();
+        return false;
+    }
+
+    if (mDefaultFB_IsInvalid) {
+        gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mDefaultFB->mFB);
+        const GLbitfield bits = LOCAL_GL_COLOR_BUFFER_BIT |
+                                LOCAL_GL_DEPTH_BUFFER_BIT |
+                                LOCAL_GL_STENCIL_BUFFER_BIT;
+        const bool fakeNoAlpha = !mOptions.alpha;
+        ForceClearFramebufferWithDefaultValues(bits, fakeNoAlpha);
+        mDefaultFB_IsInvalid = false;
+    }
+    return true;
+}
+
+void
+WebGLContext::DoBindFB(const WebGLFramebuffer* const fb, const GLenum target) const
+{
+    const GLenum driverFB = fb ? fb->mGLName : mDefaultFB->mFB;
+    gl->fBindFramebuffer(target, driverFB);
+}
+
+bool
+WebGLContext::BindCurFBForDraw(const char* const funcName)
+{
+    const auto& fb = mBoundDrawFramebuffer;
+    if (!ValidateAndInitFB(funcName, fb))
+        return false;
+
+    DoBindFB(fb);
+    return true;
+}
+
+bool
+WebGLContext::BindCurFBForColorRead(const char* const funcName,
+                                    const webgl::FormatUsageInfo** const out_format,
+                                    uint32_t* const out_width,
+                                    uint32_t* const out_height)
+{
+    const auto& fb = mBoundReadFramebuffer;
+
+    if (fb) {
+        if (!ValidateAndInitFB(funcName, fb))
             return false;
-        }
+        if (!fb->ValidateForColorRead(funcName, out_format, out_width, out_height))
+            return false;
 
-        ClearBackbufferIfNeeded();
-
-        // FIXME - here we're assuming that the default framebuffer is backed by
-        // UNSIGNED_BYTE that might not always be true, say if we had a 16bpp default
-        // framebuffer.
-        auto effFormat = mOptions.alpha ? webgl::EffectiveFormat::RGBA8
-                                        : webgl::EffectiveFormat::RGB8;
-
-        *out_format = mFormatUsage->GetUsage(effFormat);
-        MOZ_ASSERT(*out_format);
-
-        *out_width = mWidth;
-        *out_height = mHeight;
+        gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fb->mGLName);
         return true;
     }
 
-    return mBoundReadFramebuffer->ValidateForRead(funcName, out_format, out_width,
-                                                  out_height);
+    if (!BindDefaultFBForRead(funcName))
+        return false;
+
+    if (mDefaultFB_ReadBuffer == LOCAL_GL_NONE) {
+        ErrorInvalidOperation("%s: Can't read from backbuffer when readBuffer mode is"
+                              " NONE.",
+                              funcName);
+        return false;
+    }
+
+    auto effFormat = mOptions.alpha ? webgl::EffectiveFormat::RGBA8
+                                    : webgl::EffectiveFormat::RGB8;
+
+    *out_format = mFormatUsage->GetUsage(effFormat);
+    MOZ_ASSERT(*out_format);
+
+    *out_width = mDefaultFB->mSize.width;
+    *out_height = mDefaultFB->mSize.height;
+    return true;
+}
+
+bool
+WebGLContext::BindDefaultFBForRead(const char* const funcName)
+{
+    if (!ValidateAndInitFB(funcName, nullptr))
+        return false;
+
+    if (!mDefaultFB->mSamples) {
+        gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mDefaultFB->mFB);
+        return true;
+    }
+
+    if (!mResolvedDefaultFB) {
+        mResolvedDefaultFB = MozFramebuffer::Create(gl, mDefaultFB->mSize, 0, false);
+        if (!mResolvedDefaultFB) {
+            gfxCriticalNote << funcName << ": Failed to create mResolvedDefaultFB.";
+            return false;
+        }
+    }
+
+    gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mResolvedDefaultFB->mFB);
+    BlitBackbufferToCurDriverFB();
+
+    gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mResolvedDefaultFB->mFB);
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-WebGLContext::ScopedDrawCallWrapper::ScopedDrawCallWrapper(WebGLContext& webgl)
+ScopedDrawCallWrapper::ScopedDrawCallWrapper(WebGLContext& webgl)
     : mWebGL(webgl)
-    , mFakeNoAlpha(ShouldFakeNoAlpha(webgl))
-    , mFakeNoDepth(ShouldFakeNoDepth(webgl))
-    , mFakeNoStencil(ShouldFakeNoStencil(webgl))
 {
+    uint8_t driverColorMask = mWebGL.mColorWriteMask;
+    bool driverDepthTest    = mWebGL.mDepthTestEnabled;
+    bool driverStencilTest  = mWebGL.mStencilTestEnabled;
     if (!mWebGL.mBoundDrawFramebuffer) {
-        mWebGL.ClearBackbufferIfNeeded();
+        if (mWebGL.mDefaultFB_DrawBuffer0 == LOCAL_GL_NONE) {
+            driverColorMask = 0; // Is this well-optimized enough for depth-first
+                                 // rendering?
+        } else {
+            driverColorMask &= ~(uint8_t(mWebGL.mNeedsFakeNoAlpha) << 3);
+        }
+        driverDepthTest   &= !mWebGL.mNeedsFakeNoDepth;
+        driverStencilTest &= !mWebGL.mNeedsFakeNoStencil;
     }
 
-    if (mFakeNoAlpha) {
-        mWebGL.gl->fColorMask(mWebGL.mColorWriteMask[0],
-                              mWebGL.mColorWriteMask[1],
-                              mWebGL.mColorWriteMask[2],
-                              false);
+    const auto& gl = mWebGL.gl;
+    if (mWebGL.mDriverColorMask != driverColorMask) {
+        mWebGL.mDriverColorMask = driverColorMask;
+        gl->fColorMask(bool(mWebGL.mDriverColorMask & (1 << 0)),
+                       bool(mWebGL.mDriverColorMask & (1 << 1)),
+                       bool(mWebGL.mDriverColorMask & (1 << 2)),
+                       bool(mWebGL.mDriverColorMask & (1 << 3)));
     }
-    if (mFakeNoDepth) {
-        mWebGL.gl->fDisable(LOCAL_GL_DEPTH_TEST);
+    if (mWebGL.mDriverDepthTest != driverDepthTest) {
+        // "When disabled, the depth comparison and subsequent possible updates to the
+        //  depth buffer value are bypassed and the fragment is passed to the next
+        //  operation." [GLES 3.0.5, p177]
+        mWebGL.mDriverDepthTest = driverDepthTest;
+        gl->SetEnabled(LOCAL_GL_DEPTH_TEST, mWebGL.mDriverDepthTest);
     }
-    if (mFakeNoStencil) {
-        mWebGL.gl->fDisable(LOCAL_GL_STENCIL_TEST);
+    if (mWebGL.mDriverStencilTest != driverStencilTest) {
+        // "When disabled, the stencil test and associated modifications are not made, and
+        //  the fragment is always passed." [GLES 3.0.5, p175]
+        mWebGL.mDriverStencilTest = driverStencilTest;
+        gl->SetEnabled(LOCAL_GL_STENCIL_TEST, mWebGL.mDriverStencilTest);
     }
 }
 
-WebGLContext::ScopedDrawCallWrapper::~ScopedDrawCallWrapper()
+ScopedDrawCallWrapper::~ScopedDrawCallWrapper()
 {
-    if (mFakeNoAlpha) {
-        mWebGL.gl->fColorMask(mWebGL.mColorWriteMask[0],
-                              mWebGL.mColorWriteMask[1],
-                              mWebGL.mColorWriteMask[2],
-                              mWebGL.mColorWriteMask[3]);
-    }
-    if (mFakeNoDepth) {
-        mWebGL.gl->fEnable(LOCAL_GL_DEPTH_TEST);
-    }
-    if (mFakeNoStencil) {
-        MOZ_ASSERT(mWebGL.mStencilTestEnabled);
-        mWebGL.gl->fEnable(LOCAL_GL_STENCIL_TEST);
-    }
+    if (mWebGL.mBoundDrawFramebuffer)
+        return;
 
-    if (!mWebGL.mBoundDrawFramebuffer) {
-        mWebGL.Invalidate();
-        mWebGL.mShouldPresent = true;
-    }
-}
+    mWebGL.mResolvedDefaultFB = nullptr;
 
-/*static*/ bool
-WebGLContext::ScopedDrawCallWrapper::HasDepthButNoStencil(const WebGLFramebuffer* fb)
-{
-    const auto& depth = fb->DepthAttachment();
-    const auto& stencil = fb->StencilAttachment();
-    return depth.IsDefined() && !stencil.IsDefined();
-}
-
-////
-
-void
-WebGLContext::OnBeforeReadCall()
-{
-    if (!mBoundReadFramebuffer) {
-        ClearBackbufferIfNeeded();
-    }
+    mWebGL.Invalidate();
+    mWebGL.mShouldPresent = true;
 }
 
 ////////////////////////////////////////

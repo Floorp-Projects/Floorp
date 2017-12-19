@@ -56,7 +56,7 @@ StringValue(JSContext* cx, const char* chars, ErrorResult& rv)
 }
 
 void
-WebGLContext::GenerateWarning(const char* fmt, ...)
+WebGLContext::GenerateWarning(const char* fmt, ...) const
 {
     va_list ap;
     va_start(ap, fmt);
@@ -67,7 +67,7 @@ WebGLContext::GenerateWarning(const char* fmt, ...)
 }
 
 void
-WebGLContext::GenerateWarning(const char* fmt, va_list ap)
+WebGLContext::GenerateWarning(const char* fmt, va_list ap) const
 {
     if (!ShouldGenerateWarnings())
         return;
@@ -146,7 +146,7 @@ WebGLContext::GeneratePerfWarning(const char* fmt, ...) const
 }
 
 void
-WebGLContext::SynthesizeGLError(GLenum err)
+WebGLContext::SynthesizeGLError(GLenum err) const
 {
     /* ES2 section 2.5 "GL Errors" states that implementations can have
      * multiple 'flags', as errors might be caught in different parts of
@@ -159,7 +159,7 @@ WebGLContext::SynthesizeGLError(GLenum err)
 }
 
 void
-WebGLContext::SynthesizeGLError(GLenum err, const char* fmt, ...)
+WebGLContext::SynthesizeGLError(GLenum err, const char* fmt, ...) const
 {
     va_list va;
     va_start(va, fmt);
@@ -170,7 +170,7 @@ WebGLContext::SynthesizeGLError(GLenum err, const char* fmt, ...)
 }
 
 void
-WebGLContext::ErrorInvalidEnum(const char* fmt, ...)
+WebGLContext::ErrorInvalidEnum(const char* fmt, ...) const
 {
     va_list va;
     va_start(va, fmt);
@@ -181,7 +181,7 @@ WebGLContext::ErrorInvalidEnum(const char* fmt, ...)
 }
 
 void
-WebGLContext::ErrorInvalidEnumInfo(const char* info, GLenum enumValue)
+WebGLContext::ErrorInvalidEnumInfo(const char* info, GLenum enumValue) const
 {
     nsCString name;
     EnumName(enumValue, &name);
@@ -191,7 +191,7 @@ WebGLContext::ErrorInvalidEnumInfo(const char* info, GLenum enumValue)
 
 void
 WebGLContext::ErrorInvalidEnumInfo(const char* info, const char* funcName,
-                                   GLenum enumValue)
+                                   GLenum enumValue) const
 {
     nsCString name;
     EnumName(enumValue, &name);
@@ -201,7 +201,7 @@ WebGLContext::ErrorInvalidEnumInfo(const char* info, const char* funcName,
 }
 
 void
-WebGLContext::ErrorInvalidOperation(const char* fmt, ...)
+WebGLContext::ErrorInvalidOperation(const char* fmt, ...) const
 {
     va_list va;
     va_start(va, fmt);
@@ -212,7 +212,7 @@ WebGLContext::ErrorInvalidOperation(const char* fmt, ...)
 }
 
 void
-WebGLContext::ErrorInvalidValue(const char* fmt, ...)
+WebGLContext::ErrorInvalidValue(const char* fmt, ...) const
 {
     va_list va;
     va_start(va, fmt);
@@ -223,7 +223,7 @@ WebGLContext::ErrorInvalidValue(const char* fmt, ...)
 }
 
 void
-WebGLContext::ErrorInvalidFramebufferOperation(const char* fmt, ...)
+WebGLContext::ErrorInvalidFramebufferOperation(const char* fmt, ...) const
 {
     va_list va;
     va_start(va, fmt);
@@ -234,7 +234,7 @@ WebGLContext::ErrorInvalidFramebufferOperation(const char* fmt, ...)
 }
 
 void
-WebGLContext::ErrorOutOfMemory(const char* fmt, ...)
+WebGLContext::ErrorOutOfMemory(const char* fmt, ...) const
 {
     va_list va;
     va_start(va, fmt);
@@ -245,7 +245,7 @@ WebGLContext::ErrorOutOfMemory(const char* fmt, ...)
 }
 
 void
-WebGLContext::ErrorImplementationBug(const char* fmt, ...)
+WebGLContext::ErrorImplementationBug(const char* fmt, ...) const
 {
     const nsPrintfCString warning("Implementation bug, please file at %s! %s",
                                   "https://bugzilla.mozilla.org/", fmt);
@@ -260,7 +260,7 @@ WebGLContext::ErrorImplementationBug(const char* fmt, ...)
     return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY);
 }
 
-const char*
+/*static*/ const char*
 WebGLContext::ErrorName(GLenum error)
 {
     switch(error) {
@@ -625,7 +625,8 @@ WebGLContext::EnumName(GLenum val, nsCString* out_name)
 }
 
 void
-WebGLContext::ErrorInvalidEnumArg(const char* funcName, const char* argName, GLenum val)
+WebGLContext::ErrorInvalidEnumArg(const char* funcName, const char* argName,
+                                  GLenum val) const
 {
     nsCString enumName;
     EnumName(val, &enumName);
@@ -676,7 +677,7 @@ IsTextureFormatCompressed(TexInternalFormat format)
 }
 
 GLenum
-WebGLContext::GetAndFlushUnderlyingGLErrors()
+WebGLContext::GetAndFlushUnderlyingGLErrors() const
 {
     // Get and clear GL error in ALL cases.
     GLenum error = gl->fGetError();
@@ -739,7 +740,7 @@ AssertUintParamCorrect(gl::GLContext*, GLenum, GLuint)
 #endif
 
 void
-WebGLContext::AssertCachedBindings()
+WebGLContext::AssertCachedBindings() const
 {
 #ifdef DEBUG
     GetAndFlushUnderlyingGLErrors();
@@ -747,21 +748,6 @@ WebGLContext::AssertCachedBindings()
     if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::OES_vertex_array_object)) {
         GLuint bound = mBoundVertexArray ? mBoundVertexArray->GLName() : 0;
         AssertUintParamCorrect(gl, LOCAL_GL_VERTEX_ARRAY_BINDING, bound);
-    }
-
-    // Framebuffers
-    if (IsWebGL2()) {
-        GLuint bound = mBoundDrawFramebuffer ? mBoundDrawFramebuffer->mGLName
-                                             : 0;
-        AssertUintParamCorrect(gl, LOCAL_GL_DRAW_FRAMEBUFFER_BINDING, bound);
-
-        bound = mBoundReadFramebuffer ? mBoundReadFramebuffer->mGLName : 0;
-        AssertUintParamCorrect(gl, LOCAL_GL_READ_FRAMEBUFFER_BINDING, bound);
-    } else {
-        MOZ_ASSERT(mBoundDrawFramebuffer == mBoundReadFramebuffer);
-        GLuint bound = mBoundDrawFramebuffer ? mBoundDrawFramebuffer->mGLName
-                                             : 0;
-        AssertUintParamCorrect(gl, LOCAL_GL_FRAMEBUFFER_BINDING, bound);
     }
 
     GLint stencilBits = 0;
@@ -804,7 +790,7 @@ WebGLContext::AssertCachedBindings()
 }
 
 void
-WebGLContext::AssertCachedGlobalState()
+WebGLContext::AssertCachedGlobalState() const
 {
 #ifdef DEBUG
     GetAndFlushUnderlyingGLErrors();
@@ -812,19 +798,10 @@ WebGLContext::AssertCachedGlobalState()
     ////////////////
 
     // Draw state
-    MOZ_ASSERT(gl->fIsEnabled(LOCAL_GL_DEPTH_TEST) == mDepthTestEnabled);
     MOZ_ASSERT(gl->fIsEnabled(LOCAL_GL_DITHER) == mDitherEnabled);
     MOZ_ASSERT_IF(IsWebGL2(),
                   gl->fIsEnabled(LOCAL_GL_RASTERIZER_DISCARD) == mRasterizerDiscardEnabled);
     MOZ_ASSERT(gl->fIsEnabled(LOCAL_GL_SCISSOR_TEST) == mScissorTestEnabled);
-    MOZ_ASSERT(gl->fIsEnabled(LOCAL_GL_STENCIL_TEST) == mStencilTestEnabled);
-
-    realGLboolean colorWriteMask[4] = {0, 0, 0, 0};
-    gl->fGetBooleanv(LOCAL_GL_COLOR_WRITEMASK, colorWriteMask);
-    MOZ_ASSERT(colorWriteMask[0] == mColorWriteMask[0] &&
-               colorWriteMask[1] == mColorWriteMask[1] &&
-               colorWriteMask[2] == mColorWriteMask[2] &&
-               colorWriteMask[3] == mColorWriteMask[3]);
 
     GLfloat colorClearValue[4] = {0.0f, 0.0f, 0.0f, 0.0f};
     gl->fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, colorClearValue);

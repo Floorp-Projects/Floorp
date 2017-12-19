@@ -420,15 +420,13 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
 
     // These are the default values, see 6.2 State tables in the
     // OpenGL ES 2.0.25 spec.
-    mColorWriteMask[0] = 1;
-    mColorWriteMask[1] = 1;
-    mColorWriteMask[2] = 1;
-    mColorWriteMask[3] = 1;
-    mDepthWriteMask = 1;
+    mColorWriteMask = 0x0f;
+    mDriverColorMask = mColorWriteMask;
     mColorClearValue[0] = 0.f;
     mColorClearValue[1] = 0.f;
     mColorClearValue[2] = 0.f;
     mColorClearValue[3] = 0.f;
+    mDepthWriteMask = true;
     mDepthClearValue = 1.f;
     mStencilClearValue = 0;
     mStencilRefFront = 0;
@@ -461,13 +459,18 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     mDitherEnabled = true;
     mRasterizerDiscardEnabled = false;
     mScissorTestEnabled = false;
+
     mDepthTestEnabled = 0;
+    mDriverDepthTest = false;
     mStencilTestEnabled = 0;
+    mDriverStencilTest = false;
+
     mGenerateMipmapHint = LOCAL_GL_DONT_CARE;
 
     // Bindings, etc.
     mActiveTexture = 0;
     mDefaultFB_DrawBuffer0 = LOCAL_GL_BACK;
+    mDefaultFB_ReadBuffer = LOCAL_GL_BACK;
 
     mEmitContextLostErrorOnce = true;
     mWebGLError = LOCAL_GL_NO_ERROR;

@@ -40,29 +40,18 @@ WebGL2Context::BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY
 
     ////
 
-    const auto& readFB = mBoundReadFramebuffer;
-    if (readFB &&
-        !readFB->ValidateAndInitAttachments("blitFramebuffer's READ_FRAMEBUFFER"))
+    if (!ValidateAndInitFB("blitFramebuffer: READ_FRAMEBUFFER", mBoundReadFramebuffer) ||
+        !ValidateAndInitFB("blitFramebuffer: DRAW_FRAMEBUFFER", mBoundDrawFramebuffer))
     {
         return;
     }
 
-    const auto& drawFB = mBoundDrawFramebuffer;
-    if (drawFB &&
-        !drawFB->ValidateAndInitAttachments("blitFramebuffer's DRAW_FRAMEBUFFER"))
-    {
-        return;
-    }
-
-    ////
-
-    if (!mBoundReadFramebuffer) {
-        ClearBackbufferIfNeeded();
-    }
+    DoBindFB(mBoundReadFramebuffer, LOCAL_GL_READ_FRAMEBUFFER);
+    DoBindFB(mBoundDrawFramebuffer, LOCAL_GL_DRAW_FRAMEBUFFER);
 
     WebGLFramebuffer::BlitFramebuffer(this,
-                                      readFB, srcX0, srcY0, srcX1, srcY1,
-                                      drawFB, dstX0, dstY0, dstX1, dstY1,
+                                      srcX0, srcY0, srcX1, srcY1,
+                                      dstX0, dstY0, dstX1, dstY1,
                                       mask, filter);
 }
 
@@ -170,22 +159,24 @@ WebGLContext::ValidateInvalidateFramebuffer(const char* funcName, GLenum target,
         return false;
 
     const WebGLFramebuffer* fb;
-    bool isDefaultFB;
+    bool isDefaultFB = false;
     switch (target) {
     case LOCAL_GL_FRAMEBUFFER:
     case LOCAL_GL_DRAW_FRAMEBUFFER:
         fb = mBoundDrawFramebuffer;
-        isDefaultFB = gl->Screen()->IsDrawFramebufferDefault();
         break;
 
     case LOCAL_GL_READ_FRAMEBUFFER:
         fb = mBoundReadFramebuffer;
-        isDefaultFB = gl->Screen()->IsReadFramebufferDefault();
         break;
 
     default:
         MOZ_CRASH("GFX: Bad target.");
     }
+
+    if (!ValidateAndInitFB(funcName, fb))
+        return false;
+    DoBindFB(fb, target);
 
     *out_glNumAttachments = attachments.Length();
     *out_glAttachments = attachments.Elements();
@@ -230,13 +221,9 @@ WebGLContext::ValidateInvalidateFramebuffer(const char* funcName, GLenum target,
     ////
 
     if (!fb) {
-        ClearBackbufferIfNeeded();
-
-        // Don't do more validation after these.
-        Invalidate();
-        mShouldPresent = true;
+        mDefaultFB_IsInvalid = true;
+        mResolvedDefaultFB = nullptr;
     }
-
     return true;
 }
 
@@ -331,7 +318,7 @@ WebGL2Context::ReadBuffer(GLenum mode)
         return;
     }
 
-    gl->Screen()->SetReadBuffer(mode);
+    mDefaultFB_ReadBuffer = mode;
 }
 
 } // namespace mozilla
