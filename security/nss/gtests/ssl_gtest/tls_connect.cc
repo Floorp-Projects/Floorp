@@ -165,6 +165,22 @@ void TlsConnectTestBase::CheckShares(
   EXPECT_EQ(shares.len(), i);
 }
 
+void TlsConnectTestBase::CheckEpochs(uint16_t client_epoch,
+                                     uint16_t server_epoch) const {
+  uint16_t read_epoch = 0;
+  uint16_t write_epoch = 0;
+
+  EXPECT_EQ(SECSuccess,
+            SSLInt_GetEpochs(client_->ssl_fd(), &read_epoch, &write_epoch));
+  EXPECT_EQ(server_epoch, read_epoch) << "client read epoch";
+  EXPECT_EQ(client_epoch, write_epoch) << "client write epoch";
+
+  EXPECT_EQ(SECSuccess,
+            SSLInt_GetEpochs(server_->ssl_fd(), &read_epoch, &write_epoch));
+  EXPECT_EQ(client_epoch, read_epoch) << "server read epoch";
+  EXPECT_EQ(server_epoch, write_epoch) << "server write epoch";
+}
+
 void TlsConnectTestBase::ClearStats() {
   // Clear statistics.
   SSL3Statistics* stats = SSL_GetStatistics();
@@ -593,10 +609,12 @@ void TlsConnectTestBase::CheckSrtp() const {
   server_->CheckSrtp();
 }
 
-void TlsConnectTestBase::SendReceive() {
-  client_->SendData(50);
-  server_->SendData(50);
-  Receive(50);
+void TlsConnectTestBase::SendReceive(size_t total) {
+  ASSERT_GT(total, client_->received_bytes());
+  ASSERT_GT(total, server_->received_bytes());
+  client_->SendData(total - server_->received_bytes());
+  server_->SendData(total - client_->received_bytes());
+  Receive(total);  // Receive() is cumulative
 }
 
 // Do a first connection so we can do 0-RTT on the second one.

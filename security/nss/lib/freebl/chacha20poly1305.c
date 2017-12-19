@@ -14,7 +14,11 @@
 #include "blapit.h"
 
 #ifndef NSS_DISABLE_CHACHAPOLY
+#if defined(HAVE_INT128_SUPPORT) && (defined(NSS_X86_OR_X64) || defined(__aarch64__))
+#include "verified/Hacl_Poly1305_64.h"
+#else
 #include "poly1305.h"
+#endif
 #include "chacha20.h"
 #include "chacha20poly1305.h"
 #endif
@@ -22,6 +26,49 @@
 /* Poly1305Do writes the Poly1305 authenticator of the given additional data
  * and ciphertext to |out|. */
 #ifndef NSS_DISABLE_CHACHAPOLY
+
+#if defined(HAVE_INT128_SUPPORT) && (defined(NSS_X86_OR_X64) || defined(__aarch64__))
+
+static void
+Poly1305PadUpdate(Hacl_Impl_Poly1305_64_State_poly1305_state state, unsigned char *block, const unsigned char *p, const unsigned int pLen)
+{
+    unsigned int pRemLen = pLen % 16;
+    Hacl_Poly1305_64_update(state, (uint8_t *)p, (pLen / 16));
+    if (pRemLen > 0) {
+        memcpy(block, p + (pLen - pRemLen), pRemLen);
+        Hacl_Poly1305_64_update(state, block, 1);
+    }
+}
+
+static void
+Poly1305Do(unsigned char *out, const unsigned char *ad, unsigned int adLen,
+           const unsigned char *ciphertext, unsigned int ciphertextLen,
+           const unsigned char key[32])
+{
+    uint64_t tmp1[6U] = { 0U };
+    Hacl_Impl_Poly1305_64_State_poly1305_state state = Hacl_Poly1305_64_mk_state(tmp1, tmp1 + 3);
+
+    unsigned char block[16] = { 0 };
+    Hacl_Poly1305_64_init(state, (uint8_t *)key);
+
+    Poly1305PadUpdate(state, block, ad, adLen);
+    memset(block, 0, 16);
+    Poly1305PadUpdate(state, block, ciphertext, ciphertextLen);
+
+    unsigned int i;
+    unsigned int j;
+    for (i = 0, j = adLen; i < 8; i++, j >>= 8) {
+        block[i] = j;
+    }
+    for (i = 8, j = ciphertextLen; i < 16; i++, j >>= 8) {
+        block[i] = j;
+    }
+
+    Hacl_Poly1305_64_update(state, block, 1);
+    Hacl_Poly1305_64_finish(state, out, (uint8_t *)(key + 16));
+}
+#else
+
 static void
 Poly1305Do(unsigned char *out, const unsigned char *ad, unsigned int adLen,
            const unsigned char *ciphertext, unsigned int ciphertextLen,
@@ -56,7 +103,9 @@ Poly1305Do(unsigned char *out, const unsigned char *ad, unsigned int adLen,
     Poly1305Update(&state, lengthBytes, sizeof(lengthBytes));
     Poly1305Finish(&state, out);
 }
-#endif
+
+#endif /* HAVE_INT128_SUPPORT */
+#endif /* NSS_DISABLE_CHACHAPOLY */
 
 SECStatus
 ChaCha20Poly1305_InitContext(ChaCha20Poly1305Context *ctx,

@@ -39,6 +39,8 @@ SECStatus SSLInt_AdvanceWriteSeqNum(PRFileDesc *fd, PRUint64 to);
 SECStatus SSLInt_AdvanceReadSeqNum(PRFileDesc *fd, PRUint64 to);
 SECStatus SSLInt_AdvanceWriteSeqByAWindow(PRFileDesc *fd, PRInt32 extra);
 SSLKEAType SSLInt_GetKEAType(SSLNamedGroup group);
+SECStatus SSLInt_GetEpochs(PRFileDesc *fd, PRUint16 *readEpoch,
+                           PRUint16 *writeEpoch);
 
 SECStatus SSLInt_SetCipherSpecChangeFunc(PRFileDesc *fd,
                                          sslCipherSpecChangedFunc func,
