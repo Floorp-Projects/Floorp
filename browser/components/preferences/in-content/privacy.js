@@ -730,7 +730,7 @@ var gPrivacyPane = {
 
   _lastMode: null,
   _lastCheckState: null,
-  updateAutostart() {
+  async updateAutostart() {
     let mode = document.getElementById("historyMode");
     let autoStart = document.getElementById("privateBrowsingAutoStart");
     let pref = Preferences.get("browser.privatebrowsing.autostart");
@@ -748,7 +748,7 @@ var gPrivacyPane = {
       return;
     }
 
-    let buttonIndex = confirmRestartPrompt(autoStart.checked, 1,
+    let buttonIndex = await confirmRestartPrompt(autoStart.checked, 1,
       true, false);
     if (buttonIndex == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
       pref.value = autoStart.hasAttribute("checked");
@@ -1626,8 +1626,8 @@ var gPrivacyPane = {
       .setAttribute("href", a11yLearnMoreLink);
   },
 
-  updateA11yPrefs(checked) {
-    let buttonIndex = confirmRestartPrompt(checked, 0, true, false);
+  async updateA11yPrefs(checked) {
+    let buttonIndex = await confirmRestartPrompt(checked, 0, true, false);
     if (buttonIndex == CONFIRM_RESTART_PROMPT_RESTART_NOW) {
       Services.prefs.setIntPref("accessibility.force_disabled", checked ? 1 : 0);
       Services.telemetry.scalarSet("preferences.prevent_accessibility_services", true);
