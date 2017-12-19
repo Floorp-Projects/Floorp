@@ -307,13 +307,9 @@ var gEditItemOverlay = {
       // Note: since all controls are collapsed by default, we don't get the
       // default XUL dialog behavior, that selects the first control, so we set
       // the focus explicitly.
-      // Note: If focusedElement === "preferred", this file expects gPrefService
-      // to be defined in the global scope.
       let elt;
       if (focusedElement === "preferred") {
-        /* eslint-disable no-undef */
         elt = this._element(Services.prefs.getCharPref("browser.bookmarks.editDialog.firstEditField"));
-        /* eslint-enable no-undef */
       } else if (focusedElement === "first") {
         elt = document.querySelector("textbox:not([collapsed=true])");
       }
