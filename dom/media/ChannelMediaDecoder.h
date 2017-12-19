@@ -103,8 +103,6 @@ public:
 
 private:
   void DownloadProgressed();
-  void PinForSeek() override;
-  void UnpinForSeek() override;
 
   // Create a new state machine to run this decoder.
   MediaDecoderStateMachine* CreateStateMachine();
@@ -152,10 +150,6 @@ private:
   // this estimate is "decode time" (where the "current time" is the
   // time of the last decoded video frame).
   MediaChannelStatistics mPlaybackStatistics;
-
-  // True when our media stream has been pinned. We pin the stream
-  // while seeking.
-  bool mPinnedForSeek = false;
 
   // Current playback position in the stream. This is (approximately)
   // where we're up to playing back the stream. This is not adjusted
