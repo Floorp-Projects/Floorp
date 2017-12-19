@@ -51,21 +51,16 @@ panel[type="arrow"][side="right"] {
   margin: 1px;
 }
 
-.panel-arrow {
-  -moz-context-properties: fill, stroke;
-  fill: var(--arrowpanel-background);
-  stroke: var(--arrowpanel-border-color);
-}
-
 .panel-arrow[side="top"] {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
+  list-style-image: var(--panel-arrow-image-vertical,
+                        url("chrome://global/skin/arrow/panelarrow-vertical.png"));
   margin-left: 16px;
   margin-right: 16px;
   margin-bottom: -1px;
 }
 
 .panel-arrow[side="bottom"] {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.png");
   -moz-transform: scaleY(-1);
   margin-left: 16px;
   margin-right: 16px;
@@ -73,18 +68,35 @@ panel[type="arrow"][side="right"] {
 }
 
 .panel-arrow[side="left"] {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.png");
   margin-top: 16px;
   margin-bottom: 16px;
   margin-right: -1px;
 }
 
 .panel-arrow[side="right"] {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.png");
   transform: scaleX(-1);
   margin-top: 16px;
   margin-bottom: 16px;
   margin-left: -1px;
+}
+
+@media (min-resolution: 2dppx) {
+  .panel-arrow[side="top"],
+  .panel-arrow[side="bottom"] {
+    list-style-image: var(--panel-arrow-image-vertical,
+                          url("chrome://global/skin/arrow/panelarrow-vertical@2x.png"));
+    width: 18px;
+    height: 10px;
+  }
+
+  .panel-arrow[side="left"],
+  .panel-arrow[side="right"] {
+    list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal@2x.png");
+    width: 10px;
+    height: 18px;
+  }
 }
 
 /* ::::: tooltip ::::: */

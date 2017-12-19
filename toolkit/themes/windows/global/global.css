@@ -26,12 +26,6 @@ menulist > menupopup {
   --arrowpanel-border-color: ThreeDShadow;
 }
 
-@media (-moz-windows-default-theme) {
-  :root {
-    --arrowpanel-border-color: hsla(210,4%,10%,.2);
-  }
-}
-
 /* ::::: root elements ::::: */
 
 window,
