@@ -25,12 +25,11 @@ interface nsITabParent : nsISupports
   attribute boolean docShellIsActive;
 
   /**
-   * When aEnabled is set to true, this tells the child to paint and
-   * upload layers to the compositor. When aEnabled is set to false,
-   * previous layers are cleared from the compositor, but only if
-   * preserveLayers is also set to false.
+   * When set to true, this tells the child to paint and upload layers to
+   * the compositor. When set to false, previous layers are cleared from
+   * the compositor, but only if preserveLayers is also set to false.
    */
-  void renderLayers(in bool aEnabled);
+  attribute boolean renderLayers;
 
   /**
    * True if layers are being rendered and the compositor has reported
