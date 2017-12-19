@@ -22,7 +22,7 @@ def on_stop(event):
         # See if WasmFaultHandler is installed as the SIGSEGV signal action.
         sigaction_fn = gdb.parse_and_eval('__sigaction')
         sigaction_fn(SIGSEGV, 0, buf)
-        WasmFaultHandler = gdb.parse_and_eval("WasmFaultHandler<(Signal)0>")
+        WasmFaultHandler = gdb.parse_and_eval("WasmFaultHandler")
         if buf['__sigaction_handler']['sa_handler'] == WasmFaultHandler:
             # Advise the user that magic is happening.
             print("js/src/gdb/mozilla/asmjs.py: Allowing WasmFaultHandler to run.")
