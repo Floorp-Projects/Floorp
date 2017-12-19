@@ -304,6 +304,19 @@
         </body>
       </method>
 
+      <property name="renderLayers">
+        <getter>
+          <![CDATA[
+            return this.docShellIsActive;
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            return this.docShellIsActive = val;
+          ]]>
+        </setter>
+      </property>
+
       <property name="hasLayers" readonly="true">
         <getter>
           <![CDATA[
