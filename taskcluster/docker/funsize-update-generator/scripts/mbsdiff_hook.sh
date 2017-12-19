@@ -9,15 +9,15 @@
 #
 
 HOOK=
-SERVER_URL=
+AWS_BUCKET_NAME=
 LOCAL_CACHE_DIR=
 
 getsha512(){
-    echo "$(openssl sha512 "${1}" | awk '{print $2}')"
+    openssl sha512 "${1}" | awk '{print $2}'
 }
 
 print_usage(){
-    echo "$(basename $0) -A SERVER-URL [-c LOCAL-CACHE-DIR-PATH] [-g] [-u] PATH-FROM-URL PATH-TO-URL PATH-PATCH"
+    echo "$(basename "$0") [-S S3-BUCKET-NAME] [-c LOCAL-CACHE-DIR-PATH] [-g] [-u] PATH-FROM-URL PATH-TO-URL PATH-PATCH"
     echo "Script that saves/retrieves from cache presumptive patches as args"
     echo ""
     echo "-A SERVER-URL - host where to send the files"
@@ -31,74 +31,76 @@ print_usage(){
 }
 
 upload_patch(){
-    sha_from=`getsha512 "$1"`
-    sha_to=`getsha512 "$2"`
+    sha_from=$(getsha512 "$1")
+    sha_to=$(getsha512 "$2")
     patch_path="$3"
+    patch_filename="$(basename "$3")"
 
     # save to local cache first
     if [ -n "$LOCAL_CACHE_DIR" ]; then
         local_cmd="mkdir -p "$LOCAL_CACHE_DIR/$sha_from""
-        if `$local_cmd` >&2; then
-            cp -avf "$patch_path" "$LOCAL_CACHE_DIR/$sha_from/$sha_to"
-            echo "$patch_path saved on local cache!"
+        if $local_cmd >&2; then
+            cp -avf "${patch_path}" "$LOCAL_CACHE_DIR/$sha_from/$sha_to"
+            echo "${patch_path} saved on local cache."
         fi
     fi
-    # The remote cache implementation is not used. The code is for usage
-    # reference only.
-     return 0
 
-    # send it over to funsize
-    cmd="curl -sSw %{http_code} -o /dev/null -X POST $SERVER_URL -F sha_from="$sha_from" -F sha_to="$sha_to" -F patch_file="@$patch_path""
-    ret_code=`$cmd`
-
-    if [ $ret_code -eq 200 ]; then
-        echo "$patch_path Successful uploaded to funsize!"
-        return 0
+    if [ -n "${AWS_BUCKET_NAME}" ]; then
+        BUCKET_PATH="s3://${AWS_BUCKET_NAME}${sha_from}/${sha_to}/${patch_filename}"
+        if aws s3 cp "${patch_path}" "${BUCKET_PATH}"; then
+            echo "${patch_path} saved on s://${AWS_BUCKET_NAME}"
+            return 0
+        fi
+        echo "${patch_path} failed to be uploaded to s3://${AWS_BUCKET_NAME}"
+        return 1
     fi
-
-    echo "$patch_path Failed to be uploaded to funsize!"
-    return 1
+    return 0
 }
 
 get_patch(){
-    sha_from=`getsha512 "$1"`
-    sha_to=`getsha512 "$2"`
+    # $1 and $2 are the /path/to/filename
+    sha_from=$(getsha512 "$1")
+    sha_to=$(getsha512 "$2")
     destination_file="$3"
-    tmp_file="$destination_file.tmp"
+    s3_filename="$(basename "$3")"
 
-    # try to retrieve from local cache first
-    if [ -r "$LOCAL_CACHE_DIR/$sha_from/$sha_to" ]; then
-        cp -avf "$LOCAL_CACHE_DIR/$sha_from/$sha_to" "$destination_file"
-        echo "Successful retrieved $destination_file from local cache!"
-        return 0
-    else
-        echo "File is not in the locale cache"
-        return 1
+    # Try to retrieve from local cache first.
+    if [ -n "$LOCAL_CACHE_DIR" ]; then
+        if [ -r "$LOCAL_CACHE_DIR/$sha_from/$sha_to" ]; then
+            cp -avf "$LOCAL_CACHE_DIR/$sha_from/$sha_to" "$destination_file"
+            echo "Successful retrieved ${destination_file} from local cache."
+            return 0
+        fi
     fi
-    # The remote cache implementation is not used. The code is for usage
-    # reference only.
+    # If not in the local cache, we might find it remotely.
 
-    # if unsuccessful, try to retrieve from funsize
-    cmd="curl -LsSGw %{http_code} $SERVER_URL/$sha_from/$sha_to -o $tmp_file"
-    ret_code=`$cmd`
-
-    if [ $ret_code -eq 200 ]; then
-        mv "$tmp_file" "$destination_file"
-        echo "Successful retrieved $destination_file from funsize!"
-        return 0
+    if [ -n "${AWS_BUCKET_NAME}" ]; then
+        BUCKET_PATH="s3://${AWS_BUCKET_NAME}${sha_from}/${sha_to}/${s3_filename}"
+        if aws s3 ls "${BUCKET_PATH}"; then
+            if aws s3 cp "${BUCKET_PATH}" "${destination_file}"; then
+                echo "Successful retrieved ${destination_file} from s3://${AWS_BUCKET_NAME}"
+                return 0
+            else
+                echo "Failed to retrieve ${destination_file} from s3://${AWS_BUCKET_NAME}"
+                return 1
+            fi
+        # Not found, fall through to default error
+        fi
     fi
-
-    rm  -f "$tmp_file"
-    echo "Failed to retrieve $destination_file from funsize!"
     return 1
 }
 
 OPTIND=1
 
-while getopts ":A:c:gu" option; do
+while getopts ":S:c:gu" option; do
     case $option in
-        A)
-            SERVER_URL="$OPTARG"
+        S)
+            # This will probably be bucketname/path/prefix but we can use it either way
+            AWS_BUCKET_NAME="$OPTARG"
+            # Ensure trailing slash is there.
+            if [[ ! $AWS_BUCKET_NAME =~ .*/$ ]]; then
+              AWS_BUCKET_NAME="${AWS_BUCKET_NAME}/"
+            fi
             ;;
         c)
             LOCAL_CACHE_DIR="$OPTARG"

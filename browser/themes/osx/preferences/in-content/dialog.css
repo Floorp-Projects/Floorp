@@ -13,10 +13,6 @@ prefwindow,
   font-size: 1.18em;
 }
 
-caption {
-  font: message-box;
-}
-
 .prefWindow-dlgbuttons {
   margin: 0;
 }

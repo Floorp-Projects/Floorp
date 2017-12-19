@@ -69,6 +69,10 @@ HistoryEngine.prototype = {
     }
   },
 
+  shouldSyncURL(url) {
+    return !url.startsWith("file:");
+  },
+
   async pullNewChanges() {
     let modifiedGUIDs = Object.keys(this._tracker.changedIDs);
     if (!modifiedGUIDs.length) {
@@ -174,6 +178,9 @@ HistoryStore.prototype = {
 
     let urlsByGUID = {};
     for (let url of urls) {
+      if (!this.engine.shouldSyncURL(url)) {
+        continue;
+      }
       let guid = await this.GUIDForUri(url, true);
       urlsByGUID[guid] = url;
     }
@@ -294,7 +301,8 @@ HistoryStore.prototype = {
     }
     record.guid = record.id;
 
-    if (!this._canAddURI(record.uri)) {
+    if (!this._canAddURI(record.uri) ||
+        !this.engine.shouldSyncURL(record.uri.spec)) {
       this._log.trace("Ignoring record " + record.id + " with URI "
                       + record.uri.spec + ": can't add this URI.");
       return false;
@@ -314,7 +322,11 @@ HistoryStore.prototype = {
 
     let i, k;
     for (i = 0; i < curVisitsAsArray.length; i++) {
-      curVisits.add(curVisitsAsArray[i].date + "," + curVisitsAsArray[i].type);
+      // Same logic as used in the loop below to generate visitKey.
+      let {date, type} = curVisitsAsArray[i];
+      let dateObj = PlacesUtils.toDate(date);
+      let millis = PlacesSyncUtils.history.clampVisitDate(dateObj).getTime();
+      curVisits.add(`${millis},${type}`);
     }
 
     // Walk through the visits, make sure we have sound data, and eliminate
@@ -340,8 +352,7 @@ HistoryStore.prototype = {
       let originalVisitDate = PlacesUtils.toDate(Math.round(visit.date));
       visit.date = PlacesSyncUtils.history.clampVisitDate(originalVisitDate);
 
-      let visitDateAsPRTime = PlacesUtils.toPRTime(visit.date);
-      let visitKey = visitDateAsPRTime + "," + visit.type;
+      let visitKey = `${visit.date.getTime()},${visit.type}`;
       if (curVisits.has(visitKey)) {
         // Visit is a dupe, don't increment 'k' so the element will be
         // overwritten.
@@ -455,7 +466,7 @@ HistoryTracker.prototype = {
     }
 
     this._log.trace("onVisit: " + uri.spec);
-    if (this.addChangedID(guid)) {
+    if (this.engine.shouldSyncURL(uri.spec) && this.addChangedID(guid)) {
       this.score += SCORE_INCREMENT_SMALL;
     }
   },

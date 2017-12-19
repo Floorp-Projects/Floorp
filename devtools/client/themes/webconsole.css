@@ -1241,3 +1241,7 @@ body #output-container {
 .sidebar-close-button::before {
   background-image: var(--close-button-image);
 }
+
+.sidebar-contents .object-inspector {
+  min-width: 100%;
+}

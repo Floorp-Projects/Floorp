@@ -7,6 +7,7 @@
 #ifndef NSLINEBREAKER_H_
 #define NSLINEBREAKER_H_
 
+#include "mozilla/intl/LineBreaker.h"
 #include "nsString.h"
 #include "nsTArray.h"
 

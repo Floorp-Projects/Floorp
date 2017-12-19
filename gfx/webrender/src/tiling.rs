@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadiusKind, ClipId, ColorF, DeviceIntPoint, ImageKey};
+use api::{ClipId, ColorF, DeviceIntPoint, ImageKey};
 use api::{DeviceIntRect, DeviceIntSize, device_length, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
 use api::{DocumentLayer, ExternalImageType, FilterOp};
 use api::{ImageFormat, ImageRendering};
@@ -29,8 +29,8 @@ use profiler::FrameProfileCounters;
 use render_task::{ClipWorkItem};
 use render_task::{RenderTaskAddress, RenderTaskId, RenderTaskKey, RenderTaskKind};
 use render_task::{BlurTask, ClearMode, RenderTaskLocation, RenderTaskTree};
-use renderer::BlendMode;
-use renderer::ImageBufferKind;
+use renderer::{BlendMode, ImageBufferKind};
+use renderer::BLOCKS_PER_UV_RECT;
 use resource_cache::{GlyphFetchResult, ResourceCache};
 use std::{cmp, usize, f32, i32};
 use std::collections::hash_map::Entry;
@@ -570,7 +570,7 @@ fn add_to_batch(
                 &text_cpu.glyph_keys,
                 glyph_fetch_buffer,
                 gpu_cache,
-                |texture_id, glyph_format, glyphs| {
+                |texture_id, mut glyph_format, glyphs| {
                     debug_assert_ne!(texture_id, SourceTexture::Invalid);
 
                     let textures = BatchTextures {
@@ -580,6 +580,11 @@ fn add_to_batch(
                             SourceTexture::Invalid,
                         ],
                     };
+
+                    // Ignore color and only sample alpha when shadowing.
+                    if text_cpu.is_shadow() {
+                        glyph_format = glyph_format.ignore_color();
+                    }
 
                     let kind = BatchKind::Transformable(
                         transform_kind,
@@ -650,22 +655,13 @@ fn add_to_batch(
                             };
                             batch.push(PrimitiveInstance::from(instance));
                         }
-                        PictureKind::BoxShadow { radii_kind, .. } => {
+                        PictureKind::BoxShadow { image_kind, .. } => {
                             let kind = BatchKind::Brush(
                                 BrushBatchKind::Image(
                                     BrushImageSourceKind::from_render_target_kind(picture.target_kind())),
                             );
                             let key = BatchKey::new(kind, blend_mode, textures);
                             let batch = batch_list.get_suitable_batch(key, item_bounding_rect);
-
-                            let image_kind = match radii_kind {
-                                BorderRadiusKind::Uniform => {
-                                    BrushImageKind::Mirror
-                                }
-                                BorderRadiusKind::NonUniform => {
-                                    BrushImageKind::NinePatch
-                                }
-                            };
 
                             let instance = BrushInstance {
                                 picture_address: task_address,
@@ -2112,7 +2108,7 @@ fn resolve_image(
                     // This is an external texture - we will add it to
                     // the deferred resolves list to be patched by
                     // the render thread...
-                    let cache_handle = gpu_cache.push_deferred_per_frame_blocks(2);
+                    let cache_handle = gpu_cache.push_deferred_per_frame_blocks(BLOCKS_PER_UV_RECT);
                     deferred_resolves.push(DeferredResolve {
                         image_properties,
                         address: gpu_cache.get_address(&cache_handle),

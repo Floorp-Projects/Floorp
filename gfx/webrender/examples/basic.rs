@@ -259,7 +259,7 @@ impl Example for App {
         if false {
             // draw text?
             let font_key = api.generate_font_key();
-            let font_bytes = load_file("../wrench/reftest/text/FreeSans.ttf");
+            let font_bytes = load_file("../wrench/reftests/text/FreeSans.ttf");
             resources.add_raw_font(font_key, font_bytes, 0);
 
             let font_instance_key = api.generate_font_instance_key();
