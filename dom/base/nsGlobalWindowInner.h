@@ -351,6 +351,8 @@ public:
   mozilla::Maybe<mozilla::dom::ClientState> GetClientState() const;
   mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const;
 
+  void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
+
   virtual nsresult FireDelayedDOMEvents() override;
 
   virtual nsresult SetNewDocument(nsIDocument *aDocument,
