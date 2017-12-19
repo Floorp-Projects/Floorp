@@ -259,6 +259,12 @@ public:
   static bool IsGoogleJapaneseInputActive();
 
   /**
+   * Returns true if active TIP or IME is a black listed one and we should
+   * set input scope of URL bar to IS_DEFAULT rather than IS_URL.
+   */
+  static bool ShouldSetInputScopeOfURLBarToDefault();
+
+  /**
    * Returns true if TSF may crash if GetSelection() returns E_FAIL.
    */
   static bool DoNotReturnErrorFromGetSelection();
