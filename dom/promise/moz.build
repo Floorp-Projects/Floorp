@@ -11,12 +11,14 @@ EXPORTS.mozilla.dom += [
     'Promise.h',
     'PromiseDebugging.h',
     'PromiseNativeHandler.h',
+    'PromiseWindowProxy.h',
     'PromiseWorkerProxy.h',
 ]
 
 UNIFIED_SOURCES += [
     'Promise.cpp',
     'PromiseDebugging.cpp',
+    'PromiseWindowProxy.cpp',
 ]
 
 LOCAL_INCLUDES += [
