@@ -37,24 +37,11 @@ class nsResolveHostCallback;
 
 struct nsHostKey
 {
-    const nsCString host;
-    uint16_t flags;
-    uint16_t af;
-    const nsCString netInterface;
-    const nsCString originSuffix;
-
-    nsHostKey(const nsACString& host, uint16_t flags,
-              uint16_t af, const nsACString& netInterface,
-              const nsACString& originSuffix)
-        : host(host)
-        , flags(flags)
-        , af(af)
-        , netInterface(netInterface)
-        , originSuffix(originSuffix) {
-    }
-
-    bool operator==(const nsHostKey& other) const;
-    size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+    const char *host;
+    uint16_t    flags;
+    uint16_t    af;
+    const char *netInterface;
+    const char *originSuffix;
 };
 
 /**
@@ -69,7 +56,6 @@ public:
 
     /* instantiates a new host record */
     static nsresult Create(const nsHostKey *key, nsHostRecord **record);
-    nsHostRecord(const nsHostKey& key);
 
     /* a fully resolved host record has either a non-null |addr_info| or |addr|
      * field.  if |addr_info| is null, it implies that the |host| is an IP
