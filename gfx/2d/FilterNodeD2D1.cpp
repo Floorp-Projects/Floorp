@@ -812,7 +812,7 @@ FilterNodeD2D1::SetAttribute(uint32_t aIndex, const IntRect &aValue)
   if (mType == FilterType::TURBULENCE) {
     MOZ_ASSERT(aIndex == ATT_TURBULENCE_RECT);
 
-    mEffect->SetValue(D2D1_TURBULENCE_PROP_OFFSET, D2D1::Vector2F(Float(aValue.x), Float(aValue.y)));
+    mEffect->SetValue(D2D1_TURBULENCE_PROP_OFFSET, D2D1::Vector2F(Float(aValue.X()), Float(aValue.Y())));
     mEffect->SetValue(D2D1_TURBULENCE_PROP_SIZE, D2D1::Vector2F(Float(aValue.Width()), Float(aValue.Height())));
     return;
   }
@@ -820,7 +820,7 @@ FilterNodeD2D1::SetAttribute(uint32_t aIndex, const IntRect &aValue)
   UINT32 input = GetD2D1PropForAttribute(mType, aIndex);
   MOZ_ASSERT(input < mEffect->GetPropertyCount());
 
-  mEffect->SetValue(input, D2D1::RectF(Float(aValue.x), Float(aValue.y),
+  mEffect->SetValue(input, D2D1::RectF(Float(aValue.X()), Float(aValue.Y()),
                                        Float(aValue.XMost()), Float(aValue.YMost())));
 }
 
@@ -1021,7 +1021,7 @@ void
 FilterNodeConvolveD2D1::UpdateSourceRect()
 {
   mExtendInputEffect->SetValue(EXTENDINPUT_PROP_OUTPUT_RECT,
-    D2D1::Vector4F(Float(mSourceRect.x), Float(mSourceRect.y),
+                   D2D1::Vector4F(Float(mSourceRect.X()), Float(mSourceRect.Y()),
                    Float(mSourceRect.XMost()), Float(mSourceRect.YMost())));
 }
 

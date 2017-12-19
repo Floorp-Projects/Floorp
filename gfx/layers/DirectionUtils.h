@@ -16,27 +16,27 @@ namespace layers {
 template <typename PointOrRect>
 CoordOf<PointOrRect> GetAxisStart(ScrollDirection aDir, const PointOrRect& aValue) {
   if (aDir == ScrollDirection::eHorizontal) {
-    return aValue.x;
+    return aValue.X();
   } else {
-    return aValue.y;
+    return aValue.Y();
   }
 }
 
 template <typename Rect>
 CoordOf<Rect> GetAxisEnd(ScrollDirection aDir, const Rect& aValue) {
   if (aDir == ScrollDirection::eHorizontal) {
-    return aValue.x + aValue.width;
+    return aValue.XMost();
   } else {
-    return aValue.y + aValue.height;
+    return aValue.YMost();
   }
 }
 
 template <typename Rect>
 CoordOf<Rect> GetAxisLength(ScrollDirection aDir, const Rect& aValue) {
   if (aDir == ScrollDirection::eHorizontal) {
-    return aValue.width;
+    return aValue.Width();
   } else {
-    return aValue.height;
+    return aValue.Height();
   }
 }
 

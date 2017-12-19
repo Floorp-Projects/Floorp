@@ -520,9 +520,9 @@ CompositorOGL::PrepareViewport(CompositingRenderTargetOGL* aRenderTarget)
 already_AddRefed<CompositingRenderTarget>
 CompositorOGL::CreateRenderTarget(const IntRect &aRect, SurfaceInitMode aInit)
 {
-  MOZ_ASSERT(aRect.Width() != 0 && aRect.Height() != 0, "Trying to create a render target of invalid size");
+  MOZ_ASSERT(!aRect.IsZero(), "Trying to create a render target of invalid size");
 
-  if (aRect.Width() * aRect.Height() == 0) {
+  if (aRect.IsZero()) {
     return nullptr;
   }
 
@@ -547,9 +547,9 @@ CompositorOGL::CreateRenderTargetFromSource(const IntRect &aRect,
                                             const CompositingRenderTarget *aSource,
                                             const IntPoint &aSourcePoint)
 {
-  MOZ_ASSERT(aRect.Width() != 0 && aRect.Height() != 0, "Trying to create a render target of invalid size");
+  MOZ_ASSERT(!aRect.IsZero(), "Trying to create a render target of invalid size");
 
-  if (aRect.Width() * aRect.Height() == 0) {
+  if (aRect.IsZero()) {
     return nullptr;
   }
 
@@ -614,10 +614,10 @@ void
 CompositorOGL::ClearRect(const gfx::Rect& aRect)
 {
   // Map aRect to OGL coordinates, origin:bottom-left
-  GLint y = mViewportSize.height - (aRect.y + aRect.Height());
+  GLint y = mViewportSize.height - aRect.YMost();
 
   ScopedGLState scopedScissorTestState(mGLContext, LOCAL_GL_SCISSOR_TEST, true);
-  ScopedScissorRect autoScissorRect(mGLContext, aRect.x, y, aRect.Width(), aRect.Height());
+  ScopedScissorRect autoScissorRect(mGLContext, aRect.X(), y, aRect.Width(), aRect.Height());
   mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 }
@@ -638,15 +638,15 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   if (mUseExternalSurfaceSize) {
     rect = gfx::IntRect(0, 0, mSurfaceSize.width, mSurfaceSize.height);
   } else {
-    rect = gfx::IntRect(aRenderBounds.x, aRenderBounds.y, aRenderBounds.Width(), aRenderBounds.Height());
+    rect = gfx::IntRect(aRenderBounds.X(), aRenderBounds.Y(), aRenderBounds.Width(), aRenderBounds.Height());
   }
 
   if (aRenderBoundsOut) {
     *aRenderBoundsOut = rect;
   }
 
-  GLint width = rect.Width();
-  GLint height = rect.Height();
+  auto width = rect.Width();
+  auto height = rect.Height();
 
   // We can't draw anything to something with no area
   // so just return
@@ -725,6 +725,9 @@ CompositorOGL::CreateTexture(const IntRect& aRect, bool aCopyFromSource,
   clampedRect.SetWidth(std::min(clampedRect.Width(), maxTexSize));
   clampedRect.SetHeight(std::min(clampedRect.Height(), maxTexSize));
 
+  auto clampedRectWidth = clampedRect.Width();
+  auto clampedRectHeight = clampedRect.Height();
+
   GLuint tex;
 
   mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
@@ -753,25 +756,25 @@ CompositorOGL::CreateTexture(const IntRect& aRect, bool aCopyFromSource,
       mGLContext->fCopyTexImage2D(mFBOTextureTarget,
                                   0,
                                   LOCAL_GL_RGBA,
-                                  clampedRect.x, FlipY(clampedRect.y + clampedRect.Height()),
-                                  clampedRect.Width(), clampedRect.Height(),
+                                  clampedRect.X(), FlipY(clampedRect.YMost()),
+                                  clampedRectWidth, clampedRectHeight,
                                   0);
     } else {
       // Curses, incompatible formats.  Take a slow path.
 
       // RGBA
-      size_t bufferSize = clampedRect.Width() * clampedRect.Height() * 4;
+      size_t bufferSize = clampedRectWidth * clampedRectHeight * 4;
       auto buf = MakeUnique<uint8_t[]>(bufferSize);
 
-      mGLContext->fReadPixels(clampedRect.x, clampedRect.y,
-                              clampedRect.Width(), clampedRect.Height(),
+      mGLContext->fReadPixels(clampedRect.X(), clampedRect.Y(),
+                              clampedRectWidth, clampedRectHeight,
                               LOCAL_GL_RGBA,
                               LOCAL_GL_UNSIGNED_BYTE,
                               buf.get());
       mGLContext->fTexImage2D(mFBOTextureTarget,
                               0,
                               LOCAL_GL_RGBA,
-                              clampedRect.Width(), clampedRect.Height(),
+                              clampedRectWidth, clampedRectHeight,
                               0,
                               LOCAL_GL_RGBA,
                               LOCAL_GL_UNSIGNED_BYTE,
@@ -789,7 +792,7 @@ CompositorOGL::CreateTexture(const IntRect& aRect, bool aCopyFromSource,
     mGLContext->fTexImage2D(mFBOTextureTarget,
                             0,
                             LOCAL_GL_RGBA,
-                            clampedRect.Width(), clampedRect.Height(),
+                            clampedRectWidth, clampedRectHeight,
                             0,
                             LOCAL_GL_RGBA,
                             LOCAL_GL_UNSIGNED_BYTE,
@@ -806,8 +809,8 @@ CompositorOGL::CreateTexture(const IntRect& aRect, bool aCopyFromSource,
   mGLContext->fBindTexture(mFBOTextureTarget, 0);
 
   if (aAllocSize) {
-    aAllocSize->width = clampedRect.Width();
-    aAllocSize->height = clampedRect.Height();
+    aAllocSize->width = clampedRectWidth;
+    aAllocSize->height = clampedRectHeight;
   }
 
   return tex;
@@ -1046,7 +1049,7 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
   // XXX: This doesn't handle 3D transforms. It also doesn't handled rotated
   //      quads. Fix me.
-  mPixelsFilled += destRect.width * destRect.height;
+  mPixelsFilled += destRect.Width() * destRect.Height();
 
   // Do a simple culling if this rect is out of target buffer.
   // Inflate a small size to avoid some numerical imprecision issue.
@@ -1069,8 +1072,8 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
   }
 
   ScopedGLState scopedScissorTestState(mGLContext, LOCAL_GL_SCISSOR_TEST, true);
-  ScopedScissorRect autoScissorRect(mGLContext, clipRect.x, FlipY(clipRect.y + clipRect.height),
-                                    clipRect.width, clipRect.height);
+  ScopedScissorRect autoScissorRect(mGLContext, clipRect.X(), FlipY(clipRect.Y() + clipRect.Height()),
+                                    clipRect.Width(), clipRect.Height());
 
   MaskType maskType;
   EffectMask* effectMask;
@@ -1093,10 +1096,10 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
     Rect bounds = Rect(Point(), Size(maskSize));
     bounds = maskTransform.As2D().TransformBounds(bounds);
 
-    maskQuadTransform._11 = 1.0f/bounds.width;
-    maskQuadTransform._22 = 1.0f/bounds.height;
-    maskQuadTransform._41 = float(-bounds.x)/bounds.width;
-    maskQuadTransform._42 = float(-bounds.y)/bounds.height;
+    maskQuadTransform._11 = 1.0f/bounds.Width();
+    maskQuadTransform._22 = 1.0f/bounds.Height();
+    maskQuadTransform._41 = float(-bounds.X())/bounds.Width();
+    maskQuadTransform._42 = float(-bounds.Y())/bounds.Height();
 
     maskType = MaskType::Mask;
   } else {
@@ -1481,7 +1484,7 @@ CompositorOGL::DrawGeometry(const Geometry& aGeometry,
   MakeCurrent();
 
   LayerScope::DrawEnd(mGLContext, aEffectChain,
-                      aRect.width, aRect.height);
+                      aRect.Width(), aRect.Height());
 }
 
 void
@@ -1687,7 +1690,7 @@ CompositorOGL::CopyToTarget(DrawTarget* aTarget, const nsIntPoint& aTopLeft, con
 
   Matrix oldMatrix = aTarget->GetTransform();
   aTarget->SetTransform(glToCairoTransform);
-  Rect floatRect = Rect(rect.x, rect.y, rect.Width(), rect.Height());
+  Rect floatRect = Rect(rect.X(), rect.Y(), width, height);
   aTarget->DrawSurface(source, floatRect, floatRect, DrawSurfaceOptions(), DrawOptions(1.0f, CompositionOp::OP_SOURCE));
   aTarget->SetTransform(oldMatrix);
   aTarget->Flush();

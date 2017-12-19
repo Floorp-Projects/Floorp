@@ -313,8 +313,8 @@ static inline wr::LayoutVector2D ToLayoutVector2D(const mozilla::LayoutDeviceInt
 static inline wr::LayoutRect ToLayoutRect(const mozilla::LayoutDeviceRect& rect)
 {
   wr::LayoutRect r;
-  r.origin.x = rect.x;
-  r.origin.y = rect.y;
+  r.origin.x = rect.X();
+  r.origin.y = rect.Y();
   r.size.width = rect.Width();
   r.size.height = rect.Height();
   return r;
@@ -323,8 +323,8 @@ static inline wr::LayoutRect ToLayoutRect(const mozilla::LayoutDeviceRect& rect)
 static inline wr::LayoutRect ToLayoutRect(const gfxRect& rect)
 {
   wr::LayoutRect r;
-  r.origin.x = rect.x;
-  r.origin.y = rect.y;
+  r.origin.x = rect.X();
+  r.origin.y = rect.Y();
   r.size.width = rect.Width();
   r.size.height = rect.Height();
   return r;
@@ -333,10 +333,10 @@ static inline wr::LayoutRect ToLayoutRect(const gfxRect& rect)
 static inline wr::DeviceUintRect ToDeviceUintRect(const mozilla::ImageIntRect& rect)
 {
   wr::DeviceUintRect r;
-  r.origin.x = rect.x;
-  r.origin.y = rect.y;
-  r.size.width = rect.width;
-  r.size.height = rect.height;
+  r.origin.x = rect.X();
+  r.origin.y = rect.Y();
+  r.size.width = rect.Width();
+  r.size.height = rect.Height();
   return r;
 }
 
