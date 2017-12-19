@@ -319,6 +319,12 @@ HistoryStore.prototype = {
     } catch (e) {
       this._log.error("Error while fetching visits for URL ${record.histUri}", record.histUri);
     }
+    let oldestAllowed = PlacesSyncUtils.bookmarks.EARLIEST_BOOKMARK_TIMESTAMP;
+    if (curVisitsAsArray.length == 20) {
+      let oldestVisit = curVisitsAsArray[curVisitsAsArray.length - 1];
+      oldestAllowed = PlacesSyncUtils.history.clampVisitDate(
+        PlacesUtils.toDate(oldestVisit.date).getTime());
+    }
 
     let i, k;
     for (i = 0; i < curVisitsAsArray.length; i++) {
@@ -352,6 +358,11 @@ HistoryStore.prototype = {
       let originalVisitDate = PlacesUtils.toDate(Math.round(visit.date));
       visit.date = PlacesSyncUtils.history.clampVisitDate(originalVisitDate);
 
+      if (visit.date.getTime() < oldestAllowed) {
+        // Visit is older than the oldest visit we have, and we have so many
+        // visits for this uri that we hit our limit when inserting.
+        continue;
+      }
       let visitKey = `${visit.date.getTime()},${visit.type}`;
       if (curVisits.has(visitKey)) {
         // Visit is a dupe, don't increment 'k' so the element will be

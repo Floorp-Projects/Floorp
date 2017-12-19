@@ -189,3 +189,68 @@ add_task(async function test_history_visit_roundtrip() {
   equal(visits.length, 2);
   await PlacesTestUtils.clearHistory();
 });
+
+add_task(async function test_history_visit_dedupe_old() {
+  let engine = new HistoryEngine(Service);
+  await engine.initialize();
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  Svc.Obs.notify("weave:engine:start-tracking");
+
+  await PlacesUtils.history.insert({
+    url: "https://www.example.com",
+    visits: Array.from({ length: 25 }, (_, index) => ({
+      transition: PlacesUtils.history.TRANSITION_LINK,
+      date: new Date(Date.UTC(2017, 10, 1 + index)),
+    }))
+  });
+
+  let recentVisits = await PlacesSyncUtils.history.fetchVisitsForURL("https://www.example.com");
+  equal(recentVisits.length, 20);
+  let {visits: allVisits, guid} = await PlacesUtils.history.fetch("https://www.example.com", {
+    includeVisits: true
+  });
+  equal(allVisits.length, 25);
+
+  let collection = server.user("foo").collection("history");
+
+  await sync_engine_and_validate_telem(engine, false);
+
+  let wbo = collection.wbo(guid);
+  let data = JSON.parse(JSON.parse(wbo.payload).ciphertext);
+
+  data.visits.push(
+    // Add a couple remote visit equivalent to some old visits we have already
+    {
+      date: Date.UTC(2017, 10, 1) * 1000, // Nov 1, 2017
+      type: PlacesUtils.history.TRANSITIONS.LINK
+    }, {
+      date: Date.UTC(2017, 10, 2) * 1000, // Nov 2, 2017
+      type: PlacesUtils.history.TRANSITIONS.LINK
+    },
+    // Add a couple new visits to make sure we are still applying them.
+    {
+      date: Date.UTC(2017, 11, 4) * 1000, // Dec 4, 2017
+      type: PlacesUtils.history.TRANSITIONS.LINK
+    }, {
+      date: Date.UTC(2017, 11, 5) * 1000, // Dec 5, 2017
+      type: PlacesUtils.history.TRANSITIONS.LINK
+    }
+  );
+
+  collection.insertWBO(new ServerWBO(guid, encryptPayload(data), Date.now() / 1000 + 10));
+  engine.lastSync = Date.now() / 1000 - 30;
+  await sync_engine_and_validate_telem(engine, false);
+
+  allVisits = (await PlacesUtils.history.fetch("https://www.example.com", {
+    includeVisits: true
+  })).visits;
+
+  equal(allVisits.length, 27);
+  ok(allVisits.find(x => x.date.getTime() === Date.UTC(2017, 11, 4)),
+     "Should contain the Dec. 4th visit");
+  ok(allVisits.find(x => x.date.getTime() === Date.UTC(2017, 11, 5)),
+     "Should contain the Dec. 5th visit");
+  await PlacesTestUtils.clearHistory();
+});
