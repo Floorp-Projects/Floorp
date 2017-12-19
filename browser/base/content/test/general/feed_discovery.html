@@ -12,6 +12,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=377611
     <link rel="alternate" type="application/rss+xml" title="2" href="/2.rss" />
     <link rel="feed" title="3" href="/3.xml" />
 
+    <!-- invalid protocol -->
+    <link rel="alternate" type="application/atom+xml" title="Bogus non file protocol" href="file://path/1.rss" />
+    <link rel="alternate" type="application/atom+xml" title="Bogus non feed:http protocol" href="feed:http://path/1.rss" />
+    <link rel="alternate" type="application/atom+xml" title="Bogus non pcast protocol" href="pcast://path/1.rss" />
+
     <!-- rel is a space-separated list -->
     <link rel=" alternate " type="application/atom+xml" title="4" href="/4.atom" />
     <link rel="foo alternate" type="application/atom+xml" title="5" href="/5.atom" />

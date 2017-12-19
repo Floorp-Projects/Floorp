@@ -659,9 +659,10 @@ impl ClipScrollNode {
                 state.parent_reference_frame_transform = self.world_viewport_transform;
                 state.parent_combined_viewport_rect = combined_local_viewport_rect;
                 state.parent_accumulated_scroll_offset = LayerVector2D::zero();
+                let translation = -info.origin_in_parent_reference_frame;
                 state.nearest_scrolling_ancestor_viewport =
                     state.nearest_scrolling_ancestor_viewport
-                       .translate(&info.origin_in_parent_reference_frame);
+                       .translate(&translation);
             }
             NodeType::Clip(..) => {
                 state.parent_combined_viewport_rect = combined_local_viewport_rect;

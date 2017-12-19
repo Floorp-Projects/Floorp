@@ -47,40 +47,12 @@ const URLs = new Map([
   // - whether the URI can be created at all (some protocol handlers will
   //   refuse to create certain variants)
     ["http://www.example2.com", true, true, true],
-    ["feed:http://www.example2.com", false, false, true],
     ["https://www.example2.com", true, true, true],
     ["moz-icon:file:///foo/bar/baz.exe", false, false, true],
     ["moz-icon://.exe", false, false, true],
     ["chrome://foo/content/bar.xul", false, false, true],
-    ["feed:chrome://foo/content/bar.xul", false, false, false],
     ["view-source:http://www.example2.com", false, false, true],
     ["view-source:https://www.example2.com", false, false, true],
-    ["view-source:feed:http://www.example2.com", false, false, true],
-    ["feed:view-source:http://www.example2.com", false, false, false],
-    ["data:text/html,Hi", true, false, true],
-    ["view-source:data:text/html,Hi", false, false, true],
-    ["javascript:alert('hi')", true, false, true],
-    ["moz://a", false, false, true],
-    ["about:test-chrome-privs", false, false, true],
-    ["about:test-unknown-unlinkable", false, false, true],
-    ["about:test-content-unlinkable", false, false, true],
-    ["about:test-content-linkable", true, true, true],
-    // Because this page doesn't have SAFE_FOR_UNTRUSTED, the web can't link to it:
-    ["about:test-unknown-linkable", false, false, true],
-  ]],
-  ["feed:http://www.example.com", [
-    ["http://www.example2.com", true, true, true],
-    ["feed:http://www.example2.com", true, true, true],
-    ["https://www.example2.com", true, true, true],
-    ["moz-icon:file:///foo/bar/baz.exe", false, false, true],
-    ["moz-icon://.exe", false, false, true],
-    ["feed:https://www.example2.com", true, true, true],
-    ["chrome://foo/content/bar.xul", false, false, true],
-    ["feed:chrome://foo/content/bar.xul", false, false, false],
-    ["view-source:http://www.example2.com", false, false, true],
-    ["view-source:https://www.example2.com", false, false, true],
-    ["view-source:feed:http://www.example2.com", false, false, true],
-    ["feed:view-source:http://www.example2.com", false, false, false],
     ["data:text/html,Hi", true, false, true],
     ["view-source:data:text/html,Hi", false, false, true],
     ["javascript:alert('hi')", true, false, true],
@@ -94,17 +66,12 @@ const URLs = new Map([
   ]],
   ["view-source:http://www.example.com", [
     ["http://www.example2.com", true, true, true],
-    ["feed:http://www.example2.com", false, false, true],
     ["https://www.example2.com", true, true, true],
     ["moz-icon:file:///foo/bar/baz.exe", false, false, true],
     ["moz-icon://.exe", false, false, true],
-    ["feed:https://www.example2.com", false, false, true],
     ["chrome://foo/content/bar.xul", false, false, true],
-    ["feed:chrome://foo/content/bar.xul", false, false, false],
     ["view-source:http://www.example2.com", true, true, true],
     ["view-source:https://www.example2.com", true, true, true],
-    ["view-source:feed:http://www.example2.com", false, false, true],
-    ["feed:view-source:http://www.example2.com", false, false, false],
     ["data:text/html,Hi", true, false, true],
     ["view-source:data:text/html,Hi", true, false, true],
     ["javascript:alert('hi')", true, false, true],
@@ -289,14 +256,6 @@ add_task(async function() {
                 baseFlags);
         testURL(contentPrincipal, "view-source:" + contentBlobURI, false, false, true,
                 baseFlags | ssm.DISALLOW_INHERIT_PRINCIPAL);
-
-        // Feed URIs for blobs can't be created, so need to pass false as the fourth param.
-        for (let prefix of ["feed:", "view-source:feed:", "feed:view-source:"]) {
-          testURL(contentPrincipal, prefix + contentBlobURI, false, false, false,
-                  baseFlags);
-          testURL(contentPrincipal, prefix + contentBlobURI, false, false, false,
-                  baseFlags | ssm.DISALLOW_INHERIT_PRINCIPAL);
-        }
       }
     );
 

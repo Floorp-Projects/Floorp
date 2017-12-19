@@ -2971,9 +2971,12 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            var tabsToEnd = [];
+            let tabsToEnd = [];
             let tabs = this.visibleTabs;
-            for (let i = tabs.length - 1; tabs[i] != aTab && i >= 0; --i) {
+            for (let i = tabs.length - 1; i >= 0; --i) {
+              if (tabs[i] == aTab || tabs[i].pinned) {
+                break;
+              }
               tabsToEnd.push(tabs[i]);
             }
             return tabsToEnd;
@@ -3015,9 +3018,9 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            if (aTab.pinned ||
-                !this.warnAboutClosingTabs(this.closingTabsEnum.OTHER))
+            if (!this.warnAboutClosingTabs(this.closingTabsEnum.OTHER)) {
               return;
+            }
 
             let tabs = this.visibleTabs.reverse();
             this.selectedTab = aTab;
