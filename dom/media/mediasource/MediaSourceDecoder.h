@@ -73,8 +73,6 @@ public:
   void NotifyDataArrived();
 
 private:
-  void PinForSeek() override {}
-  void UnpinForSeek() override {}
   MediaDecoderStateMachine* CreateStateMachine();
   void DoSetMediaSourceDuration(double aDuration);
   media::TimeInterval ClampIntervalToEnd(const media::TimeInterval& aInterval);

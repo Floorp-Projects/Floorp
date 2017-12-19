@@ -47,9 +47,6 @@ public:
 private:
   friend class HLSResourceCallbacksSupport;
 
-  void PinForSeek() override {}
-  void UnpinForSeek() override {}
-
   MediaDecoderStateMachine* CreateStateMachine();
 
   bool CanPlayThroughImpl() override final
