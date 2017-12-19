@@ -726,7 +726,7 @@ nsStyleSet::AddDocStyleSheet(CSSStyleSheet* aSheet, nsIDocument* aDocument)
 
   bool present = sheets.RemoveElement(aSheet);
 
-  size_t index = aDocument->FindDocStyleSheetInsertionPoint(sheets, *aSheet);
+  size_t index = aDocument->FindDocStyleSheetInsertionPoint(sheets, aSheet);
   sheets.InsertElementAt(index, aSheet);
 
   if (!present) {
