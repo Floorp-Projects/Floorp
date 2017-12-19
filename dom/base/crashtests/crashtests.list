@@ -238,4 +238,3 @@ pref(dom.webcomponents.customelements.enabled,true) load 1413815.html
 load 1411473.html
 pref(dom.webcomponents.enabled,false) load 1422931.html
 pref(dom.webcomponents.enabled,true) load 1419799.html
-pref(dom.webcomponents.customelements.enabled,true) pref(dom.disable_open_during_load,false) load 1419902.html
