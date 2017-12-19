@@ -184,6 +184,7 @@ add_task(async function test_new_tab_keep_settings() {
   let extensionId = "newtabkeep@mochi.test";
   let manifest = {
     version: "1.0",
+    name: "New Tab Add-on",
     applications: {gecko: {id: extensionId}},
     chrome_url_overrides: {newtab: "keep.html"},
   };
@@ -202,6 +203,7 @@ add_task(async function test_new_tab_keep_settings() {
 
   await extension.startup();
 
+
   // Simulate opening the New Tab as a user would.
   let popupShown = promisePopupShown(panel);
   BrowserOpenTab();
@@ -215,11 +217,17 @@ add_task(async function test_new_tab_keep_settings() {
      "The New Tab notification is not set for this extension");
   is(panel.anchorNode.closest("toolbarbutton").id, "PanelUI-menu-button",
      "The doorhanger is anchored to the menu icon");
+  is(panel.querySelector("description").textContent,
+     "An extension,  New Tab Add-on, changed the page you see when you open a new tab.Learn more",
+     "The description includes the add-on name");
 
   // Click the Keep Changes button.
-  let popupHidden = promisePopupHidden(panel);
+  let confirmationSaved = TestUtils.waitForCondition(() => {
+    return ExtensionSettingsStore.getSetting(
+      "newTabNotification", extensionId, extensionId).value;
+  });
   clickKeepChanges(notification);
-  await popupHidden;
+  await confirmationSaved;
 
   // Ensure panel is closed and setting is updated.
   ok(panel.getAttribute("panelopen") != "true",
@@ -258,6 +266,10 @@ add_task(async function test_new_tab_keep_settings() {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await upgradedExtension.unload();
   await extension.unload();
+
+  let confirmation = ExtensionSettingsStore.getSetting(
+    "newTabNotification", extensionId, extensionId);
+  is(confirmation, null, "The confirmation has been cleaned up");
 });
 
 add_task(async function test_new_tab_restore_settings() {
