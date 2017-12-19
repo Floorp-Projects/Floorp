@@ -1420,7 +1420,7 @@ KeymapWrapper::WillDispatchKeyboardEventInternal(WidgetKeyboardEvent& aKeyEvent,
 
     bool needLatinKeyCodes = !isLatin;
     if (!needLatinKeyCodes) {
-        needLatinKeyCodes = 
+        needLatinKeyCodes =
             (IS_ASCII_ALPHABETICAL(altCharCodes.mUnshiftedCharCode) !=
              IS_ASCII_ALPHABETICAL(altCharCodes.mShiftedCharCode));
     }

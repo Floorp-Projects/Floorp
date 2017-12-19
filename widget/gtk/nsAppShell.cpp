@@ -117,7 +117,7 @@ WrapGdkFrameClockDispose(GObject* object)
 #endif
 
 /*static*/ gboolean
-nsAppShell::EventProcessorCallback(GIOChannel *source, 
+nsAppShell::EventProcessorCallback(GIOChannel *source,
                                    GIOCondition condition,
                                    gpointer data)
 {

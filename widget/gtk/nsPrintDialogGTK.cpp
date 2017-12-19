@@ -94,7 +94,7 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
   gtk_container_set_border_width(GTK_CONTAINER(custom_hbox), 2);
   gtk_widget_show_all(custom_hbox);
 
-  gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(prompt_dialog))), 
+  gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(prompt_dialog))),
                      custom_hbox, FALSE, FALSE, 0);
   gint diag_response = gtk_dialog_run(GTK_DIALOG(prompt_dialog));
 
@@ -142,7 +142,7 @@ class nsPrintDialogWidgetGTK {
     const char* OptionWidgetToString(GtkWidget *dropdown);
 
     /* Code to copy between GTK and NS print settings structures.
-     * In the following, 
+     * In the following,
      *   "Import" means to copy from NS to GTK
      *   "Export" means to copy from GTK to NS
      */
@@ -413,7 +413,7 @@ nsPrintDialogWidgetGTK::ImportSettings(nsIPrintSettings *aNSSettings)
 
   gtk_print_unix_dialog_set_settings(GTK_PRINT_UNIX_DIALOG(dialog), settings);
   gtk_print_unix_dialog_set_page_setup(GTK_PRINT_UNIX_DIALOG(dialog), setup);
-  
+
   return NS_OK;
 }
 
