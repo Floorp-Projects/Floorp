@@ -327,7 +327,7 @@ if use_minidump:
     if platform.system() == 'Linux':
         injector_lib = os.path.join(DIR.tooltool, 'breakpad-tools', 'libbreakpadinjector.so')
         env.setdefault('MINIDUMP_STACKWALK',
-                       os.path.join(DIR.tooltool, 'linux64-minidump_stackwalk'))
+                       os.path.join(DIR.tooltool, 'breakpad-tools', 'minidump_stackwalk'))
     elif platform.system() == 'Darwin':
         injector_lib = os.path.join(DIR.tooltool, 'breakpad-tools', 'breakpadinjector.dylib')
     if not injector_lib or not os.path.exists(injector_lib):

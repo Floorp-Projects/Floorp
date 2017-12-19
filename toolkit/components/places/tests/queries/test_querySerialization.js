@@ -381,9 +381,6 @@ const queryOptionSwitches = [
       function(aQuery, aQueryOptions) {
         aQueryOptions.resultType = aQueryOptions.RESULTS_AS_URI;
       },
-      function(aQuery, aQueryOptions) {
-        aQueryOptions.resultType = aQueryOptions.RESULTS_AS_FULL_VISIT;
-      }
     ]
   },
   // excludeItems

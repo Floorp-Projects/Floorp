@@ -9,10 +9,12 @@ import math
 import os
 import re
 import sys
+import atexit
 import shared_telemetry_utils as utils
 
 from shared_telemetry_utils import ParserError
 from collections import OrderedDict
+atexit.register(ParserError.exit_func)
 
 # Constants.
 MAX_LABEL_LENGTH = 20
@@ -100,10 +102,10 @@ def load_whitelist():
                 for name, whitelist in whitelists.iteritems():
                     whitelists[name] = set(whitelist)
             except ValueError:
-                raise ParserError('Error parsing whitelist: %s' % whitelist_path)
+                ParserError('Error parsing whitelist: %s' % whitelist_path).handle_now()
     except IOError:
         whitelists = None
-        raise ParserError('Unable to parse whitelist: %s.' % whitelist_path)
+        ParserError('Unable to parse whitelist: %s.' % whitelist_path).handle_now()
 
 
 class Histogram:
@@ -218,7 +220,8 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         }
 
         if self._kind not in bucket_fns:
-            raise ParserError('Unknown kind "%s" for histogram "%s".' % (self._kind, self._name))
+            ParserError('Unknown kind "%s" for histogram "%s".' %
+                        (self._kind, self._name)).handle_later()
 
         fn = bucket_fns[self._kind]
         return fn(self.low(), self.high(), self.n_buckets())
@@ -235,7 +238,8 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         }
 
         if self._kind not in bucket_fns:
-            raise ParserError('Unknown kind "%s" for histogram "%s".' % (self._kind, self._name))
+            ParserError('Unknown kind "%s" for histogram "%s".' %
+                        (self._kind, self._name)).handle_later()
 
         fn = bucket_fns[self._kind]
         self.set_bucket_parameters(*fn(definition))
@@ -260,7 +264,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
         kind = definition['kind']
         if kind not in table:
-            raise ParserError('Unknown kind "%s" for histogram "%s".' % (kind, name))
+            ParserError('Unknown kind "%s" for histogram "%s".' % (kind, name)).handle_later()
         allowed_keys = table[kind]
 
         self.check_name(name)
@@ -275,12 +279,13 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
     def check_name(self, name):
         if '#' in name:
-            raise ParserError('Error for histogram name "%s": "#" is not allowed.' % (name))
+            ParserError('Error for histogram name "%s": "#" is not allowed.' %
+                        (name)).handle_later()
 
         # Avoid C++ identifier conflicts between histogram enums and label enum names.
         if name.startswith("LABELS_"):
-            raise ParserError('Error for histogram name "%s":  can not start with "LABELS_".' %
-                              (name))
+            ParserError('Error for histogram name "%s":  can not start with "LABELS_".' %
+                        (name)).handle_later()
 
         # To make it easier to generate C++ identifiers from this etc., we restrict
         # the histogram names to a strict pattern.
@@ -288,8 +293,8 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         if self._strict_type_checks:
             pattern = '^[a-z][a-z0-9_]+[a-z0-9]$'
             if not re.match(pattern, name, re.IGNORECASE):
-                raise ParserError('Error for histogram name "%s": name does not conform to "%s"' %
-                                  (name, pattern))
+                ParserError('Error for histogram name "%s": name does not conform to "%s"' %
+                            (name, pattern)).handle_later()
 
     def check_expiration(self, name, definition):
         field = 'expires_in_version'
@@ -303,12 +308,13 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         if expiration == "default" and \
            whitelists is not None and \
            name not in whitelists['expiry_default']:
-            raise ParserError('New histogram "%s" cannot have "default" %s value.' % (name, field))
+            ParserError('New histogram "%s" cannot have "default" %s value.' %
+                        (name, field)).handle_later()
 
         if expiration != "default" and not utils.validate_expiration_version(expiration):
-            raise ParserError(('Error for histogram {} - invalid {}: {}.'
-                               '\nSee: {}#expires-in-version')
-                              .format(name, field, expiration, HISTOGRAMS_DOC_URL))
+            ParserError(('Error for histogram {} - invalid {}: {}.'
+                        '\nSee: {}#expires-in-version')
+                        .format(name, field, expiration, HISTOGRAMS_DOC_URL)).handle_later()
 
         expiration = utils.add_expiration_postfix(expiration)
 
@@ -321,19 +327,19 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
         invalid = filter(lambda l: len(l) > MAX_LABEL_LENGTH, labels)
         if len(invalid) > 0:
-            raise ParserError('Label values for "%s" exceed length limit of %d: %s' %
-                              (name, MAX_LABEL_LENGTH, ', '.join(invalid)))
+            ParserError('Label values for "%s" exceed length limit of %d: %s' %
+                        (name, MAX_LABEL_LENGTH, ', '.join(invalid))).handle_later()
 
         if len(labels) > MAX_LABEL_COUNT:
-            raise ParserError('Label count for "%s" exceeds limit of %d' %
-                              (name, MAX_LABEL_COUNT))
+            ParserError('Label count for "%s" exceeds limit of %d' %
+                        (name, MAX_LABEL_COUNT)).handle_now()
 
         # To make it easier to generate C++ identifiers from this etc., we restrict
         # the label values to a strict pattern.
         invalid = filter(lambda l: not re.match(CPP_IDENTIFIER_PATTERN, l, re.IGNORECASE), labels)
         if len(invalid) > 0:
-            raise ParserError('Label values for %s are not matching pattern "%s": %s' %
-                              (name, CPP_IDENTIFIER_PATTERN, ', '.join(invalid)))
+            ParserError('Label values for %s are not matching pattern "%s": %s' %
+                        (name, CPP_IDENTIFIER_PATTERN, ', '.join(invalid))).handle_later()
 
     def check_record_in_processes(self, name, definition):
         if not self._strict_type_checks:
@@ -345,13 +351,13 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         DOC_URL = HISTOGRAMS_DOC_URL + "#record-in-processes"
 
         if not rip:
-            raise ParserError('Histogram "%s" must have a "%s" field:\n%s'
-                              % (name, field, DOC_URL))
+            ParserError('Histogram "%s" must have a "%s" field:\n%s'
+                        % (name, field, DOC_URL)).handle_later()
 
         for process in rip:
             if not utils.is_valid_process_name(process):
-                raise ParserError('Histogram "%s" has unknown process "%s" in %s.\n%s' %
-                                  (name, process, field, DOC_URL))
+                ParserError('Histogram "%s" has unknown process "%s" in %s.\n%s' %
+                            (name, process, field, DOC_URL)).handle_later()
 
     def check_keys_field(self, name, definition):
         keys = definition.get('keys')
@@ -395,13 +401,13 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         if not android_cpp_guard and \
            hist_kind in ["flag", "count"] and \
            name not in whitelists["kind"]:
-            raise ParserError(('Unsupported kind "%s" for histogram "%s":\n'
-                               'New "%s" histograms are not supported on Desktop, you should'
-                               ' use scalars instead:\n'
-                               '%s\n'
-                               'Are you trying to add a histogram on Android?'
-                               ' Add "cpp_guard": "ANDROID" to your histogram definition.')
-                              % (hist_kind, name, hist_kind, SCALARS_DOC_URL))
+            ParserError(('Unsupported kind "%s" for histogram "%s":\n'
+                         'New "%s" histograms are not supported on Desktop, you should'
+                         ' use scalars instead:\n'
+                         '%s\n'
+                         'Are you trying to add a histogram on Android?'
+                         ' Add "cpp_guard": "ANDROID" to your histogram definition.')
+                        % (hist_kind, name, hist_kind, SCALARS_DOC_URL)).handle_now()
 
     # Check for the presence of fields that old histograms are whitelisted for.
     def check_whitelistable_fields(self, name, definition):
@@ -417,11 +423,12 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
         for field in ['alert_emails', 'bug_numbers']:
             if field not in definition and name not in whitelists[field]:
-                raise ParserError('New histogram "%s" must have a "%s" field.' % (name, field))
+                ParserError('New histogram "%s" must have a "%s" field.' %
+                            (name, field)).handle_later()
             if field in definition and name in whitelists[field]:
                 msg = 'Histogram "%s" should be removed from the whitelist for "%s" in ' \
                       'histogram-whitelists.json.'
-                raise ParserError(msg % (name, field))
+                ParserError(msg % (name, field)).handle_later()
 
     def check_field_types(self, name, definition):
         # Define expected types for the histogram properties.
@@ -480,22 +487,23 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             if key not in definition:
                 continue
             if not isinstance(definition[key], key_type):
-                raise ParserError('Value for key "{0}" in histogram "{1}" should be {2}.'
-                                  .format(key, name, nice_type_name(key_type)))
+                ParserError('Value for key "{0}" in histogram "{1}" should be {2}.'
+                            .format(key, name, nice_type_name(key_type))).handle_later()
 
         for key, key_type in type_checked_list_fields.iteritems():
             if key not in definition:
                 continue
             if not all(isinstance(x, key_type) for x in definition[key]):
-                raise ParserError('All values for list "{0}" in histogram "{1}" should be of type'
-                                  ' {2}.'.format(key, name, nice_type_name(key_type)))
+                ParserError('All values for list "{0}" in histogram "{1}" should be of type'
+                            ' {2}.'.format(key, name, nice_type_name(key_type))).handle_later()
 
     def check_keys(self, name, definition, allowed_keys):
         if not self._strict_type_checks:
             return
         for key in definition.iterkeys():
             if key not in allowed_keys:
-                raise ParserError('Key "%s" is not allowed for histogram "%s".' % (key, name))
+                ParserError('Key "%s" is not allowed for histogram "%s".' %
+                            (key, name)).handle_later()
 
     def set_bucket_parameters(self, low, high, n_buckets):
         self._low = low
@@ -503,14 +511,14 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         self._n_buckets = n_buckets
         if whitelists is not None and self._n_buckets > 100 and type(self._n_buckets) is int:
             if self._name not in whitelists['n_buckets']:
-                raise ParserError(
+                ParserError(
                     'New histogram "%s" is not permitted to have more than 100 buckets.\n'
                     'Histograms with large numbers of buckets use disproportionately high'
                     ' amounts of resources. Contact a Telemetry peer (e.g. in #telemetry)'
                     ' if you think an exception ought to be made:\n'
                     'https://wiki.mozilla.org/Modules/Toolkit#Telemetry'
                     % self._name
-                    )
+                    ).handle_later()
 
     @staticmethod
     def boolean_flag_bucket_parameters(definition):
@@ -557,7 +565,8 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         }
 
         if self._kind not in types:
-            raise ParserError('Unknown kind "%s" for histogram "%s".' % (self._kind, self._name))
+            ParserError('Unknown kind "%s" for histogram "%s".' %
+                        (self._kind, self._name)).handle_later()
 
         self._nsITelemetry_kind = "nsITelemetry::HISTOGRAM_%s" % types[self._kind]
 
@@ -569,8 +578,8 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
         value = definition.get('releaseChannelCollection', 'opt-in')
         if value not in datasets:
-            raise ParserError('Unknown value for releaseChannelCollection'
-                              ' policy for histogram "%s".' % self._name)
+            ParserError('Unknown value for releaseChannelCollection'
+                        ' policy for histogram "%s".' % self._name).handle_later()
 
         self._dataset = "nsITelemetry::" + datasets[value]
 
@@ -581,7 +590,7 @@ def load_histograms_into_dict(ordered_pairs, strict_type_checks):
     d = collections.OrderedDict()
     for key, value in ordered_pairs:
         if strict_type_checks and key in d:
-            raise ParserError("Found duplicate key in Histograms file: %s" % key)
+            ParserError("Found duplicate key in Histograms file: %s" % key).handle_later()
         d[key] = value
     return d
 
@@ -597,7 +606,7 @@ def from_Histograms_json(filename, strict_type_checks):
                 return load_histograms_into_dict(ps, strict_type_checks)
             histograms = json.load(f, object_pairs_hook=hook)
         except ValueError, e:
-            raise ParserError("error parsing histograms in %s: %s" % (filename, e.message))
+            ParserError("error parsing histograms in %s: %s" % (filename, e.message)).handle_now()
     return histograms
 
 
@@ -662,11 +671,11 @@ the histograms defined in filenames.
         # all_histograms stable, which makes ordering in generated files
         # stable, which makes builds more deterministic.
         if not isinstance(histograms, OrderedDict):
-            raise ParserError("Histogram parser did not provide an OrderedDict.")
+            ParserError("Histogram parser did not provide an OrderedDict.").handle_now()
 
         for (name, definition) in histograms.iteritems():
             if name in all_histograms:
-                raise ParserError('Duplicate histogram name "%s".' % name)
+                ParserError('Duplicate histogram name "%s".' % name).handle_later()
             all_histograms[name] = definition
 
     # We require that all USE_COUNTER2_* histograms be defined in a contiguous
@@ -678,7 +687,8 @@ the histograms defined in filenames.
         upper_bound = use_counter_indices[-1][0]
         n_counters = upper_bound - lower_bound + 1
         if n_counters != len(use_counter_indices):
-            raise ParserError("Use counter histograms must be defined in a contiguous block.")
+            ParserError("Use counter histograms must be defined in a contiguous block."
+                        ).handle_later()
 
     # Check that histograms that were removed from Histograms.json etc.
     # are also removed from the whitelists.
@@ -688,7 +698,7 @@ the histograms defined in filenames.
         if len(orphaned) > 0:
             msg = 'The following entries are orphaned and should be removed from ' \
                   'histogram-whitelists.json:\n%s'
-            raise ParserError(msg % (', '.join(sorted(orphaned))))
+            ParserError(msg % (', '.join(sorted(orphaned)))).handle_later()
 
     for (name, definition) in all_histograms.iteritems():
         yield Histogram(name, definition, strict_type_checks=strict_type_checks)
