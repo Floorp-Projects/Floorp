@@ -887,6 +887,8 @@ pref("gfx.webrender.debug.profiler", false);
 pref("gfx.webrender.debug.gpu-time-queries", false);
 pref("gfx.webrender.debug.gpu-sample-queries", false);
 pref("gfx.webrender.debug.disable-batching", false);
+pref("gfx.webrender.debug.epochs", false);
+pref("gfx.webrender.debug.compact-profiler", false);
 
 pref("accessibility.browsewithcaret", false);
 pref("accessibility.warn_on_browsewithcaret", true);
