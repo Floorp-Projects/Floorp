@@ -86,4 +86,15 @@ TEST(TestURIMutator, Mutator)
   ASSERT_EQ(rv, NS_OK);
   ASSERT_EQ(newURL->GetSpec(out), NS_OK);
   ASSERT_TRUE(out == NS_LITERAL_CSTRING("https://mozilla.org/path?originalQuery#newref"));
+
+  // Check that calling Finalize twice will fail.
+  NS_MutateURI mutator(newURL);
+  rv = mutator.SetQuery(EmptyCString()).Finalize(uri2);
+  ASSERT_EQ(rv, NS_OK);
+  ASSERT_EQ(uri2->GetSpec(out), NS_OK);
+  ASSERT_TRUE(out == NS_LITERAL_CSTRING("https://mozilla.org/path#newref"));
+  nsCOMPtr<nsIURI> uri3;
+  rv = mutator.Finalize(uri3);
+  ASSERT_EQ(rv, NS_ERROR_NOT_AVAILABLE);
+  ASSERT_TRUE(uri3 == nullptr);
 }
