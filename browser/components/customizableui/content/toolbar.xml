@@ -18,32 +18,13 @@
       <constructor><![CDATA[
           let scope = {};
           Cu.import("resource:///modules/CustomizableUI.jsm", scope);
+          let CustomizableUI = scope.CustomizableUI;
           // Add an early overflow event listener that will mark if the
           // toolbar overflowed during construction.
-          if (scope.CustomizableUI.isAreaOverflowable(this.id)) {
+          if (CustomizableUI.isAreaOverflowable(this.id)) {
             this.addEventListener("overflow", this);
             this.addEventListener("underflow", this);
           }
-
-          if (document.readyState == "complete") {
-            this._init();
-          } else {
-            // Need to wait until XUL overlays are loaded. See bug 554279.
-            let self = this;
-            document.addEventListener("readystatechange", function onReadyStateChange() {
-              if (document.readyState != "complete")
-                return;
-              document.removeEventListener("readystatechange", onReadyStateChange);
-              self._init();
-            });
-          }
-      ]]></constructor>
-
-      <method name="_init">
-        <body><![CDATA[
-          let scope = {};
-          Cu.import("resource:///modules/CustomizableUI.jsm", scope);
-          let CustomizableUI = scope.CustomizableUI;
 
           // Bug 989289: Forcibly set the now unsupported "mode" and "iconsize"
           // attributes, just in case they accidentally get restored from
@@ -83,8 +64,7 @@
                               .filter(node => node.getAttribute("skipintoolbarset") != "true" && node.id)
                               .map(node => node.id);
           CustomizableUI.registerToolbarNode(this, children);
-        ]]></body>
-      </method>
+      ]]></constructor>
 
       <method name="handleEvent">
         <parameter name="aEvent"/>
