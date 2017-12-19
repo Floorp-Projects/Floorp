@@ -6130,16 +6130,18 @@ nsGlobalWindowInner::SyncStateFromParentWindow()
   }
 }
 
-template<typename Method>
-void
-nsGlobalWindowInner::CallOnChildren(Method aMethod)
+template<typename Method, typename... Args>
+nsGlobalWindowInner::CallState
+nsGlobalWindowInner::CallOnChildren(Method aMethod, Args& ...aArgs)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsCurrentInnerWindow());
 
+  CallState state = CallState::Continue;
+
   nsCOMPtr<nsIDocShell> docShell = GetDocShell();
   if (!docShell) {
-    return;
+    return state;
   }
 
   int32_t childCount = 0;
@@ -6165,8 +6167,19 @@ nsGlobalWindowInner::CallOnChildren(Method aMethod)
       continue;
     }
 
-    (inner->*aMethod)();
+    // Call the child method using our helper CallChild() template method.
+    // This allows us to handle both void returning methods and methods
+    // that return CallState explicitly.  For void returning methods we
+    // assume CallState::Continue.
+    typedef decltype((inner->*aMethod)(aArgs...)) returnType;
+    state = CallChild<returnType>(inner, aMethod, aArgs...);
+
+    if (state == CallState::Stop) {
+      return state;
+    }
   }
+
+  return state;
 }
 
 Maybe<ClientInfo>
