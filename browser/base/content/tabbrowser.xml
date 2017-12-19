@@ -4395,8 +4395,20 @@
             getTabState(tab) {
               let state = this.tabState.get(tab);
               if (state === undefined) {
-                return this.STATE_UNLOADED;
+                state = this.STATE_UNLOADED;
+
+                if (tab && tab.linkedPanel) {
+                  let b = tab.linkedBrowser;
+                  if (b.renderLayers && b.hasLayers) {
+                    state = this.STATE_LOADED;
+                  } else if (b.renderLayers && !b.hasLayers) {
+                    state = this.STATE_LOADING;
+                  } else if (!b.renderLayers && b.hasLayers) {
+                    state = this.STATE_UNLOADING;
+                  }
+                }
               }
+
               return state;
             },
 
@@ -4421,7 +4433,7 @@
                 }
 
                 if (tabParent) {
-                  tabParent.renderLayers(true);
+                  browser.renderLayers = true;
                 } else {
                   this.onLayersReady(browser);
                 }
@@ -4459,11 +4471,6 @@
             init() {
               this.log("START");
 
-              // If we minimized the window before the switcher was activated,
-              // we might have set  the preserveLayers flag for the current
-              // browser. Let's clear it.
-              this.tabbrowser.mCurrentBrowser.preserveLayers(false);
-
               window.addEventListener("MozAfterPaint", this);
               window.addEventListener("MozLayerTreeReady", this);
               window.addEventListener("MozLayerTreeCleared", this);
@@ -4473,15 +4480,23 @@
               window.addEventListener("SwapDocShells", this, true);
               window.addEventListener("EndSwapDocShells", this, true);
 
-              let tab = this.requestedTab;
-              let browser = tab.linkedBrowser;
-              let tabIsLoaded = browser.renderingLayers;
+              let initialTab = this.requestedTab;
+              let initialBrowser = initialTab.linkedBrowser;
+
+              let tabIsLoaded = !initialBrowser.isRemoteBrowser ||
+                                initialBrowser.frameLoader.tabParent.hasLayers;
+
+              // If we minimized the window before the switcher was activated,
+              // we might have set  the preserveLayers flag for the current
+              // browser. Let's clear it.
+              initialBrowser.preserveLayers(false);
 
               if (!this.minimizedOrFullyOccluded) {
                 this.log("Initial tab is loaded?: " + tabIsLoaded);
-                this.setTabState(tab, tabIsLoaded ? this.STATE_LOADED
-                                                  : this.STATE_LOADING);
+                this.setTabState(initialTab, tabIsLoaded ? this.STATE_LOADED
+                                                         : this.STATE_LOADING);
               }
+
               for (let ppBrowser of this.tabbrowser._printPreviewBrowsers) {
                 let ppTab = this.tabbrowser.getTabForBrowser(ppBrowser);
                 let state = ppBrowser.hasLayers ? this.STATE_LOADED
