@@ -78,11 +78,12 @@ BEGIN_TEST(testBinASTReaderECMAScript2)
 
 #elif defined(XP_WIN)
 
-    const char PATH[] = "jsapi-tests\\binast\\parser\\tester\\*.binjs";
+    const char PATTERN[] = "jsapi-tests\\binast\\parser\\tester\\*.binjs";
+    const char PATH[] = "jsapi-tests\\binast\\parser\\tester\\";
 
     WIN32_FIND_DATA FindFileData;
     enterJsDirectory();
-    HANDLE hFind = FindFirstFile(PATH, &FindFileData);
+    HANDLE hFind = FindFirstFile(PATTERN, &FindFileData);
     exitJsDirectory();
     for (bool found = (hFind != INVALID_HANDLE_VALUE);
             found;
