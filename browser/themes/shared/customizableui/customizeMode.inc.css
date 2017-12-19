@@ -462,7 +462,7 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   /* specify width for hidpi image to fit correctly */
   width: 20px;
 %endif
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg"));
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
   -moz-context-properties: fill, stroke;
   fill: var(--arrowpanel-background);
   stroke: var(--arrowpanel-border-color);
