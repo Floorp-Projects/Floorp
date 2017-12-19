@@ -80,6 +80,7 @@
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
 #include "nsCCUncollectableMarker.h"
+#include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "nsJSPrincipals.h"
@@ -2328,6 +2329,21 @@ Maybe<ServiceWorkerDescriptor>
 nsPIDOMWindowInner::GetController() const
 {
   return Move(nsGlobalWindowInner::Cast(this)->GetController());
+}
+
+bool
+nsGlobalWindowInner::ShouldReportForServiceWorkerScope(const nsAString& aScope)
+{
+  RefPtr<workers::ServiceWorkerManager> swm =
+    workers::ServiceWorkerManager::GetInstance();
+  NS_ENSURE_TRUE(swm, false);
+
+  bool aResult = false;
+  nsresult rv = swm->ShouldReportToWindow(GetOuterWindowInternal(),
+                                          NS_ConvertUTF16toUTF8(aScope), &aResult);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return aResult;
 }
 
 void
