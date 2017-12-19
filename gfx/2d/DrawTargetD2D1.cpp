@@ -205,7 +205,7 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
   // Here we scale the source pattern up to the size and position where we want
   // it to be.
   Matrix transform;
-  transform.PreTranslate(aDest.x - aSource.x * xScale, aDest.y - aSource.y * yScale);
+  transform.PreTranslate(aDest.X() - aSource.X() * xScale, aDest.Y() - aSource.Y() * yScale);
   transform.PreScale(xScale, yScale);
 
   RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, transform, ExtendMode::CLAMP);
@@ -358,7 +358,7 @@ DrawTargetD2D1::ClearRect(const Rect &aRect)
 
   RefPtr<ID2D1SolidColorBrush> brush;
   mDC->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), getter_AddRefs(brush));
-  mDC->PushAxisAlignedClip(D2D1::RectF(addClipRect.x, addClipRect.y, addClipRect.XMost(), addClipRect.YMost()), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+  mDC->PushAxisAlignedClip(D2D1::RectF(addClipRect.X(), addClipRect.Y(), addClipRect.XMost(), addClipRect.YMost()), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
   mDC->FillGeometry(geom, brush);
   mDC->PopAxisAlignedClip();
 
@@ -458,7 +458,7 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
   mDC->SetTransform(D2D1::IdentityMatrix());
   mTransformDirty = true;
 
-  Matrix mat = Matrix::Translation(aDestination.x - aSourceRect.x, aDestination.y - aSourceRect.y);
+  Matrix mat = Matrix::Translation(aDestination.x - aSourceRect.X(), aDestination.y - aSourceRect.Y());
   RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, mat, ExtendMode::CLAMP, nullptr, false);
 
   if (!image) {
@@ -472,10 +472,8 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
   }
 
   IntRect sourceRect = aSourceRect;
-  sourceRect.x += (aDestination.x - aSourceRect.x) - mat._31;
-  sourceRect.width -= (aDestination.x - aSourceRect.x) - mat._31;
-  sourceRect.y += (aDestination.y - aSourceRect.y) - mat._32;
-  sourceRect.height -= (aDestination.y - aSourceRect.y) - mat._32;
+  sourceRect.SetLeftEdge(sourceRect.X() + (aDestination.x - aSourceRect.X()) - mat._31);
+  sourceRect.SetTopEdge(sourceRect.Y() + (aDestination.y - aSourceRect.Y()) - mat._32);
 
   RefPtr<ID2D1Bitmap> bitmap;
   HRESULT hr = image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
@@ -492,7 +490,7 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
     return;
   }
 
-  Rect srcRect(Float(sourceRect.x), Float(sourceRect.y),
+  Rect srcRect(Float(sourceRect.X()), Float(sourceRect.Y()),
                Float(aSourceRect.Width()), Float(aSourceRect.Height()));
 
   Rect dstRect(Float(aDestination.x), Float(aDestination.y),
@@ -1883,7 +1881,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
                                    Float(pat->mSurface->GetSize().height));
     } else if (pat->mSurface->GetType() == SurfaceType::D2D1_1_IMAGE) {
       samplingBounds = D2DRect(pat->mSamplingRect);
-      mat.PreTranslate(pat->mSamplingRect.x, pat->mSamplingRect.y);
+      mat.PreTranslate(pat->mSamplingRect.X(), pat->mSamplingRect.Y());
     } else {
       // We will do a partial upload of the sampling restricted area from GetImageForSurface.
       samplingBounds = D2D1::RectF(0, 0, pat->mSamplingRect.Width(), pat->mSamplingRect.Height());

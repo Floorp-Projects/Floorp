@@ -395,9 +395,9 @@ inline void ApplyMorphologyHorizontal_SIMD(uint8_t* aSourceData, int32_t aSource
   IntRect sourceRect = aDestRect;
   sourceRect.Inflate(aRadius, 0);
 
-  for (int32_t y = aDestRect.y; y < aDestRect.YMost(); y++) {
-    int32_t kernelStartX = aDestRect.x - aRadius;
-    for (int32_t x = aDestRect.x; x < aDestRect.XMost(); x += 4, kernelStartX += 4) {
+  for (int32_t y = aDestRect.Y(); y < aDestRect.YMost(); y++) {
+    int32_t kernelStartX = aDestRect.X() - aRadius;
+    for (int32_t x = aDestRect.X(); x < aDestRect.XMost(); x += 4, kernelStartX += 4) {
       // We process four pixels (16 color values) at a time.
       // aSourceData[0] points to the pixel located at aDestRect.TopLeft();
       // source values can be read beyond that because the source is extended
@@ -455,10 +455,10 @@ static void ApplyMorphologyVertical_SIMD(uint8_t* aSourceData, int32_t aSourceSt
                 op == MORPHOLOGY_OPERATOR_DILATE,
                 "unexpected morphology operator");
 
-  int32_t startY = aDestRect.y - aRadius;
-  int32_t endY = aDestRect.y + aRadius;
-  for (int32_t y = aDestRect.y; y < aDestRect.YMost(); y++, startY++, endY++) {
-    for (int32_t x = aDestRect.x; x < aDestRect.XMost(); x += 4) {
+  int32_t startY = aDestRect.Y() - aRadius;
+  int32_t endY = aDestRect.Y() + aRadius;
+  for (int32_t y = aDestRect.Y(); y < aDestRect.YMost(); y++, startY++, endY++) {
+    for (int32_t x = aDestRect.X(); x < aDestRect.XMost(); x += 4) {
       int32_t sourceIndex = startY * aSourceStride + 4 * x;
       u8x16_t u = simd::Load8<u8x16_t>(&aSourceData[sourceIndex]);
       sourceIndex += aSourceStride;

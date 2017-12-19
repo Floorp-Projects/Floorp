@@ -174,7 +174,7 @@ D3D9SurfaceImage::AllocateAndCopy(D3D9RecycleAllocator* aAllocator,
     return E_FAIL;
   }
 
-  RECT src = { aRegion.x, aRegion.y, aRegion.x+aRegion.Width(), aRegion.y+aRegion.Height() };
+  RECT src = { aRegion.X(), aRegion.Y(), aRegion.XMost(), aRegion.YMost() };
   hr = device->StretchRect(surface, &src, textureSurface, nullptr, D3DTEXF_NONE);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 

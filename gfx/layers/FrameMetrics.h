@@ -172,15 +172,15 @@ public:
     CSSRect scrollableRect = mScrollableRect;
     CSSSize compSize = CalculateCompositedSizeInCssPixels();
     if (scrollableRect.Width() < compSize.width) {
-      scrollableRect.x = std::max(0.f,
-                                  scrollableRect.x - (compSize.width - scrollableRect.Width()));
-      scrollableRect.SetWidth(compSize.width);
+      scrollableRect.SetRectX(std::max(0.f,
+                                       scrollableRect.X() - (compSize.width - scrollableRect.Width())),
+                              compSize.width);
     }
 
     if (scrollableRect.Height() < compSize.height) {
-      scrollableRect.y = std::max(0.f,
-                                  scrollableRect.y - (compSize.height - scrollableRect.Height()));
-      scrollableRect.SetHeight(compSize.height);
+      scrollableRect.SetRectY(std::max(0.f,
+                                       scrollableRect.Y() - (compSize.height - scrollableRect.Height())),
+                              compSize.height);
     }
 
     return scrollableRect;

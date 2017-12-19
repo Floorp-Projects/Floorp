@@ -398,7 +398,7 @@ MLGSwapChainD3D11::UpdateBackBufferContents(ID3D11Texture2D* aBack)
   for (auto iter = frontValid.RectIter(); !iter.Done(); iter.Next()) {
     const IntRect& rect = iter.Get();
     D3D11_BOX box = RectToBox(rect);
-    context->CopySubresourceRegion(aBack, 0, rect.x, rect.y, 0, front, 0, &box);
+    context->CopySubresourceRegion(aBack, 0, rect.X(), rect.Y(), 0, front, 0, &box);
   }
 
   // The back and front buffers are now in sync.
@@ -454,8 +454,8 @@ MLGSwapChainD3D11::Present()
     size_t i = 0;
     for (auto iter = mBackBufferInvalid.RectIter(); !iter.Done(); iter.Next()) {
       const IntRect& rect = iter.Get();
-      rects[i].left = rect.x;
-      rects[i].top = rect.y;
+      rects[i].left = rect.X();
+      rects[i].top = rect.Y();
       rects[i].bottom = rect.YMost();
       rects[i].right = rect.XMost();
       i++;
@@ -576,7 +576,7 @@ MLGSwapChainD3D11::CopyBackbuffer(gfx::DrawTarget* aTarget, const gfx::IntRect& 
   aTarget->CopySurface(
     source,
     IntRect(0, 0, bbDesc.Width, bbDesc.Height),
-    IntPoint(-aBounds.x, -aBounds.y));
+    IntPoint(-aBounds.X(), -aBounds.Y()));
   aTarget->Flush();
 
   context->Unmap(temp, 0);
@@ -1417,8 +1417,8 @@ MLGDeviceD3D11::SetViewport(const gfx::IntRect& aViewport)
   D3D11_VIEWPORT vp;
   vp.MaxDepth = 1.0f;
   vp.MinDepth = 0.0f;
-  vp.TopLeftX = aViewport.x;
-  vp.TopLeftY = aViewport.y;
+  vp.TopLeftX = aViewport.X();
+  vp.TopLeftY = aViewport.Y();
   vp.Width = aViewport.Width();
   vp.Height = aViewport.Height();
   mCtx->RSSetViewports(1, &vp);
@@ -1428,8 +1428,8 @@ static inline D3D11_RECT
 ToD3D11Rect(const gfx::IntRect& aRect)
 {
   D3D11_RECT rect;
-  rect.left = aRect.x;
-  rect.top = aRect.y;
+  rect.left = aRect.X();
+  rect.top = aRect.Y();
   rect.right = aRect.XMost();
   rect.bottom = aRect.YMost();
   return rect;
@@ -2122,8 +2122,8 @@ RectToBox(const gfx::IntRect& aRect)
   D3D11_BOX box;
   box.front = 0;
   box.back = 1;
-  box.left = aRect.x;
-  box.top = aRect.y;
+  box.left = aRect.X();
+  box.top = aRect.Y();
   box.right = aRect.XMost();
   box.bottom = aRect.YMost();
   return box;

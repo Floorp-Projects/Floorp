@@ -1464,12 +1464,12 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
         D3D11_BOX box;
         box.front = 0;
         box.back = 1;
-        box.left = rect.x;
-        box.top = rect.y;
+        box.left = rect.X();
+        box.top = rect.Y();
         box.right = rect.XMost();
         box.bottom = rect.YMost();
 
-        void* data = map.mData + map.mStride * rect.y + BytesPerPixel(aSurface->GetFormat()) * rect.x;
+        void* data = map.mData + map.mStride * rect.Y() + BytesPerPixel(aSurface->GetFormat()) * rect.X();
 
         context->UpdateSubresource(mTexture, 0, &box, data, map.mStride, map.mStride * rect.Height());
       }
@@ -1504,8 +1504,8 @@ DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,
 
       D3D11_SUBRESOURCE_DATA initData;
       initData.pSysMem = map.GetData() +
-                         tileRect.y * map.GetStride() +
-                         tileRect.x * bpp;
+                         tileRect.Y() * map.GetStride() +
+                         tileRect.X() * bpp;
       initData.SysMemPitch = map.GetStride();
 
       hr = mDevice->CreateTexture2D(&desc, &initData, getter_AddRefs(mTileTextures[i]));
@@ -1576,7 +1576,7 @@ IntRect
 DataTextureSourceD3D11::GetTileRect()
 {
   IntRect rect = GetTileRect(mCurrentTile);
-  return IntRect(rect.x, rect.y, rect.Width(), rect.Height());
+  return IntRect(rect.X(), rect.Y(), rect.Width(), rect.Height());
 }
 
 CompositingRenderTargetD3D11::CompositingRenderTargetD3D11(ID3D11Texture2D* aTexture,

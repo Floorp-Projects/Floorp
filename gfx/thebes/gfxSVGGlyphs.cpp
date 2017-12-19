@@ -162,7 +162,7 @@ gfxSVGGlyphsDocument::SetupPresentation()
 
     if (!presShell->DidInitialize()) {
         nsRect rect = presContext->GetVisibleArea();
-        rv = presShell->Initialize(rect.width, rect.height);
+        rv = presShell->Initialize(rect.Width(), rect.Height());
         NS_ENSURE_SUCCESS(rv, rv);
     }
 

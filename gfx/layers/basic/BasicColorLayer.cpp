@@ -54,7 +54,7 @@ public:
       return;
     }
 
-    Rect snapped(mBounds.x, mBounds.y, mBounds.Width(), mBounds.Height());
+    Rect snapped(mBounds.X(), mBounds.Y(), mBounds.Width(), mBounds.Height());
     MaybeSnapToDevicePixels(snapped, *aDT, true);
 
     // Clip drawing in case we're using (unbounded) operator source.

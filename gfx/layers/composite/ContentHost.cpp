@@ -175,11 +175,11 @@ ContentHostTexture::Composite(Compositor* aCompositor,
             tileRegionRect = regionRect.Intersect(currentTileRect);
             tileRegionRect.MoveBy(-currentTileRect.TopLeft());
           }
-          gfx::Rect rect(tileScreenRect.x, tileScreenRect.y,
+          gfx::Rect rect(tileScreenRect.X(), tileScreenRect.Y(),
                          tileScreenRect.Width(), tileScreenRect.Height());
 
-          effect->mTextureCoords = Rect(Float(tileRegionRect.x) / texRect.Width(),
-                                        Float(tileRegionRect.y) / texRect.Height(),
+          effect->mTextureCoords = Rect(Float(tileRegionRect.X()) / texRect.Width(),
+                                        Float(tileRegionRect.Y()) / texRect.Height(),
                                         Float(tileRegionRect.Width()) / texRect.Width(),
                                         Float(tileRegionRect.Height()) / texRect.Height());
 

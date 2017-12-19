@@ -202,7 +202,7 @@ VerifyRGBXCorners(uint8_t* aData, const IntSize &aSize, const int32_t aStride, S
   const int pixelSize = 4;
   MOZ_ASSERT(aSize.width * pixelSize <= aStride);
 
-  const int translation = bounds.y * aStride + bounds.x * pixelSize;
+  const int translation = bounds.Y() * aStride + bounds.X() * pixelSize;
   const int topLeft = translation;
   const int topRight = topLeft + (width - 1) * pixelSize;
   const int bottomLeft = translation + (height - 1) * aStride;
@@ -220,7 +220,7 @@ VerifyRGBXCorners(uint8_t* aData, const IntSize &aSize, const int32_t aStride, S
         int column = (offset % aStride) / pixelSize;
         gfxCriticalError() << "RGBX corner pixel at (" << column << "," << row << ") in "
                            << aSize.width << "x" << aSize.height << " surface, bounded by "
-                           << "(" << bounds.x << "," << bounds.y << "," << width << ","
+                           << "(" << bounds.X() << "," << bounds.Y() << "," << width << ","
                            << height << ") is not opaque: "
                            << int(aData[offset]) << ","
                            << int(aData[offset+1]) << ","
@@ -527,7 +527,7 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0, Po
 
       if (!pat.mSamplingRect.IsEmpty()) {
         image = ExtractSubset(image, pat.mSamplingRect);
-        mat.preTranslate(pat.mSamplingRect.x, pat.mSamplingRect.y);
+        mat.preTranslate(pat.mSamplingRect.X(), pat.mSamplingRect.Y());
       }
 
       SkShader::TileMode xTileMode = ExtendModeToTileMode(pat.mExtendMode, Axis::X_AXIS);
@@ -872,16 +872,16 @@ ShrinkClippedStrokedRect(const Rect &aStrokedRect, const IntRect &aDeviceClip,
   Rect userSpaceStrokeClip =
     UserSpaceStrokeClip(aDeviceClip, aTransform, aStrokeOptions);
   RectDouble strokedRectDouble(
-    aStrokedRect.x, aStrokedRect.y, aStrokedRect.Width(), aStrokedRect.Height());
+    aStrokedRect.X(), aStrokedRect.Y(), aStrokedRect.Width(), aStrokedRect.Height());
   RectDouble intersection =
-    strokedRectDouble.Intersect(RectDouble(userSpaceStrokeClip.x,
-                                           userSpaceStrokeClip.y,
+    strokedRectDouble.Intersect(RectDouble(userSpaceStrokeClip.X(),
+                                           userSpaceStrokeClip.Y(),
                                            userSpaceStrokeClip.Width(),
                                            userSpaceStrokeClip.Height()));
   Double dashPeriodLength = DashPeriodLength(aStrokeOptions);
   if (intersection.IsEmpty() || dashPeriodLength == 0.0f) {
-    return Rect(
-      intersection.x, intersection.y, intersection.Width(), intersection.Height());
+    return Rect(intersection.X(), intersection.Y(),
+                intersection.Width(), intersection.Height());
   }
 
   // Reduce the rectangle side lengths in multiples of the dash period length
@@ -893,8 +893,8 @@ ShrinkClippedStrokedRect(const Rect &aStrokedRect, const IntRect &aDeviceClip,
   insetBy.left = RoundDownToMultiple(insetBy.left, dashPeriodLength);
 
   strokedRectDouble.Deflate(insetBy);
-  return Rect(strokedRectDouble.x,
-              strokedRectDouble.y,
+  return Rect(strokedRectDouble.X(),
+              strokedRectDouble.Y(),
               strokedRectDouble.Width(),
               strokedRectDouble.Height());
 }
@@ -1564,7 +1564,7 @@ DrawTarget::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4x4& a
     return true;
   }
   // Offset the matrix by the transformed origin.
-  fullMat.PostTranslate(-xformBounds.x, -xformBounds.y, 0);
+  fullMat.PostTranslate(-xformBounds.X(), -xformBounds.Y(), 0);
 
   // Read in the source data.
   sk_sp<SkImage> srcImage = GetSkImageForSurface(aSurface);
@@ -1853,7 +1853,7 @@ DrawTargetSkia::CopySurface(SourceSurface *aSurface,
   if (SkImageIsMask(image)) {
     mCanvas->clear(SK_ColorTRANSPARENT);
   }
-  mCanvas->drawImage(image, -SkIntToScalar(aSourceRect.x), -SkIntToScalar(aSourceRect.y), &paint);
+  mCanvas->drawImage(image, -SkIntToScalar(aSourceRect.X()), -SkIntToScalar(aSourceRect.Y()), &paint);
   mCanvas->restore();
 }
 
