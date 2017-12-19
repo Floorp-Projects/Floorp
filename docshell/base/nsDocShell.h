@@ -234,10 +234,6 @@ public:
                         const char16_t* aTargetSpec) override;
   NS_IMETHOD OnLeaveLink() override;
 
-  nsDocShellInfoLoadType ConvertLoadTypeToDocShellLoadInfo(uint32_t aLoadType);
-  uint32_t ConvertDocShellLoadInfoToLoadType(
-    nsDocShellInfoLoadType aDocShellLoadType);
-
   // Don't use NS_DECL_NSILOADCONTEXT because some of nsILoadContext's methods
   // are shared with nsIDocShell (appID, etc.) and can't be declared twice.
   NS_IMETHOD GetAssociatedWindow(mozIDOMWindowProxy**) override;
