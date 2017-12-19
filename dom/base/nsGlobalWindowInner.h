@@ -971,6 +971,8 @@ public:
 
   already_AddRefed<nsWindowRoot> GetWindowRoot(mozilla::ErrorResult& aError);
 
+  bool ShouldReportForServiceWorkerScope(const nsAString& aScope);
+
   void UpdateTopInnerWindow();
 
   virtual bool IsInSyncOperation() override
