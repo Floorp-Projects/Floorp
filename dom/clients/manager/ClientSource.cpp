@@ -677,5 +677,20 @@ ClientSource::Traverse(nsCycleCollectionTraversalCallback& aCallback,
   }
 }
 
+void
+ClientSource::NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope)
+{
+  if (mRegisteringScopeList.Contains(aScope)) {
+    return;
+  }
+  mRegisteringScopeList.AppendElement(aScope);
+}
+
+bool
+ClientSource::CalledRegisterForServiceWorkerScope(const nsACString& aScope)
+{
+  return mRegisteringScopeList.Contains(aScope);
+}
+
 } // namespace dom
 } // namespace mozilla

@@ -2331,6 +2331,12 @@ nsPIDOMWindowInner::GetController() const
   return Move(nsGlobalWindowInner::Cast(this)->GetController());
 }
 
+void
+nsPIDOMWindowInner::NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope)
+{
+  nsGlobalWindowInner::Cast(this)->NoteCalledRegisterForServiceWorkerScope(aScope);
+}
+
 bool
 nsGlobalWindowInner::ShouldReportForServiceWorkerScope(const nsAString& aScope)
 {
@@ -2375,10 +2381,28 @@ nsGlobalWindowInner::ShouldReportForServiceWorkerScopeInternal(const nsACString&
     return CallState::Stop;
   }
 
+  // Next, check to see if this window has called navigator.serviceWorker.register()
+  // for this scope.  If so, then treat this as a match so console reports
+  // appear in the devtools console.
+  if (mClientSource && mClientSource->CalledRegisterForServiceWorkerScope(aScope)) {
+    *aResultOut = true;
+    return CallState::Stop;
+  }
+
   // The current window doesn't care about this service worker, but maybe
   // one of our child frames does.
   return CallOnChildren(&nsGlobalWindowInner::ShouldReportForServiceWorkerScopeInternal,
                         aScope, aResultOut);
+}
+
+void
+nsGlobalWindowInner::NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope)
+{
+  if (!mClientSource) {
+    return;
+  }
+
+  mClientSource->NoteCalledRegisterForServiceWorkerScope(aScope);
 }
 
 void
