@@ -3632,63 +3632,6 @@ ServiceWorkerManager::RemoveListener(nsIServiceWorkerManagerListener* aListener)
   return NS_OK;
 }
 
-nsresult
-ServiceWorkerManager::ShouldReportToWindow(mozIDOMWindowProxy* aWindow,
-                                           const nsACString& aScope,
-                                           bool* aResult)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(aResult);
-
-  *aResult = false;
-
-  // Get the inner window ID to compare to our document windows below.
-  nsCOMPtr<nsPIDOMWindowOuter> targetWin = nsPIDOMWindowOuter::From(aWindow);
-  if (NS_WARN_IF(!targetWin)) {
-    return NS_OK;
-  }
-
-  targetWin = targetWin->GetScriptableTop();
-  uint64_t winId = targetWin->WindowID();
-
-  // Examine any windows performing a navigation that we are currently
-  // intercepting.
-  InterceptionList* intList = mNavigationInterceptions.Get(aScope);
-  if (intList) {
-    for (uint32_t i = 0; i < intList->Length(); ++i) {
-      nsCOMPtr<nsIInterceptedChannel> channel = intList->ElementAt(i);
-
-      nsCOMPtr<nsIChannel> inner;
-      nsresult rv = channel->GetChannel(getter_AddRefs(inner));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        continue;
-      }
-
-      uint64_t id = nsContentUtils::GetInnerWindowID(inner);
-      if (id == 0) {
-        continue;
-      }
-
-      nsCOMPtr<nsPIDOMWindowInner> win =
-        nsGlobalWindowInner::GetInnerWindowWithId(id)->AsInner();
-      if (!win) {
-        continue;
-      }
-
-      nsCOMPtr<nsPIDOMWindowOuter> outer = win->GetScriptableTop();
-
-      // Match.  We should report to this window.
-      if (outer && winId == outer->WindowID()) {
-        *aResult = true;
-        return NS_OK;
-      }
-    }
-  }
-
-  // No match.  We should not report to this window.
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 ServiceWorkerManager::Observe(nsISupports* aSubject,
                               const char* aTopic,
