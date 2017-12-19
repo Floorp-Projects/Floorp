@@ -1,9 +1,20 @@
 const PAGE = "https://example.com/browser/toolkit/content/tests/browser/file_silentAudioTrack.html";
 
-async function check_video_decoding_state(isSuspended) {
+async function check_video_decoding_state(args) {
   let video = content.document.getElementById("autoplay");
   if (!video) {
     ok(false, "Can't get the video element!");
+  }
+
+  let isSuspended = args.suspend;
+  let reload = args.reload;
+
+  if (reload) {
+    // It is too late to register event handlers when playback is half
+    // way done. Let's start playback from the beginning so we won't
+    // miss any events.
+    video.load();
+    video.play();
   }
 
   let state = isSuspended ? "suspended" : "resumed";
@@ -46,13 +57,16 @@ function check_should_not_send_unselected_tab_hover_msg(browser) {
   });
 }
 
-function get_video_decoding_suspend_promise(browser) {
-  return ContentTask.spawn(browser, true /* suspend */,
+function get_video_decoding_suspend_promise(browser, reload) {
+  let suspend = true;
+  return ContentTask.spawn(browser, { suspend, reload },
                            check_video_decoding_state);
 }
 
 function get_video_decoding_resume_promise(browser) {
-  return ContentTask.spawn(browser, false /* resume */,
+  let suspend = false;
+  let reload = false;
+  return ContentTask.spawn(browser, { suspend, reload },
                            check_video_decoding_state);
 }
 
@@ -97,7 +111,7 @@ add_task(async function resume_and_suspend_background_video_decoding() {
   await BrowserTestUtils.browserLoaded(browser);
 
   info("- should suspend background video decoding -");
-  await get_video_decoding_suspend_promise(browser);
+  await get_video_decoding_suspend_promise(browser, true);
   await check_should_send_unselected_tab_hover_msg(browser);
 
   info("- when cursor is hovering over the tab, resuming the video decoding -");

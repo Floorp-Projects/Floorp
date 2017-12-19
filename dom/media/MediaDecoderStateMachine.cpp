@@ -847,15 +847,6 @@ public:
     mSeekJob = Move(aSeekJob);
     mVisibility = aVisibility;
 
-    // Always switch off the blank decoder otherwise we might become visible
-    // in the middle of seeking and won't have a valid video frame to show
-    // when seek is done.
-    if (mMaster->mVideoDecodeSuspended) {
-      mMaster->mVideoDecodeSuspended = false;
-      mMaster->mOnPlaybackEvent.Notify(MediaEventType::ExitVideoSuspend);
-      Reader()->SetVideoBlankDecode(false);
-    }
-
     // Suppressed visibility comes from two cases: (1) leaving dormant state,
     // and (2) resuming suspended video decoder. We want both cases to be
     // transparent to the user. So we only notify the change when the seek
@@ -898,8 +889,7 @@ public:
 
   void HandleResumeVideoDecoding(const TimeUnit&) override
   {
-    // We set mVideoDecodeSuspended to false in Enter().
-    MOZ_ASSERT(false, "Shouldn't have suspended video decoding.");
+    // Do nothing. We will resume video decoding in the decoding state.
   }
 
 protected:
@@ -2122,6 +2112,10 @@ StateObject::HandleResumeVideoDecoding(const TimeUnit& aTarget)
 {
   MOZ_ASSERT(mMaster->mVideoDecodeSuspended);
 
+  mMaster->mVideoDecodeSuspended = false;
+  mMaster->mOnPlaybackEvent.Notify(MediaEventType::ExitVideoSuspend);
+  Reader()->SetVideoBlankDecode(false);
+
   // Start counting recovery time from right now.
   TimeStamp start = TimeStamp::Now();
 
@@ -2271,6 +2265,12 @@ MediaDecoderStateMachine::
 DecodingState::Enter()
 {
   MOZ_ASSERT(mMaster->mSentFirstFrameLoadedEvent);
+
+  if (mMaster->mVideoDecodeSuspended &&
+      mMaster->mVideoDecodeMode == VideoDecodeMode::Normal) {
+    StateObject::HandleResumeVideoDecoding(mMaster->GetMediaTime());
+    return;
+  }
 
   if (mMaster->mVideoDecodeMode == VideoDecodeMode::Suspend &&
       !mMaster->mVideoDecodeSuspendTimer.IsScheduled() &&
