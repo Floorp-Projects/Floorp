@@ -2868,8 +2868,13 @@ MediaCacheStream::Init(int64_t aContentLength)
     return NS_ERROR_FAILURE;
   }
 
-  AutoLock lock(mMediaCache->Monitor());
-  mMediaCache->OpenStream(lock, this);
+  OwnerThread()->Dispatch(NS_NewRunnableFunction(
+    "MediaCacheStream::Init",
+    [ this, res = RefPtr<ChannelMediaResource>(mClient) ]() {
+      AutoLock lock(mMediaCache->Monitor());
+      mMediaCache->OpenStream(lock, this);
+    }));
+
   return NS_OK;
 }
 
