@@ -82,7 +82,8 @@ macosx64-dmd/opt:
             - builds/releng_base_firefox.py
             - builds/releng_base_mac_64_cross_builds.py
         script: "mozharness/scripts/fx_desktop_build.py"
-        custom-build-variant-cfg: dmd
+        extra-config:
+            mozconfig_variant: 'opt-dmd'
         secrets: true
         tooltool-downloads: internal
     run-on-projects: []

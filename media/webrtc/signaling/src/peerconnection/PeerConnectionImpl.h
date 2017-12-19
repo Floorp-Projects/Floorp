@@ -849,6 +849,10 @@ private:
   Atomic<bool> mPacketDumpEnabled;
   mutable Mutex mPacketDumpFlagsMutex;
 
+  // used to store the raw trickle candidate string for display
+  // on the about:webrtc raw candidates table.
+  std::vector<std::string> mRawTrickledCandidates;
+
 public:
   //these are temporary until the DataChannel Listen/Connect API is removed
   unsigned short listenPort;

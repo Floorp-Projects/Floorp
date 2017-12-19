@@ -8,7 +8,6 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Window Management")
 
 DIRS += [
-    'windowds',
     'directory',
     'build',
 ]

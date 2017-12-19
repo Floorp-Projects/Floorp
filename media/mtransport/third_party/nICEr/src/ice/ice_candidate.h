@@ -45,6 +45,7 @@ struct nr_ice_candidate_ {
   char *label;
   char codeword[5];
   int state;
+  int trickled;
 #define NR_ICE_CAND_STATE_CREATED          1
 #define NR_ICE_CAND_STATE_INITIALIZING     2
 #define NR_ICE_CAND_STATE_INITIALIZED      3

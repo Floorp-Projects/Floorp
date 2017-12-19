@@ -1,10 +1,10 @@
 "use strict";
 
 let {AddonManager} = Components.utils.import("resource://gre/modules/AddonManager.jsm", {});
-let {Extension} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
+let {ExtensionTestCommon} = Components.utils.import("resource://testing-common/ExtensionTestCommon.jsm", {});
 
 async function makeAndInstallXPI(id, backgroundScript, loadedURL) {
-  let xpi = Extension.generateXPI({
+  let xpi = ExtensionTestCommon.generateXPI({
     manifest: {applications: {gecko: {id}}},
     background: backgroundScript,
   });

@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // Check that reading non existant inner jars results in the right error
 
-function run_test() {
+add_task(async function() {
   var file = do_get_file("data/test_bug597702.zip");
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
@@ -21,4 +21,28 @@ function run_test() {
   var instr = goodChannel.open2();
 
   ok(!!instr, "Should be able to open channel");
-}
+});
+
+add_task(async function() {
+  var file = do_get_file("data/test_bug597702.zip");
+  var ios = Cc["@mozilla.org/network/io-service;1"].
+            getService(Ci.nsIIOService);
+  var outerJarBase = "jar:" + ios.newFileURI(file).spec + "!/";
+  var goodSpec = "jar:" + outerJarBase + "inner.jar!/hello?ignore%20this%20part!/";
+  var goodChannel = NetUtil.newChannel({uri: goodSpec, loadUsingSystemPrincipal: true});
+  var instr = goodChannel.open2();
+
+  ok(!!instr, "Should be able to open channel");
+});
+
+add_task(async function() {
+  var file = do_get_file("data/test_bug597702.zip");
+  var ios = Cc["@mozilla.org/network/io-service;1"].
+            getService(Ci.nsIIOService);
+  var outerJarBase = "jar:" + ios.newFileURI(file).spec + "!/";
+  var goodSpec = "jar:" + outerJarBase + "inner.jar!/hello?ignore#this!/part";
+  var goodChannel = NetUtil.newChannel({uri: goodSpec, loadUsingSystemPrincipal: true});
+  var instr = goodChannel.open2();
+
+  ok(!!instr, "Should be able to open channel");
+});

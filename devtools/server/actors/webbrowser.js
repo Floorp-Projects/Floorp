@@ -615,8 +615,6 @@ BrowserTabList.prototype._listenToMediatorIf = function (shouldListen) {
  * An nsIWindowMediatorListener's methods get passed all sorts of windows; we
  * only care about the tab containers. Those have 'getBrowser' methods.
  */
-BrowserTabList.prototype.onWindowTitleChange = () => { };
-
 BrowserTabList.prototype.onOpenWindow =
 DevToolsUtils.makeInfallible(function (window) {
   let handleLoad = DevToolsUtils.makeInfallible(() => {

@@ -902,14 +902,6 @@ NS_IMETHODIMP nsXULWindow::SetTitle(const nsAString& aTitle)
   mTitle.Assign(aTitle);
   mTitle.StripCRLF();
   NS_ENSURE_SUCCESS(mWindow->SetTitle(mTitle), NS_ERROR_FAILURE);
-
-  // Tell the window mediator that a title has changed
-  nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
-  if (!windowMediator)
-    return NS_OK;
-
-  windowMediator->UpdateWindowTitle(static_cast<nsIXULWindow*>(this), aTitle);
-
   return NS_OK;
 }
 

@@ -280,6 +280,13 @@ def build_gtest(pgo, build_project, target, automation, enabled, enable_tests):
 
 set_config('LINK_GTEST_DURING_COMPILE', build_gtest)
 
+# Localization
+# ==============================================================
+option('--enable-ui-locale', default='en-US',
+       help='Select the user interface locale (default: en-US)')
+
+set_config('MOZ_UI_LOCALE', depends('--enable-ui-locale')(lambda x: x))
+
 # clang-plugin location
 # ==============================================================
 @depends(library_name_info, check_build_environment, when='--enable-clang-plugin')

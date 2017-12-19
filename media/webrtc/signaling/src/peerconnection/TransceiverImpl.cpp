@@ -417,29 +417,31 @@ TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
     return;
   }
 
+  std::string trackId = mJsepTransceiver->mSendTrack.GetTrackId();
+
   if (sendTrack) {
     nsString wideTrackId;
     sendTrack->GetId(wideTrackId);
-    std::string trackId = NS_ConvertUTF16toUTF8(wideTrackId).get();
+    trackId = NS_ConvertUTF16toUTF8(wideTrackId).get();
     MOZ_ASSERT(!trackId.empty());
-
-    nsTArray<RefPtr<DOMMediaStream>> streams;
-    sender->GetStreams(streams, aRv);
-    if (aRv.Failed()) {
-      return;
-    }
-
-    std::vector<std::string> streamIds;
-    for (const auto& stream : streams) {
-      nsString wideStreamId;
-      stream->GetId(wideStreamId);
-      std::string streamId = NS_ConvertUTF16toUTF8(wideStreamId).get();
-      MOZ_ASSERT(!streamId.empty());
-      streamIds.push_back(streamId);
-    }
-
-    mJsepTransceiver->mSendTrack.UpdateTrackIds(streamIds, trackId);
   }
+
+  nsTArray<RefPtr<DOMMediaStream>> streams;
+  sender->GetStreams(streams, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  std::vector<std::string> streamIds;
+  for (const auto& stream : streams) {
+    nsString wideStreamId;
+    stream->GetId(wideStreamId);
+    std::string streamId = NS_ConvertUTF16toUTF8(wideStreamId).get();
+    MOZ_ASSERT(!streamId.empty());
+    streamIds.push_back(streamId);
+  }
+
+  mJsepTransceiver->mSendTrack.UpdateTrackIds(streamIds, trackId);
 
   // Update RTCRtpParameters
   // TODO: Both ways for things like ssrc, codecs, header extensions, etc

@@ -48,7 +48,7 @@ static char *RCSSTRING __UNUSED__="$Id: ice_peer_ctx.c,v 1.2 2008/04/28 17:59:01
 
 static void nr_ice_peer_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg);
 static int nr_ice_peer_ctx_parse_stream_attributes_int(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream, nr_ice_media_stream *pstream, char **attrs, int attr_ct);
-static int nr_ice_ctx_parse_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream *pstream, char *candidate);
+static int nr_ice_ctx_parse_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream *pstream, char *candidate, int trickled);
 static void nr_ice_peer_ctx_start_trickle_timer(nr_ice_peer_ctx *pctx);
 
 int nr_ice_peer_ctx_create(nr_ice_ctx *ctx, nr_ice_handler *handler,char *label, nr_ice_peer_ctx **pctxp)
@@ -162,7 +162,7 @@ static int nr_ice_peer_ctx_parse_stream_attributes_int(nr_ice_peer_ctx *pctx, nr
         }
       }
       else if (!strncmp(attrs[i],"candidate",9)){
-        if(r=nr_ice_ctx_parse_candidate(pctx,pstream,attrs[i])) {
+        if(r=nr_ice_ctx_parse_candidate(pctx,pstream,attrs[i],0)) {
           r_log(LOG_ICE,LOG_WARNING,"ICE(%s): peer (%s) specified bogus candidate",pctx->ctx->label,pctx->label);
           continue;
         }
@@ -176,7 +176,7 @@ static int nr_ice_peer_ctx_parse_stream_attributes_int(nr_ice_peer_ctx *pctx, nr
     return(0);
   }
 
-static int nr_ice_ctx_parse_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream *pstream, char *candidate)
+static int nr_ice_ctx_parse_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream *pstream, char *candidate, int trickled)
   {
     nr_ice_candidate *cand=0;
     nr_ice_component *comp;
@@ -189,6 +189,9 @@ static int nr_ice_ctx_parse_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream
       r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) specified too many components",pctx->ctx->label,pctx->label);
       ABORT(R_BAD_DATA);
     }
+
+    /* set the trickled flag on the candidate */
+    cand->trickled = trickled;
 
     /* Not the fastest way to find a component, but it's what we got */
     j=1;
@@ -293,7 +296,7 @@ int nr_ice_peer_ctx_parse_trickle_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_
         break;
     }
 
-    if(r=nr_ice_ctx_parse_candidate(pctx,pstream,candidate)){
+    if(r=nr_ice_ctx_parse_candidate(pctx,pstream,candidate,1)){
       ABORT(r);
     }
 

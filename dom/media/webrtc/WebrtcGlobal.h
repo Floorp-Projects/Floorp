@@ -81,6 +81,9 @@ struct ParamTraits<mozilla::dom::RTCStatsReportInternal>
     WriteParam(aMsg, aParam.mTransportStats);
     WriteParam(aMsg, aParam.mRtpContributingSourceStats);
     WriteParam(aMsg, aParam.mOfferer);
+    WriteParam(aMsg, aParam.mTrickledIceCandidateStats);
+    WriteParam(aMsg, aParam.mRawLocalCandidates);
+    WriteParam(aMsg, aParam.mRawRemoteCandidates);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
@@ -102,7 +105,10 @@ struct ParamTraits<mozilla::dom::RTCStatsReportInternal>
         !ReadParam(aMsg, aIter, &(aResult->mIceRollbacks)) ||
         !ReadParam(aMsg, aIter, &(aResult->mTransportStats)) ||
         !ReadParam(aMsg, aIter, &(aResult->mRtpContributingSourceStats)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mOfferer))) {
+        !ReadParam(aMsg, aIter, &(aResult->mOfferer)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mTrickledIceCandidateStats)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mRawLocalCandidates)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mRawRemoteCandidates))) {
       return false;
     }
 

@@ -42,6 +42,10 @@ if (isWorker) {
   loader.lazyRequireGetter(this, "ContentProcessListener", "devtools/server/actors/webconsole/listeners", true);
 }
 
+function isObject(value) {
+  return Object(value) === value;
+}
+
 /**
  * The WebConsoleActor implements capabilities needed for the Web Console
  * feature.
@@ -443,8 +447,7 @@ WebConsoleActor.prototype =
    *         Debuggee value for |value|.
    */
   makeDebuggeeValue: function (value, useObjectGlobal) {
-    let isObject = Object(value) === value;
-    if (useObjectGlobal && isObject) {
+    if (useObjectGlobal && isObject(value)) {
       try {
         let global = Cu.getGlobalForObject(value);
         let dbgGlobal = this.dbg.makeGlobalObjectReference(global);
@@ -1320,17 +1323,25 @@ WebConsoleActor.prototype =
       let objActor = this.getActorByID(options.bindObjectActor ||
                                        options.selectedObjectActor);
       if (objActor) {
-        let jsObj = objActor.obj.unsafeDereference();
-        // If we use the makeDebuggeeValue method of jsObj's own global, then
-        // we'll get a D.O that sees jsObj as viewed from its own compartment -
-        // that is, without wrappers. The evalWithBindings call will then wrap
-        // jsObj appropriately for the evaluation compartment.
-        let global = Cu.getGlobalForObject(jsObj);
-        let _dbgWindow = dbg.makeGlobalObjectReference(global);
-        bindSelf = dbgWindow.makeDebuggeeValue(jsObj);
+        let jsVal = objActor.rawValue();
 
-        if (options.bindObjectActor) {
-          dbgWindow = _dbgWindow;
+        if (isObject(jsVal)) {
+          // If we use the makeDebuggeeValue method of jsVal's own global, then
+          // we'll get a D.O that sees jsVal as viewed from its own compartment -
+          // that is, without wrappers. The evalWithBindings call will then wrap
+          // jsVal appropriately for the evaluation compartment.
+          bindSelf = dbgWindow.makeDebuggeeValue(jsVal);
+          if (options.bindObjectActor) {
+            let global = Cu.getGlobalForObject(jsVal);
+            try {
+              let _dbgWindow = dbg.makeGlobalObjectReference(global);
+              dbgWindow = _dbgWindow;
+            } catch (err) {
+              // The above will throw if `global` is invisible to debugger.
+            }
+          }
+        } else {
+          bindSelf = jsVal;
         }
       }
     }
