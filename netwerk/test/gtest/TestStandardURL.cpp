@@ -236,7 +236,6 @@ MOZ_GTEST_BENCH(TestStandardURL, NormalizePerfFails, [] {
 });
 #endif
 
-
 TEST(TestStandardURL, Mutator)
 {
   nsAutoCString out;
