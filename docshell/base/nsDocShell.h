@@ -357,6 +357,16 @@ public:
     return mOriginAttributes;
   }
 
+  // Determine whether this docshell corresponds to the given history entry,
+  // via having a pointer to it in mOSHE or mLSHE.
+  bool HasHistoryEntry(nsISHEntry* aEntry) const
+  {
+    return aEntry && (aEntry == mOSHE || aEntry == mLSHE);
+  }
+
+  // Update any pointers (mOSHE or mLSHE) to aOldEntry to point to aNewEntry
+  void SwapHistoryEntries(nsISHEntry* aOldEntry, nsISHEntry* aNewEntry);
+
   static bool SandboxFlagsImplyCookies(const uint32_t &aSandboxFlags);
 
   // Tell the favicon service that aNewURI has the same favicon as aOldURI.
@@ -391,47 +401,6 @@ private: // member functions
     nsDocShell*, UniquePtr<AbstractTimelineMarker>&&);
   friend void mozilla::TimelineConsumers::PopMarkers(nsDocShell*,
     JSContext*, nsTArray<dom::ProfileTimelineMarker>&);
-
-  // Callback prototype for WalkHistoryEntries.
-  // aEntry is the child history entry, aShell is its corresponding docshell,
-  // aChildIndex is the child's index in its parent entry, and aData is
-  // the opaque pointer passed to WalkHistoryEntries.
-  typedef nsresult(*WalkHistoryEntriesFunc)(nsISHEntry* aEntry,
-                                            nsDocShell* aShell,
-                                            int32_t aChildIndex,
-                                            void* aData);
-
-  // Clone a session history tree for subframe navigation.
-  // The tree rooted at |aSrcEntry| will be cloned into |aDestEntry|, except
-  // for the entry with id |aCloneID|, which will be replaced with
-  // |aReplaceEntry|. |aSrcShell| is a (possibly null) docshell which
-  // corresponds to |aSrcEntry| via its mLSHE or mOHE pointers, and will
-  // have that pointer updated to point to the cloned history entry.
-  // If aCloneChildren is true then the children of the entry with id
-  // |aCloneID| will be cloned into |aReplaceEntry|.
-  static nsresult CloneAndReplace(nsISHEntry* aSrcEntry,
-                                  nsDocShell* aSrcShell,
-                                  uint32_t aCloneID,
-                                  nsISHEntry* aReplaceEntry,
-                                  bool aCloneChildren,
-                                  nsISHEntry** aDestEntry);
-
-  // Child-walking callback for CloneAndReplace
-  static nsresult CloneAndReplaceChild(nsISHEntry* aEntry, nsDocShell* aShell,
-                                       int32_t aChildIndex, void* aData);
-
-
-  // Child-walking callback for SetHistoryEntry
-  static nsresult SetChildHistoryEntry(nsISHEntry* aEntry, nsDocShell* aShell,
-                                       int32_t aEntryIndex, void* aData);
-
-  // For each child of aRootEntry, find the corresponding docshell which is
-  // a child of aRootShell, and call aCallback. The opaque pointer aData
-  // is passed to the callback.
-  static nsresult WalkHistoryEntries(nsISHEntry* aRootEntry,
-                                     nsDocShell* aRootShell,
-                                     WalkHistoryEntriesFunc aCallback,
-                                     void* aData);
 
   // Security checks to prevent frameset spoofing. See comments at
   // implementation sites.
@@ -527,16 +496,6 @@ private: // member functions
   nsresult AddChildSHEntryInternal(nsISHEntry* aCloneRef, nsISHEntry* aNewEntry,
                                    int32_t aChildOffset, uint32_t aLoadType,
                                    bool aCloneChildren);
-
-  // Determine whether this docshell corresponds to the given history entry,
-  // via having a pointer to it in mOSHE or mLSHE.
-  bool HasHistoryEntry(nsISHEntry* aEntry) const
-  {
-    return aEntry && (aEntry == mOSHE || aEntry == mLSHE);
-  }
-
-  // Update any pointers (mOSHE or mLSHE) to aOldEntry to point to aNewEntry
-  void SwapHistoryEntries(nsISHEntry* aOldEntry, nsISHEntry* aNewEntry);
 
   // Call this method to swap in a new history entry to m[OL]SHE, rather than
   // setting it directly. This completes the navigation in all docshells
