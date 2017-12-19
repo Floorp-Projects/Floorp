@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async function test() {
-  gPrefService.setBoolPref("browser.ctrlTab.previews", true);
+  Services.prefs.setBoolPref("browser.ctrlTab.previews", true);
 
   let [origTab] = gBrowser.visibleTabs;
   let tabOne = BrowserTestUtils.addTab(gBrowser);
@@ -28,8 +28,8 @@ add_task(async function test() {
   gBrowser.removeTab(tabOne);
   gBrowser.removeTab(tabTwo);
 
-  if (gPrefService.prefHasUserValue("browser.ctrlTab.previews"))
-    gPrefService.clearUserPref("browser.ctrlTab.previews");
+  if (Services.prefs.prefHasUserValue("browser.ctrlTab.previews"))
+    Services.prefs.clearUserPref("browser.ctrlTab.previews");
 });
 
 function pressCtrlTab(aShiftKey) {
