@@ -142,6 +142,7 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "layout.css.column-span.enabled",
   "layout.css.contain.enabled",
   "layout.css.control-characters.visible",
+  "layout.css.emulate-moz-box-with-flex",
   "layout.css.expensive-style-struct-assertions.enabled",
   "layout.css.float-logical-values.enabled",
   "layout.css.font-display.enabled",
