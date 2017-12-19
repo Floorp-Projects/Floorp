@@ -3719,33 +3719,6 @@ ServiceWorkerManager::ShouldReportToWindow(mozIDOMWindowProxy* aWindow,
     }
   }
 
-  // Next examine controlled documents to see if the windows match.
-  for (auto iter = mControlledDocuments.Iter(); !iter.Done(); iter.Next()) {
-    ServiceWorkerRegistrationInfo* reg = iter.UserData();
-    MOZ_ASSERT(reg);
-    if (!reg->mScope.Equals(aScope)) {
-      continue;
-    }
-
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(iter.Key());
-    if (!doc || !doc->IsCurrentActiveDocument()) {
-      continue;
-    }
-
-    nsCOMPtr<nsPIDOMWindowOuter> win = doc->GetWindow();
-    if (!win) {
-      continue;
-    }
-
-    win = win->GetScriptableTop();
-
-    // Match.  We should report to this window.
-    if (win && winId == win->WindowID()) {
-      *aResult = true;
-      return NS_OK;
-    }
-  }
-
   // No match.  We should not report to this window.
   return NS_OK;
 }
