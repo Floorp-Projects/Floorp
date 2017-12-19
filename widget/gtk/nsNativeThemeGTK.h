@@ -49,7 +49,7 @@ public:
                                   mozilla::LayoutDeviceIntSize* aResult,
                                   bool* aIsOverridable) override;
 
-  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
+  NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
                                 nsAtom* aAttribute,
                                 bool* aShouldRepaint,
                                 const nsAttrValue* aOldValue) override;
@@ -61,7 +61,7 @@ public:
                                         uint8_t aWidgetType) override;
 
   NS_IMETHOD_(bool) WidgetIsContainer(uint8_t aWidgetType) override;
-  
+
   NS_IMETHOD_(bool) ThemeDrawsFocusForWidget(uint8_t aWidgetType) override;
 
   virtual bool ThemeNeedsComboboxDropmarker() override;

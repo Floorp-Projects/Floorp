@@ -267,7 +267,7 @@ OnSourceGrabEventAfter(GtkWidget *widget, GdkEvent *event, gpointer user_data)
     //
     // http://www.whatwg.org/specs/web-apps/current-work/multipage/dnd.html#drag-and-drop-processing-model
     // recommends an interval of 350ms +/- 200ms.
-    sMotionEventTimerID = 
+    sMotionEventTimerID =
         g_timeout_add_full(G_PRIORITY_DEFAULT_IDLE, 350,
                            DispatchMotionEventCopy, nullptr, nullptr);
 }
@@ -303,7 +303,7 @@ GetGtkWindow(nsIDOMDocument *aDocument)
         return nullptr;
 
     return GTK_WINDOW(toplevel);
-}   
+}
 
 // nsIDragService
 
@@ -527,7 +527,7 @@ nsDragService::StartDragSession()
     MOZ_LOG(sDragLm, LogLevel::Debug, ("nsDragService::StartDragSession"));
     return nsBaseDragService::StartDragSession();
 }
- 
+
 NS_IMETHODIMP
 nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers)
 {
@@ -552,7 +552,7 @@ nsDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers)
 
     // unset our drag action
     SetDragAction(DRAGDROP_ACTION_NONE);
-    
+
     // We're done with the drag context.
     mTargetDragContextForRemote = nullptr;
 
@@ -799,7 +799,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
             else {
                 MOZ_LOG(sDragLm, LogLevel::Debug, ("dataFound = false\n"));
 
-                // Dragging and dropping from the file manager would cause us 
+                // Dragging and dropping from the file manager would cause us
                 // to parse the source text as a nsIFile URL.
                 if (flavorStr.EqualsLiteral(kFileMime)) {
                     gdkFlavor = gdk_atom_intern(kTextMime, FALSE);
@@ -827,7 +827,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                                     nsCOMPtr<nsIFile> file;
                                     rv = fileURL->GetFile(getter_AddRefs(file));
                                     if (NS_SUCCEEDED(rv)) {
-                                        // The common wrapping code at the end of 
+                                        // The common wrapping code at the end of
                                         // this function assumes the data is text
                                         // and calls text-specific operations.
                                         // Make a secret hideout here for nsIFile
@@ -979,7 +979,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
                                &mTargetDragData,
                                reinterpret_cast<int*>(&mTargetDragDataLen));
                 }
-        
+
                 // put it into the transferable.
                 nsCOMPtr<nsISupports> genericDataWrapper;
                 nsPrimitiveHelpers::CreatePrimitiveForData(flavorStr,
@@ -996,7 +996,7 @@ nsDragService::GetData(nsITransferable * aTransferable,
     } // foreach flavor
 
     return NS_OK;
-  
+
 }
 
 NS_IMETHODIMP
@@ -1067,7 +1067,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
 
     // check the target context vs. this flavor, one at a time
     GList *tmp;
-    for (tmp = gdk_drag_context_list_targets(mTargetDragContext); 
+    for (tmp = gdk_drag_context_list_targets(mTargetDragContext);
          tmp; tmp = tmp->next) {
         /* Bug 331198 */
         GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
@@ -1080,7 +1080,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
             *_retval = true;
         }
         // check for automatic text/uri-list -> text/x-moz-url mapping
-        if (!*_retval && 
+        if (!*_retval &&
             name &&
             (strcmp(name, gTextUriListType) == 0) &&
             (strcmp(aDataFlavor, kURLMime) == 0 ||
@@ -1091,7 +1091,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
             *_retval = true;
         }
         // check for automatic _NETSCAPE_URL -> text/x-moz-url mapping
-        if (!*_retval && 
+        if (!*_retval &&
             name &&
             (strcmp(name, gMozUrlType) == 0) &&
             (strcmp(aDataFlavor, kURLMime) == 0)) {
@@ -1101,7 +1101,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
             *_retval = true;
         }
         // check for auto text/plain -> text/unicode mapping
-        if (!*_retval && 
+        if (!*_retval &&
             name &&
             (strcmp(name, kTextMime) == 0) &&
             ((strcmp(aDataFlavor, kUnicodeMime) == 0) ||
@@ -1186,7 +1186,7 @@ nsDragService::IsTargetContextList(void)
 
     // walk the list of context targets and see if one of them is a list
     // of items.
-    for (tmp = gdk_drag_context_list_targets(mTargetDragContext); 
+    for (tmp = gdk_drag_context_list_targets(mTargetDragContext);
          tmp; tmp = tmp->next) {
         /* Bug 331198 */
         GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
@@ -1214,7 +1214,7 @@ nsDragService::GetTargetDragData(GdkAtom aFlavor)
     // reset our target data areas
     TargetResetData();
     gtk_drag_get_data(mTargetWidget, mTargetDragContext, aFlavor, mTargetTime);
-    
+
     MOZ_LOG(sDragLm, LogLevel::Debug, ("about to start inner iteration."));
     PRTime entryTime = PR_Now();
     while (!mTargetDragDataReceived && mDoingDrag) {
@@ -1443,7 +1443,7 @@ nsDragService::SourceEndDragSession(GdkDragContext *aContext,
         // aContext->dest_window will be non-nullptr only if the drop was
         // sent.
         GdkDragAction action =
-            gdk_drag_context_get_dest_window(aContext) ? 
+            gdk_drag_context_get_dest_window(aContext) ?
                 gdk_drag_context_get_actions(aContext) : (GdkDragAction)0;
 
         // Only one bit of action should be set, but, just in case someone
@@ -1786,7 +1786,7 @@ invisibleSourceDragEnd(GtkWidget        *aWidget,
 // In general, GTK does not expect us to run the event loop while handling its
 // drag signals, however our drag event handlers may run the
 // event loop, most often to fetch information about the drag data.
-// 
+//
 // GTK, for example, uses the return value from drag-motion signals to
 // determine whether drag-leave signals should be sent.  If an event loop is
 // run during drag-motion the XdndLeave message can get processed but when GTK
@@ -1849,7 +1849,7 @@ nsDragService::ScheduleLeaveEvent()
     // to the main loop and the scheduled leave task will be replaced.
     if (!Schedule(eDragTaskLeave, nullptr, nullptr, LayoutDeviceIntPoint(), 0)) {
         NS_WARNING("Drag leave after drop");
-    }        
+    }
 }
 
 gboolean
@@ -1860,7 +1860,7 @@ nsDragService::ScheduleDropEvent(nsWindow *aWindow,
     if (!Schedule(eDragTaskDrop, aWindow,
                   aDragContext, aWindowPoint, aTime)) {
         NS_WARNING("Additional drag drop ignored");
-        return FALSE;        
+        return FALSE;
     }
 
     SetDragEndPoint(aWindowPoint + aWindow->WidgetToScreenOffset());
@@ -1963,7 +1963,7 @@ nsDragService::RunScheduledTask()
     // mTargetWidget may be nullptr if the window has been destroyed.
     // (The leave event is not scheduled if a drop task is still scheduled.)
     // We still reply appropriately to indicate that the drop will or didn't
-    // succeeed. 
+    // succeeed.
     mTargetWidget = mTargetWindow->GetMozContainerWidget();
     mTargetDragContext.steal(mPendingDragContext);
     mTargetTime = mPendingTime;
