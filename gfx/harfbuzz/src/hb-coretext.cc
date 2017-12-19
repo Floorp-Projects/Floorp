@@ -39,7 +39,7 @@
 #define HB_CORETEXT_DEFAULT_FONT_SIZE 12.f
 
 static CGFloat
-coretext_font_size (float ptem)
+coretext_font_size_from_ptem (float ptem)
 {
   /* CoreText points are CSS pixels (96 per inch),
    * NOT typographic points (72 per inch).
@@ -48,6 +48,12 @@ coretext_font_size (float ptem)
    */
   ptem *= 96.f / 72.f;
   return ptem <= 0.f ? HB_CORETEXT_DEFAULT_FONT_SIZE : ptem;
+}
+static float
+coretext_font_size_to_ptem (CGFloat size)
+{
+  size *= 72.f / 96.f;
+  return size <= 0.f ? 0 : size;
 }
 
 static void
@@ -84,7 +90,7 @@ _hb_cg_font_release (void *data)
 
 HB_SHAPER_DATA_ENSURE_DEFINE(coretext, face)
 HB_SHAPER_DATA_ENSURE_DEFINE_WITH_CONDITION(coretext, font,
-	fabs (CTFontGetSize((CTFontRef) data) - coretext_font_size (font->ptem)) <= .5
+	fabs (CTFontGetSize((CTFontRef) data) - coretext_font_size_from_ptem (font->ptem)) <= .5
 )
 
 static CTFontDescriptorRef
@@ -282,7 +288,7 @@ _hb_coretext_shaper_font_data_create (hb_font_t *font)
   if (unlikely (!hb_coretext_shaper_face_data_ensure (face))) return nullptr;
   CGFontRef cg_font = (CGFontRef) HB_SHAPER_DATA_GET (face);
 
-  CTFontRef ct_font = create_ct_font (cg_font, coretext_font_size (font->ptem));
+  CTFontRef ct_font = create_ct_font (cg_font, coretext_font_size_from_ptem (font->ptem));
 
   if (unlikely (!ct_font))
   {
@@ -313,6 +319,8 @@ hb_coretext_font_create (CTFontRef ct_font)
 
   if (unlikely (hb_object_is_inert (font)))
     return font;
+
+  hb_font_set_ptem (font, coretext_font_size_to_ptem (CTFontGetSize(ct_font)));
 
   /* Let there be dragons here... */
   HB_SHAPER_DATA_GET (font) = (hb_coretext_shaper_font_data_t *) CFRetain (ct_font);
