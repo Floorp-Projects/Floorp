@@ -377,6 +377,223 @@ nsSHistory::Shutdown()
   }
 }
 
+// static
+nsISHEntry*
+nsSHistory::GetRootSHEntry(nsISHEntry* aEntry)
+{
+  nsCOMPtr<nsISHEntry> rootEntry = aEntry;
+  nsISHEntry* result = nullptr;
+  while (rootEntry) {
+    result = rootEntry;
+    result->GetParent(getter_AddRefs(rootEntry));
+  }
+
+  return result;
+}
+
+// static
+nsresult
+nsSHistory::WalkHistoryEntries(nsISHEntry* aRootEntry,
+                               nsDocShell* aRootShell,
+                               WalkHistoryEntriesFunc aCallback,
+                               void* aData)
+{
+  NS_ENSURE_TRUE(aRootEntry, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsISHContainer> container(do_QueryInterface(aRootEntry));
+  if (!container) {
+    return NS_ERROR_FAILURE;
+  }
+
+  int32_t childCount;
+  container->GetChildCount(&childCount);
+  for (int32_t i = 0; i < childCount; i++) {
+    nsCOMPtr<nsISHEntry> childEntry;
+    container->GetChildAt(i, getter_AddRefs(childEntry));
+    if (!childEntry) {
+      // childEntry can be null for valid reasons, for example if the
+      // docshell at index i never loaded anything useful.
+      // Remember to clone also nulls in the child array (bug 464064).
+      aCallback(nullptr, nullptr, i, aData);
+      continue;
+    }
+
+    nsDocShell* childShell = nullptr;
+    if (aRootShell) {
+      // Walk the children of aRootShell and see if one of them
+      // has srcChild as a SHEntry.
+      int32_t length;
+      aRootShell->GetChildCount(&length);
+      for (int32_t i = 0; i < length; i++) {
+        nsCOMPtr<nsIDocShellTreeItem> item;
+        nsresult rv = aRootShell->GetChildAt(i, getter_AddRefs(item));
+        NS_ENSURE_SUCCESS(rv, rv);
+        nsDocShell* child = static_cast<nsDocShell*>(item.get());
+        if (child->HasHistoryEntry(childEntry)) {
+          childShell = child;
+          break;
+        }
+      }
+    }
+    nsresult rv = aCallback(childEntry, childShell, i, aData);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+// callback data for WalkHistoryEntries
+struct MOZ_STACK_CLASS CloneAndReplaceData
+{
+  CloneAndReplaceData(uint32_t aCloneID, nsISHEntry* aReplaceEntry,
+                      bool aCloneChildren, nsISHEntry* aDestTreeParent)
+    : cloneID(aCloneID)
+    , cloneChildren(aCloneChildren)
+    , replaceEntry(aReplaceEntry)
+    , destTreeParent(aDestTreeParent)
+  {
+  }
+
+  uint32_t cloneID;
+  bool cloneChildren;
+  nsISHEntry* replaceEntry;
+  nsISHEntry* destTreeParent;
+  nsCOMPtr<nsISHEntry> resultEntry;
+};
+
+// static
+nsresult
+nsSHistory::CloneAndReplaceChild(nsISHEntry* aEntry,
+                                          nsDocShell* aShell,
+                                          int32_t aEntryIndex,
+                                          void* aData)
+{
+  nsCOMPtr<nsISHEntry> dest;
+
+  CloneAndReplaceData* data = static_cast<CloneAndReplaceData*>(aData);
+  uint32_t cloneID = data->cloneID;
+  nsISHEntry* replaceEntry = data->replaceEntry;
+
+  nsCOMPtr<nsISHContainer> container = do_QueryInterface(data->destTreeParent);
+  if (!aEntry) {
+    if (container) {
+      container->AddChild(nullptr, aEntryIndex);
+    }
+    return NS_OK;
+  }
+
+  uint32_t srcID;
+  aEntry->GetID(&srcID);
+
+  nsresult rv = NS_OK;
+  if (srcID == cloneID) {
+    // Replace the entry
+    dest = replaceEntry;
+  } else {
+    // Clone the SHEntry...
+    rv = aEntry->Clone(getter_AddRefs(dest));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  dest->SetIsSubFrame(true);
+
+  if (srcID != cloneID || data->cloneChildren) {
+    // Walk the children
+    CloneAndReplaceData childData(cloneID, replaceEntry,
+                                  data->cloneChildren, dest);
+    rv = WalkHistoryEntries(aEntry, aShell,
+                            CloneAndReplaceChild, &childData);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (srcID != cloneID && aShell) {
+    aShell->SwapHistoryEntries(aEntry, dest);
+  }
+
+  if (container) {
+    container->AddChild(dest, aEntryIndex);
+  }
+
+  data->resultEntry = dest;
+  return rv;
+}
+
+// static
+nsresult
+nsSHistory::CloneAndReplace(nsISHEntry* aSrcEntry,
+                                     nsDocShell* aSrcShell,
+                                     uint32_t aCloneID,
+                                     nsISHEntry* aReplaceEntry,
+                                     bool aCloneChildren,
+                                     nsISHEntry** aResultEntry)
+{
+  NS_ENSURE_ARG_POINTER(aResultEntry);
+  NS_ENSURE_TRUE(aReplaceEntry, NS_ERROR_FAILURE);
+
+  CloneAndReplaceData data(aCloneID, aReplaceEntry, aCloneChildren, nullptr);
+  nsresult rv = CloneAndReplaceChild(aSrcEntry, aSrcShell, 0, &data);
+
+  data.resultEntry.swap(*aResultEntry);
+  return rv;
+}
+
+// static
+nsresult
+nsSHistory::SetChildHistoryEntry(nsISHEntry* aEntry, nsDocShell* aShell,
+                                 int32_t aEntryIndex, void* aData)
+{
+  SwapEntriesData* data = static_cast<SwapEntriesData*>(aData);
+  nsDocShell* ignoreShell = data->ignoreShell;
+
+  if (!aShell || aShell == ignoreShell) {
+    return NS_OK;
+  }
+
+  nsISHEntry* destTreeRoot = data->destTreeRoot;
+
+  nsCOMPtr<nsISHEntry> destEntry;
+  nsCOMPtr<nsISHContainer> container = do_QueryInterface(data->destTreeParent);
+
+  if (container) {
+    // aEntry is a clone of some child of destTreeParent, but since the
+    // trees aren't necessarily in sync, we'll have to locate it.
+    // Note that we could set aShell's entry to null if we don't find a
+    // corresponding entry under destTreeParent.
+
+    uint32_t targetID, id;
+    aEntry->GetID(&targetID);
+
+    // First look at the given index, since this is the common case.
+    nsCOMPtr<nsISHEntry> entry;
+    container->GetChildAt(aEntryIndex, getter_AddRefs(entry));
+    if (entry && NS_SUCCEEDED(entry->GetID(&id)) && id == targetID) {
+      destEntry.swap(entry);
+    } else {
+      int32_t childCount;
+      container->GetChildCount(&childCount);
+      for (int32_t i = 0; i < childCount; ++i) {
+        container->GetChildAt(i, getter_AddRefs(entry));
+        if (!entry) {
+          continue;
+        }
+
+        entry->GetID(&id);
+        if (id == targetID) {
+          destEntry.swap(entry);
+          break;
+        }
+      }
+    }
+  } else {
+    destEntry = destTreeRoot;
+  }
+
+  aShell->SwapHistoryEntries(aEntry, destEntry);
+
+  // Now handle the children of aEntry.
+  SwapEntriesData childData = { ignoreShell, destTreeRoot, destEntry };
+  return WalkHistoryEntries(aEntry, aShell, SetChildHistoryEntry, &childData);
+}
+
 /* Add an entry to the History list at mIndex and
  * increment the index to point to the new entry
  */
