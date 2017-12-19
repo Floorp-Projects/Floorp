@@ -4,27 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsPrintOptionsGTK_h__
-#define nsPrintOptionsGTK_h__
+#ifndef nsPrintOptionsWin_h__
+#define nsPrintOptionsWin_h__
 
-#include "nsPrintOptionsImpl.h"
+#include "mozilla/embedding/PPrinting.h"
+#include "nsPrintSettingsService.h"
 
-namespace mozilla
-{
-namespace embedding
-{
-  class PrintData;
-} // namespace embedding
-} // namespace mozilla
+class nsIPrintSettings;
+class nsIWebBrowserPrint;
 
 //*****************************************************************************
 //***    nsPrintOptions
 //*****************************************************************************
-class nsPrintOptionsGTK : public nsPrintOptions
+class nsPrintOptionsWin : public nsPrintOptions
 {
 public:
-  nsPrintOptionsGTK();
-  virtual ~nsPrintOptionsGTK();
+  nsPrintOptionsWin();
+  virtual ~nsPrintOptionsWin();
 
   NS_IMETHODIMP SerializeToPrintData(nsIPrintSettings* aSettings,
                                      nsIWebBrowserPrint* aWBP,

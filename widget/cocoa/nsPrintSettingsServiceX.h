@@ -6,7 +6,7 @@
 #ifndef nsPrintOptionsX_h_
 #define nsPrintOptionsX_h_
 
-#include "nsPrintOptionsImpl.h"
+#include "nsPrintSettingsService.h"
 
 namespace mozilla
 {

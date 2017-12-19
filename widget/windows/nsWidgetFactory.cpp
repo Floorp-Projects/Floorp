@@ -50,7 +50,7 @@
 #ifdef NS_PRINTING
 #include "nsDeviceContextSpecWin.h"
 #include "nsPrintDialogWin.h"
-#include "nsPrintOptionsWin.h"
+#include "nsPrintSettingsServiceWin.h"
 #include "nsPrintSession.h"
 #endif
 

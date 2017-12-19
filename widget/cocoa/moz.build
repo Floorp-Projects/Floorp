@@ -47,7 +47,7 @@ UNIFIED_SOURCES += [
     'nsMenuUtilsX.mm',
     'nsMenuX.mm',
     'nsPrintDialogX.mm',
-    'nsPrintOptionsX.mm',
+    'nsPrintSettingsServiceX.mm',
     'nsPrintSettingsX.mm',
     'nsSound.mm',
     'nsStandaloneNativeMenu.mm',

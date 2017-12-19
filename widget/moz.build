@@ -214,12 +214,12 @@ if CONFIG['OS_ARCH'] == 'Linux':
 if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
     EXPORTS += [
         'nsDeviceContextSpecProxy.h',
-        'nsPrintOptionsImpl.h',
+        'nsPrintSettingsService.h',
     ]
     UNIFIED_SOURCES += [
         'nsDeviceContextSpecProxy.cpp',
-        'nsPrintOptionsImpl.cpp',
         'nsPrintSession.cpp',
+        'nsPrintSettingsService.cpp',
     ]
 
 # nsBaseWidget.cpp needs to be built separately because of name clashes in the OS X headers
