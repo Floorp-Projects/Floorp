@@ -1175,10 +1175,13 @@ main {
       offset-inline-end: 0;
       position: absolute; }
     .collapsible-section .section-top-bar .section-info-option .info-option::before {
-      background-image: url("chrome://global/skin/arrow/panelarrow-vertical-themed.svg");
+      background-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
       background-position: right 6px bottom;
       background-repeat: no-repeat;
       background-size: 20px 10px;
+      -moz-context-properties: fill, stroke;
+      fill: #FFF;
+      stroke: #D7D7DB;
       height: 32px;
       top: -32px;
       width: 43px; }
