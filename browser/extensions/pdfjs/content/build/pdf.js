@@ -590,13 +590,10 @@ function string32(value) {
   return String.fromCharCode(value >> 24 & 0xff, value >> 16 & 0xff, value >> 8 & 0xff, value & 0xff);
 }
 function log2(x) {
-  var n = 1,
-      i = 0;
-  while (x > n) {
-    n <<= 1;
-    i++;
+  if (x <= 0) {
+    return 0;
   }
-  return i;
+  return Math.ceil(Math.log2(x));
 }
 function readInt8(data, start) {
   return data[start] << 24 >> 24;
@@ -1799,7 +1796,7 @@ class StatTimer {
 }
 class DummyStatTimer {
   constructor() {
-    throw new Error('Cannot initialize DummyStatTimer.');
+    (0, _util.unreachable)('Cannot initialize DummyStatTimer.');
   }
   static reset() {}
   static time(name) {}
@@ -1965,7 +1962,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   if (worker.destroyed) {
     return Promise.reject(new Error('Worker was destroyed'));
   }
-  let apiVersion = '2.0.197';
+  let apiVersion = '2.0.213';
   source.disableRange = (0, _dom_utils.getDefaultSetting)('disableRange');
   source.disableAutoFetch = (0, _dom_utils.getDefaultSetting)('disableAutoFetch');
   source.disableStream = (0, _dom_utils.getDefaultSetting)('disableStream');
@@ -2077,7 +2074,7 @@ var PDFDataRangeTransport = function pdfDataRangeTransportClosure() {
       this._readyCapability.resolve();
     },
     requestDataRange: function PDFDataRangeTransport_requestDataRange(begin, end) {
-      throw new Error('Abstract method PDFDataRangeTransport.requestDataRange');
+      (0, _util.unreachable)('Abstract method PDFDataRangeTransport.requestDataRange');
     },
     abort: function PDFDataRangeTransport_abort() {}
   };
@@ -3263,8 +3260,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.197';
-  exports.build = build = '371ca514';
+  exports.version = version = '2.0.213';
+  exports.build = build = '8ae3fd49';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -3305,6 +3302,20 @@ class Metadata {
     return data.replace(/>\\376\\377([^<]+)/g, function (all, codes) {
       let bytes = codes.replace(/\\([0-3])([0-7])([0-7])/g, function (code, d1, d2, d3) {
         return String.fromCharCode(d1 * 64 + d2 * 8 + d3 * 1);
+      }).replace(/&(amp|apos|gt|lt|quot);/g, function (str, name) {
+        switch (name) {
+          case 'amp':
+            return '&';
+          case 'apos':
+            return '\'';
+          case 'gt':
+            return '>';
+          case 'lt':
+            return '<';
+          case 'quot':
+            return '\"';
+        }
+        throw new Error(`_repair: ${name} isn't defined.`);
       });
       let chars = '';
       for (let i = 0, ii = bytes.length; i < ii; i += 2) {
@@ -3516,7 +3527,7 @@ class AnnotationElement {
     container.appendChild(popup);
   }
   render() {
-    throw new Error('Abstract method `AnnotationElement.render` called');
+    (0, _util.unreachable)('Abstract method `AnnotationElement.render` called');
   }
 }
 class LinkAnnotationElement extends AnnotationElement {
@@ -4637,8 +4648,8 @@ exports.SVGGraphics = SVGGraphics;
 "use strict";
 
 
-var pdfjsVersion = '2.0.197';
-var pdfjsBuild = '371ca514';
+var pdfjsVersion = '2.0.213';
+var pdfjsBuild = '8ae3fd49';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(12);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);
@@ -7761,8 +7772,8 @@ if (!_global_scope2.default.PDFJS) {
 }
 var PDFJS = _global_scope2.default.PDFJS;
 {
-  PDFJS.version = '2.0.197';
-  PDFJS.build = '371ca514';
+  PDFJS.version = '2.0.213';
+  PDFJS.build = '8ae3fd49';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
@@ -9313,10 +9324,10 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
       this.restore();
     },
     beginInlineImage: function CanvasGraphics_beginInlineImage() {
-      throw new Error('Should not call beginInlineImage');
+      (0, _util.unreachable)('Should not call beginInlineImage');
     },
     beginImageData: function CanvasGraphics_beginImageData() {
-      throw new Error('Should not call beginImageData');
+      (0, _util.unreachable)('Should not call beginImageData');
     },
     paintFormXObjectBegin: function CanvasGraphics_paintFormXObjectBegin(matrix, bbox) {
       this.save();
