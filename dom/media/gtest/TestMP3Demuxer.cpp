@@ -137,7 +137,7 @@ protected:
       res.mID3MinorVersion = 0;
       res.mID3Flags = 0;
       res.mID3Size = 115304;
-      res.mDuration = 3160816;
+      res.mDuration = 3166167;
       res.mDurationError = 0.001f;
       res.mSeekError = 0.02f;
       res.mSampleRate = 44100;
