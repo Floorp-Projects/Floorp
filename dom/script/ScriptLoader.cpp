@@ -244,8 +244,12 @@ CollectScriptTelemetry(nsIIncrementalStreamLoader* aLoader,
 // <script for=... event=...> element.
 
 static bool
-IsScriptEventHandler(nsIContent* aScriptElement)
+IsScriptEventHandler(ScriptKind kind, nsIContent* aScriptElement)
 {
+  if (kind != ScriptKind::Classic) {
+    return false;
+  }
+
   if (!aScriptElement->IsHTMLElement()) {
     return false;
   }
@@ -1297,35 +1301,38 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
 
   nsCOMPtr<nsIContent> scriptContent = do_QueryInterface(aElement);
 
+  // Determine whether this is a classic script or a module script.
+  nsAutoString type;
+  bool hasType = aElement->GetScriptType(type);
+  ScriptKind scriptKind = ScriptKind::Classic;
+  if (ModuleScriptsEnabled() &&
+      !type.IsEmpty() && type.LowerCaseEqualsASCII("module")) {
+    scriptKind = ScriptKind::Module;
+  }
+
   // Step 13. Check that the script is not an eventhandler
-  if (IsScriptEventHandler(scriptContent)) {
+  if (IsScriptEventHandler(scriptKind, scriptContent)) {
     return false;
   }
 
   ValidJSVersion validJSVersion = ValidJSVersion::Valid;
 
-  // Check the type attribute to determine language and version.
-  // If type exists, it trumps the deprecated 'language='
-  nsAutoString type;
-  bool hasType = aElement->GetScriptType(type);
-
-  ScriptKind scriptKind = ScriptKind::Classic;
-  if (!type.IsEmpty()) {
-    if (ModuleScriptsEnabled() && type.LowerCaseEqualsASCII("module")) {
-      scriptKind = ScriptKind::Module;
-    } else {
+  // For classic scripts, check the type attribute to determine language and
+  // version. If type exists, it trumps the deprecated 'language='
+  if (scriptKind == ScriptKind::Classic) {
+    if (!type.IsEmpty()) {
       NS_ENSURE_TRUE(ParseTypeAttribute(type, &validJSVersion), false);
-    }
-  } else if (!hasType) {
-    // no 'type=' element
-    // "language" is a deprecated attribute of HTML, so we check it only for
-    // HTML script elements.
-    if (scriptContent->IsHTMLElement()) {
-      nsAutoString language;
-      scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::language, language);
-      if (!language.IsEmpty()) {
-        if (!nsContentUtils::IsJavaScriptLanguage(language)) {
-          return false;
+    } else if (!hasType) {
+      // no 'type=' element
+      // "language" is a deprecated attribute of HTML, so we check it only for
+      // HTML script elements.
+      if (scriptContent->IsHTMLElement()) {
+        nsAutoString language;
+        scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::language, language);
+        if (!language.IsEmpty()) {
+          if (!nsContentUtils::IsJavaScriptLanguage(language)) {
+            return false;
+          }
         }
       }
     }
