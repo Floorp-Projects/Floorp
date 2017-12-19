@@ -331,6 +331,8 @@ public:
   mozilla::Maybe<mozilla::dom::ClientState> GetClientState() const;
   mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const;
 
+  void NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
+
   mozilla::dom::TabGroup* TabGroup();
 
   virtual nsPIDOMWindowOuter* GetPrivateRoot() = 0;
