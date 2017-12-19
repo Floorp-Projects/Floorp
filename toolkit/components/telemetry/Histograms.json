@@ -869,15 +869,6 @@
     "bug_numbers": [1239166],
     "description": "Status of Family Safety detection and remediation. See nsNSSComponent.cpp."
   },
-  "FEED_PROTOCOL_USAGE": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["jkt@mozilla.com"],
-    "bug_numbers": [1345546],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 8,
-    "description": "Usage counts of feed protocols used to load a page. (1=feed, 2=feed:http, 3=feed:https, 4=feed:brokenScheme, 5=pcast, 6=pcast:http, 7=pcast:https, 8=pcast:brokenScheme)"
-  },
   "FETCH_IS_MAINTHREAD": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "50",

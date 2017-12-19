@@ -221,6 +221,17 @@ pub enum GlyphFormat {
     ColorBitmap,
 }
 
+impl GlyphFormat {
+    pub fn ignore_color(self) -> Self {
+        match self {
+            GlyphFormat::Subpixel => GlyphFormat::Alpha,
+            GlyphFormat::TransformedSubpixel => GlyphFormat::TransformedAlpha,
+            GlyphFormat::ColorBitmap => GlyphFormat::Bitmap,
+            _ => self,
+        }
+    }
+}
+
 pub struct RasterizedGlyph {
     pub top: f32,
     pub left: f32,

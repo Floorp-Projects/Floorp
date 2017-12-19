@@ -4,7 +4,7 @@
 
 use api::{BorderRadius, ClipMode, ComplexClipRegion, DeviceIntRect, ImageMask, ImageRendering};
 use api::{LayerPoint, LayerRect, LayerToWorldTransform, LayoutPoint, LayoutVector2D, LocalClip};
-use border::BorderCornerClipSource;
+use border::{BorderCornerClipSource, ensure_no_corner_overlap};
 use ellipse::Ellipse;
 use freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
 use gpu_cache::{GpuCache, GpuCacheHandle, ToGpuBlocks};
@@ -87,7 +87,7 @@ impl From<ClipRegion> for ClipSources {
         clips.push(ClipSource::Rectangle(region.main));
 
         for complex in region.complex_clips {
-            clips.push(ClipSource::RoundedRectangle(
+            clips.push(ClipSource::new_rounded_rect(
                 complex.rect,
                 complex.radii,
                 complex.mode,
@@ -99,6 +99,19 @@ impl From<ClipRegion> for ClipSources {
 }
 
 impl ClipSource {
+    pub fn new_rounded_rect(
+        rect: LayerRect,
+        mut radii: BorderRadius,
+        clip_mode: ClipMode
+    ) -> ClipSource {
+        ensure_no_corner_overlap(&mut radii, &rect);
+        ClipSource::RoundedRectangle(
+            rect,
+            radii,
+            clip_mode,
+        )
+    }
+
     pub fn contains(&self, point: &LayerPoint) -> bool {
         // We currently do not handle all BorderCorners, because they aren't used for
         // ClipScrollNodes and this method is only used during hit testing.

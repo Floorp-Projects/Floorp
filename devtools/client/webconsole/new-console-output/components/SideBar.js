@@ -7,12 +7,17 @@ const { Component, createFactory } = require("devtools/client/shared/vendor/reac
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
+const { getObjectInspector } = require("devtools/client/webconsole/new-console-output/utils/object-inspector");
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
 const SplitBox = createFactory(require("devtools/client/shared/components/splitter/SplitBox"));
+
+const reps = require("devtools/client/shared/components/reps/reps");
+const { MODE } = reps;
 
 class SideBar extends Component {
   static get propTypes() {
     return {
+      serviceContainer: PropTypes.object,
       dispatch: PropTypes.func.isRequired,
       sidebarVisible: PropTypes.bool,
       grip: PropTypes.object,
@@ -32,7 +37,13 @@ class SideBar extends Component {
     let {
       sidebarVisible,
       grip,
+      serviceContainer,
     } = this.props;
+
+    let objectInspector = getObjectInspector(grip, serviceContainer, {
+      autoExpandDepth: 1,
+      mode: MODE.SHORT,
+    });
 
     let endPanel = dom.aside({
       className: "sidebar-wrapper"
@@ -47,7 +58,7 @@ class SideBar extends Component {
       ),
       dom.aside({
         className: "sidebar-contents"
-      }, JSON.stringify(grip, null, 2))
+      }, objectInspector)
     );
 
     return (
