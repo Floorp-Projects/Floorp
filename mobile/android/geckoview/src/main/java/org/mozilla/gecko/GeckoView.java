@@ -80,38 +80,36 @@ public class GeckoView extends FrameLayout {
         };
     }
 
-    private class Display implements GeckoDisplay,
-                                     SurfaceHolder.Callback {
+    private class Display implements SurfaceHolder.Callback {
         private final int[] mOrigin = new int[2];
 
-        private Listener mListener;
+        private GeckoDisplay mDisplay;
         private boolean mValid;
 
-        @Override // GeckoDisplay
-        public Listener getListener() {
-            return mListener;
-        }
+        public void acquire(final GeckoDisplay display) {
+            mDisplay = display;
 
-        @Override // GeckoDisplay
-        public void setListener(final Listener listener) {
-            if (mValid && mListener != null) {
-                // Tell old listener the surface is gone.
-                mListener.surfaceDestroyed();
-            }
-
-            mListener = listener;
-
-            if (!mValid || listener == null) {
+            if (!mValid) {
                 return;
             }
 
-            // Tell new listener there is already a surface.
+            // Tell display there is already a surface.
             onGlobalLayout();
             if (GeckoView.this.mSurfaceView != null) {
                 final SurfaceHolder holder = GeckoView.this.mSurfaceView.getHolder();
                 final Rect frame = holder.getSurfaceFrame();
-                listener.surfaceChanged(holder.getSurface(), frame.right, frame.bottom);
+                mDisplay.surfaceChanged(holder.getSurface(), frame.right, frame.bottom);
             }
+        }
+
+        public GeckoDisplay release() {
+            if (mValid) {
+                mDisplay.surfaceDestroyed();
+            }
+
+            final GeckoDisplay display = mDisplay;
+            mDisplay = null;
+            return display;
         }
 
         @Override // SurfaceHolder.Callback
@@ -121,27 +119,27 @@ public class GeckoView extends FrameLayout {
         @Override // SurfaceHolder.Callback
         public void surfaceChanged(final SurfaceHolder holder, final int format,
                                    final int width, final int height) {
-            if (mListener != null) {
-                mListener.surfaceChanged(holder.getSurface(), width, height);
+            if (mDisplay != null) {
+                mDisplay.surfaceChanged(holder.getSurface(), width, height);
             }
             mValid = true;
         }
 
         @Override // SurfaceHolder.Callback
         public void surfaceDestroyed(final SurfaceHolder holder) {
-            if (mListener != null) {
-                mListener.surfaceDestroyed();
+            if (mDisplay != null) {
+                mDisplay.surfaceDestroyed();
             }
             mValid = false;
         }
 
         public void onGlobalLayout() {
-            if (mListener == null) {
+            if (mDisplay == null) {
                 return;
             }
             if (GeckoView.this.mSurfaceView != null) {
                 GeckoView.this.mSurfaceView.getLocationOnScreen(mOrigin);
-                mListener.screenOriginChanged(mOrigin[0], mOrigin[1]);
+                mDisplay.screenOriginChanged(mOrigin[0], mOrigin[1]);
             }
         }
     }
@@ -197,10 +195,10 @@ public class GeckoView extends FrameLayout {
         }
 
         if (mSession != null) {
-            mSession.removeDisplay(mDisplay);
+            mSession.releaseDisplay(mDisplay.release());
         }
         if (session != null) {
-            session.addDisplay(mDisplay);
+            mDisplay.acquire(session.acquireDisplay());
         }
 
         final Context context = getContext();
