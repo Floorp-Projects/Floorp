@@ -5,7 +5,7 @@
 #ifndef nsPrintOptionsAndroid_h__
 #define nsPrintOptionsAndroid_h__
 
-#include "nsPrintOptionsImpl.h"
+#include "nsPrintSettingsService.h"
 #include "nsIPrintSettings.h"
 
 //*****************************************************************************

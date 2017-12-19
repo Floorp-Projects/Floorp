@@ -35,7 +35,7 @@
 #include "OSXNotificationCenter.h"
 
 #include "nsDeviceContextSpecX.h"
-#include "nsPrintOptionsX.h"
+#include "nsPrintSettingsServiceX.h"
 #include "nsPrintDialogX.h"
 #include "nsPrintSession.h"
 #include "nsToolkitCompsCID.h"
