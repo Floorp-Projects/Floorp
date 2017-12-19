@@ -320,27 +320,27 @@ panelview:not([mainview]) .toolbarbutton-text,
   padding: 0;
 }
 
-#extension-new-tab-notification > .popup-notification-body-container > .popup-notification-body {
+.extension-controlled-notification > .popup-notification-body-container > .popup-notification-body {
   width: 30em;
 }
 
-#extension-new-tab-notification > .popup-notification-body-container > .popup-notification-body > hbox > vbox > .popup-notification-description {
+.extension-controlled-notification > .popup-notification-body-container > .popup-notification-body > hbox > vbox > .popup-notification-description {
   font-size: 1.3em;
   font-weight: lighter;
 }
 
-#extension-new-tab-notification-description {
+.extension-controlled-notification {
   margin-bottom: 0;
 }
 
-#extension-new-tab-notification-description > .extension-controlled-icon {
+.extension-controlled-notification > popupnotificationcontent > description > .extension-controlled-icon {
   height: 16px;
   width: 16px;
   vertical-align: bottom;
 }
 
-#extension-new-tab-notification > .popup-notification-body-container > .popup-notification-body > .popup-notification-warning,
-#extension-new-tab-notification > .popup-notification-body-container > .popup-notification-icon {
+.extension-controlled-notification > .popup-notification-body-container > .popup-notification-body > .popup-notification-warning,
+.extension-controlled-notification > .popup-notification-body-container > .popup-notification-icon {
   display: none;
 }
 /* END notification popups for extension controlled content */
