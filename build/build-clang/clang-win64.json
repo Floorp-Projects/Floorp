@@ -13,6 +13,7 @@
     "cxx": "cl.exe",
     "ml": "ml64.exe",
     "patches": [
+      "r318309.patch",
       "loosen-msvc-detection.patch",
       "hide-gcda-profiling-symbols.patch",
       "fflush-before-unlocking.patch"
