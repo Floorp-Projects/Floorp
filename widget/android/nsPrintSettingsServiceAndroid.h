@@ -12,7 +12,6 @@ class nsPrintSettingsServiceAndroid final : public nsPrintSettingsService
 {
 public:
   nsPrintSettingsServiceAndroid() {}
-  virtual ~nsPrintSettingsServiceAndroid() {}
 
   nsresult _CreatePrintSettings(nsIPrintSettings** _retval) override;
 };
