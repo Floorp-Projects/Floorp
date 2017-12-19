@@ -30,7 +30,6 @@
 #include "mtransport/transportflow.h"
 #include "mtransport/transportlayer.h"
 #include "mtransport/transportlayerdtls.h"
-#include "mtransport/transportlayerprsock.h"
 #endif
 
 #ifndef DATACHANNEL_LOG
