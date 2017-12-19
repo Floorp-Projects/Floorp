@@ -21,24 +21,6 @@ const EXPECTED_REFLOWS = [
   },
 ];
 
-if (Services.appinfo.OS == "Linux") {
-  if (gMultiProcessBrowser) {
-    EXPECTED_REFLOWS.push({
-      stack: [
-        "handleEvent@chrome://browser/content/tabbrowser.xml",
-      ],
-    });
-  } else {
-    EXPECTED_REFLOWS.push({
-      stack: [
-        "handleEvent@chrome://browser/content/tabbrowser.xml",
-        "inferFromText@chrome://browser/content/browser.js",
-        "handleEvent@chrome://browser/content/browser.js",
-      ],
-    });
-  }
-}
-
 if (Services.appinfo.OS == "WINNT") {
   EXPECTED_REFLOWS.push(
     {
