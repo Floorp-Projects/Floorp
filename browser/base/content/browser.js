@@ -149,10 +149,6 @@ XPCOMUtils.defineLazyGetter(this, "gCustomizeMode", function() {
   return new scope.CustomizeMode(window);
 });
 
-XPCOMUtils.defineLazyGetter(this, "gPrefService", function() {
-  return Services.prefs;
-});
-
 XPCOMUtils.defineLazyGetter(this, "InlineSpellCheckerUI", function() {
   let tmp = {};
   Cu.import("resource://gre/modules/InlineSpellChecker.jsm", tmp);
