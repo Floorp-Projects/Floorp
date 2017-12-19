@@ -16,12 +16,13 @@ var tabPreviews = {
 
     gBrowser.tabContainer.addEventListener("TabSelect", this);
     gBrowser.tabContainer.addEventListener("SSTabRestored", this);
+  },
 
-    let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"]
-                          .getService(Ci.nsIScreenManager);
-    let left = {}, top = {}, width = {}, height = {};
-    screenManager.primaryScreen.GetRectDisplayPix(left, top, width, height);
-    this.aspectRatio = height.value / width.value;
+  get aspectRatio() {
+    let { PageThumbUtils } = Cu.import("resource://gre/modules/PageThumbUtils.jsm", {});
+    let [ width, height ] = PageThumbUtils.getThumbnailSize(window);
+    delete this.aspectRatio;
+    return this.aspectRatio = height / width;
   },
 
   get: function tabPreviews_get(aTab) {

@@ -24,7 +24,6 @@ EXPORTS.mtransport += [
     '../transportlayerice.h',
     '../transportlayerlog.h',
     '../transportlayerloopback.h',
-    '../transportlayerprsock.h',
 ]
 
 include('../common.build')

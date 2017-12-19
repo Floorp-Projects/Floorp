@@ -424,6 +424,8 @@ private:
  * provided by the monitor.
  * For now Await can only be used with an exclusive MozPromise if passed a
  * Resolve/Reject function.
+ * Await() can *NOT* be called from a task queue/nsISerialEventTarget used for
+ * resolving/rejecting aPromise, otherwise things will deadlock.
  */
 template<typename ResolveValueType,
          typename RejectValueType,
@@ -436,9 +438,10 @@ Await(
   ResolveFunction&& aResolveFunction,
   RejectFunction&& aRejectFunction)
 {
-  Monitor mon(__func__);
   RefPtr<AutoTaskQueue> taskQueue =
     new AutoTaskQueue(Move(aPool), "MozPromiseAwait");
+  // We can't use a Monitor allocated on the stack (see bug 1426067)
+  Monitor& mon = taskQueue->Monitor();
   bool done = false;
 
   aPromise->Then(taskQueue,
@@ -468,9 +471,10 @@ typename MozPromise<ResolveValueType, RejectValueType, Excl>::
 Await(already_AddRefed<nsIEventTarget> aPool,
       RefPtr<MozPromise<ResolveValueType, RejectValueType, Excl>> aPromise)
 {
-  Monitor mon(__func__);
   RefPtr<AutoTaskQueue> taskQueue =
     new AutoTaskQueue(Move(aPool), "MozPromiseAwait");
+  // We can't use a Monitor allocated on the stack (see bug 1426067)
+  Monitor& mon = taskQueue->Monitor();
   bool done = false;
 
   typename MozPromise<ResolveValueType, RejectValueType, Excl>::ResolveOrRejectValue val;

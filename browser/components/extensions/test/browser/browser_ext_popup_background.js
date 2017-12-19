@@ -42,30 +42,14 @@ add_task(async function testPopupBackground() {
     let arrowContent = document.getAnonymousElementByAttribute(panel, "class", "panel-arrowcontent");
     let arrow = document.getAnonymousElementByAttribute(panel, "anonid", "arrow");
 
-    let borderColor = getComputedStyle(arrowContent).borderTopColor;
-
     let checkArrow = (background = null) => {
-      let image = getComputedStyle(arrow).listStyleImage;
-
       if (background == null || !standAlone) {
-        ok(image.startsWith('url("chrome://'), `We should have the built-in background image (got: ${image})`);
+        ok(!arrow.style.hasOwnProperty("fill"), "Arrow fill should be the default one");
         return;
       }
 
-      if (AppConstants.platform == "mac") {
-        // Panels have a drop shadow rather than a border on OS-X, so we extend
-        // the background color through the border area instead.
-        borderColor = background;
-      }
-
-      image = decodeURIComponent(image);
-      let borderIndex = image.indexOf(`fill="${borderColor}"`);
-      let backgroundIndex = image.lastIndexOf(`fill="${background}"`);
-
-      ok(borderIndex >= 0, `Have border fill (index=${borderIndex})`);
-      ok(backgroundIndex >= 0, `Have background fill (index=${backgroundIndex})`);
       is(getComputedStyle(arrowContent).backgroundColor, background, "Arrow content should have correct background");
-      isnot(borderIndex, backgroundIndex, "Border and background fills are separate elements");
+      is(getComputedStyle(arrow).fill, background, "Arrow should have correct background");
     };
 
     function getBackground(browser) {

@@ -141,6 +141,14 @@
   color: var(--string-color);
 }
 
+.network-monitor .tree-container .treeTable .treeValueCell input:focus {
+  color: var(--theme-selection-color) !important;
+}
+
+.network-monitor .tree-container .treeTable .treeRow.hasChildren > .treeLabelCell > .treeLabel:hover {
+  text-decoration: none;
+}
+
 /* Source editor in tab panels */
 
 /* If there is a source editor shows up in the last row of TreeView,

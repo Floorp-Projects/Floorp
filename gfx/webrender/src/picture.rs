@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadiusKind, ColorF, ClipAndScrollInfo, FilterOp, MixBlendMode};
+use api::{ColorF, ClipAndScrollInfo, FilterOp, MixBlendMode};
 use api::{device_length, DeviceIntRect, DeviceIntSize, PipelineId};
 use api::{BoxShadowClipMode, LayerPoint, LayerRect, LayerSize, LayerVector2D, Shadow};
 use api::{ClipId, PremultipliedColorF};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowCacheKey};
 use frame_builder::PrimitiveContext;
 use gpu_cache::GpuDataRequest;
+use gpu_types::BrushImageKind;
 use prim_store::{PrimitiveIndex, PrimitiveRun, PrimitiveRunLocalRect};
 use render_task::{ClearMode, RenderTask, RenderTaskId, RenderTaskTree};
 use scene::{FilterOpHelpers, SceneProperties};
@@ -59,7 +60,7 @@ pub enum PictureKind {
         color: ColorF,
         blur_regions: Vec<LayerRect>,
         clip_mode: BoxShadowClipMode,
-        radii_kind: BorderRadiusKind,
+        image_kind: BrushImageKind,
         content_rect: LayerRect,
         cache_key: BoxShadowCacheKey,
     },
@@ -156,7 +157,7 @@ impl PicturePrimitive {
         color: ColorF,
         blur_regions: Vec<LayerRect>,
         clip_mode: BoxShadowClipMode,
-        radii_kind: BorderRadiusKind,
+        image_kind: BrushImageKind,
         cache_key: BoxShadowCacheKey,
         pipeline_id: PipelineId,
     ) -> Self {
@@ -168,7 +169,7 @@ impl PicturePrimitive {
                 color,
                 blur_regions,
                 clip_mode,
-                radii_kind,
+                image_kind,
                 content_rect: LayerRect::zero(),
                 cache_key,
             },
@@ -259,7 +260,7 @@ impl PicturePrimitive {
 
                 content_rect.translate(&offset)
             }
-            PictureKind::BoxShadow { blur_radius, clip_mode, radii_kind, ref mut content_rect, .. } => {
+            PictureKind::BoxShadow { blur_radius, clip_mode, image_kind, ref mut content_rect, .. } => {
                 // We need to inflate the content rect if outset.
                 match clip_mode {
                     BoxShadowClipMode::Outset => {
@@ -269,8 +270,8 @@ impl PicturePrimitive {
                         // left corner and mirror it across the primitive. In
                         // this case, shift the content rect to leave room
                         // for the blur to take effect.
-                        match radii_kind {
-                            BorderRadiusKind::Uniform => {
+                        match image_kind {
+                            BrushImageKind::Mirror => {
                                 let origin = LayerPoint::new(
                                     local_content_rect.origin.x - blur_offset,
                                     local_content_rect.origin.y - blur_offset,
@@ -281,7 +282,7 @@ impl PicturePrimitive {
                                 );
                                 *content_rect = LayerRect::new(origin, size);
                             }
-                            BorderRadiusKind::NonUniform => {
+                            BrushImageKind::NinePatch | BrushImageKind::Simple => {
                                 // For a non-uniform radii, we need to expand
                                 // the content rect on all sides for the blur.
                                 *content_rect = local_content_rect.inflate(

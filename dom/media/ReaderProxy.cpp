@@ -62,8 +62,12 @@ ReaderProxy::OnAudioDataRequestCompleted(RefPtr<AudioData> aAudio)
   int64_t offset =
     StartTime().ToMicroseconds() - mLoopingOffset.ToMicroseconds();
   aAudio->AdjustForStartTime(offset);
-  mLastAudioEndTime = aAudio->mTime;
-  return AudioDataPromise::CreateAndResolve(aAudio.forget(), __func__);
+  if (aAudio->mTime.IsValid()) {
+    mLastAudioEndTime = aAudio->mTime;
+    return AudioDataPromise::CreateAndResolve(aAudio.forget(), __func__);
+  }
+  return AudioDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+                                           __func__);
 }
 
 RefPtr<ReaderProxy::AudioDataPromise>
@@ -149,8 +153,11 @@ ReaderProxy::RequestVideoData(const media::TimeUnit& aTimeThreshold)
            __func__,
            [startTime](RefPtr<VideoData> aVideo) {
              aVideo->AdjustForStartTime(startTime);
-             return VideoDataPromise::CreateAndResolve(aVideo.forget(),
-                                                       __func__);
+             return aVideo->mTime.IsValid()
+                      ? VideoDataPromise::CreateAndResolve(aVideo.forget(),
+                                                           __func__)
+                      : VideoDataPromise::CreateAndReject(
+                          NS_ERROR_DOM_MEDIA_OVERFLOW_ERR, __func__);
            },
            [](const MediaResult& aError) {
              return VideoDataPromise::CreateAndReject(aError, __func__);

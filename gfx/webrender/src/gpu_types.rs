@@ -180,6 +180,7 @@ impl From<BrushInstance> for PrimitiveInstance {
 // In the future, we may draw with segments for each portion
 // of the primitive, in which case this will be redundant.
 #[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub enum BrushImageKind {
     Simple = 0,     // A normal rect
     NinePatch = 1,  // A nine-patch image (stretch inside segments)

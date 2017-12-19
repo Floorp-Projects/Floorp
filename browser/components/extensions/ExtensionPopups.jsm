@@ -81,10 +81,6 @@ class BasePopup {
 
     this.viewNode.addEventListener(this.DESTROY_EVENT, this);
 
-    let doc = viewNode.ownerDocument;
-    let arrowContent = doc.getAnonymousElementByAttribute(this.panel, "class", "panel-arrowcontent");
-    this.borderColor = doc.defaultView.getComputedStyle(arrowContent).borderTopColor;
-
     this.browser = null;
     this.browserLoaded = new Promise((resolve, reject) => {
       this.browserLoadedDeferred = {resolve, reject};
@@ -129,7 +125,6 @@ class BasePopup {
       let {panel} = this;
       if (panel) {
         panel.style.removeProperty("--arrowpanel-background");
-        panel.style.removeProperty("--panel-arrow-image-vertical");
         panel.removeAttribute("remote");
       }
 
@@ -344,24 +339,10 @@ class BasePopup {
     this.browser.dispatchEvent(event);
   }
 
-  setBackground(background) {
-    let panelBackground = "";
-    let panelArrow = "";
-
+  setBackground(background = "") {
     if (background) {
-      let borderColor = this.borderColor || background;
-
-      panelBackground = background;
-      panelArrow = `url("data:image/svg+xml,${encodeURIComponent(`<?xml version="1.0" encoding="UTF-8"?>
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="10">
-          <path d="M 0,10 L 10,0 20,10 z" fill="${borderColor}"/>
-          <path d="M 1,10 L 10,1 19,10 z" fill="${background}"/>
-        </svg>
-      `)}")`;
+      this.panel.style.setProperty("--arrowpanel-background", background);
     }
-
-    this.panel.style.setProperty("--arrowpanel-background", panelBackground);
-    this.panel.style.setProperty("--panel-arrow-image-vertical", panelArrow);
     this.background = background;
   }
 }

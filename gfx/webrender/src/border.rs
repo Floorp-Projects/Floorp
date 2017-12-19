@@ -227,7 +227,10 @@ impl NormalBorderHelpers for NormalBorder {
     }
 }
 
-fn ensure_no_corner_overlap(radius: &mut BorderRadius, info: &LayerPrimitiveInfo) {
+pub fn ensure_no_corner_overlap(
+    radius: &mut BorderRadius,
+    rect: &LayerRect,
+) {
     let mut ratio = 1.0;
     let top_left_radius = &mut radius.top_left;
     let top_right_radius = &mut radius.top_right;
@@ -235,23 +238,23 @@ fn ensure_no_corner_overlap(radius: &mut BorderRadius, info: &LayerPrimitiveInfo
     let bottom_left_radius = &mut radius.bottom_left;
 
     let sum = top_left_radius.width + bottom_left_radius.width;
-    if info.rect.size.width < sum {
-        ratio = f32::min(ratio, info.rect.size.width / sum);
+    if rect.size.width < sum {
+        ratio = f32::min(ratio, rect.size.width / sum);
     }
 
     let sum = top_right_radius.width + bottom_right_radius.width;
-    if info.rect.size.width < sum {
-        ratio = f32::min(ratio, info.rect.size.width / sum);
+    if rect.size.width < sum {
+        ratio = f32::min(ratio, rect.size.width / sum);
     }
 
     let sum = top_left_radius.height + bottom_left_radius.height;
-    if info.rect.size.height < sum {
-        ratio = f32::min(ratio, info.rect.size.height / sum);
+    if rect.size.height < sum {
+        ratio = f32::min(ratio, rect.size.height / sum);
     }
 
     let sum = top_right_radius.height + bottom_right_radius.height;
-    if info.rect.size.height < sum {
-        ratio = f32::min(ratio, info.rect.size.height / sum);
+    if rect.size.height < sum {
+        ratio = f32::min(ratio, rect.size.height / sum);
     }
 
     if ratio < 1. {
@@ -353,7 +356,7 @@ impl FrameBuilder {
         // threads being run on CI at once).
 
         let mut border = *border;
-        ensure_no_corner_overlap(&mut border.radius, &info);
+        ensure_no_corner_overlap(&mut border.radius, &info.rect);
 
         let radius = &border.radius;
         let left = &border.left;

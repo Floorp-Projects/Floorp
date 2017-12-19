@@ -208,11 +208,6 @@ var FeedHandler = {
       href = event.target.getAttribute("feed");
     urlSecurityCheck(href, gBrowser.contentPrincipal,
                      Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
-    let feedURI = makeURI(href, document.characterSet);
-    // Use the feed scheme so X-Moz-Is-Feed will be set
-    // The value doesn't matter
-    if (/^https?$/.test(feedURI.scheme))
-      href = "feed:" + href;
     this.loadFeed(href, event);
   },
 
@@ -278,6 +273,13 @@ var FeedHandler = {
   addFeed(link, browserForLink) {
     if (!browserForLink.feeds)
       browserForLink.feeds = [];
+
+    urlSecurityCheck(link.href, gBrowser.contentPrincipal,
+                     Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+
+    let feedURI = makeURI(link.href, document.characterSet);
+    if (!/^https?$/.test(feedURI.scheme))
+      return;
 
     browserForLink.feeds.push({ href: link.href, title: link.title });
 

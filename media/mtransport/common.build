@@ -25,7 +25,6 @@ mtransport_lcppsrcs = [
     'transportlayerice.cpp',
     'transportlayerlog.cpp',
     'transportlayerloopback.cpp',
-    'transportlayerprsock.cpp',
 ]
 
 mtransport_cppsrcs = [

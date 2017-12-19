@@ -13,18 +13,15 @@ if (typeof define === "undefined") {
 }
 
 // React
-const { createFactory } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const ObjectClient = require("devtools/shared/client/object-client");
 const {
   MESSAGE_TYPE,
   JSTERM_COMMANDS,
 } = require("../constants");
+const { getObjectInspector } = require("devtools/client/webconsole/new-console-output/utils/object-inspector");
 
 const reps = require("devtools/client/shared/components/reps/reps");
-const { REPS, MODE } = reps;
-const ObjectInspector = createFactory(reps.ObjectInspector);
-const { Grip } = REPS;
+const { MODE } = reps;
 
 GripMessageBody.displayName = "GripMessageBody";
 
@@ -65,46 +62,9 @@ function GripMessageBody(props) {
     styleObject = cleanupStyle(userProvidedStyle, serviceContainer.createElement);
   }
 
-  let onDOMNodeMouseOver;
-  let onDOMNodeMouseOut;
-  let onInspectIconClick;
-  if (serviceContainer) {
-    onDOMNodeMouseOver = serviceContainer.highlightDomElement
-      ? (object) => serviceContainer.highlightDomElement(object)
-      : null;
-    onDOMNodeMouseOut = serviceContainer.unHighlightDomElement;
-    onInspectIconClick = serviceContainer.openNodeInInspector
-      ? (object, e) => {
-        // Stop the event propagation so we don't trigger ObjectInspector expand/collapse.
-        e.stopPropagation();
-        serviceContainer.openNodeInInspector(object);
-      }
-      : null;
-  }
-
-  const objectInspectorProps = {
-    // Auto-expand the ObjectInspector when the message is a console.dir one.
+  let objectInspectorProps = {
     autoExpandDepth: shouldAutoExpandObjectInspector(props) ? 1 : 0,
     mode,
-    // TODO: we disable focus since it's not currently working well in ObjectInspector.
-    // Let's remove the property below when problem are fixed in OI.
-    disabledFocus: true,
-    roots: [{
-      path: (grip && grip.actor) || JSON.stringify(grip),
-      contents: {
-        value: grip
-      }
-    }],
-    createObjectClient: object =>
-      new ObjectClient(serviceContainer.hudProxy.client, object),
-    releaseActor: actor => {
-      if (!actor || !serviceContainer.hudProxy.releaseActor) {
-        return;
-      }
-      serviceContainer.hudProxy.releaseActor(actor);
-    },
-    onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
-    openLink: serviceContainer.openLink,
   };
 
   if (typeof grip === "string" || (grip && grip.type === "longString")) {
@@ -113,16 +73,9 @@ function GripMessageBody(props) {
       escapeWhitespace,
       style: styleObject
     });
-  } else {
-    Object.assign(objectInspectorProps, {
-      onDOMNodeMouseOver,
-      onDOMNodeMouseOut,
-      onInspectIconClick,
-      defaultRep: Grip,
-    });
   }
 
-  return ObjectInspector(objectInspectorProps);
+  return getObjectInspector(grip, serviceContainer, objectInspectorProps);
 }
 
 // Regular expression that matches the allowed CSS property names.
