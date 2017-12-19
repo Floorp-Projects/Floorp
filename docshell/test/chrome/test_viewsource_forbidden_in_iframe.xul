@@ -132,34 +132,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=624883
       expectedProtocolList: "view-source, http"
     },
     {
-      desc: "Test 2: feed:view-source should not be allowed in an iframe",
-      protocols: "feed:view-source:http",
-      expectedProtocolList: "feed, view-source, http"
-    },
-    {
-      desc: "Test 3: jar:view-source should not be allowed in an iframe",
+      desc: "Test 2: jar:view-source should not be allowed in an iframe",
       protocols: "jar:view-source:http",
       expectedProtocolList: "jar, view-source, http"
     },
     {
-      desc: "Test 4: pcast:view-source should not be allowed in an iframe",
-      protocols: "pcast:view-source:http",
-      expectedProtocolList: "pcast, view-source, http"
-    },
-    {
-      desc: "Test 5: pcast:feed:view-source should not be allowed in an iframe",
-      protocols: "pcast:feed:view-source:http",
-      expectedProtocolList: "pcast, feed, view-source, http"
-    },
-    {
-      desc: "Test 6: if invalid protocol first should report before view-source",
+      desc: "Test 3: if invalid protocol first should report before view-source",
       protocols: "wibble:view-source:http",
       // Nothing after the invalid protocol gets set as a proper nested URI,
       // so the list stops there.
       expectedProtocolList: "wibble"
     },
     {
-      desc: "Test 7: if view-source first should report before invalid protocol",
+      desc: "Test 4: if view-source first should report before invalid protocol",
       protocols: "view-source:wibble:http",
       expectedProtocolList: "view-source, wibble"
     }
