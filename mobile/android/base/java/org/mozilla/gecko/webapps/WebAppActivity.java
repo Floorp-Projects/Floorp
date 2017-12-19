@@ -120,18 +120,20 @@ public class WebAppActivity extends AppCompatActivity
             GeckoSharedPrefs.forApp(this).getBoolean(
                 GeckoPreferences.PREFS_DEVTOOLS_REMOTE_USB_ENABLED, false));
 
-        mManifest = WebAppManifest.fromFile(getIntent().getStringExtra(MANIFEST_URL),
-                                            getIntent().getStringExtra(MANIFEST_PATH));
-
-        if (mManifest == null) {
+        try {
+            mManifest = WebAppManifest.fromFile(getIntent().getStringExtra(MANIFEST_URL),
+                                                getIntent().getStringExtra(MANIFEST_PATH));
+        } catch (Exception e) {
             Log.w(LOGTAG, "Cannot retrieve manifest, launching in Firefox");
             try {
                 Intent intent = new Intent(this, BrowserApp.class);
                 intent.setAction(Intent.ACTION_VIEW);
-                intent.setData(getIntent().getData());
-                intent.setPackage(getPackageName());
-                startActivity(intent);
-            } catch (Exception e) {
+                if (getIntent().getData() != null) {
+                    intent.setData(getIntent().getData());
+                    intent.setPackage(getPackageName());
+                    startActivity(intent);
+                }
+            } catch (Exception e2) {
                 Log.e(LOGTAG, "Failed to fall back to launching in Firefox");
             }
             finish();
