@@ -324,6 +324,10 @@ public:
   void
   CheckPendingReadyPromises();
 
+  nsresult
+  ShouldReportToWindow(mozIDOMWindowProxy* aWindow, const nsACString& aScope,
+                       bool* aResult);
+
 private:
   ServiceWorkerManager();
   ~ServiceWorkerManager();

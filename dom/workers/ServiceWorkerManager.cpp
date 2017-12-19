@@ -3631,7 +3631,7 @@ ServiceWorkerManager::RemoveListener(nsIServiceWorkerManagerListener* aListener)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 ServiceWorkerManager::ShouldReportToWindow(mozIDOMWindowProxy* aWindow,
                                            const nsACString& aScope,
                                            bool* aResult)
