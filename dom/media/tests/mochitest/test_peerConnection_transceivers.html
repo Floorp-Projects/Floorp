@@ -142,6 +142,10 @@
 
     // If we are expecting an object, check its props
     if (typeof expected === "object" && expected !== null) {
+      if (observed === null) {
+        ok(false, "Expected non-null");
+        return false;
+      }
       let propsWeCareAbout = Object.getOwnPropertyNames(expected);
       for (let i in propsWeCareAbout) {
         let prop = propsWeCareAbout[i];
@@ -631,7 +635,7 @@
 
     hasProps(pc2.getTransceivers(),
       [
-        {mid: "sdparta_0", sender: {track}}
+        {mid: "sdparta_0", sender: {track: null}}
       ]);
 
     pc1.close();
