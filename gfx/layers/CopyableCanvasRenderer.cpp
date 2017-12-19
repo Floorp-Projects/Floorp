@@ -155,8 +155,8 @@ CopyableCanvasRenderer::ReadbackSurface()
   }
 
   IntSize readSize(frontbuffer->mSize);
-  SurfaceFormat format =
-    mOpaque ? SurfaceFormat::B8G8R8X8 : SurfaceFormat::B8G8R8A8;
+  SurfaceFormat format = frontbuffer->mHasAlpha ? SurfaceFormat::B8G8R8X8
+                                                : SurfaceFormat::B8G8R8A8;
   bool needsPremult = frontbuffer->mHasAlpha && !mIsAlphaPremultiplied;
 
   RefPtr<DataSourceSurface> resultSurf = GetTempSurface(readSize, format);

@@ -2520,8 +2520,6 @@ GLContext::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
 {
     MOZ_ASSERT(src && dest);
     MOZ_ASSERT(dest->GetSize() == src->mSize);
-    MOZ_ASSERT(dest->GetFormat() == (src->mHasAlpha ? SurfaceFormat::B8G8R8A8
-                                                    : SurfaceFormat::B8G8R8X8));
 
     if (!MakeCurrent()) {
         return false;

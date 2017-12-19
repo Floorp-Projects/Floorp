@@ -45,7 +45,7 @@ WebGL2Context::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
     /* GLenum */
     case LOCAL_GL_READ_BUFFER: {
       if (!mBoundReadFramebuffer)
-        return JS::Int32Value(gl->Screen()->GetReadBufferMode());
+        return JS::Int32Value(mDefaultFB_ReadBuffer);
 
       if (!mBoundReadFramebuffer->ColorReadBuffer())
         return JS::Int32Value(LOCAL_GL_NONE);

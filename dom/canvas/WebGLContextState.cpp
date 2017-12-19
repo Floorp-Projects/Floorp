@@ -60,7 +60,7 @@ WebGLContext::Enable(GLenum cap)
 }
 
 bool
-WebGLContext::GetStencilBits(GLint* const out_stencilBits)
+WebGLContext::GetStencilBits(GLint* const out_stencilBits) const
 {
     *out_stencilBits = 0;
     if (mBoundDrawFramebuffer) {
@@ -190,7 +190,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             GLint ret = LOCAL_GL_NONE;
             if (!mBoundDrawFramebuffer) {
                 if (pname == LOCAL_GL_DRAW_BUFFER0) {
-                    ret = gl->Screen()->GetDrawBufferMode();
+                    ret = mDefaultFB_DrawBuffer0;
                 }
             } else {
                 gl->fGetIntegerv(pname, &ret);
@@ -342,7 +342,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE: {
             const webgl::FormatUsageInfo* usage;
             uint32_t width, height;
-            if (!ValidateCurFBForRead(funcName, &usage, &width, &height))
+            if (!BindCurFBForColorRead(funcName, &usage, &width, &height))
                 return JS::NullValue();
 
             const auto implPI = ValidImplementationColorReadPI(usage);
