@@ -31653,40 +31653,19 @@ module.exports = isEmpty;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.parseScriptTags = exports.parseScripts = exports.parseScript = exports.getCandidateScriptLocations = exports.generateWhitespace = exports.extractScriptTags = undefined;
 
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+var _babelTypes = __webpack_require__(493);
 
-var babylon = __webpack_require__(435);
-var types = __webpack_require__(493);
+var types = _interopRequireWildcard(_babelTypes);
 
-var startScript = /<script[^>]*>/im;
-var endScript = /<\/script\s*>/im;
-// https://stackoverflow.com/questions/5034781/js-regex-to-split-by-line#comment5633979_5035005
-var newLines = /\r\n|[\n\v\f\r\x85\u2028\u2029]/;
+var _babylon = __webpack_require__(435);
 
-function getCandidateScriptLocations(source, index) {
-  var i = index || 0;
-  var str = source.substring(i);
+var babylon = _interopRequireWildcard(_babylon);
 
-  var startMatch = startScript.exec(str);
-  if (startMatch) {
-    var startsAt = startMatch.index + startMatch[0].length;
-    var afterStart = str.substring(startsAt);
-    var endMatch = endScript.exec(afterStart);
-    if (endMatch) {
-      var locLength = endMatch.index;
-      var locIndex = i + startsAt;
+var _customParse = __webpack_require__(1794);
 
-      return [adjustForLineAndColumn(source, {
-        index: locIndex,
-        length: locLength,
-        source: source.substring(locIndex, locIndex + locLength)
-      })].concat(_toConsumableArray(getCandidateScriptLocations(source, locIndex + locLength + endMatch[0].length)));
-    }
-  }
-
-  return [];
-}
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function parseScript(_ref) {
   var source = _ref.source,
@@ -31710,69 +31689,11 @@ function parseScript(_ref) {
 function parseScripts(locations) {
   var parser = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : parseScript;
 
-  return locations.map(parser);
-}
-
-function generateWhitespace(length) {
-  return Array.from(new Array(length + 1)).join(" ");
-}
-
-function calcLineAndColumn(source, index) {
-  var lines = source.substring(0, index).split(newLines);
-  var line = lines.length;
-  var column = lines.pop().length + 1;
-
-  return {
-    column: column,
-    line: line
-  };
-}
-
-function adjustForLineAndColumn(fullSource, location) {
-  var _calcLineAndColumn = calcLineAndColumn(fullSource, location.index),
-      column = _calcLineAndColumn.column,
-      line = _calcLineAndColumn.line;
-
-  return Object.assign({}, location, {
-    line: line,
-    column: column,
-    // prepend whitespace for scripts that do not start on the first column
-    source: generateWhitespace(column) + location.source
-  });
-}
-
-function parseScriptTags(source, parser) {
-  var scripts = parseScripts(getCandidateScriptLocations(source), parser).filter(types.isFile).reduce(function (main, script) {
-    return {
-      statements: main.statements.concat(script.program.body),
-      comments: main.comments.concat(script.comments),
-      tokens: main.tokens.concat(script.tokens)
-    };
-  }, {
-    statements: [],
-    comments: [],
-    tokens: []
-  });
-
-  var program = types.program(scripts.statements);
-  var file = types.file(program, scripts.comments, scripts.tokens);
-
-  var end = calcLineAndColumn(source, source.length);
-  file.start = program.start = 0;
-  file.end = program.end = source.length;
-  file.loc = program.loc = {
-    start: {
-      line: 1,
-      column: 0
-    },
-    end: end
-  };
-
-  return file;
+  return (0, _customParse.parseScripts)(locations, parser);
 }
 
 function extractScriptTags(source) {
-  return parseScripts(getCandidateScriptLocations(source), function (loc) {
+  return parseScripts((0, _customParse.getCandidateScriptLocations)(source), function (loc) {
     var ast = parseScript(loc);
 
     if (ast) {
@@ -31783,10 +31704,16 @@ function extractScriptTags(source) {
   }).filter(types.isFile);
 }
 
+function parseScriptTags(source) {
+  var parser = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : parseScript;
+
+  return (0, _customParse.parseScriptTags)(source, parser);
+}
+
 exports.default = parseScriptTags;
 exports.extractScriptTags = extractScriptTags;
-exports.generateWhitespace = generateWhitespace;
-exports.getCandidateScriptLocations = getCandidateScriptLocations;
+exports.generateWhitespace = _customParse.generateWhitespace;
+exports.getCandidateScriptLocations = _customParse.getCandidateScriptLocations;
 exports.parseScript = parseScript;
 exports.parseScripts = parseScripts;
 exports.parseScriptTags = parseScriptTags;
@@ -35988,6 +35915,7 @@ function extractSymbols(source) {
   const identifiers = [];
   const classes = [];
   const imports = [];
+  let hasJsx = false;
 
   const ast = (0, _ast.traverseAst)(source, {
     enter(path) {
@@ -36003,6 +35931,10 @@ function extractSymbols(source) {
           parameterNames: getFunctionParameterNames(path),
           identifier: path.node.id
         });
+      }
+
+      if (t.isJSXElement(path)) {
+        hasJsx = true;
       }
 
       if (t.isClassDeclaration(path)) {
@@ -36102,7 +36034,8 @@ function extractSymbols(source) {
     comments,
     identifiers,
     classes,
-    imports
+    imports,
+    hasJsx
   };
 }
 
@@ -41875,6 +41808,344 @@ function baseToPairs(object, props) {
 
 module.exports = baseToPairs;
 
+
+/***/ }),
+/* 1758 */,
+/* 1759 */,
+/* 1760 */,
+/* 1761 */,
+/* 1762 */,
+/* 1763 */,
+/* 1764 */,
+/* 1765 */,
+/* 1766 */,
+/* 1767 */,
+/* 1768 */,
+/* 1769 */,
+/* 1770 */,
+/* 1771 */,
+/* 1772 */,
+/* 1773 */,
+/* 1774 */,
+/* 1775 */,
+/* 1776 */,
+/* 1777 */,
+/* 1778 */,
+/* 1779 */,
+/* 1780 */,
+/* 1781 */,
+/* 1782 */,
+/* 1783 */,
+/* 1784 */,
+/* 1785 */,
+/* 1786 */,
+/* 1787 */,
+/* 1788 */,
+/* 1789 */,
+/* 1790 */,
+/* 1791 */,
+/* 1792 */,
+/* 1793 */,
+/* 1794 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.parseScriptTags = exports.parseScripts = exports.getCandidateScriptLocations = exports.generateWhitespace = undefined;
+
+var _babelTypes = __webpack_require__(493);
+
+var types = _interopRequireWildcard(_babelTypes);
+
+var _parseScriptFragment = __webpack_require__(1795);
+
+var _parseScriptFragment2 = _interopRequireDefault(_parseScriptFragment);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+var startScript = /<script[^>]*>/im;
+var endScript = /<\/script\s*>/im;
+// https://stackoverflow.com/questions/5034781/js-regex-to-split-by-line#comment5633979_5035005
+var newLines = /\r\n|[\n\v\f\r\x85\u2028\u2029]/;
+
+function getType(tag) {
+  var fragment = (0, _parseScriptFragment2.default)(tag);
+
+  if (fragment) {
+    var type = fragment.attributes.type;
+
+    return type ? type.toLowerCase() : null;
+  }
+
+  return null;
+}
+
+function getCandidateScriptLocations(source, index) {
+  var i = index || 0;
+  var str = source.substring(i);
+
+  var startMatch = startScript.exec(str);
+  if (startMatch) {
+    var startsAt = startMatch.index + startMatch[0].length;
+    var afterStart = str.substring(startsAt);
+    var endMatch = endScript.exec(afterStart);
+    if (endMatch) {
+      var locLength = endMatch.index;
+      var locIndex = i + startsAt;
+      var endIndex = locIndex + locLength + endMatch[0].length;
+
+      // extract the complete tag (incl start and end tags and content). if the
+      // type is invalid (= not JS), skip this tag and continue
+      var tag = source.substring(i + startMatch.index, endIndex);
+      var type = getType(tag);
+      if (type && type !== "javascript" && type !== "text/javascript") {
+        return getCandidateScriptLocations(source, endIndex);
+      }
+
+      return [adjustForLineAndColumn(source, {
+        index: locIndex,
+        length: locLength,
+        source: source.substring(locIndex, locIndex + locLength)
+      })].concat(_toConsumableArray(getCandidateScriptLocations(source, endIndex)));
+    }
+  }
+
+  return [];
+}
+
+function parseScripts(locations, parser) {
+  return locations.map(parser);
+}
+
+function generateWhitespace(length) {
+  return Array.from(new Array(length + 1)).join(" ");
+}
+
+function calcLineAndColumn(source, index) {
+  var lines = source.substring(0, index).split(newLines);
+  var line = lines.length;
+  var column = lines.pop().length + 1;
+
+  return {
+    column: column,
+    line: line
+  };
+}
+
+function adjustForLineAndColumn(fullSource, location) {
+  var _calcLineAndColumn = calcLineAndColumn(fullSource, location.index),
+      column = _calcLineAndColumn.column,
+      line = _calcLineAndColumn.line;
+
+  return Object.assign({}, location, {
+    line: line,
+    column: column,
+    // prepend whitespace for scripts that do not start on the first column
+    source: generateWhitespace(column) + location.source
+  });
+}
+
+function parseScriptTags(source, parser) {
+  var scripts = parseScripts(getCandidateScriptLocations(source), parser).filter(types.isFile).reduce(function (main, script) {
+    return {
+      statements: main.statements.concat(script.program.body),
+      comments: main.comments.concat(script.comments),
+      tokens: main.tokens.concat(script.tokens)
+    };
+  }, {
+    statements: [],
+    comments: [],
+    tokens: []
+  });
+
+  var program = types.program(scripts.statements);
+  var file = types.file(program, scripts.comments, scripts.tokens);
+
+  var end = calcLineAndColumn(source, source.length);
+  file.start = program.start = 0;
+  file.end = program.end = source.length;
+  file.loc = program.loc = {
+    start: {
+      line: 1,
+      column: 0
+    },
+    end: end
+  };
+
+  return file;
+}
+
+exports.default = parseScriptTags;
+exports.generateWhitespace = generateWhitespace;
+exports.getCandidateScriptLocations = getCandidateScriptLocations;
+exports.parseScripts = parseScripts;
+exports.parseScriptTags = parseScriptTags;
+
+/***/ }),
+/* 1795 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var alphanum = /[a-z0-9\-]/i;
+
+function parseToken(str, start) {
+  var i = start;
+  while (i < str.length && alphanum.test(str.charAt(i++))) {
+    continue;
+  }
+
+  if (i !== start) {
+    return {
+      token: str.substring(start, i - 1),
+      index: i
+    };
+  }
+
+  return null;
+}
+
+function parseAttributes(str, start) {
+  var i = start;
+  var attributes = {};
+  var attribute = null;
+
+  while (i < str.length) {
+    var c = str.charAt(i);
+
+    if (attribute === null && c == ">") {
+      break;
+    } else if (attribute === null && alphanum.test(c)) {
+      attribute = {
+        name: null,
+        value: true,
+        bool: true,
+        terminator: null
+      };
+
+      var attributeNameNode = parseToken(str, i);
+      if (attributeNameNode) {
+        attribute.name = attributeNameNode.token;
+        i = attributeNameNode.index - 2;
+      }
+    } else if (attribute !== null) {
+      if (c === "=") {
+        // once we've started an attribute, look for = to indicate
+        // it's a non-boolean attribute
+        attribute.bool = false;
+        if (attribute.value === true) {
+          attribute.value = "";
+        }
+      } else if (!attribute.bool && attribute.terminator === null && (c === '"' || c === "'")) {
+        // once we've determined it's non-boolean, look for a
+        // value terminator (", ')
+        attribute.terminator = c;
+      } else if (attribute.terminator) {
+        if (c === attribute.terminator) {
+          // if we had a terminator and found another, we've
+          // reach the end of the attribute
+          attributes[attribute.name] = attribute.value;
+          attribute = null;
+        } else {
+          // otherwise, append the character to the attribute value
+          attribute.value += c;
+
+          // check for an escaped terminator and push it as well
+          // to avoid terminating prematurely
+          if (c === "\\") {
+            var next = str.charAt(i + 1);
+            if (next === attribute.terminator) {
+              attribute.value += next;
+              i += 1;
+            }
+          }
+        }
+      } else if (!/\s/.test(c)) {
+        // if we've hit a non-space character and aren't processing a value,
+        // we're starting a new attribute so push the attribute and clear the
+        // local variable
+        attributes[attribute.name] = attribute.value;
+        attribute = null;
+
+        // move the cursor back to re-find the start of the attribute
+        i -= 1;
+      }
+    }
+
+    i++;
+  }
+
+  if (i !== start) {
+    return {
+      attributes: attributes,
+      index: i
+    };
+  }
+
+  return null;
+}
+
+function parseFragment(str) {
+  var start = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+
+  var tag = null;
+  var open = false;
+  var attributes = {};
+
+  var i = start;
+  while (i < str.length) {
+    var c = str.charAt(i++);
+
+    if (!open && !tag && c === "<") {
+      // Open Start Tag
+      open = true;
+
+      var tagNode = parseToken(str, i);
+      if (!tagNode) {
+        return null;
+      }
+
+      i = tagNode.index - 1;
+      tag = tagNode.token;
+    } else if (open && c === ">") {
+      // Close Start Tag
+      break;
+    } else if (open) {
+      // Attributes
+      var attributeNode = parseAttributes(str, i - 1);
+
+      if (attributeNode) {
+        i = attributeNode.index;
+        attributes = attributeNode.attributes || attributes;
+      }
+    }
+  }
+
+  if (tag) {
+    return {
+      tag: tag,
+      attributes: attributes
+    };
+  }
+
+  return null;
+}
+
+exports.default = parseFragment;
+exports.parseFragment = parseFragment;
 
 /***/ })
 /******/ ]);
