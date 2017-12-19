@@ -464,6 +464,11 @@ class BaseConfig(object):
                     )
                 else:
                     raise
+
+        if 'EXTRA_MOZHARNESS_CONFIG' in os.environ:
+            env_config = json.loads(os.environ['EXTRA_MOZHARNESS_CONFIG'])
+            all_cfg_files_and_dicts.append(("[EXTRA_MOZHARENSS_CONFIG]", env_config))
+
         return all_cfg_files_and_dicts
 
     def parse_args(self, args=None):

@@ -796,6 +796,28 @@
     stopTracks(stream);
   };
 
+  let checkSendrecvWithTracklessStream = async () => {
+    let pc1 = new RTCPeerConnection();
+    let pc2 = new RTCPeerConnection();
+
+    let stream = new MediaStream();
+    pc1.addTransceiver("audio", {streams: [stream]});
+
+    let offer = await pc1.createOffer();
+
+    let trackEvents = await setRemoteDescriptionReturnTrackEvents(pc2, offer);
+    hasProps(trackEvents,
+      [
+        {
+          track: pc2.getTransceivers()[0].receiver.track,
+          streams: [{id: stream.id}]
+        }
+      ]);
+
+    pc1.close();
+    pc2.close();
+  };
+
   let checkMute = async () => {
     let pc1 = new RTCPeerConnection();
     let stream1 = await getUserMedia({audio: true, video: true});
@@ -1827,6 +1849,7 @@
     await checkSetDirection();
     await checkCurrentDirection();
     await checkSendrecvWithNoSendTrack();
+    await checkSendrecvWithTracklessStream();
     await checkAddTransceiverNoTrackDoesntPair();
     await checkAddTransceiverWithTrackDoesntPair();
     await checkAddTransceiverThenReplaceTrackDoesntPair();

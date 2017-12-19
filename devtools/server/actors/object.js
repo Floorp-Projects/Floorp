@@ -69,6 +69,10 @@ function ObjectActor(obj, {
 ObjectActor.prototype = {
   actorPrefix: "obj",
 
+  rawValue: function () {
+    return this.obj.unsafeDereference();
+  },
+
   /**
    * Returns a grip for this actor for returning in a protocol message.
    */
@@ -2270,6 +2274,10 @@ function LongStringActor(string) {
 LongStringActor.prototype = {
   actorPrefix: "longString",
 
+  rawValue: function () {
+    return this.string;
+  },
+
   destroy: function () {
     // Because longStringActors is not a weak map, we won't automatically leave
     // it so we need to manually leave on destroy so that we don't leak
@@ -2340,6 +2348,10 @@ function ArrayBufferActor(buffer) {
 
 ArrayBufferActor.prototype = {
   actorPrefix: "arrayBuffer",
+
+  rawValue: function () {
+    return this.buffer;
+  },
 
   destroy: function () {
   },

@@ -24,6 +24,7 @@ struct StylePrefs
   static bool sVisitedLinksEnabled;
   static bool sMozDocumentEnabledInContent;
   static bool sGridTemplateSubgridValueEnabled;
+  static bool sEmulateMozBoxWithFlex;
 
   static void Init();
 };

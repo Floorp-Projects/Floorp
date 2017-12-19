@@ -187,6 +187,9 @@ dictionary RTCStatsReportInternal {
   unsigned long                           iceRollbacks;
   boolean                                 offerer; // Is the PC the offerer
   boolean                                 closed; // Is the PC now closed
+  sequence<RTCIceCandidateStats>          trickledIceCandidateStats;
+  sequence<DOMString>                     rawLocalCandidates;
+  sequence<DOMString>                     rawRemoteCandidates;
 };
 
 [Pref="media.peerconnection.enabled",

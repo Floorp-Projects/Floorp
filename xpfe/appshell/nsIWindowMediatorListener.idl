@@ -10,8 +10,6 @@ interface nsIXULWindow;
 [scriptable, uuid(2F276982-0D60-4377-A595-D350BA516395)]
 interface nsIWindowMediatorListener : nsISupports
 {
-    void onWindowTitleChange(in nsIXULWindow window, in AString newTitle);
-
     void onOpenWindow(in nsIXULWindow window);
     void onCloseWindow(in nsIXULWindow window);
 };

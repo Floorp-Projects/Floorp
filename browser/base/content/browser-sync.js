@@ -81,6 +81,22 @@ var gSync = {
     }
   },
 
+  _definePrefGetters() {
+    XPCOMUtils.defineLazyPreferenceGetter(this, "UNSENDABLE_URL_REGEXP",
+        "services.sync.engine.tabs.filteredUrls", null, null, rx => {
+          try {
+            return new RegExp(rx, "i");
+          } catch (e) {
+            Cu.reportError(`Failed to build url filter regexp for send tab: ${e}`);
+            return null;
+          }
+        });
+    XPCOMUtils.defineLazyPreferenceGetter(this, "FXA_CONNECT_DEVICE_URI",
+        "identity.fxaccounts.remote.connectdevice.uri");
+    XPCOMUtils.defineLazyPreferenceGetter(this, "PRODUCT_INFO_BASE_URL",
+        "app.productInfo.baseURL");
+  },
+
   _maybeUpdateUIState() {
     // Update the UI.
     if (UIState.isReady()) {
@@ -103,6 +119,7 @@ var gSync = {
     }
 
     this._generateNodeGetters();
+    this._definePrefGetters();
 
     // initial label for the sync buttons.
     let broadcaster = document.getElementById("sync-status");
@@ -277,13 +294,13 @@ var gSync = {
   },
 
   openConnectAnotherDevice(entryPoint) {
-    let url = new URL(Services.prefs.getCharPref("identity.fxaccounts.remote.connectdevice.uri"));
+    let url = new URL(this.FXA_CONNECT_DEVICE_URI);
     url.searchParams.append("entrypoint", entryPoint);
     openUILinkIn(url.href, "tab");
   },
 
   openSendToDevicePromo() {
-    let url = Services.prefs.getCharPref("app.productInfo.baseURL");
+    let url = this.PRODUCT_INFO_BASE_URL;
     url += "send-tabs/?utm_source=" + Services.appinfo.name.toLowerCase();
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
@@ -433,18 +450,14 @@ var gSync = {
     if (aURISpec.length > 65535) {
       return false;
     }
-    try {
-      // Filter out un-sendable URIs -- things like local files, object urls, etc.
-      const unsendableRegexp = new RegExp(
-        Services.prefs.getCharPref("services.sync.engine.tabs.filteredUrls"), "i");
-      return !unsendableRegexp.test(aURISpec);
-    } catch (e) {
-      // The preference has been removed, or is an invalid regexp, so we log an
-      // error and treat it as a valid URI -- and the more problematic case is
-      // the length, which we've already addressed.
-      Cu.reportError(`Failed to build url filter regexp for send tab: ${e}`);
-      return true;
+    if (this.UNSENDABLE_URL_REGEXP) {
+      return !this.UNSENDABLE_URL_REGEXP.test(aURISpec);
     }
+    // The preference has been removed, or is an invalid regexp, so we treat it
+    // as a valid URI. We've already logged an error when trying to construct
+    // the regexp, and the more problematic case is the length, which we've
+    // already addressed.
+    return true;
   },
 
   // "Send Tab to Device" menu item

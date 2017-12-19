@@ -345,7 +345,6 @@ WindowListener.prototype = {
     domwindow.addEventListener("load", onLoad, true);
   },
   onCloseWindow(aXULWindow) {},
-  onWindowTitleChange(aXULWindow, aNewTitle) {},
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowMediatorListener,
                                          Ci.nsISupports]),
 };
