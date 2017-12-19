@@ -31,8 +31,8 @@
   skin/classic/global/arrow/arrow-rit-dis.gif              (../../windows/global/arrow/arrow-rit-dis.gif)
   skin/classic/global/arrow/arrow-up.gif                   (../../windows/global/arrow/arrow-up.gif)
   skin/classic/global/arrow/arrow-up-dis.gif               (../../windows/global/arrow/arrow-up-dis.gif)
-  skin/classic/global/arrow/panelarrow-horizontal-themed.svg (../../windows/global/arrow/panelarrow-horizontal-themed.svg)
-  skin/classic/global/arrow/panelarrow-vertical-themed.svg   (../../windows/global/arrow/panelarrow-vertical-themed.svg)
+  skin/classic/global/arrow/panelarrow-horizontal.svg (../../windows/global/arrow/panelarrow-horizontal.svg)
+  skin/classic/global/arrow/panelarrow-vertical.svg   (../../windows/global/arrow/panelarrow-vertical.svg)
 
 * skin/classic/global/dirListing/dirListing.css            (../../windows/global/dirListing/dirListing.css)
   skin/classic/global/icons/error-16.png                   (../../windows/global/icons/error-16.png)
