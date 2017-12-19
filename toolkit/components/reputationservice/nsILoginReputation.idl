@@ -10,14 +10,12 @@ interface nsIDOMHTMLInputElement;
 interface nsIURI;
 
 [scriptable, uuid(6219f9da-297e-446d-8d47-ccdd8e72a1d5)]
-interface nsILoginReputationResult : nsISupports {
+interface nsILoginReputationVerdictType : nsISupports {
 
-  // These should sync with 'VerdictType' defined in
-  // LoginReputationClientResponse in csd.proto.
-  const uint16_t UNSPECIFIED      = 0;
-  const uint16_t SAFE             = 1;
-  const uint16_t LOW_REPUTATION   = 2;
-  const uint16_t PHISHING         = 3;
+  const unsigned long UNSPECIFIED      = 0;
+  const unsigned long SAFE             = 1;
+  const unsigned long LOW_REPUTATION   = 2;
+  const unsigned long PHISHING         = 3;
 };
 
 [scriptable, uuid(c21ffe59-595f-46c8-9052-fefb639e196e)]
@@ -27,9 +25,10 @@ interface nsILoginReputationQuery : nsISupports {
 
 [scriptable, uuid(b527be1e-8fbb-41d9-bee4-267a71236368)]
 interface nsILoginReputationQueryCallback : nsISupports {
-  // aResult should be one of the const value defined in nsILoginReputationResult
+  // aVerdict should be one of the const value defined in nsILoginReputationResult
   // interface.
-  void onQueryComplete(in uint16_t aResult);
+  void onComplete(in nsresult aStatus,
+                  in unsigned long aVerdict);
 };
 
 [scriptable, uuid(1b3f1dfe-ce3a-486b-953e-ce5ac863eff9)]
