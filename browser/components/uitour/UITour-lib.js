@@ -595,33 +595,6 @@ if (typeof Mozilla == "undefined") {
   };
 
   /**
-   * Request the browser open the "Connect Another Device" Firefox Accounts page.
-   *
-   * @param {Object} extraURLCampaignParams - An object containing additional
-   * parameters for the URL opened by the browser for reasons of promotional
-   * campaign tracking. Each attribute of the object must have a name that
-   * is a string, begins with "utm_" and contains only only alphanumeric
-   * characters, dashes or underscores. The values may be any string and will
-   * automatically be encoded.
-   * @since 59
-   * @example
-   * // Will open https://accounts.firefox.com/connect_another_device?entrypoint=uitour
-   * Mozilla.UITour.showConnectAnotherDevice();
-   * @example
-   * // Will open:
-   * // https://accounts.firefox.com/connect_another_device?entrypoint=uitour&utm_foo=bar&utm_bar=baz
-   * Mozilla.UITour.showConnectAnotherDevice({
-   *   'utm_foo': 'bar',
-   *   'utm_bar': 'baz'
-   * });
-   */
-  Mozilla.UITour.showConnectAnotherDevice = function(extraURLCampaignParams) {
-    _sendEvent("showConnectAnotherDevice", {
-      extraURLCampaignParams: JSON.stringify(extraURLCampaignParams)
-    });
-  };
-
-  /**
    * Show a profile refresh/reset dialog, allowing users to choose to reomve
    * add-ons and customizations as well as restore browser defaults, if possible.
    * `getConfiguration('canReset')` should first be used to determine whether
