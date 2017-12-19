@@ -4,24 +4,14 @@
     "permissions": [],
     "types": [
       {
-        "id": "WebExtensionManifest",
+        "id": "ManifestBase",
         "type": "object",
-        "description": "Represents a WebExtension manifest.json file",
+        "description": "Common properties for all manifest.json files",
         "properties": {
           "manifest_version": {
             "type": "integer",
             "minimum": 2,
             "maximum": 2
-          },
-
-          "minimum_chrome_version":{
-            "type": "string",
-            "optional": true
-          },
-
-          "minimum_opera_version":{
-            "type": "string",
-            "optional": true
           },
 
           "applications": {
@@ -81,6 +71,24 @@
             "format": "url",
             "optional": true,
             "preprocess": "localize"
+          }
+        }
+      },
+      {
+        "id": "WebExtensionManifest",
+        "type": "object",
+        "description": "Represents a WebExtension manifest.json file",
+
+        "$import": "ManifestBase",
+        "properties": {
+          "minimum_chrome_version":{
+            "type": "string",
+            "optional": true
+          },
+
+          "minimum_opera_version":{
+            "type": "string",
+            "optional": true
           },
 
           "icons": {
@@ -220,65 +228,9 @@
         "id": "WebExtensionLangpackManifest",
         "type": "object",
         "description": "Represents a WebExtension language pack manifest.json file",
+
+        "$import": "ManifestBase",
         "properties": {
-          "manifest_version": {
-            "type": "integer",
-            "minimum": 2,
-            "maximum": 2
-          },
-
-          "applications": {
-            "type": "object",
-            "optional": true,
-            "properties": {
-              "gecko": {
-                "$ref": "FirefoxSpecificProperties",
-                "optional": true
-              }
-            }
-          },
-
-          "browser_specific_settings": {
-            "type": "object",
-            "optional": true,
-            "properties": {
-              "gecko": {
-                "$ref": "FirefoxSpecificProperties",
-                "optional": true
-              }
-            }
-          },
-
-          "name": {
-            "type": "string",
-            "optional": false,
-            "preprocess": "localize"
-          },
-
-          "short_name": {
-            "type": "string",
-            "optional": true,
-            "preprocess": "localize"
-          },
-
-          "description": {
-            "type": "string",
-            "optional": true,
-            "preprocess": "localize"
-          },
-
-          "author": {
-            "type": "string",
-            "optional": true,
-            "preprocess": "localize",
-            "onError": "warn"
-          },
-
-          "version": {
-            "type": "string",
-            "optional": false
-          },
-
           "homepage_url": {
             "type": "string",
             "format": "url",
