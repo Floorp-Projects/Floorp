@@ -48,6 +48,8 @@ public:
                     ValidJSVersion aValidJSVersion,
                     CORSMode aCORSMode,
                     const SRIMetadata& aIntegrity,
+                    nsIURI* aReferrer,
+                    mozilla::net::ReferrerPolicy,
                     ScriptLoader* aLoader);
 
   // Create a module load request for an imported module.
