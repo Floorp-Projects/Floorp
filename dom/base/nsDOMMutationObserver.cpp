@@ -926,7 +926,7 @@ nsDOMMutationObserver::HandleMutationsInternal(AutoSlowOperation& aAso)
     DocGroup::sPendingDocGroups = nullptr;
   }
 
-  while (sScheduledMutationObservers) {
+  if (sScheduledMutationObservers) {
     AutoTArray<RefPtr<nsDOMMutationObserver>, 4>* observers =
       sScheduledMutationObservers;
     sScheduledMutationObservers = nullptr;
