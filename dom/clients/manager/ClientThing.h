@@ -49,13 +49,15 @@ protected:
   // Conditionally execute the given callable based on the current state.
   template<typename Callable>
   void
-  MaybeExecute(const Callable& aCallable)
+  MaybeExecute(const Callable& aSuccess,
+               const std::function<void()>& aFailure = []{})
   {
     if (mShutdown) {
+      aFailure();
       return;
     }
     MOZ_DIAGNOSTIC_ASSERT(mActor);
-    aCallable(mActor);
+    aSuccess(mActor);
   }
 
   // Attach activate the thing by attaching its underlying IPC actor.  This

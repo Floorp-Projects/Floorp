@@ -79,7 +79,7 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
     case ePointerEventClass:
     case eSimpleGestureEventClass: {
       WidgetMouseEventBase* mouseEventBase = mEvent->AsMouseEventBase();
-      mouseEventBase->relatedTarget = aRelatedTarget;
+      mouseEventBase->mRelatedTarget = aRelatedTarget;
       mouseEventBase->button = aButton;
       mouseEventBase->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
       mClientPoint.x = aClientX;
@@ -295,8 +295,7 @@ MouseEvent::GetRelatedTarget()
     case eDragEventClass:
     case ePointerEventClass:
     case eSimpleGestureEventClass:
-      relatedTarget =
-        do_QueryInterface(mEvent->AsMouseEventBase()->relatedTarget);
+      relatedTarget = mEvent->AsMouseEventBase()->mRelatedTarget;
       break;
     default:
       break;

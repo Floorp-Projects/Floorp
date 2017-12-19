@@ -699,7 +699,7 @@ PluginModuleChromeParent::WriteExtraDataForMinidump()
     // mCrashReporterMutex is already held by the caller
     mCrashReporterMutex.AssertCurrentThreadOwns();
 
-    typedef nsDependentCString CS;
+    typedef nsDependentCString cstring;
 
     // Get the plugin filename, try to get just the file leafname
     const std::string& pluginFile = mSubprocess->GetPluginFilePath();
@@ -708,7 +708,7 @@ PluginModuleChromeParent::WriteExtraDataForMinidump()
         filePos = 0;
     else
         filePos++;
-    mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginFilename"), CS(pluginFile.substr(filePos).c_str()));
+    mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginFilename"), cstring(pluginFile.substr(filePos).c_str()));
 
     mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginName"), mPluginName);
     mCrashReporter->AddNote(NS_LITERAL_CSTRING("PluginVersion"), mPluginVersion);

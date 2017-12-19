@@ -1,16 +1,9 @@
 [
   {
-    "size": 479280,
-    "digest": "dd7e9d67fc858f670502a16266963b15d8fb9a2fa4fc638ba1a27e17318b84ade5a9c1284783905dfbe113ce59690c9232c182e0466d53a37182e8aedea5530f",
+    "size": 996696,
+    "digest": "7c09f6144c84a6dd9bdb8d817e7957b432e72138ecb4a2adf6f5754b7ef2a2bd5c53ba113659283644f510a1aab87a1efc09851bc07457978eb0c0a63f4c29a4",
     "algorithm": "sha512",
     "filename": "breakpad-tools.tar.xz",
     "unpack": true
-  },
-  {
-    "size": 1737944,
-    "visibility": "public",
-    "digest": "76d704f0bfa110f5ea298b87200e34ec09d039b9d1a59ec819fc8e02b2cf073af32a4536dca33a3813f037a557fd0669b48a063c7a920f6308b307148029d41f",
-    "algorithm": "sha512",
-    "filename": "linux64-minidump_stackwalk"
   }
 ]
