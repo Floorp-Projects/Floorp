@@ -1423,13 +1423,18 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
 
       rv = StartLoad(request);
       if (NS_FAILED(rv)) {
-        const char* message = "ScriptSourceLoadFailed";
-
+        const char* message;
+        bool isScript = scriptKind == ScriptKind::Classic;
         if (rv == NS_ERROR_MALFORMED_URI) {
-            message = "ScriptSourceMalformed";
+          message =
+            isScript ? "ScriptSourceMalformed" : "ModuleSourceMalformed";
         }
         else if (rv == NS_ERROR_DOM_BAD_URI) {
-            message = "ScriptSourceNotAllowed";
+          message =
+            isScript ? "ScriptSourceNotAllowed" : "ModuleSourceNotAllowed";
+        } else {
+          message =
+            isScript ? "ScriptSourceLoadFailed" : "ModuleSourceLoadFailed";
         }
 
         NS_ConvertUTF8toUTF16 url(scriptURI->GetSpecOrDefault());
@@ -2843,11 +2848,16 @@ ScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
         AppendUTF8toUTF16(aRequest->mURI->GetSpecOrDefault(), url);
       }
 
+      const char* message = "ScriptSourceLoadFailed";
+      if (aRequest->IsModuleRequest()) {
+        message = "ModuleSourceLoadFailed";
+      }
+
       const char16_t* params[] = { url.get() };
 
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
         NS_LITERAL_CSTRING("Script Loader"), mDocument,
-        nsContentUtils::eDOM_PROPERTIES, "ScriptSourceLoadFailed",
+        nsContentUtils::eDOM_PROPERTIES, message,
         params, ArrayLength(params), nullptr,
         EmptyString(), lineNo);
     }
