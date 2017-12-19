@@ -14,20 +14,12 @@
 
 using namespace mozilla::embedding;
 
-nsPrintOptionsX::nsPrintOptionsX()
-{
-}
-
-nsPrintOptionsX::~nsPrintOptionsX()
-{
-}
-
 NS_IMETHODIMP
-nsPrintOptionsX::SerializeToPrintData(nsIPrintSettings* aSettings,
-                                      nsIWebBrowserPrint* aWBP,
-                                      PrintData* data)
+nsPrintSettingsServiceX::SerializeToPrintData(nsIPrintSettings* aSettings,
+                                              nsIWebBrowserPrint* aWBP,
+                                              PrintData* data)
 {
-  nsresult rv = nsPrintOptions::SerializeToPrintData(aSettings, aWBP, data);
+  nsresult rv = nsPrintSettingsService::SerializeToPrintData(aSettings, aWBP, data);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -50,9 +42,9 @@ nsPrintOptionsX::SerializeToPrintData(nsIPrintSettings* aSettings,
 }
 
 nsresult
-nsPrintOptionsX::SerializeToPrintDataChild(nsIPrintSettings* aSettings,
-                                           nsIWebBrowserPrint* aWBP,
-                                           PrintData* data)
+nsPrintSettingsServiceX::SerializeToPrintDataChild(nsIPrintSettings* aSettings,
+                                                   nsIWebBrowserPrint* aWBP,
+                                                   PrintData* data)
 {
   // If we are in the child process, we don't need to populate
   // nsPrintSettingsX completely. The parent discards almost all of
@@ -84,9 +76,9 @@ nsPrintOptionsX::SerializeToPrintDataChild(nsIPrintSettings* aSettings,
 }
 
 nsresult
-nsPrintOptionsX::SerializeToPrintDataParent(nsIPrintSettings* aSettings,
-                                            nsIWebBrowserPrint* aWBP,
-                                            PrintData* data)
+nsPrintSettingsServiceX::SerializeToPrintDataParent(nsIPrintSettings* aSettings,
+                                                    nsIWebBrowserPrint* aWBP,
+                                                    PrintData* data)
 {
   RefPtr<nsPrintSettingsX> settingsX(do_QueryObject(aSettings));
   if (NS_WARN_IF(!settingsX)) {
@@ -179,10 +171,10 @@ nsPrintOptionsX::SerializeToPrintDataParent(nsIPrintSettings* aSettings,
 }
 
 NS_IMETHODIMP
-nsPrintOptionsX::DeserializeToPrintSettings(const PrintData& data,
-                                            nsIPrintSettings* settings)
+nsPrintSettingsServiceX::DeserializeToPrintSettings(const PrintData& data,
+                                                    nsIPrintSettings* settings)
 {
-  nsresult rv = nsPrintOptions::DeserializeToPrintSettings(data, settings);
+  nsresult rv = nsPrintSettingsService::DeserializeToPrintSettings(data, settings);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -204,12 +196,14 @@ nsPrintOptionsX::DeserializeToPrintSettings(const PrintData& data,
 }
 
 nsresult
-nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, uint32_t aFlags)
+nsPrintSettingsServiceX::ReadPrefs(nsIPrintSettings* aPS,
+                                   const nsAString& aPrinterName,
+                                   uint32_t aFlags)
 {
   nsresult rv;
   
-  rv = nsPrintOptions::ReadPrefs(aPS, aPrinterName, aFlags);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintOptions::ReadPrefs() failed");
+  rv = nsPrintSettingsService::ReadPrefs(aPS, aPrinterName, aFlags);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsService::ReadPrefs() failed");
   
   RefPtr<nsPrintSettingsX> printSettingsX(do_QueryObject(aPS));
   if (!printSettingsX)
@@ -219,7 +213,7 @@ nsPrintOptionsX::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
   return NS_OK;
 }
 
-nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
+nsresult nsPrintSettingsServiceX::_CreatePrintSettings(nsIPrintSettings** _retval)
 {
   nsresult rv;
   *_retval = nullptr;
@@ -239,12 +233,14 @@ nsresult nsPrintOptionsX::_CreatePrintSettings(nsIPrintSettings **_retval)
 }
 
 nsresult
-nsPrintOptionsX::WritePrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName, uint32_t aFlags)
+nsPrintSettingsServiceX::WritePrefs(nsIPrintSettings* aPS,
+                                    const nsAString& aPrinterName,
+                                    uint32_t aFlags)
 {
   nsresult rv;
 
-  rv = nsPrintOptions::WritePrefs(aPS, aPrinterName, aFlags);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintOptions::WritePrefs() failed");
+  rv = nsPrintSettingsService::WritePrefs(aPS, aPrinterName, aFlags);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "nsPrintSettingsService::WritePrefs() failed");
 
   RefPtr<nsPrintSettingsX> printSettingsX(do_QueryObject(aPS));
   if (!printSettingsX)

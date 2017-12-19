@@ -769,7 +769,7 @@ NS_IMETHODIMP nsPrintSettings::SetPaperData(int16_t aPaperData)
 }
 
 /** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
+ *  See documentation in nsPrintSettingsService.h
  *	@update 6/21/00 dwc
  *	@update 1/12/01 rods
  */
@@ -809,7 +809,7 @@ nsPrintSettings::SetUnwriteableMarginInTwips(nsIntMargin& aUnwriteableMargin)
 }
 
 /** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
+ *  See documentation in nsPrintSettingsService.h
  *	@update 6/21/00 dwc
  */
 NS_IMETHODIMP 
@@ -843,7 +843,7 @@ nsPrintSettings::SetupSilentPrinting()
 }
 
 /** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
+ *  See documentation in nsPrintSettingsService.h
  */
 NS_IMETHODIMP 
 nsPrintSettings::GetEffectivePageSize(double *aWidth, double *aHeight)
