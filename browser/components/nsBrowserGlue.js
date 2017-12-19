@@ -1114,11 +1114,6 @@ BrowserGlue.prototype = {
     // early, so we use a maximum timeout for it.
     Services.tm.idleDispatchToMainThread(() => {
       SafeBrowsing.init();
-
-      // Login reputation depends on the Safe Browsing API.
-      let reputationService = Cc["@mozilla.org/reputationservice/login-reputation-service;1"]
-        .getService(Ci.nsILoginReputationService);
-      reputationService.init();
     }, 5000);
 
     if (AppConstants.MOZ_CRASHREPORTER) {

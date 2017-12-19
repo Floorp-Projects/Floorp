@@ -40,9 +40,11 @@ LoginReputationParent::QueryReputation(nsIURI* aURI)
 }
 
 NS_IMETHODIMP
-LoginReputationParent::OnQueryComplete(uint16_t aResult)
+LoginReputationParent::OnComplete(nsresult aResult,
+                                  VerdictType aVerdict)
 {
-  LR_LOG(("OnQueryComplete() [result=%d]", aResult));
+  LR_LOG(("OnComplete() [verdict=%s]",
+    LoginReputationService::VerdictTypeToString(aVerdict).get()));
 
   if (mIPCOpen) {
     Unused << Send__delete__(this);

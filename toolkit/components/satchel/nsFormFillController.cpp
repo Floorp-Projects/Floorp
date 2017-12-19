@@ -901,16 +901,6 @@ nsFormFillController::StopSearch()
 nsresult
 nsFormFillController::StartQueryLoginReputation(nsIDOMHTMLInputElement *aInput)
 {
-  if (!mLoginReputationService) {
-    mLoginReputationService =
-      do_GetService(NS_LOGIN_REPUTATION_SERVICE_CONTRACTID);
-    if (NS_WARN_IF(!mLoginReputationService)) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  mLoginReputationService->QueryReputationAsync(aInput, nullptr);
-
   return NS_OK;
 }
 
