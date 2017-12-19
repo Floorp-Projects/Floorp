@@ -2205,6 +2205,8 @@ ssl_ProtectRecord(sslSocket *ss, ssl3CipherSpec *cwSpec, SSL3ContentType type,
     PORT_Assert(SSL_BUFFER_LEN(wrBuf) == 0);
     PORT_Assert(cwSpec->cipherDef->max_records <= RECORD_SEQ_MAX);
     if (cwSpec->seqNum >= cwSpec->cipherDef->max_records) {
+        /* We should have automatically updated before here in TLS 1.3. */
+        PORT_Assert(cwSpec->version < SSL_LIBRARY_VERSION_TLS_1_3);
         SSL_TRC(3, ("%d: SSL[-]: write sequence number at limit 0x%0llx",
                     SSL_GETPID(), cwSpec->seqNum));
         PORT_SetError(SSL_ERROR_TOO_MANY_RECORDS);
@@ -8612,7 +8614,7 @@ loser:
  * in asking to use the V3 handshake.
  */
 SECStatus
-ssl3_HandleV2ClientHello(sslSocket *ss, unsigned char *buffer, int length,
+ssl3_HandleV2ClientHello(sslSocket *ss, unsigned char *buffer, unsigned int length,
                          PRUint8 padding)
 {
     sslSessionID *sid = NULL;

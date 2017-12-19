@@ -32,15 +32,21 @@ nssCryptokiObject_Create(
         /* a failure here indicates a device error */
         return (nssCryptokiObject *)NULL;
     }
+    if (cert_template[0].ulValueLen == 0) {
+        nss_ZFreeIf(cert_template[1].pValue);
+        return (nssCryptokiObject *)NULL;
+    }
     object = nss_ZNEW(NULL, nssCryptokiObject);
     if (!object) {
+        nss_ZFreeIf(cert_template[0].pValue);
+        nss_ZFreeIf(cert_template[1].pValue);
         return (nssCryptokiObject *)NULL;
     }
     object->handle = h;
     object->token = nssToken_AddRef(t);
     isTokenObject = (CK_BBOOL *)cert_template[0].pValue;
     object->isTokenObject = *isTokenObject;
-    nss_ZFreeIf(isTokenObject);
+    nss_ZFreeIf(cert_template[0].pValue);
     NSS_CK_ATTRIBUTE_TO_UTF8(&cert_template[1], object->label);
     return object;
 }

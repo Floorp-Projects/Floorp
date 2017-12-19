@@ -619,7 +619,7 @@ static SECStatus
 ssl_CallCustomExtensionSenders(sslSocket *ss, sslBuffer *buf,
                                SSLHandshakeType message)
 {
-    sslBuffer tail = { NULL, 0, 0 };
+    sslBuffer tail = SSL_BUFFER_EMPTY;
     SECStatus rv;
     PRCList *cursor;
 
