@@ -456,17 +456,16 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 
 #customization-panelWrapper > .panel-arrowbox > .panel-arrow[side="top"] {
 %ifdef XP_MACOSX
-  list-style-image: var(--panel-arrow-image-vertical,
-                        url("chrome://global/skin/arrow/panelarrow-vertical.png"));
   /* The OS X image is 2px narrower than the windows/linux one.
    * Add padding to compensate: */
   padding: 0 1px;
   /* specify width for hidpi image to fit correctly */
   width: 20px;
-%else
-  list-style-image: var(--panel-arrow-image-vertical,
-                        url("chrome://global/skin/arrow/panelarrow-vertical-themed.svg"));
 %endif
+  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
+  -moz-context-properties: fill, stroke;
+  fill: var(--arrowpanel-background);
+  stroke: var(--arrowpanel-border-color);
   /* The arrow needs to point to the overflow button. The numbers involved
    * are:
    * overflow button width: (16px + 2 * 2px padding
@@ -485,15 +484,6 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   margin-inline-end: calc(9px + 3 * var(--toolbarbutton-inner-padding));
   vertical-align: top;
 }
-
-%ifdef XP_MACOSX
-@media (min-resolution: 2dppx) {
-  #customization-panelWrapper > .panel-arrowbox > .panel-arrow[side="top"] {
-    list-style-image: var(--panel-arrow-image-vertical,
-                          url("chrome://global/skin/arrow/panelarrow-vertical@2x.png"));
-  }
-}
-%endif
 
 #customization-panelDescription {
   font-size: 1.1em;

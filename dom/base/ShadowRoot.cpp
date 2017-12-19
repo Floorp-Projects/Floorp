@@ -27,7 +27,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(ShadowRoot)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ShadowRoot,
                                                   DocumentFragment)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheetList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAssociatedBinding)
   for (auto iter = tmp->mIdentifierMap.ConstIter(); !iter.Done();
        iter.Next()) {
@@ -39,7 +39,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ShadowRoot)
   if (tmp->GetHost()) {
     tmp->GetHost()->RemoveMutationObserver(tmp);
   }
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStyleSheetList)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAssociatedBinding)
   tmp->mIdentifierMap.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(DocumentFragment)
@@ -210,21 +210,37 @@ ShadowRoot::InsertSheet(StyleSheet* aSheet,
 {
   nsCOMPtr<nsIStyleSheetLinkingElement>
     linkingElement = do_QueryInterface(aLinkingContent);
+
+  // FIXME(emilio, bug 1410578): <link> should probably also be allowed here.
   MOZ_ASSERT(linkingElement, "The only styles in a ShadowRoot should come "
                              "from <style>.");
 
   linkingElement->SetStyleSheet(aSheet); // This sets the ownerNode on the sheet
 
+  MOZ_DIAGNOSTIC_ASSERT(mProtoBinding->SheetCount() == StyleScope::SheetCount());
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  // FIXME(emilio, bug 1425759): For now we keep them duplicated, the proto
+  // binding will disappear soon (tm).
+  {
+    size_t i = 0;
+    for (RefPtr<StyleSheet>& sheet : mStyleSheets) {
+      MOZ_DIAGNOSTIC_ASSERT(sheet.get() == mProtoBinding->StyleSheetAt(i++));
+    }
+  }
+#endif
+
   // Find the correct position to insert into the style sheet list (must
   // be in tree order).
-  for (size_t i = 0; i <= mProtoBinding->SheetCount(); i++) {
-    if (i == mProtoBinding->SheetCount()) {
+  for (size_t i = 0; i <= SheetCount(); i++) {
+    if (i == SheetCount()) {
+      AppendStyleSheet(*aSheet);
       mProtoBinding->AppendStyleSheet(aSheet);
       break;
     }
 
-    nsINode* sheetOwningNode = mProtoBinding->StyleSheetAt(i)->GetOwnerNode();
+    nsINode* sheetOwningNode = SheetAt(i)->GetOwnerNode();
     if (nsContentUtils::PositionIsBefore(aLinkingContent, sheetOwningNode)) {
+      InsertSheetAt(i, *aSheet);
       mProtoBinding->InsertStyleSheetAt(i, aSheet);
       break;
     }
@@ -239,6 +255,7 @@ void
 ShadowRoot::RemoveSheet(StyleSheet* aSheet)
 {
   mProtoBinding->RemoveStyleSheet(aSheet);
+  StyleScope::RemoveSheet(*aSheet);
 
   if (aSheet->IsApplicable()) {
     StyleSheetChanged();
@@ -493,16 +510,6 @@ ShadowRoot::SetApplyAuthorStyles(bool aApplyAuthorStyles)
   }
 }
 
-StyleSheetList*
-ShadowRoot::StyleSheets()
-{
-  if (!mStyleSheetList) {
-    mStyleSheetList = new ShadowRootStyleSheetList(this);
-  }
-
-  return mStyleSheetList;
-}
-
 /**
  * Returns whether the web components pool population algorithm
  * on the host would contain |aContent|. This function ignores
@@ -620,38 +627,3 @@ ShadowRoot::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
   *aResult = nullptr;
   return NS_ERROR_DOM_DATA_CLONE_ERR;
 }
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ShadowRootStyleSheetList, StyleSheetList,
-                                   mShadowRoot)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ShadowRootStyleSheetList)
-NS_INTERFACE_MAP_END_INHERITING(StyleSheetList)
-
-NS_IMPL_ADDREF_INHERITED(ShadowRootStyleSheetList, StyleSheetList)
-NS_IMPL_RELEASE_INHERITED(ShadowRootStyleSheetList, StyleSheetList)
-
-ShadowRootStyleSheetList::ShadowRootStyleSheetList(ShadowRoot* aShadowRoot)
-  : mShadowRoot(aShadowRoot)
-{
-}
-
-ShadowRootStyleSheetList::~ShadowRootStyleSheetList()
-{
-}
-
-StyleSheet*
-ShadowRootStyleSheetList::IndexedGetter(uint32_t aIndex, bool& aFound)
-{
-  aFound = aIndex < mShadowRoot->mProtoBinding->SheetCount();
-  if (!aFound) {
-    return nullptr;
-  }
-  return mShadowRoot->mProtoBinding->StyleSheetAt(aIndex);
-}
-
-uint32_t
-ShadowRootStyleSheetList::Length()
-{
-  return mShadowRoot->mProtoBinding->SheetCount();
-}
-

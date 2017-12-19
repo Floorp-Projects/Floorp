@@ -212,6 +212,23 @@ add_task(async function test_stop_tracking_twice() {
   await cleanup();
 });
 
+add_task(async function test_filter_file_uris() {
+  await startTracking();
+
+  let uri = CommonUtils.makeURI("file:///Users/eoger/tps/config.json");
+  let visitAddedPromise = promiseVisit("added", uri);
+  await PlacesTestUtils.addVisits({
+    uri,
+    visitDate: Date.now() * 1000,
+    transition: PlacesUtils.history.TRANSITION_LINK
+  });
+  await visitAddedPromise;
+
+  await verifyTrackerEmpty();
+  await stopTracking();
+  await cleanup();
+});
+
 add_task(async function test_filter_hidden() {
   await startTracking();
 

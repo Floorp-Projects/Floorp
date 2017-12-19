@@ -30,8 +30,18 @@ add_task(async function () {
   info("Showing sidebar for {a:1}");
   await showSidebarWithContextMenu(hud, objectA, true);
 
+  let sidebarContents = hud.ui.document.querySelector(".sidebar-contents");
+  let objectInspector = sidebarContents.querySelector(".object-inspector");
+  let oiNodes = objectInspector.querySelectorAll(".node");
+  if (oiNodes.length === 1) {
+    // If this is the case, we wait for the properties to be fetched and displayed.
+    await waitForNodeMutation(objectInspector, {
+      childList: true
+    });
+  }
+
   let sidebarText = hud.ui.document.querySelector(".sidebar-contents").textContent;
-  ok(sidebarText.includes('"a":'), "Sidebar is shown for {a:1}");
+  ok(sidebarText.includes("a: 1"), "Sidebar is shown for {a:1}");
 
   info("Showing sidebar for {a:1} again");
   await showSidebarWithContextMenu(hud, objectA, false);
@@ -42,10 +52,22 @@ add_task(async function () {
 
   info("Showing sidebar for {b:1}");
   await showSidebarWithContextMenu(hud, objectB, false);
+
+  sidebarContents = hud.ui.document.querySelector(".sidebar-contents");
+  objectInspector = sidebarContents.querySelector(".object-inspector");
+  oiNodes = objectInspector.querySelectorAll(".node");
+  if (oiNodes.length === 1) {
+    // If this is the case, we wait for the properties to be fetched and displayed.
+    await waitForNodeMutation(objectInspector, {
+      childList: true
+    });
+  }
+
   isnot(hud.ui.document.querySelector(".sidebar-contents").textContent, sidebarText,
         "Sidebar is updated for {b:1}");
   sidebarText = hud.ui.document.querySelector(".sidebar-contents").textContent;
-  ok(sidebarText.includes('"b":'), "Sidebar contents shown for {b:1}");
+
+  ok(sidebarText.includes("b: 1"), "Sidebar contents shown for {b:1}");
 
   info("Checking context menu entry is disabled for number");
   let numberContextMenuEnabled = await isContextMenuEntryEnabled(hud, number);

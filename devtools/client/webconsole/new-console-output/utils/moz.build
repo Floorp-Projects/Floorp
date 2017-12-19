@@ -7,4 +7,5 @@ DevToolsModules(
     'context-menu.js',
     'id-generator.js',
     'messages.js',
+    'object-inspector.js',
 )

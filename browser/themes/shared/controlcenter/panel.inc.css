@@ -78,6 +78,9 @@
   background-repeat: no-repeat;
   background-position: 1em 1em;
   background-size: 24px auto;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: .6;
   padding: 0.5em 0 1em;
   /* .identity-popup-host depends on this width */
   padding-inline-start: calc(2em + 24px);

@@ -11,25 +11,11 @@ transforms:
 kind-dependencies:
    - beetmover-checksums
    - beetmover-repackage
+   # Fennec doesn't have beetmover-{checksums,repackage}, so
+   # also depend on vanilla beetmover.
+   - beetmover
 
 jobs:
-   firefox-ship:
-      name: post-beetmover-dummy
-      description: Dummy task to deal with max_dependencies
-      run-on-projects: []
-      shipping-phase: ship
-      shipping-product: firefox
-      worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-      worker:
-         implementation: docker-worker
-         os: linux
-         docker-image: "ubuntu:16.10"
-         max-run-time: 600
-         command:
-            - /bin/bash
-            - -c
-            - echo "Dummy task"
-
    firefox-promote:
       name: post-beetmover-dummy
       description: Dummy task to deal with max_dependencies
@@ -47,11 +33,11 @@ jobs:
             - -c
             - echo "Dummy task"
 
-   devedition-ship:
+   devedition-promote:
       name: post-beetmover-dummy
       description: Dummy task to deal with max_dependencies
       run-on-projects: []
-      shipping-phase: ship
+      shipping-phase: promote
       shipping-product: devedition
       worker-type: aws-provisioner-v1/gecko-{level}-b-linux
       worker:
@@ -64,12 +50,12 @@ jobs:
             - -c
             - echo "Dummy task"
 
-   devedition-promote:
+   fennec-promote:
       name: post-beetmover-dummy
       description: Dummy task to deal with max_dependencies
       run-on-projects: []
       shipping-phase: promote
-      shipping-product: devedition
+      shipping-product: fennec
       worker-type: aws-provisioner-v1/gecko-{level}-b-linux
       worker:
          implementation: docker-worker

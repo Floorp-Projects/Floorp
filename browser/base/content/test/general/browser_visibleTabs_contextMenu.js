@@ -32,10 +32,15 @@ add_task(async function test() {
   gBrowser.pinTab(pinned);
   is(gBrowser.visibleTabs.length, 2, "now there are two visible tabs");
 
+  // Check the context menu on the pinned tab
+  updateTabContextMenu(pinned);
+  ok(!document.getElementById("context_closeOtherTabs").disabled, "Close Other Tabs is enabled on pinned tab");
+  ok(!document.getElementById("context_closeTabsToTheEnd").disabled, "Close Tabs To The End is enabled on pinned tab");
+
   // Check the context menu on the unpinned visible tab
   updateTabContextMenu(testTab);
-  is(document.getElementById("context_closeOtherTabs").disabled, true, "Close Other Tabs is disabled");
-  is(document.getElementById("context_closeTabsToTheEnd").disabled, true, "Close Tabs To The End is disabled");
+  ok(document.getElementById("context_closeOtherTabs").disabled, "Close Other Tabs is disabled on single unpinned tab");
+  ok(document.getElementById("context_closeTabsToTheEnd").disabled, "Close Tabs To The End is disabled on single unpinned tab");
 
   // Show all tabs
   let allTabs = Array.from(gBrowser.tabs);
@@ -43,13 +48,15 @@ add_task(async function test() {
 
   // Check the context menu now
   updateTabContextMenu(testTab);
-  is(document.getElementById("context_closeOtherTabs").disabled, false, "Close Other Tabs is enabled");
-  is(document.getElementById("context_closeTabsToTheEnd").disabled, true, "Close Tabs To The End is disabled");
+  ok(!document.getElementById("context_closeOtherTabs").disabled,
+     "Close Other Tabs is enabled on unpinned tab when there's another unpinned tab");
+  ok(document.getElementById("context_closeTabsToTheEnd").disabled, "Close Tabs To The End is disabled on last unpinned tab");
 
   // Check the context menu of the original tab
   // Close Tabs To The End should now be enabled
   updateTabContextMenu(origTab);
-  is(document.getElementById("context_closeTabsToTheEnd").disabled, false, "Close Tabs To The End is enabled");
+  ok(!document.getElementById("context_closeTabsToTheEnd").disabled,
+     "Close Tabs To The End is enabled on unpinned tab when followed by another");
 
   gBrowser.removeTab(testTab);
   gBrowser.removeTab(pinned);

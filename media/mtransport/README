@@ -27,10 +27,9 @@ There are no thread locks. It is the responsibility of the caller to
 arrange that any given TransportLayer/TransportFlow is only
 manipulated in one thread at once. One good way to do this is to run
 everything on the STS thread. Many of the existing layer implementations
-(TransportLayerPrsock, TransportLayerIce, TransportLayerLoopback)
-already run on STS so in those cases you must run on STS, though
-you can do setup on the main thread and then activate them on the
-STS.
+(TransportLayerIce, TransportLayerLoopback) already run on STS so in those
+cases you must run on STS, though you can do setup on the main thread and
+then activate them on the STS.
 
 
 EXISTING TRANSPORT LAYERS
@@ -38,22 +37,9 @@ The following transport layers are currently implemented:
 
 * DTLS -- a wrapper around NSS's DTLS [RFC 6347] stack
 * ICE  -- a wrapper around the nICEr ICE [RFC 5245] stack.
-* Prsock -- a wrapper around NSPR sockets
 * Loopback -- a loopback IO mechanism
 * Logging -- a passthrough that just logs its data
 
-The last three are primarily for debugging.
-
-
-
-
-
-
-
-
-
-
-
-
+The last two are primarily for debugging.
 
 

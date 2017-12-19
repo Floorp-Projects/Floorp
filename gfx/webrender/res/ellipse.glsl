@@ -84,9 +84,11 @@ float clip_against_ellipse_if_needed(
       return current_distance;
     }
 
-    return distance_to_ellipse(pos - ellipse_center_radius.xy,
-                               ellipse_center_radius.zw,
-                               aa_range);
+    float distance = distance_to_ellipse(pos - ellipse_center_radius.xy,
+                                         ellipse_center_radius.zw,
+                                         aa_range);
+
+    return max(distance, current_distance);
 }
 
 float rounded_rect(vec2 pos,

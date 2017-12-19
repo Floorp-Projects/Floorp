@@ -670,12 +670,13 @@ VertexInfo write_transform_vertex(RectWithSize local_segment_rect,
 
     // Convert the world positions to device pixel space.
     vec2 device_pos = world_pos.xy / world_pos.w * uDevicePixelRatio;
+    vec2 task_offset = task.common_data.task_rect.p0 - task.content_origin;
 
     // We want the world space coords to be perspective divided by W.
     // We also want that to apply to any interpolators. However, we
     // want a constant Z across the primitive, since we're using it
     // for draw ordering - so scale by the W coord to ensure this.
-    vec4 final_pos = vec4(world_pos.xy + task.common_data.task_rect.p0 - task.content_origin,
+    vec4 final_pos = vec4(world_pos.xy * uDevicePixelRatio + task_offset,
                           z * world_pos.w,
                           world_pos.w);
     gl_Position = uTransform * final_pos;
@@ -720,6 +721,7 @@ struct ImageResource {
 };
 
 ImageResource fetch_image_resource(int address) {
+    //Note: number of blocks has to match `renderer::BLOCKS_PER_UV_RECT`
     vec4 data[2] = fetch_from_resource_cache_2(address);
     return ImageResource(data[0], data[1].x);
 }
