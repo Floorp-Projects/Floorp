@@ -1117,7 +1117,7 @@ BrowserGlue.prototype = {
 
       // Login reputation depends on the Safe Browsing API.
       let reputationService = Cc["@mozilla.org/reputationservice/login-reputation-service;1"]
-        .getService(Ci.ILoginReputationService);
+        .getService(Ci.nsILoginReputationService);
       reputationService.init();
     }, 5000);
 
