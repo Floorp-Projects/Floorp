@@ -32,7 +32,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserUsageTelemetry: "resource:///modules/BrowserUsageTelemetry.jsm",
   ContentClick: "resource:///modules/ContentClick.jsm",
   ContextualIdentityService: "resource://gre/modules/ContextualIdentityService.jsm",
-  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   DateTimePickerHelper: "resource://gre/modules/DateTimePickerHelper.jsm",
   DirectoryLinksProvider: "resource:///modules/DirectoryLinksProvider.jsm",
   ExtensionsUI: "resource:///modules/ExtensionsUI.jsm",
@@ -1169,10 +1168,6 @@ BrowserGlue.prototype = {
         JawsScreenReaderVersionCheck.onWindowsRestored();
       });
     }
-
-    Services.tm.idleDispatchToMainThread(() => {
-      this._urlbarMatchBuckets.init();
-    });
   },
 
   /**
@@ -2326,49 +2321,6 @@ BrowserGlue.prototype = {
     if (willPrompt) {
       DefaultBrowserCheck.prompt(RecentWindow.getMostRecentBrowserWindow());
     }
-  },
-
-  // This keeps the browser.urlbar.matchBuckets pref updated depending on the
-  // placement of the searchbar.
-  _urlbarMatchBuckets: {
-    searchbarWidgetID: "search-container",
-    prefName: "browser.urlbar.matchBuckets",
-    searchbarPresentPrefValue: "general:5,suggestion:Infinity",
-
-    init() {
-      this._updatePref();
-      let checkWidget = widgetID => {
-        if (widgetID == this.searchbarWidgetID) {
-          this._updatePref();
-        }
-      };
-      CustomizableUI.addListener({
-        onWidgetAdded: checkWidget,
-        onWidgetRemoved: checkWidget,
-      });
-    },
-
-    _checkWidget(widgetID) {
-      if (widgetID == this.searchbarWidgetID) {
-        this._updatePref();
-      }
-    },
-
-    _updatePref() {
-      let pref = Services.prefs.getCharPref(this.prefName, "");
-      if (pref && pref != this.searchbarPresentPrefValue) {
-        // The user has customized the pref.  Don't touch it.
-        return;
-      }
-      let placement =
-        CustomizableUI.getPlacementOfWidget(this.searchbarWidgetID);
-      if (placement) {
-        Services.prefs.setCharPref(this.prefName,
-                                   this.searchbarPresentPrefValue);
-      } else {
-        Services.prefs.clearUserPref(this.prefName);
-      }
-    },
   },
 
   // ------------------------------
