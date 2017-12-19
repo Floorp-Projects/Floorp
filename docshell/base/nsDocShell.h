@@ -31,13 +31,11 @@
 #include "nsILinkHandler.h"
 #include "nsILoadContext.h"
 #include "nsILoadURIDelegate.h"
-#include "nsINamed.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIRefreshURI.h"
 #include "nsIScrollable.h"
 #include "nsITabParent.h"
 #include "nsITextScroll.h"
-#include "nsITimer.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
 #include "nsIWebProgressListener.h"
@@ -113,34 +111,6 @@ enum ViewMode
 {
   viewNormal = 0x0,
   viewSource = 0x1
-};
-
-class nsRefreshTimer : public nsITimerCallback
-                     , public nsINamed
-{
-public:
-  nsRefreshTimer(nsDocShell* aDocShell,
-                 nsIURI* aURI,
-                 nsIPrincipal* aPrincipal,
-                 int32_t aDelay,
-                 bool aRepeat,
-                 bool aMetaRefresh);
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSITIMERCALLBACK
-  NS_DECL_NSINAMED
-
-  int32_t GetDelay() { return mDelay ;}
-
-  RefPtr<nsDocShell> mDocShell;
-  nsCOMPtr<nsIURI> mURI;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
-  int32_t mDelay;
-  bool mRepeat;
-  bool mMetaRefresh;
-
-private:
-  virtual ~nsRefreshTimer();
 };
 
 enum eCharsetReloadState
