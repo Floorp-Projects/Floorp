@@ -666,7 +666,7 @@ var gMainPane = {
     this.readBrowserContainersCheckbox();
   },
 
-  separateProfileModeChange() {
+  async separateProfileModeChange() {
     if (AppConstants.MOZ_DEV_EDITION) {
       function quitApp() {
         Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestartNotSameProfile);
@@ -689,7 +689,7 @@ var gMainPane = {
       }
 
       let separateProfileModeCheckbox = document.getElementById("separateProfileMode");
-      let button_index = confirmRestartPrompt(separateProfileModeCheckbox.checked,
+      let button_index = await confirmRestartPrompt(separateProfileModeCheckbox.checked,
         0, false, true);
       switch (button_index) {
         case CONFIRM_RESTART_PROMPT_CANCEL:

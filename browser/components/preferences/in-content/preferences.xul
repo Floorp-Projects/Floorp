@@ -89,12 +89,10 @@
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:html="http://www.w3.org/1999/xhtml"
       disablefastfind="true"
-#ifdef USE_WIN_TITLE_STYLE
-      title="&prefWindow.titleWin;">
-#else
-      title="&prefWindow.title;">
-#endif
+      data-l10n-id="pref-page"
+      data-l10n-attrs="title">
 
+  <link rel="localization" href="branding/brand.ftl"/>
   <link rel="localization" href="browser/preferences/main.ftl"/>
   <link rel="localization" href="browser/preferences/preferences.ftl"/>
   <script type="text/javascript" src="chrome://global/content/l10n.js"></script>
@@ -137,20 +135,22 @@
                       class="category"
                       value="paneGeneral"
                       helpTopic="prefs-main"
-                      tooltiptext="&paneGeneral.title;"
+                      data-l10n-id="category-general"
+                      data-l10n-attrs="tooltiptext"
                       align="center">
           <image class="category-icon"/>
-          <label class="category-name" flex="1">&paneGeneral.title;</label>
+          <label class="category-name" flex="1" data-l10n-id="pane-general-title"></label>
         </richlistitem>
 
         <richlistitem id="category-search"
                       class="category"
                       value="paneSearch"
                       helpTopic="prefs-search"
-                      tooltiptext="&paneSearch.title;"
+                      data-l10n-id="category-search"
+                      data-l10n-attrs="tooltiptext"
                       align="center">
           <image class="category-icon"/>
-          <label class="category-name" flex="1">&paneSearch.title;</label>
+          <label class="category-name" flex="1" data-l10n-id="pane-search-title"></label>
         </richlistitem>
 
         <richlistitem id="category-containers"
@@ -163,20 +163,22 @@
                       class="category"
                       value="panePrivacy"
                       helpTopic="prefs-privacy"
-                      tooltiptext="&panePrivacySecurity.title;"
+                      data-l10n-id="category-privacy"
+                      data-l10n-attrs="tooltiptext"
                       align="center">
           <image class="category-icon"/>
-          <label class="category-name" flex="1">&panePrivacySecurity.title;</label>
+          <label class="category-name" flex="1" data-l10n-id="pane-privacy-title"></label>
         </richlistitem>
 
         <richlistitem id="category-sync"
                       class="category"
                       value="paneSync"
                       helpTopic="prefs-weave"
-                      tooltiptext="&paneSync1.title;"
+                      data-l10n-id="category-sync"
+                      data-l10n-attrs="tooltiptext"
                       align="center">
           <image class="category-icon"/>
-          <label class="category-name" flex="1">&paneSync1.title;</label>
+          <label class="category-name" flex="1" data-l10n-id="pane-sync-title"></label>
         </richlistitem>
       </richlistbox>
 
@@ -185,20 +187,25 @@
       <hbox class="help-button" pack="center">
         <label class="text-link">
           <hbox align="center">
-            <image class="help-icon"/><label class="help-label" flex="1">&helpButton2.label;</label>
+            <image class="help-icon"/>
+              <label class="help-label" flex="1" data-l10n-id="help-button-label"></label>
           </hbox>
         </label>
       </hbox>
     </vbox>
 
     <keyset>
-      <key key="&focusSearch1.key;" modifiers="accel" id="focusSearch1" oncommand="gSearchResultsPane.searchInput.focus();"/>
+      <key data-l10n-id="focus-search" modifiers="accel" id="focusSearch1" oncommand="gSearchResultsPane.searchInput.focus();"/>
     </keyset>
 
     <vbox class="main-content" flex="1" align="start">
       <vbox class="pane-container">
         <hbox class="search-container" pack="end">
-          <textbox type="search" id="searchInput" style="width: &searchField.width;" hidden="true" clickSelectsAll="true"/>
+          <textbox
+            type="search" id="searchInput"
+            data-l10n-id="search-field"
+            data-l10n-attrs="style"
+            hidden="true" clickSelectsAll="true"/>
         </hbox>
         <vbox id="mainPrefPane" class="prefpane prefwindow">
 #include searchResults.xul
@@ -222,7 +229,7 @@
       <caption flex="1" align="center">
         <label class="dialogTitle" flex="1"></label>
         <button class="dialogClose close-icon"
-                aria-label="&preferencesCloseButton.label;"/>
+                data-l10n-id="close-button"/>
       </caption>
       <browser class="dialogFrame"
                autoscroll="false"
