@@ -13,6 +13,7 @@ UNIFIED_SOURCES += [
     'TestProtocolProxyService.cpp',
     'TestReadStreamToString.cpp',
     'TestStandardURL.cpp',
+    'TestURIMutator.cpp',
 ]
 
 TEST_DIRS += [

@@ -329,7 +329,6 @@
 @RESPATH@/components/widget_cocoa.xpt
 #endif
 @RESPATH@/components/windowcreator.xpt
-@RESPATH@/components/windowds.xpt
 @RESPATH@/components/windowwatcher.xpt
 @RESPATH@/components/xpcom_base.xpt
 @RESPATH@/components/xpcom_system.xpt

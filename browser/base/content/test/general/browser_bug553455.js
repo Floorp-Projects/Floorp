@@ -158,8 +158,6 @@ async function waitForInstallDialog() {
       },
       onCloseWindow(aXULWindow) {
       },
-      onWindowTitleChange(aXULWindow, aNewTitle) {
-      }
     });
   });
   info("Install dialog opened, waiting for focus");

@@ -394,22 +394,6 @@ nsWindowMediator::UpdateWindowTimeStamp(nsIXULWindow* inWindow)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsWindowMediator::UpdateWindowTitle(nsIXULWindow* inWindow,
-                                    const nsAString& inTitle)
-{
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  NS_ENSURE_STATE(mReady);
-  if (GetInfoFor(inWindow)) {
-    ListenerArray::ForwardIterator iter(mListeners);
-    while (iter.HasMore()) {
-      iter.GetNext()->OnWindowTitleChange(inWindow, inTitle);
-    }
-  }
-
-  return NS_OK;
-}
-
 /* This method's plan is to intervene only when absolutely necessary.
    We will get requests to place our windows behind unknown windows.
    For the most part, we need to leave those alone (turning them into

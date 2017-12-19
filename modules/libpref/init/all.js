@@ -2973,6 +2973,13 @@ pref("layout.css.frames-timing.enabled", false);
 pref("layout.css.frames-timing.enabled", true);
 #endif
 
+// Are we emulating -moz-{inline}-box layout using CSS flexbox?
+// (This pref only takes effect in prerelease builds, so we only
+// bother specifying a default in prerelease builds as well.)
+#ifndef RELEASE_OR_BETA
+pref("layout.css.emulate-moz-box-with-flex", false);
+#endif
+
 // Are sets of prefixed properties supported?
 pref("layout.css.prefixes.border-image", true);
 pref("layout.css.prefixes.transforms", true);

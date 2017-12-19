@@ -91,6 +91,7 @@
 #include "mozilla/GeckoStyleContext.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerInlines.h"
+#include "mozilla/StylePrefs.h"
 #include "StickyScrollContainer.h"
 #include "nsFieldSetFrame.h"
 #include "nsInlineFrame.h"
@@ -380,12 +381,12 @@ IsFlexOrGridContainer(const nsIFrame* aFrame)
 }
 
 // Returns true IFF the given nsIFrame is a nsFlexContainerFrame and
-// represents a -webkit-{inline-}box container.
+// represents a -webkit-{inline-}box or -moz-{inline-}box container.
 static inline bool
 IsFlexContainerForLegacyBox(const nsIFrame* aFrame)
 {
   return aFrame->IsFlexContainerFrame() &&
-         aFrame->HasAnyStateBits(NS_STATE_FLEX_IS_LEGACY_WEBKIT_BOX);
+         aFrame->HasAnyStateBits(NS_STATE_FLEX_IS_EMULATING_LEGACY_BOX);
 }
 
 #if DEBUG
@@ -2688,7 +2689,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     newFrame = frameItems.FirstChild();
     NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
   } else if (display->mDisplay == StyleDisplay::Flex ||
-             display->mDisplay == StyleDisplay::WebkitBox) {
+             display->mDisplay == StyleDisplay::WebkitBox ||
+             (StylePrefs::sEmulateMozBoxWithFlex &&
+              display->mDisplay == StyleDisplay::MozBox)) {
     contentFrame = NS_NewFlexContainerFrame(mPresShell, styleContext);
     InitAndRestoreFrame(state, aDocElement, mDocElementContainingBlock,
                         contentFrame);
@@ -4397,22 +4400,26 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
 static
 bool IsXULDisplayType(const nsStyleDisplay* aDisplay)
 {
-  return (aDisplay->mDisplay == StyleDisplay::MozInlineBox ||
+  // -moz-{inline-}box is XUL, unless we're emulating it with flexbox.
+  if  (!StylePrefs::sEmulateMozBoxWithFlex &&
+       (aDisplay->mDisplay == StyleDisplay::MozInlineBox ||
+        aDisplay->mDisplay == StyleDisplay::MozBox)) {
+    return true;
+  }
+
 #ifdef MOZ_XUL
-          aDisplay->mDisplay == StyleDisplay::MozInlineGrid ||
+  return (aDisplay->mDisplay == StyleDisplay::MozInlineGrid ||
           aDisplay->mDisplay == StyleDisplay::MozInlineStack ||
-#endif
-          aDisplay->mDisplay == StyleDisplay::MozBox
-#ifdef MOZ_XUL
-          || aDisplay->mDisplay == StyleDisplay::MozGrid ||
+          aDisplay->mDisplay == StyleDisplay::MozGrid ||
           aDisplay->mDisplay == StyleDisplay::MozStack ||
           aDisplay->mDisplay == StyleDisplay::MozGridGroup ||
           aDisplay->mDisplay == StyleDisplay::MozGridLine ||
           aDisplay->mDisplay == StyleDisplay::MozDeck ||
           aDisplay->mDisplay == StyleDisplay::MozPopup ||
-          aDisplay->mDisplay == StyleDisplay::MozGroupbox
+          aDisplay->mDisplay == StyleDisplay::MozGroupbox);
+#else
+  return false;
 #endif
-          );
 }
 
 
@@ -4646,6 +4653,17 @@ nsCSSFrameConstructor::FindXULDisplayData(const nsStyleDisplay* aDisplay,
     return nullptr;
   }
 
+  // If we're emulating -moz-box with flexbox, then treat it as non-XUL and
+  // return null (except for scrollcorners which have to be XUL becuase their
+  // parent reflows them with BoxReflow() which means they have to get
+  // actual-XUL frames).
+  if (StylePrefs::sEmulateMozBoxWithFlex &&
+      aElement && !aElement->IsXULElement(nsGkAtoms::scrollcorner) &&
+      (aDisplay->mDisplay == StyleDisplay::MozBox ||
+       aDisplay->mDisplay == StyleDisplay::MozInlineBox)) {
+    return nullptr;
+  }
+
   MOZ_ASSERT(aDisplay->mDisplay <= StyleDisplay::MozPopup,
              "Someone added a new display value?");
 
@@ -4872,7 +4890,9 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
   // we use a different FCData struct without FCDATA_MAY_NEED_SCROLLFRAME.
   if (propagatedScrollToViewport && aDisplay->IsScrollableOverflow()) {
     if (aDisplay->mDisplay == StyleDisplay::Flex ||
-        aDisplay->mDisplay == StyleDisplay::WebkitBox) {
+        aDisplay->mDisplay == StyleDisplay::WebkitBox ||
+        (StylePrefs::sEmulateMozBoxWithFlex &&
+         aDisplay->mDisplay == StyleDisplay::MozBox)) {
       static const FrameConstructionData sNonScrollableFlexData =
         FCDATA_DECL(0, NS_NewFlexContainerFrame);
       return &sNonScrollableFlexData;
@@ -4966,10 +4986,17 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
       FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
     FCDATA_FOR_DISPLAY(StyleDisplay::WebkitInlineBox,
       FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
+    FCDATA_FOR_DISPLAY(StyleDisplay::MozBox,
+      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
+    FCDATA_FOR_DISPLAY(StyleDisplay::MozInlineBox,
+      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
   };
-  static_assert(ArrayLength(sDisplayData) == size_t(StyleDisplay::WebkitInlineBox) + 1,
+  static_assert(ArrayLength(sDisplayData) == size_t(StyleDisplay::MozInlineBox) + 1,
                 "Be sure to update sDisplayData if you touch StyleDisplay");
-
+  MOZ_ASSERT(StylePrefs::sEmulateMozBoxWithFlex ||
+             (aDisplay->mDisplay != StyleDisplay::MozBox &&
+              aDisplay->mDisplay != StyleDisplay::MozInlineBox),
+             "-moz-{inline-}box as XUL should have already been handled");
   MOZ_ASSERT(size_t(aDisplay->mDisplay) < ArrayLength(sDisplayData),
              "XUL display data should have already been handled");
 
@@ -10032,11 +10059,11 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
     return;
   }
 
-  const bool isWebkitBox = IsFlexContainerForLegacyBox(aParentFrame);
+  const bool isLegacyBox = IsFlexContainerForLegacyBox(aParentFrame);
   FCItemIterator iter(aItems);
   do {
     // Advance iter past children that don't want to be wrapped
-    if (iter.SkipItemsThatDontNeedAnonFlexOrGridItem(aState, isWebkitBox)) {
+    if (iter.SkipItemsThatDontNeedAnonFlexOrGridItem(aState, isLegacyBox)) {
       // Hit the end of the items without finding any remaining children that
       // need to be wrapped. We're finished!
       return;
@@ -10059,7 +10086,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
       bool hitEnd = afterWhitespaceIter.SkipWhitespace(aState);
       bool nextChildNeedsAnonItem =
         !hitEnd &&
-        afterWhitespaceIter.item().NeedsAnonFlexOrGridItem(aState, isWebkitBox);
+        afterWhitespaceIter.item().NeedsAnonFlexOrGridItem(aState, isLegacyBox);
 
       if (!nextChildNeedsAnonItem) {
         // There's nothing after the whitespace that we need to wrap, so we
@@ -10073,7 +10100,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
         // we jump back to the beginning of the loop to skip over that child
         // (and anything else non-wrappable after it)
         MOZ_ASSERT(!iter.IsDone() &&
-                   !iter.item().NeedsAnonFlexOrGridItem(aState, isWebkitBox),
+                   !iter.item().NeedsAnonFlexOrGridItem(aState, isLegacyBox),
                    "hitEnd and/or nextChildNeedsAnonItem lied");
         continue;
       }
@@ -10083,7 +10110,7 @@ nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
     // anonymous flex/grid item. Now we see how many children after it also want
     // to be wrapped in an anonymous flex/grid item.
     FCItemIterator endIter(iter); // iterator to find the end of the group
-    endIter.SkipItemsThatNeedAnonFlexOrGridItem(aState, isWebkitBox);
+    endIter.SkipItemsThatNeedAnonFlexOrGridItem(aState, isLegacyBox);
 
     NS_ASSERTION(iter != endIter,
                  "Should've had at least one wrappable child to seek past");
@@ -10720,8 +10747,8 @@ FrameWantsToBeInAnonymousItem(const nsIFrame* aContainerFrame,
     return true;
   }
 
-  // If the container is a -webkit-box/-webkit-inline-box, then placeholders
-  // also need to be wrapped, for compatibility.
+  // If the container is a -webkit-{inline-}box or -moz-{inline-}box container,
+  // then placeholders also need to be wrapped, for compatibility.
   if (IsFlexContainerForLegacyBox(aContainerFrame) &&
       aFrame->IsPlaceholderFrame()) {
     return true;
@@ -12402,9 +12429,9 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
 
     // Check if we're adding to-be-wrapped content right *after* an existing
     // anonymous flex or grid item (which would need to absorb this content).
-    const bool isWebkitBox = IsFlexContainerForLegacyBox(aFrame);
+    const bool isLegacyBox = IsFlexContainerForLegacyBox(aFrame);
     if (aPrevSibling && IsAnonymousFlexOrGridItem(aPrevSibling) &&
-        iter.item().NeedsAnonFlexOrGridItem(aState, isWebkitBox)) {
+        iter.item().NeedsAnonFlexOrGridItem(aState, isLegacyBox)) {
       RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
       return true;
     }
@@ -12415,7 +12442,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
       // Jump to the last entry in the list
       iter.SetToEnd();
       iter.Prev();
-      if (iter.item().NeedsAnonFlexOrGridItem(aState, isWebkitBox)) {
+      if (iter.item().NeedsAnonFlexOrGridItem(aState, isLegacyBox)) {
         RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
         return true;
       }
@@ -12440,8 +12467,8 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     // Skip over things that _do_ need an anonymous flex item, because
     // they're perfectly happy to go here -- they won't cause a reframe.
     nsIFrame* containerFrame = aFrame->GetParent();
-    const bool isWebkitBox = IsFlexContainerForLegacyBox(containerFrame);
-    if (!iter.SkipItemsThatNeedAnonFlexOrGridItem(aState, isWebkitBox)) {
+    const bool isLegacyBox = IsFlexContainerForLegacyBox(containerFrame);
+    if (!iter.SkipItemsThatNeedAnonFlexOrGridItem(aState, isLegacyBox)) {
       // We hit something that _doesn't_ need an anonymous flex item!
       // Rebuild the flex container to bust it out.
       RecreateFramesForContent(containerFrame->GetContent(), InsertionKind::Async);
@@ -12884,31 +12911,34 @@ Iterator::SkipItemsNotWantingParentType(ParentType aParentType)
   return false;
 }
 
-// Note: we implement -webkit-box & -webkit-inline-box using
-// nsFlexContainerFrame, but we use different rules for what gets wrapped in an
-// anonymous flex item.
+// Note: we implement -webkit-{inline-}box (and optionally -moz-{inline-}box)
+// using nsFlexContainerFrame, but we use different rules for what gets wrapped
+// in an anonymous flex item.
 bool
 nsCSSFrameConstructor::FrameConstructionItem::
   NeedsAnonFlexOrGridItem(const nsFrameConstructorState& aState,
-                          bool aIsWebkitBox)
+                          bool aIsLegacyBox)
 {
   if (mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) {
     // This will be an inline non-replaced box.
     return true;
   }
 
-  if (aIsWebkitBox) {
+  if (aIsLegacyBox) {
     if (mStyleContext->StyleDisplay()->IsInlineOutsideStyle()) {
-      // In a -webkit-box, all inline-level content gets wrapped in anon item.
+      // In an emulated legacy box, all inline-level content gets wrapped in an
+      // anonymous flex item.
       return true;
     }
-    if (!(mFCData->mBits & FCDATA_DISALLOW_OUT_OF_FLOW) &&
-        aState.GetGeometricParent(mStyleContext->StyleDisplay(), nullptr)) {
-      // We're abspos or fixedpos, which means we'll spawn a placeholder which
-      // (because our container is a -webkit-box) we'll need to wrap in an
-      // anonymous flex item.  So, we just treat _this_ frame as if _it_ needs
-      // to be wrapped in an anonymous flex item, and then when we spawn the
-      // placeholder, it'll end up in the right spot.
+    if (mIsPopup ||
+        (!(mFCData->mBits & FCDATA_DISALLOW_OUT_OF_FLOW) &&
+         aState.GetGeometricParent(mStyleContext->StyleDisplay(), nullptr))) {
+      // We're abspos or fixedpos (or a XUL popup), which means we'll spawn a
+      // placeholder which (because our container is an emulated legacy box)
+      // we'll need to wrap in an anonymous flex item.  So, we just treat
+      // _this_ frame as if _it_ needs to be wrapped in an anonymous flex item,
+      // and then when we spawn the placeholder, it'll end up in the right
+      // spot.
       return true;
     }
   }
@@ -12920,10 +12950,10 @@ inline bool
 nsCSSFrameConstructor::FrameConstructionItemList::
 Iterator::SkipItemsThatNeedAnonFlexOrGridItem(
   const nsFrameConstructorState& aState,
-  bool aIsWebkitBox)
+  bool aIsLegacyBox)
 {
   NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
-  while (item().NeedsAnonFlexOrGridItem(aState, aIsWebkitBox)) {
+  while (item().NeedsAnonFlexOrGridItem(aState, aIsLegacyBox)) {
     Next();
     if (IsDone()) {
       return true;
@@ -12936,10 +12966,10 @@ inline bool
 nsCSSFrameConstructor::FrameConstructionItemList::
 Iterator::SkipItemsThatDontNeedAnonFlexOrGridItem(
   const nsFrameConstructorState& aState,
-  bool aIsWebkitBox)
+  bool aIsLegacyBox)
 {
   NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
-  while (!(item().NeedsAnonFlexOrGridItem(aState, aIsWebkitBox))) {
+  while (!(item().NeedsAnonFlexOrGridItem(aState, aIsLegacyBox))) {
     Next();
     if (IsDone()) {
       return true;

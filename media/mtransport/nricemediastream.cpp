@@ -166,6 +166,8 @@ static bool ToNrIceCandidate(const nr_ice_candidate& candc,
   out->type = type;
   out->tcp_type = tcp_type;
   out->codeword = candc.codeword;
+  out->label = candc.label;
+  out->trickled = candc.trickled;
   return true;
 }
 

@@ -884,7 +884,11 @@ SandboxBroker::ThreadMain(void)
     }
 
     const size_t numIO = ios[1].iov_len > 0 ? 2 : 1;
-    DebugOnly<const ssize_t> sent = SendWithFd(respfd, ios, numIO, openedFd);
+    const ssize_t sent = SendWithFd(respfd, ios, numIO, openedFd);
+    if (sent < 0) {
+      SANDBOX_LOG_ERROR("failed to send broker response to pid %d: %s", mChildPid,
+                        strerror(errno));
+    }
     close(respfd);
     MOZ_ASSERT(sent < 0 ||
                static_cast<size_t>(sent) == ios[0].iov_len + ios[1].iov_len);

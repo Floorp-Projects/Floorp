@@ -9,6 +9,7 @@ way, and certainly anything using mozharness should use this approach.
 """
 
 from __future__ import absolute_import, print_function, unicode_literals
+import json
 import slugid
 
 from textwrap import dedent
@@ -51,6 +52,9 @@ mozharness_run_schema = Schema({
 
     # --custom-build-variant-cfg value
     Optional('custom-build-variant-cfg'): basestring,
+
+    # Extra configuration options to pass to mozharness.
+    Optional('extra-config'): dict,
 
     # Extra metadata to use toward the workspace caching.
     # Only supported on docker-worker
@@ -151,6 +155,9 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
     if 'custom-build-variant-cfg' in run:
         env['MH_CUSTOM_BUILD_VARIANT_CFG'] = run['custom-build-variant-cfg']
 
+    if 'extra-config' in run:
+        env['EXTRA_MOZHARNESS_CONFIG'] = json.dumps(run['extra-config'])
+
     if 'job-script' in run:
         env['JOB_SCRIPT'] = run['job-script']
 
@@ -228,6 +235,9 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     })
     if run['use-simple-package']:
         env.update({'MOZ_SIMPLE_PACKAGE_NAME': 'target'})
+
+    if 'extra-config' in run:
+        env['EXTRA_MOZHARNESS_CONFIG'] = json.dumps(run['extra-config'])
 
     # The windows generic worker uses batch files to pass environment variables
     # to commands.  Setting a variable to empty in a batch file unsets, so if
