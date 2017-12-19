@@ -22,6 +22,15 @@
   MOZ_MEMORY_API return_type name ## _impl(__VA_ARGS__);
 #define MALLOC_FUNCS MALLOC_FUNCS_MALLOC
 #include "malloc_decls.h"
+#else
+
+#include <malloc.h>
+#define malloc_impl malloc
+#define calloc_impl calloc
+#define realloc_impl realloc
+#define free_impl free
+
+#endif
 
 // Warning: C4273: 'HeapAlloc': inconsistent dll linkage
 // The Windows headers define HeapAlloc as dllimport, but we define it as
@@ -64,5 +73,3 @@ BOOL WINAPI HeapFree(_In_ HANDLE hHeap, _In_ DWORD dwFlags,
     free_impl(lpMem);
     return true;
 }
-
-#endif
