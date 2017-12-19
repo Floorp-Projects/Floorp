@@ -2314,8 +2314,8 @@ MediaCacheStream::NotifyResume()
       }
       // Don't resume download if we are already at the end of the stream for
       // seek will fail and be wasted anyway.
-      if (mStreamLength < 0 || mChannelOffset < mStreamLength) {
-        int64_t offset = mSeekTarget != -1 ? mSeekTarget : mChannelOffset;
+      int64_t offset = mSeekTarget != -1 ? mSeekTarget : mChannelOffset;
+      if (mStreamLength < 0 || offset < mStreamLength) {
         mClient->CacheClientSeek(offset, false);
         // DownloadResumed() will be notified when a new channel is opened.
       }
