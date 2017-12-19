@@ -1053,9 +1053,11 @@ this.PanelMultiView = class {
     let keyCode = event.code;
     switch (keyCode) {
       case "ArrowDown":
-      case "ArrowUp": {
+      case "ArrowUp":
+      case "Tab": {
         stop();
-        let isDown = (keyCode == "ArrowDown");
+        let isDown = (keyCode == "ArrowDown") ||
+                     (keyCode == "Tab" && !event.shiftKey);
         let button = this._updateSelectedKeyNav(navMap, buttons, isDown);
         button.focus();
         break;
