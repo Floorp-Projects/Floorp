@@ -515,6 +515,9 @@ private:
   already_AddRefed<CSSValue> DoGetPageBreakInside();
   already_AddRefed<CSSValue> DoGetTouchAction();
   already_AddRefed<CSSValue> DoGetTransform();
+  already_AddRefed<CSSValue> DoGetTranslate();
+  already_AddRefed<CSSValue> DoGetRotate();
+  already_AddRefed<CSSValue> DoGetScale();
   already_AddRefed<CSSValue> DoGetTransformBox();
   already_AddRefed<CSSValue> DoGetTransformOrigin();
   already_AddRefed<CSSValue> DoGetPerspective();
