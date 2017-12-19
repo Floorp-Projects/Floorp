@@ -297,6 +297,7 @@ public:
     aURI = do_QueryInterface(uri, &mStatus);
     NS_ENSURE_SUCCESS(mStatus, mStatus);
 
+    mStatus = NS_ERROR_NOT_AVAILABLE; // Second call to Finalize should fail.
     return NS_OK;
   }
 
@@ -305,25 +306,37 @@ public:
   {
     NS_ENSURE_SUCCESS(mStatus, mStatus);
     mStatus = mMutator->Finalize(getter_AddRefs(aURI));
-    return mStatus;
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+
+    mStatus = NS_ERROR_NOT_AVAILABLE; // Second call to Finalize should fail.
+    return NS_OK;
   }
 
   template <class C>
   nsresult Finalize(C** aURI)
   {
     NS_ENSURE_SUCCESS(mStatus, mStatus);
+
     nsCOMPtr<nsIURI> uri;
     mStatus = mMutator->Finalize(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+
     nsCOMPtr<C> result = do_QueryInterface(uri, &mStatus);
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+
     result.forget(aURI);
-    return mStatus;
+    mStatus = NS_ERROR_NOT_AVAILABLE; // Second call to Finalize should fail.
+    return NS_OK;
   }
 
   nsresult Finalize(nsIURI** aURI)
   {
     NS_ENSURE_SUCCESS(mStatus, mStatus);
     mStatus = mMutator->Finalize(aURI);
-    return mStatus;
+    NS_ENSURE_SUCCESS(mStatus, mStatus);
+
+    mStatus = NS_ERROR_NOT_AVAILABLE; // Second call to Finalize should fail.
+    return NS_OK;
   }
 
   nsresult GetStatus() { return mStatus; }
