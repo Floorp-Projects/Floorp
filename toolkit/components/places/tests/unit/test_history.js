@@ -44,8 +44,6 @@ add_task(async function test_execute() {
   var options = histsvc.getNewQueryOptions();
   options.sortingMode = options.SORT_BY_DATE_DESCENDING;
   options.maxResults = 1;
-  // TODO: using full visit crashes in xpcshell test
-  // options.resultType = options.RESULTS_AS_FULL_VISIT;
   options.resultType = options.RESULTS_AS_VISIT;
   var query = histsvc.getNewQuery();
   var result = histsvc.executeQuery(query, options);
@@ -57,8 +55,6 @@ add_task(async function test_execute() {
     // test node properties in RESULTS_AS_VISIT
     do_check_eq(node.uri, testURI.spec);
     do_check_eq(node.type, Ci.nsINavHistoryResultNode.RESULT_TYPE_URI);
-    // TODO: change query type to RESULTS_AS_FULL_VISIT and test this
-    // do_check_eq(node.transitionType, histsvc.TRANSITION_TYPED);
   }
   root.containerOpen = false;
 

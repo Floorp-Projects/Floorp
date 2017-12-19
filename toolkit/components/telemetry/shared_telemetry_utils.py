@@ -9,6 +9,7 @@ from __future__ import print_function
 
 import re
 import yaml
+import sys
 
 # This is a list of flags that determine which process a measurement is allowed
 # to record from.
@@ -23,9 +24,33 @@ KNOWN_PROCESS_FLAGS = {
 PROCESS_ENUM_PREFIX = "mozilla::Telemetry::Common::RecordedProcessType::"
 
 
-# This is thrown by the different probe parsers.
 class ParserError(Exception):
-    pass
+    """Thrown by different probe parsers. Errors are partitioned into
+    'immediately fatal' and 'eventually fatal' so that the parser can print
+    multiple error messages at a time. See bug 1401612 ."""
+
+    eventual_errors = []
+
+    def __init__(self, *args):
+        Exception.__init__(self, *args)
+
+    def handle_later(self):
+        ParserError.eventual_errors.append(self)
+
+    def handle_now(self):
+        ParserError.print_eventuals()
+        print(self.message, file=sys.stderr)
+        sys.exit(1)
+
+    @classmethod
+    def print_eventuals(cls):
+        while cls.eventual_errors:
+            print(cls.eventual_errors.pop(0).message, file=sys.stderr)
+
+    @classmethod
+    def exit_func(cls):
+        if cls.eventual_errors:
+            cls("Some errors occurred").handle_now()
 
 
 def is_valid_process_name(name):

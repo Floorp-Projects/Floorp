@@ -153,18 +153,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
     tmp->mEvent->mTarget = nullptr;
     tmp->mEvent->mCurrentTarget = nullptr;
     tmp->mEvent->mOriginalTarget = nullptr;
+    tmp->mEvent->mRelatedTarget = nullptr;
     switch (tmp->mEvent->mClass) {
-      case eMouseEventClass:
-      case eMouseScrollEventClass:
-      case eWheelEventClass:
-      case eSimpleGestureEventClass:
-      case ePointerEventClass:
-        tmp->mEvent->AsMouseEventBase()->relatedTarget = nullptr;
-        break;
       case eDragEventClass: {
         WidgetDragEvent* dragEvent = tmp->mEvent->AsDragEvent();
         dragEvent->mDataTransfer = nullptr;
-        dragEvent->relatedTarget = nullptr;
         break;
       }
       case eClipboardEventClass:
@@ -172,9 +165,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
         break;
       case eMutationEventClass:
         tmp->mEvent->AsMutationEvent()->mRelatedNode = nullptr;
-        break;
-      case eFocusEventClass:
-        tmp->mEvent->AsFocusEvent()->mRelatedTarget = nullptr;
         break;
       default:
         break;
@@ -191,21 +181,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->mTarget)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->mCurrentTarget)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->mOriginalTarget)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->mRelatedTarget)
     switch (tmp->mEvent->mClass) {
-      case eMouseEventClass:
-      case eMouseScrollEventClass:
-      case eWheelEventClass:
-      case eSimpleGestureEventClass:
-      case ePointerEventClass:
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
-        cb.NoteXPCOMChild(tmp->mEvent->AsMouseEventBase()->relatedTarget);
-        break;
       case eDragEventClass: {
         WidgetDragEvent* dragEvent = tmp->mEvent->AsDragEvent();
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mDataTransfer");
         cb.NoteXPCOMChild(dragEvent->mDataTransfer);
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
-        cb.NoteXPCOMChild(dragEvent->relatedTarget);
         break;
       }
       case eClipboardEventClass:
@@ -215,10 +196,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
       case eMutationEventClass:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mRelatedNode");
         cb.NoteXPCOMChild(tmp->mEvent->AsMutationEvent()->mRelatedNode);
-        break;
-      case eFocusEventClass:
-        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mRelatedTarget");
-        cb.NoteXPCOMChild(tmp->mEvent->AsFocusEvent()->mRelatedTarget);
         break;
       default:
         break;
