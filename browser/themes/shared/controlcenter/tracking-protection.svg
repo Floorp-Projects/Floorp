@@ -1,7 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24" height="24">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="24" height="24" viewBox="0 0 24 24">
+#include ../icon-colors.inc.svg
   <style>
     g:not(:target) {
       display: none;
@@ -30,11 +33,11 @@
   </defs>
 
   <g id="enabled">
-    <use fill="context-fill" fill-opacity="context-fill-opacity" xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout)"/>
+    <use class="fieldtext" xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout)"/>
   </g>
 
   <g id="disabled">
-    <use fill="context-fill" fill-opacity="context-fill-opacity" xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout-disabled)"/>
+    <use class="fieldtext" xlink:href="#shape-shield-outer" mask="url(#mask-shield-cutout-disabled)"/>
     <line x1="3" y1="22" x2="23" y2="1" stroke="#d92d21" stroke-width="3"/>
   </g>
 </svg>

@@ -3,10 +3,6 @@
   padding-bottom: 0;
 }
 
-#pageActionActivatedActionPanel[actionID="pocket"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
-  fill: #fbfbfb;
-}
-
 #pocket-button {
   list-style-image: url("chrome://pocket-shared/skin/pocket.svg");
 }
