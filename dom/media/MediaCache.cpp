@@ -1804,8 +1804,6 @@ MediaCache::OpenStream(AutoLock& aLock,
                        MediaCacheStream* aStream,
                        bool aIsClone)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-
   LOG("Stream %p opened", aStream);
   mStreams.AppendElement(aStream);
 
@@ -2890,6 +2888,19 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
   mCacheSuspended = true;
   mChannelEnded = true;
 
+  OwnerThread()->Dispatch(
+    NS_NewRunnableFunction("MediaCacheStream::InitAsClone", [
+      this,
+      aOriginal,
+      r1 = RefPtr<ChannelMediaResource>(mClient),
+      r2 = RefPtr<ChannelMediaResource>(aOriginal->mClient)
+    ]() { InitAsCloneInternal(aOriginal); }));
+}
+
+void
+MediaCacheStream::InitAsCloneInternal(MediaCacheStream* aOriginal)
+{
+  MOZ_ASSERT(OwnerThread()->IsOnCurrentThread());
   AutoLock lock(aOriginal->mMediaCache->Monitor());
 
   mResourceID = aOriginal->mResourceID;
@@ -2927,6 +2938,9 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
          BLOCK_SIZE);
 
   mMediaCache->OpenStream(lock, this, true /* aIsClone */);
+
+  // Wake up the reader which is waiting for the cloned data.
+  lock.NotifyAll();
 }
 
 nsIEventTarget*
