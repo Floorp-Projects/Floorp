@@ -714,7 +714,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
    * following algorithm: starting from the end of the syllable, move backwards
    * until a consonant is found that does not have a below-base or post-base
    * form (post-base forms have to follow below-base forms), or that is not a
-   * pre-base reordering Ra, or arrive at the first consonant. The consonant
+   * pre-base-reordering Ra, or arrive at the first consonant. The consonant
    * stopped at will be the base.
    *
    *   o If the syllable starts with Ra + Halant (in a script that has Reph)
@@ -785,11 +785,11 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
 	    if (info[i].indic_position() == POS_BELOW_C)
 	      seen_below = true;
 
-	    /* -> or that is not a pre-base reordering Ra,
+	    /* -> or that is not a pre-base-reordering Ra,
 	     *
 	     * IMPLEMENTATION NOTES:
 	     *
-	     * Our pre-base reordering Ra's are marked POS_POST_C, so will be skipped
+	     * Our pre-base-reordering Ra's are marked POS_POST_C, so will be skipped
 	     * by the logic above already.
 	     */
 
@@ -1124,7 +1124,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
   unsigned int pref_len = 2;
   if (indic_plan->mask_array[PREF] && base + pref_len < end)
   {
-    /* Find a Halant,Ra sequence and mark it for pre-base reordering processing. */
+    /* Find a Halant,Ra sequence and mark it for pre-base-reordering processing. */
     for (unsigned int i = base + 1; i + pref_len - 1 < end; i++) {
       hb_codepoint_t glyphs[2];
       for (unsigned int j = 0; j < pref_len; j++)
@@ -1518,7 +1518,7 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
 
     /*       3. If reph should be repositioned after the main consonant: find the
      *          first consonant not ligated with main, or find the first
-     *          consonant that is not a potential pre-base reordering Ra.
+     *          consonant that is not a potential pre-base-reordering Ra.
      */
     if (reph_pos == REPH_POS_AFTER_MAIN)
     {
@@ -1607,13 +1607,13 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
   }
 
 
-  /*   o Reorder pre-base reordering consonants:
+  /*   o Reorder pre-base-reordering consonants:
    *
-   *     If a pre-base reordering consonant is found, reorder it according to
+   *     If a pre-base-reordering consonant is found, reorder it according to
    *     the following rules:
    */
 
-  if (try_pref && base + 1 < end) /* Otherwise there can't be any pre-base reordering Ra. */
+  if (try_pref && base + 1 < end) /* Otherwise there can't be any pre-base-reordering Ra. */
   {
     for (unsigned int i = base + 1; i < end; i++)
       if ((info[i].mask & indic_plan->mask_array[PREF]) != 0)

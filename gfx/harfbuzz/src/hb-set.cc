@@ -45,8 +45,7 @@ hb_set_create (void)
   if (!(set = hb_object_create<hb_set_t> ()))
     return hb_set_get_empty ();
 
-  set->page_map.init ();
-  set->pages.init ();
+  set->init ();
 
   return set;
 }
@@ -96,8 +95,7 @@ hb_set_destroy (hb_set_t *set)
 {
   if (!hb_object_destroy (set)) return;
 
-  set->page_map.finish ();
-  set->pages.finish ();
+  set->finish ();
 
   free (set);
 }

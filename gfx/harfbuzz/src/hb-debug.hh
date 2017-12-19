@@ -93,7 +93,7 @@ _hb_debug_msg_va (const char *what,
   fprintf (stderr, "%-10s", what ? what : "");
 
   if (obj)
-    fprintf (stderr, "(%0*lx) ", (unsigned int) (2 * sizeof (void *)), (unsigned long) obj);
+    fprintf (stderr, "(%*p) ", (unsigned int) (2 * sizeof (void *)), obj);
   else
     fprintf (stderr, " %*s  ", (unsigned int) (2 * sizeof (void *)), "");
 
@@ -220,8 +220,8 @@ template <>
 {}
 
 template <int max_level, typename ret_t>
-struct hb_auto_trace_t {
-
+struct hb_auto_trace_t
+{
   explicit inline hb_auto_trace_t (unsigned int *plevel_,
 				   const char *what_,
 				   const void *obj_,
@@ -269,7 +269,17 @@ struct hb_auto_trace_t {
   bool returned;
 };
 template <typename ret_t> /* Make sure we don't use hb_auto_trace_t when not tracing. */
-struct hb_auto_trace_t<0, ret_t>;
+struct hb_auto_trace_t<0, ret_t>
+{
+  explicit inline hb_auto_trace_t (unsigned int *plevel_,
+				   const char *what_,
+				   const void *obj_,
+				   const char *func,
+				   const char *message,
+				   ...) HB_PRINTF_FUNC(6, 7) {}
+
+  inline ret_t ret (ret_t v, unsigned int line HB_UNUSED = 0) { return v; }
+};
 
 /* For disabled tracing; optimize out everything.
  * https://github.com/harfbuzz/harfbuzz/pull/605 */
