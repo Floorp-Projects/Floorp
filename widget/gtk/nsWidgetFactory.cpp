@@ -34,7 +34,7 @@
 #include "WakeLockListener.h"
 
 #ifdef NS_PRINTING
-#include "nsPrintOptionsGTK.h"
+#include "nsPrintSettingsServiceGTK.h"
 #include "nsPrintSession.h"
 #include "nsDeviceContextSpecG.h"
 #endif

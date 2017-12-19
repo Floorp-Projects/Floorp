@@ -71,8 +71,8 @@ if CONFIG['NS_PRINTING']:
         'nsCUPSShim.cpp',
         'nsDeviceContextSpecG.cpp',
         'nsPrintDialogGTK.cpp',
-        'nsPrintOptionsGTK.cpp',
         'nsPrintSettingsGTK.cpp',
+        'nsPrintSettingsServiceGTK.cpp',
         'nsPSPrinters.cpp',
     ]
 
