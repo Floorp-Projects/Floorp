@@ -21,6 +21,7 @@ const { ZoomKeys } = require("devtools/client/shared/zoom-keys");
 
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
 const PREF_PERSISTLOG = "devtools.webconsole.persistlog";
+const PREF_SIDEBAR_ENABLED = "devtools.webconsole.sidebarToggle";
 
 // XXX: This file is incomplete (see bug 1326937).
 // It's used when loading the webconsole with devtools-launchpad, but will ultimately be
@@ -252,6 +253,12 @@ NewWebConsoleFrame.prototype = {
                    this.window.close.bind(this.window));
 
       ZoomKeys.register(this.window);
+    } else if (Services.prefs.getBoolPref(PREF_SIDEBAR_ENABLED)) {
+      shortcuts.on("Esc", (name, event) => {
+        if (!this.jsterm.autocompletePopup || !this.jsterm.autocompletePopup.isOpen) {
+          this.newConsoleOutput.dispatchSidebarClose();
+        }
+      });
     }
   },
   /**
