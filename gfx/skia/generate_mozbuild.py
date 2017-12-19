@@ -67,6 +67,8 @@ LOCAL_INCLUDES += [
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     if CONFIG['CC_TYPE'] == 'gcc':
         DEFINES['SK_JUMPER_USE_ASSEMBLY'] = False
+    elif CONFIG['CPU_ARCH'] == 'x86':
+        SOURCES['skia/src/jumper/SkJumper_generated_win.S'].flags += ['-safeseh']
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
     UNIFIED_SOURCES += [
