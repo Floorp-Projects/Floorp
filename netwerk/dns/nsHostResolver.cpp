@@ -162,29 +162,8 @@ IsLowPriority(uint16_t flags)
 // host record (i.e., the flags that are passed down to PR_GetAddrInfoByName).
 #define RES_KEY_FLAGS(_f) ((_f) & nsHostResolver::RES_CANON_NAME)
 
-bool
-nsHostKey::operator==(const nsHostKey& other) const
-{
-    return host == other.host &&
-        RES_KEY_FLAGS (flags) == RES_KEY_FLAGS(other.flags) &&
-        af == other.af &&
-        netInterface == other.netInterface &&
-        originSuffix == other.originSuffix;
-}
-
-size_t
-nsHostKey::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-{
-    size_t n = 0;
-    n += host.SizeOfExcludingThisIfUnshared(mallocSizeOf);
-    n += netInterface.SizeOfExcludingThisIfUnshared(mallocSizeOf);
-    n += originSuffix.SizeOfExcludingThisIfUnshared(mallocSizeOf);
-    return n;
-}
-
-nsHostRecord::nsHostRecord(const nsHostKey& key)
-    : nsHostKey(key)
-    , addr_info_lock("nsHostRecord.addr_info_lock")
+nsHostRecord::nsHostRecord(const nsHostKey *key)
+    : addr_info_lock("nsHostRecord.addr_info_lock")
     , addr_info_gencnt(0)
     , addr_info(nullptr)
     , addr(nullptr)
@@ -199,13 +178,31 @@ nsHostRecord::nsHostRecord(const nsHostKey& key)
     , mBlacklistedCount(0)
     , mResolveAgain(false)
 {
+    host = ((char *) this) + sizeof(nsHostRecord);
+    memcpy((char *) host, key->host, strlen(key->host) + 1);
+    flags = key->flags;
+    af = key->af;
+    netInterface = host + strlen(key->host) + 1;
+    memcpy((char *) netInterface, key->netInterface,
+           strlen(key->netInterface) + 1);
+    originSuffix = netInterface + strlen(key->netInterface) + 1;
+    memcpy((char *) originSuffix, key->originSuffix,
+           strlen(key->originSuffix) + 1);
     PR_INIT_CLIST(this);
 }
 
 nsresult
 nsHostRecord::Create(const nsHostKey *key, nsHostRecord **result)
 {
-    *result = new nsHostRecord(*key);
+    size_t hostLen = strlen(key->host) + 1;
+    size_t netInterfaceLen = strlen(key->netInterface) + 1;
+    size_t originSuffixLen = strlen(key->originSuffix) + 1;
+    size_t size = hostLen + netInterfaceLen + originSuffixLen + sizeof(nsHostRecord);
+
+    // Use placement new to create the object with room for the hostname,
+    // network interface name and originSuffix allocated after it.
+    void *place = ::operator new(size);
+    *result = new(place) nsHostRecord(key);
     NS_ADDREF(*result);
 
     return NS_OK;
@@ -243,7 +240,7 @@ nsHostRecord::Blacklisted(NetAddr *aQuery)
 {
     // must call locked
     LOG(("Checking blacklist for host [%s%s%s], host record [%p].\n",
-          LOG_HOST(host.get(), netInterface.get()), this));
+          LOG_HOST(host, netInterface), this));
 
     // skip the string conversion for the common case of no blacklist
     if (!mBlacklistedItems.Length()) {
@@ -259,7 +256,7 @@ nsHostRecord::Blacklisted(NetAddr *aQuery)
     for (uint32_t i = 0; i < mBlacklistedItems.Length(); i++) {
         if (mBlacklistedItems.ElementAt(i).Equals(strQuery)) {
             LOG(("Address [%s] is blacklisted for host [%s%s%s].\n", buf,
-                 LOG_HOST(host.get(), netInterface.get())));
+                 LOG_HOST(host, netInterface)));
             return true;
         }
     }
@@ -272,7 +269,7 @@ nsHostRecord::ReportUnusable(NetAddr *aAddress)
 {
     // must call locked
     LOG(("Adding address to blacklist for host [%s%s%s], host record [%p].\n",
-         LOG_HOST(host.get(), netInterface.get()), this));
+         LOG_HOST(host, netInterface), this));
 
     ++mBlacklistedCount;
 
@@ -282,7 +279,7 @@ nsHostRecord::ReportUnusable(NetAddr *aAddress)
     char buf[kIPv6CStrBufSize];
     if (NetAddrToString(aAddress, buf, sizeof(buf))) {
         LOG(("Successfully adding address [%s] to blacklist for host "
-             "[%s%s%s].\n", buf, LOG_HOST(host.get(), netInterface.get())));
+             "[%s%s%s].\n", buf, LOG_HOST(host, netInterface)));
         mBlacklistedItems.AppendElement(nsCString(buf));
     }
 }
@@ -292,7 +289,7 @@ nsHostRecord::ResetBlacklist()
 {
     // must call locked
     LOG(("Resetting blacklist for host [%s%s%s], host record [%p].\n",
-         LOG_HOST(host.get(), netInterface.get()), this));
+         LOG_HOST(host, netInterface), this));
     mBlacklistedItems.Clear();
 }
 
@@ -347,7 +344,11 @@ nsHostRecord::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 {
     size_t n = mallocSizeOf(this);
 
-    n += nsHostKey::SizeOfExcludingThis(mallocSizeOf);
+    // The |host| field (inherited from nsHostKey) actually points to extra
+    // memory that is allocated beyond the end of the nsHostRecord (see
+    // nsHostRecord::Create()).  So it will be included in the
+    // |mallocSizeOf(this)| call above.
+
     n += SizeOfResolveHostCallbackListExcludingHead(mCallbacks, mallocSizeOf);
     n += addr_info ? addr_info->SizeOfIncludingThis(mallocSizeOf) : 0;
     n += mallocSizeOf(addr.get());
@@ -403,9 +404,8 @@ static PLDHashNumber
 HostDB_HashKey(const void *key)
 {
     const nsHostKey *hk = static_cast<const nsHostKey *>(key);
-    return AddToHash(HashString(hk->host.get()), RES_KEY_FLAGS(hk->flags),
-                     hk->af, HashString(hk->netInterface.get()),
-                     HashString(hk->originSuffix.get()));
+    return AddToHash(HashString(hk->host), RES_KEY_FLAGS(hk->flags), hk->af,
+                     HashString(hk->netInterface), HashString(hk->originSuffix));
 }
 
 static bool
@@ -415,7 +415,12 @@ HostDB_MatchEntry(const PLDHashEntryHdr *entry,
     const nsHostDBEnt *he = static_cast<const nsHostDBEnt *>(entry);
     const nsHostKey *hk = static_cast<const nsHostKey *>(key);
 
-    return *he->rec == *hk;
+    return !strcmp(he->rec->host ? he->rec->host : "",
+                   hk->host ? hk->host : "") &&
+            RES_KEY_FLAGS (he->rec->flags) == RES_KEY_FLAGS(hk->flags) &&
+            he->rec->af == hk->af &&
+            !strcmp(he->rec->netInterface, hk->netInterface) &&
+            !strcmp(he->rec->originSuffix, hk->originSuffix);
 }
 
 static void
@@ -438,22 +443,22 @@ HostDB_ClearEntry(PLDHashTable *table,
     MOZ_ASSERT(hr, "nsHostDBEnt has null host record!");
 
     LOG(("Clearing cache db entry for host [%s%s%s].\n",
-         LOG_HOST(hr->host.get(), hr->netInterface.get())));
+         LOG_HOST(hr->host, hr->netInterface)));
 #if defined(DEBUG)
     {
         MutexAutoLock lock(hr->addr_info_lock);
         if (!hr->addr_info) {
             LOG(("No address info for host [%s%s%s].\n",
-                 LOG_HOST(hr->host.get(), hr->netInterface.get())));
+                 LOG_HOST(hr->host, hr->netInterface)));
         } else {
             if (!hr->mValidEnd.IsNull()) {
                 TimeDuration diff = hr->mValidEnd - TimeStamp::NowLoRes();
                 LOG(("Record for host [%s%s%s] expires in %f seconds.\n",
-                     LOG_HOST(hr->host.get(), hr->netInterface.get()),
+                     LOG_HOST(hr->host, hr->netInterface),
                      diff.ToSeconds()));
             } else {
                 LOG(("Record for host [%s%s%s] not yet valid.\n",
-                     LOG_HOST(hr->host.get(), hr->netInterface.get())));
+                     LOG_HOST(hr->host, hr->netInterface)));
             }
 
             NetAddrElement *addrElement = nullptr;
@@ -622,7 +627,7 @@ nsHostResolver::FlushCache()
             nsHostRecord *rec = static_cast<nsHostRecord *>(node);
             node = node->next;
             PR_REMOVE_AND_INIT_LINK(rec);
-            mDB.Remove(static_cast<nsHostKey *>(rec));
+            mDB.Remove((nsHostKey *) rec);
             NS_RELEASE(rec);
         }
     }
@@ -766,8 +771,7 @@ nsHostResolver::ResolveHost(const char             *host,
             nsAutoCString originSuffix;
             aOriginAttributes.CreateSuffix(originSuffix);
 
-            nsHostKey key(nsCString(host), flags, af, nsCString(netInterface),
-                          originSuffix);
+            nsHostKey key = { host, flags, af, netInterface, originSuffix.get() };
             auto he = static_cast<nsHostDBEnt*>(mDB.Add(&key, fallible));
 
             // if the record is null, the hash table OOM'd.
@@ -844,8 +848,8 @@ nsHostResolver::ResolveHost(const char             *host,
                 if (!(flags & RES_BYPASS_CACHE) &&
                     ((af == PR_AF_INET) || (af == PR_AF_INET6))) {
                     // First, search for an entry with AF_UNSPEC
-                    const nsHostKey unspecKey(nsCString(host), flags, PR_AF_UNSPEC,
-                                              nsCString(netInterface), originSuffix);
+                    const nsHostKey unspecKey = { host, flags, PR_AF_UNSPEC,
+                                                  netInterface, originSuffix.get() };
                     auto unspecHe =
                         static_cast<nsHostDBEnt*>(mDB.Search(&unspecKey));
                     NS_ASSERTION(!unspecHe ||
@@ -1001,8 +1005,7 @@ nsHostResolver::DetachCallback(const char             *host,
         nsAutoCString originSuffix;
         aOriginAttributes.CreateSuffix(originSuffix);
 
-        nsHostKey key(nsCString(host), flags, af, nsCString(netInterface),
-                      originSuffix);
+        nsHostKey key = { host, flags, af, netInterface, originSuffix.get() };
         auto he = static_cast<nsHostDBEnt*>(mDB.Search(&key));
         if (he) {
             // walk list looking for |callback|... we cannot assume
@@ -1053,7 +1056,7 @@ nsHostResolver::ConditionallyCreateThread(nsHostRecord *rec)
     }
     else {
         LOG(("  Unable to find a thread for looking up host [%s%s%s].\n",
-             LOG_HOST(rec->host.get(), rec->netInterface.get())));
+             LOG_HOST(rec->host, rec->netInterface)));
     }
     return NS_OK;
 }
@@ -1215,7 +1218,7 @@ nsHostResolver::PrepareRecordExpiration(nsHostRecord* rec) const
         rec->SetExpiration(TimeStamp::NowLoRes(),
                            NEGATIVE_RECORD_LIFETIME, 0);
         LOG(("Caching host [%s%s%s] negative record for %u seconds.\n",
-             LOG_HOST(rec->host.get(), rec->netInterface.get()),
+             LOG_HOST(rec->host, rec->netInterface),
              NEGATIVE_RECORD_LIFETIME));
         return;
     }
@@ -1236,7 +1239,7 @@ nsHostResolver::PrepareRecordExpiration(nsHostRecord* rec) const
 
     rec->SetExpiration(TimeStamp::NowLoRes(), lifetime, grace);
     LOG(("Caching host [%s%s%s] record for %u seconds (grace %d).",
-         LOG_HOST(rec->host.get(), rec->netInterface.get()), lifetime, grace));
+         LOG_HOST(rec->host, rec->netInterface), lifetime, grace));
 }
 
 static bool
@@ -1350,7 +1353,7 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* new
                 nsHostRecord *head =
                     static_cast<nsHostRecord *>(PR_LIST_HEAD(&mEvictionQ));
                 PR_REMOVE_AND_INIT_LINK(head);
-                mDB.Remove(static_cast<nsHostKey *>(head));
+                mDB.Remove((nsHostKey *) head);
 
                 if (!head->negative) {
                     // record the age of the entry upon eviction.
@@ -1365,7 +1368,7 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* new
 #if TTL_AVAILABLE
             if (!rec->mGetTtl && !rec->resolving && sGetTtlEnabled) {
                 LOG(("Issuing second async lookup for TTL for host [%s%s%s].",
-                     LOG_HOST(rec->host.get(), rec->netInterface.get())));
+                     LOG_HOST(rec->host, rec->netInterface)));
                 rec->flags =
                   (rec->flags & ~RES_PRIORITY_MEDIUM) | RES_PRIORITY_LOW;
                 DebugOnly<nsresult> rv = IssueLookup(rec);
@@ -1398,12 +1401,11 @@ nsHostResolver::CancelAsyncRequest(const char             *host,
 {
     MutexAutoLock lock(mLock);
 
-    nsCString originSuffix;
+    nsAutoCString originSuffix;
     aOriginAttributes.CreateSuffix(originSuffix);
 
     // Lookup the host record associated with host, flags & address family
-    nsHostKey key(nsCString(host), flags, af, nsCString(netInterface),
-                  originSuffix);
+    nsHostKey key = { host, flags, af, netInterface, originSuffix.get() };
     auto he = static_cast<nsHostDBEnt*>(mDB.Search(&key));
     if (he) {
         nsHostRecord* recPtr = nullptr;
@@ -1419,7 +1421,7 @@ nsHostResolver::CancelAsyncRequest(const char             *host,
 
         // If there are no more callbacks, remove the hash table entry
         if (recPtr && recPtr->mCallbacks.isEmpty()) {
-            mDB.Remove(static_cast<nsHostKey *>(recPtr));
+            mDB.Remove((nsHostKey *)recPtr);
             // If record is on a Queue, remove it and then deref it
             if (recPtr->next != recPtr) {
                 PR_REMOVE_LINK(recPtr);
@@ -1470,7 +1472,7 @@ nsHostResolver::ThreadFunc(void *arg)
 
     while (rec || resolver->GetHostToLookup(&rec)) {
         LOG(("DNS lookup thread - Calling getaddrinfo for host [%s%s%s].\n",
-             LOG_HOST(rec->host.get(), rec->netInterface.get())));
+             LOG_HOST(rec->host, rec->netInterface)));
 
         TimeStamp startTime = TimeStamp::Now();
 #if TTL_AVAILABLE
@@ -1479,14 +1481,11 @@ nsHostResolver::ThreadFunc(void *arg)
         bool getTtl = false;
 #endif
 
-        nsresult status = GetAddrInfo(rec->host.get(), rec->af,
-                                      rec->flags,
-                                      rec->netInterface.get(), &ai,
-                                      getTtl);
+        nsresult status = GetAddrInfo(rec->host, rec->af, rec->flags, rec->netInterface,
+                                      &ai, getTtl);
 #if defined(RES_RETRY_ON_FAILURE)
         if (NS_FAILED(status) && rs.Reset()) {
-            status = GetAddrInfo(rec->host.get(), rec->af,
-                                 rec->flags, rec->netInterface, &ai,
+            status = GetAddrInfo(rec->host, rec->af, rec->flags, rec->netInterface, &ai,
                                  getTtl);
         }
 #endif
@@ -1519,13 +1518,13 @@ nsHostResolver::ThreadFunc(void *arg)
 
         // CompleteLookup may release "rec", long before we lose it.
         LOG(("DNS lookup thread - lookup completed for host [%s%s%s]: %s.\n",
-             LOG_HOST(rec->host.get(), rec->netInterface.get()),
+             LOG_HOST(rec->host, rec->netInterface),
              ai ? "success" : "failure: unknown host"));
 
         if (LOOKUP_RESOLVEAGAIN == resolver->CompleteLookup(rec, status, ai)) {
             // leave 'rec' assigned and loop to make a renewed host resolve
             LOG(("DNS lookup thread - Re-resolving host [%s%s%s].\n",
-                 LOG_HOST(rec->host.get(), rec->netInterface.get())));
+                 LOG_HOST(rec->host, rec->netInterface)));
         } else {
             rec = nullptr;
         }
@@ -1562,7 +1561,7 @@ nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries> *args)
         auto entry = static_cast<nsHostDBEnt*>(iter.Get());
         nsHostRecord* rec = entry->rec;
         MOZ_ASSERT(rec, "rec should never be null here!");
-        if (!rec || !rec->addr_info) {
+        if (!rec || !rec->addr_info || !rec->host) {
             continue;
         }
 
