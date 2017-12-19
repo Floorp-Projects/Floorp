@@ -9,63 +9,50 @@ package org.mozilla.gecko.gfx;
 import android.view.Surface;
 
 /**
- * Displays implement this interface to provide GeckoSession
- * with a Surface for displaying content.
+ * Applications use a GeckoDisplay instance to provide GeckoSession with a Surface for
+ * displaying content. To ensure drawing only happens on a valid Surface, GeckoSession
+ * will only use the provided Surface after {@link #surfaceChanged(Surface, int, int)} is
+ * called and before {@link #surfaceDestroyed()} returns.
  */
-public interface GeckoDisplay {
-    /**
-     * Displays notify GeckoSession of changes to its Surface through this interface that
-     * GeckoSession implements. To ensure drawing only happens on a valid Surface,
-     * GeckoSession will only use the provided Surface after {@link
-     * #surfaceChanged(Surface, int, int)} is called and before {@link
-     * #surfaceDestroyed()} returns.
-     */
-    interface Listener {
-        /**
-         * Required callback. The display's Surface has been created or changed. Must be
-         * called on the application main thread. GeckoSession may block this call to
-         * ensure the Surface is valid while resuming drawing.
-         *
-         * @param surface The new Surface.
-         * @param width New width of the Surface.
-         * @param height New height of the Surface.
-         */
-        void surfaceChanged(Surface surface, int width, int height);
+public class GeckoDisplay {
+    private final LayerSession mSession;
 
-        /**
-         * Required callback. The display's Surface has been destroyed. Must be called on
-         * the application main thread. GeckoSession may block this call to ensure the
-         * Surface is valid while pausing drawing.
-         */
-        void surfaceDestroyed();
-
-        /**
-         * Optional callback. The display's coordinates on the screen has changed. Must be
-         * called on the application main thread.
-         *
-         * @param left The X coordinate of the display on the screen, in screen pixels.
-         * @param top The Y coordinate of the display on the screen, in screen pixels.
-         */
-        void screenOriginChanged(int left, int top);
+    /* package */ GeckoDisplay(final LayerSession session) {
+        mSession = session;
     }
 
     /**
-     * Get the current listener attached to this display. Must be called on the
-     * application main thread.
+     * Required callback. The display's Surface has been created or changed. Must be
+     * called on the application main thread. GeckoSession may block this call to ensure
+     * the Surface is valid while resuming drawing.
      *
-     * @return Current listener or null if there is no listener.
+     * @param surface The new Surface.
+     * @param width New width of the Surface.
+     * @param height New height of the Surface.
      */
-    Listener getListener();
+    public void surfaceChanged(Surface surface, int width, int height) {
+        mSession.onSurfaceChanged(surface, width, height);
+    }
 
     /**
-     * Set a new listener attached to this display. Must be called on the application main
-     * thread. When attaching a new listener, and there is an existing valid Surface, the
-     * display must call {@link Listener#surfaceChanged(Surface, int, int)} (and other
-     * optional callbacks, if implemented) on the new listener. Similarly, when detaching
-     * a previous listener, and there is an existing valid Surface, the display must call
-     * {@link Listener#surfaceDestroyed()} on the previous listener.
-     *
-     * @param listener New listener or null if detaching previous listener.
+     * Required callback. The display's Surface has been destroyed. Must be called on the
+     * application main thread. GeckoSession may block this call to ensure the Surface is
+     * valid while pausing drawing.
      */
-    void setListener(Listener listener);
+    public void surfaceDestroyed() {
+        mSession.onSurfaceDestroyed();
+    }
+
+    /**
+     * Optional callback. The display's coordinates on the screen has changed. Must be
+     * called on the application main thread. Together with the transformation matrix, the
+     * screen origin determines how a point on the display maps to a point on the screen.
+     *
+     * @param left The X coordinate of the display on the screen, in screen pixels.
+     * @param top The Y coordinate of the display on the screen, in screen pixels.
+     * @see #transformationMatrixChanged(Matrix)
+     */
+    public void screenOriginChanged(final int left, final int top) {
+        mSession.onScreenOriginChanged(left, top);
+    }
 }
