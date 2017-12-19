@@ -60,12 +60,12 @@ add_task(async function() {
     is(gURLBar.textValue, testURL, "gURLBar.textValue should be testURL after initial switch to deletedURLTab");
 
     // simulate the user removing the whole url from the location bar
-    gPrefService.setBoolPref("browser.urlbar.clickSelectsAll", true);
+    Services.prefs.setBoolPref("browser.urlbar.clickSelectsAll", true);
 
     await urlbarBackspace();
     is(gURLBar.textValue, "", 'gURLBar.textValue should be "" (just set)');
-    if (gPrefService.prefHasUserValue("browser.urlbar.clickSelectsAll")) {
-      gPrefService.clearUserPref("browser.urlbar.clickSelectsAll");
+    if (Services.prefs.prefHasUserValue("browser.urlbar.clickSelectsAll")) {
+      Services.prefs.clearUserPref("browser.urlbar.clickSelectsAll");
     }
   }
 
@@ -79,7 +79,7 @@ add_task(async function() {
     is(gURLBar.textValue, testURL, "gURLBar.textValue should be testURL after initial switch to partialURLTab");
 
     // simulate the user removing part of the url from the location bar
-    gPrefService.setBoolPref("browser.urlbar.clickSelectsAll", false);
+    Services.prefs.setBoolPref("browser.urlbar.clickSelectsAll", false);
 
     let deleted = 0;
     while (deleted < charsToDelete) {
@@ -88,8 +88,8 @@ add_task(async function() {
     }
 
     is(gURLBar.textValue, testPartialURL, "gURLBar.textValue should be testPartialURL (just set)");
-    if (gPrefService.prefHasUserValue("browser.urlbar.clickSelectsAll")) {
-      gPrefService.clearUserPref("browser.urlbar.clickSelectsAll");
+    if (Services.prefs.prefHasUserValue("browser.urlbar.clickSelectsAll")) {
+      Services.prefs.clearUserPref("browser.urlbar.clickSelectsAll");
     }
   }
 
