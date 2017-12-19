@@ -1,1 +1,0 @@
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="document.getElementById('foo').removeAttribute('ref');"><foo id="foo" datasources="nosuch.rdf" ref="urn:root"><template/></foo></window>
