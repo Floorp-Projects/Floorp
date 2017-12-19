@@ -71,21 +71,25 @@ void enterJsDirectory() {
 
     // Find destination directory, if any.
     char destination[MAX_PATH];
-    if (!GetEnvironmentVariable("CPP_UNIT_TESTS_DIR_JS_SRC", destination, MAX_PATH)) {
-        if (GetLastError() != ERROR_ENVVAR_NOT_FOUND)
-            MOZ_CRASH("Could not get CPP_UNIT_TESTS_DIR_JS_SRC");
+    result = GetEnvironmentVariable("CPP_UNIT_TESTS_DIR_JS_SRC", destination, MAX_PATH);
+    if (result == 0) {
+        if (GetLastError() == ERROR_ENVVAR_NOT_FOUND)
+            return; // No need to chdir
         else
-            return;
+            MOZ_CRASH("Could not get CPP_UNIT_TESTS_DIR_JS_SRC");
+    }
+    if (result > MAX_PATH) {
+        MOZ_CRASH_UNSAFE_PRINTF("Could not get CPP_UNIT_TESTS_DIR_JS_SRC: needed %ld bytes, got %ld\n", result, MAX_PATH);
     }
 
     // Go to the directory.
-    if (SetCurrentDirectory(destination) != 0)
+    if (SetCurrentDirectory(destination) == 0)
         MOZ_CRASH_UNSAFE_PRINTF("Could not chdir to %s", destination);
 }
 
 void exitJsDirectory() {
     MOZ_ASSERT(strlen(gJsDirectory) > 0);
-    if (SetCurrentDirectory(gJsDirectory) != 0)
+    if (SetCurrentDirectory(gJsDirectory) == 0)
         MOZ_CRASH("Could not return to original directory");
     gJsDirectory[0] = 0;
 }
@@ -95,7 +99,7 @@ void exitJsDirectory() {
 void readFull(const char* path, js::Vector<uint8_t>& buf) {
     enterJsDirectory();
     buf.shrinkTo(0);
-    FILE* in = fopen(path, "r");
+    FILE* in = fopen(path, "rb");
     if (!in)
         MOZ_CRASH_UNSAFE_PRINTF("Could not open %s: %s", path, strerror(errno));
 
@@ -110,7 +114,7 @@ void readFull(const char* path, js::Vector<uint8_t>& buf) {
     if (fclose(in) != 0)
         MOZ_CRASH("Could not close input file");
     if (result != info.st_size)
-        MOZ_CRASH("Read error");
+        MOZ_CRASH_UNSAFE_PRINTF("Read error while reading %s: expected %llu bytes, got %llu", path, (unsigned long long)info.st_size, (unsigned long long)result);
     exitJsDirectory();
 }
 
