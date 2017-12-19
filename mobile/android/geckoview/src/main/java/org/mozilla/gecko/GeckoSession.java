@@ -67,7 +67,7 @@ public class GeckoSession extends LayerSession
     private final EventDispatcher mEventDispatcher =
         new EventDispatcher(mNativeQueue);
 
-    private final TextInputController mTextInput = new TextInputController(this);
+    private final TextInputController mTextInput = new TextInputController(this, mNativeQueue);
 
     private final GeckoSessionHandler<ContentListener> mContentHandler =
         new GeckoSessionHandler<ContentListener>(
@@ -324,7 +324,11 @@ public class GeckoSession extends LayerSession
         private synchronized void onTransfer(final EventDispatcher dispatcher) {
             final NativeQueue nativeQueue = dispatcher.getNativeQueue();
             if (mNativeQueue != nativeQueue) {
+                // Set new queue to the same state as the old queue,
+                // then return the old queue to its initial state if applicable,
+                // because the old queue is no longer the active queue.
                 nativeQueue.setState(mNativeQueue.getState());
+                mNativeQueue.checkAndSetState(State.READY, State.INITIAL);
                 mNativeQueue = nativeQueue;
             }
         }
@@ -398,11 +402,14 @@ public class GeckoSession extends LayerSession
                         GeckoBundle.class, mSettings.asBundle());
             }
         }
+
+        onWindowChanged();
     }
 
     /* package */ void transferFrom(final GeckoSession session) {
         transferFrom(session.mWindow, session.mSettings);
         session.mWindow = null;
+        session.onWindowChanged();
     }
 
     @Override // Parcelable
@@ -509,12 +516,16 @@ public class GeckoSession extends LayerSession
                 screenId, isPrivate);
         }
 
-        if (mTextInput != null) {
-            mTextInput.onWindowReady(mNativeQueue, mWindow);
-        }
+        onWindowChanged();
     }
 
     public void closeWindow() {
+        ThreadUtils.assertOnUiThread();
+
+        if (!isOpen()) {
+            throw new IllegalStateException("Session is not open");
+        }
+
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
             mWindow.close();
             mWindow.disposeNative();
@@ -526,6 +537,13 @@ public class GeckoSession extends LayerSession
         }
 
         mWindow = null;
+        onWindowChanged();
+    }
+
+    private void onWindowChanged() {
+        if (mWindow != null) {
+            mTextInput.onWindowChanged(mWindow);
+        }
     }
 
     /**
