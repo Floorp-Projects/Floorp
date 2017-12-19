@@ -12,6 +12,7 @@
     "cc": "cl.exe",
     "cxx": "cl.exe",
     "patches": [
+      "r318309.patch",
       "msvc-host-x64.patch",
       "loosen-msvc-detection.patch"
     ]
