@@ -837,7 +837,7 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
   RemoveSheetOfType(SheetType::Doc, aSheet);
 
   size_t index =
-    aDocument->FindDocStyleSheetInsertionPoint(mSheets[SheetType::Doc], *aSheet);
+    aDocument->FindDocStyleSheetInsertionPoint(mSheets[SheetType::Doc], aSheet);
 
   if (index < mSheets[SheetType::Doc].Length()) {
     // This case is insert before.

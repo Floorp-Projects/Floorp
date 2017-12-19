@@ -8,7 +8,8 @@
 #define mozilla_dom_shadowroot_h__
 
 #include "mozilla/dom/DocumentFragment.h"
-#include "mozilla/dom/StyleScope.h"
+#include "mozilla/dom/StyleSheetList.h"
+#include "mozilla/StyleSheet.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContentInlines.h"
@@ -26,11 +27,12 @@ class EventChainPreVisitor;
 namespace dom {
 
 class Element;
+class ShadowRootStyleSheetList;
 
 class ShadowRoot final : public DocumentFragment,
-                         public StyleScope,
                          public nsStubMutationObserver
 {
+  friend class ShadowRootStyleSheetList;
 public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ShadowRoot,
                                            DocumentFragment)
@@ -47,19 +49,13 @@ public:
 
   // Shadow DOM v1
   Element* Host();
-  ShadowRootMode Mode() const
+  ShadowRootMode Mode()
   {
     return mMode;
   }
-  bool IsClosed() const
+  bool IsClosed()
   {
     return mMode == ShadowRootMode::Closed;
-  }
-
-  // StyleScope.
-  nsINode& AsNode() final
-  {
-    return *this;
   }
 
   // [deprecated] Shadow DOM v0
@@ -69,10 +65,7 @@ public:
   void RemoveSheet(StyleSheet* aSheet);
   bool ApplyAuthorStyles();
   void SetApplyAuthorStyles(bool aApplyAuthorStyles);
-  StyleSheetList* StyleSheets()
-  {
-    return &StyleScope::EnsureDOMStyleSheets();
-  }
+  StyleSheetList* StyleSheets();
 
   /**
    * Distributes all the explicit children of the pool host to the content
@@ -162,6 +155,8 @@ protected:
   // owns |mProtoBinding|.
   RefPtr<nsXBLBinding> mAssociatedBinding;
 
+  RefPtr<ShadowRootStyleSheetList> mStyleSheetList;
+
   // A boolean that indicates that an insertion point was added or removed
   // from this ShadowRoot and that the nodes need to be redistributed into
   // the insertion points. After this flag is set, nodes will be distributed
@@ -176,6 +171,28 @@ protected:
 
   nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult,
                  bool aPreallocateChildren) const override;
+};
+
+class ShadowRootStyleSheetList : public StyleSheetList
+{
+public:
+  explicit ShadowRootStyleSheetList(ShadowRoot* aShadowRoot);
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ShadowRootStyleSheetList, StyleSheetList)
+
+  virtual nsINode* GetParentObject() const override
+  {
+    return mShadowRoot;
+  }
+
+  uint32_t Length() override;
+  StyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) override;
+
+protected:
+  virtual ~ShadowRootStyleSheetList();
+
+  RefPtr<ShadowRoot> mShadowRoot;
 };
 
 } // namespace dom

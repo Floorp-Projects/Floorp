@@ -421,22 +421,23 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindowOuter* aWindow)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  size_t count = document->SheetCount();
+  int32_t count = document->GetNumberOfStyleSheets();
 
   // Build an array of style sheets we need to reload.
   nsTArray<RefPtr<StyleSheet>> oldSheets(count);
   nsTArray<RefPtr<StyleSheet>> newSheets(count);
 
   // Iterate over the style sheets.
-  for (size_t i = 0; i < count; i++) {
+  for (int32_t i = 0; i < count; i++) {
     // Get the style sheet
-    oldSheets.AppendElement(document->SheetAt(i));
+    StyleSheet* styleSheet = document->GetStyleSheetAt(i);
+    oldSheets.AppendElement(styleSheet);
   }
 
   // Iterate over our old sheets and kick off a sync load of the new
   // sheet if and only if it's a non-inline sheet with a chrome URL.
   for (StyleSheet* sheet : oldSheets) {
-    MOZ_ASSERT(sheet, "SheetAt shouldn't return nullptr for "
+    MOZ_ASSERT(sheet, "GetStyleSheetAt shouldn't return nullptr for "
                       "in-range sheet indexes");
     nsIURI* uri = sheet->GetSheetURI();
 
