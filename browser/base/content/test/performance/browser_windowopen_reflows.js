@@ -12,14 +12,7 @@
  * See https://developer.mozilla.org/en-US/Firefox/Performance_best_practices_for_Firefox_fe_engineers
  * for tips on how to do that.
  */
-const EXPECTED_REFLOWS = [
-  {
-    stack: [
-      "select@chrome://global/content/bindings/textbox.xml",
-      "focusAndSelectUrlBar@chrome://browser/content/browser.js",
-    ],
-  },
-];
+const EXPECTED_REFLOWS = [];
 
 if (Services.appinfo.OS == "WINNT") {
   EXPECTED_REFLOWS.push(
@@ -37,6 +30,12 @@ if (Services.appinfo.OS == "WINNT") {
 
 if (Services.appinfo.OS == "WINNT" || Services.appinfo.OS == "Darwin") {
   EXPECTED_REFLOWS.push(
+    {
+      stack: [
+        "select@chrome://global/content/bindings/textbox.xml",
+        "focusAndSelectUrlBar@chrome://browser/content/browser.js",
+      ],
+    },
     {
       stack: [
         "rect@chrome://browser/content/browser-tabsintitlebar.js",
