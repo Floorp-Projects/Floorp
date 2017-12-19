@@ -37,7 +37,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIdleServiceAndroid, nsIdleServiceAndr
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsAndroid, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSettingsServiceAndroid, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecAndroid)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
@@ -101,7 +101,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_TRANSFERABLE_CID, false, nullptr, nsTransferableConstructor },
   { &kNS_CLIPBOARD_CID, false, nullptr, nsClipboardConstructor },
   { &kNS_CLIPBOARDHELPER_CID, false, nullptr, nsClipboardHelperConstructor },
-  { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintOptionsAndroidConstructor },
+  { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintSettingsServiceAndroidConstructor },
   { &kNS_PRINTSESSION_CID, false, nullptr, nsPrintSessionConstructor },
   { &kNS_DEVICE_CONTEXT_SPEC_CID, false, nullptr, nsDeviceContextSpecAndroidConstructor },
   { &kNS_HTMLFORMATCONVERTER_CID, false, nullptr, nsHTMLFormatConverterConstructor },

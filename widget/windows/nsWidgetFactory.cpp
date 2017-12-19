@@ -140,7 +140,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(TaskbarPreviewCallback)
 #ifdef NS_PRINTING
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintDialogServiceWin, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsWin, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSettingsServiceWin, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecWin)
@@ -214,7 +214,7 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_TASKBARPREVIEWCALLBACK_CID, false, nullptr, TaskbarPreviewCallbackConstructor },
 #ifdef NS_PRINTING
   { &kNS_PRINTDIALOGSERVICE_CID, false, nullptr, nsPrintDialogServiceWinConstructor, Module::MAIN_PROCESS_ONLY },
-  { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintOptionsWinConstructor },
+  { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintSettingsServiceWinConstructor },
   { &kNS_PRINTER_ENUMERATOR_CID, false, nullptr, nsPrinterEnumeratorWinConstructor },
   { &kNS_PRINTSESSION_CID, false, nullptr, nsPrintSessionConstructor },
   { &kNS_DEVICE_CONTEXT_SPEC_CID, false, nullptr, nsDeviceContextSpecWinConstructor },

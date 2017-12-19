@@ -444,7 +444,7 @@ nsPrintSettingsWin::_Assign(nsIPrintSettings *aPS)
 // This define turns on the testing module below
 // so at start up it writes and reads the prefs.
 #ifdef DEBUG_rodsX
-#include "nsIPrintOptions.h"
+#include "nsIPrintSettingsService.h"
 #include "nsIServiceManager.h"
 class Tester {
 public:
@@ -454,7 +454,8 @@ Tester::Tester()
 {
   nsCOMPtr<nsIPrintSettings> ps;
   nsresult rv;
-  nsCOMPtr<nsIPrintOptions> printService = do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
+  nsCOMPtr<nsIPrintSettingsService> printService =
+    do_GetService("@mozilla.org/gfx/printsettings-service;1", &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = printService->CreatePrintSettings(getter_AddRefs(ps));
   }

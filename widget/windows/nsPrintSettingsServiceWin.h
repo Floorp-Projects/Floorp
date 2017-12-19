@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsPrintOptionsWin_h__
-#define nsPrintOptionsWin_h__
+#ifndef nsPrintSettingsServiceWin_h
+#define nsPrintSettingsServiceWin_h
 
 #include "mozilla/embedding/PPrinting.h"
 #include "nsPrintSettingsService.h"
@@ -13,14 +13,11 @@
 class nsIPrintSettings;
 class nsIWebBrowserPrint;
 
-//*****************************************************************************
-//***    nsPrintOptions
-//*****************************************************************************
-class nsPrintOptionsWin : public nsPrintOptions
+class nsPrintSettingsServiceWin final : public nsPrintSettingsService
 {
 public:
-  nsPrintOptionsWin();
-  virtual ~nsPrintOptionsWin();
+  nsPrintSettingsServiceWin() {}
+  virtual ~nsPrintSettingsServiceWin() {}
 
   NS_IMETHODIMP SerializeToPrintData(nsIPrintSettings* aSettings,
                                      nsIWebBrowserPrint* aWBP,
@@ -33,4 +30,4 @@ public:
 
 
 
-#endif /* nsPrintOptions_h__ */
+#endif // nsPrintSettingsServiceWin_h
