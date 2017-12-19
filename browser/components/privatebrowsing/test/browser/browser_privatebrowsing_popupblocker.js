@@ -6,11 +6,11 @@
 // for the popup blocker menu.
 add_task(async function test() {
   let testURI = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/popup.html";
-  let oldPopupPolicy = gPrefService.getBoolPref("dom.disable_open_during_load");
-  gPrefService.setBoolPref("dom.disable_open_during_load", true);
+  let oldPopupPolicy = Services.prefs.getBoolPref("dom.disable_open_during_load");
+  Services.prefs.setBoolPref("dom.disable_open_during_load", true);
 
   registerCleanupFunction(() => {
-    gPrefService.setBoolPref("dom.disable_open_during_load", oldPopupPolicy);
+    Services.prefs.setBoolPref("dom.disable_open_during_load", oldPopupPolicy);
   });
 
   function testPopupBlockerMenuItem(aExpectedDisabled, aWindow, aCallback) {

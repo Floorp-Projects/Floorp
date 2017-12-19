@@ -312,7 +312,7 @@ var gEditItemOverlay = {
       let elt;
       if (focusedElement === "preferred") {
         /* eslint-disable no-undef */
-        elt = this._element(gPrefService.getCharPref("browser.bookmarks.editDialog.firstEditField"));
+        elt = this._element(Services.prefs.getCharPref("browser.bookmarks.editDialog.firstEditField"));
         /* eslint-enable no-undef */
       } else if (focusedElement === "first") {
         elt = document.querySelector("textbox:not([collapsed=true])");

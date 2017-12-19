@@ -244,7 +244,7 @@ var gXPInstallObserver = {
       notificationID = "xpinstall-disabled";
       let secondaryActions = null;
 
-      if (gPrefService.prefIsLocked("xpinstall.enabled")) {
+      if (Services.prefs.prefIsLocked("xpinstall.enabled")) {
         messageString = gNavigatorBundle.getString("xpinstallDisabledMessageLocked");
       } else {
         messageString = gNavigatorBundle.getString("xpinstallDisabledMessage");
@@ -253,7 +253,7 @@ var gXPInstallObserver = {
           label: gNavigatorBundle.getString("xpinstallDisabledButton"),
           accessKey: gNavigatorBundle.getString("xpinstallDisabledButton.accesskey"),
           callback: function editPrefs() {
-            gPrefService.setBoolPref("xpinstall.enabled", true);
+            Services.prefs.setBoolPref("xpinstall.enabled", true);
           }
         };
 

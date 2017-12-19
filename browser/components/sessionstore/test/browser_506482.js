@@ -38,7 +38,7 @@ function test() {
   const PREF_INTERVAL = "browser.sessionstore.interval";
 
   // make sure sessionstore.js is saved ASAP on all events
-  gPrefService.setIntPref(PREF_INTERVAL, 0);
+  Services.prefs.setIntPref(PREF_INTERVAL, 0);
 
   // get the initial sessionstore.js mtime (-1 if it doesn't exist yet)
   let mtime0 = getSessionstorejsModificationTime();
@@ -62,8 +62,8 @@ function test() {
            "tab selection and scrolling: sessionstore.js not updated");
 
         // ok, done, cleanup and finish
-        if (gPrefService.prefHasUserValue(PREF_INTERVAL))
-          gPrefService.clearUserPref(PREF_INTERVAL);
+        if (Services.prefs.prefHasUserValue(PREF_INTERVAL))
+          Services.prefs.clearUserPref(PREF_INTERVAL);
         gBrowser.removeTab(tab);
         finish();
       }, 3500); // end of sleep after tab selection and scrolling
