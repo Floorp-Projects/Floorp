@@ -948,7 +948,47 @@
       "label": "TUBITAK_Kamu_SM_SSL_Kok_Sertifikasi___Surum_1",
       "binNumber": 188,
       "sha256Fingerprint": "Ru3DaJBG1TpFP7MQSrgNyuxliyZg6hYp3X6GeZBkhxY="
+    },
+    {
+      "label": "GDCA_TrustAUTH_R5_ROOT",
+      "binNumber": 189,
+      "sha256Fingerprint": "v/+P0EQzSH1qiqYMGil2ep/Cu7BeQg9xOhO5kokdOJM="
+    },
+    {
+      "label": "TrustCor_RootCert_CA_1",
+      "binNumber": 190,
+      "sha256Fingerprint": "1A6chs2P5GjBd2lZ9J6ndPpUhoS2xAbzkJJh9NziV1w="
+    },
+    {
+      "label": "TrustCor_RootCert_CA_2",
+      "binNumber": 191,
+      "sha256Fingerprint": "B1PpQDeMG9Xjg245Xa6ly4OeUEbxvQ6uGVHPEP7HyWU="
+    },
+    {
+      "label": "TrustCor_ECA_1",
+      "binNumber": 192,
+      "sha256Fingerprint": "WohdsZwB2RLFdZOIk4yvu98DGrLUjpHuFVibQpcdA5w="
+    },
+    {
+      "label": "SSL_com_Root_Certification_Authority_RSA",
+      "binNumber": 193,
+      "sha256Fingerprint": "hWZqVi7gvlzpJcHYiQpvdqh+wW1NfV8p6nQZzyASO2k="
+    },
+    {
+      "label": "SSL_com_Root_Certification_Authority_ECC",
+      "binNumber": 194,
+      "sha256Fingerprint": "NBe7BsxgB9oblhySC4q0zj+tgg5Kowuay8SnTr3OvGU="
+    },
+    {
+      "label": "SSL_com_EV_Root_Certification_Authority_RSA_R2",
+      "binNumber": 195,
+      "sha256Fingerprint": "LnvxbMIkhae74qqGlnUHYbCuOb47L+nQzG1O9zSRQlw="
+    },
+    {
+      "label": "SSL_com_EV_Root_Certification_Authority_ECC",
+      "binNumber": 196,
+      "sha256Fingerprint": "IqLB973tcEzB5wG19AjDEIgP6Va13ipKRPmchzolp8g="
     }
   ],
-  "maxBin": 188
+  "maxBin": 196
 }

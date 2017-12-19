@@ -159,6 +159,18 @@ export default async function main() {
     ],
   });
 
+  await scheduleLinux("Linux 64 (opt, make)", {
+    env: {USE_64: "1", BUILD_OPT: "1"},
+    platform: "linux64",
+    image: LINUX_IMAGE,
+    collection: "make",
+    command: [
+       "/bin/bash",
+       "-c",
+       "bin/checkout.sh && nss/automation/taskcluster/scripts/build.sh"
+    ],
+  });
+
   await scheduleLinux("Linux 32 (debug, make)", {
     platform: "linux32",
     image: LINUX_IMAGE,

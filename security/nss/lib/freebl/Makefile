@@ -492,8 +492,6 @@ else
 endif # Solaris for non-sparc family CPUs
 endif # target == SunO
 
-# poly1305-donna-x64-sse2-incremental-source.c requires __int128 support
-# in GCC 4.6.0.
 ifdef USE_64
     ifdef CC_IS_CLANG
             HAVE_INT128_SUPPORT = 1
@@ -517,7 +515,7 @@ endif
 ifndef NSS_DISABLE_CHACHAPOLY
     ifeq ($(CPU_ARCH),x86_64)
         ifdef HAVE_INT128_SUPPORT
-            EXTRA_SRCS += poly1305-donna-x64-sse2-incremental-source.c
+            EXTRA_SRCS += Hacl_Poly1305_64.c
         else
             EXTRA_SRCS += poly1305.c
         endif

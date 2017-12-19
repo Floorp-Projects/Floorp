@@ -362,3 +362,17 @@ SECStatus SSLInt_SetSocketMaxEarlyDataSize(PRFileDesc *fd, uint32_t size) {
 void SSLInt_RolloverAntiReplay(void) {
   tls13_AntiReplayRollover(ssl_TimeUsec());
 }
+
+SECStatus SSLInt_GetEpochs(PRFileDesc *fd, PRUint16 *readEpoch,
+                           PRUint16 *writeEpoch) {
+  sslSocket *ss = ssl_FindSocket(fd);
+  if (!ss || !readEpoch || !writeEpoch) {
+    return SECFailure;
+  }
+
+  ssl_GetSpecReadLock(ss);
+  *readEpoch = ss->ssl3.crSpec->epoch;
+  *writeEpoch = ss->ssl3.cwSpec->epoch;
+  ssl_ReleaseSpecReadLock(ss);
+  return SECSuccess;
+}

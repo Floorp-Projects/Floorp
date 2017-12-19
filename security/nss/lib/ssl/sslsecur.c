@@ -762,6 +762,55 @@ ssl_SecureShutdown(sslSocket *ss, int nsprHow)
 
 /************************************************************************/
 
+static SECStatus
+tls13_CheckKeyUpdate(sslSocket *ss, CipherSpecDirection dir)
+{
+    PRBool keyUpdate;
+    ssl3CipherSpec *spec;
+    sslSequenceNumber seqNum;
+    sslSequenceNumber margin;
+    SECStatus rv;
+
+    /* Bug 1413368: enable for DTLS */
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3 || IS_DTLS(ss)) {
+        return SECSuccess;
+    }
+
+    /* If both sides update at the same number, then this will cause two updates
+     * to happen at once. The problem is that the KeyUpdate itself consumes a
+     * sequence number, and that will trigger the reading side to request an
+     * update.
+     *
+     * If we have the writing side update first, the writer will be the one that
+     * drives the update.  An update by the writer doesn't need a response, so
+     * it is more efficient overall.  The margins here are pretty arbitrary, but
+     * having the write margin larger reduces the number of times that a
+     * KeyUpdate is sent by a reader. */
+    ssl_GetSpecReadLock(ss);
+    if (dir == CipherSpecRead) {
+        spec = ss->ssl3.crSpec;
+        margin = spec->cipherDef->max_records / 8;
+    } else {
+        spec = ss->ssl3.cwSpec;
+        margin = spec->cipherDef->max_records / 4;
+    }
+    seqNum = spec->seqNum;
+    keyUpdate = seqNum > spec->cipherDef->max_records - margin;
+    ssl_ReleaseSpecReadLock(ss);
+    if (!keyUpdate) {
+        return SECSuccess;
+    }
+
+    SSL_TRC(5, ("%d: SSL[%d]: automatic key update at %llx for %s cipher spec",
+                SSL_GETPID(), ss->fd, seqNum,
+                (dir == CipherSpecRead) ? "read" : "write"));
+    ssl_GetSSL3HandshakeLock(ss);
+    rv = tls13_SendKeyUpdate(ss, (dir == CipherSpecRead) ? update_requested : update_not_requested,
+                             dir == CipherSpecWrite /* buffer */);
+    ssl_ReleaseSSL3HandshakeLock(ss);
+    return rv;
+}
+
 int
 ssl_SecureRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
 {
@@ -801,8 +850,17 @@ ssl_SecureRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
             rv = ssl_Do1stHandshake(ss);
         }
         ssl_Release1stHandshakeLock(ss);
+    } else {
+        if (tls13_CheckKeyUpdate(ss, CipherSpecRead) != SECSuccess) {
+            rv = PR_FAILURE;
+        }
     }
     if (rv < 0) {
+        if (PORT_GetError() == PR_WOULD_BLOCK_ERROR &&
+            !PR_CLIST_IS_EMPTY(&ss->ssl3.hs.bufferedEarlyData)) {
+            PORT_Assert(ss->version >= SSL_LIBRARY_VERSION_TLS_1_3);
+            return tls13_Read0RttData(ss, buf, len);
+        }
         return rv;
     }
 
@@ -884,9 +942,17 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
         }
         ssl_Release1stHandshakeLock(ss);
     }
+
     if (rv < 0) {
         ss->writerThread = NULL;
         goto done;
+    }
+
+    if (ss->firstHsDone) {
+        if (tls13_CheckKeyUpdate(ss, CipherSpecWrite) != SECSuccess) {
+            rv = PR_FAILURE;
+            goto done;
+        }
     }
 
     if (zeroRtt) {

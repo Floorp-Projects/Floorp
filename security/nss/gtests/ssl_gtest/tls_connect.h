@@ -94,6 +94,7 @@ class TlsConnectTestBase : public ::testing::Test {
                    std::function<void(SSLNamedGroup)> check_group);
   void CheckShares(const DataBuffer& shares,
                    std::function<void(SSLNamedGroup)> check_group);
+  void CheckEpochs(uint16_t client_epoch, uint16_t server_epoch) const;
 
   void ConfigureVersion(uint16_t version);
   void SetExpectedVersion(uint16_t version);
@@ -114,7 +115,7 @@ class TlsConnectTestBase : public ::testing::Test {
   void CheckAlpn(const std::string& val);
   void EnableSrtp();
   void CheckSrtp() const;
-  void SendReceive();
+  void SendReceive(size_t total = 50);
   void SetupForZeroRtt();
   void SetupForResume();
   void ZeroRttSendReceive(

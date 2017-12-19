@@ -653,12 +653,12 @@ ListCerts(CERTCertDBHandle *handle, char *nickname, char *email,
 }
 
 static SECStatus
-DeleteCert(CERTCertDBHandle *handle, char *name)
+DeleteCert(CERTCertDBHandle *handle, char *name, void *pwdata)
 {
     SECStatus rv;
     CERTCertificate *cert;
 
-    cert = CERT_FindCertByNicknameOrEmailAddr(handle, name);
+    cert = CERT_FindCertByNicknameOrEmailAddrCX(handle, name, pwdata);
     if (!cert) {
         SECU_PrintError(progName, "could not find certificate named \"%s\"",
                         name);
@@ -674,12 +674,12 @@ DeleteCert(CERTCertDBHandle *handle, char *name)
 }
 
 static SECStatus
-RenameCert(CERTCertDBHandle *handle, char *name, char *newName)
+RenameCert(CERTCertDBHandle *handle, char *name, char *newName, void *pwdata)
 {
     SECStatus rv;
     CERTCertificate *cert;
 
-    cert = CERT_FindCertByNicknameOrEmailAddr(handle, name);
+    cert = CERT_FindCertByNicknameOrEmailAddrCX(handle, name, pwdata);
     if (!cert) {
         SECU_PrintError(progName, "could not find certificate named \"%s\"",
                         name);
@@ -3334,12 +3334,12 @@ certutil_main(int argc, char **argv, PRBool initialize)
     }
     /*  Delete cert (-D)  */
     if (certutil.commands[cmd_DeleteCert].activated) {
-        rv = DeleteCert(certHandle, name);
+        rv = DeleteCert(certHandle, name, &pwdata);
         goto shutdown;
     }
     /*  Rename cert (--rename)  */
     if (certutil.commands[cmd_Rename].activated) {
-        rv = RenameCert(certHandle, name, newName);
+        rv = RenameCert(certHandle, name, newName, &pwdata);
         goto shutdown;
     }
     /*  Delete key (-F)  */

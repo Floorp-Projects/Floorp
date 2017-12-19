@@ -77,7 +77,7 @@ void InstallManyWriters(std::shared_ptr<TlsAgent> agent,
                         SSLExtensionWriter writer, size_t *installed = nullptr,
                         size_t *called = nullptr) {
   for (size_t i = 0; i < PR_ARRAY_SIZE(kManyExtensions); ++i) {
-    SSLExtensionSupport support;
+    SSLExtensionSupport support = ssl_ext_none;
     SECStatus rv = SSL_GetExtensionSupport(kManyExtensions[i], &support);
     ASSERT_EQ(SECSuccess, rv) << "SSL_GetExtensionSupport cannot fail";
 

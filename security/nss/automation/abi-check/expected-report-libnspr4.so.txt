@@ -1,0 +1,8 @@
+Functions changes summary: 1 Removed, 0 Changed, 0 Added function
+Variables changes summary: 0 Removed, 0 Changed, 0 Added variable
+
+1 Removed function:
+
+  'function void PR_EXPERIMENTAL_ONLY_IN_4_17_GetOverlappedIOHandle(void**)'    {PR_EXPERIMENTAL_ONLY_IN_4_17_GetOverlappedIOHandle}
+
+

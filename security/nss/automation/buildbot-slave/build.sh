@@ -271,15 +271,18 @@ check_abi()
             > ${HGDIR}/nss/automation/abi-check/new-report-$SO.txt
         if [ $? -ne 0 ]; then
             ABI_PROBLEM_FOUND=1
+            print_log "FAILED to run abidiff {$PREVDIST , $NEWDIST} for $SO, or failed writing to ${HGDIR}/nss/automation/abi-check/new-report-$SO.txt"
         fi
         if [ ! -f ${HGDIR}/nss/automation/abi-check/expected-report-$SO.txt ]; then
             ABI_PROBLEM_FOUND=1
+            print_log "FAILED to access report file: ${HGDIR}/nss/automation/abi-check/expected-report-$SO.txt"
         fi
 
         diff -wB -u ${HGDIR}/nss/automation/abi-check/expected-report-$SO.txt \
                 ${HGDIR}/nss/automation/abi-check/new-report-$SO.txt >> ${ABI_REPORT}
         if [ ! -f ${ABI_REPORT} ]; then
             ABI_PROBLEM_FOUND=1
+            print_log "FAILED to compare exepcted and new report: ${HGDIR}/nss/automation/abi-check/new-report-$SO.txt"
         fi
     done
 

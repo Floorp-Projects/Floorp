@@ -531,3 +531,12 @@ ER3(SSL_ERROR_NO_TIMERS_ERROR, (SSL_ERROR_BASE + 167),
 
 ER3(SSL_ERROR_MISSING_COOKIE_EXTENSION, (SSL_ERROR_BASE + 168),
     "A second ClientHello was received without a cookie extension.")
+
+ER3(SSL_ERROR_RX_UNEXPECTED_KEY_UPDATE, (SSL_ERROR_BASE + 169),
+    "SSL received an unexpected key update message.")
+
+ER3(SSL_ERROR_RX_MALFORMED_KEY_UPDATE, (SSL_ERROR_BASE + 170),
+    "SSL received a malformed key update message.")
+
+ER3(SSL_ERROR_TOO_MANY_KEY_UPDATES, (SSL_ERROR_BASE + 171),
+    "SSL attempted too many key updates.")
