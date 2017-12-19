@@ -99,7 +99,7 @@ nsNativeThemeGTK::RefreshWidgetWindow(nsIFrame* aFrame)
   nsViewManager* vm = shell->GetViewManager();
   if (!vm)
     return;
- 
+
   vm->InvalidateAllViews();
 }
 
@@ -669,7 +669,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
   case NS_THEME_SPLITTER:
     if (IsHorizontal(aFrame))
       aGtkWidgetType = MOZ_GTK_SPLITTER_VERTICAL;
-    else 
+    else
       aGtkWidgetType = MOZ_GTK_SPLITTER_HORIZONTAL;
     break;
   case NS_THEME_MENUBAR:
@@ -1596,7 +1596,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
 
       moz_gtk_get_menu_separator_height(&separator_height);
       aResult->height = separator_height;
-    
+
       *aIsOverridable = false;
     }
     break;
@@ -1659,9 +1659,9 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
   case NS_THEME_SEPARATOR:
     {
       gint separator_width;
-    
+
       moz_gtk_get_toolbar_separator_width(&separator_width);
-    
+
       aResult->width = separator_width;
     }
     break;
@@ -1701,7 +1701,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
+nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
                                      nsAtom* aAttribute, bool* aShouldRepaint,
                                      const nsAttrValue* aOldValue)
 {
@@ -1768,7 +1768,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
     *aShouldRepaint = true;
   }
   else {
-    // Check the attribute to see if it's relevant.  
+    // Check the attribute to see if it's relevant.
     // disabled, checked, dlgtype, default, etc.
     *aShouldRepaint = false;
     if (aAttribute == nsGkAtoms::disabled ||
@@ -1950,10 +1950,10 @@ bool
 nsNativeThemeGTK::ThemeDrawsFocusForWidget(uint8_t aWidgetType)
 {
    if (aWidgetType == NS_THEME_MENULIST ||
-      aWidgetType == NS_THEME_BUTTON || 
+      aWidgetType == NS_THEME_BUTTON ||
       aWidgetType == NS_THEME_TREEHEADERCELL)
     return true;
-  
+
   return false;
 }
 

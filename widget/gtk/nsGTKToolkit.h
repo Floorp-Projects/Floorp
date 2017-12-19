@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GTKTOOLKIT_H      
+#ifndef GTKTOOLKIT_H
 #define GTKTOOLKIT_H
 
 #include "nsString.h"
@@ -15,7 +15,7 @@
  * Wrapper around the thread running the message pump.
  * The toolkit abstraction is necessary because the message pump must
  * execute within the same thread that created the widget under Win32.
- */ 
+ */
 
 class nsGTKToolkit
 {
@@ -33,7 +33,7 @@ public:
      * Get/set our value of DESKTOP_STARTUP_ID. When non-empty, this is applied
      * to the next toplevel window to be shown or focused (and then immediately
      * cleared).
-     */ 
+     */
     void SetDesktopStartupID(const nsACString& aID) { mDesktopStartupID = aID; }
     void GetDesktopStartupID(nsACString* aID) { *aID = mDesktopStartupID; }
 
