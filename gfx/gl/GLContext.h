@@ -3693,13 +3693,41 @@ public:
     static bool ShouldDumpExts();
     bool Readback(SharedSurface* src, gfx::DataSourceSurface* dest);
 
-    ////
+    // --
 
     void TexParams_SetClampNoMips(GLenum target = LOCAL_GL_TEXTURE_2D) {
         fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
         fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
         fTexParameteri(target, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
         fTexParameteri(target, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
+    }
+
+    // --
+
+    GLuint CreateFramebuffer() {
+        GLuint x = 0;
+        fGenFramebuffers(1, &x);
+        return x;
+    }
+    GLuint CreateRenderbuffer() {
+        GLuint x = 0;
+        fGenRenderbuffers(1, &x);
+        return x;
+    }
+    GLuint CreateTexture() {
+        GLuint x = 0;
+        fGenTextures(1, &x);
+        return x;
+    }
+
+    void DeleteFramebuffer(const GLuint x) {
+        fDeleteFramebuffers(1, &x);
+    }
+    void DeleteRenderbuffer(const GLuint x) {
+        fDeleteRenderbuffers(1, &x);
+    }
+    void DeleteTexture(const GLuint x) {
+        fDeleteTextures(1, &x);
     }
 };
 

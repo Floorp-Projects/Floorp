@@ -136,6 +136,7 @@ UNIFIED_SOURCES += [
     'GLScreenBuffer.cpp',
     'GLTextureImage.cpp',
     'GLUploadHelpers.cpp',
+    'MozFramebuffer.cpp',
     'ScopedGLHelpers.cpp',
     'SharedSurface.cpp',
     'SharedSurfaceEGL.cpp',
