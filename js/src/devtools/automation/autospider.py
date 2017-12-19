@@ -367,14 +367,17 @@ if not args.nobuild:
     if use_minidump:
         # Convert symbols to breakpad format.
         hostdir = os.path.join(OBJDIR, "dist", "host", "bin")
-        os.makedirs(hostdir)
+        if not os.path.isdir(hostdir):
+            os.makedirs(hostdir)
         shutil.copy(os.path.join(DIR.tooltool, "breakpad-tools", "dump_syms"),
                     os.path.join(hostdir, 'dump_syms'))
         run_command([
             'make',
             'recurse_syms',
             'MOZ_SOURCE_REPO=file://' + DIR.source,
-            'RUST_TARGET=0', 'RUSTC_COMMIT=0'
+            'RUST_TARGET=0', 'RUSTC_COMMIT=0',
+            'MOZ_CRASHREPORTER=1',
+            'MOZ_AUTOMATION_BUILD_SYMBOLS=1',
         ], check=True)
 
 COMMAND_PREFIX = []
