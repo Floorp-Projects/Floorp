@@ -31,65 +31,81 @@ class BaseURIMutator
 // in order to avoid code duplication
 // Class type T should be the type of the class that implements nsIURI
 protected:
-    nsresult InitFromURI(T* aURI)
-    {
-        nsCOMPtr<nsIURI> clone;
-        nsresult rv = aURI->Clone(getter_AddRefs(clone));
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
-        mURI = static_cast<T*>(clone.get());
-        return NS_OK;
+  MOZ_MUST_USE nsresult InitFromURI(T* aURI)
+  {
+    nsCOMPtr<nsIURI> clone;
+    nsresult rv = aURI->Clone(getter_AddRefs(clone));
+    if (NS_FAILED(rv)) {
+      return rv;
     }
+    mURI = static_cast<T*>(clone.get());
+    return NS_OK;
+  }
 
-    nsresult InitFromInputStream(nsIObjectInputStream* aStream)
-    {
-        RefPtr<T> uri = new T();
-        nsresult rv = uri->Read(aStream);
-        if (NS_FAILED(rv)) {
-            return rv;
-        }
-        mURI = uri;
-        return NS_OK;
+  MOZ_MUST_USE nsresult InitFromInputStream(nsIObjectInputStream* aStream)
+  {
+    RefPtr<T> uri = new T();
+    nsresult rv = uri->Read(aStream);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
+    mURI = uri;
+    return NS_OK;
+  }
 
-    nsresult InitFromIPCParams(const mozilla::ipc::URIParams& aParams)
-    {
-        RefPtr<T> uri = new T();
-        bool ret = uri->Deserialize(aParams);
-        if (!ret) {
-          return NS_ERROR_FAILURE;
-        }
-        mURI = uri;
-        return NS_OK;
+  MOZ_MUST_USE nsresult InitFromIPCParams(const mozilla::ipc::URIParams& aParams)
+  {
+    RefPtr<T> uri = new T();
+    bool ret = uri->Deserialize(aParams);
+    if (!ret) {
+      return NS_ERROR_FAILURE;
     }
+    mURI = uri;
+    return NS_OK;
+  }
 
-    nsresult InitFromSpec(const nsACString& aSpec)
-    {
-        RefPtr<T> uri = new T();
-        nsresult rv = uri->SetSpec(aSpec);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-        mURI = uri;
-        return NS_OK;
+  MOZ_MUST_USE nsresult InitFromSpec(const nsACString& aSpec)
+  {
+    RefPtr<T> uri = new T();
+    nsresult rv = uri->SetSpec(aSpec);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
+    mURI = uri;
+    return NS_OK;
+  }
 
-    RefPtr<T> mURI;
+  RefPtr<T> mURI;
 };
 
 // Since most implementations of nsIURIMutator would extend BaseURIMutator,
 // some methods would have the same implementation. We provide a useful macro
 // to avoid code duplication.
 #define NS_DEFINE_NSIMUTATOR_COMMON                                           \
-  NS_IMETHOD Deserialize(const mozilla::ipc::URIParams& aParams) override     \
-    { return InitFromIPCParams(aParams); }                                    \
-  NS_IMETHOD Read(nsIObjectInputStream* aStream) override                     \
-    { return InitFromInputStream(aStream); }                                  \
-  NS_IMETHOD Finalize(nsIURI** aURI) override                                 \
-    { mURI.forget(aURI); return NS_OK; }                                      \
-  NS_IMETHOD SetSpec(const nsACString & aSpec, nsIURIMutator** aMutator) override \
-    { if (aMutator) NS_ADDREF(*aMutator = this); return InitFromSpec(aSpec); }
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  Deserialize(const mozilla::ipc::URIParams& aParams) override                \
+  {                                                                           \
+    return InitFromIPCParams(aParams);                                        \
+  }                                                                           \
+                                                                              \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  Read(nsIObjectInputStream* aStream) override                                \
+  {                                                                           \
+    return InitFromInputStream(aStream);                                      \
+  }                                                                           \
+                                                                              \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  Finalize(nsIURI** aURI) override                                            \
+  {                                                                           \
+    mURI.forget(aURI); return NS_OK;                                          \
+  }                                                                           \
+                                                                              \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  SetSpec(const nsACString& aSpec, nsIURIMutator** aMutator) override         \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return InitFromSpec(aSpec);                                               \
+  }                                                                           \
 %}
 
 [ptr] native Encoding(const mozilla::Encoding);
@@ -104,7 +120,7 @@ interface nsIURISetSpec : nsISupports
    * to define it separately, while the rest of the setters may be simply
    * forwarded to the mutable URI.
    */
-  nsIURIMutator setSpec(in AUTF8String aSpec);
+  [must_use] nsIURIMutator setSpec(in AUTF8String aSpec);
 };
 
 /**
@@ -119,52 +135,104 @@ interface nsIURISetSpec : nsISupports
 [scriptable, builtinclass, uuid(5403a6ec-99d7-405e-8b45-9f805bbdfcef)]
 interface nsIURISetters : nsIURISetSpec
 {
-  nsIURIMutator setScheme(in AUTF8String aScheme);
-  nsIURIMutator setUserPass(in AUTF8String aUserPass);
-  nsIURIMutator setUsername(in AUTF8String aUsername);
-  nsIURIMutator setPassword(in AUTF8String aPassword);
-  nsIURIMutator setHostPort(in AUTF8String aHostPort);
-  nsIURIMutator setHostAndPort(in AUTF8String aHostAndPort);
-  nsIURIMutator setHost(in AUTF8String aHost);
-  nsIURIMutator setPort(in long aPort);
-  nsIURIMutator setPathQueryRef(in AUTF8String aPathQueryRef);
-  nsIURIMutator setRef(in AUTF8String aRef);
-  nsIURIMutator setFilePath(in AUTF8String aFilePath);
-  nsIURIMutator setQuery(in AUTF8String aQuery);
-  [noscript] nsIURIMutator setQueryWithEncoding(in AUTF8String query, in Encoding encoding);
+  [must_use] nsIURIMutator setScheme(in AUTF8String aScheme);
+  [must_use] nsIURIMutator setUserPass(in AUTF8String aUserPass);
+  [must_use] nsIURIMutator setUsername(in AUTF8String aUsername);
+  [must_use] nsIURIMutator setPassword(in AUTF8String aPassword);
+  [must_use] nsIURIMutator setHostPort(in AUTF8String aHostPort);
+  [must_use] nsIURIMutator setHostAndPort(in AUTF8String aHostAndPort);
+  [must_use] nsIURIMutator setHost(in AUTF8String aHost);
+  [must_use] nsIURIMutator setPort(in long aPort);
+  [must_use] nsIURIMutator setPathQueryRef(in AUTF8String aPathQueryRef);
+  [must_use] nsIURIMutator setRef(in AUTF8String aRef);
+  [must_use] nsIURIMutator setFilePath(in AUTF8String aFilePath);
+  [must_use] nsIURIMutator setQuery(in AUTF8String aQuery);
+  [must_use, noscript] nsIURIMutator setQueryWithEncoding(in AUTF8String query, in Encoding encoding);
 };
 
 %{C++
 
 // Using this macro instead of NS_FORWARD_SAFE_NSIURISETTERS makes chaining
 // setter operations possible.
-#define NS_FORWARD_SAFE_NSIURISETTERS_RET(_to)                                                                                         \
-  NS_IMETHOD SetScheme(const nsACString & aScheme, nsIURIMutator** aMutator) override                                                  \
-    { if (aMutator) NS_ADDREF(*aMutator = this); return !_to ? NS_ERROR_NULL_POINTER : _to->SetScheme(aScheme); }                      \
-  NS_IMETHOD SetUserPass(const nsACString & aUserPass, nsIURIMutator** aMutator) override                                              \
-    { if (aMutator) NS_ADDREF(*aMutator = this); return !_to ? NS_ERROR_NULL_POINTER : _to->SetUserPass(aUserPass); }                  \
-  NS_IMETHOD SetUsername(const nsACString & aUsername, nsIURIMutator** aMutator) override                                              \
-    { if (aMutator) NS_ADDREF(*aMutator = this); return !_to ? NS_ERROR_NULL_POINTER : _to->SetUsername(aUsername); }                  \
-  NS_IMETHOD SetPassword(const nsACString & aPassword, nsIURIMutator** aMutator) override                                              \
-    { if (aMutator) NS_ADDREF(*aMutator = this); return !_to ? NS_ERROR_NULL_POINTER : _to->SetPassword(aPassword); }                  \
-  NS_IMETHOD SetHostPort(const nsACString & aHostPort, nsIURIMutator** aMutator) override                                              \
-    { if (aMutator) NS_ADDREF(*aMutator = this); return !_to ? NS_ERROR_NULL_POINTER : _to->SetHostPort(aHostPort); }                  \
-  NS_IMETHOD SetHostAndPort(const nsACString & aHostAndPort, nsIURIMutator** aMutator) override                                        \
-    { if (aMutator) NS_ADDREF(*aMutator = this); return !_to ? NS_ERROR_NULL_POINTER : _to->SetHostAndPort(aHostAndPort); }            \
-  NS_IMETHOD SetHost(const nsACString & aHost, nsIURIMutator** aMutator) override                                                      \
-    { if (aMutator) NS_ADDREF(*aMutator = this); return !_to ? NS_ERROR_NULL_POINTER : _to->SetHost(aHost); }                          \
-  NS_IMETHOD SetPort(int32_t aPort, nsIURIMutator** aMutator) override                                                                 \
-    { if (aMutator) NS_ADDREF(*aMutator = this); return !_to ? NS_ERROR_NULL_POINTER : _to->SetPort(aPort); }                          \
-  NS_IMETHOD SetPathQueryRef(const nsACString & aPathQueryRef, nsIURIMutator** aMutator) override                                      \
-    { if (aMutator) NS_ADDREF(*aMutator = this); return !_to ? NS_ERROR_NULL_POINTER : _to->SetPathQueryRef(aPathQueryRef); }          \
-  NS_IMETHOD SetRef(const nsACString & aRef, nsIURIMutator** aMutator) override                                                        \
-    { if (aMutator) NS_ADDREF(*aMutator = this); return !_to ? NS_ERROR_NULL_POINTER : _to->SetRef(aRef); }                            \
-  NS_IMETHOD SetFilePath(const nsACString & aFilePath, nsIURIMutator** aMutator) override                                              \
-    { if (aMutator) NS_ADDREF(*aMutator = this); return !_to ? NS_ERROR_NULL_POINTER : _to->SetFilePath(aFilePath); }                  \
-  NS_IMETHOD SetQuery(const nsACString & aQuery, nsIURIMutator** aMutator) override                                                    \
-    { if (aMutator) NS_ADDREF(*aMutator = this); return !_to ? NS_ERROR_NULL_POINTER : _to->SetQuery(aQuery); }                        \
-  NS_IMETHOD SetQueryWithEncoding(const nsACString & query, const mozilla::Encoding *encoding, nsIURIMutator** aMutator) override      \
-    { if (aMutator) NS_ADDREF(*aMutator = this); return !_to ? NS_ERROR_NULL_POINTER : _to->SetQueryWithEncoding(query, encoding); }
+#define NS_FORWARD_SAFE_NSIURISETTERS_RET(_to)                                \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  SetScheme(const nsACString& aScheme, nsIURIMutator** aMutator) override     \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetScheme(aScheme);            \
+  }                                                                           \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  SetUserPass(const nsACString& aUserPass, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetUserPass(aUserPass);        \
+  }                                                                           \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  SetUsername(const nsACString& aUsername, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetUsername(aUsername);        \
+  }                                                                           \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  SetPassword(const nsACString& aPassword, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetPassword(aPassword);        \
+  }                                                                           \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  SetHostPort(const nsACString& aHostPort, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetHostPort(aHostPort);        \
+  }                                                                           \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  SetHostAndPort(const nsACString& aHostAndPort, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetHostAndPort(aHostAndPort);  \
+  }                                                                           \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  SetHost(const nsACString& aHost, nsIURIMutator** aMutator) override         \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetHost(aHost);                \
+  }                                                                           \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  SetPort(int32_t aPort, nsIURIMutator** aMutator) override                   \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetPort(aPort);                \
+  }                                                                           \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  SetPathQueryRef(const nsACString& aPathQueryRef, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetPathQueryRef(aPathQueryRef); \
+  }                                                                           \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  SetRef(const nsACString& aRef, nsIURIMutator** aMutator) override           \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetRef(aRef);                  \
+  }                                                                           \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  SetFilePath(const nsACString& aFilePath, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetFilePath(aFilePath);        \
+  }                                                                           \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  SetQuery(const nsACString& aQuery, nsIURIMutator** aMutator) override       \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetQuery(aQuery);              \
+  }                                                                           \
+  MOZ_MUST_USE NS_IMETHOD                                                     \
+  SetQueryWithEncoding(const nsACString& query, const mozilla::Encoding *encoding, nsIURIMutator** aMutator) override \
+  {                                                                           \
+    if (aMutator) NS_ADDREF(*aMutator = this);                                \
+    return !_to ? NS_ERROR_NULL_POINTER : _to->SetQueryWithEncoding(query, encoding); \
+  }                                                                           \
 
 %}
 
@@ -176,18 +244,20 @@ interface nsIURIMutator : nsIURISetters
    * The input stream must contain the serialization of the same object type.
    * See nsISerializable.
    */
+  [must_use]
   void read(in nsIObjectInputStream aInputStream);
 
   /**
    * Initalizes the URI by reading IPC URIParams.
    * See nsIIPCSerializableURI.
    */
-  [noscript, notxpcom]
+  [noscript, notxpcom, must_use]
   nsresult deserialize(in const_URIParams_ref aParams);
 
   /**
    * Finishes changing or constructing the URI and returns an immutable URI.
    */
+  [must_use]
   nsIURI finalize();
 };
 
@@ -286,7 +356,7 @@ public:
   }
 
   template <class C>
-  nsresult Finalize(nsCOMPtr<C>& aURI)
+  MOZ_MUST_USE nsresult Finalize(nsCOMPtr<C>& aURI)
   {
     NS_ENSURE_SUCCESS(mStatus, mStatus);
 
@@ -302,7 +372,7 @@ public:
   }
 
   // Overload for nsIURI to avoid query interface.
-  nsresult Finalize(nsCOMPtr<nsIURI>& aURI)
+  MOZ_MUST_USE nsresult Finalize(nsCOMPtr<nsIURI>& aURI)
   {
     NS_ENSURE_SUCCESS(mStatus, mStatus);
     mStatus = mMutator->Finalize(getter_AddRefs(aURI));
@@ -313,7 +383,7 @@ public:
   }
 
   template <class C>
-  nsresult Finalize(C** aURI)
+  MOZ_MUST_USE nsresult Finalize(C** aURI)
   {
     NS_ENSURE_SUCCESS(mStatus, mStatus);
 
@@ -329,7 +399,7 @@ public:
     return NS_OK;
   }
 
-  nsresult Finalize(nsIURI** aURI)
+  MOZ_MUST_USE nsresult Finalize(nsIURI** aURI)
   {
     NS_ENSURE_SUCCESS(mStatus, mStatus);
     mStatus = mMutator->Finalize(aURI);
