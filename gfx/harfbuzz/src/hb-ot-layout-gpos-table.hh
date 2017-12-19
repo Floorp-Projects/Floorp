@@ -462,7 +462,7 @@ struct SinglePosFormat1
   inline void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
     TRACE_COLLECT_GLYPHS (this);
-    (this+coverage).add_coverage (c->input);
+    if (unlikely (!(this+coverage).add_coverage (c->input))) return;
   }
 
   inline const Coverage &get_coverage (void) const
@@ -510,7 +510,7 @@ struct SinglePosFormat2
   inline void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
     TRACE_COLLECT_GLYPHS (this);
-    (this+coverage).add_coverage (c->input);
+    if (unlikely (!(this+coverage).add_coverage (c->input))) return;
   }
 
   inline const Coverage &get_coverage (void) const
@@ -607,12 +607,7 @@ struct PairSet
     unsigned int record_size = UINT16::static_size * (1 + len1 + len2);
 
     const PairValueRecord *record = CastP<PairValueRecord> (arrayZ);
-    unsigned int count = len;
-    for (unsigned int i = 0; i < count; i++)
-    {
-      c->input->add (record->secondGlyph);
-      record = &StructAtOffset<PairValueRecord> (record, record_size);
-    }
+    c->input->add_array (&record->secondGlyph, len, record_size);
   }
 
   inline bool apply (hb_apply_context_t *c,
@@ -689,7 +684,7 @@ struct PairPosFormat1
   inline void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
     TRACE_COLLECT_GLYPHS (this);
-    (this+coverage).add_coverage (c->input);
+    if (unlikely (!(this+coverage).add_coverage (c->input))) return;
     unsigned int count = pairSet.len;
     for (unsigned int i = 0; i < count; i++)
       (this+pairSet[i]).collect_glyphs (c, valueFormat);
@@ -755,17 +750,8 @@ struct PairPosFormat2
   inline void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
     TRACE_COLLECT_GLYPHS (this);
-    (this+coverage).add_coverage (c->input);
-
-    unsigned int count1 = class1Count;
-    const ClassDef &klass1 = this+classDef1;
-    for (unsigned int i = 0; i < count1; i++)
-      klass1.add_class (c->input, i);
-
-    unsigned int count2 = class2Count;
-    const ClassDef &klass2 = this+classDef2;
-    for (unsigned int i = 0; i < count2; i++)
-      klass2.add_class (c->input, i);
+    if (unlikely (!(this+coverage).add_coverage (c->input))) return;
+    if (unlikely (!(this+classDef2).add_coverage (c->input))) return;
   }
 
   inline const Coverage &get_coverage (void) const
@@ -906,7 +892,7 @@ struct CursivePosFormat1
   inline void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
     TRACE_COLLECT_GLYPHS (this);
-    (this+coverage).add_coverage (c->input);
+    if (unlikely (!(this+coverage).add_coverage (c->input))) return;
   }
 
   inline const Coverage &get_coverage (void) const
@@ -1064,8 +1050,8 @@ struct MarkBasePosFormat1
   inline void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
     TRACE_COLLECT_GLYPHS (this);
-    (this+markCoverage).add_coverage (c->input);
-    (this+baseCoverage).add_coverage (c->input);
+    if (unlikely (!(this+markCoverage).add_coverage (c->input))) return;
+    if (unlikely (!(this+baseCoverage).add_coverage (c->input))) return;
   }
 
   inline const Coverage &get_coverage (void) const
@@ -1167,8 +1153,8 @@ struct MarkLigPosFormat1
   inline void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
     TRACE_COLLECT_GLYPHS (this);
-    (this+markCoverage).add_coverage (c->input);
-    (this+ligatureCoverage).add_coverage (c->input);
+    if (unlikely (!(this+markCoverage).add_coverage (c->input))) return;
+    if (unlikely (!(this+ligatureCoverage).add_coverage (c->input))) return;
   }
 
   inline const Coverage &get_coverage (void) const
@@ -1280,8 +1266,8 @@ struct MarkMarkPosFormat1
   inline void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
     TRACE_COLLECT_GLYPHS (this);
-    (this+mark1Coverage).add_coverage (c->input);
-    (this+mark2Coverage).add_coverage (c->input);
+    if (unlikely (!(this+mark1Coverage).add_coverage (c->input))) return;
+    if (unlikely (!(this+mark2Coverage).add_coverage (c->input))) return;
   }
 
   inline const Coverage &get_coverage (void) const

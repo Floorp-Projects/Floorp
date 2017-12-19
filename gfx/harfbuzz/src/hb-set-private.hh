@@ -70,20 +70,19 @@ struct hb_set_t
 
     inline void add_range (hb_codepoint_t a, hb_codepoint_t b)
     {
-     elt_t *la = &elt (a);
-     elt_t *lb = &elt (b);
-     if (la == lb)
-       *la |= (mask (b) << 1) - mask(a);
-     else
-     {
-       *la |= ~(mask (a) - 1);
-       la++;
+      elt_t *la = &elt (a);
+      elt_t *lb = &elt (b);
+      if (la == lb)
+        *la |= (mask (b) << 1) - mask(a);
+      else
+      {
+	*la |= ~(mask (a) - 1);
+	la++;
 
-       memset (la, 0xff, (char *) lb - (char *) la);
+	memset (la, 0xff, (char *) lb - (char *) la);
 
-       *lb |= ((mask (b) << 1) - 1);
-
-     }
+	*lb |= ((mask (b) << 1) - 1);
+      }
     }
 
     inline bool is_equal (const page_t *other) const
@@ -151,7 +150,7 @@ struct hb_set_t
       return 0;
     }
 
-    static const unsigned int PAGE_BITS = 512; /* Use to tune. */
+    static const unsigned int PAGE_BITS = 8192; /* Use to tune. */
     static_assert ((PAGE_BITS & ((PAGE_BITS) - 1)) == 0, "");
 
     typedef uint64_t elt_t;
@@ -182,7 +181,18 @@ struct hb_set_t
   ASSERT_POD ();
   bool in_error;
   hb_prealloced_array_t<page_map_t, 8> page_map;
-  hb_prealloced_array_t<page_t, 8> pages;
+  hb_prealloced_array_t<page_t, 1> pages;
+
+  inline void init (void)
+  {
+    page_map.init ();
+    pages.init ();
+  }
+  inline void finish (void)
+  {
+    page_map.finish ();
+    pages.finish ();
+  }
 
   inline bool resize (unsigned int count)
   {
@@ -215,39 +225,89 @@ struct hb_set_t
   {
     if (unlikely (in_error)) return;
     if (unlikely (g == INVALID)) return;
-    page_t *page = page_for_insert (g);
-    if (unlikely (!page)) return;
+    page_t *page = page_for_insert (g); if (unlikely (!page)) return;
     page->add (g);
   }
-  inline void add_range (hb_codepoint_t a, hb_codepoint_t b)
+  inline bool add_range (hb_codepoint_t a, hb_codepoint_t b)
   {
-    if (unlikely (in_error || a > b || a == INVALID || b == INVALID)) return;
+    if (unlikely (in_error || a > b || a == INVALID || b == INVALID)) return false;
     unsigned int ma = get_major (a);
     unsigned int mb = get_major (b);
     if (ma == mb)
     {
-      page_t *page = page_for_insert (a);
-      if (unlikely (!page)) return;
+      page_t *page = page_for_insert (a); if (unlikely (!page)) return false;
       page->add_range (a, b);
     }
     else
     {
-      page_t *page = page_for_insert (a);
-      if (unlikely (!page)) return;
+      page_t *page = page_for_insert (a); if (unlikely (!page)) return false;
       page->add_range (a, major_start (ma + 1) - 1);
 
       for (unsigned int m = ma + 1; m < mb; m++)
       {
-	page = page_for_insert (major_start (m));
-	if (unlikely (!page)) return;
+	page = page_for_insert (major_start (m)); if (unlikely (!page)) return false;
 	page->init1 ();
       }
 
-      page = page_for_insert (b);
-      if (unlikely (!page)) return;
+      page = page_for_insert (b); if (unlikely (!page)) return false;
       page->add_range (major_start (mb), b);
     }
+    return true;
   }
+
+  template <typename T>
+  inline void add_array (const T *array, unsigned int count, unsigned int stride=sizeof(T))
+  {
+    if (unlikely (in_error)) return;
+    if (!count) return;
+    hb_codepoint_t g = *array;
+    while (count)
+    {
+      unsigned int m = get_major (g);
+      page_t *page = page_for_insert (g); if (unlikely (!page)) return;
+      unsigned int start = major_start (m);
+      unsigned int end = major_start (m + 1);
+      do
+      {
+	page->add (g);
+
+	array++;
+	count--;
+      }
+      while (count && (g = *array, start <= g && g < end));
+    }
+  }
+
+  /* Might return false if array looks unsorted.
+   * Used for faster rejection of corrupt data. */
+  template <typename T>
+  inline bool add_sorted_array (const T *array, unsigned int count, unsigned int stride=sizeof(T))
+  {
+    if (unlikely (in_error)) return false;
+    if (!count) return true;
+    hb_codepoint_t g = *array;
+    hb_codepoint_t last_g = g;
+    while (count)
+    {
+      unsigned int m = get_major (g);
+      page_t *page = page_for_insert (g); if (unlikely (!page)) return false;
+      unsigned int end = major_start (m + 1);
+      do
+      {
+        /* If we try harder we can change the following comparison to <=;
+	 * Not sure if it's worth it. */
+        if (g < last_g) return false;
+	last_g = g;
+	page->add (g);
+
+	array++;
+	count--;
+      }
+      while (count && (g = *array, g < end));
+    }
+    return true;
+  }
+
   inline void del (hb_codepoint_t g)
   {
     if (unlikely (in_error)) return;

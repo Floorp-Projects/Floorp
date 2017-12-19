@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([HarfBuzz],
-        [1.7.2],
+        [1.7.3],
         [https://github.com/harfbuzz/harfbuzz/issues/new],
         [harfbuzz],
         [http://harfbuzz.org/])
@@ -354,6 +354,7 @@ if $have_freetype; then
 	save_libs=$LIBS
 	LIBS="$LIBS $FREETYPE_LIBS"
 	AC_CHECK_FUNCS(FT_Get_Var_Blend_Coordinates)
+	AC_CHECK_FUNCS(FT_Set_Var_Blend_Coordinates)
 	LIBS=$save_libs
 fi
 AM_CONDITIONAL(HAVE_FREETYPE, $have_freetype)

@@ -1,3 +1,13 @@
+Overview of changes leading to 1.7.3
+Monday, December 18, 2017
+====================================
+
+- hb_set_t performance tuning and optimizations.
+- Speed up collect_glyphs() and reject garbage data.
+- In hb_coretext_font_create() set font point-size (ptem).
+- Misc fixes.
+
+
 Overview of changes leading to 1.7.2
 Monday, December 4, 2017
 ====================================
