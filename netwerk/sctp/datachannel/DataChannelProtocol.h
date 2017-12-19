@@ -22,7 +22,7 @@
 #define WEBRTC_DATACHANNEL_PORT_DEFAULT                    5000
 // TODO: Bug 1381146, change once we resolve the nsCString limitation
 #define WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_LOCAL          1073741823
-#define WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_REMOTE_DEFAULT 65535
+#define WEBRTC_DATACHANNEL_MAX_MESSAGE_SIZE_REMOTE_DEFAULT 65536
 // TODO: Bug 1382779, once resolved, can be increased to min(Uint8ArrayMaxSize, UINT32_MAX)
 // TODO: Bug 1381146, once resolved, can be increased to whatever we support then (hopefully
 //       SIZE_MAX) or be removed
