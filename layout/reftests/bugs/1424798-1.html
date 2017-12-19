@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<title>Animation between 1-argument and 2-argument transforms should work</title>
+<style>
+#box {
+  transform: translate(0%);
+  width: 100px;
+  height: 100px;
+  background-color: red;
+}
+@keyframes anim {
+    from { transform: translate(0%); }
+    to { transform: translate(0%, 100px); }
+}
+#box {
+animation: anim 100s linear -50s paused;
+}
+</style>
+
+<div id="box">
+</div>
