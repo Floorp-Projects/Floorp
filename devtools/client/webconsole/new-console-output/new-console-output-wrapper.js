@@ -282,6 +282,10 @@ NewConsoleOutputWrapper.prototype = {
     this.batchedRequestUpdates({ id, data });
   },
 
+  dispatchSidebarClose: function () {
+    store.dispatch(actions.sidebarClose());
+  },
+
   batchedMessageUpdates: function (info) {
     this.queuedMessageUpdates.push(info);
     this.setTimeoutIfNeeded();

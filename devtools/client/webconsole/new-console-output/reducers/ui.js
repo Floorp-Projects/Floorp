@@ -42,7 +42,7 @@ function ui(state = UiState(), action) {
       return Object.assign({}, state, {networkMessageActiveTabId: action.id});
     case SIDEBAR_CLOSE:
       return Object.assign({}, state, {
-        sidebarVisible: !state.sidebarVisible,
+        sidebarVisible: false,
         gripInSidebar: null
       });
     case INITIALIZE:
