@@ -12,8 +12,6 @@ MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 if CONFIG['MOZ_XUL']:
-    DIRS += ['templates']
-
     XPIDL_SOURCES += [
         'nsIXULOverlayProvider.idl',
     ]
@@ -26,16 +24,19 @@ if CONFIG['MOZ_XUL']:
     UNIFIED_SOURCES += [
         'nsXULCommandDispatcher.cpp',
         'nsXULContentSink.cpp',
+        'nsXULContentUtils.cpp',
         'nsXULElement.cpp',
         'nsXULPopupListener.cpp',
         'nsXULPrototypeCache.cpp',
         'nsXULPrototypeDocument.cpp',
+        'nsXULSortService.cpp',
         'XULDocument.cpp',
     ]
 
 XPIDL_SOURCES += [
     'nsIController.idl',
     'nsIControllers.idl',
+    'nsIXULSortService.idl',
 ]
 
 XPIDL_MODULE = 'xul'
@@ -50,7 +51,6 @@ LOCAL_INCLUDES += [
     '/dom/html',
     '/dom/xbl',
     '/dom/xml',
-    '/dom/xul/templates',
     '/layout/base',
     '/layout/generic',
     '/layout/style',

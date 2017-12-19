@@ -8,7 +8,6 @@
 #include "nsCOMPtr.h"
 #include "nsXULElement.h"
 #include "nsIScriptableRegion.h"
-#include "nsIXULTemplateBuilder.h"
 #include "nsTreeContentView.h"
 #include "nsITreeSelection.h"
 #include "ChildIterator.h"
@@ -146,15 +145,9 @@ TreeBoxObject::GetView(nsITreeView * *aView)
   if (!mView) {
     RefPtr<nsXULElement> xulele = nsXULElement::FromContentOrNull(mContent);
     if (xulele) {
-      // See if there is a XUL tree builder associated with the element
-      nsCOMPtr<nsIXULTemplateBuilder> builder = xulele->GetBuilder();
-      mView = do_QueryInterface(builder);
-
-      if (!mView) {
-        // No tree builder, create a tree content view.
-        nsresult rv = NS_NewTreeContentView(getter_AddRefs(mView));
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+      // No tree builder, create a tree content view.
+      nsresult rv = NS_NewTreeContentView(getter_AddRefs(mView));
+      NS_ENSURE_SUCCESS(rv, rv);
 
       // Initialise the frame and view
       mTreeBody->SetView(mView);

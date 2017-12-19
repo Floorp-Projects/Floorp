@@ -43,7 +43,6 @@
 #include "nsIDocument.h"
 #include "mozilla/css/StyleRule.h"
 #include "nsCSSRendering.h"
-#include "nsIXULTemplateBuilder.h"
 #include "nsString.h"
 #include "nsContainerFrame.h"
 #include "nsView.h"

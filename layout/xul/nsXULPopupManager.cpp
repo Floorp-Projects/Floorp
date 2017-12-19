@@ -18,7 +18,6 @@
 #include "nsIXULDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULCommandDispatcher.h"
-#include "nsIXULTemplateBuilder.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsGlobalWindow.h"
 #include "nsLayoutUtils.h"
@@ -702,23 +701,6 @@ nsXULPopupManager::ShowMenu(nsIContent *aMenu,
                             bool aSelectFirstItem,
                             bool aAsynchronous)
 {
-  // generate any template content first. Otherwise, the menupopup may not
-  // have been created yet.
-  if (aMenu) {
-    nsIContent* element = aMenu;
-    do {
-      RefPtr<nsXULElement> xulelem = nsXULElement::FromContent(element);
-      if (xulelem) {
-        nsCOMPtr<nsIXULTemplateBuilder> builder = xulelem->GetBuilder();
-        if (builder) {
-          builder->CreateContents(aMenu->AsElement(), true);
-          break;
-        }
-      }
-      element = element->GetParent();
-    } while (element);
-  }
-
   nsMenuFrame* menuFrame = do_QueryFrame(aMenu->GetPrimaryFrame());
   if (!menuFrame || !menuFrame->IsMenu())
     return;
