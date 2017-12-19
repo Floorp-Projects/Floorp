@@ -27,7 +27,7 @@ void* nsFloatManager::sCachedFloatManagers[NS_FLOAT_MANAGER_CACHE_SIZE];
 // nsFloatManager
 
 nsFloatManager::nsFloatManager(nsIPresShell* aPresShell,
-                               mozilla::WritingMode aWM)
+                               WritingMode aWM)
   :
 #ifdef DEBUG
     mWritingMode(aWM),
@@ -534,50 +534,50 @@ public:
   // Translate the current origin by the specified offsets.
   virtual void Translate(nscoord aLineLeft, nscoord aBlockStart) = 0;
 
-  static mozilla::LogicalRect ComputeShapeBoxRect(
-    const mozilla::StyleShapeSource& aShapeOutside,
+  static LogicalRect ComputeShapeBoxRect(
+    const StyleShapeSource& aShapeOutside,
     nsIFrame* const aFrame,
-    const mozilla::LogicalRect& aMarginRect,
-    mozilla::WritingMode aWM);
+    const LogicalRect& aMarginRect,
+    WritingMode aWM);
 
   // Convert the LogicalRect to the special logical coordinate space used
   // in float manager.
-  static nsRect ConvertToFloatLogical(const mozilla::LogicalRect& aRect,
-                                      mozilla::WritingMode aWM,
+  static nsRect ConvertToFloatLogical(const LogicalRect& aRect,
+                                      WritingMode aWM,
                                       const nsSize& aContainerSize)
   {
     return nsRect(aRect.LineLeft(aWM, aContainerSize), aRect.BStart(aWM),
                   aRect.ISize(aWM), aRect.BSize(aWM));
   }
 
-  static mozilla::UniquePtr<ShapeInfo> CreateShapeBox(
+  static UniquePtr<ShapeInfo> CreateShapeBox(
     nsIFrame* const aFrame,
-    const mozilla::LogicalRect& aShapeBoxRect,
-    mozilla::WritingMode aWM,
+    const LogicalRect& aShapeBoxRect,
+    WritingMode aWM,
     const nsSize& aContainerSize);
 
-  static mozilla::UniquePtr<ShapeInfo> CreateBasicShape(
-    const mozilla::UniquePtr<mozilla::StyleBasicShape>& aBasicShape,
-    const mozilla::LogicalRect& aShapeBoxRect,
-    mozilla::WritingMode aWM,
+  static UniquePtr<ShapeInfo> CreateBasicShape(
+    const UniquePtr<StyleBasicShape>& aBasicShape,
+    const LogicalRect& aShapeBoxRect,
+    WritingMode aWM,
     const nsSize& aContainerSize);
 
-  static mozilla::UniquePtr<ShapeInfo> CreateInset(
-    const mozilla::UniquePtr<mozilla::StyleBasicShape>& aBasicShape,
-    const mozilla::LogicalRect& aShapeBoxRect,
-    mozilla::WritingMode aWM,
+  static UniquePtr<ShapeInfo> CreateInset(
+    const UniquePtr<StyleBasicShape>& aBasicShape,
+    const LogicalRect& aShapeBoxRect,
+    WritingMode aWM,
     const nsSize& aContainerSize);
 
-  static mozilla::UniquePtr<ShapeInfo> CreateCircleOrEllipse(
-    const mozilla::UniquePtr<mozilla::StyleBasicShape>& aBasicShape,
-    const mozilla::LogicalRect& aShapeBoxRect,
-    mozilla::WritingMode aWM,
+  static UniquePtr<ShapeInfo> CreateCircleOrEllipse(
+    const UniquePtr<StyleBasicShape>& aBasicShape,
+    const LogicalRect& aShapeBoxRect,
+    WritingMode aWM,
     const nsSize& aContainerSize);
 
-  static mozilla::UniquePtr<ShapeInfo> CreatePolygon(
-    const mozilla::UniquePtr<mozilla::StyleBasicShape>& aBasicShape,
-    const mozilla::LogicalRect& aShapeBoxRect,
-    mozilla::WritingMode aWM,
+  static UniquePtr<ShapeInfo> CreatePolygon(
+    const UniquePtr<StyleBasicShape>& aBasicShape,
+    const LogicalRect& aShapeBoxRect,
+    WritingMode aWM,
     const nsSize& aContainerSize);
 
 protected:
@@ -601,14 +601,14 @@ protected:
   // Convert the physical point to the special logical coordinate space
   // used in float manager.
   static nsPoint ConvertToFloatLogical(const nsPoint& aPoint,
-                                       mozilla::WritingMode aWM,
+                                       WritingMode aWM,
                                        const nsSize& aContainerSize);
 
   // Convert the half corner radii (nscoord[8]) to the special logical
   // coordinate space used in float manager.
-  static mozilla::UniquePtr<nscoord[]> ConvertToFloatLogical(
+  static UniquePtr<nscoord[]> ConvertToFloatLogical(
     const nscoord aRadii[8],
-    mozilla::WritingMode aWM);
+    WritingMode aWM);
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -619,7 +619,7 @@ class nsFloatManager::RoundedBoxShapeInfo final : public nsFloatManager::ShapeIn
 {
 public:
   RoundedBoxShapeInfo(const nsRect& aRect,
-                      mozilla::UniquePtr<nscoord[]> aRadii)
+                      UniquePtr<nscoord[]> aRadii)
     : mRect(aRect)
     , mRadii(Move(aRadii))
   {}
@@ -644,7 +644,7 @@ private:
   // The half corner radii of the reference box. It's an nscoord[8] array
   // in the float manager's coordinate space. If there are no radii, it's
   // nullptr.
-  mozilla::UniquePtr<nscoord[]> mRadii;
+  UniquePtr<nscoord[]> mRadii;
 };
 
 nscoord
@@ -1114,8 +1114,8 @@ nsFloatManager::FloatInfo::IsEmpty(ShapeType aShapeType) const
 nsFloatManager::ShapeInfo::ComputeShapeBoxRect(
   const StyleShapeSource& aShapeOutside,
   nsIFrame* const aFrame,
-  const mozilla::LogicalRect& aMarginRect,
-  mozilla::WritingMode aWM)
+  const LogicalRect& aMarginRect,
+  WritingMode aWM)
 {
   LogicalRect rect = aMarginRect;
 
