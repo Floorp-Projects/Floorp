@@ -52,7 +52,6 @@ if os_win:
         'src/base/win_util.cc',
         'src/chrome/common/ipc_channel_win.cc',
         'src/chrome/common/process_watcher_win.cc',
-        'src/chrome/common/transport_dib_win.cc',
     ]
 
 elif not CONFIG['MOZ_SYSTEM_LIBEVENT']:
@@ -91,7 +90,6 @@ if os_macosx:
         'src/base/time_mac.cc',
         'src/chrome/common/mach_ipc_mac.mm',
         'src/chrome/common/mach_message_source_mac.cc',
-        'src/chrome/common/transport_dib_mac.cc',
     ]
     SOURCES += [
         # This file cannot be built in unified mode because of the redefinition
