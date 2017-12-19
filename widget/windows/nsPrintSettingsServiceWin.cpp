@@ -19,29 +19,12 @@ const char kPrinterEnumeratorContractID[] = "@mozilla.org/gfx/printerenumerator;
 
 using namespace mozilla::embedding;
 
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsWin.h
- *	@update 6/21/00 dwc
- */
-nsPrintOptionsWin::nsPrintOptionsWin()
-{
-
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPrintOptionsImpl.h
- *	@update 6/21/00 dwc
- */
-nsPrintOptionsWin::~nsPrintOptionsWin()
-{
-}
-
 NS_IMETHODIMP
-nsPrintOptionsWin::SerializeToPrintData(nsIPrintSettings* aSettings,
-                                        nsIWebBrowserPrint* aWBP,
-                                        PrintData* data)
+nsPrintSettingsServiceWin::SerializeToPrintData(nsIPrintSettings* aSettings,
+                                                nsIWebBrowserPrint* aWBP,
+                                                PrintData* data)
 {
-  nsresult rv = nsPrintOptions::SerializeToPrintData(aSettings, aWBP, data);
+  nsresult rv = nsPrintSettingsService::SerializeToPrintData(aSettings, aWBP, data);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Windows wants this information for its print dialogs
@@ -104,10 +87,10 @@ nsPrintOptionsWin::SerializeToPrintData(nsIPrintSettings* aSettings,
 }
 
 NS_IMETHODIMP
-nsPrintOptionsWin::DeserializeToPrintSettings(const PrintData& data,
-                                              nsIPrintSettings* settings)
+nsPrintSettingsServiceWin::DeserializeToPrintSettings(const PrintData& data,
+                                                      nsIPrintSettings* settings)
 {
-  nsresult rv = nsPrintOptions::DeserializeToPrintSettings(data, settings);
+  nsresult rv = nsPrintSettingsService::DeserializeToPrintSettings(data, settings);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrintSettingsWin> psWin = do_QueryInterface(settings);
@@ -148,7 +131,7 @@ nsPrintOptionsWin::DeserializeToPrintSettings(const PrintData& data,
   return NS_OK;
 }
 
-nsresult nsPrintOptionsWin::_CreatePrintSettings(nsIPrintSettings **_retval)
+nsresult nsPrintSettingsServiceWin::_CreatePrintSettings(nsIPrintSettings** _retval)
 {
   *_retval = nullptr;
   nsPrintSettingsWin* printSettings = new nsPrintSettingsWin(); // does not initially ref count

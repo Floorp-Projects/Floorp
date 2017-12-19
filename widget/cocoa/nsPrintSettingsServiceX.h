@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsPrintOptionsX_h_
-#define nsPrintOptionsX_h_
+#ifndef nsPrintSettingsServiceX_h
+#define nsPrintSettingsServiceX_h
 
 #include "nsPrintSettingsService.h"
 
@@ -16,11 +16,11 @@ namespace embedding
 } // namespace embedding
 } // namespace mozilla
 
-class nsPrintOptionsX : public nsPrintOptions
+class nsPrintSettingsServiceX final : public nsPrintSettingsService
 {
 public:
-             nsPrintOptionsX();
-  virtual    ~nsPrintOptionsX();
+  nsPrintSettingsServiceX() {}
+  virtual ~nsPrintSettingsServiceX() {}
 
   /*
    * These serialize and deserialize methods are not symmetrical in that
@@ -52,4 +52,4 @@ private:
                                       mozilla::embedding::PrintData* data);
 };
 
-#endif // nsPrintOptionsX_h_
+#endif // nsPrintSettingsServiceX_h
