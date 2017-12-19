@@ -76,6 +76,9 @@ pub const MAX_VERTEX_TEXTURE_WIDTH: usize = 1024;
 /// is performed correctly.
 const GPU_CACHE_RESIZE_TEST: bool = false;
 
+/// Number of GPU blocks per UV rectangle provided for an image.
+pub const BLOCKS_PER_UV_RECT: usize = 2;
+
 const GPU_TAG_BRUSH_SOLID: GpuProfileTag = GpuProfileTag {
     label: "B_Solid",
     color: debug_colors::RED,
@@ -1594,7 +1597,6 @@ pub struct Renderer {
     // output, and the cache_image shader blits the results of
     // a cache shader (e.g. blur) to the screen.
     ps_text_run: TextShader,
-    ps_text_run_subpx_bg_pass1: TextShader,
     ps_image: Vec<Option<PrimitiveShader>>,
     ps_yuv_image: Vec<Option<PrimitiveShader>>,
     ps_border_corner: PrimitiveShader,
@@ -1858,13 +1860,6 @@ impl Renderer {
                             &mut device,
                             &[],
                            options.precache_shaders)
-        };
-
-        let ps_text_run_subpx_bg_pass1 = try!{
-            TextShader::new("ps_text_run",
-                            &mut device,
-                            &["SUBPX_BG_PASS1"],
-                            options.precache_shaders)
         };
 
         // All image configuration.
@@ -2241,7 +2236,6 @@ impl Renderer {
             cs_clip_border,
             cs_clip_image,
             ps_text_run,
-            ps_text_run_subpx_bg_pass1,
             ps_image,
             ps_yuv_image,
             ps_border_corner,
@@ -3558,7 +3552,7 @@ impl Renderer {
 
                                 self.device.set_blend_mode_subpixel_with_bg_color_pass1();
 
-                                self.ps_text_run_subpx_bg_pass1.bind(
+                                self.ps_text_run.bind(
                                     &mut self.device,
                                     glyph_format,
                                     transform_kind,
@@ -3923,7 +3917,7 @@ impl Renderer {
 
             list.updates.push(GpuCacheUpdate::Copy {
                 block_index: list.blocks.len(),
-                block_count: 2,
+                block_count: BLOCKS_PER_UV_RECT,
                 address: deferred_resolve.address,
             });
             list.blocks.push([image.u0, image.v0, image.u1, image.v1].into());
@@ -4434,7 +4428,6 @@ impl Renderer {
         self.cs_clip_image.deinit(&mut self.device);
         self.cs_clip_border.deinit(&mut self.device);
         self.ps_text_run.deinit(&mut self.device);
-        self.ps_text_run_subpx_bg_pass1.deinit(&mut self.device);
         for shader in self.ps_image {
             if let Some(shader) = shader {
                 shader.deinit(&mut self.device);
