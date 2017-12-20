@@ -125,9 +125,6 @@ public:
   bool
   IsAvailable(nsIPrincipal* aPrincipal, nsIURI* aURI);
 
-  bool
-  IsControlled(nsIDocument* aDocument, ErrorResult& aRv);
-
   // Return true if the given content process could potentially be executing
   // service worker code with the given principal.  At the current time, this
   // just means that we have any registration for the origin, regardless of

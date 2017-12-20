@@ -48,26 +48,12 @@ add_task(async function() {
                          inRange(r.x1, width * .75, width * .9)
         },
 
-        {name: "bug 1394914 - sidebar toolbar icon should be visible at first paint",
-         condition: r => r.h == 13 && inRange(r.w, 14, 16) && // icon size
-                         inRange(r.y1, 40, 80) && // in the toolbar
-                         // near the right end of screen
-                         inRange(r.x1, width - 100, width - 50)
-        },
-
         {name: "bug 1403648 - urlbar should be focused at first paint",
          condition: r => inRange(r.y2, 60, 80) && // in the toolbar
                          // taking 50% to 75% of the window width
                          inRange(r.w, width * .5, width * .75) &&
                          // starting at 15 to 25% of the window width
                          inRange(r.x1, width * .15, width * .25)
-        },
-
-        {name: "bug 1421460 - restore icon should be visible at first paint",
-         condition: r => r.w == 9 && r.h == 9 && // 9x9 icon
-                         AppConstants.platform == "win" &&
-                         // near the right end of the screen
-                         inRange(r.x1, width - 80, width - 70)
         },
       ];
 
