@@ -315,7 +315,7 @@ add_task(async function test_activeTab_pageAction_popup() {
   const popupTabId = popupTab.id;
 
   let onceTabClosed = new Promise(resolve => {
-    BrowserApp.deck.addEventListener("TabClose", resolve, {once: true});
+    BrowserApp.deck.addEventListener("TabClose", () => setTimeout(resolve, 0), {once: true});
   });
 
   // Switch to the parent tab of the popup tab.
@@ -444,7 +444,7 @@ add_task(async function test_activeTab_browserAction_popup() {
   const popupTabId = popupTab.id;
 
   let onceTabClosed = new Promise(resolve => {
-    BrowserApp.deck.addEventListener("TabClose", resolve, {once: true});
+    BrowserApp.deck.addEventListener("TabClose", () => setTimeout(resolve, 0), {once: true});
   });
 
   // Switch to the parent tab of the popup tab.
