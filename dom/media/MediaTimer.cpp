@@ -80,6 +80,12 @@ MediaTimer::OnMediaTimerThread()
 }
 
 RefPtr<MediaTimerPromise>
+MediaTimer::WaitFor(const TimeDuration& aDuration, const char* aCallSite)
+{
+  return WaitUntil(TimeStamp::Now() + aDuration, aCallSite);
+}
+
+RefPtr<MediaTimerPromise>
 MediaTimer::WaitUntil(const TimeStamp& aTimeStamp, const char* aCallSite)
 {
   MonitorAutoLock mon(mMonitor);
