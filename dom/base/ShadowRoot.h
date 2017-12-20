@@ -56,12 +56,6 @@ public:
     return mMode == ShadowRootMode::Closed;
   }
 
-  // StyleScope.
-  nsINode& AsNode() final
-  {
-    return *this;
-  }
-
   // [deprecated] Shadow DOM v0
   void AddToIdTable(Element* aElement, nsAtom* aId);
   void RemoveFromIdTable(Element* aElement, nsAtom* aId);
