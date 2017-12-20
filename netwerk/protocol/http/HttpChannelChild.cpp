@@ -1100,6 +1100,19 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
     // DoOnStopRequest() calls ReleaseListeners()
   }
 
+  // If unknownDecoder is involved and the received content is short we will
+  // know whether we need to divert to parent only after OnStopRequest of the
+  // listeners chain is called in DoOnStopRequest. At that moment
+  // unknownDecoder will call OnStartRequest of the real listeners of the
+  // channel including the OnStopRequest of UrlLoader which decides whether we
+  // need to divert to parent.
+  // If we are diverting to parent we should not do a cleanup.
+  if (mDivertingToParent) {
+    LOG(("HttpChannelChild::OnStopRequest  - We are diverting to parent, "
+         "postpone cleaning up."));
+    return;
+  }
+
   CleanupBackgroundChannel();
 
   // If there is a possibility we might want to write alt data to the cache
