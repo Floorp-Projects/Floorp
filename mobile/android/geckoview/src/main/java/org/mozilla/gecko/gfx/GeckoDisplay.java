@@ -45,12 +45,10 @@ public class GeckoDisplay {
 
     /**
      * Optional callback. The display's coordinates on the screen has changed. Must be
-     * called on the application main thread. Together with the transformation matrix, the
-     * screen origin determines how a point on the display maps to a point on the screen.
+     * called on the application main thread.
      *
      * @param left The X coordinate of the display on the screen, in screen pixels.
      * @param top The Y coordinate of the display on the screen, in screen pixels.
-     * @see #transformationMatrixChanged(Matrix)
      */
     public void screenOriginChanged(final int left, final int top) {
         mSession.onScreenOriginChanged(left, top);
