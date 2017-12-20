@@ -8,7 +8,7 @@
 #define mozilla_dom_shadowroot_h__
 
 #include "mozilla/dom/DocumentFragment.h"
-#include "mozilla/dom/StyleScope.h"
+#include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContentInlines.h"
@@ -28,7 +28,7 @@ namespace dom {
 class Element;
 
 class ShadowRoot final : public DocumentFragment,
-                         public StyleScope,
+                         public DocumentOrShadowRoot,
                          public nsStubMutationObserver
 {
 public:
@@ -63,7 +63,7 @@ public:
   void SetApplyAuthorStyles(bool aApplyAuthorStyles);
   StyleSheetList* StyleSheets()
   {
-    return &StyleScope::EnsureDOMStyleSheets();
+    return &DocumentOrShadowRoot::EnsureDOMStyleSheets();
   }
 
   /**
@@ -119,7 +119,7 @@ public:
   void RemoveFromIdTable(Element* aElement, nsAtom* aId);
 
   // WebIDL methods.
-  using mozilla::dom::StyleScope::GetElementById;
+  using mozilla::dom::DocumentOrShadowRoot::GetElementById;
   void GetInnerHTML(nsAString& aInnerHTML);
   void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);
   void StyleSheetChanged();

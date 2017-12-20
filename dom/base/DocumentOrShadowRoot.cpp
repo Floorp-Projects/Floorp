@@ -4,29 +4,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "StyleScope.h"
+#include "DocumentOrShadowRoot.h"
 #include "mozilla/dom/StyleSheetList.h"
 #include "XULDocument.h"
 
 namespace mozilla {
 namespace dom {
 
-StyleScope::StyleScope(mozilla::dom::ShadowRoot& aShadowRoot)
+DocumentOrShadowRoot::DocumentOrShadowRoot(mozilla::dom::ShadowRoot& aShadowRoot)
   : mAsNode(aShadowRoot)
   , mKind(Kind::ShadowRoot)
 {}
 
-StyleScope::StyleScope(nsIDocument& aDoc)
+DocumentOrShadowRoot::DocumentOrShadowRoot(nsIDocument& aDoc)
   : mAsNode(aDoc)
   , mKind(Kind::Document)
 {}
 
-StyleScope::~StyleScope()
-{
-}
-
 StyleSheetList&
-StyleScope::EnsureDOMStyleSheets()
+DocumentOrShadowRoot::EnsureDOMStyleSheets()
 {
   if (!mDOMStyleSheets) {
     mDOMStyleSheets = new StyleSheetList(*this);
@@ -35,7 +31,7 @@ StyleScope::EnsureDOMStyleSheets()
 }
 
 Element*
-StyleScope::GetElementById(const nsAString& aElementId)
+DocumentOrShadowRoot::GetElementById(const nsAString& aElementId)
 {
   if (MOZ_UNLIKELY(aElementId.IsEmpty())) {
     nsContentUtils::ReportEmptyGetElementByIdArg(AsNode().OwnerDoc());
@@ -57,7 +53,7 @@ StyleScope::GetElementById(const nsAString& aElementId)
 }
 
 already_AddRefed<nsContentList>
-StyleScope::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
+DocumentOrShadowRoot::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                    const nsAString& aLocalName)
 {
   ErrorResult rv;
@@ -70,7 +66,7 @@ StyleScope::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 }
 
 already_AddRefed<nsContentList>
-StyleScope::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
+DocumentOrShadowRoot::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                    const nsAString& aLocalName,
                                    mozilla::ErrorResult& aResult)
 {
@@ -90,7 +86,7 @@ StyleScope::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 }
 
 already_AddRefed<nsContentList>
-StyleScope::GetElementsByClassName(const nsAString& aClasses)
+DocumentOrShadowRoot::GetElementsByClassName(const nsAString& aClasses)
 {
   return nsContentUtils::GetElementsByClassName(&AsNode(), aClasses);
 }

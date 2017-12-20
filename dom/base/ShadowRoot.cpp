@@ -56,7 +56,7 @@ ShadowRoot::ShadowRoot(Element* aElement, bool aClosed,
                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                        nsXBLPrototypeBinding* aProtoBinding)
   : DocumentFragment(aNodeInfo)
-  , StyleScope(*this)
+  , DocumentOrShadowRoot(*this)
   , mProtoBinding(aProtoBinding)
   , mInsertionPointChanged(false)
   , mIsComposedDocParticipant(false)
@@ -218,7 +218,7 @@ ShadowRoot::InsertSheet(StyleSheet* aSheet,
 
   linkingElement->SetStyleSheet(aSheet); // This sets the ownerNode on the sheet
 
-  MOZ_DIAGNOSTIC_ASSERT(mProtoBinding->SheetCount() == StyleScope::SheetCount());
+  MOZ_DIAGNOSTIC_ASSERT(mProtoBinding->SheetCount() == DocumentOrShadowRoot::SheetCount());
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // FIXME(emilio, bug 1425759): For now we keep them duplicated, the proto
   // binding will disappear soon (tm).
@@ -256,7 +256,7 @@ void
 ShadowRoot::RemoveSheet(StyleSheet* aSheet)
 {
   mProtoBinding->RemoveStyleSheet(aSheet);
-  StyleScope::RemoveSheet(*aSheet);
+  DocumentOrShadowRoot::RemoveSheet(*aSheet);
 
   if (aSheet->IsApplicable()) {
     StyleSheetChanged();
