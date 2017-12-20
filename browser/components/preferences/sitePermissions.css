@@ -21,3 +21,19 @@
   margin: 1px;
   margin-inline-end: 5px;
 }
+
+#permissionsDisableLabel {
+  padding-top: 14px;
+  font-weight: bold;
+}
+
+#permissionsDisableDescription {
+  margin-inline-start: 37px;
+  color: #737373;
+  line-height: 110%;
+}
+
+#permissionsDisableCheckbox {
+  margin-inline-start: 4px;
+  padding-top: 10px;
+}
