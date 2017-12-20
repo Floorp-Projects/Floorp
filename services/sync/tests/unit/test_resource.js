@@ -7,7 +7,6 @@ Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/browserid_identity.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 var logger;
 

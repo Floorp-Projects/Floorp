@@ -9,7 +9,6 @@ Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
@@ -76,13 +75,6 @@ async function syncAndReportErrorsAndWait(topic) {
   await promise2;
 }
 add_task(async function setup() {
-  initTestLogging("Trace");
-
-  Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.ErrorHandler").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.LogManager").level = Log.Level.Trace;
-
   Service.engineManager.clear();
   await Service.engineManager.register(EHTestsCommon.CatapultEngine);
   engine = Service.engineManager.get("catapult");
@@ -96,6 +88,8 @@ async function clean() {
   Status.resetBackoff();
   errorHandler.didReportProlongedError = false;
   removeLogFiles();
+  // Move log levels back to trace (startOver will have reversed this), sicne
+  syncTestLogging();
 }
 
 add_task(async function test_crypto_keys_login_server_maintenance_error() {

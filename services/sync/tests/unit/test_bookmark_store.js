@@ -567,9 +567,3 @@ add_task(async function test_delete_buffering() {
     await engine.finalize();
   }
 });
-
-
-function run_test() {
-  initTestLogging("Trace");
-  run_next_test();
-}

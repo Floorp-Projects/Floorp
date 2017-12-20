@@ -148,10 +148,6 @@ async function test_LoginRec_toString(store, recordData) {
 }
 
 add_task(async function run_test() {
-  initTestLogging("Trace");
-  Log.repository.getLogger("Sync.Engine.Passwords").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.Store.Passwords").level = Log.Level.Trace;
-
   const BOGUS_GUID_A = "zzzzzzzzzzzz";
   const BOGUS_GUID_B = "yyyyyyyyyyyy";
   let recordA = {id: BOGUS_GUID_A,
