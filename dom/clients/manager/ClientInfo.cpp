@@ -11,6 +11,8 @@
 namespace mozilla {
 namespace dom {
 
+using mozilla::ipc::PrincipalInfo;
+
 ClientInfo::ClientInfo(const nsID& aId,
                        ClientType aType,
                        const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
@@ -108,6 +110,32 @@ const IPCClientInfo&
 ClientInfo::ToIPC() const
 {
   return *mData;
+}
+
+bool
+ClientInfo::IsPrivateBrowsing() const
+{
+  switch(PrincipalInfo().type()) {
+    case PrincipalInfo::TContentPrincipalInfo:
+    {
+      auto& p = PrincipalInfo().get_ContentPrincipalInfo();
+      return p.attrs().mPrivateBrowsingId != 0;
+    }
+    case PrincipalInfo::TSystemPrincipalInfo:
+    {
+      return false;
+    }
+    case PrincipalInfo::TNullPrincipalInfo:
+    {
+      auto& p = PrincipalInfo().get_NullPrincipalInfo();
+      return p.attrs().mPrivateBrowsingId != 0;
+    }
+    default:
+    {
+      // clients should never be expanded principals
+      MOZ_CRASH("unexpected principal type!");
+    }
+  }
 }
 
 } // namespace dom
