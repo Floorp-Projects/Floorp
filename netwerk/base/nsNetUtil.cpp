@@ -75,6 +75,8 @@
 #include "nsHttpHandler.h"
 #include "nsNSSComponent.h"
 #include "nsIRedirectHistoryEntry.h"
+#include "nsICertBlocklist.h"
+#include "nsICertOverrideService.h"
 
 #include <limits>
 
@@ -2659,6 +2661,10 @@ void net_EnsurePSMInit()
     nsresult rv;
     nsCOMPtr<nsISupports> psm = do_GetService(PSM_COMPONENT_CONTRACTID, &rv);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    nsCOMPtr<nsISupports> sss = do_GetService(NS_SSSERVICE_CONTRACTID);
+    nsCOMPtr<nsISupports> cbl = do_GetService(NS_CERTBLOCKLIST_CONTRACTID);
+    nsCOMPtr<nsISupports> cos = do_GetService(NS_CERTOVERRIDE_CONTRACTID);
 }
 
 bool NS_IsAboutBlank(nsIURI *uri)
