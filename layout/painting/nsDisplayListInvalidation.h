@@ -309,6 +309,8 @@ public:
   }
 
   nsTArray<nsRect> mDestRects;
+  float mOpacity;
+  bool mHandleOpacity;
 };
 
 class nsDisplayFilterGeometry : public nsDisplaySVGEffectGeometry
