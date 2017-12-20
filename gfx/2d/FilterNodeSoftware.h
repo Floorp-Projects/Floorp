@@ -8,6 +8,7 @@
 #define _MOZILLA_GFX_FILTERNODESOFTWARE_H_
 
 #include "Filters.h"
+#include "mozilla/Mutex.h"
 #include <vector>
 
 namespace mozilla {
@@ -709,6 +710,7 @@ private:
                                            CoordType aKernelUnitLengthX,
                                            CoordType aKernelUnitLengthY);
 
+  Mutex mLock;
   LightType mLight;
   LightingType mLighting;
   Float mSurfaceScale;

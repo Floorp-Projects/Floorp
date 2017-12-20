@@ -3283,7 +3283,8 @@ static inline Point3D Normalized(const Point3D &vec) {
 
 template<typename LightType, typename LightingType>
 FilterNodeLightingSoftware<LightType, LightingType>::FilterNodeLightingSoftware(const char* aTypeName)
- : mSurfaceScale(0)
+ : mLock("FilterNodeLightingSoftware")
+ , mSurfaceScale(0)
 #if defined(MOZILLA_INTERNAL_API) && (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
  , mTypeName(aTypeName)
 #endif
@@ -3541,6 +3542,8 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
   int32_t sourceStride = sourceMap.GetStride();
   uint8_t* targetData = targetMap.GetData();
   int32_t targetStride = targetMap.GetStride();
+
+  MutexAutoLock lock(mLock);
 
   uint32_t lightColor = ColorToBGRA(mColor);
   mLight.Prepare();
