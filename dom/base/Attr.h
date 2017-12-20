@@ -86,7 +86,7 @@ public:
 
   // XPCOM GetName() is OK
 
-  void GetValue(nsString& val, nsIPrincipal&)
+  void GetValue(nsString& val, nsIPrincipal*)
   {
     GetValue(val);
   }

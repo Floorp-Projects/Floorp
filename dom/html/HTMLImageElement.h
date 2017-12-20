@@ -141,7 +141,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::alt, aAlt, aError);
   }
-  void GetSrc(nsAString& aSrc, nsIPrincipal&)
+  void GetSrc(nsAString& aSrc, nsIPrincipal*)
   {
     GetSrc(aSrc);
   }
@@ -153,15 +153,15 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::src, aSrc, aError);
   }
-  void SetSrc(const nsAString& aSrc, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aError)
+  void SetSrc(const nsAString& aSrc, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, aError);
   }
-  void GetSrcset(nsAString& aSrcset, nsIPrincipal&)
+  void GetSrcset(nsAString& aSrcset, nsIPrincipal*)
   {
     GetHTMLAttr(nsGkAtoms::srcset, aSrcset);
   }
-  void SetSrcset(const nsAString& aSrcset, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aError)
+  void SetSrcset(const nsAString& aSrcset, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::srcset, aSrcset, aTriggeringPrincipal, aError);
   }

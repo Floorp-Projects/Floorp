@@ -21,9 +21,9 @@ interface nsIStreamListener;
 interface HTMLImageElement : HTMLElement {
            [CEReactions, SetterThrows]
            attribute DOMString alt;
-           [CEReactions, NeedsSubjectPrincipal, SetterThrows]
+           [CEReactions, NeedsSubjectPrincipal=NonSystem, SetterThrows]
            attribute DOMString src;
-           [CEReactions, NeedsSubjectPrincipal, SetterThrows]
+           [CEReactions, NeedsSubjectPrincipal=NonSystem, SetterThrows]
            attribute DOMString srcset;
            [CEReactions, SetterThrows]
            attribute DOMString? crossOrigin;
