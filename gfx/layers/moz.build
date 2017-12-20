@@ -116,7 +116,6 @@ EXPORTS.mozilla.layers += [
     'apz/util/ContentProcessController.h',
     'apz/util/DoubleTapToZoom.h',
     'apz/util/InputAPZContext.h',
-    'apz/util/ScrollInputMethods.h',
     'apz/util/ScrollLinkedEffectDetector.h',
     'apz/util/TouchActionHelper.h',
     'AsyncCanvasRenderer.h',
