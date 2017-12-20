@@ -8,7 +8,9 @@
 #define mozilla_dom_StyleScope_h__
 
 #include "nsTArray.h"
+#include "nsIdentifierMapEntry.h"
 
+class nsContentList;
 class nsINode;
 
 namespace mozilla {
@@ -17,6 +19,7 @@ class StyleSheet;
 namespace dom {
 
 class StyleSheetList;
+class ShadowRoot;
 
 /**
  * A class meant to be shared by ShadowRoot and Document, that holds a list of
@@ -78,15 +81,65 @@ public:
 
   StyleSheetList& EnsureDOMStyleSheets();
 
+  Element* GetElementById(const nsAString& aElementId);
+
+  /**
+   * This method returns _all_ the elements in this scope which have id
+   * aElementId, if there are any.  Otherwise it returns null.
+   *
+   * This is useful for stuff like QuerySelector optimization and such.
+   */
+  inline const nsTArray<Element*>*
+  GetAllElementsForId(const nsAString& aElementId) const;
+
+  already_AddRefed<nsContentList>
+  GetElementsByTagName(const nsAString& aTagName)
+  {
+    return NS_GetContentList(&AsNode(), kNameSpaceID_Unknown, aTagName);
+  }
+
+  already_AddRefed<nsContentList>
+  GetElementsByTagNameNS(const nsAString& aNamespaceURI,
+                         const nsAString& aLocalName);
+
+  already_AddRefed<nsContentList>
+  GetElementsByTagNameNS(const nsAString& aNamespaceURI,
+                         const nsAString& aLocalName,
+                         mozilla::ErrorResult&);
+
+  already_AddRefed<nsContentList>
+  GetElementsByClassName(const nsAString& aClasses);
+
   ~StyleScope();
 
 protected:
   nsTArray<RefPtr<mozilla::StyleSheet>> mStyleSheets;
   RefPtr<mozilla::dom::StyleSheetList> mDOMStyleSheets;
 
+  /*
+   * mIdentifierMap works as follows for IDs:
+   * 1) Attribute changes affect the table immediately (removing and adding
+   *    entries as needed).
+   * 2) Removals from the DOM affect the table immediately
+   * 3) Additions to the DOM always update existing entries for names, and add
+   *    new ones for IDs.
+   */
+  nsTHashtable<nsIdentifierMapEntry> mIdentifierMap;
+
   nsINode& mAsNode;
   const Kind mKind;
 };
+
+inline const nsTArray<Element*>*
+StyleScope::GetAllElementsForId(const nsAString& aElementId) const
+{
+  if (aElementId.IsEmpty()) {
+    return nullptr;
+  }
+
+  nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(aElementId);
+  return entry ? &entry->GetIdElements() : nullptr;
+}
 
 }
 
