@@ -88,8 +88,8 @@ tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME) features
 	rsync -a --include-from='$(srcdir)/macbuild/Contents/MacOS-files.in' --exclude '*' $(DIST)/bin/ '$(dist_dest)/Contents/MacOS'
 	$(RM) '$(dist_dest)/Contents/MacOS/$(MOZ_APP_NAME)'
 	rsync -aL $(DIST)/bin/$(MOZ_APP_NAME) '$(dist_dest)/Contents/MacOS'
-	cp -RL $(DIST)/branding/firefox.icns '$(dist_dest)/Contents/Resources/firefox.icns'
-	cp -RL $(DIST)/branding/document.icns '$(dist_dest)/Contents/Resources/document.icns'
+	cp -RL $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/firefox.icns '$(dist_dest)/Contents/Resources/firefox.icns'
+	cp -RL $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/document.icns '$(dist_dest)/Contents/Resources/document.icns'
 	$(MKDIR) -p '$(dist_dest)/Contents/Library/LaunchServices'
 ifdef MOZ_UPDATER
 	mv -f '$(dist_dest)/Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater' '$(dist_dest)/Contents/Library/LaunchServices'
