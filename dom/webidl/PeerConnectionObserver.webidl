@@ -36,7 +36,6 @@ interface PeerConnectionObserver
 
   /* Changes to MediaStreamTracks */
   void onRemoveStream(MediaStream stream);
-  void onTrack(DOMString webrtcTrackId, sequence<DOMString> streamIds);
 
   /* Transceiver management; called when setRemoteDescription causes a
      transceiver to be created on the C++ side */

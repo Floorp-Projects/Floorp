@@ -1323,6 +1323,31 @@ class RTCPeerConnection {
     });
   }
 
+  _processTrackAdditionsAndRemovals() {
+    let postProcessing = {
+      updateStreamFunctions: [],
+      muteTracks: [],
+      trackEvents: []
+    };
+
+    for (let transceiver of this._transceivers) {
+      transceiver.receiver.processTrackAdditionsAndRemovals(transceiver,
+                                                            postProcessing);
+    }
+
+    for (let f of postProcessing.updateStreamFunctions) {
+      f();
+    }
+
+    for (let t of postProcessing.muteTracks) {
+      t.mutedChanged(true);
+    }
+
+    for (let ev of postProcessing.trackEvents) {
+      this.dispatchEvent(ev);
+    }
+  }
+
   // TODO(Bug 1241291): Legacy event, remove eventually
   _fireLegacyAddStreamEvents() {
     for (let stream of this._newStreams) {
@@ -1655,6 +1680,7 @@ class PeerConnectionObserver {
 
   onSetRemoteDescriptionSuccess() {
     this._dompc._syncTransceivers();
+    this._dompc._processTrackAdditionsAndRemovals();
     this._dompc._fireLegacyAddStreamEvents();
     this._dompc._onSetRemoteDescriptionSuccess();
   }
@@ -1819,39 +1845,6 @@ class PeerConnectionObserver {
   _getTransceiverWithRecvTrack(webrtcTrackId) {
     return this._dompc.getTransceivers().find(
         transceiver => transceiver.remoteTrackIdIs(webrtcTrackId));
-  }
-
-  onTrack(webrtcTrackId, streamIds) {
-    let pc = this._dompc;
-    let matchingTransceiver = this._getTransceiverWithRecvTrack(webrtcTrackId);
-
-    // Get or create MediaStreams, and add the new track to them.
-    let streams = streamIds.map(id => this._dompc._getOrCreateStream(id));
-
-    streams.forEach(stream => {
-      stream.addTrack(matchingTransceiver.receiver.track);
-      // Adding tracks from JS does not result in the stream getting
-      // onaddtrack, so we need to do that here. The mediacapture spec says
-      // this needs to be queued, also.
-      pc._queueTaskWithClosedCheck(() => {
-        stream.dispatchEvent(
-            new pc._win.MediaStreamTrackEvent(
-              "addtrack", { track: matchingTransceiver.receiver.track }));
-      });
-    });
-
-
-    let ev = new pc._win.RTCTrackEvent("track", {
-      receiver: matchingTransceiver.receiver,
-      track: matchingTransceiver.receiver.track,
-      streams,
-      transceiver: matchingTransceiver });
-    this.dispatchEvent(ev);
-
-    // Fire legacy event as well for a little bit.
-    ev = new pc._win.MediaStreamTrackEvent("addtrack",
-        { track: matchingTransceiver.receiver.track });
-    this.dispatchEvent(ev);
   }
 
   onTransceiverNeeded(kind, transceiverImpl) {
@@ -2075,6 +2068,9 @@ class RTCRtpReceiver {
           _pc: pc,
           _transceiverImpl: transceiverImpl,
           track: transceiverImpl.getReceiveTrack(),
+          _remoteSetSendBit: false,
+          _ontrackFired: false,
+          streamIds: [],
           // Sync and contributing sources must be kept cached so that timestamps
           // remain stable, as the timestamp offset can vary
           // note key = entry.source + entry.sourceType
@@ -2136,8 +2132,6 @@ class RTCRtpReceiver {
     }
   }
 
-
-
   _getRtpSourcesByType(type) {
     this._fetchRtpSources();
     // Only return the values from within the last 10 seconds as per the spec
@@ -2162,6 +2156,67 @@ class RTCRtpReceiver {
     return this._getRtpSourcesByType("synchronization");
   }
 
+  setStreamIds(streamIds) {
+    this.streamIds = streamIds;
+  }
+
+  setRemoteSendBit(sendBit) {
+    this._remoteSetSendBit = sendBit;
+  }
+
+  processTrackAdditionsAndRemovals(transceiver,
+                                   {updateStreamFunctions, muteTracks, trackEvents}) {
+    let streamsWithTrack = this.streamIds
+      .map(id => this._pc._getOrCreateStream(id));
+
+    let streamsWithoutTrack = this._pc.getRemoteStreams()
+      .filter(s => !this.streamIds.includes(s.id));
+
+    updateStreamFunctions.push(...streamsWithTrack.map(stream => () => {
+      if (!stream.getTracks().includes(this.track)) {
+        stream.addTrack(this.track);
+        // Adding tracks from JS does not result in the stream getting
+        // onaddtrack, so we need to do that here.
+        stream.dispatchEvent(
+            new this._pc._win.MediaStreamTrackEvent(
+              "addtrack", { track: this.track }));
+      }
+    }));
+
+    updateStreamFunctions.push(...streamsWithoutTrack.map(stream => () => {
+      // Content JS might remove this track from the stream before this function fires (ugh)
+      if (stream.getTracks().includes(this.track)) {
+        stream.removeTrack(this.track);
+        // Removing tracks from JS does not result in the stream getting
+        // onremovetrack, so we need to do that here.
+        stream.dispatchEvent(
+            new this._pc._win.MediaStreamTrackEvent(
+              "removetrack", { track: this.track }));
+      }
+    }));
+
+    if (!this._remoteSetSendBit) {
+      // remote used "recvonly" or "inactive"
+      this._ontrackFired = false;
+      if (!this.track.muted) {
+        muteTracks.push(this.track);
+      }
+    } else if (!this._ontrackFired) {
+      // remote used "sendrecv" or "sendonly", and we haven't fired ontrack
+      let ev = new this._pc._win.RTCTrackEvent("track", {
+        receiver: this.__DOM_IMPL__,
+        track: this.track,
+        streams: streamsWithTrack,
+        transceiver });
+      trackEvents.push(ev);
+      this._ontrackFired = true;
+
+      // Fire legacy event as well for a little bit.
+      ev = new this._pc._win.MediaStreamTrackEvent("addtrack",
+          { track: this.track });
+      trackEvents.push(ev);
+    }
+  }
 }
 setupPrototype(RTCRtpReceiver, {
   classID: PC_RECEIVER_CID,
