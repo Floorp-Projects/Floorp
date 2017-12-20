@@ -3621,11 +3621,10 @@ protected:
         return true;
     }
 
-
 public:
-    GLsizei MaxSamples() const {
-        return mMaxSamples;
-    }
+    auto MaxSamples() const { return uint32_t(mMaxSamples); }
+    auto MaxTextureSize() const { return uint32_t(mMaxTextureSize); }
+    auto MaxRenderbufferSize() const { return uint32_t(mMaxRenderbufferSize); }
 
 #ifdef MOZ_GL_DEBUG
     void CreatedProgram(GLContext* aOrigin, GLuint aName);
