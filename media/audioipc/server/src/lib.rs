@@ -23,7 +23,7 @@ use bytes::{Bytes, BytesMut};
 use cubeb_core::binding::Binding;
 use cubeb_core::ffi;
 use mio::{Ready, Token};
-use mio_uds::{UnixListener, UnixStream};
+use mio_uds::UnixStream;
 use std::{slice, thread};
 use std::collections::{HashSet, VecDeque};
 use std::convert::From;
@@ -31,8 +31,6 @@ use std::io::Cursor;
 use std::os::raw::c_void;
 use std::os::unix::prelude::*;
 use std::sync::{Mutex, MutexGuard};
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
 
 mod channel;
 
@@ -166,10 +164,9 @@ impl Drop for Callback {
 type Slab<T> = slab::Slab<T, Token>;
 type StreamSlab = slab::Slab<cubeb::Stream<Callback>, usize>;
 
-// TODO: Server token must be outside range used by server.connections slab.
+// TODO: Server command token must be outside range used by server.connections slab.
 // usize::MAX is already used internally in mio.
-const QUIT: Token = Token(std::usize::MAX - 2);
-const SERVER: Token = Token(std::usize::MAX - 1);
+const CMD: Token = Token(std::usize::MAX - 1);
 
 struct ServerConn {
     //connection: audioipc::Connection,
@@ -602,13 +599,14 @@ impl ServerConn {
 }
 
 pub struct Server {
-    socket: UnixListener,
     // Ok(None)      - Server hasn't tried to create cubeb::Context.
     // Ok(Some(ctx)) - Server has successfully created cubeb::Context.
     // Err(_)        - Server has tried and failed to create cubeb::Context.
     //                 Don't try again.
     context: Option<Result<cubeb::Context>>,
-    conns: Slab<ServerConn>
+    conns: Slab<ServerConn>,
+    rx: channel::Receiver<Command>,
+    tx: std::sync::mpsc::Sender<Response>,
 }
 
 impl Drop for Server {
@@ -623,26 +621,17 @@ impl Drop for Server {
 }
 
 impl Server {
-    pub fn new(socket: UnixListener) -> Server {
+    pub fn new(rx: channel::Receiver<Command>,
+               tx: std::sync::mpsc::Sender<Response>) -> Server {
         Server {
-            socket: socket,
             context: None,
-            conns: slab::Slab::with_capacity(SERVER_CONN_CHUNK_SIZE)
+            conns: slab::Slab::with_capacity(SERVER_CONN_CHUNK_SIZE),
+            rx: rx,
+            tx: tx,
         }
     }
 
-    fn accept(&mut self, poll: &mut mio::Poll) -> Result<()> {
-        debug!("Server accepting connection");
-
-        let client_socket = match self.socket.accept() {
-            Err(e) => {
-                warn!("server accept error: {}", e);
-                return Err(e.into());
-            },
-            Ok(None) => panic!("accept returned EAGAIN unexpectedly"),
-            Ok(Some((socket, _))) => socket,
-        };
-
+    fn handle_new_connection(&mut self, poll: &mut mio::Poll, client_socket: UnixStream) -> Result<()> {
         if !self.conns.has_available() {
             trace!(
                 "server ran out of connection slots. reserving {} more.",
@@ -688,6 +677,14 @@ impl Server {
         Ok(())
     }
 
+    fn new_connection(&mut self, poll: &mut mio::Poll) -> Result<AutoCloseFd> {
+        let (s1, s2) = UnixStream::pair()?;
+        self.handle_new_connection(poll, s1)?;
+        unsafe {
+            Ok(audioipc::AutoCloseFd::from_raw_fd(s2.into_raw_fd()))
+        }
+    }
+
     pub fn poll(&mut self, poll: &mut mio::Poll) -> Result<()> {
         let mut events = mio::Events::with_capacity(16);
 
@@ -699,14 +696,19 @@ impl Server {
 
         for event in events.iter() {
             match event.token() {
-                SERVER => {
-                    if let Err(e) = self.accept(poll) {
-                        warn!("server accept error: {}", e);
-                    };
-                },
-                QUIT => {
-                    info!("Quitting Audio Server loop");
-                    bail!("quit");
+                CMD => {
+                    match self.rx.try_recv().unwrap() {
+                        Command::Quit => {
+                            info!("Quitting Audio Server loop");
+                            self.tx.send(Response::Quit).unwrap();
+                            bail!("quit");
+                        },
+                        Command::NewConnection => {
+                            info!("Creating new connection");
+                            let fd = self.new_connection(poll)?;
+                            self.tx.send(Response::Connection(fd)).unwrap();
+                        }
+                    }
                 },
                 token => {
                     trace!("token {:?} ready", token);
@@ -756,88 +758,50 @@ impl Server {
     }
 }
 
-
-// TODO: This should take an "Evented" instead of opening the UDS path
-// directly (and let caller set up the Evented), but need a way to describe
-// it as an Evented that we can send/recv file descriptors (or HANDLEs on
-// Windows) over.
-pub fn run(running: Arc<AtomicBool>) -> Result<()> {
-    let path = audioipc::get_uds_path(1);
-
-    // Ignore result.
-    let _ = std::fs::remove_file(&path);
-
-    // TODO: Use a SEQPACKET, wrap it in UnixStream?
-    let mut poll = mio::Poll::new()?;
-    let mut server = Server::new(UnixListener::bind(&path)?);
-
-    poll.register(
-        &server.socket,
-        SERVER,
-        mio::Ready::readable(),
-        mio::PollOpt::edge()
-    ).unwrap();
-
-    loop {
-        if !running.load(Ordering::SeqCst) {
-            let _ = std::fs::remove_file(&path);
-            bail!("server quit due to ctrl-c");
-        }
-
-        let r = server.poll(&mut poll);
-        if r.is_err() {
-            let _ = std::fs::remove_file(&path);
-            return r;
-        }
-    }
-
-    //poll.deregister(&server.socket).unwrap();
-}
-
 fn error(error: cubeb::Error) -> ClientMessage {
     ClientMessage::Error(error.raw_code())
 }
 
 struct ServerWrapper {
     thread_handle: std::thread::JoinHandle<()>,
-    sender_ctl: channel::SenderCtl,
-    path: std::path::PathBuf,
+    tx: channel::Sender<Command>,
+    rx: std::sync::mpsc::Receiver<Response>,
+}
+
+#[derive(Debug)]
+pub enum Command {
+    Quit,
+    NewConnection,
+}
+
+#[derive(Debug)]
+pub enum Response {
+    Quit,
+    Connection(AutoCloseFd)
 }
 
 impl ServerWrapper {
     fn shutdown(self) {
-        // Dropping SenderCtl here will notify the other end.
-        drop(self.sender_ctl);
+        let _ = self.tx.send(Command::Quit);
+        let r = self.rx.recv();
+        match r {
+            Ok(Response::Quit) => info!("server quit response received"),
+            e => warn!("unexpected response to server quit: {:?}", e),
+        };
         self.thread_handle.join().unwrap();
-        // Ignore result.
-        let _ = std::fs::remove_file(self.path);
     }
 }
 
 #[no_mangle]
 pub extern "C" fn audioipc_server_start() -> *mut c_void {
-    let pid = unsafe { libc::getpid() };
-    let path = audioipc::get_uds_path(pid as u64);
-
-    let (tx, rx) = channel::ctl_pair();
+    let (tx, rx) = channel::channel();
+    let (tx2, rx2) = std::sync::mpsc::channel();
 
     let handle = thread::spawn(move || {
-        let path = audioipc::get_uds_path(pid as u64);
-        // Ignore result.
-        let _ = std::fs::remove_file(&path);
-
-        // TODO: Use a SEQPACKET, wrap it in UnixStream?
         let mut poll = mio::Poll::new().unwrap();
-        let mut server = Server::new(UnixListener::bind(&path).unwrap());
+        let mut server = Server::new(rx, tx2);
 
-        poll.register(
-            &server.socket,
-            SERVER,
-            mio::Ready::readable(),
-            mio::PollOpt::edge()
-        ).unwrap();
-
-        poll.register(&rx, QUIT, mio::Ready::readable(), mio::PollOpt::edge())
+        poll.register(&server.rx, CMD, mio::Ready::readable(), mio::PollOpt::edge())
             .unwrap();
 
         loop {
@@ -849,11 +813,24 @@ pub extern "C" fn audioipc_server_start() -> *mut c_void {
 
     let wrapper = ServerWrapper {
         thread_handle: handle,
-        sender_ctl: tx,
-        path: path
+        tx: tx,
+        rx: rx2,
     };
 
     Box::into_raw(Box::new(wrapper)) as *mut _
+}
+
+#[no_mangle]
+pub extern "C" fn audioipc_server_new_client(p: *mut c_void) -> libc::c_int {
+    let wrapper: &mut ServerWrapper = unsafe { &mut *(p as *mut _) };
+
+    wrapper.tx.send(Command::NewConnection).unwrap();
+
+    if let Response::Connection(fd) = wrapper.rx.recv().unwrap() {
+        return fd.into_raw_fd();
+    }
+
+    -1
 }
 
 #[no_mangle]
