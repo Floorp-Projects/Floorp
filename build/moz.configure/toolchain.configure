@@ -1017,7 +1017,7 @@ def compiler(language, host_or_target, c_compiler=None, other_compiler=None,
             def is_msvc(compiler):
                 return compiler.type == 'msvc'
 
-            imply_option('LINK', linker, reason='LD', when=is_msvc)
+            imply_option('LINKER', linker, reason='LD', when=is_msvc)
 
     return valid_compiler
 
