@@ -480,10 +480,38 @@ async _consoleOpenWithCachedMessagesTest() {
     return Promise.resolve();
   },
 
+  /**
+   * Wait for any pending paint.
+   * The tool may have touched the DOM elements at the very end of the current test.
+   * We should ensure waiting for the reflow related to these changes.
+   */
+  async waitForPendingPaints(toolbox) {
+    let panel = toolbox.getCurrentPanel();
+    // All panels have its own way of exposing their window object...
+    let window = panel.panelWin || panel._frameWindow || panel.panelWindow;
+
+    let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindowUtils);
+    window.performance.mark("pending paints.start");
+    while (utils.isMozAfterPaintPending) {
+      await new Promise(done => {
+        window.addEventListener("MozAfterPaint", function listener() {
+          window.performance.mark("pending paint");
+          done();
+        }, { once: true });
+      });
+    }
+    window.performance.measure("pending paints", "pending paints.start");
+  },
+
   async openToolboxAndLog(name, tool, onLoad) {
     dump("Open toolbox on '" + name + "'\n");
     let test = this.runTest(name + ".open.DAMP");
     let toolbox = await this.openToolbox(tool, onLoad);
+    test.done();
+
+    test = this.runTest(name + ".open.settle.DAMP");
+    await this.waitForPendingPaints(toolbox);
     test.done();
 
     // Force freeing memory after toolbox open as it creates a lot of objects
