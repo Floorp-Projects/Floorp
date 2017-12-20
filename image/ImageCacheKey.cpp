@@ -168,7 +168,7 @@ ImageCacheKey::GetControlledDocumentToken(nsIDocument* aDocument)
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (aDocument && swm) {
     ErrorResult rv;
-    if (swm->IsControlled(aDocument, rv)) {
+    if (aDocument->GetController().isSome()) {
       pointer = aDocument;
     }
   }
