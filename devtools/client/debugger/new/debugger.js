@@ -8759,7 +8759,7 @@ module.exports = invariant;
 
   pos_bonus = 20;
 
-  tau_size = 85;
+  tau_size = 150;
 
   miss_coeff = 0.75;
 
@@ -8800,7 +8800,7 @@ module.exports = invariant;
   };
 
   exports.computeScore = computeScore = function(subject, subject_lw, preparedQuery) {
-    var acro, acro_score, align, csc_diag, csc_invalid, csc_row, csc_score, i, j, m, miss_budget, miss_left, mm, n, pos, query, query_lw, record_miss, score, score_diag, score_row, score_up, si_lw, start, sz;
+    var acro, acro_score, align, csc_diag, csc_row, csc_score, csc_should_rebuild, i, j, m, miss_budget, miss_left, n, pos, query, query_lw, record_miss, score, score_diag, score_row, score_up, si_lw, start, sz;
     query = preparedQuery.query;
     query_lw = preparedQuery.query_lw;
     m = subject.length;
@@ -8819,29 +8819,22 @@ module.exports = invariant;
     sz = scoreSize(n, m);
     miss_budget = Math.ceil(miss_coeff * n) + 5;
     miss_left = miss_budget;
+    csc_should_rebuild = true;
     j = -1;
     while (++j < n) {
       score_row[j] = 0;
       csc_row[j] = 0;
     }
-    i = subject_lw.indexOf(query_lw[0]);
-    if (i > -1) {
-      i--;
-    }
-    mm = subject_lw.lastIndexOf(query_lw[n - 1], m);
-    if (mm > i) {
-      m = mm + 1;
-    }
-    csc_invalid = true;
+    i = -1;
     while (++i < m) {
       si_lw = subject_lw[i];
-      if (preparedQuery.charCodes[si_lw.charCodeAt(0)] == null) {
-        if (csc_invalid !== true) {
+      if (!si_lw.charCodeAt(0) in preparedQuery.charCodes) {
+        if (csc_should_rebuild) {
           j = -1;
           while (++j < n) {
             csc_row[j] = 0;
           }
-          csc_invalid = true;
+          csc_should_rebuild = false;
         }
         continue;
       }
@@ -8849,7 +8842,7 @@ module.exports = invariant;
       score_diag = 0;
       csc_diag = 0;
       record_miss = true;
-      csc_invalid = false;
+      csc_should_rebuild = true;
       j = -1;
       while (++j < n) {
         score_up = score_row[j];
@@ -8866,7 +8859,7 @@ module.exports = invariant;
             miss_left = miss_budget;
           } else {
             if (record_miss && --miss_left <= 0) {
-              return score_row[n - 1] * sz;
+              return Math.max(score, score_row[n - 1]) * sz;
             }
             record_miss = false;
           }
@@ -8976,6 +8969,9 @@ module.exports = invariant;
       if (query[j] === subject[i]) {
         sameCase++;
       }
+    }
+    if (sz < k) {
+      i--;
     }
     if (sz === 1) {
       return 1 + 2 * sameCase;
@@ -9094,9 +9090,9 @@ module.exports = invariant;
 
   _ref = __webpack_require__(163), isMatch = _ref.isMatch, computeScore = _ref.computeScore, scoreSize = _ref.scoreSize;
 
-  tau_depth = 13;
+  tau_depth = 20;
 
-  file_coeff = 1.2;
+  file_coeff = 2.5;
 
   exports.score = function(string, query, options) {
     var allowErrors, preparedQuery, score, string_lw;
@@ -9337,7 +9333,7 @@ module.exports = invariant;
         strPos = matchPos;
       }
     }
-    if (strPos < string.length - 1) {
+    if (strPos <= string.length - 1) {
       output += string.substring(strPos);
     }
     return output;
@@ -12274,159 +12270,7 @@ module.exports = {
 /* 343 */,
 /* 344 */,
 /* 345 */,
-/* 346 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, '__esModule', {
-    value: true
-});
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var DOMParser = typeof window !== 'undefined' && window.DOMParser;
-var process = process || {};
-process.env = process.env || {};
-var parserAvailable = typeof DOMParser !== 'undefined' && DOMParser.prototype != null && DOMParser.prototype.parseFromString != null;
-
-function isParsable(src) {
-    // kinda naive but meh, ain't gonna use full-blown parser for this
-    return parserAvailable && typeof src === 'string' && src.trim().substr(0, 4) === '<svg';
-}
-
-// parse SVG string using `DOMParser`
-function parseFromSVGString(src) {
-    var parser = new DOMParser();
-    return parser.parseFromString(src, "image/svg+xml");
-}
-
-// Transform DOM prop/attr names applicable to `<svg>` element but react-limited
-function switchSVGAttrToReactProp(propName) {
-    switch (propName) {
-        case 'class':
-            return 'className';
-        default:
-            return propName;
-    }
-}
-
-var InlineSVG = (function (_React$Component) {
-    _inherits(InlineSVG, _React$Component);
-
-    _createClass(InlineSVG, null, [{
-        key: 'defaultProps',
-        value: {
-            element: 'i',
-            raw: false,
-            src: ''
-        },
-        enumerable: true
-    }, {
-        key: 'propTypes',
-        value: {
-            src: _react2['default'].PropTypes.string.isRequired,
-            element: _react2['default'].PropTypes.string,
-            raw: _react2['default'].PropTypes.bool
-        },
-        enumerable: true
-    }]);
-
-    function InlineSVG(props) {
-        _classCallCheck(this, InlineSVG);
-
-        _get(Object.getPrototypeOf(InlineSVG.prototype), 'constructor', this).call(this, props);
-        this._extractSVGProps = this._extractSVGProps.bind(this);
-    }
-
-    // Serialize `Attr` objects in `NamedNodeMap`
-
-    _createClass(InlineSVG, [{
-        key: '_serializeAttrs',
-        value: function _serializeAttrs(map) {
-            var ret = {};
-            var prop = undefined;
-            for (var i = 0; i < map.length; i++) {
-                prop = switchSVGAttrToReactProp(map[i].name);
-                ret[prop] = map[i].value;
-            }
-            return ret;
-        }
-
-        // get <svg /> element props
-    }, {
-        key: '_extractSVGProps',
-        value: function _extractSVGProps(src) {
-            var map = parseFromSVGString(src).documentElement.attributes;
-            return map.length > 0 ? this._serializeAttrs(map) : null;
-        }
-
-        // get content inside <svg> element.
-    }, {
-        key: '_stripSVG',
-        value: function _stripSVG(src) {
-            return parseFromSVGString(src).documentElement.innerHTML;
-        }
-    }, {
-        key: 'componentWillReceiveProps',
-        value: function componentWillReceiveProps(_ref) {
-            var children = _ref.children;
-
-            if ("production" !== process.env.NODE_ENV && children != null) {
-                console.info('<InlineSVG />: `children` prop will be ignored.');
-            }
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var Element = undefined,
-                __html = undefined,
-                svgProps = undefined;
-            var _props = this.props;
-            var element = _props.element;
-            var raw = _props.raw;
-            var src = _props.src;
-
-            var otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
-
-            if (raw === true && isParsable(src)) {
-                Element = 'svg';
-                svgProps = this._extractSVGProps(src);
-                __html = this._stripSVG(src);
-            }
-            __html = __html || src;
-            Element = Element || element;
-            svgProps = svgProps || {};
-
-            return _react2['default'].createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
-                dangerouslySetInnerHTML: { __html: __html } }));
-        }
-    }]);
-
-    return InlineSVG;
-})(_react2['default'].Component);
-
-exports['default'] = InlineSVG;
-module.exports = exports['default'];
-
-/***/ }),
+/* 346 */,
 /* 347 */
 /***/ (function(module, exports) {
 
@@ -12526,7 +12370,7 @@ module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http:/
 /* 363 */
 /***/ (function(module, exports) {
 
-module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M6.925 12.5l7.4-5-7.4-5v10zM6 12.5v-10c0-.785.8-1.264 1.415-.848l7.4 5c.58.392.58 1.304 0 1.696l-7.4 5C6.8 13.764 6 13.285 6 12.5z\" fill-rule=\"evenodd\"></path></svg>"
+module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:svg=\"http://www.w3.org/2000/svg\"><path fill=\"black\" id=\"svg_1\" fill-rule=\"evenodd\" d=\"m4.55195,12.97461l7.4,-5l-7.4,-5l0,10zm-0.925,0l0,-10c0,-0.785 0.8,-1.264 1.415,-0.848l7.4,5c0.58,0.392 0.58,1.304 0,1.696l-7.4,5c-0.615,0.416 -1.415,-0.063 -1.415,-0.848z\"></path></svg>"
 
 /***/ }),
 /* 364 */
@@ -23004,13 +22848,13 @@ var _Svg = __webpack_require__(1359);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
+var _CommandBarButton = __webpack_require__(1787);
+
+var _CommandBarButton2 = _interopRequireDefault(_CommandBarButton);
+
 __webpack_require__(1321);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class PaneToggleButton extends _react.Component {
   shouldComponentUpdate(nextProps) {
@@ -23024,9 +22868,9 @@ class PaneToggleButton extends _react.Component {
     const title = !collapsed ? L10N.getStr("expandPanes") : L10N.getStr("collapsePanes");
 
     return _react2.default.createElement(
-      "button",
+      _CommandBarButton2.default,
       {
-        className: (0, _classnames2.default)(`toggle-button-${position}`, {
+        className: (0, _classnames2.default)("toggle-button", position, {
           collapsed,
           vertical: horizontal != null ? !horizontal : false
         }),
@@ -23036,7 +22880,9 @@ class PaneToggleButton extends _react.Component {
       _react2.default.createElement(_Svg2.default, { name: "togglePanes" })
     );
   }
-}
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 exports.default = PaneToggleButton;
 
@@ -23403,7 +23249,7 @@ module.exports = Grip;
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const React = __webpack_require__(0);
-const InlineSVG = __webpack_require__(346);
+const InlineSVG = __webpack_require__(1793);
 
 const svg = {
   "arrow": __webpack_require__(1152),
@@ -29585,7 +29431,7 @@ module.exports = connect(mapStateToProps, mapDispatchToProps)(LaunchpadApp);
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { score } = __webpack_require__(161);
+const { score } = __webpack_require__(1788);
 
 function getTabs(state) {
   let tabs = state.tabs.get("tabs");
@@ -29990,7 +29836,7 @@ module.exports = Sidebar;
 
 
 const React = __webpack_require__(0);
-const { default: InlineSVG } = __webpack_require__(1769);
+const { default: InlineSVG } = __webpack_require__(1786);
 const { isDevelopment } = __webpack_require__(1355);
 
 const svg = {
@@ -33129,7 +32975,9 @@ exports.ShortcutsModal = ShortcutsModal; /* This Source Code Form is subject to 
 const React = __webpack_require__(0);
 const ReactDOM = __webpack_require__(4);
 const Draggable = React.createFactory(__webpack_require__(1537));
-const { DOM: dom, PropTypes } = React;
+const { Component } = React;
+const PropTypes = __webpack_require__(20);
+const dom = __webpack_require__(1759);
 
 __webpack_require__(1309);
 
@@ -33137,43 +32985,43 @@ __webpack_require__(1309);
  * This component represents a Splitter. The splitter supports vertical
  * as well as horizontal mode.
  */
-const SplitBox = React.createClass({
-  propTypes: {
-    // Custom class name. You can use more names separated by a space.
-    className: PropTypes.string,
-    // Initial size of controlled panel.
-    initialSize: PropTypes.any,
-    // Optional initial width of controlled panel.
-    initialWidth: PropTypes.number,
-    // Optional initial height of controlled panel.
-    initialHeight: PropTypes.number,
-    // Left/top panel
-    startPanel: PropTypes.any,
-    // Left/top panel collapse state.
-    startPanelCollapsed: PropTypes.bool,
-    // Min panel size.
-    minSize: PropTypes.any,
-    // Max panel size.
-    maxSize: PropTypes.any,
-    // Right/bottom panel
-    endPanel: PropTypes.any,
-    // Right/bottom panel collapse state.
-    endPanelCollapsed: PropTypes.bool,
-    // True if the right/bottom panel should be controlled.
-    endPanelControl: PropTypes.bool,
-    // Size of the splitter handle bar.
-    splitterSize: PropTypes.number,
-    // True if the splitter bar is vertical (default is vertical).
-    vert: PropTypes.bool,
-    // Optional style properties passed into the splitbox
-    style: PropTypes.object,
-    // Optional callback when splitbox resize stops
-    onResizeEnd: PropTypes.func
-  },
+class SplitBox extends Component {
+  static get propTypes() {
+    return {
+      // Custom class name. You can use more names separated by a space.
+      className: PropTypes.string,
+      // Initial size of controlled panel.
+      initialSize: PropTypes.any,
+      // Optional initial width of controlled panel.
+      initialWidth: PropTypes.number,
+      // Optional initial height of controlled panel.
+      initialHeight: PropTypes.number,
+      // Left/top panel
+      startPanel: PropTypes.any,
+      // Left/top panel collapse state.
+      startPanelCollapsed: PropTypes.bool,
+      // Min panel size.
+      minSize: PropTypes.any,
+      // Max panel size.
+      maxSize: PropTypes.any,
+      // Right/bottom panel
+      endPanel: PropTypes.any,
+      // Right/bottom panel collapse state.
+      endPanelCollapsed: PropTypes.bool,
+      // True if the right/bottom panel should be controlled.
+      endPanelControl: PropTypes.bool,
+      // Size of the splitter handle bar.
+      splitterSize: PropTypes.number,
+      // True if the splitter bar is vertical (default is vertical).
+      vert: PropTypes.bool,
+      // Optional style properties passed into the splitbox
+      style: PropTypes.object,
+      // Optional callback when splitbox resize stops
+      onResizeEnd: PropTypes.func
+    };
+  }
 
-  displayName: "SplitBox",
-
-  getDefaultProps() {
+  static get defaultProps() {
     return {
       splitterSize: 5,
       vert: true,
@@ -33181,27 +33029,29 @@ const SplitBox = React.createClass({
       endPanelCollapsed: false,
       startPanelCollapsed: false
     };
-  },
+  }
 
-  /**
-   * The state stores the current orientation (vertical or horizontal)
-   * and the current size (width/height). All these values can change
-   * during the component's life time.
-   */
-  getInitialState() {
-    return {
-      vert: this.props.vert,
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      vert: props.vert,
       // We use integers for these properties
-      width: parseInt(this.props.initialWidth || this.props.initialSize),
-      height: parseInt(this.props.initialHeight || this.props.initialSize)
+      width: parseInt(props.initialWidth || props.initialSize, 10),
+      height: parseInt(props.initialHeight || props.initialSize, 10)
     };
-  },
+
+    this.onStartMove = this.onStartMove.bind(this);
+    this.onStopMove = this.onStopMove.bind(this);
+    this.onMove = this.onMove.bind(this);
+    this.preparePanelStyles = this.preparePanelStyles.bind(this);
+  }
 
   componentWillReceiveProps(nextProps) {
     if (this.props.vert !== nextProps.vert) {
       this.setState({ vert: nextProps.vert });
     }
-  },
+  }
 
   // Dragging Events
 
@@ -33221,7 +33071,7 @@ const SplitBox = React.createClass({
     this.setState({
       defaultCursor: defaultCursor
     });
-  },
+  }
 
   onStopMove() {
     const splitBox = ReactDOM.findDOMNode(this);
@@ -33233,7 +33083,7 @@ const SplitBox = React.createClass({
     if (this.props.onResizeEnd) {
       this.props.onResizeEnd(this.state.vert ? this.state.width : this.state.height);
     }
-  },
+  }
 
   /**
    * Adjust size of the controlled panel. Depending on the current
@@ -33267,7 +33117,7 @@ const SplitBox = React.createClass({
         height: state.height + movementY
       }));
     }
-  },
+  }
 
   // Rendering
   preparePanelStyles() {
@@ -33313,7 +33163,7 @@ const SplitBox = React.createClass({
     }
 
     return { leftPanelStyle, rightPanelStyle };
-  },
+  }
 
   render() {
     const vert = this.state.vert;
@@ -33359,7 +33209,7 @@ const SplitBox = React.createClass({
       style: rightPanelStyle
     }, endPanel) : null);
   }
-});
+}
 
 module.exports = SplitBox;
 
@@ -33373,18 +33223,27 @@ module.exports = SplitBox;
 
 const React = __webpack_require__(0);
 const ReactDOM = __webpack_require__(4);
-const { DOM: dom, PropTypes } = React;
+const { Component } = React;
+const PropTypes = __webpack_require__(20);
+const dom = __webpack_require__(1759);
 
-const Draggable = React.createClass({
-  displayName: "Draggable",
+class Draggable extends Component {
+  static get propTypes() {
+    return {
+      onMove: PropTypes.func.isRequired,
+      onStart: PropTypes.func,
+      onStop: PropTypes.func,
+      style: PropTypes.object,
+      className: PropTypes.string
+    };
+  }
 
-  propTypes: {
-    onMove: PropTypes.func.isRequired,
-    onStart: PropTypes.func,
-    onStop: PropTypes.func,
-    style: PropTypes.object,
-    className: PropTypes.string
-  },
+  constructor(props) {
+    super(props);
+    this.startDragging = this.startDragging.bind(this);
+    this.onMove = this.onMove.bind(this);
+    this.onUp = this.onUp.bind(this);
+  }
 
   startDragging(ev) {
     ev.preventDefault();
@@ -33392,14 +33251,14 @@ const Draggable = React.createClass({
     doc.addEventListener("mousemove", this.onMove);
     doc.addEventListener("mouseup", this.onUp);
     this.props.onStart && this.props.onStart();
-  },
+  }
 
   onMove(ev) {
     ev.preventDefault();
     // We pass the whole event because we don't know which properties
     // the callee needs.
     this.props.onMove(ev);
-  },
+  }
 
   onUp(ev) {
     ev.preventDefault();
@@ -33407,7 +33266,7 @@ const Draggable = React.createClass({
     doc.removeEventListener("mousemove", this.onMove);
     doc.removeEventListener("mouseup", this.onUp);
     this.props.onStop && this.props.onStop();
-  },
+  }
 
   render() {
     return dom.div({
@@ -33416,7 +33275,7 @@ const Draggable = React.createClass({
       onMouseDown: this.startDragging
     });
   }
-});
+}
 
 module.exports = Draggable;
 
@@ -33810,8 +33669,14 @@ TextSearch.contextTypes = {
 "use strict";
 
 
+var _svgInlineReact = __webpack_require__(1786);
+
+var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 const React = __webpack_require__(0);
-const InlineSVG = __webpack_require__(346);
+
 const { isDevelopment } = __webpack_require__(1355);
 
 const svg = {
@@ -33897,7 +33762,7 @@ function Svg({ name, className, onClick, "aria-label": ariaLabel }) {
     src: svg[name]
   };
 
-  return React.createElement(InlineSVG, props);
+  return React.createElement(_svgInlineReact2.default, props);
 }
 
 Svg.displayName = "Svg";
@@ -35516,6 +35381,8 @@ var _devtoolsConfig = __webpack_require__(1355);
 
 var _devtoolsSourceEditor = __webpack_require__(1386);
 
+var _prefs = __webpack_require__(226);
+
 var _selectors = __webpack_require__(1352);
 
 var _redux = __webpack_require__(3);
@@ -35583,15 +35450,13 @@ __webpack_require__(1333);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // Redux actions
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 const cssVars = {
   searchbarHeight: "var(--editor-searchbar-height)",
   secondSearchbarHeight: "var(--editor-second-searchbar-height)",
   footerHeight: "var(--editor-footer-height)"
-};
+}; /* This Source Code Form is subject to the terms of the Mozilla Public
+    * License, v. 2.0. If a copy of the MPL was not distributed with this
+    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 class Editor extends _react.PureComponent {
 
@@ -35806,7 +35671,7 @@ class Editor extends _react.PureComponent {
     this.setSize(nextProps);
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps, prevState) {
     // This is in `componentDidUpdate` so helper functions can expect
     // `this.props` to be the current props. This lifecycle method is
     // responsible for updating the editor annotations.
@@ -35830,6 +35695,14 @@ class Editor extends _react.PureComponent {
     // loaded.
     if (selectedSource && (0, _source.isLoaded)(selectedSource.toJS())) {
       this.highlightLine();
+    }
+
+    // NOTE: when devtools are opened, the editor is not set when
+    // the source loads so we need to wait until the editor is
+    // set to update the text and size.
+    if (!prevState.editor && this.state.editor) {
+      this.setText(this.props);
+      this.setSize(this.props);
     }
   }
 
@@ -36009,13 +35882,13 @@ class Editor extends _react.PureComponent {
     if (!editor || !selectedSource || !(0, _source.isLoaded)(selectedSource.toJS())) {
       return null;
     }
+
     return _react2.default.createElement(
       "div",
       null,
       _react2.default.createElement(_DebugLine2.default, { editor: editor }),
       _react2.default.createElement(_EmptyLines2.default, { editor: editor }),
       _react2.default.createElement(_Breakpoints2.default, { editor: editor }),
-      _react2.default.createElement(_CallSites2.default, { editor: editor }),
       _react2.default.createElement(_Preview2.default, { editor: editor }),
       ";",
       _react2.default.createElement(_Footer2.default, { editor: editor, horizontal: horizontal }),
@@ -36023,6 +35896,7 @@ class Editor extends _react.PureComponent {
       _react2.default.createElement(_EditorMenu2.default, { editor: editor }),
       _react2.default.createElement(_GutterMenu2.default, { editor: editor }),
       _react2.default.createElement(_ConditionalPanel2.default, { editor: editor }),
+      _prefs.features.columnBreakpoints ? _react2.default.createElement(_CallSites2.default, { editor: editor }) : null,
       this.renderHitCounts()
     );
   }
@@ -40003,8 +39877,6 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(1189);
 
-var _prefs = __webpack_require__(226);
-
 var _lodash = __webpack_require__(2);
 
 var _CallSite = __webpack_require__(1592);
@@ -40043,22 +39915,18 @@ class CallSites extends _react.Component {
     const { editor } = this.props;
     const codeMirrorWrapper = editor.codeMirror.getWrapperElement();
 
-    if (_prefs.features.columnBreakpoints) {
-      codeMirrorWrapper.addEventListener("click", e => this.onTokenClick(e));
-      document.body.addEventListener("keydown", this.onKeyDown);
-      document.body.addEventListener("keyup", this.onKeyUp);
-    }
+    codeMirrorWrapper.addEventListener("click", e => this.onTokenClick(e));
+    document.body.addEventListener("keydown", this.onKeyDown);
+    document.body.addEventListener("keyup", this.onKeyUp);
   }
 
-  componentDidUnMount() {
+  componentWillUnmount() {
     const { editor } = this.props;
     const codeMirrorWrapper = editor.codeMirror.getWrapperElement();
 
-    if (_prefs.features.columnBreakpoints) {
-      codeMirrorWrapper.addEventListener("click", e => this.onTokenClick(e));
-      document.body.removeEventListener("keydown", e => this.onKeyDown);
-      document.body.removeEventListener("keyup", this.onKeyUp);
-    }
+    codeMirrorWrapper.removeEventListener("click", e => this.onTokenClick(e));
+    document.body.removeEventListener("keydown", this.onKeyDown);
+    document.body.removeEventListener("keyup", this.onKeyUp);
   }
 
   onKeyUp(e) {
@@ -42759,10 +42627,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                                                                                                                                                                                                                                                   * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                                                                                                                                                                                                                                                   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
 var _propTypes = __webpack_require__(20);
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
@@ -42789,11 +42653,19 @@ var _actions = __webpack_require__(1354);
 
 var _actions2 = _interopRequireDefault(_actions);
 
+var _CommandBarButton = __webpack_require__(1787);
+
+var _CommandBarButton2 = _interopRequireDefault(_CommandBarButton);
+
 __webpack_require__(1295);
 
 var _devtoolsModules = __webpack_require__(1376);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const { appinfo } = _devtoolsModules.Services;
 
@@ -42846,17 +42718,16 @@ function formatKey(action) {
 }
 
 function debugBtn(onClick, type, className, tooltip, disabled = false, ariaPressed = false) {
-  const props = {
-    onClick,
-    key: type,
-    title: tooltip,
-    disabled,
-    "aria-pressed": ariaPressed
-  };
-
   return _react2.default.createElement(
-    "button",
-    _extends({ className: (0, _classnames2.default)(type, className) }, props),
+    _CommandBarButton2.default,
+    {
+      className: (0, _classnames2.default)(type, className),
+      disabled: disabled,
+      key: type,
+      onClick: onClick,
+      pressed: ariaPressed,
+      title: tooltip
+    },
     _react2.default.createElement("img", { className: type })
   );
 }
@@ -45098,7 +44969,14 @@ class QuickOpenModal extends _react.Component {
       }
     };
 
-    this.resultCount = () => this.state.results ? this.state.results.length : 0;
+    this.resultCount = () => {
+      const results = this.state.results;
+
+      if (results && results.length) {
+        return results.length;
+      }
+      return 0;
+    };
 
     this.isSymbolSearch = () => ["functions", "variables"].includes(this.props.searchType);
 
@@ -47147,194 +47025,8 @@ module.exports = KeyShortcuts;
 exports.register = function (window) {};
 
 /***/ }),
-/* 1769 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _extends = Object.assign || function (target) {
-    for (var i = 1; i < arguments.length; i++) {
-        var source = arguments[i];for (var key in source) {
-            if (Object.prototype.hasOwnProperty.call(source, key)) {
-                target[key] = source[key];
-            }
-        }
-    }return target;
-};
-
-var _createClass = function () {
-    function defineProperties(target, props) {
-        for (var i = 0; i < props.length; i++) {
-            var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
-        }
-    }return function (Constructor, protoProps, staticProps) {
-        if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
-    };
-}();
-
-var _react = __webpack_require__(0);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _propTypes = __webpack_require__(20);
-
-var _util = __webpack_require__(1770);
-
-function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : { default: obj };
-}
-
-function _objectWithoutProperties(obj, keys) {
-    var target = {};for (var i in obj) {
-        if (keys.indexOf(i) >= 0) continue;if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;target[i] = obj[i];
-    }return target;
-}
-
-function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-        throw new TypeError("Cannot call a class as a function");
-    }
-}
-
-function _possibleConstructorReturn(self, call) {
-    if (!self) {
-        throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }return call && ((typeof call === "undefined" ? "undefined" : _typeof(call)) === "object" || typeof call === "function") ? call : self;
-}
-
-function _inherits(subClass, superClass) {
-    if (typeof superClass !== "function" && superClass !== null) {
-        throw new TypeError("Super expression must either be null or a function, not " + (typeof superClass === "undefined" ? "undefined" : _typeof(superClass)));
-    }subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-}
-
-var process = process || { env: {} };
-
-var InlineSVG = function (_React$Component) {
-    _inherits(InlineSVG, _React$Component);
-
-    function InlineSVG() {
-        _classCallCheck(this, InlineSVG);
-
-        return _possibleConstructorReturn(this, (InlineSVG.__proto__ || Object.getPrototypeOf(InlineSVG)).apply(this, arguments));
-    }
-
-    _createClass(InlineSVG, [{
-        key: 'componentWillReceiveProps',
-        value: function componentWillReceiveProps(_ref) {
-            var children = _ref.children;
-
-            if ("production" !== process.env.NODE_ENV && children != null) {
-                console.info('<InlineSVG />: `children` prop will be ignored.');
-            }
-        }
-    }, {
-        key: 'render',
-        value: function render() {
-            var Element = void 0,
-                __html = void 0,
-                svgProps = void 0;
-
-            var _props = this.props,
-                element = _props.element,
-                raw = _props.raw,
-                src = _props.src,
-                otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
-
-            if (raw === true) {
-                Element = 'svg';
-                svgProps = (0, _util.extractSVGProps)(src);
-                __html = (0, _util.getSVGFromSource)(src).innerHTML;
-            }
-            __html = __html || src;
-            Element = Element || element;
-            svgProps = svgProps || {};
-
-            return _react2.default.createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
-                dangerouslySetInnerHTML: { __html: __html } }));
-        }
-    }]);
-
-    return InlineSVG;
-}(_react2.default.Component);
-
-exports.default = InlineSVG;
-
-InlineSVG.defaultProps = {
-    element: 'i',
-    raw: false,
-    src: ''
-};
-
-InlineSVG.propTypes = {
-    src: _propTypes.string.isRequired,
-    element: _propTypes.string,
-    raw: _propTypes.bool
-};
-
-/***/ }),
-/* 1770 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.convertReactSVGDOMProperty = convertReactSVGDOMProperty;
-exports.startsWith = startsWith;
-exports.serializeAttrs = serializeAttrs;
-exports.getSVGFromSource = getSVGFromSource;
-exports.extractSVGProps = extractSVGProps;
-// Transform DOM prop/attr names applicable to `<svg>` element but react-limited
-
-function convertReactSVGDOMProperty(str) {
-    return str.replace(/[-|:]([a-z])/g, function (g) {
-        return g[1].toUpperCase();
-    });
-}
-
-function startsWith(str, substring) {
-    return str.indexOf(substring) === 0;
-}
-
-var DataPropPrefix = 'data-';
-// Serialize `Attr` objects in `NamedNodeMap`
-function serializeAttrs(map) {
-    var ret = {};
-    for (var prop, i = 0; i < map.length; i++) {
-        var key = map[i].name;
-        if (!startsWith(key, DataPropPrefix)) {
-            prop = convertReactSVGDOMProperty(key);
-        }
-        ret[prop] = map[i].value;
-    }
-    return ret;
-}
-
-function getSVGFromSource(src) {
-    var svgContainer = document.createElement('div');
-    svgContainer.innerHTML = src;
-    var svg = svgContainer.firstElementChild;
-    svg.remove(); // deref from parent element
-    return svg;
-}
-
-// get <svg /> element props
-function extractSVGProps(src) {
-    var map = getSVGFromSource(src).attributes;
-    return map.length > 0 ? serializeAttrs(map) : null;
-}
-
-/***/ }),
+/* 1769 */,
+/* 1770 */,
 /* 1771 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -48117,6 +47809,1326 @@ function getScope(scope, selectedFrame, frameScopes, pauseInfo, scopeIndex) {
 
   return null;
 }
+
+/***/ }),
+/* 1783 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+(function () {
+  var AcronymResult, computeScore, emptyAcronymResult, isAcronymFullWord, isMatch, isSeparator, isWordEnd, isWordStart, miss_coeff, pos_bonus, scoreAcronyms, scoreCharacter, scoreConsecutives, scoreExact, scoreExactMatch, scorePattern, scorePosition, scoreSize, tau_size, wm;
+
+  wm = 150;
+
+  pos_bonus = 20;
+
+  tau_size = 85;
+
+  miss_coeff = 0.75;
+
+  exports.score = function (string, query, options) {
+    var allowErrors, preparedQuery, score, string_lw;
+    preparedQuery = options.preparedQuery, allowErrors = options.allowErrors;
+    if (!(allowErrors || isMatch(string, preparedQuery.core_lw, preparedQuery.core_up))) {
+      return 0;
+    }
+    string_lw = string.toLowerCase();
+    score = computeScore(string, string_lw, preparedQuery);
+    return Math.ceil(score);
+  };
+
+  exports.isMatch = isMatch = function (subject, query_lw, query_up) {
+    var i, j, m, n, qj_lw, qj_up, si;
+    m = subject.length;
+    n = query_lw.length;
+    if (!m || n > m) {
+      return false;
+    }
+    i = -1;
+    j = -1;
+    while (++j < n) {
+      qj_lw = query_lw.charCodeAt(j);
+      qj_up = query_up.charCodeAt(j);
+      while (++i < m) {
+        si = subject.charCodeAt(i);
+        if (si === qj_lw || si === qj_up) {
+          break;
+        }
+      }
+      if (i === m) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  exports.computeScore = computeScore = function (subject, subject_lw, preparedQuery) {
+    var acro, acro_score, align, csc_diag, csc_invalid, csc_row, csc_score, i, j, m, miss_budget, miss_left, mm, n, pos, query, query_lw, record_miss, score, score_diag, score_row, score_up, si_lw, start, sz;
+    query = preparedQuery.query;
+    query_lw = preparedQuery.query_lw;
+    m = subject.length;
+    n = query.length;
+    acro = scoreAcronyms(subject, subject_lw, query, query_lw);
+    acro_score = acro.score;
+    if (acro.count === n) {
+      return scoreExact(n, m, acro_score, acro.pos);
+    }
+    pos = subject_lw.indexOf(query_lw);
+    if (pos > -1) {
+      return scoreExactMatch(subject, subject_lw, query, query_lw, pos, n, m);
+    }
+    score_row = new Array(n);
+    csc_row = new Array(n);
+    sz = scoreSize(n, m);
+    miss_budget = Math.ceil(miss_coeff * n) + 5;
+    miss_left = miss_budget;
+    j = -1;
+    while (++j < n) {
+      score_row[j] = 0;
+      csc_row[j] = 0;
+    }
+    i = subject_lw.indexOf(query_lw[0]);
+    if (i > -1) {
+      i--;
+    }
+    mm = subject_lw.lastIndexOf(query_lw[n - 1], m);
+    if (mm > i) {
+      m = mm + 1;
+    }
+    csc_invalid = true;
+    while (++i < m) {
+      si_lw = subject_lw[i];
+      if (preparedQuery.charCodes[si_lw.charCodeAt(0)] == null) {
+        if (csc_invalid !== true) {
+          j = -1;
+          while (++j < n) {
+            csc_row[j] = 0;
+          }
+          csc_invalid = true;
+        }
+        continue;
+      }
+      score = 0;
+      score_diag = 0;
+      csc_diag = 0;
+      record_miss = true;
+      csc_invalid = false;
+      j = -1;
+      while (++j < n) {
+        score_up = score_row[j];
+        if (score_up > score) {
+          score = score_up;
+        }
+        csc_score = 0;
+        if (query_lw[j] === si_lw) {
+          start = isWordStart(i, subject, subject_lw);
+          csc_score = csc_diag > 0 ? csc_diag : scoreConsecutives(subject, subject_lw, query, query_lw, i, j, start);
+          align = score_diag + scoreCharacter(i, j, start, acro_score, csc_score);
+          if (align > score) {
+            score = align;
+            miss_left = miss_budget;
+          } else {
+            if (record_miss && --miss_left <= 0) {
+              return score_row[n - 1] * sz;
+            }
+            record_miss = false;
+          }
+        }
+        score_diag = score_up;
+        csc_diag = csc_row[j];
+        csc_row[j] = csc_score;
+        score_row[j] = score;
+      }
+    }
+    score = score_row[n - 1];
+    return score * sz;
+  };
+
+  exports.isWordStart = isWordStart = function (pos, subject, subject_lw) {
+    var curr_s, prev_s;
+    if (pos === 0) {
+      return true;
+    }
+    curr_s = subject[pos];
+    prev_s = subject[pos - 1];
+    return isSeparator(prev_s) || curr_s !== subject_lw[pos] && prev_s === subject_lw[pos - 1];
+  };
+
+  exports.isWordEnd = isWordEnd = function (pos, subject, subject_lw, len) {
+    var curr_s, next_s;
+    if (pos === len - 1) {
+      return true;
+    }
+    curr_s = subject[pos];
+    next_s = subject[pos + 1];
+    return isSeparator(next_s) || curr_s === subject_lw[pos] && next_s !== subject_lw[pos + 1];
+  };
+
+  isSeparator = function (c) {
+    return c === ' ' || c === '.' || c === '-' || c === '_' || c === '/' || c === '\\';
+  };
+
+  scorePosition = function (pos) {
+    var sc;
+    if (pos < pos_bonus) {
+      sc = pos_bonus - pos;
+      return 100 + sc * sc;
+    } else {
+      return Math.max(100 + pos_bonus - pos, 0);
+    }
+  };
+
+  exports.scoreSize = scoreSize = function (n, m) {
+    return tau_size / (tau_size + Math.abs(m - n));
+  };
+
+  scoreExact = function (n, m, quality, pos) {
+    return 2 * n * (wm * quality + scorePosition(pos)) * scoreSize(n, m);
+  };
+
+  exports.scorePattern = scorePattern = function (count, len, sameCase, start, end) {
+    var bonus, sz;
+    sz = count;
+    bonus = 6;
+    if (sameCase === count) {
+      bonus += 2;
+    }
+    if (start) {
+      bonus += 3;
+    }
+    if (end) {
+      bonus += 1;
+    }
+    if (count === len) {
+      if (start) {
+        if (sameCase === len) {
+          sz += 2;
+        } else {
+          sz += 1;
+        }
+      }
+      if (end) {
+        bonus += 1;
+      }
+    }
+    return sameCase + sz * (sz + bonus);
+  };
+
+  exports.scoreCharacter = scoreCharacter = function (i, j, start, acro_score, csc_score) {
+    var posBonus;
+    posBonus = scorePosition(i);
+    if (start) {
+      return posBonus + wm * ((acro_score > csc_score ? acro_score : csc_score) + 10);
+    }
+    return posBonus + wm * csc_score;
+  };
+
+  exports.scoreConsecutives = scoreConsecutives = function (subject, subject_lw, query, query_lw, i, j, startOfWord) {
+    var k, m, mi, n, nj, sameCase, sz;
+    m = subject.length;
+    n = query.length;
+    mi = m - i;
+    nj = n - j;
+    k = mi < nj ? mi : nj;
+    sameCase = 0;
+    sz = 0;
+    if (query[j] === subject[i]) {
+      sameCase++;
+    }
+    while (++sz < k && query_lw[++j] === subject_lw[++i]) {
+      if (query[j] === subject[i]) {
+        sameCase++;
+      }
+    }
+    if (sz === 1) {
+      return 1 + 2 * sameCase;
+    }
+    return scorePattern(sz, n, sameCase, startOfWord, isWordEnd(i, subject, subject_lw, m));
+  };
+
+  exports.scoreExactMatch = scoreExactMatch = function (subject, subject_lw, query, query_lw, pos, n, m) {
+    var end, i, pos2, sameCase, start;
+    start = isWordStart(pos, subject, subject_lw);
+    if (!start) {
+      pos2 = subject_lw.indexOf(query_lw, pos + 1);
+      if (pos2 > -1) {
+        start = isWordStart(pos2, subject, subject_lw);
+        if (start) {
+          pos = pos2;
+        }
+      }
+    }
+    i = -1;
+    sameCase = 0;
+    while (++i < n) {
+      if (query[pos + i] === subject[i]) {
+        sameCase++;
+      }
+    }
+    end = isWordEnd(pos + n - 1, subject, subject_lw, m);
+    return scoreExact(n, m, scorePattern(n, n, sameCase, start, end), pos);
+  };
+
+  AcronymResult = function () {
+    function AcronymResult(score, pos, count) {
+      this.score = score;
+      this.pos = pos;
+      this.count = count;
+    }
+
+    return AcronymResult;
+  }();
+
+  emptyAcronymResult = new AcronymResult(0, 0.1, 0);
+
+  exports.scoreAcronyms = scoreAcronyms = function (subject, subject_lw, query, query_lw) {
+    var count, fullWord, i, j, m, n, qj_lw, sameCase, score, sepCount, sumPos;
+    m = subject.length;
+    n = query.length;
+    if (!(m > 1 && n > 1)) {
+      return emptyAcronymResult;
+    }
+    count = 0;
+    sepCount = 0;
+    sumPos = 0;
+    sameCase = 0;
+    i = -1;
+    j = -1;
+    while (++j < n) {
+      qj_lw = query_lw[j];
+      if (isSeparator(qj_lw)) {
+        i = subject_lw.indexOf(qj_lw, i + 1);
+        if (i > -1) {
+          sepCount++;
+          continue;
+        } else {
+          break;
+        }
+      }
+      while (++i < m) {
+        if (qj_lw === subject_lw[i] && isWordStart(i, subject, subject_lw)) {
+          if (query[j] === subject[i]) {
+            sameCase++;
+          }
+          sumPos += i;
+          count++;
+          break;
+        }
+      }
+      if (i === m) {
+        break;
+      }
+    }
+    if (count < 2) {
+      return emptyAcronymResult;
+    }
+    fullWord = count === n ? isAcronymFullWord(subject, subject_lw, query, count) : false;
+    score = scorePattern(count, n, sameCase, true, fullWord);
+    return new AcronymResult(score, sumPos / count, count + sepCount);
+  };
+
+  isAcronymFullWord = function (subject, subject_lw, query, nbAcronymInQuery) {
+    var count, i, m, n;
+    m = subject.length;
+    n = query.length;
+    count = 0;
+    if (m > 12 * n) {
+      return false;
+    }
+    i = -1;
+    while (++i < m) {
+      if (isWordStart(i, subject, subject_lw) && ++count > nbAcronymInQuery) {
+        return false;
+      }
+    }
+    return true;
+  };
+}).call(undefined);
+
+/***/ }),
+/* 1784 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+(function () {
+  var computeScore, countDir, file_coeff, getExtension, getExtensionScore, isMatch, scorePath, scoreSize, tau_depth, _ref;
+
+  _ref = __webpack_require__(1783), isMatch = _ref.isMatch, computeScore = _ref.computeScore, scoreSize = _ref.scoreSize;
+
+  tau_depth = 13;
+
+  file_coeff = 1.2;
+
+  exports.score = function (string, query, options) {
+    var allowErrors, preparedQuery, score, string_lw;
+    preparedQuery = options.preparedQuery, allowErrors = options.allowErrors;
+    if (!(allowErrors || isMatch(string, preparedQuery.core_lw, preparedQuery.core_up))) {
+      return 0;
+    }
+    string_lw = string.toLowerCase();
+    score = computeScore(string, string_lw, preparedQuery);
+    score = scorePath(string, string_lw, score, options);
+    return Math.ceil(score);
+  };
+
+  scorePath = function (subject, subject_lw, fullPathScore, options) {
+    var alpha, basePathScore, basePos, depth, end, extAdjust, fileLength, pathSeparator, preparedQuery, useExtensionBonus;
+    if (fullPathScore === 0) {
+      return 0;
+    }
+    preparedQuery = options.preparedQuery, useExtensionBonus = options.useExtensionBonus, pathSeparator = options.pathSeparator;
+    end = subject.length - 1;
+    while (subject[end] === pathSeparator) {
+      end--;
+    }
+    basePos = subject.lastIndexOf(pathSeparator, end);
+    fileLength = end - basePos;
+    extAdjust = 1.0;
+    if (useExtensionBonus) {
+      extAdjust += getExtensionScore(subject_lw, preparedQuery.ext, basePos, end, 2);
+      fullPathScore *= extAdjust;
+    }
+    if (basePos === -1) {
+      return fullPathScore;
+    }
+    depth = preparedQuery.depth;
+    while (basePos > -1 && depth-- > 0) {
+      basePos = subject.lastIndexOf(pathSeparator, basePos - 1);
+    }
+    basePathScore = basePos === -1 ? fullPathScore : extAdjust * computeScore(subject.slice(basePos + 1, end + 1), subject_lw.slice(basePos + 1, end + 1), preparedQuery);
+    alpha = 0.5 * tau_depth / (tau_depth + countDir(subject, end + 1, pathSeparator));
+    return alpha * basePathScore + (1 - alpha) * fullPathScore * scoreSize(0, file_coeff * fileLength);
+  };
+
+  exports.countDir = countDir = function (path, end, pathSeparator) {
+    var count, i;
+    if (end < 1) {
+      return 0;
+    }
+    count = 0;
+    i = -1;
+    while (++i < end && path[i] === pathSeparator) {
+      continue;
+    }
+    while (++i < end) {
+      if (path[i] === pathSeparator) {
+        count++;
+        while (++i < end && path[i] === pathSeparator) {
+          continue;
+        }
+      }
+    }
+    return count;
+  };
+
+  exports.getExtension = getExtension = function (str) {
+    var pos;
+    pos = str.lastIndexOf(".");
+    if (pos < 0) {
+      return "";
+    } else {
+      return str.substr(pos + 1);
+    }
+  };
+
+  getExtensionScore = function (candidate, ext, startPos, endPos, maxDepth) {
+    var m, matched, n, pos;
+    if (!ext.length) {
+      return 0;
+    }
+    pos = candidate.lastIndexOf(".", endPos);
+    if (!(pos > startPos)) {
+      return 0;
+    }
+    n = ext.length;
+    m = endPos - pos;
+    if (m < n) {
+      n = m;
+      m = ext.length;
+    }
+    pos++;
+    matched = -1;
+    while (++matched < n) {
+      if (candidate[pos + matched] !== ext[matched]) {
+        break;
+      }
+    }
+    if (matched === 0 && maxDepth > 0) {
+      return 0.9 * getExtensionScore(candidate, ext, startPos, pos - 2, maxDepth - 1);
+    }
+    return matched / m;
+  };
+}).call(undefined);
+
+/***/ }),
+/* 1785 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+(function () {
+  var Query, coreChars, countDir, getCharCodes, getExtension, opt_char_re, truncatedUpperCase, _ref;
+
+  _ref = __webpack_require__(1784), countDir = _ref.countDir, getExtension = _ref.getExtension;
+
+  module.exports = Query = function () {
+    function Query(query, _arg) {
+      var optCharRegEx, pathSeparator, _ref1;
+      _ref1 = _arg != null ? _arg : {}, optCharRegEx = _ref1.optCharRegEx, pathSeparator = _ref1.pathSeparator;
+      if (!(query && query.length)) {
+        return null;
+      }
+      this.query = query;
+      this.query_lw = query.toLowerCase();
+      this.core = coreChars(query, optCharRegEx);
+      this.core_lw = this.core.toLowerCase();
+      this.core_up = truncatedUpperCase(this.core);
+      this.depth = countDir(query, query.length, pathSeparator);
+      this.ext = getExtension(this.query_lw);
+      this.charCodes = getCharCodes(this.query_lw);
+    }
+
+    return Query;
+  }();
+
+  opt_char_re = /[ _\-:\/\\]/g;
+
+  coreChars = function (query, optCharRegEx) {
+    if (optCharRegEx == null) {
+      optCharRegEx = opt_char_re;
+    }
+    return query.replace(optCharRegEx, '');
+  };
+
+  truncatedUpperCase = function (str) {
+    var char, upper, _i, _len;
+    upper = "";
+    for (_i = 0, _len = str.length; _i < _len; _i++) {
+      char = str[_i];
+      upper += char.toUpperCase()[0];
+    }
+    return upper;
+  };
+
+  getCharCodes = function (str) {
+    var charCodes, i, len;
+    len = str.length;
+    i = -1;
+    charCodes = [];
+    while (++i < len) {
+      charCodes[str.charCodeAt(i)] = true;
+    }
+    return charCodes;
+  };
+}).call(undefined);
+
+/***/ }),
+/* 1786 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _propTypes = __webpack_require__(20);
+
+var _util = __webpack_require__(1791);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var process = process || { env: {} };
+
+var InlineSVG = function (_React$Component) {
+    _inherits(InlineSVG, _React$Component);
+
+    function InlineSVG() {
+        _classCallCheck(this, InlineSVG);
+
+        return _possibleConstructorReturn(this, (InlineSVG.__proto__ || Object.getPrototypeOf(InlineSVG)).apply(this, arguments));
+    }
+
+    _createClass(InlineSVG, [{
+        key: 'componentWillReceiveProps',
+        value: function componentWillReceiveProps(_ref) {
+            var children = _ref.children;
+
+            if ("production" !== process.env.NODE_ENV && children != null) {
+                console.info('<InlineSVG />: `children` prop will be ignored.');
+            }
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var Element = void 0,
+                __html = void 0,
+                svgProps = void 0;
+
+            var _props = this.props,
+                element = _props.element,
+                raw = _props.raw,
+                src = _props.src,
+                otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
+
+            if (raw === true) {
+                Element = 'svg';
+                svgProps = (0, _util.extractSVGProps)(src);
+                __html = (0, _util.getSVGFromSource)(src).innerHTML;
+            }
+            __html = __html || src;
+            Element = Element || element;
+            svgProps = svgProps || {};
+
+            return _react2.default.createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
+                dangerouslySetInnerHTML: { __html: __html } }));
+        }
+    }]);
+
+    return InlineSVG;
+}(_react2.default.Component);
+
+exports.default = InlineSVG;
+
+
+InlineSVG.defaultProps = {
+    element: 'i',
+    raw: false,
+    src: ''
+};
+
+InlineSVG.propTypes = {
+    src: _propTypes.string.isRequired,
+    element: _propTypes.string,
+    raw: _propTypes.bool
+};
+
+/***/ }),
+/* 1787 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _classnames = __webpack_require__(175);
+
+var _classnames2 = _interopRequireDefault(_classnames);
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+__webpack_require__(1792);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
+
+const CommandBarButton = props => {
+  const { children, className, pressed = false } = props,
+        rest = _objectWithoutProperties(props, ["children", "className", "pressed"]);
+
+  return _react2.default.createElement(
+    "button",
+    _extends({
+      "aria-pressed": pressed,
+      className: (0, _classnames2.default)("command-bar-button", className)
+    }, rest),
+    children
+  );
+};
+
+exports.default = CommandBarButton;
+
+/***/ }),
+/* 1788 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+(function () {
+  var Query, defaultPathSeparator, filter, matcher, parseOptions, pathScorer, preparedQueryCache, scorer;
+
+  filter = __webpack_require__(1789);
+
+  matcher = __webpack_require__(1790);
+
+  scorer = __webpack_require__(1783);
+
+  pathScorer = __webpack_require__(1784);
+
+  Query = __webpack_require__(1785);
+
+  preparedQueryCache = null;
+
+  defaultPathSeparator = (typeof process !== "undefined" && process !== null ? process.platform : void 0) === "win32" ? '\\' : '/';
+
+  module.exports = {
+    filter: function (candidates, query, options) {
+      if (options == null) {
+        options = {};
+      }
+      if (!((query != null ? query.length : void 0) && (candidates != null ? candidates.length : void 0))) {
+        return [];
+      }
+      options = parseOptions(options, query);
+      return filter(candidates, query, options);
+    },
+    score: function (string, query, options) {
+      if (options == null) {
+        options = {};
+      }
+      if (!((string != null ? string.length : void 0) && (query != null ? query.length : void 0))) {
+        return 0;
+      }
+      options = parseOptions(options, query);
+      if (options.usePathScoring) {
+        return pathScorer.score(string, query, options);
+      } else {
+        return scorer.score(string, query, options);
+      }
+    },
+    match: function (string, query, options) {
+      var _i, _ref, _results;
+      if (options == null) {
+        options = {};
+      }
+      if (!string) {
+        return [];
+      }
+      if (!query) {
+        return [];
+      }
+      if (string === query) {
+        return function () {
+          _results = [];
+          for (var _i = 0, _ref = string.length; 0 <= _ref ? _i < _ref : _i > _ref; 0 <= _ref ? _i++ : _i--) {
+            _results.push(_i);
+          }
+          return _results;
+        }.apply(this);
+      }
+      options = parseOptions(options, query);
+      return matcher.match(string, query, options);
+    },
+    wrap: function (string, query, options) {
+      if (options == null) {
+        options = {};
+      }
+      if (!string) {
+        return [];
+      }
+      if (!query) {
+        return [];
+      }
+      options = parseOptions(options, query);
+      return matcher.wrap(string, query, options);
+    },
+    prepareQuery: function (query, options) {
+      if (options == null) {
+        options = {};
+      }
+      options = parseOptions(options, query);
+      return options.preparedQuery;
+    }
+  };
+
+  parseOptions = function (options, query) {
+    if (options.allowErrors == null) {
+      options.allowErrors = false;
+    }
+    if (options.usePathScoring == null) {
+      options.usePathScoring = true;
+    }
+    if (options.useExtensionBonus == null) {
+      options.useExtensionBonus = false;
+    }
+    if (options.pathSeparator == null) {
+      options.pathSeparator = defaultPathSeparator;
+    }
+    if (options.optCharRegEx == null) {
+      options.optCharRegEx = null;
+    }
+    if (options.wrap == null) {
+      options.wrap = null;
+    }
+    if (options.preparedQuery == null) {
+      options.preparedQuery = preparedQueryCache && preparedQueryCache.query === query ? preparedQueryCache : preparedQueryCache = new Query(query, options);
+    }
+    return options;
+  };
+}).call(undefined);
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(120)))
+
+/***/ }),
+/* 1789 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+(function () {
+  var Query, pathScorer, pluckCandidates, scorer, sortCandidates;
+
+  scorer = __webpack_require__(1783);
+
+  pathScorer = __webpack_require__(1784);
+
+  Query = __webpack_require__(1785);
+
+  pluckCandidates = function (a) {
+    return a.candidate;
+  };
+
+  sortCandidates = function (a, b) {
+    return b.score - a.score;
+  };
+
+  module.exports = function (candidates, query, options) {
+    var bKey, candidate, key, maxInners, maxResults, score, scoreProvider, scoredCandidates, spotLeft, string, usePathScoring, _i, _len;
+    scoredCandidates = [];
+    key = options.key, maxResults = options.maxResults, maxInners = options.maxInners, usePathScoring = options.usePathScoring;
+    spotLeft = maxInners != null && maxInners > 0 ? maxInners : candidates.length + 1;
+    bKey = key != null;
+    scoreProvider = usePathScoring ? pathScorer : scorer;
+    for (_i = 0, _len = candidates.length; _i < _len; _i++) {
+      candidate = candidates[_i];
+      string = bKey ? candidate[key] : candidate;
+      if (!string) {
+        continue;
+      }
+      score = scoreProvider.score(string, query, options);
+      if (score > 0) {
+        scoredCandidates.push({
+          candidate: candidate,
+          score: score
+        });
+        if (! --spotLeft) {
+          break;
+        }
+      }
+    }
+    scoredCandidates.sort(sortCandidates);
+    candidates = scoredCandidates.map(pluckCandidates);
+    if (maxResults != null) {
+      candidates = candidates.slice(0, maxResults);
+    }
+    return candidates;
+  };
+}).call(undefined);
+
+/***/ }),
+/* 1790 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+(function () {
+  var basenameMatch, computeMatch, isMatch, isWordStart, match, mergeMatches, scoreAcronyms, scoreCharacter, scoreConsecutives, _ref;
+
+  _ref = __webpack_require__(1783), isMatch = _ref.isMatch, isWordStart = _ref.isWordStart, scoreConsecutives = _ref.scoreConsecutives, scoreCharacter = _ref.scoreCharacter, scoreAcronyms = _ref.scoreAcronyms;
+
+  exports.match = match = function (string, query, options) {
+    var allowErrors, baseMatches, matches, pathSeparator, preparedQuery, string_lw;
+    allowErrors = options.allowErrors, preparedQuery = options.preparedQuery, pathSeparator = options.pathSeparator;
+    if (!(allowErrors || isMatch(string, preparedQuery.core_lw, preparedQuery.core_up))) {
+      return [];
+    }
+    string_lw = string.toLowerCase();
+    matches = computeMatch(string, string_lw, preparedQuery);
+    if (matches.length === 0) {
+      return matches;
+    }
+    if (string.indexOf(pathSeparator) > -1) {
+      baseMatches = basenameMatch(string, string_lw, preparedQuery, pathSeparator);
+      matches = mergeMatches(matches, baseMatches);
+    }
+    return matches;
+  };
+
+  exports.wrap = function (string, query, options) {
+    var matchIndex, matchPos, matchPositions, output, strPos, tagClass, tagClose, tagOpen, _ref1;
+    if (options.wrap != null) {
+      _ref1 = options.wrap, tagClass = _ref1.tagClass, tagOpen = _ref1.tagOpen, tagClose = _ref1.tagClose;
+    }
+    if (tagClass == null) {
+      tagClass = 'highlight';
+    }
+    if (tagOpen == null) {
+      tagOpen = '<strong class="' + tagClass + '">';
+    }
+    if (tagClose == null) {
+      tagClose = '</strong>';
+    }
+    if (string === query) {
+      return tagOpen + string + tagClose;
+    }
+    matchPositions = match(string, query, options);
+    if (matchPositions.length === 0) {
+      return string;
+    }
+    output = '';
+    matchIndex = -1;
+    strPos = 0;
+    while (++matchIndex < matchPositions.length) {
+      matchPos = matchPositions[matchIndex];
+      if (matchPos > strPos) {
+        output += string.substring(strPos, matchPos);
+        strPos = matchPos;
+      }
+      while (++matchIndex < matchPositions.length) {
+        if (matchPositions[matchIndex] === matchPos + 1) {
+          matchPos++;
+        } else {
+          matchIndex--;
+          break;
+        }
+      }
+      matchPos++;
+      if (matchPos > strPos) {
+        output += tagOpen;
+        output += string.substring(strPos, matchPos);
+        output += tagClose;
+        strPos = matchPos;
+      }
+    }
+    if (strPos < string.length - 1) {
+      output += string.substring(strPos);
+    }
+    return output;
+  };
+
+  basenameMatch = function (subject, subject_lw, preparedQuery, pathSeparator) {
+    var basePos, depth, end;
+    end = subject.length - 1;
+    while (subject[end] === pathSeparator) {
+      end--;
+    }
+    basePos = subject.lastIndexOf(pathSeparator, end);
+    if (basePos === -1) {
+      return [];
+    }
+    depth = preparedQuery.depth;
+    while (depth-- > 0) {
+      basePos = subject.lastIndexOf(pathSeparator, basePos - 1);
+      if (basePos === -1) {
+        return [];
+      }
+    }
+    basePos++;
+    end++;
+    return computeMatch(subject.slice(basePos, end), subject_lw.slice(basePos, end), preparedQuery, basePos);
+  };
+
+  mergeMatches = function (a, b) {
+    var ai, bj, i, j, m, n, out;
+    m = a.length;
+    n = b.length;
+    if (n === 0) {
+      return a.slice();
+    }
+    if (m === 0) {
+      return b.slice();
+    }
+    i = -1;
+    j = 0;
+    bj = b[j];
+    out = [];
+    while (++i < m) {
+      ai = a[i];
+      while (bj <= ai && ++j < n) {
+        if (bj < ai) {
+          out.push(bj);
+        }
+        bj = b[j];
+      }
+      out.push(ai);
+    }
+    while (j < n) {
+      out.push(b[j++]);
+    }
+    return out;
+  };
+
+  computeMatch = function (subject, subject_lw, preparedQuery, offset) {
+    var DIAGONAL, LEFT, STOP, UP, acro_score, align, backtrack, csc_diag, csc_row, csc_score, i, j, m, matches, move, n, pos, query, query_lw, score, score_diag, score_row, score_up, si_lw, start, trace;
+    if (offset == null) {
+      offset = 0;
+    }
+    query = preparedQuery.query;
+    query_lw = preparedQuery.query_lw;
+    m = subject.length;
+    n = query.length;
+    acro_score = scoreAcronyms(subject, subject_lw, query, query_lw).score;
+    score_row = new Array(n);
+    csc_row = new Array(n);
+    STOP = 0;
+    UP = 1;
+    LEFT = 2;
+    DIAGONAL = 3;
+    trace = new Array(m * n);
+    pos = -1;
+    j = -1;
+    while (++j < n) {
+      score_row[j] = 0;
+      csc_row[j] = 0;
+    }
+    i = -1;
+    while (++i < m) {
+      score = 0;
+      score_up = 0;
+      csc_diag = 0;
+      si_lw = subject_lw[i];
+      j = -1;
+      while (++j < n) {
+        csc_score = 0;
+        align = 0;
+        score_diag = score_up;
+        if (query_lw[j] === si_lw) {
+          start = isWordStart(i, subject, subject_lw);
+          csc_score = csc_diag > 0 ? csc_diag : scoreConsecutives(subject, subject_lw, query, query_lw, i, j, start);
+          align = score_diag + scoreCharacter(i, j, start, acro_score, csc_score);
+        }
+        score_up = score_row[j];
+        csc_diag = csc_row[j];
+        if (score > score_up) {
+          move = LEFT;
+        } else {
+          score = score_up;
+          move = UP;
+        }
+        if (align > score) {
+          score = align;
+          move = DIAGONAL;
+        } else {
+          csc_score = 0;
+        }
+        score_row[j] = score;
+        csc_row[j] = csc_score;
+        trace[++pos] = score > 0 ? move : STOP;
+      }
+    }
+    i = m - 1;
+    j = n - 1;
+    pos = i * n + j;
+    backtrack = true;
+    matches = [];
+    while (backtrack && i >= 0 && j >= 0) {
+      switch (trace[pos]) {
+        case UP:
+          i--;
+          pos -= n;
+          break;
+        case LEFT:
+          j--;
+          pos--;
+          break;
+        case DIAGONAL:
+          matches.push(i + offset);
+          j--;
+          i--;
+          pos -= n + 1;
+          break;
+        default:
+          backtrack = false;
+      }
+    }
+    matches.reverse();
+    return matches;
+  };
+}).call(undefined);
+
+/***/ }),
+/* 1791 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.convertReactSVGDOMProperty = convertReactSVGDOMProperty;
+exports.startsWith = startsWith;
+exports.serializeAttrs = serializeAttrs;
+exports.getSVGFromSource = getSVGFromSource;
+exports.extractSVGProps = extractSVGProps;
+// Transform DOM prop/attr names applicable to `<svg>` element but react-limited
+
+function convertReactSVGDOMProperty(str) {
+    return str.replace(/[-|:]([a-z])/g, function (g) {
+        return g[1].toUpperCase();
+    });
+}
+
+function startsWith(str, substring) {
+    return str.indexOf(substring) === 0;
+}
+
+var DataPropPrefix = 'data-';
+// Serialize `Attr` objects in `NamedNodeMap`
+function serializeAttrs(map) {
+    var ret = {};
+    for (var prop, i = 0; i < map.length; i++) {
+        var key = map[i].name;
+        if (!startsWith(key, DataPropPrefix)) {
+            prop = convertReactSVGDOMProperty(key);
+        }
+        ret[prop] = map[i].value;
+    }
+    return ret;
+}
+
+function getSVGFromSource(src) {
+    var svgContainer = document.createElement('div');
+    svgContainer.innerHTML = src;
+    var svg = svgContainer.firstElementChild;
+    svg.remove(); // deref from parent element
+    return svg;
+}
+
+// get <svg /> element props
+function extractSVGProps(src) {
+    var map = getSVGFromSource(src).attributes;
+    return map.length > 0 ? serializeAttrs(map) : null;
+}
+
+/***/ }),
+/* 1792 */
+/***/ (function(module, exports) {
+
+// removed by extract-text-webpack-plugin
+
+/***/ }),
+/* 1793 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
+
+var _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+        var source = arguments[i];for (var key in source) {
+            if (Object.prototype.hasOwnProperty.call(source, key)) {
+                target[key] = source[key];
+            }
+        }
+    }return target;
+};
+
+var _createClass = function () {
+    function defineProperties(target, props) {
+        for (var i = 0; i < props.length; i++) {
+            var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ('value' in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
+        }
+    }return function (Constructor, protoProps, staticProps) {
+        if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
+    };
+}();
+
+var _get = function get(_x, _x2, _x3) {
+    var _again = true;_function: while (_again) {
+        var object = _x,
+            property = _x2,
+            receiver = _x3;_again = false;if (object === null) object = Function.prototype;var desc = Object.getOwnPropertyDescriptor(object, property);if (desc === undefined) {
+            var parent = Object.getPrototypeOf(object);if (parent === null) {
+                return undefined;
+            } else {
+                _x = parent;_x2 = property;_x3 = receiver;_again = true;desc = parent = undefined;continue _function;
+            }
+        } else if ('value' in desc) {
+            return desc.value;
+        } else {
+            var getter = desc.get;if (getter === undefined) {
+                return undefined;
+            }return getter.call(receiver);
+        }
+    }
+};
+
+function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : { 'default': obj };
+}
+
+function _objectWithoutProperties(obj, keys) {
+    var target = {};for (var i in obj) {
+        if (keys.indexOf(i) >= 0) continue;if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;target[i] = obj[i];
+    }return target;
+}
+
+function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+        throw new TypeError('Cannot call a class as a function');
+    }
+}
+
+function _inherits(subClass, superClass) {
+    if (typeof superClass !== 'function' && superClass !== null) {
+        throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass);
+    }subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+}
+
+var _react = __webpack_require__(0);
+
+var _react2 = _interopRequireDefault(_react);
+
+var DOMParser = typeof window !== 'undefined' && window.DOMParser;
+var process = process || {};
+process.env = process.env || {};
+var parserAvailable = typeof DOMParser !== 'undefined' && DOMParser.prototype != null && DOMParser.prototype.parseFromString != null;
+
+function isParsable(src) {
+    // kinda naive but meh, ain't gonna use full-blown parser for this
+    return parserAvailable && typeof src === 'string' && src.trim().substr(0, 4) === '<svg';
+}
+
+// parse SVG string using `DOMParser`
+function parseFromSVGString(src) {
+    var parser = new DOMParser();
+    return parser.parseFromString(src, "image/svg+xml");
+}
+
+// Transform DOM prop/attr names applicable to `<svg>` element but react-limited
+function switchSVGAttrToReactProp(propName) {
+    switch (propName) {
+        case 'class':
+            return 'className';
+        default:
+            return propName;
+    }
+}
+
+var InlineSVG = function (_React$Component) {
+    _inherits(InlineSVG, _React$Component);
+
+    _createClass(InlineSVG, null, [{
+        key: 'defaultProps',
+        value: {
+            element: 'i',
+            raw: false,
+            src: ''
+        },
+        enumerable: true
+    }, {
+        key: 'propTypes',
+        value: {
+            src: _react2['default'].PropTypes.string.isRequired,
+            element: _react2['default'].PropTypes.string,
+            raw: _react2['default'].PropTypes.bool
+        },
+        enumerable: true
+    }]);
+
+    function InlineSVG(props) {
+        _classCallCheck(this, InlineSVG);
+
+        _get(Object.getPrototypeOf(InlineSVG.prototype), 'constructor', this).call(this, props);
+        this._extractSVGProps = this._extractSVGProps.bind(this);
+    }
+
+    // Serialize `Attr` objects in `NamedNodeMap`
+
+    _createClass(InlineSVG, [{
+        key: '_serializeAttrs',
+        value: function _serializeAttrs(map) {
+            var ret = {};
+            var prop = undefined;
+            for (var i = 0; i < map.length; i++) {
+                prop = switchSVGAttrToReactProp(map[i].name);
+                ret[prop] = map[i].value;
+            }
+            return ret;
+        }
+
+        // get <svg /> element props
+    }, {
+        key: '_extractSVGProps',
+        value: function _extractSVGProps(src) {
+            var map = parseFromSVGString(src).documentElement.attributes;
+            return map.length > 0 ? this._serializeAttrs(map) : null;
+        }
+
+        // get content inside <svg> element.
+    }, {
+        key: '_stripSVG',
+        value: function _stripSVG(src) {
+            return parseFromSVGString(src).documentElement.innerHTML;
+        }
+    }, {
+        key: 'componentWillReceiveProps',
+        value: function componentWillReceiveProps(_ref) {
+            var children = _ref.children;
+
+            if ("production" !== process.env.NODE_ENV && children != null) {
+                console.info('<InlineSVG />: `children` prop will be ignored.');
+            }
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var Element = undefined,
+                __html = undefined,
+                svgProps = undefined;
+            var _props = this.props;
+            var element = _props.element;
+            var raw = _props.raw;
+            var src = _props.src;
+
+            var otherProps = _objectWithoutProperties(_props, ['element', 'raw', 'src']);
+
+            if (raw === true && isParsable(src)) {
+                Element = 'svg';
+                svgProps = this._extractSVGProps(src);
+                __html = this._stripSVG(src);
+            }
+            __html = __html || src;
+            Element = Element || element;
+            svgProps = svgProps || {};
+
+            return _react2['default'].createElement(Element, _extends({}, svgProps, otherProps, { src: null, children: null,
+                dangerouslySetInnerHTML: { __html: __html } }));
+        }
+    }]);
+
+    return InlineSVG;
+}(_react2['default'].Component);
+
+exports['default'] = InlineSVG;
+module.exports = exports['default'];
 
 /***/ })
 /******/ ]);

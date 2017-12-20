@@ -25,7 +25,6 @@ WebGLVertexArrayGL::DeleteImpl()
 {
     mElementArrayBuffer = nullptr;
 
-    mContext->MakeContextCurrent();
     mContext->gl->fDeleteVertexArrays(1, &mGLName);
 
     mIsVAO = false;
@@ -55,7 +54,6 @@ WebGLVertexArrayGL::IsVertexArrayImpl() const
         return mIsVAO;
     }
 
-    mContext->MakeContextCurrent();
     return mContext->gl->fIsVertexArray(mGLName) != 0;
 }
 

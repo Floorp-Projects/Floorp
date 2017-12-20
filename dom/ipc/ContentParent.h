@@ -1106,6 +1106,9 @@ private:
   RecvRequestAnonymousTemporaryFile(const uint64_t& aID) override;
 
   virtual mozilla::ipc::IPCResult
+  RecvCreateAudioIPCConnection(CreateAudioIPCConnectionResolver&& aResolver) override;
+
+  virtual mozilla::ipc::IPCResult
   RecvKeygenProcessValue(const nsString& oldValue, const nsString& challenge,
                          const nsString& keytype, const nsString& keyparams,
                          nsString* newValue) override;

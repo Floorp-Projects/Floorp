@@ -26,7 +26,6 @@ WebGLContext::Uniform1ui(WebGLUniformLocation* loc, GLuint v0)
     if (!ValidateUniformSetter(loc, 1, LOCAL_GL_UNSIGNED_INT, "uniform1ui"))
         return;
 
-    MakeContextCurrent();
     gl->fUniform1ui(loc->mLoc, v0);
 }
 
@@ -36,7 +35,6 @@ WebGLContext::Uniform2ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1)
     if (!ValidateUniformSetter(loc, 2, LOCAL_GL_UNSIGNED_INT, "uniform2ui"))
         return;
 
-    MakeContextCurrent();
     gl->fUniform2ui(loc->mLoc, v0, v1);
 }
 
@@ -46,7 +44,6 @@ WebGLContext::Uniform3ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint
     if (!ValidateUniformSetter(loc, 3, LOCAL_GL_UNSIGNED_INT, "uniform3ui"))
         return;
 
-    MakeContextCurrent();
     gl->fUniform3ui(loc->mLoc, v0, v1, v2);
 }
 
@@ -57,7 +54,6 @@ WebGLContext::Uniform4ui(WebGLUniformLocation* loc, GLuint v0, GLuint v1, GLuint
     if (!ValidateUniformSetter(loc, 4, LOCAL_GL_UNSIGNED_INT, "uniform4ui"))
         return;
 
-    MakeContextCurrent();
     gl->fUniform4ui(loc->mLoc, v0, v1, v2, v3);
 }
 
@@ -194,7 +190,6 @@ WebGL2Context::GetActiveUniforms(JSContext* cx, const WebGLProgram& program,
     }
     retval.setObject(*array);
 
-    MakeContextCurrent();
     gl->fGetActiveUniformsiv(program.mGLName, count, uniformIndices.Elements(), pname,
                              samples.get());
 
@@ -251,8 +246,6 @@ WebGL2Context::GetActiveUniformBlockParameter(JSContext* cx, const WebGLProgram&
 
     if (!ValidateObject("getActiveUniformBlockParameter: program", program))
         return;
-
-    MakeContextCurrent();
 
     switch(pname) {
     case LOCAL_GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER:

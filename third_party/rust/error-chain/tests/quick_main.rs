@@ -24,7 +24,5 @@ mod i32 {
 
 mod closure {
     use super::*;
-    quick_main!(|| -> Result<()> {
-        Ok(())
-    });
+    quick_main!(|| -> Result<()> { Ok(()) });
 }

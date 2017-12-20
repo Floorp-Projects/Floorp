@@ -486,8 +486,6 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     mBoundReadFramebuffer = nullptr;
     mBoundRenderbuffer = nullptr;
 
-    MakeContextCurrent();
-
     gl->GetUIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, &mGLMaxVertexAttribs);
 
     if (mGLMaxVertexAttribs < 8) {

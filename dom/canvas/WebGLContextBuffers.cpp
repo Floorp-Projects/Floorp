@@ -149,7 +149,6 @@ WebGLContext::BindBuffer(GLenum target, WebGLBuffer* buffer)
     if (buffer && !buffer->ValidateCanBindToTarget(funcName, target))
         return;
 
-    gl->MakeCurrent();
     gl->fBindBuffer(target, buffer ? buffer->mGLName : 0);
 
     WebGLBuffer::SetSlot(target, buffer, slot);
@@ -216,7 +215,6 @@ WebGLContext::BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer)
 
     ////
 
-    gl->MakeCurrent();
     gl->fBindBufferBase(target, index, buffer ? buffer->mGLName : 0);
 
     ////
@@ -265,8 +263,6 @@ WebGLContext::BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer,
     }
 
     ////
-
-    gl->MakeCurrent();
 
     switch (target) {
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER:
@@ -448,7 +444,6 @@ WebGLContext::CreateBuffer()
         return nullptr;
 
     GLuint buf = 0;
-    MakeContextCurrent();
     gl->fGenBuffers(1, &buf);
 
     RefPtr<WebGLBuffer> globj = new WebGLBuffer(this, buf);
@@ -509,7 +504,6 @@ WebGLContext::IsBuffer(WebGLBuffer* buffer)
     if (!ValidateIsObject("isBuffer", buffer))
         return false;
 
-    MakeContextCurrent();
     return gl->fIsBuffer(buffer->mGLName);
 }
 

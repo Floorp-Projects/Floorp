@@ -5,7 +5,7 @@ add_task(async function() {
   isnot(document.activeElement, gURLBar.inputField, "location bar is not focused");
 
   var tab = gBrowser.selectedTab;
-  gPrefService.setBoolPref("browser.tabs.closeWindowWithLastTab", false);
+  Services.prefs.setBoolPref("browser.tabs.closeWindowWithLastTab", false);
 
   let tabClosedPromise = BrowserTestUtils.tabRemoved(tab);
   EventUtils.synthesizeKey("w", { accelKey: true });
@@ -15,6 +15,6 @@ add_task(async function() {
   is(gBrowser.tabs.length, 1, "a new tab has been opened");
   is(document.activeElement, gURLBar.inputField, "location bar is focused for the new tab");
 
-  if (gPrefService.prefHasUserValue("browser.tabs.closeWindowWithLastTab"))
-    gPrefService.clearUserPref("browser.tabs.closeWindowWithLastTab");
+  if (Services.prefs.prefHasUserValue("browser.tabs.closeWindowWithLastTab"))
+    Services.prefs.clearUserPref("browser.tabs.closeWindowWithLastTab");
 });

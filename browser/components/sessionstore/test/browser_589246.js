@@ -7,8 +7,8 @@ const WINDOW_ATTRIBUTES = ["width", "height", "screenX", "screenY", "sizemode"];
 
 var stateBackup = ss.getBrowserState();
 
-var originalWarnOnClose = gPrefService.getBoolPref("browser.tabs.warnOnClose");
-var originalStartupPage = gPrefService.getIntPref("browser.startup.page");
+var originalWarnOnClose = Services.prefs.getBoolPref("browser.tabs.warnOnClose");
+var originalStartupPage = Services.prefs.getIntPref("browser.startup.page");
 var originalWindowType = document.documentElement.getAttribute("windowtype");
 
 var gotLastWindowClosedTopic = false;
@@ -108,9 +108,9 @@ function test() {
   requestLongerTimeout(2);
 
   // We don't want the quit dialog pref
-  gPrefService.setBoolPref("browser.tabs.warnOnClose", false);
+  Services.prefs.setBoolPref("browser.tabs.warnOnClose", false);
   // Ensure that we would restore the session (important for Windows)
-  gPrefService.setIntPref("browser.startup.page", 3);
+  Services.prefs.setIntPref("browser.startup.page", 3);
 
   runNextTestOrFinish();
 }
@@ -121,8 +121,8 @@ function runNextTestOrFinish() {
   } else {
     // some state is cleaned up at the end of each test, but not all
     ["browser.tabs.warnOnClose", "browser.startup.page"].forEach(function(p) {
-      if (gPrefService.prefHasUserValue(p))
-        gPrefService.clearUserPref(p);
+      if (Services.prefs.prefHasUserValue(p))
+        Services.prefs.clearUserPref(p);
     });
 
     ss.setBrowserState(stateBackup);

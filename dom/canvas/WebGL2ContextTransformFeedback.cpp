@@ -20,7 +20,6 @@ WebGL2Context::CreateTransformFeedback()
     if (IsContextLost())
         return nullptr;
 
-    MakeContextCurrent();
     GLuint tf = 0;
     gl->fGenTransformFeedbacks(1, &tf);
 
@@ -53,7 +52,6 @@ WebGL2Context::IsTransformFeedback(const WebGLTransformFeedback* tf)
     if (!ValidateIsObject("isTransformFeedback", tf))
         return false;
 
-    MakeContextCurrent();
     return gl->fIsTransformFeedback(tf->mGLName);
 }
 
@@ -87,7 +85,6 @@ WebGL2Context::BindTransformFeedback(GLenum target, WebGLTransformFeedback* tf)
 
     mBoundTransformFeedback = (tf ? tf : mDefaultTransformFeedback);
 
-    MakeContextCurrent();
     gl->fBindTransformFeedback(target, mBoundTransformFeedback->mGLName);
 
     if (mBoundTransformFeedback) {

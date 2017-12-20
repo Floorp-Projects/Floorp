@@ -1,12 +1,13 @@
 /// Prefer to use `error_chain` instead of this macro.
+#[doc(hidden)]
 #[macro_export]
-macro_rules! error_chain_processed {
+macro_rules! impl_error_chain_processed {
     // Default values for `types`.
     (
         types {}
         $( $rest: tt )*
     ) => {
-        error_chain_processed! {
+        impl_error_chain_processed! {
             types {
                 Error, ErrorKind, ResultExt, Result;
             }
@@ -21,7 +22,7 @@ macro_rules! error_chain_processed {
         }
         $( $rest: tt )*
     ) => {
-        error_chain_processed! {
+        impl_error_chain_processed! {
             types {
                 $error_name, $error_kind_name,
                 $result_ext_name;
@@ -96,8 +97,14 @@ macro_rules! error_chain_processed {
                 self.kind()
             }
 
-            fn iter(&self) -> $crate::ErrorChainIter {
-                $crate::ErrorChainIter(Some(self))
+            fn iter(&self) -> $crate::Iter {
+                $crate::Iter::new(Some(self))
+            }
+
+            fn chain_err<F, EK>(self, error: F) -> Self
+                where F: FnOnce() -> EK,
+                      EK: Into<$error_kind_name> {
+                self.chain_err(error)
             }
 
             fn backtrace(&self) -> Option<&$crate::Backtrace> {
@@ -125,9 +132,17 @@ macro_rules! error_chain_processed {
                 where E: ::std::error::Error + Send + 'static,
                       K: Into<$error_kind_name>
             {
+                $error_name::with_boxed_chain(Box::new(error), kind)
+            }
+
+            /// Construct a chained error from another boxed error and a kind, and generates a backtrace
+            pub fn with_boxed_chain<K>(error: Box<::std::error::Error + Send>, kind: K)
+                -> $error_name
+                where K: Into<$error_kind_name>
+            {
                 $error_name(
                     kind.into(),
-                    $crate::State::new::<$error_name>(Box::new(error), ),
+                    $crate::State::new::<$error_name>(error, ),
                 )
             }
 
@@ -137,13 +152,19 @@ macro_rules! error_chain_processed {
             }
 
             /// Iterates over the error chain.
-            pub fn iter(&self) -> $crate::ErrorChainIter {
+            pub fn iter(&self) -> $crate::Iter {
                 $crate::ChainedError::iter(self)
             }
 
             /// Returns the backtrace associated with this error.
             pub fn backtrace(&self) -> Option<&$crate::Backtrace> {
                 self.1.backtrace()
+            }
+
+            /// Extends the error chain with a new entry.
+            pub fn chain_err<F, EK>(self, error: F) -> $error_name
+                where F: FnOnce() -> EK, EK: Into<$error_kind_name> {
+                $error_name::with_chain(self, Self::from_kind(error().into()))
             }
         }
 
@@ -152,6 +173,7 @@ macro_rules! error_chain_processed {
                 self.0.description()
             }
 
+            #[allow(unknown_lints, unused_doc_comment)]
             fn cause(&self) -> Option<&::std::error::Error> {
                 match self.1.next_error {
                     Some(ref c) => Some(&**c),
@@ -229,7 +251,7 @@ macro_rules! error_chain_processed {
         // The ErrorKind type
         // --------------
 
-        quick_error! {
+        impl_error_chain_kind! {
             /// The kind of an error.
             #[derive(Debug)]
             pub enum $error_kind_name {
@@ -290,7 +312,7 @@ macro_rules! error_chain_processed {
         // The ResultExt trait defines the `chain_err` method.
 
         /// Additional methods for `Result`, for easy interaction with this crate.
-        pub trait $result_ext_name<T, E> {
+        pub trait $result_ext_name<T> {
             /// If the `Result` is an `Err` then `chain_err` evaluates the closure,
             /// which returns *some type that can be converted to `ErrorKind`*, boxes
             /// the original error to store as the cause, then returns a new error
@@ -300,13 +322,23 @@ macro_rules! error_chain_processed {
                       EK: Into<$error_kind_name>;
         }
 
-        impl<T, E> $result_ext_name<T, E> for ::std::result::Result<T, E> where E: ::std::error::Error + Send + 'static {
+        impl<T, E> $result_ext_name<T> for ::std::result::Result<T, E> where E: ::std::error::Error + Send + 'static {
             fn chain_err<F, EK>(self, callback: F) -> ::std::result::Result<T, $error_name>
                 where F: FnOnce() -> EK,
                       EK: Into<$error_kind_name> {
                 self.map_err(move |e| {
                     let state = $crate::State::new::<$error_name>(Box::new(e), );
                     $crate::ChainedError::new(callback().into(), state)
+                })
+            }
+        }
+
+        impl<T> $result_ext_name<T> for ::std::option::Option<T> {
+            fn chain_err<F, EK>(self, callback: F) -> ::std::result::Result<T, $error_name>
+                where F: FnOnce() -> EK,
+                      EK: Into<$error_kind_name> {
+                self.ok_or_else(move || {
+                    $crate::ChainedError::from_kind(callback().into())
                 })
             }
         }
@@ -360,7 +392,7 @@ macro_rules! error_chain_processing {
         }
     };
     ( ($a:tt, $b:tt, $c:tt, $d:tt) ) => {
-        error_chain_processed! {
+        impl_error_chain_processed! {
             types $a
             links $b
             foreign_links $c
@@ -369,8 +401,7 @@ macro_rules! error_chain_processing {
     };
 }
 
-/// This macro is used for handling of duplicated and out-of-order fields. For
-/// the exact rules, see `error_chain_processed`.
+/// Macro for generating error types and traits. See crate level documentation for details.
 #[macro_export]
 macro_rules! error_chain {
     ( $( $block_name:ident { $( $block_content:tt )* } )* ) => {
@@ -393,6 +424,7 @@ macro_rules! impl_extract_backtrace {
     ($error_name: ident
      $error_kind_name: ident
      $([$link_error_path: path, $(#[$meta_links: meta])*])*) => {
+        #[allow(unknown_lints, unused_doc_comment)]
         fn extract_backtrace(e: &(::std::error::Error + Send + 'static))
             -> Option<::std::sync::Arc<$crate::Backtrace>> {
             if let Some(e) = e.downcast_ref::<$error_name>() {

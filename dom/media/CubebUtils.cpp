@@ -8,6 +8,8 @@
 
 #include "MediaInfo.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -55,9 +57,10 @@
 extern "C" {
 // These functions are provided by audioipc-server crate
 extern void* audioipc_server_start();
+extern mozilla::ipc::FileDescriptor::PlatformHandleType audioipc_server_new_client(void*);
 extern void audioipc_server_stop(void*);
 // These functions are provided by audioipc-client crate
-extern int audioipc_client_init(cubeb**, const char*);
+extern int audioipc_client_init(cubeb**, const char*, int);
 }
 
 namespace mozilla {
@@ -68,6 +71,9 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 // Cubeb Sound Server Thread
 void* sServerHandle = nullptr;
+
+// Initialized during early startup, protected by sMutex.
+ipc::FileDescriptor sIPCConnection;
 
 static bool
 StartSoundServer()
@@ -378,6 +384,39 @@ void InitBrandName()
   sBrandName[ascii.Length()] = 0;
 }
 
+#ifdef MOZ_CUBEB_REMOTING
+void InitAudioIPCConnection()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  auto contentChild = dom::ContentChild::GetSingleton();
+  auto promise = contentChild->SendCreateAudioIPCConnection();
+  promise->Then(AbstractThread::GetCurrent(),
+                __func__,
+                [](ipc::FileDescriptor aFD) {
+                  StaticMutexAutoLock lock(sMutex);
+                  MOZ_ASSERT(!sIPCConnection.IsValid());
+                  sIPCConnection = aFD;
+                },
+                [](mozilla::ipc::ResponseRejectReason aReason) {
+                  MOZ_LOG(gCubebLog, LogLevel::Error, ("SendCreateAudioIPCConnection failed: %d",
+                                                       int(aReason)));
+                });
+}
+#endif
+
+ipc::FileDescriptor CreateAudioIPCConnection()
+{
+#ifdef MOZ_CUBEB_REMOTING
+  MOZ_ASSERT(sServerHandle);
+  int rawFD = audioipc_server_new_client(sServerHandle);
+  ipc::FileDescriptor fd(rawFD);
+  close(rawFD);
+  return fd;
+#else
+  return ipc::FileDescriptor();
+#endif
+}
+
 cubeb* GetCubebContextUnlocked()
 {
   sMutex.AssertCurrentThreadOwns();
@@ -395,10 +434,19 @@ cubeb* GetCubebContextUnlocked()
   }
 
 #ifdef MOZ_CUBEB_REMOTING
+  if (XRE_IsParentProcess()) {
+    // TODO: Don't use audio IPC when within the same process.
+    MOZ_ASSERT(!sIPCConnection.IsValid());
+    sIPCConnection = CreateAudioIPCConnection();
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(sIPCConnection.IsValid());
+  }
+
   MOZ_LOG(gCubebLog, LogLevel::Info, ("%s: %s", PREF_CUBEB_SANDBOX, sCubebSandbox ? "true" : "false"));
 
   int rv = sCubebSandbox
-    ? audioipc_client_init(&sCubebContext, sBrandName)
+    ? audioipc_client_init(&sCubebContext, sBrandName,
+                           sIPCConnection.ClonePlatformHandle().release())
     : cubeb_init(&sCubebContext, sBrandName, sCubebBackendName.get());
 #else // !MOZ_CUBEB_REMOTING
   int rv = cubeb_init(&sCubebContext, sBrandName, sCubebBackendName.get());
@@ -492,6 +540,12 @@ void InitLibrary()
   AbstractThread::MainThread()->Dispatch(
     NS_NewRunnableFunction("CubebUtils::InitLibrary", &InitBrandName));
 #endif
+#ifdef MOZ_CUBEB_REMOTING
+  if (XRE_IsContentProcess()) {
+    AbstractThread::MainThread()->Dispatch(
+      NS_NewRunnableFunction("CubebUtils::InitLibrary", &InitAudioIPCConnection));
+  }
+#endif
 }
 
 void ShutdownLibrary()
@@ -514,6 +568,7 @@ void ShutdownLibrary()
   sCubebState = CubebState::Shutdown;
 
 #ifdef MOZ_CUBEB_REMOTING
+  sIPCConnection = ipc::FileDescriptor();
   ShutdownSoundServer();
 #endif
 }

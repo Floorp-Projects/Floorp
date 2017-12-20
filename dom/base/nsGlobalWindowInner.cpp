@@ -43,6 +43,7 @@
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsIDocumentLoader.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsIScriptContext.h"
@@ -2328,6 +2329,110 @@ Maybe<ServiceWorkerDescriptor>
 nsPIDOMWindowInner::GetController() const
 {
   return Move(nsGlobalWindowInner::Cast(this)->GetController());
+}
+
+void
+nsPIDOMWindowInner::NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope)
+{
+  nsGlobalWindowInner::Cast(this)->NoteCalledRegisterForServiceWorkerScope(aScope);
+}
+
+bool
+nsGlobalWindowInner::ShouldReportForServiceWorkerScope(const nsAString& aScope)
+{
+  bool result = false;
+
+  nsPIDOMWindowOuter* topOuter = GetScriptableTop();
+  NS_ENSURE_TRUE(topOuter, false);
+
+  nsGlobalWindowInner* topInner =
+    nsGlobalWindowInner::Cast(topOuter->GetCurrentInnerWindow());
+  NS_ENSURE_TRUE(topInner, false);
+
+  topInner->ShouldReportForServiceWorkerScopeInternal(NS_ConvertUTF16toUTF8(aScope),
+                                                      &result);
+  return result;
+}
+
+nsGlobalWindowInner::CallState
+nsGlobalWindowInner::ShouldReportForServiceWorkerScopeInternal(const nsACString& aScope,
+                                                               bool* aResultOut)
+{
+  MOZ_DIAGNOSTIC_ASSERT(aResultOut);
+
+  // First check to see if this window is controlled.  If so, then we have
+  // found a match and are done.
+  const Maybe<ServiceWorkerDescriptor> swd = GetController();
+  if (swd.isSome() && swd.ref().Scope() == aScope) {
+    *aResultOut = true;
+    return CallState::Stop;
+  }
+
+  // Next, check to see if this window has called navigator.serviceWorker.register()
+  // for this scope.  If so, then treat this as a match so console reports
+  // appear in the devtools console.
+  if (mClientSource && mClientSource->CalledRegisterForServiceWorkerScope(aScope)) {
+    *aResultOut = true;
+    return CallState::Stop;
+  }
+
+  // Finally check the current docshell nsILoadGroup to see if there are any
+  // outstanding navigation requests.  If so, match the scope against the
+  // channel's URL.  We want to show console reports during the FetchEvent
+  // intercepting the navigation itself.
+  nsCOMPtr<nsIDocumentLoader> loader(do_QueryInterface(GetDocShell()));
+  if (loader) {
+    nsCOMPtr<nsILoadGroup> loadgroup;
+    Unused << loader->GetLoadGroup(getter_AddRefs(loadgroup));
+    if (loadgroup) {
+      nsCOMPtr<nsISimpleEnumerator> iter;
+      Unused << loadgroup->GetRequests(getter_AddRefs(iter));
+      if (iter) {
+        nsCOMPtr<nsISupports> tmp;
+        bool hasMore = true;
+        // Check each network request in the load group.
+        while (NS_SUCCEEDED(iter->HasMoreElements(&hasMore)) && hasMore) {
+          iter->GetNext(getter_AddRefs(tmp));
+          nsCOMPtr<nsIChannel> loadingChannel(do_QueryInterface(tmp));
+          // Ignore subresource requests.  Logging for a subresource
+          // FetchEvent should be handled above since the client is
+          // already controlled.
+          if (!loadingChannel ||
+              !nsContentUtils::IsNonSubresourceRequest(loadingChannel)) {
+            continue;
+          }
+          nsCOMPtr<nsIURI> loadingURL;
+          Unused << loadingChannel->GetURI(getter_AddRefs(loadingURL));
+          if (!loadingURL) {
+            continue;
+          }
+          nsAutoCString loadingSpec;
+          Unused << loadingURL->GetSpec(loadingSpec);
+          // Perform a simple substring comparison to match the scope
+          // against the channel URL.
+          if (StringBeginsWith(loadingSpec, aScope)) {
+            *aResultOut = true;
+            return CallState::Stop;
+          }
+        }
+      }
+    }
+  }
+
+  // The current window doesn't care about this service worker, but maybe
+  // one of our child frames does.
+  return CallOnChildren(&nsGlobalWindowInner::ShouldReportForServiceWorkerScopeInternal,
+                        aScope, aResultOut);
+}
+
+void
+nsGlobalWindowInner::NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope)
+{
+  if (!mClientSource) {
+    return;
+  }
+
+  mClientSource->NoteCalledRegisterForServiceWorkerScope(aScope);
 }
 
 void
@@ -6114,16 +6219,18 @@ nsGlobalWindowInner::SyncStateFromParentWindow()
   }
 }
 
-template<typename Method>
-void
-nsGlobalWindowInner::CallOnChildren(Method aMethod)
+template<typename Method, typename... Args>
+nsGlobalWindowInner::CallState
+nsGlobalWindowInner::CallOnChildren(Method aMethod, Args& ...aArgs)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsCurrentInnerWindow());
 
+  CallState state = CallState::Continue;
+
   nsCOMPtr<nsIDocShell> docShell = GetDocShell();
   if (!docShell) {
-    return;
+    return state;
   }
 
   int32_t childCount = 0;
@@ -6149,8 +6256,19 @@ nsGlobalWindowInner::CallOnChildren(Method aMethod)
       continue;
     }
 
-    (inner->*aMethod)();
+    // Call the child method using our helper CallChild() template method.
+    // This allows us to handle both void returning methods and methods
+    // that return CallState explicitly.  For void returning methods we
+    // assume CallState::Continue.
+    typedef decltype((inner->*aMethod)(aArgs...)) returnType;
+    state = CallChild<returnType>(inner, aMethod, aArgs...);
+
+    if (state == CallState::Stop) {
+      return state;
+    }
   }
+
+  return state;
 }
 
 Maybe<ClientInfo>

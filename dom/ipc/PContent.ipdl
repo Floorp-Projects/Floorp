@@ -764,6 +764,8 @@ parent:
 
     async PPresentation();
 
+    async CreateAudioIPCConnection() returns (FileDescriptor fd);
+
     sync PURLClassifier(Principal principal, bool useTrackingProtection)
         returns (bool success);
     sync ClassifyLocal(URIParams uri, nsCString tables)

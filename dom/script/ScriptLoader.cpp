@@ -244,8 +244,12 @@ CollectScriptTelemetry(nsIIncrementalStreamLoader* aLoader,
 // <script for=... event=...> element.
 
 static bool
-IsScriptEventHandler(nsIContent* aScriptElement)
+IsScriptEventHandler(ScriptKind kind, nsIContent* aScriptElement)
 {
+  if (kind != ScriptKind::Classic) {
+    return false;
+  }
+
   if (!aScriptElement->IsHTMLElement()) {
     return false;
   }
@@ -1105,7 +1109,7 @@ ScriptLoader::StartLoad(ScriptLoadRequest* aRequest)
                                        NS_LITERAL_CSTRING("*/*"),
                                        false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = httpChannel->SetReferrerWithPolicy(mDocument->GetDocumentURI(),
+    rv = httpChannel->SetReferrerWithPolicy(aRequest->mReferrer,
                                             aRequest->mReferrerPolicy);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
@@ -1263,11 +1267,15 @@ ScriptLoader::CreateLoadRequest(ScriptKind aKind,
                                 nsIScriptElement* aElement,
                                 ValidJSVersion aValidJSVersion,
                                 CORSMode aCORSMode,
-                                const SRIMetadata& aIntegrity)
+                                const SRIMetadata& aIntegrity,
+                                mozilla::net::ReferrerPolicy aReferrerPolicy)
 {
+  nsIURI* referrer = mDocument->GetDocumentURI();
+
   if (aKind == ScriptKind::Classic) {
     ScriptLoadRequest* slr = new ScriptLoadRequest(aKind, aURI, aElement,
-                                 aValidJSVersion, aCORSMode, aIntegrity);
+                                                   aValidJSVersion, aCORSMode, aIntegrity,
+                                                   referrer, aReferrerPolicy);
 
     LOG(("ScriptLoader %p creates ScriptLoadRequest %p", this, slr));
     return slr;
@@ -1275,7 +1283,7 @@ ScriptLoader::CreateLoadRequest(ScriptKind aKind,
 
   MOZ_ASSERT(aKind == ScriptKind::Module);
   return new ModuleLoadRequest(aURI, aElement, aValidJSVersion, aCORSMode,
-                               aIntegrity, this);
+                               aIntegrity, referrer, aReferrerPolicy, this);
 }
 
 bool
@@ -1293,35 +1301,38 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
 
   nsCOMPtr<nsIContent> scriptContent = do_QueryInterface(aElement);
 
+  // Determine whether this is a classic script or a module script.
+  nsAutoString type;
+  bool hasType = aElement->GetScriptType(type);
+  ScriptKind scriptKind = ScriptKind::Classic;
+  if (ModuleScriptsEnabled() &&
+      !type.IsEmpty() && type.LowerCaseEqualsASCII("module")) {
+    scriptKind = ScriptKind::Module;
+  }
+
   // Step 13. Check that the script is not an eventhandler
-  if (IsScriptEventHandler(scriptContent)) {
+  if (IsScriptEventHandler(scriptKind, scriptContent)) {
     return false;
   }
 
   ValidJSVersion validJSVersion = ValidJSVersion::Valid;
 
-  // Check the type attribute to determine language and version.
-  // If type exists, it trumps the deprecated 'language='
-  nsAutoString type;
-  bool hasType = aElement->GetScriptType(type);
-
-  ScriptKind scriptKind = ScriptKind::Classic;
-  if (!type.IsEmpty()) {
-    if (ModuleScriptsEnabled() && type.LowerCaseEqualsASCII("module")) {
-      scriptKind = ScriptKind::Module;
-    } else {
+  // For classic scripts, check the type attribute to determine language and
+  // version. If type exists, it trumps the deprecated 'language='
+  if (scriptKind == ScriptKind::Classic) {
+    if (!type.IsEmpty()) {
       NS_ENSURE_TRUE(ParseTypeAttribute(type, &validJSVersion), false);
-    }
-  } else if (!hasType) {
-    // no 'type=' element
-    // "language" is a deprecated attribute of HTML, so we check it only for
-    // HTML script elements.
-    if (scriptContent->IsHTMLElement()) {
-      nsAutoString language;
-      scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::language, language);
-      if (!language.IsEmpty()) {
-        if (!nsContentUtils::IsJavaScriptLanguage(language)) {
-          return false;
+    } else if (!hasType) {
+      // no 'type=' element
+      // "language" is a deprecated attribute of HTML, so we check it only for
+      // HTML script elements.
+      if (scriptContent->IsHTMLElement()) {
+        nsAutoString language;
+        scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::language, language);
+        if (!language.IsEmpty()) {
+          if (!nsContentUtils::IsJavaScriptLanguage(language)) {
+            return false;
+          }
         }
       }
     }
@@ -1341,6 +1352,7 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
   // Step 15. and later in the HTML5 spec
   nsresult rv = NS_OK;
   RefPtr<ScriptLoadRequest> request;
+  mozilla::net::ReferrerPolicy ourRefPolicy = mDocument->GetReferrerPolicy();
   if (aElement->GetScriptExternal()) {
     // external script
     nsCOMPtr<nsIURI> scriptURI = aElement->GetScriptURI();
@@ -1354,7 +1366,6 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
     }
 
     // Double-check that the preload matches what we're asked to load now.
-    mozilla::net::ReferrerPolicy ourRefPolicy = mDocument->GetReferrerPolicy();
     CORSMode ourCORSMode = aElement->GetCORSMode();
     nsTArray<PreloadInfo>::index_type i =
       mPreloads.IndexOf(scriptURI.get(), 0, PreloadURIComparator());
@@ -1414,22 +1425,27 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
       }
 
       request = CreateLoadRequest(scriptKind, scriptURI, aElement,
-                                  validJSVersion, ourCORSMode, sriMetadata);
+                                  validJSVersion, ourCORSMode, sriMetadata,
+                                  ourRefPolicy);
       request->mTriggeringPrincipal = Move(principal);
       request->mIsInline = false;
-      request->mReferrerPolicy = ourRefPolicy;
       // keep request->mScriptFromHead to false so we don't treat non preloaded
       // scripts as blockers for full page load. See bug 792438.
 
       rv = StartLoad(request);
       if (NS_FAILED(rv)) {
-        const char* message = "ScriptSourceLoadFailed";
-
+        const char* message;
+        bool isScript = scriptKind == ScriptKind::Classic;
         if (rv == NS_ERROR_MALFORMED_URI) {
-            message = "ScriptSourceMalformed";
+          message =
+            isScript ? "ScriptSourceMalformed" : "ModuleSourceMalformed";
         }
         else if (rv == NS_ERROR_DOM_BAD_URI) {
-            message = "ScriptSourceNotAllowed";
+          message =
+            isScript ? "ScriptSourceNotAllowed" : "ModuleSourceNotAllowed";
+        } else {
+          message =
+            isScript ? "ScriptSourceLoadFailed" : "ModuleSourceLoadFailed";
         }
 
         NS_ConvertUTF8toUTF16 url(scriptURI->GetSpecOrDefault());
@@ -1554,10 +1570,11 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
     return false;
   }
 
-  // Inline scripts ignore ther CORS mode and are always CORS_NONE
+  // Inline scripts ignore ther CORS mode and are always CORS_NONE.
   request = CreateLoadRequest(scriptKind, mDocument->GetDocumentURI(), aElement,
                               validJSVersion, CORS_NONE,
-                              SRIMetadata()); // SRI doesn't apply
+                              SRIMetadata(), // SRI doesn't apply
+                              ourRefPolicy);
   request->mValidJSVersion = validJSVersion;
   request->mIsInline = true;
   request->mTriggeringPrincipal = mDocument->NodePrincipal();
@@ -2843,11 +2860,16 @@ ScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
         AppendUTF8toUTF16(aRequest->mURI->GetSpecOrDefault(), url);
       }
 
+      const char* message = "ScriptSourceLoadFailed";
+      if (aRequest->IsModuleRequest()) {
+        message = "ModuleSourceLoadFailed";
+      }
+
       const char16_t* params[] = { url.get() };
 
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
         NS_LITERAL_CSTRING("Script Loader"), mDocument,
-        nsContentUtils::eDOM_PROPERTIES, "ScriptSourceLoadFailed",
+        nsContentUtils::eDOM_PROPERTIES, message,
         params, ArrayLength(params), nullptr,
         EmptyString(), lineNo);
     }
@@ -3145,10 +3167,10 @@ ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
 
   RefPtr<ScriptLoadRequest> request =
     CreateLoadRequest(ScriptKind::Classic, aURI, nullptr, ValidJSVersion::Valid,
-                      Element::StringToCORSMode(aCrossOrigin), sriMetadata);
+                      Element::StringToCORSMode(aCrossOrigin), sriMetadata,
+                      aReferrerPolicy);
   request->mTriggeringPrincipal = mDocument->NodePrincipal();
   request->mIsInline = false;
-  request->mReferrerPolicy = aReferrerPolicy;
   request->mScriptFromHead = aScriptFromHead;
   request->mPreloadAsAsync = aAsync;
   request->mPreloadAsDefer = aDefer;

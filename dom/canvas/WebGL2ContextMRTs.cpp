@@ -62,8 +62,6 @@ WebGL2Context::ValidateClearBuffer(const char* funcName, GLenum buffer, GLint dr
 
     ////
 
-    MakeContextCurrent();
-
     const auto& fb = mBoundDrawFramebuffer;
     if (fb) {
         if (!fb->ValidateAndInitAttachments(funcName))

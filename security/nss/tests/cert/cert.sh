@@ -514,11 +514,11 @@ cert_all_CA()
 #       Create RSA-PSS version of TestCA
 	ALL_CU_SUBJECT="CN=NSS Test CA (RSA-PSS), O=BOGUS NSS, L=Mountain View, ST=California, C=US"
 	cert_rsa_pss_CA $CADIR TestCA-rsa-pss -x "CTu,CTu,CTu" ${D_CA} "1" SHA256
-	rm $CLIENT_CADIR/rsapssroot.cert $SERVER_CADIR/rsapssroot.cert
+	rm $CADIR/rsapssroot.cert
 
 	ALL_CU_SUBJECT="CN=NSS Test CA (RSA-PSS-SHA1), O=BOGUS NSS, L=Mountain View, ST=California, C=US"
 	cert_rsa_pss_CA $CADIR TestCA-rsa-pss-sha1 -x "CTu,CTu,CTu" ${D_CA} "1" SHA1
-	rm $CLIENT_CADIR/rsapssroot.cert $SERVER_CADIR/rsapssroot.cert
+	rm $CADIR/rsapssroot.cert
 
 #
 #       Create EC version of TestCA

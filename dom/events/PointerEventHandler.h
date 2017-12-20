@@ -8,6 +8,8 @@
 #define mozilla_PointerEventHandler_h
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/MouseEvents.h"
+#include "mozilla/TouchEvents.h"
 
 class nsIFrame;
 class nsIContent;
@@ -77,6 +79,9 @@ public:
 
   // CheckPointerCaptureState checks cases, when got/lostpointercapture events
   // should be fired.
+  static void MaybeProcessPointerCapture(WidgetGUIEvent* aEvent);
+  static void ProcessPointerCaptureForMouse(WidgetMouseEvent* aEvent);
+  static void ProcessPointerCaptureForTouch(WidgetTouchEvent* aEvent);
   static void CheckPointerCaptureState(WidgetPointerEvent* aEvent);
 
   // Implicitly get and release capture of current pointer for touch.
@@ -84,19 +89,16 @@ public:
   static void ImplicitlyReleasePointerCapture(WidgetEvent* aEvent);
 
   /**
-   * GetPointerCapturingFrame returns a target frame of aEvent. If the event is
-   * a mouse or pointer event (except mousedown and pointerdown), the pointer
-   * may be captured by a content. This method returns the capturing content's
-   * primary frame. Otherwise, aFrameUnderCursor.
+   * GetPointerCapturingContent returns a target content which captures the
+   * pointer. It's applied to mouse or pointer event (except mousedown and
+   * pointerdown). When capturing, return the content. Otherwise, nullptr.
    *
-   * @param aFrameUnderCursor    A frame under cursor.
    * @param aEvent               A mouse event or pointer event which may be
    *                             captured.
    *
-   * @return                     Target frame for aEvent.
+   * @return                     Target content for aEvent.
    */
-  static nsIFrame* GetPointerCapturingFrame(nsIFrame* aFrameUnderCursor,
-                                            WidgetGUIEvent* aEvent);
+  static nsIContent* GetPointerCapturingContent(WidgetGUIEvent* aEvent);
 
   static nsIContent* GetPointerCapturingContent(uint32_t aPointerId);
 
@@ -138,6 +140,7 @@ public:
 
   static void DispatchPointerFromMouseOrTouch(PresShell* aShell,
                                               nsIFrame* aFrame,
+                                              nsIContent* aContent,
                                               WidgetGUIEvent* aEvent,
                                               bool aDontRetargetEvents,
                                               nsEventStatus* aStatus,
@@ -151,6 +154,19 @@ public:
                                         WidgetTouchEvent* aTouchEvent,
                                         mozilla::dom::Touch* aTouch,
                                         bool aIsPrimary);
+
+  static bool ShouldGeneratePointerEventFromMouse(WidgetGUIEvent* aEvent)
+  {
+    return aEvent->mMessage == eMouseDown || aEvent->mMessage == eMouseUp ||
+           aEvent->mMessage == eMouseMove;
+  }
+
+  static bool ShouldGeneratePointerEventFromTouch(WidgetGUIEvent* aEvent)
+  {
+    return aEvent->mMessage == eTouchStart || aEvent->mMessage == eTouchMove ||
+           aEvent->mMessage == eTouchEnd || aEvent->mMessage == eTouchCancel ||
+           aEvent->mMessage == eTouchPointerCancel;
+  }
 
 private:
   // GetPointerType returns pointer type like mouse, pen or touch for pointer

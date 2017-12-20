@@ -50,6 +50,7 @@ Touch::Touch(EventTarget* aTarget,
              int32_t aRadiusY,
              float aRotationAngle,
              float aForce)
+  : mIsTouchEventSuppressed(false)
 {
   mTarget = aTarget;
   mIdentifier = aIdentifier;
@@ -73,6 +74,7 @@ Touch::Touch(int32_t aIdentifier,
              LayoutDeviceIntPoint aRadius,
              float aRotationAngle,
              float aForce)
+  : mIsTouchEventSuppressed(false)
 {
   mIdentifier = aIdentifier;
   mPagePoint = CSSIntPoint(0, 0);
@@ -93,6 +95,7 @@ Touch::Touch(const Touch& aOther)
   : mTarget(aOther.mTarget)
   , mRefPoint(aOther.mRefPoint)
   , mChanged(aOther.mChanged)
+  , mIsTouchEventSuppressed(aOther.mIsTouchEventSuppressed)
   , mMessage(aOther.mMessage)
   , mIdentifier(aOther.mIdentifier)
   , mPagePoint(aOther.mPagePoint)

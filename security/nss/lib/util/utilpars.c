@@ -1110,12 +1110,8 @@ _NSSUTIL_EvaluateConfigDir(const char *configdir,
     NSSDBType dbType;
     PRBool checkEnvDefaultDB = PR_FALSE;
     *appName = NULL;
-/* force the default */
-#ifdef NSS_DISABLE_DBM
+    /* force the default */
     dbType = NSS_DB_TYPE_SQL;
-#else
-    dbType = NSS_DB_TYPE_LEGACY;
-#endif
     if (configdir == NULL) {
         checkEnvDefaultDB = PR_TRUE;
     } else if (PORT_Strncmp(configdir, MULTIACCESS, sizeof(MULTIACCESS) - 1) == 0) {

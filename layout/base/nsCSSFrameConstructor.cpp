@@ -10999,8 +10999,12 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
   // XXXbz ideally, this would do all the pushing of various
   // containing blocks as needed, so callers don't have to do it...
 
+  // Check that our parent frame is a block before allowing ::first-letter/line.
+  // E.g. <button style="display:grid"> should not allow it.
+  const bool allowFirstPseudos = aAllowBlockStyles &&
+                                 nsLayoutUtils::GetAsBlock(aFrame);
   bool haveFirstLetterStyle = false, haveFirstLineStyle = false;
-  if (aAllowBlockStyles) {
+  if (allowFirstPseudos) {
     ShouldHaveSpecialBlockStyle(aContent, aStyleContext, &haveFirstLetterStyle,
                                 &haveFirstLineStyle);
   }
@@ -11024,7 +11028,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
 
   // If we have first-letter or first-line style then frames can get
   // moved around so don't set these flags.
-  if (aAllowBlockStyles && !haveFirstLetterStyle && !haveFirstLineStyle) {
+  if (allowFirstPseudos && !haveFirstLetterStyle && !haveFirstLineStyle) {
     itemsToConstruct.SetLineBoundaryAtStart(true);
     itemsToConstruct.SetLineBoundaryAtEnd(true);
   }
@@ -11123,7 +11127,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
                               /* aParentIsWrapperAnonBox = */ false,
                               aFrameItems);
 
-  NS_ASSERTION(!aAllowBlockStyles || !aFrame->IsXULBoxFrame(),
+  NS_ASSERTION(!allowFirstPseudos || !aFrame->IsXULBoxFrame(),
                "can't be both block and box");
 
   if (haveFirstLetterStyle) {
