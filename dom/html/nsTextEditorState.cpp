@@ -47,11 +47,9 @@
 #include "nsFrameSelection.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/layers/ScrollInputMethods.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using mozilla::layers::ScrollInputMethod;
 
 class MOZ_STACK_CLASS ValueSetter
 {
@@ -669,9 +667,6 @@ nsTextInputSelectionImpl::CompleteScroll(bool aForward)
   if (!mScrollFrame)
     return NS_ERROR_NOT_INITIALIZED;
 
-  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-      (uint32_t) ScrollInputMethod::MainThreadCompleteScroll);
-
   mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
                          nsIScrollableFrame::WHOLE,
                          nsIScrollableFrame::INSTANT);
@@ -724,9 +719,6 @@ nsTextInputSelectionImpl::ScrollPage(bool aForward)
   if (!mScrollFrame)
     return NS_ERROR_NOT_INITIALIZED;
 
-  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-      (uint32_t) ScrollInputMethod::MainThreadScrollPage);
-
   mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
                          nsIScrollableFrame::PAGES,
                          nsIScrollableFrame::SMOOTH);
@@ -739,9 +731,6 @@ nsTextInputSelectionImpl::ScrollLine(bool aForward)
   if (!mScrollFrame)
     return NS_ERROR_NOT_INITIALIZED;
 
-  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-      (uint32_t) ScrollInputMethod::MainThreadScrollLine);
-
   mScrollFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
                          nsIScrollableFrame::LINES,
                          nsIScrollableFrame::SMOOTH);
@@ -753,9 +742,6 @@ nsTextInputSelectionImpl::ScrollCharacter(bool aRight)
 {
   if (!mScrollFrame)
     return NS_ERROR_NOT_INITIALIZED;
-
-  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-      (uint32_t) ScrollInputMethod::MainThreadScrollCharacter);
 
   mScrollFrame->ScrollBy(nsIntPoint(aRight ? 1 : -1, 0),
                          nsIScrollableFrame::LINES,

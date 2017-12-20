@@ -72,7 +72,6 @@
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/layers/ScrollInputMethods.h"
 #include "nsViewManager.h"
 
 #include "nsFocusManager.h"
@@ -80,7 +79,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using mozilla::layers::ScrollInputMethod;
 
 //#define DEBUG_TABLE 1
 
@@ -3675,11 +3673,6 @@ Selection::ScrollIntoView(SelectionRegion aRegion,
   }
   if (aFlags & Selection::SCROLL_OVERFLOW_HIDDEN) {
     flags |= nsIPresShell::SCROLL_OVERFLOW_HIDDEN;
-  }
-
-  if (aFlags & Selection::SCROLL_FOR_CARET_MOVE) {
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-        (uint32_t) ScrollInputMethod::MainThreadScrollCaretIntoView);
   }
 
   presShell->ScrollFrameRectIntoView(frame, rect, aVertical, aHorizontal,
