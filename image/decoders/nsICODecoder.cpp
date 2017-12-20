@@ -13,6 +13,8 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Move.h"
 
+#include "mozilla/gfx/Swizzle.h"
+
 #include "RasterImage.h"
 
 using namespace mozilla::gfx;
@@ -618,6 +620,13 @@ nsICODecoder::FinishMask()
     for (size_t i = 3 ; i < bmpDecoder->GetImageDataLength() ; i += 4) {
       imageData[i] = mMaskBuffer[i];
     }
+    int32_t stride = mDownscaler->TargetSize().width * sizeof(uint32_t);
+    DebugOnly<bool> ret =
+    // We know the format is B8G8R8A8 because we always assume bmp's inside
+    // ico's are transparent. 
+      PremultiplyData(imageData, stride, SurfaceFormat::B8G8R8A8,
+        imageData, stride, SurfaceFormat::B8G8R8A8, mDownscaler->TargetSize());
+    MOZ_ASSERT(ret);
   }
 
   return Transition::To(ICOState::FINISHED_RESOURCE, 0);
