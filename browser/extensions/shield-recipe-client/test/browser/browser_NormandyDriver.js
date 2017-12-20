@@ -4,6 +4,7 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://testing-common/AddonTestUtils.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/NormandyDriver.jsm", this);
+Cu.import("resource://shield-recipe-client/lib/PreferenceExperiments.jsm", this);
 
 add_task(withDriver(Assert, async function uuids(driver) {
   // Test that it is a UUID
@@ -192,6 +193,7 @@ decorate_task(
 decorate_task(
   withSandboxManager(Assert),
   withWebExtension({id: "driver-addon-studies@example.com"}),
+  AddonStudies.withStudies(),
   async function testAddonStudies(sandboxManager, [addonId, addonFile]) {
     const addonUrl = Services.io.newFileURI(addonFile).spec;
     const driver = new NormandyDriver(sandboxManager);
@@ -319,7 +321,8 @@ decorate_task(
 decorate_task(
   withSandboxManager(Assert),
   withMockPreferences,
-  async function testAddonStudies(sandboxManager) {
+  PreferenceExperiments.withMockExperiments,
+  async function testPreferenceStudies(sandboxManager) {
     const driver = new NormandyDriver(sandboxManager);
     sandboxManager.cloneIntoGlobal("driver", driver, {cloneFunctions: true});
 
