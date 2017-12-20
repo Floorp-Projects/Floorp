@@ -75,10 +75,6 @@ jsreftest:
         by-test-platform:
             android.*: 7200
             default: 3600
-    when:
-        files-changed:
-            - js/src/**
-            - js/public/**
     tier:
         by-test-platform:
             linux64-qr/.*: 1
