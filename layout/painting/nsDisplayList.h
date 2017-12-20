@@ -5696,6 +5696,10 @@ public:
     return false;
   }
 
+  bool ShouldHandleOpacity() {
+    return mHandleOpacity;
+  }
+
   gfxRect BBoxInUserSpace() const;
   gfxPoint UserSpaceOffset() const;
 
