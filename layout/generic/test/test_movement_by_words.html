@@ -65,6 +65,10 @@ var KatakanaChars = "&#x30AB;&#x30BF;&#x30AB;&#x30CA;";
 var JapaneseFullStop = "&#x3002;";
 var JapaneseComma = "&#x3001;";
 var ModifierColon = "&#xA789;";
+var Symbol = "&#x26C5;"; // "sun behind cloud" (weather symbol)
+var Emoji = "&#x1f400;"; // rat emoji
+var DeseretChars = "&#x10440;&#x10441;";
+var ChineseCharsPlane2 = "&#x2000B;&#x2003F;";
 
 function test() {
   setPrefs(false, true, test1);
@@ -183,6 +187,78 @@ function test1() {
   testRight(editor.firstChild, 6);
   testRight(editor.firstChild, 13);
   testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
+  // test word selection in Deseret (alphabet in Plane 1)
+  editor.innerHTML = DeseretChars + " " + DeseretChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 9);
+  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  // Latin words separated by a pictographic symbol
+  editor.innerHTML = "hello" + Symbol + "world";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 11);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 0);
+
+  // Latin words separated by an emoji symbol
+  editor.innerHTML = "hello" + Emoji + "world";
+  sel.collapse(editor.firstChild, 0);
+//  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 12);
+//  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
+  // Emoji and Chinese
+  editor.innerHTML = Emoji + ChineseChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 2);
+  testRight(editor.firstChild, 4);
+  testLeft(editor.firstChild, 2);
+  testLeft(editor.firstChild, 0);
+
+  // test that word selection stops at Latin/Chinese boundary
+  editor.innerHTML = "hello" + ChineseChars + "world";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 12);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  // similar, but with Deseret (alphabet in Plane 1) in place of Latin
+  editor.innerHTML = DeseretChars + ChineseChars + DeseretChars;
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 4);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 10);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 4);
+  testLeft(editor.firstChild, 0);
+
+  // with Plane 2 Chinese characters
+  editor.innerHTML = "hello" + ChineseCharsPlane2 + "world";
+  sel.collapse(editor.firstChild, 0);
+//  testRight(editor.firstChild, 5);
+//  testRight(editor.firstChild, 9);
+  testRight(editor.firstChild, 14);
+//  testLeft(editor.firstChild, 9);
+//  testLeft(editor.firstChild, 5);
+  testLeft(editor.firstChild, 0);
+
+  // Plane 1 Deseret and Plane 2 Chinese characters
+  editor.innerHTML = DeseretChars + ChineseCharsPlane2 + DeseretChars;
+  sel.collapse(editor.firstChild, 0);
+//  testRight(editor.firstChild, 4);
+//  testRight(editor.firstChild, 8);
+  testRight(editor.firstChild, 12);
+//  testLeft(editor.firstChild, 8);
+//  testLeft(editor.firstChild, 4);
   testLeft(editor.firstChild, 0);
 
   // test basic word movement with eat_space_next_to_word true.
