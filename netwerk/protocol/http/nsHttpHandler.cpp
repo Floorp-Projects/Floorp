@@ -78,6 +78,7 @@
 
 #if defined(XP_WIN)
 #include <windows.h>
+#include "mozilla/WindowsVersion.h"
 #endif
 
 #if defined(XP_MACOSX)
@@ -308,6 +309,8 @@ nsHttpHandler::SetFastOpenOSSupport()
     mFastOpenSupported = false;
 #if !defined(XP_WIN) && !defined(XP_LINUX) && !defined(ANDROID) && !defined(HAS_CONNECTX)
     return;
+#elif defined(XP_WIN)
+    mFastOpenSupported = IsWindows10BuildOrLater(16299);
 #else
 
     nsAutoCString version;
@@ -332,9 +335,7 @@ nsHttpHandler::SetFastOpenOSSupport()
 
     if (NS_SUCCEEDED(rv)) {
         // set min version minus 1.
-#ifdef XP_WIN
-        int min_version[] = {10, 0};
-#elif XP_MACOSX
+#if XP_MACOSX
         int min_version[] = {15, 0};
 #elif ANDROID
         int min_version[] = {4, 4};
@@ -366,16 +367,6 @@ nsHttpHandler::SetFastOpenOSSupport()
         }
     }
 #endif
-
-#ifdef XP_WIN
-  if (mFastOpenSupported) {
-    // We have some problems with lavasoft software and tcp fast open.
-    if (GetModuleHandleW(L"pmls64.dll") || GetModuleHandleW(L"rlls64.dll")) {
-      mFastOpenSupported = false;
-    }
-  }
-#endif
-
     LOG(("nsHttpHandler::SetFastOpenOSSupport %s supported.\n",
          mFastOpenSupported ? "" : "not"));
 }
