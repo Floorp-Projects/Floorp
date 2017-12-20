@@ -6,14 +6,13 @@ Cu.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
 const OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
 decorate_task(
-  withPrefEnv({
-    set: [[OPT_OUT_PREF, true]],
-  }),
+  withMockPreferences,
   AddonStudies.withStudies([
     studyFactory({active: true}),
     studyFactory({active: true}),
   ]),
-  async function testDisableStudiesWhenOptOutDisabled([study1, study2]) {
+  async function testDisableStudiesWhenOptOutDisabled(mockPreferences, [study1, study2]) {
+    mockPreferences.set(OPT_OUT_PREF, true);
     const observers = [
       studyEndObserved(study1.recipeId),
       studyEndObserved(study2.recipeId),
