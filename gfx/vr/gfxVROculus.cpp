@@ -1245,12 +1245,12 @@ VRDisplayOculus::SubmitFrame(ID3D11Texture2D* aSource,
   layer.ColorTexture[1] = nullptr;
   layer.Fov[0] = mFOVPort[0];
   layer.Fov[1] = mFOVPort[1];
-  layer.Viewport[0].Pos.x = aSize.width * aLeftEyeRect.x;
-  layer.Viewport[0].Pos.y = aSize.height * aLeftEyeRect.y;
+  layer.Viewport[0].Pos.x = aSize.width * aLeftEyeRect.X();
+  layer.Viewport[0].Pos.y = aSize.height * aLeftEyeRect.Y();
   layer.Viewport[0].Size.w = aSize.width * aLeftEyeRect.Width();
   layer.Viewport[0].Size.h = aSize.height * aLeftEyeRect.Height();
-  layer.Viewport[1].Pos.x = aSize.width * aRightEyeRect.x;
-  layer.Viewport[1].Pos.y = aSize.height * aRightEyeRect.y;
+  layer.Viewport[1].Pos.x = aSize.width * aRightEyeRect.X();
+  layer.Viewport[1].Pos.y = aSize.height * aRightEyeRect.Y();
   layer.Viewport[1].Size.w = aSize.width * aRightEyeRect.Width();
   layer.Viewport[1].Size.h = aSize.height * aRightEyeRect.Height();
 

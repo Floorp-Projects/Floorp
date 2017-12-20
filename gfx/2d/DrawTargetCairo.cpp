@@ -136,26 +136,26 @@ ConditionRect(Rect& r) {
     return false;
 
   if (r.X() < 0.f) {
-    r.width += r.X();
-    if (r.width < 0.f)
+    r.SetWidth(r.XMost());
+    if (r.Width() < 0.f)
       return false;
-    r.x = 0.f;
+    r.MoveToX(0.f);
   }
 
   if (r.XMost() > CAIRO_COORD_MAX) {
-    r.width = CAIRO_COORD_MAX - r.X();
+    r.SetRightEdge(CAIRO_COORD_MAX);
   }
 
   if (r.Y() < 0.f) {
-    r.height += r.Y();
+    r.SetHeight(r.YMost());
     if (r.Height() < 0.f)
       return false;
 
-    r.y = 0.f;
+    r.MoveToY(0.f);
   }
 
   if (r.YMost() > CAIRO_COORD_MAX) {
-    r.height = CAIRO_COORD_MAX - r.Y();
+    r.SetBottomEdge(CAIRO_COORD_MAX);
   }
   return true;
 }
@@ -219,9 +219,12 @@ CopyToImageSurface(unsigned char *aData,
 {
   MOZ_ASSERT(aData);
 
+  auto aRectWidth = aRect.Width();
+  auto aRectHeight = aRect.Height();
+
   cairo_surface_t* surf = cairo_image_surface_create(GfxFormatToCairoFormat(aFormat),
-                                                     aRect.width,
-                                                     aRect.height);
+                                                     aRectWidth,
+                                                     aRectHeight);
   // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
   // covers the details of how to run into it, but the full detailed
   // investigation hasn't been done to determine the underlying cause.  We
@@ -236,14 +239,14 @@ CopyToImageSurface(unsigned char *aData,
   int32_t pixelWidth = BytesPerPixel(aFormat);
 
   unsigned char* source = aData +
-                          aRect.y * aStride +
-                          aRect.x * pixelWidth;
+                          aRect.Y() * aStride +
+                          aRect.X() * pixelWidth;
 
-  MOZ_ASSERT(aStride >= aRect.width * pixelWidth);
-  for (int32_t y = 0; y < aRect.height; ++y) {
+  MOZ_ASSERT(aStride >= aRectWidth * pixelWidth);
+  for (int32_t y = 0; y < aRectHeight; ++y) {
     memcpy(surfData + y * surfStride,
            source + y * aStride,
-           aRect.width * pixelWidth);
+           aRectWidth * pixelWidth);
   }
   cairo_surface_mark_dirty(surf);
   return surf;
@@ -277,16 +280,16 @@ cairo_surface_t* CreateSubImageForData(unsigned char* aData,
     return nullptr;
   }
   unsigned char *data = aData +
-                        aRect.y * aStride +
-                        aRect.x * BytesPerPixel(aFormat);
+                        aRect.Y() * aStride +
+                        aRect.X() * BytesPerPixel(aFormat);
 
   cairo_surface_t *image =
     cairo_image_surface_create_for_data(data,
                                         GfxFormatToCairoFormat(aFormat),
-                                        aRect.width,
-                                        aRect.height,
+                                        aRect.Width(),
+                                        aRect.Height(),
                                         aStride);
-  cairo_surface_set_device_offset(image, -aRect.x, -aRect.y);
+  cairo_surface_set_device_offset(image, -aRect.X(), -aRect.Y());
   return image;
 }
 
@@ -314,15 +317,15 @@ cairo_surface_t* ExtractSubImage(cairo_surface_t* aSurface,
   cairo_surface_t* similar =
     cairo_surface_create_similar(aSurface,
                                  cairo_surface_get_content(aSurface),
-                                 aSubImage.width, aSubImage.height);
+                                 aSubImage.Width(), aSubImage.Height());
 
   cairo_t* ctx = cairo_create(similar);
   cairo_set_operator(ctx, CAIRO_OPERATOR_SOURCE);
-  cairo_set_source_surface(ctx, aSurface, -aSubImage.x, -aSubImage.y);
+  cairo_set_source_surface(ctx, aSurface, -aSubImage.X(), -aSubImage.Y());
   cairo_paint(ctx);
   cairo_destroy(ctx);
 
-  cairo_surface_set_device_offset(similar, -aSubImage.x, -aSubImage.y);
+  cairo_surface_set_device_offset(similar, -aSubImage.X(), -aSubImage.Y());
   return similar;
 }
 
@@ -1056,12 +1059,12 @@ DrawTargetCairo::FillRect(const Rect &aRect,
   Rect r = aRect;
 
   /* Clamp coordinates to work around a design bug in cairo */
-  if (r.width > CAIRO_COORD_MAX ||
-      r.height > CAIRO_COORD_MAX ||
-      r.x < -CAIRO_COORD_MAX ||
-      r.x > CAIRO_COORD_MAX ||
-      r.y < -CAIRO_COORD_MAX ||
-      r.y > CAIRO_COORD_MAX)
+  if (r.Width() > CAIRO_COORD_MAX ||
+      r.Height() > CAIRO_COORD_MAX ||
+      r.X() < -CAIRO_COORD_MAX ||
+      r.X() > CAIRO_COORD_MAX ||
+      r.Y() < -CAIRO_COORD_MAX ||
+      r.Y() > CAIRO_COORD_MAX)
   {
     if (!mat.IsRectilinear()) {
       gfxWarning() << "DrawTargetCairo::FillRect() misdrawing huge Rect "
@@ -1082,7 +1085,7 @@ DrawTargetCairo::FillRect(const Rect &aRect,
   }
 
   cairo_new_path(mContext);
-  cairo_rectangle(mContext, r.x, r.y, r.Width(), r.Height());
+  cairo_rectangle(mContext, r.X(), r.Y(), r.Width(), r.Height());
 
   bool pathBoundsClip = false;
 
@@ -1109,13 +1112,13 @@ DrawTargetCairo::CopySurfaceInternal(cairo_surface_t* aSurface,
 
   cairo_identity_matrix(mContext);
 
-  cairo_set_source_surface(mContext, aSurface, aDest.x - aSource.x, aDest.y - aSource.y);
+  cairo_set_source_surface(mContext, aSurface, aDest.x - aSource.X(), aDest.y - aSource.Y());
   cairo_set_operator(mContext, CAIRO_OPERATOR_SOURCE);
   cairo_set_antialias(mContext, CAIRO_ANTIALIAS_NONE);
 
   cairo_reset_clip(mContext);
   cairo_new_path(mContext);
-  cairo_rectangle(mContext, aDest.x, aDest.y, aSource.width, aSource.height);
+  cairo_rectangle(mContext, aDest.x, aDest.y, aSource.Width(), aSource.Height());
   cairo_fill(mContext);
 }
 
@@ -1160,19 +1163,17 @@ DrawTargetCairo::CopyRect(const IntRect &aSource,
   cairo_surface_t* surf = mSurface;
 
   if (!SupportsSelfCopy(mSurface) &&
-      aDest.y >= aSource.y &&
-      aDest.y < aSource.YMost()) {
+      aSource.ContainsY(aDest.y)) {
     cairo_surface_t* similar = cairo_surface_create_similar(mSurface,
                                                             GfxFormatToCairoContent(GetFormat()),
-                                                            aSource.width, aSource.height);
+                                                            aSource.Width(), aSource.Height());
     cairo_t* ctx = cairo_create(similar);
     cairo_set_operator(ctx, CAIRO_OPERATOR_SOURCE);
-    cairo_set_source_surface(ctx, surf, -aSource.x, -aSource.y);
+    cairo_set_source_surface(ctx, surf, -aSource.X(), -aSource.Y());
     cairo_paint(ctx);
     cairo_destroy(ctx);
 
-    source.x = 0;
-    source.y = 0;
+    source.MoveTo(0, 0);
     surf = similar;
   }
 
@@ -1219,7 +1220,7 @@ DrawTargetCairo::StrokeRect(const Rect &aRect,
   AutoPrepareForDrawing prep(this, mContext);
 
   cairo_new_path(mContext);
-  cairo_rectangle(mContext, aRect.x, aRect.y, aRect.Width(), aRect.Height());
+  cairo_rectangle(mContext, aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
 
   DrawPattern(aPattern, aStrokeOptions, aOptions, DRAW_STROKE);
 }

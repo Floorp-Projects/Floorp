@@ -67,18 +67,14 @@ RotatedBuffer::GetSourceRectangle(XSide aXSide, YSide aYSide) const
 {
   Rect result;
   if (aXSide == LEFT) {
-    result.x = 0;
-    result.SetWidth(mBufferRotation.x);
+    result.SetBoxX(0, mBufferRotation.x);
   } else {
-    result.x = mBufferRotation.x;
-    result.SetWidth(mBufferRect.Width() - mBufferRotation.x);
+    result.SetBoxX(mBufferRotation.x, mBufferRect.Width());
   }
   if (aYSide == TOP) {
-    result.y = 0;
-    result.SetHeight(mBufferRotation.y);
+    result.SetBoxY(0, mBufferRotation.y);
   } else {
-    result.y = mBufferRotation.y;
-    result.SetHeight(mBufferRect.Height() - mBufferRotation.y);
+    result.SetBoxY(mBufferRotation.y, mBufferRect.Height());
   }
   return result;
 }
@@ -111,7 +107,7 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
   if (!fillRect.IntersectRect(mBufferRect, quadrantRect))
     return;
 
-  gfx::Point quadrantTranslation(quadrantRect.x, quadrantRect.y);
+  gfx::Point quadrantTranslation(quadrantRect.X(), quadrantRect.Y());
 
   MOZ_ASSERT(aSource != BUFFER_BOTH);
   RefPtr<SourceSurface> snapshot = GetSourceSurface(aSource);
@@ -297,8 +293,8 @@ RotatedBuffer::Parameters::RectWrapsBuffer(const gfx::IntRect& aRect) const
 {
   int32_t xBoundary = mBufferRect.XMost() - mBufferRotation.x;
   int32_t yBoundary = mBufferRect.YMost() - mBufferRotation.y;
-  return (aRect.x < xBoundary && xBoundary < aRect.XMost()) ||
-         (aRect.y < yBoundary && yBoundary < aRect.YMost());
+  return (aRect.X() < xBoundary && xBoundary < aRect.XMost()) ||
+         (aRect.Y() < yBoundary && yBoundary < aRect.YMost());
 }
 
 void
@@ -452,13 +448,13 @@ RotatedBuffer::BorrowDrawTargetForQuadrantUpdate(const IntRect& aBounds,
   if (aSetTransform) {
     mLoanedTransform = mLoanedDrawTarget->GetTransform();
     Matrix transform = Matrix(mLoanedTransform)
-                            .PreTranslate(-quadrantRect.x,
-                                          -quadrantRect.y);
+                            .PreTranslate(-quadrantRect.X(),
+                                          -quadrantRect.Y());
     mLoanedDrawTarget->SetTransform(transform);
     mSetTransform = true;
   } else {
     MOZ_ASSERT(aOutMatrix);
-    *aOutMatrix = Matrix::Translation(-quadrantRect.x, -quadrantRect.y);
+    *aOutMatrix = Matrix::Translation(-quadrantRect.X(), -quadrantRect.Y());
     mSetTransform = false;
   }
 

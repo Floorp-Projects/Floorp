@@ -253,8 +253,8 @@ D3D11YCbCrImage::GetAsSourceSurface()
 
   MOZ_ASSERT(mapCb.RowPitch == mapCr.RowPitch);
 
-  data.mPicX = mPictureRect.x;
-  data.mPicY = mPictureRect.y;
+  data.mPicX = mPictureRect.X();
+  data.mPicY = mPictureRect.Y();
   data.mPicSize = mPictureRect.Size();
   data.mStereoMode = StereoMode::MONO;
   data.mYUVColorSpace = mColorSpace;

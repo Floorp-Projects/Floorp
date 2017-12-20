@@ -259,9 +259,9 @@ BasicCompositor::GetTextureFactoryIdentifier()
 already_AddRefed<CompositingRenderTarget>
 BasicCompositor::CreateRenderTarget(const IntRect& aRect, SurfaceInitMode aInit)
 {
-  MOZ_ASSERT(aRect.Width() != 0 && aRect.Height() != 0, "Trying to create a render target of invalid size");
+  MOZ_ASSERT(!aRect.IsZero(), "Trying to create a render target of invalid size");
 
-  if (aRect.Width() * aRect.Height() == 0) {
+  if (aRect.IsZero()) {
     return nullptr;
   }
 
@@ -289,9 +289,9 @@ already_AddRefed<CompositingRenderTarget>
 BasicCompositor::CreateRenderTargetForWindow(const LayoutDeviceIntRect& aRect, const LayoutDeviceIntRect& aClearRect, BufferMode aBufferMode)
 {
   MOZ_ASSERT(mDrawTarget);
-  MOZ_ASSERT(aRect.Width() != 0 && aRect.Height() != 0, "Trying to create a render target of invalid size");
+  MOZ_ASSERT(!aRect.IsZero(), "Trying to create a render target of invalid size");
 
-  if (aRect.Width() * aRect.Height() == 0) {
+  if (aRect.IsZero()) {
     return nullptr;
   }
 
@@ -460,8 +460,8 @@ DrawSurfaceWithTextureCoords(gfx::DrawTarget* aDest,
   }
 
   // Convert aTextureCoords into aSource's coordinate space
-  gfxRect sourceRect(aTextureCoords.x * aSource->GetSize().width,
-                     aTextureCoords.y * aSource->GetSize().height,
+  gfxRect sourceRect(aTextureCoords.X() * aSource->GetSize().width,
+                     aTextureCoords.Y() * aSource->GetSize().height,
                      aTextureCoords.Width() * aSource->GetSize().width,
                      aTextureCoords.Height() * aSource->GetSize().height);
 
@@ -472,8 +472,8 @@ DrawSurfaceWithTextureCoords(gfx::DrawTarget* aDest,
   // Compute a transform that maps sourceRect to aDestRect.
   Matrix matrix =
     gfxUtils::TransformRectToRect(sourceRect,
-                                  gfx::IntPoint::Truncate(aDestRect.x, aDestRect.y),
-                                  gfx::IntPoint::Truncate(aDestRect.XMost(), aDestRect.y),
+                                  gfx::IntPoint::Truncate(aDestRect.X(), aDestRect.Y()),
+                                  gfx::IntPoint::Truncate(aDestRect.XMost(), aDestRect.Y()),
                                   gfx::IntPoint::Truncate(aDestRect.XMost(), aDestRect.YMost()));
 
   // Only use REPEAT if aTextureCoords is outside (0, 0, 1, 1).
@@ -559,7 +559,7 @@ AttemptVideoScale(TextureSourceBasic* aSource, const SourceSurface* aSourceMask,
 
     ssse3_scale_data((uint32_t*)mapSrc.GetData(), srcSource->GetSize().width, srcSource->GetSize().height,
                      mapSrc.GetStride()/4,
-                     ((uint32_t*)dstData) + fillRect.x + (dstStride / 4) * fillRect.y, dstRect.Width(), dstRect.Height(),
+                     ((uint32_t*)dstData) + fillRect.X() + (dstStride / 4) * fillRect.Y(), dstRect.Width(), dstRect.Height(),
                      dstStride / 4,
                      offset.x, offset.y,
                      fillRect.Width(), fillRect.Height());
@@ -624,7 +624,7 @@ AttemptVideoConvertAndScale(TextureSource* aSource, const SourceSurface* aSource
   if (aDest->LockBits(&dstData, &dstSize, &dstStride, &dstFormat)) {
     wrappingSource->ConvertAndScale(dstFormat,
                                     dstRect.Size(),
-                                    dstData + ptrdiff_t(dstRect.x) * BytesPerPixel(dstFormat) + ptrdiff_t(dstRect.y) * dstStride,
+                                    dstData + ptrdiff_t(dstRect.X()) * BytesPerPixel(dstFormat) + ptrdiff_t(dstRect.Y()) * dstStride,
                                     dstStride);
     aDest->ReleaseBits(dstData);
     return true;
@@ -692,7 +692,7 @@ BasicCompositor::DrawGeometry(const Geometry& aGeometry,
       return;
     }
 
-    dest->SetTransform(Matrix::Translation(-aRect.x, -aRect.y));
+    dest->SetTransform(Matrix::Translation(-aRect.X(), -aRect.Y()));
 
     // Get the bounds post-transform.
     transformBounds = aTransform.TransformAndClipBounds(aRect, Rect(offset.x, offset.y, buffer->GetSize().width, buffer->GetSize().height));
@@ -707,7 +707,7 @@ BasicCompositor::DrawGeometry(const Geometry& aGeometry,
     // When we apply the 3D transformation, we do it against a temporary
     // surface, so undo the coordinate offset.
     new3DTransform = aTransform;
-    new3DTransform.PreTranslate(aRect.x, aRect.y, 0);
+    new3DTransform.PreTranslate(aRect.X(), aRect.Y(), 0);
   }
 
   // XXX the transform is probably just an integer offset so this whole
@@ -845,7 +845,7 @@ BasicCompositor::DrawGeometry(const Geometry& aGeometry,
       RefPtr<DrawTarget> transformDT =
         dest->CreateSimilarDrawTarget(IntSize::Truncate(transformBounds.Width(), transformBounds.Height()),
                                       SurfaceFormat::B8G8R8A8);
-      new3DTransform.PostTranslate(-transformBounds.x, -transformBounds.y, 0);
+      new3DTransform.PostTranslate(-transformBounds.X(), -transformBounds.Y(), 0);
       if (transformDT &&
           transformDT->Draw3DTransformedSurface(destSnapshot, new3DTransform)) {
         RefPtr<SourceSurface> transformSnapshot = transformDT->Snapshot();
@@ -1054,8 +1054,8 @@ BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd)
     for (auto iter = mInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
       const LayoutDeviceIntRect& r = iter.Get();
       dest->CopySurface(source,
-                        IntRect(r.x, r.y, r.Width(), r.Height()) - mRenderTarget->GetOrigin(),
-                        IntPoint(r.x, r.y) - offset);
+                        IntRect(r.X(), r.Y(), r.Width(), r.Height()) - mRenderTarget->GetOrigin(),
+                        IntPoint(r.X(), r.Y()) - offset);
     }
   }
 

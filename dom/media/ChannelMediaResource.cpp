@@ -470,7 +470,6 @@ ChannelMediaResource::Open(nsIStreamListener** aStreamListener)
   mSharedInfo->mResources.AppendElement(this);
 
   mIsLiveStream = cl < 0;
-  MOZ_ASSERT(GetOffset() == 0, "Who set offset already?");
   mListener = new Listener(this, 0, ++mLoadID);
   *aStreamListener = mListener;
   NS_ADDREF(*aStreamListener);
@@ -690,24 +689,7 @@ ChannelMediaResource::Resume()
       // Just wake up our existing channel
       element->DownloadResumed();
     } else {
-      int64_t totalLength = GetLength();
-      // If mOffset is at the end of the stream, then we shouldn't try to
-      // seek to it. The seek will fail and be wasted anyway. We can leave
-      // the channel dead; if the media cache wants to read some other data
-      // in the future, it will call CacheClientSeek itself which will reopen the
-      // channel.
-      if (totalLength < 0 || GetOffset() < totalLength) {
-        // There is (or may be) data to read, so start reading it.
-        // Need to recreate the channel.
-        int64_t offset =
-          mPendingSeekOffset != -1 ? mPendingSeekOffset : GetOffset();
-        mPendingSeekOffset = -1;
-        Seek(offset, false);
-        element->DownloadResumed();
-      } else {
-        // The channel remains dead. Do not notify DownloadResumed() which
-        // will leave the media element in NETWORK_LOADING state.
-      }
+      mCacheStream.NotifyResume();
     }
   }
 }
@@ -858,12 +840,9 @@ ChannelMediaResource::Seek(int64_t aOffset, bool aResume)
   // Don't create a new channel if we are still suspended. The channel will
   // be recreated when we are resumed.
   if (mSuspendAgent.IsSuspended()) {
-    // Store the offset so we know where to seek when resumed.
-    mPendingSeekOffset = aOffset;
     return NS_OK;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(mPendingSeekOffset == -1);
   nsresult rv = RecreateChannel();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -962,12 +941,6 @@ int64_t
 ChannelMediaResource::GetLength()
 {
   return mCacheStream.GetLength();
-}
-
-int64_t
-ChannelMediaResource::GetOffset() const
-{
-  return mCacheStream.GetOffset();
 }
 
 nsCString

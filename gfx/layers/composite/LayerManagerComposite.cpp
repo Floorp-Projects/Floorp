@@ -723,7 +723,7 @@ LayerManagerComposite::PushGroupForLayerEffects()
   // so that we don't have to change size if the drawing area changes.
   IntRect rect(previousTarget->GetOrigin(), previousTarget->GetSize());
   // XXX: I'm not sure if this is true or not...
-  MOZ_ASSERT(rect.x == 0 && rect.y == 0);
+  MOZ_ASSERT(rect.IsEqualXY(0, 0));
   if (!mTwoPassTmpTarget ||
       mTwoPassTmpTarget->GetSize() != previousTarget->GetSize() ||
       mTwoPassTmpTarget->GetOrigin() != previousTarget->GetOrigin()) {
@@ -894,7 +894,7 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
   }
 
   ParentLayerIntRect clipRect;
-  IntRect bounds(mRenderBounds.x, mRenderBounds.y, mRenderBounds.Width(), mRenderBounds.Height());
+  IntRect bounds(mRenderBounds.X(), mRenderBounds.Y(), mRenderBounds.Width(), mRenderBounds.Height());
   IntRect actualBounds;
 
   CompositorBench(mCompositor, bounds);
@@ -910,12 +910,12 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
 #endif
   if (mRoot->GetClipRect()) {
     clipRect = *mRoot->GetClipRect();
-    IntRect rect(clipRect.x, clipRect.y, clipRect.Width(), clipRect.Height());
+    IntRect rect(clipRect.X(), clipRect.Y(), clipRect.Width(), clipRect.Height());
     mCompositor->BeginFrame(aInvalidRegion, &rect, bounds, aOpaqueRegion, nullptr, &actualBounds);
   } else {
     gfx::IntRect rect;
     mCompositor->BeginFrame(aInvalidRegion, nullptr, bounds, aOpaqueRegion, &rect, &actualBounds);
-    clipRect = ParentLayerIntRect(rect.x, rect.y, rect.Width(), rect.Height());
+    clipRect = ParentLayerIntRect(rect.X(), rect.Y(), rect.Width(), rect.Height());
   }
 #if defined(MOZ_WIDGET_ANDROID)
   ScreenCoord offset = GetContentShiftForToolbar();
@@ -959,7 +959,7 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion, const nsIntRegi
   if (!mRegionToClear.IsEmpty()) {
     for (auto iter = mRegionToClear.RectIter(); !iter.Done(); iter.Next()) {
       const IntRect& r = iter.Get();
-      mCompositor->ClearRect(Rect(r.x, r.y, r.Width(), r.Height()));
+      mCompositor->ClearRect(Rect(r.X(), r.Y(), r.Width(), r.Height()));
     }
   }
 

@@ -1081,14 +1081,14 @@ public:
     if (mClipRect) {
       if (!aRect) {
         MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ClipRect was %d,%d,%d,%d is <none>", this,
-                                            mClipRect->x, mClipRect->y, mClipRect->Width(), mClipRect->Height()));
+                                            mClipRect->X(), mClipRect->Y(), mClipRect->Width(), mClipRect->Height()));
         mClipRect.reset();
         Mutated();
       } else {
         if (!aRect->IsEqualEdges(*mClipRect)) {
           MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ClipRect was %d,%d,%d,%d is %d,%d,%d,%d", this,
-                                              mClipRect->x, mClipRect->y, mClipRect->Width(), mClipRect->Height(),
-                                              aRect->x, aRect->y, aRect->Width(), aRect->Height()));
+                                              mClipRect->X(), mClipRect->Y(), mClipRect->Width(), mClipRect->Height(),
+                                              aRect->X(), aRect->Y(), aRect->Width(), aRect->Height()));
           mClipRect = aRect;
           Mutated();
         }
@@ -1096,7 +1096,7 @@ public:
     } else {
       if (aRect) {
         MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ClipRect was <none> is %d,%d,%d,%d", this,
-                                            aRect->x, aRect->y, aRect->Width(), aRect->Height()));
+                                            aRect->X(), aRect->Y(), aRect->Width(), aRect->Height()));
         mClipRect = aRect;
         Mutated();
       }
