@@ -2372,14 +2372,10 @@ static nsresult setHistoryDetailsCallback(nsNavHistoryResultNode* aNode,
  * common update operation and it is important that it be as efficient as
  * possible.
  */
-NS_IMETHODIMP
+nsresult
 nsNavHistoryQueryResultNode::OnVisit(nsIURI* aURI, int64_t aVisitId,
-                                     PRTime aTime, int64_t aSessionId,
-                                     int64_t aReferringId,
-                                     uint32_t aTransitionType,
-                                     const nsACString& aGUID,
-                                     bool aHidden,
-                                     uint32_t* aAdded)
+                                     PRTime aTime, uint32_t aTransitionType,
+                                     bool aHidden, uint32_t* aAdded)
 {
   if (aHidden && !mOptions->IncludeHidden())
     return NS_OK;
@@ -4622,12 +4618,10 @@ nsNavHistoryResult::OnItemMoved(int64_t aItemId,
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
-                            int64_t aSessionId, int64_t aReferringId,
-                            uint32_t aTransitionType, const nsACString& aGUID,
-                            bool aHidden, uint32_t aVisitCount, uint32_t aTyped,
-                            const nsAString& aLastKnownTitle)
+                            uint32_t aTransitionType, const nsACString& aGUID, bool aHidden,
+                            uint32_t aVisitCount, const nsAString& aLastKnownTitle)
 {
   NS_ENSURE_ARG(aURI);
 
@@ -4638,8 +4632,7 @@ nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
 
   uint32_t added = 0;
 
-  ENUMERATE_HISTORY_OBSERVERS(OnVisit(aURI, aVisitId, aTime, aSessionId,
-                                      aReferringId, aTransitionType, aGUID,
+  ENUMERATE_HISTORY_OBSERVERS(OnVisit(aURI, aVisitId, aTime, aTransitionType,
                                       aHidden, &added));
 
   // When we add visits through UpdatePlaces, we don't bother telling
@@ -4709,6 +4702,35 @@ nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
     ENUMERATE_QUERY_OBSERVERS(Refresh(), mHistoryObservers, IsContainersQuery());
   }
 
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsNavHistoryResult::OnVisits(nsIVisitData** aVisits,
+                             uint32_t aVisitsCount) {
+  for (uint32_t i = 0; i < aVisitsCount; ++i) {
+    nsIVisitData* place = aVisits[i];
+    nsCOMPtr<nsIURI> uri;
+    MOZ_ALWAYS_SUCCEEDS(place->GetUri(getter_AddRefs(uri)));
+    int64_t visitId;
+    MOZ_ALWAYS_SUCCEEDS(place->GetVisitId(&visitId));
+    PRTime time;
+    MOZ_ALWAYS_SUCCEEDS(place->GetTime(&time));
+    uint32_t transitionType;
+    MOZ_ALWAYS_SUCCEEDS(place->GetTransitionType(&transitionType));
+    nsCString guid;
+    MOZ_ALWAYS_SUCCEEDS(place->GetGuid(guid));
+    bool hidden;
+    MOZ_ALWAYS_SUCCEEDS(place->GetHidden(&hidden));
+    uint32_t visitCount;
+    MOZ_ALWAYS_SUCCEEDS(place->GetVisitCount(&visitCount));
+    nsString lastKnownTitle;
+    MOZ_ALWAYS_SUCCEEDS(place->GetLastKnownTitle(lastKnownTitle));
+    nsresult rv = OnVisit(uri, visitId, time, transitionType, guid, hidden,
+                          visitCount, lastKnownTitle);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return NS_OK;
 }
 

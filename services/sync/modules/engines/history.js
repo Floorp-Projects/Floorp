@@ -470,15 +470,17 @@ HistoryTracker.prototype = {
     this.onDeleteAffectsGUID(uri, guid, reason, "onDeleteURI", SCORE_INCREMENT_XLARGE);
   },
 
-  onVisit(uri, vid, time, session, referrer, trans, guid) {
+  onVisits(aVisits) {
     if (this.ignoreAll) {
-      this._log.trace("ignoreAll: ignoring visit for " + guid);
+      this._log.trace("ignoreAll: ignoring visits [" +
+                      aVisits.map(v => v.guid).join(",") + "]");
       return;
     }
-
-    this._log.trace("onVisit: " + uri.spec);
-    if (this.engine.shouldSyncURL(uri.spec) && this.addChangedID(guid)) {
-      this.score += SCORE_INCREMENT_SMALL;
+    for (let {uri, guid} of aVisits) {
+      this._log.trace("onVisits: " + uri.spec);
+      if (this.engine.shouldSyncURL(uri.spec) && this.addChangedID(guid)) {
+        this.score += SCORE_INCREMENT_SMALL;
+      }
     }
   },
 

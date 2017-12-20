@@ -843,7 +843,7 @@ this.AeroPeek = {
   /* nsINavHistoryObserver implementation */
   onBeginUpdateBatch() {},
   onEndUpdateBatch() {},
-  onVisit() {},
+  onVisits() {},
   onTitleChanged() {},
   onFrecencyChanged() {},
   onManyFrecenciesChanged() {},
