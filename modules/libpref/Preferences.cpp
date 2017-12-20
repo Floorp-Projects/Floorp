@@ -4897,6 +4897,33 @@ Preferences::AddBoolVarCache(bool* aCache, const char* aPref, bool aDefault)
   return NS_OK;
 }
 
+template<MemoryOrdering Order>
+static void
+AtomicBoolVarChanged(const char* aPref, void* aClosure)
+{
+  CacheData* cache = static_cast<CacheData*>(aClosure);
+  *static_cast<Atomic<bool, Order>*>(cache->mCacheLocation) =
+    Preferences::GetBool(aPref, cache->mDefaultValueBool);
+}
+
+template<MemoryOrdering Order>
+/* static */ nsresult
+Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache, const char* aPref, bool aDefault)
+{
+  WATCHING_PREF_RAII();
+  NS_ASSERTION(aCache, "aCache must not be NULL");
+#ifdef DEBUG
+  AssertNotAlreadyCached("bool", aPref, aCache);
+#endif
+  *aCache = Preferences::GetBool(aPref, aDefault);
+  CacheData* data = new CacheData();
+  data->mCacheLocation = aCache;
+  data->mDefaultValueBool = aDefault;
+  CacheDataAppendElement(data);
+  RegisterVarCacheCallback(AtomicBoolVarChanged<Order>, aPref, data);
+  return NS_OK;
+}
+
 static void
 IntVarChanged(const char* aPref, void* aClosure)
 {
@@ -4983,6 +5010,10 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
 // Since the definition of this template function is not in a header file, we
 // need to explicitly specify the instantiations that are required. Currently
 // only the order=Relaxed variant is needed.
+template nsresult
+Preferences::AddAtomicBoolVarCache(Atomic<bool, Relaxed>*,
+                                   const char*,
+                                   bool);
 template nsresult
 Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Relaxed>*,
                                    const char*,
