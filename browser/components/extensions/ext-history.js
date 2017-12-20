@@ -97,16 +97,18 @@ const getHistoryObserver = () => {
       onDeleteURI(uri, guid, reason) {
         this.emit("visitRemoved", {allHistory: false, urls: [uri.spec]});
       }
-      onVisit(uri, visitId, time, sessionId, referringId, transitionType, guid, hidden, visitCount, typed, lastKnownTitle) {
-        let data = {
-          id: guid,
-          url: uri.spec,
-          title: lastKnownTitle || "",
-          lastVisitTime: time / 1000,  // time from Places is microseconds,
-          visitCount,
-          typedCount: typed,
-        };
-        this.emit("visited", data);
+      onVisits(visits) {
+        for (let visit of visits) {
+          let data = {
+            id: visit.guid,
+            url: visit.uri.spec,
+            title: visit.lastKnownTitle || "",
+            lastVisitTime: visit.time / 1000,  // time from Places is microseconds,
+            visitCount: visit.visitCount,
+            typedCount: visit.typed,
+          };
+          this.emit("visited", data);
+        }
       }
       onBeginUpdateBatch() {}
       onEndUpdateBatch() {}
