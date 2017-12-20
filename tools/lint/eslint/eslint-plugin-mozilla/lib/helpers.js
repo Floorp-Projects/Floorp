@@ -248,6 +248,23 @@ module.exports = {
    *                     If the global is writeable or not.
    */
   convertCallExpressionToGlobals(node, isGlobal) {
+    let express = node.expression;
+    if (express.type === "CallExpression" &&
+        express.callee.type === "MemberExpression" &&
+        express.callee.object &&
+        express.callee.object.type === "Identifier" &&
+        express.arguments.length === 1 &&
+        express.arguments[0].type === "ArrayExpression" &&
+        express.callee.property.type === "Identifier" &&
+        express.callee.property.name === "importGlobalProperties") {
+      return express.arguments[0].elements.map(literal => {
+        return {
+          name: literal.value,
+          writable: false
+        };
+      });
+    }
+
     let source;
     try {
       source = this.getASTSource(node);

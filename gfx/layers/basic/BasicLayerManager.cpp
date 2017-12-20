@@ -63,7 +63,7 @@ using namespace mozilla::gfx;
 static bool
 ClipToContain(gfxContext* aContext, const IntRect& aRect)
 {
-  gfxRect userRect(aRect.x, aRect.y, aRect.Width(), aRect.Height());
+  gfxRect userRect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
   gfxRect deviceRect = aContext->UserToDevice(userRect);
   deviceRect.RoundOut();
 
@@ -268,7 +268,7 @@ public:
         !mTransform.HasNonAxisAlignedTransform()) {
 
       gfx::Rect opaqueRect = dt->GetTransform().TransformBounds(
-              gfx::Rect(bounds.x, bounds.y, bounds.Width(), bounds.Height()));
+          gfx::Rect(bounds.X(), bounds.Y(), bounds.Width(), bounds.Height()));
       opaqueRect.RoundIn();
       IntRect intOpaqueRect;
       if (opaqueRect.ToIntRect(&intOpaqueRect)) {
@@ -372,7 +372,7 @@ static void
 TransformIntRect(IntRect& aRect, const Matrix& aMatrix,
                  IntRect (*aRoundMethod)(const gfxRect&))
 {
-  Rect gr = Rect(aRect.x, aRect.y, aRect.Width(), aRect.Height());
+  Rect gr = Rect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
   gr = aMatrix.TransformBounds(gr);
   aRect = (*aRoundMethod)(ThebesRect(gr));
 }
@@ -617,7 +617,7 @@ BasicLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
     if (!mRegionToClear.IsEmpty()) {
       for (auto iter = mRegionToClear.RectIter(); !iter.Done(); iter.Next()) {
         const IntRect& r = iter.Get();
-        mTarget->GetDrawTarget()->ClearRect(Rect(r.x, r.y, r.Width(), r.Height()));
+        mTarget->GetDrawTarget()->ClearRect(Rect(r.X(), r.Y(), r.Width(), r.Height()));
       }
     }
     if (mWidget) {
@@ -793,7 +793,7 @@ InstallLayerClipPreserves3D(gfxContext* aTarget, Layer* aLayer)
   aTarget->SetMatrix(transform);
 
   aTarget->NewPath();
-  aTarget->SnappedRectangle(gfxRect(clipRect->x, clipRect->y,
+  aTarget->SnappedRectangle(gfxRect(clipRect->X(), clipRect->Y(),
                                     clipRect->Width(), clipRect->Height()));
   aTarget->Clip();
 
@@ -904,7 +904,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     if (!untransformedDT || !untransformedDT->IsValid()) {
       return;
     }
-    untransformedDT->SetTransform(Matrix::Translation(-Point(bounds.x, bounds.y)));
+    untransformedDT->SetTransform(Matrix::Translation(-Point(bounds.X(), bounds.Y())));
 
     RefPtr<gfxContext> groupTarget =
       gfxContext::CreatePreservingTransformOrNull(untransformedDT);
@@ -927,8 +927,8 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
       effectiveTransform.TransformAndClipBounds(Rect(bounds),
                                                 ToRect(aTarget->GetClipExtents()));
     xformBounds.RoundOut();
-    effectiveTransform.PostTranslate(-xformBounds.x, -xformBounds.y, 0);
-    effectiveTransform.PreTranslate(bounds.x, bounds.y, 0);
+    effectiveTransform.PostTranslate(-xformBounds.X(), -xformBounds.Y(), 0);
+    effectiveTransform.PreTranslate(bounds.X(), bounds.Y(), 0);
 
     RefPtr<SourceSurface> untransformedSurf = untransformedDT->Snapshot();
     RefPtr<DrawTarget> xformDT =

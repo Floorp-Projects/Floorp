@@ -112,8 +112,8 @@ CheckerboardEvent::LogInfo(RendertraceProperty aProperty,
   mRendertraceInfo << "RENDERTRACE "
       << (aTimestamp - mOriginTime).ToMilliseconds() << " rect "
       << sColors[aProperty] << " "
-      << aRect.x << " "
-      << aRect.y << " "
+      << aRect.X() << " "
+      << aRect.Y() << " "
       << aRect.Width() << " "
       << aRect.Height() << " "
       << "// " << sDescriptions[aProperty]

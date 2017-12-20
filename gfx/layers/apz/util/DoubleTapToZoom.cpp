@@ -134,21 +134,21 @@ CalculateRectToZoomTo(const nsCOMPtr<nsIDocument>& aRootContentDocument,
     if (widthRatio < 0.9 && targetHeight < rect.Height()) {
       const CSSPoint scrollPoint = CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition());
       float newY = aPoint.y + scrollPoint.y - (targetHeight * 0.5f);
-      if ((newY + targetHeight) > (rect.y + rect.Height())) {
-        rect.y += rect.Height() - targetHeight;
-      } else if (newY > rect.y) {
-        rect.y = newY;
+      if ((newY + targetHeight) > rect.YMost()) {
+        rect.MoveByY(rect.Height() - targetHeight);
+      } else if (newY > rect.Y()) {
+        rect.MoveToY(newY);
       }
       rect.SetHeight(targetHeight);
     }
   }
 
-  rect = CSSRect(std::max(metrics.GetScrollableRect().x, rect.x - margin),
-                 rect.y,
+  rect = CSSRect(std::max(metrics.GetScrollableRect().X(), rect.X() - margin),
+                 rect.Y(),
                  rect.Width() + 2 * margin,
                  rect.Height());
   // Constrict the rect to the screen's right edge
-  rect.SetWidth(std::min(rect.Width(), metrics.GetScrollableRect().XMost() - rect.x));
+  rect.SetWidth(std::min(rect.Width(), metrics.GetScrollableRect().XMost() - rect.X()));
 
   // If the rect is already taking up most of the visible area and is
   // stretching the width of the page, then we want to zoom out instead.
@@ -166,8 +166,8 @@ CalculateRectToZoomTo(const nsCOMPtr<nsIDocument>& aRootContentDocument,
   // to zoom in (bug 761721). The 1.2 multiplier is just a little fuzz to
   // compensate for 'rect' including horizontal margins but not vertical ones.
   CSSCoord cssTapY = metrics.GetScrollOffset().y + aPoint.y;
-  if ((rect.Height() > rounded.Height()) && (cssTapY > rounded.y + (rounded.Height() * 1.2))) {
-    rounded.y = cssTapY - (rounded.Height() / 2);
+  if ((rect.Height() > rounded.Height()) && (cssTapY > rounded.Y() + (rounded.Height() * 1.2))) {
+    rounded.MoveToY(cssTapY - (rounded.Height() / 2));
   }
 
   return rounded;

@@ -187,12 +187,12 @@ UpdateTextureCoordinates(gfx::TexturedTriangle& aTriangle,
                          const gfx::Rect& aTextureCoords)
 {
   // Calculate the relative offset of the intersection within the layer.
-  float dx = (aIntersection.x - aRect.x) / aRect.Width();
-  float dy = (aIntersection.y - aRect.y) / aRect.Height();
+  float dx = (aIntersection.X() - aRect.X()) / aRect.Width();
+  float dy = (aIntersection.Y() - aRect.Y()) / aRect.Height();
 
   // Update the texture offset.
-  float x = aTextureCoords.x + dx * aTextureCoords.Width();
-  float y = aTextureCoords.y + dy * aTextureCoords.Height();
+  float x = aTextureCoords.X() + dx * aTextureCoords.Width();
+  float y = aTextureCoords.Y() + dy * aTextureCoords.Height();
 
   // Scale the texture width and height.
   float w = aTextureCoords.Width() * aIntersection.Width() / aRect.Width();
@@ -206,8 +206,8 @@ UpdateTextureCoordinates(gfx::TexturedTriangle& aTriangle,
 
   auto UpdatePoint = [&](const gfx::Point& p, gfx::Point& t)
   {
-    t.x = x + (p.x - aIntersection.x) / aIntersection.Width() * w;
-    t.y = y + (p.y - aIntersection.y) / aIntersection.Height() * h;
+    t.x = x + (p.x - aIntersection.X()) / aIntersection.Width() * w;
+    t.y = y + (p.y - aIntersection.Y()) / aIntersection.Height() * h;
 
     Clamp(t.x);
     Clamp(t.y);
@@ -372,22 +372,22 @@ Compositor::SlowDrawRect(const gfx::Rect& aRect, const gfx::Color& aColor,
 
   effects.mPrimaryEffect = new EffectSolidColor(aColor);
   // left
-  this->DrawQuad(gfx::Rect(aRect.x, aRect.y,
+  this->DrawQuad(gfx::Rect(aRect.X(), aRect.Y(),
                            aStrokeWidth, aRect.Height()),
                  aClipRect, effects, opacity,
                  aTransform);
   // top
-  this->DrawQuad(gfx::Rect(aRect.x + aStrokeWidth, aRect.y,
+  this->DrawQuad(gfx::Rect(aRect.X() + aStrokeWidth, aRect.Y(),
                            aRect.Width() - 2 * aStrokeWidth, aStrokeWidth),
                  aClipRect, effects, opacity,
                  aTransform);
   // right
-  this->DrawQuad(gfx::Rect(aRect.x + aRect.Width() - aStrokeWidth, aRect.y,
+  this->DrawQuad(gfx::Rect(aRect.XMost() - aStrokeWidth, aRect.Y(),
                            aStrokeWidth, aRect.Height()),
                  aClipRect, effects, opacity,
                  aTransform);
   // bottom
-  this->DrawQuad(gfx::Rect(aRect.x + aStrokeWidth, aRect.y + aRect.Height() - aStrokeWidth,
+  this->DrawQuad(gfx::Rect(aRect.X() + aStrokeWidth, aRect.YMost() - aStrokeWidth,
                            aRect.Width() - 2 * aStrokeWidth, aStrokeWidth),
                  aClipRect, effects, opacity,
                  aTransform);
@@ -456,19 +456,19 @@ DecomposeIntoNoRepeatRects(const gfx::Rect& aRect,
   bool flipped = false;
   if (texCoordRect.Height() < 0) {
     flipped = true;
-    texCoordRect.y += texCoordRect.Height();
+    texCoordRect.MoveByY(texCoordRect.Height());
     texCoordRect.SetHeight(-texCoordRect.Height());
   }
 
   // Wrap the texture coordinates so they are within [0,1] and cap width/height
   // at 1. We rely on this below.
-  texCoordRect = gfx::Rect(gfx::Point(WrapTexCoord(texCoordRect.x),
-                                      WrapTexCoord(texCoordRect.y)),
+  texCoordRect = gfx::Rect(gfx::Point(WrapTexCoord(texCoordRect.X()),
+                                      WrapTexCoord(texCoordRect.Y())),
                            gfx::Size(std::min(texCoordRect.Width(), 1.0f),
                                      std::min(texCoordRect.Height(), 1.0f)));
 
-  NS_ASSERTION(texCoordRect.x >= 0.0f && texCoordRect.x <= 1.0f &&
-               texCoordRect.y >= 0.0f && texCoordRect.y <= 1.0f &&
+  NS_ASSERTION(texCoordRect.X() >= 0.0f && texCoordRect.X() <= 1.0f &&
+               texCoordRect.Y() >= 0.0f && texCoordRect.Y() <= 1.0f &&
                texCoordRect.Width() >= 0.0f && texCoordRect.Width() <= 1.0f &&
                texCoordRect.Height() >= 0.0f && texCoordRect.Height() <= 1.0f &&
                texCoordRect.XMost() >= 0.0f && texCoordRect.XMost() <= 2.0f &&
@@ -499,7 +499,7 @@ DecomposeIntoNoRepeatRects(const gfx::Rect& aRect,
   // xmid/ymid values.
   if (!xwrap && !ywrap) {
     SetRects(0, aLayerRects, aTextureRects,
-             aRect.x, aRect.y, aRect.XMost(), aRect.YMost(),
+             aRect.X(), aRect.Y(), aRect.XMost(), aRect.YMost(),
              tl.x, tl.y, br.x, br.y,
              flipped);
     return 1;
@@ -514,30 +514,30 @@ DecomposeIntoNoRepeatRects(const gfx::Rect& aRect,
   // tl.x .. 1.0 and then from 0.0 .. br.x (which we just wrapped above).
   // The same applies for the Y axis. The midpoints we calculate here are
   // only valid if we actually wrap around.
-  GLfloat xmid = aRect.x + (1.0f - tl.x) / texCoordRect.Width() * aRect.Width();
-  GLfloat ymid = aRect.y + (1.0f - tl.y) / texCoordRect.Height() * aRect.Height();
+  GLfloat xmid = aRect.X() + (1.0f - tl.x) / texCoordRect.Width() * aRect.Width();
+  GLfloat ymid = aRect.Y() + (1.0f - tl.y) / texCoordRect.Height() * aRect.Height();
 
   // Due to floating-point inaccuracy, we have to use XMost()-x and YMost()-y
   // to calculate width and height, respectively, to ensure that size will
   // remain consistent going from absolute to relative and back again.
   NS_ASSERTION(!xwrap ||
-               (xmid >= aRect.x &&
+               (xmid >= aRect.X() &&
                 xmid <= aRect.XMost() &&
-                FuzzyEqual((xmid - aRect.x) + (aRect.XMost() - xmid), aRect.XMost() - aRect.x)),
+                FuzzyEqual((xmid - aRect.X()) + (aRect.XMost() - xmid), aRect.XMost() - aRect.X())),
                "xmid should be within [x,XMost()] and the wrapped rect should have the same width");
   NS_ASSERTION(!ywrap ||
-               (ymid >= aRect.y &&
+               (ymid >= aRect.Y() &&
                 ymid <= aRect.YMost() &&
-                FuzzyEqual((ymid - aRect.y) + (aRect.YMost() - ymid), aRect.YMost() - aRect.y)),
+                FuzzyEqual((ymid - aRect.Y()) + (aRect.YMost() - ymid), aRect.YMost() - aRect.Y())),
                "ymid should be within [y,YMost()] and the wrapped rect should have the same height");
 
   if (!xwrap && ywrap) {
     SetRects(0, aLayerRects, aTextureRects,
-             aRect.x, aRect.y, aRect.XMost(), ymid,
+             aRect.X(), aRect.Y(), aRect.XMost(), ymid,
              tl.x, tl.y, br.x, 1.0f,
              flipped);
     SetRects(1, aLayerRects, aTextureRects,
-             aRect.x, ymid, aRect.XMost(), aRect.YMost(),
+             aRect.X(), ymid, aRect.XMost(), aRect.YMost(),
              tl.x, 0.0f, br.x, br.y,
              flipped);
     return 2;
@@ -545,26 +545,26 @@ DecomposeIntoNoRepeatRects(const gfx::Rect& aRect,
 
   if (xwrap && !ywrap) {
     SetRects(0, aLayerRects, aTextureRects,
-             aRect.x, aRect.y, xmid, aRect.YMost(),
+             aRect.X(), aRect.Y(), xmid, aRect.YMost(),
              tl.x, tl.y, 1.0f, br.y,
              flipped);
     SetRects(1, aLayerRects, aTextureRects,
-             xmid, aRect.y, aRect.XMost(), aRect.YMost(),
+             xmid, aRect.Y(), aRect.XMost(), aRect.YMost(),
              0.0f, tl.y, br.x, br.y,
              flipped);
     return 2;
   }
 
   SetRects(0, aLayerRects, aTextureRects,
-           aRect.x, aRect.y, xmid, ymid,
+           aRect.X(), aRect.Y(), xmid, ymid,
            tl.x, tl.y, 1.0f, 1.0f,
            flipped);
   SetRects(1, aLayerRects, aTextureRects,
-           xmid, aRect.y, aRect.XMost(), ymid,
+           xmid, aRect.Y(), aRect.XMost(), ymid,
            0.0f, tl.y, br.x, 1.0f,
            flipped);
   SetRects(2, aLayerRects, aTextureRects,
-           aRect.x, ymid, xmid, aRect.YMost(),
+           aRect.X(), ymid, xmid, aRect.YMost(),
            tl.x, 0.0f, 1.0f, br.y,
            flipped);
   SetRects(3, aLayerRects, aTextureRects,

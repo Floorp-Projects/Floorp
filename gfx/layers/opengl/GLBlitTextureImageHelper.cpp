@@ -111,13 +111,13 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const gfx::IntRec
             // we transform these rectangles to be relative to the current src and dst tiles, respectively
             gfx::IntSize srcSize = srcTextureRect.Size();
             gfx::IntSize dstSize = dstTextureRect.Size();
-            srcSubRect.MoveBy(-srcTextureRect.x, -srcTextureRect.y);
-            srcSubInDstRect.MoveBy(-dstTextureRect.x, -dstTextureRect.y);
+            srcSubRect.MoveBy(-srcTextureRect.X(), -srcTextureRect.Y());
+            srcSubInDstRect.MoveBy(-dstTextureRect.X(), -dstTextureRect.Y());
 
-            float dx0 = 2.0f * float(srcSubInDstRect.x) / float(dstSize.width) - 1.0f;
-            float dy0 = 2.0f * float(srcSubInDstRect.y) / float(dstSize.height) - 1.0f;
-            float dx1 = 2.0f * float(srcSubInDstRect.x + srcSubInDstRect.Width()) / float(dstSize.width) - 1.0f;
-            float dy1 = 2.0f * float(srcSubInDstRect.y + srcSubInDstRect.Height()) / float(dstSize.height) - 1.0f;
+            float dx0 = 2.0f * float(srcSubInDstRect.X()) / float(dstSize.width) - 1.0f;
+            float dy0 = 2.0f * float(srcSubInDstRect.Y()) / float(dstSize.height) - 1.0f;
+            float dx1 = 2.0f * float(srcSubInDstRect.XMost()) / float(dstSize.width) - 1.0f;
+            float dy1 = 2.0f * float(srcSubInDstRect.YMost()) / float(dstSize.height) - 1.0f;
             ScopedViewportRect autoViewportRect(gl, 0, 0, dstSize.width, dstSize.height);
 
             RectTriangles rects;
@@ -132,8 +132,8 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const gfx::IntRec
                 rects.addRect(/* dest rectangle */
                         dx0, dy0, dx1, dy1,
                         /* tex coords */
-                        srcSubRect.x / float(realTexSize.width),
-                        srcSubRect.y / float(realTexSize.height),
+                        srcSubRect.X() / float(realTexSize.width),
+                        srcSubRect.Y() / float(realTexSize.height),
                         srcSubRect.XMost() / float(realTexSize.width),
                         srcSubRect.YMost() / float(realTexSize.height));
             } else {

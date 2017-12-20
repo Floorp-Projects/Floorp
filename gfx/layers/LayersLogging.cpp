@@ -64,7 +64,7 @@ AppendToString(std::stringstream& aStream, const nsRect& r,
   aStream << pfx;
   aStream << nsPrintfCString(
     "(x=%d, y=%d, w=%d, h=%d)",
-    r.x, r.y, r.Width(), r.Height()).get();
+    r.X(), r.Y(), r.Width(), r.Height()).get();
   aStream << sfx;
 }
 

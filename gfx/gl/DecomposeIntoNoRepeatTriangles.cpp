@@ -52,15 +52,15 @@ DecomposeIntoNoRepeatTriangles(const gfx::IntRect& aTexCoordRect,
 {
     // normalize this
     gfx::IntRect tcr(aTexCoordRect);
-    while (tcr.x >= aTexSize.width)
-        tcr.x -= aTexSize.width;
-    while (tcr.y >= aTexSize.height)
-        tcr.y -= aTexSize.height;
+    while (tcr.X() >= aTexSize.width)
+        tcr.MoveByX(-aTexSize.width);
+    while (tcr.Y() >= aTexSize.height)
+        tcr.MoveByY(-aTexSize.height);
 
     // Compute top left and bottom right tex coordinates
     GLfloat tl[2] =
-        { GLfloat(tcr.x) / GLfloat(aTexSize.width),
-          GLfloat(tcr.y) / GLfloat(aTexSize.height) };
+        { GLfloat(tcr.X()) / GLfloat(aTexSize.width),
+          GLfloat(tcr.Y()) / GLfloat(aTexSize.height) };
     GLfloat br[2] =
         { GLfloat(tcr.XMost()) / GLfloat(aTexSize.width),
           GLfloat(tcr.YMost()) / GLfloat(aTexSize.height) };
@@ -70,7 +70,7 @@ DecomposeIntoNoRepeatTriangles(const gfx::IntRect& aTexCoordRect,
     // texture coordinates.
 
     bool xwrap = false, ywrap = false;
-    if (tcr.x < 0 || tcr.x > aTexSize.width ||
+    if (tcr.X() < 0 || tcr.X() > aTexSize.width ||
         tcr.XMost() < 0 || tcr.XMost() > aTexSize.width)
     {
         xwrap = true;
@@ -78,7 +78,7 @@ DecomposeIntoNoRepeatTriangles(const gfx::IntRect& aTexCoordRect,
         br[0] = WrapTexCoord(br[0]);
     }
 
-    if (tcr.y < 0 || tcr.y > aTexSize.height ||
+    if (tcr.Y() < 0 || tcr.Y() > aTexSize.height ||
         tcr.YMost() < 0 || tcr.YMost() > aTexSize.height)
     {
         ywrap = true;

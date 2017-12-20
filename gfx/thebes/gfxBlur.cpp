@@ -527,7 +527,7 @@ CreateBoxShadow(DrawTarget* aDestDrawTarget,
   // Use ceil to preserve the remaining 1x1 middle area for minimized box
   // shadows.
   if (aMirrorCorners) {
-    blurRect.SizeTo(ceil(blurRect.width * 0.5f), ceil(blurRect.height * 0.5f));
+    blurRect.SizeTo(ceil(blurRect.Width() * 0.5f), ceil(blurRect.Height() * 0.5f));
   }
   IntSize zeroSpread(0, 0);
   RefPtr<DrawTarget> blurDT =
@@ -767,8 +767,8 @@ DrawMirroredRect(DrawTarget* aDT,
                          Matrix::Scaling(aScaleX, aScaleY)
                            .PreTranslate(-aSrc)
                            .PostTranslate(
-                             aScaleX < 0 ? aDest.XMost() : aDest.x,
-                             aScaleY < 0 ? aDest.YMost() : aDest.y));
+                             aScaleX < 0 ? aDest.XMost() : aDest.X(),
+                             aScaleY < 0 ? aDest.YMost() : aDest.Y()));
   aDT->FillRect(aDest, pattern);
 }
 
@@ -777,14 +777,14 @@ DrawMirroredBoxShadow(DrawTarget* aDT,
                       SourceSurface* aSurface,
                       const Rect& aDestRect)
 {
-  Point center(ceil(aDestRect.x + aDestRect.width / 2),
-               ceil(aDestRect.y + aDestRect.height / 2));
-  Rect topLeft(aDestRect.x, aDestRect.y,
-               center.x - aDestRect.x,
-               center.y - aDestRect.y);
+  Point center(ceil(aDestRect.X() + aDestRect.Width() / 2),
+               ceil(aDestRect.Y() + aDestRect.Height() / 2));
+  Rect topLeft(aDestRect.X(), aDestRect.Y(),
+               center.x - aDestRect.X(),
+               center.y - aDestRect.Y());
   Rect bottomRight(topLeft.BottomRight(), aDestRect.Size() - topLeft.Size());
-  Rect topRight(bottomRight.x, topLeft.y, bottomRight.width, topLeft.height);
-  Rect bottomLeft(topLeft.x, bottomRight.y, topLeft.width, bottomRight.height);
+  Rect topRight(bottomRight.X(), topLeft.Y(), bottomRight.Width(), topLeft.Height());
+  Rect bottomLeft(topLeft.X(), bottomRight.Y(), topLeft.Width(), bottomRight.Height());
   DrawMirroredRect(aDT, aSurface, topLeft, Point(), 1, 1);
   DrawMirroredRect(aDT, aSurface, topRight, Point(), -1, 1);
   DrawMirroredRect(aDT, aSurface, bottomLeft, Point(), 1, -1);
@@ -813,8 +813,8 @@ RepeatOrStretchMirroredSurface(DrawTarget* aDT, SourceSurface* aSurface,
   }
 
   if (ShouldStretchSurface(aDT, aSurface)) {
-    aScaleX *= aDest.width / aSrc.width;
-    aScaleY *= aDest.height / aSrc.height;
+    aScaleX *= aDest.Width() / aSrc.Width();
+    aScaleY *= aDest.Height() / aSrc.Height();
     DrawMirroredRect(aDT, aSurface, aDest, aSrc.TopLeft(), aScaleX, aScaleY);
     return;
   }
@@ -823,8 +823,8 @@ RepeatOrStretchMirroredSurface(DrawTarget* aDT, SourceSurface* aSurface,
                          Matrix::Scaling(aScaleX, aScaleY)
                            .PreTranslate(-aSrc.TopLeft())
                            .PostTranslate(
-                             aScaleX < 0 ? aDest.XMost() : aDest.x,
-                             aScaleY < 0 ? aDest.YMost() : aDest.y),
+                             aScaleX < 0 ? aDest.XMost() : aDest.X(),
+                             aScaleY < 0 ? aDest.YMost() : aDest.Y()),
                          SamplingFilter::GOOD, RoundedToInt(aSrc));
   aDT->FillRect(aDest, pattern);
 }
@@ -838,26 +838,26 @@ DrawMirroredMinBoxShadow(DrawTarget* aDestDrawTarget, SourceSurface* aSourceBlur
   // Corners: top left, top right, bottom left, bottom right
   // Compute quadrant bounds and then clip them to corners along
   // dimensions where we need to stretch from min size.
-  Point center(ceil(aDstOuter.x + aDstOuter.width / 2),
-               ceil(aDstOuter.y + aDstOuter.height / 2));
-  Rect topLeft(aDstOuter.x, aDstOuter.y,
-               center.x - aDstOuter.x,
-               center.y - aDstOuter.y);
+  Point center(ceil(aDstOuter.X() + aDstOuter.Width() / 2),
+               ceil(aDstOuter.Y() + aDstOuter.Height() / 2));
+  Rect topLeft(aDstOuter.X(), aDstOuter.Y(),
+               center.x - aDstOuter.X(),
+               center.y - aDstOuter.Y());
   Rect bottomRight(topLeft.BottomRight(), aDstOuter.Size() - topLeft.Size());
-  Rect topRight(bottomRight.x, topLeft.y, bottomRight.width, topLeft.height);
-  Rect bottomLeft(topLeft.x, bottomRight.y, topLeft.width, bottomRight.height);
+  Rect topRight(bottomRight.X(), topLeft.Y(), bottomRight.Width(), topLeft.Height());
+  Rect bottomLeft(topLeft.X(), bottomRight.Y(), topLeft.Width(), bottomRight.Height());
 
   // Check if the middle part has been minimized along each dimension.
   // If so, those will be strecthed/drawn separately and need to be clipped out.
-  if (aSrcInner.width == 1) {
-    topLeft.SetRightEdge(aDstInner.x);
+  if (aSrcInner.Width() == 1) {
+    topLeft.SetRightEdge(aDstInner.X());
     topRight.SetLeftEdge(aDstInner.XMost());
-    bottomLeft.SetRightEdge(aDstInner.x);
+    bottomLeft.SetRightEdge(aDstInner.X());
     bottomRight.SetLeftEdge(aDstInner.XMost());
   }
-  if (aSrcInner.height == 1) {
-    topLeft.SetBottomEdge(aDstInner.y);
-    topRight.SetBottomEdge(aDstInner.y);
+  if (aSrcInner.Height() == 1) {
+    topLeft.SetBottomEdge(aDstInner.Y());
+    topRight.SetBottomEdge(aDstInner.Y());
     bottomLeft.SetTopEdge(aDstInner.YMost());
     bottomRight.SetTopEdge(aDstInner.YMost());
   }
@@ -875,7 +875,7 @@ DrawMirroredMinBoxShadow(DrawTarget* aDestDrawTarget, SourceSurface* aSourceBlur
   // Draw middle edges where they need to be stretched. The top and left
   // sections that are part of the top-left quadrant will be mirrored to
   // the bottom and right sections, respectively.
-  if (aSrcInner.width == 1) {
+  if (aSrcInner.Width() == 1) {
     Rect dstTop = RectWithEdgesTRBL(aDstOuter.Y(), aDstInner.XMost(),
                                     aDstInner.Y(), aDstInner.X());
     Rect srcTop = RectWithEdgesTRBL(aSrcOuter.Y(), aSrcInner.XMost(),
@@ -887,11 +887,11 @@ DrawMirroredMinBoxShadow(DrawTarget* aDestDrawTarget, SourceSurface* aSourceBlur
     // If we only need to stretch along the X axis and we're drawing
     // the middle section, just sample all the way to the center of the
     // source on the Y axis to avoid extra draw calls.
-    if (aMiddle && aSrcInner.height != 1) {
+    if (aMiddle && aSrcInner.Height() != 1) {
       dstTop.SetBottomEdge(center.y);
-      srcTop.height = dstTop.height;
+      srcTop.SetHeight(dstTop.Height());
       dstBottom.SetTopEdge(dstTop.YMost());
-      srcBottom.height = dstBottom.height;
+      srcBottom.SetHeight(dstBottom.Height());
     }
     RepeatOrStretchMirroredSurface(aDestDrawTarget, aSourceBlur,
                                    dstTop, srcTop, aSkipRect, 1, 1);
@@ -899,7 +899,7 @@ DrawMirroredMinBoxShadow(DrawTarget* aDestDrawTarget, SourceSurface* aSourceBlur
                                    dstBottom, srcBottom, aSkipRect, 1, -1);
   }
 
-  if (aSrcInner.height == 1) {
+  if (aSrcInner.Height() == 1) {
     Rect dstLeft = RectWithEdgesTRBL(aDstInner.Y(), aDstInner.X(),
                                      aDstInner.YMost(), aDstOuter.X());
     Rect srcLeft = RectWithEdgesTRBL(aSrcInner.Y(), aSrcInner.X(),
@@ -909,11 +909,11 @@ DrawMirroredMinBoxShadow(DrawTarget* aDestDrawTarget, SourceSurface* aSourceBlur
     Rect srcRight = RectWithEdgesTRBL(aSrcInner.Y(), aSrcInner.X(),
                                       aSrcInner.YMost(), aSrcOuter.X());
     // Only stretching on Y axis, so sample source to the center of the X axis.
-    if (aMiddle && aSrcInner.width != 1) {
+    if (aMiddle && aSrcInner.Width() != 1) {
       dstLeft.SetRightEdge(center.x);
-      srcLeft.width = dstLeft.width;
+      srcLeft.SetWidth(dstLeft.Width());
       dstRight.SetLeftEdge(dstLeft.XMost());
-      srcRight.width = dstRight.width;
+      srcRight.SetWidth(dstRight.Width());
     }
     RepeatOrStretchMirroredSurface(aDestDrawTarget, aSourceBlur,
                                    dstLeft, srcLeft, aSkipRect, 1, 1);
@@ -923,7 +923,7 @@ DrawMirroredMinBoxShadow(DrawTarget* aDestDrawTarget, SourceSurface* aSourceBlur
 
   // If we need to stretch along both dimensions, then the middle part
   // must be drawn separately.
-  if (aMiddle && aSrcInner.width == 1 && aSrcInner.height == 1) {
+  if (aMiddle && aSrcInner.Width() == 1 && aSrcInner.Height() == 1) {
     RepeatOrStretchSurface(aDestDrawTarget, aSourceBlur,
                            RectWithEdgesTRBL(aDstInner.Y(), aDstInner.XMost(),
                                              aDstInner.YMost(), aDstInner.X()),
@@ -1127,7 +1127,7 @@ gfxAlphaBoxBlur::GetInsetBlur(const Rect& aOuterRect,
   // Use ceil to preserve the remaining 1x1 middle area for minimized box
   // shadows.
   if (aMirrorCorners) {
-    blurRect.SizeTo(ceil(blurRect.width * 0.5f), ceil(blurRect.height * 0.5f));
+    blurRect.SizeTo(ceil(blurRect.Width() * 0.5f), ceil(blurRect.Height() * 0.5f));
   }
   IntSize zeroSpread(0, 0);
   RefPtr<DrawTarget> minDrawTarget =
@@ -1244,8 +1244,8 @@ GetInsetBoxShadowRects(const Margin& aBlurMargin,
   // If the inner white space rect is larger than the shadow clip rect
   // our approach does not work as we'll just copy one corner
   // and cover the destination. In those cases, fallback to the destination rect
-  bool useDestRect = (aShadowClipRect.width <= aInnerMargin.LeftRight()) ||
-                     (aShadowClipRect.height <= aInnerMargin.TopBottom());
+  bool useDestRect = (aShadowClipRect.Width() <= aInnerMargin.LeftRight()) ||
+                     (aShadowClipRect.Height() <= aInnerMargin.TopBottom());
 
   if (useDestRect) {
     aOutWhitespaceRect = aShadowClipRect;

@@ -35,6 +35,15 @@
           "lastModified": 1361551979368077,
           "type": "text/x-moz-place",
           "uri": "http://en-us.www.mozilla.com/en-US/firefox/customize/"
+        },
+        {
+          "guid": "OCyeUO5uu9FG",
+          "title": "Bad URL",
+          "id": 9,
+          "dateAdded": 1361551979356436,
+          "lastModified": 1361551979362718,
+          "type": "text/x-moz-place",
+          "uri": "http:///"
         }
       ]
     }

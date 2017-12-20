@@ -264,15 +264,15 @@ ImageHost::Composite(Compositor* aCompositor,
       it->BeginBigImageIteration();
       do {
         IntRect tileRect = it->GetTileRect();
-        gfx::Rect rect(tileRect.x, tileRect.y, tileRect.Width(), tileRect.Height());
+        gfx::Rect rect(tileRect.X(), tileRect.Y(), tileRect.Width(), tileRect.Height());
         rect = rect.Intersect(pictureRect);
-        effect->mTextureCoords = Rect(Float(rect.x - tileRect.x) / tileRect.Width(),
-                                      Float(rect.y - tileRect.y) / tileRect.Height(),
+        effect->mTextureCoords = Rect(Float(rect.X() - tileRect.X()) / tileRect.Width(),
+                                      Float(rect.Y() - tileRect.Y()) / tileRect.Height(),
                                       Float(rect.Width()) / tileRect.Width(),
                                       Float(rect.Height()) / tileRect.Height());
         if (img->mTextureHost->GetFlags() & TextureFlags::ORIGIN_BOTTOM_LEFT) {
-          effect->mTextureCoords.y = effect->mTextureCoords.YMost();
-          effect->mTextureCoords.SetHeight(-effect->mTextureCoords.Height());
+          effect->mTextureCoords.SetRectY(effect->mTextureCoords.YMost(),
+                                          -effect->mTextureCoords.Height());
         }
         aCompositor->DrawGeometry(rect, aClipRect, aEffectChain,
                                   aOpacity, aTransform, aGeometry);
@@ -285,14 +285,14 @@ ImageHost::Composite(Compositor* aCompositor,
                                    aClipRect, aTransform, mFlashCounter);
     } else {
       IntSize textureSize = mCurrentTextureSource->GetSize();
-      effect->mTextureCoords = Rect(Float(img->mPictureRect.x) / textureSize.width,
-                                    Float(img->mPictureRect.y) / textureSize.height,
+      effect->mTextureCoords = Rect(Float(img->mPictureRect.X()) / textureSize.width,
+                                    Float(img->mPictureRect.Y()) / textureSize.height,
                                     Float(img->mPictureRect.Width()) / textureSize.width,
                                     Float(img->mPictureRect.Height()) / textureSize.height);
 
       if (img->mTextureHost->GetFlags() & TextureFlags::ORIGIN_BOTTOM_LEFT) {
-        effect->mTextureCoords.y = effect->mTextureCoords.YMost();
-        effect->mTextureCoords.SetHeight(-effect->mTextureCoords.Height());
+        effect->mTextureCoords.SetRectY(effect->mTextureCoords.YMost(),
+                                        -effect->mTextureCoords.Height());
       }
 
       aCompositor->DrawGeometry(pictureRect, aClipRect, aEffectChain,

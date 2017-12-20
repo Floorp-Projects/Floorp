@@ -2300,6 +2300,31 @@ MediaCacheStream::NotifyClientSuspended(bool aSuspended)
   OwnerThread()->Dispatch(r.forget());
 }
 
+void
+MediaCacheStream::NotifyResume()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
+    "MediaCacheStream::NotifyResume",
+    [ this, client = RefPtr<ChannelMediaResource>(mClient) ]() {
+      AutoLock lock(mMediaCache->Monitor());
+      if (mClosed) {
+        return;
+      }
+      // Don't resume download if we are already at the end of the stream for
+      // seek will fail and be wasted anyway.
+      int64_t offset = mSeekTarget != -1 ? mSeekTarget : mChannelOffset;
+      if (mStreamLength < 0 || offset < mStreamLength) {
+        mClient->CacheClientSeek(offset, false);
+        // DownloadResumed() will be notified when a new channel is opened.
+      }
+      // The channel remains dead. If we want to read some other data in the
+      // future, CacheClientSeek() will be called to reopen the channel.
+    });
+  OwnerThread()->Dispatch(r.forget());
+}
+
 MediaCacheStream::~MediaCacheStream()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
@@ -2398,17 +2423,9 @@ MediaCacheStream::Unpin()
 int64_t
 MediaCacheStream::GetLength()
 {
-  // TODO: Assert non-main thread.
+  MOZ_ASSERT(!NS_IsMainThread());
   AutoLock lock(mMediaCache->Monitor());
   return mStreamLength;
-}
-
-int64_t
-MediaCacheStream::GetOffset() const
-{
-  // TODO: Assert non-main thread.
-  AutoLock lock(mMediaCache->Monitor());
-  return mChannelOffset;
 }
 
 int64_t

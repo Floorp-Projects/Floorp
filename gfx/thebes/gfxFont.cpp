@@ -2493,9 +2493,9 @@ gfxFont::Measure(const gfxTextRun *aTextRun,
                             advance, metrics.mBoundingBox.Height());
                     }
                     if (isRTL) {
-                        glyphRect.x -= advance;
+                        glyphRect.MoveByX(-advance);
                     }
-                    glyphRect.x += x;
+                    glyphRect.MoveByX(x);
                     metrics.mBoundingBox = metrics.mBoundingBox.Union(glyphRect);
                 }
             }
@@ -2522,10 +2522,10 @@ gfxFont::Measure(const gfxTextRun *aTextRun,
                             advance, metrics.mAscent + metrics.mDescent);
                     }
                     if (isRTL) {
-                        glyphRect.x -= advance;
+                        glyphRect.MoveByX(-advance);
                     }
-                    glyphRect.x += x + details->mOffset.x;
-                    glyphRect.y += details->mOffset.y;
+                    glyphRect.MoveByX(x + details->mOffset.x);
+                    glyphRect.MoveByY(details->mOffset.y);
                     metrics.mBoundingBox = metrics.mBoundingBox.Union(glyphRect);
                     x += direction*advance;
                 }
@@ -2564,15 +2564,15 @@ gfxFont::Measure(const gfxTextRun *aTextRun,
         gfxFloat extendLeftEdge =
             ceil(OBLIQUE_SKEW_FACTOR * metrics.mBoundingBox.YMost());
         gfxFloat extendRightEdge =
-            ceil(OBLIQUE_SKEW_FACTOR * -metrics.mBoundingBox.y);
-        metrics.mBoundingBox.width += extendLeftEdge + extendRightEdge;
-        metrics.mBoundingBox.x -= extendLeftEdge;
+            ceil(OBLIQUE_SKEW_FACTOR * -metrics.mBoundingBox.Y());
+        metrics.mBoundingBox.SetWidth(metrics.mBoundingBox.Width() + extendLeftEdge + extendRightEdge);
+        metrics.mBoundingBox.MoveByX(-extendLeftEdge);
     }
 
     if (baselineOffset != 0) {
         metrics.mAscent -= baselineOffset;
         metrics.mDescent += baselineOffset;
-        metrics.mBoundingBox.y += baselineOffset;
+        metrics.mBoundingBox.MoveByY(baselineOffset);
     }
 
     metrics.mAdvanceWidth = x*direction;
@@ -3476,10 +3476,10 @@ gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
                                        GetAdjustedSize(), &svgBounds)) {
         gfxFloat d2a = aExtents->GetAppUnitsPerDevUnit();
         aExtents->SetTightGlyphExtents(aGlyphID,
-                                       gfxRect(svgBounds.x * d2a,
-                                               svgBounds.y * d2a,
-                                               svgBounds.width * d2a,
-                                               svgBounds.height * d2a));
+                                       gfxRect(svgBounds.X() * d2a,
+                                               svgBounds.Y() * d2a,
+                                               svgBounds.Width() * d2a,
+                                               svgBounds.Height() * d2a));
         return;
     }
 

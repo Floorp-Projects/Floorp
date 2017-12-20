@@ -612,7 +612,7 @@ TransformRect(const mozilla::gfx::IntRect& aRect, const mozilla::gfx::Matrix4x4&
         return mozilla::gfx::IntRect();
     }
 
-    mozilla::gfx::RectDouble rect(aRect.x, aRect.y, aRect.Width(), aRect.Height());
+    mozilla::gfx::RectDouble rect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
     rect = aTransform.TransformAndClipBounds(rect, mozilla::gfx::RectDouble::MaxIntRect());
     rect.RoundOut();
 
@@ -794,22 +794,22 @@ nsIntRegion nsRegion::ScaleToInsidePixels (float aScaleX, float aScaleY,
       mozilla::gfx::IntRect deviceRect =
 	rect.ScaleToInsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
 
-      if (rect.y <= first.YMost()) {
-	if (rect.XMost() == first.x && rect.YMost() <= first.YMost()) {
+      if (rect.Y() <= first.YMost()) {
+	if (rect.XMost() == first.X() && rect.YMost() <= first.YMost()) {
 	  // rect is touching on the left edge of the first rect and contained within
 	  // the length of its left edge
-	  deviceRect.SetRightEdge(firstDeviceRect.x);
-	} else if (rect.x == first.XMost() && rect.YMost() <= first.YMost()) {
+	  deviceRect.SetRightEdge(firstDeviceRect.X());
+	} else if (rect.X() == first.XMost() && rect.YMost() <= first.YMost()) {
 	  // rect is touching on the right edge of the first rect and contained within
 	  // the length of its right edge
 	  deviceRect.SetLeftEdge(firstDeviceRect.XMost());
-	} else if (rect.y == first.YMost()) {
+	} else if (rect.Y() == first.YMost()) {
 	  // The bottom of the first rect is on the same line as the top of rect, but
 	  // they aren't necessarily contained.
-	  if (rect.x <= first.x && rect.XMost() >= first.XMost()) {
+	  if (rect.X() <= first.X() && rect.XMost() >= first.XMost()) {
 	    // The top of rect contains the bottom of the first rect
-	    firstDeviceRect.SetBottomEdge(deviceRect.y);
-	  } else if (rect.x >= first.x && rect.XMost() <= first.XMost()) {
+	    firstDeviceRect.SetBottomEdge(deviceRect.Y());
+	  } else if (rect.X() >= first.X() && rect.XMost() <= first.XMost()) {
 	    // The bottom of the first contains the top of rect
 	    deviceRect.SetTopEdge(firstDeviceRect.YMost());
 	  }
@@ -1030,15 +1030,15 @@ nsRect nsRegion::GetLargestRectangle (const nsRect& aContainingRect) const {
   // Step 1: Calculate the grid lines
   for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
     const nsRect& rect = iter.Get();
-    xaxis.InsertCoord(rect.x);
+    xaxis.InsertCoord(rect.X());
     xaxis.InsertCoord(rect.XMost());
-    yaxis.InsertCoord(rect.y);
+    yaxis.InsertCoord(rect.Y());
     yaxis.InsertCoord(rect.YMost());
   }
   if (!aContainingRect.IsEmpty()) {
-    xaxis.InsertCoord(aContainingRect.x);
+    xaxis.InsertCoord(aContainingRect.X());
     xaxis.InsertCoord(aContainingRect.XMost());
-    yaxis.InsertCoord(aContainingRect.y);
+    yaxis.InsertCoord(aContainingRect.Y());
     yaxis.InsertCoord(aContainingRect.YMost());
   }
 
@@ -1053,9 +1053,9 @@ nsRect nsRegion::GetLargestRectangle (const nsRect& aContainingRect) const {
 
   for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
     const nsRect& rect = iter.Get();
-    int32_t xstart = xaxis.IndexOf(rect.x);
+    int32_t xstart = xaxis.IndexOf(rect.X());
     int32_t xend = xaxis.IndexOf(rect.XMost());
-    int32_t y = yaxis.IndexOf(rect.y);
+    int32_t y = yaxis.IndexOf(rect.Y());
     int32_t yend = yaxis.IndexOf(rect.YMost());
 
     for (; y < yend; y++) {
@@ -1119,8 +1119,8 @@ nsRect nsRegion::GetLargestRectangle (const nsRect& aContainingRect) const {
 
     bestRect.MoveTo(xaxis.StopAt(bestRectIndices.left),
                     yaxis.StopAt(bestRectIndices.top));
-    bestRect.SizeTo(xaxis.StopAt(bestRectIndices.right) - bestRect.x,
-                    yaxis.StopAt(bestRectIndices.bottom) - bestRect.y);
+    bestRect.SizeTo(xaxis.StopAt(bestRectIndices.right) - bestRect.X(),
+                    yaxis.StopAt(bestRectIndices.bottom) - bestRect.Y());
   }
 
   return bestRect;

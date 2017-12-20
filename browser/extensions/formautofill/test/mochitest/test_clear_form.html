@@ -19,7 +19,7 @@ Form autofill test: clear form button
 
 "use strict";
 
-const MOCK_STORAGE = [{
+const MOCK_ADDR_STORAGE = [{
   organization: "Sesame Street",
   "street-address": "2 Harrison St\nline2\nline3",
   tel: "+13453453456",
@@ -30,21 +30,36 @@ const MOCK_STORAGE = [{
   organization: "Tel org",
   tel: "+12223334444",
 }];
+const MOCK_CC_STORAGE = [{
+  "cc-name": "John Doe",
+  "cc-number": "1234567812345678",
+  "cc-exp-month": 4,
+  "cc-exp-year": 2017,
+}, {
+  "cc-name": "Timothy Berners-Lee",
+  "cc-number": "1111222233334444",
+  "cc-exp-month": 12,
+  "cc-exp-year": 2022,
+}];
 
 initPopupListener();
 
 add_task(async function setup_storage() {
-  await addAddress(MOCK_STORAGE[0]);
-  await addAddress(MOCK_STORAGE[1]);
-  await addAddress(MOCK_STORAGE[2]);
+  await addAddress(MOCK_ADDR_STORAGE[0]);
+  await addAddress(MOCK_ADDR_STORAGE[1]);
+  await addAddress(MOCK_ADDR_STORAGE[2]);
+
+  await addCreditCard(MOCK_CC_STORAGE[0]);
+  await addCreditCard(MOCK_CC_STORAGE[1]);
 });
+
 
 function checkIsFormCleared(patch = {}) {
   const form = document.getElementById("form1");
 
   for (const elem of form.elements) {
     const expectedValue = patch[elem.id] || "";
-    is(elem.value, expectedValue, "checking value");
+    checkFieldValue(elem, expectedValue);
     checkFieldHighlighted(elem, false);
     checkFieldPreview(elem, "");
   }
@@ -52,7 +67,7 @@ function checkIsFormCleared(patch = {}) {
 
 add_task(async function simple_clear() {
   await triggerPopupAndHoverItem("#organization", 0);
-  await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
+  await triggerAutofillAndCheckProfile(MOCK_ADDR_STORAGE[0]);
 
   await triggerPopupAndHoverItem("#tel", 0);
   doKey("return");
@@ -61,7 +76,7 @@ add_task(async function simple_clear() {
 
 add_task(async function clear_adapted_record() {
   await triggerPopupAndHoverItem("#street-address", 0);
-  await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
+  await triggerAutofillAndCheckProfile(MOCK_ADDR_STORAGE[0]);
 
   await triggerPopupAndHoverItem("#street-address", 0);
   doKey("return");
@@ -70,7 +85,7 @@ add_task(async function clear_adapted_record() {
 
 add_task(async function clear_modified_form() {
   await triggerPopupAndHoverItem("#organization", 0);
-  await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
+  await triggerAutofillAndCheckProfile(MOCK_ADDR_STORAGE[0]);
 
   await setInput("#tel", "+1111111111", true);
 
@@ -78,6 +93,31 @@ add_task(async function clear_modified_form() {
   doKey("return");
   checkIsFormCleared({tel: "+1111111111"});
 });
+
+add_task(async function clear_distinct_section() {
+  document.getElementById("form1").reset();
+  await triggerPopupAndHoverItem("#cc-name", 0);
+  await triggerAutofillAndCheckProfile(MOCK_CC_STORAGE[0]);
+
+  await triggerPopupAndHoverItem("#organization", 0);
+  await triggerAutofillAndCheckProfile(MOCK_ADDR_STORAGE[0]);
+  await triggerPopupAndHoverItem("#street-address", 0);
+  doKey("return");
+
+  for (const [id, val] of Object.entries(MOCK_CC_STORAGE[0])) {
+    const element = document.getElementById(id);
+    if (!element) {
+      return;
+    }
+    checkFieldValue(element, val);
+    checkFieldHighlighted(element, true);
+  }
+
+  await triggerPopupAndHoverItem("#cc-name", 0);
+  doKey("return");
+  checkIsFormCleared();
+});
+
 </script>
 
 <p id="display"></p>
@@ -90,6 +130,12 @@ add_task(async function clear_modified_form() {
     <p><label>streetAddress: <input id="street-address" autocomplete="street-address"></label></p>
     <p><label>tel: <input id="tel" autocomplete="tel"></label></p>
     <p><label>country: <input id="country" autocomplete="country"></label></p>
+
+    <p><label>Name: <input id="cc-name" autocomplete="cc-name"></label></p>
+    <p><label>Card Number: <input id="cc-number" autocomplete="cc-number"></label></p>
+    <p><label>Expiration month: <input id="cc-exp-month" autocomplete="cc-exp-month"></label></p>
+    <p><label>Expiration year: <input id="cc-exp-year" autocomplete="cc-exp-year"></label></p>
+    <p><label>CSC: <input id="cc-csc" autocomplete="cc-csc"></label></p>
   </form>
 
 </div>

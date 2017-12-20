@@ -84,7 +84,7 @@ TransformRect(const IntRect& aRect, const Matrix4x4& aTransform)
     return IntRect();
   }
 
-  Rect rect(aRect.x, aRect.y, aRect.Width(), aRect.Height());
+  Rect rect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
   rect = aTransform.TransformAndClipBounds(rect, Rect::MaxIntRect());
   rect.RoundOut();
 

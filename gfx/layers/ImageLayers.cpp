@@ -44,8 +44,7 @@ void ImageLayer::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSu
       SnapTransform(local, sourceRect, nullptr) *
       SnapTransformTranslation(aTransformToSurface, nullptr);
 
-  if (mScaleMode != ScaleMode::SCALE_NONE &&
-      sourceRect.Width() != 0.0 && sourceRect.Height() != 0.0) {
+  if (mScaleMode != ScaleMode::SCALE_NONE && !sourceRect.IsZero()) {
     NS_ASSERTION(mScaleMode == ScaleMode::STRETCH,
                  "No other scalemodes than stretch and none supported yet.");
     local.PreScale(mScaleToSize.width / sourceRect.Width(),

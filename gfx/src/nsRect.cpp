@@ -44,10 +44,10 @@ FILE* operator<<(FILE* out, const nsRect& rect)
 
   // Output the coordinates in fractional pixels so they're easier to read
   tmp.Append('{');
-  tmp.AppendFloat(NSAppUnitsToFloatPixels(rect.x,
+  tmp.AppendFloat(NSAppUnitsToFloatPixels(rect.X(),
                        nsDeviceContext::AppUnitsPerCSSPixel()));
   tmp.AppendLiteral(", ");
-  tmp.AppendFloat(NSAppUnitsToFloatPixels(rect.y,
+  tmp.AppendFloat(NSAppUnitsToFloatPixels(rect.Y(),
                        nsDeviceContext::AppUnitsPerCSSPixel()));
   tmp.AppendLiteral(", ");
   tmp.AppendFloat(NSAppUnitsToFloatPixels(rect.Width(),

@@ -36,6 +36,11 @@ frame-script
 
 Defines the environment for frame scripts.
 
+jsm
+---
+
+Defines the environment for jsm files (javascript modules).
+
 Rules
 =====
 
