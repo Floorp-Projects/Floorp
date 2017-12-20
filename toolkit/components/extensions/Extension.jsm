@@ -43,6 +43,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
+  AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
@@ -536,7 +537,7 @@ class ExtensionData {
       }
 
       for (let perm of manifest.permissions) {
-        if (perm === "geckoProfiler") {
+        if (perm === "geckoProfiler" && !this.isPrivileged) {
           const acceptedExtensions = Services.prefs.getStringPref("extensions.geckoProfiler.acceptedExtensionIds", "");
           if (!acceptedExtensions.split(",").includes(id)) {
             this.manifestError("Only whitelisted extensions are allowed to access the geckoProfiler.");
@@ -1196,10 +1197,21 @@ class Extension extends ExtensionData {
     return [this.id, this.version, Services.locale.getAppLocaleAsLangTag()];
   }
 
+  get isPrivileged() {
+    return (this.addonData.signedState === AddonManager.SIGNEDSTATE_PRIVILEGED ||
+            (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS &&
+             this.addonData.temporarilyInstalled));
+  }
+
+  get experimentsAllowed() {
+    return (AddonSettings.ALLOW_LEGACY_EXTENSIONS ||
+            this.isPrivileged);
+  }
+
   async _parseManifest() {
     let manifest = await super.parseManifest();
     if (manifest && manifest.permissions.has("mozillaAddons") &&
-        this.addonData.signedState !== AddonManager.SIGNEDSTATE_PRIVILEGED) {
+        !this.isPrivileged) {
       Cu.reportError(`Stripping mozillaAddons permission from ${this.id}`);
       manifest.permissions.delete("mozillaAddons");
       let i = manifest.manifest.permissions.indexOf("mozillaAddons");
