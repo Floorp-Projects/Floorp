@@ -91,6 +91,10 @@ public:
   // Convert to the ipdl generated type.
   const IPCClientInfo&
   ToIPC() const;
+
+  // Determine if the client is in private browsing mode.
+  bool
+  IsPrivateBrowsing() const;
 };
 
 } // namespace dom
