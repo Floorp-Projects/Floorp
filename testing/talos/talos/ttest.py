@@ -291,5 +291,10 @@ class TTest(object):
             for key, value in c.items():
                 LOG.debug('COUNTER %r: %s' % (key, value))
 
+        # if running against a code-coverage instrumented build, move the
+        # produced gcda files to a folder where they will be collected later
+        if browser_config.get('code_coverage', False):
+            setup.collect_or_clean_ccov()
+
         # return results
         return test_results

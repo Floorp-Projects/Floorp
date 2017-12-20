@@ -371,6 +371,8 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             options += args
         if 'talos_extra_options' in self.config:
             options += self.config['talos_extra_options']
+        if self.config.get('code_coverage', False):
+            options.extend(['--code-coverage'])
         return options
 
     def populate_webroot(self):
