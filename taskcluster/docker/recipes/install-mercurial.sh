@@ -13,13 +13,13 @@ if [ -f /etc/lsb-release ]; then
 
     if [ "${DISTRIB_ID}" = "Ubuntu" -a "${DISTRIB_RELEASE}" = "16.04" ]; then
         HG_DEB=1
-        HG_DIGEST=dd4dd7759fe73985b6a0424b34a3036d130c26defdd866a9fdd7302e40c7417433b93f020497ceb40593eaead8e86be55e48340887015645202b47ff7b0d7ac6
-        HG_SIZE=181722
-        HG_FILENAME=mercurial_4.3.1_amd64.deb
+        HG_DIGEST=458746bd82b4732c72c611f1041f77a47a683bc75ff3f6ab7ed86ea394f48d94cd7e2d3d1d5b020906318a9a24bea27401a3a63d7e645514dbc2cb581621977f
+        HG_SIZE=193710
+        HG_FILENAME=mercurial_4.4.2_amd64.deb
 
-        HG_COMMON_DIGEST=045f7e07f1e2e0fef767b2f50a7e9ab37d5da0bfead5ddf473ae044b61a4566aed2d6f2706f52d227947d713ef8e89eb9a269288f08e52924e4de88a39cd7ac0
-        HG_COMMON_SIZE=2017628
-        HG_COMMON_FILENAME=mercurial-common_4.3.1_all.deb
+        HG_COMMON_DIGEST=8074efbfff974f0bbdd0c3be3d272cc7a634456921e04db31369fbec1c9256ddaf44bdbe120f6f33113d2be9324a1537048028ebaaf205c6659e476a757358fd
+        HG_COMMON_SIZE=2097892
+        HG_COMMON_FILENAME=mercurial-common_4.4.2_all.deb
     elif [ "${DISTRIB_ID}" = "Ubuntu" -a "${DISTRIB_RELEASE}" = "12.04" ]; then
         echo "Ubuntu 12.04 not supported"
         exit 1
@@ -100,15 +100,15 @@ elif [ -n "${PIP_PATH}" ]; then
 tooltool_fetch <<EOF
 [
   {
-    "size": 5475042,
-    "digest": "4c42d06b7f111a3e825dd927704a30f88f0b2225cf87ab8954bf53a7fbc0edf561374dd49b13d9c10140d98ff5853a64acb5a744349727abae81d32da401922b",
+    "size": 5647013,
+    "digest": "3d1d103689eac4f50cc1005be44144b37d75ebfac3ff3b4fc90d6f41fbee46e107a168d04f2c366ce7cca2733ea4e5b5127df462af8e253f61a72f8938833993",
     "algorithm": "sha512",
-    "filename": "mercurial-4.3.1.tar.gz"
+    "filename": "mercurial-4.4.2.tar.gz"
   }
 ]
 EOF
 
-   ${PIP_PATH} install mercurial-4.3.1.tar.gz
+   ${PIP_PATH} install mercurial-4.4.2.tar.gz
 else
     echo "Do not know how to install Mercurial on this OS"
     exit 1

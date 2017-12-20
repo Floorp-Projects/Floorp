@@ -557,14 +557,14 @@ ChannelMediaResource::GetCurrentPrincipal()
 
 bool ChannelMediaResource::CanClone()
 {
-  return mCacheStream.IsAvailableForSharing();
+  return !mClosed && mCacheStream.IsAvailableForSharing();
 }
 
 already_AddRefed<BaseMediaResource>
 ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-  NS_ASSERTION(mCacheStream.IsAvailableForSharing(), "Stream can't be cloned");
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(CanClone(), "Stream can't be cloned");
 
   RefPtr<ChannelMediaResource> resource =
     new ChannelMediaResource(aCallback, nullptr, mURI);

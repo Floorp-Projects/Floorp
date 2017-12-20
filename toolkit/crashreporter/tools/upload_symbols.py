@@ -4,14 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# This script uploads a symbol zip file passed on the commandline
-# to the Tecken symbol upload API at https://symbols.mozilla.org/ .
+# This script uploads a symbol zip file from a path or URL passed on the commandline
+# to the symbol server at https://symbols.mozilla.org/ .
 #
 # Using this script requires you to have generated an authentication
-# token in the Tecken web interface. You must store the token in a Taskcluster
+# token in the symbol server web interface. You must store the token in a Taskcluster
 # secret as the JSON blob `{"token": "<token>"}` and set the `SYMBOL_SECRET`
-# environment variable to the name of the Taskcluster secret. Alternatively,
-# you can pu the token in a file and set SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE
+# environment variable to the name of the Taskcluster secret. Alternately,
+# you can put the token in a file and set `SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE`
 # environment variable to the path to the file.
 
 from __future__ import absolute_import, print_function, unicode_literals
@@ -68,13 +68,14 @@ def main():
     parser = argparse.ArgumentParser(
         description='Upload symbols in ZIP using token from Taskcluster secrets service.')
     parser.add_argument('zip',
-                        help='Symbols zip file')
+                        help='Symbols zip file - URL or path to local file')
     args = parser.parse_args()
 
-    if not os.path.isfile(args.zip):
+    if not args.zip.startswith('http') and not os.path.isfile(args.zip):
         log.error('Error: zip file "{0}" does not exist!'.format(args.zip),
                   file=sys.stderr)
         return 1
+
 
     secret_name = os.environ.get('SYMBOL_SECRET')
     if secret_name is not None:
@@ -105,12 +106,19 @@ def main():
     for i, _ in enumerate(redo.retrier(attempts=MAX_RETRIES), start=1):
         log.info('Attempt %d of %d...' % (i, MAX_RETRIES))
         try:
+            if args.zip.startswith('http'):
+                zip_arg = {'data': {'url': args.zip}}
+            else:
+                zip_arg = {'files': {'symbols.zip': open(args.zip, 'rb')}}
             r = requests.post(
                 url,
-                files={'symbols.zip': open(args.zip, 'rb')},
                 headers={'Auth-Token': auth_token},
                 allow_redirects=False,
-                timeout=120)
+                # Allow a longer read timeout because uploading by URL means the server
+                # has to fetch the entire zip file, which can take a while. The load balancer
+                # in front of symbols.mozilla.org has a 300 second timeout, so we'll use that.
+                timeout=(10, 300),
+                **zip_arg)
             # 500 is likely to be a transient failure.
             # Break out for success or other error codes.
             if r.status_code < 500:
