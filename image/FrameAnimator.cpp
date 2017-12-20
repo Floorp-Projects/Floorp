@@ -602,9 +602,7 @@ FrameAnimator::DoBlend(DrawableSurface& aFrames,
                    ? prevFrameData.mRect.Intersect(*prevFrameData.mBlendRect)
                    : prevFrameData.mRect;
 
-  bool isFullPrevFrame = prevRect.x == 0 && prevRect.y == 0 &&
-                         prevRect.Width() == mSize.width &&
-                         prevRect.Height() == mSize.height;
+  bool isFullPrevFrame = prevRect.IsEqualRect(0, 0, mSize.width, mSize.height);
 
   // Optimization: DisposeClearAll if the previous frame is the same size as
   //               container and it's clearing itself
@@ -619,9 +617,7 @@ FrameAnimator::DoBlend(DrawableSurface& aFrames,
                    ? nextFrameData.mRect.Intersect(*nextFrameData.mBlendRect)
                    : nextFrameData.mRect;
 
-  bool isFullNextFrame = nextRect.x == 0 && nextRect.y == 0 &&
-                         nextRect.Width() == mSize.width &&
-                         nextRect.Height() == mSize.height;
+  bool isFullNextFrame = nextRect.IsEqualRect(0, 0, mSize.width, mSize.height);
 
   if (!nextFrame->GetIsPaletted()) {
     // Optimization: Skip compositing if the previous frame wants to clear the
@@ -719,7 +715,7 @@ FrameAnimator::DoBlend(DrawableSurface& aFrames,
       // No need to blank the composite frame
       needToBlankComposite = false;
     } else {
-      if ((prevRect.x >= nextRect.x) && (prevRect.y >= nextRect.y) &&
+      if ((prevRect.X() >= nextRect.X()) && (prevRect.Y() >= nextRect.Y()) &&
           (prevRect.XMost() <= nextRect.XMost()) &&
           (prevRect.YMost() <= nextRect.YMost())) {
         // Optimization: No need to dispose prev.frame when
@@ -893,8 +889,8 @@ FrameAnimator::ClearFrame(uint8_t* aFrameData, const IntRect& aFrameRect,
   }
 
   uint32_t bytesPerRow = aFrameRect.Width() * 4;
-  for (int row = toClear.y; row < toClear.YMost(); ++row) {
-    memset(aFrameData + toClear.x * 4 + row * bytesPerRow, 0,
+  for (int row = toClear.Y(); row < toClear.YMost(); ++row) {
+    memset(aFrameData + toClear.X() * 4 + row * bytesPerRow, 0,
            toClear.Width() * 4);
   }
 }
@@ -930,24 +926,25 @@ FrameAnimator::DrawFrameTo(const uint8_t* aSrcData, const IntRect& aSrcRect,
   NS_ENSURE_ARG_POINTER(aDstPixels);
 
   // According to both AGIF and APNG specs, offsets are unsigned
-  if (aSrcRect.x < 0 || aSrcRect.y < 0) {
+  if (aSrcRect.X() < 0 || aSrcRect.Y() < 0) {
     NS_WARNING("FrameAnimator::DrawFrameTo: negative offsets not allowed");
     return NS_ERROR_FAILURE;
   }
+
   // Outside the destination frame, skip it
-  if ((aSrcRect.x > aDstRect.Width()) || (aSrcRect.y > aDstRect.Height())) {
+  if ((aSrcRect.X() > aDstRect.Width()) || (aSrcRect.Y() > aDstRect.Height())) {
     return NS_OK;
   }
 
   if (aSrcPaletteLength) {
     // Larger than the destination frame, clip it
-    int32_t width = std::min(aSrcRect.Width(), aDstRect.Width() - aSrcRect.x);
-    int32_t height = std::min(aSrcRect.Height(), aDstRect.Height() - aSrcRect.y);
+    int32_t width = std::min(aSrcRect.Width(), aDstRect.Width() - aSrcRect.X());
+    int32_t height = std::min(aSrcRect.Height(), aDstRect.Height() - aSrcRect.Y());
 
     // The clipped image must now fully fit within destination image frame
-    NS_ASSERTION((aSrcRect.x >= 0) && (aSrcRect.y >= 0) &&
-                 (aSrcRect.x + width <= aDstRect.Width()) &&
-                 (aSrcRect.y + height <= aDstRect.Height()),
+    NS_ASSERTION((aSrcRect.X() >= 0) && (aSrcRect.Y() >= 0) &&
+                 (aSrcRect.X() + width <= aDstRect.Width()) &&
+                 (aSrcRect.Y() + height <= aDstRect.Height()),
                 "FrameAnimator::DrawFrameTo: Invalid aSrcRect");
 
     // clipped image size may be smaller than source, but not larger
@@ -960,7 +957,7 @@ FrameAnimator::DrawFrameTo(const uint8_t* aSrcData, const IntRect& aSrcRect,
     const uint32_t* colormap = reinterpret_cast<const uint32_t*>(aSrcData);
 
     // Skip to the right offset
-    dstPixels += aSrcRect.x + (aSrcRect.y * aDstRect.Width());
+    dstPixels += aSrcRect.X() + (aSrcRect.Y() * aDstRect.Width());
     if (!aSrcHasAlpha) {
       for (int32_t r = height; r > 0; --r) {
         for (int32_t c = 0; c < width; c++) {
@@ -1030,7 +1027,7 @@ FrameAnimator::DrawFrameTo(const uint8_t* aSrcData, const IntRect& aSrcRect,
                                dst,
                                0, 0,
                                0, 0,
-                               aSrcRect.x, aSrcRect.y,
+                               aSrcRect.X(), aSrcRect.Y(),
                                aSrcRect.Width(), aSrcRect.Height());
     } else {
       // We need to do the OVER followed by SOURCE trick above.
@@ -1040,15 +1037,15 @@ FrameAnimator::DrawFrameTo(const uint8_t* aSrcData, const IntRect& aSrcRect,
                                dst,
                                0, 0,
                                0, 0,
-                               aSrcRect.x, aSrcRect.y,
+                               aSrcRect.X(), aSrcRect.Y(),
                                aSrcRect.Width(), aSrcRect.Height());
       pixman_image_composite32(PIXMAN_OP_SRC,
                                src,
                                nullptr,
                                dst,
-                               aBlendRect->x, aBlendRect->y,
+                               aBlendRect->X(), aBlendRect->Y(),
                                0, 0,
-                               aBlendRect->x, aBlendRect->y,
+                               aBlendRect->X(), aBlendRect->Y(),
                                aBlendRect->Width(), aBlendRect->Height());
     }
 
