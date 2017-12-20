@@ -275,6 +275,10 @@ public:
   static nsresult AddBoolVarCache(bool* aVariable,
                                   const char* aPref,
                                   bool aDefault = false);
+  template<MemoryOrdering Order>
+  static nsresult AddAtomicBoolVarCache(Atomic<bool, Order>* aVariable,
+                                        const char* aPref,
+                                        bool aDefault = false);
   static nsresult AddIntVarCache(int32_t* aVariable,
                                  const char* aPref,
                                  int32_t aDefault = 0);
