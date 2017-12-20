@@ -139,8 +139,8 @@ MediaKeySession::UpdateKeyStatusMap()
 
   nsTArray<CDMCaps::KeyStatus> keyStatuses;
   {
-    CDMCaps::AutoLock caps(mKeys->GetCDMProxy()->Capabilites());
-    caps.GetKeyStatusesForSession(mSessionId, keyStatuses);
+    auto caps = mKeys->GetCDMProxy()->Capabilites().Lock();
+    caps->GetKeyStatusesForSession(mSessionId, keyStatuses);
   }
 
   mKeyStatusMap->Update(keyStatuses);
