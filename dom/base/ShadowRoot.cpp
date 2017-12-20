@@ -510,33 +510,6 @@ ShadowRoot::SetApplyAuthorStyles(bool aApplyAuthorStyles)
   }
 }
 
-/**
- * Returns whether the web components pool population algorithm
- * on the host would contain |aContent|. This function ignores
- * insertion points in the pool, thus should only be used to
- * test nodes that have not yet been distributed.
- */
-bool
-ShadowRoot::IsPooledNode(nsIContent* aContent) const
-{
-  if (nsContentUtils::IsContentInsertionPoint(aContent)) {
-    // Insertion points never end up in the pool.
-    return false;
-  }
-
-  auto* host = GetHost();
-  auto* container = aContent->GetParent();
-  if (container == host && !aContent->IsRootOfAnonymousSubtree()) {
-    // Children of the host will end up in the pool. We check to ensure
-    // that the content is in the same anonymous tree as the container
-    // because anonymous content may report its container as the host
-    // but it may not be in the host's child list.
-    return true;
-  }
-
-  return false;
-}
-
 void
 ShadowRoot::AttributeChanged(nsIDocument* aDocument,
                              Element* aElement,

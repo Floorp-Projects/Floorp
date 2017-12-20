@@ -2703,18 +2703,6 @@ public:
   static mozilla::LogModule* DOMDumpLog();
 
   /**
-   * Returns whether a content is an insertion point for XBL
-   * bindings or web components ShadowRoot. In web components,
-   * this corresponds to a <content> element that participates
-   * in node distribution. In XBL this corresponds to an
-   * <xbl:children> element in anonymous content.
-   *
-   * @param aContent The content to test for being an insertion point.
-   */
-  static bool IsContentInsertionPoint(nsIContent* aContent);
-
-
-  /**
    * Returns whether the children of the provided content are
    * nodes that are distributed to Shadow DOM insertion points.
    */

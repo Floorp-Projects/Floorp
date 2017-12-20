@@ -17,48 +17,6 @@
 namespace mozilla {
 namespace dom {
 
-class MatchedNodes {
-public:
-  explicit MatchedNodes()
-    : mIsContentElement(false), mChildrenElement(nullptr) {}
-  explicit MatchedNodes(XBLChildrenElement* aInsertionPoint)
-    : mIsContentElement(false), mChildrenElement(aInsertionPoint) {}
-
-  uint32_t Length() const
-  {
-    return mChildrenElement ? mChildrenElement->InsertedChildrenLength() : 0;
-  }
-
-  nsIContent* operator[](int32_t aIndex) const
-  {
-    return mChildrenElement ? mChildrenElement->InsertedChild(aIndex) : nullptr;
-  }
-
-  bool IsEmpty() const
-  {
-    return mChildrenElement && !mChildrenElement->HasInsertedChildren();
-  }
-protected:
-  // Leftover from Shadow DOM v0.
-  bool mIsContentElement;
-  union {
-    XBLChildrenElement* mChildrenElement;
-  };
-};
-
-static inline MatchedNodes
-GetMatchedNodesForPoint(nsIContent* aContent)
-{
-  if (aContent->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
-    // XBL case
-    return MatchedNodes(static_cast<XBLChildrenElement*>(aContent));
-  }
-
-  return MatchedNodes();
-  // Web components case
-  // XXX handle <slot> element?
-}
-
 ExplicitChildIterator::ExplicitChildIterator(const nsIContent* aParent,
                                              bool aStartAtBeginning)
   : mParent(aParent),
@@ -88,16 +46,18 @@ ExplicitChildIterator::GetNextChild()
       return mChild;
     }
 
-    MatchedNodes assignedChildren = GetMatchedNodesForPoint(mChild);
-    if (mIndexInInserted < assignedChildren.Length()) {
-      return assignedChildren[mIndexInInserted++];
+    MOZ_ASSERT(mChild->IsActiveChildrenElement());
+    auto* childrenElement =
+      static_cast<XBLChildrenElement*>(mChild);
+    if (mIndexInInserted < childrenElement->InsertedChildrenLength()) {
+      return childrenElement->InsertedChild(mIndexInInserted++);
     }
     mIndexInInserted = 0;
     mChild = mChild->GetNextSibling();
   } else if (mDefaultChild) {
     // If we're already in default content, check if there are more nodes there
     MOZ_ASSERT(mChild);
-    MOZ_ASSERT(nsContentUtils::IsContentInsertionPoint(mChild));
+    MOZ_ASSERT(mChild->IsActiveChildrenElement());
 
     mDefaultChild = mDefaultChild->GetNextSibling();
     if (mDefaultChild) {
@@ -128,15 +88,16 @@ ExplicitChildIterator::GetNextChild()
   // Iterate until we find a non-insertion point, or an insertion point with
   // content.
   while (mChild) {
-    if (nsContentUtils::IsContentInsertionPoint(mChild)) {
+    if (mChild->IsActiveChildrenElement()) {
       // If the current child being iterated is a content insertion point
       // then the iterator needs to return the nodes distributed into
       // the content insertion point.
-      MatchedNodes assignedChildren = GetMatchedNodesForPoint(mChild);
-      if (!assignedChildren.IsEmpty()) {
+      auto* childrenElement =
+        static_cast<XBLChildrenElement*>(mChild);
+      if (childrenElement->HasInsertedChildren()) {
         // Iterate through elements projected on insertion point.
         mIndexInInserted = 1;
-        return assignedChildren[0];
+        return childrenElement->InsertedChild(0);
       }
 
       // Insertion points inside fallback/default content
@@ -202,7 +163,7 @@ ExplicitChildIterator::Seek(const nsIContent* aChildToFind)
     mIndexInInserted = 0;
     mDefaultChild = nullptr;
     mIsFirst = false;
-    MOZ_ASSERT(!nsContentUtils::IsContentInsertionPoint(mChild));
+    MOZ_ASSERT(!mChild->IsActiveChildrenElement());
     return true;
   }
 
@@ -225,8 +186,9 @@ ExplicitChildIterator::Get() const
   }
 
   if (mIndexInInserted) {
-    MatchedNodes assignedChildren = GetMatchedNodesForPoint(mChild);
-    return assignedChildren[mIndexInInserted - 1];
+    MOZ_ASSERT(mChild->IsActiveChildrenElement());
+    auto* childrenElement = static_cast<XBLChildrenElement*>(mChild);
+    return childrenElement->InsertedChild(mIndexInInserted - 1);
   }
 
   return mDefaultChild ? mDefaultChild : mChild;
@@ -253,9 +215,10 @@ ExplicitChildIterator::GetPreviousChild()
 
     // NB: mIndexInInserted points one past the last returned child so we need
     // to look *two* indices back in order to return the previous child.
-    MatchedNodes assignedChildren = GetMatchedNodesForPoint(mChild);
+    MOZ_ASSERT(mChild->IsActiveChildrenElement());
+    auto* childrenElement = static_cast<XBLChildrenElement*>(mChild);
     if (--mIndexInInserted) {
-      return assignedChildren[mIndexInInserted - 1];
+      return childrenElement->InsertedChild(mIndexInInserted - 1);
     }
     mChild = mChild->GetPreviousSibling();
   } else if (mDefaultChild) {
@@ -289,14 +252,14 @@ ExplicitChildIterator::GetPreviousChild()
   // Iterate until we find a non-insertion point, or an insertion point with
   // content.
   while (mChild) {
-    if (nsContentUtils::IsContentInsertionPoint(mChild)) {
+    if (mChild->IsActiveChildrenElement()) {
       // If the current child being iterated is a content insertion point
       // then the iterator needs to return the nodes distributed into
       // the content insertion point.
-      MatchedNodes assignedChildren = GetMatchedNodesForPoint(mChild);
-      if (!assignedChildren.IsEmpty()) {
-        mIndexInInserted = assignedChildren.Length();
-        return assignedChildren[mIndexInInserted - 1];
+      auto* childrenElement = static_cast<XBLChildrenElement*>(mChild);
+      if (childrenElement->HasInsertedChildren()) {
+        mIndexInInserted = childrenElement->InsertedChildrenLength();
+        return childrenElement->InsertedChild(mIndexInInserted - 1);
       }
 
       mDefaultChild = mChild->GetLastChild();
