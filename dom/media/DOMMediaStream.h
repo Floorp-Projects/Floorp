@@ -378,6 +378,7 @@ public:
   bool Active() const;
 
   IMPL_EVENT_HANDLER(addtrack)
+  IMPL_EVENT_HANDLER(removetrack)
 
   // NON-WebIDL
 
