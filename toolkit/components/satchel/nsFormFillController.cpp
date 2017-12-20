@@ -907,8 +907,6 @@ nsFormFillController::StartQueryLoginReputation(nsIDOMHTMLInputElement *aInput)
     if (NS_WARN_IF(!mLoginReputationService)) {
       return NS_ERROR_FAILURE;
     }
-
-    mLoginReputationService->Init();
   }
 
   mLoginReputationService->QueryReputationAsync(aInput, nullptr);

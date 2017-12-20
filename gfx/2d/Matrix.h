@@ -770,12 +770,12 @@ public:
         // Since intercept.w will always be 0 here, we interpret x,y,z as a
         // direction towards an infinite vanishing point.
         if (intercept.x < 0.0f) {
-          min_x = aClip.x;
+          min_x = aClip.X();
         } else if (intercept.x > 0.0f) {
           max_x = aClip.XMost();
         }
         if (intercept.y < 0.0f) {
-          min_y = aClip.y;
+          min_y = aClip.Y();
         } else if (intercept.y > 0.0f) {
           max_y = aClip.YMost();
         }
@@ -845,17 +845,17 @@ public:
     Point4DTyped<UnknownUnits, F> points[2][kTransformAndClipRectMaxVerts];
     Point4DTyped<UnknownUnits, F>* dstPoint = points[0];
 
-    *dstPoint++ = TransformPoint(Point4DTyped<UnknownUnits, F>(aRect.x, aRect.y, 0, 1));
-    *dstPoint++ = TransformPoint(Point4DTyped<UnknownUnits, F>(aRect.XMost(), aRect.y, 0, 1));
+    *dstPoint++ = TransformPoint(Point4DTyped<UnknownUnits, F>(aRect.X(), aRect.Y(), 0, 1));
+    *dstPoint++ = TransformPoint(Point4DTyped<UnknownUnits, F>(aRect.XMost(), aRect.Y(), 0, 1));
     *dstPoint++ = TransformPoint(Point4DTyped<UnknownUnits, F>(aRect.XMost(), aRect.YMost(), 0, 1));
-    *dstPoint++ = TransformPoint(Point4DTyped<UnknownUnits, F>(aRect.x, aRect.YMost(), 0, 1));
+    *dstPoint++ = TransformPoint(Point4DTyped<UnknownUnits, F>(aRect.X(), aRect.YMost(), 0, 1));
 
     // View frustum clipping planes are described as normals originating from
     // the 0,0,0,0 origin.
     Point4DTyped<UnknownUnits, F> planeNormals[4];
-    planeNormals[0] = Point4DTyped<UnknownUnits, F>(1.0, 0.0, 0.0, -aClip.x);
+    planeNormals[0] = Point4DTyped<UnknownUnits, F>(1.0, 0.0, 0.0, -aClip.X());
     planeNormals[1] = Point4DTyped<UnknownUnits, F>(-1.0, 0.0, 0.0, aClip.XMost());
-    planeNormals[2] = Point4DTyped<UnknownUnits, F>(0.0, 1.0, 0.0, -aClip.y);
+    planeNormals[2] = Point4DTyped<UnknownUnits, F>(0.0, 1.0, 0.0, -aClip.Y());
     planeNormals[3] = Point4DTyped<UnknownUnits, F>(0.0, -1.0, 0.0, aClip.YMost());
 
     // Iterate through each clipping plane and clip the polygon.

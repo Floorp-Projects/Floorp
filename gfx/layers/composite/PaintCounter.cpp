@@ -73,7 +73,7 @@ PaintCounter::Draw(Compositor* aCompositor, TimeDuration aPaintTime, TimeDuratio
   effectChain.mPrimaryEffect = mTexturedEffect;
 
   gfx::Matrix4x4 identity;
-  Rect rect(mRect.x, mRect.y, mRect.Width(), mRect.Height());
+  Rect rect(mRect.X(), mRect.Y(), mRect.Width(), mRect.Height());
   aCompositor->DrawQuad(rect, mRect, effectChain, 1.0, identity);
 }
 

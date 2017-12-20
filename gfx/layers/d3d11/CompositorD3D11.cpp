@@ -327,9 +327,9 @@ already_AddRefed<CompositingRenderTarget>
 CompositorD3D11::CreateRenderTarget(const gfx::IntRect& aRect,
                                     SurfaceInitMode aInit)
 {
-  MOZ_ASSERT(aRect.Width() != 0 && aRect.Height() != 0);
+  MOZ_ASSERT(!aRect.IsZero());
 
-  if (aRect.Width() * aRect.Height() == 0) {
+  if (aRect.IsZero()) {
     return nullptr;
   }
 
@@ -359,9 +359,9 @@ CompositorD3D11::CreateTexture(const gfx::IntRect& aRect,
                                const CompositingRenderTarget* aSource,
                                const gfx::IntPoint& aSourcePoint)
 {
-  MOZ_ASSERT(aRect.Width() != 0 && aRect.Height() != 0);
+  MOZ_ASSERT(!aRect.IsZero());
 
-  if (aRect.Width() * aRect.Height() == 0) {
+  if (aRect.IsZero()) {
     return nullptr;
   }
 
@@ -398,8 +398,8 @@ CompositorD3D11::CreateTexture(const gfx::IntRect& aRect,
       D3D11_BOX copyBox;
       copyBox.front = 0;
       copyBox.back = 1;
-      copyBox.left = copyRect.x;
-      copyBox.top = copyRect.y;
+      copyBox.left = copyRect.X();
+      copyBox.top = copyRect.Y();
       copyBox.right = copyRect.XMost();
       copyBox.bottom = copyRect.YMost();
 
@@ -525,9 +525,9 @@ CompositorD3D11::ClearRect(const gfx::Rect& aRect)
   mPSConstants.layerOpacity[0] = 1.0f;
 
   D3D11_RECT scissor;
-  scissor.left = aRect.x;
+  scissor.left = aRect.X();
   scissor.right = aRect.XMost();
-  scissor.top = aRect.y;
+  scissor.top = aRect.Y();
   scissor.bottom = aRect.YMost();
   mContext->RSSetScissorRects(1, &scissor);
   mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
@@ -741,14 +741,14 @@ CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
     Matrix4x4 transform;
     transform._11 = 1.0f / bounds.Width();
     transform._22 = 1.0f / bounds.Height();
-    transform._41 = float(-bounds.x) / bounds.Width();
-    transform._42 = float(-bounds.y) / bounds.Height();
+    transform._41 = float(-bounds.X()) / bounds.Width();
+    transform._42 = float(-bounds.Y()) / bounds.Height();
     memcpy(mVSConstants.maskTransform, &transform._11, 64);
   }
 
   D3D11_RECT scissor;
 
-  IntRect clipRect(aClipRect.x, aClipRect.y, aClipRect.Width(), aClipRect.Height());
+  IntRect clipRect(aClipRect.X(), aClipRect.Y(), aClipRect.Width(), aClipRect.Height());
   if (mCurrentRT == mDefaultRT) {
     clipRect = clipRect.Intersect(mCurrentClip);
   }
@@ -757,9 +757,9 @@ CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
     return;
   }
 
-  scissor.left = clipRect.x;
+  scissor.left = clipRect.X();
   scissor.right = clipRect.XMost();
-  scissor.top = clipRect.y;
+  scissor.top = clipRect.Y();
   scissor.bottom = clipRect.YMost();
 
   bool useBlendShaders = false;
@@ -1015,7 +1015,7 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   IntRect clipRect = invalidRect;
   if (aClipRectIn) {
-    clipRect.IntersectRect(clipRect, IntRect(aClipRectIn->x, aClipRectIn->y, aClipRectIn->Width(), aClipRectIn->Height()));
+    clipRect.IntersectRect(clipRect, IntRect(aClipRectIn->X(), aClipRectIn->Y(), aClipRectIn->Width(), aClipRectIn->Height()));
   }
 
   if (clipRect.IsEmpty()) {
@@ -1179,8 +1179,8 @@ CompositorD3D11::Present()
     uint32_t i = 0;
     for (auto iter = mBackBufferInvalid.RectIter(); !iter.Done(); iter.Next()) {
       const IntRect& r = iter.Get();
-      rects[i].left = r.x;
-      rects[i].top = r.y;
+      rects[i].left = r.X();
+      rects[i].top = r.Y();
       rects[i].bottom = r.YMost();
       rects[i].right = r.XMost();
       i++;
@@ -1414,11 +1414,11 @@ CompositorD3D11::UpdateRenderTarget()
         D3D11_BOX box;
         box.back = 1;
         box.front = 0;
-        box.left = rect.x;
+        box.left = rect.X();
         box.right = rect.XMost();
-        box.top = rect.y;
+        box.top = rect.Y();
         box.bottom = rect.YMost();
-        mContext->CopySubresourceRegion(backBuf, 0, rect.x, rect.y, 0, frontBuf, 0, &box);
+        mContext->CopySubresourceRegion(backBuf, 0, rect.X(), rect.Y(), 0, frontBuf, 0, &box);
       }
       mBackBufferInvalid = mFrontBufferInvalid;
     }
@@ -1528,7 +1528,7 @@ CompositorD3D11::PaintToTarget()
                                              SurfaceFormat::B8G8R8A8);
   mTarget->CopySurface(sourceSurface,
                        IntRect(0, 0, bbDesc.Width, bbDesc.Height),
-                       IntPoint(-mTargetBounds.x, -mTargetBounds.y));
+                       IntPoint(-mTargetBounds.X(), -mTargetBounds.Y()));
 
   mTarget->Flush();
   mContext->Unmap(readTexture, 0);

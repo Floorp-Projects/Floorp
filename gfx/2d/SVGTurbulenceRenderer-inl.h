@@ -179,8 +179,8 @@ SVGTurbulenceRenderer<Type,Stitch,f32x4_t,i32x4_t,u8x16_t>::CreateStitchInfo(con
   StitchInfo stitch;
   stitch.width = int32_t(floorf(aTileRect.Width() * mBaseFrequency.width + 0.5f));
   stitch.height = int32_t(floorf(aTileRect.Height() * mBaseFrequency.height + 0.5f));
-  stitch.wrapX = int32_t(aTileRect.x * mBaseFrequency.width) + stitch.width;
-  stitch.wrapY = int32_t(aTileRect.y * mBaseFrequency.height) + stitch.height;
+  stitch.wrapX = int32_t(aTileRect.X() * mBaseFrequency.width) + stitch.width;
+  stitch.wrapY = int32_t(aTileRect.Y() * mBaseFrequency.height) + stitch.height;
   return stitch;
 }
 

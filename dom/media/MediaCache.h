@@ -289,6 +289,9 @@ public:
   // Main thread only.
   void NotifyClientSuspended(bool aSuspended);
 
+  // Notifies the stream to resume download at the current offset.
+  void NotifyResume();
+
   // These methods can be called on any thread.
   // Cached blocks associated with this stream will not be evicted
   // while the stream is pinned.
@@ -301,8 +304,6 @@ public:
   // If we've successfully read data beyond the originally reported length,
   // we return the end of the data we've read.
   int64_t GetLength();
-  // Return the offset where next channel data will write to. Main thread only.
-  int64_t GetOffset() const;
   // Returns the unique resource ID. Call only on the main thread or while
   // holding the media cache lock.
   int64_t GetResourceID() { return mResourceID; }

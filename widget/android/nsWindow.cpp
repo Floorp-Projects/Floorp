@@ -1375,7 +1375,10 @@ nsWindow::GeckoViewSupport::AttachEditable(const GeckoSession::Window::LocalRef&
     java::GeckoEditableChild::LocalRef editableChild(inst.Env());
     editableChild = java::GeckoEditableChild::Ref::From(aEditableChild);
 
-    MOZ_ASSERT(!window.mEditableSupport);
+    if (window.mEditableSupport) {
+        window.mEditableSupport.Detach();
+    }
+
     window.mEditableSupport.Attach(editableChild, &window, editableChild);
     window.mEditableParent = aEditableParent;
 }
@@ -1389,6 +1392,8 @@ nsWindow::InitNatives()
     if (jni::IsFennec()) {
         nsWindow::PMPMSupport::Init();
     }
+
+    GeckoEditableSupport::Init();
 }
 
 nsWindow*

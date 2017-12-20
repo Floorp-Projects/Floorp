@@ -206,8 +206,8 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
   // an endless updating cycle.
   if (fabsf(contentMetrics.GetScrollOffset().x - compositorMetrics.GetScrollOffset().x) <= 2 &&
       fabsf(contentMetrics.GetScrollOffset().y - compositorMetrics.GetScrollOffset().y) <= 2 &&
-      fabsf(contentMetrics.GetDisplayPort().x - compositorMetrics.GetDisplayPort().x) <= 2 &&
-      fabsf(contentMetrics.GetDisplayPort().y - compositorMetrics.GetDisplayPort().y) <= 2 &&
+      fabsf(contentMetrics.GetDisplayPort().X() - compositorMetrics.GetDisplayPort().X()) <= 2 &&
+      fabsf(contentMetrics.GetDisplayPort().Y() - compositorMetrics.GetDisplayPort().Y()) <= 2 &&
       fabsf(contentMetrics.GetDisplayPort().Width() - compositorMetrics.GetDisplayPort().Width()) <= 2 &&
       fabsf(contentMetrics.GetDisplayPort().Height() - compositorMetrics.GetDisplayPort().Height()) <= 2) {
     return false;
@@ -552,7 +552,7 @@ TileClient::ValidateBackBufferFromFront(const nsIntRegion& aDirtyRegion,
       // is unlikely that we'd save much by copying each individual rect of the
       // region, but we can reevaluate this if it becomes an issue.
       const IntRect rectToCopy = regionToCopy.GetBounds();
-      gfx::IntRect gfxRectToCopy(rectToCopy.x, rectToCopy.y, rectToCopy.Width(), rectToCopy.Height());
+      gfx::IntRect gfxRectToCopy(rectToCopy.X(), rectToCopy.Y(), rectToCopy.Width(), rectToCopy.Height());
       if (CopyFrontToBack(mFrontBuffer, mBackBuffer, gfxRectToCopy, aFlags, aCopies, aClients)) {
         if (mBackBufferOnWhite) {
           MOZ_ASSERT(mFrontBufferOnWhite);
@@ -957,11 +957,11 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
   const gfx::IntRect newBounds = newValidRegion.GetBounds();
 
   const TilesPlacement oldTiles = mTiles;
-  const TilesPlacement newTiles(floor_div(newBounds.x, scaledTileSize.width),
-                          floor_div(newBounds.y, scaledTileSize.height),
-                          floor_div(GetTileStart(newBounds.x, scaledTileSize.width)
+  const TilesPlacement newTiles(floor_div(newBounds.X(), scaledTileSize.width),
+                          floor_div(newBounds.Y(), scaledTileSize.height),
+                                floor_div(GetTileStart(newBounds.X(), scaledTileSize.width)
                                     + newBounds.Width(), scaledTileSize.width) + 1,
-                          floor_div(GetTileStart(newBounds.y, scaledTileSize.height)
+                                floor_div(GetTileStart(newBounds.Y(), scaledTileSize.height)
                                     + newBounds.Height(), scaledTileSize.height) + 1);
 
   const size_t oldTileCount = mRetainedTiles.Length();
@@ -1372,7 +1372,7 @@ ClientMultiTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& a
   int startX, incX, startY, incY;
   gfx::IntSize scaledTileSize = GetScaledTileSize();
   if (aPaintData->mScrollOffset.x >= aPaintData->mLastScrollOffset.x) {
-    startX = RoundDownToTileEdge(paintBounds.x, scaledTileSize.width);
+    startX = RoundDownToTileEdge(paintBounds.X(), scaledTileSize.width);
     incX = scaledTileSize.width;
   } else {
     startX = RoundDownToTileEdge(paintBounds.XMost() - 1, scaledTileSize.width);
@@ -1380,7 +1380,7 @@ ClientMultiTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& a
   }
 
   if (aPaintData->mScrollOffset.y >= aPaintData->mLastScrollOffset.y) {
-    startY = RoundDownToTileEdge(paintBounds.y, scaledTileSize.height);
+    startY = RoundDownToTileEdge(paintBounds.Y(), scaledTileSize.height);
     incY = scaledTileSize.height;
   } else {
     startY = RoundDownToTileEdge(paintBounds.YMost() - 1, scaledTileSize.height);
@@ -1405,9 +1405,9 @@ ClientMultiTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& a
       break;
     }
     if (Abs(scrollDiffY) >= Abs(scrollDiffX)) {
-      tileBounds.x += incX;
+      tileBounds.MoveByX(incX);
     } else {
-      tileBounds.y += incY;
+      tileBounds.MoveByY(incY);
     }
   }
 

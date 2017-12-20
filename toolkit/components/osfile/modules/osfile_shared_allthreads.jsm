@@ -126,6 +126,7 @@ exports.defineLazyGetter = defineLazyGetter;
  * The choice of logger can be overridden with Config.TEST.
  */
 var gLogger;
+// eslint-disable-next-line no-undef
 if (typeof window != "undefined" && window.console && console.log) {
   gLogger = console.log.bind(console, "OS");
 } else {
