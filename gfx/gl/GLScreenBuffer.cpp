@@ -817,7 +817,7 @@ DrawBuffer::Create(GLContext* const gl,
         if (formats.samples == 0)
             return false; // Can't create it.
 
-        MOZ_ASSERT(formats.samples <= gl->MaxSamples());
+        MOZ_ASSERT(uint32_t(formats.samples) <= gl->MaxSamples());
     }
 
     GLuint colorMSRB = 0;
