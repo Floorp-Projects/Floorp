@@ -11,17 +11,10 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/rotaryengine.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
 
 add_task(async function setup() {
-  Log.repository.getLogger("Sync.ErrorHandler").level  = Log.Level.Trace;
-  Log.repository.getLogger("Sync.Resource").level      = Log.Level.Trace;
-  Log.repository.getLogger("Sync.RESTRequest").level   = Log.Level.Trace;
-  Log.repository.getLogger("Sync.Service").level       = Log.Level.Trace;
-  Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
-  initTestLogging();
   validate_all_future_pings();
 
   // None of the failures in this file should result in a UI error.
@@ -56,6 +49,7 @@ async function prepareServer() {
   let server = new SyncServer();
   server.registerUser("johndoe");
   server.start();
+  syncTestLogging();
   await configureIdentity({username: "johndoe"}, server);
   return server;
 }

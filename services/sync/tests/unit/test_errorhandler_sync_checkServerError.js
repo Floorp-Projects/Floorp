@@ -9,9 +9,6 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/fakeservices.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
-
-initTestLogging("Trace");
 
 var engineManager = Service.engineManager;
 engineManager.clear();
@@ -55,6 +52,7 @@ async function sync_httpd_setup() {
 async function setUp(server) {
   await configureIdentity({username: "johndoe"}, server);
   new FakeCryptoService();
+  syncTestLogging();
 }
 
 async function generateAndUploadKeys(server) {

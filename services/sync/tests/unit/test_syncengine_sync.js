@@ -10,7 +10,6 @@ Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/rotaryengine.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 function makeRotaryEngine() {
   return new RotaryEngine(Service);
