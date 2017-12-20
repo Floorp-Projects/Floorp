@@ -429,9 +429,9 @@ def valid_mt(path):
 set_config('MSMANIFEST_TOOL', depends(valid_mt)(lambda x: bool(x)))
 
 
-link = check_prog('LINK', ('link.exe',), paths=vc_compiler_path)
+link = check_prog('LINKER', ('link.exe',), paths=vc_compiler_path)
 
-add_old_configure_assignment('LINK', link)
+add_old_configure_assignment('LINKER', link)
 
 
 # Normally, we'd just have CC, etc. set to absolute paths, but the build system

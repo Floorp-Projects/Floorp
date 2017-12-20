@@ -8,7 +8,7 @@
  * https://console.spec.whatwg.org/#console-namespace
  */
 
-[Exposed=(Window,Worker,WorkerDebugger,Worklet),
+[Exposed=(Window,Worker,WorkerDebugger,Worklet,System),
  ClassString="Console",
  ProtoObjectHack]
 namespace console {

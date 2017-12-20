@@ -817,9 +817,8 @@ Console::Console(nsPIDOMWindowInner* aWindow)
   , mOuterID(0)
   , mInnerID(0)
   , mStatus(eUnknown)
+  , mCreationTimeStamp(TimeStamp::Now())
 {
-  MOZ_ASSERT_IF(NS_IsMainThread(), aWindow);
-
   if (mWindow) {
     mInnerID = mWindow->WindowID();
 
@@ -855,9 +854,11 @@ Console::Initialize(ErrorResult& aRv)
       return;
     }
 
-    aRv = obs->AddObserver(this, "inner-window-destroyed", true);
-    if (NS_WARN_IF(aRv.Failed())) {
-      return;
+    if (mWindow) {
+      aRv = obs->AddObserver(this, "inner-window-destroyed", true);
+      if (NS_WARN_IF(aRv.Failed())) {
+        return;
+      }
     }
 
     aRv = obs->AddObserver(this, "memory-pressure", true);
@@ -1223,36 +1224,38 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
 
   OriginAttributes oa;
 
-  if (mWindow) {
-    // Save the principal's OriginAttributes in the console event data
-    // so that we will be able to filter messages by origin attributes.
-    nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(mWindow);
-    if (NS_WARN_IF(!sop)) {
-      return;
-    }
+  if (NS_IsMainThread()) {
+    if (mWindow) {
+      // Save the principal's OriginAttributes in the console event data
+      // so that we will be able to filter messages by origin attributes.
+      nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(mWindow);
+      if (NS_WARN_IF(!sop)) {
+        return;
+      }
 
-    nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
-    if (NS_WARN_IF(!principal)) {
-      return;
-    }
+      nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
+      if (NS_WARN_IF(!principal)) {
+        return;
+      }
 
-    oa = principal->OriginAttributesRef();
-    callData->SetAddonId(principal);
+      oa = principal->OriginAttributesRef();
+      callData->SetAddonId(principal);
 
 #ifdef DEBUG
-    if (!nsContentUtils::IsSystemPrincipal(principal)) {
-      nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(mWindow);
-      if (webNav) {
-        nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(webNav);
-        MOZ_ASSERT(loadContext);
+      if (!nsContentUtils::IsSystemPrincipal(principal)) {
+        nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(mWindow);
+        if (webNav) {
+          nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(webNav);
+          MOZ_ASSERT(loadContext);
 
-        bool pb;
-        if (NS_SUCCEEDED(loadContext->GetUsePrivateBrowsing(&pb))) {
-          MOZ_ASSERT(pb == !!oa.mPrivateBrowsingId);
+          bool pb;
+          if (NS_SUCCEEDED(loadContext->GetUsePrivateBrowsing(&pb))) {
+            MOZ_ASSERT(pb == !!oa.mPrivateBrowsingId);
+          }
         }
       }
-    }
 #endif
+    }
   } else {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
@@ -1290,67 +1293,11 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   DOMHighResTimeStamp monotonicTimer;
 
   // Monotonic timer for 'time' and 'timeEnd'
-  if (aMethodName == MethodTime ||
-      aMethodName == MethodTimeEnd ||
-      aMethodName == MethodTimeStamp) {
-    if (mWindow) {
-      nsGlobalWindowInner *win = nsGlobalWindowInner::Cast(mWindow);
-      MOZ_ASSERT(win);
-
-      RefPtr<Performance> performance = win->GetPerformance();
-      if (!performance) {
-        return;
-      }
-
-      monotonicTimer = performance->Now();
-
-      nsDocShell* docShell = static_cast<nsDocShell*>(mWindow->GetDocShell());
-      RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
-      bool isTimelineRecording = timelines && timelines->HasConsumer(docShell);
-
-      // The 'timeStamp' recordings do not need an argument; use empty string
-      // if no arguments passed in.
-      if (isTimelineRecording && aMethodName == MethodTimeStamp) {
-        JS::Rooted<JS::Value> value(aCx, aData.Length() == 0
-          ? JS_GetEmptyStringValue(aCx)
-          : aData[0]);
-        JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
-        if (!jsString) {
-          return;
-        }
-
-        nsAutoJSString key;
-        if (!key.init(aCx, jsString)) {
-          return;
-        }
-
-        timelines->AddMarkerForDocShell(docShell, Move(
-          MakeUnique<TimestampTimelineMarker>(key)));
-      }
-      // For `console.time(foo)` and `console.timeEnd(foo)`.
-      else if (isTimelineRecording && aData.Length() == 1) {
-        JS::Rooted<JS::Value> value(aCx, aData[0]);
-        JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
-        if (!jsString) {
-          return;
-        }
-
-        nsAutoJSString key;
-        if (!key.init(aCx, jsString)) {
-          return;
-        }
-
-        timelines->AddMarkerForDocShell(docShell, Move(
-          MakeUnique<ConsoleTimelineMarker>(
-            key, aMethodName == MethodTime ? MarkerTracingType::START
-                                           : MarkerTracingType::END)));
-      }
-    } else {
-      WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-      MOZ_ASSERT(workerPrivate);
-
-      monotonicTimer = workerPrivate->TimeStampToDOMHighRes(TimeStamp::Now());
-    }
+  if ((aMethodName == MethodTime ||
+       aMethodName == MethodTimeEnd ||
+       aMethodName == MethodTimeStamp) &&
+      !MonotonicTimer(aCx, aMethodName, aData, &monotonicTimer)) {
+    return;
   }
 
   if (aMethodName == MethodTime && !aData.IsEmpty()) {
@@ -1375,7 +1322,17 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   }
 
   if (NS_IsMainThread()) {
-    callData->SetIDs(mOuterID, mInnerID);
+    if (mWindow) {
+      callData->SetIDs(mOuterID, mInnerID);
+    } else {
+      nsAutoString filename;
+      if (callData->mTopStackFrame.isSome()) {
+        filename = callData->mTopStackFrame->mFilename;
+      }
+
+      callData->SetIDs(NS_LITERAL_STRING("jsm"), filename);
+    }
+
     ProcessCallData(aCx, callData, aData);
 
     // Just because we don't want to expose
@@ -2436,7 +2393,7 @@ Console::GetConsole(const GlobalObject& aGlobal)
   return console.forget();
 }
 
-/* static */ Console*
+/* static */ already_AddRefed<Console>
 Console::GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
   // Worklet
@@ -2452,8 +2409,16 @@ Console::GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult& aRv)
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> innerWindow =
       do_QueryInterface(aGlobal.GetAsSupports());
-    if (NS_WARN_IF(!innerWindow)) {
-      return nullptr;
+
+    // we are probably running a chrome script.
+    if (!innerWindow) {
+      RefPtr<Console> console = new Console(nullptr);
+      console->Initialize(aRv);
+      if (NS_WARN_IF(aRv.Failed())) {
+        return nullptr;
+      }
+
+      return console.forget();
     }
 
     nsGlobalWindowInner* window = nsGlobalWindowInner::Cast(innerWindow);
@@ -2490,6 +2455,86 @@ Console::GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult& aRv)
 
     return debuggerScope->GetConsole(aRv);
   }
+}
+
+bool
+Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
+                        const Sequence<JS::Value>& aData,
+                        DOMHighResTimeStamp* aTimeStamp)
+{
+  if (mWindow) {
+    nsGlobalWindowInner *win = nsGlobalWindowInner::Cast(mWindow);
+    MOZ_ASSERT(win);
+
+    RefPtr<Performance> performance = win->GetPerformance();
+    if (!performance) {
+      return false;
+    }
+
+    *aTimeStamp = performance->Now();
+
+    nsDocShell* docShell = static_cast<nsDocShell*>(mWindow->GetDocShell());
+    RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+    bool isTimelineRecording = timelines && timelines->HasConsumer(docShell);
+
+    // The 'timeStamp' recordings do not need an argument; use empty string
+    // if no arguments passed in.
+    if (isTimelineRecording && aMethodName == MethodTimeStamp) {
+      JS::Rooted<JS::Value> value(aCx, aData.Length() == 0
+        ? JS_GetEmptyStringValue(aCx)
+        : aData[0]);
+      JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
+      if (!jsString) {
+        return false;
+      }
+
+      nsAutoJSString key;
+      if (!key.init(aCx, jsString)) {
+        return false;
+      }
+
+      timelines->AddMarkerForDocShell(docShell, Move(
+        MakeUnique<TimestampTimelineMarker>(key)));
+    }
+    // For `console.time(foo)` and `console.timeEnd(foo)`.
+    else if (isTimelineRecording && aData.Length() == 1) {
+      JS::Rooted<JS::Value> value(aCx, aData[0]);
+      JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
+      if (!jsString) {
+        return false;
+      }
+
+      nsAutoJSString key;
+      if (!key.init(aCx, jsString)) {
+        return false;
+      }
+
+      timelines->AddMarkerForDocShell(docShell, Move(
+        MakeUnique<ConsoleTimelineMarker>(
+          key, aMethodName == MethodTime ? MarkerTracingType::START
+                                         : MarkerTracingType::END)));
+    }
+
+    return true;
+  }
+
+  if (NS_IsMainThread()) {
+    double duration = (TimeStamp::Now() - mCreationTimeStamp).ToMilliseconds();
+
+    // Round down to the nearest 5us, because if the timer is too accurate
+    // people can do nasty timing attacks with it.  See similar code in the
+    // worker Performance implementation.
+    const double maxResolutionMs = 0.005;
+    return nsRFPService::ReduceTimePrecisionAsMSecs(
+      floor(duration / maxResolutionMs) * maxResolutionMs);
+    return true;
+  }
+
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+
+  *aTimeStamp = workerPrivate->TimeStampToDOMHighRes(TimeStamp::Now());
+  return true;
 }
 
 } // namespace dom

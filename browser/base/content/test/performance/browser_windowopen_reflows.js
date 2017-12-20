@@ -12,7 +12,17 @@
  * See https://developer.mozilla.org/en-US/Firefox/Performance_best_practices_for_Firefox_fe_engineers
  * for tips on how to do that.
  */
-const EXPECTED_REFLOWS = [];
+const EXPECTED_REFLOWS = [
+  {
+    stack: [
+      "onOverflow@resource:///modules/CustomizableUI.jsm",
+      "init@resource:///modules/CustomizableUI.jsm",
+      "observe@resource:///modules/CustomizableUI.jsm",
+      "_delayedStartup@chrome://browser/content/browser.js",
+    ],
+    times: 2, // This number should only ever go down - never up.
+  },
+];
 
 if (Services.appinfo.OS == "WINNT") {
   EXPECTED_REFLOWS.push(

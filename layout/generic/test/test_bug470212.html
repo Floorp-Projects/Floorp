@@ -27,7 +27,7 @@ function doShiftDrag(){
     // key, follows by two mouse move events.
 
     // Press on left-top corner of the canvas element.
-    wu.sendMouseEvent('mousedown',  canvasRect.left, canvasRect.top, 0, 1, 4);
+    wu.sendMouseEvent('mousedown',  canvasRect.left + 1, canvasRect.top + 1, 0, 1, 4);
     // Move to the center of this cavas element.
     wu.sendMouseEvent('mousemove',  canvasRect.left + (canvasRect.width / 2),
                       canvasRect.top + (canvasRect.height / 2), 0, 0, 4);
