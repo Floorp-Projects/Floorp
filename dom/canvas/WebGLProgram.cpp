@@ -560,16 +560,9 @@ webgl::LinkedProgramInfo::GetDrawFetchLimits(const char* const funcName) const
 ////////////////////////////////////////////////////////////////////////////////
 // WebGLProgram
 
-static GLuint
-CreateProgram(gl::GLContext* gl)
-{
-    gl->MakeCurrent();
-    return gl->fCreateProgram();
-}
-
 WebGLProgram::WebGLProgram(WebGLContext* webgl)
     : WebGLRefCountedObject(webgl)
-    , mGLName(CreateProgram(webgl->GL()))
+    , mGLName(webgl->gl->fCreateProgram())
     , mNumActiveTFOs(0)
     , mNextLink_TransformFeedbackBufferMode(LOCAL_GL_INTERLEAVED_ATTRIBS)
 {
@@ -585,8 +578,6 @@ void
 WebGLProgram::Delete()
 {
     gl::GLContext* gl = mContext->GL();
-
-    gl->MakeCurrent();
     gl->fDeleteProgram(mGLName);
 
     mVertShader = nullptr;
@@ -628,7 +619,6 @@ WebGLProgram::AttachShader(WebGLShader* shader)
 
     *shaderSlot = shader;
 
-    mContext->MakeContextCurrent();
     mContext->gl->fAttachShader(mGLName, shader->mGLName);
 }
 
@@ -686,7 +676,6 @@ WebGLProgram::DetachShader(const WebGLShader* shader)
 
     *shaderSlot = nullptr;
 
-    mContext->MakeContextCurrent();
     mContext->gl->fDetachShader(mGLName, shader->mGLName);
 }
 
@@ -785,12 +774,9 @@ WebGLProgram::GetFragDataLocation(const nsAString& userName_wide) const
         return -1;
     }
 
-
-    const auto& gl = mContext->gl;
-    gl->MakeCurrent();
-
     const NS_LossyConvertUTF16toASCII userName(userName_wide);
 #ifdef XP_MACOSX
+    const auto& gl = mContext->gl;
     if (gl->WorkAroundDriverBugs()) {
         // OSX doesn't return locs for indexed names, just the base names.
         // Indicated by failure in: conformance2/programs/gl-get-frag-data-location.html
@@ -829,7 +815,6 @@ JS::Value
 WebGLProgram::GetProgramParameter(GLenum pname) const
 {
     gl::GLContext* gl = mContext->gl;
-    gl->MakeCurrent();
 
     if (mContext->IsWebGL2()) {
         switch (pname) {
@@ -912,7 +897,6 @@ WebGLProgram::GetUniformBlockIndex(const nsAString& userName_wide) const
     const auto& mappedName = info->mMappedName;
 
     gl::GLContext* gl = mContext->GL();
-    gl->MakeCurrent();
     return gl->fGetUniformBlockIndex(mGLName, mappedName.BeginReading());
 }
 
@@ -1034,7 +1018,6 @@ WebGLProgram::GetUniformLocation(const nsAString& userName_wide) const
         return nullptr;
 
     gl::GLContext* gl = mContext->GL();
-    gl->MakeCurrent();
 
     GLint loc = gl->fGetUniformLocation(mGLName, mappedName.BeginReading());
     if (loc == -1)
@@ -1059,7 +1042,6 @@ WebGLProgram::GetUniformIndices(const dom::Sequence<nsString>& uniformNames,
     nsTArray<GLuint>& arr = retval.SetValue();
 
     gl::GLContext* gl = mContext->GL();
-    gl->MakeCurrent();
 
     for (size_t i = 0; i < count; i++) {
         const NS_LossyConvertUTF16toASCII userName(uniformNames[i]);
@@ -1108,7 +1090,6 @@ WebGLProgram::UniformBlockBinding(GLuint uniformBlockIndex,
     ////
 
     gl::GLContext* gl = mContext->GL();
-    gl->MakeCurrent();
     gl->fUniformBlockBinding(mGLName, uniformBlockIndex, uniformBlockBinding);
 
     ////
@@ -1170,7 +1151,6 @@ WebGLProgram::LinkProgram()
         return;
     }
 
-    mContext->MakeContextCurrent();
     // as some of the validation changes program state
 
     mLinkLog.Truncate();
@@ -1464,8 +1444,6 @@ WebGLProgram::UseProgram() const
         return false;
     }
 
-    mContext->MakeContextCurrent();
-
     mContext->gl->fUseProgram(mGLName);
     return true;
 }
@@ -1473,7 +1451,6 @@ WebGLProgram::UseProgram() const
 void
 WebGLProgram::ValidateProgram() const
 {
-    mContext->MakeContextCurrent();
     gl::GLContext* gl = mContext->gl;
 
 #ifdef XP_MACOSX
@@ -1562,7 +1539,6 @@ WebGLProgram::TransformFeedbackVaryings(const dom::Sequence<nsString>& varyings,
     const char funcName[] = "transformFeedbackVaryings";
 
     const auto& gl = mContext->gl;
-    gl->MakeCurrent();
 
     switch (bufferMode) {
     case LOCAL_GL_INTERLEAVED_ATTRIBS:

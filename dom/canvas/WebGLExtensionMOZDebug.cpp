@@ -27,7 +27,6 @@ WebGLExtensionMOZDebug::GetParameter(JSContext* cx, GLenum pname,
                                      ErrorResult& er) const
 {
     const auto& gl = mContext->gl;
-    gl->MakeCurrent();
 
     switch (pname) {
     case LOCAL_GL_EXTENSIONS:

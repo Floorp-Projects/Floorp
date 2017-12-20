@@ -1710,8 +1710,6 @@ protected:
     void Invalidate();
     void DestroyResourcesAndContext();
 
-    void MakeContextCurrent() const { } // MakeCurrent is implicit now.
-
     // helpers
 
     bool ConvertImage(size_t width, size_t height, size_t srcStride,
