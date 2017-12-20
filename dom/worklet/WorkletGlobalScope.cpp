@@ -54,7 +54,7 @@ WorkletGlobalScope::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto
   return nullptr;
 }
 
-Console*
+already_AddRefed<Console>
 WorkletGlobalScope::GetConsole(ErrorResult& aRv)
 {
   if (!mConsole) {
@@ -64,7 +64,8 @@ WorkletGlobalScope::GetConsole(ErrorResult& aRv)
     }
   }
 
-  return mConsole;
+  RefPtr<Console> console = mConsole;
+  return console.forget();
 }
 
 void

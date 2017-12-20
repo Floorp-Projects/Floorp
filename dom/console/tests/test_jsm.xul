@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Console + JSM"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+const JSM = "chrome://mochitests/content/chrome/dom/console/tests/console.jsm";
+
+function consoleListener() {
+  SpecialPowers.addObserver(this, "console-api-log-event");
+}
+
+consoleListener.prototype  = {
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "console-api-log-event") {
+      var obj = aSubject.wrappedJSObject;
+      if (obj.innerID == JSM) {
+        is(obj.ID, "jsm", "ID and InnerID are correctly set.");
+        is (obj.arguments[0], "Hello world!", "Message matches");
+
+        SpecialPowers.removeObserver(this, "console-api-log-event");
+        SimpleTest.finish();
+      }
+    }
+  }
+}
+function test() {
+  SimpleTest.waitForExplicitFinish();
+
+  var cl = new consoleListener();
+  Components.utils.import(JSM);
+  ConsoleTest.go();
+}
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+</window>

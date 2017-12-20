@@ -136,7 +136,7 @@ WorkerGlobalScope::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   MOZ_CRASH("We should never get here!");
 }
 
-Console*
+already_AddRefed<Console>
 WorkerGlobalScope::GetConsole(ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
@@ -148,7 +148,8 @@ WorkerGlobalScope::GetConsole(ErrorResult& aRv)
     }
   }
 
-  return mConsole;
+  RefPtr<Console> console = mConsole;
+  return console.forget();
 }
 
 Crypto*
@@ -1045,7 +1046,7 @@ WorkerDebuggerGlobalScope::SetConsoleEventHandler(JSContext* aCx,
   console->SetConsoleEventHandler(aHandler);
 }
 
-Console*
+already_AddRefed<Console>
 WorkerDebuggerGlobalScope::GetConsole(ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
@@ -1058,7 +1059,8 @@ WorkerDebuggerGlobalScope::GetConsole(ErrorResult& aRv)
     }
   }
 
-  return mConsole;
+  RefPtr<Console> console = mConsole;
+  return console.forget();
 }
 
 void

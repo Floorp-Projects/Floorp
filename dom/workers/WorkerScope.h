@@ -92,7 +92,7 @@ public:
     return this;
   }
 
-  Console*
+  already_AddRefed<Console>
   GetConsole(ErrorResult& aRv);
 
   Console*
@@ -410,7 +410,7 @@ public:
   SetConsoleEventHandler(JSContext* aCx, AnyCallback* aHandler,
                          ErrorResult& aRv);
 
-  Console*
+  already_AddRefed<Console>
   GetConsole(ErrorResult& aRv);
 
   Console*
