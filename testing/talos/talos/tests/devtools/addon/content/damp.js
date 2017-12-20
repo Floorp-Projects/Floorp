@@ -323,7 +323,7 @@ Damp.prototype = {
 
     test.done();
 
-    await this.closeToolboxAndLog("console.objectexpanded");
+    await this.closeToolboxAndLog("console.objectexpanded", toolbox);
     await this.testTeardown();
   },
 
@@ -521,10 +521,9 @@ async _consoleOpenWithCachedMessagesTest() {
     return toolbox;
   },
 
-  async closeToolboxAndLog(name) {
+  async closeToolboxAndLog(name, toolbox) {
+    let { target } = toolbox;
     dump("Close toolbox on '" + name + "'\n");
-    let tab = getActiveTab(getMostRecentBrowserWindow());
-    let target = TargetFactory.forTab(tab);
     await target.client.waitForRequestsToSettle();
 
     let test = this.runTest(name + ".close.DAMP");
@@ -532,10 +531,14 @@ async _consoleOpenWithCachedMessagesTest() {
     test.done();
   },
 
-  async reloadPageAndLog(name, onReload) {
+  async reloadPageAndLog(name, toolbox, onReload) {
     dump("Reload page on '" + name + "'\n");
     let test = this.runTest(name + ".reload.DAMP");
     await this.reloadPage(onReload);
+    test.done();
+
+    test = this.runTest(name + ".reload.settle.DAMP");
+    await this.waitForPendingPaints(toolbox);
     test.done();
   },
 
@@ -562,7 +565,7 @@ async _consoleOpenWithCachedMessagesTest() {
     // Options panel should not do anything on page reload.
     await toolbox.selectTool("options");
 
-    await this.reloadPageAndLog("panelsInBackground");
+    await this.reloadPageAndLog("panelsInBackground", toolbox);
 
     await this.closeToolbox();
     await this.testTeardown();
@@ -576,7 +579,7 @@ async _consoleOpenWithCachedMessagesTest() {
       // Then wait for inspector to be updated
       await inspector.once("inspector-updated");
     };
-    await this.reloadPageAndLog(label + ".inspector", onReload);
+    await this.reloadPageAndLog(label + ".inspector", toolbox, onReload);
   },
 
   async customInspector() {
@@ -584,7 +587,7 @@ async _consoleOpenWithCachedMessagesTest() {
     await this.testSetup(url);
     let toolbox = await this.openToolboxAndLog("custom.inspector", "inspector");
     await this.reloadInspectorAndLog("custom", toolbox);
-    await this.closeToolboxAndLog("custom.inspector");
+    await this.closeToolboxAndLog("custom.inspector", toolbox);
     await this.testTeardown();
   },
 
@@ -594,7 +597,7 @@ async _consoleOpenWithCachedMessagesTest() {
         await this.testSetup(url);
         let toolbox = await this.openToolboxAndLog(label + ".inspector", "inspector");
         await this.reloadInspectorAndLog(label, toolbox);
-        await this.closeToolboxAndLog(label + ".inspector");
+        await this.closeToolboxAndLog(label + ".inspector", toolbox);
         await this.testTeardown();
       },
 
@@ -614,8 +617,8 @@ async _consoleOpenWithCachedMessagesTest() {
             webconsole.hud.ui.on("new-messages", receiveMessages);
           });
         };
-        await this.reloadPageAndLog(label + ".webconsole", onReload);
-        await this.closeToolboxAndLog(label + ".webconsole");
+        await this.reloadPageAndLog(label + ".webconsole", toolbox, onReload);
+        await this.closeToolboxAndLog(label + ".webconsole", toolbox);
         await this.testTeardown();
       },
 
@@ -650,24 +653,24 @@ async _consoleOpenWithCachedMessagesTest() {
             client.addListener("newSource", onSource);
           });
         };
-        await this.reloadPageAndLog(label + ".jsdebugger", onReload);
-        await this.closeToolboxAndLog(label + ".jsdebugger");
+        await this.reloadPageAndLog(label + ".jsdebugger", toolbox, onReload);
+        await this.closeToolboxAndLog(label + ".jsdebugger", toolbox);
         await this.testTeardown();
       },
 
       async styleeditor() {
         await this.testSetup(url);
-        await this.openToolboxAndLog(label + ".styleeditor", "styleeditor");
-        await this.reloadPageAndLog(label + ".styleeditor");
-        await this.closeToolboxAndLog(label + ".styleeditor");
+        const toolbox = await this.openToolboxAndLog(label + ".styleeditor", "styleeditor");
+        await this.reloadPageAndLog(label + ".styleeditor", toolbox);
+        await this.closeToolboxAndLog(label + ".styleeditor", toolbox);
         await this.testTeardown();
       },
 
       async performance() {
         await this.testSetup(url);
-        await this.openToolboxAndLog(label + ".performance", "performance");
-        await this.reloadPageAndLog(label + ".performance");
-        await this.closeToolboxAndLog(label + ".performance");
+        const toolbox = await this.openToolboxAndLog(label + ".performance", "performance");
+        await this.reloadPageAndLog(label + ".performance", toolbox);
+        await this.closeToolboxAndLog(label + ".performance", toolbox);
         await this.testTeardown();
       },
 
@@ -675,20 +678,20 @@ async _consoleOpenWithCachedMessagesTest() {
         await this.testSetup(url);
         const toolbox = await this.openToolboxAndLog(label + ".netmonitor", "netmonitor");
         const requestsDone = this.waitForNetworkRequests(label + ".netmonitor", toolbox);
-        await this.reloadPageAndLog(label + ".netmonitor");
+        await this.reloadPageAndLog(label + ".netmonitor", toolbox);
         await requestsDone;
-        await this.closeToolboxAndLog(label + ".netmonitor");
+        await this.closeToolboxAndLog(label + ".netmonitor", toolbox);
         await this.testTeardown();
       },
 
       async saveAndReadHeapSnapshot() {
         await this.testSetup(url);
-        await this.openToolboxAndLog(label + ".memory", "memory");
-        await this.reloadPageAndLog(label + ".memory");
+        const toolbox = await this.openToolboxAndLog(label + ".memory", "memory");
+        await this.reloadPageAndLog(label + ".memory", toolbox);
         await this.saveHeapSnapshot(label);
         await this.readHeapSnapshot(label);
         await this.takeCensus(label);
-        await this.closeToolboxAndLog(label + ".memory");
+        await this.closeToolboxAndLog(label + ".memory", toolbox);
         await this.testTeardown();
       },
     };
