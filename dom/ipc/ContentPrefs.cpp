@@ -152,6 +152,7 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "layout.css.grid-template-subgrid-value.enabled",
   "layout.css.grid.enabled",
   "layout.css.image-orientation.enabled",
+  "layout.css.individual-transform.enabled",
   "layout.css.initial-letter.enabled",
   "layout.css.isolation.enabled",
   "layout.css.mix-blend-mode.enabled",
