@@ -6,9 +6,7 @@
 #ifndef mozilla_widget_AndroidCompositorWidget_h
 #define mozilla_widget_AndroidCompositorWidget_h
 
-#include "GLContext.h"
-#include "GLLibraryEGL.h"
-#include "GLTypes.h"
+#include "GLDefs.h"
 #include "mozilla/widget/InProcessCompositorWidget.h"
 
 struct ANativeWindow;
