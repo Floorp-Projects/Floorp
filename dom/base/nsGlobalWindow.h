@@ -1610,6 +1610,11 @@ public:
   // Inner windows only.
   void UpdateCanvasFocus(bool aFocusChanged, nsIContent* aNewContent);
 
+  // See PromiseWindowProxy.h for an explanation.
+  // Inner windows only.
+  void AddPendingPromise(mozilla::dom::Promise* aPromise);
+  void RemovePendingPromise(mozilla::dom::Promise* aPromise);
+
 public:
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() override;
 
@@ -1964,6 +1969,8 @@ protected:
   int64_t mBeforeUnloadListenerCount; // Inner windows only
 
   RefPtr<mozilla::dom::IntlUtils> mIntlUtils;
+
+  nsTArray<RefPtr<mozilla::dom::Promise>> mPendingPromises; // Inner windows only
 
   // Members in the mChromeFields member should only be used in chrome windows.
   // All accesses to this field should be guarded by a check of mIsChrome.
