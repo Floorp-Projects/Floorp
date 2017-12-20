@@ -1425,7 +1425,7 @@ static already_AddRefed<mozilla::dom::NodeInfo> nullNodeInfo;
 // ==================================================================
 nsIDocument::nsIDocument()
   : nsINode(nullNodeInfo),
-    StyleScope(*this),
+    DocumentOrShadowRoot(*this),
     mReferrerPolicySet(false),
     mReferrerPolicy(mozilla::net::RP_Unset),
     mBlockAllMixedContent(false),
@@ -4677,7 +4677,7 @@ nsDocument::InsertStyleSheetAt(StyleSheet* aSheet, size_t aIndex)
   MOZ_ASSERT(aSheet);
   MOZ_DIAGNOSTIC_ASSERT(aSheet->IsServo() == IsStyledByServo());
 
-  // FIXME(emilio): Stop touching StyleScope's members directly, and use an
+  // FIXME(emilio): Stop touching DocumentOrShadowRoot's members directly, and use an
   // accessor.
   mStyleSheets.InsertElementAt(aIndex, aSheet);
 

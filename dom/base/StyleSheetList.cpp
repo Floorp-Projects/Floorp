@@ -48,19 +48,19 @@ StyleSheetList::SlowItem(uint32_t aIndex, nsIDOMStyleSheet** aItem)
 void
 StyleSheetList::NodeWillBeDestroyed(const nsINode* aNode)
 {
-  mStyleScope = nullptr;
+  mDocumentOrShadowRoot = nullptr;
 }
 
-StyleSheetList::StyleSheetList(StyleScope& aScope)
-  : mStyleScope(&aScope)
+StyleSheetList::StyleSheetList(DocumentOrShadowRoot& aScope)
+  : mDocumentOrShadowRoot(&aScope)
 {
-  mStyleScope->AsNode().AddMutationObserver(this);
+  mDocumentOrShadowRoot->AsNode().AddMutationObserver(this);
 }
 
 StyleSheetList::~StyleSheetList()
 {
-  if (mStyleScope) {
-    mStyleScope->AsNode().RemoveMutationObserver(this);
+  if (mDocumentOrShadowRoot) {
+    mDocumentOrShadowRoot->AsNode().RemoveMutationObserver(this);
   }
 }
 
