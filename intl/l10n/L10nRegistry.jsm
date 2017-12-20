@@ -1,3 +1,4 @@
+const { AppConstants } = ChromeUtils.import("resource://gre/modules/AppConstants.jsm", {});
 const { Services } = ChromeUtils.import('resource://gre/modules/Services.jsm', {});
 const { MessageContext } = ChromeUtils.import("resource://gre/modules/MessageContext.jsm", {});
 Components.utils.importGlobalProperties(["fetch"]); /* globals fetch */
@@ -218,6 +219,28 @@ async function* generateContextsForLocale(locale, sourcesOrder, resourceIds, res
   }
 }
 
+const  MSG_CONTEXT_OPTIONS = {
+  functions: {
+    /**
+     * PLATFORM is a built-in allowing localizers to differentiate message
+     * variants depending on the target platform.
+     */
+    PLATFORM: () => {
+      switch (AppConstants.platform) {
+        case "linux":
+        case "android":
+          return AppConstants.platform;
+        case "win":
+          return "windows";
+        case "macosx":
+          return "macos";
+        default:
+          return "other";
+      }
+    }
+  }
+}
+
 /**
  * Generates a single MessageContext by loading all resources
  * from the listed sources for a given locale.
@@ -244,7 +267,7 @@ function generateContext(locale, sourcesOrder, resourceIds) {
 
   const ctxPromise = Promise.all(fetchPromises).then(
     dataSets => {
-      const ctx = new MessageContext(locale);
+      const ctx = new MessageContext(locale, MSG_CONTEXT_OPTIONS);
       for (const data of dataSets) {
         if (data === null) {
           return null;
