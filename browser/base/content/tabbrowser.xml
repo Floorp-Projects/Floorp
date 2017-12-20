@@ -7749,8 +7749,7 @@
        Therefore it should only be used as a child of the tab or the tabs
        element (in both cases, when they are anonymous nodes of <tabbrowser>).
   -->
-  <binding id="tabbrowser-close-tab-button"
-           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image">
+  <binding id="tabbrowser-close-tab-button">
     <handlers>
       <handler event="click" button="0"><![CDATA[
         var bindingParent = document.getBindingParent(this);
@@ -7827,9 +7826,9 @@
                      anonid="soundplaying-icon"
                      class="tab-icon-sound"
                      role="presentation"/>
-          <xul:toolbarbutton anonid="close-button"
-                             xbl:inherits="fadein,pinned,selected=visuallyselected"
-                             class="tab-close-button close-icon"/>
+          <xul:image anonid="close-button"
+                     xbl:inherits="fadein,pinned,selected=visuallyselected"
+                     class="tab-close-button close-icon"/>
         </xul:hbox>
       </xul:stack>
     </content>
