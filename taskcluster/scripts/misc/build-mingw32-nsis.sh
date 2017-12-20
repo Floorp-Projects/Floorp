@@ -4,16 +4,16 @@ set -x -e -v
 # We set the INSTALL_DIR to match the directory that it will run in exactly,
 # otherwise we get an NSIS error of the form:
 #   checking for NSIS version...
-#   DEBUG: Executing: `/home/worker/workspace/build/src/gcc/
+#   DEBUG: Executing: `/home/worker/workspace/build/src/mingw32/
 #   DEBUG: The command returned non-zero exit status 1.
 #   DEBUG: Its error output was:
-#   DEBUG: | Error: opening stub "/home/worker/workspace/gcc/
+#   DEBUG: | Error: opening stub "/home/worker/workspace/mingw32/
 #   DEBUG: | Error initalizing CEXEBuild: error setting
 #   ERROR: Failed to get nsis version.
 
 WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
-INSTALL_DIR=$WORKSPACE/build/src/gcc
+INSTALL_DIR=$WORKSPACE/build/src/mingw32
 TOOLTOOL_DIR=$WORKSPACE/build/src
 UPLOAD_DIR=$HOME/artifacts
 
@@ -33,9 +33,8 @@ cd $TOOLTOOL_DIR
 # to package up what we just built. If we don't move the compiler,
 # we will package up the compiler we downloaded along with the
 # stuff we just built.
-mv gcc gcc-mingw
-export PATH="$TOOLTOOL_DIR/gcc-mingw/bin:$TOOLTOOL_DIR/gcc-mingw/i686-w64-mingw32/bin:$PATH"
-mkdir -p $INSTALL_DIR
+mv mingw32 mingw32-gcc
+export PATH="$TOOLTOOL_DIR/mingw32-gcc/bin:$PATH"
 
 cd $WORKSPACE
 
@@ -100,7 +99,7 @@ scons XGCC_W32_PREFIX=i686-w64-mingw32- ZLIB_W32=../zlib-1.2.11 SKIPUTILS="NSIS 
 # --------------
 
 cd $WORKSPACE/build/src
-tar caf nsis.tar.xz gcc
+tar caf nsis.tar.xz mingw32
 
 mkdir -p $UPLOAD_DIR
 cp nsis.tar.* $UPLOAD_DIR
