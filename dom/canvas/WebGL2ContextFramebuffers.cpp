@@ -174,8 +174,14 @@ WebGLContext::ValidateInvalidateFramebuffer(const char* funcName, GLenum target,
         MOZ_CRASH("GFX: Bad target.");
     }
 
-    if (!ValidateAndInitFB(funcName, fb))
-        return false;
+    if (fb) {
+        const auto fbStatus = fb->CheckFramebufferStatus(funcName);
+        if (fbStatus != LOCAL_GL_FRAMEBUFFER_COMPLETE)
+            return false; // Not an error, but don't run forward to driver either.
+    } else {
+        if (!EnsureDefaultFB())
+            return false;
+    }
     DoBindFB(fb, target);
 
     *out_glNumAttachments = attachments.Length();
