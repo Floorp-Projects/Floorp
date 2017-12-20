@@ -30,4 +30,3 @@ load 468211-3.xul
 load 495635-1.xul
 load 509719-1.xul
 asserts(3) load 509719-2.xul # bug 909819
-load 583230.xul
