@@ -644,10 +644,10 @@ public:
   // nsIDOMDocumentXBL
   NS_DECL_NSIDOMDOCUMENTXBL
 
-  using mozilla::dom::StyleScope::GetElementById;
-  using mozilla::dom::StyleScope::GetElementsByTagName;
-  using mozilla::dom::StyleScope::GetElementsByTagNameNS;
-  using mozilla::dom::StyleScope::GetElementsByClassName;
+  using mozilla::dom::DocumentOrShadowRoot::GetElementById;
+  using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagName;
+  using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagNameNS;
+  using mozilla::dom::DocumentOrShadowRoot::GetElementsByClassName;
 
   // nsIDOMEventTarget
   virtual nsresult GetEventTargetParent(
