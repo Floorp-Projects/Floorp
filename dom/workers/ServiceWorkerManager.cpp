@@ -2784,28 +2784,6 @@ ServiceWorkerManager::IsAvailable(nsIPrincipal* aPrincipal,
   return registration && registration->GetActive();
 }
 
-bool
-ServiceWorkerManager::IsControlled(nsIDocument* aDoc, ErrorResult& aRv)
-{
-  MOZ_ASSERT(aDoc);
-
-  if (nsContentUtils::IsInPrivateBrowsing(aDoc)) {
-    // Handle the case where a service worker was previously registered in
-    // a non-private window (bug 1255621).
-    return false;
-  }
-
-  RefPtr<ServiceWorkerRegistrationInfo> registration;
-  nsresult rv = GetDocumentRegistration(aDoc, getter_AddRefs(registration));
-  if (NS_WARN_IF(NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE)) {
-    // It's OK to ignore the case where we don't have a registration.
-    aRv.Throw(rv);
-    return false;
-  }
-
-  return !!registration;
-}
-
 nsresult
 ServiceWorkerManager::GetDocumentRegistration(nsIDocument* aDoc,
                                               ServiceWorkerRegistrationInfo** aRegistrationInfo)
