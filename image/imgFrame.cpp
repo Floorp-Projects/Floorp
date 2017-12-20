@@ -507,7 +507,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPartialDecode,
                              mFormat);
   }
 
-  gfxRect available = gfxRect(mDecoded.x, mDecoded.y, mDecoded.Width(),
+  gfxRect available = gfxRect(mDecoded.X(), mDecoded.Y(), mDecoded.Width(),
                               mDecoded.Height());
 
   if (aDoTile) {
@@ -523,7 +523,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPartialDecode,
 
     SurfacePattern pattern(aSurface,
                            aRegion.GetExtendMode(),
-                           Matrix::Translation(mDecoded.x, mDecoded.y));
+                           Matrix::Translation(mDecoded.X(), mDecoded.Y()));
     target->FillRect(ToRect(aRegion.Intersect(available).Rect()), pattern);
 
     RefPtr<SourceSurface> newsurf = target->Snapshot();
