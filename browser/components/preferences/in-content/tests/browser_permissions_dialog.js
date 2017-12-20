@@ -271,6 +271,71 @@ add_task(async function onPermissionsSort() {
   doc.getElementById("cancel").click();
 });
 
+add_task(async function onPermissionDisable() {
+  // Enable desktop-notification permission prompts.
+  Services.prefs.setIntPref("permissions.default.desktop-notification", SitePermissions.UNKNOWN);
+
+  await openPermissionsDialog();
+  let doc = sitePermissionsDialog.document;
+
+  // Check if the enabled state is reflected in the checkbox.
+  let checkbox = doc.getElementById("permissionsDisableCheckbox");
+  Assert.equal(checkbox.checked, false);
+
+  // Disable permission and click on "Cancel".
+  checkbox.checked = true;
+  doc.getElementById("cancel").click();
+
+  // Check that the permission is not disabled yet.
+  let perm = Services.prefs.getIntPref("permissions.default.desktop-notification");
+  Assert.equal(perm, SitePermissions.UNKNOWN);
+
+  // Open the dialog once again.
+  await openPermissionsDialog();
+  doc = sitePermissionsDialog.document;
+
+  // Disable permission and save changes.
+  checkbox = doc.getElementById("permissionsDisableCheckbox");
+  checkbox.checked = true;
+  doc.getElementById("btnApplyChanges").click();
+
+  // Check if the permission is now disabled.
+  perm = Services.prefs.getIntPref("permissions.default.desktop-notification");
+  Assert.equal(perm, SitePermissions.BLOCK);
+
+  // Open the dialog once again and check if the disabled state is still reflected in the checkbox.
+  await openPermissionsDialog();
+  doc = sitePermissionsDialog.document;
+  checkbox = doc.getElementById("permissionsDisableCheckbox");
+  Assert.equal(checkbox.checked, true);
+
+  // Close the dialog.
+  doc.getElementById("cancel").click();
+});
+
+add_task(async function checkDefaultPermissionState() {
+  // Set default permission state to ALLOW.
+  Services.prefs.setIntPref("permissions.default.desktop-notification", SitePermissions.ALLOW);
+
+  await openPermissionsDialog();
+  let doc = sitePermissionsDialog.document;
+
+  // Check if the enabled state is reflected in the checkbox.
+  let checkbox = doc.getElementById("permissionsDisableCheckbox");
+  Assert.equal(checkbox.checked, false);
+
+  // Check the checkbox and then uncheck it.
+  checkbox.checked = true;
+  checkbox.checked = false;
+
+  // Save changes.
+  doc.getElementById("btnApplyChanges").click();
+
+  // Check if the default permission state is retained (and not automatically set to SitePermissions.UNKNOWN).
+  let state = Services.prefs.getIntPref("permissions.default.desktop-notification");
+  Assert.equal(state, SitePermissions.ALLOW);
+});
+
 add_task(async function removeTab() {
   gBrowser.removeCurrentTab();
 });
