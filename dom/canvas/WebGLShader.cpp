@@ -133,16 +133,9 @@ GetCompilationStatusAndLog(gl::GLContext* gl, GLuint shader, bool* const out_suc
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static GLuint
-CreateShader(gl::GLContext* gl, GLenum type)
-{
-    gl->MakeCurrent();
-    return gl->fCreateShader(type);
-}
-
 WebGLShader::WebGLShader(WebGLContext* webgl, GLenum type)
     : WebGLRefCountedObject(webgl)
-    , mGLName(CreateShader(webgl->GL(), type))
+    , mGLName(webgl->gl->fCreateShader(type))
     , mType(type)
     , mTranslationSuccessful(false)
     , mCompilationSuccessful(false)
@@ -228,8 +221,6 @@ WebGLShader::CompileShader()
         return;
 
     mTranslationSuccessful = true;
-
-    gl->MakeCurrent();
 
     const char* const parts[] = {
         mTranslatedSource.BeginReading()
@@ -448,7 +439,6 @@ WebGLShader::Delete()
 {
     gl::GLContext* gl = mContext->GL();
 
-    gl->MakeCurrent();
     gl->fDeleteShader(mGLName);
 
     LinkedListElement<WebGLShader>::removeFrom(mContext->mShaders);

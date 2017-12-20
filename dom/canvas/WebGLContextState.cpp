@@ -37,7 +37,6 @@ WebGLContext::Disable(GLenum cap)
         *trackingSlot = 0;
     }
 
-    MakeContextCurrent();
     gl->fDisable(cap);
 }
 
@@ -57,7 +56,6 @@ WebGLContext::Enable(GLenum cap)
         *trackingSlot = 1;
     }
 
-    MakeContextCurrent();
     gl->fEnable(cap);
 }
 
@@ -178,8 +176,6 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 
     if (IsContextLost())
         return JS::NullValue();
-
-    MakeContextCurrent();
 
     if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers)) {
         if (pname == LOCAL_GL_MAX_COLOR_ATTACHMENTS) {
@@ -617,8 +613,6 @@ WebGLContext::GetParameterIndexed(JSContext* cx, GLenum pname, GLuint index,
         return;
     }
 
-    MakeContextCurrent();
-
     switch (pname) {
         case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
         {
@@ -648,7 +642,6 @@ WebGLContext::IsEnabled(GLenum cap)
     if (!ValidateCapabilityEnum(cap, "isEnabled"))
         return false;
 
-    MakeContextCurrent();
     return gl->fIsEnabled(cap);
 }
 

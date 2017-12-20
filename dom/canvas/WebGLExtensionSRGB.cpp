@@ -21,7 +21,6 @@ WebGLExtensionSRGB::WebGLExtensionSRGB(WebGLContext* webgl)
     if (!gl->IsGLES()) {
         // Desktop OpenGL requires the following to be enabled in order to
         // support sRGB operations on framebuffers.
-        gl->MakeCurrent();
         gl->fEnable(LOCAL_GL_FRAMEBUFFER_SRGB_EXT);
     }
 

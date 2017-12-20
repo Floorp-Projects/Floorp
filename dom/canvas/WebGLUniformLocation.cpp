@@ -189,7 +189,6 @@ WebGLUniformLocation::GetUniform(JSContext* js) const
     GLuint prog = mLinkInfo->prog->mGLName;
 
     gl::GLContext* gl = mContext->GL();
-    gl->MakeCurrent();
 
     switch (mInfo->mActiveInfo->mElemType) {
     case LOCAL_GL_INT:

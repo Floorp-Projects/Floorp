@@ -166,8 +166,6 @@ WebGLContext::ValidateInvalidateFramebuffer(const char* funcName, GLenum target,
     if (IsContextLost())
         return false;
 
-    gl->MakeCurrent();
-
     if (!ValidateFramebufferTarget(target, funcName))
         return false;
 
@@ -315,8 +313,6 @@ WebGL2Context::ReadBuffer(GLenum mode)
     const char funcName[] = "readBuffer";
     if (IsContextLost())
         return;
-
-    gl->MakeCurrent();
 
     if (mBoundReadFramebuffer) {
         mBoundReadFramebuffer->ReadBuffer(funcName, mode);

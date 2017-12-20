@@ -28,7 +28,6 @@ WebGLSync::~WebGLSync()
 void
 WebGLSync::Delete()
 {
-    mContext->MakeContextCurrent();
     mContext->gl->fDeleteSync(mGLName);
     LinkedListElement<WebGLSync>::removeFrom(mContext->mSyncs);
 }
