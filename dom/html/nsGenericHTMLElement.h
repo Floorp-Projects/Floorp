@@ -813,7 +813,7 @@ protected:
   {
     mozilla::dom::Element::SetAttr(aName, aValue, aError);
   }
-  void SetHTMLAttr(nsAtom* aName, const nsAString& aValue, nsIPrincipal& aTriggeringPrincipal, mozilla::ErrorResult& aError)
+  void SetHTMLAttr(nsAtom* aName, const nsAString& aValue, nsIPrincipal* aTriggeringPrincipal, mozilla::ErrorResult& aError)
   {
     mozilla::dom::Element::SetAttr(aName, aValue, aTriggeringPrincipal, aError);
   }

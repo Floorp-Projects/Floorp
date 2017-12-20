@@ -79,10 +79,10 @@ public:
   }                                                                          \
                                                                              \
   void                                                                       \
-  Set##method_(const nsAString& aValue, nsIPrincipal& aSubjectPrincipal,     \
+  Set##method_(const nsAString& aValue, nsIPrincipal* aSubjectPrincipal,     \
                mozilla::ErrorResult& rv)                                     \
   {                                                                          \
-    rv = SetPropertyValue(eCSSProperty_##id_, aValue, &aSubjectPrincipal);   \
+    rv = SetPropertyValue(eCSSProperty_##id_, aValue, aSubjectPrincipal);    \
   }
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
