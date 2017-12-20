@@ -169,6 +169,121 @@ struct VisitData {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+//// nsVisitData
+
+class nsVisitData : public nsIVisitData
+{
+public:
+  explicit nsVisitData(nsIURI* aURI,
+                       int64_t aVisitId,
+                       PRTime aTime,
+                       int64_t aReferrerVisitId,
+                       int32_t aTransitionType,
+                       const nsACString& aGuid,
+                       bool aHidden,
+                       uint32_t aVisitCount,
+                       uint32_t aTyped,
+                       const nsAString& aLastKnownTitle)
+    : mURI(aURI)
+    , mVisitId(aVisitId)
+    , mTime(aTime)
+    , mReferrerVisitId(aReferrerVisitId)
+    , mTransitionType(aTransitionType)
+    , mGuid(aGuid)
+    , mHidden(aHidden)
+    , mVisitCount(aVisitCount)
+    , mTyped(aTyped)
+    , mLastKnownTitle(aLastKnownTitle)
+  {
+    MOZ_ASSERT(NS_IsMainThread(),
+               "nsVisitData should only be constructed on the main thread.");
+  }
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetUri(nsIURI** aUri) override
+  {
+    NS_ENSURE_ARG_POINTER(aUri);
+    *aUri = mURI;
+    NS_IF_ADDREF(*aUri);
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetVisitId(int64_t* aVisitId) override
+  {
+    *aVisitId = mVisitId;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetTime(PRTime* aTime) override
+  {
+    *aTime = mTime;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetReferrerId(int64_t* aReferrerVisitId) override
+  {
+    *aReferrerVisitId = mReferrerVisitId;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetTransitionType(uint32_t* aTransitionType) override
+  {
+    *aTransitionType = mTransitionType;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetGuid(nsACString& aGuid) override
+  {
+    aGuid.Assign(mGuid);
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetHidden(bool* aHidden) override
+  {
+    *aHidden = mHidden;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetVisitCount(uint32_t* aVisitCount) override
+  {
+    *aVisitCount = mVisitCount;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetTyped(uint32_t* aTyped) override
+  {
+    *aTyped = mTyped;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetLastKnownTitle(nsAString& aLastKnownTitle) override
+  {
+    aLastKnownTitle.Assign(mLastKnownTitle);
+    return NS_OK;
+  }
+
+private:
+  virtual ~nsVisitData() {
+    MOZ_ASSERT(NS_IsMainThread(),
+               "nsVisitData should only be destructed on the main thread.");
+  };
+
+  nsCOMPtr<nsIURI> mURI;
+  int64_t mVisitId;
+  PRTime mTime;
+  int64_t mReferrerVisitId;
+  uint32_t mTransitionType;
+  nsCString mGuid;
+  bool mHidden;
+  uint32_t mVisitCount;
+  uint32_t mTyped;
+  nsString mLastKnownTitle;
+};
+
+NS_IMPL_ISUPPORTS(nsVisitData, nsIVisitData)
+
+////////////////////////////////////////////////////////////////////////////////
 //// RemoveVisitsFilter
 
 /**
@@ -648,44 +763,39 @@ public:
   nsresult NotifyVisit(nsNavHistory* aNavHistory,
                        nsCOMPtr<nsIObserverService>& aObsService,
                        PRTime aNow,
-                       nsTArray<URIParams>& aNotifyVisitedURIs,
+                       nsIURI* aURI,
                        const VisitData& aPlace) {
-    nsCOMPtr<nsIURI> uri;
-    MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), aPlace.spec));
-    if (!uri) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    // Notify the visit.  Note that TRANSITION_EMBED visits are never added
-    // to the database, thus cannot be queried and we don't notify them.
-    if (aPlace.transitionType != nsINavHistoryService::TRANSITION_EMBED) {
-      aNavHistory->NotifyOnVisit(uri, aPlace.visitId, aPlace.visitTime,
-                                 aPlace.referrerVisitId, aPlace.transitionType,
-                                 aPlace.guid, aPlace.hidden,
-                                 aPlace.visitCount + 1, // Add current visit.
-                                 static_cast<uint32_t>(aPlace.typed),
-                                 aPlace.title);
-    }
-
     if (aObsService) {
       DebugOnly<nsresult> rv =
-        aObsService->NotifyObservers(uri, URI_VISIT_SAVED, nullptr);
+        aObsService->NotifyObservers(aURI, URI_VISIT_SAVED, nullptr);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Could not notify observers");
     }
 
     if (aNow - aPlace.visitTime < RECENTLY_VISITED_URIS_MAX_AGE) {
-      mHistory->AppendToRecentlyVisitedURIs(uri);
+      mHistory->AppendToRecentlyVisitedURIs(aURI);
     }
-    mHistory->NotifyVisited(uri);
+    mHistory->NotifyVisited(aURI);
 
     if (aPlace.titleChanged) {
-      aNavHistory->NotifyTitleChange(uri, aPlace.title, aPlace.guid);
+      aNavHistory->NotifyTitleChange(aURI, aPlace.title, aPlace.guid);
     }
 
-    URIParams serialized;
-    SerializeURI(uri, serialized);
-    aNotifyVisitedURIs.AppendElement(Move(serialized));
-
     return NS_OK;
+  }
+
+  void AddPlaceForNotify(const VisitData& aPlace,
+                         nsIURI* aURI,
+                         nsCOMArray<nsIVisitData>& aPlaces) {
+    if (aPlace.transitionType != nsINavHistoryService::TRANSITION_EMBED) {
+      nsCOMPtr<nsIVisitData> notifyPlace = new nsVisitData(
+        aURI, aPlace.visitId, aPlace.visitTime,
+        aPlace.referrerVisitId, aPlace.transitionType,
+        aPlace.guid, aPlace.hidden,
+        aPlace.visitCount + 1, // Add current visit.
+        static_cast<uint32_t>(aPlace.typed),
+        aPlace.title);
+      aPlaces.AppendElement(notifyPlace.forget());
+    }
   }
 
   NS_IMETHOD Run() override
@@ -707,19 +817,52 @@ public:
     nsCOMPtr<nsIObserverService> obsService =
       mozilla::services::GetObserverService();
 
+    nsCOMArray<nsIVisitData> places;
+    nsCOMArray<nsIURI> uris;
+    if (mPlaces.Length() > 0) {
+      for (uint32_t i = 0; i < mPlaces.Length(); ++i) {
+        nsCOMPtr<nsIURI> uri;
+        MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), mPlaces[i].spec));
+        if (!uri) {
+          return NS_ERROR_UNEXPECTED;
+        }
+        AddPlaceForNotify(mPlaces[i], uri, places);
+        uris.AppendElement(uri.forget());
+      }
+    } else {
+      nsCOMPtr<nsIURI> uri;
+      MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), mPlace.spec));
+      if (!uri) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      AddPlaceForNotify(mPlace, uri, places);
+      uris.AppendElement(uri.forget());
+    }
+    if (places.Length() > 0) {
+      navHistory->NotifyOnVisits(places.Elements(), places.Length());
+    }
+
     PRTime now = PR_Now();
     if (mPlaces.Length() > 0) {
-      InfallibleTArray<URIParams> uris(mPlaces.Length());
+      InfallibleTArray<URIParams> serializableUris(mPlaces.Length());
       for (uint32_t i = 0; i < mPlaces.Length(); ++i) {
-        nsresult rv = NotifyVisit(navHistory, obsService, now, uris, mPlaces[i]);
+        nsresult rv = NotifyVisit(navHistory, obsService, now, uris[i], mPlaces[i]);
         NS_ENSURE_SUCCESS(rv, rv);
+
+        URIParams serializedUri;
+        SerializeURI(uris[i], serializedUri);
+        serializableUris.AppendElement(Move(serializedUri));
       }
-      mHistory->NotifyVisitedParent(uris);
+      mHistory->NotifyVisitedParent(serializableUris);
     } else {
-      AutoTArray<URIParams, 1> uris;
-      nsresult rv = NotifyVisit(navHistory, obsService, now, uris, mPlace);
+      AutoTArray<URIParams, 1> serializableUris;
+      nsresult rv = NotifyVisit(navHistory, obsService, now, uris[0], mPlace);
       NS_ENSURE_SUCCESS(rv, rv);
-      mHistory->NotifyVisitedParent(uris);
+
+      URIParams serializedUri;
+      SerializeURI(uris[0], serializedUri);
+      serializableUris.AppendElement(Move(serializedUri));
+      mHistory->NotifyVisitedParent(serializableUris);
     }
 
     return NS_OK;

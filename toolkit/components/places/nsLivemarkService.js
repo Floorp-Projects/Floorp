@@ -414,10 +414,12 @@ LivemarkService.prototype = {
     });
   },
 
-  onVisit(aURI) {
+  onVisits(aVisits) {
     this._withLivemarksMap(livemarksMap => {
-      for (let livemark of livemarksMap.values()) {
-        livemark.updateURIVisitedStatus(aURI, true);
+      for (let {uri} of aVisits) {
+        for (let livemark of livemarksMap.values()) {
+          livemark.updateURIVisitedStatus(uri, true);
+        }
       }
     });
   },

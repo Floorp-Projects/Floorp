@@ -3156,25 +3156,28 @@ nsNavBookmarks::OnEndUpdateBatch()
 
 
 NS_IMETHODIMP
-nsNavBookmarks::OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
-                        int64_t aSessionID, int64_t aReferringID,
-                        uint32_t aTransitionType, const nsACString& aGUID,
-                        bool aHidden, uint32_t aVisitCount, uint32_t aTyped,
-                        const nsAString& aLastKnownTitle)
+nsNavBookmarks::OnVisits(nsIVisitData** aVisits, uint32_t aVisitsCount)
 {
-  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG(aVisits);
+  NS_ENSURE_ARG(aVisitsCount);
 
-  // If the page is bookmarked, notify observers for each associated bookmark.
-  ItemVisitData visitData;
-  nsresult rv = aURI->GetSpec(visitData.bookmark.url);
-  NS_ENSURE_SUCCESS(rv, rv);
-  visitData.visitId = aVisitId;
-  visitData.time = aTime;
-  visitData.transitionType = aTransitionType;
+  for (uint32_t i = 0; i < aVisitsCount; ++i) {
+    nsIVisitData* place = aVisits[i];
+    nsCOMPtr<nsIURI> uri;
+    MOZ_ALWAYS_SUCCEEDS(place->GetUri(getter_AddRefs(uri)));
 
-  RefPtr< AsyncGetBookmarksForURI<ItemVisitMethod, ItemVisitData> > notifier =
-    new AsyncGetBookmarksForURI<ItemVisitMethod, ItemVisitData>(this, &nsNavBookmarks::NotifyItemVisited, visitData);
-  notifier->Init();
+    // If the page is bookmarked, notify observers for each associated bookmark.
+    ItemVisitData visitData;
+    nsresult rv = uri->GetSpec(visitData.bookmark.url);
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ALWAYS_SUCCEEDS(place->GetVisitId(&visitData.visitId));
+    MOZ_ALWAYS_SUCCEEDS(place->GetTime(&visitData.time));
+    MOZ_ALWAYS_SUCCEEDS(place->GetTransitionType(&visitData.transitionType));
+
+    RefPtr< AsyncGetBookmarksForURI<ItemVisitMethod, ItemVisitData> > notifier =
+      new AsyncGetBookmarksForURI<ItemVisitMethod, ItemVisitData>(this, &nsNavBookmarks::NotifyItemVisited, visitData);
+    notifier->Init();
+  }
   return NS_OK;
 }
 

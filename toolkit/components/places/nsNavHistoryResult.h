@@ -78,25 +78,13 @@ private:
                             const nsACString& aGUID, uint16_t aReason,  \
                             uint32_t aTransitionType) __VA_ARGS__;
 
-// The internal version has an output aAdded parameter, it is incremented by
-// query nodes when the visited uri belongs to them. If no such query exists,
-// the history result creates a new query node dynamically.
+// The internal version is used by query nodes.
 #define NS_DECL_BOOKMARK_HISTORY_OBSERVER_INTERNAL                      \
-  NS_DECL_BOOKMARK_HISTORY_OBSERVER_BASE()                              \
-  NS_IMETHOD OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,      \
-                     int64_t aSessionId, int64_t aReferringId,          \
-                     uint32_t aTransitionType, const nsACString& aGUID, \
-                     bool aHidden, uint32_t* aAdded);
+  NS_DECL_BOOKMARK_HISTORY_OBSERVER_BASE()
 
 // The external version is used by results.
 #define NS_DECL_BOOKMARK_HISTORY_OBSERVER_EXTERNAL(...)                 \
-  NS_DECL_BOOKMARK_HISTORY_OBSERVER_BASE(__VA_ARGS__)                   \
-  NS_IMETHOD OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,      \
-                     int64_t aSessionId, int64_t aReferringId,          \
-                     uint32_t aTransitionType, const nsACString& aGUID, \
-                     bool aHidden, uint32_t aVisitCount,                \
-                     uint32_t aTyped, const nsAString& aLastKnownTitle) \
-                     __VA_ARGS__;
+  NS_DECL_BOOKMARK_HISTORY_OBSERVER_BASE(__VA_ARGS__)
 
 // nsNavHistoryResult
 //
@@ -124,8 +112,10 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSINAVHISTORYRESULT
-  NS_DECL_BOOKMARK_HISTORY_OBSERVER_EXTERNAL(override)
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsNavHistoryResult, nsINavHistoryResult)
+  NS_DECL_BOOKMARK_HISTORY_OBSERVER_EXTERNAL(override)
+  NS_IMETHOD OnVisits(nsIVisitData** aVisits,
+                      uint32_t aVisitsCount) override;
 
   void AddHistoryObserver(nsNavHistoryQueryResultNode* aNode);
   void AddBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode, int64_t aFolder);
@@ -134,6 +124,11 @@ public:
   void RemoveBookmarkFolderObserver(nsNavHistoryFolderResultNode* aNode, int64_t aFolder);
   void RemoveAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode);
   void StopObserving();
+
+  nsresult OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
+                   uint32_t aTransitionType, const nsACString& aGUID,
+                   bool aHidden, uint32_t aVisitCount,
+                   const nsAString& aLastKnownTitle);
 
 public:
   // two-stage init, use NewHistoryResult to construct
@@ -639,6 +634,13 @@ public:
   virtual nsresult OpenContainer() override;
 
   NS_DECL_BOOKMARK_HISTORY_OBSERVER_INTERNAL
+
+  // The internal version has an output aAdded parameter, it is incremented by
+  // query nodes when the visited uri belongs to them. If no such query exists,
+  // the history result creates a new query node dynamically.
+  nsresult OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
+                   uint32_t aTransitionType, bool aHidden,
+                   uint32_t* aAdded);
   virtual void OnRemoving() override;
 
 public:

@@ -518,35 +518,27 @@ nsNavHistory::LoadPrefs()
 #undef FRECENCY_PREF
 }
 
-
 void
-nsNavHistory::NotifyOnVisit(nsIURI* aURI,
-                            int64_t aVisitId,
-                            PRTime aTime,
-                            int64_t aReferrerVisitId,
-                            int32_t aTransitionType,
-                            const nsACString& aGuid,
-                            bool aHidden,
-                            uint32_t aVisitCount,
-                            uint32_t aTyped,
-                            const nsAString& aLastKnownTitle)
+nsNavHistory::NotifyOnVisits(nsIVisitData** aVisits, uint32_t aVisitsCount)
 {
-  MOZ_ASSERT(!aGuid.IsEmpty());
-  MOZ_ASSERT(aVisitCount, "Should have at least 1 visit when notifying");
-  // If there's no history, this visit will surely add a day.  If the visit is
-  // added before or after the last cached day, the day count may have changed.
-  // Otherwise adding multiple visits in the same day should not invalidate
-  // the cache.
+  MOZ_ASSERT(aVisits, "Can't call NotifyOnVisits with a NULL aVisits");
+  MOZ_ASSERT(aVisitsCount, "Should have at least 1 visit when notifying");
+
   if (mDaysOfHistory == 0) {
     mDaysOfHistory = 1;
-  } else if (aTime > mLastCachedEndOfDay || aTime < mLastCachedStartOfDay) {
-    mDaysOfHistory = -1;
+  }
+
+  for (uint32_t i = 0; i < aVisitsCount; ++i) {
+    PRTime time;
+    MOZ_ALWAYS_SUCCEEDS(aVisits[i]->GetTime(&time));
+    if (time > mLastCachedEndOfDay || time < mLastCachedStartOfDay) {
+      mDaysOfHistory = -1;
+    }
   }
 
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavHistoryObserver,
-                   OnVisit(aURI, aVisitId, aTime, 0, aReferrerVisitId,
-                           aTransitionType, aGuid, aHidden, aVisitCount, aTyped, aLastKnownTitle));
+                   OnVisits(aVisits, aVisitsCount));
 }
 
 void
