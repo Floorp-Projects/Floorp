@@ -355,6 +355,11 @@ ClientSource::SetController(const ServiceWorkerDescriptor& aServiceWorker)
 {
   NS_ASSERT_OWNINGTHREAD(ClientSource);
 
+  // A client in private browsing mode should never be controlled by
+  // a service worker.  The principal origin attributes should guarantee
+  // this invariant.
+  MOZ_DIAGNOSTIC_ASSERT(!mClientInfo.IsPrivateBrowsing());
+
   if (mController.isSome() && mController.ref() == aServiceWorker) {
     return;
   }

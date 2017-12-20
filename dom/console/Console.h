@@ -10,6 +10,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/JSObjectHolder.h"
+#include "mozilla/TimeStamp.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
@@ -159,7 +160,7 @@ private:
   static already_AddRefed<Console>
   GetConsole(const GlobalObject& aGlobal);
 
-  static Console*
+  static already_AddRefed<Console>
   GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult &aRv);
 
   static void
@@ -370,6 +371,11 @@ private:
   bool
   IsShuttingDown() const;
 
+  bool
+  MonotonicTimer(JSContext* aCx, MethodName aMethodName,
+                 const Sequence<JS::Value>& aData,
+                 DOMHighResTimeStamp* aTimeStamp);
+
   // All these nsCOMPtr are touched on main thread only.
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIConsoleAPIStorage> mStorage;
@@ -405,6 +411,10 @@ private:
     eInitialized,
     eShuttingDown
   } mStatus;
+
+  // This is used when Console is created and it's used only for JSM custom
+  // console instance.
+  mozilla::TimeStamp mCreationTimeStamp;
 
   friend class ConsoleCallData;
   friend class ConsoleRunnable;

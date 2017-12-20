@@ -128,6 +128,8 @@ class Animation;
 class AnonymousContent;
 class Attr;
 class BoxObject;
+class ClientInfo;
+class ClientState;
 class CDATASection;
 class Comment;
 struct CustomElementDefinition;
@@ -159,6 +161,7 @@ class ProcessingInstruction;
 class Promise;
 class ScriptLoader;
 class Selection;
+class ServiceWorkerDescriptor;
 class StyleSheetList;
 class SVGDocument;
 class SVGSVGElement;
@@ -1123,6 +1126,10 @@ public:
 
   // Resolve all SVG pres attrs scheduled in ScheduleSVGForPresAttrEvaluation
   virtual void ResolveScheduledSVGPresAttrs() = 0;
+
+  mozilla::Maybe<mozilla::dom::ClientInfo> GetClientInfo() const;
+  mozilla::Maybe<mozilla::dom::ClientState> GetClientState() const;
+  mozilla::Maybe<mozilla::dom::ServiceWorkerDescriptor> GetController() const;
 
 protected:
   virtual Element *GetRootElementInternal() const = 0;
