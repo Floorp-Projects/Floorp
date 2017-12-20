@@ -2372,15 +2372,12 @@ ServiceWorkerManager::StartControllingADocument(ServiceWorkerRegistrationInfo* a
   // document here, our goal is to move ServiceWorkerManager to a separate
   // process.  Using the ClientHandle supports this remote operation.
   ServiceWorkerInfo* activeWorker = aRegistration->GetActive();
-  nsPIDOMWindowInner* innerWindow = aDoc->GetInnerWindow();
-  if (activeWorker && innerWindow) {
-    Maybe<ClientInfo> clientInfo = innerWindow->GetClientInfo();
-    if (clientInfo.isSome()) {
-      RefPtr<ClientHandle> clientHandle =
-        ClientManager::CreateHandle(clientInfo.ref(),
-                                    SystemGroup::EventTargetFor(TaskCategory::Other));
-      ref = Move(clientHandle->Control(activeWorker->Descriptor()));
-    }
+  Maybe<ClientInfo> clientInfo = aDoc->GetClientInfo();
+  if (activeWorker && clientInfo.isSome()) {
+    RefPtr<ClientHandle> clientHandle =
+      ClientManager::CreateHandle(clientInfo.ref(),
+                                  SystemGroup::EventTargetFor(TaskCategory::Other));
+    ref = Move(clientHandle->Control(activeWorker->Descriptor()));
   }
 
   Telemetry::Accumulate(Telemetry::SERVICE_WORKER_CONTROLLED_DOCUMENTS, 1);
@@ -3273,7 +3270,7 @@ ServiceWorkerManager::UpdateClientControllers(ServiceWorkerRegistrationInfo* aRe
   RefPtr<ServiceWorkerInfo> activeWorker = aRegistration->GetActive();
   MOZ_DIAGNOSTIC_ASSERT(activeWorker);
 
-  AutoTArray<nsCOMPtr<nsPIDOMWindowInner>, 16> innerWindows;
+  AutoTArray<nsCOMPtr<nsIDocument>, 16> docList;
   for (auto iter = mControlledDocuments.Iter(); !iter.Done(); iter.Next()) {
     if (iter.UserData() != aRegistration) {
       continue;
@@ -3284,24 +3281,20 @@ ServiceWorkerManager::UpdateClientControllers(ServiceWorkerRegistrationInfo* aRe
       continue;
     }
 
-    nsPIDOMWindowInner* innerWindow = doc->GetInnerWindow();
-    if (NS_WARN_IF(!innerWindow)) {
-      continue;
-    }
-
-    innerWindows.AppendElement(innerWindow);
+    docList.AppendElement(doc.forget());
   }
 
   // Fire event after iterating mControlledDocuments is done to prevent
   // modification by reentering from the event handlers during iteration.
-  for (auto& innerWindow : innerWindows) {
-    Maybe<ClientInfo> clientInfo = innerWindow->GetClientInfo();
-    if (clientInfo.isSome()) {
-      RefPtr<ClientHandle> clientHandle =
-        ClientManager::CreateHandle(clientInfo.ref(),
-                                    innerWindow->EventTargetFor(TaskCategory::Other));
-      clientHandle->Control(activeWorker->Descriptor());
+  for (auto& doc : docList) {
+    Maybe<ClientInfo> clientInfo = doc->GetClientInfo();
+    if (clientInfo.isNothing()) {
+      continue;
     }
+    RefPtr<ClientHandle> clientHandle =
+      ClientManager::CreateHandle(clientInfo.ref(),
+                                  SystemGroup::EventTargetFor(TaskCategory::Other));
+    clientHandle->Control(activeWorker->Descriptor());
   }
 }
 
