@@ -29,7 +29,6 @@ WebGL2Context::FenceSync(GLenum condition, GLbitfield flags)
         return nullptr;
     }
 
-    MakeContextCurrent();
     RefPtr<WebGLSync> globj = new WebGLSync(this, condition, flags);
     return globj.forget();
 }
@@ -73,7 +72,6 @@ WebGL2Context::ClientWaitSync(const WebGLSync& sync, GLbitfield flags, GLuint64 
         return LOCAL_GL_WAIT_FAILED;
     }
 
-    MakeContextCurrent();
     const auto ret = gl->fClientWaitSync(sync.mGLName, flags, timeout);
 
     if (ret == LOCAL_GL_CONDITION_SATISFIED ||
@@ -105,7 +103,6 @@ WebGL2Context::WaitSync(const WebGLSync& sync, GLbitfield flags, GLint64 timeout
         return;
     }
 
-    MakeContextCurrent();
     gl->fWaitSync(sync.mGLName, flags, LOCAL_GL_TIMEOUT_IGNORED);
 }
 
@@ -122,8 +119,6 @@ WebGL2Context::GetSyncParameter(JSContext*, const WebGLSync& sync, GLenum pname,
         return;
 
     ////
-
-    gl->MakeCurrent();
 
     GLint result = 0;
     switch (pname) {

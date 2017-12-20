@@ -623,7 +623,6 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
     WebGLContext* webgl = tex->mContext;
 
     gl::GLContext* gl = webgl->GL();
-    gl->MakeCurrent();
 
     if (needsRespec) {
         *out_error = DoTexOrSubImage(isSubImage, gl, target.get(), level, dui, xOffset,

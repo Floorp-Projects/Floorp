@@ -521,8 +521,6 @@ WebGLContext::DrawArraysInstanced(GLenum mode, GLint first, GLsizei vertCount,
     if (IsContextLost())
         return;
 
-    MakeContextCurrent();
-
     bool error = false;
     ScopedResolveTexturesForDraw scopedResolve(this, funcName, &error);
     if (error)
@@ -678,8 +676,6 @@ WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei indexCount, GLenum type
     AUTO_PROFILER_LABEL("WebGLContext::DrawElementsInstanced", GRAPHICS);
     if (IsContextLost())
         return;
-
-    MakeContextCurrent();
 
     bool error = false;
     ScopedResolveTexturesForDraw scopedResolve(this, funcName, &error);
@@ -999,7 +995,6 @@ WebGLContext::FakeBlackTexture::FakeBlackTexture(gl::GLContext* gl)
 
 WebGLContext::FakeBlackTexture::~FakeBlackTexture()
 {
-    mGL->MakeCurrent();
     mGL->fDeleteTextures(1, &mGLName);
 }
 

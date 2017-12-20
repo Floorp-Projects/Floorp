@@ -655,7 +655,6 @@ WebGLFramebuffer::Delete()
         cur.Clear(funcName);
     }
 
-    mContext->MakeContextCurrent();
     mContext->gl->fDeleteFramebuffers(1, &mGLName);
 
     LinkedListElement<WebGLFramebuffer>::removeFrom(mContext->mFramebuffers);
@@ -1087,8 +1086,6 @@ WebGLFramebuffer::ResolveAttachmentData(const char* funcName) const
         ////
         // Clear
 
-        mContext->MakeContextCurrent();
-
         const bool hasDrawBuffers = mContext->HasDrawBuffers();
         if (hasDrawBuffers) {
             fnDrawBuffers(colorAttachmentsToClear);
@@ -1203,7 +1200,6 @@ WebGLFramebuffer::CheckFramebufferStatus(const char* funcName)
 
         // Looks good on our end. Let's ask the driver.
         gl::GLContext* const gl = mContext->gl;
-        gl->MakeCurrent();
 
         const ScopedFBRebinder autoFB(mContext);
         gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGLName);
@@ -1333,8 +1329,6 @@ WebGLFramebuffer::DrawBuffers(const char* funcName, const dom::Sequence<GLenum>&
 
     ////
 
-    mContext->MakeContextCurrent();
-
     mColorDrawBuffers.swap(newColorDrawBuffers);
     RefreshDrawBuffers(); // Calls glDrawBuffers.
     RefreshResolvedData();
@@ -1357,8 +1351,6 @@ WebGLFramebuffer::ReadBuffer(const char* funcName, GLenum attachPoint)
     const auto& attach = maybeAttach.value(); // Might be nullptr.
 
     ////
-
-    mContext->MakeContextCurrent();
 
     mColorReadBuffer = attach;
     RefreshReadBuffer(); // Calls glReadBuffer.
@@ -1936,7 +1928,6 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
 
     ////
 
-    gl->MakeCurrent();
     webgl->OnBeforeReadCall();
     WebGLContext::ScopedDrawCallWrapper wrapper(*webgl);
     gl->fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1,
