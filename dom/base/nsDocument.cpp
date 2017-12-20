@@ -212,6 +212,8 @@
 #include "mozilla/dom/AnimatableBinding.h"
 #include "mozilla/dom/AnonymousContent.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/ClientInfo.h"
+#include "mozilla/dom/ClientState.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/Event.h"
@@ -225,6 +227,7 @@
 #include "mozilla/dom/WebComponentsBinding.h"
 #include "mozilla/dom/CustomElementRegistryBinding.h"
 #include "mozilla/dom/CustomElementRegistry.h"
+#include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/dom/TimeoutManager.h"
 #include "mozilla/ExtensionPolicyService.h"
 #include "nsFrame.h"
@@ -5840,6 +5843,36 @@ nsIDocument::GetAnonRootIfInAnonymousContentContainer(nsINode* aNode) const
     parent = child->GetParentNode();
   }
   return nullptr;
+}
+
+Maybe<ClientInfo>
+nsIDocument::GetClientInfo() const
+{
+  nsPIDOMWindowInner* inner = GetInnerWindow();
+  if (inner) {
+    return Move(inner->GetClientInfo());
+  }
+  return Move(Maybe<ClientInfo>());
+}
+
+Maybe<ClientState>
+nsIDocument::GetClientState() const
+{
+  nsPIDOMWindowInner* inner = GetInnerWindow();
+  if (inner) {
+    return Move(inner->GetClientState());
+  }
+  return Move(Maybe<ClientState>());
+}
+
+Maybe<ServiceWorkerDescriptor>
+nsIDocument::GetController() const
+{
+  nsPIDOMWindowInner* inner = GetInnerWindow();
+  if (inner) {
+    return Move(inner->GetController());
+  }
+  return Move(Maybe<ServiceWorkerDescriptor>());
 }
 
 //
