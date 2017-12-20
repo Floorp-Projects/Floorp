@@ -249,19 +249,6 @@ void SetAllFDsToCloseOnExec() {
   }
 }
 
-ProcessMetrics::ProcessMetrics(ProcessHandle process) : process_(process),
-                                                        last_time_(0),
-                                                        last_system_time_(0) {
-  processor_count_ = base::SysInfo::NumberOfProcessors();
-}
-
-// static
-ProcessMetrics* ProcessMetrics::CreateProcessMetrics(ProcessHandle process) {
-  return new ProcessMetrics(process);
-}
-
-ProcessMetrics::~ProcessMetrics() { }
-
 bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
   int status;
   const int result = HANDLE_EINTR(waitpid(handle, &status, WNOHANG));
@@ -307,53 +294,6 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
     return WEXITSTATUS(status) != 0;
 
   return false;
-}
-
-namespace {
-
-int64_t TimeValToMicroseconds(const struct timeval& tv) {
-  return tv.tv_sec * kMicrosecondsPerSecond + tv.tv_usec;
-}
-
-}
-
-int ProcessMetrics::GetCPUUsage() {
-  struct timeval now;
-  struct rusage usage;
-
-  int retval = gettimeofday(&now, NULL);
-  if (retval)
-    return 0;
-  retval = getrusage(RUSAGE_SELF, &usage);
-  if (retval)
-    return 0;
-
-  int64_t system_time = (TimeValToMicroseconds(usage.ru_stime) +
-                       TimeValToMicroseconds(usage.ru_utime)) /
-                        processor_count_;
-  int64_t time = TimeValToMicroseconds(now);
-
-  if ((last_system_time_ == 0) || (last_time_ == 0)) {
-    // First call, just set the last values.
-    last_system_time_ = system_time;
-    last_time_ = time;
-    return 0;
-  }
-
-  int64_t system_time_delta = system_time - last_system_time_;
-  int64_t time_delta = time - last_time_;
-  DCHECK(time_delta != 0);
-  if (time_delta == 0)
-    return 0;
-
-  // We add time_delta / 2 so the result is rounded.
-  int cpu = static_cast<int>((system_time_delta * 100 + time_delta / 2) /
-                             time_delta);
-
-  last_system_time_ = system_time;
-  last_time_ = time;
-
-  return cpu;
 }
 
 void
