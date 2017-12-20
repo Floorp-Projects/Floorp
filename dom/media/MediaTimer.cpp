@@ -57,12 +57,10 @@ MediaTimer::Destroy()
   MOZ_ASSERT(OnMediaTimerThread());
   TIMER_LOG("MediaTimer::Destroy");
 
-  // Reject any outstanding entries. There's no need to acquire the monitor
-  // here, because we're on the timer thread and all other references to us
-  // must be gone.
-  while (!mEntries.empty()) {
-    mEntries.top().mPromise->Reject(false, __func__);
-    mEntries.pop();
+  // Reject any outstanding entries.
+  {
+    MonitorAutoLock lock(mMonitor);
+    Reject();
   }
 
   // Cancel the timer if necessary.
@@ -95,6 +93,14 @@ MediaTimer::WaitUntil(const TimeStamp& aTimeStamp, const char* aCallSite)
   mEntries.push(e);
   ScheduleUpdate();
   return p;
+}
+
+void
+MediaTimer::Cancel()
+{
+  MonitorAutoLock mon(mMonitor);
+  TIMER_LOG("MediaTimer::Cancel");
+  Reject();
 }
 
 void
@@ -162,6 +168,16 @@ MediaTimer::UpdateLocked()
   if (!TimerIsArmed() || mEntries.top().mTimeStamp < mCurrentTimerTarget) {
     CancelTimerIfArmed();
     ArmTimer(mEntries.top().mTimeStamp, now);
+  }
+}
+
+void
+MediaTimer::Reject()
+{
+  mMonitor.AssertCurrentThreadOwns();
+  while (!mEntries.empty()) {
+    mEntries.top().mPromise->Reject(false, __func__);
+    mEntries.pop();
   }
 }
 
