@@ -194,7 +194,7 @@ gfxAlphaRecovery::AlignRectForSubimageRecovery(const mozilla::gfx::IntRect& aRec
         return aRect;
     }
 
-    const int32_t x = aRect.x, y = aRect.y, w = aRect.width, h = aRect.height;
+    const int32_t x = aRect.X(), y = aRect.Y(), w = aRect.Width(), h = aRect.Height();
     const int32_t r = x + w;
     const int32_t sw = surfaceSize.width;
     const int32_t strideAlign = ByteAlignment(kByteAlignLog2, stride);

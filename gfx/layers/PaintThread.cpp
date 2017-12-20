@@ -77,16 +77,16 @@ CapturedTiledPaintState::Clear::ClearBuffer()
   if (mTargetOnWhite) {
     mTargetOnWhite->SetTransform(Matrix());
     for (auto iter = mDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
-      const gfx::Rect drawRect(iter.Get().x, iter.Get().y,
-                               iter.Get().width, iter.Get().height);
+      const gfx::Rect drawRect(iter.Get().X(), iter.Get().Y(),
+                               iter.Get().Width(), iter.Get().Height());
       mTarget->FillRect(drawRect, ColorPattern(Color(0.0, 0.0, 0.0, 1.0)));
       mTargetOnWhite->FillRect(drawRect, ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
     }
     mTargetOnWhite->SetTransform(oldTransform);
   } else {
     for (auto iter = mDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
-      const gfx::Rect drawRect(iter.Get().x, iter.Get().y,
-                               iter.Get().width, iter.Get().height);
+      const gfx::Rect drawRect(iter.Get().X(), iter.Get().Y(),
+                               iter.Get().Width(), iter.Get().Height());
       mTarget->ClearRect(drawRect);
     }
   }

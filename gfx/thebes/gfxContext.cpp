@@ -603,7 +603,7 @@ gfxContext::GetClipExtents(ClipExtentsSpace aSpace) const
 {
   Rect rect = GetAzureDeviceSpaceClipBounds();
 
-  if (rect.width == 0 || rect.height == 0) {
+  if (rect.IsZero()) {
     return gfxRect(0, 0, 0, 0);
   }
 
@@ -768,7 +768,7 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content, Float aOpacity, S
   if (mDT->GetFormat() != SurfaceFormat::B8G8R8X8) {
     gfxRect clipRect = GetClipExtents(gfxContext::eDeviceSpace);
     clipRect.RoundOut();
-    clipExtents = IntRect::Truncate(clipRect.x, clipRect.y, clipRect.width, clipRect.height);
+    clipExtents = IntRect::Truncate(clipRect.X(), clipRect.Y(), clipRect.Width(), clipRect.Height());
   }
   bool pushOpaqueWithCopiedBG = (mDT->GetFormat() == SurfaceFormat::B8G8R8X8 ||
                                  mDT->GetOpaqueRect().Contains(clipExtents)) &&

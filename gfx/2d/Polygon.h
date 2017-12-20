@@ -275,10 +275,10 @@ public:
   static PolygonTyped<Units> FromRect(const RectTyped<Units>& aRect)
   {
     nsTArray<Point4DType> points {
-      Point4DType(aRect.x, aRect.y, 0.0f, 1.0f),
-      Point4DType(aRect.x, aRect.YMost(), 0.0f, 1.0f),
+      Point4DType(aRect.X(), aRect.Y(), 0.0f, 1.0f),
+      Point4DType(aRect.X(), aRect.YMost(), 0.0f, 1.0f),
       Point4DType(aRect.XMost(), aRect.YMost(), 0.0f, 1.0f),
-      Point4DType(aRect.XMost(), aRect.y, 0.0f, 1.0f)
+      Point4DType(aRect.XMost(), aRect.Y(), 0.0f, 1.0f)
     };
 
     return PolygonTyped<Units>(Move(points));

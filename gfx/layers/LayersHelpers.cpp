@@ -29,15 +29,15 @@ ComputeBackdropCopyRect(const gfx::Rect& aRect,
 
   // Apply the layer transform.
   RectDouble dest = aTransform.TransformAndClipBounds(
-    RectDouble(aRect.x, aRect.y, aRect.Width(), aRect.Height()),
-    RectDouble(renderBounds.x, renderBounds.y, renderBounds.Width(), renderBounds.Height()));
+    RectDouble(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height()),
+    RectDouble(renderBounds.X(), renderBounds.Y(), renderBounds.Width(), renderBounds.Height()));
   dest -= rtOffset;
 
   // Ensure we don't round out to -1, which trips up Direct3D.
   dest.IntersectRect(dest, RectDouble(0, 0, rtSize.width, rtSize.height));
 
   if (aOutLayerQuad) {
-    *aOutLayerQuad = Rect(dest.x, dest.y, dest.Width(), dest.Height());
+    *aOutLayerQuad = Rect(dest.X(), dest.Y(), dest.Width(), dest.Height());
   }
 
   // Round out to integer.
@@ -50,7 +50,7 @@ ComputeBackdropCopyRect(const gfx::Rect& aRect,
   // uv-space.
   Matrix4x4 transform;
   transform.PostScale(rtSize.width, rtSize.height, 1.0);
-  transform.PostTranslate(-result.x, -result.y, 0.0);
+  transform.PostTranslate(-result.X(), -result.Y(), 0.0);
   transform.PostScale(1 / float(result.Width()), 1 / float(result.Height()), 1.0);
   *aOutTransform = transform;
   return result;

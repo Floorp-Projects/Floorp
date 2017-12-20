@@ -524,7 +524,7 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
     // See DefaultComputeEffectiveTransforms below
     NS_ASSERTION(is2D && matrix.PreservesAxisAlignedRectangles(),
                  "Non preserves axis aligned transform with clipped child should have forced intermediate surface");
-    gfx::Rect r(scissor.x, scissor.y, scissor.Width(), scissor.Height());
+    gfx::Rect r(scissor.X(), scissor.Y(), scissor.Width(), scissor.Height());
     gfxRect trScissor = gfx::ThebesRect(matrix.TransformBounds(r));
     trScissor.Round();
     IntRect tmp;
@@ -1834,12 +1834,12 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
     aStream << nsPrintfCString(" [isStickyPosition scrollId=%" PRIu64 " outer=(%.3f,%.3f)-(%.3f,%.3f) "
                      "inner=(%.3f,%.3f)-(%.3f,%.3f)]",
                      GetStickyScrollContainerId(),
-                     GetStickyScrollRangeOuter().x,
-                     GetStickyScrollRangeOuter().y,
+                     GetStickyScrollRangeOuter().X(),
+                     GetStickyScrollRangeOuter().Y(),
                      GetStickyScrollRangeOuter().XMost(),
                      GetStickyScrollRangeOuter().YMost(),
-                     GetStickyScrollRangeInner().x,
-                     GetStickyScrollRangeInner().y,
+                     GetStickyScrollRangeInner().X(),
+                     GetStickyScrollRangeInner().Y(),
                      GetStickyScrollRangeInner().XMost(),
                      GetStickyScrollRangeInner().YMost()).get();
   }
@@ -1890,8 +1890,8 @@ static void
 DumpRect(layerscope::LayersPacket::Layer::Rect* aLayerRect,
          const BaseRect<T, Sub, Point, SizeT, MarginT>& aRect)
 {
-  aLayerRect->set_x(aRect.x);
-  aLayerRect->set_y(aRect.y);
+  aLayerRect->set_x(aRect.X());
+  aLayerRect->set_y(aRect.Y());
   aLayerRect->set_w(aRect.Width());
   aLayerRect->set_h(aRect.Height());
 }
@@ -2469,7 +2469,7 @@ SetAntialiasingFlags(Layer* aLayer, DrawTarget* aTarget)
   }
 
   const IntRect& bounds = aLayer->GetVisibleRegion().ToUnknownRegion().GetBounds();
-  gfx::Rect transformedBounds = aTarget->GetTransform().TransformBounds(gfx::Rect(Float(bounds.x), Float(bounds.y),
+  gfx::Rect transformedBounds = aTarget->GetTransform().TransformBounds(gfx::Rect(Float(bounds.X()), Float(bounds.Y()),
                                                                                   Float(bounds.Width()), Float(bounds.Height())));
   transformedBounds.RoundOut();
   IntRect intTransformedBounds;
@@ -2482,7 +2482,7 @@ SetAntialiasingFlags(Layer* aLayer, DrawTarget* aTarget)
 IntRect
 ToOutsideIntRect(const gfxRect &aRect)
 {
-  return IntRect::RoundOut(aRect.x, aRect.y, aRect.Width(), aRect.Height());
+  return IntRect::RoundOut(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
 }
 
 TextLayer::TextLayer(LayerManager* aManager, void* aImplData)

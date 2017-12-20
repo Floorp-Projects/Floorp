@@ -465,10 +465,7 @@ nsresult
 nsDeviceContext::GetRect(nsRect &aRect)
 {
     if (IsPrinterContext()) {
-        aRect.x = 0;
-        aRect.y = 0;
-        aRect.SetWidth(mWidth);
-        aRect.SetHeight(mHeight);
+        aRect.SetRect(0, 0, mWidth, mHeight);
     } else
         ComputeFullAreaUsingScreen ( &aRect );
 
@@ -479,10 +476,7 @@ nsresult
 nsDeviceContext::GetClientRect(nsRect &aRect)
 {
     if (IsPrinterContext()) {
-        aRect.x = 0;
-        aRect.y = 0;
-        aRect.SetWidth(mWidth);
-        aRect.SetHeight(mHeight);
+        aRect.SetRect(0, 0, mWidth, mHeight);
     }
     else
         ComputeClientRectUsingScreen(&aRect);
@@ -621,10 +615,10 @@ nsDeviceContext::ComputeClientRectUsingScreen(nsRect* outRect)
         screen->GetAvailRect(&x, &y, &width, &height);
 
         // convert to device units
-        outRect->y = NSIntPixelsToAppUnits(y, AppUnitsPerDevPixel());
-        outRect->x = NSIntPixelsToAppUnits(x, AppUnitsPerDevPixel());
-        outRect->SetWidth(NSIntPixelsToAppUnits(width, AppUnitsPerDevPixel()));
-        outRect->SetHeight(NSIntPixelsToAppUnits(height, AppUnitsPerDevPixel()));
+        outRect->SetRect(NSIntPixelsToAppUnits(x, AppUnitsPerDevPixel()),
+                         NSIntPixelsToAppUnits(y, AppUnitsPerDevPixel()),
+                         NSIntPixelsToAppUnits(width, AppUnitsPerDevPixel()),
+                         NSIntPixelsToAppUnits(height, AppUnitsPerDevPixel()));
     }
 }
 
@@ -642,11 +636,10 @@ nsDeviceContext::ComputeFullAreaUsingScreen(nsRect* outRect)
         screen->GetRect ( &x, &y, &width, &height );
 
         // convert to device units
-        outRect->y = NSIntPixelsToAppUnits(y, AppUnitsPerDevPixel());
-        outRect->x = NSIntPixelsToAppUnits(x, AppUnitsPerDevPixel());
-        outRect->SetWidth(NSIntPixelsToAppUnits(width, AppUnitsPerDevPixel()));
-        outRect->SetHeight(NSIntPixelsToAppUnits(height, AppUnitsPerDevPixel()));
-
+        outRect->SetRect(NSIntPixelsToAppUnits(x, AppUnitsPerDevPixel()),
+                         NSIntPixelsToAppUnits(y, AppUnitsPerDevPixel()),
+                         NSIntPixelsToAppUnits(width, AppUnitsPerDevPixel()),
+                         NSIntPixelsToAppUnits(height, AppUnitsPerDevPixel()));
         mWidth = outRect->Width();
         mHeight = outRect->Height();
     }

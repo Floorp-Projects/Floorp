@@ -316,22 +316,17 @@ DuplicateEdges(DataSourceSurface* aSurface, const IntRect &aFromRect)
   for (int32_t ix = 0; ix < 3; ix++) {
     switch (ix) {
       case 0:
-        fill.x = 0;
-        fill.SetWidth(aFromRect.x);
-        sampleRect.x = fill.XMost();
-        sampleRect.SetWidth(1);
+        fill.SetRectX(0, aFromRect.X());
+        sampleRect.SetRectX(fill.XMost(), 1);
         break;
       case 1:
-        fill.x = aFromRect.x;
-        fill.SetWidth(aFromRect.Width());
-        sampleRect.x = fill.x;
-        sampleRect.SetWidth(fill.Width());
+        fill.SetRectX(aFromRect.X(), aFromRect.Width());
+        sampleRect.SetRectX(fill.X(), fill.Width());
         break;
       case 2:
-        fill.x = aFromRect.XMost();
-        fill.SetWidth(size.width - fill.x);
-        sampleRect.x = fill.x - 1;
-        sampleRect.SetWidth(1);
+        fill.MoveToX(aFromRect.XMost());
+        fill.SetRightEdge(size.width);
+        sampleRect.SetRectX(fill.X() - 1, 1);
         break;
     }
     if (fill.Width() <= 0) {
@@ -341,22 +336,17 @@ DuplicateEdges(DataSourceSurface* aSurface, const IntRect &aFromRect)
     for (int32_t iy = 0; iy < 3; iy++) {
       switch (iy) {
         case 0:
-          fill.y = 0;
-          fill.SetHeight(aFromRect.y);
-          sampleRect.y = fill.YMost();
-          sampleRect.SetHeight(1);
+          fill.SetRectY(0, aFromRect.Y());
+          sampleRect.SetRectY(fill.YMost(), 1);
           break;
         case 1:
-          fill.y = aFromRect.y;
-          fill.SetHeight(aFromRect.Height());
-          sampleRect.y = fill.y;
-          sampleRect.SetHeight(fill.Height());
+          fill.SetRectY(aFromRect.Y(), aFromRect.Height());
+          sampleRect.SetRectY(fill.Y(), fill.Height());
           break;
         case 2:
-          fill.y = aFromRect.YMost();
-          fill.SetHeight(size.height - fill.y);
-          sampleRect.y = fill.y - 1;
-          sampleRect.SetHeight(1);
+          fill.MoveToY(aFromRect.YMost());
+          fill.SetBottomEdge(size.height);
+          sampleRect.SetRectY(fill.Y() - 1, 1);
           break;
       }
       if (fill.Height() <= 0) {
@@ -382,8 +372,8 @@ DuplicateEdges(DataSourceSurface* aSurface, const IntRect &aFromRect)
 static IntPoint
 TileIndex(const IntRect &aFirstTileRect, const IntPoint &aPoint)
 {
-  return IntPoint(int32_t(floor(double(aPoint.x - aFirstTileRect.x) / aFirstTileRect.Width())),
-                  int32_t(floor(double(aPoint.y - aFirstTileRect.y) / aFirstTileRect.Height())));
+  return IntPoint(int32_t(floor(double(aPoint.x - aFirstTileRect.X()) / aFirstTileRect.Width())),
+                  int32_t(floor(double(aPoint.y - aFirstTileRect.Y()) / aFirstTileRect.Height())));
 }
 
 static void
@@ -396,8 +386,8 @@ TileSurface(DataSourceSurface* aSource, DataSourceSurface* aTarget, const IntPoi
 
   for (int32_t ix = startIndex.x; ix <= endIndex.x; ix++) {
     for (int32_t iy = startIndex.y; iy <= endIndex.y; iy++) {
-      IntPoint destPoint(sourceRect.x + ix * sourceRect.Width(),
-                         sourceRect.y + iy * sourceRect.Height());
+      IntPoint destPoint(sourceRect.X() + ix * sourceRect.Width(),
+                         sourceRect.Y() + iy * sourceRect.Height());
       IntRect destRect(destPoint, sourceRect.Size());
       destRect = destRect.Intersect(targetRect);
       IntRect srcRect = destRect - destPoint;
@@ -1118,8 +1108,8 @@ FilterNodeTransformSoftware::Render(const IntRect& aRect)
     return nullptr;
   }
 
-  Matrix transform = Matrix::Translation(srcRect.x, srcRect.y) * mMatrix *
-                     Matrix::Translation(-aRect.x, -aRect.y);
+  Matrix transform = Matrix::Translation(srcRect.X(), srcRect.Y()) * mMatrix *
+                     Matrix::Translation(-aRect.X(), -aRect.Y());
   if (transform.IsIdentity() && srcRect.Size() == aRect.Size()) {
     return input.forget();
   }
@@ -1219,7 +1209,7 @@ ApplyMorphology(const IntRect& aSourceRect, DataSourceSurface* aInput,
 {
   IntRect srcRect = aSourceRect - aDestRect.TopLeft();
   IntRect destRect = aDestRect - aDestRect.TopLeft();
-  IntRect tmpRect(destRect.x, srcRect.y, destRect.Width(), srcRect.Height());
+  IntRect tmpRect(destRect.X(), srcRect.Y(), destRect.Width(), srcRect.Height());
 #ifdef DEBUG
   IntMargin margin = srcRect - destRect;
   MOZ_ASSERT(margin.top >= ry && margin.right >= rx &&
@@ -1555,8 +1545,8 @@ FilterNodeTileSoftware::SetAttribute(uint32_t aIndex,
                                      const IntRect &aSourceRect)
 {
   MOZ_ASSERT(aIndex == ATT_TILE_SOURCE_RECT);
-  mSourceRect = IntRect(int32_t(aSourceRect.x), int32_t(aSourceRect.y),
-                        int32_t(aSourceRect.Width()), int32_t(aSourceRect.Height()));
+  mSourceRect.SetRect(int32_t(aSourceRect.X()), int32_t(aSourceRect.Y()),
+                      int32_t(aSourceRect.Width()), int32_t(aSourceRect.Height()));
   Invalidate();
 }
 
@@ -1565,11 +1555,11 @@ struct CompareIntRects
 {
   bool operator()(const IntRect& a, const IntRect& b) const
   {
-    if (a.x != b.x) {
-      return a.x < b.x;
+    if (a.X() != b.X()) {
+      return a.X() < b.X();
     }
-    if (a.y != b.y) {
-      return a.y < b.y;
+    if (a.Y() != b.Y()) {
+      return a.Y() < b.Y();
     }
     if (a.Width() != b.Width()) {
       return a.Width() < b.Width();
@@ -3565,7 +3555,7 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
                                       x, y, mSurfaceScale,
                                       aKernelUnitLengthX, aKernelUnitLengthY);
 
-      IntPoint pointInFilterSpace(aRect.x + x, aRect.y + y);
+      IntPoint pointInFilterSpace(aRect.X() + x, aRect.Y() + y);
       Float Z = mSurfaceScale * sourceData[sourceIndex] / 255.0f;
       Point3D pt(pointInFilterSpace.x, pointInFilterSpace.y, Z);
       Point3D rayDir = mLight.GetVectorToLight(pt);

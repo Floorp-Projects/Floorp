@@ -45,8 +45,8 @@
 // #define CULLING_LOG(...) printf_stderr("CULLING: " __VA_ARGS__)
 
 #define DUMP(...) do { if (gfxEnv::DumpDebug()) { printf_stderr(__VA_ARGS__); } } while(0)
-#define XYWH(k)  (k).x, (k).y, (k).Width(), (k).Height()
-#define XY(k)    (k).x, (k).y
+#define XYWH(k)  (k).X(), (k).Y(), (k).Width(), (k).Height()
+#define XY(k)    (k).X(), (k).Y()
 #define WH(k)    (k).Width(), (k).Height()
 
 namespace mozilla {
@@ -326,7 +326,7 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
   }
 
   // Don't render trivial minimap. They can show up from textboxes and other tiny frames.
-  if (viewRect.width < 64 && viewRect.height < 64) {
+  if (viewRect.Width() < 64 && viewRect.Height() < 64) {
     return;
   }
 
@@ -342,15 +342,15 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
     dest = aContainer->GetEffectiveTransform().Inverse().TransformBounds(dest);
   }
   dest = dest.Intersect(compositionBounds.ToUnknownRect());
-  scaleFactorX = std::min(100.f, dest.width - (2 * horizontalPadding)) / scrollRect.width;
-  scaleFactorY = (dest.height - (2 * verticalPadding)) / scrollRect.height;
+  scaleFactorX = std::min(100.f, dest.Width() - (2 * horizontalPadding)) / scrollRect.Width();
+  scaleFactorY = (dest.Height() - (2 * verticalPadding)) / scrollRect.Height();
   scaleFactor = std::min(scaleFactorX, scaleFactorY);
   if (scaleFactor <= 0) {
     return;
   }
 
   Matrix4x4 transform = Matrix4x4::Scaling(scaleFactor, scaleFactor, 1);
-  transform.PostTranslate(horizontalPadding + dest.x, verticalPadding + dest.y, 0);
+  transform.PostTranslate(horizontalPadding + dest.X(), verticalPadding + dest.Y(), 0);
 
   Rect transformedScrollRect = transform.TransformBounds(scrollRect.ToUnknownRect());
 
@@ -440,7 +440,7 @@ RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
       gfx::IntRect clearRect = layerToRender->GetClearRect();
       if (!clearRect.IsEmpty()) {
         // Clear layer's visible rect on FrameBuffer with transparent pixels
-        gfx::Rect fbRect(clearRect.x, clearRect.y, clearRect.Width(), clearRect.Height());
+        gfx::Rect fbRect(clearRect.X(), clearRect.Y(), clearRect.Width(), clearRect.Height());
         compositor->ClearRect(fbRect);
         layerToRender->SetClearRect(gfx::IntRect(0, 0, 0, 0));
       }
@@ -539,10 +539,10 @@ CreateTemporaryTargetAndCopyFromBackground(ContainerT* aContainer,
   Compositor* compositor = aManager->GetCompositor();
   gfx::IntRect visibleRect = aContainer->GetLocalVisibleRegion().ToUnknownRegion().GetBounds();
   RefPtr<CompositingRenderTarget> previousTarget = compositor->GetCurrentRenderTarget();
-  gfx::IntRect surfaceRect = gfx::IntRect(visibleRect.x, visibleRect.y,
+  gfx::IntRect surfaceRect = gfx::IntRect(visibleRect.X(), visibleRect.Y(),
                                           visibleRect.Width(), visibleRect.Height());
 
-  gfx::IntPoint sourcePoint = gfx::IntPoint(visibleRect.x, visibleRect.y);
+  gfx::IntPoint sourcePoint = gfx::IntPoint(visibleRect.X(), visibleRect.Y());
 
   gfx::Matrix4x4 transform = aContainer->GetEffectiveTransform();
   DebugOnly<gfx::Matrix> transform2d;
@@ -737,7 +737,7 @@ TransformRect(const LayerIntRect& aRect, const Matrix4x4& aTransform)
     return LayerIntRect();
   }
 
-  Rect rect(aRect.x, aRect.y, aRect.width, aRect.height);
+  Rect rect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
   rect = aTransform.TransformAndClipBounds(rect, Rect::MaxIntRect());
   rect.RoundOut();
 

@@ -525,7 +525,7 @@ ParentLayerCoord AxisX::GetRectLength(const ParentLayerRect& aRect) const
 
 ParentLayerCoord AxisX::GetRectOffset(const ParentLayerRect& aRect) const
 {
-  return aRect.x;
+  return aRect.X();
 }
 
 CSSToParentLayerScale AxisX::GetScaleForAxis(const CSSToParentLayerScale2D& aScale) const
@@ -566,7 +566,7 @@ ParentLayerCoord AxisY::GetRectLength(const ParentLayerRect& aRect) const
 
 ParentLayerCoord AxisY::GetRectOffset(const ParentLayerRect& aRect) const
 {
-  return aRect.y;
+  return aRect.Y();
 }
 
 CSSToParentLayerScale AxisY::GetScaleForAxis(const CSSToParentLayerScale2D& aScale) const

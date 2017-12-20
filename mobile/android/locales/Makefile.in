@@ -18,6 +18,12 @@ PP_TARGETS += L10N_PREF_JS_EXPORTS
 
 include $(topsrcdir)/config/rules.mk
 
+# Required for l10n.mk - defines a list of app sub dirs that should
+# be included in langpack xpis.
+DIST_SUBDIRS = $(DIST_SUBDIR)
+
+MOZ_LANGPACK_EID=langpack-$(AB_CD)@firefox.mozilla.org
+
 include $(topsrcdir)/toolkit/locales/l10n.mk
 
 # need to kill stage for repacks for now due to the library moves
@@ -56,6 +62,8 @@ ifeq ($(OS_TARGET),Android)
 	@$(MAKE) -C $(DEPTH)/mobile/android/base/locales chrome-$*
 endif
 
+langpack: langpack-$(AB_CD)
+
 # This is a generic target that will make a langpack and repack tarball
 # builds. It is called from the tinderbox scripts. Alter it with caution.
 
@@ -63,6 +71,7 @@ installers-%: IS_LANGUAGE_REPACK=1
 installers-%:
 	@$(MAKE) clobber-stage
 	@$(MAKE) libs-$*
+	@$(MAKE) package-langpack-$*
 	@$(MAKE) repackage-zip-$*
 	@echo 'repackaging done'
 

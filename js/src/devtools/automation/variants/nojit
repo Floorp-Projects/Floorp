@@ -1,0 +1,7 @@
+{
+    "configure-args": "--disable-ion --enable-warnings-as-errors",
+    "optimize": true,
+    "skip-tests": {
+        "all": ["jstests", "jittest", "jsapitests"]
+    }
+}

@@ -35,10 +35,10 @@ static inline gfx::Rect
 TextureRectToCoords(const T& aRect, const gfx::IntSize& aSize)
 {
   return gfx::Rect(
-    float(aRect.x) / aSize.width,
-    float(aRect.y) / aSize.height,
-    float(aRect.width) / aSize.width,
-    float(aRect.height) / aSize.height);
+    float(aRect.X()) / aSize.width,
+    float(aRect.Y()) / aSize.height,
+    float(aRect.Width()) / aSize.width,
+    float(aRect.Height()) / aSize.height);
 }
 
 // This is defined in Compositor.cpp.
