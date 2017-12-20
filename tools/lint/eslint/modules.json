@@ -19,7 +19,7 @@
   "bogus_element_type.jsm": [],
   "bookmark_repair.js": ["BookmarkRepairRequestor", "BookmarkRepairResponder"],
   "bookmark_validator.js": ["BookmarkValidator", "BookmarkProblemData"],
-  "bookmarks.js": ["BookmarksEngine", "PlacesItem", "Bookmark", "BookmarkFolder", "BookmarkQuery", "Livemark", "BookmarkSeparator"],
+  "bookmarks.js": ["BookmarksEngine", "PlacesItem", "Bookmark", "BookmarkFolder", "BookmarkQuery", "Livemark", "BookmarkSeparator", "BufferedBookmarksEngine"],
   "bookmarks.jsm": ["PlacesItem", "Bookmark", "Separator", "Livemark", "BookmarkFolder", "DumpBookmarks"],
   "BootstrapMonitor.jsm": ["monitor"],
   "browser-loader.js": ["BrowserLoader"],
