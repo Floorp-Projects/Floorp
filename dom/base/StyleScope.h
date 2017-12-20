@@ -27,12 +27,23 @@ class StyleSheetList;
  */
 class StyleScope
 {
+  enum class Kind {
+    Document,
+    ShadowRoot,
+  };
+
 public:
-  virtual nsINode& AsNode() = 0;
+  explicit StyleScope(nsIDocument&);
+  explicit StyleScope(mozilla::dom::ShadowRoot&);
+
+  nsINode& AsNode()
+  {
+    return mAsNode;
+  }
 
   const nsINode& AsNode() const
   {
-    return const_cast<StyleScope&>(*this).AsNode();
+    return mAsNode;
   }
 
   StyleSheet* SheetAt(size_t aIndex) const
@@ -72,6 +83,9 @@ public:
 protected:
   nsTArray<RefPtr<mozilla::StyleSheet>> mStyleSheets;
   RefPtr<mozilla::dom::StyleSheetList> mDOMStyleSheets;
+
+  nsINode& mAsNode;
+  const Kind mKind;
 };
 
 }
