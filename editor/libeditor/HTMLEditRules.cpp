@@ -1781,9 +1781,7 @@ HTMLEditRules::WillInsertBreak(Selection& aSelection,
   // contains the word "text".  The user selects "text" and types return.
   // "Text" is deleted leaving an empty block.  We want to put in one br to
   // make block have a line.  Then code further below will put in a second br.)
-  bool isEmpty;
-  IsEmptyBlock(*blockParent, &isEmpty);
-  if (isEmpty) {
+  if (IsEmptyBlockElement(*blockParent, IgnoreSingleBR::eNo)) {
     AutoEditorDOMPointChildInvalidator lockOffset(atStartOfSelection);
     EditorRawDOMPoint endOfBlockParent;
     endOfBlockParent.SetToEndOf(blockParent);
@@ -4986,27 +4984,22 @@ HTMLEditRules::CreateStyleForInsertText(Selection& aSelection,
   return NS_OK;
 }
 
-
-/**
- * Figure out if aNode is (or is inside) an empty block.  A block can have
- * children and still be considered empty, if the children are empty or
- * non-editable.
- */
-nsresult
-HTMLEditRules::IsEmptyBlock(Element& aNode,
-                            bool* aOutIsEmptyBlock,
-                            MozBRCounts aMozBRCounts)
+bool
+HTMLEditRules::IsEmptyBlockElement(Element& aElement,
+                                   IgnoreSingleBR aIgnoreSingleBR)
 {
-  MOZ_ASSERT(aOutIsEmptyBlock);
-  *aOutIsEmptyBlock = true;
-
-  NS_ENSURE_TRUE(IsBlockNode(aNode), NS_ERROR_NULL_POINTER);
-
-  return mHTMLEditor->IsEmptyNode(aNode.AsDOMNode(), aOutIsEmptyBlock,
-                                  aMozBRCounts == MozBRCounts::yes ? false
-                                                                   : true);
+  if (NS_WARN_IF(!IsBlockNode(aElement))) {
+    return false;
+  }
+  bool isEmpty = true;
+  nsresult rv =
+    mHTMLEditor->IsEmptyNode(&aElement, &isEmpty,
+                             aIgnoreSingleBR == IgnoreSingleBR::eYes);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+  return isEmpty;
 }
-
 
 nsresult
 HTMLEditRules::WillAlign(Selection& aSelection,
@@ -6826,10 +6819,7 @@ HTMLEditRules::ReturnInHeader(Selection& aSelection,
   }
 
   // If the new (righthand) header node is empty, delete it
-  bool isEmpty;
-  rv = IsEmptyBlock(aHeader, &isEmpty, MozBRCounts::no);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (isEmpty) {
+  if (IsEmptyBlockElement(aHeader, IgnoreSingleBR::eYes)) {
     rv = htmlEditor->DeleteNode(&aHeader);
     NS_ENSURE_SUCCESS(rv, rv);
     // Layout tells the caret to blink in a weird place if we don't place a
@@ -7109,11 +7099,9 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
   // If we are in an empty item, then we want to pop up out of the list, but
   // only if prefs say it's okay and if the parent isn't the active editing
   // host.
-  bool isEmpty;
-  nsresult rv = IsEmptyBlock(aListItem, &isEmpty, MozBRCounts::no);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (isEmpty && root != aListItem.GetParentElement() &&
-      mReturnInEmptyLIKillsList) {
+  if (mReturnInEmptyLIKillsList &&
+      root != aListItem.GetParentElement() &&
+      IsEmptyBlockElement(aListItem, IgnoreSingleBR::eYes)) {
     nsCOMPtr<nsIContent> leftListNode = aListItem.GetParent();
     // Are we the last list item in the list?
     if (!htmlEditor->IsLastEditableChild(&aListItem)) {
@@ -7133,15 +7121,16 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
       "Failed to advance offset after the right list node");
     if (HTMLEditUtils::IsList(atNextSiblingOfLeftList.GetContainer())) {
       // If so, move item out of this list and into the grandparent list
-      rv = htmlEditor->MoveNode(&aListItem,
-                                atNextSiblingOfLeftList.GetContainer(),
-                                atNextSiblingOfLeftList.Offset());
+      nsresult rv =
+        htmlEditor->MoveNode(&aListItem,
+                             atNextSiblingOfLeftList.GetContainer(),
+                             atNextSiblingOfLeftList.Offset());
       NS_ENSURE_SUCCESS(rv, rv);
       rv = aSelection.Collapse(&aListItem, 0);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       // Otherwise kill this item
-      rv = htmlEditor->DeleteNode(&aListItem);
+      nsresult rv = htmlEditor->DeleteNode(&aListItem);
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Time to insert a paragraph
@@ -7173,8 +7162,9 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
   // Else we want a new list item at the same list level.  Get ws code to
   // adjust any ws.
   nsCOMPtr<nsINode> selNode = &aNode;
-  rv = WSRunObject::PrepareToSplitAcrossBlocks(htmlEditor,
-                                               address_of(selNode), &aOffset);
+  nsresult rv =
+    WSRunObject::PrepareToSplitAcrossBlocks(htmlEditor,
+                                            address_of(selNode), &aOffset);
   NS_ENSURE_SUCCESS(rv, rv);
   if (NS_WARN_IF(!selNode->IsContent())) {
     return NS_ERROR_FAILURE;

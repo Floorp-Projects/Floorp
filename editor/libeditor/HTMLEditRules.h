@@ -361,9 +361,19 @@ protected:
                                             nsAtom* aItemType);
 
   nsresult CreateStyleForInsertText(Selection& aSelection, nsIDocument& aDoc);
-  enum class MozBRCounts { yes, no };
-  nsresult IsEmptyBlock(Element& aNode, bool* aOutIsEmptyBlock,
-                        MozBRCounts aMozBRCounts = MozBRCounts::yes);
+
+  /**
+   * IsEmptyBlockElement() returns true if aElement is a block level element
+   * and it doesn't have any visible content.
+   */
+  enum class IgnoreSingleBR
+  {
+    eYes,
+    eNo
+  };
+  bool IsEmptyBlockElement(Element& aElement,
+                           IgnoreSingleBR aIgnoreSingleBR);
+
   nsresult CheckForEmptyBlock(nsINode* aStartNode, Element* aBodyNode,
                               Selection* aSelection,
                               nsIEditor::EDirection aAction, bool* aHandled);
