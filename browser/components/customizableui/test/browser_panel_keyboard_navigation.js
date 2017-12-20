@@ -178,3 +178,30 @@ add_task(async function testTabKey() {
   PanelUI.hide();
   await promise;
 });
+
+add_task(async function testInterleavedTabAndArrowKeys() {
+  let promise = promisePanelShown(window);
+  PanelUI.show();
+  await promise;
+
+  let buttons = gHelperInstance._getNavigableElements(PanelUI.mainView);
+  let tab = false;
+
+  for (let button of buttons) {
+    if (button.disabled)
+      continue;
+    if (tab) {
+      EventUtils.synthesizeKey("KEY_Tab", { code: "Tab" });
+    } else {
+      EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+    }
+    tab = !tab;
+  }
+
+  Assert.equal(document.commandDispatcher.focusedElement, buttons[buttons.length - 1],
+    "The last button should be focused after a mix of Tab and ArrowDown");
+
+  promise = promisePanelHidden(window);
+  PanelUI.hide();
+  await promise;
+});
