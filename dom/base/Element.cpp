@@ -3955,7 +3955,7 @@ Element::GetInnerHTML(nsAString& aInnerHTML)
 }
 
 void
-Element::SetInnerHTML(const nsAString& aInnerHTML, nsIPrincipal& aSubjectPrincipal, ErrorResult& aError)
+Element::SetInnerHTML(const nsAString& aInnerHTML, nsIPrincipal* aSubjectPrincipal, ErrorResult& aError)
 {
   SetInnerHTMLInternal(aInnerHTML, aError);
 }
