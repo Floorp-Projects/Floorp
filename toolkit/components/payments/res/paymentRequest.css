@@ -20,9 +20,3 @@ html {
   font-size: 15px;
   font-weight: bold;
 }
-
-#cancel {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-}
