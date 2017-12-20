@@ -2331,6 +2331,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mMessageManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mGroupMessageManagers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChromeFields.mOpenerForInitialContentBrowser)
+
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingPromises)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
@@ -2433,6 +2435,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeFields.mGroupMessageManagers)
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mChromeFields.mOpenerForInitialContentBrowser)
   }
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingPromises)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -11405,6 +11409,19 @@ nsGlobalWindow::GetIndexedDB(ErrorResult& aError)
   return mIndexedDB;
 }
 
+void
+nsGlobalWindow::AddPendingPromise(mozilla::dom::Promise* aPromise)
+{
+  mPendingPromises.AppendElement(aPromise);
+}
+
+void
+nsGlobalWindow::RemovePendingPromise(mozilla::dom::Promise* aPromise)
+{
+  DebugOnly<bool> foundIt = mPendingPromises.RemoveElement(aPromise);
+  MOZ_ASSERT(foundIt, "tried to remove a non-existent element from mPendingPromises");
+}
+
 //*****************************************************************************
 // nsGlobalWindow::nsIInterfaceRequestor
 //*****************************************************************************
@@ -13721,6 +13738,9 @@ nsGlobalWindow::AddSizeOfIncludingThis(nsWindowSizes& aWindowSizes) const
     aWindowSizes.mDOMPerformanceResourceEntries =
       mPerformance->SizeOfResourceEntries(aWindowSizes.mState.mMallocSizeOf);
   }
+
+  aWindowSizes.mDOMOtherSize +=
+    mPendingPromises.ShallowSizeOfExcludingThis(aWindowSizes.mState.mMallocSizeOf);
 }
 
 void
