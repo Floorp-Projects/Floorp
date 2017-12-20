@@ -360,6 +360,21 @@ uint32_t PreferredChannelMap(uint32_t aChannels)
   return kLayoutInfos[sPreferredChannelLayout].mask;
 }
 
+cubeb_channel_layout GetPreferredChannelLayoutOrSMPTE(cubeb* context, uint32_t aChannels)
+{
+  cubeb_channel_layout layout = CUBEB_LAYOUT_UNDEFINED;
+  if (cubeb_get_preferred_channel_layout(context, &layout) != CUBEB_OK) {
+    return layout; //undefined
+  }
+
+  if (kLayoutInfos[layout].channels != aChannels) {
+    AudioConfig::ChannelLayout smpteLayout(aChannels);
+    return ConvertChannelMapToCubebLayout(smpteLayout.Map());
+  }
+
+  return layout;
+}
+
 void InitBrandName()
 {
   if (sBrandName) {

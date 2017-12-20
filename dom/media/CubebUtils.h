@@ -53,6 +53,7 @@ void GetCurrentBackend(nsAString& aBackend);
 void GetPreferredChannelLayout(nsAString& aLayout);
 void GetDeviceCollection(nsTArray<RefPtr<AudioDeviceInfo>>& aDeviceInfos,
                          Side aSide);
+cubeb_channel_layout GetPreferredChannelLayoutOrSMPTE(cubeb* context, uint32_t aChannels);
 } // namespace CubebUtils
 } // namespace mozilla
 
