@@ -372,12 +372,21 @@ public:
                                                     nsINode* aNode);
 
   /**
+   * IsInVisibleTextFrames() returns true if all text in aText is in visible
+   * text frames.  Callers have to guarantee that there is no pending reflow.
+   */
+  bool IsInVisibleTextFrames(dom::Text& aText);
+
+  /**
+   * IsVisibleTextNode() returns true if aText has visible text.  If it has
+   * only whitespaces and they are collapsed, returns false.
+   */
+  bool IsVisibleTextNode(Text& aText);
+
+  /**
    * aNode must be a non-null text node.
    * outIsEmptyNode must be non-null.
    */
-  nsresult IsVisTextNode(nsIContent* aNode,
-                         bool* outIsEmptyNode,
-                         bool aSafeToAskFrames);
   nsresult IsEmptyNode(nsIDOMNode* aNode, bool* outIsEmptyBlock,
                        bool aMozBRDoesntCount = false,
                        bool aListOrCellNotEmpty = false,
