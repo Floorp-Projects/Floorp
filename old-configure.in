@@ -242,12 +242,18 @@ case "$target" in
           WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd -W`
         fi
 
-        # Check linker version
-        _LD_FULL_VERSION=`"${LINKER}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
-        _LD_MAJOR_VERSION=`echo ${_LD_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
-        if test "$_LD_MAJOR_VERSION" != "$_CC_SUITE"; then
-            AC_MSG_ERROR([The linker major version, $_LD_FULL_VERSION,  does not match the compiler suite version, $_CC_SUITE.])
-        fi
+        # Check linker version, except in lld builds
+        case "$LINKER" in
+        *lld*)
+            ;;
+        *)
+            _LD_FULL_VERSION=`"${LINKER}" -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
+            _LD_MAJOR_VERSION=`echo ${_LD_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
+            if test "$_LD_MAJOR_VERSION" != "$_CC_SUITE"; then
+                AC_MSG_ERROR([The linker major version, $_LD_FULL_VERSION,  does not match the compiler suite version, $_CC_SUITE.])
+            fi
+            ;;
+        esac
 
         INCREMENTAL_LINKER=1
 
