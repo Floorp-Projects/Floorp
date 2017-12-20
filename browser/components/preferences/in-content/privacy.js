@@ -370,19 +370,27 @@ var gPrivacyPane = {
     ]);
     appendSearchKeywords("notificationSettingsButton", [
       bundlePrefs.getString("notificationspermissionstitle2"),
-      bundlePrefs.getString("notificationspermissionstext5"),
+      bundlePrefs.getString("notificationspermissionstext6"),
+      bundlePrefs.getString("notificationspermissionsdisablelabel"),
+      bundlePrefs.getString("notificationspermissionsdisabledescription"),
     ]);
     appendSearchKeywords("locationSettingsButton", [
       bundlePrefs.getString("locationpermissionstitle"),
-      bundlePrefs.getString("locationpermissionstext"),
+      bundlePrefs.getString("locationpermissionstext2"),
+      bundlePrefs.getString("locationpermissionsdisablelabel"),
+      bundlePrefs.getString("locationpermissionsdisabledescription"),
     ]);
     appendSearchKeywords("cameraSettingsButton", [
       bundlePrefs.getString("camerapermissionstitle"),
-      bundlePrefs.getString("camerapermissionstext"),
+      bundlePrefs.getString("camerapermissionstext2"),
+      bundlePrefs.getString("camerapermissionsdisablelabel"),
+      bundlePrefs.getString("camerapermissionsdisabledescription"),
     ]);
     appendSearchKeywords("microphoneSettingsButton", [
       bundlePrefs.getString("microphonepermissionstitle"),
-      bundlePrefs.getString("microphonepermissionstext"),
+      bundlePrefs.getString("microphonepermissionstext2"),
+      bundlePrefs.getString("microphonepermissionsdisablelabel"),
+      bundlePrefs.getString("microphonepermissionsdisabledescription"),
     ]);
     appendSearchKeywords("addonExceptions", [
       bundlePrefs.getString("addons_permissions_title2"),
@@ -894,7 +902,9 @@ var gPrivacyPane = {
     let bundlePreferences = document.getElementById("bundlePreferences");
     let params = { permissionType: "geo" };
     params.windowTitle = bundlePreferences.getString("locationpermissionstitle");
-    params.introText = bundlePreferences.getString("locationpermissionstext");
+    params.introText = bundlePreferences.getString("locationpermissionstext2");
+    params.disablePermissionsLabel = bundlePreferences.getString("locationpermissionsdisablelabel");
+    params.disablePermissionsDescription = bundlePreferences.getString("locationpermissionsdisabledescription");
 
     gSubDialog.open("chrome://browser/content/preferences/sitePermissions.xul",
       "resizable=yes", params);
@@ -910,7 +920,9 @@ var gPrivacyPane = {
     let bundlePreferences = document.getElementById("bundlePreferences");
     let params = { permissionType: "camera" };
     params.windowTitle = bundlePreferences.getString("camerapermissionstitle");
-    params.introText = bundlePreferences.getString("camerapermissionstext");
+    params.introText = bundlePreferences.getString("camerapermissionstext2");
+    params.disablePermissionsLabel = bundlePreferences.getString("camerapermissionsdisablelabel");
+    params.disablePermissionsDescription = bundlePreferences.getString("camerapermissionsdisabledescription");
 
     gSubDialog.open("chrome://browser/content/preferences/sitePermissions.xul",
       "resizable=yes", params);
@@ -926,7 +938,9 @@ var gPrivacyPane = {
     let bundlePreferences = document.getElementById("bundlePreferences");
     let params = { permissionType: "microphone" };
     params.windowTitle = bundlePreferences.getString("microphonepermissionstitle");
-    params.introText = bundlePreferences.getString("microphonepermissionstext");
+    params.introText = bundlePreferences.getString("microphonepermissionstext2");
+    params.disablePermissionsLabel = bundlePreferences.getString("microphonepermissionsdisablelabel");
+    params.disablePermissionsDescription = bundlePreferences.getString("microphonepermissionsdisabledescription");
 
     gSubDialog.open("chrome://browser/content/preferences/sitePermissions.xul",
       "resizable=yes", params);
@@ -942,7 +956,9 @@ var gPrivacyPane = {
     let bundlePreferences = document.getElementById("bundlePreferences");
     let params = { permissionType: "desktop-notification" };
     params.windowTitle = bundlePreferences.getString("notificationspermissionstitle2");
-    params.introText = bundlePreferences.getString("notificationspermissionstext5");
+    params.introText = bundlePreferences.getString("notificationspermissionstext6");
+    params.disablePermissionsLabel = bundlePreferences.getString("notificationspermissionsdisablelabel");
+    params.disablePermissionsDescription = bundlePreferences.getString("notificationspermissionsdisabledescription");
 
     gSubDialog.open("chrome://browser/content/preferences/sitePermissions.xul",
       "resizable=yes", params);
