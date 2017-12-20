@@ -35,7 +35,6 @@ UNIFIED_SOURCES += [
 if os_win:
     SOURCES += [
         'src/base/condition_variable_win.cc',
-        'src/base/cpu.cc',
         'src/base/file_util_win.cc',
         'src/base/lock_impl_win.cc',
         'src/base/message_pump_win.cc',
