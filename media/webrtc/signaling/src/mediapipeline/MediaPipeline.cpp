@@ -2172,7 +2172,15 @@ public:
     , mConduit(aConduit)
     , mSource(mTrack->GetInputStream()->AsSourceStream())
     , mTrackId(mTrack->GetInputTrackId())
-    , mRate(mSource ? mSource->GraphRate() : 0)
+    // AudioSession conduit only supports 16, 32, 44.1 and 48kHz
+    // This is an artificial limitation, it would however require more changes
+    // to support any rates.
+    // If the sampling rate is not-supported, we will use 48kHz instead.
+    , mRate(mSource ? (static_cast<AudioSessionConduit*>(mConduit.get())
+                           ->IsSamplingFreqSupported(mSource->GraphRate())
+                         ? mSource->GraphRate()
+                         : WEBRTC_MAX_SAMPLE_RATE)
+                    : WEBRTC_MAX_SAMPLE_RATE)
     , mTaskQueue(
         new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
                           "AudioPipelineListener"))
