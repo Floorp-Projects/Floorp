@@ -423,7 +423,7 @@ void
 WaylandShmPool::SetImageDataFromPool(class WaylandShmPool* aSourcePool,
                                      int aImageDataSize)
 {
-  MOZ_ASSERT(mAllocatedSize <= aImageDataSize, "WaylandShmPool overflows!");
+  MOZ_ASSERT(mAllocatedSize >= aImageDataSize, "WaylandShmPool overflows!");
   memcpy(mImageData, aSourcePool->GetImageData(), aImageDataSize);
 }
 
