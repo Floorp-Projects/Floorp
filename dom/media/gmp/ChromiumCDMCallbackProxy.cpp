@@ -132,13 +132,13 @@ ChromiumCDMCallbackProxy::SessionKeysChange(const nsCString& aSessionId,
 {
   bool keyStatusesChange = false;
   {
-    CDMCaps::AutoLock caps(mProxy->Capabilites());
+    auto caps = mProxy->Capabilites().Lock();
     for (const auto& keyInfo : aKeysInfo) {
       keyStatusesChange |=
-        caps.SetKeyStatus(keyInfo.mKeyId(),
-                          NS_ConvertUTF8toUTF16(aSessionId),
-                          dom::Optional<dom::MediaKeyStatus>(
-                            ToDOMMediaKeyStatus(keyInfo.mStatus())));
+        caps->SetKeyStatus(keyInfo.mKeyId(),
+                           NS_ConvertUTF8toUTF16(aSessionId),
+                           dom::Optional<dom::MediaKeyStatus>(
+                             ToDOMMediaKeyStatus(keyInfo.mStatus())));
     }
   }
   if (keyStatusesChange) {
