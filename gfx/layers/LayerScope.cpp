@@ -373,8 +373,8 @@ LayerScopeManager gLayerScopeManager;
 template<typename T>
 static void DumpRect(T* aPacketRect, const Rect& aRect)
 {
-    aPacketRect->set_x(aRect.x);
-    aPacketRect->set_y(aRect.y);
+    aPacketRect->set_x(aRect.X());
+    aPacketRect->set_y(aRect.Y());
     aPacketRect->set_w(aRect.Width());
     aPacketRect->set_h(aRect.Height());
 }

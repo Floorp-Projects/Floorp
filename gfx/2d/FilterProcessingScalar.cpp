@@ -40,10 +40,10 @@ ApplyMorphologyHorizontal_Scalar(uint8_t* aSourceData, int32_t aSourceStride,
                 Operator == MORPHOLOGY_OPERATOR_DILATE,
                 "unexpected morphology operator");
 
-  for (int32_t y = aDestRect.y; y < aDestRect.YMost(); y++) {
-    int32_t startX = aDestRect.x - aRadius;
-    int32_t endX = aDestRect.x + aRadius;
-    for (int32_t x = aDestRect.x; x < aDestRect.XMost(); x++, startX++, endX++) {
+  for (int32_t y = aDestRect.Y(); y < aDestRect.YMost(); y++) {
+    int32_t startX = aDestRect.X() - aRadius;
+    int32_t endX = aDestRect.X() + aRadius;
+    for (int32_t x = aDestRect.X(); x < aDestRect.XMost(); x++, startX++, endX++) {
       int32_t sourceIndex = y * aSourceStride + 4 * startX;
       uint8_t u[4];
       for (size_t i = 0; i < 4; i++) {
@@ -92,10 +92,10 @@ static void ApplyMorphologyVertical_Scalar(uint8_t* aSourceData, int32_t aSource
                 Operator == MORPHOLOGY_OPERATOR_DILATE,
                 "unexpected morphology operator");
 
-  int32_t startY = aDestRect.y - aRadius;
-  int32_t endY = aDestRect.y + aRadius;
-  for (int32_t y = aDestRect.y; y < aDestRect.YMost(); y++, startY++, endY++) {
-    for (int32_t x = aDestRect.x; x < aDestRect.XMost(); x++) {
+  int32_t startY = aDestRect.Y() - aRadius;
+  int32_t endY = aDestRect.Y() + aRadius;
+  for (int32_t y = aDestRect.Y(); y < aDestRect.YMost(); y++, startY++, endY++) {
+    for (int32_t x = aDestRect.X(); x < aDestRect.XMost(); x++) {
       int32_t sourceIndex = startY * aSourceStride + 4 * x;
       uint8_t u[4];
       for (size_t i = 0; i < 4; i++) {

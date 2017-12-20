@@ -20,13 +20,13 @@ namespace gfx {
 
 inline Rect ToRect(const gfxRect &aRect)
 {
-  return Rect(Float(aRect.x), Float(aRect.y),
+  return Rect(Float(aRect.X()), Float(aRect.Y()),
               Float(aRect.Width()), Float(aRect.Height()));
 }
 
 inline RectDouble ToRectDouble(const gfxRect &aRect)
 {
-  return RectDouble(aRect.x, aRect.y, aRect.Width(), aRect.Height());
+  return RectDouble(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
 }
 
 inline Matrix ToMatrix(const gfxMatrix &aMatrix)
@@ -63,17 +63,17 @@ inline gfxSize ThebesSize(const Size &aSize)
 
 inline gfxRect ThebesRect(const Rect &aRect)
 {
-  return gfxRect(aRect.x, aRect.y, aRect.Width(), aRect.Height());
+  return gfxRect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
 }
 
 inline gfxRect ThebesRect(const IntRect &aRect)
 {
-  return gfxRect(aRect.x, aRect.y, aRect.Width(), aRect.Height());
+  return gfxRect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
 }
 
 inline gfxRect ThebesRect(const RectDouble &aRect)
 {
-  return gfxRect(aRect.x, aRect.y, aRect.Width(), aRect.Height());
+  return gfxRect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
 }
 
 inline gfxImageFormat SurfaceFormatToImageFormat(SurfaceFormat aFormat)

@@ -225,8 +225,6 @@ protected:
   // Update the principal for the resource. Main thread only.
   void UpdatePrincipal();
 
-  int64_t GetOffset() const;
-
   // Parses 'Content-Range' header and returns results via parameters.
   // Returns error if header is not available, values are not parse-able or
   // values are out of range.
@@ -256,9 +254,6 @@ protected:
   RefPtr<Listener> mListener;
   // A mono-increasing integer to uniquely identify the channel we are loading.
   uint32_t mLoadID = 0;
-  // Used by the cache to store the offset to seek to when we are resumed.
-  // -1 means no seek initiated by the cache is waiting.
-  int64_t mPendingSeekOffset = -1;
   bool mIsLiveStream = false;
 
   // Any thread access

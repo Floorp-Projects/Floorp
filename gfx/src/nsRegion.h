@@ -56,8 +56,8 @@ public:
 
   nsRegion () { pixman_region32_init(&mImpl); }
   MOZ_IMPLICIT nsRegion (const nsRect& aRect) { pixman_region32_init_rect(&mImpl,
-                                                                          aRect.x,
-                                                                          aRect.y,
+                                                                          aRect.X(),
+                                                                          aRect.Y(),
                                                                           aRect.Width(),
                                                                           aRect.Height()); }
   explicit nsRegion (mozilla::gfx::ArrayView<pixman_box32_t> aRects)
@@ -121,7 +121,7 @@ public:
   }
   nsRegion& And(const nsRegion& aRegion, const nsRect& aRect)
   {
-    pixman_region32_intersect_rect(&mImpl, aRegion.Impl(), aRect.x, aRect.y, aRect.Width(), aRect.Height());
+    pixman_region32_intersect_rect(&mImpl, aRegion.Impl(), aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
     return *this;
   }
   nsRegion& And(const nsRect& aRect1, const nsRect& aRect2)
@@ -147,7 +147,7 @@ public:
   }
   nsRegion& Or(const nsRegion& aRegion, const nsRect& aRect)
   {
-    pixman_region32_union_rect(&mImpl, aRegion.Impl(), aRect.x, aRect.y, aRect.Width(), aRect.Height());
+    pixman_region32_union_rect(&mImpl, aRegion.Impl(), aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
     return *this;
   }
   nsRegion& Or(const nsRect& aRect, const nsRegion& aRegion)
@@ -794,11 +794,11 @@ private:
 
   static nsRect ToRect(const Rect& aRect)
   {
-    return nsRect (aRect.x, aRect.y, aRect.Width(), aRect.Height());
+    return nsRect (aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
   }
   static Rect FromRect(const nsRect& aRect)
   {
-    return Rect (aRect.x, aRect.y, aRect.Width(), aRect.Height());
+    return Rect (aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
   }
 
   Derived& This()

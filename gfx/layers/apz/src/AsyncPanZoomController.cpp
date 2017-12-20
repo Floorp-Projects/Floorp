@@ -1913,7 +1913,7 @@ AsyncPanZoomController::GetKeyboardDestination(const KeyboardScrollAction& aActi
       if (aAction.mForward) {
         scrollDestination.y = scrollRect.YMost();
       } else {
-        scrollDestination.y = scrollRect.y;
+        scrollDestination.y = scrollRect.Y();
       }
       break;
     }
@@ -3251,8 +3251,8 @@ const ScreenMargin AsyncPanZoomController::CalculatePendingDisplayPort(
     ToString(aVelocity).c_str(), paintFactor);
 
   CSSMargin cssMargins;
-  cssMargins.left = -displayPort.x;
-  cssMargins.top = -displayPort.y;
+  cssMargins.left = -displayPort.X();
+  cssMargins.top = -displayPort.Y();
   cssMargins.right = displayPort.Width() - compositionSize.width - cssMargins.left;
   cssMargins.bottom = displayPort.Height() - compositionSize.height - cssMargins.top;
 
@@ -4135,21 +4135,19 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
 
     // Vertically center the zoomed element in the screen.
     if (!zoomOut && (sizeAfterZoom.height > aRect.Height())) {
-      aRect.y -= (sizeAfterZoom.height - aRect.Height()) * 0.5f;
-      if (aRect.y < 0.0f) {
-        aRect.y = 0.0f;
+      aRect.MoveByY(-(sizeAfterZoom.height - aRect.Height()) * 0.5f);
+      if (aRect.Y() < 0.0f) {
+        aRect.MoveToY(0.0f);
       }
     }
 
     // If either of these conditions are met, the page will be
     // overscrolled after zoomed
-    if (aRect.y + sizeAfterZoom.height > cssPageRect.Height()) {
-      aRect.y = cssPageRect.Height() - sizeAfterZoom.height;
-      aRect.y = aRect.y > 0 ? aRect.y : 0;
+    if (aRect.Y() + sizeAfterZoom.height > cssPageRect.Height()) {
+      aRect.MoveToY(std::max(0.f, cssPageRect.Height() - sizeAfterZoom.height));
     }
-    if (aRect.x + sizeAfterZoom.width > cssPageRect.Width()) {
-      aRect.x = cssPageRect.Width() - sizeAfterZoom.width;
-      aRect.x = aRect.x > 0 ? aRect.x : 0;
+    if (aRect.X() + sizeAfterZoom.width > cssPageRect.Width()) {
+      aRect.MoveToX(std::max(0.f, cssPageRect.Width() - sizeAfterZoom.width));
     }
 
     endZoomToMetrics.SetScrollOffset(aRect.TopLeft());
