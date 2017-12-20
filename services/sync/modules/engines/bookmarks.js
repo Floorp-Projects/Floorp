@@ -4,7 +4,8 @@
 
 this.EXPORTED_SYMBOLS = ["BookmarksEngine", "PlacesItem", "Bookmark",
                          "BookmarkFolder", "BookmarkQuery",
-                         "Livemark", "BookmarkSeparator"];
+                         "Livemark", "BookmarkSeparator",
+                         "BufferedBookmarksEngine"];
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
@@ -18,23 +19,26 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "BookmarkValidator",
-                                  "resource://services-sync/bookmark_validator.js");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  SyncedBookmarksMirror: "resource://gre/modules/SyncedBookmarksMirror.jsm",
+  BookmarkValidator: "resource://services-sync/bookmark_validator.js",
+  OS: "resource://gre/modules/osfile.jsm",
+  PlacesBackups: "resource://gre/modules/PlacesBackups.jsm",
+  PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  Resource: "resource://services-sync/resource.js",
+});
+
 XPCOMUtils.defineLazyGetter(this, "PlacesBundle", () => {
   return Services.strings.createBundle("chrome://places/locale/places.properties");
 });
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-                                  "resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesSyncUtils",
-                                  "resource://gre/modules/PlacesSyncUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesBackups",
-                                  "resource://gre/modules/PlacesBackups.jsm");
 
-const ANNOS_TO_TRACK = [PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO,
-                        PlacesSyncUtils.bookmarks.SIDEBAR_ANNO,
-                        PlacesUtils.LMANNO_FEEDURI, PlacesUtils.LMANNO_SITEURI];
+XPCOMUtils.defineLazyGetter(this, "ANNOS_TO_TRACK", () => [
+  PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO,
+  PlacesSyncUtils.bookmarks.SIDEBAR_ANNO, PlacesUtils.LMANNO_FEEDURI,
+  PlacesUtils.LMANNO_SITEURI,
+]);
 
-const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 const FOLDER_SORTINDEX = 1000000;
 const {
   SOURCE_SYNC,
@@ -42,10 +46,6 @@ const {
   SOURCE_IMPORT_REPLACE,
   SOURCE_SYNC_REPARENT_REMOVED_FOLDER_CHILDREN,
 } = Ci.nsINavBookmarksService;
-
-const ORGANIZERQUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
-const ALLBOOKMARKS_ANNO = "AllBookmarks";
-const MOBILE_ANNO = "MobileBookmarks";
 
 // Roots that should be deleted from the server, instead of applied locally.
 // This matches `AndroidBrowserBookmarksRepositorySession::forbiddenGUID`,
@@ -273,19 +273,123 @@ BookmarkSeparator.prototype = {
 
 Utils.deferGetSet(BookmarkSeparator, "cleartext", "pos");
 
-this.BookmarksEngine = function BookmarksEngine(service) {
+/**
+ * The rest of this file implements two different bookmarks engines and stores.
+ * The `services.sync.engine.bookmarks.buffer` pref controls which one we use.
+ * `BaseBookmarksEngine` and `BaseBookmarksStore` define a handful of methods
+ * shared between the two implementations.
+ *
+ * `BookmarksEngine` and `BookmarksStore` pull locally changed IDs before
+ * syncing, examine every incoming record, use the default record-level
+ * reconciliation to resolve merge conflicts, and update records in Places
+ * using public APIs. This is similar to how the other sync engines work.
+ *
+ * Unfortunately, this general approach doesn't serve bookmark sync well.
+ * Bookmarks form a tree locally, but they're stored as opaque, encrypted, and
+ * unordered records on the server. The records are interdependent, with a
+ * set of constraints: each parent must know the IDs and order of its children,
+ * and a child can't appear in multiple parents.
+ *
+ * This has two important implications.
+ *
+ * First, some changes require us to upload multiple records. For example,
+ * moving a bookmark into a different folder uploads the bookmark, old folder,
+ * and new folder.
+ *
+ * Second, conflict resolution, like adding a bookmark to a folder on one
+ * device, and moving a different bookmark out of the same folder on a different
+ * device, must account for the tree structure. Otherwise, we risk uploading an
+ * incomplete tree, and confuse other devices that try to sync.
+ *
+ * Historically, the lack of durable change tracking and atomic uploads meant
+ * that we'd miss these changes entirely, or leave the server in an inconsistent
+ * state after a partial sync. Another device would then sync, download and
+ * apply the partial state directly to Places, and upload its changes. This
+ * could easily result in Sync scrambling bookmarks on both devices, and user
+ * intervention to manually undo the damage would make things worse.
+ *
+ * `BufferedBookmarksEngine` and `BufferedBookmarksStore` mitigate this by
+ * mirroring incoming bookmarks in a separate database, constructing trees from
+ * the local and remote bookmarks, and merging the two trees into a single
+ * consistent tree that accounts for every bookmark. For more information about
+ * merging, please see the explanation above `SyncedBookmarksMirror`.
+ */
+function BaseBookmarksEngine(service) {
   SyncEngine.call(this, "Bookmarks", service);
-};
-BookmarksEngine.prototype = {
+}
+BaseBookmarksEngine.prototype = {
   __proto__: SyncEngine.prototype,
   _recordObj: PlacesItem,
-  _storeObj: BookmarksStore,
   _trackerObj: BookmarksTracker,
   version: 2,
   _defaultSort: "index",
 
   syncPriority: 4,
   allowSkippedRecord: false,
+
+  async _syncFinish() {
+    await SyncEngine.prototype._syncFinish.call(this);
+    await PlacesSyncUtils.bookmarks.ensureMobileQuery();
+  },
+
+  async _createRecord(id) {
+    if (this._modified.isTombstone(id)) {
+      // If we already know a changed item is a tombstone, just create the
+      // record without dipping into Places.
+      return this._createTombstone(id);
+    }
+    let record = await SyncEngine.prototype._createRecord.call(this, id);
+    if (record.deleted) {
+      // Make sure deleted items are marked as tombstones. We do this here
+      // in addition to the `isTombstone` call above because it's possible
+      // a changed bookmark might be deleted during a sync (bug 1313967).
+      this._modified.setTombstone(record.id);
+    }
+    return record;
+  },
+
+  async pullAllChanges() {
+    return this.pullNewChanges();
+  },
+
+  async trackRemainingChanges() {
+    let changes = this._modified.changes;
+    await PlacesSyncUtils.bookmarks.pushChanges(changes);
+  },
+
+  _deleteId(id) {
+    this._noteDeletedId(id);
+  },
+
+  async _resetClient() {
+    await super._resetClient();
+    await PlacesSyncUtils.bookmarks.reset();
+  },
+
+  // Cleans up the Places root, reading list items (ignored in bug 762118,
+  // removed in bug 1155684), and pinned sites.
+  _shouldDeleteRemotely(incomingItem) {
+    return FORBIDDEN_INCOMING_IDS.includes(incomingItem.id) ||
+           FORBIDDEN_INCOMING_PARENT_IDS.includes(incomingItem.parentid);
+  },
+
+  getValidator() {
+    return new BookmarkValidator();
+  }
+};
+
+/**
+ * The original bookmarks engine. Uses an in-memory GUID map for deduping, and
+ * the default implementation for reconciling changes. Handles child ordering
+ * and deletions at the end of a sync.
+ */
+this.BookmarksEngine = function BookmarksEngine(service) {
+  BaseBookmarksEngine.apply(this, arguments);
+};
+
+BookmarksEngine.prototype = {
+  __proto__: BaseBookmarksEngine.prototype,
+  _storeObj: BookmarksStore,
 
   emptyChangeset() {
     return new BookmarksChangeset();
@@ -522,33 +626,20 @@ BookmarksEngine.prototype = {
     this._store._childrenToOrder = {};
   },
 
-  async _syncFinish() {
-    await SyncEngine.prototype._syncFinish.call(this);
-    await PlacesSyncUtils.bookmarks.ensureMobileQuery();
-  },
-
   async _syncCleanup() {
     await SyncEngine.prototype._syncCleanup.call(this);
     delete this._guidMap;
   },
 
   async _createRecord(id) {
-    if (this._modified.isTombstone(id)) {
-      // If we already know a changed item is a tombstone, just create the
-      // record without dipping into Places.
-      return this._createTombstone(id);
+    let record = await super._createRecord(id);
+    if (record.deleted) {
+      return record;
     }
-    // Create the record as usual, but mark it as having dupes if necessary.
-    let record = await SyncEngine.prototype._createRecord.call(this, id);
+    // Mark the record as having dupes if necessary.
     let entry = await this._mapDupe(record);
     if (entry != null && entry.hasDupe) {
       record.hasDupe = true;
-    }
-    if (record.deleted) {
-      // Make sure deleted items are marked as tombstones. We do this here
-      // in addition to the `isTombstone` call above because it's possible
-      // a changed bookmark might be deleted during a sync (bug 1313967).
-      this._modified.setTombstone(record.id);
     }
     return record;
   },
@@ -569,26 +660,8 @@ BookmarksEngine.prototype = {
     return mapped ? mapped.toString() : mapped;
   },
 
-  async pullAllChanges() {
-    return this.pullNewChanges();
-  },
-
   async pullNewChanges() {
     return this._tracker.promiseChangedIDs();
-  },
-
-  async trackRemainingChanges() {
-    let changes = this._modified.changes;
-    await PlacesSyncUtils.bookmarks.pushChanges(changes);
-  },
-
-  _deleteId(id) {
-    this._noteDeletedId(id);
-  },
-
-  async _resetClient() {
-    await SyncEngine.prototype._resetClient.call(this);
-    await PlacesSyncUtils.bookmarks.reset();
   },
 
   // Called when _findDupe returns a dupe item and the engine has decided to
@@ -598,13 +671,6 @@ BookmarksEngine.prototype = {
                                                             incomingItem.id,
                                                             incomingItem.parentid);
     this._modified.insert(newChanges);
-  },
-
-  // Cleans up the Places root, reading list items (ignored in bug 762118,
-  // removed in bug 1155684), and pinned sites.
-  _shouldDeleteRemotely(incomingItem) {
-    return FORBIDDEN_INCOMING_IDS.includes(incomingItem.id) ||
-           FORBIDDEN_INCOMING_PARENT_IDS.includes(incomingItem.parentid);
   },
 
   beforeRecordDiscard(localRecord, remoteRecord, remoteIsNewer) {
@@ -629,18 +695,228 @@ BookmarksEngine.prototype = {
     this._log.debug("Recording children of " + localRecord.id, order);
     this._store._childrenToOrder[localRecord.id] = order;
   },
+};
 
-  getValidator() {
-    return new BookmarkValidator();
+/**
+ * The buffered bookmarks engine uses a different store that stages downloaded
+ * bookmarks in a separate database, instead of writing directly to Places. The
+ * buffer handles reconciliation, so we stub out `_reconcile`, and wait to pull
+ * changes until we're ready to upload.
+ */
+this.BufferedBookmarksEngine = function BufferedBookmarksEngine() {
+  BaseBookmarksEngine.apply(this, arguments);
+};
+
+BufferedBookmarksEngine.prototype = {
+  __proto__: BaseBookmarksEngine.prototype,
+  _storeObj: BufferedBookmarksStore,
+
+  async getLastSync() {
+    let mirror = await this._store.ensureOpenMirror();
+    return mirror.getCollectionHighWaterMark();
+  },
+
+  async setLastSync(lastSync) {
+    let mirror = await this._store.ensureOpenMirror();
+    await mirror.setCollectionLastModified(lastSync);
+    // Update the pref so that reverting to the original bookmarks engine
+    // doesn't download records we've already applied.
+    super.lastSync = lastSync;
+  },
+
+  get lastSync() {
+    throw new TypeError("Use getLastSync");
+  },
+
+  set lastSync(value) {
+    throw new TypeError("Use setLastSync");
+  },
+
+  emptyChangeset() {
+    return new BufferedBookmarksChangeset();
+  },
+
+  async _processIncoming(newitems) {
+    try {
+      await super._processIncoming(newitems);
+    } finally {
+      let buf = await this._store.ensureOpenMirror();
+      let recordsToUpload = await buf.apply({
+        remoteTimeSeconds: Resource.serverTime,
+      });
+      this._modified.replace(recordsToUpload);
+    }
+  },
+
+  async _reconcile(item) {
+    return true;
+  },
+
+  async _createRecord(id) {
+    if (this._needWeakUpload.has(id)) {
+      return this._store.createRecord(id, this.name);
+    }
+    let change = this._modified.changes[id];
+    if (!change) {
+      this._log.error("Creating record for item ${id} not in strong " +
+                      "changeset", { id });
+      throw new TypeError("Can't create record for unchanged item");
+    }
+    let record = this._recordFromCleartext(id, change.cleartext);
+    record.sortindex = await this._store._calculateIndex(record);
+    return record;
+  },
+
+  _recordFromCleartext(id, cleartext) {
+    let recordObj = getTypeObject(cleartext.type);
+    if (!recordObj) {
+      this._log.warn("Creating record for item ${id} with unknown type ${type}",
+                     { id, type: cleartext.type });
+      recordObj = PlacesItem;
+    }
+    let record = new recordObj(this.name, id);
+    record.cleartext = cleartext;
+    return record;
+  },
+
+  async pullChanges() {
+    return {};
+  },
+
+  /**
+   * Writes successfully uploaded records back to the mirror, so that the
+   * mirror matches the server. We update the mirror before updating Places,
+   * which has implications for interrupted syncs.
+   *
+   * 1. Sync interrupted during upload; server doesn't support atomic uploads.
+   *    We'll download and reapply everything that we uploaded before the
+   *    interruption. All locally changed items retain their change counters.
+   * 2. Sync interrupted during upload; atomic uploads enabled. The server
+   *    discards the batch. All changed local items retain their change
+   *    counters, so the next sync resumes cleanly.
+   * 3. Sync interrupted during upload; outgoing records can't fit in a single
+   *    batch. We'll download and reapply all records through the most recent
+   *    committed batch. This is a variation of (1).
+   * 4. Sync interrupted after we update the mirror, but before cleanup. The
+   *    mirror matches the server, but locally changed items retain their change
+   *    counters. Reuploading them on the next sync should be idempotent, though
+   *    unnecessary. If another client makes a conflicting remote change before
+   *    we sync again, we may incorrectly prefer the local state.
+   * 5. Sync completes successfully. We'll update the mirror, and reset the
+   *    change counters for all items.
+   */
+  async _onRecordsWritten(succeeded, failed, serverModifiedTime) {
+    let records = [];
+    for (let id of succeeded) {
+      let change = this._modified.changes[id];
+      if (!change) {
+        // TODO (Bug 1433178): Write weakly uploaded records back to the mirror.
+        this._log.info("Uploaded record not in strong changeset", id);
+        continue;
+      }
+      if (!change.synced) {
+        this._log.info("Record in strong changeset not uploaded", id);
+        continue;
+      }
+      let cleartext = change.cleartext;
+      if (!cleartext) {
+        this._log.error("Missing Sync record cleartext for ${id} in ${change}",
+                        { id, change });
+        throw new TypeError("Missing cleartext for uploaded Sync record");
+      }
+      let record = this._recordFromCleartext(id, cleartext);
+      record.modified = serverModifiedTime;
+      records.push(record);
+    }
+    let buf = await this._store.ensureOpenMirror();
+    await buf.store(records, { needsMerge: false });
+  },
+
+  async _resetClient() {
+    await super._resetClient();
+    let buf = await this._store.ensureOpenMirror();
+    await buf.reset();
+  },
+
+  async finalize() {
+    await super.finalize();
+    await this._store.finalize();
+  },
+};
+
+/**
+ * The only code shared between `BookmarksStore` and `BufferedBookmarksStore`
+ * is for creating Sync records from Places items. Everything else is
+ * different.
+ */
+function BaseBookmarksStore(name, engine) {
+  Store.call(this, name, engine);
+}
+
+BaseBookmarksStore.prototype = {
+  __proto__: Store.prototype,
+
+  // Create a record starting from the weave id (places guid)
+  async createRecord(id, collection) {
+    let item = await PlacesSyncUtils.bookmarks.fetch(id);
+    if (!item) { // deleted item
+      let record = new PlacesItem(collection, id);
+      record.deleted = true;
+      return record;
+    }
+
+    let recordObj = getTypeObject(item.kind);
+    if (!recordObj) {
+      this._log.warn("Unknown item type, cannot serialize: " + item.kind);
+      recordObj = PlacesItem;
+    }
+    let record = new recordObj(collection, id);
+    record.fromSyncBookmark(item);
+
+    record.sortindex = await this._calculateIndex(record);
+
+    return record;
+  },
+
+  async _calculateIndex(record) {
+    // Ensure folders have a very high sort index so they're not synced last.
+    if (record.type == "folder")
+      return FOLDER_SORTINDEX;
+
+    // For anything directly under the toolbar, give it a boost of more than an
+    // unvisited bookmark
+    let index = 0;
+    if (record.parentid == "toolbar")
+      index += 150;
+
+    // Add in the bookmark's frecency if we have something.
+    if (record.bmkUri != null) {
+      let frecency = await PlacesSyncUtils.history.fetchURLFrecency(record.bmkUri);
+      if (frecency != -1)
+        index += frecency;
+    }
+
+    return index;
+  },
+
+  async wipe() {
+    // Save a backup before clearing out all bookmarks.
+    await PlacesBackups.create(null, true);
+    await PlacesSyncUtils.bookmarks.wipe();
   }
 };
 
-function BookmarksStore(name, engine) {
-  Store.call(this, name, engine);
+/**
+ * The original store updates Places during the sync, using public methods.
+ * `BookmarksStore` implements all abstract `Store` methods, and behaves like
+ * the other stores.
+ */
+function BookmarksStore() {
+  BaseBookmarksStore.apply(this, arguments);
   this._itemsToDelete = new Set();
 }
 BookmarksStore.prototype = {
-  __proto__: Store.prototype,
+  __proto__: BaseBookmarksStore.prototype,
 
   async itemExists(id) {
     return (await this.idForGUID(id)) > 0;
@@ -777,29 +1053,6 @@ BookmarksStore.prototype = {
     this._itemsToDelete.clear();
   },
 
-  // Create a record starting from the weave id (places guid)
-  async createRecord(id, collection) {
-    let item = await PlacesSyncUtils.bookmarks.fetch(id);
-    if (!item) { // deleted item
-      let record = new PlacesItem(collection, id);
-      record.deleted = true;
-      return record;
-    }
-
-    let recordObj = getTypeObject(item.kind);
-    if (!recordObj) {
-      this._log.warn("Unknown item type, cannot serialize: " + item.kind);
-      recordObj = PlacesItem;
-    }
-    let record = new recordObj(collection, id);
-    record.fromSyncBookmark(item);
-
-    record.sortindex = await this._calculateIndex(record);
-
-    return record;
-  },
-
-
   async GUIDForId(id) {
     let guid = await PlacesUtils.promiseItemGuid(id);
     return PlacesSyncUtils.bookmarks.guidToRecordId(guid);
@@ -816,33 +1069,72 @@ BookmarksStore.prototype = {
     }
   },
 
-  async _calculateIndex(record) {
-    // Ensure folders have a very high sort index so they're not synced last.
-    if (record.type == "folder")
-      return FOLDER_SORTINDEX;
-
-    // For anything directly under the toolbar, give it a boost of more than an
-    // unvisited bookmark
-    let index = 0;
-    if (record.parentid == "toolbar")
-      index += 150;
-
-    // Add in the bookmark's frecency if we have something.
-    if (record.bmkUri != null) {
-      let frecency = await PlacesSyncUtils.history.fetchURLFrecency(record.bmkUri);
-      if (frecency != -1)
-        index += frecency;
-    }
-
-    return index;
-  },
-
   async wipe() {
     this.clearPendingDeletions();
-    // Save a backup before clearing out all bookmarks.
-    await PlacesBackups.create(null, true);
-    await PlacesSyncUtils.bookmarks.wipe();
+    await super.wipe();
   }
+};
+
+/**
+ * The buffered store delegates to the mirror for staging and applying
+ * records. Unlike `BookmarksStore`, `BufferedBookmarksStore` only
+ * implements `applyIncoming`, and `createRecord` via `BaseBookmarksStore`.
+ * These are the only two methods that `BufferedBookmarksEngine` calls during
+ * download and upload.
+ *
+ * The other `Store` methods intentionally remain abstract, so you can't use
+ * this store to create or update bookmarks in Places. All changes must go
+ * through the mirror, which takes care of merging and producing a valid tree.
+ */
+function BufferedBookmarksStore() {
+  BaseBookmarksStore.apply(this, arguments);
+}
+
+BufferedBookmarksStore.prototype = {
+  __proto__: BaseBookmarksStore.prototype,
+  _openMirrorPromise: null,
+
+  ensureOpenMirror() {
+    if (!this._openMirrorPromise) {
+      this._openMirrorPromise = this._openMirror().catch(err => {
+        // We may have failed to open the mirror temporarily; for example, if
+        // the database is locked. Clear the promise so that subsequent
+        // `ensureOpenMirror` calls can try to open the mirror again.
+        this._openMirrorPromise = null;
+        throw err;
+      });
+    }
+    return this._openMirrorPromise;
+  },
+
+  async _openMirror() {
+    let mirrorPath = OS.Path.join(OS.Constants.Path.profileDir, "weave",
+                                  "bookmarks.sqlite");
+    await OS.File.makeDir(OS.Path.dirname(mirrorPath), {
+      from: OS.Constants.Path.profileDir,
+    });
+
+    return SyncedBookmarksMirror.open({
+      path: mirrorPath,
+      recordTelemetryEvent: (object, method, value, extra) => {
+        this.engine.service.recordTelemetryEvent(object, method, value,
+                                                 extra);
+      },
+    });
+  },
+
+  async applyIncoming(record) {
+    let buf = await this.ensureOpenMirror();
+    await buf.store([record]);
+  },
+
+  async finalize() {
+    if (!this._openMirrorPromise) {
+      return;
+    }
+    let buf = await this._openMirrorPromise;
+    await buf.finalize();
+  },
 };
 
 // The bookmarks tracker is a special flower. Instead of listening for changes
@@ -853,7 +1145,6 @@ BookmarksStore.prototype = {
 function BookmarksTracker(name, engine) {
   this._batchDepth = 0;
   this._batchSawScoreIncrement = false;
-  this._migratedOldEntries = false;
   Tracker.call(this, name, engine);
 }
 BookmarksTracker.prototype = {
@@ -912,60 +1203,11 @@ BookmarksTracker.prototype = {
     throw new Error("Don't set initial changed bookmark IDs");
   },
 
-  // Migrates tracker entries from the old JSON-based tracker to Places. This
-  // is called the first time we start tracking changes.
-  async _migrateOldEntries() {
-    let existingIDs = await Utils.jsonLoad("changes/" + this.file, this);
-    if (existingIDs === null) {
-      // If the tracker file doesn't exist, we don't need to migrate, even if
-      // the engine is enabled. It's possible we're upgrading before the first
-      // sync. In the worst case, getting this wrong has the same effect as a
-      // restore: we'll reupload everything to the server.
-      this._log.debug("migrateOldEntries: Missing bookmarks tracker file; " +
-                      "skipping migration");
-      return null;
-    }
-
-    if (!this._needsMigration()) {
-      // We have a tracker file, but bookmark syncing is disabled, or this is
-      // the first sync. It's likely the tracker file is stale. Remove it and
-      // skip migration.
-      this._log.debug("migrateOldEntries: Bookmarks engine disabled or " +
-                      "first sync; skipping migration");
-      return Utils.jsonRemove("changes/" + this.file, this);
-    }
-
-    // At this point, we know the engine is enabled, we have a tracker file
-    // (though it may be empty), and we've synced before.
-    this._log.debug("migrateOldEntries: Migrating old tracker entries");
-    let entries = [];
-    for (let id in existingIDs) {
-      let change = existingIDs[id];
-      // Allow raw timestamps for backward-compatibility with changed IDs
-      // persisted before bug 1274496.
-      let timestamp = typeof change == "number" ? change : change.modified;
-      entries.push({
-        recordId: id,
-        modified: timestamp * 1000,
-      });
-    }
-    await PlacesSyncUtils.bookmarks.migrateOldTrackerEntries(entries);
-    return Utils.jsonRemove("changes/" + this.file, this);
-  },
-
-  _needsMigration() {
-    return this.engine && this.engineIsEnabled() && this.engine.lastSync > 0;
-  },
-
   observe: function observe(subject, topic, data) {
     Tracker.prototype.observe.call(this, subject, topic, data);
 
     switch (topic) {
       case "weave:engine:start-tracking":
-        if (!this._migratedOldEntries) {
-          this._migratedOldEntries = true;
-          Async.promiseSpinningly(this._migrateOldEntries());
-        }
         break;
       case "bookmarks-restore-begin":
         this._log.debug("Ignoring changes from importing bookmarks.");
@@ -1078,16 +1320,46 @@ BookmarksTracker.prototype = {
   onItemVisited() {}
 };
 
-class BookmarksChangeset extends Changeset {
-
-  getStatus(id) {
-    let change = this.changes[id];
-    if (!change) {
-      return PlacesUtils.bookmarks.SYNC_STATUS.UNKNOWN;
-    }
-    return change.status;
+/**
+ * A changeset that stores extra metadata in a change record for each ID. The
+ * engine updates this metadata when uploading Sync records, and writes it back
+ * to Places in `BaseBookmarksEngine#trackRemainingChanges`.
+ *
+ * The `synced` property on a change record means its corresponding item has
+ * been uploaded, and we should pretend it doesn't exist in the changeset.
+ */
+class BufferedBookmarksChangeset extends Changeset {
+  // Only `_reconcile` calls `getModifiedTimestamp` and `has`, and the buffered
+  // engine does its own reconciliation.
+  getModifiedTimestamp(id) {
+    throw new Error("Don't use timestamps to resolve bookmark conflicts");
   }
 
+  has(id) {
+    throw new Error("Don't use the changeset to resolve bookmark conflicts");
+  }
+
+  delete(id) {
+    let change = this.changes[id];
+    if (change) {
+      // Mark the change as synced without removing it from the set. We do this
+      // so that we can update Places in `trackRemainingChanges`.
+      change.synced = true;
+    }
+  }
+
+  ids() {
+    let results = new Set();
+    for (let id in this.changes) {
+      if (!this.changes[id].synced) {
+        results.add(id);
+      }
+    }
+    return [...results];
+  }
+}
+
+class BookmarksChangeset extends BufferedBookmarksChangeset {
   getModifiedTimestamp(id) {
     let change = this.changes[id];
     if (change) {
@@ -1111,25 +1383,6 @@ class BookmarksChangeset extends Changeset {
     if (change) {
       change.tombstone = true;
     }
-  }
-
-  delete(id) {
-    let change = this.changes[id];
-    if (change) {
-      // Mark the change as synced without removing it from the set. We do this
-      // so that we can update Places in `trackRemainingChanges`.
-      change.synced = true;
-    }
-  }
-
-  ids() {
-    let results = new Set();
-    for (let id in this.changes) {
-      if (!this.changes[id].synced) {
-        results.add(id);
-      }
-    }
-    return [...results];
   }
 
   isTombstone(id) {
