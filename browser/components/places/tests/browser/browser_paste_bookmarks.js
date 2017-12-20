@@ -24,7 +24,7 @@ add_task(async function setup() {
 
 add_task(async function paste() {
   info("Selecting BookmarksToolbar in the left pane");
-  PlacesOrganizer.selectLeftPaneQuery("BookmarksToolbar");
+  PlacesOrganizer.selectLeftPaneBuiltIn("BookmarksToolbar");
 
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
@@ -40,7 +40,7 @@ add_task(async function paste() {
   }, PlacesUtils.TYPE_X_MOZ_PLACE);
 
   info("Selecting UnfiledBookmarks in the left pane");
-  PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
+  PlacesOrganizer.selectLeftPaneBuiltIn("UnfiledBookmarks");
 
   info("Pasting clipboard");
   await ContentTree.view.controller.paste();
@@ -60,7 +60,7 @@ add_task(async function paste() {
 
 add_task(async function paste_check_indexes() {
   info("Selecting BookmarksToolbar in the left pane");
-  PlacesOrganizer.selectLeftPaneQuery("BookmarksToolbar");
+  PlacesOrganizer.selectLeftPaneBuiltIn("BookmarksToolbar");
 
   let copyChildren = [];
   let targetChildren = [];
@@ -98,7 +98,7 @@ add_task(async function paste_check_indexes() {
   }, PlacesUtils.TYPE_X_MOZ_PLACE);
 
   info("Selecting UnfiledBookmarks in the left pane");
-  PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
+  PlacesOrganizer.selectLeftPaneBuiltIn("UnfiledBookmarks");
 
   ContentTree.view.selectItems([targetBookmarks[4].guid]);
 
@@ -137,7 +137,7 @@ add_task(async function paste_check_indexes() {
 
 add_task(async function paste_check_indexes_same_folder() {
   info("Selecting BookmarksToolbar in the left pane");
-  PlacesOrganizer.selectLeftPaneQuery("BookmarksToolbar");
+  PlacesOrganizer.selectLeftPaneBuiltIn("BookmarksToolbar");
 
   let copyChildren = [];
   for (let i = 0; i < 10; i++) {
@@ -224,7 +224,7 @@ add_task(async function paste_from_different_instance() {
   Services.clipboard.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
 
   info("Selecting UnfiledBookmarks in the left pane");
-  PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
+  PlacesOrganizer.selectLeftPaneBuiltIn("UnfiledBookmarks");
 
   info("Pasting clipboard");
   await ContentTree.view.controller.paste();

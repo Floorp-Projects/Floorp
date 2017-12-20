@@ -46,7 +46,7 @@ add_task(async function() {
   await PlacesOrganizer._places.controller.paste();
 
   // re-focus the history again
-  PlacesOrganizer.selectLeftPaneQuery("History");
+  PlacesOrganizer.selectLeftPaneBuiltIn("History");
   let histContainer = PlacesOrganizer._places.selectedNode;
   PlacesUtils.asContainer(histContainer);
   histContainer.containerOpen = true;
@@ -67,7 +67,7 @@ add_task(async function() {
 
   // is the bookmark visible in the UI?
   // get the Unsorted Bookmarks node
-  PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
+  PlacesOrganizer.selectLeftPaneBuiltIn("UnfiledBookmarks");
 
   // now we can see what is in the ContentTree tree
   let unsortedNode = ContentTree.view.view.nodeForTreeIndex(1);
@@ -87,7 +87,7 @@ add_task(async function() {
 });
 
 function focusTag(PlacesOrganizer) {
-  PlacesOrganizer.selectLeftPaneQuery("Tags");
+  PlacesOrganizer.selectLeftPaneBuiltIn("Tags");
   let tags = PlacesOrganizer._places.selectedNode;
   tags.containerOpen = true;
   let fooTag = tags.getChild(0);
@@ -100,7 +100,7 @@ function focusTag(PlacesOrganizer) {
 
 function copyHistNode(PlacesOrganizer, ContentTree) {
   // focus the history object
-  PlacesOrganizer.selectLeftPaneQuery("History");
+  PlacesOrganizer.selectLeftPaneBuiltIn("History");
   let histContainer = PlacesOrganizer._places.selectedNode;
   PlacesUtils.asContainer(histContainer);
   histContainer.containerOpen = true;

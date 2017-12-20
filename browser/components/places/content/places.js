@@ -41,7 +41,7 @@ var PlacesOrganizer = {
     this._places.place = "place:excludeItems=1&expandQueries=0&folder=" + leftPaneRoot;
   },
 
-  selectLeftPaneQuery: function PO_selectLeftPaneQuery(aQueryName) {
+  selectLeftPaneBuiltIn(aQueryName) {
     var itemId = PlacesUIUtils.leftPaneQueries[aQueryName];
     this._places.selectItems([itemId]);
     // Forcefully expand all-bookmarks
@@ -77,7 +77,7 @@ var PlacesOrganizer = {
             if (container.substr(0, 6) == "place:")
               this._places.selectPlaceURI(container);
             else if (container in PlacesUIUtils.leftPaneQueries)
-              this.selectLeftPaneQuery(container);
+              this.selectLeftPaneBuiltIn(container);
             else
               throw new Error("Invalid container found: " + container);
             break;
