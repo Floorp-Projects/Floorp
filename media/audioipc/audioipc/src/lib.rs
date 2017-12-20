@@ -116,17 +116,9 @@ impl<'a> AsRawFd for &'a AutoCloseFd {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-fn get_temp_path(name: &str) -> PathBuf {
-    let mut path = temp_dir();
-    path.push(name);
-    path
-}
-
-pub fn get_uds_path(id: u64) -> PathBuf {
-    get_temp_path(&format!("cubeb-sock-{}", id))
-}
-
 pub fn get_shm_path(dir: &str) -> PathBuf {
     let pid = unsafe { libc::getpid() };
-    get_temp_path(&format!("cubeb-shm-{}-{}", pid, dir))
+    let mut temp = temp_dir();
+    temp.push(&format!("cubeb-shm-{}-{}", pid, dir));
+    temp
 }
