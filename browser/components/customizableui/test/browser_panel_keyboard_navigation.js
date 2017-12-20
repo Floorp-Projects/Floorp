@@ -142,3 +142,39 @@ add_task(async function testLeftRightKeys() {
   await promise;
 });
 
+add_task(async function testTabKey() {
+  let promise = promisePanelShown(window);
+  PanelUI.show();
+  await promise;
+
+  let buttons = gHelperInstance._getNavigableElements(PanelUI.mainView);
+
+  for (let button of buttons) {
+    if (button.disabled)
+      continue;
+    EventUtils.synthesizeKey("KEY_Tab", { code: "Tab" });
+    Assert.equal(document.commandDispatcher.focusedElement, button,
+      "The correct button should be focused after tabbing");
+  }
+
+  EventUtils.synthesizeKey("KEY_Tab", { code: "Tab" });
+  Assert.equal(document.commandDispatcher.focusedElement, buttons[0],
+    "Pressing tab should cycle around and select the first button again");
+
+  for (let i = buttons.length - 1; i >= 0; --i) {
+    let button = buttons[i];
+    if (button.disabled)
+      continue;
+    EventUtils.synthesizeKey("Tab", { code: "Tab", shiftKey: true });
+    Assert.equal(document.commandDispatcher.focusedElement, button,
+      "The correct button should be focused after shift + tabbing");
+  }
+
+  EventUtils.synthesizeKey("KEY_Tab", { code: "Tab", shiftKey: true });
+  Assert.equal(document.commandDispatcher.focusedElement, buttons[buttons.length - 1],
+    "Pressing shift + tab should cycle around and select the last button again");
+
+  promise = promisePanelHidden(window);
+  PanelUI.hide();
+  await promise;
+});
