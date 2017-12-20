@@ -62,9 +62,6 @@ $(list-json): $(call mkdir_deps,$(SEARCHPLUGINS_PATH)) $(if $(IS_LANGUAGE_REPACK
 	$(call py_action,generate_searchjson,$(srcdir)/search/list.json $(AB_CD) $(list-json))
 searchplugins:: $(list-json)
 
-$(DIST)/branding:
-	$(NSINSTALL) -D $@
-
 DEFINES += -DBOOKMARKS_INCLUDE_DIR=$(dir $(call MERGE_FILE,profile/bookmarks.inc))
 
 libs-%: AB_CD=$*
