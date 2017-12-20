@@ -20,5 +20,5 @@ serde = "1.*.*"
 serde_derive = "1.*.*"
 
 [dependencies.error-chain]
-version = "0.10.0"
+version = "0.11.0"
 default-features = false
