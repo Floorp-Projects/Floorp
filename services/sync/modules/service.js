@@ -39,7 +39,6 @@ Cu.import("resource://services-sync/util.js");
 function getEngineModules() {
   let result = {
     Addons: {module: "addons.js", symbol: "AddonsEngine"},
-    Bookmarks: {module: "bookmarks.js", symbol: "BookmarksEngine"},
     Form: {module: "forms.js", symbol: "FormEngine"},
     History: {module: "history.js", symbol: "HistoryEngine"},
     Password: {module: "passwords.js", symbol: "PasswordEngine"},
@@ -57,6 +56,17 @@ function getEngineModules() {
     result.CreditCards = {
       module: "resource://formautofill/FormAutofillSync.jsm",
       symbol: "CreditCardsEngine",
+    };
+  }
+  if (Svc.Prefs.get("engine.bookmarks.buffer", false)) {
+    result.Bookmarks = {
+      module: "bookmarks.js",
+      symbol: "BufferedBookmarksEngine",
+    };
+  } else {
+    result.Bookmarks = {
+      module: "bookmarks.js",
+      symbol: "BookmarksEngine",
     };
   }
   return result;
