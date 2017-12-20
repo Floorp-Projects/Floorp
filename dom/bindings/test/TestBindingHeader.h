@@ -971,6 +971,9 @@ public:
   void NeedsCallerTypeMethod(CallerType);
   bool NeedsCallerTypeAttr(CallerType);
   void SetNeedsCallerTypeAttr(bool, CallerType);
+  void NeedsNonSystemSubjectPrincipalMethod(nsIPrincipal*);
+  bool NeedsNonSystemSubjectPrincipalAttr(nsIPrincipal*);
+  void SetNeedsNonSystemSubjectPrincipalAttr(bool, nsIPrincipal*);
   void CeReactionsMethod();
   void CeReactionsMethodOverload();
   void CeReactionsMethodOverload(const nsAString&);
@@ -1466,6 +1469,9 @@ public:
   void NeedsCallerTypeMethod(CallerType);
   bool NeedsCallerTypeAttr(CallerType);
   void SetNeedsCallerTypeAttr(bool, CallerType);
+  void NeedsNonSystemSubjectPrincipalMethod(Maybe<nsIPrincipal*>);
+  bool NeedsNonSystemSubjectPrincipalAttr(Maybe<nsIPrincipal*>);
+  void SetNeedsNonSystemSubjectPrincipalAttr(bool, Maybe<nsIPrincipal*>);
 };
 
 class TestHTMLConstructorInterface : public nsGenericHTMLElement
