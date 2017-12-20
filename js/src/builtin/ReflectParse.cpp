@@ -1749,31 +1749,31 @@ AssignmentOperator
 ASTSerializer::aop(ParseNodeKind kind)
 {
     switch (kind) {
-      case PNK_ASSIGN:
+      case ParseNodeKind::PNK_ASSIGN:
         return AOP_ASSIGN;
-      case PNK_ADDASSIGN:
+      case ParseNodeKind::PNK_ADDASSIGN:
         return AOP_PLUS;
-      case PNK_SUBASSIGN:
+      case ParseNodeKind::PNK_SUBASSIGN:
         return AOP_MINUS;
-      case PNK_MULASSIGN:
+      case ParseNodeKind::PNK_MULASSIGN:
         return AOP_STAR;
-      case PNK_DIVASSIGN:
+      case ParseNodeKind::PNK_DIVASSIGN:
         return AOP_DIV;
-      case PNK_MODASSIGN:
+      case ParseNodeKind::PNK_MODASSIGN:
         return AOP_MOD;
-      case PNK_POWASSIGN:
+      case ParseNodeKind::PNK_POWASSIGN:
         return AOP_POW;
-      case PNK_LSHASSIGN:
+      case ParseNodeKind::PNK_LSHASSIGN:
         return AOP_LSH;
-      case PNK_RSHASSIGN:
+      case ParseNodeKind::PNK_RSHASSIGN:
         return AOP_RSH;
-      case PNK_URSHASSIGN:
+      case ParseNodeKind::PNK_URSHASSIGN:
         return AOP_URSH;
-      case PNK_BITORASSIGN:
+      case ParseNodeKind::PNK_BITORASSIGN:
         return AOP_BITOR;
-      case PNK_BITXORASSIGN:
+      case ParseNodeKind::PNK_BITXORASSIGN:
         return AOP_BITXOR;
-      case PNK_BITANDASSIGN:
+      case ParseNodeKind::PNK_BITANDASSIGN:
         return AOP_BITAND;
       default:
         return AOP_ERR;
@@ -1790,17 +1790,17 @@ ASTSerializer::unop(ParseNodeKind kind)
         return UNOP_TYPEOF;
 
     switch (kind) {
-      case PNK_AWAIT:
+      case ParseNodeKind::PNK_AWAIT:
         return UNOP_AWAIT;
-      case PNK_NEG:
+      case ParseNodeKind::PNK_NEG:
         return UNOP_NEG;
-      case PNK_POS:
+      case ParseNodeKind::PNK_POS:
         return UNOP_POS;
-      case PNK_NOT:
+      case ParseNodeKind::PNK_NOT:
         return UNOP_NOT;
-      case PNK_BITNOT:
+      case ParseNodeKind::PNK_BITNOT:
         return UNOP_BITNOT;
-      case PNK_VOID:
+      case ParseNodeKind::PNK_VOID:
         return UNOP_VOID;
       default:
         return UNOP_ERR;
@@ -1811,51 +1811,51 @@ BinaryOperator
 ASTSerializer::binop(ParseNodeKind kind)
 {
     switch (kind) {
-      case PNK_LSH:
+      case ParseNodeKind::PNK_LSH:
         return BINOP_LSH;
-      case PNK_RSH:
+      case ParseNodeKind::PNK_RSH:
         return BINOP_RSH;
-      case PNK_URSH:
+      case ParseNodeKind::PNK_URSH:
         return BINOP_URSH;
-      case PNK_LT:
+      case ParseNodeKind::PNK_LT:
         return BINOP_LT;
-      case PNK_LE:
+      case ParseNodeKind::PNK_LE:
         return BINOP_LE;
-      case PNK_GT:
+      case ParseNodeKind::PNK_GT:
         return BINOP_GT;
-      case PNK_GE:
+      case ParseNodeKind::PNK_GE:
         return BINOP_GE;
-      case PNK_EQ:
+      case ParseNodeKind::PNK_EQ:
         return BINOP_EQ;
-      case PNK_NE:
+      case ParseNodeKind::PNK_NE:
         return BINOP_NE;
-      case PNK_STRICTEQ:
+      case ParseNodeKind::PNK_STRICTEQ:
         return BINOP_STRICTEQ;
-      case PNK_STRICTNE:
+      case ParseNodeKind::PNK_STRICTNE:
         return BINOP_STRICTNE;
-      case PNK_ADD:
+      case ParseNodeKind::PNK_ADD:
         return BINOP_ADD;
-      case PNK_SUB:
+      case ParseNodeKind::PNK_SUB:
         return BINOP_SUB;
-      case PNK_STAR:
+      case ParseNodeKind::PNK_STAR:
         return BINOP_STAR;
-      case PNK_DIV:
+      case ParseNodeKind::PNK_DIV:
         return BINOP_DIV;
-      case PNK_MOD:
+      case ParseNodeKind::PNK_MOD:
         return BINOP_MOD;
-      case PNK_POW:
+      case ParseNodeKind::PNK_POW:
         return BINOP_POW;
-      case PNK_BITOR:
+      case ParseNodeKind::PNK_BITOR:
         return BINOP_BITOR;
-      case PNK_BITXOR:
+      case ParseNodeKind::PNK_BITXOR:
         return BINOP_BITXOR;
-      case PNK_BITAND:
+      case ParseNodeKind::PNK_BITAND:
         return BINOP_BITAND;
-      case PNK_IN:
+      case ParseNodeKind::PNK_IN:
         return BINOP_IN;
-      case PNK_INSTANCEOF:
+      case ParseNodeKind::PNK_INSTANCEOF:
         return BINOP_INSTANCEOF;
-      case PNK_PIPELINE:
+      case ParseNodeKind::PNK_PIPELINE:
         return BINOP_PIPELINE;
       default:
         return BINOP_ERR;
@@ -1865,7 +1865,7 @@ ASTSerializer::binop(ParseNodeKind kind)
 bool
 ASTSerializer::statements(ParseNode* pn, NodeVector& elts)
 {
-    MOZ_ASSERT(pn->isKind(PNK_STATEMENTLIST));
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::PNK_STATEMENTLIST));
     MOZ_ASSERT(pn->isArity(PN_LIST));
 
     if (!elts.reserve(pn->pn_count))
@@ -1904,7 +1904,7 @@ ASTSerializer::expressions(ParseNode* pn, NodeVector& elts)
 bool
 ASTSerializer::blockStatement(ParseNode* pn, MutableHandleValue dst)
 {
-    MOZ_ASSERT(pn->isKind(PNK_STATEMENTLIST));
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::PNK_STATEMENTLIST));
 
     NodeVector stmts(cx);
     return statements(pn, stmts) &&
@@ -1931,20 +1931,20 @@ ASTSerializer::sourceElement(ParseNode* pn, MutableHandleValue dst)
 bool
 ASTSerializer::declaration(ParseNode* pn, MutableHandleValue dst)
 {
-    MOZ_ASSERT(pn->isKind(PNK_FUNCTION) ||
-               pn->isKind(PNK_VAR) ||
-               pn->isKind(PNK_LET) ||
-               pn->isKind(PNK_CONST));
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::PNK_FUNCTION) ||
+               pn->isKind(ParseNodeKind::PNK_VAR) ||
+               pn->isKind(ParseNodeKind::PNK_LET) ||
+               pn->isKind(ParseNodeKind::PNK_CONST));
 
     switch (pn->getKind()) {
-      case PNK_FUNCTION:
+      case ParseNodeKind::PNK_FUNCTION:
         return function(pn, AST_FUNC_DECL, dst);
 
-      case PNK_VAR:
+      case ParseNodeKind::PNK_VAR:
         return variableDeclaration(pn, false, dst);
 
       default:
-        MOZ_ASSERT(pn->isKind(PNK_LET) || pn->isKind(PNK_CONST));
+        MOZ_ASSERT(pn->isKind(ParseNodeKind::PNK_LET) || pn->isKind(ParseNodeKind::PNK_CONST));
         return variableDeclaration(pn, true, dst);
     }
 }
@@ -1952,16 +1952,16 @@ ASTSerializer::declaration(ParseNode* pn, MutableHandleValue dst)
 bool
 ASTSerializer::variableDeclaration(ParseNode* pn, bool lexical, MutableHandleValue dst)
 {
-    MOZ_ASSERT_IF(lexical, pn->isKind(PNK_LET) || pn->isKind(PNK_CONST));
-    MOZ_ASSERT_IF(!lexical, pn->isKind(PNK_VAR));
+    MOZ_ASSERT_IF(lexical, pn->isKind(ParseNodeKind::PNK_LET) || pn->isKind(ParseNodeKind::PNK_CONST));
+    MOZ_ASSERT_IF(!lexical, pn->isKind(ParseNodeKind::PNK_VAR));
 
     VarDeclKind kind = VARDECL_ERR;
     // Treat both the toplevel const binding (secretly var-like) and the lexical const
     // the same way
     if (lexical)
-        kind = pn->isKind(PNK_LET) ? VARDECL_LET : VARDECL_CONST;
+        kind = pn->isKind(ParseNodeKind::PNK_LET) ? VARDECL_LET : VARDECL_CONST;
     else
-        kind = pn->isKind(PNK_VAR) ? VARDECL_VAR : VARDECL_CONST;
+        kind = pn->isKind(ParseNodeKind::PNK_VAR) ? VARDECL_VAR : VARDECL_CONST;
 
     NodeVector dtors(cx);
     if (!dtors.reserve(pn->pn_count))
@@ -1981,11 +1981,11 @@ ASTSerializer::variableDeclarator(ParseNode* pn, MutableHandleValue dst)
     ParseNode* pnleft;
     ParseNode* pnright;
 
-    if (pn->isKind(PNK_NAME)) {
+    if (pn->isKind(ParseNodeKind::PNK_NAME)) {
         pnleft = pn;
         pnright = pn->pn_expr;
         MOZ_ASSERT_IF(pnright, pn->pn_pos.encloses(pnright->pn_pos));
-    } else if (pn->isKind(PNK_ASSIGN)) {
+    } else if (pn->isKind(ParseNodeKind::PNK_ASSIGN)) {
         pnleft = pn->pn_left;
         pnright = pn->pn_right;
         MOZ_ASSERT(pn->pn_pos.encloses(pnleft->pn_pos));
@@ -2005,10 +2005,10 @@ ASTSerializer::variableDeclarator(ParseNode* pn, MutableHandleValue dst)
 bool
 ASTSerializer::importDeclaration(ParseNode* pn, MutableHandleValue dst)
 {
-    MOZ_ASSERT(pn->isKind(PNK_IMPORT));
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::PNK_IMPORT));
     MOZ_ASSERT(pn->isArity(PN_BINARY));
-    MOZ_ASSERT(pn->pn_left->isKind(PNK_IMPORT_SPEC_LIST));
-    MOZ_ASSERT(pn->pn_right->isKind(PNK_STRING));
+    MOZ_ASSERT(pn->pn_left->isKind(ParseNodeKind::PNK_IMPORT_SPEC_LIST));
+    MOZ_ASSERT(pn->pn_right->isKind(ParseNodeKind::PNK_STRING));
 
     NodeVector elts(cx);
     if (!elts.reserve(pn->pn_left->pn_count))
@@ -2029,7 +2029,7 @@ ASTSerializer::importDeclaration(ParseNode* pn, MutableHandleValue dst)
 bool
 ASTSerializer::importSpecifier(ParseNode* pn, MutableHandleValue dst)
 {
-    MOZ_ASSERT(pn->isKind(PNK_IMPORT_SPEC));
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::PNK_IMPORT_SPEC));
 
     RootedValue importName(cx);
     RootedValue bindingName(cx);
@@ -2041,24 +2041,24 @@ ASTSerializer::importSpecifier(ParseNode* pn, MutableHandleValue dst)
 bool
 ASTSerializer::exportDeclaration(ParseNode* pn, MutableHandleValue dst)
 {
-    MOZ_ASSERT(pn->isKind(PNK_EXPORT) ||
-               pn->isKind(PNK_EXPORT_FROM) ||
-               pn->isKind(PNK_EXPORT_DEFAULT));
-    MOZ_ASSERT(pn->getArity() == (pn->isKind(PNK_EXPORT) ? PN_UNARY : PN_BINARY));
-    MOZ_ASSERT_IF(pn->isKind(PNK_EXPORT_FROM), pn->pn_right->isKind(PNK_STRING));
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::PNK_EXPORT) ||
+               pn->isKind(ParseNodeKind::PNK_EXPORT_FROM) ||
+               pn->isKind(ParseNodeKind::PNK_EXPORT_DEFAULT));
+    MOZ_ASSERT(pn->getArity() == (pn->isKind(ParseNodeKind::PNK_EXPORT) ? PN_UNARY : PN_BINARY));
+    MOZ_ASSERT_IF(pn->isKind(ParseNodeKind::PNK_EXPORT_FROM), pn->pn_right->isKind(ParseNodeKind::PNK_STRING));
 
     RootedValue decl(cx, NullValue());
     NodeVector elts(cx);
 
-    ParseNode* kid = pn->isKind(PNK_EXPORT) ? pn->pn_kid : pn->pn_left;
+    ParseNode* kid = pn->isKind(ParseNodeKind::PNK_EXPORT) ? pn->pn_kid : pn->pn_left;
     switch (ParseNodeKind kind = kid->getKind()) {
-      case PNK_EXPORT_SPEC_LIST:
+      case ParseNodeKind::PNK_EXPORT_SPEC_LIST:
         if (!elts.reserve(pn->pn_left->pn_count))
             return false;
 
         for (ParseNode* next = pn->pn_left->pn_head; next; next = next->pn_next) {
             RootedValue elt(cx);
-            if (next->isKind(PNK_EXPORT_SPEC)) {
+            if (next->isKind(ParseNodeKind::PNK_EXPORT_SPEC)) {
                 if (!exportSpecifier(next, &elt))
                     return false;
             } else {
@@ -2069,20 +2069,20 @@ ASTSerializer::exportDeclaration(ParseNode* pn, MutableHandleValue dst)
         }
         break;
 
-      case PNK_FUNCTION:
+      case ParseNodeKind::PNK_FUNCTION:
         if (!function(kid, AST_FUNC_DECL, &decl))
             return false;
         break;
 
-      case PNK_CLASS:
+      case ParseNodeKind::PNK_CLASS:
         if (!classDefinition(kid, false, &decl))
             return false;
         break;
 
-      case PNK_VAR:
-      case PNK_CONST:
-      case PNK_LET:
-        if (!variableDeclaration(kid, kind != PNK_VAR, &decl))
+      case ParseNodeKind::PNK_VAR:
+      case ParseNodeKind::PNK_CONST:
+      case ParseNodeKind::PNK_LET:
+        if (!variableDeclaration(kid, kind != ParseNodeKind::PNK_VAR, &decl))
             return false;
         break;
 
@@ -2093,11 +2093,11 @@ ASTSerializer::exportDeclaration(ParseNode* pn, MutableHandleValue dst)
     }
 
     RootedValue moduleSpec(cx, NullValue());
-    if (pn->isKind(PNK_EXPORT_FROM) && !literal(pn->pn_right, &moduleSpec))
+    if (pn->isKind(ParseNodeKind::PNK_EXPORT_FROM) && !literal(pn->pn_right, &moduleSpec))
         return false;
 
     RootedValue isDefault(cx, BooleanValue(false));
-    if (pn->isKind(PNK_EXPORT_DEFAULT))
+    if (pn->isKind(ParseNodeKind::PNK_EXPORT_DEFAULT))
         isDefault.setBoolean(true);
 
     return builder.exportDeclaration(decl, elts, moduleSpec, isDefault, &pn->pn_pos, dst);
@@ -2106,7 +2106,7 @@ ASTSerializer::exportDeclaration(ParseNode* pn, MutableHandleValue dst)
 bool
 ASTSerializer::exportSpecifier(ParseNode* pn, MutableHandleValue dst)
 {
-    MOZ_ASSERT(pn->isKind(PNK_EXPORT_SPEC));
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::PNK_EXPORT_SPEC));
 
     RootedValue bindingName(cx);
     RootedValue exportName(cx);
@@ -2144,7 +2144,7 @@ ASTSerializer::switchStatement(ParseNode* pn, MutableHandleValue dst)
     ParseNode* listNode;
     bool lexical;
 
-    if (pn->pn_right->isKind(PNK_LEXICALSCOPE)) {
+    if (pn->pn_right->isKind(ParseNodeKind::PNK_LEXICALSCOPE)) {
         listNode = pn->pn_right->pn_expr;
         lexical = true;
     } else {
@@ -2169,7 +2169,7 @@ ASTSerializer::switchStatement(ParseNode* pn, MutableHandleValue dst)
 bool
 ASTSerializer::catchClause(ParseNode* pn, MutableHandleValue dst)
 {
-    MOZ_ASSERT(pn->isKind(PNK_CATCH));
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::PNK_CATCH));
     MOZ_ASSERT_IF(pn->pn_left, pn->pn_pos.encloses(pn->pn_left->pn_pos));
     MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
 
@@ -2195,7 +2195,7 @@ ASTSerializer::tryStatement(ParseNode* pn, MutableHandleValue dst)
 
     RootedValue handler(cx, NullValue());
     if (ParseNode* catchScope = pn->pn_kid2) {
-        MOZ_ASSERT(catchScope->isKind(PNK_LEXICALSCOPE));
+        MOZ_ASSERT(catchScope->isKind(ParseNodeKind::PNK_LEXICALSCOPE));
         if (!catchClause(catchScope->scopeBody(), &handler))
             return false;
     }
@@ -2213,8 +2213,8 @@ ASTSerializer::forInit(ParseNode* pn, MutableHandleValue dst)
         return true;
     }
 
-    bool lexical = pn->isKind(PNK_LET) || pn->isKind(PNK_CONST);
-    return (lexical || pn->isKind(PNK_VAR))
+    bool lexical = pn->isKind(ParseNodeKind::PNK_LET) || pn->isKind(ParseNodeKind::PNK_CONST);
+    return (lexical || pn->isKind(ParseNodeKind::PNK_VAR))
            ? variableDeclaration(pn, lexical, dst)
            : expression(pn, dst);
 }
@@ -2263,23 +2263,23 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
         return false;
 
     switch (pn->getKind()) {
-      case PNK_FUNCTION:
-      case PNK_VAR:
+      case ParseNodeKind::PNK_FUNCTION:
+      case ParseNodeKind::PNK_VAR:
         return declaration(pn, dst);
 
-      case PNK_LET:
-      case PNK_CONST:
+      case ParseNodeKind::PNK_LET:
+      case ParseNodeKind::PNK_CONST:
         return declaration(pn, dst);
 
-      case PNK_IMPORT:
+      case ParseNodeKind::PNK_IMPORT:
         return importDeclaration(pn, dst);
 
-      case PNK_EXPORT:
-      case PNK_EXPORT_DEFAULT:
-      case PNK_EXPORT_FROM:
+      case ParseNodeKind::PNK_EXPORT:
+      case ParseNodeKind::PNK_EXPORT_DEFAULT:
+      case ParseNodeKind::PNK_EXPORT_FROM:
         return exportDeclaration(pn, dst);
 
-      case PNK_SEMI:
+      case ParseNodeKind::PNK_SEMI:
         if (pn->pn_kid) {
             RootedValue expr(cx);
             return expression(pn->pn_kid, &expr) &&
@@ -2287,16 +2287,16 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
         }
         return builder.emptyStatement(&pn->pn_pos, dst);
 
-      case PNK_LEXICALSCOPE:
+      case ParseNodeKind::PNK_LEXICALSCOPE:
         pn = pn->pn_expr;
-        if (!pn->isKind(PNK_STATEMENTLIST))
+        if (!pn->isKind(ParseNodeKind::PNK_STATEMENTLIST))
             return statement(pn, dst);
         MOZ_FALLTHROUGH;
 
-      case PNK_STATEMENTLIST:
+      case ParseNodeKind::PNK_STATEMENTLIST:
         return blockStatement(pn, dst);
 
-      case PNK_IF:
+      case ParseNodeKind::PNK_IF:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid2->pn_pos));
@@ -2310,14 +2310,14 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
                builder.ifStatement(test, cons, alt, &pn->pn_pos, dst);
       }
 
-      case PNK_SWITCH:
+      case ParseNodeKind::PNK_SWITCH:
         return switchStatement(pn, dst);
 
-      case PNK_TRY:
+      case ParseNodeKind::PNK_TRY:
         return tryStatement(pn, dst);
 
-      case PNK_WITH:
-      case PNK_WHILE:
+      case ParseNodeKind::PNK_WITH:
+      case ParseNodeKind::PNK_WHILE:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
@@ -2326,12 +2326,12 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
 
         return expression(pn->pn_left, &expr) &&
                statement(pn->pn_right, &stmt) &&
-               (pn->isKind(PNK_WITH)
+               (pn->isKind(ParseNodeKind::PNK_WITH)
                 ? builder.withStatement(expr, stmt, &pn->pn_pos, dst)
                 : builder.whileStatement(expr, stmt, &pn->pn_pos, dst));
       }
 
-      case PNK_DOWHILE:
+      case ParseNodeKind::PNK_DOWHILE:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
@@ -2343,7 +2343,7 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
                builder.doWhileStatement(stmt, test, &pn->pn_pos, dst);
       }
 
-      case PNK_FOR:
+      case ParseNodeKind::PNK_FOR:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
@@ -2358,27 +2358,27 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
         if (!statement(pn->pn_right, &stmt))
             return false;
 
-        if (head->isKind(PNK_FORIN) || head->isKind(PNK_FOROF)) {
+        if (head->isKind(ParseNodeKind::PNK_FORIN) || head->isKind(ParseNodeKind::PNK_FOROF)) {
             RootedValue var(cx);
-            if (head->pn_kid1->isKind(PNK_LEXICALSCOPE)) {
+            if (head->pn_kid1->isKind(ParseNodeKind::PNK_LEXICALSCOPE)) {
                 if (!variableDeclaration(head->pn_kid1->pn_expr, true, &var))
                     return false;
-            } else if (!head->pn_kid1->isKind(PNK_VAR) &&
-                       !head->pn_kid1->isKind(PNK_LET) &&
-                       !head->pn_kid1->isKind(PNK_CONST))
+            } else if (!head->pn_kid1->isKind(ParseNodeKind::PNK_VAR) &&
+                       !head->pn_kid1->isKind(ParseNodeKind::PNK_LET) &&
+                       !head->pn_kid1->isKind(ParseNodeKind::PNK_CONST))
             {
                 if (!pattern(head->pn_kid1, &var))
                     return false;
             } else {
                 if (!variableDeclaration(head->pn_kid1,
-                                         head->pn_kid1->isKind(PNK_LET) ||
-                                         head->pn_kid1->isKind(PNK_CONST),
+                                         head->pn_kid1->isKind(ParseNodeKind::PNK_LET) ||
+                                         head->pn_kid1->isKind(ParseNodeKind::PNK_CONST),
                                          &var))
                 {
                     return false;
                 }
             }
-            if (head->isKind(PNK_FORIN))
+            if (head->isKind(ParseNodeKind::PNK_FORIN))
                 return forIn(pn, head, var, stmt, dst);
             return forOf(pn, head, var, stmt, dst);
         }
@@ -2391,18 +2391,18 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
                builder.forStatement(init, test, update, stmt, &pn->pn_pos, dst);
       }
 
-      case PNK_BREAK:
-      case PNK_CONTINUE:
+      case ParseNodeKind::PNK_BREAK:
+      case ParseNodeKind::PNK_CONTINUE:
       {
         RootedValue label(cx);
         RootedAtom pnAtom(cx, pn->pn_atom);
         return optIdentifier(pnAtom, nullptr, &label) &&
-               (pn->isKind(PNK_BREAK)
+               (pn->isKind(ParseNodeKind::PNK_BREAK)
                 ? builder.breakStatement(label, &pn->pn_pos, dst)
                 : builder.continueStatement(label, &pn->pn_pos, dst));
       }
 
-      case PNK_LABEL:
+      case ParseNodeKind::PNK_LABEL:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_expr->pn_pos));
 
@@ -2413,7 +2413,7 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
                builder.labeledStatement(label, stmt, &pn->pn_pos, dst);
       }
 
-      case PNK_THROW:
+      case ParseNodeKind::PNK_THROW:
       {
         MOZ_ASSERT_IF(pn->pn_kid, pn->pn_pos.encloses(pn->pn_kid->pn_pos));
 
@@ -2423,7 +2423,7 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
                builder.throwStatement(arg, &pn->pn_pos, dst);
       }
 
-      case PNK_RETURN:
+      case ParseNodeKind::PNK_RETURN:
       {
         MOZ_ASSERT_IF(pn->pn_kid, pn->pn_pos.encloses(pn->pn_kid->pn_pos));
 
@@ -2433,13 +2433,13 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
                builder.returnStatement(arg, &pn->pn_pos, dst);
       }
 
-      case PNK_DEBUGGER:
+      case ParseNodeKind::PNK_DEBUGGER:
         return builder.debuggerStatement(&pn->pn_pos, dst);
 
-      case PNK_CLASS:
+      case ParseNodeKind::PNK_CLASS:
         return classDefinition(pn, false, dst);
 
-      case PNK_CLASSMETHODLIST:
+      case ParseNodeKind::PNK_CLASSMETHODLIST:
       {
         NodeVector methods(cx);
         if (!methods.reserve(pn->pn_count))
@@ -2457,7 +2457,7 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
         return builder.classMethods(methods, dst);
       }
 
-      case PNK_NOP:
+      case ParseNodeKind::PNK_NOP:
         return builder.emptyStatement(&pn->pn_pos, dst);
 
       default:
@@ -2500,8 +2500,8 @@ ASTSerializer::leftAssociate(ParseNode* pn, MutableHandleValue dst)
     MOZ_ASSERT(pn->pn_count >= 1);
 
     ParseNodeKind kind = pn->getKind();
-    bool lor = kind == PNK_OR;
-    bool logop = lor || (kind == PNK_AND);
+    bool lor = kind == ParseNodeKind::PNK_OR;
+    bool logop = lor || (kind == ParseNodeKind::PNK_AND);
 
     ParseNode* head = pn->pn_head;
     RootedValue left(cx);
@@ -2580,20 +2580,20 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         return false;
 
     switch (pn->getKind()) {
-      case PNK_FUNCTION:
+      case ParseNodeKind::PNK_FUNCTION:
       {
         ASTType type = pn->pn_funbox->function()->isArrow() ? AST_ARROW_EXPR : AST_FUNC_EXPR;
         return function(pn, type, dst);
       }
 
-      case PNK_COMMA:
+      case ParseNodeKind::PNK_COMMA:
       {
         NodeVector exprs(cx);
         return expressions(pn, exprs) &&
                builder.sequenceExpression(exprs, &pn->pn_pos, dst);
       }
 
-      case PNK_CONDITIONAL:
+      case ParseNodeKind::PNK_CONDITIONAL:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid1->pn_pos));
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid2->pn_pos));
@@ -2607,45 +2607,45 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
                builder.conditionalExpression(test, cons, alt, &pn->pn_pos, dst);
       }
 
-      case PNK_OR:
-      case PNK_AND:
+      case ParseNodeKind::PNK_OR:
+      case ParseNodeKind::PNK_AND:
         return leftAssociate(pn, dst);
 
-      case PNK_PREINCREMENT:
-      case PNK_PREDECREMENT:
+      case ParseNodeKind::PNK_PREINCREMENT:
+      case ParseNodeKind::PNK_PREDECREMENT:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
 
-        bool inc = pn->isKind(PNK_PREINCREMENT);
+        bool inc = pn->isKind(ParseNodeKind::PNK_PREINCREMENT);
         RootedValue expr(cx);
         return expression(pn->pn_kid, &expr) &&
                builder.updateExpression(expr, inc, true, &pn->pn_pos, dst);
       }
 
-      case PNK_POSTINCREMENT:
-      case PNK_POSTDECREMENT:
+      case ParseNodeKind::PNK_POSTINCREMENT:
+      case ParseNodeKind::PNK_POSTDECREMENT:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
 
-        bool inc = pn->isKind(PNK_POSTINCREMENT);
+        bool inc = pn->isKind(ParseNodeKind::PNK_POSTINCREMENT);
         RootedValue expr(cx);
         return expression(pn->pn_kid, &expr) &&
                builder.updateExpression(expr, inc, false, &pn->pn_pos, dst);
       }
 
-      case PNK_ASSIGN:
-      case PNK_ADDASSIGN:
-      case PNK_SUBASSIGN:
-      case PNK_BITORASSIGN:
-      case PNK_BITXORASSIGN:
-      case PNK_BITANDASSIGN:
-      case PNK_LSHASSIGN:
-      case PNK_RSHASSIGN:
-      case PNK_URSHASSIGN:
-      case PNK_MULASSIGN:
-      case PNK_DIVASSIGN:
-      case PNK_MODASSIGN:
-      case PNK_POWASSIGN:
+      case ParseNodeKind::PNK_ASSIGN:
+      case ParseNodeKind::PNK_ADDASSIGN:
+      case ParseNodeKind::PNK_SUBASSIGN:
+      case ParseNodeKind::PNK_BITORASSIGN:
+      case ParseNodeKind::PNK_BITXORASSIGN:
+      case ParseNodeKind::PNK_BITANDASSIGN:
+      case ParseNodeKind::PNK_LSHASSIGN:
+      case ParseNodeKind::PNK_RSHASSIGN:
+      case ParseNodeKind::PNK_URSHASSIGN:
+      case ParseNodeKind::PNK_MULASSIGN:
+      case ParseNodeKind::PNK_DIVASSIGN:
+      case ParseNodeKind::PNK_MODASSIGN:
+      case ParseNodeKind::PNK_POWASSIGN:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
@@ -2659,45 +2659,45 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
                builder.assignmentExpression(op, lhs, rhs, &pn->pn_pos, dst);
       }
 
-      case PNK_PIPELINE:
-      case PNK_ADD:
-      case PNK_SUB:
-      case PNK_STRICTEQ:
-      case PNK_EQ:
-      case PNK_STRICTNE:
-      case PNK_NE:
-      case PNK_LT:
-      case PNK_LE:
-      case PNK_GT:
-      case PNK_GE:
-      case PNK_LSH:
-      case PNK_RSH:
-      case PNK_URSH:
-      case PNK_STAR:
-      case PNK_DIV:
-      case PNK_MOD:
-      case PNK_BITOR:
-      case PNK_BITXOR:
-      case PNK_BITAND:
-      case PNK_IN:
-      case PNK_INSTANCEOF:
+      case ParseNodeKind::PNK_PIPELINE:
+      case ParseNodeKind::PNK_ADD:
+      case ParseNodeKind::PNK_SUB:
+      case ParseNodeKind::PNK_STRICTEQ:
+      case ParseNodeKind::PNK_EQ:
+      case ParseNodeKind::PNK_STRICTNE:
+      case ParseNodeKind::PNK_NE:
+      case ParseNodeKind::PNK_LT:
+      case ParseNodeKind::PNK_LE:
+      case ParseNodeKind::PNK_GT:
+      case ParseNodeKind::PNK_GE:
+      case ParseNodeKind::PNK_LSH:
+      case ParseNodeKind::PNK_RSH:
+      case ParseNodeKind::PNK_URSH:
+      case ParseNodeKind::PNK_STAR:
+      case ParseNodeKind::PNK_DIV:
+      case ParseNodeKind::PNK_MOD:
+      case ParseNodeKind::PNK_BITOR:
+      case ParseNodeKind::PNK_BITXOR:
+      case ParseNodeKind::PNK_BITAND:
+      case ParseNodeKind::PNK_IN:
+      case ParseNodeKind::PNK_INSTANCEOF:
         return leftAssociate(pn, dst);
 
-      case PNK_POW:
+      case ParseNodeKind::PNK_POW:
         return rightAssociate(pn, dst);
 
-      case PNK_DELETENAME:
-      case PNK_DELETEPROP:
-      case PNK_DELETEELEM:
-      case PNK_DELETEEXPR:
-      case PNK_TYPEOFNAME:
-      case PNK_TYPEOFEXPR:
-      case PNK_VOID:
-      case PNK_NOT:
-      case PNK_BITNOT:
-      case PNK_POS:
-      case PNK_AWAIT:
-      case PNK_NEG: {
+      case ParseNodeKind::PNK_DELETENAME:
+      case ParseNodeKind::PNK_DELETEPROP:
+      case ParseNodeKind::PNK_DELETEELEM:
+      case ParseNodeKind::PNK_DELETEEXPR:
+      case ParseNodeKind::PNK_TYPEOFNAME:
+      case ParseNodeKind::PNK_TYPEOFEXPR:
+      case ParseNodeKind::PNK_VOID:
+      case ParseNodeKind::PNK_NOT:
+      case ParseNodeKind::PNK_BITNOT:
+      case ParseNodeKind::PNK_POS:
+      case ParseNodeKind::PNK_AWAIT:
+      case ParseNodeKind::PNK_NEG: {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
 
         UnaryOperator op = unop(pn->getKind());
@@ -2708,17 +2708,17 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
                builder.unaryExpression(op, expr, &pn->pn_pos, dst);
       }
 
-      case PNK_NEW:
-      case PNK_TAGGED_TEMPLATE:
-      case PNK_CALL:
-      case PNK_SUPERCALL:
+      case ParseNodeKind::PNK_NEW:
+      case ParseNodeKind::PNK_TAGGED_TEMPLATE:
+      case ParseNodeKind::PNK_CALL:
+      case ParseNodeKind::PNK_SUPERCALL:
       {
         ParseNode* next = pn->pn_head;
         MOZ_ASSERT(pn->pn_pos.encloses(next->pn_pos));
 
         RootedValue callee(cx);
-        if (pn->isKind(PNK_SUPERCALL)) {
-            MOZ_ASSERT(next->isKind(PNK_SUPERBASE));
+        if (pn->isKind(ParseNodeKind::PNK_SUPERCALL)) {
+            MOZ_ASSERT(next->isKind(ParseNodeKind::PNK_SUPERBASE));
             if (!builder.super(&next->pn_pos, &callee))
                 return false;
         } else {
@@ -2739,17 +2739,17 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
             args.infallibleAppend(arg);
         }
 
-        if (pn->getKind() == PNK_TAGGED_TEMPLATE)
+        if (pn->getKind() == ParseNodeKind::PNK_TAGGED_TEMPLATE)
             return builder.taggedTemplate(callee, args, &pn->pn_pos, dst);
 
         // SUPERCALL is Call(super, args)
-        return pn->isKind(PNK_NEW)
+        return pn->isKind(ParseNodeKind::PNK_NEW)
                ? builder.newExpression(callee, args, &pn->pn_pos, dst)
 
             : builder.callExpression(callee, args, &pn->pn_pos, dst);
       }
 
-      case PNK_DOT:
+      case ParseNodeKind::PNK_DOT:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_expr->pn_pos));
 
@@ -2769,7 +2769,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
                builder.memberExpression(false, expr, propname, &pn->pn_pos, dst);
       }
 
-      case PNK_ELEM:
+      case ParseNodeKind::PNK_ELEM:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
@@ -2788,7 +2788,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
                builder.memberExpression(true, left, right, &pn->pn_pos, dst);
       }
 
-      case PNK_CALLSITEOBJ:
+      case ParseNodeKind::PNK_CALLSITEOBJ:
       {
         NodeVector raw(cx);
         if (!raw.reserve(pn->pn_head->pn_count))
@@ -2809,10 +2809,10 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
             MOZ_ASSERT(pn->pn_pos.encloses(next->pn_pos));
 
             RootedValue expr(cx);
-            if (next->isKind(PNK_RAW_UNDEFINED)) {
+            if (next->isKind(ParseNodeKind::PNK_RAW_UNDEFINED)) {
                 expr.setUndefined();
             } else {
-                MOZ_ASSERT(next->isKind(PNK_TEMPLATE_STRING));
+                MOZ_ASSERT(next->isKind(ParseNodeKind::PNK_TEMPLATE_STRING));
                 expr.setString(next->pn_atom);
             }
             cooked.infallibleAppend(expr);
@@ -2821,7 +2821,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         return builder.callSiteObj(raw, cooked, &pn->pn_pos, dst);
       }
 
-      case PNK_ARRAY:
+      case ParseNodeKind::PNK_ARRAY:
       {
         NodeVector elts(cx);
         if (!elts.reserve(pn->pn_count))
@@ -2830,7 +2830,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         for (ParseNode* next = pn->pn_head; next; next = next->pn_next) {
             MOZ_ASSERT(pn->pn_pos.encloses(next->pn_pos));
 
-            if (next->isKind(PNK_ELISION)) {
+            if (next->isKind(ParseNodeKind::PNK_ELISION)) {
                 elts.infallibleAppend(NullValue());
             } else {
                 RootedValue expr(cx);
@@ -2843,21 +2843,21 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         return builder.arrayExpression(elts, &pn->pn_pos, dst);
       }
 
-      case PNK_SPREAD:
+      case ParseNodeKind::PNK_SPREAD:
       {
           RootedValue expr(cx);
           return expression(pn->pn_kid, &expr) &&
                  builder.spreadExpression(expr, &pn->pn_pos, dst);
       }
 
-      case PNK_COMPUTED_NAME:
+      case ParseNodeKind::PNK_COMPUTED_NAME:
       {
          RootedValue name(cx);
          return expression(pn->pn_kid, &name) &&
                 builder.computedName(name, &pn->pn_pos, dst);
       }
 
-      case PNK_OBJECT:
+      case ParseNodeKind::PNK_OBJECT:
       {
         NodeVector elts(cx);
         if (!elts.reserve(pn->pn_count))
@@ -2875,13 +2875,13 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         return builder.objectExpression(elts, &pn->pn_pos, dst);
       }
 
-      case PNK_NAME:
+      case ParseNodeKind::PNK_NAME:
         return identifier(pn, dst);
 
-      case PNK_THIS:
+      case ParseNodeKind::PNK_THIS:
         return builder.thisExpression(&pn->pn_pos, dst);
 
-      case PNK_TEMPLATE_STRING_LIST:
+      case ParseNodeKind::PNK_TEMPLATE_STRING_LIST:
       {
         NodeVector elts(cx);
         if (!elts.reserve(pn->pn_count))
@@ -2899,17 +2899,17 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         return builder.templateLiteral(elts, &pn->pn_pos, dst);
       }
 
-      case PNK_TEMPLATE_STRING:
-      case PNK_STRING:
-      case PNK_REGEXP:
-      case PNK_NUMBER:
-      case PNK_TRUE:
-      case PNK_FALSE:
-      case PNK_NULL:
-      case PNK_RAW_UNDEFINED:
+      case ParseNodeKind::PNK_TEMPLATE_STRING:
+      case ParseNodeKind::PNK_STRING:
+      case ParseNodeKind::PNK_REGEXP:
+      case ParseNodeKind::PNK_NUMBER:
+      case ParseNodeKind::PNK_TRUE:
+      case ParseNodeKind::PNK_FALSE:
+      case ParseNodeKind::PNK_NULL:
+      case ParseNodeKind::PNK_RAW_UNDEFINED:
         return literal(pn, dst);
 
-      case PNK_YIELD_STAR:
+      case ParseNodeKind::PNK_YIELD_STAR:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
 
@@ -2918,7 +2918,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
                builder.yieldExpression(arg, Delegating, &pn->pn_pos, dst);
       }
 
-      case PNK_YIELD:
+      case ParseNodeKind::PNK_YIELD:
       {
         MOZ_ASSERT_IF(pn->pn_kid, pn->pn_pos.encloses(pn->pn_kid->pn_pos));
 
@@ -2927,14 +2927,14 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
                builder.yieldExpression(arg, NotDelegating, &pn->pn_pos, dst);
       }
 
-      case PNK_CLASS:
+      case ParseNodeKind::PNK_CLASS:
         return classDefinition(pn, true, dst);
 
-      case PNK_NEWTARGET:
+      case ParseNodeKind::PNK_NEWTARGET:
       {
-        MOZ_ASSERT(pn->pn_left->isKind(PNK_POSHOLDER));
+        MOZ_ASSERT(pn->pn_left->isKind(ParseNodeKind::PNK_POSHOLDER));
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
-        MOZ_ASSERT(pn->pn_right->isKind(PNK_POSHOLDER));
+        MOZ_ASSERT(pn->pn_right->isKind(ParseNodeKind::PNK_POSHOLDER));
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_right->pn_pos));
 
         RootedValue newIdent(cx);
@@ -2948,10 +2948,10 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
                builder.metaProperty(newIdent, targetIdent, &pn->pn_pos, dst);
       }
 
-      case PNK_SETTHIS:
+      case ParseNodeKind::PNK_SETTHIS:
         // SETTHIS is used to assign the result of a super() call to |this|.
         // It's not part of the original AST, so just forward to the call.
-        MOZ_ASSERT(pn->pn_left->isKind(PNK_NAME));
+        MOZ_ASSERT(pn->pn_left->isKind(ParseNodeKind::PNK_NAME));
         return expression(pn->pn_right, dst);
 
       default:
@@ -2962,12 +2962,12 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
 bool
 ASTSerializer::propertyName(ParseNode* pn, MutableHandleValue dst)
 {
-    if (pn->isKind(PNK_COMPUTED_NAME))
+    if (pn->isKind(ParseNodeKind::PNK_COMPUTED_NAME))
         return expression(pn, dst);
-    if (pn->isKind(PNK_OBJECT_PROPERTY_NAME))
+    if (pn->isKind(ParseNodeKind::PNK_OBJECT_PROPERTY_NAME))
         return identifier(pn, dst);
 
-    LOCAL_ASSERT(pn->isKind(PNK_STRING) || pn->isKind(PNK_NUMBER));
+    LOCAL_ASSERT(pn->isKind(ParseNodeKind::PNK_STRING) || pn->isKind(ParseNodeKind::PNK_NUMBER));
 
     return literal(pn, dst);
 }
@@ -2975,12 +2975,12 @@ ASTSerializer::propertyName(ParseNode* pn, MutableHandleValue dst)
 bool
 ASTSerializer::property(ParseNode* pn, MutableHandleValue dst)
 {
-    if (pn->isKind(PNK_MUTATEPROTO)) {
+    if (pn->isKind(ParseNodeKind::PNK_MUTATEPROTO)) {
         RootedValue val(cx);
         return expression(pn->pn_kid, &val) &&
                builder.prototypeMutation(val, &pn->pn_pos, dst);
     }
-    if (pn->isKind(PNK_SPREAD))
+    if (pn->isKind(ParseNodeKind::PNK_SPREAD))
         return expression(pn, dst);
 
     PropKind kind;
@@ -3001,9 +3001,9 @@ ASTSerializer::property(ParseNode* pn, MutableHandleValue dst)
         LOCAL_NOT_REACHED("unexpected object-literal property");
     }
 
-    bool isShorthand = pn->isKind(PNK_SHORTHAND);
+    bool isShorthand = pn->isKind(ParseNodeKind::PNK_SHORTHAND);
     bool isMethod =
-        pn->pn_right->isKind(PNK_FUNCTION) &&
+        pn->pn_right->isKind(ParseNodeKind::PNK_FUNCTION) &&
         pn->pn_right->pn_funbox->function()->kind() == JSFunction::Method;
     RootedValue key(cx), val(cx);
     return propertyName(pn->pn_left, &key) &&
@@ -3016,12 +3016,12 @@ ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst)
 {
     RootedValue val(cx);
     switch (pn->getKind()) {
-      case PNK_TEMPLATE_STRING:
-      case PNK_STRING:
+      case ParseNodeKind::PNK_TEMPLATE_STRING:
+      case ParseNodeKind::PNK_STRING:
         val.setString(pn->pn_atom);
         break;
 
-      case PNK_REGEXP:
+      case ParseNodeKind::PNK_REGEXP:
       {
         RootedObject re1(cx, pn->as<RegExpLiteral>().objbox()->object);
         LOCAL_ASSERT(re1 && re1->is<RegExpObject>());
@@ -3034,23 +3034,23 @@ ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst)
         break;
       }
 
-      case PNK_NUMBER:
+      case ParseNodeKind::PNK_NUMBER:
         val.setNumber(pn->pn_dval);
         break;
 
-      case PNK_NULL:
+      case ParseNodeKind::PNK_NULL:
         val.setNull();
         break;
 
-      case PNK_RAW_UNDEFINED:
+      case ParseNodeKind::PNK_RAW_UNDEFINED:
         val.setUndefined();
         break;
 
-      case PNK_TRUE:
+      case ParseNodeKind::PNK_TRUE:
         val.setBoolean(true);
         break;
 
-      case PNK_FALSE:
+      case ParseNodeKind::PNK_FALSE:
         val.setBoolean(false);
         break;
 
@@ -3064,16 +3064,16 @@ ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst)
 bool
 ASTSerializer::arrayPattern(ParseNode* pn, MutableHandleValue dst)
 {
-    MOZ_ASSERT(pn->isKind(PNK_ARRAY));
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::PNK_ARRAY));
 
     NodeVector elts(cx);
     if (!elts.reserve(pn->pn_count))
         return false;
 
     for (ParseNode* next = pn->pn_head; next; next = next->pn_next) {
-        if (next->isKind(PNK_ELISION)) {
+        if (next->isKind(ParseNodeKind::PNK_ELISION)) {
             elts.infallibleAppend(NullValue());
-        } else if (next->isKind(PNK_SPREAD)) {
+        } else if (next->isKind(ParseNodeKind::PNK_SPREAD)) {
             RootedValue target(cx);
             RootedValue spread(cx);
             if (!pattern(next->pn_kid, &target))
@@ -3095,14 +3095,14 @@ ASTSerializer::arrayPattern(ParseNode* pn, MutableHandleValue dst)
 bool
 ASTSerializer::objectPattern(ParseNode* pn, MutableHandleValue dst)
 {
-    MOZ_ASSERT(pn->isKind(PNK_OBJECT));
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::PNK_OBJECT));
 
     NodeVector elts(cx);
     if (!elts.reserve(pn->pn_count))
         return false;
 
     for (ParseNode* propdef = pn->pn_head; propdef; propdef = propdef->pn_next) {
-        if (propdef->isKind(PNK_SPREAD)) {
+        if (propdef->isKind(ParseNodeKind::PNK_SPREAD)) {
             RootedValue target(cx);
             RootedValue spread(cx);
             if (!pattern(propdef->pn_kid, &target))
@@ -3112,11 +3112,11 @@ ASTSerializer::objectPattern(ParseNode* pn, MutableHandleValue dst)
             elts.infallibleAppend(spread);
             continue;
         }
-        LOCAL_ASSERT(propdef->isKind(PNK_MUTATEPROTO) != propdef->isOp(JSOP_INITPROP));
+        LOCAL_ASSERT(propdef->isKind(ParseNodeKind::PNK_MUTATEPROTO) != propdef->isOp(JSOP_INITPROP));
 
         RootedValue key(cx);
         ParseNode* target;
-        if (propdef->isKind(PNK_MUTATEPROTO)) {
+        if (propdef->isKind(ParseNodeKind::PNK_MUTATEPROTO)) {
             RootedValue pname(cx, StringValue(cx->names().proto));
             if (!builder.literal(pname, &propdef->pn_pos, &key))
                 return false;
@@ -3129,7 +3129,8 @@ ASTSerializer::objectPattern(ParseNode* pn, MutableHandleValue dst)
 
         RootedValue patt(cx), prop(cx);
         if (!pattern(target, &patt) ||
-            !builder.propertyPattern(key, patt, propdef->isKind(PNK_SHORTHAND), &propdef->pn_pos,
+            !builder.propertyPattern(key, patt, propdef->isKind(ParseNodeKind::PNK_SHORTHAND),
+                                     &propdef->pn_pos,
                                      &prop))
         {
             return false;
@@ -3148,10 +3149,10 @@ ASTSerializer::pattern(ParseNode* pn, MutableHandleValue dst)
         return false;
 
     switch (pn->getKind()) {
-      case PNK_OBJECT:
+      case ParseNodeKind::PNK_OBJECT:
         return objectPattern(pn, dst);
 
-      case PNK_ARRAY:
+      case ParseNodeKind::PNK_ARRAY:
         return arrayPattern(pn, dst);
 
       default:
@@ -3216,7 +3217,7 @@ ASTSerializer::functionArgsAndBody(ParseNode* pn, NodeVector& args, NodeVector& 
     ParseNode* pnbody;
 
     /* Extract the args and body separately. */
-    if (pn->isKind(PNK_PARAMSBODY)) {
+    if (pn->isKind(ParseNodeKind::PNK_PARAMSBODY)) {
         pnargs = pn;
         pnbody = pn->last();
     } else {
@@ -3224,27 +3225,27 @@ ASTSerializer::functionArgsAndBody(ParseNode* pn, NodeVector& args, NodeVector& 
         pnbody = pn;
     }
 
-    if (pnbody->isKind(PNK_LEXICALSCOPE))
+    if (pnbody->isKind(ParseNodeKind::PNK_LEXICALSCOPE))
         pnbody = pnbody->scopeBody();
 
     /* Serialize the arguments and body. */
     switch (pnbody->getKind()) {
-      case PNK_RETURN: /* expression closure, no destructured args */
+      case ParseNodeKind::PNK_RETURN: /* expression closure, no destructured args */
         return functionArgs(pn, pnargs, args, defaults, rest) &&
                expression(pnbody->pn_kid, body);
 
-      case PNK_STATEMENTLIST:     /* statement closure */
+      case ParseNodeKind::PNK_STATEMENTLIST:     /* statement closure */
       {
         ParseNode* pnstart = pnbody->pn_head;
 
         // Skip over initial yield in generator.
-        if (pnstart && pnstart->isKind(PNK_INITIALYIELD))
+        if (pnstart && pnstart->isKind(ParseNodeKind::PNK_INITIALYIELD))
             pnstart = pnstart->pn_next;
 
         // Async arrow with expression body is converted into STATEMENTLIST
         // to insert initial yield.
         if (isAsync && isExpression) {
-            MOZ_ASSERT(pnstart->getKind() == PNK_RETURN);
+            MOZ_ASSERT(pnstart->getKind() == ParseNodeKind::PNK_RETURN);
             return functionArgs(pn, pnargs, args, defaults, rest) &&
                    expression(pnstart->pn_kid, body);
         }
@@ -3275,17 +3276,22 @@ ASTSerializer::functionArgs(ParseNode* pn, ParseNode* pnargs,
     for (ParseNode* arg = pnargs->pn_head; arg && arg != pnargs->last(); arg = arg->pn_next) {
         ParseNode* pat;
         ParseNode* defNode;
-        if (arg->isKind(PNK_NAME) || arg->isKind(PNK_ARRAY) || arg->isKind(PNK_OBJECT)) {
+        if (arg->isKind(ParseNodeKind::PNK_NAME) ||
+            arg->isKind(ParseNodeKind::PNK_ARRAY) ||
+            arg->isKind(ParseNodeKind::PNK_OBJECT))
+        {
             pat = arg;
             defNode = nullptr;
         } else {
-            MOZ_ASSERT(arg->isKind(PNK_ASSIGN));
+            MOZ_ASSERT(arg->isKind(ParseNodeKind::PNK_ASSIGN));
             pat = arg->pn_left;
             defNode = arg->pn_right;
         }
 
         // Process the name or pattern.
-        MOZ_ASSERT(pat->isKind(PNK_NAME) || pat->isKind(PNK_ARRAY) || pat->isKind(PNK_OBJECT));
+        MOZ_ASSERT(pat->isKind(ParseNodeKind::PNK_NAME) ||
+                   pat->isKind(ParseNodeKind::PNK_ARRAY) ||
+                   pat->isKind(ParseNodeKind::PNK_OBJECT));
         if (!pattern(pat, &node))
             return false;
         if (rest.isUndefined() && arg->pn_next == pnargs->last()) {
@@ -3500,7 +3506,7 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
         if (!pn)
             return false;
 
-        MOZ_ASSERT(pn->getKind() == PNK_MODULE);
+        MOZ_ASSERT(pn->getKind() == ParseNodeKind::PNK_MODULE);
         pn = pn->pn_body;
     }
 
