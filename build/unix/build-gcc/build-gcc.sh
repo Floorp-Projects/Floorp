@@ -3,7 +3,7 @@
 set -e
 set -x
 
-make_flags='-j12'
+make_flags="-j$(nproc)"
 
 . $data_dir/download-tools.sh
 
