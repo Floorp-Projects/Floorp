@@ -520,13 +520,14 @@ public:
         packetizer_->Channels() != outputChannels) {
       // It's ok to drop the audio still in the packetizer here.
       packetizer_ = new AudioPacketizer<int16_t, int16_t>(audio_10ms, outputChannels);
+      packet_ = MakeUnique<int16_t[]>(audio_10ms * outputChannels);
     }
 
     packetizer_->Input(samples, chunk.mDuration);
 
     while (packetizer_->PacketsAvailable()) {
-      packetizer_->Output(packet_);
-      mConduit->SendAudioFrame(packet_, packetizer_->PacketSize(), rate, packetizer_->Channels(), 0);
+      packetizer_->Output(packet_.get());
+      mConduit->SendAudioFrame(packet_.get(), packetizer_->PacketSize(), rate, packetizer_->Channels(), 0);
     }
   }
 
@@ -555,7 +556,7 @@ protected:
   // Only accessed on mThread
   nsAutoPtr<AudioPacketizer<int16_t, int16_t>> packetizer_;
   // A buffer to hold a single packet of audio.
-  int16_t packet_[AUDIO_SAMPLE_BUFFER_MAX_BYTES / sizeof(int16_t)];
+  UniquePtr<int16_t[]> packet_;
 };
 
 static char kDTLSExporterLabel[] = "EXTRACTOR-dtls_srtp";
