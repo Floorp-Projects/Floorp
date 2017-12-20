@@ -55,13 +55,6 @@ add_task(async function() {
                          // starting at 15 to 25% of the window width
                          inRange(r.x1, width * .15, width * .25)
         },
-
-        {name: "bug 1421460 - restore icon should be visible at first paint",
-         condition: r => r.w == 9 && r.h == 9 && // 9x9 icon
-                         AppConstants.platform == "win" &&
-                         // near the right end of the screen
-                         inRange(r.x1, width - 80, width - 70)
-        },
       ];
 
       let rectText = `${rect.toSource()}, window width: ${width}`;
