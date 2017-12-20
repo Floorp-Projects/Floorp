@@ -1,15 +1,18 @@
-const React = require("react");
-const {mount, shallow} = require("enzyme");
-const {IntlProvider, intlShape} = require("react-intl");
-const messages = require("data/locales.json")["en-US"];
+import {IntlProvider, intlShape} from "react-intl";
+import {mount, shallow} from "enzyme";
+import React from "react";
+
+const messages = require("data/locales.json")["en-US"]; // eslint-disable-line import/no-commonjs
+
 const intlProvider = new IntlProvider({locale: "en-US", messages});
+
 const {intl} = intlProvider.getChildContext();
 
 /**
  * GlobalOverrider - Utility that allows you to override properties on the global object.
  *                   See unit-entry.js for example usage.
  */
-class GlobalOverrider {
+export class GlobalOverrider {
   constructor() {
     this.originalGlobals = new Map();
     this.sandbox = sinon.sandbox.create();
@@ -87,7 +90,7 @@ class GlobalOverrider {
  *                   to save off a pointer to the created instance so that
  *                   stubs and spies can be inspected by the test code.
  */
-class FakensIPrefBranch {
+export class FakensIPrefBranch {
   constructor(args) {
     if (args) {
       if ("initHook" in args) {
@@ -126,7 +129,7 @@ FakensIPrefBranch.prototype.prefs = {};
  * Very simple fake for the most basic semantics of Preferences.jsm.
  * Extends FakensIPrefBranch.
  */
-class FakePrefs extends FakensIPrefBranch {
+export class FakePrefs extends FakensIPrefBranch {
   observe(prefName, callback) {
     super.addObserver(prefName, callback);
   }
@@ -145,7 +148,7 @@ class FakePrefs extends FakensIPrefBranch {
 /**
  * Slimmed down version of toolkit/modules/EventEmitter.jsm
  */
-function EventEmitter() {}
+export function EventEmitter() {}
 EventEmitter.decorate = function(objectToDecorate) {
   let emitter = new EventEmitter();
   objectToDecorate.on = emitter.on.bind(emitter);
@@ -214,7 +217,7 @@ EventEmitter.prototype = {
   }
 };
 
-function FakePerformance() {}
+export function FakePerformance() {}
 FakePerformance.prototype = {
   marks: new Map(),
   now() {
@@ -257,7 +260,7 @@ FakePerformance.prototype = {
 /**
  * addNumberReducer - a simple dummy reducer for testing that adds a number
  */
-function addNumberReducer(prevState = 0, action) {
+export function addNumberReducer(prevState = 0, action) {
   return action.type === "ADD" ? prevState + action.data : prevState;
 }
 
@@ -268,23 +271,13 @@ function nodeWithIntlProp(node) {
   return React.cloneElement(node, {intl});
 }
 
-function shallowWithIntl(node, options = {}) {
+export function shallowWithIntl(node, options = {}) {
   return shallow(nodeWithIntlProp(node), Object.assign({}, options, {context: {intl}}));
 }
 
-function mountWithIntl(node, options = {}) {
+export function mountWithIntl(node, options = {}) {
   return mount(nodeWithIntlProp(node), Object.assign({}, options, {
     context: {intl},
     childContextTypes: {intl: intlShape}
   }));
 }
-
-module.exports = {
-  FakePerformance,
-  FakePrefs,
-  EventEmitter,
-  GlobalOverrider,
-  addNumberReducer,
-  mountWithIntl,
-  shallowWithIntl
-};

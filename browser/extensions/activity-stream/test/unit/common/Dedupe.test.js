@@ -1,4 +1,4 @@
-const {Dedupe} = require("common/Dedupe.jsm");
+import {Dedupe} from "common/Dedupe.jsm";
 
 describe("Dedupe", () => {
   let instance;

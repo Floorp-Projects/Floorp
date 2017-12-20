@@ -9,7 +9,7 @@ window.gActivityStreamStrings = {
   "header_bookmarks": "ბოლოს ჩანიშნულები",
   "header_recommended_by": "რეკომენდებულია {provider}-ის მიერ",
   "header_bookmarks_placeholder": "სანიშნები ჯერ არაა დამატებული.",
-  "header_stories_from": "-იდან",
+  "header_stories_from": "მომწოდებელი:",
   "type_label_visited": "მონახულებული",
   "type_label_bookmarked": "ჩანიშნული",
   "type_label_synced": "სხვა მოწყობილობიდან დასინქრონებული",

@@ -1,5 +1,5 @@
-const {shortURL} = require("lib/ShortURL.jsm");
-const {GlobalOverrider} = require("test/unit/utils");
+import {GlobalOverrider} from "test/unit/utils";
+import {shortURL} from "lib/ShortURL.jsm";
 
 const puny = "xn--kpry57d";
 const idn = "台灣";

@@ -1,7 +1,7 @@
-const injector = require("inject!lib/Store.jsm");
-const {createStore} = require("redux");
-const {addNumberReducer} = require("test/unit/utils");
-const {FakePrefs} = require("test/unit/utils");
+import {addNumberReducer, FakePrefs} from "test/unit/utils";
+import {createStore} from "redux";
+import injector from "inject!lib/Store.jsm";
+
 describe("Store", () => {
   let Store;
   let sandbox;

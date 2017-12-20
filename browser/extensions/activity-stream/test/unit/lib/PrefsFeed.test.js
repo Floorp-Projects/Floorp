@@ -1,6 +1,6 @@
-const {PrefsFeed} = require("lib/PrefsFeed.jsm");
-const {actionTypes: at, actionCreators: ac} = require("common/Actions.jsm");
-const {PrerenderData} = require("common/PrerenderData.jsm");
+import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import {PrefsFeed} from "lib/PrefsFeed.jsm";
+import {PrerenderData} from "common/PrerenderData.jsm";
 const {initialPrefs} = PrerenderData;
 
 const PRERENDER_PREF_NAME = "prerender";

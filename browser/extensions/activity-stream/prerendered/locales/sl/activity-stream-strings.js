@@ -85,7 +85,7 @@ window.gActivityStreamStrings = {
   "topsites_form_add_button": "Dodaj",
   "topsites_form_save_button": "Shrani",
   "topsites_form_cancel_button": "Prekliči",
-  "topsites_form_url_validation": "Vnesite veljaven URL",
+  "topsites_form_url_validation": "Vnesite veljaven spletni naslov",
   "pocket_read_more": "Priljubljene teme:",
   "pocket_read_even_more": "Prikaži več vesti",
   "pocket_feedback_header": "Najboljše s spleta, kar je izbralo več kot 25 milijonov ljudi.",

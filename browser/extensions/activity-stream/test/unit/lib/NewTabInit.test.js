@@ -1,5 +1,5 @@
-const {NewTabInit} = require("lib/NewTabInit.jsm");
-const {actionTypes: at, actionCreators: ac} = require("common/Actions.jsm");
+import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import {NewTabInit} from "lib/NewTabInit.jsm";
 
 describe("NewTabInit", () => {
   let instance;

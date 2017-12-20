@@ -1,7 +1,7 @@
-const prerender = require("content-src/activity-stream-prerender");
-const {prerenderStore} = prerender;
-const {PrerenderData} = require("common/PrerenderData.jsm");
-const messages = require("data/locales.json")["en-US"];
+import {prerender, prerenderStore} from "content-src/activity-stream-prerender";
+import {PrerenderData} from "common/PrerenderData.jsm";
+
+const messages = require("data/locales.json")["en-US"]; // eslint-disable-line import/no-commonjs
 
 describe("prerenderStore", () => {
   it("should start uninitialized", () => {

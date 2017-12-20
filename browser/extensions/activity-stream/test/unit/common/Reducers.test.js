@@ -1,7 +1,6 @@
-const {reducers, INITIAL_STATE, insertPinned} = require("common/Reducers.jsm");
+import {INITIAL_STATE, insertPinned, reducers} from "common/Reducers.jsm";
 const {TopSites, App, Snippets, Prefs, Dialog, Sections, PreferencesPane} = reducers;
-
-const {actionTypes: at} = require("common/Actions.jsm");
+import {actionTypes as at} from "common/Actions.jsm";
 
 describe("Reducers", () => {
   describe("App", () => {

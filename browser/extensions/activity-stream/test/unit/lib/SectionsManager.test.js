@@ -1,7 +1,7 @@
 "use strict";
-const {SectionsFeed, SectionsManager} = require("lib/SectionsManager.jsm");
-const {EventEmitter, GlobalOverrider} = require("test/unit/utils");
-const {MAIN_MESSAGE_TYPE, CONTENT_MESSAGE_TYPE} = require("common/Actions.jsm");
+import {CONTENT_MESSAGE_TYPE, MAIN_MESSAGE_TYPE} from "common/Actions.jsm";
+import {EventEmitter, GlobalOverrider} from "test/unit/utils";
+import {SectionsFeed, SectionsManager} from "lib/SectionsManager.jsm";
 
 const FAKE_ID = "FAKE_ID";
 const FAKE_OPTIONS = {icon: "FAKE_ICON", title: "FAKE_TITLE"};
