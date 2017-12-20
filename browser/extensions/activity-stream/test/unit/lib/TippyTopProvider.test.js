@@ -1,6 +1,5 @@
-"use strict";
-const {TippyTopProvider} = require("lib/TippyTopProvider.jsm");
-const {GlobalOverrider} = require("test/unit/utils");
+import {GlobalOverrider} from "test/unit/utils";
+import {TippyTopProvider} from "lib/TippyTopProvider.jsm";
 
 describe("TippyTopProvider", () => {
   let instance;

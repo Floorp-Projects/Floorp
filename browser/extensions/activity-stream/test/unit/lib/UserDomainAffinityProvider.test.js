@@ -1,6 +1,5 @@
-"use strict";
-const injector = require("inject!lib/UserDomainAffinityProvider.jsm");
-const {GlobalOverrider} = require("test/unit/utils");
+import {GlobalOverrider} from "test/unit/utils";
+import injector from "inject!lib/UserDomainAffinityProvider.jsm";
 
 const TIME_SEGMENTS = [
   {"id": "hour", "startTime": 3600, "endTime": 0, "weightPosition": 1},

@@ -1,5 +1,5 @@
 const ACTIVITY_STREAM_PREF_BRANCH = "browser.newtabpage.activity-stream.";
-const {Prefs, DefaultPrefs} = require("lib/ActivityStreamPrefs.jsm");
+import {DefaultPrefs, Prefs} from "lib/ActivityStreamPrefs.jsm";
 
 const TEST_PREF_CONFIG = new Map([
   ["foo", {value: true}],

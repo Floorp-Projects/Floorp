@@ -1,16 +1,15 @@
 /* global Services */
-
-const injector = require("inject!lib/TelemetryFeed.jsm");
-const {GlobalOverrider, FakePrefs} = require("test/unit/utils");
-const {actionCreators: ac, actionTypes: at} = require("common/Actions.jsm");
-const {
+import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import {
   BasePing,
-  UndesiredPing,
-  UserEventPing,
   ImpressionStatsPing,
   PerfPing,
-  SessionPing
-} = require("test/schemas/pings");
+  SessionPing,
+  UndesiredPing,
+  UserEventPing
+} from "test/schemas/pings";
+import {FakePrefs, GlobalOverrider} from "test/unit/utils";
+import injector from "inject!lib/TelemetryFeed.jsm";
 
 const FAKE_UUID = "{foo-123-foo}";
 
@@ -165,7 +164,7 @@ describe("TelemetryFeed", () => {
       assert.propertyVal(instance.sessions.get("foo").perf,
                          "topsites_data_late_by_ms", 10);
     });
-    it("should be a valid ping with the topsites_icon_stats perf", () => {
+    it("should be a valid ping with the topsites stats perf", () => {
       // Add a session
       const portID = "foo";
       const session = instance.addSession(portID, "about:home");
@@ -176,7 +175,8 @@ describe("TelemetryFeed", () => {
           "tippytop": 2,
           "rich_icon": 1,
           "no_image": 0
-        }
+        },
+        topsites_pinned: 3
       });
 
       // Create a ping referencing the session
@@ -184,6 +184,7 @@ describe("TelemetryFeed", () => {
       assert.validate(ping, SessionPing);
       assert.propertyVal(instance.sessions.get("foo").perf.topsites_icon_stats,
         "screenshot_with_icon", 2);
+      assert.equal(instance.sessions.get("foo").perf.topsites_pinned, 3);
     });
   });
 
