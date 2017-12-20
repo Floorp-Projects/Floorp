@@ -1435,11 +1435,12 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(const GLbitfield clearBits,
     AssertCachedGlobalState();
 
     // Prepare GL state for clearing.
-    gl->fDisable(LOCAL_GL_SCISSOR_TEST);
+    if (mScissorTestEnabled) {
+        gl->fDisable(LOCAL_GL_SCISSOR_TEST);
+    }
 
     if (initializeColorBuffer) {
-        gl->fColorMask(1, 1, 1, 1);
-        mDriverColorMask = 0x0f;
+        DoColorMask(0x0f);
 
         if (fakeNoAlpha) {
             gl->fClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -1469,8 +1470,9 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(const GLbitfield clearBits,
     gl->fClear(clearBits);
 
     // And reset!
-    if (mScissorTestEnabled)
+    if (mScissorTestEnabled) {
         gl->fEnable(LOCAL_GL_SCISSOR_TEST);
+    }
 
     if (mRasterizerDiscardEnabled) {
         gl->fEnable(LOCAL_GL_RASTERIZER_DISCARD);
@@ -1510,6 +1512,8 @@ WebGLContext::OnEndOfFrame() const
 void
 WebGLContext::BlitBackbufferToCurDriverFB() const
 {
+    DoColorMask(0x0f);
+
     if (mScissorTestEnabled) {
         gl->fDisable(LOCAL_GL_SCISSOR_TEST);
     }
@@ -2077,6 +2081,18 @@ WebGLContext::BindDefaultFBForRead(const char* const funcName)
     return true;
 }
 
+void
+WebGLContext::DoColorMask(const uint8_t bitmask) const
+{
+    if (mDriverColorMask != bitmask) {
+        mDriverColorMask = bitmask;
+        gl->fColorMask(bool(mDriverColorMask & (1 << 0)),
+                       bool(mDriverColorMask & (1 << 1)),
+                       bool(mDriverColorMask & (1 << 2)),
+                       bool(mDriverColorMask & (1 << 3)));
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 ScopedDrawCallWrapper::ScopedDrawCallWrapper(WebGLContext& webgl)
@@ -2097,13 +2113,7 @@ ScopedDrawCallWrapper::ScopedDrawCallWrapper(WebGLContext& webgl)
     }
 
     const auto& gl = mWebGL.gl;
-    if (mWebGL.mDriverColorMask != driverColorMask) {
-        mWebGL.mDriverColorMask = driverColorMask;
-        gl->fColorMask(bool(mWebGL.mDriverColorMask & (1 << 0)),
-                       bool(mWebGL.mDriverColorMask & (1 << 1)),
-                       bool(mWebGL.mDriverColorMask & (1 << 2)),
-                       bool(mWebGL.mDriverColorMask & (1 << 3)));
-    }
+    mWebGL.DoColorMask(driverColorMask);
     if (mWebGL.mDriverDepthTest != driverDepthTest) {
         // "When disabled, the depth comparison and subsequent possible updates to the
         //  depth buffer value are bypassed and the fragment is passed to the next

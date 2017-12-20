@@ -2003,6 +2003,7 @@ protected:
     bool BindCurFBForColorRead(const char* funcName,
                                const webgl::FormatUsageInfo** out_format,
                                uint32_t* out_width, uint32_t* out_height);
+    void DoColorMask(uint8_t bitmask) const;
     void BlitBackbufferToCurDriverFB() const;
     bool BindDefaultFBForRead(const char* funcName);
 
