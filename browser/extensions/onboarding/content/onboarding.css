@@ -356,22 +356,11 @@
   border: none;
 }
 
-.onboarding-tour-page.onboarding-no-button > .onboarding-tour-content {
-  grid-row: tour-page-start / tour-page-end;
-  grid-column: tour-content-start / tour-page-end;
-}
-
 .onboarding-tour-button-container {
   /* Get higher z-index in order to ensure buttons within container are selectable */
   z-index: 2;
   grid-row: tour-button-start / tour-page-end;
   grid-column: tour-content-start / tour-page-end;
-}
-
-.onboarding-tour-page.onboarding-no-button > .onboarding-tour-button-container {
-  display: none;
-  grid-row: tour-page-end;
-  grid-column: tour-page-end;
 }
 
 .onboarding-tour-action-button {

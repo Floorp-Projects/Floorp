@@ -201,7 +201,7 @@ class BackendMakeFile(object):
     actually change. We use FileAvoidWrite to accomplish this.
     """
 
-    def __init__(self, srcdir, objdir, environment, topsrcdir, topobjdir):
+    def __init__(self, srcdir, objdir, environment, topsrcdir, topobjdir, dry_run):
         self.topsrcdir = topsrcdir
         self.srcdir = srcdir
         self.objdir = objdir
@@ -211,7 +211,7 @@ class BackendMakeFile(object):
 
         self.xpt_name = None
 
-        self.fh = FileAvoidWrite(self.name, capture_diff=True)
+        self.fh = FileAvoidWrite(self.name, capture_diff=True, dry_run=dry_run)
         self.fh.write('# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT EDIT.\n')
         self.fh.write('\n')
 
@@ -433,7 +433,7 @@ class RecursiveMakeBackend(CommonBackend):
         if obj.objdir not in self._backend_files:
             self._backend_files[obj.objdir] = \
                 BackendMakeFile(obj.srcdir, obj.objdir, obj.config,
-                    obj.topsrcdir, self.environment.topobjdir)
+                    obj.topsrcdir, self.environment.topobjdir, self.dry_run)
         return self._backend_files[obj.objdir]
 
     def consume_object(self, obj):

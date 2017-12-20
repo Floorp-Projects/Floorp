@@ -57,6 +57,9 @@ let onClick = evt => {
         Mozilla.UITour.showFirefoxAccounts(null, emailInput.value);
       }
       break;
+    case "onboarding-tour-sync-connect-device-button":
+      Mozilla.UITour.showConnectAnotherDevice();
+      break;
   }
   let classList = evt.target.classList;
   // On keyboard navigation the target would be .onboarding-tour-item.

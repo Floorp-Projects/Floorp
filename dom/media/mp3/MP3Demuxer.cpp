@@ -391,16 +391,31 @@ MP3TrackDemuxer::Duration() const
   if (mParser.VBRInfo().IsValid() && numAudioFrames.valueOr(0) + 1 > 1) {
     // VBR headers don't include the VBR header frame.
     numFrames = numAudioFrames.value() + 1;
-  } else {
-    const int64_t streamLen = StreamLength();
-    if (streamLen < 0) {
-      // Unknown length, we can't estimate duration.
-      return TimeUnit::FromMicroseconds(-1);
-    }
-    if (AverageFrameLength() > 0) {
-      numFrames = (streamLen - mFirstFrameOffset) / AverageFrameLength();
-    }
+    return Duration(numFrames);
   }
+
+  const int64_t streamLen = StreamLength();
+  if (streamLen < 0) { // Live streams.
+    // Unknown length, we can't estimate duration.
+    return TimeUnit::FromMicroseconds(-1);
+  }
+  // We can't early return when streamLen < 0 before checking numAudioFrames
+  // since some live radio will give an opening remark before playing music
+  // and the duration of the opening talk can be calculated by numAudioFrames.
+
+  const int64_t size = streamLen - mFirstFrameOffset;
+  MOZ_ASSERT(size);
+
+  // If it's CBR, calculate the duration by bitrate.
+  if (!mParser.VBRInfo().IsValid()) {
+    const int32_t bitrate = mParser.CurrentFrame().Header().Bitrate();
+    return media::TimeUnit::FromSeconds(static_cast<double>(size) * 8 / bitrate);
+  }
+
+  if (AverageFrameLength() > 0) {
+    numFrames = size / AverageFrameLength();
+  }
+
   return Duration(numFrames);
 }
 
