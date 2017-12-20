@@ -117,11 +117,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
     // Ensure that all network requests for a window client have the ClientInfo
     // properly set.
     // TODO: The ClientInfo is not set properly for worker initiated requests yet.
-    nsCOMPtr<nsPIDOMWindowInner> contextInner =
-      aLoadingContext->OwnerDoc()->GetInnerWindow();
-    if (contextInner) {
-      mClientInfo = contextInner->GetClientInfo();
-    }
+    mClientInfo = aLoadingContext->OwnerDoc()->GetClientInfo();
 
     nsCOMPtr<nsPIDOMWindowOuter> contextOuter = aLoadingContext->OwnerDoc()->GetWindow();
     if (contextOuter) {
