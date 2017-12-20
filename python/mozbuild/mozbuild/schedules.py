@@ -15,6 +15,11 @@ INCLUSIVE_COMPONENTS = [
     'py-lint',
     'js-lint',
     'yaml-lint',
+    # inclusive test suites -- these *only* run when certain files have changed
+    'jittest',
+    'test-verify',
+    'test-verify-wpt',
+    'jsreftest',
 ]
 INCLUSIVE_COMPONENTS = sorted(INCLUSIVE_COMPONENTS)
 
@@ -30,7 +35,6 @@ EXCLUSIVE_COMPONENTS = [
     'firefox-ui',
     'geckoview',
     'gtest',
-    'jittest',
     'marionette',
     'mochitest',
     'reftest',

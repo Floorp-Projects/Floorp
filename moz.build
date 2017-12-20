@@ -55,6 +55,18 @@ with Files('**/Makefile.in'):
     BUG_COMPONENT = ('Core', 'Build Config')
     FINAL = True
 
+with Files("**/*.js"):
+    SCHEDULES.inclusive += ['test-verify']
+
+with Files("**/*.html"):
+    SCHEDULES.inclusive += ['test-verify']
+
+with Files("**/*.xhtml"):
+    SCHEDULES.inclusive += ['test-verify']
+
+with Files("**/*.xul"):
+    SCHEDULES.inclusive += ['test-verify']
+
 CONFIGURE_SUBST_FILES += [
     'config/autoconf.mk',
     'config/emptyvars.mk',

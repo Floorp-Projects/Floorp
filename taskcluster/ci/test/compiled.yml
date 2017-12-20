@@ -75,10 +75,6 @@ jittest:
                 windows.*: false
                 macosx.*: false
                 default: true
-    when:
-        files-changed:
-            - js/src/**
-            - js/public/**
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
