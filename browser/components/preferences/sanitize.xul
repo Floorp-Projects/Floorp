@@ -19,8 +19,7 @@
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
             dlgbuttons="accept,cancel,help"
             ondialoghelp="openPrefsHelp()"
-            dialogWidth="&sanitizePrefs2.modal.width;"
-            subdialogWidth="&sanitizePrefs2.inContent.dialog.width;"
+            style="width: &sanitizePrefs2.modal.width;"
             title="&sanitizePrefs2.title;"
             onload="gSanitizeDialog.init();">
 
@@ -48,8 +47,7 @@
       <caption><label>&historySection.label;</label></caption>
       <grid flex="1">
         <columns>
-          <column dialogWidth="&sanitizePrefs2.column.width;"
-                  subdialogWidth="&sanitizePrefs2.inContent.column.width;"/>
+          <column style="width: &sanitizePrefs2.column.width;"/>
           <column flex="1"/>
         </columns>
         <rows>
@@ -81,8 +79,7 @@
       <caption><label>&dataSection.label;</label></caption>
       <grid flex="1">
         <columns>
-          <column dialogWidth="&sanitizePrefs2.column.width;"
-                  subdialogWidth="&sanitizePrefs2.inContent.column.width;"/>
+          <column style="width: &sanitizePrefs2.column.width;"/>
           <column flex="1"/>
         </columns>
         <rows>
