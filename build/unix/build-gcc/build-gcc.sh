@@ -116,6 +116,7 @@ build_gcc() {
   make $make_flags install DESTDIR=$root_dir
 
   cd $root_dir/tools
+  ln -s gcc gcc/bin/cc
   tar caf $root_dir/gcc.tar.xz gcc/
   popd
 }
