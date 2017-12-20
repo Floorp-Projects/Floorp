@@ -513,13 +513,6 @@ protected:
     return GetTrack(*mSessionAns, type, index);
   }
 
-  size_t CountRtpTypes() const {
-    return std::count_if(
-        types.begin(), types.end(),
-        [](SdpMediaSection::MediaType type)
-          {return type != SdpMediaSection::MediaType::kApplication;});
-  }
-
   bool Equals(const SdpFingerprintAttributeList::Fingerprint& f1,
               const SdpFingerprintAttributeList::Fingerprint& f2) const {
     if (f1.hashFunc != f2.hashFunc) {
@@ -1639,20 +1632,10 @@ TEST_P(JsepSessionTest, RenegotiationNoChange)
   SetLocalOffer(offer);
   SetRemoteOffer(offer);
 
-  auto added = mSessionAns->GetRemoteTracksAdded();
-  auto removed = mSessionAns->GetRemoteTracksRemoved();
-  ASSERT_EQ(CountRtpTypes(), added.size());
-  ASSERT_EQ(0U, removed.size());
-
   AddTracks(*mSessionAns);
   std::string answer = CreateAnswer();
   SetLocalAnswer(answer);
   SetRemoteAnswer(answer);
-
-  added = mSessionOff->GetRemoteTracksAdded();
-  removed = mSessionOff->GetRemoteTracksRemoved();
-  ASSERT_EQ(CountRtpTypes(), added.size());
-  ASSERT_EQ(0U, removed.size());
 
   ValidateSetupAttribute(*mSessionOff, SdpSetupAttribute::kActpass);
   ValidateSetupAttribute(*mSessionAns, SdpSetupAttribute::kActive);
@@ -1666,19 +1649,9 @@ TEST_P(JsepSessionTest, RenegotiationNoChange)
   SetLocalOffer(reoffer);
   SetRemoteOffer(reoffer);
 
-  added = mSessionAns->GetRemoteTracksAdded();
-  removed = mSessionAns->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(0U, removed.size());
-
   std::string reanswer = CreateAnswer();
   SetLocalAnswer(reanswer);
   SetRemoteAnswer(reanswer);
-
-  added = mSessionOff->GetRemoteTracksAdded();
-  removed = mSessionOff->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(0U, removed.size());
 
   ValidateSetupAttribute(*mSessionOff, SdpSetupAttribute::kActpass);
   ValidateSetupAttribute(*mSessionAns, SdpSetupAttribute::kActive);
@@ -1698,20 +1671,10 @@ TEST_P(JsepSessionTest, DISABLED_RenegotiationSwappedRolesNoChange)
   SetLocalOffer(offer);
   SetRemoteOffer(offer);
 
-  auto added = mSessionAns->GetRemoteTracksAdded();
-  auto removed = mSessionAns->GetRemoteTracksRemoved();
-  ASSERT_EQ(types.size(), added.size());
-  ASSERT_EQ(0U, removed.size());
-
   AddTracks(*mSessionAns);
   std::string answer = CreateAnswer();
   SetLocalAnswer(answer);
   SetRemoteAnswer(answer);
-
-  added = mSessionOff->GetRemoteTracksAdded();
-  removed = mSessionOff->GetRemoteTracksRemoved();
-  ASSERT_EQ(types.size(), added.size());
-  ASSERT_EQ(0U, removed.size());
 
   ValidateSetupAttribute(*mSessionOff, SdpSetupAttribute::kActpass);
   ValidateSetupAttribute(*mSessionAns, SdpSetupAttribute::kActive);
@@ -1725,19 +1688,9 @@ TEST_P(JsepSessionTest, DISABLED_RenegotiationSwappedRolesNoChange)
   SetLocalOffer(reoffer);
   SetRemoteOffer(reoffer);
 
-  added = mSessionAns->GetRemoteTracksAdded();
-  removed = mSessionAns->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(0U, removed.size());
-
   std::string reanswer = CreateAnswer();
   SetLocalAnswer(reanswer);
   SetRemoteAnswer(reanswer);
-
-  added = mSessionOff->GetRemoteTracksAdded();
-  removed = mSessionOff->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(0U, removed.size());
 
   ValidateSetupAttribute(*mSessionOff, SdpSetupAttribute::kActpass);
   ValidateSetupAttribute(*mSessionAns, SdpSetupAttribute::kPassive);
@@ -1775,18 +1728,6 @@ TEST_P(JsepSessionTest, RenegotiationOffererAddsTrack)
 
   ValidateSetupAttribute(*mSessionOff, SdpSetupAttribute::kActpass);
   ValidateSetupAttribute(*mSessionAns, SdpSetupAttribute::kActive);
-
-  auto added = mSessionAns->GetRemoteTracksAdded();
-  auto removed = mSessionAns->GetRemoteTracksRemoved();
-  ASSERT_EQ(2U, added.size());
-  ASSERT_EQ(0U, removed.size());
-  ASSERT_EQ(SdpMediaSection::kAudio, added[0].GetMediaType());
-  ASSERT_EQ(SdpMediaSection::kVideo, added[1].GetMediaType());
-
-  added = mSessionOff->GetRemoteTracksAdded();
-  removed = mSessionOff->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(0U, removed.size());
 
   auto newOffererTransceivers = mSessionOff->GetTransceivers();
   auto newAnswererTransceivers = mSessionAns->GetTransceivers();
@@ -1838,18 +1779,6 @@ TEST_P(JsepSessionTest, RenegotiationAnswererAddsTrack)
   ValidateSetupAttribute(*mSessionOff, SdpSetupAttribute::kActpass);
   ValidateSetupAttribute(*mSessionAns, SdpSetupAttribute::kActive);
 
-  auto added = mSessionAns->GetRemoteTracksAdded();
-  auto removed = mSessionAns->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(0U, removed.size());
-
-  added = mSessionOff->GetRemoteTracksAdded();
-  removed = mSessionOff->GetRemoteTracksRemoved();
-  ASSERT_EQ(2U, added.size());
-  ASSERT_EQ(0U, removed.size());
-  ASSERT_EQ(SdpMediaSection::kAudio, added[0].GetMediaType());
-  ASSERT_EQ(SdpMediaSection::kVideo, added[1].GetMediaType());
-
   auto newOffererTransceivers = mSessionOff->GetTransceivers();
   auto newAnswererTransceivers = mSessionAns->GetTransceivers();
 
@@ -1888,20 +1817,6 @@ TEST_P(JsepSessionTest, RenegotiationBothAddTrack)
 
   ValidateSetupAttribute(*mSessionOff, SdpSetupAttribute::kActpass);
   ValidateSetupAttribute(*mSessionAns, SdpSetupAttribute::kActive);
-
-  auto added = mSessionAns->GetRemoteTracksAdded();
-  auto removed = mSessionAns->GetRemoteTracksRemoved();
-  ASSERT_EQ(2U, added.size());
-  ASSERT_EQ(0U, removed.size());
-  ASSERT_EQ(SdpMediaSection::kAudio, added[0].GetMediaType());
-  ASSERT_EQ(SdpMediaSection::kVideo, added[1].GetMediaType());
-
-  added = mSessionOff->GetRemoteTracksAdded();
-  removed = mSessionOff->GetRemoteTracksRemoved();
-  ASSERT_EQ(2U, added.size());
-  ASSERT_EQ(0U, removed.size());
-  ASSERT_EQ(SdpMediaSection::kAudio, added[0].GetMediaType());
-  ASSERT_EQ(SdpMediaSection::kVideo, added[1].GetMediaType());
 
   auto newOffererTransceivers = mSessionOff->GetTransceivers();
   auto newAnswererTransceivers = mSessionAns->GetTransceivers();
@@ -1986,7 +1901,8 @@ TEST_P(JsepSessionTest, RenegotiationOffererChangesMsid)
   std::string offer = CreateOffer();
   SetLocalOffer(offer);
 
-  JsepTransceiver* transceiver = GetNegotiatedTransceiver(*mSessionOff, 0);
+  RefPtr<JsepTransceiver> transceiver =
+    GetNegotiatedTransceiver(*mSessionOff, 0);
   ASSERT_TRUE(transceiver);
   std::string streamId = transceiver->mSendTrack.GetStreamIds()[0];
   std::string trackId = transceiver->mSendTrack.GetTrackId();
@@ -1999,19 +1915,9 @@ TEST_P(JsepSessionTest, RenegotiationOffererChangesMsid)
   offer.replace(msidOffset, msidToReplace.size(), "a=msid:foo bar");
 
   SetRemoteOffer(offer);
-
-  std::vector<JsepTrack> removedTracks = mSessionAns->GetRemoteTracksRemoved();
-  std::vector<JsepTrack> addedTracks = mSessionAns->GetRemoteTracksAdded();
-
-  ASSERT_EQ(1U, removedTracks.size());
-  ASSERT_FALSE(IsNull(removedTracks[0]));
-  ASSERT_EQ(streamId, removedTracks[0].GetStreamIds()[0]);
-  ASSERT_EQ(trackId, removedTracks[0].GetTrackId());
-
-  ASSERT_EQ(1U, addedTracks.size());
-  ASSERT_FALSE(IsNull(addedTracks[0]));
-  ASSERT_EQ("foo", addedTracks[0].GetStreamIds()[0]);
-  ASSERT_EQ("bar", addedTracks[0].GetTrackId());
+  transceiver = GetNegotiatedTransceiver(*mSessionAns, 0);
+  ASSERT_EQ("foo", transceiver->mRecvTrack.GetStreamIds()[0]);
+  ASSERT_EQ("bar", transceiver->mRecvTrack.GetTrackId());
 
   std::string answer = CreateAnswer();
   SetLocalAnswer(answer);
@@ -2036,7 +1942,8 @@ TEST_P(JsepSessionTest, RenegotiationAnswererChangesMsid)
   std::string answer = CreateAnswer();
   SetLocalAnswer(answer);
 
-  JsepTransceiver* transceiver = GetNegotiatedTransceiver(*mSessionAns, 0);
+  RefPtr<JsepTransceiver> transceiver =
+    GetNegotiatedTransceiver(*mSessionAns, 0);
   ASSERT_TRUE(transceiver);
   std::string streamId = transceiver->mSendTrack.GetStreamIds()[0];
   std::string trackId = transceiver->mSendTrack.GetTrackId();
@@ -2050,18 +1957,9 @@ TEST_P(JsepSessionTest, RenegotiationAnswererChangesMsid)
 
   SetRemoteAnswer(answer);
 
-  std::vector<JsepTrack> removedTracks = mSessionOff->GetRemoteTracksRemoved();
-  std::vector<JsepTrack> addedTracks = mSessionOff->GetRemoteTracksAdded();
-
-  ASSERT_EQ(1U, removedTracks.size());
-  ASSERT_FALSE(IsNull(removedTracks[0]));
-  ASSERT_EQ(streamId, removedTracks[0].GetStreamIds()[0]);
-  ASSERT_EQ(trackId, removedTracks[0].GetTrackId());
-
-  ASSERT_EQ(1U, addedTracks.size());
-  ASSERT_FALSE(IsNull(addedTracks[0]));
-  ASSERT_EQ("foo", addedTracks[0].GetStreamIds()[0]);
-  ASSERT_EQ("bar", addedTracks[0].GetTrackId());
+  transceiver = GetNegotiatedTransceiver(*mSessionOff, 0);
+  ASSERT_EQ("foo", transceiver->mRecvTrack.GetStreamIds()[0]);
+  ASSERT_EQ("bar", transceiver->mRecvTrack.GetTrackId());
 }
 
 TEST_P(JsepSessionTest, RenegotiationOffererStopsTransceiver)
@@ -2084,20 +1982,6 @@ TEST_P(JsepSessionTest, RenegotiationOffererStopsTransceiver)
   JsepTrack removedTrack(mSessionOff->GetTransceivers().back()->mSendTrack);
 
   OfferAnswer(CHECK_SUCCESS);
-
-  auto added = mSessionAns->GetRemoteTracksAdded();
-  auto removed = mSessionAns->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(1U, removed.size());
-
-  ASSERT_EQ(removedTrack.GetMediaType(), removed[0].GetMediaType());
-  ASSERT_EQ(removedTrack.GetStreamIds(), removed[0].GetStreamIds());
-  ASSERT_EQ(removedTrack.GetTrackId(), removed[0].GetTrackId());
-
-  added = mSessionOff->GetRemoteTracksAdded();
-  removed = mSessionOff->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(1U, removed.size());
 
   // Last m-section should be disabled
   auto offer = GetParsedLocalDescription(*mSessionOff);
@@ -2154,20 +2038,6 @@ TEST_P(JsepSessionTest, RenegotiationAnswererStopsTransceiver)
 
   OfferAnswer(CHECK_SUCCESS);
 
-  auto added = mSessionAns->GetRemoteTracksAdded();
-  auto removed = mSessionAns->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(0U, removed.size());
-
-  added = mSessionOff->GetRemoteTracksAdded();
-  removed = mSessionOff->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(1U, removed.size());
-
-  ASSERT_EQ(removedTrack.GetMediaType(), removed[0].GetMediaType());
-  ASSERT_EQ(removedTrack.GetStreamIds(), removed[0].GetStreamIds());
-  ASSERT_EQ(removedTrack.GetTrackId(), removed[0].GetTrackId());
-
   // Last m-section should be sendrecv
   auto offer = GetParsedLocalDescription(*mSessionOff);
   const SdpMediaSection* msection =
@@ -2222,24 +2092,6 @@ TEST_P(JsepSessionTest, RenegotiationBothStopSameTransceiver)
   JsepTrack removedTrackAnswer(mSessionAns->GetTransceivers().back()->mSendTrack);
 
   OfferAnswer(CHECK_SUCCESS);
-
-  auto added = mSessionAns->GetRemoteTracksAdded();
-  auto removed = mSessionAns->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(1U, removed.size());
-
-  ASSERT_EQ(removedTrackOffer.GetMediaType(), removed[0].GetMediaType());
-  ASSERT_EQ(removedTrackOffer.GetStreamIds(), removed[0].GetStreamIds());
-  ASSERT_EQ(removedTrackOffer.GetTrackId(), removed[0].GetTrackId());
-
-  added = mSessionOff->GetRemoteTracksAdded();
-  removed = mSessionOff->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(1U, removed.size());
-
-  ASSERT_EQ(removedTrackAnswer.GetMediaType(), removed[0].GetMediaType());
-  ASSERT_EQ(removedTrackAnswer.GetStreamIds(), removed[0].GetStreamIds());
-  ASSERT_EQ(removedTrackAnswer.GetTrackId(), removed[0].GetTrackId());
 
   // Last m-section should be disabled
   auto offer = GetParsedLocalDescription(*mSessionOff);
@@ -2305,18 +2157,6 @@ TEST_P(JsepSessionTest, RenegotiationBothStopTransceiverThenAddTrack)
 
   OfferAnswer(CHECK_SUCCESS);
 
-  auto added = mSessionAns->GetRemoteTracksAdded();
-  auto removed = mSessionAns->GetRemoteTracksRemoved();
-  ASSERT_EQ(1U, added.size());
-  ASSERT_EQ(0U, removed.size());
-  ASSERT_EQ(removedType, added[0].GetMediaType());
-
-  added = mSessionOff->GetRemoteTracksAdded();
-  removed = mSessionOff->GetRemoteTracksRemoved();
-  ASSERT_EQ(1U, added.size());
-  ASSERT_EQ(0U, removed.size());
-  ASSERT_EQ(removedType, added[0].GetMediaType());
-
   auto newOffererTransceivers = mSessionOff->GetTransceivers();
   auto newAnswererTransceivers = mSessionAns->GetTransceivers();
 
@@ -2352,16 +2192,8 @@ TEST_P(JsepSessionTest, RenegotiationBothStopTransceiverDifferentMsection)
   mSessionOff->GetTransceivers()[1]->Stop();
 
   OfferAnswer(CHECK_SUCCESS);
-
-  auto added = mSessionAns->GetRemoteTracksAdded();
-  auto removed = mSessionAns->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(2U, removed.size());
-
-  added = mSessionOff->GetRemoteTracksAdded();
-  removed = mSessionOff->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(2U, removed.size());
+  ASSERT_TRUE(mSessionAns->GetTransceivers()[0]->IsStopped());
+  ASSERT_TRUE(mSessionAns->GetTransceivers()[1]->IsStopped());
 }
 
 TEST_P(JsepSessionTest, RenegotiationOffererReplacesTrack)
@@ -2382,10 +2214,10 @@ TEST_P(JsepSessionTest, RenegotiationOffererReplacesTrack)
 
   // Latest JSEP spec says the msid never changes, so the other side will not
   // notice track replacement.
-  auto added = mSessionAns->GetRemoteTracksAdded();
-  auto removed = mSessionAns->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(0U, removed.size());
+  ASSERT_NE("newtrack",
+      mSessionAns->GetTransceivers()[0]->mRecvTrack.GetTrackId());
+  ASSERT_NE("newstream",
+      mSessionAns->GetTransceivers()[0]->mRecvTrack.GetStreamIds()[0]);
 }
 
 TEST_P(JsepSessionTest, RenegotiationAnswererReplacesTrack)
@@ -2406,10 +2238,10 @@ TEST_P(JsepSessionTest, RenegotiationAnswererReplacesTrack)
 
   // Latest JSEP spec says the msid never changes, so the other side will not
   // notice track replacement.
-  auto added = mSessionOff->GetRemoteTracksAdded();
-  auto removed = mSessionOff->GetRemoteTracksRemoved();
-  ASSERT_EQ(0U, added.size());
-  ASSERT_EQ(0U, removed.size());
+  ASSERT_NE("newtrack",
+      mSessionOff->GetTransceivers()[0]->mRecvTrack.GetTrackId());
+  ASSERT_NE("newstream",
+      mSessionOff->GetTransceivers()[0]->mRecvTrack.GetStreamIds()[0]);
 }
 
 // Tests whether auto-assigned remote msids (ie; what happens when the other
@@ -4744,7 +4576,9 @@ TEST_P(JsepSessionTest, TestRejectOfferRollback)
   ASSERT_EQ(NS_OK,
             mSessionAns->SetRemoteDescription(kJsepSdpRollback, ""));
   ASSERT_EQ(kJsepStateStable, mSessionAns->GetState());
-  ASSERT_EQ(CountRtpTypes(), mSessionAns->GetRemoteTracksRemoved().size());
+  for (const auto& transceiver : mSessionAns->GetTransceivers()) {
+    ASSERT_EQ(0U, transceiver->mRecvTrack.GetStreamIds().size());
+  }
 
   ASSERT_EQ(NS_OK,
             mSessionOff->SetLocalDescription(kJsepSdpRollback, ""));

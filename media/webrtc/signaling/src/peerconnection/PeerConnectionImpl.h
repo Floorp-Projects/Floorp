@@ -361,8 +361,6 @@ public:
     rv = SetLocalDescription(aAction, NS_ConvertUTF16toUTF8(aSDP).get());
   }
 
-  void FireOnTrackEvents(RefPtr<PeerConnectionObserver>& aPco);
-
   NS_IMETHODIMP SetRemoteDescription (int32_t aAction, const char* aSDP);
 
   void SetRemoteDescription (int32_t aAction, const nsAString& aSDP, ErrorResult &rv)

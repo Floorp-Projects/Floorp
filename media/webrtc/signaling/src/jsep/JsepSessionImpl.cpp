@@ -188,18 +188,6 @@ JsepSessionImpl::AddVideoRtpExtension(const std::string& extensionName,
   return AddRtpExtension(mVideoRtpExtensions, extensionName, direction);
 }
 
-std::vector<JsepTrack>
-JsepSessionImpl::GetRemoteTracksAdded() const
-{
-  return mRemoteTracksAdded;
-}
-
-std::vector<JsepTrack>
-JsepSessionImpl::GetRemoteTracksRemoved() const
-{
-  return mRemoteTracksRemoved;
-}
-
 nsresult
 JsepSessionImpl::CreateOfferMsection(const JsepOfferOptions& options,
                                      JsepTransceiver& transceiver,
@@ -1398,12 +1386,6 @@ JsepSessionImpl::SetRemoteDescriptionAnswer(JsepSdpType type,
   return NS_OK;
 }
 
-static bool
-TrackIdCompare(const JsepTrack& t1, const JsepTrack& t2)
-{
-  return t1.GetTrackId() < t2.GetTrackId();
-}
-
 JsepTransceiver*
 JsepSessionImpl::GetTransceiverForLevel(size_t level)
 {
@@ -1483,9 +1465,6 @@ JsepSessionImpl::GetTransceiverForRemote(const SdpMediaSection& msection)
 nsresult
 JsepSessionImpl::UpdateTransceiversFromRemoteDescription(const Sdp& remote)
 {
-  std::vector<JsepTrack> oldRemoteTracks;
-  std::vector<JsepTrack> newRemoteTracks;
-
   // Iterate over the sdp, updating remote tracks as we go
   for (size_t i = 0; i < remote.GetMediaSectionCount(); ++i) {
     const SdpMediaSection& msection = remote.GetMediaSection(i);
@@ -1493,13 +1472,6 @@ JsepSessionImpl::UpdateTransceiversFromRemoteDescription(const Sdp& remote)
     JsepTransceiver* transceiver(GetTransceiverForRemote(msection));
     if (!transceiver) {
       return NS_ERROR_FAILURE;
-    }
-
-    bool isRtp =
-      msection.GetMediaType() != SdpMediaSection::MediaType::kApplication;
-
-    if (isRtp && transceiver->mRecvTrack.GetActive()) {
-      oldRemoteTracks.push_back(transceiver->mRecvTrack);
     }
 
     if (!mSdpHelper.MsectionIsDisabled(msection)) {
@@ -1511,12 +1483,13 @@ JsepSessionImpl::UpdateTransceiversFromRemoteDescription(const Sdp& remote)
       continue;
     }
 
-    if (!isRtp) {
+    if (msection.GetMediaType() == SdpMediaSection::MediaType::kApplication) {
       continue;
     }
 
     // Interop workaround for endpoints that don't support msid.
-    // If the receiver has no ids, set some initial values, one way or another.
+    // Ensures that there is a default track id set.
+    // TODO(bug 1426005): Remove this
     if (msection.IsSending() && transceiver->mRecvTrack.GetTrackId().empty()) {
       std::vector<std::string> streamIds;
       std::string trackId;
@@ -1527,33 +1500,7 @@ JsepSessionImpl::UpdateTransceiversFromRemoteDescription(const Sdp& remote)
     }
 
     transceiver->mRecvTrack.UpdateRecvTrack(remote, msection);
-
-    if (msection.IsSending()) {
-      newRemoteTracks.push_back(transceiver->mRecvTrack);
-    }
   }
-
-  std::sort(oldRemoteTracks.begin(), oldRemoteTracks.end(), TrackIdCompare);
-  std::sort(newRemoteTracks.begin(), newRemoteTracks.end(), TrackIdCompare);
-
-  mRemoteTracksAdded.clear();
-  mRemoteTracksRemoved.clear();
-
-  std::set_difference(
-      oldRemoteTracks.begin(),
-      oldRemoteTracks.end(),
-      newRemoteTracks.begin(),
-      newRemoteTracks.end(),
-      std::inserter(mRemoteTracksRemoved, mRemoteTracksRemoved.begin()),
-      TrackIdCompare);
-
-  std::set_difference(
-      newRemoteTracks.begin(),
-      newRemoteTracks.end(),
-      oldRemoteTracks.begin(),
-      oldRemoteTracks.end(),
-      std::inserter(mRemoteTracksAdded, mRemoteTracksAdded.begin()),
-      TrackIdCompare);
 
   return NS_OK;
 }
@@ -1617,26 +1564,24 @@ JsepSessionImpl::RollbackRemoteOffer()
     }
 
     // New transceiver!
-    if (!transceiver->HasAddTrackMagic() &&
-        transceiver->WasCreatedBySetRemote()) {
-      transceiver->Stop();
-      transceiver->Disassociate();
-      transceiver->ClearLevel();
-      transceiver->SetRemoved();
-      mTransceivers.erase(mTransceivers.begin() + i);
-      --i;
-      continue;
-    }
+    bool shouldRemove = !transceiver->HasAddTrackMagic() &&
+                        transceiver->WasCreatedBySetRemote();
 
-    // Transceiver has been "touched" by addTrack; let it live, but unhook it
-    // from everything.
+    // We rollback even for transceivers we will remove, just to ensure we end
+    // up at the starting state.
     RefPtr<JsepTransceiver> temp(
         new JsepTransceiver(transceiver->GetMediaType()));
     transceiver->Rollback(*temp);
+
+    if (shouldRemove) {
+      transceiver->Stop();
+      transceiver->SetRemoved();
+      mTransceivers.erase(mTransceivers.begin() + i);
+      --i;
+    }
   }
 
   mOldTransceivers.clear();
-  std::swap(mRemoteTracksAdded, mRemoteTracksRemoved);
 }
 
 nsresult

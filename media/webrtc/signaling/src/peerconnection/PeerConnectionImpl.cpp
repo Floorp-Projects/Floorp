@@ -1774,36 +1774,6 @@ static void DeferredSetRemote(const std::string& aPcHandle,
   }
 }
 
-void
-PeerConnectionImpl::FireOnTrackEvents(RefPtr<PeerConnectionObserver>& aPco)
-{
-  for (auto& track : mJsepSession->GetRemoteTracksAdded()) {
-    if (track.GetMediaType() == mozilla::SdpMediaSection::kApplication) {
-      // Ignore datachannel
-      continue;
-    }
-
-    MOZ_ASSERT(!track.GetTrackId().empty());
-
-    nsString trackId = NS_ConvertUTF8toUTF16(track.GetTrackId().c_str());
-
-    dom::Sequence<nsString> streamIds;
-    for (const std::string& streamId : track.GetStreamIds()) {
-      // If this fails, oh well.
-      streamIds.AppendElement(
-          NS_ConvertASCIItoUTF16(streamId.c_str()), fallible);
-    }
-
-    JSErrorResult jrv;
-    aPco->OnTrack(trackId, streamIds, jrv);
-    if (jrv.Failed()) {
-      CSFLogError(LOGTAG, ": OnTrack(%s) failed! Error: %u",
-          track.GetTrackId().c_str(),
-          jrv.ErrorCodeAsInt());
-    }
-  }
-}
-
 NS_IMETHODIMP
 PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
 {
@@ -1929,11 +1899,6 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
     }
 
     UpdateSignalingState(sdpType == mozilla::kJsepSdpRollback);
-
-    // This needs to be done before we fire ontrack events
-    pco->SyncTransceivers(jrv);
-
-    FireOnTrackEvents(pco);
 
     pco->OnSetRemoteDescriptionSuccess(jrv);
 
