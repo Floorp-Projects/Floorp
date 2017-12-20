@@ -625,7 +625,7 @@ AudioCallbackDriver::Init()
   mScratchBuffer = SpillBuffer<AudioDataValue, WEBAUDIO_BLOCK_SIZE * 2>(mOutputChannels);
 
   output.channels = mOutputChannels;
-  output.layout = CubebUtils::ConvertChannelMapToCubebLayout(CubebUtils::PreferredChannelMap(mOutputChannels));
+  output.layout = CubebUtils::GetPreferredChannelLayoutOrSMPTE(cubebContext, mOutputChannels);
 
   Maybe<uint32_t> latencyPref = CubebUtils::GetCubebMSGLatencyInFrames();
   if (latencyPref) {
