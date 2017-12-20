@@ -119,9 +119,4 @@ TimeTicks TimeTicks::Now() {
   return TimeTicks(absolute_micro);
 }
 
-// static
-TimeTicks TimeTicks::HighResNow() {
-  return Now();
-}
-
 }  // namespace base
