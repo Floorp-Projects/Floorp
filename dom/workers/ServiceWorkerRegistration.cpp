@@ -9,7 +9,6 @@
 #include "ipc/ErrorIPCUtils.h"
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/PromiseWindowProxy.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/PushManagerBinding.h"
 #include "mozilla/dom/PushManager.h"
@@ -415,15 +414,14 @@ UpdateInternal(nsIPrincipal* aPrincipal,
 
 class MainThreadUpdateCallback final : public ServiceWorkerUpdateFinishCallback
 {
-  PromiseWindowProxy mPromise;
+  RefPtr<Promise> mPromise;
 
   ~MainThreadUpdateCallback()
   { }
 
 public:
-  explicit MainThreadUpdateCallback(nsPIDOMWindowInner* aWindow,
-                                    Promise* aPromise)
-    : mPromise(aWindow, aPromise)
+  explicit MainThreadUpdateCallback(Promise* aPromise)
+    : mPromise(aPromise)
   {
     AssertIsOnMainThread();
   }
@@ -431,17 +429,13 @@ public:
   void
   UpdateSucceeded(ServiceWorkerRegistrationInfo* aRegistration) override
   {
-    if (RefPtr<Promise> promise = mPromise.Get()) {
-      promise->MaybeResolveWithUndefined();
-    }
+    mPromise->MaybeResolveWithUndefined();
   }
 
   void
   UpdateFailed(ErrorResult& aStatus) override
   {
-    if (RefPtr<Promise> promise = mPromise.Get()) {
-      promise->MaybeReject(aStatus);
-    }
+    mPromise->MaybeReject(aStatus);
   }
 };
 
@@ -577,25 +571,22 @@ private:
 
 class UnregisterCallback final : public nsIServiceWorkerUnregisterCallback
 {
-  PromiseWindowProxy mPromise;
+  RefPtr<Promise> mPromise;
 
 public:
   NS_DECL_ISUPPORTS
 
-  explicit UnregisterCallback(nsPIDOMWindowInner* aWindow,
-                              Promise* aPromise)
-    : mPromise(aWindow, aPromise)
+  explicit UnregisterCallback(Promise* aPromise)
+    : mPromise(aPromise)
   {
-    MOZ_ASSERT(aPromise);
+    MOZ_ASSERT(mPromise);
   }
 
   NS_IMETHOD
   UnregisterSucceeded(bool aState) override
   {
     AssertIsOnMainThread();
-    if (RefPtr<Promise> promise = mPromise.Get()) {
-      promise->MaybeResolve(aState);
-    }
+    mPromise->MaybeResolve(aState);
     return NS_OK;
   }
 
@@ -604,9 +595,7 @@ public:
   {
     AssertIsOnMainThread();
 
-    if (RefPtr<Promise> promise = mPromise.Get()) {
-      promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
-    }
+    mPromise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return NS_OK;
   }
 
@@ -776,7 +765,7 @@ ServiceWorkerRegistrationMainThread::Update(ErrorResult& aRv)
   MOZ_ASSERT(doc);
 
   RefPtr<MainThreadUpdateCallback> cb =
-    new MainThreadUpdateCallback(GetOwner(), promise);
+    new MainThreadUpdateCallback(promise);
   UpdateInternal(doc->NodePrincipal(), mScope, cb);
 
   return promise.forget();
@@ -834,7 +823,7 @@ ServiceWorkerRegistrationMainThread::Unregister(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<UnregisterCallback> cb = new UnregisterCallback(GetOwner(), promise);
+  RefPtr<UnregisterCallback> cb = new UnregisterCallback(promise);
 
   NS_ConvertUTF8toUTF16 scope(uriSpec);
   aRv = swm->Unregister(documentPrincipal, cb, scope);
