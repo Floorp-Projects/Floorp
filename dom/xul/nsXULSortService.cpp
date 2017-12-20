@@ -65,9 +65,6 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
     } else if (child->IsXULElement(nsGkAtoms::treecol)) {
       nsAutoString value;
       child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, value);
-      // also check the resource attribute for older code
-      if (value.IsEmpty())
-        child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::resource, value);
       if (value == sortResource) {
         child->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::sortActive,
                                     NS_LITERAL_STRING("true"), true);
@@ -165,41 +162,13 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
 
   uint32_t i;
 
-  // inbetweenSeparatorSort sorts the items between separators independently
-  if (aSortState->inbetweenSeparatorSort) {
-    uint32_t startIndex = 0;
-    for (i = 0; i < numResults; i++) {
-      if (i > startIndex + 1) {
-        nsAutoString type;
-        items[i].result->GetType(type);
-        if (type.EqualsLiteral("separator")) {
-          if (aSortState->invertSort)
-            InvertSortInfo(items, startIndex, i - startIndex);
-          else
-            NS_QuickSort((void *)(items.Elements() + startIndex), i - startIndex,
-                         sizeof(contentSortInfo), testSortCallback, (void*)aSortState);
-
-          startIndex = i + 1;
-        }
-      }
-    }
-
-    if (i > startIndex + 1) {
-      if (aSortState->invertSort)
-        InvertSortInfo(items, startIndex, i - startIndex);
-      else
-        NS_QuickSort((void *)(items.Elements() + startIndex), i - startIndex,
-                     sizeof(contentSortInfo), testSortCallback, (void*)aSortState);
-    }
-  } else {
-    // if the items are just being inverted, that is, just switching between
-    // ascending and descending, just reverse the list.
-    if (aSortState->invertSort)
-      InvertSortInfo(items, 0, numResults);
-    else
-      NS_QuickSort((void *)items.Elements(), numResults,
-                   sizeof(contentSortInfo), testSortCallback, (void*)aSortState);
-  }
+  // if the items are just being inverted, that is, just switching between
+  // ascending and descending, just reverse the list.
+  if (aSortState->invertSort)
+    InvertSortInfo(items, 0, numResults);
+  else
+    NS_QuickSort((void *)items.Elements(), numResults,
+                 sizeof(contentSortInfo), testSortCallback, (void*)aSortState);
 
   // first remove the items from the old positions
   for (i = 0; i < numResults; i++) {
@@ -279,46 +248,23 @@ XULSortServiceImpl::InitializeSortState(Element* aRootElement,
     aSortState->lastWasLast = false;
   }
 
-  // The attributes allowed are either:
-  //    sort="key1 key2 ..."
-  // or sortResource="key1" sortResource2="key2"
-  // The latter is for backwards compatibility, and is equivalent to concatenating
-  // both values in the sort attribute
+  // The sort attribute is of the form: sort="key1 key2 ..."
   nsAutoString sort(aSortKey);
   aSortState->sortKeys.Clear();
-  if (sort.IsEmpty()) {
-    nsAutoString sortResource, sortResource2;
-    aRootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::sortResource, sortResource);
-    if (!sortResource.IsEmpty()) {
-      RefPtr<nsAtom> sortkeyatom = NS_Atomize(sortResource);
-      aSortState->sortKeys.AppendElement(sortkeyatom);
-      sort.Append(sortResource);
-
-      aRootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::sortResource2, sortResource2);
-      if (!sortResource2.IsEmpty()) {
-        RefPtr<nsAtom> sortkeyatom2 = NS_Atomize(sortResource2);
-        aSortState->sortKeys.AppendElement(sortkeyatom2);
-        sort.Append(' ');
-        sort.Append(sortResource2);
-      }
-    }
-  }
-  else {
-    nsWhitespaceTokenizer tokenizer(sort);
-    while (tokenizer.hasMoreTokens()) {
-      RefPtr<nsAtom> keyatom = NS_Atomize(tokenizer.nextToken());
-      NS_ENSURE_TRUE(keyatom, NS_ERROR_OUT_OF_MEMORY);
-      aSortState->sortKeys.AppendElement(keyatom);
-    }
+  nsWhitespaceTokenizer tokenizer(sort);
+  while (tokenizer.hasMoreTokens()) {
+    RefPtr<nsAtom> keyatom = NS_Atomize(tokenizer.nextToken());
+    NS_ENSURE_TRUE(keyatom, NS_ERROR_OUT_OF_MEMORY);
+    aSortState->sortKeys.AppendElement(keyatom);
   }
 
   aSortState->sort.Assign(sort);
   aSortState->direction = nsSortState_natural;
 
   bool noNaturalState = false;
-  nsWhitespaceTokenizer tokenizer(aSortHints);
-  while (tokenizer.hasMoreTokens()) {
-    const nsDependentSubstring& token(tokenizer.nextToken());
+  nsWhitespaceTokenizer hintsTokenizer(aSortHints);
+  while (hintsTokenizer.hasMoreTokens()) {
+    const nsDependentSubstring& token(hintsTokenizer.nextToken());
     if (token.EqualsLiteral("comparecase"))
       aSortState->sortHints |= nsIXULSortService::SORT_COMPARECASE;
     else if (token.EqualsLiteral("integer"))
@@ -356,16 +302,6 @@ XULSortServiceImpl::InitializeSortState(Element* aRootElement,
       aSortState->invertSort = true;
     }
   }
-
-  // sort items between separators independently
-  aSortState->inbetweenSeparatorSort =
-    aRootElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::sortSeparators,
-                              nsGkAtoms::_true, eCaseMatters);
-
-  // sort static content (non template generated nodes) after generated content
-  aSortState->sortStaticsLast = aRootElement->AttrValueIs(kNameSpaceID_None,
-                                  nsGkAtoms::sortStaticsLast,
-                                  nsGkAtoms::_true, eCaseMatters);
 
   aSortState->initialized = true;
 
