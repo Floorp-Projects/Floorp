@@ -23,14 +23,16 @@ available on linux64, and is built via the following procedure:
     % export PATH=$PATH:$(pwd)/depot_tools
     % mkdir breakpad
     % cd breakpad
+    # python must be python2.7
     % fetch breakpad
     % cd src
     % git fetch https://github.com/hotsphink/breakpad injector
-    % git checkout injector
+    % git checkout FETCH_HEAD
     % cd ..
     % mkdir obj
     % cd obj
-    % ../src/configure
+    # Possibly set $PATH to include a recent gcc
+    % ../src/configure --enable-static
     % mkdir ../root
     % make install DESTDIR=$(pwd)/../root
 

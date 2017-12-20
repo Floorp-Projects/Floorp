@@ -7412,7 +7412,7 @@ nsGlobalWindowInner::Orientation(CallerType aCallerType) const
 }
 #endif
 
-Console*
+already_AddRefed<Console>
 nsGlobalWindowInner::GetConsole(ErrorResult& aRv)
 {
   if (!mConsole) {
@@ -7422,7 +7422,8 @@ nsGlobalWindowInner::GetConsole(ErrorResult& aRv)
     }
   }
 
-  return mConsole;
+  RefPtr<Console> console = mConsole;
+  return console.forget();
 }
 
 bool

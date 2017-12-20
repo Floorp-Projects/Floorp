@@ -80,15 +80,8 @@ public:
       return NS_OK;
     }
 
-    nsPIDOMWindowInner* innerWindow = doc->GetInnerWindow();
-    if (NS_WARN_IF(!innerWindow)) {
-      mPromise->Reject(NS_ERROR_FAILURE, __func__);
-      mPromise = nullptr;
-      return NS_OK;
-    }
-
-    Maybe<ClientInfo> info = innerWindow->GetClientInfo();
-    Maybe<ClientState> state = innerWindow->GetClientState();
+    Maybe<ClientInfo> info(doc->GetClientInfo());
+    Maybe<ClientState> state(doc->GetClientState());
 
     if (NS_WARN_IF(info.isNothing() || state.isNothing())) {
       mPromise->Reject(NS_ERROR_FAILURE, __func__);
