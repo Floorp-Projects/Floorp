@@ -149,6 +149,7 @@ public:
     using nsDocument::CreateElementNS;
     NS_FORWARD_NSIDOMDOCUMENT(XMLDocument::)
     // And explicitly import the things from nsDocument that we just shadowed
+    using mozilla::dom::StyleScope::GetElementById;
     using nsDocument::GetImplementation;
     using nsDocument::GetTitle;
     using nsDocument::SetTitle;
@@ -156,8 +157,8 @@ public:
     using nsDocument::MozSetImageElement;
     using nsIDocument::GetLocation;
 
-    // nsDocument interface overrides
-    virtual Element* GetElementById(const nsAString & elementId) override;
+    // Helper for StyleScope::GetElementById.
+    Element* GetRefById(const nsAString & elementId);
 
     // nsIDOMXULDocument interface
     NS_DECL_NSIDOMXULDOCUMENT
