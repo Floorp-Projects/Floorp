@@ -266,8 +266,6 @@ partial interface Element {
   // [deprecated] Shadow DOM v0
   [Throws, Func="nsDocument::IsWebComponentsEnabled"]
   ShadowRoot createShadowRoot();
-  [Func="nsDocument::IsWebComponentsEnabled"]
-  NodeList getDestinationInsertionPoints();
 };
 
 Element implements ChildNode;
