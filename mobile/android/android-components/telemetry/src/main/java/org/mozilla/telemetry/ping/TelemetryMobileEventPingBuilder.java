@@ -15,20 +15,18 @@ import org.mozilla.telemetry.measurement.SettingsMeasurement;
 import org.mozilla.telemetry.measurement.TimezoneOffsetMeasurement;
 
 /**
- * A telemetry ping builder for pings of type "focus-event".
+ * A telemetry ping builder for events of type "mobile-event".
  *
- * @deprecated prefer {@link TelemetryMobileEventPingBuilder}. "focus-event" was the original type but
- * we're migrating to the generic "mobile-event" type. In order to prevent breaking public APIs, we couldn't
- * change this class directly and copied it into the new ping type.
+ * See the schema for more details:
+ *   https://github.com/mozilla-services/mozilla-pipeline-schemas/blob/master/schemas/telemetry/mobile-event/mobile-event.1.schema.json
  */
-@Deprecated
-public class TelemetryEventPingBuilder extends TelemetryPingBuilder {
-    public static final String TYPE = "focus-event";
+public class TelemetryMobileEventPingBuilder extends TelemetryPingBuilder {
+    public static final String TYPE = "mobile-event";
     private static final int VERSION = 1;
 
     private EventsMeasurement eventsMeasurement;
 
-    public TelemetryEventPingBuilder(TelemetryConfiguration configuration) {
+    public TelemetryMobileEventPingBuilder(TelemetryConfiguration configuration) {
         super(configuration, TYPE, VERSION);
 
         addMeasurement(new SequenceMeasurement(configuration, this));
