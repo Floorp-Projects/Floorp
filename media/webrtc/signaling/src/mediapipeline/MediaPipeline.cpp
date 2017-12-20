@@ -2035,12 +2035,13 @@ class GenericReceiveListener : public MediaStreamListener
 public:
   explicit GenericReceiveListener(dom::MediaStreamTrack* aTrack)
     : mTrack(aTrack)
+    , mSource(mTrack->GetInputStream()->AsSourceStream())
     , mPlayedTicks(0)
     , mPrincipalHandle(PRINCIPAL_HANDLE_NONE)
     , mListening(false)
     , mMaybeTrackNeedsUnmute(true)
   {
-    MOZ_ASSERT(aTrack->GetInputStream()->AsSourceStream());
+    MOZ_RELEASE_ASSERT(mSource, "Must be used with a SourceMediaStream");
   }
 
   virtual ~GenericReceiveListener()
@@ -2053,7 +2054,7 @@ public:
   {
     if (!mListening) {
       mListening = true;
-      mTrack->GetInputStream()->AddListener(this);
+      mSource->AddListener(this);
       mMaybeTrackNeedsUnmute = true;
     }
   }
@@ -2062,7 +2063,7 @@ public:
   {
     if (mListening) {
       mListening = false;
-      mTrack->GetInputStream()->RemoveListener(this);
+      mSource->RemoveListener(this);
     }
   }
 
@@ -2070,10 +2071,10 @@ public:
   {
     if (mMaybeTrackNeedsUnmute) {
       mMaybeTrackNeedsUnmute = false;
-      NS_DispatchToMainThread(NewRunnableMethod(
-            "GenericReceiveListener::OnRtpReceived_m",
-            this,
-            &GenericReceiveListener::OnRtpReceived_m));
+      NS_DispatchToMainThread(
+        NewRunnableMethod("GenericReceiveListener::OnRtpReceived_m",
+                          this,
+                          &GenericReceiveListener::OnRtpReceived_m));
     }
   }
 
@@ -2105,7 +2106,7 @@ public:
 
     mTrack->GraphImpl()->AppendMessage(MakeUnique<Message>(mTrack));
     // This breaks the cycle with the SourceMediaStream
-    mTrack->GetInputStream()->RemoveListener(this);
+    mSource->RemoveListener(this);
   }
 
   // Must be called on the main thread
@@ -2143,6 +2144,7 @@ public:
 
 protected:
   RefPtr<dom::MediaStreamTrack> mTrack;
+  const RefPtr<SourceMediaStream> mSource;
   TrackTicks mPlayedTicks;
   PrincipalHandle mPrincipalHandle;
   bool mListening;
@@ -2171,33 +2173,26 @@ public:
                    const RefPtr<MediaSessionConduit>& aConduit)
     : GenericReceiveListener(aTrack)
     , mConduit(aConduit)
-    , mSource(mTrack->GetInputStream()->AsSourceStream())
     , mTrackId(mTrack->GetInputTrackId())
     // AudioSession conduit only supports 16, 32, 44.1 and 48kHz
     // This is an artificial limitation, it would however require more changes
     // to support any rates.
     // If the sampling rate is not-supported, we will use 48kHz instead.
-    , mRate(mSource ? (static_cast<AudioSessionConduit*>(mConduit.get())
-                           ->IsSamplingFreqSupported(mSource->GraphRate())
-                         ? mSource->GraphRate()
-                         : WEBRTC_MAX_SAMPLE_RATE)
-                    : WEBRTC_MAX_SAMPLE_RATE)
+    , mRate(static_cast<AudioSessionConduit*>(mConduit.get())
+                ->IsSamplingFreqSupported(mSource->GraphRate())
+              ? mSource->GraphRate()
+              : WEBRTC_MAX_SAMPLE_RATE)
     , mTaskQueue(
         new AutoTaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
                           "AudioPipelineListener"))
     , mLastLog(0)
   {
-    MOZ_ASSERT(mSource);
   }
 
   // Implement MediaStreamListener
   void NotifyPull(MediaStreamGraph* aGraph,
                   StreamTime aDesiredTime) override
   {
-    if (!mSource) {
-      CSFLogError(LOGTAG, "NotifyPull() called from a non-SourceMediaStream");
-      return;
-    }
     NotifyPullImpl(aDesiredTime);
   }
 
@@ -2205,11 +2200,6 @@ public:
     MediaStreamGraph* aGraph,
     StreamTime aDesiredTime) override
   {
-    if (!mSource) {
-      CSFLogError(LOGTAG, "NotifyPull() called from a non-SourceMediaStream");
-      return SourceMediaStream::NotifyPullPromise::CreateAndReject(true,
-                                                                   __func__);
-    }
     RefPtr<PipelineListener> self = this;
     return InvokeAsync(mTaskQueue, __func__, [self, aDesiredTime]() {
       self->NotifyPullImpl(aDesiredTime);
@@ -2322,7 +2312,6 @@ private:
   }
 
   RefPtr<MediaSessionConduit> mConduit;
-  const RefPtr<SourceMediaStream> mSource;
   const TrackID mTrackId;
   const TrackRate mRate;
   const RefPtr<AutoTaskQueue> mTaskQueue;
@@ -2415,8 +2404,7 @@ public:
       IntSize size = image ? image->GetSize() : IntSize(mWidth, mHeight);
       segment.AppendFrame(image.forget(), delta, size, mPrincipalHandle);
       // Handle track not actually added yet or removed/finished
-      if (!mTrack->GetInputStream()->AsSourceStream()->AppendToTrack(
-            mTrack->GetInputTrackId(), &segment)) {
+      if (!mSource->AppendToTrack(mTrack->GetInputTrackId(), &segment)) {
         CSFLogError(LOGTAG, "AppendToTrack failed");
         return;
       }
