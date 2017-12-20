@@ -48,6 +48,7 @@
 #include "nsHTMLDNSPrefetch.h"
 #include "nsIObserverService.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "nsParserConstants.h"
 #include "nsSandboxFlags.h"
@@ -1109,7 +1110,7 @@ nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec)
 
   // If this document has been interecepted, let's skip the processing of the
   // manifest.
-  if (nsContentUtils::IsControlledByServiceWorker(mDocument)) {
+  if (mDocument->GetController().isSome()) {
     return;
   }
 

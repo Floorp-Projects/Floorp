@@ -2397,11 +2397,6 @@ public:
   }
 
   /**
-   * Return true if this doc is controlled by a ServiceWorker.
-   */
-  static bool IsControlledByServiceWorker(nsIDocument* aDocument);
-
-  /**
    * Fire mutation events for changes caused by parsing directly into a
    * context node.
    *

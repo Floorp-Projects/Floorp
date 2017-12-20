@@ -5055,7 +5055,7 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     if (swm) {
       ErrorResult error;
-      if (swm->IsControlled(this, error)) {
+      if (GetController().isSome()) {
         imgLoader* loader = nsContentUtils::GetImgLoaderForDocument(this);
         if (loader) {
           loader->ClearCacheForControlledDocument(this);
