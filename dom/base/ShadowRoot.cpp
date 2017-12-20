@@ -263,37 +263,6 @@ ShadowRoot::RemoveSheet(StyleSheet* aSheet)
   }
 }
 
-Element*
-ShadowRoot::GetElementById(const nsAString& aElementId)
-{
-  nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aElementId);
-  return entry ? entry->GetIdElement() : nullptr;
-}
-
-already_AddRefed<nsContentList>
-ShadowRoot::GetElementsByTagName(const nsAString& aTagName)
-{
-  return NS_GetContentList(this, kNameSpaceID_Unknown, aTagName);
-}
-
-already_AddRefed<nsContentList>
-ShadowRoot::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
-                                   const nsAString& aLocalName)
-{
-  int32_t nameSpaceId = kNameSpaceID_Wildcard;
-
-  if (!aNamespaceURI.EqualsLiteral("*")) {
-    nsresult rv =
-      nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
-                                                            nameSpaceId);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-  }
-
-  NS_ASSERTION(nameSpaceId != kNameSpaceID_Unknown, "Unexpected namespace ID!");
-
-  return NS_GetContentList(this, nameSpaceId, aLocalName);
-}
-
 void
 ShadowRoot::AddToIdTable(Element* aElement, nsAtom* aId)
 {
@@ -313,12 +282,6 @@ ShadowRoot::RemoveFromIdTable(Element* aElement, nsAtom* aId)
       mIdentifierMap.RemoveEntry(entry);
     }
   }
-}
-
-already_AddRefed<nsContentList>
-ShadowRoot::GetElementsByClassName(const nsAString& aClasses)
-{
-  return nsContentUtils::GetElementsByClassName(this, aClasses);
 }
 
 nsresult
