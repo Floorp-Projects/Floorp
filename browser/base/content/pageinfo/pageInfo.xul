@@ -168,23 +168,23 @@
       <tree id="imagetree" onselect="onImageSelect();" contextmenu="picontext"
             ondragstart="onBeginLinkDrag(event,'image-address','image-alt')">
         <treecols>
-          <treecol sortSeparators="true" primary="true" persist="width" flex="10"
+          <treecol primary="true" persist="width" flex="10"
                         width="10" id="image-address" label="&mediaAddress;"
                         onclick="gImageView.onPageMediaSort('image-address');"/>
           <splitter class="tree-splitter"/>
-          <treecol sortSeparators="true" persist="hidden width" flex="2"
+          <treecol persist="hidden width" flex="2"
                         width="2"  id="image-type"    label="&mediaType;"
                         onclick="gImageView.onPageMediaSort('image-type');"/>
           <splitter class="tree-splitter"/>
-          <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="2"
+          <treecol hidden="true" persist="hidden width" flex="2"
                         width="2"  id="image-size"  label="&mediaSize;" value="size"
                         onclick="gImageView.onPageMediaSort('image-size');"/>
           <splitter class="tree-splitter"/>
-          <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="4"
+          <treecol hidden="true" persist="hidden width" flex="4"
                         width="4"  id="image-alt"    label="&mediaAltHeader;"
                         onclick="gImageView.onPageMediaSort('image-alt');"/>
           <splitter class="tree-splitter"/>
-          <treecol sortSeparators="true" hidden="true" persist="hidden width" flex="1"
+          <treecol hidden="true" persist="hidden width" flex="1"
                         width="1"  id="image-count"    label="&mediaCount;"
                         onclick="gImageView.onPageMediaSort('image-count');"/>
         </treecols>
