@@ -401,19 +401,22 @@ function* waitForServiceWorkerActivation(swUrl, document) {
 /**
  * Set all preferences needed to enable service worker debugging and testing.
  */
-function enableServiceWorkerDebugging() {
-  return new Promise(done => {
-    let options = { "set": [
-      // Enable service workers.
-      ["dom.serviceWorkers.enabled", true],
-      // Accept workers from mochitest's http.
-      ["dom.serviceWorkers.testing.enabled", true],
-      // Force single content process.
-      ["dom.ipc.processCount", 1],
-    ]};
+function* enableServiceWorkerDebugging() {
+  let options = { "set": [
+    // Enable service workers.
+    ["dom.serviceWorkers.enabled", true],
+    // Accept workers from mochitest's http.
+    ["dom.serviceWorkers.testing.enabled", true],
+    // Force single content process.
+    ["dom.ipc.processCount", 1],
+  ]};
+
+  // Wait for dom.ipc.processCount to be updated before releasing processes.
+  yield new Promise(done => {
     SpecialPowers.pushPrefEnv(options, done);
-    Services.ppmm.releaseCachedProcesses();
   });
+
+  Services.ppmm.releaseCachedProcesses();
 }
 
 /**
