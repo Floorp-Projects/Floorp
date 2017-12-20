@@ -299,7 +299,6 @@ public:
    * Returns true if aNode is a container.
    */
   virtual bool IsContainer(nsINode* aNode) override;
-  virtual bool IsContainer(nsIDOMNode* aNode) override;
 
   /**
    * Make the given selection span the entire document.
