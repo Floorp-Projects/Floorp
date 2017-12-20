@@ -175,10 +175,10 @@ HTMLStyleElement::GetInnerHTML(nsAString& aInnerHTML)
 
 void
 HTMLStyleElement::SetInnerHTML(const nsAString& aInnerHTML,
-                               nsIPrincipal& aScriptedPrincipal,
+                               nsIPrincipal* aScriptedPrincipal,
                                ErrorResult& aError)
 {
-  SetTextContentInternal(aInnerHTML, &aScriptedPrincipal, aError);
+  SetTextContentInternal(aInnerHTML, aScriptedPrincipal, aError);
 }
 
 void
