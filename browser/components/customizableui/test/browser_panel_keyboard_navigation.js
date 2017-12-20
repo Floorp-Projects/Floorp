@@ -205,3 +205,34 @@ add_task(async function testInterleavedTabAndArrowKeys() {
   PanelUI.hide();
   await promise;
 });
+
+add_task(async function testSpaceDownAfterTabNavigation() {
+  let promise = promisePanelShown(window);
+  PanelUI.show();
+  await promise;
+
+  let buttons = gHelperInstance._getNavigableElements(PanelUI.mainView);
+  let button;
+
+  for (button of buttons) {
+    if (button.disabled)
+      continue;
+    EventUtils.synthesizeKey("KEY_Tab", { code: "Tab" });
+    if (button.id == kHelpButtonId) {
+      break;
+    }
+  }
+
+  Assert.equal(document.commandDispatcher.focusedElement, button,
+               "Help button should be focused after tabbing to it.");
+
+  // Pressing down space on a button that points to a subview should navigate us
+  // there, before keyup.
+  promise = BrowserTestUtils.waitForEvent(PanelUI.helpView, "ViewShown");
+  EventUtils.synthesizeKey(" ", { code: "Space", type: "keydown" });
+  await promise;
+
+  promise = promisePanelHidden(window);
+  PanelUI.hide();
+  await promise;
+});
