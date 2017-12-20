@@ -45,11 +45,11 @@ public:
   uint32_t GetSandboxFlags();
 
   // Web IDL binding methods
-  void GetSrc(nsString& aSrc, nsIPrincipal&) const
+  void GetSrc(nsString& aSrc, nsIPrincipal*) const
   {
     GetURIAttr(nsGkAtoms::src, nullptr, aSrc);
   }
-  void SetSrc(const nsAString& aSrc, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aError)
+  void SetSrc(const nsAString& aSrc, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, aError);
   }

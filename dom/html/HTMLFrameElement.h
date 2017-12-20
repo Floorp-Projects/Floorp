@@ -99,11 +99,11 @@ public:
     SetHTMLAttr(nsGkAtoms::scrolling, aScrolling, aError);
   }
 
-  void GetSrc(nsString& aSrc, nsIPrincipal&)
+  void GetSrc(nsString& aSrc, nsIPrincipal*)
   {
     GetURIAttr(nsGkAtoms::src, nullptr, aSrc);
   }
-  void SetSrc(const nsAString& aSrc, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aError)
+  void SetSrc(const nsAString& aSrc, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aError)
   {
     SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, aError);
   }

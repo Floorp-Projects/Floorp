@@ -87,11 +87,11 @@ public:
   {
     GetURIAttr(nsGkAtoms::href, nullptr, aValue);
   }
-  void GetHref(nsString& aValue, nsIPrincipal&)
+  void GetHref(nsString& aValue, nsIPrincipal*)
   {
     GetHref(aValue);
   }
-  void SetHref(const nsAString& aHref, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aRv)
+  void SetHref(const nsAString& aHref, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::href, aHref, aTriggeringPrincipal, aRv);
   }

@@ -80,7 +80,7 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::defer, aDefer, aRv);
   }
 
-  void GetSrc(nsAString& aSrc, nsIPrincipal&)
+  void GetSrc(nsAString& aSrc, nsIPrincipal*)
   {
     GetSrc(aSrc);
   }
@@ -88,7 +88,7 @@ public:
   {
     GetURIAttr(nsGkAtoms::src, nullptr, aSrc);
   }
-  void SetSrc(const nsAString& aSrc, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aRv)
+  void SetSrc(const nsAString& aSrc, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, aRv);
   }
