@@ -385,9 +385,24 @@ private:
 
 #define NAME_NOT_VALID ((nsSimpleContentList*)1)
 
+nsIdentifierMapEntry::nsIdentifierMapEntry(const nsIdentifierMapEntry::AtomOrString& aKey)
+  : mKey(aKey)
+{}
+
+nsIdentifierMapEntry::nsIdentifierMapEntry(const nsIdentifierMapEntry::AtomOrString* aKey)
+  : mKey(aKey ? *aKey : nullptr)
+{}
+
 nsIdentifierMapEntry::~nsIdentifierMapEntry()
-{
-}
+{}
+
+nsIdentifierMapEntry::nsIdentifierMapEntry(nsIdentifierMapEntry&& aOther)
+  : mKey(mozilla::Move(aOther.mKey))
+  , mIdContentList(mozilla::Move(aOther.mIdContentList))
+  , mNameContentList(mozilla::Move(aOther.mNameContentList))
+  , mChangeCallbacks(mozilla::Move(aOther.mChangeCallbacks))
+  , mImageElement(mozilla::Move(aOther.mImageElement))
+{}
 
 void
 nsIdentifierMapEntry::Traverse(nsCycleCollectionTraversalCallback* aCallback)
@@ -409,6 +424,12 @@ nsIdentifierMapEntry::IsEmpty()
 {
   return mIdContentList.IsEmpty() && !mNameContentList &&
          !mChangeCallbacks && !mImageElement;
+}
+
+bool
+nsIdentifierMapEntry::HasNameElement() const
+{
+  return mNameContentList && mNameContentList->Length() != 0;
 }
 
 Element*
@@ -3832,12 +3853,6 @@ nsDocument::GetElementsByClassName(const nsAString& aClasses,
   return NS_OK;
 }
 
-already_AddRefed<nsContentList>
-nsIDocument::GetElementsByClassName(const nsAString& aClasses)
-{
-  return nsContentUtils::GetElementsByClassName(this, aClasses);
-}
-
 void
 nsIDocument::ReleaseCapture() const
 {
@@ -5377,32 +5392,7 @@ nsDocument::BeginLoad()
 void
 nsDocument::ReportEmptyGetElementByIdArg()
 {
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("DOM"), this,
-                                  nsContentUtils::eDOM_PROPERTIES,
-                                  "EmptyGetElementByIdParam");
-}
-
-Element*
-nsDocument::GetElementById(const nsAString& aElementId)
-{
-  if (!CheckGetElementByIdArg(aElementId)) {
-    return nullptr;
-  }
-
-  nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aElementId);
-  return entry ? entry->GetIdElement() : nullptr;
-}
-
-const nsTArray<Element*>*
-nsDocument::GetAllElementsForId(const nsAString& aElementId) const
-{
-  if (aElementId.IsEmpty()) {
-    return nullptr;
-  }
-
-  nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aElementId);
-  return entry ? &entry->GetIdElements() : nullptr;
+  nsContentUtils::ReportEmptyGetElementByIdArg(this);
 }
 
 NS_IMETHODIMP
@@ -6359,27 +6349,6 @@ nsDocument::BlockedTrackingNodes() const
   return list.forget();
 }
 
-already_AddRefed<nsContentList>
-nsIDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
-                                    const nsAString& aLocalName,
-                                    ErrorResult& aResult)
-{
-  int32_t nameSpaceId = kNameSpaceID_Wildcard;
-
-  if (!aNamespaceURI.EqualsLiteral("*")) {
-    aResult =
-      nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
-                                                            nameSpaceId);
-    if (aResult.Failed()) {
-      return nullptr;
-    }
-  }
-
-  NS_ASSERTION(nameSpaceId != kNameSpaceID_Unknown, "Unexpected namespace ID!");
-
-  return NS_GetContentList(this, nameSpaceId, aLocalName);
-}
-
 NS_IMETHODIMP
 nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                    const nsAString& aLocalName,
@@ -6387,7 +6356,7 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 {
   ErrorResult rv;
   RefPtr<nsContentList> list =
-    nsIDocument::GetElementsByTagNameNS(aNamespaceURI, aLocalName, rv);
+    GetElementsByTagNameNS(aNamespaceURI, aLocalName, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }

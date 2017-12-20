@@ -572,7 +572,7 @@ public:
    * to remove it.
    */
   typedef bool (* IDTargetObserver)(Element* aOldElement,
-                                      Element* aNewelement, void* aData);
+                                    Element* aNewelement, void* aData);
 
   /**
    * Add an IDTargetObserver for a specific ID. The IDTargetObserver
@@ -2646,19 +2646,10 @@ public:
   virtual void ResetScrolledToRefAlready() = 0;
   virtual void SetChangeScrollPosWhenScrollingToRef(bool aValue) = 0;
 
-  /**
-   * This method is similar to GetElementById() from nsIDOMDocument but it
-   * returns a mozilla::dom::Element instead of a nsIDOMElement.
-   * It prevents converting nsIDOMElement to mozilla::dom::Element which is
-   * already converted from mozilla::dom::Element.
-   */
-  virtual Element* GetElementById(const nsAString& aElementId) = 0;
-
-  /**
-   * This method returns _all_ the elements in this document which
-   * have id aElementId, if there are any.  Otherwise it returns null.
-   */
-  virtual const nsTArray<Element*>* GetAllElementsForId(const nsAString& aElementId) const = 0;
+  using mozilla::dom::StyleScope::GetElementById;
+  using mozilla::dom::StyleScope::GetElementsByTagName;
+  using mozilla::dom::StyleScope::GetElementsByTagNameNS;
+  using mozilla::dom::StyleScope::GetElementsByClassName;
 
   /**
    * Lookup an image element using its associated ID, which is usually provided
@@ -2855,18 +2846,6 @@ public:
 
   nsIDocument* GetTopLevelContentDocument();
 
-  already_AddRefed<nsContentList>
-  GetElementsByTagName(const nsAString& aTagName)
-  {
-    return NS_GetContentList(this, kNameSpaceID_Unknown, aTagName);
-  }
-  already_AddRefed<nsContentList>
-    GetElementsByTagNameNS(const nsAString& aNamespaceURI,
-                           const nsAString& aLocalName,
-                           mozilla::ErrorResult& aResult);
-  already_AddRefed<nsContentList>
-    GetElementsByClassName(const nsAString& aClasses);
-  // GetElementById defined above
   virtual already_AddRefed<Element>
     CreateElement(const nsAString& aTagName,
                   const mozilla::dom::ElementCreationOptionsOrString& aOptions,
