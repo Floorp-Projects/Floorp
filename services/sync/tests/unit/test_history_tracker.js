@@ -14,8 +14,6 @@ let engine;
 let tracker;
 
 add_task(async function setup() {
-  initTestLogging("Trace");
-  Log.repository.getLogger("Sync.Tracker.History").level = Log.Level.Trace;
 
   Service.engineManager.clear();
   await Service.engineManager.register(HistoryEngine);

@@ -6,7 +6,6 @@ Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-sync/engines/forms.js");
 Cu.import("resource://services-sync/engines/passwords.js");
 Cu.import("resource://services-sync/engines/prefs.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 const LoginInfo = Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");

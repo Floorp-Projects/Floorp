@@ -10,7 +10,6 @@ Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 function CatapultEngine() {
   SyncEngine.call(this, "Catapult", Service);
@@ -62,6 +61,8 @@ async function cleanUpAndGo(server) {
   await Async.promiseYield();
   await clientsEngine._store.wipe();
   await Service.startOver();
+  // Re-enable logging, which we just disabled.
+  syncTestLogging();
   if (server) {
     await promiseStopServer(server);
   }
@@ -75,10 +76,7 @@ add_task(async function setup() {
   // the next sync.
   clientsEngine._removeRemoteClient = async (id) => {};
   Service.engineManager.clear();
-  initTestLogging("Trace");
 
-  Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.scheduler").level = Log.Level.Trace;
   validate_all_future_pings();
 
   scheduler.setDefaults();

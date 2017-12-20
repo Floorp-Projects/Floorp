@@ -7,7 +7,6 @@ Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 let syncedEngines = [];
 
@@ -70,13 +69,8 @@ async function setUp() {
 }
 
 add_task(async function setup() {
-  initTestLogging();
   Service.engineManager.clear();
-
-  initTestLogging("Trace");
   validate_all_future_pings();
-  Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.ErrorHandler").level = Log.Level.Trace;
 
   await Service.engineManager.register(SteamEngine);
   await Service.engineManager.register(StirlingEngine);

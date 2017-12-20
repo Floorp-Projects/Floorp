@@ -7,7 +7,6 @@ Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-crypto/utils.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://testing-common/services/sync/fxa_utils.js");
 Cu.import("resource://services-common/hawkclient.js");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
@@ -60,13 +59,6 @@ function MockFxAccounts() {
     return Promise.resolve(this.cert.cert);
   };
   return fxa;
-}
-
-function run_test() {
-  initTestLogging("Trace");
-  Log.repository.getLogger("Sync.Identity").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.BrowserIDManager").level = Log.Level.Trace;
-  run_next_test();
 }
 
 add_test(function test_initial_state() {

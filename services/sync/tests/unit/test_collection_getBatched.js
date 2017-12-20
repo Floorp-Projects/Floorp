@@ -4,12 +4,6 @@
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
 
-function run_test() {
-  initTestLogging("Trace");
-  Log.repository.getLogger("Sync.Collection").level = Log.Level.Trace;
-  run_next_test();
-}
-
 function recordRange(lim, offset, total) {
   let res = [];
   for (let i = offset; i < Math.min(lim + offset, total); ++i) {

@@ -7,7 +7,6 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 async function newSmartBookmark(parentGuid, url, position, title, queryID) {
   let info = await PlacesUtils.bookmarks.insert({
@@ -36,9 +35,6 @@ let engine;
 let store;
 
 add_task(async function setup() {
-  initTestLogging("Trace");
-  Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
-
   await generateNewKeys(Service.collectionKeys);
 });
 

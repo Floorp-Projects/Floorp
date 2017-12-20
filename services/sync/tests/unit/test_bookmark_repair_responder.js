@@ -2,15 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource:///modules/PlacesUIUtils.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
 
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/bookmark_repair.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
-
-initTestLogging("Trace");
-Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
 
 // Disable validation so that we don't try to automatically repair the server
 // when we sync.
