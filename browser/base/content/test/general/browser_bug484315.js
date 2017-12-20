@@ -5,15 +5,15 @@ function test() {
   while (enumerator.hasMoreElements()) {
     let win = enumerator.getNext();
     if (win.content == contentWin) {
-      gPrefService.setBoolPref("browser.tabs.closeWindowWithLastTab", false);
+      Services.prefs.setBoolPref("browser.tabs.closeWindowWithLastTab", false);
       win.gBrowser.removeCurrentTab();
       ok(win.closed, "popup is closed");
 
       // clean up
       if (!win.closed)
         win.close();
-      if (gPrefService.prefHasUserValue("browser.tabs.closeWindowWithLastTab"))
-        gPrefService.clearUserPref("browser.tabs.closeWindowWithLastTab");
+      if (Services.prefs.prefHasUserValue("browser.tabs.closeWindowWithLastTab"))
+        Services.prefs.clearUserPref("browser.tabs.closeWindowWithLastTab");
 
       return;
     }

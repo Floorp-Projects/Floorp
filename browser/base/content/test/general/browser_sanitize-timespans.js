@@ -82,7 +82,7 @@ async function onHistoryReady() {
   let s = new Sanitizer();
   s.ignoreTimespan = false;
   s.prefDomain = "privacy.cpd.";
-  var itemPrefs = gPrefService.getBranch(s.prefDomain);
+  var itemPrefs = Services.prefs.getBranch(s.prefDomain);
   itemPrefs.setBoolPref("history", true);
   itemPrefs.setBoolPref("downloads", true);
   itemPrefs.setBoolPref("cache", false);

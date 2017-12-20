@@ -17,5 +17,5 @@ mio-uds = "0.6.4"
 slab = "0.3.0"
 
 [dependencies.error-chain]
-version = "0.10.0"
+version = "0.11.0"
 default-features = false

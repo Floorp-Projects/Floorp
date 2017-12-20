@@ -82,6 +82,12 @@ public:
   nsCOMPtr<EventTarget> mTarget;
   LayoutDeviceIntPoint mRefPoint;
   bool mChanged;
+
+  // Is this touch instance being suppressed to dispatch touch event to content.
+  // We can't remove touch instance from WidgetTouchEvent::mTouches because we
+  // still need it when dispatching pointer events.
+  bool mIsTouchEventSuppressed;
+
   uint32_t mMessage;
   int32_t mIdentifier;
   CSSIntPoint mPagePoint;

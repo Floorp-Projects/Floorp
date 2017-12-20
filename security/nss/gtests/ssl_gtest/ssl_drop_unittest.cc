@@ -352,6 +352,9 @@ TEST_F(TlsDropDatagram13, DropSecondHalfOfServerCertificate) {
 // overlapping message ranges are handled properly; and that extra
 // retransmissions are handled properly.
 class TlsFragmentationAndRecoveryTest : public TlsDropDatagram13 {
+ public:
+  TlsFragmentationAndRecoveryTest() : cert_len_(0) {}
+
  protected:
   void RunTest(size_t dropped_half) {
     FirstFlightDropCertificate();

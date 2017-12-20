@@ -111,131 +111,111 @@ nsTString<T>::RFindCharInSet(const char_type* aSet, int32_t aOffset) const
 }
 
 
-// it's a shame to replicate this code.  it was done this way in the past
-// to help performance.  this function also gets to keep the rickg style
-// indentation :-/
+// Common logic for nsTString<T>::ToInteger and nsTString<T>::ToInteger64.
+template<typename T, typename int_type>
+int_type
+ToIntegerCommon(const nsTString<T>& aSrc, nsresult* aErrorCode, uint32_t aRadix)
+{
+  MOZ_ASSERT(aRadix == 10 || aRadix == 16);
+
+  // Initial value, override if we find an integer.
+  *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
+
+  // Begin by skipping over leading chars that shouldn't be part of the number.
+  auto cp = aSrc.BeginReading();
+  auto endcp = aSrc.EndReading();
+  bool negate = false;
+  bool done = false;
+
+  // NB: For backwards compatibility I'm not going to change this logic but
+  //     it seems really odd. Previously there was logic to auto-detect the
+  //     radix if kAutoDetect was passed in. In practice this value was never
+  //     used, so it pretended to auto detect and skipped some preceding
+  //     letters (excluding valid hex digits) but never used the result.
+  //
+  //     For example if you pass in "Get the number: 10", aRadix = 10 we'd
+  //     skip the 'G', and then fail to parse "et the number: 10". If aRadix =
+  //     16 we'd skip the 'G', and parse just 'e' returning 14.
+  while ((cp < endcp) && (!done)) {
+    switch (*cp++) {
+      // clang-format off
+      case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
+      case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
+      case '0': case '1': case '2': case '3': case '4':
+      case '5': case '6': case '7': case '8': case '9':
+        done = true;
+        break;
+      // clang-format on
+      case '-':
+        negate = true;
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (!done) {
+    // No base 16 or base 10 digits were found.
+    return 0;
+  }
+
+  // Step back.
+  cp--;
+
+  mozilla::CheckedInt<int_type> result;
+
+  // Now iterate the numeric chars and build our result.
+  while (cp < endcp) {
+    auto theChar = *cp++;
+    if (('0' <= theChar) && (theChar <= '9')) {
+      result = (aRadix * result) + (theChar - '0');
+    } else if ((theChar >= 'A') && (theChar <= 'F')) {
+      if (10 == aRadix) {
+        // Invalid base 10 digit, error out.
+        return 0;
+      } else {
+        result = (aRadix * result) + ((theChar - 'A') + 10);
+      }
+    } else if ((theChar >= 'a') && (theChar <= 'f')) {
+      if (10 == aRadix) {
+        // Invalid base 10 digit, error out.
+        return 0;
+      } else {
+        result = (aRadix * result) + ((theChar - 'a') + 10);
+      }
+    } else if ((('X' == theChar) || ('x' == theChar)) && result == 0) {
+      // For some reason we support a leading 'x' regardless of radix. For
+      // example: "000000x500", aRadix = 10 would be parsed as 500 rather
+      // than 0.
+      continue;
+    } else {
+      // We've encountered a char that's not a legal number or sign and we can
+      // terminate processing.
+      break;
+    }
+
+    if (!result.isValid()) {
+      // Overflow!
+      return 0;
+    }
+  }
+
+  // Integer found.
+  *aErrorCode = NS_OK;
+
+  if (negate) {
+    result = -result;
+  }
+
+  return result.value();
+}
+
+
 template <typename T>
 int32_t
 nsTString<T>::ToInteger(nsresult* aErrorCode, uint32_t aRadix) const
 {
-  char_type* cp = this->mData;
-  int32_t theRadix = 10; // base 10 unless base 16 detected, or overriden (aRadix != kAutoDetect)
-  int32_t result = 0;
-  bool negate = false;
-  char_type theChar = 0;
-
-  //initial value, override if we find an integer
-  *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
-
-  if(cp) {
-
-    //begin by skipping over leading chars that shouldn't be part of the number...
-
-    char_type* endcp=cp+this->mLength;
-    bool done=false;
-
-    while((cp<endcp) && (!done)){
-      switch(*cp++) {
-        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
-        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
-          theRadix=16;
-          done=true;
-          break;
-        case '0': case '1': case '2': case '3': case '4':
-        case '5': case '6': case '7': case '8': case '9':
-          done=true;
-          break;
-        case '-':
-          negate=true; //fall through...
-          break;
-        case 'X': case 'x':
-          theRadix=16;
-          break;
-        default:
-          break;
-      } //switch
-    }
-
-    if (done) {
-
-      //integer found
-      *aErrorCode = NS_OK;
-
-      if (aRadix!=kAutoDetect) theRadix = aRadix; // override
-
-      //now iterate the numeric chars and build our result
-      char_type* first=--cp;  //in case we have to back up.
-      bool haveValue = false;
-
-      while(cp<endcp){
-        int32_t oldresult = result;
-
-        theChar=*cp++;
-        if(('0'<=theChar) && (theChar<='9')){
-          result = (theRadix * result) + (theChar-'0');
-          haveValue = true;
-        }
-        else if((theChar>='A') && (theChar<='F')) {
-          if(10==theRadix) {
-            if(kAutoDetect==aRadix){
-              theRadix=16;
-              cp=first; //backup
-              result=0;
-              haveValue = false;
-            }
-            else {
-              *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
-              result=0;
-              break;
-            }
-          }
-          else {
-            result = (theRadix * result) + ((theChar-'A')+10);
-            haveValue = true;
-          }
-        }
-        else if((theChar>='a') && (theChar<='f')) {
-          if(10==theRadix) {
-            if(kAutoDetect==aRadix){
-              theRadix=16;
-              cp=first; //backup
-              result=0;
-              haveValue = false;
-            }
-            else {
-              *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
-              result=0;
-              break;
-            }
-          }
-          else {
-            result = (theRadix * result) + ((theChar-'a')+10);
-            haveValue = true;
-          }
-        }
-        else if((('X'==theChar) || ('x'==theChar)) && (!haveValue || result == 0)) {
-          continue;
-        }
-        else if((('#'==theChar) || ('+'==theChar)) && !haveValue) {
-          continue;
-        }
-        else {
-          //we've encountered a char that's not a legal number or sign
-          break;
-        }
-
-        if (result < oldresult) {
-          // overflow!
-          *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
-          result = 0;
-          break;
-        }
-      } //while
-      if(negate)
-        result=-result;
-    } //if
-  }
-  return result;
+  return ToIntegerCommon<T, int32_t>(*this, aErrorCode, aRadix);
 }
 
 
@@ -246,124 +226,7 @@ template <typename T>
 int64_t
 nsTString<T>::ToInteger64(nsresult* aErrorCode, uint32_t aRadix) const
 {
-  char_type* cp=this->mData;
-  int32_t theRadix=10; // base 10 unless base 16 detected, or overriden (aRadix != kAutoDetect)
-  int64_t result=0;
-  bool negate=false;
-  char_type theChar=0;
-
-  //initial value, override if we find an integer
-  *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
-
-  if(cp) {
-
-    //begin by skipping over leading chars that shouldn't be part of the number...
-
-    char_type* endcp=cp+this->mLength;
-    bool done=false;
-
-    while((cp<endcp) && (!done)){
-      switch(*cp++) {
-        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
-        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
-          theRadix=16;
-          done=true;
-          break;
-        case '0': case '1': case '2': case '3': case '4':
-        case '5': case '6': case '7': case '8': case '9':
-          done=true;
-          break;
-        case '-':
-          negate=true; //fall through...
-          break;
-        case 'X': case 'x':
-          theRadix=16;
-          break;
-        default:
-          break;
-      } //switch
-    }
-
-    if (done) {
-
-      //integer found
-      *aErrorCode = NS_OK;
-
-      if (aRadix!=kAutoDetect) theRadix = aRadix; // override
-
-      //now iterate the numeric chars and build our result
-      char_type* first=--cp;  //in case we have to back up.
-      bool haveValue = false;
-
-      while(cp<endcp){
-        int64_t oldresult = result;
-
-        theChar=*cp++;
-        if(('0'<=theChar) && (theChar<='9')){
-          result = (theRadix * result) + (theChar-'0');
-          haveValue = true;
-        }
-        else if((theChar>='A') && (theChar<='F')) {
-          if(10==theRadix) {
-            if(kAutoDetect==aRadix){
-              theRadix=16;
-              cp=first; //backup
-              result=0;
-              haveValue = false;
-            }
-            else {
-              *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
-              result=0;
-              break;
-            }
-          }
-          else {
-            result = (theRadix * result) + ((theChar-'A')+10);
-            haveValue = true;
-          }
-        }
-        else if((theChar>='a') && (theChar<='f')) {
-          if(10==theRadix) {
-            if(kAutoDetect==aRadix){
-              theRadix=16;
-              cp=first; //backup
-              result=0;
-              haveValue = false;
-            }
-            else {
-              *aErrorCode=NS_ERROR_ILLEGAL_VALUE;
-              result=0;
-              break;
-            }
-          }
-          else {
-            result = (theRadix * result) + ((theChar-'a')+10);
-            haveValue = true;
-          }
-        }
-        else if((('X'==theChar) || ('x'==theChar)) && (!haveValue || result == 0)) {
-          continue;
-        }
-        else if((('#'==theChar) || ('+'==theChar)) && !haveValue) {
-          continue;
-        }
-        else {
-          //we've encountered a char that's not a legal number or sign
-          break;
-        }
-
-        if (result < oldresult) {
-          // overflow!
-          *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
-          result = 0;
-          break;
-        }
-      } //while
-      if(negate)
-        result=-result;
-    } //if
-  }
-  return result;
+  return ToIntegerCommon<T, int64_t>(*this, aErrorCode, aRadix);
 }
 
 

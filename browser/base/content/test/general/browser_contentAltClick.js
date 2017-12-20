@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
                                   "resource://testing-common/PlacesTestUtils.jsm");
 
 function setup() {
-  gPrefService.setBoolPref("browser.altClickSave", true);
+  Services.prefs.setBoolPref("browser.altClickSave", true);
 
   let testPage =
     "data:text/html," +
@@ -40,7 +40,7 @@ async function clean_up() {
   // Remove download history.
   await PlacesTestUtils.clearHistory();
 
-  gPrefService.clearUserPref("browser.altClickSave");
+  Services.prefs.clearUserPref("browser.altClickSave");
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }
 

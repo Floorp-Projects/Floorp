@@ -74,7 +74,6 @@ WebGLContext::VertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfl
 
     ////
 
-    gl->MakeCurrent();
     if (index || !gl->IsCompatibilityProfile()) {
         gl->fVertexAttrib4f(index, x, y, z, w);
     }
@@ -106,7 +105,6 @@ WebGL2Context::VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w,
 
     ////
 
-    gl->MakeCurrent();
     if (index || !gl->IsCompatibilityProfile()) {
         gl->fVertexAttribI4i(index, x, y, z, w);
     }
@@ -138,7 +136,6 @@ WebGL2Context::VertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLui
 
     ////
 
-    gl->MakeCurrent();
     if (index || !gl->IsCompatibilityProfile()) {
         gl->fVertexAttribI4ui(index, x, y, z, w);
     }
@@ -165,8 +162,6 @@ WebGLContext::EnableVertexAttribArray(GLuint index)
     if (!ValidateAttribIndex(index, "enableVertexAttribArray"))
         return;
 
-    MakeContextCurrent();
-
     gl->fEnableVertexAttribArray(index);
 
     MOZ_ASSERT(mBoundVertexArray);
@@ -182,8 +177,6 @@ WebGLContext::DisableVertexAttribArray(GLuint index)
 
     if (!ValidateAttribIndex(index, "disableVertexAttribArray"))
         return;
-
-    MakeContextCurrent();
 
     if (index || !gl->IsCompatibilityProfile()) {
         gl->fDisableVertexAttribArray(index);
@@ -206,8 +199,6 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
         return JS::NullValue();
 
     MOZ_ASSERT(mBoundVertexArray);
-
-    MakeContextCurrent();
 
     switch (pname) {
     case LOCAL_GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
@@ -417,7 +408,6 @@ WebGLContext::VertexAttribAnyPointer(const char* funcName, bool isFuncInt, GLuin
 
     ////
 
-    gl->MakeCurrent();
     if (isFuncInt) {
         gl->fVertexAttribIPointer(index, size, type, stride,
                                   reinterpret_cast<void*>(byteOffset));
@@ -445,8 +435,6 @@ WebGLContext::VertexAttribDivisor(GLuint index, GLuint divisor)
     MOZ_ASSERT(mBoundVertexArray);
     mBoundVertexArray->mAttribs[index].mDivisor = divisor;
     mBoundVertexArray->InvalidateCaches();
-
-    MakeContextCurrent();
 
     gl->fVertexAttribDivisor(index, divisor);
 }

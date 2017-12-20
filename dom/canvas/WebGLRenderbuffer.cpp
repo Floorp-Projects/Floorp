@@ -62,8 +62,6 @@ WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext* webgl)
 void
 WebGLRenderbuffer::Delete()
 {
-    mContext->MakeContextCurrent();
-
     mContext->gl->fDeleteRenderbuffers(1, &mPrimaryRB);
     if (mSecondaryRB)
         mContext->gl->fDeleteRenderbuffers(1, &mSecondaryRB);
@@ -196,8 +194,6 @@ WebGLRenderbuffer::RenderbufferStorage(const char* funcName, uint32_t samples,
                                     funcName);
         return;
     }
-
-    mContext->MakeContextCurrent();
 
     if (!usage->maxSamplesKnown) {
         const_cast<webgl::FormatUsageInfo*>(usage)->ResolveMaxSamples(mContext->gl);

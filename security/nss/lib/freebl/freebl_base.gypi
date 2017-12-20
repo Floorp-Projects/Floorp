@@ -145,13 +145,35 @@
     }],
     [ 'disable_chachapoly==0', {
       'conditions': [
-        [ 'OS!="win" and target_arch=="x64"', {
-          'sources': [
-            'chacha20_vec.c',
-            'poly1305-donna-x64-sse2-incremental-source.c',
+        [ 'OS!="win"', {
+          'conditions': [
+            [ 'target_arch=="x64"', {
+              'sources': [
+                'chacha20_vec.c',
+                'verified/Hacl_Poly1305_64.c',
+              ],
+            }, {
+              # !Windows & !x64
+              'conditions': [
+                [ 'target_arch=="arm64" or target_arch=="aarch64"', {
+                  'sources': [
+                    'chacha20.c',
+                    'verified/Hacl_Chacha20.c',
+                    'verified/Hacl_Poly1305_64.c',
+                  ],
+                }, {
+                  # !Windows & !x64 & !arm64 & !aarch64
+                  'sources': [
+                    'chacha20.c',
+                    'verified/Hacl_Chacha20.c',
+                    'poly1305.c',
+                  ],
+                }],
+              ],
+            }],
           ],
         }, {
-          # not x64
+          # Windows
           'sources': [
             'chacha20.c',
             'verified/Hacl_Chacha20.c',

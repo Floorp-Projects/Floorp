@@ -296,6 +296,10 @@ struct nsIConsoleService::COMTypeInfo<nsConsoleService, void> {
 const nsIID nsIConsoleService::COMTypeInfo<nsConsoleService, void>::kIID = NS_ICONSOLESERVICE_IID;
 
 namespace mozilla {
+namespace CubebUtils {
+  extern FileDescriptor CreateAudioIPCConnection();
+}
+
 namespace dom {
 
 #define NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC "ipc:network:set-offline"
@@ -4156,6 +4160,17 @@ ContentParent::RecvRequestAnonymousTemporaryFile(const uint64_t& aID)
   }
 
   rv = NS_OK;
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvCreateAudioIPCConnection(CreateAudioIPCConnectionResolver&& aResolver)
+{
+  FileDescriptor fd = CubebUtils::CreateAudioIPCConnection();
+  if (!fd.IsValid()) {
+    return IPC_FAIL(this, "CubebUtils::CreateAudioIPCConnection failed");
+  }
+  aResolver(Move(fd));
   return IPC_OK();
 }
 

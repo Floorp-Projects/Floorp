@@ -133,8 +133,8 @@ nsContextMenu.prototype = {
     this.isFrameImage = document.getElementById("isFrameImage");
     this.ellipsis = "\u2026";
     try {
-      this.ellipsis = gPrefService.getComplexValue("intl.ellipsis",
-                                                   Ci.nsIPrefLocalizedString).data;
+      this.ellipsis = Services.prefs.getComplexValue("intl.ellipsis",
+                                                     Ci.nsIPrefLocalizedString).data;
     } catch (e) { }
 
     // Reset after "on-build-contextmenu" notification in case selection was
@@ -433,7 +433,7 @@ nsContextMenu.prototype = {
                        this.onLink || this.onTextInput);
 
     var showInspect = this.inTabBrowser &&
-                      gPrefService.getBoolPref("devtools.inspector.enabled", true);
+                      Services.prefs.getBoolPref("devtools.inspector.enabled", true);
 
     this.showItem("context-viewsource", shouldShow);
     this.showItem("context-viewinfo", shouldShow);
@@ -1179,7 +1179,7 @@ nsContextMenu.prototype = {
 
     // fallback to the old way if we don't see the headers quickly
     var timeToWait =
-      gPrefService.getIntPref("browser.download.saveLinkAsFilenameTimeout");
+      Services.prefs.getIntPref("browser.download.saveLinkAsFilenameTimeout");
     var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     timer.initWithCallback(new timerCallback(), timeToWait,
                            timer.TYPE_ONE_SHOT);
@@ -1383,8 +1383,8 @@ nsContextMenu.prototype = {
 
     var locale = "-";
     try {
-      locale = gPrefService.getComplexValue("intl.accept_languages",
-                                            Ci.nsIPrefLocalizedString).data;
+      locale = Services.prefs.getComplexValue("intl.accept_languages",
+                                              Ci.nsIPrefLocalizedString).data;
     } catch (e) { }
 
     var version = "-";
@@ -1394,7 +1394,7 @@ nsContextMenu.prototype = {
 
     uri = uri.replace(/%LOCALE%/, escape(locale)).replace(/%VERSION%/, version);
 
-    var newWindowPref = gPrefService.getIntPref("browser.link.open_newwindow");
+    var newWindowPref = Services.prefs.getIntPref("browser.link.open_newwindow");
     var where = newWindowPref == 3 ? "tab" : "window";
 
     openUILinkIn(uri, where);

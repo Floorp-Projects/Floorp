@@ -64,9 +64,9 @@ ssl_init()
     PORT=$(($PORT + $padd))
   fi
   NSS_SSL_TESTS=${NSS_SSL_TESTS:-normal_normal}
-  nss_ssl_run="stapling signed_cert_timestamps cov auth stress"
+  nss_ssl_run="stapling signed_cert_timestamps cov auth stress dtls"
   NSS_SSL_RUN=${NSS_SSL_RUN:-$nss_ssl_run}
-
+  
   # Test case files
   SSLCOV=${QADIR}/ssl/sslcov.txt
   SSLAUTH=${QADIR}/ssl/sslauth.txt
@@ -1097,6 +1097,47 @@ ssl_crl_cache()
   html "</TABLE><BR>"
 }
 
+############################ ssl_dtls ###################################
+# local shell function to test tstclnt acting as client and server for DTLS
+#########################################################################
+ssl_dtls()
+{
+  #verbose="-v"
+  html_head "SSL DTLS $NORM_EXT - server $SERVER_MODE/client $CLIENT_MODE"
+
+    testname="ssl_dtls"
+    value=0
+
+    if [ "$SERVER_MODE" = "fips" -o "$CLIENT_MODE" = "fips" ] ; then
+        echo "$SCRIPTNAME: skipping  $testname (non-FIPS only)"
+        return 0
+    fi
+
+    echo "${testname}"
+
+    echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_SERVERDIR} $verbose ${SERVER_OPTIONS} \\"
+    echo "        -U -V tls1.1:tls1.2 -P server -Q < ${REQUEST_FILE} &"
+
+    ${PROFTOOL} ${BINDIR}/tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f ${SERVER_OPTIONS} \
+                -d ${P_R_SERVERDIR} $verbose -U -V tls1.1:tls1.2 -P server -n ${HOSTADDR} -w nss < ${REQUEST_FILE} 2>&1 &
+
+    PID=$!
+    
+    sleep 1
+    
+    echo "tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} $verbose ${CLIENT_OPTIONS} \\"
+    echo "        -U -V tls1.1:tls1.2 -P client -Q < ${REQUEST_FILE}"
+    ${PROFTOOL} ${BINDIR}/tstclnt -4 -p ${PORT} -h ${HOSTADDR} -f ${CLIENT_OPTIONS} \
+            -d ${P_R_CLIENTDIR} $verbose -U -V tls1.1:tls1.2 -P client -Q < ${REQUEST_FILE} 2>&1 
+    ret=$?
+    html_msg $ret $value "${testname}" \
+             "produced a returncode of $ret, expected is $value"
+
+    kill ${PID}
+    
+  html "</TABLE><BR>"
+}
+
 
 ############################## ssl_cleanup #############################
 # local shell function to finish this script (no exit since it might be
@@ -1133,6 +1174,9 @@ ssl_run()
             ;;
         "stress")
             ssl_stress
+            ;;
+        "dtls")
+            ssl_dtls
             ;;
          esac
     done

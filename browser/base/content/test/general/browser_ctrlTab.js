@@ -1,5 +1,5 @@
 add_task(async function() {
-  gPrefService.setBoolPref("browser.ctrlTab.previews", true);
+  Services.prefs.setBoolPref("browser.ctrlTab.previews", true);
 
   BrowserTestUtils.addTab(gBrowser);
   BrowserTestUtils.addTab(gBrowser);
@@ -112,8 +112,8 @@ add_task(async function() {
   }
 
   // cleanup
-  if (gPrefService.prefHasUserValue("browser.ctrlTab.previews"))
-    gPrefService.clearUserPref("browser.ctrlTab.previews");
+  if (Services.prefs.prefHasUserValue("browser.ctrlTab.previews"))
+    Services.prefs.clearUserPref("browser.ctrlTab.previews");
 
   /* private utility functions */
 
@@ -150,7 +150,7 @@ add_task(async function() {
   }
 
   function canOpen() {
-    return gPrefService.getBoolPref("browser.ctrlTab.previews") && gBrowser.tabs.length > 2;
+    return Services.prefs.getBoolPref("browser.ctrlTab.previews") && gBrowser.tabs.length > 2;
   }
 
   function checkTabs(aTabs) {

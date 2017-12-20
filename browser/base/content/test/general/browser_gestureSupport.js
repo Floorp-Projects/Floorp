@@ -342,14 +342,14 @@ function test_addCommand(prefName, id) {
   cmd.setAttribute("oncommand", "this.callCount++;");
 
   cmd.origPrefName = prefName;
-  cmd.origPrefValue = gPrefService.getCharPref(prefName);
-  gPrefService.setCharPref(prefName, id);
+  cmd.origPrefValue = Services.prefs.getCharPref(prefName);
+  Services.prefs.setCharPref(prefName, id);
 
   return cmd;
 }
 
 function test_removeCommand(cmd) {
-  gPrefService.setCharPref(cmd.origPrefName, cmd.origPrefValue);
+  Services.prefs.setCharPref(cmd.origPrefName, cmd.origPrefValue);
   test_commandset.removeChild(cmd);
 }
 
@@ -358,8 +358,8 @@ function test_latchedGesture(gesture, inc, dec, eventPrefix) {
   let branch = test_prefBranch + gesture + ".";
 
   // Put the gesture into latched mode.
-  let oldLatchedValue = gPrefService.getBoolPref(branch + "latched");
-  gPrefService.setBoolPref(branch + "latched", true);
+  let oldLatchedValue = Services.prefs.getBoolPref(branch + "latched");
+  Services.prefs.setBoolPref(branch + "latched", true);
 
   // Install the test commands for increasing and decreasing motion.
   let cmd = {
@@ -372,7 +372,7 @@ function test_latchedGesture(gesture, inc, dec, eventPrefix) {
   test_emitLatchedEvents(eventPrefix, -500, cmd);
 
   // Restore the gesture to its original configuration.
-  gPrefService.setBoolPref(branch + "latched", oldLatchedValue);
+  Services.prefs.setBoolPref(branch + "latched", oldLatchedValue);
   for (let dir in cmd)
     test_removeCommand(cmd[dir]);
 }
@@ -382,12 +382,12 @@ function test_thresholdGesture(gesture, inc, dec, eventPrefix) {
   let branch = test_prefBranch + gesture + ".";
 
   // Disable latched mode for this gesture.
-  let oldLatchedValue = gPrefService.getBoolPref(branch + "latched");
-  gPrefService.setBoolPref(branch + "latched", false);
+  let oldLatchedValue = Services.prefs.getBoolPref(branch + "latched");
+  Services.prefs.setBoolPref(branch + "latched", false);
 
   // Set the triggering threshold value to 50.
-  let oldThresholdValue = gPrefService.getIntPref(branch + "threshold");
-  gPrefService.setIntPref(branch + "threshold", 50);
+  let oldThresholdValue = Services.prefs.getIntPref(branch + "threshold");
+  Services.prefs.setIntPref(branch + "threshold", 50);
 
   // Install the test commands for increasing and decreasing motion.
   let cmdInc = test_addCommand(branch + inc, "test:incMotion");
@@ -425,8 +425,8 @@ function test_thresholdGesture(gesture, inc, dec, eventPrefix) {
   ok(cmdDec.callCount == 0, "Decreasing command was triggered");
 
   // Restore the gesture to its original configuration.
-  gPrefService.setBoolPref(branch + "latched", oldLatchedValue);
-  gPrefService.setIntPref(branch + "threshold", oldThresholdValue);
+  Services.prefs.setBoolPref(branch + "latched", oldLatchedValue);
+  Services.prefs.setIntPref(branch + "threshold", oldThresholdValue);
   test_removeCommand(cmdInc);
   test_removeCommand(cmdDec);
 }

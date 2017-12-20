@@ -42,7 +42,7 @@
   gvr_context* context = (mPresentingContext ? mPresentingContext : GetNonPresentingContext()); \
   if (context && (gvr_get_error(context) != GVR_ERROR_NONE)) { \
      __android_log_print(ANDROID_LOG_ERROR, GVR_LOGTAG, \
-                         "GVR ERROR: %s at%s:%s:%d", \
+                         "GVR ERROR: %s at:%s:%s:%d", \
                          gvr_get_error_string(gvr_get_error(context)), \
                          __FILE__, __FUNCTION__, __LINE__); \
     gvr_clear_error(context); \
@@ -276,6 +276,7 @@ VRDisplayGVR::SubmitFrame(const mozilla::layers::EGLImageDescriptor* aDescriptor
     GVR_LOG("Unable to submit frame. No presenting context")
     return false;
   }
+
   if (!sGLContextEGL) {
     GVR_LOG("Unable to submit frame. No GL Context");
     return false;
@@ -406,7 +407,7 @@ VRDisplayGVR::GetSensorState()
   result.linearVelocity[1] = 0.0f;
   result.linearVelocity[2] = 0.0f;
 
-  UpdateHeadToEye(context, &rot);
+  UpdateHeadToEye(context);
   result.CalcViewMatrices(mHeadToEyes);
 
   return result;
@@ -465,7 +466,7 @@ VRDisplayGVR::SetPresentingContext(void* aGVRPresentingContext)
 }
 
 void
-VRDisplayGVR::UpdateHeadToEye(gvr_context* aContext, gfx::Quaternion* aRot)
+VRDisplayGVR::UpdateHeadToEye(gvr_context* aContext)
 {
   if (!aContext) {
     return;
@@ -476,11 +477,7 @@ VRDisplayGVR::UpdateHeadToEye(gvr_context* aContext, gfx::Quaternion* aRot)
     mDisplayInfo.mEyeTranslation[eyeIndex].x = -eye.m[0][3];
     mDisplayInfo.mEyeTranslation[eyeIndex].y = -eye.m[1][3];
     mDisplayInfo.mEyeTranslation[eyeIndex].z = -eye.m[2][3];
-    if (aRot) {
-      mHeadToEyes[eyeIndex].SetRotationFromQuaternion(*aRot);
-    } else {
-      mHeadToEyes[eyeIndex] = gfx::Matrix4x4();
-    }
+    mHeadToEyes[eyeIndex] = gfx::Matrix4x4();
     mHeadToEyes[eyeIndex].PreTranslate(eye.m[0][3], eye.m[1][3], eye.m[2][3]);
   }
 }
@@ -582,7 +579,7 @@ VRDisplayGVR::UpdateControllers(VRSystemManager* aManager)
     return;
   }
 
-  GVR_CHECK(gvr_controller_apply_arm_model(mControllerContext, GVR_CONTROLLER_RIGHT_HANDED,GVR_ARM_MODEL_FOLLOW_GAZE, mHeadMatrix));
+  GVR_CHECK(gvr_controller_apply_arm_model(mControllerContext, 0, mController->GetHand() == dom::GamepadHand::Right ? GVR_CONTROLLER_RIGHT_HANDED : GVR_CONTROLLER_LEFT_HANDED, GVR_ARM_MODEL_FOLLOW_GAZE, mHeadMatrix));
   GVR_CHECK(gvr_controller_state_update(mControllerContext, 0, mControllerState));
   mController->Update(mControllerState, aManager);
 }

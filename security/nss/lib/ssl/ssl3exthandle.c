@@ -665,7 +665,7 @@ ssl3_EncodeSessionTicket(sslSocket *ss, const NewSessionTicket *ticket,
                          PK11SymKey *secret, SECItem *ticket_data)
 {
     SECStatus rv;
-    sslBuffer plaintext = { NULL, 0, 0 };
+    sslBuffer plaintext = SSL_BUFFER_EMPTY;
     SECItem ticket_buf = { 0, NULL, 0 };
     sslSessionID sid;
     unsigned char wrapped_ms[SSL3_MASTER_SECRET_LENGTH];

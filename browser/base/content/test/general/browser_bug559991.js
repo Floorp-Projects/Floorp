@@ -7,8 +7,8 @@ function test() {
 
   waitForExplicitFinish();
 
-  gPrefService.setBoolPref("browser.zoom.updateBackgroundTabs", true);
-  gPrefService.setBoolPref("browser.zoom.siteSpecific", true);
+  Services.prefs.setBoolPref("browser.zoom.updateBackgroundTabs", true);
+  Services.prefs.setBoolPref("browser.zoom.siteSpecific", true);
 
   let uri = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 
@@ -31,11 +31,11 @@ function endTest() {
 
     tab = null;
 
-    if (gPrefService.prefHasUserValue("browser.zoom.updateBackgroundTabs"))
-      gPrefService.clearUserPref("browser.zoom.updateBackgroundTabs");
+    if (Services.prefs.prefHasUserValue("browser.zoom.updateBackgroundTabs"))
+      Services.prefs.clearUserPref("browser.zoom.updateBackgroundTabs");
 
-    if (gPrefService.prefHasUserValue("browser.zoom.siteSpecific"))
-      gPrefService.clearUserPref("browser.zoom.siteSpecific");
+    if (Services.prefs.prefHasUserValue("browser.zoom.siteSpecific"))
+      Services.prefs.clearUserPref("browser.zoom.siteSpecific");
 
     finish();
   })();

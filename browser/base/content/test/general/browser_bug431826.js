@@ -24,7 +24,7 @@ add_task(async function() {
   });
 
   // Tweak the expert mode pref
-  gPrefService.setBoolPref("browser.xul.error_pages.expert_bad_cert", true);
+  Services.prefs.setBoolPref("browser.xul.error_pages.expert_bad_cert", true);
 
   promise = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
   gBrowser.reload();
@@ -39,6 +39,6 @@ add_task(async function() {
 
   // Clean up
   gBrowser.removeCurrentTab();
-  if (gPrefService.prefHasUserValue("browser.xul.error_pages.expert_bad_cert"))
-    gPrefService.clearUserPref("browser.xul.error_pages.expert_bad_cert");
+  if (Services.prefs.prefHasUserValue("browser.xul.error_pages.expert_bad_cert"))
+    Services.prefs.clearUserPref("browser.xul.error_pages.expert_bad_cert");
 });

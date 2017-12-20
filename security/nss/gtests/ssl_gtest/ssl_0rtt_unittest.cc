@@ -612,13 +612,7 @@ TEST_P(TlsConnectTls13, ZeroRttOrdering) {
   });
 
   std::vector<uint8_t> buf(10);
-  // The first read here blocks because there isn't any 0-RTT to deliver so it
-  // processes everything.  When the EndOfEarlyData message is read, it stalls
-  // out of the loop.  The second read should return the early data.
   PRInt32 read = PR_Read(server_->ssl_fd(), buf.data(), buf.size());
-  EXPECT_GT(0, read);
-  EXPECT_EQ(PR_WOULD_BLOCK_ERROR, PORT_GetError());
-  read = PR_Read(server_->ssl_fd(), buf.data(), buf.size());
   ASSERT_EQ(static_cast<PRInt32>(early_data.size()), read);
   buf.resize(read);
   EXPECT_EQ(early_data, buf);

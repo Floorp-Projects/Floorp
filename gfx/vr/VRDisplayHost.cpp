@@ -26,6 +26,11 @@
 
 #endif
 
+#if defined(MOZ_ANDROID_GOOGLE_VR)
+#include "mozilla/layers/CompositorThread.h"
+#endif // defined(MOZ_ANDROID_GOOGLE_VR)
+
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
@@ -262,7 +267,9 @@ VRDisplayHost::SubmitFrameInternal(const layers::SurfaceDescriptor &aTexture,
                                    const gfx::Rect& aLeftEyeRect,
                                    const gfx::Rect& aRightEyeRect)
 {
+#if !defined(MOZ_ANDROID_GOOGLE_VR)
   MOZ_ASSERT(mSubmitThread->GetThread() == NS_GetCurrentThread());
+#endif // !defined(MOZ_ANDROID_GOOGLE_VR)
   AUTO_PROFILER_TRACING("VR", "SubmitFrameAtVRDisplayHost");
 
   mFrameStarted = false;
@@ -373,9 +380,11 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
                            const gfx::Rect& aLeftEyeRect,
                            const gfx::Rect& aRightEyeRect)
 {
+#if !defined(MOZ_ANDROID_GOOGLE_VR)
   if (!mSubmitThread) {
     mSubmitThread = new VRThread(NS_LITERAL_CSTRING("VR_SubmitFrame"));
   }
+#endif // !defined(MOZ_ANDROID_GOOGLE_VR)
 
   if ((mDisplayInfo.mGroupMask & aLayer->GetGroup()) == 0) {
     // Suppress layers hidden by the group mask
@@ -387,12 +396,17 @@ VRDisplayHost::SubmitFrame(VRLayerParent* aLayer,
     return;
   }
 
-  mSubmitThread->Start();
-  mSubmitThread->PostTask(
+  RefPtr<Runnable> submit =
     NewRunnableMethod<StoreCopyPassByConstLRef<layers::SurfaceDescriptor>, uint64_t,
       StoreCopyPassByConstLRef<gfx::Rect>, StoreCopyPassByConstLRef<gfx::Rect>>(
       "gfx::VRDisplayHost::SubmitFrameInternal", this, &VRDisplayHost::SubmitFrameInternal,
-      aTexture, aFrameId, aLeftEyeRect, aRightEyeRect));
+      aTexture, aFrameId, aLeftEyeRect, aRightEyeRect);
+#if !defined(MOZ_ANDROID_GOOGLE_VR)
+  mSubmitThread->Start();
+  mSubmitThread->PostTask(submit.forget());
+#else
+  CompositorThreadHolder::Loop()->PostTask(submit.forget());
+#endif // defined(MOZ_ANDROID_GOOGLE_VR)
 }
 
 bool

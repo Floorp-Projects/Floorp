@@ -19,6 +19,9 @@ class WebGLSync final
 {
     friend class WebGL2Context;
 
+    const GLsync mGLName;
+    const uint64_t mFenceId;
+
 public:
     WebGLSync(WebGLContext* webgl, GLenum condition, GLbitfield flags);
 
@@ -30,10 +33,10 @@ public:
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLSync)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLSync)
 
+    void MarkSignaled() const;
+
 private:
     ~WebGLSync();
-
-    GLsync mGLName;
 };
 
 } // namespace mozilla

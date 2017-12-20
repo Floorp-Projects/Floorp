@@ -112,6 +112,8 @@ extern "C" void  hb_free_impl(void *ptr);
 #endif
 #if __GNUC__ >= 4
 #define HB_UNUSED	__attribute__((unused))
+#elif defined(_MSC_VER) /* https://github.com/harfbuzz/harfbuzz/issues/635 */
+#define HB_UNUSED __pragma(warning(suppress: 4100 4101))
 #else
 #define HB_UNUSED
 #endif

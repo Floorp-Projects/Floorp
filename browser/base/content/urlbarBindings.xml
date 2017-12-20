@@ -837,7 +837,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               break;
             case (accel):
               try {
-                suffix = gPrefService.getCharPref("browser.fixup.alternate.suffix");
+                suffix = Services.prefs.getCharPref("browser.fixup.alternate.suffix");
                 if (suffix.charAt(suffix.length - 1) != "/")
                   suffix += "/";
               } catch (e) {

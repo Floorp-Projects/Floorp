@@ -433,7 +433,7 @@ var gGestureSupport = {
         getFunc = "Bool";
       else if (type == "number")
         getFunc = "Int";
-      return gPrefService["get" + getFunc + "Pref"](branch + aPref);
+      return Services.prefs["get" + getFunc + "Pref"](branch + aPref);
     } catch (e) {
       return aDef;
     }
@@ -1014,7 +1014,7 @@ var gHistorySwipeAnimation = {
    * This limit is a global limit and is valid across all open tabs.
    */
   _getMaxSnapshots: function HSA__getMaxSnapshots() {
-    return gPrefService.getIntPref("browser.snapshots.limit");
+    return Services.prefs.getIntPref("browser.snapshots.limit");
   },
 
   /**

@@ -719,7 +719,8 @@ private:
      induce a line break boundary before and after itself. */
 #define FCDATA_IS_LINE_BREAK 0x4000
   /* If FCDATA_ALLOW_BLOCK_STYLES is set, allow block styles when processing
-     children.  This should not be used with FCDATA_FUNC_IS_FULL_CTOR. */
+     children of a block (i.e. allow ::first-letter/line).
+     This should not be used with FCDATA_FUNC_IS_FULL_CTOR. */
 #define FCDATA_ALLOW_BLOCK_STYLES 0x8000
   /* If FCDATA_USE_CHILD_ITEMS is set, then use the mChildItems in the relevant
      FrameConstructionItem instead of trying to process the content's children.

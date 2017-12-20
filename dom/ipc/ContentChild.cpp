@@ -91,9 +91,6 @@
 #elif defined(XP_LINUX)
 #include "mozilla/Sandbox.h"
 #include "mozilla/SandboxInfo.h"
-
-// Remove this include with Bug 1104619
-#include "CubebUtils.h"
 #elif defined(XP_MACOSX)
 #include "mozilla/Sandbox.h"
 #endif
@@ -1668,14 +1665,7 @@ ContentChild::RecvSetProcessSandbox(const MaybeFileDesc& aBroker)
 #if defined(XP_LINUX)
   // Otherwise, sandboxing is best-effort.
   if (!SandboxInfo::Get().CanSandboxContent()) {
-       sandboxEnabled = false;
-   } else {
-       // This triggers the initialization of cubeb, which needs to happen
-       // before seccomp is enabled (Bug 1259508). It also increases the startup
-       // time of the content process, because cubeb is usually initialized
-       // when it is actually needed. This call here is no longer required
-       // once Bug 1104619 (remoting audio) is resolved.
-       Unused << CubebUtils::GetCubebContext();
+    sandboxEnabled = false;
   }
 
   if (sandboxEnabled) {

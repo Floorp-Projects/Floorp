@@ -21,8 +21,6 @@ WebGLContext::BindVertexArray(WebGLVertexArray* array)
     if (array && !ValidateObject("bindVertexArrayObject", *array))
         return;
 
-    MakeContextCurrent();
-
     if (mBoundVertexArray) {
         mBoundVertexArray->AddBufferBindCounts(-1);
     }
@@ -47,7 +45,6 @@ WebGLContext::CreateVertexArray()
 
     RefPtr<WebGLVertexArray> globj = CreateVertexArrayImpl();
 
-    MakeContextCurrent();
     globj->GenVertexArray();
 
     return globj.forget();
@@ -77,7 +74,6 @@ WebGLContext::IsVertexArray(const WebGLVertexArray* array)
     if (!ValidateIsObject("isVertexArray", array))
         return false;
 
-    MakeContextCurrent();
     return array->IsVertexArray();
 }
 

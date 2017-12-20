@@ -107,7 +107,6 @@ sslSessionIDLookupFunc ssl_sid_lookup;
 sslSessionIDCacheFunc ssl_sid_cache;
 sslSessionIDUncacheFunc ssl_sid_uncache;
 
-static PRBool ssl_inited = PR_FALSE;
 static PRDescIdentity ssl_layer_id;
 
 PRBool locksEverDisabled; /* implicitly PR_FALSE */
@@ -3462,7 +3461,6 @@ ssl_InitIOLayer(void)
 {
     ssl_layer_id = PR_GetUniqueIdentity("SSL");
     ssl_SetupIOMethods();
-    ssl_inited = PR_TRUE;
     return PR_SUCCESS;
 }
 
@@ -3472,15 +3470,13 @@ ssl_PushIOLayer(sslSocket *ns, PRFileDesc *stack, PRDescIdentity id)
     PRFileDesc *layer = NULL;
     PRStatus status;
 
-    if (!ssl_inited) {
-        status = PR_CallOnce(&initIoLayerOnce, &ssl_InitIOLayer);
-        if (status != PR_SUCCESS)
-            goto loser;
-    }
-
-    if (ns == NULL)
+    status = PR_CallOnce(&initIoLayerOnce, &ssl_InitIOLayer);
+    if (status != PR_SUCCESS) {
         goto loser;
-
+    }
+    if (ns == NULL) {
+        goto loser;
+    }
     layer = PR_CreateIOLayerStub(ssl_layer_id, &combined_methods);
     if (layer == NULL)
         goto loser;
@@ -3934,6 +3930,7 @@ struct {
     EXP(GetExtensionSupport),
     EXP(HelloRetryRequestCallback),
     EXP(InstallExtensionHooks),
+    EXP(KeyUpdate),
     EXP(SendSessionTicket),
     EXP(SetupAntiReplay),
 #endif

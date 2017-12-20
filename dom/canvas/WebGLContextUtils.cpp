@@ -742,8 +742,6 @@ void
 WebGLContext::AssertCachedBindings()
 {
 #ifdef DEBUG
-    MakeContextCurrent();
-
     GetAndFlushUnderlyingGLErrors();
 
     if (IsWebGL2() || IsExtensionEnabled(WebGLExtensionID::OES_vertex_array_object)) {
@@ -809,8 +807,6 @@ void
 WebGLContext::AssertCachedGlobalState()
 {
 #ifdef DEBUG
-    MakeContextCurrent();
-
     GetAndFlushUnderlyingGLErrors();
 
     ////////////////
