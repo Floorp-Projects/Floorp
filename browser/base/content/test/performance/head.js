@@ -144,14 +144,18 @@ async function withReflowObserver(testFn, expectedReflows = [], win = window) {
     dirtyFrameFn();
     await testFn(dirtyFrameFn);
   } finally {
-    for (let remainder of expectedReflows) {
-      if (!Number.isInteger(remainder.minTimes) || remainder.minTimes > 0) {
-        Assert.ok(false,
-                  `Unused expected reflow: ${JSON.stringify(remainder.stack, null, "\t")}\n` +
-                  `This reflow was supposed to be hit ${remainder.minTimes || remainder.times} more time(s).\n` +
-                  "This is probably a good thing - just remove it from the " +
-                  "expected list.");
+    if (expectedReflows.length != 0) {
+      for (let remainder of expectedReflows) {
+        if (!Number.isInteger(remainder.minTimes) || remainder.minTimes > 0) {
+          Assert.ok(false,
+                    `Unused expected reflow: ${JSON.stringify(remainder.stack, null, "\t")}\n` +
+                    `This reflow was supposed to be hit ${remainder.minTimes || remainder.times} more time(s).\n` +
+                    "This is probably a good thing - just remove it from the " +
+                    "expected list.");
+        }
       }
+    } else {
+      Assert.ok(true, "All expected reflows were observed");
     }
 
     Services.els.removeListenerForAllEvents(win, dirtyFrameFn, true);

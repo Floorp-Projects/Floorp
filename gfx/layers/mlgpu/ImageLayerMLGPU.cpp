@@ -86,7 +86,7 @@ ImageLayerMLGPU::SetRenderRegion(LayerIntRegion&& aRegion)
   default:
     // Clamp the visible region to the texture size. (see bug 1396507)
     MOZ_ASSERT(mScaleMode == ScaleMode::SCALE_NONE);
-    aRegion.AndWith(LayerIntRect(0, 0, mPictureRect.width, mPictureRect.height));
+    aRegion.AndWith(LayerIntRect(0, 0, mPictureRect.Width(), mPictureRect.Height()));
     break;
   }
   LayerMLGPU::SetRenderRegion(Move(aRegion));

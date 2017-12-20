@@ -55,16 +55,16 @@ MaskOperation::ComputeMaskRect(Layer* aLayer) const
 bool
 MaskTexture::operator <(const MaskTexture& aOther) const
 {
-  if (mRect.x != aOther.mRect.x) {
-    return mRect.x < aOther.mRect.x;
+  if (mRect.X() != aOther.mRect.X()) {
+    return mRect.X() < aOther.mRect.X();
   }
-  if (mRect.y != aOther.mRect.y) {
-    return mRect.y < aOther.mRect.y;
+  if (mRect.Y() != aOther.mRect.Y()) {
+    return mRect.Y() < aOther.mRect.Y();
   }
-  if (mRect.width != aOther.mRect.width) {
+  if (mRect.Width() != aOther.mRect.Width()) {
     return mRect.Width() < aOther.mRect.Width();
   }
-  if (mRect.height != aOther.mRect.height) {
+  if (mRect.Height() != aOther.mRect.Height()) {
     return mRect.Height() < aOther.mRect.Height();
   }
   return mSource < aOther.mSource;

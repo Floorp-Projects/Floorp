@@ -90,23 +90,25 @@ public final class TextInputController {
     }
 
     private final GeckoSession mSession;
+    private final NativeQueue mQueue;
     private final GeckoEditable mEditable = new GeckoEditable();
     private final GeckoEditableChild mEditableChild = new GeckoEditableChild(mEditable);
     private Delegate mInputConnection;
 
-    /* package */ TextInputController(final @NonNull GeckoSession session) {
+    /* package */ TextInputController(final @NonNull GeckoSession session,
+                                      final @NonNull NativeQueue queue) {
         mSession = session;
+        mQueue = queue;
         mEditable.setDefaultEditableChild(mEditableChild);
     }
 
-    /* package */ void onWindowReady(final NativeQueue queue,
-                                     final GeckoSession.Window window) {
-        if (queue.isReady()) {
+    /* package */ void onWindowChanged(final GeckoSession.Window window) {
+        if (mQueue.isReady()) {
             window.attachEditable(mEditable, mEditableChild);
         } else {
-            queue.queueUntilReady(window, "attachEditable",
-                                  IGeckoEditableParent.class, mEditable,
-                                  GeckoEditableChild.class, mEditableChild);
+            mQueue.queueUntilReady(window, "attachEditable",
+                                   IGeckoEditableParent.class, mEditable,
+                                   GeckoEditableChild.class, mEditableChild);
         }
     }
 
@@ -137,13 +139,18 @@ public final class TextInputController {
         return defHandler;
     }
 
-    private synchronized void ensureInputConnection() {
+    private synchronized boolean ensureInputConnection() {
+        if (!mQueue.isReady()) {
+            return false;
+        }
+
         if (mInputConnection == null) {
             mInputConnection = GeckoInputConnection.create(mSession,
                                                            /* view */ null,
                                                            mEditable);
             mEditable.setListener((EditableListener) mInputConnection);
         }
+        return true;
     }
 
     /**
@@ -181,10 +188,11 @@ public final class TextInputController {
      * @param outAttrs EditorInfo instance to be filled on return.
      * @return InputConnection instance or null if input method is not active.
      */
-    public synchronized @Nullable InputConnection onCreateInputConnection(
-            final @NonNull EditorInfo attrs) {
+    public @Nullable InputConnection onCreateInputConnection(final @NonNull EditorInfo attrs) {
         // May be called on any thread.
-        ensureInputConnection();
+        if (!ensureInputConnection()) {
+            return null;
+        }
         return mInputConnection.onCreateInputConnection(attrs);
     }
 
@@ -197,7 +205,9 @@ public final class TextInputController {
      */
     public boolean onKeyPreIme(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        ensureInputConnection();
+        if (!ensureInputConnection()) {
+            return false;
+        }
         return mInputConnection.onKeyPreIme(keyCode, event);
     }
 
@@ -210,7 +220,9 @@ public final class TextInputController {
      */
     public boolean onKeyDown(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        ensureInputConnection();
+        if (!ensureInputConnection()) {
+            return false;
+        }
         return mInputConnection.onKeyDown(keyCode, event);
     }
 
@@ -223,7 +235,9 @@ public final class TextInputController {
      */
     public boolean onKeyUp(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        ensureInputConnection();
+        if (!ensureInputConnection()) {
+            return false;
+        }
         return mInputConnection.onKeyUp(keyCode, event);
     }
 
@@ -236,7 +250,9 @@ public final class TextInputController {
      */
     public boolean onKeyLongPress(final int keyCode, final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        ensureInputConnection();
+        if (!ensureInputConnection()) {
+            return false;
+        }
         return mInputConnection.onKeyLongPress(keyCode, event);
     }
 
@@ -250,7 +266,9 @@ public final class TextInputController {
     public boolean onKeyMultiple(final int keyCode, final int repeatCount,
                                  final @NonNull KeyEvent event) {
         ThreadUtils.assertOnUiThread();
-        ensureInputConnection();
+        if (!ensureInputConnection()) {
+            return false;
+        }
         return mInputConnection.onKeyMultiple(keyCode, repeatCount, event);
     }
 

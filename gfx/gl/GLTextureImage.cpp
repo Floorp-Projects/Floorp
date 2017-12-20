@@ -285,8 +285,8 @@ TiledTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion
     BeginBigImageIteration();
     do {
         IntRect tileRect = GetSrcTileRect();
-        int xPos = tileRect.x;
-        int yPos = tileRect.y;
+        int xPos = tileRect.X();
+        int yPos = tileRect.Y();
 
         nsIntRegion tileRegion;
         tileRegion.And(region, tileRect); // intersect with tile
@@ -359,9 +359,9 @@ gfx::IntRect TiledTextureImage::GetSrcTileRect()
 {
     gfx::IntRect rect = GetTileRect();
     const bool needsYFlip = mFlags & OriginBottomLeft;
-    unsigned int srcY = needsYFlip ? mSize.height - rect.Height() - rect.y
-                                   : rect.y;
-    return gfx::IntRect(rect.x, srcY, rect.Width(), rect.Height());
+    unsigned int srcY = needsYFlip ? mSize.height - rect.Height() - rect.Y()
+                                   : rect.Y();
+    return gfx::IntRect(rect.X(), srcY, rect.Width(), rect.Height());
 }
 
 void

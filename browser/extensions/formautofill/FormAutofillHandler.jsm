@@ -438,9 +438,6 @@ class FormAutofillSection {
         // Autofill highlight appears regardless if value is changed or not
         this._changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
       }
-      if (fieldDetail.state == FIELD_STATES.AUTO_FILLED) {
-        element.addEventListener("input", this, {mozSystemGroup: true});
-      }
     }
   }
 
@@ -534,7 +531,6 @@ class FormAutofillSection {
         element.setUserInput("");
       }
     }
-    this.resetFieldStates();
   }
 
   /**
@@ -556,6 +552,9 @@ class FormAutofillSection {
       log.warn(fieldDetail.fieldName, "is trying to change to an invalid state");
       return;
     }
+    if (fieldDetail.state == nextState) {
+      return;
+    }
 
     for (let [state, mmStateValue] of Object.entries(this._FIELD_STATE_ENUM)) {
       // The NORMAL state is simply the absence of other manually
@@ -568,6 +567,19 @@ class FormAutofillSection {
         this.winUtils.addManuallyManagedState(element, mmStateValue);
       } else {
         this.winUtils.removeManuallyManagedState(element, mmStateValue);
+      }
+    }
+
+    switch (nextState) {
+      case FIELD_STATES.NORMAL: {
+        if (fieldDetail.state == FIELD_STATES.AUTO_FILLED) {
+          element.removeEventListener("input", this, {mozSystemGroup: true});
+        }
+        break;
+      }
+      case FIELD_STATES.AUTO_FILLED: {
+        element.addEventListener("input", this, {mozSystemGroup: true});
+        break;
       }
     }
 
@@ -763,14 +775,32 @@ class FormAutofillSection {
           return;
         }
         const target = event.target;
-        const fieldDetail = this.getFieldDetailByElement(target);
+        const targetFieldDetail = this.getFieldDetailByElement(target);
         const targetSet = this._getTargetSet(target);
-        this._changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
 
-        if (!targetSet.fieldDetails.some(detail => detail.state == FIELD_STATES.AUTO_FILLED)) {
+        this._changeFieldState(targetFieldDetail, FIELD_STATES.NORMAL);
+
+        let isAutofilled = false;
+        let dimFieldDetails = [];
+        for (const fieldDetail of targetSet.fieldDetails) {
+          const element = fieldDetail.elementWeakRef.get();
+
+          if (ChromeUtils.getClassName(element) === "HTMLSelectElement") {
+            // Dim fields are those we don't attempt to revert their value
+            // when clear the target set, such as <select>.
+            dimFieldDetails.push(fieldDetail);
+          } else {
+            isAutofilled |= fieldDetail.state == FIELD_STATES.AUTO_FILLED;
+          }
+        }
+        if (!isAutofilled) {
+          // Restore the dim fields to initial state as well once we knew
+          // that user had intention to clear the filled form manually.
+          for (const fieldDetail of dimFieldDetails) {
+            this._changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
+          }
           targetSet.filledRecordGUID = null;
         }
-        target.removeEventListener("input", this, {mozSystemGroup: true});
         break;
       }
     }

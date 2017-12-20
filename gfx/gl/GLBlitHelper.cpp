@@ -174,20 +174,20 @@ SubRectMat3(const float x, const float y, const float w, const float h)
 Mat3
 SubRectMat3(const gfx::IntRect& subrect, const gfx::IntSize& size)
 {
-    return SubRectMat3(float(subrect.x) / size.width,
-                       float(subrect.y) / size.height,
-                       float(subrect.width) / size.width,
-                       float(subrect.height) / size.height);
+    return SubRectMat3(float(subrect.X()) / size.width,
+                       float(subrect.Y()) / size.height,
+                       float(subrect.Width()) / size.width,
+                       float(subrect.Height()) / size.height);
 }
 
 Mat3
 SubRectMat3(const gfx::IntRect& bigSubrect, const gfx::IntSize& smallSize,
             const gfx::IntSize& divisors)
 {
-    const float x = float(bigSubrect.x) / divisors.width;
-    const float y = float(bigSubrect.y) / divisors.height;
-    const float w = float(bigSubrect.width) / divisors.width;
-    const float h = float(bigSubrect.height) / divisors.height;
+    const float x = float(bigSubrect.X()) / divisors.width;
+    const float y = float(bigSubrect.Y()) / divisors.height;
+    const float w = float(bigSubrect.Width()) / divisors.width;
+    const float h = float(bigSubrect.Height()) / divisors.height;
     return SubRectMat3(x / smallSize.width,
                        y / smallSize.height,
                        w / smallSize.width,
@@ -425,10 +425,10 @@ DrawBlitProg::Draw(const BaseArgs& args, const YUVArgs* const argsYUV) const
     Mat3 destMatrix;
     if (args.destRect) {
         const auto& destRect = args.destRect.value();
-        destMatrix = SubRectMat3(destRect.x / args.destSize.width,
-                                 destRect.y / args.destSize.height,
-                                 destRect.width / args.destSize.width,
-                                 destRect.height / args.destSize.height);
+        destMatrix = SubRectMat3(destRect.X() / args.destSize.width,
+                                 destRect.Y() / args.destSize.height,
+                                 destRect.Width() / args.destSize.width,
+                                 destRect.Height() / args.destSize.height);
     } else {
         destMatrix = Mat3::I();
     }

@@ -27,7 +27,7 @@ void* nsFloatManager::sCachedFloatManagers[NS_FLOAT_MANAGER_CACHE_SIZE];
 // nsFloatManager
 
 nsFloatManager::nsFloatManager(nsIPresShell* aPresShell,
-                               mozilla::WritingMode aWM)
+                               WritingMode aWM)
   :
 #ifdef DEBUG
     mWritingMode(aWM),
@@ -514,7 +514,138 @@ nsFloatManager::ClearContinues(StyleClear aBreakType) const
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// ShapeInfo is an abstract class for implementing all the shapes in CSS
+// Shapes Module. A subclass needs to override all the methods to adjust
+// the flow area with respect to its shape.
+//
+class nsFloatManager::ShapeInfo
+{
+public:
+  virtual ~ShapeInfo() {}
+
+  virtual nscoord LineLeft(const nscoord aBStart,
+                           const nscoord aBEnd) const = 0;
+  virtual nscoord LineRight(const nscoord aBStart,
+                            const nscoord aBEnd) const = 0;
+  virtual nscoord BStart() const = 0;
+  virtual nscoord BEnd() const = 0;
+  virtual bool IsEmpty() const = 0;
+
+  // Translate the current origin by the specified offsets.
+  virtual void Translate(nscoord aLineLeft, nscoord aBlockStart) = 0;
+
+  static LogicalRect ComputeShapeBoxRect(
+    const StyleShapeSource& aShapeOutside,
+    nsIFrame* const aFrame,
+    const LogicalRect& aMarginRect,
+    WritingMode aWM);
+
+  // Convert the LogicalRect to the special logical coordinate space used
+  // in float manager.
+  static nsRect ConvertToFloatLogical(const LogicalRect& aRect,
+                                      WritingMode aWM,
+                                      const nsSize& aContainerSize)
+  {
+    return nsRect(aRect.LineLeft(aWM, aContainerSize), aRect.BStart(aWM),
+                  aRect.ISize(aWM), aRect.BSize(aWM));
+  }
+
+  static UniquePtr<ShapeInfo> CreateShapeBox(
+    nsIFrame* const aFrame,
+    const LogicalRect& aShapeBoxRect,
+    WritingMode aWM,
+    const nsSize& aContainerSize);
+
+  static UniquePtr<ShapeInfo> CreateBasicShape(
+    const UniquePtr<StyleBasicShape>& aBasicShape,
+    const LogicalRect& aShapeBoxRect,
+    WritingMode aWM,
+    const nsSize& aContainerSize);
+
+  static UniquePtr<ShapeInfo> CreateInset(
+    const UniquePtr<StyleBasicShape>& aBasicShape,
+    const LogicalRect& aShapeBoxRect,
+    WritingMode aWM,
+    const nsSize& aContainerSize);
+
+  static UniquePtr<ShapeInfo> CreateCircleOrEllipse(
+    const UniquePtr<StyleBasicShape>& aBasicShape,
+    const LogicalRect& aShapeBoxRect,
+    WritingMode aWM,
+    const nsSize& aContainerSize);
+
+  static UniquePtr<ShapeInfo> CreatePolygon(
+    const UniquePtr<StyleBasicShape>& aBasicShape,
+    const LogicalRect& aShapeBoxRect,
+    WritingMode aWM,
+    const nsSize& aContainerSize);
+
+protected:
+  // Compute the minimum line-axis difference between the bounding shape
+  // box and its rounded corner within the given band (block-axis region).
+  // This is used as a helper function to compute the LineRight() and
+  // LineLeft(). See the picture in the implementation for an example.
+  // RadiusL and RadiusB stand for radius on the line-axis and block-axis.
+  //
+  // Returns radius-x diff on the line-axis, or 0 if there's no rounded
+  // corner within the given band.
+  static nscoord ComputeEllipseLineInterceptDiff(
+    const nscoord aShapeBoxBStart, const nscoord aShapeBoxBEnd,
+    const nscoord aBStartCornerRadiusL, const nscoord aBStartCornerRadiusB,
+    const nscoord aBEndCornerRadiusL, const nscoord aBEndCornerRadiusB,
+    const nscoord aBandBStart, const nscoord aBandBEnd);
+
+  static nscoord XInterceptAtY(const nscoord aY, const nscoord aRadiusX,
+                               const nscoord aRadiusY);
+
+  // Convert the physical point to the special logical coordinate space
+  // used in float manager.
+  static nsPoint ConvertToFloatLogical(const nsPoint& aPoint,
+                                       WritingMode aWM,
+                                       const nsSize& aContainerSize);
+
+  // Convert the half corner radii (nscoord[8]) to the special logical
+  // coordinate space used in float manager.
+  static UniquePtr<nscoord[]> ConvertToFloatLogical(
+    const nscoord aRadii[8],
+    WritingMode aWM);
+};
+
+/////////////////////////////////////////////////////////////////////////////
 // RoundedBoxShapeInfo
+//
+// Implements shape-outside: <shape-box> and shape-outside: inset().
+class nsFloatManager::RoundedBoxShapeInfo final : public nsFloatManager::ShapeInfo
+{
+public:
+  RoundedBoxShapeInfo(const nsRect& aRect,
+                      UniquePtr<nscoord[]> aRadii)
+    : mRect(aRect)
+    , mRadii(Move(aRadii))
+  {}
+
+  nscoord LineLeft(const nscoord aBStart,
+                   const nscoord aBEnd) const override;
+  nscoord LineRight(const nscoord aBStart,
+                    const nscoord aBEnd) const override;
+  nscoord BStart() const override { return mRect.y; }
+  nscoord BEnd() const override { return mRect.YMost(); }
+  bool IsEmpty() const override { return mRect.IsEmpty(); };
+
+  void Translate(nscoord aLineLeft, nscoord aBlockStart) override
+  {
+    mRect.MoveBy(aLineLeft, aBlockStart);
+  }
+
+private:
+  // The rect of the rounded box shape in the float manager's coordinate
+  // space.
+  nsRect mRect;
+  // The half corner radii of the reference box. It's an nscoord[8] array
+  // in the float manager's coordinate space. If there are no radii, it's
+  // nullptr.
+  UniquePtr<nscoord[]> mRadii;
+};
 
 nscoord
 nsFloatManager::RoundedBoxShapeInfo::LineLeft(const nscoord aBStart,
@@ -552,6 +683,39 @@ nsFloatManager::RoundedBoxShapeInfo::LineRight(const nscoord aBStart,
 
 /////////////////////////////////////////////////////////////////////////////
 // EllipseShapeInfo
+//
+// Implements shape-outside: circle() and shape-outside: ellipse().
+//
+class nsFloatManager::EllipseShapeInfo final : public nsFloatManager::ShapeInfo
+{
+public:
+  EllipseShapeInfo(const nsPoint& aCenter,
+                   const nsSize& aRadii)
+    : mCenter(aCenter)
+    , mRadii(aRadii)
+  {}
+
+  nscoord LineLeft(const nscoord aBStart,
+                   const nscoord aBEnd) const override;
+  nscoord LineRight(const nscoord aBStart,
+                    const nscoord aBEnd) const override;
+  nscoord BStart() const override { return mCenter.y - mRadii.height; }
+  nscoord BEnd() const override { return mCenter.y + mRadii.height; }
+  bool IsEmpty() const override { return mRadii.IsEmpty(); };
+
+  void Translate(nscoord aLineLeft, nscoord aBlockStart) override
+  {
+    mCenter.MoveBy(aLineLeft, aBlockStart);
+  }
+
+private:
+  // The position of the center of the ellipse. The coordinate space is the
+  // same as FloatInfo::mRect.
+  nsPoint mCenter;
+  // The radii of the ellipse in app units. The width and height represent
+  // the line-axis and block-axis radii of the ellipse.
+  nsSize mRadii;
+};
 
 nscoord
 nsFloatManager::EllipseShapeInfo::LineLeft(const nscoord aBStart,
@@ -579,6 +743,54 @@ nsFloatManager::EllipseShapeInfo::LineRight(const nscoord aBStart,
 
 /////////////////////////////////////////////////////////////////////////////
 // PolygonShapeInfo
+//
+// Implements shape-outside: polygon().
+//
+class nsFloatManager::PolygonShapeInfo final : public nsFloatManager::ShapeInfo
+{
+public:
+  explicit PolygonShapeInfo(nsTArray<nsPoint>&& aVertices);
+
+  nscoord LineLeft(const nscoord aBStart,
+                   const nscoord aBEnd) const override;
+  nscoord LineRight(const nscoord aBStart,
+                    const nscoord aBEnd) const override;
+  nscoord BStart() const override { return mBStart; }
+  nscoord BEnd() const override { return mBEnd; }
+  bool IsEmpty() const override { return mEmpty; }
+
+  void Translate(nscoord aLineLeft, nscoord aBlockStart) override;
+
+private:
+  // Helper method for implementing LineLeft() and LineRight().
+  nscoord ComputeLineIntercept(
+    const nscoord aBStart,
+    const nscoord aBEnd,
+    nscoord (*aCompareOp) (std::initializer_list<nscoord>),
+    const nscoord aLineInterceptInitialValue) const;
+
+  // Given a horizontal line y, and two points p1 and p2 forming a line
+  // segment L. Solve x for the intersection of y and L. This method
+  // assumes y and L do intersect, and L is *not* horizontal.
+  static nscoord XInterceptAtY(const nscoord aY,
+                               const nsPoint& aP1,
+                               const nsPoint& aP2);
+
+  // The vertices of the polygon in the float manager's coordinate space.
+  nsTArray<nsPoint> mVertices;
+
+  // If mEmpty is true, that means the polygon encloses no area.
+  bool mEmpty = false;
+
+  // Computed block start and block end value of the polygon shape.
+  //
+  // If mEmpty is false, their initial values nscoord_MAX and nscoord_MIN
+  // are used as sentinels for computing min() and max() in the
+  // constructor, and mBStart is guaranteed to be less than or equal to
+  // mBEnd. If mEmpty is true, their values do not matter.
+  nscoord mBStart = nscoord_MAX;
+  nscoord mBEnd = nscoord_MIN;
+};
 
 nsFloatManager::PolygonShapeInfo::PolygonShapeInfo(nsTArray<nsPoint>&& aVertices)
   : mVertices(aVertices)
@@ -902,8 +1114,8 @@ nsFloatManager::FloatInfo::IsEmpty(ShapeType aShapeType) const
 nsFloatManager::ShapeInfo::ComputeShapeBoxRect(
   const StyleShapeSource& aShapeOutside,
   nsIFrame* const aFrame,
-  const mozilla::LogicalRect& aMarginRect,
-  mozilla::WritingMode aWM)
+  const LogicalRect& aMarginRect,
+  WritingMode aWM)
 {
   LogicalRect rect = aMarginRect;
 

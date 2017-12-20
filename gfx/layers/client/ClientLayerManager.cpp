@@ -261,7 +261,7 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
     orientation = currentConfig.orientation();
   }
   LayoutDeviceIntRect targetBounds = mWidget->GetNaturalBounds();
-  targetBounds.x = targetBounds.y = 0;
+  targetBounds.MoveTo(0, 0);
   mForwarder->BeginTransaction(targetBounds.ToUnknownRect(), mTargetRotation,
                                orientation);
 
@@ -625,7 +625,7 @@ ClientLayerManager::MakeSnapshotIfRequired()
           RefPtr<DataSourceSurface> surf = GetSurfaceForDescriptor(outSnapshot);
           DrawTarget* dt = mShadowTarget->GetDrawTarget();
 
-          Rect dstRect(bounds.x, bounds.y, bounds.Width(), bounds.Height());
+          Rect dstRect(bounds.X(), bounds.Y(), bounds.Width(), bounds.Height());
           Rect srcRect(0, 0, bounds.Width(), bounds.Height());
 
           gfx::Matrix rotate =

@@ -94,7 +94,7 @@ AppendToString(std::stringstream& aStream, const mozilla::gfx::RectTyped<T>& r,
   aStream << pfx;
   aStream << nsPrintfCString(
     "(x=%f, y=%f, w=%f, h=%f)",
-    r.x, r.y, r.Width(), r.Height()).get();
+    r.X(), r.Y(), r.Width(), r.Height()).get();
   aStream << sfx;
 }
 
@@ -106,7 +106,7 @@ AppendToString(std::stringstream& aStream, const mozilla::gfx::IntRectTyped<T>& 
   aStream << pfx;
   aStream << nsPrintfCString(
     "(x=%d, y=%d, w=%d, h=%d)",
-    r.x, r.y, r.Width(), r.Height()).get();
+    r.X(), r.Y(), r.Width(), r.Height()).get();
   aStream << sfx;
 }
 

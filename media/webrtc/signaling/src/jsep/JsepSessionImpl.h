@@ -222,6 +222,7 @@ private:
                         const SdpMediaSection& msection,
                         std::vector<std::string>* streamIds,
                         std::string* trackId);
+  nsresult RemoveDuplicateTrackIds(Sdp* sdp);
   nsresult CreateOfferMsection(const JsepOfferOptions& options,
                                JsepTransceiver& transceiver,
                                Sdp* local);

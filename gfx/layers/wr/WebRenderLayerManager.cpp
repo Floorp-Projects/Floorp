@@ -390,7 +390,7 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
   gfxUtils::WriteAsPNG(snapshot, filename);
   */
 
-  Rect dst(bounds.x, bounds.y, bounds.Width(), bounds.Height());
+  Rect dst(bounds.X(), bounds.Y(), bounds.Width(), bounds.Height());
   Rect src(0, 0, bounds.Width(), bounds.Height());
 
   // The data we get from webrender is upside down. So flip and translate up so the image is rightside up.

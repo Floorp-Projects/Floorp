@@ -61,7 +61,7 @@ function frameScript() {
 
   Services.obs.notifyObservers(this, "tab-content-frameloader-created");
 
-  // eslint-disable-next-line mozilla/balanced-listeners
+  // eslint-disable-next-line mozilla/balanced-listeners, no-undef
   addEventListener("MozHeapMinimize", () => {
     Services.obs.notifyObservers(null, "memory-pressure", "heap-minimize");
   }, true, true);
