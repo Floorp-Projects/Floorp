@@ -432,11 +432,11 @@ public:
 
   MediaError* GetError() const;
 
-  void GetSrc(nsString& aSrc, nsIPrincipal&)
+  void GetSrc(nsString& aSrc, nsIPrincipal*)
   {
     GetSrc(aSrc);
   }
-  void SetSrc(const nsAString& aSrc, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aRv)
+  void SetSrc(const nsAString& aSrc, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, aRv);
   }

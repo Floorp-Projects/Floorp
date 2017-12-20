@@ -1413,9 +1413,9 @@ public:
     aError = SetAttr(kNameSpaceID_None, aAttr, aValue, true);
   }
 
-  void SetAttr(nsAtom* aAttr, const nsAString& aValue, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aError)
+  void SetAttr(nsAtom* aAttr, const nsAString& aValue, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aError)
   {
-    aError = nsIContent::SetAttr(kNameSpaceID_None, aAttr, aValue, &aTriggeringPrincipal, true);
+    aError = nsIContent::SetAttr(kNameSpaceID_None, aAttr, aValue, aTriggeringPrincipal, true);
   }
 
   /**

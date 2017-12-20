@@ -707,11 +707,11 @@ public:
     SetUnsignedIntAttr(nsGkAtoms::size, aValue, DEFAULT_COLS, aRv);
   }
 
-  void GetSrc(nsAString& aValue, nsIPrincipal&)
+  void GetSrc(nsAString& aValue, nsIPrincipal*)
   {
     GetURIAttr(nsGkAtoms::src, nullptr, aValue);
   }
-  void SetSrc(const nsAString& aValue, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aRv)
+  void SetSrc(const nsAString& aValue, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aRv)
   {
     SetHTMLAttr(nsGkAtoms::src, aValue, aTriggeringPrincipal, aRv);
   }
