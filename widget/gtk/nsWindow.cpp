@@ -5102,21 +5102,25 @@ nsWindow::SetWindowDecoration(nsBorderStyle aStyle)
         return;
     }
 
+    // We can't use mGdkWindow directly here as it can be
+    // derived from mContainer which is not a top-level GdkWindow.
+    GdkWindow *window = gtk_widget_get_window(mShell);
+
     // Sawfish, metacity, and presumably other window managers get
     // confused if we change the window decorations while the window
     // is visible.
     bool wasVisible = false;
-    if (gdk_window_is_visible(mGdkWindow)) {
-        gdk_window_hide(mGdkWindow);
+    if (gdk_window_is_visible(window)) {
+        gdk_window_hide(window);
         wasVisible = true;
     }
 
     gint wmd = ConvertBorderStyles(aStyle);
     if (wmd != -1)
-      gdk_window_set_decorations(mGdkWindow, (GdkWMDecoration) wmd);
+      gdk_window_set_decorations(window, (GdkWMDecoration) wmd);
 
     if (wasVisible)
-        gdk_window_show(mGdkWindow);
+        gdk_window_show(window);
 
     // For some window managers, adding or removing window decorations
     // requires unmapping and remapping our toplevel window.  Go ahead
@@ -5124,10 +5128,13 @@ nsWindow::SetWindowDecoration(nsBorderStyle aStyle)
     // error later when this happens (when the persistence timer fires
     // and GetWindowPos is called)
 #ifdef MOZ_X11
-    XSync(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()) , False);
-#else
-    gdk_flush ();
+    if (mIsX11Display) {
+        XSync(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()) , False);
+    } else
 #endif /* MOZ_X11 */
+    {
+        gdk_flush ();
+    }
 }
 
 void
