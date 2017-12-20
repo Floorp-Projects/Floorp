@@ -330,7 +330,7 @@ static size_t
 SizeOfResolveHostCallbackListExcludingHead(const mozilla::LinkedList<RefPtr<nsResolveHostCallback>>& aCallbacks,
                                            MallocSizeOf mallocSizeOf)
 {
-    size_t n = 0; // TODO: should be aCallbacks.sizeOfIncludingThis(mallocSizeOf);
+    size_t n = aCallbacks.sizeOfExcludingThis(mallocSizeOf);
 
     for (const nsResolveHostCallback* t = aCallbacks.getFirst(); t; t = t->getNext()) {
       n += t->SizeOfIncludingThis(mallocSizeOf);
