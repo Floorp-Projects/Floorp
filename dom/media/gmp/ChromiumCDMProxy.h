@@ -98,7 +98,7 @@ public:
 
   const nsString& KeySystem() const override;
 
-  CDMCaps& Capabilites() override;
+  DataMutex<CDMCaps>& Capabilites() override;
 
   void OnKeyStatusesChange(const nsAString& aSessionId) override;
 

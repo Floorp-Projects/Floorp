@@ -49,42 +49,29 @@ public:
     dom::MediaKeyStatus mStatus;
   };
 
-  // Locks the CDMCaps. It must be locked to access its shared state.
-  // Threadsafe when locked.
-  class MOZ_STACK_CLASS AutoLock {
-  public:
-    explicit AutoLock(CDMCaps& aKeyCaps);
-    ~AutoLock();
+  bool IsKeyUsable(const CencKeyId& aKeyId);
 
-    bool IsKeyUsable(const CencKeyId& aKeyId);
+  // Returns true if key status changed,
+  // i.e. the key status changed from usable to expired.
+  bool SetKeyStatus(const CencKeyId& aKeyId,
+                    const nsString& aSessionId,
+                    const dom::Optional<dom::MediaKeyStatus>& aStatus);
 
-    // Returns true if key status changed,
-    // i.e. the key status changed from usable to expired.
-    bool SetKeyStatus(const CencKeyId& aKeyId,
-                      const nsString& aSessionId,
-                      const dom::Optional<dom::MediaKeyStatus>& aStatus);
+  void GetKeyStatusesForSession(const nsAString& aSessionId,
+                                nsTArray<KeyStatus>& aOutKeyStatuses);
 
-    void GetKeyStatusesForSession(const nsAString& aSessionId,
-                                  nsTArray<KeyStatus>& aOutKeyStatuses);
+  void GetSessionIdsForKeyId(const CencKeyId& aKeyId,
+                             nsTArray<nsCString>& aOutSessionIds);
 
-    void GetSessionIdsForKeyId(const CencKeyId& aKeyId,
-                               nsTArray<nsCString>& aOutSessionIds);
+  // Ensures all keys for a session are marked as 'unknown', i.e. removed.
+  // Returns true if a key status was changed.
+  bool RemoveKeysForSession(const nsString& aSessionId);
 
-    // Ensures all keys for a session are marked as 'unknown', i.e. removed.
-    // Returns true if a key status was changed.
-    bool RemoveKeysForSession(const nsString& aSessionId);
-
-    // Notifies the SamplesWaitingForKey when key become usable.
-    void NotifyWhenKeyIdUsable(const CencKeyId& aKey,
-                               SamplesWaitingForKey* aSamplesWaiting);
-  private:
-    // Not taking a strong ref, since this should be allocated on the stack.
-    CDMCaps& mData;
-  };
+  // Notifies the SamplesWaitingForKey when key become usable.
+  void NotifyWhenKeyIdUsable(const CencKeyId& aKey,
+                             SamplesWaitingForKey* aSamplesWaiting);
 
 private:
-  void Lock();
-  void Unlock();
 
   struct WaitForKeys {
     WaitForKeys(const CencKeyId& aKeyId,
@@ -95,8 +82,6 @@ private:
     CencKeyId mKeyId;
     RefPtr<SamplesWaitingForKey> mListener;
   };
-
-  Monitor mMonitor;
 
   nsTArray<KeyStatus> mKeyStatuses;
 
