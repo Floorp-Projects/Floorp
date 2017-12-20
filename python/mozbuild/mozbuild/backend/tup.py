@@ -373,7 +373,6 @@ class TupOnly(CommonBackend, PartialBackend):
                 'dist/xpi-stage',
                 '_tests',
                 'dist/include',
-                'dist/branding',
                 'dist/sdk',
             ))
             if not path:

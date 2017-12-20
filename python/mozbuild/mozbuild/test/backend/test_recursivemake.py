@@ -509,18 +509,6 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertIn('res/tests/test.manifest', m)
         self.assertIn('res/tests/extra.manifest', m)
 
-    def test_branding_files(self):
-        """Ensure BRANDING_FILES is handled properly."""
-        env = self._consume('branding-files', RecursiveMakeBackend)
-
-        #BRANDING_FILES should appear in the dist_branding install manifest.
-        m = InstallManifest(path=os.path.join(env.topobjdir,
-            '_build_manifests', 'install', 'dist_branding'))
-        self.assertEqual(len(m), 3)
-        self.assertIn('bar.ico', m)
-        self.assertIn('quux.png', m)
-        self.assertIn('icons/foo.ico', m)
-
     def test_test_manifests_files_written(self):
         """Ensure test manifests get turned into files."""
         env = self._consume('test-manifests-written', RecursiveMakeBackend)

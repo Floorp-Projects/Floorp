@@ -1656,20 +1656,6 @@ VARIABLES = {
         them correctly.
         """),
 
-    'BRANDING_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
-        """List of files to be installed into the branding directory.
-
-        ``BRANDING_FILES`` will copy (or symlink, if the platform supports it)
-        the contents of its files to the ``dist/branding`` directory. Files that
-        are destined for a subdirectory can be specified by accessing a field.
-        For example, to export ``foo.png`` to the top-level directory and
-        ``bar.png`` to the directory ``images/subdir``, append to
-        ``BRANDING_FILES`` like so::
-
-           BRANDING_FILES += ['foo.png']
-           BRANDING_FILES.images.subdir += ['bar.png']
-        """),
-
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list,
         """Compile a list of executable names.
 
