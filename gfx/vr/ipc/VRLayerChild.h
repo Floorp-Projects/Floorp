@@ -11,7 +11,6 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/PVRLayerChild.h"
-#include "GLContext.h"
 #include "gfxVR.h"
 
 class nsICanvasRenderingContextInternal;
