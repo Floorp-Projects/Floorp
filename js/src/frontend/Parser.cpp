@@ -3774,7 +3774,7 @@ GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling i
             }
 
 #if JS_HAS_EXPR_CLOSURES
-            addTelemetry(DeprecatedLanguageExtension::ExpressionClosure);
+            this->addTelemetry(DeprecatedLanguageExtension::ExpressionClosure);
             if (!warnOnceAboutExprClosure())
                 return false;
 #else
