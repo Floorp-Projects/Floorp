@@ -72,6 +72,13 @@ AddVarCacheFunc(Atomic<bool, Relaxed>* aVar, const char* aPrefName)
 }
 
 void
+AddVarCacheFunc(Atomic<bool, ReleaseAcquire>* aVar, const char* aPrefName)
+{
+  nsresult rv = Preferences::AddAtomicBoolVarCache(aVar, aPrefName);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+}
+
+void
 AddVarCacheFunc(int32_t* aVar, const char* aPrefName)
 {
   nsresult rv = Preferences::AddIntVarCache(aVar, aPrefName);
@@ -94,6 +101,13 @@ AddVarCacheFunc(uint32_t* aVar, const char* aPrefName)
 
 void
 AddVarCacheFunc(Atomic<uint32_t, Relaxed>* aVar, const char* aPrefName)
+{
+  nsresult rv = Preferences::AddAtomicUintVarCache(aVar, aPrefName);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+}
+
+void
+AddVarCacheFunc(Atomic<uint32_t, ReleaseAcquire>* aVar, const char* aPrefName)
 {
   nsresult rv = Preferences::AddAtomicUintVarCache(aVar, aPrefName);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -155,10 +169,16 @@ TEST(CallbackAndVarCacheOrder, Bool)
   RunTest<bool>("test_pref.bool.1", "test_pref.bool.2", false, true);
 }
 
-TEST(CallbackAndVarCacheOrder, AtomicBool)
+TEST(CallbackAndVarCacheOrder, AtomicBoolRelaxed)
 {
   RunTest<bool, Atomic<bool, Relaxed>>(
     "test_pref.atomic_bool.1", "test_pref.atomic_bool.2", false, true);
+ }
+
+TEST(CallbackAndVarCacheOrder, AtomicBoolReleaseAcquire)
+{
+  RunTest<bool, Atomic<bool, ReleaseAcquire>>(
+    "test_pref.atomic_bool.3", "test_pref.atomic_bool.4", false, true);
 }
 
 TEST(CallbackAndVarCacheOrder, Int)
@@ -177,15 +197,21 @@ TEST(CallbackAndVarCacheOrder, Uint)
   RunTest<uint32_t>("test_pref.uint.1", "test_pref.uint.2", 4u, 5u);
 }
 
-TEST(CallbackAndVarCacheOrder, AtomicUint)
+TEST(CallbackAndVarCacheOrder, AtomicUintRelaxed)
 {
   RunTest<uint32_t, Atomic<uint32_t, Relaxed>>(
     "test_pref.atomic_uint.1", "test_pref.atomic_uint.2", 6u, 7u);
 }
 
+TEST(CallbackAndVarCacheOrder, AtomicUintReleaseAcquire)
+{
+  RunTest<uint32_t, Atomic<uint32_t, ReleaseAcquire>>(
+    "test_pref.atomic_uint.3", "test_pref.atomic_uint.4", 8u, 9u);
+}
+
 TEST(CallbackAndVarCacheOrder, Float)
 {
-  RunTest<float>("test_pref.float.1", "test_pref.float.2", -8.0f, 9.0f);
+  RunTest<float>("test_pref.float.1", "test_pref.float.2", -10.0f, 11.0f);
 }
 
 } // namespace mozilla
