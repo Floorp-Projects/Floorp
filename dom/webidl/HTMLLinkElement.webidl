@@ -16,7 +16,7 @@
 interface HTMLLinkElement : HTMLElement {
   [Pure]
            attribute boolean disabled;
-  [CEReactions, SetterNeedsSubjectPrincipal, SetterThrows, Pure]
+  [CEReactions, SetterNeedsSubjectPrincipal=NonSystem, SetterThrows, Pure]
            attribute DOMString href;
   [CEReactions, SetterThrows, Pure]
            attribute DOMString? crossOrigin;
