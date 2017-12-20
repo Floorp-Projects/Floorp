@@ -212,8 +212,6 @@ WebGLContext::DestroyResourcesAndContext()
     if (!gl)
         return;
 
-    gl->MakeCurrent();
-
     mBound2DTextures.Clear();
     mBoundCubeMapTextures.Clear();
     mBound3DTextures.Clear();
@@ -898,8 +896,6 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
         if (IsContextLost())
             return NS_OK;
 
-        MakeContextCurrent();
-
         // If we've already drawn, we should commit the current buffer.
         PresentScreenBuffer();
 
@@ -1490,8 +1486,6 @@ WebGLContext::MozGetUnderlyingParamString(uint32_t pname, nsAString& retval)
 
     retval.SetIsVoid(true);
 
-    MakeContextCurrent();
-
     switch (pname) {
     case LOCAL_GL_VENDOR:
     case LOCAL_GL_RENDERER:
@@ -1514,7 +1508,6 @@ WebGLContext::MozGetUnderlyingParamString(uint32_t pname, nsAString& retval)
 void
 WebGLContext::ClearScreen()
 {
-    MakeContextCurrent();
     ScopedBindFramebuffer autoFB(gl, 0);
 
     const bool changeDrawBuffers = (mDefaultFB_DrawBuffer0 != LOCAL_GL_BACK);
@@ -1539,8 +1532,6 @@ void
 WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield clearBits,
                                                      bool fakeNoAlpha)
 {
-    MakeContextCurrent();
-
     const bool initializeColorBuffer = bool(clearBits & LOCAL_GL_COLOR_BUFFER_BIT);
     const bool initializeDepthBuffer = bool(clearBits & LOCAL_GL_DEPTH_BUFFER_BIT);
     const bool initializeStencilBuffer = bool(clearBits & LOCAL_GL_STENCIL_BUFFER_BIT);
@@ -1638,8 +1629,6 @@ WebGLContext::PresentScreenBuffer()
         return false;
     }
     MOZ_ASSERT(!mBackbufferNeedsClear);
-
-    gl->MakeCurrent();
 
     GLScreenBuffer* screen = gl->Screen();
     MOZ_ASSERT(screen);
@@ -1979,7 +1968,6 @@ WebGLContext::GetSurfaceSnapshot(gfxAlphaType* const out_alphaType)
     if (NS_WARN_IF(!surf))
         return nullptr;
 
-    gl->MakeCurrent();
     {
         ScopedBindFramebuffer autoFB(gl, 0);
         ClearBackbufferIfNeeded();
@@ -2442,7 +2430,6 @@ WebGLContext::ValidateArrayBufferView(const char* funcName,
 void
 WebGLContext::UpdateMaxDrawBuffers()
 {
-    gl->MakeCurrent();
     mGLMaxColorAttachments = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_COLOR_ATTACHMENTS);
     mGLMaxDrawBuffers = gl->GetIntAs<uint32_t>(LOCAL_GL_MAX_DRAW_BUFFERS);
 

@@ -37,12 +37,6 @@ this.TestUtils = {
     return new Promise(resolve => this.executeSoon(resolve));
   },
 
-  waitForIdle(timeout = undefined) {
-    return new Promise(resolve => {
-      Services.tm.idleDispatchToMainThread(resolve);
-    });
-  },
-
   /**
    * Waits for the specified topic to be observed.
    *

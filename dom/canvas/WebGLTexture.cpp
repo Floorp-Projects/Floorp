@@ -152,7 +152,6 @@ WebGLTexture::Delete()
         cur.Clear(funcName);
     }
 
-    mContext->MakeContextCurrent();
     mContext->gl->fDeleteTextures(1, &mGLName);
 
     LinkedListElement<WebGLTexture>::removeFrom(mContext->mTextures);
@@ -647,7 +646,6 @@ ZeroTextureData(WebGLContext* webgl, const char* funcName, GLuint tex,
                            funcName);
 
     gl::GLContext* gl = webgl->GL();
-    gl->MakeCurrent();
 
     GLenum scopeBindTarget;
     switch (target.get()) {
@@ -938,7 +936,6 @@ WebGLTexture::GenerateMipmap(TexTarget texTarget)
 
     // Done with validation. Do the operation.
 
-    mContext->MakeContextCurrent();
     gl::GLContext* gl = mContext->gl;
 
     if (gl->WorkAroundDriverBugs()) {
@@ -966,8 +963,6 @@ WebGLTexture::GenerateMipmap(TexTarget texTarget)
 JS::Value
 WebGLTexture::GetTexParameter(TexTarget texTarget, GLenum pname)
 {
-    mContext->MakeContextCurrent();
-
     GLint i = 0;
     GLfloat f = 0.0f;
 
@@ -1223,7 +1218,6 @@ WebGLTexture::TexParameter(TexTarget texTarget, GLenum pname, const FloatOrInt& 
 
     ////////////////
 
-    mContext->MakeContextCurrent();
     if (!clamped.isFloat)
         mContext->gl->fTexParameteri(texTarget.get(), pname, clamped.i);
     else

@@ -343,6 +343,13 @@ partial interface Window {
    */
   [ChromeOnly, Throws]
   readonly attribute WindowRoot? windowRoot;
+
+  /**
+   * ChromeOnly method to determine if a particular window should see console
+   * reports from service workers of the given scope.
+   */
+  [ChromeOnly]
+  boolean shouldReportForServiceWorkerScope(USVString aScope);
 };
 
 Window implements TouchEventHandlers;

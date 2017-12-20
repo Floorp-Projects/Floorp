@@ -81,8 +81,8 @@ function test() {
   // open a window and add the above closed window list
   let newWin = openDialog(location, "_blank", "chrome,all,dialog=no");
   promiseWindowLoaded(newWin).then(() => {
-    gPrefService.setIntPref("browser.sessionstore.max_windows_undo",
-                            test_state._closedWindows.length);
+    Services.prefs.setIntPref("browser.sessionstore.max_windows_undo",
+                              test_state._closedWindows.length);
     ss.setWindowState(newWin, JSON.stringify(test_state), true);
 
     let closedWindows = JSON.parse(ss.getClosedWindowData());
@@ -113,7 +113,7 @@ function test() {
        "... and windows not specifically forgetten weren't.");
 
     // clean up
-    gPrefService.clearUserPref("browser.sessionstore.max_windows_undo");
+    Services.prefs.clearUserPref("browser.sessionstore.max_windows_undo");
     BrowserTestUtils.closeWindow(newWin).then(finish);
   });
 }

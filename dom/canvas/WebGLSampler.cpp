@@ -35,7 +35,6 @@ WebGLSampler::~WebGLSampler()
 void
 WebGLSampler::Delete()
 {
-    mContext->MakeContextCurrent();
     mContext->gl->fDeleteSamplers(1, &mGLName);
 
     removeFrom(mContext->mSamplers);
@@ -197,7 +196,6 @@ WebGLSampler::SamplerParameter(const char* funcName, GLenum pname,
 
     ////
 
-    mContext->gl->MakeCurrent();
     if (param.isFloat) {
         mContext->gl->fSamplerParameterf(mGLName, pname, param.f);
     } else {

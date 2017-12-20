@@ -43,14 +43,14 @@ var PointerlockFsWarning = {
 
   showPointerLock(aOrigin) {
     if (!document.fullscreen) {
-      let timeout = gPrefService.getIntPref("pointer-lock-api.warning.timeout");
+      let timeout = Services.prefs.getIntPref("pointer-lock-api.warning.timeout");
       this.show(aOrigin, "pointerlock-warning", timeout, 0);
     }
   },
 
   showFullScreen(aOrigin) {
-    let timeout = gPrefService.getIntPref("full-screen-api.warning.timeout");
-    let delay = gPrefService.getIntPref("full-screen-api.warning.delay");
+    let timeout = Services.prefs.getIntPref("full-screen-api.warning.timeout");
+    let delay = Services.prefs.getIntPref("full-screen-api.warning.delay");
     this.show(aOrigin, "fullscreen-warning", timeout, delay);
   },
 
@@ -529,7 +529,7 @@ var FullScreen = {
   _isPopupOpen: false,
   _isChromeCollapsed: false,
   _safeToCollapse() {
-    if (!gPrefService.getBoolPref("browser.fullscreen.autohide"))
+    if (!Services.prefs.getBoolPref("browser.fullscreen.autohide"))
       return false;
 
     // a popup menu is open in chrome: don't collapse chrome
@@ -573,10 +573,10 @@ var FullScreen = {
 
   // Autohide helpers for the context menu item
   getAutohide(aItem) {
-    aItem.setAttribute("checked", gPrefService.getBoolPref("browser.fullscreen.autohide"));
+    aItem.setAttribute("checked", Services.prefs.getBoolPref("browser.fullscreen.autohide"));
   },
   setAutohide() {
-    gPrefService.setBoolPref("browser.fullscreen.autohide", !gPrefService.getBoolPref("browser.fullscreen.autohide"));
+    Services.prefs.setBoolPref("browser.fullscreen.autohide", !Services.prefs.getBoolPref("browser.fullscreen.autohide"));
     // Try again to hide toolbar when we change the pref.
     FullScreen.hideNavToolbox(true);
   },
@@ -612,7 +612,7 @@ var FullScreen = {
 
     this._fullScrToggler.hidden = false;
 
-    if (aAnimate && gPrefService.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
+    if (aAnimate && Services.prefs.getBoolPref("toolkit.cosmeticAnimations.enabled")) {
       gNavToolbox.setAttribute("fullscreenShouldAnimate", true);
       // Hide the fullscreen toggler until the transition ends.
       let listener = () => {

@@ -93,7 +93,6 @@ WebGLContext::ActiveTexture(GLenum texture)
             texture, mGLMaxTextureUnits);
     }
 
-    MakeContextCurrent();
     mActiveTexture = texture - LOCAL_GL_TEXTURE0;
     gl->fActiveTexture(texture);
 }
@@ -137,8 +136,6 @@ WebGLContext::BindFramebuffer(GLenum target, WebGLFramebuffer* wfb)
 
     if (wfb && !ValidateObject("bindFramebuffer", *wfb))
         return;
-
-    MakeContextCurrent();
 
     if (!wfb) {
         gl->fBindFramebuffer(target, 0);
@@ -198,7 +195,6 @@ void WebGLContext::BlendEquation(GLenum mode)
     if (!ValidateBlendEquationEnum(mode, "blendEquation: mode"))
         return;
 
-    MakeContextCurrent();
     gl->fBlendEquation(mode);
 }
 
@@ -211,7 +207,6 @@ void WebGLContext::BlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
         !ValidateBlendEquationEnum(modeAlpha, "blendEquationSeparate: modeAlpha"))
         return;
 
-    MakeContextCurrent();
     gl->fBlendEquationSeparate(modeRGB, modeAlpha);
 }
 
@@ -280,7 +275,6 @@ void WebGLContext::BlendFunc(GLenum sfactor, GLenum dfactor)
     if (!ValidateBlendFuncEnumsCompatibility(sfactor, dfactor, "blendFuncSeparate: srcRGB and dstRGB"))
         return;
 
-    MakeContextCurrent();
     gl->fBlendFunc(sfactor, dfactor);
 }
 
@@ -299,7 +293,6 @@ WebGLContext::BlendFuncSeparate(GLenum srcRGB, GLenum dstRGB,
     if (!ValidateBlendFuncEnumsCompatibility(srcRGB, dstRGB, "blendFuncSeparate: srcRGB and dstRGB"))
         return;
 
-    MakeContextCurrent();
     gl->fBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
 }
 
@@ -369,7 +362,6 @@ WebGLContext::CullFace(GLenum face)
     if (!ValidateFaceEnum(face, "cullFace"))
         return;
 
-    MakeContextCurrent();
     gl->fCullFace(face);
 }
 
@@ -489,7 +481,6 @@ WebGLContext::DepthFunc(GLenum func)
     if (!ValidateComparisonEnum(func, "depthFunc"))
         return;
 
-    MakeContextCurrent();
     gl->fDepthFunc(func);
 }
 
@@ -502,7 +493,6 @@ WebGLContext::DepthRange(GLfloat zNear, GLfloat zFar)
     if (zNear > zFar)
         return ErrorInvalidOperation("depthRange: the near value is greater than the far value!");
 
-    MakeContextCurrent();
     gl->fDepthRange(zNear, zFar);
 }
 
@@ -587,7 +577,6 @@ WebGLContext::FrontFace(GLenum mode)
             return ErrorInvalidEnumInfo("frontFace: mode", mode);
     }
 
-    MakeContextCurrent();
     gl->fFrontFace(mode);
 }
 
@@ -700,8 +689,6 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
     default:
         MOZ_CRASH("GFX: Bad target.");
     }
-
-    MakeContextCurrent();
 
     if (fb)
         return fb->GetAttachmentParameter(funcName, cx, target, attachment, pname, &rv);
@@ -841,8 +828,6 @@ WebGLContext::GetRenderbufferParameter(GLenum target, GLenum pname)
         return JS::NullValue();
     }
 
-    MakeContextCurrent();
-
     switch (pname) {
     case LOCAL_GL_RENDERBUFFER_SAMPLES:
         if (!IsWebGL2())
@@ -879,7 +864,6 @@ WebGLContext::CreateTexture()
         return nullptr;
 
     GLuint tex = 0;
-    MakeContextCurrent();
     gl->fGenTextures(1, &tex);
 
     RefPtr<WebGLTexture> globj = new WebGLTexture(this, tex);
@@ -929,7 +913,6 @@ WebGLContext::GetError()
     // Either no WebGL-side error, or it's already been cleared.
     // UnderlyingGL-side errors, now.
 
-    MakeContextCurrent();
     GetAndFlushUnderlyingGLErrors();
 
     err = GetAndClearError(&mUnderlyingGLError);
@@ -1024,7 +1007,6 @@ WebGLContext::Hint(GLenum target, GLenum mode)
     if (!isValid)
         return ErrorInvalidEnum("hint: invalid hint");
 
-    MakeContextCurrent();
     gl->fHint(target, mode);
 }
 
@@ -1042,7 +1024,6 @@ WebGLContext::IsFramebuffer(const WebGLFramebuffer* fb)
     }
 #endif
 
-    MakeContextCurrent();
     return gl->fIsFramebuffer(fb->mGLName);
 }
 
@@ -1149,7 +1130,6 @@ WebGLContext::PixelStorei(GLenum pname, GLint param)
                 return;
             }
 
-            MakeContextCurrent();
             gl->fPixelStorei(pname, param);
             *pValueSlot = param;
             return;
@@ -1197,7 +1177,6 @@ WebGLContext::PixelStorei(GLenum pname, GLint param)
             else if (pname == LOCAL_GL_UNPACK_ALIGNMENT)
                 mPixelStore_UnpackAlignment = param;
 
-            MakeContextCurrent();
             gl->fPixelStorei(pname, param);
             return;
 
@@ -1441,7 +1420,6 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
         bytesAfterOffset = checkedBytesAfterOffset.value();
     }
 
-    gl->MakeCurrent();
     const ScopedLazyBind lazyBind(gl, LOCAL_GL_PIXEL_PACK_BUFFER, buffer);
 
     ReadPixelsImpl(x, y, width, height, format, type, (void*)offset, bytesAfterOffset);
@@ -1577,8 +1555,6 @@ WebGLContext::ReadPixelsImpl(GLint x, GLint y, GLsizei rawWidth, GLsizei rawHeig
     const uint32_t height(rawHeight);
 
     //////
-
-    MakeContextCurrent();
 
     const webgl::FormatUsageInfo* srcFormat;
     uint32_t srcWidth;
@@ -1732,7 +1708,6 @@ WebGLContext::Scissor(GLint x, GLint y, GLsizei width, GLsizei height)
     if (width < 0 || height < 0)
         return ErrorInvalidValue("scissor: negative size");
 
-    MakeContextCurrent();
     gl->fScissor(x, y, width, height);
 }
 
@@ -1750,7 +1725,6 @@ WebGLContext::StencilFunc(GLenum func, GLint ref, GLuint mask)
     mStencilValueMaskFront = mask;
     mStencilValueMaskBack = mask;
 
-    MakeContextCurrent();
     gl->fStencilFunc(func, ref, mask);
 }
 
@@ -1781,7 +1755,6 @@ WebGLContext::StencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint ma
             break;
     }
 
-    MakeContextCurrent();
     gl->fStencilFuncSeparate(face, func, ref, mask);
 }
 
@@ -1796,7 +1769,6 @@ WebGLContext::StencilOp(GLenum sfail, GLenum dpfail, GLenum dppass)
         !ValidateStencilOpEnum(dppass, "stencilOp: dppass"))
         return;
 
-    MakeContextCurrent();
     gl->fStencilOp(sfail, dpfail, dppass);
 }
 
@@ -1812,7 +1784,6 @@ WebGLContext::StencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum
         !ValidateStencilOpEnum(dppass, "stencilOpSeparate: dppass"))
         return;
 
-    MakeContextCurrent();
     gl->fStencilOpSeparate(face, sfail, dpfail, dppass);
 }
 
@@ -1885,7 +1856,6 @@ WebGLContext::Uniform1i(WebGLUniformLocation* loc, GLint a1)
     if (error)
         return;
 
-    MakeContextCurrent();
     gl->fUniform1i(loc->mLoc, a1);
 }
 
@@ -1896,7 +1866,6 @@ WebGLContext::Uniform2i(WebGLUniformLocation* loc, GLint a1, GLint a2)
     if (!ValidateUniformSetter(loc, 2, LOCAL_GL_INT, funcName))
         return;
 
-    MakeContextCurrent();
     gl->fUniform2i(loc->mLoc, a1, a2);
 }
 
@@ -1907,7 +1876,6 @@ WebGLContext::Uniform3i(WebGLUniformLocation* loc, GLint a1, GLint a2, GLint a3)
     if (!ValidateUniformSetter(loc, 3, LOCAL_GL_INT, funcName))
         return;
 
-    MakeContextCurrent();
     gl->fUniform3i(loc->mLoc, a1, a2, a3);
 }
 
@@ -1919,7 +1887,6 @@ WebGLContext::Uniform4i(WebGLUniformLocation* loc, GLint a1, GLint a2, GLint a3,
     if (!ValidateUniformSetter(loc, 4, LOCAL_GL_INT, funcName))
         return;
 
-    MakeContextCurrent();
     gl->fUniform4i(loc->mLoc, a1, a2, a3, a4);
 }
 
@@ -1932,7 +1899,6 @@ WebGLContext::Uniform1f(WebGLUniformLocation* loc, GLfloat a1)
     if (!ValidateUniformSetter(loc, 1, LOCAL_GL_FLOAT, funcName))
         return;
 
-    MakeContextCurrent();
     gl->fUniform1f(loc->mLoc, a1);
 }
 
@@ -1943,7 +1909,6 @@ WebGLContext::Uniform2f(WebGLUniformLocation* loc, GLfloat a1, GLfloat a2)
     if (!ValidateUniformSetter(loc, 2, LOCAL_GL_FLOAT, funcName))
         return;
 
-    MakeContextCurrent();
     gl->fUniform2f(loc->mLoc, a1, a2);
 }
 
@@ -1955,7 +1920,6 @@ WebGLContext::Uniform3f(WebGLUniformLocation* loc, GLfloat a1, GLfloat a2,
     if (!ValidateUniformSetter(loc, 3, LOCAL_GL_FLOAT, funcName))
         return;
 
-    MakeContextCurrent();
     gl->fUniform3f(loc->mLoc, a1, a2, a3);
 }
 
@@ -1967,7 +1931,6 @@ WebGLContext::Uniform4f(WebGLUniformLocation* loc, GLfloat a1, GLfloat a2,
     if (!ValidateUniformSetter(loc, 4, LOCAL_GL_FLOAT, funcName))
         return;
 
-    MakeContextCurrent();
     gl->fUniform4f(loc->mLoc, a1, a2, a3, a4);
 }
 
@@ -2030,7 +1993,6 @@ WebGLContext::UniformNiv(const char* funcName, uint8_t N, WebGLUniformLocation* 
     };
     const auto func = kFuncList[N-1];
 
-    MakeContextCurrent();
     (gl->*func)(loc->mLoc, numElementsToUpload, elemBytes);
 }
 
@@ -2063,7 +2025,6 @@ WebGLContext::UniformNuiv(const char* funcName, uint8_t N, WebGLUniformLocation*
     };
     const auto func = kFuncList[N-1];
 
-    MakeContextCurrent();
     (gl->*func)(loc->mLoc, numElementsToUpload, elemBytes);
 }
 
@@ -2096,7 +2057,6 @@ WebGLContext::UniformNfv(const char* funcName, uint8_t N, WebGLUniformLocation* 
     };
     const auto func = kFuncList[N-1];
 
-    MakeContextCurrent();
     (gl->*func)(loc->mLoc, numElementsToUpload, elemBytes);
 }
 
@@ -2184,7 +2144,6 @@ WebGLContext::UniformMatrixAxBfv(const char* funcName, uint8_t A, uint8_t B,
     };
     const auto func = kFuncList[3*(A-2) + (B-2)];
 
-    MakeContextCurrent();
     (gl->*func)(loc->mLoc, numMatsToUpload, uploadTranspose, uploadBytes);
 }
 
@@ -2230,7 +2189,6 @@ WebGLContext::CreateFramebuffer()
         return nullptr;
 
     GLuint fbo = 0;
-    MakeContextCurrent();
     gl->fGenFramebuffers(1, &fbo);
 
     RefPtr<WebGLFramebuffer> globj = new WebGLFramebuffer(this, fbo);
@@ -2243,7 +2201,6 @@ WebGLContext::CreateRenderbuffer()
     if (IsContextLost())
         return nullptr;
 
-    MakeContextCurrent();
     RefPtr<WebGLRenderbuffer> globj = new WebGLRenderbuffer(this);
     return globj.forget();
 }
@@ -2260,7 +2217,6 @@ WebGLContext::Viewport(GLint x, GLint y, GLsizei width, GLsizei height)
     width = std::min(width, (GLsizei)mGLMaxViewportDims[0]);
     height = std::min(height, (GLsizei)mGLMaxViewportDims[1]);
 
-    MakeContextCurrent();
     gl->fViewport(x, y, width, height);
 
     mViewportX = x;
@@ -2335,7 +2291,6 @@ WebGLContext::GetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype)
             return nullptr;
     }
 
-    MakeContextCurrent();
     GLint range[2], precision;
 
     if (mDisableFragHighP &&
@@ -2411,27 +2366,33 @@ WebGLContext::RestoreContext()
 }
 
 void
-WebGLContext::BlendColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
+WebGLContext::BlendColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
+{
     if (IsContextLost())
         return;
-    MakeContextCurrent();
+
     gl->fBlendColor(r, g, b, a);
 }
 
 void
-WebGLContext::Flush() {
+WebGLContext::Flush()
+{
     if (IsContextLost())
         return;
-    MakeContextCurrent();
+
     gl->fFlush();
 }
 
 void
-WebGLContext::Finish() {
+WebGLContext::Finish()
+{
     if (IsContextLost())
         return;
-    MakeContextCurrent();
+
     gl->fFinish();
+
+    mCompletedFenceId = mNextFenceId;
+    mNextFenceId += 1;
 }
 
 void
@@ -2453,23 +2414,24 @@ WebGLContext::LineWidth(GLfloat width)
         width = 1.0;
     }
 
-    MakeContextCurrent();
     gl->fLineWidth(width);
 }
 
 void
-WebGLContext::PolygonOffset(GLfloat factor, GLfloat units) {
+WebGLContext::PolygonOffset(GLfloat factor, GLfloat units)
+{
     if (IsContextLost())
         return;
-    MakeContextCurrent();
+
     gl->fPolygonOffset(factor, units);
 }
 
 void
-WebGLContext::SampleCoverage(GLclampf value, WebGLboolean invert) {
+WebGLContext::SampleCoverage(GLclampf value, WebGLboolean invert)
+{
     if (IsContextLost())
         return;
-    MakeContextCurrent();
+
     gl->fSampleCoverage(value, invert);
 }
 

@@ -63,6 +63,12 @@ class ClientSource final : public ClientThing<ClientSourceChild>
   ClientInfo mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
 
+  // Contained a de-duplicated list of ServiceWorker scope strings
+  // for which this client has called navigator.serviceWorker.register().
+  // Typically there will be either be zero or one scope strings, but
+  // there could be more.  We keep this list until the client is closed.
+  AutoTArray<nsCString, 1> mRegisteringScopeList;
+
   void
   Shutdown();
 
@@ -163,6 +169,12 @@ public:
   Traverse(nsCycleCollectionTraversalCallback& aCallback,
            const char* aName,
            uint32_t aFlags);
+
+  void
+  NoteCalledRegisterForServiceWorkerScope(const nsACString& aScope);
+
+  bool
+  CalledRegisterForServiceWorkerScope(const nsACString& aScope);
 };
 
 inline void

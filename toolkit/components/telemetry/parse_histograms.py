@@ -291,10 +291,9 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         # the histogram names to a strict pattern.
         # We skip this on the server to avoid failures with old Histogram.json revisions.
         if self._strict_type_checks:
-            pattern = '^[a-z][a-z0-9_]+[a-z0-9]$'
-            if not re.match(pattern, name, re.IGNORECASE):
+            if not re.match(CPP_IDENTIFIER_PATTERN, name, re.IGNORECASE):
                 ParserError('Error for histogram name "%s": name does not conform to "%s"' %
-                            (name, pattern)).handle_later()
+                            (name, CPP_IDENTIFIER_PATTERN)).handle_later()
 
     def check_expiration(self, name, definition):
         field = 'expires_in_version'

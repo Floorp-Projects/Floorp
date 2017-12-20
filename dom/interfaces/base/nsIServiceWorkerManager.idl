@@ -234,8 +234,6 @@ interface nsIServiceWorkerManager : nsISupports
   void addListener(in nsIServiceWorkerManagerListener aListener);
 
   void removeListener(in nsIServiceWorkerManagerListener aListener);
-
-  bool shouldReportToWindow(in mozIDOMWindowProxy aWindow, in ACString aScope);
 };
 
 %{ C++

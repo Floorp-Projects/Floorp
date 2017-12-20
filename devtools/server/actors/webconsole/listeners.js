@@ -283,7 +283,7 @@ ConsoleAPIListener.prototype =
       // a window.
       let scope = message.ID;
 
-      if (!swm.shouldReportToWindow(this.window, scope)) {
+      if (!this.window.shouldReportForServiceWorkerScope(scope)) {
         return false;
       }
     }

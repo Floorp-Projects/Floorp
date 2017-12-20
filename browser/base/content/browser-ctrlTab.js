@@ -216,8 +216,8 @@ var ctrlTab = {
   prefName: "browser.ctrlTab.previews",
   readPref: function ctrlTab_readPref() {
     var enable =
-      gPrefService.getBoolPref(this.prefName) &&
-      !gPrefService.getBoolPref("browser.ctrlTab.disallowForScreenReaders", false);
+      Services.prefs.getBoolPref(this.prefName) &&
+      !Services.prefs.getBoolPref("browser.ctrlTab.disallowForScreenReaders", false);
 
     if (enable)
       this.init();

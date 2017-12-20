@@ -426,6 +426,9 @@ ugly_split(HTAB *hashp, uint32 obucket, BUFHEAD *old_bufp,
     last_bfp = NULL;
     scopyto = (uint16)copyto; /* ANSI */
 
+    if (ino[0] < 1) {
+        return DATABASE_CORRUPTED_ERROR;
+    }
     n = ino[0] - 1;
     while (n < ino[0]) {
 
@@ -463,7 +466,13 @@ ugly_split(HTAB *hashp, uint32 obucket, BUFHEAD *old_bufp,
              * Fix up the old page -- the extra 2 are the fields
              * which contained the overflow information.
              */
+            if (ino[0] < (moved + 2)) {
+                return DATABASE_CORRUPTED_ERROR;
+            }
             ino[0] -= (moved + 2);
+            if (scopyto < sizeof(uint16) * (ino[0] + 3)) {
+                return DATABASE_CORRUPTED_ERROR;
+            }
             FREESPACE(ino) =
                 scopyto - sizeof(uint16) * (ino[0] + 3);
             OFFSET(ino) = scopyto;
@@ -486,8 +495,14 @@ ugly_split(HTAB *hashp, uint32 obucket, BUFHEAD *old_bufp,
         for (n = 1; (n < ino[0]) && (ino[n + 1] >= REAL_KEY); n += 2) {
             cino = (char *)ino;
             key.data = (uint8 *)cino + ino[n];
+            if (off < ino[n]) {
+                return DATABASE_CORRUPTED_ERROR;
+            }
             key.size = off - ino[n];
             val.data = (uint8 *)cino + ino[n + 1];
+            if (ino[n] < ino[n + 1]) {
+                return DATABASE_CORRUPTED_ERROR;
+            }
             val.size = ino[n] - ino[n + 1];
             off = ino[n + 1];
 

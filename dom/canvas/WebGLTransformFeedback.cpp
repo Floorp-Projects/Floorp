@@ -31,7 +31,6 @@ void
 WebGLTransformFeedback::Delete()
 {
     if (mGLName) {
-        mContext->MakeContextCurrent();
         mContext->gl->fDeleteTransformFeedbacks(1, &mGLName);
     }
     removeFrom(mContext->mTransformFeedbacks);
@@ -93,7 +92,6 @@ WebGLTransformFeedback::BeginTransformFeedback(GLenum primMode)
     ////
 
     const auto& gl = mContext->gl;
-    gl->MakeCurrent();
     gl->fBeginTransformFeedback(primMode);
 
     ////
@@ -123,7 +121,6 @@ WebGLTransformFeedback::EndTransformFeedback()
     ////
 
     const auto& gl = mContext->gl;
-    gl->MakeCurrent();
     gl->fEndTransformFeedback();
 
     ////
@@ -151,7 +148,6 @@ WebGLTransformFeedback::PauseTransformFeedback()
     ////
 
     const auto& gl = mContext->gl;
-    gl->MakeCurrent();
     gl->fPauseTransformFeedback();
 
     ////
@@ -176,7 +172,6 @@ WebGLTransformFeedback::ResumeTransformFeedback()
     ////
 
     const auto& gl = mContext->gl;
-    gl->MakeCurrent();
     gl->fResumeTransformFeedback();
 
     ////

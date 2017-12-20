@@ -78,7 +78,7 @@ dtls13_RememberFragment(sslSocket *ss,
 SECStatus
 dtls13_SendAck(sslSocket *ss)
 {
-    sslBuffer buf = { NULL, 0, 0 };
+    sslBuffer buf = SSL_BUFFER_EMPTY;
     SECStatus rv = SECSuccess;
     PRCList *cursor;
     PRInt32 sent;

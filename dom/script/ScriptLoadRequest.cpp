@@ -43,7 +43,9 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind,
                                      nsIScriptElement* aElement,
                                      ValidJSVersion aValidJSVersion,
                                      mozilla::CORSMode aCORSMode,
-                                     const mozilla::dom::SRIMetadata& aIntegrity)
+                                     const mozilla::dom::SRIMetadata& aIntegrity,
+                                     nsIURI* aReferrer,
+                                     mozilla::net::ReferrerPolicy aReferrerPolicy)
   : mKind(aKind)
   , mElement(aElement)
   , mScriptFromHead(false)
@@ -69,7 +71,8 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind,
   , mLineNo(1)
   , mCORSMode(aCORSMode)
   , mIntegrity(aIntegrity)
-  , mReferrerPolicy(mozilla::net::RP_Unset)
+  , mReferrer(aReferrer)
+  , mReferrerPolicy(aReferrerPolicy)
 {
 }
 

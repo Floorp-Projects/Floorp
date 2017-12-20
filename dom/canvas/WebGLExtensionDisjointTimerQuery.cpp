@@ -117,7 +117,6 @@ WebGLExtensionDisjointTimerQuery::GetQueryObjectEXT(JSContext* cx,
 bool
 WebGLExtensionDisjointTimerQuery::IsSupported(const WebGLContext* webgl)
 {
-    webgl->MakeContextCurrent();
     gl::GLContext* gl = webgl->GL();
     return gl->IsSupported(gl::GLFeature::query_objects) &&
            gl->IsSupported(gl::GLFeature::get_query_object_i64v) &&
