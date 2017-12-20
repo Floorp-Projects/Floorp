@@ -1979,28 +1979,6 @@ nsContentUtils::ParseLegacyFontSize(const nsAString& aValue)
 }
 
 /* static */
-bool
-nsContentUtils::IsControlledByServiceWorker(nsIDocument* aDocument)
-{
-  if (nsContentUtils::IsInPrivateBrowsing(aDocument)) {
-    return false;
-  }
-
-  RefPtr<workers::ServiceWorkerManager> swm =
-    workers::ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
-
-  ErrorResult rv;
-  bool controlled = swm->IsControlled(aDocument, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    rv.SuppressException();
-    return false;
-  }
-
-  return controlled;
-}
-
-/* static */
 void
 nsContentUtils::GetOfflineAppManifest(nsIDocument *aDocument, nsIURI **aURI)
 {
@@ -2008,7 +1986,7 @@ nsContentUtils::GetOfflineAppManifest(nsIDocument *aDocument, nsIURI **aURI)
   MOZ_ASSERT(aDocument);
   *aURI = nullptr;
 
-  if (IsControlledByServiceWorker(aDocument)) {
+  if (aDocument->GetController().isSome()) {
     return;
   }
 

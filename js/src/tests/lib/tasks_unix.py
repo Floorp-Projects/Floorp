@@ -2,7 +2,7 @@
 # waitpid to dispatch tasks.  This avoids several deadlocks that are possible
 # with fork/exec + threads + Python.
 
-import errno, os, select, sys
+import errno, os, select, signal, sys
 from datetime import datetime, timedelta
 from progressbar import ProgressBar
 from results import NullTestOutput, TestOutput, escape_cmdline
@@ -131,14 +131,16 @@ def remove_task(tasks, pid):
 
 def timed_out(task, timeout):
     """
-    Return True if the given task has been running for longer than |timeout|.
-    |timeout| may be falsy, indicating an infinite timeout (in which case
-    timed_out always returns False).
+    Return a timedelta with the amount we are overdue, or False if the timeout
+    has not yet been reached (or timeout is falsy, indicating there is no
+    timeout.)
     """
-    if timeout:
-        now = datetime.now()
-        return (now - task.start) > timedelta(seconds=timeout)
-    return False
+    if not timeout:
+        return False
+
+    elapsed = datetime.now() - task.start
+    over = elapsed - timedelta(seconds=timeout)
+    return over if over.total_seconds() > 0 else False
 
 def reap_zombies(tasks, timeout):
     """
@@ -181,11 +183,17 @@ def reap_zombies(tasks, timeout):
 
 def kill_undead(tasks, timeout):
     """
-    Signal all children that are over the given timeout.
+    Signal all children that are over the given timeout. Use SIGABRT first to
+    generate a stack dump. If it still doesn't die for another 30 seconds, kill
+    with SIGKILL.
     """
     for task in tasks:
-        if timed_out(task, timeout):
-            os.kill(task.pid, 9)
+        over = timed_out(task, timeout)
+        if over:
+            if over.total_seconds() < 30:
+                os.kill(task.pid, signal.SIGABRT)
+            else:
+                os.kill(task.pid, signal.SIGKILL)
 
 def run_all_tests(tests, prefix, pb, options):
     # Copy and reverse for fast pop off end.

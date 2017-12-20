@@ -54,7 +54,7 @@ public:
     return GetWrapper();
   }
 
-  Console*
+  already_AddRefed<Console>
   GetConsole(ErrorResult& aRv);
 
   void

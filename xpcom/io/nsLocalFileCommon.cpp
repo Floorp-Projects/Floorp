@@ -15,6 +15,7 @@
 #include "nsCRT.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsUTF8Utils.h"
+#include "nsArray.h"
 
 #ifdef XP_WIN
 #include <string.h>

@@ -1,7 +1,7 @@
 [
   {
-    "size": 996696,
-    "digest": "7c09f6144c84a6dd9bdb8d817e7957b432e72138ecb4a2adf6f5754b7ef2a2bd5c53ba113659283644f510a1aab87a1efc09851bc07457978eb0c0a63f4c29a4",
+    "size": 2156788,
+    "digest": "8e3b50c4879f1321655a7b2b613dc6c981580fb5e14af585eda1f79020e98378f67bfdf46bf49c060635b283b1892d0e5ca23ab219af83de0456fbee3e276983",
     "algorithm": "sha512",
     "filename": "breakpad-tools.tar.xz",
     "unpack": true
