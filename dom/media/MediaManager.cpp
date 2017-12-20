@@ -1817,9 +1817,7 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
         result->AppendElement(source);
       }
     }
-    SourceSet* handoff = result.release();
-    NS_DispatchToMainThread(NewRunnableFrom([id, handoff]() mutable {
-      UniquePtr<SourceSet> result(handoff); // grab result
+    NS_DispatchToMainThread(NewRunnableFrom([id, result{Move(result)}]() mutable {
       MediaManager* mgr = MediaManager::GetIfExists();
       if (!mgr) {
         return NS_OK;
