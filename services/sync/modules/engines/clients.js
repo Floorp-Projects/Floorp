@@ -91,6 +91,7 @@ this.ClientEngine = function ClientEngine(service) {
   this.resetLastSync();
   this.fxAccounts = fxAccounts;
   this.addClientCommandQueue = Promise.resolve();
+  Utils.defineLazyIDProperty(this, "localID", "services.sync.client.GUID");
 };
 ClientEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -99,6 +100,7 @@ ClientEngine.prototype = {
   _trackerObj: ClientsTracker,
   allowSkippedRecord: false,
   _knownStaleFxADeviceIds: null,
+  _lastDeviceCounts: null,
 
   // These two properties allow us to avoid replaying the same commands
   // continuously if we cannot manage to upload our own record.
@@ -186,15 +188,6 @@ ClientEngine.prototype = {
     return counts;
   },
 
-  get localID() {
-    // Generate a random GUID id we don't have one
-    let localID = Svc.Prefs.get("client.GUID", "");
-    return localID == "" ? this.localID = Utils.makeGUID() : localID;
-  },
-  set localID(value) {
-    Svc.Prefs.set("client.GUID", value);
-  },
-
   get brandName() {
     let brand = Services.strings.createBundle(
       "chrome://branding/locale/brand.properties");
@@ -202,12 +195,7 @@ ClientEngine.prototype = {
   },
 
   get localName() {
-    let name = Utils.getDeviceName();
-    // If `getDeviceName` returns the default name, set the pref. FxA registers
-    // the device before syncing, so we don't need to update the registration
-    // in this case.
-    Svc.Prefs.set("client.name", name);
-    return name;
+    return Utils.getDeviceName();
   },
   set localName(value) {
     Svc.Prefs.set("client.name", value);
@@ -562,7 +550,8 @@ ClientEngine.prototype = {
     // so non-histogram telemetry (eg, UITelemetry) and the sync scheduler
     // has easy access to them, and so they are accurate even before we've
     // successfully synced the first time after startup.
-    for (let [deviceType, count] of this.deviceTypes) {
+    let deviceTypeCounts = this.deviceTypes;
+    for (let [deviceType, count] of deviceTypeCounts) {
       let hid;
       let prefName = this.name + ".devices.";
       switch (deviceType) {
@@ -579,8 +568,13 @@ ClientEngine.prototype = {
           continue;
       }
       Services.telemetry.getHistogramById(hid).add(count);
-      Svc.Prefs.set(prefName, count);
+      // Optimization: only write the pref if it changed since our last sync.
+      if (this._lastDeviceCounts == null ||
+          this._lastDeviceCounts.get(prefName) != count) {
+        Svc.Prefs.set(prefName, count);
+      }
     }
+    this._lastDeviceCounts = deviceTypeCounts;
     return SyncEngine.prototype._syncFinish.call(this);
   },
 
@@ -1077,7 +1071,7 @@ ClientsTracker.prototype = {
         break;
       case "nsPref:changed":
         this._log.debug("client.name preference changed");
-        this.addChangedID(Svc.Prefs.get("client.GUID"));
+        this.addChangedID(this.engine.localID);
         this.score += SCORE_INCREMENT_XLARGE;
         break;
     }

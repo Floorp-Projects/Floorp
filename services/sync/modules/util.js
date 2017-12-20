@@ -27,6 +27,14 @@ XPCOMUtils.defineLazyServiceGetter(this, "cryptoSDR",
                                    "@mozilla.org/login-manager/crypto/SDR;1",
                                    "nsILoginManagerCrypto");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "localDeviceName",
+                                      "services.sync.client.name",
+                                      "");
+
+XPCOMUtils.defineLazyPreferenceGetter(this, "localDeviceType",
+                                      "services.sync.client.type",
+                                      DEVICE_TYPE_DESKTOP);
+
 /*
  * Custom exception types.
  */
@@ -80,7 +88,7 @@ this.Utils = {
         Services.appinfo.appBuildID + ".";                        // Build.
       /* eslint-enable no-multi-spaces */
     }
-    return this._userAgent + Svc.Prefs.get("client.type", "desktop");
+    return this._userAgent + localDeviceType;
   },
 
   /**
@@ -626,17 +634,60 @@ this.Utils = {
   },
 
   getDeviceName() {
-    const deviceName = Svc.Prefs.get("client.name", "");
+    let deviceName = localDeviceName;
 
     if (deviceName === "") {
-      return this.getDefaultDeviceName();
+      deviceName = this.getDefaultDeviceName();
+      Svc.Prefs.set("client.name", deviceName);
     }
 
     return deviceName;
   },
 
+  /**
+   * Helper to implement a more efficient version of fairly common pattern:
+   *
+   * Utils.defineLazyIDProperty(this, "syncID", "services.sync.client.syncID")
+   *
+   * is equivalent to (but more efficient than) the following:
+   *
+   * Foo.prototype = {
+   *   ...
+   *   get syncID() {
+   *     let syncID = Svc.Prefs.get("client.syncID", "");
+   *     return syncID == "" ? this.syncID = Utils.makeGUID() : syncID;
+   *   },
+   *   set syncID(value) {
+   *     Svc.Prefs.set("client.syncID", value);
+   *   },
+   *   ...
+   * };
+   */
+  defineLazyIDProperty(object, propName, prefName) {
+    // An object that exists to be the target of the lazy pref getter.
+    // We can't use `object` (at least, not using `propName`) since XPCOMUtils
+    // will stomp on any setter we define.
+    const storage = {};
+    XPCOMUtils.defineLazyPreferenceGetter(storage, "value", prefName, "");
+    Object.defineProperty(object, propName, {
+      configurable: true,
+      enumerable: true,
+      get() {
+        let value = storage.value;
+        if (!value) {
+          value = Utils.makeGUID();
+          Services.prefs.setStringPref(prefName, value);
+        }
+        return value;
+      },
+      set(value) {
+        Services.prefs.setStringPref(prefName, value);
+      }
+    });
+  },
+
   getDeviceType() {
-    return Svc.Prefs.get("client.type", DEVICE_TYPE_DESKTOP);
+    return localDeviceType;
   },
 
   formatTimestamp(date) {
