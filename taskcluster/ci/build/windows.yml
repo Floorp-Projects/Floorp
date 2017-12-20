@@ -424,13 +424,14 @@ win32-rusttests/opt:
         product: firefox
         job-name: win32-rusttests-opt
     treeherder:
-        platform: windows2012-32-rusttests/opt
+        platform: windows2012-32/opt
         symbol: tc(BR)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
         env:
+            PERFHERDER_EXTRA_OPTIONS: rusttests
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
     run:
         using: mozharness
@@ -453,13 +454,14 @@ win64-rusttests/opt:
         product: firefox
         job-name: win64-rusttests-opt
     treeherder:
-        platform: windows2012-64-rusttests/opt
+        platform: windows2012-64/opt
         symbol: tc(BR)
         tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
     worker:
         max-run-time: 7200
         env:
+            PERFHERDER_EXTRA_OPTIONS: rusttests
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
     run:
         using: mozharness
