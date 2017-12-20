@@ -65,6 +65,13 @@ AddVarCacheFunc(bool* aVar, const char* aPrefName)
 }
 
 void
+AddVarCacheFunc(Atomic<bool, Relaxed>* aVar, const char* aPrefName)
+{
+  nsresult rv = Preferences::AddAtomicBoolVarCache(aVar, aPrefName);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+}
+
+void
 AddVarCacheFunc(int32_t* aVar, const char* aPrefName)
 {
   nsresult rv = Preferences::AddIntVarCache(aVar, aPrefName);
@@ -139,6 +146,11 @@ RunTest(const char* aPrefName1, const char* aPrefName2, T aValue1, T aValue2)
 TEST(CallbackAndVarCacheOrder, Bool)
 {
   RunTest<bool>("test_pref.bool.1", "test_pref.bool.2", false, true);
+}
+
+TEST(CallbackAndVarCacheOrder, AtomicBool)
+{
+  RunTest<bool, Atomic<bool, Relaxed>>("test_pref.atomic_bool.1", "test_pref.atomic_bool.2", false, true);
 }
 
 TEST(CallbackAndVarCacheOrder, Int)
