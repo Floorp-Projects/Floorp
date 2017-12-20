@@ -522,19 +522,33 @@ TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
         aJsTransceiver.SetCurrentDirection(
             dom::RTCRtpTransceiverDirection::Inactive, aRv);
       }
-
-      // If negotiation stops a track from receiving (ie; m-section is
-      // negotiated "sendonly" or "inactive"), we mark the track muted.  We do
-      // _not_ do the reverse; we need to wait for RTP to unmute according to
-      // the spec. That happens in MediaPipeline.
-      if (!mReceiveTrack->Muted()) {
-        mReceiveTrack->MutedChanged(true);
-      }
     }
 
     if (aRv.Failed()) {
       return;
     }
+  }
+
+  RefPtr<dom::RTCRtpReceiver> receiver = aJsTransceiver.GetReceiver(aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  // receive stream ids from JSEP
+  dom::Sequence<nsString> receiveStreamIds;
+  for (const auto& id : mJsepTransceiver->mRecvTrack.GetStreamIds()) {
+    receiveStreamIds.AppendElement(NS_ConvertUTF8toUTF16(id.c_str()),
+                                   fallible);
+  }
+  receiver->SetStreamIds(receiveStreamIds, aRv);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  receiver->SetRemoteSendBit(mJsepTransceiver->mRecvTrack.GetRemoteSetSendBit(),
+                             aRv);
+  if (aRv.Failed()) {
+    return;
   }
 
   // AddTrack magic from JS

@@ -98,7 +98,8 @@ public:
             sdp::Direction direction)
       : mType(type),
         mDirection(direction),
-        mActive(false)
+        mActive(false),
+        mRemoteSetSendBit(false)
   {
   }
 
@@ -125,8 +126,12 @@ public:
     std::string error;
     SdpHelper helper(&error);
 
+    mRemoteSetSendBit = msection.IsSending();
+
     if (msection.IsSending()) {
       (void)helper.GetIdsFromMsid(sdp, msection, &mStreamIds, &mTrackId);
+    } else {
+      mStreamIds.clear();
     }
 
     // We do this whether or not the track is active
@@ -159,6 +164,7 @@ public:
       mJsEncodeConstraints = rhs.mJsEncodeConstraints;
       mSsrcs = rhs.mSsrcs;
       mActive = rhs.mActive;
+      mRemoteSetSendBit = rhs.mRemoteSetSendBit;
 
       for (const JsepCodecDescription* codec : rhs.mPrototypeCodecs.values) {
         mPrototypeCodecs.values.push_back(codec->Clone());
@@ -225,6 +231,12 @@ public:
   SetActive(bool active)
   {
     mActive = active;
+  }
+
+  bool
+  GetRemoteSetSendBit() const
+  {
+    return mRemoteSetSendBit;
   }
 
   virtual void PopulateCodecs(
@@ -350,6 +362,7 @@ private:
   UniquePtr<JsepTrackNegotiatedDetails> mNegotiatedDetails;
   std::vector<uint32_t> mSsrcs;
   bool mActive;
+  bool mRemoteSetSendBit;
 };
 
 } // namespace mozilla
