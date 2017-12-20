@@ -476,6 +476,7 @@ private:
 
         bool                           mPrimaryConnectedOK;
         bool                           mBackupConnectedOK;
+        bool                           mBackupConnStatsSet;
 
         // A nsHalfOpenSocket can be made for a concrete non-null transaction,
         // but the transaction can be dispatch to another connection. In that
