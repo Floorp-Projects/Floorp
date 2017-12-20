@@ -1520,7 +1520,7 @@ nsWindow::UpdateClientOffset()
 {
     AUTO_PROFILER_LABEL("nsWindow::UpdateClientOffset", GRAPHICS);
 
-    if (!mIsTopLevel || !mShell || !mGdkWindow || !mIsX11Display ||
+    if (!mIsTopLevel || !mShell || !mIsX11Display ||
         gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP) {
         mClientOffset = nsIntPoint(0, 0);
         return;
@@ -1533,7 +1533,7 @@ nsWindow::UpdateClientOffset()
     int length_returned;
     long *frame_extents;
 
-    if (!gdk_property_get(mGdkWindow,
+    if (!gdk_property_get(gtk_widget_get_window(mShell),
                           gdk_atom_intern ("_NET_FRAME_EXTENTS", FALSE),
                           cardinal_atom,
                           0, // offset
@@ -3802,6 +3802,8 @@ nsWindow::Create(nsIWidget* aParent,
         eventWidget = (drawToContainer) ? container : mShell;
 
         gtk_widget_add_events(eventWidget, kEvents);
+        if (drawToContainer)
+            gtk_widget_add_events(mShell, GDK_PROPERTY_CHANGE_MASK);
 
         // Prevent GtkWindow from painting a background to avoid flickering.
         gtk_widget_set_app_paintable(eventWidget, TRUE);
@@ -3892,6 +3894,12 @@ nsWindow::Create(nsIWidget* aParent,
 
     // label the drawing window with this object so we can find our way home
     g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", this);
+    if (drawToContainer) {
+        // Also label mShell toplevel window,
+        // property_notify_event_cb callback also needs to find its way home
+        g_object_set_data(G_OBJECT(gtk_widget_get_window(mShell)),
+                          "nsWindow", this);
+    }
 
     if (mContainer)
         g_object_set_data(G_OBJECT(mContainer), "nsWindow", this);
@@ -3909,12 +3917,12 @@ nsWindow::Create(nsIWidget* aParent,
                          G_CALLBACK(window_state_event_cb), nullptr);
         g_signal_connect(mShell, "check-resize",
                          G_CALLBACK(check_resize_cb), nullptr);
-
-        GdkScreen *screen = gtk_widget_get_screen(mShell);
-
         g_signal_connect(mShell, "composited-changed",
                          G_CALLBACK(widget_composited_changed_cb), nullptr);
+        g_signal_connect(mShell, "property-notify-event",
+                         G_CALLBACK(property_notify_event_cb), nullptr);
 
+        GdkScreen *screen = gtk_widget_get_screen(mShell);
         if (!g_signal_handler_find(screen, G_SIGNAL_MATCH_FUNC,
                                    0, 0, nullptr,
                                    FuncToGpointer(screen_composited_changed_cb), 0)) {
@@ -4024,8 +4032,6 @@ nsWindow::Create(nsIWidget* aParent,
                          G_CALLBACK(button_press_event_cb), nullptr);
         g_signal_connect(eventWidget, "button-release-event",
                          G_CALLBACK(button_release_event_cb), nullptr);
-        g_signal_connect(eventWidget, "property-notify-event",
-                         G_CALLBACK(property_notify_event_cb), nullptr);
         g_signal_connect(eventWidget, "scroll-event",
                          G_CALLBACK(scroll_event_cb), nullptr);
 #if GTK_CHECK_VERSION(3,4,0)
@@ -4098,7 +4104,8 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
   res_name[0] = toupper(res_name[0]);
   if (!role) role = res_name;
 
-  gdk_window_set_role(mGdkWindow, role);
+  GdkWindow* gdkWindow = gtk_widget_get_window(mShell);
+  gdk_window_set_role(gdkWindow, role);
 
 #ifdef MOZ_X11
   if (mIsX11Display) {
@@ -4114,7 +4121,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
       // a warning & refuses to make the change.
       GdkDisplay *display = gdk_display_get_default();
       XSetClassHint(GDK_DISPLAY_XDISPLAY(display),
-                    gdk_x11_window_get_xid(mGdkWindow),
+                    gdk_x11_window_get_xid(gdkWindow),
                     class_hint);
       XFree(class_hint);
   }
