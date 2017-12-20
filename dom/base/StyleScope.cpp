@@ -10,6 +10,16 @@
 namespace mozilla {
 namespace dom {
 
+StyleScope::StyleScope(mozilla::dom::ShadowRoot& aShadowRoot)
+  : mAsNode(aShadowRoot)
+  , mKind(Kind::ShadowRoot)
+{}
+
+StyleScope::StyleScope(nsIDocument& aDoc)
+  : mAsNode(aDoc)
+  , mKind(Kind::Document)
+{}
+
 StyleScope::~StyleScope()
 {
 }

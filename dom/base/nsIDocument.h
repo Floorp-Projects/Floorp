@@ -1331,11 +1331,6 @@ public:
    */
   virtual void EnsureOnDemandBuiltInUASheet(mozilla::StyleSheet* aSheet) = 0;
 
-  nsINode& AsNode() final
-  {
-    return *this;
-  }
-
   mozilla::dom::StyleSheetList* StyleSheets()
   {
     return &StyleScope::EnsureDOMStyleSheets();
