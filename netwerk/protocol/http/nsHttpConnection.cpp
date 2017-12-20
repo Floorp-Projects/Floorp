@@ -87,7 +87,7 @@ nsHttpConnection::nsHttpConnection()
     , mEarlyDataNegotiated(false)
     , mDid0RTTSpdy(false)
     , mFastOpen(false)
-    , mFastOpenStatus(TFO_NOT_TRIED)
+    , mFastOpenStatus(TFO_NOT_SET)
     , mForceSendDuringFastOpenPending(false)
     , mReceivedSocketWouldBlockDuringFastOpen(false)
 {
@@ -127,12 +127,12 @@ nsHttpConnection::~nsHttpConnection()
 
     if ((mFastOpenStatus != TFO_FAILED) &&
         (mFastOpenStatus != TFO_HTTP) &&
-        ((mFastOpenStatus != TFO_NOT_TRIED) ||
+        ((mFastOpenStatus != TFO_DISABLED) ||
          gHttpHandler->UseFastOpen())) {
         // TFO_FAILED will be reported in the replacement connection with more
         // details.
         // Otherwise report only if TFO is enabled and supported.
-        Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_2, mFastOpenStatus);
+        Telemetry::Accumulate(Telemetry::TCP_FAST_OPEN_3, mFastOpenStatus);
     }
 }
 
@@ -2446,11 +2446,20 @@ void
 nsHttpConnection::SetFastOpenStatus(uint8_t tfoStatus) {
     mFastOpenStatus = tfoStatus;
     if ((mFastOpenStatus >= TFO_FAILED_CONNECTION_REFUSED) &&
+        (mFastOpenStatus <= TFO_FAILED_BACKUP_CONNECTION_TFO_DATA_COOKIE_NOT_ACCEPTED) &&
         mSocketTransport) {
         nsresult firstRetryError;
         if (NS_SUCCEEDED(mSocketTransport->GetFirstRetryError(&firstRetryError)) &&
             (NS_FAILED(firstRetryError))) {
-            mFastOpenStatus = tfoStatus + 4; 
+            if ((mFastOpenStatus >= TFO_FAILED_BACKUP_CONNECTION_TFO_NOT_TRIED) &&
+                (mFastOpenStatus <= TFO_FAILED_BACKUP_CONNECTION_TFO_DATA_COOKIE_NOT_ACCEPTED)) {
+                mFastOpenStatus = TFO_FAILED_BACKUP_CONNECTION_NO_TFO_FAILED_TOO;
+            } else {
+                // We add +7 to tranform TFO_FAILED_CONNECTION_REFUSED into
+                // TFO_FAILED_CONNECTION_REFUSED_NO_TFO_FAILED_TOO, etc.
+                // If the list in TCPFastOpenLayer.h changes please addapt +7.
+                mFastOpenStatus = tfoStatus + 7;
+            }
         }
     }
 }

@@ -3875,7 +3875,7 @@ nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
     }
 
     if (mEnt->mConnInfo->FirstHopSSL()) {
-      mFastOpenStatus = TFO_NOT_TRIED;
+      mFastOpenStatus = TFO_UNKNOWN;
     } else {
       mFastOpenStatus = TFO_HTTP;
     }
@@ -3985,8 +3985,12 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
         tmpFlags |= nsISocketTransport::DISABLE_RFC1918;
     }
 
-    if (!isBackup && mEnt->mUseFastOpen) {
-        socketTransport->SetFastOpenCallback(this);
+    if (!isBackup) {
+        if (mEnt->mUseFastOpen) {
+            socketTransport->SetFastOpenCallback(this);
+        } else {
+            mFastOpenStatus = TFO_DISABLED;
+        }
     }
 
     socketTransport->SetConnectionFlags(tmpFlags);
@@ -4310,7 +4314,18 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
 
         mFastOpenInProgress = false;
         mConnectionNegotiatingFastOpen = nullptr;
-        mFastOpenStatus = TFO_FAILED_BACKUP_CONNECTION;
+        if (mFastOpenStatus == TFO_NOT_TRIED) {
+            mFastOpenStatus = TFO_FAILED_BACKUP_CONNECTION_TFO_NOT_TRIED;
+        } else if (mFastOpenStatus == TFO_TRIED) {
+            mFastOpenStatus = TFO_FAILED_BACKUP_CONNECTION_TFO_TRIED;
+        } else if (mFastOpenStatus == TFO_DATA_SENT) {
+            mFastOpenStatus = TFO_FAILED_BACKUP_CONNECTION_TFO_DATA_SENT;
+        } else {
+            // This is TFO_DATA_COOKIE_NOT_ACCEPTED (I think this cannot
+            // happened, because the primary connection will be already
+            // connected or in recovery and mFastOpenInProgress==false).
+            mFastOpenStatus = TFO_FAILED_BACKUP_CONNECTION_TFO_DATA_COOKIE_NOT_ACCEPTED;
+        }
     }
 
     nsresult rv =  SetupConn(out, false);
@@ -4332,6 +4347,8 @@ nsHalfOpenSocket::FastOpenEnabled()
         return false;
     }
 
+    MOZ_ASSERT(mEnt->mConnInfo->FirstHopSSL());
+
     // If mEnt is present this HalfOpen must be in the mHalfOpens,
     // but we want to be sure!!!
     if (!mEnt->mHalfOpens.Contains(this)) {
@@ -4342,6 +4359,7 @@ nsHalfOpenSocket::FastOpenEnabled()
         // fast open was turned off.
         LOG(("nsHalfOpenSocket::FastEnabled - fast open was turned off.\n"));
         mEnt->mUseFastOpen = false;
+        mFastOpenStatus = TFO_DISABLED;
         return false;
     }
     // We can use FastOpen if we have a transaction or if it is ssl
@@ -4350,25 +4368,11 @@ nsHalfOpenSocket::FastOpenEnabled()
     // the connection will be 100% ready for the next transaction to use it.
     // Make an exception for SSL tunneled HTTP proxy as the NullHttpTransaction
     // does not know how to drive Connect.
-    RefPtr<PendingTransactionInfo> info = FindTransactionHelper(false);
-
-    if ((!info) &&
-        (!mEnt->mConnInfo->FirstHopSSL() || mEnt->mConnInfo->UsingConnect())) {
-        LOG(("nsHalfOpenSocket::FastOpenEnabled - It is a connection without "
-             "transaction and first hop is not ssl.\n"));
+    if (mEnt->mConnInfo->UsingConnect()) {
+        LOG(("nsHalfOpenSocket::FastOpenEnabled - It is using Connect."));
+        mFastOpenStatus = TFO_DISABLED_CONNECT;
         return false;
     }
-
-    if ((info) && !mEnt->mConnInfo->FirstHopSSL()) {
-        // The following function call will check whether is possible to send
-        // data during fast open
-        if (!info->mTransaction->CanDo0RTT()) {
-            LOG(("nsHalfOpenSocket::FastOpenEnabled - it is not safe to restart "
-                 "transaction.\n"));
-            return false;
-        }
-    }
-
     return true;
 }
 
@@ -4556,7 +4560,13 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError, bool aWillRetry)
         mStreamOut = nullptr;
         mStreamIn = nullptr;
 
-        Abandon();
+        // If backup transport has already started put this HalfOpen back to
+        // mEnt list.
+        if (mBackupTransport) {
+            mFastOpenStatus = TFO_BACKUP_CONN;
+            mEnt->mHalfOpens.AppendElement(this);
+            gHttpHandler->ConnMgr()->mNumHalfOpenConns++;
+        }
     }
 
     mFastOpenInProgress = false;
@@ -4576,6 +4586,7 @@ nsHttpConnectionMgr::
 nsHalfOpenSocket::SetFastOpenStatus(uint8_t tfoStatus)
 {
     MOZ_ASSERT(mFastOpenInProgress);
+    mFastOpenStatus = tfoStatus;
     mConnectionNegotiatingFastOpen->SetFastOpenStatus(tfoStatus);
     mConnectionNegotiatingFastOpen->Transaction()->SetFastOpenStatus(tfoStatus);
 }
@@ -4804,6 +4815,10 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
         }
     } else {
         conn->SetFastOpenStatus(mFastOpenStatus);
+        mFastOpenStatus = TFO_BACKUP_CONN; // Set this to TFO_BACKUP_CONN so
+                                           // that if a backup connection is
+                                           // established we do not report
+                                           // values twice.
     }
 
     // If this halfOpenConn was speculative, but at the ende the conn got a

@@ -799,7 +799,7 @@ nsSocketTransport::nsSocketTransport()
     , mKeepaliveProbeCount(-1)
     , mFastOpenCallback(nullptr)
     , mFastOpenLayerHasBufferedData(false)
-    , mFastOpenStatus(TFO_NOT_TRIED)
+    , mFastOpenStatus(TFO_NOT_SET)
     , mFirstRetryError(NS_OK)
     , mDoNotRetryToConnect(false)
 {
@@ -2214,9 +2214,9 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
             BOOL option = 0;
             int len = sizeof(option);
             PRInt32 rv = getsockopt((SOCKET)osfd, IPPROTO_TCP, TCP_FASTOPEN, (char*)&option, &len);
-            if ((rv != 0) && !option) {
+            if (!rv && !option) {
                 // On error, I will let the normal necko paths pickup the error.
-                mFastOpenCallback->SetFastOpenStatus(TFO_NOT_TRIED);
+                mFastOpenCallback->SetFastOpenStatus(TFO_DATA_COOKIE_NOT_ACCEPTED);
             }
         }
 #endif
