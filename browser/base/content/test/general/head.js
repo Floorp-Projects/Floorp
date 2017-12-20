@@ -57,25 +57,6 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
   }, "browser-delayed-startup-finished");
 }
 
-function updateTabContextMenu(tab, onOpened) {
-  let menu = document.getElementById("tabContextMenu");
-  if (!tab)
-    tab = gBrowser.selectedTab;
-  var evt = new Event("");
-  tab.dispatchEvent(evt);
-  menu.openPopup(tab, "end_after", 0, 0, true, false, evt);
-  is(TabContextMenu.contextTab, tab, "TabContextMenu context is the expected tab");
-  const onFinished = () => menu.hidePopup();
-  if (onOpened) {
-    return (async function() {
-      await onOpened();
-      onFinished();
-    })();
-  }
-  onFinished();
-  return Promise.resolve();
-}
-
 function openToolbarCustomizationUI(aCallback, aBrowserWin) {
   if (!aBrowserWin)
     aBrowserWin = window;
