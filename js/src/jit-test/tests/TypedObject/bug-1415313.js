@@ -1,3 +1,6 @@
+if (!this.hasOwnProperty("TypedObject"))
+  quit();
+
 var Uint32Array = TypedObject.float32.array(3);
 const ONE_MINUS_EPSILON = 1 - Math.pow(2, -53);
 const f = new Float64Array([0, 0]);
