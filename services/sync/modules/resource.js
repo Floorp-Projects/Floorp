@@ -37,6 +37,11 @@ this.Resource = function Resource(uri) {
 };
 // (static) Caches the latest server timestamp (X-Weave-Timestamp header).
 Resource.serverTime = null;
+
+XPCOMUtils.defineLazyPreferenceGetter(Resource,
+                                      "SEND_VERSION_INFO",
+                                      "services.sync.sendVersionInfo",
+                                      true);
 Resource.prototype = {
   _logName: "Sync.Resource",
 
@@ -91,7 +96,7 @@ Resource.prototype = {
   _buildHeaders(method) {
     const headers = new Headers(this._headers);
 
-    if (Svc.Prefs.get("sendVersionInfo", true)) {
+    if (Resource.SEND_VERSION_INFO) {
       headers.append("user-agent", Utils.userAgent);
     }
 
