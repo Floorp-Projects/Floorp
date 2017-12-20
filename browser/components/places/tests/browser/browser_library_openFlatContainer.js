@@ -27,7 +27,7 @@ add_task(async function() {
   });
 
   // Select unfiled later, to ensure it's closed.
-  library.PlacesOrganizer.selectLeftPaneQuery("UnfiledBookmarks");
+  library.PlacesOrganizer.selectLeftPaneBuiltIn("UnfiledBookmarks");
   ok(!library.PlacesOrganizer._places.selectedNode.containerOpen,
      "Unfiled container is closed");
 
