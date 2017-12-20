@@ -21,7 +21,7 @@ wget $URL
 echo "$SHA256SUM  $ARCHIVE" | sha256sum -c -
 
 # Just the file we need.
-tar zxvf $ARCHIVE '*/proguard.jar'
+tar --wildcards -zxvf $ARCHIVE '*/proguard.jar'
 
 # The archive is to satisfy source distribution requirements.
 mv $ARCHIVE $UPLOAD_DIR
