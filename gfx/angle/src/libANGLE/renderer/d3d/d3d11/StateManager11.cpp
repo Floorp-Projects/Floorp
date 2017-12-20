@@ -1752,6 +1752,9 @@ gl::Error StateManager11::syncCurrentValueAttribs(const gl::State &glState)
         currentValueAttrib->attribute        = attrib;
         currentValueAttrib->binding          = &vertexBindings[attrib->bindingIndex];
 
+        mDirtyVertexBufferRange.extend(static_cast<unsigned int>(attribIndex));
+        mInputLayoutIsDirty = true;
+
         ANGLE_TRY(mVertexDataManager.storeCurrentValue(currentValue, currentValueAttrib,
                                                        static_cast<size_t>(attribIndex)));
     }
