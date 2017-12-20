@@ -149,7 +149,7 @@ public:
     using nsDocument::CreateElementNS;
     NS_FORWARD_NSIDOMDOCUMENT(XMLDocument::)
     // And explicitly import the things from nsDocument that we just shadowed
-    using mozilla::dom::StyleScope::GetElementById;
+    using mozilla::dom::DocumentOrShadowRoot::GetElementById;
     using nsDocument::GetImplementation;
     using nsDocument::GetTitle;
     using nsDocument::SetTitle;

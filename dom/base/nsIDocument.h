@@ -35,7 +35,7 @@
 #include "nsClassHashtable.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/DispatcherTrait.h"
-#include "mozilla/dom/StyleScope.h"
+#include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/SegmentedVector.h"
@@ -216,7 +216,7 @@ class nsContentList;
 // Document interface.  This is implemented by all document objects in
 // Gecko.
 class nsIDocument : public nsINode,
-                    public mozilla::dom::StyleScope,
+                    public mozilla::dom::DocumentOrShadowRoot,
                     public mozilla::dom::DispatcherTrait
 {
   typedef mozilla::dom::GlobalObject GlobalObject;
@@ -1339,7 +1339,7 @@ public:
 
   mozilla::dom::StyleSheetList* StyleSheets()
   {
-    return &StyleScope::EnsureDOMStyleSheets();
+    return &DocumentOrShadowRoot::EnsureDOMStyleSheets();
   }
 
   /**
@@ -2646,10 +2646,10 @@ public:
   virtual void ResetScrolledToRefAlready() = 0;
   virtual void SetChangeScrollPosWhenScrollingToRef(bool aValue) = 0;
 
-  using mozilla::dom::StyleScope::GetElementById;
-  using mozilla::dom::StyleScope::GetElementsByTagName;
-  using mozilla::dom::StyleScope::GetElementsByTagNameNS;
-  using mozilla::dom::StyleScope::GetElementsByClassName;
+  using mozilla::dom::DocumentOrShadowRoot::GetElementById;
+  using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagName;
+  using mozilla::dom::DocumentOrShadowRoot::GetElementsByTagNameNS;
+  using mozilla::dom::DocumentOrShadowRoot::GetElementsByClassName;
 
   /**
    * Lookup an image element using its associated ID, which is usually provided
