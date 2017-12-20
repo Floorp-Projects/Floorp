@@ -2748,9 +2748,9 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
                 continue;
               }
               nsCOMPtr<nsIContent> content = somenode->AsContent();
-              if (content->NodeType() == nsIDOMNode::TEXT_NODE) {
+              if (Text* text = content->GetAsText()) {
                 NS_ENSURE_STATE(mHTMLEditor);
-                mHTMLEditor->IsVisTextNode(content, &join, true);
+                join = !mHTMLEditor->IsInVisibleTextFrames(*text);
               } else {
                 NS_ENSURE_STATE(mHTMLEditor);
                 join = content->IsHTMLElement(nsGkAtoms::br) &&
@@ -2839,14 +2839,18 @@ HTMLEditRules::WillDeleteSelection(Selection* aSelection,
 void
 HTMLEditRules::DeleteNodeIfCollapsedText(nsINode& aNode)
 {
-  if (!aNode.GetAsText()) {
+  Text* text = aNode.GetAsText();
+  if (!text) {
     return;
   }
-  bool empty;
-  nsresult rv = mHTMLEditor->IsVisTextNode(aNode.AsContent(), &empty, false);
-  NS_ENSURE_SUCCESS_VOID(rv);
-  if (empty) {
-    mHTMLEditor->DeleteNode(&aNode);
+
+  if (NS_WARN_IF(!mHTMLEditor)) {
+    return;
+  }
+
+  if (!mHTMLEditor->IsVisibleTextNode(*text)) {
+    RefPtr<HTMLEditor> htmlEditor(mHTMLEditor);
+    htmlEditor->DeleteNode(&aNode);
   }
 }
 
@@ -6237,12 +6241,9 @@ HTMLEditRules::GetNodesForOperation(
     }
     // Empty text node shouldn't be selected if unnecessary
     for (int32_t i = aOutArrayOfNodes.Length() - 1; i >= 0; i--) {
-      OwningNonNull<nsINode> node = aOutArrayOfNodes[i];
-      if (EditorBase::IsTextNode(node)) {
+      if (Text* text = aOutArrayOfNodes[i]->GetAsText()) {
         // Don't select empty text except to empty block
-        bool isEmpty = false;
-        htmlEditor->IsVisTextNode(node->AsContent(), &isEmpty, false);
-        if (isEmpty) {
+        if (!htmlEditor->IsVisibleTextNode(*text)) {
           aOutArrayOfNodes.RemoveElementAt(i);
         }
       }
