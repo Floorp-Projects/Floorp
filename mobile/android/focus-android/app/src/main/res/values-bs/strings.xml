@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Dodajte pretraživač</string>
   <string name="search_add_confirmation">Novi pretraživač dodan.</string>
   <string name="search_add_error_empty_name">Unesite naziv pretraživača</string>
+  <string name="search_add_error_duplicate_name">Instalirani pretraživač već koristi to ime.</string>
   <string name="search_add_error_empty_search">Unesite string za pretragu</string>
   <string name="search_add_error_format">Provjerite da traženi string odgovara formatu primjera</string>
   <string name="content_description_clear_input">Očisti unos</string>

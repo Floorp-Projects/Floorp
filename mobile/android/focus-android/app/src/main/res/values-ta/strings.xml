@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">தேடுபொறியைச் சேர்</string>
   <string name="search_add_confirmation">புது தேடுபொறி சேர்க்கப்பட்டது.</string>
   <string name="search_add_error_empty_name">தேடுபொறி பெயரை உள்ளிடு</string>
+  <string name="search_add_error_duplicate_name">நிறுவப்பட்ட தேடுபொறி ஏற்கனவே அப்பெயரைப் பயன்படுத்துகிறது.</string>
   <string name="search_add_error_empty_search">தேடல் தொடரை உள்ளிடு</string>
   <string name="search_add_error_format">தேடல் தொடர் எகா வடிவத்தை ஒத்திருக்கிறதா என்று பார்</string>
   <string name="content_description_clear_input">துள்ளிய உள்ளீடு</string>

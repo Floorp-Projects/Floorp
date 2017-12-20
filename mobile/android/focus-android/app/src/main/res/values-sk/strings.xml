@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Pridať vyhľadávací modul</string>
   <string name="search_add_confirmation">Bol pridaný nový vyhľadávací modul.</string>
   <string name="search_add_error_empty_name">Zadajte názov vyhľadávacieho modulu</string>
+  <string name="search_add_error_duplicate_name">Tento názov už používa nainštalovaný vyhľadávací modul.</string>
   <string name="search_add_error_empty_search">Zadajte hľadaný výraz</string>
   <string name="search_add_error_format">Skontrolujte, či sa hľadaný výraz formátovo zhoduje s príkladom</string>
   <string name="content_description_clear_input">Vymazať pole</string>

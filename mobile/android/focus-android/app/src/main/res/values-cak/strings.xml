@@ -29,11 +29,25 @@
   <string name="preference_search_engine_default">K\'o wi</string>
   <string name="preference_state_on">Titzij</string>
   <string name="preference_state_off">Tichup</string>
+  <string name="preference_subitem_autocomplete">URL Titz\'aqatisäx ruyon</string>
   <string name="preference_switch_autocomplete">Titz\'aqatisäx ruyon</string>
+  <string name="preference_category_autocomplete_preinstalled">K\'o wi URL Cholb\'äl</string>
+  <string name="preference_autocomplete_preinstalled_summary">Titzij richin nik\'ul %1$s ruyonil nunojisaj naqaj chi re 450 ajowan taq URLs pa kikajtz\'ik ochochib\'äl.</string>
+  <string name="preference_category_autocomplete_custom">Ichinan URL</string>
+  <string name="preference_autocomplete_subitem_customlist">Ichinan URLs</string>
+  <string name="preference_autocomplete_action_add">+ Titz\'aqatisäx ichinan URL</string>
+  <string name="preference_autocomplete_title_add">Titz\'aqatisäx ichinan URL</string>
+  <string name="preference_autocomplete_title_remove">Tiyuj ichinan URLs</string>
   <string name="preference_autocomplete_learn_more">Tetamäx ch\'aqa\' chik</string>
+  <string name="preference_autocomplete_custom_summary">Titz\'aqatisäx chuqa\' tinuk\'samajïx ichinan ruyonil yenojisäx taq URLs.</string>
+  <string name="preference_autocomplete_add_title">URL richin nitz\'aqatisäx</string>
+  <string name="preference_autocomplete_add_hint">Titz\'ajb\'äx o titz\'ib\'äx URL</string>
+  <string name="preference_autocomplete_add_example">Rutz\'etb\'al: example.com</string>
   <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">K\'ak\'a\' ichina URL xtz\'aqatisäx.</string>
   <string name="preference_autocomplete_menu_remove">Tiyuj</string>
   <string name="preference_autocomplete_action_remove_content_description">Tiyuj</string>
+  <string name="preference_autocomplete_add_error">Tajikib\'a\' ri URL xatz\'ib\'aj.</string>
   <string name="preference_language">Ch\'ab\'äl</string>
   <string name="preference_language_systemdefault">Q\'inoj k\'o wi</string>
   <string name="preference_dialog_title_search_engine">Tikanöx k\'o wi</string>
@@ -84,6 +98,10 @@
   <string name="search_add_manually_example">Tz\'etb\'äl: example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Titz\'aqatisäx kanob\'äl</string>
   <string name="search_add_confirmation">Xtz\'aqatisäx k\'ak\'a\' kanob\'äl.</string>
+  <string name="search_add_error_empty_name">Titz\'ib\'äx ri rub\'i\' ri kanob\'äl</string>
+  <string name="search_add_error_duplicate_name">Yakon chik jun kanob\'äl rik\'in ri b\'i\'aj ri\'.</string>
+  <string name="search_add_error_empty_search">Titz\'ib\'äx rucholajem ri nikanöx</string>
+  <string name="search_add_error_format">Tijikib\'äx chi ri rucholajem ri nikanöx nuk\'äm ri\' rik\'in ri rub\'anikil tz\'etb\'äl</string>
   <string name="content_description_clear_input">Tajin yeyuj</string>
   <string name="content_description_dismiss_input">Tichup ruwäch</string>
   <string name="content_description_erase">Tiyuj runatab\'al okem pa k\'amaya\'l</string>

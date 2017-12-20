@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Aldoni serĉilon</string>
   <string name="search_add_confirmation">Nova serĉilo aldonita.</string>
   <string name="search_add_error_empty_name">Tajpu nomon de serĉilo</string>
+  <string name="search_add_error_duplicate_name">Tiu nomo jam estas uzita de instalita serĉilo.</string>
   <string name="search_add_error_empty_search">Tajpu serĉan tekston</string>
   <string name="search_add_error_format">Kontrolu ĉu la serĉa teksto kongruas kun la formo de la ekzemplo</string>
   <string name="content_description_clear_input">Viŝi kampon</string>

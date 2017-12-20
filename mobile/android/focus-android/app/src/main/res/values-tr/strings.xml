@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Arama motoru ekle</string>
   <string name="search_add_confirmation">Yeni arama motoru eklendi.</string>
   <string name="search_add_error_empty_name">Arama motoru adını yazın</string>
+  <string name="search_add_error_duplicate_name">Yüklenmiş bir arama motoru zaten bu adı kullanıyor.</string>
   <string name="search_add_error_empty_search">Arama dizgisini yazın</string>
   <string name="search_add_error_format">Arama dizgisinin örnek biçimle uyumlu olduğundan emin olun</string>
   <string name="content_description_clear_input">Girdiyi temizle</string>

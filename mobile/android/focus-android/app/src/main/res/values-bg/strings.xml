@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Добавяне на търсачка</string>
   <string name="search_add_confirmation">Добавена е нова търсачка.</string>
   <string name="search_add_error_empty_name">Въведете име на търсачка</string>
+  <string name="search_add_error_duplicate_name">Инсталирана търсеща машина вече използва това име.</string>
   <string name="search_add_error_empty_search">Въведете низ за търсене</string>
   <string name="search_add_error_format">Проверете дали низът за търсене отговаря на формата в примера</string>
   <string name="content_description_clear_input">Изчистване на полето</string>

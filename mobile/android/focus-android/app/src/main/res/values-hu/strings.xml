@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Keresőszolgáltatás hozzáadása</string>
   <string name="search_add_confirmation">Új keresőszolgáltatás hozzáadása.</string>
   <string name="search_add_error_empty_name">Adja meg a keresőszolgáltatás nevét</string>
+  <string name="search_add_error_duplicate_name">Egy telepített keresőszolgáltatás már használja ezt a nevet.</string>
   <string name="search_add_error_empty_search">Adja meg a keresési szöveget</string>
   <string name="search_add_error_format">Ellenőrizze, hogy a keresési szöveg egyezik-e a példa formátumával</string>
   <string name="content_description_clear_input">Bemenet törlése</string>
@@ -156,11 +157,11 @@
   <string name="contextmenu_open_in_new_tab">Hivatkozás megnyitása új lapon</string>
   <string name="contextmenu_image_warning"><![CDATA["A mentett és megosztott képek "<b xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">nem ker&#252;lnek t&#246;rl&#233;sre</b>, ha törli a %1$s előzményeit.]]></string>
   <string name="firstrun_defaultbrowser_title">Tuningolja fel az adatvédelmét</string>
-  <string name="firstrun_defaultbrowser_text2">Emelje a privát a böngészést a következő szintre. Blokkolja a hirdetéseket, és más tartalmakat, amelyek követhetik az oldalak között, és lelassíthatják a betöltési sebességet.</string>
+  <string name="firstrun_defaultbrowser_text2">Emelje a privát böngészést a következő szintre. Blokkolja a hirdetéseket, és más tartalmakat, amelyek követhetik az oldalak között, és lelassíthatják a betöltési sebességet.</string>
   <string name="firstrun_search_title">Az Ön keresése, az Ön útja</string>
-  <string name="firstrun_search_text">Valami mást keres? Válasszon másik alapértelmezett keresőmotort a Beállításokban.</string>
+  <string name="firstrun_search_text">Valami mást keres? Válasszon másik alapértelmezett keresőszolgáltatást a Beállításokban.</string>
   <string name="firstrun_shortcut_title">Adjon ikonokat a kezdőképernyőre</string>
-  <string name="firstrun_shortcut_text">Térjen vissza gyorsan a kedven oldalaihoz a %1$sban. Csak válassza a „Hozzáadás a kezdőképernyőre” lehetőséget a %1$s menüből.</string>
+  <string name="firstrun_shortcut_text">Térjen vissza gyorsan a kedvenc oldalaihoz a %1$sban. Csak válassza a „Hozzáadás a kezdőképernyőre” lehetőséget a %1$s menüből.</string>
   <string name="firstrun_privacy_title">Váljon szokásává az adatvédelem</string>
   <string name="firstrun_privacy_text">Állítsa be a %1$st alapértelmezett böngészőként, és kapja meg a privát böngészés előnyeit, amikor weboldalakat nyit meg a többi appból.</string>
   <string name="firstrun_close_button">Rendben, értem!</string>

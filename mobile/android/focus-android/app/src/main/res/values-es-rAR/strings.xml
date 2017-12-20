@@ -5,7 +5,7 @@
   <string name="action_save">Guardar</string>
   <string name="urlbar_hint">Buscar o ingresar dirección</string>
   <string name="teaser">Navegación privada automática.\nNavegar. Borrar. Repetir.</string>
-  <string name="feedback_erase">El historial de navegación fue borrado.</string>
+  <string name="feedback_erase">Se borró el historial de navegación.</string>
   <string name="search_hint">Buscar %1$s</string>
   <string name="menu_share">Compartir…</string>
   <string name="menu_open_with_default_browser">Abrir con %1$s</string>
@@ -15,7 +15,7 @@
   <string name="menu_settings">Configuración</string>
   <string name="menu_about">Acerca de</string>
   <string name="menu_help">Ayuda</string>
-  <string name="menu_rights">Tus derechos</string>
+  <string name="menu_rights">Sus derechos</string>
   <string name="menu_trackers_blocked_title">Rastreadores bloqueados</string>
   <string name="share_dialog_title">Compartir vía</string>
   <string name="notification_erase_text">Borrar historial de navegación</string>
@@ -32,7 +32,7 @@
   <string name="preference_subitem_autocomplete">Autocompletar URL</string>
   <string name="preference_switch_autocomplete">Autocompletar</string>
   <string name="preference_category_autocomplete_preinstalled">Lista de URL predeterminada</string>
-  <string name="preference_autocomplete_preinstalled_summary">Activelo para que %1$s autocomplete la barra de direcciones con más de 450 URLs populares.</string>
+  <string name="preference_autocomplete_preinstalled_summary">Activar para que %1$s autocomplete la barra de direcciones con más de 450 URLs populares.</string>
   <string name="preference_category_autocomplete_custom">URL personalizada</string>
   <string name="preference_autocomplete_subitem_customlist">URLs personalizadas</string>
   <string name="preference_autocomplete_action_add">+ Agregar URL personalizada</string>
@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Agregar buscador</string>
   <string name="search_add_confirmation">Se agregó un buscador nuevo.</string>
   <string name="search_add_error_empty_name">Escriba el nombre del motor de búsqueda</string>
+  <string name="search_add_error_duplicate_name">Ya hay instalado un buscador con ese nombre.</string>
   <string name="search_add_error_empty_search">Escribir cadena de búsqueda</string>
   <string name="search_add_error_format">Verifique que la cadena de búsqueda coincida con el formato del ejemplo</string>
   <string name="content_description_clear_input">Borrar entrada</string>
@@ -119,7 +120,7 @@
   <string name="content_description_customtab_exit">Volver a la aplicación anterior</string>
   <string name="content_description_blocking_switch">Bloquear rastreadores</string>
   <string name="context_menu_paste_go">Pegar e ir</string>
-  <string name="your_rights">Tus derechos</string>
+  <string name="your_rights">Sus derechos</string>
   <string name="external_app_prompt_title">Abrir enlace en otra aplicación</string>
   <string name="external_app_prompt">Podés dejar que %1$s abra este enlace en %2$s.</string>
   <string name="external_app_prompt_no_app_title">Buscar una app que pueda abrir el enlace</string>
@@ -179,7 +180,7 @@
   <string name="download_firefox">Descargar Firefox</string>
   <string name="your_rights_content1">%1$s es software gratuito y de código abierto hecho por Mozilla y otros colaboradores.</string>
   <string name="your_rights_content2"><![CDATA["%1$s está disponible para usted bajo los términos de la Licencia pública de Mozilla "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s"/>" y otras licencias de código abierto."]]></string>
-  <string name="your_rights_content3"><![CDATA["No tenés derecho o licencia sobre las marcas registradas de la Fundación Mozilla ni cualquier otra parte interesada, incluidos los nombres o logos de Mozilla, Firefox o %1$s. Podés encontrar más información "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aqu&#237;</a>.]]></string>
+  <string name="your_rights_content3"><![CDATA["No tiene derecho o licencia sobre las marcas registradas de la Fundación Mozilla ni cualquier otra parte interesada, incluidos los nombres o logos de Mozilla, Firefox o %1$s. Puede encontrar más información "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">aqu&#237;</a>.]]></string>
   <string name="your_rights_content4"><![CDATA["El código fuente adicional de %1$s está disponible bajo varias "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">licencias</a>" libres y de código abierto."]]></string>
   <string name="your_rights_content5"><![CDATA["%1$s también utiliza listas de bloqueo de DIsconnect, Inc. como trabajos separados e independientes bajo la "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%2$s">Licencia P&#250;blica General GNU v3</a>" disponible "<a xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2" href="%3$s">aqu&#237;</a>.]]></string>
 </resources>

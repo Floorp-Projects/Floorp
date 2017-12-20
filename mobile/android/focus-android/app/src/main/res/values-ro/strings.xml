@@ -70,7 +70,7 @@
   <string name="preference_category_mozilla">Mozilla</string>
   <string name="preference_mozilla_telemetry2">Trimite date privind utilizarea</string>
   <string name="preference_mozilla_telemetry_summary">Află mai multe</string>
-  <string name="preference_mozilla_telemetry_summary2">Mozilla se străduieşte să colecteze doar ceea ce avem nevoie ca să oferim și să îmbunătățim %1$s pentru toată lumea.</string>
+  <string name="preference_mozilla_telemetry_summary2">La Mozilla noi colectăm doar strictul necesar pentru a crea și îmbunătăți %1$s pentru toată lumea.</string>
   <string name="preference_privacy_notice">Politica de confidențialitate</string>
   <string name="preference_about">Despre %1$s</string>
   <string name="preference_search_installed_search_engines">Motoare de căutare instalate</string>
@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Adaugă motor de căutare</string>
   <string name="search_add_confirmation">Motor nou de căutare adăugat.</string>
   <string name="search_add_error_empty_name">Introdu numele motorului de căutare</string>
+  <string name="search_add_error_duplicate_name">Un motor de căutare instalat folosește deja acest nume.</string>
   <string name="search_add_error_empty_search">Introdu șirul de căutare</string>
   <string name="search_add_error_format">Verifică dacă șirul de căutare se potrivește cu formatul exemplu</string>
   <string name="content_description_clear_input">Șterge adresa introdusă</string>
@@ -165,7 +166,7 @@
   <string name="firstrun_privacy_text">Setează %1$s ca browser implicit și beneficiază de avantajele navigării private atunci când deschizi pagini web din alte aplicații.</string>
   <string name="firstrun_close_button">Ok, am înțeles!</string>
   <string name="firstrun_skip_button">Omite</string>
-  <string name="firstrun_next_button">Următorul</string>
+  <string name="firstrun_next_button">Mai departe</string>
   <string name="content_blocking_disabled">-</string>
   <string name="dialog_addtohomescreen_title">Adaugă la ecranul principal</string>
   <string name="dialog_addtohomescreen_action_add">Adaugă</string>

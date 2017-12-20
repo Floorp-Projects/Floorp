@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Thêm công cụ tìm kiếm</string>
   <string name="search_add_confirmation">Đã thêm công cụ tìm kiếm mới.</string>
   <string name="search_add_error_empty_name">Nhập tên công cụ tìm kiếm</string>
+  <string name="search_add_error_duplicate_name">Một công cụ tìm kiếm đã cài đặt đã sử dụng cùng tên này.</string>
   <string name="search_add_error_empty_search">Nhập chuỗi tìm kiếm</string>
   <string name="search_add_error_format">Kiểm tra xem chuỗi tìm kiếm có đúng với định dạng như ở ví dụ không</string>
   <string name="content_description_clear_input">Xóa trắng</string>

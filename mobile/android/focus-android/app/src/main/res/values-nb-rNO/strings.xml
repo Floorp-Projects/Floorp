@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Legg til søkemotor</string>
   <string name="search_add_confirmation">Ny søkemotor lagt til.</string>
   <string name="search_add_error_empty_name">Skriv inn søkemotornavn</string>
+  <string name="search_add_error_duplicate_name">En installert søkemotor bruker allerede det navnet.</string>
   <string name="search_add_error_empty_search">Skriv inn søkestreng</string>
   <string name="search_add_error_format">Kontroller at søkestrengen passer med eksempelformatet</string>
   <string name="content_description_clear_input">Tøm skrivefeltet</string>

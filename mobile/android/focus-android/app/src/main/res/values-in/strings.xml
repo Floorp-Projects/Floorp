@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Tambah mesin pencari</string>
   <string name="search_add_confirmation">Mesin pencari baru ditambahkan.</string>
   <string name="search_add_error_empty_name">Masukkan nama mesin pencari</string>
+  <string name="search_add_error_duplicate_name">Mesin pencari yang terpasang telah menggunakan nama tersebut.</string>
   <string name="search_add_error_empty_search">Masukkan string pencarian</string>
   <string name="search_add_error_format">Periksa apakah string pencarian cocok dengan format Contoh</string>
   <string name="content_description_clear_input">Bersihkan masukan</string>

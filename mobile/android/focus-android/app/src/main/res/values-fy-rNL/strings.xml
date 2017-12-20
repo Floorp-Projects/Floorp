@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Sykmasine tafoegje</string>
   <string name="search_add_confirmation">Nije sykmasine tafoege.</string>
   <string name="search_add_error_empty_name">Fier namme fan sykmasine yn</string>
+  <string name="search_add_error_duplicate_name">Dizze namme wurdt al troch in ynstallearre sykmasine brûkt.</string>
   <string name="search_add_error_empty_search">Fier syksterm yn</string>
   <string name="search_add_error_format">Kontrolearje oft sykterm oan foarbyldnotaasje foldocht</string>
   <string name="content_description_clear_input">Ynfier wiskje</string>

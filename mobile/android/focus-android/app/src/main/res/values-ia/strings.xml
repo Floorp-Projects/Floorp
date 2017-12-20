@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Cancellar</string>
   <string name="action_ok">OK</string>
+  <string name="action_save">Salvar</string>
   <string name="urlbar_hint">Insere un adresse o face un recerca</string>
   <string name="teaser">Navigation private automatic.\nNaviga. Elimina. Repete.</string>
   <string name="feedback_erase">Tu chronologia de navigation ha essite eliminate.</string>
@@ -26,6 +27,14 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">Usante %1$s, tu es al commando.</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"Usa lo como un navigator private&#160;:\n  "<ul>"\n    "<li>Cerca e naviga directemente in le application</li>"\n    "<li>Bloca le traciatores (o actualisa le parametros pro permitter traciatores)</li>"\n    "<li>" &#8220;Eliminar&#8221; pro deler le cookies e tamben le chronologia de recercas e de navigation"</li>\n</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s es producite per Mozilla. Nostre mission es promover un Internet san e aperite.<br/>\n<a href="%2$s">Saper plus</a></p>]]></string>
   <string name="preference_category_search">Cercar</string>
   <string name="preference_search_engine_default">Predefinite</string>
+  <string name="preference_state_on">Activar</string>
+  <string name="preference_state_off">Disactivar</string>
+  <string name="preference_switch_autocomplete">Auto-completar</string>
+  <string name="preference_autocomplete_learn_more">Apprender plus</string>
+  <string name="preference_autocomplete_add_title">URL a adder</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_menu_remove">Remover</string>
+  <string name="preference_autocomplete_action_remove_content_description">Remover</string>
   <string name="preference_language">Lingua</string>
   <string name="preference_language_systemdefault">Valor predefinite per le systema</string>
   <string name="preference_dialog_title_search_engine">Motor de recerca predefinite</string>

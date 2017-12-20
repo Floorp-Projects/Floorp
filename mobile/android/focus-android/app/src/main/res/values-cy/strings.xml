@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Ychwanegu peiriant chwilio</string>
   <string name="search_add_confirmation">Wedi ychwanegu peiriant chwilio.</string>
   <string name="search_add_error_empty_name">Rhowch enw peiriant chwilio</string>
+  <string name="search_add_error_duplicate_name">Mae peiriant chwilio sydd wedi ei osod eisoes yn defnyddio\'r enw yna.</string>
   <string name="search_add_error_empty_search">Rhowch linyn chwilio</string>
   <string name="search_add_error_format">Gwiriwch fod y llinyn chwilio yn cyfateb i fformat Enghraifft</string>
   <string name="content_description_clear_input">Clirio\'r mewnbwn</string>

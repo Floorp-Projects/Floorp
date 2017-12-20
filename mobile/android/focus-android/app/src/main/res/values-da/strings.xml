@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Tilføj søgetjeneste</string>
   <string name="search_add_confirmation">Ny søgetjeneste tilføjet.</string>
   <string name="search_add_error_empty_name">Indtast søgetjenestens navn</string>
+  <string name="search_add_error_duplicate_name">En installeret søgetjeneste bruger allerede dette navn.</string>
   <string name="search_add_error_empty_search">Indtast søgestreng</string>
   <string name="search_add_error_format">Kontroller at søgestrengens format svarer til eksemplets</string>
   <string name="content_description_clear_input">Ryd adressefeltet</string>

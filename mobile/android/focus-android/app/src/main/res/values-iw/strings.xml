@@ -87,7 +87,7 @@
   <string name="action_option_add_search_engine">הוספת מנוע חיפוש</string>
   <string name="tutorial_search_step3_alternative">3. ללחוץ על %1$s</string>
   <string name="tutorial_search_step4">4. אם זכוכית המגדלת לא מופיעה, כדאי לנסות להוסיף מנוע חיפוש ידנית.</string>
-  <string name="tutorial_search_step4_alternative">4. אם %1$s לא ומפיע, כדי לנסות להוסיף מנוע חיפוש ידנית.</string>
+  <string name="tutorial_search_step4_alternative">4. אם %1$s לא מופיע, כדאי לנסות להוסיף מנוע חיפוש ידנית.</string>
   <string name="tutorial_search_finish">יסודות</string>
   <string name="search_add_hint">יש ללחוץ על סמל הזכוכית המגדלת שמעל למקלדת כדי להוסיף את מנוע החיפוש הזה.</string>
   <string name="search_add_manually_name">שם להצגה</string>

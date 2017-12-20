@@ -37,7 +37,7 @@
   <string name="preference_autocomplete_subitem_customlist">ብጁ URLs</string>
   <string name="preference_autocomplete_action_add">+ ብጁ አክል URL</string>
   <string name="preference_autocomplete_title_add">ብጁ አክል URL</string>
-  <string name="preference_autocomplete_title_remove">አስወግድ ብጁ URLs</string>
+  <string name="preference_autocomplete_title_remove">ብጁ አስወግድ URLs</string>
   <string name="preference_autocomplete_learn_more">ተጨማሪ እወቅ</string>
   <string name="preference_autocomplete_custom_summary">አክል ወይም አደራጅ ብጁ ራስ-አጠናቅቅ URLs</string>
   <string name="preference_autocomplete_add_title">URL መጨመር</string>

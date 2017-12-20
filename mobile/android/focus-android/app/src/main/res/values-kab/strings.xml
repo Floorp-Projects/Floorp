@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Rnu amsedday n unadi</string>
   <string name="search_add_confirmation">Amesday n unadi amaynut ittwarna.</string>
   <string name="search_add_error_empty_name">Sekcem isem n umsedday n unadi</string>
+  <string name="search_add_error_duplicate_name">Amsedday n unadi s yisem-a ittwasebded yakan.</string>
   <string name="search_add_error_empty_search">Sekcem aḍris n unadi</string>
   <string name="search_add_error_format">Senqed akken aḍris n unadi yemsaḍa akked tawsit n umedya</string>
   <string name="content_description_clear_input">Sfeḍ anekcam</string>

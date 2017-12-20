@@ -2,6 +2,7 @@
 <resources>
   <string name="action_cancel">Չեղարկել</string>
   <string name="action_ok">Լավ</string>
+  <string name="action_save">Պահպանել</string>
   <string name="urlbar_hint">Որոնեք կամ մուտքագրեք հասցեն</string>
   <string name="teaser">Ինքնաշխատ գաղտնի դիտարկում: \nԴիտարկել: Ջնջել: Կրկնել:</string>
   <string name="feedback_erase">Դիտարկումների պատմությունը ջնջվել է:</string>
@@ -26,6 +27,27 @@
   <string name="about_content"><![CDATA[<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s-&#1384; &#1392;&#1398;&#1377;&#1408;&#1377;&#1406;&#1400;&#1408;&#1400;&#1410;&#1385;&#1397;&#1400;&#1410;&#1398; &#1383; &#1407;&#1377;&#1388;&#1387;&#1405; &#1345;&#1381;&#1382; &#1391;&#1377;&#1404;&#1377;&#1406;&#1377;&#1408;&#1381;&#1388;:</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">"&#1365;&#1379;&#1407;&#1377;&#1379;&#1400;&#1408;&#1390;&#1381;&#1412; &#1377;&#1397;&#1398; &#1400;&#1408;&#1402;&#1381;&#1405; &#1379;&#1377;&#1394;&#1407;&#1398;&#1387; &#1380;&#1387;&#1407;&#1377;&#1408;&#1391;&#1387;&#1401;.\n  "<ul>"\n    "<li>&#1352;&#1408;&#1400;&#1398;&#1381;&#1412; &#1415; &#1380;&#1387;&#1407;&#1377;&#1408;&#1391;&#1381;&#1412; &#1377;&#1398;&#1396;&#1387;&#1403;&#1377;&#1402;&#1381;&#1405; &#1392;&#1377;&#1406;&#1381;&#1388;&#1406;&#1377;&#1390;&#1400;&#1410;&#1396;</li>"\n    "<li>&#1329;&#1408;&#1379;&#1381;&#1388;&#1377;&#1411;&#1377;&#1391;&#1381;&#1412; &#1392;&#1381;&#1407;&#1377;&#1379;&#1390;&#1400;&#1410;&#1396;&#1398;&#1381;&#1408;&#1384; (&#1391;&#1377;&#1396; &#1391;&#1377;&#1408;&#1379;&#1377;&#1406;&#1400;&#1408;&#1381;&#1412;&#1373; &#1385;&#1400;&#1410;&#1397;&#1388;&#1377;&#1407;&#1408;&#1381;&#1388;&#1400;&#1410; &#1380;&#1408;&#1377;&#1398;&#1412;)</li>"\n    "<li>&#1355;&#1398;&#1403;&#1381;&#1412;&#1373; cookie-&#1398;&#1381;&#1408;&#1384;, &#1400;&#1408;&#1400;&#1398;&#1400;&#1410;&#1396;&#1384; &#1415; &#1380;&#1387;&#1407;&#1377;&#1408;&#1391;&#1400;&#1410;&#1396;&#1398;&#1381;&#1408;&#1387; &#1402;&#1377;&#1407;&#1396;&#1400;&#1410;&#1385;&#1397;&#1400;&#1410;&#1398;&#1384; &#1396;&#1377;&#1412;&#1408;&#1381;&#1388;&#1400;&#1410; &#1392;&#1377;&#1396;&#1377;&#1408;</li>"\n  "</ul>\n</p>\n<p xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">%1$s-&#1384; &#1402;&#1377;&#1399;&#1407;&#1402;&#1377;&#1398;&#1406;&#1377;&#1390; &#1383; Mozilla-&#1387; &#1391;&#1400;&#1394;&#1396;&#1387;&#1409;: &#1348;&#1381;&#1408; &#1377;&#1404;&#1377;&#1412;&#1381;&#1388;&#1400;&#1410;&#1385;&#1397;&#1400;&#1410;&#1398;&#1398; &#1383; &#1398;&#1402;&#1377;&#1405;&#1407;&#1381;&#1388; &#1392;&#1377;&#1396;&#1377;&#1409;&#1377;&#1398;&#1409;&#1387; &#1377;&#1404;&#1400;&#1394;&#1403; &#1415; &#1378;&#1377;&#1409; &#1388;&#1387;&#1398;&#1381;&#1388;&#1400;&#1410;&#1398;:<br/>\n<a href="%2$s">Learn more</a></p>]]></string>
   <string name="preference_category_search">Որոնում</string>
   <string name="preference_search_engine_default">Լռելյայն</string>
+  <string name="preference_state_on">Միաց.</string>
+  <string name="preference_state_off">Անջ.</string>
+  <string name="preference_subitem_autocomplete">URL ինքնալրացում</string>
+  <string name="preference_switch_autocomplete">Ինքնալրացում</string>
+  <string name="preference_category_autocomplete_preinstalled">Սկզբնադիր URL ցանկ</string>
+  <string name="preference_autocomplete_preinstalled_summary">Միացրեք՝ ունենալու համար %1$s ինքնալրացում աեվլի քան 450 հանրահայտ URL-ների համար:</string>
+  <string name="preference_category_autocomplete_custom">Հարմարեցված URL</string>
+  <string name="preference_autocomplete_subitem_customlist">Հարմարեցված URL-ներ</string>
+  <string name="preference_autocomplete_action_add">+ Հավելել հարմարեցված URL</string>
+  <string name="preference_autocomplete_title_add">Հավելել հարմարեցված URL</string>
+  <string name="preference_autocomplete_title_remove">ՀԵռացնել հարմարեցված URL-ները</string>
+  <string name="preference_autocomplete_learn_more">Իմանալ ավելին</string>
+  <string name="preference_autocomplete_custom_summary">Ավելացնել և կառավարել հարմարեցված ինքնալրացվող URL-ները:</string>
+  <string name="preference_autocomplete_add_title">URL՝ ավելացնելու համար</string>
+  <string name="preference_autocomplete_add_hint">Տեղադրեք կամ մուտքագրեք URL-ն</string>
+  <string name="preference_autocomplete_add_example">Օրինակ՝ example.com</string>
+  <string name="preference_autocomplete_handle_content_description">-</string>
+  <string name="preference_autocomplete_add_confirmation">Նոր հարմարեցված URL է ավելացվել:</string>
+  <string name="preference_autocomplete_menu_remove">Հեռացնել</string>
+  <string name="preference_autocomplete_action_remove_content_description">Հեռացնել</string>
+  <string name="preference_autocomplete_add_error">Ստուգեք մուտքագրված URL-ն:</string>
   <string name="preference_language">Լեզուն</string>
   <string name="preference_language_systemdefault">Համակարգայինը</string>
   <string name="preference_dialog_title_search_engine">Լռելյայն որոնում</string>
@@ -76,6 +98,10 @@
   <string name="search_add_manually_example">Օրինակ՝ example.com/search/?q=%s</string>
   <string name="accessibility_announcement_search">Ավելացնել որոնիչ</string>
   <string name="search_add_confirmation">Նոր որոնիչը ավելացվել է:</string>
+  <string name="search_add_error_empty_name">Մուտքագրեք որոնիչի անունը</string>
+  <string name="search_add_error_duplicate_name">Տեղադրված որոնիչը արդեն օգտագործում է այդ անունը:</string>
+  <string name="search_add_error_empty_search">Մուտքագրել որոնման տողը</string>
+  <string name="search_add_error_format">Ստուգեք, որոնման տողը համապատասխանում է օրինակի ձևաչափին</string>
   <string name="content_description_clear_input">Մաքրել ներածումը</string>
   <string name="content_description_dismiss_input">Բաց թողնել</string>
   <string name="content_description_erase">Ջնջել դիտարկման պատմությունը</string>

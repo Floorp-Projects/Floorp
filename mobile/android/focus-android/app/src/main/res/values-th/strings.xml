@@ -29,6 +29,8 @@
   <string name="preference_search_engine_default">ค่าเริ่มต้น</string>
   <string name="preference_state_on">เปิด</string>
   <string name="preference_state_off">ปิด</string>
+  <string name="preference_subitem_autocomplete">การเติม URL อัตโนมัติ</string>
+  <string name="preference_switch_autocomplete">การเติมอัตโนมัติ</string>
   <string name="preference_category_autocomplete_preinstalled">รายการ URL เริ่มต้น</string>
   <string name="preference_category_autocomplete_custom">URL ที่กำหนดเอง</string>
   <string name="preference_autocomplete_subitem_customlist">URL ที่กำหนดเอง</string>
@@ -36,6 +38,7 @@
   <string name="preference_autocomplete_title_add">เพิ่ม URL ที่กำหนดเอง</string>
   <string name="preference_autocomplete_title_remove">เอา URL ที่กำหนดเองออก</string>
   <string name="preference_autocomplete_learn_more">เรียนรู้เพิ่มเติม</string>
+  <string name="preference_autocomplete_custom_summary">เพิ่มและจัดการ URL เติมอัตโนมัติที่กำหนดเอง</string>
   <string name="preference_autocomplete_add_title">URL ที่จะเพิ่ม</string>
   <string name="preference_autocomplete_add_hint">วางหรือป้อน URL</string>
   <string name="preference_autocomplete_add_example">ตัวอย่าง: example.com</string>

@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Додати засіб пошуку</string>
   <string name="search_add_confirmation">Новий засіб пошуку додано.</string>
   <string name="search_add_error_empty_name">Введіть назву засобу пошуку</string>
+  <string name="search_add_error_duplicate_name">Ця назва вже використовується у встановленому засобі пошуку.</string>
   <string name="search_add_error_empty_search">Введіть пошуковий запит</string>
   <string name="search_add_error_format">Перевірте пошуковий запит на відповідність формату зразка</string>
   <string name="content_description_clear_input">Очистити поле</string>

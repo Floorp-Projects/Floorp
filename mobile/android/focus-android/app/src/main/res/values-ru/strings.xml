@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Добавить поисковую систему</string>
   <string name="search_add_confirmation">Добавлена новая поисковая система.</string>
   <string name="search_add_error_empty_name">Введите имя поисковой системы</string>
+  <string name="search_add_error_duplicate_name">Установленная поисковая система уже использует это имя.</string>
   <string name="search_add_error_empty_search">Введите поисковую строку</string>
   <string name="search_add_error_format">Убедитесь, что поисковая строка соответствует формату примера</string>
   <string name="content_description_clear_input">Очистить ввод</string>

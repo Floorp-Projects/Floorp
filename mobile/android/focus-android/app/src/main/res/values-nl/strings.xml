@@ -99,6 +99,7 @@
   <string name="accessibility_announcement_search">Zoekmachine toevoegen</string>
   <string name="search_add_confirmation">Nieuwe zoekmachine toegevoegd.</string>
   <string name="search_add_error_empty_name">Voer naam van zoekmachine in</string>
+  <string name="search_add_error_duplicate_name">Deze naam wordt al door een geïnstalleerde zoekmachine gebruikt.</string>
   <string name="search_add_error_empty_search">Voer zoekstring in</string>
   <string name="search_add_error_format">Controleer of zoekstring aan voorbeeldnotatie voldoet</string>
   <string name="content_description_clear_input">Invoer wissen</string>
