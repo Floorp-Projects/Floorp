@@ -5,7 +5,7 @@ rust:
 - nightly
 # Oldest supported version for all features.
 # Use of https://github.com/rust-lang/rfcs/pull/16
-- 1.13.0
+- 1.14.0
 # Oldest supported version as dependency, with no features, tests, or examples.
 - 1.10.0
 
@@ -35,6 +35,7 @@ env:
   global:
   - secure: ncxJbvJM1vCZfcEftjsFKJMxxhKLgWKaR8Go9AMo0VB5fB2XVW/6NYO5bQEEYpOf1Nc/+2FbI2+Dkz0S/mJpUcNSfBgablCHgwU2sHse7KsoaqfHj2mf1E3exjzSHoP96hPGicC5zAjSXFjCgJPOUSGqqRaJ7z5AsJLhJT6LuK7QpvwPBZzklUN8T+n1sVmws8TNmRIbaniq/q6wYHANHcy6Dl59dx4sKwniUGiZdUhCiddVpoxbECSxc0A8mN2pk7/aW+WGxK3goBs5ZF7+JXF318F62pDcXQmR5CX6WdpenIcJ25g1Vg1WhQ4Ifpe17CN0bfxV8ShuzrQUThCDMffZCo9XySBtODdEowwK1UIpjnFLfIxjOs45Cd8o3tM2j0CfvtnjOz6BCdUU0qiwNPPNx0wFkx3ZiOfSh+FhBhvyPM12HN2tdN0esgVBItFmEci+sSIIXqjVL6DNiu5zTjbu0bs6COwlUWdmL6vmsZtq5tl7Cno9+C3szxRVAkShGydd04l9NYjqNEzTa1EPG50OsnVRKGdRiFzSxhc3BWExNKvcQ4v867t6/PpPkW6s4oXmYI3+De+8O7ExWc6a4alcrDXKlMs5fCb5Pcd4Ju9kowcjkoJo5yf2wW3Ox5R8SJpaEEpvyhx5O/qtIxjhHNzeo8Wsr/6gdNDv20r91TI=
   - TRAVIS_CARGO_NIGHTLY_FEATURE=""
+  - RUSTFLAGS="-D warnings"
   matrix:
   - FEATURES=--features=backtrace
   - FEATURES=--no-default-features

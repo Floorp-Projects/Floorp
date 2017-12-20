@@ -32,9 +32,7 @@ fn main() {
     }
     #[cfg(not(feature = "backtrace"))]
     {
-        let state = error_chain::State {
-            next_error: None,
-        };
+        let state = error_chain::State { next_error: None };
         println!("      State.next_error: {}", size_of_val(&state.next_error));
     }
 }
