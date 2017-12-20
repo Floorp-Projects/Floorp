@@ -7010,18 +7010,6 @@ nsWindow::GetCSDSupportLevel() {
         return sCSDSupportLevel;
     }
 
-    const char* decorationOverride = getenv("MOZ_GTK_TITLEBAR_DECORATION");
-    if (decorationOverride) {
-        if (strcmp(decorationOverride, "none") == 0) {
-            sCSDSupportLevel = CSD_SUPPORT_NONE;
-        } else if (strcmp(decorationOverride, "client") == 0) {
-            sCSDSupportLevel = CSD_SUPPORT_FLAT;
-        } else if (strcmp(decorationOverride, "system") == 0) {
-            sCSDSupportLevel = CSD_SUPPORT_FULL;
-        }
-        return sCSDSupportLevel;
-    }
-
     const char* currentDesktop = getenv("XDG_CURRENT_DESKTOP");
     if (currentDesktop) {
         if (strstr(currentDesktop, "GNOME") != nullptr) {
@@ -7045,6 +7033,24 @@ nsWindow::GetCSDSupportLevel() {
         }
     } else {
         sCSDSupportLevel = CSD_SUPPORT_NONE;
+    }
+
+    // We don't support CSD_SUPPORT_FULL on Wayland
+    if (!GDK_IS_X11_DISPLAY(gdk_display_get_default()) &&
+        sCSDSupportLevel == CSD_SUPPORT_FULL) {
+        sCSDSupportLevel = CSD_SUPPORT_FLAT;
+    }
+
+    // Allow MOZ_GTK_TITLEBAR_DECORATION to override our heuristics
+    const char* decorationOverride = getenv("MOZ_GTK_TITLEBAR_DECORATION");
+    if (decorationOverride) {
+        if (strcmp(decorationOverride, "none") == 0) {
+            sCSDSupportLevel = CSD_SUPPORT_NONE;
+        } else if (strcmp(decorationOverride, "client") == 0) {
+            sCSDSupportLevel = CSD_SUPPORT_FLAT;
+        } else if (strcmp(decorationOverride, "system") == 0) {
+            sCSDSupportLevel = CSD_SUPPORT_FULL;
+        }
     }
 
     return sCSDSupportLevel;
