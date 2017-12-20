@@ -1,6 +1,5 @@
-"use strict";
-const injector = require("inject!lib/SystemTickFeed.jsm");
-const {actionTypes: at} = require("common/Actions.jsm");
+import {actionTypes as at} from "common/Actions.jsm";
+import injector from "inject!lib/SystemTickFeed.jsm";
 
 describe("System Tick Feed", () => {
   let SystemTickFeed;

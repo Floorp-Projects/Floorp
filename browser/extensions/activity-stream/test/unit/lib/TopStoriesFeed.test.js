@@ -1,8 +1,6 @@
-"use strict";
-const injector = require("inject!lib/TopStoriesFeed.jsm");
-const {FakePrefs} = require("test/unit/utils");
-const {actionTypes: at} = require("common/Actions.jsm");
-const {GlobalOverrider} = require("test/unit/utils");
+import {FakePrefs, GlobalOverrider} from "test/unit/utils";
+import {actionTypes as at} from "common/Actions.jsm";
+import injector from "inject!lib/TopStoriesFeed.jsm";
 
 describe("Top Stories Feed", () => {
   let TopStoriesFeed;

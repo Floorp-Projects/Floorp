@@ -1,6 +1,6 @@
-const injector = require("inject!lib/ManualMigration.jsm");
-const {actionCreators: ac, actionTypes: at} = require("common/Actions.jsm");
-const {GlobalOverrider} = require("test/unit/utils");
+import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import {GlobalOverrider} from "test/unit/utils";
+import injector from "inject!lib/ManualMigration.jsm";
 
 describe("ManualMigration", () => {
   let dispatch;

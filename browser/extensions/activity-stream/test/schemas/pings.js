@@ -1,7 +1,7 @@
-const Joi = require("joi-browser");
-const {MAIN_MESSAGE_TYPE, CONTENT_MESSAGE_TYPE} = require("common/Actions.jsm");
+import {CONTENT_MESSAGE_TYPE, MAIN_MESSAGE_TYPE} from "common/Actions.jsm";
+import Joi from "joi-browser";
 
-const baseKeys = {
+export const baseKeys = {
   // client_id will be set by PingCentre if it doesn't exist.
   client_id: Joi.string().optional(),
   addon_version: Joi.string().required(),
@@ -11,9 +11,9 @@ const baseKeys = {
   user_prefs: Joi.number().integer().required()
 };
 
-const BasePing = Joi.object().keys(baseKeys).options({allowUnknown: true});
+export const BasePing = Joi.object().keys(baseKeys).options({allowUnknown: true});
 
-const UserEventPing = Joi.object().keys(Object.assign({}, baseKeys, {
+export const UserEventPing = Joi.object().keys(Object.assign({}, baseKeys, {
   session_id: baseKeys.session_id.required(),
   page: baseKeys.page.required(),
   source: Joi.string().required(),
@@ -25,7 +25,7 @@ const UserEventPing = Joi.object().keys(Object.assign({}, baseKeys, {
 }));
 
 // Use this to validate actions generated from Redux
-const UserEventAction = Joi.object().keys({
+export const UserEventAction = Joi.object().keys({
   type: Joi.string().required(),
   data: Joi.object().keys({
     event: Joi.valid([
@@ -55,19 +55,19 @@ const UserEventAction = Joi.object().keys({
   }).required()
 });
 
-const UndesiredPing = Joi.object().keys(Object.assign({}, baseKeys, {
+export const UndesiredPing = Joi.object().keys(Object.assign({}, baseKeys, {
   source: Joi.string().required(),
   event: Joi.string().required(),
   action: Joi.valid("activity_stream_undesired_event").required(),
   value: Joi.number().required()
 }));
 
-const TileSchema = Joi.object().keys({
+export const TileSchema = Joi.object().keys({
   id: Joi.number().integer().required(),
   pos: Joi.number().integer()
 });
 
-const ImpressionStatsPing = Joi.object().keys(Object.assign({}, baseKeys, {
+export const ImpressionStatsPing = Joi.object().keys(Object.assign({}, baseKeys, {
   source: Joi.string().required(),
   impression_id: Joi.string().required(),
   client_id: Joi.valid("n/a").required(),
@@ -79,14 +79,14 @@ const ImpressionStatsPing = Joi.object().keys(Object.assign({}, baseKeys, {
   pocket: Joi.number().integer()
 }));
 
-const PerfPing = Joi.object().keys(Object.assign({}, baseKeys, {
+export const PerfPing = Joi.object().keys(Object.assign({}, baseKeys, {
   source: Joi.string(),
   event: Joi.string().required(),
   action: Joi.valid("activity_stream_performance_event").required(),
   value: Joi.number().required()
 }));
 
-const SessionPing = Joi.object().keys(Object.assign({}, baseKeys, {
+export const SessionPing = Joi.object().keys(Object.assign({}, baseKeys, {
   session_id: baseKeys.session_id.required(),
   page: baseKeys.page.required(),
   session_duration: Joi.number().integer(),
@@ -130,6 +130,9 @@ const SessionPing = Joi.object().keys(Object.assign({}, baseKeys, {
       no_image: Joi.number()
     }),
 
+    // The count of pinned Top Sites.
+    topsites_pinned: Joi.number(),
+
     // When the page itself receives an event that document.visibilityState
     // == visible.
     //
@@ -147,7 +150,7 @@ const SessionPing = Joi.object().keys(Object.assign({}, baseKeys, {
   }).required()
 }));
 
-function chaiAssertions(_chai, utils) {
+export function chaiAssertions(_chai, utils) {
   const {Assertion} = _chai;
 
   Assertion.addMethod("validate", function(schema, schemaName) {
@@ -181,15 +184,3 @@ function chaiAssertions(_chai, utils) {
 
   Object.assign(_chai.assert, assertions);
 }
-
-module.exports = {
-  baseKeys,
-  BasePing,
-  UndesiredPing,
-  UserEventPing,
-  UserEventAction,
-  ImpressionStatsPing,
-  PerfPing,
-  SessionPing,
-  chaiAssertions
-};

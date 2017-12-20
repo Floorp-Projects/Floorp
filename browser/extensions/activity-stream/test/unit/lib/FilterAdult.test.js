@@ -1,5 +1,6 @@
+import {filterAdult} from "lib/FilterAdult.jsm";
+
 describe("filterAdult", () => {
-  let filterAdult;
   let hashStub;
   let hashValue;
 
@@ -14,7 +15,6 @@ describe("filterAdult", () => {
         return hashStub;
       }
     };
-    filterAdult = require("lib/FilterAdult.jsm").filterAdult;
   });
 
   it("should default to include on unexpected urls", () => {

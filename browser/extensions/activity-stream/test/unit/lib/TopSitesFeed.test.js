@@ -1,9 +1,10 @@
 "use strict";
-const injector = require("inject!lib/TopSitesFeed.jsm");
-const {Screenshots} = require("lib/Screenshots.jsm");
-const {FakePrefs, GlobalOverrider} = require("test/unit/utils");
-const {actionTypes: at, actionCreators: ac} = require("common/Actions.jsm");
-const {insertPinned, TOP_SITES_SHOWMORE_LENGTH} = require("common/Reducers.jsm");
+
+import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import {FakePrefs, GlobalOverrider} from "test/unit/utils";
+import {insertPinned, TOP_SITES_SHOWMORE_LENGTH} from "common/Reducers.jsm";
+import injector from "inject!lib/TopSitesFeed.jsm";
+import {Screenshots} from "lib/Screenshots.jsm";
 
 const FAKE_FAVICON = "data987";
 const FAKE_FAVICON_SIZE = 128;
