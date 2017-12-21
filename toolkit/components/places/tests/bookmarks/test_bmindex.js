@@ -15,14 +15,14 @@ async function check_contiguous_indexes(bookmarks) {
   var indexes = [];
   for (let bm of bookmarks) {
     let bmIndex = (await PlacesUtils.bookmarks.fetch(bm.guid)).index;
-    do_print(`Index: ${bmIndex}\n`);
-    do_print("Checking duplicates\n");
+    info(`Index: ${bmIndex}\n`);
+    info("Checking duplicates\n");
     Assert.ok(!indexes.includes(bmIndex));
-    do_print(`Checking out of range, found ${bookmarks.length} items\n`);
+    info(`Checking out of range, found ${bookmarks.length} items\n`);
     Assert.ok(bmIndex >= 0 && bmIndex < bookmarks.length);
     indexes.push(bmIndex);
   }
-  do_print("Checking all valid indexes have been used\n");
+  info("Checking all valid indexes have been used\n");
   Assert.equal(indexes.length, bookmarks.length);
 }
 
@@ -90,7 +90,7 @@ add_task(async function test_bookmarks_indexing() {
   // Execute some random bookmark delete.
   for (let i = 0; i < Math.ceil(NUM_ITEMS / 4); i++) {
     let bm = bookmarks.splice(Math.floor(Math.random() * bookmarks.length), 1)[0];
-    do_print(`Removing item with guid ${bm.guid}\n`);
+    info(`Removing item with guid ${bm.guid}\n`);
     await PlacesUtils.bookmarks.remove(bm);
   }
   await check_contiguous_indexes(bookmarks);
@@ -101,7 +101,7 @@ add_task(async function test_bookmarks_indexing() {
     let randIndex = Math.floor(Math.random() * bookmarks.length);
     let bm = bookmarks[randIndex];
     let newIndex = Math.round(MIN_RAND + (Math.random() * (MAX_RAND - MIN_RAND)));
-    do_print(`Moving item with guid ${bm.guid} to index ${newIndex}\n`);
+    info(`Moving item with guid ${bm.guid} to index ${newIndex}\n`);
     try {
       bm.index = newIndex;
       await PlacesUtils.bookmarks.update(bm);

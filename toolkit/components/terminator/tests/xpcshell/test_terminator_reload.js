@@ -31,7 +31,7 @@ add_task(async function init() {
 });
 
 add_task(async function test_reload() {
-  do_print("Forging data");
+  info("Forging data");
   let data = {};
   let telemetrySnapshots = Services.telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
                                                                  false /* subsession */,
@@ -51,18 +51,18 @@ add_task(async function test_reload() {
   let wait = new Promise(resolve =>
     Services.obs.addObserver(
       function observer() {
-        do_print("Telemetry has been updated");
+        info("Telemetry has been updated");
         Services.obs.removeObserver(observer, TOPIC);
         resolve();
       },
       TOPIC));
 
-  do_print("Starting nsTerminatorTelemetry");
+  info("Starting nsTerminatorTelemetry");
   let tt = Cc["@mozilla.org/toolkit/shutdown-terminator-telemetry;1"].
     createInstance(Ci.nsIObserver);
   tt.observe(null, "profile-after-change", "");
 
-  do_print("Waiting until telemetry is updated");
+  info("Waiting until telemetry is updated");
   // Now wait until Telemetry is updated
   await wait;
 
@@ -71,7 +71,7 @@ add_task(async function test_reload() {
                                                              false /* clear */).parent;
   for (let k of Object.keys(HISTOGRAMS)) {
     let id = HISTOGRAMS[k];
-    do_print("Testing histogram " + id);
+    info("Testing histogram " + id);
     let snapshot = telemetrySnapshots[id];
     let count = 0;
     for (let x of snapshot.counts) {

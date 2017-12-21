@@ -11,7 +11,7 @@ var gManagerEventsListener = {
                   "onUpdateModeChanged"];
     events.forEach(function(aEvent) {
       this[aEvent] = function() {
-        do_print("Saw event " + aEvent);
+        info("Saw event " + aEvent);
         this.seenEvents.push(aEvent);
       };
     }, this);
@@ -26,10 +26,10 @@ var gManagerEventsListener = {
     this.expectedEvents = aEvents;
   },
   checkExpected() {
-    do_print("Checking expected events...");
+    info("Checking expected events...");
     while (this.expectedEvents.length > 0) {
       let event = this.expectedEvents.pop();
-      do_print("Looking for expected event " + event);
+      info("Looking for expected event " + event);
       let matchingEvents = this.seenEvents.filter(function(aSeenEvent) {
         return aSeenEvent == event;
       });

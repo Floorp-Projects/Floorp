@@ -45,7 +45,7 @@ if (tmpFile.exists())
 
 var zipW = new ZipWriter();
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   try {
     zipW.close();
   } catch (e) {

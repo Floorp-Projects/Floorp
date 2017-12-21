@@ -95,7 +95,7 @@ function end_test() {
 
   Services.prefs.clearUserPref(PREF_EM_STRICT_COMPATIBILITY);
 
-  do_execute_soon(do_test_finished);
+  executeSoon(do_test_finished);
 }
 
 // Test that the test extensions are all installed
@@ -121,7 +121,7 @@ async function run_test_1() {
     Assert.ok(isExtensionInAddonsList(globalDir, a4.id));
     Assert.equal(a4.version, "1.0");
 
-    do_execute_soon(run_test_2);
+    executeSoon(run_test_2);
   });
 }
 
@@ -161,7 +161,7 @@ async function run_test_2() {
     Assert.ok(isExtensionInAddonsList(globalDir, a4.id));
     Assert.equal(a4.version, "2.0");
 
-    do_execute_soon(run_test_3);
+    executeSoon(run_test_3);
   });
 }
 

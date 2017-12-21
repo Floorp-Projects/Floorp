@@ -25,12 +25,12 @@ add_task(async function() {
     }
 
     let compressed = Lz4.compressFileContent(array);
-    do_print("Compressed " + array.byteLength + " bytes into " +
-             compressed.byteLength);
+    info("Compressed " + array.byteLength + " bytes into " +
+         compressed.byteLength);
 
     let decompressed = Lz4.decompressFileContent(compressed);
-    do_print("Decompressed " + compressed.byteLength + " bytes into " +
-             decompressed.byteLength);
+    info("Decompressed " + compressed.byteLength + " bytes into " +
+         decompressed.byteLength);
 
     Assert.ok(compare_arrays(array, decompressed));
   }

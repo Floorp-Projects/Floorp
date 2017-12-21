@@ -78,12 +78,12 @@ function readServerContent(request, buffer)
   Assert.equal(buffer, responseContent);
   Assert.equal(cc.alternativeDataType, "");
 
-  do_execute_soon(() => {
+  executeSoon(() => {
     let os = cc.openAlternativeOutputStream(altContentType);
     os.write(altContent, altContent.length);
     os.close();
 
-    do_execute_soon(flushAndOpenAltChannel);
+    executeSoon(flushAndOpenAltChannel);
   });
 }
 
@@ -97,7 +97,7 @@ function flushAndOpenAltChannel()
 // needs to be rooted
 let cacheFlushObserver = { observe: function() {
   if (!cacheFlushObserver) {
-    do_print("ignoring cacheFlushObserver\n");
+    info("ignoring cacheFlushObserver\n");
     return;
   }
   cacheFlushObserver = null;
@@ -126,12 +126,12 @@ function readServerContent2(request, buffer, closure, fromCache)
   Assert.equal(buffer, responseContent);
   Assert.equal(cc.alternativeDataType, "");
 
-  do_execute_soon(() => {
+  executeSoon(() => {
     let os = cc.openAlternativeOutputStream(altContentType);
     os.write(altContent, altContent.length);
     os.close();
 
-    do_execute_soon(flushAndOpenAltChannel2);
+    executeSoon(flushAndOpenAltChannel2);
   });
 }
 
@@ -145,7 +145,7 @@ function flushAndOpenAltChannel2()
 // needs to be rooted
 let cacheFlushObserver2 = { observe: function() {
   if (!cacheFlushObserver2) {
-    do_print("ignoring cacheFlushObserver2\n");
+    info("ignoring cacheFlushObserver2\n");
     return;
   }
   cacheFlushObserver2 = null;
@@ -162,14 +162,14 @@ function readAltContent2(request, buffer, closure, fromCache)
   Assert.equal(cc.alternativeDataType, altContentType);
   Assert.equal(buffer, altContent);
 
-  do_execute_soon(() => {
+  executeSoon(() => {
     Cu.forceShrinkingGC();
-    do_print("writing other content\n");
+    info("writing other content\n");
     let os = cc.openAlternativeOutputStream(altContentType2);
     os.write(altContent2, altContent2.length);
     os.close();
 
-    do_execute_soon(flushAndOpenAltChannel3);
+    executeSoon(flushAndOpenAltChannel3);
   });
 }
 
@@ -183,7 +183,7 @@ function flushAndOpenAltChannel3()
 // needs to be rooted
 let cacheFlushObserver3 = { observe: function() {
   if (!cacheFlushObserver3) {
-    do_print("ignoring cacheFlushObserver3\n");
+    info("ignoring cacheFlushObserver3\n");
     return;
   }
 

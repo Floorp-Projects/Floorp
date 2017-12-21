@@ -36,7 +36,7 @@ function makeCancelListener() {
     },
 
     onUpdateFinished(aAddon, aError) {
-      do_print("onUpdateCheckFinished: " + aAddon.id + " " + aError);
+      info("onUpdateCheckFinished: " + aAddon.id + " " + aError);
       updated.resolve(aError);
     },
     promise: updated.promise

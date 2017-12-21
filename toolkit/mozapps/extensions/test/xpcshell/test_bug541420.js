@@ -31,7 +31,7 @@ function run_test() {
       if (!("nsIWindowsRegKey" in Components.interfaces))
         Assert.ok((file.permissions & 0o100) == 0o100);
 
-      do_execute_soon(do_test_finished);
+      executeSoon(do_test_finished);
     });
   });
 }

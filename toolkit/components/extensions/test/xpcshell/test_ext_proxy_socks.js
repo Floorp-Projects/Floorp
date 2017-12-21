@@ -424,7 +424,7 @@ class SocksTestClient {
 
 const socksServer = new SocksTestServer();
 socksServer.setUserPass("foo", "bar");
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   socksServer.close();
 });
 

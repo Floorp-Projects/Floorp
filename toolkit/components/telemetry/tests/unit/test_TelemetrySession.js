@@ -109,7 +109,7 @@ function getSavedPingFile(basename) {
   if (pingFile.exists()) {
     pingFile.remove(true);
   }
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     try {
       pingFile.remove(true);
     } catch (e) {
@@ -502,7 +502,7 @@ add_task(async function test_setup() {
 
   Assert.ok(Telemetry.maximalNumberOfConcurrentThreads >= gNumberOfThreadsLaunched);
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     threads.forEach(function(thread) {
       thread.shutdown();
     });

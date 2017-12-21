@@ -21,7 +21,7 @@ var observer = {
 };
 PlacesUtils.bookmarks.addObserver(observer);
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   PlacesUtils.bookmarks.removeObserver(observer);
 });
 

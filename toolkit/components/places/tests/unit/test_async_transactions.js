@@ -106,7 +106,7 @@ var bmStartIndex = 0;
 
 function run_test() {
   bmsvc.addObserver(observer);
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     bmsvc.removeObserver(observer);
   });
 

@@ -40,13 +40,13 @@ function run_test() {
       Assert.equal(a1.pendingOperations, 0);
       do_check_in_crash_annotation(addon1.id, addon1.version);
 
-      do_execute_soon(run_test_1);
+      executeSoon(run_test_1);
     });
   }));
 }
 
 function end_test() {
-  do_execute_soon(do_test_finished);
+  executeSoon(do_test_finished);
 }
 
 // Uninstalling an add-on should work.
@@ -70,7 +70,7 @@ function run_test_1() {
       Assert.equal(list.length, 1);
       Assert.equal(list[0].id, "addon1@tests.mozilla.org");
 
-      do_execute_soon(check_test_1);
+      executeSoon(check_test_1);
     });
   });
 }
@@ -87,7 +87,7 @@ function check_test_1() {
     dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
     Assert.ok(!dest.exists());
     writeInstallRDFForExtension(addon1, profileDir);
-    do_execute_soon(run_test_2);
+    executeSoon(run_test_2);
   });
 }
 
@@ -122,7 +122,7 @@ async function run_test_2() {
 
     ensure_test_completed();
 
-    do_execute_soon(check_test_2);
+    executeSoon(check_test_2);
   });
 }
 
@@ -180,7 +180,7 @@ function check_test_3() {
     ensure_test_completed();
     Assert.ok(hasFlag(AddonManager.PENDING_DISABLE, a1.pendingOperations));
 
-    do_execute_soon(run_test_4);
+    executeSoon(run_test_4);
   });
 }
 

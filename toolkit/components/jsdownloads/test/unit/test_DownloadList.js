@@ -314,7 +314,7 @@ add_task(async function test_history_expiration() {
   function cleanup() {
     Services.prefs.clearUserPref("places.history.expiration.max_pages");
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   // Set max pages to 0 to make the download expire.
   Services.prefs.setIntPref("places.history.expiration.max_pages", 0);

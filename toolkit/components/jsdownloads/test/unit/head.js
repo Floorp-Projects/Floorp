@@ -122,7 +122,7 @@ function getTempFile(leafName) {
  */
 function promiseExecuteSoon() {
   return new Promise(resolve => {
-    do_execute_soon(resolve);
+    executeSoon(resolve);
   });
 }
 
@@ -565,7 +565,7 @@ function mustInterruptResponses() {
   // on the client side anymore.
   _gDeferResponses.resolve();
 
-  do_print("Interruptible responses will be blocked midway.");
+  info("Interruptible responses will be blocked midway.");
   _gDeferResponses = Promise.defer();
 }
 
@@ -573,7 +573,7 @@ function mustInterruptResponses() {
  * Allows all the current and future interruptible requests to complete.
  */
 function continueResponses() {
-  do_print("Interruptible responses are now allowed to continue.");
+  info("Interruptible responses are now allowed to continue.");
   _gDeferResponses.resolve();
 }
 
@@ -591,7 +591,7 @@ function continueResponses() {
  */
 function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn) {
   gHttpServer.registerPathHandler(aPath, function(aRequest, aResponse) {
-    do_print("Interruptible request started.");
+    info("Interruptible request started.");
 
     // Process the first part of the response.
     aResponse.processAsync();
@@ -601,7 +601,7 @@ function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn) {
     _gDeferResponses.promise.then(function RIH_onSuccess() {
       aSecondPartFn(aRequest, aResponse);
       aResponse.finish();
-      do_print("Interruptible request finished.");
+      info("Interruptible request finished.");
     }).catch(Cu.reportError);
   });
 }
@@ -629,7 +629,7 @@ add_task(function test_common_initialize() {
   gHttpServer = new HttpServer();
   gHttpServer.registerDirectory("/", do_get_file("../data"));
   gHttpServer.start(-1);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     return new Promise(resolve => {
       // Ensure all the pending HTTP requests have a chance to finish.
       continueResponses();
@@ -642,7 +642,7 @@ add_task(function test_common_initialize() {
   gHttpServer.identity.setPrimary("http", "www.example.com",
                                   gHttpServer.identity.primaryPort);
   Services.prefs.setCharPref("network.dns.localDomains", "www.example.com");
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("network.dns.localDomains");
   });
 
@@ -650,7 +650,7 @@ add_task(function test_common_initialize() {
   // this may block tests that use the interruptible handlers.
   Services.prefs.setBoolPref("browser.cache.disk.enable", false);
   Services.prefs.setBoolPref("browser.cache.memory.enable", false);
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.cache.disk.enable");
     Services.prefs.clearUserPref("browser.cache.memory.enable");
   });
@@ -792,7 +792,7 @@ add_task(function test_common_initialize() {
   };
 
   let cid = MockRegistrar.register("@mozilla.org/helperapplauncherdialog;1", mock);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     MockRegistrar.unregister(cid);
   });
 });

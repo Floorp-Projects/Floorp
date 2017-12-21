@@ -46,7 +46,7 @@ function test_not_supported()
 {
   let socketName = do_get_tempdir();
   socketName.append('socket');
-  do_print("creating socket: " + socketName.path);
+  info("creating socket: " + socketName.path);
 
   do_check_throws_nsIException(() => new UnixServerSocket(socketName, allPermissions, -1),
                                "NS_ERROR_SOCKET_ADDRESS_NOT_SUPPORTED");
@@ -64,11 +64,11 @@ function test_echo()
   socketName.append('socket');
 
   // Create a server socket, listening for connections.
-  do_print("creating socket: " + socketName.path);
+  info("creating socket: " + socketName.path);
   let server = new UnixServerSocket(socketName, allPermissions, -1);
   server.asyncListen({
     onSocketAccepted: function(aServ, aTransport) {
-      do_print("called test_echo's onSocketAccepted");
+      info("called test_echo's onSocketAccepted");
       log += 'a';
 
       Assert.equal(aServ, server);
@@ -92,19 +92,19 @@ function test_echo()
       let serverOutput = connection.openOutputStream(0, 0, 0);
 
       serverAsyncInput.asyncWait(function (aStream) {
-        do_print("called test_echo's server's onInputStreamReady");
+        info("called test_echo's server's onInputStreamReady");
         let serverScriptableInput = new ScriptableInputStream(aStream);
 
         // Receive data from the client, and send back a response.
         Assert.equal(serverScriptableInput.readBytes(17), "Mervyn Murgatroyd");
-        do_print("server has read message from client");
+        info("server has read message from client");
         serverOutput.write("Ruthven Murgatroyd", 18);
-        do_print("server has written to client");
+        info("server has written to client");
       }, 0, 0, threadManager.currentThread);
     },
 
     onStopListening: function(aServ, aStatus) {
-      do_print("called test_echo's onStopListening");
+      info("called test_echo's onStopListening");
       log += 's';
 
       Assert.equal(aServ, server);
@@ -124,10 +124,10 @@ function test_echo()
   let clientOutput = client.openOutputStream(0, 0, 0);
 
   clientOutput.write("Mervyn Murgatroyd", 17);
-  do_print("client has written to server");
+  info("client has written to server");
 
   clientAsyncInput.asyncWait(function (aStream) {
-    do_print("called test_echo's client's onInputStreamReady");
+    info("called test_echo's client's onInputStreamReady");
     log += 'c';
 
     Assert.equal(aStream, clientAsyncInput);
@@ -144,7 +144,7 @@ function test_echo()
     Assert.equal(clientPeerAddr.address, socketName.path);
 
     Assert.equal(clientInput.readBytes(18), "Ruthven Murgatroyd");
-    do_print("client has read message from server");
+    info("client has read message from server");
 
     server.close();
   }, 0, 0, threadManager.currentThread);
@@ -195,7 +195,7 @@ function test_no_such_socket()
   let client = socketTransportService.createUnixDomainTransport(socketName);
   let clientAsyncInput = client.openInputStream(0, 0, 0).QueryInterface(Ci.nsIAsyncInputStream);
   clientAsyncInput.asyncWait(function (aStream) {
-    do_print("called test_no_such_socket's onInputStreamReady");
+    info("called test_no_such_socket's onInputStreamReady");
 
     Assert.equal(aStream, clientAsyncInput);
 
@@ -322,7 +322,7 @@ function test_connect_permission()
   let client1 = socketTransportService.createUnixDomainTransport(socketName);
   let client1AsyncInput = client1.openInputStream(0, 0, 0).QueryInterface(Ci.nsIAsyncInputStream);
   client1AsyncInput.asyncWait(function (aStream) {
-    do_print("called test_connect_permission's client1's onInputStreamReady");
+    info("called test_connect_permission's client1's onInputStreamReady");
     log += '1';
 
     // nsISocketTransport puts off actually creating sockets as long as
@@ -340,7 +340,7 @@ function test_connect_permission()
     let client2 = socketTransportService.createUnixDomainTransport(socketName);
     let client2AsyncInput = client2.openInputStream(0, 0, 0).QueryInterface(Ci.nsIAsyncInputStream);
     client2AsyncInput.asyncWait(function (aStream) {
-      do_print("called test_connect_permission's client2's onInputStreamReady");
+      info("called test_connect_permission's client2's onInputStreamReady");
       log += '2';
 
       do_check_throws_nsIException(() => client2AsyncInput.available(),
@@ -363,14 +363,14 @@ function test_connect_permission()
   }, 0, 0, threadManager.currentThread);
 
   function socketAccepted(aServ, aTransport) {
-    do_print("called test_connect_permission's onSocketAccepted");
+    info("called test_connect_permission's onSocketAccepted");
     log += 'a';
 
     let serverInput = aTransport.openInputStream(0, 0, 0).QueryInterface(Ci.nsIAsyncInputStream);
     let serverOutput = aTransport.openOutputStream(0, 0, 0);
 
     serverInput.asyncWait(function (aStream) {
-      do_print("called test_connect_permission's socketAccepted's onInputStreamReady");
+      info("called test_connect_permission's socketAccepted's onInputStreamReady");
       log += 'i';
 
       // Receive data from the client, and send back a response.
@@ -381,7 +381,7 @@ function test_connect_permission()
   }
 
   function client3InputStreamReady(aStream) {
-    do_print("called client3's onInputStreamReady");
+    info("called client3's onInputStreamReady");
     log += '3';
 
     let client3Input = new ScriptableInputStream(aStream);
@@ -393,7 +393,7 @@ function test_connect_permission()
   }
 
   function stopListening(aServ, aStatus) {
-    do_print("called test_connect_permission's server's stopListening");
+    info("called test_connect_permission's server's stopListening");
     log += 's';
 
     Assert.equal(log, '12ai3s');
@@ -445,7 +445,7 @@ function test_keep_when_offline()
 
   // The server accepted connection callback.
   function onAccepted(aListener, aServer) {
-    do_print("test_keep_when_offline: onAccepted called");
+    info("test_keep_when_offline: onAccepted called");
     log += 'a';
     Assert.equal(aListener, listener);
     server = aServer;
@@ -464,7 +464,7 @@ function test_keep_when_offline()
   // The client has seen its end of the socket close.
   function clientReady(aStream) {
     log += 'c';
-    do_print("test_keep_when_offline: clientReady called: " + log);
+    info("test_keep_when_offline: clientReady called: " + log);
     Assert.equal(aStream, clientInput);
 
     // If the connection has been closed, end the conversation and stop listening.
@@ -475,7 +475,7 @@ function test_keep_when_offline()
       do_check_instanceof(ex, Ci.nsIException);
       Assert.equal(ex.result, Cr.NS_BASE_STREAM_CLOSED);
 
-      do_print("client received end-of-stream; closing client output stream");
+      info("client received end-of-stream; closing client output stream");
       log += ')';
 
       client.close(Cr.NS_OK);
@@ -500,7 +500,7 @@ function test_keep_when_offline()
 
   function serverReady(aStream) {
     log += 's';
-    do_print("test_keep_when_offline: serverReady called: " + log);
+    info("test_keep_when_offline: serverReady called: " + log);
     Assert.equal(aStream, serverInput);
 
     // Check the message from the client.
@@ -525,7 +525,7 @@ function test_keep_when_offline()
       // After sending ten times and receiving ten replies, we're not
       // going to send any more. Close the server's output stream; the
       // client's input stream should see this.
-      do_print("closing server transport");
+      info("closing server transport");
       server.close(Cr.NS_OK);
       log += '(';
     }
@@ -533,7 +533,7 @@ function test_keep_when_offline()
 
   // We have stopped listening.
   function onStopListening(aServ, aStatus) {
-    do_print("test_keep_when_offline: onStopListening called");
+    info("test_keep_when_offline: onStopListening called");
     log += 'L';
     Assert.equal(log, 'acscscscscsocscscscscs(c)L');
 

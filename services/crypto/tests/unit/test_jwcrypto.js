@@ -65,7 +65,7 @@ function test_rsa() {
   do_test_pending();
   function checkRSA(err, kpo) {
     Assert.notEqual(kpo, undefined);
-    do_print(kpo.serializedPublicKey);
+    info(kpo.serializedPublicKey);
     let pk = JSON.parse(kpo.serializedPublicKey);
     Assert.equal(pk.algorithm, "RS");
 /* TODO
@@ -95,7 +95,7 @@ function test_dsa() {
   do_test_pending();
   function checkDSA(err, kpo) {
     Assert.notEqual(kpo, undefined);
-    do_print(kpo.serializedPublicKey);
+    info(kpo.serializedPublicKey);
     let pk = JSON.parse(kpo.serializedPublicKey);
     Assert.equal(pk.algorithm, "DS");
 /* TODO

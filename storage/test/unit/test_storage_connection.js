@@ -310,7 +310,7 @@ add_task(async function test_clone_optional_param() {
 });
 
 async function standardAsyncTest(promisedDB, name, shouldInit = false) {
-  do_print("Performing standard async test " + name);
+  info("Performing standard async test " + name);
 
   let adb = await promisedDB;
   Assert.ok(adb instanceof Ci.mozIStorageAsyncConnection);
@@ -328,14 +328,14 @@ async function standardAsyncTest(promisedDB, name, shouldInit = false) {
   let stmt = adb.createAsyncStatement("INSERT INTO test (name) VALUES (:name)");
   stmt.params.name = name;
   let result = await executeAsync(stmt);
-  do_print("Request complete");
+  info("Request complete");
   stmt.finalize();
   Assert.ok(Components.isSuccessCode(result));
-  do_print("Extracting data");
+  info("Extracting data");
   stmt = adb.createAsyncStatement("SELECT * FROM test");
   let found = false;
   await executeAsync(stmt, function(results) {
-    do_print("Data has been extracted");
+    info("Data has been extracted");
     for (let row = results.getNextRow(); row != null; row = results.getNextRow()) {
       if (row.getResultByName("name") == name) {
         found = true;
@@ -347,7 +347,7 @@ async function standardAsyncTest(promisedDB, name, shouldInit = false) {
   stmt.finalize();
   await asyncClose(adb);
 
-  do_print("Standard async test " + name + " complete");
+  info("Standard async test " + name + " complete");
 }
 
 add_task(async function test_open_async() {
@@ -361,7 +361,7 @@ add_task(async function test_open_async() {
     {shared: false}),
     "in-memory database and options", true);
 
-  do_print("Testing async opening with bogus options 0");
+  info("Testing async opening with bogus options 0");
   let raised = false;
   let adb = null;
 
@@ -376,7 +376,7 @@ add_task(async function test_open_async() {
   }
   Assert.ok(raised);
 
-  do_print("Testing async opening with bogus options 1");
+  info("Testing async opening with bogus options 1");
   raised = false;
   adb = null;
   try {
@@ -390,7 +390,7 @@ add_task(async function test_open_async() {
   }
   Assert.ok(raised);
 
-  do_print("Testing async opening with bogus options 2");
+  info("Testing async opening with bogus options 2");
   raised = false;
   adb = null;
   try {
@@ -407,20 +407,20 @@ add_task(async function test_open_async() {
 
 
 add_task(async function test_async_open_with_shared_cache() {
-  do_print("Testing that opening with a shared cache doesn't break stuff");
+  info("Testing that opening with a shared cache doesn't break stuff");
   let adb = await openAsyncDatabase(getTestDB(), {shared: true});
 
   let stmt = adb.createAsyncStatement("INSERT INTO test (name) VALUES (:name)");
   stmt.params.name = "clockworker";
   let result = await executeAsync(stmt);
-  do_print("Request complete");
+  info("Request complete");
   stmt.finalize();
   Assert.ok(Components.isSuccessCode(result));
-  do_print("Extracting data");
+  info("Extracting data");
   stmt = adb.createAsyncStatement("SELECT * FROM test");
   let found = false;
   await executeAsync(stmt, function(results) {
-    do_print("Data has been extracted");
+    info("Data has been extracted");
     for (let row = results.getNextRow(); row != null; row = results.getNextRow()) {
       if (row.getResultByName("name") == "clockworker") {
         found = true;
@@ -434,48 +434,48 @@ add_task(async function test_async_open_with_shared_cache() {
 });
 
 add_task(async function test_clone_trivial_async() {
-  do_print("Open connection");
+  info("Open connection");
   let db = Services.storage.openDatabase(getTestDB());
   Assert.ok(db instanceof Ci.mozIStorageAsyncConnection);
-  do_print("AsyncClone connection");
+  info("AsyncClone connection");
   let clone = await asyncClone(db, true);
   Assert.ok(clone instanceof Ci.mozIStorageAsyncConnection);
   Assert.equal(false, clone instanceof Ci.mozIStorageConnection);
-  do_print("Close connection");
+  info("Close connection");
   await asyncClose(db);
-  do_print("Close clone");
+  info("Close clone");
   await asyncClose(clone);
 });
 
 add_task(async function test_clone_no_optional_param_async() {
   "use strict";
-  do_print("Testing async cloning");
+  info("Testing async cloning");
   let adb1 = await openAsyncDatabase(getTestDB(), null);
   Assert.ok(adb1 instanceof Ci.mozIStorageAsyncConnection);
   Assert.equal(false, adb1 instanceof Ci.mozIStorageConnection);
 
-  do_print("Cloning database");
+  info("Cloning database");
 
   let adb2 = await asyncClone(adb1);
-  do_print("Testing that the cloned db is a mozIStorageAsyncConnection " +
-           "and not a mozIStorageConnection");
+  info("Testing that the cloned db is a mozIStorageAsyncConnection " +
+       "and not a mozIStorageConnection");
   Assert.ok(adb2 instanceof Ci.mozIStorageAsyncConnection);
   Assert.equal(false, adb2 instanceof Ci.mozIStorageConnection);
 
-  do_print("Inserting data into source db");
+  info("Inserting data into source db");
   let stmt = adb1.
                createAsyncStatement("INSERT INTO test (name) VALUES (:name)");
 
   stmt.params.name = "yoric";
   let result = await executeAsync(stmt);
-  do_print("Request complete");
+  info("Request complete");
   stmt.finalize();
   Assert.ok(Components.isSuccessCode(result));
-  do_print("Extracting data from clone db");
+  info("Extracting data from clone db");
   stmt = adb2.createAsyncStatement("SELECT * FROM test");
   let found = false;
   await executeAsync(stmt, function(results) {
-    do_print("Data has been extracted");
+    info("Data has been extracted");
     for (let row = results.getNextRow(); row != null; row = results.getNextRow()) {
       if (row.getResultByName("name") == "yoric") {
         found = true;
@@ -485,12 +485,12 @@ add_task(async function test_clone_no_optional_param_async() {
   });
   Assert.ok(found);
   stmt.finalize();
-  do_print("Closing databases");
+  info("Closing databases");
   await asyncClose(adb2);
-  do_print("First db closed");
+  info("First db closed");
 
   await asyncClose(adb1);
-  do_print("Second db closed");
+  info("Second db closed");
 });
 
 add_task(async function test_clone_readonly() {
@@ -778,11 +778,11 @@ add_task(async function test_clone_attach_database() {
 });
 
 add_task(async function test_async_clone_with_temp_trigger_and_table() {
-  do_print("Open connection");
+  info("Open connection");
   let db = Services.storage.openDatabase(getTestDB());
   Assert.ok(db instanceof Ci.mozIStorageAsyncConnection);
 
-  do_print("Set up tables on original connection");
+  info("Set up tables on original connection");
   let createQueries = [
     `CREATE TEMP TABLE test_temp(name TEXT)`,
     `CREATE INDEX test_temp_idx ON test_temp(name)`,
@@ -797,52 +797,52 @@ add_task(async function test_async_clone_with_temp_trigger_and_table() {
     stmt.finalize();
   }
 
-  do_print("Create read-write clone with temp tables");
+  info("Create read-write clone with temp tables");
   let readWriteClone = await asyncClone(db, false);
   Assert.ok(readWriteClone instanceof Ci.mozIStorageAsyncConnection);
 
-  do_print("Insert into temp table on read-write clone");
+  info("Insert into temp table on read-write clone");
   let insertStmt = readWriteClone.createAsyncStatement(`
     INSERT INTO test_temp(name) VALUES('mak'), ('standard8'), ('markh')`);
   await executeAsync(insertStmt);
   insertStmt.finalize();
 
-  do_print("Fire temp trigger on read-write clone");
+  info("Fire temp trigger on read-write clone");
   let deleteStmt = readWriteClone.createAsyncStatement(`
     DELETE FROM test_temp`);
   await executeAsync(deleteStmt);
   deleteStmt.finalize();
 
-  do_print("Read from original connection");
+  info("Read from original connection");
   let names = fetchAllNames(db);
   Assert.ok(names.includes("mak"));
   Assert.ok(names.includes("standard8"));
   Assert.ok(names.includes("markh"));
 
-  do_print("Create read-only clone");
+  info("Create read-only clone");
   let readOnlyClone = await asyncClone(db, true);
   Assert.ok(readOnlyClone instanceof Ci.mozIStorageAsyncConnection);
 
-  do_print("Read-only clone shouldn't have temp entities");
+  info("Read-only clone shouldn't have temp entities");
   let badStmt = readOnlyClone.createAsyncStatement(`SELECT 1 FROM test_temp`);
   await Assert.rejects(executeAsync(badStmt));
   badStmt.finalize();
 
-  do_print("Clean up");
+  info("Clean up");
   for (let conn of [db, readWriteClone, readOnlyClone]) {
     await asyncClose(conn);
   }
 });
 
 add_task(async function test_sync_clone_in_transaction() {
-  do_print("Open connection");
+  info("Open connection");
   let db = Services.storage.openDatabase(getTestDB());
   Assert.ok(db instanceof Ci.mozIStorageAsyncConnection);
 
-  do_print("Begin transaction on main connection");
+  info("Begin transaction on main connection");
   db.beginTransaction();
 
-  do_print("Create temp table and trigger in transaction");
+  info("Create temp table and trigger in transaction");
   let createQueries = [
     `CREATE TEMP TABLE test_temp(name TEXT)`,
     `CREATE TEMP TRIGGER test_temp_afterdelete_trigger
@@ -855,33 +855,33 @@ add_task(async function test_sync_clone_in_transaction() {
     db.executeSimpleSQL(query);
   }
 
-  do_print("Clone main connection while transaction is in progress");
+  info("Clone main connection while transaction is in progress");
   let clone = db.clone(/* aReadOnly */ false);
 
   // Dropping the table also drops `test_temp_afterdelete_trigger`.
-  do_print("Drop temp table on main connection");
+  info("Drop temp table on main connection");
   db.executeSimpleSQL(`DROP TABLE test_temp`);
 
-  do_print("Commit transaction");
+  info("Commit transaction");
   db.commitTransaction();
 
-  do_print("Clone connection should still have temp entities");
+  info("Clone connection should still have temp entities");
   let readTempStmt = clone.createStatement(`SELECT 1 FROM test_temp`);
   readTempStmt.execute();
   readTempStmt.finalize();
 
-  do_print("Clean up");
+  info("Clean up");
 
   db.close();
   clone.close();
 });
 
 add_task(async function test_sync_clone_with_function() {
-  do_print("Open connection");
+  info("Open connection");
   let db = Services.storage.openDatabase(getTestDB());
   Assert.ok(db instanceof Ci.mozIStorageAsyncConnection);
 
-  do_print("Create SQL function");
+  info("Create SQL function");
   function storeLastInsertedNameFunc() {
     this.name = null;
   }
@@ -893,7 +893,7 @@ add_task(async function test_sync_clone_with_function() {
   let func = new storeLastInsertedNameFunc();
   db.createFunction("store_last_inserted_name", 1, func);
 
-  do_print("Create temp trigger on main connection");
+  info("Create temp trigger on main connection");
   db.executeSimpleSQL(`
     CREATE TEMP TRIGGER test_afterinsert_trigger
     AFTER INSERT ON test FOR EACH ROW
@@ -901,15 +901,15 @@ add_task(async function test_sync_clone_with_function() {
       SELECT store_last_inserted_name(NEW.name);
     END`);
 
-  do_print("Clone main connection");
+  info("Clone main connection");
   let clone = db.clone(/* aReadOnly */ false);
 
-  do_print("Write to clone");
+  info("Write to clone");
   clone.executeSimpleSQL(`INSERT INTO test(name) VALUES('kit')`);
 
   Assert.equal(func.name, "kit");
 
-  do_print("Clean up");
+  info("Clean up");
   db.close();
   clone.close();
 });

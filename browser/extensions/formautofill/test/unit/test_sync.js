@@ -58,10 +58,10 @@ function expectLocalProfiles(profileStorage, expected) {
       ok(objectMatches(thisGot, thisExpected));
     }
   } catch (ex) {
-    do_print("Comparing expected profiles:");
-    do_print(JSON.stringify(expected, undefined, 2));
-    do_print("against actual profiles:");
-    do_print(JSON.stringify(profiles, undefined, 2));
+    info("Comparing expected profiles:");
+    info(JSON.stringify(expected, undefined, 2));
+    info("against actual profiles:");
+    info(JSON.stringify(profiles, undefined, 2));
     throw ex;
   }
 }

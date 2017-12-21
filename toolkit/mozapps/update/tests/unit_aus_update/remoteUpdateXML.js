@@ -16,7 +16,7 @@ function run_test() {
   setUpdateChannel("test_channel");
 
   standardInit();
-  do_execute_soon(run_test_pt01);
+  executeSoon(run_test_pt01);
 }
 
 // Helper function for testing update counts returned from an update xml

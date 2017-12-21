@@ -263,7 +263,7 @@ add_task(async function run_test_1() {
   // Open another handle on the JSON DB with as much Unix and Windows locking
   // as we can to simulate some other process interfering with it
   shutdownManager();
-  do_print("Locking " + gExtensionsJSON.path);
+  info("Locking " + gExtensionsJSON.path);
   let options = {
     winShare: 0
   };
@@ -459,7 +459,7 @@ add_task(async function run_test_1() {
   } catch (e) {
     shutdownError = e;
   }
-  do_print("Unlocking " + gExtensionsJSON.path);
+  info("Unlocking " + gExtensionsJSON.path);
   await file.close();
   gExtensionsJSON.permissions = filePermissions;
   await promiseStartupManager(false);
@@ -499,12 +499,12 @@ add_task(async function run_test_1() {
   // couldn't replace the old DB so we read the older version of the DB
   // where the extension is enabled
   if (shutdownError) {
-    do_print("XPI save failed");
+    info("XPI save failed");
     Assert.ok(a3.isActive);
     Assert.ok(!a3.appDisabled);
     Assert.ok(isExtensionInAddonsList(profileDir, a3.id));
   } else {
-    do_print("XPI save succeeded");
+    info("XPI save succeeded");
     Assert.ok(!a3.isActive);
     Assert.ok(a3.appDisabled);
     Assert.ok(!isExtensionInAddonsList(profileDir, a3.id));

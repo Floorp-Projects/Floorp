@@ -35,6 +35,6 @@ function run_test() {
     Assert.equal(getInstalledVersion(), "1.0");
     Assert.equal(getActiveVersion(), "1.0");
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

@@ -22,7 +22,7 @@ autocompleteObject.populatePreloadedSiteStorage([
 ]);
 
 async function assert_feature_works(condition) {
-  do_print("List Results do appear " + condition);
+  info("List Results do appear " + condition);
   await check_autocomplete({
     search: "ooo",
     matches: [
@@ -31,7 +31,7 @@ async function assert_feature_works(condition) {
     ],
   });
 
-  do_print("Autofill does appear " + condition);
+  info("Autofill does appear " + condition);
   await check_autocomplete({
     search: "gooo",
     autofilled: "gooogle.com/", // Will fail without trailing slash
@@ -40,13 +40,13 @@ async function assert_feature_works(condition) {
 }
 
 async function assert_feature_does_not_appear(condition) {
-  do_print("List Results don't appear " + condition);
+  info("List Results don't appear " + condition);
   await check_autocomplete({
     search: "ooo",
     matches: [],
   });
 
-  do_print("Autofill doesn't appear " + condition);
+  info("Autofill doesn't appear " + condition);
   // "search" is what you type,
   // "autofilled" is what you get in response in the url bar,
   // "completed" is what you get there when you hit enter.
@@ -83,7 +83,7 @@ add_task(async function test_sorting_against_bookmark() {
   Services.prefs.setBoolPref(PREF_FEATURE_ENABLED, true);
   Services.prefs.setIntPref(PREF_FEATURE_EXPIRE_DAYS, 14);
 
-  do_print("Preloaded Top Sites are placed lower than Bookmarks");
+  info("Preloaded Top Sites are placed lower than Bookmarks");
   await check_autocomplete({
     checkSorting: true,
     search: "ooo",
@@ -104,7 +104,7 @@ add_task(async function test_sorting_against_history() {
   Services.prefs.setBoolPref(PREF_FEATURE_ENABLED, true);
   Services.prefs.setIntPref(PREF_FEATURE_EXPIRE_DAYS, 14);
 
-  do_print("Preloaded Top Sites are placed lower than History entries");
+  info("Preloaded Top Sites are placed lower than History entries");
   await check_autocomplete({
     checkSorting: true,
     search: "ooo",
@@ -281,7 +281,7 @@ add_task(async function test_scheme_and_www() {
 
   for (let test of tests) {
     let matches = test[3] ? test[3].map(toMatch) : null;
-    do_print("User types: " + test[0]);
+    info("User types: " + test[0]);
     await check_autocomplete({
       checkSorting: true,
       search: test[0],
@@ -297,19 +297,19 @@ add_task(async function test_scheme_and_www() {
 add_task(async function test_data_file() {
   let response = await fetch("chrome://global/content/unifiedcomplete-top-urls.json");
 
-  do_print("Source file is supplied and fetched OK");
+  info("Source file is supplied and fetched OK");
   Assert.ok(response.ok);
 
-  do_print("The JSON is parsed");
+  info("The JSON is parsed");
   let sites = await response.json();
 
-  do_print("Storage is populated");
+  info("Storage is populated");
   autocompleteObject.populatePreloadedSiteStorage(sites);
 
   let lastSite = sites.pop();
   let uri = NetUtil.newURI(lastSite[0]);
 
-  do_print("Storage is populated from JSON correctly");
+  info("Storage is populated from JSON correctly");
   await check_autocomplete({
     search: uri.host,
     autofilled: uri.host + "/",

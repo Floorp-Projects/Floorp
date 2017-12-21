@@ -19,7 +19,7 @@ var observer1 = {
 
       timer = null;
 
-      do_print("1st timer triggered (before being cancelled). Should not have happened!");
+      info("1st timer triggered (before being cancelled). Should not have happened!");
       Assert.ok(false);
     }
   }

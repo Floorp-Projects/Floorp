@@ -61,7 +61,7 @@ function runUpdateFinished() {
   setTestFilesAndDirsForFailure();
   checkFilesAfterUpdateFailure(getApplyDirFile, !IS_MACOSX, false);
 
-  do_execute_soon(waitForUpdateXMLFiles);
+  executeSoon(waitForUpdateXMLFiles);
 }
 
 /**

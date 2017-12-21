@@ -26,7 +26,7 @@ function run_test() {
   ];
 
   for (let obj of objects) {
-    do_print(uneval(obj));
+    info(uneval(obj));
     ok(byteSize(obj), "We should get some (non-zero) byte size");
   }
 }

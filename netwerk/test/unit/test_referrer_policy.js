@@ -1,7 +1,7 @@
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
 function test_policy(test) {
-  do_print("Running test: " + test.toSource());
+  info("Running test: " + test.toSource());
 
   var prefs = Cc["@mozilla.org/preferences-service;1"]
     .getService(Components.interfaces.nsIPrefBranch);

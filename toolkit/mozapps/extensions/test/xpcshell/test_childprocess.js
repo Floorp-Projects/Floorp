@@ -14,7 +14,7 @@ function run_test() {
     Components.utils.import("resource://gre/modules/AddonManager.jsm");
     do_throw("AddonManager should have refused to load");
   } catch (ex) {
-    do_print(ex.message);
+    info(ex.message);
     Assert.ok(!!ex.message);
   }
 }

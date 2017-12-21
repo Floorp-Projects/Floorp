@@ -21,7 +21,7 @@ var selectedName = Services.search.defaultEngine.name;
 Assert.equal(selectedName, kSearchEngineID);
 
 const kForceHostLookup = "browser.fixup.dns_first_for_single_words";
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   if (oldDefaultEngine) {
     Services.search.defaultEngine = oldDefaultEngine;
   }
@@ -523,11 +523,11 @@ function sanitize(input) {
 var gSingleWordHostLookup = false;
 function run_test() {
   // Only keywordlookup things should be affected by requiring a DNS lookup for single-word hosts:
-  do_print("Check only keyword lookup testcases should be affected by requiring DNS for single hosts");
+  info("Check only keyword lookup testcases should be affected by requiring DNS for single hosts");
   let affectedTests = testcases.filter(t => !t.keywordLookup && t.affectedByDNSForSingleHosts);
   if (affectedTests.length) {
     for (let testcase of affectedTests) {
-      do_print("Affected: " + testcase.input);
+      info("Affected: " + testcase.input);
     }
   }
   Assert.equal(affectedTests.length, 0);
@@ -565,7 +565,7 @@ function do_single_test_run() {
       try {
         fixupURIOnly = urifixup.createFixupURI(testInput, flags);
       } catch (ex) {
-        do_print("Caught exception: " + ex);
+        info("Caught exception: " + ex);
         Assert.equal(expectedFixedURI, null);
       }
 
@@ -573,14 +573,14 @@ function do_single_test_run() {
         info = urifixup.getFixupURIInfo(testInput, flags);
       } catch (ex) {
         // Both APIs should return an error in the same cases.
-        do_print("Caught exception: " + ex);
+        info("Caught exception: " + ex);
         Assert.equal(expectedFixedURI, null);
         Assert.equal(fixupURIOnly, null);
         continue;
       }
 
-      do_print("Checking \"" + testInput + "\" with flags " + flags +
-               " (host lookup for single words: " + (gSingleWordHostLookup ? "yes" : "no") + ")");
+      info("Checking \"" + testInput + "\" with flags " + flags +
+           " (host lookup for single words: " + (gSingleWordHostLookup ? "yes" : "no") + ")");
 
       // Both APIs should then also be using the same spec.
       Assert.equal(!!fixupURIOnly, !!info.preferredURI);

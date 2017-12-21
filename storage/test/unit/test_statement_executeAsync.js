@@ -940,7 +940,7 @@ function run_next_test() {
   // Don't actually schedule another test if we're quitting.
   if (!_quit) {
     // For saner stacks, we execute this code RSN.
-    do_execute_soon(_run_next_test);
+    executeSoon(_run_next_test);
   }
 }
 

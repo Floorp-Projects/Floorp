@@ -6,16 +6,16 @@ Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 
 add_task(async function test_no_condition() {
   for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
-    do_print("Testing a barrier with no condition (" + kind + ")");
+    info("Testing a barrier with no condition (" + kind + ")");
     let lock = makeLock(kind);
     await lock.wait();
-    do_print("Barrier with no condition didn't lock");
+    info("Barrier with no condition didn't lock");
   }
 });
 
 add_task(async function test_phase_various_failures() {
   for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
-    do_print("Kind: " + kind);
+    info("Kind: " + kind);
     // Testing with wrong arguments
     let lock = makeLock(kind);
 
@@ -34,10 +34,10 @@ add_task(async function test_phase_various_failures() {
 });
 
 add_task(async function test_reentrant() {
-  do_print("Ensure that we can call addBlocker from within a blocker");
+  info("Ensure that we can call addBlocker from within a blocker");
 
   for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
-    do_print("Kind: " + kind);
+    info("Kind: " + kind);
     let lock = makeLock(kind);
 
     let deferredOuter = PromiseUtils.defer();
@@ -45,10 +45,10 @@ add_task(async function test_reentrant() {
     let deferredBlockInner = PromiseUtils.defer();
 
     lock.addBlocker("Outer blocker", () => {
-      do_print("Entering outer blocker");
+      info("Entering outer blocker");
       deferredOuter.resolve();
       lock.addBlocker("Inner blocker", () => {
-        do_print("Entering inner blocker");
+        info("Entering inner blocker");
         deferredInner.resolve();
         return deferredBlockInner.promise;
       });
@@ -63,41 +63,41 @@ add_task(async function test_reentrant() {
     let promiseSteps = (async function() {
       await Promise.resolve();
 
-      do_print("Waiting until we have entered the outer blocker");
+      info("Waiting until we have entered the outer blocker");
       await deferredOuter.promise;
 
-      do_print("Waiting until we have entered the inner blocker");
+      info("Waiting until we have entered the inner blocker");
       await deferredInner.promise;
 
-      do_print("Allowing the lock to resolve");
+      info("Allowing the lock to resolve");
       deferredBlockInner.resolve();
     })();
 
-    do_print("Starting wait");
+    info("Starting wait");
     await lock.wait();
 
-    do_print("Waiting until all steps have been walked");
+    info("Waiting until all steps have been walked");
     await promiseSteps;
   }
 });
 
 
 add_task(async function test_phase_removeBlocker() {
-  do_print("Testing that we can call removeBlocker before, during and after the call to wait()");
+  info("Testing that we can call removeBlocker before, during and after the call to wait()");
 
   for (let kind of ["phase", "barrier", "xpcom-barrier", "xpcom-barrier-unwrapped"]) {
 
-    do_print("Switching to kind " + kind);
-    do_print("Attempt to add then remove a blocker before wait()");
+    info("Switching to kind " + kind);
+    info("Attempt to add then remove a blocker before wait()");
     let lock = makeLock(kind);
     let blocker = () => {
-      do_print("This promise will never be resolved");
+      info("This promise will never be resolved");
       return PromiseUtils.defer().promise;
     };
 
     lock.addBlocker("Wait forever", blocker);
     let do_remove_blocker = function(aLock, aBlocker, aShouldRemove) {
-      do_print("Attempting to remove blocker " + aBlocker + ", expecting result " + aShouldRemove);
+      info("Attempting to remove blocker " + aBlocker + ", expecting result " + aShouldRemove);
       if (kind == "xpcom-barrier") {
         // The xpcom variant always returns `undefined`, so we can't
         // check its result.
@@ -108,28 +108,28 @@ add_task(async function test_phase_removeBlocker() {
     };
     do_remove_blocker(lock, blocker, true);
     do_remove_blocker(lock, blocker, false);
-    do_print("Attempt to remove non-registered blockers before wait()");
+    info("Attempt to remove non-registered blockers before wait()");
     do_remove_blocker(lock, "foo", false);
     do_remove_blocker(lock, null, false);
-    do_print("Waiting (should lift immediately)");
+    info("Waiting (should lift immediately)");
     await lock.wait();
 
-    do_print("Attempt to add a blocker then remove it during wait()");
+    info("Attempt to add a blocker then remove it during wait()");
     lock = makeLock(kind);
     let blockers = [
       () => {
-        do_print("This blocker will self-destruct");
+        info("This blocker will self-destruct");
         do_remove_blocker(lock, blockers[0], true);
         return PromiseUtils.defer().promise;
       },
       () => {
-        do_print("This blocker will self-destruct twice");
+        info("This blocker will self-destruct twice");
         do_remove_blocker(lock, blockers[1], true);
         do_remove_blocker(lock, blockers[1], false);
         return PromiseUtils.defer().promise;
       },
       () => {
-        do_print("Attempt to remove non-registered blockers during wait()");
+        info("Attempt to remove non-registered blockers during wait()");
         do_remove_blocker(lock, "foo", false);
         do_remove_blocker(lock, null, false);
       }
@@ -137,18 +137,18 @@ add_task(async function test_phase_removeBlocker() {
     for (let i in blockers) {
       lock.addBlocker("Wait forever again: " + i, blockers[i]);
     }
-    do_print("Waiting (should lift very quickly)");
+    info("Waiting (should lift very quickly)");
     await lock.wait();
     do_remove_blocker(lock, blockers[0], false);
 
 
-    do_print("Attempt to remove a blocker after wait");
+    info("Attempt to remove a blocker after wait");
     lock = makeLock(kind);
     blocker = Promise.resolve.bind(Promise);
     await lock.wait();
     do_remove_blocker(lock, blocker, false);
 
-    do_print("Attempt to remove non-registered blocker after wait()");
+    info("Attempt to remove non-registered blocker after wait()");
     do_remove_blocker(lock, "foo", false);
     do_remove_blocker(lock, null, false);
   }
@@ -156,7 +156,7 @@ add_task(async function test_phase_removeBlocker() {
 });
 
 add_task(async function test_state() {
-  do_print("Testing information contained in `state`");
+  info("Testing information contained in `state`");
 
   let BLOCKER_NAME = "test_state blocker " + Math.random();
 
@@ -174,7 +174,7 @@ add_task(async function test_state() {
 
   // Now that we have called `wait()`, the state contains interesting things
   let state = barrier.state[0];
-  do_print("State: " + JSON.stringify(barrier.state, null, "\t"));
+  info("State: " + JSON.stringify(barrier.state, null, "\t"));
   Assert.equal(state.filename, filename);
   Assert.equal(state.lineNumber, lineNumber + 1);
   Assert.equal(state.name, BLOCKER_NAME);

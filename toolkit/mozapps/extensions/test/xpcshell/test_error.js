@@ -85,6 +85,6 @@ function run_test_6() {
     Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
     Assert.equal(install.error, AddonManager.ERROR_CORRUPT_FILE);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

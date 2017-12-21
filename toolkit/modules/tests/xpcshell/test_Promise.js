@@ -20,12 +20,12 @@ var run_promise_tests = function run_promise_tests(tests, cb) {
       }
       return;
     }
-    do_print("Launching test " + (index + 1) + "/" + tests.length);
+    info("Launching test " + (index + 1) + "/" + tests.length);
     let test = tests[index];
     // Execute from an empty stack
     let next = function next() {
-      do_print("Test " + (index + 1) + "/" + tests.length + " complete");
-      do_execute_soon(function() {
+      info("Test " + (index + 1) + "/" + tests.length + " complete");
+      executeSoon(function() {
         loop(index + 1);
       });
     };
@@ -37,7 +37,7 @@ var run_promise_tests = function run_promise_tests(tests, cb) {
 
 var make_promise_test = function(test) {
   return function runtest() {
-    do_print("Test starting: " + test.name);
+    info("Test starting: " + test.name);
     try {
       let result = test();
       if (result && "promise" in result) {
@@ -56,7 +56,7 @@ var make_promise_test = function(test) {
       result = result.then(
         // Test complete
         function onResolve() {
-          do_print("Test complete: " + test.name);
+          info("Test complete: " + test.name);
         },
         // The test failed with an unexpected error
         function onReject(err) {
@@ -622,7 +622,7 @@ tests.push(
 
     d3.resolve(4);
     d2.resolve(2);
-    do_execute_soon(() => d1.resolve(1));
+    executeSoon(() => d1.resolve(1));
 
     let promises = [d1.promise, d2.promise, 3, d3.promise];
 
@@ -648,7 +648,7 @@ tests.push(
 
     d3.resolve(3);
     d2.resolve(2);
-    do_execute_soon(() => d1.reject(error));
+    executeSoon(() => d1.reject(error));
 
     let promises = [d1.promise, d2.promise, d3.promise];
 
@@ -936,13 +936,13 @@ tests.push(
     let promise1 = Promise.resolve(1);
     let promise2 = Promise.resolve(2);
 
-    do_print("Setting wait for first promise");
+    info("Setting wait for first promise");
     promise1.then(value => {
-      do_print("Starting event loop");
+      info("Starting event loop");
       event_loop();
     }, null);
 
-    do_print("Setting wait for second promise");
+    info("Setting wait for second promise");
     return promise2.catch(error => { return 3; })
     .then(
       count => {
@@ -1030,7 +1030,7 @@ function wait_for_uncaught(aMustAppear, aTimeout = undefined) {
       let {mustFind, error} = make_rejection();
       let name = make_rejection.name;
       tests.push(make_promise_test(function test_uncaught_is_reported() {
-        do_print("Testing with rejection " + name);
+        info("Testing with rejection " + name);
         let promise = wait_for_uncaught(mustFind);
         (function test_rejection_closure() {
           // For the moment, we cannot be absolutely certain that a value is
@@ -1051,7 +1051,7 @@ function wait_for_uncaught(aMustAppear, aTimeout = undefined) {
             Promise.reject(error);
           }
         })();
-        do_print("Posted all rejections");
+        info("Posted all rejections");
         Components.utils.forceGC();
         Components.utils.forceCC();
         Components.utils.forceShrinkingGC();
@@ -1078,7 +1078,7 @@ make_promise_test(function test_caught_is_not_reported() {
   return promise.then(function onSuccess() {
     throw new Error("This error was caught and should not have been reported");
   }, function onError() {
-    do_print("The caught error was not reported, all is fine");
+    info("The caught error was not reported, all is fine");
   }
   );
 }));
@@ -1087,7 +1087,7 @@ make_promise_test(function test_caught_is_not_reported() {
 tests.push(
   make_promise_test(function test_freezing_promise(test) {
     var p = new Promise(function executor(resolve) {
-      do_execute_soon(resolve);
+      executeSoon(resolve);
     });
     Object.freeze(p);
     return p;

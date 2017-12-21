@@ -17,7 +17,7 @@ function compare_paths(ospath, key) {
     Assert.ok(!!ospath);
     Assert.equal(ospath, file.path);
   } else {
-    do_print("WARNING: " + key + " is not defined. Test may not be testing anything!");
+    info("WARNING: " + key + " is not defined. Test may not be testing anything!");
     Assert.ok(!ospath);
   }
 }
@@ -74,5 +74,5 @@ add_task(async function test_desktop_paths() {
 // Open libxul
 add_task(async function test_libxul() {
   ctypes.open(OS.Constants.Path.libxul);
-  do_print("Linked to libxul");
+  info("Linked to libxul");
 });

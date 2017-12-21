@@ -25,13 +25,13 @@ function TestServer() {
   // any port (-1), loopback only (true), default backlog (-1)
   this.listener = ServerSocket(-1, true, -1);
   this.port = this.listener.port;
-  do_print('server: listening on ' + this.port);
+  info('server: listening on ' + this.port);
   this.listener.asyncListen(this);
 }
 
 TestServer.prototype = {
   onSocketAccepted: function(socket, trans) {
-    do_print('server: got client connection');
+    info('server: got client connection');
 
     // one connection at a time.
     if (this.input !== null) {
@@ -156,7 +156,7 @@ function testIpv4() {
     checkAddrEqual(peerAddr, serv.selfAddr);
 
     testDataStore = null;
-    do_execute_soon(run_next_test);
+    executeSoon(run_next_test);
   };
 
   // Useful timeout for debugging test hangs
@@ -189,7 +189,7 @@ function run_test() {
             .getService(Ci.nsISocketTransportService);
   serv = new TestServer();
 
-  do_register_cleanup(function(){ serv.stop(); });
+  registerCleanupFunction(function(){ serv.stop(); });
 
   add_test(testIpv4);
   /* TODO: testIpv6 */

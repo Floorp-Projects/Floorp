@@ -66,7 +66,7 @@ function run_test() {
 }
 
 function end_test() {
-  do_execute_soon(do_test_finished);
+  executeSoon(do_test_finished);
 }
 
 function sortAddons(addons) {

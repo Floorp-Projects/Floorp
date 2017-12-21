@@ -151,7 +151,7 @@ add_task(async function() {
   // Open another handle on the JSON DB with as much Unix and Windows locking
   // as we can to simulate some other process interfering with it
   shutdownManager();
-  do_print("Locking " + gExtensionsJSON.path);
+  info("Locking " + gExtensionsJSON.path);
   let options = {
     winShare: 0
   };
@@ -232,13 +232,13 @@ add_task(async function() {
   // these things happened when we had no access to the database so
   // they are seen as external changes when we get the database back
   if (shutdownError) {
-    do_print("Previous XPI save failed");
+    info("Previous XPI save failed");
     check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED,
         ["addon6@tests.mozilla.org"]);
     check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED,
         ["addon4@tests.mozilla.org"]);
   } else {
-    do_print("Previous XPI save succeeded");
+    info("Previous XPI save succeeded");
     check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
     check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);
   }

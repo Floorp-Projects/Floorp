@@ -57,7 +57,7 @@ server.start(-1);
 const port = server.identity.primaryPort;
 const serverURL = "http://localhost:" + port;
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   return new Promise(resolve => server.stop(resolve));
 });
 

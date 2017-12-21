@@ -46,7 +46,7 @@ function run_test() {
     return;
 
   registry = new MockRegistry();
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     registry.shutdown();
   });
 
@@ -84,7 +84,7 @@ function run_test_1() {
 
     Assert.equal(a3, null);
 
-    do_execute_soon(run_test_2);
+    executeSoon(run_test_2);
   });
 }
 
@@ -113,7 +113,7 @@ function run_test_2() {
 
     Assert.equal(a3, null);
 
-    do_execute_soon(run_test_3);
+    executeSoon(run_test_3);
   });
 }
 
@@ -142,6 +142,6 @@ function run_test_3() {
 
     Assert.equal(a3, null);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

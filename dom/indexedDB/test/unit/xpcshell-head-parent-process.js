@@ -29,7 +29,7 @@ function isnot(a, b, msg) {
 }
 
 function executeSoon(fun) {
-  do_execute_soon(fun);
+  executeSoon(fun);
 }
 
 function todo(condition, name, diag) {
@@ -37,7 +37,7 @@ function todo(condition, name, diag) {
 }
 
 function info(name, message) {
-  do_print(name);
+  info(name);
 }
 
 function run_test() {
@@ -74,7 +74,7 @@ function finishTest()
 
   SpecialPowers.removeFiles();
 
-  do_execute_soon(function() {
+  executeSoon(function() {
     do_test_finished();
   });
 }
@@ -86,7 +86,7 @@ function grabEventAndContinueHandler(event)
 
 function continueToNextStep()
 {
-  do_execute_soon(function() {
+  executeSoon(function() {
     testGenerator.next();
   });
 }

@@ -40,7 +40,7 @@ function run_test()
     // entries that are obviously unreferenced.  Yeah, I know, this is wacky...
     gc();
     gc();
-    do_execute_soon(() => {
+    executeSoon(() => {
       gc();
       gc();
       log_("purging");

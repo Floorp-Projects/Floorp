@@ -115,7 +115,7 @@ async function run_test_1() {
             Assert.ok(!isExtensionInAddonsList(userDir, a2_3.id));
             Assert.equal(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
 
-            do_execute_soon(run_test_2);
+            executeSoon(run_test_2);
           });
         }));
       }

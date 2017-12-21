@@ -33,7 +33,7 @@ function run_test() {
 if (isParent) {
   add_test(function setUp() {
     db = PushServiceWebSocket.newPushDB();
-    do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+    registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
     setUpServiceInParent(PushService, db).then(run_next_test, run_next_test);
   });
 }

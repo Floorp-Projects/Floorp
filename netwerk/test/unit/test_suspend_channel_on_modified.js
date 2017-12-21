@@ -54,7 +54,7 @@ function startChannelRequest(baseUrl, flags, expectedResponse=null) {
     } else {
       Assert.ok(!!!data, "no response");
     }
-    do_execute_soon(run_next_test)
+    executeSoon(run_next_test)
   }, null, flags));
 }
 
@@ -169,7 +169,7 @@ function run_test() {
 
   run_next_test();
 
-  do_register_cleanup(function(){
+  registerCleanupFunction(function(){
     httpServer.stop(() => {});
   });
 }

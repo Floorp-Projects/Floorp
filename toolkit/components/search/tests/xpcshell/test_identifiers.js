@@ -19,7 +19,7 @@ function run_test() {
 
 add_test(function test_identifier() {
   Services.search.init(async function initComplete(aResult) {
-    do_print("init'd search service");
+    info("init'd search service");
     Assert.ok(Components.isSuccessCode(aResult));
 
     await installTestEngine();

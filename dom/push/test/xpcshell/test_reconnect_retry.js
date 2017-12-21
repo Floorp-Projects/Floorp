@@ -16,7 +16,7 @@ function run_test() {
 
 add_task(async function test_reconnect_retry() {
   let db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+  registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
 
   let registers = 0;
   let channelID;

@@ -39,11 +39,11 @@ add_task(async function test_startup() {
                                                     false).parent;
 
 
-  do_print("Ensuring that we have recorded measures for histograms");
+  info("Ensuring that we have recorded measures for histograms");
   Assert.equal(getCount(after[LAUNCH]), getCount(before[LAUNCH]) + 1);
   Assert.equal(getCount(after[READY]), getCount(before[READY]) + 1);
 
-  do_print("Ensuring that launh <= ready");
+  info("Ensuring that launh <= ready");
   Assert.ok(after[LAUNCH].sum <= after[READY].sum);
 });
 

@@ -107,7 +107,7 @@ function do_check_bootstrappedPref(aCallback) {
     }
     Assert.equal(Object.keys(data).length, 0);
 
-    do_execute_soon(aCallback);
+    executeSoon(aCallback);
   });
 }
 
@@ -202,7 +202,7 @@ function check_test_1(installSyncGUID) {
       AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
         Assert.equal(list.length, 0);
 
-        do_execute_soon(run_test_2);
+        executeSoon(run_test_2);
       });
     });
   });
@@ -509,7 +509,7 @@ function run_test_10() {
       "onInstallStarted",
       "onInstallEnded",
     ], function() {
-      do_print("Waiting for startup of bootstrap1_2");
+      info("Waiting for startup of bootstrap1_2");
     });
     install.install();
   });
@@ -642,7 +642,7 @@ function run_test_12() {
     do_check_in_crash_annotation(ID1, "1.0");
 
     b1.uninstall();
-    do_execute_soon(test_12_restart);
+    executeSoon(test_12_restart);
   });
 }
 
@@ -698,7 +698,7 @@ function check_test_13() {
       BootstrapMonitor.checkAddonNotStarted(ID1); // Should not have called startup though
       do_check_not_in_crash_annotation(ID1, "3.0");
 
-      do_execute_soon(test_13_restart);
+      executeSoon(test_13_restart);
     });
   });
 }
@@ -718,7 +718,7 @@ function test_13_restart() {
 
     do_check_bootstrappedPref(function() {
       b1.uninstall();
-      do_execute_soon(run_test_14);
+      executeSoon(run_test_14);
     });
   });
 }
@@ -870,7 +870,7 @@ function run_test_16() {
         AddonManager.getAddonByID(ID1, function(b1_3) {
           b1_3.uninstall();
 
-          do_execute_soon(run_test_17);
+          executeSoon(run_test_17);
         });
       }));
     }));
@@ -999,7 +999,7 @@ function run_test_20() {
     Assert.equal(getInstallOldVersion(), 1);
     Assert.equal(getStartupOldVersion(), undefined);
 
-    do_execute_soon(run_test_21);
+    executeSoon(run_test_21);
   });
 }
 
@@ -1163,7 +1163,7 @@ function check_test_23() {
     Assert.equal(installs.length, 0);
 
     AddonManager.getAddonByID(ID1, function(b1) {
-     do_execute_soon(function test_23_after_startup() {
+     executeSoon(function test_23_after_startup() {
       Assert.notEqual(b1, null);
       Assert.equal(b1.version, "1.0");
       Assert.ok(!b1.appDisabled);
@@ -1200,12 +1200,12 @@ function check_test_23() {
 
 // Tests that we recover from a broken preference
 function run_test_24() {
-  do_print("starting 24");
+  info("starting 24");
 
   Promise.all([BootstrapMonitor.promiseAddonStartup(ID2),
               promiseInstallAllFiles([do_get_addon("test_bootstrap1_1"), do_get_addon("test_bootstrap2_1")])])
          .then(async function test_24_pref() {
-    do_print("test 24 got prefs");
+    info("test 24 got prefs");
     BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
     BootstrapMonitor.checkAddonStarted(ID1, "1.0");
     BootstrapMonitor.checkAddonInstalled(ID2, "1.0");
@@ -1248,7 +1248,7 @@ function run_test_24() {
 // the uninstall method
 function run_test_25() {
   BootstrapMonitor.promiseAddonStartup(ID1).then(function test_25_after_pref() {
-      do_print("test 25 pref change detected");
+      info("test 25 pref change detected");
       BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
       BootstrapMonitor.checkAddonStarted(ID1, "1.0");
 
@@ -1284,7 +1284,7 @@ function run_test_25() {
       });
   });
   installAllFiles([do_get_addon("test_bootstrap1_1")], function test_25_installed() {
-    do_print("test 25 install done");
+    info("test 25 install done");
   });
 }
 
@@ -1372,7 +1372,7 @@ function run_test_27() {
 // disabled calls the install method but not the startup method
 function run_test_28() {
   installAllFiles([do_get_addon("test_bootstrap1_1")], function() {
-   do_execute_soon(function bootstrap_disabled_downgrade_check() {
+   executeSoon(function bootstrap_disabled_downgrade_check() {
     // Doesn't need a restart to complete this
     BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
     Assert.equal(getInstallReason(), ADDON_DOWNGRADE);

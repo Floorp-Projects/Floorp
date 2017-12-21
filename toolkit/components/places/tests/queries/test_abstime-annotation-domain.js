@@ -153,14 +153,14 @@ add_task(async function test_abstime_annotation_domain() {
   var addItem = [{isInQuery: true, isVisit: true, isDetails: true, title: "moz",
                  uri: "http://www.foo.com/i-am-added.html", lastVisit: jan11_800}];
   await task_populateDB(addItem);
-  do_print("Adding item foo.com/i-am-added.html");
+  info("Adding item foo.com/i-am-added.html");
   Assert.equal(isInResult(addItem, root), true);
 
   // Let's update something by title
   var change1 = [{isDetails: true, uri: "http://foo.com/changeme1",
                   lastVisit: jan12_1730, title: "moz moz mozzie"}];
   await task_populateDB(change1);
-  do_print("LiveUpdate by changing title");
+  info("LiveUpdate by changing title");
   Assert.equal(isInResult(change1, root), true);
 
   // Let's update something by annotation
@@ -179,7 +179,7 @@ add_task(async function test_abstime_annotation_domain() {
   var change3 = [{isDetails: true, uri: "http://foo.com/changeme3.htm",
                   title: "moz", lastVisit: jan15_2045}];
   await task_populateDB(change3);
-  do_print("LiveUpdate by adding visit within timerange");
+  info("LiveUpdate by adding visit within timerange");
   Assert.equal(isInResult(change3, root), true);
 
   // And delete something from the result set - using annotation
@@ -193,7 +193,7 @@ add_task(async function test_abstime_annotation_domain() {
   // Delete something by changing the title
   var change5 = [{isDetails: true, uri: "http://foo.com/end.html", title: "deleted"}];
   await task_populateDB(change5);
-  do_print("LiveUpdate by deleting item by changing title");
+  info("LiveUpdate by deleting item by changing title");
   Assert.equal(isInResult(change5, root), false);
 
   root.containerOpen = false;

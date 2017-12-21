@@ -29,7 +29,7 @@ add_task(async function test_referrer_restart() {
   function cleanup() {
     gHttpServer.registerPathHandler(sourcePath, null);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   registerInterruptibleHandler(sourcePath,
     function firstPart(aRequest, aResponse) {

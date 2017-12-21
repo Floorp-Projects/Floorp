@@ -159,7 +159,7 @@ function run_test_2(uri) {
       Assert.ok(newb1.userDisabled);
       check_mapping(uri, newb1.id);
 
-      do_execute_soon(() => run_test_3(uri));
+      executeSoon(() => run_test_3(uri));
     });
   });
 }
@@ -193,7 +193,7 @@ function run_test_4() {
       let uri = newb1.getResourceURI(".");
       check_mapping(uri, newb1.id);
 
-      do_execute_soon(run_test_5);
+      executeSoon(run_test_5);
     });
   });
 }
@@ -206,7 +206,7 @@ function run_test_5() {
     let uri = b1.getResourceURI(".");
     check_mapping(uri, b1.id);
 
-    do_execute_soon(run_test_6);
+    executeSoon(run_test_6);
   });
 }
 
@@ -227,7 +227,7 @@ function run_test_6() {
     check_mapping(uri, b1.id);
 
     restartManager();
-    do_execute_soon(run_test_7);
+    executeSoon(run_test_7);
   });
 }
 
@@ -243,7 +243,7 @@ function run_test_7() {
     let uri = b1.getResourceURI(".");
     check_mapping(uri, b1.id);
 
-    do_execute_soon(run_test_8);
+    executeSoon(run_test_8);
   });
 }
 
@@ -272,7 +272,7 @@ function run_test_8() {
 
     check_mapping(uri, b2.id);
 
-    do_execute_soon(run_test_invalidarg);
+    executeSoon(run_test_invalidarg);
   });
   AddonManager.installTemporaryAddon(do_get_addon("test_bootstrap2_1"));
 }

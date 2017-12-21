@@ -118,14 +118,14 @@ add_task(async function testParameterValidation() {
     try {
       testnamespace[name](...args);
     } catch (e) {
-      do_print(`testnamespace.${name}(${args.map(String).join(", ")}) unexpectedly threw.`);
+      info(`testnamespace.${name}(${args.map(String).join(", ")}) unexpectedly threw.`);
       throw new Error(e);
     }
   }
   let cb = () => {};
 
   for (let isChromeCompat of [true, false]) {
-    do_print(`Testing API validation with isChromeCompat=${isChromeCompat}`);
+    info(`Testing API validation with isChromeCompat=${isChromeCompat}`);
     testnamespace = generateAPIs({
       isChromeCompat,
     }, {
@@ -201,7 +201,7 @@ add_task(async function testCheckAsyncResults() {
 add_task(async function testAsyncResults() {
   await Schemas.load("data:," + JSON.stringify(schemaJson));
   function runWithCallback(func) {
-    do_print(`Calling testnamespace.${func.name}, expecting callback with result`);
+    info(`Calling testnamespace.${func.name}, expecting callback with result`);
     return new Promise(resolve => {
       let result = "uninitialized value";
       let returnValue = func(reply => {
@@ -216,7 +216,7 @@ add_task(async function testAsyncResults() {
   }
 
   function runFailCallback(func) {
-    do_print(`Calling testnamespace.${func.name}, expecting callback with error`);
+    info(`Calling testnamespace.${func.name}, expecting callback with error`);
     return new Promise(resolve => {
       func(reply => {
         Assert.equal(reply, undefined);
@@ -226,7 +226,7 @@ add_task(async function testAsyncResults() {
   }
 
   for (let isChromeCompat of [true, false]) {
-    do_print(`Testing API invocation with isChromeCompat=${isChromeCompat}`);
+    info(`Testing API invocation with isChromeCompat=${isChromeCompat}`);
     let testnamespace = generateAPIs({
       isChromeCompat,
     }, {
@@ -240,12 +240,12 @@ add_task(async function testAsyncResults() {
       },
     });
     if (!isChromeCompat) { // No promises for chrome.
-      do_print("testnamespace.async_required should be a Promise");
+      info("testnamespace.async_required should be a Promise");
       let promise = testnamespace.async_required();
       Assert.ok(promise instanceof context.cloneScope.Promise);
       Assert.equal(await promise, 1);
 
-      do_print("testnamespace.async_optional should be a Promise");
+      info("testnamespace.async_optional should be a Promise");
       promise = testnamespace.async_optional();
       Assert.ok(promise instanceof context.cloneScope.Promise);
       Assert.equal(await promise, 2);
@@ -262,7 +262,7 @@ add_task(async function testAsyncResults() {
       msg => Cu.evalInSandbox(`Promise.reject({message: "${msg}"})`, otherSandbox),
     ];
     for (let makeError of errorFactories) {
-      do_print(`Testing callback/promise with error caused by: ${makeError}`);
+      info(`Testing callback/promise with error caused by: ${makeError}`);
       testnamespace = generateAPIs({
         isChromeCompat,
       }, {

@@ -31,37 +31,37 @@ add_task(async function test_download_embed_bookmarks() {
   await addBookmark({ uri: uri3,
                       title: "framed-bookmark" });
 
-  do_print("Searching for bookmarked download uri matches");
+  info("Searching for bookmarked download uri matches");
   await check_autocomplete({
     search: "download-bookmark",
     matches: [ { uri: uri1, title: "download-bookmark", style: [ "bookmark" ] } ]
   });
 
-  do_print("Searching for bookmarked embed uri matches");
+  info("Searching for bookmarked embed uri matches");
   await check_autocomplete({
     search: "embed-bookmark",
     matches: [ { uri: uri2, title: "embed-bookmark", style: [ "bookmark" ] } ]
   });
 
-  do_print("Searching for bookmarked framed uri matches");
+  info("Searching for bookmarked framed uri matches");
   await check_autocomplete({
     search: "framed-bookmark",
     matches: [ { uri: uri3, title: "framed-bookmark", style: [ "bookmark" ] } ]
   });
 
-  do_print("Searching for download uri does not match");
+  info("Searching for download uri does not match");
   await check_autocomplete({
     search: "download2",
     matches: [ ]
   });
 
-  do_print("Searching for embed uri does not match");
+  info("Searching for embed uri does not match");
   await check_autocomplete({
     search: "embed2",
     matches: [ ]
   });
 
-  do_print("Searching for framed uri does not match");
+  info("Searching for framed uri does not match");
   await check_autocomplete({
     search: "framed2",
     matches: [ ]

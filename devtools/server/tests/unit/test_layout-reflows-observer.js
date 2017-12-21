@@ -96,22 +96,22 @@ function run_test() {
 }
 
 function instancesOfObserversAreSharedBetweenWindows() {
-  do_print("Checking that when requesting twice an instances of the observer " +
+  info("Checking that when requesting twice an instances of the observer " +
     "for the same TabActor, the instance is shared");
 
-  do_print("Checking 2 instances of the observer for the tabActor 1");
+  info("Checking 2 instances of the observer for the tabActor 1");
   let tabActor1 = new MockTabActor();
   let obs11 = getLayoutChangesObserver(tabActor1);
   let obs12 = getLayoutChangesObserver(tabActor1);
   Assert.equal(obs11, obs12);
 
-  do_print("Checking 2 instances of the observer for the tabActor 2");
+  info("Checking 2 instances of the observer for the tabActor 2");
   let tabActor2 = new MockTabActor();
   let obs21 = getLayoutChangesObserver(tabActor2);
   let obs22 = getLayoutChangesObserver(tabActor2);
   Assert.equal(obs21, obs22);
 
-  do_print("Checking that observers instances for 2 different tabActors are " +
+  info("Checking that observers instances for 2 different tabActors are " +
     "different");
   Assert.notEqual(obs11, obs21);
 
@@ -122,7 +122,7 @@ function instancesOfObserversAreSharedBetweenWindows() {
 }
 
 function eventsAreBatched() {
-  do_print("Checking that reflow events are batched and only sent when the " +
+  info("Checking that reflow events are batched and only sent when the " +
     "timeout expires");
 
   // Note that in this test, we mock the TabActor and its window property, so we
@@ -139,24 +139,24 @@ function eventsAreBatched() {
   let onResize = () => resizeEvents.push("resize");
   observer.on("resize", onResize);
 
-  do_print("Fake one reflow event");
+  info("Fake one reflow event");
   tabActor.window.docShell.observer.reflow();
-  do_print("Checking that no batched reflow event has been emitted");
+  info("Checking that no batched reflow event has been emitted");
   Assert.equal(reflowsEvents.length, 0);
 
-  do_print("Fake another reflow event");
+  info("Fake another reflow event");
   tabActor.window.docShell.observer.reflow();
-  do_print("Checking that still no batched reflow event has been emitted");
+  info("Checking that still no batched reflow event has been emitted");
   Assert.equal(reflowsEvents.length, 0);
 
-  do_print("Fake a few of resize events too");
+  info("Fake a few of resize events too");
   tabActor.window.docShell.mockResize();
   tabActor.window.docShell.mockResize();
   tabActor.window.docShell.mockResize();
-  do_print("Checking that still no batched resize event has been emitted");
+  info("Checking that still no batched resize event has been emitted");
   Assert.equal(resizeEvents.length, 0);
 
-  do_print("Faking timeout expiration and checking that events are sent");
+  info("Faking timeout expiration and checking that events are sent");
   observer.eventLoopTimer();
   Assert.equal(reflowsEvents.length, 1);
   Assert.equal(reflowsEvents[0].length, 2);
@@ -168,7 +168,7 @@ function eventsAreBatched() {
 }
 
 function noEventsAreSentWhenThereAreNoReflowsAndLoopTimeouts() {
-  do_print("Checking that if no reflows were detected and the event batching " +
+  info("Checking that if no reflows were detected and the event batching " +
   "loop expires, then no reflows event is sent");
 
   let tabActor = new MockTabActor();
@@ -178,7 +178,7 @@ function noEventsAreSentWhenThereAreNoReflowsAndLoopTimeouts() {
   let onReflows = (event, reflows) => reflowsEvents.push(reflows);
   observer.on("reflows", onReflows);
 
-  do_print("Faking timeout expiration and checking for reflows");
+  info("Faking timeout expiration and checking for reflows");
   observer.eventLoopTimer();
   Assert.equal(reflowsEvents.length, 0);
 
@@ -187,7 +187,7 @@ function noEventsAreSentWhenThereAreNoReflowsAndLoopTimeouts() {
 }
 
 function observerIsAlreadyStarted() {
-  do_print("Checking that the observer is already started when getting it");
+  info("Checking that the observer is already started when getting it");
 
   let tabActor = new MockTabActor();
   let observer = getLayoutChangesObserver(tabActor);
@@ -203,7 +203,7 @@ function observerIsAlreadyStarted() {
 }
 
 function destroyStopsObserving() {
-  do_print("Checking that the destroying the observer stops it");
+  info("Checking that the destroying the observer stops it");
 
   let tabActor = new MockTabActor();
   let observer = getLayoutChangesObserver(tabActor);
@@ -216,7 +216,7 @@ function destroyStopsObserving() {
 }
 
 function stoppingAndStartingSeveralTimesWorksCorrectly() {
-  do_print("Checking that the stopping and starting several times the observer" +
+  info("Checking that the stopping and starting several times the observer" +
     " works correctly");
 
   let tabActor = new MockTabActor();
@@ -239,36 +239,36 @@ function stoppingAndStartingSeveralTimesWorksCorrectly() {
 }
 
 function reflowsArentStackedWhenStopped() {
-  do_print("Checking that when stopped, reflows aren't stacked in the observer");
+  info("Checking that when stopped, reflows aren't stacked in the observer");
 
   let tabActor = new MockTabActor();
   let observer = getLayoutChangesObserver(tabActor);
 
-  do_print("Stoping the observer");
+  info("Stoping the observer");
   observer.stop();
 
-  do_print("Faking reflows");
+  info("Faking reflows");
   tabActor.window.docShell.observer.reflow();
   tabActor.window.docShell.observer.reflow();
   tabActor.window.docShell.observer.reflow();
 
-  do_print("Checking that reflows aren't recorded");
+  info("Checking that reflows aren't recorded");
   Assert.equal(observer.reflows.length, 0);
 
-  do_print("Starting the observer and faking more reflows");
+  info("Starting the observer and faking more reflows");
   observer.start();
   tabActor.window.docShell.observer.reflow();
   tabActor.window.docShell.observer.reflow();
   tabActor.window.docShell.observer.reflow();
 
-  do_print("Checking that reflows are recorded");
+  info("Checking that reflows are recorded");
   Assert.equal(observer.reflows.length, 3);
 
   releaseLayoutChangesObserver(tabActor);
 }
 
 function stackedReflowsAreResetOnStop() {
-  do_print("Checking that stacked reflows are reset on stop");
+  info("Checking that stacked reflows are reset on stop");
 
   let tabActor = new MockTabActor();
   let observer = getLayoutChangesObserver(tabActor);

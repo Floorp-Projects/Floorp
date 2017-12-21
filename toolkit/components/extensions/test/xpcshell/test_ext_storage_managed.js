@@ -48,7 +48,7 @@ add_task(async function setup() {
                       "", path);
   }
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.dirsvc.unregisterProvider(dirProvider);
     tmpDir.remove(true);
     if (registry) {

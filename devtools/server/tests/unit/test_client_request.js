@@ -55,13 +55,13 @@ function init() {
 
 function checkStack(expectedName) {
   if (!Services.prefs.getBoolPref("javascript.options.asyncstack")) {
-    do_print("Async stacks are disabled.");
+    info("Async stacks are disabled.");
     return;
   }
 
   let stack = Components.stack;
   while (stack) {
-    do_print(stack.name);
+    info(stack.name);
     if (stack.name == expectedName) {
       // Reached back to outer function before request
       ok(true, "Complete stack");

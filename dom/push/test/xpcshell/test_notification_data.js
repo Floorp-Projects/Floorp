@@ -40,7 +40,7 @@ let ackDone;
 let server;
 add_task(async function test_notification_ack_data_setup() {
   db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+  registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
 
   await putRecord(
     'subscription1',

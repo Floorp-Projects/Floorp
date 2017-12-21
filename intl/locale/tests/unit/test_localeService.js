@@ -167,6 +167,6 @@ add_test(function test_getRequestedLocales_sanitize() {
   run_next_test();
 });
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   Services.prefs.clearUserPref(PREF_REQUESTED_LOCALES);
 });

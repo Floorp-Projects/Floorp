@@ -23,7 +23,7 @@ add_task(async function setup() {
   stmt.reset();
   stmt.finalize();
 
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 });
 
 add_task(async function test_getIsNull_for_null() {

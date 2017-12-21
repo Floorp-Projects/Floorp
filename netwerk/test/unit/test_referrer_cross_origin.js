@@ -6,7 +6,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 function test_policy(test) {
-  do_print("Running test: " + test.toSource());
+  info("Running test: " + test.toSource());
 
   let prefs = Services.prefs;
 

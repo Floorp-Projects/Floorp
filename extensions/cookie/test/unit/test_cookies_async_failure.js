@@ -26,7 +26,7 @@ function run_test() {
 }
 
 function finish_test() {
-  do_execute_soon(function() {
+  executeSoon(function() {
     test_generator.return();
     do_test_finished();
   });
@@ -145,7 +145,7 @@ function* run_test_1(generator)
 
   // ... and the DELETE statement to finish.
   while (do_count_cookies_in_db(db.db) == 2) {
-    do_execute_soon(function() {
+    executeSoon(function() {
       do_run_generator(sub_generator);
     });
     yield;
@@ -176,7 +176,7 @@ function* run_test_1(generator)
   // the chaos status.
   for (let i = 0; i < 10; ++i) {
     Assert.equal(Services.cookiemgr.countCookiesFromHost(cookie.host), 1);
-    do_execute_soon(function() { do_run_generator(sub_generator); });
+    executeSoon(function() { do_run_generator(sub_generator); });
     yield;
   }
 
@@ -186,7 +186,7 @@ function* run_test_1(generator)
     new _observer(sub_generator, "cookie-db-rebuilding");
     yield;
   }
-  do_execute_soon(function() { do_run_generator(sub_generator); });
+  executeSoon(function() { do_run_generator(sub_generator); });
   yield;
 
   // At this point, the cookies should still be in memory.

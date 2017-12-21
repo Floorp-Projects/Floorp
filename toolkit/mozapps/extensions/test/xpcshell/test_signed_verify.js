@@ -36,7 +36,7 @@ function verifySignatures() {
     };
     Services.obs.addObserver(observer, "xpi-signature-changed");
 
-    do_print("Verifying signatures");
+    info("Verifying signatures");
     let XPIscope = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
     XPIscope.XPIProvider.verifySignatures();
   });
@@ -50,7 +50,7 @@ function run_test() {
 
 function verify_no_change([startFile, startState], [endFile, endState]) {
   add_task(async function() {
-    do_print("A switch from " + startFile + " to " + endFile + " should cause no change.");
+    info("A switch from " + startFile + " to " + endFile + " should cause no change.");
 
     // Install the first add-on
     manuallyInstall(do_get_file(DATA + startFile), profileDir, ID);
@@ -95,7 +95,7 @@ function verify_no_change([startFile, startState], [endFile, endState]) {
 
 function verify_enables([startFile, startState], [endFile, endState]) {
   add_task(async function() {
-    do_print("A switch from " + startFile + " to " + endFile + " should enable the add-on.");
+    info("A switch from " + startFile + " to " + endFile + " should enable the add-on.");
 
     // Install the first add-on
     manuallyInstall(do_get_file(DATA + startFile), profileDir, ID);
@@ -112,7 +112,7 @@ function verify_enables([startFile, startState], [endFile, endState]) {
     manuallyInstall(do_get_file(DATA + endFile), profileDir, ID);
 
     let needsRestart = hasFlag(addon.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_ENABLE);
-    do_print(needsRestart);
+    info(needsRestart);
 
     let events = {};
     if (!needsRestart) {
@@ -157,7 +157,7 @@ function verify_enables([startFile, startState], [endFile, endState]) {
 
 function verify_disables([startFile, startState], [endFile, endState]) {
   add_task(async function() {
-    do_print("A switch from " + startFile + " to " + endFile + " should disable the add-on.");
+    info("A switch from " + startFile + " to " + endFile + " should disable the add-on.");
 
     // Install the first add-on
     manuallyInstall(do_get_file(DATA + startFile), profileDir, ID);

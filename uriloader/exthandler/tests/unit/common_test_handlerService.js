@@ -247,7 +247,7 @@ add_task(async function test_store_preferredAction() {
  */
 add_task(async function test_store_localHandlerApp_missing() {
   if (!("@mozilla.org/uriloader/dbus-handler-app;1" in Cc)) {
-    do_print("Skipping test because it does not apply to this platform.");
+    info("Skipping test because it does not apply to this platform.");
     return;
   }
 
@@ -280,7 +280,7 @@ add_task(async function test_store_localHandlerApp_missing() {
  */
 add_task(async function test_store_dBusHandlerApp() {
   if (!("@mozilla.org/uriloader/dbus-handler-app;1" in Cc)) {
-    do_print("Skipping test because it does not apply to this platform.");
+    info("Skipping test because it does not apply to this platform.");
     return;
   }
 
@@ -564,7 +564,7 @@ function assertAllHandlerInfosMatchDefaultHandlers() {
  */
 add_task(async function test_default_protocol_handlers() {
   if (!Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")) {
-    do_print("This platform or locale does not have default handlers.");
+    info("This platform or locale does not have default handlers.");
     return;
   }
 
@@ -580,7 +580,7 @@ add_task(async function test_default_protocol_handlers() {
  */
 add_task(async function test_default_protocol_handlers_no_duplicates() {
   if (!Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")) {
-    do_print("This platform or locale does not have default handlers.");
+    info("This platform or locale does not have default handlers.");
     return;
   }
 

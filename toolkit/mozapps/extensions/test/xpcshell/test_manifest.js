@@ -541,6 +541,6 @@ function run_test() {
     // An obsolete optionsType means the add-on isn't registered.
     Assert.equal(a26, null);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

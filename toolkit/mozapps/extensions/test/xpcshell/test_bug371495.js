@@ -24,7 +24,7 @@ function run_test() {
         Assert.equal(addon2.optionsURL, null);
         Assert.equal(addon2.aboutURL, null);
 
-        do_execute_soon(do_test_finished);
+        executeSoon(do_test_finished);
       }));
     }));
   });

@@ -19,8 +19,8 @@ add_task(async function duration() {
   let copyFile = pathSource + ".bak";
   function testOptions(options, name, durations = availableDurations) {
     for (let duration of durations) {
-      do_print(`Checking ${duration} for operation: ${name}`);
-      do_print(`${name}: Gathered method duration time: ${options[duration]} ms`);
+      info(`Checking ${duration} for operation: ${name}`);
+      info(`${name}: Gathered method duration time: ${options[duration]} ms`);
       // Making sure that duration was updated.
       Assert.equal(typeof options[duration], "number");
       Assert.ok(options[duration] >= 0);
@@ -29,9 +29,9 @@ add_task(async function duration() {
 
   function testOptionIncrements(options, name, backupDuration, durations = availableDurations) {
     for (let duration of durations) {
-      do_print(`Checking ${duration} increment for operation: ${name}`);
-      do_print(`${name}: Gathered method duration time: ${options[duration]} ms`);
-      do_print(`${name}: Previous duration: ${backupDuration[duration]} ms`);
+      info(`Checking ${duration} increment for operation: ${name}`);
+      info(`${name}: Gathered method duration time: ${options[duration]} ms`);
+      info(`${name}: Previous duration: ${backupDuration[duration]} ms`);
       // Making sure that duration was incremented.
       Assert.ok(options[duration] >= backupDuration[duration]);
     }
@@ -65,7 +65,7 @@ add_task(async function duration() {
   testOptions(writeAtomicOptions, "OS.File.writeAtomic", ["outExecutionDuration"]);
   await OS.File.remove(pathDest);
 
-  do_print(`Ensuring that we can use ${availableDurations.join(", ")} to accumulate durations`);
+  info(`Ensuring that we can use ${availableDurations.join(", ")} to accumulate durations`);
 
   let ARBITRARY_BASE_DURATION = 5;
   copyOptions = {

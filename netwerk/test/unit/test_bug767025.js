@@ -37,14 +37,14 @@ const kDataFileSize = 1024;	// file size for each content page
 const kHttpLocation = "http://localhost:4444/";
 
 function manifest_handler(metadata, response) {
-  do_print("manifest\n");
+  info("manifest\n");
   response.setHeader("content-type", "text/cache-manifest");
 
   response.write(kManifest);
 }
 
 function datafile_handler(metadata, response) {
-  do_print("datafile_handler\n");
+  info("datafile_handler\n");
   let data = "";
 
   while(data.length < kDataFileSize) {
@@ -56,7 +56,7 @@ function datafile_handler(metadata, response) {
 }
 
 function app_handler(metadata, response) {
-  do_print("app_handler\n");
+  info("app_handler\n");
   response.setHeader("content-type", "text/html");
 
   response.write("<html></html>");
@@ -71,7 +71,7 @@ function init_profile() {
   ps.setBoolPref("browser.cache.offline.enable", true);
   ps.setComplexValue("browser.cache.offline.parent_directory",
 		     Ci.nsIFile, do_get_profile());
-  do_print("profile " + do_get_profile());
+  info("profile " + do_get_profile());
 }
 
 function init_http_server() {
@@ -142,7 +142,7 @@ const {STATE_FINISHED: STATE_FINISHED,
  * Start caching app1 as a non-pinned app.
  */
 function start_cache_nonpinned_app() {
-  do_print("Start non-pinned App1");
+  info("Start non-pinned App1");
   start_and_watch_app_cache(kHttpLocation + "app.appcache",
                           kHttpLocation + "app",
                           function (update, state) {
@@ -157,7 +157,7 @@ function start_cache_nonpinned_app() {
                             }
                           },
                           function (appcache) {
-                            do_print("app avail " + appcache + "\n");
+                            info("app avail " + appcache + "\n");
                           });
 }
 

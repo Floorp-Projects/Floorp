@@ -128,7 +128,7 @@ function completeTest2(request, data, ctx)
     filename = chan.contentDispositionFilename;  // should barf
     do_throw("Should have failed getting Content-Disposition filename");
   } catch (ex) {
-    do_print("correctly ate exception");    
+    info("correctly ate exception");    
   }
   runNextTest();  
 }
@@ -154,7 +154,7 @@ function completeTest3(request, data, ctx)
     filename = chan.contentDispositionFilename;  // should barf
     do_throw("Should have failed getting Content-Disposition filename");
   } catch (ex) {
-    do_print("correctly ate exception");    
+    info("correctly ate exception");    
   }
   runNextTest();  
 }
@@ -180,7 +180,7 @@ function completeTest4(request, data, ctx)
     filename = chan.contentDispositionFilename;  // should barf
     do_throw("Should have failed getting Content-Disposition filename");
   } catch (ex) {
-    do_print("correctly ate exception");    
+    info("correctly ate exception");    
   }
   runNextTest();
 }

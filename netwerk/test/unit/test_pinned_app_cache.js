@@ -62,28 +62,28 @@ XPCOMUtils.defineLazyGetter(this, "kHttpLocation_ip", function() {
 });
 
 function manifest1_handler(metadata, response) {
-  do_print("manifest1\n");
+  info("manifest1\n");
   response.setHeader("content-type", "text/cache-manifest");
 
   response.write(kManifest1);
 }
 
 function manifest2_handler(metadata, response) {
-  do_print("manifest2\n");
+  info("manifest2\n");
   response.setHeader("content-type", "text/cache-manifest");
 
   response.write(kManifest2);
 }
 
 function app_handler(metadata, response) {
-  do_print("app_handler\n");
+  info("app_handler\n");
   response.setHeader("content-type", "text/html");
 
   response.write("<html></html>");
 }
 
 function datafile_handler(metadata, response) {
-  do_print("datafile_handler\n");
+  info("datafile_handler\n");
   let data = "";
 
   while(data.length < kDataFileSize) {
@@ -182,7 +182,7 @@ const {STATE_FINISHED: STATE_FINISHED,
  * Start caching app1 as a non-pinned app.
  */
 function start_cache_nonpinned_app() {
-  do_print("Start non-pinned App1");
+  info("Start non-pinned App1");
   start_and_watch_app_cache(kHttpLocation + "app1.appcache",
                           kHttpLocation + "app1",
                           false,
@@ -198,7 +198,7 @@ function start_cache_nonpinned_app() {
                             }
                           },
                           function (appcahe) {
-                            do_print("app1 avail " + appcache + "\n");
+                            info("app1 avail " + appcache + "\n");
                           });
 }
 
@@ -212,7 +212,7 @@ function start_cache_nonpinned_app() {
  */
 function start_cache_nonpinned_app2_for_partial() {
   let error_count = [0];
-  do_print("Start non-pinned App2 for partial\n");
+  info("Start non-pinned App2 for partial\n");
   start_and_watch_app_cache(kHttpLocation_ip + "app2.appcache",
                             kHttpLocation_ip + "app2",
                             false,
@@ -240,7 +240,7 @@ function start_cache_nonpinned_app2_for_partial() {
  */
 function start_cache_pinned_app2_for_success() {
   let error_count = [0];
-  do_print("Start pinned App2 for success\n");
+  info("Start pinned App2 for success\n");
   start_and_watch_app_cache(kHttpLocation_ip + "app2.appcache",
                             kHttpLocation_ip + "app2",
                             true,
@@ -253,13 +253,13 @@ function start_cache_pinned_app2_for_success() {
 				break;
 
                               case STATE_ERROR:
-				do_print("STATE_ERROR\n");
+				info("STATE_ERROR\n");
 				error_count[0]++;
 				break;
                               }
                             },
                             function (appcahe) {
-                              do_print("app2 avail " + appcache + "\n");
+                              info("app2 avail " + appcache + "\n");
                             });
 }
 

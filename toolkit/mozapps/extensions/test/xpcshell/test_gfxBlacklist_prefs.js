@@ -74,7 +74,7 @@ function run_test() {
   function blacklistAdded(aSubject, aTopic, aData) {
     // If we wait until after we go through the event loop, gfxInfo is sure to
     // have processed the gfxItems event.
-    do_execute_soon(ensureBlacklistSet);
+    executeSoon(ensureBlacklistSet);
   }
   function ensureBlacklistSet() {
     var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
@@ -95,7 +95,7 @@ function run_test() {
   function blacklistRemoved(aSubject, aTopic, aData) {
     // If we wait until after we go through the event loop, gfxInfo is sure to
     // have processed the gfxItems event.
-    do_execute_soon(ensureBlacklistUnset);
+    executeSoon(ensureBlacklistUnset);
   }
   function ensureBlacklistUnset() {
     var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);

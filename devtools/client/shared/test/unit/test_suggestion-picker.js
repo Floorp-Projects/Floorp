@@ -44,7 +44,7 @@ const TEST_DATA = [
 ];
 
 function ensureMostRelevantIndexProvidedByHelperFunction() {
-  do_print("Running ensureMostRelevantIndexProvidedByHelperFunction()");
+  info("Running ensureMostRelevantIndexProvidedByHelperFunction()");
 
   for (let testData of TEST_DATA) {
     let { items, sortedItems, expectedIndex } = testData;
@@ -126,7 +126,7 @@ const CSS_TEST_DATA = [
 ];
 
 function ensureMostRelevantIndexProvidedByClassMethod() {
-  do_print("Running ensureMostRelevantIndexProvidedByClassMethod()");
+  info("Running ensureMostRelevantIndexProvidedByClassMethod()");
 
   for (let testData of CSS_TEST_DATA) {
     let { items, expectedIndex } = testData;
@@ -136,7 +136,7 @@ function ensureMostRelevantIndexProvidedByClassMethod() {
 }
 
 function ensureErrorThrownWithInvalidArguments() {
-  do_print("Running ensureErrorThrownWithInvalidTypeArgument()");
+  info("Running ensureErrorThrownWithInvalidTypeArgument()");
 
   let expectedError = "Please provide valid items and sortedItems arrays.";
   // No arguments passed.

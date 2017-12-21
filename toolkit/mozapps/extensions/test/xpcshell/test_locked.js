@@ -264,7 +264,7 @@ add_task(async function run_test_1() {
   // Open another handle on the JSON DB with as much Unix and Windows locking
   // as we can to simulate some other process interfering with it
   shutdownManager();
-  do_print("Locking " + gExtensionsJSON.path);
+  info("Locking " + gExtensionsJSON.path);
   let options = {
     winShare: 0
   };
@@ -461,7 +461,7 @@ add_task(async function run_test_1() {
    } catch (e) {
      // We're expecting an error here.
    }
-   do_print("Unlocking " + gExtensionsJSON.path);
+   info("Unlocking " + gExtensionsJSON.path);
    await file.close();
    gExtensionsJSON.permissions = filePermissions;
    await promiseStartupManager();

@@ -385,19 +385,19 @@ function run_test() {
 // Test parseDeclarations.
 function run_basic_tests() {
   for (let test of TEST_DATA) {
-    do_print("Test input string " + test.input);
+    info("Test input string " + test.input);
     let output;
     try {
       output = parseDeclarations(isCssPropertyKnown, test.input,
                                  test.parseComments);
     } catch (e) {
-      do_print("parseDeclarations threw an exception with the given input " +
+      info("parseDeclarations threw an exception with the given input " +
         "string");
       if (test.throws) {
-        do_print("Exception expected");
+        info("Exception expected");
         Assert.ok(true);
       } else {
-        do_print("Exception unexpected\n" + e);
+        info("Exception unexpected\n" + e);
         Assert.ok(false);
       }
     }
@@ -423,7 +423,7 @@ const COMMENT_DATA = [
 // Test parseCommentDeclarations.
 function run_comment_tests() {
   for (let test of COMMENT_DATA) {
-    do_print("Test input string " + test.input);
+    info("Test input string " + test.input);
     let output = _parseCommentDeclarations(isCssPropertyKnown, test.input, 0,
                                            test.input.length + 4);
     deepEqual(output, test.expected);
@@ -445,9 +445,9 @@ const NAMED_DATA = [
 // Test parseNamedDeclarations.
 function run_named_tests() {
   for (let test of NAMED_DATA) {
-    do_print("Test input string " + test.input);
+    info("Test input string " + test.input);
     let output = parseNamedDeclarations(isCssPropertyKnown, test.input, true);
-    do_print(JSON.stringify(output));
+    info(JSON.stringify(output));
     deepEqual(output, test.expected);
   }
 }
@@ -456,7 +456,7 @@ function assertOutput(actual, expected) {
   if (actual.length === expected.length) {
     for (let i = 0; i < expected.length; i++) {
       Assert.ok(!!actual[i]);
-      do_print("Check that the output item has the expected name, " +
+      info("Check that the output item has the expected name, " +
         "value and priority");
       Assert.equal(expected[i].name, actual[i].name);
       Assert.equal(expected[i].value, actual[i].value);
@@ -468,7 +468,7 @@ function assertOutput(actual, expected) {
     }
   } else {
     for (let prop of actual) {
-      do_print("Actual output contained: {name: " + prop.name + ", value: " +
+      info("Actual output contained: {name: " + prop.name + ", value: " +
         prop.value + ", priority: " + prop.priority + "}");
     }
     Assert.equal(actual.length, expected.length);

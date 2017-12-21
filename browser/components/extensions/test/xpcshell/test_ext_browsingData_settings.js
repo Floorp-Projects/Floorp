@@ -55,7 +55,7 @@ add_task(async function testSettingsProperties() {
   const SINGLE_OPTION = "cache";
   const SINGLE_PREF = "privacy.cpd.cache";
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Preferences.reset(SINGLE_PREF);
   });
 
@@ -100,7 +100,7 @@ add_task(async function testSettingsSince() {
 
   await extension.startup();
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Preferences.reset(TIMESPAN_PREF);
   });
 

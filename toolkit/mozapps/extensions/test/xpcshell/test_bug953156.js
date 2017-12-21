@@ -46,6 +46,6 @@ function check_test() {
     Services.scriptloader.loadSubScript("chrome://bug675371/content/test.js", target);
     Assert.ok(target.active);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   }));
 }

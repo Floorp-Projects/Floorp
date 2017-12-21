@@ -84,7 +84,7 @@ add_task(async function reorder() {
   }
 
 
-  do_print("Test partial sorting");
+  info("Test partial sorting");
   {
     // Try a partial sorting by passing 2 entries in same order as they
     // currently have. No entries should change order.

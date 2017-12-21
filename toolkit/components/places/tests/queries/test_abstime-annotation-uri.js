@@ -127,7 +127,7 @@ add_task(async function test_abstime_annotation_uri() {
   compareArrayToResult(testData, root);
 
   // live update.
-  do_print("change title");
+  info("change title");
   var change1 = [{isDetails: true, uri: "http://foo.com/",
                   title: "mo"}, ];
   await task_populateDB(change1);
@@ -144,7 +144,7 @@ add_task(async function test_abstime_annotation_uri() {
                   uri: "http://foo.com/",
                   annoName: badAnnoName, annoVal: "test"}];
   await task_populateDB(change3);
-  do_print("LiveUpdate by removing annotation");
+  info("LiveUpdate by removing annotation");
   Assert.ok(!isInResult({uri: "http://foo.com/"}, root));
 
   root.containerOpen = false;

@@ -243,7 +243,7 @@ add_task(async function test_migrateAddressRecords() {
   await profileStorage.initialize();
 
   ADDRESS_TESTCASES.forEach(testcase => {
-    do_print(testcase.description);
+    info(testcase.description);
     profileStorage.addresses._migrateRecord(testcase.record);
     do_check_record_matches(testcase.expectedResult, testcase.record);
   });
@@ -256,7 +256,7 @@ add_task(async function test_migrateCreditCardRecords() {
   await profileStorage.initialize();
 
   CREDIT_CARD_TESTCASES.forEach(testcase => {
-    do_print(testcase.description);
+    info(testcase.description);
     profileStorage.creditCards._migrateRecord(testcase.record);
     do_check_record_matches(testcase.expectedResult, testcase.record);
   });

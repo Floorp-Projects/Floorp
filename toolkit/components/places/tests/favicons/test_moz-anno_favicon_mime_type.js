@@ -32,7 +32,7 @@ streamListener.prototype =
 };
 
 add_task(async function() {
-  do_print("Test that the default icon has the right content type.");
+  info("Test that the default icon has the right content type.");
   let channel = NetUtil.newChannel({
     uri: PlacesUtils.favicons.defaultFavicon,
     loadUsingSystemPrincipal: true,
@@ -44,7 +44,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  do_print("Test icon URI that we don't know anything about.  Will serve the default icon.");
+  info("Test icon URI that we don't know anything about.  Will serve the default icon.");
   let channel = NetUtil.newChannel({
     uri: PlacesUtils.favicons.getFaviconLinkForIcon(testIconURI).spec,
     loadUsingSystemPrincipal: true,
@@ -56,7 +56,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  do_print("Test that the content type of a favicon we add is correct.");
+  info("Test that the content type of a favicon we add is correct.");
   let testURI = uri("http://mozilla.org/");
   // Add the data before opening
   PlacesUtils.favicons.replaceFaviconDataFromDataURL(testIconURI,

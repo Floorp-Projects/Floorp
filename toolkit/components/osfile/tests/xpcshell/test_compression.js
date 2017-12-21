@@ -19,18 +19,18 @@ add_task(async function test_compress_lz4() {
   }
   let arrayAsString = Array.prototype.join.call(array);
 
-  do_print("Writing data with lz4 compression");
+  info("Writing data with lz4 compression");
   let bytes = await OS.File.writeAtomic(path, array, { compression: "lz4" });
-  do_print("Compressed " + length + " bytes into " + bytes);
+  info("Compressed " + length + " bytes into " + bytes);
 
-  do_print("Reading back with lz4 decompression");
+  info("Reading back with lz4 decompression");
   let decompressed = await OS.File.read(path, { compression: "lz4" });
-  do_print("Decompressed into " + decompressed.byteLength + " bytes");
+  info("Decompressed into " + decompressed.byteLength + " bytes");
   Assert.equal(arrayAsString, Array.prototype.join.call(decompressed));
 });
 
 add_task(async function test_uncompressed() {
-  do_print("Writing data without compression");
+  info("Writing data without compression");
   let path = OS.Path.join(OS.Constants.Path.tmpDir, "no_compression.tmp");
   let array = new Uint8Array(1024);
   for (let i = 0; i < array.byteLength; ++i) {
@@ -54,7 +54,7 @@ add_task(async function test_no_header() {
   let path = OS.Path.join(OS.Constants.Path.tmpDir, "no_header.tmp");
   let array = new Uint8Array(8).fill(0, 0); // Small array with no header
 
-  do_print("Writing data with no header");
+  info("Writing data with no header");
 
   await OS.File.writeAtomic(path, array); // No compression
   let exn;
@@ -78,7 +78,7 @@ add_task(async function test_invalid_content() {
   array.set(arr1);
   array.set(arr2, arr1.length);
 
-  do_print("Writing invalid data (with a valid header and only ones after that)");
+  info("Writing invalid data (with a valid header and only ones after that)");
 
   await OS.File.writeAtomic(path, array); // No compression
   let exn;

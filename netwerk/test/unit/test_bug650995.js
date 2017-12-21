@@ -70,7 +70,7 @@ function runNextTest() {
         httpserver.stop(do_test_finished);
         return;
     }
-    do_execute_soon(function() { aTest.start(); } );
+    executeSoon(function() { aTest.start(); } );
 }
 
 // Just make sure devices are created
@@ -114,14 +114,14 @@ function TestCacheEntrySize(setSizeFunc, firstRequest, secondRequest, secondExpe
     this.initialLoad = function(request, data, ctx) {
         Assert.equal(firstRequest, data);
         var channel = setupChannel("/bug650995", secondRequest);
-        do_execute_soon(function() {
+        executeSoon(function() {
             channel.asyncOpen2(new ChannelListener(ctx.testAndTriggerNext, ctx));
             });
     },
 
     this.testAndTriggerNext = function(request, data, ctx) {
         Assert.equal(secondExpectedReply, data);
-        do_execute_soon(nextTest);
+        executeSoon(nextTest);
     }
 }
 

@@ -107,6 +107,6 @@ function run_test_2() {
     AddonManager.removeInstallListener(listener2);
     AddonManager.removeInstallListener(listener3);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

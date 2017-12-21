@@ -43,7 +43,7 @@ let promptService = {
 
 add_task(async function setup() {
   let fakePromptService = MockRegistrar.register("@mozilla.org/embedcomp/prompt-service;1", promptService);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     MockRegistrar.unregister(fakePromptService);
   });
   await ExtensionTestUtils.startAddonManager();

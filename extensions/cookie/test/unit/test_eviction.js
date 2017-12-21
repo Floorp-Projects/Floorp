@@ -25,7 +25,7 @@ function repeat_test()
   gPurgeAge *= 2;
   gShortExpiry *= 2;
 
-  do_execute_soon(function() {
+  executeSoon(function() {
     test_generator.return();
     test_generator = do_run_test();
     do_run_generator(test_generator);

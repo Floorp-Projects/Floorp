@@ -118,7 +118,7 @@ add_task(async function test_migration_rdf_present_keeps_new_data() {
  */
 add_task(async function test_migration_rdf_absent() {
   if (!Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")) {
-    do_print("This platform or locale does not have default handlers.");
+    info("This platform or locale does not have default handlers.");
     return;
   }
 

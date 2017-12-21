@@ -13,7 +13,7 @@ tmpDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 let baseDir = OS.Path.join(tmpDir.path, slug);
 OS.File.makeDir(baseDir);
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   tmpDir.remove(true);
 });
 
@@ -57,7 +57,7 @@ async function setupManifests(modules) {
       };
 
       Services.dirsvc.registerProvider(dirProvider);
-      do_register_cleanup(() => {
+      registerCleanupFunction(() => {
         Services.dirsvc.unregisterProvider(dirProvider);
       });
 
@@ -70,7 +70,7 @@ async function setupManifests(modules) {
       const REGKEY = String.raw`Software\Mozilla\PKCS11Modules`;
 
       let registry = new MockRegistry();
-      do_register_cleanup(() => {
+      registerCleanupFunction(() => {
         registry.shutdown();
       });
 

@@ -51,7 +51,7 @@ function add_storage_task(test_function) {
 }
 
 add_storage_task(async function test_simple_tombstone(storage, record) {
-  do_print("check simple tombstone semantics");
+  info("check simple tombstone semantics");
 
   let guid = storage.add(record);
   Assert.equal(storage.getAll().length, 1);
@@ -70,7 +70,7 @@ add_storage_task(async function test_simple_tombstone(storage, record) {
 });
 
 add_storage_task(async function test_simple_synctombstone(storage, record) {
-  do_print("check simple tombstone semantics for synced records");
+  info("check simple tombstone semantics for synced records");
 
   let guid = storage.add(record);
   Assert.equal(storage.getAll().length, 1);
@@ -98,7 +98,7 @@ add_storage_task(async function test_simple_synctombstone(storage, record) {
 });
 
 add_storage_task(async function test_add_tombstone(storage, record) {
-  do_print("Should be able to add a new tombstone");
+  info("Should be able to add a new tombstone");
   let guid = storage.add({guid: "test-guid-1", deleted: true});
 
   // should be unable to get it normally.
@@ -120,13 +120,13 @@ add_storage_task(async function test_add_tombstone(storage, record) {
 });
 
 add_storage_task(async function test_add_tombstone_without_guid(storage, record) {
-  do_print("Should not be able to add a new tombstone without specifying the guid");
+  info("Should not be able to add a new tombstone without specifying the guid");
   Assert.throws(() => { storage.add({deleted: true}); });
   Assert.equal(storage.getAll({includeDeleted: true}).length, 0);
 });
 
 add_storage_task(async function test_add_tombstone_existing_guid(storage, record) {
-  do_print("Should not be able to add a new tombstone when a record with that ID exists");
+  info("Should not be able to add a new tombstone when a record with that ID exists");
   let guid = storage.add(record);
   Assert.throws(() => { storage.add({guid, deleted: true}); });
 
@@ -136,13 +136,13 @@ add_storage_task(async function test_add_tombstone_existing_guid(storage, record
 });
 
 add_storage_task(async function test_update_tombstone(storage, record) {
-  do_print("Updating a tombstone should fail");
+  info("Updating a tombstone should fail");
   let guid = storage.add({guid: "test-guid-1", deleted: true});
   Assert.throws(() => storage.update(guid, {}), /No matching record./);
 });
 
 add_storage_task(async function test_remove_existing_tombstone(storage, record) {
-  do_print("Removing a record that's already a tombstone should be a no-op");
+  info("Removing a record that's already a tombstone should be a no-op");
   let guid = storage.add({guid: "test-guid-1", deleted: true, timeLastModified: 1234});
 
   storage.remove(guid);

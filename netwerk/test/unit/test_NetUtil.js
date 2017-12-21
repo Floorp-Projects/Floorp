@@ -165,7 +165,7 @@ function test_async_copy()
           + (bufferedInput?"buffered input":"unbuffered input")
           + ", "
           + (bufferedOutput?"buffered output":"unbuffered output");
-        do_print(text);
+        info(text);
         let TEST_DATA = "[" + make_sample(text) + "]";
         let source = make_input(bufferedInput, TEST_DATA);
         let {file, sink} = make_output(bufferedOutput);

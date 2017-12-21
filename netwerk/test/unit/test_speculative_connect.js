@@ -108,7 +108,7 @@ TestFailedStreamCallback.prototype = {
         return true;
     },
     onOutputStreamReady: function(outstream) {
-        do_print("outputstream handler.");
+        info("outputstream handler.");
         Assert.notEqual(typeof(outstream), undefined);
         try {
             outstream.write(this.dummyContent, this.dummyContent.length);
@@ -117,10 +117,10 @@ TestFailedStreamCallback.prototype = {
             this.next();
             return;
         }
-        do_print("no exception on write. Wait for read.");
+        info("no exception on write. Wait for read.");
     },
     onInputStreamReady: function(instream) {
-        do_print("inputstream handler.");
+        info("inputstream handler.");
         Assert.notEqual(typeof(instream), undefined);
         try {
             instream.available();
@@ -169,7 +169,7 @@ function test_speculative_connect() {
  * function to call the next test case.
  */
 function test_hostnames_resolving_to_addresses(host, next) {
-    do_print(host);
+    info(host);
     var sts = Cc["@mozilla.org/network/socket-transport-service;1"]
               .getService(Ci.nsISocketTransportService);
     Assert.notEqual(typeof(sts), undefined);
@@ -237,7 +237,7 @@ function test_hostnames_resolving_to_local_addresses() {
  * function to call the next test case.
  */
 function test_proxies(proxyHost, next) {
-    do_print("Proxy: " + proxyHost);
+    info("Proxy: " + proxyHost);
     var sts = Cc["@mozilla.org/network/socket-transport-service;1"]
               .getService(Ci.nsISocketTransportService);
     Assert.notEqual(typeof(sts), undefined);
@@ -317,7 +317,7 @@ function next_test() {
         do_test_finished();
         return;
     }
-    do_print("SpeculativeConnect: " + testDescription[testIdx]);
+    info("SpeculativeConnect: " + testDescription[testIdx]);
     hostIdx = 0;
     // Start next test in list.
     testList[testIdx++]();

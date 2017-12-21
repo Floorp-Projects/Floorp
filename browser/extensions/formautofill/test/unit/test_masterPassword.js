@@ -62,7 +62,7 @@ do_get_profile();
 let windowWatcherCID =
   MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1",
                          gWindowWatcher);
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   MockRegistrar.unregister(windowWatcherCID);
 });
 
@@ -70,7 +70,7 @@ TESTCASES.forEach(testcase => {
   let token = MasterPassword._token;
 
   add_task(async function test_encrypt_decrypt() {
-    do_print("Starting testcase: " + testcase.description);
+    info("Starting testcase: " + testcase.description);
     token.initPassword(testcase.masterPassword);
 
     // Test only: Force the token login without asking for master password

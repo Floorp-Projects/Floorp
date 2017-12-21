@@ -112,7 +112,7 @@ function setupTest() {
   Services.prefs.setBoolPref(PREF_LOAD_FROM_PROFILE, true);
 }
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   deleteDistribution();
   Services.prefs.clearUserPref(PREF_LOAD_FROM_PROFILE);
 });

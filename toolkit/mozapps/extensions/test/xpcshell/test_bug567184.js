@@ -47,7 +47,7 @@ function check_test_1() {
       Assert.ok(!b1.userDisabled);
       Assert.ok(!b1.isActive);
 
-      do_execute_soon(do_test_finished);
+      executeSoon(do_test_finished);
     });
   });
 }

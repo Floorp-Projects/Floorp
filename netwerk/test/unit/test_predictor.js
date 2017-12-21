@@ -617,7 +617,7 @@ function run_test_real() {
 
   registerObserver();
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.prefs.clearUserPref("network.predictor.preconnect-min-confidence");
     Services.prefs.clearUserPref("network.predictor.enabled");
     Services.prefs.clearUserPref("network.predictor.cleaned-up");

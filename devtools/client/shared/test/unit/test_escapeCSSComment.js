@@ -30,7 +30,7 @@ function run_test() {
   let i = 0;
   for (let test of TEST_DATA) {
     ++i;
-    do_print("Test #" + i);
+    info("Test #" + i);
 
     let escaped = escapeCSSComment(test.input);
     equal(escaped, test.expected);

@@ -17,7 +17,7 @@ function run_test() {
 
 add_task(async function test_notification_incomplete() {
   let db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+  registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
   let records = [{
     channelID: '123',
     pushEndpoint: 'https://example.org/update/1',
@@ -54,7 +54,7 @@ add_task(async function test_notification_incomplete() {
   function observeMessage(subject, topic, data) {
     ok(false, 'Should not deliver malformed updates');
   }
-  do_register_cleanup(() =>
+  registerCleanupFunction(() =>
     Services.obs.removeObserver(observeMessage, PushServiceComponent.pushTopic));
   Services.obs.addObserver(observeMessage, PushServiceComponent.pushTopic);
 

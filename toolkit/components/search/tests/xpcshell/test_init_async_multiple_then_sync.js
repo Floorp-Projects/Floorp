@@ -14,10 +14,10 @@
  * Test case comes from test_645970.js
  */
 function run_test() {
-  do_print("Setting up test");
+  info("Setting up test");
   do_test_pending();
 
-  do_print("Test starting");
+  info("Test starting");
 
   let numberOfInitializers = 4;
   let pending = [];
@@ -35,26 +35,26 @@ function run_test() {
 
   // Ensure that all asynchronous initializers eventually complete
   let init_complete = function init_complete(i) {
-    do_print("init complete " + i);
+    info("init complete " + i);
     Assert.ok(pending[i]);
     pending[i] = false;
     numberPending--;
     Assert.ok(numberPending >= 0);
     Assert.ok(Services.search.isInitialized);
     if (numberPending != 0) {
-      do_print("Still waiting for the following initializations: " + JSON.stringify(pending));
+      info("Still waiting for the following initializations: " + JSON.stringify(pending));
       return;
     }
-    do_print("All initializations have completed");
+    info("All initializations have completed");
     // Just check that we can access a list of engines.
     let engines = Services.search.getEngines();
     Assert.notEqual(engines, null);
 
-    do_print("Waiting a second before quitting");
+    info("Waiting a second before quitting");
     // Wait a little before quitting: if some initializer is
     // triggered twice, we want to catch that error.
     do_timeout(1000, function() {
-      do_print("Test is complete");
+      info("Test is complete");
       do_test_finished();
     });
   };
@@ -62,6 +62,6 @@ function run_test() {
   // ... but don't wait for asynchronous initializations to complete
   let engines = Services.search.getEngines();
   Assert.notEqual(engines, null);
-  do_print("Synchronous part of the test complete");
+  info("Synchronous part of the test complete");
 }
 

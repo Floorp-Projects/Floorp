@@ -52,7 +52,7 @@ add_task(async function testFileError_with_move() {
   } catch (ex) {
     exception = ex;
   }
-  do_print(exception);
+  info(exception);
   Assert.ok(exception instanceof File.Error);
   Assert.ok(exception.path == sourcePath);
 });

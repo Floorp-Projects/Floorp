@@ -282,7 +282,7 @@ for (let test of testParams) {
 
         onNoUpdateAvailable(addon) {
           Assert.equal(addon, a2);
-          do_execute_soon(check_test_3);
+          executeSoon(check_test_3);
         }
       }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
     });
@@ -364,7 +364,7 @@ for (let test of testParams) {
 
         onNoUpdateAvailable(addon) {
           Assert.ok(this.sawUpdate);
-          do_execute_soon(check_test_5);
+          executeSoon(check_test_5);
         }
       }, AddonManager.UPDATE_WHEN_USER_REQUESTED, "3.0", "3.0");
     });
@@ -614,7 +614,7 @@ for (let test of testParams) {
         let compatListener = {
           onUpdateFinished(addon, error) {
             if (--count == 0)
-              do_execute_soon(next_test);
+              executeSoon(next_test);
           }
         };
 
@@ -625,7 +625,7 @@ for (let test of testParams) {
 
           onUpdateFinished(addon, error) {
             if (--count == 0)
-              do_execute_soon(next_test);
+              executeSoon(next_test);
           }
         };
 
@@ -746,7 +746,7 @@ for (let test of testParams) {
 
         onUpdateFinished(addon) {
           Assert.ok(addon.isCompatible);
-          do_execute_soon(check_test_13);
+          executeSoon(check_test_13);
         }
       }, AddonManager.UPDATE_WHEN_NEW_APP_DETECTED, "3.0", "3.0");
     });
@@ -833,7 +833,7 @@ for (let test of testParams) {
           Assert.equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
           Assert.equal(aInstall.existingAddon.pendingUpgrade.install, aInstall);
 
-          do_execute_soon(check_test_14);
+          executeSoon(check_test_14);
         },
 
         onInstallFailed(aInstall) {
@@ -932,7 +932,7 @@ for (let test of testParams) {
 
         onInstallEnded(aInstall) {
           Assert.equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
-          do_execute_soon(check_test_15);
+          executeSoon(check_test_15);
         },
 
         onInstallFailed(aInstall) {
@@ -971,7 +971,7 @@ for (let test of testParams) {
     AddonManager.getInstallForURL(url, function(aInstall) {
       aInstall.addListener({
         onInstallEnded() {
-         do_execute_soon(function install_2_1_ended() {
+         executeSoon(function install_2_1_ended() {
           restartManager();
 
           AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a1) {
@@ -982,7 +982,7 @@ for (let test of testParams) {
             AddonManager.getInstallForURL(url_2, function(aInstall_2) {
               aInstall_2.addListener({
                 onInstallEnded() {
-                 do_execute_soon(function install_2_2_ended() {
+                 executeSoon(function install_2_2_ended() {
                   restartManager();
 
                   AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
@@ -1172,7 +1172,7 @@ for (let test of testParams) {
       Assert.equal(a12.type, "extension");
       a12.uninstall();
 
-      do_execute_soon(() => {
+      executeSoon(() => {
         restartManager();
         run_next_test();
       });
@@ -1338,7 +1338,7 @@ function check_test_7_cache() {
     Assert.equal(p1.version, "3");
     Assert.equal(p1.name, "Updated Theme v.3");
     Assert.equal(p1.description, "A test theme v.3");
-    do_print(JSON.stringify(p1));
+    info(JSON.stringify(p1));
     Assert.equal(p1.creator.name, "John Smith");
     Assert.equal(p1.homepageURL, "http://localhost:" + gPort + "/data/index3.html?v=3");
     Assert.equal(p1.screenshots[0].url, "http://localhost:" + gPort + "/data/preview.png?v=3");

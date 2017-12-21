@@ -1241,7 +1241,7 @@ add_task(async function testPermissions() {
   equal(root.fooPerm, undefined, "fooPerm namespace should not exist");
 
 
-  do_print('Add "foo" permission');
+  info('Add "foo" permission');
   permissions.add("foo");
 
   root = {};
@@ -1257,7 +1257,7 @@ add_task(async function testPermissions() {
   equal(root.fooPerm.fooBarPerm, undefined, "fooPerm.fooBarPerm method should not exist");
 
 
-  do_print('Add "foo.bar" permission');
+  info('Add "foo.bar" permission');
   permissions.add("foo.bar");
 
   root = {};
@@ -1510,7 +1510,7 @@ add_task(async function testLocalAPIImplementation() {
   Assert.equal(root.testing.prop2, "prop2 val");
   Assert.equal(countGet2, 2);
 
-  do_print(JSON.stringify(root.testing));
+  info(JSON.stringify(root.testing));
   Assert.equal(root.testing.prop3.sub_foo(), 1);
   Assert.equal(countProp3, 1);
   Assert.equal(countProp3SubFoo, 1);

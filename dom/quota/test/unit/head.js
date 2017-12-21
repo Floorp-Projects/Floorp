@@ -21,7 +21,7 @@ function ok(cond, msg)
 
 function info(name, message)
 {
-  do_print(name);
+  info(name);
 }
 
 function run_test()
@@ -47,7 +47,7 @@ function finishTest()
 {
   resetTesting();
 
-  do_execute_soon(function() {
+  executeSoon(function() {
     do_test_finished();
   })
 }
@@ -59,7 +59,7 @@ function grabArgAndContinueHandler(arg)
 
 function continueToNextStep()
 {
-  do_execute_soon(function() {
+  executeSoon(function() {
     testGenerator.next();
   });
 }

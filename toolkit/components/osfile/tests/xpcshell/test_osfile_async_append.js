@@ -1,6 +1,6 @@
 "use strict";
 
-do_print("starting tests");
+info("starting tests");
 
 Components.utils.import("resource://gre/modules/osfile.jsm");
 

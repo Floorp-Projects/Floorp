@@ -110,7 +110,7 @@ const TEST_DATA = [{
 function run_test() {
   for (let {tagName, namespaceURI, attributeName,
             otherAttributes, attributeValue, expected} of TEST_DATA) {
-    do_print("Testing <" + tagName + " " + attributeName + "='" + attributeValue + "'>");
+    info("Testing <" + tagName + " " + attributeName + "='" + attributeValue + "'>");
 
     let attributes = [
       ...otherAttributes || [],
@@ -122,11 +122,11 @@ function run_test() {
       continue;
     }
 
-    do_print("Checking that the number of parsed tokens is correct");
+    info("Checking that the number of parsed tokens is correct");
     Assert.equal(tokens.length, expected.length);
 
     for (let i = 0; i < tokens.length; i++) {
-      do_print("Checking the data in token " + i);
+      info("Checking the data in token " + i);
       Assert.equal(tokens[i].value, expected[i].value);
       Assert.equal(tokens[i].type, expected[i].type);
     }

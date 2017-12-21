@@ -66,7 +66,7 @@ add_task(async function test_activeStatus_observe() {
 
 add_task(async function test_activeStatus_computeStatus() {
   let formAutofillParent = new FormAutofillParent();
-  do_register_cleanup(function cleanup() {
+  registerCleanupFunction(function cleanup() {
     Services.prefs.clearUserPref("extensions.formautofill.addresses.enabled");
     Services.prefs.clearUserPref("extensions.formautofill.creditCards.enabled");
   });

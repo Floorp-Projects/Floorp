@@ -111,12 +111,12 @@ const TESTCASES = [
 ];
 
 for (let tc of TESTCASES) {
-  do_print("Sanity checking the testcase: " + tc.description);
+  info("Sanity checking the testcase: " + tc.description);
 
   (function() {
     let testcase = tc;
     add_task(async function() {
-      do_print("Starting testcase: " + testcase.description);
+      info("Starting testcase: " + testcase.description);
       let document = MockDocument.createTestDocument("http://localhost:8080/test/",
                                                       testcase.document);
 

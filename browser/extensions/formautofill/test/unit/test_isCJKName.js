@@ -68,7 +68,7 @@ const TESTCASES = [
 
 add_task(async function test_isCJKName() {
   TESTCASES.forEach(testcase => {
-    do_print("Starting testcase: " + testcase.fullName);
+    info("Starting testcase: " + testcase.fullName);
     let result = FormAutofillNameUtils._isCJKName(testcase.fullName);
     Assert.equal(result, testcase.expectedResult);
   });

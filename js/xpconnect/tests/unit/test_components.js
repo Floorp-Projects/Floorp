@@ -26,7 +26,7 @@ function run_test() {
   var C2 = Cu.evalInSandbox("Components", sb2);
   var whitelist = ['interfaces', 'interfacesByID', 'results', 'isSuccessCode', 'QueryInterface'];
   for (var prop in Components) {
-    do_print("Checking " + prop);
+    info("Checking " + prop);
     Assert.equal((prop in C2), whitelist.indexOf(prop) != -1);
   }
 

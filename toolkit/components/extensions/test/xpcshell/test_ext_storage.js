@@ -174,7 +174,7 @@ add_task(async function test_reloading_extensions_works() {
   Preferences.reset(STORAGE_SYNC_PREF);
 });
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   Preferences.reset(STORAGE_SYNC_PREF);
 });
 

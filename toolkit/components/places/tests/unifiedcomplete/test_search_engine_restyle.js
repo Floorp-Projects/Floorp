@@ -7,14 +7,14 @@ add_task(async function test_searchEngine() {
                                        "GET", "http://s.example.com/search");
   let engine = Services.search.getEngineByName("SearchEngine");
   engine.addParam("q", "{searchTerms}", null);
-  do_register_cleanup(() => Services.search.removeEngine(engine));
+  registerCleanupFunction(() => Services.search.removeEngine(engine));
 
   let uri1 = NetUtil.newURI("http://s.example.com/search?q=Terms&client=1");
   let uri2 = NetUtil.newURI("http://s.example.com/search?q=Terms&client=2");
   await PlacesTestUtils.addVisits({ uri: uri1, title: "Terms - SearchEngine Search" });
   await addBookmark({ uri: uri2, title: "Terms - SearchEngine Search" });
 
-  do_print("Past search terms should be styled, unless bookmarked");
+  info("Past search terms should be styled, unless bookmarked");
   Services.prefs.setBoolPref("browser.urlbar.restyleSearches", true);
   await check_autocomplete({
     search: "term",
@@ -31,7 +31,7 @@ add_task(async function test_searchEngine() {
     ]
   });
 
-  do_print("Past search terms should not be styled if restyling is disabled");
+  info("Past search terms should not be styled if restyling is disabled");
   Services.prefs.setBoolPref("browser.urlbar.restyleSearches", false);
   await check_autocomplete({
     search: "term",

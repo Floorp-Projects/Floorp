@@ -125,7 +125,7 @@ function promiseDefaultSearchEngine() {
 function promiseSearchTopic(expectedVerb) {
   return new Promise(resolve => {
     Services.obs.addObserver( function observe(subject, topic, verb) {
-      do_print("browser-search-engine-modified: " + verb);
+      info("browser-search-engine-modified: " + verb);
       if (verb == expectedVerb) {
         Services.obs.removeObserver(observe, "browser-search-engine-modified");
         resolve();
