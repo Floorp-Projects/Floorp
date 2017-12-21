@@ -1224,6 +1224,7 @@ MediaDecoder::NotifyReaderDataArrived()
                       mReader.get(),
                       &MediaFormatReader::NotifyDataArrived));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 // Provide access to the state machine object

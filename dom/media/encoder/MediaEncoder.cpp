@@ -103,6 +103,7 @@ public:
             "mozilla::AudioTrackEncoder::SetStartOffset",
             mEncoder, &AudioTrackEncoder::SetStartOffset, aTrackOffset));
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+      Unused << rv;
       mInitialized = true;
     }
 
@@ -115,6 +116,7 @@ public:
               mEncoder, &AudioTrackEncoder::AdvanceBlockedInput,
               aQueuedMedia.GetDuration()));
         MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+        Unused << rv;
         return;
       }
     } else {
@@ -128,6 +130,7 @@ public:
           mEncoder, &AudioTrackEncoder::AdvanceCurrentTime,
           aQueuedMedia.GetDuration()));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
@@ -152,6 +155,7 @@ public:
           "mozilla::AudioTrackEncoder::AppendAudioSegment",
           mEncoder, &AudioTrackEncoder::AppendAudioSegment, Move(copy)));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   void NotifyEnded() override
@@ -168,6 +172,7 @@ public:
         NewRunnableMethod("mozilla::AudioTrackEncoder::NotifyEndOfStream",
                           mEncoder, &AudioTrackEncoder::NotifyEndOfStream));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   void NotifyRemoved() override
@@ -178,6 +183,7 @@ public:
           NewRunnableMethod("mozilla::AudioTrackEncoder::NotifyEndOfStream",
                             mEncoder, &AudioTrackEncoder::NotifyEndOfStream));
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+      Unused << rv;
     }
 
     mRemoved = true;
@@ -257,6 +263,7 @@ public:
             "mozilla::VideoTrackEncoder::SetStartOffset",
             mEncoder, &VideoTrackEncoder::SetStartOffset, aTrackOffset));
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+      Unused << rv;
       mInitialized = true;
     }
 
@@ -268,6 +275,7 @@ public:
             mEncoder, &VideoTrackEncoder::AdvanceBlockedInput,
             aQueuedMedia.GetDuration()));
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+      Unused << rv;
       return;
     }
 
@@ -278,6 +286,7 @@ public:
           mEncoder, &VideoTrackEncoder::AdvanceCurrentTime,
           aQueuedMedia.GetDuration()));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   void SetCurrentFrames(const VideoSegment& aMedia) override
@@ -298,6 +307,7 @@ public:
           "mozilla::VideoTrackEncoder::AppendVideoSegment",
           mEncoder, &VideoTrackEncoder::AppendVideoSegment, Move(copy)));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   void ClearFrames() override {}
@@ -316,6 +326,7 @@ public:
         NewRunnableMethod("mozilla::VideoTrackEncoder::NotifyEndOfStream",
                           mEncoder, &VideoTrackEncoder::NotifyEndOfStream));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   void NotifyRemoved() override
@@ -326,6 +337,7 @@ public:
           NewRunnableMethod("mozilla::VideoTrackEncoder::NotifyEndOfStream",
                             mEncoder, &VideoTrackEncoder::NotifyEndOfStream));
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+      Unused << rv;
     }
 
     mRemoved = true;
@@ -375,6 +387,7 @@ public:
         NewRunnableMethod("mozilla::MediaEncoder::NotifyInitialized",
                           mEncoder, &MediaEncoder::NotifyInitialized));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   void DataAvailable(TrackEncoder* aTrackEncoder) override
@@ -395,6 +408,7 @@ public:
         NewRunnableMethod("mozilla::MediaEncoder::EncoderListener::DataAvailableImpl",
                           this, &EncoderListener::DataAvailableImpl));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
 
     mPendingDataAvailable = true;
   }
@@ -424,6 +438,7 @@ public:
         NewRunnableMethod("mozilla::MediaEncoder::SetError",
                           mEncoder, &MediaEncoder::SetError));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
 protected:
@@ -461,6 +476,7 @@ MediaEncoder::MediaEncoder(TaskQueue* aEncoderThread,
           mAudioEncoder, &AudioTrackEncoder::RegisterListener,
           mEncoderListener));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
   if (mVideoEncoder) {
     mVideoListener =
@@ -472,6 +488,7 @@ MediaEncoder::MediaEncoder(TaskQueue* aEncoderThread,
           mVideoEncoder, &VideoTrackEncoder::RegisterListener,
           mEncoderListener));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 }
 
@@ -496,6 +513,7 @@ MediaEncoder::Suspend(TimeStamp aTime)
       return NS_OK;
     }));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 void
@@ -514,6 +532,7 @@ MediaEncoder::Resume(TimeStamp aTime)
       return NS_OK;
     }));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 void
@@ -883,6 +902,7 @@ MediaEncoder::Shutdown()
         NewRunnableMethod("mozilla::MediaEncoderListener::Shutdown",
                           l, &MediaEncoderListener::Shutdown));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 }
 
@@ -974,6 +994,7 @@ MediaEncoder::Cancel()
       return NS_OK;
     }));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 bool

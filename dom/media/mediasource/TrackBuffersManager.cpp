@@ -192,6 +192,7 @@ TrackBuffersManager::QueueTask(SourceBufferTask* aTask)
         &TrackBuffersManager::QueueTask,
         aTask));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
     return;
   }
   mQueue.Push(aTask);
