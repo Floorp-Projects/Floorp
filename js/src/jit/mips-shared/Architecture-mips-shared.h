@@ -266,7 +266,7 @@ class FloatRegistersMIPSShared
         f31,
         invalid_freg
     };
-    typedef FPRegisterID Code;
+    typedef uint32_t Code;
     typedef FPRegisterID Encoding;
 
     // Content spilled during bailouts.
@@ -274,7 +274,7 @@ class FloatRegistersMIPSShared
         double d;
     };
 
-    static const char* GetName(Code code) {
+    static const char* GetName(Encoding code) {
         static const char * const Names[] = { "f0", "f1", "f2", "f3",  "f4", "f5",  "f6", "f7",
                                               "f8", "f9",  "f10", "f11", "f12", "f13",
                                               "f14", "f15", "f16", "f17", "f18", "f19",
@@ -283,9 +283,13 @@ class FloatRegistersMIPSShared
         return Names[code];
     }
 
-    static const Code Invalid = invalid_freg;
+    static const Encoding Invalid = invalid_freg;
 
+#if defined(JS_CODEGEN_MIPS32)
+    typedef uint32_t SetType;
+#elif defined(JS_CODEGEN_MIPS64)
     typedef uint64_t SetType;
+#endif
 };
 
 template <typename T>
@@ -298,16 +302,33 @@ class FloatRegisterMIPSShared
 
     typedef FloatRegistersMIPSShared::SetType SetType;
 
+#if defined(JS_CODEGEN_MIPS32)
     static uint32_t SetSize(SetType x) {
-        static_assert(sizeof(SetType) == 8, "SetType must be 64 bits");
+        static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
         return mozilla::CountPopulation32(x);
     }
     static uint32_t FirstBit(SetType x) {
+        static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
+        return mozilla::CountTrailingZeroes32(x);
+    }
+    static uint32_t LastBit(SetType x) {
+        static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
+        return 31 - mozilla::CountLeadingZeroes32(x);
+    }
+#elif defined(JS_CODEGEN_MIPS64)
+    static uint32_t SetSize(SetType x) {
+        static_assert(sizeof(SetType) == 8, "SetType must be 64 bits");
+        return mozilla::CountPopulation64(x);
+    }
+    static uint32_t FirstBit(SetType x) {
+        static_assert(sizeof(SetType) == 8, "SetType must be 64 bits");
         return mozilla::CountTrailingZeroes64(x);
     }
     static uint32_t LastBit(SetType x) {
+        static_assert(sizeof(SetType) == 8, "SetType must be 64 bits");
         return 63 - mozilla::CountLeadingZeroes64(x);
     }
+#endif
 };
 
 namespace mips_private {
@@ -328,12 +349,12 @@ hasUnaliasedDouble() {
     return false;
 }
 
-// On MIPS, fn-double aliases both fn-float32 and fn+1-float32, so if you need
-// to convert a float32 to a double as a temporary, you need a temporary
-// double register.
+// MIPS64 doesn't support it and on MIPS32 we don't allocate odd single fp
+// registers thus not exposing multi aliasing to the jit.
+// See comments in Arhitecture-mips32.h.
 inline bool
 hasMultiAlias() {
-    return true;
+    return false;
 }
 
 } // namespace jit
