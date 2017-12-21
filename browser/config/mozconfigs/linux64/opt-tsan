@@ -1,7 +1,6 @@
 . $topsrcdir/build/unix/mozconfig.tsan
 
 export PKG_CONFIG_LIBDIR=/usr/local/lib64/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig
-. $topsrcdir/build/unix/mozconfig.gtk
 
 # Need this to prevent name conflicts with the normal nightly build packages
 export MOZ_PKG_SPECIAL=tsan
