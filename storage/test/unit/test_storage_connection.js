@@ -666,8 +666,8 @@ add_task(async function test_clone_copies_pragmas() {
   PRAGMAS.forEach(function(pragma) {
     let stmt = db2.createStatement("PRAGMA " + pragma.name);
     Assert.ok(stmt.executeStep());
-    let validate = pragma.copied ? do_check_eq : do_check_neq;
-    validate(pragma.value, stmt.getInt32(0));
+    let validate = pragma.copied ? "equal" : "notEqual";
+    Assert[validate](pragma.value, stmt.getInt32(0));
     stmt.finalize();
   });
 
@@ -708,8 +708,8 @@ add_task(async function test_readonly_clone_copies_pragmas() {
   PRAGMAS.forEach(function(pragma) {
     let stmt = db2.createStatement("PRAGMA " + pragma.name);
     Assert.ok(stmt.executeStep());
-    let validate = pragma.copied ? do_check_eq : do_check_neq;
-    validate(pragma.value, stmt.getInt32(0));
+    let validate = pragma.copied ? "equal" : "notEqual";
+    Assert[validate](pragma.value, stmt.getInt32(0));
     stmt.finalize();
   });
 

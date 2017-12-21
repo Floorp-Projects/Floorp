@@ -1297,7 +1297,7 @@ function saveJSON(aData, aFile) {
  */
 function callback_soon(aFunction) {
   return function(...args) {
-    do_execute_soon(function() {
+    executeSoon(function() {
       aFunction.apply(null, args);
     }, aFunction.name ? "delayed callback " + aFunction.name : "delayed callback");
   };

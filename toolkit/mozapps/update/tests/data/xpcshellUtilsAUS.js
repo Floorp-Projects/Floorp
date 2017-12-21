@@ -126,7 +126,7 @@ const FILE_IN_USE_TIMEOUT_MS = 1000;
 
 const PIPE_TO_NULL = IS_WIN ? ">nul" : "> /dev/null 2>&1";
 
-const LOG_FUNCTION = do_print;
+const LOG_FUNCTION = info;
 
 const gHTTPHandlerPath = "updates.xml";
 

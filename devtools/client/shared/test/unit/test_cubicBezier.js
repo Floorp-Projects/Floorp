@@ -132,8 +132,8 @@ function testParseTimingFunction() {
             "correct with comments and whitespace");
 }
 
-function do_check_throws(cb, info) {
-  info(info);
+function do_check_throws(cb, details) {
+  info(details);
 
   let hasThrown = false;
   try {

@@ -19,11 +19,6 @@ function ok(cond, msg)
   Assert.ok(!!cond, Components.stack.caller);
 }
 
-function info(name, message)
-{
-  info(name);
-}
-
 function run_test()
 {
   runTest();

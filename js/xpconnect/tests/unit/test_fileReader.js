@@ -5,8 +5,8 @@ function run_test() {
   var Cu = Components.utils;
   var sb = new Cu.Sandbox('http://www.example.com',
                           { wantGlobalProperties: ["FileReader"] });
-  sb.do_check_true = do_check_true;
-  Cu.evalInSandbox('do_check_true((new FileReader()) instanceof FileReader);',
+  sb.ok = ok;
+  Cu.evalInSandbox('ok((new FileReader()) instanceof FileReader);',
                    sb);
   Cu.importGlobalProperties(["FileReader"]);
   Assert.ok((new FileReader()) instanceof FileReader);
