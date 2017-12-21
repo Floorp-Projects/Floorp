@@ -3830,8 +3830,14 @@ PeerConnectionImpl::DTMFState::Notify(nsITimer* timer)
     return NS_OK; // Return is ignored anyhow
   }
 
+  RefPtr<dom::MediaStreamTrack> sendTrack = mTransceiver->GetSendTrack();
+  if (!sendTrack) {
+    NS_WARNING("Failed to dispatch the RTCDTMFToneChange event!");
+    return NS_OK; // Return is ignored anyhow
+  }
+
   JSErrorResult jrv;
-  pco->OnDTMFToneChange(*mTransceiver->GetSendTrack(), eventTone, jrv);
+  pco->OnDTMFToneChange(*sendTrack, eventTone, jrv);
 
   if (jrv.Failed()) {
     NS_WARNING("Failed to dispatch the RTCDTMFToneChange event!");
