@@ -11,6 +11,12 @@
   display: none;
 }
 
+/* This is used by screenshots tests to hide intermittently different
+ * identity popup shadows (see bug 1425253). */
+#identity-popup.no-shadow {
+  -moz-window-shadow: none;
+}
+
 /* Show the right elements for the right connection states. */
 #identity-popup[connection=not-secure] [when-connection~=not-secure],
 #identity-popup[connection=secure-cert-user-overridden] [when-connection~=secure-cert-user-overridden],
