@@ -710,6 +710,11 @@ public:
       return nullptr;
     }
 
+    // you probably want to use gfxVars::UseWebRender() instead of this
+    static bool WebRenderPrefEnabled();
+    // you probably want to use gfxVars::UseWebRender() instead of this
+    static bool WebRenderEnvvarEnabled();
+
 protected:
     gfxPlatform();
     virtual ~gfxPlatform();
