@@ -62,10 +62,11 @@ function setupTransition(elem) {
 }
 
 function setupAnimation(elem) {
-  elem.style.animation = 'test 30ms';
+  elem.style.animation = 'test 30ms 2';
 }
 
 runLegacyEventTest('transitionend', 'webkitTransitionEnd', "TransitionEvent", setupTransition);
 runLegacyEventTest('animationend', 'webkitAnimationEnd', "AnimationEvent", setupAnimation);
+runLegacyEventTest('animationiteration', 'webkitAnimationIteration', "AnimationEvent", setupAnimation);
 runLegacyEventTest('animationstart', 'webkitAnimationStart', "AnimationEvent", setupAnimation);
 </script>
