@@ -7,7 +7,6 @@ Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 const MORE_THAN_CLIENTS_TTL_REFRESH = 691200; // 8 days
 const LESS_THAN_CLIENTS_TTL_REFRESH = 86400; // 1 day
@@ -61,6 +60,9 @@ async function cleanup() {
   Svc.Prefs.resetBranch("");
   engine._tracker.clearChangedIDs();
   await engine._resetClient();
+  // un-cleanup the logs (the resetBranch will have reset their levels), since
+  // not all the tests use SyncTestingInfrastructure, and it's cheap.
+  syncTestLogging();
   // We don't finalize storage at cleanup, since we use the same clients engine
   // instance across all tests.
 }
@@ -1892,9 +1894,3 @@ add_task(async function test_create_record_command_limit() {
     }
   }
 });
-
-function run_test() {
-  initTestLogging("Trace");
-  Log.repository.getLogger("Sync.Engine.Clients").level = Log.Level.Trace;
-  run_next_test();
-}

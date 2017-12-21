@@ -59,12 +59,6 @@ function makeLivemark(p, mintGUID) {
   return b;
 }
 
-add_task(async function setup() {
-  initTestLogging("Trace");
-  Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.Store.Bookmarks").level  = Log.Level.Trace;
-});
-
 add_task(async function test_livemark_descriptions() {
   let engine = new BookmarksEngine(Service);
   await engine.initialize();

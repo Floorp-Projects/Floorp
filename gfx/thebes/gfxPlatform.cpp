@@ -2460,10 +2460,23 @@ gfxPlatform::InitCompositorAccelerationPrefs()
   }
 }
 
+/*static*/ bool
+gfxPlatform::WebRenderPrefEnabled()
+{
+  return Preferences::GetBool("gfx.webrender.enabled", false);
+}
+
+/*static*/ bool
+gfxPlatform::WebRenderEnvvarEnabled()
+{
+  const char* env = PR_GetEnv("MOZ_WEBRENDER");
+  return (env && *env == '1');
+}
+
 void
 gfxPlatform::InitWebRenderConfig()
 {
-  bool prefEnabled = Preferences::GetBool("gfx.webrender.enabled", false);
+  bool prefEnabled = WebRenderPrefEnabled();
 
   ScopedGfxFeatureReporter reporter("WR", prefEnabled);
   if (!XRE_IsParentProcess()) {
@@ -2485,11 +2498,8 @@ gfxPlatform::InitWebRenderConfig()
 
   if (prefEnabled) {
     featureWebRender.UserEnable("Enabled by pref");
-  } else {
-    const char* env = PR_GetEnv("MOZ_WEBRENDER");
-    if (env && *env == '1') {
-      featureWebRender.UserEnable("Enabled by envvar");
-    }
+  } else if (WebRenderEnvvarEnabled()) {
+    featureWebRender.UserEnable("Enabled by envvar");
   }
 
   // HW_COMPOSITING being disabled implies interfacing with the GPU might break

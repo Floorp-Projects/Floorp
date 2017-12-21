@@ -10,6 +10,9 @@
  * pippki UI js files.
  */
 
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+
 function setText(id, value) {
   let element = document.getElementById(id);
   if (!element) {
@@ -64,6 +67,9 @@ function getPEMString(cert) {
 }
 
 function alertPromptService(title, message) {
+  // XXX Bug 1425832 - Using Services.prompt here causes tests to report memory
+  // leaks.
+  // eslint-disable-next-line mozilla/use-services
   var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
            getService(Components.interfaces.nsIPromptService);
   ps.alert(window, title, message);

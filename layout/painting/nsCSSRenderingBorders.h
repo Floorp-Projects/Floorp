@@ -336,8 +336,8 @@ private:
   nsMargin mImageOutset;
   nsRect mArea;
   nsRect mClip;
-  uint8_t mRepeatModeHorizontal;
-  uint8_t mRepeatModeVertical;
+  mozilla::StyleBorderImageRepeat mRepeatModeHorizontal;
+  mozilla::StyleBorderImageRepeat mRepeatModeVertical;
   uint8_t mFill;
 
   friend class nsDisplayBorder;

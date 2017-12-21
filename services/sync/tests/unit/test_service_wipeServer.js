@@ -2,7 +2,6 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://testing-common/services/sync/fakeservices.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 Svc.Prefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
@@ -35,12 +34,6 @@ async function setUpTestFixtures(server) {
   Service.clusterURL = server.baseURI + "/";
 
   await configureIdentity(identityConfig);
-}
-
-
-function run_test() {
-  initTestLogging("Trace");
-  run_next_test();
 }
 
 add_task(async function test_wipeServer_list_success() {

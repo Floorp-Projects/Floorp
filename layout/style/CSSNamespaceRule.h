@@ -36,6 +36,12 @@ public:
   uint16_t Type() const final {
     return nsIDOMCSSRule::NAMESPACE_RULE;
   }
+  void GetNamespaceURI(nsString& aNamespaceURI) {
+    GetURLSpec(aNamespaceURI);
+  }
+  void GetPrefix(DOMString& aPrefix) {
+    aPrefix.SetOwnedAtom(GetPrefix(), DOMString::eTreatNullAsEmpty);
+  }
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const = 0;
 

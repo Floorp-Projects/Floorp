@@ -11,6 +11,7 @@ const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironmen
 const APPLY_CONFIG_TIMEOUT_MS = 60 * 1000;
 const HOME_PAGE = "chrome://mozscreenshots/content/lib/mozscreenshots.html";
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
@@ -34,6 +35,7 @@ this.TestRunner = {
 
   init(extensionPath) {
     this._extensionPath = extensionPath;
+    this.setupOS();
   },
 
   /**
@@ -44,6 +46,28 @@ this.TestRunner = {
    */
   initTest(mochitestScope) {
     this.mochitestScope = mochitestScope;
+  },
+
+  setupOS() {
+    switch (AppConstants.platform) {
+      case "macosx": {
+        this.disableNotificationCenter();
+        break;
+      }
+    }
+  },
+
+  disableNotificationCenter() {
+    let killall = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    killall.initWithPath("/bin/bash");
+
+    let killallP = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
+    killallP.init(killall);
+    let ncPlist = "/System/Library/LaunchAgents/com.apple.notificationcenterui.plist";
+    let killallArgs = ["-c",
+                       `/bin/launchctl unload -w ${ncPlist} && ` +
+                       "/usr/bin/killall -v NotificationCenter"];
+    killallP.run(true, killallArgs, killallArgs.length);
   },
 
   /**

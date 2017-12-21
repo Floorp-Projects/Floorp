@@ -52,7 +52,8 @@ VideoDecoderManagerChild::InitializeThread()
 VideoDecoderManagerChild::InitForContent(Endpoint<PVideoDecoderManagerChild>&& aVideoManager)
 {
   InitializeThread();
-  sVideoDecoderChildThread->Dispatch(NewRunnableFunction(&Open, Move(aVideoManager)), NS_DISPATCH_NORMAL);
+  sVideoDecoderChildThread->Dispatch(NewRunnableFunction("InitForContentRunnable",
+                                                         &Open, Move(aVideoManager)), NS_DISPATCH_NORMAL);
 }
 
 /* static */ void

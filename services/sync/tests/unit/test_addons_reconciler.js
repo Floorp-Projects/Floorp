@@ -13,11 +13,6 @@ loadAddonTestFunctions();
 startupManager();
 
 add_task(async function run_test() {
-  initTestLogging("Trace");
-  Log.repository.getLogger("Sync.AddonsReconciler").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.AddonsReconciler").level =
-    Log.Level.Trace;
-
   Svc.Prefs.set("engine.addons", true);
   await Service.engineManager.register(AddonsEngine);
 });

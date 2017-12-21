@@ -9,7 +9,6 @@ let store;
 let tracker;
 
 add_task(async function setup() {
-  initTestLogging("Trace");
   engine = new BookmarksEngine(Service);
   store = engine._store;
   tracker = engine._tracker;

@@ -12,7 +12,6 @@ let store;
 let tracker;
 
 add_task(async function setup() {
-  initTestLogging("Trace");
   await Service.engineManager.register(PasswordEngine);
   engine = Service.engineManager.get("passwords");
   store  = engine._store;

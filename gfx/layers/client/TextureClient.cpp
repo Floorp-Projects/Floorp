@@ -338,13 +338,15 @@ DeallocateTextureClient(TextureDeallocParams params)
       bool done = false;
       ReentrantMonitor barrier("DeallocateTextureClient");
       ReentrantMonitorAutoEnter autoMon(barrier);
-      ipdlMsgLoop->PostTask(NewRunnableFunction(DeallocateTextureClientSyncProxy,
+      ipdlMsgLoop->PostTask(NewRunnableFunction("DeallocateTextureClientSyncProxyRunnable",
+                                                DeallocateTextureClientSyncProxy,
                                                 params, &barrier, &done));
       while (!done) {
         barrier.Wait();
       }
     } else {
-      ipdlMsgLoop->PostTask(NewRunnableFunction(DeallocateTextureClient,
+      ipdlMsgLoop->PostTask(NewRunnableFunction("DeallocateTextureClientRunnable",
+                                                DeallocateTextureClient,
                                                 params));
     }
     // The work has been forwarded to the IPDL thread, we are done.
@@ -840,7 +842,8 @@ void CancelTextureClientRecycle(uint64_t aTextureId, LayersIPCChannel* aAllocato
   if (MessageLoop::current() == msgLoop) {
     aAllocator->CancelWaitForRecycle(aTextureId);
   } else {
-    msgLoop->PostTask(NewRunnableFunction(CancelTextureClientRecycle,
+    msgLoop->PostTask(NewRunnableFunction("CancelTextureClientRecycleRunnable",
+                                          CancelTextureClientRecycle,
                                           aTextureId, aAllocator));
   }
 }

@@ -75,7 +75,7 @@ mochitest-a11y:
     e10s: false
     run-on-projects:
         by-test-platform:
-            linux64-qr/.*: ['mozilla-central', 'try']
+            .*-qr/.*: ['mozilla-central', 'try']
             default: built-projects
     mozharness:
         mochitest-flavor: a11y
@@ -252,6 +252,10 @@ mochitest-gpu:
     description: "Mochitest GPU run"
     suite: mochitest/gpu
     treeherder-symbol: tc-M(gpu)
+    run-on-projects:
+        by-test-platform:
+            .*-qr/.*: ['mozilla-central', 'autoland', 'mozilla-inbound', 'try']  # exclude beta and project branches
+            default: built-projects
     loopback-video: true
     virtualization: virtual-with-gpu
     e10s:

@@ -95,6 +95,8 @@ public:
   void AddFontFaceSet(FontFaceSet* aFontFaceSet);
   void RemoveFontFaceSet(FontFaceSet* aFontFaceSet);
 
+  FontFaceSet* GetPrimaryFontFaceSet() const { return mFontFaceSet; }
+
   /**
    * Gets the family name of the FontFace as a raw string (such as 'Times', as
    * opposed to GetFamily, which returns a CSS-escaped string, such as

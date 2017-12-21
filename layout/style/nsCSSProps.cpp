@@ -1004,10 +1004,10 @@ const KTableEntry nsCSSProps::kBorderCollapseKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kBorderImageRepeatKTable[] = {
-  { eCSSKeyword_stretch, NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH },
-  { eCSSKeyword_repeat, NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT },
-  { eCSSKeyword_round, NS_STYLE_BORDER_IMAGE_REPEAT_ROUND },
-  { eCSSKeyword_space, NS_STYLE_BORDER_IMAGE_REPEAT_SPACE },
+  { eCSSKeyword_stretch, StyleBorderImageRepeat::Stretch },
+  { eCSSKeyword_repeat, StyleBorderImageRepeat::Repeat },
+  { eCSSKeyword_round, StyleBorderImageRepeat::Round },
+  { eCSSKeyword_space, StyleBorderImageRepeat::Space },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

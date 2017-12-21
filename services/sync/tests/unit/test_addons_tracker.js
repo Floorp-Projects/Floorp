@@ -33,10 +33,6 @@ async function cleanup() {
 }
 
 add_task(async function setup() {
-  initTestLogging("Trace");
-  Log.repository.getLogger("Sync.Engine.Addons").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.AddonsReconciler").level = Log.Level.Trace;
-
   await Service.engineManager.register(AddonsEngine);
   engine     = Service.engineManager.get("addons");
   reconciler = engine._reconciler;

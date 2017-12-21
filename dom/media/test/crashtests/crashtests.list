@@ -12,7 +12,7 @@ load 497734-1.xhtml
 load 497734-2.html
 load 576612-1.html
 load 752784-1.html
-skip-if(Android) load 789075-1.html # bug 1374405
+skip-if(Android||(webrender&&winWidget)) load 789075-1.html # bug 1374405 for android, bug 1426199 for webrender
 skip-if(Android&&AndroidVersion=='22') HTTP load 795892-1.html # bug 1358718
 load 844563.html
 load 846612.html
@@ -95,7 +95,7 @@ load 1291702.html
 load 1378826.html
 load 1384248.html
 load 1389304.html
-load 1393272.webm
+skip-if(webrender&&winWidget) load 1393272.webm # bug 1426199 for webrender
 load 1411322.html
 load disconnect-wrong-destination.html
 load analyser-channels-1.html
