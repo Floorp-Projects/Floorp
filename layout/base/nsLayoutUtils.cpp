@@ -636,6 +636,16 @@ nsLayoutUtils::IsAnimationLoggingEnabled()
 }
 
 bool
+nsLayoutUtils::AreRetainedDisplayListsEnabled()
+{
+  if (XRE_IsContentProcess()) {
+    return gfxPrefs::LayoutRetainDisplayList();
+  } else {
+    return gfxPrefs::LayoutRetainDisplayListChrome();
+  }
+}
+
+bool
 nsLayoutUtils::GPUImageScalingEnabled()
 {
   static bool sGPUImageScalingEnabled;
@@ -3620,9 +3630,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   const bool isForPainting = (aFlags & PaintFrameFlags::PAINT_WIDGET_LAYERS) &&
     aBuilderMode == nsDisplayListBuilderMode::PAINTING;
 
-  // Retained display list builder is currently only used for content processes.
-  const bool retainingEnabled = isForPainting &&
-    gfxPrefs::LayoutRetainDisplayList() && XRE_IsContentProcess();
+  const bool retainingEnabled = isForPainting && AreRetainedDisplayListsEnabled();
 
   RetainedDisplayListBuilder* retainedBuilder =
     GetOrCreateRetainedDisplayListBuilder(aFrame, retainingEnabled, buildCaret);

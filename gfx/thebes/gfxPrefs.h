@@ -656,6 +656,7 @@ private:
 
   DECL_GFX_PREF(Live, "layout.display-list.build-twice",       LayoutDisplayListBuildTwice, bool, false);
   DECL_GFX_PREF(Live, "layout.display-list.retain",            LayoutRetainDisplayList, bool, true);
+  DECL_GFX_PREF(Live, "layout.display-list.retain.chrome",     LayoutRetainDisplayListChrome, bool, false);
   DECL_GFX_PREF(Live, "layout.display-list.retain.verify",     LayoutVerifyRetainDisplayList, bool, false);
   DECL_GFX_PREF(Live, "layout.display-list.rebuild-frame-limit", LayoutRebuildFrameLimit, uint32_t, 500);
   DECL_GFX_PREF(Live, "layout.display-list.dump",              LayoutDumpDisplayList, bool, false);
