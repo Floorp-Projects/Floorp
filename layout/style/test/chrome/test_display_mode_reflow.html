@@ -25,6 +25,10 @@ function waitOneEvent(element, name) {
   });
 }
 
+function promiseNextTick() {
+  return new Promise(resolve => setTimeout(resolve, 0));
+}
+
 add_task(async function() {
   await waitOneEvent(window, "load");
 
@@ -39,10 +43,14 @@ add_task(async function() {
 
   // Test entering the OS's fullscreen mode.
   var fullScreenEntered = waitOneEvent(win, "sizemodechange");
+  await promiseNextTick();
   synthesizeKey("VK_F11", {});
   await fullScreenEntered;
   ok(offsetTop !== secondDiv.offsetTop, "offset top changes");
   var fullScreenExited = waitOneEvent(win, "sizemodechange");
+  // Need to wait for the next tick to to avoid nested fullscreen change
+  // in different direction. See bug 1415781.
+  await promiseNextTick();
   synthesizeKey("VK_F11", {});
   await fullScreenExited;
   ok(offsetTop === secondDiv.offsetTop, "offset top returns to original value");
