@@ -31,12 +31,10 @@ const experimentPref3 = "test.initExperimentPrefs3";
 const experimentPref4 = "test.initExperimentPrefs4";
 
 decorate_task(
-  withPrefEnv({
-    clear: [[initPref1], [initPref2], [initPref3]],
-  }),
   withBootstrap,
   async function testInitShieldPrefs(Bootstrap) {
     const defaultBranch = Services.prefs.getDefaultBranch("");
+
     const prefDefaults = {
       [initPref1]: true,
       [initPref2]: 2,
@@ -74,6 +72,8 @@ decorate_task(
         `Pref ${pref} doesn't have a user value after being initialized.`,
       );
     }
+
+    defaultBranch.deleteBranch("test.");
   },
 );
 

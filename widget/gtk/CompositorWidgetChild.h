@@ -6,7 +6,7 @@
 #ifndef widget_gtk_CompositorWidgetChild_h
 #define widget_gtk_CompositorWidgetChild_h
 
-#include "X11CompositorWidget.h"
+#include "GtkCompositorWidget.h"
 #include "mozilla/widget/PCompositorWidgetChild.h"
 #include "mozilla/widget/CompositorWidgetVsyncObserver.h"
 

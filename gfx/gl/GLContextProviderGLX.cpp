@@ -17,7 +17,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/widget/CompositorWidget.h"
-#include "mozilla/widget/X11CompositorWidget.h"
+#include "mozilla/widget/GtkCompositorWidget.h"
 #include "mozilla/Unused.h"
 
 #include "prenv.h"
@@ -803,7 +803,7 @@ CreateForWidget(Display* aXDisplay, Window aXWindow,
 already_AddRefed<GLContext>
 GLContextProviderGLX::CreateForCompositorWidget(CompositorWidget* aCompositorWidget, bool aForceAccelerated)
 {
-    X11CompositorWidget* compWidget = aCompositorWidget->AsX11();
+    GtkCompositorWidget* compWidget = aCompositorWidget->AsX11();
     MOZ_ASSERT(compWidget);
 
     return CreateForWidget(compWidget->XDisplay(),

@@ -622,6 +622,16 @@ public:
   {
     aOther.mUnit = eCSSUnit_Null;
   }
+  template<typename T,
+           typename = typename std::enable_if<std::is_enum<T>::value>::type>
+  explicit nsCSSValue(T aValue)
+    : mUnit(eCSSUnit_Enumerated)
+  {
+    static_assert(mozilla::EnumTypeFitsWithin<T, int32_t>::value,
+                  "aValue must be an enum that fits within mValue.mInt");
+    mValue.mInt = static_cast<int32_t>(aValue);
+  }
+
   ~nsCSSValue() { Reset(); }
 
   nsCSSValue&  operator=(const nsCSSValue& aCopy);

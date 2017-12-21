@@ -7,7 +7,7 @@
 		var a = typeof exports === 'object' ? factory(require("devtools/client/shared/vendor/react-dom-factories"), require("devtools/client/shared/vendor/lodash"), require("devtools/client/shared/vendor/react-prop-types"), require("devtools/client/shared/vendor/react")) : factory(root["devtools/client/shared/vendor/react-dom-factories"], root["devtools/client/shared/vendor/lodash"], root["devtools/client/shared/vendor/react-prop-types"], root["devtools/client/shared/vendor/react"]);
 		for(var i in a) (typeof exports === 'object' ? exports : root)[i] = a[i];
 	}
-})(this, function(__WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_53__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_6__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_1__, __WEBPACK_EXTERNAL_MODULE_53__, __WEBPACK_EXTERNAL_MODULE_2__, __WEBPACK_EXTERNAL_MODULE_7__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -533,7 +533,7 @@ __webpack_require__(18);
 // Load all existing rep templates
 const Undefined = __webpack_require__(19);
 const Null = __webpack_require__(20);
-const StringRep = __webpack_require__(7);
+const StringRep = __webpack_require__(6);
 const LongStringRep = __webpack_require__(21);
 const Number = __webpack_require__(22);
 const ArrayRep = __webpack_require__(10);
@@ -744,12 +744,6 @@ module.exports = wrapRender(PropRep);
 
 /***/ }),
 /* 6 */
-/***/ (function(module, exports) {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_6__;
-
-/***/ }),
-/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -843,8 +837,8 @@ function StringRep(props) {
  */
 function getLinkifiedElements(text, cropLimit, omitLinkHref, openLink) {
   const halfLimit = Math.ceil((cropLimit - ELLIPSIS.length) / 2);
-  const startCropIndex = halfLimit;
-  const endCropIndex = text.length - halfLimit;
+  const startCropIndex = cropLimit ? halfLimit : null;
+  const endCropIndex = cropLimit ? text.length - halfLimit : null;
 
   // As we walk through the tokens of the source string, we make sure to preserve
   // the original whitespace that separated the tokens.
@@ -902,13 +896,17 @@ function getLinkifiedElements(text, cropLimit, omitLinkHref, openLink) {
  * @param {String} text: The substring to crop.
  * @param {Integer} offset: The offset corresponding to the index at which the substring
  *                          is in the parent string.
- * @param {Integer} startCropIndex: the index where the start of the crop should happen
- *                                  in the parent string
- * @param {Integer} endCropIndex: the index where the end of the crop should happen
- *                                  in the parent string
+ * @param {Integer|null} startCropIndex: the index where the start of the crop should
+ *                                       happen in the parent string.
+ * @param {Integer|null} endCropIndex: the index where the end of the crop should happen
+ *                                     in the parent string
  * @returns {String|null} The cropped substring, or null if the text is completly cropped.
  */
 function getCroppedString(text, offset = 0, startCropIndex, endCropIndex) {
+  if (!startCropIndex) {
+    return text;
+  }
+
   const start = offset;
   const end = offset + text.length;
 
@@ -943,6 +941,12 @@ module.exports = {
   rep: wrapRender(StringRep),
   supportsObject
 };
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_7__;
 
 /***/ }),
 /* 8 */
@@ -1279,7 +1283,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const React = __webpack_require__(6);
+const React = __webpack_require__(7);
 const PropTypes = __webpack_require__(2);
 
 
@@ -1470,7 +1474,7 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _react = __webpack_require__(6);
+var _react = __webpack_require__(7);
 
 var _react2 = _interopRequireDefault(_react);
 
@@ -1639,20 +1643,30 @@ function GripArray(props) {
   if (mode === MODE.TINY) {
     let objectLength = getLength(object);
     let isEmpty = objectLength === 0;
-    if (isEmpty) {
-      items = [];
-    } else {
-      items = [span({
+    let ellipsis;
+    if (!isEmpty) {
+      ellipsis = span({
         className: "more-ellipsis",
         title: "more…"
-      }, "…")];
+      }, "…");
+    }
+
+    let title;
+    if (object.class != "Array") {
+      title = object.class + " ";
     }
     brackets = needSpace(false);
-  } else {
-    let max = maxLengthMap.get(mode);
-    items = arrayIterator(props, object, max);
-    brackets = needSpace(items.length > 0);
+    return span({
+      "data-link-actor-id": object.actor,
+      className: "objectBox objectBox-array" }, title, span({
+      className: "arrayLeftBracket"
+    }, brackets.left), ellipsis, span({
+      className: "arrayRightBracket"
+    }, brackets.right));
   }
+  let max = maxLengthMap.get(mode);
+  items = arrayIterator(props, object, max);
+  brackets = needSpace(items.length > 0);
 
   let title = getTitle(props, object);
 
@@ -3416,7 +3430,7 @@ const {
   isGrip,
   wrapRender
 } = __webpack_require__(0);
-const { rep: StringRep } = __webpack_require__(7);
+const { rep: StringRep } = __webpack_require__(6);
 
 /**
  * Renders DOM attribute
@@ -3723,6 +3737,8 @@ const Svg = __webpack_require__(9);
 const dom = __webpack_require__(1);
 const { span } = dom;
 
+const IGNORED_SOURCE_URLS = ["debugger eval code"];
+
 /**
  * This component represents a template for Function objects.
  */
@@ -3739,7 +3755,7 @@ function FunctionRep(props) {
   } = props;
 
   let jumpToDefinitionButton;
-  if (onViewSourceInDebugger && grip.location && grip.location.url) {
+  if (onViewSourceInDebugger && grip.location && grip.location.url && !IGNORED_SOURCE_URLS.includes(grip.location.url)) {
     jumpToDefinitionButton = Svg("jump-definition", {
       element: "a",
       draggable: false,
@@ -4232,7 +4248,7 @@ const {
   isGrip,
   wrapRender
 } = __webpack_require__(0);
-const { rep: StringRep } = __webpack_require__(7);
+const { rep: StringRep } = __webpack_require__(6);
 const { MODE } = __webpack_require__(3);
 const nodeConstants = __webpack_require__(12);
 const Svg = __webpack_require__(9);
@@ -4636,6 +4652,8 @@ const {
   wrapRender
 } = __webpack_require__(0);
 
+const String = __webpack_require__(6).rep;
+
 const dom = __webpack_require__(1);
 const { span } = dom;
 
@@ -4650,8 +4668,8 @@ function ObjectWithText(props) {
   let grip = props.object;
   return span({
     "data-link-actor-id": grip.actor,
-    className: "objectBox objectBox-" + getType(grip)
-  }, span({ className: "objectPropValue" }, getDescription(grip)));
+    className: "objectTitle objectBox objectBox-" + getType(grip)
+  }, getType(grip), " ", getDescription(grip));
 }
 
 function getType(grip) {
@@ -4659,7 +4677,9 @@ function getType(grip) {
 }
 
 function getDescription(grip) {
-  return "\"" + grip.preview.text + "\"";
+  return String({
+    object: grip.preview.text
+  });
 }
 
 // Registration
@@ -4760,7 +4780,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Component, createFactory } = __webpack_require__(6);
+const { Component, createFactory } = __webpack_require__(7);
 const PropTypes = __webpack_require__(2);
 const dom = __webpack_require__(1);
 
@@ -5213,7 +5233,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _react = __webpack_require__(6);
+var _react = __webpack_require__(7);
 
 var _react2 = _interopRequireDefault(_react);
 

@@ -9,6 +9,16 @@ Cu.import("resource://shield-recipe-client/lib/AddonStudies.jsm", this);
 // Initialize test utils
 AddonTestUtils.initMochitest(this);
 
+let _startArgsFactoryId = 1;
+function startArgsFactory(args) {
+  return Object.assign({
+    recipeId: _startArgsFactoryId++,
+    name: "Test",
+    description: "Test",
+    addonUrl: "http://test/addon.xpi",
+  }, args);
+}
+
 decorate_task(
   AddonStudies.withStudies(),
   async function testGetMissing() {
@@ -103,16 +113,6 @@ decorate_task(
   }
 );
 
-let _startArgsFactoryId = 0;
-function startArgsFactory(args) {
-  return Object.assign({
-    recipeId: _startArgsFactoryId++,
-    name: "Test",
-    description: "Test",
-    addonUrl: "http://test/addon.xpi",
-  }, args);
-}
-
 add_task(async function testStartRequiredArguments() {
   const requiredArguments = startArgsFactory();
   for (const key in requiredArguments) {
@@ -175,6 +175,7 @@ decorate_task(
 
 decorate_task(
   withWebExtension({version: "2.0"}),
+  AddonStudies.withStudies(),
   async function testStart([addonId, addonFile]) {
     const startupPromise = AddonTestUtils.promiseWebExtensionStartup(addonId);
     const addonUrl = Services.io.newFileURI(addonFile).spec;
@@ -210,7 +211,7 @@ decorate_task(
     );
     ok(study.studyStartDate, "start assigns a value to the study start date.");
 
-    await Addons.uninstall(addonId);
+    await AddonStudies.stop(args.recipeId);
   }
 );
 

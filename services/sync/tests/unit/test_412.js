@@ -3,11 +3,6 @@
 
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://testing-common/services/sync/rotaryengine.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
-
-initTestLogging("Trace");
-
-Services.prefs.setCharPref("services.sync.log.logger.service.main", "Trace");
 
 add_task(async function test_412_not_treated_as_failure() {
   await Service.engineManager.register(RotaryEngine);
