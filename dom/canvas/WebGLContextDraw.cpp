@@ -337,6 +337,10 @@ public:
                     *out_error = true;
                     return;
                 }
+
+                // Technically we don't know that this will be updated yet, but we can
+                // speculatively mark it.
+                buffer->ResetLastUpdateFenceId();
             }
         }
 

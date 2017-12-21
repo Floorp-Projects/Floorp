@@ -166,6 +166,8 @@ WebGLBuffer::BufferData(GLenum target, size_t size, const void* data, GLenum usa
             mIndexRanges.clear();
         }
     }
+
+    ResetLastUpdateFenceId();
 }
 
 void
@@ -197,6 +199,8 @@ WebGLBuffer::BufferSubData(GLenum target, size_t dstByteOffset, size_t dataLen,
     const ScopedLazyBind lazyBind(gl, target, this);
 
     gl->fBufferSubData(target, dstByteOffset, dataLen, uploadData);
+
+    ResetLastUpdateFenceId();
 }
 
 bool
@@ -407,6 +411,12 @@ WebGLBuffer::ValidateCanBindToTarget(const char* funcName, GLenum target)
     mContext->ErrorInvalidOperation("%s: Buffer already contains %s data.", funcName,
                                     dataType);
     return false;
+}
+
+void
+WebGLBuffer::ResetLastUpdateFenceId() const
+{
+    mLastUpdateFenceId = mContext->mNextFenceId;
 }
 
 JSObject*
