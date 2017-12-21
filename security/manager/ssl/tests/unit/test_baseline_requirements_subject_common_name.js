@@ -37,7 +37,7 @@ function checkCertOn25August2016(cert, expectedResult) {
 }
 
 function run_test() {
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.prefs.clearUserPref("security.pki.name_matching_mode");
     Services.prefs.clearUserPref("security.test.built_in_root_hash");
   });
@@ -51,7 +51,7 @@ function run_test() {
   // not in general treated as built-ins, these should all successfully verify
   // regardless of the value of the pref.
   Services.prefs.setIntPref("security.pki.name_matching_mode", 0);
-  do_print("current mode: always fall back, root not built-in");
+  info("current mode: always fall back, root not built-in");
   checkCertOn25August2016(certFromFile("no-san-recent"),
                           PRErrorCodeSuccess);
   checkCertOn25August2016(certFromFile("no-san-old"),
@@ -66,8 +66,8 @@ function run_test() {
                           PRErrorCodeSuccess);
 
   Services.prefs.setIntPref("security.pki.name_matching_mode", 1);
-  do_print("current mode: fall back for notBefore < August 23, 2016, root " +
-           "not built-in");
+  info("current mode: fall back for notBefore < August 23, 2016, root " +
+       "not built-in");
   checkCertOn25August2016(certFromFile("no-san-recent"),
                           PRErrorCodeSuccess);
   checkCertOn25August2016(certFromFile("no-san-old"),
@@ -82,8 +82,8 @@ function run_test() {
                           PRErrorCodeSuccess);
 
   Services.prefs.setIntPref("security.pki.name_matching_mode", 2);
-  do_print("current mode: fall back for notBefore < August 23, 2015, root " +
-           "not built-in");
+  info("current mode: fall back for notBefore < August 23, 2015, root " +
+       "not built-in");
   checkCertOn25August2016(certFromFile("no-san-recent"),
                           PRErrorCodeSuccess);
   checkCertOn25August2016(certFromFile("no-san-old"),
@@ -98,7 +98,7 @@ function run_test() {
                           PRErrorCodeSuccess);
 
   Services.prefs.setIntPref("security.pki.name_matching_mode", 3);
-  do_print("current mode: never fall back, root not built-in");
+  info("current mode: never fall back, root not built-in");
   checkCertOn25August2016(certFromFile("no-san-recent"),
                           PRErrorCodeSuccess);
   checkCertOn25August2016(certFromFile("no-san-old"),
@@ -121,7 +121,7 @@ function run_test() {
 
     // Always fall back if necessary.
     Services.prefs.setIntPref("security.pki.name_matching_mode", 0);
-    do_print("current mode: always fall back, root built-in");
+    info("current mode: always fall back, root built-in");
     checkCertOn25August2016(certFromFile("no-san-recent"),
                             PRErrorCodeSuccess);
     checkCertOn25August2016(certFromFile("no-san-old"),
@@ -137,8 +137,8 @@ function run_test() {
 
     // Only fall back if notBefore < 23 August 2016
     Services.prefs.setIntPref("security.pki.name_matching_mode", 1);
-    do_print("current mode: fall back for notBefore < August 23, 2016, root " +
-             "built-in");
+    info("current mode: fall back for notBefore < August 23, 2016, root " +
+         "built-in");
     checkCertOn25August2016(certFromFile("no-san-recent"),
                             SSL_ERROR_BAD_CERT_DOMAIN);
     checkCertOn25August2016(certFromFile("no-san-old"),
@@ -154,8 +154,8 @@ function run_test() {
 
     // Only fall back if notBefore < 23 August 2015
     Services.prefs.setIntPref("security.pki.name_matching_mode", 2);
-    do_print("current mode: fall back for notBefore < August 23, 2015, root " +
-             "built-in");
+    info("current mode: fall back for notBefore < August 23, 2015, root " +
+         "built-in");
     checkCertOn25August2016(certFromFile("no-san-recent"),
                             SSL_ERROR_BAD_CERT_DOMAIN);
     checkCertOn25August2016(certFromFile("no-san-old"),
@@ -171,7 +171,7 @@ function run_test() {
 
     // Never fall back.
     Services.prefs.setIntPref("security.pki.name_matching_mode", 3);
-    do_print("current mode: never fall back, root built-in");
+    info("current mode: never fall back, root built-in");
     checkCertOn25August2016(certFromFile("no-san-recent"),
                             SSL_ERROR_BAD_CERT_DOMAIN);
     checkCertOn25August2016(certFromFile("no-san-old"),

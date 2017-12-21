@@ -23,7 +23,7 @@ function folder_id(aQuery) {
   var result = hs.executeQueries(queries.value, size.value, options.value);
   var root = result.root;
   root.containerOpen = true;
-  do_check_true(root.hasChildren);
+  Assert.ok(root.hasChildren);
   var folderID = root.getChild(0).parent.itemId;
   root.containerOpen = false;
   return folderID;
@@ -74,6 +74,6 @@ add_task(async function test_history_string_to_query() {
   for (var i = 0; i < QUERIES.length; i++) {
     var result = folder_id(QUERIES[i]);
     dump("expected " + FOLDER_IDS[i] + ", got " + result + "\n");
-    do_check_eq(FOLDER_IDS[i], result);
+    Assert.equal(FOLDER_IDS[i], result);
   }
 });

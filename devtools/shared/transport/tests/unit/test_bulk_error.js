@@ -25,7 +25,7 @@ TestBulkActor.prototype = {
   actorPrefix: "testBulk",
 
   jsonReply: function ({length, reader, reply, done}) {
-    do_check_eq(length, really_long().length);
+    Assert.equal(length, really_long().length);
 
     return {
       allDone: true
@@ -49,7 +49,7 @@ var test_string_error = Task.async(function* (transportFactory, onReady) {
 
   let client = new DebuggerClient(transport);
   return client.connect().then(([app, traits]) => {
-    do_check_eq(traits.bulk, true);
+    Assert.equal(traits.bulk, true);
     return client.listTabs();
   }).then(response => {
     return onReady(client, response);
@@ -83,7 +83,7 @@ function json_reply(client, response) {
       });
       do_throw(new Error("Copying should fail, the stream is not async."));
     } catch (e) {
-      do_check_true(true);
+      Assert.ok(true);
       copyDeferred.resolve();
     }
   });

@@ -17,10 +17,10 @@ function sha256HMAC(message, key) {
 }
 
 function do_check_keypair_eq(a, b) {
-  do_check_eq(2, a.length);
-  do_check_eq(2, b.length);
-  do_check_eq(a[0], b[0]);
-  do_check_eq(a[1], b[1]);
+  Assert.equal(2, a.length);
+  Assert.equal(2, b.length);
+  Assert.equal(a[0], b[0]);
+  Assert.equal(a[1], b[1]);
 }
 
 add_task(async function test_time_keyFromString() {
@@ -35,7 +35,7 @@ add_task(async function test_time_keyFromString() {
     let k = b.hmacKeyObject;
     o = sha256HMAC(d, k);
   }
-  do_check_true(!!o);
+  Assert.ok(!!o);
   _("Done.");
 });
 
@@ -49,9 +49,9 @@ add_test(function test_set_invalid_values() {
     bundle.encryptionKey = null;
   } catch (ex) {
     thrown = true;
-    do_check_eq(ex.message.indexOf("Encryption key can only be set to"), 0);
+    Assert.equal(ex.message.indexOf("Encryption key can only be set to"), 0);
   } finally {
-    do_check_true(thrown);
+    Assert.ok(thrown);
     thrown = false;
   }
 
@@ -59,9 +59,9 @@ add_test(function test_set_invalid_values() {
     bundle.encryptionKey = ["trollololol"];
   } catch (ex) {
     thrown = true;
-    do_check_eq(ex.message.indexOf("Encryption key can only be set to"), 0);
+    Assert.equal(ex.message.indexOf("Encryption key can only be set to"), 0);
   } finally {
-    do_check_true(thrown);
+    Assert.ok(thrown);
     thrown = false;
   }
 
@@ -69,9 +69,9 @@ add_test(function test_set_invalid_values() {
     bundle.hmacKey = Utils.generateRandomBytes(15);
   } catch (ex) {
     thrown = true;
-    do_check_eq(ex.message.indexOf("HMAC key must be at least 128"), 0);
+    Assert.equal(ex.message.indexOf("HMAC key must be at least 128"), 0);
   } finally {
-    do_check_true(thrown);
+    Assert.ok(thrown);
     thrown = false;
   }
 
@@ -79,9 +79,9 @@ add_test(function test_set_invalid_values() {
     bundle.hmacKey = null;
   } catch (ex) {
     thrown = true;
-    do_check_eq(ex.message.indexOf("HMAC key can only be set to string"), 0);
+    Assert.equal(ex.message.indexOf("HMAC key can only be set to string"), 0);
   } finally {
-    do_check_true(thrown);
+    Assert.ok(thrown);
     thrown = false;
   }
 
@@ -89,9 +89,9 @@ add_test(function test_set_invalid_values() {
     bundle.hmacKey = ["trollolol"];
   } catch (ex) {
     thrown = true;
-    do_check_eq(ex.message.indexOf("HMAC key can only be set to"), 0);
+    Assert.equal(ex.message.indexOf("HMAC key can only be set to"), 0);
   } finally {
-    do_check_true(thrown);
+    Assert.ok(thrown);
     thrown = false;
   }
 
@@ -99,9 +99,9 @@ add_test(function test_set_invalid_values() {
     bundle.hmacKey = Utils.generateRandomBytes(15);
   } catch (ex) {
     thrown = true;
-    do_check_eq(ex.message.indexOf("HMAC key must be at least 128"), 0);
+    Assert.equal(ex.message.indexOf("HMAC key must be at least 128"), 0);
   } finally {
-    do_check_true(thrown);
+    Assert.ok(thrown);
     thrown = false;
   }
 
@@ -113,7 +113,7 @@ add_test(function test_repeated_hmac() {
   let k = Utils.makeHMACKey("foo");
   let one = sha256HMAC(Utils.decodeKeyBase32(testKey), k);
   let two = sha256HMAC(Utils.decodeKeyBase32(testKey), k);
-  do_check_eq(one, two);
+  Assert.equal(one, two);
 
   run_next_test();
 });
@@ -155,14 +155,14 @@ add_task(async function test_ensureLoggedIn() {
   await storage_keys.encrypt(keyBundle);
 
   // Sanity checking.
-  do_check_true(null == storage_keys.cleartext);
-  do_check_true(null != storage_keys.ciphertext);
+  Assert.ok(null == storage_keys.cleartext);
+  Assert.ok(null != storage_keys.ciphertext);
 
   log.info("Updating collection keys.");
 
   // updateContents decrypts the object, releasing the payload for us to use.
   // Returns true, because the default key has changed.
-  do_check_true(await collectionKeys.updateContents(keyBundle, storage_keys));
+  Assert.ok(await collectionKeys.updateContents(keyBundle, storage_keys));
   let payload = storage_keys.cleartext;
 
   _("CK: " + JSON.stringify(collectionKeys._collections));
@@ -174,20 +174,20 @@ add_task(async function test_ensureLoggedIn() {
   _("WBO cleartext: " + JSON.stringify(wbo.cleartext));
 
   // Check the individual contents.
-  do_check_eq(wbo.collection, "crypto");
-  do_check_eq(wbo.id, "keys");
-  do_check_eq(undefined, wbo.modified);
-  do_check_eq(collectionKeys.lastModified, storage_keys.modified);
-  do_check_true(!!wbo.cleartext.default);
+  Assert.equal(wbo.collection, "crypto");
+  Assert.equal(wbo.id, "keys");
+  Assert.equal(undefined, wbo.modified);
+  Assert.equal(collectionKeys.lastModified, storage_keys.modified);
+  Assert.ok(!!wbo.cleartext.default);
   do_check_keypair_eq(payload.default, wbo.cleartext.default);
   do_check_keypair_eq(payload.collections.bookmarks, wbo.cleartext.collections.bookmarks);
 
-  do_check_true("bookmarks" in collectionKeys._collections);
-  do_check_false("tabs" in collectionKeys._collections);
+  Assert.ok("bookmarks" in collectionKeys._collections);
+  Assert.equal(false, "tabs" in collectionKeys._collections);
 
   _("Updating contents twice with the same data doesn't proceed.");
   await storage_keys.encrypt(keyBundle);
-  do_check_false(await collectionKeys.updateContents(keyBundle, storage_keys));
+  Assert.equal(false, await collectionKeys.updateContents(keyBundle, storage_keys));
 
   /*
    * Test that we get the right keys out when we ask for
@@ -199,14 +199,14 @@ add_task(async function test_ensureLoggedIn() {
   do_check_keypair_eq(b1.keyPair, b2.keyPair);
 
   // Check key equality.
-  do_check_true(b1.equals(b2));
-  do_check_true(b2.equals(b1));
+  Assert.ok(b1.equals(b2));
+  Assert.ok(b2.equals(b1));
 
   b1 = new BulkKeyBundle("[default]");
   b1.keyPairB64 = [default_key64, default_hmac64];
 
-  do_check_false(b1.equals(b2));
-  do_check_false(b2.equals(b1));
+  Assert.ok(!b1.equals(b2));
+  Assert.ok(!b2.equals(b1));
 
   b2 = collectionKeys.keyForCollection(null);
   do_check_keypair_eq(b1.keyPair, b2.keyPair);
@@ -215,14 +215,14 @@ add_task(async function test_ensureLoggedIn() {
    * Checking for update times.
    */
   let info_collections = {};
-  do_check_true(collectionKeys.updateNeeded(info_collections));
+  Assert.ok(collectionKeys.updateNeeded(info_collections));
   info_collections.crypto = 5000;
-  do_check_false(collectionKeys.updateNeeded(info_collections));
+  Assert.ok(!collectionKeys.updateNeeded(info_collections));
   info_collections.crypto = 1 + (Date.now() / 1000); // Add one in case computers are fast!
-  do_check_true(collectionKeys.updateNeeded(info_collections));
+  Assert.ok(collectionKeys.updateNeeded(info_collections));
 
   collectionKeys.lastModified = null;
-  do_check_true(collectionKeys.updateNeeded({}));
+  Assert.ok(collectionKeys.updateNeeded({}));
 
   /*
    * Check _compareKeyBundleCollections.
@@ -253,14 +253,14 @@ add_task(async function test_ensureLoggedIn() {
   let d7 = collectionKeys._compareKeyBundleCollections(coll5, coll5); // []
   let d8 = collectionKeys._compareKeyBundleCollections(coll6, coll6); // []
 
-  do_check_true(d1.same);
-  do_check_false(d2.same);
-  do_check_false(d3.same);
-  do_check_false(d4.same);
-  do_check_false(d5.same);
-  do_check_false(d6.same);
-  do_check_true(d7.same);
-  do_check_true(d8.same);
+  Assert.ok(d1.same);
+  Assert.ok(!d2.same);
+  Assert.ok(!d3.same);
+  Assert.ok(!d4.same);
+  Assert.ok(!d5.same);
+  Assert.ok(!d6.same);
+  Assert.ok(d7.same);
+  Assert.ok(d8.same);
 
   do_check_array_eq(d1.changed, []);
   do_check_array_eq(d2.changed, ["bar"]);

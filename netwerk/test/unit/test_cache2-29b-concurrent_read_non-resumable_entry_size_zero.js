@@ -62,11 +62,11 @@ function run_test()
 
 function firstTimeThrough(request, buffer)
 {
-  do_check_eq(buffer, responseBodyDecoded);
+  Assert.equal(buffer, responseBodyDecoded);
 }
 
 function secondTimeThrough(request, buffer)
 {
-  do_check_eq(buffer, responseBodyDecoded);
+  Assert.equal(buffer, responseBodyDecoded);
   httpServer.stop(do_test_finished);
 }

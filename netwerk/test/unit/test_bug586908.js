@@ -23,8 +23,8 @@ XPCOMUtils.defineLazyGetter(this, "systemSettings", function() {
 });
 
 function checkValue(request, data, ctx) {
-  do_check_true(called);
-  do_check_eq("ok", data);
+  Assert.ok(called);
+  Assert.equal("ok", data);
   httpserv.stop(do_test_finished);
 }
 

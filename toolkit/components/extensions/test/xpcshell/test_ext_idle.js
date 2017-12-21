@@ -48,7 +48,7 @@ function checkActivity(expectedActivity) {
 
 add_task(async function setup() {
   let fakeIdleService = MockRegistrar.register("@mozilla.org/widget/idleservice;1", idleService);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     MockRegistrar.unregister(fakeIdleService);
   });
 });

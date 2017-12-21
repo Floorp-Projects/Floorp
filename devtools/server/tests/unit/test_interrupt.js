@@ -22,7 +22,7 @@ function run_test() {
 
 function test_attach(response, tabClient) {
   tabClient.attachThread({}, function (response, threadClient) {
-    do_check_eq(threadClient.paused, true);
+    Assert.equal(threadClient.paused, true);
     threadClient.resume(function () {
       test_interrupt(threadClient);
     });
@@ -30,11 +30,11 @@ function test_attach(response, tabClient) {
 }
 
 function test_interrupt(threadClient) {
-  do_check_eq(threadClient.paused, false);
+  Assert.equal(threadClient.paused, false);
   threadClient.interrupt(function (response) {
-    do_check_eq(threadClient.paused, true);
+    Assert.equal(threadClient.paused, true);
     threadClient.resume(function () {
-      do_check_eq(threadClient.paused, false);
+      Assert.equal(threadClient.paused, false);
       cleanup();
     });
   });

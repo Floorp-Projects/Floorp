@@ -61,8 +61,8 @@ function run_test() {
   }];
 
   for (let { desc, animation, expectedType } of TEST_DATA) {
-    do_print(desc);
+    info(desc);
     let actor = AnimationPlayerActor({}, animation);
-    do_check_eq(actor.getType(), expectedType);
+    Assert.equal(actor.getType(), expectedType);
   }
 }

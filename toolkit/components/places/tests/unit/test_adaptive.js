@@ -79,13 +79,13 @@ function ensure_results(expected, searchTerm, callback) {
   controller.input = input;
 
   input.onSearchComplete = function() {
-    do_check_eq(controller.searchStatus,
-                Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
-    do_check_eq(controller.matchCount, expected.length);
+    Assert.equal(controller.searchStatus,
+                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
+    Assert.equal(controller.matchCount, expected.length);
     for (let i = 0; i < controller.matchCount; i++) {
       print("Testing for '" + expected[i].uri.spec + "' got '" + controller.getValueAt(i) + "'");
-      do_check_eq(controller.getValueAt(i), expected[i].uri.spec);
-      do_check_eq(controller.getStyleAt(i), expected[i].style);
+      Assert.equal(controller.getValueAt(i), expected[i].uri.spec);
+      Assert.equal(controller.getStyleAt(i), expected[i].style);
     }
 
     callback();
@@ -380,7 +380,7 @@ var tests = [
 add_task(async function test_adaptive() {
   // Disable autoFill for this test.
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
-  do_register_cleanup(() => Services.prefs.clearUserPref("browser.urlbar.autoFill"));
+  registerCleanupFunction(() => Services.prefs.clearUserPref("browser.urlbar.autoFill"));
   for (let test of tests) {
     // Cleanup.
     await PlacesUtils.bookmarks.eraseEverything();

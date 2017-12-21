@@ -50,9 +50,9 @@ add_task(async function test_backupTo_option_with_tmpPath() {
   await File.writeAtomic(path, DEFAULT_CONTENTS);
   await File.writeAtomic(path, WRITE_CONTENTS, { tmpPath: path + ".tmp",
                                         backupTo: path + ".backup" });
-  do_check_true((await File.exists(path + ".backup")));
+  Assert.ok((await File.exists(path + ".backup")));
   let contents = await File.read(path + ".backup");
-  do_check_eq(DEFAULT_CONTENTS, (new TextDecoder()).decode(contents));
+  Assert.equal(DEFAULT_CONTENTS, (new TextDecoder()).decode(contents));
 });
 
 /**
@@ -69,9 +69,9 @@ add_task(async function test_backupTo_option_without_tmpPath() {
                        "test_backupTo_option_without_tmpPath.tmp");
   await File.writeAtomic(path, DEFAULT_CONTENTS);
   await File.writeAtomic(path, WRITE_CONTENTS, { backupTo: path + ".backup" });
-  do_check_true((await File.exists(path + ".backup")));
+  Assert.ok((await File.exists(path + ".backup")));
   let contents = await File.read(path + ".backup");
-  do_check_eq(DEFAULT_CONTENTS, (new TextDecoder()).decode(contents));
+  Assert.equal(DEFAULT_CONTENTS, (new TextDecoder()).decode(contents));
 });
 
 /**
@@ -88,7 +88,7 @@ add_task(async function test_non_backupTo_option() {
                        "test_non_backupTo_option.tmp");
   await File.writeAtomic(path, DEFAULT_CONTENTS);
   await File.writeAtomic(path, WRITE_CONTENTS);
-  do_check_false((await File.exists(path + ".backup")));
+  Assert.equal(false, (await File.exists(path + ".backup")));
 });
 
 /**
@@ -104,7 +104,7 @@ add_task(async function test_backupTo_option_without_destination_file() {
                        "test_backupTo_option_without_destination_file.tmp");
   await File.remove(path);
   await File.writeAtomic(path, WRITE_CONTENTS, { backupTo: path + ".backup" });
-  do_check_false((await File.exists(path + ".backup")));
+  Assert.equal(false, (await File.exists(path + ".backup")));
 });
 
 /**
@@ -125,9 +125,9 @@ add_task(async function test_backupTo_option_with_backup_file() {
   await File.writeAtomic(path + ".backup", new Uint8Array(1000));
 
   await File.writeAtomic(path, WRITE_CONTENTS, { backupTo: path + ".backup" });
-  do_check_true((await File.exists(path + ".backup")));
+  Assert.ok((await File.exists(path + ".backup")));
   let contents = await File.read(path + ".backup");
-  do_check_eq(DEFAULT_CONTENTS, (new TextDecoder()).decode(contents));
+  Assert.equal(DEFAULT_CONTENTS, (new TextDecoder()).decode(contents));
 });
 
 add_task(async function cleanup() {

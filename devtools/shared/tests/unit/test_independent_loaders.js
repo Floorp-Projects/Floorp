@@ -15,8 +15,8 @@ function run_test() {
   let indent1 = loader1.require("devtools/shared/indentation");
   let indent2 = loader2.require("devtools/shared/indentation");
 
-  do_check_true(indent1 !== indent2);
+  Assert.ok(indent1 !== indent2);
 
-  do_check_true(loader1._provider !== loader2._provider);
-  do_check_true(loader1._provider.loader !== loader2._provider.loader);
+  Assert.ok(loader1._provider !== loader2._provider);
+  Assert.ok(loader1._provider.loader !== loader2._provider.loader);
 }

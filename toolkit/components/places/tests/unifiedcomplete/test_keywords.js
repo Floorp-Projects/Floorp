@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async function test_non_keyword() {
-  do_print("Searching for non-keyworded entry should autoFill it");
+  info("Searching for non-keyworded entry should autoFill it");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/test/"),
     transition: TRANSITION_TYPED
@@ -18,7 +18,7 @@ add_task(async function test_non_keyword() {
 });
 
 add_task(async function test_keyword() {
-  do_print("Searching for keyworded entry should not autoFill it");
+  info("Searching for keyworded entry should not autoFill it");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/test/"),
     transition: TRANSITION_TYPED
@@ -33,7 +33,7 @@ add_task(async function test_keyword() {
 });
 
 add_task(async function test_more_than_keyword() {
-  do_print("Searching for more than keyworded entry should autoFill it");
+  info("Searching for more than keyworded entry should autoFill it");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/test/"),
     transition: TRANSITION_TYPED
@@ -48,7 +48,7 @@ add_task(async function test_more_than_keyword() {
 });
 
 add_task(async function test_less_than_keyword() {
-  do_print("Searching for less than keyworded entry should autoFill it");
+  info("Searching for less than keyworded entry should autoFill it");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/test/"),
     transition: TRANSITION_TYPED
@@ -63,7 +63,7 @@ add_task(async function test_less_than_keyword() {
 });
 
 add_task(async function test_keyword_casing() {
-  do_print("Searching for keyworded entry is case-insensitive");
+  info("Searching for keyworded entry is case-insensitive");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/test/"),
     transition: TRANSITION_TYPED

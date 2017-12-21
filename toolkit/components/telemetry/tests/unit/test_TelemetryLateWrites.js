@@ -87,10 +87,10 @@ function run_test() {
   write_late_writes_file(STACK_BOGUS, STACK_BOGUS_SUFFIX);
 
   let lateWrites = Telemetry.lateWrites;
-  do_check_true("memoryMap" in lateWrites);
-  do_check_eq(lateWrites.memoryMap.length, 0);
-  do_check_true("stacks" in lateWrites);
-  do_check_eq(lateWrites.stacks.length, 0);
+  Assert.ok("memoryMap" in lateWrites);
+  Assert.equal(lateWrites.memoryMap.length, 0);
+  Assert.ok("stacks" in lateWrites);
+  Assert.equal(lateWrites.stacks.length, 0);
 
   do_test_pending();
   Telemetry.asyncFetchTelemetryData(function() {
@@ -99,26 +99,26 @@ function run_test() {
 }
 
 function actual_test() {
-  do_check_false(construct_file(STACK_SUFFIX1).exists());
-  do_check_false(construct_file(STACK_SUFFIX2).exists());
-  do_check_false(construct_file(STACK_BOGUS_SUFFIX).exists());
+  Assert.ok(!construct_file(STACK_SUFFIX1).exists());
+  Assert.ok(!construct_file(STACK_SUFFIX2).exists());
+  Assert.ok(!construct_file(STACK_BOGUS_SUFFIX).exists());
 
   let lateWrites = Telemetry.lateWrites;
 
-  do_check_true("memoryMap" in lateWrites);
-  do_check_eq(lateWrites.memoryMap.length, N_MODULES);
+  Assert.ok("memoryMap" in lateWrites);
+  Assert.equal(lateWrites.memoryMap.length, N_MODULES);
   for (let id in LOADED_MODULES) {
     let matchingLibrary = lateWrites.memoryMap.filter(function(library, idx, array) {
                                                         return library[1] == id;
                                                       });
-    do_check_eq(matchingLibrary.length, 1);
+    Assert.equal(matchingLibrary.length, 1);
     let library = matchingLibrary[0];
     let name = library[0];
-    do_check_eq(LOADED_MODULES[id], name);
+    Assert.equal(LOADED_MODULES[id], name);
   }
 
-  do_check_true("stacks" in lateWrites);
-  do_check_eq(lateWrites.stacks.length, 2);
+  Assert.ok("stacks" in lateWrites);
+  Assert.equal(lateWrites.stacks.length, 2);
   let uneval_STACKS = [uneval(STACK1), uneval(STACK2)];
   let first_stack = lateWrites.stacks[0];
   let second_stack = lateWrites.stacks[1];
@@ -128,8 +128,8 @@ function actual_test() {
       return unevalCanonicalStack == obj;
     };
   }
-  do_check_eq(uneval_STACKS.filter(stackChecker(first_stack)).length, 1);
-  do_check_eq(uneval_STACKS.filter(stackChecker(second_stack)).length, 1);
+  Assert.equal(uneval_STACKS.filter(stackChecker(first_stack)).length, 1);
+  Assert.equal(uneval_STACKS.filter(stackChecker(second_stack)).length, 1);
 
   do_test_finished();
 }

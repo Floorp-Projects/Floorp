@@ -29,8 +29,8 @@ add_test(function test_authenticated_request() {
   let auth;
 
   let server = httpd_setup({"/foo": function(request, response) {
-      do_check_true(request.hasHeader("Authorization"));
-      do_check_eq(auth, request.getHeader("Authorization"));
+      Assert.ok(request.hasHeader("Authorization"));
+      Assert.equal(auth, request.getHeader("Authorization"));
 
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(message, message.length);
@@ -45,8 +45,8 @@ add_test(function test_authenticated_request() {
   req.get(cb);
   let result = cb.wait();
 
-  do_check_eq(null, result);
-  do_check_eq(message, req.response.body);
+  Assert.equal(null, result);
+  Assert.equal(message, req.response.body);
 
   server.stop(run_next_test);
 });

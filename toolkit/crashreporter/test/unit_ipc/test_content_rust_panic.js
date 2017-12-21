@@ -15,7 +15,7 @@ function run_test() {
                 .rustPanic("OH NO");
     },
     function(mdump, extra) {
-      do_check_eq(extra.MozCrashReason, "OH NO");
+      Assert.equal(extra.MozCrashReason, "OH NO");
     }
   );
 }

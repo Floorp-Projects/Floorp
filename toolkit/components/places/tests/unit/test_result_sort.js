@@ -16,7 +16,7 @@ function promiseOnItemVisited() {
       onItemVisited: function BO_onItemVisited() {
         PlacesUtils.bookmarks.removeObserver(this);
         // Enqueue to be sure that all onItemVisited notifications ran.
-        do_execute_soon(resolve);
+        executeSoon(resolve);
       }
     };
     PlacesUtils.bookmarks.addObserver(bookmarksObserver);
@@ -56,35 +56,35 @@ add_task(async function test() {
   let result = PlacesUtils.getFolderContents(testFolderId);
   let root = result.root;
 
-  do_check_eq(root.childCount, 3);
+  Assert.equal(root.childCount, 3);
 
   function checkOrder(a, b, c) {
-    do_check_eq(root.getChild(0).bookmarkGuid, a);
-    do_check_eq(root.getChild(1).bookmarkGuid, b);
-    do_check_eq(root.getChild(2).bookmarkGuid, c);
+    Assert.equal(root.getChild(0).bookmarkGuid, a);
+    Assert.equal(root.getChild(1).bookmarkGuid, b);
+    Assert.equal(root.getChild(2).bookmarkGuid, c);
   }
 
   // natural order
-  do_print("Natural order");
+  info("Natural order");
   checkOrder(guid1, guid2, guid3);
 
   // title: guid3 should precede guid2 since we fall-back to URI-based sorting
-  do_print("Sort by title asc");
+  info("Sort by title asc");
   result.sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
   checkOrder(guid3, guid2, guid1);
 
   // In reverse
-  do_print("Sort by title desc");
+  info("Sort by title desc");
   result.sortingMode = NHQO.SORT_BY_TITLE_DESCENDING;
   checkOrder(guid1, guid2, guid3);
 
   // uri sort: guid1 should precede guid3 since we fall-back to natural order
-  do_print("Sort by uri asc");
+  info("Sort by uri asc");
   result.sortingMode = NHQO.SORT_BY_URI_ASCENDING;
   checkOrder(guid1, guid3, guid2);
 
   // test live update
-  do_print("Change bookmark uri liveupdate");
+  info("Change bookmark uri liveupdate");
   await PlacesUtils.bookmarks.update({
     guid: guid1,
     url: uri2,
@@ -97,7 +97,7 @@ add_task(async function test() {
   checkOrder(guid1, guid3, guid2);
 
   // keyword sort
-  do_print("Sort by keyword asc");
+  info("Sort by keyword asc");
   result.sortingMode = NHQO.SORT_BY_KEYWORD_ASCENDING;
   checkOrder(guid3, guid2, guid1); // no keywords set - falling back to title sort
   await PlacesUtils.keywords.insert({ url: uri1, keyword: "a" });
@@ -108,7 +108,7 @@ add_task(async function test() {
   // XXXtodo: test different item types once folderId and bookmarkId are merged.
   // XXXtodo: test sortingAnnotation functionality with non-bookmark nodes
 
-  do_print("Sort by annotation desc");
+  info("Sort by annotation desc");
   let ids = await PlacesUtils.promiseManyItemIds([guid1, guid3]);
   PlacesUtils.annotations.setItemAnnotation(ids.get(guid1), "testAnno", "a", 0, 0);
   PlacesUtils.annotations.setItemAnnotation(ids.get(guid3), "testAnno", "b", 0, 0);
@@ -122,7 +122,7 @@ add_task(async function test() {
   // XXXtodo:  test lastModified sort
 
   // test live update
-  do_print("Annotation liveupdate");
+  info("Annotation liveupdate");
   PlacesUtils.annotations.setItemAnnotation(ids.get(guid1), "testAnno", "c", 0, 0);
   checkOrder(guid1, guid3, guid2);
 
@@ -135,7 +135,7 @@ add_task(async function test() {
   await PlacesTestUtils.addVisits({ uri: uri2, transition: TRANSITION_TYPED });
   await waitForVisited;
 
-  do_print("Sort by frecency desc");
+  info("Sort by frecency desc");
   result.sortingMode = NHQO.SORT_BY_FRECENCY_DESCENDING;
   for (let i = 0; i < root.childCount; ++i) {
     print(root.getChild(i).uri + " " + root.getChild(i).title);
@@ -143,7 +143,7 @@ add_task(async function test() {
   // For guid1 and guid3, since they have same frecency and no visits, fallback
   // to sort by the newest bookmark.
   checkOrder(guid2, guid3, guid1);
-  do_print("Sort by frecency asc");
+  info("Sort by frecency asc");
   result.sortingMode = NHQO.SORT_BY_FRECENCY_ASCENDING;
   for (let i = 0; i < root.childCount; ++i) {
     print(root.getChild(i).uri + " " + root.getChild(i).title);

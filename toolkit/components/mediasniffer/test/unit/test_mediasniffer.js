@@ -46,8 +46,8 @@ const tests = [
 // A basic listener that reads checks the if we sniffed properly.
 var listener = {
   onStartRequest(request, context) {
-    do_check_eq(request.QueryInterface(Ci.nsIChannel).contentType,
-                tests[testRan].expectedContentType);
+    Assert.equal(request.QueryInterface(Ci.nsIChannel).contentType,
+                 tests[testRan].expectedContentType);
   },
 
   onDataAvailable(request, context, stream, offset, count) {

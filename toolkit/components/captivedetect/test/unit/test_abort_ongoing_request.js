@@ -30,7 +30,7 @@ function fakeUIResponse() {
       xhr.open("GET", gServerURL + kCanonicalSitePath, true);
       xhr.send();
       loginFinished = true;
-      do_check_eq(++step, 3);
+      Assert.equal(++step, 3);
     }
   }, "captive-portal-login");
 }
@@ -41,7 +41,7 @@ function test_multiple_requests_abort() {
   let callback = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsICaptivePortalCallback]),
     prepare: function prepare() {
-      do_check_eq(++step, 1);
+      Assert.equal(++step, 1);
       gCaptivePortalDetector.finishPreparation(kInterfaceName);
     },
     complete: function complete(success) {
@@ -52,12 +52,12 @@ function test_multiple_requests_abort() {
   let otherCallback = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsICaptivePortalCallback]),
     prepare: function prepare() {
-      do_check_eq(++step, 2);
+      Assert.equal(++step, 2);
       gCaptivePortalDetector.finishPreparation(kOtherInterfaceName);
     },
     complete: function complete(success) {
-      do_check_eq(++step, 4);
-      do_check_true(success);
+      Assert.equal(++step, 4);
+      Assert.ok(success);
       gServer.stop(do_test_finished);
     }
   };

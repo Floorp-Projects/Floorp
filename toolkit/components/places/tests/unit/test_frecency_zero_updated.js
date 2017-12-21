@@ -11,15 +11,15 @@ add_task(async function() {
     title: "A title"
   });
   await PlacesTestUtils.promiseAsyncUpdates();
-  do_check_true(frecencyForUrl(TEST_URI) > 0);
+  Assert.ok(frecencyForUrl(TEST_URI) > 0);
 
   // Removing the bookmark should leave an orphan page with zero frecency.
   // Note this would usually be expired later by expiration.
   await PlacesUtils.bookmarks.remove(bookmark.guid);
   await PlacesTestUtils.promiseAsyncUpdates();
-  do_check_eq(frecencyForUrl(TEST_URI), 0);
+  Assert.equal(frecencyForUrl(TEST_URI), 0);
 
   // Now add a valid visit to the page, frecency should increase.
   await PlacesTestUtils.addVisits({ uri: TEST_URI });
-  do_check_true(frecencyForUrl(TEST_URI) > 0);
+  Assert.ok(frecencyForUrl(TEST_URI) > 0);
 });

@@ -64,12 +64,12 @@ add_task(async function test_tracker_score_updated() {
   Svc.Obs.add("weave:engine:score:updated", onScoreUpdated);
 
   try {
-    do_check_eq(engine.score, 0);
+    Assert.equal(engine.score, 0);
 
     tracker.score += SCORE_INCREMENT_SMALL;
-    do_check_eq(engine.score, SCORE_INCREMENT_SMALL);
+    Assert.equal(engine.score, SCORE_INCREMENT_SMALL);
 
-    do_check_eq(scoreUpdated, 1);
+    Assert.equal(scoreUpdated, 1);
   } finally {
     Svc.Obs.remove("weave:engine:score:updated", onScoreUpdated);
     tracker.resetScore();
@@ -87,7 +87,7 @@ add_task(async function test_sync_triggered() {
   Service.scheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
 
 
-  do_check_eq(Status.login, LOGIN_SUCCEEDED);
+  Assert.equal(Status.login, LOGIN_SUCCEEDED);
   tracker.score += SCORE_INCREMENT_XLARGE;
 
   await promiseOneObserver("weave:service:sync:finish");
@@ -113,7 +113,7 @@ add_task(async function test_clients_engine_sync_triggered() {
   await Service.login();
 
   Service.scheduler.syncThreshold = MULTI_DEVICE_THRESHOLD;
-  do_check_eq(Status.login, LOGIN_SUCCEEDED);
+  Assert.equal(Status.login, LOGIN_SUCCEEDED);
   Service.clientsEngine._tracker.score += SCORE_INCREMENT_XLARGE;
 
   await promiseOneObserver("weave:service:sync:finish");
@@ -151,7 +151,7 @@ add_task(async function test_incorrect_credentials_sync_not_triggered() {
 
   Svc.Obs.remove("weave:service:sync:start", onSyncStart);
 
-  do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
+  Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
 
   await Service.startOver();
   await promiseStopServer(server);

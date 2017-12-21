@@ -43,10 +43,10 @@ async function task_add_visit(aURI, aVisitType) {
     let sql = "SELECT place_id FROM moz_historyvisits WHERE id = ?1";
     let stmt = DBConn().createStatement(sql);
     stmt.bindByIndex(0, visitId);
-    do_check_true(stmt.executeStep());
+    Assert.ok(stmt.executeStep());
     let placeId = stmt.getInt64(0);
     stmt.finalize();
-    do_check_true(placeId > 0);
+    Assert.ok(placeId > 0);
     return placeId;
   }
   return 0;
@@ -69,7 +69,7 @@ function check_results(aExpectedCount, aExpectedCountWithHidden) {
   let root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;
   // Children without hidden ones
-  do_check_eq(root.childCount, aExpectedCount);
+  Assert.equal(root.childCount, aExpectedCount);
   root.containerOpen = false;
 
   // Execute again with includeHidden = true
@@ -78,7 +78,7 @@ function check_results(aExpectedCount, aExpectedCountWithHidden) {
   root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;
   // Children with hidden ones
-  do_check_eq(root.childCount, aExpectedCountWithHidden);
+  Assert.equal(root.childCount, aExpectedCountWithHidden);
   root.containerOpen = false;
 }
 
@@ -97,15 +97,15 @@ add_task(async function test_execute() {
   // Add a visit that force unhide and check the place id.
   // - We expect that the place gets hidden = 0 while retaining the same
   //   place id and a correct visit_count.
-  do_check_eq((await task_add_visit(TEST_URI, TRANSITION_TYPED)), placeId);
+  Assert.equal((await task_add_visit(TEST_URI, TRANSITION_TYPED)), placeId);
   check_results(1, 1);
 
   // Add a visit that should not increase visit_count
-  do_check_eq((await task_add_visit(TEST_URI, TRANSITION_RELOAD)), placeId);
+  Assert.equal((await task_add_visit(TEST_URI, TRANSITION_RELOAD)), placeId);
   check_results(1, 1);
 
   // Add a visit that should not increase visit_count
-  do_check_eq((await task_add_visit(TEST_URI, TRANSITION_DOWNLOAD)), placeId);
+  Assert.equal((await task_add_visit(TEST_URI, TRANSITION_DOWNLOAD)), placeId);
   check_results(1, 1);
 
   // Add a visit, check that hidden is not overwritten

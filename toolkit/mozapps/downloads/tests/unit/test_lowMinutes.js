@@ -47,7 +47,7 @@ function run_test() {
 
     _("Got status:", status, "last:", last);
     _("Expecting..", expectStatus);
-    do_check_eq(status, expectStatus);
+    Assert.equal(status, expectStatus);
 
     _();
   });

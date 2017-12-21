@@ -64,16 +64,16 @@ add_task(async function test_first_create_and_add() {
   );
   stmt.bindByIndex(0, INTEGER);
   try {
-    do_check_true(stmt.executeStep());
-    do_check_eq(TEXT, stmt.getString(0));
-    do_check_eq(REAL, stmt.getDouble(1));
-    do_check_true(stmt.getIsNull(2));
+    Assert.ok(stmt.executeStep());
+    Assert.equal(TEXT, stmt.getString(0));
+    Assert.equal(REAL, stmt.getDouble(1));
+    Assert.ok(stmt.getIsNull(2));
     let count = { value: 0 };
     let blob = { value: null };
     stmt.getBlob(3, count, blob);
-    do_check_eq(BLOB.length, count.value);
+    Assert.equal(BLOB.length, count.value);
     for (let i = 0; i < BLOB.length; i++)
-      do_check_eq(BLOB[i], blob.value[i]);
+      Assert.equal(BLOB[i], blob.value[i]);
   } finally {
     stmt.finalize();
   }
@@ -83,8 +83,8 @@ add_task(async function test_first_create_and_add() {
     "SELECT COUNT(1) FROM test"
   );
   try {
-    do_check_true(stmt.executeStep());
-    do_check_eq(2, stmt.getInt32(0));
+    Assert.ok(stmt.executeStep());
+    Assert.equal(2, stmt.getInt32(0));
   } finally {
     stmt.finalize();
   }
@@ -130,7 +130,7 @@ add_task(async function test_last_multiple_bindings_on_statements() {
     "SELECT COUNT(1) AS count FROM test"
   );
   try {
-    do_check_true(countStmt.executeStep());
+    Assert.ok(countStmt.executeStep());
     currentRows = countStmt.row.count;
   } finally {
     countStmt.reset();
@@ -148,9 +148,9 @@ add_task(async function test_last_multiple_bindings_on_statements() {
 
   // Check to make sure we added all of our rows.
   try {
-    do_check_true(countStmt.executeStep());
-    do_check_eq(currentRows + (ITERATIONS * AMOUNT_TO_ADD),
-                countStmt.row.count);
+    Assert.ok(countStmt.executeStep());
+    Assert.equal(currentRows + (ITERATIONS * AMOUNT_TO_ADD),
+                 countStmt.row.count);
   } finally {
     countStmt.finalize();
   }

@@ -10,7 +10,7 @@ add_task(async function setup() {
   tmpFile.append("TestDB");
   dbConn = await Sqlite.openConnection({ path: tmpFile.path });
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     dbConn.close();
     OS.File.remove(tmpFile.path);
   });

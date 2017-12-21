@@ -89,17 +89,17 @@ async function ensure_results_internal(uris, searchTerm) {
   var numSearchesStarted = 0;
   input.onSearchBegin = function() {
     numSearchesStarted++;
-    do_check_eq(numSearchesStarted, 1);
+    Assert.equal(numSearchesStarted, 1);
   };
 
   let promise = new Promise(resolve => {
     input.onSearchComplete = function() {
-      do_check_eq(numSearchesStarted, 1);
-      do_check_eq(controller.searchStatus,
-                  Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
-      do_check_eq(controller.matchCount, uris.length);
+      Assert.equal(numSearchesStarted, 1);
+      Assert.equal(controller.searchStatus,
+                   Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
+      Assert.equal(controller.matchCount, uris.length);
       for (var i = 0; i < controller.matchCount; i++) {
-        do_check_eq(controller.getValueAt(i), uris[i].spec);
+        Assert.equal(controller.getValueAt(i), uris[i].spec);
       }
 
       resolve();
@@ -266,7 +266,7 @@ async function() {
 add_task(async function test_frecency() {
   // Disable autoFill for this test.
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
-  do_register_cleanup(() => Services.prefs.clearUserPref("browser.urlbar.autoFill"));
+  registerCleanupFunction(() => Services.prefs.clearUserPref("browser.urlbar.autoFill"));
   // always search in history + bookmarks, no matter what the default is
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);

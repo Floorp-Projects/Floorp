@@ -12,9 +12,9 @@ add_task(function() {
     worker.onmessage = function(event) {
       let data = event.data;
       switch (data.kind) {
-        case "do_check_true":
+        case "assert_ok":
           try {
-            do_check_true(data.args[0]);
+            Assert.ok(data.args[0]);
           } catch (ex) {
             // Ignore errors
           }
@@ -24,7 +24,7 @@ add_task(function() {
           worker.terminate();
           break;
         case "do_print":
-          do_print(data.args[0]);
+          info(data.args[0]);
       }
     };
     worker.onerror = function(event) {

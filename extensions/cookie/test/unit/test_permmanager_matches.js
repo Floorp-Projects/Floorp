@@ -3,22 +3,22 @@
 
 function matches_always(perm, principals) {
   principals.forEach((principal) => {
-    do_check_true(perm.matches(principal, true), "perm: " + perm.principal.origin + ", princ: " + principal.origin);
-    do_check_true(perm.matches(principal, false), "perm: " + perm.principal.origin + ", princ: " + principal.origin);
+    Assert.ok(perm.matches(principal, true), "perm: " + perm.principal.origin + ", princ: " + principal.origin);
+    Assert.ok(perm.matches(principal, false), "perm: " + perm.principal.origin + ", princ: " + principal.origin);
   });
 }
 
 function matches_weak(perm, principals) {
   principals.forEach((principal) => {
-    do_check_false(perm.matches(principal, true), "perm: " + perm.principal.origin + ", princ: " + principal.origin);
-    do_check_true(perm.matches(principal, false), "perm: " + perm.principal.origin + ", princ: " + principal.origin);
+    Assert.ok(!perm.matches(principal, true), "perm: " + perm.principal.origin + ", princ: " + principal.origin);
+    Assert.ok(perm.matches(principal, false), "perm: " + perm.principal.origin + ", princ: " + principal.origin);
   });
 }
 
 function matches_never(perm, principals) {
   principals.forEach((principal) => {
-    do_check_false(perm.matches(principal, true), "perm: " + perm.principal.origin + ", princ: " + principal.origin);
-    do_check_false(perm.matches(principal, false), "perm: " + perm.principal.origin + ", princ: " + principal.origin);
+    Assert.ok(!perm.matches(principal, true), "perm: " + perm.principal.origin + ", princ: " + principal.origin);
+    Assert.ok(!perm.matches(principal, false), "perm: " + perm.principal.origin + ", princ: " + principal.origin);
   });
 }
 

@@ -6,7 +6,7 @@
 // This file tests the nsIX509CertValidity implementation.
 
 function fuzzyEqual(attributeName, dateString, expectedTime) {
-  do_print(`${attributeName}: ${dateString}`);
+  info(`${attributeName}: ${dateString}`);
   let absTimeDiff = Math.abs(expectedTime - Date.parse(dateString));
   const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
   lessOrEqual(absTimeDiff, ONE_DAY_IN_MS,

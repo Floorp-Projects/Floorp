@@ -31,14 +31,14 @@ function run_test() {
   } catch (e) {
     exception = true;
   }
-  do_check_eq(exception, false);
+  Assert.equal(exception, false);
   exception = false; // reset exception value
 
   iconURI = uri.QueryInterface(Ci.nsIMozIconURI);
-  do_check_eq(iconURI.iconSize, "button");
-  do_check_eq(iconURI.iconState, "normal");
-  do_check_eq(iconURI.contentType, "bar");
-  do_check_eq(iconURI.fileExtension, ".html");
+  Assert.equal(iconURI.iconSize, "button");
+  Assert.equal(iconURI.iconState, "normal");
+  Assert.equal(iconURI.contentType, "bar");
+  Assert.equal(iconURI.fileExtension, ".html");
 
   // Make sure a valid file name icon URI can be created with a numeric size,
   // and make sure the numeric size is handled properly
@@ -48,12 +48,12 @@ function run_test() {
   } catch (e) {
     exception = true;
   }
-  do_check_eq(exception, false);
+  Assert.equal(exception, false);
   exception = false; // reset exception value
 
   iconURI = uri.QueryInterface(Ci.nsIMozIconURI);
-  do_check_eq(iconURI.iconSize, "");
-  do_check_eq(iconURI.imageSize, 3);
+  Assert.equal(iconURI.iconSize, "");
+  Assert.equal(iconURI.imageSize, 3);
 
   // Make sure a valid stock icon URI can be created and that we can obtain
   // the stock icon's name.
@@ -63,11 +63,11 @@ function run_test() {
   } catch (e) {
     exception = true;
   }
-  do_check_eq(exception, false);
+  Assert.equal(exception, false);
   exception = false; // reset exception value
 
   iconURI = uri.QueryInterface(Ci.nsIMozIconURI);
-  do_check_eq(iconURI.stockIcon, "foo");
+  Assert.equal(iconURI.stockIcon, "foo");
 
   // Make sure an invalid stock icon URI, missing icon identifier, throws.
   currentSpec = "moz-icon://stock/?size=3";
@@ -76,7 +76,7 @@ function run_test() {
   } catch (e) {
     exception = true;
   }
-  do_check_true(exception);
+  Assert.ok(exception);
   exception = false; // reset exception value
 
   // Make sure a valid file URL icon URI can be created and that we can obtain
@@ -87,7 +87,7 @@ function run_test() {
   } catch (e) {
     exception = true;
   }
-  do_check_eq(exception, false);
+  Assert.equal(exception, false);
   exception = false; // reset exception value
 
   iconURI = uri.QueryInterface(Ci.nsIMozIconURI);
@@ -97,10 +97,10 @@ function run_test() {
   } catch (e) {
     exception = true;
   }
-  do_check_eq(exception, false);
+  Assert.equal(exception, false);
   exception = false; // reset exception value
 
-  do_check_neq(fileURL, null);
+  Assert.notEqual(fileURL, null);
 
   // Now test a file URI which has been created with an extra //
   currentSpec = "moz-icon://file://foo.txt";
@@ -109,7 +109,7 @@ function run_test() {
   } catch (e) {
     exception = true;
   }
-  do_check_eq(exception, false);
+  Assert.equal(exception, false);
   exception = false; // reset exception value
 
   iconURI = uri.QueryInterface(Ci.nsIMozIconURI);
@@ -119,10 +119,10 @@ function run_test() {
   } catch (e) {
     exception = true;
   }
-  do_check_eq(exception, false);
+  Assert.equal(exception, false);
   exception = false; // reset exception value
 
-  do_check_neq(fileURL, null);
+  Assert.notEqual(fileURL, null);
 
   // Now test a simple invalid icon URI. This should fail.
   currentSpec = "moz-icon:foo";
@@ -131,7 +131,7 @@ function run_test() {
   } catch (e) {
     exception = true;
   }
-  do_check_eq(exception, true);
+  Assert.equal(exception, true);
   exception = false; // reset exception value
 
   // Now test an icon URI that has a URI for a path but that is not a URL. This should fail.
@@ -142,7 +142,7 @@ function run_test() {
   } catch (e) {
     exception = true;
   }
-  do_check_eq(exception, true);
+  Assert.equal(exception, true);
   exception = false; // reset exception value
 
   // Now test a URI that should be a file name but is ridiculously long. This should fail.
@@ -152,6 +152,6 @@ function run_test() {
   } catch (e) {
     exception = true;
   }
-  do_check_eq(exception, true);
+  Assert.equal(exception, true);
   exception = false; // reset exception value
 };

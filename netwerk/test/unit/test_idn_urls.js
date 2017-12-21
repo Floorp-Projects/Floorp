@@ -342,18 +342,18 @@ function run_test() {
             if (punycodeURL.substr(0, 4) == "xn--" || punycodeURL.indexOf(".xn--") > 0) {
                 // test convertToDisplayIDN with a Unicode URL and with a
                 //  Punycode URL if we have one
-                do_check_eq(escape(result),
-                            expectedUnicode ? escape(URL) : escape(punycodeURL));
+                Assert.equal(escape(result),
+                             expectedUnicode ? escape(URL) : escape(punycodeURL));
 
                 result = idnService.convertToDisplayIDN(punycodeURL, isASCII);
-                do_check_eq(escape(result),
-                            expectedUnicode ? escape(URL) : escape(punycodeURL));
+                Assert.equal(escape(result),
+                             expectedUnicode ? escape(URL) : escape(punycodeURL));
             } else {
                 // The "punycode" URL isn't punycode. This happens in testcases
                 // where the Unicode URL has become normalized to an ASCII URL,
                 // so, even though expectedUnicode is true, the expected result
                 // is equal to punycodeURL
-                do_check_eq(escape(result), escape(punycodeURL));
+                Assert.equal(escape(result), escape(punycodeURL));
             }
         }
     }

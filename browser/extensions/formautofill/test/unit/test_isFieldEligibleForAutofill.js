@@ -67,7 +67,7 @@ const TESTCASES = [
 
 TESTCASES.forEach(testcase => {
   add_task(async function() {
-    do_print("Starting testcase: " + testcase.document);
+    info("Starting testcase: " + testcase.document);
 
     let doc = MockDocument.createTestDocument(
       "http://localhost:8080/test/", testcase.document);

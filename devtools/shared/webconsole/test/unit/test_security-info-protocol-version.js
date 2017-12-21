@@ -42,10 +42,10 @@ const TEST_CASES = [
 ];
 
 function run_test() {
-  do_print("Testing NetworkHelper.formatSecurityProtocol.");
+  info("Testing NetworkHelper.formatSecurityProtocol.");
 
   for (let {description, input, expected} of TEST_CASES) {
-    do_print("Testing " + description);
+    info("Testing " + description);
 
     equal(NetworkHelper.formatSecurityProtocol(input), expected,
       "Got the expected protocol string.");

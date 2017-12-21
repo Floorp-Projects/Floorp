@@ -15,17 +15,17 @@ function run_test() {
 
   var libs = profiler.sharedLibraries;
 
-  do_check_eq(typeof libs, "object");
-  do_check_true(Array.isArray(libs));
-  do_check_eq(typeof libs, "object");
-  do_check_true(libs.length >= 1);
-  do_check_eq(typeof libs[0], "object");
-  do_check_eq(typeof libs[0].name, "string");
-  do_check_eq(typeof libs[0].path, "string");
-  do_check_eq(typeof libs[0].debugName, "string");
-  do_check_eq(typeof libs[0].debugPath, "string");
-  do_check_eq(typeof libs[0].arch, "string");
-  do_check_eq(typeof libs[0].start, "number");
-  do_check_eq(typeof libs[0].end, "number");
-  do_check_true(libs[0].start <= libs[0].end);
+  Assert.equal(typeof libs, "object");
+  Assert.ok(Array.isArray(libs));
+  Assert.equal(typeof libs, "object");
+  Assert.ok(libs.length >= 1);
+  Assert.equal(typeof libs[0], "object");
+  Assert.equal(typeof libs[0].name, "string");
+  Assert.equal(typeof libs[0].path, "string");
+  Assert.equal(typeof libs[0].debugName, "string");
+  Assert.equal(typeof libs[0].debugPath, "string");
+  Assert.equal(typeof libs[0].arch, "string");
+  Assert.equal(typeof libs[0].start, "number");
+  Assert.equal(typeof libs[0].end, "number");
+  Assert.ok(libs[0].start <= libs[0].end);
 }

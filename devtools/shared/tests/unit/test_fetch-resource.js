@@ -13,7 +13,7 @@ const URL_NOT_FOUND = "resource://devtools/this/is/not/here.js";
  */
 add_task(function* test_missing() {
   yield DevToolsUtils.fetch(URL_NOT_FOUND).then(result => {
-    do_print(result);
+    info(result);
     ok(false, "fetch resolved unexpectedly for non-existent resource:// URI");
   }, () => {
     ok(true, "fetch rejected as the resource:// URI was non-existent.");

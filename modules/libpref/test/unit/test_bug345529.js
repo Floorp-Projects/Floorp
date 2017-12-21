@@ -30,5 +30,5 @@ function run_test() {
   // "test0" before this test.
   prefs.setCharPref(PREF_NAME, "test1")
 
-  do_check_true(true);
+  Assert.ok(true);
 }

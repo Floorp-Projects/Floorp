@@ -28,7 +28,7 @@ function authHandler(metadata, response) {
     if (!metadata.hasHeader("Authorization")) {
       noAuthHeader = true;
     }
-    do_check_true(noAuthHeader);
+    Assert.ok(noAuthHeader);
   } else {
     // Not our test request yet.
     if (!metadata.hasHeader("Authorization")) {
@@ -44,7 +44,7 @@ function RequestObserver() {
 
 RequestObserver.prototype = {
   register: function() {
-    do_print("Registering " + notification);
+    info("Registering " + notification);
     Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService).
       addObserver(this, notification, true);
   },

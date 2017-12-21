@@ -18,11 +18,11 @@ var listener = {
   onStart: function(aContext)
   {
     // onStart is not called when a connection fails
-    do_check_true(false);
+    Assert.ok(false);
   },
   onStop: function(aContext, aStatusCode)
   {
-    do_check_neq(aStatusCode, Cr.NS_OK);
+    Assert.notEqual(aStatusCode, Cr.NS_OK);
     Services.io.offline = offlineStatus;
     do_test_finished();
   }

@@ -26,18 +26,18 @@ function notifyPromptObservers(aIsPrivate, aExpectedCount, aExpectedPBCount) {
   // Notify quit application requested observer.
   DownloadIntegration._testPromptDownloads = -1;
   Services.obs.notifyObservers(cancelQuit, "quit-application-requested");
-  do_check_eq(DownloadIntegration._testPromptDownloads, aExpectedCount);
+  Assert.equal(DownloadIntegration._testPromptDownloads, aExpectedCount);
 
   // Notify offline requested observer.
   DownloadIntegration._testPromptDownloads = -1;
   Services.obs.notifyObservers(cancelQuit, "offline-requested");
-  do_check_eq(DownloadIntegration._testPromptDownloads, aExpectedCount);
+  Assert.equal(DownloadIntegration._testPromptDownloads, aExpectedCount);
 
   if (aIsPrivate) {
     // Notify last private browsing requested observer.
     DownloadIntegration._testPromptDownloads = -1;
     Services.obs.notifyObservers(cancelQuit, "last-pb-context-exiting");
-    do_check_eq(DownloadIntegration._testPromptDownloads, aExpectedPBCount);
+    Assert.equal(DownloadIntegration._testPromptDownloads, aExpectedPBCount);
   }
 
   delete DownloadIntegration._testPromptDownloads;
@@ -53,7 +53,7 @@ function allowDirectoriesInTest() {
   function cleanup() {
     DownloadIntegration.allowDirectories = false;
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
   return cleanup;
 }
 
@@ -78,11 +78,11 @@ add_task(async function test_getSystemDownloadsDirectory_exists_or_creates() {
       (Services.appinfo.OS == "WINNT" &&
        parseFloat(Services.sysinfo.getProperty("version")) >= 6)) {
     downloadDir = await DownloadIntegration.getSystemDownloadsDirectory();
-    do_check_eq(downloadDir, tempDir.path);
-    do_check_true(await OS.File.exists(downloadDir));
+    Assert.equal(downloadDir, tempDir.path);
+    Assert.ok(await OS.File.exists(downloadDir));
 
     let info = await OS.File.stat(downloadDir);
-    do_check_true(info.isDir);
+    Assert.ok(info.isDir);
   } else {
     let targetPath = OS.Path.join(tempDir.path,
                        gStringBundle.GetStringFromName("downloadsFolder"));
@@ -90,11 +90,11 @@ add_task(async function test_getSystemDownloadsDirectory_exists_or_creates() {
       await OS.File.removeEmptyDir(targetPath);
     } catch (e) {}
     downloadDir = await DownloadIntegration.getSystemDownloadsDirectory();
-    do_check_eq(downloadDir, targetPath);
-    do_check_true(await OS.File.exists(downloadDir));
+    Assert.equal(downloadDir, targetPath);
+    Assert.ok(await OS.File.exists(downloadDir));
 
     let info = await OS.File.stat(downloadDir);
-    do_check_true(info.isDir);
+    Assert.ok(info.isDir);
     await OS.File.removeEmptyDir(targetPath);
   }
 });
@@ -111,7 +111,7 @@ add_task(async function test_getSystemDownloadsDirectory_real() {
   let realDownloadDir = await DownloadIntegration.getSystemDownloadsDirectory();
   cleanup();
 
-  do_check_neq(fakeDownloadDir, realDownloadDir);
+  Assert.notEqual(fakeDownloadDir, realDownloadDir);
 });
 
 /**
@@ -127,27 +127,27 @@ add_task(async function test_getPreferredDownloadsDirectory() {
     Services.prefs.clearUserPref(folderListPrefName);
     Services.prefs.clearUserPref(dirPrefName);
   }
-  do_register_cleanup(cleanupPrefs);
+  registerCleanupFunction(cleanupPrefs);
 
   // Should return the system downloads directory.
   Services.prefs.setIntPref(folderListPrefName, 1);
   let systemDir = await DownloadIntegration.getSystemDownloadsDirectory();
   let downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
-  do_check_neq(downloadDir, "");
-  do_check_eq(downloadDir, systemDir);
+  Assert.notEqual(downloadDir, "");
+  Assert.equal(downloadDir, systemDir);
 
   // Should return the desktop directory.
   Services.prefs.setIntPref(folderListPrefName, 0);
   downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
-  do_check_neq(downloadDir, "");
-  do_check_eq(downloadDir, Services.dirsvc.get("Desk", Ci.nsIFile).path);
+  Assert.notEqual(downloadDir, "");
+  Assert.equal(downloadDir, Services.dirsvc.get("Desk", Ci.nsIFile).path);
 
   // Should return the system downloads directory because the dir preference
   // is not set.
   Services.prefs.setIntPref(folderListPrefName, 2);
   downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
-  do_check_neq(downloadDir, "");
-  do_check_eq(downloadDir, systemDir);
+  Assert.notEqual(downloadDir, "");
+  Assert.equal(downloadDir, systemDir);
 
   // Should return the directory which is listed in the dir preference.
   let time = (new Date()).getTime();
@@ -155,9 +155,9 @@ add_task(async function test_getPreferredDownloadsDirectory() {
   tempDir.append(time);
   Services.prefs.setComplexValue("browser.download.dir", Ci.nsIFile, tempDir);
   downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
-  do_check_neq(downloadDir, "");
-  do_check_eq(downloadDir, tempDir.path);
-  do_check_true(await OS.File.exists(downloadDir));
+  Assert.notEqual(downloadDir, "");
+  Assert.equal(downloadDir, tempDir.path);
+  Assert.ok(await OS.File.exists(downloadDir));
   await OS.File.removeEmptyDir(tempDir.path);
 
   // Should return the system downloads directory beacause the path is invalid
@@ -167,13 +167,13 @@ add_task(async function test_getPreferredDownloadsDirectory() {
   tempDir.append(time);
   Services.prefs.setComplexValue("browser.download.dir", Ci.nsIFile, tempDir);
   downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
-  do_check_eq(downloadDir, systemDir);
+  Assert.equal(downloadDir, systemDir);
 
   // Should return the system downloads directory because the folderList
   // preference is invalid
   Services.prefs.setIntPref(folderListPrefName, 999);
   downloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
-  do_check_eq(downloadDir, systemDir);
+  Assert.equal(downloadDir, systemDir);
 
   cleanupPrefs();
   cleanupDirectories();
@@ -187,14 +187,14 @@ add_task(async function test_getTemporaryDownloadsDirectory() {
   let cleanup = allowDirectoriesInTest();
 
   let downloadDir = await DownloadIntegration.getTemporaryDownloadsDirectory();
-  do_check_neq(downloadDir, "");
+  Assert.notEqual(downloadDir, "");
 
   if ("nsILocalFileMac" in Ci) {
     let preferredDownloadDir = await DownloadIntegration.getPreferredDownloadsDirectory();
-    do_check_eq(downloadDir, preferredDownloadDir);
+    Assert.equal(downloadDir, preferredDownloadDir);
   } else {
     let tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
-    do_check_eq(downloadDir, tempDir.path);
+    Assert.equal(downloadDir, tempDir.path);
   }
 
   cleanup();
@@ -210,7 +210,7 @@ add_task(async function test_getTemporaryDownloadsDirectory() {
  */
 add_task(async function test_observers_setup() {
   DownloadIntegration.allowObservers = true;
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     DownloadIntegration.allowObservers = false;
   });
 });
@@ -338,15 +338,15 @@ add_task(async function test_suspend_resume() {
 
   // First, check that the downloads are all canceled when going to sleep.
   Services.obs.notifyObservers(null, "sleep_notification");
-  do_check_true(download1.canceled);
-  do_check_true(download2.canceled);
-  do_check_true(download3.canceled);
-  do_check_true(download4.canceled);
-  do_check_true(download5.canceled);
+  Assert.ok(download1.canceled);
+  Assert.ok(download2.canceled);
+  Assert.ok(download3.canceled);
+  Assert.ok(download4.canceled);
+  Assert.ok(download5.canceled);
 
   // Remove a download. It should not be started again.
   publicList.remove(download5);
-  do_check_true(download5.canceled);
+  Assert.ok(download5.canceled);
 
   // When waking up again, the downloads start again after the wake delay. To be
   // more robust, don't check after a delay but instead just wait for the
@@ -359,8 +359,8 @@ add_task(async function test_suspend_resume() {
 
   // Downloads should no longer be canceled. However, as download5 was removed
   // from the public list, it will not be restarted.
-  do_check_false(download1.canceled);
-  do_check_true(download5.canceled);
+  Assert.ok(!download1.canceled);
+  Assert.ok(download5.canceled);
 
   // Create four new downloads and check for going offline and then online again.
 
@@ -371,10 +371,10 @@ add_task(async function test_suspend_resume() {
 
   // Going offline should cancel the downloads.
   Services.obs.notifyObservers(null, "network:offline-about-to-go-offline");
-  do_check_true(download1.canceled);
-  do_check_true(download2.canceled);
-  do_check_true(download3.canceled);
-  do_check_true(download4.canceled);
+  Assert.ok(download1.canceled);
+  Assert.ok(download2.canceled);
+  Assert.ok(download3.canceled);
+  Assert.ok(download4.canceled);
 
   // Going back online should start the downloads again.
   Services.obs.notifyObservers(null, "network:offline-status-changed", "online");
@@ -406,7 +406,7 @@ add_task(async function test_exit_private_browsing() {
   // Complete the download.
   await promiseAttempt1;
 
-  do_check_eq((await privateList.getAll()).length, 2);
+  Assert.equal((await privateList.getAll()).length, 2);
 
   // Simulate exiting the private browsing.
   await new Promise(resolve => {
@@ -415,7 +415,7 @@ add_task(async function test_exit_private_browsing() {
   });
   delete DownloadIntegration._testResolveClearPrivateList;
 
-  do_check_eq((await privateList.getAll()).length, 0);
+  Assert.equal((await privateList.getAll()).length, 0);
 
   continueResponses();
 });

@@ -169,8 +169,12 @@ InterceptedChannelBase::SaveTimeStamps()
     return NS_ERROR_FAILURE;
   }
 
-  nsCString navigationOrSubresource = nsContentUtils::IsNonSubresourceRequest(channel) ?
+  bool isNonSubresourceRequest = nsContentUtils::IsNonSubresourceRequest(channel);
+  nsCString navigationOrSubresource = isNonSubresourceRequest ?
     NS_LITERAL_CSTRING("navigation") : NS_LITERAL_CSTRING("subresource");
+
+  nsAutoCString subresourceKey(EmptyCString());
+  GetSubresourceTimeStampKey(channel, subresourceKey);
 
   // We may have null timestamps if the fetch dispatch runnable was cancelled
   // and we defaulted to resuming the request.
@@ -182,16 +186,31 @@ InterceptedChannelBase::SaveTimeStamps()
       Telemetry::SERVICE_WORKER_FETCH_EVENT_CHANNEL_RESET_MS;
     Telemetry::Accumulate(id, navigationOrSubresource,
       static_cast<uint32_t>((mFinishResponseEnd - mFinishResponseStart).ToMilliseconds()));
+    if (!isNonSubresourceRequest && !subresourceKey.IsEmpty()) {
+      Telemetry::Accumulate(id, subresourceKey,
+        static_cast<uint32_t>((mFinishResponseEnd - mFinishResponseStart).ToMilliseconds()));
+    }
   }
 
   Telemetry::Accumulate(Telemetry::SERVICE_WORKER_FETCH_EVENT_DISPATCH_MS,
     navigationOrSubresource,
     static_cast<uint32_t>((mHandleFetchEventStart - mDispatchFetchEventStart).ToMilliseconds()));
 
+  if (!isNonSubresourceRequest && !subresourceKey.IsEmpty()) {
+    Telemetry::Accumulate(Telemetry::SERVICE_WORKER_FETCH_EVENT_DISPATCH_MS,
+      subresourceKey,
+      static_cast<uint32_t>((mHandleFetchEventStart - mDispatchFetchEventStart).ToMilliseconds()));
+  }
+
   if (!mFinishResponseEnd.IsNull()) {
     Telemetry::Accumulate(Telemetry::SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS,
       navigationOrSubresource,
       static_cast<uint32_t>((mFinishResponseEnd - mDispatchFetchEventStart).ToMilliseconds()));
+    if (!isNonSubresourceRequest && !subresourceKey.IsEmpty()) {
+      Telemetry::Accumulate(Telemetry::SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS,
+        subresourceKey,
+        static_cast<uint32_t>((mFinishResponseEnd - mDispatchFetchEventStart).ToMilliseconds()));
+    }
   }
 
   return rv;

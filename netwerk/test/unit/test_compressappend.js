@@ -32,7 +32,7 @@ TestAppend.prototype = {
   },
 
   writeData: function(status, entry) {
-    do_check_eq(status, Cr.NS_OK);
+    Assert.equal(status, Cr.NS_OK);
     if (this._compress)
       entry.setMetaDataElement("uncompressed-len", "0");
     var os = entry.openOutputStream(0);
@@ -45,7 +45,7 @@ TestAppend.prototype = {
   },
 
   appendData: function(status, entry) {
-    do_check_eq(status, Cr.NS_OK);
+    Assert.equal(status, Cr.NS_OK);
     var os = entry.openOutputStream(entry.storageDataSize);
     write_and_check(os, "abcde", 5);
     os.close();
@@ -57,14 +57,14 @@ TestAppend.prototype = {
   },
 
   checkData: function(status, entry) {
-    do_check_eq(status, Cr.NS_OK);
+    Assert.equal(status, Cr.NS_OK);
     var self = this;
     pumpReadStream(entry.openInputStream(0), function(str) {
-      do_check_eq(str.length, 10);
-      do_check_eq(str, "12345abcde");
+      Assert.equal(str.length, 10);
+      Assert.equal(str, "12345abcde");
       entry.close();
 
-      do_execute_soon(self._callback);
+      executeSoon(self._callback);
     });
   }
 };

@@ -12,7 +12,7 @@ function run_test() {
 }
 
 function finish_test() {
-  do_execute_soon(function() {
+  executeSoon(function() {
     test_generator.return();
     do_test_finished();
   });
@@ -93,17 +93,17 @@ function* do_run_test() {
   do_load_profile();
 
   // 1) All unexpired, unique cookies exist.
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("foo.com"), 20);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("foo.com"), 20);
 
   // 2) All expired, unique cookies exist.
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("bar.com"), 20);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("bar.com"), 20);
 
   // 3) Only one cookie remains, and it's the one with the highest expiration
   // time.
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("baz.com"), 1);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("baz.com"), 1);
   let enumerator = Services.cookiemgr.getCookiesFromHost("baz.com", {});
   let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
-  do_check_eq(cookie.expiry, futureExpiry + 44);
+  Assert.equal(cookie.expiry, futureExpiry + 44);
 
   do_close_profile(test_generator);
   yield;
@@ -134,7 +134,7 @@ function* do_run_test() {
   schema2db.insertCookie(cookie);
 
   // Check that there is, indeed, a singular cookie for baz.com.
-  do_check_eq(do_count_cookies_in_db(schema2db.db, "baz.com"), 1);
+  Assert.equal(do_count_cookies_in_db(schema2db.db, "baz.com"), 1);
 
   // Close it.
   schema2db.close();
@@ -153,19 +153,19 @@ function* do_run_test() {
   yield;
 
   // Test the expected set of cookies.
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("foo.com"), 20);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("bar.com"), 20);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("baz.com"), 0);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("cat.com"), 0);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("foo.com"), 20);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("bar.com"), 20);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("baz.com"), 0);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("cat.com"), 0);
 
   do_close_profile(test_generator);
   yield;
 
   // Open the database and prove that they were deleted.
   schema2db = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);
-  do_check_eq(do_count_cookies_in_db(schema2db.db), 40);
-  do_check_eq(do_count_cookies_in_db(schema2db.db, "foo.com"), 20);
-  do_check_eq(do_count_cookies_in_db(schema2db.db, "bar.com"), 20);
+  Assert.equal(do_count_cookies_in_db(schema2db.db), 40);
+  Assert.equal(do_count_cookies_in_db(schema2db.db, "foo.com"), 20);
+  Assert.equal(do_count_cookies_in_db(schema2db.db, "bar.com"), 20);
   schema2db.close();
 
   // Copy the database back.
@@ -176,19 +176,19 @@ function* do_run_test() {
   do_load_profile();
 
   // Test the expected set of cookies.
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("foo.com"), 20);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("bar.com"), 20);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("baz.com"), 0);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("cat.com"), 0);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("foo.com"), 20);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("bar.com"), 20);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("baz.com"), 0);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("cat.com"), 0);
 
   do_close_profile(test_generator);
   yield;
 
   // Open the database and prove that they were deleted.
   schema2db = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);
-  do_check_eq(do_count_cookies_in_db(schema2db.db), 40);
-  do_check_eq(do_count_cookies_in_db(schema2db.db, "foo.com"), 20);
-  do_check_eq(do_count_cookies_in_db(schema2db.db, "bar.com"), 20);
+  Assert.equal(do_count_cookies_in_db(schema2db.db), 40);
+  Assert.equal(do_count_cookies_in_db(schema2db.db, "foo.com"), 20);
+  Assert.equal(do_count_cookies_in_db(schema2db.db, "bar.com"), 20);
   schema2db.close();
 
   // Copy the database back.
@@ -197,22 +197,22 @@ function* do_run_test() {
 
   // Load the database synchronously, in its entirety.
   do_load_profile();
-  do_check_eq(do_count_cookies(), 40);
+  Assert.equal(do_count_cookies(), 40);
 
   // Test the expected set of cookies.
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("foo.com"), 20);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("bar.com"), 20);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("baz.com"), 0);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("cat.com"), 0);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("foo.com"), 20);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("bar.com"), 20);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("baz.com"), 0);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("cat.com"), 0);
 
   do_close_profile(test_generator);
   yield;
 
   // Open the database and prove that they were deleted.
   schema2db = new CookieDatabaseConnection(do_get_cookie_file(profile), 2);
-  do_check_eq(do_count_cookies_in_db(schema2db.db), 40);
-  do_check_eq(do_count_cookies_in_db(schema2db.db, "foo.com"), 20);
-  do_check_eq(do_count_cookies_in_db(schema2db.db, "bar.com"), 20);
+  Assert.equal(do_count_cookies_in_db(schema2db.db), 40);
+  Assert.equal(do_count_cookies_in_db(schema2db.db, "foo.com"), 20);
+  Assert.equal(do_count_cookies_in_db(schema2db.db, "bar.com"), 20);
   schema2db.close();
 
   finish_test();

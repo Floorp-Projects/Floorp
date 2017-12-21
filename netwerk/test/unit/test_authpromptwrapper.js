@@ -16,12 +16,12 @@ function run_test() {
     return;
   }
   var adapter = Components.classes[contractID].getService();
-  do_check_eq(adapter instanceof nsIAuthPromptAdapterFactory, true);
+  Assert.equal(adapter instanceof nsIAuthPromptAdapterFactory, true);
 
   // NOTE: xpconnect lets us get away with passing an empty object here
   // For this part of the test, we only care that this function returns
   // success
-  do_check_neq(adapter.createAdapter({}), null);
+  Assert.notEqual(adapter.createAdapter({}), null);
 
   const host = "www.mozilla.org";
 
@@ -79,22 +79,22 @@ function run_test() {
     },
 
     doChecks: function ap1_check(text, realm) {
-      do_check_eq(this.scheme + "://" + host + " (" + info.realm + ")", realm);
+      Assert.equal(this.scheme + "://" + host + " (" + info.realm + ")", realm);
 
-      do_check_neq(text.indexOf(host), -1);
+      Assert.notEqual(text.indexOf(host), -1);
       if (info.flags & nsIAuthInformation.ONLY_PASSWORD) {
         // Should have the username in the text
-        do_check_neq(text.indexOf(info.username), -1);
+        Assert.notEqual(text.indexOf(info.username), -1);
       } else {
         // Make sure that we show the realm if we have one and that we don't
         // show "" otherwise
         if (info.realm != "")
-          do_check_neq(text.indexOf(info.realm), -1);
+          Assert.notEqual(text.indexOf(info.realm), -1);
         else
-          do_check_eq(text.indexOf('""'), -1);
+          Assert.equal(text.indexOf('""'), -1);
         // No explicit port in the URL; message should not contain -1
         // for those cases
-        do_check_eq(text.indexOf("-1"), -1);
+        Assert.equal(text.indexOf("-1"), -1);
       }
     }
   };
@@ -117,13 +117,13 @@ function run_test() {
     wrapper = adapter.createAdapter(prompt1);
 
     var rv = wrapper.promptAuth(chan, 0, info);
-    do_check_eq(rv, prompt1.rv);
-    do_check_eq(prompt1.called, CALLED_PROMPTUP);
+    Assert.equal(rv, prompt1.rv);
+    Assert.equal(prompt1.called, CALLED_PROMPTUP);
 
     if (rv) {
-      do_check_eq(info.domain, "");
-      do_check_eq(info.username, prompt1.user);
-      do_check_eq(info.password, prompt1.pw);
+      Assert.equal(info.domain, "");
+      Assert.equal(info.username, prompt1.user);
+      Assert.equal(info.password, prompt1.pw);
     }
 
     info.domain = "";
@@ -140,13 +140,13 @@ function run_test() {
 
     wrapper = adapter.createAdapter(prompt1);
     rv = wrapper.promptAuth(chan, 0, info);
-    do_check_eq(rv, prompt1.rv);
-    do_check_eq(prompt1.called, CALLED_PROMPTP);
+    Assert.equal(rv, prompt1.rv);
+    Assert.equal(prompt1.called, CALLED_PROMPTP);
 
     if (rv) {
-      do_check_eq(info.domain, "");
-      do_check_eq(info.username, prompt1.user); // we initialized this
-      do_check_eq(info.password, prompt1.pw);
+      Assert.equal(info.domain, "");
+      Assert.equal(info.username, prompt1.user); // we initialized this
+      Assert.equal(info.password, prompt1.pw);
     }
 
     info.flags &= ~nsIAuthInformation.ONLY_PASSWORD;
@@ -162,13 +162,13 @@ function run_test() {
 
     wrapper = adapter.createAdapter(prompt1);
     rv = wrapper.promptAuth(chan, 0, info);
-    do_check_eq(rv, prompt1.rv);
-    do_check_eq(prompt1.called, CALLED_PROMPTUP);
+    Assert.equal(rv, prompt1.rv);
+    Assert.equal(prompt1.called, CALLED_PROMPTUP);
 
     if (rv) {
-      do_check_eq(info.domain, "foo");
-      do_check_eq(info.username, "bar");
-      do_check_eq(info.password, prompt1.pw);
+      Assert.equal(info.domain, "foo");
+      Assert.equal(info.username, "bar");
+      Assert.equal(info.password, prompt1.pw);
     }
 
     info.flags &= ~nsIAuthInformation.NEED_DOMAIN;
@@ -186,13 +186,13 @@ function run_test() {
 
     wrapper = adapter.createAdapter(prompt1);
     rv = wrapper.promptAuth(chan, 0, info);
-    do_check_eq(rv, prompt1.rv);
-    do_check_eq(prompt1.called, CALLED_PROMPTUP);
+    Assert.equal(rv, prompt1.rv);
+    Assert.equal(prompt1.called, CALLED_PROMPTUP);
 
     if (rv) {
-      do_check_eq(info.domain, "");
-      do_check_eq(info.username, prompt1.user);
-      do_check_eq(info.password, prompt1.pw);
+      Assert.equal(info.domain, "");
+      Assert.equal(info.username, prompt1.user);
+      Assert.equal(info.password, prompt1.pw);
     }
 
     info.flags &= ~nsIAuthInformation.NEED_DOMAIN;
@@ -214,13 +214,13 @@ function run_test() {
 
     wrapper = adapter.createAdapter(prompt1);
     var rv = wrapper.promptAuth(ftpchan, 0, info);
-    do_check_eq(rv, prompt1.rv);
-    do_check_eq(prompt1.called, CALLED_PROMPTUP);
+    Assert.equal(rv, prompt1.rv);
+    Assert.equal(prompt1.called, CALLED_PROMPTUP);
 
     if (rv) {
-      do_check_eq(info.domain, "");
-      do_check_eq(info.username, prompt1.user);
-      do_check_eq(info.password, prompt1.pw);
+      Assert.equal(info.domain, "");
+      Assert.equal(info.username, prompt1.user);
+      Assert.equal(info.password, prompt1.pw);
     }
 
     info.domain = "";

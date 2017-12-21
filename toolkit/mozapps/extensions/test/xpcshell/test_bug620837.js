@@ -21,7 +21,7 @@ function notify_blocklist() {
 }
 
 function pathHandler(metadata, response) {
-  do_check_eq(metadata.queryString, gExpectedQueryString);
+  Assert.equal(metadata.queryString, gExpectedQueryString);
   gNextTest();
 }
 

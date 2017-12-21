@@ -74,7 +74,7 @@ add_test(function test_ipv6_loopback() {
 
 function run_test(){ // jshint ignore:line
   Services.io.offline = true;
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.io.offline = false;
   });
   run_next_test();

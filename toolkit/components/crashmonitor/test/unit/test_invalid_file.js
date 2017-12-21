@@ -14,9 +14,9 @@ add_task(async function test_invalid_file() {
 
   // An invalid file will cause |init| to return null
   let status = await CrashMonitor.init();
-  do_check_true(!!(status === null));
+  Assert.ok(!!(status === null));
 
   // and |previousCheckpoints| will be null
   let checkpoints = await CrashMonitor.previousCheckpoints;
-  do_check_true(!!(checkpoints === null));
+  Assert.ok(!!(checkpoints === null));
 });

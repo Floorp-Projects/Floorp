@@ -85,6 +85,6 @@ function run_test()
 
 function finish_test(event)
 {
-  do_check_eq(receivedCookieVal, sentCookieVal);
+  Assert.equal(receivedCookieVal, sentCookieVal);
   httpServer.stop(do_test_finished);
 }

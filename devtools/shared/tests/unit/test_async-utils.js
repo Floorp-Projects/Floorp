@@ -35,9 +35,9 @@ function run_test() {
 function test_async_args(async) {
   let obj = {
     method: async(function* (a, b) {
-      do_check_eq(this, obj);
-      do_check_eq(a, "foo");
-      do_check_eq(b, "bar");
+      Assert.equal(this, obj);
+      Assert.equal(a, "foo");
+      Assert.equal(b, "bar");
     })
   };
 
@@ -54,7 +54,7 @@ function test_async_return(async) {
   };
 
   return obj.method("foo", "bar").then(ret => {
-    do_check_eq(ret, "foobar");
+    Assert.equal(ret, "foobar");
   });
 }
 
@@ -67,8 +67,8 @@ function test_async_throw(async) {
   };
 
   return obj.method().catch(error => {
-    do_check_true(error instanceof Error);
-    do_check_eq(error.message, "boom");
+    Assert.ok(error instanceof Error);
+    Assert.equal(error.message, "boom");
   });
 }
 
@@ -95,23 +95,23 @@ function test_async_once() {
   let p1 = foo1.method();
   let p2 = foo2.method();
 
-  do_check_neq(p1, p2);
+  Assert.notEqual(p1, p2);
 
   let p3 = foo1.method();
-  do_check_eq(p1, p3);
-  do_check_false(foo1.ran);
+  Assert.equal(p1, p3);
+  Assert.ok(!foo1.ran);
 
   let p4 = foo2.method();
-  do_check_eq(p2, p4);
-  do_check_false(foo2.ran);
+  Assert.equal(p2, p4);
+  Assert.ok(!foo2.ran);
 
   return p1.then(ret => {
-    do_check_true(foo1.ran);
-    do_check_eq(ret, 0);
+    Assert.ok(foo1.ran);
+    Assert.equal(ret, 0);
     return p2;
   }).then(ret => {
-    do_check_true(foo2.ran);
-    do_check_eq(ret, 1);
+    Assert.ok(foo2.ran);
+    Assert.equal(ret, 1);
   });
 }
 
@@ -119,20 +119,20 @@ function test_async_once() {
 function test_async_invoke() {
   return Task.spawn(function* () {
     function func(a, b, expectedThis, callback) {
-      do_check_eq(a, "foo");
-      do_check_eq(b, "bar");
-      do_check_eq(this, expectedThis);
+      Assert.equal(a, "foo");
+      Assert.equal(b, "bar");
+      Assert.equal(this, expectedThis);
       callback(a + b);
     }
 
     // Test call.
     let callResult = yield promiseCall(func, "foo", "bar", undefined);
-    do_check_eq(callResult, "foobar");
+    Assert.equal(callResult, "foobar");
 
     // Test invoke.
     let obj = { method: func };
     let invokeResult = yield promiseInvoke(obj, obj.method, "foo", "bar", obj);
-    do_check_eq(invokeResult, "foobar");
+    Assert.equal(invokeResult, "foobar");
 
     // Test passing multiple values to the callback.
     function multipleResults(callback) {
@@ -140,9 +140,9 @@ function test_async_invoke() {
     }
 
     let results = yield promiseCall(multipleResults);
-    do_check_eq(results.length, 2);
-    do_check_eq(results[0], "foo");
-    do_check_eq(results[1], "bar");
+    Assert.equal(results.length, 2);
+    Assert.equal(results[0], "foo");
+    Assert.equal(results[1], "bar");
 
     // Test throwing from the function.
     function thrower() {
@@ -150,8 +150,8 @@ function test_async_invoke() {
     }
 
     yield promiseCall(thrower).catch(error => {
-      do_check_true(error instanceof Error);
-      do_check_eq(error.message, "boom");
+      Assert.ok(error instanceof Error);
+      Assert.equal(error.message, "boom");
     });
   });
 }

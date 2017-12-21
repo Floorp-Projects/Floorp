@@ -14,7 +14,10 @@ interface nsIOutputStream;
 interface nsIURI;
 
 %{C++
+#include "nsContentUtils.h"
+#include "nsIChannel.h"
 #include "nsIConsoleReportCollector.h"
+#include "nsILoadInfo.h"
 namespace mozilla {
 class TimeStamp;
 
@@ -183,6 +186,42 @@ interface nsIInterceptedChannel : nsISupports
       nsCOMPtr<nsIConsoleReportCollector> reporter;
       GetConsoleReportCollector(getter_AddRefs(reporter));
       return reporter.forget();
+    }
+
+    void
+    GetSubresourceTimeStampKey(nsIChannel* aChannel, nsACString& aKey)
+    {
+      if (!nsContentUtils::IsNonSubresourceRequest(aChannel)) {
+        nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+        if (loadInfo) {
+          switch(loadInfo->InternalContentPolicyType()) {
+            case nsIContentPolicy::TYPE_SCRIPT:
+            case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
+            case nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD:
+            case nsIContentPolicy::TYPE_INTERNAL_WORKER_IMPORT_SCRIPTS: {
+              aKey = NS_LITERAL_CSTRING("subresource-script");
+              break;
+            }
+            case nsIContentPolicy::TYPE_IMAGE:
+            case nsIContentPolicy::TYPE_INTERNAL_IMAGE:
+            case nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD:
+            case nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON: {
+              aKey = NS_LITERAL_CSTRING("subresource-image");
+              break;
+            }
+            case nsIContentPolicy::TYPE_STYLESHEET:
+            case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET:
+            case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD: {
+              aKey = NS_LITERAL_CSTRING("subresource-stylesheet");
+              break;
+            }
+            default: {
+              aKey = NS_LITERAL_CSTRING("subresource-other");
+              break;
+            }
+          }
+        }
+      }
     }
 %}
 

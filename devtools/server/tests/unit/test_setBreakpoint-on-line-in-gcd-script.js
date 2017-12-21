@@ -28,27 +28,27 @@ function run_test() {
 
     let location = { line: 7 };
     let [packet, breakpointClient] = yield setBreakpoint(sourceClient, location);
-    do_check_true(packet.isPending);
-    do_check_false("actualLocation" in packet);
+    Assert.ok(packet.isPending);
+    Assert.equal(false, "actualLocation" in packet);
 
     packet = yield executeOnNextTickAndWaitForPause(function () {
       reload(tabClient).then(function () {
         loadSubScriptWithOptions(SOURCE_URL, {target: global, ignoreCache: true});
       });
     }, client);
-    do_check_eq(packet.type, "paused");
+    Assert.equal(packet.type, "paused");
     let why = packet.why;
-    do_check_eq(why.type, "breakpoint");
-    do_check_eq(why.actors.length, 1);
-    do_check_eq(why.actors[0], breakpointClient.actor);
+    Assert.equal(why.type, "breakpoint");
+    Assert.equal(why.actors.length, 1);
+    Assert.equal(why.actors[0], breakpointClient.actor);
     let frame = packet.frame;
     let where = frame.where;
-    do_check_eq(where.source.actor, source.actor);
-    do_check_eq(where.line, location.line);
+    Assert.equal(where.source.actor, source.actor);
+    Assert.equal(where.line, location.line);
     let variables = frame.environment.bindings.variables;
-    do_check_eq(variables.a.value, 1);
-    do_check_eq(variables.b.value.type, "undefined");
-    do_check_eq(variables.c.value.type, "undefined");
+    Assert.equal(variables.a.value, 1);
+    Assert.equal(variables.b.value.type, "undefined");
+    Assert.equal(variables.c.value.type, "undefined");
     yield resume(threadClient);
 
     yield close(client);

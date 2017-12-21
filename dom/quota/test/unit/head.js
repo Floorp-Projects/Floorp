@@ -11,17 +11,12 @@ const NS_ERROR_UNEXPECTED = Cr.NS_ERROR_UNEXPECTED;
 
 function is(a, b, msg)
 {
-  do_check_eq(a, b, Components.stack.caller);
+  Assert.equal(a, b, Components.stack.caller);
 }
 
 function ok(cond, msg)
 {
-  do_check_true(!!cond, Components.stack.caller);
-}
-
-function info(name, message)
-{
-  do_print(name);
+  Assert.ok(!!cond, Components.stack.caller);
 }
 
 function run_test()
@@ -47,7 +42,7 @@ function finishTest()
 {
   resetTesting();
 
-  do_execute_soon(function() {
+  executeSoon(function() {
     do_test_finished();
   })
 }
@@ -59,7 +54,7 @@ function grabArgAndContinueHandler(arg)
 
 function continueToNextStep()
 {
-  do_execute_soon(function() {
+  executeSoon(function() {
     testGenerator.next();
   });
 }

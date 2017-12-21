@@ -27,7 +27,7 @@ function format_mode(mode) {
 }
 
 const _umask = OS.Constants.Sys.umask;
-do_print("umask: " + format_mode(_umask));
+info("umask: " + format_mode(_umask));
 
 /**
  * Compute the mode that a file should have after applying the umask,
@@ -60,12 +60,12 @@ add_task(async function test_path_setPermissions() {
   try {
     for (let [options, expectedMode] of testSequence) {
       if (options !== null) {
-        do_print("Setting permissions to " + JSON.stringify(options));
+        info("Setting permissions to " + JSON.stringify(options));
         await OS.File.setPermissions(path, options);
       }
 
       let stat = await OS.File.stat(path);
-      do_check_eq(format_mode(stat.unixMode), format_mode(expectedMode));
+      Assert.equal(format_mode(stat.unixMode), format_mode(expectedMode));
     }
   } finally {
     await OS.File.remove(path);
@@ -83,12 +83,12 @@ add_task(async function test_file_setPermissions() {
     try {
       for (let [options, expectedMode] of testSequence) {
         if (options !== null) {
-          do_print("Setting permissions to " + JSON.stringify(options));
+          info("Setting permissions to " + JSON.stringify(options));
           await fd.setPermissions(options);
         }
 
         let stat = await fd.stat();
-        do_check_eq(format_mode(stat.unixMode), format_mode(expectedMode));
+        Assert.equal(format_mode(stat.unixMode), format_mode(expectedMode));
       }
     } finally {
       await fd.close();

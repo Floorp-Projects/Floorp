@@ -46,8 +46,8 @@ function contentHandler2(metadata, response)
       response.bodyOutputStream.write(responseBody2a, responseBody2a.length);
       break;
     case 1:
-      do_check_true(metadata.hasHeader("If-None-Match"));
-      do_check_eq(metadata.getHeader("If-None-Match"), "testetag");
+      Assert.ok(metadata.hasHeader("If-None-Match"));
+      Assert.equal(metadata.getHeader("If-None-Match"), "testetag");
       response.bodyOutputStream.write(responseBody2b, responseBody2b.length);
       break;
     default:
@@ -77,17 +77,17 @@ function run_test_content1a()
 
 function contentListener1a(request, buffer)
 {
-  do_check_eq(buffer, responseBody1);
+  Assert.equal(buffer, responseBody1);
 
   asyncOpenCacheEntry(URL + "/content1", "disk", 0, null, cacheCheck1)
 }
 
 function cacheCheck1(status, entry)
 {
-  do_check_eq(status, 0);
-  do_check_eq(entry.dataSize, 0);
+  Assert.equal(status, 0);
+  Assert.equal(entry.dataSize, 0);
   try {
-    do_check_neq(entry.getMetaDataElement("response-head"), null);
+    Assert.notEqual(entry.getMetaDataElement("response-head"), null);
   }
   catch (ex) {
     do_throw("Missing response head");
@@ -102,11 +102,11 @@ function cacheCheck1(status, entry)
 function contentListener1b(request, buffer)
 {
   request.QueryInterface(Ci.nsIHttpChannel);
-  do_check_eq(request.requestMethod, "GET");
-  do_check_eq(request.responseStatus, 200);
-  do_check_eq(request.getResponseHeader("Cache-control"), "max-age=999999");
+  Assert.equal(request.requestMethod, "GET");
+  Assert.equal(request.responseStatus, 200);
+  Assert.equal(request.getResponseHeader("Cache-control"), "max-age=999999");
 
-  do_check_eq(buffer, "");
+  Assert.equal(buffer, "");
   run_test_content2a();
 }
 
@@ -122,18 +122,18 @@ function run_test_content2a()
 
 function contentListener2a(request, buffer)
 {
-  do_check_eq(buffer, responseBody2a);
+  Assert.equal(buffer, responseBody2a);
 
   asyncOpenCacheEntry(URL + "/content2", "disk", 0, null, cacheCheck2)
 }
 
 function cacheCheck2(status, entry)
 {
-  do_check_eq(status, 0);
-  do_check_eq(entry.dataSize, 0);
+  Assert.equal(status, 0);
+  Assert.equal(entry.dataSize, 0);
   try {
-    do_check_neq(entry.getMetaDataElement("response-head"), null);
-    do_check_true(entry.getMetaDataElement("response-head").match('etag: testetag'));
+    Assert.notEqual(entry.getMetaDataElement("response-head"), null);
+    Assert.ok(entry.getMetaDataElement("response-head").match('etag: testetag'));
   }
   catch (ex) {
     do_throw("Missing response head");
@@ -147,7 +147,7 @@ function cacheCheck2(status, entry)
 
 function contentListener2b(request, buffer)
 {
-  do_check_eq(buffer, responseBody2b);
+  Assert.equal(buffer, responseBody2b);
 
   httpServer.stop(do_test_finished);
 }

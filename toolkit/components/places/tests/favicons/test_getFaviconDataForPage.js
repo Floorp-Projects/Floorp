@@ -7,7 +7,7 @@ const FAVICON_MIMETYPE = "image/png";
 const ICON32_URL = "http://places.test/favicon-normal32.png";
 
 add_task(async function test_normal() {
-  do_check_eq(FAVICON_DATA.length, 344);
+  Assert.equal(FAVICON_DATA.length, 344);
   let pageURI = NetUtil.newURI("http://example.com/normal");
 
   await PlacesTestUtils.addVisits(pageURI);
@@ -18,10 +18,10 @@ add_task(async function test_normal() {
         function() {
         PlacesUtils.favicons.getFaviconDataForPage(pageURI,
           function(aURI, aDataLen, aData, aMimeType) {
-            do_check_true(aURI.equals(FAVICON_URI));
-            do_check_eq(FAVICON_DATA.length, aDataLen);
-            do_check_true(compareArrays(FAVICON_DATA, aData));
-            do_check_eq(FAVICON_MIMETYPE, aMimeType);
+            Assert.ok(aURI.equals(FAVICON_URI));
+            Assert.equal(FAVICON_DATA.length, aDataLen);
+            Assert.ok(compareArrays(FAVICON_DATA, aData));
+            Assert.equal(FAVICON_MIMETYPE, aMimeType);
             resolve();
           });
       }, Services.scriptSecurityManager.getSystemPrincipal());
@@ -35,10 +35,10 @@ add_task(async function test_missing() {
     PlacesUtils.favicons.getFaviconDataForPage(pageURI,
       function(aURI, aDataLen, aData, aMimeType) {
         // Check also the expected data types.
-        do_check_true(aURI === null);
-        do_check_true(aDataLen === 0);
-        do_check_true(aData.length === 0);
-        do_check_true(aMimeType === "");
+        Assert.ok(aURI === null);
+        Assert.ok(aDataLen === 0);
+        Assert.ok(aData.length === 0);
+        Assert.ok(aMimeType === "");
         resolve();
       });
   });
@@ -49,14 +49,14 @@ add_task(async function test_fallback() {
   const ROOT_ICON_URL = ROOT_URL + "favicon.ico";
   const SUBPAGE_URL = ROOT_URL + "/missing";
 
-  do_print("Set icon for the root");
+  info("Set icon for the root");
   await PlacesTestUtils.addVisits(ROOT_URL);
   let data = readFileData(do_get_file("favicon-normal16.png"));
   PlacesUtils.favicons.replaceFaviconData(NetUtil.newURI(ROOT_ICON_URL),
                                           data, data.length, "image/png");
   await setFaviconForPage(ROOT_URL, ROOT_ICON_URL);
 
-  do_print("check fallback icons");
+  info("check fallback icons");
   await new Promise(resolve => {
     PlacesUtils.favicons.getFaviconDataForPage(NetUtil.newURI(ROOT_URL),
       (aURI, aDataLen, aData, aMimeType) => {
@@ -78,14 +78,14 @@ add_task(async function test_fallback() {
       });
   });
 
-  do_print("Now add a proper icon for the page");
+  info("Now add a proper icon for the page");
   await PlacesTestUtils.addVisits(SUBPAGE_URL);
   let data32 = readFileData(do_get_file("favicon-normal32.png"));
   PlacesUtils.favicons.replaceFaviconData(NetUtil.newURI(ICON32_URL),
                                           data32, data32.length, "image/png");
   await setFaviconForPage(SUBPAGE_URL, ICON32_URL);
 
-  do_print("check no fallback icons");
+  info("check no fallback icons");
   await new Promise(resolve => {
     PlacesUtils.favicons.getFaviconDataForPage(NetUtil.newURI(ROOT_URL),
       (aURI, aDataLen, aData, aMimeType) => {

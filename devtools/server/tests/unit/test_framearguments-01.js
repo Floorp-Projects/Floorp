@@ -28,15 +28,15 @@ function run_test() {
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     let args = packet.frame.arguments;
-    do_check_eq(args.length, 6);
-    do_check_eq(args[0], 42);
-    do_check_eq(args[1], true);
-    do_check_eq(args[2], "nasu");
-    do_check_eq(args[3].type, "null");
-    do_check_eq(args[4].type, "undefined");
-    do_check_eq(args[5].type, "object");
-    do_check_eq(args[5].class, "Object");
-    do_check_true(!!args[5].actor);
+    Assert.equal(args.length, 6);
+    Assert.equal(args[0], 42);
+    Assert.equal(args[1], true);
+    Assert.equal(args[2], "nasu");
+    Assert.equal(args[3].type, "null");
+    Assert.equal(args[4].type, "undefined");
+    Assert.equal(args[5].type, "object");
+    Assert.equal(args[5].class, "Object");
+    Assert.ok(!!args[5].actor);
 
     gThreadClient.resume(function () {
       finishClient(gClient);

@@ -80,7 +80,7 @@ function inputDetailAssertion(detail, expected) {
 
 TESTCASES.forEach(testcase => {
   add_task(async function() {
-    do_print("Starting testcase: " + testcase.description);
+    info("Starting testcase: " + testcase.description);
 
     let doc = MockDocument.createTestDocument(
               "http://localhost:8080/test/", testcase.document);

@@ -43,11 +43,11 @@ function checkResults(xhr, method, status, unsafe)
 
   if (xhr.readyState != 4)
     return false;
-  do_check_eq(xhr.status, status);
+  Assert.equal(xhr.status, status);
 
   if (status == 200) {
     // if followed then check for echoed method name
-    do_check_eq(xhr.getResponseHeader("X-Received-Method"), method);
+    Assert.equal(xhr.getResponseHeader("X-Received-Method"), method);
   }
 
   return true;

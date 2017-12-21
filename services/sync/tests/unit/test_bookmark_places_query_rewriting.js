@@ -45,7 +45,7 @@ add_task(async function run_test() {
 
   _("Tag ID: " + tagID);
   let insertedRecord = await store.createRecord("abcdefabcdef", "bookmarks");
-  do_check_eq(insertedRecord.bmkUri, uri.replace("499", tagID));
+  Assert.equal(insertedRecord.bmkUri, uri.replace("499", tagID));
 
   _("... but not if the type is wrong.");
   let wrongTypeURI = "place:folder=499&type=2&queryType=1";
@@ -53,5 +53,5 @@ add_task(async function run_test() {
   await store.applyIncoming(wrongTypeRecord);
 
   insertedRecord = await store.createRecord("fedcbafedcba", "bookmarks");
-  do_check_eq(insertedRecord.bmkUri, wrongTypeURI);
+  Assert.equal(insertedRecord.bmkUri, wrongTypeURI);
 });

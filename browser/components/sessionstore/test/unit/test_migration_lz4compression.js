@@ -17,7 +17,7 @@ updateAppInfo({
 
 function promise_check_exist(path, shouldExist) {
   return (async function() {
-    do_print("Ensuring that " + path + (shouldExist ? " exists" : " does not exist"));
+    info("Ensuring that " + path + (shouldExist ? " exists" : " does not exist"));
     if ((await OS.File.exists(path)) != shouldExist) {
       throw new Error("File " + path + " should " + (shouldExist ? "exist" : "not exist"));
     }
@@ -26,7 +26,7 @@ function promise_check_exist(path, shouldExist) {
 
 function promise_check_contents(path, expect) {
   return (async function() {
-    do_print("Checking whether " + path + " has the right contents");
+    info("Checking whether " + path + " has the right contents");
     let actual = await OS.File.read(path, { encoding: "utf-8", compression: "lz4" });
     Assert.deepEqual(JSON.parse(actual), expect, `File ${path} contains the expected data.`);
   })();

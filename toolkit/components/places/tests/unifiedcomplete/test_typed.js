@@ -8,7 +8,7 @@
 const FAVICON_HREF = NetUtil.newURI(do_get_file("../favicons/favicon-normal16.png")).spec;
 
 add_task(async function test_domain() {
-  do_print("Searching for domain should autoFill it");
+  info("Searching for domain should autoFill it");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   await PlacesTestUtils.addVisits(NetUtil.newURI("http://mozilla.org/link/"));
   await setFaviconForPage("http://mozilla.org/link/", FAVICON_HREF);
@@ -22,7 +22,7 @@ add_task(async function test_domain() {
 });
 
 add_task(async function test_url() {
-  do_print("Searching for url should autoFill it");
+  info("Searching for url should autoFill it");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   await PlacesTestUtils.addVisits(NetUtil.newURI("http://mozilla.org/link/"));
   await setFaviconForPage("http://mozilla.org/link/", FAVICON_HREF);
@@ -38,7 +38,7 @@ add_task(async function test_url() {
 // Now do searches with typed behavior forced to true.
 
 add_task(async function test_untyped_domain() {
-  do_print("Searching for non-typed domain should not autoFill it");
+  info("Searching for non-typed domain should not autoFill it");
   await PlacesTestUtils.addVisits(NetUtil.newURI("http://mozilla.org/link/"));
   await check_autocomplete({
     search: "moz",
@@ -49,7 +49,7 @@ add_task(async function test_untyped_domain() {
 });
 
 add_task(async function test_typed_domain() {
-  do_print("Searching for typed domain should autoFill it");
+  info("Searching for typed domain should autoFill it");
   await PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://mozilla.org/typed/"),
                            transition: TRANSITION_TYPED });
   await check_autocomplete({
@@ -61,7 +61,7 @@ add_task(async function test_typed_domain() {
 });
 
 add_task(async function test_untyped_url() {
-  do_print("Searching for non-typed url should not autoFill it");
+  info("Searching for non-typed url should not autoFill it");
   await PlacesTestUtils.addVisits(NetUtil.newURI("http://mozilla.org/link/"));
   await check_autocomplete({
     search: "mozilla.org/li",
@@ -72,7 +72,7 @@ add_task(async function test_untyped_url() {
 });
 
 add_task(async function test_typed_url() {
-  do_print("Searching for typed url should autoFill it");
+  info("Searching for typed url should autoFill it");
   await PlacesTestUtils.addVisits({ uri: NetUtil.newURI("http://mozilla.org/link/"),
                            transition: TRANSITION_TYPED });
   await check_autocomplete({

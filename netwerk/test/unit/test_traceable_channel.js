@@ -27,11 +27,11 @@ TracingListener.prototype = {
     request.QueryInterface(Components.interfaces.nsIHttpChannelInternal);
 
 // local/remote addresses broken in e10s: disable for now
-    do_check_eq(request.localAddress, "127.0.0.1");
-    do_check_eq(request.localPort > 0, true);
-    do_check_neq(request.localPort, PORT);
-    do_check_eq(request.remoteAddress, "127.0.0.1");
-    do_check_eq(request.remotePort, PORT);
+    Assert.equal(request.localAddress, "127.0.0.1");
+    Assert.equal(request.localPort > 0, true);
+    Assert.notEqual(request.localPort, PORT);
+    Assert.equal(request.remoteAddress, "127.0.0.1");
+    Assert.equal(request.remotePort, PORT);
 
     // Make sure listener can't be replaced after OnStartRequest was called.
     request.QueryInterface(Components.interfaces.nsITraceableChannel);
@@ -48,7 +48,7 @@ TracingListener.prototype = {
   onStopRequest: function(request, context, statusCode) {
     dump("*** tracing listener onStopRequest\n");
     
-    do_check_eq(gotOnStartRequest, true);
+    Assert.equal(gotOnStartRequest, true);
 
     try {
       var sin = Components.classes["@mozilla.org/scriptableinputstream;1"].
@@ -57,10 +57,10 @@ TracingListener.prototype = {
       streamSink.close();
       var input = pipe.inputStream;
       sin.init(input);
-      do_check_eq(sin.available(), originalBody.length);
+      Assert.equal(sin.available(), originalBody.length);
     
       var result = sin.read(originalBody.length);
-      do_check_eq(result, originalBody);
+      Assert.equal(result, originalBody);
     
       input.close();
     } catch (e) {

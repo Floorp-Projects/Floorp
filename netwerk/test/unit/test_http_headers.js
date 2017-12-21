@@ -7,7 +7,7 @@ function check_request_header(chan, name, value) {
   } catch (e) {
     do_throw("Expected to find header '" + name + "' but didn't find it");
   }
-  do_check_eq(chanValue, value);
+  Assert.equal(chanValue, value);
 }
 
 function run_test() {

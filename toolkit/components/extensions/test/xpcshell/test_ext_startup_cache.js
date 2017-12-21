@@ -70,7 +70,7 @@ add_task(async function() {
   equal(manifest.name, "en-US 1.0", "Got expected manifest name");
 
 
-  do_print("Restart and re-check");
+  info("Restart and re-check");
   await AddonTestUtils.promiseRestartManager();
   await extension.awaitStartup();
 
@@ -79,7 +79,7 @@ add_task(async function() {
   equal(manifest.name, "en-US 1.0", "Got expected manifest name");
 
 
-  do_print("Change locale to 'fr' and restart");
+  info("Change locale to 'fr' and restart");
   Services.locale.setRequestedLocales(["fr"]);
   await AddonTestUtils.promiseRestartManager();
   await extension.awaitStartup();
@@ -89,7 +89,7 @@ add_task(async function() {
   equal(manifest.name, "fr 1.0", "Got expected manifest name");
 
 
-  do_print("Update to version 1.1");
+  info("Update to version 1.1");
   await extension.upgrade(makeExtension({version: "1.1"}));
 
   equal(extension.version, "1.1", "Expected extension version");
@@ -97,7 +97,7 @@ add_task(async function() {
   equal(manifest.name, "fr 1.1", "Got expected manifest name");
 
 
-  do_print("Change locale to 'en-US' and restart");
+  info("Change locale to 'en-US' and restart");
   Services.locale.setRequestedLocales(["en-US"]);
   await AddonTestUtils.promiseRestartManager();
   await extension.awaitStartup();

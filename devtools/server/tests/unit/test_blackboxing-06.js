@@ -29,7 +29,7 @@ function run_test() {
           .then(run_code)
           .then(test_correct_location)
           .catch(function (error) {
-            do_check_true(false, "Should not get an error, got " + error);
+            Assert.ok(false, "Should not get an error, got " + error);
           })
           .then(function () {
             finishClient(gClient);
@@ -73,14 +73,14 @@ function black_box_code() {
   const d = defer();
 
   gThreadClient.getSources(function ({ sources, error }) {
-    do_check_true(!error, "Shouldn't get an error getting sources");
+    Assert.ok(!error, "Shouldn't get an error getting sources");
     const source = sources.filter((s) => {
       return s.url.indexOf("b.js") !== -1;
     })[0];
-    do_check_true(!!source, "We should have our source in the sources list");
+    Assert.ok(!!source, "We should have our source in the sources list");
 
     gThreadClient.source(source).blackBox(function ({ error }) {
-      do_check_true(!error, "Should not get an error black boxing");
+      Assert.ok(!error, "Should not get an error black boxing");
       d.resolve(true);
     });
   });
@@ -101,9 +101,9 @@ function run_code() {
 }
 
 function test_correct_location(packet) {
-  do_check_eq(packet.why.type, "debuggerStatement",
-              "Should hit a debugger statement.");
-  do_check_eq(packet.frame.where.source.url, "http://example.com/c.js",
-              "Should have skipped over the debugger statement in the" +
-              " black boxed source");
+  Assert.equal(packet.why.type, "debuggerStatement",
+               "Should hit a debugger statement.");
+  Assert.equal(packet.frame.where.source.url, "http://example.com/c.js",
+               "Should have skipped over the debugger statement in the" +
+               " black boxed source");
 }

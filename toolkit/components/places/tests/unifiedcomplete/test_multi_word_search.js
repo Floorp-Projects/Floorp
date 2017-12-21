@@ -26,39 +26,39 @@ add_task(async function test_match_beginning() {
   await addBookmark({ uri: uri3, title: "f(o)o b<a>r" });
   await addBookmark({ uri: uri4, title: "b(a)r b<a>z" });
 
-  do_print("Match 2 terms all in url");
+  info("Match 2 terms all in url");
   await check_autocomplete({
     search: "c d",
     matches: [ { uri: uri1, title: "f(o)o b<a>r" } ]
   });
 
-  do_print("Match 1 term in url and 1 term in title");
+  info("Match 1 term in url and 1 term in title");
   await check_autocomplete({
     search: "b e",
     matches: [ { uri: uri1, title: "f(o)o b<a>r" },
                { uri: uri2, title: "b(a)r b<a>z" } ]
   });
 
-  do_print("Match 3 terms all in title; display bookmark title if matched");
+  info("Match 3 terms all in title; display bookmark title if matched");
   await check_autocomplete({
     search: "b a z",
     matches: [ { uri: uri2, title: "b(a)r b<a>z" },
                { uri: uri4, title: "b(a)r b<a>z", style: [ "bookmark" ] } ]
   });
 
-  do_print("Match 2 terms in url and 1 in title; make sure bookmark title is used for search");
+  info("Match 2 terms in url and 1 in title; make sure bookmark title is used for search");
   await check_autocomplete({
     search: "k f t",
     matches: [ { uri: uri3, title: "f(o)o b<a>r", style: [ "bookmark" ] } ]
   });
 
-  do_print("Match 3 terms in url and 1 in title");
+  info("Match 3 terms in url and 1 in title");
   await check_autocomplete({
     search: "d i g z",
     matches: [ { uri: uri2, title: "b(a)r b<a>z" } ]
   });
 
-  do_print("Match nothing");
+  info("Match nothing");
   await check_autocomplete({
     search: "m o z i",
     matches: [ ]

@@ -26,7 +26,7 @@ function run_test() {
       resolve();
     });
     srv.start(-1);
-    do_register_cleanup(() => srv.stop(() => {}));
+    registerCleanupFunction(() => srv.stop(() => {}));
 
     url = "http://localhost:" + srv.identity.primaryPort + "/icon.svg";
   });

@@ -14,7 +14,7 @@ function run_test() {
     var statement = conn.createStatement(sql);
     try {
       // This shouldn't crash:
-      do_check_eq(statement.getColumnName(0), colName);
+      Assert.equal(statement.getColumnName(0), colName);
     } finally {
       statement.reset();
       statement.finalize();

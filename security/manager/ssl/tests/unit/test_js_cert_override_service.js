@@ -47,7 +47,7 @@ function run_test() {
   let certOverrideServiceCID =
     MockRegistrar.register("@mozilla.org/security/certoverride;1",
                            gCertOverrideService);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     MockRegistrar.unregister(certOverrideServiceCID);
   });
   add_tls_server_setup("BadCertServer", "bad_certs");

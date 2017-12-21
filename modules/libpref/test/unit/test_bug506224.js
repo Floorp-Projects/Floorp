@@ -13,8 +13,8 @@ function run_test() {
 
   prefs.setCharPref(PREF_NAME, "test0");
   prefs.lockPref(PREF_NAME);
-  do_check_eq("test0", userprefs.getCharPref(PREF_NAME));
-  do_check_eq(false, userprefs.prefHasUserValue(PREF_NAME));
+  Assert.equal("test0", userprefs.getCharPref(PREF_NAME));
+  Assert.equal(false, userprefs.prefHasUserValue(PREF_NAME));
 
   var file = do_get_profile();
   file.append("prefs.js");
@@ -24,6 +24,6 @@ function run_test() {
   prefs.setCharPref(PREF_NAME, "test1");
   ps.readUserPrefsFromFile(file);
 
-  do_check_eq("test1", userprefs.getCharPref(PREF_NAME));
-  do_check_eq(false, userprefs.prefHasUserValue(PREF_NAME));
+  Assert.equal("test1", userprefs.getCharPref(PREF_NAME));
+  Assert.equal(false, userprefs.prefHasUserValue(PREF_NAME));
 }

@@ -26,9 +26,9 @@ function run_test() {
   pm.addFromPrincipal(tldPrincipal, perm, pm.ALLOW_ACTION, 0, 0);
 
   // They should obviously be there now..
-  do_check_eq(pm.testPermissionFromPrincipal(mainDomainPrincipal, perm), pm.ALLOW_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(subDomainPrincipal, perm), pm.ALLOW_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(tldPrincipal, perm), pm.ALLOW_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(mainDomainPrincipal, perm), pm.ALLOW_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(subDomainPrincipal, perm), pm.ALLOW_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(tldPrincipal, perm), pm.ALLOW_ACTION);
 
   // We do the same thing with the puny-encoded versions of the IDN.
   let punyMainDomainPrincipal = getPrincipalFromDomain('xn--f-xgav.com');
@@ -36,14 +36,14 @@ function run_test() {
   let punyTldPrincipal = getPrincipalFromDomain('xn--f-xgav.xn--br-jia.xn--cm-8ja');
 
   // Those principals should have the permission granted too.
-  do_check_eq(pm.testPermissionFromPrincipal(punyMainDomainPrincipal, perm), pm.ALLOW_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(punySubDomainPrincipal, perm), pm.ALLOW_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(punyTldPrincipal, perm), pm.ALLOW_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(punyMainDomainPrincipal, perm), pm.ALLOW_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(punySubDomainPrincipal, perm), pm.ALLOW_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(punyTldPrincipal, perm), pm.ALLOW_ACTION);
 
   // However, those two principals shouldn't be allowed because they are like
   // the IDN but without the UT8-8 characters.
   let witnessPrincipal = getPrincipalFromDomain("foo.com");
-  do_check_eq(pm.testPermissionFromPrincipal(witnessPrincipal, perm), pm.UNKNOWN_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(witnessPrincipal, perm), pm.UNKNOWN_ACTION);
   witnessPrincipal = getPrincipalFromDomain("foo.bar.com");
-  do_check_eq(pm.testPermissionFromPrincipal(witnessPrincipal, perm), pm.UNKNOWN_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(witnessPrincipal, perm), pm.UNKNOWN_ACTION);
 }

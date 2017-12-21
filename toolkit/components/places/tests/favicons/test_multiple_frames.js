@@ -23,18 +23,18 @@ add_task(async function() {
     let file = do_get_file(`favicon-multi-frame${size}.png`);
     let data = readFileData(file);
 
-    do_print("Check getFaviconDataForPage");
+    info("Check getFaviconDataForPage");
     let icon = await getFaviconDataForPage(pageURI, size);
     Assert.equal(icon.mimeType, "image/png");
     Assert.deepEqual(icon.data, data);
 
-    do_print("Check moz-anno:favicon protocol");
+    info("Check moz-anno:favicon protocol");
     await compareFavicons(
       Services.io.newFileURI(file),
       PlacesUtils.urlWithSizeRef(win, PlacesUtils.favicons.getFaviconLinkForIcon(faviconURI).spec, size)
     );
 
-    do_print("Check page-icon protocol");
+    info("Check page-icon protocol");
     await compareFavicons(
       Services.io.newFileURI(file),
       PlacesUtils.urlWithSizeRef(win, "page-icon:" + pageURI.spec, size)

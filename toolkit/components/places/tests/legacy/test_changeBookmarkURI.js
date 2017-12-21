@@ -23,15 +23,15 @@ async function checkUris(aBookmarkId, aBookmarkedUri, aUnbookmarkedUri) {
   // Ensure that aBookmarkedUri equals some URI that is bookmarked
   let bm = await PlacesUtils.bookmarks.fetch({url: aBookmarkedUri});
 
-  do_check_neq(bm, null);
-  do_check_true(uri(bm.url).equals(aBookmarkedUri));
+  Assert.notEqual(bm, null);
+  Assert.ok(uri(bm.url).equals(aBookmarkedUri));
 
   // Ensure that the URI corresponding to aBookmarkId equals aBookmarkedUri
-  do_check_true(bmsvc.getBookmarkURI(aBookmarkId).equals(aBookmarkedUri));
+  Assert.ok(bmsvc.getBookmarkURI(aBookmarkId).equals(aBookmarkedUri));
 
   // Ensure that aUnbookmarkedUri does not equal any URI that is bookmarked
   bm = await PlacesUtils.bookmarks.fetch({url: aUnbookmarkedUri});
-  do_check_eq(bm, null);
+  Assert.equal(bm, null);
 }
 
 // main

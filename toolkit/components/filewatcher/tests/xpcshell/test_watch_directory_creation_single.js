@@ -38,7 +38,7 @@ add_task(async function test_watch_single_path_directory_creation() {
 
   // Wait until the watcher informs us that the file has changed.
   let changed = await deferred.promise;
-  do_check_eq(changed, tmpDirPath);
+  Assert.equal(changed, tmpDirPath);
 
   // Remove the watch and free the associated memory (we need to
   // reuse 'deferred.resolve' and 'deferred.reject' to unregister).

@@ -76,7 +76,7 @@ add_task(async function test_search() {
   const nsIFile = Ci.nsIFile;
   let downloadDir = FileUtils.getDir("TmpD", ["downloads"]);
   downloadDir.createUnique(nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  do_print(`downloadDir ${downloadDir.path}`);
+  info(`downloadDir ${downloadDir.path}`);
 
   function downloadPath(filename) {
     let path = downloadDir.clone();
@@ -87,7 +87,7 @@ add_task(async function test_search() {
   Services.prefs.setIntPref("browser.download.folderList", 2);
   Services.prefs.setComplexValue("browser.download.dir", nsIFile, downloadDir);
 
-  do_register_cleanup(async () => {
+  registerCleanupFunction(async () => {
     Services.prefs.clearUserPref("browser.download.folderList");
     Services.prefs.clearUserPref("browser.download.dir");
     await cleanupDir(downloadDir);
@@ -95,7 +95,7 @@ add_task(async function test_search() {
   });
 
   await clearDownloads().then(downloads => {
-    do_print(`removed ${downloads.length} pre-existing downloads from history`);
+    info(`removed ${downloads.length} pre-existing downloads from history`);
   });
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -110,7 +110,7 @@ add_task(async function test_search() {
     let result = await extension.awaitMessage("download.done");
 
     if (result.status == "success") {
-      do_print(`wait for onChanged event to indicate ${result.id} is complete`);
+      info(`wait for onChanged event to indicate ${result.id} is complete`);
       extension.sendMessage("waitForComplete.request", result.id);
 
       await extension.awaitMessage("waitForComplete.done");

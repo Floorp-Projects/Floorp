@@ -14,9 +14,9 @@ function run_test() {
                      crashReporter.appendAppNotesToCrashReport("!!!foo!!!");
                    },
                    function(mdump, extra) {
-                     do_check_eq(extra.TestKey, "TestValue");
-                     do_check_true("StartupTime" in extra);
-                     do_check_true("ProcessType" in extra);
-                     do_check_neq(extra.Notes.indexOf("!!!foo!!!"), -1);
+                     Assert.equal(extra.TestKey, "TestValue");
+                     Assert.ok("StartupTime" in extra);
+                     Assert.ok("ProcessType" in extra);
+                     Assert.notEqual(extra.Notes.indexOf("!!!foo!!!"), -1);
                    });
 }

@@ -89,7 +89,7 @@ function rebuildSmartBookmarks() {
   };
   Services.console.reset();
   Services.console.registerListener(consoleListener);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     try {
       Services.console.unregisterListener(consoleListener);
     } catch (ex) { /* will likely fail */ }

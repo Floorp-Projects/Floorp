@@ -50,7 +50,7 @@ function serverHandler(metadata, response) {
 }
 
 function checkRequest(request, data, context) {
-  do_check_eq(data, httpbody);
+  Assert.equal(data, httpbody);
 }
 
 function checkRequestFinish(request, data, context) {

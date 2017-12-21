@@ -24,7 +24,7 @@ add_task(async function test_promiseID() {
   let promise = [p1, p2, p3];
 
   let identifiers = promise.map(PromiseDebugging.getPromiseID);
-  do_print("Identifiers: " + JSON.stringify(identifiers));
+  info("Identifiers: " + JSON.stringify(identifiers));
   let idSet = new Set(identifiers);
   Assert.equal(idSet.size, identifiers.length,
     "PromiseDebugging.getPromiseID returns a distinct id per promise");
@@ -48,7 +48,7 @@ add_task(async function test_observe_uncaught() {
   };
   CallbackResults.prototype = {
     observe: function(promise) {
-      do_print(this.name + " observing Promise " + names.get(promise));
+      info(this.name + " observing Promise " + names.get(promise));
       Assert.equal(PromiseDebugging.getState(promise).state, "rejected",
                    this.name + " observed a rejected Promise");
       if (!this.expected.has(promise)) {
@@ -68,8 +68,8 @@ add_task(async function test_observe_uncaught() {
       if (this.expected.size == 0) {
         this.resolve();
       } else {
-        do_print(this.name + " is still waiting for " + this.expected.size + " observations:");
-        do_print(JSON.stringify(Array.from(this.expected.values(), (x) => names.get(x))));
+        info(this.name + " is still waiting for " + this.expected.size + " observations:");
+        info(JSON.stringify(Array.from(this.expected.values(), (x) => names.get(x))));
       }
     },
   };
@@ -123,7 +123,7 @@ add_task(async function test_observe_uncaught() {
     // Reject a promise now, consume it later.
     let p = Promise.reject("Reject now, consume later");
     setTimeout(() => p.catch(() => {
-      do_print("Consumed promise");
+      info("Consumed promise");
     }), 200);
     yield {
       promise: p,
@@ -196,7 +196,7 @@ add_task(async function test_observe_uncaught() {
   let samples = [];
   for (let s of makeSamples()) {
     samples.push(s);
-    do_print("Promise '" + s.name + "' has id " + PromiseDebugging.getPromiseID(s.promise));
+    info("Promise '" + s.name + "' has id " + PromiseDebugging.getPromiseID(s.promise));
   }
 
   PromiseDebugging.addUncaughtRejectionObserver(observer);
@@ -211,17 +211,17 @@ add_task(async function test_observe_uncaught() {
     }
   }
 
-  do_print("Test setup, waiting for callbacks.");
+  info("Test setup, waiting for callbacks.");
   await onLeftUncaught.blocker;
 
-  do_print("All calls to onLeftUncaught are complete.");
+  info("All calls to onLeftUncaught are complete.");
   if (onConsumed.expected.size != 0) {
-    do_print("onConsumed is still waiting for the following Promise:");
-    do_print(JSON.stringify(Array.from(onConsumed.expected.values(), (x) => names.get(x))));
+    info("onConsumed is still waiting for the following Promise:");
+    info(JSON.stringify(Array.from(onConsumed.expected.values(), (x) => names.get(x))));
     await onConsumed.blocker;
   }
 
-  do_print("All calls to onConsumed are complete.");
+  info("All calls to onConsumed are complete.");
   let removed = PromiseDebugging.removeUncaughtRejectionObserver(observer);
   Assert.ok(removed, "removeUncaughtRejectionObserver succeeded");
   removed = PromiseDebugging.removeUncaughtRejectionObserver(observer);
@@ -252,15 +252,15 @@ add_task(async function test_uninstall_observer() {
     },
   };
 
-  do_print("Adding an observer.");
+  info("Adding an observer.");
   let deactivate = new Observer();
   Promise.reject("I am an uncaught rejection.");
   await deactivate.blocker;
   Assert.ok(true, "The observer has observed an uncaught Promise.");
   deactivate.active = false;
-  do_print("Removing the observer, it should not observe any further uncaught Promise.");
+  info("Removing the observer, it should not observe any further uncaught Promise.");
 
-  do_print("Rejecting a Promise and waiting a little to give a chance to observers.");
+  info("Rejecting a Promise and waiting a little to give a chance to observers.");
   let wait = new Observer();
   Promise.reject("I am another uncaught rejection.");
   await wait.blocker;

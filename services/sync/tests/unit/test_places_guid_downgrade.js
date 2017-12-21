@@ -44,14 +44,14 @@ add_test(function test_initial_state() {
   let db = Services.storage.openUnsharedDatabase(dbFile);
 
   let stmt = db.createStatement("PRAGMA journal_mode");
-  do_check_true(stmt.executeStep());
+  Assert.ok(stmt.executeStep());
   // WAL journal mode should have been unset this database when it was migrated
   // down to v10.
-  do_check_neq(stmt.getString(0).toLowerCase(), "wal");
+  Assert.notEqual(stmt.getString(0).toLowerCase(), "wal");
   stmt.finalize();
 
-  do_check_true(db.indexExists("moz_bookmarks_guid_uniqueindex"));
-  do_check_true(db.indexExists("moz_places_guid_uniqueindex"));
+  Assert.ok(db.indexExists("moz_bookmarks_guid_uniqueindex"));
+  Assert.ok(db.indexExists("moz_places_guid_uniqueindex"));
 
   // There should be a non-zero amount of bookmarks without a guid.
   stmt = db.createStatement(
@@ -59,8 +59,8 @@ add_test(function test_initial_state() {
   + "FROM moz_bookmarks "
   + "WHERE guid IS NULL "
   );
-  do_check_true(stmt.executeStep());
-  do_check_neq(stmt.getInt32(0), 0);
+  Assert.ok(stmt.executeStep());
+  Assert.notEqual(stmt.getInt32(0), 0);
   stmt.finalize();
 
   // There should be a non-zero amount of places without a guid.
@@ -69,12 +69,12 @@ add_test(function test_initial_state() {
   + "FROM moz_places "
   + "WHERE guid IS NULL "
   );
-  do_check_true(stmt.executeStep());
-  do_check_neq(stmt.getInt32(0), 0);
+  Assert.ok(stmt.executeStep());
+  Assert.notEqual(stmt.getInt32(0), 0);
   stmt.finalize();
 
   // Check our schema version to make sure it is actually at 10.
-  do_check_eq(db.schemaVersion, 10);
+  Assert.equal(db.schemaVersion, 10);
 
   db.close();
 
@@ -117,26 +117,26 @@ add_task(async function test_history_guids() {
       "SELECT id FROM moz_places WHERE guid = :guid",
       {guid: fxguid}
     );
-    do_check_eq(result.length, 1);
+    Assert.equal(result.length, 1);
 
     result = await db.execute(
       "SELECT id FROM moz_places WHERE guid = :guid",
       {guid: tbguid}
     );
-    do_check_eq(result.length, 1);
+    Assert.equal(result.length, 1);
 
     _("History: Verify GUIDs weren't added to annotations.");
     result = await db.execute(
       "SELECT a.content AS guid FROM moz_annos a WHERE guid = :guid",
       {guid: fxguid}
     );
-    do_check_eq(result.length, 0);
+    Assert.equal(result.length, 0);
 
     result = await db.execute(
       "SELECT a.content AS guid FROM moz_annos a WHERE guid = :guid",
       {guid: tbguid}
     );
-    do_check_eq(result.length, 0);
+    Assert.equal(result.length, 0);
   }
 
   await PlacesUtils.history.insertMany(places);
@@ -163,28 +163,28 @@ add_task(async function test_bookmark_guids() {
     "SELECT id FROM moz_bookmarks WHERE guid = :guid",
     {guid: fx.guid}
   );
-  do_check_eq(result.length, 1);
-  do_check_eq(result[0].getResultByName("id"), fxid);
+  Assert.equal(result.length, 1);
+  Assert.equal(result[0].getResultByName("id"), fxid);
 
   result = await db.execute(
     "SELECT id FROM moz_bookmarks WHERE guid = :guid",
     {guid: tb.guid}
   );
-  do_check_eq(result.length, 1);
-  do_check_eq(result[0].getResultByName("id"), tbid);
+  Assert.equal(result.length, 1);
+  Assert.equal(result[0].getResultByName("id"), tbid);
 
   _("Bookmarks: Verify GUIDs weren't added to annotations.");
   result = await db.execute(
     "SELECT a.content AS guid FROM moz_items_annos a WHERE guid = :guid",
     {guid: fx.guid}
   );
-  do_check_eq(result.length, 0);
+  Assert.equal(result.length, 0);
 
   result = await db.execute(
     "SELECT a.content AS guid FROM moz_items_annos a WHERE guid = :guid",
     {guid: tb.guid}
   );
-  do_check_eq(result.length, 0);
+  Assert.equal(result.length, 0);
 });
 
 function run_test() {

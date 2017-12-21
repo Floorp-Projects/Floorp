@@ -11,26 +11,26 @@ function run_test()
     addonId: "12345"
   });
 
-  do_check_eq(Components.utils.getSandboxMetadata(sandbox), "test metadata");
-  do_check_eq(Components.utils.getSandboxAddonId(sandbox), "12345");
+  Assert.equal(Components.utils.getSandboxMetadata(sandbox), "test metadata");
+  Assert.equal(Components.utils.getSandboxAddonId(sandbox), "12345");
 
   sandbox = Components.utils.Sandbox("http://www.blah.com", {
     metadata: { foopy: { bar: 2 }, baz: "hi" }
   });
 
   let metadata = Components.utils.getSandboxMetadata(sandbox);
-  do_check_eq(metadata.baz, "hi");
-  do_check_eq(metadata.foopy.bar, 2);
+  Assert.equal(metadata.baz, "hi");
+  Assert.equal(metadata.foopy.bar, 2);
   metadata.baz = "foo";
 
   metadata = Components.utils.getSandboxMetadata(sandbox);
-  do_check_eq(metadata.baz, "foo");
+  Assert.equal(metadata.baz, "foo");
 
   metadata = { foo: "bar" };
   Components.utils.setSandboxMetadata(sandbox, metadata);
   metadata.foo = "baz";
   metadata = Components.utils.getSandboxMetadata(sandbox);
-  do_check_eq(metadata.foo, "bar");
+  Assert.equal(metadata.foo, "bar");
 
   let thrown = false;
   let reflector = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -42,7 +42,7 @@ function run_test()
     thrown = true;
   }
 
-  do_check_eq(thrown, true);
+  Assert.equal(thrown, true);
 
   sandbox = Components.utils.Sandbox(this, {
     metadata: { foopy: { bar: 2 }, baz: "hi" }
@@ -51,8 +51,8 @@ function run_test()
   let inner = Components.utils.evalInSandbox("Components.utils.Sandbox('http://www.blah.com')", sandbox);
 
   metadata = Components.utils.getSandboxMetadata(inner);
-  do_check_eq(metadata.baz, "hi");
-  do_check_eq(metadata.foopy.bar, 2);
+  Assert.equal(metadata.baz, "hi");
+  Assert.equal(metadata.foopy.bar, 2);
   metadata.baz = "foo";
 }
 

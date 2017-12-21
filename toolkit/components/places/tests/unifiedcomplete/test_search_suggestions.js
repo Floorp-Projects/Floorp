@@ -46,7 +46,7 @@ add_task(async function setup() {
 
   // Install the test engine.
   let oldCurrentEngine = Services.search.currentEngine;
-  do_register_cleanup(() => Services.search.currentEngine = oldCurrentEngine);
+  registerCleanupFunction(() => Services.search.currentEngine = oldCurrentEngine);
   let engine = await addTestEngine(ENGINE_NAME, server);
   Services.search.currentEngine = engine;
 
@@ -601,7 +601,7 @@ add_task(async function prohibit_suggestions() {
     ],
   });
   Services.prefs.setBoolPref("browser.fixup.domainwhitelist.localhost", true);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.prefs.setBoolPref("browser.fixup.domainwhitelist.localhost", false);
   });
   await check_autocomplete({
@@ -648,7 +648,7 @@ add_task(async function prohibit_suggestions() {
   // word instead:
   Services.prefs.setBoolPref("browser.fixup.domainwhitelist.localhost", false);
   Services.prefs.setBoolPref("browser.fixup.dns_first_for_single_words", true);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.prefs.clearUserPref("browser.fixup.dns_first_for_single_words");
   });
 

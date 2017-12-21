@@ -11,7 +11,7 @@ function run_test() {
 
   // Set up our destination stream.  Make sure to use segments a good
   // bit smaller than our data length.
-  do_check_true(testStr.length > 1024*10);
+  Assert.ok(testStr.length > 1024*10);
   var pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
   pipe.init(true, true, 1024, 0xffffffff, null);
 
@@ -25,11 +25,11 @@ function run_test() {
   
   var observer = {
     onStartRequest: function(aRequest, aContext) {
-      do_check_eq(aContext.wrappedJSObject, ctx);
+      Assert.equal(aContext.wrappedJSObject, ctx);
     },
     onStopRequest: function(aRequest, aContext, aStatusCode) {
-      do_check_eq(aStatusCode, 0);
-      do_check_eq(aContext.wrappedJSObject, ctx);
+      Assert.equal(aStatusCode, 0);
+      Assert.equal(aContext.wrappedJSObject, ctx);
       var sis =
         Cc["@mozilla.org/scriptableinputstream;1"]
           .createInstance(Ci.nsIScriptableInputStream);
@@ -41,9 +41,9 @@ function run_test() {
           result += temp;
         }
       } catch(e) {
-	do_check_eq(e.result, Components.results.NS_BASE_STREAM_CLOSED);
+	Assert.equal(e.result, Components.results.NS_BASE_STREAM_CLOSED);
       }
-      do_check_eq(result, testStr);
+      Assert.equal(result, testStr);
       do_test_finished();
     }
   };

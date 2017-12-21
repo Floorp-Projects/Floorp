@@ -30,8 +30,8 @@ function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function (event, packet1) {
     gThreadClient.addOneTimeListener("paused", function (event, packet2) {
       let poppedFrames = packet2.poppedFrames;
-      do_check_eq(typeof (poppedFrames), typeof ([]));
-      do_check_true(poppedFrames.indexOf(packet1.frame.actor) >= 0);
+      Assert.equal(typeof (poppedFrames), typeof ([]));
+      Assert.ok(poppedFrames.indexOf(packet1.frame.actor) >= 0);
       gThreadClient.resume(function () {
         finishClient(gClient);
       });

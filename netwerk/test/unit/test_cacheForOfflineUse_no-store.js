@@ -42,13 +42,13 @@ const responseBody = "response body";
 // A HTTP channel for updating the offline cache should normally succeed.
 function normalHandler(metadata, response)
 {
-  do_print("normalHandler");
+  info("normalHandler");
   response.setHeader("Content-Type", "text/plain");
   response.bodyOutputStream.write(responseBody, responseBody.length);
 }
 function checkNormal(request, buffer)
 {
-  do_check_eq(buffer, responseBody);
+  Assert.equal(buffer, responseBody);
   asyncCheckCacheEntryPresence(baseURI + normalEntry, "appcache", true, run_next_test, appCache);
 }
 add_test(function test_normal() {
@@ -60,14 +60,14 @@ add_test(function test_normal() {
 // response with Cache-Control: no-store.
 function noStoreHandler(metadata, response)
 {
-  do_print("noStoreHandler");
+  info("noStoreHandler");
   response.setHeader("Content-Type", "text/plain");
   response.setHeader("Cache-Control", "no-store");
   response.bodyOutputStream.write(responseBody, responseBody.length);
 }
 function checkNoStore(request, buffer)
 {
-  do_check_eq(buffer, "");
+  Assert.equal(buffer, "");
   asyncCheckCacheEntryPresence(baseURI + noStoreEntry, "appcache", false, run_next_test, appCache);
 }
 add_test(function test_noStore() {

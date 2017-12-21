@@ -36,10 +36,10 @@ const TEST_CASES = [
 ];
 
 function run_test() {
-  do_print("Testing NetworkHelper.getReasonsForWeakness.");
+  info("Testing NetworkHelper.getReasonsForWeakness.");
 
   for (let {description, input, expected} of TEST_CASES) {
-    do_print("Testing " + description);
+    info("Testing " + description);
 
     deepEqual(NetworkHelper.getReasonsForWeakness(input), expected,
       "Got the expected reasons for weakness.");

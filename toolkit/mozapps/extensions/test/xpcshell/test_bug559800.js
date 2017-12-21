@@ -42,14 +42,14 @@ function end_test() {
 
 function run_test_1() {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "1.0");
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "1.0");
 
     shutdownManager();
 
     gExtensionsJSON.remove(true);
 
-    do_execute_soon(check_test_1);
+    executeSoon(check_test_1);
   }));
 }
 
@@ -57,14 +57,14 @@ function check_test_1() {
   startupManager(false);
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "1.0");
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "1.0");
 
     // due to delayed write, the file may not exist until
     // after shutdown
     shutdownManager();
-    do_check_true(gExtensionsJSON.exists());
-    do_check_true(gExtensionsJSON.fileSize > 0);
+    Assert.ok(gExtensionsJSON.exists());
+    Assert.ok(gExtensionsJSON.fileSize > 0);
 
     end_test();
   }));

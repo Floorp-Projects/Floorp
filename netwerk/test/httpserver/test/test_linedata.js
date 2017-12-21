@@ -12,9 +12,9 @@ function run_test()
   data.appendBytes(["a".charCodeAt(0), CR]);
 
   var out = { value: "" };
-  do_check_false(data.readLine(out));
+  Assert.ok(!data.readLine(out));
 
   data.appendBytes([LF]);
-  do_check_true(data.readLine(out));
-  do_check_eq(out.value, "a");
+  Assert.ok(data.readLine(out));
+  Assert.equal(out.value, "a");
 }

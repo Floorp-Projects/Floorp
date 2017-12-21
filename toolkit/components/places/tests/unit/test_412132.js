@@ -16,9 +16,9 @@ const TEST_URL1 = "http://example.com/1";
 const TEST_URL2 = "http://example.com/2";
 
 add_task(async function changeuri_unvisited_bookmark() {
-  do_print("After changing URI of bookmark, frecency of bookmark's " +
-           "original URI should be zero if original URI is unvisited and " +
-           "no longer bookmarked.");
+  info("After changing URI of bookmark, frecency of bookmark's " +
+       "original URI should be zero if original URI is unvisited and " +
+       "no longer bookmarked.");
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "bookmark title",
@@ -45,8 +45,8 @@ add_task(async function changeuri_unvisited_bookmark() {
 });
 
 add_task(async function changeuri_visited_bookmark() {
-  do_print("After changing URI of bookmark, frecency of bookmark's " +
-           "original URI should not be zero if original URI is visited.");
+  info("After changing URI of bookmark, frecency of bookmark's " +
+       "original URI should not be zero if original URI is visited.");
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "bookmark title",
@@ -77,9 +77,9 @@ add_task(async function changeuri_visited_bookmark() {
 });
 
 add_task(async function changeuri_bookmark_still_bookmarked() {
-  do_print("After changing URI of bookmark, frecency of bookmark's " +
-           "original URI should not be zero if original URI is still " +
-           "bookmarked.");
+  info("After changing URI of bookmark, frecency of bookmark's " +
+       "original URI should not be zero if original URI is still " +
+       "bookmarked.");
   let bookmark = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     title: "bookmark 1 title",
@@ -104,8 +104,8 @@ add_task(async function changeuri_bookmark_still_bookmarked() {
 
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("URI still bookmarked => frecency should != 0");
-  do_check_neq(frecencyForUrl(TEST_URL2), 0);
+  info("URI still bookmarked => frecency should != 0");
+  Assert.notEqual(frecencyForUrl(TEST_URL2), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesTestUtils.clearHistory();

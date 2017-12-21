@@ -62,9 +62,9 @@ add_task(async function test_onlyBookmarked() {
   // You can use this to compare the data in the array with the result set,
   // if the array's isInQuery: true items are sorted the same way as the result
   // set.
-  do_print("begin first test");
+  info("begin first test");
   compareArrayToResult(testData, root);
-  do_print("end first test");
+  info("end first test");
 
   // Test live-update
   var liveUpdateTestData = [
@@ -92,9 +92,9 @@ add_task(async function test_onlyBookmarked() {
   testData.push(liveUpdateTestData[1]);
 
   // re-query and test
-  do_print("begin live-update test");
+  info("begin live-update test");
   compareArrayToResult(testData, root);
-  do_print("end live-update test");
+  info("end live-update test");
 /*
   // we are actually not updating during a batch.
   // see bug 432706 for details.

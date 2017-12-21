@@ -17,7 +17,7 @@ add_task(async function test_extractFiles() {
 
 
 function testEmitter(emitter) {
-  do_check_true(emitter, "We have an event emitter");
+  Assert.ok(emitter, "We have an event emitter");
 
   let beenHere1 = false;
   let beenHere2 = false;
@@ -26,11 +26,11 @@ function testEmitter(emitter) {
   emitter.emit("next", "abc", "def");
 
   function next(eventName, str1, str2) {
-    do_check_eq(eventName, "next", "Got event");
-    do_check_eq(str1, "abc", "Argument 1 do_check_eq correct");
-    do_check_eq(str2, "def", "Argument 2 do_check_eq correct");
+    Assert.equal(eventName, "next", "Got event");
+    Assert.equal(str1, "abc", "Argument 1 do_check_eq correct");
+    Assert.equal(str2, "def", "Argument 2 do_check_eq correct");
 
-    do_check_false(beenHere1, "first time in next callback");
+    Assert.ok(!beenHere1, "first time in next callback");
     beenHere1 = true;
 
     emitter.off("next", next);
@@ -44,7 +44,7 @@ function testEmitter(emitter) {
   }
 
   function onlyOnce() {
-    do_check_true(!beenHere2, "\"once\" listener has been called once");
+    Assert.ok(!beenHere2, "\"once\" listener has been called once");
     beenHere2 = true;
     emitter.emit("onlyonce");
 
@@ -68,17 +68,17 @@ function testEmitter(emitter) {
 
   function killItWhileEmitting() {
     function c1() {
-      do_check_true(true, "c1 called");
+      Assert.ok(true, "c1 called");
     }
     function c2() {
-      do_check_true(true, "c2 called");
+      Assert.ok(true, "c2 called");
       emitter.off("tick", c3);
     }
     function c3() {
-      do_check_true(false, "c3 should not be called");
+      Assert.ok(false, "c3 should not be called");
     }
     function c4() {
-      do_check_true(true, "c4 called");
+      Assert.ok(true, "c4 called");
     }
 
     emitter.on("tick", c1);
@@ -103,7 +103,7 @@ function testEmitter(emitter) {
 
     emitter.emit("oao");
 
-    do_check_false(enteredC1, "c1 should not be called");
+    Assert.ok(!enteredC1, "c1 should not be called");
   }
 }
 
@@ -115,9 +115,9 @@ function testPromise() {
   // emit("thing") more than once
   let firstCallbackCalled = false;
   let check1 = p.then(arg => {
-    do_check_eq(firstCallbackCalled, false, "first callback called only once");
+    Assert.equal(firstCallbackCalled, false, "first callback called only once");
     firstCallbackCalled = true;
-    do_check_eq(arg, "happened", "correct arg in promise");
+    Assert.equal(arg, "happened", "correct arg in promise");
     return "rval from c1";
   });
 
@@ -126,10 +126,10 @@ function testPromise() {
   // Check that the promise do_check_eq resolved asynchronously
   let secondCallbackCalled = false;
   let check2 = p.then(arg => {
-    do_check_true(true, "second callback called");
-    do_check_eq(arg, "happened", "correct arg in promise");
+    Assert.ok(true, "second callback called");
+    Assert.equal(arg, "happened", "correct arg in promise");
     secondCallbackCalled = true;
-    do_check_eq(arg, "happened", "correct arg in promise (a second time)");
+    Assert.equal(arg, "happened", "correct arg in promise (a second time)");
     return "rval from c2";
   });
 
@@ -142,21 +142,21 @@ function testPromise() {
   let pbar = emitter.once("bar");
 
   let check3 = pfoo.then(arg => {
-    do_check_eq(arg, undefined, "no arg for foo event");
+    Assert.equal(arg, undefined, "no arg for foo event");
     return "rval from c3";
   });
 
   pbar.then(() => {
-    do_check_true(false, "pbar should not be called");
+    Assert.ok(false, "pbar should not be called");
   });
 
   emitter.emit("foo");
 
-  do_check_eq(secondCallbackCalled, false, "second callback not called yet");
+  Assert.equal(secondCallbackCalled, false, "second callback not called yet");
 
   return Promise.all([ check1, check2, check3 ]).then(args => {
-    do_check_eq(args[0], "rval from c1", "callback 1 done good");
-    do_check_eq(args[1], "rval from c2", "callback 2 done good");
-    do_check_eq(args[2], "rval from c3", "callback 3 done good");
+    Assert.equal(args[0], "rval from c1", "callback 1 done good");
+    Assert.equal(args[1], "rval from c2", "callback 2 done good");
+    Assert.equal(args[2], "rval from c3", "callback 3 done good");
   });
 }

@@ -60,7 +60,7 @@ function sleep(ms) {
 // -----------  Don't add a test after this one, as it shuts down Sqlite.jsm
 //
 add_task(async function test_shutdown_clients() {
-  do_print("Ensuring that Sqlite.jsm doesn't shutdown before its clients");
+  info("Ensuring that Sqlite.jsm doesn't shutdown before its clients");
 
   let assertions = [];
 
@@ -93,24 +93,24 @@ add_task(async function test_shutdown_clients() {
   assertions.push({name: "dbOpened", value: () => dbOpened});
   assertions.push({name: "dbClosed", value: () => dbClosed});
 
-  do_print("Now shutdown Sqlite.jsm synchronously");
+  info("Now shutdown Sqlite.jsm synchronously");
   Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
   AsyncShutdown.profileBeforeChange._trigger();
   Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");
 
 
   for (let {name, value} of assertions) {
-    do_print("Checking: " + name);
-    do_check_true(value());
+    info("Checking: " + name);
+    Assert.ok(value());
   }
 
-  do_print("Ensure that we cannot open databases anymore");
+  info("Ensure that we cannot open databases anymore");
   let exn;
   try {
     await getDummyDatabase("opened after shutdown");
   } catch (ex) {
     exn = ex;
   }
-  do_check_true(!!exn);
-  do_check_true(exn.message.indexOf("Sqlite.jsm has been shutdown") != -1);
+  Assert.ok(!!exn);
+  Assert.ok(exn.message.indexOf("Sqlite.jsm has been shutdown") != -1);
 });

@@ -16,7 +16,7 @@ AutoCompleteNoMatchResult.prototype = Object.create(AutoCompleteResultBase.proto
  * of matches.
  */
 function AutoCompleteBadIndexResult(aValues, aDefaultIndex) {
-  do_check_true(aValues.length <= aDefaultIndex);
+  Assert.ok(aValues.length <= aDefaultIndex);
   this._values = aValues;
   this.defaultIndex = aDefaultIndex;
 }
@@ -38,8 +38,8 @@ add_test(function autocomplete_noMatch_success() {
   // Caret must be at the end for autoFill to happen.
   let strLen = INPUT_STR.length;
   input.selectTextRange(strLen, strLen);
-  do_check_eq(input.selectionStart, strLen);
-  do_check_eq(input.selectionEnd, strLen);
+  Assert.equal(input.selectionStart, strLen);
+  Assert.equal(input.selectionEnd, strLen);
 
   let controller = Cc["@mozilla.org/autocomplete/controller;1"].
                    getService(Ci.nsIAutoCompleteController);
@@ -48,7 +48,7 @@ add_test(function autocomplete_noMatch_success() {
 
   input.onSearchComplete = function() {
     // Should not try to autoFill to an empty value.
-    do_check_eq(input.textValue, "moz");
+    Assert.equal(input.textValue, "moz");
 
     // Clean up.
     unregisterAutoCompleteSearch(searchNoMatch);
@@ -73,8 +73,8 @@ add_test(function autocomplete_defaultIndex_exceeds_matchCount() {
   // Caret must be at the end for autoFill to happen.
   let strLen = INPUT_STR.length;
   input.selectTextRange(strLen, strLen);
-  do_check_eq(input.selectionStart, strLen);
-  do_check_eq(input.selectionEnd, strLen);
+  Assert.equal(input.selectionStart, strLen);
+  Assert.equal(input.selectionEnd, strLen);
 
   let controller = Cc["@mozilla.org/autocomplete/controller;1"].
                    getService(Ci.nsIAutoCompleteController);
@@ -83,7 +83,7 @@ add_test(function autocomplete_defaultIndex_exceeds_matchCount() {
 
   input.onSearchComplete = function() {
     // Should not try to autoFill to an empty value.
-    do_check_eq(input.textValue, "moz");
+    Assert.equal(input.textValue, "moz");
 
     // Clean up.
     unregisterAutoCompleteSearch(searchBadIndex);

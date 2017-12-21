@@ -14,7 +14,7 @@ function run_test() {
   AddonManager.getInstallForFile(do_get_addon("test_bug675371"), function(install) {
     ensure_test_completed();
 
-    do_check_neq(install, null);
+    Assert.notEqual(install, null);
 
     prepare_test({
       "bug675371@tests.mozilla.org": [
@@ -31,13 +31,13 @@ function run_test() {
 
 function check_test() {
   AddonManager.getAddonByID("bug675371@tests.mozilla.org", do_exception_wrap(function(addon) {
-    do_check_neq(addon, null);
-    do_check_true(addon.isActive);
+    Assert.notEqual(addon, null);
+    Assert.ok(addon.isActive);
 
     // Tests that chrome.manifest is registered when the addon is installed.
     var target = { };
     Services.scriptloader.loadSubScript("chrome://bug675371/content/test.js", target);
-    do_check_true(target.active);
+    Assert.ok(target.active);
 
     prepare_test({
       "bug675371@tests.mozilla.org": [
@@ -53,7 +53,7 @@ function check_test() {
       Services.scriptloader.loadSubScript("chrome://bug675371/content/test.js", target);
       do_throw("Chrome file should not have been found");
     } catch (e) {
-      do_check_false(target.active);
+      Assert.ok(!target.active);
     }
 
     prepare_test({
@@ -67,7 +67,7 @@ function check_test() {
     addon.userDisabled = false;
     target.active = false;
     Services.scriptloader.loadSubScript("chrome://bug675371/content/test.js", target);
-    do_check_true(target.active);
+    Assert.ok(target.active);
 
     prepare_test({
       "bug675371@tests.mozilla.org": [
@@ -83,9 +83,9 @@ function check_test() {
       Services.scriptloader.loadSubScript("chrome://bug675371/content/test.js", target);
       do_throw("Chrome file should not have been found");
     } catch (e) {
-      do_check_false(target.active);
+      Assert.ok(!target.active);
     }
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   }));
 }

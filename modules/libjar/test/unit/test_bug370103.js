@@ -24,5 +24,5 @@ function run_test() {
     exception = true;
   }
 
-  do_check_true(exception); // should throw exception instead of crashing
+  Assert.ok(exception); // should throw exception instead of crashing
 }

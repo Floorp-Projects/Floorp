@@ -19,14 +19,14 @@ function run_test() {
         tests.push([host, test_basic_eviction.bind(this, base, sub, other, another)]);
         add_task(async function a() {
             var t = tests.splice(0, 1)[0];
-            do_print('testing with host ' + t[0]);
+            info('testing with host ' + t[0]);
             await t[1]();
             cm.removeAll();
         });
         tests.push([host, test_domain_or_path_matches_not_both.bind(this, base, sub, other, another)]);
         add_task(async function() {
             var t = tests.splice(0, 1)[0];
-            do_print('testing with host ' + t[0]);
+            info('testing with host ' + t[0]);
             await t[1]();
             cm.removeAll();
         });
@@ -224,7 +224,7 @@ async function test_basic_eviction(base_host, subdomain_host, other_subdomain_ho
 
 // Verify that the given cookie names exist, and are ordered from least to most recently accessed
 function verifyCookies(names, uri) {
-    do_check_eq(cm.countCookiesFromHost(uri.host), names.length);
+    Assert.equal(cm.countCookiesFromHost(uri.host), names.length);
     let cookies = cm.getCookiesFromHost(uri.host, {});
     let actual_cookies = [];
     while (cookies.hasMoreElements()) {
@@ -243,13 +243,13 @@ function verifyCookies(names, uri) {
             }) == -1;
         }).map(function(c) { return c.name });
         if (left.length) {
-            do_print("unexpected cookies: " + left);
+            info("unexpected cookies: " + left);
         }
         if (right.length) {
-            do_print("expected cookies: " + right);
+            info("expected cookies: " + right);
         }
     }
-    do_check_eq(names.length, actual_cookies.length);
+    Assert.equal(names.length, actual_cookies.length);
     actual_cookies.sort(function(a, b) {
         if (a.lastAccessed < b.lastAccessed)
             return -1;
@@ -258,8 +258,8 @@ function verifyCookies(names, uri) {
         return 0;
     });
     for (var i = 0; i < names.length; i++) {
-        do_check_eq(names[i], actual_cookies[i].name);
-        do_check_eq(names[i].startsWith('session'), actual_cookies[i].isSession);
+        Assert.equal(names[i], actual_cookies[i].name);
+        Assert.equal(names[i].startsWith('session'), actual_cookies[i].isSession);
     }
 }
 
@@ -282,7 +282,7 @@ function setCookie(name, domain, path, maxAge, url) {
         s += ' (session)';
     }
     s += ' for ' + url.spec;
-    do_print(s);
+    info(s);
     cs.setCookieStringFromHttp(url, null, null, value, null, null);
     return new Promise(function(resolve) {
         // Windows XP has low precision timestamps that cause our cookie eviction

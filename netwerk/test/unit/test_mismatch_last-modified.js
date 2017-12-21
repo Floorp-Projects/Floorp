@@ -34,7 +34,7 @@ var listener_3 = {
                                        offset, count) {
 	var data = new BinaryInputStream(inputStream).readByteArray(count);
       
-	do_check_eq(data[0], "B".charCodeAt(0));
+	Assert.equal(data[0], "B".charCodeAt(0));
     },
 
     onStopRequest: function test_onStopR(request, ctx, status) {
@@ -64,7 +64,7 @@ XPCOMUtils.defineLazyGetter(this, "listener_2", function() {
 	// This is 'A' from a cache revalidation, but that reval will clean the cache
 	// because of mismatched last-modified response headers
 	
-	do_check_eq(data[0], "A".charCodeAt(0));
+	Assert.equal(data[0], "A".charCodeAt(0));
     },
 
     onStopRequest: function test_onStopR(request, ctx, status) {
@@ -96,7 +96,7 @@ XPCOMUtils.defineLazyGetter(this, "listener_1", function() {
     onDataAvailable: function test_ODA(request, cx, inputStream,
                                        offset, count) {
 	var data = new BinaryInputStream(inputStream).readByteArray(count);
-	do_check_eq(data[0], "A".charCodeAt(0));
+	Assert.equal(data[0], "A".charCodeAt(0));
     },
 
     onStopRequest: function test_onStopR(request, ctx, status) {

@@ -14,7 +14,7 @@ function setupChannel(suffix)
 
 function checkValueAndTrigger(request, data, ctx)
 {
-    do_check_eq("Ok", data);
+    Assert.equal("Ok", data);
     httpserver.stop(do_test_finished);
 }
 
