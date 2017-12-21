@@ -587,7 +587,8 @@ class AOMExtensionWrapper extends ExtensionWrapper {
 var ExtensionTestUtils = {
   BASE_MANIFEST,
 
-  async normalizeManifest(manifest, baseManifest = BASE_MANIFEST) {
+  async normalizeManifest(manifest, manifestType = "manifest.WebExtensionManifest",
+                          baseManifest = BASE_MANIFEST) {
     await Management.lazyInit();
 
     let errors = [];
@@ -603,7 +604,7 @@ var ExtensionTestUtils = {
 
     manifest = Object.assign({}, baseManifest, manifest);
 
-    let normalized = Schemas.normalize(manifest, "manifest.WebExtensionManifest", context);
+    let normalized = Schemas.normalize(manifest, manifestType, context);
     normalized.errors = errors;
 
     return normalized;

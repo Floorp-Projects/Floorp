@@ -487,11 +487,20 @@
         "additionalProperties": { "$ref": "UnrecognizedProperty" }
       },
       {
-        "$extend": "WebExtensionManifest",
+        "id": "ThemeManifest",
+        "type": "object",
+        "description": "Contents of manifest.json for a static theme",
+        "$import": "manifest.ManifestBase",
         "properties": {
           "theme": {
-            "optional": true,
             "$ref": "ThemeType"
+          },
+          "icons": {
+            "type": "object",
+            "optional": true,
+            "patternProperties": {
+              "^[1-9]\\d*$": { "type": "string" }
+            }
           }
         }
       }
