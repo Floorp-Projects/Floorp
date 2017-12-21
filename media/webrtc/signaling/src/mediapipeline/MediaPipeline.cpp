@@ -2000,6 +2000,25 @@ public:
     , mMaybeTrackNeedsUnmute(true)
   {
     MOZ_RELEASE_ASSERT(mSource, "Must be used with a SourceMediaStream");
+
+    if (mTrack->AsAudioStreamTrack()) {
+      mSource->AddAudioTrack(
+          mTrackId, mSource->GraphRate(), 0, new AudioSegment());
+    } else if (mTrack->AsVideoStreamTrack()) {
+      mSource->AddTrack(mTrackId, 0, new VideoSegment());
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Unknown track type");
+    }
+    CSFLogDebug(
+      LOGTAG,
+      "GenericReceiveListener added %s track %d (%p) to stream %p",
+      mTrack->AsAudioStreamTrack() ? "audio" : "video",
+      mTrackId,
+      mTrack.get(),
+      mSource.get());
+
+    mSource->AdvanceKnownTracksTime(STREAM_TIME_MAX);
+    mSource->AddListener(this);
   }
 
   virtual ~GenericReceiveListener()
@@ -2012,7 +2031,7 @@ public:
   {
     if (!mListening) {
       mListening = true;
-      mSource->AddListener(this);
+      mSource->SetPullEnabled(true);
       mMaybeTrackNeedsUnmute = true;
     }
   }
@@ -2021,7 +2040,7 @@ public:
   {
     if (mListening) {
       mListening = false;
-      mSource->RemoveListener(this);
+      mSource->SetPullEnabled(false);
     }
   }
 
@@ -2047,25 +2066,10 @@ public:
   {
     CSFLogDebug(LOGTAG, "GenericReceiveListener ending track");
 
-    // We do this on MSG to avoid it racing against StartTrack.
-    class Message : public ControlMessage
-    {
-    public:
-      explicit Message(SourceMediaStream* aStream, TrackID aTrackId)
-        : ControlMessage(aStream)
-        , mTrackId(aTrackId)
-      {
-      }
 
-      void Run() override { mStream->AsSourceStream()->EndTrack(mTrackId); }
-
-
-      const TrackID mTrackId;
-    };
-
-    mTrack->GraphImpl()->AppendMessage(MakeUnique<Message>(mSource, mTrackId));
     // This breaks the cycle with the SourceMediaStream
     mSource->RemoveListener(this);
+    mSource->EndTrack(mTrackId);
   }
 
   // Must be called on the main thread
@@ -2362,7 +2366,7 @@ public:
       IntSize size = image ? image->GetSize() : IntSize(mWidth, mHeight);
       segment.AppendFrame(image.forget(), delta, size, mPrincipalHandle);
       // Handle track not actually added yet or removed/finished
-      if (!mSource->AppendToTrack(mTrack->GetInputTrackId(), &segment)) {
+      if (!mSource->AppendToTrack(mTrackId, &segment)) {
         CSFLogError(LOGTAG, "AppendToTrack failed");
         return;
       }
