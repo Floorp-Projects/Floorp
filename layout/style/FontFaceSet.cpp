@@ -983,7 +983,7 @@ FontFaceSet::InsertRuleFontFace(FontFace* aFontFace, SheetType aSheetType,
   mUserFontSet->AddUserFontEntry(fontfamily, entry);
 }
 
-already_AddRefed<gfxUserFontEntry>
+/* static */ already_AddRefed<gfxUserFontEntry>
 FontFaceSet::FindOrCreateUserFontEntryFromFontFace(FontFace* aFontFace)
 {
   nsAutoString fontfamily;
@@ -997,11 +997,13 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(FontFace* aFontFace)
                                                SheetType::Doc);
 }
 
-already_AddRefed<gfxUserFontEntry>
+/* static */ already_AddRefed<gfxUserFontEntry>
 FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
                                                    FontFace* aFontFace,
                                                    SheetType aSheetType)
 {
+  FontFaceSet* set = aFontFace->GetPrimaryFontFaceSet();
+
   nsCSSValue val;
   nsCSSUnit unit;
 
@@ -1130,7 +1132,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
           face->mURI = uri ? new gfxFontSrcURI(uri) : nullptr;
           URLValue* url = val.GetURLStructValue();
           face->mReferrer = url->mExtraData->GetReferrer();
-          face->mReferrerPolicy = mDocument->GetReferrerPolicy();
+          face->mReferrerPolicy = set->mDocument->GetReferrerPolicy();
           face->mOriginPrincipal =
             new gfxFontSrcPrincipal(url->mExtraData->GetPrincipal());
           NS_ASSERTION(face->mOriginPrincipal, "null origin principal in @font-face rule");
@@ -1197,11 +1199,11 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   }
 
   RefPtr<gfxUserFontEntry> entry =
-    mUserFontSet->FindOrCreateUserFontEntry(aFamilyName, srcArray, weight,
-                                            stretch, italicStyle,
-                                            featureSettings,
-                                            languageOverride,
-                                            unicodeRanges, fontDisplay);
+    set->mUserFontSet->FindOrCreateUserFontEntry(aFamilyName, srcArray, weight,
+                                                 stretch, italicStyle,
+                                                 featureSettings,
+                                                 languageOverride,
+                                                 unicodeRanges, fontDisplay);
   return entry.forget();
 }
 
