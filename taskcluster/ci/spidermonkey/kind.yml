@@ -201,8 +201,6 @@ jobs:
         worker:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
-            env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
         run:
             spidermonkey-variant: arm-sim
 
@@ -292,8 +290,6 @@ jobs:
         worker:
             max-run-time: 36000
             docker-image: {in-tree: desktop-build}
-            env:
-                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/tsan.manifest"
         run:
             spidermonkey-variant: tsan
 
