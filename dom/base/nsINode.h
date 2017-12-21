@@ -1353,10 +1353,10 @@ public:
     GetTextContentInternal(aTextContent, aError);
   }
   void SetTextContent(const nsAString& aTextContent,
-                      nsIPrincipal* aSubjectPrincipal,
+                      nsIPrincipal& aSubjectPrincipal,
                       mozilla::ErrorResult& aError)
   {
-    SetTextContentInternal(aTextContent, aSubjectPrincipal, aError);
+    SetTextContentInternal(aTextContent, &aSubjectPrincipal, aError);
   }
   void SetTextContent(const nsAString& aTextContent,
                       mozilla::ErrorResult& aError)

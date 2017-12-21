@@ -1341,7 +1341,7 @@ public:
                                     nsTArray<RefPtr<Animation>>& aAnimations);
 
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
-  virtual void SetInnerHTML(const nsAString& aInnerHTML, nsIPrincipal* aSubjectPrincipal, ErrorResult& aError);
+  virtual void SetInnerHTML(const nsAString& aInnerHTML, nsIPrincipal& aSubjectPrincipal, ErrorResult& aError);
   void GetOuterHTML(nsAString& aOuterHTML);
   void SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError);
   void InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
@@ -1568,9 +1568,9 @@ public:
     aError = SetAttr(kNameSpaceID_None, aAttr, aValue, true);
   }
 
-  void SetAttr(nsAtom* aAttr, const nsAString& aValue, nsIPrincipal* aTriggeringPrincipal, ErrorResult& aError)
+  void SetAttr(nsAtom* aAttr, const nsAString& aValue, nsIPrincipal& aTriggeringPrincipal, ErrorResult& aError)
   {
-    aError = SetAttr(kNameSpaceID_None, aAttr, aValue, aTriggeringPrincipal, true);
+    aError = SetAttr(kNameSpaceID_None, aAttr, aValue, &aTriggeringPrincipal, true);
   }
 
   /**

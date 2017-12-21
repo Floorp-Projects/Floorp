@@ -40,9 +40,9 @@ interface Element : Node {
   DOMString? getAttribute(DOMString name);
   [Pure]
   DOMString? getAttributeNS(DOMString? namespace, DOMString localName);
-  [CEReactions, NeedsSubjectPrincipal=NonSystem, Throws]
+  [CEReactions, NeedsSubjectPrincipal, Throws]
   void setAttribute(DOMString name, DOMString value);
-  [CEReactions, NeedsSubjectPrincipal=NonSystem, Throws]
+  [CEReactions, NeedsSubjectPrincipal, Throws]
   void setAttributeNS(DOMString? namespace, DOMString name, DOMString value);
   [CEReactions, Throws]
   void removeAttribute(DOMString name);
@@ -230,7 +230,7 @@ partial interface Element {
 
 // http://domparsing.spec.whatwg.org/#extensions-to-the-element-interface
 partial interface Element {
-  [CEReactions, SetterNeedsSubjectPrincipal=NonSystem, Pure, SetterThrows, TreatNullAs=EmptyString]
+  [CEReactions, SetterNeedsSubjectPrincipal, Pure, SetterThrows, TreatNullAs=EmptyString]
   attribute DOMString innerHTML;
   [CEReactions, Pure,SetterThrows,TreatNullAs=EmptyString]
   attribute DOMString outerHTML;

@@ -783,8 +783,6 @@ interface TestExampleInterface {
   [SetterCanOOM] attribute boolean canOOMSetterAttr;
   [NeedsSubjectPrincipal] void needsSubjectPrincipalMethod();
   [NeedsSubjectPrincipal] attribute boolean needsSubjectPrincipalAttr;
-  [NeedsSubjectPrincipal=NonSystem] void needsNonSystemSubjectPrincipalMethod();
-  [NeedsSubjectPrincipal=NonSystem] attribute boolean needsNonSystemSubjectPrincipalAttr;
   [NeedsCallerType] void needsCallerTypeMethod();
   [NeedsCallerType] attribute boolean needsCallerTypeAttr;
   [CEReactions] void ceReactionsMethod();
@@ -835,6 +833,4 @@ interface TestExampleWorkerInterface {
   [NeedsSubjectPrincipal] attribute boolean needsSubjectPrincipalAttr;
   [NeedsCallerType] void needsCallerTypeMethod();
   [NeedsCallerType] attribute boolean needsCallerTypeAttr;
-  [NeedsSubjectPrincipal=NonSystem] void needsNonSystemSubjectPrincipalMethod();
-  [NeedsSubjectPrincipal=NonSystem] attribute boolean needsNonSystemSubjectPrincipalAttr;
 };
