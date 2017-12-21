@@ -23,41 +23,29 @@
 namespace mozilla {
 
 void
-WebGLContext::Disable(GLenum cap)
+WebGLContext::SetEnabled(const char* const funcName, const GLenum cap, const bool enabled)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateCapabilityEnum(cap, "disable"))
+    if (!ValidateCapabilityEnum(cap, funcName))
         return;
 
-    realGLboolean* trackingSlot = GetStateTrackingSlot(cap);
-
-    if (trackingSlot)
-    {
-        *trackingSlot = 0;
+    const auto& slot = GetStateTrackingSlot(cap);
+    if (slot) {
+        *slot = enabled;
     }
 
-    gl->fDisable(cap);
-}
+    switch (cap) {
+    case LOCAL_GL_DEPTH_TEST:
+    case LOCAL_GL_STENCIL_TEST:
+        break; // Lazily applied, so don't tell GL yet or we will desync.
 
-void
-WebGLContext::Enable(GLenum cap)
-{
-    if (IsContextLost())
-        return;
-
-    if (!ValidateCapabilityEnum(cap, "enable"))
-        return;
-
-    realGLboolean* trackingSlot = GetStateTrackingSlot(cap);
-
-    if (trackingSlot)
-    {
-        *trackingSlot = 1;
+    default:
+        // Non-lazy caps.
+        gl->SetEnabled(cap, enabled);
+        break;
     }
-
-    gl->fEnable(cap);
 }
 
 bool
@@ -663,6 +651,10 @@ WebGLContext::IsEnabled(GLenum cap)
 
     if (!ValidateCapabilityEnum(cap, "isEnabled"))
         return false;
+
+    const auto& slot = GetStateTrackingSlot(cap);
+    if (slot)
+        return *slot;
 
     return gl->fIsEnabled(cap);
 }
