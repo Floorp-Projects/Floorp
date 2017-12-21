@@ -722,31 +722,29 @@ nsContentSink::ProcessLink(const nsAString& aAnchor, const nsAString& aHref,
     return NS_OK;
   }
 
-  if (!nsContentUtils::PrefetchPreloadEnabled(mDocShell)) {
-    return NS_OK;
-  }
-
-  // prefetch href if relation is "next" or "prefetch"
-  if ((linkTypes & nsStyleLinkElement::eNEXT) ||
-      (linkTypes & nsStyleLinkElement::ePREFETCH) ||
-      (linkTypes & nsStyleLinkElement::ePRELOAD)) {
-    PrefetchPreloadHref(aHref, mDocument, linkTypes, aAs, aType, aMedia);
-  }
-
-  if (linkTypes & nsStyleLinkElement::ePRERENDER) {
-    nsCOMPtr<nsIURI> href;
-    nsresult rv = NS_NewURI(getter_AddRefs(href), aHref);
-    if (NS_SUCCEEDED(rv)) {
-      mDocument->PrerenderHref(href);
+  if (nsContentUtils::PrefetchPreloadEnabled(mDocShell)) {
+    // prefetch href if relation is "next" or "prefetch"
+    if ((linkTypes & nsStyleLinkElement::eNEXT) ||
+        (linkTypes & nsStyleLinkElement::ePREFETCH) ||
+        (linkTypes & nsStyleLinkElement::ePRELOAD)) {
+      PrefetchPreloadHref(aHref, mDocument, linkTypes, aAs, aType, aMedia);
     }
-  }
 
-  if (!aHref.IsEmpty() && (linkTypes & nsStyleLinkElement::eDNS_PREFETCH)) {
-    PrefetchDNS(aHref);
-  }
+    if (linkTypes & nsStyleLinkElement::ePRERENDER) {
+      nsCOMPtr<nsIURI> href;
+      nsresult rv = NS_NewURI(getter_AddRefs(href), aHref);
+      if (NS_SUCCEEDED(rv)) {
+        mDocument->PrerenderHref(href);
+      }
+    }
 
-  if (!aHref.IsEmpty() && (linkTypes & nsStyleLinkElement::ePRECONNECT)) {
-    Preconnect(aHref, aCrossOrigin);
+    if (!aHref.IsEmpty() && (linkTypes & nsStyleLinkElement::eDNS_PREFETCH)) {
+      PrefetchDNS(aHref);
+    }
+
+    if (!aHref.IsEmpty() && (linkTypes & nsStyleLinkElement::ePRECONNECT)) {
+      Preconnect(aHref, aCrossOrigin);
+    }
   }
 
   // is it a stylesheet link?
