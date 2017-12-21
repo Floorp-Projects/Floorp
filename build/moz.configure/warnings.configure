@@ -149,5 +149,9 @@ check_and_add_gcc_warning('-Wno-noexcept-type', cxx_compiler,
 
 
 # Please keep these last in this file
-add_old_configure_assignment('_WARNINGS_CFLAGS', warnings_cflags)
-add_old_configure_assignment('_WARNINGS_CXXFLAGS', warnings_cxxflags)
+add_old_configure_assignment('_WARNINGS_CFLAGS', warnings_flags.cflags)
+add_old_configure_assignment('_WARNINGS_CXXFLAGS', warnings_flags.cxxflags)
+add_old_configure_assignment(
+    '_WARNINGS_HOST_CFLAGS', warnings_flags.host_cflags)
+add_old_configure_assignment(
+    '_WARNINGS_HOST_CXXFLAGS', warnings_flags.host_cxxflags)
