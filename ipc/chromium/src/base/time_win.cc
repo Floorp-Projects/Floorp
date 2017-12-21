@@ -45,6 +45,7 @@
 #include "base/basictypes.h"
 #include "base/lock.h"
 #include "base/logging.h"
+#include "base/cpu.h"
 #include "base/singleton.h"
 #include "mozilla/Casting.h"
 
@@ -255,6 +256,105 @@ class NowSingleton {
   DISALLOW_COPY_AND_ASSIGN(NowSingleton);
 };
 
+// Overview of time counters:
+// (1) CPU cycle counter. (Retrieved via RDTSC)
+// The CPU counter provides the highest resolution time stamp and is the least
+// expensive to retrieve. However, the CPU counter is unreliable and should not
+// be used in production. Its biggest issue is that it is per processor and it
+// is not synchronized between processors. Also, on some computers, the counters
+// will change frequency due to thermal and power changes, and stop in some
+// states.
+//
+// (2) QueryPerformanceCounter (QPC). The QPC counter provides a high-
+// resolution (100 nanoseconds) time stamp but is comparatively more expensive
+// to retrieve. What QueryPerformanceCounter actually does is up to the HAL.
+// (with some help from ACPI).
+// According to http://blogs.msdn.com/oldnewthing/archive/2005/09/02/459952.aspx
+// in the worst case, it gets the counter from the rollover interrupt on the
+// programmable interrupt timer. In best cases, the HAL may conclude that the
+// RDTSC counter runs at a constant frequency, then it uses that instead. On
+// multiprocessor machines, it will try to verify the values returned from
+// RDTSC on each processor are consistent with each other, and apply a handful
+// of workarounds for known buggy hardware. In other words, QPC is supposed to
+// give consistent result on a multiprocessor computer, but it is unreliable in
+// reality due to bugs in BIOS or HAL on some, especially old computers.
+// With recent updates on HAL and newer BIOS, QPC is getting more reliable but
+// it should be used with caution.
+//
+// (3) System time. The system time provides a low-resolution (typically 10ms
+// to 55 milliseconds) time stamp but is comparatively less expensive to
+// retrieve and more reliable.
+class HighResNowSingleton {
+ public:
+  HighResNowSingleton()
+    : ticks_per_microsecond_(0.0),
+      skew_(0) {
+    InitializeClock();
+
+    // On Athlon X2 CPUs (e.g. model 15) QueryPerformanceCounter is
+    // unreliable.  Fallback to low-res clock.
+    base::CPU cpu;
+    if (cpu.vendor_name() == "AuthenticAMD" && cpu.family() == 15)
+      DisableHighResClock();
+  }
+
+  bool IsUsingHighResClock() {
+    return ticks_per_microsecond_ != 0.0;
+  }
+
+  void DisableHighResClock() {
+    ticks_per_microsecond_ = 0.0;
+  }
+
+  TimeDelta Now() {
+    // Our maximum tolerance for QPC drifting.
+    const int kMaxTimeDrift = 50 * Time::kMicrosecondsPerMillisecond;
+
+    if (IsUsingHighResClock()) {
+      int64_t now = UnreliableNow();
+
+      // Verify that QPC does not seem to drift.
+      DCHECK(now - ReliableNow() - skew_ < kMaxTimeDrift);
+
+      return TimeDelta::FromMicroseconds(now);
+    }
+
+    // Just fallback to the slower clock.
+    return Singleton<NowSingleton>::get()->Now();
+  }
+
+ private:
+  // Synchronize the QPC clock with GetSystemTimeAsFileTime.
+  void InitializeClock() {
+    LARGE_INTEGER ticks_per_sec = {{0}};
+    if (!QueryPerformanceFrequency(&ticks_per_sec))
+      return;  // Broken, we don't guarantee this function works.
+    ticks_per_microsecond_ = static_cast<float>(ticks_per_sec.QuadPart) /
+      static_cast<float>(Time::kMicrosecondsPerSecond);
+
+    skew_ = UnreliableNow() - ReliableNow();
+  }
+
+  // Get the number of microseconds since boot in a reliable fashion
+  int64_t UnreliableNow() {
+    LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
+    return static_cast<int64_t>(now.QuadPart / ticks_per_microsecond_);
+  }
+
+  // Get the number of microseconds since boot in a reliable fashion
+  int64_t ReliableNow() {
+    return Singleton<NowSingleton>::get()->Now().InMicroseconds();
+  }
+
+  // Cached clock frequency -> microseconds. This assumes that the clock
+  // frequency is faster than one microsecond (which is 1MHz, should be OK).
+  float ticks_per_microsecond_;  // 0 indicates QPF failed and we're broken.
+  int64_t skew_;  // Skew between lo-res and hi-res clocks (for debugging).
+
+  DISALLOW_COPY_AND_ASSIGN(HighResNowSingleton);
+};
+
 }  // namespace
 
 // static
@@ -268,4 +368,9 @@ TimeTicks::TickFunctionType TimeTicks::SetMockTickFunction(
 // static
 TimeTicks TimeTicks::Now() {
   return TimeTicks() + Singleton<NowSingleton>::get()->Now();
+}
+
+// static
+TimeTicks TimeTicks::HighResNow() {
+  return TimeTicks() + Singleton<HighResNowSingleton>::get()->Now();
 }
