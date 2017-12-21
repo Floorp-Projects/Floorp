@@ -4071,7 +4071,9 @@ pref_ReadPrefFromJar(nsZipArchive* aJarReader, const char* aName)
               URLPreloader::ReadZip(aJarReader, nsDependentCString(aName)));
 
   Parser parser;
-  parser.Parse(manifest.get(), manifest.Length());
+  if (!parser.Parse(manifest.get(), manifest.Length())) {
+    return NS_ERROR_FILE_CORRUPTED;
+  }
 
   return NS_OK;
 }

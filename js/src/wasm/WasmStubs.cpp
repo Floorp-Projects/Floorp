@@ -239,11 +239,7 @@ static const LiveRegisterSet NonVolatileRegs =
                     FloatRegisterSet(FloatRegisters::NonVolatileMask));
 #endif
 
-#if defined(JS_CODEGEN_MIPS32)
-static const unsigned NonVolatileRegsPushSize = NonVolatileRegs.gprs().size() * sizeof(intptr_t) +
-                                                NonVolatileRegs.fpus().getPushSizeInBytes() +
-                                                sizeof(double);
-#elif defined(JS_CODEGEN_NONE)
+#if defined(JS_CODEGEN_NONE)
 static const unsigned NonVolatileRegsPushSize = 0;
 #else
 static const unsigned NonVolatileRegsPushSize = NonVolatileRegs.gprs().size() * sizeof(intptr_t) +

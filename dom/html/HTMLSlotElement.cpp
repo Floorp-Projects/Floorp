@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/HTMLSlotElementBinding.h"
 #include "mozilla/dom/HTMLUnknownElement.h"
@@ -204,6 +205,26 @@ HTMLSlotElement::ClearAssignedNodes()
   }
 
   mAssignedNodes.Clear();
+}
+
+void
+HTMLSlotElement::EnqueueSlotChangeEvent() const
+{
+  DocGroup* docGroup = OwnerDoc()->GetDocGroup();
+  if (!docGroup) {
+    return;
+  }
+
+  docGroup->SignalSlotChange(this);
+}
+
+void
+HTMLSlotElement::FireSlotChangeEvent()
+{
+  nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
+                                       static_cast<nsIContent*>(this),
+                                       NS_LITERAL_STRING("slotchange"), true,
+                                       false);
 }
 
 JSObject*

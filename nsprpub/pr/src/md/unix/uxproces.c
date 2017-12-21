@@ -685,10 +685,6 @@ static void pr_SigchldHandler(int sig)
 
 static void pr_InstallSigchldHandler()
 {
-#if defined(HPUX) && defined(_PR_DCETHREADS)
-#error "HP-UX DCE threads have their own SIGCHLD handler"
-#endif
-
     struct sigaction act, oact;
     int rv;
 

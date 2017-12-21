@@ -177,7 +177,8 @@ public:
     bool UseFastOpen()
     {
         return mUseFastOpen && mFastOpenSupported &&
-               mFastOpenConsecutiveFailureCounter < mFastOpenConsecutiveFailureLimit;
+               (mFastOpenStallsCounter < mFastOpenStallsLimit) &&
+               (mFastOpenConsecutiveFailureCounter < mFastOpenConsecutiveFailureLimit);
     }
     // If one of tcp connections return PR_NOT_TCP_SOCKET_ERROR while trying
     // fast open, it means that Fast Open is turned off so we will not try again
@@ -193,6 +194,14 @@ public:
     void ResetFastOpenConsecutiveFailureCounter()
     {
         mFastOpenConsecutiveFailureCounter = 0;
+    }
+
+    void IncrementFastOpenStallsCounter();
+    uint32_t CheckIfConnectionIsStalledOnlyIfIdleForThisAmountOfSeconds() {
+        return mFastOpenStallsIdleTime;
+    }
+    uint32_t FastOpenStallsTimeout() {
+      return mFastOpenStallsTimeout;
     }
 
     // returns the HTTP framing check level preference, as controlled with
@@ -651,6 +660,10 @@ private:
     Atomic<bool, Relaxed> mFastOpenSupported;
     uint32_t mFastOpenConsecutiveFailureLimit;
     uint32_t mFastOpenConsecutiveFailureCounter;
+    uint32_t mFastOpenStallsLimit;
+    uint32_t mFastOpenStallsCounter;
+    uint32_t mFastOpenStallsIdleTime;
+    uint32_t mFastOpenStallsTimeout;
 
     // If true, the transactions from active tab will be dispatched first.
     bool mActiveTabPriority;

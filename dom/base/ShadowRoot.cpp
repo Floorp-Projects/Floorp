@@ -134,6 +134,7 @@ ShadowRoot::AddSlot(HTMLSlotElement* aSlot)
     return;
   }
 
+  bool doEnqueueSlotChange = false;
   if (oldSlot && oldSlot != currentSlot) {
     // Move assigned nodes from old slot to new slot.
     const nsTArray<RefPtr<nsINode>>& assignedNodes = oldSlot->AssignedNodes();
@@ -142,6 +143,12 @@ ShadowRoot::AddSlot(HTMLSlotElement* aSlot)
 
       oldSlot->RemoveAssignedNode(assignedNode);
       currentSlot->AppendAssignedNode(assignedNode);
+      doEnqueueSlotChange = true;
+    }
+
+    if (doEnqueueSlotChange) {
+      oldSlot->EnqueueSlotChangeEvent();
+      currentSlot->EnqueueSlotChangeEvent();
     }
   } else {
     // Otherwise add appropriate nodes to this slot from the host.
@@ -152,7 +159,12 @@ ShadowRoot::AddSlot(HTMLSlotElement* aSlot)
       child->GetAttr(kNameSpaceID_None, nsGkAtoms::slot, slotName);
       if (child->IsSlotable() && slotName.Equals(name)) {
         currentSlot->AppendAssignedNode(child);
+        doEnqueueSlotChange = true;
       }
+    }
+
+    if (doEnqueueSlotChange) {
+      currentSlot->EnqueueSlotChangeEvent();
     }
   }
 }
@@ -171,8 +183,13 @@ ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot)
     if (currentSlots->Length() == 1) {
       MOZ_ASSERT(currentSlots->ElementAt(0) == aSlot);
       mSlotMap.Remove(name);
-      aSlot->ClearAssignedNodes();
+
+      if (aSlot->AssignedNodes().Length() > 0) {
+        aSlot->ClearAssignedNodes();
+        aSlot->EnqueueSlotChangeEvent();
+      }
     } else {
+      bool doEnqueueSlotChange = false;
       bool doReplaceSlot = currentSlots->ElementAt(0) == aSlot;
       currentSlots->RemoveElement(aSlot);
       HTMLSlotElement* replacementSlot = currentSlots->ElementAt(0);
@@ -186,6 +203,12 @@ ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot)
 
           aSlot->RemoveAssignedNode(assignedNode);
           replacementSlot->AppendAssignedNode(assignedNode);
+          doEnqueueSlotChange = true;
+        }
+
+        if (doEnqueueSlotChange) {
+          aSlot->EnqueueSlotChangeEvent();
+          replacementSlot->EnqueueSlotChangeEvent();
         }
       }
     }
@@ -436,6 +459,12 @@ ShadowRoot::MaybeReassignElement(Element* aElement,
     const HTMLSlotElement* newSlot = AssignSlotFor(aElement);
 
     if (oldSlot != newSlot) {
+      if (oldSlot) {
+        oldSlot->EnqueueSlotChangeEvent();
+      }
+      if (newSlot) {
+        newSlot->EnqueueSlotChangeEvent();
+      }
       return true;
     }
   }
@@ -564,11 +593,24 @@ ShadowRoot::ContentInserted(nsIDocument* aDocument,
     return;
   }
 
-  if (!aChild->IsSlotable() || aContainer != GetHost()) {
+  if (!aChild->IsSlotable()) {
     return;
   }
 
-  AssignSlotFor(aChild);
+  if (aContainer && aContainer == GetHost()) {
+    if (const HTMLSlotElement* slot = AssignSlotFor(aChild)) {
+      slot->EnqueueSlotChangeEvent();
+    }
+    return;
+  }
+
+  // If parent's root is a shadow root, and parent is a slot whose assigned
+  // nodes is the empty list, then run signal a slot change for parent.
+  HTMLSlotElement* slot = HTMLSlotElement::FromContentOrNull(aContainer);
+  if (slot && slot->GetContainingShadow() == this &&
+      slot->AssignedNodes().IsEmpty()) {
+    slot->EnqueueSlotChangeEvent();
+  }
 }
 
 void
@@ -584,13 +626,26 @@ ShadowRoot::ContentRemoved(nsIDocument* aDocument,
     return;
   }
 
-  if (!aChild->IsSlotable() || aContainer != GetHost()) {
+  if (!aChild->IsSlotable()) {
     return;
   }
 
-  nsAutoString slotName;
-  aChild->GetAttr(kNameSpaceID_None, nsGkAtoms::slot, slotName);
-  UnassignSlotFor(aChild, slotName);
+  if (aContainer && aContainer == GetHost()) {
+    nsAutoString slotName;
+    aChild->GetAttr(kNameSpaceID_None, nsGkAtoms::slot, slotName);
+    if (const HTMLSlotElement* slot = UnassignSlotFor(aChild, slotName)) {
+      slot->EnqueueSlotChangeEvent();
+    }
+    return;
+  }
+
+  // If parent's root is a shadow root, and parent is a slot whose assigned
+  // nodes is the empty list, then run signal a slot change for parent.
+  HTMLSlotElement* slot = HTMLSlotElement::FromContentOrNull(aContainer);
+  if (slot && slot->GetContainingShadow() == this &&
+      slot->AssignedNodes().IsEmpty()) {
+    slot->EnqueueSlotChangeEvent();
+  }
 }
 
 nsresult
