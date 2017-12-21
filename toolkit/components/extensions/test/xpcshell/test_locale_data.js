@@ -13,7 +13,7 @@ async function generateAddon(data) {
   data.manifest = Object.assign({applications: {gecko: {id}}}, data.manifest);
 
   let xpi = Extension.generateXPI(data);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.obs.notifyObservers(xpi, "flush-cache-entry");
     xpi.remove(false);
   });
@@ -40,7 +40,7 @@ add_task(async function testMissingDefaultLocale() {
 
   equal(extension.errors.length, 1, "One error reported");
 
-  do_print(`Got error: ${extension.errors[0]}`);
+  info(`Got error: ${extension.errors[0]}`);
 
   ok(extension.errors[0].includes('"default_locale" property is required'),
      "Got missing default_locale error");
@@ -60,7 +60,7 @@ add_task(async function testInvalidDefaultLocale() {
 
   equal(extension.errors.length, 1, "One error reported");
 
-  do_print(`Got error: ${extension.errors[0]}`);
+  info(`Got error: ${extension.errors[0]}`);
 
   ok(extension.errors[0].includes("Loading locale file _locales/en/messages.json"),
      "Got invalid default_locale error");
@@ -69,7 +69,7 @@ add_task(async function testInvalidDefaultLocale() {
 
   equal(extension.errors.length, 2, "Two errors reported");
 
-  do_print(`Got error: ${extension.errors[1]}`);
+  info(`Got error: ${extension.errors[1]}`);
 
   ok(extension.errors[1].includes('"default_locale" property must correspond'),
      "Got invalid default_locale error");
@@ -85,7 +85,7 @@ add_task(async function testUnexpectedDefaultLocale() {
 
   equal(extension.errors.length, 1, "One error reported");
 
-  do_print(`Got error: ${extension.errors[0]}`);
+  info(`Got error: ${extension.errors[0]}`);
 
   ok(extension.errors[0].includes("Loading locale file _locales/en-US/messages.json"),
      "Got invalid default_locale error");
@@ -94,7 +94,7 @@ add_task(async function testUnexpectedDefaultLocale() {
 
   equal(extension.errors.length, 2, "One error reported");
 
-  do_print(`Got error: ${extension.errors[1]}`);
+  info(`Got error: ${extension.errors[1]}`);
 
   ok(extension.errors[1].includes('"default_locale" property must correspond'),
      "Got unexpected default_locale error");
@@ -114,7 +114,7 @@ add_task(async function testInvalidSyntax() {
 
   equal(extension.errors.length, 1, "No errors reported");
 
-  do_print(`Got error: ${extension.errors[0]}`);
+  info(`Got error: ${extension.errors[0]}`);
 
   ok(extension.errors[0].includes("Loading locale file _locales\/en_US\/messages\.json: SyntaxError"),
      "Got syntax error");
@@ -123,7 +123,7 @@ add_task(async function testInvalidSyntax() {
 
   equal(extension.errors.length, 2, "One error reported");
 
-  do_print(`Got error: ${extension.errors[1]}`);
+  info(`Got error: ${extension.errors[1]}`);
 
   ok(extension.errors[1].includes("Loading locale file _locales\/en_US\/messages\.json: SyntaxError"),
      "Got syntax error");

@@ -23,12 +23,12 @@ let downloadDir;
 function setup() {
   downloadDir = FileUtils.getDir("TmpD", ["downloads"]);
   downloadDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  do_print(`Using download directory ${downloadDir.path}`);
+  info(`Using download directory ${downloadDir.path}`);
 
   Services.prefs.setIntPref("browser.download.folderList", 2);
   Services.prefs.setComplexValue("browser.download.dir", Ci.nsIFile, downloadDir);
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.prefs.clearUserPref("browser.download.folderList");
     Services.prefs.clearUserPref("browser.download.dir");
 
@@ -127,7 +127,7 @@ add_task(async function test_downloads() {
 
   await extension.startup();
   await extension.awaitMessage("ready");
-  do_print("extension started");
+  info("extension started");
 
   // Call download() with just the url property.
   await testDownload({url: FILE_URL}, FILE_NAME, FILE_LEN, "just source");

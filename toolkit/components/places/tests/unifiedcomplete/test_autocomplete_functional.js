@@ -7,7 +7,7 @@
 const PREF_AUTOCOMPLETE_ENABLED = "browser.urlbar.autocomplete.enabled";
 
 add_task(async function test_disabling_autocomplete() {
-  do_print("Check disabling autocomplete disables autofill");
+  info("Check disabling autocomplete disables autofill");
   Services.prefs.setBoolPref(PREF_AUTOCOMPLETE_ENABLED, false);
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://visit.mozilla.org"),
@@ -22,7 +22,7 @@ add_task(async function test_disabling_autocomplete() {
 });
 
 add_task(async function test_urls_order() {
-  do_print("Add urls, check for correct order");
+  info("Add urls, check for correct order");
   let places = [{ uri: NetUtil.newURI("http://visit1.mozilla.org") },
                 { uri: NetUtil.newURI("http://visit2.mozilla.org"),
                   transition: TRANSITION_TYPED }];
@@ -36,7 +36,7 @@ add_task(async function test_urls_order() {
 });
 
 add_task(async function test_ignore_prefix() {
-  do_print("Add urls, make sure www and http are ignored");
+  info("Add urls, make sure www and http are ignored");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   await PlacesTestUtils.addVisits(NetUtil.newURI("http://www.visit1.mozilla.org"));
   await check_autocomplete({
@@ -48,7 +48,7 @@ add_task(async function test_ignore_prefix() {
 });
 
 add_task(async function test_after_host() {
-  do_print("Autocompleting after an existing host completes to the url");
+  info("Autocompleting after an existing host completes to the url");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   await PlacesTestUtils.addVisits(NetUtil.newURI("http://www.visit3.mozilla.org"));
   await check_autocomplete({
@@ -60,7 +60,7 @@ add_task(async function test_after_host() {
 });
 
 add_task(async function test_respect_www() {
-  do_print("Searching for www.me should yield www.me.mozilla.org/");
+  info("Searching for www.me should yield www.me.mozilla.org/");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   await PlacesTestUtils.addVisits(NetUtil.newURI("http://www.me.mozilla.org"));
   await check_autocomplete({
@@ -72,7 +72,7 @@ add_task(async function test_respect_www() {
 });
 
 add_task(async function test_bookmark_first() {
-  do_print("With a bookmark and history, the query result should be the bookmark");
+  info("With a bookmark and history, the query result should be the bookmark");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   await addBookmark({ uri: NetUtil.newURI("http://bookmark1.mozilla.org/") });
   await PlacesTestUtils.addVisits(NetUtil.newURI("http://bookmark1.mozilla.org/foo"));
@@ -85,7 +85,7 @@ add_task(async function test_bookmark_first() {
 });
 
 add_task(async function test_full_path() {
-  do_print("Check to make sure we get the proper results with full paths");
+  info("Check to make sure we get the proper results with full paths");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   let places = [{ uri: NetUtil.newURI("http://smokey.mozilla.org/foo/bar/baz?bacon=delicious") },
                 { uri: NetUtil.newURI("http://smokey.mozilla.org/foo/bar/baz?bacon=smokey") }];
@@ -99,7 +99,7 @@ add_task(async function test_full_path() {
 });
 
 add_task(async function test_complete_to_slash() {
-  do_print("Check to make sure we autocomplete to the following '/'");
+  info("Check to make sure we autocomplete to the following '/'");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   let places = [{ uri: NetUtil.newURI("http://smokey.mozilla.org/foo/bar/baz?bacon=delicious") },
                 { uri: NetUtil.newURI("http://smokey.mozilla.org/foo/bar/baz?bacon=smokey") }];
@@ -113,7 +113,7 @@ add_task(async function test_complete_to_slash() {
 });
 
 add_task(async function test_complete_to_slash_with_www() {
-  do_print("Check to make sure we autocomplete to the following '/'");
+  info("Check to make sure we autocomplete to the following '/'");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   let places = [{ uri: NetUtil.newURI("http://www.smokey.mozilla.org/foo/bar/baz?bacon=delicious") },
                 { uri: NetUtil.newURI("http://www.smokey.mozilla.org/foo/bar/baz?bacon=smokey") }];
@@ -127,7 +127,7 @@ add_task(async function test_complete_to_slash_with_www() {
 });
 
 add_task(async function test_complete_querystring() {
-  do_print("Check to make sure we autocomplete after ?");
+  info("Check to make sure we autocomplete after ?");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   await PlacesTestUtils.addVisits(NetUtil.newURI("http://smokey.mozilla.org/foo?bacon=delicious"));
   await check_autocomplete({
@@ -139,7 +139,7 @@ add_task(async function test_complete_querystring() {
 });
 
 add_task(async function test_complete_fragment() {
-  do_print("Check to make sure we autocomplete after #");
+  info("Check to make sure we autocomplete after #");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   await PlacesTestUtils.addVisits(NetUtil.newURI("http://smokey.mozilla.org/foo?bacon=delicious#bar"));
   await check_autocomplete({
@@ -154,13 +154,13 @@ add_task(async function test_autocomplete_enabled_pref() {
   Services.prefs.setBoolPref(PREF_AUTOCOMPLETE_ENABLED, false);
   let types = ["history", "bookmark", "openpage"];
   for (let type of types) {
-    do_check_eq(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), false,
-                "suggest." + type + "pref should be false");
+    Assert.equal(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), false,
+                 "suggest." + type + "pref should be false");
   }
   Services.prefs.setBoolPref(PREF_AUTOCOMPLETE_ENABLED, true);
   for (let type of types) {
-    do_check_eq(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), true,
-                "suggest." + type + "pref should be true");
+    Assert.equal(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), true,
+                 "suggest." + type + "pref should be true");
   }
 
   // Clear prefs.

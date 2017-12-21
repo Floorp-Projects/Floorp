@@ -17,7 +17,7 @@ function run_test() {
 
 add_task(async function test_notification_version_string() {
   let db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+  registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
   await db.put({
     channelID: '6ff97d56-d0c0-43bc-8f5b-61b855e1d93b',
     pushEndpoint: 'https://example.org/updates/1',

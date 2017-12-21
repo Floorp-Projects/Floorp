@@ -177,7 +177,7 @@ function verifyQuery(aSQLString, aBind, aResults) {
   let stmt = getOpenedDatabase().createStatement(aSQLString);
   stmt.bindByIndex(0, aBind);
   try {
-    do_check_true(stmt.executeStep());
+    Assert.ok(stmt.executeStep());
     let nCols = stmt.numEntries;
     if (aResults.length != nCols)
       do_throw("Expected " + aResults.length + " columns in result but " +
@@ -186,26 +186,26 @@ function verifyQuery(aSQLString, aBind, aResults) {
       let expectedVal = aResults[iCol];
       let valType = stmt.getTypeOfIndex(iCol);
       if (expectedVal === null) {
-        do_check_eq(stmt.VALUE_TYPE_NULL, valType);
-        do_check_true(stmt.getIsNull(iCol));
+        Assert.equal(stmt.VALUE_TYPE_NULL, valType);
+        Assert.ok(stmt.getIsNull(iCol));
       } else if (typeof expectedVal == "number") {
         if (Math.floor(expectedVal) == expectedVal) {
-          do_check_eq(stmt.VALUE_TYPE_INTEGER, valType);
-          do_check_eq(expectedVal, stmt.getInt32(iCol));
+          Assert.equal(stmt.VALUE_TYPE_INTEGER, valType);
+          Assert.equal(expectedVal, stmt.getInt32(iCol));
         } else {
-          do_check_eq(stmt.VALUE_TYPE_FLOAT, valType);
-          do_check_eq(expectedVal, stmt.getDouble(iCol));
+          Assert.equal(stmt.VALUE_TYPE_FLOAT, valType);
+          Assert.equal(expectedVal, stmt.getDouble(iCol));
         }
       } else if (typeof expectedVal == "string") {
-        do_check_eq(stmt.VALUE_TYPE_TEXT, valType);
-        do_check_eq(expectedVal, stmt.getUTF8String(iCol));
+        Assert.equal(stmt.VALUE_TYPE_TEXT, valType);
+        Assert.equal(expectedVal, stmt.getUTF8String(iCol));
       } else { // blob
-        do_check_eq(stmt.VALUE_TYPE_BLOB, valType);
+        Assert.equal(stmt.VALUE_TYPE_BLOB, valType);
         let count = { value: 0 }, blob = { value: null };
         stmt.getBlob(iCol, count, blob);
-        do_check_eq(count.value, expectedVal.length);
+        Assert.equal(count.value, expectedVal.length);
         for (let i = 0; i < count.value; i++) {
-          do_check_eq(expectedVal[i], blob.value[i]);
+          Assert.equal(expectedVal[i], blob.value[i]);
         }
       }
     }
@@ -228,7 +228,7 @@ function getTableRowCount(aTableName) {
     "SELECT COUNT(1) AS count FROM " + aTableName
   );
   try {
-    do_check_true(countStmt.executeStep());
+    Assert.ok(countStmt.executeStep());
     currentRows = countStmt.row.count;
   } finally {
     countStmt.finalize();

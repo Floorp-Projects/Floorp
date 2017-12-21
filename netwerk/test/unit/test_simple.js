@@ -49,7 +49,7 @@ function serverHandler(metadata, response) {
 
 function checkRequest(request, data, context) {
   if (dbg) { print("============== checkRequest: in"); }
-  do_check_eq(data, httpbody);
+  Assert.equal(data, httpbody);
   httpserver.stop(do_test_finished);
   if (dbg) { print("============== checkRequest: out"); }
 }

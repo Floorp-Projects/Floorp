@@ -10,7 +10,7 @@ function run_test() {
   // or convert it to something that *is* valid (in UTF8).  So we measure
   // its length to make sure this hasn't happened.
   var badMimeType = "text/plainÿ";
-  do_check_eq(badMimeType.length, 11);
+  Assert.equal(badMimeType.length, 11);
 
   try {
     var type = Cc["@mozilla.org/mime;1"].
@@ -25,5 +25,5 @@ function run_test() {
   } finally {
   }
   // Not crashing is good enough
-  do_check_eq(true, true);
+  Assert.equal(true, true);
 }

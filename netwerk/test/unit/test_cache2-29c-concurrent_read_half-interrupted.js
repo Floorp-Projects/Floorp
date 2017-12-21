@@ -61,7 +61,7 @@ function contentHandler(metadata, response)
 function run_test()
 {
   // Static check
-  do_check_true(responseBody.length > 1024);
+  Assert.ok(responseBody.length > 1024);
 
   do_get_profile();
 
@@ -82,11 +82,11 @@ function run_test()
 
 function firstTimeThrough(request, buffer)
 {
-  do_check_eq(buffer, responseBody);
+  Assert.equal(buffer, responseBody);
 }
 
 function secondTimeThrough(request, buffer)
 {
-  do_check_eq(buffer, responseBody);
+  Assert.equal(buffer, responseBody);
   httpServer.stop(do_test_finished);
 }

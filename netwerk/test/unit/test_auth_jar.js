@@ -29,21 +29,21 @@ function run_test() {
   var domain = {value: ""}, user = {value: ""}, pass = {value: ""};
   try {
     am.getAuthIdentity("http", "a.example.com", -1, "basic", "realm", "", domain, user, pass, false, app1browser);
-    do_check_false(true); // no identity should be present
+    Assert.equal(false, true); // no identity should be present
   } catch (x) {
-    do_check_eq(domain.value, "");
-    do_check_eq(user.value, "");
-    do_check_eq(pass.value, "");
+    Assert.equal(domain.value, "");
+    Assert.equal(user.value, "");
+    Assert.equal(pass.value, "");
   }
 
   am.getAuthIdentity("http", "a.example.com", -1, "basic", "realm", "", domain, user, pass, false, app1);
-  do_check_eq(domain.value, "example.com");
-  do_check_eq(user.value, "user");
-  do_check_eq(pass.value, "pass");
+  Assert.equal(domain.value, "example.com");
+  Assert.equal(user.value, "user");
+  Assert.equal(pass.value, "pass");
 
 
   am.getAuthIdentity("http", "a.example.com", -1, "basic", "realm", "", domain, user, pass, false, app10);
-  do_check_eq(domain.value, "example.com");
-  do_check_eq(user.value, "user2");
-  do_check_eq(pass.value, "pass2");
+  Assert.equal(domain.value, "example.com");
+  Assert.equal(user.value, "user2");
+  Assert.equal(pass.value, "pass2");
 }

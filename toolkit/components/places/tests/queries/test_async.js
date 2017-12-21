@@ -124,13 +124,13 @@ Test.prototype = {
    */
   checkArgs(aNewState, aNode, aOldState, aExpectOldState) {
     print("Node passed on " + aNewState + " should be result.root");
-    do_check_eq(this.result.root, aNode);
+    Assert.equal(this.result.root, aNode);
     print("Old state passed on " + aNewState + " should be " + aExpectOldState);
 
     // aOldState comes from xpconnect and will therefore be defined.  It may be
     // zero, though, so use strict equality just to make sure aExpectOldState is
     // also defined.
-    do_check_true(aOldState === aExpectOldState);
+    Assert.ok(aOldState === aExpectOldState);
   },
 
   /**
@@ -175,7 +175,7 @@ Test.prototype = {
             " times and at most " + aExpectedMax + " times (actual = " +
             cnt + ")");
     }
-    do_check_true(cnt >= aExpectedMin && cnt <= aExpectedMax);
+    Assert.ok(cnt >= aExpectedMin && cnt <= aExpectedMax);
     return cnt;
   },
 
@@ -190,7 +190,7 @@ Test.prototype = {
       containerStateChanged(container, oldState, newState) {
         print("New state passed to containerStateChanged() should equal the " +
               "container's current state");
-        do_check_eq(newState, container.state);
+        Assert.equal(newState, container.state);
 
         try {
           switch (newState) {

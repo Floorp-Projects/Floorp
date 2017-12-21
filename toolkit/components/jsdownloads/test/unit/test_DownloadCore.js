@@ -27,60 +27,60 @@ Services.scriptloader.loadSubScript(NetUtil.newURI(scriptFile).spec);
 add_task(function test_DownloadError() {
   let error = new DownloadError({ result: Cr.NS_ERROR_NOT_RESUMABLE,
                                   message: "Not resumable."});
-  do_check_eq(error.result, Cr.NS_ERROR_NOT_RESUMABLE);
-  do_check_eq(error.message, "Not resumable.");
-  do_check_false(error.becauseSourceFailed);
-  do_check_false(error.becauseTargetFailed);
-  do_check_false(error.becauseBlocked);
-  do_check_false(error.becauseBlockedByParentalControls);
+  Assert.equal(error.result, Cr.NS_ERROR_NOT_RESUMABLE);
+  Assert.equal(error.message, "Not resumable.");
+  Assert.ok(!error.becauseSourceFailed);
+  Assert.ok(!error.becauseTargetFailed);
+  Assert.ok(!error.becauseBlocked);
+  Assert.ok(!error.becauseBlockedByParentalControls);
 
   error = new DownloadError({ message: "Unknown error."});
-  do_check_eq(error.result, Cr.NS_ERROR_FAILURE);
-  do_check_eq(error.message, "Unknown error.");
+  Assert.equal(error.result, Cr.NS_ERROR_FAILURE);
+  Assert.equal(error.message, "Unknown error.");
 
   error = new DownloadError({ result: Cr.NS_ERROR_NOT_RESUMABLE });
-  do_check_eq(error.result, Cr.NS_ERROR_NOT_RESUMABLE);
-  do_check_true(error.message.indexOf("Exception") > 0);
+  Assert.equal(error.result, Cr.NS_ERROR_NOT_RESUMABLE);
+  Assert.ok(error.message.indexOf("Exception") > 0);
 
   // becauseSourceFailed will be set, but not the unknown property.
   error = new DownloadError({ message: "Unknown error.",
                               becauseSourceFailed: true,
                               becauseUnknown: true });
-  do_check_true(error.becauseSourceFailed);
-  do_check_false("becauseUnknown" in error);
+  Assert.ok(error.becauseSourceFailed);
+  Assert.equal(false, "becauseUnknown" in error);
 
   error = new DownloadError({ result: Cr.NS_ERROR_MALFORMED_URI,
                               inferCause: true });
-  do_check_eq(error.result, Cr.NS_ERROR_MALFORMED_URI);
-  do_check_true(error.becauseSourceFailed);
-  do_check_false(error.becauseTargetFailed);
-  do_check_false(error.becauseBlocked);
-  do_check_false(error.becauseBlockedByParentalControls);
+  Assert.equal(error.result, Cr.NS_ERROR_MALFORMED_URI);
+  Assert.ok(error.becauseSourceFailed);
+  Assert.ok(!error.becauseTargetFailed);
+  Assert.ok(!error.becauseBlocked);
+  Assert.ok(!error.becauseBlockedByParentalControls);
 
   // This test does not set inferCause, so becauseSourceFailed will not be set.
   error = new DownloadError({ result: Cr.NS_ERROR_MALFORMED_URI });
-  do_check_eq(error.result, Cr.NS_ERROR_MALFORMED_URI);
-  do_check_false(error.becauseSourceFailed);
+  Assert.equal(error.result, Cr.NS_ERROR_MALFORMED_URI);
+  Assert.ok(!error.becauseSourceFailed);
 
   error = new DownloadError({ result: Cr.NS_ERROR_FILE_INVALID_PATH,
                               inferCause: true });
-  do_check_eq(error.result, Cr.NS_ERROR_FILE_INVALID_PATH);
-  do_check_false(error.becauseSourceFailed);
-  do_check_true(error.becauseTargetFailed);
-  do_check_false(error.becauseBlocked);
-  do_check_false(error.becauseBlockedByParentalControls);
+  Assert.equal(error.result, Cr.NS_ERROR_FILE_INVALID_PATH);
+  Assert.ok(!error.becauseSourceFailed);
+  Assert.ok(error.becauseTargetFailed);
+  Assert.ok(!error.becauseBlocked);
+  Assert.ok(!error.becauseBlockedByParentalControls);
 
   error = new DownloadError({ becauseBlocked: true });
-  do_check_eq(error.message, "Download blocked.");
-  do_check_false(error.becauseSourceFailed);
-  do_check_false(error.becauseTargetFailed);
-  do_check_true(error.becauseBlocked);
-  do_check_false(error.becauseBlockedByParentalControls);
+  Assert.equal(error.message, "Download blocked.");
+  Assert.ok(!error.becauseSourceFailed);
+  Assert.ok(!error.becauseTargetFailed);
+  Assert.ok(error.becauseBlocked);
+  Assert.ok(!error.becauseBlockedByParentalControls);
 
   error = new DownloadError({ becauseBlockedByParentalControls: true });
-  do_check_eq(error.message, "Download blocked.");
-  do_check_false(error.becauseSourceFailed);
-  do_check_false(error.becauseTargetFailed);
-  do_check_true(error.becauseBlocked);
-  do_check_true(error.becauseBlockedByParentalControls);
+  Assert.equal(error.message, "Download blocked.");
+  Assert.ok(!error.becauseSourceFailed);
+  Assert.ok(!error.becauseTargetFailed);
+  Assert.ok(error.becauseBlocked);
+  Assert.ok(error.becauseBlockedByParentalControls);
 });

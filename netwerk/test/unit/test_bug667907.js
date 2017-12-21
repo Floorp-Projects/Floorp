@@ -28,7 +28,7 @@ var listener_proto = {
   },
 
   onStartRequest: function(request, context) {
-    do_check_eq(request.QueryInterface(Ci.nsIChannel).contentType,
+    Assert.equal(request.QueryInterface(Ci.nsIChannel).contentType,
 		this.contentType);
     request.cancel(Cr.NS_BINDING_ABORTED);
   },
@@ -38,7 +38,7 @@ var listener_proto = {
   },
 
   onStopRequest: function(request, context, status) {
-    do_check_eq(status, Cr.NS_BINDING_ABORTED);
+    Assert.equal(status, Cr.NS_BINDING_ABORTED);
     this.termination_func();
   }  
 };

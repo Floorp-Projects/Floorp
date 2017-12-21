@@ -28,32 +28,32 @@ var copyObserver =
   onStopRequest: function(request, cx, statusCode)
   {
     // check status code
-    do_check_eq(statusCode, test_result);
+    Assert.equal(statusCode, test_result);
 
     // check number of copied bytes
-    do_check_eq(pipe2.inputStream.available(), test_content.length);
+    Assert.equal(pipe2.inputStream.available(), test_content.length);
 
     // check content
     var scinp = new ScriptableInputStream(pipe2.inputStream);
     var content = scinp.read(scinp.available());
-    do_check_eq(content, test_content);
+    Assert.equal(content, test_content);
 
     // check closed sink
     try {
       pipe2.outputStream.write("closedSinkTest", 14);
-      do_check_false(test_sink_closed);
+      Assert.ok(!test_sink_closed);
     }
     catch (ex) {
-      do_check_true(test_sink_closed);
+      Assert.ok(test_sink_closed);
     }
 
     // check closed source
     try {
       pipe1.outputStream.write("closedSourceTest", 16);
-      do_check_false(test_source_closed);
+      Assert.ok(!test_source_closed);
     }
     catch (ex) {
-      do_check_true(test_source_closed);
+      Assert.ok(test_source_closed);
     }
 
     do_timeout(0, do_test);

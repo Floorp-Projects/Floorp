@@ -347,16 +347,16 @@ function run_test() {
     trace.expectReceive({"from": "<actorid>",
                          "applicationType": "xpcshell-tests",
                          "traits": []});
-    do_check_eq(applicationType, "xpcshell-tests");
+    Assert.equal(applicationType, "xpcshell-tests");
 
     let rootFront = RootFront(client);
     let childFront = null;
 
     let expectRootChildren = size => {
-      do_check_eq(rootActor._poolMap.size, size + 1);
-      do_check_eq(rootFront._poolMap.size, size + 1);
+      Assert.equal(rootActor._poolMap.size, size + 1);
+      Assert.equal(rootFront._poolMap.size, size + 1);
       if (childFront) {
-        do_check_eq(childFront._poolMap.size, 0);
+        Assert.equal(childFront._poolMap.size, 0);
       }
     };
 
@@ -365,8 +365,8 @@ function run_test() {
       trace.expectReceive({"actor": "<actorid>", "from": "<actorid>"});
 
       childFront = ret;
-      do_check_true(childFront instanceof ChildFront);
-      do_check_eq(childFront.childID, "child1");
+      Assert.ok(childFront instanceof ChildFront);
+      Assert.equal(childFront.childID, "child1");
       expectRootChildren(1);
     }).then(() => {
       // Request the child again, make sure the same is returned.
@@ -376,14 +376,14 @@ function run_test() {
       trace.expectReceive({"actor": "<actorid>", "from": "<actorid>"});
 
       expectRootChildren(1);
-      do_check_true(ret === childFront);
+      Assert.ok(ret === childFront);
     }).then(() => {
       return childFront.echo("hello");
     }).then(ret => {
       trace.expectSend({"type": "echo", "str": "hello", "to": "<actorid>"});
       trace.expectReceive({"str": "hello", "from": "<actorid>"});
 
-      do_check_eq(ret, "hello");
+      Assert.equal(ret, "hello");
     }).then(() => {
       return childFront.getDetail1();
     }).then(ret => {
@@ -392,8 +392,8 @@ function run_test() {
                            "childID": "child1",
                            "detail": "detail1",
                            "from": "<actorid>"});
-      do_check_true(ret === childFront);
-      do_check_eq(childFront.detail, "detail1");
+      Assert.ok(ret === childFront);
+      Assert.equal(childFront.detail, "detail1");
     }).then(() => {
       return childFront.getDetail2();
     }).then(ret => {
@@ -402,14 +402,14 @@ function run_test() {
                            "childID": "child1",
                            "detail": "detail2",
                            "from": "<actorid>"});
-      do_check_true(ret === childFront);
-      do_check_eq(childFront.detail, "detail2");
+      Assert.ok(ret === childFront);
+      Assert.equal(childFront.detail, "detail2");
     }).then(() => {
       return childFront.getIDDetail();
     }).then(ret => {
       trace.expectSend({"type": "getIDDetail", "to": "<actorid>"});
       trace.expectReceive({"idDetail": childFront.actorID, "from": "<actorid>"});
-      do_check_true(ret === childFront);
+      Assert.ok(ret === childFront);
     }).then(() => {
       return childFront.getSibling("siblingID");
     }).then(ret => {
@@ -426,8 +426,8 @@ function run_test() {
 
         // At this point we expect two direct children, plus the temporary holder
         // which should hold 1 itself.
-        do_check_eq(rootActor._temporaryHolder.__poolMap.size, 1);
-        do_check_eq(rootFront._temporaryHolder.__poolMap.size, 1);
+        Assert.equal(rootActor._temporaryHolder.__poolMap.size, 1);
+        Assert.equal(rootFront._temporaryHolder.__poolMap.size, 1);
 
         expectRootChildren(3);
         return rootFront.getTemporaryChild("temp2").then(temp2 => {
@@ -439,8 +439,8 @@ function run_test() {
 
           // Same amount of direct children, and an extra in the temporary holder.
           expectRootChildren(3);
-          do_check_eq(rootActor._temporaryHolder.__poolMap.size, 2);
-          do_check_eq(rootFront._temporaryHolder.__poolMap.size, 2);
+          Assert.equal(rootActor._temporaryHolder.__poolMap.size, 2);
+          Assert.equal(rootFront._temporaryHolder.__poolMap.size, 2);
 
           // Get the children of the temporary holder...
           let checkActors = rootActor._temporaryHolder.__poolMap.values();
@@ -451,11 +451,11 @@ function run_test() {
             trace.expectReceive({"from": "<actorid>"});
 
             expectRootChildren(2);
-            do_check_false(!!rootActor._temporaryHolder);
-            do_check_false(!!rootFront._temporaryHolder);
+            Assert.ok(!rootActor._temporaryHolder);
+            Assert.ok(!rootFront._temporaryHolder);
             for (let checkActor of checkActors) {
-              do_check_true(checkActor.destroyed);
-              do_check_true(checkActor.destroyed);
+              Assert.ok(checkActor.destroyed);
+              Assert.ok(checkActor.destroyed);
             }
           });
         });
@@ -471,9 +471,9 @@ function run_test() {
                            "from": "<actorid>"});
 
       expectRootChildren(3);
-      do_check_true(ret[0] === childFront);
-      do_check_true(ret[1] !== childFront);
-      do_check_true(ret[1] instanceof ChildFront);
+      Assert.ok(ret[0] === childFront);
+      Assert.ok(ret[1] !== childFront);
+      Assert.ok(ret[1] instanceof ChildFront);
 
       // On both children, listen to events.  We're only
       // going to trigger events on the first child, so an event
@@ -483,39 +483,39 @@ function run_test() {
                          "object-event", "array-object-event"]);
 
       childFront.on("event1", (a, b, c) => {
-        do_check_eq(a, 1);
-        do_check_eq(b, 2);
-        do_check_eq(c, 3);
+        Assert.equal(a, 1);
+        Assert.equal(b, 2);
+        Assert.equal(c, 3);
         // Verify that the pre-event handler was called.
-        do_check_eq(childFront.event1arg3, 3);
+        Assert.equal(childFront.event1arg3, 3);
         set.delete("event1");
       });
       childFront.on("event2", (a, b, c) => {
-        do_check_eq(a, 4);
-        do_check_eq(b, 5);
-        do_check_eq(c, 6);
+        Assert.equal(a, 4);
+        Assert.equal(b, 5);
+        Assert.equal(c, 6);
         // Verify that the async pre-event handler was called,
         // setting the property before this handler was called.
-        do_check_eq(childFront.event2arg3, 6);
+        Assert.equal(childFront.event2arg3, 6);
         // And check that the sync preEvent with the same name is also
         // executed
-        do_check_eq(childFront.event2arg2, 5);
+        Assert.equal(childFront.event2arg2, 5);
         set.delete("event2");
       });
       childFront.on("named-event", (a, b, c) => {
-        do_check_eq(a, 1);
-        do_check_eq(b, 2);
-        do_check_eq(c, 3);
+        Assert.equal(a, 1);
+        Assert.equal(b, 2);
+        Assert.equal(c, 3);
         set.delete("named-event");
       });
       childFront.on("object-event", (obj) => {
-        do_check_true(obj === childFront);
-        do_check_eq(childFront.detail, "detail1");
+        Assert.ok(obj === childFront);
+        Assert.equal(childFront.detail, "detail1");
         set.delete("object-event");
       });
       childFront.on("array-object-event", (array) => {
-        do_check_true(array[0] === childFront);
-        do_check_eq(childFront.detail, "detail2");
+        Assert.ok(array[0] === childFront);
+        Assert.equal(childFront.detail, "detail2");
         set.delete("array-object-event");
       });
 
@@ -548,7 +548,7 @@ function run_test() {
                              "from": "<actorid>"});
         trace.expectReceive({"value": "correct response", "from": "<actorid>"});
 
-        do_check_eq(set.size, 0);
+        Assert.equal(set.size, 0);
       });
     }).then(ret => {
       return rootFront.getManyChildren();
@@ -561,10 +561,10 @@ function run_test() {
                            "from": "<actorid>"});
 
       // Check all the crazy stuff we did in getManyChildren
-      do_check_eq(ret.foo, "bar");
-      do_check_eq(ret.child5.childID, "child5");
-      do_check_eq(ret.more[0].childID, "child6");
-      do_check_eq(ret.more[1].childID, "child7");
+      Assert.equal(ret.foo, "bar");
+      Assert.equal(ret.child5.childID, "child5");
+      Assert.equal(ret.more[0].childID, "child6");
+      Assert.equal(ret.more[1].childID, "child7");
     }).then(() => {
       // Test accepting a generator.
       let f = function* () {
@@ -574,10 +574,10 @@ function run_test() {
       };
       return childFront.getIntArray(f());
     }).then((ret) => {
-      do_check_eq(ret.length, 5);
+      Assert.equal(ret.length, 5);
       let expected = [2, 4, 6, 8, 10];
       for (let i = 0; i < 5; ++i) {
-        do_check_eq(ret[i], expected[i]);
+        Assert.equal(ret[i], expected[i]);
       }
     }).then(() => {
       return rootFront.getChildren(["child1", "child2"]);
@@ -589,10 +589,10 @@ function run_test() {
       };
       return rootFront.getChildren2(f());
     }).then(ret => {
-      do_check_eq(ret.length, 2);
-      do_check_true(ret[0] === childFront);
-      do_check_true(ret[1] !== childFront);
-      do_check_true(ret[1] instanceof ChildFront);
+      Assert.equal(ret.length, 2);
+      Assert.ok(ret[0] === childFront);
+      Assert.ok(ret[1] !== childFront);
+      Assert.ok(ret[1] instanceof ChildFront);
     }).then(() => {
       client.close().then(() => {
         do_test_finished();

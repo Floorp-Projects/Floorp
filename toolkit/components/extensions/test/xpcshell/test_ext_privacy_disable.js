@@ -67,7 +67,7 @@ add_task(async function test_disable() {
     Preferences.set(pref, PREFS[pref]);
   }
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     // Reset the prefs.
     for (let pref in PREFS) {
       Preferences.reset(pref);

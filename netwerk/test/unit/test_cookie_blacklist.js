@@ -14,5 +14,5 @@ function run_test() {
   cookieService.setCookieStringFromHttp(cookieURI, cookieURI, null, SPACEY_COOKIE, null, null);
 
   var storedCookie = cookieService.getCookieString(cookieURI, null);
-  do_check_eq(storedCookie, GOOD_COOKIE + "; " + SPACEY_COOKIE);
+  Assert.equal(storedCookie, GOOD_COOKIE + "; " + SPACEY_COOKIE);
 }

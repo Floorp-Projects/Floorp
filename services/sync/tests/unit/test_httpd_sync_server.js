@@ -15,7 +15,7 @@ add_test(function test_creation() {
   let server = new SyncServer({
     __proto__: SyncServerCallback,
   });
-  do_check_true(!!server); // Just so we have a check.
+  Assert.ok(!!server); // Just so we have a check.
   server.start(null, function() {
     _("Started on " + server.port);
     server.stop(run_next_test);
@@ -28,40 +28,40 @@ add_test(function test_url_parsing() {
   // Check that we can parse a WBO URI.
   let parts = server.pathRE.exec("/1.1/johnsmith/storage/crypto/keys");
   let [all, version, username, first, rest] = parts;
-  do_check_eq(all, "/1.1/johnsmith/storage/crypto/keys");
-  do_check_eq(version, "1.1");
-  do_check_eq(username, "johnsmith");
-  do_check_eq(first, "storage");
-  do_check_eq(rest, "crypto/keys");
-  do_check_eq(null, server.pathRE.exec("/nothing/else"));
+  Assert.equal(all, "/1.1/johnsmith/storage/crypto/keys");
+  Assert.equal(version, "1.1");
+  Assert.equal(username, "johnsmith");
+  Assert.equal(first, "storage");
+  Assert.equal(rest, "crypto/keys");
+  Assert.equal(null, server.pathRE.exec("/nothing/else"));
 
   // Check that we can parse a collection URI.
   parts = server.pathRE.exec("/1.1/johnsmith/storage/crypto");
   [all, version, username, first, rest] = parts;
-  do_check_eq(all, "/1.1/johnsmith/storage/crypto");
-  do_check_eq(version, "1.1");
-  do_check_eq(username, "johnsmith");
-  do_check_eq(first, "storage");
-  do_check_eq(rest, "crypto");
+  Assert.equal(all, "/1.1/johnsmith/storage/crypto");
+  Assert.equal(version, "1.1");
+  Assert.equal(username, "johnsmith");
+  Assert.equal(first, "storage");
+  Assert.equal(rest, "crypto");
 
   // We don't allow trailing slash on storage URI.
   parts = server.pathRE.exec("/1.1/johnsmith/storage/");
-  do_check_eq(parts, undefined);
+  Assert.equal(parts, undefined);
 
   // storage alone is a valid request.
   parts = server.pathRE.exec("/1.1/johnsmith/storage");
   [all, version, username, first, rest] = parts;
-  do_check_eq(all, "/1.1/johnsmith/storage");
-  do_check_eq(version, "1.1");
-  do_check_eq(username, "johnsmith");
-  do_check_eq(first, "storage");
-  do_check_eq(rest, undefined);
+  Assert.equal(all, "/1.1/johnsmith/storage");
+  Assert.equal(version, "1.1");
+  Assert.equal(username, "johnsmith");
+  Assert.equal(first, "storage");
+  Assert.equal(rest, undefined);
 
   parts = server.storageRE.exec("storage");
   let collection;
   [all, , collection, ] = parts;
-  do_check_eq(all, "storage");
-  do_check_eq(collection, undefined);
+  Assert.equal(all, "storage");
+  Assert.equal(collection, undefined);
 
   run_next_test();
 });
@@ -77,14 +77,14 @@ function localRequest(server, path) {
 add_test(function test_basic_http() {
   let server = new SyncServer();
   server.registerUser("john", "password");
-  do_check_true(server.userExists("john"));
+  Assert.ok(server.userExists("john"));
   server.start(null, function() {
     _("Started on " + server.port);
     CommonUtils.nextTick(function() {
       let req = localRequest(server, "/1.1/john/storage/crypto/keys");
       _("req is " + req);
       req.get(function(err) {
-        do_check_eq(null, err);
+        Assert.equal(null, err);
         CommonUtils.nextTick(function() {
           server.stop(run_next_test);
         });
@@ -98,9 +98,9 @@ add_test(function test_info_collections() {
     __proto__: SyncServerCallback
   });
   function responseHasCorrectHeaders(r) {
-    do_check_eq(r.status, 200);
-    do_check_eq(r.headers["content-type"], "application/json");
-    do_check_true("x-weave-timestamp" in r.headers);
+    Assert.equal(r.status, 200);
+    Assert.equal(r.headers["content-type"], "application/json");
+    Assert.ok("x-weave-timestamp" in r.headers);
   }
 
   server.registerUser("john", "password");
@@ -109,28 +109,28 @@ add_test(function test_info_collections() {
       let req = localRequest(server, "/1.1/john/info/collections");
       req.get(function(err) {
         // Initial info/collections fetch is empty.
-        do_check_eq(null, err);
+        Assert.equal(null, err);
         responseHasCorrectHeaders(this.response);
 
-        do_check_eq(this.response.body, "{}");
+        Assert.equal(this.response.body, "{}");
         CommonUtils.nextTick(function() {
           // When we PUT something to crypto/keys, "crypto" appears in the response.
           function cb(err2) {
-            do_check_eq(null, err2);
+            Assert.equal(null, err2);
             responseHasCorrectHeaders(this.response);
             let putResponseBody = this.response.body;
             _("PUT response body: " + JSON.stringify(putResponseBody));
 
             req = localRequest(server, "/1.1/john/info/collections");
             req.get(function(err3) {
-              do_check_eq(null, err3);
+              Assert.equal(null, err3);
               responseHasCorrectHeaders(this.response);
               let expectedColl = server.getCollection("john", "crypto");
-              do_check_true(!!expectedColl);
+              Assert.ok(!!expectedColl);
               let modified = expectedColl.timestamp;
-              do_check_true(modified > 0);
-              do_check_eq(putResponseBody, modified);
-              do_check_eq(JSON.parse(this.response.body).crypto, modified);
+              Assert.ok(modified > 0);
+              Assert.equal(putResponseBody, modified);
+              Assert.equal(JSON.parse(this.response.body).crypto, modified);
               CommonUtils.nextTick(function() {
                 server.stop(run_next_test);
               });
@@ -157,19 +157,19 @@ add_test(function test_storage_request() {
     crypto: {foos: {foo: "bar"}}
   });
   let coll = server.user("john").collection("crypto");
-  do_check_true(!!coll);
+  Assert.ok(!!coll);
 
   _("We're tracking timestamps.");
-  do_check_true(coll.timestamp >= creation);
+  Assert.ok(coll.timestamp >= creation);
 
   function retrieveWBONotExists(next) {
     let req = localRequest(server, keysURL);
     req.get(function(err) {
       _("Body is " + this.response.body);
       _("Modified is " + this.response.newModified);
-      do_check_eq(null, err);
-      do_check_eq(this.response.status, 404);
-      do_check_eq(this.response.body, "Not found");
+      Assert.equal(null, err);
+      Assert.equal(this.response.status, 404);
+      Assert.equal(this.response.body, "Not found");
       CommonUtils.nextTick(next);
     });
   }
@@ -179,9 +179,9 @@ add_test(function test_storage_request() {
       _("Body is " + this.response.body);
       _("Modified is " + this.response.newModified);
       let parsedBody = JSON.parse(this.response.body);
-      do_check_eq(parsedBody.id, "foos");
-      do_check_eq(parsedBody.modified, coll.wbo("foos").modified);
-      do_check_eq(JSON.parse(parsedBody.payload).foo, "bar");
+      Assert.equal(parsedBody.id, "foos");
+      Assert.equal(parsedBody.modified, coll.wbo("foos").modified);
+      Assert.equal(JSON.parse(parsedBody.payload).foo, "bar");
       CommonUtils.nextTick(next);
     });
   }
@@ -194,7 +194,7 @@ add_test(function test_storage_request() {
     req.delete(function(err) {
       _("Body is " + this.response.body);
       _("Modified is " + this.response.newModified);
-      do_check_eq(this.response.status, 200);
+      Assert.equal(this.response.status, 200);
       delete server.callback.onItemDeleted;
       CommonUtils.nextTick(next);
     });
@@ -204,16 +204,16 @@ add_test(function test_storage_request() {
     server.callback.onItemDeleted = function(username, collection, wboID) {
       _("onItemDeleted called for " + collection + "/" + wboID);
       delete server.callback.onItemDeleted;
-      do_check_eq(username, "john");
-      do_check_eq(collection, "crypto");
-      do_check_eq(wboID, "foos");
+      Assert.equal(username, "john");
+      Assert.equal(collection, "crypto");
+      Assert.equal(wboID, "foos");
       CommonUtils.nextTick(next);
     };
 
     req.delete(function(err) {
       _("Body is " + this.response.body);
       _("Modified is " + this.response.newModified);
-      do_check_eq(this.response.status, 200);
+      Assert.equal(this.response.status, 200);
     });
   }
   function deleteStorage(next) {
@@ -225,7 +225,7 @@ add_test(function test_storage_request() {
       _("Body is " + this.response.body);
       _("Modified is " + this.response.newModified);
       let parsedBody = JSON.parse(this.response.body);
-      do_check_true(parsedBody >= now);
+      Assert.ok(parsedBody >= now);
       do_check_empty(server.users.john.collections);
       CommonUtils.nextTick(next);
     });
@@ -234,8 +234,8 @@ add_test(function test_storage_request() {
     _("Testing that GET on /storage fails.");
     let req = localRequest(server, storageURL);
     req.get(function(err) {
-      do_check_eq(this.response.status, 405);
-      do_check_eq(this.response.headers.allow, "DELETE");
+      Assert.equal(this.response.status, 405);
+      Assert.equal(this.response.headers.allow, "DELETE");
       CommonUtils.nextTick(next);
     });
   }
@@ -243,7 +243,7 @@ add_test(function test_storage_request() {
     _("Testing that fetching a WBO from an on-existent collection 404s.");
     let req = localRequest(server, storageURL + "/foobar/baz");
     req.get(function(err) {
-      do_check_eq(this.response.status, 404);
+      Assert.equal(this.response.status, 404);
       CommonUtils.nextTick(next);
     });
   }
@@ -274,11 +274,11 @@ add_test(function test_x_weave_records() {
     let wbo = localRequest(server, "/1.1/john/storage/crypto/foos");
     wbo.get(function(err) {
       // WBO fetches don't have one.
-      do_check_false("x-weave-records" in this.response.headers);
+      Assert.equal(false, "x-weave-records" in this.response.headers);
       let col = localRequest(server, "/1.1/john/storage/crypto");
       col.get(function(err2) {
         // Collection fetches do.
-        do_check_eq(this.response.headers["x-weave-records"], "2");
+        Assert.equal(this.response.headers["x-weave-records"], "2");
         server.stop(run_next_test);
       });
     });

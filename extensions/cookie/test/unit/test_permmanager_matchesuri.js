@@ -3,22 +3,22 @@
 
 function matches_always(perm, uris) {
   uris.forEach((uri) => {
-    do_check_true(perm.matchesURI(uri, true), "perm: " + perm.principal.origin + ", URI: " + uri.spec);
-    do_check_true(perm.matchesURI(uri, false), "perm: " + perm.principal.origin + ", URI: " + uri.spec);
+    Assert.ok(perm.matchesURI(uri, true), "perm: " + perm.principal.origin + ", URI: " + uri.spec);
+    Assert.ok(perm.matchesURI(uri, false), "perm: " + perm.principal.origin + ", URI: " + uri.spec);
   });
 }
 
 function matches_weak(perm, uris) {
   uris.forEach((uri) => {
-    do_check_false(perm.matchesURI(uri, true), "perm: " + perm.principal.origin + ", URI: " + uri.spec);
-    do_check_true(perm.matchesURI(uri, false), "perm: " + perm.principal.origin + ", URI: " + uri.spec);
+    Assert.ok(!perm.matchesURI(uri, true), "perm: " + perm.principal.origin + ", URI: " + uri.spec);
+    Assert.ok(perm.matchesURI(uri, false), "perm: " + perm.principal.origin + ", URI: " + uri.spec);
   });
 }
 
 function matches_never(perm, uris) {
   uris.forEach((uri) => {
-    do_check_false(perm.matchesURI(uri, true), "perm: " + perm.principal.origin + ", URI: " + uri.spec);
-    do_check_false(perm.matchesURI(uri, false), "perm: " + perm.principal.origin + ", URI: " + uri.spec);
+    Assert.ok(!perm.matchesURI(uri, true), "perm: " + perm.principal.origin + ", URI: " + uri.spec);
+    Assert.ok(!perm.matchesURI(uri, false), "perm: " + perm.principal.origin + ", URI: " + uri.spec);
   });
 }
 

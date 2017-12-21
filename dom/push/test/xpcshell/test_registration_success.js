@@ -15,7 +15,7 @@ function run_test() {
 
 add_task(async function test_registration_success() {
   let db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+  registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
   let records = [{
     channelID: 'bf001fe0-2684-42f2-bc4d-a3e14b11dd5b',
     pushEndpoint: 'https://example.com/update/same-manifest/1',

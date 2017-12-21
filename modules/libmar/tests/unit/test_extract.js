@@ -16,7 +16,7 @@ function run_test() {
     // Get the path that we will extract to
     let outDir = tempDir.clone();
     outDir.append("out");
-    do_check_false(outDir.exists());
+    Assert.ok(!outDir.exists());
     outDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o777);
 
     // Get the ref files and the files that will be extracted.
@@ -25,7 +25,7 @@ function run_test() {
     for (let i = 0; i < files.length; i++) {
       let outFile = outDir.clone();
       outFile.append(files[i]);
-      do_check_false(outFile.exists());
+      Assert.ok(!outFile.exists());
 
       outFiles.push(outFile);
       refFiles.push(do_get_file("data/" + files[i]));
@@ -36,7 +36,7 @@ function run_test() {
 
     // Compare to make sure the extracted files are the same.
     for (let i = 0; i < files.length; i++) {
-      do_check_true(outFiles[i].exists());
+      Assert.ok(outFiles[i].exists());
       let refFileData = getBinaryFileData(refFiles[i]);
       let outFileData = getBinaryFileData(outFiles[i]);
       compareBinaryData(refFileData, outFileData);
@@ -89,5 +89,5 @@ function run_test() {
   };
 
   // Run all the tests
-  do_check_eq(run_tests(tests), Object.keys(tests).length - 1);
+  Assert.equal(run_tests(tests), Object.keys(tests).length - 1);
 }

@@ -35,8 +35,8 @@ add_task(async function test_undo_folder_remove_within_transaction() {
   // Now check to make sure it gets added with the right id
   PlacesUtils.bookmarks.addObserver({
     onItemAdded(aItemId, aFolder, aIndex, aItemType, aURI, aTitle) {
-      do_check_eq(aItemId, id);
-      do_check_eq(aTitle, TITLE);
+      Assert.equal(aItemId, id);
+      Assert.equal(aTitle, TITLE);
     }
   });
   transaction.undoTransaction();

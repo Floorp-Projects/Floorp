@@ -10,7 +10,7 @@ function expected_pass(inputIDN)
 {
   var isASCII = {};
   var displayIDN = idnService.convertToDisplayIDN(inputIDN, isASCII);
-  do_check_eq(displayIDN, inputIDN);
+  Assert.equal(displayIDN, inputIDN);
 }
 
 function expected_fail(inputIDN)
@@ -23,7 +23,7 @@ function expected_fail(inputIDN)
   }
   catch(e) {}
 
-  do_check_neq(displayIDN, inputIDN);
+  Assert.notEqual(displayIDN, inputIDN);
 }
 
 function run_test() {

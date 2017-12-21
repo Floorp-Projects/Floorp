@@ -22,40 +22,40 @@ function run_test() {
 
 function test_1() {
   AddonManager.getInstallForURL(addon_url, function(aInstall) {
-    do_check_eq(aInstall.iconURL, null);
-    do_check_neq(aInstall.icons, null);
-    do_check_eq(aInstall.icons[32], undefined);
-    do_check_eq(aInstall.icons[64], undefined);
+    Assert.equal(aInstall.iconURL, null);
+    Assert.notEqual(aInstall.icons, null);
+    Assert.equal(aInstall.icons[32], undefined);
+    Assert.equal(aInstall.icons[64], undefined);
     test_2();
   }, "application/x-xpinstall", null, null, null, null, null);
 }
 
 function test_2() {
   AddonManager.getInstallForURL(addon_url, function(aInstall) {
-    do_check_eq(aInstall.iconURL, icon32_url);
-    do_check_neq(aInstall.icons, null);
-    do_check_eq(aInstall.icons[32], icon32_url);
-    do_check_eq(aInstall.icons[64], undefined);
+    Assert.equal(aInstall.iconURL, icon32_url);
+    Assert.notEqual(aInstall.icons, null);
+    Assert.equal(aInstall.icons[32], icon32_url);
+    Assert.equal(aInstall.icons[64], undefined);
     test_3();
   }, "application/x-xpinstall", null, null, icon32_url, null, null);
 }
 
 function test_3() {
   AddonManager.getInstallForURL(addon_url, function(aInstall) {
-    do_check_eq(aInstall.iconURL, icon32_url);
-    do_check_neq(aInstall.icons, null);
-    do_check_eq(aInstall.icons[32], icon32_url);
-    do_check_eq(aInstall.icons[64], undefined);
+    Assert.equal(aInstall.iconURL, icon32_url);
+    Assert.notEqual(aInstall.icons, null);
+    Assert.equal(aInstall.icons[32], icon32_url);
+    Assert.equal(aInstall.icons[64], undefined);
     test_4();
   }, "application/x-xpinstall", null, null, { "32": icon32_url }, null, null);
 }
 
 function test_4() {
   AddonManager.getInstallForURL(addon_url, function(aInstall) {
-    do_check_eq(aInstall.iconURL, icon32_url);
-    do_check_neq(aInstall.icons, null);
-    do_check_eq(aInstall.icons[32], icon32_url);
-    do_check_eq(aInstall.icons[64], icon64_url);
-    do_execute_soon(do_test_finished);
+    Assert.equal(aInstall.iconURL, icon32_url);
+    Assert.notEqual(aInstall.icons, null);
+    Assert.equal(aInstall.icons[32], icon32_url);
+    Assert.equal(aInstall.icons[64], icon64_url);
+    executeSoon(do_test_finished);
   }, "application/x-xpinstall", null, null, { "32": icon32_url, "64": icon64_url }, null, null);
 }

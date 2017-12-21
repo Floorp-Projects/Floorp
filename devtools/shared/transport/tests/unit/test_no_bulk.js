@@ -24,13 +24,13 @@ var test_bulk_send_error = Task.async(function* (transportFactory) {
 
   let client = new DebuggerClient(transport);
   return client.connect().then(([app, traits]) => {
-    do_check_false(traits.bulk);
+    Assert.ok(!traits.bulk);
 
     try {
       client.startBulkRequest();
       do_throw(new Error("Can't use bulk since server doesn't support it"));
     } catch (e) {
-      do_check_true(true);
+      Assert.ok(true);
     }
   });
 });

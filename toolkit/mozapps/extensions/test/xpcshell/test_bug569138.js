@@ -113,35 +113,35 @@ function run_test() {
                                "addon6@tests.mozilla.org",
                                "addon7@tests.mozilla.org"],
                                function([a1, a2, a3, a4, a5, a6, a7]) {
-    do_check_neq(a1, null);
-    do_check_false(a1.appDisabled);
-    do_check_true(a1.isActive);
+    Assert.notEqual(a1, null);
+    Assert.ok(!a1.appDisabled);
+    Assert.ok(a1.isActive);
 
-    do_check_neq(a2, null);
-    do_check_true(a2.appDisabled);
-    do_check_false(a2.isActive);
+    Assert.notEqual(a2, null);
+    Assert.ok(a2.appDisabled);
+    Assert.ok(!a2.isActive);
 
-    do_check_neq(a3, null);
-    do_check_true(a3.appDisabled);
-    do_check_false(a3.isActive);
+    Assert.notEqual(a3, null);
+    Assert.ok(a3.appDisabled);
+    Assert.ok(!a3.isActive);
 
-    do_check_neq(a4, null);
-    do_check_true(a4.appDisabled);
-    do_check_false(a4.isActive);
+    Assert.notEqual(a4, null);
+    Assert.ok(a4.appDisabled);
+    Assert.ok(!a4.isActive);
 
-    do_check_neq(a5, null);
-    do_check_true(a5.appDisabled);
-    do_check_false(a5.isActive);
+    Assert.notEqual(a5, null);
+    Assert.ok(a5.appDisabled);
+    Assert.ok(!a5.isActive);
 
-    do_check_neq(a6, null);
-    do_check_true(a6.appDisabled);
-    do_check_false(a6.isActive);
+    Assert.notEqual(a6, null);
+    Assert.ok(a6.appDisabled);
+    Assert.ok(!a6.isActive);
 
-    do_check_neq(a6, null);
-    do_check_true(a6.appDisabled);
-    do_check_false(a6.isActive);
+    Assert.notEqual(a6, null);
+    Assert.ok(a6.appDisabled);
+    Assert.ok(!a6.isActive);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
 
   });
 }

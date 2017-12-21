@@ -56,7 +56,7 @@ function addTestingFunctionsToGlobal(global) {
     `
   );
   if (!global.print) {
-    global.print = do_print;
+    global.print = info;
   }
   if (!global.newGlobal) {
     global.newGlobal = newGlobal;

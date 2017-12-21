@@ -29,38 +29,38 @@ function run_test() {
 
     let location = { line: 4 };
     let [packet, breakpointClient] = yield setBreakpoint(sourceClient, location);
-    do_check_false(packet.isPending);
-    do_check_false("actualLocation" in packet);
+    Assert.ok(!packet.isPending);
+    Assert.equal(false, "actualLocation" in packet);
 
     packet = yield executeOnNextTickAndWaitForPause(function () {
       Cu.evalInSandbox("f()", global);
     }, client);
-    do_check_eq(packet.type, "paused");
+    Assert.equal(packet.type, "paused");
     let why = packet.why;
-    do_check_eq(why.type, "breakpoint");
-    do_check_eq(why.actors.length, 1);
-    do_check_eq(why.actors[0], breakpointClient.actor);
+    Assert.equal(why.type, "breakpoint");
+    Assert.equal(why.actors.length, 1);
+    Assert.equal(why.actors[0], breakpointClient.actor);
     let frame = packet.frame;
     let where = frame.where;
-    do_check_eq(where.source.actor, source.actor);
-    do_check_eq(where.line, location.line);
+    Assert.equal(where.source.actor, source.actor);
+    Assert.equal(where.line, location.line);
     let variables = frame.environment.bindings.variables;
-    do_check_eq(variables.i.value.type, "undefined");
+    Assert.equal(variables.i.value.type, "undefined");
 
     packet = yield executeOnNextTickAndWaitForPause(function () {
       resume(threadClient);
     }, client);
-    do_check_eq(packet.type, "paused");
+    Assert.equal(packet.type, "paused");
     why = packet.why;
-    do_check_eq(why.type, "breakpoint");
-    do_check_eq(why.actors.length, 1);
-    do_check_eq(why.actors[0], breakpointClient.actor);
+    Assert.equal(why.type, "breakpoint");
+    Assert.equal(why.actors.length, 1);
+    Assert.equal(why.actors[0], breakpointClient.actor);
     frame = packet.frame;
     where = frame.where;
-    do_check_eq(where.source.actor, source.actor);
-    do_check_eq(where.line, location.line);
+    Assert.equal(where.source.actor, source.actor);
+    Assert.equal(where.line, location.line);
     variables = frame.environment.bindings.variables;
-    do_check_eq(variables.i.value, 0);
+    Assert.equal(variables.i.value, 0);
 
     yield resume(threadClient);
     yield close(client);

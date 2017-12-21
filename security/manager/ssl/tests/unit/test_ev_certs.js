@@ -29,7 +29,7 @@ do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb = Cc["@mozilla.org/security/x509certdb;1"]
                  .getService(Ci.nsIX509CertDB);
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   Services.prefs.clearUserPref("network.dns.localDomains");
   Services.prefs.clearUserPref("security.OCSP.enabled");
 });
@@ -213,11 +213,11 @@ add_task(async function expectDVFallbackTests() {
 // causes the verifications to succeed again).
 add_task(async function evRootTrustTests() {
   clearOCSPCache();
-  do_print("untrusting evroot");
+  info("untrusting evroot");
   certdb.setCertTrust(evroot, Ci.nsIX509Cert.CA_CERT,
                       Ci.nsIX509CertDB.UNTRUSTED);
   await ensureVerificationFails("test-oid-path", SEC_ERROR_UNKNOWN_ISSUER);
-  do_print("re-trusting evroot");
+  info("re-trusting evroot");
   certdb.setCertTrust(evroot, Ci.nsIX509Cert.CA_CERT,
                       Ci.nsIX509CertDB.TRUSTED_SSL);
   await ensureVerifiesAsEV("test-oid-path");

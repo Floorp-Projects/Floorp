@@ -50,7 +50,7 @@ Listener.prototype = {
     onDataAvailable: function(request, ctx, stream, offset, count) {
         try {
             this.available = stream.available();
-            do_check_eq(this.available, count);
+            Assert.equal(this.available, count);
             // Need to consume stream to avoid assertion
             new nsIBinaryInputStream(stream).readBytes(count);
         }
@@ -63,7 +63,7 @@ Listener.prototype = {
     },
     onStopRequest: function(request, ctx, status) {
         this.gotStopRequest = true;
-        do_check_eq(status, 0);
+        Assert.equal(status, 0);
         if (this._callback) {
             this._callback.call(null, this);
         }
@@ -76,12 +76,12 @@ Listener.prototype = {
 function testAsync() {
     var uri = jarBase + "/inner40.zip";
     var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
-    do_check_true(chan.contentLength < 0);
+    Assert.ok(chan.contentLength < 0);
     chan.asyncOpen2(new Listener(function(l) {
-        do_check_true(chan.contentLength > 0);
-        do_check_true(l.gotStartRequest);
-        do_check_true(l.gotStopRequest);
-        do_check_eq(l.available, chan.contentLength);
+        Assert.ok(chan.contentLength > 0);
+        Assert.ok(l.gotStartRequest);
+        Assert.ok(l.gotStopRequest);
+        Assert.equal(l.available, chan.contentLength);
 
         run_next_test();
     }));
@@ -99,8 +99,8 @@ function testZipEntry() {
     var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true})
                       .QueryInterface(Ci.nsIJARChannel);
     var entry = chan.zipEntry;
-    do_check_true(entry.CRC32 == 0x8b635486);
-    do_check_true(entry.realSize == 184);
+    Assert.ok(entry.CRC32 == 0x8b635486);
+    Assert.ok(entry.realSize == 184);
     run_next_test();
 }
 
@@ -114,8 +114,8 @@ add_test(function testSync() {
     var uri = jarBase + "/inner40.zip";
     var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
     var stream = chan.open2();
-    do_check_true(chan.contentLength > 0);
-    do_check_eq(stream.available(), chan.contentLength);
+    Assert.ok(chan.contentLength > 0);
+    Assert.equal(stream.available(), chan.contentLength);
     stream.close();
     stream.close(); // should still not throw
 
@@ -130,8 +130,8 @@ add_test(function testSyncNested() {
     var uri = "jar:" + jarBase + "/inner40.zip!/foo";
     var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
     var stream = chan.open2();
-    do_check_true(chan.contentLength > 0);
-    do_check_eq(stream.available(), chan.contentLength);
+    Assert.ok(chan.contentLength > 0);
+    Assert.equal(stream.available(), chan.contentLength);
     stream.close();
     stream.close(); // should still not throw
 
@@ -145,10 +145,10 @@ add_test(function testAsyncNested(next) {
     var uri = "jar:" + jarBase + "/inner40.zip!/foo";
     var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
     chan.asyncOpen2(new Listener(function(l) {
-        do_check_true(chan.contentLength > 0);
-        do_check_true(l.gotStartRequest);
-        do_check_true(l.gotStopRequest);
-        do_check_eq(l.available, chan.contentLength);
+        Assert.ok(chan.contentLength > 0);
+        Assert.ok(l.gotStartRequest);
+        Assert.ok(l.gotStopRequest);
+        Assert.equal(l.available, chan.contentLength);
 
         run_next_test();
     }));
@@ -165,7 +165,7 @@ add_test(function testSyncCloseUnlocks() {
     var uri = "jar:" + ios.newFileURI(copy).spec + "!/inner40.zip";
     var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
     var stream = chan.open2();
-    do_check_true(chan.contentLength > 0);
+    Assert.ok(chan.contentLength > 0);
     stream.close();
 
     // Drop any jar caches
@@ -194,7 +194,7 @@ add_test(function testAsyncCloseUnlocks() {
     var chan = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
 
     chan.asyncOpen2(new Listener(function (l) {
-        do_check_true(chan.contentLength > 0);
+        Assert.ok(chan.contentLength > 0);
 
         // Drop any jar caches
         obs.notifyObservers(null, "chrome-flush-caches");

@@ -160,26 +160,26 @@ var test = {
     var toolbar =
       PlacesUtils.getFolderContents(PlacesUtils.toolbarFolderId,
                                     false, true).root;
-    do_check_true(toolbar.childCount, 1);
+    Assert.ok(toolbar.childCount, 1);
 
     var folderNode = toolbar.getChild(0);
-    do_check_eq(folderNode.type, folderNode.RESULT_TYPE_FOLDER);
-    do_check_eq(folderNode.title, this._testRootTitle);
+    Assert.equal(folderNode.type, folderNode.RESULT_TYPE_FOLDER);
+    Assert.equal(folderNode.title, this._testRootTitle);
     folderNode.QueryInterface(Ci.nsINavHistoryQueryResultNode);
     folderNode.containerOpen = true;
 
     // |_count| folders + the query nodes
-    do_check_eq(folderNode.childCount, this._count + 4);
+    Assert.equal(folderNode.childCount, this._count + 4);
 
     for (let i = 0; i < this._count; i++) {
       var subFolder = folderNode.getChild(i);
-      do_check_eq(subFolder.title, "folder" + i);
+      Assert.equal(subFolder.title, "folder" + i);
       subFolder.QueryInterface(Ci.nsINavHistoryContainerResultNode);
       subFolder.containerOpen = true;
-      do_check_eq(subFolder.childCount, 1);
+      Assert.equal(subFolder.childCount, 1);
       var child = subFolder.getChild(0);
-      do_check_eq(child.title, "bookmark" + i);
-      do_check_true(uri(child.uri).equals(uri("http://" + i)));
+      Assert.equal(child.title, "bookmark" + i);
+      Assert.ok(uri(child.uri).equals(uri("http://" + i)));
     }
 
     // validate folder shortcut
@@ -200,59 +200,59 @@ var test = {
   },
 
   validateQueryNode1: function validateQueryNode1(aNode) {
-    do_check_eq(aNode.title, this._queryTitle1);
-    do_check_true(PlacesUtils.nodeIsFolder(aNode));
+    Assert.equal(aNode.title, this._queryTitle1);
+    Assert.ok(PlacesUtils.nodeIsFolder(aNode));
 
     aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
     aNode.containerOpen = true;
-    do_check_eq(aNode.childCount, 1);
+    Assert.equal(aNode.childCount, 1);
     var child = aNode.getChild(0);
-    do_check_true(uri(child.uri).equals(uri("http://0")));
-    do_check_eq(child.title, "bookmark0");
+    Assert.ok(uri(child.uri).equals(uri("http://0")));
+    Assert.equal(child.title, "bookmark0");
     aNode.containerOpen = false;
   },
 
   validateQueryNode2: function validateQueryNode2(aNode) {
-    do_check_eq(aNode.title, this._queryTitle2);
-    do_check_true(PlacesUtils.nodeIsQuery(aNode));
+    Assert.equal(aNode.title, this._queryTitle2);
+    Assert.ok(PlacesUtils.nodeIsQuery(aNode));
 
     aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
     aNode.containerOpen = true;
-    do_check_eq(aNode.childCount, this._count);
+    Assert.equal(aNode.childCount, this._count);
     for (var i = 0; i < aNode.childCount; i++) {
       var child = aNode.getChild(i);
-      do_check_true(uri(child.uri).equals(uri("http://" + i)));
-      do_check_eq(child.title, "bookmark" + i);
+      Assert.ok(uri(child.uri).equals(uri("http://" + i)));
+      Assert.equal(child.title, "bookmark" + i);
     }
     aNode.containerOpen = false;
   },
 
   validateQueryNode3: function validateQueryNode3(aNode) {
-    do_check_eq(aNode.title, this._queryTitle3);
-    do_check_true(PlacesUtils.nodeIsQuery(aNode));
+    Assert.equal(aNode.title, this._queryTitle3);
+    Assert.ok(PlacesUtils.nodeIsQuery(aNode));
 
     aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
     aNode.containerOpen = true;
-    do_check_eq(aNode.childCount, this._count);
+    Assert.equal(aNode.childCount, this._count);
     for (var i = 0; i < aNode.childCount; i++) {
       var child = aNode.getChild(i);
-      do_check_true(uri(child.uri).equals(uri("http://" + i)));
-      do_check_eq(child.title, "bookmark" + i);
+      Assert.ok(uri(child.uri).equals(uri("http://" + i)));
+      Assert.equal(child.title, "bookmark" + i);
     }
     aNode.containerOpen = false;
   },
 
   validateQueryNode4(aNode) {
-    do_check_eq(aNode.title, this._queryTitle4);
-    do_check_true(PlacesUtils.nodeIsQuery(aNode));
+    Assert.equal(aNode.title, this._queryTitle4);
+    Assert.ok(PlacesUtils.nodeIsQuery(aNode));
 
     aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
     aNode.containerOpen = true;
     // The query will list the extra bookmarks added at the start of validate.
-    do_check_eq(aNode.childCount, this._extraBookmarksCount);
+    Assert.equal(aNode.childCount, this._extraBookmarksCount);
     for (var i = 0; i < aNode.childCount; i++) {
       var child = aNode.getChild(i);
-      do_check_eq(child.uri, `http://aaaa${i}/`);
+      Assert.equal(child.uri, `http://aaaa${i}/`);
     }
     aNode.containerOpen = false;
   },

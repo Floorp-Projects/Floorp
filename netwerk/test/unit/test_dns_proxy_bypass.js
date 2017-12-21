@@ -27,10 +27,10 @@ var dnsRequestObserver = {
 
   observe: function(subject, topic, data) {
     if (topic == "dns-resolution-request") {
-      do_print(data);
+      info(data);
       if (data.indexOf("dnsleak.example.com") > -1) {
         try {
-          do_check_true(false);
+          Assert.ok(false);
         } catch (e) {}
       }
     }

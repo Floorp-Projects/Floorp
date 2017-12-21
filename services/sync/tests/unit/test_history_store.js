@@ -47,7 +47,7 @@ var engine = new HistoryEngine(Service);
 Async.promiseSpinningly(engine.initialize());
 var store = engine._store;
 async function applyEnsureNoFailures(records) {
-  do_check_eq((await store.applyIncomingBatch(records)).length, 0);
+  Assert.equal((await store.applyIncomingBatch(records)).length, 0);
 }
 
 var fxuri, fxguid, tburi, tbguid;
@@ -68,21 +68,21 @@ add_task(async function test_store() {
                                   visitDate: TIMESTAMP1 });
   _("Verify that the entry exists.");
   let ids = Object.keys((await store.getAllIDs()));
-  do_check_eq(ids.length, 1);
+  Assert.equal(ids.length, 1);
   fxguid = ids[0];
-  do_check_true((await store.itemExists(fxguid)));
+  Assert.ok((await store.itemExists(fxguid)));
 
   _("If we query a non-existent record, it's marked as deleted.");
   let record = await store.createRecord("non-existent");
-  do_check_true(record.deleted);
+  Assert.ok(record.deleted);
 
   _("Verify createRecord() returns a complete record.");
   record = await store.createRecord(fxguid);
-  do_check_eq(record.histUri, fxuri.spec);
-  do_check_eq(record.title, "Get Firefox!");
-  do_check_eq(record.visits.length, 1);
-  do_check_eq(record.visits[0].date, TIMESTAMP1);
-  do_check_eq(record.visits[0].type, Ci.nsINavHistoryService.TRANSITION_LINK);
+  Assert.equal(record.histUri, fxuri.spec);
+  Assert.equal(record.title, "Get Firefox!");
+  Assert.equal(record.visits.length, 1);
+  Assert.equal(record.visits[0].date, TIMESTAMP1);
+  Assert.equal(record.visits[0].type, Ci.nsINavHistoryService.TRANSITION_LINK);
 
   _("Let's modify the record and have the store update the database.");
   let secondvisit = {date: TIMESTAMP2,
@@ -98,8 +98,8 @@ add_task(async function test_store() {
   let queryres = await PlacesUtils.history.fetch(fxuri.spec, {
     includeVisits: true,
   });
-  do_check_eq(queryres.title, "Hol Dir Firefox!");
-  do_check_matches(queryres.visits, [{
+  Assert.equal(queryres.title, "Hol Dir Firefox!");
+  Assert.deepEqual(queryres.visits, [{
     date: new Date(TIMESTAMP2 / 1000),
     transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
   }, {
@@ -122,13 +122,13 @@ add_task(async function test_store_create() {
                type: Ci.nsINavHistoryService.TRANSITION_TYPED}]}
   ]);
   await onVisitObserved;
-  do_check_true((await store.itemExists(tbguid)));
+  Assert.ok((await store.itemExists(tbguid)));
   do_check_attribute_count(await store.getAllIDs(), 1);
   let queryres = await PlacesUtils.history.fetch(tburi.spec, {
     includeVisits: true,
   });
-  do_check_eq(queryres.title, "The bird is the word!");
-  do_check_matches(queryres.visits, [{
+  Assert.equal(queryres.title, "The bird is the word!");
+  Assert.deepEqual(queryres.visits, [{
     date: new Date(TIMESTAMP3 / 1000),
     transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
   }]);
@@ -151,8 +151,8 @@ add_task(async function test_null_title() {
   let queryres = await PlacesUtils.history.fetch(resuri.spec, {
     includeVisits: true,
   });
-  do_check_eq(queryres.title, "");
-  do_check_matches(queryres.visits, [{
+  Assert.equal(queryres.title, "");
+  Assert.deepEqual(queryres.visits, [{
     date: new Date(TIMESTAMP3 / 1000),
     transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
   }]);
@@ -189,8 +189,8 @@ add_task(async function test_invalid_records() {
     visits: [{date: TIMESTAMP3,
               type: Ci.nsINavHistoryService.TRANSITION_EMBED}]}
   ]);
-  do_check_eq(failed.length, 1);
-  do_check_eq(failed[0], invalid_uri_guid);
+  Assert.equal(failed.length, 1);
+  Assert.equal(failed[0], invalid_uri_guid);
 
   _("Make sure we handle records with invalid GUIDs gracefully (ignore).");
   await applyEnsureNoFailures([
@@ -226,7 +226,7 @@ add_task(async function test_invalid_records() {
      visits: [{date: 1234.567,
                type: Ci.nsINavHistoryService.TRANSITION_EMBED}]}
   ]);
-  do_check_eq(failed.length, 0);
+  Assert.equal(failed.length, 0);
 
   _("Make sure we handle records with javascript: URLs gracefully.");
   await applyEnsureNoFailures([
@@ -344,11 +344,11 @@ add_task(async function test_remove() {
   _("Remove an existent record and a non-existent from the store.");
   await applyEnsureNoFailures([{id: fxguid, deleted: true},
                          {id: Utils.makeGUID(), deleted: true}]);
-  do_check_false((await store.itemExists(fxguid)));
+  Assert.equal(false, (await store.itemExists(fxguid)));
   let queryres = await PlacesUtils.history.fetch(fxuri.spec, {
     includeVisits: true,
   });
-  do_check_null(queryres);
+  Assert.equal(null, queryres);
 
   _("Make sure wipe works.");
   await store.wipe();
@@ -356,11 +356,11 @@ add_task(async function test_remove() {
   queryres = await PlacesUtils.history.fetch(fxuri.spec, {
     includeVisits: true,
   });
-  do_check_null(queryres);
+  Assert.equal(null, queryres);
   queryres = await PlacesUtils.history.fetch(tburi.spec, {
     includeVisits: true,
   });
-  do_check_null(queryres);
+  Assert.equal(null, queryres);
 });
 
 add_task(async function test_chunking() {
@@ -452,11 +452,11 @@ add_task(async function test_applyIncomingBatch_filters_file_uris() {
      visits: [{date: TIMESTAMP3,
                type: Ci.nsINavHistoryService.TRANSITION_TYPED}]}
   ]);
-  do_check_false((await store.itemExists(guid)));
+  Assert.equal(false, (await store.itemExists(guid)));
   let queryres = await PlacesUtils.history.fetch(uri.spec, {
     includeVisits: true,
   });
-  do_check_null(queryres);
+  Assert.equal(null, queryres);
 });
 
 add_task(async function cleanup() {

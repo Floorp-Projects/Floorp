@@ -40,13 +40,13 @@ add_task(async function test_isAddressField_isCreditCardField() {
   };
 
   for (let fieldName of Object.keys(TEST_CASES)) {
-    do_print("Starting testcase: " + fieldName);
-    let info = TEST_CASES[fieldName];
+    info("Starting testcase: " + fieldName);
+    let field = TEST_CASES[fieldName];
     Assert.equal(FormAutofillUtils.isAddressField(fieldName),
-                 info.isAddressField,
+                 field.isAddressField,
                  "isAddressField");
     Assert.equal(FormAutofillUtils.isCreditCardField(fieldName),
-                 info.isCreditCardField,
+                 field.isCreditCardField,
                  "isCreditCardField");
   }
 });

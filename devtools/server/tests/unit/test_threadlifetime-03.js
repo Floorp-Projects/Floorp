@@ -33,7 +33,7 @@ function test_thread_lifetime() {
 
     let handler = function (response) {
       if (response.error) {
-        do_check_eq(response.error, "");
+        Assert.equal(response.error, "");
         finishClient(gClient);
       }
       grips.push(response.from);
@@ -64,14 +64,14 @@ function test_release_many(grips) {
     // First two actors should return a noSuchActor error, because
     // they're gone now.
     gClient.request({ to: grips[0], type: "bogusRequest" }, function (response) {
-      do_check_eq(response.error, "noSuchActor");
+      Assert.equal(response.error, "noSuchActor");
       gClient.request({ to: grips[1], type: "bogusRequest" }, function (response) {
-        do_check_eq(response.error, "noSuchActor");
+        Assert.equal(response.error, "noSuchActor");
 
         // Last actor should return unrecognizedPacketType, because it's still
         // alive.
         gClient.request({ to: grips[2], type: "bogusRequest" }, function (response) {
-          do_check_eq(response.error, "unrecognizedPacketType");
+          Assert.equal(response.error, "unrecognizedPacketType");
           gThreadClient.resume(function () {
             finishClient(gClient);
           });

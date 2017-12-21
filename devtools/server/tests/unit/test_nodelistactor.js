@@ -15,7 +15,7 @@ function run_test() {
 }
 
 function check_actor_for_list(nodelist) {
-  do_print("Checking NodeListActor with nodelist '" + nodelist + "' works.");
+  info("Checking NodeListActor with nodelist '" + nodelist + "' works.");
   let actor = new NodeListActor({}, nodelist);
   let form = actor.form();
 

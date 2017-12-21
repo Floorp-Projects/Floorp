@@ -21,6 +21,6 @@ function run_test() {
   let pb = ps.getBranch(BRANCH);
 
   let floatPref = pb.getFloatPref(PREF_NAME);
-  do_check_true(FLOAT+FUDGE >= floatPref);
-  do_check_true(FLOAT-FUDGE <= floatPref);
+  Assert.ok(FLOAT+FUDGE >= floatPref);
+  Assert.ok(FLOAT-FUDGE <= floatPref);
 }

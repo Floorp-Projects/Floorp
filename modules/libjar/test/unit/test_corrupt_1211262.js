@@ -29,6 +29,6 @@ function run_test() {
     }
   }
 
-  do_check_true(failed);
+  Assert.ok(failed);
 }
 

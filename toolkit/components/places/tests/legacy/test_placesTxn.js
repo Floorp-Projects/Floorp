@@ -112,7 +112,7 @@ var root = PlacesUtils.bookmarksMenuFolderId;
 
 add_task(async function init() {
   bmsvc.addObserver(observer);
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     bmsvc.removeObserver(observer);
   });
 });
@@ -136,26 +136,26 @@ add_task(async function test_create_folder_with_description() {
   txnManager.undoTransaction();
 
   let folderId = observer._itemAddedId;
-  do_check_eq(bmsvc.getItemTitle(folderId), TEST_FOLDERNAME);
-  do_check_eq(observer._itemAddedIndex, bmStartIndex);
-  do_check_eq(observer._itemAddedParent, root);
-  do_check_eq(observer._itemAddedId, folderId);
-  do_check_eq(TEST_DESCRIPTION, annosvc.getItemAnnotation(folderId, DESCRIPTION_ANNO));
+  Assert.equal(bmsvc.getItemTitle(folderId), TEST_FOLDERNAME);
+  Assert.equal(observer._itemAddedIndex, bmStartIndex);
+  Assert.equal(observer._itemAddedParent, root);
+  Assert.equal(observer._itemAddedId, folderId);
+  Assert.equal(TEST_DESCRIPTION, annosvc.getItemAnnotation(folderId, DESCRIPTION_ANNO));
 
   txn.undoTransaction();
-  do_check_eq(observer._itemRemovedId, folderId);
-  do_check_eq(observer._itemRemovedFolder, root);
-  do_check_eq(observer._itemRemovedIndex, bmStartIndex);
+  Assert.equal(observer._itemRemovedId, folderId);
+  Assert.equal(observer._itemRemovedFolder, root);
+  Assert.equal(observer._itemRemovedIndex, bmStartIndex);
 
   txn.redoTransaction();
-  do_check_eq(observer._itemAddedIndex, bmStartIndex);
-  do_check_eq(observer._itemAddedParent, root);
-  do_check_eq(observer._itemAddedId, folderId);
+  Assert.equal(observer._itemAddedIndex, bmStartIndex);
+  Assert.equal(observer._itemAddedParent, root);
+  Assert.equal(observer._itemAddedId, folderId);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemRemovedId, folderId);
-  do_check_eq(observer._itemRemovedFolder, root);
-  do_check_eq(observer._itemRemovedIndex, bmStartIndex);
+  Assert.equal(observer._itemRemovedId, folderId);
+  Assert.equal(observer._itemRemovedFolder, root);
+  Assert.equal(observer._itemRemovedIndex, bmStartIndex);
 });
 
 add_task(async function test_create_item() {
@@ -166,26 +166,26 @@ add_task(async function test_create_item() {
 
   txnManager.doTransaction(txn);
   let id = bmsvc.getBookmarkIdsForURI(testURI)[0];
-  do_check_eq(observer._itemAddedId, id);
-  do_check_eq(observer._itemAddedIndex, bmStartIndex);
-  do_check_neq(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
+  Assert.equal(observer._itemAddedId, id);
+  Assert.equal(observer._itemAddedIndex, bmStartIndex);
+  Assert.notEqual(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemRemovedId, id);
-  do_check_eq(observer._itemRemovedIndex, bmStartIndex);
-  do_check_eq(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
+  Assert.equal(observer._itemRemovedId, id);
+  Assert.equal(observer._itemRemovedIndex, bmStartIndex);
+  Assert.equal(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
 
   txn.redoTransaction();
-  do_check_neq(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
+  Assert.notEqual(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
   let newId = bmsvc.getBookmarkIdsForURI(testURI)[0];
-  do_check_eq(observer._itemAddedIndex, bmStartIndex);
-  do_check_eq(observer._itemAddedParent, root);
-  do_check_eq(observer._itemAddedId, newId);
+  Assert.equal(observer._itemAddedIndex, bmStartIndex);
+  Assert.equal(observer._itemAddedParent, root);
+  Assert.equal(observer._itemAddedId, newId);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemRemovedId, newId);
-  do_check_eq(observer._itemRemovedFolder, root);
-  do_check_eq(observer._itemRemovedIndex, bmStartIndex);
+  Assert.equal(observer._itemRemovedId, newId);
+  Assert.equal(observer._itemRemovedFolder, root);
+  Assert.equal(observer._itemRemovedIndex, bmStartIndex);
 });
 
 add_task(async function test_create_item_to_folder() {
@@ -197,24 +197,24 @@ add_task(async function test_create_item_to_folder() {
                                                 "Test creating item");
   txnManager.doTransaction(txn);
   let bkmId = bmsvc.getBookmarkIdsForURI(testURI)[0];
-  do_check_eq(observer._itemAddedId, bkmId);
-  do_check_eq(observer._itemAddedIndex, bmStartIndex);
-  do_check_neq(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
+  Assert.equal(observer._itemAddedId, bkmId);
+  Assert.equal(observer._itemAddedIndex, bmStartIndex);
+  Assert.notEqual(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemRemovedId, bkmId);
-  do_check_eq(observer._itemRemovedIndex, bmStartIndex);
+  Assert.equal(observer._itemRemovedId, bkmId);
+  Assert.equal(observer._itemRemovedIndex, bmStartIndex);
 
   txn.redoTransaction();
   let newBkmId = bmsvc.getBookmarkIdsForURI(testURI)[0];
-  do_check_eq(observer._itemAddedIndex, bmStartIndex);
-  do_check_eq(observer._itemAddedParent, folderId);
-  do_check_eq(observer._itemAddedId, newBkmId);
+  Assert.equal(observer._itemAddedIndex, bmStartIndex);
+  Assert.equal(observer._itemAddedParent, folderId);
+  Assert.equal(observer._itemAddedId, newBkmId);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemRemovedId, newBkmId);
-  do_check_eq(observer._itemRemovedFolder, folderId);
-  do_check_eq(observer._itemRemovedIndex, bmStartIndex);
+  Assert.equal(observer._itemRemovedId, newBkmId);
+  Assert.equal(observer._itemRemovedFolder, folderId);
+  Assert.equal(observer._itemRemovedIndex, bmStartIndex);
 });
 
 add_task(async function test_move_items_to_folder() {
@@ -227,32 +227,32 @@ add_task(async function test_move_items_to_folder() {
   let sameTxn = new PlacesMoveItemTransaction(testBkmId, testFolderId, bmsvc.DEFAULT_INDEX);
 
   sameTxn.doTransaction();
-  do_check_eq(observer._itemMovedId, testBkmId);
-  do_check_eq(observer._itemMovedOldParent, testFolderId);
-  do_check_eq(observer._itemMovedOldIndex, 0);
-  do_check_eq(observer._itemMovedNewParent, testFolderId);
-  do_check_eq(observer._itemMovedNewIndex, 1);
+  Assert.equal(observer._itemMovedId, testBkmId);
+  Assert.equal(observer._itemMovedOldParent, testFolderId);
+  Assert.equal(observer._itemMovedOldIndex, 0);
+  Assert.equal(observer._itemMovedNewParent, testFolderId);
+  Assert.equal(observer._itemMovedNewIndex, 1);
 
   sameTxn.undoTransaction();
-  do_check_eq(observer._itemMovedId, testBkmId);
-  do_check_eq(observer._itemMovedOldParent, testFolderId);
-  do_check_eq(observer._itemMovedOldIndex, 1);
-  do_check_eq(observer._itemMovedNewParent, testFolderId);
-  do_check_eq(observer._itemMovedNewIndex, 0);
+  Assert.equal(observer._itemMovedId, testBkmId);
+  Assert.equal(observer._itemMovedOldParent, testFolderId);
+  Assert.equal(observer._itemMovedOldIndex, 1);
+  Assert.equal(observer._itemMovedNewParent, testFolderId);
+  Assert.equal(observer._itemMovedNewIndex, 0);
 
   sameTxn.redoTransaction();
-  do_check_eq(observer._itemMovedId, testBkmId);
-  do_check_eq(observer._itemMovedOldParent, testFolderId);
-  do_check_eq(observer._itemMovedOldIndex, 0);
-  do_check_eq(observer._itemMovedNewParent, testFolderId);
-  do_check_eq(observer._itemMovedNewIndex, 1);
+  Assert.equal(observer._itemMovedId, testBkmId);
+  Assert.equal(observer._itemMovedOldParent, testFolderId);
+  Assert.equal(observer._itemMovedOldIndex, 0);
+  Assert.equal(observer._itemMovedNewParent, testFolderId);
+  Assert.equal(observer._itemMovedNewIndex, 1);
 
   sameTxn.undoTransaction();
-  do_check_eq(observer._itemMovedId, testBkmId);
-  do_check_eq(observer._itemMovedOldParent, testFolderId);
-  do_check_eq(observer._itemMovedOldIndex, 1);
-  do_check_eq(observer._itemMovedNewParent, testFolderId);
-  do_check_eq(observer._itemMovedNewIndex, 0);
+  Assert.equal(observer._itemMovedId, testBkmId);
+  Assert.equal(observer._itemMovedOldParent, testFolderId);
+  Assert.equal(observer._itemMovedOldIndex, 1);
+  Assert.equal(observer._itemMovedNewParent, testFolderId);
+  Assert.equal(observer._itemMovedNewIndex, 0);
 
   // Moving items between different folders
   let folderId = bmsvc.createFolder(testFolderId,
@@ -261,32 +261,32 @@ add_task(async function test_move_items_to_folder() {
   let diffTxn = new PlacesMoveItemTransaction(testBkmId, folderId, bmsvc.DEFAULT_INDEX);
 
   diffTxn.doTransaction();
-  do_check_eq(observer._itemMovedId, testBkmId);
-  do_check_eq(observer._itemMovedOldParent, testFolderId);
-  do_check_eq(observer._itemMovedOldIndex, 0);
-  do_check_eq(observer._itemMovedNewParent, folderId);
-  do_check_eq(observer._itemMovedNewIndex, 0);
+  Assert.equal(observer._itemMovedId, testBkmId);
+  Assert.equal(observer._itemMovedOldParent, testFolderId);
+  Assert.equal(observer._itemMovedOldIndex, 0);
+  Assert.equal(observer._itemMovedNewParent, folderId);
+  Assert.equal(observer._itemMovedNewIndex, 0);
 
   sameTxn.undoTransaction();
-  do_check_eq(observer._itemMovedId, testBkmId);
-  do_check_eq(observer._itemMovedOldParent, folderId);
-  do_check_eq(observer._itemMovedOldIndex, 0);
-  do_check_eq(observer._itemMovedNewParent, testFolderId);
-  do_check_eq(observer._itemMovedNewIndex, 0);
+  Assert.equal(observer._itemMovedId, testBkmId);
+  Assert.equal(observer._itemMovedOldParent, folderId);
+  Assert.equal(observer._itemMovedOldIndex, 0);
+  Assert.equal(observer._itemMovedNewParent, testFolderId);
+  Assert.equal(observer._itemMovedNewIndex, 0);
 
   diffTxn.redoTransaction();
-  do_check_eq(observer._itemMovedId, testBkmId);
-  do_check_eq(observer._itemMovedOldParent, testFolderId);
-  do_check_eq(observer._itemMovedOldIndex, 0);
-  do_check_eq(observer._itemMovedNewParent, folderId);
-  do_check_eq(observer._itemMovedNewIndex, 0);
+  Assert.equal(observer._itemMovedId, testBkmId);
+  Assert.equal(observer._itemMovedOldParent, testFolderId);
+  Assert.equal(observer._itemMovedOldIndex, 0);
+  Assert.equal(observer._itemMovedNewParent, folderId);
+  Assert.equal(observer._itemMovedNewIndex, 0);
 
   sameTxn.undoTransaction();
-  do_check_eq(observer._itemMovedId, testBkmId);
-  do_check_eq(observer._itemMovedOldParent, folderId);
-  do_check_eq(observer._itemMovedOldIndex, 0);
-  do_check_eq(observer._itemMovedNewParent, testFolderId);
-  do_check_eq(observer._itemMovedNewIndex, 0);
+  Assert.equal(observer._itemMovedId, testBkmId);
+  Assert.equal(observer._itemMovedOldParent, folderId);
+  Assert.equal(observer._itemMovedOldIndex, 0);
+  Assert.equal(observer._itemMovedNewParent, testFolderId);
+  Assert.equal(observer._itemMovedNewIndex, 0);
 });
 
 add_task(async function test_remove_folder() {
@@ -296,24 +296,24 @@ add_task(async function test_remove_folder() {
   let txn = new PlacesRemoveItemTransaction(folderId);
 
   txn.doTransaction();
-  do_check_eq(observer._itemRemovedId, folderId);
-  do_check_eq(observer._itemRemovedFolder, testFolder);
-  do_check_eq(observer._itemRemovedIndex, 0);
+  Assert.equal(observer._itemRemovedId, folderId);
+  Assert.equal(observer._itemRemovedFolder, testFolder);
+  Assert.equal(observer._itemRemovedIndex, 0);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemAddedId, folderId);
-  do_check_eq(observer._itemAddedParent, testFolder);
-  do_check_eq(observer._itemAddedIndex, 0);
+  Assert.equal(observer._itemAddedId, folderId);
+  Assert.equal(observer._itemAddedParent, testFolder);
+  Assert.equal(observer._itemAddedIndex, 0);
 
   txn.redoTransaction();
-  do_check_eq(observer._itemRemovedId, folderId);
-  do_check_eq(observer._itemRemovedFolder, testFolder);
-  do_check_eq(observer._itemRemovedIndex, 0);
+  Assert.equal(observer._itemRemovedId, folderId);
+  Assert.equal(observer._itemRemovedFolder, testFolder);
+  Assert.equal(observer._itemRemovedIndex, 0);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemAddedId, folderId);
-  do_check_eq(observer._itemAddedParent, testFolder);
-  do_check_eq(observer._itemAddedIndex, 0);
+  Assert.equal(observer._itemAddedId, folderId);
+  Assert.equal(observer._itemAddedParent, testFolder);
+  Assert.equal(observer._itemAddedIndex, 0);
 });
 
 add_task(async function test_remove_item_with_tag() {
@@ -334,27 +334,27 @@ add_task(async function test_remove_item_with_tag() {
   let txn = new PlacesRemoveItemTransaction(testBkmId);
 
   txn.doTransaction();
-  do_check_eq(observer._itemRemovedId, testBkmId);
-  do_check_eq(observer._itemRemovedFolder, testFolder);
-  do_check_eq(observer._itemRemovedIndex, 0);
-  do_check_eq(tagssvc.getTagsForURI(testURI), TAG_NAME);
+  Assert.equal(observer._itemRemovedId, testBkmId);
+  Assert.equal(observer._itemRemovedFolder, testFolder);
+  Assert.equal(observer._itemRemovedIndex, 0);
+  Assert.equal(tagssvc.getTagsForURI(testURI), TAG_NAME);
 
   txn.undoTransaction();
   let newbkmk2Id = observer._itemAddedId;
-  do_check_eq(observer._itemAddedParent, testFolder);
-  do_check_eq(observer._itemAddedIndex, 0);
-  do_check_eq(tagssvc.getTagsForURI(testURI)[0], TAG_NAME);
+  Assert.equal(observer._itemAddedParent, testFolder);
+  Assert.equal(observer._itemAddedIndex, 0);
+  Assert.equal(tagssvc.getTagsForURI(testURI)[0], TAG_NAME);
 
   txn.redoTransaction();
-  do_check_eq(observer._itemRemovedId, newbkmk2Id);
-  do_check_eq(observer._itemRemovedFolder, testFolder);
-  do_check_eq(observer._itemRemovedIndex, 0);
-  do_check_eq(tagssvc.getTagsForURI(testURI)[0], TAG_NAME);
+  Assert.equal(observer._itemRemovedId, newbkmk2Id);
+  Assert.equal(observer._itemRemovedFolder, testFolder);
+  Assert.equal(observer._itemRemovedIndex, 0);
+  Assert.equal(tagssvc.getTagsForURI(testURI)[0], TAG_NAME);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemAddedParent, testFolder);
-  do_check_eq(observer._itemAddedIndex, 0);
-  do_check_eq(tagssvc.getTagsForURI(testURI)[0], TAG_NAME);
+  Assert.equal(observer._itemAddedParent, testFolder);
+  Assert.equal(observer._itemAddedIndex, 0);
+  Assert.equal(tagssvc.getTagsForURI(testURI)[0], TAG_NAME);
 });
 
 add_task(async function test_remove_item_with_keyword() {
@@ -372,26 +372,26 @@ add_task(async function test_remove_item_with_keyword() {
   let txn = new PlacesRemoveItemTransaction(testBkmId);
 
   txn.doTransaction();
-  do_check_eq(observer._itemRemovedId, testBkmId);
-  do_check_eq(observer._itemRemovedFolder, testFolder);
-  do_check_eq(observer._itemRemovedIndex, 0);
+  Assert.equal(observer._itemRemovedId, testBkmId);
+  Assert.equal(observer._itemRemovedFolder, testFolder);
+  Assert.equal(observer._itemRemovedIndex, 0);
   await promiseKeyword(KEYWORD, null);
 
   txn.undoTransaction();
   let newbkmk2Id = observer._itemAddedId;
-  do_check_eq(observer._itemAddedParent, testFolder);
-  do_check_eq(observer._itemAddedIndex, 0);
+  Assert.equal(observer._itemAddedParent, testFolder);
+  Assert.equal(observer._itemAddedIndex, 0);
   await promiseKeyword(KEYWORD, testURI.spec);
 
   txn.redoTransaction();
-  do_check_eq(observer._itemRemovedId, newbkmk2Id);
-  do_check_eq(observer._itemRemovedFolder, testFolder);
-  do_check_eq(observer._itemRemovedIndex, 0);
+  Assert.equal(observer._itemRemovedId, newbkmk2Id);
+  Assert.equal(observer._itemRemovedFolder, testFolder);
+  Assert.equal(observer._itemRemovedIndex, 0);
   await promiseKeyword(KEYWORD, null);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemAddedParent, testFolder);
-  do_check_eq(observer._itemAddedIndex, 0);
+  Assert.equal(observer._itemAddedParent, testFolder);
+  Assert.equal(observer._itemAddedIndex, 0);
 });
 
 add_task(async function test_creating_separator() {
@@ -401,23 +401,23 @@ add_task(async function test_creating_separator() {
   txn.doTransaction();
 
   let sepId = observer._itemAddedId;
-  do_check_eq(observer._itemAddedIndex, 0);
-  do_check_eq(observer._itemAddedParent, testFolder);
+  Assert.equal(observer._itemAddedIndex, 0);
+  Assert.equal(observer._itemAddedParent, testFolder);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemRemovedId, sepId);
-  do_check_eq(observer._itemRemovedFolder, testFolder);
-  do_check_eq(observer._itemRemovedIndex, 0);
+  Assert.equal(observer._itemRemovedId, sepId);
+  Assert.equal(observer._itemRemovedFolder, testFolder);
+  Assert.equal(observer._itemRemovedIndex, 0);
 
   txn.redoTransaction();
   let newSepId = observer._itemAddedId;
-  do_check_eq(observer._itemAddedIndex, 0);
-  do_check_eq(observer._itemAddedParent, testFolder);
+  Assert.equal(observer._itemAddedIndex, 0);
+  Assert.equal(observer._itemAddedParent, testFolder);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemRemovedId, newSepId);
-  do_check_eq(observer._itemRemovedFolder, testFolder);
-  do_check_eq(observer._itemRemovedIndex, 0);
+  Assert.equal(observer._itemRemovedId, newSepId);
+  Assert.equal(observer._itemRemovedFolder, testFolder);
+  Assert.equal(observer._itemRemovedIndex, 0);
 });
 
 add_task(async function test_removing_separator() {
@@ -427,24 +427,24 @@ add_task(async function test_removing_separator() {
   let txn = new PlacesRemoveItemTransaction(sepId);
 
   txn.doTransaction();
-  do_check_eq(observer._itemRemovedId, sepId);
-  do_check_eq(observer._itemRemovedFolder, testFolder);
-  do_check_eq(observer._itemRemovedIndex, 0);
+  Assert.equal(observer._itemRemovedId, sepId);
+  Assert.equal(observer._itemRemovedFolder, testFolder);
+  Assert.equal(observer._itemRemovedIndex, 0);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemAddedId, sepId); // New separator created
-  do_check_eq(observer._itemAddedParent, testFolder);
-  do_check_eq(observer._itemAddedIndex, 0);
+  Assert.equal(observer._itemAddedId, sepId); // New separator created
+  Assert.equal(observer._itemAddedParent, testFolder);
+  Assert.equal(observer._itemAddedIndex, 0);
 
   txn.redoTransaction();
-  do_check_eq(observer._itemRemovedId, sepId);
-  do_check_eq(observer._itemRemovedFolder, testFolder);
-  do_check_eq(observer._itemRemovedIndex, 0);
+  Assert.equal(observer._itemRemovedId, sepId);
+  Assert.equal(observer._itemRemovedFolder, testFolder);
+  Assert.equal(observer._itemRemovedIndex, 0);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemAddedId, sepId); // New separator created
-  do_check_eq(observer._itemAddedParent, testFolder);
-  do_check_eq(observer._itemAddedIndex, 0);
+  Assert.equal(observer._itemAddedId, sepId); // New separator created
+  Assert.equal(observer._itemAddedParent, testFolder);
+  Assert.equal(observer._itemAddedIndex, 0);
 });
 
 add_task(async function test_editing_item_title() {
@@ -456,24 +456,24 @@ add_task(async function test_editing_item_title() {
   let txn = new PlacesEditItemTitleTransaction(testBkmId, MOD_TITLE);
 
   txn.doTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "title");
-  do_check_eq(observer._itemChangedValue, MOD_TITLE);
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "title");
+  Assert.equal(observer._itemChangedValue, MOD_TITLE);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "title");
-  do_check_eq(observer._itemChangedValue, TITLE);
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "title");
+  Assert.equal(observer._itemChangedValue, TITLE);
 
   txn.redoTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "title");
-  do_check_eq(observer._itemChangedValue, MOD_TITLE);
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "title");
+  Assert.equal(observer._itemChangedValue, MOD_TITLE);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "title");
-  do_check_eq(observer._itemChangedValue, TITLE);
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "title");
+  Assert.equal(observer._itemChangedValue, TITLE);
 });
 
 add_task(async function test_editing_item_uri() {
@@ -486,32 +486,32 @@ add_task(async function test_editing_item_uri() {
   let txn = new PlacesEditBookmarkURITransaction(testBkmId, NEW_TEST_URI);
 
   txn.doTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "uri");
-  do_check_eq(observer._itemChangedValue, NEW_TEST_URI.spec);
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(NEW_TEST_URI)), JSON.stringify(["tag"]));
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(OLD_TEST_URI)), JSON.stringify([]));
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "uri");
+  Assert.equal(observer._itemChangedValue, NEW_TEST_URI.spec);
+  Assert.equal(JSON.stringify(tagssvc.getTagsForURI(NEW_TEST_URI)), JSON.stringify(["tag"]));
+  Assert.equal(JSON.stringify(tagssvc.getTagsForURI(OLD_TEST_URI)), JSON.stringify([]));
 
   txn.undoTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "uri");
-  do_check_eq(observer._itemChangedValue, OLD_TEST_URI.spec);
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(OLD_TEST_URI)), JSON.stringify(["tag"]));
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(NEW_TEST_URI)), JSON.stringify([]));
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "uri");
+  Assert.equal(observer._itemChangedValue, OLD_TEST_URI.spec);
+  Assert.equal(JSON.stringify(tagssvc.getTagsForURI(OLD_TEST_URI)), JSON.stringify(["tag"]));
+  Assert.equal(JSON.stringify(tagssvc.getTagsForURI(NEW_TEST_URI)), JSON.stringify([]));
 
   txn.redoTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "uri");
-  do_check_eq(observer._itemChangedValue, NEW_TEST_URI.spec);
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(NEW_TEST_URI)), JSON.stringify(["tag"]));
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(OLD_TEST_URI)), JSON.stringify([]));
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "uri");
+  Assert.equal(observer._itemChangedValue, NEW_TEST_URI.spec);
+  Assert.equal(JSON.stringify(tagssvc.getTagsForURI(NEW_TEST_URI)), JSON.stringify(["tag"]));
+  Assert.equal(JSON.stringify(tagssvc.getTagsForURI(OLD_TEST_URI)), JSON.stringify([]));
 
   txn.undoTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "uri");
-  do_check_eq(observer._itemChangedValue, OLD_TEST_URI.spec);
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(OLD_TEST_URI)), JSON.stringify(["tag"]));
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(NEW_TEST_URI)), JSON.stringify([]));
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "uri");
+  Assert.equal(observer._itemChangedValue, OLD_TEST_URI.spec);
+  Assert.equal(JSON.stringify(tagssvc.getTagsForURI(OLD_TEST_URI)), JSON.stringify(["tag"]));
+  Assert.equal(JSON.stringify(tagssvc.getTagsForURI(NEW_TEST_URI)), JSON.stringify([]));
 });
 
 add_task(async function test_edit_description_transaction() {
@@ -528,8 +528,8 @@ add_task(async function test_edit_description_transaction() {
   let txn = new PlacesSetItemAnnotationTransaction(testBkmId, anno);
 
   txn.doTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, DESCRIPTION_ANNO);
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, DESCRIPTION_ANNO);
 });
 
 add_task(async function test_edit_keyword() {
@@ -541,16 +541,16 @@ add_task(async function test_edit_keyword() {
   let txn = new PlacesEditBookmarkKeywordTransaction(testBkmId, KEYWORD, "postData");
 
   txn.doTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "keyword");
-  do_check_eq(observer._itemChangedValue, KEYWORD);
-  do_check_eq(PlacesUtils.getPostDataForBookmark(testBkmId), "postData");
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "keyword");
+  Assert.equal(observer._itemChangedValue, KEYWORD);
+  Assert.equal(PlacesUtils.getPostDataForBookmark(testBkmId), "postData");
 
   txn.undoTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "keyword");
-  do_check_eq(observer._itemChangedValue, "");
-  do_check_eq(PlacesUtils.getPostDataForBookmark(testBkmId), null);
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "keyword");
+  Assert.equal(observer._itemChangedValue, "");
+  Assert.equal(PlacesUtils.getPostDataForBookmark(testBkmId), null);
 });
 
 add_task(async function test_edit_specific_keyword() {
@@ -566,9 +566,9 @@ add_task(async function test_edit_specific_keyword() {
   let txn = new PlacesEditBookmarkKeywordTransaction(testBkmId, KEYWORD, "postData2", "kw2");
 
   txn.doTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "keyword");
-  do_check_eq(observer._itemChangedValue, KEYWORD);
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "keyword");
+  Assert.equal(observer._itemChangedValue, KEYWORD);
   let entry = await PlacesUtils.keywords.fetch("kw1");
   Assert.equal(entry.url.href, testURI.spec);
   Assert.equal(entry.postData, "postData1");
@@ -576,10 +576,10 @@ add_task(async function test_edit_specific_keyword() {
   await promiseKeyword("kw2", null);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "keyword");
-  do_check_eq(observer._itemChangedValue, "kw2");
-  do_check_eq(PlacesUtils.getPostDataForBookmark(testBkmId), "postData1");
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "keyword");
+  Assert.equal(observer._itemChangedValue, "kw2");
+  Assert.equal(PlacesUtils.getPostDataForBookmark(testBkmId), "postData1");
   entry = await PlacesUtils.keywords.fetch("kw1");
   Assert.equal(entry.url.href, testURI.spec);
   Assert.equal(entry.postData, "postData1");
@@ -600,14 +600,14 @@ add_task(async function test_LoadInSidebar_transaction() {
   let txn = new PlacesSetItemAnnotationTransaction(testBkmId, anno);
 
   txn.doTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, LOAD_IN_SIDEBAR_ANNO);
-  do_check_eq(observer._itemChanged_isAnnotationProperty, true);
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, LOAD_IN_SIDEBAR_ANNO);
+  Assert.equal(observer._itemChanged_isAnnotationProperty, true);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, LOAD_IN_SIDEBAR_ANNO);
-  do_check_eq(observer._itemChanged_isAnnotationProperty, true);
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, LOAD_IN_SIDEBAR_ANNO);
+  Assert.equal(observer._itemChanged_isAnnotationProperty, true);
 });
 
 add_task(async function test_generic_item_annotation() {
@@ -622,19 +622,19 @@ add_task(async function test_generic_item_annotation() {
   let txn = new PlacesSetItemAnnotationTransaction(testBkmId, itemAnnoObj);
 
   txn.doTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
-  do_check_eq(observer._itemChanged_isAnnotationProperty, true);
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "testAnno/testInt");
+  Assert.equal(observer._itemChanged_isAnnotationProperty, true);
 
   txn.undoTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
-  do_check_eq(observer._itemChanged_isAnnotationProperty, true);
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "testAnno/testInt");
+  Assert.equal(observer._itemChanged_isAnnotationProperty, true);
 
   txn.redoTransaction();
-  do_check_eq(observer._itemChangedId, testBkmId);
-  do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
-  do_check_eq(observer._itemChanged_isAnnotationProperty, true);
+  Assert.equal(observer._itemChangedId, testBkmId);
+  Assert.equal(observer._itemChangedProperty, "testAnno/testInt");
+  Assert.equal(observer._itemChanged_isAnnotationProperty, true);
 });
 
 add_task(async function test_editing_item_date_added() {
@@ -647,10 +647,10 @@ add_task(async function test_editing_item_date_added() {
   let txn = new PlacesEditItemDateAddedTransaction(testBkmId, newAdded);
 
   txn.doTransaction();
-  do_check_eq(newAdded, bmsvc.getItemDateAdded(testBkmId));
+  Assert.equal(newAdded, bmsvc.getItemDateAdded(testBkmId));
 
   txn.undoTransaction();
-  do_check_eq(oldAdded, bmsvc.getItemDateAdded(testBkmId));
+  Assert.equal(oldAdded, bmsvc.getItemDateAdded(testBkmId));
 });
 
 add_task(async function test_edit_item_last_modified() {
@@ -663,10 +663,10 @@ add_task(async function test_edit_item_last_modified() {
   let txn = new PlacesEditItemLastModifiedTransaction(testBkmId, newModified);
 
   txn.doTransaction();
-  do_check_eq(newModified, bmsvc.getItemLastModified(testBkmId));
+  Assert.equal(newModified, bmsvc.getItemLastModified(testBkmId));
 
   txn.undoTransaction();
-  do_check_eq(oldModified, bmsvc.getItemLastModified(testBkmId));
+  Assert.equal(oldModified, bmsvc.getItemLastModified(testBkmId));
 });
 
 add_task(async function test_generic_page_annotation() {
@@ -681,13 +681,13 @@ add_task(async function test_generic_page_annotation() {
     let txn = new PlacesSetPageAnnotationTransaction(testURI, pageAnnoObj);
 
     txn.doTransaction();
-    do_check_true(annosvc.pageHasAnnotation(testURI, TEST_ANNO));
+    Assert.ok(annosvc.pageHasAnnotation(testURI, TEST_ANNO));
 
     txn.undoTransaction();
-    do_check_false(annosvc.pageHasAnnotation(testURI, TEST_ANNO));
+    Assert.ok(!annosvc.pageHasAnnotation(testURI, TEST_ANNO));
 
     txn.redoTransaction();
-    do_check_true(annosvc.pageHasAnnotation(testURI, TEST_ANNO));
+    Assert.ok(annosvc.pageHasAnnotation(testURI, TEST_ANNO));
   });
 });
 
@@ -707,31 +707,31 @@ add_task(async function test_sort_folder_by_name() {
   let b2 = bkmIds[1];
   let b3 = bkmIds[2];
 
-  do_check_eq(0, bmsvc.getItemIndex(b1));
-  do_check_eq(1, bmsvc.getItemIndex(b2));
-  do_check_eq(2, bmsvc.getItemIndex(b3));
+  Assert.equal(0, bmsvc.getItemIndex(b1));
+  Assert.equal(1, bmsvc.getItemIndex(b2));
+  Assert.equal(2, bmsvc.getItemIndex(b3));
 
   let txn = new PlacesSortFolderByNameTransaction(testFolder);
 
   txn.doTransaction();
-  do_check_eq(2, bmsvc.getItemIndex(b1));
-  do_check_eq(1, bmsvc.getItemIndex(b2));
-  do_check_eq(0, bmsvc.getItemIndex(b3));
+  Assert.equal(2, bmsvc.getItemIndex(b1));
+  Assert.equal(1, bmsvc.getItemIndex(b2));
+  Assert.equal(0, bmsvc.getItemIndex(b3));
 
   txn.undoTransaction();
-  do_check_eq(0, bmsvc.getItemIndex(b1));
-  do_check_eq(1, bmsvc.getItemIndex(b2));
-  do_check_eq(2, bmsvc.getItemIndex(b3));
+  Assert.equal(0, bmsvc.getItemIndex(b1));
+  Assert.equal(1, bmsvc.getItemIndex(b2));
+  Assert.equal(2, bmsvc.getItemIndex(b3));
 
   txn.redoTransaction();
-  do_check_eq(2, bmsvc.getItemIndex(b1));
-  do_check_eq(1, bmsvc.getItemIndex(b2));
-  do_check_eq(0, bmsvc.getItemIndex(b3));
+  Assert.equal(2, bmsvc.getItemIndex(b1));
+  Assert.equal(1, bmsvc.getItemIndex(b2));
+  Assert.equal(0, bmsvc.getItemIndex(b3));
 
   txn.undoTransaction();
-  do_check_eq(0, bmsvc.getItemIndex(b1));
-  do_check_eq(1, bmsvc.getItemIndex(b2));
-  do_check_eq(2, bmsvc.getItemIndex(b3));
+  Assert.equal(0, bmsvc.getItemIndex(b1));
+  Assert.equal(1, bmsvc.getItemIndex(b2));
+  Assert.equal(2, bmsvc.getItemIndex(b3));
 });
 
 add_task(async function test_tagURI_untagURI() {
@@ -743,25 +743,25 @@ add_task(async function test_tagURI_untagURI() {
   let tagTxn = new PlacesTagURITransaction(tagURI, [TAG_1, TAG_2]);
 
   tagTxn.doTransaction();
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_1, TAG_2]));
+  Assert.equal(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_1, TAG_2]));
 
   tagTxn.undoTransaction();
-  do_check_eq(tagssvc.getTagsForURI(tagURI).length, 0);
+  Assert.equal(tagssvc.getTagsForURI(tagURI).length, 0);
 
   tagTxn.redoTransaction();
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_1, TAG_2]));
+  Assert.equal(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_1, TAG_2]));
 
   // Test untagURI
   let untagTxn = new PlacesUntagURITransaction(tagURI, [TAG_1]);
 
   untagTxn.doTransaction();
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_2]));
+  Assert.equal(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_2]));
 
   untagTxn.undoTransaction();
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_1, TAG_2]));
+  Assert.equal(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_1, TAG_2]));
 
   untagTxn.redoTransaction();
-  do_check_eq(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_2]));
+  Assert.equal(JSON.stringify(tagssvc.getTagsForURI(tagURI)), JSON.stringify([TAG_2]));
 });
 
 add_task(async function test_aggregate_removeItem_Txn() {
@@ -786,14 +786,14 @@ add_task(async function test_aggregate_removeItem_Txn() {
   let txn = new PlacesAggregatedTransaction("RemoveItems", transactions);
 
   txn.doTransaction();
-  do_check_eq(bmsvc.getItemIndex(bkmk1Id), -1);
-  do_check_eq(bmsvc.getItemIndex(bkmk2Id), -1);
-  do_check_eq(bmsvc.getItemIndex(bkmk3Id), -1);
-  do_check_eq(bmsvc.getItemIndex(bkmk3_1Id), -1);
-  do_check_eq(bmsvc.getItemIndex(bkmk3_2Id), -1);
-  do_check_eq(bmsvc.getItemIndex(bkmk3_3Id), -1);
+  Assert.equal(bmsvc.getItemIndex(bkmk1Id), -1);
+  Assert.equal(bmsvc.getItemIndex(bkmk2Id), -1);
+  Assert.equal(bmsvc.getItemIndex(bkmk3Id), -1);
+  Assert.equal(bmsvc.getItemIndex(bkmk3_1Id), -1);
+  Assert.equal(bmsvc.getItemIndex(bkmk3_2Id), -1);
+  Assert.equal(bmsvc.getItemIndex(bkmk3_3Id), -1);
   // Check last removed item id.
-  do_check_eq(observer._itemRemovedId, bkmk3Id);
+  Assert.equal(observer._itemRemovedId, bkmk3Id);
 
   txn.undoTransaction();
   let newBkmk1Id = bmsvc.getIdForItemAt(testFolder, 0);
@@ -802,32 +802,32 @@ add_task(async function test_aggregate_removeItem_Txn() {
   let newBkmk3_1Id = bmsvc.getIdForItemAt(newBkmk3Id, 0);
   let newBkmk3_2Id = bmsvc.getIdForItemAt(newBkmk3Id, 1);
   let newBkmk3_3Id = bmsvc.getIdForItemAt(newBkmk3Id, 2);
-  do_check_eq(bmsvc.getItemType(newBkmk1Id), bmsvc.TYPE_BOOKMARK);
-  do_check_eq(bmsvc.getBookmarkURI(newBkmk1Id).spec, TEST_URL);
-  do_check_eq(bmsvc.getItemType(newBkmk2Id), bmsvc.TYPE_SEPARATOR);
-  do_check_eq(bmsvc.getItemType(newBkmk3Id), bmsvc.TYPE_FOLDER);
-  do_check_eq(bmsvc.getItemTitle(newBkmk3Id), FOLDERNAME);
-  do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_1Id), newBkmk3Id);
-  do_check_eq(bmsvc.getItemType(newBkmk3_1Id), bmsvc.TYPE_BOOKMARK);
-  do_check_eq(bmsvc.getBookmarkURI(newBkmk3_1Id).spec, TEST_URL);
-  do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_2Id), newBkmk3Id);
-  do_check_eq(bmsvc.getItemType(newBkmk3_2Id), bmsvc.TYPE_SEPARATOR);
-  do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_3Id), newBkmk3Id);
-  do_check_eq(bmsvc.getItemType(newBkmk3_3Id), bmsvc.TYPE_FOLDER);
-  do_check_eq(bmsvc.getItemTitle(newBkmk3_3Id), FOLDERNAME);
+  Assert.equal(bmsvc.getItemType(newBkmk1Id), bmsvc.TYPE_BOOKMARK);
+  Assert.equal(bmsvc.getBookmarkURI(newBkmk1Id).spec, TEST_URL);
+  Assert.equal(bmsvc.getItemType(newBkmk2Id), bmsvc.TYPE_SEPARATOR);
+  Assert.equal(bmsvc.getItemType(newBkmk3Id), bmsvc.TYPE_FOLDER);
+  Assert.equal(bmsvc.getItemTitle(newBkmk3Id), FOLDERNAME);
+  Assert.equal(bmsvc.getFolderIdForItem(newBkmk3_1Id), newBkmk3Id);
+  Assert.equal(bmsvc.getItemType(newBkmk3_1Id), bmsvc.TYPE_BOOKMARK);
+  Assert.equal(bmsvc.getBookmarkURI(newBkmk3_1Id).spec, TEST_URL);
+  Assert.equal(bmsvc.getFolderIdForItem(newBkmk3_2Id), newBkmk3Id);
+  Assert.equal(bmsvc.getItemType(newBkmk3_2Id), bmsvc.TYPE_SEPARATOR);
+  Assert.equal(bmsvc.getFolderIdForItem(newBkmk3_3Id), newBkmk3Id);
+  Assert.equal(bmsvc.getItemType(newBkmk3_3Id), bmsvc.TYPE_FOLDER);
+  Assert.equal(bmsvc.getItemTitle(newBkmk3_3Id), FOLDERNAME);
   // Check last added back item id.
   // Notice items are restored in reverse order.
-  do_check_eq(observer._itemAddedId, newBkmk1Id);
+  Assert.equal(observer._itemAddedId, newBkmk1Id);
 
   txn.redoTransaction();
-  do_check_eq(bmsvc.getItemIndex(newBkmk1Id), -1);
-  do_check_eq(bmsvc.getItemIndex(newBkmk2Id), -1);
-  do_check_eq(bmsvc.getItemIndex(newBkmk3Id), -1);
-  do_check_eq(bmsvc.getItemIndex(newBkmk3_1Id), -1);
-  do_check_eq(bmsvc.getItemIndex(newBkmk3_2Id), -1);
-  do_check_eq(bmsvc.getItemIndex(newBkmk3_3Id), -1);
+  Assert.equal(bmsvc.getItemIndex(newBkmk1Id), -1);
+  Assert.equal(bmsvc.getItemIndex(newBkmk2Id), -1);
+  Assert.equal(bmsvc.getItemIndex(newBkmk3Id), -1);
+  Assert.equal(bmsvc.getItemIndex(newBkmk3_1Id), -1);
+  Assert.equal(bmsvc.getItemIndex(newBkmk3_2Id), -1);
+  Assert.equal(bmsvc.getItemIndex(newBkmk3_3Id), -1);
   // Check last removed item id.
-  do_check_eq(observer._itemRemovedId, newBkmk3Id);
+  Assert.equal(observer._itemRemovedId, newBkmk3Id);
 
   txn.undoTransaction();
   newBkmk1Id = bmsvc.getIdForItemAt(testFolder, 0);
@@ -836,22 +836,22 @@ add_task(async function test_aggregate_removeItem_Txn() {
   newBkmk3_1Id = bmsvc.getIdForItemAt(newBkmk3Id, 0);
   newBkmk3_2Id = bmsvc.getIdForItemAt(newBkmk3Id, 1);
   newBkmk3_3Id = bmsvc.getIdForItemAt(newBkmk3Id, 2);
-  do_check_eq(bmsvc.getItemType(newBkmk1Id), bmsvc.TYPE_BOOKMARK);
-  do_check_eq(bmsvc.getBookmarkURI(newBkmk1Id).spec, TEST_URL);
-  do_check_eq(bmsvc.getItemType(newBkmk2Id), bmsvc.TYPE_SEPARATOR);
-  do_check_eq(bmsvc.getItemType(newBkmk3Id), bmsvc.TYPE_FOLDER);
-  do_check_eq(bmsvc.getItemTitle(newBkmk3Id), FOLDERNAME);
-  do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_1Id), newBkmk3Id);
-  do_check_eq(bmsvc.getItemType(newBkmk3_1Id), bmsvc.TYPE_BOOKMARK);
-  do_check_eq(bmsvc.getBookmarkURI(newBkmk3_1Id).spec, TEST_URL);
-  do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_2Id), newBkmk3Id);
-  do_check_eq(bmsvc.getItemType(newBkmk3_2Id), bmsvc.TYPE_SEPARATOR);
-  do_check_eq(bmsvc.getFolderIdForItem(newBkmk3_3Id), newBkmk3Id);
-  do_check_eq(bmsvc.getItemType(newBkmk3_3Id), bmsvc.TYPE_FOLDER);
-  do_check_eq(bmsvc.getItemTitle(newBkmk3_3Id), FOLDERNAME);
+  Assert.equal(bmsvc.getItemType(newBkmk1Id), bmsvc.TYPE_BOOKMARK);
+  Assert.equal(bmsvc.getBookmarkURI(newBkmk1Id).spec, TEST_URL);
+  Assert.equal(bmsvc.getItemType(newBkmk2Id), bmsvc.TYPE_SEPARATOR);
+  Assert.equal(bmsvc.getItemType(newBkmk3Id), bmsvc.TYPE_FOLDER);
+  Assert.equal(bmsvc.getItemTitle(newBkmk3Id), FOLDERNAME);
+  Assert.equal(bmsvc.getFolderIdForItem(newBkmk3_1Id), newBkmk3Id);
+  Assert.equal(bmsvc.getItemType(newBkmk3_1Id), bmsvc.TYPE_BOOKMARK);
+  Assert.equal(bmsvc.getBookmarkURI(newBkmk3_1Id).spec, TEST_URL);
+  Assert.equal(bmsvc.getFolderIdForItem(newBkmk3_2Id), newBkmk3Id);
+  Assert.equal(bmsvc.getItemType(newBkmk3_2Id), bmsvc.TYPE_SEPARATOR);
+  Assert.equal(bmsvc.getFolderIdForItem(newBkmk3_3Id), newBkmk3Id);
+  Assert.equal(bmsvc.getItemType(newBkmk3_3Id), bmsvc.TYPE_FOLDER);
+  Assert.equal(bmsvc.getItemTitle(newBkmk3_3Id), FOLDERNAME);
   // Check last added back item id.
   // Notice items are restored in reverse order.
-  do_check_eq(observer._itemAddedId, newBkmk1Id);
+  Assert.equal(observer._itemAddedId, newBkmk1Id);
 });
 
 add_task(async function test_create_item_with_childTxn() {
@@ -878,28 +878,28 @@ add_task(async function test_create_item_with_childTxn() {
   try {
     txnManager.doTransaction(itemWChildTxn);
     let itemId = bmsvc.getBookmarkIdsForURI(testURI)[0];
-    do_check_eq(observer._itemAddedId, itemId);
-    do_check_eq(newDateAdded, bmsvc.getItemDateAdded(itemId));
-    do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
-    do_check_eq(observer._itemChanged_isAnnotationProperty, true);
-    do_check_true(annosvc.itemHasAnnotation(itemId, itemChildAnnoObj.name));
-    do_check_eq(annosvc.getItemAnnotation(itemId, itemChildAnnoObj.name), itemChildAnnoObj.value);
+    Assert.equal(observer._itemAddedId, itemId);
+    Assert.equal(newDateAdded, bmsvc.getItemDateAdded(itemId));
+    Assert.equal(observer._itemChangedProperty, "testAnno/testInt");
+    Assert.equal(observer._itemChanged_isAnnotationProperty, true);
+    Assert.ok(annosvc.itemHasAnnotation(itemId, itemChildAnnoObj.name));
+    Assert.equal(annosvc.getItemAnnotation(itemId, itemChildAnnoObj.name), itemChildAnnoObj.value);
 
     itemWChildTxn.undoTransaction();
-    do_check_eq(observer._itemRemovedId, itemId);
+    Assert.equal(observer._itemRemovedId, itemId);
 
     itemWChildTxn.redoTransaction();
-    do_check_neq(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
+    Assert.notEqual(await PlacesUtils.bookmarks.fetch({url: testURI}), null);
     let newId = bmsvc.getBookmarkIdsForURI(testURI)[0];
-    do_check_eq(newDateAdded, bmsvc.getItemDateAdded(newId));
-    do_check_eq(observer._itemAddedId, newId);
-    do_check_eq(observer._itemChangedProperty, "testAnno/testInt");
-    do_check_eq(observer._itemChanged_isAnnotationProperty, true);
-    do_check_true(annosvc.itemHasAnnotation(newId, itemChildAnnoObj.name));
-    do_check_eq(annosvc.getItemAnnotation(newId, itemChildAnnoObj.name), itemChildAnnoObj.value);
+    Assert.equal(newDateAdded, bmsvc.getItemDateAdded(newId));
+    Assert.equal(observer._itemAddedId, newId);
+    Assert.equal(observer._itemChangedProperty, "testAnno/testInt");
+    Assert.equal(observer._itemChanged_isAnnotationProperty, true);
+    Assert.ok(annosvc.itemHasAnnotation(newId, itemChildAnnoObj.name));
+    Assert.equal(annosvc.getItemAnnotation(newId, itemChildAnnoObj.name), itemChildAnnoObj.value);
 
     itemWChildTxn.undoTransaction();
-    do_check_eq(observer._itemRemovedId, newId);
+    Assert.equal(observer._itemRemovedId, newId);
   } catch (ex) {
     do_throw("Setting a child transaction in a createItem transaction did throw: " + ex);
   }
@@ -914,21 +914,21 @@ add_task(async function test_create_folder_with_child_itemTxn() {
   try {
     txnManager.doTransaction(txn);
     let childItemId = bmsvc.getBookmarkIdsForURI(childURI)[0];
-    do_check_eq(observer._itemAddedId, childItemId);
-    do_check_eq(observer._itemAddedIndex, 0);
-    do_check_neq(await PlacesUtils.bookmarks.fetch({url: childURI}), null);
+    Assert.equal(observer._itemAddedId, childItemId);
+    Assert.equal(observer._itemAddedIndex, 0);
+    Assert.notEqual(await PlacesUtils.bookmarks.fetch({url: childURI}), null);
 
     txn.undoTransaction();
-    do_check_eq(await PlacesUtils.bookmarks.fetch({url: childURI}), null);
+    Assert.equal(await PlacesUtils.bookmarks.fetch({url: childURI}), null);
 
     txn.redoTransaction();
     let newchildItemId = bmsvc.getBookmarkIdsForURI(childURI)[0];
-    do_check_eq(observer._itemAddedIndex, 0);
-    do_check_eq(observer._itemAddedId, newchildItemId);
-    do_check_neq(await PlacesUtils.bookmarks.fetch({url: childURI}), null);
+    Assert.equal(observer._itemAddedIndex, 0);
+    Assert.equal(observer._itemAddedId, newchildItemId);
+    Assert.notEqual(await PlacesUtils.bookmarks.fetch({url: childURI}), null);
 
     txn.undoTransaction();
-    do_check_eq(await PlacesUtils.bookmarks.fetch({url: childURI}), null);
+    Assert.equal(await PlacesUtils.bookmarks.fetch({url: childURI}), null);
   } catch (ex) {
     do_throw("Setting a child item transaction in a createFolder transaction did throw: " + ex);
   }

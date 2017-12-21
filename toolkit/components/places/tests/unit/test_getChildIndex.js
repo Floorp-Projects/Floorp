@@ -27,7 +27,7 @@ add_task(async function test_get_child_index() {
   let unfiledNode = getNodeAt(PlacesUtils.unfiledBookmarksFolderId, 0);
   if (!unfiledNode)
     do_throw("Unable to find bookmark in hierarchy!");
-  do_check_eq(unfiledNode.title, "Unfiled bookmark");
+  Assert.equal(unfiledNode.title, "Unfiled bookmark");
 
   let hs = PlacesUtils.history;
   let query = hs.getNewQuery();
@@ -41,7 +41,7 @@ add_task(async function test_get_child_index() {
   for (let i = 0; i < root.childCount; i++) {
     let node = root.getChild(i);
     print("Now testing: " + node.title);
-    do_check_eq(root.getChildIndex(node), i);
+    Assert.equal(root.getChildIndex(node), i);
   }
 
   // Now search for an invalid node and expect an exception.

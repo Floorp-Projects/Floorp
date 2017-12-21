@@ -30,7 +30,7 @@ function setAddonCSP(csp) {
   policy.active = true;
 }
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   policy.active = false;
 });
 

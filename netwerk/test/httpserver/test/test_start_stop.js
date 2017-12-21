@@ -159,11 +159,11 @@ function handle(request, response)
 
   callLater(INTERVAL, function()
   {
-    do_check_false(stopped);
+    Assert.ok(!stopped);
 
     callLater(INTERVAL, function()
     {
-      do_check_false(stopped);
+      Assert.ok(!stopped);
       response.finish();
 
       try

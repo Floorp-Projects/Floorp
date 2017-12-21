@@ -25,7 +25,7 @@ var observer = {
     try {
       subject.QueryInterface(Components.interfaces.nsIHttpChannel);
       currentReferrer = subject.getRequestHeader("Referer");
-      do_check_eq(currentReferrer, "http://site1.com/");
+      Assert.equal(currentReferrer, "http://site1.com/");
       var uri = ios.newURI("http://site2.com");
       subject.referrer = uri;
     } catch (ex) {
@@ -40,13 +40,13 @@ var observer = {
 
 var listener = {
   onStartRequest: function test_onStartR(request, ctx) {
-    do_check_eq(request.status, Components.results.NS_BINDING_ABORTED);
+    Assert.equal(request.status, Components.results.NS_BINDING_ABORTED);
 
     // ENSURE_CALLED_BEFORE_CONNECT: setting referrer should now fail
     try {
       request.QueryInterface(Components.interfaces.nsIHttpChannel);
       currentReferrer = request.getRequestHeader("Referer");
-      do_check_eq(currentReferrer, "http://site2.com/");
+      Assert.equal(currentReferrer, "http://site2.com/");
       var uri = ios.newURI("http://site3.com/");
 
       // Need to set NECKO_ERRORS_ARE_FATAL=0 else we'll abort process

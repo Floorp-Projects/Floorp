@@ -89,10 +89,10 @@ add_test(function test_text_paste() {
   const TEST_TITLE = "Places bookmark";
 
   waitForBookmarkNotification("onItemAdded", function(aData) {
-    do_check_eq(aData.title, TEST_TITLE);
-    do_check_eq(aData.url, TEST_URL);
-    do_check_eq(aData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-    do_check_eq(aData.index, 0);
+    Assert.equal(aData.title, TEST_TITLE);
+    Assert.equal(aData.url, TEST_URL);
+    Assert.equal(aData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
+    Assert.equal(aData.index, 0);
     run_next_test();
   });
 
@@ -110,20 +110,20 @@ add_test(function test_container() {
   const TEST_TITLE = "Places folder";
 
   waitForBookmarkNotification("onItemChanged", function(aChangedData) {
-    do_check_eq(aChangedData.title, TEST_TITLE);
-    do_check_eq(aChangedData.type, PlacesUtils.bookmarks.TYPE_FOLDER);
-    do_check_eq(aChangedData.index, 1);
+    Assert.equal(aChangedData.title, TEST_TITLE);
+    Assert.equal(aChangedData.type, PlacesUtils.bookmarks.TYPE_FOLDER);
+    Assert.equal(aChangedData.index, 1);
 
     waitForBookmarkNotification("onItemAdded", function(aAddedData) {
-      do_check_eq(aAddedData.title, TEST_TITLE);
-      do_check_eq(aAddedData.type, PlacesUtils.bookmarks.TYPE_FOLDER);
-      do_check_eq(aAddedData.index, 2);
+      Assert.equal(aAddedData.title, TEST_TITLE);
+      Assert.equal(aAddedData.type, PlacesUtils.bookmarks.TYPE_FOLDER);
+      Assert.equal(aAddedData.index, 2);
       let id = aAddedData.id;
 
       waitForBookmarkNotification("onItemMoved", function(aMovedData) {
-        do_check_eq(aMovedData.id, id);
-        do_check_eq(aMovedData.type, PlacesUtils.bookmarks.TYPE_FOLDER);
-        do_check_eq(aMovedData.index, 1);
+        Assert.equal(aMovedData.id, id);
+        Assert.equal(aMovedData.type, PlacesUtils.bookmarks.TYPE_FOLDER);
+        Assert.equal(aMovedData.index, 1);
 
         run_next_test();
       });
@@ -166,18 +166,18 @@ add_test(function test_container() {
 
 add_test(function test_separator() {
   waitForBookmarkNotification("onItemChanged", function(aChangedData) {
-    do_check_eq(aChangedData.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
-    do_check_eq(aChangedData.index, 3);
+    Assert.equal(aChangedData.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
+    Assert.equal(aChangedData.index, 3);
 
     waitForBookmarkNotification("onItemAdded", function(aAddedData) {
-      do_check_eq(aAddedData.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
-      do_check_eq(aAddedData.index, 4);
+      Assert.equal(aAddedData.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
+      Assert.equal(aAddedData.index, 4);
       let id = aAddedData.id;
 
       waitForBookmarkNotification("onItemMoved", function(aMovedData) {
-        do_check_eq(aMovedData.id, id);
-        do_check_eq(aMovedData.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
-        do_check_eq(aMovedData.index, 1);
+        Assert.equal(aMovedData.id, id);
+        Assert.equal(aMovedData.type, PlacesUtils.bookmarks.TYPE_SEPARATOR);
+        Assert.equal(aMovedData.index, 1);
 
         run_next_test();
       });
@@ -218,22 +218,22 @@ add_test(function test_bookmark() {
   const TEST_TITLE = "Places bookmark";
 
   waitForBookmarkNotification("onItemChanged", function(aChangedData) {
-    do_check_eq(aChangedData.title, TEST_TITLE);
-    do_check_eq(aChangedData.url, TEST_URL);
-    do_check_eq(aChangedData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-    do_check_eq(aChangedData.index, 5);
+    Assert.equal(aChangedData.title, TEST_TITLE);
+    Assert.equal(aChangedData.url, TEST_URL);
+    Assert.equal(aChangedData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
+    Assert.equal(aChangedData.index, 5);
 
     waitForBookmarkNotification("onItemAdded", function(aAddedData) {
-      do_check_eq(aAddedData.title, TEST_TITLE);
-      do_check_eq(aAddedData.url, TEST_URL);
-      do_check_eq(aAddedData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-      do_check_eq(aAddedData.index, 6);
+      Assert.equal(aAddedData.title, TEST_TITLE);
+      Assert.equal(aAddedData.url, TEST_URL);
+      Assert.equal(aAddedData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
+      Assert.equal(aAddedData.index, 6);
       let id = aAddedData.id;
 
       waitForBookmarkNotification("onItemMoved", function(aMovedData) {
-        do_check_eq(aMovedData.id, id);
-        do_check_eq(aMovedData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-        do_check_eq(aMovedData.index, 1);
+        Assert.equal(aMovedData.id, id);
+        Assert.equal(aMovedData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
+        Assert.equal(aMovedData.index, 1);
 
         run_next_test();
       });
@@ -279,16 +279,16 @@ add_test(function test_visit() {
   const TEST_TITLE = "Places bookmark";
 
   waitForBookmarkNotification("onItemAdded", function(aAddedData) {
-    do_check_eq(aAddedData.title, TEST_TITLE);
-    do_check_eq(aAddedData.url, TEST_URL);
-    do_check_eq(aAddedData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-    do_check_eq(aAddedData.index, 7);
+    Assert.equal(aAddedData.title, TEST_TITLE);
+    Assert.equal(aAddedData.url, TEST_URL);
+    Assert.equal(aAddedData.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
+    Assert.equal(aAddedData.index, 7);
 
     waitForBookmarkNotification("onItemAdded", function(aAddedData2) {
-      do_check_eq(aAddedData2.title, TEST_TITLE);
-      do_check_eq(aAddedData2.url, TEST_URL);
-      do_check_eq(aAddedData2.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-      do_check_eq(aAddedData2.index, 8);
+      Assert.equal(aAddedData2.title, TEST_TITLE);
+      Assert.equal(aAddedData2.url, TEST_URL);
+      Assert.equal(aAddedData2.type, PlacesUtils.bookmarks.TYPE_BOOKMARK);
+      Assert.equal(aAddedData2.index, 8);
       run_next_test();
     });
 
@@ -321,10 +321,10 @@ add_test(function check_annotations() {
   // Copies should retain the description annotation.
   let descriptions =
     PlacesUtils.annotations.getItemsWithAnnotation(PlacesUIUtils.DESCRIPTION_ANNO, {});
-  do_check_eq(descriptions.length, 4);
+  Assert.equal(descriptions.length, 4);
 
   // Only the original bookmarks should have this annotation.
   let others = PlacesUtils.annotations.getItemsWithAnnotation("random-anno", {});
-  do_check_eq(others.length, 3);
+  Assert.equal(others.length, 3);
   run_next_test();
 });

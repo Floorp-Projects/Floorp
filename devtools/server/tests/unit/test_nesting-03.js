@@ -38,14 +38,14 @@ function start_second_connection() {
 
 function test_nesting() {
   gThreadClient1.resume(response => {
-    do_check_eq(response.error, "wrongOrder");
+    Assert.equal(response.error, "wrongOrder");
     gThreadClient2.resume(response => {
-      do_check_true(!response.error);
-      do_check_eq(response.from, gThreadClient2.actor);
+      Assert.ok(!response.error);
+      Assert.equal(response.from, gThreadClient2.actor);
 
       gThreadClient1.resume(response => {
-        do_check_true(!response.error);
-        do_check_eq(response.from, gThreadClient1.actor);
+        Assert.ok(!response.error);
+        Assert.equal(response.from, gThreadClient1.actor);
 
         gClient1.close(() => finishClient(gClient2));
       });

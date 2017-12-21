@@ -66,7 +66,7 @@ function testCase(testText, expectedText, bufferLength, charset)
   }
 
   // escape the strings before comparing for better readability
-  do_check_eq(escape(outStr), escape(expectedText));
+  Assert.equal(escape(outStr), escape(expectedText));
 }
 
 function run_test()

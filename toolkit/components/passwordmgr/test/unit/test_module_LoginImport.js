@@ -144,8 +144,8 @@ add_task(async function test_import()
   await new LoginImport(store, loginsSqlite).import();
 
   // Verify that every login in the test data has a matching imported row.
-  do_check_eq(loginList.length, store.data.logins.length);
-  do_check_true(loginList.every(function(loginInfo) {
+  Assert.equal(loginList.length, store.data.logins.length);
+  Assert.ok(loginList.every(function(loginInfo) {
     return store.data.logins.some(function(loginDataItem) {
       let username = gLoginManagerCrypto.decrypt(loginDataItem.encryptedUsername);
       let password = gLoginManagerCrypto.decrypt(loginDataItem.encryptedPassword);
@@ -166,9 +166,9 @@ add_task(async function test_import()
   }));
 
   // Verify that disabled hosts have been imported.
-  do_check_eq(store.data.disabledHosts.length, 2);
-  do_check_true(store.data.disabledHosts.indexOf("http://www.example.com") != -1);
-  do_check_true(store.data.disabledHosts.indexOf("https://www.example.org") != -1);
+  Assert.equal(store.data.disabledHosts.length, 2);
+  Assert.ok(store.data.disabledHosts.indexOf("http://www.example.com") != -1);
+  Assert.ok(store.data.disabledHosts.indexOf("https://www.example.org") != -1);
 });
 
 /**
@@ -203,9 +203,9 @@ add_task(async function test_import_downgraded()
   let loginItem = store.data.logins[0];
   let creationTime = loginItem.timeCreated;
   LoginTestUtils.assertTimeIsAboutNow(creationTime);
-  do_check_eq(loginItem.timeLastUsed, creationTime);
-  do_check_eq(loginItem.timePasswordChanged, creationTime);
-  do_check_eq(loginItem.timesUsed, 1);
+  Assert.equal(loginItem.timeLastUsed, creationTime);
+  Assert.equal(loginItem.timePasswordChanged, creationTime);
+  Assert.equal(loginItem.timesUsed, 1);
 });
 
 /**
@@ -237,6 +237,6 @@ add_task(async function test_import_v3()
   await new LoginImport(store, loginsSqlite).import();
 
   // We only execute basic integrity checks.
-  do_check_eq(store.data.logins[0].usernameField, "u1");
-  do_check_eq(store.data.disabledHosts.length, 0);
+  Assert.equal(store.data.logins[0].usernameField, "u1");
+  Assert.equal(store.data.disabledHosts.length, 0);
 });

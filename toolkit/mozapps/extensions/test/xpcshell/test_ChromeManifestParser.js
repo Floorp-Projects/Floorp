@@ -41,10 +41,10 @@ function run_test_1() {
     let manifestURI = a1.getResourceURI("chrome.manifest");
     let manifest = ChromeManifestParser.parseSync(manifestURI);
 
-    do_check_true(Array.isArray(manifest));
-    do_check_eq(manifest.length, expected.length);
+    Assert.ok(Array.isArray(manifest));
+    Assert.equal(manifest.length, expected.length);
     for (let i = 0; i < manifest.length; i++) {
-      do_check_eq(JSON.stringify(manifest[i]), JSON.stringify(expected[i]));
+      Assert.equal(JSON.stringify(manifest[i]), JSON.stringify(expected[i]));
     }
 
     // addon2
@@ -59,10 +59,10 @@ function run_test_1() {
     manifestURI = a2.getResourceURI("chrome.manifest");
     manifest = ChromeManifestParser.parseSync(manifestURI);
 
-    do_check_true(Array.isArray(manifest));
-    do_check_eq(manifest.length, expected.length);
+    Assert.ok(Array.isArray(manifest));
+    Assert.equal(manifest.length, expected.length);
     for (let i = 0; i < manifest.length; i++) {
-      do_check_eq(JSON.stringify(manifest[i]), JSON.stringify(expected[i]));
+      Assert.equal(JSON.stringify(manifest[i]), JSON.stringify(expected[i]));
     }
 
     // addon3
@@ -78,10 +78,10 @@ function run_test_1() {
     manifestURI = a3.getResourceURI("chrome.manifest");
     manifest = ChromeManifestParser.parseSync(manifestURI);
 
-    do_check_true(Array.isArray(manifest));
-    do_check_eq(manifest.length, expected.length);
+    Assert.ok(Array.isArray(manifest));
+    Assert.equal(manifest.length, expected.length);
     for (let i = 0; i < manifest.length; i++) {
-      do_check_eq(JSON.stringify(manifest[i]), JSON.stringify(expected[i]));
+      Assert.equal(JSON.stringify(manifest[i]), JSON.stringify(expected[i]));
     }
 
     // addon4
@@ -97,12 +97,12 @@ function run_test_1() {
     manifestURI = a4.getResourceURI("chrome.manifest");
     manifest = ChromeManifestParser.parseSync(manifestURI);
 
-    do_check_true(Array.isArray(manifest));
-    do_check_eq(manifest.length, expected.length);
+    Assert.ok(Array.isArray(manifest));
+    Assert.equal(manifest.length, expected.length);
     for (let i = 0; i < manifest.length; i++) {
-      do_check_eq(JSON.stringify(manifest[i]), JSON.stringify(expected[i]));
+      Assert.equal(JSON.stringify(manifest[i]), JSON.stringify(expected[i]));
     }
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

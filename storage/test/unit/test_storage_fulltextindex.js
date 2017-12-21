@@ -13,7 +13,7 @@ function test_table_creation() {
   msc.executeSimpleSQL(
     "CREATE VIRTUAL TABLE recipe USING fts3(name, ingredients)");
 
-  do_check_true(msc.tableExists("recipe"));
+  Assert.ok(msc.tableExists("recipe"));
 }
 
 function test_insertion() {
@@ -31,7 +31,7 @@ function test_insertion() {
   var stmt = msc.createStatement("SELECT COUNT(*) FROM recipe");
   stmt.executeStep();
 
-  do_check_eq(stmt.getInt32(0), 4);
+  Assert.equal(stmt.getInt32(0), 4);
 
   stmt.reset();
   stmt.finalize();
@@ -43,17 +43,17 @@ function test_selection() {
   var stmt = msc.createStatement(
     "SELECT rowid, name, ingredients FROM recipe WHERE name MATCH 'pie'");
 
-  do_check_true(stmt.executeStep());
-  do_check_eq(stmt.getInt32(0), 3);
-  do_check_eq(stmt.getString(1), "broccoli pie");
-  do_check_eq(stmt.getString(2), "broccoli cheese onions flour");
+  Assert.ok(stmt.executeStep());
+  Assert.equal(stmt.getInt32(0), 3);
+  Assert.equal(stmt.getString(1), "broccoli pie");
+  Assert.equal(stmt.getString(2), "broccoli cheese onions flour");
 
-  do_check_true(stmt.executeStep());
-  do_check_eq(stmt.getInt32(0), 4);
-  do_check_eq(stmt.getString(1), "pumpkin pie");
-  do_check_eq(stmt.getString(2), "pumpkin sugar flour butter");
+  Assert.ok(stmt.executeStep());
+  Assert.equal(stmt.getInt32(0), 4);
+  Assert.equal(stmt.getString(1), "pumpkin pie");
+  Assert.equal(stmt.getString(2), "pumpkin sugar flour butter");
 
-  do_check_false(stmt.executeStep());
+  Assert.ok(!stmt.executeStep());
 
   stmt.reset();
   stmt.finalize();

@@ -54,10 +54,10 @@ add_task(function() {
   dayContainer.containerOpen = true;
 
   var cc = dayContainer.childCount;
-  do_check_eq(cc, pages.length);
+  Assert.equal(cc, pages.length);
   for (var i = 0; i < cc; i++) {
     var node = dayContainer.getChild(i);
-    do_check_eq(pages[i], node.uri);
+    Assert.equal(pages[i], node.uri);
   }
 
   dayContainer.containerOpen = false;
@@ -80,10 +80,10 @@ add_task(function() {
   dayContainer.containerOpen = true;
 
   var cc = dayContainer.childCount;
-  do_check_eq(cc, pages.length);
+  Assert.equal(cc, pages.length);
   for (var i = 0; i < cc; i++) {
     var node = dayContainer.getChild(i);
-    do_check_eq(pages[pages.length - i - 1], node.uri);
+    Assert.equal(pages[pages.length - i - 1], node.uri);
   }
 
   dayContainer.containerOpen = false;
@@ -105,14 +105,14 @@ add_task(function() {
   var dayContainer = root.getChild(0).QueryInterface(Ci.nsINavHistoryContainerResultNode);
   dayContainer.containerOpen = true;
   var siteContainer = dayContainer.getChild(0).QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  do_check_eq(siteContainer.title, "a.mozilla.org");
+  Assert.equal(siteContainer.title, "a.mozilla.org");
   siteContainer.containerOpen = true;
 
   var cc = siteContainer.childCount;
-  do_check_eq(cc, pages.length / 2);
+  Assert.equal(cc, pages.length / 2);
   for (var i = 0; i < cc / 2; i++) {
     var node = siteContainer.getChild(i);
-    do_check_eq(pages[i], node.uri);
+    Assert.equal(pages[i], node.uri);
   }
 
   siteContainer.containerOpen = false;

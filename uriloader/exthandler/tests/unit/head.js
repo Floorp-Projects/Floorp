@@ -102,7 +102,7 @@ add_task(async function test_initialize() {
 /**
  * Ensures the files are removed and the services unloaded when the tests end.
  */
-do_register_cleanup(async function test_terminate() {
+registerCleanupFunction(async function test_terminate() {
   await deleteHandlerStoreJSON();
   await deleteHandlerStoreRDF();
 });

@@ -142,7 +142,7 @@ add_task(async function test_addCrash_quitting() {
                 Ci.nsICrashService.CRASH_TYPE_CRASH, firstCrashId);
 
   // Spin the event loop so that the minidump analyzer is launched
-  await new Promise((resolve) => { do_execute_soon(resolve); });
+  await new Promise((resolve) => { executeSoon(resolve); });
 
   // Pretend we're quitting
   let obs = cs.QueryInterface(Ci.nsIObserver);

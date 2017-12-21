@@ -55,7 +55,7 @@ AuthPrompt1.prototype = {
   {
     if (this.flags & FLAG_NO_REALM) {
       // Note that the realm here isn't actually the realm. it's a pw mgr key.
-      do_check_eq(URL + " (" + this.expectedRealm + ")", realm);
+      Assert.equal(URL + " (" + this.expectedRealm + ")", realm);
     }
     if (!(this.flags & CROSS_ORIGIN)) {
       if (text.indexOf(this.expectedRealm) == -1) {
@@ -128,12 +128,12 @@ AuthPrompt2.prototype = {
       this.expectedRealm = ""; // NTLM knows no realms
     }
 
-    do_check_eq(this.expectedRealm, authInfo.realm);
+    Assert.equal(this.expectedRealm, authInfo.realm);
 
     var expectedLevel = (isNTLM || isDigest) ?
                         nsIAuthPrompt2.LEVEL_PW_ENCRYPTED :
                         nsIAuthPrompt2.LEVEL_NONE;
-    do_check_eq(expectedLevel, level);
+    Assert.equal(expectedLevel, level);
 
     var expectedFlags = nsIAuthInformation.AUTH_HOST;
 
@@ -147,15 +147,15 @@ AuthPrompt2.prototype = {
       expectedFlags |= nsIAuthInformation.NEED_DOMAIN;
 
     const kAllKnownFlags = 127; // Don't fail test for newly added flags
-    do_check_eq(expectedFlags, authInfo.flags & kAllKnownFlags);
+    Assert.equal(expectedFlags, authInfo.flags & kAllKnownFlags);
 
     var expectedScheme = isNTLM ? "ntlm" : isDigest ? "digest" : "basic";
-    do_check_eq(expectedScheme, authInfo.authenticationScheme);
+    Assert.equal(expectedScheme, authInfo.authenticationScheme);
 
     // No passwords in the URL -> nothing should be prefilled
-    do_check_eq(authInfo.username, "");
-    do_check_eq(authInfo.password, "");
-    do_check_eq(authInfo.domain, "");
+    Assert.equal(authInfo.username, "");
+    Assert.equal(authInfo.password, "");
+    Assert.equal(authInfo.domain, "");
 
     if (this.flags & FLAG_RETURN_FALSE)
     {
@@ -244,7 +244,7 @@ RealmTestRequestor.prototype = {
   },
 
   promptAuth: function realmtest_checkAuth(channel, level, authInfo) {
-    do_check_eq(authInfo.realm, '\"foo_bar');
+    Assert.equal(authInfo.realm, '\"foo_bar');
 
     return false;
   },
@@ -265,9 +265,9 @@ var listener = {
       if (!(request instanceof Components.interfaces.nsIHttpChannel))
         do_throw("Expecting an HTTP channel");
 
-      do_check_eq(request.responseStatus, this.expectedCode);
+      Assert.equal(request.responseStatus, this.expectedCode);
       // The request should be succeeded iff we expect 200
-      do_check_eq(request.requestSucceeded, this.expectedCode == 200);
+      Assert.equal(request.requestSucceeded, this.expectedCode == 200);
 
     } catch (e) {
       do_throw("Unexpected exception: " + e);
@@ -281,7 +281,7 @@ var listener = {
   },
 
   onStopRequest: function test_onStopR(request, ctx, status) {
-    do_check_eq(status, Components.results.NS_ERROR_ABORT);
+    Assert.equal(status, Components.results.NS_ERROR_ABORT);
 
     if (current_test < (tests.length - 1)) {
       // First, gotta clear the auth cache

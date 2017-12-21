@@ -29,6 +29,6 @@ function run_test() {
   svc.setCookieString(uri, null, "oh=hai", publicChan);
   let privateChan = makeChan(uri, true);
   svc.setCookieString(uri, null, "oh=hai", privateChan);
-  do_check_eq(publicNotifications, 1);
-  do_check_eq(privateNotifications, 1);
+  Assert.equal(publicNotifications, 1);
+  Assert.equal(privateNotifications, 1);
 }

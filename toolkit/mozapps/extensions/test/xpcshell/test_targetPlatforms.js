@@ -107,41 +107,41 @@ async function run_test() {
                                "addon5@tests.mozilla.org"],
                                function([a1, a2, a3, a4, a5]) {
 
-    do_check_neq(a1, null);
-    do_check_false(a1.appDisabled);
-    do_check_true(a1.isPlatformCompatible);
-    do_check_true(a1.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+    Assert.notEqual(a1, null);
+    Assert.ok(!a1.appDisabled);
+    Assert.ok(a1.isPlatformCompatible);
+    Assert.ok(a1.isActive);
+    Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
     do_check_in_crash_annotation(addon1.id, addon1.version);
 
-    do_check_neq(a2, null);
-    do_check_false(a2.appDisabled);
-    do_check_true(a2.isPlatformCompatible);
-    do_check_true(a2.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, a2.id));
+    Assert.notEqual(a2, null);
+    Assert.ok(!a2.appDisabled);
+    Assert.ok(a2.isPlatformCompatible);
+    Assert.ok(a2.isActive);
+    Assert.ok(isExtensionInAddonsList(profileDir, a2.id));
     do_check_in_crash_annotation(addon2.id, addon2.version);
 
-    do_check_neq(a3, null);
-    do_check_false(a3.appDisabled);
-    do_check_true(a3.isPlatformCompatible);
-    do_check_true(a3.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, a3.id));
+    Assert.notEqual(a3, null);
+    Assert.ok(!a3.appDisabled);
+    Assert.ok(a3.isPlatformCompatible);
+    Assert.ok(a3.isActive);
+    Assert.ok(isExtensionInAddonsList(profileDir, a3.id));
     do_check_in_crash_annotation(addon3.id, addon3.version);
 
-    do_check_neq(a4, null);
-    do_check_true(a4.appDisabled);
-    do_check_false(a4.isPlatformCompatible);
-    do_check_false(a4.isActive);
-    do_check_false(isExtensionInAddonsList(profileDir, a4.id));
+    Assert.notEqual(a4, null);
+    Assert.ok(a4.appDisabled);
+    Assert.ok(!a4.isPlatformCompatible);
+    Assert.ok(!a4.isActive);
+    Assert.ok(!isExtensionInAddonsList(profileDir, a4.id));
     do_check_not_in_crash_annotation(addon4.id, addon4.version);
 
-    do_check_neq(a5, null);
-    do_check_true(a5.appDisabled);
-    do_check_false(a5.isPlatformCompatible);
-    do_check_false(a5.isActive);
-    do_check_false(isExtensionInAddonsList(profileDir, a5.id));
+    Assert.notEqual(a5, null);
+    Assert.ok(a5.appDisabled);
+    Assert.ok(!a5.isPlatformCompatible);
+    Assert.ok(!a5.isActive);
+    Assert.ok(!isExtensionInAddonsList(profileDir, a5.id));
     do_check_not_in_crash_annotation(addon5.id, addon5.version);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

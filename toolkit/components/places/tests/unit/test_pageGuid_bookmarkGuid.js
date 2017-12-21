@@ -33,36 +33,36 @@ add_task(async function test_addBookmarksAndCheckGuids() {
   let folderId = await PlacesUtils.promiseItemId(bookmarks[0].guid);
 
   let root = PlacesUtils.getFolderContents(folderId).root;
-  do_check_eq(root.childCount, 5);
+  Assert.equal(root.childCount, 5);
 
   // check bookmark guids
   let bookmarkGuidZero = root.getChild(0).bookmarkGuid;
-  do_check_eq(bookmarkGuidZero.length, 12);
+  Assert.equal(bookmarkGuidZero.length, 12);
   // bookmarks have bookmark guids
-  do_check_eq(root.getChild(1).bookmarkGuid.length, 12);
-  do_check_eq(root.getChild(2).bookmarkGuid.length, 12);
+  Assert.equal(root.getChild(1).bookmarkGuid.length, 12);
+  Assert.equal(root.getChild(2).bookmarkGuid.length, 12);
   // separator has bookmark guid
-  do_check_eq(root.getChild(3).bookmarkGuid.length, 12);
+  Assert.equal(root.getChild(3).bookmarkGuid.length, 12);
   // folder has bookmark guid
-  do_check_eq(root.getChild(4).bookmarkGuid.length, 12);
+  Assert.equal(root.getChild(4).bookmarkGuid.length, 12);
   // all bookmark guids are different.
-  do_check_neq(bookmarkGuidZero, root.getChild(1).bookmarkGuid);
-  do_check_neq(root.getChild(1).bookmarkGuid, root.getChild(2).bookmarkGuid);
-  do_check_neq(root.getChild(2).bookmarkGuid, root.getChild(3).bookmarkGuid);
-  do_check_neq(root.getChild(3).bookmarkGuid, root.getChild(4).bookmarkGuid);
+  Assert.notEqual(bookmarkGuidZero, root.getChild(1).bookmarkGuid);
+  Assert.notEqual(root.getChild(1).bookmarkGuid, root.getChild(2).bookmarkGuid);
+  Assert.notEqual(root.getChild(2).bookmarkGuid, root.getChild(3).bookmarkGuid);
+  Assert.notEqual(root.getChild(3).bookmarkGuid, root.getChild(4).bookmarkGuid);
 
   // check page guids
   let pageGuidZero = root.getChild(0).pageGuid;
-  do_check_eq(pageGuidZero.length, 12);
+  Assert.equal(pageGuidZero.length, 12);
   // bookmarks have page guids
-  do_check_eq(root.getChild(1).pageGuid.length, 12);
-  do_check_eq(root.getChild(2).pageGuid.length, 12);
+  Assert.equal(root.getChild(1).pageGuid.length, 12);
+  Assert.equal(root.getChild(2).pageGuid.length, 12);
   // folder and separator don't have page guids
-  do_check_eq(root.getChild(3).pageGuid, "");
-  do_check_eq(root.getChild(4).pageGuid, "");
+  Assert.equal(root.getChild(3).pageGuid, "");
+  Assert.equal(root.getChild(4).pageGuid, "");
 
-  do_check_neq(pageGuidZero, root.getChild(1).pageGuid);
-  do_check_neq(root.getChild(1).pageGuid, root.getChild(2).pageGuid);
+  Assert.notEqual(pageGuidZero, root.getChild(1).pageGuid);
+  Assert.notEqual(root.getChild(1).pageGuid, root.getChild(2).pageGuid);
 
   root.containerOpen = false;
 
@@ -88,7 +88,7 @@ add_task(async function test_updateBookmarksAndCheckGuids() {
   let folderId = await PlacesUtils.promiseItemId(bookmarks[0].guid);
 
   let root = PlacesUtils.getFolderContents(folderId).root;
-  do_check_eq(root.childCount, 2);
+  Assert.equal(root.childCount, 2);
 
   // ensure the bookmark and page guids remain the same after modifing other property.
   let bookmarkGuidZero = root.getChild(0).bookmarkGuid;
@@ -97,9 +97,9 @@ add_task(async function test_updateBookmarksAndCheckGuids() {
     guid: bookmarks[1].guid,
     title: "1 title mod",
   });
-  do_check_eq(root.getChild(0).title, "1 title mod");
-  do_check_eq(root.getChild(0).bookmarkGuid, bookmarkGuidZero);
-  do_check_eq(root.getChild(0).pageGuid, pageGuidZero);
+  Assert.equal(root.getChild(0).title, "1 title mod");
+  Assert.equal(root.getChild(0).bookmarkGuid, bookmarkGuidZero);
+  Assert.equal(root.getChild(0).pageGuid, pageGuidZero);
 
   let bookmarkGuidOne = root.getChild(1).bookmarkGuid;
   let pageGuidOne = root.getChild(1).pageGuid;
@@ -108,9 +108,9 @@ add_task(async function test_updateBookmarksAndCheckGuids() {
     guid: bookmarks[2].guid,
     title: "test foolder 234",
   });
-  do_check_eq(root.getChild(1).title, "test foolder 234");
-  do_check_eq(root.getChild(1).bookmarkGuid, bookmarkGuidOne);
-  do_check_eq(root.getChild(1).pageGuid, pageGuidOne);
+  Assert.equal(root.getChild(1).title, "test foolder 234");
+  Assert.equal(root.getChild(1).bookmarkGuid, bookmarkGuidOne);
+  Assert.equal(root.getChild(1).pageGuid, pageGuidOne);
 
   root.containerOpen = false;
 
@@ -121,17 +121,17 @@ add_task(async function test_addVisitAndCheckGuid() {
   // add a visit and test page guid and non-existing bookmark guids.
   let sourceURI = uri("http://test4.com/");
   await PlacesTestUtils.addVisits({ uri: sourceURI });
-  do_check_eq(await PlacesUtils.bookmarks.fetch({ url: sourceURI }, null));
+  Assert.equal(await PlacesUtils.bookmarks.fetch({ url: sourceURI }, null));
 
   let options = histsvc.getNewQueryOptions();
   let query = histsvc.getNewQuery();
   query.uri = sourceURI;
   let root = histsvc.executeQuery(query, options).root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, 1);
+  Assert.equal(root.childCount, 1);
 
   do_check_valid_places_guid(root.getChild(0).pageGuid);
-  do_check_eq(root.getChild(0).bookmarkGuid, "");
+  Assert.equal(root.getChild(0).bookmarkGuid, "");
   root.containerOpen = false;
 
   await PlacesTestUtils.clearHistory();
@@ -201,10 +201,10 @@ add_task(async function test_addItemsWithGUIDs() {
   let folderId = await PlacesUtils.promiseItemId(bookmarks[0].guid);
 
   let root = PlacesUtils.getFolderContents(folderId).root;
-  do_check_eq(root.childCount, 2);
-  do_check_eq(root.bookmarkGuid, FOLDER_GUID);
-  do_check_eq(root.getChild(0).bookmarkGuid, BOOKMARK_GUID);
-  do_check_eq(root.getChild(1).bookmarkGuid, SEPARATOR_GUID);
+  Assert.equal(root.childCount, 2);
+  Assert.equal(root.bookmarkGuid, FOLDER_GUID);
+  Assert.equal(root.getChild(0).bookmarkGuid, BOOKMARK_GUID);
+  Assert.equal(root.getChild(1).bookmarkGuid, SEPARATOR_GUID);
 
   root.containerOpen = false;
   await PlacesUtils.bookmarks.eraseEverything();

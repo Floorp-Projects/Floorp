@@ -21,19 +21,19 @@ dir.create(dir.DIRECTORY_TYPE, -1);
 var gListener = {
   onSearchResult(aSearch, aResult) {
     // Check that we got same search string back.
-    do_check_eq(aResult.searchString, "test");
+    Assert.equal(aResult.searchString, "test");
     // Check that the search succeeded.
-    do_check_eq(aResult.searchResult, aResult.RESULT_SUCCESS);
+    Assert.equal(aResult.searchResult, aResult.RESULT_SUCCESS);
     // Check that we got two results.
-    do_check_eq(aResult.matchCount, 2);
+    Assert.equal(aResult.matchCount, 2);
     // Check that the first result is the directory we created.
-    do_check_eq(aResult.getValueAt(0), "test_dir");
+    Assert.equal(aResult.getValueAt(0), "test_dir");
     // Check that the first result has directory style.
-    do_check_eq(aResult.getStyleAt(0), "directory");
+    Assert.equal(aResult.getStyleAt(0), "directory");
     // Check that the second result is the file we created.
-    do_check_eq(aResult.getValueAt(1), "test_file");
+    Assert.equal(aResult.getValueAt(1), "test_file");
     // Check that the second result has file style.
-    do_check_eq(aResult.getStyleAt(1), "file");
+    Assert.equal(aResult.getStyleAt(1), "file");
   }
 };
 

@@ -28,7 +28,7 @@ function startIter() {
 }
 
 function completeIter(request, data, ctx) {
-    do_check_true(data.length == tests[index].datalen);
+    Assert.ok(data.length == tests[index].datalen);
     if (++index < tests.length) {
 	startIter();
     } else {

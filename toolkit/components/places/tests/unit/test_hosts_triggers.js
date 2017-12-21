@@ -113,7 +113,7 @@ add_task(async function test_bookmark_changes() {
     title: "bookmark title",
   });
 
-  do_check_true(isHostInMozPlaces(testUri));
+  Assert.ok(isHostInMozPlaces(testUri));
 
   // Change the hostname
   await PlacesUtils.bookmarks.update({
@@ -124,7 +124,7 @@ add_task(async function test_bookmark_changes() {
   await PlacesTestUtils.clearHistory();
 
   let newUri = NetUtil.newURI(NEW_URL);
-  do_check_true(isHostInMozPlaces(newUri));
+  Assert.ok(isHostInMozPlaces(newUri));
   checkHostInMozHosts(newUri, false, null);
   checkHostNotInMozHosts(NetUtil.newURI("http://test.mozilla.org"), false, null);
 });
@@ -360,10 +360,10 @@ const hostsUpdateTests = [{
 
 add_task(async function test_moz_hosts_update() {
   for (const section of hostsUpdateTests) {
-    do_print(section.title);
+    info(section.title);
 
     for (const test of section.tests) {
-      do_print(test.title);
+      info(test.title);
 
       if ("visits" in test) {
         await PlacesTestUtils.addVisits(test.visits);

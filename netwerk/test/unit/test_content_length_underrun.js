@@ -67,7 +67,7 @@ function run_gzip_test(num)
 
     onStopRequest: function(aRequest, aContext, aStatusCode) {
       // Make sure we catch the error NS_ERROR_NET_PARTIAL_TRANSFER here.
-      do_check_eq(aStatusCode, Components.results.NS_ERROR_NET_PARTIAL_TRANSFER);
+      Assert.equal(aStatusCode, Components.results.NS_ERROR_NET_PARTIAL_TRANSFER);
       //  do_test_finished();
         endTests();
     },
@@ -118,7 +118,7 @@ function handler1(metadata, response)
 
 function completeTest1(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_ERROR_NET_PARTIAL_TRANSFER);
+  Assert.equal(request.status, Components.results.NS_ERROR_NET_PARTIAL_TRANSFER);
 
   run_test_number(11);
 }
@@ -142,7 +142,7 @@ function handler11(metadata, response)
 
 function completeTest11(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_OK);
+  Assert.equal(request.status, Components.results.NS_OK);
   run_test_number(2);
 }
 
@@ -166,7 +166,7 @@ function handler2(metadata, response)
 
 function completeTest2(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_OK);
+  Assert.equal(request.status, Components.results.NS_OK);
 
   // test 3 requires the enforce-framing prefs to be false
   prefs.setBoolPref("network.http.enforce-framing.http1", false);
@@ -193,7 +193,7 @@ function handler3(metadata, response)
 
 function completeTest3(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_OK);
+  Assert.equal(request.status, Components.results.NS_OK);
   prefs.setBoolPref("network.http.enforce-framing.soft", true);
   run_test_number(4);
 }
@@ -234,7 +234,7 @@ function handler4(metadata, response)
 
 function completeTest4(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_OK);
+  Assert.equal(request.status, Components.results.NS_OK);
 
   prefs.setBoolPref("network.http.enforce-framing.http1", true);
   run_gzip_test(99);

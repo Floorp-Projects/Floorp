@@ -249,23 +249,23 @@ function run_test() {
 
   input.onSearchBegin = function() {
     numSearchesStarted++;
-    do_check_eq(numSearchesStarted, 1);
-    do_check_eq(input.searchCount, 2);
+    Assert.equal(numSearchesStarted, 1);
+    Assert.equal(input.searchCount, 2);
   };
 
   input.onSearchComplete = function() {
-    do_check_eq(numSearchesStarted, 1);
+    Assert.equal(numSearchesStarted, 1);
 
-    do_check_eq(controller.searchStatus,
-                Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
-    do_check_eq(controller.matchCount, 2);
+    Assert.equal(controller.searchStatus,
+                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
+    Assert.equal(controller.matchCount, 2);
 
     // Confirm expected result values
     for (var i = 0; i < expectedValues.length; i++) {
-      do_check_eq(expectedValues[i], controller.getValueAt(i));
+      Assert.equal(expectedValues[i], controller.getValueAt(i));
     }
 
-    do_check_true(input.popupOpen);
+    Assert.ok(input.popupOpen);
 
     // Unregister searches
     unregisterAutoCompleteSearch(emptySearch);

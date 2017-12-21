@@ -148,7 +148,7 @@ function run_test() {
   notEqual(gSSService, null);
 
   Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 2);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.prefs.clearUserPref("security.cert_pinning.enforcement_level");
   });
 }

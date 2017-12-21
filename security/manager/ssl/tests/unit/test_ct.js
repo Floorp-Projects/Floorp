@@ -18,7 +18,7 @@ function expectCT(value) {
   };
 }
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.pki.certificate_transparency.mode");
 });
 

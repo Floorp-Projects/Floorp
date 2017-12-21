@@ -30,11 +30,11 @@ function run_test() {
   AddonManager.getAddonsByIDs(["bug740612_1@tests.mozilla.org",
                                "bug740612_2@tests.mozilla.org"],
                                function([a1, a2]) {
-    do_check_neq(a1, null);
-    do_check_neq(a2, null);
-    do_check_eq(getInstalledVersion(), "1.0");
-    do_check_eq(getActiveVersion(), "1.0");
+    Assert.notEqual(a1, null);
+    Assert.notEqual(a2, null);
+    Assert.equal(getInstalledVersion(), "1.0");
+    Assert.equal(getActiveVersion(), "1.0");
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

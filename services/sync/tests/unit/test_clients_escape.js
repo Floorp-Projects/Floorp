@@ -22,8 +22,8 @@ add_task(async function test_clients_escape() {
 
     _("Make sure we have the expected record");
     let record = await engine._createRecord("ascii");
-    do_check_eq(record.id, "ascii");
-    do_check_eq(record.name, "wéävê");
+    Assert.equal(record.id, "ascii");
+    Assert.equal(record.name, "wéävê");
 
     _("Encrypting record...");
     await record.encrypt(keyBundle);
@@ -35,22 +35,22 @@ add_task(async function test_clients_escape() {
     Array.forEach(serialized, function(ch) {
       let code = ch.charCodeAt(0);
       _("Checking asciiness of '", ch, "'=", code);
-      do_check_true(code < 128);
+      Assert.ok(code < 128);
       checkCount++;
     });
 
     _("Processed", checkCount, "characters out of", serialized.length);
-    do_check_eq(checkCount, serialized.length);
+    Assert.equal(checkCount, serialized.length);
 
     _("Making sure the record still looks like it did before");
     await record.decrypt(keyBundle);
-    do_check_eq(record.id, "ascii");
-    do_check_eq(record.name, "wéävê");
+    Assert.equal(record.id, "ascii");
+    Assert.equal(record.name, "wéävê");
 
     _("Sanity check that creating the record also gives the same");
     record = await engine._createRecord("ascii");
-    do_check_eq(record.id, "ascii");
-    do_check_eq(record.name, "wéävê");
+    Assert.equal(record.id, "ascii");
+    Assert.equal(record.name, "wéävê");
   } finally {
     Svc.Prefs.resetBranch("");
   }

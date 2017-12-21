@@ -29,27 +29,27 @@ add_task(async function test_brokenFolderShortcut() {
   let root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;
 
-  do_check_eq(root.childCount, 4);
+  Assert.equal(root.childCount, 4);
 
   let shortcut = root.getChild(1);
-  do_check_eq(shortcut.uri, "place:folder=1234");
+  Assert.equal(shortcut.uri, "place:folder=1234");
   PlacesUtils.asContainer(shortcut);
   shortcut.containerOpen = true;
-  do_check_eq(shortcut.childCount, 0);
+  Assert.equal(shortcut.childCount, 0);
   shortcut.containerOpen = false;
   // Remove the broken shortcut while the containing result is open.
   await PlacesUtils.bookmarks.remove(bookmarks[1]);
-  do_check_eq(root.childCount, 3);
+  Assert.equal(root.childCount, 3);
 
   shortcut = root.getChild(1);
-  do_check_eq(shortcut.uri, "place:folder=-1");
+  Assert.equal(shortcut.uri, "place:folder=-1");
   PlacesUtils.asContainer(shortcut);
   shortcut.containerOpen = true;
-  do_check_eq(shortcut.childCount, 0);
+  Assert.equal(shortcut.childCount, 0);
   shortcut.containerOpen = false;
   // Remove the broken shortcut while the containing result is open.
   await PlacesUtils.bookmarks.remove(bookmarks[2]);
-  do_check_eq(root.childCount, 2);
+  Assert.equal(root.childCount, 2);
 
   root.containerOpen = false;
 
@@ -59,7 +59,7 @@ add_task(async function test_brokenFolderShortcut() {
   options = PlacesUtils.history.getNewQueryOptions();
   root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, 0);
+  Assert.equal(root.childCount, 0);
   root.containerOpen = false;
 
   // Broken folder shortcut as root node with folder=-1.
@@ -68,6 +68,6 @@ add_task(async function test_brokenFolderShortcut() {
   options = PlacesUtils.history.getNewQueryOptions();
   root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, 0);
+  Assert.equal(root.childCount, 0);
   root.containerOpen = false;
 });

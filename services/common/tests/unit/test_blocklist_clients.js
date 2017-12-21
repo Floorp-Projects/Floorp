@@ -74,7 +74,7 @@ function run_test() {
       response.write(sample.responseBody);
       response.finish();
     } catch (e) {
-      do_print(e);
+      info(e);
     }
   }
   const configPath = "/v1/";
@@ -89,7 +89,7 @@ function run_test() {
 
   run_next_test();
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     server.stop(() => { });
   });
 }

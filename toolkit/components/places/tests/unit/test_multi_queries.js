@@ -43,5 +43,5 @@ add_task(async function test_execute() {
   let childCount = root.childCount;
   root.containerOpen = false;
 
-  do_check_eq(childCount, 3);
+  Assert.equal(childCount, 3);
 });

@@ -47,7 +47,7 @@ add_task(async function test_special_searches() {
   await addBookmark( { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ] } );
 
   // Test restricting searches
-  do_print("History restrict");
+  info("History restrict");
   await check_autocomplete({
     search: "^",
     matches: [ { uri: uri1, title: "title" },
@@ -58,7 +58,7 @@ add_task(async function test_special_searches() {
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("Star restrict");
+  info("Star restrict");
   await check_autocomplete({
     search: "*",
     matches: [ { uri: uri5, title: "title", style: [ "bookmark" ] },
@@ -71,7 +71,7 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("Tag restrict");
+  info("Tag restrict");
   await check_autocomplete({
     search: "+",
     matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
@@ -81,7 +81,7 @@ add_task(async function test_special_searches() {
   });
 
   // Test specials as any word position
-  do_print("Special as first word");
+  info("Special as first word");
   await check_autocomplete({
     search: "^ foo bar",
     matches: [ { uri: uri2, title: "foo.bar" },
@@ -91,7 +91,7 @@ add_task(async function test_special_searches() {
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("Special as middle word");
+  info("Special as middle word");
   await check_autocomplete({
     search: "foo ^ bar",
     matches: [ { uri: uri2, title: "foo.bar" },
@@ -101,7 +101,7 @@ add_task(async function test_special_searches() {
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("Special as last word");
+  info("Special as last word");
   await check_autocomplete({
     search: "foo bar ^",
     matches: [ { uri: uri2, title: "foo.bar" },
@@ -112,7 +112,7 @@ add_task(async function test_special_searches() {
   });
 
   // Test restricting and matching searches with a term
-  do_print("foo ^ -> history");
+  info("foo ^ -> history");
   await check_autocomplete({
     search: "foo ^",
     matches: [ { uri: uri2, title: "foo.bar" },
@@ -122,7 +122,7 @@ add_task(async function test_special_searches() {
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo * -> is star");
+  info("foo * -> is star");
   await check_autocomplete({
     search: "foo *",
     matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
@@ -134,7 +134,7 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("foo # -> in title");
+  info("foo # -> in title");
   await check_autocomplete({
     search: "foo #",
     matches: [ { uri: uri2, title: "foo.bar" },
@@ -147,7 +147,7 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo @ -> in url");
+  info("foo @ -> in url");
   await check_autocomplete({
     search: "foo @",
     matches: [ { uri: uri3, title: "title" },
@@ -158,7 +158,7 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo + -> is tag");
+  info("foo + -> is tag");
   await check_autocomplete({
     search: "foo +",
     matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
@@ -167,7 +167,7 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo ~ -> is typed");
+  info("foo ~ -> is typed");
   await check_autocomplete({
     search: "foo ~",
     matches: [ { uri: uri4, title: "foo.bar" },
@@ -175,14 +175,14 @@ add_task(async function test_special_searches() {
   });
 
   // Test various pairs of special searches
-  do_print("foo ^ * -> history, is star");
+  info("foo ^ * -> history, is star");
   await check_autocomplete({
     search: "foo ^ *",
     matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("foo ^ # -> history, in title");
+  info("foo ^ # -> history, in title");
   await check_autocomplete({
     search: "foo ^ #",
     matches: [ { uri: uri2, title: "foo.bar" },
@@ -191,7 +191,7 @@ add_task(async function test_special_searches() {
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo ^ @ -> history, in url");
+  info("foo ^ @ -> history, in url");
   await check_autocomplete({
     search: "foo ^ @",
     matches: [ { uri: uri3, title: "title" },
@@ -199,20 +199,20 @@ add_task(async function test_special_searches() {
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo ^ + -> history, is tag");
+  info("foo ^ + -> history, is tag");
   await check_autocomplete({
     search: "foo ^ +",
     matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo ^ ~ -> history, is typed");
+  info("foo ^ ~ -> history, is typed");
   await check_autocomplete({
     search: "foo ^ ~",
     matches: [ { uri: uri4, title: "foo.bar" },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo * # -> is star, in title");
+  info("foo * # -> is star, in title");
   await check_autocomplete({
     search: "foo * #",
     matches: [ { uri: uri6, title: "foo.bar", style: [ "bookmark" ] },
@@ -223,7 +223,7 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("foo * @ -> is star, in url");
+  info("foo * @ -> is star, in url");
   await check_autocomplete({
     search: "foo * @",
     matches: [ { uri: uri7, title: "title", style: [ "bookmark" ] },
@@ -232,7 +232,7 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("foo * + -> same as +");
+  info("foo * + -> same as +");
   await check_autocomplete({
     search: "foo * +",
     matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] },
@@ -241,13 +241,13 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("foo * ~ -> is star, is typed");
+  info("foo * ~ -> is star, is typed");
   await check_autocomplete({
     search: "foo * ~",
     matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("foo # @ -> in title, in url");
+  info("foo # @ -> in title, in url");
   await check_autocomplete({
     search: "foo # @",
     matches: [ { uri: uri4, title: "foo.bar" },
@@ -256,7 +256,7 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo # + -> in title, is tag");
+  info("foo # + -> in title, is tag");
   await check_autocomplete({
     search: "foo # +",
     matches: [ { uri: uri9, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
@@ -265,28 +265,28 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo # ~ -> in title, is typed");
+  info("foo # ~ -> in title, is typed");
   await check_autocomplete({
     search: "foo # ~",
     matches: [ { uri: uri4, title: "foo.bar" },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo @ + -> in url, is tag");
+  info("foo @ + -> in url, is tag");
   await check_autocomplete({
     search: "foo @ +",
     matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] },
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo @ ~ -> in url, is typed");
+  info("foo @ ~ -> in url, is typed");
   await check_autocomplete({
     search: "foo @ ~",
     matches: [ { uri: uri4, title: "foo.bar" },
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
   });
 
-  do_print("foo + ~ -> is tag, is typed");
+  info("foo + ~ -> is tag, is typed");
   await check_autocomplete({
     search: "foo + ~",
     matches: [ { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "tag" ] } ]
@@ -297,7 +297,7 @@ add_task(async function test_special_searches() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
 
   // Test default usage by setting certain browser.urlbar.suggest.* prefs
-  do_print("foo -> default history");
+  info("foo -> default history");
   setSuggestPrefsToFalse();
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
   await check_autocomplete({
@@ -309,7 +309,7 @@ add_task(async function test_special_searches() {
                { uri: uri11, title: "title", tags: ["foo.bar"], style: [ "tag" ] } ]
   });
 
-  do_print("foo -> default history, is star");
+  info("foo -> default history, is star");
   setSuggestPrefsToFalse();
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
@@ -327,7 +327,7 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("foo -> default history, is star, is typed");
+  info("foo -> default history, is star, is typed");
   setSuggestPrefsToFalse();
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", true);
   Services.prefs.setBoolPref("browser.urlbar.suggest.history.onlyTyped", true);
@@ -338,7 +338,7 @@ add_task(async function test_special_searches() {
                { uri: uri11, title: "title", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("foo -> is star");
+  info("foo -> is star");
   setSuggestPrefsToFalse();
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
@@ -353,7 +353,7 @@ add_task(async function test_special_searches() {
                { uri: uri12, title: "foo.bar", tags: [ "foo.bar" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("foo -> is star, is typed");
+  info("foo -> is star, is typed");
   setSuggestPrefsToFalse();
   // only typed should be ignored
   Services.prefs.setBoolPref("browser.urlbar.suggest.history.onlyTyped", true);

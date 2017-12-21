@@ -108,11 +108,11 @@ function testGetHeader()
 
   headers.setHeader("Content-Type", "text/html", false);
   var c = headers.getHeader("content-type");
-  do_check_eq(c, "text/html");
+  Assert.equal(c, "text/html");
 
   headers.setHeader("test", "FOO", false);
   var c = headers.getHeader("test");
-  do_check_eq(c, "FOO");
+  Assert.equal(c, "FOO");
 
   try
   {
@@ -155,7 +155,7 @@ function testHeaderEnumerator()
   while (en.hasMoreElements())
   {
     var it = en.getNext().QueryInterface(Ci.nsISupportsString).data;
-    do_check_true(it.toLowerCase() in heads);
+    Assert.ok(it.toLowerCase() in heads);
     delete heads[it.toLowerCase()];
   }
 
@@ -169,12 +169,12 @@ function testHasHeader()
   var headers = new nsHttpHeaders();
 
   headers.setHeader("foo", "bar", false);
-  do_check_true(headers.hasHeader("foo"));
-  do_check_true(headers.hasHeader("fOo"));
-  do_check_false(headers.hasHeader("not-there"));
+  Assert.ok(headers.hasHeader("foo"));
+  Assert.ok(headers.hasHeader("fOo"));
+  Assert.ok(!headers.hasHeader("not-there"));
 
   headers.setHeader("f`'~", "bar", false);
-  do_check_true(headers.hasHeader("F`'~"));
+  Assert.ok(headers.hasHeader("F`'~"));
 
   try
   {

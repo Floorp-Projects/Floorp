@@ -35,7 +35,7 @@ add_task(async function test_query_with_remove_shortcut() {
 
   await PlacesUtils.bookmarks.remove(query.guid);
 
-  do_check_eq(root.childCount, oldCount - 1);
+  Assert.equal(root.childCount, oldCount - 1);
 
   root.containerOpen = false;
 

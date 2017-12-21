@@ -12,17 +12,17 @@ function run_test()
   var uri2 = ios.newURI(str);
   const str2 = "http://example.org";
   var uri3 = ios.newURI(str2);
-  do_check_true(uri.equals(uri));
-  do_check_true(uri.equals(uri2));
-  do_check_true(uri2.equals(uri));
-  do_check_true(uri2.equals(uri2));
-  do_check_false(uri3.equals(uri2));
-  do_check_false(uri2.equals(uri3));
+  Assert.ok(uri.equals(uri));
+  Assert.ok(uri.equals(uri2));
+  Assert.ok(uri2.equals(uri));
+  Assert.ok(uri2.equals(uri2));
+  Assert.ok(!uri3.equals(uri2));
+  Assert.ok(!uri2.equals(uri3));
 
   var simple = Components.classes["@mozilla.org/network/simple-uri;1"]
                          .createInstance(Components.interfaces.nsIURI);
   simple.spec = str;
-  do_check_eq(simple.spec, uri.spec);
-  do_check_false(simple.equals(uri));
-  do_check_false(uri.equals(simple));
+  Assert.equal(simple.spec, uri.spec);
+  Assert.ok(!simple.equals(uri));
+  Assert.ok(!uri.equals(simple));
 }

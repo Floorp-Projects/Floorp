@@ -16,9 +16,9 @@ function run_test() {
     // root.initWithPath("/");
   }
   var drives = root.directoryEntries;
-  do_check_true(drives.hasMoreElements());
+  Assert.ok(drives.hasMoreElements());
   while (drives.hasMoreElements()) {
     var newPath = drives.getNext().QueryInterface(nsIFile).path;
-    do_check_eq(newPath.indexOf("\0"), -1);
+    Assert.equal(newPath.indexOf("\0"), -1);
   }
 }

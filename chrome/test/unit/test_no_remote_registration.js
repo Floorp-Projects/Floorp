@@ -192,11 +192,11 @@ function run_test() {
         }
 
         if (protocol.shouldRegister) {
-          do_check_eq(expectedURI, uri);
+          Assert.equal(expectedURI, uri);
         } else {
           // Overrides will not throw, so we'll get to here.  We want to make
           // sure that the two strings are not the same in this situation.
-          do_check_neq(expectedURI, uri);
+          Assert.notEqual(expectedURI, uri);
         }
       } catch (e) {
         if (protocol.shouldRegister) {

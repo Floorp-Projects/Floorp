@@ -27,8 +27,8 @@ add_task(async function test_pref() {
 
   let engine = Services.search.getEngineByName("engine-pref");
   let base = "http://www.google.com/search?q=foo&code=";
-  do_check_eq(engine.getSubmission("foo").uri.spec,
-              base + "good%26id%3Dunique");
+  Assert.equal(engine.getSubmission("foo").uri.spec,
+               base + "good%26id%3Dunique");
 
   do_test_finished();
 });

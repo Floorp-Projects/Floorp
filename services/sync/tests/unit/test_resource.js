@@ -176,9 +176,9 @@ add_task(async function test_proxy_auth_redirect() {
   installFakePAC();
   let res = new Resource(server.baseURI + "/open");
   let result = await res.get();
-  do_check_true(pacFetched);
-  do_check_true(fetched);
-  do_check_eq("This path exists", result);
+  Assert.ok(pacFetched);
+  Assert.ok(fetched);
+  Assert.equal("This path exists", result);
   pacFetched = fetched = false;
   uninstallFakePAC();
   await promiseStopServer(server);
@@ -210,10 +210,10 @@ add_task(async function test_new_channel() {
 
   let request = new Resource(server.baseURI + "/redirect");
   let content = await request.get();
-  do_check_true(resourceRequested);
-  do_check_eq(200, content.status);
-  do_check_true("content-type" in content.headers);
-  do_check_eq("text/plain", content.headers["content-type"]);
+  Assert.ok(resourceRequested);
+  Assert.equal(200, content.status);
+  Assert.ok("content-type" in content.headers);
+  Assert.equal("text/plain", content.headers["content-type"]);
 
   await promiseStopServer(server);
 });
@@ -244,11 +244,11 @@ add_test(function test_members() {
   _("Resource object members");
   let uri = server.baseURI + "/open";
   let res = new Resource(uri);
-  do_check_true(res.uri instanceof Ci.nsIURI);
-  do_check_eq(res.uri.spec, uri);
-  do_check_eq(res.spec, uri);
-  do_check_eq(typeof res.headers, "object");
-  do_check_eq(typeof res.authenticator, "object");
+  Assert.ok(res.uri instanceof Ci.nsIURI);
+  Assert.equal(res.uri.spec, uri);
+  Assert.equal(res.spec, uri);
+  Assert.equal(typeof res.headers, "object");
+  Assert.equal(typeof res.authenticator, "object");
 
   run_next_test();
 });
@@ -257,9 +257,9 @@ add_task(async function test_get() {
   _("GET a non-password-protected resource");
   let res = new Resource(server.baseURI + "/open");
   let content = await res.get();
-  do_check_eq(content, "This path exists");
-  do_check_eq(content.status, 200);
-  do_check_true(content.success);
+  Assert.equal(content, "This path exists");
+  Assert.equal(content.status, 200);
+  Assert.ok(content.success);
 
   // Observe logging messages.
   let resLogger = res._log;
@@ -278,10 +278,10 @@ add_task(async function test_get() {
   } catch (ex) {
     didThrow = true;
   }
-  do_check_true(didThrow);
-  do_check_eq(debugMessages.length, 1);
-  do_check_eq(debugMessages[0],
-              "Parse fail: Response body starts: \"\"This path exists\"\".");
+  Assert.ok(didThrow);
+  Assert.equal(debugMessages.length, 1);
+  Assert.equal(debugMessages[0],
+               "Parse fail: Response body starts: \"\"This path exists\"\".");
   resLogger.debug = dbg;
 });
 
@@ -289,8 +289,8 @@ add_test(function test_basicauth() {
   _("Test that the BasicAuthenticator doesn't screw up header case.");
   let res1 = new Resource(server.baseURI + "/foo");
   res1.setHeader("Authorization", "Basic foobar");
-  do_check_eq(res1._headers.authorization, "Basic foobar");
-  do_check_eq(res1.headers.authorization, "Basic foobar");
+  Assert.equal(res1._headers.authorization, "Basic foobar");
+  Assert.equal(res1.headers.authorization, "Basic foobar");
 
   run_next_test();
 });
@@ -299,9 +299,9 @@ add_task(async function test_get_protected_fail() {
   _("GET a password protected resource (test that it'll fail w/o pass, no throw)");
   let res2 = new Resource(server.baseURI + "/protected");
   let content = await res2.get();
-  do_check_eq(content, "This path exists and is protected - failed");
-  do_check_eq(content.status, 401);
-  do_check_false(content.success);
+  Assert.equal(content, "This path exists and is protected - failed");
+  Assert.equal(content.status, 401);
+  Assert.ok(!content.success);
 });
 
 add_task(async function test_get_protected_success() {
@@ -312,114 +312,114 @@ add_task(async function test_get_protected_success() {
   let auth = browseridManager.getResourceAuthenticator();
   let res3 = new Resource(server.baseURI + "/protected");
   res3.authenticator = auth;
-  do_check_eq(res3.authenticator, auth);
+  Assert.equal(res3.authenticator, auth);
   let content = await res3.get();
-  do_check_eq(content, "This path exists and is protected");
-  do_check_eq(content.status, 200);
-  do_check_true(content.success);
+  Assert.equal(content, "This path exists and is protected");
+  Assert.equal(content.status, 200);
+  Assert.ok(content.success);
 });
 
 add_task(async function test_get_404() {
   _("GET a non-existent resource (test that it'll fail, but not throw)");
   let res4 = new Resource(server.baseURI + "/404");
   let content = await res4.get();
-  do_check_eq(content, "File not found");
-  do_check_eq(content.status, 404);
-  do_check_false(content.success);
+  Assert.equal(content, "File not found");
+  Assert.equal(content.status, 404);
+  Assert.ok(!content.success);
 
   // Check some headers of the 404 response
-  do_check_eq(content.headers.connection, "close");
-  do_check_eq(content.headers.server, "httpd.js");
-  do_check_eq(content.headers["content-length"], 14);
+  Assert.equal(content.headers.connection, "close");
+  Assert.equal(content.headers.server, "httpd.js");
+  Assert.equal(content.headers["content-length"], 14);
 });
 
 add_task(async function test_put_string() {
   _("PUT to a resource (string)");
   let res_upload = new Resource(server.baseURI + "/upload");
   let content = await res_upload.put(JSON.stringify(sample_data));
-  do_check_eq(content, "Valid data upload via PUT");
-  do_check_eq(content.status, 200);
+  Assert.equal(content, "Valid data upload via PUT");
+  Assert.equal(content.status, 200);
 });
 
 add_task(async function test_put_object() {
   _("PUT to a resource (object)");
   let res_upload = new Resource(server.baseURI + "/upload");
   let content = await res_upload.put(sample_data);
-  do_check_eq(content, "Valid data upload via PUT");
-  do_check_eq(content.status, 200);
+  Assert.equal(content, "Valid data upload via PUT");
+  Assert.equal(content.status, 200);
 });
 
 add_task(async function test_post_string() {
   _("POST to a resource (string)");
   let res_upload = new Resource(server.baseURI + "/upload");
   let content = await res_upload.post(JSON.stringify(sample_data));
-  do_check_eq(content, "Valid data upload via POST");
-  do_check_eq(content.status, 200);
+  Assert.equal(content, "Valid data upload via POST");
+  Assert.equal(content.status, 200);
 });
 
 add_task(async function test_post_object() {
   _("POST to a resource (object)");
   let res_upload = new Resource(server.baseURI + "/upload");
   let content = await res_upload.post(sample_data);
-  do_check_eq(content, "Valid data upload via POST");
-  do_check_eq(content.status, 200);
+  Assert.equal(content, "Valid data upload via POST");
+  Assert.equal(content.status, 200);
 });
 
 add_task(async function test_delete() {
   _("DELETE a resource");
   let res6 = new Resource(server.baseURI + "/delete");
   let content = await res6.delete();
-  do_check_eq(content, "This resource has been deleted");
-  do_check_eq(content.status, 200);
+  Assert.equal(content, "This resource has been deleted");
+  Assert.equal(content.status, 200);
 });
 
 add_task(async function test_json_body() {
   _("JSON conversion of response body");
   let res7 = new Resource(server.baseURI + "/json");
   let content = await res7.get();
-  do_check_eq(content, JSON.stringify(sample_data));
-  do_check_eq(content.status, 200);
-  do_check_eq(JSON.stringify(content.obj), JSON.stringify(sample_data));
+  Assert.equal(content, JSON.stringify(sample_data));
+  Assert.equal(content.status, 200);
+  Assert.equal(JSON.stringify(content.obj), JSON.stringify(sample_data));
 });
 
 add_task(async function test_weave_timestamp() {
   _("X-Weave-Timestamp header updates Resource.serverTime");
   // Before having received any response containing the
   // X-Weave-Timestamp header, Resource.serverTime is null.
-  do_check_eq(Resource.serverTime, null);
+  Assert.equal(Resource.serverTime, null);
   let res8 = new Resource(server.baseURI + "/timestamp");
   await res8.get();
-  do_check_eq(Resource.serverTime, TIMESTAMP);
+  Assert.equal(Resource.serverTime, TIMESTAMP);
 });
 
 add_task(async function test_get_no_headers() {
   _("GET: no special request headers");
   let res_headers = new Resource(server.baseURI + "/headers");
   let content = await res_headers.get();
-  do_check_eq(content, "{}");
+  Assert.equal(content, "{}");
 });
 
 add_task(async function test_put_default_content_type() {
   _("PUT: Content-Type defaults to text/plain");
   let res_headers = new Resource(server.baseURI + "/headers");
   let content = await res_headers.put("data");
-  do_check_eq(content, JSON.stringify({"content-type": "text/plain"}));
+  Assert.equal(content, JSON.stringify({"content-type": "text/plain"}));
 });
 
 add_task(async function test_post_default_content_type() {
   _("POST: Content-Type defaults to text/plain");
   let res_headers = new Resource(server.baseURI + "/headers");
   let content = await res_headers.post("data");
-  do_check_eq(content, JSON.stringify({"content-type": "text/plain"}));
+  Assert.equal(content, JSON.stringify({"content-type": "text/plain"}));
 });
 
 add_task(async function test_setHeader() {
   _("setHeader(): setting simple header");
   let res_headers = new Resource(server.baseURI + "/headers");
   res_headers.setHeader("X-What-Is-Weave", "awesome");
-  do_check_eq(res_headers.headers["x-what-is-weave"], "awesome");
+  Assert.equal(res_headers.headers["x-what-is-weave"], "awesome");
   let content = await res_headers.get();
-  do_check_eq(content, JSON.stringify({"x-what-is-weave": "awesome"}));
+  Assert.equal(content, JSON.stringify({"x-what-is-weave": "awesome"}));
 });
 
 add_task(async function test_setHeader_overwrite() {
@@ -427,20 +427,20 @@ add_task(async function test_setHeader_overwrite() {
   let res_headers = new Resource(server.baseURI + "/headers");
   res_headers.setHeader("X-WHAT-is-Weave", "more awesomer");
   res_headers.setHeader("X-Another-Header", "hello world");
-  do_check_eq(res_headers.headers["x-what-is-weave"], "more awesomer");
-  do_check_eq(res_headers.headers["x-another-header"], "hello world");
+  Assert.equal(res_headers.headers["x-what-is-weave"], "more awesomer");
+  Assert.equal(res_headers.headers["x-another-header"], "hello world");
   let content = await res_headers.get();
-  do_check_eq(content, JSON.stringify({"x-another-header": "hello world",
-                                       "x-what-is-weave": "more awesomer"}));
+  Assert.equal(content, JSON.stringify({"x-another-header": "hello world",
+                                        "x-what-is-weave": "more awesomer"}));
 });
 
 add_task(async function test_put_override_content_type() {
   _("PUT: override default Content-Type");
   let res_headers = new Resource(server.baseURI + "/headers");
   res_headers.setHeader("Content-Type", "application/foobar");
-  do_check_eq(res_headers.headers["content-type"], "application/foobar");
+  Assert.equal(res_headers.headers["content-type"], "application/foobar");
   let content = await res_headers.put("data");
-  do_check_eq(content, JSON.stringify({"content-type": "application/foobar"}));
+  Assert.equal(content, JSON.stringify({"content-type": "application/foobar"}));
 });
 
 add_task(async function test_post_override_content_type() {
@@ -448,7 +448,7 @@ add_task(async function test_post_override_content_type() {
   let res_headers = new Resource(server.baseURI + "/headers");
   res_headers.setHeader("Content-Type", "application/foobar");
   let content = await res_headers.post("data");
-  do_check_eq(content, JSON.stringify({"content-type": "application/foobar"}));
+  Assert.equal(content, JSON.stringify({"content-type": "application/foobar"}));
 });
 
 add_task(async function test_weave_backoff() {
@@ -461,31 +461,31 @@ add_task(async function test_weave_backoff() {
 
   let res10 = new Resource(server.baseURI + "/backoff");
   await res10.get();
-  do_check_eq(backoffInterval, 600);
+  Assert.equal(backoffInterval, 600);
 });
 
 add_task(async function test_quota_error() {
   _("X-Weave-Quota-Remaining header notifies observer on successful requests.");
   let res10 = new Resource(server.baseURI + "/quota-error");
   let content = await res10.get();
-  do_check_eq(content.status, 400);
-  do_check_eq(quotaValue, undefined); // HTTP 400, so no observer notification.
+  Assert.equal(content.status, 400);
+  Assert.equal(quotaValue, undefined); // HTTP 400, so no observer notification.
 });
 
 add_task(async function test_quota_notice() {
   let res10 = new Resource(server.baseURI + "/quota-notice");
   let content = await res10.get();
-  do_check_eq(content.status, 200);
-  do_check_eq(quotaValue, 1048576);
+  Assert.equal(content.status, 200);
+  Assert.equal(quotaValue, 1048576);
 });
 
 add_task(async function test_preserve_exceptions() {
   _("Error handling preserves exception information");
   let res11 = new Resource("http://localhost:12345/does/not/exist");
   await Assert.rejects(res11.get(), error => {
-    do_check_neq(error, null);
-    do_check_eq(error.result, Cr.NS_ERROR_CONNECTION_REFUSED);
-    do_check_eq(error.name, "NS_ERROR_CONNECTION_REFUSED");
+    Assert.notEqual(error, null);
+    Assert.equal(error.result, Cr.NS_ERROR_CONNECTION_REFUSED);
+    Assert.equal(error.name, "NS_ERROR_CONNECTION_REFUSED");
     return true;
   });
 });
@@ -495,7 +495,7 @@ add_task(async function test_timeout() {
   let res19 = new Resource(server.baseURI + "/json");
   res19.ABORT_TIMEOUT = 0;
   await Assert.rejects(res19.get(), error => {
-    do_check_eq(error.result, Cr.NS_ERROR_NET_TIMEOUT);
+    Assert.equal(error.result, Cr.NS_ERROR_NET_TIMEOUT);
     return true;
   });
 });
@@ -514,7 +514,7 @@ add_test(function test_uri_construction() {
   let uri2 = CommonUtils.makeURI("http://foo/")
                   .QueryInterface(Ci.nsIURL);
   uri2.query = query;
-  do_check_eq(uri1.query, uri2.query);
+  Assert.equal(uri1.query, uri2.query);
 
   run_next_test();
 });

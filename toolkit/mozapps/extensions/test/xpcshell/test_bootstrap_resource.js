@@ -20,9 +20,9 @@ function run_test() {
                   function() {
 
     AddonManager.getAddonByID("addon6@tests.mozilla.org", function(addon) {
-      do_check_neq(addon, null);
-      do_check_true(addon.isActive);
-      do_check_true(resourceProtocol.hasSubstitution("test-addon-1"));
+      Assert.notEqual(addon, null);
+      Assert.ok(addon.isActive);
+      Assert.ok(resourceProtocol.hasSubstitution("test-addon-1"));
 
       prepare_test({
         "addon6@tests.mozilla.org": [
@@ -31,11 +31,11 @@ function run_test() {
         ]
       });
 
-      do_check_eq(addon.operationsRequiringRestart &
-                  AddonManager.OP_NEEDS_RESTART_DISABLE, 0);
+      Assert.equal(addon.operationsRequiringRestart &
+                   AddonManager.OP_NEEDS_RESTART_DISABLE, 0);
       addon.userDisabled = true;
       ensure_test_completed();
-      do_check_false(resourceProtocol.hasSubstitution("test-addon-1"));
+      Assert.ok(!resourceProtocol.hasSubstitution("test-addon-1"));
 
       prepare_test({
         "addon6@tests.mozilla.org": [
@@ -44,13 +44,13 @@ function run_test() {
         ]
       });
 
-      do_check_eq(addon.operationsRequiringRestart &
-                  AddonManager.OP_NEEDS_RESTART_ENABLE, 0);
+      Assert.equal(addon.operationsRequiringRestart &
+                   AddonManager.OP_NEEDS_RESTART_ENABLE, 0);
       addon.userDisabled = false;
       ensure_test_completed();
-      do_check_true(resourceProtocol.hasSubstitution("test-addon-1"));
+      Assert.ok(resourceProtocol.hasSubstitution("test-addon-1"));
 
-      do_execute_soon(do_test_finished);
+      executeSoon(do_test_finished);
     });
   });
 }

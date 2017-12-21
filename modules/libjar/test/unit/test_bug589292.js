@@ -16,10 +16,10 @@ function run_test() {
   var val;
   try {
     val = channel.contentDisposition;
-    do_check_true(false, "The channel has content disposition?!");
+    Assert.ok(false, "The channel has content disposition?!");
   } catch (e) {
     // This is what we want to happen - there's no underlying channel, so no
     // content-disposition header is available
-    do_check_true(true, "How are you reading this?!");
+    Assert.ok(true, "How are you reading this?!");
   }
 }

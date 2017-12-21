@@ -900,8 +900,9 @@ nsFrameLoader::ReallyStartLoadingInternal()
     // FIXME get error codes from child
     mRemoteBrowser->LoadURL(mURIToLoad);
 
-    if (!mRemoteBrowserShown && !ShowRemoteFrame(ScreenIntSize(0, 0))) {
-      NS_WARNING("[nsFrameLoader] ReallyStartLoadingInternal tried but couldn't show remote browser.\n");
+    if (!mRemoteBrowserShown) {
+      // This can fail if it's too early to show the frame, we will retry later.
+      Unused << ShowRemoteFrame(ScreenIntSize(0, 0));
     }
 
     return NS_OK;

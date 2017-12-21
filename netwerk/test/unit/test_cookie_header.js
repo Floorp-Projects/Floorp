@@ -22,7 +22,7 @@ function check_request_header(chan, name, value) {
     do_throw("Expected to find header '" + name + "' but didn't find it, got exception: " + e);
   }
   dump("Value for header '" + name + "' is '" + chanValue + "'\n");
-  do_check_eq(chanValue, value);
+  Assert.equal(chanValue, value);
 }
 
 var cookieVal = "C1=V1";

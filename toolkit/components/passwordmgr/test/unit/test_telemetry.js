@@ -96,9 +96,9 @@ function testHistogram(histogramId, expectedNonZeroRanges) {
   }
 
   // These are stringified to visualize the differences between the values.
-  do_print("Testing histogram: " + histogramId);
-  do_check_eq(JSON.stringify(actualNonZeroRanges),
-              JSON.stringify(expectedNonZeroRanges));
+  info("Testing histogram: " + histogramId);
+  Assert.equal(JSON.stringify(actualNonZeroRanges),
+               JSON.stringify(expectedNonZeroRanges));
 }
 
 // Tests
@@ -110,7 +110,7 @@ function testHistogram(histogramId, expectedNonZeroRanges) {
 add_task(function test_initialize() {
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     Services.telemetry.canRecordExtended = oldCanRecord;
   });
 
@@ -170,7 +170,7 @@ add_task(function test_disabledHosts_statistics() {
  */
 add_task(function test_settings_statistics() {
   let oldRememberSignons = Services.prefs.getBoolPref("signon.rememberSignons");
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     Services.prefs.setBoolPref("signon.rememberSignons", oldRememberSignons);
   });
 

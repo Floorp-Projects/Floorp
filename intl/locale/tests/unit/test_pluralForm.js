@@ -632,7 +632,7 @@ function run_test()
 
     // Make sure the largest value expected matches the number of plural forms
     let maxExpect = Math.max.apply(this, expect);
-    do_check_eq(maxExpect, numForms());
+    Assert.equal(maxExpect, numForms());
 
     // Make a string of numbers, e.g., 1;2;3;4;5
     let words = [];
@@ -643,7 +643,7 @@ function run_test()
     // Make sure we get the expected number
     for (let [index, number] of expect.entries()) {
       print(["Plural form of ", index, " should be ", number, " (", words, ")"].join(""));
-      do_check_eq(get(index, words), number);
+      Assert.equal(get(index, words), number);
     }
   }
 }

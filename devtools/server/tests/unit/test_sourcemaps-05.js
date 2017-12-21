@@ -27,14 +27,14 @@ function run_test() {
 
 function test_relative_source_map() {
   gThreadClient.addOneTimeListener("newSource", function _onNewSource(event, packet) {
-    do_check_eq(event, "newSource");
-    do_check_eq(packet.type, "newSource");
-    do_check_true(!!packet.source);
+    Assert.equal(event, "newSource");
+    Assert.equal(packet.type, "newSource");
+    Assert.ok(!!packet.source);
 
-    do_check_true(packet.source.url.indexOf("sourcemapped.coffee") !== -1,
-                  "The new source should be a coffee file.");
-    do_check_eq(packet.source.url.indexOf("sourcemapped.js"), -1,
-                "The new source should not be a js file.");
+    Assert.ok(packet.source.url.indexOf("sourcemapped.coffee") !== -1,
+              "The new source should be a coffee file.");
+    Assert.equal(packet.source.url.indexOf("sourcemapped.js"), -1,
+                 "The new source should not be a js file.");
 
     finishClient(gClient);
   });

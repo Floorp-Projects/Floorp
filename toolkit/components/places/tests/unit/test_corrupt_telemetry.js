@@ -20,8 +20,8 @@ add_task(async function() {
                       .counts[3];
   Assert.equal(count, 0, "There should be no telemetry");
 
-  do_check_eq(PlacesUtils.history.databaseStatus,
-              PlacesUtils.history.DATABASE_STATUS_CORRUPT);
+  Assert.equal(PlacesUtils.history.databaseStatus,
+               PlacesUtils.history.DATABASE_STATUS_CORRUPT);
 
   count = Services.telemetry
                   .getHistogramById("PLACES_DATABASE_CORRUPTION_HANDLING_STAGE")

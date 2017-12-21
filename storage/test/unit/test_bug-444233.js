@@ -24,8 +24,8 @@ function test_bug444233() {
 
   // Check that there are 2 results
   var stmt = createStatement("SELECT COUNT(*) AS number FROM test_bug444233");
-  do_check_true(stmt.executeStep());
-  do_check_eq(2, stmt.row.number);
+  Assert.ok(stmt.executeStep());
+  Assert.equal(2, stmt.row.number);
   stmt.reset();
   stmt.finalize();
 

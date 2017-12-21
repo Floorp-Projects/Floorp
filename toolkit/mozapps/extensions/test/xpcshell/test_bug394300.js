@@ -14,7 +14,7 @@ var updateListener = {
   _count: 0,
 
   onUpdateAvailable: function onAddonUpdateEnded(aAddon, aInstall) {
-    do_check_eq(aInstall.version, 10);
+    Assert.equal(aInstall.version, 10);
   },
 
   onNoUpdateAvailable: function onNoUpdateAvailable(aAddon) {
@@ -41,8 +41,8 @@ function run_test() {
     AddonManager.getAddonsByIDs(["bug394300_1@tests.mozilla.org",
                                  "bug394300_2@tests.mozilla.org"], function(updates) {
 
-      do_check_neq(updates[0], null);
-      do_check_neq(updates[1], null);
+      Assert.notEqual(updates[0], null);
+      Assert.notEqual(updates[1], null);
 
       server = new HttpServer();
       server.registerDirectory("/", do_get_file("data"));

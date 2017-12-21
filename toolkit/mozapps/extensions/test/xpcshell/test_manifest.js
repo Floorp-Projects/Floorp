@@ -372,175 +372,175 @@ function run_test() {
                                          a11, a12, a13, a14, a15, a16, a17, a18, a19, a20,
                                          a21, a22, a23, a24, a25, a26]) {
 
-    do_check_neq(a1, null);
-    do_check_eq(a1.id, "addon1@tests.mozilla.org");
-    do_check_eq(a1.type, "extension");
-    do_check_eq(a1.version, "1.0");
-    do_check_eq(a1.optionsType, null);
-    do_check_eq(a1.aboutURL, "chrome://test/content/about.xul");
-    do_check_eq(a1.iconURL, "chrome://test/skin/icon.png");
-    do_check_eq(a1.icon64URL, "chrome://test/skin/icon64.png");
-    do_check_eq(a1.icons[32], "chrome://test/skin/icon.png");
-    do_check_eq(a1.icons[64], "chrome://test/skin/icon64.png");
-    do_check_eq(a1.name, "Test Addon 1");
-    do_check_eq(a1.description, "Test Description");
-    do_check_eq(a1.creator, "Test Creator");
-    do_check_eq(a1.homepageURL, "http://www.example.com");
-    do_check_eq(a1.developers[0], "Test Developer 1");
-    do_check_eq(a1.developers[1], "Test Developer 2");
-    do_check_eq(a1.translators[0], "Test Translator 1");
-    do_check_eq(a1.translators[1], "Test Translator 2");
-    do_check_eq(a1.contributors[0], "Test Contributor 1");
-    do_check_eq(a1.contributors[1], "Test Contributor 2");
-    do_check_true(a1.isActive);
-    do_check_false(a1.userDisabled);
-    do_check_false(a1.appDisabled);
-    do_check_true(a1.isCompatible);
-    do_check_true(a1.providesUpdatesSecurely);
-    do_check_eq(a1.blocklistState, AM_Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.id, "addon1@tests.mozilla.org");
+    Assert.equal(a1.type, "extension");
+    Assert.equal(a1.version, "1.0");
+    Assert.equal(a1.optionsType, null);
+    Assert.equal(a1.aboutURL, "chrome://test/content/about.xul");
+    Assert.equal(a1.iconURL, "chrome://test/skin/icon.png");
+    Assert.equal(a1.icon64URL, "chrome://test/skin/icon64.png");
+    Assert.equal(a1.icons[32], "chrome://test/skin/icon.png");
+    Assert.equal(a1.icons[64], "chrome://test/skin/icon64.png");
+    Assert.equal(a1.name, "Test Addon 1");
+    Assert.equal(a1.description, "Test Description");
+    Assert.equal(a1.creator, "Test Creator");
+    Assert.equal(a1.homepageURL, "http://www.example.com");
+    Assert.equal(a1.developers[0], "Test Developer 1");
+    Assert.equal(a1.developers[1], "Test Developer 2");
+    Assert.equal(a1.translators[0], "Test Translator 1");
+    Assert.equal(a1.translators[1], "Test Translator 2");
+    Assert.equal(a1.contributors[0], "Test Contributor 1");
+    Assert.equal(a1.contributors[1], "Test Contributor 2");
+    Assert.ok(a1.isActive);
+    Assert.ok(!a1.userDisabled);
+    Assert.ok(!a1.appDisabled);
+    Assert.ok(a1.isCompatible);
+    Assert.ok(a1.providesUpdatesSecurely);
+    Assert.equal(a1.blocklistState, AM_Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
 
-    do_check_neq(a2, null);
-    do_check_eq(a2.id, "addon2@tests.mozilla.org");
-    do_check_true(a2.isActive);
-    do_check_false(a2.userDisabled);
-    do_check_false(a2.appDisabled);
-    do_check_true(a2.providesUpdatesSecurely);
+    Assert.notEqual(a2, null);
+    Assert.equal(a2.id, "addon2@tests.mozilla.org");
+    Assert.ok(a2.isActive);
+    Assert.ok(!a2.userDisabled);
+    Assert.ok(!a2.appDisabled);
+    Assert.ok(a2.providesUpdatesSecurely);
 
-    do_check_neq(a3, null);
-    do_check_eq(a3.id, "addon3@tests.mozilla.org");
-    do_check_false(a3.isActive);
-    do_check_false(a3.userDisabled);
-    do_check_true(a3.appDisabled);
-    do_check_false(a3.providesUpdatesSecurely);
+    Assert.notEqual(a3, null);
+    Assert.equal(a3.id, "addon3@tests.mozilla.org");
+    Assert.ok(!a3.isActive);
+    Assert.ok(!a3.userDisabled);
+    Assert.ok(a3.appDisabled);
+    Assert.ok(!a3.providesUpdatesSecurely);
 
-    do_check_neq(a4, null);
-    do_check_eq(a4.id, "addon4@tests.mozilla.org");
-    do_check_true(a4.isActive);
-    do_check_false(a4.userDisabled);
-    do_check_false(a4.appDisabled);
-    do_check_true(a4.providesUpdatesSecurely);
+    Assert.notEqual(a4, null);
+    Assert.equal(a4.id, "addon4@tests.mozilla.org");
+    Assert.ok(a4.isActive);
+    Assert.ok(!a4.userDisabled);
+    Assert.ok(!a4.appDisabled);
+    Assert.ok(a4.providesUpdatesSecurely);
 
-    do_check_neq(a5, null);
-    do_check_true(a5.isActive);
-    do_check_false(a5.userDisabled);
-    do_check_false(a5.appDisabled);
-    do_check_true(a5.isCompatible);
+    Assert.notEqual(a5, null);
+    Assert.ok(a5.isActive);
+    Assert.ok(!a5.userDisabled);
+    Assert.ok(!a5.appDisabled);
+    Assert.ok(a5.isCompatible);
 
-    do_check_neq(a6, null);
-    do_check_true(a6.isActive);
-    do_check_false(a6.userDisabled);
-    do_check_false(a6.appDisabled);
-    do_check_true(a6.isCompatible);
+    Assert.notEqual(a6, null);
+    Assert.ok(a6.isActive);
+    Assert.ok(!a6.userDisabled);
+    Assert.ok(!a6.appDisabled);
+    Assert.ok(a6.isCompatible);
 
-    do_check_neq(a7, null);
-    do_check_false(a7.isActive);
-    do_check_false(a7.userDisabled);
-    do_check_true(a7.appDisabled);
-    do_check_false(a7.isCompatible);
+    Assert.notEqual(a7, null);
+    Assert.ok(!a7.isActive);
+    Assert.ok(!a7.userDisabled);
+    Assert.ok(a7.appDisabled);
+    Assert.ok(!a7.isCompatible);
 
-    do_check_neq(a8, null);
-    do_check_false(a8.isActive);
-    do_check_false(a8.userDisabled);
-    do_check_true(a8.appDisabled);
-    do_check_false(a8.isCompatible);
+    Assert.notEqual(a8, null);
+    Assert.ok(!a8.isActive);
+    Assert.ok(!a8.userDisabled);
+    Assert.ok(a8.appDisabled);
+    Assert.ok(!a8.isCompatible);
 
-    do_check_neq(a9, null);
-    do_check_true(a9.isActive);
-    do_check_false(a9.userDisabled);
-    do_check_false(a9.appDisabled);
-    do_check_true(a9.isCompatible);
+    Assert.notEqual(a9, null);
+    Assert.ok(a9.isActive);
+    Assert.ok(!a9.userDisabled);
+    Assert.ok(!a9.appDisabled);
+    Assert.ok(a9.isCompatible);
 
-    do_check_neq(a10, null);
-    do_check_false(a10.isActive);
-    do_check_false(a10.userDisabled);
-    do_check_true(a10.appDisabled);
-    do_check_false(a10.isCompatible);
+    Assert.notEqual(a10, null);
+    Assert.ok(!a10.isActive);
+    Assert.ok(!a10.userDisabled);
+    Assert.ok(a10.appDisabled);
+    Assert.ok(!a10.isCompatible);
 
-    do_check_neq(a11, null);
-    do_check_true(a11.isActive);
-    do_check_false(a11.userDisabled);
-    do_check_false(a11.appDisabled);
-    do_check_true(a11.isCompatible);
+    Assert.notEqual(a11, null);
+    Assert.ok(a11.isActive);
+    Assert.ok(!a11.userDisabled);
+    Assert.ok(!a11.appDisabled);
+    Assert.ok(a11.isCompatible);
 
-    do_check_neq(a12, null);
-    do_check_false(a12.isActive);
-    do_check_false(a12.userDisabled);
-    do_check_true(a12.appDisabled);
-    do_check_false(a12.isCompatible);
+    Assert.notEqual(a12, null);
+    Assert.ok(!a12.isActive);
+    Assert.ok(!a12.userDisabled);
+    Assert.ok(a12.appDisabled);
+    Assert.ok(!a12.isCompatible);
 
-    do_check_neq(a13, null);
-    do_check_false(a13.isActive);
-    do_check_false(a13.userDisabled);
-    do_check_true(a13.appDisabled);
-    do_check_false(a13.isCompatible);
+    Assert.notEqual(a13, null);
+    Assert.ok(!a13.isActive);
+    Assert.ok(!a13.userDisabled);
+    Assert.ok(a13.appDisabled);
+    Assert.ok(!a13.isCompatible);
 
-    do_check_neq(a14, null);
-    do_check_true(a14.isActive);
-    do_check_false(a14.userDisabled);
-    do_check_false(a14.appDisabled);
-    do_check_true(a14.isCompatible);
+    Assert.notEqual(a14, null);
+    Assert.ok(a14.isActive);
+    Assert.ok(!a14.userDisabled);
+    Assert.ok(!a14.appDisabled);
+    Assert.ok(a14.isCompatible);
 
-    do_check_neq(a15, null);
-    do_check_true(a15.isActive);
-    do_check_false(a15.userDisabled);
-    do_check_false(a15.appDisabled);
-    do_check_true(a15.isCompatible);
-    do_check_true(a15.providesUpdatesSecurely);
+    Assert.notEqual(a15, null);
+    Assert.ok(a15.isActive);
+    Assert.ok(!a15.userDisabled);
+    Assert.ok(!a15.appDisabled);
+    Assert.ok(a15.isCompatible);
+    Assert.ok(a15.providesUpdatesSecurely);
 
-    do_check_neq(a16, null);
-    do_check_true(a16.isActive);
-    do_check_false(a16.userDisabled);
-    do_check_false(a16.appDisabled);
-    do_check_true(a16.isCompatible);
-    do_check_true(a16.providesUpdatesSecurely);
+    Assert.notEqual(a16, null);
+    Assert.ok(a16.isActive);
+    Assert.ok(!a16.userDisabled);
+    Assert.ok(!a16.appDisabled);
+    Assert.ok(a16.isCompatible);
+    Assert.ok(a16.providesUpdatesSecurely);
 
     // An obsolete optionsType means the add-on isn't registered.
-    do_check_eq(a17, null);
+    Assert.equal(a17, null);
 
-    do_check_neq(a18, null);
-    do_check_true(a18.isActive);
-    do_check_false(a18.userDisabled);
-    do_check_false(a18.appDisabled);
-    do_check_true(a18.isCompatible);
-    do_check_eq(a18.optionsURL, null);
-    do_check_eq(a18.optionsType, null);
+    Assert.notEqual(a18, null);
+    Assert.ok(a18.isActive);
+    Assert.ok(!a18.userDisabled);
+    Assert.ok(!a18.appDisabled);
+    Assert.ok(a18.isCompatible);
+    Assert.equal(a18.optionsURL, null);
+    Assert.equal(a18.optionsType, null);
 
-    do_check_eq(a19, null);
+    Assert.equal(a19, null);
 
     // Even with a defined optionsURL optionsType is null by default.
-    do_check_neq(a20, null);
-    do_check_true(a20.isActive);
-    do_check_false(a20.userDisabled);
-    do_check_false(a20.appDisabled);
-    do_check_true(a20.isCompatible);
-    do_check_eq(a20.optionsURL, "chrome://test/content/options.xul");
-    do_check_eq(a20.optionsType, null);
+    Assert.notEqual(a20, null);
+    Assert.ok(a20.isActive);
+    Assert.ok(!a20.userDisabled);
+    Assert.ok(!a20.appDisabled);
+    Assert.ok(a20.isCompatible);
+    Assert.equal(a20.optionsURL, "chrome://test/content/options.xul");
+    Assert.equal(a20.optionsType, null);
 
-    do_check_neq(a21, null);
-    do_check_true(a21.isActive);
-    do_check_false(a21.userDisabled);
-    do_check_false(a21.appDisabled);
-    do_check_true(a21.isCompatible);
-    do_check_eq(a21.optionsURL, "chrome://test/content/options.xul");
-    do_check_eq(a21.optionsType, AddonManager.OPTIONS_TYPE_TAB);
-
-    // An obsolete optionsType means the add-on isn't registered.
-    do_check_eq(a22, null);
+    Assert.notEqual(a21, null);
+    Assert.ok(a21.isActive);
+    Assert.ok(!a21.userDisabled);
+    Assert.ok(!a21.appDisabled);
+    Assert.ok(a21.isCompatible);
+    Assert.equal(a21.optionsURL, "chrome://test/content/options.xul");
+    Assert.equal(a21.optionsType, AddonManager.OPTIONS_TYPE_TAB);
 
     // An obsolete optionsType means the add-on isn't registered.
-    do_check_eq(a23, null);
-
-    do_check_neq(a24, null);
-    do_check_eq(a24.optionsType, null);
-    do_check_eq(a24.optionsURL, null);
-
-    do_check_neq(a25, null);
-    do_check_eq(a25.optionsType, null);
-    do_check_eq(a25.optionsURL, null);
+    Assert.equal(a22, null);
 
     // An obsolete optionsType means the add-on isn't registered.
-    do_check_eq(a26, null);
+    Assert.equal(a23, null);
 
-    do_execute_soon(do_test_finished);
+    Assert.notEqual(a24, null);
+    Assert.equal(a24.optionsType, null);
+    Assert.equal(a24.optionsURL, null);
+
+    Assert.notEqual(a25, null);
+    Assert.equal(a25.optionsType, null);
+    Assert.equal(a25.optionsURL, null);
+
+    // An obsolete optionsType means the add-on isn't registered.
+    Assert.equal(a26, null);
+
+    executeSoon(do_test_finished);
   });
 }

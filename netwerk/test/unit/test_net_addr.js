@@ -25,13 +25,13 @@ function TestServer() {
   // any port (-1), loopback only (true), default backlog (-1)
   this.listener = ServerSocket(-1, true, -1);
   this.port = this.listener.port;
-  do_print('server: listening on ' + this.port);
+  info('server: listening on ' + this.port);
   this.listener.asyncListen(this);
 }
 
 TestServer.prototype = {
   onSocketAccepted: function(socket, trans) {
-    do_print('server: got client connection');
+    info('server: got client connection');
 
     // one connection at a time.
     if (this.input !== null) {
@@ -89,11 +89,11 @@ TestServer.prototype = {
  * Compares two nsINetAddr objects and ensures they are logically equivalent.
  */
 function checkAddrEqual(lhs, rhs) {
-  do_check_eq(lhs.family, rhs.family);
+  Assert.equal(lhs.family, rhs.family);
 
   if (lhs.family === Ci.nsINetAddr.FAMILY_INET) {
-    do_check_eq(lhs.address, rhs.address);
-    do_check_eq(lhs.port, rhs.port);
+    Assert.equal(lhs.address, rhs.address);
+    Assert.equal(lhs.port, rhs.port);
   }
   
   /* TODO: fully support ipv6 and local */
@@ -142,21 +142,21 @@ function testIpv4() {
     var peerAddr = testDataStore.transport.getScriptablePeerAddr();
 
     // check peerAddr against expected values
-    do_check_eq(peerAddr.family, Ci.nsINetAddr.FAMILY_INET);
-    do_check_eq(peerAddr.port, testDataStore.transport.port);
-    do_check_eq(peerAddr.port, serv.port);
-    do_check_eq(peerAddr.address, "127.0.0.1");
+    Assert.equal(peerAddr.family, Ci.nsINetAddr.FAMILY_INET);
+    Assert.equal(peerAddr.port, testDataStore.transport.port);
+    Assert.equal(peerAddr.port, serv.port);
+    Assert.equal(peerAddr.address, "127.0.0.1");
 
     // check selfAddr against expected values
-    do_check_eq(selfAddr.family, Ci.nsINetAddr.FAMILY_INET);
-    do_check_eq(selfAddr.address, "127.0.0.1");
+    Assert.equal(selfAddr.family, Ci.nsINetAddr.FAMILY_INET);
+    Assert.equal(selfAddr.address, "127.0.0.1");
 
     // check that selfAddr = server.peerAddr and vice versa.
     checkAddrEqual(selfAddr, serv.peerAddr);
     checkAddrEqual(peerAddr, serv.selfAddr);
 
     testDataStore = null;
-    do_execute_soon(run_next_test);
+    executeSoon(run_next_test);
   };
 
   // Useful timeout for debugging test hangs
@@ -189,7 +189,7 @@ function run_test() {
             .getService(Ci.nsISocketTransportService);
   serv = new TestServer();
 
-  do_register_cleanup(function(){ serv.stop(); });
+  registerCleanupFunction(function(){ serv.stop(); });
 
   add_test(testIpv4);
   /* TODO: testIpv6 */

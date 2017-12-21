@@ -189,7 +189,7 @@ class ExtensionWrapper {
     this.messageQueue = new Set();
 
 
-    this.testScope.do_register_cleanup(() => {
+    this.testScope.registerCleanupFunction(() => {
       this.clearMessageQueues();
 
       if (this.state == "pending" || this.state == "running") {
@@ -234,7 +234,7 @@ class ExtensionWrapper {
     extension.on("test-done", this.handleResult);
     extension.on("test-message", this.handleMessage);
 
-    this.testScope.do_print(`Extension attached`);
+    this.testScope.info(`Extension attached`);
   }
 
   clearMessageQueues() {
@@ -260,7 +260,7 @@ class ExtensionWrapper {
         break;
 
       case "test-log":
-        this.testScope.do_print(msg);
+        this.testScope.info(msg);
         break;
 
       case "test-result":
@@ -645,7 +645,7 @@ var ExtensionTestUtils = {
     Services.dirsvc.registerProvider(dirProvider);
 
 
-    scope.do_register_cleanup(() => {
+    scope.registerCleanupFunction(() => {
       tmpD.remove(true);
       Services.dirsvc.unregisterProvider(dirProvider);
 

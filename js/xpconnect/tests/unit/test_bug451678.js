@@ -14,5 +14,5 @@ function run_test() {
                        .getService(Ci.mozIJSSubScriptLoader);
   var srvScope = {};
   scriptLoader.loadSubScript(uri.spec, srvScope);
-  do_check_true('makeTags' in srvScope && srvScope.makeTags instanceof Function);
+  Assert.ok('makeTags' in srvScope && srvScope.makeTags instanceof Function);
 }

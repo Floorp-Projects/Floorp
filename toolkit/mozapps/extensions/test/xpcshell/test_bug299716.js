@@ -124,7 +124,7 @@ function run_test() {
   // Make sure we can actually get our data files.
   const xpiFile = addonsDir.clone();
   xpiFile.append("test_bug299716_a_2.xpi");
-  do_check_true(xpiFile.exists());
+  Assert.ok(xpiFile.exists());
 
   // Create and configure the HTTP server.
   testserver = new HttpServer();
@@ -138,11 +138,11 @@ function run_test() {
                         .createInstance(Ci.nsIXMLHttpRequest);
   xhr.open("GET", "http://localhost:4444/addons/test_bug299716_a_2.xpi", false);
   xhr.send(null);
-  do_check_true(xhr.status == 200);
+  Assert.ok(xhr.status == 200);
 
   xhr.open("GET", "http://localhost:4444/data/test_bug299716.rdf", false);
   xhr.send(null);
-  do_check_true(xhr.status == 200);
+  Assert.ok(xhr.status == 200);
 
   // Start the real test.
   startupManager();

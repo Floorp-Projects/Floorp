@@ -19,7 +19,7 @@ function run_test() {
     let outMAR = tempDir.clone();
     outMAR.append("out.mar");
     if (checkNoMAR) {
-      do_check_false(outMAR.exists());
+      Assert.ok(!outMAR.exists());
     }
 
     // Create the actual MAR file.
@@ -106,5 +106,5 @@ function run_test() {
   };
 
   // Run all the tests
-  do_check_eq(run_tests(tests), Object.keys(tests).length - 1);
+  Assert.equal(run_tests(tests), Object.keys(tests).length - 1);
 }

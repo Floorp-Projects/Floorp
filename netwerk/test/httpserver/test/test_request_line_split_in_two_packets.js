@@ -65,7 +65,7 @@ function checkVeryLongRequestLine(data)
   print("iter object: " + iter);
 
   // Status-Line
-  do_check_eq(iter.next().value, "HTTP/1.1 200 TEST PASSED");
+  Assert.equal(iter.next().value, "HTTP/1.1 200 TEST PASSED");
 
   skipHeaders(iter);
 
@@ -112,7 +112,7 @@ function checkLotsOfLeadingBlankLines(data)
   print("data length: " + data.length);
   print("iter object: " + iter);
 
-  do_check_eq(iter.next().value, "HTTP/1.1 200 TEST PASSED");
+  Assert.equal(iter.next().value, "HTTP/1.1 200 TEST PASSED");
 
   skipHeaders(iter);
 

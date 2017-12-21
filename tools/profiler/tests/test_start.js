@@ -13,13 +13,13 @@ function run_test() {
   if (!profiler)
     return;
 
-  do_check_true(!profiler.IsActive());
+  Assert.ok(!profiler.IsActive());
 
   profiler.StartProfiler(10, 100, [], 0);
 
-  do_check_true(profiler.IsActive());
+  Assert.ok(profiler.IsActive());
 
   profiler.StopProfiler();
 
-  do_check_true(!profiler.IsActive());
+  Assert.ok(!profiler.IsActive());
 }

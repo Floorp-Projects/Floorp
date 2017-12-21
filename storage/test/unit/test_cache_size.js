@@ -25,8 +25,8 @@ function check_size(dbOpener, file, pageSize, expectedCacheSize) {
 
   // Check the page size change worked.
   let stmt = db.createStatement("PRAGMA page_size");
-  do_check_true(stmt.executeStep());
-  do_check_eq(stmt.row.page_size, pageSize);
+  Assert.ok(stmt.executeStep());
+  Assert.equal(stmt.row.page_size, pageSize);
   stmt.finalize();
 
   // Create a simple table.
@@ -38,15 +38,15 @@ function check_size(dbOpener, file, pageSize, expectedCacheSize) {
 
   // Check cache size is as expected.
   stmt = db.createStatement("PRAGMA cache_size");
-  do_check_true(stmt.executeStep());
-  do_check_eq(stmt.row.cache_size, expectedCacheSize);
+  Assert.ok(stmt.executeStep());
+  Assert.equal(stmt.row.cache_size, expectedCacheSize);
   stmt.finalize();
 }
 
 function new_file(name) {
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append(name + ".sqlite");
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
   return file;
 }
 

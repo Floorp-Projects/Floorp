@@ -48,8 +48,8 @@ function test_component(contractid) {
     var a = val1;
     var b = {value: val2};
     var rv = o[name].call(o, a, b);
-    do_check_true(comparator(rv, val2));
-    do_check_true(comparator(val1, b.value));
+    Assert.ok(comparator(rv, val2));
+    Assert.ok(comparator(val1, b.value));
   };
 
   function doIsTest(name, val1, val1Is, val2, val2Is, valComparator, isComparator) {
@@ -61,10 +61,10 @@ function test_component(contractid) {
     var bIs = {value: val2Is};
     var rvIs = {};
     var rv = o[name].call(o, aIs, a, bIs, b, rvIs);
-    do_check_true(valComparator(rv, val2));
-    do_check_true(isComparator(rvIs.value, val2Is));
-    do_check_true(valComparator(val1, b.value));
-    do_check_true(isComparator(val1Is, bIs.value));
+    Assert.ok(valComparator(rv, val2));
+    Assert.ok(isComparator(rvIs.value, val2Is));
+    Assert.ok(valComparator(val1, b.value));
+    Assert.ok(isComparator(val1Is, bIs.value));
   }
 
   // Special-purpose function for testing arrays of iid_is interfaces, where we
@@ -79,12 +79,12 @@ function test_component(contractid) {
     var rvSize = {};
     var rvIID = {};
     var rv = o[name].call(o, aSize, aIID, a, bSize, bIID, b, rvSize, rvIID);
-    do_check_true(arrayComparator(interfaceComparator)(rv, val2));
-    do_check_true(standardComparator(rvSize.value, val2Size));
-    do_check_true(dotEqualsComparator(rvIID.value, val2IID));
-    do_check_true(arrayComparator(interfaceComparator)(val1, b.value));
-    do_check_true(standardComparator(val1Size, bSize.value));
-    do_check_true(dotEqualsComparator(val1IID, bIID.value));
+    Assert.ok(arrayComparator(interfaceComparator)(rv, val2));
+    Assert.ok(standardComparator(rvSize.value, val2Size));
+    Assert.ok(dotEqualsComparator(rvIID.value, val2IID));
+    Assert.ok(arrayComparator(interfaceComparator)(val1, b.value));
+    Assert.ok(standardComparator(val1Size, bSize.value));
+    Assert.ok(dotEqualsComparator(val1IID, bIID.value));
   }
 
   // Check that the given call (type mismatch) results in an exception being thrown.
@@ -95,11 +95,11 @@ function test_component(contractid) {
       doIsTest(name, val1, val1Size, val2, val2Size, comparator);
       
       // An exception was not thrown as would have been expected.
-      do_check_true(false);
+      Assert.ok(false);
     }
     catch (e) {
       // An exception was thrown as expected.
-      do_check_true(true);
+      Assert.ok(true);
     }
   }
 
@@ -109,7 +109,7 @@ function test_component(contractid) {
     var a = val1;
     var b = {value: ""};
     o[name].call(o, a, b);
-    do_check_eq(val1, b.value);
+    Assert.equal(val1, b.value);
   }
 
   // Test all the different types
@@ -137,7 +137,7 @@ function test_component(contractid) {
   // inouts.
   let outAString = {};
   o.testOutAString(outAString);
-  do_check_eq(outAString.value, "out");
+  Assert.equal(outAString.value, "out");
   try { o.testOutAString(undefined); } catch (e) {} // Don't crash
   try { o.testOutAString(null); } catch (e) {} // Don't crash
   try { o.testOutAString("string"); } catch (e) {} // Don't crash
@@ -189,7 +189,7 @@ function test_component(contractid) {
                                     [makeB(), makeB(), makeB()], 3, Ci['nsIXPCTestInterfaceB']);
 
   // Test optional array size.
-  do_check_eq(o.testStringArrayOptionalSize(["some", "string", "array"]), "somestringarray");
+  Assert.equal(o.testStringArrayOptionalSize(["some", "string", "array"]), "somestringarray");
 
   // Test incorrect (too big) array size parameter; this should throw NOT_ENOUGH_ELEMENTS.
   doTypedArrayMismatchTest("testShortArray", new Int16Array([-3, 7, 4]), 4,

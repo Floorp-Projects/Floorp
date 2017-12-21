@@ -519,8 +519,11 @@ int main()
       TestHook(TestNtWriteFile, "ntdll.dll", "NtWriteFile") &&
       TestHook(TestNtWriteFileGather, "ntdll.dll", "NtWriteFileGather") &&
       TestHook(TestNtQueryFullAttributesFile, "ntdll.dll", "NtQueryFullAttributesFile") &&
+#ifndef MOZ_ASAN
       // Bug 733892: toolkit/crashreporter/nsExceptionHandler.cpp
+      // This fails on ASan because the ASan runtime already hooked this function
       TestHook(TestSetUnhandledExceptionFilter, "kernel32.dll", "SetUnhandledExceptionFilter") &&
+#endif
 #ifdef _M_IX86
       // Bug 670967: xpcom/base/AvailableMemoryTracker.cpp
       TestHook(TestVirtualAlloc, "kernel32.dll", "VirtualAlloc") &&

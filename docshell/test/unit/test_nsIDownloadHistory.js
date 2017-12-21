@@ -20,14 +20,14 @@ function testLinkVistedObserver()
 
   var gh = Cc["@mozilla.org/browser/global-history;2"].
            getService(Ci.nsIGlobalHistory2);
-  do_check_false(gh.isVisited(testURI));
+  Assert.ok(!gh.isVisited(testURI));
 
   var topicReceived = false;
   var obs = {
     observe: function tlvo_observe(aSubject, aTopic, aData)
     {
       if (NS_LINK_VISITED_EVENT_TOPIC == aTopic) {
-        do_check_eq(testURI, aSubject);
+        Assert.equal(testURI, aSubject);
         topicReceived = true;
       }
     }
@@ -40,8 +40,8 @@ function testLinkVistedObserver()
   var dh = Components.classesByID[NS_DOWNLOADHISTORY_CID].
            getService(Ci.nsIDownloadHistory);
   dh.addDownload(testURI);
-  do_check_true(topicReceived);
-  do_check_true(gh.isVisited(testURI));
+  Assert.ok(topicReceived);
+  Assert.ok(gh.isVisited(testURI));
 }
 
 var tests = [testLinkVistedObserver];

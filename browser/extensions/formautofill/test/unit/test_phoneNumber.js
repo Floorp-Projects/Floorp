@@ -9,46 +9,46 @@ Cu.import("resource://formautofill/phonenumberutils/PhoneNumberNormalizer.jsm");
 
 function IsPlain(dial, expected) {
   let result = PhoneNumber.IsPlain(dial);
-  do_check_eq(result, expected);
+  Assert.equal(result, expected);
 }
 
 function Normalize(dial, expected) {
   let result = PhoneNumberNormalizer.Normalize(dial);
-  do_check_eq(result, expected);
+  Assert.equal(result, expected);
 }
 
 function CantParse(dial, currentRegion) {
   let result = PhoneNumber.Parse(dial, currentRegion);
-  do_check_null(result);
+  Assert.equal(null, result);
 }
 
 function Parse(dial, currentRegion) {
   let result = PhoneNumber.Parse(dial, currentRegion);
-  do_check_neq(result, null);
+  Assert.notEqual(result, null);
   return result;
 }
 
 function Test(dial, currentRegion, nationalNumber, region) {
   let result = Parse(dial, currentRegion);
-  do_check_eq(result.nationalNumber, nationalNumber);
-  do_check_eq(result.region, region);
+  Assert.equal(result.nationalNumber, nationalNumber);
+  Assert.equal(result.region, region);
   return result;
 }
 
 function TestProperties(dial, currentRegion) {
   let result = Parse(dial, currentRegion);
-  do_check_true(result.internationalFormat);
-  do_check_true(result.internationalNumber);
-  do_check_true(result.nationalFormat);
-  do_check_true(result.nationalNumber);
-  do_check_true(result.countryName);
-  do_check_true(result.countryCode);
+  Assert.ok(result.internationalFormat);
+  Assert.ok(result.internationalNumber);
+  Assert.ok(result.nationalFormat);
+  Assert.ok(result.nationalNumber);
+  Assert.ok(result.countryName);
+  Assert.ok(result.countryCode);
 }
 
 function Format(dial, currentRegion, nationalNumber, region, nationalFormat, internationalFormat) {
   let result = Test(dial, currentRegion, nationalNumber, region);
-  do_check_eq(result.nationalFormat, nationalFormat);
-  do_check_eq(result.internationalFormat, internationalFormat);
+  Assert.equal(result.nationalFormat, nationalFormat);
+  Assert.equal(result.internationalFormat, internationalFormat);
   return result;
 }
 
@@ -240,7 +240,7 @@ add_task(async function test_phoneNumber() {
   AllEqual(["01187654321", "0411187654321", "551187654321", "90411187654321", "+551187654321"], "BR");
   AllEqual(["011987654321", "04111987654321", "5511987654321", "904111987654321", "+5511987654321"], "BR");
 
-  do_check_eq(PhoneNumberNormalizer.Normalize("123abc", true), "123");
-  do_check_eq(PhoneNumberNormalizer.Normalize("12345", true), "12345");
-  do_check_eq(PhoneNumberNormalizer.Normalize("1abcd", false), "12223");
+  Assert.equal(PhoneNumberNormalizer.Normalize("123abc", true), "123");
+  Assert.equal(PhoneNumberNormalizer.Normalize("12345", true), "12345");
+  Assert.equal(PhoneNumberNormalizer.Normalize("1abcd", false), "12223");
 });

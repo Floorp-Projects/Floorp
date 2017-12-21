@@ -23,7 +23,7 @@ var listener = {
   },
 
   onStopRequest: function (request, ctx, status) {
-      do_check_eq(status, Components.results.NS_OK);
+      Assert.equal(status, Components.results.NS_OK);
       server.stop(do_test_finished);
   },
 

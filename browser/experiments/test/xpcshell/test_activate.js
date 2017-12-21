@@ -33,7 +33,7 @@ add_task(async function test_setup() {
   let port = gHttpServer.identity.primaryPort;
   gHttpRoot = "http://localhost:" + port + "/";
   gHttpServer.registerDirectory("/", do_get_cwd());
-  do_register_cleanup(() => gHttpServer.stop(() => {}));
+  registerCleanupFunction(() => gHttpServer.stop(() => {}));
 
   patchPolicy(gPolicy, {
     updatechannel: () => "nightly",

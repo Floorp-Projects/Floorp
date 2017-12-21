@@ -14,12 +14,12 @@ const TXT_URL = BASE + "/" + TXT_FILE;
 function setup() {
   let downloadDir = FileUtils.getDir("TmpD", ["downloads"]);
   downloadDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  do_print(`Using download directory ${downloadDir.path}`);
+  info(`Using download directory ${downloadDir.path}`);
 
   Services.prefs.setIntPref("browser.download.folderList", 2);
   Services.prefs.setComplexValue("browser.download.dir", Ci.nsIFile, downloadDir);
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.prefs.clearUserPref("browser.download.folderList");
     Services.prefs.clearUserPref("browser.download.dir");
 

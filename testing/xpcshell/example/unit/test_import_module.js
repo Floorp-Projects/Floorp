@@ -13,13 +13,13 @@
  */
 
 function run_test() {
-  do_check_true(typeof(this.MODULE_IMPORTED) == "undefined");
-  do_check_true(typeof(this.MODULE_URI) == "undefined");
+  Assert.ok(typeof(this.MODULE_IMPORTED) == "undefined");
+  Assert.ok(typeof(this.MODULE_URI) == "undefined");
   let uri = "resource://test/import_module.jsm";
   Components.utils.import(uri);
-  do_check_true(MODULE_URI == uri);
-  do_check_true(MODULE_IMPORTED);
-  do_check_true(SUBMODULE_IMPORTED);
-  do_check_true(same_scope);
-  do_check_true(SUBMODULE_IMPORTED_TO_SCOPE);
+  Assert.ok(MODULE_URI == uri);
+  Assert.ok(MODULE_IMPORTED);
+  Assert.ok(SUBMODULE_IMPORTED);
+  Assert.ok(same_scope);
+  Assert.ok(SUBMODULE_IMPORTED_TO_SCOPE);
 }

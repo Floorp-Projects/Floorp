@@ -29,27 +29,27 @@ function run_test() {
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     let env = packet.frame.environment;
-    do_check_neq(env, undefined);
+    Assert.notEqual(env, undefined);
 
     let parentEnv = env.parent;
-    do_check_neq(parentEnv, undefined);
+    Assert.notEqual(parentEnv, undefined);
 
     let bindings = parentEnv.bindings;
     let args = bindings.arguments;
     let vars = bindings.variables;
-    do_check_eq(args.length, 1);
-    do_check_eq(args[0].number.value, 10);
-    do_check_eq(vars.r.value, 10);
-    do_check_eq(vars.a.value, Math.PI * 100);
-    do_check_eq(vars.arguments.value.class, "Arguments");
-    do_check_true(!!vars.arguments.value.actor);
+    Assert.equal(args.length, 1);
+    Assert.equal(args[0].number.value, 10);
+    Assert.equal(vars.r.value, 10);
+    Assert.equal(vars.a.value, Math.PI * 100);
+    Assert.equal(vars.arguments.value.class, "Arguments");
+    Assert.ok(!!vars.arguments.value.actor);
 
     let objClient = gThreadClient.pauseGrip(env.object);
     objClient.getPrototypeAndProperties(function (response) {
-      do_check_eq(response.ownProperties.PI.value, Math.PI);
-      do_check_eq(response.ownProperties.cos.value.type, "object");
-      do_check_eq(response.ownProperties.cos.value.class, "Function");
-      do_check_true(!!response.ownProperties.cos.value.actor);
+      Assert.equal(response.ownProperties.PI.value, Math.PI);
+      Assert.equal(response.ownProperties.cos.value.type, "object");
+      Assert.equal(response.ownProperties.cos.value.class, "Function");
+      Assert.ok(!!response.ownProperties.cos.value.actor);
 
       gThreadClient.resume(function () {
         finishClient(gClient);

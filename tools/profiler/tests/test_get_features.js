@@ -14,5 +14,5 @@ function run_test() {
     return;
 
   var profilerFeatures = profiler.GetFeatures([]);
-  do_check_true(profilerFeatures != null);
+  Assert.ok(profilerFeatures != null);
 }

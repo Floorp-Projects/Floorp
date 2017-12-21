@@ -6,6 +6,6 @@ function run_test() {
   var sb1obj = Cu.evalInSandbox('new Object()', sb1);
   chromeObj.__proto__ = sb1obj;
   sb2.wrapMe = chromeObj;
-  do_check_true(true, "Didn't crash");
-  do_check_eq(sb2.wrapMe.__proto__, sb1obj, 'proto set correctly');
+  Assert.ok(true, "Didn't crash");
+  Assert.equal(sb2.wrapMe.__proto__, sb1obj, 'proto set correctly');
 }

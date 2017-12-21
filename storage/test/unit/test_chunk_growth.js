@@ -40,12 +40,12 @@ function run_test() {
     run_sql(d, "INSERT INTO bloat VALUES('" + str1024 + "')");
     var size = get_size(filename);
     // Must not grow in small increments.
-    do_check_true(size == orig_size || size >= CHUNK_SIZE);
+    Assert.ok(size == orig_size || size >= CHUNK_SIZE);
   }
   /* In addition to growing in chunk-size increments, the db
    * should shrink in chunk-size increments too.
    */
   run_sql(d, "DELETE FROM bloat");
   run_sql(d, "VACUUM");
-  do_check_true(get_size(filename) >= CHUNK_SIZE);
+  Assert.ok(get_size(filename) >= CHUNK_SIZE);
 }

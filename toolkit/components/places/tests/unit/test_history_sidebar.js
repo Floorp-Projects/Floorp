@@ -112,12 +112,12 @@ add_task(async function task_fill_history() {
     var node = root.getChild(i);
     print(node.title);
     if (container.label)
-      do_check_eq(node.title, container.label);
+      Assert.equal(node.title, container.label);
     // Check labels are not repeated.
-    do_check_eq(previousLabels.indexOf(node.title), -1);
+    Assert.equal(previousLabels.indexOf(node.title), -1);
     previousLabels.push(node.title);
   }
-  do_check_eq(cc, visibleContainers.length);
+  Assert.equal(cc, visibleContainers.length);
   root.containerOpen = false;
 });
 
@@ -153,7 +153,7 @@ function check_visit(aOffset) {
   for (var i = 0; i < cc; i++) {
     var node = root.getChild(i);
     print(node.title);
-    do_check_eq(unexpected.indexOf(node.title), -1);
+    Assert.equal(unexpected.indexOf(node.title), -1);
   }
 
   root.containerOpen = false;
@@ -176,23 +176,23 @@ add_task(async function test_RESULTS_AS_DATE_SITE_QUERY() {
   var dayNode = root.getChild(0)
                     .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   dayNode.containerOpen = true;
-  do_check_eq(dayNode.childCount, 2);
+  Assert.equal(dayNode.childCount, 2);
 
   // Items should be sorted by host
   var site1 = dayNode.getChild(0)
                      .QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  do_check_eq(site1.title, "mirror0.google.com");
+  Assert.equal(site1.title, "mirror0.google.com");
 
   var site2 = dayNode.getChild(1)
                      .QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  do_check_eq(site2.title, "mirror0.mozilla.com");
+  Assert.equal(site2.title, "mirror0.mozilla.com");
 
   site1.containerOpen = true;
-  do_check_eq(site1.childCount, 2);
+  Assert.equal(site1.childCount, 2);
 
   // Inside of host sites are sorted by title
   var site1visit = site1.getChild(0);
-  do_check_eq(site1visit.uri, "http://mirror0.google.com/a");
+  Assert.equal(site1visit.uri, "http://mirror0.google.com/a");
 
   // Bug 473157: changing sorting mode should not affect the containers
   result.sortingMode = options.SORT_BY_TITLE_DESCENDING;
@@ -201,23 +201,23 @@ add_task(async function test_RESULTS_AS_DATE_SITE_QUERY() {
   dayNode = root.getChild(0)
                     .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   dayNode.containerOpen = true;
-  do_check_eq(dayNode.childCount, 2);
+  Assert.equal(dayNode.childCount, 2);
 
   // Hosts are still sorted by title
   site1 = dayNode.getChild(0)
                      .QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  do_check_eq(site1.title, "mirror0.google.com");
+  Assert.equal(site1.title, "mirror0.google.com");
 
   site2 = dayNode.getChild(1)
                      .QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  do_check_eq(site2.title, "mirror0.mozilla.com");
+  Assert.equal(site2.title, "mirror0.mozilla.com");
 
   site1.containerOpen = true;
-  do_check_eq(site1.childCount, 2);
+  Assert.equal(site1.childCount, 2);
 
   // But URLs are now sorted by title descending
   site1visit = site1.getChild(0);
-  do_check_eq(site1visit.uri, "http://mirror0.google.com/b");
+  Assert.equal(site1visit.uri, "http://mirror0.google.com/b");
 
   site1.containerOpen = false;
   dayNode.containerOpen = false;
@@ -237,28 +237,28 @@ add_task(async function test_RESULTS_AS_DATE_QUERY() {
   root.containerOpen = true;
 
   var cc = root.childCount;
-  do_check_eq(cc, visibleContainers.length);
+  Assert.equal(cc, visibleContainers.length);
   print("Found containers:");
   for (var i = 0; i < cc; i++) {
     var container = visibleContainers[i];
     var node = root.getChild(i);
     print(node.title);
     if (container.label)
-      do_check_eq(node.title, container.label);
+      Assert.equal(node.title, container.label);
   }
 
   // Check one of the days
   var dayNode = root.getChild(0)
                     .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   dayNode.containerOpen = true;
-  do_check_eq(dayNode.childCount, 4);
+  Assert.equal(dayNode.childCount, 4);
 
   // Items should be sorted by title
   var visit1 = dayNode.getChild(0);
-  do_check_eq(visit1.uri, "http://mirror0.google.com/a");
+  Assert.equal(visit1.uri, "http://mirror0.google.com/a");
 
   var visit2 = dayNode.getChild(3);
-  do_check_eq(visit2.uri, "http://mirror0.mozilla.com/b");
+  Assert.equal(visit2.uri, "http://mirror0.mozilla.com/b");
 
   // Bug 473157: changing sorting mode should not affect the containers
   result.sortingMode = options.SORT_BY_TITLE_DESCENDING;
@@ -267,14 +267,14 @@ add_task(async function test_RESULTS_AS_DATE_QUERY() {
   dayNode = root.getChild(0)
                     .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   dayNode.containerOpen = true;
-  do_check_eq(dayNode.childCount, 4);
+  Assert.equal(dayNode.childCount, 4);
 
   // But URLs are now sorted by title descending
   visit1 = dayNode.getChild(0);
-  do_check_eq(visit1.uri, "http://mirror0.mozilla.com/b");
+  Assert.equal(visit1.uri, "http://mirror0.mozilla.com/b");
 
   visit2 = dayNode.getChild(3);
-  do_check_eq(visit2.uri, "http://mirror0.google.com/a");
+  Assert.equal(visit2.uri, "http://mirror0.google.com/a");
 
   dayNode.containerOpen = false;
   root.containerOpen = false;
@@ -299,7 +299,7 @@ add_task(async function test_RESULTS_AS_SITE_QUERY() {
   var result = hs.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, containers.length * 2);
+  Assert.equal(root.childCount, containers.length * 2);
 
 /* Expected results:
     "mirror0.google.com",
@@ -320,27 +320,27 @@ add_task(async function test_RESULTS_AS_SITE_QUERY() {
   // Items should be sorted by host
   var siteNode = root.getChild(6)
                      .QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  do_check_eq(siteNode.title, "mirror3.google.com");
+  Assert.equal(siteNode.title, "mirror3.google.com");
 
   siteNode.containerOpen = true;
-  do_check_eq(siteNode.childCount, 2);
+  Assert.equal(siteNode.childCount, 2);
 
   // Inside of host sites are sorted by title
   var visitNode = siteNode.getChild(0);
-  do_check_eq(visitNode.uri, "http://mirror3.google.com/a");
+  Assert.equal(visitNode.uri, "http://mirror3.google.com/a");
 
   // Bug 473157: changing sorting mode should not affect the containers
   result.sortingMode = options.SORT_BY_TITLE_DESCENDING;
   siteNode = root.getChild(6)
                      .QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  do_check_eq(siteNode.title, "mirror3.google.com");
+  Assert.equal(siteNode.title, "mirror3.google.com");
 
   siteNode.containerOpen = true;
-  do_check_eq(siteNode.childCount, 2);
+  Assert.equal(siteNode.childCount, 2);
 
   // But URLs are now sorted by title descending
   var visit = siteNode.getChild(0);
-  do_check_eq(visit.uri, "http://mirror3.google.com/b");
+  Assert.equal(visit.uri, "http://mirror3.google.com/b");
 
   siteNode.containerOpen = false;
   root.containerOpen = false;
@@ -367,10 +367,10 @@ async function task_test_date_liveupdate(aResultType) {
   var root = result.root;
   root.containerOpen = true;
 
-  do_check_eq(root.childCount, visibleContainers.length);
+  Assert.equal(root.childCount, visibleContainers.length);
   // Remove "Today".
   hs.removePagesByTimeframe(midnight.getTime() * 1000, Date.now() * 1000);
-  do_check_eq(root.childCount, visibleContainers.length - 1);
+  Assert.equal(root.childCount, visibleContainers.length - 1);
 
   // Open "Last 7 days" container, this way we will have a container accepting
   // the new visit, but we should still add back "Today" container.
@@ -381,7 +381,7 @@ async function task_test_date_liveupdate(aResultType) {
   // Add a visit for "Today".  This should add back the missing "Today"
   // container.
   await task_add_normalized_visit(uri("http://www.mozilla.org/"), nowObj.getTime(), 0);
-  do_check_eq(root.childCount, visibleContainers.length);
+  Assert.equal(root.childCount, visibleContainers.length);
 
   last7Days.containerOpen = false;
   root.containerOpen = false;
@@ -400,17 +400,17 @@ async function task_test_date_liveupdate(aResultType) {
   result = hs.executeQuery(query, options);
   root = result.root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, 1);
+  Assert.equal(root.childCount, 1);
   var dateContainer = root.getChild(0).QueryInterface(Ci.nsINavHistoryContainerResultNode);
   dateContainer.containerOpen = true;
 
-  do_check_eq(dateContainer.childCount, visibleContainers.length);
+  Assert.equal(dateContainer.childCount, visibleContainers.length);
   // Remove "Today".
   hs.removePagesByTimeframe(midnight.getTime() * 1000, Date.now() * 1000);
-  do_check_eq(dateContainer.childCount, visibleContainers.length - 1);
+  Assert.equal(dateContainer.childCount, visibleContainers.length - 1);
   // Add a visit for "Today".
   await task_add_normalized_visit(uri("http://www.mozilla.org/"), nowObj.getTime(), 0);
-  do_check_eq(dateContainer.childCount, visibleContainers.length);
+  Assert.equal(dateContainer.childCount, visibleContainers.length);
 
   dateContainer.containerOpen = false;
   root.containerOpen = false;

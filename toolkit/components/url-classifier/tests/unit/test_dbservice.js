@@ -117,7 +117,7 @@ function checkNoHost() {
   } catch (e) {
     exception = true;
   }
-  do_check_true(exception);
+  Assert.ok(exception);
 
   do_test_finished();
 }
@@ -128,8 +128,8 @@ function tablesCallbackWithoutSub(tables) {
 
   // there's a leading \n here because splitting left an empty string
   // after the trailing newline, which will sort first
-  do_check_eq(parts.join("\n"),
-              "\ntest-block-simple;a:1\ntest-malware-simple;a:1\ntest-phish-simple;a:2\ntest-unwanted-simple;a:1");
+  Assert.equal(parts.join("\n"),
+               "\ntest-block-simple;a:1\ntest-malware-simple;a:1\ntest-phish-simple;a:2\ntest-unwanted-simple;a:1");
 
   checkNoHost();
 }
@@ -145,8 +145,8 @@ function tablesCallbackWithSub(tables) {
 
   // there's a leading \n here because splitting left an empty string
   // after the trailing newline, which will sort first
-  do_check_eq(parts.join("\n"),
-              "\ntest-block-simple;a:1\ntest-malware-simple;a:1\ntest-phish-simple;a:2:s:3\ntest-unwanted-simple;a:1");
+  Assert.equal(parts.join("\n"),
+               "\ntest-block-simple;a:1\ntest-malware-simple;a:1\ntest-phish-simple;a:2:s:3\ntest-unwanted-simple;a:1");
 
   // verify that expiring a sub chunk removes its name from the list
   var data =
@@ -169,7 +169,7 @@ function checkDone() {
 function phishExists(result) {
   dumpn("phishExists: " + result);
   try {
-    do_check_true(result.indexOf("test-phish-simple") != -1);
+    Assert.ok(result.indexOf("test-phish-simple") != -1);
   } finally {
     checkDone();
   }
@@ -178,7 +178,7 @@ function phishExists(result) {
 function phishDoesntExist(result) {
   dumpn("phishDoesntExist: " + result);
   try {
-    do_check_true(result.indexOf("test-phish-simple") == -1);
+    Assert.ok(result.indexOf("test-phish-simple") == -1);
   } finally {
     checkDone();
   }
@@ -188,7 +188,7 @@ function malwareExists(result) {
   dumpn("malwareExists: " + result);
 
   try {
-    do_check_true(result.indexOf("test-malware-simple") != -1);
+    Assert.ok(result.indexOf("test-malware-simple") != -1);
   } finally {
     checkDone();
   }
@@ -198,7 +198,7 @@ function unwantedExists(result) {
   dumpn("unwantedExists: " + result);
 
   try {
-    do_check_true(result.indexOf("test-unwanted-simple") != -1);
+    Assert.ok(result.indexOf("test-unwanted-simple") != -1);
   } finally {
     checkDone();
   }
@@ -208,7 +208,7 @@ function blockedExists(result) {
   dumpn("blockedExists: " + result);
 
   try {
-    do_check_true(result.indexOf("test-block-simple") != -1);
+    Assert.ok(result.indexOf("test-block-simple") != -1);
   } finally {
     checkDone();
   }
@@ -255,7 +255,7 @@ function checkState() {
 }
 
 function testSubSuccess(result) {
-  do_check_eq(result, "1000");
+  Assert.equal(result, "1000");
   checkState();
 }
 
@@ -272,7 +272,7 @@ function do_subs() {
 }
 
 function testAddSuccess(arg) {
-  do_check_eq(arg, "1000");
+  Assert.equal(arg, "1000");
 
   do_subs();
 }

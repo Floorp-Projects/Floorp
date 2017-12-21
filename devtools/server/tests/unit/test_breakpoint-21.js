@@ -50,11 +50,11 @@ const test = Task.async(function* () {
 
   yield resume(gThreadClient);
   packet = yield waitForPause(gClient);
-  do_check_eq(packet.type, "paused");
-  do_check_eq(packet.why.type, "breakpoint");
-  do_check_eq(packet.why.actors[0], bpClient.actor);
-  do_check_eq(packet.frame.where.source.actor, source.actor);
-  do_check_eq(packet.frame.where.line, location.line);
+  Assert.equal(packet.type, "paused");
+  Assert.equal(packet.why.type, "breakpoint");
+  Assert.equal(packet.why.actors[0], bpClient.actor);
+  Assert.equal(packet.frame.where.source.actor, source.actor);
+  Assert.equal(packet.frame.where.line, location.line);
 
   yield resume(gThreadClient);
   finishClient(gClient);

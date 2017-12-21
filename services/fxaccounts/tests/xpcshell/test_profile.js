@@ -114,15 +114,15 @@ add_test(function cacheProfile_change() {
   let fxa = mockFxa();
   fxa.setProfileCache = (data) => {
     setProfileCacheCalled = true;
-    do_check_eq(data.profile.avatar, "myurl");
-    do_check_eq(data.etag, "bogusetag");
+    Assert.equal(data.profile.avatar, "myurl");
+    Assert.equal(data.etag, "bogusetag");
     return Promise.resolve();
   };
   let profile = CreateFxAccountsProfile(fxa);
 
   makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function(subject, topic, data) {
-    do_check_eq(data, ACCOUNT_DATA.uid);
-    do_check_true(setProfileCacheCalled);
+    Assert.equal(data, ACCOUNT_DATA.uid);
+    Assert.ok(setProfileCacheCalled);
     run_next_test();
   });
 
@@ -138,14 +138,14 @@ add_test(function fetchAndCacheProfile_ok() {
   profile._cachedAt = 12345;
 
   profile._cacheProfile = function(toCache) {
-    do_check_eq(toCache.body.avatar, "myimg");
+    Assert.equal(toCache.body.avatar, "myimg");
     return Promise.resolve(toCache.body);
   };
 
   return profile._fetchAndCacheProfile()
     .then(result => {
-      do_check_eq(result.avatar, "myimg");
-      do_check_neq(profile._cachedAt, 12345, "cachedAt has been bumped");
+      Assert.equal(result.avatar, "myimg");
+      Assert.notEqual(profile._cachedAt, 12345, "cachedAt has been bumped");
       run_next_test();
     });
 });
@@ -162,7 +162,7 @@ add_test(function fetchAndCacheProfile_always_bumps_cachedAt() {
     .then(result => {
       do_throw("Should not succeed");
     }, err => {
-      do_check_neq(profile._cachedAt, 12345, "cachedAt has been bumped");
+      Assert.notEqual(profile._cachedAt, 12345, "cachedAt has been bumped");
       run_next_test();
     });
 });
@@ -172,7 +172,7 @@ add_test(function fetchAndCacheProfile_sendsETag() {
   fxa.profileCache = { profile: {}, etag: "bogusETag" };
   let client = mockClient(fxa);
   client.fetchProfile = function(etag) {
-    do_check_eq(etag, "bogusETag");
+    Assert.equal(etag, "bogusETag");
     return Promise.resolve({ body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg"} });
   };
   let profile = CreateFxAccountsProfile(fxa, client);
@@ -207,19 +207,19 @@ add_task(async function fetchAndCacheProfileOnce() {
 
   // should be one request made to fetch the profile (but the promise returned
   // by it remains unresolved)
-  do_check_eq(numFetches, 1);
+  Assert.equal(numFetches, 1);
 
   // resolve the promise.
   resolveProfile({ body: { uid: ACCOUNT_UID, email: ACCOUNT_EMAIL, avatar: "myimg"} });
 
   // both requests should complete with the same data.
   let got1 = await request1;
-  do_check_eq(got1.avatar, "myimg");
+  Assert.equal(got1.avatar, "myimg");
   let got2 = await request1;
-  do_check_eq(got2.avatar, "myimg");
+  Assert.equal(got2.avatar, "myimg");
 
   // and still only 1 request was made.
-  do_check_eq(numFetches, 1);
+  Assert.equal(numFetches, 1);
 });
 
 // Check that sharing a single fetch promise works correctly when the promise
@@ -246,7 +246,7 @@ add_task(async function fetchAndCacheProfileOnce() {
 
   // should be one request made to fetch the profile (but the promise returned
   // by it remains unresolved)
-  do_check_eq(numFetches, 1);
+  Assert.equal(numFetches, 1);
 
   // reject the promise.
   rejectProfile("oh noes");
@@ -275,7 +275,7 @@ add_task(async function fetchAndCacheProfileOnce() {
   };
 
   let got = await profile._fetchAndCacheProfile();
-  do_check_eq(got.avatar, "myimg");
+  Assert.equal(got.avatar, "myimg");
 });
 
 add_test(function fetchAndCacheProfile_alreadyCached() {
@@ -284,7 +284,7 @@ add_test(function fetchAndCacheProfile_alreadyCached() {
   fxa.profileCache = { profile: { uid: ACCOUNT_UID, avatar: cachedUrl }, etag: "bogusETag" };
   let client = mockClient(fxa);
   client.fetchProfile = function(etag) {
-    do_check_eq(etag, "bogusETag");
+    Assert.equal(etag, "bogusETag");
     return Promise.resolve(null);
   };
 
@@ -295,8 +295,8 @@ add_test(function fetchAndCacheProfile_alreadyCached() {
 
   return profile._fetchAndCacheProfile()
     .then(result => {
-      do_check_eq(result, null);
-      do_check_eq(fxa.profileCache.profile.avatar, cachedUrl);
+      Assert.equal(result, null);
+      Assert.equal(fxa.profileCache.profile.avatar, cachedUrl);
       run_next_test();
     });
 });
@@ -314,10 +314,10 @@ add_task(async function fetchAndCacheProfileAfterThreshold() {
   profile.PROFILE_FRESHNESS_THRESHOLD = 1000;
 
   await profile.getProfile();
-  do_check_eq(numFetches, 1);
+  Assert.equal(numFetches, 1);
 
   await profile.getProfile();
-  do_check_eq(numFetches, 1);
+  Assert.equal(numFetches, 1);
 
   await new Promise(resolve => {
     do_timeout(1000, resolve);
@@ -331,7 +331,7 @@ add_task(async function fetchAndCacheProfileAfterThreshold() {
   };
   await profile.getProfile();
   await backgroundFetchDone.promise;
-  do_check_eq(numFetches, 2);
+  Assert.equal(numFetches, 2);
 });
 
 // Check that a new profile request within PROFILE_FRESHNESS_THRESHOLD of the
@@ -348,7 +348,7 @@ add_task(async function fetchAndCacheProfileBeforeThresholdOnNotification() {
   profile.PROFILE_FRESHNESS_THRESHOLD = 1000;
 
   await profile.getProfile();
-  do_check_eq(numFetches, 1);
+  Assert.equal(numFetches, 1);
 
   Services.obs.notifyObservers(null, ON_PROFILE_CHANGE_NOTIFICATION);
 
@@ -360,18 +360,18 @@ add_task(async function fetchAndCacheProfileBeforeThresholdOnNotification() {
   };
   await profile.getProfile();
   await backgroundFetchDone.promise;
-  do_check_eq(numFetches, 2);
+  Assert.equal(numFetches, 2);
 });
 
 add_test(function tearDown_ok() {
   let profile = CreateFxAccountsProfile();
 
-  do_check_true(!!profile.client);
-  do_check_true(!!profile.fxa);
+  Assert.ok(!!profile.client);
+  Assert.ok(!!profile.fxa);
 
   profile.tearDown();
-  do_check_null(profile.fxa);
-  do_check_null(profile.client);
+  Assert.equal(null, profile.fxa);
+  Assert.equal(null, profile.client);
 
   run_next_test();
 });
@@ -391,8 +391,8 @@ add_test(function getProfile_ok() {
 
   return profile.getProfile()
     .then(result => {
-      do_check_eq(result.avatar, cachedUrl);
-      do_check_true(didFetch);
+      Assert.equal(result.avatar, cachedUrl);
+      Assert.ok(didFetch);
       run_next_test();
     });
 });
@@ -409,7 +409,7 @@ add_test(function getProfile_no_cache() {
 
   return profile.getProfile()
     .then(result => {
-      do_check_eq(result.avatar, fetchedUrl);
+      Assert.equal(result.avatar, fetchedUrl);
       run_next_test();
     });
 });
@@ -431,14 +431,14 @@ add_test(function getProfile_has_cached_fetch_deleted() {
   makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function(subject, topic, data) {
     profile.getProfile()
       .then(profileData => {
-        do_check_null(profileData.avatar);
+        Assert.equal(null, profileData.avatar);
         run_next_test();
       });
   });
 
   return profile.getProfile()
     .then(result => {
-      do_check_eq(result.avatar, "myurl");
+      Assert.equal(result.avatar, "myurl");
     });
 });
 
@@ -451,7 +451,7 @@ add_test(function getProfile_fetchAndCacheProfile_throws() {
 
   return profile.getProfile()
     .then(result => {
-      do_check_eq(result.avatar, "myimg");
+      Assert.equal(result.avatar, "myimg");
       run_next_test();
     });
 });
@@ -463,7 +463,7 @@ add_test(function getProfile_email_changed() {
     return Promise.resolve({ body: { uid: ACCOUNT_UID, email: "newemail@bar.com" } });
   };
   fxa.handleEmailUpdated = email => {
-    do_check_eq(email, "newemail@bar.com");
+    Assert.equal(email, "newemail@bar.com");
     run_next_test();
   };
 

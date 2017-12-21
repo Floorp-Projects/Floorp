@@ -106,15 +106,15 @@ add_task(async function test_notifications_onDeleteVisits() {
       onTitleChanged() {},
       onDeleteURI(aURI, aGUID, aReason) {
         // Check this uri was not bookmarked.
-        do_check_eq(currentTest.bookmarks.indexOf(aURI.spec), -1);
+        Assert.equal(currentTest.bookmarks.indexOf(aURI.spec), -1);
         do_check_valid_places_guid(aGUID);
-        do_check_eq(aReason, Ci.nsINavHistoryObserver.REASON_EXPIRED);
+        Assert.equal(aReason, Ci.nsINavHistoryObserver.REASON_EXPIRED);
       },
       onPageChanged() {},
       onDeleteVisits(aURI, aTime, aGUID, aReason) {
         currentTest.receivedNotifications++;
         do_check_guid_for_uri(aURI, aGUID);
-        do_check_eq(aReason, Ci.nsINavHistoryObserver.REASON_EXPIRED);
+        Assert.equal(aReason, Ci.nsINavHistoryObserver.REASON_EXPIRED);
       },
     };
     hs.addObserver(historyObserver);
@@ -124,8 +124,8 @@ add_task(async function test_notifications_onDeleteVisits() {
 
     hs.removeObserver(historyObserver, false);
 
-    do_check_eq(currentTest.receivedNotifications,
-                currentTest.expectedNotifications);
+    Assert.equal(currentTest.receivedNotifications,
+                 currentTest.expectedNotifications);
 
     // Clean up.
     await PlacesUtils.bookmarks.eraseEverything();

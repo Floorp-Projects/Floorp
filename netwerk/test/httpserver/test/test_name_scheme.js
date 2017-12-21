@@ -67,24 +67,24 @@ function run_test()
 
 function start_bar_html_(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 200);
+  Assert.equal(ch.responseStatus, 200);
 
-  do_check_eq(ch.getResponseHeader("Content-Type"), "text/html");
+  Assert.equal(ch.getResponseHeader("Content-Type"), "text/html");
 }
 
 function start_foo_html_(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 404);
+  Assert.equal(ch.responseStatus, 404);
 }
 
 function start_normal_file_txt(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 200);
-  do_check_eq(ch.getResponseHeader("Content-Type"), "text/plain");
+  Assert.equal(ch.responseStatus, 200);
+  Assert.equal(ch.getResponseHeader("Content-Type"), "text/plain");
 }
 
 function start_folder__file_txt(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 200);
-  do_check_eq(ch.getResponseHeader("Content-Type"), "text/plain");
+  Assert.equal(ch.responseStatus, 200);
+  Assert.equal(ch.getResponseHeader("Content-Type"), "text/plain");
 }

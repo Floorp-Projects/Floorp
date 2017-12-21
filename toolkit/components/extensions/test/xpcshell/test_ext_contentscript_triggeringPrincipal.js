@@ -781,7 +781,7 @@ function awaitLoads(urlsPromise, origins) {
 
         if (!expectedURLs.size) {
           Services.obs.removeObserver(observer, "http-on-modify-request");
-          do_print("Got all expected requests");
+          info("Got all expected requests");
           resolve();
         }
       }
@@ -845,7 +845,7 @@ function awaitCSP(urlsPromise) {
         if (blockedURLs.has(baseURL)) {
           blockedURLs.delete(baseURL);
 
-          do_print(`Got CSP report for forbidden URL ${origURL}`);
+          info(`Got CSP report for forbidden URL ${origURL}`);
         }
       }
 
@@ -854,12 +854,12 @@ function awaitCSP(urlsPromise) {
         if (blockedSources.has(source)) {
           blockedSources.delete(source);
 
-          do_print(`Got CSP report for forbidden inline source ${JSON.stringify(source)}`);
+          info(`Got CSP report for forbidden inline source ${JSON.stringify(source)}`);
         }
       }
 
       if (!blockedURLs.size && !blockedSources.size) {
-        do_print("Got all expected CSP reports");
+        info("Got all expected CSP reports");
         resolve();
       }
     }

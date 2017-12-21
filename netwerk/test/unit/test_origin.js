@@ -11,8 +11,8 @@ var loadGroup;
 function run_test() {
   var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
   h2Port = env.get("MOZHTTP2_PORT");
-  do_check_neq(h2Port, null);
-  do_check_neq(h2Port, "");
+  Assert.notEqual(h2Port, null);
+  Assert.notEqual(h2Port, "");
 
   // Set to allow the cert presented by our H2 server
   do_get_profile();
@@ -75,12 +75,12 @@ var Listener = function() {};
 Listener.prototype.clientPort = 0;
 Listener.prototype = {
   onStartRequest: function testOnStartRequest(request, ctx) {
-    do_check_true(request instanceof Components.interfaces.nsIHttpChannel);
+    Assert.ok(request instanceof Components.interfaces.nsIHttpChannel);
 
     if (!Components.isSuccessCode(request.status)) {
       do_throw("Channel should have a success code! (" + request.status + ")");
     }
-    do_check_eq(request.responseStatus, 200);
+    Assert.equal(request.responseStatus, 200);
     this.clientPort = parseInt(request.getResponseHeader("x-client-port"));
   },
 
@@ -89,11 +89,11 @@ Listener.prototype = {
   },
 
   onStopRequest: function testOnStopRequest(request, ctx, status) {
-    do_check_true(Components.isSuccessCode(status));
+    Assert.ok(Components.isSuccessCode(status));
     if (nextPortExpectedToBeSame) {
-     do_check_eq(currentPort, this.clientPort);
+     Assert.equal(currentPort, this.clientPort);
     } else {
-     do_check_neq(currentPort, this.clientPort);
+     Assert.notEqual(currentPort, this.clientPort);
     }
     currentPort = this.clientPort;
     nextTest();
@@ -104,14 +104,14 @@ Listener.prototype = {
 var FailListener = function() {};
 FailListener.prototype = {
   onStartRequest: function testOnStartRequest(request, ctx) {
-    do_check_true(request instanceof Components.interfaces.nsIHttpChannel);
-    do_check_false(Components.isSuccessCode(request.status));
+    Assert.ok(request instanceof Components.interfaces.nsIHttpChannel);
+    Assert.ok(!Components.isSuccessCode(request.status));
   },
   onDataAvailable: function testOnDataAvailable(request, ctx, stream, off, cnt) {
     read_stream(stream, cnt);
   },
   onStopRequest: function testOnStopRequest(request, ctx, status) {
-    do_check_false(Components.isSuccessCode(request.status));
+    Assert.ok(!Components.isSuccessCode(request.status));
     nextTest();
     do_test_finished();
   }
@@ -280,8 +280,8 @@ Http2PushApiListener.prototype = {
     dump("push api onpush " + pushChannel.originalURI.spec +
          " associated to " + associatedChannel.originalURI.spec + "\n");
 
-    do_check_eq(associatedChannel.originalURI.spec, "https://foo.example.com:" + h2Port + "/origin-11-a");
-    do_check_eq(pushChannel.getRequestHeader("x-pushed-request"), "true");
+    Assert.equal(associatedChannel.originalURI.spec, "https://foo.example.com:" + h2Port + "/origin-11-a");
+    Assert.equal(pushChannel.getRequestHeader("x-pushed-request"), "true");
 
     if (pushChannel.originalURI.spec === "https://foo.example.com:" + h2Port + "/origin-11-b") {
       this.fooOK = true;
@@ -289,7 +289,7 @@ Http2PushApiListener.prototype = {
       this.alt1OK = true;
     } else {
       // any push of bar or madeup should not end up in onPush()
-      do_check_eq(true, false);
+      Assert.equal(true, false);
     }
     pushChannel.cancel(Components.results.NS_ERROR_ABORT);
   },
@@ -305,8 +305,8 @@ Http2PushApiListener.prototype = {
 
   onStopRequest: function test_onStopR(request, ctx, status) {
     dump("push api onstop " + request.originalURI.spec + "\n");
-    do_check_true(this.fooOK);
-    do_check_true(this.alt1OK);
+    Assert.ok(this.fooOK);
+    Assert.ok(this.alt1OK);
     nextTest();
     do_test_finished();
   }

@@ -78,7 +78,7 @@ function testCase(withBOM, charset, charsetDec, decoder, bufferLength)
   }
 
   // escape the strings before comparing for better readability
-  do_check_eq(escape(outStr), escape(expected));
+  Assert.equal(escape(outStr), escape(expected));
 }
 
 function run_test()

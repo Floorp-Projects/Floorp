@@ -70,7 +70,7 @@ function test_utf8_1()
   {
     var pipe = Pipe();
     var conv = new COS(pipe.outputStream, "UTF-8");
-    do_check_true(conv.writeString(UNICODE_STRINGS[i]));
+    Assert.ok(conv.writeString(UNICODE_STRINGS[i]));
     conv.close();
 
     if (!equalStreams(new UTF8(pipe.inputStream),

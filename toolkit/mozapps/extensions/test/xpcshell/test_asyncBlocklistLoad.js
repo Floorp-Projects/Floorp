@@ -9,25 +9,25 @@ add_task(async function() {
 
   // sync -> async
   blocklist._loadBlocklist();
-  do_check_true(blocklist._isBlocklistLoaded());
+  Assert.ok(blocklist._isBlocklistLoaded());
   await blocklist._preloadBlocklist();
-  do_check_false(blocklist._isBlocklistPreloaded());
+  Assert.ok(!blocklist._isBlocklistPreloaded());
   blocklist._clear();
 
   // async -> sync
   await blocklist._preloadBlocklist();
-  do_check_false(blocklist._isBlocklistLoaded());
-  do_check_true(blocklist._isBlocklistPreloaded());
+  Assert.ok(!blocklist._isBlocklistLoaded());
+  Assert.ok(blocklist._isBlocklistPreloaded());
   blocklist._loadBlocklist();
-  do_check_true(blocklist._isBlocklistLoaded());
-  do_check_false(blocklist._isBlocklistPreloaded());
+  Assert.ok(blocklist._isBlocklistLoaded());
+  Assert.ok(!blocklist._isBlocklistPreloaded());
   blocklist._clear();
 
   // async -> sync -> async
   let read = scope.OS.File.read;
   scope.OS.File.read = function(...args) {
     return new Promise((resolve, reject) => {
-      do_execute_soon(() => {
+      executeSoon(() => {
         blocklist._loadBlocklist();
         resolve(read(...args));
       });
@@ -35,6 +35,6 @@ add_task(async function() {
   };
 
   await blocklist._preloadBlocklist();
-  do_check_true(blocklist._isBlocklistLoaded());
-  do_check_false(blocklist._isBlocklistPreloaded());
+  Assert.ok(blocklist._isBlocklistLoaded());
+  Assert.ok(!blocklist._isBlocklistPreloaded());
 });

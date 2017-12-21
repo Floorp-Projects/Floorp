@@ -18,5 +18,5 @@ function run_test() {
   var expected = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   expected.initWithPath(env.get(envVar));
 
-  do_check_eq(homeDir.path, expected.path);
+  Assert.equal(homeDir.path, expected.path);
 }

@@ -237,7 +237,7 @@ const TESTCASES = [
 
 TESTCASES.forEach(testcase => {
   add_task(async function() {
-    do_print("Starting testcase: " + testcase.description);
+    info("Starting testcase: " + testcase.description);
 
     let doc = MockDocument.createTestDocument(
       "http://localhost:8080/test/", testcase.document);
@@ -251,7 +251,7 @@ TESTCASES.forEach(testcase => {
 });
 
 add_task(async function test_regexp_list() {
-  do_print("Verify the fieldName support for select element.");
+  info("Verify the fieldName support for select element.");
   let SUPPORT_LIST = {
     "email": null, // email
     "tel-extension": null, // tel-extension
@@ -286,8 +286,8 @@ add_task(async function test_regexp_list() {
         contactType: "",
       } : null),
     };
-    do_print(testcase.description);
-    do_print(testcase.document);
+    info(testcase.description);
+    info(testcase.document);
     let doc = MockDocument.createTestDocument(
       "http://localhost:8080/test/", testcase.document);
 

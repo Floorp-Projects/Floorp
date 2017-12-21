@@ -3,7 +3,7 @@
 var test = function(s, funcName){
     function Arg(){};
     Arg.prototype.toString = function(){
-	do_print("Testing " + funcName + " with null args");
+	info("Testing " + funcName + " with null args");
 	return this.value;
     };
     // create a generic arg lits of null, -1, and 10 nulls
@@ -16,11 +16,11 @@ var test = function(s, funcName){
 	up[funcName].apply(up, args);
 	return args;
 	} catch (x) {
-	    do_check_true(true); // make sure it throws an exception instead of crashing
+	    Assert.ok(true); // make sure it throws an exception instead of crashing
 	    return x;
 	}
     // should always have an exception to catch
-    do_check_true(false);
+    Assert.ok(false);
 };
 var s = null;
 var funcs = ["parseAuthority", "parseFileName", "parseFilePath", "parsePath", "parseServerInfo", "parseURL", "parseUserInfo"];

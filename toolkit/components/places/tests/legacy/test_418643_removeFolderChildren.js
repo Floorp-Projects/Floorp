@@ -143,7 +143,7 @@ async function check_bookmarks(folderGuid) {
   var result = histSvc.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, 0);
+  Assert.equal(root.childCount, 0);
   root.containerOpen = false;
 
   // test that all children have been deleted, we use annos for that

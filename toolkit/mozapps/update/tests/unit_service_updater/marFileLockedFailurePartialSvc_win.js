@@ -44,7 +44,7 @@ function waitForHelperExitFinished() {
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_UNABLE_OPEN_DEST);
   checkUpdateLogContains(STATE_FAILED_READ_ERROR + "\n" + CALL_QUIT);
-  do_execute_soon(waitForUpdateXMLFiles);
+  executeSoon(waitForUpdateXMLFiles);
 }
 
 /**

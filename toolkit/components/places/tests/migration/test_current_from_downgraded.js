@@ -8,7 +8,7 @@ add_task(async function setup() {
   while (version > 0) {
     let dbFile = OS.Path.join(do_get_cwd().path, `places_v${version}.sqlite`);
     if (await OS.File.exists(dbFile)) {
-      do_print("Using database version " + version);
+      info("Using database version " + version);
       break;
     }
     version--;

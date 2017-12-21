@@ -23,7 +23,7 @@ function fakeUIResponse() {
                   .createInstance(Ci.nsIXMLHttpRequest);
       xhr.open("GET", gServerURL + kCanonicalSitePath, true);
       xhr.send();
-      do_check_eq(++step, 2);
+      Assert.equal(++step, 2);
       let details = JSON.parse(data);
       gCaptivePortalDetector.cancelLogin(details.id);
     }
@@ -36,12 +36,12 @@ function test_cancel() {
   let callback = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsICaptivePortalCallback]),
     prepare: function prepare() {
-      do_check_eq(++step, 1);
+      Assert.equal(++step, 1);
       gCaptivePortalDetector.finishPreparation(kInterfaceName);
     },
     complete: function complete(success) {
-      do_check_eq(++step, 3);
-      do_check_false(success);
+      Assert.equal(++step, 3);
+      Assert.ok(!success);
       gServer.stop(do_test_finished);
     },
   };

@@ -359,7 +359,7 @@ if (runningInParent) {
 
   // This gets imported via fakeNow();
   /* global TelemetrySend */
-  do_register_cleanup(() => TelemetrySend.shutdown());
+  registerCleanupFunction(() => TelemetrySend.shutdown());
 }
 
 TelemetryController.testInitLogging();

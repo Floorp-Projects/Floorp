@@ -43,14 +43,14 @@ async function checkFaviconDataConversion(aFileName, aFileMimeType, aFileLength,
       PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
       (aURI, aDataLen, aData, aMimeType) => {
         if (!aExpectConversion) {
-          do_check_true(compareArrays(aData, fileData));
-          do_check_eq(aMimeType, aFileMimeType);
+          Assert.ok(compareArrays(aData, fileData));
+          Assert.equal(aMimeType, aFileMimeType);
         } else {
           if (!aVaryOnWindows || !isWindows) {
             let expectedFile = do_get_file("expected-" + aFileName + ".png");
-            do_check_true(compareArrays(aData, readFileData(expectedFile)));
+            Assert.ok(compareArrays(aData, readFileData(expectedFile)));
           }
-          do_check_eq(aMimeType, "image/png");
+          Assert.equal(aMimeType, "image/png");
         }
         resolve();
       }, Services.scriptSecurityManager.getSystemPrincipal());

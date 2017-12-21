@@ -1,5 +1,5 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   Services.obs.notifyObservers(null, "quit-application");
 });

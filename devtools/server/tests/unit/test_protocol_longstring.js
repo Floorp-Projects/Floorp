@@ -107,8 +107,8 @@ function run_test() {
   let strfront = null;
 
   let expectRootChildren = function (size) {
-    do_check_eq(rootActor.__poolMap.size, size + 1);
-    do_check_eq(rootClient.__poolMap.size, size + 1);
+    Assert.equal(rootActor.__poolMap.size, size + 1);
+    Assert.equal(rootClient.__poolMap.size, size + 1);
   };
 
   client.connect().then(([applicationType, traits]) => {
@@ -120,7 +120,7 @@ function run_test() {
     trace.expectReceive({"from": "<actorid>",
                          "applicationType": "xpcshell-tests",
                          "traits": []});
-    do_check_eq(applicationType, "xpcshell-tests");
+    Assert.equal(applicationType, "xpcshell-tests");
     rootClient.shortString().then(ret => {
       trace.expectSend({"type": "shortString", "to": "<actorid>"});
       trace.expectReceive({"value": "abc", "from": "<actorid>"});
@@ -131,7 +131,7 @@ function run_test() {
     }).then(() => {
       return strfront.string();
     }).then(ret => {
-      do_check_eq(ret, SHORT_STR);
+      Assert.equal(ret, SHORT_STR);
     }).then(() => {
       return rootClient.longString();
     }).then(ret => {
@@ -155,7 +155,7 @@ function run_test() {
       trace.expectSend({"type": "substring", "start": 15, "end": 20, "to": "<actorid>"});
       trace.expectReceive({"substring": "p", "from": "<actorid>"});
 
-      do_check_eq(ret, LONG_STR);
+      Assert.equal(ret, LONG_STR);
     }).then(() => {
       return strfront.release();
     }).then(() => {
@@ -170,7 +170,7 @@ function run_test() {
         trace.expectSend({"type": "emitShortString", "to": "<actorid>"});
         trace.expectReceive({"type": "string-event", "str": "abc", "from": "<actorid>"});
 
-        do_check_true(!!str);
+        Assert.ok(!!str);
         strfront = str;
         // Shouldn't generate any new references
         expectRootChildren(0);
@@ -182,7 +182,7 @@ function run_test() {
       rootClient.emitShortString();
       return deferred.promise;
     }).then(value => {
-      do_check_eq(value, SHORT_STR);
+      Assert.equal(value, SHORT_STR);
     }).then(() => {
       // Will generate no packets
       return strfront.release();
@@ -197,7 +197,7 @@ function run_test() {
                                      "initial": "abcde"},
                              "from": "<actorid>"});
 
-        do_check_true(!!str);
+        Assert.ok(!!str);
         // Should generate one new reference
         expectRootChildren(1);
         strfront = str;
@@ -224,7 +224,7 @@ function run_test() {
       rootClient.emitLongString();
       return deferred.promise;
     }).then(value => {
-      do_check_eq(value, LONG_STR);
+      Assert.equal(value, LONG_STR);
     }).then(() => {
       return strfront.release();
     }).then(() => {

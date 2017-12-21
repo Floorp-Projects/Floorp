@@ -33,7 +33,7 @@ callback.prototype = {
       return;
     }
 
-    do_check_eq(this.callCount, 2);
+    Assert.equal(this.callCount, 2);
     do_test_finished();
   },
 

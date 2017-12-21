@@ -38,13 +38,13 @@ function run_test()
 
 function checkStatusLine(channel, httpMaxVer, httpMinVer, httpCode, statusText)
 {
-  do_check_eq(channel.responseStatus, httpCode);
-  do_check_eq(channel.responseStatusText, statusText);
+  Assert.equal(channel.responseStatus, httpCode);
+  Assert.equal(channel.responseStatusText, statusText);
 
   var respMaj = {}, respMin = {};
   channel.getResponseVersion(respMaj, respMin);
-  do_check_eq(respMaj.value, httpMaxVer);
-  do_check_eq(respMin.value, httpMinVer);
+  Assert.equal(respMaj.value, httpMaxVer);
+  Assert.equal(respMin.value, httpMinVer);
 }
 
 
@@ -76,7 +76,7 @@ function startNoSetStatusLine(ch, cx)
 }
 function stop(ch, cx, status, data)
 {
-  do_check_true(Components.isSuccessCode(status));
+  Assert.ok(Components.isSuccessCode(status));
 }
 
 
@@ -117,7 +117,7 @@ function invalidVersion(metadata, response)
 function startPassedTrue(ch, cx)
 {
   checkStatusLine(ch, 1, 1, 200, "OK");
-  do_check_eq(ch.getResponseHeader("Passed"), "true");
+  Assert.equal(ch.getResponseHeader("Passed"), "true");
 }
 
 

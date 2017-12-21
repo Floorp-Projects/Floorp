@@ -30,7 +30,7 @@ function run_test() {
 function testBreakpointMapping(name, callback) {
   Task.spawn(function* () {
     let response = yield waitForPause(gThreadClient);
-    do_check_eq(response.why.type, "debuggerStatement");
+    Assert.equal(response.why.type, "debuggerStatement");
 
     const source = yield getSource(gThreadClient, "http://example.com/www/js/" + name + ".js");
     response = yield setBreakpoint(source, {
@@ -40,7 +40,7 @@ function testBreakpointMapping(name, callback) {
     });
 
     // Should not slide breakpoints for sourcemapped sources
-    do_check_true(!response.actualLocation);
+    Assert.ok(!response.actualLocation);
 
     yield setBreakpoint(source, { line: 4 });
 
@@ -49,21 +49,21 @@ function testBreakpointMapping(name, callback) {
     // finally receive our last pause which has the result of the client
     // evaluation.
     response = yield gThreadClient.eval(null, name + "()");
-    do_check_eq(response.type, "resumed");
+    Assert.equal(response.type, "resumed");
 
     response = yield waitForPause(gThreadClient);
-    do_check_eq(response.why.type, "breakpoint");
+    Assert.equal(response.why.type, "breakpoint");
     // Assert that we paused because of the breakpoint at the correct
     // location in the code by testing that the value of `ret` is still
     // undefined.
-    do_check_eq(response.frame.environment.bindings.variables.ret.value.type,
-                "undefined");
+    Assert.equal(response.frame.environment.bindings.variables.ret.value.type,
+                 "undefined");
 
     response = yield resume(gThreadClient);
 
     response = yield waitForPause(gThreadClient);
-    do_check_eq(response.why.type, "clientEvaluated");
-    do_check_eq(response.why.frameFinished.return, name);
+    Assert.equal(response.why.type, "clientEvaluated");
+    Assert.equal(response.why.frameFinished.return, name);
 
     response = yield resume(gThreadClient);
 

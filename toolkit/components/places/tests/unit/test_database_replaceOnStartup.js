@@ -8,11 +8,11 @@ function run_test() {
   // Ensure that our database doesn't already exist.
   let dbFile = gProfD.clone();
   dbFile.append("places.sqlite");
-  do_check_false(dbFile.exists());
+  Assert.ok(!dbFile.exists());
 
   dbFile = gProfD.clone();
   dbFile.append("places.sqlite.corrupt");
-  do_check_false(dbFile.exists());
+  Assert.ok(!dbFile.exists());
 
   let file = do_get_file("default.sqlite");
   file.copyToFollowingLinks(gProfD, "places.sqlite");
@@ -25,12 +25,12 @@ function run_test() {
   db.close();
 
   Services.prefs.setBoolPref("places.database.replaceOnStartup", true);
-  do_check_eq(PlacesUtils.history.databaseStatus,
-              PlacesUtils.history.DATABASE_STATUS_CORRUPT);
+  Assert.equal(PlacesUtils.history.databaseStatus,
+               PlacesUtils.history.DATABASE_STATUS_CORRUPT);
 
   dbFile = gProfD.clone();
   dbFile.append("places.sqlite");
-  do_check_true(dbFile.exists());
+  Assert.ok(dbFile.exists());
 
   // Check the new database is really a new one.
   db = Services.storage.openUnsharedDatabase(file);
@@ -42,5 +42,5 @@ function run_test() {
 
   dbFile = gProfD.clone();
   dbFile.append("places.sqlite.corrupt");
-  do_check_true(dbFile.exists());
+  Assert.ok(dbFile.exists());
 }

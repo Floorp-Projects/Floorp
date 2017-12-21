@@ -16,5 +16,5 @@ function run_test()
            false);
   xhr.send(null);
 
-  do_check_eq(xhr.responseText, result);
+  Assert.equal(xhr.responseText, result);
 }

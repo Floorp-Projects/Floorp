@@ -12,7 +12,7 @@ function run_test() {
     // This test assumes that it's starting on an empty profiler stack.
     // (Note that the other profiler tests also assume the profiler
     // isn't already started.)
-    do_check_true(!p.IsActive());
+    Assert.ok(!p.IsActive());
 
     let jsFuns = Cu.getJSTestingFunctions();
     if (!jsFuns.isAsmJSCompilationAvailable())
@@ -56,26 +56,26 @@ function run_test() {
         return asmjs_function;
     }
 
-    do_check_true(jsFuns.isAsmJSModule(asmjs_module));
+    Assert.ok(jsFuns.isAsmJSModule(asmjs_module));
 
     var asmjs_function = asmjs_module(null, {ffi: ffi_function});
-    do_check_true(jsFuns.isAsmJSFunction(asmjs_function));
+    Assert.ok(jsFuns.isAsmJSFunction(asmjs_function));
 
     asmjs_function();
 
-    do_check_neq(stack, null);
+    Assert.notEqual(stack, null);
 
     var i1 = stack.indexOf("entry trampoline");
-    do_check_true(i1 !== -1);
+    Assert.ok(i1 !== -1);
     var i2 = stack.indexOf("asmjs_function");
-    do_check_true(i2 !== -1);
+    Assert.ok(i2 !== -1);
     var i3 = stack.indexOf("FFI trampoline");
-    do_check_true(i3 !== -1);
+    Assert.ok(i3 !== -1);
     var i4 = stack.indexOf("ffi_function");
-    do_check_true(i4 !== -1);
-    do_check_true(i1 < i2);
-    do_check_true(i2 < i3);
-    do_check_true(i3 < i4);
+    Assert.ok(i4 !== -1);
+    Assert.ok(i1 < i2);
+    Assert.ok(i2 < i3);
+    Assert.ok(i3 < i4);
 
     p.StopProfiler();
 }

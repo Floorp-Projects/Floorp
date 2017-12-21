@@ -89,7 +89,7 @@ function run_test() {
   loadCertWithTrust("int-nsSGC-older", ",,");
   // 0 = "always accept nsSGC in place of serverAuth for CA certificates"
   Services.prefs.setIntPref("security.pki.netscape_step_up_policy", 0);
-  do_print("Netscape Step Up policy: always accept");
+  info("Netscape Step Up policy: always accept");
   checkCertOn25August2016(certFromFile("ee-int-nsSGC-recent"),
                           PRErrorCodeSuccess);
   checkCertOn25August2016(certFromFile("ee-int-nsSGC-old"),
@@ -97,7 +97,7 @@ function run_test() {
   checkCertOn25August2016(certFromFile("ee-int-nsSGC-older"),
                           PRErrorCodeSuccess);
   // 1 = "accept nsSGC before 23 August 2016"
-  do_print("Netscape Step Up policy: accept before 23 August 2016");
+  info("Netscape Step Up policy: accept before 23 August 2016");
   Services.prefs.setIntPref("security.pki.netscape_step_up_policy", 1);
   checkCertOn25August2016(certFromFile("ee-int-nsSGC-recent"),
                           SEC_ERROR_INADEQUATE_CERT_TYPE);
@@ -106,7 +106,7 @@ function run_test() {
   checkCertOn25August2016(certFromFile("ee-int-nsSGC-older"),
                           PRErrorCodeSuccess);
   // 2 = "accept nsSGC before 23 August 2015"
-  do_print("Netscape Step Up policy: accept before 23 August 2015");
+  info("Netscape Step Up policy: accept before 23 August 2015");
   Services.prefs.setIntPref("security.pki.netscape_step_up_policy", 2);
   checkCertOn25August2016(certFromFile("ee-int-nsSGC-recent"),
                           SEC_ERROR_INADEQUATE_CERT_TYPE);
@@ -115,7 +115,7 @@ function run_test() {
   checkCertOn25August2016(certFromFile("ee-int-nsSGC-older"),
                           PRErrorCodeSuccess);
   // 3 = "never accept nsSGC"
-  do_print("Netscape Step Up policy: never accept");
+  info("Netscape Step Up policy: never accept");
   Services.prefs.setIntPref("security.pki.netscape_step_up_policy", 3);
   checkCertOn25August2016(certFromFile("ee-int-nsSGC-recent"),
                           SEC_ERROR_INADEQUATE_CERT_TYPE);

@@ -19,34 +19,34 @@ function run_test() {
 }
 
 function test_isTextMimeType() {
-  do_check_eq(NetworkHelper.isTextMimeType("text/plain"), true);
-  do_check_eq(NetworkHelper.isTextMimeType("application/javascript"), true);
-  do_check_eq(NetworkHelper.isTextMimeType("application/json"), true);
-  do_check_eq(NetworkHelper.isTextMimeType("text/css"), true);
-  do_check_eq(NetworkHelper.isTextMimeType("text/html"), true);
-  do_check_eq(NetworkHelper.isTextMimeType("image/svg+xml"), true);
-  do_check_eq(NetworkHelper.isTextMimeType("application/xml"), true);
+  Assert.equal(NetworkHelper.isTextMimeType("text/plain"), true);
+  Assert.equal(NetworkHelper.isTextMimeType("application/javascript"), true);
+  Assert.equal(NetworkHelper.isTextMimeType("application/json"), true);
+  Assert.equal(NetworkHelper.isTextMimeType("text/css"), true);
+  Assert.equal(NetworkHelper.isTextMimeType("text/html"), true);
+  Assert.equal(NetworkHelper.isTextMimeType("image/svg+xml"), true);
+  Assert.equal(NetworkHelper.isTextMimeType("application/xml"), true);
 
   // Test custom JSON subtype
-  do_check_eq(NetworkHelper
+  Assert.equal(NetworkHelper
     .isTextMimeType("application/vnd.tent.posts-feed.v0+json"), true);
-  do_check_eq(NetworkHelper
+  Assert.equal(NetworkHelper
     .isTextMimeType("application/vnd.tent.posts-feed.v0-json"), true);
   // Test custom XML subtype
-  do_check_eq(NetworkHelper
+  Assert.equal(NetworkHelper
     .isTextMimeType("application/vnd.tent.posts-feed.v0+xml"), true);
-  do_check_eq(NetworkHelper
+  Assert.equal(NetworkHelper
     .isTextMimeType("application/vnd.tent.posts-feed.v0-xml"), false);
   // Test case-insensitive
-  do_check_eq(NetworkHelper.isTextMimeType("application/vnd.BIG-CORP+json"), true);
+  Assert.equal(NetworkHelper.isTextMimeType("application/vnd.BIG-CORP+json"), true);
   // Test non-text type
-  do_check_eq(NetworkHelper.isTextMimeType("image/png"), false);
+  Assert.equal(NetworkHelper.isTextMimeType("image/png"), false);
   // Test invalid types
-  do_check_eq(NetworkHelper.isTextMimeType("application/foo-+json"), false);
-  do_check_eq(NetworkHelper.isTextMimeType("application/-foo+json"), false);
-  do_check_eq(NetworkHelper.isTextMimeType("application/foo--bar+json"), false);
+  Assert.equal(NetworkHelper.isTextMimeType("application/foo-+json"), false);
+  Assert.equal(NetworkHelper.isTextMimeType("application/-foo+json"), false);
+  Assert.equal(NetworkHelper.isTextMimeType("application/foo--bar+json"), false);
 
   // Test we do not cause internal errors with unoptimized regex. Bug 961097
-  do_check_eq(NetworkHelper
+  Assert.equal(NetworkHelper
     .isTextMimeType("application/vnd.google.safebrowsing-chunk"), false);
 }

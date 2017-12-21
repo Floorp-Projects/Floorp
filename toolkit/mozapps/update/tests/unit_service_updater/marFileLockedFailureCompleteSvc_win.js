@@ -45,7 +45,7 @@ function waitForHelperExitFinished() {
   checkUpdateLogContains(ERR_RENAME_FILE);
   checkUpdateLogContains(ERR_BACKUP_CREATE_7);
   checkUpdateLogContains(STATE_FAILED_WRITE_ERROR + "\n" + CALL_QUIT);
-  do_execute_soon(() => waitForUpdateXMLFiles(true, false));
+  executeSoon(() => waitForUpdateXMLFiles(true, false));
 }
 
 /**

@@ -78,7 +78,7 @@ function firstTimeThrough(request, buffer)
 
 function finish_test(request, buffer)
 {
-  do_check_eq(buffer, responseBody);
+  Assert.equal(buffer, responseBody);
   Services.prefs.setBoolPref("network.http.enforce-framing.soft", enforcePref);
   httpServer.stop(do_test_finished);
 }

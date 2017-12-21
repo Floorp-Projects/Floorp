@@ -37,14 +37,14 @@ const kDataFileSize = 1024;	// file size for each content page
 const kHttpLocation = "http://localhost:4444/";
 
 function manifest_handler(metadata, response) {
-  do_print("manifest\n");
+  info("manifest\n");
   response.setHeader("content-type", "text/cache-manifest");
 
   response.write(kManifest);
 }
 
 function datafile_handler(metadata, response) {
-  do_print("datafile_handler\n");
+  info("datafile_handler\n");
   let data = "";
 
   while(data.length < kDataFileSize) {
@@ -56,7 +56,7 @@ function datafile_handler(metadata, response) {
 }
 
 function app_handler(metadata, response) {
-  do_print("app_handler\n");
+  info("app_handler\n");
   response.setHeader("content-type", "text/html");
 
   response.write("<html></html>");
@@ -71,7 +71,7 @@ function init_profile() {
   ps.setBoolPref("browser.cache.offline.enable", true);
   ps.setComplexValue("browser.cache.offline.parent_directory",
 		     Ci.nsIFile, do_get_profile());
-  do_print("profile " + do_get_profile());
+  info("profile " + do_get_profile());
 }
 
 function init_http_server() {
@@ -142,7 +142,7 @@ const {STATE_FINISHED: STATE_FINISHED,
  * Start caching app1 as a non-pinned app.
  */
 function start_cache_nonpinned_app() {
-  do_print("Start non-pinned App1");
+  info("Start non-pinned App1");
   start_and_watch_app_cache(kHttpLocation + "app.appcache",
                           kHttpLocation + "app",
                           function (update, state) {
@@ -157,7 +157,7 @@ function start_cache_nonpinned_app() {
                             }
                           },
                           function (appcache) {
-                            do_print("app avail " + appcache + "\n");
+                            info("app avail " + appcache + "\n");
                           });
 }
 
@@ -189,14 +189,14 @@ function check_evict_cache(appcache) {
   file.append("5");
   file.append("9");
   file.append("8379C6596B8CA4-0");
-  do_check_eq(file.exists(), true);
+  Assert.equal(file.exists(), true);
 
   file = do_get_profile().clone();
   file.append("OfflineCache");
   file.append("C");
   file.append("2");
   file.append("5F356A168B5E3B-0");
-  do_check_eq(file.exists(), false);
+  Assert.equal(file.exists(), false);
 
   // activate foo3
   asyncOpenCacheEntry(
@@ -217,28 +217,28 @@ function check_evict_cache(appcache) {
         file.append("5");
         file.append("9");
         file.append("8379C6596B8CA4-0");
-        do_check_eq(file.exists(), true);
+        Assert.equal(file.exists(), true);
 
         file = do_get_profile().clone();
         file.append("OfflineCache");
         file.append("0");
         file.append("0");
         file.append("61FEE819921D39-0");
-        do_check_eq(file.exists(), false);
+        Assert.equal(file.exists(), false);
 
         file = do_get_profile().clone();
         file.append("OfflineCache");
         file.append("3");
         file.append("9");
         file.append("0D8759F1DE5452-0");
-        do_check_eq(file.exists(), false);
+        Assert.equal(file.exists(), false);
 
         file = do_get_profile().clone();
         file.append("OfflineCache");
         file.append("C");
         file.append("2");
         file.append("5F356A168B5E3B-0");
-        do_check_eq(file.exists(), false);
+        Assert.equal(file.exists(), false);
 
         // foo3
         file = do_get_profile().clone();
@@ -246,14 +246,14 @@ function check_evict_cache(appcache) {
         file.append("D");
         file.append("C");
         file.append("1ADCCC843B5C00-0");
-        do_check_eq(file.exists(), true);
+        Assert.equal(file.exists(), true);
 
         file = do_get_profile().clone();
         file.append("OfflineCache");
         file.append("F");
         file.append("0");
         file.append("FC3E6D6C1164E9-0");
-        do_check_eq(file.exists(), false);
+        Assert.equal(file.exists(), false);
 
         httpServer.stop(do_test_finished);
       }, true /* force even with the new cache back end */);

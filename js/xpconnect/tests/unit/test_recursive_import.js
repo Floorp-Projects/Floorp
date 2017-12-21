@@ -7,11 +7,11 @@ function run_test() {
   Components.utils.import("resource://test/recursive_importA.jsm", scope);
 
   // A imported correctly
-  do_check_true(scope.foo() == "foo");
+  Assert.ok(scope.foo() == "foo");
 
   // Symbols from B are visible through A
-  do_check_true(scope.bar.baz() == "baz");
+  Assert.ok(scope.bar.baz() == "baz");
 
   // Symbols from A are visible through A, B, A.
-  do_check_true(scope.bar.qux.foo() == "foo");
+  Assert.ok(scope.bar.qux.foo() == "foo");
 }

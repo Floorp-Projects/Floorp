@@ -26,13 +26,13 @@ let controllerState = new ControllerStateMachine(mockControllerChannel, testCont
 let receiverState = new ReceiverStateMachine(mockReceiverChannel);
 
 mockControllerChannel.sendCommand = function(command) {
-  do_execute_soon(function() {
+  executeSoon(function() {
     receiverState.onCommand(command);
   });
 };
 
 mockReceiverChannel.sendCommand = function(command) {
-  do_execute_soon(function() {
+  executeSoon(function() {
     controllerState.onCommand(command);
   });
 };

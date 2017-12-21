@@ -56,8 +56,8 @@ function run_test() {
     let uri = ioService.newURI(results[i][0]);
     let principal = secMan.createCodebasePrincipal(uri, {});
 
-    do_check_eq(pm.testPermissionFromPrincipal(principal, results[i][1]), results[i][2]);
-    do_check_eq(pm.testExactPermissionFromPrincipal(principal, results[i][1]), results[i][3]);
+    Assert.equal(pm.testPermissionFromPrincipal(principal, results[i][1]), results[i][2]);
+    Assert.equal(pm.testExactPermissionFromPrincipal(principal, results[i][1]), results[i][3]);
   }
 
   // test the enumerator ...
@@ -68,7 +68,7 @@ function run_test() {
     perms[j] = enumerator.getNext().QueryInterface(Components.interfaces.nsIPermission);
     ++j;
   }
-  do_check_eq(perms.length, hosts.length);
+  Assert.equal(perms.length, hosts.length);
 
   // ... remove all the hosts ...
   for (var j = 0; j < perms.length; ++j) {
@@ -86,10 +86,10 @@ function run_test() {
       }
     }
   }
-  do_check_eq(perms.length, 0);
+  Assert.equal(perms.length, 0);
 
   // ... and check the permmgr's empty
-  do_check_eq(pm.enumerator.hasMoreElements(), false);
+  Assert.equal(pm.enumerator.hasMoreElements(), false);
 
   // test UTF8 normalization behavior: expect ASCII/ACE host encodings
   var utf8 = "b\u00FCcher.dolske.org"; // "bücher.dolske.org"
@@ -97,14 +97,14 @@ function run_test() {
   var uri = ioService.newURI("http://" + utf8);
   pm.add(uri, "utf8", 1);
   var enumerator = pm.enumerator;
-  do_check_eq(enumerator.hasMoreElements(), true);
+  Assert.equal(enumerator.hasMoreElements(), true);
   var ace = enumerator.getNext().QueryInterface(Components.interfaces.nsIPermission);
-  do_check_eq(ace.principal.URI.asciiHost, aceref);
-  do_check_eq(enumerator.hasMoreElements(), false);
+  Assert.equal(ace.principal.URI.asciiHost, aceref);
+  Assert.equal(enumerator.hasMoreElements(), false);
 
   // test removeAll()
   pm.removeAll();
-  do_check_eq(pm.enumerator.hasMoreElements(), false);
+  Assert.equal(pm.enumerator.hasMoreElements(), false);
 
   uri = ioService.newURI("https://www.example.com");
   pm.add(uri, "offline-app", pm.ALLOW_ACTION);
@@ -115,5 +115,5 @@ function run_test() {
   // Try to remove already deleted entry.
   perm = pm.getPermissionObject(principal, "offline-app", true);
   pm.removePermission(perm);
-  do_check_eq(pm.enumerator.hasMoreElements(), false);
+  Assert.equal(pm.enumerator.hasMoreElements(), false);
 }

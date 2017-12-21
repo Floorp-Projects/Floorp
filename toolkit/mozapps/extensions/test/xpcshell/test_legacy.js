@@ -75,12 +75,12 @@ add_task(async function test_disable() {
   }));
   await promiseCompleteAllInstalls(installs);
   for (let install of installs) {
-    do_check_eq(install.state, AddonManager.STATE_INSTALLED);
-    do_check_eq(install.error, 0);
+    Assert.equal(install.state, AddonManager.STATE_INSTALLED);
+    Assert.equal(install.error, 0);
   }
   let addons = await AddonManager.getAddonsByIDs(nonLegacy.map(a => a.id));
   for (let addon of addons) {
-    do_check_eq(addon.appDisabled, false);
+    Assert.equal(addon.appDisabled, false);
   }
 
   // And installing legacy extensions should fail
@@ -92,8 +92,8 @@ add_task(async function test_disable() {
   // and the install is abandoned at that point.  Since this is a local file
   // install we just start out in the DONWLOADED state.
   for (let install of installs) {
-    do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
-    do_check_eq(install.addon.appDisabled, true);
+    Assert.equal(install.state, AddonManager.STATE_DOWNLOADED);
+    Assert.equal(install.addon.appDisabled, true);
   }
 
   // Now enable legacy extensions, and we should be able to install
@@ -101,17 +101,17 @@ add_task(async function test_disable() {
   Services.prefs.setBoolPref(LEGACY_PREF, true);
   installs = await Promise.all(legacyXPIs.map(xpi => AddonManager.getInstallForFile(xpi)));
   for (let install of installs) {
-    do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
-    do_check_eq(install.addon.appDisabled, false);
+    Assert.equal(install.state, AddonManager.STATE_DOWNLOADED);
+    Assert.equal(install.addon.appDisabled, false);
   }
   await promiseCompleteAllInstalls(installs);
   for (let install of installs) {
-    do_check_eq(install.state, AddonManager.STATE_INSTALLED);
-    do_check_eq(install.error, 0);
+    Assert.equal(install.state, AddonManager.STATE_INSTALLED);
+    Assert.equal(install.error, 0);
   }
   addons = await AddonManager.getAddonsByIDs(legacy.map(a => a.id));
   for (let addon of addons) {
-    do_check_eq(addon.appDisabled, false);
+    Assert.equal(addon.appDisabled, false);
   }
 
   // Flip the preference back, the legacy extensions should become disabled
@@ -119,12 +119,12 @@ add_task(async function test_disable() {
   Services.prefs.setBoolPref(LEGACY_PREF, false);
   addons = await AddonManager.getAddonsByIDs(nonLegacy.map(a => a.id));
   for (let addon of addons) {
-    do_check_eq(addon.appDisabled, false);
+    Assert.equal(addon.appDisabled, false);
     addon.uninstall();
   }
   addons = await AddonManager.getAddonsByIDs(legacy.map(a => a.id));
   for (let addon of addons) {
-    do_check_eq(addon.appDisabled, true);
+    Assert.equal(addon.appDisabled, true);
     addon.uninstall();
   }
 

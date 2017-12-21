@@ -16,9 +16,9 @@ function run_test() {
 }
 
 function* test_transport_events(name, transportFactory) {
-  do_print(`Started testing of transport: ${name}`);
+  info(`Started testing of transport: ${name}`);
 
-  do_check_eq(Object.keys(DebuggerServer._connections).length, 0);
+  Assert.equal(Object.keys(DebuggerServer._connections).length, 0);
 
   let transport = yield transportFactory();
 
@@ -29,26 +29,26 @@ function* test_transport_events(name, transportFactory) {
   };
 
   let rootReceived = transport.once("packet", (event, packet) => {
-    do_print(`Packet event: ${event} ${JSON.stringify(packet)}`);
-    do_check_eq(event, "packet");
-    do_check_eq(packet.from, "root");
+    info(`Packet event: ${event} ${JSON.stringify(packet)}`);
+    Assert.equal(event, "packet");
+    Assert.equal(packet.from, "root");
   });
 
   transport.ready();
   yield rootReceived;
 
   let echoSent = transport.once("send", (event, packet) => {
-    do_print(`Send event: ${event} ${JSON.stringify(packet)}`);
-    do_check_eq(event, "send");
-    do_check_eq(packet.to, "root");
-    do_check_eq(packet.type, "echo");
+    info(`Send event: ${event} ${JSON.stringify(packet)}`);
+    Assert.equal(event, "send");
+    Assert.equal(packet.to, "root");
+    Assert.equal(packet.type, "echo");
   });
 
   let echoReceived = transport.once("packet", (event, packet) => {
-    do_print(`Packet event: ${event} ${JSON.stringify(packet)}`);
-    do_check_eq(event, "packet");
-    do_check_eq(packet.from, "root");
-    do_check_eq(packet.type, "echo");
+    info(`Packet event: ${event} ${JSON.stringify(packet)}`);
+    Assert.equal(event, "packet");
+    Assert.equal(packet.from, "root");
+    Assert.equal(packet.type, "echo");
   });
 
   transport.send({ to: "root", type: "echo" });
@@ -56,14 +56,14 @@ function* test_transport_events(name, transportFactory) {
   yield echoReceived;
 
   let clientClosed = transport.once("close", (event) => {
-    do_print(`Close event: ${event}`);
-    do_check_eq(event, "close");
+    info(`Close event: ${event}`);
+    Assert.equal(event, "close");
   });
 
   let serverClosed = DebuggerServer.once("connectionchange", (event, type) => {
-    do_print(`Server closed`);
-    do_check_eq(event, "connectionchange");
-    do_check_eq(type, "closed");
+    info(`Server closed`);
+    Assert.equal(event, "connectionchange");
+    Assert.equal(type, "closed");
   });
 
   transport.close();
@@ -71,5 +71,5 @@ function* test_transport_events(name, transportFactory) {
   yield clientClosed;
   yield serverClosed;
 
-  do_print(`Finished testing of transport: ${name}`);
+  info(`Finished testing of transport: ${name}`);
 }

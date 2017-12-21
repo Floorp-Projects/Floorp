@@ -82,7 +82,7 @@ function run_test() {
     // this throws for packages that are not registered
     let uri = cr.convertChromeURL(sourceURI).spec;
 
-    do_check_eq(expectedURI, uri);
+    Assert.equal(expectedURI, uri);
   } catch (e) {
     dump(e + "\n");
     do_throw("Should have registered our URI!");

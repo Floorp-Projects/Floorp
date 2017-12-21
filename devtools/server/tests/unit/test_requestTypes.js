@@ -11,9 +11,9 @@ function test_requestTypes_request(client, anActor) {
                                            .prototype
                                            .requestTypes);
 
-    do_check_true(Array.isArray(response.requestTypes));
-    do_check_eq(JSON.stringify(response.requestTypes),
-                JSON.stringify(expectedRequestTypes));
+    Assert.ok(Array.isArray(response.requestTypes));
+    Assert.equal(JSON.stringify(response.requestTypes),
+                 JSON.stringify(expectedRequestTypes));
 
     client.close().then(() => {
       do_test_finished();

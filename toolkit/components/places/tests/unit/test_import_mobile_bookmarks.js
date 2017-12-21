@@ -2,7 +2,7 @@ async function importFromFixture(fixture, replace) {
   let cwd = await OS.File.getCurrentDirectory();
   let path = OS.Path.join(cwd, fixture);
 
-  do_print(`Importing from ${path}`);
+  info(`Importing from ${path}`);
   await BookmarkJSONUtils.importFromFile(path, replace);
   await PlacesTestUtils.promiseAsyncUpdates();
 }
@@ -20,8 +20,8 @@ async function treeEquals(guid, expected, message) {
     return entry;
   }(root));
 
-  do_print(`Checking if ${guid} tree matches ${JSON.stringify(expected)}`);
-  do_print(`Got bookmarks tree for ${guid}: ${JSON.stringify(bookmarks)}`);
+  info(`Checking if ${guid} tree matches ${JSON.stringify(expected)}`);
+  info(`Got bookmarks tree for ${guid}: ${JSON.stringify(bookmarks)}`);
 
   deepEqual(bookmarks, expected, message);
 }

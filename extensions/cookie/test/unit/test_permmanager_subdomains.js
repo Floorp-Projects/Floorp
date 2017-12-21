@@ -15,43 +15,43 @@ function run_test() {
   // Adds a permission to a sub-domain. Checks if it is working.
   let sub1Principal = getPrincipalFromURI("http://sub1.example.com");
   pm.addFromPrincipal(sub1Principal, "test/subdomains", pm.ALLOW_ACTION, 0, 0);
-  do_check_eq(pm.testPermissionFromPrincipal(sub1Principal, "test/subdomains"), pm.ALLOW_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(sub1Principal, "test/subdomains"), pm.ALLOW_ACTION);
 
   // A sub-sub-domain should get the permission.
   let subsubPrincipal = getPrincipalFromURI("http://sub.sub1.example.com");
-  do_check_eq(pm.testPermissionFromPrincipal(subsubPrincipal, "test/subdomains"), pm.ALLOW_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(subsubPrincipal, "test/subdomains"), pm.ALLOW_ACTION);
 
   // Another sub-domain shouldn't get the permission.
   let sub2Principal = getPrincipalFromURI("http://sub2.example.com");
-  do_check_eq(pm.testPermissionFromPrincipal(sub2Principal, "test/subdomains"), pm.UNKNOWN_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(sub2Principal, "test/subdomains"), pm.UNKNOWN_ACTION);
 
   // Remove current permissions.
   pm.removeFromPrincipal(sub1Principal, "test/subdomains");
-  do_check_eq(pm.testPermissionFromPrincipal(sub1Principal, "test/subdomains"), pm.UNKNOWN_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(sub1Principal, "test/subdomains"), pm.UNKNOWN_ACTION);
 
   // Adding the permission to the main domain. Checks if it is working.
   let mainPrincipal = getPrincipalFromURI("http://example.com");
   pm.addFromPrincipal(mainPrincipal, "test/subdomains", pm.ALLOW_ACTION, 0, 0);
-  do_check_eq(pm.testPermissionFromPrincipal(mainPrincipal, "test/subdomains"), pm.ALLOW_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(mainPrincipal, "test/subdomains"), pm.ALLOW_ACTION);
 
   // All sub-domains should have the permission now.
-  do_check_eq(pm.testPermissionFromPrincipal(sub1Principal, "test/subdomains"), pm.ALLOW_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(sub2Principal, "test/subdomains"), pm.ALLOW_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(subsubPrincipal, "test/subdomains"), pm.ALLOW_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(sub1Principal, "test/subdomains"), pm.ALLOW_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(sub2Principal, "test/subdomains"), pm.ALLOW_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(subsubPrincipal, "test/subdomains"), pm.ALLOW_ACTION);
 
   // Remove current permissions.
   pm.removeFromPrincipal(mainPrincipal, "test/subdomains");
-  do_check_eq(pm.testPermissionFromPrincipal(mainPrincipal, "test/subdomains"), pm.UNKNOWN_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(sub1Principal, "test/subdomains"), pm.UNKNOWN_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(sub2Principal, "test/subdomains"), pm.UNKNOWN_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(subsubPrincipal, "test/subdomains"), pm.UNKNOWN_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(mainPrincipal, "test/subdomains"), pm.UNKNOWN_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(sub1Principal, "test/subdomains"), pm.UNKNOWN_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(sub2Principal, "test/subdomains"), pm.UNKNOWN_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(subsubPrincipal, "test/subdomains"), pm.UNKNOWN_ACTION);
 
   // A sanity check that the previous implementation wasn't passing...
   let crazyPrincipal = getPrincipalFromURI("http://com");
   pm.addFromPrincipal(crazyPrincipal, "test/subdomains", pm.ALLOW_ACTION, 0, 0);
-  do_check_eq(pm.testPermissionFromPrincipal(crazyPrincipal, "test/subdomains"),  pm.ALLOW_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(mainPrincipal, "test/subdomains"),   pm.UNKNOWN_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(sub1Principal, "test/subdomains"),   pm.UNKNOWN_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(sub2Principal, "test/subdomains"),   pm.UNKNOWN_ACTION);
-  do_check_eq(pm.testPermissionFromPrincipal(subsubPrincipal, "test/subdomains"), pm.UNKNOWN_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(crazyPrincipal, "test/subdomains"),  pm.ALLOW_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(mainPrincipal, "test/subdomains"),   pm.UNKNOWN_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(sub1Principal, "test/subdomains"),   pm.UNKNOWN_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(sub2Principal, "test/subdomains"),   pm.UNKNOWN_ACTION);
+  Assert.equal(pm.testPermissionFromPrincipal(subsubPrincipal, "test/subdomains"), pm.UNKNOWN_ACTION);
 }

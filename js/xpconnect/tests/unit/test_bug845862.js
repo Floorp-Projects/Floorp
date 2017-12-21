@@ -6,8 +6,8 @@ function run_test() {
   // waivers out of the sandbox (which has no native objects). :-(
   var sb = new Cu.Sandbox('http://www.example.com', {wantXrays: false});
   Cu.evalInSandbox("this.foo = {}; Object.defineProperty(foo, 'bar', {get: function() {return {};}});", sb);
-  do_check_true(sb.foo != XPCNativeWrapper(sb.foo), "sb.foo is waived");
+  Assert.ok(sb.foo != XPCNativeWrapper(sb.foo), "sb.foo is waived");
   var desc = Object.getOwnPropertyDescriptor(sb.foo, 'bar');
   var b = desc.get();
-  do_check_true(b != XPCNativeWrapper(b), "results from accessor descriptors are waived");
+  Assert.ok(b != XPCNativeWrapper(b), "results from accessor descriptors are waived");
 }

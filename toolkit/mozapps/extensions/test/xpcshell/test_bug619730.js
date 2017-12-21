@@ -18,7 +18,7 @@ function load_blocklist(file, aCallback) {
   Services.obs.addObserver(function observer() {
     Services.obs.removeObserver(observer, "blocklist-updated");
 
-    do_execute_soon(aCallback);
+    executeSoon(aCallback);
   }, "blocklist-updated");
 
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
@@ -39,22 +39,22 @@ function run_test() {
   do_test_pending();
 
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
-    do_check_true(aSubject instanceof AM_Ci.nsIDOMElement);
-    do_check_eq(aSubject.getAttribute("testattr"), "GFX");
-    do_check_eq(aSubject.childNodes.length, 2);
+    Assert.ok(aSubject instanceof AM_Ci.nsIDOMElement);
+    Assert.equal(aSubject.getAttribute("testattr"), "GFX");
+    Assert.equal(aSubject.childNodes.length, 2);
     gSawGFX = true;
   }, "blocklist-data-gfxItems");
 
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
-    do_check_true(aSubject instanceof AM_Ci.nsIDOMElement);
-    do_check_eq(aSubject.getAttribute("testattr"), "FOO");
-    do_check_eq(aSubject.childNodes.length, 3);
+    Assert.ok(aSubject instanceof AM_Ci.nsIDOMElement);
+    Assert.equal(aSubject.getAttribute("testattr"), "FOO");
+    Assert.equal(aSubject.childNodes.length, 3);
     gSawTest = true;
   }, "blocklist-data-testItems");
 
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
-    do_check_true(gSawGFX);
-    do_check_true(gSawTest);
+    Assert.ok(gSawGFX);
+    Assert.ok(gSawTest);
   }, "blocklist-data-fooItems");
 
   // Need to wait for the blocklist to load; Bad Things happen if the test harness

@@ -3,7 +3,7 @@ var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
 var listener = {
   onLookupComplete: function(inRequest, inRecord, inStatus) {
     var answer = inRecord.getNextAddrAsString();
-    do_check_true(answer == "127.0.0.1" || answer == "::1");
+    Assert.ok(answer == "127.0.0.1" || answer == "::1");
 
     do_test_finished();
   },

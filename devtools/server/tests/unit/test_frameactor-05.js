@@ -30,7 +30,7 @@ function run_test() {
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     gThreadClient.getFrames(0, null, function (frameResponse) {
-      do_check_eq(frameResponse.frames.length, 5);
+      Assert.equal(frameResponse.frames.length, 5);
       // Now wait for the next pause, after which the three
       // youngest actors should be popped..
       let expectPopped = frameResponse.frames.slice(0, 3).map(frame => frame.actor);
@@ -38,9 +38,9 @@ function test_pause_frame() {
 
       gThreadClient.addOneTimeListener("paused", function (event, pausePacket) {
         let popped = pausePacket.poppedFrames.sort();
-        do_check_eq(popped.length, 3);
+        Assert.equal(popped.length, 3);
         for (let i = 0; i < 3; i++) {
-          do_check_eq(expectPopped[i], popped[i]);
+          Assert.equal(expectPopped[i], popped[i]);
         }
 
         gThreadClient.resume(() => finishClient(gClient));

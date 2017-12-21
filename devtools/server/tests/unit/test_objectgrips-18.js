@@ -70,14 +70,14 @@ async function test_object_grip() {
 }
 
 async function check_enum_properties(response) {
-  do_print("Check enumProperties response");
+  info("Check enumProperties response");
   ok(response && Object.getOwnPropertyNames(response).includes("iterator"),
     "The response object has an iterator property");
 
   const {iterator} = response;
   equal(iterator.count, 10, "iterator.count has the expected value");
 
-  do_print("Check iterator.slice response for all properties");
+  info("Check iterator.slice response for all properties");
   let sliceResponse = await iterator.slice(0, iterator.count);
   ok(sliceResponse && Object.getOwnPropertyNames(sliceResponse).includes("ownProperties"),
     "The response object has an ownProperties property");
@@ -92,11 +92,11 @@ async function check_enum_properties(response) {
     equal(ownProperties[name].value, `property_${i}_value`);
   }
 
-  do_print("Check iterator.all response");
+  info("Check iterator.all response");
   let allResponse = await iterator.all();
   deepEqual(allResponse, sliceResponse, "iterator.all response has the expected data");
 
-  do_print("Check iterator response for 2 properties only");
+  info("Check iterator response for 2 properties only");
   sliceResponse = await iterator.slice(2, 2);
   ok(sliceResponse && Object.getOwnPropertyNames(sliceResponse).includes("ownProperties"),
     "The response object has an ownProperties property");
@@ -111,14 +111,14 @@ async function check_enum_properties(response) {
 }
 
 async function check_enum_symbols(response) {
-  do_print("Check enumProperties response");
+  info("Check enumProperties response");
   ok(response && Object.getOwnPropertyNames(response).includes("iterator"),
     "The response object has an iterator property");
 
   const {iterator} = response;
   equal(iterator.count, 13, "iterator.count has the expected value");
 
-  do_print("Check iterator.slice response for all symbols");
+  info("Check iterator.slice response for all symbols");
   let sliceResponse = await iterator.slice(0, iterator.count);
   ok(sliceResponse && Object.getOwnPropertyNames(sliceResponse).includes("ownSymbols"),
     "The response object has an ownSymbols property");
@@ -143,11 +143,11 @@ async function check_enum_symbols(response) {
   equal(iteratorSymbol.name, "Symbol(Symbol.iterator)");
   equal(iteratorSymbol.descriptor.value.class, "Function");
 
-  do_print("Check iterator.all response");
+  info("Check iterator.all response");
   let allResponse = await iterator.all();
   deepEqual(allResponse, sliceResponse, "iterator.all response has the expected data");
 
-  do_print("Check iterator response for 2 symbols only");
+  info("Check iterator response for 2 symbols only");
   sliceResponse = await iterator.slice(9, 2);
   ok(sliceResponse && Object.getOwnPropertyNames(sliceResponse).includes("ownSymbols"),
     "The response object has an ownSymbols property");

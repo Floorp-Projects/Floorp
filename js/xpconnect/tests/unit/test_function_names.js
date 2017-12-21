@@ -30,7 +30,7 @@ function run_test() {
   function observer(subject, topic, data)
   {
     let named = subject.QueryInterface(Ci.nsINamed);
-    do_check_eq(named.name, data);
+    Assert.equal(named.name, data);
     dump(`name: ${named.name}\n`);
   }
   obs.addObserver(observer, "test-obs-fun", false);

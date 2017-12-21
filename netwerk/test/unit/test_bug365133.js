@@ -61,9 +61,9 @@ const tests = [
 ]
 
 function checkData(request, data, ctx) {
-  do_check_eq(tests[0][1], data);
+  Assert.equal(tests[0][1], data);
   tests.shift();
-  do_execute_soon(next_test);
+  executeSoon(next_test);
 }
 
 function storeData() {
@@ -103,6 +103,6 @@ function next_test() {
 }
 
 function run_test() {
-  do_execute_soon(next_test);
+  executeSoon(next_test);
   do_test_pending();
 }

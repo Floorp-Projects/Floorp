@@ -59,9 +59,9 @@ function check(ch, cx)
   var headerValue;
 
   headerValue = ch.getResponseHeader("Proxy-Authenticate");
-  do_check_eq(headerValue, "First line 1\nSecond line 1\nThird line 1");
+  Assert.equal(headerValue, "First line 1\nSecond line 1\nThird line 1");
   headerValue = ch.getResponseHeader("WWW-Authenticate");
-  do_check_eq(headerValue, "First line 2\nSecond line 2\nThird line 2");
+  Assert.equal(headerValue, "First line 2\nSecond line 2\nThird line 2");
   headerValue = ch.getResponseHeader("X-Single-Header-Merge");
-  do_check_eq(headerValue, "Single 1,Single 2");
+  Assert.equal(headerValue, "Single 1,Single 2");
 }

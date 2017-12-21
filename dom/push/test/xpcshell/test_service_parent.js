@@ -12,7 +12,7 @@ function run_test() {
 
 add_task(async function test_service_parent() {
   let db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+  registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
   await setUpServiceInParent(PushService, db);
 
   // Accessing the lazy service getter will start the service in the main

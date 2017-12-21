@@ -41,7 +41,7 @@ AuthPrompt2.prototype = {
     try {
 
       // never HOST and PROXY set at the same time in prompt
-      do_check_eq((authInfo.flags & Ci.nsIAuthInformation.AUTH_HOST) != 0,
+      Assert.equal((authInfo.flags & Ci.nsIAuthInformation.AUTH_HOST) != 0,
           (authInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY) == 0);
 
       var isProxy = (authInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY) != 0;
@@ -53,10 +53,10 @@ AuthPrompt2.prototype = {
         ((cred.flags & FLAG_RETURN_FALSE) !=0 ? "return false" : "")  + "\n");
 
       // PROXY properly set by necko (checked using realm)
-      do_check_eq(cred.realmExpected, authInfo.realm);
+      Assert.equal(cred.realmExpected, authInfo.realm);
 
       // PREVIOUS_FAILED properly set by necko
-      do_check_eq((cred.flags & FLAG_PREVIOUS_FAILED) != 0,
+      Assert.equal((cred.flags & FLAG_PREVIOUS_FAILED) != 0,
           (authInfo.flags & Ci.nsIAuthInformation.PREVIOUS_FAILED) != 0);
 
       if (cred.flags & FLAG_RETURN_FALSE)
@@ -87,7 +87,7 @@ AuthPrompt2.prototype = {
     try {
       var me = this;
       var allOverAndDead = false;
-      do_execute_soon(function() {
+      executeSoon(function() {
         try {
           if (allOverAndDead)
             throw "already canceled";
@@ -170,15 +170,15 @@ var listener = {
       if (!(request instanceof Ci.nsIHttpChannel))
         do_throw("Expecting an HTTP channel");
 
-      do_check_eq(this.expectedCode, request.responseStatus);
+      Assert.equal(this.expectedCode, request.responseStatus);
       // If we expect 200, the request should have succeeded
-      do_check_eq(this.expectedCode == 200, request.requestSucceeded);
+      Assert.equal(this.expectedCode == 200, request.requestSucceeded);
 
       var cookie = "";
       try {
         cookie = request.getRequestHeader("Cookie");
       } catch (e) { }
-      do_check_eq(cookie, "");
+      Assert.equal(cookie, "");
 
     } catch (e) {
       do_throw("Unexpected exception: " + e);
@@ -192,7 +192,7 @@ var listener = {
   },
 
   onStopRequest: function test_onStopR(request, ctx, status) {
-    do_check_eq(status, Cr.NS_ERROR_ABORT);
+    Assert.equal(status, Cr.NS_ERROR_ABORT);
 
     if (current_test < (tests.length - 1)) {
       // First, need to clear the auth cache
@@ -237,7 +237,7 @@ function run_test() {
   Services.prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
   Services.prefs.setBoolPref("network.auth.non-web-content-triggered-resources-http-auth-allow", true);
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.prefs.clearUserPref("network.proxy.http");
     Services.prefs.clearUserPref("network.proxy.http_port");
     Services.prefs.clearUserPref("network.proxy.no_proxies_on");

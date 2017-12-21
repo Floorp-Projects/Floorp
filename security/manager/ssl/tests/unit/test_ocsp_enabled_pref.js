@@ -33,7 +33,7 @@ function getOCSPResponder(expectedCertNames) {
 function testOff() {
   add_test(() => {
     Services.prefs.setIntPref("security.OCSP.enabled", 0);
-    do_print("Setting security.OCSP.enabled to 0");
+    info("Setting security.OCSP.enabled to 0");
     run_next_test();
   });
 
@@ -60,7 +60,7 @@ function testOff() {
 function testOn() {
   add_test(() => {
     Services.prefs.setIntPref("security.OCSP.enabled", 1);
-    do_print("Setting security.OCSP.enabled to 1");
+    info("Setting security.OCSP.enabled to 1");
     run_next_test();
   });
 
@@ -91,7 +91,7 @@ function testOn() {
 function testEVOnly() {
   add_test(() => {
     Services.prefs.setIntPref("security.OCSP.enabled", 2);
-    do_print("Setting security.OCSP.enabled to 2");
+    info("Setting security.OCSP.enabled to 2");
     run_next_test();
   });
 
@@ -118,7 +118,7 @@ function testEVOnly() {
 }
 
 function run_test() {
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.prefs.clearUserPref("network.dns.localDomains");
     Services.prefs.clearUserPref("security.OCSP.enabled");
     Services.prefs.clearUserPref("security.OCSP.require");

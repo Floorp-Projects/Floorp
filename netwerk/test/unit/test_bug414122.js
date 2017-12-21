@@ -54,5 +54,5 @@ function checkPublicSuffix(host, expectedSuffix)
 {
   expectedSuffix = idn.convertUTF8toACE(expectedSuffix).toLowerCase();
   var actualSuffix = etld.getPublicSuffixFromHost(host);
-  do_check_eq(actualSuffix, expectedSuffix);
+  Assert.equal(actualSuffix, expectedSuffix);
 }

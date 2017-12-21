@@ -54,7 +54,7 @@ var promiseValidateArchivedPings = async function(aExpectedReasons) {
     let currentPing = await TelemetryArchive.promiseArchivedPingById(list[i].id);
     let currentInfo = currentPing.payload.info;
     let previousInfo = previousPing.payload.info;
-    do_print("Archive entry " + i + " - id: " + currentPing.id + ", reason: " + currentInfo.reason);
+    info("Archive entry " + i + " - id: " + currentPing.id + ", reason: " + currentInfo.reason);
 
     Assert.equal(aExpectedReasons.shift(), currentInfo.reason,
                  "Telemetry should only get pings with expected reasons.");

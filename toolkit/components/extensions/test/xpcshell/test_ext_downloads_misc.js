@@ -61,7 +61,7 @@ function handleRequest(request, response) {
     response.write(TEST_DATA.slice(0, PARTIAL_LEN));
   }
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     try {
       response.finish();
     } catch (e) {
@@ -244,12 +244,12 @@ add_task(async function setup() {
   const nsIFile = Ci.nsIFile;
   downloadDir = FileUtils.getDir("TmpD", ["downloads"]);
   downloadDir.createUnique(nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
-  do_print(`downloadDir ${downloadDir.path}`);
+  info(`downloadDir ${downloadDir.path}`);
 
   Services.prefs.setIntPref("browser.download.folderList", 2);
   Services.prefs.setComplexValue("browser.download.dir", nsIFile, downloadDir);
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.prefs.clearUserPref("browser.download.folderList");
     Services.prefs.clearUserPref("browser.download.dir");
     downloadDir.remove(true);
@@ -258,7 +258,7 @@ add_task(async function setup() {
   });
 
   await clearDownloads().then(downloads => {
-    do_print(`removed ${downloads.length} pre-existing downloads from history`);
+    info(`removed ${downloads.length} pre-existing downloads from history`);
   });
 
   extension = ExtensionTestUtils.loadExtension({
@@ -295,7 +295,7 @@ add_task(async function test_events() {
 
 add_task(async function test_cancel() {
   let url = getInterruptibleUrl();
-  do_print(url);
+  info(url);
   let msg = await runInExtension("download", {url});
   equal(msg.status, "success", "download() succeeded");
   const id = msg.result;
@@ -308,7 +308,7 @@ add_task(async function test_cancel() {
   equal(msg.status, "success", "got created and changed events");
 
   await progressPromise;
-  do_print(`download reached ${INT_PARTIAL_LEN} bytes`);
+  info(`download reached ${INT_PARTIAL_LEN} bytes`);
 
   msg = await runInExtension("cancel", id);
   equal(msg.status, "success", "cancel() succeeded");
@@ -382,7 +382,7 @@ add_task(async function test_pauseresume() {
   equal(msg.status, "success", "got created and changed events");
 
   await progressPromise;
-  do_print(`download reached ${INT_PARTIAL_LEN} bytes`);
+  info(`download reached ${INT_PARTIAL_LEN} bytes`);
 
   msg = await runInExtension("pause", id);
   equal(msg.status, "success", "pause() succeeded");
@@ -510,7 +510,7 @@ add_task(async function test_pausecancel() {
   equal(msg.status, "success", "got created and changed events");
 
   await progressPromise;
-  do_print(`download reached ${INT_PARTIAL_LEN} bytes`);
+  info(`download reached ${INT_PARTIAL_LEN} bytes`);
 
   msg = await runInExtension("pause", id);
   equal(msg.status, "success", "pause() succeeded");
@@ -658,7 +658,7 @@ add_task(async function test_removal_of_incomplete_download() {
   equal(msg.status, "success", "got created and changed events");
 
   await progressPromise;
-  do_print(`download reached ${INT_PARTIAL_LEN} bytes`);
+  info(`download reached ${INT_PARTIAL_LEN} bytes`);
 
   msg = await runInExtension("pause", id);
   equal(msg.status, "success", "pause() succeeded");

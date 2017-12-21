@@ -889,7 +889,7 @@ add_task(async function setup() {
   gHttpRoot = "http://localhost:" + port + "/";
   gDataRoot = gHttpRoot + "data/";
   gHttpServer.registerDirectory("/data/", do_get_cwd());
-  do_register_cleanup(() => gHttpServer.stop(() => {}));
+  registerCleanupFunction(() => gHttpServer.stop(() => {}));
 
   // Spoof the the hotfixVersion
   Preferences.set("extensions.hotfix.lastVersion", APP_HOTFIX_VERSION);
@@ -901,7 +901,7 @@ add_task(async function setup() {
   // The attribution functionality only exists in Firefox.
   if (AppConstants.MOZ_BUILD_APP == "browser") {
     spoofAttributionData();
-    do_register_cleanup(cleanupAttributionData);
+    registerCleanupFunction(cleanupAttributionData);
   }
 
   await spoofProfileReset();
@@ -1578,7 +1578,7 @@ add_task(async function test_defaultSearchEngine() {
     Services.obs.addObserver(function obs(obsSubject, obsTopic, obsData) {
       try {
         let searchEngine = obsSubject.QueryInterface(Ci.nsISearchEngine);
-        do_print("Observed " + obsData + " for " + searchEngine.name);
+        info("Observed " + obsData + " for " + searchEngine.name);
         if (obsData != "engine-added" || searchEngine.name != "engine-telemetry") {
           return;
         }

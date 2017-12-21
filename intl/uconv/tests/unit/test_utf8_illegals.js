@@ -122,8 +122,8 @@ function testCaseInputStream(inStr, expected)
   } while (more);
 
   dump(outStr + "; expected=" + expected + "\n");
-  do_check_eq(outStr, expected);
-  do_check_eq(outStr.length, expected.length);
+  Assert.equal(outStr, expected);
+  Assert.equal(outStr.length, expected.length);
 }
 
 function run_test() {

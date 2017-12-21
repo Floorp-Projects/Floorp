@@ -25,21 +25,21 @@ function run_test() {
   result.appendMatch("b", "");
   result.appendMatch("c", "");
   result.setListener(gResultListener);
-  do_check_eq(result.matchCount, 3);
+  Assert.equal(result.matchCount, 3);
   result.removeValueAt(0, true);
-  do_check_eq(result.matchCount, 2);
-  do_check_eq(gResultListener._lastResult, result);
-  do_check_eq(gResultListener._lastValue, "a");
-  do_check_eq(gResultListener._lastRemoveFromDb, true);
+  Assert.equal(result.matchCount, 2);
+  Assert.equal(gResultListener._lastResult, result);
+  Assert.equal(gResultListener._lastValue, "a");
+  Assert.equal(gResultListener._lastRemoveFromDb, true);
 
   result.removeValueAt(0, false);
-  do_check_eq(result.matchCount, 1);
-  do_check_eq(gResultListener._lastValue, "b");
-  do_check_eq(gResultListener._lastRemoveFromDb, false);
+  Assert.equal(result.matchCount, 1);
+  Assert.equal(gResultListener._lastValue, "b");
+  Assert.equal(gResultListener._lastRemoveFromDb, false);
 
   // check that we don't get notified if the listener is unset
   result.setListener(null);
   result.removeValueAt(0, true); // "c"
-  do_check_eq(result.matchCount, 0);
-  do_check_eq(gResultListener._lastValue, "b");
+  Assert.equal(result.matchCount, 0);
+  Assert.equal(gResultListener._lastValue, "b");
 }

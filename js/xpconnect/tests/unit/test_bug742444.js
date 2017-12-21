@@ -11,7 +11,7 @@ function run_test() {
   sb2.waived = Cu.waiveXrays(obj);
   sbChrome.obj = obj;
   sbChrome.waived = Cu.waiveXrays(obj);
-  do_check_true(Cu.evalInSandbox('obj === waived', sb1B));
-  do_check_true(Cu.evalInSandbox('obj === waived', sb2));
-  do_check_true(Cu.evalInSandbox('obj !== waived', sbChrome));
+  Assert.ok(Cu.evalInSandbox('obj === waived', sb1B));
+  Assert.ok(Cu.evalInSandbox('obj === waived', sb2));
+  Assert.ok(Cu.evalInSandbox('obj !== waived', sbChrome));
 }

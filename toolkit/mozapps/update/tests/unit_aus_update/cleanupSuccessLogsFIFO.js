@@ -29,7 +29,7 @@ function run_test() {
             "there should not be an active update");
   Assert.equal(gUpdateManager.updateCount, 1,
                "the update manager update count" + MSG_SHOULD_EQUAL);
-  do_execute_soon(waitForUpdateXMLFiles);
+  executeSoon(waitForUpdateXMLFiles);
 }
 
 /**

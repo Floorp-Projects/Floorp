@@ -29,7 +29,7 @@ add_task(async function init() {
   // Initialize the terminator
   // (normally, this is done through the manifest file, but xpcshell
   // doesn't take them into account).
-  do_print("Initializing the Terminator");
+  info("Initializing the Terminator");
   terminator = Cc["@mozilla.org/toolkit/shutdown-terminator;1"].
     createInstance(Ci.nsIObserver);
   terminator.observe(null, "profile-after-change", null);
@@ -38,19 +38,19 @@ add_task(async function init() {
 var promiseShutdownDurationData = async function() {
   // Wait until PATH exists.
   // Timeout if it is never created.
-  do_print("Waiting for file creation: " + PATH);
+  info("Waiting for file creation: " + PATH);
   while (true) {
     if ((await OS.File.exists(PATH))) {
       break;
     }
 
-    do_print("The file does not exist yet. Waiting 1 second.");
+    info("The file does not exist yet. Waiting 1 second.");
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
-  do_print("The file has been created");
+  info("The file has been created");
   let raw = await OS.File.read(PATH, { encoding: "utf-8"} );
-  do_print(raw);
+  info(raw);
   return JSON.parse(raw);
 };
 
@@ -60,10 +60,10 @@ add_task(async function test_record() {
   let PHASE2 = "xpcom-will-shutdown";
   let t0 = Date.now();
 
-  do_print("Starting shutdown");
+  info("Starting shutdown");
   terminator.observe(null, "profile-change-teardown", null);
 
-  do_print("Moving to next phase");
+  info("Moving to next phase");
   terminator.observe(null, PHASE1, null);
 
   let data = await promiseShutdownDurationData();
@@ -79,11 +79,11 @@ add_task(async function test_record() {
 
   Assert.equal(Object.keys(data).length, 1, "Data does not contain other durations");
 
-  do_print("Cleaning up and moving to next phase");
+  info("Cleaning up and moving to next phase");
   await File.remove(PATH);
   await File.remove(PATH_TMP);
 
-  do_print("Waiting at least one tick");
+  info("Waiting at least one tick");
   let WAIT_MS = 2000;
   await new Promise(resolve => setTimeout(resolve, WAIT_MS));
 

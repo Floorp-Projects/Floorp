@@ -66,7 +66,7 @@ function run_test() {
 }
 
 function end_test() {
-  do_execute_soon(do_test_finished);
+  executeSoon(do_test_finished);
 }
 
 function sortAddons(addons) {
@@ -80,12 +80,12 @@ function run_test_1() {
   AddonManager.getAddonsByTypes(["plugin"], function(addons) {
     sortAddons(addons);
 
-    do_check_eq(addons.length, 2);
+    Assert.equal(addons.length, 2);
 
-    do_check_eq(addons[0].name, "Flash");
-    do_check_false(addons[0].userDisabled);
-    do_check_eq(addons[1].name, "Java");
-    do_check_false(addons[1].userDisabled);
+    Assert.equal(addons[0].name, "Flash");
+    Assert.ok(!addons[0].userDisabled);
+    Assert.equal(addons[1].name, "Java");
+    Assert.ok(!addons[1].userDisabled);
 
     run_test_2();
   });
@@ -104,12 +104,12 @@ function run_test_2() {
   AddonManager.getAddonsByTypes(["plugin"], function(addons) {
     sortAddons(addons);
 
-    do_check_eq(addons.length, 2);
+    Assert.equal(addons.length, 2);
 
-    do_check_eq(addons[0].name, "Flash");
-    do_check_false(addons[0].userDisabled);
-    do_check_eq(addons[1].name, "Java");
-    do_check_false(addons[1].userDisabled);
+    Assert.equal(addons[0].name, "Flash");
+    Assert.ok(!addons[0].userDisabled);
+    Assert.equal(addons[1].name, "Java");
+    Assert.ok(!addons[1].userDisabled);
 
     run_test_3();
   });
@@ -138,14 +138,14 @@ function run_test_3() {
   AddonManager.getAddonsByTypes(["plugin"], function(addons) {
     sortAddons(addons);
 
-    do_check_eq(addons.length, 3);
+    Assert.equal(addons.length, 3);
 
-    do_check_eq(addons[0].name, "Flash");
-    do_check_false(addons[0].userDisabled);
-    do_check_eq(addons[1].name, "Java");
-    do_check_false(addons[1].userDisabled);
-    do_check_eq(addons[2].name, "Quicktime");
-    do_check_false(addons[2].userDisabled);
+    Assert.equal(addons[0].name, "Flash");
+    Assert.ok(!addons[0].userDisabled);
+    Assert.equal(addons[1].name, "Java");
+    Assert.ok(!addons[1].userDisabled);
+    Assert.equal(addons[2].name, "Quicktime");
+    Assert.ok(!addons[2].userDisabled);
 
     run_test_4();
   });
@@ -171,12 +171,12 @@ function run_test_4() {
   AddonManager.getAddonsByTypes(["plugin"], function(addons) {
     sortAddons(addons);
 
-    do_check_eq(addons.length, 2);
+    Assert.equal(addons.length, 2);
 
-    do_check_eq(addons[0].name, "Flash");
-    do_check_false(addons[0].userDisabled);
-    do_check_eq(addons[1].name, "Quicktime");
-    do_check_false(addons[1].userDisabled);
+    Assert.equal(addons[0].name, "Flash");
+    Assert.ok(!addons[0].userDisabled);
+    Assert.equal(addons[1].name, "Quicktime");
+    Assert.ok(!addons[1].userDisabled);
 
     run_test_5();
   });
@@ -193,12 +193,12 @@ function run_test_5() {
   AddonManager.getAddonsByTypes(["plugin"], function(addons) {
     sortAddons(addons);
 
-    do_check_eq(addons.length, 2);
+    Assert.equal(addons.length, 2);
 
-    do_check_eq(addons[0].name, "Flash");
-    do_check_false(addons[0].userDisabled);
-    do_check_eq(addons[1].name, "Quicktime");
-    do_check_false(addons[1].userDisabled);
+    Assert.equal(addons[0].name, "Flash");
+    Assert.ok(!addons[0].userDisabled);
+    Assert.equal(addons[1].name, "Quicktime");
+    Assert.ok(!addons[1].userDisabled);
 
     run_test_6();
   });
@@ -232,12 +232,12 @@ function run_test_6() {
   AddonManager.getAddonsByTypes(["plugin"], function(addons) {
     sortAddons(addons);
 
-    do_check_eq(addons.length, 2);
+    Assert.equal(addons.length, 2);
 
-    do_check_eq(addons[0].name, "Flash 2");
-    do_check_true(addons[0].userDisabled);
-    do_check_eq(addons[1].name, "Quicktime");
-    do_check_false(addons[1].userDisabled);
+    Assert.equal(addons[0].name, "Flash 2");
+    Assert.ok(addons[0].userDisabled);
+    Assert.equal(addons[1].name, "Quicktime");
+    Assert.ok(!addons[1].userDisabled);
 
     run_test_7();
   });
@@ -269,12 +269,12 @@ function run_test_7() {
   AddonManager.getAddonsByTypes(["plugin"], function(addons) {
     sortAddons(addons);
 
-    do_check_eq(addons.length, 2);
+    Assert.equal(addons.length, 2);
 
-    do_check_eq(addons[0].name, "Flash 2");
-    do_check_false(addons[0].userDisabled);
-    do_check_eq(addons[1].name, "Quicktime");
-    do_check_true(addons[1].userDisabled);
+    Assert.equal(addons[0].name, "Flash 2");
+    Assert.ok(!addons[0].userDisabled);
+    Assert.equal(addons[1].name, "Quicktime");
+    Assert.ok(addons[1].userDisabled);
 
     end_test();
   });

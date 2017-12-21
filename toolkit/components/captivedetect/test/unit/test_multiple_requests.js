@@ -31,7 +31,7 @@ function fakeUIResponse() {
       xhr.open("GET", gServerURL + kCanonicalSitePath, true);
       xhr.send();
       loginFinished = true;
-      do_check_eq(++step, 2);
+      Assert.equal(++step, 2);
     }
   }, "captive-portal-login");
 
@@ -41,7 +41,7 @@ function fakeUIResponse() {
       if (loginSuccessCount > 1) {
         throw "We should only receive 'captive-portal-login-success' once";
       }
-      do_check_eq(++step, 4);
+      Assert.equal(++step, 4);
     }
   }, "captive-portal-login-success");
 }
@@ -52,24 +52,24 @@ function test_multiple_requests() {
   let callback = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsICaptivePortalCallback]),
     prepare: function prepare() {
-      do_check_eq(++step, 1);
+      Assert.equal(++step, 1);
       gCaptivePortalDetector.finishPreparation(kInterfaceName);
     },
     complete: function complete(success) {
-      do_check_eq(++step, 3);
-      do_check_true(success);
+      Assert.equal(++step, 3);
+      Assert.ok(success);
     },
   };
 
   let otherCallback = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsICaptivePortalCallback]),
     prepare: function prepare() {
-      do_check_eq(++step, 5);
+      Assert.equal(++step, 5);
       gCaptivePortalDetector.finishPreparation(kOtherInterfaceName);
     },
     complete: function complete(success) {
-      do_check_eq(++step, 6);
-      do_check_true(success);
+      Assert.equal(++step, 6);
+      Assert.ok(success);
       gServer.stop(do_test_finished);
     }
   };

@@ -17,7 +17,7 @@ const addonsDir = gTmpD.clone();
 addonsDir.append("addons");
 addonsDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0o755);
 
-do_register_cleanup(() => addonsDir.remove(true));
+registerCleanupFunction(() => addonsDir.remove(true));
 
 testserver.registerDirectory("/addons/", addonsDir);
 
@@ -128,7 +128,7 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42.0", "42.0");
 
   startupManager();
-  do_register_cleanup(promiseShutdownManager);
+  registerCleanupFunction(promiseShutdownManager);
 
   run_next_test();
 }

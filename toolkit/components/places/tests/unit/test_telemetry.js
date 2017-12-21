@@ -6,24 +6,24 @@
 Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
 
 var histograms = {
-  PLACES_PAGES_COUNT: val => do_check_eq(val, 1),
-  PLACES_BOOKMARKS_COUNT: val => do_check_eq(val, 1),
-  PLACES_TAGS_COUNT: val => do_check_eq(val, 1),
-  PLACES_KEYWORDS_COUNT: val => do_check_eq(val, 1),
-  PLACES_SORTED_BOOKMARKS_PERC: val => do_check_eq(val, 100),
-  PLACES_TAGGED_BOOKMARKS_PERC: val => do_check_eq(val, 100),
-  PLACES_DATABASE_FILESIZE_MB: val => do_check_true(val > 0),
-  PLACES_DATABASE_PAGESIZE_B: val => do_check_eq(val, 32768),
-  PLACES_DATABASE_SIZE_PER_PAGE_B: val => do_check_true(val > 0),
-  PLACES_EXPIRATION_STEPS_TO_CLEAN2: val => do_check_true(val > 1),
+  PLACES_PAGES_COUNT: val => Assert.equal(val, 1),
+  PLACES_BOOKMARKS_COUNT: val => Assert.equal(val, 1),
+  PLACES_TAGS_COUNT: val => Assert.equal(val, 1),
+  PLACES_KEYWORDS_COUNT: val => Assert.equal(val, 1),
+  PLACES_SORTED_BOOKMARKS_PERC: val => Assert.equal(val, 100),
+  PLACES_TAGGED_BOOKMARKS_PERC: val => Assert.equal(val, 100),
+  PLACES_DATABASE_FILESIZE_MB: val => Assert.ok(val > 0),
+  PLACES_DATABASE_PAGESIZE_B: val => Assert.equal(val, 32768),
+  PLACES_DATABASE_SIZE_PER_PAGE_B: val => Assert.ok(val > 0),
+  PLACES_EXPIRATION_STEPS_TO_CLEAN2: val => Assert.ok(val > 1),
   // PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS:  val => do_check_true(val > 1),
-  PLACES_IDLE_FRECENCY_DECAY_TIME_MS: val => do_check_true(val >= 0),
-  PLACES_IDLE_MAINTENANCE_TIME_MS: val => do_check_true(val > 0),
+  PLACES_IDLE_FRECENCY_DECAY_TIME_MS: val => Assert.ok(val >= 0),
+  PLACES_IDLE_MAINTENANCE_TIME_MS: val => Assert.ok(val > 0),
   // One from the `setItemAnnotation` call; the other from the mobile root.
   // This can be removed along with the anno in bug 1306445.
-  PLACES_ANNOS_BOOKMARKS_COUNT: val => do_check_eq(val, 2),
-  PLACES_ANNOS_PAGES_COUNT: val => do_check_eq(val, 1),
-  PLACES_MAINTENANCE_DAYSFROMLAST: val => do_check_true(val >= 0),
+  PLACES_ANNOS_BOOKMARKS_COUNT: val => Assert.equal(val, 2),
+  PLACES_ANNOS_PAGES_COUNT: val => Assert.equal(val, 1),
+  PLACES_MAINTENANCE_DAYSFROMLAST: val => Assert.ok(val >= 0),
 };
 
 /**
@@ -162,10 +162,10 @@ add_task(async function test_execute() {
   await PlacesDBUtils.maintenanceOnIdle();
 
   for (let histogramId in histograms) {
-    do_print("checking histogram " + histogramId);
+    info("checking histogram " + histogramId);
     let validate = histograms[histogramId];
     let snapshot = Services.telemetry.getHistogramById(histogramId).snapshot();
     validate(snapshot.sum);
-    do_check_true(snapshot.counts.reduce((a, b) => a + b) > 0);
+    Assert.ok(snapshot.counts.reduce((a, b) => a + b) > 0);
   }
 });

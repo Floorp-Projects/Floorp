@@ -25,8 +25,8 @@ const REQUEST_DATA = "12345678901234567";
 
 function contentLength(request, response)
 {
-  do_check_eq(request.method, "POST");
-  do_check_eq(request.getHeader("Content-Length"), "017");
+  Assert.equal(request.method, "POST");
+  Assert.equal(request.getHeader("Content-Length"), "017");
 
   var body = new ScriptableInputStream(request.bodyInputStream);
 
@@ -35,7 +35,7 @@ function contentLength(request, response)
   while ((avail = body.available()) > 0)
     data += body.read(avail);
 
-  do_check_eq(data, REQUEST_DATA);
+  Assert.equal(data, REQUEST_DATA);
 }
 
 /***************

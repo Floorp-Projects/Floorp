@@ -19,35 +19,35 @@ add_task(async function() {
   await promiseStartupManager();
 
   let install = await promiseInstallFile(do_get_addon("test_bootstrap1_1"));
-  do_check_eq(install.state, AddonManager.STATE_INSTALLED);
-  do_check_false(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
+  Assert.equal(install.state, AddonManager.STATE_INSTALLED);
+  Assert.ok(!hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
 
   let addon = install.addon;
-  do_check_eq(addon.version, "1.0");
-  do_check_false(addon.foreignInstall);
-  do_check_true(addon.seen);
+  Assert.equal(addon.version, "1.0");
+  Assert.ok(!addon.foreignInstall);
+  Assert.ok(addon.seen);
 
   await promiseRestartManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_false(addon.foreignInstall);
-  do_check_true(addon.seen);
+  Assert.ok(!addon.foreignInstall);
+  Assert.ok(addon.seen);
 
   // Installing an update should retain that
   install = await promiseInstallFile(do_get_addon("test_bootstrap1_2"));
-  do_check_eq(install.state, AddonManager.STATE_INSTALLED);
-  do_check_false(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
+  Assert.equal(install.state, AddonManager.STATE_INSTALLED);
+  Assert.ok(!hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
 
   addon = install.addon;
-  do_check_eq(addon.version, "2.0");
-  do_check_false(addon.foreignInstall);
-  do_check_true(addon.seen);
+  Assert.equal(addon.version, "2.0");
+  Assert.ok(!addon.foreignInstall);
+  Assert.ok(addon.seen);
 
   await promiseRestartManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_false(addon.foreignInstall);
-  do_check_true(addon.seen);
+  Assert.ok(!addon.foreignInstall);
+  Assert.ok(addon.seen);
 
   addon.uninstall();
 
@@ -62,7 +62,7 @@ add_task(async function() {
   let systemParentDir = gTmpD.clone();
   systemParentDir.append("systemwide-extensions");
   registerDirectory("XRESysSExtPD", systemParentDir.clone());
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     systemParentDir.remove(true);
   });
 
@@ -77,15 +77,15 @@ add_task(async function() {
   await AddonManagerPrivate.getNewSideloads();
 
   let addon = await promiseAddonByID(ID);
-  do_check_eq(addon.version, "1.0");
-  do_check_true(addon.foreignInstall);
-  do_check_false(addon.seen);
+  Assert.equal(addon.version, "1.0");
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(!addon.seen);
 
   await promiseRestartManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_true(addon.foreignInstall);
-  do_check_false(addon.seen);
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(!addon.seen);
 
   await promiseShutdownManager();
   Services.obs.notifyObservers(path, "flush-cache-entry");
@@ -104,15 +104,15 @@ add_task(async function() {
   await promiseStartupManager();
 
   let addon = await promiseAddonByID(ID);
-  do_check_eq(addon.version, "1.0");
-  do_check_true(addon.foreignInstall);
-  do_check_false(addon.seen);
+  Assert.equal(addon.version, "1.0");
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(!addon.seen);
 
   await promiseRestartManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_true(addon.foreignInstall);
-  do_check_false(addon.seen);
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(!addon.seen);
 
   await promiseShutdownManager();
 
@@ -124,9 +124,9 @@ add_task(async function() {
   await promiseStartupManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_eq(addon.version, "2.0");
-  do_check_true(addon.foreignInstall);
-  do_check_false(addon.seen);
+  Assert.equal(addon.version, "2.0");
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(!addon.seen);
 
   addon.uninstall();
   await promiseShutdownManager();
@@ -142,31 +142,31 @@ add_task(async function() {
   await promiseStartupManager();
 
   let addon = await promiseAddonByID(ID);
-  do_check_eq(addon.version, "1.0");
-  do_check_true(addon.foreignInstall);
-  do_check_false(addon.seen);
+  Assert.equal(addon.version, "1.0");
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(!addon.seen);
 
   await promiseRestartManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_true(addon.foreignInstall);
-  do_check_false(addon.seen);
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(!addon.seen);
 
   // Updating through the API shouldn't change the state
   let install = await promiseInstallFile(do_get_addon("test_bootstrap1_2"));
-  do_check_eq(install.state, AddonManager.STATE_INSTALLED);
-  do_check_false(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
+  Assert.equal(install.state, AddonManager.STATE_INSTALLED);
+  Assert.ok(!hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
 
   addon = install.addon;
-  do_check_true(addon.foreignInstall);
-  do_check_false(addon.seen);
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(!addon.seen);
 
   await promiseRestartManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_eq(addon.version, "2.0");
-  do_check_true(addon.foreignInstall);
-  do_check_false(addon.seen);
+  Assert.equal(addon.version, "2.0");
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(!addon.seen);
 
   addon.uninstall();
   await promiseShutdownManager();
@@ -182,17 +182,17 @@ add_task(async function() {
   await promiseStartupManager();
 
   let addon = await promiseAddonByID(ID);
-  do_check_eq(addon.version, "1.0");
-  do_check_true(addon.foreignInstall);
-  do_check_false(addon.seen);
+  Assert.equal(addon.version, "1.0");
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(!addon.seen);
   addon.markAsSeen();
-  do_check_true(addon.seen);
+  Assert.ok(addon.seen);
 
   await promiseRestartManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_true(addon.foreignInstall);
-  do_check_true(addon.seen);
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(addon.seen);
 
   await promiseShutdownManager();
 
@@ -204,9 +204,9 @@ add_task(async function() {
   await promiseStartupManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_eq(addon.version, "2.0");
-  do_check_true(addon.foreignInstall);
-  do_check_true(addon.seen);
+  Assert.equal(addon.version, "2.0");
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(addon.seen);
 
   addon.uninstall();
   await promiseShutdownManager();
@@ -222,33 +222,33 @@ add_task(async function() {
   await promiseStartupManager();
 
   let addon = await promiseAddonByID(ID);
-  do_check_eq(addon.version, "1.0");
-  do_check_true(addon.foreignInstall);
-  do_check_false(addon.seen);
+  Assert.equal(addon.version, "1.0");
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(!addon.seen);
   addon.markAsSeen();
-  do_check_true(addon.seen);
+  Assert.ok(addon.seen);
 
   await promiseRestartManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_true(addon.foreignInstall);
-  do_check_true(addon.seen);
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(addon.seen);
 
   // Updating through the API shouldn't change the state
   let install = await promiseInstallFile(do_get_addon("test_bootstrap1_2"));
-  do_check_eq(install.state, AddonManager.STATE_INSTALLED);
-  do_check_false(hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
+  Assert.equal(install.state, AddonManager.STATE_INSTALLED);
+  Assert.ok(!hasFlag(install.addon.pendingOperations, AddonManager.PENDING_INSTALL));
 
   addon = install.addon;
-  do_check_true(addon.foreignInstall);
-  do_check_true(addon.seen);
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(addon.seen);
 
   await promiseRestartManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_eq(addon.version, "2.0");
-  do_check_true(addon.foreignInstall);
-  do_check_true(addon.seen);
+  Assert.equal(addon.version, "2.0");
+  Assert.ok(addon.foreignInstall);
+  Assert.ok(addon.seen);
 
   addon.uninstall();
   await promiseShutdownManager();

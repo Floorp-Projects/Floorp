@@ -3,6 +3,6 @@
 
 function run_test() {
   let ac = new AbortController();
-  do_check_true(ac instanceof AbortController);
-  do_check_true(ac.signal instanceof AbortSignal);
+  Assert.ok(ac instanceof AbortController);
+  Assert.ok(ac.signal instanceof AbortSignal);
 }

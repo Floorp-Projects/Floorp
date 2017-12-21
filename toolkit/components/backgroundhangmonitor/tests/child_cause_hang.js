@@ -23,7 +23,7 @@ add_task(async function childCauseHang() {
     return;
   }
 
-  do_execute_soon(() => {
+  executeSoon(() => {
     let startTime = Date.now();
     while ((Date.now() - startTime) < 2000);
   });

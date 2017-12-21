@@ -366,12 +366,8 @@ function do_info(text, stack) {
 // when we ignore the ref.
 // 
 // The third argument is optional. If the client passes a third argument
-// (e.g. todo_check_true), we'll use that in lieu of do_check_true.
-function do_check_uri_eq(aURI1, aURI2, aCheckTrueFunc) {
-  if (!aCheckTrueFunc) {
-    aCheckTrueFunc = do_check_true;
-  }
-
+// (e.g. todo_check_true), we'll use that in lieu of ok.
+function do_check_uri_eq(aURI1, aURI2, aCheckTrueFunc = ok) {
   do_info("(uri equals check: '" + aURI1.spec + "' == '" + aURI2.spec + "')");
   aCheckTrueFunc(aURI1.equals(aURI2));
   do_info("(uri equals check: '" + aURI2.spec + "' == '" + aURI1.spec + "')");
@@ -380,7 +376,7 @@ function do_check_uri_eq(aURI1, aURI2, aCheckTrueFunc) {
   // (Only take the extra step of testing 'equalsExceptRef' when we expect the
   // URIs to really be equal.  In 'todo' cases, the URIs may or may not be
   // equal when refs are ignored - there's no way of knowing in general.)
-  if (aCheckTrueFunc == do_check_true) {
+  if (aCheckTrueFunc == ok) {
     do_check_uri_eqExceptRef(aURI1, aURI2, aCheckTrueFunc);
   }
 }
@@ -388,12 +384,8 @@ function do_check_uri_eq(aURI1, aURI2, aCheckTrueFunc) {
 // Checks that the URIs satisfy equalsExceptRef(), in both possible orderings.
 //
 // The third argument is optional. If the client passes a third argument
-// (e.g. todo_check_true), we'll use that in lieu of do_check_true.
-function do_check_uri_eqExceptRef(aURI1, aURI2, aCheckTrueFunc) {
-  if (!aCheckTrueFunc) {
-    aCheckTrueFunc = do_check_true;
-  }
-
+// (e.g. todo_check_true), we'll use that in lieu of ok.
+function do_check_uri_eqExceptRef(aURI1, aURI2, aCheckTrueFunc = ok) {
   do_info("(uri equalsExceptRef check: '" +
           aURI1.spec + "' == '" + aURI2.spec + "')");
   aCheckTrueFunc(aURI1.equalsExceptRef(aURI2));
@@ -414,7 +406,7 @@ function do_check_property(aTest, aURI, aPropertyName, aTestFunctor) {
     do_info("testing " + aPropertyName + " of " +
             (aTestFunctor ? "modified '" : "'" ) + aTest.spec +
             "' is '" + expectedVal + "'");
-    do_check_eq(aURI[aPropertyName], expectedVal);
+    Assert.equal(aURI[aPropertyName], expectedVal);
   }
 }
 
@@ -429,7 +421,7 @@ function do_test_uri_basic(aTest) {
   } catch(e) {
     do_info("Caught error on parse of" + aTest.spec + " Error: " + e.result);
     if (aTest.fail) {
-      do_check_eq(e.result, aTest.result);
+      Assert.equal(e.result, aTest.result);
       return;
     }
     do_throw(e.result);
@@ -443,7 +435,7 @@ function do_test_uri_basic(aTest) {
     } catch (e) {
       do_info("Caught error on Relative parse of " + aTest.spec + " + " + aTest.relativeURI +" Error: " + e.result);
       if (aTest.relativeFail) {
-        do_check_eq(e.result, aTest.relativeFail);
+        Assert.equal(e.result, aTest.relativeFail);
         return;
       }
       do_throw(e.result);
@@ -458,10 +450,10 @@ function do_test_uri_basic(aTest) {
   do_check_uri_eq(URI, URI.clone());
   do_check_uri_eqExceptRef(URI, URI.cloneIgnoringRef());
   do_info("testing " + aTest.spec + " instanceof nsIURL");
-  do_check_eq(URI instanceof Ci.nsIURL, aTest.nsIURL);
+  Assert.equal(URI instanceof Ci.nsIURL, aTest.nsIURL);
   do_info("testing " + aTest.spec + " instanceof nsINestedURI");
-  do_check_eq(URI instanceof Ci.nsINestedURI,
-              aTest.nsINestedURI);
+  Assert.equal(URI instanceof Ci.nsINestedURI,
+               aTest.nsINestedURI);
 
   do_info("testing that " + aTest.spec + " throws or returns false " +
           "from equals(null)");
@@ -474,7 +466,7 @@ function do_test_uri_basic(aTest) {
   } catch(e) {
     threw = true;
   }
-  do_check_true(threw || !isEqualToNull);
+  Assert.ok(threw || !isEqualToNull);
 
 
   // Check the various components
@@ -490,14 +482,14 @@ function do_test_uri_basic(aTest) {
   do_check_property(aTest, URI, "specIgnoringRef");
   if ("hasRef" in aTest) {
     do_info("testing hasref: " + aTest.hasRef + " vs " + URI.hasRef);
-    do_check_eq(aTest.hasRef, URI.hasRef);
+    Assert.equal(aTest.hasRef, URI.hasRef);
   }
 }
 
 // Test that a given URI parses correctly when we add a given ref to the end
 function do_test_uri_with_hash_suffix(aTest, aSuffix) {
   do_info("making sure caller is using suffix that starts with '#'");
-  do_check_eq(aSuffix[0], "#");
+  Assert.equal(aSuffix[0], "#");
 
   var origURI = NetUtil.newURI(aTest.spec);
   var testURI;
@@ -526,13 +518,13 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
   do_info("testing " + aTest.spec +
           " doesn't equal self with '" + aSuffix + "' appended");
 
-  do_check_false(origURI.equals(testURI));
+  Assert.ok(!origURI.equals(testURI));
 
   do_info("testing " + aTest.spec +
           " is equalExceptRef to self with '" + aSuffix + "' appended");
   do_check_uri_eqExceptRef(origURI, testURI);
 
-  do_check_eq(testURI.hasRef, true);
+  Assert.equal(testURI.hasRef, true);
 
   if (!origURI.ref) {
     // These tests fail if origURI has a ref
@@ -540,7 +532,7 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
             " is equal to no-ref version but not equal to ref version");
     var cloneNoRef = testURI.cloneIgnoringRef();
     do_check_uri_eq(cloneNoRef, origURI);
-    do_check_false(cloneNoRef.equals(testURI));
+    Assert.ok(!cloneNoRef.equals(testURI));
   }
 
   do_check_property(aTest, testURI, "scheme");
@@ -557,7 +549,7 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
 // Tests various ways of setting & clearing a ref on a URI.
 function do_test_mutate_ref(aTest, aSuffix) {
   do_info("making sure caller is using suffix that starts with '#'");
-  do_check_eq(aSuffix[0], "#");
+  Assert.equal(aSuffix[0], "#");
 
   var refURIWithSuffix    = NetUtil.newURI(aTest.spec + aSuffix);
   var refURIWithoutSuffix = NetUtil.newURI(aTest.spec);
@@ -619,7 +611,7 @@ function do_test_mutate_ref(aTest, aSuffix) {
       do_info("testing that clearing path from " + 
               pathWithSuffix + " also clears .ref");
       testURI.pathQueryRef = "";
-      do_check_eq(testURI.ref, "");
+      Assert.equal(testURI.ref, "");
     }
   }
 }
@@ -627,7 +619,7 @@ function do_test_mutate_ref(aTest, aSuffix) {
 // Tests that normally-mutable properties can't be modified on
 // special URIs that are known to be immutable.
 function do_test_immutable(aTest) {
-  do_check_true(aTest.immutable);
+  Assert.ok(aTest.immutable);
 
   var URI = NetUtil.newURI(aTest.spec);
   // All the non-readonly attributes on nsIURI.idl:
@@ -644,7 +636,7 @@ function do_test_immutable(aTest) {
 
     do_info("testing that setting '" + aProperty +
             "' on immutable URI '" + aTest.spec + "' will throw");
-    do_check_true(threw);
+    Assert.ok(threw);
   });
 }
 
@@ -659,7 +651,7 @@ function run_test()
   let resolved = gIoService.newURI("?x", null, base);
   let expected = gIoService.newURI("http://example.org/xenia?x");
   do_info("Bug 662981: ACSII - comparing " + resolved.spec + " and " + expected.spec);
-  do_check_true(resolved.equals(expected));
+  Assert.ok(resolved.equals(expected));
 
   // UTF-8 character "è"
   // Bug 622981 was triggered by an empty query string
@@ -667,7 +659,7 @@ function run_test()
   resolved = gIoService.newURI("?x", null, base);
   expected = gIoService.newURI("http://example.org/xènia?x");
   do_info("Bug 662981: UTF8 - comparing " + resolved.spec + " and " + expected.spec);
-  do_check_true(resolved.equals(expected));
+  Assert.ok(resolved.equals(expected));
 
   gTests.forEach(function(aTest) {
     // Check basic URI functionality

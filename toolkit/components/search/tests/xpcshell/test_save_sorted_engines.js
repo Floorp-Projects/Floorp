@@ -34,29 +34,29 @@ add_task(async function test_save_sorted_engines() {
 
   // Changes should be commited immediately
   await promiseAfterCache();
-  do_print("Commit complete after moveEngine");
+  info("Commit complete after moveEngine");
 
   // Check that the entries are placed as specified correctly
   let metadata = await promiseEngineMetadata();
-  do_check_eq(metadata["test-search-engine"].order, 1);
-  do_check_eq(metadata["a-second-test-engine"].order, 2);
+  Assert.equal(metadata["test-search-engine"].order, 1);
+  Assert.equal(metadata["a-second-test-engine"].order, 2);
 
   // Test removing an engine
   search.removeEngine(engine1);
   await promiseAfterCache();
-  do_print("Commit complete after removeEngine");
+  info("Commit complete after removeEngine");
 
   // Check that the order of the remaining engine was updated correctly
   metadata = await promiseEngineMetadata();
-  do_check_eq(metadata["a-second-test-engine"].order, 1);
+  Assert.equal(metadata["a-second-test-engine"].order, 1);
 
   // Test adding a new engine
   search.addEngineWithDetails("foo", "", "foo", "", "GET",
                               "http://searchget/?search={searchTerms}");
   await promiseAfterCache();
-  do_print("Commit complete after addEngineWithDetails");
+  info("Commit complete after addEngineWithDetails");
 
   metadata = await promiseEngineMetadata();
-  do_check_eq(metadata.foo.alias, "foo");
-  do_check_true(metadata.foo.order > 0);
+  Assert.equal(metadata.foo.alias, "foo");
+  Assert.ok(metadata.foo.order > 0);
 });

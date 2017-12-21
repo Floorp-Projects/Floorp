@@ -12,5 +12,5 @@ function run_test() {
     f = f.parent;
   }
 
-  do_check_true(terminated);
+  Assert.ok(terminated);
 }

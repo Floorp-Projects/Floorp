@@ -13,7 +13,7 @@ const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
 var originalReqLocales = Services.locale.getRequestedLocales();
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   Preferences.reset("intl.accept_languages");
   Services.locale.setRequestedLocales(originalReqLocales);
 });

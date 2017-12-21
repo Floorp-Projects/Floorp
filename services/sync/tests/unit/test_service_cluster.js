@@ -13,7 +13,7 @@ function do_check_throws(func) {
   } catch (ex) {
     raised = true;
   }
-  do_check_true(raised);
+  Assert.ok(raised);
 }
 
 add_test(function test_findCluster() {
@@ -36,7 +36,7 @@ add_test(function test_findCluster() {
 
     _("_findCluster() returns the user's cluster node");
     let cluster = Service._clusterManager._findCluster();
-    do_check_eq(cluster, "http://weave.user.node/");
+    Assert.equal(cluster, "http://weave.user.node/");
 
   } finally {
     Svc.Prefs.resetBranch("");
@@ -48,22 +48,22 @@ add_test(function test_setCluster() {
   _("Test Service._setCluster()");
   try {
     _("Check initial state.");
-    do_check_eq(Service.clusterURL, "");
+    Assert.equal(Service.clusterURL, "");
 
     Service._clusterManager._findCluster = () => "http://weave.user.node/";
 
     _("Set the cluster URL.");
-    do_check_true(Service._clusterManager.setCluster());
-    do_check_eq(Service.clusterURL, "http://weave.user.node/");
+    Assert.ok(Service._clusterManager.setCluster());
+    Assert.equal(Service.clusterURL, "http://weave.user.node/");
 
     _("Setting it again won't make a difference if it's the same one.");
-    do_check_false(Service._clusterManager.setCluster());
-    do_check_eq(Service.clusterURL, "http://weave.user.node/");
+    Assert.ok(!Service._clusterManager.setCluster());
+    Assert.equal(Service.clusterURL, "http://weave.user.node/");
 
     _("A 'null' response won't make a difference either.");
     Service._clusterManager._findCluster = () => null;
-    do_check_false(Service._clusterManager.setCluster());
-    do_check_eq(Service.clusterURL, "http://weave.user.node/");
+    Assert.ok(!Service._clusterManager.setCluster());
+    Assert.equal(Service.clusterURL, "http://weave.user.node/");
 
   } finally {
     Svc.Prefs.resetBranch("");

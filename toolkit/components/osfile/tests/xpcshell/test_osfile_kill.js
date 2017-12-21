@@ -61,7 +61,7 @@ add_task(async function test_kill_race() {
   // than it does not invoke a native fast-path.
   await OS.File.exists("foo.foo");
 
-  do_print("issuing first request");
+  info("issuing first request");
   let firstRequest = OS.File.exists("foo.bar"); // eslint-disable-line no-unused-vars
   let secondRequest;
   let secondResolved = false;
@@ -72,14 +72,14 @@ add_task(async function test_kill_race() {
   // before we issue the kill request means we will get run before the `kill`
   // task resumes and allow us to precisely create the desired race.
   Scheduler.queue.then(function() {
-    do_print("issuing second request");
+    info("issuing second request");
     secondRequest = OS.File.exists("foo.baz");
     secondRequest.then(function() {
       secondResolved = true;
     });
   });
 
-  do_print("issuing kill request");
+  info("issuing kill request");
   let killRequest = Scheduler.kill({ reset: true, shutdown: false });
 
   // Wait on the killRequest so that we can schedule a new OS.File request

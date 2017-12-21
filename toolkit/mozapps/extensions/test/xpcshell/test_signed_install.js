@@ -105,9 +105,9 @@ async function test_install_broken(file, expectedError) {
   let install = await createInstall("http://localhost:4444/" + file.leafName);
   await promiseCompleteAllInstalls([install]);
 
-  do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
-  do_check_eq(install.error, expectedError);
-  do_check_eq(install.addon, null);
+  Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
+  Assert.equal(install.error, expectedError);
+  Assert.equal(install.addon, null);
 
   gServer.registerFile("/" + file.leafName, null);
 }
@@ -118,9 +118,9 @@ async function test_install_working(file, expectedSignedState) {
   let install = await createInstall("http://localhost:4444/" + file.leafName);
   await promiseCompleteAllInstalls([install]);
 
-  do_check_eq(install.state, AddonManager.STATE_INSTALLED);
-  do_check_neq(install.addon, null);
-  do_check_eq(install.addon.signedState, expectedSignedState);
+  Assert.equal(install.state, AddonManager.STATE_INSTALLED);
+  Assert.notEqual(install.addon, null);
+  Assert.equal(install.addon.signedState, expectedSignedState);
 
   gServer.registerFile("/" + file.leafName, null);
 
@@ -139,9 +139,9 @@ async function test_update_broken(file, expectedError) {
   let install = update.updateAvailable;
   await promiseCompleteAllInstalls([install]);
 
-  do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
-  do_check_eq(install.error, expectedError);
-  do_check_eq(install.addon, null);
+  Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
+  Assert.equal(install.error, expectedError);
+  Assert.equal(install.addon, null);
 
   gServer.registerFile("/" + file.leafName, null);
   gServer.registerPathHandler("/update.rdf", null);
@@ -161,9 +161,9 @@ async function test_update_working(file, expectedSignedState) {
   let install = update.updateAvailable;
   await promiseCompleteAllInstalls([install]);
 
-  do_check_eq(install.state, AddonManager.STATE_INSTALLED);
-  do_check_neq(install.addon, null);
-  do_check_eq(install.addon.signedState, expectedSignedState);
+  Assert.equal(install.state, AddonManager.STATE_INSTALLED);
+  Assert.notEqual(install.addon, null);
+  Assert.equal(install.addon.signedState, expectedSignedState);
 
   gServer.registerFile("/" + file.leafName, null);
   gServer.registerPathHandler("/update.rdf", null);

@@ -39,9 +39,9 @@ class InputStreamCallback {
   }
 
   onInputStreamReady(stream) {
-    do_print("input stream ready");
+    info("input stream ready");
     if (this.stopped) {
-      do_print("input stream callback stopped - bailing");
+      info("input stream callback stopped - bailing");
       return;
     }
     let available = 0;
@@ -66,7 +66,7 @@ class InputStreamCallback {
             "should have been able to write entire response");
     }
     this.output.close();
-    do_print("done with input stream ready");
+    info("done with input stream ready");
   }
 
   stop() {
@@ -84,11 +84,11 @@ class TLSServerSecurityObserver {
   }
 
   onHandshakeDone(socket, status) {
-    do_print("TLS handshake done");
-    do_print(`TLS version used: ${status.tlsVersionUsed}`);
+    info("TLS handshake done");
+    info(`TLS version used: ${status.tlsVersionUsed}`);
 
     if (this.stopped) {
-      do_print("handshake done callback stopped - bailing");
+      info("handshake done callback stopped - bailing");
       return;
     }
 
@@ -113,7 +113,7 @@ class ServerSocketListener {
   }
 
   onSocketAccepted(socket, transport) {
-    do_print("accepted TLS client connection");
+    info("accepted TLS client connection");
     let connectionInfo = transport.securityInfo
                          .QueryInterface(Ci.nsITLSServerConnectionInfo);
     let input = transport.openInputStream(0, 0, 0);
@@ -126,7 +126,7 @@ class ServerSocketListener {
   // For some reason we get input stream callback events after we've stopped
   // listening, so this ensures we just drop those events.
   onStopListening() {
-    do_print("onStopListening");
+    info("onStopListening");
     this.securityObservers.forEach((observer) => {
       observer.stop();
     });
@@ -206,7 +206,7 @@ add_task(async function() {
   server.close();
 });
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   Services.prefs.clearUserPref("security.tls.version.max");
   Services.prefs.clearUserPref("network.dns.localDomains");
 });

@@ -21,49 +21,49 @@ add_task(async function test_keyword_searc() {
   ]);
   await addBookmark({ uri: uri1, title: "Bookmark title", keyword: "key"});
 
-  do_print("Plain keyword query");
+  info("Plain keyword query");
   await check_autocomplete({
     search: "key term",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=term"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
-  do_print("Plain keyword UC");
+  info("Plain keyword UC");
   await check_autocomplete({
     search: "key TERM",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=TERM"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
-  do_print("Multi-word keyword query");
+  info("Multi-word keyword query");
   await check_autocomplete({
     search: "key multi word",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=multi%20word"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
-  do_print("Keyword query with +");
+  info("Keyword query with +");
   await check_autocomplete({
     search: "key blocking+",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=blocking%2B"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
-  do_print("Unescaped term in query");
+  info("Unescaped term in query");
   await check_autocomplete({
     search: "key ユニコード",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=ユニコード"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
-  do_print("Keyword that happens to match a page");
+  info("Keyword that happens to match a page");
   await check_autocomplete({
     search: "key ThisPageIsInHistory",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=ThisPageIsInHistory"), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
-  do_print("Keyword without query (without space)");
+  info("Keyword without query (without space)");
   await check_autocomplete({
     search: "key",
     matches: [ { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
-  do_print("Keyword without query (with space)");
+  info("Keyword without query (with space)");
   await check_autocomplete({
     search: "key ",
     matches: [ { uri: NetUtil.newURI("http://abc/?search="), title: "abc", style: ["keyword", "heuristic"] } ]

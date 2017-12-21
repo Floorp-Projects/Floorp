@@ -50,9 +50,9 @@ add_task(async function v4_upgrade() {
     await configureIdentity({ "username": "johndoe" }, server);
 
     await Service.login();
-    do_check_true(Service.isLoggedIn);
+    Assert.ok(Service.isLoggedIn);
     await Service.verifyAndFetchSymmetricKeys();
-    do_check_true((await Service._remoteSetup()));
+    Assert.ok((await Service._remoteSetup()));
 
     async function test_out_of_date() {
       _("Old meta/global: " + JSON.stringify(meta_global));
@@ -65,7 +65,7 @@ add_task(async function v4_upgrade() {
         await Service.sync();
       } catch (ex) {
       }
-      do_check_eq(Service.status.sync, VERSION_OUT_OF_DATE);
+      Assert.equal(Service.status.sync, VERSION_OUT_OF_DATE);
     }
 
     // See what happens when we bump the storage version.
@@ -86,9 +86,9 @@ add_task(async function v4_upgrade() {
     collections.meta = Date.now() / 1000;
     Service.recordManager.set(Service.metaURL, meta_global);
     await Service.login();
-    do_check_true(Service.isLoggedIn);
+    Assert.ok(Service.isLoggedIn);
     await Service.sync();
-    do_check_true(Service.isLoggedIn);
+    Assert.ok(Service.isLoggedIn);
 
     let serverDecrypted;
     let serverKeys;
@@ -100,7 +100,7 @@ add_task(async function v4_upgrade() {
 
       serverKeys = new CryptoWrapper("crypto", "keys");
       serverResp = (await serverKeys.fetch(Service.resource(Service.cryptoKeysURL))).response;
-      do_check_true(serverResp.success);
+      Assert.ok(serverResp.success);
 
       serverDecrypted = await serverKeys.decrypt(Service.identity.syncKeyBundle);
       _("Retrieved WBO:       " + JSON.stringify(serverDecrypted));
@@ -117,9 +117,9 @@ add_task(async function v4_upgrade() {
       _("Local keyBundle:     " + JSON.stringify(localDefault));
 
       if (should_succeed)
-        do_check_eq(JSON.stringify(serverDefault), JSON.stringify(localDefault));
+        Assert.equal(JSON.stringify(serverDefault), JSON.stringify(localDefault));
       else
-        do_check_neq(JSON.stringify(serverDefault), JSON.stringify(localDefault));
+        Assert.notEqual(JSON.stringify(serverDefault), JSON.stringify(localDefault));
     }
 
     // Uses the objects set above.
@@ -141,8 +141,8 @@ add_task(async function v4_upgrade() {
     await retrieve_and_compare_default(false);
 
     _("Indeed, they're what we set them to...");
-    do_check_eq("KaaaaaaaaaaaHAtfmuRY0XEJ7LXfFuqvF7opFdBD/MY=",
-                (await retrieve_server_default())[0]);
+    Assert.equal("KaaaaaaaaaaaHAtfmuRY0XEJ7LXfFuqvF7opFdBD/MY=",
+                 (await retrieve_server_default())[0]);
 
     _("Sync. Should download changed keys automatically.");
     let oldClientsModified = collections.clients;
@@ -153,8 +153,8 @@ add_task(async function v4_upgrade() {
     _("New key should have forced upload of data.");
     _("Tabs: " + oldTabsModified + " < " + collections.tabs);
     _("Clients: " + oldClientsModified + " < " + collections.clients);
-    do_check_true(collections.clients > oldClientsModified);
-    do_check_true(collections.tabs > oldTabsModified);
+    Assert.ok(collections.clients > oldClientsModified);
+    Assert.ok(collections.tabs > oldTabsModified);
 
     _("... and keys will now match.");
     await retrieve_and_compare_default(true);
@@ -207,7 +207,7 @@ add_task(async function v5_upgrade() {
       let serverKeys = Service.collectionKeys.asWBO("crypto", wboName);
       await serverKeys.encrypt(syncKeyBundle);
       let res = Service.resource(Service.storageURL + collWBO);
-      do_check_true((await serverKeys.upload(res)).success);
+      Assert.ok((await serverKeys.upload(res)).success);
     }
 
     _("Bumping version.");
@@ -238,8 +238,8 @@ add_task(async function v5_upgrade() {
       _("Exception: " + e);
     }
     _("Status: " + Service.status);
-    do_check_false(Service.isLoggedIn);
-    do_check_eq(VERSION_OUT_OF_DATE, Service.status.sync);
+    Assert.ok(!Service.isLoggedIn);
+    Assert.equal(VERSION_OUT_OF_DATE, Service.status.sync);
 
     // Clean up.
     await Service.startOver();

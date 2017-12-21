@@ -11,12 +11,12 @@ function createUtf16Database() {
 
   print("Make sure the encoding was set correctly and is now UTF-16.");
   let stmt = conn.createStatement("PRAGMA encoding");
-  do_check_true(stmt.executeStep());
+  Assert.ok(stmt.executeStep());
   let enc = stmt.getString(0);
   stmt.finalize();
 
   // The value returned will actually be UTF-16le or UTF-16be.
-  do_check_true(enc === "UTF-16le" || enc === "UTF-16be");
+  Assert.ok(enc === "UTF-16le" || enc === "UTF-16be");
 
   return conn;
 }
@@ -26,8 +26,8 @@ function check_levenshtein(db, s, t, expectedDistance) {
   stmt.params.s = s;
   stmt.params.t = t;
   try {
-    do_check_true(stmt.executeStep());
-    do_check_eq(expectedDistance, stmt.row.result);
+    Assert.ok(stmt.executeStep());
+    Assert.equal(expectedDistance, stmt.row.result);
   } finally {
     stmt.reset();
     stmt.finalize();

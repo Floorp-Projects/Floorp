@@ -19,7 +19,7 @@ add_test(function test_bug1024090_purge() {
       ok(false, "Notification database error when cleaning: " + reason);
     }
   ).then(function next() {
-    do_print("Cleanup steps completed: " + NOTIFICATION_STORE_PATH);
+    info("Cleanup steps completed: " + NOTIFICATION_STORE_PATH);
     startNotificationDB();
     run_next_test();
   });

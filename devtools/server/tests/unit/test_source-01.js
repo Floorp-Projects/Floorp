@@ -44,25 +44,25 @@ function test_source() {
 
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     gThreadClient.getSources(function (response) {
-      do_check_true(!!response);
-      do_check_true(!!response.sources);
+      Assert.ok(!!response);
+      Assert.ok(!!response.sources);
 
       let source = response.sources.filter(function (s) {
         return s.url === SOURCE_URL;
       })[0];
 
-      do_check_true(!!source);
+      Assert.ok(!!source);
 
       let sourceClient = gThreadClient.source(source);
       sourceClient.source(function (response) {
-        do_check_true(!!response);
-        do_check_true(!response.error);
-        do_check_true(!!response.contentType);
-        do_check_true(response.contentType.includes("javascript"));
+        Assert.ok(!!response);
+        Assert.ok(!response.error);
+        Assert.ok(!!response.contentType);
+        Assert.ok(response.contentType.includes("javascript"));
 
-        do_check_true(!!response.source);
-        do_check_eq(SOURCE_CONTENT,
-                    response.source);
+        Assert.ok(!!response.source);
+        Assert.equal(SOURCE_CONTENT,
+                     response.source);
 
         gThreadClient.resume(function () {
           finishClient(gClient);

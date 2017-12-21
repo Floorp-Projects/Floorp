@@ -248,20 +248,20 @@ function run_test() {
   };
 
   input.onSearchComplete = function() {
-    do_check_eq(controller.searchStatus,
-                Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
-    do_check_eq(controller.matchCount, 2);
+    Assert.equal(controller.searchStatus,
+                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
+    Assert.equal(controller.matchCount, 2);
 
     if (numSearchesStarted == 1) {
-      do_check_eq(search1._previousResult, null);
-      do_check_eq(search2._previousResult, null);
+      Assert.equal(search1._previousResult, null);
+      Assert.equal(search2._previousResult, null);
 
       // Now start it again
       controller.startSearch("test");
       return;
     }
-    do_check_neq(search1._previousResult, null);
-    do_check_neq(search2._previousResult, null);
+    Assert.notEqual(search1._previousResult, null);
+    Assert.notEqual(search2._previousResult, null);
 
     // Unregister searches
     unregisterAutoCompleteSearch(search1);

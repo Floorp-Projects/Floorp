@@ -29,7 +29,7 @@ function setup_crash() {
 
 
 function after_crash(mdump, extra) {
-  do_print("Crash signature: " + JSON.stringify(extra, null, "\t"));
+  info("Crash signature: " + JSON.stringify(extra, null, "\t"));
   Assert.equal(extra.ShutdownProgress, "profile-before-change");
 }
 

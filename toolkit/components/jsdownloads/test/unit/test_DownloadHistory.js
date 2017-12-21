@@ -58,7 +58,7 @@ function areEqual(a, b) {
     Assert.equal(a, b);
     return true;
   }
-  do_print(a + " !== " + b);
+  info(a + " !== " + b);
   return false;
 }
 
@@ -106,8 +106,8 @@ class TestView {
     for (let i = 0; i < this.downloads.length; i++) {
       let download = this.downloads[i];
       let testDownload = this.expected[i];
-      do_print("Checking download source " + download.source.url +
-               " with target " + download.target.path);
+      info("Checking download source " + download.source.url +
+           " with target " + download.target.path);
       if (!areEqual(download.succeeded, !!testDownload.succeeded) ||
           !areEqual(download.canceled, !!testDownload.canceled) ||
           !areEqual(download.hasPartialData, !!testDownload.hasPartialData) ||
@@ -143,7 +143,7 @@ add_task(async function test_DownloadHistory() {
   async function cleanup() {
     await PlacesUtils.history.clear();
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
   await cleanup();
 
   let testDownloads = [

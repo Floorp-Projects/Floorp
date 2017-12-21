@@ -72,7 +72,7 @@ const TESTS = [{
 function run_test() {
   for (let { desc, grids, expected } of TESTS) {
     if (desc) {
-      do_print(desc);
+      info(desc);
     }
     equal(compareFragmentsGeometry(grids[0], grids[1]), expected);
   }

@@ -33,7 +33,7 @@ function cleanup() {
   aboutNewTabService.resetNewTabURL();
 }
 
-do_register_cleanup(cleanup);
+registerCleanupFunction(cleanup);
 
 add_task(async function test_as_and_prerender_initialized() {
   Assert.equal(aboutNewTabService.activityStreamEnabled, Services.prefs.getBoolPref(ACTIVITY_STREAM_PREF),

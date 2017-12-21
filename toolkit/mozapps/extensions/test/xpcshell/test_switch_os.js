@@ -19,11 +19,11 @@ add_task(async function() {
   await promiseInstallFile(do_get_addon("test_bootstrap1_1"));
 
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
+  Assert.notEqual(addon, null);
 
   BootstrapMonitor.checkAddonStarted(ID);
-  do_check_false(addon.userDisabled);
-  do_check_true(addon.isActive);
+  Assert.ok(!addon.userDisabled);
+  Assert.ok(addon.isActive);
 
   await promiseShutdownManager();
 
@@ -43,9 +43,9 @@ add_task(async function() {
   startupManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
+  Assert.notEqual(addon, null);
 
   BootstrapMonitor.checkAddonStarted(ID);
-  do_check_false(addon.userDisabled);
-  do_check_true(addon.isActive);
+  Assert.ok(!addon.userDisabled);
+  Assert.ok(addon.isActive);
 });

@@ -17,10 +17,10 @@ function run_test() {
   const files = [{ type: "full", name: "test", text: code }];
 
   server.request({ query: query, files: files }, (error, response) => {
-    do_check_eq(error, null);
-    do_check_true(!!response);
-    do_check_true(Array.isArray(response.completions));
-    do_check_true(response.completions.indexOf("concat") != -1);
+    Assert.equal(error, null);
+    Assert.ok(!!response);
+    Assert.ok(Array.isArray(response.completions));
+    Assert.ok(response.completions.indexOf("concat") != -1);
     do_test_finished();
   });
 }

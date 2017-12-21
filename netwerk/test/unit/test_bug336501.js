@@ -23,5 +23,5 @@ function run_test() {
   sis.close();
 
   var data = sis.read(45);
-  do_check_eq(data.length, 0);
+  Assert.equal(data.length, 0);
 }

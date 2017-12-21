@@ -55,7 +55,7 @@ function test_importfromPrefs() {
   let unknown = whitelisted.concat(blacklisted).concat(untouched);
   for (let url of unknown) {
     let uri = Services.io.newURI(url);
-    do_check_eq(Services.perms.testPermission(uri, TEST_PERM), Services.perms.UNKNOWN_ACTION);
+    Assert.equal(Services.perms.testPermission(uri, TEST_PERM), Services.perms.UNKNOWN_ACTION);
   }
 
   // Import them
@@ -66,20 +66,20 @@ function test_importfromPrefs() {
 
   // Check preferences were emptied
   for (let pref of preferences) {
-    do_check_eq(Services.prefs.getCharPref(pref), "");
+    Assert.equal(Services.prefs.getCharPref(pref), "");
   }
 
   // Check they were imported into the permissions manager
   for (let url of whitelisted) {
     let uri = Services.io.newURI(url);
-    do_check_eq(Services.perms.testPermission(uri, TEST_PERM), Services.perms.ALLOW_ACTION);
+    Assert.equal(Services.perms.testPermission(uri, TEST_PERM), Services.perms.ALLOW_ACTION);
   }
   for (let url of blacklisted) {
     let uri = Services.io.newURI(url);
-    do_check_eq(Services.perms.testPermission(uri, TEST_PERM), Services.perms.DENY_ACTION);
+    Assert.equal(Services.perms.testPermission(uri, TEST_PERM), Services.perms.DENY_ACTION);
   }
   for (let url of untouched) {
     let uri = Services.io.newURI(url);
-    do_check_eq(Services.perms.testPermission(uri, TEST_PERM), Services.perms.UNKNOWN_ACTION);
+    Assert.equal(Services.perms.testPermission(uri, TEST_PERM), Services.perms.UNKNOWN_ACTION);
   }
 }

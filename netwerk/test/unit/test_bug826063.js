@@ -29,8 +29,8 @@ function* getChannels() {
 }
 
 function checkPrivate(channel, shouldBePrivate) {
-  do_check_eq(channel.QueryInterface(Ci.nsIPrivateBrowsingChannel).isChannelPrivate,
-              shouldBePrivate);
+  Assert.equal(channel.QueryInterface(Ci.nsIPrivateBrowsingChannel).isChannelPrivate,
+               shouldBePrivate);
 }
 
 /**

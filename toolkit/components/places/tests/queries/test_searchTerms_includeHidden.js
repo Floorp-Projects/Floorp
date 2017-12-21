@@ -69,8 +69,8 @@ add_task(async function test_searchTerms_includeHidden() {
 
     root.containerOpen = false;
 
-    do_check_eq(cc, data.expectedResults);
-    do_check_eq(cc_update, data.expectedResults + (data.includeHidden ? 1 : 0));
+    Assert.equal(cc, data.expectedResults);
+    Assert.equal(cc_update, data.expectedResults + (data.includeHidden ? 1 : 0));
 
     await PlacesUtils.history.remove("http://hidden.example.com/");
   }

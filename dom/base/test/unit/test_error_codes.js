@@ -21,7 +21,7 @@ var asyncXHR = {
   },
   onError: function doAsyncRequest_onError(event) {
     var request = event.target.channel.QueryInterface(Components.interfaces.nsIRequest);
-    do_check_eq(request.status, gExpectedStatus);
+    Assert.equal(request.status, gExpectedStatus);
     gNextTestFunc();
   }
 }

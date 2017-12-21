@@ -39,20 +39,20 @@ function test_thread_lifetime() {
     // Create thread-lifetime actors for these objects.
     gThreadClient.threadGrips(actors, function (response) {
       // Successful promotion won't return an error.
-      do_check_eq(response.error, undefined);
+      Assert.equal(response.error, undefined);
 
       gThreadClient.addOneTimeListener("paused", function (event, packet) {
         // Verify that the promoted actors are returned again.
         actors.forEach(function (actor, i) {
-          do_check_eq(actor, packet.frame.arguments[i].actor);
+          Assert.equal(actor, packet.frame.arguments[i].actor);
         });
         // Now that we've resumed, release the thread-lifetime grips.
         gThreadClient.releaseMany(actors, function (response) {
           // Successful release won't return an error.
-          do_check_eq(response.error, undefined);
+          Assert.equal(response.error, undefined);
 
           gClient.request({ to: last, type: "bogusRequest" }, function (response) {
-            do_check_eq(response.error, "noSuchActor");
+            Assert.equal(response.error, "noSuchActor");
             gThreadClient.resume(function (response) {
               finishClient(gClient);
             });

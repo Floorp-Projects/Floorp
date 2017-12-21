@@ -12,7 +12,7 @@ function run_test() {
   ];
 
   for (let root of ROOTS) {
-    do_check_true(PlacesUtils.isRootItem(root));
+    Assert.ok(PlacesUtils.isRootItem(root));
 
     try {
       PlacesUtils.bookmarks.removeItem(root);

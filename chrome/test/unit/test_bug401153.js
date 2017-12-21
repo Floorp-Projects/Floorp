@@ -26,10 +26,10 @@ var rph = Services.io.getProtocolHandler("resource")
 
 function test_succeeded_mapping(namespace, target) {
   try {
-    do_check_true(rph.hasSubstitution(namespace));
+    Assert.ok(rph.hasSubstitution(namespace));
     var uri = Services.io.newURI("resource://" + namespace);
     dump("### checking for " + target + ", getting " + rph.resolveURI(uri) + "\n");
-    do_check_eq(rph.resolveURI(uri), target);
+    Assert.equal(rph.resolveURI(uri), target);
   } catch (ex) {
     dump(ex + "\n");
     do_throw(namespace);
@@ -37,7 +37,7 @@ function test_succeeded_mapping(namespace, target) {
 }
 
 function test_failed_mapping(namespace) {
-  do_check_false(rph.hasSubstitution(namespace));
+  Assert.ok(!rph.hasSubstitution(namespace));
 }
 
 function run_test() {

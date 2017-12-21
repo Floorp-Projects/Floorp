@@ -39,13 +39,13 @@ function run_test()
 
 function checkStatusLine(channel, httpMaxVer, httpMinVer, httpCode, statusText)
 {
-  do_check_eq(channel.responseStatus, httpCode);
-  do_check_eq(channel.responseStatusText, statusText);
+  Assert.equal(channel.responseStatus, httpCode);
+  Assert.equal(channel.responseStatusText, statusText);
 
   var respMaj = {}, respMin = {};
   channel.getResponseVersion(respMaj, respMin);
-  do_check_eq(respMaj.value, httpMaxVer);
-  do_check_eq(respMin.value, httpMinVer);
+  Assert.equal(respMaj.value, httpMaxVer);
+  Assert.equal(respMin.value, httpMinVer);
 }
 
 function start_throws_exception(ch, cx)
@@ -65,7 +65,7 @@ function start_multiple_exceptions_500(ch, cx)
 
 function succeeded(ch, cx, status, data)
 {
-  do_check_true(Components.isSuccessCode(status));
+  Assert.ok(Components.isSuccessCode(status));
 }
 
 function register400Handler(ch)

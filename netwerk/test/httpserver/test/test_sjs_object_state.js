@@ -76,10 +76,10 @@ function initialStop(ch, cx, status, data)
 {
   dumpn("*** initialStop");
 
-  do_check_eq(data.map(function(v) { return String.fromCharCode(v); }).join(""),
-              "done");
+  Assert.equal(data.map(function(v) { return String.fromCharCode(v); }).join(""),
+               "done");
 
-  do_check_eq(srv.getObjectState("object-state-test"), null);
+  Assert.equal(srv.getObjectState("object-state-test"), null);
 
   if (!initialStarted)
     do_throw("initialStop: initialStarted is false?!?!");
@@ -100,7 +100,7 @@ function intermediateStart(ch, cx)
 {
   dumpn("*** intermediateStart");
 
-  do_check_neq(srv.getObjectState("object-state-test"), null);
+  Assert.notEqual(srv.getObjectState("object-state-test"), null);
 
   if (!initialStarted)
     do_throw("intermediateStart: initialStarted is false?!?!");
@@ -115,10 +115,10 @@ function intermediateStop(ch, cx, status, data)
 {
   dumpn("*** intermediateStop");
 
-  do_check_eq(data.map(function(v) { return String.fromCharCode(v); }).join(""),
-              "intermediate");
+  Assert.equal(data.map(function(v) { return String.fromCharCode(v); }).join(""),
+               "intermediate");
 
-  do_check_neq(srv.getObjectState("object-state-test"), null);
+  Assert.notEqual(srv.getObjectState("object-state-test"), null);
 
   if (!initialStarted)
     do_throw("intermediateStop: initialStarted is false?!?!");
@@ -155,8 +155,8 @@ function triggerStop(ch, cx, status, data)
 {
   dumpn("*** triggerStop");
 
-  do_check_eq(data.map(function(v) { return String.fromCharCode(v); }).join(""),
-              "trigger");
+  Assert.equal(data.map(function(v) { return String.fromCharCode(v); }).join(""),
+               "trigger");
 
   if (!initialStarted)
     do_throw("triggerStop: initialStarted is false?!?!");
@@ -194,7 +194,7 @@ function checkForFinish()
     finished = true;
     try
     {
-      do_check_eq(srv.getObjectState("object-state-test"), null);
+      Assert.equal(srv.getObjectState("object-state-test"), null);
 
       if (!initialStarted)
         do_throw("checkForFinish: initialStarted is false?!?!");

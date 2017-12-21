@@ -34,20 +34,20 @@ function construct_file() {
 function run_test() {
   do_get_profile();
 
-  do_check_eq(Telemetry.failedProfileLockCount, 0);
+  Assert.equal(Telemetry.failedProfileLockCount, 0);
 
   write_string_to_file(construct_file(), N_FAILED_LOCKS.toString());
 
   // Make sure that we're not eagerly reading the count now that the
   // file exists.
-  do_check_eq(Telemetry.failedProfileLockCount, 0);
+  Assert.equal(Telemetry.failedProfileLockCount, 0);
 
   do_test_pending();
   Telemetry.asyncFetchTelemetryData(actual_test);
 }
 
 function actual_test() {
-  do_check_eq(Telemetry.failedProfileLockCount, N_FAILED_LOCKS);
-  do_check_false(construct_file().exists());
+  Assert.equal(Telemetry.failedProfileLockCount, N_FAILED_LOCKS);
+  Assert.ok(!construct_file().exists());
   do_test_finished();
 }

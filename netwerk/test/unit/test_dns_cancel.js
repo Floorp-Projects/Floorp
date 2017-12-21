@@ -21,7 +21,7 @@ var listener1 = {
     // One request should be resolved and two request should be canceled.
     if (inRequest == requestList1NotCanceled) {
       // This request should not be canceled.
-      do_check_neq(inStatus, Cr.NS_ERROR_ABORT);
+      Assert.notEqual(inStatus, Cr.NS_ERROR_ABORT);
 
       do_test_finished();
     }
@@ -40,7 +40,7 @@ var listener2 = {
     // One request should be resolved and the other canceled.
     if (inRequest == requestList2NotCanceled) {
       // The request should not be canceled.
-      do_check_neq(inStatus, Cr.NS_ERROR_ABORT);
+      Assert.notEqual(inStatus, Cr.NS_ERROR_ABORT);
 
       do_test_finished();
     }

@@ -69,7 +69,7 @@ function startIter() {
 
 function completeIter(request, data, ctx) {
     if (!(tests[index].flags & CL_EXPECT_FAILURE)) {
-	do_check_eq(data.length, tests[index].datalen);
+	Assert.equal(data.length, tests[index].datalen);
     }
     if (++index < tests.length) {
 	startIter();

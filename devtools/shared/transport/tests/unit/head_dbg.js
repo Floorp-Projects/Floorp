@@ -149,7 +149,7 @@ var socket_transport = Task.async(function* () {
     yield debuggerListener.open();
   }
   let port = DebuggerServer._listeners[0].port;
-  do_print("Debugger server port is " + port);
+  info("Debugger server port is " + port);
   return DebuggerClient.socketConnect({ host: "127.0.0.1", port });
 });
 

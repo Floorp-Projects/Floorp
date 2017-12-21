@@ -36,16 +36,16 @@ function test_simple_source_map() {
 
   gClient.addOneTimeListener("paused", function (event, packet) {
     gThreadClient.getSources(function (response) {
-      do_check_true(!response.error, "Should not get an error");
+      Assert.ok(!response.error, "Should not get an error");
 
       for (let s of response.sources) {
-        do_check_neq(s.url, "http://example.com/www/js/abc.js",
-                     "Shouldn't get the generated source's url.");
+        Assert.notEqual(s.url, "http://example.com/www/js/abc.js",
+                        "Shouldn't get the generated source's url.");
         expectedSources.delete(s.url);
       }
 
-      do_check_eq(expectedSources.size, 0,
-                  "Should have found all the expected sources sources by now.");
+      Assert.equal(expectedSources.size, 0,
+                   "Should have found all the expected sources sources by now.");
 
       finishClient(gClient);
     });

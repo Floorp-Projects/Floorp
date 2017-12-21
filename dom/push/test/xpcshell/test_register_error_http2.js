@@ -27,7 +27,7 @@ function run_test() {
 add_task(async function test_pushSubscriptionNoConnection() {
 
   let db = PushServiceHttp2.newPushDB();
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     return db.drop().then(_ => db.close());
   });
 
@@ -66,7 +66,7 @@ add_task(async function test_TLS() {
 add_task(async function test_pushSubscriptionMissingLocation() {
 
   let db = PushServiceHttp2.newPushDB();
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     return db.drop().then(_ => db.close());
   });
 
@@ -92,7 +92,7 @@ add_task(async function test_pushSubscriptionMissingLocation() {
 add_task(async function test_pushSubscriptionMissingLink() {
 
   let db = PushServiceHttp2.newPushDB();
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     return db.drop().then(_ => db.close());
   });
 
@@ -118,7 +118,7 @@ add_task(async function test_pushSubscriptionMissingLink() {
 add_task(async function test_pushSubscriptionMissingLink1() {
 
   let db = PushServiceHttp2.newPushDB();
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     return db.drop().then(_ => db.close());
   });
 
@@ -144,7 +144,7 @@ add_task(async function test_pushSubscriptionMissingLink1() {
 add_task(async function test_pushSubscriptionLocationBogus() {
 
   let db = PushServiceHttp2.newPushDB();
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     return db.drop().then(_ => db.close());
   });
 
@@ -170,7 +170,7 @@ add_task(async function test_pushSubscriptionLocationBogus() {
 add_task(async function test_pushSubscriptionNot2xxCode() {
 
   let db = PushServiceHttp2.newPushDB();
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     return db.drop().then(_ => db.close());
   });
 

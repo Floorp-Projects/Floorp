@@ -20,13 +20,13 @@ add_task(async function test_bytes() {
       // 1. Test write, by supplying {bytes:} options smaller than the actual
       // buffer.
       await file.write(new Uint8Array(2048), {bytes: 1024});
-      do_check_eq((await file.stat()).size, 1024);
+      Assert.equal((await file.stat()).size, 1024);
 
       // 2. Test that passing nullish values for |options| still works.
       await file.setPosition(0, OS.File.POS_END);
       await file.write(new Uint8Array(1024), null);
       await file.write(new Uint8Array(1024), undefined);
-      do_check_eq((await file.stat()).size, 3072);
+      Assert.equal((await file.stat()).size, 3072);
     } finally {
       await file.close();
     }

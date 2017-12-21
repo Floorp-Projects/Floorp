@@ -146,8 +146,8 @@ function installAddonFromInstall(install) {
   Async.waitForSyncCallback(cb);
   AddonManager.removeAddonListener(listener);
 
-  do_check_neq(null, install.addon);
-  do_check_neq(null, install.addon.syncGUID);
+  Assert.notEqual(null, install.addon);
+  Assert.notEqual(null, install.addon.syncGUID);
 
   return install.addon;
 }
@@ -161,7 +161,7 @@ function installAddonFromInstall(install) {
  */
 function installAddon(name) {
   let install = getAddonInstall(name);
-  do_check_neq(null, install);
+  Assert.notEqual(null, install);
   return installAddonFromInstall(install);
 }
 
@@ -266,9 +266,9 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
 
 // Helper that allows checking array equality.
 function do_check_array_eq(a1, a2) {
-  do_check_eq(a1.length, a2.length);
+  Assert.equal(a1.length, a2.length);
   for (let i = 0; i < a1.length; ++i) {
-    do_check_eq(a1[i], a2[i]);
+    Assert.equal(a1[i], a2[i]);
   }
 }
 
@@ -296,9 +296,9 @@ function assert_valid_ping(record) {
         // validation failed - using a simple |deepEqual([], errors)| tends to
         // truncate the validation errors in the output and doesn't show that
         // the ping actually was - so be helpful.
-        do_print("telemetry ping validation failed");
-        do_print("the ping data is: " + JSON.stringify(record, undefined, 2));
-        do_print("the validation failures: " + JSON.stringify(SyncPingValidator.errors, undefined, 2));
+        info("telemetry ping validation failed");
+        info("the ping data is: " + JSON.stringify(record, undefined, 2));
+        info("the validation failures: " + JSON.stringify(SyncPingValidator.errors, undefined, 2));
         ok(false, "Sync telemetry ping validation failed - see output above for details");
       }
     }

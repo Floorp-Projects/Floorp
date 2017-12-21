@@ -13,14 +13,14 @@ var gResponsePattern = [];
 var gMessage = "";
 
 function respondWithGoodOCSP(request, response) {
-  do_print("returning 200 OK");
+  info("returning 200 OK");
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "application/ocsp-response");
   response.write(gGoodOCSPResponse);
 }
 
 function respondWithSHA1OCSP(request, response) {
-  do_print("returning 200 OK with sha-1 delegated response");
+  info("returning 200 OK with sha-1 delegated response");
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "application/ocsp-response");
 
@@ -30,7 +30,7 @@ function respondWithSHA1OCSP(request, response) {
 }
 
 function respondWithError(request, response) {
-  do_print("returning 500 Internal Server Error");
+  info("returning 500 Internal Server Error");
   response.setStatusLine(request.httpVersion, 500, "Internal Server Error");
   let body = "Refusing to return a response";
   response.bodyOutputStream.write(body, body.length);
@@ -68,7 +68,7 @@ function run_test() {
 
   let ocspResponder = new HttpServer();
   ocspResponder.registerPrefixHandler("/", function(request, response) {
-    do_print("gFetchCount: " + gFetchCount);
+    info("gFetchCount: " + gFetchCount);
     let responseFunction = gResponsePattern[gFetchCount];
     Assert.notEqual(undefined, responseFunction);
 

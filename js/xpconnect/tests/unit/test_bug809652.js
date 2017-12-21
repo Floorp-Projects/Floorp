@@ -58,6 +58,6 @@ function run_test() {
 function checkThrows(expression, sb) {
   var result = Cu.evalInSandbox('(function() { try { ' + expression + '; return "allowed"; } catch (e) { return e.toString(); }})();', sb);
   dump('result: ' + result + '\n\n\n');
-  do_check_true(!!/denied/.exec(result));
+  Assert.ok(!!/denied/.exec(result));
 }
 

@@ -35,12 +35,12 @@ function run_test() {
     restartManager();
 
     AddonManager.getAddonByID(ADDON.id, function(item) {
-      do_check_eq(item.version, 0.1);
-      do_check_false(item.isCompatible);
+      Assert.equal(item.version, 0.1);
+      Assert.ok(!item.isCompatible);
 
       item.findUpdates({
         onUpdateFinished(addon) {
-          do_check_false(item.isCompatible);
+          Assert.ok(!item.isCompatible);
 
           testserver.stop(do_test_finished);
         }

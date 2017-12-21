@@ -15,7 +15,7 @@ function do_check_empty(obj) {
 }
 
 function do_check_attribute_count(obj, c) {
-  do_check_eq(c, Object.keys(obj).length);
+  Assert.equal(c, Object.keys(obj).length);
 }
 
 function do_check_throws(aFunc, aResult, aStack) {
@@ -29,7 +29,7 @@ function do_check_throws(aFunc, aResult, aStack) {
   try {
     aFunc();
   } catch (e) {
-    do_check_eq(e.result, aResult, aStack);
+    Assert.equal(e.result, aResult, aStack);
     return;
   }
   do_throw("Expected result " + aResult + ", none thrown.", aStack);
@@ -49,7 +49,7 @@ function do_check_throws_message(aFunc, aResult) {
   try {
     aFunc();
   } catch (e) {
-    do_check_eq(e.message, aResult);
+    Assert.equal(e.message, aResult);
     return;
   }
   do_throw("Expected an error, none thrown.");

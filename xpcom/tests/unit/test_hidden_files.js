@@ -21,6 +21,6 @@ function run_test() {
   if (mozinfo.os == "win")
     return;
 
-  do_check_true(createUNIXHiddenFile());
-  do_check_true(hiddenUnixFile.isHidden());
+  Assert.ok(createUNIXHiddenFile());
+  Assert.ok(hiddenUnixFile.isHidden());
 }

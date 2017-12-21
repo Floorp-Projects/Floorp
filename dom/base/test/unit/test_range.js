@@ -56,8 +56,8 @@ function dumpFragment(aFragment) {
  * @return nsIDOMNode  The target node retrieved from the XPath.
  */
 function evalXPathInDocumentFragment(aContextNode, aPath) {
-  do_check_true(aContextNode instanceof C_i.nsIDOMDocumentFragment);
-  do_check_true(aContextNode.childNodes.length > 0);
+  Assert.ok(aContextNode instanceof C_i.nsIDOMDocumentFragment);
+  Assert.ok(aContextNode.childNodes.length > 0);
   if (aPath == ".") {
     return aContextNode;
   }
@@ -78,7 +78,7 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
   var bracketIndex = prefix.indexOf("[");
   if (bracketIndex != -1) {
     childIndex = Number(prefix.substring(bracketIndex + 1, prefix.indexOf("]")));
-    do_check_true(childIndex > 0);
+    Assert.ok(childIndex > 0);
     prefix = prefix.substr(0, bracketIndex);
   }
 
@@ -132,7 +132,7 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
                  targetType,
                  filter);
   var targetNode = walker.nextNode();
-  do_check_neq(targetNode, null);
+  Assert.notEqual(targetNode, null);
 
   // Apply our remaining xpath to the found node.
   var expr = aContextNode.ownerDocument.createExpression(realPath, null);
@@ -149,8 +149,8 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
  * @return Range object.
  */
 function getRange(aSourceNode, aFragment) {
-  do_check_true(aSourceNode instanceof C_i.nsIDOMElement);
-  do_check_true(aFragment instanceof C_i.nsIDOMDocumentFragment);
+  Assert.ok(aSourceNode instanceof C_i.nsIDOMElement);
+  Assert.ok(aFragment instanceof C_i.nsIDOMDocumentFragment);
   var doc = aSourceNode.ownerDocument;
 
   var containerPath = aSourceNode.getAttribute("startContainer");
@@ -177,9 +177,9 @@ function getParsedDocument(aPath) {
 }
 
 function processParsedDocument(doc) {
-  do_check_true(doc.documentElement.localName != "parsererror");
-  do_check_true(doc instanceof C_i.nsIDOMXPathEvaluator);
-  do_check_true(doc instanceof C_i.nsIDOMDocument);
+  Assert.ok(doc.documentElement.localName != "parsererror");
+  Assert.ok(doc instanceof C_i.nsIDOMXPathEvaluator);
+  Assert.ok(doc instanceof C_i.nsIDOMDocument);
 
   // Clean out whitespace.
   var walker = doc.createTreeWalker(doc,
@@ -230,12 +230,12 @@ function do_extract_test(doc) {
 
     // Validate the test is properly formatted for what this harness expects.
     var baseSource = currentTest.firstChild;
-    do_check_eq(baseSource.nodeName, "source");
+    Assert.equal(baseSource.nodeName, "source");
     var baseResult = baseSource.nextSibling;
-    do_check_eq(baseResult.nodeName, "result");
+    Assert.equal(baseResult.nodeName, "result");
     var baseExtract = baseResult.nextSibling;
-    do_check_eq(baseExtract.nodeName, "extract");
-    do_check_eq(baseExtract.nextSibling, null);
+    Assert.equal(baseExtract.nodeName, "extract");
+    Assert.equal(baseExtract.nextSibling, null);
 
     /* We do all our tests on DOM document fragments, derived from the test
        element's children.  This lets us rip the various fragments to shreds,
@@ -270,11 +270,11 @@ function do_extract_test(doc) {
     var cutFragment = baseRange.extractContents();
     dump("cutFragment: " + cutFragment + "\n");
     if (cutFragment) {
-      do_check_true(extractFrag.isEqualNode(cutFragment));
+      Assert.ok(extractFrag.isEqualNode(cutFragment));
     } else {
-      do_check_eq(extractFrag.firstChild, null);
+      Assert.equal(extractFrag.firstChild, null);
     }
-    do_check_true(baseFrag.isEqualNode(resultFrag));
+    Assert.ok(baseFrag.isEqualNode(resultFrag));
 
     dump("Ensure the original nodes weren't extracted - test " + i + "\n\n");
     var walker = doc.createTreeWalker(baseFrag,
@@ -289,12 +289,12 @@ function do_extract_test(doc) {
 
       if (walker.currentNode == endContainer) {
         // An end container node should not come before the start container node.
-        do_check_true(foundStart);
+        Assert.ok(foundStart);
         foundEnd = true;
         break;
       }
     } while (walker.nextNode())
-    do_check_true(foundEnd);
+    Assert.ok(foundEnd);
 
     /* Now, we reset our test for the deleteContents case.  This one differs
        from the extractContents case only in that there is no extracted document
@@ -307,7 +307,7 @@ function do_extract_test(doc) {
     var startContainer = baseRange.startContainer;
     var endContainer = baseRange.endContainer;
     baseRange.deleteContents();
-    do_check_true(baseFrag.isEqualNode(resultFrag));
+    Assert.ok(baseFrag.isEqualNode(resultFrag));
 
     dump("Ensure the original nodes weren't deleted - test " + i + "\n\n");
     walker = doc.createTreeWalker(baseFrag,
@@ -322,12 +322,12 @@ function do_extract_test(doc) {
 
       if (walker.currentNode == endContainer) {
         // An end container node should not come before the start container node.
-        do_check_true(foundStart);
+        Assert.ok(foundStart);
         foundEnd = true;
         break;
       }
     } while (walker.nextNode())
-    do_check_true(foundEnd);
+    Assert.ok(foundEnd);
 
     // Clean up after ourselves.
     walker = null;
@@ -368,7 +368,7 @@ function do_miscellaneous_tests(doc) {
       baseRange.setStart(null, 0);
       do_throw("Should have thrown NOT_OBJECT_ERR!");
     } catch (e) {
-      do_check_eq(e.constructor.name, "TypeError");
+      Assert.equal(e.constructor.name, "TypeError");
     }
 
     // Invalid start node
@@ -376,7 +376,7 @@ function do_miscellaneous_tests(doc) {
       baseRange.setStart({}, 0);
       do_throw("Should have thrown SecurityError!");
     } catch (e) {
-      do_check_eq(e.constructor.name, "TypeError");
+      Assert.equal(e.constructor.name, "TypeError");
     }
 
     // Invalid index
@@ -384,7 +384,7 @@ function do_miscellaneous_tests(doc) {
       baseRange.setStart(startContainer, -1);
       do_throw("Should have thrown IndexSizeError!");
     } catch (e) {
-      do_check_eq(e.name, "IndexSizeError");
+      Assert.equal(e.name, "IndexSizeError");
     }
   
     // Invalid index
@@ -395,21 +395,21 @@ function do_miscellaneous_tests(doc) {
       baseRange.setStart(startContainer, newOffset);
       do_throw("Should have thrown IndexSizeError!");
     } catch (e) {
-      do_check_eq(e.name, "IndexSizeError");
+      Assert.equal(e.name, "IndexSizeError");
     }
   
     newOffset--;
     // Valid index
     baseRange.setStart(startContainer, newOffset);
-    do_check_eq(baseRange.startContainer, baseRange.endContainer);
-    do_check_eq(baseRange.startOffset, newOffset);
-    do_check_true(baseRange.collapsed);
+    Assert.equal(baseRange.startContainer, baseRange.endContainer);
+    Assert.equal(baseRange.startOffset, newOffset);
+    Assert.ok(baseRange.collapsed);
 
     // Valid index
     baseRange.setEnd(startContainer, 0);
-    do_check_eq(baseRange.startContainer, baseRange.endContainer);
-    do_check_eq(baseRange.startOffset, 0);
-    do_check_true(baseRange.collapsed);
+    Assert.equal(baseRange.startContainer, baseRange.endContainer);
+    Assert.equal(baseRange.startOffset, 0);
+    Assert.ok(baseRange.collapsed);
   } else {
     do_throw("The first test should be a text-only range test.  Test is invalid.")
   }
@@ -431,9 +431,9 @@ function do_miscellaneous_tests(doc) {
   var externalRange = getRange(externalSource, externalFrag);
 
   baseRange.setEnd(externalRange.endContainer, 0);
-  do_check_eq(baseRange.startContainer, externalRange.endContainer);
-  do_check_eq(baseRange.startOffset, 0);
-  do_check_true(baseRange.collapsed);
+  Assert.equal(baseRange.startContainer, externalRange.endContainer);
+  Assert.equal(baseRange.startOffset, 0);
+  Assert.ok(baseRange.collapsed);
 
   /*
   // XXX ajvincent if rv == WRONG_DOCUMENT_ERR, return false?
@@ -444,15 +444,15 @@ function do_miscellaneous_tests(doc) {
 
   // Requested by smaug:  A range involving a comment as a document child.
   doc = parser.parseFromString("<!-- foo --><foo/>", "application/xml");
-  do_check_true(doc instanceof C_i.nsIDOMDocument);
-  do_check_eq(doc.childNodes.length, 2);
+  Assert.ok(doc instanceof C_i.nsIDOMDocument);
+  Assert.equal(doc.childNodes.length, 2);
   baseRange = doc.createRange();
   baseRange.setStart(doc.firstChild, 1);
   baseRange.setEnd(doc.firstChild, 2);
   var frag = baseRange.extractContents();
-  do_check_eq(frag.childNodes.length, 1);
-  do_check_true(frag.firstChild instanceof C_i.nsIDOMComment);
-  do_check_eq(frag.firstChild.nodeValue, "f");
+  Assert.equal(frag.childNodes.length, 1);
+  Assert.ok(frag.firstChild instanceof C_i.nsIDOMComment);
+  Assert.equal(frag.firstChild.nodeValue, "f");
 
   /* smaug also requested attribute tests.  Sadly, those are not yet supported
      in ranges - see https://bugzilla.mozilla.org/show_bug.cgi?id=302775.

@@ -12,7 +12,7 @@ function run_test()
     do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
-    do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
+    Assert.equal(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
   }
 
   try {
@@ -20,7 +20,7 @@ function run_test()
     do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
-    do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
+    Assert.equal(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
   }
 
   try {
@@ -28,7 +28,7 @@ function run_test()
     do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
-    do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
+    Assert.equal(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
   }
 
   try {
@@ -36,7 +36,7 @@ function run_test()
     do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
-    do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
+    Assert.equal(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
   }
 
   try {
@@ -44,7 +44,7 @@ function run_test()
     do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
-    do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
+    Assert.equal(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
   }
 
   try {
@@ -52,7 +52,7 @@ function run_test()
     do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
-    do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
+    Assert.equal(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
   }
 
   try {
@@ -60,7 +60,7 @@ function run_test()
     do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
-    do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
+    Assert.equal(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
   }
 
   try {
@@ -68,6 +68,6 @@ function run_test()
     do_throw("Should have thrown uninitialized error.");
   }
   catch (e) {
-    do_check_eq(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
+    Assert.equal(e.result, Components.results.NS_ERROR_NOT_INITIALIZED);
   }
 }

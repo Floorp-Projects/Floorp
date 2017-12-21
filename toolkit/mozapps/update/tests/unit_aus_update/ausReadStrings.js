@@ -27,5 +27,5 @@ function run_test() {
   let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
   process.init(readStrings);
   process.run(true, [], 0);
-  do_check_eq(process.exitValue, 0);
+  Assert.equal(process.exitValue, 0);
 }

@@ -22,7 +22,7 @@ let putRecord = async function(perm, record) {
 
   Services.perms.add(uri, 'desktop-notification',
     Ci.nsIPermissionManager[perm]);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.perms.remove(uri, 'desktop-notification');
   });
 
@@ -31,7 +31,7 @@ let putRecord = async function(perm, record) {
 
 add_task(async function test_expiration_history_observer() {
   db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => db.drop().then(_ => db.close()));
+  registerCleanupFunction(() => db.drop().then(_ => db.close()));
 
   // A registration that we'll expire...
   await putRecord('ALLOW_ACTION', {

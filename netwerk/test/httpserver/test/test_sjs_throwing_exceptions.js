@@ -28,8 +28,8 @@ function run_test()
   {
     do_test_pending();
     srv.stop(function() { do_test_finished(); });
-    do_check_eq(gStartCount, TEST_RUNS);
-    do_check_true(lastPassed);
+    Assert.equal(gStartCount, TEST_RUNS);
+    Assert.ok(lastPassed);
   }
 
   runHttpTests(tests, done);
@@ -57,18 +57,18 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
 
 function start_thrower(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 500);
-  do_check_false(ch.requestSucceeded);
+  Assert.equal(ch.responseStatus, 500);
+  Assert.ok(!ch.requestSucceeded);
 
   gStartCount++;
 }
 
 function start_last(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 200);
-  do_check_true(ch.requestSucceeded);
+  Assert.equal(ch.responseStatus, 200);
+  Assert.ok(ch.requestSucceeded);
 
-  do_check_eq(ch.getResponseHeader("X-Test-Status"), "PASS");
+  Assert.equal(ch.getResponseHeader("X-Test-Status"), "PASS");
 
   lastPassed = true;
 }

@@ -40,24 +40,24 @@ let log = Log.repository.getLogger("crypto.service.test");
 
 // When the output of an operation is a
 function do_check_eq_or_slightly_less(x, y) {
-  do_check_true(x >= y - (3 * 8));
+  Assert.ok(x >= y - (3 * 8));
 }
 
 function test_base64_roundtrip() {
   let message = "Attack at dawn!";
   let encoded = idService.base64UrlEncode(message);
   let decoded = base64UrlDecode(encoded);
-  do_check_neq(message, encoded);
-  do_check_eq(decoded, message);
+  Assert.notEqual(message, encoded);
+  Assert.equal(decoded, message);
   run_next_test();
 }
 
 function test_dsa() {
   idService.generateKeyPair(ALG_DSA, function(rv, keyPair) {
     log.debug("DSA generateKeyPair finished " + rv);
-    do_check_true(Components.isSuccessCode(rv));
-    do_check_eq(typeof keyPair.sign, "function");
-    do_check_eq(keyPair.keyType, ALG_DSA);
+    Assert.ok(Components.isSuccessCode(rv));
+    Assert.equal(typeof keyPair.sign, "function");
+    Assert.equal(keyPair.keyType, ALG_DSA);
     do_check_eq_or_slightly_less(keyPair.hexDSAGenerator.length, 1024 / 8 * 2);
     do_check_eq_or_slightly_less(keyPair.hexDSAPrime.length, 1024 / 8 * 2);
     do_check_eq_or_slightly_less(keyPair.hexDSASubPrime.length, 160 / 8 * 2);
@@ -67,8 +67,8 @@ function test_dsa() {
     log.debug("about to sign with DSA key");
     keyPair.sign("foo", function(rv2, signature) {
       log.debug("DSA sign finished " + rv2 + " " + signature);
-      do_check_true(Components.isSuccessCode(rv2));
-      do_check_true(signature.length > 1);
+      Assert.ok(Components.isSuccessCode(rv2));
+      Assert.ok(signature.length > 1);
       // TODO: verify the signature with the public key
       run_next_test();
     });
@@ -78,18 +78,18 @@ function test_dsa() {
 function test_rsa() {
   idService.generateKeyPair(ALG_RSA, function(rv, keyPair) {
     log.debug("RSA generateKeyPair finished " + rv);
-    do_check_true(Components.isSuccessCode(rv));
-    do_check_eq(typeof keyPair.sign, "function");
-    do_check_eq(keyPair.keyType, ALG_RSA);
+    Assert.ok(Components.isSuccessCode(rv));
+    Assert.equal(typeof keyPair.sign, "function");
+    Assert.equal(keyPair.keyType, ALG_RSA);
     do_check_eq_or_slightly_less(keyPair.hexRSAPublicKeyModulus.length,
                                  2048 / 8);
-    do_check_true(keyPair.hexRSAPublicKeyExponent.length > 1);
+    Assert.ok(keyPair.hexRSAPublicKeyExponent.length > 1);
 
     log.debug("about to sign with RSA key");
     keyPair.sign("foo", function(rv2, signature) {
       log.debug("RSA sign finished " + rv2 + " " + signature);
-      do_check_true(Components.isSuccessCode(rv2));
-      do_check_true(signature.length > 1);
+      Assert.ok(Components.isSuccessCode(rv2));
+      Assert.ok(signature.length > 1);
       run_next_test();
     });
   });
@@ -97,7 +97,7 @@ function test_rsa() {
 
 function test_base64UrlEncode() {
   for (let [source, target] of BASE64_URL_ENCODINGS) {
-    do_check_eq(target, idService.base64UrlEncode(source));
+    Assert.equal(target, idService.base64UrlEncode(source));
   }
   run_next_test();
 }
@@ -112,7 +112,7 @@ function test_base64UrlDecode() {
   for (let [source, target] of BASE64_URL_ENCODINGS) {
     let result = utf8Converter.ConvertToUnicode(base64UrlDecode(target));
     result += utf8Converter.Finish();
-    do_check_eq(source, result);
+    Assert.equal(source, result);
   }
   run_next_test();
 }

@@ -7,7 +7,7 @@ function run_test() {
     if (!p)
       return;
 
-    do_check_true(!p.IsActive());
+    Assert.ok(!p.IsActive());
 
     // The function is entered with the profiler disabled.
     (function() {

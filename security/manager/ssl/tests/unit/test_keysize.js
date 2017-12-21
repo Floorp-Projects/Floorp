@@ -38,8 +38,8 @@ function checkChain(rootKeyType, rootKeySize, intKeyType, intKeySize,
   addCertFromFile(certdb, `test_keysize/${intFullName}.pem`, ",,");
   let eeCert = constructCertFromFile(`test_keysize/${eeFullName}.pem`);
 
-  do_print("cert o=" + eeCert.organization);
-  do_print("cert issuer o=" + eeCert.issuerOrganization);
+  info("cert o=" + eeCert.organization);
+  info("cert issuer o=" + eeCert.issuerOrganization);
   checkCertErrorGeneric(certdb, eeCert, eeExpectedError,
                         certificateUsageSSLServer);
 }

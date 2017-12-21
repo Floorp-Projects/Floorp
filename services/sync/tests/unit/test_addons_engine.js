@@ -64,9 +64,9 @@ add_task(async function test_addon_install() {
   _("Ensure basic add-on APIs work as expected.");
 
   let install = getAddonInstall("test_bootstrap1_1");
-  do_check_neq(install, null);
-  do_check_eq(install.type, "extension");
-  do_check_eq(install.name, "Test Bootstrap 1");
+  Assert.notEqual(install, null);
+  Assert.equal(install.type, "extension");
+  Assert.equal(install.name, "Test Bootstrap 1");
 
   await resetReconciler();
 });
@@ -89,11 +89,11 @@ add_task(async function test_find_dupe() {
   };
 
   let dupe = await engine._findDupe(record);
-  do_check_eq(addon.syncGUID, dupe);
+  Assert.equal(addon.syncGUID, dupe);
 
   record.id = addon.syncGUID;
   dupe = await engine._findDupe(record);
-  do_check_eq(null, dupe);
+  Assert.equal(null, dupe);
 
   uninstallAddon(addon);
   await resetReconciler();
@@ -104,8 +104,8 @@ add_task(async function test_get_changed_ids() {
 
   _("Ensure getChangedIDs() returns an empty object by default.");
   let changes = await engine.getChangedIDs();
-  do_check_eq("object", typeof(changes));
-  do_check_eq(0, Object.keys(changes).length);
+  Assert.equal("object", typeof(changes));
+  Assert.equal(0, Object.keys(changes).length);
 
   _("Ensure tracker changes are populated.");
   let now = new Date();
@@ -114,10 +114,10 @@ add_task(async function test_get_changed_ids() {
   tracker.addChangedID(guid1, changeTime);
 
   changes = await engine.getChangedIDs();
-  do_check_eq("object", typeof(changes));
-  do_check_eq(1, Object.keys(changes).length);
-  do_check_true(guid1 in changes);
-  do_check_eq(changeTime, changes[guid1]);
+  Assert.equal("object", typeof(changes));
+  Assert.equal(1, Object.keys(changes).length);
+  Assert.ok(guid1 in changes);
+  Assert.equal(changeTime, changes[guid1]);
 
   tracker.clearChangedIDs();
 
@@ -125,19 +125,19 @@ add_task(async function test_get_changed_ids() {
   let addon = installAddon("test_bootstrap1_1");
   tracker.clearChangedIDs(); // Just in case.
   changes = await engine.getChangedIDs();
-  do_check_eq("object", typeof(changes));
-  do_check_eq(1, Object.keys(changes).length);
-  do_check_true(addon.syncGUID in changes);
+  Assert.equal("object", typeof(changes));
+  Assert.equal(1, Object.keys(changes).length);
+  Assert.ok(addon.syncGUID in changes);
   _("Change time: " + changeTime + ", addon change: " + changes[addon.syncGUID]);
-  do_check_true(changes[addon.syncGUID] >= changeTime);
+  Assert.ok(changes[addon.syncGUID] >= changeTime);
 
   let oldTime = changes[addon.syncGUID];
   let guid2 = addon.syncGUID;
   uninstallAddon(addon);
   changes = await engine.getChangedIDs();
-  do_check_eq(1, Object.keys(changes).length);
-  do_check_true(guid2 in changes);
-  do_check_true(changes[guid2] > oldTime);
+  Assert.equal(1, Object.keys(changes).length);
+  Assert.ok(guid2 in changes);
+  Assert.ok(changes[guid2] > oldTime);
 
   _("Ensure non-syncable add-ons aren't picked up by reconciler changes.");
   reconciler._addons  = {};
@@ -157,7 +157,7 @@ add_task(async function test_get_changed_ids() {
 
   changes = await engine.getChangedIDs();
   _(JSON.stringify(changes));
-  do_check_eq(0, Object.keys(changes).length);
+  Assert.equal(0, Object.keys(changes).length);
 
   await resetReconciler();
 });
@@ -221,8 +221,8 @@ add_task(async function test_disabled_install_semantics() {
 
   // We ensure the reconciler has recorded the proper ID and enabled state.
   let addon = reconciler.getAddonStateFromSyncGUID(id);
-  do_check_neq(null, addon);
-  do_check_eq(false, addon.enabled);
+  Assert.notEqual(null, addon);
+  Assert.equal(false, addon.enabled);
 
   // We fake an app restart and perform another sync, just to make sure things
   // are sane.
@@ -234,12 +234,12 @@ add_task(async function test_disabled_install_semantics() {
 
   // The client should not upload a new record. The old record should be
   // retained and unmodified.
-  do_check_eq(1, collection.count());
+  Assert.equal(1, collection.count());
 
   let payload = collection.payloads()[0];
-  do_check_neq(null, collection.wbo(id));
-  do_check_eq(ADDON_ID, payload.addonID);
-  do_check_false(payload.enabled);
+  Assert.notEqual(null, collection.wbo(id));
+  Assert.equal(ADDON_ID, payload.addonID);
+  Assert.ok(!payload.enabled);
 
   await promiseStopServer(server);
 });

@@ -11,7 +11,7 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const flags = require("devtools/shared/flags");
 
 flags.testing = true;
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   flags.testing = false;
 });
 

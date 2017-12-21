@@ -56,61 +56,61 @@ const HEADER_COUNT = 1000;
 // or invariants for every URL in paths
 function commonCheck(ch)
 {
-  do_check_true(ch.contentLength > -1);
-  do_check_eq(ch.getResponseHeader("connection"), "close");
-  do_check_false(ch.isNoStoreResponse());
-  do_check_false(ch.isPrivateResponse());
+  Assert.ok(ch.contentLength > -1);
+  Assert.equal(ch.getResponseHeader("connection"), "close");
+  Assert.ok(!ch.isNoStoreResponse());
+  Assert.ok(!ch.isPrivateResponse());
 }
 
 function start_objHandler(ch, cx)
 {
   commonCheck(ch);
 
-  do_check_eq(ch.responseStatus, 200);
-  do_check_true(ch.requestSucceeded);
-  do_check_eq(ch.getResponseHeader("content-type"), "text/plain");
-  do_check_eq(ch.responseStatusText, "OK");
+  Assert.equal(ch.responseStatus, 200);
+  Assert.ok(ch.requestSucceeded);
+  Assert.equal(ch.getResponseHeader("content-type"), "text/plain");
+  Assert.equal(ch.responseStatusText, "OK");
 
   var reqMin = {}, reqMaj = {}, respMin = {}, respMaj = {};
   ch.getRequestVersion(reqMaj, reqMin);
   ch.getResponseVersion(respMaj, respMin);
-  do_check_true(reqMaj.value == respMaj.value &&
-                reqMin.value == respMin.value);
+  Assert.ok(reqMaj.value == respMaj.value &&
+            reqMin.value == respMin.value);
 }
 
 function start_functionHandler(ch, cx)
 {
   commonCheck(ch);
 
-  do_check_eq(ch.responseStatus, 404);
-  do_check_false(ch.requestSucceeded);
-  do_check_eq(ch.getResponseHeader("foopy"), "quux-baz");
-  do_check_eq(ch.responseStatusText, "Page Not Found");
+  Assert.equal(ch.responseStatus, 404);
+  Assert.ok(!ch.requestSucceeded);
+  Assert.equal(ch.getResponseHeader("foopy"), "quux-baz");
+  Assert.equal(ch.responseStatusText, "Page Not Found");
 
   var reqMin = {}, reqMaj = {}, respMin = {}, respMaj = {};
   ch.getRequestVersion(reqMaj, reqMin);
   ch.getResponseVersion(respMaj, respMin);
-  do_check_true(reqMaj.value == 1 && reqMin.value == 1);
-  do_check_true(respMaj.value == 1 && respMin.value == 1);
+  Assert.ok(reqMaj.value == 1 && reqMin.value == 1);
+  Assert.ok(respMaj.value == 1 && respMin.value == 1);
 }
 
 function start_non_existent_path(ch, cx)
 {
   commonCheck(ch);
 
-  do_check_eq(ch.responseStatus, 404);
-  do_check_false(ch.requestSucceeded);
+  Assert.equal(ch.responseStatus, 404);
+  Assert.ok(!ch.requestSucceeded);
 }
 
 function start_lots_of_headers(ch, cx)
 {
   commonCheck(ch);
 
-  do_check_eq(ch.responseStatus, 200);
-  do_check_true(ch.requestSucceeded);
+  Assert.equal(ch.responseStatus, 200);
+  Assert.ok(ch.requestSucceeded);
 
   for (var i = 0; i < HEADER_COUNT; i++)
-    do_check_eq(ch.getResponseHeader("X-Header-" + i), "value " + i);
+    Assert.equal(ch.getResponseHeader("X-Header-" + i), "value " + i);
 }
 
 // PATH HANDLERS
@@ -126,7 +126,7 @@ var objHandler =
       var body = "Request (slightly reformatted):\n\n";
       body += metadata.method + " " + metadata.path;
 
-      do_check_eq(metadata.port, port);
+      Assert.equal(metadata.port, port);
 
       if (metadata.queryString)
         body +=  "?" + metadata.queryString;
@@ -158,9 +158,9 @@ function functionHandler(metadata, response)
   response.setStatusLine("1.1", 404, "Page Not Found");
   response.setHeader("foopy", "quux-baz", false);
 
-  do_check_eq(metadata.port, port);
-  do_check_eq(metadata.host, "localhost");
-  do_check_eq(metadata.path.charAt(0), "/");
+  Assert.equal(metadata.port, port);
+  Assert.equal(metadata.host, "localhost");
+  Assert.equal(metadata.path.charAt(0), "/");
 
   var body = "this is text\n";
   response.bodyOutputStream.write(body, body.length);

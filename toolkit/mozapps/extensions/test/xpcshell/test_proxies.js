@@ -66,7 +66,7 @@ function checkAddonsExist() {
   for (let addon of ADDONS) {
     let file = addon.directory.clone();
     file.append("install.rdf");
-    do_check_true(file.exists(), Components.stack.caller);
+    Assert.ok(file.exists(), Components.stack.caller);
   }
 }
 
@@ -124,8 +124,8 @@ async function run_proxy_tests() {
               ADDONS[i].dirId,
               ADDONS[i].dirId != null,
               ADDONS[i].type == "symlink");
-        do_check_eq(addon == null,
-                    ADDONS[i].dirId != null);
+        Assert.equal(addon == null,
+                     ADDONS[i].dirId != null);
 
         if (addon != null) {
           let fixURL = url => {
@@ -135,19 +135,19 @@ async function run_proxy_tests() {
           };
 
           // Check that proxied add-ons do not have upgrade permissions.
-          do_check_eq(addon.permissions & AddonManager.PERM_CAN_UPGRADE, 0);
+          Assert.equal(addon.permissions & AddonManager.PERM_CAN_UPGRADE, 0);
 
           // Check that getResourceURI points to the right place.
-          do_check_eq(Services.io.newFileURI(ADDONS[i].directory).spec,
-                      fixURL(addon.getResourceURI().spec),
-                      `Base resource URL resolves as expected`);
+          Assert.equal(Services.io.newFileURI(ADDONS[i].directory).spec,
+                       fixURL(addon.getResourceURI().spec),
+                       `Base resource URL resolves as expected`);
 
           let file = ADDONS[i].directory.clone();
           file.append("install.rdf");
 
-          do_check_eq(Services.io.newFileURI(file).spec,
-                      fixURL(addon.getResourceURI("install.rdf").spec),
-                      `Resource URLs resolve as expected`);
+          Assert.equal(Services.io.newFileURI(file).spec,
+                       fixURL(addon.getResourceURI("install.rdf").spec),
+                       `Resource URLs resolve as expected`);
 
           addon.uninstall();
         }
@@ -203,12 +203,12 @@ async function run_symlink_tests() {
   let file = symlink.clone();
   file.append(tempFile.leafName);
   file.normalize();
-  do_check_eq(file.path.replace(/^\/private\//, "/"), tempFile.path);
+  Assert.equal(file.path.replace(/^\/private\//, "/"), tempFile.path);
 
   startupManager();
 
   return AddonManager.getAddonByID(METADATA.id).then(addon => {
-    do_check_neq(addon, null);
+    Assert.notEqual(addon, null);
 
     addon.uninstall();
 
@@ -216,10 +216,10 @@ async function run_symlink_tests() {
     shutdownManager();
 
     // Check that the install directory is gone.
-    do_check_false(addonDirectory.exists());
+    Assert.ok(!addonDirectory.exists());
 
     // Check that the temp file is not gone.
-    do_check_true(tempFile.exists());
+    Assert.ok(tempFile.exists());
 
     tempDirectory.remove(true);
   });

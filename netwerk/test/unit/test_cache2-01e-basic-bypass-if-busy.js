@@ -10,7 +10,7 @@ function run_test()
       // Open and bypass
       asyncOpenCacheEntry("http://a/", "disk", Ci.nsICacheStorage.OPEN_BYPASS_IF_BUSY, null,
         new OpenCallback(NOTFOUND, "", "", function(entry) {
-          do_check_false(bypassed);
+          Assert.ok(!bypassed);
           bypassed = true;
         })
       );
@@ -19,8 +19,8 @@ function run_test()
       // 1. we want finish_cache2_test call for sure after do_test_pending, but all the callbacks here
       //    may invoke synchronously
       // 2. precaution when the OPEN_BYPASS_IF_BUSY invocation become a post one day
-      do_execute_soon(function() {
-        do_check_true(bypassed);
+      executeSoon(function() {
+        Assert.ok(bypassed);
         finish_cache2_test();
       });
     })

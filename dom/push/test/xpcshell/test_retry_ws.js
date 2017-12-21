@@ -19,7 +19,7 @@ function run_test() {
 
 add_task(async function test_ws_retry() {
   let db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+  registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
 
   await db.put({
     channelID: '61770ba9-2d57-4134-b949-d40404630d5b',

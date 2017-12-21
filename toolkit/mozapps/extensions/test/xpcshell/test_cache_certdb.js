@@ -23,7 +23,7 @@ add_task(async function() {
   await XPIProvider.verifySignatures();
 
   let addon = await AddonManager.getAddonByID(ID);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
-  do_check_false(addon.isActive);
-  do_check_true(addon.appDisabled);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
+  Assert.ok(!addon.isActive);
+  Assert.ok(addon.appDisabled);
 });

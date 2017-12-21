@@ -38,7 +38,7 @@ function stopHttpServer() {
 }
 
 function run_test() { // jshint ignore:line
-  do_register_cleanup(stopHttpServer);
+  registerCleanupFunction(stopHttpServer);
 
   run_test_in_child('../unit/test_channel_priority.js', () => {
     startHttpServer();

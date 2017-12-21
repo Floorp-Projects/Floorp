@@ -19,30 +19,30 @@ add_task(async function test_saveBookmarksToJSONFile_and_create() {
   backupFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0600", 8));
 
   let nodeCount = await PlacesBackups.saveBookmarksToJSONFile(backupFile, true);
-  do_check_true(nodeCount > 0);
-  do_check_true(backupFile.exists());
-  do_check_eq(backupFile.leafName, "bookmarks.json");
+  Assert.ok(nodeCount > 0);
+  Assert.ok(backupFile.exists());
+  Assert.equal(backupFile.leafName, "bookmarks.json");
 
   // Ensure the backup would be copied to our backups folder when the original
   // backup is saved somewhere else.
   let recentBackup = await PlacesBackups.getMostRecentBackup();
   let matches = OS.Path.basename(recentBackup).match(PlacesBackups.filenamesRegex);
-  do_check_eq(matches[2], nodeCount);
-  do_check_eq(matches[3].length, 24);
+  Assert.equal(matches[2], nodeCount);
+  Assert.equal(matches[3].length, 24);
 
   // Clear all backups in our backups folder.
   await PlacesBackups.create(0);
-  do_check_eq((await PlacesBackups.getBackupFiles()).length, 0);
+  Assert.equal((await PlacesBackups.getBackupFiles()).length, 0);
 
   // Test create() which saves bookmarks with metadata on the filename.
   await PlacesBackups.create();
-  do_check_eq((await PlacesBackups.getBackupFiles()).length, 1);
+  Assert.equal((await PlacesBackups.getBackupFiles()).length, 1);
 
   let mostRecentBackupFile = await PlacesBackups.getMostRecentBackup();
-  do_check_neq(mostRecentBackupFile, null);
+  Assert.notEqual(mostRecentBackupFile, null);
   matches = OS.Path.basename(recentBackup).match(PlacesBackups.filenamesRegex);
-  do_check_eq(matches[2], nodeCount);
-  do_check_eq(matches[3].length, 24);
+  Assert.equal(matches[2], nodeCount);
+  Assert.equal(matches[3].length, 24);
 
   // Cleanup
   backupFile.remove(false);

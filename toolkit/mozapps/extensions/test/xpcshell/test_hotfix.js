@@ -60,11 +60,11 @@ function check_test_1() {
   restartManager();
 
   AddonManager.getAddonByID("hotfix@tests.mozilla.org", function(aAddon) {
-    do_check_neq(aAddon, null);
-    do_check_eq(aAddon.version, "1.0");
+    Assert.notEqual(aAddon, null);
+    Assert.equal(aAddon.version, "1.0");
 
     aAddon.uninstall();
-    do_execute_soon(run_test_2);
+    executeSoon(run_test_2);
   });
 }
 
@@ -107,11 +107,11 @@ function check_test_3() {
   restartManager();
 
   AddonManager.getAddonByID("hotfix@tests.mozilla.org", function(aAddon) {
-    do_check_neq(aAddon, null);
-    do_check_eq(aAddon.version, "2.0");
+    Assert.notEqual(aAddon, null);
+    Assert.equal(aAddon.version, "2.0");
 
     aAddon.uninstall();
-    do_execute_soon(run_test_4);
+    executeSoon(run_test_4);
   });
 }
 
@@ -237,11 +237,11 @@ function finish_test_7() {
   restartManager();
 
   AddonManager.getAddonByID("hotfix@tests.mozilla.org", function(aAddon) {
-    do_check_neq(aAddon, null);
-    do_check_eq(aAddon.version, "1.0");
+    Assert.notEqual(aAddon, null);
+    Assert.equal(aAddon.version, "1.0");
 
     aAddon.uninstall();
-    do_execute_soon(run_test_8);
+    executeSoon(run_test_8);
   });
 }
 
@@ -291,14 +291,14 @@ function check_test_8() {
 
 function finish_test_8() {
   AddonManager.getAllInstalls(callback_soon(function(aInstalls) {
-    do_check_eq(aInstalls.length, 1);
-    do_check_eq(aInstalls[0].version, "2.0");
+    Assert.equal(aInstalls.length, 1);
+    Assert.equal(aInstalls[0].version, "2.0");
 
     restartManager();
 
     AddonManager.getAddonByID("hotfix@tests.mozilla.org", callback_soon(function(aAddon) {
-      do_check_neq(aAddon, null);
-      do_check_eq(aAddon.version, "2.0");
+      Assert.notEqual(aAddon, null);
+      Assert.equal(aAddon.version, "2.0");
 
       aAddon.uninstall();
       restartManager();

@@ -42,11 +42,11 @@ var listener = {
       case 1:
         request.suspend();
         syncXHR();
-        do_execute_soon(function() { request.resume(); });
+        executeSoon(function() { request.resume(); });
         break;
       case 2:
-        do_execute_soon(function() { request.suspend(); });
-        do_execute_soon(function() { request.resume(); });
+        executeSoon(function() { request.suspend(); });
+        executeSoon(function() { request.resume(); });
         syncXHR();
         break;
     }
@@ -55,13 +55,13 @@ var listener = {
   },
 
   onDataAvailable: function(request, context, stream, offset, count) {
-    do_check_true(this._done_onStart);
+    Assert.ok(this._done_onStart);
     read_stream(stream, count);
     this._done_onData = true;
   },
 
   onStopRequest: function(request, ctx, status) {
-    do_check_true(this._done_onData);
+    Assert.ok(this._done_onData);
     this._reset();
     if (this._test <= MAX_TESTS)
       next_test();

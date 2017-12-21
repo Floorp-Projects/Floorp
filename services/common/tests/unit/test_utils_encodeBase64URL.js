@@ -10,14 +10,14 @@ add_test(function test_simple() {
   };
 
   for (let [k, v] of Object.entries(expected)) {
-    do_check_eq(CommonUtils.encodeBase64URL(k), v);
+    Assert.equal(CommonUtils.encodeBase64URL(k), v);
   }
 
   run_next_test();
 });
 
 add_test(function test_no_padding() {
-  do_check_eq(CommonUtils.encodeBase64URL("hello", false), "aGVsbG8");
+  Assert.equal(CommonUtils.encodeBase64URL("hello", false), "aGVsbG8");
 
   run_next_test();
 });

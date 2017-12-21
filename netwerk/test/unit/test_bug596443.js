@@ -42,7 +42,7 @@ Listener.prototype = {
         this._buffer = this._buffer.concat(read_stream(stream, count));
     },
     onStopRequest: function (request, ctx, status) {
-        do_check_eq(this._buffer, this._response);
+        Assert.equal(this._buffer, this._response);
         if (--expectedOnStopRequests == 0)
             do_timeout(10, function() {
                         httpserver.stop(do_test_finished);

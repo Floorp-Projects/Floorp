@@ -100,7 +100,7 @@ add_test(function test_getHashRequestV4() {
 
       equal(match.fullHash, "01234567890123456789012345678901");
       equal(match.cacheDuration, 8);
-      do_print("completion: " + match.fullHash + ", " + table);
+      info("completion: " + match.fullHash + ", " + table);
     },
 
     completionFinished(status) {
@@ -124,7 +124,7 @@ add_test(function test_getHashRequestV4() {
 
       equal(match.fullHash, "12345678901234567890123456789012");
       equal(match.cacheDuration, 7);
-      do_print("completion: " + match.fullHash + ", " + table);
+      info("completion: " + match.fullHash + ", " + table);
     },
 
     completionFinished(status) {
@@ -175,7 +175,7 @@ add_test(function test_minWaitDuration() {
 
         equal(match.fullHash, "12345678901234567890123456789012");
         equal(match.cacheDuration, 7);
-        do_print("completion: " + match.fullHash + ", " + table);
+        info("completion: " + match.fullHash + ", " + table);
       },
 
       completionFinished(status) {

@@ -30,13 +30,13 @@ add_test(function test_corruptFormHistoryDB_lazyCorruptInit1() {
   do_log_info("ensure FormHistory backs up a corrupt DB on initialization.");
 
   // DB init is done lazily so the DB shouldn't be created yet.
-  do_check_false(bakFile.exists());
+  Assert.ok(!bakFile.exists());
   // Doing any request to the DB should create it.
   countEntries(null, null, run_next_test);
 });
 
 add_test(function test_corruptFormHistoryDB_lazyCorruptInit2() {
-  do_check_true(bakFile.exists());
+  Assert.ok(bakFile.exists());
   bakFile.remove(false);
   run_next_test();
 });
@@ -47,10 +47,10 @@ add_test(function test_corruptFormHistoryDB_emptyInit() {
 
   FormHistory.count({}, {
     handleResult(aNumEntries) {
-      do_check_true(aNumEntries == 0);
+      Assert.ok(aNumEntries == 0);
       FormHistory.count({ fieldname: "name-A", value: "value-A" }, {
         handleResult(aNumEntries2) {
-          do_check_true(aNumEntries2 == 0);
+          Assert.ok(aNumEntries2 == 0);
           run_next_test();
         },
         handleError(aError2) {
@@ -71,7 +71,7 @@ add_test(function test_corruptFormHistoryDB_addEntry() {
               function() {
                 countEntries("name-A", "value-A",
                              function(count) {
-                               do_check_true(count == 1);
+                               Assert.ok(count == 1);
                                run_next_test();
                              });
               });
@@ -84,7 +84,7 @@ add_test(function test_corruptFormHistoryDB_removeEntry() {
               function() {
                 countEntries("name-A", "value-A",
                              function(count) {
-                               do_check_true(count == 0);
+                               Assert.ok(count == 0);
                                run_next_test();
                              });
               });

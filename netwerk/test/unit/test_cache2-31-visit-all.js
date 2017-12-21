@@ -9,7 +9,7 @@ function run_test()
   do_get_profile();
 
   var mc = new MultipleCallbacks(8, function() {
-    do_execute_soon(function() {
+    executeSoon(function() {
       var expectedConsumption = 8192;
       var entries = [{ uri: "http://a/", lci: lcis[0] },    // default
                      { uri: "http://b/", lci: lcis[0] },    // default

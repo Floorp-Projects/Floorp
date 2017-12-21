@@ -35,21 +35,21 @@ add_task(async function() {
   }
 
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_eq(addon.version, "1.0");
-  do_check_eq(addon.name, "Web Extension Name");
-  do_check_true(addon.isCompatible);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
-  do_check_false(addon.isSystem);
-  do_check_eq(addon.type, "extension");
-  do_check_true(addon.isWebExtension);
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.name, "Web Extension Name");
+  Assert.ok(addon.isCompatible);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.ok(!addon.isSystem);
+  Assert.equal(addon.type, "extension");
+  Assert.ok(addon.isWebExtension);
+  Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let uri = do_get_addon_root_uri(profileDir, ID);
 
-  do_check_eq(addon.iconURL, uri + "icon48.png");
-  do_check_eq(addon.icon64URL, uri + "icon64.png");
+  Assert.equal(addon.iconURL, uri + "icon48.png");
+  Assert.equal(addon.icon64URL, uri + "icon64.png");
 
   // Should persist through a restart
   await promiseShutdownManager();
@@ -63,23 +63,23 @@ add_task(async function() {
   ok(GlobalManager.extensionMap.has(ID));
 
   addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_eq(addon.version, "1.0");
-  do_check_eq(addon.name, "Web Extension Name");
-  do_check_true(addon.isCompatible);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
-  do_check_false(addon.isSystem);
-  do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.name, "Web Extension Name");
+  Assert.ok(addon.isCompatible);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.ok(!addon.isSystem);
+  Assert.equal(addon.type, "extension");
+  Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let file = getFileForAddon(profileDir, ID);
-  do_check_true(file.exists());
+  Assert.ok(file.exists());
 
   uri = do_get_addon_root_uri(profileDir, ID);
 
-  do_check_eq(addon.iconURL, uri + "icon48.png");
-  do_check_eq(addon.icon64URL, uri + "icon64.png");
+  Assert.equal(addon.iconURL, uri + "icon48.png");
+  Assert.equal(addon.icon64URL, uri + "icon64.png");
 
   addon.userDisabled = true;
 
@@ -94,7 +94,7 @@ add_task(async function() {
   addon.uninstall();
 
   equal(GlobalManager.extensionMap.size, 0);
-  do_check_false(GlobalManager.extensionMap.has(ID));
+  Assert.ok(!GlobalManager.extensionMap.has(ID));
 
   await promiseShutdownManager();
 });
@@ -116,18 +116,18 @@ add_task(async function() {
   await promiseWebExtensionStartup();
 
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_eq(addon.version, "1.0");
-  do_check_eq(addon.name, "Web Extension Name");
-  do_check_true(addon.isCompatible);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
-  do_check_false(addon.isSystem);
-  do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.name, "Web Extension Name");
+  Assert.ok(addon.isCompatible);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.ok(!addon.isSystem);
+  Assert.equal(addon.type, "extension");
+  Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let file = getFileForAddon(profileDir, ID);
-  do_check_true(file.exists());
+  Assert.ok(file.exists());
 
   addon.uninstall();
 
@@ -180,10 +180,10 @@ add_task(async function() {
   await promiseRestartManager();
 
   let addon = await promiseAddonByID(ID);
-  do_check_eq(addon, null);
+  Assert.equal(addon, null);
 
   let file = getFileForAddon(profileDir, ID);
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
 
   await promiseRestartManager();
 });
@@ -204,10 +204,10 @@ add_task(async function() {
   await promiseRestartManager();
 
   let addon = await promiseAddonByID(ID);
-  do_check_eq(addon, null);
+  Assert.equal(addon, null);
 
   let file = getFileForAddon(profileDir, ID);
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
 
   await promiseRestartManager();
 });
@@ -223,14 +223,14 @@ add_task(async function() {
 
   let installrdf_id = "first-webextension2@tests.mozilla.org";
   let first_addon = await promiseAddonByID(installrdf_id);
-  do_check_neq(first_addon, null);
-  do_check_false(first_addon.appDisabled);
-  do_check_true(first_addon.isActive);
-  do_check_false(first_addon.isSystem);
+  Assert.notEqual(first_addon, null);
+  Assert.ok(!first_addon.appDisabled);
+  Assert.ok(first_addon.isActive);
+  Assert.ok(!first_addon.isSystem);
 
   let manifestjson_id = "last-webextension2@tests.mozilla.org";
   let last_addon = await promiseAddonByID(manifestjson_id);
-  do_check_eq(last_addon, null);
+  Assert.equal(last_addon, null);
 
   await promiseRestartManager();
 });
@@ -401,18 +401,18 @@ add_task(async function testThemeExtension() {
   });
 
   addon = await promiseAddonByID(addon.id);
-  do_check_neq(addon, null);
-  do_check_eq(addon.creator, "Some author");
-  do_check_eq(addon.version, "1.0");
-  do_check_eq(addon.name, "Web Extension Name");
-  do_check_true(addon.isCompatible);
-  do_check_false(addon.appDisabled);
-  do_check_false(addon.isActive);
-  do_check_true(addon.userDisabled);
-  do_check_false(addon.isSystem);
-  do_check_eq(addon.type, "theme");
-  do_check_true(addon.isWebExtension);
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.creator, "Some author");
+  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.name, "Web Extension Name");
+  Assert.ok(addon.isCompatible);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(!addon.isActive);
+  Assert.ok(addon.userDisabled);
+  Assert.ok(!addon.isSystem);
+  Assert.equal(addon.type, "theme");
+  Assert.ok(addon.isWebExtension);
+  Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   addon.uninstall();
 
@@ -428,8 +428,8 @@ add_task(async function testThemeExtension() {
   });
 
   addon = await promiseAddonByID(addon.id);
-  do_check_eq(addon.type, "extension");
-  do_check_true(addon.isWebExtension);
+  Assert.equal(addon.type, "extension");
+  Assert.ok(addon.isWebExtension);
 
   addon.uninstall();
 });
@@ -456,14 +456,14 @@ add_task(async function test_theme_upgrade() {
   let addon = await promiseAddonByID(ID);
 
   // temporary add-on is installed and started
-  do_check_neq(addon, null);
-  do_check_eq(addon.version, "1.0");
-  do_check_eq(addon.name, "Test WebExtension 1 (temporary)");
-  do_check_true(addon.isCompatible);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
-  do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.name, "Test WebExtension 1 (temporary)");
+  Assert.ok(addon.isCompatible);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.type, "extension");
+  Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   // Create a webextension theme with the same ID
   let webext2 = createTempWebExtensionFile({
@@ -485,18 +485,18 @@ add_task(async function test_theme_upgrade() {
   ]);
   addon = await promiseAddonByID(ID);
 
-  do_check_neq(addon, null);
-  do_check_eq(addon.version, "2.0");
-  do_check_eq(addon.name, "Test WebExtension 1 (temporary)");
-  do_check_true(addon.isCompatible);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.version, "2.0");
+  Assert.equal(addon.name, "Test WebExtension 1 (temporary)");
+  Assert.ok(addon.isCompatible);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
   // This is what we're really interested in:
-  do_check_eq(addon.type, "theme");
-  do_check_true(addon.isWebExtension);
+  Assert.equal(addon.type, "theme");
+  Assert.ok(addon.isWebExtension);
 
   addon.uninstall();
 
   addon = await promiseAddonByID(ID);
-  do_check_eq(addon, null);
+  Assert.equal(addon, null);
 });

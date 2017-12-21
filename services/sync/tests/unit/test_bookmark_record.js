@@ -30,17 +30,17 @@ add_task(async function test_bookmark_record() {
   let bookmarkItem = prepareBookmarkItem("bookmarks", "foo");
 
   log.info("Checking getTypeObject");
-  do_check_eq(placesItem.getTypeObject(placesItem.type), Bookmark);
-  do_check_eq(bookmarkItem.getTypeObject(bookmarkItem.type), Bookmark);
+  Assert.equal(placesItem.getTypeObject(placesItem.type), Bookmark);
+  Assert.equal(bookmarkItem.getTypeObject(bookmarkItem.type), Bookmark);
 
   await bookmarkItem.encrypt(keyBundle);
   log.info("Ciphertext is " + bookmarkItem.ciphertext);
-  do_check_true(bookmarkItem.ciphertext != null);
+  Assert.ok(bookmarkItem.ciphertext != null);
 
   log.info("Decrypting the record");
 
   let payload = await bookmarkItem.decrypt(keyBundle);
-  do_check_eq(payload.stuff, "my payload here");
-  do_check_eq(bookmarkItem.getTypeObject(bookmarkItem.type), Bookmark);
-  do_check_neq(payload, bookmarkItem.payload); // wrap.data.payload is the encrypted one
+  Assert.equal(payload.stuff, "my payload here");
+  Assert.equal(bookmarkItem.getTypeObject(bookmarkItem.type), Bookmark);
+  Assert.notEqual(payload, bookmarkItem.payload); // wrap.data.payload is the encrypted one
 });

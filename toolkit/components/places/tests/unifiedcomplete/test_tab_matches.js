@@ -22,7 +22,7 @@ add_task(async function test_tab_matches() {
   addOpenPages(uri3, 1);
   addOpenPages(uri4, 1);
 
-  do_print("two results, normal result is a tab match");
+  info("two results, normal result is a tab match");
   await check_autocomplete({
     search: "abc.com",
     searchParam: "enable-actions",
@@ -31,7 +31,7 @@ add_task(async function test_tab_matches() {
                makeSearchMatch("abc.com", { heuristic: false }) ]
   });
 
-  do_print("three results, one tab match");
+  info("three results, one tab match");
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions",
@@ -41,7 +41,7 @@ add_task(async function test_tab_matches() {
                { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
   });
 
-  do_print("three results, both normal results are tab matches");
+  info("three results, both normal results are tab matches");
   addOpenPages(uri2, 1);
   await check_autocomplete({
     search: "abc",
@@ -52,7 +52,7 @@ add_task(async function test_tab_matches() {
                { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
   });
 
-  do_print("a container tab is not visible in 'switch to tab'");
+  info("a container tab is not visible in 'switch to tab'");
   addOpenPages(uri5, 1, /* userContextId: */ 3);
   await check_autocomplete({
     search: "abc",
@@ -63,7 +63,7 @@ add_task(async function test_tab_matches() {
                { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
   });
 
-  do_print("a container tab should not see 'switch to tab' for other container tabs");
+  info("a container tab should not see 'switch to tab' for other container tabs");
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions user-context-id:3",
@@ -73,7 +73,7 @@ add_task(async function test_tab_matches() {
                { uri: uri2, title: "xyz.net - we're better than ABC", style: [ "favicon" ] } ]
   });
 
-  do_print("a different container tab should not see any 'switch to tab'");
+  info("a different container tab should not see any 'switch to tab'");
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions user-context-id:2",
@@ -83,7 +83,7 @@ add_task(async function test_tab_matches() {
                { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
   });
 
-  do_print("three results, both normal results are tab matches, one has multiple tabs");
+  info("three results, both normal results are tab matches, one has multiple tabs");
   addOpenPages(uri2, 5);
   await check_autocomplete({
     search: "abc",
@@ -94,7 +94,7 @@ add_task(async function test_tab_matches() {
                { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
   });
 
-  do_print("three results, no tab matches (disable-private-actions)");
+  info("three results, no tab matches (disable-private-actions)");
   await check_autocomplete({
     search: "abc",
     searchParam: "enable-actions disable-private-actions",
@@ -104,7 +104,7 @@ add_task(async function test_tab_matches() {
                { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
   });
 
-  do_print("two results (actions disabled)");
+  info("two results (actions disabled)");
   await check_autocomplete({
     search: "abc",
     searchParam: "",
@@ -113,7 +113,7 @@ add_task(async function test_tab_matches() {
                { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
   });
 
-  do_print("three results, no tab matches");
+  info("three results, no tab matches");
   removeOpenPages(uri1, 1);
   removeOpenPages(uri2, 6);
   await check_autocomplete({
@@ -125,7 +125,7 @@ add_task(async function test_tab_matches() {
                { uri: uri5, title: "foobar.org - much better than ABC, definitely better than XYZ", style: [ "favicon" ] } ]
   });
 
-  do_print("tab match search with restriction character");
+  info("tab match search with restriction character");
   addOpenPages(uri1, 1);
   await check_autocomplete({
     search: gTabRestrictChar + " abc",
@@ -134,7 +134,7 @@ add_task(async function test_tab_matches() {
                makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }) ]
   });
 
-  do_print("tab match with not-addable pages");
+  info("tab match with not-addable pages");
   await check_autocomplete({
     search: "mozilla",
     searchParam: "enable-actions",
@@ -142,7 +142,7 @@ add_task(async function test_tab_matches() {
                makeSwitchToTabMatch("about:mozilla") ]
   });
 
-  do_print("tab match with not-addable pages and restriction character");
+  info("tab match with not-addable pages and restriction character");
   await check_autocomplete({
     search: gTabRestrictChar + " mozilla",
     searchParam: "enable-actions",
@@ -150,7 +150,7 @@ add_task(async function test_tab_matches() {
                makeSwitchToTabMatch("about:mozilla") ]
   });
 
-  do_print("tab match with not-addable pages and only restriction character");
+  info("tab match with not-addable pages and only restriction character");
   await check_autocomplete({
     search: gTabRestrictChar,
     searchParam: "enable-actions",

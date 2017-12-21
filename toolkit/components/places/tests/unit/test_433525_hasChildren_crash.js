@@ -26,7 +26,7 @@ add_task(async function test_execute() {
   var root = result.root;
 
   // check hasChildren while the container is closed
-  do_check_eq(root.hasChildren, true);
+  Assert.equal(root.hasChildren, true);
 
   // now check via the saved search path
   var queryURI = histsvc.queriesToQueryString([query], 1, options);
@@ -44,8 +44,8 @@ add_task(async function test_execute() {
   root = result.root;
   root.containerOpen = true;
   var queryNode = root.getChild(0);
-  do_check_eq(queryNode.title, "test query");
+  Assert.equal(queryNode.title, "test query");
   queryNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  do_check_eq(queryNode.hasChildren, true);
+  Assert.equal(queryNode.hasChildren, true);
   root.containerOpen = false;
 });

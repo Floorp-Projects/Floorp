@@ -92,7 +92,7 @@ function makeListener(headerIdx, bodyIdx) {
       try {
         var chan = request.QueryInterface(Components.interfaces.nsIChannel);
 
-        do_check_eq(chan.status, Components.results.NS_OK);
+        Assert.equal(chan.status, Components.results.NS_OK);
         
         var type = chan.contentType;
 
@@ -110,7 +110,7 @@ function makeListener(headerIdx, bodyIdx) {
                      bodyList[bodyIdx][1] +
                    "].");
         }
-        do_check_eq(expectedType, type);
+        Assert.equal(expectedType, type);
       } catch (e) {
         do_throw("Unexpected exception: " + e);
       }

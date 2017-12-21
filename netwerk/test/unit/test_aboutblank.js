@@ -27,9 +27,9 @@ function run_test() {
     }
     // Property shouldn't be there.
   }
-  do_check_eq(propVal, null);
-  do_check_eq(haveProp, false);
-  do_check_eq(chan2.getPropertyAsInterface("baseURI",
-                                           Components.interfaces.nsIURI),
-              base);
+  Assert.equal(propVal, null);
+  Assert.equal(haveProp, false);
+  Assert.equal(chan2.getPropertyAsInterface("baseURI",
+                                            Components.interfaces.nsIURI),
+               base);
 }

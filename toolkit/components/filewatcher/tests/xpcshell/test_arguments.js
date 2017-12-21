@@ -32,7 +32,7 @@ add_task(async function test_null_args_addPath() {
   } catch (ex) {
     if (ex.result != Cr.NS_ERROR_NULL_POINTER)
       throw ex;
-    do_print("Initialisation thrown NS_ERROR_NULL_POINTER as expected.");
+    info("Initialisation thrown NS_ERROR_NULL_POINTER as expected.");
   }
 
   // Check for error when passing both null arguments
@@ -41,7 +41,7 @@ add_task(async function test_null_args_addPath() {
   } catch (ex) {
     if (ex.result != Cr.NS_ERROR_NULL_POINTER)
       throw ex;
-    do_print("Initialisation thrown NS_ERROR_NULL_POINTER as expected.");
+    info("Initialisation thrown NS_ERROR_NULL_POINTER as expected.");
   }
 });
 
@@ -65,7 +65,7 @@ add_task(async function test_null_args_removePath() {
   } catch (ex) {
     if (ex.result != Cr.NS_ERROR_NULL_POINTER)
       throw ex;
-    do_print("Initialisation thrown NS_ERROR_NULL_POINTER as expected.");
+    info("Initialisation thrown NS_ERROR_NULL_POINTER as expected.");
   }
 
   // Check for error when passing both null arguments
@@ -74,6 +74,6 @@ add_task(async function test_null_args_removePath() {
   } catch (ex) {
     if (ex.result != Cr.NS_ERROR_NULL_POINTER)
       throw ex;
-    do_print("Initialisation thrown NS_ERROR_NULL_POINTER as expected.");
+    info("Initialisation thrown NS_ERROR_NULL_POINTER as expected.");
   }
 });

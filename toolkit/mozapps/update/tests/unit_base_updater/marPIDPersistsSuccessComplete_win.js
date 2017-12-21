@@ -25,7 +25,7 @@ function setupUpdaterTestFinished() {
  */
 function waitForHelperSleepFinished() {
   if (!gPIDPersistProcess.pid) {
-    do_execute_soon(waitForHelperSleepFinished);
+    executeSoon(waitForHelperSleepFinished);
     return;
   }
   runUpdate(STATE_SUCCEEDED, false, 0, true);
@@ -53,7 +53,7 @@ function checkPostUpdateAppLogFinished() {
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContains(ERR_PARENT_PID_PERSISTS);
-  do_execute_soon(waitForUpdateXMLFiles);
+  executeSoon(waitForUpdateXMLFiles);
 }
 
 /**

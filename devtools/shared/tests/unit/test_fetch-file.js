@@ -69,7 +69,7 @@ add_task(function* test_encoding_iso_8859_1() {
  */
 add_task(function* test_missing() {
   yield DevToolsUtils.fetch("file:///file/not/found.right").then(result => {
-    do_print(result);
+    info(result);
     ok(false, "Fetch resolved unexpectedly when the file was not found.");
   }, () => {
     ok(true, "Fetch rejected as expected because the file was not found.");
@@ -96,7 +96,7 @@ function createTemporaryFile(extension) {
   let file = FileUtils.getFile("TmpD", [name]);
   file.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0755", 8));
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     file.remove(false);
   });
 

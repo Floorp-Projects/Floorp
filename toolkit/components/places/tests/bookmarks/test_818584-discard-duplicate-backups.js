@@ -14,8 +14,8 @@ add_task(async function() {
   let oldBackupName = PlacesBackups.getFilenameForDate(dateObj);
   let oldBackup = OS.Path.join(backupFolder, oldBackupName);
   let {count: count, hash: hash} = await BookmarkJSONUtils.exportToFile(oldBackup);
-  do_check_true(count > 0);
-  do_check_eq(hash.length, 24);
+  Assert.ok(count > 0);
+  Assert.equal(hash.length, 24);
   oldBackupName = oldBackupName.replace(/\.json/, "_" + count + "_" + hash + ".json");
   await OS.File.move(oldBackup, OS.Path.join(backupFolder, oldBackupName));
 
@@ -26,12 +26,12 @@ add_task(async function() {
 
   // Get the hash of the generated backup
   let backupFiles = await PlacesBackups.getBackupFiles();
-  do_check_eq(backupFiles.length, 1);
+  Assert.equal(backupFiles.length, 1);
 
   let matches = OS.Path.basename(backupFiles[0]).match(PlacesBackups.filenamesRegex);
-  do_check_eq(matches[1], PlacesBackups.toISODateString(new Date()));
-  do_check_eq(matches[2], count);
-  do_check_eq(matches[3], hash);
+  Assert.equal(matches[1], PlacesBackups.toISODateString(new Date()));
+  Assert.equal(matches[2], count);
+  Assert.equal(matches[3], hash);
 
   // Add a bookmark and create another backup.
   let bookmark = await PlacesUtils.bookmarks.insert({
@@ -43,13 +43,13 @@ add_task(async function() {
   // We must enforce a backup since one for today already exists.  The forced
   // backup will replace the existing one.
   await PlacesBackups.create(undefined, true);
-  do_check_eq(backupFiles.length, 1);
+  Assert.equal(backupFiles.length, 1);
   let recentBackup = await PlacesBackups.getMostRecentBackup();
-  do_check_neq(recentBackup, OS.Path.join(backupFolder, oldBackupName));
+  Assert.notEqual(recentBackup, OS.Path.join(backupFolder, oldBackupName));
   matches = OS.Path.basename(recentBackup).match(PlacesBackups.filenamesRegex);
-  do_check_eq(matches[1], PlacesBackups.toISODateString(new Date()));
-  do_check_eq(matches[2], count + 1);
-  do_check_neq(matches[3], hash);
+  Assert.equal(matches[1], PlacesBackups.toISODateString(new Date()));
+  Assert.equal(matches[2], count + 1);
+  Assert.notEqual(matches[3], hash);
 
   // Clean up
   await PlacesUtils.bookmarks.remove(bookmark);

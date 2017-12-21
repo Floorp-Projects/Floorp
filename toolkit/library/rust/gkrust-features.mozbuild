@@ -23,9 +23,9 @@ if CONFIG['MOZ_PULSEAUDIO']:
 if CONFIG['MOZ_RUST_SIMD']:
     gkrust_features += ['simd-accel']
 
-# This feature is only supported on Linux and this check needs to
+# This feature is only supported on Linux and macOS, and this check needs to
 # match MOZ_CUBEB_REMOTING in CubebUtils.cpp.
-if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android':
+if (CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TARGET'] != 'Android') or CONFIG['OS_ARCH'] == 'Darwin':
     gkrust_features += ['cubeb-remoting']
 
 gkrust_features += ['no-static-ideograph-encoder-tables']
