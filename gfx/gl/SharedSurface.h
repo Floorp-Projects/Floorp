@@ -76,8 +76,7 @@ protected:
                   bool canRecycle);
 
 public:
-    virtual ~SharedSurface() {
-    }
+    virtual ~SharedSurface();
 
     // Specifies to the TextureClient any flags which
     // are required by the SharedSurface backend.

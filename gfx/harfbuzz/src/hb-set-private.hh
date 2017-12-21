@@ -230,7 +230,8 @@ struct hb_set_t
   }
   inline bool add_range (hb_codepoint_t a, hb_codepoint_t b)
   {
-    if (unlikely (in_error || a > b || a == INVALID || b == INVALID)) return false;
+    if (unlikely (in_error)) return true; /* https://github.com/harfbuzz/harfbuzz/issues/657 */
+    if (unlikely (a > b || a == INVALID || b == INVALID)) return false;
     unsigned int ma = get_major (a);
     unsigned int mb = get_major (b);
     if (ma == mb)
@@ -283,7 +284,7 @@ struct hb_set_t
   template <typename T>
   inline bool add_sorted_array (const T *array, unsigned int count, unsigned int stride=sizeof(T))
   {
-    if (unlikely (in_error)) return false;
+    if (unlikely (in_error)) return true; /* https://github.com/harfbuzz/harfbuzz/issues/657 */
     if (!count) return true;
     hb_codepoint_t g = *array;
     hb_codepoint_t last_g = g;

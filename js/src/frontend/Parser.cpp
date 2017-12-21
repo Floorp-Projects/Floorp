@@ -2270,7 +2270,7 @@ Parser<FullParseHandler, CharT>::moduleBody(ModuleSharedContext* modulesc)
     if (!pn)
         return null();
 
-    MOZ_ASSERT(pn->isKind(PNK_STATEMENTLIST));
+    MOZ_ASSERT(pn->isKind(ParseNodeKind::PNK_STATEMENTLIST));
     mn->pn_body = pn;
 
     TokenKind tt;
@@ -2581,7 +2581,7 @@ Parser<FullParseHandler, CharT>::standaloneFunction(HandleFunction fun,
     if (!fn)
         return null();
 
-    ParseNode* argsbody = handler.newList(PNK_PARAMSBODY, pos());
+    ParseNode* argsbody = handler.newList(ParseNodeKind::PNK_PARAMSBODY, pos());
     if (!argsbody)
         return null();
     fn->pn_body = argsbody;
@@ -3017,7 +3017,7 @@ GeneralParser<ParseHandler, CharT>::functionArguments(YieldHandling yieldHandlin
             return false;
     }
 
-    Node argsbody = handler.newList(PNK_PARAMSBODY, firstTokenPos);
+    Node argsbody = handler.newList(ParseNodeKind::PNK_PARAMSBODY, firstTokenPos);
     if (!argsbody)
         return false;
     handler.setFunctionFormalParametersAndBody(funcpn, argsbody);
@@ -3343,7 +3343,7 @@ GeneralParser<ParseHandler, CharT>::templateLiteral(YieldHandling yieldHandling)
     if (!pn)
         return null();
 
-    Node nodeList = handler.newList(PNK_TEMPLATE_STRING_LIST, pn);
+    Node nodeList = handler.newList(ParseNodeKind::PNK_TEMPLATE_STRING_LIST, pn);
     if (!nodeList)
         return null();
 
@@ -3774,7 +3774,7 @@ GeneralParser<ParseHandler, CharT>::functionFormalParametersAndBody(InHandling i
             }
 
 #if JS_HAS_EXPR_CLOSURES
-            addTelemetry(DeprecatedLanguageExtension::ExpressionClosure);
+            this->addTelemetry(DeprecatedLanguageExtension::ExpressionClosure);
             if (!warnOnceAboutExprClosure())
                 return false;
 #else
@@ -4447,7 +4447,7 @@ GeneralParser<ParseHandler, CharT>::bindingInitializer(Node lhs, DeclarationKind
 
     handler.checkAndSetIsDirectRHSAnonFunction(rhs);
 
-    Node assign = handler.newAssignment(PNK_ASSIGN, lhs, rhs);
+    Node assign = handler.newAssignment(ParseNodeKind::PNK_ASSIGN, lhs, rhs);
     if (!assign)
         return null();
 
@@ -4775,8 +4775,8 @@ typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::expressionAfterForInOrOf(ParseNodeKind forHeadKind,
                                                              YieldHandling yieldHandling)
 {
-    MOZ_ASSERT(forHeadKind == PNK_FORIN || forHeadKind == PNK_FOROF);
-    Node pn = forHeadKind == PNK_FOROF
+    MOZ_ASSERT(forHeadKind == ParseNodeKind::PNK_FORIN || forHeadKind == ParseNodeKind::PNK_FOROF);
+    Node pn = forHeadKind == ParseNodeKind::PNK_FOROF
            ? assignExpr(InAllowed, yieldHandling, TripledotProhibited)
            : expr(InAllowed, yieldHandling, TripledotProhibited);
     return pn;
@@ -4803,18 +4803,18 @@ GeneralParser<ParseHandler, CharT>::declarationPattern(DeclarationKind declKind,
             return null();
 
         if (isForIn) {
-            *forHeadKind = PNK_FORIN;
+            *forHeadKind = ParseNodeKind::PNK_FORIN;
         } else if (isForOf) {
-            *forHeadKind = PNK_FOROF;
+            *forHeadKind = ParseNodeKind::PNK_FOROF;
 
             // Annex B.3.5 has different early errors for vars in for-of loops.
             if (declKind == DeclarationKind::Var)
                 declKind = DeclarationKind::ForOfVar;
         } else {
-            *forHeadKind = PNK_FORHEAD;
+            *forHeadKind = ParseNodeKind::PNK_FORHEAD;
         }
 
-        if (*forHeadKind != PNK_FORHEAD) {
+        if (*forHeadKind != ParseNodeKind::PNK_FORHEAD) {
             *forInOrOfExpression = expressionAfterForInOrOf(*forHeadKind, yieldHandling);
             if (!*forInOrOfExpression)
                 return null();
@@ -4832,7 +4832,7 @@ GeneralParser<ParseHandler, CharT>::declarationPattern(DeclarationKind declKind,
 
     handler.checkAndSetIsDirectRHSAnonFunction(init);
 
-    return handler.newAssignment(PNK_ASSIGN, pattern, init);
+    return handler.newAssignment(ParseNodeKind::PNK_ASSIGN, pattern, init);
 }
 
 template <class ParseHandler, typename CharT>
@@ -4881,15 +4881,15 @@ GeneralParser<ParseHandler, CharT>::initializerInNameDeclaration(Node binding,
 
             // This leaves only initialized for-in |var| declarations.  ES6
             // forbids these; later ES un-forbids in non-strict mode code.
-            *forHeadKind = PNK_FORIN;
+            *forHeadKind = ParseNodeKind::PNK_FORIN;
             if (!strictModeErrorAt(initializerOffset, JSMSG_INVALID_FOR_IN_DECL_WITH_INIT))
                 return false;
 
-            *forInOrOfExpression = expressionAfterForInOrOf(PNK_FORIN, yieldHandling);
+            *forInOrOfExpression = expressionAfterForInOrOf(ParseNodeKind::PNK_FORIN, yieldHandling);
             if (!*forInOrOfExpression)
                 return false;
         } else {
-            *forHeadKind = PNK_FORHEAD;
+            *forHeadKind = ParseNodeKind::PNK_FORHEAD;
         }
     }
 
@@ -4944,19 +4944,19 @@ GeneralParser<ParseHandler, CharT>::declarationName(DeclarationKind declKind, To
                 return null();
 
             if (isForIn) {
-                *forHeadKind = PNK_FORIN;
+                *forHeadKind = ParseNodeKind::PNK_FORIN;
             } else if (isForOf) {
-                *forHeadKind = PNK_FOROF;
+                *forHeadKind = ParseNodeKind::PNK_FOROF;
 
                 // Annex B.3.5 has different early errors for vars in for-of loops.
                 if (declKind == DeclarationKind::Var)
                     declKind = DeclarationKind::ForOfVar;
             } else {
-                *forHeadKind = PNK_FORHEAD;
+                *forHeadKind = ParseNodeKind::PNK_FORHEAD;
             }
         }
 
-        if (forHeadKind && *forHeadKind != PNK_FORHEAD) {
+        if (forHeadKind && *forHeadKind != ParseNodeKind::PNK_FORHEAD) {
             *forInOrOfExpression = expressionAfterForInOrOf(*forHeadKind, yieldHandling);
             if (!*forInOrOfExpression)
                 return null();
@@ -4985,17 +4985,19 @@ GeneralParser<ParseHandler, CharT>::declarationList(YieldHandling yieldHandling,
                                                     ParseNodeKind* forHeadKind /* = nullptr */,
                                                     Node* forInOrOfExpression /* = nullptr */)
 {
-    MOZ_ASSERT(kind == PNK_VAR || kind == PNK_LET || kind == PNK_CONST);
+    MOZ_ASSERT(kind == ParseNodeKind::PNK_VAR ||
+               kind == ParseNodeKind::PNK_LET ||
+               kind == ParseNodeKind::PNK_CONST);
 
     DeclarationKind declKind;
     switch (kind) {
-      case PNK_VAR:
+      case ParseNodeKind::PNK_VAR:
         declKind = DeclarationKind::Var;
         break;
-      case PNK_CONST:
+      case ParseNodeKind::PNK_CONST:
         declKind = DeclarationKind::Const;
         break;
-      case PNK_LET:
+      case ParseNodeKind::PNK_LET:
         declKind = DeclarationKind::Let;
         break;
       default:
@@ -5010,7 +5012,7 @@ GeneralParser<ParseHandler, CharT>::declarationList(YieldHandling yieldHandling,
     bool initialDeclaration = true;
     do {
         MOZ_ASSERT_IF(!initialDeclaration && forHeadKind,
-                      *forHeadKind == PNK_FORHEAD);
+                      *forHeadKind == ParseNodeKind::PNK_FORHEAD);
 
         TokenKind tt;
         if (!tokenStream.getToken(&tt))
@@ -5028,7 +5030,7 @@ GeneralParser<ParseHandler, CharT>::declarationList(YieldHandling yieldHandling,
 
         // If we have a for-in/of loop, the above call matches the entirety
         // of the loop head (up to the closing parenthesis).
-        if (forHeadKind && *forHeadKind != PNK_FORHEAD)
+        if (forHeadKind && *forHeadKind != ParseNodeKind::PNK_FORHEAD)
             break;
 
         initialDeclaration = false;
@@ -5059,7 +5061,9 @@ GeneralParser<ParseHandler, CharT>::lexicalDeclaration(YieldHandling yieldHandli
      * See 8.1.1.1.6 and the note in 13.2.1.
      */
     Node decl = declarationList(yieldHandling,
-                                kind == DeclarationKind::Const ? PNK_CONST : PNK_LET);
+                                kind == DeclarationKind::Const
+                                ? ParseNodeKind::PNK_CONST
+                                : ParseNodeKind::PNK_LET);
     if (!decl || !matchOrInsertSemicolon())
         return null();
 
@@ -5199,7 +5203,7 @@ Parser<FullParseHandler, CharT>::importDeclaration()
     if (!tokenStream.getToken(&tt))
         return null();
 
-    Node importSpecSet = handler.newList(PNK_IMPORT_SPEC_LIST, pos());
+    Node importSpecSet = handler.newList(ParseNodeKind::PNK_IMPORT_SPEC_LIST, pos());
     if (!importSpecSet)
         return null();
 
@@ -5329,9 +5333,9 @@ Parser<FullParseHandler, CharT>::checkExportedNamesForDeclaration(ParseNode* nod
 {
     MOZ_ASSERT(node->isArity(PN_LIST));
     for (ParseNode* binding = node->pn_head; binding; binding = binding->pn_next) {
-        if (binding->isKind(PNK_ASSIGN))
+        if (binding->isKind(ParseNodeKind::PNK_ASSIGN))
             binding = binding->pn_left;
-        MOZ_ASSERT(binding->isKind(PNK_NAME));
+        MOZ_ASSERT(binding->isKind(ParseNodeKind::PNK_NAME));
         if (!checkExportedName(binding->pn_atom))
             return false;
     }
@@ -5492,7 +5496,7 @@ GeneralParser<ParseHandler, CharT>::exportBatch(uint32_t begin)
 
     MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_MUL));
 
-    Node kid = handler.newList(PNK_EXPORT_SPEC_LIST, pos());
+    Node kid = handler.newList(ParseNodeKind::PNK_EXPORT_SPEC_LIST, pos());
     if (!kid)
         return null();
 
@@ -5516,7 +5520,7 @@ Parser<FullParseHandler, CharT>::checkLocalExportNames(ParseNode* node)
     // ES 2017 draft 15.2.3.1.
     for (ParseNode* next = node->pn_head; next; next = next->pn_next) {
         ParseNode* name = next->pn_left;
-        MOZ_ASSERT(name->isKind(PNK_NAME));
+        MOZ_ASSERT(name->isKind(ParseNodeKind::PNK_NAME));
 
         RootedPropertyName ident(context, name->pn_atom->asPropertyName());
         if (!checkLocalExportName(ident, name->pn_pos.begin))
@@ -5550,7 +5554,7 @@ GeneralParser<ParseHandler, CharT>::exportClause(uint32_t begin)
 
     MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_LC));
 
-    Node kid = handler.newList(PNK_EXPORT_SPEC_LIST, pos());
+    Node kid = handler.newList(ParseNodeKind::PNK_EXPORT_SPEC_LIST, pos());
     if (!kid)
         return null();
 
@@ -5650,7 +5654,7 @@ GeneralParser<ParseHandler, CharT>::exportVariableStatement(uint32_t begin)
 
     MOZ_ASSERT(anyChars.isCurrentTokenType(TOK_VAR));
 
-    Node kid = declarationList(YieldIsName, PNK_VAR);
+    Node kid = declarationList(YieldIsName, ParseNodeKind::PNK_VAR);
     if (!kid)
         return null();
     if (!matchOrInsertSemicolon())
@@ -6144,7 +6148,7 @@ GeneralParser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
     // component.
     if (tt == TOK_SEMI) {
         *forInitialPart = null();
-        *forHeadKind = PNK_FORHEAD;
+        *forHeadKind = ParseNodeKind::PNK_FORHEAD;
         return true;
     }
 
@@ -6155,7 +6159,7 @@ GeneralParser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
         tokenStream.consumeKnownToken(tt, TokenStream::Operand);
 
         // Pass null for block object because |var| declarations don't use one.
-        *forInitialPart = declarationList(yieldHandling, PNK_VAR, forHeadKind,
+        *forInitialPart = declarationList(yieldHandling, ParseNodeKind::PNK_VAR, forHeadKind,
                                           forInOrOfExpression);
         return *forInitialPart != null();
     }
@@ -6198,7 +6202,10 @@ GeneralParser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
         // statements.
         ParseContext::Statement forHeadStmt(pc, StatementKind::ForLoopLexicalHead);
 
-        *forInitialPart = declarationList(yieldHandling, tt == TOK_CONST ? PNK_CONST : PNK_LET,
+        *forInitialPart = declarationList(yieldHandling,
+                                          tt == TOK_CONST
+                                          ? ParseNodeKind::PNK_CONST
+                                          : ParseNodeKind::PNK_LET,
                                           forHeadKind, forInOrOfExpression);
         return *forInitialPart != null();
     }
@@ -6225,7 +6232,7 @@ GeneralParser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
         if (!possibleError.checkForExpressionError())
             return false;
 
-        *forHeadKind = PNK_FORHEAD;
+        *forHeadKind = ParseNodeKind::PNK_FORHEAD;
         return true;
     }
 
@@ -6246,7 +6253,7 @@ GeneralParser<ParseHandler, CharT>::forHeadStart(YieldHandling yieldHandling,
         return false;
     }
 
-    *forHeadKind = isForIn ? PNK_FORIN : PNK_FOROF;
+    *forHeadKind = isForIn ? ParseNodeKind::PNK_FORIN : ParseNodeKind::PNK_FOROF;
 
     // Verify the left-hand side expression doesn't have a forbidden form.
     if (handler.isUnparenthesizedDestructuringPattern(*forInitialPart)) {
@@ -6308,7 +6315,8 @@ GeneralParser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
                                            ? JSMSG_FOR_AWAIT_OUTSIDE_ASYNC
                                            : JSMSG_PAREN_AFTER_FOR));
 
-    // PNK_FORHEAD, PNK_FORIN, or PNK_FOROF depending on the loop type.
+    // ParseNodeKind::PNK_FORHEAD, ParseNodeKind::PNK_FORIN, or
+    // ParseNodeKind::PNK_FOROF depending on the loop type.
     ParseNodeKind headKind;
 
     // |x| in either |for (x; ...; ...)| or |for (x in/of ...)|.
@@ -6346,15 +6354,17 @@ GeneralParser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
     if (!forHeadStart(yieldHandling, &headKind, &startNode, forLoopLexicalScope, &iteratedExpr))
         return null();
 
-    MOZ_ASSERT(headKind == PNK_FORIN || headKind == PNK_FOROF || headKind == PNK_FORHEAD);
+    MOZ_ASSERT(headKind == ParseNodeKind::PNK_FORIN ||
+               headKind == ParseNodeKind::PNK_FOROF ||
+               headKind == ParseNodeKind::PNK_FORHEAD);
 
-    if (iterKind == IteratorKind::Async && headKind != PNK_FOROF) {
+    if (iterKind == IteratorKind::Async && headKind != ParseNodeKind::PNK_FOROF) {
         errorAt(begin, JSMSG_FOR_AWAIT_NOT_OF);
         return null();
     }
 
     Node forHead;
-    if (headKind == PNK_FORHEAD) {
+    if (headKind == ParseNodeKind::PNK_FORHEAD) {
         Node init = startNode;
 
         // Look for an operand: |for (;| means we might have already examined
@@ -6395,7 +6405,7 @@ GeneralParser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
         if (!forHead)
             return null();
     } else {
-        MOZ_ASSERT(headKind == PNK_FORIN || headKind == PNK_FOROF);
+        MOZ_ASSERT(headKind == ParseNodeKind::PNK_FORIN || headKind == ParseNodeKind::PNK_FOROF);
 
         // |target| is the LeftHandSideExpression or declaration to which the
         // per-iteration value (an arbitrary value exposed by the iteration
@@ -6403,7 +6413,7 @@ GeneralParser<ParseHandler, CharT>::forStatement(YieldHandling yieldHandling)
         Node target = startNode;
 
         // Parse the rest of the for-in/of head.
-        if (headKind == PNK_FORIN)
+        if (headKind == ParseNodeKind::PNK_FORIN)
             stmt.refineForKind(StatementKind::ForInLoop);
         else
             stmt.refineForKind(StatementKind::ForOfLoop);
@@ -6660,7 +6670,7 @@ GeneralParser<ParseHandler, CharT>::yieldExpression(InHandling inHandling)
     pc->lastYieldOffset = begin;
 
     Node exprNode;
-    ParseNodeKind kind = PNK_YIELD;
+    ParseNodeKind kind = ParseNodeKind::PNK_YIELD;
     TokenKind tt = TOK_EOF;
     if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
         return null();
@@ -6685,7 +6695,7 @@ GeneralParser<ParseHandler, CharT>::yieldExpression(InHandling inHandling)
         anyChars.addModifierException(TokenStream::NoneIsOperand);
         break;
       case TOK_MUL:
-        kind = PNK_YIELD_STAR;
+        kind = ParseNodeKind::PNK_YIELD_STAR;
         tokenStream.consumeKnownToken(TOK_MUL, TokenStream::Operand);
         MOZ_FALLTHROUGH;
       default:
@@ -6693,7 +6703,7 @@ GeneralParser<ParseHandler, CharT>::yieldExpression(InHandling inHandling)
         if (!exprNode)
             return null();
     }
-    if (kind == PNK_YIELD_STAR)
+    if (kind == ParseNodeKind::PNK_YIELD_STAR)
         return handler.newYieldStarExpression(begin, exprNode);
     return handler.newYieldExpression(begin, exprNode);
 }
@@ -7324,7 +7334,7 @@ template <class ParseHandler, typename CharT>
 typename ParseHandler::Node
 GeneralParser<ParseHandler, CharT>::variableStatement(YieldHandling yieldHandling)
 {
-    Node vars = declarationList(yieldHandling, PNK_VAR);
+    Node vars = declarationList(yieldHandling, ParseNodeKind::PNK_VAR);
     if (!vars)
         return null();
     if (!matchOrInsertSemicolon())
@@ -7821,50 +7831,51 @@ static ParseNodeKind
 BinaryOpTokenKindToParseNodeKind(TokenKind tok)
 {
     MOZ_ASSERT(TokenKindIsBinaryOp(tok));
-    return ParseNodeKind(PNK_BINOP_FIRST + (tok - TOK_BINOP_FIRST));
+    return ParseNodeKind(size_t(ParseNodeKind::PNK_BINOP_FIRST) + (tok - TOK_BINOP_FIRST));
 }
 
 static const int PrecedenceTable[] = {
-    1, /* PNK_PIPELINE */
-    2, /* PNK_OR */
-    3, /* PNK_AND */
-    4, /* PNK_BITOR */
-    5, /* PNK_BITXOR */
-    6, /* PNK_BITAND */
-    7, /* PNK_STRICTEQ */
-    7, /* PNK_EQ */
-    7, /* PNK_STRICTNE */
-    7, /* PNK_NE */
-    8, /* PNK_LT */
-    8, /* PNK_LE */
-    8, /* PNK_GT */
-    8, /* PNK_GE */
-    8, /* PNK_INSTANCEOF */
-    8, /* PNK_IN */
-    9, /* PNK_LSH */
-    9, /* PNK_RSH */
-    9, /* PNK_URSH */
-    10, /* PNK_ADD */
-    10, /* PNK_SUB */
-    11, /* PNK_STAR */
-    11, /* PNK_DIV */
-    11, /* PNK_MOD */
-    12  /* PNK_POW */
+    1, /* ParseNodeKind::PNK_PIPELINE */
+    2, /* ParseNodeKind::PNK_OR */
+    3, /* ParseNodeKind::PNK_AND */
+    4, /* ParseNodeKind::PNK_BITOR */
+    5, /* ParseNodeKind::PNK_BITXOR */
+    6, /* ParseNodeKind::PNK_BITAND */
+    7, /* ParseNodeKind::PNK_STRICTEQ */
+    7, /* ParseNodeKind::PNK_EQ */
+    7, /* ParseNodeKind::PNK_STRICTNE */
+    7, /* ParseNodeKind::PNK_NE */
+    8, /* ParseNodeKind::PNK_LT */
+    8, /* ParseNodeKind::PNK_LE */
+    8, /* ParseNodeKind::PNK_GT */
+    8, /* ParseNodeKind::PNK_GE */
+    8, /* ParseNodeKind::PNK_INSTANCEOF */
+    8, /* ParseNodeKind::PNK_IN */
+    9, /* ParseNodeKind::PNK_LSH */
+    9, /* ParseNodeKind::PNK_RSH */
+    9, /* ParseNodeKind::PNK_URSH */
+    10, /* ParseNodeKind::PNK_ADD */
+    10, /* ParseNodeKind::PNK_SUB */
+    11, /* ParseNodeKind::PNK_STAR */
+    11, /* ParseNodeKind::PNK_DIV */
+    11, /* ParseNodeKind::PNK_MOD */
+    12  /* ParseNodeKind::PNK_POW */
 };
 
 static const int PRECEDENCE_CLASSES = 12;
 
 static int
-Precedence(ParseNodeKind pnk) {
-    // Everything binds tighter than PNK_LIMIT, because we want to reduce all
-    // nodes to a single node when we reach a token that is not another binary
-    // operator.
-    if (pnk == PNK_LIMIT)
+Precedence(ParseNodeKind pnk)
+{
+    // Everything binds tighter than ParseNodeKind::PNK_LIMIT, because we want
+    // to reduce all nodes to a single node when we reach a token that is not
+    // another binary operator.
+    if (pnk == ParseNodeKind::PNK_LIMIT)
         return 0;
 
-    MOZ_ASSERT(pnk >= PNK_BINOP_FIRST);
-    MOZ_ASSERT(pnk <= PNK_BINOP_LAST);
-    return PrecedenceTable[pnk - PNK_BINOP_FIRST];
+    MOZ_ASSERT(pnk >= ParseNodeKind::PNK_BINOP_FIRST);
+    MOZ_ASSERT(pnk <= ParseNodeKind::PNK_BINOP_LAST);
+    return PrecedenceTable[size_t(pnk) - size_t(ParseNodeKind::PNK_BINOP_FIRST)];
 }
 
 template <class ParseHandler, typename CharT>
@@ -7915,7 +7926,7 @@ GeneralParser<ParseHandler, CharT>::orExpr(InHandling inHandling, YieldHandling 
             pnk = BinaryOpTokenKindToParseNodeKind(tok);
         } else {
             tok = TOK_EOF;
-            pnk = PNK_LIMIT;
+            pnk = ParseNodeKind::PNK_LIMIT;
         }
 
         // From this point on, destructuring defaults are definitely an error.
@@ -7936,7 +7947,7 @@ GeneralParser<ParseHandler, CharT>::orExpr(InHandling inHandling, YieldHandling 
                 return null();
         }
 
-        if (pnk == PNK_LIMIT)
+        if (pnk == ParseNodeKind::PNK_LIMIT)
             break;
 
         nodeStack[depth] = pn;
@@ -8148,19 +8159,19 @@ GeneralParser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandl
 
     ParseNodeKind kind;
     switch (tokenAfterLHS) {
-      case TOK_ASSIGN:       kind = PNK_ASSIGN;       break;
-      case TOK_ADDASSIGN:    kind = PNK_ADDASSIGN;    break;
-      case TOK_SUBASSIGN:    kind = PNK_SUBASSIGN;    break;
-      case TOK_BITORASSIGN:  kind = PNK_BITORASSIGN;  break;
-      case TOK_BITXORASSIGN: kind = PNK_BITXORASSIGN; break;
-      case TOK_BITANDASSIGN: kind = PNK_BITANDASSIGN; break;
-      case TOK_LSHASSIGN:    kind = PNK_LSHASSIGN;    break;
-      case TOK_RSHASSIGN:    kind = PNK_RSHASSIGN;    break;
-      case TOK_URSHASSIGN:   kind = PNK_URSHASSIGN;   break;
-      case TOK_MULASSIGN:    kind = PNK_MULASSIGN;    break;
-      case TOK_DIVASSIGN:    kind = PNK_DIVASSIGN;    break;
-      case TOK_MODASSIGN:    kind = PNK_MODASSIGN;    break;
-      case TOK_POWASSIGN:    kind = PNK_POWASSIGN;    break;
+      case TOK_ASSIGN:       kind = ParseNodeKind::PNK_ASSIGN;       break;
+      case TOK_ADDASSIGN:    kind = ParseNodeKind::PNK_ADDASSIGN;    break;
+      case TOK_SUBASSIGN:    kind = ParseNodeKind::PNK_SUBASSIGN;    break;
+      case TOK_BITORASSIGN:  kind = ParseNodeKind::PNK_BITORASSIGN;  break;
+      case TOK_BITXORASSIGN: kind = ParseNodeKind::PNK_BITXORASSIGN; break;
+      case TOK_BITANDASSIGN: kind = ParseNodeKind::PNK_BITANDASSIGN; break;
+      case TOK_LSHASSIGN:    kind = ParseNodeKind::PNK_LSHASSIGN;    break;
+      case TOK_RSHASSIGN:    kind = ParseNodeKind::PNK_RSHASSIGN;    break;
+      case TOK_URSHASSIGN:   kind = ParseNodeKind::PNK_URSHASSIGN;   break;
+      case TOK_MULASSIGN:    kind = ParseNodeKind::PNK_MULASSIGN;    break;
+      case TOK_DIVASSIGN:    kind = ParseNodeKind::PNK_DIVASSIGN;    break;
+      case TOK_MODASSIGN:    kind = ParseNodeKind::PNK_MODASSIGN;    break;
+      case TOK_POWASSIGN:    kind = ParseNodeKind::PNK_POWASSIGN;    break;
 
       default:
         MOZ_ASSERT(!anyChars.isCurrentTokenAssignment());
@@ -8177,7 +8188,7 @@ GeneralParser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandl
 
     // Verify the left-hand side expression doesn't have a forbidden form.
     if (handler.isUnparenthesizedDestructuringPattern(lhs)) {
-        if (kind != PNK_ASSIGN) {
+        if (kind != ParseNodeKind::PNK_ASSIGN) {
             error(JSMSG_BAD_DESTRUCT_ASS);
             return null();
         }
@@ -8212,7 +8223,7 @@ GeneralParser<ParseHandler, CharT>::assignExpr(InHandling inHandling, YieldHandl
     if (!rhs)
         return null();
 
-    if (kind == PNK_ASSIGN)
+    if (kind == ParseNodeKind::PNK_ASSIGN)
         handler.checkAndSetIsDirectRHSAnonFunction(rhs);
 
     return handler.newAssignment(kind, lhs, rhs);
@@ -8314,15 +8325,15 @@ GeneralParser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
     uint32_t begin = pos().begin;
     switch (tt) {
       case TOK_VOID:
-        return unaryOpExpr(yieldHandling, PNK_VOID, begin);
+        return unaryOpExpr(yieldHandling, ParseNodeKind::PNK_VOID, begin);
       case TOK_NOT:
-        return unaryOpExpr(yieldHandling, PNK_NOT, begin);
+        return unaryOpExpr(yieldHandling, ParseNodeKind::PNK_NOT, begin);
       case TOK_BITNOT:
-        return unaryOpExpr(yieldHandling, PNK_BITNOT, begin);
+        return unaryOpExpr(yieldHandling, ParseNodeKind::PNK_BITNOT, begin);
       case TOK_ADD:
-        return unaryOpExpr(yieldHandling, PNK_POS, begin);
+        return unaryOpExpr(yieldHandling, ParseNodeKind::PNK_POS, begin);
       case TOK_SUB:
-        return unaryOpExpr(yieldHandling, PNK_NEG, begin);
+        return unaryOpExpr(yieldHandling, ParseNodeKind::PNK_NEG, begin);
 
       case TOK_TYPEOF: {
         // The |typeof| operator is specially parsed to distinguish its
@@ -8355,9 +8366,10 @@ GeneralParser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
             memberExpr(yieldHandling, TripledotProhibited, ExpressionClosure::Forbidden, tt2);
         if (!operand || !checkIncDecOperand(operand, operandOffset))
             return null();
-
-        return handler.newUpdate((tt == TOK_INC) ? PNK_PREINCREMENT : PNK_PREDECREMENT,
-                                 begin, operand);
+        ParseNodeKind pnk = (tt == TOK_INC)
+                            ? ParseNodeKind::PNK_PREINCREMENT
+                            : ParseNodeKind::PNK_PREDECREMENT;
+        return handler.newUpdate(pnk, begin, operand);
       }
 
       case TOK_DELETE: {
@@ -8413,8 +8425,11 @@ GeneralParser<ParseHandler, CharT>::unaryExpr(YieldHandling yieldHandling,
         tokenStream.consumeKnownToken(tt);
         if (!checkIncDecOperand(expr, begin))
             return null();
-        return handler.newUpdate((tt == TOK_INC) ? PNK_POSTINCREMENT : PNK_POSTDECREMENT,
-                                 begin, expr);
+
+        ParseNodeKind pnk = (tt == TOK_INC)
+                            ? ParseNodeKind::PNK_POSTINCREMENT
+                            : ParseNodeKind::PNK_POSTDECREMENT;
+        return handler.newUpdate(pnk, begin, expr);
       }
     }
 }
@@ -9592,7 +9607,7 @@ GeneralParser<ParseHandler, CharT>::objectLiteral(YieldHandling yieldHandling,
 
                 handler.checkAndSetIsDirectRHSAnonFunction(rhs);
 
-                Node propExpr = handler.newAssignment(PNK_ASSIGN, lhs, rhs);
+                Node propExpr = handler.newAssignment(ParseNodeKind::PNK_ASSIGN, lhs, rhs);
                 if (!propExpr)
                     return null();
 

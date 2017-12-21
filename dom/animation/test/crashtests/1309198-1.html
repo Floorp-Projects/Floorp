@@ -1,0 +1,40 @@
+<script>
+function start() {
+  o53=document.createElement('frameset');
+  o254=document.createElement('iframe');
+  o280=document.createElement('audio');
+  o317=document.documentElement;
+  o508=document.createElement('li');
+  o508.appendChild(o317);
+  o590=document.createElement('li');
+  o594=document.createElement('track');
+  o280.appendChild(o594);
+  o647=document.createElement('ol');
+  o654=document.createElement('li');
+  o647.appendChild(o654);
+  o654.insertAdjacentHTML('beforebegin','<iframe>');
+  document.write('<html><body></body></html>');
+  o955=document.documentElement;
+  document.documentElement.appendChild(o647);
+  o590.appendChild(o955);
+  document.close();
+  document.write('<html><body></body></html>');
+  document.documentElement.appendChild(o590);
+  document.documentElement.appendChild(o254);
+  o280.controls^=1;
+  SpecialPowers.forceGC();
+  o317.insertAdjacentHTML('afterend','<iframe>');
+  document.documentElement.appendChild(o280);
+  o2695=document.implementation.createHTMLDocument();
+  o2695.body.appendChild(o254);
+  o53.onerror=f0;
+  document.documentElement.appendChild(o508);
+  o2803=frames[1].document;
+  o2803.getAnimations();
+}
+function f0() {
+  o2803.write('<html><body></body></html>');
+  SpecialPowers.forceCC();
+}
+</script>
+<body onload="start()"></body>
