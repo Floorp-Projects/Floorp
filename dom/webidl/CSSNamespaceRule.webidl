@@ -9,8 +9,6 @@
 
 // https://drafts.csswg.org/cssom/#cssnamespacerule
 interface CSSNamespaceRule : CSSRule {
-  // Not implemented yet.  <See
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=1326514>.
-  //  readonly attribute DOMString namespaceURI;
-  //  readonly attribute DOMString prefix;
+  readonly attribute DOMString namespaceURI;
+  readonly attribute DOMString prefix;
 };
