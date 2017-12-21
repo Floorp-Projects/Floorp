@@ -60,7 +60,7 @@ function setupTests(throwing)
   function verifyRawText(channel, cx, status, bytes)
   {
     dumpn(channel.originalURI.spec);
-    do_check_eq(bytesToString(bytes), fileContents(sjs));
+    Assert.equal(bytesToString(bytes), fileContents(sjs));
   }
 
   test = new Test(TEST_URL, setupFile, null, verifyRawText);
@@ -79,19 +79,19 @@ function setupTests(throwing)
   {
     if (throwing)
     {
-      do_check_false(ch.requestSucceeded);
-      do_check_eq(ch.responseStatus, 500);
+      Assert.ok(!ch.requestSucceeded);
+      Assert.equal(ch.responseStatus, 500);
     }
     else
     {
-      do_check_eq(ch.contentType, "text/plain");
+      Assert.equal(ch.contentType, "text/plain");
     }
   }
 
   function checkContents(ch, cx, status, data)
   {
     if (!throwing)
-      do_check_eq("PASS", bytesToString(data));
+      Assert.equal("PASS", bytesToString(data));
   }
 
   test = new Test(TEST_URL, addTypeMapping, checkType, checkContents);
@@ -154,7 +154,7 @@ function init(ch)
 
 function checkNotSJS(ch, cx, status, data)
 {
-  do_check_neq("FAIL", bytesToString(data));
+  Assert.notEqual("FAIL", bytesToString(data));
 }
 
 test = new Test(BASE + "/sjs", init, null, checkNotSJS);
@@ -183,8 +183,8 @@ function checkRangeResult(ch, cx)
     do_throw("should not have gotten a Content-Range header, but got one " +
              "with this value: " + val);
   }
-  do_check_eq(200, ch.responseStatus);
-  do_check_eq("OK", ch.responseStatusText);
+  Assert.equal(200, ch.responseStatus);
+  Assert.equal("OK", ch.responseStatusText);
 }
 
 test = new Test(BASE + "/range-checker.sjs",
@@ -219,12 +219,12 @@ function setupFileMapping(ch)
 
 function onStart(ch, cx)
 {
-  do_check_eq(ch.contentType, "text/plain");
+  Assert.equal(ch.contentType, "text/plain");
 }
 
 function onStop(ch, cx, status, data)
 {
-  do_check_eq("PASS", bytesToString(data));
+  Assert.equal("PASS", bytesToString(data));
 }
 
 test = new Test(BASE + "/script.html", setupFileMapping, onStart, onStop);

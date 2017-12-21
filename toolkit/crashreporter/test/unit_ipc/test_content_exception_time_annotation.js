@@ -12,6 +12,6 @@ function run_test() {
                      crashType = CrashTestUtils.CRASH_OOM;
                    },
                    function(mdump, extra) {
-                     do_check_true("OOMAllocationSize" in extra);
+                     Assert.ok("OOMAllocationSize" in extra);
                    });
 }

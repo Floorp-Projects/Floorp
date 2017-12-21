@@ -38,7 +38,7 @@ function test_function_no_double_registration() {
     msc.createFunction("test_square", 2, testSquareFunction);
     do_throw("We shouldn't get here!");
   } catch (e) {
-    do_check_eq(Cr.NS_ERROR_FAILURE, e.result);
+    Assert.equal(Cr.NS_ERROR_FAILURE, e.result);
   }
 }
 
@@ -59,7 +59,7 @@ function test_function_call() {
   while (stmt.executeStep()) {
     // Do nothing.
   }
-  do_check_eq(testNums.length, testSquareFunction.calls);
+  Assert.equal(testNums.length, testSquareFunction.calls);
   testSquareFunction.calls = 0;
   stmt.finalize();
 }
@@ -67,7 +67,7 @@ function test_function_call() {
 function test_function_result() {
   var stmt = createStatement("SELECT test_square(42) FROM function_tests");
   stmt.executeStep();
-  do_check_eq(42 * 42, stmt.getInt32(0));
+  Assert.equal(42 * 42, stmt.getInt32(0));
   testSquareFunction.calls = 0;
   stmt.finalize();
 }

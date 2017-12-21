@@ -6,7 +6,7 @@ var nextTest;
 var listener = {
   onLookupComplete: function(inRequest, inRecord, inStatus) {
     var answer = inRecord.getNextAddrAsString();
-    do_check_true(answer == "127.0.0.1" || answer == "::1");
+    Assert.ok(answer == "127.0.0.1" || answer == "::1");
 
     nextTest();
     do_test_finished();

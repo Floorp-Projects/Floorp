@@ -35,7 +35,7 @@ function resubscribeHandler(metadata, response) {
 }
 
 function listenSuccessHandler(metadata, response) {
-  do_check_true(true, "New listener point");
+  Assert.ok(true, "New listener point");
   httpServer.stop(handlerDone);
   response.setStatusLine(metadata.httpVersion, 204, "Try again");
 }
@@ -63,7 +63,7 @@ function run_test() {
 add_task(async function test1() {
 
   let db = PushServiceHttp2.newPushDB();
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     return db.drop().then(_ => db.close());
   });
 

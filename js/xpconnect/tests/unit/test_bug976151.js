@@ -10,7 +10,7 @@ function run_test() {
     try {
       Cu.evalInSandbox('prop();', sb);
     } catch (e) {
-      do_check_true(/denied|insecure|/.test(e));
+      Assert.ok(/denied|insecure|/.test(e));
     }
   }
   let xoSb = new Cu.Sandbox('http://www.example.net');

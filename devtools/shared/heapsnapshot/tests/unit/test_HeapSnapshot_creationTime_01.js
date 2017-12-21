@@ -13,7 +13,7 @@ function waitForThirtyMilliseconds() {
 
 function run_test() {
   const start = Date.now() * 1000;
-  do_print("start                 = " + start);
+  info("start                 = " + start);
 
   // Because Date.now() is less precise than the snapshot's time stamp, give it
   // a little bit of head room. Additionally, WinXP's timer only has granularity
@@ -23,10 +23,10 @@ function run_test() {
   waitForThirtyMilliseconds();
 
   const end = Date.now() * 1000;
-  do_print("end                   = " + end);
+  info("end                   = " + end);
 
   const snapshot = ChromeUtils.readHeapSnapshot(path);
-  do_print("snapshot.creationTime = " + snapshot.creationTime);
+  info("snapshot.creationTime = " + snapshot.creationTime);
 
   ok(snapshot.creationTime >= start);
   ok(snapshot.creationTime <= end);

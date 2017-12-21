@@ -383,7 +383,7 @@ function run_test_for(input) {
 
 	encoder = encodeImage(input);
 	dataURL = makeDataURL(encoder, "image/png");
-	do_check_eq(dataURL, input.expected);
+	Assert.equal(dataURL, input.expected);
 };
 
 

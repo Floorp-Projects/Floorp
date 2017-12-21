@@ -58,8 +58,8 @@ function setup() {
 
 function test_count() {
   var stmt = createStatement("SELECT count(*) FROM t1;");
-  do_check_true(stmt.executeStep());
-  do_check_eq(stmt.getInt32(0), 12);
+  Assert.ok(stmt.executeStep());
+  Assert.equal(stmt.getInt32(0), 12);
   stmt.reset();
   stmt.finalize();
 }
@@ -68,11 +68,11 @@ function test_like_1() {
   var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
   stmt.bindByIndex(0, "abc");
   var solutions = ["abc", "ABC"];
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_false(stmt.executeStep());
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(!stmt.executeStep());
   stmt.reset();
   stmt.finalize();
 }
@@ -81,11 +81,11 @@ function test_like_2() {
   var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
   stmt.bindByIndex(0, "ABC");
   var solutions = ["abc", "ABC"];
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_false(stmt.executeStep());
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(!stmt.executeStep());
   stmt.reset();
   stmt.finalize();
 }
@@ -94,11 +94,11 @@ function test_like_3() {
   var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
   stmt.bindByIndex(0, "aBc");
   var solutions = ["abc", "ABC"];
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_false(stmt.executeStep());
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(!stmt.executeStep());
   stmt.reset();
   stmt.finalize();
 }
@@ -107,15 +107,15 @@ function test_like_4() {
   var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
   stmt.bindByIndex(0, "abc%");
   var solutions = ["abc", "abcd", "ABC", "ABC abc xyz"];
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_false(stmt.executeStep());
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(!stmt.executeStep());
   stmt.reset();
   stmt.finalize();
 }
@@ -124,11 +124,11 @@ function test_like_5() {
   var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
   stmt.bindByIndex(0, "a_c");
   var solutions = ["abc", "ABC"];
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_false(stmt.executeStep());
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(!stmt.executeStep());
   stmt.reset();
   stmt.finalize();
 }
@@ -137,11 +137,11 @@ function test_like_6() {
   var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
   stmt.bindByIndex(0, "ab%d");
   var solutions = ["abcd", "abd"];
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_false(stmt.executeStep());
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(!stmt.executeStep());
   stmt.reset();
   stmt.finalize();
 }
@@ -150,15 +150,15 @@ function test_like_7() {
   var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
   stmt.bindByIndex(0, "a_c%");
   var solutions = ["abc", "abcd", "ABC", "ABC abc xyz"];
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_false(stmt.executeStep());
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(!stmt.executeStep());
   stmt.reset();
   stmt.finalize();
 }
@@ -167,11 +167,11 @@ function test_like_8() {
   var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?;");
   stmt.bindByIndex(0, "%bcd");
   var solutions = ["abcd", "bcd"];
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_true(stmt.executeStep());
-  do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
-  do_check_false(stmt.executeStep());
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(stmt.executeStep());
+  Assert.ok(solutions.indexOf(stmt.getString(0)) != -1);
+  Assert.ok(!stmt.executeStep());
   stmt.reset();
   stmt.finalize();
 }

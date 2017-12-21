@@ -8,5 +8,5 @@ function run_test() {
   // this throws for packages that are not registered
   let file = cr.convertChromeURL(sourceURI).QueryInterface(Ci.nsIFileURL).file;
 
-  do_check_true(file.equals(do_get_file("data/test_crlf.xul", true)));
+  Assert.ok(file.equals(do_get_file("data/test_crlf.xul", true)));
 }

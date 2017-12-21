@@ -160,8 +160,8 @@ var tests = [
       },
       handleCompletion() {
         // (7) Finally, this callback should be called after set's above.
-        do_check_true(!!fetchedPref);
-        do_check_eq(fetchedPref.value, 2);
+        Assert.ok(!!fetchedPref);
+        Assert.equal(fetchedPref.value, 2);
         next();
       },
     });

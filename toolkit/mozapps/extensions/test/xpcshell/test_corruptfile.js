@@ -38,7 +38,7 @@ function run_test_packed() {
     ensure_test_completed();
 
     AddonManager.getAddonByID("corrupt@tests.mozilla.org", function(addon) {
-      do_check_neq(addon, null);
+      Assert.notEqual(addon, null);
 
       do_test_finished();
     });
@@ -75,7 +75,7 @@ function run_test_unpacked() {
     pathShouldntExist(stageDir);
 
     AddonManager.getAddonByID("corrupt@tests.mozilla.org", function(addon) {
-      do_check_eq(addon, null);
+      Assert.equal(addon, null);
 
       do_test_finished();
     });

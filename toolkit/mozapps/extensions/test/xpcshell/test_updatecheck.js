@@ -149,7 +149,7 @@ add_task(async function() {
     let updates = await checkUpdates("test_bug378216_12@tests.mozilla.org",
                                      key, file);
     equal(updates.length, 1);
-    do_check_false("updateURL" in updates[0]);
+    Assert.equal(false, "updateURL" in updates[0]);
   }
 });
 

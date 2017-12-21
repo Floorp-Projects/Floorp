@@ -21,13 +21,13 @@ var observer = {
 };
 PlacesUtils.bookmarks.addObserver(observer);
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   PlacesUtils.bookmarks.removeObserver(observer);
 });
 
 // Returns do_check_eq with .getTime() added onto parameters
 function do_check_date_eq( t1, t2) {
-  return do_check_eq(t1.getTime(), t2.getTime()) ;
+  return Assert.equal(t1.getTime(), t2.getTime()) ;
 }
 
 add_task(async function test_bookmark_update_notifications() {
@@ -51,7 +51,7 @@ add_task(async function test_bookmark_update_notifications() {
   });
 
   // Sanity check.
-  do_check_true(observer.itemChangedProperty === undefined);
+  Assert.ok(observer.itemChangedProperty === undefined);
 
   // Set dateAdded in the past and verify the changes.
   await PlacesUtils.bookmarks.update({
@@ -59,8 +59,8 @@ add_task(async function test_bookmark_update_notifications() {
     dateAdded: PAST_DATE
   });
 
-  do_check_eq(observer._itemChangedProperty, "dateAdded");
-  do_check_eq(observer._itemChangedValue, PlacesUtils.toPRTime(PAST_DATE));
+  Assert.equal(observer._itemChangedProperty, "dateAdded");
+  Assert.equal(observer._itemChangedValue, PlacesUtils.toPRTime(PAST_DATE));
 
   // After just inserting, modified should be the same as dateAdded.
   do_check_date_eq(bookmark.lastModified, bookmark.dateAdded);
@@ -77,8 +77,8 @@ add_task(async function test_bookmark_update_notifications() {
     lastModified: PAST_DATE
   });
 
-  do_check_eq(observer._itemChangedProperty, "lastModified");
-  do_check_eq(observer._itemChangedValue, PlacesUtils.toPRTime(PAST_DATE));
+  Assert.equal(observer._itemChangedProperty, "lastModified");
+  Assert.equal(observer._itemChangedValue, PlacesUtils.toPRTime(PAST_DATE));
   do_check_date_eq(updatedBookmark.lastModified, PAST_DATE);
 
   // Set bookmark title
@@ -88,24 +88,24 @@ add_task(async function test_bookmark_update_notifications() {
   });
 
   // Test notifications.
-  do_check_eq(observer._itemChangedId, await PlacesUtils.promiseItemId(bookmark.guid));
-  do_check_eq(observer._itemChangedProperty, "title");
-  do_check_eq(observer._itemChangedValue, "Google");
+  Assert.equal(observer._itemChangedId, await PlacesUtils.promiseItemId(bookmark.guid));
+  Assert.equal(observer._itemChangedProperty, "title");
+  Assert.equal(observer._itemChangedValue, "Google");
 
   // Check lastModified has been updated.
-  do_check_true(is_time_ordered(PAST_DATE,
+  Assert.ok(is_time_ordered(PAST_DATE,
     updatedBookmark.lastModified.getTime()));
 
   // Check that node properties are updated.
   let testFolderId = await PlacesUtils.promiseItemId(testFolder.guid);
   let root = PlacesUtils.getFolderContents(testFolderId).root;
-  do_check_eq(root.childCount, 1);
+  Assert.equal(root.childCount, 1);
   let childNode = root.getChild(0);
 
   // confirm current dates match node properties
-  do_check_eq(PlacesUtils.toPRTime(updatedBookmark.dateAdded),
+  Assert.equal(PlacesUtils.toPRTime(updatedBookmark.dateAdded),
    childNode.dateAdded);
-  do_check_eq(PlacesUtils.toPRTime(updatedBookmark.lastModified),
+  Assert.equal(PlacesUtils.toPRTime(updatedBookmark.lastModified),
    childNode.lastModified);
 
   // Test live update of lastModified when setting title.
@@ -116,16 +116,16 @@ add_task(async function test_bookmark_update_notifications() {
   });
 
   // Check lastModified has been updated.
-  do_check_true(is_time_ordered(PAST_DATE, childNode.lastModified));
+  Assert.ok(is_time_ordered(PAST_DATE, childNode.lastModified));
   // Test that node value matches db value.
-  do_check_eq(PlacesUtils.toPRTime(updatedBookmark.lastModified),
+  Assert.equal(PlacesUtils.toPRTime(updatedBookmark.lastModified),
    childNode.lastModified);
 
   // Test live update of the exposed date apis.
   await PlacesUtils.bookmarks.update({guid: bookmark.guid, dateAdded: PAST_DATE});
-  do_check_eq(childNode.dateAdded, PlacesUtils.toPRTime(PAST_DATE));
+  Assert.equal(childNode.dateAdded, PlacesUtils.toPRTime(PAST_DATE));
   await PlacesUtils.bookmarks.update({guid: bookmark.guid, lastModified: PAST_DATE});
-  do_check_eq(childNode.lastModified, PlacesUtils.toPRTime(PAST_DATE));
+  Assert.equal(childNode.lastModified, PlacesUtils.toPRTime(PAST_DATE));
 
   root.containerOpen = false;
 });

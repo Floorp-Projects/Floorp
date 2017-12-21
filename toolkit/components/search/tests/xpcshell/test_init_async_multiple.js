@@ -12,11 +12,11 @@
  * Test case comes from test_645970.js
  */
 function run_test() {
-  do_print("Setting up test");
+  info("Setting up test");
 
   do_test_pending();
 
-  do_print("Test starting");
+  info("Test starting");
   let numberOfInitializers = 4;
   let pending = [];
   let numberPending = numberOfInitializers;
@@ -26,22 +26,22 @@ function run_test() {
     let me = i;
     pending[me] = true;
     Services.search.init(function search_initialized_0(aStatus) {
-      do_check_true(Components.isSuccessCode(aStatus));
+      Assert.ok(Components.isSuccessCode(aStatus));
       init_complete(me);
     });
   }
 
   // Wait until all initializers have completed
   let init_complete = function init_complete(i) {
-    do_check_true(pending[i]);
+    Assert.ok(pending[i]);
     pending[i] = false;
     numberPending--;
-    do_check_true(numberPending >= 0);
-    do_check_true(Services.search.isInitialized);
+    Assert.ok(numberPending >= 0);
+    Assert.ok(Services.search.isInitialized);
     if (numberPending == 0) {
       // Just check that we can access a list of engines.
       let engines = Services.search.getEngines();
-      do_check_neq(engines, null);
+      Assert.notEqual(engines, null);
 
       // Wait a little before quitting: if some initializer is
       // triggered twice, we want to catch that error.

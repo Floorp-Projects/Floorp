@@ -81,7 +81,7 @@ ProtocolHandler.prototype = {
   },
   open: function() {
     var file = do_get_file("test_bug894586.js", false);
-    do_check_true(file.exists());
+    Assert.ok(file.exists());
     var url = Services.io.newFileURI(file);
     return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true}).open2();
   },

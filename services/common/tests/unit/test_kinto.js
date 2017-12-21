@@ -48,7 +48,7 @@ add_task(async function test_kinto_add_get() {
     let newRecord = { foo: "bar" };
     // check a record is created
     let createResult = await collection.create(newRecord);
-    do_check_eq(createResult.data.foo, newRecord.foo);
+    Assert.equal(createResult.data.foo, newRecord.foo);
     // check getting the record gets the same info
     let getResult = await collection.get(createResult.data.id);
     deepEqual(createResult.data, getResult.data);
@@ -109,18 +109,18 @@ add_task(async function test_kinto_update() {
     const newRecord = { foo: "bar" };
     // check a record is created
     let createResult = await collection.create(newRecord);
-    do_check_eq(createResult.data.foo, newRecord.foo);
-    do_check_eq(createResult.data._status, "created");
+    Assert.equal(createResult.data.foo, newRecord.foo);
+    Assert.equal(createResult.data._status, "created");
     // check we can update this OK
     let copiedRecord = Object.assign(createResult.data, {});
     deepEqual(createResult.data, copiedRecord);
     copiedRecord.foo = "wibble";
     let updateResult = await collection.update(copiedRecord);
     // check the field was updated
-    do_check_eq(updateResult.data.foo, copiedRecord.foo);
+    Assert.equal(updateResult.data.foo, copiedRecord.foo);
     // check the status is still "created", since we haven't synced
     // the record
-    do_check_eq(updateResult.data._status, "created");
+    Assert.equal(updateResult.data._status, "created");
   } finally {
     await sqliteHandle.close();
   }
@@ -142,11 +142,11 @@ add_task(async function test_kinto_clear() {
     }
     // check the collection contains the correct number
     let list = await collection.list();
-    do_check_eq(list.data.length, expected);
+    Assert.equal(list.data.length, expected);
     // clear the collection and check again - should be 0
     await collection.clear();
     list = await collection.list();
-    do_check_eq(list.data.length, 0);
+    Assert.equal(list.data.length, 0);
   } finally {
     await sqliteHandle.close();
   }
@@ -162,14 +162,14 @@ add_task(async function test_kinto_delete() {
     const newRecord = { foo: "bar" };
     // check a record is created
     let createResult = await collection.create(newRecord);
-    do_check_eq(createResult.data.foo, newRecord.foo);
+    Assert.equal(createResult.data.foo, newRecord.foo);
     // check getting the record gets the same info
     let getResult = await collection.get(createResult.data.id);
     deepEqual(createResult.data, getResult.data);
     // delete that record
     let deleteResult = await collection.delete(createResult.data.id);
     // check the ID is set on the result
-    do_check_eq(getResult.data.id, deleteResult.data.id);
+    Assert.equal(getResult.data.id, deleteResult.data.id);
     // and check that get no longer returns the record
     try {
       getResult = await collection.get(createResult.data.id);
@@ -194,7 +194,7 @@ add_task(async function test_kinto_list() {
     }
     // check the collection contains the correct number
     let list = await collection.list();
-    do_check_eq(list.data.length, expected);
+    Assert.equal(list.data.length, expected);
 
     // check that all created records exist in the retrieved list
     for (let createdRecord of created) {
@@ -205,7 +205,7 @@ add_task(async function test_kinto_list() {
           found = true;
         }
       }
-      do_check_true(found);
+      Assert.ok(found);
     }
   } finally {
     await sqliteHandle.close();
@@ -222,7 +222,7 @@ add_task(async function test_loadDump_ignores_already_imported_records() {
     const record = {id: "41b71c13-17e9-4ee3-9268-6a41abf9730f", title: "foo", last_modified: 1457896541};
     await collection.loadDump([record]);
     let impactedRecords = await collection.loadDump([record]);
-    do_check_eq(impactedRecords.length, 0);
+    Assert.equal(impactedRecords.length, 0);
   } finally {
     await sqliteHandle.close();
   }
@@ -239,7 +239,7 @@ add_task(async function test_loadDump_should_overwrite_old_records() {
     await collection.loadDump([record]);
     const updated = Object.assign({}, record, {last_modified: 1457896543});
     let impactedRecords = await collection.loadDump([updated]);
-    do_check_eq(impactedRecords.length, 1);
+    Assert.equal(impactedRecords.length, 1);
   } finally {
     await sqliteHandle.close();
   }
@@ -256,7 +256,7 @@ add_task(async function test_loadDump_should_not_overwrite_unsynced_records() {
     await collection.create({id: recordId, title: "foo"}, {useRecordId: true});
     const record = {id: recordId, title: "bar", last_modified: 1457896541};
     let impactedRecords = await collection.loadDump([record]);
-    do_check_eq(impactedRecords.length, 0);
+    Assert.equal(impactedRecords.length, 0);
   } finally {
     await sqliteHandle.close();
   }
@@ -273,7 +273,7 @@ add_task(async function test_loadDump_should_not_overwrite_records_without_last_
     await collection.create({id: recordId, title: "foo"}, {synced: true});
     const record = {id: recordId, title: "bar", last_modified: 1457896541};
     let impactedRecords = await collection.loadDump([record]);
-    do_check_eq(impactedRecords.length, 0);
+    Assert.equal(impactedRecords.length, 0);
   } finally {
     await sqliteHandle.close();
   }
@@ -320,25 +320,25 @@ add_task(async function test_kinto_sync() {
     const collection = do_get_kinto_collection(sqliteHandle);
 
     result = await collection.sync();
-    do_check_true(result.ok);
+    Assert.ok(result.ok);
 
     // our test data has a single record; it should be in the local collection
     let list = await collection.list();
-    do_check_eq(list.data.length, 1);
+    Assert.equal(list.data.length, 1);
 
     // now sync again; we should now have 2 records
     result = await collection.sync();
-    do_check_true(result.ok);
+    Assert.ok(result.ok);
     list = await collection.list();
-    do_check_eq(list.data.length, 2);
+    Assert.equal(list.data.length, 2);
 
     // sync again; the second records should have been modified
     const before = list.data[0].title;
     result = await collection.sync();
-    do_check_true(result.ok);
+    Assert.ok(result.ok);
     list = await collection.list();
     const after = list.data[0].title;
-    do_check_neq(before, after);
+    Assert.notEqual(before, after);
   } finally {
     await sqliteHandle.close();
   }
@@ -351,7 +351,7 @@ function run_test() {
 
   run_next_test();
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     server.stop(function() { });
   });
 }

@@ -21,8 +21,8 @@ function test_find_app()
 
   let path;
   path = mwaUtils.pathForAppWithIdentifier(sig);
-  do_print("TextEdit path: " + path + "\n");
-  do_check_neq(path, "");
+  info("TextEdit path: " + path + "\n");
+  Assert.notEqual(path, "");
 }
 
 function test_dont_find_fake_app()
@@ -33,7 +33,7 @@ function test_dont_find_fake_app()
 
   let path;
   path = mwaUtils.pathForAppWithIdentifier(sig);
-  do_check_eq(path, "");
+  Assert.equal(path, "");
 }
 
 

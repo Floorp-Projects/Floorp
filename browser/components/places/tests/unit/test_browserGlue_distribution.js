@@ -35,7 +35,7 @@ function run_test() {
   run_next_test();
 }
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   // Remove the distribution file, even if the test failed, otherwise all
   // next tests will import it.
   let iniFile = gProfD.clone();

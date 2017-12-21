@@ -46,7 +46,7 @@ Test.prototype = {
   },
 
   onStopRequest: function(request, context, status) {
-    do_check_eq(this._buffer, this._expectVal);
+    Assert.equal(this._buffer, this._expectVal);
     do_timeout(0, run_next_test);
   },
 
@@ -150,7 +150,7 @@ function run_next_test()
 function handler(metadata, response) {
 
   // None of the tests above should send an IMS
-  do_check_false(metadata.hasHeader("If-Modified-Since"));
+  Assert.ok(!metadata.hasHeader("If-Modified-Since"));
 
   // Pick up requested value to echo
   var hdr = "default value";

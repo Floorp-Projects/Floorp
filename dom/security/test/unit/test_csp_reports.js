@@ -52,7 +52,7 @@ function makeReportHandler(testpath, message, expectedJSON) {
     // dump("EXPECTED:  \n" + JSON.stringify(expectedJSON) + "\n\n");
 
     for (var i in expectedJSON)
-      do_check_eq(expectedJSON[i], reportObj['csp-report'][i]);
+      Assert.equal(expectedJSON[i], reportObj['csp-report'][i]);
 
     testsToFinish--;
     httpServer.registerPathHandler(testpath, null);
@@ -121,7 +121,7 @@ function run_test() {
                                        0); // aLineNumber
 
         // this is not a report only policy, so it better block inline scripts
-        do_check_false(inlineOK);
+        Assert.ok(!inlineOK);
       });
 
   // test that eval violations cause a report.
@@ -133,9 +133,9 @@ function run_test() {
         evalOK = csp.getAllowsEval(oReportViolation);
 
         // this is not a report only policy, so it better block eval
-        do_check_false(evalOK);
+        Assert.ok(!evalOK);
         // ... and cause reports to go out
-        do_check_true(oReportViolation.value);
+        Assert.ok(oReportViolation.value);
 
         if (oReportViolation.value) {
           // force the logging, since the getter doesn't.
@@ -171,7 +171,7 @@ function run_test() {
                                        0); // aLineNumber
 
         // this is a report only policy, so it better allow inline scripts
-        do_check_true(inlineOK);
+        Assert.ok(inlineOK);
       });
 
   // test that eval violations cause a report in report-only policy
@@ -181,9 +181,9 @@ function run_test() {
         evalOK = csp.getAllowsEval(oReportViolation);
 
         // this is a report only policy, so it better allow eval
-        do_check_true(evalOK);
+        Assert.ok(evalOK);
         // ... but still cause reports to go out
-        do_check_true(oReportViolation.value);
+        Assert.ok(oReportViolation.value);
 
         if (oReportViolation.value) {
           // force the logging, since the getter doesn't.

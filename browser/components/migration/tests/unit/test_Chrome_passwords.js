@@ -131,7 +131,7 @@ add_task(async function setup() {
   dbConn = await Sqlite.openConnection({ path: loginDataFile.path });
   registerFakePath("LocalAppData", do_get_file("AppData/Local/"));
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.logins.removeAllLogins();
     crypto.finalize();
     return dbConn.close();

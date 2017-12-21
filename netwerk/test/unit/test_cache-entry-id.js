@@ -43,7 +43,7 @@ function contentHandler(metadata, response)
     return;
   }
 
-  do_check_true(false, "Should not reach here.");
+  Assert.ok(false, "Should not reach here.");
 }
 
 function fetch(preferredDataType = null)
@@ -70,10 +70,10 @@ function check(response, content, preferredDataType, isFromCache, cacheEntryIdCh
 {
   var cc = response.request.QueryInterface(Ci.nsICacheInfoChannel);
 
-  do_check_eq(response.buffer, content);
-  do_check_eq(cc.alternativeDataType, preferredDataType);
-  do_check_eq(response.isFromCache, isFromCache);
-  do_check_true(!cacheEntryIdChecker || cacheEntryIdChecker(response.cacheEntryId));
+  Assert.equal(response.buffer, content);
+  Assert.equal(cc.alternativeDataType, preferredDataType);
+  Assert.equal(response.isFromCache, isFromCache);
+  Assert.ok(!cacheEntryIdChecker || cacheEntryIdChecker(response.cacheEntryId));
 
   return response;
 }
@@ -142,7 +142,7 @@ function run_test()
                                      cacheEntryId !== targetCacheEntryId))
 
     // Tear down.
-    .catch(e => do_check_true(false, "Unexpected exception: " + e))
-    .then(_ => do_check_eq(handlers.length, 0))
+    .catch(e => Assert.ok(false, "Unexpected exception: " + e))
+    .then(_ => Assert.equal(handlers.length, 0))
     .then(_ => httpServer.stop(do_test_finished));
 }

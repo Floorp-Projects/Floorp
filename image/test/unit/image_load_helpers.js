@@ -25,7 +25,7 @@ function ImageListener(start_callback, stop_callback)
 {
   this.sizeAvailable = function onSizeAvailable(aRequest)
   {
-    do_check_false(this.synchronous);
+    Assert.ok(!this.synchronous);
 
     this.state |= SIZE_AVAILABLE;
 
@@ -34,19 +34,19 @@ function ImageListener(start_callback, stop_callback)
   }
   this.frameComplete = function onFrameComplete(aRequest)
   {
-    do_check_false(this.synchronous);
+    Assert.ok(!this.synchronous);
 
     this.state |= FRAME_COMPLETE;
   }
   this.decodeComplete = function onDecodeComplete(aRequest)
   {
-    do_check_false(this.synchronous);
+    Assert.ok(!this.synchronous);
 
     this.state |= DECODE_COMPLETE;
   }
   this.loadComplete = function onLoadcomplete(aRequest)
   {
-    do_check_false(this.synchronous);
+    Assert.ok(!this.synchronous);
 
     this.state |= LOAD_COMPLETE;
 

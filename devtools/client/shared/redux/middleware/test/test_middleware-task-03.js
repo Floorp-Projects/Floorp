@@ -34,7 +34,7 @@ function generatorError() {
 }
 
 function reducer(state = [], action) {
-  do_print("Action called: " + action.type);
+  info("Action called: " + action.type);
   if (action.type === ERROR_TYPE) {
     state.push(action);
   }

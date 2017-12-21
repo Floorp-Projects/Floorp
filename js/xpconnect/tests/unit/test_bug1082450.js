@@ -5,9 +5,9 @@ function run_test() {
   function checkThrows(str, rgxp) {
     try {
       sb.eval(str);
-      do_check_true(false, "eval should have thrown");
+      Assert.ok(false, "eval should have thrown");
     } catch (e) {
-      do_check_true(rgxp.test(e), "error message should match");
+      Assert.ok(rgxp.test(e), "error message should match");
     }
   }
 
@@ -29,12 +29,12 @@ function run_test() {
                         chromeCallableValueProp: 'r' }
   };
 
-  do_check_eq(sb.eval('exposed.simpleValueProp'), undefined);
-  do_check_eq(sb.eval('exposed.objectValueProp'), undefined);
-  do_check_eq(sb.eval('exposed.getterProp;'), undefined);
-  do_check_eq(sb.eval('exposed.getterSetterProp;'), undefined);
+  Assert.equal(sb.eval('exposed.simpleValueProp'), undefined);
+  Assert.equal(sb.eval('exposed.objectValueProp'), undefined);
+  Assert.equal(sb.eval('exposed.getterProp;'), undefined);
+  Assert.equal(sb.eval('exposed.getterSetterProp;'), undefined);
   checkThrows('exposed.setterProp = 42;', /Permission denied/i);
   checkThrows('exposed.getterSetterProp = 42;', /Permission denied/i);
-  do_check_eq(sb.eval('exposed.contentCallableValueProp'), undefined);
+  Assert.equal(sb.eval('exposed.contentCallableValueProp'), undefined);
   checkThrows('exposed.chromeCallableValueProp();', /is not a function/i);
 }

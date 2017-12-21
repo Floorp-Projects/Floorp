@@ -4,7 +4,7 @@
 // Ensure inline autocomplete doesn't return zero frecency pages.
 
 add_task(async function test_dupe_urls() {
-  do_print("Searching for urls with dupes should only show one");
+  info("Searching for urls with dupes should only show one");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/"),
     transition: TRANSITION_TYPED

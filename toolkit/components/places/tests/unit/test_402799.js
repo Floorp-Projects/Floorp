@@ -47,12 +47,12 @@ add_task(async function test_query_only_returns_bookmarks_not_tags() {
 
   root.containerOpen = true;
   let cc = root.childCount;
-  do_check_eq(cc, 2);
+  Assert.equal(cc, 2);
   let node1 = root.getChild(0);
   node1 = await PlacesUtils.bookmarks.fetch(node1.bookmarkGuid);
-  do_check_eq(node1.parentGuid, PlacesUtils.bookmarks.menuGuid);
+  Assert.equal(node1.parentGuid, PlacesUtils.bookmarks.menuGuid);
   let node2 = root.getChild(1);
   node2 = await PlacesUtils.bookmarks.fetch(node2.bookmarkGuid);
-  do_check_eq(node2.parentGuid, PlacesUtils.bookmarks.toolbarGuid);
+  Assert.equal(node2.parentGuid, PlacesUtils.bookmarks.toolbarGuid);
   root.containerOpen = false;
 });

@@ -78,7 +78,7 @@ add_task(async function test_getRecords() {
     await formAutofillParent._getRecords({collectionName}, target);
     mock.verify();
     if (collection) {
-      do_check_eq(collection.getAll.called, true);
+      Assert.equal(collection.getAll.called, true);
       collection.getAll.restore();
     }
   }
@@ -152,7 +152,7 @@ add_task(async function test_getRecords_addresses() {
   ];
 
   for (let testCase of testCases) {
-    do_print("Starting testcase: " + testCase.description);
+    info("Starting testcase: " + testCase.description);
     let mock = sinon.mock(target);
     mock.expects("sendAsyncMessage").once().withExactArgs("FormAutofill:Records",
                                                           testCase.expectedResult);
@@ -248,7 +248,7 @@ add_task(async function test_getRecords_creditCards() {
   ];
 
   for (let testCase of testCases) {
-    do_print("Starting testcase: " + testCase.description);
+    info("Starting testcase: " + testCase.description);
     if (testCase.mpEnabled) {
       let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(Ci.nsIPK11TokenDB);
       let token = tokendb.getInternalKeyToken();

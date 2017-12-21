@@ -52,7 +52,7 @@ function make_channel(url, body, cb) {
       gotOnStatus = true;
     },
     shouldPrepareForIntercept: function() {
-      do_check_eq(this.numChecks, 0);
+      Assert.equal(this.numChecks, 0);
       this.numChecks++;
       return true;
     },
@@ -95,23 +95,23 @@ function run_test() {
 }
 
 function handle_synthesized_response(request, buffer) {
-  do_check_eq(buffer, NON_REMOTE_BODY);
-  do_check_true(gotOnStatus);
-  do_check_true(gotOnProgress);
+  Assert.equal(buffer, NON_REMOTE_BODY);
+  Assert.ok(gotOnStatus);
+  Assert.ok(gotOnProgress);
   run_next_test();
 }
 
 function handle_synthesized_response_2(request, buffer) {
-  do_check_eq(buffer, NON_REMOTE_BODY_2);
-  do_check_true(gotOnStatus);
-  do_check_true(gotOnProgress);
+  Assert.equal(buffer, NON_REMOTE_BODY_2);
+  Assert.ok(gotOnStatus);
+  Assert.ok(gotOnProgress);
   run_next_test();
 }
 
 function handle_remote_response(request, buffer) {
-  do_check_eq(buffer, REMOTE_BODY);
-  do_check_true(gotOnStatus);
-  do_check_true(gotOnProgress);
+  Assert.equal(buffer, REMOTE_BODY);
+  Assert.ok(gotOnStatus);
+  Assert.ok(gotOnProgress);
   run_next_test();
 }
 
@@ -205,7 +205,7 @@ add_test(function() {
       } catch (x) {
         gotexception = true;
       }
-      do_check_true(gotexception);
+      Assert.ok(gotexception);
     });
   });
   chan.asyncOpen2(new ChannelListener(handle_remote_response, null));

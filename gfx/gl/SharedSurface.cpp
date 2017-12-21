@@ -219,6 +219,8 @@ SharedSurface::SharedSurface(SharedSurfaceType type,
     , mIsProducerAcquired(false)
 { }
 
+SharedSurface::~SharedSurface() = default;
+
 layers::TextureFlags
 SharedSurface::GetTextureFlags() const
 {

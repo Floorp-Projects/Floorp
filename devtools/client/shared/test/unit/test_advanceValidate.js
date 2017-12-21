@@ -16,7 +16,7 @@ const {advanceValidate} = require("devtools/client/inspector/shared/utils");
 const sampleInput = '\\symbol "string" url(somewhere)';
 
 function testInsertion(where, result, testName) {
-  do_print(testName);
+  info(testName);
   equal(advanceValidate(Ci.nsIDOMKeyEvent.DOM_VK_SEMICOLON, sampleInput, where),
         result, "testing advanceValidate at " + where);
 }

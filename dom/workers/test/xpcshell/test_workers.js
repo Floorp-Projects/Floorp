@@ -21,7 +21,7 @@ function talk_with_worker(worker) {
         success = false;
         reject(event);
       }
-      do_check_true(success);
+      Assert.ok(success);
       worker.terminate();
     };
     worker.onerror = function(event) {

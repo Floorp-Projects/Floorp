@@ -80,8 +80,7 @@ function check_cookie_exists(aDomain, aExists) {
     name: COOKIE_NAME,
     path: COOKIE_PATH
   };
-  let checker = aExists ? do_check_true : do_check_false;
-  checker(Services.cookies.cookieExists(cookie));
+  Assert.equal(aExists, Services.cookies.cookieExists(cookie));
 }
 
 /**
@@ -105,8 +104,7 @@ function add_disabled_host(aHost) {
  *        True if the host should be disabled, false otherwise.
  */
 function check_disabled_host(aHost, aIsDisabled) {
-  let checker = aIsDisabled ? do_check_false : do_check_true;
-  checker(Services.logins.getLoginSavingEnabled(aHost));
+  Assert.equal(!aIsDisabled, Services.logins.getLoginSavingEnabled(aHost));
 }
 
 /**
@@ -136,7 +134,7 @@ function add_login(aHost) {
 function check_login_exists(aHost, aExists) {
   let count = { value: 0 };
   Services.logins.findLogins(count, aHost, "", null);
-  do_check_eq(count.value, aExists ? 1 : 0);
+  Assert.equal(count.value, aExists ? 1 : 0);
 }
 
 /**
@@ -165,8 +163,8 @@ function check_permission_exists(aURI, aExists) {
   let principal = Services.scriptSecurityManager.createCodebasePrincipal(aURI, {});
 
   let perm = Services.perms.testExactPermissionFromPrincipal(principal, PERMISSION_TYPE);
-  let checker = aExists ? do_check_eq : do_check_neq;
-  checker(perm, PERMISSION_VALUE);
+  let checker = aExists ? "equal" : "notEqual";
+  Assert[checker](perm, PERMISSION_VALUE);
 }
 
 /**
@@ -208,29 +206,29 @@ function preference_exists(aURI) {
 // History
 async function test_history_cleared_with_direct_match() {
   const TEST_URI = Services.io.newURI("http://mozilla.org/foo");
-  do_check_false(await promiseIsURIVisited(TEST_URI));
+  Assert.equal(false, await promiseIsURIVisited(TEST_URI));
   await PlacesTestUtils.addVisits(TEST_URI);
-  do_check_true(await promiseIsURIVisited(TEST_URI));
+  Assert.ok(await promiseIsURIVisited(TEST_URI));
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  do_check_false(await promiseIsURIVisited(TEST_URI));
+  Assert.equal(false, await promiseIsURIVisited(TEST_URI));
 }
 
 async function test_history_cleared_with_subdomain() {
   const TEST_URI = Services.io.newURI("http://www.mozilla.org/foo");
-  do_check_false(await promiseIsURIVisited(TEST_URI));
+  Assert.equal(false, await promiseIsURIVisited(TEST_URI));
   await PlacesTestUtils.addVisits(TEST_URI);
-  do_check_true(await promiseIsURIVisited(TEST_URI));
+  Assert.ok(await promiseIsURIVisited(TEST_URI));
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  do_check_false(await promiseIsURIVisited(TEST_URI));
+  Assert.equal(false, await promiseIsURIVisited(TEST_URI));
 }
 
 async function test_history_not_cleared_with_uri_contains_domain() {
   const TEST_URI = Services.io.newURI("http://ilovemozilla.org/foo");
-  do_check_false(await promiseIsURIVisited(TEST_URI));
+  Assert.equal(false, await promiseIsURIVisited(TEST_URI));
   await PlacesTestUtils.addVisits(TEST_URI);
-  do_check_true(await promiseIsURIVisited(TEST_URI));
+  Assert.ok(await promiseIsURIVisited(TEST_URI));
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
-  do_check_true(await promiseIsURIVisited(TEST_URI));
+  Assert.ok(await promiseIsURIVisited(TEST_URI));
 
   // Clear history since we left something there from this test.
   await PlacesTestUtils.clearHistory();
@@ -356,37 +354,37 @@ function waitForPurgeNotification() {
 // Content Preferences
 async function test_content_preferences_cleared_with_direct_match() {
   const TEST_URI = Services.io.newURI("http://mozilla.org");
-  do_check_false(await preference_exists(TEST_URI));
+  Assert.equal(false, await preference_exists(TEST_URI));
   await add_preference(TEST_URI);
-  do_check_true(await preference_exists(TEST_URI));
+  Assert.ok(await preference_exists(TEST_URI));
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   await waitForPurgeNotification();
-  do_check_false(await preference_exists(TEST_URI));
+  Assert.equal(false, await preference_exists(TEST_URI));
 }
 
 async function test_content_preferences_cleared_with_subdomain() {
   const TEST_URI = Services.io.newURI("http://www.mozilla.org");
-  do_check_false(await preference_exists(TEST_URI));
+  Assert.equal(false, await preference_exists(TEST_URI));
   await add_preference(TEST_URI);
-  do_check_true(await preference_exists(TEST_URI));
+  Assert.ok(await preference_exists(TEST_URI));
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   await waitForPurgeNotification();
-  do_check_false(await preference_exists(TEST_URI));
+  Assert.equal(false, await preference_exists(TEST_URI));
 }
 
 async function test_content_preferences_not_cleared_with_uri_contains_domain() {
   const TEST_URI = Services.io.newURI("http://ilovemozilla.org");
-  do_check_false(await preference_exists(TEST_URI));
+  Assert.equal(false, await preference_exists(TEST_URI));
   await add_preference(TEST_URI);
-  do_check_true(await preference_exists(TEST_URI));
+  Assert.ok(await preference_exists(TEST_URI));
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   await waitForPurgeNotification();
-  do_check_true(await preference_exists(TEST_URI));
+  Assert.ok(await preference_exists(TEST_URI));
 
   // Reset state
   await ForgetAboutSite.removeDataFromDomain("ilovemozilla.org");
   await waitForPurgeNotification();
-  do_check_false(await preference_exists(TEST_URI));
+  Assert.equal(false, await preference_exists(TEST_URI));
 }
 
 function push_registration_exists(aURL, ps) {
@@ -439,7 +437,7 @@ async function test_push_cleared() {
     });
 
     const TEST_URL = "https://www.mozilla.org/scope/";
-    do_check_false(await push_registration_exists(TEST_URL, ps));
+    Assert.equal(false, await push_registration_exists(TEST_URL, ps));
     await db.put({
       channelID,
       pushEndpoint: "https://example.org/update/clear-success",
@@ -448,13 +446,13 @@ async function test_push_cleared() {
       originAttributes: "",
       quota: Infinity,
     });
-    do_check_true(await push_registration_exists(TEST_URL, ps));
+    Assert.ok(await push_registration_exists(TEST_URL, ps));
 
     let promisePurgeNotification = waitForPurgeNotification();
     await ForgetAboutSite.removeDataFromDomain("mozilla.org");
     await promisePurgeNotification;
 
-    do_check_false(await push_registration_exists(TEST_URL, ps));
+    Assert.equal(false, await push_registration_exists(TEST_URL, ps));
   } finally {
     await PushService._shutdownService();
   }
@@ -463,7 +461,7 @@ async function test_push_cleared() {
 // Cache
 async function test_cache_cleared() {
   // Because this test is asynchronous, it should be the last test
-  do_check_true(tests[tests.length - 1] == test_cache_cleared);
+  Assert.ok(tests[tests.length - 1] == test_cache_cleared);
 
   // NOTE: We could be more extensive with this test and actually add an entry
   //       to the cache, and then make sure it is gone.  However, we trust that
@@ -499,20 +497,20 @@ async function test_storage_cleared() {
   for (let i = 0; i < s.length; ++i) {
     let storage = s[i];
     storage.setItem("test", "value" + i);
-    do_check_eq(storage.length, 1);
-    do_check_eq(storage.key(0), "test");
-    do_check_eq(storage.getItem("test"), "value" + i);
+    Assert.equal(storage.length, 1);
+    Assert.equal(storage.key(0), "test");
+    Assert.equal(storage.getItem("test"), "value" + i);
   }
 
   await ForgetAboutSite.removeDataFromDomain("mozilla.org");
   await waitForPurgeNotification();
 
-  do_check_eq(s[0].getItem("test"), null);
-  do_check_eq(s[0].length, 0);
-  do_check_eq(s[1].getItem("test"), null);
-  do_check_eq(s[1].length, 0);
-  do_check_eq(s[2].getItem("test"), "value2");
-  do_check_eq(s[2].length, 1);
+  Assert.equal(s[0].getItem("test"), null);
+  Assert.equal(s[0].length, 0);
+  Assert.equal(s[1].getItem("test"), null);
+  Assert.equal(s[1].length, 0);
+  Assert.equal(s[2].getItem("test"), "value2");
+  Assert.equal(s[2].length, 1);
 }
 
 var tests = [

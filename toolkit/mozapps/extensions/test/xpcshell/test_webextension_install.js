@@ -138,7 +138,7 @@ add_task(async function test_multiple_no_id_extensions() {
 
   const allAddons = await AddonManager.getAllAddons();
 
-  do_print(`Found these add-ons: ${allAddons.map(a => a.name).join(", ")}`);
+  info(`Found these add-ons: ${allAddons.map(a => a.name).join(", ")}`);
   const filtered = allAddons.filter(addon => addon.name === manifest.name);
   // Make sure we have two add-ons by the same name.
   equal(filtered.length, 2, "Two add-ons are installed with the same name");

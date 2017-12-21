@@ -102,7 +102,7 @@ profileDir.append("extensions");
 
 
 function do_check_compat_status(aStrict, aAddonCompat, aCallback) {
-  do_check_eq(AddonManager.strictCompatibility, aStrict);
+  Assert.equal(AddonManager.strictCompatibility, aStrict);
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
@@ -111,42 +111,42 @@ function do_check_compat_status(aStrict, aAddonCompat, aCallback) {
                                "addon6@tests.mozilla.org",
                                "addon7@tests.mozilla.org"],
                               function([a1, a2, a3, a4, a5, a6, a7]) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.isCompatible, aAddonCompat[0]);
-    do_check_eq(a1.appDisabled, !aAddonCompat[0]);
-    do_check_false(a1.strictCompatibility);
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.isCompatible, aAddonCompat[0]);
+    Assert.equal(a1.appDisabled, !aAddonCompat[0]);
+    Assert.ok(!a1.strictCompatibility);
 
-    do_check_neq(a2, null);
-    do_check_eq(a2.isCompatible, aAddonCompat[1]);
-    do_check_eq(a2.appDisabled, !aAddonCompat[1]);
-    do_check_false(a2.strictCompatibility);
+    Assert.notEqual(a2, null);
+    Assert.equal(a2.isCompatible, aAddonCompat[1]);
+    Assert.equal(a2.appDisabled, !aAddonCompat[1]);
+    Assert.ok(!a2.strictCompatibility);
 
-    do_check_neq(a3, null);
-    do_check_eq(a3.isCompatible, aAddonCompat[2]);
-    do_check_eq(a3.appDisabled, !aAddonCompat[2]);
-    do_check_true(a3.strictCompatibility);
+    Assert.notEqual(a3, null);
+    Assert.equal(a3.isCompatible, aAddonCompat[2]);
+    Assert.equal(a3.appDisabled, !aAddonCompat[2]);
+    Assert.ok(a3.strictCompatibility);
 
-    do_check_neq(a4, null);
-    do_check_eq(a4.isCompatible, aAddonCompat[3]);
-    do_check_eq(a4.appDisabled, !aAddonCompat[3]);
-    do_check_true(a4.strictCompatibility);
+    Assert.notEqual(a4, null);
+    Assert.equal(a4.isCompatible, aAddonCompat[3]);
+    Assert.equal(a4.appDisabled, !aAddonCompat[3]);
+    Assert.ok(a4.strictCompatibility);
 
-    do_check_neq(a5, null);
-    do_check_eq(a5.isCompatible, aAddonCompat[4]);
-    do_check_eq(a5.appDisabled, !aAddonCompat[4]);
-    do_check_false(a5.strictCompatibility);
+    Assert.notEqual(a5, null);
+    Assert.equal(a5.isCompatible, aAddonCompat[4]);
+    Assert.equal(a5.appDisabled, !aAddonCompat[4]);
+    Assert.ok(!a5.strictCompatibility);
 
-    do_check_neq(a6, null);
-    do_check_eq(a6.isCompatible, aAddonCompat[5]);
-    do_check_eq(a6.appDisabled, !aAddonCompat[5]);
-    do_check_false(a6.strictCompatibility);
+    Assert.notEqual(a6, null);
+    Assert.equal(a6.isCompatible, aAddonCompat[5]);
+    Assert.equal(a6.appDisabled, !aAddonCompat[5]);
+    Assert.ok(!a6.strictCompatibility);
 
-    do_check_neq(a7, null);
-    do_check_eq(a7.isCompatible, aAddonCompat[6]);
-    do_check_eq(a7.appDisabled, !aAddonCompat[6]);
-    do_check_false(a7.strictCompatibility);
+    Assert.notEqual(a7, null);
+    Assert.equal(a7.isCompatible, aAddonCompat[6]);
+    Assert.equal(a7.appDisabled, !aAddonCompat[6]);
+    Assert.ok(!a7.strictCompatibility);
 
-    do_execute_soon(aCallback);
+    executeSoon(aCallback);
   });
 }
 
@@ -172,31 +172,31 @@ function run_test() {
 }
 
 function run_test_1() {
-  do_print("Test 1");
+  info("Test 1");
   Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
   do_check_compat_status(false, [true, true, false, false, false, true, true], run_test_2);
 }
 
 function run_test_2() {
-  do_print("Test 2");
+  info("Test 2");
   restartManager();
   do_check_compat_status(false, [true, true, false, false, false, true, true], run_test_3);
 }
 
 function run_test_3() {
-  do_print("Test 3");
+  info("Test 3");
   Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, true);
   do_check_compat_status(true, [true, false, false, false, false, false, false], run_test_4);
 }
 
 function run_test_4() {
-  do_print("Test 4");
+  info("Test 4");
   restartManager();
   do_check_compat_status(true, [true, false, false, false, false, false, false], run_test_5);
 }
 
 function run_test_5() {
-  do_print("Test 5");
+  info("Test 5");
   Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
   Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_APP_VERSION, "0.4");
   do_check_compat_status(false, [true, true, false, false, false, false, true], do_test_finished);

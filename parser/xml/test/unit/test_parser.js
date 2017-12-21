@@ -89,7 +89,7 @@ function do_check_true_with_dump(aCondition, aParseLog) {
   if (!aCondition) {
     dump(aParseLog.join("\n"));
   }
-  do_check_true(aCondition);
+  Assert.ok(aCondition);
 }
 
 function run_test() {

@@ -229,7 +229,7 @@ const TESTS = {
  */
 const runnable = (tests) => (async function () {
   for (let name of Object.keys(tests)) {
-    do_print(name);
+    info(name);
     if (tests[name].length === 1) {
       await (new Promise(resolve => tests[name](resolve)));
     } else {

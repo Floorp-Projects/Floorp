@@ -8,7 +8,7 @@
 function run_test() {
   do_test_pending();
 
-  do_check_false(Services.search.isInitialized);
+  Assert.ok(!Services.search.isInitialized);
 
   let engineFile = gProfD.clone();
   engineFile.append("searchplugins");
@@ -22,8 +22,8 @@ function run_test() {
   Services.search.init(function search_initialized(aStatus) {
     // The invalid engine should have been skipped and should not
     // have caused an exception.
-    do_check_true(Components.isSuccessCode(aStatus));
-    do_check_true(Services.search.isInitialized);
+    Assert.ok(Components.isSuccessCode(aStatus));
+    Assert.ok(Services.search.isInitialized);
 
     do_test_finished();
   });

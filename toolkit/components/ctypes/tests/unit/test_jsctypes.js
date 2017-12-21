@@ -28,7 +28,7 @@ function do_check_throws(f, type, stack) {
     f();
   } catch (exc) {
     if (exc.constructor.name === type.name) {
-      do_check_true(true);
+      Assert.ok(true);
       return;
     }
     do_throw("expected " + type.name + " exception, caught " + exc, stack);
@@ -156,11 +156,11 @@ function run_test() {
       new ctypes.PointerType(
         new ctypes.ArrayType(
           new ctypes.PointerType(ctypes.int32_t), 4)));
-  do_check_eq(ptrTo_ptrTo_arrayOf4_ptrTo_int32s.name, "int32_t*(**)[4]");
+  Assert.equal(ptrTo_ptrTo_arrayOf4_ptrTo_int32s.name, "int32_t*(**)[4]");
 
   let source_t = new ctypes.StructType("source",
     [{ a: ptrTo_ptrTo_arrayOf4_ptrTo_int32s }, { b: ctypes.int64_t }]);
-  do_check_eq(source_t.toSource(),
+  Assert.equal(source_t.toSource(),
     'ctypes.StructType("source", [{ "a": ctypes.int32_t.ptr.array(4).ptr.ptr }, ' +
     '{ "b": ctypes.int64_t }])');
 
@@ -194,15 +194,15 @@ function run_test() {
 
   // test that functions work as properties of other objects
   let getter = library.declare("get_int8_t_cdecl", ctypes.default_abi, ctypes.int8_t);
-  do_check_eq(getter(), 109);
+  Assert.equal(getter(), 109);
   obj.t = getter;
-  do_check_eq(obj.t(), 109);
+  Assert.equal(obj.t(), 109);
 
   // bug 521937
   do_check_throws(function() { let nolib = ctypes.open("notfoundlibrary.dll"); nolib.close(); }, Error);
 
   // bug 522360
-  do_check_eq(run_load_system_library(), true);
+  Assert.equal(run_load_system_library(), true);
 
   // Test loading a library with a unicode name (bug 589413). Note that nsIFile
   // implementations are not available in some harnesses; if not, the harness
@@ -223,23 +223,23 @@ function run_abstract_class_tests() {
   do_check_throws(function() { ctypes.CType(); }, TypeError);
   do_check_throws(function() { new ctypes.CType(); }, TypeError);
 
-  do_check_true(ctypes.CType.hasOwnProperty("prototype"));
+  Assert.ok(ctypes.CType.hasOwnProperty("prototype"));
   do_check_throws(function() { ctypes.CType.prototype(); }, TypeError);
   do_check_throws(function() { new ctypes.CType.prototype(); }, TypeError);
 
-  do_check_true(ctypes.CType.prototype.hasOwnProperty("constructor"));
-  do_check_true(ctypes.CType.prototype.constructor === ctypes.CType);
+  Assert.ok(ctypes.CType.prototype.hasOwnProperty("constructor"));
+  Assert.ok(ctypes.CType.prototype.constructor === ctypes.CType);
 
   // Check that ctypes.CType.prototype has the correct properties and functions.
-  do_check_true(ctypes.CType.prototype.hasOwnProperty("name"));
-  do_check_true(ctypes.CType.prototype.hasOwnProperty("size"));
-  do_check_true(ctypes.CType.prototype.hasOwnProperty("ptr"));
-  do_check_true(ctypes.CType.prototype.hasOwnProperty("array"));
-  do_check_true(ctypes.CType.prototype.hasOwnProperty("toString"));
-  do_check_true(ctypes.CType.prototype.hasOwnProperty("toSource"));
+  Assert.ok(ctypes.CType.prototype.hasOwnProperty("name"));
+  Assert.ok(ctypes.CType.prototype.hasOwnProperty("size"));
+  Assert.ok(ctypes.CType.prototype.hasOwnProperty("ptr"));
+  Assert.ok(ctypes.CType.prototype.hasOwnProperty("array"));
+  Assert.ok(ctypes.CType.prototype.hasOwnProperty("toString"));
+  Assert.ok(ctypes.CType.prototype.hasOwnProperty("toSource"));
 
   // Make sure we can access 'prototype' on a CTypeProto.
-  do_check_true(ctypes.CType.prototype.prototype === ctypes.CData.prototype);
+  Assert.ok(ctypes.CType.prototype.prototype === ctypes.CData.prototype);
 
   // Check that the shared properties and functions on ctypes.CType.prototype throw.
   do_check_throws(function() { ctypes.CType.prototype.name; }, TypeError);
@@ -250,26 +250,26 @@ function run_abstract_class_tests() {
 
   // toString and toSource are called by the web console during inspection,
   // so we don't want them to throw.
-  do_check_eq(typeof ctypes.CType.prototype.toString(), "string");
-  do_check_eq(typeof ctypes.CType.prototype.toSource(), "string");
+  Assert.equal(typeof ctypes.CType.prototype.toString(), "string");
+  Assert.equal(typeof ctypes.CType.prototype.toSource(), "string");
 
   // Test that ctypes.CData is an abstract constructor that throws.
   do_check_throws(function() { ctypes.CData(); }, TypeError);
   do_check_throws(function() { new ctypes.CData(); }, TypeError);
 
-  do_check_true(ctypes.CData.__proto__ === ctypes.CType.prototype);
-  do_check_true(ctypes.CData instanceof ctypes.CType);
+  Assert.ok(ctypes.CData.__proto__ === ctypes.CType.prototype);
+  Assert.ok(ctypes.CData instanceof ctypes.CType);
 
-  do_check_true(ctypes.CData.hasOwnProperty("prototype"));
-  do_check_true(ctypes.CData.prototype.hasOwnProperty("constructor"));
-  do_check_true(ctypes.CData.prototype.constructor === ctypes.CData);
+  Assert.ok(ctypes.CData.hasOwnProperty("prototype"));
+  Assert.ok(ctypes.CData.prototype.hasOwnProperty("constructor"));
+  Assert.ok(ctypes.CData.prototype.constructor === ctypes.CData);
 
   // Check that ctypes.CData.prototype has the correct properties and functions.
-  do_check_true(ctypes.CData.prototype.hasOwnProperty("value"));
-  do_check_true(ctypes.CData.prototype.hasOwnProperty("address"));
-  do_check_true(ctypes.CData.prototype.hasOwnProperty("readString"));
-  do_check_true(ctypes.CData.prototype.hasOwnProperty("toString"));
-  do_check_true(ctypes.CData.prototype.hasOwnProperty("toSource"));
+  Assert.ok(ctypes.CData.prototype.hasOwnProperty("value"));
+  Assert.ok(ctypes.CData.prototype.hasOwnProperty("address"));
+  Assert.ok(ctypes.CData.prototype.hasOwnProperty("readString"));
+  Assert.ok(ctypes.CData.prototype.hasOwnProperty("toString"));
+  Assert.ok(ctypes.CData.prototype.hasOwnProperty("toSource"));
 
   // Check that the shared properties and functions on ctypes.CData.prototype throw.
   do_check_throws(function() { ctypes.CData.prototype.value; }, TypeError);
@@ -279,134 +279,134 @@ function run_abstract_class_tests() {
 
   // toString and toSource are called by the web console during inspection,
   // so we don't want them to throw.
-  do_check_eq(ctypes.CData.prototype.toString(), "[CData proto object]");
-  do_check_eq(ctypes.CData.prototype.toSource(), "[CData proto object]");
+  Assert.equal(ctypes.CData.prototype.toString(), "[CData proto object]");
+  Assert.equal(ctypes.CData.prototype.toSource(), "[CData proto object]");
 }
 
 function run_Int64_tests() {
   do_check_throws(function() { ctypes.Int64(); }, TypeError);
 
-  do_check_true(ctypes.Int64.hasOwnProperty("prototype"));
-  do_check_true(ctypes.Int64.prototype.hasOwnProperty("constructor"));
-  do_check_true(ctypes.Int64.prototype.constructor === ctypes.Int64);
+  Assert.ok(ctypes.Int64.hasOwnProperty("prototype"));
+  Assert.ok(ctypes.Int64.prototype.hasOwnProperty("constructor"));
+  Assert.ok(ctypes.Int64.prototype.constructor === ctypes.Int64);
 
   // Check that ctypes.Int64 and ctypes.Int64.prototype have the correct
   // properties and functions.
-  do_check_true(ctypes.Int64.hasOwnProperty("compare"));
-  do_check_true(ctypes.Int64.hasOwnProperty("lo"));
-  do_check_true(ctypes.Int64.hasOwnProperty("hi"));
-  do_check_true(ctypes.Int64.hasOwnProperty("join"));
-  do_check_true(ctypes.Int64.prototype.hasOwnProperty("toString"));
-  do_check_true(ctypes.Int64.prototype.hasOwnProperty("toSource"));
+  Assert.ok(ctypes.Int64.hasOwnProperty("compare"));
+  Assert.ok(ctypes.Int64.hasOwnProperty("lo"));
+  Assert.ok(ctypes.Int64.hasOwnProperty("hi"));
+  Assert.ok(ctypes.Int64.hasOwnProperty("join"));
+  Assert.ok(ctypes.Int64.prototype.hasOwnProperty("toString"));
+  Assert.ok(ctypes.Int64.prototype.hasOwnProperty("toSource"));
 
   // Check that the shared functions on ctypes.Int64.prototype throw.
   do_check_throws(function() { ctypes.Int64.prototype.toString(); }, TypeError);
   do_check_throws(function() { ctypes.Int64.prototype.toSource(); }, TypeError);
 
   let int64 = ctypes.Int64(0);
-  do_check_true(int64.__proto__ === ctypes.Int64.prototype);
-  do_check_true(int64 instanceof ctypes.Int64);
+  Assert.ok(int64.__proto__ === ctypes.Int64.prototype);
+  Assert.ok(int64 instanceof ctypes.Int64);
 
   // Test Int64.toString([radix]).
-  do_check_eq(int64.toString(), "0");
+  Assert.equal(int64.toString(), "0");
   for (let radix = 2; radix <= 36; ++radix)
-    do_check_eq(int64.toString(radix), "0");
+    Assert.equal(int64.toString(radix), "0");
   do_check_throws(function() { int64.toString(0); }, RangeError);
   do_check_throws(function() { int64.toString(1); }, RangeError);
   do_check_throws(function() { int64.toString(37); }, RangeError);
   do_check_throws(function() { int64.toString(10, 2); }, TypeError);
 
   // Test Int64.toSource().
-  do_check_eq(int64.toSource(), "ctypes.Int64(\"0\")");
+  Assert.equal(int64.toSource(), "ctypes.Int64(\"0\")");
   do_check_throws(function() { int64.toSource(10); }, TypeError);
 
   int64 = ctypes.Int64("0x28590a1c921def71");
-  do_check_eq(int64.toString(), int64.toString(10));
-  do_check_eq(int64.toString(10), "2907366152271163249");
-  do_check_eq(int64.toString(16), "28590a1c921def71");
-  do_check_eq(int64.toString(2), "10100001011001000010100001110010010010000111011110111101110001");
-  do_check_eq(int64.toSource(), "ctypes.Int64(\"" + int64.toString(10) + "\")");
+  Assert.equal(int64.toString(), int64.toString(10));
+  Assert.equal(int64.toString(10), "2907366152271163249");
+  Assert.equal(int64.toString(16), "28590a1c921def71");
+  Assert.equal(int64.toString(2), "10100001011001000010100001110010010010000111011110111101110001");
+  Assert.equal(int64.toSource(), "ctypes.Int64(\"" + int64.toString(10) + "\")");
 
   int64 = ctypes.Int64("-0x28590a1c921def71");
-  do_check_eq(int64.toString(), int64.toString(10));
-  do_check_eq(int64.toString(10), "-2907366152271163249");
-  do_check_eq(int64.toString(16), "-28590a1c921def71");
-  do_check_eq(int64.toString(2), "-10100001011001000010100001110010010010000111011110111101110001");
-  do_check_eq(int64.toSource(), "ctypes.Int64(\"" + int64.toString(10) + "\")");
+  Assert.equal(int64.toString(), int64.toString(10));
+  Assert.equal(int64.toString(10), "-2907366152271163249");
+  Assert.equal(int64.toString(16), "-28590a1c921def71");
+  Assert.equal(int64.toString(2), "-10100001011001000010100001110010010010000111011110111101110001");
+  Assert.equal(int64.toSource(), "ctypes.Int64(\"" + int64.toString(10) + "\")");
 
   int64 = ctypes.Int64("-0X28590A1c921DEf71");
-  do_check_eq(int64.toString(), int64.toString(10));
-  do_check_eq(int64.toString(10), "-2907366152271163249");
-  do_check_eq(int64.toString(16), "-28590a1c921def71");
-  do_check_eq(int64.toString(2), "-10100001011001000010100001110010010010000111011110111101110001");
-  do_check_eq(int64.toSource(), "ctypes.Int64(\"" + int64.toString(10) + "\")");
+  Assert.equal(int64.toString(), int64.toString(10));
+  Assert.equal(int64.toString(10), "-2907366152271163249");
+  Assert.equal(int64.toString(16), "-28590a1c921def71");
+  Assert.equal(int64.toString(2), "-10100001011001000010100001110010010010000111011110111101110001");
+  Assert.equal(int64.toSource(), "ctypes.Int64(\"" + int64.toString(10) + "\")");
 
   // Test Int64(primitive double) constructor.
   int64 = ctypes.Int64(-0);
-  do_check_eq(int64.toString(), "0");
+  Assert.equal(int64.toString(), "0");
 
   int64 = ctypes.Int64(0x7ffffffffffff000);
-  do_check_eq(int64.toString(), int64.toString(10));
-  do_check_eq(int64.toString(10), "9223372036854771712");
-  do_check_eq(int64.toString(16), "7ffffffffffff000");
-  do_check_eq(int64.toString(2), "111111111111111111111111111111111111111111111111111000000000000");
+  Assert.equal(int64.toString(), int64.toString(10));
+  Assert.equal(int64.toString(10), "9223372036854771712");
+  Assert.equal(int64.toString(16), "7ffffffffffff000");
+  Assert.equal(int64.toString(2), "111111111111111111111111111111111111111111111111111000000000000");
 
   int64 = ctypes.Int64(-0x8000000000000000);
-  do_check_eq(int64.toString(), int64.toString(10));
-  do_check_eq(int64.toString(10), "-9223372036854775808");
-  do_check_eq(int64.toString(16), "-8000000000000000");
-  do_check_eq(int64.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
+  Assert.equal(int64.toString(), int64.toString(10));
+  Assert.equal(int64.toString(10), "-9223372036854775808");
+  Assert.equal(int64.toString(16), "-8000000000000000");
+  Assert.equal(int64.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
 
   // Test Int64(string) constructor.
   int64 = ctypes.Int64("0x7fffffffffffffff");
-  do_check_eq(int64.toString(), int64.toString(10));
-  do_check_eq(int64.toString(10), "9223372036854775807");
-  do_check_eq(int64.toString(16), "7fffffffffffffff");
-  do_check_eq(int64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
+  Assert.equal(int64.toString(), int64.toString(10));
+  Assert.equal(int64.toString(10), "9223372036854775807");
+  Assert.equal(int64.toString(16), "7fffffffffffffff");
+  Assert.equal(int64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
 
   int64 = ctypes.Int64("-0x8000000000000000");
-  do_check_eq(int64.toString(), int64.toString(10));
-  do_check_eq(int64.toString(10), "-9223372036854775808");
-  do_check_eq(int64.toString(16), "-8000000000000000");
-  do_check_eq(int64.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
+  Assert.equal(int64.toString(), int64.toString(10));
+  Assert.equal(int64.toString(10), "-9223372036854775808");
+  Assert.equal(int64.toString(16), "-8000000000000000");
+  Assert.equal(int64.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
 
   int64 = ctypes.Int64("9223372036854775807");
-  do_check_eq(int64.toString(), int64.toString(10));
-  do_check_eq(int64.toString(10), "9223372036854775807");
-  do_check_eq(int64.toString(16), "7fffffffffffffff");
-  do_check_eq(int64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
+  Assert.equal(int64.toString(), int64.toString(10));
+  Assert.equal(int64.toString(10), "9223372036854775807");
+  Assert.equal(int64.toString(16), "7fffffffffffffff");
+  Assert.equal(int64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
 
   int64 = ctypes.Int64("-9223372036854775808");
-  do_check_eq(int64.toString(), int64.toString(10));
-  do_check_eq(int64.toString(10), "-9223372036854775808");
-  do_check_eq(int64.toString(16), "-8000000000000000");
-  do_check_eq(int64.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
+  Assert.equal(int64.toString(), int64.toString(10));
+  Assert.equal(int64.toString(10), "-9223372036854775808");
+  Assert.equal(int64.toString(16), "-8000000000000000");
+  Assert.equal(int64.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
 
   // Test Int64(other Int64) constructor.
   int64 = ctypes.Int64(ctypes.Int64(0));
-  do_check_eq(int64.toString(), "0");
+  Assert.equal(int64.toString(), "0");
 
   int64 = ctypes.Int64(ctypes.Int64("0x7fffffffffffffff"));
-  do_check_eq(int64.toString(), int64.toString(10));
-  do_check_eq(int64.toString(10), "9223372036854775807");
-  do_check_eq(int64.toString(16), "7fffffffffffffff");
-  do_check_eq(int64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
+  Assert.equal(int64.toString(), int64.toString(10));
+  Assert.equal(int64.toString(10), "9223372036854775807");
+  Assert.equal(int64.toString(16), "7fffffffffffffff");
+  Assert.equal(int64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
 
   int64 = ctypes.Int64(ctypes.Int64("-0x8000000000000000"));
-  do_check_eq(int64.toString(), int64.toString(10));
-  do_check_eq(int64.toString(10), "-9223372036854775808");
-  do_check_eq(int64.toString(16), "-8000000000000000");
-  do_check_eq(int64.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
+  Assert.equal(int64.toString(), int64.toString(10));
+  Assert.equal(int64.toString(10), "-9223372036854775808");
+  Assert.equal(int64.toString(16), "-8000000000000000");
+  Assert.equal(int64.toString(2), "-1000000000000000000000000000000000000000000000000000000000000000");
 
   // Test Int64(other UInt64) constructor.
   int64 = ctypes.Int64(ctypes.UInt64(0));
-  do_check_eq(int64.toString(), "0");
+  Assert.equal(int64.toString(), "0");
 
   int64 = ctypes.Int64(ctypes.UInt64("0x7fffffffffffffff"));
-  do_check_eq(int64.toString(), int64.toString(10));
-  do_check_eq(int64.toString(10), "9223372036854775807");
-  do_check_eq(int64.toString(16), "7fffffffffffffff");
-  do_check_eq(int64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
+  Assert.equal(int64.toString(), int64.toString(10));
+  Assert.equal(int64.toString(10), "9223372036854775807");
+  Assert.equal(int64.toString(16), "7fffffffffffffff");
+  Assert.equal(int64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
 
   let vals = [-0x8000000000001000, 0x8000000000000000,
               ctypes.UInt64("0x8000000000000000"),
@@ -422,31 +422,31 @@ function run_Int64_tests() {
     do_check_throws(function() { ctypes.Int64(vals[i]); }, RangeError);
 
   // Test ctypes.Int64.compare.
-  do_check_eq(ctypes.Int64.compare(ctypes.Int64(5), ctypes.Int64(5)), 0);
-  do_check_eq(ctypes.Int64.compare(ctypes.Int64(5), ctypes.Int64(4)), 1);
-  do_check_eq(ctypes.Int64.compare(ctypes.Int64(4), ctypes.Int64(5)), -1);
-  do_check_eq(ctypes.Int64.compare(ctypes.Int64(-5), ctypes.Int64(-5)), 0);
-  do_check_eq(ctypes.Int64.compare(ctypes.Int64(-5), ctypes.Int64(-4)), -1);
-  do_check_eq(ctypes.Int64.compare(ctypes.Int64(-4), ctypes.Int64(-5)), 1);
+  Assert.equal(ctypes.Int64.compare(ctypes.Int64(5), ctypes.Int64(5)), 0);
+  Assert.equal(ctypes.Int64.compare(ctypes.Int64(5), ctypes.Int64(4)), 1);
+  Assert.equal(ctypes.Int64.compare(ctypes.Int64(4), ctypes.Int64(5)), -1);
+  Assert.equal(ctypes.Int64.compare(ctypes.Int64(-5), ctypes.Int64(-5)), 0);
+  Assert.equal(ctypes.Int64.compare(ctypes.Int64(-5), ctypes.Int64(-4)), -1);
+  Assert.equal(ctypes.Int64.compare(ctypes.Int64(-4), ctypes.Int64(-5)), 1);
   do_check_throws(function() { ctypes.Int64.compare(ctypes.Int64(4), ctypes.UInt64(4)); }, TypeError);
   do_check_throws(function() { ctypes.Int64.compare(4, 5); }, TypeError);
 
   // Test ctypes.Int64.{lo,hi}.
-  do_check_eq(ctypes.Int64.lo(ctypes.Int64(0x28590a1c921de000)), 0x921de000);
-  do_check_eq(ctypes.Int64.hi(ctypes.Int64(0x28590a1c921de000)), 0x28590a1c);
-  do_check_eq(ctypes.Int64.lo(ctypes.Int64(-0x28590a1c921de000)), 0x6de22000);
-  do_check_eq(ctypes.Int64.hi(ctypes.Int64(-0x28590a1c921de000)), -0x28590a1d);
+  Assert.equal(ctypes.Int64.lo(ctypes.Int64(0x28590a1c921de000)), 0x921de000);
+  Assert.equal(ctypes.Int64.hi(ctypes.Int64(0x28590a1c921de000)), 0x28590a1c);
+  Assert.equal(ctypes.Int64.lo(ctypes.Int64(-0x28590a1c921de000)), 0x6de22000);
+  Assert.equal(ctypes.Int64.hi(ctypes.Int64(-0x28590a1c921de000)), -0x28590a1d);
   do_check_throws(function() { ctypes.Int64.lo(ctypes.UInt64(0)); }, TypeError);
   do_check_throws(function() { ctypes.Int64.hi(ctypes.UInt64(0)); }, TypeError);
   do_check_throws(function() { ctypes.Int64.lo(0); }, TypeError);
   do_check_throws(function() { ctypes.Int64.hi(0); }, TypeError);
 
   // Test ctypes.Int64.join.
-  do_check_eq(ctypes.Int64.join(0, 0).toString(), "0");
-  do_check_eq(ctypes.Int64.join(0x28590a1c, 0x921de000).toString(16), "28590a1c921de000");
-  do_check_eq(ctypes.Int64.join(-0x28590a1d, 0x6de22000).toString(16), "-28590a1c921de000");
-  do_check_eq(ctypes.Int64.join(0x7fffffff, 0xffffffff).toString(16), "7fffffffffffffff");
-  do_check_eq(ctypes.Int64.join(-0x80000000, 0x00000000).toString(16), "-8000000000000000");
+  Assert.equal(ctypes.Int64.join(0, 0).toString(), "0");
+  Assert.equal(ctypes.Int64.join(0x28590a1c, 0x921de000).toString(16), "28590a1c921de000");
+  Assert.equal(ctypes.Int64.join(-0x28590a1d, 0x6de22000).toString(16), "-28590a1c921de000");
+  Assert.equal(ctypes.Int64.join(0x7fffffff, 0xffffffff).toString(16), "7fffffffffffffff");
+  Assert.equal(ctypes.Int64.join(-0x80000000, 0x00000000).toString(16), "-8000000000000000");
   do_check_throws(function() { ctypes.Int64.join(-0x80000001, 0); }, TypeError);
   do_check_throws(function() { ctypes.Int64.join(0x80000000, 0); }, TypeError);
   do_check_throws(function() { ctypes.Int64.join(0, -0x1); }, TypeError);
@@ -456,108 +456,108 @@ function run_Int64_tests() {
 function run_UInt64_tests() {
   do_check_throws(function() { ctypes.UInt64(); }, TypeError);
 
-  do_check_true(ctypes.UInt64.hasOwnProperty("prototype"));
-  do_check_true(ctypes.UInt64.prototype.hasOwnProperty("constructor"));
-  do_check_true(ctypes.UInt64.prototype.constructor === ctypes.UInt64);
+  Assert.ok(ctypes.UInt64.hasOwnProperty("prototype"));
+  Assert.ok(ctypes.UInt64.prototype.hasOwnProperty("constructor"));
+  Assert.ok(ctypes.UInt64.prototype.constructor === ctypes.UInt64);
 
   // Check that ctypes.UInt64 and ctypes.UInt64.prototype have the correct
   // properties and functions.
-  do_check_true(ctypes.UInt64.hasOwnProperty("compare"));
-  do_check_true(ctypes.UInt64.hasOwnProperty("lo"));
-  do_check_true(ctypes.UInt64.hasOwnProperty("hi"));
-  do_check_true(ctypes.UInt64.hasOwnProperty("join"));
-  do_check_true(ctypes.UInt64.prototype.hasOwnProperty("toString"));
-  do_check_true(ctypes.UInt64.prototype.hasOwnProperty("toSource"));
+  Assert.ok(ctypes.UInt64.hasOwnProperty("compare"));
+  Assert.ok(ctypes.UInt64.hasOwnProperty("lo"));
+  Assert.ok(ctypes.UInt64.hasOwnProperty("hi"));
+  Assert.ok(ctypes.UInt64.hasOwnProperty("join"));
+  Assert.ok(ctypes.UInt64.prototype.hasOwnProperty("toString"));
+  Assert.ok(ctypes.UInt64.prototype.hasOwnProperty("toSource"));
 
   // Check that the shared functions on ctypes.UInt64.prototype throw.
   do_check_throws(function() { ctypes.UInt64.prototype.toString(); }, TypeError);
   do_check_throws(function() { ctypes.UInt64.prototype.toSource(); }, TypeError);
 
   let uint64 = ctypes.UInt64(0);
-  do_check_true(uint64.__proto__ === ctypes.UInt64.prototype);
-  do_check_true(uint64 instanceof ctypes.UInt64);
+  Assert.ok(uint64.__proto__ === ctypes.UInt64.prototype);
+  Assert.ok(uint64 instanceof ctypes.UInt64);
 
   // Test UInt64.toString([radix]).
-  do_check_eq(uint64.toString(), "0");
+  Assert.equal(uint64.toString(), "0");
   for (let radix = 2; radix <= 36; ++radix)
-    do_check_eq(uint64.toString(radix), "0");
+    Assert.equal(uint64.toString(radix), "0");
   do_check_throws(function() { uint64.toString(0); }, RangeError);
   do_check_throws(function() { uint64.toString(1); }, RangeError);
   do_check_throws(function() { uint64.toString(37); }, RangeError);
   do_check_throws(function() { uint64.toString(10, 2); }, TypeError);
 
   // Test UInt64.toSource().
-  do_check_eq(uint64.toSource(), "ctypes.UInt64(\"0\")");
+  Assert.equal(uint64.toSource(), "ctypes.UInt64(\"0\")");
   do_check_throws(function() { uint64.toSource(10); }, TypeError);
 
   uint64 = ctypes.UInt64("0x28590a1c921def71");
-  do_check_eq(uint64.toString(), uint64.toString(10));
-  do_check_eq(uint64.toString(10), "2907366152271163249");
-  do_check_eq(uint64.toString(16), "28590a1c921def71");
-  do_check_eq(uint64.toString(2), "10100001011001000010100001110010010010000111011110111101110001");
-  do_check_eq(uint64.toSource(), "ctypes.UInt64(\"" + uint64.toString(10) + "\")");
+  Assert.equal(uint64.toString(), uint64.toString(10));
+  Assert.equal(uint64.toString(10), "2907366152271163249");
+  Assert.equal(uint64.toString(16), "28590a1c921def71");
+  Assert.equal(uint64.toString(2), "10100001011001000010100001110010010010000111011110111101110001");
+  Assert.equal(uint64.toSource(), "ctypes.UInt64(\"" + uint64.toString(10) + "\")");
 
   uint64 = ctypes.UInt64("0X28590A1c921DEf71");
-  do_check_eq(uint64.toString(), uint64.toString(10));
-  do_check_eq(uint64.toString(10), "2907366152271163249");
-  do_check_eq(uint64.toString(16), "28590a1c921def71");
-  do_check_eq(uint64.toString(2), "10100001011001000010100001110010010010000111011110111101110001");
-  do_check_eq(uint64.toSource(), "ctypes.UInt64(\"" + uint64.toString(10) + "\")");
+  Assert.equal(uint64.toString(), uint64.toString(10));
+  Assert.equal(uint64.toString(10), "2907366152271163249");
+  Assert.equal(uint64.toString(16), "28590a1c921def71");
+  Assert.equal(uint64.toString(2), "10100001011001000010100001110010010010000111011110111101110001");
+  Assert.equal(uint64.toSource(), "ctypes.UInt64(\"" + uint64.toString(10) + "\")");
 
   // Test UInt64(primitive double) constructor.
   uint64 = ctypes.UInt64(-0);
-  do_check_eq(uint64.toString(), "0");
+  Assert.equal(uint64.toString(), "0");
 
   uint64 = ctypes.UInt64(0xfffffffffffff000);
-  do_check_eq(uint64.toString(), uint64.toString(10));
-  do_check_eq(uint64.toString(10), "18446744073709547520");
-  do_check_eq(uint64.toString(16), "fffffffffffff000");
-  do_check_eq(uint64.toString(2), "1111111111111111111111111111111111111111111111111111000000000000");
+  Assert.equal(uint64.toString(), uint64.toString(10));
+  Assert.equal(uint64.toString(10), "18446744073709547520");
+  Assert.equal(uint64.toString(16), "fffffffffffff000");
+  Assert.equal(uint64.toString(2), "1111111111111111111111111111111111111111111111111111000000000000");
 
   // Test UInt64(string) constructor.
   uint64 = ctypes.UInt64("0xffffffffffffffff");
-  do_check_eq(uint64.toString(), uint64.toString(10));
-  do_check_eq(uint64.toString(10), "18446744073709551615");
-  do_check_eq(uint64.toString(16), "ffffffffffffffff");
-  do_check_eq(uint64.toString(2), "1111111111111111111111111111111111111111111111111111111111111111");
+  Assert.equal(uint64.toString(), uint64.toString(10));
+  Assert.equal(uint64.toString(10), "18446744073709551615");
+  Assert.equal(uint64.toString(16), "ffffffffffffffff");
+  Assert.equal(uint64.toString(2), "1111111111111111111111111111111111111111111111111111111111111111");
 
   uint64 = ctypes.UInt64("0x0");
-  do_check_eq(uint64.toString(), uint64.toString(10));
-  do_check_eq(uint64.toString(10), "0");
-  do_check_eq(uint64.toString(16), "0");
-  do_check_eq(uint64.toString(2), "0");
+  Assert.equal(uint64.toString(), uint64.toString(10));
+  Assert.equal(uint64.toString(10), "0");
+  Assert.equal(uint64.toString(16), "0");
+  Assert.equal(uint64.toString(2), "0");
 
   uint64 = ctypes.UInt64("18446744073709551615");
-  do_check_eq(uint64.toString(), uint64.toString(10));
-  do_check_eq(uint64.toString(10), "18446744073709551615");
-  do_check_eq(uint64.toString(16), "ffffffffffffffff");
-  do_check_eq(uint64.toString(2), "1111111111111111111111111111111111111111111111111111111111111111");
+  Assert.equal(uint64.toString(), uint64.toString(10));
+  Assert.equal(uint64.toString(10), "18446744073709551615");
+  Assert.equal(uint64.toString(16), "ffffffffffffffff");
+  Assert.equal(uint64.toString(2), "1111111111111111111111111111111111111111111111111111111111111111");
 
   uint64 = ctypes.UInt64("0");
-  do_check_eq(uint64.toString(), "0");
+  Assert.equal(uint64.toString(), "0");
 
   // Test UInt64(other UInt64) constructor.
   uint64 = ctypes.UInt64(ctypes.UInt64(0));
-  do_check_eq(uint64.toString(), "0");
+  Assert.equal(uint64.toString(), "0");
 
   uint64 = ctypes.UInt64(ctypes.UInt64("0xffffffffffffffff"));
-  do_check_eq(uint64.toString(), uint64.toString(10));
-  do_check_eq(uint64.toString(10), "18446744073709551615");
-  do_check_eq(uint64.toString(16), "ffffffffffffffff");
-  do_check_eq(uint64.toString(2), "1111111111111111111111111111111111111111111111111111111111111111");
+  Assert.equal(uint64.toString(), uint64.toString(10));
+  Assert.equal(uint64.toString(10), "18446744073709551615");
+  Assert.equal(uint64.toString(16), "ffffffffffffffff");
+  Assert.equal(uint64.toString(2), "1111111111111111111111111111111111111111111111111111111111111111");
 
   uint64 = ctypes.UInt64(ctypes.UInt64("0x0"));
-  do_check_eq(uint64.toString(), "0");
+  Assert.equal(uint64.toString(), "0");
 
   // Test UInt64(other Int64) constructor.
   uint64 = ctypes.UInt64(ctypes.Int64(0));
-  do_check_eq(uint64.toString(), "0");
+  Assert.equal(uint64.toString(), "0");
 
   uint64 = ctypes.UInt64(ctypes.Int64("0x7fffffffffffffff"));
-  do_check_eq(uint64.toString(), uint64.toString(10));
-  do_check_eq(uint64.toString(10), "9223372036854775807");
-  do_check_eq(uint64.toString(16), "7fffffffffffffff");
-  do_check_eq(uint64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
+  Assert.equal(uint64.toString(), uint64.toString(10));
+  Assert.equal(uint64.toString(10), "9223372036854775807");
+  Assert.equal(uint64.toString(16), "7fffffffffffffff");
+  Assert.equal(uint64.toString(2), "111111111111111111111111111111111111111111111111111111111111111");
 
   let vals = [-1, 0x10000000000000000, "-1", "-0x1",
               ctypes.Int64("-1"), Infinity, -Infinity, NaN, 0.1,
@@ -572,28 +572,28 @@ function run_UInt64_tests() {
     do_check_throws(function() { ctypes.UInt64(vals[i]); }, RangeError);
 
   // Test ctypes.UInt64.compare.
-  do_check_eq(ctypes.UInt64.compare(ctypes.UInt64(5), ctypes.UInt64(5)), 0);
-  do_check_eq(ctypes.UInt64.compare(ctypes.UInt64(5), ctypes.UInt64(4)), 1);
-  do_check_eq(ctypes.UInt64.compare(ctypes.UInt64(4), ctypes.UInt64(5)), -1);
+  Assert.equal(ctypes.UInt64.compare(ctypes.UInt64(5), ctypes.UInt64(5)), 0);
+  Assert.equal(ctypes.UInt64.compare(ctypes.UInt64(5), ctypes.UInt64(4)), 1);
+  Assert.equal(ctypes.UInt64.compare(ctypes.UInt64(4), ctypes.UInt64(5)), -1);
   do_check_throws(function() { ctypes.UInt64.compare(ctypes.UInt64(4), ctypes.Int64(4)); }, TypeError);
   do_check_throws(function() { ctypes.UInt64.compare(4, 5); }, TypeError);
 
   // Test ctypes.UInt64.{lo,hi}.
-  do_check_eq(ctypes.UInt64.lo(ctypes.UInt64(0x28590a1c921de000)), 0x921de000);
-  do_check_eq(ctypes.UInt64.hi(ctypes.UInt64(0x28590a1c921de000)), 0x28590a1c);
-  do_check_eq(ctypes.UInt64.lo(ctypes.UInt64(0xa8590a1c921de000)), 0x921de000);
-  do_check_eq(ctypes.UInt64.hi(ctypes.UInt64(0xa8590a1c921de000)), 0xa8590a1c);
+  Assert.equal(ctypes.UInt64.lo(ctypes.UInt64(0x28590a1c921de000)), 0x921de000);
+  Assert.equal(ctypes.UInt64.hi(ctypes.UInt64(0x28590a1c921de000)), 0x28590a1c);
+  Assert.equal(ctypes.UInt64.lo(ctypes.UInt64(0xa8590a1c921de000)), 0x921de000);
+  Assert.equal(ctypes.UInt64.hi(ctypes.UInt64(0xa8590a1c921de000)), 0xa8590a1c);
   do_check_throws(function() { ctypes.UInt64.lo(ctypes.Int64(0)); }, TypeError);
   do_check_throws(function() { ctypes.UInt64.hi(ctypes.Int64(0)); }, TypeError);
   do_check_throws(function() { ctypes.UInt64.lo(0); }, TypeError);
   do_check_throws(function() { ctypes.UInt64.hi(0); }, TypeError);
 
   // Test ctypes.UInt64.join.
-  do_check_eq(ctypes.UInt64.join(0, 0).toString(), "0");
-  do_check_eq(ctypes.UInt64.join(0x28590a1c, 0x921de000).toString(16), "28590a1c921de000");
-  do_check_eq(ctypes.UInt64.join(0xa8590a1c, 0x921de000).toString(16), "a8590a1c921de000");
-  do_check_eq(ctypes.UInt64.join(0xffffffff, 0xffffffff).toString(16), "ffffffffffffffff");
-  do_check_eq(ctypes.UInt64.join(0, 0).toString(16), "0");
+  Assert.equal(ctypes.UInt64.join(0, 0).toString(), "0");
+  Assert.equal(ctypes.UInt64.join(0x28590a1c, 0x921de000).toString(16), "28590a1c921de000");
+  Assert.equal(ctypes.UInt64.join(0xa8590a1c, 0x921de000).toString(16), "a8590a1c921de000");
+  Assert.equal(ctypes.UInt64.join(0xffffffff, 0xffffffff).toString(16), "ffffffffffffffff");
+  Assert.equal(ctypes.UInt64.join(0, 0).toString(16), "0");
   do_check_throws(function() { ctypes.UInt64.join(-0x1, 0); }, TypeError);
   do_check_throws(function() { ctypes.UInt64.join(0x100000000, 0); }, TypeError);
   do_check_throws(function() { ctypes.UInt64.join(0, -0x1); }, TypeError);
@@ -623,7 +623,7 @@ function run_basic_abi_tests(library, t, name, toprimitive,
                                       ctypes.char.ptr,
                                       ctypes.char.ptr);
     let hello = ctypes.char.array()("hello!");
-    do_check_eq(charupper(hello).readString(), "HELLO!");
+    Assert.equal(charupper(hello).readString(), "HELLO!");
   }
 
   // Check the alignment of the type, and its behavior in a struct,
@@ -631,7 +631,7 @@ function run_basic_abi_tests(library, t, name, toprimitive,
   check_struct_stats(library, t);
 
   // Check the ToSource functions defined in the namespace ABI
-  do_check_eq(ctypes.default_abi.toSource(), "ctypes.default_abi");
+  Assert.equal(ctypes.default_abi.toSource(), "ctypes.default_abi");
 
   let exn;
   try {
@@ -639,24 +639,24 @@ function run_basic_abi_tests(library, t, name, toprimitive,
   } catch (x) {
     exn = x;
   }
-  do_check_true(!!exn); // Check that some exception was raised
+  Assert.ok(!!exn); // Check that some exception was raised
 }
 
 function run_single_abi_tests(decl, abi, t, toprimitive,
                               get_test, set_tests, sum_tests, sum_many_tests) {
   let getter_t = ctypes.FunctionType(abi, t).ptr;
   let getter = decl(getter_t, "get_");
-  do_check_eq(toprimitive(getter()), get_test);
+  Assert.equal(toprimitive(getter()), get_test);
 
   let setter_t = ctypes.FunctionType(abi, t, [t]).ptr;
   let setter = decl(setter_t, "set_");
   for (let i of set_tests)
-    do_check_eq(toprimitive(setter(i)), i);
+    Assert.equal(toprimitive(setter(i)), i);
 
   let sum_t = ctypes.FunctionType(abi, t, [t, t]).ptr;
   let sum = decl(sum_t, "sum_");
   for (let a of sum_tests)
-    do_check_eq(toprimitive(sum(a[0], a[1])), a[2]);
+    Assert.equal(toprimitive(sum(a[0], a[1])), a[2]);
 
   let sum_alignb_t = ctypes.FunctionType(abi, t,
     [ctypes.char, t, ctypes.char, t, ctypes.char]).ptr;
@@ -665,17 +665,17 @@ function run_single_abi_tests(decl, abi, t, toprimitive,
     [ctypes.float, t, ctypes.float, t, ctypes.float]).ptr;
   let sum_alignf = decl(sum_alignf_t, "sum_alignf_");
   for (let a of sum_tests) {
-    do_check_eq(toprimitive(sum_alignb(0, a[0], 0, a[1], 0)), a[2]);
-    do_check_eq(toprimitive(sum_alignb(1, a[0], 1, a[1], 1)), a[2]);
-    do_check_eq(toprimitive(sum_alignf(0, a[0], 0, a[1], 0)), a[2]);
-    do_check_eq(toprimitive(sum_alignf(1, a[0], 1, a[1], 1)), a[2]);
+    Assert.equal(toprimitive(sum_alignb(0, a[0], 0, a[1], 0)), a[2]);
+    Assert.equal(toprimitive(sum_alignb(1, a[0], 1, a[1], 1)), a[2]);
+    Assert.equal(toprimitive(sum_alignf(0, a[0], 0, a[1], 0)), a[2]);
+    Assert.equal(toprimitive(sum_alignf(1, a[0], 1, a[1], 1)), a[2]);
   }
 
   let sum_many_t = ctypes.FunctionType(abi, t,
     [t, t, t, t, t, t, t, t, t, t, t, t, t, t, t, t, t, t]).ptr;
   let sum_many = decl(sum_many_t, "sum_many_");
   for (let a of sum_many_tests)
-    do_check_eq(
+    Assert.equal(
       toprimitive(sum_many(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7],
                            a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15],
                            a[16], a[17])), a[18]);
@@ -697,14 +697,14 @@ function check_struct_stats(library, t) {
   get_stats(align.address(), size.address(), nalign.address(), nsize.address(),
             offsets);
 
-  do_check_eq(size.value, s_t.size);
-  do_check_eq(align.value, s_t.size - t.size);
-  do_check_eq(align.value, offsetof(s_t, "y"));
-  do_check_eq(nsize.value, n_t.size);
-  do_check_eq(nalign.value, offsetof(n_t, "b"));
-  do_check_eq(offsets[0], offsetof(s_t, "y"));
-  do_check_eq(offsets[1], offsetof(n_t, "b"));
-  do_check_eq(offsets[2], offsetof(n_t, "c"));
+  Assert.equal(size.value, s_t.size);
+  Assert.equal(align.value, s_t.size - t.size);
+  Assert.equal(align.value, offsetof(s_t, "y"));
+  Assert.equal(nsize.value, n_t.size);
+  Assert.equal(nalign.value, offsetof(n_t, "b"));
+  Assert.equal(offsets[0], offsetof(s_t, "y"));
+  Assert.equal(offsets[1], offsetof(n_t, "b"));
+  Assert.equal(offsets[2], offsetof(n_t, "c"));
 }
 
 // Determine the offset, in bytes, of 'member' within 'struct'.
@@ -720,12 +720,12 @@ function offsetof(struct, member) {
 
 // Test the class and prototype hierarchy for a given basic type 't'.
 function run_basic_class_tests(t) {
-  do_check_true(t.__proto__ === ctypes.CType.prototype);
-  do_check_true(t instanceof ctypes.CType);
+  Assert.ok(t.__proto__ === ctypes.CType.prototype);
+  Assert.ok(t instanceof ctypes.CType);
 
-  do_check_true(t.prototype.__proto__ === ctypes.CData.prototype);
-  do_check_true(t.prototype instanceof ctypes.CData);
-  do_check_true(t.prototype.constructor === t);
+  Assert.ok(t.prototype.__proto__ === ctypes.CData.prototype);
+  Assert.ok(t.prototype instanceof ctypes.CData);
+  Assert.ok(t.prototype.constructor === t);
 
   // Check that the shared properties and functions on 't.prototype' throw.
   do_check_throws(function() { t.prototype.value; }, TypeError);
@@ -735,14 +735,14 @@ function run_basic_class_tests(t) {
 
   // toString and toSource are called by the web console during inspection,
   // so we don't want them to throw.
-  do_check_eq(t.prototype.toString(), "[CData proto object]");
-  do_check_eq(t.prototype.toSource(), "[CData proto object]");
+  Assert.equal(t.prototype.toString(), "[CData proto object]");
+  Assert.equal(t.prototype.toSource(), "[CData proto object]");
 
   // Test that an instance 'd' of 't' is a CData.
   let d = t();
-  do_check_true(d.__proto__ === t.prototype);
-  do_check_true(d instanceof t);
-  do_check_true(d.constructor === t);
+  Assert.ok(d.__proto__ === t.prototype);
+  Assert.ok(d instanceof t);
+  Assert.ok(d.constructor === t);
 }
 
 function run_bool_tests(library) {
@@ -750,27 +750,27 @@ function run_bool_tests(library) {
   run_basic_class_tests(t);
 
   let name = "bool";
-  do_check_eq(t.name, name);
-  do_check_true(t.size == 1 || t.size == 4);
+  Assert.equal(t.name, name);
+  Assert.ok(t.size == 1 || t.size == 4);
 
-  do_check_eq(t.toString(), "type " + name);
-  do_check_eq(t.toSource(), "ctypes." + name);
-  do_check_true(t.ptr === ctypes.PointerType(t));
-  do_check_eq(t.array().name, name + "[]");
-  do_check_eq(t.array(5).name, name + "[5]");
+  Assert.equal(t.toString(), "type " + name);
+  Assert.equal(t.toSource(), "ctypes." + name);
+  Assert.ok(t.ptr === ctypes.PointerType(t));
+  Assert.equal(t.array().name, name + "[]");
+  Assert.equal(t.array(5).name, name + "[5]");
 
   let d = t();
-  do_check_eq(d.value, 0);
+  Assert.equal(d.value, 0);
   d.value = 1;
-  do_check_eq(d.value, 1);
+  Assert.equal(d.value, 1);
   d.value = -0;
-  do_check_eq(1 / d.value, 1 / 0);
+  Assert.equal(1 / d.value, 1 / 0);
   d.value = false;
-  do_check_eq(d.value, 0);
+  Assert.equal(d.value, 0);
   d.value = true;
-  do_check_eq(d.value, 1);
+  Assert.equal(d.value, 1);
   d = new t(1);
-  do_check_eq(d.value, 1);
+  Assert.equal(d.value, 1);
 
   // don't convert anything else
   let vals = [-1, 2, Infinity, -Infinity, NaN, 0.1,
@@ -781,10 +781,10 @@ function run_bool_tests(library) {
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { d.value = vals[i]; }, TypeError);
 
-  do_check_true(d.address().constructor === t.ptr);
-  do_check_eq(d.address().contents, d.value);
-  do_check_eq(d.toSource(), "ctypes." + name + "(" + d.value + ")");
-  do_check_eq(d.toSource(), d.toString());
+  Assert.ok(d.address().constructor === t.ptr);
+  Assert.equal(d.address().contents, d.value);
+  Assert.equal(d.toSource(), "ctypes." + name + "(" + d.value + ")");
+  Assert.equal(d.toSource(), d.toString());
 
   // Test the function call ABI for calls involving the type,
   // and check the alignment of the type against what C says.
@@ -805,53 +805,53 @@ function run_bool_tests(library) {
 function run_integer_tests(library, t, name, size, signed, limits) {
   run_basic_class_tests(t);
 
-  do_check_eq(t.name, name);
-  do_check_eq(t.size, size);
+  Assert.equal(t.name, name);
+  Assert.equal(t.size, size);
 
-  do_check_eq(t.toString(), "type " + name);
-  do_check_eq(t.toSource(), "ctypes." + name);
-  do_check_true(t.ptr === ctypes.PointerType(t));
-  do_check_eq(t.array().name, name + "[]");
-  do_check_eq(t.array(5).name, name + "[5]");
+  Assert.equal(t.toString(), "type " + name);
+  Assert.equal(t.toSource(), "ctypes." + name);
+  Assert.ok(t.ptr === ctypes.PointerType(t));
+  Assert.equal(t.array().name, name + "[]");
+  Assert.equal(t.array(5).name, name + "[5]");
 
   // Check the alignment of the type, and its behavior in a struct,
   // against what C says.
   check_struct_stats(library, t);
 
   let d = t();
-  do_check_eq(d.value, 0);
+  Assert.equal(d.value, 0);
   d.value = 5;
-  do_check_eq(d.value, 5);
+  Assert.equal(d.value, 5);
   d = t(10);
-  do_check_eq(d.value, 10);
+  Assert.equal(d.value, 10);
   if (signed) {
     d.value = -10;
-    do_check_eq(d.value, -10);
+    Assert.equal(d.value, -10);
   }
   d = new t(20);
-  do_check_eq(d.value, 20);
+  Assert.equal(d.value, 20);
 
   d.value = ctypes.Int64(5);
-  do_check_eq(d.value, 5);
+  Assert.equal(d.value, 5);
   if (signed) {
     d.value = ctypes.Int64(-5);
-    do_check_eq(d.value, -5);
+    Assert.equal(d.value, -5);
   }
   d.value = ctypes.UInt64(5);
-  do_check_eq(d.value, 5);
+  Assert.equal(d.value, 5);
 
   d.value = limits[0];
-  do_check_eq(d.value, limits[0]);
+  Assert.equal(d.value, limits[0]);
   d.value = limits[1];
-  do_check_eq(d.value, limits[1]);
+  Assert.equal(d.value, limits[1]);
   d.value = 0;
-  do_check_eq(d.value, 0);
+  Assert.equal(d.value, 0);
   d.value = -0;
-  do_check_eq(1 / d.value, 1 / 0);
+  Assert.equal(1 / d.value, 1 / 0);
   d.value = false;
-  do_check_eq(d.value, 0);
+  Assert.equal(d.value, 0);
   d.value = true;
-  do_check_eq(d.value, 1);
+  Assert.equal(d.value, 1);
 
   // don't convert anything else
   let vals = [limits[0] - 1, limits[1] + 1, Infinity, -Infinity, NaN, 0.1,
@@ -861,10 +861,10 @@ function run_integer_tests(library, t, name, size, signed, limits) {
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { d.value = vals[i]; }, TypeError);
 
-  do_check_true(d.address().constructor === t.ptr);
-  do_check_eq(d.address().contents, d.value);
-  do_check_eq(d.toSource(), "ctypes." + name + "(" + d.value + ")");
-  do_check_eq(d.toSource(), d.toString());
+  Assert.ok(d.address().constructor === t.ptr);
+  Assert.equal(d.address().contents, d.value);
+  Assert.equal(d.toSource(), "ctypes." + name + "(" + d.value + ")");
+  Assert.equal(d.toSource(), d.toString());
 
   // Test the function call ABI for calls involving the type,
   // and check the alignment of the type against what C says.
@@ -886,27 +886,27 @@ function run_integer_tests(library, t, name, size, signed, limits) {
 function run_float_tests(library, t, name, size) {
   run_basic_class_tests(t);
 
-  do_check_eq(t.name, name);
-  do_check_eq(t.size, size);
+  Assert.equal(t.name, name);
+  Assert.equal(t.size, size);
 
-  do_check_eq(t.toString(), "type " + name);
-  do_check_eq(t.toSource(), "ctypes." + name);
-  do_check_true(t.ptr === ctypes.PointerType(t));
-  do_check_eq(t.array().name, name + "[]");
-  do_check_eq(t.array(5).name, name + "[5]");
+  Assert.equal(t.toString(), "type " + name);
+  Assert.equal(t.toSource(), "ctypes." + name);
+  Assert.ok(t.ptr === ctypes.PointerType(t));
+  Assert.equal(t.array().name, name + "[]");
+  Assert.equal(t.array(5).name, name + "[5]");
 
   let d = t();
-  do_check_eq(d.value, 0);
+  Assert.equal(d.value, 0);
   d.value = 5;
-  do_check_eq(d.value, 5);
+  Assert.equal(d.value, 5);
   d.value = 5.25;
-  do_check_eq(d.value, 5.25);
+  Assert.equal(d.value, 5.25);
   d = t(10);
-  do_check_eq(d.value, 10);
+  Assert.equal(d.value, 10);
   d.value = -10;
-  do_check_eq(d.value, -10);
+  Assert.equal(d.value, -10);
   d = new t(20);
-  do_check_eq(d.value, 20);
+  Assert.equal(d.value, 20);
 
   do_check_throws(function() { d.value = ctypes.Int64(5); }, TypeError);
   do_check_throws(function() { d.value = ctypes.Int64(-5); }, TypeError);
@@ -914,32 +914,32 @@ function run_float_tests(library, t, name, size) {
 
   if (size == 4) {
     d.value = 0x7fffff;
-    do_check_eq(d.value, 0x7fffff);
+    Assert.equal(d.value, 0x7fffff);
 
     // allow values that can't be represented precisely as a float
     d.value = 0xffffffff;
     let delta = 1 - d.value / 0xffffffff;
-    do_check_true(delta != 0);
-    do_check_true(delta > -0.01 && delta < 0.01);
+    Assert.ok(delta != 0);
+    Assert.ok(delta > -0.01 && delta < 0.01);
     d.value = 1 + 1 / 0x80000000;
-    do_check_eq(d.value, 1);
+    Assert.equal(d.value, 1);
   } else {
     d.value = 0xfffffffffffff000;
-    do_check_eq(d.value, 0xfffffffffffff000);
+    Assert.equal(d.value, 0xfffffffffffff000);
 
     do_check_throws(function() { d.value = ctypes.Int64("0x7fffffffffffffff"); }, TypeError);
   }
 
   d.value = Infinity;
-  do_check_eq(d.value, Infinity);
+  Assert.equal(d.value, Infinity);
   d.value = -Infinity;
-  do_check_eq(d.value, -Infinity);
+  Assert.equal(d.value, -Infinity);
   d.value = NaN;
-  do_check_true(isNaN(d.value));
+  Assert.ok(isNaN(d.value));
   d.value = 0;
-  do_check_eq(d.value, 0);
+  Assert.equal(d.value, 0);
   d.value = -0;
-  do_check_eq(1 / d.value, 1 / -0);
+  Assert.equal(1 / d.value, 1 / -0);
 
   // don't convert anything else
   let vals = [true, false, null, undefined, "", "0", {}, [], new Number(16),
@@ -953,18 +953,18 @@ function run_float_tests(library, t, name, size) {
     let f1 = tFn(val);
     // eslint-disable-next-line no-eval
     var f2 = eval(f1.toSource());
-    do_check_eq(f1.value, f2.value);
+    Assert.equal(f1.value, f2.value);
   }
   vals = [Infinity, -Infinity, -0, 0, 1, -1, 1 / 3, -1 / 3, 1 / 4, -1 / 4,
           1e-14, -1e-14, 0xfffffffffffff000, -0xfffffffffffff000];
   for (let i = 0; i < vals.length; i++)
     test_roundtrip(t, vals[i]);
-  do_check_eq(t(NaN).toSource(), t.toSource() + "(NaN)");
+  Assert.equal(t(NaN).toSource(), t.toSource() + "(NaN)");
 
-  do_check_true(d.address().constructor === t.ptr);
-  do_check_eq(d.address().contents, d.value);
-  do_check_eq(d.toSource(), "ctypes." + name + "(" + d.value + ")");
-  do_check_eq(d.toSource(), d.toString());
+  Assert.ok(d.address().constructor === t.ptr);
+  Assert.equal(d.address().contents, d.value);
+  Assert.equal(d.toSource(), "ctypes." + name + "(" + d.value + ")");
+  Assert.equal(d.toSource(), d.toString());
 
   // Test the function call ABI for calls involving the type,
   // and check the alignment of the type against what C says.
@@ -995,50 +995,50 @@ function run_float_tests(library, t, name, size) {
 function run_wrapped_integer_tests(library, t, name, size, signed, w, wname, limits) {
   run_basic_class_tests(t);
 
-  do_check_eq(t.name, name);
-  do_check_eq(t.size, size);
+  Assert.equal(t.name, name);
+  Assert.equal(t.size, size);
 
-  do_check_eq(t.toString(), "type " + name);
-  do_check_eq(t.toSource(), "ctypes." + name);
-  do_check_true(t.ptr === ctypes.PointerType(t));
-  do_check_eq(t.array().name, name + "[]");
-  do_check_eq(t.array(5).name, name + "[5]");
+  Assert.equal(t.toString(), "type " + name);
+  Assert.equal(t.toSource(), "ctypes." + name);
+  Assert.ok(t.ptr === ctypes.PointerType(t));
+  Assert.equal(t.array().name, name + "[]");
+  Assert.equal(t.array(5).name, name + "[5]");
 
   let d = t();
-  do_check_true(d.value instanceof w);
-  do_check_eq(d.value, 0);
+  Assert.ok(d.value instanceof w);
+  Assert.equal(d.value, 0);
   d.value = 5;
-  do_check_eq(d.value, 5);
+  Assert.equal(d.value, 5);
   d = t(10);
-  do_check_eq(d.value, 10);
+  Assert.equal(d.value, 10);
   if (signed) {
     d.value = -10;
-    do_check_eq(d.value, -10);
+    Assert.equal(d.value, -10);
   }
   d = new t(20);
-  do_check_eq(d.value, 20);
+  Assert.equal(d.value, 20);
 
   d.value = ctypes.Int64(5);
-  do_check_eq(d.value, 5);
+  Assert.equal(d.value, 5);
   if (signed) {
     d.value = ctypes.Int64(-5);
-    do_check_eq(d.value, -5);
+    Assert.equal(d.value, -5);
   }
   d.value = ctypes.UInt64(5);
-  do_check_eq(d.value, 5);
+  Assert.equal(d.value, 5);
 
   d.value = w(limits[0]);
-  do_check_eq(d.value, limits[0]);
+  Assert.equal(d.value, limits[0]);
   d.value = w(limits[1]);
-  do_check_eq(d.value, limits[1]);
+  Assert.equal(d.value, limits[1]);
   d.value = 0;
-  do_check_eq(d.value, 0);
+  Assert.equal(d.value, 0);
   d.value = -0;
-  do_check_eq(1 / d.value, 1 / 0);
+  Assert.equal(1 / d.value, 1 / 0);
   d.value = false;
-  do_check_eq(d.value, 0);
+  Assert.equal(d.value, 0);
   d.value = true;
-  do_check_eq(d.value, 1);
+  Assert.equal(d.value, 1);
 
   // don't convert anything else
   let vals = [limits[2], limits[3], Infinity, -Infinity, NaN, 0.1,
@@ -1048,10 +1048,10 @@ function run_wrapped_integer_tests(library, t, name, size, signed, w, wname, lim
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { d.value = vals[i]; }, TypeError);
 
-  do_check_true(d.address().constructor === t.ptr);
-  do_check_eq(d.address().contents.toString(), d.value.toString());
-  do_check_eq(d.toSource(), "ctypes." + name + "(" + wname + "(\"" + d.value + "\"))");
-  do_check_eq(d.toSource(), d.toString());
+  Assert.ok(d.address().constructor === t.ptr);
+  Assert.equal(d.address().contents.toString(), d.value.toString());
+  Assert.equal(d.toSource(), "ctypes." + name + "(" + wname + "(\"" + d.value + "\"))");
+  Assert.equal(d.toSource(), d.toString());
 
   // Test the function call ABI for calls involving the type,
   // and check the alignment of the type against what C says.
@@ -1073,53 +1073,53 @@ function run_wrapped_integer_tests(library, t, name, size, signed, w, wname, lim
 function run_char_tests(library, t, name, size, signed, limits) {
   run_basic_class_tests(t);
 
-  do_check_eq(t.name, name);
-  do_check_eq(t.size, size);
+  Assert.equal(t.name, name);
+  Assert.equal(t.size, size);
 
-  do_check_eq(t.toString(), "type " + name);
-  do_check_eq(t.toSource(), "ctypes." + name);
-  do_check_true(t.ptr === ctypes.PointerType(t));
-  do_check_eq(t.array().name, name + "[]");
-  do_check_eq(t.array(5).name, name + "[5]");
+  Assert.equal(t.toString(), "type " + name);
+  Assert.equal(t.toSource(), "ctypes." + name);
+  Assert.ok(t.ptr === ctypes.PointerType(t));
+  Assert.equal(t.array().name, name + "[]");
+  Assert.equal(t.array(5).name, name + "[5]");
 
   let d = t();
-  do_check_eq(d.value, 0);
+  Assert.equal(d.value, 0);
   d.value = 5;
-  do_check_eq(d.value, 5);
+  Assert.equal(d.value, 5);
   d = t(10);
-  do_check_eq(d.value, 10);
+  Assert.equal(d.value, 10);
   if (signed) {
     d.value = -10;
-    do_check_eq(d.value, -10);
+    Assert.equal(d.value, -10);
   } else {
     do_check_throws(function() { d.value = -10; }, TypeError);
   }
   d = new t(20);
-  do_check_eq(d.value, 20);
+  Assert.equal(d.value, 20);
 
   function toprimitive(a) { return a; }
 
   d.value = ctypes.Int64(5);
-  do_check_eq(d.value, 5);
+  Assert.equal(d.value, 5);
   if (signed) {
     d.value = ctypes.Int64(-10);
-    do_check_eq(d.value, -10);
+    Assert.equal(d.value, -10);
   }
   d.value = ctypes.UInt64(5);
-  do_check_eq(d.value, 5);
+  Assert.equal(d.value, 5);
 
   d.value = limits[0];
-  do_check_eq(d.value, limits[0]);
+  Assert.equal(d.value, limits[0]);
   d.value = limits[1];
-  do_check_eq(d.value, limits[1]);
+  Assert.equal(d.value, limits[1]);
   d.value = 0;
-  do_check_eq(d.value, 0);
+  Assert.equal(d.value, 0);
   d.value = -0;
-  do_check_eq(1 / d.value, 1 / 0);
+  Assert.equal(1 / d.value, 1 / 0);
   d.value = false;
-  do_check_eq(d.value, 0);
+  Assert.equal(d.value, 0);
   d.value = true;
-  do_check_eq(d.value, 1);
+  Assert.equal(d.value, 1);
 
   do_check_throws(function() { d.value = "5"; }, TypeError);
 
@@ -1131,23 +1131,23 @@ function run_char_tests(library, t, name, size, signed, limits) {
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { d.value = vals[i]; }, TypeError);
 
-  do_check_true(d.address().constructor === t.ptr);
-  do_check_eq(d.address().contents, 1);
-  do_check_eq(d.toSource(), "ctypes." + name + "(" + d.value + ")");
-  do_check_eq(d.toSource(), d.toString());
+  Assert.ok(d.address().constructor === t.ptr);
+  Assert.equal(d.address().contents, 1);
+  Assert.equal(d.toSource(), "ctypes." + name + "(" + d.value + ")");
+  Assert.equal(d.toSource(), d.toString());
 
   // Test string autoconversion (and lack thereof).
   let literal = "autoconverted";
   let s = t.array()(literal);
-  do_check_eq(s.readString(), literal);
-  do_check_eq(s.constructor.length, literal.length + 1);
+  Assert.equal(s.readString(), literal);
+  Assert.equal(s.constructor.length, literal.length + 1);
   s = t.array(50)(literal);
-  do_check_eq(s.readString(), literal);
+  Assert.equal(s.readString(), literal);
   do_check_throws(function() { t.array(3)(literal); }, TypeError);
 
   do_check_throws(function() { t.ptr(literal); }, TypeError);
   let p = t.ptr(s);
-  do_check_eq(p.readString(), literal);
+  Assert.equal(p.readString(), literal);
 
   // Test the function call ABI for calls involving the type,
   // and check the alignment of the type against what C says.
@@ -1168,52 +1168,52 @@ function run_char_tests(library, t, name, size, signed, limits) {
 function run_char16_tests(library, t, name, limits) {
   run_basic_class_tests(t);
 
-  do_check_eq(t.name, name);
-  do_check_eq(t.size, 2);
+  Assert.equal(t.name, name);
+  Assert.equal(t.size, 2);
 
-  do_check_eq(t.toString(), "type " + name);
-  do_check_eq(t.toSource(), "ctypes." + name);
-  do_check_true(t.ptr === ctypes.PointerType(t));
-  do_check_eq(t.array().name, name + "[]");
-  do_check_eq(t.array(5).name, name + "[5]");
+  Assert.equal(t.toString(), "type " + name);
+  Assert.equal(t.toSource(), "ctypes." + name);
+  Assert.ok(t.ptr === ctypes.PointerType(t));
+  Assert.equal(t.array().name, name + "[]");
+  Assert.equal(t.array(5).name, name + "[5]");
 
   function toprimitive(a) { return a.charCodeAt(0); }
 
   let d = t();
-  do_check_eq(d.value.length, 1);
-  do_check_eq(toprimitive(d.value), 0);
+  Assert.equal(d.value.length, 1);
+  Assert.equal(toprimitive(d.value), 0);
   d.value = 5;
-  do_check_eq(d.value.length, 1);
-  do_check_eq(toprimitive(d.value), 5);
+  Assert.equal(d.value.length, 1);
+  Assert.equal(toprimitive(d.value), 5);
   d = t(10);
-  do_check_eq(toprimitive(d.value), 10);
+  Assert.equal(toprimitive(d.value), 10);
   do_check_throws(function() { d.value = -10; }, TypeError);
   d = new t(20);
-  do_check_eq(toprimitive(d.value), 20);
+  Assert.equal(toprimitive(d.value), 20);
 
   d.value = ctypes.Int64(5);
-  do_check_eq(d.value.charCodeAt(0), 5);
+  Assert.equal(d.value.charCodeAt(0), 5);
   do_check_throws(function() { d.value = ctypes.Int64(-10); }, TypeError);
   d.value = ctypes.UInt64(5);
-  do_check_eq(d.value.charCodeAt(0), 5);
+  Assert.equal(d.value.charCodeAt(0), 5);
 
   d.value = limits[0];
-  do_check_eq(toprimitive(d.value), limits[0]);
+  Assert.equal(toprimitive(d.value), limits[0]);
   d.value = limits[1];
-  do_check_eq(toprimitive(d.value), limits[1]);
+  Assert.equal(toprimitive(d.value), limits[1]);
   d.value = 0;
-  do_check_eq(toprimitive(d.value), 0);
+  Assert.equal(toprimitive(d.value), 0);
   d.value = -0;
-  do_check_eq(1 / toprimitive(d.value), 1 / 0);
+  Assert.equal(1 / toprimitive(d.value), 1 / 0);
   d.value = false;
-  do_check_eq(toprimitive(d.value), 0);
+  Assert.equal(toprimitive(d.value), 0);
   d.value = true;
-  do_check_eq(toprimitive(d.value), 1);
+  Assert.equal(toprimitive(d.value), 1);
 
   d.value = "\0";
-  do_check_eq(toprimitive(d.value), 0);
+  Assert.equal(toprimitive(d.value), 0);
   d.value = "a";
-  do_check_eq(d.value, "a");
+  Assert.equal(d.value, "a");
 
   // don't convert anything else
   let vals = [limits[0] - 1, limits[1] + 1, Infinity, -Infinity, NaN, 0.1,
@@ -1223,23 +1223,23 @@ function run_char16_tests(library, t, name, limits) {
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { d.value = vals[i]; }, TypeError);
 
-  do_check_true(d.address().constructor === t.ptr);
-  do_check_eq(d.address().contents, "a");
-  do_check_eq(d.toSource(), "ctypes." + name + "(\"" + d.value + "\")");
-  do_check_eq(d.toSource(), d.toString());
+  Assert.ok(d.address().constructor === t.ptr);
+  Assert.equal(d.address().contents, "a");
+  Assert.equal(d.toSource(), "ctypes." + name + "(\"" + d.value + "\")");
+  Assert.equal(d.toSource(), d.toString());
 
   // Test string autoconversion (and lack thereof).
   let literal = "autoconverted";
   let s = t.array()(literal);
-  do_check_eq(s.readString(), literal);
-  do_check_eq(s.constructor.length, literal.length + 1);
+  Assert.equal(s.readString(), literal);
+  Assert.equal(s.constructor.length, literal.length + 1);
   s = t.array(50)(literal);
-  do_check_eq(s.readString(), literal);
+  Assert.equal(s.readString(), literal);
   do_check_throws(function() { t.array(3)(literal); }, TypeError);
 
   do_check_throws(function() { t.ptr(literal); }, TypeError);
   let p = t.ptr(s);
-  do_check_eq(p.readString(), literal);
+  Assert.equal(p.readString(), literal);
 
   // Test the function call ABI for calls involving the type,
   // and check the alignment of the type against what C says.
@@ -1259,15 +1259,15 @@ function run_char16_tests(library, t, name, limits) {
 
 // Test the class and prototype hierarchy for a given type constructor 'c'.
 function run_type_ctor_class_tests(c, t, t2, props = [], fns = [], instanceProps = [], instanceFns = [], specialProps = []) {
-  do_check_true(c.prototype.__proto__ === ctypes.CType.prototype);
-  do_check_true(c.prototype instanceof ctypes.CType);
-  do_check_true(c.prototype.constructor === c);
+  Assert.ok(c.prototype.__proto__ === ctypes.CType.prototype);
+  Assert.ok(c.prototype instanceof ctypes.CType);
+  Assert.ok(c.prototype.constructor === c);
 
   // Check that 'c.prototype' has the correct properties and functions.
   for (let p of props)
-    do_check_true(c.prototype.hasOwnProperty(p));
+    Assert.ok(c.prototype.hasOwnProperty(p));
   for (let f of fns)
-    do_check_true(c.prototype.hasOwnProperty(f));
+    Assert.ok(c.prototype.hasOwnProperty(f));
 
   // Check that the shared properties and functions on 'c.prototype' throw.
   for (let p of props)
@@ -1275,27 +1275,27 @@ function run_type_ctor_class_tests(c, t, t2, props = [], fns = [], instanceProps
   for (let f of fns)
     do_check_throws(function() { c.prototype[f](); }, TypeError);
 
-  do_check_true(t.__proto__ === c.prototype);
-  do_check_true(t instanceof c);
+  Assert.ok(t.__proto__ === c.prototype);
+  Assert.ok(t instanceof c);
 
   // 't.prototype.__proto__' is the common ancestor of all types constructed
   // from 'c'; while not available from 'c' directly, it should be identically
   // equal to 't2.prototype.__proto__' where 't2' is a different CType
   // constructed from 'c'.
-  do_check_true(t.prototype.__proto__ === t2.prototype.__proto__);
+  Assert.ok(t.prototype.__proto__ === t2.prototype.__proto__);
   if (t instanceof ctypes.FunctionType)
-    do_check_true(t.prototype.__proto__.__proto__ === ctypes.PointerType.prototype.prototype);
+    Assert.ok(t.prototype.__proto__.__proto__ === ctypes.PointerType.prototype.prototype);
   else
-    do_check_true(t.prototype.__proto__.__proto__ === ctypes.CData.prototype);
-  do_check_true(t.prototype instanceof ctypes.CData);
-  do_check_true(t.prototype.constructor === t);
+    Assert.ok(t.prototype.__proto__.__proto__ === ctypes.CData.prototype);
+  Assert.ok(t.prototype instanceof ctypes.CData);
+  Assert.ok(t.prototype.constructor === t);
 
   // Check that 't.prototype.__proto__' has the correct properties and
   // functions.
   for (let p of instanceProps)
-    do_check_true(t.prototype.__proto__.hasOwnProperty(p));
+    Assert.ok(t.prototype.__proto__.hasOwnProperty(p));
   for (let f of instanceFns)
-    do_check_true(t.prototype.__proto__.hasOwnProperty(f));
+    Assert.ok(t.prototype.__proto__.hasOwnProperty(f));
 
   // Check that the shared properties and functions on 't.prototype.__proto__'
   // (and thus also 't.prototype') throw.
@@ -1310,7 +1310,7 @@ function run_type_ctor_class_tests(c, t, t2, props = [], fns = [], instanceProps
 
   // Check that 't.prototype' has the correct special properties.
   for (let p of specialProps)
-    do_check_true(t.prototype.hasOwnProperty(p));
+    Assert.ok(t.prototype.hasOwnProperty(p));
 
   // Check that the shared special properties on 't.prototype' throw.
   for (let p of specialProps)
@@ -1318,16 +1318,16 @@ function run_type_ctor_class_tests(c, t, t2, props = [], fns = [], instanceProps
 
   // Make sure we can access 'prototype' on a CTypeProto.
   if (t instanceof ctypes.FunctionType)
-    do_check_true(Object.getPrototypeOf(c.prototype.prototype) === ctypes.PointerType.prototype.prototype);
+    Assert.ok(Object.getPrototypeOf(c.prototype.prototype) === ctypes.PointerType.prototype.prototype);
   else
-    do_check_true(Object.getPrototypeOf(c.prototype.prototype) === ctypes.CType.prototype.prototype);
+    Assert.ok(Object.getPrototypeOf(c.prototype.prototype) === ctypes.CType.prototype.prototype);
 
   // Test that an instance 'd' of 't' is a CData.
   if (t.__proto__ != ctypes.FunctionType.prototype) {
     let d = t();
-    do_check_true(d.__proto__ === t.prototype);
-    do_check_true(d instanceof t);
-    do_check_true(d.constructor === t);
+    Assert.ok(d.__proto__ === t.prototype);
+    Assert.ok(d instanceof t);
+    Assert.ok(d.constructor === t);
   }
 }
 
@@ -1367,23 +1367,23 @@ function run_StructType_tests() {
 
   // Check that opaque structs work.
   let opaque_t = ctypes.StructType("a");
-  do_check_eq(opaque_t.name, "a");
-  do_check_eq(opaque_t.toString(), "type a");
-  do_check_eq(opaque_t.toSource(), 'ctypes.StructType("a")');
-  do_check_true(opaque_t.prototype === undefined);
-  do_check_true(opaque_t.fields === undefined);
-  do_check_true(opaque_t.size === undefined);
+  Assert.equal(opaque_t.name, "a");
+  Assert.equal(opaque_t.toString(), "type a");
+  Assert.equal(opaque_t.toSource(), 'ctypes.StructType("a")');
+  Assert.ok(opaque_t.prototype === undefined);
+  Assert.ok(opaque_t.fields === undefined);
+  Assert.ok(opaque_t.size === undefined);
   do_check_throws(function() { opaque_t(); }, Error);
   let opaqueptr_t = opaque_t.ptr;
-  do_check_true(opaqueptr_t.targetType === opaque_t);
-  do_check_eq(opaqueptr_t.name, "a*");
-  do_check_eq(opaqueptr_t.toString(), "type a*");
-  do_check_eq(opaqueptr_t.toSource(), 'ctypes.StructType("a").ptr');
+  Assert.ok(opaqueptr_t.targetType === opaque_t);
+  Assert.equal(opaqueptr_t.name, "a*");
+  Assert.equal(opaqueptr_t.toString(), "type a*");
+  Assert.equal(opaqueptr_t.toSource(), 'ctypes.StructType("a").ptr');
 
   // Check that type checking works with opaque structs.
   let opaqueptr = opaqueptr_t();
   opaqueptr.value = opaqueptr_t(1);
-  do_check_eq(ptrValue(opaqueptr), 1);
+  Assert.equal(ptrValue(opaqueptr), 1);
   do_check_throws(function() {
     opaqueptr.value = ctypes.StructType("a").ptr();
   }, TypeError);
@@ -1399,7 +1399,7 @@ function run_StructType_tests() {
   do_check_throws(function() {
     opaque_t.define([{ a: ctypes.int32_t }, { b: 0 }]);
   }, TypeError);
-  do_check_false(opaque_t.hasOwnProperty("prototype"));
+  Assert.ok(!opaque_t.hasOwnProperty("prototype"));
 
   // Check that circular references work with opaque structs...
   // but not crazy ones.
@@ -1409,40 +1409,40 @@ function run_StructType_tests() {
   let opaque = opaque_t();
   let circular = circular_t(opaque.address());
   opaque.b = circular;
-  do_check_eq(circular.a.toSource(), opaque.address().toSource());
-  do_check_eq(opaque.b.toSource(), circular.toSource());
+  Assert.equal(circular.a.toSource(), opaque.address().toSource());
+  Assert.equal(opaque.b.toSource(), circular.toSource());
 
   // Check that attempting to redefine a struct fails and if attempted, the
   // original definition is preserved.
   do_check_throws(function() {
     opaque_t.define([{ c: ctypes.int32_t.array(8) }]);
   }, Error);
-  do_check_eq(opaque_t.size, circular_t.size);
-  do_check_true(opaque_t.prototype.hasOwnProperty("b"));
-  do_check_false(opaque_t.prototype.hasOwnProperty("c"));
+  Assert.equal(opaque_t.size, circular_t.size);
+  Assert.ok(opaque_t.prototype.hasOwnProperty("b"));
+  Assert.ok(!opaque_t.prototype.hasOwnProperty("c"));
 
   // StructType size, alignment, and offset calculations have already been
   // checked for each basic type. We do not need to check them again.
   let name = "g_t";
   let g_t = ctypes.StructType(name, [{ a: ctypes.int32_t }, { b: ctypes.double }]);
-  do_check_eq(g_t.name, name);
+  Assert.equal(g_t.name, name);
 
-  do_check_eq(g_t.toString(), "type " + name);
-  do_check_eq(g_t.toSource(),
+  Assert.equal(g_t.toString(), "type " + name);
+  Assert.equal(g_t.toSource(),
     "ctypes.StructType(\"g_t\", [{ \"a\": ctypes.int32_t }, { \"b\": ctypes.double }])");
-  do_check_true(g_t.ptr === ctypes.PointerType(g_t));
-  do_check_eq(g_t.array().name, name + "[]");
-  do_check_eq(g_t.array(5).name, name + "[5]");
+  Assert.ok(g_t.ptr === ctypes.PointerType(g_t));
+  Assert.equal(g_t.array().name, name + "[]");
+  Assert.equal(g_t.array(5).name, name + "[5]");
 
   let s_t = new ctypes.StructType("s_t", [{ a: ctypes.int32_t }, { b: g_t }, { c: ctypes.int8_t }]);
 
   let fields = [{ a: ctypes.int32_t }, { b: ctypes.int8_t }, { c: g_t }, { d: ctypes.int8_t }];
   let t_t = new ctypes.StructType("t_t", fields);
-  do_check_eq(t_t.fields.length, 4);
-  do_check_true(t_t.fields[0].a === ctypes.int32_t);
-  do_check_true(t_t.fields[1].b === ctypes.int8_t);
-  do_check_true(t_t.fields[2].c === g_t);
-  do_check_true(t_t.fields[3].d === ctypes.int8_t);
+  Assert.equal(t_t.fields.length, 4);
+  Assert.ok(t_t.fields[0].a === ctypes.int32_t);
+  Assert.ok(t_t.fields[1].b === ctypes.int8_t);
+  Assert.ok(t_t.fields[2].c === g_t);
+  Assert.ok(t_t.fields[3].d === ctypes.int8_t);
 /* disabled temporarily per bug 598225.
   do_check_throws(function() { t_t.fields.z = 0; }, Error);
   do_check_throws(function() { t_t.fields[4] = 0; }, Error);
@@ -1456,7 +1456,7 @@ function run_StructType_tests() {
     // Test 1: overflow struct size + field padding + field size.
     let large_t = ctypes.StructType("large_t",
         [{"a": ctypes.int8_t.array(0xffffffff)}]);
-    do_check_eq(large_t.size, 0xffffffff);
+    Assert.equal(large_t.size, 0xffffffff);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": ctypes.int8_t}]);
     }, RangeError);
@@ -1465,7 +1465,7 @@ function run_StructType_tests() {
     // To do this, we use a struct with maximum size and alignment 2.
     large_t = ctypes.StructType("large_t",
       [{"a": ctypes.int16_t.array(0xfffffffe / 2)}]);
-    do_check_eq(large_t.size, 0xfffffffe);
+    Assert.equal(large_t.size, 0xfffffffe);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": ctypes.int8_t}]);
     }, RangeError);
@@ -1474,7 +1474,7 @@ function run_StructType_tests() {
     // Test 1: overflow struct size when converting from size_t to jsdouble.
     let large_t = ctypes.StructType("large_t",
         [{"a": ctypes.int8_t.array(0xfffffffffffff800)}]);
-    do_check_eq(large_t.size, 0xfffffffffffff800);
+    Assert.equal(large_t.size, 0xfffffffffffff800);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": ctypes.int8_t}]);
     }, RangeError);
@@ -1485,7 +1485,7 @@ function run_StructType_tests() {
 
     large_t = ctypes.StructType("large_t",
       [{"a": ctypes.int8_t.array(0x1fffffffffffff)}]);
-    do_check_eq(large_t.size, 0x1fffffffffffff);
+    Assert.equal(large_t.size, 0x1fffffffffffff);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t.array(2)}, {"b": ctypes.int8_t}]);
     }, RangeError);
@@ -1501,7 +1501,7 @@ function run_StructType_tests() {
     // To do this, we use a struct with maximum size and alignment 2.
     large_t = ctypes.StructType("large_t",
       [{"a": ctypes.int16_t.array(0xfffffffffffff000 / 2)}]);
-    do_check_eq(large_t.size, 0xfffffffffffff000);
+    Assert.equal(large_t.size, 0xfffffffffffff000);
     small_t = ctypes.int8_t.array(0xfff);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": small_t}]);
@@ -1509,54 +1509,54 @@ function run_StructType_tests() {
   }
 
   let g = g_t();
-  do_check_eq(g.a, 0);
-  do_check_eq(g.b, 0);
+  Assert.equal(g.a, 0);
+  Assert.equal(g.b, 0);
   g = new g_t(1, 2);
-  do_check_eq(g.a, 1);
-  do_check_eq(g.b, 2);
+  Assert.equal(g.a, 1);
+  Assert.equal(g.b, 2);
   do_check_throws(function() { g_t(1); }, TypeError);
   do_check_throws(function() { g_t(1, 2, 3); }, TypeError);
 
   for (let field in g)
-    do_check_true(field == "a" || field == "b");
+    Assert.ok(field == "a" || field == "b");
 
   let g_a = g.address();
-  do_check_true(g_a.constructor === g_t.ptr);
-  do_check_eq(g_a.contents.a, g.a);
+  Assert.ok(g_a.constructor === g_t.ptr);
+  Assert.equal(g_a.contents.a, g.a);
 
   let s = new s_t(3, g, 10);
-  do_check_eq(s.a, 3);
+  Assert.equal(s.a, 3);
   s.a = 4;
-  do_check_eq(s.a, 4);
-  do_check_eq(s.b.a, 1);
-  do_check_eq(s.b.b, 2);
-  do_check_eq(s.c, 10);
+  Assert.equal(s.a, 4);
+  Assert.equal(s.b.a, 1);
+  Assert.equal(s.b.b, 2);
+  Assert.equal(s.c, 10);
   let g2 = s.b;
-  do_check_eq(g2.a, 1);
+  Assert.equal(g2.a, 1);
   g2.a = 7;
-  do_check_eq(g2.a, 7);
-  do_check_eq(s.b.a, 7);
+  Assert.equal(g2.a, 7);
+  Assert.equal(s.b.a, 7);
 
   g_a = s.addressOfField("b");
-  do_check_true(g_a.constructor === g_t.ptr);
-  do_check_eq(g_a.contents.a, s.b.a);
+  Assert.ok(g_a.constructor === g_t.ptr);
+  Assert.equal(g_a.contents.a, s.b.a);
   do_check_throws(function() { s.addressOfField(); }, TypeError);
   do_check_throws(function() { s.addressOfField("d"); }, TypeError);
   do_check_throws(function() { s.addressOfField("a", 2); }, TypeError);
 
-  do_check_eq(s.toSource(), "s_t(4, {\"a\": 7, \"b\": 2}, 10)");
-  do_check_eq(s.toSource(), s.toString());
+  Assert.equal(s.toSource(), "s_t(4, {\"a\": 7, \"b\": 2}, 10)");
+  Assert.equal(s.toSource(), s.toString());
   // eslint-disable-next-line no-eval
   var s2 = eval(s.toSource());
-  do_check_true(s2.constructor === s_t);
-  do_check_eq(s.b.b, s2.b.b);
+  Assert.ok(s2.constructor === s_t);
+  Assert.equal(s.b.b, s2.b.b);
 
   // Test that structs can be set from an object using 'value'.
   do_check_throws(function() { s.value; }, TypeError);
   let s_init = { "a": 2, "b": { "a": 9, "b": 5 }, "c": 13 };
   s.value = s_init;
-  do_check_eq(s.b.a, 9);
-  do_check_eq(s.c, 13);
+  Assert.equal(s.b.a, 9);
+  Assert.equal(s.c, 13);
   do_check_throws(function() { s.value = 5; }, TypeError);
   do_check_throws(function() { s.value = ctypes.int32_t(); }, TypeError);
   do_check_throws(function() { s.value = {}; }, TypeError);
@@ -1575,29 +1575,29 @@ function run_StructType_tests() {
   // Test that structs can be constructed similarly through ExplicitConvert,
   // and that the single-field case is disambiguated correctly.
   s = s_t(s_init);
-  do_check_eq(s.b.a, 9);
-  do_check_eq(s.c, 13);
+  Assert.equal(s.b.a, 9);
+  Assert.equal(s.c, 13);
   let v_t = ctypes.StructType("v_t", [{ "x": ctypes.int32_t }]);
   let v = v_t({ "x": 5 });
-  do_check_eq(v.x, 5);
+  Assert.equal(v.x, 5);
   v = v_t(8);
-  do_check_eq(v.x, 8);
+  Assert.equal(v.x, 8);
   let w_t = ctypes.StructType("w_t", [{ "y": v_t }]);
   do_check_throws(function() { w_t(9); }, TypeError);
   let w = w_t({ "x": 3 });
-  do_check_eq(w.y.x, 3);
+  Assert.equal(w.y.x, 3);
   w = w_t({ "y": { "x": 19 } });
-  do_check_eq(w.y.x, 19);
+  Assert.equal(w.y.x, 19);
   let u_t = ctypes.StructType("u_t", [{ "z": ctypes.ArrayType(ctypes.int32_t, 3) }]);
   let u = u_t([1, 2, 3]);
-  do_check_eq(u.z[1], 2);
+  Assert.equal(u.z[1], 2);
   u = u_t({ "z": [4, 5, 6] });
-  do_check_eq(u.z[1], 5);
+  Assert.equal(u.z[1], 5);
 
   // Check that the empty struct has size 1.
   let z_t = ctypes.StructType("z_t", []);
-  do_check_eq(z_t.size, 1);
-  do_check_eq(z_t.fields.length, 0);
+  Assert.equal(z_t.size, 1);
+  Assert.equal(z_t.fields.length, 0);
 
   // Check that structs containing arrays of undefined or zero length
   // are illegal, but arrays of defined length work.
@@ -1608,9 +1608,9 @@ function run_StructType_tests() {
     ctypes.StructType("z_t", [{ a: ctypes.int32_t.array(0) }]);
   }, TypeError);
   z_t = ctypes.StructType("z_t", [{ a: ctypes.int32_t.array(6) }]);
-  do_check_eq(z_t.size, ctypes.int32_t.size * 6);
+  Assert.equal(z_t.size, ctypes.int32_t.size * 6);
   let z = z_t([1, 2, 3, 4, 5, 6]);
-  do_check_eq(z.a[3], 4);
+  Assert.equal(z.a[3], 4);
 }
 
 function ptrValue(p) {
@@ -1633,44 +1633,44 @@ function run_PointerType_tests() {
   let g = g_t(1, 2);
 
   let p_t = ctypes.PointerType(g_t);
-  do_check_eq(p_t.name, name + "*");
-  do_check_eq(p_t.size, ctypes.uintptr_t.size);
-  do_check_true(p_t.targetType === g_t);
-  do_check_true(p_t === g_t.ptr);
+  Assert.equal(p_t.name, name + "*");
+  Assert.equal(p_t.size, ctypes.uintptr_t.size);
+  Assert.ok(p_t.targetType === g_t);
+  Assert.ok(p_t === g_t.ptr);
 
-  do_check_eq(p_t.toString(), "type " + name + "*");
-  do_check_eq(p_t.toSource(),
+  Assert.equal(p_t.toString(), "type " + name + "*");
+  Assert.equal(p_t.toSource(),
     "ctypes.StructType(\"g_t\", [{ \"a\": ctypes.int32_t }, { \"b\": ctypes.double }]).ptr");
-  do_check_true(p_t.ptr === ctypes.PointerType(p_t));
-  do_check_eq(p_t.array().name, name + "*[]");
-  do_check_eq(p_t.array(5).name, name + "*[5]");
+  Assert.ok(p_t.ptr === ctypes.PointerType(p_t));
+  Assert.equal(p_t.array().name, name + "*[]");
+  Assert.equal(p_t.array(5).name, name + "*[5]");
 
   // Test ExplicitConvert.
   let p = p_t();
   do_check_throws(function() { p.value; }, TypeError);
-  do_check_eq(ptrValue(p), 0);
+  Assert.equal(ptrValue(p), 0);
   do_check_throws(function() { p.contents; }, TypeError);
   do_check_throws(function() { p.contents = g; }, TypeError);
   p = p_t(5);
-  do_check_eq(ptrValue(p), 5);
+  Assert.equal(ptrValue(p), 5);
   p = p_t(ctypes.UInt64(10));
-  do_check_eq(ptrValue(p), 10);
+  Assert.equal(ptrValue(p), 10);
 
   // Test ImplicitConvert.
   p.value = null;
-  do_check_eq(ptrValue(p), 0);
+  Assert.equal(ptrValue(p), 0);
   do_check_throws(function() { p.value = 5; }, TypeError);
 
   // Test opaque pointers.
   let f_t = ctypes.StructType("FILE").ptr;
-  do_check_eq(f_t.name, "FILE*");
-  do_check_eq(f_t.toSource(), 'ctypes.StructType("FILE").ptr');
+  Assert.equal(f_t.name, "FILE*");
+  Assert.equal(f_t.toSource(), 'ctypes.StructType("FILE").ptr');
   let f = new f_t();
   do_check_throws(function() { f.contents; }, TypeError);
   do_check_throws(function() { f.contents = 0; }, TypeError);
   f = f_t(5);
   do_check_throws(function() { f.contents = 0; }, TypeError);
-  do_check_eq(f.toSource(), 'FILE.ptr(ctypes.UInt64("0x5"))');
+  Assert.equal(f.toSource(), 'FILE.ptr(ctypes.UInt64("0x5"))');
 
   do_check_throws(function() { f_t(p); }, TypeError);
   do_check_throws(function() { f.value = p; }, TypeError);
@@ -1678,22 +1678,22 @@ function run_PointerType_tests() {
 
   // Test void pointers.
   let v_t = ctypes.PointerType(ctypes.void_t);
-  do_check_true(v_t === ctypes.voidptr_t);
+  Assert.ok(v_t === ctypes.voidptr_t);
   let v = v_t(p);
-  do_check_eq(ptrValue(v), ptrValue(p));
+  Assert.equal(ptrValue(v), ptrValue(p));
 
   // Test 'contents'.
   let int32_t = ctypes.int32_t(9);
   p = int32_t.address();
-  do_check_eq(p.contents, int32_t.value);
+  Assert.equal(p.contents, int32_t.value);
   p.contents = ctypes.int32_t(12);
-  do_check_eq(int32_t.value, 12);
+  Assert.equal(int32_t.value, 12);
 
   // Test 'isNull'.
   let n = f_t(0);
-  do_check_true(n.isNull() === true);
+  Assert.ok(n.isNull() === true);
   n = p.address();
-  do_check_true(n.isNull() === false);
+  Assert.ok(n.isNull() === false);
 
   // Test 'increment'/'decrement'.
   g_t = ctypes.StructType("g_t", [{ a: ctypes.int32_t }, { b: ctypes.double }]);
@@ -1702,21 +1702,21 @@ function run_PointerType_tests() {
   a[0] = g_t(1, 2);
   a[1] = g_t(2, 4);
   let a_p = a.addressOfElement(0).increment();
-  do_check_eq(a_p.contents.a, 2);
-  do_check_eq(a_p.contents.b, 4);
+  Assert.equal(a_p.contents.a, 2);
+  Assert.equal(a_p.contents.b, 4);
   a_p = a_p.decrement();
-  do_check_eq(a_p.contents.a, 1);
-  do_check_eq(a_p.contents.b, 2);
+  Assert.equal(a_p.contents.a, 1);
+  Assert.equal(a_p.contents.b, 2);
 
   // Check that pointers to arrays of undefined or zero length are legal,
   // but that the former cannot be dereferenced.
   let z_t = ctypes.int32_t.array().ptr;
-  do_check_eq(ptrValue(z_t()), 0);
+  Assert.equal(ptrValue(z_t()), 0);
   do_check_throws(function() { z_t().contents; }, TypeError);
   z_t = ctypes.int32_t.array(0).ptr;
-  do_check_eq(ptrValue(z_t()), 0);
+  Assert.equal(ptrValue(z_t()), 0);
   let z = ctypes.int32_t.array(0)().address();
-  do_check_eq(z.contents.length, 0);
+  Assert.equal(z.contents.length, 0);
 
   // TODO: Somehow, somewhere we should check that:
   //
@@ -1761,23 +1761,23 @@ function run_PointerType_tests() {
       // Int8Array on unshared memory is interconvertible with Int8Array on
       // shared memory, etc.
       if (i % 8 != j % 8) {
-        do_print("Checking that typed array " + (view.constructor.name) +
-                 " can NOT be converted to " + item_type + " array");
+        info("Checking that typed array " + (view.constructor.name) +
+             " can NOT be converted to " + item_type + " array");
         do_check_throws(function() { array_type(view); }, TypeError);
       } else {
-        do_print("Checking that typed array " + (view.constructor.name) +
-                 " can be converted to " + item_type + " array");
+        info("Checking that typed array " + (view.constructor.name) +
+             " can be converted to " + item_type + " array");
 
         // Convert ArrayBuffer to array of the right size and check contents
         let c_array = array_type(c_arraybuffer);
         for (let k = 0; k < number_of_items; ++k) {
-          do_check_eq(c_array[k], view[k]);
+          Assert.equal(c_array[k], view[k]);
         }
 
         // Convert typed array to array of the right size and check contents
         c_array = array_type(view);
         for (let k = 0; k < number_of_items; ++k) {
-          do_check_eq(c_array[k], view[k]);
+          Assert.equal(c_array[k], view[k]);
         }
 
         // Convert typed array to array of wrong size, ensure that it fails
@@ -1792,7 +1792,7 @@ function run_PointerType_tests() {
         // Convert subarray of typed array to array of right size and check contents
         c_array = array_type_too_small(view.subarray(1));
         for (let k = 1; k < number_of_items; ++k) {
-          do_check_eq(c_array[k - 1], view[k]);
+          Assert.equal(c_array[k - 1], view[k]);
         }
       }
     }
@@ -1804,8 +1804,8 @@ function run_PointerType_tests() {
       let view = typed_array_samples[i][0];
       let item_type = typed_array_samples[j][1];
 
-      do_print("Checking that typed array " + (view.constructor.name) +
-               " can NOT be converted to " + item_type + " pointer/array");
+      info("Checking that typed array " + (view.constructor.name) +
+           " can NOT be converted to " + item_type + " pointer/array");
       do_check_throws(function() { item_type.ptr(c_arraybuffer); }, TypeError);
       do_check_throws(function() { item_type.ptr(view); }, TypeError);
       do_check_throws(function() { ctypes.voidptr_t(c_arraybuffer); }, TypeError);
@@ -1845,23 +1845,23 @@ function run_FunctionType_tests() {
 
   let f_t = ctypes.FunctionType(ctypes.default_abi, g_t);
   let name = "g_t()";
-  do_check_eq(f_t.name, name);
-  do_check_eq(f_t.size, undefined);
-  do_check_true(f_t.abi === ctypes.default_abi);
-  do_check_true(f_t.returnType === g_t);
-  do_check_true(f_t.argTypes.length == 0);
+  Assert.equal(f_t.name, name);
+  Assert.equal(f_t.size, undefined);
+  Assert.ok(f_t.abi === ctypes.default_abi);
+  Assert.ok(f_t.returnType === g_t);
+  Assert.ok(f_t.argTypes.length == 0);
 
-  do_check_eq(f_t.toString(), "type " + name);
-  do_check_eq(f_t.toSource(),
+  Assert.equal(f_t.toString(), "type " + name);
+  Assert.equal(f_t.toSource(),
     "ctypes.FunctionType(ctypes.default_abi, g_t)");
 
   let fp_t = f_t.ptr;
   name = "g_t(*)()";
-  do_check_eq(fp_t.name, name);
-  do_check_eq(fp_t.size, ctypes.uintptr_t.size);
+  Assert.equal(fp_t.name, name);
+  Assert.equal(fp_t.size, ctypes.uintptr_t.size);
 
-  do_check_eq(fp_t.toString(), "type " + name);
-  do_check_eq(fp_t.toSource(),
+  Assert.equal(fp_t.toString(), "type " + name);
+  Assert.equal(fp_t.toSource(),
     "ctypes.FunctionType(ctypes.default_abi, g_t).ptr");
 
   // Check that constructing a FunctionType CData directly throws.
@@ -1870,17 +1870,17 @@ function run_FunctionType_tests() {
   // Test ExplicitConvert.
   let f = fp_t();
   do_check_throws(function() { f.value; }, TypeError);
-  do_check_eq(ptrValue(f), 0);
+  Assert.equal(ptrValue(f), 0);
   f = fp_t(5);
-  do_check_eq(ptrValue(f), 5);
+  Assert.equal(ptrValue(f), 5);
   f = fp_t(ctypes.UInt64(10));
-  do_check_eq(ptrValue(f), 10);
+  Assert.equal(ptrValue(f), 10);
 
   // Test ImplicitConvert.
   f.value = null;
-  do_check_eq(ptrValue(f), 0);
+  Assert.equal(ptrValue(f), 0);
   do_check_throws(function() { f.value = 5; }, TypeError);
-  do_check_eq(f.toSource(),
+  Assert.equal(f.toSource(),
     'ctypes.FunctionType(ctypes.default_abi, g_t).ptr(ctypes.UInt64("0x0"))');
 
   // Test ImplicitConvert from a function pointer of different type.
@@ -1891,37 +1891,37 @@ function run_FunctionType_tests() {
 
   // Test that converting to a voidptr_t works.
   let v = ctypes.voidptr_t(f2);
-  do_check_eq(v.toSource(), 'ctypes.voidptr_t(ctypes.UInt64("0x0"))');
+  Assert.equal(v.toSource(), 'ctypes.voidptr_t(ctypes.UInt64("0x0"))');
 
   // Test some more complex names.
-  do_check_eq(fp_t.array().name, "g_t(*[])()");
-  do_check_eq(fp_t.array().ptr.name, "g_t(*(*)[])()");
+  Assert.equal(fp_t.array().name, "g_t(*[])()");
+  Assert.equal(fp_t.array().ptr.name, "g_t(*(*)[])()");
 
   let f3_t = ctypes.FunctionType(ctypes.default_abi,
     ctypes.char.ptr.array().ptr).ptr.ptr.array(8).array();
-  do_check_eq(f3_t.name, "char*(*(**[][8])())[]");
+  Assert.equal(f3_t.name, "char*(*(**[][8])())[]");
 
   if ("winLastError" in ctypes) {
     f3_t = ctypes.FunctionType(ctypes.stdcall_abi,
                                ctypes.char.ptr.array().ptr).ptr.ptr.array(8).array();
-    do_check_eq(f3_t.name, "char*(*(__stdcall**[][8])())[]");
+    Assert.equal(f3_t.name, "char*(*(__stdcall**[][8])())[]");
     f3_t = ctypes.FunctionType(ctypes.winapi_abi,
                                ctypes.char.ptr.array().ptr).ptr.ptr.array(8).array();
-    do_check_eq(f3_t.name, "char*(*(WINAPI**[][8])())[]");
+    Assert.equal(f3_t.name, "char*(*(WINAPI**[][8])())[]");
   }
 
   let f4_t = ctypes.FunctionType(ctypes.default_abi,
     ctypes.char.ptr.array().ptr, [ ctypes.int32_t, fp_t ]);
-  do_check_true(f4_t.argTypes.length == 2);
-  do_check_true(f4_t.argTypes[0] === ctypes.int32_t);
-  do_check_true(f4_t.argTypes[1] === fp_t);
+  Assert.ok(f4_t.argTypes.length == 2);
+  Assert.ok(f4_t.argTypes[0] === ctypes.int32_t);
+  Assert.ok(f4_t.argTypes[1] === fp_t);
 /* disabled temporarily per bug 598225.
   do_check_throws(function() { f4_t.argTypes.z = 0; }, Error);
   do_check_throws(function() { f4_t.argTypes[0] = 0; }, Error);
 */
 
   let t4_t = f4_t.ptr.ptr.array(8).array();
-  do_check_eq(t4_t.name, "char*(*(**[][8])(int32_t, g_t(*)()))[]");
+  Assert.equal(t4_t.name, "char*(*(**[][8])(int32_t, g_t(*)()))[]");
 
   // Not available in a Worker
   if ("@mozilla.org/systemprincipal;1" in Components.classes) {
@@ -1929,14 +1929,14 @@ function run_FunctionType_tests() {
                createInstance(Components.interfaces.nsIPrincipal);
     var s = new Components.utils.Sandbox(sp);
     s.ctypes = ctypes;
-    s.do_check_eq = do_check_eq;
-    s.do_check_true = do_check_true;
+    s.equal = equal;
+    s.ok = ok;
     Components.utils.evalInSandbox("var f5_t = ctypes.FunctionType(ctypes.default_abi, ctypes.int, [ctypes.int]);", s);
-    Components.utils.evalInSandbox("do_check_eq(f5_t.toSource(), 'ctypes.FunctionType(ctypes.default_abi, ctypes.int, [ctypes.int])');", s);
-    Components.utils.evalInSandbox("do_check_eq(f5_t.name, 'int(int)');", s);
+    Components.utils.evalInSandbox("equal(f5_t.toSource(), 'ctypes.FunctionType(ctypes.default_abi, ctypes.int, [ctypes.int])');", s);
+    Components.utils.evalInSandbox("equal(f5_t.name, 'int(int)');", s);
     Components.utils.evalInSandbox("function f5(aArg) { return 5; };", s);
     Components.utils.evalInSandbox("var f = f5_t.ptr(f5);", s);
-    Components.utils.evalInSandbox("do_check_true(f(6) == 5);", s);
+    Components.utils.evalInSandbox("ok(f(6) == 5);", s);
   }
 }
 
@@ -1955,55 +1955,55 @@ function run_ArrayType_tests() {
   let g = g_t(1, 2);
 
   let a_t = ctypes.ArrayType(g_t, 10);
-  do_check_eq(a_t.name, name + "[10]");
-  do_check_eq(a_t.length, 10);
-  do_check_eq(a_t.size, g_t.size * 10);
-  do_check_true(a_t.elementType === g_t);
+  Assert.equal(a_t.name, name + "[10]");
+  Assert.equal(a_t.length, 10);
+  Assert.equal(a_t.size, g_t.size * 10);
+  Assert.ok(a_t.elementType === g_t);
 
-  do_check_eq(a_t.toString(), "type " + name + "[10]");
-  do_check_eq(a_t.toSource(),
+  Assert.equal(a_t.toString(), "type " + name + "[10]");
+  Assert.equal(a_t.toSource(),
     "ctypes.StructType(\"g_t\", [{ \"a\": ctypes.int32_t }, { \"b\": ctypes.double }]).array(10)");
-  do_check_eq(a_t.array().name, name + "[][10]");
-  do_check_eq(a_t.array(5).name, name + "[5][10]");
+  Assert.equal(a_t.array().name, name + "[][10]");
+  Assert.equal(a_t.array(5).name, name + "[5][10]");
   do_check_throws(function() { ctypes.int32_t.array().array(); }, Error);
 
   let a = new a_t();
-  do_check_eq(a[0].a, 0);
-  do_check_eq(a[0].b, 0);
+  Assert.equal(a[0].a, 0);
+  Assert.equal(a[0].b, 0);
   a[0] = g;
-  do_check_eq(a[0].a, 1);
-  do_check_eq(a[0].b, 2);
+  Assert.equal(a[0].a, 1);
+  Assert.equal(a[0].b, 2);
   do_check_throws(function() { a[-1]; }, TypeError);
-  do_check_eq(a[9].a, 0);
+  Assert.equal(a[9].a, 0);
   do_check_throws(function() { a[10]; }, RangeError);
 
-  do_check_eq(a[ctypes.Int64(0)].a, 1);
-  do_check_eq(a[ctypes.UInt64(0)].b, 2);
+  Assert.equal(a[ctypes.Int64(0)].a, 1);
+  Assert.equal(a[ctypes.UInt64(0)].b, 2);
 
   let a_p = a.addressOfElement(0);
-  do_check_true(a_p.constructor.targetType === g_t);
-  do_check_true(a_p.constructor === g_t.ptr);
-  do_check_eq(a_p.contents.a, a[0].a);
-  do_check_eq(a_p.contents.b, a[0].b);
+  Assert.ok(a_p.constructor.targetType === g_t);
+  Assert.ok(a_p.constructor === g_t.ptr);
+  Assert.equal(a_p.contents.a, a[0].a);
+  Assert.equal(a_p.contents.b, a[0].b);
   a_p.contents.a = 5;
-  do_check_eq(a[0].a, 5);
+  Assert.equal(a[0].a, 5);
 
   let a2_t = ctypes.ArrayType(g_t);
-  do_check_eq(a2_t.name, "g_t[]");
-  do_check_eq(a2_t.length, undefined);
-  do_check_eq(a2_t.size, undefined);
+  Assert.equal(a2_t.name, "g_t[]");
+  Assert.equal(a2_t.length, undefined);
+  Assert.equal(a2_t.size, undefined);
   let a2 = new a2_t(5);
-  do_check_eq(a2.constructor.length, 5);
-  do_check_eq(a2.length, 5);
-  do_check_eq(a2.constructor.size, g_t.size * 5);
+  Assert.equal(a2.constructor.length, 5);
+  Assert.equal(a2.length, 5);
+  Assert.equal(a2.constructor.size, g_t.size * 5);
   do_check_throws(function() { new a2_t(); }, TypeError);
   do_check_throws(function() { ctypes.ArrayType(ctypes.ArrayType(g_t)); }, Error);
   do_check_throws(function() { ctypes.ArrayType(ctypes.ArrayType(g_t), 5); }, Error);
 
   let b_t = ctypes.int8_t.array(ctypes.UInt64(0xffff));
-  do_check_eq(b_t.length, 0xffff);
+  Assert.equal(b_t.length, 0xffff);
   b_t = ctypes.int8_t.array(ctypes.Int64(0xffff));
-  do_check_eq(b_t.length, 0xffff);
+  Assert.equal(b_t.length, 0xffff);
 
   // Check that array size bounds work, and that large, but not illegal, sizes
   // are OK.
@@ -2034,25 +2034,25 @@ function run_ArrayType_tests() {
   let b = ctypes.int32_t.array(10)();
   let p = ctypes.int32_t.ptr();
   p.value = b;
-  do_check_eq(ptrValue(b.addressOfElement(0)), ptrValue(p));
+  Assert.equal(ptrValue(b.addressOfElement(0)), ptrValue(p));
   p = ctypes.voidptr_t();
   p.value = b;
-  do_check_eq(ptrValue(b.addressOfElement(0)), ptrValue(p));
+  Assert.equal(ptrValue(b.addressOfElement(0)), ptrValue(p));
 
   // Test that arrays can be constructed through ImplicitConvert.
   let c_t = ctypes.int32_t.array(6);
   let c = c_t();
   c.value = [1, 2, 3, 4, 5, 6];
-  do_check_eq(c.toSource(), "ctypes.int32_t.array(6)([1, 2, 3, 4, 5, 6])");
-  do_check_eq(c.toSource(), c.toString());
+  Assert.equal(c.toSource(), "ctypes.int32_t.array(6)([1, 2, 3, 4, 5, 6])");
+  Assert.equal(c.toSource(), c.toString());
   // eslint-disable-next-line no-eval
   var c2 = eval(c.toSource());
-  do_check_eq(c2.constructor.name, "int32_t[6]");
-  do_check_eq(c2.length, 6);
-  do_check_eq(c2[3], c[3]);
+  Assert.equal(c2.constructor.name, "int32_t[6]");
+  Assert.equal(c2.length, 6);
+  Assert.equal(c2[3], c[3]);
 
   c.value = c;
-  do_check_eq(c[3], 4);
+  Assert.equal(c[3], 4);
   do_check_throws(function() { c.value; }, TypeError);
   do_check_throws(function() { c.value = [1, 2, 3, 4, 5]; }, TypeError);
   do_check_throws(function() { c.value = [1, 2, 3, 4, 5, 6, 7]; }, TypeError);
@@ -2080,86 +2080,86 @@ function run_type_toString_tests() {
       haveWinAPIABI = false;
   }
 
-  do_check_eq(c.char.toString(), "type char");
-  do_check_eq(c.short.toString(), "type short");
-  do_check_eq(c.int.toString(), "type int");
-  do_check_eq(c.long.toString(), "type long");
-  do_check_eq(c.long_long.toString(), "type long_long");
-  do_check_eq(c.ssize_t.toString(), "type ssize_t");
-  do_check_eq(c.int8_t.toString(), "type int8_t");
-  do_check_eq(c.int16_t.toString(), "type int16_t");
-  do_check_eq(c.int32_t.toString(), "type int32_t");
-  do_check_eq(c.int64_t.toString(), "type int64_t");
-  do_check_eq(c.intptr_t.toString(), "type intptr_t");
+  Assert.equal(c.char.toString(), "type char");
+  Assert.equal(c.short.toString(), "type short");
+  Assert.equal(c.int.toString(), "type int");
+  Assert.equal(c.long.toString(), "type long");
+  Assert.equal(c.long_long.toString(), "type long_long");
+  Assert.equal(c.ssize_t.toString(), "type ssize_t");
+  Assert.equal(c.int8_t.toString(), "type int8_t");
+  Assert.equal(c.int16_t.toString(), "type int16_t");
+  Assert.equal(c.int32_t.toString(), "type int32_t");
+  Assert.equal(c.int64_t.toString(), "type int64_t");
+  Assert.equal(c.intptr_t.toString(), "type intptr_t");
 
-  do_check_eq(c.unsigned_char.toString(), "type unsigned_char");
-  do_check_eq(c.unsigned_short.toString(), "type unsigned_short");
-  do_check_eq(c.unsigned_int.toString(), "type unsigned_int");
-  do_check_eq(c.unsigned_long.toString(), "type unsigned_long");
-  do_check_eq(c.unsigned_long_long.toString(), "type unsigned_long_long");
-  do_check_eq(c.size_t.toString(), "type size_t");
-  do_check_eq(c.uint8_t.toString(), "type uint8_t");
-  do_check_eq(c.uint16_t.toString(), "type uint16_t");
-  do_check_eq(c.uint32_t.toString(), "type uint32_t");
-  do_check_eq(c.uint64_t.toString(), "type uint64_t");
-  do_check_eq(c.uintptr_t.toString(), "type uintptr_t");
+  Assert.equal(c.unsigned_char.toString(), "type unsigned_char");
+  Assert.equal(c.unsigned_short.toString(), "type unsigned_short");
+  Assert.equal(c.unsigned_int.toString(), "type unsigned_int");
+  Assert.equal(c.unsigned_long.toString(), "type unsigned_long");
+  Assert.equal(c.unsigned_long_long.toString(), "type unsigned_long_long");
+  Assert.equal(c.size_t.toString(), "type size_t");
+  Assert.equal(c.uint8_t.toString(), "type uint8_t");
+  Assert.equal(c.uint16_t.toString(), "type uint16_t");
+  Assert.equal(c.uint32_t.toString(), "type uint32_t");
+  Assert.equal(c.uint64_t.toString(), "type uint64_t");
+  Assert.equal(c.uintptr_t.toString(), "type uintptr_t");
 
-  do_check_eq(c.float.toString(), "type float");
-  do_check_eq(c.double.toString(), "type double");
-  do_check_eq(c.bool.toString(), "type bool");
-  do_check_eq(c.void_t.toString(), "type void");
-  do_check_eq(c.voidptr_t.toString(), "type void*");
-  do_check_eq(c.char16_t.toString(), "type char16_t");
+  Assert.equal(c.float.toString(), "type float");
+  Assert.equal(c.double.toString(), "type double");
+  Assert.equal(c.bool.toString(), "type bool");
+  Assert.equal(c.void_t.toString(), "type void");
+  Assert.equal(c.voidptr_t.toString(), "type void*");
+  Assert.equal(c.char16_t.toString(), "type char16_t");
 
   var simplestruct = c.StructType("simplestruct", [{"smitty": c.voidptr_t}]);
-  do_check_eq(simplestruct.toString(), "type simplestruct");
+  Assert.equal(simplestruct.toString(), "type simplestruct");
 
   // One type modifier, int base type.
-  do_check_eq(c.int.ptr.toString(), "type int*");
-  do_check_eq(c.ArrayType(c.int).toString(), "type int[]");
-  do_check_eq(c.ArrayType(c.int, 4).toString(), "type int[4]");
-  do_check_eq(c.FunctionType(c.default_abi, c.int).toString(), "type int()");
-  do_check_eq(c.FunctionType(c.default_abi, c.int, [c.bool]).toString(), "type int(bool)");
-  do_check_eq(c.FunctionType(c.default_abi, c.int, [c.bool, c.short]).toString(),
-                                                                        "type int(bool, short)");
+  Assert.equal(c.int.ptr.toString(), "type int*");
+  Assert.equal(c.ArrayType(c.int).toString(), "type int[]");
+  Assert.equal(c.ArrayType(c.int, 4).toString(), "type int[4]");
+  Assert.equal(c.FunctionType(c.default_abi, c.int).toString(), "type int()");
+  Assert.equal(c.FunctionType(c.default_abi, c.int, [c.bool]).toString(), "type int(bool)");
+  Assert.equal(c.FunctionType(c.default_abi, c.int, [c.bool, c.short]).toString(),
+                                                                         "type int(bool, short)");
   if (haveStdCallABI)
-     do_check_eq(c.FunctionType(c.stdcall_abi, c.int).toString(), "type int __stdcall()");
+     Assert.equal(c.FunctionType(c.stdcall_abi, c.int).toString(), "type int __stdcall()");
   if (haveWinAPIABI)
-     do_check_eq(c.FunctionType(c.winapi_abi, c.int).toString(), "type int WINAPI()");
+     Assert.equal(c.FunctionType(c.winapi_abi, c.int).toString(), "type int WINAPI()");
 
   // One type modifier, struct base type.
-  do_check_eq(simplestruct.ptr.toString(), "type simplestruct*");
-  do_check_eq(c.ArrayType(simplestruct).toString(), "type simplestruct[]");
-  do_check_eq(c.ArrayType(simplestruct, 4).toString(), "type simplestruct[4]");
-  do_check_eq(c.FunctionType(c.default_abi, simplestruct).toString(), "type simplestruct()");
+  Assert.equal(simplestruct.ptr.toString(), "type simplestruct*");
+  Assert.equal(c.ArrayType(simplestruct).toString(), "type simplestruct[]");
+  Assert.equal(c.ArrayType(simplestruct, 4).toString(), "type simplestruct[4]");
+  Assert.equal(c.FunctionType(c.default_abi, simplestruct).toString(), "type simplestruct()");
 
   // Two levels of type modifiers, int base type.
-  do_check_eq(c.int.ptr.ptr.toString(), "type int**");
-  do_check_eq(c.ArrayType(c.int.ptr).toString(), "type int*[]");
-  do_check_eq(c.FunctionType(c.default_abi, c.int.ptr).toString(), "type int*()");
+  Assert.equal(c.int.ptr.ptr.toString(), "type int**");
+  Assert.equal(c.ArrayType(c.int.ptr).toString(), "type int*[]");
+  Assert.equal(c.FunctionType(c.default_abi, c.int.ptr).toString(), "type int*()");
 
-  do_check_eq(c.ArrayType(c.int).ptr.toString(), "type int(*)[]");
-  do_check_eq(c.ArrayType(c.ArrayType(c.int, 4)).toString(), "type int[][4]");
+  Assert.equal(c.ArrayType(c.int).ptr.toString(), "type int(*)[]");
+  Assert.equal(c.ArrayType(c.ArrayType(c.int, 4)).toString(), "type int[][4]");
   // Functions can't return arrays.
 
-  do_check_eq(c.FunctionType(c.default_abi, c.int).ptr.toString(), "type int(*)()");
+  Assert.equal(c.FunctionType(c.default_abi, c.int).ptr.toString(), "type int(*)()");
   // You can't have an array of functions.
   // Functions can't return functions.
 
   // We don't try all the permissible three-deep combinations, but this is fun.
-  do_check_eq(c.FunctionType(c.default_abi, c.FunctionType(c.default_abi, c.int).ptr).toString(),
-                                                                        "type int(*())()");
+  Assert.equal(c.FunctionType(c.default_abi, c.FunctionType(c.default_abi, c.int).ptr).toString(),
+                                                                         "type int(*())()");
 }
 
 function run_cast_tests() {
   // Test casting between basic types.
   let i = ctypes.int32_t();
   let j = ctypes.cast(i, ctypes.int16_t);
-  do_check_eq(ptrValue(i.address()), ptrValue(j.address()));
-  do_check_eq(i.value, j.value);
+  Assert.equal(ptrValue(i.address()), ptrValue(j.address()));
+  Assert.equal(i.value, j.value);
   let k = ctypes.cast(i, ctypes.uint32_t);
-  do_check_eq(ptrValue(i.address()), ptrValue(k.address()));
-  do_check_eq(i.value, k.value);
+  Assert.equal(ptrValue(i.address()), ptrValue(k.address()));
+  Assert.equal(i.value, k.value);
 
   // Test casting to a type of undefined or larger size.
   do_check_throws(function() { ctypes.cast(i, ctypes.void_t); }, TypeError);
@@ -2174,28 +2174,28 @@ function run_cast_tests() {
   let a = a_t();
   a[0] = { a: 5, b: 7.5 };
   let g = ctypes.cast(a, g_t);
-  do_check_eq(ptrValue(a.address()), ptrValue(g.address()));
-  do_check_eq(a[0].a, g.a);
+  Assert.equal(ptrValue(a.address()), ptrValue(g.address()));
+  Assert.equal(a[0].a, g.a);
 
   let a2 = ctypes.cast(g, g_t.array(1));
-  do_check_eq(ptrValue(a2.address()), ptrValue(g.address()));
-  do_check_eq(a2[0].a, g.a);
+  Assert.equal(ptrValue(a2.address()), ptrValue(g.address()));
+  Assert.equal(a2[0].a, g.a);
 
   let p = g.address();
   let ip = ctypes.cast(p, ctypes.int32_t.ptr);
-  do_check_eq(ptrValue(ip), ptrValue(p));
-  do_check_eq(ptrValue(ip.address()), ptrValue(p.address()));
-  do_check_eq(ip.contents, g.a);
+  Assert.equal(ptrValue(ip), ptrValue(p));
+  Assert.equal(ptrValue(ip.address()), ptrValue(p.address()));
+  Assert.equal(ip.contents, g.a);
 
   let f = f_t(0x5);
   let f2 = ctypes.cast(f, ctypes.voidptr_t);
-  do_check_eq(ptrValue(f2), ptrValue(f));
-  do_check_eq(ptrValue(f2.address()), ptrValue(f.address()));
+  Assert.equal(ptrValue(f2), ptrValue(f));
+  Assert.equal(ptrValue(f2.address()), ptrValue(f.address()));
 }
 
 function run_void_tests(library) {
   let test_void_t = library.declare("test_void_t_cdecl", ctypes.default_abi, ctypes.void_t);
-  do_check_eq(test_void_t(), undefined);
+  Assert.equal(test_void_t(), undefined);
 
   // Test that library.declare throws with void function args.
   do_check_throws(function() {
@@ -2204,7 +2204,7 @@ function run_void_tests(library) {
 
   if ("winLastError" in ctypes) {
     test_void_t = library.declare("test_void_t_stdcall", ctypes.stdcall_abi, ctypes.void_t);
-    do_check_eq(test_void_t(), undefined);
+    Assert.equal(test_void_t(), undefined);
 
     // Check that WINAPI symbol lookup for a regular stdcall function fails on
     // Win32 (it's all the same on Win64 though).
@@ -2218,8 +2218,8 @@ function run_void_tests(library) {
 
 function run_string_tests(library) {
   let test_ansi_len = library.declare("test_ansi_len", ctypes.default_abi, ctypes.int32_t, ctypes.char.ptr);
-  do_check_eq(test_ansi_len(""), 0);
-  do_check_eq(test_ansi_len("hello world"), 11);
+  Assert.equal(test_ansi_len(""), 0);
+  Assert.equal(test_ansi_len("hello world"), 11);
 
   // don't convert anything else to a string
   let vals = [true, 0, 1 / 3, undefined, {}, {toString() { return "bad"; }}, []];
@@ -2227,21 +2227,21 @@ function run_string_tests(library) {
     do_check_throws(function() { test_ansi_len(vals[i]); }, TypeError);
 
   let test_wide_len = library.declare("test_wide_len", ctypes.default_abi, ctypes.int32_t, ctypes.char16_t.ptr);
-  do_check_eq(test_wide_len("hello world"), 11);
+  Assert.equal(test_wide_len("hello world"), 11);
 
   let test_ansi_ret = library.declare("test_ansi_ret", ctypes.default_abi, ctypes.char.ptr);
-  do_check_eq(test_ansi_ret().readString(), "success");
+  Assert.equal(test_ansi_ret().readString(), "success");
 
   let test_wide_ret = library.declare("test_wide_ret", ctypes.default_abi, ctypes.char16_t.ptr);
-  do_check_eq(test_wide_ret().readString(), "success");
+  Assert.equal(test_wide_ret().readString(), "success");
 
   let test_ansi_echo = library.declare("test_ansi_echo", ctypes.default_abi, ctypes.char.ptr, ctypes.char.ptr);
   // We cannot pass a string literal directly into test_ansi_echo, since the
   // conversion to ctypes.char.ptr is only valid for the duration of the ffi
   // call. The escaped pointer that's returned will point to freed memory.
   let arg = ctypes.char.array()("anybody in there?");
-  do_check_eq(test_ansi_echo(arg).readString(), "anybody in there?");
-  do_check_eq(ptrValue(test_ansi_echo(null)), 0);
+  Assert.equal(test_ansi_echo(arg).readString(), "anybody in there?");
+  Assert.equal(ptrValue(test_ansi_echo(null)), 0);
 }
 
 function run_readstring_tests(library) {
@@ -2259,7 +2259,7 @@ function run_readstring_tests(library) {
   ascii_string[9] = 0x6C;
   ascii_string[10] = 0x64;
   ascii_string[11] = 0;
-  do_check_eq("hello world", ascii_string.readStringReplaceMalformed());
+  Assert.equal("hello world", ascii_string.readStringReplaceMalformed());
 
   // UTF-8 decode test, "U+AC00 U+B098 U+B2E4"
   let utf8_string = ctypes.unsigned_char.array(10)();
@@ -2274,9 +2274,9 @@ function run_readstring_tests(library) {
   utf8_string[8] = 0xA4;
   utf8_string[9] = 0x00;
   let utf8_result = utf8_string.readStringReplaceMalformed();
-  do_check_eq(0xAC00, utf8_result.charCodeAt(0));
-  do_check_eq(0xB098, utf8_result.charCodeAt(1));
-  do_check_eq(0xB2E4, utf8_result.charCodeAt(2));
+  Assert.equal(0xAC00, utf8_result.charCodeAt(0));
+  Assert.equal(0xB098, utf8_result.charCodeAt(1));
+  Assert.equal(0xB2E4, utf8_result.charCodeAt(2));
 
   // KS5601 decode test, invalid encoded byte should be replaced with U+FFFD
   let ks5601_string = ctypes.unsigned_char.array(7)();
@@ -2288,12 +2288,12 @@ function run_readstring_tests(library) {
   ks5601_string[5] = 0xD9;
   ks5601_string[6] = 0x00;
   let ks5601_result = ks5601_string.readStringReplaceMalformed();
-  do_check_eq(0xFFFD, ks5601_result.charCodeAt(0));
-  do_check_eq(0xFFFD, ks5601_result.charCodeAt(1));
-  do_check_eq(0xFFFD, ks5601_result.charCodeAt(2));
-  do_check_eq(0xFFFD, ks5601_result.charCodeAt(3));
-  do_check_eq(0xFFFD, ks5601_result.charCodeAt(4));
-  do_check_eq(0xFFFD, ks5601_result.charCodeAt(5));
+  Assert.equal(0xFFFD, ks5601_result.charCodeAt(0));
+  Assert.equal(0xFFFD, ks5601_result.charCodeAt(1));
+  Assert.equal(0xFFFD, ks5601_result.charCodeAt(2));
+  Assert.equal(0xFFFD, ks5601_result.charCodeAt(3));
+  Assert.equal(0xFFFD, ks5601_result.charCodeAt(4));
+  Assert.equal(0xFFFD, ks5601_result.charCodeAt(5));
 
   // Mixed decode test, "test" + "U+AC00 U+B098 U+B2E4" + "test"
   // invalid encoded byte should be replaced with U+FFFD
@@ -2314,20 +2314,20 @@ function run_readstring_tests(library) {
   mixed_string[13] = 0x74;
   mixed_string[14] = 0x00;
   let mixed_result = mixed_string.readStringReplaceMalformed();
-  do_check_eq(0x74, mixed_result.charCodeAt(0));
-  do_check_eq(0x65, mixed_result.charCodeAt(1));
-  do_check_eq(0x73, mixed_result.charCodeAt(2));
-  do_check_eq(0x74, mixed_result.charCodeAt(3));
-  do_check_eq(0xFFFD, mixed_result.charCodeAt(4));
-  do_check_eq(0xFFFD, mixed_result.charCodeAt(5));
-  do_check_eq(0xFFFD, mixed_result.charCodeAt(6));
-  do_check_eq(0xFFFD, mixed_result.charCodeAt(7));
-  do_check_eq(0xFFFD, mixed_result.charCodeAt(8));
-  do_check_eq(0xFFFD, mixed_result.charCodeAt(9));
-  do_check_eq(0x74, mixed_result.charCodeAt(10));
-  do_check_eq(0x65, mixed_result.charCodeAt(11));
-  do_check_eq(0x73, mixed_result.charCodeAt(12));
-  do_check_eq(0x74, mixed_result.charCodeAt(13));
+  Assert.equal(0x74, mixed_result.charCodeAt(0));
+  Assert.equal(0x65, mixed_result.charCodeAt(1));
+  Assert.equal(0x73, mixed_result.charCodeAt(2));
+  Assert.equal(0x74, mixed_result.charCodeAt(3));
+  Assert.equal(0xFFFD, mixed_result.charCodeAt(4));
+  Assert.equal(0xFFFD, mixed_result.charCodeAt(5));
+  Assert.equal(0xFFFD, mixed_result.charCodeAt(6));
+  Assert.equal(0xFFFD, mixed_result.charCodeAt(7));
+  Assert.equal(0xFFFD, mixed_result.charCodeAt(8));
+  Assert.equal(0xFFFD, mixed_result.charCodeAt(9));
+  Assert.equal(0x74, mixed_result.charCodeAt(10));
+  Assert.equal(0x65, mixed_result.charCodeAt(11));
+  Assert.equal(0x73, mixed_result.charCodeAt(12));
+  Assert.equal(0x74, mixed_result.charCodeAt(13));
 
   // Test of all posible invalid encoded sequence
   let invalid_string = ctypes.unsigned_char.array(27)();
@@ -2359,28 +2359,28 @@ function run_readstring_tests(library) {
   invalid_string[25] = 0x74;
   invalid_string[26] = 0x00;
   let invalid_result = invalid_string.readStringReplaceMalformed();
-  do_check_eq(0xFFFD, invalid_result.charCodeAt(0)); // 10000000
-  do_check_eq(0xFFFD, invalid_result.charCodeAt(1)); // 11000000 01110100
-  do_check_eq(0x74, invalid_result.charCodeAt(2));
-  do_check_eq(0xFFFD, invalid_result.charCodeAt(3)); // 11100000 01110100
-  do_check_eq(0x74, invalid_result.charCodeAt(4));
-  do_check_eq(0xFFFD, invalid_result.charCodeAt(5)); // 11100000 10100000 01110100
-  do_check_eq(0x74, invalid_result.charCodeAt(6));
-  do_check_eq(0xFFFD, invalid_result.charCodeAt(7)); // 11100000 10000000 01110100
-  do_check_eq(0xFFFD, invalid_result.charCodeAt(8));
-  do_check_eq(0x74, invalid_result.charCodeAt(9));
-  do_check_eq(0xFFFD, invalid_result.charCodeAt(10)); // 11110000 01110100
-  do_check_eq(0x74, invalid_result.charCodeAt(11));
-  do_check_eq(0xFFFD, invalid_result.charCodeAt(12)); // 11110000 10010000 01110100
-  do_check_eq(0x74, invalid_result.charCodeAt(13));
-  do_check_eq(0xFFFD, invalid_result.charCodeAt(14)); // 11110000 10010000 10000000 01110100
-  do_check_eq(0x74, invalid_result.charCodeAt(15));
-  do_check_eq(0xFFFD, invalid_result.charCodeAt(16)); // 11110000 10000000 10000000 01110100
-  do_check_eq(0xFFFD, invalid_result.charCodeAt(17));
-  do_check_eq(0xFFFD, invalid_result.charCodeAt(18));
-  do_check_eq(0x74, invalid_result.charCodeAt(19));
-  do_check_eq(0xFFFD, invalid_result.charCodeAt(20)); // 11110000 01110100
-  do_check_eq(0x74, invalid_result.charCodeAt(21));
+  Assert.equal(0xFFFD, invalid_result.charCodeAt(0)); // 10000000
+  Assert.equal(0xFFFD, invalid_result.charCodeAt(1)); // 11000000 01110100
+  Assert.equal(0x74, invalid_result.charCodeAt(2));
+  Assert.equal(0xFFFD, invalid_result.charCodeAt(3)); // 11100000 01110100
+  Assert.equal(0x74, invalid_result.charCodeAt(4));
+  Assert.equal(0xFFFD, invalid_result.charCodeAt(5)); // 11100000 10100000 01110100
+  Assert.equal(0x74, invalid_result.charCodeAt(6));
+  Assert.equal(0xFFFD, invalid_result.charCodeAt(7)); // 11100000 10000000 01110100
+  Assert.equal(0xFFFD, invalid_result.charCodeAt(8));
+  Assert.equal(0x74, invalid_result.charCodeAt(9));
+  Assert.equal(0xFFFD, invalid_result.charCodeAt(10)); // 11110000 01110100
+  Assert.equal(0x74, invalid_result.charCodeAt(11));
+  Assert.equal(0xFFFD, invalid_result.charCodeAt(12)); // 11110000 10010000 01110100
+  Assert.equal(0x74, invalid_result.charCodeAt(13));
+  Assert.equal(0xFFFD, invalid_result.charCodeAt(14)); // 11110000 10010000 10000000 01110100
+  Assert.equal(0x74, invalid_result.charCodeAt(15));
+  Assert.equal(0xFFFD, invalid_result.charCodeAt(16)); // 11110000 10000000 10000000 01110100
+  Assert.equal(0xFFFD, invalid_result.charCodeAt(17));
+  Assert.equal(0xFFFD, invalid_result.charCodeAt(18));
+  Assert.equal(0x74, invalid_result.charCodeAt(19));
+  Assert.equal(0xFFFD, invalid_result.charCodeAt(20)); // 11110000 01110100
+  Assert.equal(0x74, invalid_result.charCodeAt(21));
 
   // Test decoding of UTF-8 and CESU-8
   let utf8_cesu8_string = ctypes.unsigned_char.array(10)();
@@ -2395,10 +2395,10 @@ function run_readstring_tests(library) {
   utf8_cesu8_string[8] = 0xB0;
   utf8_cesu8_string[9] = 0x80;
   let utf8_cesu8_result = utf8_cesu8_string.readStringReplaceMalformed();
-  do_check_eq(0xD801, utf8_cesu8_result.charCodeAt(0));
-  do_check_eq(0xDC00, utf8_cesu8_result.charCodeAt(1));
-  do_check_eq(0xFFFD, utf8_cesu8_result.charCodeAt(2));
-  do_check_eq(0xFFFD, utf8_cesu8_result.charCodeAt(3));
+  Assert.equal(0xD801, utf8_cesu8_result.charCodeAt(0));
+  Assert.equal(0xDC00, utf8_cesu8_result.charCodeAt(1));
+  Assert.equal(0xFFFD, utf8_cesu8_result.charCodeAt(2));
+  Assert.equal(0xFFFD, utf8_cesu8_result.charCodeAt(3));
 }
 
 function run_struct_tests(library) {
@@ -2414,9 +2414,9 @@ function run_struct_tests(library) {
   let test_pt_in_rect = library.declare("test_pt_in_rect", ctypes.default_abi, ctypes.int32_t, rect_t, point_t);
   let rect = new rect_t(10, 5, 5, 10);
   let pt1 = new point_t(6, 6);
-  do_check_eq(test_pt_in_rect(rect, pt1), 1);
+  Assert.equal(test_pt_in_rect(rect, pt1), 1);
   let pt2 = new point_t(2, 2);
-  do_check_eq(test_pt_in_rect(rect, pt2), 0);
+  Assert.equal(test_pt_in_rect(rect, pt2), 0);
 
   const inner_t = new ctypes.StructType("INNER",
                        [{ i1: ctypes.uint8_t },
@@ -2433,21 +2433,21 @@ function run_struct_tests(library) {
   let inner = new inner_t(161, 523412, 43);
   let nested = new nested_t(13155, 1241, inner, 24512115, 1234111);
   // add up all the numbers and make sure the C function agrees
-  do_check_eq(test_nested_struct(nested), 26284238);
+  Assert.equal(test_nested_struct(nested), 26284238);
 
   // test returning a struct by value
   let test_struct_return = library.declare("test_struct_return", ctypes.default_abi, point_t, rect_t);
   let ret = test_struct_return(rect);
-  do_check_eq(ret.x, rect.left);
-  do_check_eq(ret.y, rect.top);
+  Assert.equal(ret.x, rect.left);
+  Assert.equal(ret.y, rect.top);
 
   // struct parameter ABI depends on size; test returning a large struct by value
   test_struct_return = library.declare("test_large_struct_return", ctypes.default_abi, rect_t, rect_t, rect_t);
   ret = test_struct_return(rect_t(1, 2, 3, 4), rect_t(5, 6, 7, 8));
-  do_check_eq(ret.left, 2);
-  do_check_eq(ret.right, 4);
-  do_check_eq(ret.top, 5);
-  do_check_eq(ret.bottom, 7);
+  Assert.equal(ret.left, 2);
+  Assert.equal(ret.right, 4);
+  Assert.equal(ret.top, 5);
+  Assert.equal(ret.bottom, 7);
 
   // ... and tests structs < 8 bytes in size
   for (let i = 1; i < 8; ++i)
@@ -2456,8 +2456,8 @@ function run_struct_tests(library) {
   // test passing a struct by pointer
   let test_init_pt = library.declare("test_init_pt", ctypes.default_abi, ctypes.void_t, point_t.ptr, ctypes.int32_t, ctypes.int32_t);
   test_init_pt(pt1.address(), 9, 10);
-  do_check_eq(pt1.x, 9);
-  do_check_eq(pt1.y, 10);
+  Assert.equal(pt1.x, 9);
+  Assert.equal(pt1.y, 10);
 }
 
 function run_small_struct_test(library, rect_t, bytes) {
@@ -2475,7 +2475,7 @@ function run_small_struct_test(library, rect_t, bytes) {
   let exp = [1, 7, 13, 45];
   let j = 0;
   for (let i = 0; i < bytes; ++i) {
-    do_check_eq(ret["f" + i], exp[j]);
+    Assert.equal(ret["f" + i], exp[j]);
     if (++j == 4)
       j = 0;
   }
@@ -2492,15 +2492,15 @@ function run_function_tests(library) {
   // Test that the value handed back by test_fnptr matches the function pointer
   // for test_ansi_len itself.
   let ptr = test_fnptr();
-  do_check_eq(ptrValue(test_ansi_len), ptrValue(ptr));
+  Assert.equal(ptrValue(test_ansi_len), ptrValue(ptr));
 
   // Test that we can call ptr().
-  do_check_eq(ptr("function pointers rule!"), 23);
+  Assert.equal(ptr("function pointers rule!"), 23);
 
   // Test that we can call via call and apply
   /* eslint-disable no-useless-call */
-  do_check_eq(ptr.call(null, "function pointers rule!"), 23);
-  do_check_eq(ptr.apply(null, ["function pointers rule!"]), 23);
+  Assert.equal(ptr.call(null, "function pointers rule!"), 23);
+  Assert.equal(ptr.apply(null, ["function pointers rule!"]), 23);
 
   // Test that we cannot call non-function pointers via call and apply
   let p_t = ctypes.PointerType(ctypes.int32_t);
@@ -2510,26 +2510,26 @@ function run_function_tests(library) {
   /* eslint-enable no-useless-call */
 
   // Test the function pointers still behave as regular pointers
-  do_check_false(ptr.isNull(), "PointerType methods should still be valid");
+  Assert.ok(!ptr.isNull(), "PointerType methods should still be valid");
 
   // Test that library.declare() returns data of type FunctionType.ptr, and that
   // it is immutable.
-  do_check_true(test_ansi_len.constructor.targetType.__proto__ ===
+  Assert.ok(test_ansi_len.constructor.targetType.__proto__ ===
     ctypes.FunctionType.prototype);
-  do_check_eq(test_ansi_len.constructor.toSource(),
+  Assert.equal(test_ansi_len.constructor.toSource(),
     "ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t, [ctypes.char.ptr]).ptr");
 /* disabled temporarily per bug 598225.
   do_check_throws(function() { test_ansi_len.value = null; }, Error);
-  do_check_eq(ptrValue(test_ansi_len), ptrValue(ptr));
+  Assert.equal(ptrValue(test_ansi_len), ptrValue(ptr));
 */
 
   // Test that the library.declare(name, functionType) form works.
   let test_ansi_len_2 = library.declare("test_ansi_len", fn_t);
-  do_check_true(test_ansi_len_2.constructor === fn_t);
-  do_check_eq(ptrValue(test_ansi_len), ptrValue(test_ansi_len_2));
+  Assert.ok(test_ansi_len_2.constructor === fn_t);
+  Assert.equal(ptrValue(test_ansi_len), ptrValue(test_ansi_len_2));
 /* disabled temporarily per bug 598225.
   do_check_throws(function() { test_ansi_len_2.value = null; }, Error);
-  do_check_eq(ptrValue(test_ansi_len_2), ptrValue(ptr));
+  Assert.equal(ptrValue(test_ansi_len_2), ptrValue(ptr));
 */
 }
 
@@ -2556,29 +2556,29 @@ function run_single_closure_tests(library, abi, suffix) {
     return "a" in this ? i + this.a : i + b;
   }
 
-  do_check_eq(closure_fn(7), 7 + b);
+  Assert.equal(closure_fn(7), 7 + b);
   let thisobj = { a: 5 };
-  do_check_eq(closure_fn.call(thisobj, 7), 7 + thisobj.a);
+  Assert.equal(closure_fn.call(thisobj, 7), 7 + thisobj.a);
 
   // Construct a closure, and call it ourselves.
   let fn_t = ctypes.FunctionType(abi, ctypes.int32_t, [ ctypes.int8_t ]).ptr;
   let closure = fn_t(closure_fn);
-  do_check_eq(closure(-17), -17 + b);
+  Assert.equal(closure(-17), -17 + b);
 
   // Have C code call it.
   let test_closure = library.declare("test_closure_" + suffix,
     ctypes.default_abi, ctypes.int32_t, ctypes.int8_t, fn_t);
-  do_check_eq(test_closure(-52, closure), -52 + b);
+  Assert.equal(test_closure(-52, closure), -52 + b);
 
   // Do the same, but specify 'this'.
   let closure2 = fn_t(closure_fn, thisobj);
-  do_check_eq(closure2(-17), -17 + thisobj.a);
-  do_check_eq(test_closure(-52, closure2), -52 + thisobj.a);
+  Assert.equal(closure2(-17), -17 + thisobj.a);
+  Assert.equal(test_closure(-52, closure2), -52 + thisobj.a);
 
   // Specify an error sentinel, and have the JS code throw (see bug 599791).
   let closure3 = fn_t(closure_fn, null, 54);
-  do_check_eq(closure3(42), 54);
-  do_check_eq(test_closure(42, closure3), 54);
+  Assert.equal(closure3(42), 54);
+  Assert.equal(test_closure(42, closure3), 54);
 
   // Check what happens when the return type is bigger than a word.
   var fn_64_t = ctypes.FunctionType(ctypes.default_abi, ctypes.uint64_t, [ctypes.bool]).ptr;
@@ -2590,8 +2590,8 @@ function run_single_closure_tests(library, abi, suffix) {
     return bignum1;
   }
   var closure64 = fn_64_t(closure_fn_64, null, bignum2);
-  do_check_eq(ctypes.UInt64.compare(closure64(false), bignum1), 0);
-  do_check_eq(ctypes.UInt64.compare(closure64(true), bignum2), 0);
+  Assert.equal(ctypes.UInt64.compare(closure64(false), bignum1), 0);
+  Assert.equal(ctypes.UInt64.compare(closure64(true), bignum2), 0);
 
   // Test a callback that returns void (see bug 682504).
   var fn_v_t = ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, []).ptr;
@@ -2613,7 +2613,7 @@ function run_single_closure_tests(library, abi, suffix) {
   } catch (e) {
     sentinelThrew = true;
   }
-  do_check_true(sentinelThrew);
+  Assert.ok(sentinelThrew);
 }
 
 function run_variadic_tests(library) {
@@ -2623,16 +2623,16 @@ function run_variadic_tests(library) {
       sum_va = library.declare("test_sum_va_cdecl", ctypes.default_abi, ctypes.int32_t,
                                ctypes.uint8_t, "...");
 
-  do_check_eq(sum_va_type.toSource(),
+  Assert.equal(sum_va_type.toSource(),
     'ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t, [ctypes.uint8_t, "..."]).ptr');
-  do_check_eq(sum_va.constructor.name, "int32_t(*)(uint8_t, ...)");
-  do_check_true(sum_va.constructor.targetType.isVariadic);
+  Assert.equal(sum_va.constructor.name, "int32_t(*)(uint8_t, ...)");
+  Assert.ok(sum_va.constructor.targetType.isVariadic);
 
-  do_check_eq(sum_va(3,
-                     ctypes.int32_t(1),
-                     ctypes.int32_t(2),
-                     ctypes.int32_t(3)),
-              6);
+  Assert.equal(sum_va(3,
+                      ctypes.int32_t(1),
+                      ctypes.int32_t(2),
+                      ctypes.int32_t(3)),
+               6);
 
   do_check_throws(function() {
     ctypes.FunctionType(ctypes.default_abi, ctypes.bool,
@@ -2661,16 +2661,16 @@ function run_variadic_tests(library) {
 
   let count_true_va = library.declare("test_sum_va_cdecl", ctypes.default_abi, ctypes.uint8_t,
                                       ctypes.uint8_t, "...");
-  do_check_eq(count_true_va(8,
-                            ctypes.bool(false),
-                            ctypes.bool(false),
-                            ctypes.bool(false),
-                            ctypes.bool(true),
-                            ctypes.bool(true),
-                            ctypes.bool(false),
-                            ctypes.bool(true),
-                            ctypes.bool(true)),
-              4);
+  Assert.equal(count_true_va(8,
+                             ctypes.bool(false),
+                             ctypes.bool(false),
+                             ctypes.bool(false),
+                             ctypes.bool(true),
+                             ctypes.bool(true),
+                             ctypes.bool(false),
+                             ctypes.bool(true),
+                             ctypes.bool(true)),
+               4);
 
   let add_char_short_int_va = library.declare("test_add_char_short_int_va_cdecl",
                                               ctypes.default_abi, ctypes.void_t,
@@ -2682,7 +2682,7 @@ function run_variadic_tests(library) {
                         ctypes.short(7),
                         ctypes.uint32_t(11));
 
-  do_check_eq(result.value, 3 + 5 + 7 + 11);
+  Assert.equal(result.value, 3 + 5 + 7 + 11);
 
   result = ctypes.int32_t.array(3)([1, 1, 1]);
   let v1 = ctypes.int32_t.array(4)([1, 2, 3, 5]);
@@ -2692,12 +2692,12 @@ function run_variadic_tests(library) {
                                       ctypes.uint8_t, ctypes.uint8_t, "...");
       // Note that vector_add_va zeroes out result first.
   let vec_sum = vector_add_va(2, 3, result, v1, v2);
-  do_check_eq(vec_sum.contents, 8);
-  do_check_eq(result[0], 8);
-  do_check_eq(result[1], 13);
-  do_check_eq(result[2], 16);
+  Assert.equal(vec_sum.contents, 8);
+  Assert.equal(result[0], 8);
+  Assert.equal(result[1], 13);
+  Assert.equal(result[2], 16);
 
-  do_check_true(!!(sum_va_type().value = sum_va_type()));
+  Assert.ok(!!(sum_va_type().value = sum_va_type()));
   let sum_notva_type = ctypes.FunctionType(sum_va_type.targetType.abi,
                                            sum_va_type.targetType.returnType,
                                            [ctypes.uint8_t]).ptr;
@@ -2716,29 +2716,29 @@ function run_static_data_tests(library) {
   let data_rect = library.declare("data_rect", rect_t);
 
   // Test reading static data.
-  do_check_true(data_rect.constructor === rect_t);
-  do_check_eq(data_rect.top, -1);
-  do_check_eq(data_rect.left, -2);
-  do_check_eq(data_rect.bottom, 3);
-  do_check_eq(data_rect.right, 4);
+  Assert.ok(data_rect.constructor === rect_t);
+  Assert.equal(data_rect.top, -1);
+  Assert.equal(data_rect.left, -2);
+  Assert.equal(data_rect.bottom, 3);
+  Assert.equal(data_rect.right, 4);
 
   // Test writing.
   data_rect.top = 9;
   data_rect.left = 8;
   data_rect.bottom = -11;
   data_rect.right = -12;
-  do_check_eq(data_rect.top, 9);
-  do_check_eq(data_rect.left, 8);
-  do_check_eq(data_rect.bottom, -11);
-  do_check_eq(data_rect.right, -12);
+  Assert.equal(data_rect.top, 9);
+  Assert.equal(data_rect.left, 8);
+  Assert.equal(data_rect.bottom, -11);
+  Assert.equal(data_rect.right, -12);
 
   // Make sure it's been written, not copied.
   let data_rect_2 = library.declare("data_rect", rect_t);
-  do_check_eq(data_rect_2.top, 9);
-  do_check_eq(data_rect_2.left, 8);
-  do_check_eq(data_rect_2.bottom, -11);
-  do_check_eq(data_rect_2.right, -12);
-  do_check_eq(ptrValue(data_rect.address()), ptrValue(data_rect_2.address()));
+  Assert.equal(data_rect_2.top, 9);
+  Assert.equal(data_rect_2.left, 8);
+  Assert.equal(data_rect_2.bottom, -11);
+  Assert.equal(data_rect_2.right, -12);
+  Assert.equal(ptrValue(data_rect.address()), ptrValue(data_rect_2.address()));
 }
 
 function run_cpp_class_tests(library) {
@@ -2767,13 +2767,13 @@ function run_cpp_class_tests(library) {
                                         ctypes.int32_t.ptr, ctypes.int32_t);
   let i = ctypes.int32_t();
   test_class_ctor(i.address(), 8);
-  do_check_eq(i.value, 8);
+  Assert.equal(i.value, 8);
 
   let test_class_add = library.declare(add_symbol, abi, ctypes.int32_t,
                                        ctypes.int32_t.ptr, ctypes.int32_t);
   let j = test_class_add(i.address(), 5);
-  do_check_eq(j, 13);
-  do_check_eq(i.value, 13);
+  Assert.equal(j, 13);
+  Assert.equal(i.value, 13);
 }
 
 // bug 522360 - try loading system library without full path

@@ -17,5 +17,5 @@ function run_test()
     } catch (e) {
         exceptionThrown = true;
     }
-    do_check_eq(false, exceptionThrown);
+    Assert.equal(false, exceptionThrown);
 }

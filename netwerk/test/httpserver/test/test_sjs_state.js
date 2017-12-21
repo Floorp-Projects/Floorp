@@ -23,13 +23,13 @@ function run_test()
 
   function done()
   {
-    do_check_eq(srv.getSharedState("shared-value"), "done!");
-    do_check_eq(srv.getState("/path-handler", "private-value"),
-                "pathHandlerPrivate2");
-    do_check_eq(srv.getState("/state1.sjs", "private-value"),
-                "");
-    do_check_eq(srv.getState("/state2.sjs", "private-value"),
-                "newPrivate5");
+    Assert.equal(srv.getSharedState("shared-value"), "done!");
+    Assert.equal(srv.getState("/path-handler", "private-value"),
+                 "pathHandlerPrivate2");
+    Assert.equal(srv.getState("/state1.sjs", "private-value"),
+                 "");
+    Assert.equal(srv.getState("/state2.sjs", "private-value"),
+                 "newPrivate5");
     do_test_pending();
     srv.stop(function() { do_test_finished(); });
   }
@@ -131,11 +131,11 @@ function expectValues(ch, oldShared, newShared, oldPrivate, newPrivate)
 {
   var getHeader = getHeaderFunction(ch);
 
-  do_check_eq(ch.responseStatus, 200);
-  do_check_eq(getHeader("X-Old-Shared-Value"), oldShared);
-  do_check_eq(getHeader("X-New-Shared-Value"), newShared);
-  do_check_eq(getHeader("X-Old-Private-Value"), oldPrivate);
-  do_check_eq(getHeader("X-New-Private-Value"), newPrivate);
+  Assert.equal(ch.responseStatus, 200);
+  Assert.equal(getHeader("X-Old-Shared-Value"), oldShared);
+  Assert.equal(getHeader("X-New-Shared-Value"), newShared);
+  Assert.equal(getHeader("X-Old-Private-Value"), oldPrivate);
+  Assert.equal(getHeader("X-New-Private-Value"), newPrivate);
 }
 
 function start_initial(ch, cx)

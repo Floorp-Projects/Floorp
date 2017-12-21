@@ -13,7 +13,7 @@ add_task(async function run_test() {
   let store = engine._store;
 
   async function applyEnsureNoFailures(records) {
-    do_check_eq((await store.applyIncomingBatch(records)).length, 0);
+    Assert.equal((await store.applyIncomingBatch(records)).length, 0);
   }
 
   _("Remove any existing entries");
@@ -37,18 +37,18 @@ add_task(async function run_test() {
     else
       do_throw("Should have only gotten one!");
   }
-  do_check_true((store.itemExists(id)));
+  Assert.ok((store.itemExists(id)));
 
   _("Should be able to find this entry as a dupe");
-  do_check_eq((await engine._findDupe({name: "name!!", value: "value??"})), id);
+  Assert.equal((await engine._findDupe({name: "name!!", value: "value??"})), id);
 
   let rec = await store.createRecord(id);
   _("Got record for id", id, rec);
-  do_check_eq(rec.name, "name!!");
-  do_check_eq(rec.value, "value??");
+  Assert.equal(rec.name, "name!!");
+  Assert.equal(rec.value, "value??");
 
   _("Create a non-existent id for delete");
-  do_check_true((await store.createRecord("deleted!!")).deleted);
+  Assert.ok((await store.createRecord("deleted!!")).deleted);
 
   _("Try updating.. doesn't do anything yet");
   await store.update({});
@@ -77,7 +77,7 @@ add_task(async function run_test() {
   await store.changeItemID(id, "newid");
 
   _("Make sure it's there");
-  do_check_true((store.itemExists("newid")));
+  Assert.ok((store.itemExists("newid")));
 
   _("Remove the entry");
   await store.remove({
@@ -109,7 +109,7 @@ add_task(async function run_test() {
     else
       do_throw("Should have only gotten one!");
   }
-  do_check_true((store.itemExists(id)));
+  Assert.ok((store.itemExists(id)));
   // mark entry as deleted
   toDelete.id = id;
   toDelete.deleted = true;

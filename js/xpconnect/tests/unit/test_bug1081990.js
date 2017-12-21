@@ -4,7 +4,7 @@ function run_test() {
   sb.obj = {};
   sb.arr = [];
   sb.fun = function() {};
-  do_check_true(sb.eval('Object.getPrototypeOf(obj) == null'));
-  do_check_true(sb.eval('Object.getPrototypeOf(arr) == null'));
-  do_check_true(sb.eval('Object.getPrototypeOf(fun) == null'));
+  Assert.ok(sb.eval('Object.getPrototypeOf(obj) == null'));
+  Assert.ok(sb.eval('Object.getPrototypeOf(arr) == null'));
+  Assert.ok(sb.eval('Object.getPrototypeOf(fun) == null'));
 }

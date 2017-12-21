@@ -44,9 +44,9 @@ function registerTableUpdate(aTable, aFilename) {
   gTables[aTable].push(redirectUrl);
 
   gHttpServer.registerPathHandler(redirectPath, function(request, response) {
-    do_print("Mock safebrowsing server handling request for " + redirectPath);
+    info("Mock safebrowsing server handling request for " + redirectPath);
     let contents = readFileToString(aFilename);
-    do_print("Length of " + aFilename + ": " + contents.length);
+    info("Length of " + aFilename + ": " + contents.length);
     response.setHeader("Content-Type",
                        "application/vnd.google.safebrowsing-update", false);
     response.setStatusLine(request.httpVersion, 200, "OK");
@@ -77,7 +77,7 @@ add_task(function test_setup() {
   let originalReqLocales = Services.locale.getRequestedLocales();
   Services.locale.setRequestedLocales(["en-US"]);
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.safebrowsing.malware.enabled");
     Services.prefs.clearUserPref("browser.safebrowsing.downloads.enabled");
     Services.prefs.clearUserPref("urlclassifier.downloadBlockTable");
@@ -106,12 +106,12 @@ add_task(function test_setup() {
   });
 
   gHttpServer.registerPathHandler("/download", function(request, response) {
-    do_print("Querying remote server for verdict");
+    info("Querying remote server for verdict");
     response.setHeader("Content-Type", "application/octet-stream", false);
     let buf = NetUtil.readInputStreamToString(
       request.bodyInputStream,
       request.bodyInputStream.available());
-    do_print("Request length: " + buf.length);
+    info("Request length: " + buf.length);
     // A garbage response. By default this produces NS_CANNOT_CONVERT_DATA as
     // the callback status.
     let blob = "this is not a serialized protocol buffer (the length doesn't match our hard-coded values)";
@@ -129,7 +129,7 @@ add_task(function test_setup() {
 
   gHttpServer.start(4444);
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     return (async function() {
       await new Promise(resolve => {
         gHttpServer.stop(resolve);
@@ -147,7 +147,7 @@ function processUpdateRequest() {
       response += "u:" + gTables[table][i] + "\n";
     }
   }
-  do_print("Returning update response: " + response);
+  info("Returning update response: " + response);
   return response;
 }
 
@@ -174,8 +174,8 @@ function waitForUpdates() {
     function updateSuccess(aEvent) {
       // Timeout of n:1000 is constructed in processUpdateRequest above and
       // passed back in the callback in nsIUrlClassifierStreamUpdater on success.
-      do_check_eq("1000", aEvent);
-      do_print("All data processed");
+      Assert.equal("1000", aEvent);
+      info("All data processed");
       resolve(true);
     }
     // Just throw if we ever get an update or download error.
@@ -195,8 +195,8 @@ function waitForUpdates() {
 function promiseQueryReputation(query, expectedShouldBlock) {
   return new Promise(resolve => {
     function onComplete(aShouldBlock, aStatus) {
-      do_check_eq(Cr.NS_OK, aStatus);
-      do_check_eq(aShouldBlock, expectedShouldBlock);
+      Assert.equal(Cr.NS_OK, aStatus);
+      Assert.equal(aShouldBlock, expectedShouldBlock);
       resolve(true);
     }
     gAppRep.queryReputation(query, onComplete);
@@ -256,8 +256,8 @@ add_task(async function test_disabled() {
     gAppRep.queryReputation(query,
       function onComplete(aShouldBlock, aStatus) {
         // We should be getting NS_ERROR_NOT_AVAILABLE if the service is disabled
-        do_check_eq(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
-        do_check_false(aShouldBlock);
+        Assert.equal(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
+        Assert.ok(!aShouldBlock);
         resolve(true);
       }
     );
@@ -277,8 +277,8 @@ add_task(async function test_disabled_through_lists() {
     gAppRep.queryReputation(query,
       function onComplete(aShouldBlock, aStatus) {
         // We should be getting NS_ERROR_NOT_AVAILABLE if the service is disabled
-        do_check_eq(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
-        do_check_false(aShouldBlock);
+        Assert.equal(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
+        Assert.ok(!aShouldBlock);
         resolve(true);
       }
     );

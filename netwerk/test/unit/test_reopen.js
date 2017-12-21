@@ -48,13 +48,13 @@ function check_throws(closure, error) {
     closure();
   } catch (e) {
     if (error instanceof Array) {
-      do_check_neq(error.indexOf(e.result), -1);
+      Assert.notEqual(error.indexOf(e.result), -1);
     } else {
-      do_check_eq(e.result, error);
+      Assert.equal(e.result, error);
     }
     thrown = true;
   }
-  do_check_true(thrown);
+  Assert.ok(thrown);
 }
 
 function check_open_throws(error) {

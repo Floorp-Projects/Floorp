@@ -32,7 +32,7 @@ var provider = {
     this._isHigh = enable;
     if (enable) {
       this._seenHigh = true;
-      do_execute_soon(stop_high_accuracy_watch);
+      executeSoon(stop_high_accuracy_watch);
     }
   },
   _isHigh: false,
@@ -49,13 +49,13 @@ catch (e) { }
 
 function successCallback()
 {
-  do_check_true(false);
+  Assert.ok(false);
   do_test_finished();
 }
 
 function errorCallback()
 {
-  do_check_true(false);
+  Assert.ok(false);
   do_test_finished();
 }
 
@@ -104,9 +104,9 @@ function check_results()
 {
   if (runningInParent) {
     // check the provider was set to high accuracy during the test
-    do_check_true(provider._seenHigh);
+    Assert.ok(provider._seenHigh);
     // check the provider is not currently set to high accuracy
-    do_check_false(provider._isHigh);
+    Assert.ok(!provider._isHigh);
   }
   do_test_finished();
 }

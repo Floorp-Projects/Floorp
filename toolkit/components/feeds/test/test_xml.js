@@ -35,7 +35,7 @@ FeedListener.prototype = {
   handleResult(result) {
     var feed = result.doc;
     try {
-      do_print("Testing feed " + this.testcase.file.path);
+      info("Testing feed " + this.testcase.file.path);
       Assert.ok(isIID(feed, Ci.nsIFeed), "Has feed interface");
 
       // eslint-disable-next-line no-eval
@@ -62,7 +62,7 @@ function createTest(data) {
       uri = data.base;
     }
 
-    do_print("Testing " + data.file.leafName);
+    info("Testing " + data.file.leafName);
 
     var parser = Cc["@mozilla.org/feed-processor;1"].createInstance(Ci.nsIFeedProcessor);
     var stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);

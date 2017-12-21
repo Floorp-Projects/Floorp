@@ -72,7 +72,7 @@ function do_run_test() {
         uri = cr.convertChromeURL(sourceURI).spec;
       }
 
-      do_check_eq(expectedURI, uri);
+      Assert.equal(expectedURI, uri);
     } catch (e) {
       dump(e + "\n");
       do_throw("Should have registered a handler for type '" +

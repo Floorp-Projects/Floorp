@@ -25,25 +25,25 @@ add_task(async function test_defaultEngine() {
   ]);
 
   search.defaultEngine = engine1;
-  do_check_eq(search.defaultEngine, engine1);
+  Assert.equal(search.defaultEngine, engine1);
   search.defaultEngine = engine2;
-  do_check_eq(search.defaultEngine, engine2);
+  Assert.equal(search.defaultEngine, engine2);
   search.defaultEngine = engine1;
-  do_check_eq(search.defaultEngine, engine1);
+  Assert.equal(search.defaultEngine, engine1);
 
   // Test that hiding the currently-default engine affects the defaultEngine getter
   // We fallback first to the original default...
   engine1.hidden = true;
-  do_check_eq(search.defaultEngine, originalDefault);
+  Assert.equal(search.defaultEngine, originalDefault);
 
   // ... and then to the first visible engine in the list, so move our second
   // engine to that position.
   search.moveEngine(engine2, 0);
   originalDefault.hidden = true;
-  do_check_eq(search.defaultEngine, engine2);
+  Assert.equal(search.defaultEngine, engine2);
 
   // Test that setting defaultEngine to an already-hidden engine works, but
   // doesn't change the return value of the getter
   search.defaultEngine = engine1;
-  do_check_eq(search.defaultEngine, engine2);
+  Assert.equal(search.defaultEngine, engine2);
 });

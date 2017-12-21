@@ -65,12 +65,12 @@ add_task(async function test_tag_updates() {
   result = PlacesUtils.history.executeQuery(query, options);
   let root = result.root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, 1);
+  Assert.equal(root.childCount, 1);
 
   let theTag = root.getChild(0)
                    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   // Bug 524219: Check that renaming the tag shows up in the result.
-  do_check_eq(theTag.title, "foo");
+  Assert.equal(theTag.title, "foo");
 
   await PlacesUtils.bookmarks.update({
     guid: tagItemGuid,
@@ -78,16 +78,16 @@ add_task(async function test_tag_updates() {
   });
 
   // Check that the item has been replaced
-  do_check_neq(theTag, root.getChild(0));
+  Assert.notEqual(theTag, root.getChild(0));
   theTag = root.getChild(0)
                    .QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  do_check_eq(theTag.title, "bar");
+  Assert.equal(theTag.title, "bar");
 
   // Check that tag container contains new title
   theTag.containerOpen = true;
-  do_check_eq(theTag.childCount, 1);
+  Assert.equal(theTag.childCount, 1);
   let node = theTag.getChild(0);
-  do_check_eq(node.title, "new title 1");
+  Assert.equal(node.title, "new title 1");
   theTag.containerOpen = false;
   root.containerOpen = false;
 
@@ -116,8 +116,8 @@ add_task(async function test_tag_updates() {
   root = result.root;
 
   root.containerOpen = true;
-  do_check_eq(root.childCount, 1);
+  Assert.equal(root.childCount, 1);
   node = root.getChild(0);
-  do_check_eq(node.title, "new title 2");
+  Assert.equal(node.title, "new title 2");
   root.containerOpen = false;
 });

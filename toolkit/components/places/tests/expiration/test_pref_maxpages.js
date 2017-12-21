@@ -97,8 +97,8 @@ add_task(async function test_pref_maxpages() {
 
     PlacesUtils.history.removeObserver(historyObserver, false);
 
-    do_check_eq(currentTest.receivedNotifications,
-                currentTest.expectedNotifications);
+    Assert.equal(currentTest.receivedNotifications,
+                 currentTest.expectedNotifications);
 
     // Clean up.
     await PlacesTestUtils.clearHistory();

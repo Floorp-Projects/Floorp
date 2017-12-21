@@ -33,7 +33,7 @@ function uri_in_db(aURI) {
 
 add_task(async function test_execute() {
   // we have a new profile, so we should have imported bookmarks
-  do_check_eq(histsvc.databaseStatus, histsvc.DATABASE_STATUS_CREATE);
+  Assert.equal(histsvc.databaseStatus, histsvc.DATABASE_STATUS_CREATE);
 
   // add a visit
   var testURI = uri("http://mozilla.com");
@@ -53,8 +53,8 @@ add_task(async function test_execute() {
   for (var i = 0; i < cc; ++i) {
     var node = root.getChild(i);
     // test node properties in RESULTS_AS_VISIT
-    do_check_eq(node.uri, testURI.spec);
-    do_check_eq(node.type, Ci.nsINavHistoryResultNode.RESULT_TYPE_URI);
+    Assert.equal(node.uri, testURI.spec);
+    Assert.equal(node.type, Ci.nsINavHistoryResultNode.RESULT_TYPE_URI);
   }
   root.containerOpen = false;
 
@@ -70,22 +70,22 @@ add_task(async function test_execute() {
   query.minVisits = 0;
   result = histsvc.executeQuery(query, options);
   result.root.containerOpen = true;
-  do_check_eq(result.root.childCount, 2);
+  Assert.equal(result.root.childCount, 2);
   result.root.containerOpen = false;
   query.minVisits = 1;
   result = histsvc.executeQuery(query, options);
   result.root.containerOpen = true;
-  do_check_eq(result.root.childCount, 2);
+  Assert.equal(result.root.childCount, 2);
   result.root.containerOpen = false;
   query.minVisits = 2;
   result = histsvc.executeQuery(query, options);
   result.root.containerOpen = true;
-  do_check_eq(result.root.childCount, 1);
+  Assert.equal(result.root.childCount, 1);
   query.minVisits = 3;
   result.root.containerOpen = false;
   result = histsvc.executeQuery(query, options);
   result.root.containerOpen = true;
-  do_check_eq(result.root.childCount, 0);
+  Assert.equal(result.root.childCount, 0);
   result.root.containerOpen = false;
 
   // test maxVisits
@@ -93,27 +93,27 @@ add_task(async function test_execute() {
   query.maxVisits = -1;
   result = histsvc.executeQuery(query, options);
   result.root.containerOpen = true;
-  do_check_eq(result.root.childCount, 2);
+  Assert.equal(result.root.childCount, 2);
   result.root.containerOpen = false;
   query.maxVisits = 0;
   result = histsvc.executeQuery(query, options);
   result.root.containerOpen = true;
-  do_check_eq(result.root.childCount, 0);
+  Assert.equal(result.root.childCount, 0);
   result.root.containerOpen = false;
   query.maxVisits = 1;
   result = histsvc.executeQuery(query, options);
   result.root.containerOpen = true;
-  do_check_eq(result.root.childCount, 1);
+  Assert.equal(result.root.childCount, 1);
   result.root.containerOpen = false;
   query.maxVisits = 2;
   result = histsvc.executeQuery(query, options);
   result.root.containerOpen = true;
-  do_check_eq(result.root.childCount, 2);
+  Assert.equal(result.root.childCount, 2);
   result.root.containerOpen = false;
   query.maxVisits = 3;
   result = histsvc.executeQuery(query, options);
   result.root.containerOpen = true;
-  do_check_eq(result.root.childCount, 2);
+  Assert.equal(result.root.childCount, 2);
   result.root.containerOpen = false;
 
   // test annotation-based queries
@@ -124,28 +124,28 @@ add_task(async function test_execute() {
   query.annotation = "testAnno";
   result = histsvc.executeQuery(query, options);
   result.root.containerOpen = true;
-  do_check_eq(result.root.childCount, 1);
-  do_check_eq(result.root.getChild(0).uri, "http://mozilla.com/");
+  Assert.equal(result.root.childCount, 1);
+  Assert.equal(result.root.getChild(0).uri, "http://mozilla.com/");
   result.root.containerOpen = false;
 
   // test annotationIsNot
   query.annotationIsNot = true;
   result = histsvc.executeQuery(query, options);
   result.root.containerOpen = true;
-  do_check_eq(result.root.childCount, 1);
-  do_check_eq(result.root.getChild(0).uri, "http://google.com/");
+  Assert.equal(result.root.childCount, 1);
+  Assert.equal(result.root.getChild(0).uri, "http://google.com/");
   result.root.containerOpen = false;
 
   // By default history is enabled.
-  do_check_true(!histsvc.historyDisabled);
+  Assert.ok(!histsvc.historyDisabled);
 
   // test getPageTitle
   await PlacesTestUtils.addVisits({ uri: uri("http://example.com"), title: "title" });
   let placeInfo = await PlacesUtils.history.fetch("http://example.com");
-  do_check_eq(placeInfo.title, "title");
+  Assert.equal(placeInfo.title, "title");
 
   // query for the visit
-  do_check_true(uri_in_db(testURI));
+  Assert.ok(uri_in_db(testURI));
 
   // test for schema changes in bug 373239
   // get direct db connection
@@ -169,6 +169,6 @@ add_task(async function test_execute() {
   result = histsvc.executeQuery(query, options);
   root = result.root;
   root.containerOpen = true;
-  do_check_true(root.childCount > 0);
+  Assert.ok(root.childCount > 0);
   root.containerOpen = false;
 });

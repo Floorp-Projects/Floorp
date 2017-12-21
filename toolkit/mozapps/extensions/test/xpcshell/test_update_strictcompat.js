@@ -95,10 +95,10 @@ for (let test of testParams) {
   let check_test_1;
   add_test(function run_test_1() {
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-      do_check_neq(a1, null);
-      do_check_eq(a1.version, "1.0");
-      do_check_eq(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DEFAULT);
-      do_check_eq(a1.releaseNotesURI, null);
+      Assert.notEqual(a1, null);
+      Assert.equal(a1.version, "1.0");
+      Assert.equal(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DEFAULT);
+      Assert.equal(a1.releaseNotesURI, null);
 
       a1.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
@@ -125,15 +125,15 @@ for (let test of testParams) {
           ensure_test_completed();
 
           AddonManager.getAllInstalls(function(aInstalls) {
-            do_check_eq(aInstalls.length, 1);
-            do_check_eq(aInstalls[0], install);
+            Assert.equal(aInstalls.length, 1);
+            Assert.equal(aInstalls[0], install);
 
-            do_check_eq(addon, a1);
-            do_check_eq(install.name, addon.name);
-            do_check_eq(install.version, "2.0");
-            do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
-            do_check_eq(install.existingAddon, addon);
-            do_check_eq(install.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
+            Assert.equal(addon, a1);
+            Assert.equal(install.name, addon.name);
+            Assert.equal(install.version, "2.0");
+            Assert.equal(install.state, AddonManager.STATE_AVAILABLE);
+            Assert.equal(install.existingAddon, addon);
+            Assert.equal(install.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
 
             // Verify that another update check returns the same AddonInstall
             a1.findUpdates({
@@ -143,10 +143,10 @@ for (let test of testParams) {
 
               onUpdateAvailable(newAddon, newInstall) {
                 AddonManager.getAllInstalls(function(aInstalls2) {
-                  do_check_eq(aInstalls2.length, 1);
-                  do_check_eq(aInstalls2[0], install);
-                  do_check_eq(newAddon, addon);
-                  do_check_eq(newInstall, install);
+                  Assert.equal(aInstalls2.length, 1);
+                  Assert.equal(aInstalls2[0], install);
+                  Assert.equal(newAddon, addon);
+                  Assert.equal(newInstall, install);
 
                   prepare_test({}, [
                     "onDownloadStarted",
@@ -173,7 +173,7 @@ for (let test of testParams) {
   let run_test_2;
   check_test_1 = (install) => {
     ensure_test_completed();
-    do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
+    Assert.equal(install.state, AddonManager.STATE_DOWNLOADED);
     run_test_2(install);
     return false;
   };
@@ -193,8 +193,8 @@ for (let test of testParams) {
 
       onNoUpdateAvailable(addon) {
         AddonManager.getAllInstalls(function(aInstalls) {
-          do_check_eq(aInstalls.length, 1);
-          do_check_eq(aInstalls[0], install);
+          Assert.equal(aInstalls.length, 1);
+          Assert.equal(aInstalls[0], install);
 
           prepare_test({
             "addon1@tests.mozilla.org": [
@@ -216,22 +216,22 @@ for (let test of testParams) {
     AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(async function(olda1) {
       await AddonTestUtils.loadAddonsList(true);
 
-      do_check_neq(olda1, null);
-      do_check_eq(olda1.version, "1.0");
-      do_check_true(isExtensionInAddonsList(profileDir, olda1.id));
+      Assert.notEqual(olda1, null);
+      Assert.equal(olda1.version, "1.0");
+      Assert.ok(isExtensionInAddonsList(profileDir, olda1.id));
 
       shutdownManager();
 
       await promiseStartupManager();
 
-      do_check_true(isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
+      Assert.ok(isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
 
       AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-        do_check_neq(a1, null);
-        do_check_eq(a1.version, "2.0");
-        do_check_true(isExtensionInAddonsList(profileDir, a1.id));
-        do_check_eq(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DISABLE);
-        do_check_eq(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
+        Assert.notEqual(a1, null);
+        Assert.equal(a1.version, "2.0");
+        Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
+        Assert.equal(a1.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DISABLE);
+        Assert.equal(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
 
         a1.uninstall();
         run_next_test();
@@ -246,17 +246,17 @@ for (let test of testParams) {
     restartManager();
 
     AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-      do_check_neq(a2, null);
-      do_check_false(a2.isActive);
-      do_check_false(a2.isCompatible);
-      do_check_true(a2.appDisabled);
-      do_check_true(a2.isCompatibleWith("0", "0"));
+      Assert.notEqual(a2, null);
+      Assert.ok(!a2.isActive);
+      Assert.ok(!a2.isCompatible);
+      Assert.ok(a2.appDisabled);
+      Assert.ok(a2.isCompatibleWith("0", "0"));
 
       a2.findUpdates({
         onCompatibilityUpdateAvailable(addon) {
-          do_check_true(a2.isCompatible);
-          do_check_false(a2.appDisabled);
-          do_check_false(a2.isActive);
+          Assert.ok(a2.isCompatible);
+          Assert.ok(!a2.appDisabled);
+          Assert.ok(!a2.isActive);
         },
 
         onUpdateAvailable(addon, install) {
@@ -264,8 +264,8 @@ for (let test of testParams) {
         },
 
         onNoUpdateAvailable(addon) {
-          do_check_eq(addon, a2);
-          do_execute_soon(check_test_3);
+          Assert.equal(addon, a2);
+          executeSoon(check_test_3);
         }
       }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
     });
@@ -274,10 +274,10 @@ for (let test of testParams) {
   check_test_3 = () => {
     restartManager();
     AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-      do_check_neq(a2, null);
-      do_check_true(a2.isActive);
-      do_check_true(a2.isCompatible);
-      do_check_false(a2.appDisabled);
+      Assert.notEqual(a2, null);
+      Assert.ok(a2.isActive);
+      Assert.ok(a2.isCompatible);
+      Assert.ok(!a2.appDisabled);
       a2.uninstall();
 
       run_next_test();
@@ -287,12 +287,12 @@ for (let test of testParams) {
   // Checks that we see no compatibility information when there is none.
   add_test(function run_test_4() {
     AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
-      do_check_neq(a3, null);
-      do_check_false(a3.isActive);
-      do_check_false(a3.isCompatible);
-      do_check_true(a3.appDisabled);
-      do_check_true(a3.isCompatibleWith("5", "5"));
-      do_check_false(a3.isCompatibleWith("2", "2"));
+      Assert.notEqual(a3, null);
+      Assert.ok(!a3.isActive);
+      Assert.ok(!a3.isCompatible);
+      Assert.ok(a3.appDisabled);
+      Assert.ok(a3.isCompatibleWith("5", "5"));
+      Assert.ok(!a3.isCompatibleWith("2", "2"));
 
       a3.findUpdates({
         sawUpdate: false,
@@ -309,7 +309,7 @@ for (let test of testParams) {
         },
 
         onNoUpdateAvailable(addon) {
-          do_check_true(this.sawUpdate);
+          Assert.ok(this.sawUpdate);
           run_next_test();
         }
       }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
@@ -321,19 +321,19 @@ for (let test of testParams) {
   let check_test_5;
   add_test(function run_test_5() {
     AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
-      do_check_neq(a3, null);
-      do_check_false(a3.isActive);
-      do_check_false(a3.isCompatible);
-      do_check_true(a3.appDisabled);
-      do_check_true(a3.isCompatibleWith("5", "5"));
-      do_check_false(a3.isCompatibleWith("2", "2"));
+      Assert.notEqual(a3, null);
+      Assert.ok(!a3.isActive);
+      Assert.ok(!a3.isCompatible);
+      Assert.ok(a3.appDisabled);
+      Assert.ok(a3.isCompatibleWith("5", "5"));
+      Assert.ok(!a3.isCompatibleWith("2", "2"));
 
       a3.findUpdates({
         sawUpdate: false,
         onCompatibilityUpdateAvailable(addon) {
-          do_check_false(a3.isCompatible);
-          do_check_true(a3.appDisabled);
-          do_check_false(a3.isActive);
+          Assert.ok(!a3.isCompatible);
+          Assert.ok(a3.appDisabled);
+          Assert.ok(!a3.isActive);
           this.sawUpdate = true;
         },
 
@@ -346,8 +346,8 @@ for (let test of testParams) {
         },
 
         onNoUpdateAvailable(addon) {
-          do_check_true(this.sawUpdate);
-          do_execute_soon(check_test_5);
+          Assert.ok(this.sawUpdate);
+          executeSoon(check_test_5);
         }
       }, AddonManager.UPDATE_WHEN_USER_REQUESTED, "3.0", "3.0");
     });
@@ -356,10 +356,10 @@ for (let test of testParams) {
   check_test_5 = () => {
     restartManager();
     AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
-      do_check_neq(a3, null);
-      do_check_false(a3.isActive);
-      do_check_false(a3.isCompatible);
-      do_check_true(a3.appDisabled);
+      Assert.notEqual(a3, null);
+      Assert.ok(!a3.isActive);
+      Assert.ok(!a3.isCompatible);
+      Assert.ok(a3.appDisabled);
 
       a3.uninstall();
       run_next_test();
@@ -395,8 +395,8 @@ for (let test of testParams) {
 
   let check_test_6;
   continue_test_6 = (install) => {
-    do_check_neq(install.existingAddon, null);
-    do_check_eq(install.existingAddon.id, "addon1@tests.mozilla.org");
+    Assert.notEqual(install.existingAddon, null);
+    Assert.equal(install.existingAddon.id, "addon1@tests.mozilla.org");
 
     prepare_test({
       "addon1@tests.mozilla.org": [
@@ -409,13 +409,13 @@ for (let test of testParams) {
   };
 
   check_test_6 = (install) => {
-    do_check_eq(install.existingAddon.pendingUpgrade.install, install);
+    Assert.equal(install.existingAddon.pendingUpgrade.install, install);
 
     restartManager();
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-      do_check_neq(a1, null);
-      do_check_eq(a1.version, "2.0");
-      do_check_eq(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
+      Assert.notEqual(a1, null);
+      Assert.equal(a1.version, "2.0");
+      Assert.equal(a1.releaseNotesURI.spec, "http://example.com/updateInfo.xhtml");
       a1.uninstall();
       run_next_test();
     });
@@ -508,67 +508,67 @@ for (let test of testParams) {
       restartManager();
 
       testserver.registerPathHandler("/data/param_test.rdf", function(request, response) {
-        do_check_neq(request.queryString, "");
+        Assert.notEqual(request.queryString, "");
         let [req_version, item_id, item_version,
              item_maxappversion, item_status,
              app_id, app_version, current_app_version,
              app_os, app_abi, app_locale, update_type] =
              request.queryString.split("/").map(a => decodeURIComponent(a));
 
-        do_check_eq(req_version, "2");
+        Assert.equal(req_version, "2");
 
         switch (item_id) {
         case "addon1@tests.mozilla.org":
-          do_check_eq(item_version, "5.0");
-          do_check_eq(item_maxappversion, "2");
-          do_check_eq(item_status, "userEnabled");
-          do_check_eq(app_version, "1");
-          do_check_eq(update_type, "97");
+          Assert.equal(item_version, "5.0");
+          Assert.equal(item_maxappversion, "2");
+          Assert.equal(item_status, "userEnabled");
+          Assert.equal(app_version, "1");
+          Assert.equal(update_type, "97");
           break;
         case "addon2@tests.mozilla.org":
-          do_check_eq(item_version, "67.0.5b1");
-          do_check_eq(item_maxappversion, "3");
-          do_check_eq(item_status, "userDisabled");
-          do_check_eq(app_version, "1");
-          do_check_eq(update_type, "49");
+          Assert.equal(item_version, "67.0.5b1");
+          Assert.equal(item_maxappversion, "3");
+          Assert.equal(item_status, "userDisabled");
+          Assert.equal(app_version, "1");
+          Assert.equal(update_type, "49");
           break;
         case "addon3@tests.mozilla.org":
-          do_check_eq(item_version, "1.3+");
-          do_check_eq(item_maxappversion, "0");
-          do_check_eq(item_status, "userEnabled,incompatible");
-          do_check_eq(app_version, "1");
-          do_check_eq(update_type, "112");
+          Assert.equal(item_version, "1.3+");
+          Assert.equal(item_maxappversion, "0");
+          Assert.equal(item_status, "userEnabled,incompatible");
+          Assert.equal(app_version, "1");
+          Assert.equal(update_type, "112");
           break;
         case "addon4@tests.mozilla.org":
-          do_check_eq(item_version, "0.5ab6");
-          do_check_eq(item_maxappversion, "5");
-          do_check_eq(item_status, "userEnabled");
-          do_check_eq(app_version, "2");
-          do_check_eq(update_type, "98");
+          Assert.equal(item_version, "0.5ab6");
+          Assert.equal(item_maxappversion, "5");
+          Assert.equal(item_status, "userEnabled");
+          Assert.equal(app_version, "2");
+          Assert.equal(update_type, "98");
           break;
         case "addon5@tests.mozilla.org":
-          do_check_eq(item_version, "1.0");
-          do_check_eq(item_maxappversion, "1");
-          do_check_eq(item_status, "userEnabled");
-          do_check_eq(app_version, "1");
-          do_check_eq(update_type, "35");
+          Assert.equal(item_version, "1.0");
+          Assert.equal(item_maxappversion, "1");
+          Assert.equal(item_status, "userEnabled");
+          Assert.equal(app_version, "1");
+          Assert.equal(update_type, "35");
           break;
         case "addon6@tests.mozilla.org":
-          do_check_eq(item_version, "1.0");
-          do_check_eq(item_maxappversion, "1");
-          do_check_eq(item_status, "userEnabled");
-          do_check_eq(app_version, "1");
-          do_check_eq(update_type, "99");
+          Assert.equal(item_version, "1.0");
+          Assert.equal(item_maxappversion, "1");
+          Assert.equal(item_status, "userEnabled");
+          Assert.equal(app_version, "1");
+          Assert.equal(update_type, "99");
           break;
         default:
           ok(false, "Update request for unexpected add-on " + item_id);
         }
 
-        do_check_eq(app_id, "xpcshell@tests.mozilla.org");
-        do_check_eq(current_app_version, "1");
-        do_check_eq(app_os, "XPCShell");
-        do_check_eq(app_abi, "noarch-spidermonkey");
-        do_check_eq(app_locale, "fr-FR");
+        Assert.equal(app_id, "xpcshell@tests.mozilla.org");
+        Assert.equal(current_app_version, "1");
+        Assert.equal(app_os, "XPCShell");
+        Assert.equal(app_abi, "noarch-spidermonkey");
+        Assert.equal(app_locale, "fr-FR");
 
         request.setStatusLine(null, 500, "Server Error");
       });
@@ -597,7 +597,7 @@ for (let test of testParams) {
         let compatListener = {
           onUpdateFinished(addon, error) {
             if (--count == 0)
-              do_execute_soon(next_test);
+              executeSoon(next_test);
           }
         };
 
@@ -608,7 +608,7 @@ for (let test of testParams) {
 
           onUpdateFinished(addon, error) {
             if (--count == 0)
-              do_execute_soon(next_test);
+              executeSoon(next_test);
           }
         };
 
@@ -640,8 +640,8 @@ for (let test of testParams) {
     restartManager();
 
     AddonManager.getAddonByID("addon4@tests.mozilla.org", function(a4) {
-      do_check_true(a4.isActive, "addon4 is active");
-      do_check_true(a4.isCompatible, "addon4 is compatible");
+      Assert.ok(a4.isActive, "addon4 is active");
+      Assert.ok(a4.isCompatible, "addon4 is compatible");
 
       run_next_test();
     });
@@ -653,7 +653,7 @@ for (let test of testParams) {
     AddonManager.getAddonByID("addon4@tests.mozilla.org", function(a4) {
       a4.findUpdates({
         onUpdateFinished(addon) {
-          do_check_true(addon.isCompatible, "addon4 is compatible");
+          Assert.ok(addon.isCompatible, "addon4 is compatible");
 
           run_next_test();
         }
@@ -667,7 +667,7 @@ for (let test of testParams) {
     AddonManager.getAddonByID("addon4@tests.mozilla.org", function(a4) {
       a4.findUpdates({
         onUpdateFinished(addon) {
-          do_check_false(addon.isCompatible, "addon4 is compatible");
+          Assert.ok(!addon.isCompatible, "addon4 is compatible");
 
           run_next_test();
         }
@@ -680,8 +680,8 @@ for (let test of testParams) {
     restartManager();
 
     AddonManager.getAddonByID("addon4@tests.mozilla.org", function(a4) {
-      do_check_false(a4.isActive, "addon4 is active");
-      do_check_false(a4.isCompatible, "addon4 is compatible");
+      Assert.ok(!a4.isActive, "addon4 is active");
+      Assert.ok(!a4.isCompatible, "addon4 is compatible");
 
       a4.uninstall();
       run_next_test();
@@ -710,11 +710,11 @@ for (let test of testParams) {
     restartManager();
 
     AddonManager.getAddonByID("addon7@tests.mozilla.org", function(a7) {
-      do_check_neq(a7, null);
-      do_check_false(a7.isActive);
-      do_check_false(a7.isCompatible);
-      do_check_true(a7.appDisabled);
-      do_check_true(a7.isCompatibleWith("0", "0"));
+      Assert.notEqual(a7, null);
+      Assert.ok(!a7.isActive);
+      Assert.ok(!a7.isCompatible);
+      Assert.ok(a7.appDisabled);
+      Assert.ok(a7.isCompatibleWith("0", "0"));
 
       a7.findUpdates({
         sawUpdate: false,
@@ -727,8 +727,8 @@ for (let test of testParams) {
         },
 
         onUpdateFinished(addon) {
-          do_check_true(addon.isCompatible);
-          do_execute_soon(check_test_13);
+          Assert.ok(addon.isCompatible);
+          executeSoon(check_test_13);
         }
       }, AddonManager.UPDATE_WHEN_NEW_APP_DETECTED, "3.0", "3.0");
     });
@@ -737,10 +737,10 @@ for (let test of testParams) {
   check_test_13 = () => {
     restartManager();
     AddonManager.getAddonByID("addon7@tests.mozilla.org", function(a7) {
-      do_check_neq(a7, null);
-      do_check_true(a7.isActive);
-      do_check_true(a7.isCompatible);
-      do_check_false(a7.appDisabled);
+      Assert.notEqual(a7, null);
+      Assert.ok(a7.isActive);
+      Assert.ok(a7.isCompatible);
+      Assert.ok(!a7.appDisabled);
 
       a7.uninstall();
       run_next_test();
@@ -792,11 +792,11 @@ for (let test of testParams) {
         },
 
         onDownloadStarted(aInstall) {
-          do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+          Assert.equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
         },
 
         onDownloadEnded(aInstall) {
-          do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+          Assert.equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
         },
 
         onDownloadFailed(aInstall) {
@@ -808,14 +808,14 @@ for (let test of testParams) {
         },
 
         onInstallStarted(aInstall) {
-          do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+          Assert.equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
         },
 
         onInstallEnded(aInstall) {
-          do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
-          do_check_eq(aInstall.existingAddon.pendingUpgrade.install, aInstall);
+          Assert.equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+          Assert.equal(aInstall.existingAddon.pendingUpgrade.install, aInstall);
 
-          do_execute_soon(check_test_14);
+          executeSoon(check_test_14);
         },
 
         onInstallFailed(aInstall) {
@@ -835,12 +835,12 @@ for (let test of testParams) {
     restartManager();
     AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                  "addon8@tests.mozilla.org"], function([a1, a8]) {
-      do_check_neq(a1, null);
-      do_check_eq(a1.version, "2.0");
+      Assert.notEqual(a1, null);
+      Assert.equal(a1.version, "2.0");
       a1.uninstall();
 
-      do_check_neq(a8, null);
-      do_check_eq(a8.version, "1.0");
+      Assert.notEqual(a8, null);
+      Assert.equal(a8.version, "1.0");
       a8.uninstall();
 
       run_next_test();
@@ -881,7 +881,7 @@ for (let test of testParams) {
 
     AddonManager.getAddonByID("addon8@tests.mozilla.org", function(a8) {
       a8.uninstall();
-      do_check_false(hasFlag(a8.permissions, AddonManager.PERM_CAN_UPGRADE));
+      Assert.ok(!hasFlag(a8.permissions, AddonManager.PERM_CAN_UPGRADE));
 
       // The background update check will find updates for both add-ons but only
       // proceed to install one of them.
@@ -893,11 +893,11 @@ for (let test of testParams) {
         },
 
         onDownloadStarted(aInstall) {
-          do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+          Assert.equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
         },
 
         onDownloadEnded(aInstall) {
-          do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+          Assert.equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
         },
 
         onDownloadFailed(aInstall) {
@@ -909,12 +909,12 @@ for (let test of testParams) {
         },
 
         onInstallStarted(aInstall) {
-          do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+          Assert.equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
         },
 
         onInstallEnded(aInstall) {
-          do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
-          do_execute_soon(check_test_15);
+          Assert.equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
+          executeSoon(check_test_15);
         },
 
         onInstallFailed(aInstall) {
@@ -934,11 +934,11 @@ for (let test of testParams) {
     restartManager();
     AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                  "addon8@tests.mozilla.org"], function([a1, a8]) {
-      do_check_neq(a1, null);
-      do_check_eq(a1.version, "2.0");
+      Assert.notEqual(a1, null);
+      Assert.equal(a1.version, "2.0");
       a1.uninstall();
 
-      do_check_eq(a8, null);
+      Assert.equal(a8, null);
 
       run_next_test();
     });
@@ -966,7 +966,7 @@ for (let test of testParams) {
       onNewInstall(aInstall) {
         equal(aInstall.existingAddon.id, "addon9@tests.mozilla.org",
               "Saw unexpected onNewInstall for " + aInstall.existingAddon.id);
-        do_check_eq(aInstall.version, "2.0");
+        Assert.equal(aInstall.version, "2.0");
       },
       onDownloadFailed(aInstall) {
         AddonManager.getAddonByID("addon9@tests.mozilla.org", function(a9) {
@@ -1003,7 +1003,7 @@ for (let test of testParams) {
     restartManager();
 
     AddonManager.getAddonByID("addon11@tests.mozilla.org", function(a11) {
-      do_check_neq(a11, null);
+      Assert.notEqual(a11, null);
 
       a11.findUpdates({
         onCompatibilityUpdateAvailable() {
@@ -1031,7 +1031,7 @@ for (let test of testParams) {
 
     shutdownManager();
 
-    await new Promise(do_execute_soon);
+    await new Promise(executeSoon);
   });
 }
 
@@ -1056,7 +1056,7 @@ add_test(function run_test_7() {
   // XXX The lightweight theme manager strips non-https updateURLs so hack it
   // back in.
   let themes = JSON.parse(Services.prefs.getCharPref("lightweightThemes.usedThemes"));
-  do_check_eq(themes.length, 1);
+  Assert.equal(themes.length, 1);
   themes[0].updateURL = "http://localhost:" + gPort + "/data/lwtheme.js";
   Services.prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(themes));
 
@@ -1077,16 +1077,16 @@ add_test(function run_test_7() {
   });
 
   AddonManager.getAddonByID("1@personas.mozilla.org", function(p1) {
-    do_check_neq(p1, null);
-    do_check_eq(p1.version, "1");
-    do_check_eq(p1.name, "Test LW Theme");
-    do_check_true(p1.isActive);
-    do_check_eq(p1.installDate.getTime(), p1.updateDate.getTime());
+    Assert.notEqual(p1, null);
+    Assert.equal(p1.version, "1");
+    Assert.equal(p1.name, "Test LW Theme");
+    Assert.ok(p1.isActive);
+    Assert.equal(p1.installDate.getTime(), p1.updateDate.getTime());
 
     // 5 seconds leeway seems like a lot, but tests can run slow and really if
     // this is within 5 seconds it is fine. If it is going to be wrong then it
     // is likely to be hours out at least
-    do_check_true((Date.now() - p1.installDate.getTime()) < 5000);
+    Assert.ok((Date.now() - p1.installDate.getTime()) < 5000);
 
     gInstallDate = p1.installDate.getTime();
 
@@ -1105,16 +1105,16 @@ add_test(function run_test_7() {
 
 function check_test_7() {
   AddonManager.getAddonByID("1@personas.mozilla.org", function(p1) {
-    do_check_neq(p1, null);
-    do_check_eq(p1.version, "2");
-    do_check_eq(p1.name, "Updated Theme");
-    do_check_eq(p1.installDate.getTime(), gInstallDate);
-    do_check_true(p1.installDate.getTime() < p1.updateDate.getTime());
+    Assert.notEqual(p1, null);
+    Assert.equal(p1.version, "2");
+    Assert.equal(p1.name, "Updated Theme");
+    Assert.equal(p1.installDate.getTime(), gInstallDate);
+    Assert.ok(p1.installDate.getTime() < p1.updateDate.getTime());
 
     // 5 seconds leeway seems like a lot, but tests can run slow and really if
     // this is within 5 seconds it is fine. If it is going to be wrong then it
     // is likely to be hours out at least
-    do_check_true((Date.now() - p1.updateDate.getTime()) < 5000);
+    Assert.ok((Date.now() - p1.updateDate.getTime()) < 5000);
 
     gInstallDate = p1.installDate.getTime();
 

@@ -7,7 +7,7 @@
 /* globals __LOCATION__ */
 
 function run_test() {
-  do_check_eq(__LOCATION__.leafName, "test_location.js");
+  Assert.equal(__LOCATION__.leafName, "test_location.js");
   // also check that __LOCATION__ works via load()
   load("location_load.js");
 }

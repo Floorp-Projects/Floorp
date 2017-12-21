@@ -39,7 +39,7 @@ var decoder;
 
 function promise_check_exist(path, shouldExist) {
   return (async function() {
-    do_print("Ensuring that " + path + (shouldExist ? " exists" : " does not exist"));
+    info("Ensuring that " + path + (shouldExist ? " exists" : " does not exist"));
     if ((await OS.File.exists(path)) != shouldExist) {
       throw new Error("File " + path + " should " + (shouldExist ? "exist" : "not exist"));
     }
@@ -48,7 +48,7 @@ function promise_check_exist(path, shouldExist) {
 
 function promise_check_contents(path, expect) {
   return (async function() {
-    do_print("Checking whether " + path + " has the right contents");
+    info("Checking whether " + path + " has the right contents");
     let actual = await OS.File.read(path, { encoding: "utf-8", compression: "lz4" });
     Assert.deepEqual(JSON.parse(actual), expect, `File ${path} contains the expected data.`);
   })();
@@ -66,14 +66,14 @@ add_task(async function test_first_write_backup() {
   let initial_content = generateFileContents("initial");
   let new_content = generateFileContents("test_1");
 
-  do_print("Before the first write, none of the files should exist");
+  info("Before the first write, none of the files should exist");
   await promise_check_exist(Paths.backups, false);
 
   await File.makeDir(Paths.backups);
   await File.writeAtomic(Paths.clean, JSON.stringify(initial_content), { encoding: "utf-8", compression: "lz4" });
   await SessionFile.write(new_content);
 
-  do_print("After first write, a few files should have been created");
+  info("After first write, a few files should have been created");
   await promise_check_exist(Paths.backups, true);
   await promise_check_exist(Paths.clean, false);
   await promise_check_exist(Paths.cleanBackup, true);
@@ -118,7 +118,7 @@ add_task(async function test_shutdown() {
 
   await SessionWorker.post("write", [output, { isFinalWrite: true, performShutdownCleanup: true}]);
 
-  do_check_false((await File.exists(Paths.recovery)));
-  do_check_false((await File.exists(Paths.recoveryBackup)));
+  Assert.equal(false, (await File.exists(Paths.recovery)));
+  Assert.equal(false, (await File.exists(Paths.recoveryBackup)));
   await promise_check_contents(Paths.clean, output);
 });

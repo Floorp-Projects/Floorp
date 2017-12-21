@@ -177,18 +177,18 @@ add_task(async function test_import_chromefavicon() {
   const CHROME_FAVICON_URI = NetUtil.newURI("chrome://global/skin/icons/info.svg");
   const CHROME_FAVICON_URI_2 = NetUtil.newURI("chrome://global/skin/icons/error-16.png");
 
-  do_print("Importing from html");
+  info("Importing from html");
   await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Insert bookmark");
+  info("Insert bookmark");
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: PAGE_URI,
     title: "Test"
   });
 
-  do_print("Set favicon");
+  info("Set favicon");
   await new Promise(resolve => {
     PlacesUtils.favicons.setAndFetchFaviconForPage(
       PAGE_URI, CHROME_FAVICON_URI, true,
@@ -207,11 +207,11 @@ add_task(async function test_import_chromefavicon() {
   test_bookmarks.unfiled.push(
     { title: "Test", url: PAGE_URI.spec, icon: base64Icon });
 
-  do_print("Export to html");
+  info("Export to html");
   await BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Set favicon");
+  info("Set favicon");
   // Change the favicon to check it's really imported again later.
   await new Promise(resolve => {
     PlacesUtils.favicons.setAndFetchFaviconForPage(
@@ -220,12 +220,12 @@ add_task(async function test_import_chromefavicon() {
       resolve, Services.scriptSecurityManager.getSystemPrincipal());
   });
 
-  do_print("import from html");
+  info("import from html");
   await PlacesUtils.bookmarks.eraseEverything();
   await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Test imported bookmarks");
+  info("Test imported bookmarks");
   await testImportedBookmarks();
 
   // Cleanup.
@@ -265,7 +265,7 @@ add_task(async function test_import_ontop() {
 
 async function testImportedBookmarks() {
   for (let group in test_bookmarks) {
-    do_print("[testImportedBookmarks()] Checking group '" + group + "'");
+    info("[testImportedBookmarks()] Checking group '" + group + "'");
 
     let root;
     switch (group) {
@@ -281,7 +281,7 @@ async function testImportedBookmarks() {
     }
 
     let items = test_bookmarks[group];
-    do_check_eq(root.childCount, items.length);
+    Assert.equal(root.childCount, items.length);
 
     for (let key in items) {
       await checkItem(items[key], root.getChild(key));
@@ -300,33 +300,33 @@ function checkItem(aExpected, aNode) {
     for (let prop in aExpected) {
       switch (prop) {
         case "type":
-          do_check_eq(aNode.type, aExpected.type);
+          Assert.equal(aNode.type, aExpected.type);
           break;
         case "title":
-          do_check_eq(aNode.title, aExpected.title);
+          Assert.equal(aNode.title, aExpected.title);
           break;
         case "description":
-          do_check_eq(PlacesUtils.annotations
-                                 .getItemAnnotation(id, DESCRIPTION_ANNO),
-                      aExpected.description);
+          Assert.equal(PlacesUtils.annotations
+                                  .getItemAnnotation(id, DESCRIPTION_ANNO),
+                       aExpected.description);
           break;
         case "dateAdded":
-          do_check_eq(PlacesUtils.toPRTime(bookmark.dateAdded),
-                      aExpected.dateAdded);
+          Assert.equal(PlacesUtils.toPRTime(bookmark.dateAdded),
+                       aExpected.dateAdded);
           break;
         case "lastModified":
-          do_check_eq(PlacesUtils.toPRTime(bookmark.lastModified),
-                      aExpected.lastModified);
+          Assert.equal(PlacesUtils.toPRTime(bookmark.lastModified),
+                       aExpected.lastModified);
           break;
         case "url":
           if (!("feedUrl" in aExpected))
-            do_check_eq(aNode.uri, aExpected.url);
+            Assert.equal(aNode.uri, aExpected.url);
           break;
         case "icon":
           let {data} = await getFaviconDataForPage(aExpected.url);
           let base64Icon = "data:image/png;base64," +
                            base64EncodeString(String.fromCharCode.apply(String, data));
-          do_check_true(base64Icon == aExpected.icon);
+          Assert.ok(base64Icon == aExpected.icon);
           break;
         case "keyword": {
           let entry = await PlacesUtils.keywords.fetch({ url: aNode.uri });
@@ -334,9 +334,9 @@ function checkItem(aExpected, aNode) {
           break;
         }
         case "sidebar":
-          do_check_eq(PlacesUtils.annotations
-                                 .itemHasAnnotation(id, LOAD_IN_SIDEBAR_ANNO),
-                      aExpected.sidebar);
+          Assert.equal(PlacesUtils.annotations
+                                  .itemHasAnnotation(id, LOAD_IN_SIDEBAR_ANNO),
+                       aExpected.sidebar);
           break;
         case "postData": {
           let entry = await PlacesUtils.keywords.fetch({ url: aNode.uri });
@@ -345,20 +345,20 @@ function checkItem(aExpected, aNode) {
         }
         case "charset":
           let testURI = NetUtil.newURI(aNode.uri);
-          do_check_eq((await PlacesUtils.getCharsetForURI(testURI)), aExpected.charset);
+          Assert.equal((await PlacesUtils.getCharsetForURI(testURI)), aExpected.charset);
           break;
         case "feedUrl":
           let livemark = await PlacesUtils.livemarks.getLivemark({ id });
           if (aExpected.url) {
-            do_check_eq(livemark.siteURI.spec, aExpected.url);
+            Assert.equal(livemark.siteURI.spec, aExpected.url);
           }
-          do_check_eq(livemark.feedURI.spec, aExpected.feedUrl);
+          Assert.equal(livemark.feedURI.spec, aExpected.feedUrl);
           break;
         case "children":
           let folder = aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-          do_check_eq(folder.hasChildren, aExpected.children.length > 0);
+          Assert.equal(folder.hasChildren, aExpected.children.length > 0);
           folder.containerOpen = true;
-          do_check_eq(folder.childCount, aExpected.children.length);
+          Assert.equal(folder.childCount, aExpected.children.length);
 
           for (let index = 0; index < aExpected.children.length; index++) {
             await checkItem(aExpected.children[index], folder.getChild(index));

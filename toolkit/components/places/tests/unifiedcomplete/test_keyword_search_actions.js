@@ -27,7 +27,7 @@ add_task(async function test_keyword_search() {
   await addBookmark({ uri: uri2, title: "Noparam", keyword: "noparam"});
   await addBookmark({ uri: uri2, title: "Noparam-Post", keyword: "post_noparam", postData: "noparam=1"});
 
-  do_print("Plain keyword query");
+  info("Plain keyword query");
   await check_autocomplete({
     search: "key term",
     searchParam: "enable-actions",
@@ -35,14 +35,14 @@ add_task(async function test_keyword_search() {
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
   });
 
-  do_print("Plain keyword UC");
+  info("Plain keyword UC");
   await check_autocomplete({
     search: "key TERM",
     matches: [ { uri: NetUtil.newURI("http://abc/?search=TERM"),
                  title: "abc", style: ["keyword", "heuristic"] } ]
   });
 
-  do_print("Multi-word keyword query");
+  info("Multi-word keyword query");
   await check_autocomplete({
     search: "key multi word",
     searchParam: "enable-actions",
@@ -50,7 +50,7 @@ add_task(async function test_keyword_search() {
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
   });
 
-  do_print("Keyword query with +");
+  info("Keyword query with +");
   await check_autocomplete({
     search: "key blocking+",
     searchParam: "enable-actions",
@@ -58,7 +58,7 @@ add_task(async function test_keyword_search() {
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
   });
 
-  do_print("Unescaped term in query");
+  info("Unescaped term in query");
   // ... but note that UnifiedComplete calls encodeURIComponent() on the query
   // string when it builds the URL, so the expected result will have the
   // ユニコード substring encoded in the URL.
@@ -69,7 +69,7 @@ add_task(async function test_keyword_search() {
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
   });
 
-  do_print("Keyword that happens to match a page");
+  info("Keyword that happens to match a page");
   await check_autocomplete({
     search: "key ThisPageIsInHistory",
     searchParam: "enable-actions",
@@ -77,7 +77,7 @@ add_task(async function test_keyword_search() {
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
   });
 
-  do_print("Keyword without query (without space)");
+  info("Keyword without query (without space)");
   await check_autocomplete({
     search: "key",
     searchParam: "enable-actions",
@@ -85,7 +85,7 @@ add_task(async function test_keyword_search() {
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
   });
 
-  do_print("Keyword without query (with space)");
+  info("Keyword without query (with space)");
   await check_autocomplete({
     search: "key ",
     searchParam: "enable-actions",
@@ -93,7 +93,7 @@ add_task(async function test_keyword_search() {
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
   });
 
-  do_print("POST Keyword");
+  info("POST Keyword");
   await check_autocomplete({
     search: "post foo",
     searchParam: "enable-actions",
@@ -101,7 +101,7 @@ add_task(async function test_keyword_search() {
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
   });
 
-  do_print("Bug 420328: no-param keyword with a param");
+  info("Bug 420328: no-param keyword with a param");
   await check_autocomplete({
     search: "noparam foo",
     searchParam: "enable-actions",
@@ -113,7 +113,7 @@ add_task(async function test_keyword_search() {
     matches: [ makeSearchMatch("post_noparam foo", { heuristic: true }) ]
   });
 
-  do_print("escaping with default UTF-8 charset");
+  info("escaping with default UTF-8 charset");
   await check_autocomplete({
     search: "encoded foé",
     searchParam: "enable-actions",
@@ -121,7 +121,7 @@ add_task(async function test_keyword_search() {
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
   });
 
-  do_print("escaping with forced ISO-8859-1 charset");
+  info("escaping with forced ISO-8859-1 charset");
   await check_autocomplete({
     search: "charset foé",
     searchParam: "enable-actions",
@@ -129,7 +129,7 @@ add_task(async function test_keyword_search() {
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
   });
 
-  do_print("Bug 359809: escaping +, / and @ with default UTF-8 charset");
+  info("Bug 359809: escaping +, / and @ with default UTF-8 charset");
   await check_autocomplete({
     search: "encoded +/@",
     searchParam: "enable-actions",
@@ -137,7 +137,7 @@ add_task(async function test_keyword_search() {
                  title: "abc", style: [ "action", "keyword", "heuristic" ] } ]
   });
 
-  do_print("Bug 359809: escaping +, / and @ with forced ISO-8859-1 charset");
+  info("Bug 359809: escaping +, / and @ with forced ISO-8859-1 charset");
   await check_autocomplete({
     search: "charset +/@",
     searchParam: "enable-actions",

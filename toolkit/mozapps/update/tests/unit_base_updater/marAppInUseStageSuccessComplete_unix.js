@@ -69,7 +69,7 @@ function checkPostUpdateAppLogFinished() {
   checkPostUpdateRunningFile(true);
   checkFilesAfterUpdateSuccess(getApplyDirFile);
   checkUpdateLogContents(LOG_REPLACE_SUCCESS, false, true);
-  do_execute_soon(waitForUpdateXMLFiles);
+  executeSoon(waitForUpdateXMLFiles);
 }
 
 /**
@@ -87,7 +87,7 @@ function setupSymLinks() {
   if (IS_UNIX) {
     removeSymlink();
     createSymlink();
-    do_register_cleanup(removeSymlink);
+    registerCleanupFunction(removeSymlink);
     gTestFiles.splice(gTestFiles.length - 3, 0,
       {
         description: "Readable symlink",

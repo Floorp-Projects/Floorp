@@ -63,10 +63,10 @@ function add_one_test(useHardFail, timeoutPrefName, timeoutMilliseconds) {
   add_test(function() {
     let endTime = new Date();
     let timeDifference = endTime - startTime;
-    do_print(`useHardFail = ${useHardFail}`);
-    do_print(`startTime = ${startTime.getTime()} (${startTime})`);
-    do_print(`endTime = ${endTime.getTime()} (${endTime})`);
-    do_print(`timeDifference = ${timeDifference}ms`);
+    info(`useHardFail = ${useHardFail}`);
+    info(`startTime = ${startTime.getTime()} (${startTime})`);
+    info(`endTime = ${endTime.getTime()} (${endTime})`);
+    info(`timeDifference = ${timeDifference}ms`);
     // Date() is not guaranteed to be monotonic, so add extra fuzz time to
     // prevent intermittent failures (this only appeared to be a problem on
     // Windows XP). See Bug 1121117.

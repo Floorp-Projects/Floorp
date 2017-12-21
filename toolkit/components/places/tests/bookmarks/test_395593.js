@@ -15,9 +15,9 @@ function check_queries_results(aQueries, aOptions, aExpectedBookmarks) {
     dump("nodes[" + i + "]: " + root.getChild(0).title + "\n");
   }
 
-  do_check_eq(root.childCount, aExpectedBookmarks.length);
+  Assert.equal(root.childCount, aExpectedBookmarks.length);
   for (let i = 0; i < root.childCount; i++) {
-    do_check_eq(root.getChild(i).bookmarkGuid, aExpectedBookmarks[i].guid);
+    Assert.equal(root.getChild(i).bookmarkGuid, aExpectedBookmarks[i].guid);
   }
 
   root.containerOpen = false;

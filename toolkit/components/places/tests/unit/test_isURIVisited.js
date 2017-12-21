@@ -35,32 +35,31 @@ function* step() {
                   .getService(Ci.mozIAsyncHistory);
 
   for (let scheme in SCHEMES) {
-    do_print("Testing scheme " + scheme);
+    info("Testing scheme " + scheme);
     for (let t in PlacesUtils.history.TRANSITIONS) {
-      do_print("With transition " + t);
+      info("With transition " + t);
       let transition = PlacesUtils.history.TRANSITIONS[t];
 
       let uri = NetUtil.newURI(scheme + "mozilla.org/");
 
       history.isURIVisited(uri, function(aURI, aIsVisited) {
-        do_check_true(uri.equals(aURI));
-        do_check_false(aIsVisited);
+        Assert.ok(uri.equals(aURI));
+        Assert.ok(!aIsVisited);
 
         let callback = {
           handleError() {},
           handleResult() {},
           handleCompletion() {
-            do_print("Added visit to " + uri.spec);
+            info("Added visit to " + uri.spec);
 
             history.isURIVisited(uri, function(aURI2, aIsVisited2) {
-              do_check_true(uri.equals(aURI2));
-              let checker = SCHEMES[scheme] ? do_check_true : do_check_false;
-              checker(aIsVisited2);
+              Assert.ok(uri.equals(aURI2));
+              Assert.ok(SCHEMES[scheme] ? aIsVisited2 : !aIsVisited2);
 
               PlacesTestUtils.clearHistory().then(function() {
                 history.isURIVisited(uri, function(aURI3, aIsVisited3) {
-                  do_check_true(uri.equals(aURI3));
-                  do_check_false(aIsVisited3);
+                  Assert.ok(uri.equals(aURI3));
+                  Assert.ok(!aIsVisited3);
                   gRunner.next();
                 });
               });

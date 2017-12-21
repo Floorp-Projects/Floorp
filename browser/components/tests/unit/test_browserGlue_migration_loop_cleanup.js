@@ -24,7 +24,7 @@ add_task(async function test_check_cleanup_loop_prefs() {
             "should have left non-loop pref 'loo.createdRoom' untouched");
 });
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   Services.prefs.clearUserPref("browser.migration.version");
   Services.prefs.clearUserPref("loop.createdRoom");
   Services.prefs.clearUserPref("loop1.createdRoom");

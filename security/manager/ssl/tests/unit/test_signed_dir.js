@@ -61,7 +61,7 @@ add_task(async function testAPIFails() {
   await verifyDirAsync(Cr.NS_ERROR_SIGNED_JAR_NOT_SIGNED);
 });
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   if (gTarget.exists()) {
     gTarget.remove(true);
   }

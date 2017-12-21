@@ -6,7 +6,7 @@ function getTestServerPort() {
   if (!Number.isFinite(port) || port < 1 || port > 65535) {
     throw new Error(`Invalid port in MOZHTTP2_PORT env var: ${portEnv}`);
   }
-  do_print(`Using HTTP/2 server on port ${port}`);
+  info(`Using HTTP/2 server on port ${port}`);
   return port;
 }
 

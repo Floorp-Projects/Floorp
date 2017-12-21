@@ -37,7 +37,7 @@ add_task(async function run_test() {
   await Service.sync();
   Service._locked = false;
 
-  do_check_true(debug[debug.length - 2].startsWith("Exception calling WrappedLock: Could not acquire lock. Label: \"service.js: login\"."));
-  do_check_eq(info[info.length - 1], "Cannot start sync: already syncing?");
+  Assert.ok(debug[debug.length - 2].startsWith("Exception calling WrappedLock: Could not acquire lock. Label: \"service.js: login\"."));
+  Assert.equal(info[info.length - 1], "Cannot start sync: already syncing?");
 });
 

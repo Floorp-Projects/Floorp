@@ -19,23 +19,23 @@ function run_test() {
 
 add_test(function test_identifier() {
   Services.search.init(async function initComplete(aResult) {
-    do_print("init'd search service");
-    do_check_true(Components.isSuccessCode(aResult));
+    info("init'd search service");
+    Assert.ok(Components.isSuccessCode(aResult));
 
     await installTestEngine();
     let profileEngine = Services.search.getEngineByName(kTestEngineName);
     let jarEngine = Services.search.getEngineByName("bug645970");
 
-    do_check_true(profileEngine instanceof Ci.nsISearchEngine);
-    do_check_true(jarEngine instanceof Ci.nsISearchEngine);
+    Assert.ok(profileEngine instanceof Ci.nsISearchEngine);
+    Assert.ok(jarEngine instanceof Ci.nsISearchEngine);
 
     // An engine loaded from the profile directory won't have an identifier,
     // because it's not built-in.
-    do_check_eq(profileEngine.identifier, null);
+    Assert.equal(profileEngine.identifier, null);
 
     // An engine loaded from a JAR will have an identifier corresponding to
     // the filename inside the JAR. (In this case it's the same as the name.)
-    do_check_eq(jarEngine.identifier, "bug645970");
+    Assert.equal(jarEngine.identifier, "bug645970");
 
     run_next_test();
   });

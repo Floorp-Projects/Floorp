@@ -21,7 +21,7 @@ function cleanup() {
 }
 
 function run_test() {
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
   Services.obs.addObserver(gObserver, "last-pb-context-exited");
 
   add_test(test_part1);

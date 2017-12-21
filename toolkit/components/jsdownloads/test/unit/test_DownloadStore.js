@@ -85,22 +85,22 @@ add_task(async function test_save_reload() {
   let itemsForSave = await listForSave.getAll();
   let itemsForLoad = await listForLoad.getAll();
 
-  do_check_eq(itemsForSave.length, itemsForLoad.length);
+  Assert.equal(itemsForSave.length, itemsForLoad.length);
 
   // Downloads should be reloaded in the same order.
   for (let i = 0; i < itemsForSave.length; i++) {
     // The reloaded downloads are different objects.
-    do_check_neq(itemsForSave[i], itemsForLoad[i]);
+    Assert.notEqual(itemsForSave[i], itemsForLoad[i]);
 
     // The reloaded downloads have the same properties.
-    do_check_eq(itemsForSave[i].source.url,
-                itemsForLoad[i].source.url);
-    do_check_eq(itemsForSave[i].source.referrer,
-                itemsForLoad[i].source.referrer);
-    do_check_eq(itemsForSave[i].target.path,
-                itemsForLoad[i].target.path);
-    do_check_eq(itemsForSave[i].saver.toSerializable(),
-                itemsForLoad[i].saver.toSerializable());
+    Assert.equal(itemsForSave[i].source.url,
+                 itemsForLoad[i].source.url);
+    Assert.equal(itemsForSave[i].source.referrer,
+                 itemsForLoad[i].source.referrer);
+    Assert.equal(itemsForSave[i].target.path,
+                 itemsForLoad[i].target.path);
+    Assert.equal(itemsForSave[i].saver.toSerializable(),
+                 itemsForLoad[i].saver.toSerializable());
   }
 });
 
@@ -115,7 +115,7 @@ add_task(async function test_save_empty() {
 
   await store.save();
 
-  do_check_false(await OS.File.exists(store.path));
+  Assert.equal(false, await OS.File.exists(store.path));
 
   // If the file does not exist, saving should not generate exceptions.
   await store.save();
@@ -127,12 +127,12 @@ add_task(async function test_save_empty() {
 add_task(async function test_load_empty() {
   let [list, store] = await promiseNewListAndStore();
 
-  do_check_false(await OS.File.exists(store.path));
+  Assert.equal(false, await OS.File.exists(store.path));
 
   await store.load();
 
   let items = await list.getAll();
-  do_check_eq(items.length, 0);
+  Assert.equal(items.length, 0);
 });
 
 /**
@@ -164,14 +164,14 @@ add_task(async function test_load_string_predefined() {
 
   let items = await list.getAll();
 
-  do_check_eq(items.length, 2);
+  Assert.equal(items.length, 2);
 
-  do_check_eq(items[0].source.url, httpUrl("source.txt"));
-  do_check_eq(items[0].target.path, targetPath);
+  Assert.equal(items[0].source.url, httpUrl("source.txt"));
+  Assert.equal(items[0].target.path, targetPath);
 
-  do_check_eq(items[1].source.url, httpUrl("empty.txt"));
-  do_check_eq(items[1].source.referrer, TEST_REFERRER_URL);
-  do_check_eq(items[1].target.path, targetPath);
+  Assert.equal(items[1].source.url, httpUrl("empty.txt"));
+  Assert.equal(items[1].source.referrer, TEST_REFERRER_URL);
+  Assert.equal(items[1].target.path, targetPath);
 });
 
 /**
@@ -199,10 +199,10 @@ add_task(async function test_load_string_unrecognized() {
 
   let items = await list.getAll();
 
-  do_check_eq(items.length, 1);
+  Assert.equal(items.length, 1);
 
-  do_check_eq(items[0].source.url, httpUrl("source.txt"));
-  do_check_eq(items[0].target.path, targetPath);
+  Assert.equal(items[0].source.url, httpUrl("source.txt"));
+  Assert.equal(items[0].target.path, targetPath);
 });
 
 /**
@@ -224,12 +224,12 @@ add_task(async function test_load_string_malformed() {
     if (ex.name != "SyntaxError") {
       throw ex;
     }
-    do_print("The expected SyntaxError exception was thrown.");
+    info("The expected SyntaxError exception was thrown.");
   }
 
   let items = await list.getAll();
 
-  do_check_eq(items.length, 0);
+  Assert.equal(items.length, 0);
 });
 
 /**
@@ -275,33 +275,33 @@ add_task(async function test_save_reload_unknownProperties() {
   let itemsForSave = await listForSave.getAll();
   let itemsForLoad = await listForLoad.getAll();
 
-  do_check_eq(itemsForSave.length, itemsForLoad.length);
+  Assert.equal(itemsForSave.length, itemsForLoad.length);
 
-  do_check_eq(Object.keys(itemsForLoad[0]._unknownProperties).length, 2);
-  do_check_eq(itemsForLoad[0]._unknownProperties.peanut, "butter");
-  do_check_eq(itemsForLoad[0]._unknownProperties.orange, "marmalade");
-  do_check_false("startTime" in itemsForLoad[0]._unknownProperties);
-  do_check_false("error" in itemsForLoad[0]._unknownProperties);
+  Assert.equal(Object.keys(itemsForLoad[0]._unknownProperties).length, 2);
+  Assert.equal(itemsForLoad[0]._unknownProperties.peanut, "butter");
+  Assert.equal(itemsForLoad[0]._unknownProperties.orange, "marmalade");
+  Assert.equal(false, "startTime" in itemsForLoad[0]._unknownProperties);
+  Assert.equal(false, "error" in itemsForLoad[0]._unknownProperties);
 
-  do_check_eq(Object.keys(itemsForLoad[1]._unknownProperties).length, 2);
-  do_check_eq(itemsForLoad[1]._unknownProperties.number, 5);
-  do_check_eq(itemsForLoad[1]._unknownProperties.object.test, "string");
+  Assert.equal(Object.keys(itemsForLoad[1]._unknownProperties).length, 2);
+  Assert.equal(itemsForLoad[1]._unknownProperties.number, 5);
+  Assert.equal(itemsForLoad[1]._unknownProperties.object.test, "string");
 
-  do_check_eq(Object.keys(itemsForLoad[2].source._unknownProperties).length, 2);
-  do_check_eq(itemsForLoad[2].source._unknownProperties.source1,
-              "download3source1");
-  do_check_eq(itemsForLoad[2].source._unknownProperties.source2,
-              "download3source2");
+  Assert.equal(Object.keys(itemsForLoad[2].source._unknownProperties).length, 2);
+  Assert.equal(itemsForLoad[2].source._unknownProperties.source1,
+               "download3source1");
+  Assert.equal(itemsForLoad[2].source._unknownProperties.source2,
+               "download3source2");
 
-  do_check_eq(Object.keys(itemsForLoad[2].target._unknownProperties).length, 2);
-  do_check_eq(itemsForLoad[2].target._unknownProperties.target1,
-              "download3target1");
-  do_check_eq(itemsForLoad[2].target._unknownProperties.target2,
-              "download3target2");
+  Assert.equal(Object.keys(itemsForLoad[2].target._unknownProperties).length, 2);
+  Assert.equal(itemsForLoad[2].target._unknownProperties.target1,
+               "download3target1");
+  Assert.equal(itemsForLoad[2].target._unknownProperties.target2,
+               "download3target2");
 
-  do_check_eq(Object.keys(itemsForLoad[2].saver._unknownProperties).length, 2);
-  do_check_eq(itemsForLoad[2].saver._unknownProperties.saver1,
-              "download3saver1");
-  do_check_eq(itemsForLoad[2].saver._unknownProperties.saver2,
-              "download3saver2");
+  Assert.equal(Object.keys(itemsForLoad[2].saver._unknownProperties).length, 2);
+  Assert.equal(itemsForLoad[2].saver._unknownProperties.saver1,
+               "download3saver1");
+  Assert.equal(itemsForLoad[2].saver._unknownProperties.saver2,
+               "download3saver2");
 });

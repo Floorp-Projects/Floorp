@@ -22,10 +22,10 @@ function test_property_throws(contractid) {
   // Test the initial values.
   try {
     o.jsvalProperty;
-    do_check_true(false);
+    Assert.ok(false);
   } catch (e) {
-    do_check_true(true);
-    do_check_true(/implicit_jscontext/.test(e))
+    Assert.ok(true);
+    Assert.ok(/implicit_jscontext/.test(e))
   }
 
 }

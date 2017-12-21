@@ -35,5 +35,5 @@ function checkPublicSuffix(host, expectedSuffix)
       /(^|\.)xn--/.test(actualSuffix) && !/(^|\.)xn--/.test(expectedSuffix)) {
     actualSuffix = idna.convertACEtoUTF8(actualSuffix);
   }
-  do_check_eq(actualSuffix, expectedSuffix);
+  Assert.equal(actualSuffix, expectedSuffix);
 }

@@ -15,6 +15,6 @@ add_task(async function test_valid_file() {
   CrashMonitor.init();
   let checkpoints = await CrashMonitor.previousCheckpoints;
 
-  do_check_true(checkpoints["final-ui-startup"]);
-  do_check_eq(Object.keys(checkpoints).length, 1);
+  Assert.ok(checkpoints["final-ui-startup"]);
+  Assert.equal(Object.keys(checkpoints).length, 1);
 });

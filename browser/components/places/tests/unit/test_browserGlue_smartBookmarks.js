@@ -20,7 +20,7 @@ function run_test() {
   run_next_test();
 }
 
-do_register_cleanup(() => PlacesUtils.bookmarks.eraseEverything());
+registerCleanupFunction(() => PlacesUtils.bookmarks.eraseEverything());
 
 function countFolderChildren(aFolderItemId) {
   let rootNode = PlacesUtils.getFolderContents(aFolderItemId).root;
@@ -53,7 +53,7 @@ add_task(async function setup() {
 });
 
 add_task(async function test_version_0() {
-  do_print("All smart bookmarks are created if smart bookmarks version is 0.");
+  info("All smart bookmarks are created if smart bookmarks version is 0.");
 
   // Sanity check: we should have default bookmark.
   Assert.ok(await PlacesUtils.bookmarks.fetch({
@@ -83,7 +83,7 @@ add_task(async function test_version_0() {
 });
 
 add_task(async function test_version_change() {
-  do_print("An existing smart bookmark is replaced when version changes.");
+  info("An existing smart bookmark is replaced when version changes.");
 
   // Sanity check: we have a smart bookmark on the toolbar.
   let bm = await PlacesUtils.bookmarks.fetch({
@@ -128,7 +128,7 @@ add_task(async function test_version_change() {
 });
 
 add_task(async function test_version_change_pos() {
-  do_print("bookmarks position is retained when version changes.");
+  info("bookmarks position is retained when version changes.");
 
   // Sanity check items.
   Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
@@ -168,7 +168,7 @@ add_task(async function test_version_change_pos() {
 });
 
 add_task(async function test_version_change_pos_moved() {
-  do_print("moved bookmarks position is retained when version changes.");
+  info("moved bookmarks position is retained when version changes.");
 
   // Sanity check items.
   Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),
@@ -227,7 +227,7 @@ add_task(async function test_version_change_pos_moved() {
 });
 
 add_task(async function test_recreation() {
-  do_print("An explicitly removed smart bookmark should not be recreated.");
+  info("An explicitly removed smart bookmark should not be recreated.");
 
   // Remove toolbar's smart bookmarks
   let bm = await PlacesUtils.bookmarks.fetch({
@@ -260,7 +260,7 @@ add_task(async function test_recreation() {
 });
 
 add_task(async function test_recreation_version_0() {
-  do_print("Even if a smart bookmark has been removed recreate it if version is 0.");
+  info("Even if a smart bookmark has been removed recreate it if version is 0.");
 
   // Sanity check items.
   Assert.equal(countFolderChildren(PlacesUtils.toolbarFolderId),

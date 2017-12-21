@@ -14,5 +14,5 @@ add_task(async function test_invalid_file() {
 
   CrashMonitor.init();
   let checkpoints = await CrashMonitor.previousCheckpoints;
-  do_check_eq(checkpoints, null);
+  Assert.equal(checkpoints, null);
 });

@@ -29,13 +29,13 @@ function fakeUIResponse() {
       xhr.open("GET", gServerURL + kCanonicalSitePath, true);
       xhr.send();
       loginFinished = true;
-      do_check_eq(++step, 2);
+      Assert.equal(++step, 2);
     }
   }, "captive-portal-login");
 
   Services.obs.addObserver(function observe(subject, topic, data) {
     if (topic === "captive-portal-login-success") {
-      do_check_eq(++step, 4);
+      Assert.equal(++step, 4);
       gServer.stop(do_test_finished);
     }
   }, "captive-portal-login-success");
@@ -47,15 +47,15 @@ function test_portal_found() {
   let callback = {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsICaptivePortalCallback]),
     prepare: function prepare() {
-      do_check_eq(++step, 1);
+      Assert.equal(++step, 1);
       gCaptivePortalDetector.finishPreparation(kInterfaceName);
     },
     complete: function complete(success) {
       // Since this is a synchronous callback, it must happen before
       // 'captive-portal-login-success' is received.
       // (Check captivedetect.js::executeCallback
-      do_check_eq(++step, 3);
-      do_check_true(success);
+      Assert.equal(++step, 3);
+      Assert.ok(success);
     },
   };
 

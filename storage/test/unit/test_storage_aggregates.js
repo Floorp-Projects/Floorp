@@ -50,7 +50,7 @@ function test_aggregate_no_double_registration() {
     msc.createAggregateFunction("test_sas_aggr", 2, testSquareAndSumFunction);
     do_throw("We shouldn't get here!");
   } catch (e) {
-    do_check_eq(Cr.NS_ERROR_FAILURE, e.result);
+    Assert.equal(Cr.NS_ERROR_FAILURE, e.result);
   }
 }
 
@@ -67,7 +67,7 @@ function test_aggregate_no_aliases() {
     msc.createAggregateFunction("test_sas_aggr2", 1, testSquareAndSumFunction);
     do_throw("We shouldn't get here!");
   } catch (e) {
-    do_check_eq(Cr.NS_ERROR_FAILURE, e.result);
+    Assert.equal(Cr.NS_ERROR_FAILURE, e.result);
   }
 }
 
@@ -76,7 +76,7 @@ function test_aggregate_call() {
   while (stmt.executeStep()) {
     // Do nothing.
   }
-  do_check_eq(testNums.length, testSquareAndSumFunction.calls);
+  Assert.equal(testNums.length, testSquareAndSumFunction.calls);
   testSquareAndSumFunction.reset();
   stmt.finalize();
 }
@@ -88,7 +88,7 @@ function test_aggregate_result() {
   }
   var stmt = createStatement("SELECT test_sas_aggr(id) FROM function_tests");
   stmt.executeStep();
-  do_check_eq(sas, stmt.getInt32(0));
+  Assert.equal(sas, stmt.getInt32(0));
   testSquareAndSumFunction.reset();
   stmt.finalize();
 }

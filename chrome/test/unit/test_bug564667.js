@@ -18,7 +18,7 @@ function test_mapping(chromeURL, target) {
 
   try {
     var result = gCR.convertChromeURL(uri);
-    do_check_eq(result.spec, target);
+    Assert.equal(result.spec, target);
   } catch (ex) {
     do_throw(chromeURL + " not Registered");
   }

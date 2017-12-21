@@ -63,7 +63,7 @@ Listener.prototype = {
     request.QueryInterface(Ci.nsIHttpChannel)
            .QueryInterface(Ci.nsIHttpChannelInternal);
 
-    do_check_eq(request.tlsFlags, this.tlsFlags);
+    Assert.equal(request.tlsFlags, this.tlsFlags);
 
     let hashKey = request.connectionInfoHashKey;
     if (gSecondRoundStarted) {
@@ -71,9 +71,9 @@ Listener.prototype = {
       // Hash keys should match if and only if their tlsFlags are the same.
       for (let tlsFlags of randomFlagValues) {
         if (tlsFlags == this.tlsFlags) {
-          do_check_eq(hashKey, previousHashKeys[tlsFlags]);
+          Assert.equal(hashKey, previousHashKeys[tlsFlags]);
         } else {
-          do_check_neq(hashKey, previousHashKeys[tlsFlags]);
+          Assert.notEqual(hashKey, previousHashKeys[tlsFlags]);
         }
       }
     } else {

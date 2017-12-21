@@ -53,26 +53,26 @@ add_task(async function() {
   // Test exporting a Places canonical json file.
   // 1. export to bookmarks.exported.json
   await BookmarkJSONUtils.exportToFile(jsonFile);
-  do_print("exported json");
+  info("exported json");
 
   // 2. empty bookmarks db
   // 3. import bookmarks.exported.json
   await BookmarkJSONUtils.importFromFile(jsonFile, true);
-  do_print("imported json");
+  info("imported json");
 
   // 4. run the test-suite
   await validate("re-imported json");
-  do_print("validated import");
+  info("validated import");
 });
 
 async function validate(infoMsg) {
-  do_print(`Validating ${infoMsg}: testMenuBookmarks`);
+  info(`Validating ${infoMsg}: testMenuBookmarks`);
   await testMenuBookmarks();
-  do_print(`Validating ${infoMsg}: testToolbarBookmarks`);
+  info(`Validating ${infoMsg}: testToolbarBookmarks`);
   await testToolbarBookmarks();
-  do_print(`Validating ${infoMsg}: testUnfiledBookmarks`);
+  info(`Validating ${infoMsg}: testUnfiledBookmarks`);
   testUnfiledBookmarks();
-  do_print(`Validating ${infoMsg}: testTags`);
+  info(`Validating ${infoMsg}: testTags`);
   testTags();
   await PlacesTestUtils.promiseAsyncUpdates();
 }
@@ -173,7 +173,7 @@ function testUnfiledBookmarks() {
 
 function testTags() {
   for (let { uri, tags } of tagData) {
-    do_print("Test tags for " + uri.spec + ": " + tags + "\n");
+    info("Test tags for " + uri.spec + ": " + tags + "\n");
     let foundTags = PlacesUtils.tagging.getTagsForURI(uri);
     Assert.equal(foundTags.length, tags.length);
     Assert.ok(tags.every(tag => foundTags.includes(tag)));

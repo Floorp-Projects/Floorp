@@ -26,6 +26,6 @@ add_task(async function test_rel_searchform() {
   // the prePath of the engine's first HTML <Url>.
   let items = engineNames.map(e => ({ name: e, xmlFileName: e }));
   for (let engine of await addTestEngines(items)) {
-    do_check_eq(engine.searchForm, "http://" + engine.name + "/?search");
+    Assert.equal(engine.searchForm, "http://" + engine.name + "/?search");
   }
 });

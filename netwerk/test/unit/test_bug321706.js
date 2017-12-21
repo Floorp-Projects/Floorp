@@ -5,7 +5,7 @@ function run_test() {
     getService(Ci.nsIIOService);
 
   var newURI = ios.newURI(url);
-  do_check_eq(newURI.spec, url);
-  do_check_eq(newURI.pathQueryRef, "/folder/file?/.");
-  do_check_eq(newURI.resolve("./file?/."), url);
+  Assert.equal(newURI.spec, url);
+  Assert.equal(newURI.pathQueryRef, "/folder/file?/.");
+  Assert.equal(newURI.resolve("./file?/."), url);
 }

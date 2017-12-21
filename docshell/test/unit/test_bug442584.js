@@ -14,11 +14,11 @@ function run_test() {
   }
 
   // Make sure the queue has items in it...
-  do_check_true(prefetch.hasMoreElements());
+  Assert.ok(prefetch.hasMoreElements());
 
   // Now disable the pref to force the queue to empty...
   prefs.setBoolPref("network.prefetch-next", false);
-  do_check_false(prefetch.hasMoreElements());
+  Assert.ok(!prefetch.hasMoreElements());
 
   // Now reenable the pref, and add more items to the queue.
   prefs.setBoolPref("network.prefetch-next", true);
@@ -26,5 +26,5 @@ function run_test() {
     var uri = ios.newURI("http://localhost/" + i);
     prefetch.prefetchURI(uri, uri, null, true);
   }
-  do_check_true(prefetch.hasMoreElements());
+  Assert.ok(prefetch.hasMoreElements());
 }

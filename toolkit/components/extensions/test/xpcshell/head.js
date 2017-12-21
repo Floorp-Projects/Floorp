@@ -51,7 +51,7 @@ function createHttpServer(port = -1) {
   let server = new HttpServer();
   server.start(port);
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     return new Promise(resolve => {
       server.stop(resolve);
     });

@@ -33,7 +33,7 @@ var test_transport = Task.async(function* (transportFactory) {
   let reallyLong = really_long();
   writeTestTempFile("bulk-input", reallyLong);
 
-  do_check_eq(Object.keys(DebuggerServer._connections).length, 0);
+  Assert.equal(Object.keys(DebuggerServer._connections).length, 0);
 
   let transport = yield transportFactory();
 
@@ -51,9 +51,9 @@ var test_transport = Task.async(function* (transportFactory) {
 
   // Receiving on server from client
   function on_bulk_packet({actor, type, length, copyTo}) {
-    do_check_eq(actor, "root");
-    do_check_eq(type, "file-stream");
-    do_check_eq(length, reallyLong.length);
+    Assert.equal(actor, "root");
+    Assert.equal(type, "file-stream");
+    Assert.equal(length, reallyLong.length);
 
     let outputFile = getTestTempFile("bulk-output", true);
     outputFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("666", 8));
@@ -102,12 +102,12 @@ var test_transport = Task.async(function* (transportFactory) {
 
     onServerHello: function (packet) {
       // We've received the initial start up packet
-      do_check_eq(packet.from, "root");
-      do_check_eq(packet.applicationType, "xpcshell-tests");
+      Assert.equal(packet.from, "root");
+      Assert.equal(packet.applicationType, "xpcshell-tests");
 
       // Server
-      do_check_eq(Object.keys(DebuggerServer._connections).length, 1);
-      do_print(Object.keys(DebuggerServer._connections));
+      Assert.equal(Object.keys(DebuggerServer._connections).length, 1);
+      info(Object.keys(DebuggerServer._connections));
       for (let connId in DebuggerServer._connections) {
         DebuggerServer._connections[connId].onBulkPacket = on_bulk_packet;
       }
@@ -123,8 +123,8 @@ var test_transport = Task.async(function* (transportFactory) {
 
     onError: function (packet) {
       // The explode actor doesn't exist
-      do_check_eq(packet.from, "root");
-      do_check_eq(packet.error, "noSuchActor");
+      Assert.equal(packet.from, "root");
+      Assert.equal(packet.error, "noSuchActor");
     },
 
     onClosed: function () {
@@ -145,8 +145,8 @@ function verify() {
   let inputFile = getTestTempFile("bulk-input");
   let outputFile = getTestTempFile("bulk-output");
 
-  do_check_eq(inputFile.fileSize, reallyLong.length);
-  do_check_eq(outputFile.fileSize, reallyLong.length);
+  Assert.equal(inputFile.fileSize, reallyLong.length);
+  Assert.equal(outputFile.fileSize, reallyLong.length);
 
   // Ensure output file contents actually match
   let compareDeferred = defer();
@@ -156,7 +156,7 @@ function verify() {
   }, input => {
     let outputData = NetUtil.readInputStreamToString(input, reallyLong.length);
       // Avoid do_check_eq here so we don't log the contents
-    do_check_true(outputData === reallyLong);
+    Assert.ok(outputData === reallyLong);
     input.close();
     compareDeferred.resolve();
   });

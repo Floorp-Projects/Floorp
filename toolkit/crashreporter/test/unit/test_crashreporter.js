@@ -2,15 +2,15 @@ function run_test() {
   dump("INFO | test_crashreporter.js | Get crashreporter service.\n");
   var cr = Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
                      .getService(Components.interfaces.nsICrashReporter);
-  do_check_neq(cr, null);
+  Assert.notEqual(cr, null);
 
-  do_check_true(cr.enabled);
+  Assert.ok(cr.enabled);
 
   try {
     cr.serverURL;
     do_throw("Getting serverURL when not set should have thrown!");
   } catch (ex) {
-    do_check_eq(ex.result, Components.results.NS_ERROR_FAILURE);
+    Assert.equal(ex.result, Components.results.NS_ERROR_FAILURE);
   }
 
   // check setting/getting serverURL
@@ -20,7 +20,7 @@ function run_test() {
                    "https://example.org/anothersubmit"];
   for (var i = 0; i < testspecs.length; ++i) {
     cr.serverURL = Services.io.newURI(testspecs[i]);
-    do_check_eq(cr.serverURL.spec, testspecs[i]);
+    Assert.equal(cr.serverURL.spec, testspecs[i]);
   }
 
   // should not allow setting non-http/https URLs
@@ -28,34 +28,34 @@ function run_test() {
     cr.serverURL = Services.io.newURI("ftp://example.com/submit");
     do_throw("Setting serverURL to a non-http(s) URL should have thrown!");
   } catch (ex) {
-    do_check_eq(ex.result, Components.results.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Components.results.NS_ERROR_INVALID_ARG);
   }
 
   // check getting/setting minidumpPath
   // it should be $TEMP by default, but I'm not sure if we can exactly test that
   // this will at least test that it doesn't throw
-  do_check_neq(cr.minidumpPath.path, "");
+  Assert.notEqual(cr.minidumpPath.path, "");
   var cwd = do_get_cwd();
   cr.minidumpPath = cwd;
-  do_check_eq(cr.minidumpPath.path, cwd.path);
+  Assert.equal(cr.minidumpPath.path, cwd.path);
 
   try {
     cr.annotateCrashReport("equal=equal", "");
     do_throw("Calling annotateCrashReport() with an '=' in key should have thrown!");
   } catch (ex) {
-    do_check_eq(ex.result, Components.results.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Components.results.NS_ERROR_INVALID_ARG);
   }
   try {
     cr.annotateCrashReport("new\nline", "");
     do_throw("Calling annotateCrashReport() with a '\\n' in key should have thrown!");
   } catch (ex) {
-    do_check_eq(ex.result, Components.results.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Components.results.NS_ERROR_INVALID_ARG);
   }
   try {
     cr.annotateCrashReport("", "da\0ta");
     do_throw("Calling annotateCrashReport() with a '\\0' in data should have thrown!");
   } catch (ex) {
-    do_check_eq(ex.result, Components.results.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Components.results.NS_ERROR_INVALID_ARG);
   }
   cr.annotateCrashReport("testKey", "testData1");
   // Replace previous data.
@@ -65,12 +65,12 @@ function run_test() {
     cr.appendAppNotesToCrashReport("da\0ta");
     do_throw("Calling appendAppNotesToCrashReport() with a '\\0' in data should have thrown!");
   } catch (ex) {
-    do_check_eq(ex.result, Components.results.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Components.results.NS_ERROR_INVALID_ARG);
   }
   cr.appendAppNotesToCrashReport("additional testData3");
   // Add more data.
   cr.appendAppNotesToCrashReport("additional testData4");
 
   cr.minidumpPath = cwd;
-  do_check_eq(cr.minidumpPath.path, cwd.path);
+  Assert.equal(cr.minidumpPath.path, cwd.path);
 }

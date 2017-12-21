@@ -47,8 +47,8 @@ const tests = [
 // A basic listener that reads checks the if we sniffed properly.
 var listener = {
   onStartRequest(request, context) {
-    do_print("Sniffing " + tests[testRan].path);
-    do_check_eq(request.QueryInterface(Ci.nsIChannel).contentType, tests[testRan].expected);
+    info("Sniffing " + tests[testRan].path);
+    Assert.equal(request.QueryInterface(Ci.nsIChannel).contentType, tests[testRan].expected);
   },
 
   onDataAvailable(request, context, stream, offset, count) {

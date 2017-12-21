@@ -20,66 +20,66 @@ add_task(async function run_test() {
   try {
 
     _("tracker.modified corresponds to preference.");
-    do_check_eq(Svc.Prefs.get("engine.prefs.modified"), undefined);
-    do_check_false(tracker.modified);
+    Assert.equal(Svc.Prefs.get("engine.prefs.modified"), undefined);
+    Assert.ok(!tracker.modified);
 
     tracker.modified = true;
-    do_check_eq(Svc.Prefs.get("engine.prefs.modified"), true);
-    do_check_true(tracker.modified);
+    Assert.equal(Svc.Prefs.get("engine.prefs.modified"), true);
+    Assert.ok(tracker.modified);
 
     _("Engine's getChangedID() just returns the one GUID we have.");
     let changedIDs = await engine.getChangedIDs();
     let ids = Object.keys(changedIDs);
-    do_check_eq(ids.length, 1);
-    do_check_eq(ids[0], CommonUtils.encodeBase64URL(Services.appinfo.ID));
+    Assert.equal(ids.length, 1);
+    Assert.equal(ids[0], CommonUtils.encodeBase64URL(Services.appinfo.ID));
 
     Svc.Prefs.set("engine.prefs.modified", false);
-    do_check_false(tracker.modified);
+    Assert.ok(!tracker.modified);
 
     _("No modified state, so no changed IDs.");
     do_check_empty((await engine.getChangedIDs()));
 
     _("Initial score is 0");
-    do_check_eq(tracker.score, 0);
+    Assert.equal(tracker.score, 0);
 
     _("Test fixtures.");
     Svc.Prefs.set("prefs.sync.testing.int", true);
 
     _("Test fixtures haven't upped the tracker score yet because it hasn't started tracking yet.");
-    do_check_eq(tracker.score, 0);
+    Assert.equal(tracker.score, 0);
 
     _("Tell the tracker to start tracking changes.");
     Svc.Obs.notify("weave:engine:start-tracking");
     prefs.set("testing.int", 23);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
-    do_check_eq(tracker.modified, true);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.modified, true);
 
     _("Clearing changed IDs reset modified status.");
     tracker.clearChangedIDs();
-    do_check_eq(tracker.modified, false);
+    Assert.equal(tracker.modified, false);
 
     _("Resetting a pref ups the score, too.");
     prefs.reset("testing.int");
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
-    do_check_eq(tracker.modified, true);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    Assert.equal(tracker.modified, true);
     tracker.clearChangedIDs();
 
     _("So does changing a pref sync pref.");
     Svc.Prefs.set("prefs.sync.testing.int", false);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
-    do_check_eq(tracker.modified, true);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    Assert.equal(tracker.modified, true);
     tracker.clearChangedIDs();
 
     _("Now that the pref sync pref has been flipped, changes to it won't be picked up.");
     prefs.set("testing.int", 42);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
-    do_check_eq(tracker.modified, false);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    Assert.equal(tracker.modified, false);
     tracker.clearChangedIDs();
 
     _("Changing some other random pref won't do anything.");
     prefs.set("testing.other", "blergh");
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
-    do_check_eq(tracker.modified, false);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    Assert.equal(tracker.modified, false);
 
   } finally {
     Svc.Obs.notify("weave:engine:stop-tracking");

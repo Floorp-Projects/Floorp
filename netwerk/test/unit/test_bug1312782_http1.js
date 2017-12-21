@@ -114,7 +114,7 @@ function check_response_id(responses, maxWindowId)
   for (var i = 0; i < responses.length; i++) {
     var id = responses[i].getHeader("X-ID");
     log("response id=" + id  + " maxWindowId=" + maxWindowId);
-    do_check_true(id < maxWindowId);
+    Assert.ok(id < maxWindowId);
   }
 }
 
@@ -155,7 +155,7 @@ function setup_http_server()
 
   });
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     server.stop(serverStopListener);
   });
 

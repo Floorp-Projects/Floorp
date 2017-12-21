@@ -7,17 +7,17 @@ function run_test() {
   configureToLoadJarEngines();
   installAddonEngine("engine-override");
 
-  do_check_false(Services.search.isInitialized);
+  Assert.ok(!Services.search.isInitialized);
 
   // test the add-on engine isn't overriding our jar engine
   let engines = Services.search.getEngines();
-  do_check_eq(engines.length, 1);
+  Assert.equal(engines.length, 1);
 
-  do_check_true(Services.search.isInitialized);
+  Assert.ok(Services.search.isInitialized);
 
   // test jar engine is loaded ok.
   let engine = Services.search.getEngineByName("bug645970");
-  do_check_neq(engine, null);
+  Assert.notEqual(engine, null);
 
-  do_check_eq(engine.description, "bug645970");
+  Assert.equal(engine.description, "bug645970");
 }

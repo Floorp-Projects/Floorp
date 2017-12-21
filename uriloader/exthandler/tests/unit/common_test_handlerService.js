@@ -149,7 +149,7 @@ function assertAllHandlerInfosMatchTestData() {
     }],
   });
 
-  do_check_eq(handlerInfos.length, 0);
+  Assert.equal(handlerInfos.length, 0);
 }
 
 /**
@@ -198,16 +198,16 @@ add_task(async function test_store_remove_exists() {
 
     await copyTestDataToHandlerStore();
 
-    do_check_true(gHandlerService.exists(handlerInfoPresent));
-    do_check_false(gHandlerService.exists(handlerInfoAbsent));
+    Assert.ok(gHandlerService.exists(handlerInfoPresent));
+    Assert.ok(!gHandlerService.exists(handlerInfoAbsent));
 
     gHandlerService.store(handlerInfoAbsent);
     gHandlerService.remove(handlerInfoPresent);
 
     await unloadHandlerStore();
 
-    do_check_false(gHandlerService.exists(handlerInfoPresent));
-    do_check_true(gHandlerService.exists(handlerInfoAbsent));
+    Assert.ok(!gHandlerService.exists(handlerInfoPresent));
+    Assert.ok(gHandlerService.exists(handlerInfoAbsent));
 
     Assert.throws(
       () => gHandlerService.fillHandlerInfo(handlerInfoPresent, ""),
@@ -236,7 +236,7 @@ add_task(async function test_store_preferredAction() {
     handlerInfo.preferredAction = preferredAction;
     gHandlerService.store(handlerInfo);
     gHandlerService.fillHandlerInfo(handlerInfo, "");
-    do_check_eq(handlerInfo.preferredAction, Ci.nsIHandlerInfo.useHelperApp);
+    Assert.equal(handlerInfo.preferredAction, Ci.nsIHandlerInfo.useHelperApp);
   }
 });
 
@@ -247,7 +247,7 @@ add_task(async function test_store_preferredAction() {
  */
 add_task(async function test_store_localHandlerApp_missing() {
   if (!("@mozilla.org/uriloader/dbus-handler-app;1" in Cc)) {
-    do_print("Skipping test because it does not apply to this platform.");
+    info("Skipping test because it does not apply to this platform.");
     return;
   }
 
@@ -280,7 +280,7 @@ add_task(async function test_store_localHandlerApp_missing() {
  */
 add_task(async function test_store_dBusHandlerApp() {
   if (!("@mozilla.org/uriloader/dbus-handler-app;1" in Cc)) {
-    do_print("Skipping test because it does not apply to this platform.");
+    info("Skipping test because it does not apply to this platform.");
     return;
   }
 
@@ -509,12 +509,12 @@ add_task(async function test_fillHandlerInfo_overrideType() {
 add_task(async function test_getTypeFromExtension() {
   await copyTestDataToHandlerStore();
 
-  do_check_eq(gHandlerService.getTypeFromExtension(""), "");
-  do_check_eq(gHandlerService.getTypeFromExtension("example_unknown"), "");
-  do_check_eq(gHandlerService.getTypeFromExtension("example_one"),
-              "example/type.handleinternally");
-  do_check_eq(gHandlerService.getTypeFromExtension("EXAMPLE_one"),
-              "example/type.handleinternally");
+  Assert.equal(gHandlerService.getTypeFromExtension(""), "");
+  Assert.equal(gHandlerService.getTypeFromExtension("example_unknown"), "");
+  Assert.equal(gHandlerService.getTypeFromExtension("example_one"),
+               "example/type.handleinternally");
+  Assert.equal(gHandlerService.getTypeFromExtension("EXAMPLE_one"),
+               "example/type.handleinternally");
 });
 
 /**
@@ -556,7 +556,7 @@ function assertAllHandlerInfosMatchDefaultHandlers() {
     }],
   });
 
-  do_check_eq(handlerInfos.length, 0);
+  Assert.equal(handlerInfos.length, 0);
 }
 
 /**
@@ -564,7 +564,7 @@ function assertAllHandlerInfosMatchDefaultHandlers() {
  */
 add_task(async function test_default_protocol_handlers() {
   if (!Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")) {
-    do_print("This platform or locale does not have default handlers.");
+    info("This platform or locale does not have default handlers.");
     return;
   }
 
@@ -580,7 +580,7 @@ add_task(async function test_default_protocol_handlers() {
  */
 add_task(async function test_default_protocol_handlers_no_duplicates() {
   if (!Services.prefs.getPrefType("gecko.handlerService.defaultHandlersVersion")) {
-    do_print("This platform or locale does not have default handlers.");
+    info("This platform or locale does not have default handlers.");
     return;
   }
 
@@ -601,7 +601,7 @@ add_task(async function test_default_protocol_handlers_no_duplicates() {
   await unloadHandlerStore();
 
   // Check that "irc" exists to make sure that the injection was repeated.
-  do_check_true(gHandlerService.exists(ircHandlerInfo));
+  Assert.ok(gHandlerService.exists(ircHandlerInfo));
 
   // There should be no duplicate handlers in the protocols.
   await assertAllHandlerInfosMatchDefaultHandlers();

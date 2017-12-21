@@ -41,9 +41,9 @@ class InputStreamCallback {
   }
 
   onInputStreamReady(stream) {
-    do_print("input stream ready");
+    info("input stream ready");
     if (this.stopped) {
-      do_print("input stream callback stopped - bailing");
+      info("input stream callback stopped - bailing");
       return;
     }
     let available = 0;
@@ -68,7 +68,7 @@ class InputStreamCallback {
             "should have been able to write entire response");
     }
     this.output.close();
-    do_print("done with input stream ready");
+    info("done with input stream ready");
   }
 
   stop() {
@@ -87,12 +87,12 @@ class TLSServerSecurityObserver {
   }
 
   onHandshakeDone(socket, status) {
-    do_print("TLS handshake done");
-    do_print(`TLS version used: ${status.tlsVersionUsed}`);
-    do_print(this.expectedVersion);
+    info("TLS handshake done");
+    info(`TLS version used: ${status.tlsVersionUsed}`);
+    info(this.expectedVersion);
     equal(status.tlsVersionUsed, this.expectedVersion, "expected version check");
     if (this.stopped) {
-      do_print("handshake done callback stopped - bailing");
+      info("handshake done callback stopped - bailing");
       return;
     }
 
@@ -125,7 +125,7 @@ function startServer(cert, minServerVersion, maxServerVersion, expectedVersion) 
     securityObservers : [],
 
     onSocketAccepted: function(socket, transport) {
-      do_print("accepted TLS client connection");
+      info("accepted TLS client connection");
       let connectionInfo = transport.securityInfo
           .QueryInterface(Ci.nsITLSServerConnectionInfo);
       let input = transport.openInputStream(0, 0, 0);
@@ -138,7 +138,7 @@ function startServer(cert, minServerVersion, maxServerVersion, expectedVersion) 
     // For some reason we get input stream callback events after we've stopped
     // listening, so this ensures we just drop those events.
     onStopListening: function() {
-      do_print("onStopListening");
+      info("onStopListening");
       this.securityObservers.forEach((observer) => {
         observer.stop();
       });
@@ -187,7 +187,7 @@ add_task(async function() {
   let cert = await getCert();
 
   // server that accepts 1.1->1.3 and a client max 1.3. expect 1.3
-  do_print("TEST 1");
+  info("TEST 1");
   let server = startServer(cert,
                            Ci.nsITLSClientStatus.TLS_VERSION_1_1,
                            Ci.nsITLSClientStatus.TLS_VERSION_1_3,
@@ -197,7 +197,7 @@ add_task(async function() {
   server.close();
 
   // server that accepts 1.1->1.3 and a client max 1.1. expect 1.1
-  do_print("TEST 2");
+  info("TEST 2");
   server = startServer(cert,
                        Ci.nsITLSClientStatus.TLS_VERSION_1_1,
                        Ci.nsITLSClientStatus.TLS_VERSION_1_3,
@@ -207,7 +207,7 @@ add_task(async function() {
   server.close();
 
   // server that accepts 1.2->1.2 and a client max 1.3. expect 1.2
-  do_print("TEST 3");
+  info("TEST 3");
   server = startServer(cert,
                        Ci.nsITLSClientStatus.TLS_VERSION_1_2,
                        Ci.nsITLSClientStatus.TLS_VERSION_1_2,
@@ -217,7 +217,7 @@ add_task(async function() {
   server.close();
 
   // server that accepts 1.2->1.2 and a client max 1.1. expect fail
-  do_print("TEST 4");
+  info("TEST 4");
   server = startServer(cert,
                        Ci.nsITLSClientStatus.TLS_VERSION_1_2,
                        Ci.nsITLSClientStatus.TLS_VERSION_1_2, 0);
@@ -227,7 +227,7 @@ add_task(async function() {
   server.close();
 });
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   Services.prefs.clearUserPref("security.tls.version.max");
   Services.prefs.clearUserPref("network.dns.localDomains");
 });

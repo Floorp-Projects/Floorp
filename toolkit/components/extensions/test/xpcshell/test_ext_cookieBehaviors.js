@@ -65,15 +65,15 @@ async function test_bg_page_allowed_storage() {
 }
 
 add_task(async function test_ext_page_allowed_storage_on_cookieBehaviors() {
-  do_print("Test background page indexedDB with BEHAVIOR_LIMIT_FOREIGN");
+  info("Test background page indexedDB with BEHAVIOR_LIMIT_FOREIGN");
   Services.prefs.setIntPref("network.cookie.cookieBehavior", BEHAVIOR_LIMIT_FOREIGN);
   await test_bg_page_allowed_storage();
 
-  do_print("Test background page indexedDB with BEHAVIOR_REJECT_FOREIGN");
+  info("Test background page indexedDB with BEHAVIOR_REJECT_FOREIGN");
   Services.prefs.setIntPref("network.cookie.cookieBehavior", BEHAVIOR_REJECT_FOREIGN);
   await test_bg_page_allowed_storage();
 
-  do_print("Test background page indexedDB with BEHAVIOR_REJECT");
+  info("Test background page indexedDB with BEHAVIOR_REJECT");
   Services.prefs.setIntPref("network.cookie.cookieBehavior", BEHAVIOR_REJECT);
   await test_bg_page_allowed_storage();
 });

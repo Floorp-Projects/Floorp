@@ -14,12 +14,12 @@ var gBookmarksObserver = {
     return this.deferred.promise;
   },
   validate(aMethodName, aArguments) {
-    do_check_eq(this.expected[0].name, aMethodName);
+    Assert.equal(this.expected[0].name, aMethodName);
 
     let args = this.expected.shift().args;
-    do_check_eq(aArguments.length, args.length);
+    Assert.equal(aArguments.length, args.length);
     for (let i = 0; i < aArguments.length; i++) {
-      do_check_true(args[i].check(aArguments[i]), aMethodName + "(args[" + i + "]: " + args[i].name + ")");
+      Assert.ok(args[i].check(aArguments[i]), aMethodName + "(args[" + i + "]: " + args[i].name + ")");
     }
 
     if (this.expected.length === 0) {
@@ -65,7 +65,7 @@ var gBookmarkSkipObserver = {
     return this.deferred.promise;
   },
   validate(aMethodName) {
-    do_check_eq(this.expected.shift(), aMethodName);
+    Assert.equal(this.expected.shift(), aMethodName);
     if (this.expected.length === 0) {
       this.deferred.resolve();
     }

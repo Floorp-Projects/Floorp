@@ -24,7 +24,7 @@ var gManifestHandlerURI  = null;
 const TLOG = TELEMETRY_LOG;
 
 function checkEvent(event, id, data) {
-  do_print("Checking message " + id);
+  info("Checking message " + id);
   Assert.equal(event[0], id, "id should match");
   Assert.ok(event[1] > 0, "timestamp should be greater than 0");
 
@@ -55,7 +55,7 @@ add_task(async function test_setup() {
     response.processAsync();
     response.finish();
   });
-  do_register_cleanup(() => gHttpServer.stop(() => {}));
+  registerCleanupFunction(() => gHttpServer.stop(() => {}));
 
   Services.prefs.setBoolPref(PREF_EXPERIMENTS_ENABLED, true);
   Services.prefs.setIntPref(PREF_LOGGING_LEVEL, 0);
@@ -131,7 +131,7 @@ add_task(async function test_telemetryBasics() {
 
   expectedLogLength += 2;
   let log = TelemetryLog.entries();
-  do_print("Telemetry log: " + JSON.stringify(log));
+  info("Telemetry log: " + JSON.stringify(log));
   Assert.equal(log.length, expectedLogLength, "Telemetry log should have " + expectedLogLength + " entries.");
   checkEvent(log[log.length - 2], TLOG.ACTIVATION_KEY,
              [TLOG.ACTIVATION.REJECTED, EXPERIMENT1_ID, "startTime"]);

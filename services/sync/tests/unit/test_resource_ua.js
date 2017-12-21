@@ -52,7 +52,7 @@ add_task(async function test_fetchInfo() {
   await Service.login();
   await Service._fetchInfo();
   _("User-Agent: " + ua);
-  do_check_eq(ua, expectedUA + ".desktop");
+  Assert.equal(ua, expectedUA + ".desktop");
   ua = "";
 });
 
@@ -61,7 +61,7 @@ add_task(async function test_desktop_post() {
   let r = new Resource(server.baseURI + "/1.1/johndoe/storage/meta/global");
   await r.post("foo=bar");
   _("User-Agent: " + ua);
-  do_check_eq(ua, expectedUA + ".desktop");
+  Assert.equal(ua, expectedUA + ".desktop");
   ua = "";
 });
 
@@ -71,7 +71,7 @@ add_task(async function test_desktop_get() {
   let r = new Resource(server.baseURI + "/1.1/johndoe/storage/meta/global");
   await r.get();
   _("User-Agent: " + ua);
-  do_check_eq(ua, expectedUA + ".desktop");
+  Assert.equal(ua, expectedUA + ".desktop");
   ua = "";
 });
 
@@ -81,7 +81,7 @@ add_task(async function test_mobile_get() {
   let r = new Resource(server.baseURI + "/1.1/johndoe/storage/meta/global");
   await r.get();
   _("User-Agent: " + ua);
-  do_check_eq(ua, expectedUA + ".mobile");
+  Assert.equal(ua, expectedUA + ".mobile");
   ua = "";
 });
 
