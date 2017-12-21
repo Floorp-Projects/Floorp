@@ -133,8 +133,8 @@
                   </description>
                 </hbox>
                 <hbox class="fxaAccountBoxButtons">
-                  <button id="verifyFxaAccount" label="&verify.label;" accesskey="&verify.accesskey;"></button>
-                  <button id="unverifiedUnlinkFxaAccount" label="&forget.label;" accesskey="&forget.accesskey;"></button>
+                  <button id="verifyFxaAccount" label="&resendVerification.label;" accesskey="&resendVerification.accesskey;"></button>
+                  <button id="unverifiedUnlinkFxaAccount" label="&cancelSetup.label;" accesskey="&cancelSetup.accesskey;"></button>
                 </hbox>
               </vbox>
             </hbox>
@@ -155,7 +155,7 @@
                 </hbox>
                 <hbox class="fxaAccountBoxButtons">
                   <button id="rejectReSignIn" label="&signIn.label;" accesskey="&signIn.accesskey;"></button>
-                  <button id="rejectUnlinkFxaAccount" label="&forget.label;" accesskey="&forget.accesskey;"></button>
+                  <button id="rejectUnlinkFxaAccount" label="&cancelSetup.label;" accesskey="&cancelSetup.accesskey;"></button>
                 </hbox>
               </vbox>
             </hbox>
