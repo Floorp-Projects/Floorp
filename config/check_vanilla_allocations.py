@@ -129,6 +129,11 @@ def main():
 
         filename = m.group(1)
 
+        # The stdc++compat library has an implicit call to operator new in
+        # thread::_M_start_thread.
+        if 'stdc++compat' in filename:
+            continue
+
         # The memory allocator code contains calls to memalign. These are ok, so
         # we whitelist them.
         if "_memory_" in filename:
