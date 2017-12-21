@@ -91,17 +91,17 @@ protected:
   virtual void MaybeStartLayout(bool aIgnorePendingSheets) override;
 
   // nsContentSink overrides
-  virtual nsresult ProcessStyleLink(nsIContent* aElement,
-                                    const nsAString& aHref,
-                                    bool aAlternate,
-                                    const nsAString& aTitle,
-                                    const nsAString& aType,
-                                    const nsAString& aMedia,
-                                    const nsAString& aReferrerPolicy) override;
+  virtual nsresult ProcessStyleLinkFromHeader(
+    const nsAString& aHref,
+    bool aAlternate,
+    const nsAString& aTitle,
+    const nsAString& aType,
+    const nsAString& aMedia,
+    const nsAString& aReferrerPolicy) override;
 
   // nsXMLContentSink overrides
   virtual nsresult MaybeProcessXSLTLink(
-    nsIContent* aProcessingInstruction,
+    ProcessingInstruction* aProcessingInstruction,
     const nsAString& aHref,
     bool aAlternate,
     const nsAString& aTitle,
@@ -336,28 +336,29 @@ nsXMLFragmentContentSink::ReportError(const char16_t* aErrorText,
 }
 
 nsresult
-nsXMLFragmentContentSink::ProcessStyleLink(nsIContent* aElement,
-                                           const nsAString& aHref,
-                                           bool aAlternate,
-                                           const nsAString& aTitle,
-                                           const nsAString& aType,
-                                           const nsAString& aMedia,
-                                           const nsAString& aReferrerPolicy)
+nsXMLFragmentContentSink::ProcessStyleLinkFromHeader(
+  const nsAString& aHref,
+  bool aAlternate,
+  const nsAString& aTitle,
+  const nsAString& aType,
+  const nsAString& aMedia,
+  const nsAString& aReferrerPolicy)
 
 {
-  // don't process until moved to document
+  NS_NOTREACHED("Shouldn't have headers for a fragment sink");
   return NS_OK;
 }
 
 nsresult
-nsXMLFragmentContentSink::MaybeProcessXSLTLink(nsIContent* aProcessingInstruction,
-                                               const nsAString& aHref,
-                                               bool aAlternate,
-                                               const nsAString& aTitle,
-                                               const nsAString& aType,
-                                               const nsAString& aMedia,
-                                               const nsAString& aReferrerPolicy,
-                                               bool* aWasXSLT)
+nsXMLFragmentContentSink::MaybeProcessXSLTLink(
+  ProcessingInstruction* aProcessingInstruction,
+  const nsAString& aHref,
+  bool aAlternate,
+  const nsAString& aTitle,
+  const nsAString& aType,
+  const nsAString& aMedia,
+  const nsAString& aReferrerPolicy,
+  bool* aWasXSLT)
 {
   MOZ_ASSERT(!aWasXSLT, "Our one caller doesn't care about whether we're XSLT");
   return NS_OK;
