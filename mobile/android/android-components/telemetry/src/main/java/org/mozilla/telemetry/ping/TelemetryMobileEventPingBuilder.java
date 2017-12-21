@@ -10,6 +10,7 @@ import org.mozilla.telemetry.measurement.EventsMeasurement;
 import org.mozilla.telemetry.measurement.LocaleMeasurement;
 import org.mozilla.telemetry.measurement.OperatingSystemMeasurement;
 import org.mozilla.telemetry.measurement.OperatingSystemVersionMeasurement;
+import org.mozilla.telemetry.measurement.ProcessStartTimestampMeasurement;
 import org.mozilla.telemetry.measurement.SequenceMeasurement;
 import org.mozilla.telemetry.measurement.SettingsMeasurement;
 import org.mozilla.telemetry.measurement.TimezoneOffsetMeasurement;
@@ -29,6 +30,7 @@ public class TelemetryMobileEventPingBuilder extends TelemetryPingBuilder {
     public TelemetryMobileEventPingBuilder(TelemetryConfiguration configuration) {
         super(configuration, TYPE, VERSION);
 
+        addMeasurement(new ProcessStartTimestampMeasurement(configuration));
         addMeasurement(new SequenceMeasurement(configuration, this));
         addMeasurement(new LocaleMeasurement());
         addMeasurement(new OperatingSystemMeasurement());

@@ -37,6 +37,8 @@ public class TelemetryConfiguration {
     private static final int DEFAULT_MAXIMUM_PINGS_PER_TYPE = 40;
     private static final int DEFAULT_MAXIMUM_PING_UPLOADS_PER_DAY = 100;
 
+    private static final long classLoadTimestampMillis = System.currentTimeMillis();
+
     private final Context context;
 
     private String appName;
@@ -410,5 +412,9 @@ public class TelemetryConfiguration {
     public TelemetryConfiguration setSettingsProvider(SettingsMeasurement.SettingsProvider settingsProvider) {
         this.settingsProvider = settingsProvider;
         return this;
+    }
+
+    public long getClassLoadTimestampMillis() {
+        return classLoadTimestampMillis;
     }
 }
