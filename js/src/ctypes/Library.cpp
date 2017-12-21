@@ -238,10 +238,11 @@ bool
 Library::Close(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
-  JSObject* obj = JS_THIS_OBJECT(cx, vp);
-  if (!obj)
-    return false;
-  if (!IsLibrary(obj)) {
+
+  RootedObject obj(cx);
+  if (args.thisv().isObject())
+    obj = &args.thisv().toObject();
+  if (!obj || !IsLibrary(obj)) {
     JS_ReportErrorASCII(cx, "not a library");
     return false;
   }

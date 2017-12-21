@@ -7962,14 +7962,34 @@ public:
   bool IsWhitespace();
   bool IsPunctuation();
   bool HaveWordBreakBefore() { return mHaveWordBreak; }
-  int32_t GetAfterOffset();
-  int32_t GetBeforeOffset();
+
+  // Get the charIndex that corresponds to the "before" side of the current
+  // character, according to the direction of iteration: so for a forward
+  // iterator, this is simply mCharIndex, while for a reverse iterator it will
+  // be mCharIndex + <number of code units in the character>.
+  int32_t GetBeforeOffset()
+  {
+    MOZ_ASSERT(mCharIndex >= 0);
+    return mDirection < 0 ? GetAfterInternal() :  mCharIndex;
+  }
+  // Get the charIndex that corresponds to the "before" side of the current
+  // character, according to the direction of iteration: the opposite side
+  // to what GetBeforeOffset returns.
+  int32_t GetAfterOffset()
+  {
+    MOZ_ASSERT(mCharIndex >= 0);
+    return mDirection > 0 ? GetAfterInternal() :  mCharIndex;
+  }
 
 private:
+  // Helper for Get{After,Before}Offset; returns the charIndex after the
+  // current position in the text, accounting for surrogate pairs.
+  int32_t GetAfterInternal();
+
   gfxSkipCharsIterator        mIterator;
   const nsTextFragment*       mFrag;
   nsTextFrame*                mTextFrame;
-  int32_t                     mDirection;
+  int32_t                     mDirection; // +1 or -1, or 0 to indicate failure
   int32_t                     mCharIndex;
   nsTextFrame::TrimmedOffsets mTrimmed;
   nsTArray<bool>      mWordBreaks;
@@ -8119,17 +8139,15 @@ ClusterIterator::IsPunctuation()
 }
 
 int32_t
-ClusterIterator::GetBeforeOffset()
+ClusterIterator::GetAfterInternal()
 {
-  NS_ASSERTION(mCharIndex >= 0, "No cluster selected");
-  return mCharIndex + (mDirection > 0 ? 0 : 1);
-}
-
-int32_t
-ClusterIterator::GetAfterOffset()
-{
-  NS_ASSERTION(mCharIndex >= 0, "No cluster selected");
-  return mCharIndex + (mDirection > 0 ? 1 : 0);
+  if (mFrag->Is2b() &&
+      NS_IS_HIGH_SURROGATE(mFrag->Get2b()[mCharIndex]) &&
+      uint32_t(mCharIndex) + 1 < mFrag->GetLength() &&
+      NS_IS_LOW_SURROGATE(mFrag->Get2b()[mCharIndex + 1])) {
+    return mCharIndex + 2;
+  }
+  return mCharIndex + 1;
 }
 
 bool

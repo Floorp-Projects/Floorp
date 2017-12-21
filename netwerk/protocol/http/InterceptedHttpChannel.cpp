@@ -944,8 +944,12 @@ InterceptedHttpChannel::SetChannelResetEnd(mozilla::TimeStamp aTimeStamp)
 NS_IMETHODIMP
 InterceptedHttpChannel::SaveTimeStamps(void)
 {
-  nsCString navigationOrSubresource = nsContentUtils::IsNonSubresourceRequest(this) ?
+  bool isNonSubresourceRequest = nsContentUtils::IsNonSubresourceRequest(this);
+  nsCString navigationOrSubresource = isNonSubresourceRequest ?
     NS_LITERAL_CSTRING("navigation") : NS_LITERAL_CSTRING("subresource");
+
+  nsAutoCString subresourceKey(EmptyCString());
+  GetSubresourceTimeStampKey(this, subresourceKey);
 
   // We may have null timestamps if the fetch dispatch runnable was cancelled
   // and we defaulted to resuming the request.
@@ -955,16 +959,31 @@ InterceptedHttpChannel::SaveTimeStamps(void)
       Telemetry::SERVICE_WORKER_FETCH_EVENT_CHANNEL_RESET_MS;
     Telemetry::Accumulate(id, navigationOrSubresource,
       static_cast<uint32_t>((mFinishResponseEnd - mFinishResponseStart).ToMilliseconds()));
+    if (!isNonSubresourceRequest && !subresourceKey.IsEmpty()) {
+      Telemetry::Accumulate(id, subresourceKey,
+        static_cast<uint32_t>((mFinishResponseEnd - mFinishResponseStart).ToMilliseconds()));
+    }
   }
 
   Telemetry::Accumulate(Telemetry::SERVICE_WORKER_FETCH_EVENT_DISPATCH_MS,
     navigationOrSubresource,
     static_cast<uint32_t>((mHandleFetchEventStart - mDispatchFetchEventStart).ToMilliseconds()));
 
+  if (!isNonSubresourceRequest && !subresourceKey.IsEmpty()) {
+    Telemetry::Accumulate(Telemetry::SERVICE_WORKER_FETCH_EVENT_DISPATCH_MS,
+      subresourceKey,
+      static_cast<uint32_t>((mHandleFetchEventStart - mDispatchFetchEventStart).ToMilliseconds()));
+  }
+
   if (!mFinishResponseEnd.IsNull()) {
     Telemetry::Accumulate(Telemetry::SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS,
       navigationOrSubresource,
       static_cast<uint32_t>((mFinishResponseEnd - mDispatchFetchEventStart).ToMilliseconds()));
+    if (!isNonSubresourceRequest && !subresourceKey.IsEmpty()) {
+      Telemetry::Accumulate(Telemetry::SERVICE_WORKER_FETCH_INTERCEPTION_DURATION_MS,
+        subresourceKey,
+        static_cast<uint32_t>((mFinishResponseEnd - mDispatchFetchEventStart).ToMilliseconds()));
+    }
   }
 
   return NS_OK;

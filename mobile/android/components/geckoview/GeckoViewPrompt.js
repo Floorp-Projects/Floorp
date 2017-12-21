@@ -713,7 +713,7 @@ PromptDelegate.prototype = {
   },
 
   asyncPromptAuth: function(aChannel, aCallback, aContext, aLevel, aAuthInfo,
-                            aCheckLabel, aCheckState) {
+                            aCheckMsg, aCheckState) {
     let responded = false;
     let callback = result => {
       // OK: result && result.password !== undefined

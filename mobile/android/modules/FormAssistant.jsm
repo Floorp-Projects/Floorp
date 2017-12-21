@@ -372,7 +372,7 @@ var FormAssistant = {
     let r = aElement.getBoundingClientRect();
 
     // step out of iframes and frames, offsetting scroll values
-    for (let frame = aElement.ownerGlobal; frame.frameElement && frame != content;
+    for (let frame = aElement.ownerGlobal; frame.frameElement;
          frame = frame.parent) {
       // adjust client coordinates' origin to be top left of iframe viewport
       let rect = frame.frameElement.getBoundingClientRect();
