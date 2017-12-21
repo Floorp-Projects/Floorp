@@ -11,9 +11,8 @@ import json
 import mozfile
 import os
 import tokenize
-
-from six.moves.configparser import SafeConfigParser as ConfigParser
-from six import StringIO
+from ConfigParser import SafeConfigParser as ConfigParser
+from StringIO import StringIO
 
 __all__ = ('PreferencesReadError', 'Preferences')
 
@@ -65,7 +64,7 @@ class Preferences(object):
           with the ''s removed from both sides
         """
 
-        if not isinstance(value, str):
+        if not isinstance(value, basestring):
             return value  # no op
         quote = "'"
         if value == 'true':
@@ -147,7 +146,7 @@ class Preferences(object):
             values = prefs.values()
         else:
             raise PreferencesReadError("Malformed preferences: %s" % path)
-        types = (bool, str, int)
+        types = (bool, basestring, int)
         if [i for i in values if not [isinstance(i, j) for j in types]]:
             raise PreferencesReadError("Only bool, string, and int values allowed")
         return prefs
@@ -187,7 +186,7 @@ class Preferences(object):
         retval = []
 
         def pref(a, b):
-            if interpolation and isinstance(b, str):
+            if interpolation and isinstance(b, basestring):
                 b = b.format(**interpolation)
             retval.append((a, b))
         lines = [i.strip().rstrip(';') for i in string.split('\n') if i.strip()]
@@ -203,7 +202,7 @@ class Preferences(object):
 
         # de-magic the marker
         for index, (key, value) in enumerate(retval):
-            if isinstance(value, str) and marker in value:
+            if isinstance(value, basestring) and marker in value:
                 retval[index] = (key, value.replace(marker, '//'))
 
         return retval
@@ -212,7 +211,7 @@ class Preferences(object):
     def write(cls, _file, prefs, pref_string='user_pref(%s, %s);'):
         """write preferences to a file"""
 
-        if isinstance(_file, str):
+        if isinstance(_file, basestring):
             f = file(_file, 'a')
         else:
             f = _file
@@ -230,5 +229,5 @@ class Preferences(object):
             print(pref_string % _pref, file=f)
 
         # close the file if opened internally
-        if isinstance(_file, str):
+        if isinstance(_file, basestring):
             f.close()
