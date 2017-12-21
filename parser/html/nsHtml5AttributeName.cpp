@@ -62,7 +62,7 @@ nsAtom** nsHtml5AttributeName::ALL_NO_PREFIX = 0;
 nsAtom** nsHtml5AttributeName::XMLNS_PREFIX = 0;
 nsAtom** nsHtml5AttributeName::XLINK_PREFIX = 0;
 nsAtom** nsHtml5AttributeName::XML_PREFIX = 0;
-nsAtom** 
+nsAtom**
 nsHtml5AttributeName::SVG_DIFFERENT(nsAtom* name, nsAtom* camel)
 {
   nsAtom** arr = new nsAtom*[4];
@@ -72,7 +72,7 @@ nsHtml5AttributeName::SVG_DIFFERENT(nsAtom* name, nsAtom* camel)
   return arr;
 }
 
-nsAtom** 
+nsAtom**
 nsHtml5AttributeName::MATH_DIFFERENT(nsAtom* name, nsAtom* camel)
 {
   nsAtom** arr = new nsAtom*[4];
@@ -82,7 +82,7 @@ nsHtml5AttributeName::MATH_DIFFERENT(nsAtom* name, nsAtom* camel)
   return arr;
 }
 
-nsAtom** 
+nsAtom**
 nsHtml5AttributeName::COLONIFIED_LOCAL(nsAtom* name, nsAtom* suffix)
 {
   nsAtom** arr = new nsAtom*[4];
@@ -92,7 +92,7 @@ nsHtml5AttributeName::COLONIFIED_LOCAL(nsAtom* name, nsAtom* suffix)
   return arr;
 }
 
-nsAtom** 
+nsAtom**
 nsHtml5AttributeName::SAME_LOCAL(nsAtom* name)
 {
   nsAtom** arr = new nsAtom*[4];
@@ -130,32 +130,31 @@ nsHtml5AttributeName::createAttributeName(nsAtom* name)
                                   ALL_NO_PREFIX);
 }
 
-
 nsHtml5AttributeName::~nsHtml5AttributeName()
 {
   MOZ_COUNT_DTOR(nsHtml5AttributeName);
   delete[] local;
 }
 
-int32_t 
+int32_t
 nsHtml5AttributeName::getUri(int32_t mode)
 {
   return uri[mode];
 }
 
-nsAtom* 
+nsAtom*
 nsHtml5AttributeName::getLocal(int32_t mode)
 {
   return local[mode];
 }
 
-nsAtom* 
+nsAtom*
 nsHtml5AttributeName::getPrefix(int32_t mode)
 {
   return prefix[mode];
 }
 
-bool 
+bool
 nsHtml5AttributeName::equalsAnother(nsHtml5AttributeName* another)
 {
   return this->getLocal(nsHtml5AttributeName::HTML) ==
@@ -743,7 +742,10 @@ static int32_t const ATTRIBUTE_HASHES_DATA[] = {
   2007064819, 2008401563, 2009041198, 2009079867, 2009231684, 2010716309,
   2016711994, 2016810187, 2017010843, 2019887833, 2023342821, 2024647008
 };
-staticJArray<int32_t,int32_t> nsHtml5AttributeName::ATTRIBUTE_HASHES = { ATTRIBUTE_HASHES_DATA, MOZ_ARRAY_LENGTH(ATTRIBUTE_HASHES_DATA) };
+staticJArray<int32_t, int32_t> nsHtml5AttributeName::ATTRIBUTE_HASHES = {
+  ATTRIBUTE_HASHES_DATA,
+  MOZ_ARRAY_LENGTH(ATTRIBUTE_HASHES_DATA)
+};
 void
 nsHtml5AttributeName::initializeStatics()
 {
@@ -2901,5 +2903,3 @@ nsHtml5AttributeName::releaseStatics()
   delete ATTR_REFY;
   delete[] ATTRIBUTE_NAMES;
 }
-
-
