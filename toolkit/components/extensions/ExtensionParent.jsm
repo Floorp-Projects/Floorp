@@ -1242,9 +1242,6 @@ function watchExtensionProxyContextLoad({extension, viewType, browser}, onExtens
   };
 }
 
-// Used to cache the list of WebExtensionManifest properties defined in the BASE_SCHEMA.
-let gBaseManifestProperties = null;
-
 // Manages icon details for toolbar buttons in the |pageAction| and
 // |browserAction| APIs.
 let IconDetails = {
@@ -1590,20 +1587,6 @@ var ExtensionParent = {
   StartupCache,
   WebExtensionPolicy,
   apiManager,
-  get baseManifestProperties() {
-    if (gBaseManifestProperties) {
-      return gBaseManifestProperties;
-    }
-
-    let types = Schemas.schemaJSON.get(BASE_SCHEMA).deserialize({})[0].types;
-    let manifest = types.find(type => type.id === "WebExtensionManifest");
-    if (!manifest) {
-      throw new Error("Unable to find base manifest properties");
-    }
-
-    gBaseManifestProperties = Object.getOwnPropertyNames(manifest.properties);
-    return gBaseManifestProperties;
-  },
   promiseExtensionViewLoaded,
   watchExtensionProxyContextLoad,
   DebugUtils,

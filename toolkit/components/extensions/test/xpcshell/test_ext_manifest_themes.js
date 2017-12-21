@@ -9,7 +9,7 @@ async function test_theme_property(property) {
         "unrecognized_key": "unrecognized_value",
       },
     },
-  });
+  }, "manifest.ThemeManifest");
 
   let expectedWarning;
   if (property === "unrecognized_key") {
