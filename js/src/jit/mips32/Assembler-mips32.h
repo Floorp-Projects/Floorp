@@ -157,9 +157,7 @@ class Assembler : public AssemblerMIPSShared
     // precision registers that make one double register.
     FloatRegister getOddPair(FloatRegister reg) {
         MOZ_ASSERT(reg.isDouble());
-        MOZ_ASSERT(reg.id() % 2 == 0);
-        FloatRegister odd(reg.id() | 1, FloatRegister::Single);
-        return odd;
+        return reg.singleOverlay(1);
     }
 
   public:
