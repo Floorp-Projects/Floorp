@@ -25,6 +25,7 @@ import org.mozilla.telemetry.net.HttpURLConnectionTelemetryClient;
 import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder;
 import org.mozilla.telemetry.ping.TelemetryEventPingBuilder;
+import org.mozilla.telemetry.ping.TelemetryMobileEventPingBuilder;
 import org.mozilla.telemetry.schedule.TelemetryScheduler;
 import org.mozilla.telemetry.schedule.jobscheduler.JobSchedulerTelemetryScheduler;
 import org.mozilla.telemetry.schedule.jobscheduler.TelemetryJobService;
@@ -134,6 +135,101 @@ public class TelemetryTest {
 
     @Test
     public void testEventPingIntegration() throws Exception {
+        final MockWebServer server = new MockWebServer();
+        server.enqueue(new MockResponse().setBody("OK"));
+
+        PreferenceManager.getDefaultSharedPreferences(RuntimeEnvironment.application)
+                .edit()
+                .putBoolean(TEST_SETTING_1, true)
+                .putString(TEST_SETTING_2, "mozilla")
+                .apply();
+
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application)
+                .setServerEndpoint("http://" + server.getHostName() + ":" + server.getPort())
+                .setUserAgent(TEST_USER_AGENT)
+                .setAppName("TelemetryTest")
+                .setAppVersion("12.1.1")
+                .setUpdateChannel("test")
+                .setBuildId("456")
+                .setPreferencesImportantForTelemetry(TEST_SETTING_1, TEST_SETTING_2);
+
+        final TelemetryPingSerializer serializer = new JSONPingSerializer();
+        final FileTelemetryStorage storage = new FileTelemetryStorage(configuration, serializer);
+
+        final TelemetryClient client = spy(new HttpURLConnectionTelemetryClient());
+        final TelemetryScheduler scheduler = new JobSchedulerTelemetryScheduler();
+
+        final TelemetryMobileEventPingBuilder pingBuilder = spy(new TelemetryMobileEventPingBuilder(configuration));
+        doReturn("ffffffff-0000-0000-ffff-ffffffffffff").when(pingBuilder).generateDocumentId();
+
+        final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler)
+                .addPingBuilder(pingBuilder);
+        TelemetryHolder.set(telemetry);
+
+        TelemetryEvent.create("action", "type_url", "search_bar").queue();
+        TelemetryEvent.create("action", "type_query", "search_bar").queue();
+        TelemetryEvent.create("action", "click", "erase_button").queue();
+
+        telemetry.queuePing(TelemetryMobileEventPingBuilder.TYPE);
+
+        TestUtils.waitForExecutor(telemetry);
+
+        assertEquals(1, storage.countStoredPings(TelemetryMobileEventPingBuilder.TYPE));
+
+        telemetry.scheduleUpload();
+
+        TestUtils.waitForExecutor(telemetry);
+
+        assertJobIsScheduled();
+        executePendingJob(TelemetryMobileEventPingBuilder.TYPE);
+
+        verify(client).uploadPing(eq(configuration), anyString(), anyString());
+
+        assertEquals(0, storage.countStoredPings(TelemetryMobileEventPingBuilder.TYPE));
+
+        final RecordedRequest request = server.takeRequest();
+        assertEquals("POST /submit/telemetry/ffffffff-0000-0000-ffff-ffffffffffff/mobile-event/TelemetryTest/12.1.1/test/456?v=4 HTTP/1.1", request.getRequestLine());
+        assertEquals("application/json; charset=utf-8", request.getHeader("Content-Type"));
+        assertEquals(TEST_USER_AGENT, request.getHeader("User-Agent"));
+        assertNotNull(request.getHeader("Date"));
+
+        final JSONObject object = new JSONObject(request.getBody().readUtf8());
+
+        assertTrue(object.has("v"));
+        assertTrue(object.has("clientId"));
+        assertTrue(object.has("seq"));
+        assertTrue(object.has("locale"));
+        assertTrue(object.has("os"));
+        assertTrue(object.has("osversion"));
+        assertTrue(object.has("created"));
+        assertTrue(object.has("tz"));
+        assertTrue(object.has("settings"));
+        assertTrue(object.has("events"));
+
+        final JSONObject settings = object.getJSONObject("settings");
+        assertEquals(2, settings.length());
+        assertEquals("true", settings.getString(TEST_SETTING_1));
+        assertEquals("mozilla", settings.getString(TEST_SETTING_2));
+
+        final JSONArray events = object.getJSONArray("events");
+        assertEquals(3, events.length());
+
+        final JSONArray event1 = events.getJSONArray(0);
+        assertEquals("action", event1.getString(1));
+        assertEquals("type_url", event1.getString(2));
+        assertEquals("search_bar", event1.getString(3));
+
+        final JSONArray event2 = events.getJSONArray(1);
+        assertEquals("action", event2.getString(1));
+        assertEquals("type_query", event2.getString(2));
+        assertEquals("search_bar", event2.getString(3));
+
+        server.shutdown();
+    }
+
+    @Test
+    @Deprecated // If you change this test, change the one above it.
+    public void testEventPingIntegrationLegacyPingType() throws Exception {
         final MockWebServer server = new MockWebServer();
         server.enqueue(new MockResponse().setBody("OK"));
 
@@ -291,6 +387,41 @@ public class TelemetryTest {
 
     @Test
     public void testPingIsQueuedIfEventLimitIsReached() throws Exception {
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
+
+        // This test assumes the maximum number of events is 500
+        assertEquals(500, configuration.getMaximumNumberOfEventsPerPing());
+
+        final TelemetryStorage storage = mock(TelemetryStorage.class);
+        final TelemetryClient client = mock(TelemetryClient.class);
+        final TelemetryScheduler scheduler = mock(TelemetryScheduler.class);
+
+        final TelemetryMobileEventPingBuilder pingBuilder = new TelemetryMobileEventPingBuilder(configuration);
+        final Telemetry telemetry = spy(new Telemetry(configuration, storage, client, scheduler)
+                .addPingBuilder(pingBuilder));
+
+        TelemetryHolder.set(telemetry);
+
+        for (int i = 0; i < 499; i++) {
+            TelemetryEvent.create("category", "method", "object", String.valueOf(i)).queue();
+        }
+
+        TestUtils.waitForExecutor(telemetry);
+
+        // No ping queued so far
+        verify(telemetry, never()).queuePing(TelemetryMobileEventPingBuilder.TYPE);
+
+        // Queue event number 500
+        TelemetryEvent.create("category", "method", "object", "500").queue();
+
+        TestUtils.waitForExecutor(telemetry);
+
+        verify(telemetry).queuePing(TelemetryMobileEventPingBuilder.TYPE);
+    }
+
+    @Test
+    @Deprecated // If you change this test, change the one above it.
+    public void testPingIsQueuedIfEventLimitIsReachedLegacyPingType() throws Exception {
         final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
 
         // This test assumes the maximum number of events is 500

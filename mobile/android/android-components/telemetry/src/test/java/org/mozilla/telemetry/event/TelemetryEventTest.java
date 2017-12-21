@@ -15,6 +15,7 @@ import org.mozilla.telemetry.config.TelemetryConfiguration;
 import org.mozilla.telemetry.measurement.EventsMeasurement;
 import org.mozilla.telemetry.net.TelemetryClient;
 import org.mozilla.telemetry.ping.TelemetryEventPingBuilder;
+import org.mozilla.telemetry.ping.TelemetryMobileEventPingBuilder;
 import org.mozilla.telemetry.schedule.TelemetryScheduler;
 import org.mozilla.telemetry.storage.TelemetryStorage;
 import org.robolectric.RobolectricTestRunner;
@@ -43,6 +44,35 @@ public class TelemetryEventTest {
 
     @Test
     public void testQueuing() throws Exception {
+        final EventsMeasurement measurement = mock(EventsMeasurement.class);
+
+        final TelemetryMobileEventPingBuilder builder = mock(TelemetryMobileEventPingBuilder.class);
+        doReturn(TelemetryMobileEventPingBuilder.TYPE).when(builder).getType();
+        doReturn(measurement).when(builder).getEventsMeasurement();
+
+        final TelemetryConfiguration configuration = new TelemetryConfiguration(RuntimeEnvironment.application);
+        final TelemetryStorage storage = mock(TelemetryStorage.class);
+        final TelemetryClient client = mock(TelemetryClient.class);
+        final TelemetryScheduler scheduler = mock(TelemetryScheduler.class);
+
+        final Telemetry telemetry = new Telemetry(configuration, storage, client, scheduler)
+                .addPingBuilder(builder);
+
+        TelemetryHolder.set(telemetry);
+
+        final TelemetryEvent event = TelemetryEvent.create("action", "type_url", "search_bar");
+        event.queue();
+
+        TestUtils.waitForExecutor(telemetry);
+
+        verify(measurement).add(event);
+
+        TelemetryHolder.set(null);
+    }
+
+    @Test
+    @Deprecated // If you change this test, change the one above it too.
+    public void testQueuingLegacyPingType() throws Exception {
         final EventsMeasurement measurement = mock(EventsMeasurement.class);
 
         final TelemetryEventPingBuilder builder = mock(TelemetryEventPingBuilder.class);
