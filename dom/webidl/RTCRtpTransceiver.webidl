@@ -51,6 +51,8 @@ interface RTCRtpTransceiver {
     [ChromeOnly]
     readonly attribute boolean addTrackMagic;
     [ChromeOnly]
+    attribute boolean shouldRemove;
+    [ChromeOnly]
     void setCurrentDirection(RTCRtpTransceiverDirection direction);
     [ChromeOnly]
     void setDirectionInternal(RTCRtpTransceiverDirection direction);
@@ -60,8 +62,6 @@ interface RTCRtpTransceiver {
     void unsetMid();
     [ChromeOnly]
     void setStopped();
-    [ChromeOnly]
-    void remove();
 
     [ChromeOnly]
     DOMString getKind();
