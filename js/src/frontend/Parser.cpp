@@ -796,7 +796,6 @@ ParserBase::errorNoOffset(unsigned errorNumber, ...)
 
 ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
                        const ReadOnlyCompileOptions& options,
-                       const char16_t* chars, size_t length,
                        bool foldConstants,
                        UsedNameTracker& usedNames)
   : AutoGCRooter(cx, PARSER),
@@ -848,10 +847,9 @@ ParserBase::~ParserBase()
 template <class ParseHandler>
 PerHandlerParser<ParseHandler>::PerHandlerParser(JSContext* cx, LifoAlloc& alloc,
                                                  const ReadOnlyCompileOptions& options,
-                                                 const char16_t* chars, size_t length,
                                                  bool foldConstants, UsedNameTracker& usedNames,
                                                  LazyScript* lazyOuterFunction)
-  : ParserBase(cx, alloc, options, chars, length, foldConstants, usedNames),
+  : ParserBase(cx, alloc, options, foldConstants, usedNames),
     handler(cx, alloc, lazyOuterFunction)
 {
 
@@ -865,7 +863,7 @@ GeneralParser<ParseHandler, CharT>::GeneralParser(JSContext* cx, LifoAlloc& allo
                                                   UsedNameTracker& usedNames,
                                                   SyntaxParser* syntaxParser,
                                                   LazyScript* lazyOuterFunction)
-  : Base(cx, alloc, options, chars, length, foldConstants, usedNames, lazyOuterFunction),
+  : Base(cx, alloc, options, foldConstants, usedNames, lazyOuterFunction),
     tokenStream(cx, options, chars, length)
 {
     // The Mozilla specific JSOPTION_EXTRA_WARNINGS option adds extra warnings
