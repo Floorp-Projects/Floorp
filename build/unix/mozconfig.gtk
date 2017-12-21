@@ -2,27 +2,4 @@
 # everything after that.
 #ac_add_options --enable-default-toolkit=cairo-gtk2
 
-TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
-
-# $TOOLTOOL_DIR/gtk3 comes from tooltool, and must be included in the tooltool manifest.
-if [ -z "$PKG_CONFIG_LIBDIR" ]; then
-  echo PKG_CONFIG_LIBDIR must be set >&2
-  exit 1
-fi
-export PKG_CONFIG_SYSROOT_DIR="$TOOLTOOL_DIR/gtk3"
-export PKG_CONFIG_PATH="$TOOLTOOL_DIR/gtk3/usr/local/lib/pkgconfig"
-PKG_CONFIG="$TOOLTOOL_DIR/gtk3/usr/local/bin/pkg-config"
-export PATH="$TOOLTOOL_DIR/gtk3/usr/local/bin:${PATH}"
-# Ensure cairo, gdk-pixbuf, etc. are not taken from the system installed packages.
-LDFLAGS="-L$TOOLTOOL_DIR/gtk3/usr/local/lib ${LDFLAGS}"
 ac_add_options --enable-default-toolkit=cairo-gtk3
-
-# Set things up to use Gtk+3 from the tooltool package
-mk_add_options "export FONTCONFIG_PATH=$TOOLTOOL_DIR/gtk3/usr/local/etc/fonts"
-mk_add_options "export PANGO_SYSCONFDIR=$TOOLTOOL_DIR/gtk3/usr/local/etc"
-mk_add_options "export PANGO_LIBDIR=$TOOLTOOL_DIR/gtk3/usr/local/lib"
-mk_add_options "export GDK_PIXBUF_MODULE_FILE=$TOOLTOOL_DIR/gtk3/usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
-mk_add_options "export GDK_PIXBUF_MODULEDIR=$TOOLTOOL_DIR/gtk3/usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders"
-
-LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/gtk3/usr/local/lib
-mk_add_options "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
