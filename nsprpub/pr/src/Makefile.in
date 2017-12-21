@@ -138,11 +138,7 @@ endif
 
 ifeq ($(OS_ARCH),HP-UX)
 ifeq ($(USE_PTHREADS), 1)
-ifeq (,$(filter-out B.10.10 B.10.20,$(OS_RELEASE)))
-OS_LIBS 	= -ldce
-else
 OS_LIBS 	= -lpthread -lrt
-endif
 endif
 ifeq ($(PTHREADS_USER), 1)
 OS_LIBS 	= -lpthread
