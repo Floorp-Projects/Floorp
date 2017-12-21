@@ -1253,8 +1253,8 @@ public:
   nsStyleSides   mBorderImageOutset;  // [reset] length, factor
 
   uint8_t        mBorderImageFill;    // [reset]
-  uint8_t        mBorderImageRepeatH; // [reset] see nsStyleConsts.h
-  uint8_t        mBorderImageRepeatV; // [reset]
+  mozilla::StyleBorderImageRepeat mBorderImageRepeatH; // [reset]
+  mozilla::StyleBorderImageRepeat mBorderImageRepeatV; // [reset]
   mozilla::StyleFloatEdge mFloatEdge; // [reset]
   mozilla::StyleBoxDecorationBreak mBoxDecorationBreak; // [reset]
 
