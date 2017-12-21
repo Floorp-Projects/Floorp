@@ -8,9 +8,12 @@
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/Telemetry.h"
 #include "nsIDocShell.h"
+#include "nsDOMMutationObserver.h"
 
 namespace mozilla {
 namespace dom {
+
+AutoTArray<RefPtr<DocGroup>, 2>* DocGroup::sPendingDocGroups = nullptr;
 
 /* static */ nsresult
 DocGroup::GetKey(nsIPrincipal* aPrincipal, nsACString& aKey)
@@ -79,6 +82,24 @@ bool*
 DocGroup::GetValidAccessPtr()
 {
   return mTabGroup->GetValidAccessPtr();
+}
+
+void
+DocGroup::SignalSlotChange(const HTMLSlotElement* aSlot)
+{
+  if (mSignalSlotList.Contains(aSlot)) {
+    return;
+  }
+
+  mSignalSlotList.AppendElement(const_cast<HTMLSlotElement*>(aSlot));
+
+  if (!sPendingDocGroups) {
+    // Queue a mutation observer compound microtask.
+    nsDOMMutationObserver::QueueMutationObserverMicroTask();
+    sPendingDocGroups = new AutoTArray<RefPtr<DocGroup>, 2>;
+  }
+
+  sPendingDocGroups->AppendElement(this);
 }
 
 }

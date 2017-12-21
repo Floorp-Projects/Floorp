@@ -423,6 +423,10 @@ struct FloatRegister
         return false;
     }
 
+    FloatRegister asSingle() const { return FloatRegister(code_, FloatRegisters::Single); }
+    FloatRegister asDouble() const { return FloatRegister(code_, FloatRegisters::Double); }
+    FloatRegister asSimd128() const { MOZ_CRASH(); }
+
     static uint32_t FirstBit(SetType x) {
         JS_STATIC_ASSERT(sizeof(SetType) == 8);
         return mozilla::CountTrailingZeroes64(x);

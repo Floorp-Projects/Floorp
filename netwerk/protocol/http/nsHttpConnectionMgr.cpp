@@ -4584,7 +4584,6 @@ nsHalfOpenSocket::SetFastOpenConnected(nsresult aError, bool aWillRetry)
     mConnectionNegotiatingFastOpen = nullptr;
     if (mEnt) {
         mEnt->mDoNotDestroy = false;
-        MOZ_ASSERT(mEnt->mHalfOpens.Contains(this));
     } else {
         MOZ_ASSERT(!mSynTimer);
         MOZ_ASSERT(!mBackupTransport);

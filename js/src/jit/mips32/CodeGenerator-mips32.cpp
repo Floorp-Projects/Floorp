@@ -826,6 +826,5 @@ CodeGeneratorMIPS::setReturnDoubleRegs(LiveRegisterSet* regs)
 {
     MOZ_ASSERT(ReturnFloat32Reg.code_ == ReturnDoubleReg.code_);
     regs->add(ReturnFloat32Reg);
-    regs->add(ReturnDoubleReg.singleOverlay(1));
     regs->add(ReturnDoubleReg);
 }
