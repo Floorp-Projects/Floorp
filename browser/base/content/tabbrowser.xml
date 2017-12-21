@@ -4992,8 +4992,9 @@
                 }
                 this.loadingTab = null;
               } else {
-                // Do nothing. We'll automatically start loading the requested tab in
-                // postActions.
+                // We're no longer minimized or occluded. This means we might want
+                // to activate the current tab's docShell.
+                this.maybeActivateDocShell(gBrowser.selectedTab);
               }
             },
 
