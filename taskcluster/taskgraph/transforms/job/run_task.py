@@ -63,12 +63,13 @@ def docker_worker_run_task(config, job, taskdesc):
     worker = taskdesc['worker'] = job['worker']
     common_setup(config, job, taskdesc)
 
-    worker['caches'].append({
-        'type': 'persistent',
-        'name': 'level-{level}-{project}-dotcache'.format(**config.params),
-        'mount-point': '/builds/worker/.cache',
-        'skip-untrusted': True,
-    })
+    if run.get('cache-dotcache'):
+        worker['caches'].append({
+            'type': 'persistent',
+            'name': 'level-{level}-{project}-dotcache'.format(**config.params),
+            'mount-point': '/builds/worker/.cache',
+            'skip-untrusted': True,
+        })
 
     run_command = run['command']
     if isinstance(run_command, basestring):
