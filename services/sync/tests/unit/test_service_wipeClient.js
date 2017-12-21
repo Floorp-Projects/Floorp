@@ -6,7 +6,6 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 function CanDecryptEngine() {
   SyncEngine.call(this, "CanDecrypt", Service);
@@ -47,7 +46,6 @@ let canDecryptEngine;
 let cannotDecryptEngine;
 
 add_task(async function setup() {
-  initTestLogging();
   Service.engineManager.clear();
 
   await Service.engineManager.register(CanDecryptEngine);
@@ -76,8 +74,10 @@ add_task(async function test_withEngineList() {
 });
 
 add_task(async function test_startOver_clears_keys() {
+  syncTestLogging();
   await generateNewKeys(Service.collectionKeys);
   Assert.ok(!!Service.collectionKeys.keyForCollection());
   await Service.startOver();
+  syncTestLogging();
   Assert.ok(!Service.collectionKeys.keyForCollection());
 });

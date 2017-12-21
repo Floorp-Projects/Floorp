@@ -6,14 +6,18 @@
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const { div } = dom;
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 // Components
-const RequestListContent = createFactory(require("./RequestListContent"));
-const RequestListEmptyNotice = createFactory(require("./RequestListEmptyNotice"));
 const StatusBar = createFactory(require("./StatusBar"));
 
-const { div } = dom;
+loader.lazyGetter(this, "RequestListContent", function () {
+  return createFactory(require("./RequestListContent"));
+});
+loader.lazyGetter(this, "RequestListEmptyNotice", function () {
+  return createFactory(require("./RequestListEmptyNotice"));
+});
 
 /**
  * Request panel component

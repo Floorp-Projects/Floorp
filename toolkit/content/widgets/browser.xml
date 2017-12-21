@@ -1329,7 +1329,7 @@
             // coordinates we pass. Unfortunately `window.screen.availLeft` can be negative
             // on Windows in multi-monitor setups, so we use nsIScreenManager instead:
             let left = {}, top = {}, width = {}, height = {};
-            screen.GetAvailRectDisplayPix(left, top, width, height);
+            screen.GetAvailRect(left, top, width, height);
 
             // We need to get screen CSS-pixel (rather than display-pixel) coordinates.
             // With 175% DPI, the actual ratio of display pixels to CSS pixels is

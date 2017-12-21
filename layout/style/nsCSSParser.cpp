@@ -13158,8 +13158,7 @@ CSSParserImpl::SetBorderImageInitialValues()
   // border-image-repeat: repeat
   nsCSSValue repeat;
   nsCSSValuePair repeatPair;
-  repeatPair.SetBothValuesTo(nsCSSValue(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH,
-                                        eCSSUnit_Enumerated));
+  repeatPair.SetBothValuesTo(nsCSSValue(StyleBorderImageRepeat::Stretch));
   repeat.SetPairValue(&repeatPair);
   AppendValue(eCSSProperty_border_image_repeat, repeat);
 }

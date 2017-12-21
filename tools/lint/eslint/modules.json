@@ -208,7 +208,7 @@
   "UpdateTelemetry.jsm": ["AUSTLMY"],
   "UpdateTopLevelContentWindowIDHelper.jsm": ["trackBrowserWindow"],
   "util.js": ["getChromeWindow", "Utils", "Svc"],
-  "utils.js": ["btoa", "encryptPayload", "makeIdentityConfig", "makeFxAccountsInternalMock", "configureFxAccountIdentity", "configureIdentity", "SyncTestingInfrastructure", "waitForZeroTimer", "Promise", "MockFxaStorageManager", "AccountState", "sumHistogram", "CommonUtils", "CryptoUtils", "TestingUtils", "promiseZeroTimer", "promiseNamedTimer", "getLoginTelemetryScalar"],
+  "utils.js": ["btoa", "encryptPayload", "makeIdentityConfig", "makeFxAccountsInternalMock", "configureFxAccountIdentity", "configureIdentity", "SyncTestingInfrastructure", "waitForZeroTimer", "Promise", "MockFxaStorageManager", "AccountState", "sumHistogram", "CommonUtils", "CryptoUtils", "TestingUtils", "promiseZeroTimer", "promiseNamedTimer", "getLoginTelemetryScalar", "syncTestLogging"],
   "Utils.jsm": ["Utils", "Logger", "PivotContext", "PrefCache"],
   "VariablesView.jsm": ["VariablesView", "escapeHTML"],
   "VariablesViewController.jsm": ["VariablesViewController", "StackFrameUtils"],

@@ -184,10 +184,26 @@ class MockPreferences {
     for (const [branchName, values] of Object.entries(this.oldValues)) {
       const preferenceBranch = preferenceBranches[branchName];
       for (const [name, {oldValue, existed}] of Object.entries(values)) {
+        const before = preferenceBranch.get(name);
+
+        if (before === oldValue) {
+          continue;
+        }
+
         if (existed) {
           preferenceBranch.set(name, oldValue);
+        } else if (branchName === "default") {
+          Services.prefs.getDefaultBranch(name).deleteBranch("");
         } else {
           preferenceBranch.reset(name);
+        }
+
+        const after = preferenceBranch.get(name);
+        if (before === after && before !== undefined) {
+          throw new Error(
+            `Couldn't reset pref "${name}" to "${oldValue}" on "${branchName}" branch ` +
+            `(value stayed "${before}", did ${existed ? "" : "not "}exist)`
+          );
         }
       }
     }

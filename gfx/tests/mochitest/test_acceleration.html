@@ -35,6 +35,7 @@ function runTest() {
   var windowutils;
   var acceleratedWindows = 0;
   var advancedLayersWindows = 0;
+  var webrenderWindows = 0;
   var layerManagerLog = [];
   while (windows.hasMoreElements()) {
     windowutils = windows.getNext().QueryInterface(Ci.nsIInterfaceRequestor)
@@ -42,6 +43,9 @@ function runTest() {
     try {
       if (windowutils.layerManagerType != "Basic") {
         acceleratedWindows++;
+      }
+      if (windowutils.layerManagerType == "WebRender") {
+        webrenderWindows++;
       }
       if (windowutils.usingAdvancedLayers) {
         advancedLayersWindows++;
@@ -108,6 +112,11 @@ function runTest() {
         ok(gfxInfo.DWriteEnabled, "DirectWrite enabled on Windows 7 or newer");
       }
 
+      var shouldGetWR = false;
+      try {
+        shouldGetWR = SpecialPowers.DOMWindowUtils.isWebRenderRequested;
+      } catch (e) {}
+
       var advancedLayersEnabled = false;
       var advancedLayersEnabledOnWin7 = false;
       try {
@@ -118,11 +127,21 @@ function runTest() {
       if (version < 6.2) {
         shouldGetAL &= advancedLayersEnabledOnWin7;
       }
+      if (shouldGetWR) {
+        shouldGetAL = false;
+      }
+
       if (shouldGetAL) {
         isnot(advancedLayersWindows, 0, "Advanced Layers enabled on Windows; "
                                         + layerManagerLog.join(","));
       } else {
         is(advancedLayersWindows, 0, "Advanced Layers disabled on Windows");
+      }
+
+      if (shouldGetWR) {
+        isnot(webrenderWindows, 0, "WebRender enabled on Windows");
+      } else {
+        is(webrenderWindows, 0, "WebRender disabled on Windows");
       }
       break;
 

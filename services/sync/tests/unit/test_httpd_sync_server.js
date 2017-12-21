@@ -4,12 +4,6 @@
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/util.js");
 
-function run_test() {
-  Log.repository.getLogger("Sync.Test.Server").level = Log.Level.Trace;
-  initTestLogging();
-  run_next_test();
-}
-
 add_test(function test_creation() {
   // Explicit callback for this one.
   let server = new SyncServer({

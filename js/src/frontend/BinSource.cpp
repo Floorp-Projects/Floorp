@@ -335,7 +335,7 @@ BinASTParser::parseBlockStatementAux(const BinKind kind, const BinFields& fields
 
     // In case of absent optional fields, inject default values.
     if (!body)
-        body = factory_.newStatementList(tokenizer_->pos());
+        TRY_VAR(body, factory_.newStatementList(tokenizer_->pos()));
 
     MOZ_TRY_VAR(body, appendDirectivesToBody(body, directives));
 

@@ -5,7 +5,6 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 function login_handling(handler) {
   return function(request, response) {

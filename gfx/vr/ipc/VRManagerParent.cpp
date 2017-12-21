@@ -121,7 +121,8 @@ VRManagerParent::CreateSameProcess()
   RefPtr<VRManagerParent> vmp = new VRManagerParent(base::GetCurrentProcId(), false);
   vmp->mVRListenerThreadHolder = VRListenerThreadHolder::GetSingleton();
   vmp->mSelfRef = vmp;
-  loop->PostTask(NewRunnableFunction(RegisterVRManagerInVRListenerThread, vmp.get()));
+  loop->PostTask(NewRunnableFunction("RegisterVRManagerInVRListenerThreadRunnable",
+                                     RegisterVRManagerInVRListenerThread, vmp.get()));
   return vmp.get();
 }
 

@@ -1,6 +1,7 @@
 import logging
 import sys
 import threading
+from Queue import Empty
 from StringIO import StringIO
 from multiprocessing import Queue
 
@@ -49,7 +50,6 @@ class LogLevelRewriter(object):
             data = data.copy()
             data["level"] = self.to_level
         return self.inner(data)
-
 
 
 class LogThread(threading.Thread):
@@ -126,5 +126,10 @@ class CaptureIO(object):
                 self.logging_queue.put(None)
                 if self.logging_thread is not None:
                     self.logging_thread.join(10)
+                while not self.logging_queue.empty():
+                    try:
+                        self.logger.warning("Dropping log message: %r", self.logging_queue.get())
+                    except Exception:
+                        pass
                 self.logging_queue.close()
                 self.logger.info("queue closed")

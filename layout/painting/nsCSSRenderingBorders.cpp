@@ -3754,7 +3754,7 @@ nsCSSBorderImageRenderer::DrawBorderImage(nsPresContext* aPresContext,
 
   for (int i = LEFT; i <= RIGHT; i++) {
     for (int j = TOP; j <= BOTTOM; j++) {
-      uint8_t fillStyleH, fillStyleV;
+      StyleBorderImageRepeat fillStyleH, fillStyleV;
       nsSize unitSize;
 
       if (i == MIDDLE && j == MIDDLE) {
@@ -3808,7 +3808,7 @@ nsCSSBorderImageRenderer::DrawBorderImage(nsPresContext* aPresContext,
         unitSize.width = sliceWidth[i] * factor;
         unitSize.height = borderHeight[j];
         fillStyleH = mRepeatModeHorizontal;
-        fillStyleV = NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH;
+        fillStyleV = StyleBorderImageRepeat::Stretch;
 
       } else if (j == MIDDLE) { // left, right
         gfxFloat factor;
@@ -3819,15 +3819,15 @@ nsCSSBorderImageRenderer::DrawBorderImage(nsPresContext* aPresContext,
 
         unitSize.width = borderWidth[i];
         unitSize.height = sliceHeight[j] * factor;
-        fillStyleH = NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH;
+        fillStyleH = StyleBorderImageRepeat::Stretch;
         fillStyleV = mRepeatModeVertical;
 
       } else {
         // Corners are always stretched to fit the corner.
         unitSize.width = borderWidth[i];
         unitSize.height = borderHeight[j];
-        fillStyleH = NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH;
-        fillStyleV = NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH;
+        fillStyleH = StyleBorderImageRepeat::Stretch;
+        fillStyleV = StyleBorderImageRepeat::Stretch;
       }
 
       nsRect destArea(borderX[i], borderY[j], borderWidth[i], borderHeight[j]);

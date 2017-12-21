@@ -18,8 +18,12 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
 Cu.import("resource://gre/modules/ObjectUtils.jsm");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 add_task(async function head_setup() {
+  // Initialize logging. This will sometimes be reset by a pref reset,
+  // so it's also called as part of SyncTestingInfrastructure().
+  syncTestLogging();
   // If a test imports Service, make sure it is initialized first.
   if (this.Service) {
     await this.Service.promiseInitialized;

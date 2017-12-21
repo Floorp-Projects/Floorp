@@ -28,6 +28,8 @@ from taskgraph.util.schema import (
     optionally_keyed_by,
     Schema,
 )
+from mozbuild.schedules import INCLUSIVE_COMPONENTS
+
 from voluptuous import (
     Any,
     Optional,
@@ -102,6 +104,11 @@ WINDOWS_WORKER_TYPES = {
       'hardware': 'releng-hardware/gecko-t-win10-64-hw',
     },
     'windows10-64-asan': {
+      'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
+      'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
+      'hardware': 'releng-hardware/gecko-t-win10-64-hw',
+    },
+    'windows10-64-qr': {
       'virtual': 'aws-provisioner-v1/gecko-t-win10-64',
       'virtual-with-gpu': 'aws-provisioner-v1/gecko-t-win10-64-gpu',
       'hardware': 'releng-hardware/gecko-t-win10-64-hw',
@@ -423,11 +430,11 @@ def set_defaults(config, tests):
         else:
             test['allow-software-gl-layers'] = False
 
-        # Enable WebRender by default on the QuantumRender test platform, since
+        # Enable WebRender by default on the QuantumRender test platforms, since
         # the whole point of QuantumRender is to run with WebRender enabled.
-        # If other *-qr test platforms are added they should also be checked for
-        # here; currently linux64-qr is the only one.
-        if test['test-platform'].startswith('linux64-qr'):
+        # This currently matches linux64-qr and windows10-64-qr; both of these
+        # have /opt and /debug variants.
+        if "-qr/" in test['test-platform']:
             test['webrender'] = True
         else:
             test.setdefault('webrender', False)
@@ -987,7 +994,15 @@ def make_job_description(config, tests):
         if test.get('when'):
             jobdesc['when'] = test['when']
         else:
-            schedules = [attributes['unittest_suite'], platform_family(test['build-platform'])]
+            suite = attributes['unittest_suite']
+            if suite in INCLUSIVE_COMPONENTS:
+                # if this is an "inclusive" test, then all files which might
+                # cause it to run are annotated with SCHEDULES in moz.build,
+                # so do not include the platform or any other components here
+                schedules = [suite]
+            else:
+                schedules = [suite, platform_family(test['build-platform'])]
+
             if config.params['project'] != 'try':
                 # for non-try branches, include SETA
                 jobdesc['optimization'] = {'skip-unless-schedules-or-seta': schedules}

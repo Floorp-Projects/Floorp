@@ -12,7 +12,7 @@ namespace widget {
 
 CompositorWidgetParent::CompositorWidgetParent(const CompositorWidgetInitData& aInitData,
                                                const layers::CompositorOptions& aOptions)
- : X11CompositorWidget(aInitData.get_X11CompositorWidgetInitData(), aOptions)
+ : GtkCompositorWidget(aInitData.get_GtkCompositorWidgetInitData(), aOptions)
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
 }

@@ -3,8 +3,6 @@
 
 let { PostQueue } = Cu.import("resource://services-sync/record.js", {});
 
-initTestLogging("Trace");
-
 function makeRecord(nbytes) {
   return {
     toJSON: () => ({ payload: "x".repeat(nbytes) }),

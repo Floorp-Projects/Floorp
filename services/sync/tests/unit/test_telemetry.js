@@ -11,7 +11,6 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/engines/clients.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://testing-common/services/sync/fxa_utils.js");
 Cu.import("resource://testing-common/services/sync/rotaryengine.js");
 Cu.import("resource://gre/modules/osfile.jsm", this);
@@ -61,13 +60,12 @@ BogusEngine.prototype = Object.create(SteamEngine.prototype);
 async function cleanAndGo(engine, server) {
   engine._tracker.clearChangedIDs();
   Svc.Prefs.resetBranch("");
-  Svc.Prefs.set("log.logger.engine.rotary", "Trace");
+  syncTestLogging();
   Service.recordManager.clearCache();
   await promiseStopServer(server);
 }
 
 add_task(async function setup() {
-  initTestLogging("Trace");
   // Avoid addon manager complaining about not being initialized
   Service.engineManager.unregister("addons");
 });

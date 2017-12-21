@@ -4,8 +4,6 @@
 /* import-globals-from pippki.js */
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 const nsFilePicker = "@mozilla.org/filepicker;1";
 const nsIX509CertDB = Components.interfaces.nsIX509CertDB;

@@ -5,7 +5,6 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/rotaryengine.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 // Track HMAC error counts.
 var hmacErrorCount = 0;
@@ -19,6 +18,7 @@ var hmacErrorCount = 0;
 
 async function shared_setup() {
   enableValidationPrefs();
+  syncTestLogging();
 
   hmacErrorCount = 0;
 
@@ -236,8 +236,3 @@ add_task(async function hmac_error_during_node_reassignment() {
     onwards();
   });
 });
-
-function run_test() {
-  initTestLogging("Trace");
-  run_next_test();
-}

@@ -245,7 +245,7 @@ GPUProcessHost::DestroyProcess()
   }
 
   MessageLoop::current()->
-    PostTask(NewRunnableFunction(DelayedDeleteSubprocess, this));
+    PostTask(NewRunnableFunction("DestroyProcessRunnable", DelayedDeleteSubprocess, this));
 }
 
 } // namespace gfx

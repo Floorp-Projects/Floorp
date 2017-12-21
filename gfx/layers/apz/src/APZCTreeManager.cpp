@@ -2384,7 +2384,8 @@ void
 APZCTreeManager::SetLongTapEnabled(bool aLongTapEnabled)
 {
   APZThreadUtils::RunOnControllerThread(
-    NewRunnableFunction(GestureEventListener::SetLongTapEnabled, aLongTapEnabled));
+    NewRunnableFunction("SetLongTapEnabledRunnable",
+                        GestureEventListener::SetLongTapEnabled, aLongTapEnabled));
 }
 
 RefPtr<HitTestingTreeNode>

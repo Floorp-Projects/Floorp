@@ -4,7 +4,6 @@
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/fxa_utils.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 add_task(async function test_findCluster() {
   _("Test FxA _findCluster()");
@@ -61,8 +60,3 @@ add_task(async function test_findCluster() {
 
   Svc.Prefs.resetBranch("");
 });
-
-function run_test() {
-  initTestLogging();
-  run_next_test();
-}

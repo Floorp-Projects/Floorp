@@ -7,6 +7,7 @@
 const Services = require("Services");
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
+const { div } = dom;
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
@@ -16,10 +17,13 @@ const { getSelectedRequest } = require("../selectors/index");
 
 // Components
 const SplitBox = createFactory(require("devtools/client/shared/components/splitter/SplitBox"));
-const NetworkDetailsPanel = createFactory(require("./NetworkDetailsPanel"));
 const RequestList = createFactory(require("./RequestList"));
 const Toolbar = createFactory(require("./Toolbar"));
-const { div } = dom;
+
+loader.lazyGetter(this, "NetworkDetailsPanel", function () {
+  return createFactory(require("./NetworkDetailsPanel"));
+});
+
 const MediaQueryList = window.matchMedia("(min-width: 700px)");
 
 /**

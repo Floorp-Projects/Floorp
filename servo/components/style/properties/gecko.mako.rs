@@ -1789,16 +1789,14 @@ fn static_assert() {
 
     pub fn set_border_image_repeat(&mut self, v: longhands::border_image_repeat::computed_value::T) {
         use properties::longhands::border_image_repeat::computed_value::RepeatKeyword;
-        use gecko_bindings::structs;
+        use gecko_bindings::structs::StyleBorderImageRepeat;
 
         % for i, side in enumerate(["H", "V"]):
-            let k = match v.${i} {
+            self.gecko.mBorderImageRepeat${side} = match v.${i} {
                 % for keyword in border_image_repeat_keywords:
-                RepeatKeyword::${keyword} => structs::NS_STYLE_BORDER_IMAGE_REPEAT_${keyword.upper()},
+                RepeatKeyword::${keyword} => StyleBorderImageRepeat::${keyword},
                 % endfor
             };
-
-            self.gecko.mBorderImageRepeat${side} = k as u8;
         % endfor
     }
 
@@ -1813,14 +1811,13 @@ fn static_assert() {
 
     pub fn clone_border_image_repeat(&self) -> longhands::border_image_repeat::computed_value::T {
         use properties::longhands::border_image_repeat::computed_value::RepeatKeyword;
-        use gecko_bindings::structs;
+        use gecko_bindings::structs::StyleBorderImageRepeat;
 
         % for side in ["H", "V"]:
-        let servo_${side.lower()} = match self.gecko.mBorderImageRepeat${side} as u32 {
+        let servo_${side.lower()} = match self.gecko.mBorderImageRepeat${side} {
             % for keyword in border_image_repeat_keywords:
-            structs::NS_STYLE_BORDER_IMAGE_REPEAT_${keyword.upper()} => RepeatKeyword::${keyword},
+            StyleBorderImageRepeat::${keyword} => RepeatKeyword::${keyword},
             % endfor
-            x => panic!("Found unexpected value in mBorderImageRepeat${side}: {:?}", x),
         };
         % endfor
         longhands::border_image_repeat::computed_value::T(servo_h, servo_v)
@@ -2951,10 +2948,12 @@ fn static_assert() {
         let count = other.gecko.m${type.capitalize()}${gecko_ffi_name}Count;
         self.gecko.m${type.capitalize()}${gecko_ffi_name}Count = count;
 
-        // The length of mTransitions or mAnimations is often greater than m{Transition|Animation}XXCount,
-        // don't copy values over the count.
-        for (index, gecko) in self.gecko.m${type.capitalize()}s.iter_mut().enumerate().take(count as usize) {
-            gecko.m${gecko_ffi_name} = other.gecko.m${type.capitalize()}s[index].m${gecko_ffi_name};
+        let iter = self.gecko.m${type.capitalize()}s.iter_mut().zip(
+            other.gecko.m${type.capitalize()}s.iter().take(count as usize).cycle()
+        );
+
+        for (ours, others) in iter {
+            ours.m${gecko_ffi_name} = others.m${gecko_ffi_name};
         }
     }
 
@@ -3734,6 +3733,7 @@ fn static_assert() {
                                           count as usize,
                                           LayerType::${shorthand.title()});
         }
+        // FIXME(emilio): This may be bogus in the same way as bug 1426246.
         for (layer, other) in self.gecko.${layers_field_name}.mLayers.iter_mut()
                                   .zip(other.gecko.${layers_field_name}.mLayers.iter())
                                   .take(count as usize) {

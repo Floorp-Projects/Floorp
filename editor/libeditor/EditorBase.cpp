@@ -3876,12 +3876,6 @@ EditorBase::IsContainer(nsINode* aNode)
 }
 
 bool
-EditorBase::IsContainer(nsIDOMNode* aNode)
-{
-  return aNode ? true : false;
-}
-
-bool
 EditorBase::IsEditable(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);

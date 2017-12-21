@@ -5,7 +5,6 @@ Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 add_task(async function test_clients_escape() {
   _("Set up test fixtures.");

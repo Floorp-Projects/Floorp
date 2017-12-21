@@ -23,11 +23,19 @@ const {
 const { sortObjectKeys } = require("../utils/sort-utils");
 
 // Components
-const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const MDNLink = createFactory(require("./MdnLink"));
 const PropertiesView = createFactory(require("./PropertiesView"));
 
-const { Rep } = REPS;
+loader.lazyGetter(this, "MDNLink", function () {
+  return createFactory(require("./MdnLink"));
+});
+
+loader.lazyGetter(this, "Rep", function () {
+  return require("devtools/client/shared/components/reps/reps").REPS.Rep;
+});
+loader.lazyGetter(this, "MODE", function () {
+  return require("devtools/client/shared/components/reps/reps").MODE;
+});
+
 const { button, div, input, textarea, span } = dom;
 
 const EDIT_AND_RESEND = L10N.getStr("netmonitor.summary.editAndResend");

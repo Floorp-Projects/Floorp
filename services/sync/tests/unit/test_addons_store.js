@@ -9,7 +9,6 @@ Cu.import("resource://services-sync/addonutils.js");
 Cu.import("resource://services-sync/engines/addons.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
 const HTTP_PORT = 8888;
@@ -104,11 +103,6 @@ function checkReconcilerUpToDate(addon) {
 }
 
 add_task(async function setup() {
-  initTestLogging("Trace");
-  Log.repository.getLogger("Sync.Engine.Addons").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.Tracker.Addons").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.AddonsRepository").level = Log.Level.Trace;
-
   await Service.engineManager.register(AddonsEngine);
   engine     = Service.engineManager.get("addons");
   tracker    = engine._tracker;
