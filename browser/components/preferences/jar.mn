@@ -12,7 +12,6 @@ browser.jar:
     content/browser/preferences/cookies.js
 *   content/browser/preferences/connection.xul
     content/browser/preferences/connection.js
-    content/browser/preferences/donottrack.xul
 *   content/browser/preferences/fonts.xul
     content/browser/preferences/fonts.js
     content/browser/preferences/handlers.xml

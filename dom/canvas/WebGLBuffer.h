@@ -105,7 +105,7 @@ protected:
     size_t mByteLength;
     size_t mTFBindCount;
     size_t mNonTFBindCount;
-    uint64_t mLastUpdateFenceId = 0;
+    mutable uint64_t mLastUpdateFenceId = 0;
 
     struct IndexRange final {
         GLenum type;
@@ -128,6 +128,8 @@ protected:
 
 public:
     CacheMapInvalidator mFetchInvalidator;
+
+    void ResetLastUpdateFenceId() const;
 };
 
 } // namespace mozilla

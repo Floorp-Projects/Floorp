@@ -358,6 +358,8 @@ public:
     }
     if (!body) {
       mInternalResponse->GetUnfilteredBody(getter_AddRefs(body));
+    } else {
+      Telemetry::ScalarAdd(Telemetry::ScalarID::SW_ALTERNATIVE_BODY_USED_COUNT, 1);
     }
 
     RefPtr<BodyCopyHandle> copyHandle;

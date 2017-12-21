@@ -156,7 +156,7 @@ XULListboxAccessible::NativeRole()
 {
   // A richlistbox is used with the new autocomplete URL bar, and has a parent
   // popup <panel>.
-  if (mContent->GetParent()->IsXULElement(nsGkAtoms::panel))
+  if (mContent->GetParent() && mContent->GetParent()->IsXULElement(nsGkAtoms::panel))
     return roles::COMBOBOX_LIST;
 
   return IsMulticolumn() ? roles::TABLE : roles::LISTBOX;

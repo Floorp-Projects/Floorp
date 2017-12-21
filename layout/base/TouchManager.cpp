@@ -217,12 +217,12 @@ TouchManager::SuppressInvalidPointsAndGetTargetedFrame(WidgetTouchEvent* aEvent)
         touch->mIsTouchEventSuppressed = true;
       } else {
         targetFrame = newTargetFrame;
+        targetFrame->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
+        while (targetContent && !targetContent->IsElement()) {
+          targetContent = targetContent->GetParent();
+        }
+        touch->SetTarget(targetContent);
       }
-      targetFrame->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
-      while (targetContent && !targetContent->IsElement()) {
-        targetContent = targetContent->GetParent();
-      }
-      touch->SetTarget(targetContent);
     }
     if (targetFrame) {
       frame = targetFrame;
