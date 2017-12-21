@@ -99,8 +99,16 @@ protected:
                                     const nsAString& aMedia,
                                     const nsAString& aReferrerPolicy) override;
 
-  nsresult LoadXSLStyleSheet(nsIURI* aUrl);
-  void StartLayout();
+  // nsXMLContentSink overrides
+  virtual nsresult MaybeProcessXSLTLink(
+    nsIContent* aProcessingInstruction,
+    const nsAString& aHref,
+    bool aAlternate,
+    const nsAString& aTitle,
+    const nsAString& aType,
+    const nsAString& aMedia,
+    const nsAString& aReferrerPolicy,
+    bool* aWasXSLT = nullptr) override;
 
   nsCOMPtr<nsIDocument> mTargetDocument;
   // the fragment
@@ -342,16 +350,17 @@ nsXMLFragmentContentSink::ProcessStyleLink(nsIContent* aElement,
 }
 
 nsresult
-nsXMLFragmentContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
+nsXMLFragmentContentSink::MaybeProcessXSLTLink(nsIContent* aProcessingInstruction,
+                                               const nsAString& aHref,
+                                               bool aAlternate,
+                                               const nsAString& aTitle,
+                                               const nsAString& aType,
+                                               const nsAString& aMedia,
+                                               const nsAString& aReferrerPolicy,
+                                               bool* aWasXSLT)
 {
-  NS_NOTREACHED("fragments shouldn't have XSL style sheets");
-  return NS_ERROR_UNEXPECTED;
-}
-
-void
-nsXMLFragmentContentSink::StartLayout()
-{
-  NS_NOTREACHED("fragments shouldn't layout");
+  MOZ_ASSERT(!aWasXSLT, "Our one caller doesn't care about whether we're XSLT");
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
