@@ -561,7 +561,7 @@ TransceiverImpl::SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver,
   }
 
   if (mJsepTransceiver->IsRemoved()) {
-    aJsTransceiver.Remove(aRv);
+    aJsTransceiver.SetShouldRemove(true, aRv);
   }
 }
 

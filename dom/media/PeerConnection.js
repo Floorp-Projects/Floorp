@@ -1682,6 +1682,7 @@ class PeerConnectionObserver {
     this._dompc._syncTransceivers();
     this._dompc._processTrackAdditionsAndRemovals();
     this._dompc._fireLegacyAddStreamEvents();
+    this._dompc._transceivers = this._dompc._transceivers.filter(t => !t.shouldRemove);
     this._dompc._onSetRemoteDescriptionSuccess();
   }
 
@@ -2244,6 +2245,7 @@ class RTCRtpTransceiver {
           currentDirection: null,
           _remoteTrackId: null,
           addTrackMagic: false,
+          shouldRemove: false,
           _hasBeenUsedToSend: false,
           // the receiver starts out without a track, so record this here
           _kind: kind,
@@ -2291,13 +2293,6 @@ class RTCRtpTransceiver {
   setStopped() {
     this.stopped = true;
     this.currentDirection = null;
-  }
-
-  remove() {
-    var index = this._pc._transceivers.indexOf(this.__DOM_IMPL__);
-    if (index != -1) {
-      this._pc._transceivers.splice(index, 1);
-    }
   }
 
   getKind() {
