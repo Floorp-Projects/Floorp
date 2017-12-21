@@ -57,11 +57,6 @@ runNetworkTest(function (options) {
                  "added track should be live");
             })
             .then(() => haveNoEvent(remoteStream, "addtrack"));
-
-          remoteStream.addEventListener("removetrack",
-                                        function onRemovetrack(trackEvent) {
-            ok(false, "UA shouldn't raise 'removetrack' when receiving peer connection");
-          })
         });
       },
     ],
