@@ -7,33 +7,33 @@ function run_test() {
 
   epsb.subsb = subsb;
   epsb.xorigsb = xorigsb;
-  epsb.do_check_true = do_check_true;
-  epsb.do_check_eq = do_check_eq;
-  subsb.do_check_true = do_check_true;
-  subsb.do_check_eq = do_check_eq;
+  epsb.ok = ok;
+  epsb.equal = equal;
+  subsb.ok = ok;
+  subsb.equal = equal;
 
   // Exporting should work if prinicipal of the source sandbox
   // subsumes the principal of the target sandbox.
   Cu.evalInSandbox("(" + function() {
     var wasCalled = false;
     this.funToExport = function(expectedThis, a, obj, native, mixed, callback) {
-      Assert.equal(arguments.callee.length, 6);
-      Assert.equal(a, 42);
-      Assert.equal(obj, subsb.tobecloned);
-      Assert.equal(obj.cloned, "cloned");
-      Assert.equal(native, subsb.native);
-      Assert.equal(expectedThis, this);
-      Assert.equal(mixed.xrayed, subsb.xrayed);
-      Assert.equal(mixed.xrayed2, subsb.xrayed2);
+      equal(arguments.callee.length, 6);
+      equal(a, 42);
+      equal(obj, subsb.tobecloned);
+      equal(obj.cloned, "cloned");
+      equal(native, subsb.native);
+      equal(expectedThis, this);
+      equal(mixed.xrayed, subsb.xrayed);
+      equal(mixed.xrayed2, subsb.xrayed2);
       if (typeof callback == 'function') {
-        Assert.equal(typeof subsb.callback, 'function');
-        Assert.equal(callback, subsb.callback);
+        equal(typeof subsb.callback, 'function');
+        equal(callback, subsb.callback);
         callback();
       }
       wasCalled = true;
     };
     this.checkIfCalled = function() {
-      Assert.ok(wasCalled);
+      ok(wasCalled);
       wasCalled = false;
     }
     exportFunction(funToExport, subsb, { defineAs: "imported", allowCallbacks: true });
@@ -55,8 +55,8 @@ function run_test() {
     invokedCallback = false;
     callback = function() { invokedCallback = true; };
     imported(this, 42, tobecloned, native, mixed, callback);
-    Assert.equal(imported.length, 6);
-    Assert.ok(invokedCallback);
+    equal(imported.length, 6);
+    ok(invokedCallback);
   }.toSource() + ")()", subsb);
 
   // Invoking an exported function with cross-origin arguments should throw.
@@ -92,9 +92,9 @@ function run_test() {
   Cu.evalInSandbox("(" + function() {
     try{
       exportFunction(function() {}, this.xorigsb, { defineAs: "denied" });
-      Assert.ok(false);
+      ok(false);
     } catch (e) {
-      Assert.ok(e.toString().indexOf('Permission denied') > -1);
+      ok(e.toString().indexOf('Permission denied') > -1);
     }
   }.toSource() + ")()", epsb);
 
@@ -104,10 +104,10 @@ function run_test() {
   Cu.evalInSandbox("(" + function() {
     try{
       exportFunction(xo_function, this.subsb, { defineAs: "denied" });
-      Assert.ok(false);
+      ok(false);
     } catch (e) {
       dump('Exception: ' + e);
-      Assert.ok(e.toString().indexOf('Permission denied') > -1);
+      ok(e.toString().indexOf('Permission denied') > -1);
     }
   }.toSource() + ")()", epsb);
 

@@ -28,11 +28,11 @@ function checkResults(xhr)
   if (xhr.readyState != 4)
     return false;
 
-  Assert.equal(xhr.status, 200);
-  Assert.equal(xhr.responseText, httpbody);
+  equal(xhr.status, 200);
+  equal(xhr.responseText, httpbody);
 
   var root_node = xhr.responseXML.getElementsByTagName('root').item(0);
-  Assert.equal(root_node.firstChild.data, "0123456789");
+  equal(root_node.firstChild.data, "0123456789");
   return true;
 }
 
@@ -102,7 +102,7 @@ function run_test()
   // we need to clone the function into the sandbox and make a few things
   // available for it.
   cu.evalInSandbox('var checkResults = ' + checkResults.toSource(), sb);
-  sb.do_check_eq = do_check_eq;
+  sb.equal = equal;
   sb.httpbody = httpbody;
 
   function changeListener(event) {

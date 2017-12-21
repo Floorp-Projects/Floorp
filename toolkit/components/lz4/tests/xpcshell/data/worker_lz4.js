@@ -9,22 +9,24 @@ function do_print(x) {
   dump("TEST-INFO: " + x + "\n");
 }
 
-function do_check_true(x) {
-  self.postMessage({kind: "do_check_true", args: [!!x]});
-  if (x) {
-    dump("TEST-PASS: " + x + "\n");
-  } else {
-    throw new Error("do_check_true failed");
-  }
-}
+const Assert = {
+  ok(x) {
+    self.postMessage({kind: "assert_ok", args: [!!x]});
+    if (x) {
+      dump("TEST-PASS: " + x + "\n");
+    } else {
+      throw new Error("Assert.ok failed");
+    }
+  },
 
-function do_check_eq(a, b) {
-  let result = a == b;
-  self.postMessage({kind: "do_check_true", args: [result]});
-  if (!result) {
-    throw new Error("do_check_eq failed " + a + " != " + b);
+  equal(a, b) {
+    let result = a == b;
+    self.postMessage({kind: "assert_ok", args: [result]});
+    if (!result) {
+      throw new Error("Assert.equal failed " + a + " != " + b);
+    }
   }
-}
+};
 
 function do_test_complete() {
   self.postMessage({kind: "do_test_complete", args: []});
