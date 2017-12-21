@@ -465,8 +465,8 @@ public class BrowserLocaleManager implements LocaleManager {
         return FALLBACK_LOCALE_TAG;
     }
 
-    @WrapForJNI
-    public static native void refreshLocales();
+    @WrapForJNI(dispatchTo = "Gecko")
+    private static native void refreshLocales();
 
 
     @WrapForJNI

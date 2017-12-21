@@ -119,7 +119,7 @@ public:
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::ANY;
         static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
+                mozilla::jni::DispatchTarget::GECKO;
     };
 
     static const mozilla::jni::CallingThread callingThread =
