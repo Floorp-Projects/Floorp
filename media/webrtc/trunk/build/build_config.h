@@ -139,7 +139,11 @@
 #elif defined(__mips__)
 #define ARCH_CPU_MIPS_FAMILY 1
 #define ARCH_CPU_MIPS 1
+#if defined(__LP64__)
+#define ARCH_CPU_64_BITS 1
+#else
 #define ARCH_CPU_32_BITS 1
+#endif
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define ARCH_CPU_LITTLE_ENDIAN 1
 #else
