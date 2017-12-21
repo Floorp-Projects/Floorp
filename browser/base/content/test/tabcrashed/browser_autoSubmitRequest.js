@@ -1,7 +1,7 @@
 "use strict";
 
 const PAGE = "data:text/html,<html><body>A%20regular,%20everyday,%20normal%20page.";
-const AUTOSUBMIT_PREF = "browser.crashReports.unsubmittedCheck.autoSubmit";
+const AUTOSUBMIT_PREF = "browser.crashReports.unsubmittedCheck.autoSubmit2";
 
 const {TabStateFlusher} =
   Cu.import("resource:///modules/sessionstore/TabStateFlusher.jsm", {});
