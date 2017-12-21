@@ -13,7 +13,7 @@
 #include <windows.h>
 #include <process.h>
 #endif
-#if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
+#if defined(_PR_PTHREADS)
 #include <pthread.h>
 #endif
 #ifdef SYMBIAN
@@ -104,7 +104,7 @@ PRInt32 native_thread = 0;
 
 	PR_ASSERT(state == PR_UNJOINABLE_THREAD);
 
-#if (defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)) || defined(WIN32) || defined(XP_OS2)
+#if defined(_PR_PTHREADS) || defined(WIN32) || defined(XP_OS2)
 
 	switch(index %  4) {
 		case 0:
@@ -124,7 +124,7 @@ PRInt32 native_thread = 0;
 			break;
 	}
 	if (native_thread) {
-#if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
+#if defined(_PR_PTHREADS)
 		pthread_t tid;
 		if (!pthread_create(&tid, NULL, start, arg))
 			return((PRThread *) tid);

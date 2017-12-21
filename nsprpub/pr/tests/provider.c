@@ -606,7 +606,7 @@ typedef struct StartObject
     void *arg;
 } StartObject;
 
-#if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
+#if defined(_PR_PTHREADS)
 #include "md/_pth.h"
 #include <pthread.h>
 
@@ -619,7 +619,7 @@ static void *pthread_start(void *arg)
     start(data);
     return NULL;
 }  /* pthread_start */
-#endif /* defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS) */
+#endif /* defined(_PR_PTHREADS) */
 
 #if defined(IRIX) && !defined(_PR_PTHREADS)
 #include <sys/types.h>
@@ -657,10 +657,10 @@ static PRStatus JoinThread(PRThread *thread)
         rv = PR_JoinThread(thread);
         break;
     case thread_pthread:
-#if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
+#if defined(_PR_PTHREADS)
         rv = PR_SUCCESS;
         break;
-#endif /* defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS) */
+#endif /* defined(_PR_PTHREADS) */
     case thread_win32:
 #if defined(WIN32)
         rv = PR_SUCCESS;
@@ -690,7 +690,7 @@ static PRStatus NewThread(
         }
         break;
     case thread_pthread:
-#if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
+#if defined(_PR_PTHREADS)
         {
             int rv;
             pthread_t id;
@@ -717,7 +717,7 @@ static PRStatus NewThread(
 #else
         PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
         rv = PR_FAILURE;
-#endif /* defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS) */
+#endif /* defined(_PR_PTHREADS) */
         break;
 
     case thread_sproc:

@@ -2889,13 +2889,8 @@ case "$target" in
         AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi 
     if test "$USE_PTHREADS"; then
-        if echo "$OS_RELEASE" | egrep '^(B.10.10|B.10.20)' >/dev/null; then
-            AC_DEFINE(_REENTRANT)
-            AC_DEFINE(_PR_DCETHREADS)
-        else
-            AC_DEFINE_UNQUOTED(_POSIX_C_SOURCE,199506L)
-            AC_DEFINE(_PR_HAVE_THREADSAFE_GETHOST)
-        fi
+        AC_DEFINE_UNQUOTED(_POSIX_C_SOURCE,199506L)
+        AC_DEFINE(_PR_HAVE_THREADSAFE_GETHOST)
     fi
     if test "$USE_USER_PTHREADS"; then
         AC_DEFINE_UNQUOTED(_POSIX_C_SOURCE,199506L)

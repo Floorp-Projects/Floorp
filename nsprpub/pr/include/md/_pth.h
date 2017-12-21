@@ -14,29 +14,7 @@
 #define _PR_MD_DISABLE_CLOCK_INTERRUPTS()
 #define _PR_MD_ENABLE_CLOCK_INTERRUPTS()
 
-/* In good standards fashion, the DCE threads (based on posix-4) are not
- * quite the same as newer posix implementations.  These are mostly name
- * changes and small differences, so macros usually do the trick
- */
-#ifdef _PR_DCETHREADS
-#define _PT_PTHREAD_MUTEXATTR_INIT        pthread_mutexattr_create
-#define _PT_PTHREAD_MUTEXATTR_DESTROY     pthread_mutexattr_delete
-#define _PT_PTHREAD_MUTEX_INIT(m, a)      pthread_mutex_init(&(m), a)
-#define _PT_PTHREAD_MUTEX_IS_LOCKED(m)    (0 == pthread_mutex_trylock(&(m)))
-#define _PT_PTHREAD_CONDATTR_INIT         pthread_condattr_create
-#define _PT_PTHREAD_COND_INIT(m, a)       pthread_cond_init(&(m), a)
-#define _PT_PTHREAD_CONDATTR_DESTROY      pthread_condattr_delete
-
-/* Notes about differences between DCE threads and pthreads 10:
- *   1. pthread_mutex_trylock returns 1 when it locks the mutex
- *      0 when it does not.  The latest pthreads has a set of errno-like
- *      return values.
- *   2. return values from pthread_cond_timedwait are different.
- *
- *
- *
- */
-#elif defined(BSDI)
+#if defined(BSDI)
 /*
  * Mutex and condition attributes are not supported.  The attr
  * argument to pthread_mutex_init() and pthread_cond_init() must
@@ -106,13 +84,7 @@
  *   PR_EnterMonitor calls any of these functions, infinite
  *   recursion ensues.
  */
-#if defined(_PR_DCETHREADS)
-#define _PT_PTHREAD_INVALIDATE_THR_HANDLE(t) \
-	memset(&(t), 0, sizeof(pthread_t))
-#define _PT_PTHREAD_THR_HANDLE_IS_INVALID(t) \
-	(!memcmp(&(t), &pt_zero_tid, sizeof(pthread_t)))
-#define _PT_PTHREAD_COPY_THR_HANDLE(st, dt)   (dt) = (st)
-#elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(SOLARIS) \
+#if defined(IRIX) || defined(OSF1) || defined(AIX) || defined(SOLARIS) \
 	|| defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
 	|| defined(HPUX) || defined(FREEBSD) \
 	|| defined(NETBSD) || defined(OPENBSD) || defined(BSDI) \
@@ -125,17 +97,7 @@
 #error "pthreads is not supported for this architecture"
 #endif
 
-#if defined(_PR_DCETHREADS)
-#define _PT_PTHREAD_ATTR_INIT            pthread_attr_create
-#define _PT_PTHREAD_ATTR_DESTROY         pthread_attr_delete
-#define _PT_PTHREAD_CREATE(t, a, f, r)   pthread_create(t, a, f, r) 
-#define _PT_PTHREAD_KEY_CREATE           pthread_keycreate
-#define _PT_PTHREAD_ATTR_SETSCHEDPOLICY  pthread_attr_setsched
-#define _PT_PTHREAD_ATTR_GETSTACKSIZE(a, s) \
-                                     (*(s) = pthread_attr_getstacksize(*(a)), 0)
-#define _PT_PTHREAD_GETSPECIFIC(k, r) \
-		pthread_getspecific((k), (pthread_addr_t *) &(r))
-#elif defined(_PR_PTHREADS)
+#if defined(_PR_PTHREADS)
 #define _PT_PTHREAD_ATTR_INIT            pthread_attr_init
 #define _PT_PTHREAD_ATTR_DESTROY         pthread_attr_destroy
 #define _PT_PTHREAD_CREATE(t, a, f, r)   pthread_create(t, &a, f, r) 
@@ -145,22 +107,6 @@
 #define _PT_PTHREAD_GETSPECIFIC(k, r)    (r) = pthread_getspecific(k)
 #else
 #error "Cannot determine pthread strategy"
-#endif
-
-#if defined(_PR_DCETHREADS)
-#define _PT_PTHREAD_EXPLICIT_SCHED      _PT_PTHREAD_DEFAULT_SCHED
-#endif
-
-/*
- * pthread_mutex_trylock returns different values in DCE threads and
- * pthreads.
- */
-#if defined(_PR_DCETHREADS)
-#define PT_TRYLOCK_SUCCESS 1
-#define PT_TRYLOCK_BUSY    0
-#else
-#define PT_TRYLOCK_SUCCESS 0
-#define PT_TRYLOCK_BUSY    EBUSY
 #endif
 
 /*
@@ -190,16 +136,9 @@
 #define PT_PRIO_MIN            DEFAULT_PRIO
 #define PT_PRIO_MAX            DEFAULT_PRIO
 #elif defined(HPUX)
-
-#if defined(_PR_DCETHREADS)
-#define PT_PRIO_MIN            PRI_OTHER_MIN
-#define PT_PRIO_MAX            PRI_OTHER_MAX
-#else /* defined(_PR_DCETHREADS) */
 #include <sys/sched.h>
 #define PT_PRIO_MIN            sched_get_priority_min(SCHED_OTHER)
 #define PT_PRIO_MAX            sched_get_priority_max(SCHED_OTHER)
-#endif /* defined(_PR_DCETHREADS) */
-
 #elif defined(LINUX) || defined(__GNU__) || defined(__GLIBC__) \
 	|| defined(FREEBSD) || defined(SYMBIAN)
 #define PT_PRIO_MIN            sched_get_priority_min(SCHED_OTHER)
@@ -238,9 +177,7 @@
  * Needed for garbage collection -- Look at PR_Suspend/PR_Resume
  * implementation.
  */
-#if defined(_PR_DCETHREADS)
-#define _PT_PTHREAD_YIELD()            	pthread_yield()
-#elif defined(OSF1)
+#if defined(OSF1)
 /*
  * sched_yield can't be called from a signal handler.  Must use
  * the _np version.
