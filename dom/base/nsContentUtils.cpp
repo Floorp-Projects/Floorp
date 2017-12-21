@@ -10992,7 +10992,7 @@ template <prototypes::ID PrototypeID, class NativeType, typename T>
 static Result<Ok, nsresult>
 ExtractExceptionValues(JSContext* aCx,
                        JS::HandleObject aObj,
-                       nsAString& aSourceSpecOut,
+                       nsACString& aSourceSpecOut,
                        uint32_t* aLineOut,
                        uint32_t* aColumnOut,
                        nsString& aMessageOut)
@@ -11000,8 +11000,10 @@ ExtractExceptionValues(JSContext* aCx,
   RefPtr<T> exn;
   MOZ_TRY((UnwrapObject<PrototypeID, NativeType>(aObj, exn)));
 
-  exn->GetFilename(aCx, aSourceSpecOut);
-  if (!aSourceSpecOut.IsEmpty()) {
+  nsAutoString filename;
+  exn->GetFilename(aCx, filename);
+  if (!filename.IsEmpty()) {
+    CopyUTF16toUTF8(filename, aSourceSpecOut);
     *aLineOut = exn->LineNumber(aCx);
     *aColumnOut = exn->ColumnNumber();
   }
@@ -11019,19 +11021,6 @@ ExtractExceptionValues(JSContext* aCx,
 nsContentUtils::ExtractErrorValues(JSContext* aCx,
                                    JS::Handle<JS::Value> aValue,
                                    nsACString& aSourceSpecOut,
-                                   uint32_t* aLineOut,
-                                   uint32_t* aColumnOut,
-                                   nsString& aMessageOut)
-{
-  nsAutoString sourceSpec;
-  ExtractErrorValues(aCx, aValue, sourceSpec, aLineOut, aColumnOut, aMessageOut);
-  CopyUTF16toUTF8(sourceSpec, aSourceSpecOut);
-}
-
-/* static */ void
-nsContentUtils::ExtractErrorValues(JSContext* aCx,
-                                   JS::Handle<JS::Value> aValue,
-                                   nsAString& aSourceSpecOut,
                                    uint32_t* aLineOut,
                                    uint32_t* aColumnOut,
                                    nsString& aMessageOut)
@@ -11056,7 +11045,7 @@ nsContentUtils::ExtractErrorValues(JSContext* aCx,
                    0);          // window ID
 
       if (!report->mFileName.IsEmpty()) {
-        aSourceSpecOut = report->mFileName;
+        CopyUTF16toUTF8(report->mFileName, aSourceSpecOut);
         *aLineOut = report->mLineNumber;
         *aColumnOut = report->mColumn;
       }
