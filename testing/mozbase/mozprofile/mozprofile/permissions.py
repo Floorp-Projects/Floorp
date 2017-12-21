@@ -12,8 +12,7 @@ from __future__ import absolute_import
 import codecs
 import os
 import sqlite3
-
-from six.moves.urllib import parse
+import urlparse
 
 __all__ = ['MissingPrimaryLocationError', 'MultiplePrimaryLocationsError',
            'DEFAULT_PORTS', 'DuplicateLocationError', 'BadPortLocationError',
@@ -140,7 +139,7 @@ class ServerLocations(object):
             self.add_callback([location])
 
     def add_host(self, host, port='80', scheme='http', options='privileged'):
-        if isinstance(options, str):
+        if isinstance(options, basestring):
             options = options.split(',')
         self.add(Location(scheme, host, port, options))
 
@@ -183,7 +182,7 @@ class ServerLocations(object):
             # parse the server url
             if '://' not in server:
                 server = 'http://' + server
-            scheme, netloc, path, query, fragment = parse.urlsplit(server)
+            scheme, netloc, path, query, fragment = urlparse.urlsplit(server)
             # get the host and port
             try:
                 host, port = netloc.rsplit(':', 1)
