@@ -3,7 +3,7 @@
 var test = function(s, funcName){
     function Arg(){};
     Arg.prototype.toString = function(){
-	do_print("Testing " + funcName + " with null args");
+	info("Testing " + funcName + " with null args");
 	return this.value;
     };
     // create a generic arg lits of null, -1, and 10 nulls

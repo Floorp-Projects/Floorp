@@ -188,7 +188,7 @@ function run_test_3() {
       Assert.ok(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
       Assert.ok(!hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
 
-      do_execute_soon(do_test_finished);
+      executeSoon(do_test_finished);
     });
   }));
 }

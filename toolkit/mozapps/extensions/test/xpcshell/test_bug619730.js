@@ -18,7 +18,7 @@ function load_blocklist(file, aCallback) {
   Services.obs.addObserver(function observer() {
     Services.obs.removeObserver(observer, "blocklist-updated");
 
-    do_execute_soon(aCallback);
+    executeSoon(aCallback);
   }, "blocklist-updated");
 
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +

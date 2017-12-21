@@ -53,7 +53,7 @@ function allowDirectoriesInTest() {
   function cleanup() {
     DownloadIntegration.allowDirectories = false;
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
   return cleanup;
 }
 
@@ -127,7 +127,7 @@ add_task(async function test_getPreferredDownloadsDirectory() {
     Services.prefs.clearUserPref(folderListPrefName);
     Services.prefs.clearUserPref(dirPrefName);
   }
-  do_register_cleanup(cleanupPrefs);
+  registerCleanupFunction(cleanupPrefs);
 
   // Should return the system downloads directory.
   Services.prefs.setIntPref(folderListPrefName, 1);
@@ -210,7 +210,7 @@ add_task(async function test_getTemporaryDownloadsDirectory() {
  */
 add_task(async function test_observers_setup() {
   DownloadIntegration.allowObservers = true;
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     DownloadIntegration.allowObservers = false;
   });
 });

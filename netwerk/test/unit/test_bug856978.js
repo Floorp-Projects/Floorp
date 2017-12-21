@@ -44,7 +44,7 @@ function RequestObserver() {
 
 RequestObserver.prototype = {
   register: function() {
-    do_print("Registering " + notification);
+    info("Registering " + notification);
     Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService).
       addObserver(this, notification, true);
   },

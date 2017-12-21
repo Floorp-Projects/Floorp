@@ -347,7 +347,7 @@ function check_state(test, lastTest, callback) {
 
       Assert.equal(expected, gNewBlocks.length);
     }
-    do_execute_soon(callback);
+    executeSoon(callback);
   });
 }
 
@@ -390,7 +390,7 @@ function check_test_pt1() {
         do_throw("Addon " + (i + 1) + " did not get installed correctly");
     }
 
-    do_execute_soon(function checkstate1() { check_state("start", null, run_test_pt2); });
+    executeSoon(function checkstate1() { check_state("start", null, run_test_pt2); });
   });
 }
 

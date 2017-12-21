@@ -63,7 +63,7 @@ function run_test_1() {
     Assert.notEqual(a5, null);
     Assert.ok(a5.isActive);
 
-    do_execute_soon(run_test_2);
+    executeSoon(run_test_2);
   });
 }
 
@@ -89,6 +89,6 @@ function run_test_2() {
     Assert.notEqual(a5, null);
     Assert.ok(a5.isActive);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

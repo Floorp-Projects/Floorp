@@ -16,7 +16,7 @@ function run_test() {
 }
 
 function* test_transport_events(name, transportFactory) {
-  do_print(`Started testing of transport: ${name}`);
+  info(`Started testing of transport: ${name}`);
 
   Assert.equal(Object.keys(DebuggerServer._connections).length, 0);
 
@@ -29,7 +29,7 @@ function* test_transport_events(name, transportFactory) {
   };
 
   let rootReceived = transport.once("packet", (event, packet) => {
-    do_print(`Packet event: ${event} ${JSON.stringify(packet)}`);
+    info(`Packet event: ${event} ${JSON.stringify(packet)}`);
     Assert.equal(event, "packet");
     Assert.equal(packet.from, "root");
   });
@@ -38,14 +38,14 @@ function* test_transport_events(name, transportFactory) {
   yield rootReceived;
 
   let echoSent = transport.once("send", (event, packet) => {
-    do_print(`Send event: ${event} ${JSON.stringify(packet)}`);
+    info(`Send event: ${event} ${JSON.stringify(packet)}`);
     Assert.equal(event, "send");
     Assert.equal(packet.to, "root");
     Assert.equal(packet.type, "echo");
   });
 
   let echoReceived = transport.once("packet", (event, packet) => {
-    do_print(`Packet event: ${event} ${JSON.stringify(packet)}`);
+    info(`Packet event: ${event} ${JSON.stringify(packet)}`);
     Assert.equal(event, "packet");
     Assert.equal(packet.from, "root");
     Assert.equal(packet.type, "echo");
@@ -56,12 +56,12 @@ function* test_transport_events(name, transportFactory) {
   yield echoReceived;
 
   let clientClosed = transport.once("close", (event) => {
-    do_print(`Close event: ${event}`);
+    info(`Close event: ${event}`);
     Assert.equal(event, "close");
   });
 
   let serverClosed = DebuggerServer.once("connectionchange", (event, type) => {
-    do_print(`Server closed`);
+    info(`Server closed`);
     Assert.equal(event, "connectionchange");
     Assert.equal(type, "closed");
   });
@@ -71,5 +71,5 @@ function* test_transport_events(name, transportFactory) {
   yield clientClosed;
   yield serverClosed;
 
-  do_print(`Finished testing of transport: ${name}`);
+  info(`Finished testing of transport: ${name}`);
 }

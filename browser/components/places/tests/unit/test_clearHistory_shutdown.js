@@ -40,7 +40,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
 var timeInMicroseconds = Date.now() * 1000;
 
 add_task(async function test_execute() {
-  do_print("Initialize browserglue before Places");
+  info("Initialize browserglue before Places");
 
   // Avoid default bookmarks import.
   let glue = Cc["@mozilla.org/browser/browserglue;1"].
@@ -61,20 +61,20 @@ add_task(async function test_execute() {
 
   Services.prefs.setBoolPref("privacy.sanitize.sanitizeOnShutdown", true);
 
-  do_print("Add visits.");
+  info("Add visits.");
   for (let aUrl of URIS) {
     await PlacesTestUtils.addVisits({
       uri: uri(aUrl), visitDate: timeInMicroseconds++,
       transition: PlacesUtils.history.TRANSITION_TYPED
     });
   }
-  do_print("Add cache.");
+  info("Add cache.");
   await storeCache(FTP_URL, "testData");
-  do_print("Add form history.");
+  info("Add form history.");
   await addFormHistory();
   Assert.equal((await getFormHistoryCount()), 1, "Added form history");
 
-  do_print("Simulate and wait shutdown.");
+  info("Simulate and wait shutdown.");
   await shutdownPlaces();
 
   Assert.equal((await getFormHistoryCount()), 0, "Form history cleared");
@@ -93,7 +93,7 @@ add_task(async function test_execute() {
     stmt.finalize();
   }
 
-  do_print("Check cache");
+  info("Check cache");
   // Check cache.
   await checkCache(FTP_URL);
 });

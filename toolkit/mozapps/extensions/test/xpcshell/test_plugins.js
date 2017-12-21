@@ -11,7 +11,7 @@ function setTestPluginState(state) {
   let tags = AM_Cc["@mozilla.org/plugin/host;1"].getService(AM_Ci.nsIPluginHost)
     .getPluginTags();
   for (let tag of tags) {
-    do_print("Checking tag: " + tag.description);
+    info("Checking tag: " + tag.description);
     if (tag.description == TEST_PLUGIN_DESCRIPTION) {
       tag.enabledState = state;
       return;
@@ -191,7 +191,7 @@ function run_test_3(p) {
     Assert.ok(p2.isActive);
     Assert.equal(p2.name, "Shockwave Flash");
 
-    do_execute_soon(run_test_4);
+    executeSoon(run_test_4);
   });
 }
 
@@ -205,6 +205,6 @@ function run_test_4() {
 
     Services.prefs.clearUserPref("plugins.click_to_play");
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

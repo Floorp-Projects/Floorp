@@ -75,7 +75,7 @@ function run_test() {
       todo(false, "Aborting test due to unmovable blocklist file: " + e);
       return;
     }
-    do_register_cleanup(function() {
+    registerCleanupFunction(function() {
       clearBlocklists();
       appBlocklist.moveTo(gAppDir, FILE_BLOCKLIST);
     });

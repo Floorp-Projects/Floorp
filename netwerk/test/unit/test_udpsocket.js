@@ -10,12 +10,12 @@ const HELLO_WORLD = "Hello World";
 const EMPTY_MESSAGE = "";
 
 add_test(function test_udp_message_raw_data() {
-  do_print("test for nsIUDPMessage.rawData");
+  info("test for nsIUDPMessage.rawData");
 
   let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
 
   socket.init(-1, true, Services.scriptSecurityManager.getSystemPrincipal());
-  do_print("Port assigned : " + socket.port);
+  info("Port assigned : " + socket.port);
   socket.asyncListen({
     QueryInterface : XPCOMUtils.generateQI([Ci.nsIUDPSocketListener]),
     onPacketReceived : function(aSocket, aMessage){
@@ -37,7 +37,7 @@ add_test(function test_udp_message_raw_data() {
 });
 
 add_test(function test_udp_send_stream() {
-  do_print("test for nsIUDPSocket.sendBinaryStream");
+  info("test for nsIUDPSocket.sendBinaryStream");
 
   let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
 
@@ -59,12 +59,12 @@ add_test(function test_udp_send_stream() {
 });
 
 add_test(function test_udp_message_zero_length() {
-  do_print("test for nsIUDPMessage with zero length");
+  info("test for nsIUDPMessage with zero length");
 
   let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
 
   socket.init(-1, true, Services.scriptSecurityManager.getSystemPrincipal());
-  do_print("Port assigned : " + socket.port);
+  info("Port assigned : " + socket.port);
   socket.asyncListen({
     QueryInterface : XPCOMUtils.generateQI([Ci.nsIUDPSocketListener]),
     onPacketReceived : function(aSocket, aMessage){

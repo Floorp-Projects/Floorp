@@ -48,7 +48,7 @@ function fetch2(data) {
 }
 
 function reducer(state = [], action) {
-  do_print("Action called: " + action.type);
+  info("Action called: " + action.type);
   if (["fetch1", "fetch2"].includes(action.type)) {
     state.push(action);
   }

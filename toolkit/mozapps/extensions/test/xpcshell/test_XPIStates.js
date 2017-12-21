@@ -15,7 +15,7 @@ profileDir.append("extensions");
 
 function run_test() {
   // Shut down the add-on manager after all tests run.
-  do_register_cleanup(promiseShutdownManager);
+  registerCleanupFunction(promiseShutdownManager);
   // Kick off the task-based tests...
   run_next_test();
 }
@@ -90,7 +90,7 @@ var lastTimestamp = Date.now();
 function checkChange(XS, aPath, aChange) {
   Assert.ok(aPath.exists());
   lastTimestamp += 10000;
-  do_print("Touching file " + aPath.path + " with " + lastTimestamp);
+  info("Touching file " + aPath.path + " with " + lastTimestamp);
   aPath.lastModifiedTime = lastTimestamp;
   Assert.equal(XS.getInstallState(), aChange);
   // Save the pref so we don't detect this change again
@@ -118,7 +118,7 @@ add_task(async function detect_touches() {
          "unpacked-disabled@tests.mozilla.org"
          ]);
 
-  do_print("Disable test add-ons");
+  info("Disable test add-ons");
   pd.userDisabled = true;
   ud.userDisabled = true;
 

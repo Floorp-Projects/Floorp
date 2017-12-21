@@ -16,7 +16,7 @@ Services.search.defaultEngine = Services.search.getEngineByName(kSearchEngineID)
 var selectedName = Services.search.defaultEngine.name;
 Assert.equal(selectedName, kSearchEngineID);
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   if (oldDefaultEngine) {
     Services.search.defaultEngine = oldDefaultEngine;
   }

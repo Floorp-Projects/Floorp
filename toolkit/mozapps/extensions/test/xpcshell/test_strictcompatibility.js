@@ -146,7 +146,7 @@ function do_check_compat_status(aStrict, aAddonCompat, aCallback) {
     Assert.equal(a7.appDisabled, !aAddonCompat[6]);
     Assert.ok(!a7.strictCompatibility);
 
-    do_execute_soon(aCallback);
+    executeSoon(aCallback);
   });
 }
 
@@ -172,31 +172,31 @@ function run_test() {
 }
 
 function run_test_1() {
-  do_print("Test 1");
+  info("Test 1");
   Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
   do_check_compat_status(false, [true, true, false, false, false, true, true], run_test_2);
 }
 
 function run_test_2() {
-  do_print("Test 2");
+  info("Test 2");
   restartManager();
   do_check_compat_status(false, [true, true, false, false, false, true, true], run_test_3);
 }
 
 function run_test_3() {
-  do_print("Test 3");
+  info("Test 3");
   Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, true);
   do_check_compat_status(true, [true, false, false, false, false, false, false], run_test_4);
 }
 
 function run_test_4() {
-  do_print("Test 4");
+  info("Test 4");
   restartManager();
   do_check_compat_status(true, [true, false, false, false, false, false, false], run_test_5);
 }
 
 function run_test_5() {
-  do_print("Test 5");
+  info("Test 5");
   Services.prefs.setBoolPref(PREF_EM_STRICT_COMPATIBILITY, false);
   Services.prefs.setCharPref(PREF_EM_MIN_COMPAT_APP_VERSION, "0.4");
   do_check_compat_status(false, [true, true, false, false, false, false, true], do_test_finished);

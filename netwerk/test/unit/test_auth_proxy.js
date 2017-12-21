@@ -87,7 +87,7 @@ AuthPrompt2.prototype = {
     try {
       var me = this;
       var allOverAndDead = false;
-      do_execute_soon(function() {
+      executeSoon(function() {
         try {
           if (allOverAndDead)
             throw "already canceled";
@@ -237,7 +237,7 @@ function run_test() {
   Services.prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
   Services.prefs.setBoolPref("network.auth.non-web-content-triggered-resources-http-auth-allow", true);
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.prefs.clearUserPref("network.proxy.http");
     Services.prefs.clearUserPref("network.proxy.http_port");
     Services.prefs.clearUserPref("network.proxy.no_proxies_on");

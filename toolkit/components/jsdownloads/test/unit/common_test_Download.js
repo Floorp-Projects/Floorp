@@ -105,7 +105,7 @@ function promisePartFileReady(aDownload) {
       }
       // This indicates that the file has been created and cannot be accessed.
       // The specific error might vary with the platform.
-      do_print("Expected exception while checking existence: " + ex.toString());
+      info("Expected exception while checking existence: " + ex.toString());
       // Wait some more time to allow the write to complete.
       await promiseTimeout(100);
     }
@@ -273,7 +273,7 @@ add_task(async function test_unix_permissions() {
   // This test is only executed on some Desktop systems.
   if (Services.appinfo.OS != "Darwin" && Services.appinfo.OS != "Linux" &&
       Services.appinfo.OS != "WINNT") {
-    do_print("Skipping test.");
+    info("Skipping test.");
     return;
   }
 
@@ -282,9 +282,9 @@ add_task(async function test_unix_permissions() {
   for (let autoDelete of [false, true]) {
     for (let isPrivate of [false, true]) {
       for (let launchWhenSucceeded of [false, true]) {
-        do_print("Checking " + JSON.stringify({ autoDelete,
-                                                isPrivate,
-                                                launchWhenSucceeded }));
+        info("Checking " + JSON.stringify({ autoDelete,
+                                            isPrivate,
+                                            launchWhenSucceeded }));
 
         Services.prefs.setBoolPref(kDeleteTempFileOnExit, autoDelete);
 
@@ -338,7 +338,7 @@ add_task(async function test_windows_zoneInformation() {
   // system installation drive, while the temporary directory used by the test
   // environment is on the same drive as the test sources.
   if (Services.appinfo.OS != "WINNT") {
-    do_print("Skipping test.");
+    info("Skipping test.");
     return;
   }
 
@@ -391,7 +391,7 @@ add_task(async function test_referrer() {
   function cleanup() {
     gHttpServer.registerPathHandler(sourcePath, null);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
@@ -461,7 +461,7 @@ add_task(async function test_adjustChannel() {
   function cleanup() {
     gHttpServer.registerPathHandler(sourcePath, null);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   gHttpServer.registerPathHandler(sourcePath, aRequest => {
     Assert.equal(aRequest.method, "POST");
@@ -658,7 +658,7 @@ add_task(async function test_empty_noprogress() {
   function cleanup() {
     gHttpServer.registerPathHandler(sourcePath, null);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   registerInterruptibleHandler(sourcePath,
     function firstPart(aRequest, aResponse) {
@@ -1107,7 +1107,7 @@ add_task(async function test_cancel_immediately_restart_immediately() {
     // If we get here, it means that the first attempt actually succeeded.  In
     // fact, this could be a valid outcome, because the cancellation request may
     // not have been processed in time before the download finished.
-    do_print("The download should have been canceled.");
+    info("The download should have been canceled.");
   } catch (ex) {
     if (!(ex instanceof Downloads.Error)) {
       throw ex;
@@ -1407,7 +1407,7 @@ add_task(async function test_error_source_partial() {
   function cleanup() {
     Services.prefs.setBoolPref("network.http.enforce-framing.http1", enforcePref);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   let download;
   try {
@@ -1568,7 +1568,7 @@ add_task(async function test_public_and_private() {
     Services.cookies.removeAll();
     gHttpServer.registerPathHandler(sourcePath, null);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
@@ -1637,7 +1637,7 @@ add_task(async function test_with_content_encoding() {
   function cleanup() {
     gHttpServer.registerPathHandler(sourcePath, null);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
@@ -1672,7 +1672,7 @@ add_task(async function test_with_content_encoding_ignore_extension() {
   function cleanup() {
     gHttpServer.registerPathHandler(sourcePath, null);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
@@ -1749,7 +1749,7 @@ add_task(async function test_blocked_parental_controls() {
   function cleanup() {
     Integration.downloads.unregister(blockFn);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   let download;
   try {
@@ -1820,7 +1820,7 @@ add_task(async function test_blocked_runtime_permissions() {
   function cleanup() {
     Integration.downloads.unregister(blockFn);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   let download;
   try {
@@ -1891,7 +1891,7 @@ var promiseBlockedDownload = async function(options) {
   function cleanup() {
     Integration.downloads.unregister(blockFn);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   let download;
 
@@ -1987,7 +1987,7 @@ add_task(async function test_blocked_applicationReputation_race() {
   function cleanup() {
     Integration.downloads.unregister(blockFn);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   let download;
 

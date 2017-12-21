@@ -20,7 +20,7 @@ add_task(async function smart_bookmarks_disabled() {
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   Assert.equal(smartBookmarkItemIds.length, 0);
 
-  do_print("check that pref has not been bumped up");
+  info("check that pref has not been bumped up");
   Assert.equal(Services.prefs.getIntPref("browser.places.smartBookmarksVersion"), -1);
 });
 
@@ -32,7 +32,7 @@ add_task(async function create_smart_bookmarks() {
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   Assert.notEqual(smartBookmarkItemIds.length, 0);
 
-  do_print("check that pref has been bumped up");
+  info("check that pref has been bumped up");
   Assert.ok(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
 });
 
@@ -40,7 +40,7 @@ add_task(async function remove_smart_bookmark_and_restore() {
   let smartBookmarkItemIds =
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   let smartBookmarksCount = smartBookmarkItemIds.length;
-  do_print("remove one smart bookmark and restore");
+  info("remove one smart bookmark and restore");
 
   let guid = await PlacesUtils.promiseItemGuid(smartBookmarkItemIds[0]);
   await PlacesUtils.bookmarks.remove(guid);
@@ -51,7 +51,7 @@ add_task(async function remove_smart_bookmark_and_restore() {
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   Assert.equal(smartBookmarkItemIds.length, smartBookmarksCount);
 
-  do_print("check that pref has been bumped up");
+  info("check that pref has been bumped up");
   Assert.ok(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
 });
 
@@ -59,7 +59,7 @@ add_task(async function move_smart_bookmark_rename_and_restore() {
   let smartBookmarkItemIds =
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   let smartBookmarksCount = smartBookmarkItemIds.length;
-  do_print("smart bookmark should be restored in place");
+  info("smart bookmark should be restored in place");
 
   let guid = await PlacesUtils.promiseItemGuid(smartBookmarkItemIds[0]);
   let bm = await PlacesUtils.bookmarks.fetch(guid);
@@ -94,6 +94,6 @@ add_task(async function move_smart_bookmark_rename_and_restore() {
   Assert.equal(bm.parentGuid, subfolder.guid);
   Assert.equal(bm.title, oldTitle);
 
-  do_print("check that pref has been bumped up");
+  info("check that pref has been bumped up");
   Assert.ok(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
 });

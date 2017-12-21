@@ -23,7 +23,7 @@ function run_test() {
         // increasingly long spins until we get a sample.
         var delayMS = 5;
         while (1) {
-            do_print("loop: ms = " + delayMS);
+            info("loop: ms = " + delayMS);
             let then = Date.now();
             do {
                 let n = 10000;
@@ -42,7 +42,7 @@ function run_test() {
     Assert.notEqual(profile.samples.data.length, 0);
     var lastSample = profile.samples.data[profile.samples.data.length - 1];
     var stack = getInflatedStackLocations(profile, lastSample);
-    do_print(stack);
+    info(stack);
 
     // All we can really check here is ensure that there is exactly
     // one arbitrary_name frame in the list.

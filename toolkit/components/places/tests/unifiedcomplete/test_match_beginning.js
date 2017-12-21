@@ -17,32 +17,32 @@ add_task(async function test_match_beginning() {
     { uri: uri2, title: "b a" }
   ]);
 
-  do_print("Match at the beginning of titles");
+  info("Match at the beginning of titles");
   Services.prefs.setIntPref("browser.urlbar.matchBehavior", 3);
   await check_autocomplete({
     search: "a",
     matches: [ { uri: uri1, title: "a b" } ]
   });
 
-  do_print("Match at the beginning of titles");
+  info("Match at the beginning of titles");
   await check_autocomplete({
     search: "b",
     matches: [ { uri: uri2, title: "b a" } ]
   });
 
-  do_print("Match at the beginning of urls");
+  info("Match at the beginning of urls");
   await check_autocomplete({
     search: "x",
     matches: [ { uri: uri1, title: "a b" } ]
   });
 
-  do_print("Match at the beginning of urls");
+  info("Match at the beginning of urls");
   await check_autocomplete({
     search: "y",
     matches: [ { uri: uri2, title: "b a" } ]
   });
 
-  do_print("Sanity check that matching anywhere finds more");
+  info("Sanity check that matching anywhere finds more");
   Services.prefs.setIntPref("browser.urlbar.matchBehavior", 1);
   await check_autocomplete({
     search: "a",

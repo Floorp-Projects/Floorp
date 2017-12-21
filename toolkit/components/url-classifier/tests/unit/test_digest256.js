@@ -40,7 +40,7 @@ function registerTableUpdate(aTable, aFilename) {
     gTables[aTable].push(redirectUrl);
 
     gHttpServ.registerPathHandler(redirectPath, function(request, response) {
-      do_print("Mock safebrowsing server handling request for " + redirectPath);
+      info("Mock safebrowsing server handling request for " + redirectPath);
       let contents = readFileToString(aFilename);
       response.setHeader("Content-Type",
                          "application/vnd.google.safebrowsing-update", false);
@@ -60,7 +60,7 @@ function processUpdateRequest() {
       response += "u:" + gTables[table][i] + "\n";
     }
   }
-  do_print("Returning update response: " + response);
+  info("Returning update response: " + response);
   return response;
 }
 
@@ -99,7 +99,7 @@ add_test(function test_update() {
     // Timeout of n:1000 is constructed in processUpdateRequest above and
     // passed back in the callback in nsIUrlClassifierStreamUpdater on success.
     Assert.equal("1000", aEvent);
-    do_print("All data processed");
+    info("All data processed");
     run_next_test();
   }
   streamUpdater.downloadUpdates(

@@ -195,7 +195,7 @@ AutoCompleteInput.prototype = {
 add_task(async function test_frecency() {
   // Disable autoFill for this test.
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
-  do_register_cleanup(() => Services.prefs.clearUserPref("browser.urlbar.autoFill"));
+  registerCleanupFunction(() => Services.prefs.clearUserPref("browser.urlbar.autoFill"));
   for (let bucket of bucketPrefs) {
     await task_initializeBucket(bucket);
   }

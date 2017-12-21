@@ -170,7 +170,7 @@ function run_test() {
         onUpdateFinished() {
           a4.findUpdates({
             onUpdateFinished() {
-              do_execute_soon(run_test_1);
+              executeSoon(run_test_1);
             }
           }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
         }
@@ -251,7 +251,7 @@ function run_test_1() {
     Assert.ok(!t2.appDisabled);
     Assert.equal(t2.pendingOperations, AddonManager.PENDING_NONE);
 
-    do_execute_soon(run_test_1_modified_db);
+    executeSoon(run_test_1_modified_db);
   });
 }
 
@@ -330,7 +330,7 @@ function run_test_1_modified_db() {
       Assert.ok(!t2.appDisabled);
       Assert.equal(t2.pendingOperations, AddonManager.PENDING_NONE);
 
-      do_execute_soon(run_test_1_after_rebuild);
+      executeSoon(run_test_1_after_rebuild);
     });
 }
 

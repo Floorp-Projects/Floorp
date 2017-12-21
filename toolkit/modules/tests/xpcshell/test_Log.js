@@ -431,7 +431,7 @@ add_task(async function log_message_with_params() {
   str = formatMessage("Exception is ${error}", {error: err});
   Assert.ok(str.includes('Exception is [Exception... "test exception"'));
   str = formatMessage("Exception is", {_error: err});
-  do_print(str);
+  info(str);
   // Exceptions buried inside objects are formatted badly.
   Assert.ok(str.includes('Exception is: {"_error":{}'));
   // If the message text is null, the message contains only the formatted params object.
@@ -528,7 +528,7 @@ add_task(async function test_structured_basic() {
   // log./level/(null, params).
   log.logStructured("action", {_message: "Structured sub ${data}", data: "structure"});
   Assert.equal(appender.messages.length, 2);
-  do_print(appender.messages[1]);
+  info(appender.messages[1]);
   Assert.ok(appender.messages[1].includes("Structured sub structure"));
 });
 

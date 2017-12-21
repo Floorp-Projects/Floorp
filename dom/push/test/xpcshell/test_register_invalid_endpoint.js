@@ -16,7 +16,7 @@ function run_test() {
 
 add_task(async function test_register_invalid_endpoint() {
   let db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+  registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
 
   PushServiceWebSocket._generateID = () => channelID;
   PushService.init({

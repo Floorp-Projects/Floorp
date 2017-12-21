@@ -29,7 +29,7 @@ function setup_crash() {
 }
 
 function after_crash(mdump, extra) {
-  do_print("after crash: " + extra.AsyncShutdownTimeout);
+  info("after crash: " + extra.AsyncShutdownTimeout);
   let info = JSON.parse(extra.AsyncShutdownTimeout);
   Assert.equal(info.phase, "testing-async-shutdown-crash");
   Assert.equal(info.conditions[0].name, "A blocker that is never satisfied");
@@ -57,10 +57,10 @@ function setup_osfile_crash_noerror() {
 }
 
 function after_osfile_crash_noerror(mdump, extra) {
-  do_print("after OS.File crash: " + extra.AsyncShutdownTimeout);
+  info("after OS.File crash: " + extra.AsyncShutdownTimeout);
   let info = JSON.parse(extra.AsyncShutdownTimeout);
   let state = info.conditions[0].state;
-  do_print("Keys: " + Object.keys(state).join(", "));
+  info("Keys: " + Object.keys(state).join(", "));
   Assert.equal(info.phase, "profile-before-change");
   Assert.ok(state.launched);
   Assert.ok(!state.shutdown);
@@ -88,10 +88,10 @@ function setup_osfile_crash_exn() {
 }
 
 function after_osfile_crash_exn(mdump, extra) {
-  do_print("after OS.File crash: " + extra.AsyncShutdownTimeout);
+  info("after OS.File crash: " + extra.AsyncShutdownTimeout);
   let info = JSON.parse(extra.AsyncShutdownTimeout);
   let state = info.conditions[0].state;
-  do_print("Keys: " + Object.keys(state).join(", "));
+  info("Keys: " + Object.keys(state).join(", "));
   Assert.equal(info.phase, "profile-before-change");
   Assert.ok(!state.shutdown);
   Assert.ok(state.worker);

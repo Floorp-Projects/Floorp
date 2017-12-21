@@ -79,7 +79,7 @@ function run_test_2() {
       gExpectedFile = null;
       gCacheFlushCount = 0;
 
-      do_execute_soon(run_test_3);
+      executeSoon(run_test_3);
     });
   });
 }
@@ -101,7 +101,7 @@ function run_test_3() {
         gExpectedFile = null;
         gCacheFlushCount = 0;
 
-        do_execute_soon(run_test_4);
+        executeSoon(run_test_4);
       }
     });
 
@@ -122,6 +122,6 @@ function run_test_4() {
     gExpectedFile = null;
     gCacheFlushCount = 0;
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

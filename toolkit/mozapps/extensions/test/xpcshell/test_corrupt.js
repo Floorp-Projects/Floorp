@@ -170,7 +170,7 @@ function run_test() {
         onUpdateFinished() {
           a4.findUpdates({
             onUpdateFinished() {
-              do_execute_soon(run_test_1);
+              executeSoon(run_test_1);
             }
           }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
         }

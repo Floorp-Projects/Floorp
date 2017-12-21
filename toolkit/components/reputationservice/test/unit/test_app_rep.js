@@ -49,9 +49,9 @@ function registerTableUpdate(aTable, aFilename) {
   gTables[aTable].push(redirectUrl);
 
   gHttpServ.registerPathHandler(redirectPath, function(request, response) {
-    do_print("Mock safebrowsing server handling request for " + redirectPath);
+    info("Mock safebrowsing server handling request for " + redirectPath);
     let contents = readFileToString(aFilename);
-    do_print("Length of " + aFilename + ": " + contents.length);
+    info("Length of " + aFilename + ": " + contents.length);
     response.setHeader("Content-Type",
                        "application/vnd.google.safebrowsing-update", false);
     response.setStatusLine(request.httpVersion, 200, "OK");
@@ -67,7 +67,7 @@ add_task(async function test_setup() {
   // doesn't have it enabled.
   Services.prefs.setBoolPref("browser.safebrowsing.malware.enabled", true);
   Services.prefs.setBoolPref("browser.safebrowsing.downloads.enabled", true);
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("browser.safebrowsing.malware.enabled");
     Services.prefs.clearUserPref("browser.safebrowsing.downloads.enabled");
   });
@@ -78,7 +78,7 @@ add_task(async function test_setup() {
                              "goog-badbinurl-shavar");
   Services.prefs.setCharPref("urlclassifier.downloadAllowTable",
                              "goog-downloadwhite-digest256");
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("urlclassifier.downloadBlockTable");
     Services.prefs.clearUserPref("urlclassifier.downloadAllowTable");
   });
@@ -90,7 +90,7 @@ add_task(async function test_setup() {
   });
   gHttpServ.start(4444);
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     return (async function() {
       await new Promise(resolve => {
         gHttpServ.stop(resolve);
@@ -170,7 +170,7 @@ add_test(function test_local_list() {
         response += "u:" + gTables[table][i] + "\n";
       }
     }
-    do_print("Returning update response: " + response);
+    info("Returning update response: " + response);
     return response;
   }
   gHttpServ.registerPathHandler("/downloads", function(request, response) {
@@ -195,7 +195,7 @@ add_test(function test_local_list() {
     // Timeout of n:1000 is constructed in processUpdateRequest above and
     // passed back in the callback in nsIUrlClassifierStreamUpdater on success.
     Assert.equal("1000", aEvent);
-    do_print("All data processed");
+    info("All data processed");
     run_next_test();
   }
   // Just throw if we ever get an update or download error.

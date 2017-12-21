@@ -37,12 +37,12 @@ add_task(async function test_path_setPermissions() {
   try {
     for (let [options, attributesExpected] of testSequence) {
       if (options !== null) {
-        do_print("Setting permissions to " + JSON.stringify(options));
+        info("Setting permissions to " + JSON.stringify(options));
         await OS.File.setPermissions(path, options);
       }
 
       let stat = await OS.File.stat(path);
-      do_print("Got stat winAttributes: " + JSON.stringify(stat.winAttributes));
+      info("Got stat winAttributes: " + JSON.stringify(stat.winAttributes));
 
       Assert.equal(stat.winAttributes.readOnly, attributesExpected.readOnly);
       Assert.equal(stat.winAttributes.system, attributesExpected.system);
@@ -65,12 +65,12 @@ add_task(async function test_file_setPermissions() {
     try {
       for (let [options, attributesExpected] of testSequence) {
         if (options !== null) {
-          do_print("Setting permissions to " + JSON.stringify(options));
+          info("Setting permissions to " + JSON.stringify(options));
           await fd.setPermissions(options);
         }
 
         let stat = await fd.stat();
-        do_print("Got stat winAttributes: " + JSON.stringify(stat.winAttributes));
+        info("Got stat winAttributes: " + JSON.stringify(stat.winAttributes));
         Assert.equal(stat.winAttributes.readOnly, attributesExpected.readOnly);
         Assert.equal(stat.winAttributes.system, attributesExpected.system);
         Assert.equal(stat.winAttributes.hidden, attributesExpected.hidden);

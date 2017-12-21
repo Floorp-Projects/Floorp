@@ -47,7 +47,7 @@ function run_test() {
         Assert.equal(newa1, null);
         Assert.equal(newa2, null);
 
-        do_execute_soon(do_test_finished);
+        executeSoon(do_test_finished);
       });
     }));
   });

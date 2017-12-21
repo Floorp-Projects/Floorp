@@ -149,7 +149,7 @@ function run_test_1() {
       HunspellEngine.listener = function(aEvent) {
         HunspellEngine.listener = null;
         Assert.equal(aEvent, "addDirectory");
-        do_execute_soon(check_test_1);
+        executeSoon(check_test_1);
       };
     });
     install.install();
@@ -221,7 +221,7 @@ function run_test_2() {
       Assert.ok(newb1.userDisabled);
       Assert.ok(!newb1.isActive);
 
-      do_execute_soon(run_test_3);
+      executeSoon(run_test_3);
     });
   });
 }
@@ -275,7 +275,7 @@ function run_test_4() {
       Assert.ok(!newb1.userDisabled);
       Assert.ok(newb1.isActive);
 
-      do_execute_soon(run_test_5);
+      executeSoon(run_test_5);
     });
   });
 }
@@ -333,7 +333,7 @@ function check_test_7() {
     AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org", function(newb1) {
       Assert.equal(newb1, null);
 
-      do_execute_soon(run_test_8);
+      executeSoon(run_test_8);
     });
   }));
 }
@@ -371,7 +371,7 @@ function run_test_8() {
     Assert.ok(HunspellEngine.isDictionaryEnabled("ab-CD.dic"));
     do_check_in_crash_annotation("ab-CD@dictionaries.addons.mozilla.org", "1.0");
 
-    do_execute_soon(run_test_9);
+    executeSoon(run_test_9);
   });
 }
 
@@ -388,7 +388,7 @@ function run_test_9() {
     Assert.equal(b1, null);
     do_check_not_in_crash_annotation("ab-CD@dictionaries.addons.mozilla.org", "1.0");
 
-    do_execute_soon(run_test_12);
+    executeSoon(run_test_12);
   });
 }
 
@@ -425,7 +425,7 @@ function run_test_12() {
     do_check_in_crash_annotation("ab-CD@dictionaries.addons.mozilla.org", "1.0");
 
     b1.uninstall();
-    do_execute_soon(run_test_16);
+    executeSoon(run_test_16);
   });
 }
 
@@ -436,7 +436,7 @@ function run_test_16() {
 
   installAllFiles([do_get_addon("test_dictionary")], function() {
     // spin the event loop to let the addon finish starting
-   do_execute_soon(function check_installed_dictionary() {
+   executeSoon(function check_installed_dictionary() {
     AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org",
      callback_soon(function(b1) {
       // Should have installed and started
@@ -466,7 +466,7 @@ function run_test_16() {
         AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org", function(b1_3) {
           b1_3.uninstall();
 
-          do_execute_soon(run_test_17);
+          executeSoon(run_test_17);
         });
       }));
     }));
@@ -554,7 +554,7 @@ function run_test_23() {
       ], function() {
         Assert.ok(addon.hasResource("install.rdf"));
         // spin to let the addon startup finish
-        do_execute_soon(check_test_23);
+        executeSoon(check_test_23);
       });
     });
     install.install();
@@ -584,7 +584,7 @@ function check_test_23() {
         restartManager();
         AddonManager.getAddonByID("ab-CD@dictionaries.addons.mozilla.org", function(b1_2) {
           b1_2.uninstall();
-          do_execute_soon(run_test_25);
+          executeSoon(run_test_25);
         });
       }));
     });
@@ -622,7 +622,7 @@ function run_test_25() {
           Assert.ok(b1_2.isActive);
           Assert.equal(b1_2.pendingOperations, AddonManager.PENDING_NONE);
 
-          do_execute_soon(run_test_26);
+          executeSoon(run_test_26);
         });
       }));
     });
@@ -657,7 +657,7 @@ function run_test_26() {
 
         HunspellEngine.deactivate();
         b1_2.uninstall();
-        do_execute_soon(run_test_27);
+        executeSoon(run_test_27);
       });
     }));
   });
@@ -703,7 +703,7 @@ function check_test_27(install) {
     Assert.equal(b1.version, "2.0");
     Assert.equal(b1.type, "dictionary");
     b1.uninstall();
-    do_execute_soon(run_test_28);
+    executeSoon(run_test_28);
   });
 }
 
@@ -749,7 +749,7 @@ function check_test_28(install) {
     Assert.equal(b2.version, "2.0");
     Assert.equal(b2.type, "extension");
     b2.uninstall();
-    do_execute_soon(run_test_29);
+    executeSoon(run_test_29);
   });
 }
 

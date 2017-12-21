@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/PromiseUtils.jsm");
 var fakeServer = new SyncServer();
 fakeServer.start();
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   return new Promise(resolve => {
     fakeServer.stop(resolve);
     Svc.Prefs.resetBranch("");

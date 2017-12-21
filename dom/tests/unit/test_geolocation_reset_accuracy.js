@@ -32,7 +32,7 @@ var provider = {
     this._isHigh = enable;
     if (enable) {
       this._seenHigh = true;
-      do_execute_soon(stop_high_accuracy_watch);
+      executeSoon(stop_high_accuracy_watch);
     }
   },
   _isHigh: false,

@@ -141,7 +141,7 @@ function run_test() {
     Assert.ok(a6.appDisabled);
     Assert.ok(!a6.isActive);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
 
   });
 }

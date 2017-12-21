@@ -91,14 +91,14 @@ add_task(async function test_results_as_tag_contents_query() {
                   isBookmark: true,
                   isTag: true,
                   tagArray: ["moz", "bugzilla"] };
-  do_print("Adding item to query");
+  info("Adding item to query");
   await task_populateDB([change1]);
-  do_print("These results should have been LIVE UPDATED with the new addition");
+  info("These results should have been LIVE UPDATED with the new addition");
   displayResultSet(root);
   Assert.ok(isInResult(change1, root));
 
   // Add one by adding a tag, remove one by removing search term.
-  do_print("Updating items");
+  info("Updating items");
   var change2 = [{ isDetails: true,
                    uri: "http://foo3.com/",
                    title: "foo"},
@@ -113,7 +113,7 @@ add_task(async function test_results_as_tag_contents_query() {
   Assert.ok(isInResult({uri: "http://foo.com/changeme2.html"}, root));
 
   // Test removing a tag updates us.
-  do_print("Deleting item");
+  info("Deleting item");
   PlacesUtils.tagging.untagURI(uri("http://foo.com/changeme2.html"), ["bugzilla"]);
   Assert.ok(!isInResult({uri: "http://foo.com/changeme2.html"}, root));
 

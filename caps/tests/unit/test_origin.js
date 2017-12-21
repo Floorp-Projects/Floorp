@@ -44,12 +44,12 @@ function checkSandboxOriginAttributes(arr, attrs, options) {
 
 // utility function useful for debugging
 function printAttrs(name, attrs) {
-  do_print(name + " {\n" +
-           "\tappId: " + attrs.appId + ",\n" +
-           "\tuserContextId: " + attrs.userContextId + ",\n" +
-           "\tinIsolatedMozBrowser: " + attrs.inIsolatedMozBrowser + ",\n" +
-           "\tprivateBrowsingId: '" + attrs.privateBrowsingId + "',\n" +
-           "\tfirstPartyDomain: '" + attrs.firstPartyDomain + "'\n}");
+  info(name + " {\n" +
+       "\tappId: " + attrs.appId + ",\n" +
+       "\tuserContextId: " + attrs.userContextId + ",\n" +
+       "\tinIsolatedMozBrowser: " + attrs.inIsolatedMozBrowser + ",\n" +
+       "\tprivateBrowsingId: '" + attrs.privateBrowsingId + "',\n" +
+       "\tfirstPartyDomain: '" + attrs.firstPartyDomain + "'\n}");
 }
 
 

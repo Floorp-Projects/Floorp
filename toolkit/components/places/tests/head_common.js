@@ -80,7 +80,7 @@ var gTestDir = do_get_cwd();
 var gProfD = do_get_profile(true);
 
 Services.prefs.setBoolPref("browser.urlbar.usepreloadedtopurls.enabled", false);
-do_register_cleanup(() =>
+registerCleanupFunction(() =>
   Services.prefs.clearUserPref("browser.urlbar.usepreloadedtopurls.enabled"));
 
 // Remove any old database.
@@ -384,17 +384,17 @@ function promiseTopicObserved(aTopic) {
  * Simulates a Places shutdown.
  */
 var shutdownPlaces = function() {
-  do_print("shutdownPlaces: starting");
+  info("shutdownPlaces: starting");
   let promise = new Promise(resolve => {
     Services.obs.addObserver(resolve, "places-connection-closed");
   });
   let hs = PlacesUtils.history.QueryInterface(Ci.nsIObserver);
   hs.observe(null, "profile-change-teardown", null);
-  do_print("shutdownPlaces: sent profile-change-teardown");
+  info("shutdownPlaces: sent profile-change-teardown");
   hs.observe(null, "test-simulate-places-shutdown", null);
-  do_print("shutdownPlaces: sent test-simulate-places-shutdown");
+  info("shutdownPlaces: sent test-simulate-places-shutdown");
   return promise.then(() => {
-    do_print("shutdownPlaces: complete");
+    info("shutdownPlaces: complete");
   });
 };
 

@@ -56,14 +56,14 @@ const TEST_DATA = [{
 
 function run_test() {
   for (let {value, splitChar, expected} of TEST_DATA) {
-    do_print("Splitting string: " + value);
+    info("Splitting string: " + value);
     let tokens = splitBy(value, splitChar);
 
-    do_print("Checking that the number of parsed tokens is correct");
+    info("Checking that the number of parsed tokens is correct");
     Assert.equal(tokens.length, expected.length);
 
     for (let i = 0; i < tokens.length; i++) {
-      do_print("Checking the data in token " + i);
+      info("Checking the data in token " + i);
       Assert.equal(tokens[i].value, expected[i].value);
       if (expected[i].type) {
         Assert.equal(tokens[i].type, expected[i].type);

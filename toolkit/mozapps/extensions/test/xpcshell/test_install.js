@@ -200,7 +200,7 @@ function check_test_1(installSyncGUID) {
           restartManager();
           do_check_not_in_crash_annotation(id, version);
 
-          do_execute_soon(run_test_2);
+          executeSoon(run_test_2);
         }));
       });
     }));
@@ -229,7 +229,7 @@ function run_test_2() {
 
       install.addListener({
         onDownloadProgress() {
-          do_execute_soon(function() {
+          executeSoon(function() {
             Components.utils.forceGC();
           });
         }
@@ -251,7 +251,7 @@ function check_test_2(install) {
   Assert.equal(install.iconURL, null);
 
   // Pause the install here and start it again in run_test_3
-  do_execute_soon(function() { run_test_3(install); });
+  executeSoon(function() { run_test_3(install); });
   return false;
 }
 
@@ -403,7 +403,7 @@ function check_test_5(install) {
           Assert.ok(a2.installDate <= a2.updateDate);
 
           a2.uninstall();
-          do_execute_soon(run_test_6);
+          executeSoon(run_test_6);
         });
       });
     }));
@@ -483,7 +483,7 @@ function check_test_7() {
         Assert.ok(isExtensionInAddonsList(profileDir, a3.id));
         Assert.ok(do_get_addon("test_install3").exists());
         a3.uninstall();
-        do_execute_soon(run_test_8);
+        executeSoon(run_test_8);
       });
     });
   }));
@@ -528,7 +528,7 @@ async function check_test_8() {
     Assert.ok(isExtensionInAddonsList(profileDir, a3.id));
     Assert.ok(do_get_addon("test_install3").exists());
     a3.uninstall();
-    do_execute_soon(run_test_9);
+    executeSoon(run_test_9);
   });
 }
 
@@ -569,7 +569,7 @@ function check_test_9(install) {
     let file = install.file;
 
     // Allow the file removal to complete
-    do_execute_soon(function() {
+    executeSoon(function() {
       AddonManager.getAllInstalls(function(activeInstalls) {
         Assert.equal(activeInstalls.length, 0);
         Assert.ok(!file.exists());
@@ -639,7 +639,7 @@ function check_test_10(install) {
     AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
       Assert.equal(a3, null);
 
-      do_execute_soon(run_test_11);
+      executeSoon(run_test_11);
     });
   }));
 }
@@ -734,7 +734,7 @@ function check_test_13(install) {
 
       a2.uninstall();
 
-      do_execute_soon(run_test_14);
+      executeSoon(run_test_14);
     });
   }));
 }
@@ -778,7 +778,7 @@ function check_test_14(install) {
     // Allow the listener to return to see if it continues downloading. The
     // The listener only really tests if we give it time to see progress, the
     // file check isn't ideal either
-    do_execute_soon(function() {
+    executeSoon(function() {
       Assert.ok(!file.exists());
 
       run_test_15();
@@ -786,7 +786,7 @@ function check_test_14(install) {
   });
 
   // Wait for the channel to be ready to cancel
-  do_execute_soon(function() {
+  executeSoon(function() {
     install.cancel();
   });
 }
@@ -827,7 +827,7 @@ function check_test_15(install) {
   });
 
   // Allow the listener to return to see if it starts installing
-  do_execute_soon(run_test_16);
+  executeSoon(run_test_16);
 }
 
 // Verify that the userDisabled value carries over to the upgrade by default
@@ -843,7 +843,7 @@ function run_test_16() {
       },
 
       onInstallEnded() {
-       do_execute_soon(function install2_1_ended() {
+       executeSoon(function install2_1_ended() {
         restartManager();
 
         AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
@@ -854,7 +854,7 @@ function run_test_16() {
           AddonManager.getInstallForURL(url_2, function(aInstall_2) {
             aInstall_2.addListener({
               onInstallEnded() {
-               do_execute_soon(function install2_2_ended() {
+               executeSoon(function install2_2_ended() {
                 Assert.ok(aInstall_2.addon.userDisabled);
 
                 restartManager();
@@ -864,7 +864,7 @@ function run_test_16() {
                   Assert.ok(!a2_2.isActive);
 
                   a2_2.uninstall();
-                  do_execute_soon(run_test_17);
+                  executeSoon(run_test_17);
                 });
                });
               }
@@ -887,7 +887,7 @@ function run_test_17() {
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded() {
-       do_execute_soon(function install2_1_ended2() {
+       executeSoon(function install2_1_ended2() {
         Assert.ok(!aInstall.addon.userDisabled);
 
         restartManager();
@@ -905,7 +905,7 @@ function run_test_17() {
               },
 
               onInstallEnded() {
-               do_execute_soon(function install2_2_ended2() {
+               executeSoon(function install2_2_ended2() {
                 restartManager();
 
                 AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2_2) {
@@ -913,7 +913,7 @@ function run_test_17() {
                   Assert.ok(!a2_2.isActive);
 
                   a2_2.uninstall();
-                  do_execute_soon(run_test_18);
+                  executeSoon(run_test_18);
                 });
                });
               }
@@ -941,7 +941,7 @@ function run_test_18() {
       },
 
       onInstallEnded() {
-       do_execute_soon(function install_2_1_ended3() {
+       executeSoon(function install_2_1_ended3() {
         restartManager();
 
         AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
@@ -957,7 +957,7 @@ function run_test_18() {
               },
 
               onInstallEnded() {
-               do_execute_soon(function install_2_2_ended3() {
+               executeSoon(function install_2_2_ended3() {
                 restartManager();
 
                 AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2_2) {
@@ -965,7 +965,7 @@ function run_test_18() {
                   Assert.ok(a2_2.isActive);
 
                   a2_2.uninstall();
-                  do_execute_soon(run_test_18_1);
+                  executeSoon(run_test_18_1);
                 });
                });
               }
@@ -995,7 +995,7 @@ function run_test_18_1() {
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded(unused, aAddon) {
-       do_execute_soon(function test18_1_install_ended() {
+       executeSoon(function test18_1_install_ended() {
         Assert.notEqual(aAddon.fullDescription, "Repository description");
 
         restartManager();
@@ -1004,7 +1004,7 @@ function run_test_18_1() {
           Assert.notEqual(a2.fullDescription, "Repository description");
 
           a2.uninstall();
-          do_execute_soon(run_test_19);
+          executeSoon(run_test_19);
         });
        });
       }
@@ -1023,7 +1023,7 @@ function run_test_19() {
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded(unused, aAddon) {
-       do_execute_soon(function test19_install_ended() {
+       executeSoon(function test19_install_ended() {
         Assert.equal(aAddon.fullDescription, "Repository description");
 
         restartManager();
@@ -1032,7 +1032,7 @@ function run_test_19() {
           Assert.equal(a2.fullDescription, "Repository description");
 
           a2.uninstall();
-          do_execute_soon(run_test_20);
+          executeSoon(run_test_20);
         });
        });
       }
@@ -1049,7 +1049,7 @@ function run_test_20() {
   AddonManager.getInstallForURL(url, function(aInstall) {
     aInstall.addListener({
       onInstallEnded(unused, aAddon) {
-       do_execute_soon(function test20_install_ended() {
+       executeSoon(function test20_install_ended() {
         Assert.equal(aAddon.fullDescription, "Repository description");
 
         restartManager();
@@ -1058,7 +1058,7 @@ function run_test_20() {
           Assert.equal(a2.fullDescription, "Repository description");
 
           a2.uninstall();
-          do_execute_soon(run_test_21);
+          executeSoon(run_test_21);
         });
        });
       }

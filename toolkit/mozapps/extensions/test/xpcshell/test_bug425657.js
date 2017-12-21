@@ -20,7 +20,7 @@ function run_test() {
       Assert.equal(addon.name, "Deutsches W\u00f6rterbuch");
       Assert.equal(addon.name.length, 20);
 
-      do_execute_soon(do_test_finished);
+      executeSoon(do_test_finished);
     });
   });
 }

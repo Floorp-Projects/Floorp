@@ -40,7 +40,7 @@ function run_test() {
 
 add_task(async function test_pushUnsubscriptionSuccess() {
   let db = PushServiceHttp2.newPushDB();
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     return db.drop().then(_ => db.close());
   });
 

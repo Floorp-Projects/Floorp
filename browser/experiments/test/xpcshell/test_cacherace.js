@@ -36,7 +36,7 @@ add_task(async function test_setup() {
     response.processAsync();
     response.finish();
   });
-  do_register_cleanup(() => gHttpServer.stop(() => {}));
+  registerCleanupFunction(() => gHttpServer.stop(() => {}));
 
   Services.prefs.setBoolPref(PREF_EXPERIMENTS_ENABLED, true);
   Services.prefs.setIntPref(PREF_LOGGING_LEVEL, 0);
@@ -83,7 +83,7 @@ add_task(async function test_setup() {
     ],
   };
 
-  do_print("gManifestObject: " + JSON.stringify(gManifestObject));
+  info("gManifestObject: " + JSON.stringify(gManifestObject));
 
   // In order for the addon manager to work properly, we hack
   // Experiments.instance which is used by the XPIProvider

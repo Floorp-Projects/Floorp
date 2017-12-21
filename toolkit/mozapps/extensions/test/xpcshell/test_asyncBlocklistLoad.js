@@ -27,7 +27,7 @@ add_task(async function() {
   let read = scope.OS.File.read;
   scope.OS.File.read = function(...args) {
     return new Promise((resolve, reject) => {
-      do_execute_soon(() => {
+      executeSoon(() => {
         blocklist._loadBlocklist();
         resolve(read(...args));
       });

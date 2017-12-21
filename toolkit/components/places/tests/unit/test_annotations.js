@@ -294,9 +294,9 @@ add_task(async function test_execute() {
 
   testItem = await PlacesUtils.bookmarks.fetch(testItem.guid);
   var lastModified4 = testItem.lastModified;
-  do_print("verify that removing an annotation updates the last modified date");
-  do_print("lastModified3 = " + lastModified3);
-  do_print("lastModified4 = " + lastModified4);
+  info("verify that removing an annotation updates the last modified date");
+  info("lastModified3 = " + lastModified3);
+  info("lastModified4 = " + lastModified4);
   Assert.ok(lastModified4 > lastModified3);
 
   Assert.equal(annoObserver.PAGE_lastRemoved_URI, testURI.spec);

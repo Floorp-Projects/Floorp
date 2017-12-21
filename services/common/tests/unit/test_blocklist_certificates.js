@@ -39,7 +39,7 @@ add_task(async function test_something() {
 
       response.write(sample.responseBody);
     } catch (e) {
-      do_print(e);
+      info(e);
     }
   }
   server.registerPathHandler(configPath, handleResponse);
@@ -129,7 +129,7 @@ function run_test() {
 
   run_next_test();
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     server.stop(() => { });
   });
 }

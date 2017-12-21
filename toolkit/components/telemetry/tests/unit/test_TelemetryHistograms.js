@@ -449,7 +449,7 @@ add_task(async function test_expired_histogram() {
                                                   false /* subsession */,
                                                   false /* clear */);
     if (!(process in histograms)) {
-      do_print("Nothing present for process " + process);
+      info("Nothing present for process " + process);
       continue;
     }
     Assert.equal(histograms[process].__expired__, undefined);

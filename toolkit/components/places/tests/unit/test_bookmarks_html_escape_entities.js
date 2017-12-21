@@ -60,7 +60,7 @@ add_task(async function() {
     switch (current.nodeType) {
       case Ci.nsIDOMNode.ELEMENT_NODE:
         for (let {name, value} of current.attributes) {
-          do_print("Found attribute: " + name);
+          info("Found attribute: " + name);
           // Check tags, keyword, postData and charSet.
           if (["tags", "last_charset", "shortcuturl", "post_data"].includes(name)) {
             Assert.equal(value, unescaped, `Attribute ${name} should be complete`);

@@ -38,15 +38,15 @@ add_task(async function() {
   await PlacesUtils.bookmarks.remove(folder1);
   await BookmarkJSONUtils.importFromFile((await PlacesBackups.getMostRecentBackup()), true);
 
-  do_print("Checking first level");
+  info("Checking first level");
   let root = PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
   let level1 = root.getChild(0);
   Assert.equal(level1.title, "f1");
-  do_print("Checking second level");
+  info("Checking second level");
   PlacesUtils.asContainer(level1).containerOpen = true;
   let level2 = level1.getChild(0);
   Assert.equal(level2.title, "f2");
-  do_print("Checking bookmark");
+  info("Checking bookmark");
   PlacesUtils.asContainer(level2).containerOpen = true;
   bookmark = level2.getChild(0);
   Assert.equal(bookmark.title, "bookmark");

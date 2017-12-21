@@ -49,7 +49,7 @@ function run_test_1() {
 
     gExtensionsJSON.remove(true);
 
-    do_execute_soon(check_test_1);
+    executeSoon(check_test_1);
   }));
 }
 

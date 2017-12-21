@@ -430,9 +430,9 @@ function Pmanual_update(aVersion) {
 function check_addon(aAddon, aExpectedVersion, aExpectedUserDisabled,
                      aExpectedSoftDisabled, aExpectedState) {
   Assert.notEqual(aAddon, null);
-  do_print("Testing " + aAddon.id + " version " + aAddon.version + " user "
-           + aAddon.userDisabled + " soft " + aAddon.softDisabled
-           + " perms " + aAddon.permissions);
+  info("Testing " + aAddon.id + " version " + aAddon.version + " user "
+       + aAddon.userDisabled + " soft " + aAddon.softDisabled
+       + " perms " + aAddon.permissions);
 
   Assert.equal(aAddon.version, aExpectedVersion);
   Assert.equal(aAddon.blocklistState, aExpectedState);
@@ -442,20 +442,20 @@ function check_addon(aAddon, aExpectedVersion, aExpectedUserDisabled,
     Assert.ok(aAddon.userDisabled);
 
   if (aExpectedState == Ci.nsIBlocklistService.STATE_BLOCKED) {
-    do_print("blocked, PERM_CAN_ENABLE " + aAddon.id);
+    info("blocked, PERM_CAN_ENABLE " + aAddon.id);
     Assert.ok(!hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
-    do_print("blocked, PERM_CAN_DISABLE " + aAddon.id);
+    info("blocked, PERM_CAN_DISABLE " + aAddon.id);
     Assert.ok(!hasFlag(aAddon.permissions, AddonManager.PERM_CAN_DISABLE));
   } else if (aAddon.userDisabled) {
-    do_print("userDisabled, PERM_CAN_ENABLE " + aAddon.id);
+    info("userDisabled, PERM_CAN_ENABLE " + aAddon.id);
     Assert.ok(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
-    do_print("userDisabled, PERM_CAN_DISABLE " + aAddon.id);
+    info("userDisabled, PERM_CAN_DISABLE " + aAddon.id);
     Assert.ok(!hasFlag(aAddon.permissions, AddonManager.PERM_CAN_DISABLE));
   } else {
-    do_print("other, PERM_CAN_ENABLE " + aAddon.id);
+    info("other, PERM_CAN_ENABLE " + aAddon.id);
     Assert.ok(!hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
     if (aAddon.type != "theme") {
-      do_print("other, PERM_CAN_DISABLE " + aAddon.id);
+      info("other, PERM_CAN_DISABLE " + aAddon.id);
       Assert.ok(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_DISABLE));
     }
   }

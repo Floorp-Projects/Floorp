@@ -38,7 +38,7 @@ XPCOMUtils.defineLazyGetter(this, "systemSettings", function() {
 let gMockProxy = MockRegistrar.register("@mozilla.org/system-proxy-settings;1",
                                         systemSettings);
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   MockRegistrar.unregister(gMockProxy);
 });
 

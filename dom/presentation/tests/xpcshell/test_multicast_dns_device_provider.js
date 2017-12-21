@@ -92,7 +92,7 @@ ContractHook.prototype = {
                               this._contractID,
                               this._newFactory);
 
-    do_register_cleanup(() => { this.cleanup.apply(this); });
+    registerCleanupFunction(() => { this.cleanup.apply(this); });
   },
 
   reset: function() {},
@@ -1295,7 +1295,7 @@ function run_test() {
 
   let infoHook = new ContractHook(INFO_CONTRACT_ID, MockDNSServiceInfo);
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.prefs.clearUserPref(PREF_DISCOVERY);
     Services.prefs.clearUserPref(PREF_DISCOVERABLE);
   });

@@ -37,29 +37,29 @@ function run_test() {
   Components.utils.evalInSandbox(testHyphenated, sandbox);
   Components.utils.evalInSandbox(testLet, sandbox);
 
-  do_print("Running tests with dbgObject");
+  info("Running tests with dbgObject");
   runChecks(dbgObject, null);
 
-  do_print("Running tests with dbgEnv");
+  info("Running tests with dbgEnv");
   runChecks(null, dbgEnv);
 }
 
 function runChecks(dbgObject, dbgEnv) {
-  do_print("Test that suggestions are given for 'this'");
+  info("Test that suggestions are given for 'this'");
   let results = JSPropertyProvider(dbgObject, dbgEnv, "t");
   test_has_result(results, "this");
 
   if (dbgObject != null) {
-    do_print("Test that suggestions are given for 'this.'");
+    info("Test that suggestions are given for 'this.'");
     results = JSPropertyProvider(dbgObject, dbgEnv, "this.");
     test_has_result(results, "testObject");
 
-    do_print("Test that no suggestions are given for 'this.this'");
+    info("Test that no suggestions are given for 'this.this'");
     results = JSPropertyProvider(dbgObject, dbgEnv, "this.this");
     test_has_no_results(results);
   }
 
-  do_print("Testing lexical scope issues (Bug 1207868)");
+  info("Testing lexical scope issues (Bug 1207868)");
   results = JSPropertyProvider(dbgObject, dbgEnv, "foobar");
   test_has_result(results, "foobar");
 
@@ -72,27 +72,27 @@ function runChecks(dbgObject, dbgEnv) {
   results = JSPropertyProvider(dbgObject, dbgEnv, "blargh.");
   test_has_result(results, "a");
 
-  do_print("Test that suggestions are given for 'foo[n]' where n is an integer.");
+  info("Test that suggestions are given for 'foo[n]' where n is an integer.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "testArray[0].");
   test_has_result(results, "propA");
 
-  do_print("Test that suggestions are given for multidimensional arrays.");
+  info("Test that suggestions are given for multidimensional arrays.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "testArray[2][0].");
   test_has_result(results, "propE");
 
-  do_print("Test that suggestions are given for nested arrays.");
+  info("Test that suggestions are given for nested arrays.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "testArray[1].propC[0].");
   test_has_result(results, "indexOf");
 
-  do_print("Test that suggestions are given for literal arrays.");
+  info("Test that suggestions are given for literal arrays.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "[1,2,3].");
   test_has_result(results, "indexOf");
 
-  do_print("Test that suggestions are given for literal arrays with newlines.");
+  info("Test that suggestions are given for literal arrays with newlines.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "[1,2,3,\n4\n].");
   test_has_result(results, "indexOf");
 
-  do_print("Test that suggestions are given for literal strings.");
+  info("Test that suggestions are given for literal strings.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "'foo'.");
   test_has_result(results, "charAt");
   results = JSPropertyProvider(dbgObject, dbgEnv, '"foo".');
@@ -102,7 +102,7 @@ function runChecks(dbgObject, dbgEnv) {
   results = JSPropertyProvider(dbgObject, dbgEnv, "'[1,2,3]'.");
   test_has_result(results, "charAt");
 
-  do_print("Test that suggestions are not given for syntax errors.");
+  info("Test that suggestions are not given for syntax errors.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "'foo\"");
   Assert.equal(null, results);
   results = JSPropertyProvider(dbgObject, dbgEnv, "[1,',2]");
@@ -112,7 +112,7 @@ function runChecks(dbgObject, dbgEnv) {
   results = JSPropertyProvider(dbgObject, dbgEnv, "'foo'..");
   Assert.equal(null, results);
 
-  do_print("Test that suggestions are not given without a dot.");
+  info("Test that suggestions are not given without a dot.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "'foo'");
   test_has_no_results(results);
   results = JSPropertyProvider(dbgObject, dbgEnv, "[1,2,3]");
@@ -120,16 +120,16 @@ function runChecks(dbgObject, dbgEnv) {
   results = JSPropertyProvider(dbgObject, dbgEnv, "[1,2,3].\n'foo'");
   test_has_no_results(results);
 
-  do_print("Test that suggestions are not given for numeric literals.");
+  info("Test that suggestions are not given for numeric literals.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "1.");
   Assert.equal(null, results);
 
-  do_print("Test that suggestions are not given for index that's out of bounds.");
+  info("Test that suggestions are not given for index that's out of bounds.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "testArray[10].");
   Assert.equal(null, results);
 
-  do_print("Test that no suggestions are given if an index is not numerical "
-           + "somewhere in the chain.");
+  info("Test that no suggestions are given if an index is not numerical "
+       + "somewhere in the chain.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "testArray[0]['propC'][0].");
   Assert.equal(null, results);
 
@@ -142,7 +142,7 @@ function runChecks(dbgObject, dbgEnv) {
   results = JSPropertyProvider(dbgObject, dbgEnv, "testArray[][1].");
   Assert.equal(null, results);
 
-  do_print("Test that suggestions are not given if there is an hyphen in the chain.");
+  info("Test that suggestions are not given if there is an hyphen in the chain.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "testHyphenated['prop-A'].");
   Assert.equal(null, results);
 }

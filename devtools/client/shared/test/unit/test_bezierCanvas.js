@@ -18,7 +18,7 @@ function run_test() {
 }
 
 function offsetsGetterReturnsData() {
-  do_print("offsets getter returns an array of 2 offset objects");
+  info("offsets getter returns an array of 2 offset objects");
 
   let b = new BezierCanvas(getCanvasMock(), getCubicBezier(), [.25, 0]);
   let offsets = b.offsets;
@@ -35,7 +35,7 @@ function offsetsGetterReturnsData() {
   Assert.equal(offsets[1].top, "100px");
   Assert.equal(offsets[1].left, "200px");
 
-  do_print("offsets getter returns data according to current padding");
+  info("offsets getter returns data according to current padding");
 
   b = new BezierCanvas(getCanvasMock(), getCubicBezier(), [0, 0]);
   offsets = b.offsets;
@@ -47,7 +47,7 @@ function offsetsGetterReturnsData() {
 }
 
 function convertsOffsetsToCoordinates() {
-  do_print("Converts offsets to coordinates");
+  info("Converts offsets to coordinates");
 
   let b = new BezierCanvas(getCanvasMock(), getCubicBezier(), [.25, 0]);
 
@@ -75,7 +75,7 @@ function convertsOffsetsToCoordinates() {
 }
 
 function plotsCanvas() {
-  do_print("Plots the curve to the canvas");
+  info("Plots the curve to the canvas");
 
   let hasDrawnCurve = false;
   let b = new BezierCanvas(getCanvasMock(), getCubicBezier(), [.25, 0]);

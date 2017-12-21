@@ -55,7 +55,7 @@ add_test(function testAsyncCancel() {
     var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
     Assert.equal(cm.countCookiesFromHost("localhost"), 0, "no cookies set");
 
-    do_execute_soon(run_next_test);
+    executeSoon(run_next_test);
   });
 });
 
@@ -68,7 +68,7 @@ function run_test() {
 
   run_next_test();
 
-  do_register_cleanup(function(){
+  registerCleanupFunction(function(){
     httpServer.stop(() => {});
   });
 }

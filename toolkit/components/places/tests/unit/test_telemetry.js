@@ -162,7 +162,7 @@ add_task(async function test_execute() {
   await PlacesDBUtils.maintenanceOnIdle();
 
   for (let histogramId in histograms) {
-    do_print("checking histogram " + histogramId);
+    info("checking histogram " + histogramId);
     let validate = histograms[histogramId];
     let snapshot = Services.telemetry.getHistogramById(histogramId).snapshot();
     validate(snapshot.sum);

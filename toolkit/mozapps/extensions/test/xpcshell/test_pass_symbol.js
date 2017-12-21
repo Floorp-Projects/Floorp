@@ -32,7 +32,7 @@ add_task(async function() {
   // most of the test is in bootstrap.js in the addon because BootstrapMonitor
   // currently requires the objects in `data` to be serializable, and we
   // need a real reference to the symbol to test this.
-  do_execute_soon(function() {
+  executeSoon(function() {
     // give the startup time to run
     Assert.ok(Services.prefs.getBoolPref(PASS_PREF));
     Assert.ok(Services.prefs.getBoolPref(FAIL_BOGUS_PREF));

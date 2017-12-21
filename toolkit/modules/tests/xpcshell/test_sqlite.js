@@ -119,7 +119,7 @@ add_task(async function test_schema_version() {
     let success;
     try {
       await db.setSchemaVersion(v);
-      do_print("Schema version " + v + " should have been rejected");
+      info("Schema version " + v + " should have been rejected");
       success = false;
     } catch (ex) {
       if (!ex.message.startsWith("Schema version must be an integer."))

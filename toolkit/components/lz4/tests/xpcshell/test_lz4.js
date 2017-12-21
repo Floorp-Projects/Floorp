@@ -24,7 +24,7 @@ add_task(function() {
           worker.terminate();
           break;
         case "do_print":
-          do_print(data.args[0]);
+          info(data.args[0]);
       }
     };
     worker.onerror = function(event) {

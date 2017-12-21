@@ -99,8 +99,8 @@ add_task(async function test_history_insert() {
   const TEST_URL = "http://mozilla.com/";
 
   let inserter = async function(name, filter, referrer, date, transition) {
-    do_print(name);
-    do_print(`filter: ${filter}, referrer: ${referrer}, date: ${date}, transition: ${transition}`);
+    info(name);
+    info(`filter: ${filter}, referrer: ${referrer}, date: ${date}, transition: ${transition}`);
 
     let uri = NetUtil.newURI(TEST_URL + Math.random());
     let title = "Visit " + Math.random();

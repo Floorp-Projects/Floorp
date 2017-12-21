@@ -10,16 +10,16 @@ async function cleanup() {
 }
 
 add_task(async function remove_visits_outside_unbookmarked_uri() {
-  do_print("*** TEST: Remove some visits outside valid timeframe from an unbookmarked URI");
+  info("*** TEST: Remove some visits outside valid timeframe from an unbookmarked URI");
 
-  do_print("Add 10 visits for the URI from way in the past.");
+  info("Add 10 visits for the URI from way in the past.");
   let visits = [];
   for (let i = 0; i < 10; i++) {
     visits.push({ uri: TEST_URI, visitDate: DB_NOW - 100000 - (i * 1000) });
   }
   await PlacesTestUtils.addVisits(visits);
 
-  do_print("Remove visits using timerange outside the URI's visits.");
+  info("Remove visits using timerange outside the URI's visits.");
   let filter = {
     beginDate: new Date(JS_NOW - 10),
     endDate: new Date(JS_NOW)
@@ -27,10 +27,10 @@ add_task(async function remove_visits_outside_unbookmarked_uri() {
   await PlacesUtils.history.removeVisitsByFilter(filter);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("URI should still exist in moz_places.");
+  info("URI should still exist in moz_places.");
   Assert.ok(page_in_database(TEST_URI.spec));
 
-  do_print("Run a history query and check that all visits still exist.");
+  info("Run a history query and check that all visits still exist.");
   let query = PlacesUtils.history.getNewQuery();
   let opts = PlacesUtils.history.getNewQueryOptions();
   opts.resultType = opts.RESULTS_AS_VISIT;
@@ -44,33 +44,33 @@ add_task(async function remove_visits_outside_unbookmarked_uri() {
   }
   root.containerOpen = false;
 
-  do_print("asyncHistory.isURIVisited should return true.");
+  info("asyncHistory.isURIVisited should return true.");
   Assert.ok(await promiseIsURIVisited(TEST_URI));
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  do_print("Frecency should be positive.");
+  info("Frecency should be positive.");
   Assert.ok(frecencyForUrl(TEST_URI) > 0);
 
   await cleanup();
 });
 
 add_task(async function remove_visits_outside_bookmarked_uri() {
-  do_print("*** TEST: Remove some visits outside valid timeframe from a bookmarked URI");
+  info("*** TEST: Remove some visits outside valid timeframe from a bookmarked URI");
 
-  do_print("Add 10 visits for the URI from way in the past.");
+  info("Add 10 visits for the URI from way in the past.");
   let visits = [];
   for (let i = 0; i < 10; i++) {
     visits.push({ uri: TEST_URI, visitDate: DB_NOW - 100000 - (i * 1000) });
   }
   await PlacesTestUtils.addVisits(visits);
-  do_print("Bookmark the URI.");
+  info("Bookmark the URI.");
   PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                        TEST_URI,
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
                                        "bookmark title");
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Remove visits using timerange outside the URI's visits.");
+  info("Remove visits using timerange outside the URI's visits.");
   let filter = {
     beginDate: new Date(JS_NOW - 10),
     endDate: new Date(JS_NOW)
@@ -78,10 +78,10 @@ add_task(async function remove_visits_outside_bookmarked_uri() {
   await PlacesUtils.history.removeVisitsByFilter(filter);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("URI should still exist in moz_places.");
+  info("URI should still exist in moz_places.");
   Assert.ok(page_in_database(TEST_URI.spec));
 
-  do_print("Run a history query and check that all visits still exist.");
+  info("Run a history query and check that all visits still exist.");
   let query = PlacesUtils.history.getNewQuery();
   let opts = PlacesUtils.history.getNewQueryOptions();
   opts.resultType = opts.RESULTS_AS_VISIT;
@@ -95,27 +95,27 @@ add_task(async function remove_visits_outside_bookmarked_uri() {
   }
   root.containerOpen = false;
 
-  do_print("asyncHistory.isURIVisited should return true.");
+  info("asyncHistory.isURIVisited should return true.");
   Assert.ok(await promiseIsURIVisited(TEST_URI));
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Frecency should be positive.");
+  info("Frecency should be positive.");
   Assert.ok(frecencyForUrl(TEST_URI) > 0);
 
   await cleanup();
 });
 
 add_task(async function remove_visits_unbookmarked_uri() {
-  do_print("*** TEST: Remove some visits from an unbookmarked URI");
+  info("*** TEST: Remove some visits from an unbookmarked URI");
 
-  do_print("Add 10 visits for the URI from now to 9 usecs in the past.");
+  info("Add 10 visits for the URI from now to 9 usecs in the past.");
   let visits = [];
   for (let i = 0; i < 10; i++) {
     visits.push({ uri: TEST_URI, visitDate: DB_NOW - (i * 1000) });
   }
   await PlacesTestUtils.addVisits(visits);
 
-  do_print("Remove the 5 most recent visits.");
+  info("Remove the 5 most recent visits.");
   let filter = {
     beginDate: new Date(JS_NOW - 4),
     endDate: new Date(JS_NOW)
@@ -123,10 +123,10 @@ add_task(async function remove_visits_unbookmarked_uri() {
   await PlacesUtils.history.removeVisitsByFilter(filter);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("URI should still exist in moz_places.");
+  info("URI should still exist in moz_places.");
   Assert.ok(page_in_database(TEST_URI.spec));
 
-  do_print("Run a history query and check that only the older 5 visits still exist.");
+  info("Run a history query and check that only the older 5 visits still exist.");
   let query = PlacesUtils.history.getNewQuery();
   let opts = PlacesUtils.history.getNewQueryOptions();
   opts.resultType = opts.RESULTS_AS_VISIT;
@@ -140,33 +140,33 @@ add_task(async function remove_visits_unbookmarked_uri() {
   }
   root.containerOpen = false;
 
-  do_print("asyncHistory.isURIVisited should return true.");
+  info("asyncHistory.isURIVisited should return true.");
   Assert.ok(await promiseIsURIVisited(TEST_URI));
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Frecency should be positive.");
+  info("Frecency should be positive.");
   Assert.ok(frecencyForUrl(TEST_URI) > 0);
 
   await cleanup();
 });
 
 add_task(async function remove_visits_bookmarked_uri() {
-  do_print("*** TEST: Remove some visits from a bookmarked URI");
+  info("*** TEST: Remove some visits from a bookmarked URI");
 
-  do_print("Add 10 visits for the URI from now to 9 usecs in the past.");
+  info("Add 10 visits for the URI from now to 9 usecs in the past.");
   let visits = [];
   for (let i = 0; i < 10; i++) {
     visits.push({ uri: TEST_URI, visitDate: DB_NOW - (i * 1000) });
   }
   await PlacesTestUtils.addVisits(visits);
-  do_print("Bookmark the URI.");
+  info("Bookmark the URI.");
   PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                        TEST_URI,
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
                                        "bookmark title");
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Remove the 5 most recent visits.");
+  info("Remove the 5 most recent visits.");
   let filter = {
     beginDate: new Date(JS_NOW - 4),
     endDate: new Date(JS_NOW)
@@ -174,10 +174,10 @@ add_task(async function remove_visits_bookmarked_uri() {
   await PlacesUtils.history.removeVisitsByFilter(filter);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("URI should still exist in moz_places.");
+  info("URI should still exist in moz_places.");
   Assert.ok(page_in_database(TEST_URI.spec));
 
-  do_print("Run a history query and check that only the older 5 visits still exist.");
+  info("Run a history query and check that only the older 5 visits still exist.");
   let query = PlacesUtils.history.getNewQuery();
   let opts = PlacesUtils.history.getNewQueryOptions();
   opts.resultType = opts.RESULTS_AS_VISIT;
@@ -191,27 +191,27 @@ add_task(async function remove_visits_bookmarked_uri() {
   }
   root.containerOpen = false;
 
-  do_print("asyncHistory.isURIVisited should return true.");
+  info("asyncHistory.isURIVisited should return true.");
   Assert.ok(await promiseIsURIVisited(TEST_URI));
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Frecency should be positive.");
+  info("Frecency should be positive.");
   Assert.ok(frecencyForUrl(TEST_URI) > 0);
 
   await cleanup();
 });
 
 add_task(async function remove_all_visits_unbookmarked_uri() {
-  do_print("*** TEST: Remove all visits from an unbookmarked URI");
+  info("*** TEST: Remove all visits from an unbookmarked URI");
 
-  do_print("Add some visits for the URI.");
+  info("Add some visits for the URI.");
   let visits = [];
   for (let i = 0; i < 10; i++) {
     visits.push({ uri: TEST_URI, visitDate: DB_NOW - (i * 1000) });
   }
   await PlacesTestUtils.addVisits(visits);
 
-  do_print("Remove all visits.");
+  info("Remove all visits.");
   let filter = {
     beginDate: new Date(JS_NOW - 10),
     endDate: new Date(JS_NOW)
@@ -219,10 +219,10 @@ add_task(async function remove_all_visits_unbookmarked_uri() {
   await PlacesUtils.history.removeVisitsByFilter(filter);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("URI should no longer exist in moz_places.");
+  info("URI should no longer exist in moz_places.");
   Assert.ok(!page_in_database(TEST_URI.spec));
 
-  do_print("Run a history query and check that no visits exist.");
+  info("Run a history query and check that no visits exist.");
   let query = PlacesUtils.history.getNewQuery();
   let opts = PlacesUtils.history.getNewQueryOptions();
   opts.resultType = opts.RESULTS_AS_VISIT;
@@ -232,22 +232,22 @@ add_task(async function remove_all_visits_unbookmarked_uri() {
   Assert.equal(root.childCount, 0);
   root.containerOpen = false;
 
-  do_print("asyncHistory.isURIVisited should return false.");
+  info("asyncHistory.isURIVisited should return false.");
   Assert.equal(false, await promiseIsURIVisited(TEST_URI));
 
   await cleanup();
 });
 
 add_task(async function remove_all_visits_bookmarked_uri() {
-  do_print("*** TEST: Remove all visits from a bookmarked URI");
+  info("*** TEST: Remove all visits from a bookmarked URI");
 
-  do_print("Add some visits for the URI.");
+  info("Add some visits for the URI.");
   let visits = [];
   for (let i = 0; i < 10; i++) {
     visits.push({ uri: TEST_URI, visitDate: DB_NOW - (i * 1000) });
   }
   await PlacesTestUtils.addVisits(visits);
-  do_print("Bookmark the URI.");
+  info("Bookmark the URI.");
   PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                        TEST_URI,
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
@@ -255,7 +255,7 @@ add_task(async function remove_all_visits_bookmarked_uri() {
   await PlacesTestUtils.promiseAsyncUpdates();
   let initialFrecency = frecencyForUrl(TEST_URI);
 
-  do_print("Remove all visits.");
+  info("Remove all visits.");
   let filter = {
     beginDate: new Date(JS_NOW - 10),
     endDate: new Date(JS_NOW)
@@ -263,10 +263,10 @@ add_task(async function remove_all_visits_bookmarked_uri() {
   await PlacesUtils.history.removeVisitsByFilter(filter);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("URI should still exist in moz_places.");
+  info("URI should still exist in moz_places.");
   Assert.ok(page_in_database(TEST_URI.spec));
 
-  do_print("Run a history query and check that no visits exist.");
+  info("Run a history query and check that no visits exist.");
   let query = PlacesUtils.history.getNewQuery();
   let opts = PlacesUtils.history.getNewQueryOptions();
   opts.resultType = opts.RESULTS_AS_VISIT;
@@ -276,29 +276,29 @@ add_task(async function remove_all_visits_bookmarked_uri() {
   Assert.equal(root.childCount, 0);
   root.containerOpen = false;
 
-  do_print("asyncHistory.isURIVisited should return false.");
+  info("asyncHistory.isURIVisited should return false.");
   Assert.equal(false, await promiseIsURIVisited(TEST_URI));
 
-  do_print("URI should be bookmarked");
+  info("URI should be bookmarked");
   Assert.ok(await PlacesUtils.bookmarks.fetch({url: TEST_URI}));
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Frecency should be smaller.");
+  info("Frecency should be smaller.");
   Assert.ok(frecencyForUrl(TEST_URI) < initialFrecency);
 
   await cleanup();
 });
 
 add_task(async function remove_all_visits_bookmarked_uri() {
-  do_print("*** TEST: Remove some visits from a zero frecency URI retains zero frecency");
+  info("*** TEST: Remove some visits from a zero frecency URI retains zero frecency");
 
-  do_print("Add some visits for the URI.");
+  info("Add some visits for the URI.");
   await PlacesTestUtils.addVisits([
     { uri: TEST_URI, transition: TRANSITION_FRAMED_LINK, visitDate: (DB_NOW - 86400000000000) },
     { uri: TEST_URI, transition: TRANSITION_FRAMED_LINK, visitDate: DB_NOW }
   ]);
 
-  do_print("Remove newer visit.");
+  info("Remove newer visit.");
   let filter = {
     beginDate: new Date(JS_NOW - 10),
     endDate: new Date(JS_NOW)
@@ -306,9 +306,9 @@ add_task(async function remove_all_visits_bookmarked_uri() {
   await PlacesUtils.history.removeVisitsByFilter(filter);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("URI should still exist in moz_places.");
+  info("URI should still exist in moz_places.");
   Assert.ok(page_in_database(TEST_URI.spec));
-  do_print("Frecency should be zero.");
+  info("Frecency should be zero.");
   Assert.equal(frecencyForUrl(TEST_URI), 0);
 
   await cleanup();

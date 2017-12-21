@@ -107,7 +107,7 @@ function nextTest()
 
   // Give the old channel a chance to close the cache entry first.
   // XXX This is actually a race condition that might be considered a bug...
-  do_execute_soon(function() {
+  executeSoon(function() {
     chan.asyncOpen2(new ChannelListener(checkAndShiftTest, null));
   });
 }

@@ -27,7 +27,7 @@ InitialListener.prototype = {
     onStartRequest: function(request, context) { },
     onStopRequest: function(request, context, status) {
         Assert.equal(1, numberOfCLHandlerCalls);
-        do_execute_soon(function() {
+        executeSoon(function() {
             var channel = setupChannel("http://localhost:" +
                                        httpserv.identity.primaryPort + "/post");
             channel.requestMethod = "POST";
@@ -42,7 +42,7 @@ RedirectingListener.prototype = {
     onStartRequest: function(request, context) { },
     onStopRequest: function(request, context, status) {
         Assert.equal(1, numberOfHandlerCalls);
-        do_execute_soon(function() {
+        executeSoon(function() {
             var channel = setupChannel("http://localhost:" +
                                        httpserv.identity.primaryPort + "/post");
             channel.requestMethod = "POST";

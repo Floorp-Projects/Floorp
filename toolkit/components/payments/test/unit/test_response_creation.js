@@ -39,7 +39,7 @@ add_task(async function test_createBasicCardResponseData_minimal() {
   };
   let actual = dialogGlobal.PaymentDialog.createBasicCardResponseData(expected);
   let expectedSerialized = serializeBasicCardResponseData(expected);
-  do_print(actual.data);
+  info(actual.data);
   Assert.equal(actual.data, expectedSerialized, "Check data");
 });
 

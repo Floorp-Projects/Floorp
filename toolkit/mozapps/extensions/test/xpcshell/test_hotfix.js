@@ -64,7 +64,7 @@ function check_test_1() {
     Assert.equal(aAddon.version, "1.0");
 
     aAddon.uninstall();
-    do_execute_soon(run_test_2);
+    executeSoon(run_test_2);
   });
 }
 
@@ -111,7 +111,7 @@ function check_test_3() {
     Assert.equal(aAddon.version, "2.0");
 
     aAddon.uninstall();
-    do_execute_soon(run_test_4);
+    executeSoon(run_test_4);
   });
 }
 
@@ -241,7 +241,7 @@ function finish_test_7() {
     Assert.equal(aAddon.version, "1.0");
 
     aAddon.uninstall();
-    do_execute_soon(run_test_8);
+    executeSoon(run_test_8);
   });
 }
 

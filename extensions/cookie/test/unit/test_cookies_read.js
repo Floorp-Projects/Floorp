@@ -13,7 +13,7 @@ function run_test() {
 }
 
 function finish_test() {
-  do_execute_soon(function() {
+  executeSoon(function() {
     test_generator.return();
     do_test_finished();
   });
@@ -45,7 +45,7 @@ function* do_run_test() {
 
   // Wait until all CMAX cookies have been written out to the database.
   while (do_count_cookies_in_db(db.db) < CMAX) {
-    do_execute_soon(function() {
+    executeSoon(function() {
       do_run_generator(test_generator);
     });
     yield;

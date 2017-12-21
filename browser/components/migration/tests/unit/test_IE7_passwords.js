@@ -335,7 +335,7 @@ add_task(async function test_passwordsAvailable() {
   let crypto = new OSCrypto();
   let hashes = []; // the hashes of all migrator websites, this is going to be used for the clean up
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.logins.removeAllLogins();
     logins = Services.logins.getAllLogins({});
     Assert.equal(logins.length, 0, "There are no logins after the cleanup");

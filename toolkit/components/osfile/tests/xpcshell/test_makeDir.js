@@ -10,7 +10,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 var Path = OS.Path;
 var profileDir;
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   Services.prefs.setBoolPref("toolkit.osfile.log", false);
 });
 

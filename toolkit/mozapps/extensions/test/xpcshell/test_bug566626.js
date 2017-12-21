@@ -65,7 +65,7 @@ function run_test_1() {
       run_test_2();
   });
 
-  do_execute_soon(function() {
+  executeSoon(function() {
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
       Assert.notEqual(a1, null);
       Assert.equal(a1.name, "Test 1");
@@ -80,8 +80,8 @@ function run_test_1() {
     });
   });
 
-  do_execute_soon(function() {
-    do_execute_soon(function() {
+  executeSoon(function() {
+    executeSoon(function() {
       AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
         Assert.notEqual(a1, null);
         Assert.equal(a1.name, "Test 1");
@@ -106,7 +106,7 @@ function run_test_2() {
 
     Assert.equal(a1, gAddon);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 
 }

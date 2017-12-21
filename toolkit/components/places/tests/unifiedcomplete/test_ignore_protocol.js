@@ -14,7 +14,7 @@ add_task(async function test_escape() {
     { uri: uri2, title: "title" }
   ]);
 
-  do_print("Searching for h matches site and not http://");
+  info("Searching for h matches site and not http://");
   await check_autocomplete({
     search: "h",
     matches: [ { uri: uri2, title: "title" } ]

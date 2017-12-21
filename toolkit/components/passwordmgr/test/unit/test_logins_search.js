@@ -38,7 +38,7 @@ function buildExpectedLogins(aQuery)
  */
 function checkSearchLogins(aQuery, aExpectedCount)
 {
-  do_print("Testing searchLogins for " + JSON.stringify(aQuery));
+  info("Testing searchLogins for " + JSON.stringify(aQuery));
 
   let expectedLogins = buildExpectedLogins(aQuery);
   Assert.equal(expectedLogins.length, aExpectedCount);
@@ -64,7 +64,7 @@ function checkSearchLogins(aQuery, aExpectedCount)
  */
 function checkAllSearches(aQuery, aExpectedCount)
 {
-  do_print("Testing all search functions for " + JSON.stringify(aQuery));
+  info("Testing all search functions for " + JSON.stringify(aQuery));
 
   let expectedLogins = buildExpectedLogins(aQuery);
   Assert.equal(expectedLogins.length, aExpectedCount);

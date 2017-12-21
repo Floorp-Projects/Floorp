@@ -72,7 +72,7 @@ var listener = {
 
     // Print in most cases, but ignore the "strict" messages
     if (!(message.flags & Ci.nsIScriptError.strictFlag)) {
-      do_print("head_dbg.js got console message: " + string + "\n");
+      info("head_dbg.js got console message: " + string + "\n");
     }
   }
 };

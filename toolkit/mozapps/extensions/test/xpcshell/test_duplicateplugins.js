@@ -155,7 +155,7 @@ function run_test_2() {
     Assert.ok(PLUGINS[0].disabled);
     Assert.ok(PLUGINS[1].disabled);
 
-    do_execute_soon(run_test_3);
+    executeSoon(run_test_3);
   });
 }
 
@@ -177,7 +177,7 @@ function run_test_3() {
       Assert.equal(p_2.name, "Duplicate Plugin 1");
       Assert.equal(p_2.description, "A duplicate plugin");
 
-      do_execute_soon(do_test_finished);
+      executeSoon(do_test_finished);
     });
   }));
 }

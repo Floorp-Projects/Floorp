@@ -37,15 +37,15 @@ add_task(async function test_nodb_pluschanges() {
   search.moveEngine(engine2, 1);
 
   // This is needed to avoid some reentrency issues in nsSearchService.
-  do_print("Next step is forcing flush");
-  await new Promise(resolve => do_execute_soon(resolve));
+  info("Next step is forcing flush");
+  await new Promise(resolve => executeSoon(resolve));
 
-  do_print("Forcing flush");
+  info("Forcing flush");
   let promiseCommit = promiseAfterCache();
   search.QueryInterface(Ci.nsIObserver)
         .observe(null, "quit-application", "");
   await promiseCommit;
-  do_print("Commit complete");
+  info("Commit complete");
 
   // Check that the entries are placed as specified correctly
   let metadata = await promiseEngineMetadata();

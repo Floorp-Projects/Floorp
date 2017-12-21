@@ -19,7 +19,7 @@ function run_test()
       // 1. we want finish_cache2_test call for sure after do_test_pending, but all the callbacks here
       //    may invoke synchronously
       // 2. precaution when the OPEN_BYPASS_IF_BUSY invocation become a post one day
-      do_execute_soon(function() {
+      executeSoon(function() {
         Assert.ok(bypassed);
         finish_cache2_test();
       });

@@ -413,9 +413,9 @@ add_task(async function test_checkForAddons_updatesWithAddons() {
  * Tests that installing found addons works as expected
  */
 async function test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
-  do_print("Running installAddon for id: " + id +
-           ", includeSize: " + includeSize +
-           " and wantInstallReject: " + wantInstallReject);
+  info("Running installAddon for id: " + id +
+       ", includeSize: " + includeSize +
+       " and wantInstallReject: " + wantInstallReject);
   let httpServer = new HttpServer();
   let dir = FileUtils.getDir("TmpD", [], true);
   httpServer.registerDirectory("/", dir);
@@ -424,7 +424,7 @@ async function test_checkForAddons_installAddon(id, includeSize, wantInstallReje
   let zipFileName = "test_" + id + "_GMP.zip";
 
   let zipURL = URL_HOST + ":" + testserverPort + "/" + zipFileName;
-  do_print("zipURL: " + zipURL);
+  info("zipURL: " + zipURL);
 
   let data = "e~=0.5772156649";
   let zipFile = createNewZipFile(zipFileName, data);
@@ -463,7 +463,7 @@ async function test_checkForAddons_installAddon(id, includeSize, wantInstallReje
     Assert.equal(extractedPaths.length, 1);
     let extractedPath = extractedPaths[0];
 
-    do_print("Extracted path: " + extractedPath);
+    info("Extracted path: " + extractedPath);
 
     let extractedFile = Cc["@mozilla.org/file/local;1"].
                         createInstance(Ci.nsIFile);
@@ -615,7 +615,7 @@ function readStringFromInputStream(inputStream) {
  */
 function readStringFromFile(file) {
   if (!file.exists()) {
-    do_print("readStringFromFile - file doesn't exist: " + file.path);
+    info("readStringFromFile - file doesn't exist: " + file.path);
     return null;
   }
   let fis = Cc["@mozilla.org/network/file-input-stream;1"].
@@ -671,7 +671,7 @@ xhr.prototype = {
   responseXML: null,
   responseText: null,
   send(aBody) {
-    do_execute_soon(() => {
+    executeSoon(() => {
       try {
         if (this._options.dropRequest) {
           if (this._timeout > 0 && this._options.timeout) {
@@ -720,14 +720,14 @@ xhr.prototype = {
     for (let item of events) {
       let k = "on" + item;
       if (this[k]) {
-        do_print("Notifying " + item);
+        info("Notifying " + item);
         let e = {
           target: this,
           type: item,
         };
         this[k](e);
       } else {
-        do_print("Notifying " + item + ", but there are no listeners");
+        info("Notifying " + item + ", but there are no listeners");
       }
     }
   },
@@ -798,6 +798,6 @@ function createNewZipFile(zipName, data) {
                              Ci.nsIZipWriter.COMPRESSION_BEST, stream, false);
     zipWriter.close();
     stream.close();
-    do_print("zip file created on disk at: " + zipFile.path);
+    info("zip file created on disk at: " + zipFile.path);
     return zipFile;
 }

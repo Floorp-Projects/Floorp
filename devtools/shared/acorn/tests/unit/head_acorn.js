@@ -13,7 +13,7 @@ function intersect(a, b) {
 }
 
 function checkEquivalentASTs(expected, actual, prop = []) {
-  do_print("Checking: " + prop.join(" "));
+  info("Checking: " + prop.join(" "));
 
   if (!isObject(expected)) {
     return void Assert.equal(expected, actual);

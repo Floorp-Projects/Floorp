@@ -502,7 +502,7 @@ add_test(function test_emptyPassword() {
   run_next_test();
 });
 
-do_register_cleanup(function () {
+registerCleanupFunction(function () {
   gPrefs.clearUserPref("network.standard-url.punycode-host");
 });
 

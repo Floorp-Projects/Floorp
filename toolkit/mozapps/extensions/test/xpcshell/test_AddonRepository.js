@@ -218,7 +218,7 @@ function run_test() {
       try {
         aInstall.install();
       } catch (e) {
-        do_print("Failed to install add-on " + aInstall.sourceURI.spec);
+        info("Failed to install add-on " + aInstall.sourceURI.spec);
         do_report_unexpected_exception(e);
       }
 
@@ -236,10 +236,10 @@ function end_test() {
   gServer.stop(function() {
     function loop() {
       if (!testDir.exists()) {
-        do_print("Staged directory has been cleaned up");
+        info("Staged directory has been cleaned up");
         do_test_finished();
       }
-      do_print("Waiting 1 second until cleanup is complete");
+      info("Waiting 1 second until cleanup is complete");
       do_timeout(1000, loop);
     }
     loop();

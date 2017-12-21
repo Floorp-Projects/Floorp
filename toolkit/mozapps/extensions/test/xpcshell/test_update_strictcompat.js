@@ -265,7 +265,7 @@ for (let test of testParams) {
 
         onNoUpdateAvailable(addon) {
           Assert.equal(addon, a2);
-          do_execute_soon(check_test_3);
+          executeSoon(check_test_3);
         }
       }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
     });
@@ -347,7 +347,7 @@ for (let test of testParams) {
 
         onNoUpdateAvailable(addon) {
           Assert.ok(this.sawUpdate);
-          do_execute_soon(check_test_5);
+          executeSoon(check_test_5);
         }
       }, AddonManager.UPDATE_WHEN_USER_REQUESTED, "3.0", "3.0");
     });
@@ -597,7 +597,7 @@ for (let test of testParams) {
         let compatListener = {
           onUpdateFinished(addon, error) {
             if (--count == 0)
-              do_execute_soon(next_test);
+              executeSoon(next_test);
           }
         };
 
@@ -608,7 +608,7 @@ for (let test of testParams) {
 
           onUpdateFinished(addon, error) {
             if (--count == 0)
-              do_execute_soon(next_test);
+              executeSoon(next_test);
           }
         };
 
@@ -728,7 +728,7 @@ for (let test of testParams) {
 
         onUpdateFinished(addon) {
           Assert.ok(addon.isCompatible);
-          do_execute_soon(check_test_13);
+          executeSoon(check_test_13);
         }
       }, AddonManager.UPDATE_WHEN_NEW_APP_DETECTED, "3.0", "3.0");
     });
@@ -815,7 +815,7 @@ for (let test of testParams) {
           Assert.equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
           Assert.equal(aInstall.existingAddon.pendingUpgrade.install, aInstall);
 
-          do_execute_soon(check_test_14);
+          executeSoon(check_test_14);
         },
 
         onInstallFailed(aInstall) {
@@ -914,7 +914,7 @@ for (let test of testParams) {
 
         onInstallEnded(aInstall) {
           Assert.equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
-          do_execute_soon(check_test_15);
+          executeSoon(check_test_15);
         },
 
         onInstallFailed(aInstall) {

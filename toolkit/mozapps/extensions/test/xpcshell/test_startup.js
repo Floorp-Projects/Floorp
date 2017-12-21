@@ -152,7 +152,7 @@ function run_test() {
     Assert.equal(a4, null);
     Assert.equal(a5, null);
 
-    do_execute_soon(run_test_1);
+    executeSoon(run_test_1);
   });
 }
 
@@ -185,7 +185,7 @@ async function run_test_1() {
   check_startup_changes(AddonManager.STARTUP_CHANGE_ENABLED, []);
   Assert.ok(gCachePurged);
 
-  do_print("Checking for " + gAddonStartup.path);
+  info("Checking for " + gAddonStartup.path);
   Assert.ok(gAddonStartup.exists());
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
@@ -272,7 +272,7 @@ async function run_test_1() {
     AddonManager.getAddonsByTypes(["extension"], function(extensionAddons) {
       Assert.equal(extensionAddons.length, 3);
 
-      do_execute_soon(run_test_2);
+      executeSoon(run_test_2);
     });
   });
 }
@@ -344,7 +344,7 @@ async function run_test_2() {
     Assert.equal(a5, null);
     Assert.ok(!isExtensionInAddonsList(profileDir, "addon5@tests.mozilla.org"));
 
-    do_execute_soon(run_test_3);
+    executeSoon(run_test_3);
   });
 }
 
@@ -410,7 +410,7 @@ async function run_test_3() {
     dest.append(do_get_expected_addon_name("addon4@tests.mozilla.org"));
     Assert.ok(!dest.exists());
 
-    do_execute_soon(run_test_4);
+    executeSoon(run_test_4);
   });
 }
 
@@ -450,7 +450,7 @@ async function run_test_4() {
     do_check_in_crash_annotation(addon2.id, a2.version);
     Assert.equal(a2.scope, AddonManager.SCOPE_SYSTEM);
 
-    do_execute_soon(run_test_5);
+    executeSoon(run_test_5);
   });
 }
 
@@ -496,7 +496,7 @@ async function run_test_5() {
     do_check_in_crash_annotation(addon2.id, a2.version);
     Assert.equal(a2.scope, AddonManager.SCOPE_USER);
 
-    do_execute_soon(run_test_6);
+    executeSoon(run_test_6);
   });
 }
 
@@ -542,7 +542,7 @@ async function run_test_6() {
     do_check_in_crash_annotation(addon2.id, a2.version);
     Assert.equal(a2.scope, AddonManager.SCOPE_USER);
 
-    do_execute_soon(run_test_7);
+    executeSoon(run_test_7);
   });
 }
 
@@ -602,7 +602,7 @@ async function run_test_7() {
     Assert.equal(a5, null);
     Assert.ok(!isExtensionInAddonsList(profileDir, "addon5@tests.mozilla.org"));
 
-    do_execute_soon(run_test_8);
+    executeSoon(run_test_8);
   });
 }
 
@@ -642,7 +642,7 @@ async function run_test_8() {
     Assert.ok(!isExtensionInAddonsList(userDir, "addon2@tests.mozilla.org"));
     Assert.ok(!isExtensionInAddonsList(globalDir, "addon2@tests.mozilla.org"));
 
-    do_execute_soon(run_test_9);
+    executeSoon(run_test_9);
   });
 }
 
@@ -704,7 +704,7 @@ async function run_test_9() {
     Assert.equal(a5, null);
     Assert.ok(!isExtensionInAddonsList(profileDir, "addon5@tests.mozilla.org"));
 
-    do_execute_soon(run_test_10);
+    executeSoon(run_test_10);
   });
 }
 
@@ -762,7 +762,7 @@ async function run_test_10() {
     Assert.equal(a5, null);
     Assert.ok(!isExtensionInAddonsList(profileDir, "addon5@tests.mozilla.org"));
 
-    do_execute_soon(run_test_11);
+    executeSoon(run_test_11);
   });
 }
 
@@ -816,7 +816,7 @@ async function run_test_11() {
     do_check_not_in_crash_annotation(addon1.id, addon1.version);
     do_check_not_in_crash_annotation(addon2.id, addon2.version);
 
-    do_execute_soon(run_test_12);
+    executeSoon(run_test_12);
   });
 }
 
@@ -933,7 +933,7 @@ function run_test_12() {
         Assert.ok(!a3_3.seen);
         Assert.ok(!a3_3.isActive);
 
-        do_execute_soon(end_test);
+        executeSoon(end_test);
       });
     });
   }));

@@ -67,7 +67,7 @@ add_test(function test_intl_accept_language() {
       }
 
       // We've checked all the entries in languages[]. Cleanup and move on.
-      do_print("Checked " + testCount + " languages. Removing checkLanguagePref as pref observer.");
+      info("Checked " + testCount + " languages. Removing checkLanguagePref as pref observer.");
       Services.prefs.removeObserver("intl.accept_languages", checkLanguagePref);
       run_next_test();
     });

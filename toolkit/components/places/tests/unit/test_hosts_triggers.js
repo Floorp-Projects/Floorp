@@ -360,10 +360,10 @@ const hostsUpdateTests = [{
 
 add_task(async function test_moz_hosts_update() {
   for (const section of hostsUpdateTests) {
-    do_print(section.title);
+    info(section.title);
 
     for (const test of section.tests) {
-      do_print(test.title);
+      info(test.title);
 
       if ("visits" in test) {
         await PlacesTestUtils.addVisits(test.visits);

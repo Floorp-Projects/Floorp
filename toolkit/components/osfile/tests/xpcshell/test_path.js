@@ -19,7 +19,7 @@ var Unix = ImportUnix;
 function do_check_fail(f) {
   try {
     let result = f();
-    do_print("Failed do_check_fail: " + result);
+    info("Failed do_check_fail: " + result);
     Assert.ok(false);
   } catch (ex) {
     Assert.ok(true);
@@ -27,9 +27,9 @@ function do_check_fail(f) {
 }
 
 function run_test() {
-  do_print("Testing Windows paths");
+  info("Testing Windows paths");
 
-  do_print("Backslash-separated, no drive");
+  info("Backslash-separated, no drive");
   Assert.equal(Win.basename("a\\b"), "b");
   Assert.equal(Win.basename("a\\b\\"), "");
   Assert.equal(Win.basename("abc"), "abc");
@@ -51,7 +51,7 @@ function run_test() {
   Assert.equal(Win.winGetDrive("\\"), null);
 
 
-  do_print("Backslash-separated, with a drive");
+  info("Backslash-separated, with a drive");
   Assert.equal(Win.basename("c:a\\b"), "b");
   Assert.equal(Win.basename("c:a\\b\\"), "");
   Assert.equal(Win.basename("c:abc"), "abc");
@@ -90,14 +90,14 @@ function run_test() {
   Assert.equal(Win.winGetDrive("c:\\abc"), "c:");
   Assert.equal(Win.winGetDrive("c:\\abc\\d\\e\\f\\g"), "c:");
 
-  do_print("Forwardslash-separated, no drive");
+  info("Forwardslash-separated, no drive");
   Assert.equal(Win.normalize("/a/b/c"), "\\a\\b\\c");
   Assert.equal(Win.normalize("/a/b////c"), "\\a\\b\\c");
   Assert.equal(Win.normalize("/a/b/c///"), "\\a\\b\\c");
   Assert.equal(Win.normalize("/a/b/c/../../../d/e/f"), "\\d\\e\\f");
   Assert.equal(Win.normalize("a/b/c/../../../d/e/f"), "d\\e\\f");
 
-  do_print("Forwardslash-separated, with a drive");
+  info("Forwardslash-separated, with a drive");
   Assert.equal(Win.normalize("c:/"), "c:\\");
   Assert.equal(Win.normalize("c:/a/b/c"), "c:\\a\\b\\c");
   Assert.equal(Win.normalize("c:/a/b////c"), "c:\\a\\b\\c");
@@ -106,7 +106,7 @@ function run_test() {
   Assert.equal(Win.normalize("c:/a/b/c/../../../d/e/f"), "c:\\d\\e\\f");
   Assert.equal(Win.normalize("c:a/b/c/../../../d/e/f"), "c:\\d\\e\\f");
 
-  do_print("Backslash-separated, UNC-style");
+  info("Backslash-separated, UNC-style");
   Assert.equal(Win.basename("\\\\a\\b"), "b");
   Assert.equal(Win.basename("\\\\a\\b\\"), "");
   Assert.equal(Win.basename("\\\\abc"), "");
@@ -127,7 +127,7 @@ function run_test() {
   Assert.equal(Win.winGetDrive("\\\\c"), "\\\\c");
   Assert.equal(Win.winGetDrive("\\\\c\\abc"), "\\\\c");
 
-  do_print("Testing unix paths");
+  info("Testing unix paths");
   Assert.equal(Unix.basename("a/b"), "b");
   Assert.equal(Unix.basename("a/b/"), "");
   Assert.equal(Unix.basename("abc"), "abc");
@@ -146,7 +146,7 @@ function run_test() {
   Assert.equal(Unix.join("/tmp", "foo", "bar"), "/tmp/foo/bar", "join /tmp,foo,bar");
   Assert.equal(Unix.join("/tmp", "/foo", "bar"), "/foo/bar", "join /tmp,/foo,bar");
 
-  do_print("Testing the presence of ospath.jsm");
+  info("Testing the presence of ospath.jsm");
   let Scope = {};
   try {
     Components.utils.import("resource://gre/modules/osfile/ospath.jsm", Scope);

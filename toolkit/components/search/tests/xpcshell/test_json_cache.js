@@ -53,10 +53,10 @@ add_test(function prepare_test_data() {
  * Start the search service and confirm the engine properties match the expected values.
  */
 add_test(function test_cached_engine_properties() {
-  do_print("init search service");
+  info("init search service");
 
   Services.search.init(function initComplete(aResult) {
-    do_print("init'd search service");
+    info("init'd search service");
     Assert.ok(Components.isSuccessCode(aResult));
 
     let engines = Services.search.getEngines({});
@@ -78,15 +78,15 @@ add_test(function test_cached_engine_properties() {
  * Test that the JSON cache written in the profile is correct.
  */
 add_test(function test_cache_write() {
-  do_print("test cache writing");
+  info("test cache writing");
 
   let cache = gProfD.clone();
   cache.append(CACHE_FILENAME);
   Assert.ok(!cache.exists());
 
-  do_print("Next step is forcing flush");
+  info("Next step is forcing flush");
   do_timeout(0, function forceFlush() {
-    do_print("Forcing flush");
+    info("Forcing flush");
     // Force flush
     // Note: the timeout is needed, to avoid some reentrency
     // issues in nsSearchService.
@@ -97,12 +97,12 @@ add_test(function test_cache_write() {
           return;
         }
         Services.obs.removeObserver(cacheWriteObserver, "browser-search-service");
-        do_print("Cache write complete");
+        info("Cache write complete");
         Assert.ok(cache.exists());
         // Check that the search.json.mozlz4 cache matches the template
 
         promiseCacheData().then(cacheWritten => {
-          do_print("Check search.json.mozlz4");
+          info("Check search.json.mozlz4");
           isSubObjectOf(cacheTemplate, cacheWritten);
 
           run_next_test();

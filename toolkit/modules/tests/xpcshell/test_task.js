@@ -350,10 +350,10 @@ add_test(function enter_stack_tests() {
  * Ensure that a list of frames appear in a stack, in the right order
  */
 function do_check_rewritten_stack(frames, ex) {
-  do_print("Checking that the expected frames appear in the right order");
-  do_print(frames.join(", "));
+  info("Checking that the expected frames appear in the right order");
+  info(frames.join(", "));
   let stack = ex.stack;
-  do_print(stack);
+  info(stack);
 
   let framesFound = 0;
   let lineNumber = 0;
@@ -362,12 +362,12 @@ function do_check_rewritten_stack(frames, ex) {
   while (framesFound < frames.length && (match = reLine.exec(stack))) {
     let line = match[0];
     let frame = frames[framesFound];
-    do_print("Searching for " + frame + " in line " + line);
+    info("Searching for " + frame + " in line " + line);
     if (line.indexOf(frame) != -1) {
-      do_print("Found " + frame);
+      info("Found " + frame);
       ++framesFound;
     } else {
-      do_print("Didn't find " + frame);
+      info("Didn't find " + frame);
     }
   }
 
@@ -377,7 +377,7 @@ function do_check_rewritten_stack(frames, ex) {
   do_throw("Did not find: " + frames.slice(framesFound).join(", ") +
            " in " + stack.substr(reLine.lastIndex));
 
-  do_print("Ensuring that we have removed Task.jsm, Promise.jsm");
+  info("Ensuring that we have removed Task.jsm, Promise.jsm");
   Assert.ok(stack.indexOf("Task.jsm") == -1);
   Assert.ok(stack.indexOf("Promise.jsm") == -1);
   Assert.ok(stack.indexOf("Promise-backend.js") == -1);
@@ -567,15 +567,15 @@ add_test(function test_throw_complex_stack()
 });
 
 add_test(function test_without_maintainStack() {
-  do_print("Calling generateReadableStack without a Task");
+  info("Calling generateReadableStack without a Task");
   Task.Debugging.generateReadableStack(new Error("Not a real error"));
 
   Task.Debugging.maintainStack = false;
 
-  do_print("Calling generateReadableStack with neither a Task nor maintainStack");
+  info("Calling generateReadableStack with neither a Task nor maintainStack");
   Task.Debugging.generateReadableStack(new Error("Not a real error"));
 
-  do_print("Calling generateReadableStack without maintainStack");
+  info("Calling generateReadableStack without maintainStack");
   Task.spawn(function*() {
     Task.Debugging.generateReadableStack(new Error("Not a real error"));
     run_next_test();

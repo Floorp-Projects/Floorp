@@ -29,7 +29,7 @@ function run_test() {
   let server = useHttpServer();
   server.registerContentType("sjs", "sjs");
 
-  do_register_cleanup(() => (async function cleanup() {
+  registerCleanupFunction(() => (async function cleanup() {
     // Remove added form history entries
     await updateSearchHistory("remove", null);
     Services.prefs.clearUserPref("browser.search.suggest.enabled");

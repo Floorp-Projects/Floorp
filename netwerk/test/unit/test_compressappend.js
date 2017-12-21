@@ -64,7 +64,7 @@ TestAppend.prototype = {
       Assert.equal(str, "12345abcde");
       entry.close();
 
-      do_execute_soon(self._callback);
+      executeSoon(self._callback);
     });
   }
 };

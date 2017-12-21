@@ -327,7 +327,7 @@ function test_result_dispose(size, tc, cleanup) {
     let witness = ref[i].dispose();
     ref[i] = null;
     if (!tc.released(i, witness)) {
-      do_print("test_result_dispose failure at index " + i);
+      info("test_result_dispose failure at index " + i);
       Assert.ok(false);
     }
   }

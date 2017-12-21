@@ -1018,7 +1018,7 @@ function doTestFinish() {
     Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, false);
     gAUS.observe(null, "nsPref:changed", PREF_APP_UPDATE_LOG);
   }
-  do_execute_soon(testFinishWaitForUpdateXMLFiles);
+  executeSoon(testFinishWaitForUpdateXMLFiles);
 }
 
 /**
@@ -2009,7 +2009,7 @@ function runUpdate(aExpectedStatus, aSwitchApp, aExpectedExitValue, aCheckSvcLog
     }
   }
 
-  do_execute_soon(runUpdateFinished);
+  executeSoon(runUpdateFinished);
 }
 
 /**
@@ -2121,7 +2121,7 @@ const gUpdateStagedObserver = {
       resetEnvironment();
       // Use do_execute_soon to prevent any failures from propagating to the
       // update service.
-      do_execute_soon(checkUpdateStagedState.bind(null, aData));
+      executeSoon(checkUpdateStagedState.bind(null, aData));
     }
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
@@ -2228,7 +2228,7 @@ function checkUpdateStagedState(aUpdateState) {
                     "contain the successful launch string");
   }
 
-  do_execute_soon(stageUpdateFinished);
+  executeSoon(stageUpdateFinished);
 }
 
 /**
@@ -2334,11 +2334,11 @@ function setupAppFilesAsync() {
       do_throw("Exceeded MAX_TIMEOUT_RUNS while trying to setup application " +
                "files! Exception: " + e);
     }
-    do_execute_soon(setupAppFilesAsync);
+    executeSoon(setupAppFilesAsync);
     return;
   }
 
-  do_execute_soon(setupUpdaterTestFinished);
+  executeSoon(setupUpdaterTestFinished);
 }
 
 /**
@@ -2706,7 +2706,7 @@ function runHelperFileInUse(aRelPath, aCopyTestHelper) {
   fileInUseProcess.init(fileInUseBin);
   fileInUseProcess.run(false, args, args.length);
 
-  do_execute_soon(waitForHelperSleep);
+  executeSoon(waitForHelperSleep);
 }
 
 /**
@@ -2738,7 +2738,7 @@ function runHelperPIDPersists(aRelPath, aCopyTestHelper) {
   gPIDPersistProcess.init(pidPersistsBin);
   gPIDPersistProcess.run(false, args, args.length);
 
-  do_execute_soon(waitForHelperSleep);
+  executeSoon(waitForHelperSleep);
 }
 
 /**
@@ -2768,7 +2768,7 @@ function runHelperLockFile(aTestFile) {
   helperProcess.init(helperBin);
   helperProcess.run(false, args, args.length);
 
-  do_execute_soon(waitForHelperSleep);
+  executeSoon(waitForHelperSleep);
 }
 
 /**
@@ -2840,10 +2840,10 @@ function waitForHelperFinishFileUnlock() {
   } catch (e) {
     // Give the lock file process time to unlock the file before deleting the
     // input and output files.
-    do_execute_soon(waitForHelperFinishFileUnlock);
+    executeSoon(waitForHelperFinishFileUnlock);
     return;
   }
-  do_execute_soon(waitForHelperExitFinished);
+  executeSoon(waitForHelperExitFinished);
 }
 
 /**
@@ -3551,7 +3551,7 @@ function checkPostUpdateAppLog() {
                  "process to create the post update log. Path: " +
                  postUpdateLog.path);
       }
-      do_execute_soon(checkPostUpdateAppLog);
+      executeSoon(checkPostUpdateAppLog);
       return;
     }
 
@@ -3567,13 +3567,13 @@ function checkPostUpdateAppLog() {
                  "process to create the expected contents in the post update log. Path: " +
                  postUpdateLog.path);
       }
-      do_execute_soon(checkPostUpdateAppLog);
+      executeSoon(checkPostUpdateAppLog);
       return;
     }
     Assert.ok(true, "the post update log contents" + MSG_SHOULD_EQUAL);
   }
 
-  do_execute_soon(checkPostUpdateAppLogFinished);
+  executeSoon(checkPostUpdateAppLogFinished);
 }
 
 /**
@@ -3746,7 +3746,7 @@ const updateCheckListener = {
               "request.status = " + aRequest.status + ", " +
               "updateCount = " + aUpdateCount);
     // Use a timeout to allow the XHR to complete
-    do_execute_soon(gCheckFunc);
+    executeSoon(gCheckFunc);
   },
 
   onError: function UCL_onError(aRequest, aUpdate) {
@@ -3760,7 +3760,7 @@ const updateCheckListener = {
               "request.status = " + gStatusCode + ", " +
               "update.statusText = " + gStatusText);
     // Use a timeout to allow the XHR to complete
-    do_execute_soon(gCheckFunc.bind(null, aRequest, aUpdate));
+    executeSoon(gCheckFunc.bind(null, aRequest, aUpdate));
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateCheckListener])
@@ -3780,7 +3780,7 @@ const downloadListener = {
   onStopRequest: function DL_onStopRequest(aRequest, aContext, aStatus) {
     gStatusResult = aStatus;
     // Use a timeout to allow the request to complete
-    do_execute_soon(downloadListenerStop);
+    executeSoon(downloadListenerStop);
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIRequestObserver,
@@ -4030,7 +4030,7 @@ function adjustGeneralPaths() {
   ds.QueryInterface(Ci.nsIProperties).undefine(NS_GRE_BIN_DIR);
   ds.QueryInterface(Ci.nsIProperties).undefine(XRE_EXECUTABLE_FILE);
   ds.registerProvider(dirProvider);
-  do_register_cleanup(function AGP_cleanup() {
+  registerCleanupFunction(function AGP_cleanup() {
     debugDump("start - unregistering directory provider");
 
     if (gAppTimer) {
@@ -4135,7 +4135,7 @@ function runUpdateUsingApp(aExpectedStatus) {
         waitForServiceStop(false);
       }
 
-      do_execute_soon(afterAppExits);
+      executeSoon(afterAppExits);
     },
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
   };
@@ -4185,7 +4185,7 @@ function runUpdateUsingApp(aExpectedStatus) {
       }
     }
 
-    do_execute_soon(runUpdateFinished);
+    executeSoon(runUpdateFinished);
   }
 
   debugDump("start - launching application to apply update");

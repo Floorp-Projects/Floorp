@@ -23,7 +23,7 @@ function run_test() {
  * This tests a one-way bulk transfer at the transport layer.
  */
 var test_bulk_transfer_transport = Task.async(function* (transportFactory) {
-  do_print("Starting bulk transfer test at " + new Date().toTimeString());
+  info("Starting bulk transfer test at " + new Date().toTimeString());
 
   let clientDeferred = defer();
   let serverDeferred = defer();
@@ -80,7 +80,7 @@ var test_bulk_transfer_transport = Task.async(function* (transportFactory) {
 
       // Server
       Assert.equal(Object.keys(DebuggerServer._connections).length, 1);
-      do_print(Object.keys(DebuggerServer._connections));
+      info(Object.keys(DebuggerServer._connections));
       for (let connId in DebuggerServer._connections) {
         DebuggerServer._connections[connId].onBulkPacket = on_bulk_packet;
       }

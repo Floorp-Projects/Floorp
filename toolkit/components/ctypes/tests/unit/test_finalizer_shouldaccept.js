@@ -63,7 +63,7 @@ function run_test() {
  * Check that toString succeeds before/after forget/dispose.
  */
 function test_to_string() {
-  do_print("Starting test_to_string");
+  info("Starting test_to_string");
   let a = ctypes.CDataFinalizer(acquire(0), dispose);
   Assert.equal(a.toString(), "0");
 
@@ -79,7 +79,7 @@ function test_to_string() {
  * Check that toSource succeeds before/after forget/dispose.
  */
 function test_to_source() {
-  do_print("Starting test_to_source");
+  info("Starting test_to_source");
   let value = acquire(0);
   let a = ctypes.CDataFinalizer(value, dispose);
   Assert.equal(a.toSource(),

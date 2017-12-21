@@ -28,12 +28,12 @@ Services.prefs.setBoolPref("toolkit.osfile.log", true);
  */
 function add_test_pair(generator) {
   add_task(async function() {
-    do_print("Executing test " + generator.name + " with native operations");
+    info("Executing test " + generator.name + " with native operations");
     Services.prefs.setBoolPref("toolkit.osfile.native", true);
     return generator();
   });
   add_task(async function() {
-    do_print("Executing test " + generator.name + " without native operations");
+    info("Executing test " + generator.name + " without native operations");
     Services.prefs.setBoolPref("toolkit.osfile.native", false);
     return generator();
   });
@@ -49,7 +49,7 @@ function add_test_pair(generator) {
  * @resolves {string} The contents of the file.
  */
 function reference_fetch_file(path, test) {
-  do_print("Fetching file " + path);
+  info("Fetching file " + path);
   return new Promise((resolve, reject) => {
     let file = new FileUtils.File(path);
     NetUtil.asyncFetch({
@@ -89,7 +89,7 @@ function reference_fetch_file(path, test) {
  */
 function reference_compare_files(a, b, test) {
   return (async function() {
-    do_print("Comparing files " + a + " and " + b);
+    info("Comparing files " + a + " and " + b);
     let a_contents = await reference_fetch_file(a, test);
     let b_contents = await reference_fetch_file(b, test);
     Assert.equal(a_contents, b_contents);

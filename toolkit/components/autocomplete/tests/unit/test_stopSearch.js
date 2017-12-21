@@ -153,7 +153,7 @@ function run_test() {
   controller.input = input;
 
   input.onSearchBegin = function() {
-    do_execute_soon(function() {
+    executeSoon(function() {
       gCurrentTest(controller);
     });
   };

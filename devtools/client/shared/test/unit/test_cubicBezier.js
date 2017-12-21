@@ -51,7 +51,7 @@ function throwsWhenIncorrectCoordinates() {
 }
 
 function convertsStringCoordinates() {
-  do_print("Converts string coordinates to numbers");
+  info("Converts string coordinates to numbers");
   let c = new CubicBezier(["0", "1", ".5", "-2"]);
 
   Assert.equal(c.coordinates[0], 0);
@@ -61,7 +61,7 @@ function convertsStringCoordinates() {
 }
 
 function coordinatesToStringOutputsAString() {
-  do_print("coordinates.toString() outputs a string representation");
+  info("coordinates.toString() outputs a string representation");
 
   let c = new CubicBezier(["0", "1", "0.5", "-2"]);
   let string = c.coordinates.toString();
@@ -73,7 +73,7 @@ function coordinatesToStringOutputsAString() {
 }
 
 function pointGettersReturnPointCoordinatesArrays() {
-  do_print("Points getters return arrays of coordinates");
+  info("Points getters return arrays of coordinates");
 
   let c = new CubicBezier([0, .2, .5, 1]);
   Assert.equal(c.P1[0], 0);
@@ -83,14 +83,14 @@ function pointGettersReturnPointCoordinatesArrays() {
 }
 
 function toStringOutputsCubicBezierValue() {
-  do_print("toString() outputs the cubic-bezier() value");
+  info("toString() outputs the cubic-bezier() value");
 
   let c = new CubicBezier([0, 1, 1, 0]);
   Assert.equal(c.toString(), "cubic-bezier(0,1,1,0)");
 }
 
 function toStringOutputsCssPresetValues() {
-  do_print("toString() outputs the css predefined values");
+  info("toString() outputs the css predefined values");
 
   let c = new CubicBezier([0, 0, 1, 1]);
   Assert.equal(c.toString(), "linear");
@@ -109,7 +109,7 @@ function toStringOutputsCssPresetValues() {
 }
 
 function testParseTimingFunction() {
-  do_print("test parseTimingFunction");
+  info("test parseTimingFunction");
 
   for (let test of ["ease", "linear", "ease-in", "ease-out", "ease-in-out"]) {
     ok(parseTimingFunction(test), test);
@@ -133,7 +133,7 @@ function testParseTimingFunction() {
 }
 
 function do_check_throws(cb, info) {
-  do_print(info);
+  info(info);
 
   let hasThrown = false;
   try {

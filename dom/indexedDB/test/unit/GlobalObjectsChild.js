@@ -12,7 +12,7 @@ function ok(cond, msg) {
 
 function finishTest()
 {
-  do_execute_soon(function() {
+  executeSoon(function() {
     do_test_finished();
   });
 }

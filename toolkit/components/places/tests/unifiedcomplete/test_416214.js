@@ -15,7 +15,7 @@
  */
 
 add_task(async function test_tag_match_url() {
-  do_print("Make sure tag matches return the right url as well as '+' remain escaped");
+  info("Make sure tag matches return the right url as well as '+' remain escaped");
   let uri1 = NetUtil.newURI("http://escaped/ユニコード");
   let uri2 = NetUtil.newURI("http://asciiescaped/blocking-firefox3%2B");
   await PlacesTestUtils.addVisits([

@@ -15,7 +15,7 @@ function run_test() {
 }
 
 function finish_test() {
-  do_execute_soon(function() {
+  executeSoon(function() {
     test_generator.return();
     do_test_finished();
   });

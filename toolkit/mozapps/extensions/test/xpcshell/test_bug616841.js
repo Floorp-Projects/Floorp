@@ -21,6 +21,6 @@ function run_test() {
 
   AddonManager.getAddonByID("foo", function(aAddon) {
     test_string_compare();
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

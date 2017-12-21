@@ -104,7 +104,7 @@ function cleanup()
 }
 
 function run_test() {
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   do_test_pending();
 

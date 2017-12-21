@@ -43,7 +43,7 @@ function run_test() {
     return;
 
   registry = new MockRegistry();
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     registry.shutdown();
   });
 
@@ -75,7 +75,7 @@ function run_test_1() {
     Assert.ok(!hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
     Assert.equal(a2.scope, AddonManager.SCOPE_USER);
 
-    do_execute_soon(run_test_2);
+    executeSoon(run_test_2);
   });
 }
 
@@ -95,7 +95,7 @@ function run_test_2() {
     Assert.equal(a1, null);
     Assert.equal(a2, null);
 
-    do_execute_soon(run_test_3);
+    executeSoon(run_test_3);
   });
 }
 
@@ -115,7 +115,7 @@ function run_test_3() {
     Assert.equal(a1, null);
     Assert.equal(a2, null);
 
-    do_execute_soon(run_test_4);
+    executeSoon(run_test_4);
   });
 }
 
@@ -153,6 +153,6 @@ function run_test_4() {
     Assert.equal(a1, null);
     Assert.notEqual(a2, null);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

@@ -177,18 +177,18 @@ add_task(async function test_import_chromefavicon() {
   const CHROME_FAVICON_URI = NetUtil.newURI("chrome://global/skin/icons/info.svg");
   const CHROME_FAVICON_URI_2 = NetUtil.newURI("chrome://global/skin/icons/error-16.png");
 
-  do_print("Importing from html");
+  info("Importing from html");
   await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Insert bookmark");
+  info("Insert bookmark");
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
     url: PAGE_URI,
     title: "Test"
   });
 
-  do_print("Set favicon");
+  info("Set favicon");
   await new Promise(resolve => {
     PlacesUtils.favicons.setAndFetchFaviconForPage(
       PAGE_URI, CHROME_FAVICON_URI, true,
@@ -207,11 +207,11 @@ add_task(async function test_import_chromefavicon() {
   test_bookmarks.unfiled.push(
     { title: "Test", url: PAGE_URI.spec, icon: base64Icon });
 
-  do_print("Export to html");
+  info("Export to html");
   await BookmarkHTMLUtils.exportToFile(gBookmarksFileNew);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Set favicon");
+  info("Set favicon");
   // Change the favicon to check it's really imported again later.
   await new Promise(resolve => {
     PlacesUtils.favicons.setAndFetchFaviconForPage(
@@ -220,12 +220,12 @@ add_task(async function test_import_chromefavicon() {
       resolve, Services.scriptSecurityManager.getSystemPrincipal());
   });
 
-  do_print("import from html");
+  info("import from html");
   await PlacesUtils.bookmarks.eraseEverything();
   await BookmarkHTMLUtils.importFromFile(gBookmarksFileNew, true);
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  do_print("Test imported bookmarks");
+  info("Test imported bookmarks");
   await testImportedBookmarks();
 
   // Cleanup.
@@ -265,7 +265,7 @@ add_task(async function test_import_ontop() {
 
 async function testImportedBookmarks() {
   for (let group in test_bookmarks) {
-    do_print("[testImportedBookmarks()] Checking group '" + group + "'");
+    info("[testImportedBookmarks()] Checking group '" + group + "'");
 
     let root;
     switch (group) {

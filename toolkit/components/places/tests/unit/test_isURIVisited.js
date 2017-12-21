@@ -35,9 +35,9 @@ function* step() {
                   .getService(Ci.mozIAsyncHistory);
 
   for (let scheme in SCHEMES) {
-    do_print("Testing scheme " + scheme);
+    info("Testing scheme " + scheme);
     for (let t in PlacesUtils.history.TRANSITIONS) {
-      do_print("With transition " + t);
+      info("With transition " + t);
       let transition = PlacesUtils.history.TRANSITIONS[t];
 
       let uri = NetUtil.newURI(scheme + "mozilla.org/");
@@ -50,7 +50,7 @@ function* step() {
           handleError() {},
           handleResult() {},
           handleCompletion() {
-            do_print("Added visit to " + uri.spec);
+            info("Added visit to " + uri.spec);
 
             history.isURIVisited(uri, function(aURI2, aIsVisited2) {
               Assert.ok(uri.equals(aURI2));

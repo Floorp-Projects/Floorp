@@ -98,7 +98,7 @@ tests.push({
     for (var i = 0; i < rootNode.childCount; i++) {
       var node = rootNode.getChild(i);
 
-      do_print("validating " + node.title);
+      info("validating " + node.title);
       if (node.itemId != PlacesUtils.tagsFolderId) {
         if (node.title == this._folderTitle) {
           // check the test folder's properties

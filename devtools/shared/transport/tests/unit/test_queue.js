@@ -107,7 +107,7 @@ var test_transport = Task.async(function* (transportFactory) {
 
       // Server
       Assert.equal(Object.keys(DebuggerServer._connections).length, 1);
-      do_print(Object.keys(DebuggerServer._connections));
+      info(Object.keys(DebuggerServer._connections));
       for (let connId in DebuggerServer._connections) {
         DebuggerServer._connections[connId].onBulkPacket = on_bulk_packet;
       }

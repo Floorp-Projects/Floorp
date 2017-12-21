@@ -108,15 +108,15 @@ async function validate(collection, expectedFailures = []) {
     (isInExpectedFailures(elt) ? expected : unexpected).push(elt);
   }
   if (unexpected.length || expected.length != expectedFailures.length) {
-    do_print("Validation failed:");
-    do_print(JSON.stringify(summary));
+    info("Validation failed:");
+    info(JSON.stringify(summary));
     // print the entire validator output as it has IDs etc.
-    do_print(JSON.stringify(problems, undefined, 2));
-    do_print("Expected: " + JSON.stringify(expectedFailures, undefined, 2));
+    info(JSON.stringify(problems, undefined, 2));
+    info("Expected: " + JSON.stringify(expectedFailures, undefined, 2));
     // All server records and the entire bookmark tree.
-    do_print("Server records:\n" + JSON.stringify(collection.payloads(), undefined, 2));
+    info("Server records:\n" + JSON.stringify(collection.payloads(), undefined, 2));
     let tree = await PlacesUtils.promiseBookmarksTree("", { includeItemIds: true });
-    do_print("Local bookmark tree:\n" + JSON.stringify(tree, undefined, 2));
+    info("Local bookmark tree:\n" + JSON.stringify(tree, undefined, 2));
     ok(false);
   }
 }
@@ -204,7 +204,7 @@ add_task(async function test_dupe_reparented_bookmark() {
     // Another parent folder *with the same name*
     let {id: folder2_id, guid: folder2_guid } = await createFolder(bms.toolbarFolder, "Folder 1");
 
-    do_print(`folder1_guid=${folder1_guid}, folder2_guid=${folder2_guid}, bmk1_guid=${bmk1_guid}`);
+    info(`folder1_guid=${folder1_guid}, folder2_guid=${folder2_guid}, bmk1_guid=${bmk1_guid}`);
 
     await engine.sync();
 
@@ -270,7 +270,7 @@ add_task(async function test_dupe_reparented_locally_changed_bookmark() {
     // Another parent folder *with the same name*
     let {id: folder2_id, guid: folder2_guid } = await createFolder(bms.toolbarFolder, "Folder 1");
 
-    do_print(`folder1_guid=${folder1_guid}, folder2_guid=${folder2_guid}, bmk1_guid=${bmk1_guid}`);
+    info(`folder1_guid=${folder1_guid}, folder2_guid=${folder2_guid}, bmk1_guid=${bmk1_guid}`);
 
     await engine.sync();
 
@@ -293,7 +293,7 @@ add_task(async function test_dupe_reparented_locally_changed_bookmark() {
 
     let deltaSeconds = 500;
     let newWBO = collection.insert(newGUID, encryptPayload(to_apply), Date.now() / 1000 + deltaSeconds);
-    do_print(`new duplicate of ${bmk1_guid} is ${newGUID}`);
+    info(`new duplicate of ${bmk1_guid} is ${newGUID}`);
 
     // Make a change to the bookmark that's a dupe, and set the modification
     // time further in the future than the incoming record. This will cause
@@ -352,7 +352,7 @@ add_task(async function test_dupe_reparented_to_earlier_appearing_parent_bookmar
     // One more folder we'll use later.
     let {guid: folder2_guid} = await createFolder(bms.toolbarFolder, "A second folder");
 
-    do_print(`folder1=${folder1_guid}, bmk1=${bmk1_guid} folder2=${folder2_guid}`);
+    info(`folder1=${folder1_guid}, bmk1=${bmk1_guid} folder2=${folder2_guid}`);
 
     await engine.sync();
 
@@ -429,7 +429,7 @@ add_task(async function test_dupe_reparented_to_later_appearing_parent_bookmark(
     // One more folder we'll use later.
     let {guid: folder2_guid} = await createFolder(bms.toolbarFolder, "A second folder");
 
-    do_print(`folder1=${folder1_guid}, bmk1=${bmk1_guid} folder2=${folder2_guid}`);
+    info(`folder1=${folder1_guid}, bmk1=${bmk1_guid} folder2=${folder2_guid}`);
 
     await engine.sync();
 
@@ -506,7 +506,7 @@ add_task(async function test_dupe_reparented_to_future_arriving_parent_bookmark(
     // One more folder we'll use later.
     let {guid: folder2_guid} = await createFolder(bms.toolbarFolder, "A second folder");
 
-    do_print(`folder1=${folder1_guid}, bmk1=${bmk1_guid} folder2=${folder2_guid}`);
+    info(`folder1=${folder1_guid}, bmk1=${bmk1_guid} folder2=${folder2_guid}`);
 
     await engine.sync();
 
