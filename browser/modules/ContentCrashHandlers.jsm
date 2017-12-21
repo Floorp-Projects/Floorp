@@ -887,11 +887,11 @@ this.UnsubmittedCrashHandler = {
 
   get autoSubmit() {
     return Services.prefs
-                   .getBoolPref("browser.crashReports.unsubmittedCheck.autoSubmit");
+                   .getBoolPref("browser.crashReports.unsubmittedCheck.autoSubmit2");
   },
 
   set autoSubmit(val) {
-    Services.prefs.setBoolPref("browser.crashReports.unsubmittedCheck.autoSubmit",
+    Services.prefs.setBoolPref("browser.crashReports.unsubmittedCheck.autoSubmit2",
                                val);
   },
 
