@@ -57,11 +57,11 @@ function verify_no_change([startFile, startState], [endFile, endState]) {
     startupManager();
 
     let addon = await promiseAddonByID(ID);
-    do_check_neq(addon, null);
+    Assert.notEqual(addon, null);
     let wasAppDisabled = addon.appDisabled;
-    do_check_neq(addon.appDisabled, addon.isActive);
-    do_check_eq(addon.pendingOperations, AddonManager.PENDING_NONE);
-    do_check_eq(addon.signedState, startState);
+    Assert.notEqual(addon.appDisabled, addon.isActive);
+    Assert.equal(addon.pendingOperations, AddonManager.PENDING_NONE);
+    Assert.equal(addon.signedState, startState);
 
     // Swap in the files from the next add-on
     manuallyUninstall(profileDir, ID);
@@ -78,13 +78,13 @@ function verify_no_change([startFile, startState], [endFile, endState]) {
 
     // Trigger the check
     let changes = await verifySignatures();
-    do_check_eq(changes.enabled.length, 0);
-    do_check_eq(changes.disabled.length, 0);
+    Assert.equal(changes.enabled.length, 0);
+    Assert.equal(changes.disabled.length, 0);
 
-    do_check_eq(addon.appDisabled, wasAppDisabled);
-    do_check_neq(addon.appDisabled, addon.isActive);
-    do_check_eq(addon.pendingOperations, AddonManager.PENDING_NONE);
-    do_check_eq(addon.signedState, endState);
+    Assert.equal(addon.appDisabled, wasAppDisabled);
+    Assert.notEqual(addon.appDisabled, addon.isActive);
+    Assert.equal(addon.pendingOperations, AddonManager.PENDING_NONE);
+    Assert.equal(addon.signedState, endState);
 
     // Remove the add-on and restart to let it go away
     manuallyUninstall(profileDir, ID);
@@ -102,10 +102,10 @@ function verify_enables([startFile, startState], [endFile, endState]) {
     startupManager();
 
     let addon = await promiseAddonByID(ID);
-    do_check_neq(addon, null);
-    do_check_false(addon.isActive);
-    do_check_eq(addon.pendingOperations, AddonManager.PENDING_NONE);
-    do_check_eq(addon.signedState, startState);
+    Assert.notEqual(addon, null);
+    Assert.ok(!addon.isActive);
+    Assert.equal(addon.pendingOperations, AddonManager.PENDING_NONE);
+    Assert.equal(addon.signedState, startState);
 
     // Swap in the files from the next add-on
     manuallyUninstall(profileDir, ID);
@@ -135,16 +135,16 @@ function verify_enables([startFile, startState], [endFile, endState]) {
 
     // Trigger the check
     let changes = await verifySignatures();
-    do_check_eq(changes.enabled.length, 1);
-    do_check_eq(changes.enabled[0], ID);
-    do_check_eq(changes.disabled.length, 0);
+    Assert.equal(changes.enabled.length, 1);
+    Assert.equal(changes.enabled[0], ID);
+    Assert.equal(changes.disabled.length, 0);
 
-    do_check_false(addon.appDisabled);
+    Assert.ok(!addon.appDisabled);
     if (needsRestart)
-      do_check_neq(addon.pendingOperations, AddonManager.PENDING_NONE);
+      Assert.notEqual(addon.pendingOperations, AddonManager.PENDING_NONE);
     else
-      do_check_true(addon.isActive);
-    do_check_eq(addon.signedState, endState);
+      Assert.ok(addon.isActive);
+    Assert.equal(addon.signedState, endState);
 
     ensure_test_completed();
 
@@ -164,10 +164,10 @@ function verify_disables([startFile, startState], [endFile, endState]) {
     startupManager();
 
     let addon = await promiseAddonByID(ID);
-    do_check_neq(addon, null);
-    do_check_true(addon.isActive);
-    do_check_eq(addon.pendingOperations, AddonManager.PENDING_NONE);
-    do_check_eq(addon.signedState, startState);
+    Assert.notEqual(addon, null);
+    Assert.ok(addon.isActive);
+    Assert.equal(addon.pendingOperations, AddonManager.PENDING_NONE);
+    Assert.equal(addon.signedState, startState);
 
     let needsRestart = hasFlag(addon.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_DISABLE);
 
@@ -196,16 +196,16 @@ function verify_disables([startFile, startState], [endFile, endState]) {
 
     // Trigger the check
     let changes = await verifySignatures();
-    do_check_eq(changes.enabled.length, 0);
-    do_check_eq(changes.disabled.length, 1);
-    do_check_eq(changes.disabled[0], ID);
+    Assert.equal(changes.enabled.length, 0);
+    Assert.equal(changes.disabled.length, 1);
+    Assert.equal(changes.disabled[0], ID);
 
-    do_check_true(addon.appDisabled);
+    Assert.ok(addon.appDisabled);
     if (needsRestart)
-      do_check_neq(addon.pendingOperations, AddonManager.PENDING_NONE);
+      Assert.notEqual(addon.pendingOperations, AddonManager.PENDING_NONE);
     else
-      do_check_false(addon.isActive);
-    do_check_eq(addon.signedState, endState);
+      Assert.ok(!addon.isActive);
+    Assert.equal(addon.signedState, endState);
 
     ensure_test_completed();
 

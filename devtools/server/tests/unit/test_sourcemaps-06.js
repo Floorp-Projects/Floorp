@@ -38,10 +38,10 @@ function test_source_content() {
     gThreadClient.removeListener("newSource", _onNewSource);
 
     gThreadClient.getSources(function (response) {
-      do_check_true(!response.error, "Should not get an error");
+      Assert.ok(!response.error, "Should not get an error");
 
       testContents(response.sources, 0, (timesCalled) => {
-        do_check_eq(timesCalled, 3);
+        Assert.equal(timesCalled, 3);
         finishClient(gClient);
       });
     });
@@ -78,12 +78,12 @@ function testContents(sources, timesCalled, callback) {
 
   if (sourceClient.url) {
     sourceClient.source((response) => {
-      do_check_true(!response.error,
-                    "Should not get an error loading the source from sourcesContent");
+      Assert.ok(!response.error,
+                "Should not get an error loading the source from sourcesContent");
 
       let expectedContent = "content for " + source.url.replace(/^.*\//, "");
-      do_check_eq(response.source, expectedContent,
-                  "Should have the expected source content");
+      Assert.equal(response.source, expectedContent,
+                   "Should have the expected source content");
 
       testContents(sources.slice(1), timesCalled + 1, callback);
     });

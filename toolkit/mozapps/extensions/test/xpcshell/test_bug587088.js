@@ -21,55 +21,55 @@ function run_test() {
 }
 
 function check_addon(aAddon, aVersion) {
-  do_check_neq(aAddon, null);
-  do_check_eq(aAddon.version, aVersion);
-  do_check_true(aAddon.isActive);
-  do_check_true(isExtensionInAddonsList(profileDir, aAddon.id));
+  Assert.notEqual(aAddon, null);
+  Assert.equal(aAddon.version, aVersion);
+  Assert.ok(aAddon.isActive);
+  Assert.ok(isExtensionInAddonsList(profileDir, aAddon.id));
 
-  do_check_true(aAddon.hasResource("testfile"));
+  Assert.ok(aAddon.hasResource("testfile"));
   if (aVersion == "1.0") {
-    do_check_true(aAddon.hasResource("testfile1"));
-    do_check_false(aAddon.hasResource("testfile2"));
+    Assert.ok(aAddon.hasResource("testfile1"));
+    Assert.ok(!aAddon.hasResource("testfile2"));
   } else {
-    do_check_false(aAddon.hasResource("testfile1"));
-    do_check_true(aAddon.hasResource("testfile2"));
+    Assert.ok(!aAddon.hasResource("testfile1"));
+    Assert.ok(aAddon.hasResource("testfile2"));
   }
 
-  do_check_eq(aAddon.pendingOperations, AddonManager.PENDING_NONE);
+  Assert.equal(aAddon.pendingOperations, AddonManager.PENDING_NONE);
 }
 
 function check_addon_upgrading(aAddon) {
-  do_check_neq(aAddon, null);
-  do_check_eq(aAddon.version, "1.0");
-  do_check_true(aAddon.isActive);
-  do_check_true(isExtensionInAddonsList(profileDir, aAddon.id));
+  Assert.notEqual(aAddon, null);
+  Assert.equal(aAddon.version, "1.0");
+  Assert.ok(aAddon.isActive);
+  Assert.ok(isExtensionInAddonsList(profileDir, aAddon.id));
 
-  do_check_true(aAddon.hasResource("testfile"));
-  do_check_true(aAddon.hasResource("testfile1"));
-  do_check_false(aAddon.hasResource("testfile2"));
+  Assert.ok(aAddon.hasResource("testfile"));
+  Assert.ok(aAddon.hasResource("testfile1"));
+  Assert.ok(!aAddon.hasResource("testfile2"));
 
-  do_check_eq(aAddon.pendingOperations, AddonManager.PENDING_UPGRADE);
+  Assert.equal(aAddon.pendingOperations, AddonManager.PENDING_UPGRADE);
 
-  do_check_eq(aAddon.pendingUpgrade.version, "2.0");
+  Assert.equal(aAddon.pendingUpgrade.version, "2.0");
 }
 
 function check_addon_uninstalling(aAddon, aAfterRestart) {
-  do_check_neq(aAddon, null);
-  do_check_eq(aAddon.version, "1.0");
+  Assert.notEqual(aAddon, null);
+  Assert.equal(aAddon.version, "1.0");
 
   if (aAfterRestart) {
-    do_check_false(aAddon.isActive);
-    do_check_false(isExtensionInAddonsList(profileDir, aAddon.id));
+    Assert.ok(!aAddon.isActive);
+    Assert.ok(!isExtensionInAddonsList(profileDir, aAddon.id));
   } else {
-    do_check_true(aAddon.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, aAddon.id));
+    Assert.ok(aAddon.isActive);
+    Assert.ok(isExtensionInAddonsList(profileDir, aAddon.id));
   }
 
-  do_check_true(aAddon.hasResource("testfile"));
-  do_check_true(aAddon.hasResource("testfile1"));
-  do_check_false(aAddon.hasResource("testfile2"));
+  Assert.ok(aAddon.hasResource("testfile"));
+  Assert.ok(aAddon.hasResource("testfile1"));
+  Assert.ok(!aAddon.hasResource("testfile2"));
 
-  do_check_eq(aAddon.pendingOperations, AddonManager.PENDING_UNINSTALL);
+  Assert.equal(aAddon.pendingOperations, AddonManager.PENDING_UNINSTALL);
 }
 
 function run_test_1() {
@@ -157,11 +157,11 @@ function run_test_2() {
           await promiseRestartManager();
 
           AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1_4) {
-            do_check_eq(a1_4, null);
+            Assert.equal(a1_4, null);
             var dir = profileDir.clone();
             dir.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
-            do_check_false(dir.exists());
-            do_check_false(isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
+            Assert.ok(!dir.exists());
+            Assert.ok(!isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
 
             do_execute_soon(do_test_finished);
           });

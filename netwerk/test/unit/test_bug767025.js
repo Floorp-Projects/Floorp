@@ -189,14 +189,14 @@ function check_evict_cache(appcache) {
   file.append("5");
   file.append("9");
   file.append("8379C6596B8CA4-0");
-  do_check_eq(file.exists(), true);
+  Assert.equal(file.exists(), true);
 
   file = do_get_profile().clone();
   file.append("OfflineCache");
   file.append("C");
   file.append("2");
   file.append("5F356A168B5E3B-0");
-  do_check_eq(file.exists(), false);
+  Assert.equal(file.exists(), false);
 
   // activate foo3
   asyncOpenCacheEntry(
@@ -217,28 +217,28 @@ function check_evict_cache(appcache) {
         file.append("5");
         file.append("9");
         file.append("8379C6596B8CA4-0");
-        do_check_eq(file.exists(), true);
+        Assert.equal(file.exists(), true);
 
         file = do_get_profile().clone();
         file.append("OfflineCache");
         file.append("0");
         file.append("0");
         file.append("61FEE819921D39-0");
-        do_check_eq(file.exists(), false);
+        Assert.equal(file.exists(), false);
 
         file = do_get_profile().clone();
         file.append("OfflineCache");
         file.append("3");
         file.append("9");
         file.append("0D8759F1DE5452-0");
-        do_check_eq(file.exists(), false);
+        Assert.equal(file.exists(), false);
 
         file = do_get_profile().clone();
         file.append("OfflineCache");
         file.append("C");
         file.append("2");
         file.append("5F356A168B5E3B-0");
-        do_check_eq(file.exists(), false);
+        Assert.equal(file.exists(), false);
 
         // foo3
         file = do_get_profile().clone();
@@ -246,14 +246,14 @@ function check_evict_cache(appcache) {
         file.append("D");
         file.append("C");
         file.append("1ADCCC843B5C00-0");
-        do_check_eq(file.exists(), true);
+        Assert.equal(file.exists(), true);
 
         file = do_get_profile().clone();
         file.append("OfflineCache");
         file.append("F");
         file.append("0");
         file.append("FC3E6D6C1164E9-0");
-        do_check_eq(file.exists(), false);
+        Assert.equal(file.exists(), false);
 
         httpServer.stop(do_test_finished);
       }, true /* force even with the new cache back end */);

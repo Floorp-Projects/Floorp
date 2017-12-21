@@ -58,11 +58,11 @@ add_task(async function() {
   do_print("Checking that a simple change doesn't cause a warning");
   let buf = makeBuffer(100);
   let warned = await checkWarning("string.accept", buf);
-  do_check_false(warned);
+  Assert.ok(!warned);
 
   // Large change, should cause a warning
   do_print("Checking that a large change causes a warning");
   buf = makeBuffer(32 * 1024);
   warned = await checkWarning("string.warn", buf);
-  do_check_true(warned);
+  Assert.ok(warned);
 });

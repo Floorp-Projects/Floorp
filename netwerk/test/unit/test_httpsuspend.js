@@ -36,7 +36,7 @@ var listener = {
   },
 
   onDataAvailable: function(request, context, stream, offset, count) {
-    do_check_true(Date.now() - this._lastEvent >= MIN_TIME_DIFFERENCE);
+    Assert.ok(Date.now() - this._lastEvent >= MIN_TIME_DIFFERENCE);
     read_stream(stream, count);
 
     // Ensure that suspending and resuming inside a callback works correctly
@@ -49,7 +49,7 @@ var listener = {
   },
 
   onStopRequest: function(request, ctx, status) {
-    do_check_true(this._gotData);
+    Assert.ok(this._gotData);
     httpserv.stop(do_test_finished);
   }
 };

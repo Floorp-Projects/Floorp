@@ -146,8 +146,8 @@ function installAddonFromInstall(install) {
   Async.waitForSyncCallback(cb);
   AddonManager.removeAddonListener(listener);
 
-  do_check_neq(null, install.addon);
-  do_check_neq(null, install.addon.syncGUID);
+  Assert.notEqual(null, install.addon);
+  Assert.notEqual(null, install.addon.syncGUID);
 
   return install.addon;
 }
@@ -161,7 +161,7 @@ function installAddonFromInstall(install) {
  */
 function installAddon(name) {
   let install = getAddonInstall(name);
-  do_check_neq(null, install);
+  Assert.notEqual(null, install);
   return installAddonFromInstall(install);
 }
 
@@ -266,9 +266,9 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
 
 // Helper that allows checking array equality.
 function do_check_array_eq(a1, a2) {
-  do_check_eq(a1.length, a2.length);
+  Assert.equal(a1.length, a2.length);
   for (let i = 0; i < a1.length; ++i) {
-    do_check_eq(a1[i], a2[i]);
+    Assert.equal(a1[i], a2[i]);
   }
 }
 

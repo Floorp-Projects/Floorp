@@ -31,7 +31,7 @@ function* do_run_test()
 
   // 1) simplest case: set 100 cookies for "foo.bar" and make sure 50 survive.
   setCookies("foo.bar", 100, futureExpiry);
-  do_check_eq(countCookies("foo.bar", "foo.bar"), 50);
+  Assert.equal(countCookies("foo.bar", "foo.bar"), 50);
 
   // 2) set cookies for different subdomains of "foo.baz", and an unrelated
   // domain, and make sure all 50 within the "foo.baz" base domain are counted.
@@ -40,9 +40,9 @@ function* do_run_test()
   setCookies("bar.foo.baz", 10, futureExpiry);
   setCookies("baz.bar.foo.baz", 10, futureExpiry);
   setCookies("unrelated.domain", 50, futureExpiry);
-  do_check_eq(countCookies("foo.baz", "baz.bar.foo.baz"), 40);
+  Assert.equal(countCookies("foo.baz", "baz.bar.foo.baz"), 40);
   setCookies("foo.baz", 20, futureExpiry);
-  do_check_eq(countCookies("foo.baz", "baz.bar.foo.baz"), 50);
+  Assert.equal(countCookies("foo.baz", "baz.bar.foo.baz"), 50);
 
   // 3) ensure cookies are evicted by order of lastAccessed time, if the
   // limit on cookies per base domain is reached.
@@ -54,7 +54,7 @@ function* do_run_test()
   yield;
 
   setCookies("tasty.horse.radish", 50, futureExpiry);
-  do_check_eq(countCookies("horse.radish", "horse.radish"), 50);
+  Assert.equal(countCookies("horse.radish", "horse.radish"), 50);
 
   let enumerator = Services.cookiemgr.enumerator;
   while (enumerator.hasMoreElements()) {
@@ -72,15 +72,15 @@ function* do_run_test()
   do_timeout(2100, continue_test);
   yield;
 
-  do_check_eq(countCookies("captchart.com", "captchart.com"), 50);
+  Assert.equal(countCookies("captchart.com", "captchart.com"), 50);
   Services.cookiemgr.add("captchart.com", "", "test200", "eviction",
     false, false, false, futureExpiry, {});
-  do_check_eq(countCookies("captchart.com", "captchart.com"), 50);
+  Assert.equal(countCookies("captchart.com", "captchart.com"), 50);
 
   enumerator = Services.cookiemgr.getCookiesFromHost("captchart.com", {});
   while (enumerator.hasMoreElements()) {
     let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
-    do_check_true(cookie.expiry == futureExpiry);
+    Assert.ok(cookie.expiry == futureExpiry);
   }
 
   do_finish_generator_test(test_generator);
@@ -119,9 +119,9 @@ countCookies(aBaseDomain, aHost)
 
   // confirm the count using countCookiesFromHost and getCookiesFromHost.
   let result = cookies.length;
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(aBaseDomain),
+  Assert.equal(Services.cookiemgr.countCookiesFromHost(aBaseDomain),
     cookies.length);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost(aHost), cookies.length);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost(aHost), cookies.length);
 
   enumerator = Services.cookiemgr.getCookiesFromHost(aHost, {});
   while (enumerator.hasMoreElements()) {
@@ -146,7 +146,7 @@ countCookies(aBaseDomain, aHost)
     }
   }
 
-  do_check_eq(cookies.length, 0);
+  Assert.equal(cookies.length, 0);
 
   return result;
 }

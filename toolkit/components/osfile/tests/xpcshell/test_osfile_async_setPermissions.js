@@ -65,7 +65,7 @@ add_task(async function test_path_setPermissions() {
       }
 
       let stat = await OS.File.stat(path);
-      do_check_eq(format_mode(stat.unixMode), format_mode(expectedMode));
+      Assert.equal(format_mode(stat.unixMode), format_mode(expectedMode));
     }
   } finally {
     await OS.File.remove(path);
@@ -88,7 +88,7 @@ add_task(async function test_file_setPermissions() {
         }
 
         let stat = await fd.stat();
-        do_check_eq(format_mode(stat.unixMode), format_mode(expectedMode));
+        Assert.equal(format_mode(stat.unixMode), format_mode(expectedMode));
       }
     } finally {
       await fd.close();

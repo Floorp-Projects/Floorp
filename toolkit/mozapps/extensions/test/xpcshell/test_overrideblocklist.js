@@ -94,10 +94,10 @@ add_test(function test_copy() {
 
   reloadBlocklist();
 
-  do_check_false(Services.blocklist.isAddonBlocklisted(invalidAddon));
-  do_check_false(Services.blocklist.isAddonBlocklisted(ancientAddon));
-  do_check_true(Services.blocklist.isAddonBlocklisted(oldAddon));
-  do_check_false(Services.blocklist.isAddonBlocklisted(newAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(invalidAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(ancientAddon));
+  Assert.ok(Services.blocklist.isAddonBlocklisted(oldAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(newAddon));
 
   shutdownManager();
 
@@ -115,10 +115,10 @@ add_test(function test_ancient() {
 
   reloadBlocklist();
 
-  do_check_false(Services.blocklist.isAddonBlocklisted(invalidAddon));
-  do_check_false(Services.blocklist.isAddonBlocklisted(ancientAddon));
-  do_check_true(Services.blocklist.isAddonBlocklisted(oldAddon));
-  do_check_false(Services.blocklist.isAddonBlocklisted(newAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(invalidAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(ancientAddon));
+  Assert.ok(Services.blocklist.isAddonBlocklisted(oldAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(newAddon));
 
   shutdownManager();
 
@@ -136,10 +136,10 @@ add_test(function test_override() {
 
   reloadBlocklist();
 
-  do_check_false(Services.blocklist.isAddonBlocklisted(invalidAddon));
-  do_check_false(Services.blocklist.isAddonBlocklisted(ancientAddon));
-  do_check_false(Services.blocklist.isAddonBlocklisted(oldAddon));
-  do_check_true(Services.blocklist.isAddonBlocklisted(newAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(invalidAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(ancientAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(oldAddon));
+  Assert.ok(Services.blocklist.isAddonBlocklisted(newAddon));
 
   shutdownManager();
 
@@ -157,10 +157,10 @@ add_test(function test_retain() {
 
   reloadBlocklist();
 
-  do_check_false(Services.blocklist.isAddonBlocklisted(invalidAddon));
-  do_check_false(Services.blocklist.isAddonBlocklisted(ancientAddon));
-  do_check_false(Services.blocklist.isAddonBlocklisted(oldAddon));
-  do_check_true(Services.blocklist.isAddonBlocklisted(newAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(invalidAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(ancientAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(oldAddon));
+  Assert.ok(Services.blocklist.isAddonBlocklisted(newAddon));
 
   shutdownManager();
 
@@ -183,10 +183,10 @@ add_test(function test_missing() {
 
   reloadBlocklist();
 
-  do_check_false(Services.blocklist.isAddonBlocklisted(invalidAddon));
-  do_check_false(Services.blocklist.isAddonBlocklisted(ancientAddon));
-  do_check_true(Services.blocklist.isAddonBlocklisted(oldAddon));
-  do_check_false(Services.blocklist.isAddonBlocklisted(newAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(invalidAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(ancientAddon));
+  Assert.ok(Services.blocklist.isAddonBlocklisted(oldAddon));
+  Assert.ok(!Services.blocklist.isAddonBlocklisted(newAddon));
 
   shutdownManager();
 

@@ -46,8 +46,8 @@ function test_child_skip_breakpoint() {
 
     source.setBreakpoint(location, function (response, bpClient) {
       // Check that the breakpoint has properly skipped forward one line.
-      do_check_eq(response.actualLocation.source.actor, source.actor);
-      do_check_eq(response.actualLocation.line, location.line + 1);
+      Assert.equal(response.actualLocation.source.actor, source.actor);
+      Assert.equal(response.actualLocation.line, location.line + 1);
       gBpActor = response.actor;
 
       // Set more breakpoints at the same location.
@@ -70,13 +70,13 @@ function test_child_skip_breakpoint() {
 
 // Set many breakpoints at the same location.
 function set_breakpoints(source, location) {
-  do_check_neq(gCount, NUM_BREAKPOINTS);
+  Assert.notEqual(gCount, NUM_BREAKPOINTS);
   source.setBreakpoint(location, function (response, bpClient) {
     // Check that the breakpoint has properly skipped forward one line.
-    do_check_eq(response.actualLocation.source.actor, source.actor);
-    do_check_eq(response.actualLocation.line, location.line + 1);
+    Assert.equal(response.actualLocation.source.actor, source.actor);
+    Assert.equal(response.actualLocation.line, location.line + 1);
     // Check that the same breakpoint actor was returned.
-    do_check_eq(response.actor, gBpActor);
+    Assert.equal(response.actor, gBpActor);
 
     if (++gCount < NUM_BREAKPOINTS) {
       set_breakpoints(source, location);
@@ -87,18 +87,18 @@ function set_breakpoints(source, location) {
     // remained.
     gThreadClient.addOneTimeListener("paused", function (event, packet) {
       // Check the return value.
-      do_check_eq(packet.type, "paused");
-      do_check_eq(packet.frame.where.source.actor, source.actor);
-      do_check_eq(packet.frame.where.line, location.line + 1);
-      do_check_eq(packet.why.type, "breakpoint");
-      do_check_eq(packet.why.actors[0], bpClient.actor);
+      Assert.equal(packet.type, "paused");
+      Assert.equal(packet.frame.where.source.actor, source.actor);
+      Assert.equal(packet.frame.where.line, location.line + 1);
+      Assert.equal(packet.why.type, "breakpoint");
+      Assert.equal(packet.why.actors[0], bpClient.actor);
       // Check that the breakpoint worked.
-      do_check_eq(gDebuggee.a, 1);
-      do_check_eq(gDebuggee.b, undefined);
+      Assert.equal(gDebuggee.a, 1);
+      Assert.equal(gDebuggee.b, undefined);
 
       gThreadClient.addOneTimeListener("paused", function (event, packet) {
         // We don't expect any more pauses after the breakpoint was hit once.
-        do_check_true(false);
+        Assert.ok(false);
       });
       gThreadClient.resume(function () {
         // Give any remaining breakpoints a chance to trigger.

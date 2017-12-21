@@ -36,7 +36,7 @@ function createFavicon(fileName) {
   stream.write(uniqueStr, uniqueStr.length);
   stream.close();
 
-  do_check_eq(outfile.leafName.substr(0, fileName.length), fileName);
+  Assert.equal(outfile.leafName.substr(0, fileName.length), fileName);
 
   return {
     file: outfile,
@@ -51,13 +51,13 @@ function createDataURLForFavicon(favicon) {
 }
 
 function checkCallbackSucceeded(callbackMimetype, callbackData, sourceMimetype, sourceData) {
-  do_check_eq(callbackMimetype, sourceMimetype);
-  do_check_true(compareArrays(callbackData, sourceData));
+  Assert.equal(callbackMimetype, sourceMimetype);
+  Assert.ok(compareArrays(callbackData, sourceData));
 }
 
 function run_test() {
   // check that the favicon loaded correctly
-  do_check_eq(originalFavicon.data.length, 286);
+  Assert.equal(originalFavicon.data.length, 286);
   run_next_test();
 }
 
@@ -196,7 +196,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_badInputs() {
   } catch (e) {
     ex = e;
   } finally {
-    do_check_true(!!ex);
+    Assert.ok(!!ex);
   }
 
   ex = null;
@@ -206,7 +206,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_badInputs() {
   } catch (e) {
     ex = e;
   } finally {
-    do_check_true(!!ex);
+    Assert.ok(!!ex);
   }
 
   favicon.file.remove(false);

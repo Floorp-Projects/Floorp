@@ -108,18 +108,18 @@ async function run_test_1() {
                                "addon4@tests.mozilla.org"],
                                function([a1, a2, a3, a4]) {
 
-    do_check_neq(a1, null);
-    do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+    Assert.notEqual(a1, null);
+    Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
 
-    do_check_neq(a2, null);
-    do_check_true(isExtensionInAddonsList(profileDir, a2.id));
+    Assert.notEqual(a2, null);
+    Assert.ok(isExtensionInAddonsList(profileDir, a2.id));
 
-    do_check_neq(a3, null);
-    do_check_false(isExtensionInAddonsList(profileDir, a3.id));
+    Assert.notEqual(a3, null);
+    Assert.ok(!isExtensionInAddonsList(profileDir, a3.id));
 
-    do_check_neq(a4, null);
-    do_check_true(isExtensionInAddonsList(globalDir, a4.id));
-    do_check_eq(a4.version, "1.0");
+    Assert.notEqual(a4, null);
+    Assert.ok(isExtensionInAddonsList(globalDir, a4.id));
+    Assert.equal(a4.version, "1.0");
 
     do_execute_soon(run_test_2);
   });
@@ -148,18 +148,18 @@ async function run_test_2() {
                                "addon4@tests.mozilla.org"],
                                function([a1, a2, a3, a4]) {
 
-    do_check_neq(a1, null);
-    do_check_false(isExtensionInAddonsList(profileDir, a1.id));
+    Assert.notEqual(a1, null);
+    Assert.ok(!isExtensionInAddonsList(profileDir, a1.id));
 
-    do_check_neq(a2, null);
-    do_check_true(isExtensionInAddonsList(profileDir, a2.id));
+    Assert.notEqual(a2, null);
+    Assert.ok(isExtensionInAddonsList(profileDir, a2.id));
 
-    do_check_neq(a3, null);
-    do_check_true(isExtensionInAddonsList(profileDir, a3.id));
+    Assert.notEqual(a3, null);
+    Assert.ok(isExtensionInAddonsList(profileDir, a3.id));
 
-    do_check_neq(a4, null);
-    do_check_true(isExtensionInAddonsList(globalDir, a4.id));
-    do_check_eq(a4.version, "2.0");
+    Assert.notEqual(a4, null);
+    Assert.ok(isExtensionInAddonsList(globalDir, a4.id));
+    Assert.equal(a4.version, "2.0");
 
     do_execute_soon(run_test_3);
   });
@@ -191,18 +191,18 @@ function run_test_3() {
                                "addon4@tests.mozilla.org"],
                                function([a1, a2, a3, a4]) {
 
-    do_check_neq(a1, null);
-    do_check_false(isExtensionInAddonsList(profileDir, a1.id));
+    Assert.notEqual(a1, null);
+    Assert.ok(!isExtensionInAddonsList(profileDir, a1.id));
 
-    do_check_neq(a2, null);
-    do_check_true(isExtensionInAddonsList(profileDir, a2.id));
+    Assert.notEqual(a2, null);
+    Assert.ok(isExtensionInAddonsList(profileDir, a2.id));
 
-    do_check_neq(a3, null);
-    do_check_true(isExtensionInAddonsList(profileDir, a3.id));
+    Assert.notEqual(a3, null);
+    Assert.ok(isExtensionInAddonsList(profileDir, a3.id));
 
-    do_check_neq(a4, null);
-    do_check_true(isExtensionInAddonsList(globalDir, a4.id));
-    do_check_eq(a4.version, "2.0");
+    Assert.notEqual(a4, null);
+    Assert.ok(isExtensionInAddonsList(globalDir, a4.id));
+    Assert.equal(a4.version, "2.0");
 
     end_test();
   });

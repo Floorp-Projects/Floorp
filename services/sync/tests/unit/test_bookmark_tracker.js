@@ -192,7 +192,7 @@ add_task(async function test_leftPaneFolder() {
       await PlacesTestUtils.promiseAsyncUpdates();
       let changes = await tracker.promiseChangedIDs();
       deepEqual(changes, {}, "New left pane queries should not be tracked");
-      do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+      Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
     }
 
     _("Reset synced bookmarks to simulate a disconnect");
@@ -203,7 +203,7 @@ add_task(async function test_leftPaneFolder() {
       let changes = await tracker.promiseChangedIDs();
       deepEqual(Object.keys(changes).sort(), ["menu", "mobile", "toolbar", "unfiled"],
         "Left pane queries should not be tracked after reset");
-      do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+      Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
       await PlacesTestUtils.markBookmarksAsSynced();
     }
 
@@ -332,12 +332,12 @@ add_task(async function test_tracking() {
     // We expect two changed items because the containing folder
     // changed as well (new child).
     await verifyTrackedCount(2);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
 
     _("Notifying twice won't do any harm.");
     createBmk();
     await verifyTrackedCount(3);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
 
   } finally {
     _("Clean up.");
@@ -359,13 +359,13 @@ add_task(async function test_batch_tracking() {
       // through blocking hoops...)
       Async.promiseSpinningly(verifyTrackedCount(2));
       // But not have bumped the score.
-      do_check_eq(tracker.score, 0);
+      Assert.equal(tracker.score, 0);
     }
   }, null);
 
   // Out of batch mode - tracker should be the same, but score should be up.
   await verifyTrackedCount(2);
-  do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+  Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   await cleanup();
 });
 
@@ -386,19 +386,19 @@ add_task(async function test_nested_batch_tracking() {
           // through blocking hoops...)
           Async.promiseSpinningly(verifyTrackedCount(2));
           // But not have bumped the score.
-          do_check_eq(tracker.score, 0);
+          Assert.equal(tracker.score, 0);
         }
       }, null);
       _("inner batch complete.");
       // should still not have a score as the outer batch is pending.
       Async.promiseSpinningly(verifyTrackedCount(2));
-      do_check_eq(tracker.score, 0);
+      Assert.equal(tracker.score, 0);
     }
   }, null);
 
   // Out of both batches - tracker should be the same, but score should be up.
   await verifyTrackedCount(2);
-  do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+  Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   await cleanup();
 });
 
@@ -424,7 +424,7 @@ add_task(async function test_tracker_sql_batching() {
     }
   }, null);
 
-  do_check_eq(createdIDs.length, numItems);
+  Assert.equal(createdIDs.length, numItems);
   await verifyTrackedCount(numItems + 1); // the folder is also tracked.
   await resetTracker();
 
@@ -446,7 +446,7 @@ add_task(async function test_onItemAdded() {
       PlacesUtils.bookmarks.DEFAULT_INDEX);
     let syncFolderGUID = await engine._store.GUIDForId(syncFolderID);
     await verifyTrackedItems(["menu", syncFolderGUID]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
 
     await resetTracker();
     await startTracking();
@@ -458,7 +458,7 @@ add_task(async function test_onItemAdded() {
       "Sync Bookmark");
     let syncBmkGUID = await engine._store.GUIDForId(syncBmkID);
     await verifyTrackedItems([syncFolderGUID, syncBmkGUID]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
 
     await resetTracker();
     await startTracking();
@@ -469,7 +469,7 @@ add_task(async function test_onItemAdded() {
       PlacesUtils.bookmarks.getItemIndex(syncFolderID));
     let syncSepGUID = await engine._store.GUIDForId(syncSepID);
     await verifyTrackedItems(["menu", syncSepGUID]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -489,7 +489,7 @@ add_task(async function test_async_onItemAdded() {
       title: "Async Folder",
     });
     await verifyTrackedItems(["menu", asyncFolder.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
 
     await resetTracker();
     await startTracking();
@@ -502,7 +502,7 @@ add_task(async function test_async_onItemAdded() {
       title: "Async Bookmark",
     });
     await verifyTrackedItems([asyncFolder.guid, asyncBmk.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
 
     await resetTracker();
     await startTracking();
@@ -514,7 +514,7 @@ add_task(async function test_async_onItemAdded() {
       index: asyncFolder.index,
     });
     await verifyTrackedItems(["menu", asyncSep.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -549,7 +549,7 @@ add_task(async function test_async_onItemChanged() {
     });
 
     await verifyTrackedItems([fxBmk.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -578,14 +578,14 @@ add_task(async function test_onItemChanged_itemDates() {
     let dateAdded = (Date.now() - DAY_IN_MS) * 1000;
     PlacesUtils.bookmarks.setItemDateAdded(fx_id, dateAdded);
     await verifyTrackedItems([fx_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
     await resetTracker();
 
     _("Set the bookmark's last modified date");
     let dateModified = Date.now() * 1000;
     PlacesUtils.bookmarks.setItemLastModified(fx_id, dateModified);
     await verifyTrackedItems([fx_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -618,7 +618,7 @@ add_task(async function test_onItemChanged_changeBookmarkURI() {
     PlacesUtils.bookmarks.changeBookmarkURI(fx_id,
       CommonUtils.makeURI("https://www.mozilla.org/firefox"));
     await verifyTrackedItems([fx_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -655,7 +655,7 @@ add_task(async function test_onItemTagged() {
 
     // bookmark should be tracked, folder should not be.
     await verifyTrackedItems([bGUID]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -687,7 +687,7 @@ add_task(async function test_onItemUntagged() {
     PlacesUtils.tagging.untagURI(uri, ["foo"]);
 
     await verifyTrackedItems([fx1GUID, fx2GUID]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 4);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 4);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -730,7 +730,7 @@ add_task(async function test_async_onItemUntagged() {
     await PlacesUtils.bookmarks.remove(fxTag.guid);
 
     await verifyTrackedItems([fxBmk1.guid, fxBmk2.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 4);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 4);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -788,7 +788,7 @@ add_task(async function test_async_onItemTagged() {
     });
 
     await verifyTrackedItems([fxBmk1.guid, fxBmk2.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 4);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 4);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -819,7 +819,7 @@ add_task(async function test_onItemKeywordChanged() {
 
     // bookmark should be tracked, folder should not be.
     await verifyTrackedItems([bGUID]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
 
   } finally {
     _("Clean up.");
@@ -857,7 +857,7 @@ add_task(async function test_async_onItemKeywordChanged() {
     });
 
     await verifyTrackedItems([fxBmk1.guid, fxBmk2.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -894,7 +894,7 @@ add_task(async function test_async_onItemKeywordDeleted() {
     await PlacesUtils.keywords.remove("the_keyword");
 
     await verifyTrackedItems([fxBmk1.guid, fxBmk2.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -923,7 +923,7 @@ add_task(async function test_onItemPostDataChanged() {
     _("Post data for the bookmark should be ignored");
     await PlacesUtils.setPostDataForBookmark(fx_id, "postData");
     await verifyTrackedItems([]);
-    do_check_eq(tracker.score, 0);
+    Assert.equal(tracker.score, 0);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -952,13 +952,13 @@ add_task(async function test_onItemAnnoChanged() {
       PlacesUtils.annotations.EXPIRE_NEVER);
     // bookmark should be tracked, folder should not.
     await verifyTrackedItems([bGUID]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
     await resetTracker();
 
     PlacesUtils.annotations.removeItemAnnotation(b,
       PlacesSyncUtils.bookmarks.DESCRIPTION_ANNO);
     await verifyTrackedItems([bGUID]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -998,7 +998,7 @@ add_task(async function test_onItemAdded_filtered_root() {
 
     _("New root and bookmark should be ignored");
     await verifyTrackedItems([]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1025,7 +1025,7 @@ add_task(async function test_onItemDeleted_filtered_root() {
 
     await verifyTrackedItems([]);
     // We'll still increment the counter for the removed item.
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1052,14 +1052,14 @@ add_task(async function test_onPageAnnoChanged() {
     PlacesUtils.annotations.setPageAnnotation(pageURI, "URIProperties/characterSet",
       "UTF-8", 0, PlacesUtils.annotations.EXPIRE_NEVER);
     await verifyTrackedItems([]);
-    do_check_eq(tracker.score, 0);
+    Assert.equal(tracker.score, 0);
     await resetTracker();
 
     _("Remove the page annotation");
     PlacesUtils.annotations.removePageAnnotation(pageURI,
       "URIProperties/characterSet");
     await verifyTrackedItems([]);
-    do_check_eq(tracker.score, 0);
+    Assert.equal(tracker.score, 0);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1099,7 +1099,7 @@ add_task(async function test_onFaviconChanged() {
         Services.scriptSecurityManager.getSystemPrincipal());
     });
     await verifyTrackedItems([]);
-    do_check_eq(tracker.score, 0);
+    Assert.equal(tracker.score, 0);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1125,7 +1125,7 @@ add_task(async function test_onLivemarkAdded() {
     await verifyTrackedItems(["menu", livemark.guid]);
     // Two observer notifications: one for creating the livemark folder, and
     // one for setting the "livemark/feedURI" anno on the folder.
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1153,7 +1153,7 @@ add_task(async function test_onLivemarkDeleted() {
     });
 
     await verifyTrackedItems(["menu", livemark.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1185,7 +1185,7 @@ add_task(async function test_onItemMoved() {
     PlacesUtils.bookmarks.moveItem(
       tb_id, PlacesUtils.bookmarks.bookmarksMenuFolder, 0);
     await verifyTrackedItems(["menu"]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
     await resetTracker();
     await PlacesTestUtils.markBookmarksAsSynced();
 
@@ -1194,7 +1194,7 @@ add_task(async function test_onItemMoved() {
     PlacesUtils.bookmarks.moveItem(fx_id, PlacesUtils.bookmarks.toolbarFolder,
                                    PlacesUtils.bookmarks.DEFAULT_INDEX);
     await verifyTrackedItems(["menu", "toolbar", fx_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
 
   } finally {
     _("Clean up.");
@@ -1230,7 +1230,7 @@ add_task(async function test_async_onItemMoved_update() {
       index: 0,
     });
     await verifyTrackedItems(["menu"]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
     await resetTracker();
 
     _("Reparenting a bookmark should track both folders and the bookmark");
@@ -1240,7 +1240,7 @@ add_task(async function test_async_onItemMoved_update() {
       index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     });
     await verifyTrackedItems(["menu", "toolbar", tbBmk.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1287,7 +1287,7 @@ add_task(async function test_async_onItemMoved_reorder() {
     // As with setItemIndex, we should only track the folder if we reorder
     // its children, but we should bump the score for every changed item.
     await verifyTrackedItems(["menu"]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1343,13 +1343,13 @@ add_task(async function test_onItemMoved_setItemIndex() {
     _("Execute the sort folder transaction");
     txn.doTransaction();
     await verifyTrackedItems([folder_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
     await resetTracker();
 
     _("Undo the sort folder transaction");
     txn.undoTransaction();
     await verifyTrackedItems([folder_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1393,7 +1393,7 @@ add_task(async function test_onItemDeleted_removeFolderTransaction() {
     _("Execute the remove folder transaction");
     txn.doTransaction();
     await verifyTrackedItems(["menu", folder_guid, fx_guid, tb_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     await resetTracker();
 
     _("Undo the remove folder transaction");
@@ -1403,13 +1403,13 @@ add_task(async function test_onItemDeleted_removeFolderTransaction() {
     let new_folder_guid = await PlacesUtils.promiseItemGuid(folder_id);
 
     await verifyTrackedItems(["menu", new_folder_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
     await resetTracker();
 
     _("Redo the transaction");
     txn.redoTransaction();
     await verifyTrackedItems(["menu", new_folder_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1453,7 +1453,7 @@ add_task(async function test_treeMoved() {
       folder2_id, PlacesUtils.bookmarks.bookmarksMenuFolder, 0);
     // the menu and both folders should be tracked, the children should not be.
     await verifyTrackedItems(["menu", folder1_guid, folder2_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1482,7 +1482,7 @@ add_task(async function test_onItemDeleted() {
     PlacesUtils.bookmarks.removeItem(tb_id);
 
     await verifyTrackedItems(["menu", tb_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1514,7 +1514,7 @@ add_task(async function test_async_onItemDeleted() {
     await PlacesUtils.bookmarks.remove(fxBmk.guid);
 
     await verifyTrackedItems(["menu", fxBmk.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1598,7 +1598,7 @@ add_task(async function test_async_onItemDeleted_eraseEverything() {
                               bugsFolder.guid, "mobile", fxBmk.guid,
                               tbBmk.guid, "unfiled", bzBmk.guid,
                               bugsGrandChildBmk.guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 8);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 8);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1640,7 +1640,7 @@ add_task(async function test_onItemDeleted_removeFolderChildren() {
     PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.mobileFolderId);
 
     await verifyTrackedItems(["mobile", fx_guid, tb_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 2);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
   } finally {
     _("Clean up.");
     await cleanup();
@@ -1685,7 +1685,7 @@ add_task(async function test_onItemDeleted_tree() {
     PlacesUtils.bookmarks.removeItem(folder2_id);
 
     await verifyTrackedItems([fx_guid, tb_guid, folder1_guid, folder2_guid]);
-    do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE * 3);
+    Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
   } finally {
     _("Clean up.");
     await cleanup();

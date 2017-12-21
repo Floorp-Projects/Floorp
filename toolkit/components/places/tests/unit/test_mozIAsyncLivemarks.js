@@ -43,7 +43,7 @@ add_task(async function test_addLivemark_noArguments_throws() {
     await PlacesUtils.livemarks.addLivemark();
     do_throw("Invoking addLivemark with no arguments should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS);
+    Assert.equal(ex.result, Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS);
   }
 });
 
@@ -52,7 +52,7 @@ add_task(async function test_addLivemark_emptyObject_throws() {
     await PlacesUtils.livemarks.addLivemark({});
     do_throw("Invoking addLivemark with empty object should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -61,7 +61,7 @@ add_task(async function test_addLivemark_badParentId_throws() {
     await PlacesUtils.livemarks.addLivemark({ parentId: "test" });
     do_throw("Invoking addLivemark with a bad parent id should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -70,7 +70,7 @@ add_task(async function test_addLivemark_invalidParentId_throws() {
     await PlacesUtils.livemarks.addLivemark({ parentId: -2 });
     do_throw("Invoking addLivemark with an invalid parent id should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -80,7 +80,7 @@ add_task(async function test_addLivemark_noIndex_throws() {
       parentId: PlacesUtils.unfiledBookmarksFolderId });
     do_throw("Invoking addLivemark with no index should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -91,7 +91,7 @@ add_task(async function test_addLivemark_badIndex_throws() {
         index: "test" });
     do_throw("Invoking addLivemark with a bad index should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -103,7 +103,7 @@ add_task(async function test_addLivemark_invalidIndex_throws() {
       });
     do_throw("Invoking addLivemark with an invalid index should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -113,7 +113,7 @@ add_task(async function test_addLivemark_noFeedURI_throws() {
       { parentGuid: PlacesUtils.bookmarks.unfiledGuid });
     do_throw("Invoking addLivemark with no feedURI should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -124,7 +124,7 @@ add_task(async function test_addLivemark_badFeedURI_throws() {
         feedURI: "test" });
     do_throw("Invoking addLivemark with a bad feedURI should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -136,7 +136,7 @@ add_task(async function test_addLivemark_badSiteURI_throws() {
         siteURI: "test" });
     do_throw("Invoking addLivemark with a bad siteURI should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -148,7 +148,7 @@ add_task(async function test_addLivemark_badGuid_throws() {
         guid: "123456" });
     do_throw("Invoking addLivemark with a bad guid should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -160,10 +160,10 @@ add_task(async function test_addLivemark_parentId_succeeds() {
                                       aURI, aTitle) {
       onItemAddedCalled = true;
       PlacesUtils.bookmarks.removeObserver(this);
-      do_check_eq(aParentId, PlacesUtils.unfiledBookmarksFolderId);
-      do_check_eq(aIndex, 0);
-      do_check_eq(aItemType, Ci.nsINavBookmarksService.TYPE_FOLDER);
-      do_check_eq(aTitle, "test");
+      Assert.equal(aParentId, PlacesUtils.unfiledBookmarksFolderId);
+      Assert.equal(aIndex, 0);
+      Assert.equal(aItemType, Ci.nsINavBookmarksService.TYPE_FOLDER);
+      Assert.equal(aTitle, "test");
     }
   });
 
@@ -171,7 +171,7 @@ add_task(async function test_addLivemark_parentId_succeeds() {
     { title: "test",
       parentId: PlacesUtils.unfiledBookmarksFolderId,
       feedURI: FEED_URI });
-  do_check_true(onItemAddedCalled);
+  Assert.ok(onItemAddedCalled);
 });
 
 
@@ -181,19 +181,19 @@ add_task(async function test_addLivemark_noSiteURI_succeeds() {
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,
       feedURI: FEED_URI
     });
-  do_check_true(livemark.id > 0);
+  Assert.ok(livemark.id > 0);
   do_check_valid_places_guid(livemark.guid);
-  do_check_eq(livemark.title, "test");
-  do_check_eq(livemark.parentId, PlacesUtils.unfiledBookmarksFolderId);
-  do_check_eq(livemark.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
-  do_check_true(livemark.feedURI.equals(FEED_URI));
-  do_check_eq(livemark.siteURI, null);
-  do_check_true(livemark.lastModified > 0);
-  do_check_eq(livemark.dateAdded, livemark.lastModified);
+  Assert.equal(livemark.title, "test");
+  Assert.equal(livemark.parentId, PlacesUtils.unfiledBookmarksFolderId);
+  Assert.equal(livemark.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
+  Assert.ok(livemark.feedURI.equals(FEED_URI));
+  Assert.equal(livemark.siteURI, null);
+  Assert.ok(livemark.lastModified > 0);
+  Assert.equal(livemark.dateAdded, livemark.lastModified);
 
   let bookmark = await PlacesUtils.bookmarks.fetch(livemark.guid);
-  do_check_eq(livemark.index, bookmark.index);
-  do_check_eq(livemark.dateAdded, bookmark.dateAdded * 1000);
+  Assert.equal(livemark.index, bookmark.index);
+  Assert.equal(livemark.dateAdded, bookmark.dateAdded * 1000);
 });
 
 add_task(async function test_addLivemark_succeeds() {
@@ -204,19 +204,19 @@ add_task(async function test_addLivemark_succeeds() {
       siteURI: SITE_URI
     });
 
-  do_check_true(livemark.id > 0);
+  Assert.ok(livemark.id > 0);
   do_check_valid_places_guid(livemark.guid);
-  do_check_eq(livemark.title, "test");
-  do_check_eq(livemark.parentId, PlacesUtils.unfiledBookmarksFolderId);
-  do_check_eq(livemark.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
-  do_check_true(livemark.feedURI.equals(FEED_URI));
-  do_check_true(livemark.siteURI.equals(SITE_URI));
-  do_check_true(PlacesUtils.annotations
-                           .itemHasAnnotation(livemark.id,
-                                              PlacesUtils.LMANNO_FEEDURI));
-  do_check_true(PlacesUtils.annotations
-                           .itemHasAnnotation(livemark.id,
-                                              PlacesUtils.LMANNO_SITEURI));
+  Assert.equal(livemark.title, "test");
+  Assert.equal(livemark.parentId, PlacesUtils.unfiledBookmarksFolderId);
+  Assert.equal(livemark.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
+  Assert.ok(livemark.feedURI.equals(FEED_URI));
+  Assert.ok(livemark.siteURI.equals(SITE_URI));
+  Assert.ok(PlacesUtils.annotations
+                       .itemHasAnnotation(livemark.id,
+                                          PlacesUtils.LMANNO_FEEDURI));
+  Assert.ok(PlacesUtils.annotations
+                       .itemHasAnnotation(livemark.id,
+                                          PlacesUtils.LMANNO_SITEURI));
 });
 
 add_task(async function test_addLivemark_bogusid_succeeds() {
@@ -227,8 +227,8 @@ add_task(async function test_addLivemark_bogusid_succeeds() {
       feedURI: FEED_URI,
       siteURI: SITE_URI
     });
-  do_check_true(livemark.id > 0);
-  do_check_neq(livemark.id, 100);
+  Assert.ok(livemark.id > 0);
+  Assert.notEqual(livemark.id, 100);
 });
 
 add_task(async function test_addLivemark_bogusParentId_fails() {
@@ -268,7 +268,7 @@ add_task(async function test_addLivemark_intoLivemark_fails() {
       });
     do_throw("Adding a livemark into a livemark should fail");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -279,7 +279,7 @@ add_task(async function test_addLivemark_forceGuid_succeeds() {
       feedURI: FEED_URI,
       guid: "1234567890AB"
     });
-    do_check_eq(livemark.guid, "1234567890AB");
+    Assert.equal(livemark.guid, "1234567890AB");
     do_check_guid_for_bookmark(livemark.id, "1234567890AB");
 });
 
@@ -291,7 +291,7 @@ add_task(async function test_addLivemark_dateAdded_succeeds() {
       feedURI: FEED_URI,
       dateAdded
     });
-  do_check_eq(livemark.dateAdded, dateAdded);
+  Assert.equal(livemark.dateAdded, dateAdded);
 });
 
 add_task(async function test_addLivemark_lastModified_succeeds() {
@@ -302,8 +302,8 @@ add_task(async function test_addLivemark_lastModified_succeeds() {
       feedURI: FEED_URI,
       lastModified: now
     });
-  do_check_eq(livemark.dateAdded, now);
-  do_check_eq(livemark.lastModified, now);
+  Assert.equal(livemark.dateAdded, now);
+  Assert.equal(livemark.lastModified, now);
 });
 
 add_task(async function test_removeLivemark_emptyObject_throws() {
@@ -311,7 +311,7 @@ add_task(async function test_removeLivemark_emptyObject_throws() {
     await PlacesUtils.livemarks.removeLivemark({});
     do_throw("Invoking removeLivemark with empty object should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -320,7 +320,7 @@ add_task(async function test_removeLivemark_noValidId_throws() {
     await PlacesUtils.livemarks.removeLivemark({ id: -10, guid: "test"});
     do_throw("Invoking removeLivemark with no valid id should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -340,13 +340,13 @@ add_task(async function test_removeLivemark_guid_succeeds() {
       guid: "234567890ABC"
   });
 
-  do_check_eq(livemark.guid, "234567890ABC");
+  Assert.equal(livemark.guid, "234567890ABC");
 
   await PlacesUtils.livemarks.removeLivemark({
     id: 789, guid: "234567890ABC"
   });
 
-  do_check_eq((await PlacesUtils.bookmarks.fetch("234567890ABC")), null);
+  Assert.equal((await PlacesUtils.bookmarks.fetch("234567890ABC")), null);
 });
 
 add_task(async function test_removeLivemark_id_succeeds() {
@@ -358,7 +358,7 @@ add_task(async function test_removeLivemark_id_succeeds() {
 
   await PlacesUtils.livemarks.removeLivemark({ id: livemark.id });
 
-  do_check_eq((await PlacesUtils.bookmarks.fetch("234567890ABC")), null);
+  Assert.equal((await PlacesUtils.bookmarks.fetch("234567890ABC")), null);
 });
 
 add_task(async function test_getLivemark_emptyObject_throws() {
@@ -366,7 +366,7 @@ add_task(async function test_getLivemark_emptyObject_throws() {
     await PlacesUtils.livemarks.getLivemark({});
     do_throw("Invoking getLivemark with empty object should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -375,7 +375,7 @@ add_task(async function test_getLivemark_noValidId_throws() {
     await PlacesUtils.livemarks.getLivemark({ id: -10, guid: "test"});
     do_throw("Invoking getLivemark with no valid id should throw");
   } catch (ex) {
-    do_check_eq(ex.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(ex.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
 
@@ -404,15 +404,15 @@ add_task(async function test_getLivemark_guid_succeeds() {
   let livemark =
     await PlacesUtils.livemarks.getLivemark({ id: 789, guid: "34567890ABCD" });
 
-  do_check_eq(livemark.title, "test");
-  do_check_eq(livemark.parentId, PlacesUtils.unfiledBookmarksFolderId);
-  do_check_eq(livemark.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
-  do_check_true(livemark.feedURI.equals(FEED_URI));
-  do_check_eq(livemark.siteURI, null);
-  do_check_eq(livemark.guid, "34567890ABCD");
+  Assert.equal(livemark.title, "test");
+  Assert.equal(livemark.parentId, PlacesUtils.unfiledBookmarksFolderId);
+  Assert.equal(livemark.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
+  Assert.ok(livemark.feedURI.equals(FEED_URI));
+  Assert.equal(livemark.siteURI, null);
+  Assert.equal(livemark.guid, "34567890ABCD");
 
   let bookmark = await PlacesUtils.bookmarks.fetch("34567890ABCD");
-  do_check_eq(livemark.index, bookmark.index);
+  Assert.equal(livemark.index, bookmark.index);
 });
 
 add_task(async function test_getLivemark_id_succeeds() {
@@ -424,15 +424,15 @@ add_task(async function test_getLivemark_id_succeeds() {
 
   livemark = await PlacesUtils.livemarks.getLivemark({ id: livemark.id });
 
-  do_check_eq(livemark.title, "test");
-  do_check_eq(livemark.parentId, PlacesUtils.unfiledBookmarksFolderId);
-  do_check_eq(livemark.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
-  do_check_true(livemark.feedURI.equals(FEED_URI));
-  do_check_eq(livemark.siteURI, null);
+  Assert.equal(livemark.title, "test");
+  Assert.equal(livemark.parentId, PlacesUtils.unfiledBookmarksFolderId);
+  Assert.equal(livemark.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
+  Assert.ok(livemark.feedURI.equals(FEED_URI));
+  Assert.equal(livemark.siteURI, null);
   do_check_guid_for_bookmark(livemark.id, livemark.guid);
 
   let bookmark = await PlacesUtils.bookmarks.fetch(livemark.guid);
-  do_check_eq(livemark.index, bookmark.index);
+  Assert.equal(livemark.index, bookmark.index);
 });
 
 add_task(async function test_getLivemark_removeItem_contention() {
@@ -450,10 +450,10 @@ add_task(async function test_getLivemark_removeItem_contention() {
 
   livemark = await PlacesUtils.livemarks.getLivemark({ guid: livemark.guid });
 
-  do_check_eq(livemark.title, "test");
-  do_check_eq(livemark.parentId, PlacesUtils.unfiledBookmarksFolderId);
-  do_check_true(livemark.feedURI.equals(FEED_URI));
-  do_check_eq(livemark.siteURI, null);
+  Assert.equal(livemark.title, "test");
+  Assert.equal(livemark.parentId, PlacesUtils.unfiledBookmarksFolderId);
+  Assert.ok(livemark.feedURI.equals(FEED_URI));
+  Assert.equal(livemark.siteURI, null);
   do_check_guid_for_bookmark(livemark.id, livemark.guid);
 });
 

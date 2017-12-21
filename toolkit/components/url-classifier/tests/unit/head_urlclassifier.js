@@ -214,7 +214,7 @@ tableData(expectedTables, cb) {
       parts.sort();
       tables = parts.join("\n");
 
-      do_check_eq(tables, expectedTables);
+      Assert.equal(tables, expectedTables);
       cb();
     });
 },
@@ -229,7 +229,7 @@ checkUrls(urls, expected, cb, useMoz = false) {
       var principal = Services.scriptSecurityManager.createCodebasePrincipal(Services.io.newURI("http://" + fragment), {});
       dbservice.lookup(principal, tables,
                                 function(arg) {
-                                  do_check_eq(expected, arg);
+                                  Assert.equal(expected, arg);
                                   doLookup();
                                 }, true);
     } else {
@@ -249,7 +249,7 @@ checkTables(url, expected, cb) {
     }
     parts.sort();
     tables = parts.join(",");
-    do_check_eq(tables, expected);
+    Assert.equal(tables, expected);
     cb();
   }, true);
 },

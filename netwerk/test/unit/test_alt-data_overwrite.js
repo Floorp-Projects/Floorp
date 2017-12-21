@@ -75,8 +75,8 @@ function readServerContent(request, buffer)
 {
   let cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
-  do_check_eq(buffer, responseContent);
-  do_check_eq(cc.alternativeDataType, "");
+  Assert.equal(buffer, responseContent);
+  Assert.equal(cc.alternativeDataType, "");
 
   do_execute_soon(() => {
     let os = cc.openAlternativeOutputStream(altContentType);
@@ -110,9 +110,9 @@ function readAltContent(request, buffer, closure, fromCache)
   Cu.forceShrinkingGC();
   let cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
-  do_check_eq(fromCache || servedNotModified, true);
-  do_check_eq(cc.alternativeDataType, altContentType);
-  do_check_eq(buffer, altContent);
+  Assert.equal(fromCache || servedNotModified, true);
+  Assert.equal(cc.alternativeDataType, altContentType);
+  Assert.equal(buffer, altContent);
 
   make_and_open_channel(URL, "dummy/null", readServerContent2);
 }
@@ -122,9 +122,9 @@ function readServerContent2(request, buffer, closure, fromCache)
   Cu.forceShrinkingGC();
   let cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
-  do_check_eq(fromCache || servedNotModified, true);
-  do_check_eq(buffer, responseContent);
-  do_check_eq(cc.alternativeDataType, "");
+  Assert.equal(fromCache || servedNotModified, true);
+  Assert.equal(buffer, responseContent);
+  Assert.equal(cc.alternativeDataType, "");
 
   do_execute_soon(() => {
     let os = cc.openAlternativeOutputStream(altContentType);
@@ -158,9 +158,9 @@ function readAltContent2(request, buffer, closure, fromCache)
   Cu.forceShrinkingGC();
   let cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
-  do_check_eq(servedNotModified || fromCache, true);
-  do_check_eq(cc.alternativeDataType, altContentType);
-  do_check_eq(buffer, altContent);
+  Assert.equal(servedNotModified || fromCache, true);
+  Assert.equal(cc.alternativeDataType, altContentType);
+  Assert.equal(buffer, altContent);
 
   do_execute_soon(() => {
     Cu.forceShrinkingGC();
@@ -197,9 +197,9 @@ function readAltContent3(request, buffer, closure, fromCache)
 {
   let cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
-  do_check_eq(servedNotModified || fromCache, true);
-  do_check_eq(cc.alternativeDataType, altContentType2);
-  do_check_eq(buffer, altContent2);
+  Assert.equal(servedNotModified || fromCache, true);
+  Assert.equal(cc.alternativeDataType, altContentType2);
+  Assert.equal(buffer, altContent2);
 
   httpServer.stop(do_test_finished);
 }

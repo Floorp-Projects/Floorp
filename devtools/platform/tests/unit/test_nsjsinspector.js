@@ -24,13 +24,13 @@ function run_test() {
 }
 
 function test_nesting() {
-  do_check_eq(inspector.eventLoopNestLevel, 0);
+  Assert.equal(inspector.eventLoopNestLevel, 0);
 
   tm.dispatchToMainThread({ run: enterEventLoop});
 
-  do_check_eq(inspector.enterNestedEventLoop(requestor(gCount)), 0);
-  do_check_eq(inspector.eventLoopNestLevel, 0);
-  do_check_eq(inspector.lastNestRequestor, null);
+  Assert.equal(inspector.enterNestedEventLoop(requestor(gCount)), 0);
+  Assert.equal(inspector.eventLoopNestLevel, 0);
+  Assert.equal(inspector.lastNestRequestor, null);
 }
 
 function enterEventLoop() {
@@ -39,25 +39,25 @@ function enterEventLoop() {
 
     Object.create(requestor(gCount));
 
-    do_check_eq(inspector.eventLoopNestLevel, gCount);
-    do_check_eq(inspector.lastNestRequestor.url, requestor(gCount - 1).url);
-    do_check_eq(inspector.lastNestRequestor.connection, requestor(gCount - 1).connection);
-    do_check_eq(inspector.enterNestedEventLoop(requestor(gCount)), gCount);
+    Assert.equal(inspector.eventLoopNestLevel, gCount);
+    Assert.equal(inspector.lastNestRequestor.url, requestor(gCount - 1).url);
+    Assert.equal(inspector.lastNestRequestor.connection, requestor(gCount - 1).connection);
+    Assert.equal(inspector.enterNestedEventLoop(requestor(gCount)), gCount);
   } else {
-    do_check_eq(gCount, MAX + 1);
+    Assert.equal(gCount, MAX + 1);
     tm.dispatchToMainThread({ run: exitEventLoop});
   }
 }
 
 function exitEventLoop() {
   if (inspector.lastNestRequestor != null) {
-    do_check_eq(inspector.lastNestRequestor.url, requestor(gCount - 1).url);
-    do_check_eq(inspector.lastNestRequestor.connection, requestor(gCount - 1).connection);
+    Assert.equal(inspector.lastNestRequestor.url, requestor(gCount - 1).url);
+    Assert.equal(inspector.lastNestRequestor.connection, requestor(gCount - 1).connection);
     if (gCount-- > 1) {
       tm.dispatchToMainThread({ run: exitEventLoop});
     }
 
-    do_check_eq(inspector.exitNestedEventLoop(), gCount);
-    do_check_eq(inspector.eventLoopNestLevel, gCount);
+    Assert.equal(inspector.exitNestedEventLoop(), gCount);
+    Assert.equal(inspector.eventLoopNestLevel, gCount);
   }
 }

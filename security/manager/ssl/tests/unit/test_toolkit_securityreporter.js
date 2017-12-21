@@ -44,7 +44,7 @@ function getReportCheck(expectReport, expectedError) {
                               function(request, response) {
       if (expectReport) {
         let report = JSON.parse(readDataFromRequest(request));
-        do_check_eq(report.errorCode, expectedError);
+        Assert.equal(report.errorCode, expectedError);
         response.setStatusLine(null, 201, "Created");
         response.write("Created");
       } else {

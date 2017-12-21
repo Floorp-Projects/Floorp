@@ -330,11 +330,11 @@ function check_except(func) {
   try {
     func();
   } catch (e) {
-    do_check_true(true);
+    Assert.ok(true);
     return;
   }
   dumpn("Should have thrown an exception: " + func.toString());
-  do_check_true(false);
+  Assert.ok(false);
 }
 
 function testGlobal(name) {
@@ -565,13 +565,13 @@ TracingTransport.prototype = {
 
   expectSend: function (expected) {
     let packet = this.packets[this.checkIndex++];
-    do_check_eq(packet.type, "sent");
+    Assert.equal(packet.type, "sent");
     deepEqual(packet.packet, this.normalize(expected));
   },
 
   expectReceive: function (expected) {
     let packet = this.packets[this.checkIndex++];
-    do_check_eq(packet.type, "received");
+    Assert.equal(packet.type, "received");
     deepEqual(packet.packet, this.normalize(expected));
   },
 

@@ -10,7 +10,7 @@ TestListener.prototype.onStartRequest = function(request, context) {
 }
 TestListener.prototype.onStopRequest = function(request, context, status) {
   var channel = request.QueryInterface(Components.interfaces.nsIHttpChannel);
-  do_check_eq(channel.responseStatus, 304);
+  Assert.equal(channel.responseStatus, 304);
 
   server.stop(do_test_finished);
 }

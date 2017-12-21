@@ -34,15 +34,15 @@ add_task(async function test_referrer_restart() {
   registerInterruptibleHandler(sourcePath,
     function firstPart(aRequest, aResponse) {
       aResponse.setHeader("Content-Type", "text/plain", false);
-      do_check_true(aRequest.hasHeader("Referer"));
-      do_check_eq(aRequest.getHeader("Referer"), TEST_REFERRER_URL);
+      Assert.ok(aRequest.hasHeader("Referer"));
+      Assert.equal(aRequest.getHeader("Referer"), TEST_REFERRER_URL);
 
       aResponse.setHeader("Content-Length", "" + (TEST_DATA_SHORT.length * 2),
                           false);
       aResponse.write(TEST_DATA_SHORT);
     }, function secondPart(aRequest, aResponse) {
-      do_check_true(aRequest.hasHeader("Referer"));
-      do_check_eq(aRequest.getHeader("Referer"), TEST_REFERRER_URL);
+      Assert.ok(aRequest.hasHeader("Referer"));
+      Assert.equal(aRequest.getHeader("Referer"), TEST_REFERRER_URL);
 
       aResponse.write(TEST_DATA_SHORT);
     });
@@ -61,11 +61,11 @@ add_task(async function test_referrer_restart() {
     // Wait for the download to finish by waiting on the whenSucceeded promise.
     await promiseSucceeded;
 
-    do_check_true(download.stopped);
-    do_check_true(download.succeeded);
-    do_check_false(download.canceled);
+    Assert.ok(download.stopped);
+    Assert.ok(download.succeeded);
+    Assert.ok(!download.canceled);
 
-    do_check_eq(download.source.referrer, TEST_REFERRER_URL);
+    Assert.equal(download.source.referrer, TEST_REFERRER_URL);
   }
 
   mustInterruptResponses();

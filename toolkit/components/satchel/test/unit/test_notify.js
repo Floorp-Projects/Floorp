@@ -28,7 +28,7 @@ const entry3 = ["entry3", "value3"];
 add_task(async function setup() {
   await promiseUpdateEntry("remove", null, null);
   const count = await promiseCountEntries(null, null);
-  do_check_false(count, "Checking initial DB is empty");
+  Assert.ok(!count, "Checking initial DB is empty");
 
   // Add the observer
   Services.obs.addObserver(TestObserver, "satchel-storage-changed");
@@ -37,25 +37,25 @@ add_task(async function setup() {
 add_task(async function addAndUpdateEntry() {
   // Add
   await promiseUpdateEntry("add", entry1[0], entry1[1]);
-  do_check_eq(TestObserver.observed.length, 1);
+  Assert.equal(TestObserver.observed.length, 1);
   let {subject, data} = TestObserver.observed[0];
-  do_check_eq(data, "formhistory-add");
-  do_check_true(isGUID.test(subject));
+  Assert.equal(data, "formhistory-add");
+  Assert.ok(isGUID.test(subject));
 
   let count = await promiseCountEntries(entry1[0], entry1[1]);
-  do_check_eq(count, 1);
+  Assert.equal(count, 1);
 
   // Update
   TestObserver.reset();
 
   await promiseUpdateEntry("update", entry1[0], entry1[1]);
-  do_check_eq(TestObserver.observed.length, 1);
+  Assert.equal(TestObserver.observed.length, 1);
   ({subject, data} = TestObserver.observed[0]);
-  do_check_eq(data, "formhistory-update");
-  do_check_true(isGUID.test(subject));
+  Assert.equal(data, "formhistory-update");
+  Assert.ok(isGUID.test(subject));
 
   count = await promiseCountEntries(entry1[0], entry1[1]);
-  do_check_eq(count, 1);
+  Assert.equal(count, 1);
 
   // Clean-up
   await promiseUpdateEntry("remove", null, null);
@@ -84,13 +84,13 @@ add_task(async function removeEntry() {
       },
     });
   });
-  do_check_eq(TestObserver.observed.length, 1);
+  Assert.equal(TestObserver.observed.length, 1);
   const {subject, data} = TestObserver.observed[0];
-  do_check_eq(data, "formhistory-remove");
-  do_check_true(isGUID.test(subject));
+  Assert.equal(data, "formhistory-remove");
+  Assert.ok(isGUID.test(subject));
 
   const count = await promiseCountEntries(entry1[0], entry1[1]);
-  do_check_eq(count, 0, "doesn't exist after remove");
+  Assert.equal(count, 0, "doesn't exist after remove");
 });
 
 add_task(async function removeAllEntries() {
@@ -100,15 +100,15 @@ add_task(async function removeAllEntries() {
   TestObserver.reset();
 
   await promiseUpdateEntry("remove", null, null);
-  do_check_eq(TestObserver.observed.length, 3);
+  Assert.equal(TestObserver.observed.length, 3);
   for (const notification of TestObserver.observed) {
     const {subject, data} = notification;
-    do_check_eq(data, "formhistory-remove");
-    do_check_true(isGUID.test(subject));
+    Assert.equal(data, "formhistory-remove");
+    Assert.ok(isGUID.test(subject));
   }
 
   const count = await promiseCountEntries(null, null);
-  do_check_eq(count, 0);
+  Assert.equal(count, 0);
 });
 
 add_task(async function removeEntriesForName() {
@@ -118,16 +118,16 @@ add_task(async function removeEntriesForName() {
   TestObserver.reset();
 
   await promiseUpdateEntry("remove", entry2[0], null);
-  do_check_eq(TestObserver.observed.length, 1);
+  Assert.equal(TestObserver.observed.length, 1);
   const {subject, data} = TestObserver.observed[0];
-  do_check_eq(data, "formhistory-remove");
-  do_check_true(isGUID.test(subject));
+  Assert.equal(data, "formhistory-remove");
+  Assert.ok(isGUID.test(subject));
 
   let count = await promiseCountEntries(entry2[0], entry2[1]);
-  do_check_eq(count, 0);
+  Assert.equal(count, 0);
 
   count = await promiseCountEntries(null, null);
-  do_check_eq(count, 2, "the other entries are still there");
+  Assert.equal(count, 2, "the other entries are still there");
 
   // Clean-up
   await promiseUpdateEntry("remove", null, null);
@@ -160,15 +160,15 @@ add_task(async function removeEntriesByTimeframe() {
       },
     });
   });
-  do_check_eq(TestObserver.observed.length, 2);
+  Assert.equal(TestObserver.observed.length, 2);
   for (const notification of TestObserver.observed) {
     const {subject, data} = notification;
-    do_check_eq(data, "formhistory-remove");
-    do_check_true(isGUID.test(subject));
+    Assert.equal(data, "formhistory-remove");
+    Assert.ok(isGUID.test(subject));
   }
 
   const count = await promiseCountEntries(null, null);
-  do_check_eq(count, 1, "entry2 should still be there");
+  Assert.equal(count, 1, "entry2 should still be there");
 
   // Clean-up
   await promiseUpdateEntry("remove", null, null);

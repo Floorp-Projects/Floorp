@@ -81,5 +81,5 @@ add_task(async function() {
     let entry = files.getNext().QueryInterface(Ci.nsIFile);
     entry.remove(false);
   }
-  do_check_false(bookmarksBackupDir.directoryEntries.hasMoreElements());
+  Assert.ok(!bookmarksBackupDir.directoryEntries.hasMoreElements());
 });

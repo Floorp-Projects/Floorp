@@ -18,7 +18,7 @@ add_task(async function test_deprecatedCreationDate() {
       observe(aMessage) {
         if (aMessage.message.indexOf("Field 'creationDate' is deprecated.") > -1) {
         do_print("Deprecation message printed");
-          do_check_true(true);
+          Assert.ok(true);
           Services.console.unregisterListener(consoleListener);
           resolve();
         }

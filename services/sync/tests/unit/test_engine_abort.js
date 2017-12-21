@@ -46,7 +46,7 @@ add_task(async function test_processIncoming_abort() {
     err = ex;
   }
 
-  do_check_eq(err, "Nooo");
+  Assert.equal(err, "Nooo");
   err = undefined;
 
   _("Trying engine.sync(). It will abort without error.");
@@ -57,7 +57,7 @@ add_task(async function test_processIncoming_abort() {
     err = ex;
   }
 
-  do_check_eq(err, undefined);
+  Assert.equal(err, undefined);
 
   await promiseStopServer(server);
   Svc.Prefs.resetBranch("");

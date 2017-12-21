@@ -30,8 +30,8 @@ var testData =
 
 function responseHandler(request, buffer)
 {
-    do_check_eq(buffer, testData[testNum].data);
-    do_check_eq(request.QueryInterface(Ci.nsIChannel).contentType,
+    Assert.equal(buffer, testData[testNum].data);
+    Assert.equal(request.QueryInterface(Ci.nsIChannel).contentType,
 		testData[testNum].type);
     if (++testNum == numTests)
 	httpserver.stop(do_test_finished);

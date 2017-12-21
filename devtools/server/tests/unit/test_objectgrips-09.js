@@ -46,23 +46,23 @@ function test_object_grip() {
       [args[0].actor, args[1].actor], function (response) {
         let obj1 = response.actors[args[0].actor];
         let obj2 = response.actors[args[1].actor];
-        do_check_eq(obj1.ownProperties.x.configurable, true);
-        do_check_eq(obj1.ownProperties.x.enumerable, true);
-        do_check_eq(obj1.ownProperties.x.writable, true);
-        do_check_eq(obj1.ownProperties.x.value, 10);
+        Assert.equal(obj1.ownProperties.x.configurable, true);
+        Assert.equal(obj1.ownProperties.x.enumerable, true);
+        Assert.equal(obj1.ownProperties.x.writable, true);
+        Assert.equal(obj1.ownProperties.x.value, 10);
 
-        do_check_eq(obj1.ownProperties.y.configurable, true);
-        do_check_eq(obj1.ownProperties.y.enumerable, true);
-        do_check_eq(obj1.ownProperties.y.writable, true);
-        do_check_eq(obj1.ownProperties.y.value, "kaiju");
+        Assert.equal(obj1.ownProperties.y.configurable, true);
+        Assert.equal(obj1.ownProperties.y.enumerable, true);
+        Assert.equal(obj1.ownProperties.y.writable, true);
+        Assert.equal(obj1.ownProperties.y.value, "kaiju");
 
-        do_check_eq(obj2.ownProperties.z.configurable, true);
-        do_check_eq(obj2.ownProperties.z.enumerable, true);
-        do_check_eq(obj2.ownProperties.z.writable, true);
-        do_check_eq(obj2.ownProperties.z.value, 123);
+        Assert.equal(obj2.ownProperties.z.configurable, true);
+        Assert.equal(obj2.ownProperties.z.enumerable, true);
+        Assert.equal(obj2.ownProperties.z.writable, true);
+        Assert.equal(obj2.ownProperties.z.value, 123);
 
-        do_check_true(obj1.prototype != undefined);
-        do_check_true(obj2.prototype != undefined);
+        Assert.ok(obj1.prototype != undefined);
+        Assert.ok(obj2.prototype != undefined);
 
         gThreadClient.resume(function () {
           gClient.close().then(gCallback);

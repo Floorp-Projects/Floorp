@@ -7,17 +7,17 @@ function run_test() {
   configureToLoadJarEngines();
   installDistributionEngine();
 
-  do_check_false(Services.search.isInitialized);
+  Assert.ok(!Services.search.isInitialized);
 
   // test that the engine from the distribution overrides our jar engine
   let engines = Services.search.getEngines();
-  do_check_eq(engines.length, 1);
+  Assert.equal(engines.length, 1);
 
-  do_check_true(Services.search.isInitialized);
+  Assert.ok(Services.search.isInitialized);
 
   let engine = Services.search.getEngineByName("bug645970");
-  do_check_neq(engine, null);
+  Assert.notEqual(engine, null);
 
   // check the engine we have is actually the one from the distribution
-  do_check_eq(engine.description, "override");
+  Assert.equal(engine.description, "override");
 }

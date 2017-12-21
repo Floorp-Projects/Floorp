@@ -21,7 +21,7 @@ function run_test() {
     let dateObj = new Date();
     dateObj.setYear(dateObj.getFullYear() + 1);
     let name = PlacesBackups.getFilenameForDate(dateObj);
-    do_check_eq(name, "bookmarks-" + PlacesBackups.toISODateString(dateObj) + ".json");
+    Assert.equal(name, "bookmarks-" + PlacesBackups.toISODateString(dateObj) + ".json");
     files = bookmarksBackupDir.directoryEntries;
     while (files.hasMoreElements()) {
       let entry = files.getNext().QueryInterface(Ci.nsIFile);
@@ -32,24 +32,24 @@ function run_test() {
     let futureBackupFile = bookmarksBackupDir.clone();
     futureBackupFile.append(name);
     futureBackupFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
-    do_check_true(futureBackupFile.exists());
+    Assert.ok(futureBackupFile.exists());
 
-    do_check_eq((await PlacesBackups.getBackupFiles()).length, 0);
+    Assert.equal((await PlacesBackups.getBackupFiles()).length, 0);
 
     await PlacesBackups.create();
     // Check that a backup for today has been created.
-    do_check_eq((await PlacesBackups.getBackupFiles()).length, 1);
+    Assert.equal((await PlacesBackups.getBackupFiles()).length, 1);
     let mostRecentBackupFile = await PlacesBackups.getMostRecentBackup();
-    do_check_neq(mostRecentBackupFile, null);
-    do_check_true(PlacesBackups.filenamesRegex.test(OS.Path.basename(mostRecentBackupFile)));
+    Assert.notEqual(mostRecentBackupFile, null);
+    Assert.ok(PlacesBackups.filenamesRegex.test(OS.Path.basename(mostRecentBackupFile)));
 
     // Check that future backup has been removed.
-    do_check_false(futureBackupFile.exists());
+    Assert.ok(!futureBackupFile.exists());
 
     // Cleanup.
     mostRecentBackupFile = new FileUtils.File(mostRecentBackupFile);
     mostRecentBackupFile.remove(false);
-    do_check_false(mostRecentBackupFile.exists());
+    Assert.ok(!mostRecentBackupFile.exists());
 
     do_test_finished();
   })();

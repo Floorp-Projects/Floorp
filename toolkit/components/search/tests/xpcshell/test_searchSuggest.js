@@ -79,9 +79,9 @@ add_task(async function add_test_engines() {
 add_task(async function simple_no_result_callback() {
   await new Promise(resolve => {
     let controller = new SearchSuggestionController((result) => {
-      do_check_eq(result.term, "no remote");
-      do_check_eq(result.local.length, 0);
-      do_check_eq(result.remote.length, 0);
+      Assert.equal(result.term, "no remote");
+      Assert.equal(result.local.length, 0);
+      Assert.equal(result.remote.length, 0);
       resolve();
     });
 
@@ -93,16 +93,16 @@ add_task(async function simple_no_result_callback_and_promise() {
   // Make sure both the callback and promise get results
   let deferred = PromiseUtils.defer();
   let controller = new SearchSuggestionController((result) => {
-    do_check_eq(result.term, "no results");
-    do_check_eq(result.local.length, 0);
-    do_check_eq(result.remote.length, 0);
+    Assert.equal(result.term, "no results");
+    Assert.equal(result.local.length, 0);
+    Assert.equal(result.remote.length, 0);
     deferred.resolve();
   });
 
   let result = await controller.fetch("no results", false, getEngine);
-  do_check_eq(result.term, "no results");
-  do_check_eq(result.local.length, 0);
-  do_check_eq(result.remote.length, 0);
+  Assert.equal(result.term, "no results");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 0);
 
   await deferred.promise;
 });
@@ -110,28 +110,28 @@ add_task(async function simple_no_result_callback_and_promise() {
 add_task(async function simple_no_result_promise() {
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("no remote", false, getEngine);
-  do_check_eq(result.term, "no remote");
-  do_check_eq(result.local.length, 0);
-  do_check_eq(result.remote.length, 0);
+  Assert.equal(result.term, "no remote");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 0);
 });
 
 add_task(async function simple_remote_no_local_result() {
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("mo", false, getEngine);
-  do_check_eq(result.term, "mo");
-  do_check_eq(result.local.length, 0);
-  do_check_eq(result.remote.length, 3);
-  do_check_eq(result.remote[0], "Mozilla");
-  do_check_eq(result.remote[1], "modern");
-  do_check_eq(result.remote[2], "mom");
+  Assert.equal(result.term, "mo");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 3);
+  Assert.equal(result.remote[0], "Mozilla");
+  Assert.equal(result.remote[1], "modern");
+  Assert.equal(result.remote[2], "mom");
 });
 
 add_task(async function remote_term_case_mismatch() {
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("Query Case Mismatch", false, getEngine);
-  do_check_eq(result.term, "Query Case Mismatch");
-  do_check_eq(result.remote.length, 1);
-  do_check_eq(result.remote[0], "Query Case Mismatch");
+  Assert.equal(result.term, "Query Case Mismatch");
+  Assert.equal(result.remote.length, 1);
+  Assert.equal(result.remote[0], "Query Case Mismatch");
 });
 
 add_task(async function simple_local_no_remote_result() {
@@ -139,10 +139,10 @@ add_task(async function simple_local_no_remote_result() {
 
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("no remote", false, getEngine);
-  do_check_eq(result.term, "no remote");
-  do_check_eq(result.local.length, 1);
-  do_check_eq(result.local[0], "no remote entries");
-  do_check_eq(result.remote.length, 0);
+  Assert.equal(result.term, "no remote");
+  Assert.equal(result.local.length, 1);
+  Assert.equal(result.local[0], "no remote entries");
+  Assert.equal(result.remote.length, 0);
 
   await updateSearchHistory("remove", "no remote entries");
 });
@@ -152,11 +152,11 @@ add_task(async function simple_non_ascii() {
 
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("I ❤️", false, getEngine);
-  do_check_eq(result.term, "I ❤️");
-  do_check_eq(result.local.length, 1);
-  do_check_eq(result.local[0], "I ❤️ XUL");
-  do_check_eq(result.remote.length, 1);
-  do_check_eq(result.remote[0], "I ❤️ Mozilla");
+  Assert.equal(result.term, "I ❤️");
+  Assert.equal(result.local.length, 1);
+  Assert.equal(result.local[0], "I ❤️ XUL");
+  Assert.equal(result.remote.length, 1);
+  Assert.equal(result.remote[0], "I ❤️ Mozilla");
 });
 
 add_task(async function both_local_remote_result_dedupe() {
@@ -164,23 +164,23 @@ add_task(async function both_local_remote_result_dedupe() {
 
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("mo", false, getEngine);
-  do_check_eq(result.term, "mo");
-  do_check_eq(result.local.length, 1);
-  do_check_eq(result.local[0], "Mozilla");
-  do_check_eq(result.remote.length, 2);
-  do_check_eq(result.remote[0], "modern");
-  do_check_eq(result.remote[1], "mom");
+  Assert.equal(result.term, "mo");
+  Assert.equal(result.local.length, 1);
+  Assert.equal(result.local[0], "Mozilla");
+  Assert.equal(result.remote.length, 2);
+  Assert.equal(result.remote[0], "modern");
+  Assert.equal(result.remote[1], "mom");
 });
 
 add_task(async function POST_both_local_remote_result_dedupe() {
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("mo", false, postEngine);
-  do_check_eq(result.term, "mo");
-  do_check_eq(result.local.length, 1);
-  do_check_eq(result.local[0], "Mozilla");
-  do_check_eq(result.remote.length, 2);
-  do_check_eq(result.remote[0], "modern");
-  do_check_eq(result.remote[1], "mom");
+  Assert.equal(result.term, "mo");
+  Assert.equal(result.local.length, 1);
+  Assert.equal(result.local[0], "Mozilla");
+  Assert.equal(result.remote.length, 2);
+  Assert.equal(result.remote[0], "modern");
+  Assert.equal(result.remote[1], "mom");
 });
 
 add_task(async function both_local_remote_result_dedupe2() {
@@ -188,12 +188,12 @@ add_task(async function both_local_remote_result_dedupe2() {
 
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("mo", false, getEngine);
-  do_check_eq(result.term, "mo");
-  do_check_eq(result.local.length, 2);
-  do_check_eq(result.local[0], "mom");
-  do_check_eq(result.local[1], "Mozilla");
-  do_check_eq(result.remote.length, 1);
-  do_check_eq(result.remote[0], "modern");
+  Assert.equal(result.term, "mo");
+  Assert.equal(result.local.length, 2);
+  Assert.equal(result.local[0], "mom");
+  Assert.equal(result.local[1], "Mozilla");
+  Assert.equal(result.remote.length, 1);
+  Assert.equal(result.remote[0], "modern");
 });
 
 add_task(async function both_local_remote_result_dedupe3() {
@@ -202,12 +202,12 @@ add_task(async function both_local_remote_result_dedupe3() {
 
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("mo", false, getEngine);
-  do_check_eq(result.term, "mo");
-  do_check_eq(result.local.length, 3);
-  do_check_eq(result.local[0], "modern");
-  do_check_eq(result.local[1], "mom");
-  do_check_eq(result.local[2], "Mozilla");
-  do_check_eq(result.remote.length, 0);
+  Assert.equal(result.term, "mo");
+  Assert.equal(result.local.length, 3);
+  Assert.equal(result.local[0], "modern");
+  Assert.equal(result.local[1], "mom");
+  Assert.equal(result.local[2], "Mozilla");
+  Assert.equal(result.remote.length, 0);
 });
 
 add_task(async function fetch_twice_in_a_row() {
@@ -220,14 +220,14 @@ add_task(async function fetch_twice_in_a_row() {
 
   // A second fetch while the server is still waiting to return results leads to an abort.
   let resultPromise2 = controller.fetch("delayed ", false, getEngine);
-  await resultPromise1.then((results) => do_check_null(results));
+  await resultPromise1.then((results) => Assert.equal(null, results));
 
   let result = await resultPromise2;
-  do_check_eq(result.term, "delayed ");
-  do_check_eq(result.local.length, 1);
-  do_check_eq(result.local[0], "delayed local");
-  do_check_eq(result.remote.length, 1);
-  do_check_eq(result.remote[0], "delayed ");
+  Assert.equal(result.term, "delayed ");
+  Assert.equal(result.local.length, 1);
+  Assert.equal(result.local[0], "delayed local");
+  Assert.equal(result.remote.length, 1);
+  Assert.equal(result.remote[0], "delayed ");
 });
 
 add_task(async function fetch_twice_subset_reuse_formHistoryResult() {
@@ -238,22 +238,22 @@ add_task(async function fetch_twice_subset_reuse_formHistoryResult() {
 
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("delay", false, getEngine);
-  do_check_eq(result.term, "delay");
-  do_check_eq(result.local.length, 2);
-  do_check_eq(result.local[0], "delay local");
-  do_check_eq(result.local[1], "delayed local");
-  do_check_eq(result.remote.length, 1);
-  do_check_eq(result.remote[0], "delay");
+  Assert.equal(result.term, "delay");
+  Assert.equal(result.local.length, 2);
+  Assert.equal(result.local[0], "delay local");
+  Assert.equal(result.local[1], "delayed local");
+  Assert.equal(result.remote.length, 1);
+  Assert.equal(result.remote[0], "delay");
 
   // Remove the entry from the DB but it should remain in the cached formHistoryResult.
   await updateSearchHistory("remove", "delayed local");
 
   let result2 = await controller.fetch("delayed ", false, getEngine);
-  do_check_eq(result2.term, "delayed ");
-  do_check_eq(result2.local.length, 1);
-  do_check_eq(result2.local[0], "delayed local");
-  do_check_eq(result2.remote.length, 1);
-  do_check_eq(result2.remote[0], "delayed ");
+  Assert.equal(result2.term, "delayed ");
+  Assert.equal(result2.local.length, 1);
+  Assert.equal(result2.local[0], "delayed local");
+  Assert.equal(result2.remote.length, 1);
+  Assert.equal(result2.remote[0], "delayed ");
 });
 
 add_task(async function both_identical_with_more_than_max_results() {
@@ -266,15 +266,15 @@ add_task(async function both_identical_with_more_than_max_results() {
   controller.maxLocalResults = 7;
   controller.maxRemoteResults = 10;
   let result = await controller.fetch("letter ", false, getEngine);
-  do_check_eq(result.term, "letter ");
-  do_check_eq(result.local.length, 7);
+  Assert.equal(result.term, "letter ");
+  Assert.equal(result.local.length, 7);
   for (let i = 0; i < controller.maxLocalResults; i++) {
-    do_check_eq(result.local[i], "letter " + String.fromCharCode("A".charCodeAt() + i));
+    Assert.equal(result.local[i], "letter " + String.fromCharCode("A".charCodeAt() + i));
   }
-  do_check_eq(result.local.length + result.remote.length, 10);
+  Assert.equal(result.local.length + result.remote.length, 10);
   for (let i = 0; i < result.remote.length; i++) {
-    do_check_eq(result.remote[i],
-                "letter " + String.fromCharCode("A".charCodeAt() + controller.maxLocalResults + i));
+    Assert.equal(result.remote[i],
+                 "letter " + String.fromCharCode("A".charCodeAt() + controller.maxLocalResults + i));
   }
 });
 
@@ -283,12 +283,12 @@ add_task(async function noremote_maxLocal() {
   controller.maxLocalResults = 2; // (should be ignored because no remote results)
   controller.maxRemoteResults = 0;
   let result = await controller.fetch("letter ", false, getEngine);
-  do_check_eq(result.term, "letter ");
-  do_check_eq(result.local.length, 26);
+  Assert.equal(result.term, "letter ");
+  Assert.equal(result.local.length, 26);
   for (let i = 0; i < result.local.length; i++) {
-    do_check_eq(result.local[i], "letter " + String.fromCharCode("A".charCodeAt() + i));
+    Assert.equal(result.local[i], "letter " + String.fromCharCode("A".charCodeAt() + i));
   }
-  do_check_eq(result.remote.length, 0);
+  Assert.equal(result.remote.length, 0);
 });
 
 add_task(async function someremote_maxLocal() {
@@ -296,15 +296,15 @@ add_task(async function someremote_maxLocal() {
   controller.maxLocalResults = 2;
   controller.maxRemoteResults = 4;
   let result = await controller.fetch("letter ", false, getEngine);
-  do_check_eq(result.term, "letter ");
-  do_check_eq(result.local.length, 2);
+  Assert.equal(result.term, "letter ");
+  Assert.equal(result.local.length, 2);
   for (let i = 0; i < result.local.length; i++) {
-    do_check_eq(result.local[i], "letter " + String.fromCharCode("A".charCodeAt() + i));
+    Assert.equal(result.local[i], "letter " + String.fromCharCode("A".charCodeAt() + i));
   }
-  do_check_eq(result.remote.length, 2);
+  Assert.equal(result.remote.length, 2);
   // "A" and "B" will have been de-duped, start at C for remote results
   for (let i = 0; i < result.remote.length; i++) {
-    do_check_eq(result.remote[i], "letter " + String.fromCharCode("C".charCodeAt() + i));
+    Assert.equal(result.remote[i], "letter " + String.fromCharCode("C".charCodeAt() + i));
   }
 });
 
@@ -313,11 +313,11 @@ add_task(async function one_of_each() {
   controller.maxLocalResults = 1;
   controller.maxRemoteResults = 2;
   let result = await controller.fetch("letter ", false, getEngine);
-  do_check_eq(result.term, "letter ");
-  do_check_eq(result.local.length, 1);
-  do_check_eq(result.local[0], "letter A");
-  do_check_eq(result.remote.length, 1);
-  do_check_eq(result.remote[0], "letter B");
+  Assert.equal(result.term, "letter ");
+  Assert.equal(result.local.length, 1);
+  Assert.equal(result.local[0], "letter A");
+  Assert.equal(result.remote.length, 1);
+  Assert.equal(result.remote[0], "letter B");
 });
 
 add_task(async function local_result_returned_remote_result_disabled() {
@@ -326,12 +326,12 @@ add_task(async function local_result_returned_remote_result_disabled() {
   controller.maxLocalResults = 1;
   controller.maxRemoteResults = 1;
   let result = await controller.fetch("letter ", false, getEngine);
-  do_check_eq(result.term, "letter ");
-  do_check_eq(result.local.length, 26);
+  Assert.equal(result.term, "letter ");
+  Assert.equal(result.local.length, 26);
   for (let i = 0; i < 26; i++) {
-    do_check_eq(result.local[i], "letter " + String.fromCharCode("A".charCodeAt() + i));
+    Assert.equal(result.local[i], "letter " + String.fromCharCode("A".charCodeAt() + i));
   }
-  do_check_eq(result.remote.length, 0);
+  Assert.equal(result.remote.length, 0);
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 });
 
@@ -341,12 +341,12 @@ add_task(async function local_result_returned_remote_result_disabled_after_creat
   controller.maxRemoteResults = 1;
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
   let result = await controller.fetch("letter ", false, getEngine);
-  do_check_eq(result.term, "letter ");
-  do_check_eq(result.local.length, 26);
+  Assert.equal(result.term, "letter ");
+  Assert.equal(result.local.length, 26);
   for (let i = 0; i < 26; i++) {
-    do_check_eq(result.local[i], "letter " + String.fromCharCode("A".charCodeAt() + i));
+    Assert.equal(result.local[i], "letter " + String.fromCharCode("A".charCodeAt() + i));
   }
-  do_check_eq(result.remote.length, 0);
+  Assert.equal(result.remote.length, 0);
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 });
 
@@ -357,11 +357,11 @@ add_task(async function one_of_each_disabled_before_creation_enabled_after_creat
   controller.maxRemoteResults = 2;
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
   let result = await controller.fetch("letter ", false, getEngine);
-  do_check_eq(result.term, "letter ");
-  do_check_eq(result.local.length, 1);
-  do_check_eq(result.local[0], "letter A");
-  do_check_eq(result.remote.length, 1);
-  do_check_eq(result.remote[0], "letter B");
+  Assert.equal(result.term, "letter ");
+  Assert.equal(result.local.length, 1);
+  Assert.equal(result.local[0], "letter A");
+  Assert.equal(result.remote.length, 1);
+  Assert.equal(result.remote[0], "letter B");
 });
 
 add_task(async function reset_suggestions_pref() {
@@ -373,12 +373,12 @@ add_task(async function one_local_zero_remote() {
   controller.maxLocalResults = 1;
   controller.maxRemoteResults = 0;
   let result = await controller.fetch("letter ", false, getEngine);
-  do_check_eq(result.term, "letter ");
-  do_check_eq(result.local.length, 26);
+  Assert.equal(result.term, "letter ");
+  Assert.equal(result.local.length, 26);
   for (let i = 0; i < 26; i++) {
-    do_check_eq(result.local[i], "letter " + String.fromCharCode("A".charCodeAt() + i));
+    Assert.equal(result.local[i], "letter " + String.fromCharCode("A".charCodeAt() + i));
   }
-  do_check_eq(result.remote.length, 0);
+  Assert.equal(result.remote.length, 0);
 });
 
 add_task(async function zero_local_one_remote() {
@@ -386,10 +386,10 @@ add_task(async function zero_local_one_remote() {
   controller.maxLocalResults = 0;
   controller.maxRemoteResults = 1;
   let result = await controller.fetch("letter ", false, getEngine);
-  do_check_eq(result.term, "letter ");
-  do_check_eq(result.local.length, 0);
-  do_check_eq(result.remote.length, 1);
-  do_check_eq(result.remote[0], "letter A");
+  Assert.equal(result.term, "letter ");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 1);
+  Assert.equal(result.remote[0], "letter A");
 });
 
 add_task(async function stop_search() {
@@ -399,7 +399,7 @@ add_task(async function stop_search() {
   let resultPromise = controller.fetch("mo", false, getEngine);
   controller.stop();
   await resultPromise.then((result) => {
-    do_check_null(result);
+    Assert.equal(null, result);
   });
 });
 
@@ -407,18 +407,18 @@ add_task(async function empty_searchTerm() {
   // Empty searches don't go to the server but still get form history.
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("", false, getEngine);
-  do_check_eq(result.term, "");
-  do_check_true(result.local.length > 0);
-  do_check_eq(result.remote.length, 0);
+  Assert.equal(result.term, "");
+  Assert.ok(result.local.length > 0);
+  Assert.equal(result.remote.length, 0);
 });
 
 add_task(async function slow_timeout() {
   let d = PromiseUtils.defer();
   function check_result(result) {
-    do_check_eq(result.term, "slow ");
-    do_check_eq(result.local.length, 1);
-    do_check_eq(result.local[0], "slow local result");
-    do_check_eq(result.remote.length, 0);
+    Assert.equal(result.term, "slow ");
+    Assert.equal(result.local.length, 1);
+    Assert.equal(result.local[0], "slow local result");
+    Assert.equal(result.remote.length, 0);
   }
   await updateSearchHistory("bump", "slow local result");
 
@@ -443,7 +443,7 @@ add_task(async function slow_stop() {
     d.resolve();
   }, 0);
   await resultPromise.then((result) => {
-    do_check_null(result);
+    Assert.equal(null, result);
   });
 
   await d.promise;
@@ -457,10 +457,10 @@ add_task(async function remote_term_mismatch() {
 
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("Query Mismatch", false, getEngine);
-  do_check_eq(result.term, "Query Mismatch");
-  do_check_eq(result.local.length, 1);
-  do_check_eq(result.local[0], "Query Mismatch Entry");
-  do_check_eq(result.remote.length, 0);
+  Assert.equal(result.term, "Query Mismatch");
+  Assert.equal(result.local.length, 1);
+  Assert.equal(result.local[0], "Query Mismatch Entry");
+  Assert.equal(result.remote.length, 0);
 });
 
 add_task(async function http_404() {
@@ -468,10 +468,10 @@ add_task(async function http_404() {
 
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("HTTP 404", false, getEngine);
-  do_check_eq(result.term, "HTTP 404");
-  do_check_eq(result.local.length, 1);
-  do_check_eq(result.local[0], "HTTP 404 Entry");
-  do_check_eq(result.remote.length, 0);
+  Assert.equal(result.term, "HTTP 404");
+  Assert.equal(result.local.length, 1);
+  Assert.equal(result.local[0], "HTTP 404 Entry");
+  Assert.equal(result.remote.length, 0);
 });
 
 add_task(async function http_500() {
@@ -479,10 +479,10 @@ add_task(async function http_500() {
 
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("HTTP 500", false, getEngine);
-  do_check_eq(result.term, "HTTP 500");
-  do_check_eq(result.local.length, 1);
-  do_check_eq(result.local[0], "HTTP 500 Entry");
-  do_check_eq(result.remote.length, 0);
+  Assert.equal(result.term, "HTTP 500");
+  Assert.equal(result.local.length, 1);
+  Assert.equal(result.local[0], "HTTP 500 Entry");
+  Assert.equal(result.remote.length, 0);
 });
 
 add_task(async function unresolvable_server() {
@@ -490,10 +490,10 @@ add_task(async function unresolvable_server() {
 
   let controller = new SearchSuggestionController();
   let result = await controller.fetch("Unresolvable Server", false, unresolvableEngine);
-  do_check_eq(result.term, "Unresolvable Server");
-  do_check_eq(result.local.length, 1);
-  do_check_eq(result.local[0], "Unresolvable Server Entry");
-  do_check_eq(result.remote.length, 0);
+  Assert.equal(result.term, "Unresolvable Server");
+  Assert.equal(result.local.length, 1);
+  Assert.equal(result.local[0], "Unresolvable Server Entry");
+  Assert.equal(result.remote.length, 0);
 });
 
 

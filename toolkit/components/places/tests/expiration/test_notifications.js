@@ -30,6 +30,6 @@ function run_test() {
 
 function check_result() {
   Services.obs.removeObserver(gObserver, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
-  do_check_eq(gObserver.notifications, 1);
+  Assert.equal(gObserver.notifications, 1);
   do_test_finished();
 }

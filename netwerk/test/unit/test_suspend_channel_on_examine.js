@@ -50,10 +50,10 @@ add_test(function testAsyncCancel() {
     });
   });
   startChannelRequest(baseUrl, CL_EXPECT_FAILURE, (request, data, context) => {
-    do_check_true(!!!data, "no response");
+    Assert.ok(!!!data, "no response");
 
     var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
-    do_check_eq(cm.countCookiesFromHost("localhost"), 0, "no cookies set");
+    Assert.equal(cm.countCookiesFromHost("localhost"), 0, "no cookies set");
 
     do_execute_soon(run_next_test);
   });

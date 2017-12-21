@@ -40,7 +40,7 @@ let mockResponse = function(response) {
 // has more checks here.
 let mockFxa = {
   getOAuthToken(options) {
-    do_check_eq(options.scope, "profile");
+    Assert.equal(options.scope, "profile");
     return "token";
   }
 };
@@ -80,10 +80,10 @@ add_test(function successfulResponse() {
   client.fetchProfile()
     .then(
       function(result) {
-        do_check_eq(client._Request._requestUri, "http://127.0.0.1:1111/v1/profile");
-        do_check_eq(result.body.email, "someone@restmail.net");
-        do_check_eq(result.body.uid, "0d5c1a89b8c54580b8e3e8adadae864a");
-        do_check_eq(result.etag, "bogusETag");
+        Assert.equal(client._Request._requestUri, "http://127.0.0.1:1111/v1/profile");
+        Assert.equal(result.body.email, "someone@restmail.net");
+        Assert.equal(result.body.uid, "0d5c1a89b8c54580b8e3e8adadae864a");
+        Assert.equal(result.etag, "bogusETag");
         run_next_test();
       }
     );
@@ -103,10 +103,10 @@ add_test(function setsIfNoneMatchETagHeader() {
   client.fetchProfile("bogusETag")
     .then(
       function(result) {
-        do_check_eq(client._Request._requestUri, "http://127.0.0.1:1111/v1/profile");
-        do_check_eq(result.body.email, "someone@restmail.net");
-        do_check_eq(result.body.uid, "0d5c1a89b8c54580b8e3e8adadae864a");
-        do_check_true(req.ifNoneMatchSet);
+        Assert.equal(client._Request._requestUri, "http://127.0.0.1:1111/v1/profile");
+        Assert.equal(result.body.email, "someone@restmail.net");
+        Assert.equal(result.body.uid, "0d5c1a89b8c54580b8e3e8adadae864a");
+        Assert.ok(req.ifNoneMatchSet);
         run_next_test();
       }
     );
@@ -124,7 +124,7 @@ add_test(function successful304Response() {
   client.fetchProfile()
     .then(
       function(result) {
-        do_check_eq(result, null);
+        Assert.equal(result, null);
         run_next_test();
       }
     );
@@ -141,11 +141,11 @@ add_test(function parseErrorResponse() {
   client._Request = new mockResponse(response);
   client.fetchProfile()
     .catch(function(e) {
-        do_check_eq(e.name, "FxAccountsProfileClientError");
-        do_check_eq(e.code, STATUS_SUCCESS);
-        do_check_eq(e.errno, ERRNO_PARSE);
-        do_check_eq(e.error, ERROR_PARSE);
-        do_check_eq(e.message, "unexpected");
+        Assert.equal(e.name, "FxAccountsProfileClientError");
+        Assert.equal(e.code, STATUS_SUCCESS);
+        Assert.equal(e.errno, ERRNO_PARSE);
+        Assert.equal(e.error, ERROR_PARSE);
+        Assert.equal(e.message, "unexpected");
         run_next_test();
       }
     );
@@ -161,11 +161,11 @@ add_test(function serverErrorResponse() {
   client._Request = new mockResponse(response);
   client.fetchProfile()
     .catch(function(e) {
-      do_check_eq(e.name, "FxAccountsProfileClientError");
-      do_check_eq(e.code, 500);
-      do_check_eq(e.errno, 100);
-      do_check_eq(e.error, "Bad Request");
-      do_check_eq(e.message, "Something went wrong");
+      Assert.equal(e.name, "FxAccountsProfileClientError");
+      Assert.equal(e.code, 500);
+      Assert.equal(e.errno, 100);
+      Assert.equal(e.error, "Bad Request");
+      Assert.equal(e.message, "Something went wrong");
       run_next_test();
     }
   );
@@ -181,13 +181,13 @@ add_test(function server401ResponseThenSuccess() {
 
   let mockFxaWithRemove = {
     getOAuthToken(options) {
-      do_check_eq(options.scope, "profile");
+      Assert.equal(options.scope, "profile");
       return "" + ++lastToken; // tokens are strings.
     },
     removeCachedOAuthToken(options) {
       // This test never has more than 1 token alive at once, so the token
       // being revoked must always be the last token we handed out.
-      do_check_eq(parseInt(options.token), lastToken);
+      Assert.equal(parseInt(options.token), lastToken);
       ++numTokensRemoved;
     }
   };
@@ -219,7 +219,7 @@ add_test(function server401ResponseThenSuccess() {
       setHeader(name, value) {
         if (name == "Authorization") {
           numAuthHeaders++;
-          do_check_eq(value, "Bearer " + lastToken);
+          Assert.equal(value, "Bearer " + lastToken);
         }
       },
       get() {
@@ -232,13 +232,13 @@ add_test(function server401ResponseThenSuccess() {
 
   client.fetchProfile()
     .then(result => {
-      do_check_eq(result.body.avatar, "http://example.com/image.jpg");
-      do_check_eq(result.body.id, "0d5c1a89b8c54580b8e3e8adadae864a");
+      Assert.equal(result.body.avatar, "http://example.com/image.jpg");
+      Assert.equal(result.body.id, "0d5c1a89b8c54580b8e3e8adadae864a");
       // should have been exactly 2 requests and exactly 2 auth headers.
-      do_check_eq(numRequests, 2);
-      do_check_eq(numAuthHeaders, 2);
+      Assert.equal(numRequests, 2);
+      Assert.equal(numAuthHeaders, 2);
       // and we should have seen one token revoked.
-      do_check_eq(numTokensRemoved, 1);
+      Assert.equal(numTokensRemoved, 1);
 
       run_next_test();
     }
@@ -255,13 +255,13 @@ add_test(function server401ResponsePersists() {
 
   let mockFxaWithRemove = {
     getOAuthToken(options) {
-      do_check_eq(options.scope, "profile");
+      Assert.equal(options.scope, "profile");
       return "" + ++lastToken; // tokens are strings.
     },
     removeCachedOAuthToken(options) {
       // This test never has more than 1 token alive at once, so the token
       // being revoked must always be the last token we handed out.
-      do_check_eq(parseInt(options.token), lastToken);
+      Assert.equal(parseInt(options.token), lastToken);
       ++numTokensRemoved;
     }
   };
@@ -283,7 +283,7 @@ add_test(function server401ResponsePersists() {
       setHeader(name, value) {
         if (name == "Authorization") {
           numAuthHeaders++;
-          do_check_eq(value, "Bearer " + lastToken);
+          Assert.equal(value, "Bearer " + lastToken);
         }
       },
       get() {
@@ -295,15 +295,15 @@ add_test(function server401ResponsePersists() {
   };
 
   client.fetchProfile().catch(function(e) {
-      do_check_eq(e.name, "FxAccountsProfileClientError");
-      do_check_eq(e.code, 401);
-      do_check_eq(e.errno, 100);
-      do_check_eq(e.error, "It's not your token, it's you!");
+      Assert.equal(e.name, "FxAccountsProfileClientError");
+      Assert.equal(e.code, 401);
+      Assert.equal(e.errno, 100);
+      Assert.equal(e.error, "It's not your token, it's you!");
       // should have been exactly 2 requests and exactly 2 auth headers.
-      do_check_eq(numRequests, 2);
-      do_check_eq(numAuthHeaders, 2);
+      Assert.equal(numRequests, 2);
+      Assert.equal(numAuthHeaders, 2);
       // and we should have seen both tokens revoked.
-      do_check_eq(numTokensRemoved, 2);
+      Assert.equal(numTokensRemoved, 2);
       run_next_test();
     }
   );
@@ -316,10 +316,10 @@ add_test(function networkErrorResponse() {
   });
   client.fetchProfile()
     .catch(function(e) {
-        do_check_eq(e.name, "FxAccountsProfileClientError");
-        do_check_eq(e.code, null);
-        do_check_eq(e.errno, ERRNO_NETWORK);
-        do_check_eq(e.error, ERROR_NETWORK);
+        Assert.equal(e.name, "FxAccountsProfileClientError");
+        Assert.equal(e.code, null);
+        Assert.equal(e.errno, ERRNO_NETWORK);
+        Assert.equal(e.error, ERROR_NETWORK);
         run_next_test();
       }
     );
@@ -330,11 +330,11 @@ add_test(function unsupportedMethod() {
 
   return client._createRequest("/profile", "PUT")
     .catch(function(e) {
-        do_check_eq(e.name, "FxAccountsProfileClientError");
-        do_check_eq(e.code, ERROR_CODE_METHOD_NOT_ALLOWED);
-        do_check_eq(e.errno, ERRNO_NETWORK);
-        do_check_eq(e.error, ERROR_NETWORK);
-        do_check_eq(e.message, ERROR_MSG_METHOD_NOT_ALLOWED);
+        Assert.equal(e.name, "FxAccountsProfileClientError");
+        Assert.equal(e.code, ERROR_CODE_METHOD_NOT_ALLOWED);
+        Assert.equal(e.errno, ERRNO_NETWORK);
+        Assert.equal(e.error, ERROR_NETWORK);
+        Assert.equal(e.message, ERROR_MSG_METHOD_NOT_ALLOWED);
         run_next_test();
       }
     );
@@ -345,11 +345,11 @@ add_test(function onCompleteRequestError() {
   client._Request = new mockResponseError(new Error("onComplete error"));
   client.fetchProfile()
     .catch(function(e) {
-        do_check_eq(e.name, "FxAccountsProfileClientError");
-        do_check_eq(e.code, null);
-        do_check_eq(e.errno, ERRNO_NETWORK);
-        do_check_eq(e.error, ERROR_NETWORK);
-        do_check_eq(e.message, "Error: onComplete error");
+        Assert.equal(e.name, "FxAccountsProfileClientError");
+        Assert.equal(e.code, null);
+        Assert.equal(e.errno, ERRNO_NETWORK);
+        Assert.equal(e.error, ERROR_NETWORK);
+        Assert.equal(e.message, "Error: onComplete error");
         run_next_test();
       }
   );
@@ -370,11 +370,11 @@ add_test(function constructorTests() {
 
 add_test(function errorTests() {
   let error1 = new FxAccountsProfileClientError();
-  do_check_eq(error1.name, "FxAccountsProfileClientError");
-  do_check_eq(error1.code, null);
-  do_check_eq(error1.errno, ERRNO_UNKNOWN_ERROR);
-  do_check_eq(error1.error, ERROR_UNKNOWN);
-  do_check_eq(error1.message, null);
+  Assert.equal(error1.name, "FxAccountsProfileClientError");
+  Assert.equal(error1.code, null);
+  Assert.equal(error1.errno, ERRNO_UNKNOWN_ERROR);
+  Assert.equal(error1.error, ERROR_UNKNOWN);
+  Assert.equal(error1.message, null);
 
   let error2 = new FxAccountsProfileClientError({
     code: STATUS_SUCCESS,
@@ -385,19 +385,19 @@ add_test(function errorTests() {
   let fields2 = error2._toStringFields();
   let statusCode = 1;
 
-  do_check_eq(error2.name, "FxAccountsProfileClientError");
-  do_check_eq(error2.code, STATUS_SUCCESS);
-  do_check_eq(error2.errno, statusCode);
-  do_check_eq(error2.error, "Error");
-  do_check_eq(error2.message, "Something");
+  Assert.equal(error2.name, "FxAccountsProfileClientError");
+  Assert.equal(error2.code, STATUS_SUCCESS);
+  Assert.equal(error2.errno, statusCode);
+  Assert.equal(error2.error, "Error");
+  Assert.equal(error2.message, "Something");
 
-  do_check_eq(fields2.name, "FxAccountsProfileClientError");
-  do_check_eq(fields2.code, STATUS_SUCCESS);
-  do_check_eq(fields2.errno, statusCode);
-  do_check_eq(fields2.error, "Error");
-  do_check_eq(fields2.message, "Something");
+  Assert.equal(fields2.name, "FxAccountsProfileClientError");
+  Assert.equal(fields2.code, STATUS_SUCCESS);
+  Assert.equal(fields2.errno, statusCode);
+  Assert.equal(fields2.error, "Error");
+  Assert.equal(fields2.message, "Something");
 
-  do_check_true(error2.toString().indexOf("Something") >= 0);
+  Assert.ok(error2.toString().indexOf("Something") >= 0);
   run_next_test();
 });
 
@@ -418,7 +418,7 @@ function validationHelper(options, expected) {
   try {
     new FxAccountsProfileClient(options);
   } catch (e) {
-    return do_check_eq(e.toString(), expected);
+    return Assert.equal(e.toString(), expected);
   }
   throw new Error("Validation helper error");
 }

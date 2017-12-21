@@ -395,10 +395,10 @@ function run_basic_tests() {
         "string");
       if (test.throws) {
         do_print("Exception expected");
-        do_check_true(true);
+        Assert.ok(true);
       } else {
         do_print("Exception unexpected\n" + e);
-        do_check_true(false);
+        Assert.ok(false);
       }
     }
     if (output) {
@@ -455,12 +455,12 @@ function run_named_tests() {
 function assertOutput(actual, expected) {
   if (actual.length === expected.length) {
     for (let i = 0; i < expected.length; i++) {
-      do_check_true(!!actual[i]);
+      Assert.ok(!!actual[i]);
       do_print("Check that the output item has the expected name, " +
         "value and priority");
-      do_check_eq(expected[i].name, actual[i].name);
-      do_check_eq(expected[i].value, actual[i].value);
-      do_check_eq(expected[i].priority, actual[i].priority);
+      Assert.equal(expected[i].name, actual[i].name);
+      Assert.equal(expected[i].value, actual[i].value);
+      Assert.equal(expected[i].priority, actual[i].priority);
       deepEqual(expected[i].offsets, actual[i].offsets);
       if ("commentOffsets" in expected[i]) {
         deepEqual(expected[i].commentOffsets, actual[i].commentOffsets);
@@ -471,6 +471,6 @@ function assertOutput(actual, expected) {
       do_print("Actual output contained: {name: " + prop.name + ", value: " +
         prop.value + ", priority: " + prop.priority + "}");
     }
-    do_check_eq(actual.length, expected.length);
+    Assert.equal(actual.length, expected.length);
   }
 }

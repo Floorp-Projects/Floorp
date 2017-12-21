@@ -26,5 +26,5 @@ function run_test() {
   // ((1 + 1 + 1) * (-1) + 1) * 2 + 1 = -3
   methods.chain(methods.save, methods.addX, methods.addX, methods.neg,
                 methods.addX, methods.double, methods.addX, methods.save)(1);
-  do_check_eq(methods.x, -3);
+  Assert.equal(methods.x, -3);
 }

@@ -98,9 +98,9 @@ function completeTest1(request, data, ctx)
 {
   try {
     var chan = request.QueryInterface(Ci.nsIChannel);
-    do_check_eq(chan.contentDisposition, chan.DISPOSITION_ATTACHMENT);
-    do_check_eq(chan.contentDispositionFilename, "foo");
-    do_check_eq(chan.contentDispositionHeader, "attachment; filename=foo");
+    Assert.equal(chan.contentDisposition, chan.DISPOSITION_ATTACHMENT);
+    Assert.equal(chan.contentDispositionFilename, "foo");
+    Assert.equal(chan.contentDispositionHeader, "attachment; filename=foo");
   } catch (ex) {
     do_throw("error parsing Content-Disposition: " + ex);
   }
@@ -122,8 +122,8 @@ function completeTest2(request, data, ctx)
 {
   try {
     var chan = request.QueryInterface(Ci.nsIChannel);
-    do_check_eq(chan.contentDisposition, chan.DISPOSITION_ATTACHMENT);
-    do_check_eq(chan.contentDispositionHeader, "attachment");
+    Assert.equal(chan.contentDisposition, chan.DISPOSITION_ATTACHMENT);
+    Assert.equal(chan.contentDispositionHeader, "attachment");
 
     filename = chan.contentDispositionFilename;  // should barf
     do_throw("Should have failed getting Content-Disposition filename");
@@ -148,8 +148,8 @@ function completeTest3(request, data, ctx)
 {
   try {
     var chan = request.QueryInterface(Ci.nsIChannel);
-    do_check_eq(chan.contentDisposition, chan.DISPOSITION_ATTACHMENT);
-    do_check_eq(chan.contentDispositionHeader, "attachment; filename=");
+    Assert.equal(chan.contentDisposition, chan.DISPOSITION_ATTACHMENT);
+    Assert.equal(chan.contentDispositionHeader, "attachment; filename=");
 
     filename = chan.contentDispositionFilename;  // should barf
     do_throw("Should have failed getting Content-Disposition filename");
@@ -174,8 +174,8 @@ function completeTest4(request, data, ctx)
 {
   try {
     var chan = request.QueryInterface(Ci.nsIChannel);
-    do_check_eq(chan.contentDisposition, chan.DISPOSITION_INLINE);
-    do_check_eq(chan.contentDispositionHeader, "inline");
+    Assert.equal(chan.contentDisposition, chan.DISPOSITION_INLINE);
+    Assert.equal(chan.contentDispositionHeader, "inline");
 
     filename = chan.contentDispositionFilename;  // should barf
     do_throw("Should have failed getting Content-Disposition filename");

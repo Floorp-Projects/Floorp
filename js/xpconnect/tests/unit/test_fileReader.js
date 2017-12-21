@@ -9,5 +9,5 @@ function run_test() {
   Cu.evalInSandbox('do_check_true((new FileReader()) instanceof FileReader);',
                    sb);
   Cu.importGlobalProperties(["FileReader"]);
-  do_check_true((new FileReader()) instanceof FileReader);
+  Assert.ok((new FileReader()) instanceof FileReader);
 }

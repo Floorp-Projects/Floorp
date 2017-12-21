@@ -33,18 +33,18 @@ add_task(async function test_execute() {
   await PlacesUtils.setCharsetForURI(TEST_BOOKMARKED_URI, charset);
 
   // check that we have created a page annotation
-  do_check_eq(PlacesUtils.annotations.getPageAnnotation(TEST_URI, CHARSET_ANNO), charset);
+  Assert.equal(PlacesUtils.annotations.getPageAnnotation(TEST_URI, CHARSET_ANNO), charset);
 
   // get charset from not-bookmarked page
-  do_check_eq((await PlacesUtils.getCharsetForURI(TEST_URI)), charset);
+  Assert.equal((await PlacesUtils.getCharsetForURI(TEST_URI)), charset);
 
   // get charset from bookmarked page
-  do_check_eq((await PlacesUtils.getCharsetForURI(TEST_BOOKMARKED_URI)), charset);
+  Assert.equal((await PlacesUtils.getCharsetForURI(TEST_BOOKMARKED_URI)), charset);
 
   await PlacesTestUtils.clearHistory();
 
   // ensure that charset has gone for not-bookmarked page
-  do_check_neq((await PlacesUtils.getCharsetForURI(TEST_URI)), charset);
+  Assert.notEqual((await PlacesUtils.getCharsetForURI(TEST_URI)), charset);
 
   // check that page annotation has been removed
   try {
@@ -53,9 +53,9 @@ add_task(async function test_execute() {
   } catch (e) {}
 
   // ensure that charset still exists for bookmarked page
-  do_check_eq((await PlacesUtils.getCharsetForURI(TEST_BOOKMARKED_URI)), charset);
+  Assert.equal((await PlacesUtils.getCharsetForURI(TEST_BOOKMARKED_URI)), charset);
 
   // remove charset from bookmark and check that has gone
   await PlacesUtils.setCharsetForURI(TEST_BOOKMARKED_URI, "");
-  do_check_neq((await PlacesUtils.getCharsetForURI(TEST_BOOKMARKED_URI)), charset);
+  Assert.notEqual((await PlacesUtils.getCharsetForURI(TEST_BOOKMARKED_URI)), charset);
 });

@@ -6,5 +6,5 @@ function run_test() {
   Cu.evalInSandbox('do_check_eq(CSS.escape("$"), "\\\\$");',
                    sb);
   Cu.importGlobalProperties(["CSS"]);
-  do_check_eq(CSS.escape("$"), "\\$");
+  Assert.equal(CSS.escape("$"), "\\$");
 }

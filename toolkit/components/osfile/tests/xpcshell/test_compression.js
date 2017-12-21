@@ -26,7 +26,7 @@ add_task(async function test_compress_lz4() {
   do_print("Reading back with lz4 decompression");
   let decompressed = await OS.File.read(path, { compression: "lz4" });
   do_print("Decompressed into " + decompressed.byteLength + " bytes");
-  do_check_eq(arrayAsString, Array.prototype.join.call(decompressed));
+  Assert.equal(arrayAsString, Array.prototype.join.call(decompressed));
 });
 
 add_task(async function test_uncompressed() {
@@ -45,9 +45,9 @@ add_task(async function test_uncompressed() {
   } catch (ex) {
     exn = ex;
   }
-  do_check_true(!!exn);
+  Assert.ok(!!exn);
   // Check the exception message (and that it contains the file name)
-  do_check_true(exn.message.indexOf(`Invalid header (no magic number) - Data: ${ path }`) != -1);
+  Assert.ok(exn.message.indexOf(`Invalid header (no magic number) - Data: ${ path }`) != -1);
 });
 
 add_task(async function test_no_header() {
@@ -64,9 +64,9 @@ add_task(async function test_no_header() {
   } catch (ex) {
     exn = ex;
   }
-  do_check_true(!!exn);
+  Assert.ok(!!exn);
   // Check the exception message (and that it contains the file name)
-  do_check_true(exn.message.indexOf(`Buffer is too short (no header) - Data: ${ path }`) != -1);
+  Assert.ok(exn.message.indexOf(`Buffer is too short (no header) - Data: ${ path }`) != -1);
 });
 
 add_task(async function test_invalid_content() {
@@ -88,9 +88,9 @@ add_task(async function test_invalid_content() {
   } catch (ex) {
     exn = ex;
   }
-  do_check_true(!!exn);
+  Assert.ok(!!exn);
   // Check the exception message (and that it contains the file name)
-  do_check_true(exn.message.indexOf(`Invalid content: Decompression stopped at 0 - Data: ${ path }`) != -1);
+  Assert.ok(exn.message.indexOf(`Invalid content: Decompression stopped at 0 - Data: ${ path }`) != -1);
 });
 
 add_task(function() {

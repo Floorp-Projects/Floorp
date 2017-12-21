@@ -7,27 +7,27 @@
 add_task(async function compress_bookmark_backups_test() {
   // Check for jsonlz4 extension
   let todayFilename = PlacesBackups.getFilenameForDate(new Date(2014, 4, 15), true);
-  do_check_eq(todayFilename, "bookmarks-2014-05-15.jsonlz4");
+  Assert.equal(todayFilename, "bookmarks-2014-05-15.jsonlz4");
 
   await PlacesBackups.create();
 
   // Check that a backup for today has been created and the regex works fine for lz4.
-  do_check_eq((await PlacesBackups.getBackupFiles()).length, 1);
+  Assert.equal((await PlacesBackups.getBackupFiles()).length, 1);
   let mostRecentBackupFile = await PlacesBackups.getMostRecentBackup();
-  do_check_neq(mostRecentBackupFile, null);
-  do_check_true(PlacesBackups.filenamesRegex.test(OS.Path.basename(mostRecentBackupFile)));
+  Assert.notEqual(mostRecentBackupFile, null);
+  Assert.ok(PlacesBackups.filenamesRegex.test(OS.Path.basename(mostRecentBackupFile)));
 
   // The most recent backup file has to be removed since saveBookmarksToJSONFile
   // will otherwise over-write the current backup, since it will be made on the
   // same date
   await OS.File.remove(mostRecentBackupFile);
-  do_check_false((await OS.File.exists(mostRecentBackupFile)));
+  Assert.equal(false, (await OS.File.exists(mostRecentBackupFile)));
 
   // Check that, if the user created a custom backup out of the default
   // backups folder, it gets copied (compressed) into it.
   let jsonFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.json");
   await PlacesBackups.saveBookmarksToJSONFile(jsonFile);
-  do_check_eq((await PlacesBackups.getBackupFiles()).length, 1);
+  Assert.equal((await PlacesBackups.getBackupFiles()).length, 1);
 
   // Check if import works from lz4 compressed json
   let url = "http://www.mozilla.org/en-US/";
@@ -44,7 +44,7 @@ add_task(async function compress_bookmark_backups_test() {
   await BookmarkJSONUtils.importFromFile(recentBackup, true);
   let root = PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
   let node = root.getChild(0);
-  do_check_eq(node.uri, url);
+  Assert.equal(node.uri, url);
 
   root.containerOpen = false;
   PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);

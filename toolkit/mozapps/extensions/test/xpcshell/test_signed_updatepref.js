@@ -62,10 +62,10 @@ add_task(async function() {
   await promiseInstallAllFiles([do_get_file(DATA + "unsigned_bootstrap_2.xpi")]);
 
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
+  Assert.notEqual(addon, null);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
 
   await promiseShutdownManager();
 
@@ -74,29 +74,29 @@ add_task(async function() {
   startupManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
+  Assert.notEqual(addon, null);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
 
   // Update checks shouldn't affect the add-on
   await AddonManagerInternal.backgroundUpdateCheck();
   addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
+  Assert.notEqual(addon, null);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
 
   let changes = await verifySignatures();
 
-  do_check_eq(changes.disabled.length, 1);
-  do_check_eq(changes.disabled[0], ID);
+  Assert.equal(changes.disabled.length, 1);
+  Assert.equal(changes.disabled[0], ID);
 
   addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_true(addon.appDisabled);
-  do_check_false(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
+  Assert.notEqual(addon, null);
+  Assert.ok(addon.appDisabled);
+  Assert.ok(!addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
 
   addon.uninstall();
 
@@ -113,10 +113,10 @@ add_task(async function() {
   await promiseInstallAllFiles([do_get_file(DATA + "unsigned_bootstrap_2.xpi")]);
 
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
+  Assert.notEqual(addon, null);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
 
   await promiseShutdownManager();
 
@@ -125,10 +125,10 @@ add_task(async function() {
   startupManager(true);
 
   addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_true(addon.appDisabled);
-  do_check_false(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
+  Assert.notEqual(addon, null);
+  Assert.ok(addon.appDisabled);
+  Assert.ok(!addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
 
   addon.uninstall();
 

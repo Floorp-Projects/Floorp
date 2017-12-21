@@ -69,28 +69,28 @@ function run_test() {
   //**************************************************************************//
   // Nonexisting user preferences
 
-  do_check_eq(pb.prefHasUserValue("UserPref.nonexistent.hasUserValue"), false);
+  Assert.equal(pb.prefHasUserValue("UserPref.nonexistent.hasUserValue"), false);
   pb.clearUserPref("UserPref.nonexistent.clearUserPref"); // shouldn't throw
-  do_check_eq(pb.getPrefType("UserPref.nonexistent.getPrefType"), PREF_INVALID);
-  do_check_eq(pb.root, "");
+  Assert.equal(pb.getPrefType("UserPref.nonexistent.getPrefType"), PREF_INVALID);
+  Assert.equal(pb.root, "");
 
   // bool...
   do_check_throws(function() {
     pb.getBoolPref("UserPref.nonexistent.getBoolPref");}, Cr.NS_ERROR_UNEXPECTED);
   pb.setBoolPref("UserPref.nonexistent.setBoolPref", false);
-  do_check_eq(pb.getBoolPref("UserPref.nonexistent.setBoolPref"), false);
+  Assert.equal(pb.getBoolPref("UserPref.nonexistent.setBoolPref"), false);
 
   // int...
   do_check_throws(function() {
     pb.getIntPref("UserPref.nonexistent.getIntPref");}, Cr.NS_ERROR_UNEXPECTED);
   pb.setIntPref("UserPref.nonexistent.setIntPref", 5);
-  do_check_eq(pb.getIntPref("UserPref.nonexistent.setIntPref"), 5);
+  Assert.equal(pb.getIntPref("UserPref.nonexistent.setIntPref"), 5);
 
   // char
   do_check_throws(function() {
     pb.getCharPref("UserPref.nonexistent.getCharPref");}, Cr.NS_ERROR_UNEXPECTED);
   pb.setCharPref("UserPref.nonexistent.setCharPref", "_test");
-  do_check_eq(pb.getCharPref("UserPref.nonexistent.setCharPref"), "_test");
+  Assert.equal(pb.getCharPref("UserPref.nonexistent.setCharPref"), "_test");
 
   //**************************************************************************//
   // Existing user Prefs and data integrity test (round-trip match)
@@ -100,30 +100,30 @@ function run_test() {
   pb.setCharPref("UserPref.existing.char", "hey");
 
   // getPref should return the pref value
-  do_check_eq(pb.getBoolPref("UserPref.existing.bool"), true);
-  do_check_eq(pb.getIntPref("UserPref.existing.int"), 23);
-  do_check_eq(pb.getCharPref("UserPref.existing.char"), "hey");
+  Assert.equal(pb.getBoolPref("UserPref.existing.bool"), true);
+  Assert.equal(pb.getIntPref("UserPref.existing.int"), 23);
+  Assert.equal(pb.getCharPref("UserPref.existing.char"), "hey");
 
   // setPref should not complain and should change the value of the pref
   pb.setBoolPref("UserPref.existing.bool", false);
-  do_check_eq(pb.getBoolPref("UserPref.existing.bool"), false);
+  Assert.equal(pb.getBoolPref("UserPref.existing.bool"), false);
   pb.setIntPref("UserPref.existing.int", 24);
-  do_check_eq(pb.getIntPref("UserPref.existing.int"), 24);
+  Assert.equal(pb.getIntPref("UserPref.existing.int"), 24);
   pb.setCharPref("UserPref.existing.char", "hej då!");
-  do_check_eq(pb.getCharPref("UserPref.existing.char"), "hej då!");
+  Assert.equal(pb.getCharPref("UserPref.existing.char"), "hej då!");
 
   // prefHasUserValue should return true now
-  do_check_true(pb.prefHasUserValue("UserPref.existing.bool"));
-  do_check_true(pb.prefHasUserValue("UserPref.existing.int"));
-  do_check_true(pb.prefHasUserValue("UserPref.existing.char"));
+  Assert.ok(pb.prefHasUserValue("UserPref.existing.bool"));
+  Assert.ok(pb.prefHasUserValue("UserPref.existing.int"));
+  Assert.ok(pb.prefHasUserValue("UserPref.existing.char"));
 
   // clearUserPref should remove the pref
   pb.clearUserPref("UserPref.existing.bool");
-  do_check_false(pb.prefHasUserValue("UserPref.existing.bool"));
+  Assert.ok(!pb.prefHasUserValue("UserPref.existing.bool"));
   pb.clearUserPref("UserPref.existing.int");
-  do_check_false(pb.prefHasUserValue("UserPref.existing.int"));
+  Assert.ok(!pb.prefHasUserValue("UserPref.existing.int"));
   pb.clearUserPref("UserPref.existing.char");
-  do_check_false(pb.prefHasUserValue("UserPref.existing.char"));
+  Assert.ok(!pb.prefHasUserValue("UserPref.existing.char"));
 
   //**************************************************************************//
   // Large value test
@@ -139,50 +139,50 @@ function run_test() {
 
   // bool...
   pb.setBoolPref("UserPref.getPrefType.bool", true);
-  do_check_eq(pb.getPrefType("UserPref.getPrefType.bool"), PREF_BOOL);
+  Assert.equal(pb.getPrefType("UserPref.getPrefType.bool"), PREF_BOOL);
 
   // int...
   pb.setIntPref("UserPref.getPrefType.int", -234);
-  do_check_eq(pb.getPrefType("UserPref.getPrefType.int"), PREF_INT);
+  Assert.equal(pb.getPrefType("UserPref.getPrefType.int"), PREF_INT);
 
   // char...
   pb.setCharPref("UserPref.getPrefType.char", "testing1..2");
-  do_check_eq(pb.getPrefType("UserPref.getPrefType.char"), PREF_STRING);
+  Assert.equal(pb.getPrefType("UserPref.getPrefType.char"), PREF_STRING);
 
   //**************************************************************************//
   // getBranch tests
   
-  do_check_eq(ps.root, "");
+  Assert.equal(ps.root, "");
 
   // bool ...
   pb.setBoolPref("UserPref.root.boolPref", true);
   let pb_1 = ps.getBranch("UserPref.root.");
-  do_check_eq(pb_1.getBoolPref("boolPref"), true);
+  Assert.equal(pb_1.getBoolPref("boolPref"), true);
   let pb_2 = ps.getBranch("UserPref.root.boolPref");
-  do_check_eq(pb_2.getBoolPref(""), true);
+  Assert.equal(pb_2.getBoolPref(""), true);
   pb_2.setBoolPref(".anotherPref", false);
   let pb_3 = ps.getBranch("UserPref.root.boolPre");
-  do_check_eq(pb_3.getBoolPref("f.anotherPref"), false);
+  Assert.equal(pb_3.getBoolPref("f.anotherPref"), false);
 
   // int ...
   pb.setIntPref("UserPref.root.intPref", 23);
   pb_1 = ps.getBranch("UserPref.root.");
-  do_check_eq(pb_1.getIntPref("intPref"), 23);
+  Assert.equal(pb_1.getIntPref("intPref"), 23);
   pb_2 = ps.getBranch("UserPref.root.intPref");
-  do_check_eq(pb_2.getIntPref(""), 23);
+  Assert.equal(pb_2.getIntPref(""), 23);
   pb_2.setIntPref(".anotherPref", 69);
   pb_3 = ps.getBranch("UserPref.root.intPre");
-  do_check_eq(pb_3.getIntPref("f.anotherPref"), 69);
+  Assert.equal(pb_3.getIntPref("f.anotherPref"), 69);
 
   // char...
   pb.setCharPref("UserPref.root.charPref", "_char");
   pb_1 = ps.getBranch("UserPref.root.");
-  do_check_eq(pb_1.getCharPref("charPref"), "_char");
+  Assert.equal(pb_1.getCharPref("charPref"), "_char");
   pb_2 = ps.getBranch("UserPref.root.charPref");
-  do_check_eq(pb_2.getCharPref(""), "_char");
+  Assert.equal(pb_2.getCharPref(""), "_char");
   pb_2.setCharPref(".anotherPref", "_another");
   pb_3 = ps.getBranch("UserPref.root.charPre");
-  do_check_eq(pb_3.getCharPref("f.anotherPref"), "_another");
+  Assert.equal(pb_3.getCharPref("f.anotherPref"), "_another");
 
   //**************************************************************************//
   // getChildlist tests
@@ -190,15 +190,15 @@ function run_test() {
   // get an already set prefBranch
   pb1 = ps.getBranch("UserPref.root.");
   let prefList = pb1.getChildList("");
-  do_check_eq(prefList.length, 6);
+  Assert.equal(prefList.length, 6);
 
   // check for specific prefs in the array : the order is not important
-  do_check_true("boolPref" in makeList(prefList));
-  do_check_true("intPref" in makeList(prefList));
-  do_check_true("charPref" in makeList(prefList));
-  do_check_true("boolPref.anotherPref" in makeList(prefList));
-  do_check_true("intPref.anotherPref" in makeList(prefList));
-  do_check_true("charPref.anotherPref" in makeList(prefList));
+  Assert.ok("boolPref" in makeList(prefList));
+  Assert.ok("intPref" in makeList(prefList));
+  Assert.ok("charPref" in makeList(prefList));
+  Assert.ok("boolPref.anotherPref" in makeList(prefList));
+  Assert.ok("intPref.anotherPref" in makeList(prefList));
+  Assert.ok("charPref.anotherPref" in makeList(prefList));
 
   //**************************************************************************//
   // Default branch tests
@@ -206,29 +206,29 @@ function run_test() {
   // bool...
   pb1 = ps.getDefaultBranch("");
   pb1.setBoolPref("DefaultPref.bool", true);
-  do_check_eq(pb1.getBoolPref("DefaultPref.bool"), true);  
-  do_check_false(pb1.prefHasUserValue("DefaultPref.bool"));
+  Assert.equal(pb1.getBoolPref("DefaultPref.bool"), true);  
+  Assert.ok(!pb1.prefHasUserValue("DefaultPref.bool"));
   ps.setBoolPref("DefaultPref.bool", false);
-  do_check_true(pb1.prefHasUserValue("DefaultPref.bool"));
-  do_check_eq(ps.getBoolPref("DefaultPref.bool"), false); 
+  Assert.ok(pb1.prefHasUserValue("DefaultPref.bool"));
+  Assert.equal(ps.getBoolPref("DefaultPref.bool"), false); 
 
   // int...
   pb1 = ps.getDefaultBranch("");
   pb1.setIntPref("DefaultPref.int", 100);
-  do_check_eq(pb1.getIntPref("DefaultPref.int"), 100);  
-  do_check_false(pb1.prefHasUserValue("DefaultPref.int"));
+  Assert.equal(pb1.getIntPref("DefaultPref.int"), 100);  
+  Assert.ok(!pb1.prefHasUserValue("DefaultPref.int"));
   ps.setIntPref("DefaultPref.int", 50);
-  do_check_true(pb1.prefHasUserValue("DefaultPref.int"));
-  do_check_eq(ps.getIntPref("DefaultPref.int"), 50); 
+  Assert.ok(pb1.prefHasUserValue("DefaultPref.int"));
+  Assert.equal(ps.getIntPref("DefaultPref.int"), 50); 
 
   // char...
   pb1 = ps.getDefaultBranch("");
   pb1.setCharPref("DefaultPref.char", "_default");
-  do_check_eq(pb1.getCharPref("DefaultPref.char"), "_default");  
-  do_check_false(pb1.prefHasUserValue("DefaultPref.char"));
+  Assert.equal(pb1.getCharPref("DefaultPref.char"), "_default");  
+  Assert.ok(!pb1.prefHasUserValue("DefaultPref.char"));
   ps.setCharPref("DefaultPref.char", "_user");
-  do_check_true(pb1.prefHasUserValue("DefaultPref.char"));
-  do_check_eq(ps.getCharPref("DefaultPref.char"), "_user"); 
+  Assert.ok(pb1.prefHasUserValue("DefaultPref.char"));
+  Assert.equal(ps.getCharPref("DefaultPref.char"), "_user"); 
 
   //**************************************************************************//
   // pref Locking/Unlocking tests
@@ -240,20 +240,20 @@ function run_test() {
     ps.unlockPref("DefaultPref.nonexistent");}, Cr.NS_ERROR_UNEXPECTED);
 
   // getting a locked pref branch should return the "default" value
-  do_check_false(ps.prefIsLocked("DefaultPref.char"));
+  Assert.ok(!ps.prefIsLocked("DefaultPref.char"));
   ps.lockPref("DefaultPref.char");
-  do_check_eq(ps.getCharPref("DefaultPref.char"), "_default"); 
-  do_check_true(ps.prefIsLocked("DefaultPref.char"));
+  Assert.equal(ps.getCharPref("DefaultPref.char"), "_default"); 
+  Assert.ok(ps.prefIsLocked("DefaultPref.char"));
 
   // getting an unlocked pref branch should return the "user" value 
   ps.unlockPref("DefaultPref.char");
-  do_check_eq(ps.getCharPref("DefaultPref.char"), "_user"); 
-  do_check_false(ps.prefIsLocked("DefaultPref.char"));
+  Assert.equal(ps.getCharPref("DefaultPref.char"), "_user"); 
+  Assert.ok(!ps.prefIsLocked("DefaultPref.char"));
 
   // setting the "default" value to a user pref branch should
   // make prefHasUserValue return false (documented behavior)
   ps.setCharPref("DefaultPref.char", "_default");
-  do_check_false(pb1.prefHasUserValue("DefaultPref.char"));
+  Assert.ok(!pb1.prefHasUserValue("DefaultPref.char"));
 
   // unlocking and locking multiple times shouldn't throw
   ps.unlockPref("DefaultPref.char");
@@ -330,12 +330,12 @@ function run_test() {
 
   // loaded prefs should read ok.
   pb = ps.getBranch("testPref.");
-  do_check_eq(pb.getBoolPref("bool1"), true);
-  do_check_eq(pb.getBoolPref("bool2"), false);
-  do_check_eq(pb.getIntPref("int1"), 23);
-  do_check_eq(pb.getIntPref("int2"), -1236);
-  do_check_eq(pb.getCharPref("char1"), "_testPref");
-  do_check_eq(pb.getCharPref("char2"), "älskar");
+  Assert.equal(pb.getBoolPref("bool1"), true);
+  Assert.equal(pb.getBoolPref("bool2"), false);
+  Assert.equal(pb.getIntPref("int1"), 23);
+  Assert.equal(pb.getIntPref("int2"), -1236);
+  Assert.equal(pb.getCharPref("char1"), "_testPref");
+  Assert.equal(pb.getCharPref("char2"), "älskar");
 
   // loading our former savePrefFile should allow us to read former prefs
 
@@ -346,14 +346,14 @@ function run_test() {
   ps.readUserPrefsFromFile(savePrefFile);
   // cleanup the file now we don't need it
   savePrefFile.remove(false);
-  do_check_eq(ps.getBoolPref("ReadPref.bool"), true);
-  do_check_eq(ps.getIntPref("ReadPref.int"), 230);
-  do_check_eq(ps.getCharPref("ReadPref.char"), "hello");
+  Assert.equal(ps.getBoolPref("ReadPref.bool"), true);
+  Assert.equal(ps.getIntPref("ReadPref.int"), 230);
+  Assert.equal(ps.getCharPref("ReadPref.char"), "hello");
 
   // ... and still be able to access "prior-to-readUserPrefs" preferences
-  do_check_eq(pb.getBoolPref("bool1"), true);
-  do_check_eq(pb.getBoolPref("bool2"), false);
-  do_check_eq(pb.getIntPref("int1"), 23);
+  Assert.equal(pb.getBoolPref("bool1"), true);
+  Assert.equal(pb.getBoolPref("bool2"), false);
+  Assert.equal(pb.getIntPref("int1"), 23);
 
   //**************************************************************************//
   // preference Observers
@@ -382,9 +382,9 @@ function run_test() {
     }
 
     observe(aSubject, aTopic, aState) {
-      do_check_eq(aTopic, "nsPref:changed");
-      do_check_eq(aState, this.name);
-      do_check_eq(this.pb.getIntPref(aState), this.value);
+      Assert.equal(aTopic, "nsPref:changed");
+      Assert.equal(aState, this.name);
+      Assert.equal(this.pb.getIntPref(aState), this.value);
       pb.removeObserver(aState, this);
 
       // notification received, we may go on...

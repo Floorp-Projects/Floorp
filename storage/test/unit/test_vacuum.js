@@ -29,7 +29,7 @@ function load_test_vacuum_component() {
     print("Check if the found category entry (" + entry + ") is expected.");
     if (EXPECTED_ENTRIES.indexOf(entry) != -1) {
       print("Check that only one test entry exists.");
-      do_check_false(found);
+      Assert.ok(!found);
       found = true;
     } else {
       // Temporary unregister other participants for this test.
@@ -37,7 +37,7 @@ function load_test_vacuum_component() {
     }
   }
   print("Check the test entry exists.");
-  do_check_true(found);
+  Assert.ok(found);
 }
 
 /**
@@ -70,7 +70,7 @@ function run_test() {
   let stmt = conn.createStatement("PRAGMA page_size");
   try {
     while (stmt.executeStep()) {
-      do_check_eq(stmt.row.page_size, 1024);
+      Assert.equal(stmt.row.page_size, 1024);
     }
   } finally {
     stmt.finalize();
@@ -111,10 +111,10 @@ const TESTS = [
     Services.obs.addObserver(function onVacuum(aSubject, aTopic, aData) {
       Services.obs.removeObserver(onVacuum, aTopic);
       print("Check we received onBeginVacuum");
-      do_check_true(beginVacuumReceived);
+      Assert.ok(beginVacuumReceived);
       print("Check we received heavy-io-task notifications");
-      do_check_true(heavyIOTaskBeginReceived);
-      do_check_true(heavyIOTaskEndReceived);
+      Assert.ok(heavyIOTaskBeginReceived);
+      Assert.ok(heavyIOTaskEndReceived);
       print("Received onEndVacuum");
       run_next_test();
     }, "test-end-vacuum");
@@ -140,7 +140,7 @@ const TESTS = [
     // Check after a couple seconds that no VACUUM has been run.
     do_timeout(2000, function() {
       print("Check VACUUM did not run.");
-      do_check_false(vacuumObserver.gotNotification);
+      Assert.ok(!vacuumObserver.gotNotification);
       Services.obs.removeObserver(vacuumObserver, "test-begin-vacuum");
       run_next_test();
     });
@@ -158,7 +158,7 @@ const TESTS = [
     let stmt = conn.createStatement("PRAGMA page_size");
     try {
       while (stmt.executeStep()) {
-        do_check_eq(stmt.row.page_size, conn.defaultPageSize);
+        Assert.equal(stmt.row.page_size, conn.defaultPageSize);
       }
     } finally {
       stmt.finalize();
@@ -184,7 +184,7 @@ const TESTS = [
     // Check after a couple seconds that no VACUUM has been run.
     do_timeout(2000, function() {
       print("Check VACUUM did not run.");
-      do_check_false(vacuumObserver.gotNotification);
+      Assert.ok(!vacuumObserver.gotNotification);
       Services.obs.removeObserver(vacuumObserver, "test-begin-vacuum");
       run_next_test();
     });
@@ -276,7 +276,7 @@ const TESTS = [
     // Check after a couple seconds that no VACUUM has been run.
     do_timeout(2000, function() {
       print("Check VACUUM did not run.");
-      do_check_false(vacuumObserver.gotNotification);
+      Assert.ok(!vacuumObserver.gotNotification);
       Services.obs.removeObserver(vacuumObserver, "test-begin-vacuum");
       run_next_test();
     });

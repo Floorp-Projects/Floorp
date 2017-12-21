@@ -17,13 +17,13 @@ dir.append("test_ZipUtils");
 
 function ensureExtracted(target) {
   target.append(SUBDIR);
-  do_check_true(target.exists());
+  Assert.ok(target.exists());
 
   for (let i = 0; i < ENTRIES.length; i++) {
     let entry = target.clone();
     entry.append(ENTRIES[i]);
     do_print("ENTRY " + entry.path);
-    do_check_true(entry.exists());
+    Assert.ok(entry.exists());
   }
 }
 

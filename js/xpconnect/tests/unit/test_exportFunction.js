@@ -17,23 +17,23 @@ function run_test() {
   Cu.evalInSandbox("(" + function() {
     var wasCalled = false;
     this.funToExport = function(expectedThis, a, obj, native, mixed, callback) {
-      do_check_eq(arguments.callee.length, 6);
-      do_check_eq(a, 42);
-      do_check_eq(obj, subsb.tobecloned);
-      do_check_eq(obj.cloned, "cloned");
-      do_check_eq(native, subsb.native);
-      do_check_eq(expectedThis, this);
-      do_check_eq(mixed.xrayed, subsb.xrayed);
-      do_check_eq(mixed.xrayed2, subsb.xrayed2);
+      Assert.equal(arguments.callee.length, 6);
+      Assert.equal(a, 42);
+      Assert.equal(obj, subsb.tobecloned);
+      Assert.equal(obj.cloned, "cloned");
+      Assert.equal(native, subsb.native);
+      Assert.equal(expectedThis, this);
+      Assert.equal(mixed.xrayed, subsb.xrayed);
+      Assert.equal(mixed.xrayed2, subsb.xrayed2);
       if (typeof callback == 'function') {
-        do_check_eq(typeof subsb.callback, 'function');
-        do_check_eq(callback, subsb.callback);
+        Assert.equal(typeof subsb.callback, 'function');
+        Assert.equal(callback, subsb.callback);
         callback();
       }
       wasCalled = true;
     };
     this.checkIfCalled = function() {
-      do_check_true(wasCalled);
+      Assert.ok(wasCalled);
       wasCalled = false;
     }
     exportFunction(funToExport, subsb, { defineAs: "imported", allowCallbacks: true });
@@ -55,26 +55,26 @@ function run_test() {
     invokedCallback = false;
     callback = function() { invokedCallback = true; };
     imported(this, 42, tobecloned, native, mixed, callback);
-    do_check_eq(imported.length, 6);
-    do_check_true(invokedCallback);
+    Assert.equal(imported.length, 6);
+    Assert.ok(invokedCallback);
   }.toSource() + ")()", subsb);
 
   // Invoking an exported function with cross-origin arguments should throw.
   subsb.xoNative = Cu.evalInSandbox('new XMLHttpRequest()', xorigsb);
   try {
     Cu.evalInSandbox('imported(this, xoNative)', subsb);
-    do_check_true(false);
+    Assert.ok(false);
   } catch (e) {
-    do_check_true(/denied|insecure/.test(e));
+    Assert.ok(/denied|insecure/.test(e));
   }
 
   // Callers can opt-out of the above.
   subsb.xoNative = Cu.evalInSandbox('new XMLHttpRequest()', xorigsb);
   try {
-    do_check_eq(Cu.evalInSandbox('echoAllowXO(xoNative)', subsb), subsb.xoNative);
-    do_check_true(true);
+    Assert.equal(Cu.evalInSandbox('echoAllowXO(xoNative)', subsb), subsb.xoNative);
+    Assert.ok(true);
   } catch (e) {
-    do_check_true(false);
+    Assert.ok(false);
   }
 
   // Apply should work and |this| should carry over appropriately.
@@ -92,9 +92,9 @@ function run_test() {
   Cu.evalInSandbox("(" + function() {
     try{
       exportFunction(function() {}, this.xorigsb, { defineAs: "denied" });
-      do_check_true(false);
+      Assert.ok(false);
     } catch (e) {
-      do_check_true(e.toString().indexOf('Permission denied') > -1);
+      Assert.ok(e.toString().indexOf('Permission denied') > -1);
     }
   }.toSource() + ")()", epsb);
 
@@ -104,10 +104,10 @@ function run_test() {
   Cu.evalInSandbox("(" + function() {
     try{
       exportFunction(xo_function, this.subsb, { defineAs: "denied" });
-      do_check_true(false);
+      Assert.ok(false);
     } catch (e) {
       dump('Exception: ' + e);
-      do_check_true(e.toString().indexOf('Permission denied') > -1);
+      Assert.ok(e.toString().indexOf('Permission denied') > -1);
     }
   }.toSource() + ")()", epsb);
 
@@ -149,5 +149,5 @@ function run_test() {
     checkIfCalled();
   }.toSource() + ")()", epsb);
 
-  do_check_true(wasCalled, true);
+  Assert.ok(wasCalled, true);
 }

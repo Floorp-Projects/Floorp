@@ -31,34 +31,34 @@ function test_pause_frame() {
     let args = bindings.arguments;
     let vars = bindings.variables;
 
-    do_check_eq(args.length, 6);
-    do_check_eq(args[0].number.value, 42);
-    do_check_eq(args[1].bool.value, true);
-    do_check_eq(args[2].string.value, "nasu");
-    do_check_eq(args[3].null_.value.type, "null");
-    do_check_eq(args[4].undef.value.type, "undefined");
-    do_check_eq(args[5].object.value.type, "object");
-    do_check_eq(args[5].object.value.class, "Object");
-    do_check_true(!!args[5].object.value.actor);
+    Assert.equal(args.length, 6);
+    Assert.equal(args[0].number.value, 42);
+    Assert.equal(args[1].bool.value, true);
+    Assert.equal(args[2].string.value, "nasu");
+    Assert.equal(args[3].null_.value.type, "null");
+    Assert.equal(args[4].undef.value.type, "undefined");
+    Assert.equal(args[5].object.value.type, "object");
+    Assert.equal(args[5].object.value.class, "Object");
+    Assert.ok(!!args[5].object.value.actor);
 
-    do_check_eq(vars.a.value, 1);
-    do_check_eq(vars.b.value, true);
-    do_check_eq(vars.c.value.type, "object");
-    do_check_eq(vars.c.value.class, "Object");
-    do_check_true(!!vars.c.value.actor);
+    Assert.equal(vars.a.value, 1);
+    Assert.equal(vars.b.value, true);
+    Assert.equal(vars.c.value.type, "object");
+    Assert.equal(vars.c.value.class, "Object");
+    Assert.ok(!!vars.c.value.actor);
 
     let objClient = gThreadClient.pauseGrip(vars.c.value);
     objClient.getPrototypeAndProperties(function (response) {
-      do_check_eq(response.ownProperties.a.configurable, true);
-      do_check_eq(response.ownProperties.a.enumerable, true);
-      do_check_eq(response.ownProperties.a.writable, true);
-      do_check_eq(response.ownProperties.a.value, "a");
+      Assert.equal(response.ownProperties.a.configurable, true);
+      Assert.equal(response.ownProperties.a.enumerable, true);
+      Assert.equal(response.ownProperties.a.writable, true);
+      Assert.equal(response.ownProperties.a.value, "a");
 
-      do_check_eq(response.ownProperties.b.configurable, true);
-      do_check_eq(response.ownProperties.b.enumerable, true);
-      do_check_eq(response.ownProperties.b.writable, true);
-      do_check_eq(response.ownProperties.b.value.type, "undefined");
-      do_check_false("class" in response.ownProperties.b.value);
+      Assert.equal(response.ownProperties.b.configurable, true);
+      Assert.equal(response.ownProperties.b.enumerable, true);
+      Assert.equal(response.ownProperties.b.writable, true);
+      Assert.equal(response.ownProperties.b.value.type, "undefined");
+      Assert.equal(false, "class" in response.ownProperties.b.value);
 
       gThreadClient.resume(function () {
         finishClient(gClient);

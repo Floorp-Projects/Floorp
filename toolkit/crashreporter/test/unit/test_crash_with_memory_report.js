@@ -46,7 +46,7 @@ function run_test() {
       crashReporter.saveMemoryReport();
     },
     function(mdump, extra) {
-      do_check_eq(extra.ContainsMemoryReport, "1");
+      Assert.equal(extra.ContainsMemoryReport, "1");
     },
     true);
 }

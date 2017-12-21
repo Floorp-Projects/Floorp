@@ -5,7 +5,7 @@ function checkThrows(fn) {
     fn();
     ok(false, "Should have thrown");
   } catch (e) {
-    do_check_true(/denied|insecure|prohibited/.test(e));
+    Assert.ok(/denied|insecure|prohibited/.test(e));
   }
 }
 

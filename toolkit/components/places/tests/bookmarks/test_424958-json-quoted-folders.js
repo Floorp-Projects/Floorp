@@ -43,10 +43,10 @@ var quotesTest = {
     toolbar.containerOpen = true;
 
     // test for our quoted folder
-    do_check_true(toolbar.childCount, 1);
+    Assert.ok(toolbar.childCount, 1);
     var folderNode = toolbar.getChild(0);
-    do_check_eq(folderNode.type, folderNode.RESULT_TYPE_FOLDER);
-    do_check_eq(folderNode.title, this._folderTitle);
+    Assert.equal(folderNode.type, folderNode.RESULT_TYPE_FOLDER);
+    Assert.equal(folderNode.title, this._folderTitle);
 
     // clean up
     toolbar.containerOpen = false;

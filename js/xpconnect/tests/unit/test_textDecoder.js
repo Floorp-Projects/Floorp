@@ -7,6 +7,6 @@ function run_test() {
                    'do_check_eq(new TextEncoder().encoding, "utf-8");',
                    sb);
   Cu.importGlobalProperties(["TextDecoder", "TextEncoder"]);
-  do_check_eq(new TextDecoder().encoding, "utf-8");
-  do_check_eq(new TextEncoder().encoding, "utf-8");
+  Assert.equal(new TextDecoder().encoding, "utf-8");
+  Assert.equal(new TextEncoder().encoding, "utf-8");
 }

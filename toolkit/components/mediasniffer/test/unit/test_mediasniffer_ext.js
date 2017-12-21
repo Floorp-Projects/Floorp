@@ -48,7 +48,7 @@ const tests = [
 var listener = {
   onStartRequest(request, context) {
     do_print("Sniffing " + tests[testRan].path);
-    do_check_eq(request.QueryInterface(Ci.nsIChannel).contentType, tests[testRan].expected);
+    Assert.equal(request.QueryInterface(Ci.nsIChannel).contentType, tests[testRan].expected);
   },
 
   onDataAvailable(request, context, stream, offset, count) {

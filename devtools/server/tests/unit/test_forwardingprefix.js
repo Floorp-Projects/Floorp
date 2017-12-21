@@ -88,10 +88,10 @@ function tryActors(reachables, completed) {
       { to: actor, type: "echo", value: "tango"},
       (response) => {
         if (reachables.has(actor)) {
-          do_check_matches({ from: actor, to: actor,
+          Assert.deepEqual({ from: actor, to: actor,
                              type: "echo", value: "tango" }, response);
         } else {
-          do_check_matches({ from: actor, error: "noSuchActor",
+          Assert.deepEqual({ from: actor, error: "noSuchActor",
                              message: "No such actor for ID: " + actor }, response);
         }
 

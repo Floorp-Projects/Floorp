@@ -21,7 +21,7 @@ function failResponseHandler(metadata, response)
   var text = "failure response";
   response.setHeader("Content-Type", "text/plain", false);
   response.bodyOutputStream.write(text, text.length);
-  do_check_true(false, "Received request when we shouldn't.");
+  Assert.ok(false, "Received request when we shouldn't.");
 }
 
 function successResponseHandler(metadata, response)
@@ -29,7 +29,7 @@ function successResponseHandler(metadata, response)
   var text = "success response";
   response.setHeader("Content-Type", "text/plain", false);
   response.bodyOutputStream.write(text, text.length);
-  do_check_true(true, "Received expected request.");
+  Assert.ok(true, "Received expected request.");
 }
 
 function onModifyListener(callback) {
@@ -50,9 +50,9 @@ function startChannelRequest(baseUrl, flags, expectedResponse=null) {
   });
   chan.asyncOpen2(new ChannelListener((request, data, context) => {
     if (expectedResponse) {
-      do_check_eq(data, expectedResponse);
+      Assert.equal(data, expectedResponse);
     } else {
-      do_check_true(!!!data, "no response");
+      Assert.ok(!!!data, "no response");
     }
     do_execute_soon(run_next_test)
   }, null, flags));

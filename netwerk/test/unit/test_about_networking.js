@@ -22,7 +22,7 @@ add_test(function test_http() {
         break;
       }
     }
-    do_check_eq(found, true);
+    Assert.equal(found, true);
 
     run_next_test();
   });
@@ -37,7 +37,7 @@ add_test(function test_dns() {
         break;
       }
     }
-    do_check_eq(found, true);
+    Assert.equal(found, true);
 
     do_test_pending();
     gHttpServer.stop(do_test_finished);
@@ -65,7 +65,7 @@ add_test(function test_sockets() {
               break;
             }
           }
-          do_check_eq(found, true);
+          Assert.equal(found, true);
 
           run_next_test();
         });

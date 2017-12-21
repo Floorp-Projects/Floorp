@@ -22,8 +22,8 @@ function test_uri(obj) {
   if (failed)
     do_throw(message);
   if (obj.result) {
-    do_check_true(uri != null);
-    do_check_eq(uri.spec, obj.uri);
+    Assert.ok(uri != null);
+    Assert.equal(uri.spec, obj.uri);
   }
 }
 

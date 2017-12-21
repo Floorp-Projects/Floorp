@@ -23,7 +23,7 @@ function run_test() {
   gDebuggee = addTestGlobal("test-wasm-source");
   gClient = new DebuggerClient(DebuggerServer.connectPipe());
   gClient.connect().then(function () {
-    do_check_true(gClient.mainRoot.traits.wasmBinarySource);
+    Assert.ok(gClient.mainRoot.traits.wasmBinarySource);
 
     attachTestTabAndResume(
       gClient, "test-wasm-source",
@@ -33,7 +33,7 @@ function run_test() {
           observeAsmJS: true,
           wasmBinarySource: true
         }, function (response) {
-          do_check_eq(!!response.error, false);
+          Assert.equal(!!response.error, false);
           test_source();
         });
       });
@@ -50,27 +50,27 @@ const EXPECTED_CONTENT = String.fromCharCode(
 function test_source() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     gThreadClient.getSources(function (response) {
-      do_check_true(!!response);
-      do_check_true(!!response.sources);
+      Assert.ok(!!response);
+      Assert.ok(!!response.sources);
 
       let source = response.sources.filter(function (s) {
         return s.introductionType === "wasm";
       })[0];
 
-      do_check_true(!!source);
+      Assert.ok(!!source);
 
       let sourceClient = gThreadClient.source(source);
       sourceClient.source(function (response) {
-        do_check_true(!!response);
-        do_check_true(!response.error);
-        do_check_true(!!response.contentType);
-        do_check_true(response.contentType.includes("wasm"));
+        Assert.ok(!!response);
+        Assert.ok(!response.error);
+        Assert.ok(!!response.contentType);
+        Assert.ok(response.contentType.includes("wasm"));
 
         let sourceContent = response.source;
-        do_check_true(!!sourceContent);
-        do_check_eq(typeof sourceContent, "object");
-        do_check_true("binary" in sourceContent);
-        do_check_eq(EXPECTED_CONTENT, sourceContent.binary);
+        Assert.ok(!!sourceContent);
+        Assert.equal(typeof sourceContent, "object");
+        Assert.ok("binary" in sourceContent);
+        Assert.equal(EXPECTED_CONTENT, sourceContent.binary);
 
         gThreadClient.resume(function () {
           finishClient(gClient);

@@ -21,7 +21,7 @@ function run_test() {
   ok(crypto);
   ok(crypto.subtle);
   let outerPromise = crypto.subtle.digest("SHA-256", new TextEncoder("utf-8").encode("abc"))
-      .then(h => do_check_eq(new Uint16Array(h)[0], 30906));
+      .then(h => Assert.equal(new Uint16Array(h)[0], 30906));
 
   do_test_pending();
   Promise.all([innerPromise, outerPromise]).then(() => do_test_finished());

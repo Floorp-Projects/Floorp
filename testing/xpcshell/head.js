@@ -1057,7 +1057,7 @@ function do_get_cwd() {
 function do_load_manifest(path) {
   var lf = do_get_file(path);
   const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
-  do_check_true(Components.manager instanceof nsIComponentRegistrar);
+  Assert.ok(Components.manager instanceof nsIComponentRegistrar);
   // Previous do_check_true() is not a test check.
   Components.manager.autoRegister(lf);
 }

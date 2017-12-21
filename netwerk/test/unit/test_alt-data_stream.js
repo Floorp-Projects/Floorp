@@ -73,8 +73,8 @@ function readServerContent(request, buffer)
 {
   var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
-  do_check_eq(buffer, responseContent);
-  do_check_eq(cc.alternativeDataType, "");
+  Assert.equal(buffer, responseContent);
+  Assert.equal(cc.alternativeDataType, "");
 
   do_execute_soon(() => {
     os = cc.openAlternativeOutputStream(altContentType);
@@ -112,9 +112,9 @@ var listener = {
   },
   onStopRequest: function(request, context, status) {
     var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
-    do_check_eq(cc.alternativeDataType, altContentType);
-    do_check_eq(this.buffer.length, altContent.length);
-    do_check_eq(this.buffer, altContent);
+    Assert.equal(cc.alternativeDataType, altContentType);
+    Assert.equal(this.buffer.length, altContent.length);
+    Assert.equal(this.buffer, altContent);
     httpServer.stop(do_test_finished);
   },
 };

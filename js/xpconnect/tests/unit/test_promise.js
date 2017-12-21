@@ -4,5 +4,5 @@ function run_test() {
   sb.do_check_eq = do_check_eq;
   Cu.evalInSandbox('do_check_eq(typeof new Promise(function(resolve){resolve();}), "object");',
                    sb);
-  do_check_eq(typeof new Promise(function(resolve){resolve();}), "object");
+  Assert.equal(typeof new Promise(function(resolve){resolve();}), "object");
 }

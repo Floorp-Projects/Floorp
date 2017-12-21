@@ -54,7 +54,7 @@ function store_entries(cb)
 }
 
 var store_data = function(status, entry) {
-  do_check_eq(status, Cr.NS_OK);
+  Assert.equal(status, Cr.NS_OK);
   var os = entry.openOutputStream(0);
 
   var written = os.write(entries[store_idx][1], entries[store_idx][1].length);
@@ -101,15 +101,15 @@ var check_data = function (status, entry) {
   }
 
   if (!check_pb_exited || entries[check_idx][3]) {
-    do_check_eq(status, Cr.NS_OK);
+    Assert.equal(status, Cr.NS_OK);
     var is = entry.openInputStream(0);
     pumpReadStream(is, function(read) {
       entry.close();
-      do_check_eq(read, entries[check_idx][1]);
+      Assert.equal(read, entries[check_idx][1]);
       cont();
     });
   } else {
-    do_check_eq(status, Cr.NS_ERROR_CACHE_KEY_NOT_FOUND);
+    Assert.equal(status, Cr.NS_ERROR_CACHE_KEY_NOT_FOUND);
     cont();
   }
 };
@@ -144,7 +144,7 @@ function run_test3() {
 
   // Make sure the memory device is not empty
   get_device_entry_count(kMemoryDevice, null, function(count) {
-    do_check_eq(count, 1);
+    Assert.equal(count, 1);
     // Check if cache-A is gone, and cache-B and cache-C are still available
     check_entries(do_test_finished, true);
   });

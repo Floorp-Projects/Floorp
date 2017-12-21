@@ -87,7 +87,7 @@ function run_test() {
     // convert that to a uri using FileUtils and Services, which toFileURI is trying to model
     let file = FileUtils.File(path);
     let uri = Services.io.newFileURI(file).spec;
-    do_check_eq(uri, OS.Path.toFileURI(path));
+    Assert.equal(uri, OS.Path.toFileURI(path));
 
     // keep the resulting URI to try the reverse, except for "C:\" for which the
     // behavior of nsIFileURL and OS.File is inconsistent
@@ -99,7 +99,7 @@ function run_test() {
   for (let uri of uris) {
     // convert URIs to paths with nsIFileURI, which fromFileURI is trying to model
     let path = Services.io.newURI(uri).QueryInterface(Components.interfaces.nsIFileURL).file.path;
-    do_check_eq(path, OS.Path.fromFileURI(uri));
+    Assert.equal(path, OS.Path.fromFileURI(uri));
   }
 
   // check that non-file URLs aren't allowed
@@ -107,8 +107,8 @@ function run_test() {
   try {
     OS.Path.fromFileURI("http://test.com");
   } catch (e) {
-    do_check_eq(e.message, "fromFileURI expects a file URI");
+    Assert.equal(e.message, "fromFileURI expects a file URI");
     thrown = true;
   }
-  do_check_true(thrown);
+  Assert.ok(thrown);
 }

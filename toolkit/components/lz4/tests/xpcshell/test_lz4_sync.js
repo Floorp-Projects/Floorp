@@ -14,7 +14,7 @@ add_task(async function() {
   let data = await OS.File.read(path);
   let decompressed = Lz4.decompressFileContent(data);
   let text = (new TextDecoder()).decode(decompressed);
-  do_check_eq(text, "Hello, lz4");
+  Assert.equal(text, "Hello, lz4");
 });
 
 add_task(async function() {
@@ -32,6 +32,6 @@ add_task(async function() {
     do_print("Decompressed " + compressed.byteLength + " bytes into " +
              decompressed.byteLength);
 
-    do_check_true(compare_arrays(array, decompressed));
+    Assert.ok(compare_arrays(array, decompressed));
   }
 });

@@ -44,7 +44,7 @@ var progressCallback = {
   },
 
   onStartRequest: function(request, context) {
-    do_check_eq(this._last_callback_handled, TYPE_ONSTATUS);
+    Assert.equal(this._last_callback_handled, TYPE_ONSTATUS);
     this._got_onstartrequest = true;
     this._last_callback_handled = TYPE_ONSTARTREQUEST;
 
@@ -53,15 +53,15 @@ var progressCallback = {
   },
 
   onDataAvailable: function(request, context, data, offset, count) {
-    do_check_eq(this._last_callback_handled, TYPE_ONPROGRESS);
+    Assert.equal(this._last_callback_handled, TYPE_ONPROGRESS);
     this._last_callback_handled = TYPE_ONDATAAVAILABLE;
 
     this._listener.onDataAvailable(request, context, data, offset, count);
   },
 
   onStopRequest: function(request, context, status) {
-    do_check_eq(this._last_callback_handled, TYPE_ONDATAAVAILABLE);
-    do_check_true(this._got_onstatus_after_onstartrequest);
+    Assert.equal(this._last_callback_handled, TYPE_ONDATAAVAILABLE);
+    Assert.ok(this._got_onstatus_after_onstartrequest);
     this._last_callback_handled = TYPE_ONSTOPREQUEST;
 
     this._listener.onStopRequest(request, context, status);
@@ -69,10 +69,10 @@ var progressCallback = {
   },
 
   onProgress: function (request, context, progress, progressMax) {
-    do_check_eq(this._last_callback_handled, TYPE_ONSTATUS);
+    Assert.equal(this._last_callback_handled, TYPE_ONSTATUS);
     this._last_callback_handled = TYPE_ONPROGRESS;
 
-    do_check_eq(mStatus, STATUS_RECEIVING_FROM);
+    Assert.equal(mStatus, STATUS_RECEIVING_FROM);
     last = progress;
     max = progressMax;
   },
@@ -81,15 +81,15 @@ var progressCallback = {
     if (!this._got_onstartrequest) {
       // Ensure that all messages before onStartRequest are onStatus
       if (this._last_callback_handled)
-        do_check_eq(this._last_callback_handled, TYPE_ONSTATUS);
+        Assert.equal(this._last_callback_handled, TYPE_ONSTATUS);
     } else if (this._last_callback_handled == TYPE_ONSTARTREQUEST) {
       this._got_onstatus_after_onstartrequest = true;
     } else {
-      do_check_eq(this._last_callback_handled, TYPE_ONDATAAVAILABLE);
+      Assert.equal(this._last_callback_handled, TYPE_ONDATAAVAILABLE);
     }
     this._last_callback_handled = TYPE_ONSTATUS;
 
-    do_check_eq(statusArg, "localhost");
+    Assert.equal(statusArg, "localhost");
     mStatus = status;
   },
 
@@ -122,7 +122,7 @@ function serverHandler(metadata, response) {
 }
 
 function checkRequest(request, data, context) {
-  do_check_eq(last, httpbody.length*LOOPS);
-  do_check_eq(max, httpbody.length*LOOPS);
+  Assert.equal(last, httpbody.length*LOOPS);
+  Assert.equal(max, httpbody.length*LOOPS);
   httpserver.stop(do_test_finished);
 }

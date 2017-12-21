@@ -28,19 +28,19 @@ async function test_setPosition(forward, current, backward) {
       do_print("Moving forward: " + forward);
       await file.setPosition(forward, OS.File.POS_START);
       pos += forward;
-      do_check_eq((await file.getPosition()), pos);
+      Assert.equal((await file.getPosition()), pos);
 
       // 2. seek forward from current position
       do_print("Moving current: " + current);
       await file.setPosition(current, OS.File.POS_CURRENT);
       pos += current;
-      do_check_eq((await file.getPosition()), pos);
+      Assert.equal((await file.getPosition()), pos);
 
       // 3. seek backward from current position
       do_print("Moving current backward: " + backward);
       await file.setPosition(-backward, OS.File.POS_CURRENT);
       pos -= backward;
-      do_check_eq((await file.getPosition()), pos);
+      Assert.equal((await file.getPosition()), pos);
 
     } finally {
       await file.setPosition(0, OS.File.POS_START);
@@ -67,22 +67,22 @@ async function test_setPosition_failures() {
         await file.setPosition(0.5, OS.File.POS_START);
         do_throw("Shouldn't have succeeded");
       } catch (ex) {
-        do_check_true(ex.toString().includes("can't pass"));
+        Assert.ok(ex.toString().includes("can't pass"));
       }
       // Since setPosition should have bailed, it shouldn't have moved the
       // file pointer at all.
-      do_check_eq((await file.getPosition()), 0);
+      Assert.equal((await file.getPosition()), 0);
 
       // 2. Use an invalid position value
       try {
         await file.setPosition(0xffffffff + 0.5, OS.File.POS_START);
         do_throw("Shouldn't have succeeded");
       } catch (ex) {
-        do_check_true(ex.toString().includes("can't pass"));
+        Assert.ok(ex.toString().includes("can't pass"));
       }
       // Since setPosition should have bailed, it shouldn't have moved the
       // file pointer at all.
-      do_check_eq((await file.getPosition()), 0);
+      Assert.equal((await file.getPosition()), 0);
 
       // 3. Use a position that cannot be represented as a double
       try {
@@ -93,7 +93,7 @@ async function test_setPosition_failures() {
         do_throw("Shouldn't have succeeded");
       } catch (ex) {
         do_print(ex.toString());
-        do_check_true(!!ex);
+        Assert.ok(!!ex);
       }
 
     } finally {

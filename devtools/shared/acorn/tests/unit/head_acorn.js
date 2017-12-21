@@ -16,14 +16,14 @@ function checkEquivalentASTs(expected, actual, prop = []) {
   do_print("Checking: " + prop.join(" "));
 
   if (!isObject(expected)) {
-    return void do_check_eq(expected, actual);
+    return void Assert.equal(expected, actual);
   }
 
-  do_check_true(isObject(actual));
+  Assert.ok(isObject(actual));
 
   if (Array.isArray(expected)) {
-    do_check_true(Array.isArray(actual));
-    do_check_eq(expected.length, actual.length);
+    Assert.ok(Array.isArray(actual));
+    Assert.equal(expected.length, actual.length);
     for (let i = 0; i < expected.length; i++) {
       checkEquivalentASTs(expected[i], actual[i], prop.concat(i));
     }

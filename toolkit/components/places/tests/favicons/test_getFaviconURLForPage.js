@@ -14,12 +14,12 @@ add_task(async function test_normal() {
         function() {
         PlacesUtils.favicons.getFaviconURLForPage(pageURI,
           function(aURI, aDataLen, aData, aMimeType) {
-            do_check_true(aURI.equals(SMALLPNG_DATA_URI));
+            Assert.ok(aURI.equals(SMALLPNG_DATA_URI));
 
             // Check also the expected data types.
-            do_check_true(aDataLen === 0);
-            do_check_true(aData.length === 0);
-            do_check_true(aMimeType === "");
+            Assert.ok(aDataLen === 0);
+            Assert.ok(aData.length === 0);
+            Assert.ok(aMimeType === "");
             resolve();
           });
       }, Services.scriptSecurityManager.getSystemPrincipal());
@@ -33,10 +33,10 @@ add_task(async function test_missing() {
     PlacesUtils.favicons.getFaviconURLForPage(pageURI,
       function(aURI, aDataLen, aData, aMimeType) {
         // Check also the expected data types.
-        do_check_true(aURI === null);
-        do_check_true(aDataLen === 0);
-        do_check_true(aData.length === 0);
-        do_check_true(aMimeType === "");
+        Assert.ok(aURI === null);
+        Assert.ok(aDataLen === 0);
+        Assert.ok(aData.length === 0);
+        Assert.ok(aMimeType === "");
         resolve();
       });
   });

@@ -29,6 +29,6 @@ add_task(async function check_failure() {
     exception = err;
     await OS.File.queue;
   }
-  do_check_true(exception != null);
+  Assert.ok(exception != null);
   do_print("Function resolved");
 });

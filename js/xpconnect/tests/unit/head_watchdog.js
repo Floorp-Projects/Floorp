@@ -79,7 +79,7 @@ function checkWatchdog(expectInterrupt, continuation) {
     if (lastWatchdogWakeup == Cu.getWatchdogTimestamp("WatchdogWakeup")) {
       return true;
     }
-    do_check_true(expectInterrupt);
+    Assert.ok(expectInterrupt);
     setInterruptCallback(undefined);
     setScriptTimeout(oldTimeout);
     // Schedule our continuation before we kill this script.
@@ -88,7 +88,7 @@ function checkWatchdog(expectInterrupt, continuation) {
   });
   executeSoon(function() {
     busyWait(3000);
-    do_check_true(!expectInterrupt);
+    Assert.ok(!expectInterrupt);
     setInterruptCallback(undefined);
     setScriptTimeout(oldTimeout);
     continuation();

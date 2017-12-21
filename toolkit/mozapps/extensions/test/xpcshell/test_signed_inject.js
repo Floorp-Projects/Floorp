@@ -85,17 +85,17 @@ add_task(async function() {
 
   // Currently we leave the sideloaded add-on there but just don't run it
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_true(addon.appDisabled);
-  do_check_false(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
-  do_check_eq(getActiveVersion(), -1);
+  Assert.notEqual(addon, null);
+  Assert.ok(addon.appDisabled);
+  Assert.ok(!addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
+  Assert.equal(getActiveVersion(), -1);
 
   addon.uninstall();
   await promiseShutdownManager();
   resetPrefs();
 
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
   clearCache(file);
 });
 
@@ -107,17 +107,17 @@ add_task(async function() {
 
   // Currently we leave the sideloaded add-on there but just don't run it
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_true(addon.appDisabled);
-  do_check_false(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
-  do_check_eq(getActiveVersion(), -1);
+  Assert.notEqual(addon, null);
+  Assert.ok(addon.appDisabled);
+  Assert.ok(!addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
+  Assert.equal(getActiveVersion(), -1);
 
   addon.uninstall();
   await promiseShutdownManager();
   resetPrefs();
 
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
   clearCache(file);
 });
 
@@ -128,17 +128,17 @@ add_task(async function() {
 
   // Currently we leave the sideloaded add-on there but just don't run it
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_true(addon.appDisabled);
-  do_check_false(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
-  do_check_eq(getActiveVersion(), -1);
+  Assert.notEqual(addon, null);
+  Assert.ok(addon.appDisabled);
+  Assert.ok(!addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
+  Assert.equal(getActiveVersion(), -1);
 
   addon.uninstall();
   await promiseShutdownManager();
   resetPrefs();
 
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
   clearCache(file);
 });
 
@@ -153,14 +153,14 @@ add_task(async function() {
 
   startupManager();
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SIGNED);
-  do_check_eq(getActiveVersion(), 2);
+  Assert.notEqual(addon, null);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_SIGNED);
+  Assert.equal(getActiveVersion(), 2);
 
   await promiseShutdownManager();
-  do_check_eq(getActiveVersion(), 0);
+  Assert.equal(getActiveVersion(), 0);
 
   clearCache(file);
   breakAddon(file);
@@ -169,21 +169,21 @@ add_task(async function() {
   startupManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_true(addon.appDisabled);
-  do_check_false(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
-  do_check_eq(getActiveVersion(), -1);
+  Assert.notEqual(addon, null);
+  Assert.ok(addon.appDisabled);
+  Assert.ok(!addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
+  Assert.equal(getActiveVersion(), -1);
 
   let ids = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_DISABLED);
-  do_check_eq(ids.length, 1);
-  do_check_eq(ids[0], ID);
+  Assert.equal(ids.length, 1);
+  Assert.equal(ids[0], ID);
 
   addon.uninstall();
   await promiseShutdownManager();
   resetPrefs();
 
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
   clearCache(file);
 });
 
@@ -195,17 +195,17 @@ add_task(async function() {
 
   // Currently we leave the sideloaded add-on there but just don't run it
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_true(addon.appDisabled);
-  do_check_false(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
-  do_check_false(isExtensionInAddonsList(profileDir, ID));
+  Assert.notEqual(addon, null);
+  Assert.ok(addon.appDisabled);
+  Assert.ok(!addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_MISSING);
+  Assert.ok(!isExtensionInAddonsList(profileDir, ID));
 
   addon.uninstall();
   await promiseRestartManager();
   await promiseShutdownManager();
 
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
   clearCache(file);
 });
 
@@ -217,17 +217,17 @@ add_task(async function() {
 
   // Currently we leave the sideloaded add-on there but just don't run it
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_true(addon.appDisabled);
-  do_check_false(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
-  do_check_false(isExtensionInAddonsList(profileDir, ID));
+  Assert.notEqual(addon, null);
+  Assert.ok(addon.appDisabled);
+  Assert.ok(!addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
+  Assert.ok(!isExtensionInAddonsList(profileDir, ID));
 
   addon.uninstall();
   await promiseRestartManager();
   await promiseShutdownManager();
 
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
   clearCache(file);
 });
 
@@ -238,17 +238,17 @@ add_task(async function() {
 
   // Currently we leave the sideloaded add-on there but just don't run it
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_true(addon.appDisabled);
-  do_check_false(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
-  do_check_false(isExtensionInAddonsList(profileDir, ID));
+  Assert.notEqual(addon, null);
+  Assert.ok(addon.appDisabled);
+  Assert.ok(!addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
+  Assert.ok(!isExtensionInAddonsList(profileDir, ID));
 
   addon.uninstall();
   await promiseRestartManager();
   await promiseShutdownManager();
 
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
   clearCache(file);
 });
 
@@ -263,11 +263,11 @@ add_task(async function() {
 
   await promiseStartupManager();
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SIGNED);
-  do_check_true(isExtensionInAddonsList(profileDir, ID));
+  Assert.notEqual(addon, null);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_SIGNED);
+  Assert.ok(isExtensionInAddonsList(profileDir, ID));
 
   await promiseShutdownManager();
 
@@ -277,21 +277,21 @@ add_task(async function() {
   await promiseStartupManager();
 
   addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_true(addon.appDisabled);
-  do_check_false(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
-  do_check_false(isExtensionInAddonsList(profileDir, ID));
+  Assert.notEqual(addon, null);
+  Assert.ok(addon.appDisabled);
+  Assert.ok(!addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
+  Assert.ok(!isExtensionInAddonsList(profileDir, ID));
 
   let ids = AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_DISABLED);
-  do_check_eq(ids.length, 1);
-  do_check_eq(ids[0], ID);
+  Assert.equal(ids.length, 1);
+  Assert.equal(ids[0], ID);
 
   addon.uninstall();
   await promiseRestartManager();
   await promiseShutdownManager();
 
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
   clearCache(file);
 });
 
@@ -304,14 +304,14 @@ add_task(async function() {
   let staged = profileDir.clone();
   staged.append("staged");
   staged.append(do_get_expected_addon_name(ID));
-  do_check_true(staged.exists());
+  Assert.ok(staged.exists());
 
   breakAddon(staged);
   startupManager();
 
   // Should have refused to install the broken staged version
   let addon = await promiseAddonByID(ID);
-  do_check_eq(addon, null);
+  Assert.equal(addon, null);
 
   clearCache(staged);
 
@@ -330,10 +330,10 @@ add_task(async function() {
 
   // Should have refused to install the broken staged version
   let addon = await promiseAddonByID(ID);
-  do_check_eq(addon, null);
-  do_check_eq(getActiveVersion(), -1);
+  Assert.equal(addon, null);
+  Assert.equal(getActiveVersion(), -1);
 
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
   clearCache(file);
 
   await promiseShutdownManager();
@@ -347,17 +347,17 @@ add_task(async function() {
   startupManager();
 
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_PRELIMINARY);
-  do_check_eq(getActiveVersion(), 2);
+  Assert.notEqual(addon, null);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_PRELIMINARY);
+  Assert.equal(getActiveVersion(), 2);
 
   addon.uninstall();
   await promiseShutdownManager();
   resetPrefs();
 
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
   clearCache(file);
 });
 
@@ -371,16 +371,16 @@ add_task(async function() {
   startupManager();
 
   let addon = await promiseAddonByID(ID);
-  do_check_neq(addon, null);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_PRELIMINARY);
-  do_check_eq(getActiveVersion(), 2);
+  Assert.notEqual(addon, null);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_PRELIMINARY);
+  Assert.equal(getActiveVersion(), 2);
 
   addon.uninstall();
   await promiseShutdownManager();
   resetPrefs();
 
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
   clearCache(file);
 });

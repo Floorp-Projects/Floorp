@@ -17,18 +17,18 @@ function nocache(ch)
 
 function notFound(ch)
 {
-  do_check_eq(ch.responseStatus, 404);
-  do_check_false(ch.requestSucceeded);
+  Assert.equal(ch.responseStatus, 404);
+  Assert.ok(!ch.requestSucceeded);
 }
 
 function makeCheckOverride(magic)
 {
   return (function checkOverride(ch)
   {
-    do_check_eq(ch.responseStatus, 200);
-    do_check_eq(ch.responseStatusText, "OK");
-    do_check_true(ch.requestSucceeded);
-    do_check_eq(ch.getResponseHeader("Override-Succeeded"), magic);
+    Assert.equal(ch.responseStatus, 200);
+    Assert.equal(ch.responseStatusText, "OK");
+    Assert.ok(ch.requestSucceeded);
+    Assert.equal(ch.getResponseHeader("Override-Succeeded"), magic);
   });
 }
 

@@ -29,7 +29,7 @@ function run_test()
 
   var lci = LoadContextInfo.default;
   var testingInterface = get_cache_service().QueryInterface(Ci.nsICacheTesting);
-  do_check_true(testingInterface);
+  Assert.ok(testingInterface);
 
   var mc = new MultipleCallbacks(1, function() {
     // (2)

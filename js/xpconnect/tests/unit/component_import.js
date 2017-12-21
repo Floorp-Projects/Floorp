@@ -27,9 +27,9 @@ FooComponent.prototype =
       thereIsNoSuchIdentifier;
       threw = false;
     } catch (ex) {
-      do_check_true(ex.lineNumber == 27);
+      Assert.ok(ex.lineNumber == 27);
     }
-    do_check_true(threw);
+    Assert.ok(threw);
 
     return interfaces;
   },

@@ -82,7 +82,7 @@ add_task(async function test_something() {
   // Our test data has a single record; it should be in the local collection
   await PinningPreloadClient.openCollection(async (collection) => {
     const list = await collection.list();
-    do_check_eq(list.data.length, 1);
+    Assert.equal(list.data.length, 1);
   });
 
   // check that a pin exists for one.example.com
@@ -96,7 +96,7 @@ add_task(async function test_something() {
   // Our data now has four new records; all should be in the local collection
   await PinningPreloadClient.openCollection(async (collection) => {
     const list = await collection.list();
-    do_check_eq(list.data.length, 5);
+    Assert.equal(list.data.length, 5);
   });
 
   // check that a pin exists for two.example.com and three.example.com
@@ -124,7 +124,7 @@ add_task(async function test_something() {
   Services.prefs.setIntPref("services.blocklist.onecrl.checked", 0);
   await PinningPreloadClient.maybeSync(3000, Date.now());
   let newValue = Services.prefs.getIntPref("services.blocklist.pinning.checked");
-  do_check_neq(newValue, 0);
+  Assert.notEqual(newValue, 0);
 
   // Check that the HSTS preload added to the collection works...
   ok(sss.isSecureURI(sss.HEADER_HSTS,

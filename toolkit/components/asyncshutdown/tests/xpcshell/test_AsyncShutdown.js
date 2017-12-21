@@ -104,7 +104,7 @@ add_task(async function test_phase_removeBlocker() {
         aLock.removeBlocker(aBlocker);
         return;
       }
-      do_check_eq(aLock.removeBlocker(aBlocker), aShouldRemove);
+      Assert.equal(aLock.removeBlocker(aBlocker), aShouldRemove);
     };
     do_remove_blocker(lock, blocker, true);
     do_remove_blocker(lock, blocker, false);

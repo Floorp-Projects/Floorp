@@ -67,10 +67,10 @@ function run_test() {
 
   function checkBlacklist() {
     var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
-    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
-    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
     gTestserver.stop(do_test_finished);
   }

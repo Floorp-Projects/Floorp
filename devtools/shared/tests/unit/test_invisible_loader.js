@@ -25,7 +25,7 @@ function visible_loader() {
 
   try {
     dbg.addDebuggee(sandbox);
-    do_check_true(true);
+    Assert.ok(true);
   } catch (e) {
     do_throw("debugger could not add visible value");
   }
@@ -33,7 +33,7 @@ function visible_loader() {
   // Check that for common loader used for tabs, promise modules is Promise.jsm
   // Which is required to support unhandled promises rejection in mochitests
   const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
-  do_check_eq(loader.require("promise"), promise);
+  Assert.equal(loader.require("promise"), promise);
 }
 
 function invisible_loader() {
@@ -48,7 +48,7 @@ function invisible_loader() {
     dbg.addDebuggee(sandbox);
     do_throw("debugger added invisible value");
   } catch (e) {
-    do_check_true(true);
+    Assert.ok(true);
   }
 
   // But for browser toolbox loader, promise is loaded as a regular modules out
@@ -56,5 +56,5 @@ function invisible_loader() {
   // into it.
   const promise = loader.require("promise");
   const promiseModule = loader._provider.loader.modules["resource://gre/modules/Promise-backend.js"];
-  do_check_eq(promise, promiseModule.exports);
+  Assert.equal(promise, promiseModule.exports);
 }

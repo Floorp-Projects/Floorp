@@ -16,6 +16,6 @@ add_task(async function test_installedresourceicon() {
     { name: "engine-resourceicon", xmlFileName: "engine-resourceicon.xml" },
     { name: "engine-chromeicon", xmlFileName: "engine-chromeicon.xml" },
   ]);
-  do_check_null(engine1.iconURI);
-  do_check_null(engine2.iconURI);
+  Assert.equal(null, engine1.iconURI);
+  Assert.equal(null, engine2.iconURI);
 });

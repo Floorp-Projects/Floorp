@@ -55,13 +55,13 @@ function run_test() {
 
   authPromptRequestReceived = false;
 
-  do_check_neq(ww.nsIPromptFactory.getPrompt(null, Ci.nsIAuthPrompt), null);
+  Assert.notEqual(ww.nsIPromptFactory.getPrompt(null, Ci.nsIAuthPrompt), null);
 
-  do_check_true(authPromptRequestReceived);
+  Assert.ok(authPromptRequestReceived);
 
   authPromptRequestReceived = false;
 
-  do_check_neq(ww.nsIPromptFactory.getPrompt(null, Ci.nsIAuthPrompt2), null);
+  Assert.notEqual(ww.nsIPromptFactory.getPrompt(null, Ci.nsIAuthPrompt2), null);
 
-  do_check_true(authPromptRequestReceived);
+  Assert.ok(authPromptRequestReceived);
 }

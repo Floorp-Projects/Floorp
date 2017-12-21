@@ -63,8 +63,8 @@ function prepareServer(cbAfterTokenFetch) {
     __proto__: SyncServerCallback,
     onRequest(req, resp) {
       let full = `${req.scheme}://${req.host}:${req.port}${req.path}`;
-      do_check_true(full.startsWith(config.fxaccount.token.endpoint),
-                    `request made to ${full}`);
+      Assert.ok(full.startsWith(config.fxaccount.token.endpoint),
+                `request made to ${full}`);
     }
   };
   let server = new SyncServer(callback);
@@ -127,7 +127,7 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
       Svc.Obs.remove(firstNotification, onFirstSync);
       Svc.Obs.add(secondNotification, onSecondSync);
 
-      do_check_eq(Service.clusterURL, "");
+      Assert.equal(Service.clusterURL, "");
 
       // Track whether we fetched a new token.
       numTokenRequestsBefore = numTokenRequests;
@@ -144,7 +144,7 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
       // before we proceed.
       waitForZeroTimer(function() {
         _("Second sync nextTick.");
-        do_check_eq(numTokenRequests, numTokenRequestsBefore + 1, "fetched a new token");
+        Assert.equal(numTokenRequests, numTokenRequestsBefore + 1, "fetched a new token");
         Service.startOver().then(() => {
           server.stop(deferred.resolve);
         });
@@ -161,7 +161,7 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
     _("Making request to " + url + " which should 401");
     let request = new RESTRequest(url);
     request.get(function() {
-      do_check_eq(request.response.status, 401);
+      Assert.equal(request.response.status, 401);
       CommonUtils.nextTick(onwards);
     });
   } else {
@@ -194,14 +194,14 @@ add_task(async function test_single_token_fetch() {
 
   let server = await prepareServer(afterTokenFetch);
 
-  do_check_false(Service.isLoggedIn, "not already logged in");
+  Assert.ok(!Service.isLoggedIn, "not already logged in");
   await Service.sync();
-  do_check_eq(Status.sync, SYNC_SUCCEEDED, "sync succeeded");
-  do_check_eq(numTokenFetches, 0, "didn't fetch a new token");
+  Assert.equal(Status.sync, SYNC_SUCCEEDED, "sync succeeded");
+  Assert.equal(numTokenFetches, 0, "didn't fetch a new token");
   // A bit hacky, but given we know how prepareServer works we can deduce
   // that clusterURL we expect.
   let expectedClusterURL = server.baseURI + "1.1/johndoe/";
-  do_check_eq(Service.clusterURL, expectedClusterURL);
+  Assert.equal(Service.clusterURL, expectedClusterURL);
   await Service.startOver();
   await promiseStopServer(server);
 });
@@ -244,7 +244,7 @@ add_task(async function test_momentary_401_engine() {
       // lastSyncReassigned shouldn't be cleared until a sync has succeeded.
       _("Ensuring that lastSyncReassigned is still set at next sync start.");
       Svc.Obs.remove("weave:service:login:start", onLoginStart);
-      do_check_true(getReassigned());
+      Assert.ok(getReassigned());
     }
 
     _("Adding observer that lastSyncReassigned is still set on login.");
@@ -280,7 +280,7 @@ add_task(async function test_momentary_401_info_collections_loggedin() {
     server.toplevelHandlers.info = oldHandler;
   }
 
-  do_check_true(Service.isLoggedIn, "already logged in");
+  Assert.ok(Service.isLoggedIn, "already logged in");
 
   await syncAndExpectNodeReassignment(server,
                                       "weave:service:sync:error",
@@ -314,12 +314,12 @@ add_task(async function test_momentary_401_info_collections_loggedout() {
   oldHandler = server.toplevelHandlers.info;
   server.toplevelHandlers.info = handleReassign;
 
-  do_check_false(Service.isLoggedIn, "not already logged in");
+  Assert.ok(!Service.isLoggedIn, "not already logged in");
 
   await Service.sync();
-  do_check_eq(Status.sync, SYNC_SUCCEEDED, "sync succeeded");
+  Assert.equal(Status.sync, SYNC_SUCCEEDED, "sync succeeded");
   // sync was successful - check we grabbed a new token.
-  do_check_true(sawTokenFetch, "a new token was fetched by this test.");
+  Assert.ok(sawTokenFetch, "a new token was fetched by this test.");
   // and we are done.
   await Service.startOver();
   await promiseStopServer(server);
@@ -345,7 +345,7 @@ add_task(async function test_momentary_401_storage_loggedin() {
     server.toplevelHandlers.storage = oldHandler;
   }
 
-  do_check_true(Service.isLoggedIn, "already logged in");
+  Assert.ok(Service.isLoggedIn, "already logged in");
 
   await syncAndExpectNodeReassignment(server,
                                       "weave:service:sync:error",
@@ -371,7 +371,7 @@ add_task(async function test_momentary_401_storage_loggedout() {
     server.toplevelHandlers.storage = oldHandler;
   }
 
-  do_check_false(Service.isLoggedIn, "already logged in");
+  Assert.ok(!Service.isLoggedIn, "already logged in");
 
   await syncAndExpectNodeReassignment(server,
                                       "weave:service:login:error",

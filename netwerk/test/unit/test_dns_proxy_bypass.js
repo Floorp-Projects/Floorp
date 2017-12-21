@@ -30,7 +30,7 @@ var dnsRequestObserver = {
       do_print(data);
       if (data.indexOf("dnsleak.example.com") > -1) {
         try {
-          do_check_true(false);
+          Assert.ok(false);
         } catch (e) {}
       }
     }

@@ -247,8 +247,8 @@ function start_cache_pinned_app2_for_success() {
                             function (update, state) {
                               switch(state) {
                               case STATE_FINISHED:
-				do_check_true(error_count[0] == 0,
-                                              "Do not discard app1?");
+				Assert.ok(error_count[0] == 0,
+                                          "Do not discard app1?");
 				httpServer.stop(do_test_finished);
 				break;
 

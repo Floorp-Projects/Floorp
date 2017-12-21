@@ -25,62 +25,62 @@ function run_test() {
 
   startupManager();
 
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("http://test1.com")));
-  do_check_true(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                              newPrincipal("https://test1.com")));
-  do_check_true(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                              newPrincipal("https://www.test2.com")));
-  do_check_true(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                              newPrincipal("https://test3.com")));
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("https://test4.com")));
-  do_check_true(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                              newPrincipal("https://www.test4.com")));
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("http://www.test5.com")));
-  do_check_true(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                              newPrincipal("https://www.test5.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("http://test1.com")));
+  Assert.ok(AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                          newPrincipal("https://test1.com")));
+  Assert.ok(AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                          newPrincipal("https://www.test2.com")));
+  Assert.ok(AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                          newPrincipal("https://test3.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("https://test4.com")));
+  Assert.ok(AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                          newPrincipal("https://www.test4.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("http://www.test5.com")));
+  Assert.ok(AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                          newPrincipal("https://www.test5.com")));
 
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("http://www.test6.com")));
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("https://www.test6.com")));
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("https://test7.com")));
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("https://www.test8.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("http://www.test6.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("https://www.test6.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("https://test7.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("https://www.test8.com")));
 
   // This should remain unaffected
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("http://www.test9.com")));
-  do_check_true(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                              newPrincipal("https://www.test9.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("http://www.test9.com")));
+  Assert.ok(AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                          newPrincipal("https://www.test9.com")));
 
   Services.perms.removeAll();
 
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("https://test1.com")));
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("https://www.test2.com")));
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("https://test3.com")));
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("https://www.test4.com")));
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("https://www.test5.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("https://test1.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("https://www.test2.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("https://test3.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("https://www.test4.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("https://www.test5.com")));
 
   // Upgrade the application and verify that the permissions are still not there
   restartManager("2");
 
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("https://test1.com")));
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("https://www.test2.com")));
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("https://test3.com")));
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("https://www.test4.com")));
-  do_check_false(AddonManager.isInstallAllowed(XPI_MIMETYPE,
-                                               newPrincipal("https://www.test5.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("https://test1.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("https://www.test2.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("https://test3.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("https://www.test4.com")));
+  Assert.ok(!AddonManager.isInstallAllowed(XPI_MIMETYPE,
+                                           newPrincipal("https://www.test5.com")));
 }

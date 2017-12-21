@@ -265,9 +265,9 @@ async function check_autocomplete(test) {
                  "Got as many results as expected");
 
     // If we expect results, make sure we got matches.
-    do_check_eq(controller.searchStatus, matches.length ?
-                Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
-                Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
+    Assert.equal(controller.searchStatus, matches.length ?
+                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
+                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
   }
 
   if (test.autofilled) {

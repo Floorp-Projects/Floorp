@@ -137,12 +137,12 @@ add_task(async function test_transitions() {
   var result = PlacesUtils.history.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
-  do_check_eq(testDataDownload.length, root.childCount);
+  Assert.equal(testDataDownload.length, root.childCount);
   await PlacesTestUtils.addVisits({
     uri: uri("http://getfirefox.com"),
     transition: TRANSITION_DOWNLOAD
   });
-  do_check_eq(testDataDownload.length + 1, root.childCount);
+  Assert.equal(testDataDownload.length + 1, root.childCount);
   root.containerOpen = false;
 });
 

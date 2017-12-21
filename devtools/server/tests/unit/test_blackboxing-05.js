@@ -70,18 +70,18 @@ function test_black_box() {
 
 function test_black_box_exception() {
   gThreadClient.getSources(function ({error, sources}) {
-    do_check_true(!error, "Should not get an error: " + error);
+    Assert.ok(!error, "Should not get an error: " + error);
     let sourceClient = gThreadClient.source(
       sources.filter(s => s.url == BLACK_BOXED_URL)[0]
     );
 
     sourceClient.blackBox(function ({error}) {
-      do_check_true(!error, "Should not get an error: " + error);
+      Assert.ok(!error, "Should not get an error: " + error);
       gThreadClient.pauseOnExceptions(true);
 
       gClient.addOneTimeListener("paused", function (event, packet) {
-        do_check_eq(packet.frame.where.source.url, SOURCE_URL,
-                    "We shouldn't pause while in the black boxed source.");
+        Assert.equal(packet.frame.where.source.url, SOURCE_URL,
+                     "We shouldn't pause while in the black boxed source.");
         finishClient(gClient);
       });
 

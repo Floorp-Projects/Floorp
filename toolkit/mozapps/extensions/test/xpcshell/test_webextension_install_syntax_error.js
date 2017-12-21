@@ -29,14 +29,14 @@ add_task(async function install_xpi() {
   });
 
   let install1 = await AddonManager.getInstallForFile(xpi1);
-  do_check_eq(install1.state, AddonManager.STATE_DOWNLOAD_FAILED);
-  do_check_eq(install1.error, AddonManager.ERROR_CORRUPT_FILE);
+  Assert.equal(install1.state, AddonManager.STATE_DOWNLOAD_FAILED);
+  Assert.equal(install1.error, AddonManager.ERROR_CORRUPT_FILE);
 
   // Replace xpi1 with xpi2 to have the same filename to reproduce install error
   xpi2.moveTo(xpi1.parent, xpi1.leafName);
 
   let install2 = await AddonManager.getInstallForFile(xpi2);
-  do_check_neq(install2.error, AddonManager.ERROR_CORRUPT_FILE);
+  Assert.notEqual(install2.error, AddonManager.ERROR_CORRUPT_FILE);
 
 });
 

@@ -96,6 +96,6 @@ add_task(function test_execute() {
     let accesstime = Date(resultNode.time / 1000);
     dump("----> result: " + resultNode.uri + "   Date: " + accesstime.toLocaleString() + "\n");
   }
-  do_check_eq(cc, 0);
+  Assert.equal(cc, 0);
   root.containerOpen = false;
 });

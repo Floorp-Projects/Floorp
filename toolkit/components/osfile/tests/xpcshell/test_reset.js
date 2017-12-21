@@ -24,7 +24,7 @@ add_task(async function transparent_reset() {
     }
     let data = await OS.File.read(path);
     let string = (new TextDecoder()).decode(data);
-    do_check_eq(string, CONTENT);
+    Assert.equal(string, CONTENT);
   }
 });
 
@@ -42,7 +42,7 @@ add_task(async function file_open_cannot_reset() {
       throw ex;
     }
   }
-  do_check_true(thrown);
+  Assert.ok(thrown);
 
   do_print("Closing the file, we should now be able to reset");
   await openedFile.close();
@@ -63,7 +63,7 @@ add_task(async function dir_open_cannot_reset() {
       throw ex;
     }
   }
-  do_check_true(thrown);
+  Assert.ok(thrown);
 
   do_print("Closing the directory, we should now be able to reset");
   await iterator.close();

@@ -2,12 +2,12 @@ function sbTest() {
   var threw = false;
   try {
     for (var x in Components) { }
-    do_check_true(false, "Shouldn't be able to enumerate Components");
+    Assert.ok(false, "Shouldn't be able to enumerate Components");
   } catch(e) {
-    do_check_true(true, "Threw appropriately");
+    Assert.ok(true, "Threw appropriately");
     threw = true;
   }
-  do_check_true(threw, "Shouldn't have thrown uncatchable exception");
+  Assert.ok(threw, "Shouldn't have thrown uncatchable exception");
 }
 
 function run_test() {

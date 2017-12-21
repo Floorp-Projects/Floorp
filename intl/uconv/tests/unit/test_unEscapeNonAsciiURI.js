@@ -4,7 +4,7 @@ function run_test() {
 
   // Tests whether nsTextToSubURI does UTF-16 unescaping (it shouldn't)
   const testURI = "data:text/html,%FE%FF";
-  do_check_eq(textToSubURI.unEscapeNonAsciiURI("UTF-16", testURI), testURI);
+  Assert.equal(textToSubURI.unEscapeNonAsciiURI("UTF-16", testURI), testURI);
 
   // Tests whether incomplete multibyte sequences throw.
   const tests = [{
@@ -38,9 +38,9 @@ function run_test() {
       } catch (e) {
         thrown = e.result;
       }
-      do_check_eq(thrown, t.throws);
+      Assert.equal(thrown, t.throws);
     } else {
-      do_check_eq(textToSubURI.unEscapeNonAsciiURI("UTF-8", t.input), t.expected);
+      Assert.equal(textToSubURI.unEscapeNonAsciiURI("UTF-8", t.input), t.expected);
     }
   }
 }

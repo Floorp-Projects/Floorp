@@ -33,13 +33,13 @@ function run_test()
 
 function succeeded(ch, cx, status, data)
 {
-  do_check_true(Components.isSuccessCode(status));
-  do_check_eq(data.map(v => String.fromCharCode(v)).join(""), "1234");
+  Assert.ok(Components.isSuccessCode(status));
+  Assert.equal(data.map(v => String.fromCharCode(v)).join(""), "1234");
 }
 
 function check_1234(ch, cx)
 {
-  do_check_eq(ch.getResponseHeader("Content-Length"), "4");
+  Assert.equal(ch.getResponseHeader("Content-Length"), "4");
 }
 
 // PATH HANDLERS
