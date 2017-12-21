@@ -49,6 +49,6 @@ add_task(async function test_nodb_pluschanges() {
 
   // Check that the entries are placed as specified correctly
   let metadata = await promiseEngineMetadata();
-  do_check_eq(metadata["test-search-engine"].order, 1);
-  do_check_eq(metadata["a-second-test-engine"].order, 2);
+  Assert.equal(metadata["test-search-engine"].order, 1);
+  Assert.equal(metadata["a-second-test-engine"].order, 2);
 });

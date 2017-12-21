@@ -33,7 +33,7 @@ var gManagerEventsListener = {
       let matchingEvents = this.seenEvents.filter(function(aSeenEvent) {
         return aSeenEvent == event;
       });
-      do_check_eq(matchingEvents.length, 1);
+      Assert.equal(matchingEvents.length, 1);
     }
     this.seenEvents = [];
   }
@@ -55,76 +55,76 @@ function run_test() {
   gManagerEventsListener.expect(["onUpdateModeChanged"]);
   AddonManager.updateEnabled = false;
   gManagerEventsListener.checkExpected();
-  do_check_false(AddonManager.updateEnabled);
-  do_check_false(Services.prefs.getBoolPref("extensions.update.enabled"));
+  Assert.ok(!AddonManager.updateEnabled);
+  Assert.ok(!Services.prefs.getBoolPref("extensions.update.enabled"));
 
   gManagerEventsListener.expect([]);
   AddonManager.updateEnabled = false;
   gManagerEventsListener.checkExpected();
-  do_check_false(AddonManager.updateEnabled);
-  do_check_false(Services.prefs.getBoolPref("extensions.update.enabled"));
+  Assert.ok(!AddonManager.updateEnabled);
+  Assert.ok(!Services.prefs.getBoolPref("extensions.update.enabled"));
 
   gManagerEventsListener.expect(["onUpdateModeChanged"]);
   AddonManager.updateEnabled = true;
   gManagerEventsListener.checkExpected();
-  do_check_true(AddonManager.updateEnabled);
-  do_check_true(Services.prefs.getBoolPref("extensions.update.enabled"));
+  Assert.ok(AddonManager.updateEnabled);
+  Assert.ok(Services.prefs.getBoolPref("extensions.update.enabled"));
 
   gManagerEventsListener.expect([]);
   AddonManager.updateEnabled = true;
   gManagerEventsListener.checkExpected();
-  do_check_true(AddonManager.updateEnabled);
-  do_check_true(Services.prefs.getBoolPref("extensions.update.enabled"));
+  Assert.ok(AddonManager.updateEnabled);
+  Assert.ok(Services.prefs.getBoolPref("extensions.update.enabled"));
 
   // AddonManager.autoUpdateDefault
   gManagerEventsListener.expect(["onUpdateModeChanged"]);
   AddonManager.autoUpdateDefault = false;
   gManagerEventsListener.checkExpected();
-  do_check_false(AddonManager.autoUpdateDefault);
-  do_check_false(Services.prefs.getBoolPref("extensions.update.autoUpdateDefault"));
+  Assert.ok(!AddonManager.autoUpdateDefault);
+  Assert.ok(!Services.prefs.getBoolPref("extensions.update.autoUpdateDefault"));
 
   gManagerEventsListener.expect([]);
   AddonManager.autoUpdateDefault = false;
   gManagerEventsListener.checkExpected();
-  do_check_false(AddonManager.autoUpdateDefault);
-  do_check_false(Services.prefs.getBoolPref("extensions.update.autoUpdateDefault"));
+  Assert.ok(!AddonManager.autoUpdateDefault);
+  Assert.ok(!Services.prefs.getBoolPref("extensions.update.autoUpdateDefault"));
 
   gManagerEventsListener.expect(["onUpdateModeChanged"]);
   AddonManager.autoUpdateDefault = true;
   gManagerEventsListener.checkExpected();
-  do_check_true(AddonManager.autoUpdateDefault);
-  do_check_true(Services.prefs.getBoolPref("extensions.update.autoUpdateDefault"));
+  Assert.ok(AddonManager.autoUpdateDefault);
+  Assert.ok(Services.prefs.getBoolPref("extensions.update.autoUpdateDefault"));
 
   gManagerEventsListener.expect([]);
   AddonManager.autoUpdateDefault = true;
   gManagerEventsListener.checkExpected();
-  do_check_true(AddonManager.autoUpdateDefault);
-  do_check_true(Services.prefs.getBoolPref("extensions.update.autoUpdateDefault"));
+  Assert.ok(AddonManager.autoUpdateDefault);
+  Assert.ok(Services.prefs.getBoolPref("extensions.update.autoUpdateDefault"));
 
   // AddonManager.strictCompatibility
   gManagerEventsListener.expect(["onCompatibilityModeChanged"]);
   AddonManager.strictCompatibility = false;
   gManagerEventsListener.checkExpected();
-  do_check_false(AddonManager.strictCompatibility);
-  do_check_false(Services.prefs.getBoolPref("extensions.strictCompatibility"));
+  Assert.ok(!AddonManager.strictCompatibility);
+  Assert.ok(!Services.prefs.getBoolPref("extensions.strictCompatibility"));
 
   gManagerEventsListener.expect([]);
   AddonManager.strictCompatibility = false;
   gManagerEventsListener.checkExpected();
-  do_check_false(AddonManager.strictCompatibility);
-  do_check_false(Services.prefs.getBoolPref("extensions.strictCompatibility"));
+  Assert.ok(!AddonManager.strictCompatibility);
+  Assert.ok(!Services.prefs.getBoolPref("extensions.strictCompatibility"));
 
   gManagerEventsListener.expect(["onCompatibilityModeChanged"]);
   AddonManager.strictCompatibility = true;
   gManagerEventsListener.checkExpected();
-  do_check_true(AddonManager.strictCompatibility);
-  do_check_true(Services.prefs.getBoolPref("extensions.strictCompatibility"));
+  Assert.ok(AddonManager.strictCompatibility);
+  Assert.ok(Services.prefs.getBoolPref("extensions.strictCompatibility"));
 
   gManagerEventsListener.expect([]);
   AddonManager.strictCompatibility = true;
   gManagerEventsListener.checkExpected();
-  do_check_true(AddonManager.strictCompatibility);
-  do_check_true(Services.prefs.getBoolPref("extensions.strictCompatibility"));
+  Assert.ok(AddonManager.strictCompatibility);
+  Assert.ok(Services.prefs.getBoolPref("extensions.strictCompatibility"));
 
 
   // AddonManager.checkCompatibility
@@ -138,80 +138,80 @@ function run_test() {
   gManagerEventsListener.expect(["onCompatibilityModeChanged"]);
   AddonManager.checkCompatibility = false;
   gManagerEventsListener.checkExpected();
-  do_check_false(AddonManager.checkCompatibility);
-  do_check_false(Services.prefs.getBoolPref(COMPATIBILITY_PREF));
+  Assert.ok(!AddonManager.checkCompatibility);
+  Assert.ok(!Services.prefs.getBoolPref(COMPATIBILITY_PREF));
 
   gManagerEventsListener.expect([]);
   AddonManager.checkCompatibility = false;
   gManagerEventsListener.checkExpected();
-  do_check_false(AddonManager.checkCompatibility);
-  do_check_false(Services.prefs.getBoolPref(COMPATIBILITY_PREF));
+  Assert.ok(!AddonManager.checkCompatibility);
+  Assert.ok(!Services.prefs.getBoolPref(COMPATIBILITY_PREF));
 
   gManagerEventsListener.expect(["onCompatibilityModeChanged"]);
   AddonManager.checkCompatibility = true;
   gManagerEventsListener.checkExpected();
-  do_check_true(AddonManager.checkCompatibility);
-  do_check_false(Services.prefs.prefHasUserValue(COMPATIBILITY_PREF));
+  Assert.ok(AddonManager.checkCompatibility);
+  Assert.ok(!Services.prefs.prefHasUserValue(COMPATIBILITY_PREF));
 
   gManagerEventsListener.expect([]);
   AddonManager.checkCompatibility = true;
   gManagerEventsListener.checkExpected();
-  do_check_true(AddonManager.checkCompatibility);
-  do_check_false(Services.prefs.prefHasUserValue(COMPATIBILITY_PREF));
+  Assert.ok(AddonManager.checkCompatibility);
+  Assert.ok(!Services.prefs.prefHasUserValue(COMPATIBILITY_PREF));
 
 
   // AddonManager.checkUpdateSecurity
   gManagerEventsListener.expect(["onCheckUpdateSecurityChanged"]);
   AddonManager.checkUpdateSecurity = false;
   gManagerEventsListener.checkExpected();
-  do_check_false(AddonManager.checkUpdateSecurity);
+  Assert.ok(!AddonManager.checkUpdateSecurity);
   if (AddonManager.checkUpdateSecurityDefault)
-    do_check_false(Services.prefs.getBoolPref("extensions.checkUpdateSecurity"));
+    Assert.ok(!Services.prefs.getBoolPref("extensions.checkUpdateSecurity"));
   else
-    do_check_false(Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity"));
+    Assert.ok(!Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity"));
 
   gManagerEventsListener.expect([]);
   AddonManager.checkUpdateSecurity = false;
   gManagerEventsListener.checkExpected();
-  do_check_false(AddonManager.checkUpdateSecurity);
+  Assert.ok(!AddonManager.checkUpdateSecurity);
   if (AddonManager.checkUpdateSecurityDefault)
-    do_check_false(Services.prefs.getBoolPref("extensions.checkUpdateSecurity"));
+    Assert.ok(!Services.prefs.getBoolPref("extensions.checkUpdateSecurity"));
   else
-    do_check_false(Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity"));
+    Assert.ok(!Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity"));
 
   gManagerEventsListener.expect(["onCheckUpdateSecurityChanged"]);
   AddonManager.checkUpdateSecurity = true;
   gManagerEventsListener.checkExpected();
-  do_check_true(AddonManager.checkUpdateSecurity);
+  Assert.ok(AddonManager.checkUpdateSecurity);
   if (!AddonManager.checkUpdateSecurityDefault)
-    do_check_true(Services.prefs.getBoolPref("extensions.checkUpdateSecurity"));
+    Assert.ok(Services.prefs.getBoolPref("extensions.checkUpdateSecurity"));
   else
-    do_check_false(Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity"));
+    Assert.ok(!Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity"));
 
   gManagerEventsListener.expect([]);
   AddonManager.checkUpdateSecurity = true;
   gManagerEventsListener.checkExpected();
-  do_check_true(AddonManager.checkUpdateSecurity);
+  Assert.ok(AddonManager.checkUpdateSecurity);
   if (!AddonManager.checkUpdateSecurityDefault)
-    do_check_true(Services.prefs.getBoolPref("extensions.checkUpdateSecurity"));
+    Assert.ok(Services.prefs.getBoolPref("extensions.checkUpdateSecurity"));
   else
-    do_check_false(Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity"));
+    Assert.ok(!Services.prefs.prefHasUserValue("extensions.checkUpdateSecurity"));
 
   gManagerEventsListener.shutdown();
 
   // AddonManager.hotfixID
   let hotfixID = "hotfix@tests.mozilla.org";
   Services.prefs.setCharPref("extensions.hotfix.id", hotfixID);
-  do_check_eq(AddonManager.hotfixID, hotfixID);
+  Assert.equal(AddonManager.hotfixID, hotfixID);
   // Change the pref and make sure the property is updated
   hotfixID = "hotfix2@tests.mozilla.org";
   Services.prefs.setCharPref("extensions.hotfix.id", hotfixID);
-  do_check_eq(AddonManager.hotfixID, hotfixID);
+  Assert.equal(AddonManager.hotfixID, hotfixID);
   // Test an invalid pref value
   hotfixID = 99;
   Services.prefs.deleteBranch("extensions.hotfix.id");
   Services.prefs.setIntPref("extensions.hotfix.id", hotfixID);
-  do_check_eq(AddonManager.hotfixID, "");
+  Assert.equal(AddonManager.hotfixID, "");
   Services.prefs.clearUserPref("extensions.hotfix.id");
 
   // After removing the listener, ensure we get no further events.

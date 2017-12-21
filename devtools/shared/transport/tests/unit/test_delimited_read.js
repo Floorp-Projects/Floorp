@@ -23,5 +23,5 @@ function run_test() {
 function test_delimited_read(input, expected) {
   input = new StringInputStream(input, input.length);
   let result = StreamUtils.delimitedRead(input, ":", 10);
-  do_check_eq(result, expected);
+  Assert.equal(result, expected);
 }

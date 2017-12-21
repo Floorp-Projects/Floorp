@@ -10,19 +10,19 @@ function run_test() {
         util.inputStreamIsBuffered(null);
         do_throw("inputStreamIsBuffered should have thrown");
     } catch (e) {
-        do_check_eq(e.result, Cr.NS_ERROR_INVALID_POINTER);
+        Assert.equal(e.result, Cr.NS_ERROR_INVALID_POINTER);
     }
 
     try {
         util.outputStreamIsBuffered(null);
         do_throw("outputStreamIsBuffered should have thrown");
     } catch (e) {
-        do_check_eq(e.result, Cr.NS_ERROR_INVALID_POINTER);
+        Assert.equal(e.result, Cr.NS_ERROR_INVALID_POINTER);
     }
 
     var s = Cc["@mozilla.org/io/string-input-stream;1"]
               .createInstance(Ci.nsIStringInputStream);
     var body = "This is a test";
     s.setData(body, body.length);
-    do_check_eq(util.inputStreamIsBuffered(s), true);
+    Assert.equal(util.inputStreamIsBuffered(s), true);
 }

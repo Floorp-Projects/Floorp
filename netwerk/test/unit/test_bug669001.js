@@ -26,13 +26,13 @@ var tests = [
 {
   prepare: function() { },
   test: function(response) {
-    do_check_true(fetched);
+    Assert.ok(fetched);
   }
 },
 {
   prepare: function() { },
   test: function(response) {
-    do_check_false(fetched);
+    Assert.ok(!fetched);
   }
 },
 {
@@ -40,13 +40,13 @@ var tests = [
     setUA("A different User Agent");
   },
   test: function(response) {
-    do_check_true(fetched);
+    Assert.ok(fetched);
   }
 },
 {
   prepare: function() { },
   test: function(response) {
-    do_check_false(fetched);
+    Assert.ok(!fetched);
   }
 },
 {
@@ -54,13 +54,13 @@ var tests = [
     setUA("And another User Agent");
   },
   test: function(response) {
-    do_check_true(fetched);
+    Assert.ok(fetched);
   }
 },
 {
   prepare: function() { },
   test: function(response) {
-    do_check_false(fetched);
+    Assert.ok(!fetched);
   }
 }
 ];

@@ -51,13 +51,13 @@ function test_source_map() {
 
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     gThreadClient.getFrames(0, 50, function ({ error, frames }) {
-      do_check_true(!error);
-      do_check_eq(frames.length, 4);
+      Assert.ok(!error);
+      Assert.equal(frames.length, 4);
       // b.js should be skipped
-      do_check_eq(frames[0].where.source.url, "http://example.com/www/js/root/e.js");
-      do_check_eq(frames[1].where.source.url, "http://example.com/www/js/root/c.js");
-      do_check_eq(frames[2].where.source.url, "http://example.com/www/js/root/a.js");
-      do_check_eq(frames[3].where.source.url, null);
+      Assert.equal(frames[0].where.source.url, "http://example.com/www/js/root/e.js");
+      Assert.equal(frames[1].where.source.url, "http://example.com/www/js/root/c.js");
+      Assert.equal(frames[2].where.source.url, "http://example.com/www/js/root/a.js");
+      Assert.equal(frames[3].where.source.url, null);
 
       finishClient(gClient);
     });

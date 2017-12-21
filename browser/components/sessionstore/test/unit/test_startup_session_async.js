@@ -25,7 +25,7 @@ function run_test() {
         getService(Ci.nsISessionStartup);
 
     afterSessionStartupInitialization(function cb() {
-      do_check_eq(startup.sessionType, Ci.nsISessionStartup.DEFER_SESSION);
+      Assert.equal(startup.sessionType, Ci.nsISessionStartup.DEFER_SESSION);
       do_test_finished();
     });
   });

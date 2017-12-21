@@ -222,7 +222,7 @@ this.BootstrapMonitor = {
     if (!this.inited)
       return;
 
-    do_check_eq(this.started.size, 0);
+    Assert.equal(this.started.size, 0);
   },
 
   clear(id) {
@@ -245,26 +245,26 @@ this.BootstrapMonitor = {
   },
 
   checkMatches(cached, current) {
-    do_check_neq(cached, undefined);
-    do_check_eq(current.data.version, cached.data.version);
-    do_check_eq(current.data.installPath, cached.data.installPath);
-    do_check_eq(current.data.resourceURI, cached.data.resourceURI);
+    Assert.notEqual(cached, undefined);
+    Assert.equal(current.data.version, cached.data.version);
+    Assert.equal(current.data.installPath, cached.data.installPath);
+    Assert.equal(current.data.resourceURI, cached.data.resourceURI);
   },
 
   checkAddonStarted(id, version = undefined) {
     let started = this.started.get(id);
-    do_check_neq(started, undefined);
+    Assert.notEqual(started, undefined);
     if (version != undefined)
-      do_check_eq(started.data.version, version);
+      Assert.equal(started.data.version, version);
 
     // Chrome should be registered by now
     let installPath = new FileUtils.File(started.data.installPath);
     let isRegistered = isManifestRegistered(installPath);
-    do_check_true(isRegistered);
+    Assert.ok(isRegistered);
   },
 
   checkAddonNotStarted(id) {
-    do_check_false(this.started.has(id));
+    Assert.ok(!this.started.has(id));
   },
 
   checkAddonInstalled(id, version = undefined) {
@@ -277,7 +277,7 @@ this.BootstrapMonitor = {
   },
 
   checkAddonNotInstalled(id) {
-    do_check_false(this.installed.has(id));
+    Assert.ok(!this.installed.has(id));
   },
 
   observe(subject, topic, data) {
@@ -317,7 +317,7 @@ this.BootstrapMonitor = {
 
       // Chrome should still be registered at this point
       let isRegistered = isManifestRegistered(installPath);
-      do_check_true(isRegistered);
+      Assert.ok(isRegistered);
 
       // XPIProvider doesn't bother unregistering chrome on app shutdown but
       // since we simulate restarts we must do so manually to keep the registry
@@ -334,7 +334,7 @@ this.BootstrapMonitor = {
       if (!this.restartfulIds.has(id)) {
         // Chrome should be unregistered at this point
         let isRegistered = isManifestRegistered(installPath);
-        do_check_false(isRegistered);
+        Assert.ok(!isRegistered);
       }
 
       this.installed.delete(id);
@@ -344,7 +344,7 @@ this.BootstrapMonitor = {
 
       // Chrome should be registered at this point
       let isRegistered = isManifestRegistered(installPath);
-      do_check_true(isRegistered);
+      Assert.ok(isRegistered);
 
       for (let resolve of this.startupPromises)
         resolve();
@@ -376,12 +376,12 @@ function do_check_in_crash_annotation(aId, aVersion) {
   }
 
   if (!("Add-ons" in gAppInfo.annotations)) {
-    do_check_false(true);
+    Assert.equal(false, true);
     return;
   }
 
   let addons = gAppInfo.annotations["Add-ons"].split(",");
-  do_check_true(addons.includes(`${encodeURIComponent(aId)}:${encodeURIComponent(aVersion)}`));
+  Assert.ok(addons.includes(`${encodeURIComponent(aId)}:${encodeURIComponent(aVersion)}`));
 }
 
 /**
@@ -399,12 +399,12 @@ function do_check_not_in_crash_annotation(aId, aVersion) {
   }
 
   if (!("Add-ons" in gAppInfo.annotations)) {
-    do_check_true(true);
+    Assert.ok(true);
     return;
   }
 
   let addons = gAppInfo.annotations["Add-ons"].split(",");
-  do_check_false(addons.includes(`${encodeURIComponent(aId)}:${encodeURIComponent(aVersion)}`));
+  Assert.ok(!addons.includes(`${encodeURIComponent(aId)}:${encodeURIComponent(aVersion)}`));
 }
 
 /**
@@ -478,8 +478,8 @@ function do_get_expected_addon_name(aId) {
  *         An array of properties to check.
  */
 function do_check_addons(aActualAddons, aExpectedAddons, aProperties) {
-  do_check_neq(aActualAddons, null);
-  do_check_eq(aActualAddons.length, aExpectedAddons.length);
+  Assert.notEqual(aActualAddons, null);
+  Assert.equal(aActualAddons.length, aExpectedAddons.length);
   for (let i = 0; i < aActualAddons.length; i++)
     do_check_addon(aActualAddons[i], aExpectedAddons[i], aProperties);
 }
@@ -495,7 +495,7 @@ function do_check_addons(aActualAddons, aExpectedAddons, aProperties) {
  *         An array of properties to check.
  */
 function do_check_addon(aActualAddon, aExpectedAddon, aProperties) {
-  do_check_neq(aActualAddon, null);
+  Assert.notEqual(aActualAddon, null);
 
   aProperties.forEach(function(aProperty) {
     let actualValue = aActualAddon[aProperty];
@@ -524,27 +524,27 @@ function do_check_addon(aActualAddon, aExpectedAddon, aProperties) {
       case "developers":
       case "translators":
       case "contributors":
-        do_check_eq(actualValue.length, expectedValue.length);
+        Assert.equal(actualValue.length, expectedValue.length);
         for (let i = 0; i < actualValue.length; i++)
           do_check_author(actualValue[i], expectedValue[i]);
         break;
 
       case "screenshots":
-        do_check_eq(actualValue.length, expectedValue.length);
+        Assert.equal(actualValue.length, expectedValue.length);
         for (let i = 0; i < actualValue.length; i++)
           do_check_screenshot(actualValue[i], expectedValue[i]);
         break;
 
       case "sourceURI":
-        do_check_eq(actualValue.spec, expectedValue);
+        Assert.equal(actualValue.spec, expectedValue);
         break;
 
       case "updateDate":
-        do_check_eq(actualValue.getTime(), expectedValue.getTime());
+        Assert.equal(actualValue.getTime(), expectedValue.getTime());
         break;
 
       case "compatibilityOverrides":
-        do_check_eq(actualValue.length, expectedValue.length);
+        Assert.equal(actualValue.length, expectedValue.length);
         for (let i = 0; i < actualValue.length; i++)
           do_check_compatibilityoverride(actualValue[i], expectedValue[i]);
         break;
@@ -570,9 +570,9 @@ function do_check_addon(aActualAddon, aExpectedAddon, aProperties) {
  *         The expected author to check against.
  */
 function do_check_author(aActual, aExpected) {
-  do_check_eq(aActual.toString(), aExpected.name);
-  do_check_eq(aActual.name, aExpected.name);
-  do_check_eq(aActual.url, aExpected.url);
+  Assert.equal(aActual.toString(), aExpected.name);
+  Assert.equal(aActual.name, aExpected.name);
+  Assert.equal(aActual.url, aExpected.url);
 }
 
 /**
@@ -584,14 +584,14 @@ function do_check_author(aActual, aExpected) {
  *         The expected screenshot to check against.
  */
 function do_check_screenshot(aActual, aExpected) {
-  do_check_eq(aActual.toString(), aExpected.url);
-  do_check_eq(aActual.url, aExpected.url);
-  do_check_eq(aActual.width, aExpected.width);
-  do_check_eq(aActual.height, aExpected.height);
-  do_check_eq(aActual.thumbnailURL, aExpected.thumbnailURL);
-  do_check_eq(aActual.thumbnailWidth, aExpected.thumbnailWidth);
-  do_check_eq(aActual.thumbnailHeight, aExpected.thumbnailHeight);
-  do_check_eq(aActual.caption, aExpected.caption);
+  Assert.equal(aActual.toString(), aExpected.url);
+  Assert.equal(aActual.url, aExpected.url);
+  Assert.equal(aActual.width, aExpected.width);
+  Assert.equal(aActual.height, aExpected.height);
+  Assert.equal(aActual.thumbnailURL, aExpected.thumbnailURL);
+  Assert.equal(aActual.thumbnailWidth, aExpected.thumbnailWidth);
+  Assert.equal(aActual.thumbnailHeight, aExpected.thumbnailHeight);
+  Assert.equal(aActual.caption, aExpected.caption);
 }
 
 /**
@@ -604,17 +604,17 @@ function do_check_screenshot(aActual, aExpected) {
  *         The expected compatibility override to check against.
  */
 function do_check_compatibilityoverride(aActual, aExpected) {
-  do_check_eq(aActual.type, aExpected.type);
-  do_check_eq(aActual.minVersion, aExpected.minVersion);
-  do_check_eq(aActual.maxVersion, aExpected.maxVersion);
-  do_check_eq(aActual.appID, aExpected.appID);
-  do_check_eq(aActual.appMinVersion, aExpected.appMinVersion);
-  do_check_eq(aActual.appMaxVersion, aExpected.appMaxVersion);
+  Assert.equal(aActual.type, aExpected.type);
+  Assert.equal(aActual.minVersion, aExpected.minVersion);
+  Assert.equal(aActual.maxVersion, aExpected.maxVersion);
+  Assert.equal(aActual.appID, aExpected.appID);
+  Assert.equal(aActual.appMinVersion, aExpected.appMinVersion);
+  Assert.equal(aActual.appMaxVersion, aExpected.appMaxVersion);
 }
 
 function do_check_icons(aActual, aExpected) {
   for (var size in aExpected) {
-    do_check_eq(remove_port(aActual[size]), remove_port(aExpected[size]));
+    Assert.equal(remove_port(aActual[size]), remove_port(aExpected[size]));
   }
 }
 
@@ -657,7 +657,7 @@ function check_startup_changes(aType, aIds) {
   changes = changes.filter(aEl => /@tests.mozilla.org$/.test(aEl));
   changes.sort();
 
-  do_check_eq(JSON.stringify(ids), JSON.stringify(changes));
+  Assert.equal(JSON.stringify(ids), JSON.stringify(changes));
 }
 
 /**
@@ -821,8 +821,8 @@ const AddonListener = {
   onPropertyChanged(aAddon, aProperties) {
     do_print(`Got onPropertyChanged event for ${aAddon.id}`);
     let [event, properties] = getExpectedEvent(aAddon.id);
-    do_check_eq("onPropertyChanged", event);
-    do_check_eq(aProperties.length, properties.length);
+    Assert.equal("onPropertyChanged", event);
+    Assert.equal(aProperties.length, properties.length);
     properties.forEach(function(aProperty) {
       // Only test that the expected properties are listed, having additional
       // properties listed is not necessary a problem
@@ -835,79 +835,79 @@ const AddonListener = {
   onEnabling(aAddon, aRequiresRestart) {
     do_print(`Got onEnabling event for ${aAddon.id}`);
     let [event, expectedRestart] = getExpectedEvent(aAddon.id);
-    do_check_eq("onEnabling", event);
-    do_check_eq(aRequiresRestart, expectedRestart);
+    Assert.equal("onEnabling", event);
+    Assert.equal(aRequiresRestart, expectedRestart);
     if (expectedRestart)
-      do_check_true(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_ENABLE));
-    do_check_false(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
+      Assert.ok(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_ENABLE));
+    Assert.ok(!hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
     return check_test_completed(arguments);
   },
 
   onEnabled(aAddon) {
     do_print(`Got onEnabled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
-    do_check_eq("onEnabled", event);
-    do_check_false(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
+    Assert.equal("onEnabled", event);
+    Assert.ok(!hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
     return check_test_completed(arguments);
   },
 
   onDisabling(aAddon, aRequiresRestart) {
     do_print(`Got onDisabling event for ${aAddon.id}`);
     let [event, expectedRestart] = getExpectedEvent(aAddon.id);
-    do_check_eq("onDisabling", event);
-    do_check_eq(aRequiresRestart, expectedRestart);
+    Assert.equal("onDisabling", event);
+    Assert.equal(aRequiresRestart, expectedRestart);
     if (expectedRestart)
-      do_check_true(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_DISABLE));
-    do_check_false(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_DISABLE));
+      Assert.ok(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_DISABLE));
+    Assert.ok(!hasFlag(aAddon.permissions, AddonManager.PERM_CAN_DISABLE));
     return check_test_completed(arguments);
   },
 
   onDisabled(aAddon) {
     do_print(`Got onDisabled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
-    do_check_eq("onDisabled", event);
-    do_check_false(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_DISABLE));
+    Assert.equal("onDisabled", event);
+    Assert.ok(!hasFlag(aAddon.permissions, AddonManager.PERM_CAN_DISABLE));
     return check_test_completed(arguments);
   },
 
   onInstalling(aAddon, aRequiresRestart) {
     do_print(`Got onInstalling event for ${aAddon.id}`);
     let [event, expectedRestart] = getExpectedEvent(aAddon.id);
-    do_check_eq("onInstalling", event);
-    do_check_eq(aRequiresRestart, expectedRestart);
+    Assert.equal("onInstalling", event);
+    Assert.equal(aRequiresRestart, expectedRestart);
     if (expectedRestart)
-      do_check_true(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_INSTALL));
+      Assert.ok(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_INSTALL));
     return check_test_completed(arguments);
   },
 
   onInstalled(aAddon) {
     do_print(`Got onInstalled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
-    do_check_eq("onInstalled", event);
+    Assert.equal("onInstalled", event);
     return check_test_completed(arguments);
   },
 
   onUninstalling(aAddon, aRequiresRestart) {
     do_print(`Got onUninstalling event for ${aAddon.id}`);
     let [event, expectedRestart] = getExpectedEvent(aAddon.id);
-    do_check_eq("onUninstalling", event);
-    do_check_eq(aRequiresRestart, expectedRestart);
+    Assert.equal("onUninstalling", event);
+    Assert.equal(aRequiresRestart, expectedRestart);
     if (expectedRestart)
-      do_check_true(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_UNINSTALL));
+      Assert.ok(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_UNINSTALL));
     return check_test_completed(arguments);
   },
 
   onUninstalled(aAddon) {
     do_print(`Got onUninstalled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
-    do_check_eq("onUninstalled", event);
+    Assert.equal("onUninstalled", event);
     return check_test_completed(arguments);
   },
 
   onOperationCancelled(aAddon) {
     do_print(`Got onOperationCancelled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
-    do_check_eq("onOperationCancelled", event);
+    Assert.equal("onOperationCancelled", event);
     return check_test_completed(arguments);
   }
 };
@@ -919,57 +919,57 @@ const InstallListener = {
         install.state != AddonManager.STATE_AVAILABLE)
       do_throw("Bad install state " + install.state);
     if (install.state != AddonManager.STATE_DOWNLOAD_FAILED)
-      do_check_eq(install.error, 0);
+      Assert.equal(install.error, 0);
     else
-      do_check_neq(install.error, 0);
-    do_check_eq("onNewInstall", getExpectedInstall());
+      Assert.notEqual(install.error, 0);
+    Assert.equal("onNewInstall", getExpectedInstall());
     return check_test_completed(arguments);
   },
 
   onDownloadStarted(install) {
-    do_check_eq(install.state, AddonManager.STATE_DOWNLOADING);
-    do_check_eq(install.error, 0);
-    do_check_eq("onDownloadStarted", getExpectedInstall());
+    Assert.equal(install.state, AddonManager.STATE_DOWNLOADING);
+    Assert.equal(install.error, 0);
+    Assert.equal("onDownloadStarted", getExpectedInstall());
     return check_test_completed(arguments);
   },
 
   onDownloadEnded(install) {
-    do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
-    do_check_eq(install.error, 0);
-    do_check_eq("onDownloadEnded", getExpectedInstall());
+    Assert.equal(install.state, AddonManager.STATE_DOWNLOADED);
+    Assert.equal(install.error, 0);
+    Assert.equal("onDownloadEnded", getExpectedInstall());
     return check_test_completed(arguments);
   },
 
   onDownloadFailed(install) {
-    do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
-    do_check_eq("onDownloadFailed", getExpectedInstall());
+    Assert.equal(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
+    Assert.equal("onDownloadFailed", getExpectedInstall());
     return check_test_completed(arguments);
   },
 
   onDownloadCancelled(install) {
-    do_check_eq(install.state, AddonManager.STATE_CANCELLED);
-    do_check_eq(install.error, 0);
-    do_check_eq("onDownloadCancelled", getExpectedInstall());
+    Assert.equal(install.state, AddonManager.STATE_CANCELLED);
+    Assert.equal(install.error, 0);
+    Assert.equal("onDownloadCancelled", getExpectedInstall());
     return check_test_completed(arguments);
   },
 
   onInstallStarted(install) {
-    do_check_eq(install.state, AddonManager.STATE_INSTALLING);
-    do_check_eq(install.error, 0);
-    do_check_eq("onInstallStarted", getExpectedInstall(install.addon));
+    Assert.equal(install.state, AddonManager.STATE_INSTALLING);
+    Assert.equal(install.error, 0);
+    Assert.equal("onInstallStarted", getExpectedInstall(install.addon));
     return check_test_completed(arguments);
   },
 
   onInstallEnded(install, newAddon) {
-    do_check_eq(install.state, AddonManager.STATE_INSTALLED);
-    do_check_eq(install.error, 0);
-    do_check_eq("onInstallEnded", getExpectedInstall(install.addon));
+    Assert.equal(install.state, AddonManager.STATE_INSTALLED);
+    Assert.equal(install.error, 0);
+    Assert.equal("onInstallEnded", getExpectedInstall(install.addon));
     return check_test_completed(arguments);
   },
 
   onInstallFailed(install) {
-    do_check_eq(install.state, AddonManager.STATE_INSTALL_FAILED);
-    do_check_eq("onInstallFailed", getExpectedInstall(install.addon));
+    Assert.equal(install.state, AddonManager.STATE_INSTALL_FAILED);
+    Assert.equal("onInstallFailed", getExpectedInstall(install.addon));
     return check_test_completed(arguments);
   },
 
@@ -978,15 +978,15 @@ const InstallListener = {
     // onInstallStarted, then the state will revert to STATE_DOWNLOADED.
     let possibleStates = [AddonManager.STATE_CANCELLED,
                           AddonManager.STATE_DOWNLOADED];
-    do_check_true(possibleStates.indexOf(install.state) != -1);
-    do_check_eq(install.error, 0);
-    do_check_eq("onInstallCancelled", getExpectedInstall(install.addon));
+    Assert.ok(possibleStates.indexOf(install.state) != -1);
+    Assert.equal(install.error, 0);
+    Assert.equal("onInstallCancelled", getExpectedInstall(install.addon));
     return check_test_completed(arguments);
   },
 
   onExternalInstall(aAddon, existingAddon, aRequiresRestart) {
-    do_check_eq("onExternalInstall", getExpectedInstall(aAddon));
-    do_check_false(aRequiresRestart);
+    Assert.equal("onExternalInstall", getExpectedInstall(aAddon));
+    Assert.ok(!aRequiresRestart);
     return check_test_completed(arguments);
   }
 };
@@ -1036,7 +1036,7 @@ function ensure_test_completed() {
   }
   gExpectedEvents = {};
   if (gExpectedInstalls)
-    do_check_eq(gExpectedInstalls.length, 0);
+    Assert.equal(gExpectedInstalls.length, 0);
 }
 
 /**
@@ -1462,25 +1462,25 @@ async function checkInstalledSystemAddons(conditions, distroDir) {
       do_print(`Checking state of add-on ${id}, expecting version ${version}`);
 
       // Add-on should be installed
-      do_check_neq(addon, null);
-      do_check_eq(addon.version, version);
-      do_check_true(addon.isActive);
-      do_check_false(addon.foreignInstall);
-      do_check_true(addon.hidden);
-      do_check_true(addon.isSystem);
+      Assert.notEqual(addon, null);
+      Assert.equal(addon.version, version);
+      Assert.ok(addon.isActive);
+      Assert.ok(!addon.foreignInstall);
+      Assert.ok(addon.hidden);
+      Assert.ok(addon.isSystem);
 
       // Verify the add-ons file is in the right place
       let file = expectedDir.clone();
       file.append(id + ".xpi");
-      do_check_true(file.exists());
-      do_check_true(file.isFile());
+      Assert.ok(file.exists());
+      Assert.ok(file.isFile());
 
       let uri = addon.getResourceURI(null);
-      do_check_true(uri instanceof AM_Ci.nsIFileURL);
-      do_check_eq(uri.file.path, file.path);
+      Assert.ok(uri instanceof AM_Ci.nsIFileURL);
+      Assert.equal(uri.file.path, file.path);
 
       if (isUpgrade) {
-        do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);
+        Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);
       }
 
       // Verify the add-on actually started
@@ -1490,7 +1490,7 @@ async function checkInstalledSystemAddons(conditions, distroDir) {
 
       if (isUpgrade) {
         // Add-on should not be installed
-        do_check_eq(addon, null);
+        Assert.equal(addon, null);
       }
 
       BootstrapMonitor.checkAddonNotStarted(id);
@@ -1592,7 +1592,7 @@ async function verifySystemAddonState(initialState, finalState = undefined, alre
   do_print("Checking final state.");
 
   let dirs = await getSystemAddonDirectories();
-  do_check_eq(dirs.length, expectedDirs);
+  Assert.equal(dirs.length, expectedDirs);
 
   await checkInstalledSystemAddons(...finalState, distroDir);
 

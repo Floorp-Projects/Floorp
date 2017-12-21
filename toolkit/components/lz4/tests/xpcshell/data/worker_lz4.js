@@ -54,7 +54,7 @@ function test_bound() {
   for (let k of ["compress", "decompress", "maxCompressedSize"]) {
     try {
       do_print("Checking the existence of " + k + "\n");
-      do_check_true(!!Internals[k]);
+      Assert.ok(!!Internals[k]);
       do_print(k + " exists");
     } catch (ex) {
       // Ignore errors
@@ -69,7 +69,7 @@ function test_reference_file() {
   let data = OS.File.read(path);
   let decompressed = Lz4.decompressFileContent(data);
   let text = (new TextDecoder()).decode(decompressed);
-  do_check_eq(text, "Hello, lz4");
+  Assert.equal(text, "Hello, lz4");
 }
 
 function compare_arrays(a, b) {
@@ -91,7 +91,7 @@ function run_rawcompression(name, array) {
                                      decompressedBytes.address());
   do_print("Raw decompression success? " + success);
   do_print("Raw decompression size: " + decompressedBytes.value);
-  do_check_true(compare_arrays(array, decompressedArray));
+  Assert.ok(compare_arrays(array, decompressedArray));
 }
 
 function run_filecompression(name, array) {
@@ -101,7 +101,7 @@ function run_filecompression(name, array) {
 
   let decompressed = Lz4.decompressFileContent(compressed);
   do_print("Decompressed " + compressed.byteLength + " bytes into " + decompressed.byteLength);
-  do_check_true(compare_arrays(array, decompressed));
+  Assert.ok(compare_arrays(array, decompressed));
 }
 
 function run_faileddecompression(name, array) {
@@ -122,11 +122,11 @@ function run_faileddecompression(name, array) {
   } catch (ex) {
     exn = ex;
   }
-  do_check_true(exn);
+  Assert.ok(exn);
   if (array.byteLength < 10) {
-    do_check_true(exn.becauseLZNoHeader);
+    Assert.ok(exn.becauseLZNoHeader);
   } else {
-    do_check_true(exn.becauseLZWrongMagicNumber);
+    Assert.ok(exn.becauseLZWrongMagicNumber);
   }
 }
 

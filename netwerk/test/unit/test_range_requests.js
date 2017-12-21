@@ -58,7 +58,7 @@ Canceler.prototype = {
            .cancel(Components.results.NS_BINDING_ABORTED);
   },
   onStopRequest: function(request, context, status) {
-    do_check_eq(status, Components.results.NS_BINDING_ABORTED);
+    Assert.equal(status, Components.results.NS_BINDING_ABORTED);
     this.continueFn(request, null);
   }
 };
@@ -103,13 +103,13 @@ FailedChannelListener.prototype = {
 
   onStopRequest: function(request, context, status) {
     if (case_8_range_request)
-      do_check_eq(status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+      Assert.equal(status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
     this.continueFn(request, null);
   }
 };
 
 function received_cleartext(request, data) {
-  do_check_eq(clearTextBody, data);
+  Assert.equal(clearTextBody, data);
   testFinished();
 }
 
@@ -123,11 +123,11 @@ function setStdHeaders(response, length) {
 
 function handler_2(metadata, response) {
   setStdHeaders(response, clearTextBody.length);
-  do_check_false(metadata.hasHeader("Range"));
+  Assert.ok(!metadata.hasHeader("Range"));
   response.bodyOutputStream.write(clearTextBody, clearTextBody.length);
 }
 function received_partial_2(request, data) {
-  do_check_eq(data, undefined);
+  Assert.equal(data, undefined);
   var chan = make_channel("http://localhost:" + port + "/test_2");
   chan.asyncOpen2(new ChannelListener(received_cleartext, null));
 }
@@ -139,14 +139,14 @@ function handler_3(metadata, response) {
   response.setHeader("Cache-Control", "no-store", false);
   switch (case_3_request_no) {
     case 0:
-      do_check_false(metadata.hasHeader("Range"));
+      Assert.ok(!metadata.hasHeader("Range"));
       body = body.slice(0, partial_data_length);
       response.processAsync();
       response.bodyOutputStream.write(body, body.length);
       response.finish();
       break;
     case 1:
-      do_check_false(metadata.hasHeader("Range"));
+      Assert.ok(!metadata.hasHeader("Range"));
       response.bodyOutputStream.write(body, body.length);
       break;
     default:
@@ -155,7 +155,7 @@ function handler_3(metadata, response) {
   case_3_request_no++;
 }
 function received_partial_3(request, data) {
-  do_check_eq(partial_data_length, data.length);
+  Assert.equal(partial_data_length, data.length);
   var chan = make_channel("http://localhost:" + port + "/test_3");
   chan.asyncOpen2(new ChannelListener(received_cleartext, null));
 }
@@ -164,7 +164,7 @@ var case_4_request_no = 0;
 function handler_4(metadata, response) {
   switch (case_4_request_no) {
     case 0:
-      do_check_false(metadata.hasHeader("Range"));
+      Assert.ok(!metadata.hasHeader("Range"));
       var body = encodedBody;
       setStdHeaders(response, body.length);
       response.setHeader("Content-Encoding", "gzip", false);
@@ -177,7 +177,7 @@ function handler_4(metadata, response) {
       response.finish();
       break;
     case 1:
-      do_check_false(metadata.hasHeader("Range"));
+      Assert.ok(!metadata.hasHeader("Range"));
       setStdHeaders(response, clearTextBody.length);
       response.bodyOutputStream.write(clearTextBody, clearTextBody.length);
       break;
@@ -199,14 +199,14 @@ function handler_5(metadata, response) {
   setStdHeaders(response, body.length);
   switch (case_5_request_no) {
     case 0:
-      do_check_false(metadata.hasHeader("Range"));
+      Assert.ok(!metadata.hasHeader("Range"));
       body = body.slice(0, partial_data_length);
       response.processAsync();
       response.bodyOutputStream.write(body, body.length);
       response.finish();
       break;
     case 1:
-      do_check_false(metadata.hasHeader("Range"));
+      Assert.ok(!metadata.hasHeader("Range"));
       response.bodyOutputStream.write(body, body.length);
       break;
     default:
@@ -215,7 +215,7 @@ function handler_5(metadata, response) {
   case_5_request_no++;
 }
 function received_partial_5(request, data) {
-  do_check_eq(partial_data_length, data.length);
+  Assert.equal(partial_data_length, data.length);
   var chan = make_channel("http://localhost:" + port + "/test_5");
   chan.setRequestHeader("If-Match", "Some eTag", false);
   chan.asyncOpen2(new ChannelListener(received_cleartext, null));
@@ -225,7 +225,7 @@ var case_6_request_no = 0;
 function handler_6(metadata, response) {
   switch (case_6_request_no) {
     case 0:
-      do_check_false(metadata.hasHeader("Range"));
+      Assert.ok(!metadata.hasHeader("Range"));
       var body = clearTextBody;
       setStdHeaders(response, body.length);
       response.setHeader("Accept-Ranges", "", false);
@@ -235,7 +235,7 @@ function handler_6(metadata, response) {
       response.finish();
       break;
     case 1:
-      do_check_false(metadata.hasHeader("Range"));
+      Assert.ok(!metadata.hasHeader("Range"));
       setStdHeaders(response, clearTextBody.length);
       response.bodyOutputStream.write(clearTextBody, clearTextBody.length);
       break;
@@ -246,7 +246,7 @@ function handler_6(metadata, response) {
 }
 function received_partial_6(request, data) {
 // would like to verify that the response does not have Accept-Ranges
-  do_check_eq(partial_data_length, data.length);
+  Assert.equal(partial_data_length, data.length);
   var chan = make_channel("http://localhost:" + port + "/test_6");
   chan.asyncOpen2(new ChannelListener(received_cleartext, null));
 }
@@ -254,7 +254,7 @@ function received_partial_6(request, data) {
 const simpleBody = "0123456789";
 
 function received_simple(request, data) {
-  do_check_eq(simpleBody, data);
+  Assert.equal(simpleBody, data);
   testFinished();
 }
 
@@ -262,7 +262,7 @@ var case_7_request_no = 0;
 function handler_7(metadata, response) {
   switch (case_7_request_no) {
     case 0:
-      do_check_false(metadata.hasHeader("Range"));
+      Assert.ok(!metadata.hasHeader("Range"));
       response.setHeader("Content-Type", "text/plain", false);
       response.setHeader("ETag", "test7Etag");
       response.setHeader("Accept-Ranges", "bytes");
@@ -276,7 +276,7 @@ function handler_7(metadata, response) {
       response.setHeader("Content-Type", "text/plain", false);
       response.setHeader("ETag", "test7Etag");
       if (metadata.hasHeader("Range")) {
-	  do_check_true(metadata.hasHeader("If-Range"));
+	  Assert.ok(metadata.hasHeader("If-Range"));
 	  response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
 	  response.setHeader("Content-Range", "4-9/10");
 	  response.setHeader("Content-Length", "6");
@@ -293,7 +293,7 @@ function handler_7(metadata, response) {
 }
 function received_partial_7(request, data) {
   // make sure we get the first 4 bytes
-  do_check_eq(4, data.length);
+  Assert.equal(4, data.length);
   // do it again to get the rest
   var chan = make_channel("http://localhost:" + port + "/test_7");
   chan.asyncOpen2(new ChannelListener(received_simple, null));
@@ -303,7 +303,7 @@ var case_8_request_no = 0;
 function handler_8(metadata, response) {
   switch (case_8_request_no) {
     case 0:
-      do_check_false(metadata.hasHeader("Range"));
+      Assert.ok(!metadata.hasHeader("Range"));
       response.setHeader("Content-Type", "text/plain", false);
       response.setHeader("ETag", "test8Etag");
       response.setHeader("Accept-Ranges", "bytes");
@@ -315,7 +315,7 @@ function handler_8(metadata, response) {
       break;
     case 1:
       if (metadata.hasHeader("Range")) {
-	  do_check_true(metadata.hasHeader("If-Range"));
+	  Assert.ok(metadata.hasHeader("If-Range"));
 	  case_8_range_request = true;
       }
       response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
@@ -332,7 +332,7 @@ function handler_8(metadata, response) {
 }
 function received_partial_8(request, data) {
   // make sure we get the first 4 bytes
-  do_check_eq(4, data.length);
+  Assert.equal(4, data.length);
   // do it again to get the rest
   var chan = make_channel("http://localhost:" + port + "/test_8");
   chan.asyncOpen2(new FailedChannelListener(testFinished, null, CL_EXPECT_LATE_FAILURE));
@@ -342,7 +342,7 @@ var case_9_request_no = 0;
 function handler_9(metadata, response) {
   switch (case_9_request_no) {
     case 0:
-      do_check_false(metadata.hasHeader("Range"));
+      Assert.ok(!metadata.hasHeader("Range"));
       response.setHeader("Content-Type", "text/plain", false);
       response.setHeader("ETag", "W/test9WeakEtag");
       response.setHeader("Accept-Ranges", "bytes");
@@ -353,7 +353,7 @@ function handler_9(metadata, response) {
       response.finish(); // truncated response
       break;
     case 1:
-      do_check_false(metadata.hasHeader("Range"));
+      Assert.ok(!metadata.hasHeader("Range"));
       response.setHeader("Content-Type", "text/plain", false);
       response.setHeader("ETag", "W/test9WeakEtag");
       response.setHeader("Accept-Ranges", "bytes");
@@ -369,7 +369,7 @@ function handler_9(metadata, response) {
   case_9_request_no++;
 }
 function received_partial_9(request, data) {
-  do_check_eq(partial_data_length, data.length);
+  Assert.equal(partial_data_length, data.length);
   var chan = make_channel("http://localhost:" + port + "/test_9");
   chan.asyncOpen2(new ChannelListener(received_simple, null));
 }

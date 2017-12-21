@@ -119,16 +119,16 @@ function run_test() {
       output = getRuleText(test.input, test.line, test.column);
       if (test.throws) {
         do_print("Test should have thrown");
-        do_check_true(false);
+        Assert.ok(false);
       }
     } catch (e) {
       do_print("getRuleText threw an exception with the given input string");
       if (test.throws) {
         do_print("Exception expected");
-        do_check_true(true);
+        Assert.ok(true);
       } else {
         do_print("Exception unexpected\n" + e);
-        do_check_true(false);
+        Assert.ok(false);
       }
     }
     if (output) {

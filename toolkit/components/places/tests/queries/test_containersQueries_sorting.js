@@ -134,7 +134,7 @@ function cartProd(aSequences, aCallback) {
  *        array of options we will use to query.
  */
 function test_query_callback(aSequence) {
-  do_check_eq(aSequence.length, 2);
+  Assert.equal(aSequence.length, 2);
   var resultType = aSequence[0];
   var sortingMode = aSequence[1];
   print("\n\n*** Testing default sorting for resultType (" + resultType.name + ") and sortingMode (" + sortingMode.name + ")");
@@ -359,7 +359,7 @@ function check_children_sorting(aRootNode, aExpectedSortingMode) {
     if (sortedResults[i].title != results[i].title)
       print(i + " index wrong, expected " + sortedResults[i].title +
             " found " + results[i].title);
-    do_check_eq(sortedResults[i].title, results[i].title);
+    Assert.equal(sortedResults[i].title, results[i].title);
   }
 }
 

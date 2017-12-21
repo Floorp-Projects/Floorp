@@ -19,8 +19,8 @@ add_task(async function test_history_query() {
       handleResult(aResultSet) {
         for (let row; (row = aResultSet.getNextRow());) {
           try {
-            do_check_eq(row.getResultByIndex(1), uri);
-            do_check_eq(row.getResultByIndex(2), title);
+            Assert.equal(row.getResultByIndex(1), uri);
+            Assert.equal(row.getResultByIndex(2), title);
           } catch (e) {
             do_throw("Error while fetching page data.");
           }
@@ -56,8 +56,8 @@ add_task(async function test_bookmarks_query() {
       handleResult(aResultSet) {
         for (let row; (row = aResultSet.getNextRow());) {
           try {
-            do_check_eq(row.getResultByIndex(1), url);
-            do_check_eq(row.getResultByIndex(2), title);
+            Assert.equal(row.getResultByIndex(1), url);
+            Assert.equal(row.getResultByIndex(2), title);
           } catch (e) {
             do_throw("Error while fetching page data.");
           }

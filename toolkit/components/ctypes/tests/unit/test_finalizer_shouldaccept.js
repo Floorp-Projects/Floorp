@@ -65,14 +65,14 @@ function run_test() {
 function test_to_string() {
   do_print("Starting test_to_string");
   let a = ctypes.CDataFinalizer(acquire(0), dispose);
-  do_check_eq(a.toString(), "0");
+  Assert.equal(a.toString(), "0");
 
   a.forget();
-  do_check_eq(a.toString(), "[CDataFinalizer - empty]");
+  Assert.equal(a.toString(), "[CDataFinalizer - empty]");
 
   a = ctypes.CDataFinalizer(acquire(0), dispose);
   a.dispose();
-  do_check_eq(a.toString(), "[CDataFinalizer - empty]");
+  Assert.equal(a.toString(), "[CDataFinalizer - empty]");
 }
 
 /**
@@ -82,20 +82,20 @@ function test_to_source() {
   do_print("Starting test_to_source");
   let value = acquire(0);
   let a = ctypes.CDataFinalizer(value, dispose);
-  do_check_eq(a.toSource(),
-              "ctypes.CDataFinalizer("
-              + ctypes.size_t(value).toSource()
-              + ", "
-              + dispose.toSource()
-              + ")");
+  Assert.equal(a.toSource(),
+               "ctypes.CDataFinalizer("
+               + ctypes.size_t(value).toSource()
+               + ", "
+               + dispose.toSource()
+               + ")");
   value = null;
 
   a.forget();
-  do_check_eq(a.toSource(), "ctypes.CDataFinalizer()");
+  Assert.equal(a.toSource(), "ctypes.CDataFinalizer()");
 
   a = ctypes.CDataFinalizer(acquire(0), dispose);
   a.dispose();
-  do_check_eq(a.toSource(), "ctypes.CDataFinalizer()");
+  Assert.equal(a.toSource(), "ctypes.CDataFinalizer()");
 }
 
 /**
@@ -123,21 +123,21 @@ function test_to_int() {
  */
 function test_errno(size, tc, cleanup) {
   reset_errno();
-  do_check_eq(ctypes.errno, 0);
+  Assert.equal(ctypes.errno, 0);
 
   let finalizable = ctypes.CDataFinalizer(acquire(3), dispose_errno);
   finalizable.dispose();
-  do_check_eq(ctypes.errno, 10);
+  Assert.equal(ctypes.errno, 10);
   reset_errno();
 
-  do_check_eq(ctypes.errno, 0);
+  Assert.equal(ctypes.errno, 0);
   for (let i = 0; i < size; ++i) {
     finalizable = ctypes.CDataFinalizer(acquire(i), dispose_errno);
     cleanup.add(finalizable);
   }
 
   trigger_gc();
-  do_check_eq(ctypes.errno, 0);
+  Assert.equal(ctypes.errno, 0);
 }
 
 /**
@@ -148,7 +148,7 @@ function test_to_pointer() {
   let finalizable = ctypes.CDataFinalizer(ptr, dispose_ptr);
   let unwrapped = ctypes.int32_t.ptr(finalizable);
 
-  do_check_eq("" + ptr, "" + unwrapped);
+  Assert.equal("" + ptr, "" + unwrapped);
 
   finalizable.forget(); // Do not dispose: This is not a real pointer.
 }
@@ -161,7 +161,7 @@ function test_readstring(size) {
     let acquired = acquire_string(i);
     let finalizable = ctypes.CDataFinalizer(acquired,
       dispose_string);
-    do_check_eq(finalizable.readString(), acquired.readString());
+    Assert.equal(finalizable.readString(), acquired.readString());
     finalizable.dispose();
   }
 }

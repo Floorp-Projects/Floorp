@@ -57,16 +57,16 @@ add_test(function test_cached_engine_properties() {
 
   Services.search.init(function initComplete(aResult) {
     do_print("init'd search service");
-    do_check_true(Components.isSuccessCode(aResult));
+    Assert.ok(Components.isSuccessCode(aResult));
 
     let engines = Services.search.getEngines({});
     let engine = engines[0];
 
-    do_check_true(engine instanceof Ci.nsISearchEngine);
+    Assert.ok(engine instanceof Ci.nsISearchEngine);
     isSubObjectOf(EXPECTED_ENGINE.engine, engine);
 
     let engineFromSS = Services.search.getEngineByName(EXPECTED_ENGINE.engine.name);
-    do_check_true(!!engineFromSS);
+    Assert.ok(!!engineFromSS);
     isSubObjectOf(EXPECTED_ENGINE.engine, engineFromSS);
 
     removeCacheFile();
@@ -82,7 +82,7 @@ add_test(function test_cache_write() {
 
   let cache = gProfD.clone();
   cache.append(CACHE_FILENAME);
-  do_check_false(cache.exists());
+  Assert.ok(!cache.exists());
 
   do_print("Next step is forcing flush");
   do_timeout(0, function forceFlush() {
@@ -98,7 +98,7 @@ add_test(function test_cache_write() {
         }
         Services.obs.removeObserver(cacheWriteObserver, "browser-search-service");
         do_print("Cache write complete");
-        do_check_true(cache.exists());
+        Assert.ok(cache.exists());
         // Check that the search.json.mozlz4 cache matches the template
 
         promiseCacheData().then(cacheWritten => {

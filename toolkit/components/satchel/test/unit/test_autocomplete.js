@@ -73,7 +73,7 @@ add_test(function test1() {
 
   countEntries(null, null, function() {
     countEntries("field1", null, function(count) {
-      do_check_true(count > 0);
+      Assert.ok(count > 0);
       run_next_test();
     });
   });
@@ -84,7 +84,7 @@ add_test(function test2() {
 
   fac.autoCompleteSearchAsync("field1", "", null, null, null, {
     onSearchCompletion(aResults) {
-      do_check_eq(numRecords, aResults.matchCount);
+      Assert.equal(numRecords, aResults.matchCount);
       run_next_test();
     },
   });
@@ -97,8 +97,8 @@ add_test(function test3() {
   fac.autoCompleteSearchAsync("field1", "", null, null, null, {
     onSearchCompletion(aResults) {
       for (let i = 0; i < numRecords; i += 2) {
-        do_check_eq(parseInt(aResults.getValueAt(i + 1).substr(5), 10), --lastFound);
-        do_check_eq(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
+        Assert.equal(parseInt(aResults.getValueAt(i + 1).substr(5), 10), --lastFound);
+        Assert.equal(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
       }
       run_next_test();
     },
@@ -112,8 +112,8 @@ add_test(function test4() {
   fac.autoCompleteSearchAsync("field1", "v", null, null, null, {
     onSearchCompletion(aResults) {
       for (let i = 0; i < numRecords; i += 2) {
-        do_check_eq(parseInt(aResults.getValueAt(i + 1).substr(5), 10), --lastFound);
-        do_check_eq(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
+        Assert.equal(parseInt(aResults.getValueAt(i + 1).substr(5), 10), --lastFound);
+        Assert.equal(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
       }
       run_next_test();
     },
@@ -142,7 +142,7 @@ add_test(function test6() {
   fac.autoCompleteSearchAsync("field2", "", null, null, null, {
     onSearchCompletion(aResults) {
       for (let i = 0; i < timesUsedSamples; i++) {
-        do_check_eq(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
+        Assert.equal(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
       }
       run_next_test();
     },
@@ -156,7 +156,7 @@ add_test(function test7() {
   fac.autoCompleteSearchAsync("field2", "v", null, null, null, {
     onSearchCompletion(aResults) {
       for (let i = 0; i < timesUsedSamples; i++) {
-        do_check_eq(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
+        Assert.equal(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
       }
       run_next_test();
     },
@@ -179,8 +179,8 @@ add_test(function test8() {
 add_test(function test9() {
   fac.autoCompleteSearchAsync("field3", "", null, null, null, {
     onSearchCompletion(aResults) {
-      do_check_eq(aResults.getValueAt(0), "senior citizen");
-      do_check_eq(aResults.getValueAt(1), "old but not senior");
+      Assert.equal(aResults.getValueAt(0), "senior citizen");
+      Assert.equal(aResults.getValueAt(1), "old but not senior");
       run_next_test();
     },
   });
@@ -202,7 +202,7 @@ add_test(function test10() {
 add_test(function test11() {
   fac.autoCompleteSearchAsync("field4", "", null, null, null, {
     onSearchCompletion(aResults) {
-      do_check_eq(aResults.matchCount, 3);
+      Assert.equal(aResults.matchCount, 3);
       run_next_test();
     },
   });
@@ -231,9 +231,9 @@ add_test(function test_token_limit_DB() {
                                 "a b c d e f g h i j .",
                                 null, previousResult, null, {
                                   onSearchCompletion(aResults) {
-                                    do_check_eq(aResults.matchCount, 0,
-                                                "All search tokens should be used with " +
-                                                        "previous results");
+                                    Assert.equal(aResults.matchCount, 0,
+                                                 "All search tokens should be used with " +
+                                                         "previous results");
                                     run_next_test();
                                   },
                                 });
@@ -253,9 +253,9 @@ add_test(function test_token_limit_DB() {
                                 "a b c d e f g h i j .",
                                 null, null, null, {
                                   onSearchCompletion(aResults) {
-                                    do_check_eq(aResults.matchCount, 1,
-                                                "Only the first MAX_SEARCH_TOKENS tokens " +
-                                                        "should be used for DB queries");
+                                    Assert.equal(aResults.matchCount, 1,
+                                                 "Only the first MAX_SEARCH_TOKENS tokens " +
+                                                         "should be used for DB queries");
                                     test_token_limit_previousResult(aResults);
                                   },
                                 });

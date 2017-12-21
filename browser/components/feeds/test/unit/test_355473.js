@@ -26,14 +26,14 @@ function run_test() {
   });
 
   // not setting .originalURI to the original URI is naughty
-  do_check_true(feedFeedURI.equals(feedChannel.originalURI));
-  do_check_true(httpFeedURI.equals(httpChannel.originalURI));
-  do_check_true(httpsFeedURI.equals(httpsChannel.originalURI));
+  Assert.ok(feedFeedURI.equals(feedChannel.originalURI));
+  Assert.ok(httpFeedURI.equals(httpChannel.originalURI));
+  Assert.ok(httpsFeedURI.equals(httpsChannel.originalURI));
 
   // actually using the horrible mess that's a feed: URI is suicidal
-  do_check_true(httpURI.equals(feedChannel.URI));
-  do_check_true(httpURI.equals(httpChannel.URI));
-  do_check_true(httpsURI.equals(httpsChannel.URI));
+  Assert.ok(httpURI.equals(feedChannel.URI));
+  Assert.ok(httpURI.equals(httpChannel.URI));
+  Assert.ok(httpsURI.equals(httpsChannel.URI));
 
   // check that we throw creating feed: URIs from file and ftp
   Assert.throws(function() { Services.io.newURI("feed:ftp://example.com/feed.xml"); },

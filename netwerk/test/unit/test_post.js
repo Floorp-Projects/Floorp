@@ -98,7 +98,7 @@ function setupChannel(path) {
 }
 
 function serverHandler(metadata, response) {
-  do_check_eq(metadata.method, "POST");
+  Assert.equal(metadata.method, "POST");
 
   var data = read_stream(metadata.bodyInputStream,
 			 metadata.bodyInputStream.available());
@@ -107,13 +107,13 @@ function serverHandler(metadata, response) {
                    createInstance(Ci.nsIFileInputStream);
   testfile_stream.init(testfile, -1, -1, 0);
 
-  do_check_eq(teststring1 +
+  Assert.equal(teststring1 +
 	      read_stream(testfile_stream, testfile_stream.available()) +
 	      teststring2,
 	      data);
 }
 
 function checkRequest(request, data, context) {
-  do_check_true(correctOnProgress);
+  Assert.ok(correctOnProgress);
   httpserver.stop(do_test_finished);
 }

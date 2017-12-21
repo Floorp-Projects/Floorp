@@ -30,11 +30,11 @@ function run_test() {
   let doc = parser.parseFromString(docbody, "text/html");
   let xhr = Cc['@mozilla.org/xmlextras/xmlhttprequest;1'].createInstance(Ci.nsIXMLHttpRequest);
   xhr.onload = function() {
-    do_check_eq(xhr.responseText, docbody);
+    Assert.equal(xhr.responseText, docbody);
     server.stop(do_test_finished);
   };
   xhr.onerror = function() {
-    do_check_false(false);
+    Assert.equal(false, false);
     server.stop(do_test_finished);
   };
   xhr.open("POST", "http://localhost:" + server.identity.primaryPort + "/foo", true);

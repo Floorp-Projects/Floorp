@@ -28,10 +28,10 @@ function run_test() {
 function test_simple_new_source() {
   gThreadClient.addOneTimeListener("paused", function () {
     gThreadClient.addOneTimeListener("newSource", function (event, packet) {
-      do_check_eq(event, "newSource");
-      do_check_eq(packet.type, "newSource");
-      do_check_true(!!packet.source);
-      do_check_true(!!packet.source.url.match(/example\.com/));
+      Assert.equal(event, "newSource");
+      Assert.equal(packet.type, "newSource");
+      Assert.ok(!!packet.source);
+      Assert.ok(!!packet.source.url.match(/example\.com/));
 
       finishClient(gClient);
     });

@@ -105,7 +105,7 @@ add_task(async function changeuri_bookmark_still_bookmarked() {
   await PlacesTestUtils.promiseAsyncUpdates();
 
   do_print("URI still bookmarked => frecency should != 0");
-  do_check_neq(frecencyForUrl(TEST_URL2), 0);
+  Assert.notEqual(frecencyForUrl(TEST_URL2), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesTestUtils.clearHistory();

@@ -83,7 +83,7 @@ function do_crash(setup, callback, canReturnZero) {
 
   if (!canReturnZero) {
     // should exit with an error (should have crashed)
-    do_check_neq(process.exitValue, 0);
+    Assert.notEqual(process.exitValue, 0);
   }
 
   handleMinidump(callback);
@@ -152,7 +152,7 @@ function handleMinidump(callback) {
     }
   });
 
-  do_check_true(extrafile.exists());
+  Assert.ok(extrafile.exists());
   let extra = parseKeyValuePairsFromFile(extrafile);
 
   if (callback) {

@@ -11,10 +11,10 @@ function run_test() {
   PROPERTIES.forEach(function(aPropertyName) {
     print("Testing property: " + aPropertyName);
     let value = sysInfo.getProperty(aPropertyName);
-    do_check_true(!!value);
+    Assert.ok(!!value);
   });
 
   // This property must exist, but its value might be zero.
   print("Testing property: umask");
-  do_check_eq(typeof sysInfo.getProperty("umask"), "number");
+  Assert.equal(typeof sysInfo.getProperty("umask"), "number");
 }

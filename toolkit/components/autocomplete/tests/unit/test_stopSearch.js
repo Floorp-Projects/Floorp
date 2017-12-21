@@ -58,7 +58,7 @@ AutoCompleteSearch.prototype = {
   stopSearchInvoked: true,
   startSearch(aSearchString, aSearchParam, aPreviousResult, aListener) {
     print("Check stop search has been called");
-    do_check_true(this.stopSearchInvoked);
+    Assert.ok(this.stopSearchInvoked);
     this.stopSearchInvoked = false;
   },
   stopSearch() {

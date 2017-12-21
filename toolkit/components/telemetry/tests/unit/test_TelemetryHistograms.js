@@ -23,7 +23,7 @@ function expect_fail(f) {
   } catch (e) {
     failed = true;
   }
-  do_check_true(failed);
+  Assert.ok(failed);
 }
 
 function expect_success(f) {
@@ -34,25 +34,25 @@ function expect_success(f) {
   } catch (e) {
     succeeded = false;
   }
-  do_check_true(succeeded);
+  Assert.ok(succeeded);
 }
 
 function compareHistograms(h1, h2) {
   let s1 = h1.snapshot();
   let s2 = h2.snapshot();
 
-  do_check_eq(s1.histogram_type, s2.histogram_type);
-  do_check_eq(s1.min, s2.min);
-  do_check_eq(s1.max, s2.max);
-  do_check_eq(s1.sum, s2.sum);
+  Assert.equal(s1.histogram_type, s2.histogram_type);
+  Assert.equal(s1.min, s2.min);
+  Assert.equal(s1.max, s2.max);
+  Assert.equal(s1.sum, s2.sum);
 
-  do_check_eq(s1.counts.length, s2.counts.length);
+  Assert.equal(s1.counts.length, s2.counts.length);
   for (let i = 0; i < s1.counts.length; i++)
-    do_check_eq(s1.counts[i], s2.counts[i]);
+    Assert.equal(s1.counts[i], s2.counts[i]);
 
-  do_check_eq(s1.ranges.length, s2.ranges.length);
+  Assert.equal(s1.ranges.length, s2.ranges.length);
   for (let i = 0; i < s1.ranges.length; i++)
-    do_check_eq(s1.ranges[i], s2.ranges[i]);
+    Assert.equal(s1.ranges[i], s2.ranges[i]);
 }
 
 function check_histogram(histogram_type, name, min, max, bucket_count) {
@@ -66,41 +66,41 @@ function check_histogram(histogram_type, name, min, max, bucket_count) {
   }
   var s = h.snapshot();
   // verify properties
-  do_check_eq(sum, s.sum);
+  Assert.equal(sum, s.sum);
 
   // there should be exactly one element per bucket
   for (let i of s.counts) {
-    do_check_eq(i, 1);
+    Assert.equal(i, 1);
   }
   var hgrams = Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
                                             false,
                                             false).parent;
   let gh = hgrams[name];
-  do_check_eq(gh.histogram_type, histogram_type);
+  Assert.equal(gh.histogram_type, histogram_type);
 
-  do_check_eq(gh.min, min);
-  do_check_eq(gh.max, max);
+  Assert.equal(gh.min, min);
+  Assert.equal(gh.max, max);
 
   // Check that booleans work with nonboolean histograms
   h.add(false);
   h.add(true);
   s = h.snapshot().counts;
-  do_check_eq(s[0], 2);
-  do_check_eq(s[1], 2);
+  Assert.equal(s[0], 2);
+  Assert.equal(s[1], 2);
 
   // Check that clearing works.
   h.clear();
   s = h.snapshot();
   for (var i of s.counts) {
-    do_check_eq(i, 0);
+    Assert.equal(i, 0);
   }
-  do_check_eq(s.sum, 0);
+  Assert.equal(s.sum, 0);
 
   h.add(0);
   h.add(1);
   var c = h.snapshot().counts;
-  do_check_eq(c[0], 1);
-  do_check_eq(c[1], 1);
+  Assert.equal(c[0], 1);
+  Assert.equal(c[1], 1);
 }
 
 // This MUST be the very first test of this file.
@@ -179,14 +179,14 @@ add_task(async function test_noSerialization() {
   let histograms = Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
                                                 false /* subsession */,
                                                 false /* clear */).parent;
-  do_check_false("NEWTAB_PAGE_PINNED_SITES_COUNT" in histograms);
+  Assert.equal(false, "NEWTAB_PAGE_PINNED_SITES_COUNT" in histograms);
 });
 
 add_task(async function test_boolean_histogram() {
   var h = Telemetry.getHistogramById("TELEMETRY_TEST_BOOLEAN");
   var r = h.snapshot().ranges;
   // boolean histograms ignore numeric parameters
-  do_check_eq(uneval(r), uneval([0, 1, 2]));
+  Assert.equal(uneval(r), uneval([0, 1, 2]));
   for (var i = 0;i < r.length;i++) {
     var v = r[i];
     h.add(v);
@@ -194,52 +194,52 @@ add_task(async function test_boolean_histogram() {
   h.add(true);
   h.add(false);
   var s = h.snapshot();
-  do_check_eq(s.histogram_type, Telemetry.HISTOGRAM_BOOLEAN);
+  Assert.equal(s.histogram_type, Telemetry.HISTOGRAM_BOOLEAN);
   // last bucket should always be 0 since .add parameters are normalized to either 0 or 1
-  do_check_eq(s.counts[2], 0);
-  do_check_eq(s.sum, 3);
-  do_check_eq(s.counts[0], 2);
+  Assert.equal(s.counts[2], 0);
+  Assert.equal(s.sum, 3);
+  Assert.equal(s.counts[0], 2);
 });
 
 add_task(async function test_flag_histogram() {
   var h = Telemetry.getHistogramById("TELEMETRY_TEST_FLAG");
   var r = h.snapshot().ranges;
   // Flag histograms ignore numeric parameters.
-  do_check_eq(uneval(r), uneval([0, 1, 2]));
+  Assert.equal(uneval(r), uneval([0, 1, 2]));
   // Should already have a 0 counted.
   var c = h.snapshot().counts;
   var s = h.snapshot().sum;
-  do_check_eq(uneval(c), uneval([1, 0, 0]));
-  do_check_eq(s, 0);
+  Assert.equal(uneval(c), uneval([1, 0, 0]));
+  Assert.equal(s, 0);
   // Should switch counts.
   h.add(1);
   var c2 = h.snapshot().counts;
   var s2 = h.snapshot().sum;
-  do_check_eq(uneval(c2), uneval([0, 1, 0]));
-  do_check_eq(s2, 1);
+  Assert.equal(uneval(c2), uneval([0, 1, 0]));
+  Assert.equal(s2, 1);
   // Should only switch counts once.
   h.add(1);
   var c3 = h.snapshot().counts;
   var s3 = h.snapshot().sum;
-  do_check_eq(uneval(c3), uneval([0, 1, 0]));
-  do_check_eq(s3, 1);
-  do_check_eq(h.snapshot().histogram_type, Telemetry.HISTOGRAM_FLAG);
+  Assert.equal(uneval(c3), uneval([0, 1, 0]));
+  Assert.equal(s3, 1);
+  Assert.equal(h.snapshot().histogram_type, Telemetry.HISTOGRAM_FLAG);
 });
 
 add_task(async function test_count_histogram() {
   let h = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT2");
   let s = h.snapshot();
-  do_check_eq(uneval(s.ranges), uneval([0, 1, 2]));
-  do_check_eq(uneval(s.counts), uneval([0, 0, 0]));
-  do_check_eq(s.sum, 0);
+  Assert.equal(uneval(s.ranges), uneval([0, 1, 2]));
+  Assert.equal(uneval(s.counts), uneval([0, 0, 0]));
+  Assert.equal(s.sum, 0);
   h.add();
   s = h.snapshot();
-  do_check_eq(uneval(s.counts), uneval([1, 0, 0]));
-  do_check_eq(s.sum, 1);
+  Assert.equal(uneval(s.counts), uneval([1, 0, 0]));
+  Assert.equal(s.sum, 1);
   h.add();
   s = h.snapshot();
-  do_check_eq(uneval(s.counts), uneval([2, 0, 0]));
-  do_check_eq(s.sum, 2);
+  Assert.equal(uneval(s.counts), uneval([2, 0, 0]));
+  Assert.equal(s.sum, 2);
 });
 
 add_task(async function test_categorical_histogram() {
@@ -355,21 +355,21 @@ add_task(async function test_getHistogramById() {
   }
   var h = Telemetry.getHistogramById("CYCLE_COLLECTOR");
   var s = h.snapshot();
-  do_check_eq(s.histogram_type, Telemetry.HISTOGRAM_EXPONENTIAL);
-  do_check_eq(s.min, 1);
-  do_check_eq(s.max, 10000);
+  Assert.equal(s.histogram_type, Telemetry.HISTOGRAM_EXPONENTIAL);
+  Assert.equal(s.min, 1);
+  Assert.equal(s.max, 10000);
 });
 
 add_task(async function test_getSlowSQL() {
   var slow = Telemetry.slowSQL;
-  do_check_true(("mainThread" in slow) && ("otherThreads" in slow));
+  Assert.ok(("mainThread" in slow) && ("otherThreads" in slow));
 });
 
 add_task(async function test_getWebrtc() {
   var webrtc = Telemetry.webrtcStats;
-  do_check_true("IceCandidatesStats" in webrtc);
+  Assert.ok("IceCandidatesStats" in webrtc);
   var icestats = webrtc.IceCandidatesStats;
-  do_check_true("webrtc" in icestats);
+  Assert.ok("webrtc" in icestats);
 });
 
 // Check that telemetry doesn't record in private mode
@@ -378,10 +378,10 @@ add_task(async function test_privateMode() {
   var orig = h.snapshot();
   Telemetry.canRecordExtended = false;
   h.add(1);
-  do_check_eq(uneval(orig), uneval(h.snapshot()));
+  Assert.equal(uneval(orig), uneval(h.snapshot()));
   Telemetry.canRecordExtended = true;
   h.add(1);
-  do_check_neq(uneval(orig), uneval(h.snapshot()));
+  Assert.notEqual(uneval(orig), uneval(h.snapshot()));
 });
 
 // Check that telemetry records only when it is suppose to.
@@ -452,12 +452,12 @@ add_task(async function test_expired_histogram() {
       do_print("Nothing present for process " + process);
       continue;
     }
-    do_check_eq(histograms[process].__expired__, undefined);
+    Assert.equal(histograms[process].__expired__, undefined);
   }
   let parentHgrams = Telemetry.snapshotHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN,
                                                   false /* subsession */,
                                                   false /* clear */).parent;
-  do_check_eq(parentHgrams[test_expired_id], undefined);
+  Assert.equal(parentHgrams[test_expired_id], undefined);
 });
 
 add_task(async function test_keyed_histogram() {

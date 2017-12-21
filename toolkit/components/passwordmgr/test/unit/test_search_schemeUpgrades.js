@@ -45,11 +45,11 @@ function checkSearch(aQuery, aExpectedCount) {
   do_print("Testing searchLogins for " + JSON.stringify(aQuery));
 
   let expectedLogins = buildExpectedLogins(aQuery);
-  do_check_eq(expectedLogins.length, aExpectedCount);
+  Assert.equal(expectedLogins.length, aExpectedCount);
 
   let outCount = {};
   let logins = Services.logins.searchLogins(outCount, newPropertyBag(aQuery));
-  do_check_eq(outCount.value, expectedLogins.length);
+  Assert.equal(outCount.value, expectedLogins.length);
   LoginTestUtils.assertLoginListsEqual(logins, expectedLogins);
 }
 

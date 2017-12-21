@@ -72,17 +72,17 @@ function run_test_1() {
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org"], function([a1, a2, a3]) {
-    do_check_neq(a1, null);
-    do_check_true(a1.isActive);
-    do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
-    do_check_eq(a1.scope, AddonManager.SCOPE_SYSTEM);
+    Assert.notEqual(a1, null);
+    Assert.ok(a1.isActive);
+    Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    Assert.equal(a1.scope, AddonManager.SCOPE_SYSTEM);
 
-    do_check_neq(a2, null);
-    do_check_true(a2.isActive);
-    do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
-    do_check_eq(a2.scope, AddonManager.SCOPE_USER);
+    Assert.notEqual(a2, null);
+    Assert.ok(a2.isActive);
+    Assert.ok(!hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    Assert.equal(a2.scope, AddonManager.SCOPE_USER);
 
-    do_check_eq(a3, null);
+    Assert.equal(a3, null);
 
     do_execute_soon(run_test_2);
   });
@@ -101,17 +101,17 @@ function run_test_2() {
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org"], function([a1, a2, a3]) {
-    do_check_neq(a1, null);
-    do_check_true(a1.isActive);
-    do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
-    do_check_eq(a1.scope, AddonManager.SCOPE_SYSTEM);
+    Assert.notEqual(a1, null);
+    Assert.ok(a1.isActive);
+    Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    Assert.equal(a1.scope, AddonManager.SCOPE_SYSTEM);
 
-    do_check_neq(a2, null);
-    do_check_true(a2.isActive);
-    do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
-    do_check_eq(a2.scope, AddonManager.SCOPE_USER);
+    Assert.notEqual(a2, null);
+    Assert.ok(a2.isActive);
+    Assert.ok(!hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    Assert.equal(a2.scope, AddonManager.SCOPE_USER);
 
-    do_check_eq(a3, null);
+    Assert.equal(a3, null);
 
     do_execute_soon(run_test_3);
   });
@@ -130,17 +130,17 @@ function run_test_3() {
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org"], function([a1, a2, a3]) {
-    do_check_neq(a1, null);
-    do_check_true(a1.isActive);
-    do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
-    do_check_eq(a1.scope, AddonManager.SCOPE_SYSTEM);
+    Assert.notEqual(a1, null);
+    Assert.ok(a1.isActive);
+    Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    Assert.equal(a1.scope, AddonManager.SCOPE_SYSTEM);
 
-    do_check_neq(a2, null);
-    do_check_true(a2.isActive);
-    do_check_false(hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
-    do_check_eq(a2.scope, AddonManager.SCOPE_USER);
+    Assert.notEqual(a2, null);
+    Assert.ok(a2.isActive);
+    Assert.ok(!hasFlag(a2.permissions, AddonManager.PERM_CAN_UNINSTALL));
+    Assert.equal(a2.scope, AddonManager.SCOPE_USER);
 
-    do_check_eq(a3, null);
+    Assert.equal(a3, null);
 
     do_execute_soon(do_test_finished);
   });

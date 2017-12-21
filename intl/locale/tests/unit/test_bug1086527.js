@@ -15,6 +15,6 @@ delete PluralForm.get;
 function run_test() {
   "use strict";
 
-  do_check_eq(3, PluralForm.numForms());
-  do_check_eq("one", PluralForm.get(5, 'one;many'));
+  Assert.equal(3, PluralForm.numForms());
+  Assert.equal("one", PluralForm.get(5, 'one;many'));
 }

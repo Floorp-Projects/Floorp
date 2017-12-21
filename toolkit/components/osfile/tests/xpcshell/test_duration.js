@@ -22,8 +22,8 @@ add_task(async function duration() {
       do_print(`Checking ${duration} for operation: ${name}`);
       do_print(`${name}: Gathered method duration time: ${options[duration]} ms`);
       // Making sure that duration was updated.
-      do_check_eq(typeof options[duration], "number");
-      do_check_true(options[duration] >= 0);
+      Assert.equal(typeof options[duration], "number");
+      Assert.ok(options[duration] >= 0);
     }
   }
 
@@ -33,7 +33,7 @@ add_task(async function duration() {
       do_print(`${name}: Gathered method duration time: ${options[duration]} ms`);
       do_print(`${name}: Previous duration: ${backupDuration[duration]} ms`);
       // Making sure that duration was incremented.
-      do_check_true(options[duration] >= backupDuration[duration]);
+      Assert.ok(options[duration] >= backupDuration[duration]);
     }
   }
 

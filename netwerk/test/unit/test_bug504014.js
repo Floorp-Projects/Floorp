@@ -63,7 +63,7 @@ function run_test() {
       var uri = ios.newURI(invalid_URIs[i]);
       do_throw("should throw: " + invalid_URIs[i]);
     } catch (e) {
-      do_check_eq(e.result, Cr.NS_ERROR_MALFORMED_URI);
+      Assert.equal(e.result, Cr.NS_ERROR_MALFORMED_URI);
     }
   }
 }

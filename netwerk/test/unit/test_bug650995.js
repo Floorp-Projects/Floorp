@@ -112,7 +112,7 @@ function TestCacheEntrySize(setSizeFunc, firstRequest, secondRequest, secondExpe
     },
 
     this.initialLoad = function(request, data, ctx) {
-        do_check_eq(firstRequest, data);
+        Assert.equal(firstRequest, data);
         var channel = setupChannel("/bug650995", secondRequest);
         do_execute_soon(function() {
             channel.asyncOpen2(new ChannelListener(ctx.testAndTriggerNext, ctx));
@@ -120,7 +120,7 @@ function TestCacheEntrySize(setSizeFunc, firstRequest, secondRequest, secondExpe
     },
 
     this.testAndTriggerNext = function(request, data, ctx) {
-        do_check_eq(secondExpectedReply, data);
+        Assert.equal(secondExpectedReply, data);
         do_execute_soon(nextTest);
     }
 }

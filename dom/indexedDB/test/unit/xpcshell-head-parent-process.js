@@ -17,15 +17,15 @@ const DOMException = Ci.nsIDOMDOMException;
 var bufferCache = [];
 
 function is(a, b, msg) {
-  do_check_eq(a, b, Components.stack.caller);
+  Assert.equal(a, b, Components.stack.caller);
 }
 
 function ok(cond, msg) {
-  do_check_true(!!cond, Components.stack.caller);
+  Assert.ok(!!cond, Components.stack.caller);
 }
 
 function isnot(a, b, msg) {
-  do_check_neq(a, b, Components.stack.caller);
+  Assert.notEqual(a, b, Components.stack.caller);
 }
 
 function executeSoon(fun) {
@@ -98,21 +98,21 @@ function errorHandler(event)
   } catch (e) {
     dump("indexedDB error: " + e);
   }
-  do_check_true(false);
+  Assert.ok(false);
   finishTest();
 }
 
 function unexpectedSuccessHandler()
 {
-  do_check_true(false);
+  Assert.ok(false);
   finishTest();
 }
 
 function expectedErrorHandler(name)
 {
   return function(event) {
-    do_check_eq(event.type, "error");
-    do_check_eq(event.target.error.name, name);
+    Assert.equal(event.type, "error");
+    Assert.equal(event.target.error.name, name);
     event.preventDefault();
     grabEventAndContinueHandler(event);
   };
@@ -131,8 +131,8 @@ function ExpectError(name, preventDefault)
 ExpectError.prototype = {
   handleEvent(event)
   {
-    do_check_eq(event.type, "error");
-    do_check_eq(this._name, event.target.error.name);
+    Assert.equal(event.type, "error");
+    Assert.equal(this._name, event.target.error.name);
     if (this._preventDefault) {
       event.preventDefault();
       event.stopPropagation();

@@ -267,7 +267,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
   }
 
   if (aOptions && aOptions.launcherPath) {
-    do_check_true(mimeInfo != null);
+    Assert.ok(mimeInfo != null);
 
     let localHandlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"]
                             .createInstance(Ci.nsILocalHandlerApp);
@@ -278,7 +278,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
   }
 
   if (aOptions && aOptions.launchWhenSucceeded) {
-    do_check_true(mimeInfo != null);
+    Assert.ok(mimeInfo != null);
 
     mimeInfo.preferredAction = Ci.nsIMIMEInfo.useHelperApp;
   }
@@ -499,17 +499,17 @@ function promiseVerifyContents(aPath, aExpectedContents) {
       NetUtil.asyncFetch(
         { uri: NetUtil.newURI(file), loadUsingSystemPrincipal: true },
         function(aInputStream, aStatus) {
-          do_check_true(Components.isSuccessCode(aStatus));
+          Assert.ok(Components.isSuccessCode(aStatus));
           let contents = NetUtil.readInputStreamToString(aInputStream,
                                                          aInputStream.available());
           if (contents.length > TEST_DATA_SHORT.length * 2 ||
               /[^\x20-\x7E]/.test(contents)) {
             // Do not print the entire content string to the test log.
-            do_check_eq(contents.length, aExpectedContents.length);
-            do_check_true(contents == aExpectedContents);
+            Assert.equal(contents.length, aExpectedContents.length);
+            Assert.ok(contents == aExpectedContents);
           } else {
             // Print the string if it is short and made of printable characters.
-            do_check_eq(contents, aExpectedContents);
+            Assert.equal(contents, aExpectedContents);
           }
           resolve();
         });

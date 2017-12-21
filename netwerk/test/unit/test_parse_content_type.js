@@ -15,9 +15,9 @@ function reset() {
 }
 
 function check(aType, aCharset, aHadCharset) {
-  do_check_eq(type, aType);
-  do_check_eq(aCharset, charset.value);
-  do_check_eq(aHadCharset, hadCharset.value);
+  Assert.equal(type, aType);
+  Assert.equal(aCharset, charset.value);
+  Assert.equal(aHadCharset, hadCharset.value);
   reset();
 }
 

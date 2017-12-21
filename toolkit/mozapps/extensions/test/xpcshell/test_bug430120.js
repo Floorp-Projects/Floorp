@@ -65,11 +65,11 @@ function pathHandler(metadata, response) {
     if (macutils.isUniversalBinary)
       ABI += "-u-" + macutils.architecturesInBinary;
   }
-  do_check_eq(metadata.queryString,
-              "xpcshell@tests.mozilla.org&1&XPCShell&1&" +
-              gAppInfo.appBuildID + "&" +
-              "XPCShell_" + ABI + "&locale&updatechannel&" +
-              gOSVersion + "&1.9&distribution&distribution-version");
+  Assert.equal(metadata.queryString,
+               "xpcshell@tests.mozilla.org&1&XPCShell&1&" +
+               gAppInfo.appBuildID + "&" +
+               "XPCShell_" + ABI + "&locale&updatechannel&" +
+               gOSVersion + "&1.9&distribution&distribution-version");
   gBlocklist.observe(null, "quit-application", "");
   gBlocklist.observe(null, "xpcom-shutdown", "");
   testserver.stop(do_test_finished);
@@ -101,7 +101,7 @@ function run_test() {
   gBlocklist = Services.blocklist.QueryInterface(Components.interfaces.nsIObserver);
   gBlocklist.observe(null, "profile-after-change", "");
 
-  do_check_true(timerService.hasTimer(BLOCKLIST_TIMER));
+  Assert.ok(timerService.hasTimer(BLOCKLIST_TIMER));
 
   do_test_pending();
 

@@ -18,23 +18,23 @@ function run_test() {
                                  "bug526598_2@tests.mozilla.org"],
                                  callback_soon(function([a1, a2]) {
 
-      do_check_neq(a1, null);
-      do_check_true(a1.hasResource("install.rdf"));
+      Assert.notEqual(a1, null);
+      Assert.ok(a1.hasResource("install.rdf"));
       let uri = a1.getResourceURI("install.rdf");
-      do_check_true(uri instanceof AM_Ci.nsIFileURL);
+      Assert.ok(uri instanceof AM_Ci.nsIFileURL);
       let file = uri.file;
-      do_check_true(file.exists());
-      do_check_true(file.isReadable());
-      do_check_true(file.isWritable());
+      Assert.ok(file.exists());
+      Assert.ok(file.isReadable());
+      Assert.ok(file.isWritable());
 
-      do_check_neq(a2, null);
-      do_check_true(a2.hasResource("install.rdf"));
+      Assert.notEqual(a2, null);
+      Assert.ok(a2.hasResource("install.rdf"));
       uri = a2.getResourceURI("install.rdf");
-      do_check_true(uri instanceof AM_Ci.nsIFileURL);
+      Assert.ok(uri instanceof AM_Ci.nsIFileURL);
       file = uri.file;
-      do_check_true(file.exists());
-      do_check_true(file.isReadable());
-      do_check_true(file.isWritable());
+      Assert.ok(file.exists());
+      Assert.ok(file.isReadable());
+      Assert.ok(file.isWritable());
 
       a1.uninstall();
       a2.uninstall();
@@ -44,8 +44,8 @@ function run_test() {
       AddonManager.getAddonsByIDs(["bug526598_1@tests.mozilla.org",
                                    "bug526598_2@tests.mozilla.org"],
                                    function([newa1, newa2]) {
-        do_check_eq(newa1, null);
-        do_check_eq(newa2, null);
+        Assert.equal(newa1, null);
+        Assert.equal(newa2, null);
 
         do_execute_soon(do_test_finished);
       });

@@ -38,14 +38,14 @@ FileComponent.prototype =
     ])
     .then(() => {
       // do some tests
-      do_check_true(f1 instanceof File, "Should be a DOM File");
-      do_check_true(f2 instanceof File, "Should be a DOM File");
+      Assert.ok(f1 instanceof File, "Should be a DOM File");
+      Assert.ok(f2 instanceof File, "Should be a DOM File");
 
-      do_check_true(f1.name == "xpcshell.ini", "Should be the right file");
-      do_check_true(f2.name == "xpcshell.ini", "Should be the right file");
+      Assert.ok(f1.name == "xpcshell.ini", "Should be the right file");
+      Assert.ok(f2.name == "xpcshell.ini", "Should be the right file");
 
-      do_check_true(f1.type == "", "Should be the right type");
-      do_check_true(f2.type == "", "Should be the right type");
+      Assert.ok(f1.type == "", "Should be the right type");
+      Assert.ok(f2.type == "", "Should be the right type");
     })
     .then(() => {
       var threw = false;
@@ -55,7 +55,7 @@ FileComponent.prototype =
       } catch (e) {
         threw = true;
       }
-      do_check_true(threw, "No ctor arguments should throw");
+      Assert.ok(threw, "No ctor arguments should throw");
 
       var threw = false;
       try {
@@ -64,7 +64,7 @@ FileComponent.prototype =
       } catch (e) {
         threw = true;
       }
-      do_check_true(threw, "Passing a random object should fail");
+      Assert.ok(threw, "Passing a random object should fail");
 
       // Directories fail
       var dir = Components.classes["@mozilla.org/file/directory_service;1"]
@@ -73,9 +73,9 @@ FileComponent.prototype =
       return File.createFromNsIFile(dir)
     })
     .then(() => {
-      do_check_true(false, "Can't create a File object for a directory");
+      Assert.ok(false, "Can't create a File object for a directory");
     }, () => {
-      do_check_true(true, "Can't create a File object for a directory");
+      Assert.ok(true, "Can't create a File object for a directory");
     })
     .then(() => {
       cb(true);

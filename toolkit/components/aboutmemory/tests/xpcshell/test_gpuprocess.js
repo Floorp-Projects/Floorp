@@ -11,7 +11,7 @@ function run_test() {
             getService(Ci.nsIMemoryReporterManager);
 
   let ok = gfxInfo.controlGPUProcessForXPCShell(true);
-  do_check_eq(ok, true);
+  Assert.equal(ok, true);
 
   let endTesting = function() {
     gfxInfo.controlGPUProcessForXPCShell(false);
@@ -25,7 +25,7 @@ function run_test() {
     }
   };
   let onFinishReporting = function() {
-    do_check_eq(foundGPUProcess, true);
+    Assert.equal(foundGPUProcess, true);
     endTesting();
   };
 

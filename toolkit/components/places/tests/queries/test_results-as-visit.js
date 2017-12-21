@@ -73,7 +73,7 @@ add_task(async function test_results_as_visit() {
    }
    await task_populateDB(tmp);
    for (let i = 0; i < 2; i++)
-     do_check_eq(root.getChild(i).title, "ab moz");
+     Assert.equal(root.getChild(i).title, "ab moz");
 
    // Update an existing URI
    do_print("Updating Item");
@@ -81,7 +81,7 @@ add_task(async function test_results_as_visit() {
                     title: "moz",
                     uri: "http://foo.mail.com/changeme2.html" }];
    await task_populateDB(change2);
-   do_check_true(isInResult(change2, root));
+   Assert.ok(isInResult(change2, root));
 
    // Update some visits - add one and take one out of query set, and simply
    // change one so that it still applies to the query.
@@ -97,8 +97,8 @@ add_task(async function test_results_as_visit() {
                     isTag: true,
                     tagArray: ["foo", "moz"] }];
    await task_populateDB(change3);
-   do_check_false(isInResult({uri: "http://foo.mail.com/changeme1.html"}, root));
-   do_check_true(isInResult({uri: "http://foo.mail.com/changeme3.html"}, root));
+   Assert.ok(!isInResult({uri: "http://foo.mail.com/changeme1.html"}, root));
+   Assert.ok(isInResult({uri: "http://foo.mail.com/changeme3.html"}, root));
 
    // And now, delete one
    do_print("Delete item outside of batch");
@@ -107,7 +107,7 @@ add_task(async function test_results_as_visit() {
                     uri: "http://moilla.com/",
                     title: "mo,z" }];
    await task_populateDB(change4);
-   do_check_false(isInResult(change4, root));
+   Assert.ok(!isInResult(change4, root));
 
    root.containerOpen = false;
 });

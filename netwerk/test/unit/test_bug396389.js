@@ -30,15 +30,15 @@ function run_test() {
     getService(Ci.nsIIOService);
 
   var uri1 = ios.newURI("file:///");
-  do_check_true(uri1 instanceof Ci.nsIFileURL);
+  Assert.ok(uri1 instanceof Ci.nsIFileURL);
 
   var uri2 = uri1.clone();
-  do_check_true(uri2 instanceof Ci.nsIFileURL);
-  do_check_true(uri1.equals(uri2));
+  Assert.ok(uri2 instanceof Ci.nsIFileURL);
+  Assert.ok(uri1.equals(uri2));
 
   var uri3 = round_trip(uri1);
-  do_check_true(uri3 instanceof Ci.nsIFileURL);
-  do_check_true(uri1.equals(uri3));
+  Assert.ok(uri3 instanceof Ci.nsIFileURL);
+  Assert.ok(uri1.equals(uri3));
 
   // Make sure our prefs are set such that this test actually means something
   var prefs = Cc["@mozilla.org/preferences-service;1"].
@@ -55,13 +55,13 @@ function run_test() {
     // URI stolen from
     // http://lists.w3.org/Archives/Public/public-iri/2004Mar/0012.html
     var uri4 = ios.newURI("http://xn--jos-dma.example.net.ch/");
-    do_check_eq(uri4.asciiHost, "xn--jos-dma.example.net.ch");
-    do_check_eq(uri4.displayHost, "jos\u00e9.example.net.ch");
+    Assert.equal(uri4.asciiHost, "xn--jos-dma.example.net.ch");
+    Assert.equal(uri4.displayHost, "jos\u00e9.example.net.ch");
     
     var uri5 = round_trip(uri4);
-    do_check_true(uri4.equals(uri5));
-    do_check_eq(uri4.displayHost, uri5.displayHost);
-    do_check_eq(uri4.asciiHost, uri5.asciiHost);
+    Assert.ok(uri4.equals(uri5));
+    Assert.equal(uri4.displayHost, uri5.displayHost);
+    Assert.equal(uri4.asciiHost, uri5.asciiHost);
   } finally {
     for (var pref of prefData) {
       if (prefs.prefHasUserValue(pref.name))

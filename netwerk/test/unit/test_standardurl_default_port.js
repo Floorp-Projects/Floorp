@@ -25,27 +25,27 @@ function run_test() {
   var origUrlStr = "http://foo.com/";
   var stdUrl = stringToURL(origUrlStr);
   var stdUrlAsUri = stdUrl.QueryInterface(Ci.nsIURI);
-  do_check_eq(-1, stdUrlAsUri.port);
+  Assert.equal(-1, stdUrlAsUri.port);
 
   // Changing default port shouldn't adjust the value returned by "port",
   // or the string representation.
   stdUrl.setDefaultPort(100);
-  do_check_eq(-1, stdUrlAsUri.port);
-  do_check_eq(stdUrlAsUri.spec, origUrlStr);
+  Assert.equal(-1, stdUrlAsUri.port);
+  Assert.equal(stdUrlAsUri.spec, origUrlStr);
 
   // Changing port directly should update .port and .spec, though:
   stdUrlAsUri.port = "200";
-  do_check_eq(200, stdUrlAsUri.port);
-  do_check_eq(stdUrlAsUri.spec, "http://foo.com:200/");
+  Assert.equal(200, stdUrlAsUri.port);
+  Assert.equal(stdUrlAsUri.spec, "http://foo.com:200/");
 
   // ...but then if we change default port to match the custom port,
   // the custom port should reset to -1 and disappear from .spec:
   stdUrl.setDefaultPort(200);
-  do_check_eq(-1, stdUrlAsUri.port);
-  do_check_eq(stdUrlAsUri.spec, origUrlStr);
+  Assert.equal(-1, stdUrlAsUri.port);
+  Assert.equal(stdUrlAsUri.spec, origUrlStr);
 
   // And further changes to default port should not make custom port reappear.
   stdUrl.setDefaultPort(300);
-  do_check_eq(-1, stdUrlAsUri.port);
-  do_check_eq(stdUrlAsUri.spec, origUrlStr);
+  Assert.equal(-1, stdUrlAsUri.port);
+  Assert.equal(stdUrlAsUri.spec, origUrlStr);
 }

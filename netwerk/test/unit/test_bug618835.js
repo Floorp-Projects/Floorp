@@ -26,7 +26,7 @@ function InitialListener() { }
 InitialListener.prototype = {
     onStartRequest: function(request, context) { },
     onStopRequest: function(request, context, status) {
-        do_check_eq(1, numberOfCLHandlerCalls);
+        Assert.equal(1, numberOfCLHandlerCalls);
         do_execute_soon(function() {
             var channel = setupChannel("http://localhost:" +
                                        httpserv.identity.primaryPort + "/post");
@@ -41,7 +41,7 @@ function RedirectingListener() { }
 RedirectingListener.prototype = {
     onStartRequest: function(request, context) { },
     onStopRequest: function(request, context, status) {
-        do_check_eq(1, numberOfHandlerCalls);
+        Assert.equal(1, numberOfHandlerCalls);
         do_execute_soon(function() {
             var channel = setupChannel("http://localhost:" +
                                        httpserv.identity.primaryPort + "/post");
@@ -57,7 +57,7 @@ function VerifyingListener() { }
 VerifyingListener.prototype = {
     onStartRequest: function(request, context) { },
     onStopRequest: function(request, context, status) {
-        do_check_eq(2, numberOfHandlerCalls);
+        Assert.equal(2, numberOfHandlerCalls);
         var channel = setupChannel("http://localhost:" +
                                    httpserv.identity.primaryPort + "/cl");
         channel.asyncOpen2(new FinalListener());
@@ -70,7 +70,7 @@ function FinalListener() { }
 FinalListener.prototype = {
     onStartRequest: function(request, context) { },
     onStopRequest: function(request, context, status) {
-        do_check_eq(2, numberOfCLHandlerCalls);
+        Assert.equal(2, numberOfCLHandlerCalls);
         httpserv.stop(do_test_finished);
     }
 };

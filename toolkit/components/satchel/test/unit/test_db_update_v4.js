@@ -26,7 +26,7 @@ function* next_test() {
     }
 
     testfile.copyTo(profileDir, "formhistory.sqlite");
-    do_check_eq(3, getDBVersion(testfile));
+    Assert.equal(3, getDBVersion(testfile));
 
     // ===== 1 =====
     testnum++;
@@ -36,18 +36,18 @@ function* next_test() {
     let dbConnection = Services.storage.openUnsharedDatabase(destFile);
 
     // check for upgraded schema.
-    do_check_eq(CURRENT_SCHEMA, FormHistory.schemaVersion);
+    Assert.equal(CURRENT_SCHEMA, FormHistory.schemaVersion);
 
     // Check that the index was added
-    do_check_true(dbConnection.tableExists("moz_deleted_formhistory"));
+    Assert.ok(dbConnection.tableExists("moz_deleted_formhistory"));
     dbConnection.close();
 
     // check for upgraded schema.
-    do_check_eq(CURRENT_SCHEMA, FormHistory.schemaVersion);
+    Assert.equal(CURRENT_SCHEMA, FormHistory.schemaVersion);
     // check that an entry still exists
     yield countEntries("name-A", "value-A",
                        function(num) {
-                         do_check_true(num > 0);
+                         Assert.ok(num > 0);
                          do_test_finished();
                        }
     );

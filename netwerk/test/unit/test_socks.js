@@ -117,7 +117,7 @@ SocksClient.prototype = {
 
     if (len == 0) {
       print('server: client closed!');
-      do_check_eq(this.state, STATE_GOT_PONG);
+      Assert.equal(this.state, STATE_GOT_PONG);
       this.server.testCompleted(this);
       return;
     }
@@ -206,7 +206,7 @@ SocksClient.prototype = {
     if (this.inbuf.length < 8)
       return;
 
-    do_check_eq(this.inbuf[1], 0x01);
+    Assert.equal(this.inbuf[1], 0x01);
     
     this.dest_port = this.inbuf.slice(2, 4);
     this.dest_addr = this.inbuf.slice(4, 8);
@@ -274,9 +274,9 @@ SocksClient.prototype = {
     if (this.inbuf.length < 2 + nmethods)
       return;
 
-    do_check_true(nmethods >= 1);  
+    Assert.ok(nmethods >= 1);  
     var methods = this.inbuf.slice(2, 2 + nmethods);
-    do_check_true(0 in methods);
+    Assert.ok(0 in methods);
 
     this.inbuf = [];
     this.state = STATE_WAIT_SOCKS5_REQUEST;
@@ -288,9 +288,9 @@ SocksClient.prototype = {
     if (this.inbuf.length < 4)
       return;
 
-    do_check_eq(this.inbuf[0], 0x05);
-    do_check_eq(this.inbuf[1], 0x01);
-    do_check_eq(this.inbuf[2], 0x00);
+    Assert.equal(this.inbuf[0], 0x05);
+    Assert.equal(this.inbuf[1], 0x01);
+    Assert.equal(this.inbuf[2], 0x00);
 
     var atype = this.inbuf[3];
     var len;
@@ -356,7 +356,7 @@ SocksClient.prototype = {
   checkPong: function()
   {
     var pong = buf2str(this.inbuf);
-    do_check_eq(pong, "PONG!");
+    Assert.equal(pong, "PONG!");
     this.state = STATE_GOT_PONG;
     this.waitRead(this.client_in);
   },
@@ -407,14 +407,14 @@ SocksTestServer.prototype = {
     var test = this.pickTest(port_id);
     
     print('server: test finished', test.port);
-    do_check_true(test != null);
-    do_check_eq(test.expectedType || test.type, client.type);
-    do_check_eq(test.port, port_id);
+    Assert.ok(test != null);
+    Assert.equal(test.expectedType || test.type, client.type);
+    Assert.equal(test.port, port_id);
 
     if (test.remote_dns)
-      do_check_eq(test.host, client.dest_name);
+      Assert.equal(test.host, client.dest_name);
     else
-      do_check_eq(test.host, buf2ip(client.dest_addr));
+      Assert.equal(test.host, buf2ip(client.dest_addr));
     
     if (this.test_cases.length == this.tests_completed) {
       print('server: all tests completed');

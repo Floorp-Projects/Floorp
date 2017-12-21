@@ -26,7 +26,7 @@ add_task(async function run_test() {
     onItemChanged(aItemId, aProperty, aIsAnnotationProperty, aValue,
                             aLastModified, aItemType, aParentId, aGuid) {
       if (aProperty == "tags") {
-        do_check_eq(aGuid, bookmark.guid);
+        Assert.equal(aGuid, bookmark.guid);
         this._changedCount++;
       }
     },
@@ -34,7 +34,7 @@ add_task(async function run_test() {
     onItemRemoved(aItemId, aParentId, aIndex, aItemType, aURI, aGuid) {
       if (aGuid == bookmark.guid) {
         PlacesUtils.bookmarks.removeObserver(this);
-        do_check_eq(this._changedCount, 2);
+        Assert.equal(this._changedCount, 2);
         promise.resolve();
       }
     },

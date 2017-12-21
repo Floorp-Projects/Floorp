@@ -33,7 +33,7 @@ function test_pause_frame() {
 
     gThreadClient.getFrames(0, 1, function (response) {
       let frame = response.frames[0];
-      do_check_eq(objActor1, frame.arguments[0].actor);
+      Assert.equal(objActor1, frame.arguments[0].actor);
       gThreadClient.resume(function () {
         finishClient(gClient);
       });

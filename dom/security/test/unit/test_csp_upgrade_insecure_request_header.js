@@ -66,7 +66,7 @@ ChannelListener.prototype = {
     }
     // debug
     // dump("executing test: " + curTest.description);
-    do_check_eq(upgrade_insecure_header, curTest.expectingHeader)
+    Assert.equal(upgrade_insecure_header, curTest.expectingHeader)
     run_next_test();
   },
 };

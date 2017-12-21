@@ -264,7 +264,7 @@ function waitForUpdates() {
     function updateSuccess(aEvent) {
       // Timeout of n:1000 is constructed in processUpdateRequest above and
       // passed back in the callback in nsIUrlClassifierStreamUpdater on success.
-      do_check_eq("1000", aEvent);
+      Assert.equal("1000", aEvent);
       do_print("All data processed");
       resolve(true);
     }
@@ -285,8 +285,8 @@ function waitForUpdates() {
 function promiseQueryReputation(query, expectedShouldBlock) {
   return new Promise(resolve => {
     function onComplete(aShouldBlock, aStatus) {
-      do_check_eq(Cr.NS_OK, aStatus);
-      do_check_eq(aShouldBlock, expectedShouldBlock);
+      Assert.equal(Cr.NS_OK, aStatus);
+      Assert.equal(aShouldBlock, expectedShouldBlock);
       resolve(true);
     }
     gAppRep.queryReputation(query, onComplete);
@@ -376,8 +376,8 @@ add_task(async function test_disabled() {
     gAppRep.queryReputation(query,
       function onComplete(aShouldBlock, aStatus) {
         // We should be getting NS_ERROR_NOT_AVAILABLE if the service is disabled
-        do_check_eq(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
-        do_check_false(aShouldBlock);
+        Assert.equal(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
+        Assert.ok(!aShouldBlock);
         resolve(true);
       }
     );
@@ -397,8 +397,8 @@ add_task(async function test_disabled_through_lists() {
     gAppRep.queryReputation(query,
       function onComplete(aShouldBlock, aStatus) {
         // We should be getting NS_ERROR_NOT_AVAILABLE if the service is disabled
-        do_check_eq(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
-        do_check_false(aShouldBlock);
+        Assert.equal(Cr.NS_ERROR_NOT_AVAILABLE, aStatus);
+        Assert.ok(!aShouldBlock);
         resolve(true);
       }
     );

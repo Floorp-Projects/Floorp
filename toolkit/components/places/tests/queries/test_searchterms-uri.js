@@ -71,11 +71,11 @@ add_task(async function test_searchterms_uri() {
                    title: "mo"}, ];
    await task_populateDB(change1);
 
-   do_check_false(isInResult({uri: "http://foo.com/"}, root));
+   Assert.ok(!isInResult({uri: "http://foo.com/"}, root));
    var change2 = [{isDetails: true, uri: "http://foo.com/",
                    title: "moz"}, ];
    await task_populateDB(change2);
-   do_check_true(isInResult({uri: "http://foo.com/"}, root));
+   Assert.ok(isInResult({uri: "http://foo.com/"}, root));
 
    root.containerOpen = false;
 });

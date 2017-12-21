@@ -39,16 +39,16 @@ function run_test()
 
   try{
     sb.prop;
-    do_check_true(false);
+    Assert.ok(false);
   } catch (e) {
-    do_check_true(e.toString().indexOf("can't access dead object") > -1);
+    Assert.ok(e.toString().indexOf("can't access dead object") > -1);
   }
 
   Components.utils.isDeadWrapper(refToObjFromSb, "ref to object from sb should be dead");
   try{
     refToObjFromSb.prop2;
-    do_check_true(false);
+    Assert.ok(false);
   } catch (e) {
-    do_check_true(e.toString().indexOf("can't access dead object") > -1);
+    Assert.ok(e.toString().indexOf("can't access dead object") > -1);
   }
 }

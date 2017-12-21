@@ -834,7 +834,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
 
 let do_check_record_matches = (expectedRecord, record) => {
   for (let key in expectedRecord) {
-    do_check_eq(expectedRecord[key], record[key]);
+    Assert.equal(expectedRecord[key], record[key]);
   }
 };
 

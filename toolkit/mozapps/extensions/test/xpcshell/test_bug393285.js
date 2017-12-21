@@ -39,7 +39,7 @@ var addonIDs = ["test_bug393285_1@tests.mozilla.org",
 var WindowWatcher = {
   openWindow(parent, url, name, features, args) {
     // Should be called to list the newly blocklisted items
-    do_check_eq(url, URI_EXTENSION_BLOCKLIST_DIALOG);
+    Assert.equal(url, URI_EXTENSION_BLOCKLIST_DIALOG);
 
     // Simulate auto-disabling any softblocks
     var list = args.wrappedJSObject.list;
@@ -259,7 +259,7 @@ function run_test() {
 
   AddonManager.getAddonsByIDs(addonIDs, function(addons) {
     for (let addon of addons) {
-      do_check_eq(addon.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+      Assert.equal(addon.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
     }
     run_test_1();
   });
@@ -273,40 +273,40 @@ function run_test_1() {
                                function([a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
                                          a11, a12, a13, a14, a15]) {
       // No info in blocklist, shouldn't be blocked
-      do_check_false(Services.blocklist.isAddonBlocklisted(a1, "1", "1.9"));
+      Assert.ok(!Services.blocklist.isAddonBlocklisted(a1, "1", "1.9"));
 
       // Should always be blocked
-      do_check_true(Services.blocklist.isAddonBlocklisted(a2, "1", "1.9"));
+      Assert.ok(Services.blocklist.isAddonBlocklisted(a2, "1", "1.9"));
 
       // Only version 1 should be blocked
-      do_check_true(Services.blocklist.isAddonBlocklisted(a3, "1", "1.9"));
-      do_check_false(Services.blocklist.isAddonBlocklisted(a4, "1", "1.9"));
+      Assert.ok(Services.blocklist.isAddonBlocklisted(a3, "1", "1.9"));
+      Assert.ok(!Services.blocklist.isAddonBlocklisted(a4, "1", "1.9"));
 
       // Should be blocked for app version 1
-      do_check_true(Services.blocklist.isAddonBlocklisted(a5, "1", "1.9"));
-      do_check_false(Services.blocklist.isAddonBlocklisted(a5, "2", "1.9"));
+      Assert.ok(Services.blocklist.isAddonBlocklisted(a5, "1", "1.9"));
+      Assert.ok(!Services.blocklist.isAddonBlocklisted(a5, "2", "1.9"));
 
       // Not blocklisted because we are a different OS
-      do_check_false(Services.blocklist.isAddonBlocklisted(a6, "2", "1.9"));
+      Assert.ok(!Services.blocklist.isAddonBlocklisted(a6, "2", "1.9"));
 
       // Blocklisted based on OS
-      do_check_true(Services.blocklist.isAddonBlocklisted(a7, "2", "1.9"));
-      do_check_true(Services.blocklist.isAddonBlocklisted(a8, "2", "1.9"));
+      Assert.ok(Services.blocklist.isAddonBlocklisted(a7, "2", "1.9"));
+      Assert.ok(Services.blocklist.isAddonBlocklisted(a8, "2", "1.9"));
 
       // Not blocklisted because we are a different ABI
-      do_check_false(Services.blocklist.isAddonBlocklisted(a9, "2", "1.9"));
+      Assert.ok(!Services.blocklist.isAddonBlocklisted(a9, "2", "1.9"));
 
       // Blocklisted based on ABI
-      do_check_true(Services.blocklist.isAddonBlocklisted(a10, "2", "1.9"));
-      do_check_true(Services.blocklist.isAddonBlocklisted(a11, "2", "1.9"));
+      Assert.ok(Services.blocklist.isAddonBlocklisted(a10, "2", "1.9"));
+      Assert.ok(Services.blocklist.isAddonBlocklisted(a11, "2", "1.9"));
 
       // Doesnt match both os and abi so not blocked
-      do_check_false(Services.blocklist.isAddonBlocklisted(a12, "2", "1.9"));
-      do_check_false(Services.blocklist.isAddonBlocklisted(a13, "2", "1.9"));
-      do_check_false(Services.blocklist.isAddonBlocklisted(a14, "2", "1.9"));
+      Assert.ok(!Services.blocklist.isAddonBlocklisted(a12, "2", "1.9"));
+      Assert.ok(!Services.blocklist.isAddonBlocklisted(a13, "2", "1.9"));
+      Assert.ok(!Services.blocklist.isAddonBlocklisted(a14, "2", "1.9"));
 
       // Matches both os and abi so blocked
-      do_check_true(Services.blocklist.isAddonBlocklisted(a15, "2", "1.9"));
+      Assert.ok(Services.blocklist.isAddonBlocklisted(a15, "2", "1.9"));
       end_test();
     });
   });

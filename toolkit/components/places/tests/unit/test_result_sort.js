@@ -56,12 +56,12 @@ add_task(async function test() {
   let result = PlacesUtils.getFolderContents(testFolderId);
   let root = result.root;
 
-  do_check_eq(root.childCount, 3);
+  Assert.equal(root.childCount, 3);
 
   function checkOrder(a, b, c) {
-    do_check_eq(root.getChild(0).bookmarkGuid, a);
-    do_check_eq(root.getChild(1).bookmarkGuid, b);
-    do_check_eq(root.getChild(2).bookmarkGuid, c);
+    Assert.equal(root.getChild(0).bookmarkGuid, a);
+    Assert.equal(root.getChild(1).bookmarkGuid, b);
+    Assert.equal(root.getChild(2).bookmarkGuid, c);
   }
 
   // natural order

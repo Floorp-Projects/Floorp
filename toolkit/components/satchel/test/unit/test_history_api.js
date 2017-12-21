@@ -13,7 +13,7 @@ function countDeletedEntries(expected) {
                .createAsyncStatement("SELECT COUNT(*) AS numEntries FROM moz_deleted_formhistory");
     stmt.executeAsync({
       handleResult(resultSet) {
-        do_check_eq(expected, resultSet.getNextRow().getResultByName("numEntries"));
+        Assert.equal(expected, resultSet.getNextRow().getResultByName("numEntries"));
         resolve();
       },
       handleError(error) {
@@ -119,8 +119,8 @@ add_task(async function() {
 
     testfile.copyTo(profileDir, "formhistory.sqlite");
 
-    function checkExists(num) { do_check_true(num > 0); }
-    function checkNotExists(num) { do_check_true(num == 0); }
+    function checkExists(num) { Assert.ok(num > 0); }
+    function checkNotExists(num) { Assert.ok(num == 0); }
 
     // ===== 1 =====
     // Check initial state is as expected
@@ -278,10 +278,10 @@ add_task(async function() {
     let results = await promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
                                              { fieldname: "field1", value: "value1" });
     let [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
-    do_check_eq(1, timesUsed);
-    do_check_true(firstUsed > 0);
-    do_check_true(lastUsed > 0);
-    await promiseCountEntries(null, null, num => do_check_eq(num, 1));
+    Assert.equal(1, timesUsed);
+    Assert.ok(firstUsed > 0);
+    Assert.ok(lastUsed > 0);
+    await promiseCountEntries(null, null, num => Assert.equal(num, 1));
 
     // ===== 11 =====
     // Add another single entry
@@ -289,7 +289,7 @@ add_task(async function() {
     await promiseUpdateEntry("add", "field1", "value1b");
     await promiseCountEntries("field1", "value1", checkExists);
     await promiseCountEntries("field1", "value1b", checkExists);
-    await promiseCountEntries(null, null, num => do_check_eq(num, 2));
+    await promiseCountEntries(null, null, num => Assert.equal(num, 2));
 
     // ===== 12 =====
     // Update a single entry
@@ -302,7 +302,7 @@ add_task(async function() {
     await promiseCountEntries("field1", "modifiedValue", checkExists);
     await promiseCountEntries("field1", "value1", checkNotExists);
     await promiseCountEntries("field1", "value1b", checkExists);
-    await promiseCountEntries(null, null, num => do_check_eq(num, 2));
+    await promiseCountEntries(null, null, num => Assert.equal(num, 2));
 
     // ===== 13 =====
     // Add a single entry with times
@@ -314,10 +314,10 @@ add_task(async function() {
                                          { fieldname: "field2", value: "value2" });
     [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
 
-    do_check_eq(20, timesUsed);
-    do_check_eq(100, firstUsed);
-    do_check_eq(500, lastUsed);
-    await promiseCountEntries(null, null, num => do_check_eq(num, 3));
+    Assert.equal(20, timesUsed);
+    Assert.equal(100, firstUsed);
+    Assert.equal(500, lastUsed);
+    await promiseCountEntries(null, null, num => Assert.equal(num, 3));
 
     // ===== 14 =====
     // Bump an entry, which updates its lastUsed field
@@ -327,10 +327,10 @@ add_task(async function() {
     results = await promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
                                          { fieldname: "field2", value: "value2" });
     [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
-    do_check_eq(21, timesUsed);
-    do_check_eq(100, firstUsed);
-    do_check_true(lastUsed > 500);
-    await promiseCountEntries(null, null, num => do_check_eq(num, 3));
+    Assert.equal(21, timesUsed);
+    Assert.equal(100, firstUsed);
+    Assert.ok(lastUsed > 500);
+    await promiseCountEntries(null, null, num => Assert.equal(num, 3));
 
     // ===== 15 =====
     // Bump an entry that does not exist
@@ -340,10 +340,10 @@ add_task(async function() {
     results = await promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
                                          { fieldname: "field3", value: "value3" });
     [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
-    do_check_eq(10, timesUsed);
-    do_check_eq(50, firstUsed);
-    do_check_eq(400, lastUsed);
-    await promiseCountEntries(null, null, num => do_check_eq(num, 4));
+    Assert.equal(10, timesUsed);
+    Assert.equal(50, firstUsed);
+    Assert.equal(400, lastUsed);
+    await promiseCountEntries(null, null, num => Assert.equal(num, 4));
 
     // ===== 16 =====
     // Bump an entry with a guid
@@ -354,10 +354,10 @@ add_task(async function() {
     results = await promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
                                          { fieldname: "field3", value: "value3" });
     [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
-    do_check_eq(11, timesUsed);
-    do_check_eq(50, firstUsed);
-    do_check_true(lastUsed > 400);
-    await promiseCountEntries(null, null, num => do_check_eq(num, 4));
+    Assert.equal(11, timesUsed);
+    Assert.equal(50, firstUsed);
+    Assert.ok(lastUsed > 400);
+    await promiseCountEntries(null, null, num => Assert.equal(num, 4));
 
     // ===== 17 =====
     // Remove an entry
@@ -370,17 +370,17 @@ add_task(async function() {
     await promiseUpdate({ op: "remove", guid});
     await promiseCountEntries("field1", "modifiedValue", checkExists);
     await promiseCountEntries("field1", "value1b", checkNotExists);
-    await promiseCountEntries(null, null, num => do_check_eq(num, 3));
+    await promiseCountEntries(null, null, num => Assert.equal(num, 3));
 
     await countDeletedEntries(8);
-    await checkTimeDeleted(guid, timeDeleted => do_check_true(timeDeleted > 10000));
+    await checkTimeDeleted(guid, timeDeleted => Assert.ok(timeDeleted > 10000));
 
     // ===== 18 =====
     // Add yet another single entry
     testnum++;
     await promiseUpdate({ op: "add", fieldname: "field4", value: "value4",
       timesUsed: 5, firstUsed: 230, lastUsed: 600 });
-    await promiseCountEntries(null, null, num => do_check_eq(num, 4));
+    await promiseCountEntries(null, null, num => Assert.equal(num, 4));
 
     // ===== 19 =====
     // Remove an entry by time
@@ -390,7 +390,7 @@ add_task(async function() {
     await promiseCountEntries("field2", "value2", checkNotExists);
     await promiseCountEntries("field3", "value3", checkExists);
     await promiseCountEntries("field4", "value4", checkNotExists);
-    await promiseCountEntries(null, null, num => do_check_eq(num, 2));
+    await promiseCountEntries(null, null, num => Assert.equal(num, 2));
     await countDeletedEntries(10);
 
     // ===== 20 =====
@@ -401,21 +401,21 @@ add_task(async function() {
       timesUsed: 5, firstUsed: 230, lastUsed: 600 },
     { op: "add", fieldname: "field6", value: "value6",
       timesUsed: 12, firstUsed: 430, lastUsed: 700 }]);
-    await promiseCountEntries(null, null, num => do_check_eq(num, 4));
+    await promiseCountEntries(null, null, num => Assert.equal(num, 4));
 
     await promiseUpdate([
       { op: "bump", fieldname: "field5", value: "value5" },
       { op: "bump", fieldname: "field6", value: "value6" }]);
     results = await promiseSearchEntries(["fieldname", "timesUsed", "firstUsed", "lastUsed"], { });
 
-    do_check_eq(6, results[2].timesUsed);
-    do_check_eq(13, results[3].timesUsed);
-    do_check_eq(230, results[2].firstUsed);
-    do_check_eq(430, results[3].firstUsed);
-    do_check_true(results[2].lastUsed > 600);
-    do_check_true(results[3].lastUsed > 700);
+    Assert.equal(6, results[2].timesUsed);
+    Assert.equal(13, results[3].timesUsed);
+    Assert.equal(230, results[2].firstUsed);
+    Assert.equal(430, results[3].firstUsed);
+    Assert.ok(results[2].lastUsed > 600);
+    Assert.ok(results[3].lastUsed > 700);
 
-    await promiseCountEntries(null, null, num => do_check_eq(num, 4));
+    await promiseCountEntries(null, null, num => Assert.equal(num, 4));
 
     // ===== 21 =====
     // Check update fails if form history is disabled and the operation is not a

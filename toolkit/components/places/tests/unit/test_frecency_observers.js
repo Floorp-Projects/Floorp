@@ -64,8 +64,8 @@ function onFrecencyChanged(expectedURI) {
     obs.onFrecencyChanged =
       (uri, newFrecency, guid, hidden, visitDate) => {
         PlacesUtils.history.removeObserver(obs);
-        do_check_true(!!uri);
-        do_check_true(uri.equals(expectedURI));
+        Assert.ok(!!uri);
+        Assert.ok(uri.equals(expectedURI));
         resolve();
       };
     PlacesUtils.history.addObserver(obs);
@@ -77,7 +77,7 @@ function onManyFrecenciesChanged() {
     let obs = new NavHistoryObserver();
     obs.onManyFrecenciesChanged = () => {
       PlacesUtils.history.removeObserver(obs);
-      do_check_true(true);
+      Assert.ok(true);
       resolve();
     };
     PlacesUtils.history.addObserver(obs);

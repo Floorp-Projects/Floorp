@@ -35,14 +35,14 @@ function contentHandler(metadata, response)
 
 function firstTimeThrough(request, buffer)
 {
-  do_check_eq(buffer, responseBody);
+  Assert.equal(buffer, responseBody);
   var chan = make_channel(randomURI);
   chan.asyncOpen2(new ChannelListener(secondTimeThrough, null));
 }
 
 function secondTimeThrough(request, buffer)
 {
-  do_check_eq(buffer, responseBody);
+  Assert.equal(buffer, responseBody);
   var chan = make_channel(randomURI);
   chan.loadFlags |= Ci.nsIRequest.LOAD_FROM_CACHE;
   chan.notificationCallbacks = new ChannelEventSink(ES_ABORT_REDIRECT);
@@ -51,7 +51,7 @@ function secondTimeThrough(request, buffer)
 
 function finish_test(request, buffer)
 {
-  do_check_eq(buffer, "");
+  Assert.equal(buffer, "");
   httpServer.stop(do_test_finished);
 }
 

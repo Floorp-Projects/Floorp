@@ -38,13 +38,13 @@ NotificationCallbacks.prototype = {
   },
   asyncOnChannelRedirect: function(oldChan, newChan, flags, callback)
   {
-    do_check_eq(oldChan.URI.spec, this._origURI.spec);
-    do_check_eq(oldChan.URI, this._origURI);
-    do_check_eq(oldChan.originalURI.spec, this._origURI.spec);
-    do_check_eq(oldChan.originalURI, this._origURI);
-    do_check_eq(newChan.originalURI.spec, this._newURI.spec);
-    do_check_eq(newChan.originalURI, newChan.URI);
-    do_check_eq(newChan.URI.spec, this._newURI.spec);
+    Assert.equal(oldChan.URI.spec, this._origURI.spec);
+    Assert.equal(oldChan.URI, this._origURI);
+    Assert.equal(oldChan.originalURI.spec, this._origURI.spec);
+    Assert.equal(oldChan.originalURI, this._origURI);
+    Assert.equal(newChan.originalURI.spec, this._newURI.spec);
+    Assert.equal(newChan.originalURI, newChan.URI);
+    Assert.equal(newChan.URI.spec, this._newURI.spec);
     throw Cr.NS_ERROR_ABORT;
   }
 };
@@ -68,10 +68,10 @@ RequestObserver.prototype = {
   onStartRequest: function (req, ctx)
   {
     var chan = req.QueryInterface(Ci.nsIChannel);
-    do_check_eq(chan.URI.spec, this._origURI.spec);
-    do_check_eq(chan.URI, this._origURI);
-    do_check_eq(chan.originalURI.spec, this._origURI.spec);
-    do_check_eq(chan.originalURI, this._origURI);
+    Assert.equal(chan.URI.spec, this._origURI.spec);
+    Assert.equal(chan.URI, this._origURI);
+    Assert.equal(chan.originalURI.spec, this._origURI.spec);
+    Assert.equal(chan.originalURI, this._origURI);
   },
   onDataAvailable: function(req, ctx, stream, offset, count)
   {
@@ -81,12 +81,12 @@ RequestObserver.prototype = {
   {
     var chan = req.QueryInterface(Ci.nsIChannel);
     try {
-      do_check_eq(chan.URI.spec, this._origURI.spec);
-      do_check_eq(chan.URI, this._origURI);
-      do_check_eq(chan.originalURI.spec, this._origURI.spec);
-      do_check_eq(chan.originalURI, this._origURI);
-      do_check_eq(status, Cr.NS_ERROR_ABORT);
-      do_check_false(chan.isPending());
+      Assert.equal(chan.URI.spec, this._origURI.spec);
+      Assert.equal(chan.URI, this._origURI);
+      Assert.equal(chan.originalURI.spec, this._origURI.spec);
+      Assert.equal(chan.originalURI, this._origURI);
+      Assert.equal(status, Cr.NS_ERROR_ABORT);
+      Assert.ok(!chan.isPending());
     } catch(e) {}
     this._nextTest();
   }
@@ -98,12 +98,12 @@ function test_cancel()
     uri: linkURI,
     loadUsingSystemPrincipal: true
   });
-  do_check_eq(chan.URI, linkURI);
-  do_check_eq(chan.originalURI, linkURI);
+  Assert.equal(chan.URI, linkURI);
+  Assert.equal(chan.originalURI, linkURI);
   chan.asyncOpen2(new RequestObserver(linkURI, newURI, do_test_finished));
-  do_check_true(chan.isPending());
+  Assert.ok(chan.isPending());
   chan.cancel(Cr.NS_ERROR_ABORT);
-  do_check_true(chan.isPending());
+  Assert.ok(chan.isPending());
 }
 
 function run_test()
@@ -120,9 +120,9 @@ function run_test()
     uri: linkURI,
     loadUsingSystemPrincipal: true
   });
-  do_check_eq(chan.URI, linkURI);
-  do_check_eq(chan.originalURI, linkURI);
+  Assert.equal(chan.URI, linkURI);
+  Assert.equal(chan.originalURI, linkURI);
   chan.notificationCallbacks = new NotificationCallbacks(linkURI, newURI);
   chan.asyncOpen2(new RequestObserver(linkURI, newURI, test_cancel));
-  do_check_true(chan.isPending());
+  Assert.ok(chan.isPending());
 }

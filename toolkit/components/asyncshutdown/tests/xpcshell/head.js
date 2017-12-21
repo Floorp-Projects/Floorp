@@ -160,13 +160,13 @@ function get_exn(f) {
 }
 
 function do_check_exn(exn, constructor) {
-  do_check_neq(exn, null);
+  Assert.notEqual(exn, null);
   if (exn.name == constructor) {
-    do_check_eq(exn.constructor.name, constructor);
+    Assert.equal(exn.constructor.name, constructor);
     return;
   }
   do_print("Wrong error constructor");
   do_print(exn.constructor.name);
   do_print(exn.stack);
-  do_check_true(false);
+  Assert.ok(false);
 }

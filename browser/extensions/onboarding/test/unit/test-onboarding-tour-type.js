@@ -11,10 +11,10 @@ add_task(async function() {
   resetOnboardingDefaultState();
   OnboardingTourType.check();
 
-  do_check_eq(Preferences.get(PREF_TOUR_TYPE), "new", "should show the new user tour");
-  do_check_eq(Preferences.get(PREF_TOURSET_VERSION), TOURSET_VERSION,
+  Assert.equal(Preferences.get(PREF_TOUR_TYPE), "new", "should show the new user tour");
+  Assert.equal(Preferences.get(PREF_TOURSET_VERSION), TOURSET_VERSION,
     "tourset version should not change");
-  do_check_eq(Preferences.get(PREF_SEEN_TOURSET_VERSION), TOURSET_VERSION,
+  Assert.equal(Preferences.get(PREF_SEEN_TOURSET_VERSION), TOURSET_VERSION,
     "seen tourset version should be set as the tourset version");
 });
 
@@ -25,10 +25,10 @@ add_task(async function() {
   Preferences.set(PREF_SEEN_TOURSET_VERSION, TOURSET_VERSION);
   OnboardingTourType.check();
 
-  do_check_eq(Preferences.get(PREF_TOUR_TYPE), "new", "should show the new user tour");
-  do_check_eq(Preferences.get(PREF_TOURSET_VERSION), TOURSET_VERSION,
+  Assert.equal(Preferences.get(PREF_TOUR_TYPE), "new", "should show the new user tour");
+  Assert.equal(Preferences.get(PREF_TOURSET_VERSION), TOURSET_VERSION,
     "tourset version should not change");
-  do_check_eq(Preferences.get(PREF_SEEN_TOURSET_VERSION), TOURSET_VERSION,
+  Assert.equal(Preferences.get(PREF_SEEN_TOURSET_VERSION), TOURSET_VERSION,
     "seen tourset version should be set as the tourset version");
 });
 
@@ -39,10 +39,10 @@ add_task(async function() {
   Preferences.set(PREF_SEEN_TOURSET_VERSION, TOURSET_VERSION);
   OnboardingTourType.check();
 
-  do_check_eq(Preferences.get(PREF_TOUR_TYPE), "new", "should show the new user tour");
-  do_check_eq(Preferences.get(PREF_TOURSET_VERSION), TOURSET_VERSION,
+  Assert.equal(Preferences.get(PREF_TOUR_TYPE), "new", "should show the new user tour");
+  Assert.equal(Preferences.get(PREF_TOURSET_VERSION), TOURSET_VERSION,
     "tourset version should not change");
-  do_check_eq(Preferences.get(PREF_SEEN_TOURSET_VERSION), TOURSET_VERSION,
+  Assert.equal(Preferences.get(PREF_SEEN_TOURSET_VERSION), TOURSET_VERSION,
     "seen tourset version should be set as the tourset version");
 });
 
@@ -54,10 +54,10 @@ add_task(async function() {
   Preferences.set(PREF_SEEN_TOURSET_VERSION, TOURSET_VERSION);
   OnboardingTourType.check();
 
-  do_check_eq(Preferences.get(PREF_TOUR_TYPE), "update", "should show the update user tour");
-  do_check_eq(Preferences.get(PREF_TOURSET_VERSION), NEXT_TOURSET_VERSION,
+  Assert.equal(Preferences.get(PREF_TOUR_TYPE), "update", "should show the update user tour");
+  Assert.equal(Preferences.get(PREF_TOURSET_VERSION), NEXT_TOURSET_VERSION,
     "tourset version should not change");
-  do_check_eq(Preferences.get(PREF_SEEN_TOURSET_VERSION), NEXT_TOURSET_VERSION,
+  Assert.equal(Preferences.get(PREF_SEEN_TOURSET_VERSION), NEXT_TOURSET_VERSION,
     "seen tourset version should be set as the tourset version");
 });
 
@@ -69,10 +69,10 @@ add_task(async function() {
   Preferences.set(PREF_SEEN_TOURSET_VERSION, TOURSET_VERSION);
   OnboardingTourType.check();
 
-  do_check_eq(Preferences.get(PREF_TOUR_TYPE), "update", "should show the update user tour");
-  do_check_eq(Preferences.get(PREF_TOURSET_VERSION), NEXT_TOURSET_VERSION,
+  Assert.equal(Preferences.get(PREF_TOUR_TYPE), "update", "should show the update user tour");
+  Assert.equal(Preferences.get(PREF_TOURSET_VERSION), NEXT_TOURSET_VERSION,
     "tourset version should not change");
-  do_check_eq(Preferences.get(PREF_SEEN_TOURSET_VERSION), NEXT_TOURSET_VERSION,
+  Assert.equal(Preferences.get(PREF_SEEN_TOURSET_VERSION), NEXT_TOURSET_VERSION,
     "seen tourset version should be set as the tourset version");
 });
 
@@ -81,9 +81,9 @@ add_task(async function() {
   resetOldProfileDefaultState();
   OnboardingTourType.check();
 
-  do_check_eq(Preferences.get(PREF_TOUR_TYPE), "update", "should show the update user tour");
-  do_check_eq(Preferences.get(PREF_TOURSET_VERSION), TOURSET_VERSION,
+  Assert.equal(Preferences.get(PREF_TOUR_TYPE), "update", "should show the update user tour");
+  Assert.equal(Preferences.get(PREF_TOURSET_VERSION), TOURSET_VERSION,
     "tourset version should not change");
-  do_check_eq(Preferences.get(PREF_SEEN_TOURSET_VERSION), TOURSET_VERSION,
+  Assert.equal(Preferences.get(PREF_SEEN_TOURSET_VERSION), TOURSET_VERSION,
     "seen tourset version should be set as the tourset version");
 });

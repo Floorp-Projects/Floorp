@@ -55,6 +55,6 @@ function compareNotification(notif1, notif2) {
   // retrieved notification should be the second one sent
   for (let prop in notif1) {
     // compare each property
-    do_check_eq(notif1[prop], notif2[prop]);
+    Assert.equal(notif1[prop], notif2[prop]);
   }
 }

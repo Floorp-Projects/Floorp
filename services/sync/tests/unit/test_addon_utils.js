@@ -57,11 +57,11 @@ add_test(function test_handle_empty_source_uri() {
   AddonUtils.installAddons([{id: ID, requireSecureURI: false}], cb);
   let result = cb.wait();
 
-  do_check_true("installedIDs" in result);
-  do_check_eq(0, result.installedIDs.length);
+  Assert.ok("installedIDs" in result);
+  Assert.equal(0, result.installedIDs.length);
 
-  do_check_true("skipped" in result);
-  do_check_true(result.skipped.includes(ID));
+  Assert.ok("skipped" in result);
+  Assert.ok(result.skipped.includes(ID));
 
   server.stop(run_next_test);
 });
@@ -80,7 +80,7 @@ add_test(function test_ignore_untrusted_source_uris() {
     let addon = {sourceURI, name: "bad", id: "bad"};
 
     let canInstall = AddonUtils.canInstallAddon(addon);
-    do_check_false(canInstall, "Correctly rejected a bad URL");
+    Assert.ok(!canInstall, "Correctly rejected a bad URL");
   }
 
   for (let s of good) {
@@ -88,7 +88,7 @@ add_test(function test_ignore_untrusted_source_uris() {
     let addon = {sourceURI, name: "good", id: "good"};
 
     let canInstall = AddonUtils.canInstallAddon(addon);
-    do_check_true(canInstall, "Correctly accepted a good URL");
+    Assert.ok(canInstall, "Correctly accepted a good URL");
   }
   run_next_test();
 });
@@ -106,15 +106,15 @@ add_test(function test_source_uri_rewrite() {
   AddonUtils.__proto__.installAddonFromSearchResult =
     function testInstallAddon(addon, metadata, cb) {
 
-    do_check_eq(SERVER_ADDRESS + "/require.xpi?src=sync",
-                addon.sourceURI.spec);
+    Assert.equal(SERVER_ADDRESS + "/require.xpi?src=sync",
+                 addon.sourceURI.spec);
 
     installCalled = true;
 
     AddonUtils.getInstallFromSearchResult(addon, function(error, install) {
-      do_check_null(error);
-      do_check_eq(SERVER_ADDRESS + "/require.xpi?src=sync",
-                  install.sourceURI.spec);
+      Assert.equal(null, error);
+      Assert.equal(SERVER_ADDRESS + "/require.xpi?src=sync",
+                   install.sourceURI.spec);
 
       cb(null, {id: addon.id, addon, install});
     }, false);
@@ -130,7 +130,7 @@ add_test(function test_source_uri_rewrite() {
   AddonUtils.installAddons([installOptions], installCallback);
 
   installCallback.wait();
-  do_check_true(installCalled);
+  Assert.ok(installCalled);
   AddonUtils.__proto__.installAddonFromSearchResult = oldFunction;
 
   server.stop(run_next_test);

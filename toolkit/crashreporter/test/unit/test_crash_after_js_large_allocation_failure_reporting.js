@@ -17,8 +17,8 @@ function run_test() {
       Components.utils.getJSTestingFunctions().reportLargeAllocationFailure();
     },
     function(mdump, extra) {
-      do_check_eq(extra.TestingOOMCrash, "Yes");
-      do_check_eq(extra.JSLargeAllocationFailure, "Reporting");
+      Assert.equal(extra.TestingOOMCrash, "Yes");
+      Assert.equal(extra.JSLargeAllocationFailure, "Reporting");
     },
     true);
 }

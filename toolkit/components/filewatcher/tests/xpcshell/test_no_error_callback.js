@@ -58,7 +58,7 @@ add_task(async function test_watch_single_path_file_creation_no_error_cb() {
 
   // Wait until the watcher informs us that the file was created.
   let changed = await deferred.promise;
-  do_check_eq(changed, tmpFilePath);
+  Assert.equal(changed, tmpFilePath);
 
   // Remove the watch and free the associated memory (we need to
   // reuse 'deferred.resolve' to unregister).

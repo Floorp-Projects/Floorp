@@ -118,17 +118,17 @@ function run_test() {
     ];
     let tokens = parseAttribute(namespaceURI, tagName, attributes, attributeName);
     if (!expected) {
-      do_check_true(!tokens);
+      Assert.ok(!tokens);
       continue;
     }
 
     do_print("Checking that the number of parsed tokens is correct");
-    do_check_eq(tokens.length, expected.length);
+    Assert.equal(tokens.length, expected.length);
 
     for (let i = 0; i < tokens.length; i++) {
       do_print("Checking the data in token " + i);
-      do_check_eq(tokens[i].value, expected[i].value);
-      do_check_eq(tokens[i].type, expected[i].type);
+      Assert.equal(tokens[i].value, expected[i].value);
+      Assert.equal(tokens[i].type, expected[i].type);
     }
   }
 }

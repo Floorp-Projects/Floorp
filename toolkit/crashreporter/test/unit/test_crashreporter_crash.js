@@ -14,20 +14,20 @@ function run_test() {
 
   // try a basic crash
   do_crash(null, function(mdump, extra) {
-             do_check_true(mdump.exists());
-             do_check_true(mdump.fileSize > 0);
-             do_check_true("StartupTime" in extra);
-             do_check_true("CrashTime" in extra);
-             do_check_true(CrashTestUtils.dumpHasStream(mdump.path, CrashTestUtils.MD_THREAD_LIST_STREAM));
-             do_check_true(CrashTestUtils.dumpHasInstructionPointerMemory(mdump.path));
+             Assert.ok(mdump.exists());
+             Assert.ok(mdump.fileSize > 0);
+             Assert.ok("StartupTime" in extra);
+             Assert.ok("CrashTime" in extra);
+             Assert.ok(CrashTestUtils.dumpHasStream(mdump.path, CrashTestUtils.MD_THREAD_LIST_STREAM));
+             Assert.ok(CrashTestUtils.dumpHasInstructionPointerMemory(mdump.path));
              if (is_windows) {
                ["SystemMemoryUsePercentage", "TotalVirtualMemory", "AvailableVirtualMemory",
                 "AvailablePageFile", "AvailablePhysicalMemory"].forEach(function(prop) {
-                  do_check_true(/^\d+$/.test(extra[prop].toString()));
+                  Assert.ok(/^\d+$/.test(extra[prop].toString()));
                });
              }
              if (is_win7_or_newer)
-               do_check_true(CrashTestUtils.dumpHasStream(mdump.path, CrashTestUtils.MD_MEMORY_INFO_LIST_STREAM));
+               Assert.ok(CrashTestUtils.dumpHasStream(mdump.path, CrashTestUtils.MD_MEMORY_INFO_LIST_STREAM));
            });
 
   // check setting some basic data
@@ -44,9 +44,9 @@ function run_test() {
              scope.TelemetryController.testSetup();
            },
            function(mdump, extra) {
-             do_check_eq(extra.TestKey, "TestValue");
-             do_check_eq(extra["\u2665"], "\u{1F4A9}");
-             do_check_eq(extra.Notes, "JunkMoreJunk");
+             Assert.equal(extra.TestKey, "TestValue");
+             Assert.equal(extra["\u2665"], "\u{1F4A9}");
+             Assert.equal(extra.Notes, "JunkMoreJunk");
              const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
              Assert.ok("TelemetrySessionId" in extra,
                        "The TelemetrySessionId field is present in the extra file");

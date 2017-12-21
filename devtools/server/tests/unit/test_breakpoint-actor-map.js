@@ -29,28 +29,28 @@ function test_get_actor() {
   };
 
   // Shouldn't have breakpoint
-  do_check_eq(null, bpStore.getActor(location),
-              "Breakpoint not added and shouldn't exist.");
+  Assert.equal(null, bpStore.getActor(location),
+               "Breakpoint not added and shouldn't exist.");
 
   bpStore.setActor(location, {});
-  do_check_true(!!bpStore.getActor(location),
-                "Breakpoint added but not found in Breakpoint Store.");
+  Assert.ok(!!bpStore.getActor(location),
+            "Breakpoint added but not found in Breakpoint Store.");
 
   bpStore.deleteActor(location);
-  do_check_eq(null, bpStore.getActor(location),
-              "Breakpoint removed but still exists.");
+  Assert.equal(null, bpStore.getActor(location),
+               "Breakpoint removed but still exists.");
 
   // Same checks for breakpoint with a column
-  do_check_eq(null, bpStore.getActor(columnLocation),
-              "Breakpoint with column not added and shouldn't exist.");
+  Assert.equal(null, bpStore.getActor(columnLocation),
+               "Breakpoint with column not added and shouldn't exist.");
 
   bpStore.setActor(columnLocation, {});
-  do_check_true(!!bpStore.getActor(columnLocation),
-                "Breakpoint with column added but not found in Breakpoint Store.");
+  Assert.ok(!!bpStore.getActor(columnLocation),
+            "Breakpoint with column added but not found in Breakpoint Store.");
 
   bpStore.deleteActor(columnLocation);
-  do_check_eq(null, bpStore.getActor(columnLocation),
-              "Breakpoint with column removed but still exists in Breakpoint Store.");
+  Assert.equal(null, bpStore.getActor(columnLocation),
+               "Breakpoint with column removed but still exists in Breakpoint Store.");
 }
 
 function test_set_actor() {
@@ -62,8 +62,8 @@ function test_set_actor() {
     originalColumn: 9
   };
   bpStore.setActor(location, {});
-  do_check_true(!!bpStore.getActor(location),
-                "We should have the column breakpoint we just added");
+  Assert.ok(!!bpStore.getActor(location),
+            "We should have the column breakpoint we just added");
 
   // Breakpoint without column (whole line breakpoint)
   location = {
@@ -71,8 +71,8 @@ function test_set_actor() {
     originalLine: 103
   };
   bpStore.setActor(location, {});
-  do_check_true(!!bpStore.getActor(location),
-                "We should have the whole line breakpoint we just added");
+  Assert.ok(!!bpStore.getActor(location),
+            "We should have the whole line breakpoint we just added");
 }
 
 function test_delete_actor() {
@@ -85,8 +85,8 @@ function test_delete_actor() {
   };
   bpStore.setActor(location, {});
   bpStore.deleteActor(location);
-  do_check_eq(bpStore.getActor(location), null,
-              "We should not have the column breakpoint anymore");
+  Assert.equal(bpStore.getActor(location), null,
+               "We should not have the column breakpoint anymore");
 
   // Breakpoint without column (whole line breakpoint)
   location = {
@@ -95,8 +95,8 @@ function test_delete_actor() {
   };
   bpStore.setActor(location, {});
   bpStore.deleteActor(location);
-  do_check_eq(bpStore.getActor(location), null,
-              "We should not have the whole line breakpoint anymore");
+  Assert.equal(bpStore.getActor(location), null,
+               "We should not have the whole line breakpoint anymore");
 }
 
 function test_find_actors() {
@@ -123,8 +123,8 @@ function test_find_actors() {
   for (let bp of bpStore.findActors()) {
     bpSet.delete(bp);
   }
-  do_check_eq(bpSet.size, 0,
-              "Should be able to iterate over all breakpoints");
+  Assert.equal(bpSet.size, 0,
+               "Should be able to iterate over all breakpoints");
 
   // Breakpoints by URL
 
@@ -134,8 +134,8 @@ function test_find_actors() {
   for (let bp of bpStore.findActors({ originalSourceActor: { actorID: "actor1" } })) {
     bpSet.delete(bp);
   }
-  do_check_eq(bpSet.size, 0,
-              "Should be able to filter the iteration by url");
+  Assert.equal(bpSet.size, 0,
+               "Should be able to filter the iteration by url");
 
   // Breakpoints by URL and line
 
@@ -146,17 +146,17 @@ function test_find_actors() {
   for (let bp of bpStore.findActors({ originalSourceActor: { actorID: "actor1" },
                                       originalLine: 10 })) {
     if (first) {
-      do_check_eq(bp.originalColumn, undefined,
-                  "Should always get the whole line breakpoint first");
+      Assert.equal(bp.originalColumn, undefined,
+                   "Should always get the whole line breakpoint first");
       first = false;
     } else {
-      do_check_neq(bp.originalColumn, undefined,
-                   "Should not get the whole line breakpoint any time other than first.");
+      Assert.notEqual(bp.originalColumn, undefined,
+                      "Should not get the whole line breakpoint any time other than first.");
     }
     bpSet.delete(bp);
   }
-  do_check_eq(bpSet.size, 0,
-              "Should be able to filter the iteration by url and line");
+  Assert.equal(bpSet.size, 0,
+               "Should be able to filter the iteration by url and line");
 }
 
 function test_duplicate_actors() {
@@ -170,7 +170,7 @@ function test_duplicate_actors() {
   };
   bpStore.setActor(location, {});
   bpStore.setActor(location, {});
-  do_check_eq(bpStore.size, 1, "We should have only 1 column breakpoint");
+  Assert.equal(bpStore.size, 1, "We should have only 1 column breakpoint");
   bpStore.deleteActor(location);
 
   // Breakpoint without column (whole line breakpoint)
@@ -180,6 +180,6 @@ function test_duplicate_actors() {
   };
   bpStore.setActor(location, {});
   bpStore.setActor(location, {});
-  do_check_eq(bpStore.size, 1, "We should have only 1 whole line breakpoint");
+  Assert.equal(bpStore.size, 1, "We should have only 1 whole line breakpoint");
   bpStore.deleteActor(location);
 }

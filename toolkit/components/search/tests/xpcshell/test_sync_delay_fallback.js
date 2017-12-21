@@ -8,21 +8,21 @@ function run_test() {
 
   configureToLoadJarEngines();
 
-  do_check_false(Services.search.isInitialized);
+  Assert.ok(!Services.search.isInitialized);
   let fallback = false;
 
   Services.search.init(function search_initialized(aStatus) {
-    do_check_true(fallback);
-    do_check_true(Components.isSuccessCode(aStatus));
-    do_check_true(Services.search.isInitialized);
+    Assert.ok(fallback);
+    Assert.ok(Components.isSuccessCode(aStatus));
+    Assert.ok(Services.search.isInitialized);
 
     // test engines from dir are not loaded.
     let engines = Services.search.getEngines();
-    do_check_eq(engines.length, 1);
+    Assert.equal(engines.length, 1);
 
     // test jar engine is loaded ok.
     let engine = Services.search.getEngineByName("bug645970");
-    do_check_neq(engine, null);
+    Assert.notEqual(engine, null);
 
     do_test_finished();
   });
@@ -33,17 +33,17 @@ function run_test() {
       Services.obs.removeObserver(searchServiceObserver, aTopic);
       fallback = true;
 
-      do_check_false(Services.search.isInitialized);
+      Assert.ok(!Services.search.isInitialized);
 
       // test engines from dir are not loaded.
       let engines = Services.search.getEngines();
-      do_check_eq(engines.length, 1);
+      Assert.equal(engines.length, 1);
 
       // test jar engine is loaded ok.
       let engine = Services.search.getEngineByName("bug645970");
-      do_check_neq(engine, null);
+      Assert.notEqual(engine, null);
 
-      do_check_true(Services.search.isInitialized);
+      Assert.ok(Services.search.isInitialized);
     }
   }, "browser-search-service");
 }

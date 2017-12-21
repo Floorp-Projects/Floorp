@@ -15,12 +15,12 @@ function do_info(text, stack) {
 function do_check_uri_neq(uri1, uri2)
 {
   do_info("Checking equality in forward direction...");
-  do_check_false(uri1.equals(uri2));
-  do_check_false(uri1.equalsExceptRef(uri2));
+  Assert.ok(!uri1.equals(uri2));
+  Assert.ok(!uri1.equalsExceptRef(uri2));
 
   do_info("Checking equality in reverse direction...");
-  do_check_false(uri2.equals(uri1));
-  do_check_false(uri2.equalsExceptRef(uri1));
+  Assert.ok(!uri2.equals(uri1));
+  Assert.ok(!uri2.equalsExceptRef(uri1));
 }
 
 function run_test()
@@ -35,7 +35,7 @@ function run_test()
   simpleURI.spec = BLOBURI_SPEC;
 
   do_info("Verifying that .spec matches");
-  do_check_eq(simpleURI.spec, fileDataURI.spec);
+  Assert.equal(simpleURI.spec, fileDataURI.spec);
 
   do_info("Checking that nsSimpleURI != nsFileDataURI despite their .spec matching")
   do_check_uri_neq(simpleURI, fileDataURI);

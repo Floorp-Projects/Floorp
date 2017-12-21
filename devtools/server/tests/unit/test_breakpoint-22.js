@@ -54,7 +54,7 @@ const test = Task.async(function* () {
   yield source.setBreakpoint(location2).then(_ => {
     do_throw("no code shall not be found the specified line or below it");
   }, reason => {
-    do_check_eq(reason.error, "noCodeAtLineColumn");
+    Assert.equal(reason.error, "noCodeAtLineColumn");
     ok(reason.message);
   });
 

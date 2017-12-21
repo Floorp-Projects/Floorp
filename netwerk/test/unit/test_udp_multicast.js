@@ -46,7 +46,7 @@ function sendPing(socket, addr) {
     socket.asyncListen({
       onPacketReceived: function(s, message) {
         do_print("Received on port " + socket.port);
-        do_check_eq(message.data, ping);
+        Assert.equal(message.data, ping);
         socket.close();
         resolve(message.data);
       },

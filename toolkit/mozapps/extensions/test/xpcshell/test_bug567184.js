@@ -20,7 +20,7 @@ function run_test_1() {
   AddonManager.getInstallForFile(do_get_addon("test_bug567184"), function(install) {
     ensure_test_completed();
 
-    do_check_neq(install, null);
+    Assert.notEqual(install, null);
 
     prepare_test({
       "bug567184@tests.mozilla.org": [
@@ -39,13 +39,13 @@ function check_test_1() {
   AddonManager.getAllInstalls(function(installs) {
     // There should be no active installs now since the install completed and
     // doesn't require a restart.
-    do_check_eq(installs.length, 0);
+    Assert.equal(installs.length, 0);
 
     AddonManager.getAddonByID("bug567184@tests.mozilla.org", function(b1) {
-      do_check_neq(b1, null);
-      do_check_true(b1.appDisabled);
-      do_check_false(b1.userDisabled);
-      do_check_false(b1.isActive);
+      Assert.notEqual(b1, null);
+      Assert.ok(b1.appDisabled);
+      Assert.ok(!b1.userDisabled);
+      Assert.ok(!b1.isActive);
 
       do_execute_soon(do_test_finished);
     });

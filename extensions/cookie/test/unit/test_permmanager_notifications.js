@@ -58,10 +58,10 @@ function* do_run_test() {
   yield;
 
   Services.obs.removeObserver(observer, "perm-changed");
-  do_check_eq(observer.adds, 1);
-  do_check_eq(observer.changes, 1);
-  do_check_eq(observer.deletes, 1);
-  do_check_true(observer.cleared);
+  Assert.equal(observer.adds, 1);
+  Assert.equal(observer.changes, 1);
+  Assert.equal(observer.deletes, 1);
+  Assert.ok(observer.cleared);
 
   do_finish_generator_test(test_generator);
 }
@@ -80,7 +80,7 @@ function permission_observer(generator, now, type) {
 
 permission_observer.prototype = {
   observe: function(subject, topic, data) {
-    do_check_eq(topic, "perm-changed");
+    Assert.equal(topic, "perm-changed");
 
     // "deleted" means a permission was deleted. aPermission is the deleted permission.
     // "added"   means a permission was added. aPermission is the added permission.
@@ -91,9 +91,9 @@ permission_observer.prototype = {
       this.adds++;
       switch (this.adds) {
         case 1:
-          do_check_eq(this.type, perm.type);
-          do_check_eq(this.pm.EXPIRE_TIME, perm.expireType);
-          do_check_eq(this.now + 100000, perm.expireTime);
+          Assert.equal(this.type, perm.type);
+          Assert.equal(this.pm.EXPIRE_TIME, perm.expireType);
+          Assert.equal(this.now + 100000, perm.expireTime);
           break;
         default:
           do_throw("too many add notifications posted.");
@@ -104,9 +104,9 @@ permission_observer.prototype = {
       this.changes++;
       switch (this.changes) {
         case 1:
-          do_check_eq(this.type, perm.type);
-          do_check_eq(this.pm.EXPIRE_TIME, perm.expireType);
-          do_check_eq(this.now + 200000, perm.expireTime);
+          Assert.equal(this.type, perm.type);
+          Assert.equal(this.pm.EXPIRE_TIME, perm.expireType);
+          Assert.equal(this.now + 200000, perm.expireTime);
           break;
         default:
           do_throw("too many change notifications posted.");
@@ -117,7 +117,7 @@ permission_observer.prototype = {
       this.deletes++;
       switch (this.deletes) {
         case 1:
-          do_check_eq(this.type, perm.type);
+          Assert.equal(this.type, perm.type);
           break;
         default:
           do_throw("too many delete notifications posted.");
@@ -125,8 +125,8 @@ permission_observer.prototype = {
 
     } else if (data == "cleared") {
       // only clear once: at the end
-      do_check_false(this.cleared);
-      do_check_eq(do_count_enumerator(Services.perms.enumerator), 0);
+      Assert.ok(!this.cleared);
+      Assert.equal(do_count_enumerator(Services.perms.enumerator), 0);
       this.cleared = true;
 
     } else {

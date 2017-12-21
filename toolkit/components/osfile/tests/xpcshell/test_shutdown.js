@@ -80,17 +80,17 @@ add_task(async function system_shutdown() {
   do_print("Testing for leaks of directory iterator " + TEST_DIR);
   let iterator = new OS.File.DirectoryIterator(TEST_DIR);
   do_print("At this stage, we leak the directory");
-  do_check_true((await testLeaksOf(TEST_DIR, "test.shutdown.dir.leak")));
+  Assert.ok((await testLeaksOf(TEST_DIR, "test.shutdown.dir.leak")));
   await iterator.close();
   do_print("At this stage, we don't leak the directory anymore");
-  do_check_false((await testLeaksOf(TEST_DIR, "test.shutdown.dir.noleak")));
+  Assert.equal(false, (await testLeaksOf(TEST_DIR, "test.shutdown.dir.noleak")));
 
   let TEST_FILE = OS.Path.join(OS.Constants.Path.profileDir, "test");
   do_print("Testing for leaks of file descriptor: " + TEST_FILE);
   let openedFile = await OS.File.open(TEST_FILE, { create: true} );
   do_print("At this stage, we leak the file");
-  do_check_true((await testLeaksOf(TEST_FILE, "test.shutdown.file.leak")));
+  Assert.ok((await testLeaksOf(TEST_FILE, "test.shutdown.file.leak")));
   await openedFile.close();
   do_print("At this stage, we don't leak the file anymore");
-  do_check_false((await testLeaksOf(TEST_FILE, "test.shutdown.file.leak.2")));
+  Assert.equal(false, (await testLeaksOf(TEST_FILE, "test.shutdown.file.leak.2")));
 });

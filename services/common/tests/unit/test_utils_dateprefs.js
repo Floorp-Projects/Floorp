@@ -21,11 +21,11 @@ add_test(function test_set_basic() {
 
   CommonUtils.setDatePref(prefs, "test00", now);
   let value = prefs.get("test00");
-  do_check_eq(value, "" + now.getTime());
+  Assert.equal(value, "" + now.getTime());
 
   let now2 = CommonUtils.getDatePref(prefs, "test00");
 
-  do_check_eq(now.getTime(), now2.getTime());
+  Assert.equal(now.getTime(), now2.getTime());
 
   run_next_test();
 });
@@ -37,11 +37,11 @@ add_test(function test_set_bounds_checking() {
   try {
     CommonUtils.setDatePref(prefs, "test01", d);
   } catch (ex) {
-    do_check_true(ex.message.startsWith("Trying to set"));
+    Assert.ok(ex.message.startsWith("Trying to set"));
     failed = true;
   }
 
-  do_check_true(failed);
+  Assert.ok(failed);
   run_next_test();
 });
 
@@ -50,8 +50,8 @@ add_test(function test_get_bounds_checking() {
 
   let log = new DummyLogger();
   let d = CommonUtils.getDatePref(prefs, "test_bounds_checking", 0, log);
-  do_check_eq(d.getTime(), 0);
-  do_check_eq(log.messages.length, 1);
+  Assert.equal(d.getTime(), 0);
+  Assert.equal(log.messages.length, 1);
 
   run_next_test();
 });
@@ -61,11 +61,11 @@ add_test(function test_get_bad_default() {
   try {
     CommonUtils.getDatePref(prefs, "get_bad_default", new Date());
   } catch (ex) {
-    do_check_true(ex.message.startsWith("Default value is not a number"));
+    Assert.ok(ex.message.startsWith("Default value is not a number"));
     failed = true;
   }
 
-  do_check_true(failed);
+  Assert.ok(failed);
   run_next_test();
 });
 
@@ -74,8 +74,8 @@ add_test(function test_get_invalid_number() {
 
   let log = new DummyLogger();
   let d = CommonUtils.getDatePref(prefs, "get_invalid_number", 42, log);
-  do_check_eq(d.getTime(), 42);
-  do_check_eq(log.messages.length, 1);
+  Assert.equal(d.getTime(), 42);
+  Assert.equal(log.messages.length, 1);
 
   run_next_test();
 });

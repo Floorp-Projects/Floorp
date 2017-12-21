@@ -46,15 +46,15 @@ add_task(async function test_update_new_id() {
   await promiseInstallFile(do_get_addon("test_updateid1"));
 
   let addon = await promiseAddonByID("addon1@tests.mozilla.org");
-  do_check_neq(addon, null);
-  do_check_eq(addon.version, "1.0");
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.version, "1.0");
 
   let update = await promiseFindAddonUpdates(addon, AddonManager.UPDATE_WHEN_USER_REQUESTED);
   let install = update.updateAvailable;
-  do_check_eq(install.name, addon.name);
-  do_check_eq(install.version, "2.0");
-  do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
-  do_check_eq(install.existingAddon, addon);
+  Assert.equal(install.name, addon.name);
+  Assert.equal(install.version, "2.0");
+  Assert.equal(install.state, AddonManager.STATE_AVAILABLE);
+  Assert.equal(install.existingAddon, addon);
 
   await Assert.rejects(promiseInstallUpdate(install),
                        function(err) { return err.code == AddonManager.ERROR_INCORRECT_ID; },

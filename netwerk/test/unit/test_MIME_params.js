@@ -484,14 +484,14 @@ function do_tests(whichRFC)
       else 
         result = mhp.getParameterHTTP(tests[i][0], "", "UTF-8", true, unused);
 
-      do_check_eq(result, expectedDt);
+      Assert.equal(result, expectedDt);
     } 
     catch (e) {
       // Tests can also succeed by expecting to fail with given error code
       if (e.result) {
         // Allow following tests to run by catching exception from do_check_eq()
         try { 
-          do_check_eq(e.result, expectedDt); 
+          Assert.equal(e.result, expectedDt); 
         } catch(e) {}  
       }
       continue;
@@ -508,14 +508,14 @@ function do_tests(whichRFC)
       else 
         result = mhp.getParameterHTTP(tests[i][0], "filename", "UTF-8", true, unused);
 
-      do_check_eq(result, expectedFn);
+      Assert.equal(result, expectedFn);
     } 
     catch (e) {
       // Tests can also succeed by expecting to fail with given error code
       if (e.result) {
         // Allow following tests to run by catching exception from do_check_eq()
         try { 
-          do_check_eq(e.result, expectedFn); 
+          Assert.equal(e.result, expectedFn); 
         } catch(e) {}  
       }
       continue;
@@ -534,15 +534,15 @@ function test_decode5987Param() {
     try {
       var decoded = mhp.decodeRFC5987Param(rfc5987paramtests[i][0], lang);
       if (rfc5987paramtests[i][3] == Cr.NS_OK) {
-        do_check_eq(rfc5987paramtests[i][1], decoded);
-        do_check_eq(rfc5987paramtests[i][2], lang.value);
+        Assert.equal(rfc5987paramtests[i][1], decoded);
+        Assert.equal(rfc5987paramtests[i][2], lang.value);
       }
       else {
-        do_check_eq(rfc5987paramtests[i][3], "instead got: " + decoded);
+        Assert.equal(rfc5987paramtests[i][3], "instead got: " + decoded);
       }
     }
     catch (e) {
-      do_check_eq(rfc5987paramtests[i][3], e.result);
+      Assert.equal(rfc5987paramtests[i][3], e.result);
     }
   }
 }

@@ -27,7 +27,7 @@ function redirectHandler(metadata, response)
 
 function makeSureNotInCache(request, buffer)
 {
-  do_check_eq(request.status, Components.results.NS_ERROR_UNKNOWN_PROTOCOL);
+  Assert.equal(request.status, Components.results.NS_ERROR_UNKNOWN_PROTOCOL);
 
   // It's very unlikely that we'd somehow succeed when we try again from cache.
   // Can't hurt to test though.
@@ -38,8 +38,8 @@ function makeSureNotInCache(request, buffer)
 
 function finish_test(request, buffer)
 {
-  do_check_eq(request.status, Components.results.NS_ERROR_UNKNOWN_PROTOCOL);
-  do_check_eq(buffer, "");
+  Assert.equal(request.status, Components.results.NS_ERROR_UNKNOWN_PROTOCOL);
+  Assert.equal(buffer, "");
   httpServer.stop(do_test_finished);
 }
 

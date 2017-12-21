@@ -14,13 +14,13 @@ var file = do_get_file("test_registerfile.js");
 
 function onStart(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 200);
+  Assert.equal(ch.responseStatus, 200);
 }
 
 function onStop(ch, cx, status, data)
 {
   // not sufficient for equality, but not likely to be wrong!
-  do_check_eq(data.length, file.fileSize);
+  Assert.equal(data.length, file.fileSize);
 }
 
 XPCOMUtils.defineLazyGetter(this, "test", function() {

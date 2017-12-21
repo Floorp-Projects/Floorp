@@ -10,9 +10,9 @@ function run_test() {
       crashReporter.annotateCrashReport("TestingOOMCrash", "Yes");
     },
     function(mdump, extra) {
-      do_check_eq(extra.TestingOOMCrash, "Yes");
-      do_check_true("OOMAllocationSize" in extra);
-      do_check_true(Number(extra.OOMAllocationSize) > 0);
+      Assert.equal(extra.TestingOOMCrash, "Yes");
+      Assert.ok("OOMAllocationSize" in extra);
+      Assert.ok(Number(extra.OOMAllocationSize) > 0);
     },
     true);
 }

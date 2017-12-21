@@ -33,6 +33,6 @@ function testPrefClear() {
 }
 
 function checkWasCleared(existsStr) {
-    do_check_eq(existsStr, "false");
+    Assert.equal(existsStr, "false");
     do_test_finished();
 }

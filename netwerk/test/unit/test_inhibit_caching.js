@@ -42,8 +42,8 @@ function test_first_response() {
 // Checks that we got the appropriate response
 function check_first_response(request, buffer) {
   request.QueryInterface(Ci.nsIHttpChannel);
-  do_check_eq(request.responseStatus, 200);
-  do_check_eq(buffer, "first");
+  Assert.equal(request.responseStatus, 200);
+  Assert.equal(buffer, "first");
   // Open the cache entry to check its contents
   asyncOpenCacheEntry(uri+"/test","disk", Ci.nsICacheStorage.OPEN_READONLY, null, cache_entry_callback);
 }
@@ -69,8 +69,8 @@ function test_inhibit_caching() {
 // Checks that we got a different response from the first request
 function check_second_response(request, buffer) {
   request.QueryInterface(Ci.nsIHttpChannel);
-  do_check_eq(request.responseStatus, 200);
-  do_check_eq(buffer, "second");
+  Assert.equal(request.responseStatus, 200);
+  Assert.equal(buffer, "second");
   // Checks that the cache entry still contains the content from the first request
   asyncOpenCacheEntry(uri+"/test","disk", Ci.nsICacheStorage.OPEN_READONLY, null, cache_entry_callback);
 }

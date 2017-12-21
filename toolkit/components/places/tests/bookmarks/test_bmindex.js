@@ -17,13 +17,13 @@ async function check_contiguous_indexes(bookmarks) {
     let bmIndex = (await PlacesUtils.bookmarks.fetch(bm.guid)).index;
     do_print(`Index: ${bmIndex}\n`);
     do_print("Checking duplicates\n");
-    do_check_false(indexes.includes(bmIndex));
+    Assert.ok(!indexes.includes(bmIndex));
     do_print(`Checking out of range, found ${bookmarks.length} items\n`);
-    do_check_true(bmIndex >= 0 && bmIndex < bookmarks.length);
+    Assert.ok(bmIndex >= 0 && bmIndex < bookmarks.length);
     indexes.push(bmIndex);
   }
   do_print("Checking all valid indexes have been used\n");
-  do_check_eq(indexes.length, bookmarks.length);
+  Assert.equal(indexes.length, bookmarks.length);
 }
 
 add_task(async function test_bookmarks_indexing() {

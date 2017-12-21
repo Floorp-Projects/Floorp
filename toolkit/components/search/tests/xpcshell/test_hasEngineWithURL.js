@@ -21,9 +21,9 @@ function getEngineClone(engine) {
 
 // Check whether and engine does or doesn't exist.
 function checkEngineState(exists, engine) {
-  do_check_eq(exists, Services.search.hasEngineWithURL(engine.method,
-                                                       engine.formURL,
-                                                       engine.queryParams));
+  Assert.equal(exists, Services.search.hasEngineWithURL(engine.method,
+                                                        engine.formURL,
+                                                        engine.queryParams));
 }
 
 // Add a search engine for testing.

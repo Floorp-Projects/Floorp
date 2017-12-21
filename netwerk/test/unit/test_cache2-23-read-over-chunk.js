@@ -18,9 +18,9 @@ function run_test()
     new OpenCallback(NEW|WAITFORWRITE, "", payload, function(entry) {
       var is = entry.openInputStream(0);
       pumpReadStream(is, function(read) {
-        do_check_eq(read.length, kChunkSize + 10);
+        Assert.equal(read.length, kChunkSize + 10);
         is.close();
-        do_check_true(read == payload); // not using do_check_eq since logger will fail for the 1/4MB string
+        Assert.ok(read == payload); // not using do_check_eq since logger will fail for the 1/4MB string
         finish_cache2_test();
       });
     })

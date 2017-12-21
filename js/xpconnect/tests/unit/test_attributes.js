@@ -24,13 +24,13 @@ function test_component_readwrite(contractid) {
   var o = Cc[contractid].createInstance(Ci["nsIXPCTestObjectReadWrite"]);
 
   // Test the initial values.
-  do_check_eq("XPConnect Read-Writable String", o.stringProperty);
-  do_check_eq(true, o.booleanProperty);
-  do_check_eq(32767, o.shortProperty);
-  do_check_eq(2147483647, o.longProperty);
-  do_check_true(5.25 < o.floatProperty && 5.75 > o.floatProperty);
-  do_check_eq("X", o.charProperty);
-  do_check_eq(-1, o.timeProperty);
+  Assert.equal("XPConnect Read-Writable String", o.stringProperty);
+  Assert.equal(true, o.booleanProperty);
+  Assert.equal(32767, o.shortProperty);
+  Assert.equal(2147483647, o.longProperty);
+  Assert.ok(5.25 < o.floatProperty && 5.75 > o.floatProperty);
+  Assert.equal("X", o.charProperty);
+  Assert.equal(-1, o.timeProperty);
 
   // Write new values.
   o.stringProperty = "another string";
@@ -42,19 +42,19 @@ function test_component_readwrite(contractid) {
   o.timeProperty = 1;
 
   // Test the new values.
-  do_check_eq("another string", o.stringProperty);
-  do_check_eq(false, o.booleanProperty);
-  do_check_eq(-12345, o.shortProperty);
-  do_check_eq(1234567890, o.longProperty);
-  do_check_true(10.15 < o.floatProperty && 10.25 > o.floatProperty);
-  do_check_eq("Z", o.charProperty);
-  do_check_eq(1, o.timeProperty);
+  Assert.equal("another string", o.stringProperty);
+  Assert.equal(false, o.booleanProperty);
+  Assert.equal(-12345, o.shortProperty);
+  Assert.equal(1234567890, o.longProperty);
+  Assert.ok(10.15 < o.floatProperty && 10.25 > o.floatProperty);
+  Assert.equal("Z", o.charProperty);
+  Assert.equal(1, o.timeProperty);
 
   // Assign values that differ from the expected type to verify conversion.
 
   function SetAndTestBooleanProperty(newValue, expectedValue) {
     o.booleanProperty = newValue;
-    do_check_eq(expectedValue, o.booleanProperty);
+    Assert.equal(expectedValue, o.booleanProperty);
   };
   SetAndTestBooleanProperty(false, false);
   SetAndTestBooleanProperty(1, true);
@@ -71,11 +71,11 @@ function test_component_readonly(contractid) {
   var o = Cc[contractid].createInstance(Ci["nsIXPCTestObjectReadOnly"]);
 
   // Test the initial values.
-  do_check_eq("XPConnect Read-Only String", o.strReadOnly);
-  do_check_eq(true, o.boolReadOnly);
-  do_check_eq(32767, o.shortReadOnly);
-  do_check_eq(2147483647, o.longReadOnly);
-  do_check_true(5.25 < o.floatReadOnly && 5.75 > o.floatReadOnly);
-  do_check_eq("X", o.charReadOnly);
-  do_check_eq(-1, o.timeReadOnly);
+  Assert.equal("XPConnect Read-Only String", o.strReadOnly);
+  Assert.equal(true, o.boolReadOnly);
+  Assert.equal(32767, o.shortReadOnly);
+  Assert.equal(2147483647, o.longReadOnly);
+  Assert.ok(5.25 < o.floatReadOnly && 5.75 > o.floatReadOnly);
+  Assert.equal("X", o.charReadOnly);
+  Assert.equal(-1, o.timeReadOnly);
 }

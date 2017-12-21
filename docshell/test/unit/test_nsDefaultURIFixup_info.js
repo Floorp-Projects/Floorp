@@ -18,7 +18,7 @@ var oldDefaultEngine = Services.search.defaultEngine;
 Services.search.defaultEngine = Services.search.getEngineByName(kSearchEngineID);
 
 var selectedName = Services.search.defaultEngine.name;
-do_check_eq(selectedName, kSearchEngineID);
+Assert.equal(selectedName, kSearchEngineID);
 
 const kForceHostLookup = "browser.fixup.dns_first_for_single_words";
 do_register_cleanup(function() {
@@ -530,7 +530,7 @@ function run_test() {
       do_print("Affected: " + testcase.input);
     }
   }
-  do_check_eq(affectedTests.length, 0);
+  Assert.equal(affectedTests.length, 0);
   do_single_test_run();
   gSingleWordHostLookup = true;
   do_single_test_run();
@@ -566,7 +566,7 @@ function do_single_test_run() {
         fixupURIOnly = urifixup.createFixupURI(testInput, flags);
       } catch (ex) {
         do_print("Caught exception: " + ex);
-        do_check_eq(expectedFixedURI, null);
+        Assert.equal(expectedFixedURI, null);
       }
 
       try {
@@ -574,8 +574,8 @@ function do_single_test_run() {
       } catch (ex) {
         // Both APIs should return an error in the same cases.
         do_print("Caught exception: " + ex);
-        do_check_eq(expectedFixedURI, null);
-        do_check_eq(fixupURIOnly, null);
+        Assert.equal(expectedFixedURI, null);
+        Assert.equal(fixupURIOnly, null);
         continue;
       }
 
@@ -583,25 +583,25 @@ function do_single_test_run() {
                " (host lookup for single words: " + (gSingleWordHostLookup ? "yes" : "no") + ")");
 
       // Both APIs should then also be using the same spec.
-      do_check_eq(!!fixupURIOnly, !!info.preferredURI);
+      Assert.equal(!!fixupURIOnly, !!info.preferredURI);
       if (fixupURIOnly)
-        do_check_eq(fixupURIOnly.spec, info.preferredURI.spec);
+        Assert.equal(fixupURIOnly.spec, info.preferredURI.spec);
 
       let isFileURL = expectedFixedURI && expectedFixedURI.startsWith("file");
 
       // Check the fixedURI:
       let makeAlternativeURI = flags & urifixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI;
       if (makeAlternativeURI && alternativeURI != null) {
-        do_check_eq(info.fixedURI.spec, alternativeURI);
+        Assert.equal(info.fixedURI.spec, alternativeURI);
       } else {
-        do_check_eq(info.fixedURI && info.fixedURI.spec, expectedFixedURI);
+        Assert.equal(info.fixedURI && info.fixedURI.spec, expectedFixedURI);
       }
 
       // Check booleans on input:
       let couldDoKeywordLookup = flags & urifixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-      do_check_eq(!!info.keywordProviderName, couldDoKeywordLookup && expectKeywordLookup);
-      do_check_eq(info.fixupChangedProtocol, expectProtocolChange);
-      do_check_eq(info.fixupCreatedAlternateURI, makeAlternativeURI && alternativeURI != null);
+      Assert.equal(!!info.keywordProviderName, couldDoKeywordLookup && expectKeywordLookup);
+      Assert.equal(info.fixupChangedProtocol, expectProtocolChange);
+      Assert.equal(info.fixupCreatedAlternateURI, makeAlternativeURI && alternativeURI != null);
 
       // Check the preferred URI
       if (couldDoKeywordLookup) {
@@ -615,19 +615,19 @@ function do_single_test_run() {
             }
             let searchURL = kSearchEngineURL.replace("{searchTerms}", urlparamInput);
             let spec = info.preferredURI.spec.replace(/%27/g, "'");
-            do_check_eq(spec, searchURL);
+            Assert.equal(spec, searchURL);
           } else {
-            do_check_eq(info.preferredURI, null);
+            Assert.equal(info.preferredURI, null);
           }
         } else {
-          do_check_eq(info.preferredURI.spec, info.fixedURI.spec);
+          Assert.equal(info.preferredURI.spec, info.fixedURI.spec);
         }
       } else {
         // In these cases, we should never be doing a keyword lookup and
         // the fixed URI should be preferred:
-        do_check_eq(info.preferredURI.spec, info.fixedURI.spec);
+        Assert.equal(info.preferredURI.spec, info.fixedURI.spec);
       }
-      do_check_eq(sanitize(testInput), info.originalInput);
+      Assert.equal(sanitize(testInput), info.originalInput);
     }
   }
 }

@@ -41,19 +41,19 @@ function test_longstring_grip() {
 
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     let args = packet.frame.arguments;
-    do_check_eq(args.length, 1);
+    Assert.equal(args.length, 1);
     let grip = args[0];
 
     try {
-      do_check_eq(grip.type, "longString");
-      do_check_eq(grip.length, longString.length);
-      do_check_eq(grip.initial,
-                  longString.substr(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH));
+      Assert.equal(grip.type, "longString");
+      Assert.equal(grip.length, longString.length);
+      Assert.equal(grip.initial,
+                   longString.substr(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH));
 
       let longStringClient = gThreadClient.pauseLongString(grip);
       longStringClient.substring(22, 28, function (response) {
         try {
-          do_check_eq(response.substring, "monkey");
+          Assert.equal(response.substring, "monkey");
         } finally {
           gThreadClient.resume(function () {
             finishClient(gClient);

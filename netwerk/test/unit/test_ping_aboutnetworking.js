@@ -33,9 +33,9 @@ function test_sockets(serverSocket) {
         break;
       }
     }
-    do_check_neq(index, -1);
-    do_check_eq(data.sockets[index].port, serverSocket.port);
-    do_check_eq(data.sockets[index].tcp, 1);
+    Assert.notEqual(index, -1);
+    Assert.equal(data.sockets[index].port, serverSocket.port);
+    Assert.equal(data.sockets[index].tcp, 1);
 
     do_test_finished();
   });
@@ -70,7 +70,7 @@ function run_test() {
             break;
           }
         }
-        do_check_eq(found, true);
+        Assert.equal(found, true);
 
         do_test_finished();
         test_sockets(serverSocket);

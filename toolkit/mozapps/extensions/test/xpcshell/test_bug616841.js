@@ -5,10 +5,10 @@
 // Tests that string comparisons work correctly in callbacks
 
 function test_string_compare() {
-  do_check_true("C".localeCompare("D") < 0);
-  do_check_true("D".localeCompare("C") > 0);
-  do_check_true("\u010C".localeCompare("D") < 0);
-  do_check_true("D".localeCompare("\u010C") > 0);
+  Assert.ok("C".localeCompare("D") < 0);
+  Assert.ok("D".localeCompare("C") > 0);
+  Assert.ok("\u010C".localeCompare("D") < 0);
+  Assert.ok("D".localeCompare("\u010C") > 0);
 }
 
 function run_test() {

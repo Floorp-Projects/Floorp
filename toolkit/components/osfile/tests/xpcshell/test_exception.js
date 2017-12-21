@@ -21,7 +21,7 @@ add_test_pair(async function test_typeerror() {
     exn = ex;
   }
   do_print("Exception: " + exn);
-  do_check_true(exn.constructor.name == "TypeError");
+  Assert.ok(exn.constructor.name == "TypeError");
 });
 
 // Tests on |read|

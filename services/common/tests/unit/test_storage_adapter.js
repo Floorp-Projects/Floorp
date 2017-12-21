@@ -64,10 +64,10 @@ function test_collection_operations() {
     await adapter.execute((transaction) => transaction.delete(record.id));
     newRecord = await adapter.get(record.id);
     // ... and ensure it's no longer there
-    do_check_eq(newRecord, undefined);
+    Assert.equal(newRecord, undefined);
     // ensure the other record still exists
     newRecord = await adapter.get("test-id");
-    do_check_neq(newRecord, undefined);
+    Assert.notEqual(newRecord, undefined);
     await sqliteHandle.close();
   });
 
@@ -78,7 +78,7 @@ function test_collection_operations() {
     // Kinto expects adapters to either:
     let newRecord = await adapter.get("missing-test-id");
     // resolve with an undefined record
-    do_check_eq(newRecord, undefined);
+    Assert.equal(newRecord, undefined);
     await sqliteHandle.close();
   });
 
@@ -104,10 +104,10 @@ function test_collection_operations() {
     let adapter = do_get_kinto_adapter(sqliteHandle);
     let originalRecord = {id: "test-id-1", foo: "bar"};
     let records = await adapter.list();
-    do_check_eq(records.length, 1);
+    Assert.equal(records.length, 1);
     await adapter.execute((transaction) => transaction.create(originalRecord));
     records = await adapter.list();
-    do_check_eq(records.length, 2);
+    Assert.equal(records.length, 2);
     await sqliteHandle.close();
   });
 
@@ -126,9 +126,9 @@ function test_collection_operations() {
     } catch (e) {
       error = e;
     }
-    do_check_neq(error, null);
+    Assert.notEqual(error, null);
     let records = await adapter.list();
-    do_check_eq(records.length, 0);
+    Assert.equal(records.length, 0);
     await sqliteHandle.close();
   });
 
@@ -140,19 +140,19 @@ function test_collection_operations() {
     let sqliteHandle = await do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
     let lastModified = await adapter.getLastModified();
-    do_check_eq(lastModified, initialValue);
+    Assert.equal(lastModified, initialValue);
     let result = await adapter.saveLastModified(intendedValue);
-    do_check_eq(result, intendedValue);
+    Assert.equal(result, intendedValue);
     lastModified = await adapter.getLastModified();
-    do_check_eq(lastModified, intendedValue);
+    Assert.equal(lastModified, intendedValue);
 
     // test saveLastModified parses values correctly
     result = await adapter.saveLastModified(" " + intendedValue + " blah");
     // should resolve with the parsed int
-    do_check_eq(result, intendedValue);
+    Assert.equal(result, intendedValue);
     // and should have saved correctly
     lastModified = await adapter.getLastModified();
-    do_check_eq(lastModified, intendedValue);
+    Assert.equal(lastModified, intendedValue);
     await sqliteHandle.close();
   });
 
@@ -165,7 +165,7 @@ function test_collection_operations() {
     let impactedRecords = await adapter.loadDump([
       record1, record2
     ]);
-    do_check_eq(impactedRecords.length, 2);
+    Assert.equal(impactedRecords.length, 2);
     let newRecord1 = await adapter.get("1");
     // ensure the record is the same as when it was added
     deepEqual(record1, newRecord1);
@@ -180,18 +180,18 @@ function test_collection_operations() {
     let adapter = do_get_kinto_adapter(sqliteHandle);
     await adapter.clear();
     let records = await adapter.list();
-    do_check_eq(records.length, 0);
+    Assert.equal(records.length, 0);
     let impactedRecords = await adapter.loadDump([
       {id: 1, foo: "bar"},
       {id: 2, foo: "baz"},
     ]);
-    do_check_eq(impactedRecords.length, 2);
+    Assert.equal(impactedRecords.length, 2);
     await adapter.loadDump([
       {id: 1, foo: "baz"},
       {id: 3, foo: "bab"},
     ]);
     records = await adapter.list();
-    do_check_eq(records.length, 3);
+    Assert.equal(records.length, 3);
     let newRecord1 = await adapter.get("1");
     deepEqual(newRecord1.foo, "baz");
     await sqliteHandle.close();
@@ -205,7 +205,7 @@ function test_collection_operations() {
       {id: 2, foo: "baz", last_modified: 1458796542},
     ]);
     let lastModified = await adapter.getLastModified();
-    do_check_eq(lastModified, 1458796542);
+    Assert.equal(lastModified, 1458796542);
     await sqliteHandle.close();
   });
 
@@ -219,7 +219,7 @@ function test_collection_operations() {
       {id: 2, foo: "baz", last_modified: 1458796542},
     ]);
     let lastModified = await adapter.getLastModified();
-    do_check_eq(lastModified, 1458796543);
+    Assert.equal(lastModified, 1458796543);
     await sqliteHandle.close();
   });
 }
@@ -230,7 +230,7 @@ add_test(function test_db_creation() {
   add_test(function test_create_from_scratch() {
     // ensure the file does not exist in the profile
     let kintoDB = do_get_kinto_db();
-    do_check_false(kintoDB.exists());
+    Assert.ok(!kintoDB.exists());
     run_next_test();
   });
 

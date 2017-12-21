@@ -92,7 +92,7 @@ function reference_compare_files(a, b, test) {
     do_print("Comparing files " + a + " and " + b);
     let a_contents = await reference_fetch_file(a, test);
     let b_contents = await reference_fetch_file(b, test);
-    do_check_eq(a_contents, b_contents);
+    Assert.equal(a_contents, b_contents);
   })();
 }
 

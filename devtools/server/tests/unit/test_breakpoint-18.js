@@ -56,7 +56,7 @@ function setBreakpoint(event, packet) {
   gClient.addOneTimeListener("resumed", runCode);
 
   source.setBreakpoint({ line: 2 }, ({ error }) => {
-    do_check_true(!error);
+    Assert.ok(!error);
     gThreadClient.resume();
   });
 }
@@ -67,16 +67,16 @@ function runCode() {
 }
 
 function testBPHit(event, { why }) {
-  do_check_eq(why.type, "breakpoint");
+  Assert.equal(why.type, "breakpoint");
   gClient.addOneTimeListener("paused", testDbgStatement);
   gThreadClient.resume();
 }
 
 function testDbgStatement(event, { why }) {
   // Should continue to the debugger statement.
-  do_check_eq(why.type, "debuggerStatement");
+  Assert.equal(why.type, "debuggerStatement");
   // Not break on another offset from the same line (that isn't an entry point
   // to the line)
-  do_check_neq(why.type, "breakpoint");
+  Assert.notEqual(why.type, "breakpoint");
   gClient.close().then(gCallback);
 }

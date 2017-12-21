@@ -19,7 +19,7 @@ function run_test() {
   } catch (e) {
     failed = true;
   }
-  do_check_true(failed);
+  Assert.ok(failed);
   zipreader = null;
 }
 

@@ -9,16 +9,16 @@ function run_test() {
   configureToLoadJarEngines();
   installAddonEngine();
 
-  do_check_false(Services.search.isInitialized);
+  Assert.ok(!Services.search.isInitialized);
 
   Services.search.init(function search_initialized(aStatus) {
-    do_check_true(Components.isSuccessCode(aStatus));
-    do_check_true(Services.search.isInitialized);
+    Assert.ok(Components.isSuccessCode(aStatus));
+    Assert.ok(Services.search.isInitialized);
 
     // test the legacy add-on engine is _not_ loaded
     let engines = Services.search.getEngines();
-    do_check_eq(engines.length, 1);
-    do_check_eq(Services.search.getEngineByName("addon"), null);
+    Assert.equal(engines.length, 1);
+    Assert.equal(Services.search.getEngineByName("addon"), null);
 
     do_test_finished();
   });

@@ -198,66 +198,66 @@ add_task(async function run_test_1() {
                               "theme1@tests.mozilla.org",
                               "theme2@tests.mozilla.org"]);
 
-  do_check_neq(a1, null);
-  do_check_true(a1.isActive);
-  do_check_false(a1.userDisabled);
-  do_check_false(a1.appDisabled);
-  do_check_eq(a1.pendingOperations, AddonManager.PENDING_NONE);
-  do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+  Assert.notEqual(a1, null);
+  Assert.ok(a1.isActive);
+  Assert.ok(!a1.userDisabled);
+  Assert.ok(!a1.appDisabled);
+  Assert.equal(a1.pendingOperations, AddonManager.PENDING_NONE);
+  Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
 
-  do_check_neq(a2, null);
-  do_check_false(a2.isActive);
-  do_check_true(a2.userDisabled);
-  do_check_false(a2.appDisabled);
-  do_check_eq(a2.pendingOperations, AddonManager.PENDING_NONE);
-  do_check_false(isExtensionInAddonsList(profileDir, a2.id));
+  Assert.notEqual(a2, null);
+  Assert.ok(!a2.isActive);
+  Assert.ok(a2.userDisabled);
+  Assert.ok(!a2.appDisabled);
+  Assert.equal(a2.pendingOperations, AddonManager.PENDING_NONE);
+  Assert.ok(!isExtensionInAddonsList(profileDir, a2.id));
 
-  do_check_neq(a3, null);
-  do_check_true(a3.isActive);
-  do_check_false(a3.userDisabled);
-  do_check_false(a3.appDisabled);
-  do_check_eq(a3.pendingOperations, AddonManager.PENDING_NONE);
-  do_check_true(isExtensionInAddonsList(profileDir, a3.id));
+  Assert.notEqual(a3, null);
+  Assert.ok(a3.isActive);
+  Assert.ok(!a3.userDisabled);
+  Assert.ok(!a3.appDisabled);
+  Assert.equal(a3.pendingOperations, AddonManager.PENDING_NONE);
+  Assert.ok(isExtensionInAddonsList(profileDir, a3.id));
 
-  do_check_neq(a4, null);
-  do_check_false(a4.isActive);
-  do_check_true(a4.userDisabled);
-  do_check_false(a4.appDisabled);
-  do_check_eq(a4.pendingOperations, AddonManager.PENDING_NONE);
-  do_check_false(isExtensionInAddonsList(profileDir, a4.id));
+  Assert.notEqual(a4, null);
+  Assert.ok(!a4.isActive);
+  Assert.ok(a4.userDisabled);
+  Assert.ok(!a4.appDisabled);
+  Assert.equal(a4.pendingOperations, AddonManager.PENDING_NONE);
+  Assert.ok(!isExtensionInAddonsList(profileDir, a4.id));
 
-  do_check_neq(a5, null);
-  do_check_true(a5.isActive);
-  do_check_false(a5.userDisabled);
-  do_check_false(a5.appDisabled);
-  do_check_eq(a5.pendingOperations, AddonManager.PENDING_NONE);
-  do_check_true(isExtensionInAddonsList(profileDir, a5.id));
+  Assert.notEqual(a5, null);
+  Assert.ok(a5.isActive);
+  Assert.ok(!a5.userDisabled);
+  Assert.ok(!a5.appDisabled);
+  Assert.equal(a5.pendingOperations, AddonManager.PENDING_NONE);
+  Assert.ok(isExtensionInAddonsList(profileDir, a5.id));
 
-  do_check_neq(a6, null);
-  do_check_true(a6.isActive);
-  do_check_false(a6.userDisabled);
-  do_check_false(a6.appDisabled);
-  do_check_eq(a6.pendingOperations, AddonManager.PENDING_NONE);
+  Assert.notEqual(a6, null);
+  Assert.ok(a6.isActive);
+  Assert.ok(!a6.userDisabled);
+  Assert.ok(!a6.appDisabled);
+  Assert.equal(a6.pendingOperations, AddonManager.PENDING_NONE);
 
-  do_check_neq(a7, null);
-  do_check_false(a7.isActive);
-  do_check_true(a7.userDisabled);
-  do_check_false(a7.appDisabled);
-  do_check_eq(a7.pendingOperations, AddonManager.PENDING_NONE);
+  Assert.notEqual(a7, null);
+  Assert.ok(!a7.isActive);
+  Assert.ok(a7.userDisabled);
+  Assert.ok(!a7.appDisabled);
+  Assert.equal(a7.pendingOperations, AddonManager.PENDING_NONE);
 
-  do_check_neq(t1, null);
-  do_check_false(t1.isActive);
-  do_check_true(t1.userDisabled);
-  do_check_false(t1.appDisabled);
-  do_check_eq(t1.pendingOperations, AddonManager.PENDING_NONE);
+  Assert.notEqual(t1, null);
+  Assert.ok(!t1.isActive);
+  Assert.ok(t1.userDisabled);
+  Assert.ok(!t1.appDisabled);
+  Assert.equal(t1.pendingOperations, AddonManager.PENDING_NONE);
   // Disabled due to bug 1394117
   // do_check_false(isThemeInAddonsList(profileDir, t1.id));
 
-  do_check_neq(t2, null);
-  do_check_true(t2.isActive);
-  do_check_false(t2.userDisabled);
-  do_check_false(t2.appDisabled);
-  do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
+  Assert.notEqual(t2, null);
+  Assert.ok(t2.isActive);
+  Assert.ok(!t2.userDisabled);
+  Assert.ok(!t2.appDisabled);
+  Assert.equal(t2.pendingOperations, AddonManager.PENDING_NONE);
   // Disabled due to bug 1394117
   // do_check_true(isThemeInAddonsList(profileDir, t2.id));
 
@@ -295,75 +295,75 @@ add_task(async function run_test_1() {
                               "theme2@tests.mozilla.org"]);
 
    // Should be correctly recovered
-   do_check_neq(a1, null);
-   do_check_true(a1.isActive);
-   do_check_false(a1.userDisabled);
-   do_check_false(a1.appDisabled);
-   do_check_eq(a1.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+   Assert.notEqual(a1, null);
+   Assert.ok(a1.isActive);
+   Assert.ok(!a1.userDisabled);
+   Assert.ok(!a1.appDisabled);
+   Assert.equal(a1.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
 
    // Should be correctly recovered
-   do_check_neq(a2, null);
-   do_check_false(a2.isActive);
-   do_check_true(a2.userDisabled);
-   do_check_false(a2.appDisabled);
-   do_check_eq(a2.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_false(isExtensionInAddonsList(profileDir, a2.id));
+   Assert.notEqual(a2, null);
+   Assert.ok(!a2.isActive);
+   Assert.ok(a2.userDisabled);
+   Assert.ok(!a2.appDisabled);
+   Assert.equal(a2.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(!isExtensionInAddonsList(profileDir, a2.id));
 
    // The compatibility update won't be recovered but it should still be
    // active for this session
-   do_check_neq(a3, null);
-   do_check_true(a3.isActive);
-   do_check_false(a3.userDisabled);
-   do_check_false(a3.appDisabled);
-   do_check_eq(a3.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_true(isExtensionInAddonsList(profileDir, a3.id));
+   Assert.notEqual(a3, null);
+   Assert.ok(a3.isActive);
+   Assert.ok(!a3.userDisabled);
+   Assert.ok(!a3.appDisabled);
+   Assert.equal(a3.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(isExtensionInAddonsList(profileDir, a3.id));
 
    // The compatibility update won't be recovered and with strict
    // compatibility it would not have been able to tell that it was
    // previously userDisabled. However, without strict compat, it wasn't
    // appDisabled, so it knows it must have been userDisabled.
-   do_check_neq(a4, null);
-   do_check_false(a4.isActive);
-   do_check_true(a4.userDisabled);
-   do_check_false(a4.appDisabled);
-   do_check_eq(a4.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_false(isExtensionInAddonsList(profileDir, a4.id));
+   Assert.notEqual(a4, null);
+   Assert.ok(!a4.isActive);
+   Assert.ok(a4.userDisabled);
+   Assert.ok(!a4.appDisabled);
+   Assert.equal(a4.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(!isExtensionInAddonsList(profileDir, a4.id));
 
-   do_check_neq(a5, null);
-   do_check_true(a5.isActive);
-   do_check_false(a5.userDisabled);
-   do_check_false(a5.appDisabled);
-   do_check_eq(a5.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_true(isExtensionInAddonsList(profileDir, a5.id));
+   Assert.notEqual(a5, null);
+   Assert.ok(a5.isActive);
+   Assert.ok(!a5.userDisabled);
+   Assert.ok(!a5.appDisabled);
+   Assert.equal(a5.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(isExtensionInAddonsList(profileDir, a5.id));
 
-   do_check_neq(a6, null);
-   do_check_true(a6.isActive);
-   do_check_false(a6.userDisabled);
-   do_check_false(a6.appDisabled);
-   do_check_eq(a6.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.notEqual(a6, null);
+   Assert.ok(a6.isActive);
+   Assert.ok(!a6.userDisabled);
+   Assert.ok(!a6.appDisabled);
+   Assert.equal(a6.pendingOperations, AddonManager.PENDING_NONE);
 
-   do_check_neq(a7, null);
-   do_check_false(a7.isActive);
-   do_check_true(a7.userDisabled);
-   do_check_false(a7.appDisabled);
-   do_check_eq(a7.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.notEqual(a7, null);
+   Assert.ok(!a7.isActive);
+   Assert.ok(a7.userDisabled);
+   Assert.ok(!a7.appDisabled);
+   Assert.equal(a7.pendingOperations, AddonManager.PENDING_NONE);
 
    // Should be correctly recovered
-   do_check_neq(t1, null);
+   Assert.notEqual(t1, null);
    // Disabled due to bug 1394117
    // do_check_false(t1.isActive);
    // do_check_true(t1.userDisabled);
-   do_check_false(t1.appDisabled);
-   do_check_eq(t1.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(!t1.appDisabled);
+   Assert.equal(t1.pendingOperations, AddonManager.PENDING_NONE);
    // do_check_false(isThemeInAddonsList(profileDir, t1.id));
 
    // Should be correctly recovered
-   do_check_neq(t2, null);
-   do_check_true(t2.isActive);
+   Assert.notEqual(t2, null);
+   Assert.ok(t2.isActive);
    // Disabled due to bug 1394117
    // do_check_false(t2.userDisabled);
-   do_check_false(t2.appDisabled);
+   Assert.ok(!t2.appDisabled);
    // do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
    // do_check_true(isThemeInAddonsList(profileDir, t2.id));
 
@@ -391,67 +391,67 @@ add_task(async function run_test_1() {
                                "theme1@tests.mozilla.org",
                                "theme2@tests.mozilla.org"]);
 
-   do_check_neq(a1, null);
-   do_check_true(a1.isActive);
-   do_check_false(a1.userDisabled);
-   do_check_false(a1.appDisabled);
-   do_check_eq(a1.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+   Assert.notEqual(a1, null);
+   Assert.ok(a1.isActive);
+   Assert.ok(!a1.userDisabled);
+   Assert.ok(!a1.appDisabled);
+   Assert.equal(a1.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
 
-   do_check_neq(a2, null);
-   do_check_false(a2.isActive);
-   do_check_true(a2.userDisabled);
-   do_check_false(a2.appDisabled);
-   do_check_eq(a2.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_false(isExtensionInAddonsList(profileDir, a2.id));
+   Assert.notEqual(a2, null);
+   Assert.ok(!a2.isActive);
+   Assert.ok(a2.userDisabled);
+   Assert.ok(!a2.appDisabled);
+   Assert.equal(a2.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(!isExtensionInAddonsList(profileDir, a2.id));
 
-   do_check_neq(a3, null);
-   do_check_true(a3.isActive);
-   do_check_false(a3.userDisabled);
-   do_check_false(a3.appDisabled);
-   do_check_eq(a3.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_true(isExtensionInAddonsList(profileDir, a3.id));
+   Assert.notEqual(a3, null);
+   Assert.ok(a3.isActive);
+   Assert.ok(!a3.userDisabled);
+   Assert.ok(!a3.appDisabled);
+   Assert.equal(a3.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(isExtensionInAddonsList(profileDir, a3.id));
 
-   do_check_neq(a4, null);
-   do_check_false(a4.isActive);
-   do_check_true(a4.userDisabled);
-   do_check_false(a4.appDisabled);
-   do_check_eq(a4.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_false(isExtensionInAddonsList(profileDir, a4.id));
+   Assert.notEqual(a4, null);
+   Assert.ok(!a4.isActive);
+   Assert.ok(a4.userDisabled);
+   Assert.ok(!a4.appDisabled);
+   Assert.equal(a4.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(!isExtensionInAddonsList(profileDir, a4.id));
 
-   do_check_neq(a5, null);
-   do_check_true(a5.isActive);
-   do_check_false(a5.userDisabled);
-   do_check_false(a5.appDisabled);
-   do_check_eq(a5.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_true(isExtensionInAddonsList(profileDir, a5.id));
+   Assert.notEqual(a5, null);
+   Assert.ok(a5.isActive);
+   Assert.ok(!a5.userDisabled);
+   Assert.ok(!a5.appDisabled);
+   Assert.equal(a5.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(isExtensionInAddonsList(profileDir, a5.id));
 
-   do_check_neq(a6, null);
-   do_check_true(a6.isActive);
-   do_check_false(a6.userDisabled);
-   do_check_false(a6.appDisabled);
-   do_check_eq(a6.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.notEqual(a6, null);
+   Assert.ok(a6.isActive);
+   Assert.ok(!a6.userDisabled);
+   Assert.ok(!a6.appDisabled);
+   Assert.equal(a6.pendingOperations, AddonManager.PENDING_NONE);
 
-   do_check_neq(a7, null);
-   do_check_false(a7.isActive);
-   do_check_true(a7.userDisabled);
-   do_check_false(a7.appDisabled);
-   do_check_eq(a7.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.notEqual(a7, null);
+   Assert.ok(!a7.isActive);
+   Assert.ok(a7.userDisabled);
+   Assert.ok(!a7.appDisabled);
+   Assert.equal(a7.pendingOperations, AddonManager.PENDING_NONE);
 
-   do_check_neq(t1, null);
+   Assert.notEqual(t1, null);
    // Disabled due to bug 1394117
    // do_check_false(t1.isActive);
    // do_check_true(t1.userDisabled);
-   do_check_false(t1.appDisabled);
-   do_check_eq(t1.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(!t1.appDisabled);
+   Assert.equal(t1.pendingOperations, AddonManager.PENDING_NONE);
    // do_check_false(isThemeInAddonsList(profileDir, t1.id));
 
-   do_check_neq(t2, null);
+   Assert.notEqual(t2, null);
    // Disabled due to bug 1394117
    // do_check_true(t2.isActive);
    // do_check_false(t2.userDisabled);
-   do_check_false(t2.appDisabled);
-   do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(!t2.appDisabled);
+   Assert.equal(t2.pendingOperations, AddonManager.PENDING_NONE);
    // do_check_true(isThemeInAddonsList(profileDir, t2.id));
 
    // After allowing access to the original DB things should go back to as
@@ -480,67 +480,67 @@ add_task(async function run_test_1() {
                                "theme1@tests.mozilla.org",
                                "theme2@tests.mozilla.org"]);
 
-   do_check_neq(a1, null);
-   do_check_true(a1.isActive);
-   do_check_false(a1.userDisabled);
-   do_check_false(a1.appDisabled);
-   do_check_eq(a1.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+   Assert.notEqual(a1, null);
+   Assert.ok(a1.isActive);
+   Assert.ok(!a1.userDisabled);
+   Assert.ok(!a1.appDisabled);
+   Assert.equal(a1.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
 
-   do_check_neq(a2, null);
-   do_check_false(a2.isActive);
-   do_check_true(a2.userDisabled);
-   do_check_false(a2.appDisabled);
-   do_check_eq(a2.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_false(isExtensionInAddonsList(profileDir, a2.id));
+   Assert.notEqual(a2, null);
+   Assert.ok(!a2.isActive);
+   Assert.ok(a2.userDisabled);
+   Assert.ok(!a2.appDisabled);
+   Assert.equal(a2.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(!isExtensionInAddonsList(profileDir, a2.id));
 
-   do_check_neq(a3, null);
-   do_check_true(a3.isActive);
-   do_check_false(a3.userDisabled);
-   do_check_false(a3.appDisabled);
-   do_check_eq(a3.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_true(isExtensionInAddonsList(profileDir, a3.id));
+   Assert.notEqual(a3, null);
+   Assert.ok(a3.isActive);
+   Assert.ok(!a3.userDisabled);
+   Assert.ok(!a3.appDisabled);
+   Assert.equal(a3.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(isExtensionInAddonsList(profileDir, a3.id));
 
-   do_check_neq(a4, null);
-   do_check_false(a4.isActive);
-   do_check_true(a4.userDisabled);
-   do_check_false(a4.appDisabled);
-   do_check_eq(a4.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_false(isExtensionInAddonsList(profileDir, a4.id));
+   Assert.notEqual(a4, null);
+   Assert.ok(!a4.isActive);
+   Assert.ok(a4.userDisabled);
+   Assert.ok(!a4.appDisabled);
+   Assert.equal(a4.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(!isExtensionInAddonsList(profileDir, a4.id));
 
-   do_check_neq(a5, null);
-   do_check_true(a5.isActive);
-   do_check_false(a5.userDisabled);
-   do_check_false(a5.appDisabled);
-   do_check_eq(a5.pendingOperations, AddonManager.PENDING_NONE);
-   do_check_true(isExtensionInAddonsList(profileDir, a5.id));
+   Assert.notEqual(a5, null);
+   Assert.ok(a5.isActive);
+   Assert.ok(!a5.userDisabled);
+   Assert.ok(!a5.appDisabled);
+   Assert.equal(a5.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(isExtensionInAddonsList(profileDir, a5.id));
 
-   do_check_neq(a6, null);
-   do_check_true(a6.isActive);
-   do_check_false(a6.userDisabled);
-   do_check_false(a6.appDisabled);
-   do_check_eq(a6.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.notEqual(a6, null);
+   Assert.ok(a6.isActive);
+   Assert.ok(!a6.userDisabled);
+   Assert.ok(!a6.appDisabled);
+   Assert.equal(a6.pendingOperations, AddonManager.PENDING_NONE);
 
-   do_check_neq(a7, null);
-   do_check_false(a7.isActive);
-   do_check_true(a7.userDisabled);
-   do_check_false(a7.appDisabled);
-   do_check_eq(a7.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.notEqual(a7, null);
+   Assert.ok(!a7.isActive);
+   Assert.ok(a7.userDisabled);
+   Assert.ok(!a7.appDisabled);
+   Assert.equal(a7.pendingOperations, AddonManager.PENDING_NONE);
 
-   do_check_neq(t1, null);
+   Assert.notEqual(t1, null);
    // Disabled due to bug 1394117
    // do_check_false(t1.isActive);
    // do_check_true(t1.userDisabled);
-   do_check_false(t1.appDisabled);
-   do_check_eq(t1.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(!t1.appDisabled);
+   Assert.equal(t1.pendingOperations, AddonManager.PENDING_NONE);
    // do_check_false(isThemeInAddonsList(profileDir, t1.id));
 
-   do_check_neq(t2, null);
+   Assert.notEqual(t2, null);
    // Disabled due to bug 1394117
    // do_check_true(t2.isActive);
    // do_check_false(t2.userDisabled);
-   do_check_false(t2.appDisabled);
-   do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
+   Assert.ok(!t2.appDisabled);
+   Assert.equal(t2.pendingOperations, AddonManager.PENDING_NONE);
    // do_check_true(isThemeInAddonsList(profileDir, t2.id));
 
    try {

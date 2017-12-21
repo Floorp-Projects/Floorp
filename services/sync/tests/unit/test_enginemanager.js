@@ -26,53 +26,53 @@ add_task(async function test_basics() {
   let manager = new EngineManager(Service);
 
   let engines = await manager.getAll();
-  do_check_eq(engines.length, 0);
-  do_check_eq((await manager.get("dummy")), undefined);
+  Assert.equal(engines.length, 0);
+  Assert.equal((await manager.get("dummy")), undefined);
 
   _("Register an engine");
   await manager.register(DummyEngine);
   let dummy = await manager.get("dummy");
-  do_check_true(dummy instanceof DummyEngine);
+  Assert.ok(dummy instanceof DummyEngine);
 
   engines = await manager.getAll();
-  do_check_eq(engines.length, 1);
-  do_check_eq(engines[0], dummy);
+  Assert.equal(engines.length, 1);
+  Assert.equal(engines[0], dummy);
 
   _("Register an already registered engine is ignored");
   await manager.register(DummyEngine);
-  do_check_eq((await manager.get("dummy")), dummy);
+  Assert.equal((await manager.get("dummy")), dummy);
 
   _("Register multiple engines in one go");
   await manager.register([PetrolEngine, DieselEngine]);
   let petrol = await manager.get("petrol");
   let diesel = await manager.get("diesel");
-  do_check_true(petrol instanceof PetrolEngine);
-  do_check_true(diesel instanceof DieselEngine);
+  Assert.ok(petrol instanceof PetrolEngine);
+  Assert.ok(diesel instanceof DieselEngine);
 
   engines = await manager.getAll();
-  do_check_eq(engines.length, 3);
-  do_check_neq(engines.indexOf(petrol), -1);
-  do_check_neq(engines.indexOf(diesel), -1);
+  Assert.equal(engines.length, 3);
+  Assert.notEqual(engines.indexOf(petrol), -1);
+  Assert.notEqual(engines.indexOf(diesel), -1);
 
   _("Retrieve multiple engines in one go");
   engines = await manager.get(["dummy", "diesel"]);
-  do_check_eq(engines.length, 2);
-  do_check_neq(engines.indexOf(dummy), -1);
-  do_check_neq(engines.indexOf(diesel), -1);
+  Assert.equal(engines.length, 2);
+  Assert.notEqual(engines.indexOf(dummy), -1);
+  Assert.notEqual(engines.indexOf(diesel), -1);
 
   _("getEnabled() only returns enabled engines");
   engines = await manager.getEnabled();
-  do_check_eq(engines.length, 0);
+  Assert.equal(engines.length, 0);
 
   petrol.enabled = true;
   engines = await manager.getEnabled();
-  do_check_eq(engines.length, 1);
-  do_check_eq(engines[0], petrol);
+  Assert.equal(engines.length, 1);
+  Assert.equal(engines[0], petrol);
 
   dummy.enabled = true;
   diesel.enabled = true;
   engines = await manager.getEnabled();
-  do_check_eq(engines.length, 3);
+  Assert.equal(engines.length, 3);
 
   _("getEnabled() returns enabled engines in sorted order");
   petrol.syncPriority = 1;
@@ -93,19 +93,19 @@ add_task(async function test_basics() {
 
   _("Unregister an engine by name");
   manager.unregister("dummy");
-  do_check_eq((await manager.get("dummy")), undefined);
+  Assert.equal((await manager.get("dummy")), undefined);
   engines = await manager.getAll();
-  do_check_eq(engines.length, 2);
-  do_check_eq(engines.indexOf(dummy), -1);
+  Assert.equal(engines.length, 2);
+  Assert.equal(engines.indexOf(dummy), -1);
 
   _("Unregister an engine by value");
   // manager.unregister() checks for instanceof Engine, so let's make one:
   await manager.register(ActualEngine);
   let actual = await manager.get("actual");
-  do_check_true(actual instanceof ActualEngine);
-  do_check_true(actual instanceof Engine);
+  Assert.ok(actual instanceof ActualEngine);
+  Assert.ok(actual instanceof Engine);
 
   manager.unregister(actual);
-  do_check_eq((await manager.get("actual")), undefined);
+  Assert.equal((await manager.get("actual")), undefined);
 });
 

@@ -13,15 +13,15 @@ function run_test()
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
   zipW.addEntryDirectory(DIRNAME1, time * PR_USEC_PER_MSEC, false);
-  do_check_false(zipW.hasEntry(DIRNAME1));
-  do_check_true(zipW.hasEntry(DIRNAME1_CORRECT));
+  Assert.ok(!zipW.hasEntry(DIRNAME1));
+  Assert.ok(zipW.hasEntry(DIRNAME1_CORRECT));
   var entry = zipW.getEntry(DIRNAME1_CORRECT);
-  do_check_true(entry.isDirectory);
+  Assert.ok(entry.isDirectory);
 
   zipW.addEntryDirectory(DIRNAME2, time * PR_USEC_PER_MSEC, false);
-  do_check_true(zipW.hasEntry(DIRNAME2));
+  Assert.ok(zipW.hasEntry(DIRNAME2));
   entry = zipW.getEntry(DIRNAME2);
-  do_check_true(entry.isDirectory);
+  Assert.ok(entry.isDirectory);
 
   zipW.close();
 }

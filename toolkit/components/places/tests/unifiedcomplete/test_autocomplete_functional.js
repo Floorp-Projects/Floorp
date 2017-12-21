@@ -154,13 +154,13 @@ add_task(async function test_autocomplete_enabled_pref() {
   Services.prefs.setBoolPref(PREF_AUTOCOMPLETE_ENABLED, false);
   let types = ["history", "bookmark", "openpage"];
   for (let type of types) {
-    do_check_eq(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), false,
-                "suggest." + type + "pref should be false");
+    Assert.equal(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), false,
+                 "suggest." + type + "pref should be false");
   }
   Services.prefs.setBoolPref(PREF_AUTOCOMPLETE_ENABLED, true);
   for (let type of types) {
-    do_check_eq(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), true,
-                "suggest." + type + "pref should be true");
+    Assert.equal(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), true,
+                 "suggest." + type + "pref should be true");
   }
 
   // Clear prefs.

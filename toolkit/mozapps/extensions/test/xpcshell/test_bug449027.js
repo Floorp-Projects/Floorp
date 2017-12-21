@@ -253,8 +253,8 @@ var PluginHost = {
 var WindowWatcher = {
   openWindow(parent, url, name, features, args) {
     // Should be called to list the newly blocklisted items
-    do_check_eq(url, URI_EXTENSION_BLOCKLIST_DIALOG);
-    do_check_neq(gCallback, null);
+    Assert.equal(url, URI_EXTENSION_BLOCKLIST_DIALOG);
+    Assert.notEqual(gCallback, null);
 
     args = args.wrappedJSObject;
 
@@ -345,7 +345,7 @@ function check_state(test, lastTest, callback) {
         }
       }
 
-      do_check_eq(expected, gNewBlocks.length);
+      Assert.equal(expected, gNewBlocks.length);
     }
     do_execute_soon(callback);
   });

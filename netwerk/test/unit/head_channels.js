@@ -178,7 +178,7 @@ ChannelListener.prototype = {
       if (!(this._flags & (CL_EXPECT_FAILURE | CL_EXPECT_LATE_FAILURE | CL_IGNORE_CL)) &&
           !(this._flags & CL_EXPECT_GZIP) &&
           this._contentLen != -1)
-          do_check_eq(this._buffer.length, this._contentLen)
+          Assert.equal(this._buffer.length, this._contentLen)
     } catch (ex) {
       do_throw("Error in onStopRequest: " + ex);
     }

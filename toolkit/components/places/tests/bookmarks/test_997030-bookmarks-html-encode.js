@@ -26,7 +26,7 @@ add_task(async function() {
   do_print("Checking first level");
   let root = PlacesUtils.getFolderContents(PlacesUtils.unfiledBookmarksFolderId).root;
   let node = root.getChild(0);
-  do_check_eq(node.uri, url);
+  Assert.equal(node.uri, url);
 
   root.containerOpen = false;
   await PlacesUtils.bookmarks.eraseEverything();

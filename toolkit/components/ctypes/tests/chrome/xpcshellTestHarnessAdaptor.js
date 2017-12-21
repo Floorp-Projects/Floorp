@@ -46,11 +46,11 @@ function do_check_eq(left, right, stack) {
 }
 
 function do_check_true(condition, stack) {
-  do_check_eq(condition, true, stack);
+  Assert.equal(condition, true, stack);
 }
 
 function do_check_false(condition, stack) {
-  do_check_eq(condition, false, stack);
+  Assert.equal(condition, false, stack);
 }
 
 function do_print(text) {

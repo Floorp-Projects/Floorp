@@ -59,7 +59,7 @@ add_task(async function test_history_clear() {
   await promiseClearHistory;
 
   // check browserHistory returns no entries
-  do_check_eq(0, PlacesUtils.history.hasHistoryEntries);
+  Assert.equal(0, PlacesUtils.history.hasHistoryEntries);
 
   await PlacesTestUtils.promiseAsyncUpdates();
 
@@ -67,25 +67,25 @@ add_task(async function test_history_clear() {
   // to -1.
   let stmt = mDBConn.createStatement(
     "SELECT h.id FROM moz_places h WHERE h.frecency > 0 ");
-  do_check_false(stmt.executeStep());
+  Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
   stmt = mDBConn.createStatement(
     `SELECT h.id FROM moz_places h WHERE h.frecency < 0
        AND EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1`);
-  do_check_true(stmt.executeStep());
+  Assert.ok(stmt.executeStep());
   stmt.finalize();
 
   // Check that all visit_counts have been brought to 0
   stmt = mDBConn.createStatement(
     "SELECT id FROM moz_places WHERE visit_count <> 0 LIMIT 1");
-  do_check_false(stmt.executeStep());
+  Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
   // Check that history tables are empty
   stmt = mDBConn.createStatement(
     "SELECT * FROM (SELECT id FROM moz_historyvisits LIMIT 1)");
-  do_check_false(stmt.executeStep());
+  Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
   // Check that all moz_places entries except bookmarks and place: have been removed
@@ -93,7 +93,7 @@ add_task(async function test_history_clear() {
     `SELECT h.id FROM moz_places h WHERE
        url_hash NOT BETWEEN hash('place', 'prefix_lo') AND hash('place', 'prefix_hi')
        AND NOT EXISTS (SELECT id FROM moz_bookmarks WHERE fk = h.id) LIMIT 1`);
-  do_check_false(stmt.executeStep());
+  Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
   // Check that we only have favicons for retained places
@@ -102,28 +102,28 @@ add_task(async function test_history_clear() {
      FROM moz_pages_w_icons
      LEFT JOIN moz_places h ON url_hash = page_url_hash AND url = page_url
      WHERE h.id ISNULL`);
-  do_check_false(stmt.executeStep());
+  Assert.ok(!stmt.executeStep());
   stmt.finalize();
   stmt = mDBConn.createStatement(
     `SELECT 1
      FROM moz_icons WHERE id NOT IN (
        SELECT icon_id FROM moz_icons_to_pages
      )`);
-  do_check_false(stmt.executeStep());
+  Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
   // Check that we only have annotations for retained places
   stmt = mDBConn.createStatement(
     `SELECT a.id FROM moz_annos a WHERE NOT EXISTS
        (SELECT id FROM moz_places WHERE id = a.place_id) LIMIT 1`);
-  do_check_false(stmt.executeStep());
+  Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
   // Check that we only have inputhistory for retained places
   stmt = mDBConn.createStatement(
     `SELECT i.place_id FROM moz_inputhistory i WHERE NOT EXISTS
        (SELECT id FROM moz_places WHERE id = i.place_id) LIMIT 1`);
-  do_check_false(stmt.executeStep());
+  Assert.ok(!stmt.executeStep());
   stmt.finalize();
 
   // Check that place:uris have frecency 0
@@ -132,6 +132,6 @@ add_task(async function test_history_clear() {
      WHERE url_hash BETWEEN hash('place', 'prefix_lo')
                         AND hash('place', 'prefix_hi')
        AND h.frecency <> 0 LIMIT 1`);
-  do_check_false(stmt.executeStep());
+  Assert.ok(!stmt.executeStep());
   stmt.finalize();
 });

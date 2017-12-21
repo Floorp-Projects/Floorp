@@ -1,13 +1,13 @@
 const Cu = Components.utils;
 
-function checkThrows(f, rgxp) { try { f(); do_check_false(); } catch (e) { do_check_true(rgxp.test(e)); } }
+function checkThrows(f, rgxp) { try { f(); do_check_false(); } catch (e) { Assert.ok(rgxp.test(e)); } }
 
 var o = { foo: 42, bar : { tick: 'tock' } };
 function checkClone(clone, frozen) {
   var waived = Cu.waiveXrays(clone);
-  function touchFoo() { "use strict"; waived.foo = 12; do_check_eq(waived.foo, 12); }
-  function touchBar() { "use strict"; waived.bar.tick = 'tack'; do_check_eq(waived.bar.tick, 'tack'); }
-  function addProp() { "use strict"; waived.newProp = 100; do_check_eq(waived.newProp, 100); }
+  function touchFoo() { "use strict"; waived.foo = 12; Assert.equal(waived.foo, 12); }
+  function touchBar() { "use strict"; waived.bar.tick = 'tack'; Assert.equal(waived.bar.tick, 'tack'); }
+  function addProp() { "use strict"; waived.newProp = 100; Assert.equal(waived.newProp, 100); }
   if (!frozen) {
     touchFoo();
     touchBar();
@@ -19,11 +19,11 @@ function checkClone(clone, frozen) {
   }
 
   var desc = Object.getOwnPropertyDescriptor(waived, 'foo');
-  do_check_eq(desc.writable, !frozen);
-  do_check_eq(desc.configurable, !frozen);
+  Assert.equal(desc.writable, !frozen);
+  Assert.equal(desc.configurable, !frozen);
   desc = Object.getOwnPropertyDescriptor(waived.bar, 'tick');
-  do_check_eq(desc.writable, !frozen);
-  do_check_eq(desc.configurable, !frozen);
+  Assert.equal(desc.writable, !frozen);
+  Assert.equal(desc.configurable, !frozen);
 }
 
 function run_test() {

@@ -77,10 +77,10 @@ function run_test() {
         "value");
       if (test.throws) {
         do_print("Exception expected");
-        do_check_true(true);
+        Assert.ok(true);
       } else {
         do_print("Exception unexpected\n" + e);
-        do_check_true(false);
+        Assert.ok(false);
       }
     }
   }
@@ -88,6 +88,6 @@ function run_test() {
 
 function assertOutput(actual, expected) {
   do_print("Check that the output has the expected value and priority");
-  do_check_eq(expected.value, actual.value);
-  do_check_eq(expected.priority, actual.priority);
+  Assert.equal(expected.value, actual.value);
+  Assert.equal(expected.priority, actual.priority);
 }

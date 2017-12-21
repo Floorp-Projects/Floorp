@@ -72,7 +72,7 @@ add_task(async function cancel_during_check() {
   startupManager();
 
   let a1 = await promiseAddonByID("addon1@tests.mozilla.org");
-  do_check_neq(a1, null);
+  Assert.notEqual(a1, null);
 
   let listener = makeCancelListener();
   a1.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
@@ -81,10 +81,10 @@ add_task(async function cancel_during_check() {
   let [/* request */, response] = await httpReceived.promise;
 
   // cancelUpdate returns true if there is an update check in progress
-  do_check_true(a1.cancelUpdate());
+  Assert.ok(a1.cancelUpdate());
 
   let updateResult = await listener.promise;
-  do_check_eq(AddonManager.UPDATE_STATUS_CANCELLED, updateResult);
+  Assert.equal(AddonManager.UPDATE_STATUS_CANCELLED, updateResult);
 
   // Now complete the HTTP request
   let file = do_get_cwd();
@@ -95,7 +95,7 @@ add_task(async function cancel_during_check() {
   response.finish();
 
   // trying to cancel again should return false, i.e. nothing to cancel
-  do_check_false(a1.cancelUpdate());
+  Assert.ok(!a1.cancelUpdate());
 
   await true;
 });
@@ -107,7 +107,7 @@ add_task(async function shutdown_during_check() {
   httpReceived = Promise.defer();
 
   let a1 = await promiseAddonByID("addon1@tests.mozilla.org");
-  do_check_neq(a1, null);
+  Assert.notEqual(a1, null);
 
   let listener = makeCancelListener();
   a1.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
@@ -118,7 +118,7 @@ add_task(async function shutdown_during_check() {
   shutdownManager();
 
   let updateResult = await listener.promise;
-  do_check_eq(AddonManager.UPDATE_STATUS_CANCELLED, updateResult);
+  Assert.equal(AddonManager.UPDATE_STATUS_CANCELLED, updateResult);
 
   // Now complete the HTTP request
   let file = do_get_cwd();

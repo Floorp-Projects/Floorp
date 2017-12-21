@@ -30,7 +30,7 @@ add_task(async function test_createBasicCardResponseData_basic() {
   };
   let actual = dialogGlobal.PaymentDialog.createBasicCardResponseData(expected);
   let expectedSerialized = serializeBasicCardResponseData(expected);
-  do_check_eq(actual.data, expectedSerialized, "Check data");
+  Assert.equal(actual.data, expectedSerialized, "Check data");
 });
 
 add_task(async function test_createBasicCardResponseData_minimal() {
@@ -40,7 +40,7 @@ add_task(async function test_createBasicCardResponseData_minimal() {
   let actual = dialogGlobal.PaymentDialog.createBasicCardResponseData(expected);
   let expectedSerialized = serializeBasicCardResponseData(expected);
   do_print(actual.data);
-  do_check_eq(actual.data, expectedSerialized, "Check data");
+  Assert.equal(actual.data, expectedSerialized, "Check data");
 });
 
 add_task(async function test_createBasicCardResponseData_withoutNumber() {
@@ -59,14 +59,14 @@ function checkAddress(actual, expected) {
   for (let [propName, propVal] of Object.entries(expected)) {
     if (propName == "addressLines") {
       // Note the singular vs. plural here.
-      do_check_eq(actual.addressLine.length, propVal.length, "Check number of address lines");
+      Assert.equal(actual.addressLine.length, propVal.length, "Check number of address lines");
       for (let [i, line] of expected.addressLines.entries()) {
-        do_check_eq(actual.addressLine.queryElementAt(i, Ci.nsISupportsString).data, line,
-                    `Check ${propName} line ${i}`);
+        Assert.equal(actual.addressLine.queryElementAt(i, Ci.nsISupportsString).data, line,
+                     `Check ${propName} line ${i}`);
       }
       continue;
     }
-    do_check_eq(actual[propName], propVal, `Check ${propName}`);
+    Assert.equal(actual[propName], propVal, `Check ${propName}`);
   }
 }
 
@@ -128,14 +128,14 @@ add_task(async function test_createShowResponse_basic() {
       continue;
     }
     if (propName == "requestId") {
-      do_check_eq(propVal, requestId, `Check ${propName}`);
+      Assert.equal(propVal, requestId, `Check ${propName}`);
       continue;
     }
     if (propName == "data") {
-      do_check_eq(propVal, serializeBasicCardResponseData(cardData), `Check ${propName}`);
+      Assert.equal(propVal, serializeBasicCardResponseData(cardData), `Check ${propName}`);
       continue;
     }
 
-    do_check_eq(propVal, responseData[propName], `Check ${propName}`);
+    Assert.equal(propVal, responseData[propName], `Check ${propName}`);
   }
 });

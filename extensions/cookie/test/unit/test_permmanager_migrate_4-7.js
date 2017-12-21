@@ -175,33 +175,33 @@ add_task(async function test() {
       }
     });
 
-    do_check_true(isExpected,
-                  "Permission " + (isExpected ? "should" : "shouldn't") +
-                  " be in permission database: " +
-                  permission.principal.origin + ", " +
-                  permission.type + ", " +
-                  permission.capability + ", " +
-                  permission.expireType + ", " +
-                  permission.expireTime);
+    Assert.ok(isExpected,
+              "Permission " + (isExpected ? "should" : "shouldn't") +
+              " be in permission database: " +
+              permission.principal.origin + ", " +
+              permission.type + ", " +
+              permission.capability + ", " +
+              permission.expireType + ", " +
+              permission.expireTime);
   }
 
   found.forEach((count, i) => {
-    do_check_true(count == 1, "Expected count = 1, got count = " + count + " for permission " + expected[i]);
+    Assert.ok(count == 1, "Expected count = 1, got count = " + count + " for permission " + expected[i]);
   });
 
   // Check to make sure that all of the tables which we care about are present
   {
     let db = Services.storage.openDatabase(GetPermissionsFile(profile));
-    do_check_true(db.tableExists("moz_perms"));
-    do_check_true(db.tableExists("moz_hosts"));
-    do_check_false(db.tableExists("moz_hosts_is_backup"));
-    do_check_false(db.tableExists("moz_perms_v6"));
+    Assert.ok(db.tableExists("moz_perms"));
+    Assert.ok(db.tableExists("moz_hosts"));
+    Assert.ok(!db.tableExists("moz_hosts_is_backup"));
+    Assert.ok(!db.tableExists("moz_perms_v6"));
 
     // The moz_hosts table should still exist but be empty
     let mozHostsCount = db.createStatement("SELECT count(*) FROM moz_hosts");
     try {
       mozHostsCount.executeStep();
-      do_check_eq(mozHostsCount.getInt64(0), 0);
+      Assert.equal(mozHostsCount.getInt64(0), 0);
     } finally {
       mozHostsCount.finalize();
     }

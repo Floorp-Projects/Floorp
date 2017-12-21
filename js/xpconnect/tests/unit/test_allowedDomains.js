@@ -21,18 +21,18 @@ function run_test() {
 
   var ret;
   ret = cu.evalInSandbox("objA.prop1", sbMaster);
-  do_check_eq(ret, 200);
+  Assert.equal(ret, 200);
   ret = cu.evalInSandbox("objB.prop1", sbMaster);
-  do_check_eq(ret, 200);
+  Assert.equal(ret, 200);
   ret = cu.evalInSandbox("objSubset.prop1", sbMaster);
-  do_check_eq(ret, 200);
+  Assert.equal(ret, 200);
   
   function evalAndCatch(str, sb) {
     try {
       ret = cu.evalInSandbox(str, sb);
-      do_check_true(false, "unexpected pass")
+      Assert.ok(false, "unexpected pass")
     } catch (e) {    
-      do_check_true(e.message && e.message.indexOf("Permission denied to access property") != -1);
+      Assert.ok(e.message && e.message.indexOf("Permission denied to access property") != -1);
     }  
   }
   
@@ -43,5 +43,5 @@ function run_test() {
   // Bug 777705:
   sbMaster.Components = cu.getComponentsForScope(sbMaster);
   Components.utils.evalInSandbox("Components.interfaces", sbMaster);
-  do_check_true(true);
+  Assert.ok(true);
 }

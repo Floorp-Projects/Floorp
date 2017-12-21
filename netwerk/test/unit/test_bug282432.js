@@ -18,7 +18,7 @@ function run_test() {
 
     onStopRequest: function(aRequest, aContext, aStatusCode) {
       // Make sure we can catch the error NS_ERROR_FILE_NOT_FOUND here.
-      do_check_eq(aStatusCode, Components.results.NS_ERROR_FILE_NOT_FOUND);
+      Assert.equal(aStatusCode, Components.results.NS_ERROR_FILE_NOT_FOUND);
       do_test_finished();
     },
 
@@ -33,7 +33,7 @@ function run_test() {
 
   // This file does not exist.
   let file = do_get_file("_NOT_EXIST_.txt", true);
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
   let channel = NetUtil.newChannel({
     uri: ios.newFileURI(file),
     loadUsingSystemPrincipal: true

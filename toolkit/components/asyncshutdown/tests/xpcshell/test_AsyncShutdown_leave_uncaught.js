@@ -43,9 +43,9 @@ add_task(async function test_phase_simple_async() {
                },
                ...state
             );
-            do_check_false(outParam.isFinished);
+            Assert.ok(!outParam.isFinished);
             await lock.wait();
-            do_check_eq(outParam.isFinished, success);
+            Assert.equal(outParam.isFinished, success);
           }
         }
 
@@ -78,9 +78,9 @@ add_task(async function test_phase_many() {
         );
       }
     }
-    do_check_true(outParams.every((x) => !x.isFinished));
+    Assert.ok(outParams.every((x) => !x.isFinished));
     await lock.wait();
-    do_check_true(outParams.every((x) => x.isFinished));
+    Assert.ok(outParams.every((x) => x.isFinished));
   }
 });
 

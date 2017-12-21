@@ -224,7 +224,7 @@ async function test_basic_eviction(base_host, subdomain_host, other_subdomain_ho
 
 // Verify that the given cookie names exist, and are ordered from least to most recently accessed
 function verifyCookies(names, uri) {
-    do_check_eq(cm.countCookiesFromHost(uri.host), names.length);
+    Assert.equal(cm.countCookiesFromHost(uri.host), names.length);
     let cookies = cm.getCookiesFromHost(uri.host, {});
     let actual_cookies = [];
     while (cookies.hasMoreElements()) {
@@ -249,7 +249,7 @@ function verifyCookies(names, uri) {
             do_print("expected cookies: " + right);
         }
     }
-    do_check_eq(names.length, actual_cookies.length);
+    Assert.equal(names.length, actual_cookies.length);
     actual_cookies.sort(function(a, b) {
         if (a.lastAccessed < b.lastAccessed)
             return -1;
@@ -258,8 +258,8 @@ function verifyCookies(names, uri) {
         return 0;
     });
     for (var i = 0; i < names.length; i++) {
-        do_check_eq(names[i], actual_cookies[i].name);
-        do_check_eq(names[i].startsWith('session'), actual_cookies[i].isSession);
+        Assert.equal(names[i], actual_cookies[i].name);
+        Assert.equal(names[i].startsWith('session'), actual_cookies[i].isSession);
     }
 }
 

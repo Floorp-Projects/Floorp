@@ -10,14 +10,14 @@ function run_test() {
   };
 
   var p = new Proxy({}, handler);
-  do_check_true(Cu.isProxy(p));
-  do_check_false(Cu.isProxy({}));
-  do_check_false(Cu.isProxy(42));
+  Assert.ok(Cu.isProxy(p));
+  Assert.ok(!Cu.isProxy({}));
+  Assert.ok(!Cu.isProxy(42));
 
   sb = new Cu.Sandbox(this,
                       { wantExportHelpers: true });
 
-  do_check_false(Cu.isProxy(sb));
+  Assert.ok(!Cu.isProxy(sb));
 
   sb.do_check_true = do_check_true;
   sb.do_check_false = do_check_false;

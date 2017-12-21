@@ -43,7 +43,7 @@ function test_black_box() {
       source.setBreakpoint({
         line: 2
       }, function (response) {
-        do_check_true(!response.error, "Should be able to set breakpoint.");
+        Assert.ok(!response.error, "Should be able to set breakpoint.");
         test_black_box_paused();
       });
     }
@@ -80,15 +80,15 @@ function test_black_box() {
 
 function test_black_box_paused() {
   gThreadClient.getSources(function ({error, sources}) {
-    do_check_true(!error, "Should not get an error: " + error);
+    Assert.ok(!error, "Should not get an error: " + error);
     let sourceClient = gThreadClient.source(
       sources.filter(s => s.url == BLACK_BOXED_URL)[0]
     );
 
     sourceClient.blackBox(function ({error, pausedInSource}) {
-      do_check_true(!error, "Should not get an error: " + error);
-      do_check_true(pausedInSource,
-                    "We should be notified that we are currently paused in this source");
+      Assert.ok(!error, "Should not get an error: " + error);
+      Assert.ok(pausedInSource,
+                "We should be notified that we are currently paused in this source");
       finishClient(gClient);
     });
   });

@@ -13,7 +13,7 @@ add_task(async function test_profileSavedFieldNames_init() {
 
   await formAutofillParent.init();
   await formAutofillParent.profileStorage.initialize();
-  do_check_eq(formAutofillParent._updateSavedFieldNames.called, true);
+  Assert.equal(formAutofillParent._updateSavedFieldNames.called, true);
 
   formAutofillParent._uninit();
 });
@@ -27,13 +27,13 @@ add_task(async function test_profileSavedFieldNames_observe() {
   // profile changed => Need to trigger updateValidFields
   ["add", "update", "remove", "reconcile"].forEach(event => {
     formAutofillParent.observe(null, "formautofill-storage-changed", "add");
-    do_check_eq(formAutofillParent._updateSavedFieldNames.called, true);
+    Assert.equal(formAutofillParent._updateSavedFieldNames.called, true);
   });
 
   // profile metadata updated => no need to trigger updateValidFields
   formAutofillParent._updateSavedFieldNames.reset();
   formAutofillParent.observe(null, "formautofill-storage-changed", "notifyUsed");
-  do_check_eq(formAutofillParent._updateSavedFieldNames.called, false);
+  Assert.equal(formAutofillParent._updateSavedFieldNames.called, false);
 });
 
 add_task(async function test_profileSavedFieldNames_update() {
@@ -48,7 +48,7 @@ add_task(async function test_profileSavedFieldNames_update() {
 
   // The set is empty if there's no profile in the store.
   formAutofillParent._updateSavedFieldNames();
-  do_check_eq(Services.ppmm.initialProcessData.autofillSavedFieldNames.size, 0);
+  Assert.equal(Services.ppmm.initialProcessData.autofillSavedFieldNames.size, 0);
 
   // 2 profiles with 4 valid fields.
   let fakeStorage = [{
@@ -76,14 +76,14 @@ add_task(async function test_profileSavedFieldNames_update() {
   formAutofillParent._updateSavedFieldNames();
 
   let autofillSavedFieldNames = Services.ppmm.initialProcessData.autofillSavedFieldNames;
-  do_check_eq(autofillSavedFieldNames.size, 4);
-  do_check_eq(autofillSavedFieldNames.has("organization"), true);
-  do_check_eq(autofillSavedFieldNames.has("street-address"), true);
-  do_check_eq(autofillSavedFieldNames.has("tel"), true);
-  do_check_eq(autofillSavedFieldNames.has("email"), false);
-  do_check_eq(autofillSavedFieldNames.has("guid"), false);
-  do_check_eq(autofillSavedFieldNames.has("timeCreated"), false);
-  do_check_eq(autofillSavedFieldNames.has("timeLastUsed"), false);
-  do_check_eq(autofillSavedFieldNames.has("timeLastModified"), false);
-  do_check_eq(autofillSavedFieldNames.has("timesUsed"), false);
+  Assert.equal(autofillSavedFieldNames.size, 4);
+  Assert.equal(autofillSavedFieldNames.has("organization"), true);
+  Assert.equal(autofillSavedFieldNames.has("street-address"), true);
+  Assert.equal(autofillSavedFieldNames.has("tel"), true);
+  Assert.equal(autofillSavedFieldNames.has("email"), false);
+  Assert.equal(autofillSavedFieldNames.has("guid"), false);
+  Assert.equal(autofillSavedFieldNames.has("timeCreated"), false);
+  Assert.equal(autofillSavedFieldNames.has("timeLastUsed"), false);
+  Assert.equal(autofillSavedFieldNames.has("timeLastModified"), false);
+  Assert.equal(autofillSavedFieldNames.has("timesUsed"), false);
 });

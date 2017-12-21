@@ -28,13 +28,13 @@ add_test(function test_compress_string() {
   const INPUT = "hello";
 
   let result = CommonUtils.convertString(INPUT, "uncompressed", "deflate");
-  do_check_eq(result.length, 13);
+  Assert.equal(result.length, 13);
 
   let result2 = CommonUtils.convertString(INPUT, "uncompressed", "deflate");
-  do_check_eq(result, result2);
+  Assert.equal(result, result2);
 
   let result3 = CommonUtils.convertString(result, "deflate", "uncompressed");
-  do_check_eq(result3, INPUT);
+  Assert.equal(result3, INPUT);
 
   run_next_test();
 });
@@ -46,10 +46,10 @@ add_test(function test_compress_utf8() {
   let compressed = CommonUtils.convertString(inputUTF8, "uncompressed", "deflate");
   let uncompressed = CommonUtils.convertString(compressed, "deflate", "uncompressed");
 
-  do_check_eq(uncompressed, inputUTF8);
+  Assert.equal(uncompressed, inputUTF8);
 
   let outputUTF8 = CommonUtils.decodeUTF8(uncompressed);
-  do_check_eq(outputUTF8, INPUT);
+  Assert.equal(outputUTF8, INPUT);
 
   run_next_test();
 });
@@ -60,53 +60,53 @@ add_test(function test_bad_argument() {
     CommonUtils.convertString(null, "uncompressed", "deflate");
   } catch (ex) {
     failed = true;
-    do_check_true(ex.message.startsWith("Input string must be defined"));
+    Assert.ok(ex.message.startsWith("Input string must be defined"));
   } finally {
-    do_check_true(failed);
+    Assert.ok(failed);
   }
 
   run_next_test();
 });
 
 add_task(function test_stringAsHex() {
-  do_check_eq(TEST_HEX, CommonUtils.stringAsHex(TEST_STR));
+  Assert.equal(TEST_HEX, CommonUtils.stringAsHex(TEST_STR));
 });
 
 add_task(function test_hexAsString() {
-  do_check_eq(TEST_STR, CommonUtils.hexAsString(TEST_HEX));
+  Assert.equal(TEST_STR, CommonUtils.hexAsString(TEST_HEX));
 });
 
 add_task(function test_hexToBytes() {
   let bytes = CommonUtils.hexToBytes(TEST_HEX);
-  do_check_eq(TEST_BYTES.length, bytes.length);
+  Assert.equal(TEST_BYTES.length, bytes.length);
   // Ensure that the decimal values of each byte are correct
-  do_check_true(arraysEqual(TEST_BYTES,
+  Assert.ok(arraysEqual(TEST_BYTES,
       CommonUtils.stringToByteArray(bytes)));
 });
 
 add_task(function test_bytesToHex() {
   // Create a list of our character bytes from the reference int values
   let bytes = CommonUtils.byteArrayToString(TEST_BYTES);
-  do_check_eq(TEST_HEX, CommonUtils.bytesAsHex(bytes));
+  Assert.equal(TEST_HEX, CommonUtils.bytesAsHex(bytes));
 });
 
 add_task(function test_stringToBytes() {
-  do_check_true(arraysEqual(TEST_BYTES,
+  Assert.ok(arraysEqual(TEST_BYTES,
       CommonUtils.stringToByteArray(CommonUtils.stringToBytes(TEST_STR))));
 });
 
 add_task(function test_stringRoundTrip() {
-  do_check_eq(TEST_STR,
+  Assert.equal(TEST_STR,
     CommonUtils.hexAsString(CommonUtils.stringAsHex(TEST_STR)));
 });
 
 add_task(function test_hexRoundTrip() {
-  do_check_eq(TEST_HEX,
+  Assert.equal(TEST_HEX,
     CommonUtils.stringAsHex(CommonUtils.hexAsString(TEST_HEX)));
 });
 
 add_task(function test_byteArrayRoundTrip() {
-  do_check_true(arraysEqual(TEST_BYTES,
+  Assert.ok(arraysEqual(TEST_BYTES,
     CommonUtils.stringToByteArray(CommonUtils.byteArrayToString(TEST_BYTES))));
 });
 

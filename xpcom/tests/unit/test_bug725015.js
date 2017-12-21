@@ -13,15 +13,15 @@ const cid = Components.ID("{05070380-6e6e-42ba-aaa5-3289fc55ca5a}");
 
 function observe_category(subj, topic, data) {
   try {
-    do_check_eq(topic, observerTopic);
+    Assert.equal(topic, observerTopic);
     if (data != category)
       return;
 
     var thisentry = subj.QueryInterface(Ci.nsISupportsCString).data;
-    do_check_eq(thisentry, entry);
+    Assert.equal(thisentry, entry);
 
-    do_check_eq(Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager).getCategoryEntry(category, entry), contract);
-    do_check_true(Cc[contract].equals(cid));
+    Assert.equal(Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager).getCategoryEntry(category, entry), contract);
+    Assert.ok(Cc[contract].equals(cid));
   } catch (e) {
     do_throw(e);
   }

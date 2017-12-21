@@ -44,17 +44,17 @@ function test_object_grip() {
     let [fClient, sClient, neClient, eClient] = packet.frame.arguments.map(
       a => gThreadClient.pauseGrip(a));
 
-    do_check_false(f.extensible);
-    do_check_false(fClient.isExtensible);
+    Assert.ok(!f.extensible);
+    Assert.ok(!fClient.isExtensible);
 
-    do_check_false(s.extensible);
-    do_check_false(sClient.isExtensible);
+    Assert.ok(!s.extensible);
+    Assert.ok(!sClient.isExtensible);
 
-    do_check_false(ne.extensible);
-    do_check_false(neClient.isExtensible);
+    Assert.ok(!ne.extensible);
+    Assert.ok(!neClient.isExtensible);
 
-    do_check_true(e.extensible);
-    do_check_true(eClient.isExtensible);
+    Assert.ok(e.extensible);
+    Assert.ok(eClient.isExtensible);
 
     gThreadClient.resume(_ => {
       gClient.close().then(gCallback);

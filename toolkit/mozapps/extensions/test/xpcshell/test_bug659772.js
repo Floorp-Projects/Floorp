@@ -74,33 +74,33 @@ async function run_test_1() {
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org"],
                               function([a1, a2, a3, a4]) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "2.0");
-    do_check_false(a1.appDisabled);
-    do_check_false(a1.userDisabled);
-    do_check_true(a1.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, addon1.id));
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "2.0");
+    Assert.ok(!a1.appDisabled);
+    Assert.ok(!a1.userDisabled);
+    Assert.ok(a1.isActive);
+    Assert.ok(isExtensionInAddonsList(profileDir, addon1.id));
 
-    do_check_neq(a2, null);
-    do_check_eq(a2.version, "2.0");
-    do_check_false(a2.appDisabled);
-    do_check_false(a2.userDisabled);
-    do_check_true(a2.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, addon2.id));
+    Assert.notEqual(a2, null);
+    Assert.equal(a2.version, "2.0");
+    Assert.ok(!a2.appDisabled);
+    Assert.ok(!a2.userDisabled);
+    Assert.ok(a2.isActive);
+    Assert.ok(isExtensionInAddonsList(profileDir, addon2.id));
 
-    do_check_neq(a3, null);
-    do_check_eq(a3.version, "2.0");
-    do_check_false(a3.appDisabled);
-    do_check_false(a3.userDisabled);
-    do_check_true(a3.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, addon3.id));
+    Assert.notEqual(a3, null);
+    Assert.equal(a3.version, "2.0");
+    Assert.ok(!a3.appDisabled);
+    Assert.ok(!a3.userDisabled);
+    Assert.ok(a3.isActive);
+    Assert.ok(isExtensionInAddonsList(profileDir, addon3.id));
 
-    do_check_neq(a4, null);
-    do_check_eq(a4.version, "2.0");
-    do_check_true(a4.appDisabled);
-    do_check_false(a4.userDisabled);
-    do_check_false(a4.isActive);
-    do_check_false(isExtensionInAddonsList(profileDir, addon4.id));
+    Assert.notEqual(a4, null);
+    Assert.equal(a4.version, "2.0");
+    Assert.ok(a4.appDisabled);
+    Assert.ok(!a4.userDisabled);
+    Assert.ok(!a4.isActive);
+    Assert.ok(!isExtensionInAddonsList(profileDir, addon4.id));
 
     // Prepare the add-on update, and a bootstrapped addon (bug 693714)
     installAllFiles([
@@ -117,7 +117,7 @@ async function run_test_1() {
       jsonfile.append("extensions");
       jsonfile.append("staged");
       jsonfile.append("addon3@tests.mozilla.org.json");
-      do_check_true(jsonfile.exists());
+      Assert.ok(jsonfile.exists());
 
       // Remove an unnecessary property from the cached manifest
       let file = await File.createFromNsIFile(jsonfile);
@@ -154,39 +154,39 @@ async function run_test_1() {
                                    "addon3@tests.mozilla.org",
                                    "addon4@tests.mozilla.org"],
                                   function([a1_2, a2_2, a3_2, a4_2]) {
-        do_check_neq(a1_2, null);
-        do_check_eq(a1_2.version, "2.0");
-        do_check_false(a1_2.appDisabled);
-        do_check_false(a1_2.userDisabled);
-        do_check_true(a1_2.isActive);
-        do_check_true(isExtensionInAddonsList(profileDir, addon1.id));
+        Assert.notEqual(a1_2, null);
+        Assert.equal(a1_2.version, "2.0");
+        Assert.ok(!a1_2.appDisabled);
+        Assert.ok(!a1_2.userDisabled);
+        Assert.ok(a1_2.isActive);
+        Assert.ok(isExtensionInAddonsList(profileDir, addon1.id));
 
-        do_check_neq(a2_2, null);
-        do_check_eq(a2_2.version, "2.0");
-        do_check_false(a2_2.appDisabled);
-        do_check_false(a2_2.userDisabled);
-        do_check_true(a2_2.isActive);
-        do_check_true(isExtensionInAddonsList(profileDir, addon2.id));
+        Assert.notEqual(a2_2, null);
+        Assert.equal(a2_2.version, "2.0");
+        Assert.ok(!a2_2.appDisabled);
+        Assert.ok(!a2_2.userDisabled);
+        Assert.ok(a2_2.isActive);
+        Assert.ok(isExtensionInAddonsList(profileDir, addon2.id));
 
         // Should stay enabled because we migrate the compat info from
         // the previous version of the DB
-        do_check_neq(a3_2, null);
-        do_check_eq(a3_2.version, "2.0");
+        Assert.notEqual(a3_2, null);
+        Assert.equal(a3_2.version, "2.0");
         todo_check_false(a3_2.appDisabled); // XXX unresolved issue
-        do_check_false(a3_2.userDisabled);
+        Assert.ok(!a3_2.userDisabled);
         todo_check_true(a3_2.isActive); // XXX same
         todo_check_true(isExtensionInAddonsList(profileDir, addon3.id)); // XXX same
 
-        do_check_neq(a4_2, null);
-        do_check_eq(a4_2.version, "2.0");
-        do_check_true(a4_2.appDisabled);
-        do_check_false(a4_2.userDisabled);
-        do_check_false(a4_2.isActive);
-        do_check_false(isExtensionInAddonsList(profileDir, addon4.id));
+        Assert.notEqual(a4_2, null);
+        Assert.equal(a4_2.version, "2.0");
+        Assert.ok(a4_2.appDisabled);
+        Assert.ok(!a4_2.userDisabled);
+        Assert.ok(!a4_2.isActive);
+        Assert.ok(!isExtensionInAddonsList(profileDir, addon4.id));
 
         // Check that install and uninstall haven't been called on the bootstrapped addon
-        do_check_false(Services.prefs.prefHasUserValue("bootstraptest.install_reason"));
-        do_check_false(Services.prefs.prefHasUserValue("bootstraptest.uninstall_reason"));
+        Assert.ok(!Services.prefs.prefHasUserValue("bootstraptest.install_reason"));
+        Assert.ok(!Services.prefs.prefHasUserValue("bootstraptest.uninstall_reason"));
 
         a1_2.uninstall();
         a2_2.uninstall();
@@ -216,33 +216,33 @@ async function run_test_2() {
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org"],
                               function([a1, a2, a3, a4]) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "2.0");
-    do_check_false(a1.appDisabled);
-    do_check_false(a1.userDisabled);
-    do_check_true(a1.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, addon1.id));
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "2.0");
+    Assert.ok(!a1.appDisabled);
+    Assert.ok(!a1.userDisabled);
+    Assert.ok(a1.isActive);
+    Assert.ok(isExtensionInAddonsList(profileDir, addon1.id));
 
-    do_check_neq(a2, null);
-    do_check_eq(a2.version, "2.0");
-    do_check_false(a2.appDisabled);
-    do_check_false(a2.userDisabled);
-    do_check_true(a2.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, addon2.id));
+    Assert.notEqual(a2, null);
+    Assert.equal(a2.version, "2.0");
+    Assert.ok(!a2.appDisabled);
+    Assert.ok(!a2.userDisabled);
+    Assert.ok(a2.isActive);
+    Assert.ok(isExtensionInAddonsList(profileDir, addon2.id));
 
-    do_check_neq(a3, null);
-    do_check_eq(a3.version, "2.0");
-    do_check_false(a3.appDisabled);
-    do_check_false(a3.userDisabled);
-    do_check_true(a3.isActive);
-    do_check_true(isExtensionInAddonsList(profileDir, addon3.id));
+    Assert.notEqual(a3, null);
+    Assert.equal(a3.version, "2.0");
+    Assert.ok(!a3.appDisabled);
+    Assert.ok(!a3.userDisabled);
+    Assert.ok(a3.isActive);
+    Assert.ok(isExtensionInAddonsList(profileDir, addon3.id));
 
-    do_check_neq(a4, null);
-    do_check_eq(a4.version, "2.0");
-    do_check_true(a4.appDisabled);
-    do_check_false(a4.userDisabled);
-    do_check_false(a4.isActive);
-    do_check_false(isExtensionInAddonsList(profileDir, addon4.id));
+    Assert.notEqual(a4, null);
+    Assert.equal(a4.version, "2.0");
+    Assert.ok(a4.appDisabled);
+    Assert.ok(!a4.userDisabled);
+    Assert.ok(!a4.isActive);
+    Assert.ok(!isExtensionInAddonsList(profileDir, addon4.id));
 
     // Prepare the add-on update, and a bootstrapped addon (bug 693714)
     installAllFiles([
@@ -261,7 +261,7 @@ async function run_test_2() {
       jsonfile.append("extensions");
       jsonfile.append("staged");
       jsonfile.append("addon3@tests.mozilla.org.json");
-      do_check_true(jsonfile.exists());
+      Assert.ok(jsonfile.exists());
 
       // Remove an unnecessary property from the cached manifest
       let file = await File.createFromNsIFile(jsonfile);
@@ -299,39 +299,39 @@ async function run_test_2() {
                                    "addon3@tests.mozilla.org",
                                    "addon4@tests.mozilla.org"],
                                   callback_soon(function([a1_2, a2_2, a3_2, a4_2]) {
-        do_check_neq(a1_2, null);
-        do_check_eq(a1_2.version, "2.0");
-        do_check_true(a1_2.appDisabled);
-        do_check_false(a1_2.userDisabled);
-        do_check_false(a1_2.isActive);
-        do_check_false(isExtensionInAddonsList(profileDir, addon1.id));
+        Assert.notEqual(a1_2, null);
+        Assert.equal(a1_2.version, "2.0");
+        Assert.ok(a1_2.appDisabled);
+        Assert.ok(!a1_2.userDisabled);
+        Assert.ok(!a1_2.isActive);
+        Assert.ok(!isExtensionInAddonsList(profileDir, addon1.id));
 
-        do_check_neq(a2_2, null);
-        do_check_eq(a2_2.version, "2.0");
-        do_check_false(a2_2.appDisabled);
-        do_check_false(a2_2.userDisabled);
-        do_check_true(a2_2.isActive);
-        do_check_true(isExtensionInAddonsList(profileDir, addon2.id));
+        Assert.notEqual(a2_2, null);
+        Assert.equal(a2_2.version, "2.0");
+        Assert.ok(!a2_2.appDisabled);
+        Assert.ok(!a2_2.userDisabled);
+        Assert.ok(a2_2.isActive);
+        Assert.ok(isExtensionInAddonsList(profileDir, addon2.id));
 
         // Should become appDisabled because we migrate the compat info from
         // the previous version of the DB
-        do_check_neq(a3_2, null);
-        do_check_eq(a3_2.version, "2.0");
+        Assert.notEqual(a3_2, null);
+        Assert.equal(a3_2.version, "2.0");
         todo_check_true(a3_2.appDisabled);
-        do_check_false(a3_2.userDisabled);
+        Assert.ok(!a3_2.userDisabled);
         todo_check_false(a3_2.isActive);
         todo_check_false(isExtensionInAddonsList(profileDir, addon3.id));
 
-        do_check_neq(a4_2, null);
-        do_check_eq(a4_2.version, "2.0");
-        do_check_false(a4_2.appDisabled);
-        do_check_false(a4_2.userDisabled);
-        do_check_true(a4_2.isActive);
-        do_check_true(isExtensionInAddonsList(profileDir, addon4.id));
+        Assert.notEqual(a4_2, null);
+        Assert.equal(a4_2.version, "2.0");
+        Assert.ok(!a4_2.appDisabled);
+        Assert.ok(!a4_2.userDisabled);
+        Assert.ok(a4_2.isActive);
+        Assert.ok(isExtensionInAddonsList(profileDir, addon4.id));
 
         // Check that install and uninstall haven't been called on the bootstrapped addon
-        do_check_false(Services.prefs.prefHasUserValue("bootstraptest.install_reason"));
-        do_check_false(Services.prefs.prefHasUserValue("bootstraptest.uninstall_reason"));
+        Assert.ok(!Services.prefs.prefHasUserValue("bootstraptest.install_reason"));
+        Assert.ok(!Services.prefs.prefHasUserValue("bootstraptest.uninstall_reason"));
 
         a1_2.uninstall();
         a2_2.uninstall();

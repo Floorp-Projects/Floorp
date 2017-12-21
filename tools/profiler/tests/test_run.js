@@ -13,30 +13,30 @@ function run_test() {
   if (!profiler)
     return;
 
-  do_check_true(!profiler.IsActive());
+  Assert.ok(!profiler.IsActive());
 
   profiler.StartProfiler(1000, 10, [], 0);
 
-  do_check_true(profiler.IsActive());
+  Assert.ok(profiler.IsActive());
 
   do_test_pending();
 
   do_timeout(1000, function wait() {
     // Check text profile format
     var profileStr = profiler.GetProfile();
-    do_check_true(profileStr.length > 10);
+    Assert.ok(profileStr.length > 10);
 
     // check json profile format
     var profileObj = profiler.getProfileData();
-    do_check_neq(profileObj, null);
-    do_check_neq(profileObj.threads, null);
-    do_check_true(profileObj.threads.length >= 1);
-    do_check_neq(profileObj.threads[0].samples, null);
+    Assert.notEqual(profileObj, null);
+    Assert.notEqual(profileObj.threads, null);
+    Assert.ok(profileObj.threads.length >= 1);
+    Assert.notEqual(profileObj.threads[0].samples, null);
     // NOTE: The number of samples will be empty since we
     //       don't have any labels in the xpcshell code
 
     profiler.StopProfiler();
-    do_check_true(!profiler.IsActive());
+    Assert.ok(!profiler.IsActive());
     do_test_finished();
   });
 

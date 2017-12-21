@@ -7,9 +7,9 @@ function setupChromeSandbox() {
 
 function checkDefineThrows(sb, obj, prop, desc) {
   var result = Cu.evalInSandbox('(function() { try { Object.defineProperty(' + obj + ', "' + prop + '", ' + desc.toSource() + '); return "nothrow"; } catch (e) { return e.toString(); }})();', sb);
-  do_check_neq(result, 'nothrow');
-  do_check_true(!!/denied|prohibited/.exec(result));
-  do_check_true(result.indexOf(prop) != -1); // Make sure the prop name is in the error message.
+  Assert.notEqual(result, 'nothrow');
+  Assert.ok(!!/denied|prohibited/.exec(result));
+  Assert.ok(result.indexOf(prop) != -1); // Make sure the prop name is in the error message.
 }
 
 function run_test() {
@@ -19,11 +19,11 @@ function run_test() {
   contentSB.chromeObj = chromeSB.chromeObj;
   contentSB.chromeArr = chromeSB.chromeArr;
 
-  do_check_eq(Cu.evalInSandbox('chromeObj.a', contentSB), undefined);
+  Assert.equal(Cu.evalInSandbox('chromeObj.a', contentSB), undefined);
   try {
     Cu.evalInSandbox('chromeArr[1]', contentSB);
-    do_check_true(false);
-  } catch (e) { do_check_true(/denied|insecure/.test(e)); }
+    Assert.ok(false);
+  } catch (e) { Assert.ok(/denied|insecure/.test(e)); }
 
   checkDefineThrows(contentSB, 'chromeObj', 'a', {get: function() { return 2; }});
   checkDefineThrows(contentSB, 'chromeObj', 'a', {configurable: true, get: function() { return 2; }});

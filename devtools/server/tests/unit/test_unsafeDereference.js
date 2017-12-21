@@ -53,41 +53,41 @@ function run_test() {
 
   // The objects appear as global variables in the sandbox, and as
   // the sandbox object's properties in chrome.
-  do_check_true(Components.utils.evalInSandbox("mainObj", contentBox)
-                === contentBox.mainObj);
-  do_check_true(Components.utils.evalInSandbox("contentObj", contentBox)
-                === contentBox.contentObj);
-  do_check_true(Components.utils.evalInSandbox("chromeObj", contentBox)
-                === contentBox.chromeObj);
-  do_check_true(Components.utils.evalInSandbox("mainObj", chromeBox)
-                === chromeBox.mainObj);
-  do_check_true(Components.utils.evalInSandbox("contentObj", chromeBox)
-                === chromeBox.contentObj);
-  do_check_true(Components.utils.evalInSandbox("chromeObj", chromeBox)
-                === chromeBox.chromeObj);
+  Assert.ok(Components.utils.evalInSandbox("mainObj", contentBox)
+            === contentBox.mainObj);
+  Assert.ok(Components.utils.evalInSandbox("contentObj", contentBox)
+            === contentBox.contentObj);
+  Assert.ok(Components.utils.evalInSandbox("chromeObj", contentBox)
+            === contentBox.chromeObj);
+  Assert.ok(Components.utils.evalInSandbox("mainObj", chromeBox)
+            === chromeBox.mainObj);
+  Assert.ok(Components.utils.evalInSandbox("contentObj", chromeBox)
+            === chromeBox.contentObj);
+  Assert.ok(Components.utils.evalInSandbox("chromeObj", chromeBox)
+            === chromeBox.chromeObj);
 
   // We (the main global) can see properties of all objects in all globals.
-  do_check_true(contentBox.mainObj.name === "mainObj");
-  do_check_true(contentBox.contentObj.name === "contentObj");
-  do_check_true(contentBox.chromeObj.name === "chromeObj");
+  Assert.ok(contentBox.mainObj.name === "mainObj");
+  Assert.ok(contentBox.contentObj.name === "contentObj");
+  Assert.ok(contentBox.chromeObj.name === "chromeObj");
 
   // chromeBox can see properties of all objects in all globals.
-  do_check_eq(Components.utils.evalInSandbox("mainObj.name", chromeBox),
-              "mainObj");
-  do_check_eq(Components.utils.evalInSandbox("contentObj.name", chromeBox),
-              "contentObj");
-  do_check_eq(Components.utils.evalInSandbox("chromeObj.name", chromeBox),
-              "chromeObj");
+  Assert.equal(Components.utils.evalInSandbox("mainObj.name", chromeBox),
+               "mainObj");
+  Assert.equal(Components.utils.evalInSandbox("contentObj.name", chromeBox),
+               "contentObj");
+  Assert.equal(Components.utils.evalInSandbox("chromeObj.name", chromeBox),
+               "chromeObj");
 
   // contentBox can see properties of the content object, but not of either
   // chrome object, because by default, content -> chrome wrappers hide all
   // object properties.
-  do_check_eq(Components.utils.evalInSandbox("mainObj.name", contentBox),
-              undefined);
-  do_check_eq(Components.utils.evalInSandbox("contentObj.name", contentBox),
-              "contentObj");
-  do_check_eq(Components.utils.evalInSandbox("chromeObj.name", contentBox),
-              undefined);
+  Assert.equal(Components.utils.evalInSandbox("mainObj.name", contentBox),
+               undefined);
+  Assert.equal(Components.utils.evalInSandbox("contentObj.name", contentBox),
+               "contentObj");
+  Assert.equal(Components.utils.evalInSandbox("chromeObj.name", contentBox),
+               undefined);
 
   // When viewing an object in compartment A from the vantage point of
   // compartment B, Debugger should give the same results as debuggee code
@@ -105,33 +105,33 @@ function run_test() {
   // same D.O instance from both getProperty and makeDebuggeeValue, and the
   // same property visibility we checked for above.
   let mainFromContentDO = contentBoxDO.getProperty("mainObj");
-  do_check_eq(mainFromContentDO, contentBoxDO.makeDebuggeeValue(mainObj));
-  do_check_eq(mainFromContentDO.getProperty("name"), undefined);
-  do_check_eq(mainFromContentDO.unsafeDereference(), mainObj);
+  Assert.equal(mainFromContentDO, contentBoxDO.makeDebuggeeValue(mainObj));
+  Assert.equal(mainFromContentDO.getProperty("name"), undefined);
+  Assert.equal(mainFromContentDO.unsafeDereference(), mainObj);
 
   let contentFromContentDO = contentBoxDO.getProperty("contentObj");
-  do_check_eq(contentFromContentDO, contentBoxDO.makeDebuggeeValue(contentObj));
-  do_check_eq(contentFromContentDO.getProperty("name"), "contentObj");
-  do_check_eq(contentFromContentDO.unsafeDereference(), contentObj);
+  Assert.equal(contentFromContentDO, contentBoxDO.makeDebuggeeValue(contentObj));
+  Assert.equal(contentFromContentDO.getProperty("name"), "contentObj");
+  Assert.equal(contentFromContentDO.unsafeDereference(), contentObj);
 
   let chromeFromContentDO = contentBoxDO.getProperty("chromeObj");
-  do_check_eq(chromeFromContentDO, contentBoxDO.makeDebuggeeValue(chromeObj));
-  do_check_eq(chromeFromContentDO.getProperty("name"), undefined);
-  do_check_eq(chromeFromContentDO.unsafeDereference(), chromeObj);
+  Assert.equal(chromeFromContentDO, contentBoxDO.makeDebuggeeValue(chromeObj));
+  Assert.equal(chromeFromContentDO.getProperty("name"), undefined);
+  Assert.equal(chromeFromContentDO.unsafeDereference(), chromeObj);
 
   // Similarly, viewing from chromeBox.
   let mainFromChromeDO = chromeBoxDO.getProperty("mainObj");
-  do_check_eq(mainFromChromeDO, chromeBoxDO.makeDebuggeeValue(mainObj));
-  do_check_eq(mainFromChromeDO.getProperty("name"), "mainObj");
-  do_check_eq(mainFromChromeDO.unsafeDereference(), mainObj);
+  Assert.equal(mainFromChromeDO, chromeBoxDO.makeDebuggeeValue(mainObj));
+  Assert.equal(mainFromChromeDO.getProperty("name"), "mainObj");
+  Assert.equal(mainFromChromeDO.unsafeDereference(), mainObj);
 
   let contentFromChromeDO = chromeBoxDO.getProperty("contentObj");
-  do_check_eq(contentFromChromeDO, chromeBoxDO.makeDebuggeeValue(contentObj));
-  do_check_eq(contentFromChromeDO.getProperty("name"), "contentObj");
-  do_check_eq(contentFromChromeDO.unsafeDereference(), contentObj);
+  Assert.equal(contentFromChromeDO, chromeBoxDO.makeDebuggeeValue(contentObj));
+  Assert.equal(contentFromChromeDO.getProperty("name"), "contentObj");
+  Assert.equal(contentFromChromeDO.unsafeDereference(), contentObj);
 
   let chromeFromChromeDO = chromeBoxDO.getProperty("chromeObj");
-  do_check_eq(chromeFromChromeDO, chromeBoxDO.makeDebuggeeValue(chromeObj));
-  do_check_eq(chromeFromChromeDO.getProperty("name"), "chromeObj");
-  do_check_eq(chromeFromChromeDO.unsafeDereference(), chromeObj);
+  Assert.equal(chromeFromChromeDO, chromeBoxDO.makeDebuggeeValue(chromeObj));
+  Assert.equal(chromeFromChromeDO.getProperty("name"), "chromeObj");
+  Assert.equal(chromeFromChromeDO.unsafeDereference(), chromeObj);
 }

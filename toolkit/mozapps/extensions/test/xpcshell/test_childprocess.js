@@ -15,6 +15,6 @@ function run_test() {
     do_throw("AddonManager should have refused to load");
   } catch (ex) {
     do_print(ex.message);
-    do_check_true(!!ex.message);
+    Assert.ok(!!ex.message);
   }
 }

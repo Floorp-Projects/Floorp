@@ -101,7 +101,7 @@ add_task(async function test_open_unshared() {
 add_task(async function test_get_dummy_database() {
   let db = await getDummyDatabase("get_dummy_database");
 
-  do_check_eq(typeof(db), "object");
+  Assert.equal(typeof(db), "object");
   await db.close();
 });
 
@@ -109,11 +109,11 @@ add_task(async function test_schema_version() {
   let db = await getDummyDatabase("schema_version");
 
   let version = await db.getSchemaVersion();
-  do_check_eq(version, 0);
+  Assert.equal(version, 0);
 
   db.setSchemaVersion(14);
   version = await db.getSchemaVersion();
-  do_check_eq(version, 14);
+  Assert.equal(version, 14);
 
   for (let v of [0.5, "foobar", NaN]) {
     let success;
@@ -126,10 +126,10 @@ add_task(async function test_schema_version() {
         throw ex;
       success = true;
     }
-    do_check_true(success);
+    Assert.ok(success);
 
     version = await db.getSchemaVersion();
-    do_check_eq(version, 14);
+    Assert.equal(version, 14);
   }
 
   await db.close();
@@ -139,8 +139,8 @@ add_task(async function test_simple_insert() {
   let c = await getDummyDatabase("simple_insert");
 
   let result = await c.execute("INSERT INTO dirs VALUES (NULL, 'foo')");
-  do_check_true(Array.isArray(result));
-  do_check_eq(result.length, 0);
+  Assert.ok(Array.isArray(result));
+  Assert.equal(result.length, 0);
   await c.close();
 });
 
@@ -148,7 +148,7 @@ add_task(async function test_simple_bound_array() {
   let c = await getDummyDatabase("simple_bound_array");
 
   let result = await c.execute("INSERT INTO dirs VALUES (?, ?)", [1, "foo"]);
-  do_check_eq(result.length, 0);
+  Assert.equal(result.length, 0);
   await c.close();
 });
 
@@ -156,11 +156,11 @@ add_task(async function test_simple_bound_object() {
   let c = await getDummyDatabase("simple_bound_object");
   let result = await c.execute("INSERT INTO dirs VALUES (:id, :path)",
                                {id: 1, path: "foo"});
-  do_check_eq(result.length, 0);
+  Assert.equal(result.length, 0);
   result = await c.execute("SELECT id, path FROM dirs");
-  do_check_eq(result.length, 1);
-  do_check_eq(result[0].getResultByName("id"), 1);
-  do_check_eq(result[0].getResultByName("path"), "foo");
+  Assert.equal(result.length, 1);
+  Assert.equal(result[0].getResultByName("id"), 1);
+  Assert.equal(result[0].getResultByName("path"), "foo");
   await c.close();
 });
 
@@ -172,17 +172,17 @@ add_task(async function test_simple_insert_then_select() {
   await c.execute("INSERT INTO dirs (path) VALUES (?)", ["bar"]);
 
   let result = await c.execute("SELECT * FROM dirs");
-  do_check_eq(result.length, 2);
+  Assert.equal(result.length, 2);
 
   let i = 0;
   for (let row of result) {
     i++;
 
-    do_check_eq(row.numEntries, 2);
-    do_check_eq(row.getResultByIndex(0), i);
+    Assert.equal(row.numEntries, 2);
+    Assert.equal(row.getResultByIndex(0), i);
 
     let expected = {1: "foo", 2: "bar"}[i];
-    do_check_eq(row.getResultByName("path"), expected);
+    Assert.equal(row.getResultByName("path"), expected);
   }
 
   await c.close();
@@ -197,7 +197,7 @@ add_task(async function test_repeat_execution() {
 
   let result = await c.execute("SELECT * FROM dirs");
 
-  do_check_eq(result.length, 2);
+  Assert.equal(result.length, 2);
 
   await c.close();
 });
@@ -205,9 +205,9 @@ add_task(async function test_repeat_execution() {
 add_task(async function test_table_exists() {
   let c = await getDummyDatabase("table_exists");
 
-  do_check_false(await c.tableExists("does_not_exist"));
-  do_check_true(await c.tableExists("dirs"));
-  do_check_true(await c.tableExists("files"));
+  Assert.equal(false, await c.tableExists("does_not_exist"));
+  Assert.ok(await c.tableExists("dirs"));
+  Assert.ok(await c.tableExists("files"));
 
   await c.close();
 });
@@ -215,10 +215,10 @@ add_task(async function test_table_exists() {
 add_task(async function test_index_exists() {
   let c = await getDummyDatabase("index_exists");
 
-  do_check_false(await c.indexExists("does_not_exist"));
+  Assert.equal(false, await c.indexExists("does_not_exist"));
 
   await c.execute("CREATE INDEX my_index ON dirs (path)");
-  do_check_true(await c.indexExists("my_index"));
+  Assert.ok(await c.indexExists("my_index"));
 
   await c.close();
 });
@@ -226,9 +226,9 @@ add_task(async function test_index_exists() {
 add_task(async function test_temp_table_exists() {
   let c = await getDummyTempDatabase("temp_table_exists");
 
-  do_check_false(await c.tableExists("temp_does_not_exist"));
-  do_check_true(await c.tableExists("dirs"));
-  do_check_true(await c.tableExists("files"));
+  Assert.equal(false, await c.tableExists("temp_does_not_exist"));
+  Assert.ok(await c.tableExists("dirs"));
+  Assert.ok(await c.tableExists("files"));
 
   await c.close();
 });
@@ -236,10 +236,10 @@ add_task(async function test_temp_table_exists() {
 add_task(async function test_temp_index_exists() {
   let c = await getDummyTempDatabase("temp_index_exists");
 
-  do_check_false(await c.indexExists("temp_does_not_exist"));
+  Assert.equal(false, await c.indexExists("temp_does_not_exist"));
 
   await c.execute("CREATE INDEX my_index ON dirs (path)");
-  do_check_true(await c.indexExists("my_index"));
+  Assert.ok(await c.indexExists("my_index"));
 
   await c.close();
 });
@@ -258,7 +258,7 @@ add_task(async function test_execute_invalid_statement() {
 
   await new Promise(resolve => {
 
-    do_check_eq(c._connectionData._anonymousStatements.size, 0);
+    Assert.equal(c._connectionData._anonymousStatements.size, 0);
 
     c.execute("SELECT invalid FROM unknown").then(do_throw, function onError(error) {
       resolve();
@@ -267,7 +267,7 @@ add_task(async function test_execute_invalid_statement() {
   });
 
   // Ensure we don't leak the statement instance.
-  do_check_eq(c._connectionData._anonymousStatements.size, 0);
+  Assert.equal(c._connectionData._anonymousStatements.size, 0);
 
   await c.close();
 });
@@ -296,8 +296,8 @@ add_task(async function test_on_row_exception_ignored() {
     throw new Error("Some silly error.");
   });
 
-  do_check_eq(hasResult, true);
-  do_check_eq(i, 10);
+  Assert.equal(hasResult, true);
+  Assert.equal(i, 10);
 
   await c.close();
 });
@@ -320,8 +320,8 @@ add_task(async function test_on_row_stop_iteration() {
     }
   });
 
-  do_check_eq(hasResult, true);
-  do_check_eq(i, 5);
+  Assert.equal(hasResult, true);
+  Assert.equal(i, 5);
 
   await c.close();
 });
@@ -335,8 +335,8 @@ add_task(async function test_on_row_stop_iteration() {
     i++;
   });
 
-  do_check_eq(hasResult, false);
-  do_check_eq(i, 0);
+  Assert.equal(hasResult, false);
+  Assert.equal(i, 0);
 
   await c.close();
 });
@@ -354,19 +354,19 @@ add_task(async function test_invalid_transaction_type() {
 add_task(async function test_execute_transaction_success() {
   let c = await getDummyDatabase("execute_transaction_success");
 
-  do_check_false(c.transactionInProgress);
+  Assert.ok(!c.transactionInProgress);
 
   await c.executeTransaction(async function transaction(conn) {
-    do_check_eq(c, conn);
-    do_check_true(conn.transactionInProgress);
+    Assert.equal(c, conn);
+    Assert.ok(conn.transactionInProgress);
 
     await conn.execute("INSERT INTO dirs (path) VALUES ('foo')");
   });
 
-  do_check_false(c.transactionInProgress);
+  Assert.ok(!c.transactionInProgress);
   let rows = await c.execute("SELECT * FROM dirs");
-  do_check_true(Array.isArray(rows));
-  do_check_eq(rows.length, 1);
+  Assert.ok(Array.isArray(rows));
+  Assert.equal(rows.length, 1);
 
   await c.close();
 });
@@ -390,7 +390,7 @@ add_task(async function test_execute_transaction_rollback() {
   await deferred.promise;
 
   let rows = await c.execute("SELECT * FROM dirs");
-  do_check_eq(rows.length, 0);
+  Assert.equal(rows.length, 0);
 
   await c.close();
 });
@@ -411,7 +411,7 @@ add_task(async function test_close_during_transaction() {
 
   let c2 = await getConnection("close_during_transaction");
   let rows = await c2.execute("SELECT * FROM dirs");
-  do_check_eq(rows.length, 1);
+  Assert.equal(rows.length, 1);
 
   await c2.close();
 });
@@ -437,7 +437,7 @@ add_task(async function test_multiple_transactions() {
   }
 
   let rows = await c.execute("SELECT * FROM dirs");
-  do_check_eq(rows.length, 20);
+  Assert.equal(rows.length, 20);
 
   await c.close();
 });
@@ -498,11 +498,11 @@ add_task(async function test_no_shrink_on_init() {
 
   // We should not shrink until a statement has been executed.
   await sleep(220);
-  do_check_eq(count, 0);
+  Assert.equal(count, 0);
 
   await c.execute("SELECT 1");
   await sleep(220);
-  do_check_eq(count, 1);
+  Assert.equal(count, 1);
 
   await c.close();
 });
@@ -530,20 +530,20 @@ add_task(async function test_idle_shrink_fires() {
   c._connectionData._startIdleShrinkTimer();
 
   await sleep(220);
-  do_check_eq(count, 1);
-  do_check_eq(shrinkPromises.length, 1);
+  Assert.equal(count, 1);
+  Assert.equal(shrinkPromises.length, 1);
   await shrinkPromises[0];
   shrinkPromises.shift();
 
   // We shouldn't shrink again unless a statement was executed.
   await sleep(300);
-  do_check_eq(count, 1);
+  Assert.equal(count, 1);
 
   await c.execute("SELECT 1");
   await sleep(300);
 
-  do_check_eq(count, 2);
-  do_check_eq(shrinkPromises.length, 1);
+  Assert.equal(count, 2);
+  Assert.equal(shrinkPromises.length, 1);
   await shrinkPromises[0];
 
   await c.close();
@@ -581,17 +581,17 @@ add_task(async function test_idle_shrink_reset_on_operation() {
     i++;
   }
 
-  do_check_true(i > 0);
+  Assert.ok(i > 0);
 
   // We should not have performed an idle while doing operations.
-  do_check_eq(count, 0);
+  Assert.equal(count, 0);
 
   // Wait for idle timer.
   await sleep(INTERVAL);
 
   // Ensure we fired.
-  do_check_eq(count, 1);
-  do_check_eq(shrinkPromises.length, 1);
+  Assert.equal(count, 1);
+  Assert.equal(shrinkPromises.length, 1);
   await shrinkPromises[0];
 
   await c.close();
@@ -599,11 +599,11 @@ add_task(async function test_idle_shrink_reset_on_operation() {
 
 add_task(async function test_in_progress_counts() {
   let c = await getDummyDatabase("in_progress_counts");
-  do_check_eq(c._connectionData._statementCounter, c._initialStatementCount);
-  do_check_eq(c._connectionData._pendingStatements.size, 0);
+  Assert.equal(c._connectionData._statementCounter, c._initialStatementCount);
+  Assert.equal(c._connectionData._pendingStatements.size, 0);
   await c.executeCached("INSERT INTO dirs (path) VALUES ('foo')");
-  do_check_eq(c._connectionData._statementCounter, c._initialStatementCount + 1);
-  do_check_eq(c._connectionData._pendingStatements.size, 0);
+  Assert.equal(c._connectionData._statementCounter, c._initialStatementCount + 1);
+  Assert.equal(c._connectionData._pendingStatements.size, 0);
 
   let expectOne;
   let expectTwo;
@@ -642,10 +642,10 @@ add_task(async function test_in_progress_counts() {
   // test postconditions.
   outer.wait();
 
-  do_check_eq(expectOne, 1);
-  do_check_eq(expectTwo, 2);
-  do_check_eq(c._connectionData._statementCounter, c._initialStatementCount + 3);
-  do_check_eq(c._connectionData._pendingStatements.size, 0);
+  Assert.equal(expectOne, 1);
+  Assert.equal(expectTwo, 2);
+  Assert.equal(c._connectionData._statementCounter, c._initialStatementCount + 3);
+  Assert.equal(c._connectionData._pendingStatements.size, 0);
 
   await c.close();
 });
@@ -668,10 +668,10 @@ add_task(async function test_discard_while_active() {
   });
 
   // We discarded everything, because the SELECT had already started to run.
-  do_check_eq(3, discarded);
+  Assert.equal(3, discarded);
 
   // And again is safe.
-  do_check_eq(0, c.discardCachedStatements());
+  Assert.equal(0, c.discardCachedStatements());
 
   await c.close();
 });
@@ -680,16 +680,16 @@ add_task(async function test_discard_cached() {
   let c = await getDummyDatabase("discard_cached");
 
   await c.executeCached("SELECT * from dirs");
-  do_check_eq(1, c._connectionData._cachedStatements.size);
+  Assert.equal(1, c._connectionData._cachedStatements.size);
 
   await c.executeCached("SELECT * from files");
-  do_check_eq(2, c._connectionData._cachedStatements.size);
+  Assert.equal(2, c._connectionData._cachedStatements.size);
 
   await c.executeCached("SELECT * from dirs");
-  do_check_eq(2, c._connectionData._cachedStatements.size);
+  Assert.equal(2, c._connectionData._cachedStatements.size);
 
   c.discardCachedStatements();
-  do_check_eq(0, c._connectionData._cachedStatements.size);
+  Assert.equal(0, c._connectionData._cachedStatements.size);
 
   await c.close();
 });
@@ -705,10 +705,10 @@ add_task(async function test_programmatic_binding() {
 
   let sql = "INSERT INTO dirs VALUES (:id, :path)";
   let result = await c.execute(sql, bindings);
-  do_check_eq(result.length, 0);
+  Assert.equal(result.length, 0);
 
   let rows = await c.executeCached("SELECT * from dirs");
-  do_check_eq(rows.length, 3);
+  Assert.equal(rows.length, 3);
   await c.close();
 });
 
@@ -724,15 +724,15 @@ add_task(async function test_programmatic_binding_transaction() {
   let sql = "INSERT INTO dirs VALUES (:id, :path)";
   await c.executeTransaction(async function transaction() {
     let result = await c.execute(sql, bindings);
-    do_check_eq(result.length, 0);
+    Assert.equal(result.length, 0);
 
     let rows = await c.executeCached("SELECT * from dirs");
-    do_check_eq(rows.length, 3);
+    Assert.equal(rows.length, 3);
   });
 
   // Transaction committed.
   let rows = await c.executeCached("SELECT * from dirs");
-  do_check_eq(rows.length, 3);
+  Assert.equal(rows.length, 3);
   await c.close();
 });
 
@@ -765,13 +765,13 @@ add_task(async function test_programmatic_binding_transaction_partial_rollback()
   }
 
   // We did not get to the end of our in-transaction block.
-  do_check_false(secondSucceeded);
+  Assert.ok(!secondSucceeded);
 
   // Everything that happened in *our* transaction, not mozStorage's, got
   // rolled back, but the first row still exists.
   let rows = await c.executeCached("SELECT * from dirs");
-  do_check_eq(rows.length, 1);
-  do_check_eq(rows[0].getResultByName("path"), "works");
+  Assert.equal(rows.length, 1);
+  Assert.equal(rows[0].getResultByName("path"), "works");
   await c.close();
 });
 
@@ -795,12 +795,12 @@ add_task(async function test_programmatic_binding_implicit_transaction() {
     print("Caught expected exception: " + ex);
   }
 
-  do_check_false(secondSucceeded);
+  Assert.ok(!secondSucceeded);
 
   // The entire batch failed.
   let rows = await c.executeCached("SELECT * from dirs");
-  do_check_eq(rows.length, 1);
-  do_check_eq(rows[0].getResultByName("path"), "works");
+  Assert.equal(rows.length, 1);
+  Assert.equal(rows[0].getResultByName("path"), "works");
   await c.close();
 });
 
@@ -985,7 +985,7 @@ add_task(async function test_closed_by_witness() {
   // forget the connection so it does not trigger a finalization again
   c._witness.forget();
   await c._connectionData._deferredClose.promise;
-  do_check_false(c._connectionData._open);
+  Assert.ok(!c._connectionData._open);
   failTestsOnAutoClose(true);
 });
 
@@ -1052,7 +1052,7 @@ add_task(async function test_forget_witness_on_close() {
 
   await c.close();
   // After close, witness should have forgotten the connection
-  do_check_true(forgetCalled);
+  Assert.ok(forgetCalled);
 });
 
 add_task(async function test_close_database_on_gc() {

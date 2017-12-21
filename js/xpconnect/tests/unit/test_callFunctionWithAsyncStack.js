@@ -16,15 +16,15 @@ function run_test() {
   Components.utils.callFunctionWithAsyncStack(function asyncCallback() {
     let stack = Components.stack;
 
-    do_check_eq(stack.name, "asyncCallback");
-    do_check_eq(stack.caller, null);
-    do_check_eq(stack.asyncCause, null);
+    Assert.equal(stack.name, "asyncCallback");
+    Assert.equal(stack.caller, null);
+    Assert.equal(stack.asyncCause, null);
 
-    do_check_eq(stack.asyncCaller.name, "getAsyncStack");
-    do_check_eq(stack.asyncCaller.asyncCause, testAsyncCause);
-    do_check_eq(stack.asyncCaller.asyncCaller, null);
+    Assert.equal(stack.asyncCaller.name, "getAsyncStack");
+    Assert.equal(stack.asyncCaller.asyncCause, testAsyncCause);
+    Assert.equal(stack.asyncCaller.asyncCaller, null);
 
-    do_check_eq(stack.asyncCaller.caller.name, "run_test");
-    do_check_eq(stack.asyncCaller.caller.asyncCause, null);
+    Assert.equal(stack.asyncCaller.caller.name, "run_test");
+    Assert.equal(stack.asyncCaller.caller.asyncCause, null);
   }, getAsyncStack(), testAsyncCause);
 }

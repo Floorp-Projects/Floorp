@@ -31,19 +31,19 @@ function* do_run_test() {
   let uri = NetUtil.newURI("http://foo.com");
   Services.cookies.setCookieString(uri, null, "oh=hai; max-age=1000", null);
   let enumerator = Services.cookiemgr.enumerator;
-  do_check_true(enumerator.hasMoreElements());
+  Assert.ok(enumerator.hasMoreElements());
   let cookie = enumerator.getNext();
-  do_check_false(enumerator.hasMoreElements());
+  Assert.ok(!enumerator.hasMoreElements());
 
   // Fire 'profile-before-change'.
   do_close_profile();
 
   // Check that the APIs behave appropriately.
-  do_check_eq(Services.cookies.getCookieString(uri, null), null);
-  do_check_eq(Services.cookies.getCookieStringFromHttp(uri, null, null), null);
+  Assert.equal(Services.cookies.getCookieString(uri, null), null);
+  Assert.equal(Services.cookies.getCookieStringFromHttp(uri, null, null), null);
   Services.cookies.setCookieString(uri, null, "oh2=hai", null);
   Services.cookies.setCookieStringFromHttp(uri, null, null, "oh3=hai", null, null);
-  do_check_eq(Services.cookies.getCookieString(uri, null), null);
+  Assert.equal(Services.cookies.getCookieString(uri, null), null);
 
   do_check_throws(function() {
     Services.cookiemgr.removeAll();
@@ -85,7 +85,7 @@ function* do_run_test() {
 
   // Load the profile and check that the API is available.
   do_load_profile();
-  do_check_true(Services.cookiemgr.cookieExists(cookie));
+  Assert.ok(Services.cookiemgr.cookieExists(cookie));
 
   finish_test();
 }

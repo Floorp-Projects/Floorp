@@ -19,27 +19,27 @@ add_task(async function test_multipleIcons() {
   ]);
 
   do_print("The default should be the 16x16 icon");
-  do_check_true(engine.iconURI.spec.includes("ico16"));
+  Assert.ok(engine.iconURI.spec.includes("ico16"));
 
-  do_check_true(engine.getIconURLBySize(16, 16).includes("ico16"));
-  do_check_true(engine.getIconURLBySize(32, 32).includes("ico32"));
-  do_check_true(engine.getIconURLBySize(74, 74).includes("ico74"));
+  Assert.ok(engine.getIconURLBySize(16, 16).includes("ico16"));
+  Assert.ok(engine.getIconURLBySize(32, 32).includes("ico32"));
+  Assert.ok(engine.getIconURLBySize(74, 74).includes("ico74"));
 
   do_print("Invalid dimensions should return null.");
-  do_check_null(engine.getIconURLBySize(50, 50));
+  Assert.equal(null, engine.getIconURLBySize(50, 50));
 
   let allIcons = engine.getIcons();
 
   do_print("Check that allIcons contains expected icon sizes");
-  do_check_eq(allIcons.length, 3);
+  Assert.equal(allIcons.length, 3);
   let expectedWidths = [16, 32, 74];
-  do_check_true(allIcons.every((item) => {
+  Assert.ok(allIcons.every((item) => {
     let width = item.width;
-    do_check_neq(expectedWidths.indexOf(width), -1);
-    do_check_eq(width, item.height);
+    Assert.notEqual(expectedWidths.indexOf(width), -1);
+    Assert.equal(width, item.height);
 
     let icon = item.url.split(",").pop();
-    do_check_eq(icon, "ico" + width);
+    Assert.equal(icon, "ico" + width);
 
     return true;
   }));
@@ -54,6 +54,6 @@ add_task(async function test_icon_not_in_file() {
 
   // Even though the icon wasn't specified inside the XML file, it should be
   // available both in the iconURI attribute and with getIconURLBySize.
-  do_check_true(engine.iconURI.spec.includes("ico16"));
-  do_check_true(engine.getIconURLBySize(16, 16).includes("ico16"));
+  Assert.ok(engine.iconURI.spec.includes("ico16"));
+  Assert.ok(engine.getIconURLBySize(16, 16).includes("ico16"));
 });

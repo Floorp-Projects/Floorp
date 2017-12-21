@@ -55,7 +55,7 @@ Canceler.prototype = {
   },
 
   onStopRequest: function(request, context, status) {
-    do_check_eq(status, Components.results.NS_BINDING_ABORTED);
+    Assert.equal(status, Components.results.NS_BINDING_ABORTED);
     this.continueFn();
   }
 };

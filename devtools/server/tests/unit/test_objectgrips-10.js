@@ -29,27 +29,27 @@ function test_object_grip() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     let person = packet.frame.environment.bindings.variables.person;
 
-    do_check_eq(person.value.class, "Object");
+    Assert.equal(person.value.class, "Object");
 
     let personClient = gThreadClient.pauseGrip(person.value);
     personClient.getPrototypeAndProperties(response => {
-      do_check_eq(response.ownProperties.getName.value.class, "Function");
+      Assert.equal(response.ownProperties.getName.value.class, "Function");
 
-      do_check_eq(response.ownProperties.getAge.value.class, "Function");
+      Assert.equal(response.ownProperties.getAge.value.class, "Function");
 
-      do_check_eq(response.ownProperties.getFoo.value.class, "Function");
+      Assert.equal(response.ownProperties.getFoo.value.class, "Function");
 
       let getNameClient = gThreadClient.pauseGrip(response.ownProperties.getName.value);
       let getAgeClient = gThreadClient.pauseGrip(response.ownProperties.getAge.value);
       let getFooClient = gThreadClient.pauseGrip(response.ownProperties.getFoo.value);
       getNameClient.getScope(response => {
-        do_check_eq(response.scope.bindings.arguments[0].name.value, "Bob");
+        Assert.equal(response.scope.bindings.arguments[0].name.value, "Bob");
 
         getAgeClient.getScope(response => {
-          do_check_eq(response.scope.bindings.arguments[1].age.value, 58);
+          Assert.equal(response.scope.bindings.arguments[1].age.value, 58);
 
           getFooClient.getScope(response => {
-            do_check_eq(response.scope.bindings.variables.foo.value, 10);
+            Assert.equal(response.scope.bindings.variables.foo.value, 10);
 
             gThreadClient.resume(() => finishClient(gClient));
           });

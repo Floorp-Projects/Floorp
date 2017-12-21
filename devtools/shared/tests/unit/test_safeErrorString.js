@@ -17,13 +17,13 @@ function run_test() {
 function test_with_error() {
   let s = DevToolsUtils.safeErrorString(new Error("foo bar"));
   // Got the message.
-  do_check_true(s.includes("foo bar"));
+  Assert.ok(s.includes("foo bar"));
   // Got the stack.
-  do_check_true(s.includes("test_with_error"));
-  do_check_true(s.includes("test_safeErrorString.js"));
+  Assert.ok(s.includes("test_with_error"));
+  Assert.ok(s.includes("test_safeErrorString.js"));
   // Got the lineNumber and columnNumber.
-  do_check_true(s.includes("Line"));
-  do_check_true(s.includes("column"));
+  Assert.ok(s.includes("Line"));
+  Assert.ok(s.includes("column"));
 }
 
 function test_with_tricky_error() {
@@ -31,13 +31,13 @@ function test_with_tricky_error() {
   e.stack = { toString: Object.create(null) };
   let s = DevToolsUtils.safeErrorString(e);
   // Still got the message, despite a bad stack property.
-  do_check_true(s.includes("batman"));
+  Assert.ok(s.includes("batman"));
 }
 
 function test_with_string() {
   let s = DevToolsUtils.safeErrorString("not really an error");
   // Still get the message.
-  do_check_true(s.includes("not really an error"));
+  Assert.ok(s.includes("not really an error"));
 }
 
 function test_with_thrower() {
@@ -47,7 +47,7 @@ function test_with_thrower() {
     }
   });
   // Still don't fail, get string back.
-  do_check_eq(typeof s, "string");
+  Assert.equal(typeof s, "string");
 }
 
 function test_with_psychotic() {
@@ -55,6 +55,6 @@ function test_with_psychotic() {
     toString: () => Object.create(null)
   });
   // Still get a string out, and no exceptions thrown
-  do_check_eq(typeof s, "string");
-  do_check_eq(s, "[object Object]");
+  Assert.equal(typeof s, "string");
+  Assert.equal(s, "[object Object]");
 }

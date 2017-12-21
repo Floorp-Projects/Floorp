@@ -209,9 +209,9 @@ add_task(async function testAsyncResults() {
         resolve(result);
       });
       // When a callback is given, the return value must be missing.
-      do_check_eq(returnValue, undefined);
+      Assert.equal(returnValue, undefined);
       // Callback must be called asynchronously.
-      do_check_eq(result, "uninitialized value");
+      Assert.equal(result, "uninitialized value");
     });
   }
 
@@ -219,7 +219,7 @@ add_task(async function testAsyncResults() {
     do_print(`Calling testnamespace.${func.name}, expecting callback with error`);
     return new Promise(resolve => {
       func(reply => {
-        do_check_eq(reply, undefined);
+        Assert.equal(reply, undefined);
         resolve(context.lastError.message); // eslint-disable-line no-undef
       });
     });
@@ -231,28 +231,28 @@ add_task(async function testAsyncResults() {
       isChromeCompat,
     }, {
       async_required(cb) {
-        do_check_eq(cb, undefined);
+        Assert.equal(cb, undefined);
         return Promise.resolve(1);
       },
       async_optional(cb) {
-        do_check_eq(cb, undefined);
+        Assert.equal(cb, undefined);
         return Promise.resolve(2);
       },
     });
     if (!isChromeCompat) { // No promises for chrome.
       do_print("testnamespace.async_required should be a Promise");
       let promise = testnamespace.async_required();
-      do_check_true(promise instanceof context.cloneScope.Promise);
-      do_check_eq(await promise, 1);
+      Assert.ok(promise instanceof context.cloneScope.Promise);
+      Assert.equal(await promise, 1);
 
       do_print("testnamespace.async_optional should be a Promise");
       promise = testnamespace.async_optional();
-      do_check_true(promise instanceof context.cloneScope.Promise);
-      do_check_eq(await promise, 2);
+      Assert.ok(promise instanceof context.cloneScope.Promise);
+      Assert.equal(await promise, 2);
     }
 
-    do_check_eq(await runWithCallback(testnamespace.async_required), 1);
-    do_check_eq(await runWithCallback(testnamespace.async_optional), 2);
+    Assert.equal(await runWithCallback(testnamespace.async_required), 1);
+    Assert.equal(await runWithCallback(testnamespace.async_optional), 2);
 
     let otherSandbox = Cu.Sandbox(null, {});
     let errorFactories = [
@@ -279,8 +279,8 @@ add_task(async function testAsyncResults() {
           "should reject testnamespace.async_optional()").catch(() => {});
       }
 
-      do_check_eq(await runFailCallback(testnamespace.async_required), "ONE");
-      do_check_eq(await runFailCallback(testnamespace.async_optional), "TWO");
+      Assert.equal(await runFailCallback(testnamespace.async_required), "ONE");
+      Assert.equal(await runFailCallback(testnamespace.async_optional), "TWO");
     }
   }
 });

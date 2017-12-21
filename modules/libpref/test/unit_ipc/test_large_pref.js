@@ -79,7 +79,7 @@ function run_test() {
       }
       let pref_name = prefName(def, user);
       if (isParent || (def.name != "Large" && user.name != "Large")) {
-        do_check_eq(pb.getCharPref(pref_name), expectedPrefValue(def, user));
+        Assert.equal(pb.getCharPref(pref_name), expectedPrefValue(def, user));
       } else {
         // This is the child, and either the default or user value is
         // large, so the preference should not be set.

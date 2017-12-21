@@ -285,12 +285,12 @@ function readJSONFile(aFile) {
 function isSubObjectOf(expectedObj, actualObj) {
   for (let prop in expectedObj) {
     if (expectedObj[prop] instanceof Object) {
-      do_check_eq(expectedObj[prop].length, actualObj[prop].length);
+      Assert.equal(expectedObj[prop].length, actualObj[prop].length);
       isSubObjectOf(expectedObj[prop], actualObj[prop]);
     } else {
       if (expectedObj[prop] != actualObj[prop])
         do_print("comparing property " + prop);
-      do_check_eq(expectedObj[prop], actualObj[prop]);
+      Assert.equal(expectedObj[prop], actualObj[prop]);
     }
   }
 }
@@ -449,7 +449,7 @@ function waitForSearchNotification(aExpectedData) {
 function asyncInit() {
   return new Promise(resolve => {
     Services.search.init(function() {
-      do_check_true(Services.search.isInitialized);
+      Assert.ok(Services.search.isInitialized);
       resolve();
     });
   });

@@ -41,14 +41,14 @@ function run_test() {
 }
 
 function after_db_rebuild([a1]) {
-  do_check_eq(a1.id, addon1.id);
+  Assert.equal(a1.id, addon1.id);
 
   shutdownManager();
 
   // Make sure our JSON database has schemaVersion and our installed extension
   let data = loadJSON(gExtensionsJSON);
-  do_check_true("schemaVersion" in data);
-  do_check_eq(data.addons[0].id, addon1.id);
+  Assert.ok("schemaVersion" in data);
+  Assert.equal(data.addons[0].id, addon1.id);
 
   do_test_finished("Bad JSON");
 }

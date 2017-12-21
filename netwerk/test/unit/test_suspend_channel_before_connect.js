@@ -24,7 +24,7 @@ function TestServer() {
 
 TestServer.prototype = {
   onSocketAccepted: function(socket, trans) {
-    do_check_true(false, "Socket should not have tried to connect!");
+    Assert.ok(false, "Socket should not have tried to connect!");
   },
 
   onStopListening: function(socket) {

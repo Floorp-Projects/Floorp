@@ -101,7 +101,7 @@ add_task(async function test_shutdown_clients() {
 
   for (let {name, value} of assertions) {
     do_print("Checking: " + name);
-    do_check_true(value());
+    Assert.ok(value());
   }
 
   do_print("Ensure that we cannot open databases anymore");
@@ -111,6 +111,6 @@ add_task(async function test_shutdown_clients() {
   } catch (ex) {
     exn = ex;
   }
-  do_check_true(!!exn);
-  do_check_true(exn.message.indexOf("Sqlite.jsm has been shutdown") != -1);
+  Assert.ok(!!exn);
+  Assert.ok(exn.message.indexOf("Sqlite.jsm has been shutdown") != -1);
 });

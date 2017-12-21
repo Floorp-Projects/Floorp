@@ -19,7 +19,7 @@ function test_kill() {
                           .createInstance(Components.interfaces.nsIProcess);
   process.init(file);
 
-  do_check_false(process.isRunning);
+  Assert.ok(!process.isRunning);
 
   try {
     process.kill();
@@ -28,11 +28,11 @@ function test_kill() {
 
   process.run(false, [], 0);
 
-  do_check_true(process.isRunning);
+  Assert.ok(process.isRunning);
 
   process.kill();
 
-  do_check_false(process.isRunning);
+  Assert.ok(!process.isRunning);
 
   try {
     process.kill();
@@ -52,7 +52,7 @@ function test_quick() {
   // to get an exit value it must be a blocking process
   process.run(true, [], 0);
 
-  do_check_eq(process.exitValue, 42);
+  Assert.equal(process.exitValue, 42);
 }
 
 function test_args(file, args, argsAreASCII) {
@@ -65,7 +65,7 @@ function test_args(file, args, argsAreASCII) {
   else
     process.runw(true, args, args.length);
 
-  do_check_eq(process.exitValue, 0);
+  Assert.equal(process.exitValue, 0);
 }
 
 // test if an argument can be successfully passed to an application
@@ -117,8 +117,8 @@ function test_notify_blocking() {
   process.runAsync([], 0, {
     observe(subject, topic, data) {
       process = subject.QueryInterface(Components.interfaces.nsIProcess);
-      do_check_eq(topic, "process-finished");
-      do_check_eq(process.exitValue, 42);
+      Assert.equal(topic, "process-finished");
+      Assert.equal(process.exitValue, 42);
       test_notify_nonblocking();
     }
   });
@@ -135,8 +135,8 @@ function test_notify_nonblocking() {
   process.runAsync(TEST_ARGS, TEST_ARGS.length, {
     observe(subject, topic, data) {
       process = subject.QueryInterface(Components.interfaces.nsIProcess);
-      do_check_eq(topic, "process-finished");
-      do_check_eq(process.exitValue, 0);
+      Assert.equal(topic, "process-finished");
+      Assert.equal(process.exitValue, 0);
       test_notify_killed();
     }
   });
@@ -153,7 +153,7 @@ function test_notify_killed() {
   process.runAsync([], 0, {
     observe(subject, topic, data) {
       process = subject.QueryInterface(Components.interfaces.nsIProcess);
-      do_check_eq(topic, "process-finished");
+      Assert.equal(topic, "process-finished");
       do_test_finished();
     }
   });
