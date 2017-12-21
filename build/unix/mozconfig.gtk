@@ -1,5 +1,0 @@
-# To do try builds with Gtk+2, uncomment the following line, and remove
-# everything after that.
-#ac_add_options --enable-default-toolkit=cairo-gtk2
-
-ac_add_options --enable-default-toolkit=cairo-gtk3
