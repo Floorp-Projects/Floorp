@@ -315,6 +315,20 @@ const TEST_CASES = [
         { x: 1000, y: 1 },
       ]
     }
+  },
+  {
+    "opacity": {
+      expectedClass: "opacity",
+      expectedValues: [
+        { x: 0, y: 1 },
+        { x: 250, y: 1 },
+        { x: 499, y: 1 },
+        { x: 500, y: 1 },
+        { x: 500, y: 0 },
+        { x: 750, y: 0.5 },
+        { x: 1000, y: 1 },
+      ]
+    }
   }
 ];
 
