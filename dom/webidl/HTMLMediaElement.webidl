@@ -17,7 +17,7 @@ interface HTMLMediaElement : HTMLElement {
   readonly attribute MediaError? error;
 
   // network state
-  [CEReactions, SetterNeedsSubjectPrincipal=NonSystem, SetterThrows]
+  [CEReactions, SetterNeedsSubjectPrincipal, SetterThrows]
            attribute DOMString src;
   readonly attribute DOMString currentSrc;
 

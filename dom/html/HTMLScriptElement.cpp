@@ -147,7 +147,7 @@ HTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML)
 
 void
 HTMLScriptElement::SetInnerHTML(const nsAString& aInnerHTML,
-                                nsIPrincipal* aScriptedPrincipal,
+                                nsIPrincipal& aScriptedPrincipal,
                                 ErrorResult& aError)
 {
   aError = nsContentUtils::SetNodeTextContent(this, aInnerHTML, true);

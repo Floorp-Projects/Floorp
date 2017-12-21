@@ -34,7 +34,7 @@ public:
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) override;
   using nsGenericHTMLElement::SetInnerHTML;
   virtual void SetInnerHTML(const nsAString& aInnerHTML,
-                            nsIPrincipal* aSubjectPrincipal,
+                            nsIPrincipal& aSubjectPrincipal,
                             mozilla::ErrorResult& aError) override;
   virtual void SetTextContentInternal(const nsAString& aTextContent,
                                       nsIPrincipal* aSubjectPrincipal,

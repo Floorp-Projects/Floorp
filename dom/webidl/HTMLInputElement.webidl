@@ -81,7 +81,7 @@ interface HTMLInputElement : HTMLElement {
            attribute boolean required;
   [CEReactions, Pure, SetterThrows]
            attribute unsigned long size;
-  [CEReactions, Pure, SetterNeedsSubjectPrincipal=NonSystem, SetterThrows]
+  [CEReactions, Pure, SetterNeedsSubjectPrincipal, SetterThrows]
            attribute DOMString src;
   [CEReactions, Pure, SetterThrows]
            attribute DOMString step;

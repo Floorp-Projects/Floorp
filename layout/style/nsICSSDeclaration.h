@@ -112,9 +112,9 @@ public:
   NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) override = 0;
 
   // WebIDL interface for CSSStyleDeclaration
-  void SetCssText(const nsAString& aString, nsIPrincipal* aSubjectPrincipal,
+  void SetCssText(const nsAString& aString, nsIPrincipal& aSubjectPrincipal,
                   mozilla::ErrorResult& rv) {
-    rv = SetCssText(aString, aSubjectPrincipal);
+    rv = SetCssText(aString, &aSubjectPrincipal);
   }
   void GetCssText(nsString& aString) {
     // Cast to nsAString& so we end up calling our virtual
@@ -141,9 +141,9 @@ public:
     GetPropertyPriority(aPropName, static_cast<nsAString&>(aPriority));
   }
   void SetProperty(const nsAString& aPropName, const nsAString& aValue,
-                   const nsAString& aPriority, nsIPrincipal* aSubjectPrincipal,
+                   const nsAString& aPriority, nsIPrincipal& aSubjectPrincipal,
                    mozilla::ErrorResult& rv) {
-    rv = SetProperty(aPropName, aValue, aPriority, aSubjectPrincipal);
+    rv = SetProperty(aPropName, aValue, aPriority, &aSubjectPrincipal);
   }
   void RemoveProperty(const nsAString& aPropName, nsString& aRetval,
                       mozilla::ErrorResult& rv) {

@@ -10,7 +10,7 @@
 
 [HTMLConstructor]
 interface HTMLScriptElement : HTMLElement {
-  [CEReactions, SetterNeedsSubjectPrincipal=NonSystem, SetterThrows]
+  [CEReactions, NeedsSubjectPrincipal, SetterThrows]
   attribute DOMString src;
   [CEReactions, SetterThrows]
   attribute DOMString type;
