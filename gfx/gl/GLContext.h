@@ -3590,6 +3590,7 @@ protected:
     GLint mViewportRect[4];
     GLint mScissorRect[4];
 
+    uint32_t mMaxTexOrRbSize = 0;
     GLint mMaxTextureSize;
     GLint mMaxCubeMapTextureSize;
     GLint mMaxTextureImageSize;
@@ -3625,6 +3626,7 @@ public:
     auto MaxSamples() const { return uint32_t(mMaxSamples); }
     auto MaxTextureSize() const { return uint32_t(mMaxTextureSize); }
     auto MaxRenderbufferSize() const { return uint32_t(mMaxRenderbufferSize); }
+    auto MaxTexOrRbSize() const { return mMaxTexOrRbSize; }
 
 #ifdef MOZ_GL_DEBUG
     void CreatedProgram(GLContext* aOrigin, GLuint aName);
