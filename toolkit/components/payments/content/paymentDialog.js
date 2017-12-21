@@ -15,7 +15,7 @@ const paymentSrv = Cc["@mozilla.org/dom/payments/payment-request-service;1"]
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let PaymentDialog = {
+var PaymentDialog = {
   componentsLoaded: new Map(),
   frame: null,
   mm: null,
@@ -38,10 +38,15 @@ let PaymentDialog = {
     this.frame.src = "resource://payments/paymentRequest.xhtml";
   },
 
-  createShowResponse({acceptStatus, methodName = "", data = null,
-                      payerName = "", payerEmail = "", payerPhone = ""}) {
+  createShowResponse({
+    acceptStatus,
+    methodName = "",
+    methodData = null,
+    payerName = "",
+    payerEmail = "",
+    payerPhone = "",
+  }) {
     let showResponse = this.createComponentInstance(Ci.nsIPaymentShowActionResponse);
-    let methodData = this.createComponentInstance(Ci.nsIGeneralResponseData);
 
     showResponse.init(this.request.requestId,
                       acceptStatus,
@@ -51,6 +56,60 @@ let PaymentDialog = {
                       payerEmail,
                       payerPhone);
     return showResponse;
+  },
+
+  createBasicCardResponseData({
+    cardholderName = "",
+    cardNumber,
+    expiryMonth = "",
+    expiryYear = "",
+    cardSecurityCode = "",
+    billingAddress = null,
+  }) {
+    const basicCardResponseData = Cc["@mozilla.org/dom/payments/basiccard-response-data;1"]
+                                  .createInstance(Ci.nsIBasicCardResponseData);
+    basicCardResponseData.initData(cardholderName,
+                                   cardNumber,
+                                   expiryMonth,
+                                   expiryYear,
+                                   cardSecurityCode,
+                                   billingAddress);
+    return basicCardResponseData;
+  },
+
+  createPaymentAddress({
+    country = "",
+    addressLines = [],
+    region = "",
+    city = "",
+    dependentLocality = "",
+    postalCode = "",
+    sortingCode = "",
+    languageCode = "",
+    organization = "",
+    recipient = "",
+    phone = "",
+  }) {
+    const billingAddress = Cc["@mozilla.org/dom/payments/payment-address;1"]
+                           .createInstance(Ci.nsIPaymentAddress);
+    const addressLine = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+    for (let line of addressLines) {
+      const address = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+      address.data = line;
+      addressLine.appendElement(address);
+    }
+    billingAddress.init(country,
+                        addressLine,
+                        region,
+                        city,
+                        dependentLocality,
+                        postalCode,
+                        sortingCode,
+                        languageCode,
+                        organization,
+                        recipient,
+                        phone);
+    return billingAddress;
   },
 
   createComponentInstance(componentInterface) {
@@ -83,6 +142,25 @@ let PaymentDialog = {
     window.close();
   },
 
+  pay({
+    payerName,
+    payerEmail,
+    payerPhone,
+    methodName,
+    methodData,
+  }) {
+    let basicCardData = this.createBasicCardResponseData(methodData);
+    const showResponse = this.createShowResponse({
+      acceptStatus: Ci.nsIPaymentActionResponse.PAYMENT_ACCEPTED,
+      payerName,
+      payerEmail,
+      payerPhone,
+      methodName,
+      methodData: basicCardData,
+    });
+    paymentSrv.respondPayment(showResponse);
+  },
+
   receiveMessage({data}) {
     let {messageType} = data;
 
@@ -110,10 +188,17 @@ let PaymentDialog = {
         this.onPaymentCancel();
         break;
       }
+      case "pay": {
+        this.pay(data);
+        break;
+      }
     }
   },
 };
 
-let frame = document.getElementById("paymentRequestFrame");
-let requestId = (new URLSearchParams(window.location.search)).get("requestId");
-PaymentDialog.init(requestId, frame);
+if ("document" in this) {
+  // Running in a browser, not a unit test
+  let frame = document.getElementById("paymentRequestFrame");
+  let requestId = (new URLSearchParams(window.location.search)).get("requestId");
+  PaymentDialog.init(requestId, frame);
+}
