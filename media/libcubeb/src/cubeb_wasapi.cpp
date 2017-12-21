@@ -1142,7 +1142,7 @@ stream_set_volume(cubeb_stream * stm, float volume)
 
   uint32_t channels;
   HRESULT hr = stm->audio_stream_volume->GetChannelCount(&channels);
-  if (hr != S_OK) {
+  if (FAILED(hr)) {
     LOG("could not get the channel count: %lx", hr);
     return CUBEB_ERROR;
   }
@@ -1158,7 +1158,7 @@ stream_set_volume(cubeb_stream * stm, float volume)
   }
 
   hr = stm->audio_stream_volume->SetAllVolumes(channels,  volumes);
-  if (hr != S_OK) {
+  if (FAILED(hr)) {
     LOG("could not set the channels volume: %lx", hr);
     return CUBEB_ERROR;
   }
