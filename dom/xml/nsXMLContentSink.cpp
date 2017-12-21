@@ -651,13 +651,12 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
 }
 
 nsresult
-nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
-                                   const nsAString& aHref,
-                                   bool aAlternate,
-                                   const nsAString& aTitle,
-                                   const nsAString& aType,
-                                   const nsAString& aMedia,
-                                   const nsAString& aReferrerPolicy)
+nsXMLContentSink::ProcessStyleLinkFromHeader(const nsAString& aHref,
+                                             bool aAlternate,
+                                             const nsAString& aTitle,
+                                             const nsAString& aType,
+                                             const nsAString& aMedia,
+                                             const nsAString& aReferrerPolicy)
 {
   mPrettyPrintXML = false;
 
@@ -668,7 +667,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     return NS_OK; // Do not load stylesheets when loading as data
 
   bool wasXSLT;
-  nsresult rv = MaybeProcessXSLTLink(aElement, aHref, aAlternate, aType, aType,
+  nsresult rv = MaybeProcessXSLTLink(nullptr, aHref, aAlternate, aType, aType,
                                      aMedia, aReferrerPolicy, &wasXSLT);
   NS_ENSURE_SUCCESS(rv, rv);
   if (wasXSLT) {
@@ -677,19 +676,21 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
   }
 
   // Otherwise fall through to nsContentSink to handle CSS Link headers.
-  return nsContentSink::ProcessStyleLink(aElement, aHref, aAlternate,
-                                         aTitle, aType, aMedia, aReferrerPolicy);
+  return nsContentSink::ProcessStyleLinkFromHeader(aHref, aAlternate,
+                                                   aTitle, aType, aMedia,
+                                                   aReferrerPolicy);
 }
 
 nsresult
-nsXMLContentSink::MaybeProcessXSLTLink(nsIContent* aProcessingInstruction,
-                                       const nsAString& aHref,
-                                       bool aAlternate,
-                                       const nsAString& aTitle,
-                                       const nsAString& aType,
-                                       const nsAString& aMedia,
-                                       const nsAString& aReferrerPolicy,
-                                       bool* aWasXSLT)
+nsXMLContentSink::MaybeProcessXSLTLink(
+  ProcessingInstruction* aProcessingInstruction,
+  const nsAString& aHref,
+  bool aAlternate,
+  const nsAString& aTitle,
+  const nsAString& aType,
+  const nsAString& aMedia,
+  const nsAString& aReferrerPolicy,
+  bool* aWasXSLT)
 {
   bool wasXSLT =
     aType.LowerCaseEqualsLiteral(TEXT_XSL) ||
@@ -732,7 +733,7 @@ nsXMLContentSink::MaybeProcessXSLTLink(nsIContent* aProcessingInstruction,
                                  url,
                                  mDocument->NodePrincipal(), // loading principal
                                  mDocument->NodePrincipal(), // triggering principal
-                                 aProcessingInstruction,
+                                 ToSupports(aProcessingInstruction),
                                  NS_ConvertUTF16toUTF8(aType),
                                  nullptr,
                                  &decision,

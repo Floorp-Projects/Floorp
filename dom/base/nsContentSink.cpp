@@ -669,10 +669,10 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
 
       href.Trim(" \t\n\r\f"); // trim HTML5 whitespace
       if (!href.IsEmpty() && !rel.IsEmpty()) {
-        rv = ProcessLink(anchor, href, rel,
-                         // prefer RFC 5987 variant over non-I18zed version
-                         titleStar.IsEmpty() ? title : titleStar,
-                         type, media, crossOrigin, referrerPolicy, as);
+        rv = ProcessLinkFromHeader(anchor, href, rel,
+                                   // prefer RFC 5987 variant over non-I18zed version
+                                   titleStar.IsEmpty() ? title : titleStar,
+                                   type, media, crossOrigin, referrerPolicy, as);
       }
 
       href.Truncate();
@@ -693,10 +693,10 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
 
   href.Trim(" \t\n\r\f"); // trim HTML5 whitespace
   if (!href.IsEmpty() && !rel.IsEmpty()) {
-    rv = ProcessLink(anchor, href, rel,
-                     // prefer RFC 5987 variant over non-I18zed version
-                     titleStar.IsEmpty() ? title : titleStar,
-                     type, media, crossOrigin, referrerPolicy, as);
+    rv = ProcessLinkFromHeader(anchor, href, rel,
+                               // prefer RFC 5987 variant over non-I18zed version
+                               titleStar.IsEmpty() ? title : titleStar,
+                               type, media, crossOrigin, referrerPolicy, as);
   }
 
   return rv;
@@ -704,12 +704,12 @@ nsContentSink::ProcessLinkHeader(const nsAString& aLinkData)
 
 
 nsresult
-nsContentSink::ProcessLink(const nsAString& aAnchor, const nsAString& aHref,
-                           const nsAString& aRel, const nsAString& aTitle,
-                           const nsAString& aType, const nsAString& aMedia,
-                           const nsAString& aCrossOrigin,
-                           const nsAString& aReferrerPolicy,
-                           const nsAString& aAs)
+nsContentSink::ProcessLinkFromHeader(const nsAString& aAnchor, const nsAString& aHref,
+                                     const nsAString& aRel, const nsAString& aTitle,
+                                     const nsAString& aType, const nsAString& aMedia,
+                                     const nsAString& aCrossOrigin,
+                                     const nsAString& aReferrerPolicy,
+                                     const nsAString& aAs)
 {
   uint32_t linkTypes =
     nsStyleLinkElement::ParseLinkTypes(aRel);
@@ -753,18 +753,17 @@ nsContentSink::ProcessLink(const nsAString& aAnchor, const nsAString& aHref,
   }
 
   bool isAlternate = linkTypes & nsStyleLinkElement::eALTERNATE;
-  return ProcessStyleLink(nullptr, aHref, isAlternate, aTitle, aType,
-                          aMedia, aReferrerPolicy);
+  return ProcessStyleLinkFromHeader(aHref, isAlternate, aTitle, aType,
+                                    aMedia, aReferrerPolicy);
 }
 
 nsresult
-nsContentSink::ProcessStyleLink(nsIContent* aElement,
-                                const nsAString& aHref,
-                                bool aAlternate,
-                                const nsAString& aTitle,
-                                const nsAString& aType,
-                                const nsAString& aMedia,
-                                const nsAString& aReferrerPolicy)
+nsContentSink::ProcessStyleLinkFromHeader(const nsAString& aHref,
+                                          bool aAlternate,
+                                          const nsAString& aTitle,
+                                          const nsAString& aType,
+                                          const nsAString& aMedia,
+                                          const nsAString& aReferrerPolicy)
 {
   if (aAlternate && aTitle.IsEmpty()) {
     // alternates must have title return without error, for now
@@ -790,20 +789,6 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
     return NS_OK;
   }
 
-  NS_ASSERTION(!aElement ||
-               aElement->NodeType() == nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
-               "We only expect processing instructions here");
-
-  nsAutoString integrity;
-  if (aElement) {
-    aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::integrity, integrity);
-  }
-  if (!integrity.IsEmpty()) {
-    MOZ_LOG(dom::SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
-            ("nsContentSink::ProcessStyleLink, integrity=%s",
-             NS_ConvertUTF16toUTF8(integrity).get()));
-  }
-
   mozilla::net::ReferrerPolicy referrerPolicy =
     mozilla::net::AttributeReferrerPolicyFromString(aReferrerPolicy);
   if (referrerPolicy == net::RP_Unset) {
@@ -812,9 +797,10 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
   // If this is a fragment parser, we don't want to observe.
   // We don't support CORS for processing instructions
   bool isAlternate;
-  rv = mCSSLoader->LoadStyleLink(aElement, url, nullptr, aTitle, aMedia, aAlternate,
+  rv = mCSSLoader->LoadStyleLink(nullptr, url, nullptr, aTitle, aMedia, aAlternate,
                                  CORS_NONE, referrerPolicy,
-                                 integrity, mRunsToCompletion ? nullptr : this,
+                                 /* integrity = */ EmptyString(),
+                                 mRunsToCompletion ? nullptr : this,
                                  &isAlternate);
   NS_ENSURE_SUCCESS(rv, rv);
 
