@@ -20,11 +20,7 @@ export GRADLE_MAVEN_REPOSITORIES="http://localhost:8081/nexus/content/repositori
 
 # From here on, just like ../android-api-16-frontend/nightly.
 
-ac_add_options --disable-compile-environment
-unset HOST_CC
-unset HOST_CXX
-unset RUSTC
-unset CARGO
+. "$topsrcdir/build/mozconfig.no-compile"
 
 ac_add_options --disable-tests
 

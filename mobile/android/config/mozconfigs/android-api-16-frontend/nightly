@@ -13,12 +13,8 @@ NO_NDK=1
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common"
 
-unset HOST_CC
-unset HOST_CXX
-unset RUSTC
-unset CARGO
+. "$topsrcdir/build/mozconfig.no-compile"
 
-ac_add_options --disable-compile-environment
 ac_add_options --disable-tests
 
 # From here on, like ../android-api-16/nightly.
