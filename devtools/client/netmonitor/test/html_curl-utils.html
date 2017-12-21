@@ -30,6 +30,7 @@
 
     <script type="text/javascript">
       /* exported performRequests */
+      /* eslint-disable max-nested-callbacks */
       "use strict";
 
       function ajaxGet(url, callback) {
@@ -46,6 +47,17 @@
         let xhr = new XMLHttpRequest();
         xhr.open("POST", url, true);
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        xhr.onload = function () {
+          callback();
+        };
+        const params = "param1=value1&param2=value2&param3=value3";
+        xhr.send(params);
+      }
+
+      function ajaxPatch(url, callback) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("PATCH", url, true);
         xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
         xhr.onload = function () {
           callback();
@@ -90,8 +102,10 @@
       function performRequests(url) {
         ajaxGet(url, () => {
           ajaxPost(url, () => {
-            ajaxMultipart(url, () => {
-              submitForm();
+            ajaxPatch(url, () => {
+              ajaxMultipart(url, () => {
+                submitForm();
+              });
             });
           });
         });
