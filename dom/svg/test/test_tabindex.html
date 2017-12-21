@@ -96,7 +96,8 @@ function main()
   SimpleTest.finish();
 }
 
-window.addEventListener("load", main);
+SimpleTest.waitForFocus(main);
+
 </script>
 </pre>
 </body>
