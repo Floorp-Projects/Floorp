@@ -344,7 +344,7 @@ private:
                                        nsIScriptElement* aElement,
                                        ValidJSVersion aValidJSVersion,
                                        mozilla::CORSMode aCORSMode,
-                                       const mozilla::dom::SRIMetadata& aIntegrity,
+                                       const SRIMetadata& aIntegrity,
                                        mozilla::net::ReferrerPolicy aReferrerPolicy);
 
   /**

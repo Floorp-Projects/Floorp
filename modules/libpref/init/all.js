@@ -4806,8 +4806,22 @@ pref("network.tcp.keepalive.retry_interval", 1); // seconds
 pref("network.tcp.keepalive.probe_count", 4);
 #endif
 
+#if defined(XP_WIN) || defined(XP_MACOSX)
+pref("network.tcp.tcp_fastopen_enable", true);
+#else
 pref("network.tcp.tcp_fastopen_enable", false);
+#endif
 pref("network.tcp.tcp_fastopen_consecutive_failure_limit", 5);
+// We are trying to detect stalled tcp connections that use TFO and TLS
+// (bug 1395494).
+// This is only happening if a connection is idle for more than 10s, but we
+// will make this a pref. If tcp_fastopen_http_stalls_limit of stalls are
+// detected the TCP fast open will be disabled.
+// If tcp_fastopen_http_check_for_stalls_only_if_idle_for is set to 0 the
+// check will not be performed.
+pref("network.tcp.tcp_fastopen_http_check_for_stalls_only_if_idle_for", 10);
+pref("network.tcp.tcp_fastopen_http_stalls_limit", 3);
+pref("network.tcp.tcp_fastopen_http_stalls_timeout", 20);
 
 // Whether to disable acceleration for all widgets.
 pref("layers.acceleration.disabled", false);

@@ -1895,19 +1895,6 @@ static PRInt32 pt_Send(
 	PRInt32 tmp_amount = amount;
 #endif
 
-    /*
-     * Under HP-UX DCE threads, pthread.h includes dce/cma_ux.h,
-     * which has the following:
-     *     #  define send        cma_send
-     *     extern int  cma_send (int , void *, int, int );
-     * So we need to cast away the 'const' of argument #2 for send().
-     */
-#if defined (HPUX) && defined(_PR_DCETHREADS)
-#define PT_SENDBUF_CAST (void *)
-#else
-#define PT_SENDBUF_CAST
-#endif
-
     if (pt_TestAbort()) return bytes;
 
     /*
@@ -1918,9 +1905,9 @@ static PRInt32 pt_Send(
 #if defined(SOLARIS)
     PR_ASSERT(0 == flags);
 retry:
-    bytes = write(fd->secret->md.osfd, PT_SENDBUF_CAST buf, tmp_amount);
+    bytes = write(fd->secret->md.osfd, buf, tmp_amount);
 #else
-    bytes = send(fd->secret->md.osfd, PT_SENDBUF_CAST buf, amount, flags);
+    bytes = send(fd->secret->md.osfd, buf, amount, flags);
 #endif
     syserrno = errno;
 

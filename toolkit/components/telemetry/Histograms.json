@@ -2437,7 +2437,7 @@
     "expires_in_version": "61",
     "kind": "enumerated",
     "n_values": 8,
-    "description": "TCP Fast Open was: 0=enabled during the session, 1=not available or disabled in the os, 2=disabled by the pref, 3=disabled based on the too many connection failures.",
+    "description": "TCP Fast Open was: 0=enabled during the session, 1=not available or disabled in the os, 2=disabled by the pref, 3=disabled based on the too many connection failures, 4=disable based on too many http transaction stalls after a connection was idle.",
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "bug_numbers": [1390881]
   },

@@ -23,7 +23,7 @@
 
 #if !defined(_PR_HAVE_ATOMIC_OPS)
 
-#if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
+#if defined(_PR_PTHREADS)
 /*
  * PR_AtomicDecrement() is used in NSPR's thread-specific data
  * destructor.  Because thread-specific data destructors may be
@@ -190,7 +190,7 @@ _PR_MD_ATOMIC_SET(PRInt32 *val, PRInt32 newval)
     pthread_mutex_unlock(&atomic_locks[idx]);
     return rv;
 }
-#else  /* _PR_PTHREADS && !_PR_DCETHREADS */
+#else  /* _PR_PTHREADS */
 /*
  * We use a single lock for all the emulated atomic operations.
  * The lock contention should be acceptable.
@@ -259,7 +259,7 @@ _PR_MD_ATOMIC_SET(PRInt32 *val, PRInt32 newval)
     PR_Unlock(atomic_lock);
     return rv;
 }
-#endif  /* _PR_PTHREADS && !_PR_DCETHREADS */
+#endif  /* _PR_PTHREADS */
 
 #endif  /* !_PR_HAVE_ATOMIC_OPS */
 

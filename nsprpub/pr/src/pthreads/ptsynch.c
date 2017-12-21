@@ -23,11 +23,6 @@ static pthread_condattr_t _pt_cvar_attr;
 
 #if defined(DEBUG)
 extern PTDebug pt_debug;  /* this is shared between several modules */
-
-#if defined(_PR_DCETHREADS)
-static pthread_t pt_zero_tid;  /* a null pthread_t (pthread_t is a struct
-                                * in DCE threads) to compare with */
-#endif  /* defined(_PR_DCETHREADS) */
 #endif  /* defined(DEBUG) */
 
 #if defined(FREEBSD)
@@ -263,12 +258,7 @@ static PRIntn pt_TimedWait(
     rv = pthread_cond_timedwait(cv, ml, &tmo);
 
     /* NSPR doesn't report timeouts */
-#ifdef _PR_DCETHREADS
-    if (rv == -1) return (errno == EAGAIN) ? 0 : errno;
-    else return rv;
-#else
     return (rv == ETIMEDOUT) ? 0 : rv;
-#endif
 }  /* pt_TimedWait */
 
 
@@ -1171,14 +1161,14 @@ PR_IMPLEMENT(PRStatus) PR_DeleteSemaphore(const char *name)
 PR_IMPLEMENT(PRStatus) PRP_TryLock(PRLock *lock)
 {
     PRIntn rv = pthread_mutex_trylock(&lock->mutex);
-    if (rv == PT_TRYLOCK_SUCCESS)
+    if (rv == 0)
     {
         PR_ASSERT(PR_FALSE == lock->locked);
         lock->locked = PR_TRUE;
         lock->owner = pthread_self();
     }
     /* XXX set error code? */
-    return (PT_TRYLOCK_SUCCESS == rv) ? PR_SUCCESS : PR_FAILURE;
+    return (0 == rv) ? PR_SUCCESS : PR_FAILURE;
 }  /* PRP_TryLock */
 
 PR_IMPLEMENT(PRCondVar*) PRP_NewNakedCondVar(void)

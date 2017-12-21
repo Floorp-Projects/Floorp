@@ -42,6 +42,7 @@
 #include "nsICacheStorage.h"
 #include "CacheControlParser.h"
 #include "LoadContextInfo.h"
+#include "TCPFastOpenLayer.h"
 
 namespace mozilla {
 namespace net {
@@ -119,6 +120,8 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   , mAttemptingEarlyData(attemptingEarlyData)
   , mOriginFrameActivated(false)
   , mTlsHandshakeFinished(false)
+  , mCheckNetworkStallsWithTFO(false)
+  , mLastRequestBytesSentTime(0)
 {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
 
@@ -269,8 +272,19 @@ Http2Session::ReadTimeoutTick(PRIntervalTime now)
   LOG3(("Http2Session::ReadTimeoutTick %p delta since last read %ds\n",
        this, PR_IntervalToSeconds(now - mLastReadEpoch)));
 
+  uint32_t nextTick = UINT32_MAX;
+  if (mCheckNetworkStallsWithTFO && mLastRequestBytesSentTime) {
+    PRIntervalTime initialResponseDelta = now - mLastRequestBytesSentTime;
+    if (initialResponseDelta >= gHttpHandler->FastOpenStallsTimeout()) {
+      gHttpHandler->IncrementFastOpenStallsCounter();
+      mCheckNetworkStallsWithTFO = false;
+    } else {
+      nextTick = PR_IntervalToSeconds(gHttpHandler->FastOpenStallsTimeout()) -
+                 PR_IntervalToSeconds(initialResponseDelta);
+    }
+  }
   if (!mPingThreshold)
-    return UINT32_MAX;
+    return nextTick;
 
   if ((now - mLastReadEpoch) < mPingThreshold) {
     // recent activity means ping is not an issue
@@ -283,8 +297,8 @@ Http2Session::ReadTimeoutTick(PRIntervalTime now)
       }
     }
 
-    return PR_IntervalToSeconds(mPingThreshold) -
-      PR_IntervalToSeconds(now - mLastReadEpoch);
+    return std::min(nextTick, PR_IntervalToSeconds(mPingThreshold) -
+                              PR_IntervalToSeconds(now - mLastReadEpoch));
   }
 
   if (mPingSentEpoch) {
@@ -373,6 +387,20 @@ Http2Session::RegisterStreamID(Http2Stream *stream, uint32_t aNewID)
   }
 
   mStreamIDHash.Put(aNewID, stream);
+
+  // If TCP fast Open has been used and conection was idle for some time
+  // we will be cautious and watch out for bug 1395494.
+  if (!mCheckNetworkStallsWithTFO && mConnection) {
+    RefPtr<nsHttpConnection> conn = mConnection->HttpConnection();
+    if (conn && (conn->GetFastOpenStatus() == TFO_DATA_SENT) &&
+        gHttpHandler->CheckIfConnectionIsStalledOnlyIfIdleForThisAmountOfSeconds() &&
+        IdleTime() >= gHttpHandler->CheckIfConnectionIsStalledOnlyIfIdleForThisAmountOfSeconds()) {
+      // If a connection was using the TCP FastOpen and it was idle for a
+      // long time we should check for stalls like bug 1395494.
+      mCheckNetworkStallsWithTFO = true;
+      mLastRequestBytesSentTime = PR_IntervalNow();
+    }
+  }
   return aNewID;
 }
 
@@ -512,8 +540,10 @@ Http2Session::NetworkRead(nsAHttpSegmentWriter *writer, char *buf,
   }
 
   nsresult rv = writer->OnWriteSegment(buf, count, countWritten);
-  if (NS_SUCCEEDED(rv) && *countWritten > 0)
+  if (NS_SUCCEEDED(rv) && *countWritten > 0) {
     mLastReadEpoch = PR_IntervalNow();
+    mCheckNetworkStallsWithTFO = false;
+  }
   return rv;
 }
 
