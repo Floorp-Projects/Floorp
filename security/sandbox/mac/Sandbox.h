@@ -47,6 +47,7 @@ typedef struct _MacSandboxInfo {
   int32_t level;
   bool hasFilePrivileges;
   bool hasSandboxedProfile;
+  bool hasAudio;
   MacSandboxPluginInfo pluginInfo;
   std::string appPath;
   std::string appBinaryPath;
