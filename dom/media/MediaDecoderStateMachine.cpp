@@ -1493,6 +1493,7 @@ public:
     RefPtr<Runnable> r = mAsyncSeekTask = new AysncNextFrameSeekTask(this);
     nsresult rv = OwnerThread()->Dispatch(r.forget());
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
 private:
@@ -3610,6 +3611,7 @@ MediaDecoderStateMachine::ScheduleStateMachine()
                         this,
                         &MediaDecoderStateMachine::RunStateMachine));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 void
@@ -3854,6 +3856,7 @@ MediaDecoderStateMachine::RequestDebugInfo()
       [self, p]() { p->Resolve(self->GetDebugInfo(), __func__); }),
     AbstractThread::TailDispatch);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
   return p.forget();
 }
 
@@ -3870,6 +3873,7 @@ void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,
                             true);
   nsresult rv = OwnerThread()->Dispatch(r.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 void MediaDecoderStateMachine::RemoveOutputStream(MediaStream* aStream)
@@ -3885,6 +3889,7 @@ void MediaDecoderStateMachine::RemoveOutputStream(MediaStream* aStream)
                               false);
     nsresult rv = OwnerThread()->Dispatch(r.forget());
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 }
 

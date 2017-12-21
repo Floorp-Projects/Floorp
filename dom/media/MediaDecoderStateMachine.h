@@ -233,6 +233,7 @@ public:
       });
     nsresult rv = OwnerThread()->Dispatch(r.forget());
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   void DispatchCanPlayThrough(bool aCanPlayThrough)
