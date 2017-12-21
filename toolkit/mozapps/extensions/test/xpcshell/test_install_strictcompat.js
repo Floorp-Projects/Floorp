@@ -328,7 +328,7 @@ function check_test_4(install) {
   Assert.equal(install.version, "3.0");
   Assert.equal(install.name, "Real Test 3");
   Assert.equal(install.state, AddonManager.STATE_DOWNLOADED);
-  do_check_neq(install.existingAddon);
+  Assert.ok(install.existingAddon);
   Assert.equal(install.existingAddon.id, "addon2@tests.mozilla.org");
   Assert.equal(install.addon.install, install);
   Assert.ok(hasFlag(install.addon.operationsRequiringRestart,

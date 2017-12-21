@@ -28,16 +28,8 @@ function isnot(a, b, msg) {
   Assert.notEqual(a, b, Components.stack.caller);
 }
 
-function executeSoon(fun) {
-  executeSoon(fun);
-}
-
 function todo(condition, name, diag) {
   todo_check_true(condition, Components.stack.caller);
-}
-
-function info(name, message) {
-  info(name);
 }
 
 function run_test() {

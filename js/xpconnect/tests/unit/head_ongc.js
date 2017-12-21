@@ -12,7 +12,7 @@ function addTestingFunctionsToGlobal(global) {
   for (let k in testingFunctions) {
     global[k] = testingFunctions[k];
   }
-  global.print = do_print;
+  global.print = info;
   global.newGlobal = newGlobal;
   addDebuggerToGlobal(global);
 }

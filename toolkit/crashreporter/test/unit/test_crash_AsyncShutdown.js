@@ -30,12 +30,12 @@ function setup_crash() {
 
 function after_crash(mdump, extra) {
   info("after crash: " + extra.AsyncShutdownTimeout);
-  let info = JSON.parse(extra.AsyncShutdownTimeout);
-  Assert.equal(info.phase, "testing-async-shutdown-crash");
-  Assert.equal(info.conditions[0].name, "A blocker that is never satisfied");
+  let data = JSON.parse(extra.AsyncShutdownTimeout);
+  Assert.equal(data.phase, "testing-async-shutdown-crash");
+  Assert.equal(data.conditions[0].name, "A blocker that is never satisfied");
   // This test spawns subprocesses by using argument "-e" of xpcshell, so
   // this is the filename known to xpcshell.
-  Assert.equal(info.conditions[0].filename, "-e");
+  Assert.equal(data.conditions[0].filename, "-e");
 }
 
 // Test that AsyncShutdown + OS.File reports errors correctly, in a case in which
@@ -58,10 +58,10 @@ function setup_osfile_crash_noerror() {
 
 function after_osfile_crash_noerror(mdump, extra) {
   info("after OS.File crash: " + extra.AsyncShutdownTimeout);
-  let info = JSON.parse(extra.AsyncShutdownTimeout);
-  let state = info.conditions[0].state;
+  let data = JSON.parse(extra.AsyncShutdownTimeout);
+  let state = data.conditions[0].state;
   info("Keys: " + Object.keys(state).join(", "));
-  Assert.equal(info.phase, "profile-before-change");
+  Assert.equal(data.phase, "profile-before-change");
   Assert.ok(state.launched);
   Assert.ok(!state.shutdown);
   Assert.ok(state.worker);
@@ -89,10 +89,10 @@ function setup_osfile_crash_exn() {
 
 function after_osfile_crash_exn(mdump, extra) {
   info("after OS.File crash: " + extra.AsyncShutdownTimeout);
-  let info = JSON.parse(extra.AsyncShutdownTimeout);
-  let state = info.conditions[0].state;
+  let data = JSON.parse(extra.AsyncShutdownTimeout);
+  let state = data.conditions[0].state;
   info("Keys: " + Object.keys(state).join(", "));
-  Assert.equal(info.phase, "profile-before-change");
+  Assert.equal(data.phase, "profile-before-change");
   Assert.ok(!state.shutdown);
   Assert.ok(state.worker);
   Assert.ok(!!state.latestSent);

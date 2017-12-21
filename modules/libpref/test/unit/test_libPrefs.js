@@ -322,11 +322,11 @@ function run_test() {
 
   // former prefs should have been replaced/lost
   do_check_throws(function() {
-    do_check_eq(pb.getBoolPref("ReadPref.bool"));}, Cr.NS_ERROR_UNEXPECTED);
+    pb.getBoolPref("ReadPref.bool");}, Cr.NS_ERROR_UNEXPECTED);
   do_check_throws(function() {
-    do_check_eq(pb.getIntPref("ReadPref.int"));}, Cr.NS_ERROR_UNEXPECTED);
+    pb.getIntPref("ReadPref.int");}, Cr.NS_ERROR_UNEXPECTED);
   do_check_throws(function() {
-    do_check_eq(pb.getCharPref("ReadPref.char"));}, Cr.NS_ERROR_UNEXPECTED);
+    pb.getCharPref("ReadPref.char");}, Cr.NS_ERROR_UNEXPECTED);
 
   // loaded prefs should read ok.
   pb = ps.getBranch("testPref.");

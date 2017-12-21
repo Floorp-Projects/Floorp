@@ -80,8 +80,7 @@ function check_cookie_exists(aDomain, aExists) {
     name: COOKIE_NAME,
     path: COOKIE_PATH
   };
-  let checker = aExists ? do_check_true : do_check_false;
-  checker(Services.cookies.cookieExists(cookie));
+  Assert.equal(aExists, Services.cookies.cookieExists(cookie));
 }
 
 /**
@@ -105,8 +104,7 @@ function add_disabled_host(aHost) {
  *        True if the host should be disabled, false otherwise.
  */
 function check_disabled_host(aHost, aIsDisabled) {
-  let checker = aIsDisabled ? do_check_false : do_check_true;
-  checker(Services.logins.getLoginSavingEnabled(aHost));
+  Assert.equal(!aIsDisabled, Services.logins.getLoginSavingEnabled(aHost));
 }
 
 /**
@@ -165,8 +163,8 @@ function check_permission_exists(aURI, aExists) {
   let principal = Services.scriptSecurityManager.createCodebasePrincipal(aURI, {});
 
   let perm = Services.perms.testExactPermissionFromPrincipal(principal, PERMISSION_TYPE);
-  let checker = aExists ? do_check_eq : do_check_neq;
-  checker(perm, PERMISSION_VALUE);
+  let checker = aExists ? "equal" : "notEqual";
+  Assert[checker](perm, PERMISSION_VALUE);
 }
 
 /**

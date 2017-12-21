@@ -10,11 +10,11 @@ function run_test() {
   sb.ok = ok;
   Cu.evalInSandbox('ok(this.crypto);', sb);
   Cu.evalInSandbox('ok(this.crypto.subtle);', sb);
-  sb.do_check_eq = do_check_eq;
+  sb.equal = equal;
   let innerPromise = new Promise(r => (sb.test_done = r));
   Cu.evalInSandbox('crypto.subtle.digest("SHA-256", ' +
                    '                     new TextEncoder("utf-8").encode("abc"))' +
-                   '  .then(h => do_check_eq(new Uint16Array(h)[0], 30906))' +
+                   '  .then(h => equal(new Uint16Array(h)[0], 30906))' +
                    '  .then(test_done);', sb);
 
   Cu.importGlobalProperties(["crypto"]);

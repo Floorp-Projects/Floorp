@@ -4,7 +4,7 @@ importScripts("resource://gre/modules/workers/require.js");
 importScripts("resource://gre/modules/osfile.jsm");
 
 
-function do_print(x) {
+function info(x) {
   // self.postMessage({kind: "do_print", args: [x]});
   dump("TEST-INFO: " + x + "\n");
 }

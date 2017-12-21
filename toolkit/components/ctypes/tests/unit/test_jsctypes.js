@@ -1929,14 +1929,14 @@ function run_FunctionType_tests() {
                createInstance(Components.interfaces.nsIPrincipal);
     var s = new Components.utils.Sandbox(sp);
     s.ctypes = ctypes;
-    s.do_check_eq = do_check_eq;
-    s.do_check_true = do_check_true;
+    s.equal = equal;
+    s.ok = ok;
     Components.utils.evalInSandbox("var f5_t = ctypes.FunctionType(ctypes.default_abi, ctypes.int, [ctypes.int]);", s);
-    Components.utils.evalInSandbox("do_check_eq(f5_t.toSource(), 'ctypes.FunctionType(ctypes.default_abi, ctypes.int, [ctypes.int])');", s);
-    Components.utils.evalInSandbox("do_check_eq(f5_t.name, 'int(int)');", s);
+    Components.utils.evalInSandbox("equal(f5_t.toSource(), 'ctypes.FunctionType(ctypes.default_abi, ctypes.int, [ctypes.int])');", s);
+    Components.utils.evalInSandbox("equal(f5_t.name, 'int(int)');", s);
     Components.utils.evalInSandbox("function f5(aArg) { return 5; };", s);
     Components.utils.evalInSandbox("var f = f5_t.ptr(f5);", s);
-    Components.utils.evalInSandbox("do_check_true(f(6) == 5);", s);
+    Components.utils.evalInSandbox("ok(f(6) == 5);", s);
   }
 }
 
@@ -2520,7 +2520,7 @@ function run_function_tests(library) {
     "ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t, [ctypes.char.ptr]).ptr");
 /* disabled temporarily per bug 598225.
   do_check_throws(function() { test_ansi_len.value = null; }, Error);
-  do_check_eq(ptrValue(test_ansi_len), ptrValue(ptr));
+  Assert.equal(ptrValue(test_ansi_len), ptrValue(ptr));
 */
 
   // Test that the library.declare(name, functionType) form works.
@@ -2529,7 +2529,7 @@ function run_function_tests(library) {
   Assert.equal(ptrValue(test_ansi_len), ptrValue(test_ansi_len_2));
 /* disabled temporarily per bug 598225.
   do_check_throws(function() { test_ansi_len_2.value = null; }, Error);
-  do_check_eq(ptrValue(test_ansi_len_2), ptrValue(ptr));
+  Assert.equal(ptrValue(test_ansi_len_2), ptrValue(ptr));
 */
 }
 
