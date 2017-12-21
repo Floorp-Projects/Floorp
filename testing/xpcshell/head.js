@@ -817,24 +817,6 @@ function do_note_exception(ex, text) {
                    });
 }
 
-function _do_check_neq(left, right, stack, todo) {
-  Assert.notEqual(left, right);
-}
-
-function do_check_neq(left, right, stack) {
-  if (!stack)
-    stack = Components.stack.caller;
-
-  _do_check_neq(left, right, stack, false);
-}
-
-function todo_check_neq(left, right, stack) {
-  if (!stack)
-      stack = Components.stack.caller;
-
-  _do_check_neq(left, right, stack, true);
-}
-
 function do_report_result(passed, text, stack, todo) {
   while (stack.filename.includes("head.js") && stack.caller) {
     stack = stack.caller;
@@ -890,19 +872,11 @@ function _do_check_eq(left, right, stack, todo) {
   do_report_result(left == right, text, stack, todo);
 }
 
-function do_check_eq(left, right, stack) {
-  Assert.equal(left, right);
-}
-
 function todo_check_eq(left, right, stack) {
   if (!stack)
       stack = Components.stack.caller;
 
   _do_check_eq(left, right, stack, true);
-}
-
-function do_check_true(condition, stack) {
-  Assert.ok(condition, stack);
 }
 
 function todo_check_true(condition, stack) {
@@ -912,10 +886,6 @@ function todo_check_true(condition, stack) {
   todo_check_eq(condition, true, stack);
 }
 
-function do_check_false(condition, stack) {
-  Assert.ok(!condition, stack);
-}
-
 function todo_check_false(condition, stack) {
   if (!stack)
     stack = Components.stack.caller;
@@ -923,15 +893,8 @@ function todo_check_false(condition, stack) {
   todo_check_eq(condition, false, stack);
 }
 
-function do_check_null(condition, stack) {
-  Assert.equal(condition, null);
-}
-
 function todo_check_null(condition, stack = Components.stack.caller) {
   todo_check_eq(condition, null, stack);
-}
-function do_check_matches(pattern, value) {
-  Assert.deepEqual(pattern, value);
 }
 
 // Check that |func| throws an nsIException that has
