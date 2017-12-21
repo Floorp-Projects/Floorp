@@ -11,19 +11,17 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
   <binding id="ctrlTab-preview" extends="chrome://global/content/bindings/button.xml#button-base">
     <content pack="center">
-      <xul:stack>
-        <xul:vbox class="ctrlTab-preview-inner" align="center" pack="center"
-                  xbl:inherits="width=canvaswidth">
-          <xul:hbox class="tabPreview-canvas" xbl:inherits="style=canvasstyle">
-            <children/>
-          </xul:hbox>
-          <xul:label xbl:inherits="value=label" crop="end" class="plain"/>
-        </xul:vbox>
+      <xul:vbox class="ctrlTab-preview-inner">
+        <xul:hbox class="ctrlTab-canvas" xbl:inherits="style=canvasstyle,width=canvaswidth">
+          <children/>
+        </xul:hbox>
         <xul:hbox class="ctrlTab-favicon-container" xbl:inherits="hidden=noicon">
           <xul:image class="ctrlTab-favicon" xbl:inherits="src=image"/>
         </xul:hbox>
-      </xul:stack>
+        <xul:label class="ctrlTab-label plain" xbl:inherits="value=label" crop="end"/>
+      </xul:vbox>
     </content>
+
     <handlers>
       <handler event="mouseover" action="ctrlTab._mouseOverFocus(this);"/>
       <handler event="command" action="ctrlTab.pick(this);"/>
