@@ -423,11 +423,11 @@ def set_defaults(config, tests):
         else:
             test['allow-software-gl-layers'] = False
 
-        # Enable WebRender by default on the QuantumRender test platform, since
+        # Enable WebRender by default on the QuantumRender test platforms, since
         # the whole point of QuantumRender is to run with WebRender enabled.
-        # If other *-qr test platforms are added they should also be checked for
-        # here; currently linux64-qr is the only one.
-        if test['test-platform'].startswith('linux64-qr'):
+        # This currently matches linux64-qr and windows10-64-qr; both of these
+        # have /opt and /debug variants.
+        if "-qr/" in test['test-platform']:
             test['webrender'] = True
         else:
             test.setdefault('webrender', False)
