@@ -3876,6 +3876,7 @@ SearchService.prototype = {
   addEngineWithDetails: function SRCH_SVC_addEWD(aName, iconURL, alias,
                                                  description, method,
                                                  template, extensionID) {
+    let isCurrent = false;
     var params;
 
     if (iconURL && typeof iconURL == "object") {
@@ -3896,16 +3897,28 @@ SearchService.prototype = {
       FAIL("Invalid name passed to addEngineWithDetails!");
     if (!params.template)
       FAIL("Invalid template passed to addEngineWithDetails!");
-    if (this._engines[aName])
-      FAIL("An engine with that name already exists!", Cr.NS_ERROR_FILE_ALREADY_EXISTS);
-
-    var engine = new Engine(sanitizeName(aName), false);
-    engine._initFromMetadata(aName, params);
-    engine._loadPath = "[other]addEngineWithDetails";
-    if (params.extensionID) {
-      engine._loadPath += ":" + params.extensionID;
+    let existingEngine = this._engines[aName];
+    if (existingEngine) {
+      if (params.extensionID &&
+          existingEngine._loadPath.startsWith(`jar:[profile]/extensions/${params.extensionID}`)) {
+        // This is a legacy extension engine that needs to be migrated to WebExtensions.
+        isCurrent = this.currentEngine == existingEngine;
+        this.removeEngine(existingEngine);
+      } else {
+        FAIL("An engine with that name already exists!", Cr.NS_ERROR_FILE_ALREADY_EXISTS);
+      }
     }
-    this._addEngineToStore(engine);
+
+    let newEngine = new Engine(sanitizeName(aName), false);
+    newEngine._initFromMetadata(aName, params);
+    newEngine._loadPath = "[other]addEngineWithDetails";
+    if (params.extensionID) {
+      newEngine._loadPath += ":" + params.extensionID;
+    }
+    this._addEngineToStore(newEngine);
+    if (isCurrent) {
+      this.currentEngine = newEngine;
+    }
   },
 
   addEngine: function SRCH_SVC_addEngine(aEngineURL, aDataType, aIconURL,
