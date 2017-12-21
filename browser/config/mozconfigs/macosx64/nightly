@@ -10,13 +10,6 @@ if test `uname -s` != Linux; then
   ac_add_options --enable-dtrace
 fi
 
-if test "${MOZ_UPDATE_CHANNEL}" = "nightly"; then
-ac_add_options --with-macbundlename-prefix=Firefox
-fi
-if test "${MOZ_UPDATE_CHANNEL}" = "nightly-try"; then
-ac_add_options --with-macbundlename-prefix=Firefox
-fi
-
 ac_add_options --with-branding=browser/branding/nightly
 
 . "$topsrcdir/build/mozconfig.common.override"
