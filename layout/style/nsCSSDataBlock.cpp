@@ -454,8 +454,7 @@ nsCSSCompressedDataBlock::HasDefaultBorderImageRepeat() const
 {
   const nsCSSValuePair &repeat =
     ValueFor(eCSSProperty_border_image_repeat)->GetPairValue();
-  return repeat.BothValuesEqualTo(
-    nsCSSValue(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH, eCSSUnit_Enumerated));
+  return repeat.BothValuesEqualTo(nsCSSValue(StyleBorderImageRepeat::Stretch));
 }
 
 /*****************************************************************************/
