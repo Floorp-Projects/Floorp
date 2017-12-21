@@ -23,6 +23,7 @@
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SelectionState.h"
+#include "mozilla/TextEditRules.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
 #include "nsCRTGlue.h" // for CRLF
@@ -42,7 +43,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDocument.h"
-#include "nsIEditRules.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
 #include "nsIMIMEService.h"
@@ -103,10 +103,10 @@ HTMLEditor::LoadHTML(const nsAString& aInputString)
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
 
-  TextRulesInfo ruleInfo(EditAction::loadHTML);
+  RulesInfo ruleInfo(EditAction::loadHTML);
   bool cancel, handled;
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
   if (cancel) {
@@ -203,7 +203,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
 
   // Prevent the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
 
   // force IME commit; set up rules sniffing and batching
   CommitComposition();
@@ -335,7 +335,7 @@ HTMLEditor::DoInsertHTMLWithContext(const nsAString& aInputString,
   }
 
   // give rules a chance to handle or cancel
-  TextRulesInfo ruleInfo(EditAction::insertElement);
+  RulesInfo ruleInfo(EditAction::insertElement);
   bool cancel, handled;
   rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1613,10 +1613,10 @@ HTMLEditor::PasteAsCitedQuotation(const nsAString& aCitation,
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   // give rules a chance to handle or cancel
-  TextRulesInfo ruleInfo(EditAction::insertElement);
+  RulesInfo ruleInfo(EditAction::insertElement);
   bool cancel, handled;
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
   if (cancel || handled) {
@@ -1812,10 +1812,10 @@ HTMLEditor::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
                                nsIEditor::eNext);
 
   // give rules a chance to handle or cancel
-  TextRulesInfo ruleInfo(EditAction::insertElement);
+  RulesInfo ruleInfo(EditAction::insertElement);
   bool cancel, handled;
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
   if (cancel || handled) {
@@ -1911,10 +1911,10 @@ HTMLEditor::InsertAsCitedQuotation(const nsAString& aQuotedText,
                                nsIEditor::eNext);
 
   // give rules a chance to handle or cancel
-  TextRulesInfo ruleInfo(EditAction::insertElement);
+  RulesInfo ruleInfo(EditAction::insertElement);
   bool cancel, handled;
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
   if (cancel || handled) {

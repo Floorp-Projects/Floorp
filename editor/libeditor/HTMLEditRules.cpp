@@ -189,6 +189,7 @@ HTMLEditRules::HTMLEditRules()
   , mRestoreContentEditableCount(false)
   , mJoinOffset(0)
 {
+  mIsHTMLEditRules = true;
   InitFields();
 }
 
@@ -254,7 +255,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLEditRules, TextEditRules,
                                    mDocChangeRange, mUtilRange, mNewBlock,
                                    mRangeItem)
 
-NS_IMETHODIMP
+nsresult
 HTMLEditRules::Init(TextEditor* aTextEditor)
 {
   if (NS_WARN_IF(!aTextEditor)) {
@@ -310,7 +311,7 @@ HTMLEditRules::Init(TextEditor* aTextEditor)
   return mHTMLEditor->AddEditActionListener(this);
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditRules::DetachEditor()
 {
   if (mHTMLEditor) {
@@ -320,8 +321,8 @@ HTMLEditRules::DetachEditor()
   return TextEditRules::DetachEditor();
 }
 
-NS_IMETHODIMP
-HTMLEditRules::BeforeEdit(EditAction action,
+nsresult
+HTMLEditRules::BeforeEdit(EditAction aAction,
                           nsIEditor::EDirection aDirection)
 {
   if (mLockRulesSniffing) {
@@ -373,10 +374,10 @@ HTMLEditRules::BeforeEdit(EditAction action,
     }
 
     // Remember current inline styles for deletion and normal insertion ops
-    if (action == EditAction::insertText ||
-        action == EditAction::insertIMEText ||
-        action == EditAction::deleteSelection ||
-        IsStyleCachePreservingAction(action)) {
+    if (aAction == EditAction::insertText ||
+        aAction == EditAction::insertIMEText ||
+        aAction == EditAction::deleteSelection ||
+        IsStyleCachePreservingAction(aAction)) {
       nsCOMPtr<nsINode> selNode =
         aDirection == nsIEditor::eNext ? selEndNode : selStartNode;
       nsresult rv = CacheInlineStyles(selNode);
@@ -396,14 +397,14 @@ HTMLEditRules::BeforeEdit(EditAction action,
     // Check that selection is in subtree defined by body node
     ConfirmSelectionInBody();
     // Let rules remember the top level action
-    mTheAction = action;
+    mTheAction = aAction;
   }
   return NS_OK;
 }
 
 
-NS_IMETHODIMP
-HTMLEditRules::AfterEdit(EditAction action,
+nsresult
+HTMLEditRules::AfterEdit(EditAction aAction,
                          nsIEditor::EDirection aDirection)
 {
   if (mLockRulesSniffing) {
@@ -420,7 +421,7 @@ HTMLEditRules::AfterEdit(EditAction action,
   mActionNesting--;
   if (!mActionNesting) {
     // Do all the tricky stuff
-    rv = AfterEditInner(action, aDirection);
+    rv = AfterEditInner(aAction, aDirection);
 
     // Free up selectionState range item
     htmlEditor->mRangeUpdater.DropRangeItem(mRangeItem);
@@ -444,11 +445,11 @@ HTMLEditRules::AfterEdit(EditAction action,
 }
 
 nsresult
-HTMLEditRules::AfterEditInner(EditAction action,
+HTMLEditRules::AfterEditInner(EditAction aAction,
                               nsIEditor::EDirection aDirection)
 {
   ConfirmSelectionInBody();
-  if (action == EditAction::ignore) {
+  if (aAction == EditAction::ignore) {
     return NS_OK;
   }
 
@@ -470,22 +471,22 @@ HTMLEditRules::AfterEditInner(EditAction action,
     }
   }
 
-  if (bDamagedRange && !((action == EditAction::undo) ||
-                         (action == EditAction::redo))) {
+  if (bDamagedRange && !((aAction == EditAction::undo) ||
+                         (aAction == EditAction::redo))) {
     // don't let any txns in here move the selection around behind our back.
     // Note that this won't prevent explicit selection setting from working.
     NS_ENSURE_STATE(mHTMLEditor);
     AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
 
     // expand the "changed doc range" as needed
-    PromoteRange(*mDocChangeRange, action);
+    PromoteRange(*mDocChangeRange, aAction);
 
     // if we did a ranged deletion or handling backspace key, make sure we have
     // a place to put caret.
     // Note we only want to do this if the overall operation was deletion,
     // not if deletion was done along the way for EditAction::loadHTML, EditAction::insertText, etc.
     // That's why this is here rather than DidDeleteSelection().
-    if (action == EditAction::deleteSelection && mDidRangedDelete) {
+    if (aAction == EditAction::deleteSelection && mDidRangedDelete) {
       nsresult rv = InsertBRIfNeeded(selection);
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -494,8 +495,8 @@ HTMLEditRules::AfterEditInner(EditAction action,
     AdjustSpecialBreaks();
 
     // merge any adjacent text nodes
-    if (action != EditAction::insertText &&
-        action != EditAction::insertIMEText) {
+    if (aAction != EditAction::insertText &&
+        aAction != EditAction::insertIMEText) {
       NS_ENSURE_STATE(mHTMLEditor);
       nsresult rv = mHTMLEditor->CollapseAdjacentTextNodes(mDocChangeRange);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -506,12 +507,12 @@ HTMLEditRules::AfterEditInner(EditAction action,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // attempt to transform any unneeded nbsp's into spaces after doing various operations
-    if (action == EditAction::insertText ||
-        action == EditAction::insertIMEText ||
-        action == EditAction::deleteSelection ||
-        action == EditAction::insertBreak ||
-        action == EditAction::htmlPaste ||
-        action == EditAction::loadHTML) {
+    if (aAction == EditAction::insertText ||
+        aAction == EditAction::insertIMEText ||
+        aAction == EditAction::deleteSelection ||
+        aAction == EditAction::insertBreak ||
+        aAction == EditAction::htmlPaste ||
+        aAction == EditAction::loadHTML) {
       rv = AdjustWhitespace(selection);
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -537,21 +538,21 @@ HTMLEditRules::AfterEditInner(EditAction action,
     }
 
     // adjust selection for insert text, html paste, and delete actions
-    if (action == EditAction::insertText ||
-        action == EditAction::insertIMEText ||
-        action == EditAction::deleteSelection ||
-        action == EditAction::insertBreak ||
-        action == EditAction::htmlPaste ||
-        action == EditAction::loadHTML) {
+    if (aAction == EditAction::insertText ||
+        aAction == EditAction::insertIMEText ||
+        aAction == EditAction::deleteSelection ||
+        aAction == EditAction::insertBreak ||
+        aAction == EditAction::htmlPaste ||
+        aAction == EditAction::loadHTML) {
       rv = AdjustSelection(selection, aDirection);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
     // check for any styles which were removed inappropriately
-    if (action == EditAction::insertText ||
-        action == EditAction::insertIMEText ||
-        action == EditAction::deleteSelection ||
-        IsStyleCachePreservingAction(action)) {
+    if (aAction == EditAction::insertText ||
+        aAction == EditAction::insertIMEText ||
+        aAction == EditAction::deleteSelection ||
+        IsStyleCachePreservingAction(aAction)) {
       NS_ENSURE_STATE(mHTMLEditor);
       mHTMLEditor->mTypeInState->UpdateSelState(selection);
       rv = ReapplyCachedStyles();
@@ -564,7 +565,7 @@ HTMLEditRules::AfterEditInner(EditAction action,
 
   nsresult rv =
     mHTMLEditor->HandleInlineSpellCheck(
-                   action, selection,
+                   aAction, selection,
                    mRangeItem->mStartContainer,
                    mRangeItem->mStartOffset,
                    rangeStartContainer,
@@ -585,7 +586,7 @@ HTMLEditRules::AfterEditInner(EditAction action,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditRules::WillDoAction(Selection* aSelection,
                             RulesInfo* aInfo,
                             bool* aCancel,
@@ -596,14 +597,11 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
   *aCancel = false;
   *aHandled = false;
 
-  // my kingdom for dynamic cast
-  TextRulesInfo* info = static_cast<TextRulesInfo*>(aInfo);
-
   // Deal with actions for which we don't need to check whether the selection is
   // editable.
-  if (info->action == EditAction::outputText ||
-      info->action == EditAction::undo ||
-      info->action == EditAction::redo) {
+  if (aInfo->action == EditAction::outputText ||
+      aInfo->action == EditAction::undo ||
+      aInfo->action == EditAction::redo) {
     return TextEditRules::WillDoAction(aSelection, aInfo, aCancel, aHandled);
   }
 
@@ -638,23 +636,24 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
     }
   }
 
-  switch (info->action) {
+  switch (aInfo->action) {
     case EditAction::insertText:
     case EditAction::insertIMEText:
       UndefineCaretBidiLevel(aSelection);
-      return WillInsertText(info->action, aSelection, aCancel, aHandled,
-                            info->inString, info->outString, info->maxLength);
+      return WillInsertText(aInfo->action, aSelection, aCancel, aHandled,
+                            aInfo->inString, aInfo->outString,
+                            aInfo->maxLength);
     case EditAction::loadHTML:
       return WillLoadHTML(aSelection, aCancel);
     case EditAction::insertBreak:
       UndefineCaretBidiLevel(aSelection);
       return WillInsertBreak(*aSelection, aCancel, aHandled);
     case EditAction::deleteSelection:
-      return WillDeleteSelection(aSelection, info->collapsedAction,
-                                 info->stripWrappers, aCancel, aHandled);
+      return WillDeleteSelection(aSelection, aInfo->collapsedAction,
+                                 aInfo->stripWrappers, aCancel, aHandled);
     case EditAction::makeList:
-      return WillMakeList(aSelection, info->blockType, info->entireList,
-                          info->bulletType, aCancel, aHandled);
+      return WillMakeList(aSelection, aInfo->blockType, aInfo->entireList,
+                          aInfo->bulletType, aCancel, aHandled);
     case EditAction::indent:
       return WillIndent(aSelection, aCancel, aHandled);
     case EditAction::outdent:
@@ -664,15 +663,15 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
     case EditAction::removeAbsolutePosition:
       return WillRemoveAbsolutePosition(aSelection, aCancel, aHandled);
     case EditAction::align:
-      return WillAlign(*aSelection, *info->alignType, aCancel, aHandled);
+      return WillAlign(*aSelection, *aInfo->alignType, aCancel, aHandled);
     case EditAction::makeBasicBlock:
-      return WillMakeBasicBlock(*aSelection, *info->blockType, aCancel,
+      return WillMakeBasicBlock(*aSelection, *aInfo->blockType, aCancel,
                                 aHandled);
     case EditAction::removeList:
-      return WillRemoveList(aSelection, info->bOrdered, aCancel, aHandled);
+      return WillRemoveList(aSelection, aInfo->bOrdered, aCancel, aHandled);
     case EditAction::makeDefListItem:
-      return WillMakeDefListItem(aSelection, info->blockType, info->entireList,
-                                 aCancel, aHandled);
+      return WillMakeDefListItem(aSelection, aInfo->blockType,
+                                 aInfo->entireList, aCancel, aHandled);
     case EditAction::insertElement:
       WillInsert(*aSelection, aCancel);
       return NS_OK;
@@ -686,17 +685,16 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
   }
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditRules::DidDoAction(Selection* aSelection,
                            RulesInfo* aInfo,
                            nsresult aResult)
 {
-  TextRulesInfo* info = static_cast<TextRulesInfo*>(aInfo);
-  switch (info->action) {
+  switch (aInfo->action) {
     case EditAction::insertBreak:
       return DidInsertBreak(aSelection, aResult);
     case EditAction::deleteSelection:
-      return DidDeleteSelection(aSelection, info->collapsedAction, aResult);
+      return DidDeleteSelection(aSelection, aInfo->collapsedAction, aResult);
     case EditAction::makeBasicBlock:
     case EditAction::indent:
     case EditAction::outdent:
@@ -713,7 +711,7 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
   }
 }
 
-NS_IMETHODIMP_(bool)
+bool
 HTMLEditRules::DocumentIsEmpty()
 {
   return !!mBogusNode;
@@ -9533,7 +9531,7 @@ HTMLEditRules::WillRelativeChangeZIndex(Selection* aSelection,
   return absPosHTMLEditor->RelativeChangeElementZIndex(elt, aChange, &zIndex);
 }
 
-NS_IMETHODIMP
+nsresult
 HTMLEditRules::DocumentModified()
 {
   nsContentUtils::AddScriptRunner(

@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/SelectionState.h"
+#include "mozilla/TextEditRules.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/mozalloc.h"
@@ -26,7 +27,6 @@
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMElement.h"
-#include "nsIEditRules.h"
 #include "nsNameSpaceManager.h"
 #include "nsINode.h"
 #include "nsISupportsImpl.h"
@@ -70,7 +70,7 @@ HTMLEditor::SetInlineProperty(nsAtom* aProperty,
 {
   NS_ENSURE_TRUE(aProperty, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
   CommitComposition();
 
   RefPtr<Selection> selection = GetSelection();
@@ -90,7 +90,7 @@ HTMLEditor::SetInlineProperty(nsAtom* aProperty,
   AutoTransactionsConserveSelection dontChangeMySelection(this);
 
   bool cancel, handled;
-  TextRulesInfo ruleInfo(EditAction::setTextProperty);
+  RulesInfo ruleInfo(EditAction::setTextProperty);
   // Protect the edit rules object from dying
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1221,9 +1221,9 @@ HTMLEditor::RemoveInlinePropertyImpl(nsAtom* aProperty,
   AutoTransactionsConserveSelection dontChangeMySelection(this);
 
   bool cancel, handled;
-  TextRulesInfo ruleInfo(EditAction::removeTextProperty);
+  RulesInfo ruleInfo(EditAction::removeTextProperty);
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!cancel && !handled) {

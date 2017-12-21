@@ -20,6 +20,11 @@
 #include "nsReadableUtils.h"
 #include "nsStringFwd.h"
 
+// Workaround for windows headers
+#ifdef SetProp
+#undef SetProp
+#endif
+
 class nsAtom;
 class nsIDOMDocument;
 
