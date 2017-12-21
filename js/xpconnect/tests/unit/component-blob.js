@@ -9,13 +9,15 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-function do_check_true(cond, text) {
-  // we don't have the test harness' utilities in this scope, so we need this
-  // little helper. In the failure case, the exception is propagated to the
-  // caller in the main run_test() function, and the test fails.
-  if (!cond)
-    throw "Failed check: " + text;
-}
+const Assert = {
+  ok(cond, text) {
+    // we don't have the test harness' utilities in this scope, so we need this
+    // little helper. In the failure case, the exception is propagated to the
+    // caller in the main run_test() function, and the test fails.
+    if (!cond)
+      throw "Failed check: " + text;
+  }
+};
 
 function BlobComponent() {
   this.wrappedJSObject = this;

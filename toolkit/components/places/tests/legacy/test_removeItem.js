@@ -14,7 +14,7 @@ add_task(async function test_removeItem() {
 
   // add a bookmark to the new folder
   var bookmarkURI = uri("http://iasdjkf");
-  Assert.equal(false, await PlacesUtils.bookmarks.fetch({url: bookmarkURI}));
+  Assert.equal(null, await PlacesUtils.bookmarks.fetch({url: bookmarkURI}));
   var bookmarkId = PlacesUtils.bookmarks.insertBookmark(folderId, bookmarkURI,
                                                         DEFAULT_INDEX, "");
   Assert.equal(PlacesUtils.bookmarks.getItemTitle(bookmarkId), "");
@@ -23,6 +23,6 @@ add_task(async function test_removeItem() {
   // remove the folder using removeItem
   PlacesUtils.bookmarks.removeItem(folderId);
   Assert.equal(PlacesUtils.bookmarks.getBookmarkIdsForURI(bookmarkURI).length, 0);
-  Assert.equal(false, await PlacesUtils.bookmarks.fetch({url: bookmarkURI}));
+  Assert.equal(null, await PlacesUtils.bookmarks.fetch({url: bookmarkURI}));
   Assert.equal(PlacesUtils.bookmarks.getItemIndex(bookmarkId), -1);
 });
