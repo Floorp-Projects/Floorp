@@ -166,13 +166,16 @@ function renderEasingHint(parentEl, segments, helper) {
     const startKeyframe = keyframes[i];
     const endKeyframe = keyframes[i + 1];
     const endTime = endKeyframe.offset * duration;
-
     const keyframeSegments = [];
+
     for (; indexOfSegments < segments.length; indexOfSegments++) {
       const segment = segments[indexOfSegments];
       keyframeSegments.push(segment);
 
-      if (segment.x === endTime) {
+      if (startKeyframe.offset === endKeyframe.offset) {
+        keyframeSegments.push(segments[++indexOfSegments]);
+        break;
+      } else if (segment.x === endTime) {
         break;
       }
     }
