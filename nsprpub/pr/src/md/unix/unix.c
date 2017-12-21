@@ -2854,28 +2854,11 @@ void _PR_UnixInit(void)
 #endif
 #endif  /* !defined(_PR_PTHREADS) */
 
-    /*
-     * Under HP-UX DCE threads, sigaction() installs a per-thread
-     * handler, so we use sigvector() to install a process-wide
-     * handler.
-     */
-#if defined(HPUX) && defined(_PR_DCETHREADS)
-    {
-        struct sigvec vec;
-
-        vec.sv_handler = SIG_IGN;
-        vec.sv_mask = 0;
-        vec.sv_flags = 0;
-        rv = sigvector(SIGPIPE, &vec, NULL);
-        PR_ASSERT(0 == rv);
-    }
-#else
     sigact.sa_handler = SIG_IGN;
     sigemptyset(&sigact.sa_mask);
     sigact.sa_flags = 0;
     rv = sigaction(SIGPIPE, &sigact, 0);
     PR_ASSERT(0 == rv);
-#endif /* HPUX && _PR_DCETHREADS */
 
     _pr_rename_lock = PR_NewLock();
     PR_ASSERT(NULL != _pr_rename_lock);

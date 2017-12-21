@@ -27,18 +27,6 @@ interface nsIMultiplexInputStream : nsISupports
     void appendStream(in nsIInputStream stream);
 
     /**
-     * Insert a stream at specified index.  If the cursor of this stream is at
-     * the beginning of the stream at index, the cursor will be placed at the
-     * beginning of the inserted stream instead.
-     * The cursor of the new stream should be located at the beginning of the
-     * stream if the implementation of this nsIMultiplexInputStream also is
-     * used as an nsISeekableStream.
-     * @param stream  stream to insert
-     * @param index   index to insert stream at, must be <= count
-     */
-    void insertStream(in nsIInputStream stream, in unsigned long index);
-
-    /**
      * Remove stream at specified index. If this stream is the one currently
      * being read the readcursor is moved to the beginning of the next
      * stream

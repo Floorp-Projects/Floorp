@@ -29,7 +29,7 @@ def generate(output, idlFilename, preprocessorHeader):
         # Unfortunately, even some of the getters here are fallible
         # (e.g. on nsComputedDOMStyle).
         extendedAttrs = ["Throws", "TreatNullAs=EmptyString",
-                         "SetterNeedsSubjectPrincipal"]
+                         "SetterNeedsSubjectPrincipal=NonSystem"]
         if pref is not "":
             extendedAttrs.append('Pref="%s"' % pref)
 

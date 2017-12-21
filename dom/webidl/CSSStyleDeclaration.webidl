@@ -8,7 +8,7 @@
  */
 
 interface CSSStyleDeclaration {
-  [CEReactions, SetterNeedsSubjectPrincipal, SetterThrows]
+  [CEReactions, SetterNeedsSubjectPrincipal=NonSystem, SetterThrows]
   attribute DOMString cssText;
 
   readonly attribute unsigned long length;
@@ -20,7 +20,7 @@ interface CSSStyleDeclaration {
   [Throws]
   CSSValue? getPropertyCSSValue(DOMString property);
   DOMString getPropertyPriority(DOMString property);
-  [CEReactions, NeedsSubjectPrincipal, Throws]
+  [CEReactions, NeedsSubjectPrincipal=NonSystem, Throws]
   void setProperty(DOMString property, [TreatNullAs=EmptyString] DOMString value, [TreatNullAs=EmptyString] optional DOMString priority = "");
   [CEReactions, Throws]
   DOMString removeProperty(DOMString property);
