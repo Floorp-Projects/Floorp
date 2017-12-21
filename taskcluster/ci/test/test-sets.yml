@@ -138,6 +138,7 @@ linux-qr-tests:
     - xpcshell
 
 windows-qr-tests:
+    - crashtest
     - mochitest-gpu
 
 jsdcov-code-coverage-tests:
