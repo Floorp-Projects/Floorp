@@ -51,7 +51,7 @@ var HistoryEntry = {
    *        the time the current Crossweave run was started
    * @return nothing
    */
-  Add(item, usSinceEpoch) {
+  async Add(item, usSinceEpoch) {
     Logger.AssertTrue("visits" in item && "uri" in item,
       "History entry in test file must have both 'visits' " +
       "and 'uri' properties");
@@ -69,20 +69,17 @@ var HistoryEntry = {
     if ("title" in item) {
       place.title = item.title;
     }
-    let cb = Async.makeSpinningCallback();
-    PlacesUtils.asyncHistory.updatePlaces(place, {
-        handleError: function Add_handleError() {
-          cb(new Error("Error adding history entry"));
-        },
-        handleResult: function Add_handleResult() {
-          cb();
-        },
-        handleCompletion: function Add_handleCompletion() {
-          // Nothing to do
-        }
+    return new Promise((resolve, reject) => {
+      PlacesUtils.asyncHistory.updatePlaces(place, {
+          handleError() {
+            reject(new Error("Error adding history entry"));
+          },
+          handleResult() {},
+          handleCompletion() {
+            resolve();
+          }
+      });
     });
-    // Spin the event loop to embed this async call in a sync API
-    cb.wait();
   },
 
   /**
@@ -113,9 +110,10 @@ var HistoryEntry = {
     let all_items_found = true;
     for (let itemvisit of item.visits) {
       all_items_found = all_items_found && "found" in itemvisit;
-      Logger.logInfo("History entry for " + item.uri + ", type:" +
-              itemvisit.type + ", date:" + itemvisit.date +
-              ("found" in itemvisit ? " is present" : " is not present"));
+      Logger.logInfo(
+        `History entry for ${item.uri}, type: ${itemvisit.type}, date: ${itemvisit.date}` +
+        `(${itemvisit.date * 60 * 60 * 1000 * 1000}), found = ${!!itemvisit.found}`
+      );
     }
     return all_items_found;
   },
@@ -130,24 +128,26 @@ var HistoryEntry = {
    *        the time the current Crossweave run was started
    * @return nothing
    */
-  Delete(item, usSinceEpoch) {
+  async Delete(item, usSinceEpoch) {
     if ("uri" in item) {
-      Async.promiseSpinningly(PlacesUtils.history.remove(item.uri));
+      let removedAny = await PlacesUtils.history.remove(item.uri);
+      if (!removedAny) {
+        Logger.log("Warning: Removed 0 history visits for uri " + item.uri);
+      }
     } else if ("host" in item) {
-      PlacesUtils.history.removePagesFromHost(item.host, false);
+      await PlacesUtils.history.removePagesFromHost(item.host, false);
     } else if ("begin" in item && "end" in item) {
-      let cb = Async.makeSpinningCallback();
       let msSinceEpoch = parseInt(usSinceEpoch / 1000);
       let filter = {
         beginDate: new Date(msSinceEpoch + (item.begin * 60 * 60 * 1000)),
         endDate: new Date(msSinceEpoch + (item.end * 60 * 60 * 1000))
       };
-      PlacesUtils.history.removeVisitsByFilter(filter)
-      .catch(ex => Logger.AssertTrue(false, "An error occurred while deleting history: " + ex.message))
-      .then(result => { cb(null, result); }, err => { cb(err); });
-      Async.waitForSyncCallback(cb);
+      let removedAny = await PlacesUtils.history.removeVisitsByFilter(filter);
+      if (!removedAny) {
+        Logger.log("Warning: Removed 0 history visits with " + JSON.stringify({ item, filter }));
+      }
     } else {
-      Logger.AssertTrue(false, "invalid entry in delete history");
+      Logger.AssertTrue(false, "invalid entry in delete history " + JSON.stringify(item));
     }
   },
 };

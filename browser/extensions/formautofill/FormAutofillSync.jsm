@@ -332,6 +332,7 @@ FormAutofillEngine.prototype = {
   },
 
   async _resetClient() {
+    await profileStorage.initialize();
     this._store.storage.resetSync();
   },
 };
