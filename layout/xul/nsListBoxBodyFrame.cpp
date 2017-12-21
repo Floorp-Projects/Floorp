@@ -714,11 +714,10 @@ nsListBoxBodyFrame::ComputeIntrinsicISize(nsBoxLayoutState& aBoxLayoutState)
   nsCOMPtr<nsIContent> firstRowContent(do_QueryInterface(firstRowEl));
 
   if (firstRowContent) {
-    RefPtr<nsStyleContext> styleContext;
-    nsPresContext *presContext = aBoxLayoutState.PresContext();
-    styleContext = presContext->StyleSet()->
-      ResolveStyleFor(firstRowContent->AsElement(), nullptr,
-                      LazyComputeBehavior::Allow);
+    nsPresContext* presContext = aBoxLayoutState.PresContext();
+    RefPtr<nsStyleContext> styleContext =
+      presContext->StyleSet()->ResolveStyleFor(
+          firstRowContent->AsElement(), nullptr, LazyComputeBehavior::Allow);
 
     nscoord width = 0;
     nsMargin margin(0,0,0,0);
@@ -920,14 +919,11 @@ nsListBoxBodyFrame::DoInternalPositionChanged(bool aUp, int32_t aDelta)
       // We have scrolled so much that all of our current frames will
       // go off screen, so blow them all away. Weeee!
       nsIFrame *currBox = mFrames.FirstChild();
-      nsCSSFrameConstructor* fc = presContext->PresShell()->FrameConstructor();
-      fc->BeginUpdate();
       while (currBox) {
         nsIFrame *nextBox = currBox->GetNextSibling();
         RemoveChildFrame(state, currBox);
         currBox = nextBox;
       }
-      fc->EndUpdate();
     }
 
     // clear frame markers so that CreateRows will re-create
@@ -1072,8 +1068,6 @@ nsListBoxBodyFrame::DestroyRows(int32_t& aRowsToLose)
   nsIFrame* childFrame = GetFirstFrame();
   nsBoxLayoutState state(PresContext());
 
-  nsCSSFrameConstructor* fc = PresShell()->FrameConstructor();
-  fc->BeginUpdate();
   while (childFrame && aRowsToLose > 0) {
     --aRowsToLose;
 
@@ -1082,7 +1076,6 @@ nsListBoxBodyFrame::DestroyRows(int32_t& aRowsToLose)
 
     mTopFrame = childFrame = nextFrame;
   }
-  fc->EndUpdate();
 
   PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
@@ -1097,8 +1090,6 @@ nsListBoxBodyFrame::ReverseDestroyRows(int32_t& aRowsToLose)
   nsIFrame* childFrame = GetLastFrame();
   nsBoxLayoutState state(PresContext());
 
-  nsCSSFrameConstructor* fc = PresShell()->FrameConstructor();
-  fc->BeginUpdate();
   while (childFrame && aRowsToLose > 0) {
     --aRowsToLose;
 
@@ -1108,7 +1099,6 @@ nsListBoxBodyFrame::ReverseDestroyRows(int32_t& aRowsToLose)
 
     mBottomFrame = childFrame = prevFrame;
   }
-  fc->EndUpdate();
 
   PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
@@ -1191,10 +1181,9 @@ nsListBoxBodyFrame::GetFirstItemBox(int32_t aOffset, bool* aCreated)
     //     display: none was on listitem content
     bool isAppend = mRowsToPrepend <= 0;
 
-    nsPresContext* presContext = PresContext();
-    nsCSSFrameConstructor* fc = presContext->PresShell()->FrameConstructor();
     nsIFrame* topFrame = nullptr;
-    fc->CreateListBoxContent(this, nullptr, startContent, &topFrame, isAppend);
+    PresContext()->FrameConstructor()->CreateListBoxContent(
+        this, nullptr, startContent, &topFrame, isAppend);
     mTopFrame = topFrame;
     if (mTopFrame) {
       if (aCreated)
@@ -1244,10 +1233,8 @@ nsListBoxBodyFrame::GetNextItemBox(nsIFrame* aBox, int32_t aOffset,
         bool isAppend = result != mLinkupFrame && mRowsToPrepend <= 0;
         nsIFrame* prevFrame = isAppend ? nullptr : aBox;
 
-        nsPresContext* presContext = PresContext();
-        nsCSSFrameConstructor* fc = presContext->PresShell()->FrameConstructor();
-        fc->CreateListBoxContent(this, prevFrame, nextContent,
-                                 &result, isAppend);
+        PresContext()->FrameConstructor()->CreateListBoxContent(
+            this, prevFrame, nextContent, &result, isAppend);
 
         if (result) {
           if (aCreated)
@@ -1298,15 +1285,11 @@ nsListBoxBodyFrame::ContinueReflow(nscoord height)
       nsIFrame* currFrame = startingPoint->GetNextSibling();
       nsBoxLayoutState state(PresContext());
 
-      nsCSSFrameConstructor* fc =
-        PresShell()->FrameConstructor();
-      fc->BeginUpdate();
       while (currFrame) {
         nsIFrame* nextFrame = currFrame->GetNextSibling();
         RemoveChildFrame(state, currFrame);
         currFrame = nextFrame;
       }
-      fc->EndUpdate();
 
       PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,
