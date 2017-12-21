@@ -12,6 +12,7 @@
 #include "TextEditUtils.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEditRules.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/mozalloc.h"
@@ -31,7 +32,6 @@
 #include "nsIDOMNode.h"
 #include "nsDOMCSSRGBColor.h"
 #include "nsIDOMWindow.h"
-#include "nsIEditRules.h"
 #include "nsIHTMLObjectResizer.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
@@ -64,11 +64,11 @@ HTMLEditor::AbsolutePositionSelection(bool aEnabled)
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  TextRulesInfo ruleInfo(aEnabled ? EditAction::setAbsolutePosition :
-                                    EditAction::removeAbsolutePosition);
+  RulesInfo ruleInfo(aEnabled ? EditAction::setAbsolutePosition :
+                                EditAction::removeAbsolutePosition);
   bool cancel, handled;
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (NS_FAILED(rv) || cancel) {
     return rv;
@@ -190,11 +190,11 @@ HTMLEditor::RelativeChangeZIndex(int32_t aChange)
   // Find out if the selection is collapsed:
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  TextRulesInfo ruleInfo(aChange < 0 ? EditAction::decreaseZIndex :
-                                       EditAction::increaseZIndex);
+  RulesInfo ruleInfo(aChange < 0 ? EditAction::decreaseZIndex :
+                                   EditAction::increaseZIndex);
   bool cancel, handled;
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;

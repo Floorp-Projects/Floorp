@@ -40,7 +40,6 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNode.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIEditRules.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
 #include "nsISelectionController.h"
@@ -639,7 +638,7 @@ TextEditor::DeleteSelection(EDirection aAction,
   }
 
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
 
   // delete placeholder txns merge.
   AutoPlaceholderBatch batch(this, nsGkAtoms::DeleteTxnName);
@@ -665,7 +664,7 @@ TextEditor::DeleteSelection(EDirection aAction,
     }
   }
 
-  TextRulesInfo ruleInfo(EditAction::deleteSelection);
+  RulesInfo ruleInfo(EditAction::deleteSelection);
   ruleInfo.collapsedAction = aAction;
   ruleInfo.stripWrappers = aStripWrappers;
   bool cancel, handled;
@@ -689,7 +688,7 @@ TextEditor::InsertText(const nsAString& aStringToInsert)
   }
 
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
 
   EditAction opID = EditAction::insertText;
   if (ShouldHandleIMEComposition()) {
@@ -705,7 +704,7 @@ TextEditor::InsertText(const nsAString& aStringToInsert)
   // XXX can we trust instring to outlive ruleInfo,
   // XXX and ruleInfo not to refer to instring in its dtor?
   //nsAutoString instring(aStringToInsert);
-  TextRulesInfo ruleInfo(opID);
+  RulesInfo ruleInfo(opID);
   ruleInfo.inString = &aStringToInsert;
   ruleInfo.outString = &resultString;
   ruleInfo.maxLength = mMaxTextLength;
@@ -731,7 +730,7 @@ TextEditor::InsertLineBreak()
   }
 
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
 
   AutoPlaceholderBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::insertBreak, nsIEditor::eNext);
@@ -740,7 +739,7 @@ TextEditor::InsertLineBreak()
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  TextRulesInfo ruleInfo(EditAction::insertBreak);
+  RulesInfo ruleInfo(EditAction::insertBreak);
   ruleInfo.maxLength = mMaxTextLength;
   bool cancel, handled;
   // XXX DidDoAction() won't be called when this returns error.  Perhaps,
@@ -818,7 +817,7 @@ TextEditor::SetText(const nsAString& aString)
   }
 
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
 
   // delete placeholder txns merge.
   AutoPlaceholderBatch batch(this, nullptr);
@@ -829,7 +828,7 @@ TextEditor::SetText(const nsAString& aString)
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_NULL_POINTER;
   }
-  TextRulesInfo ruleInfo(EditAction::setText);
+  RulesInfo ruleInfo(EditAction::setText);
   ruleInfo.inString = &aString;
   ruleInfo.maxLength = mMaxTextLength;
 
@@ -876,10 +875,8 @@ TextEditor::BeginIMEComposition(WidgetCompositionEvent* aEvent)
   if (IsPasswordEditor()) {
     NS_ENSURE_TRUE(mRules, NS_ERROR_NULL_POINTER);
     // Protect the edit rules object from dying
-    nsCOMPtr<nsIEditRules> rules(mRules);
-
-    TextEditRules* textEditRules = static_cast<TextEditRules*>(rules.get());
-    textEditRules->ResetIMETextPWBuf();
+    RefPtr<TextEditRules> rules(mRules);
+    rules->ResetIMETextPWBuf();
   }
 
   return EditorBase::BeginIMEComposition(aEvent);
@@ -960,7 +957,7 @@ TextEditor::DocumentIsEmpty(bool* aIsEmpty)
 {
   NS_ENSURE_TRUE(mRules, NS_ERROR_NOT_INITIALIZED);
 
-  if (static_cast<TextEditRules*>(mRules.get())->HasBogusNode()) {
+  if (mRules->HasBogusNode()) {
     *aIsEmpty = true;
     return NS_OK;
   }
@@ -1156,7 +1153,7 @@ NS_IMETHODIMP
 TextEditor::Undo(uint32_t aCount)
 {
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
 
   AutoUpdateViewBatch beginViewBatching(this);
 
@@ -1166,7 +1163,7 @@ TextEditor::Undo(uint32_t aCount)
 
   AutoRules beginRulesSniffing(this, EditAction::undo, nsIEditor::eNone);
 
-  TextRulesInfo ruleInfo(EditAction::undo);
+  RulesInfo ruleInfo(EditAction::undo);
   RefPtr<Selection> selection = GetSelection();
   bool cancel, handled;
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
@@ -1184,7 +1181,7 @@ NS_IMETHODIMP
 TextEditor::Redo(uint32_t aCount)
 {
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
 
   AutoUpdateViewBatch beginViewBatching(this);
 
@@ -1194,7 +1191,7 @@ TextEditor::Redo(uint32_t aCount)
 
   AutoRules beginRulesSniffing(this, EditAction::redo, nsIEditor::eNone);
 
-  TextRulesInfo ruleInfo(EditAction::redo);
+  RulesInfo ruleInfo(EditAction::redo);
   RefPtr<Selection> selection = GetSelection();
   bool cancel, handled;
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
@@ -1380,10 +1377,10 @@ TextEditor::OutputToString(const nsAString& aFormatType,
                            nsAString& aOutputString)
 {
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
 
   nsString resultString;
-  TextRulesInfo ruleInfo(EditAction::outputText);
+  RulesInfo ruleInfo(EditAction::outputText);
   ruleInfo.outString = &resultString;
   ruleInfo.flags = aFlags;
   // XXX Struct should store a nsAReadable*
@@ -1498,7 +1495,7 @@ TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
                               nsIDOMNode** aNodeInserted)
 {
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
 
   // Let the citer quote it for us:
   nsString quotedStuff;
@@ -1519,7 +1516,7 @@ TextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   AutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
 
   // give rules a chance to handle or cancel
-  TextRulesInfo ruleInfo(EditAction::insertElement);
+  RulesInfo ruleInfo(EditAction::insertElement);
   bool cancel, handled;
   rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1644,7 +1641,7 @@ TextEditor::StartOperation(EditAction opID,
                            nsIEditor::EDirection aDirection)
 {
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
 
   EditorBase::StartOperation(opID, aDirection);  // will set mAction, mDirection
   if (rules) {
@@ -1661,7 +1658,7 @@ NS_IMETHODIMP
 TextEditor::EndOperation()
 {
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
 
   // post processing
   nsresult rv = rules ? rules->AfterEdit(mAction, mDirection) : NS_OK;
@@ -1677,7 +1674,7 @@ TextEditor::SelectEntireDocument(Selection* aSelection)
   }
 
   // Protect the edit rules object from dying
-  nsCOMPtr<nsIEditRules> rules(mRules);
+  RefPtr<TextEditRules> rules(mRules);
 
   // is doc empty?
   if (rules->DocumentIsEmpty()) {

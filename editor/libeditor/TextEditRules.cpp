@@ -5,6 +5,7 @@
 
 #include "mozilla/TextEditRules.h"
 
+#include "HTMLEditRules.h"
 #include "TextEditUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EditorDOMPoint.h"
@@ -63,6 +64,7 @@ TextEditRules::TextEditRules()
   , mLockRulesSniffing(false)
   , mDidExplicitlySetInterline(false)
   , mDeleteBidiImmediately(false)
+  , mIsHTMLEditRules(false)
   , mTheAction(EditAction::none)
   , mLastStart(0)
   , mLastLength(0)
@@ -100,19 +102,30 @@ TextEditRules::~TextEditRules()
   }
 }
 
+HTMLEditRules*
+TextEditRules::AsHTMLEditRules()
+{
+  return mIsHTMLEditRules ? static_cast<HTMLEditRules*>(this) : nullptr;
+}
+
+const HTMLEditRules*
+TextEditRules::AsHTMLEditRules() const
+{
+  return mIsHTMLEditRules ? static_cast<const HTMLEditRules*>(this) : nullptr;
+}
+
 NS_IMPL_CYCLE_COLLECTION(TextEditRules, mBogusNode, mCachedSelectionNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TextEditRules)
-  NS_INTERFACE_MAP_ENTRY(nsIEditRules)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsINamed)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEditRules)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITimerCallback)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TextEditRules)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TextEditRules)
 
-NS_IMETHODIMP
+nsresult
 TextEditRules::Init(TextEditor* aTextEditor)
 {
   if (!aTextEditor) {
@@ -150,7 +163,7 @@ TextEditRules::Init(TextEditor* aTextEditor)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 TextEditRules::SetInitialValue(const nsAString& aValue)
 {
   if (IsPasswordEditor()) {
@@ -159,7 +172,7 @@ TextEditRules::SetInitialValue(const nsAString& aValue)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 TextEditRules::DetachEditor()
 {
   if (mTimer) {
@@ -169,8 +182,8 @@ TextEditRules::DetachEditor()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TextEditRules::BeforeEdit(EditAction action,
+nsresult
+TextEditRules::BeforeEdit(EditAction aAction,
                           nsIEditor::EDirection aDirection)
 {
   if (mLockRulesSniffing) {
@@ -181,7 +194,7 @@ TextEditRules::BeforeEdit(EditAction action,
   mDidExplicitlySetInterline = false;
   if (!mActionNesting) {
     // let rules remember the top level action
-    mTheAction = action;
+    mTheAction = aAction;
   }
   mActionNesting++;
 
@@ -193,7 +206,7 @@ TextEditRules::BeforeEdit(EditAction action,
   RefPtr<Selection> selection = textEditor->GetSelection();
   NS_ENSURE_STATE(selection);
 
-  if (action == EditAction::setText) {
+  if (aAction == EditAction::setText) {
     // setText replaces all text, so mCachedSelectionNode might be invalid on
     // AfterEdit.
     // Since this will be used as start position of spellchecker, we should
@@ -208,8 +221,8 @@ TextEditRules::BeforeEdit(EditAction action,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TextEditRules::AfterEdit(EditAction action,
+nsresult
+TextEditRules::AfterEdit(EditAction aAction,
                          nsIEditor::EDirection aDirection)
 {
   if (mLockRulesSniffing) {
@@ -226,7 +239,7 @@ TextEditRules::AfterEdit(EditAction action,
 
     NS_ENSURE_STATE(mTextEditor);
     nsresult rv =
-      mTextEditor->HandleInlineSpellCheck(action, selection,
+      mTextEditor->HandleInlineSpellCheck(aAction, selection,
                                           mCachedSelectionNode,
                                           mCachedSelectionOffset,
                                           nullptr, 0, nullptr, 0);
@@ -255,7 +268,7 @@ TextEditRules::AfterEdit(EditAction action,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 TextEditRules::WillDoAction(Selection* aSelection,
                             RulesInfo* aInfo,
                             bool* aCancel,
@@ -268,23 +281,22 @@ TextEditRules::WillDoAction(Selection* aSelection,
   *aHandled = false;
 
   // my kingdom for dynamic cast
-  TextRulesInfo* info = static_cast<TextRulesInfo*>(aInfo);
-
-  switch (info->action) {
+  switch (aInfo->action) {
     case EditAction::insertBreak:
       UndefineCaretBidiLevel(aSelection);
-      return WillInsertBreak(aSelection, aCancel, aHandled, info->maxLength);
+      return WillInsertBreak(aSelection, aCancel, aHandled, aInfo->maxLength);
     case EditAction::insertText:
     case EditAction::insertIMEText:
       UndefineCaretBidiLevel(aSelection);
-      return WillInsertText(info->action, aSelection, aCancel, aHandled,
-                            info->inString, info->outString, info->maxLength);
+      return WillInsertText(aInfo->action, aSelection, aCancel, aHandled,
+                            aInfo->inString, aInfo->outString,
+                            aInfo->maxLength);
     case EditAction::setText:
       UndefineCaretBidiLevel(aSelection);
-      return WillSetText(*aSelection, aCancel, aHandled, info->inString,
-                         info->maxLength);
+      return WillSetText(*aSelection, aCancel, aHandled, aInfo->inString,
+                         aInfo->maxLength);
     case EditAction::deleteSelection:
-      return WillDeleteSelection(aSelection, info->collapsedAction,
+      return WillDeleteSelection(aSelection, aInfo->collapsedAction,
                                  aCancel, aHandled);
     case EditAction::undo:
       return WillUndo(aSelection, aCancel, aHandled);
@@ -295,8 +307,8 @@ TextEditRules::WillDoAction(Selection* aSelection,
     case EditAction::removeTextProperty:
       return WillRemoveTextProperty(aSelection, aCancel, aHandled);
     case EditAction::outputText:
-      return WillOutputText(aSelection, info->outputFormat, info->outString,
-                            info->flags, aCancel, aHandled);
+      return WillOutputText(aSelection, aInfo->outputFormat, aInfo->outString,
+                            aInfo->flags, aCancel, aHandled);
     case EditAction::insertElement:
       // i had thought this would be html rules only.  but we put pre elements
       // into plaintext mail when doing quoting for reply!  doh!
@@ -307,7 +319,7 @@ TextEditRules::WillDoAction(Selection* aSelection,
   }
 }
 
-NS_IMETHODIMP
+nsresult
 TextEditRules::DidDoAction(Selection* aSelection,
                            RulesInfo* aInfo,
                            nsresult aResult)
@@ -319,10 +331,7 @@ TextEditRules::DidDoAction(Selection* aSelection,
 
   NS_ENSURE_TRUE(aSelection && aInfo, NS_ERROR_NULL_POINTER);
 
-  // my kingdom for dynamic cast
-  TextRulesInfo* info = static_cast<TextRulesInfo*>(aInfo);
-
-  switch (info->action) {
+  switch (aInfo->action) {
     case EditAction::insertBreak:
       return DidInsertBreak(aSelection, aResult);
     case EditAction::insertText:
@@ -331,7 +340,7 @@ TextEditRules::DidDoAction(Selection* aSelection,
     case EditAction::setText:
       return DidSetText(*aSelection, aResult);
     case EditAction::deleteSelection:
-      return DidDeleteSelection(aSelection, info->collapsedAction, aResult);
+      return DidDeleteSelection(aSelection, aInfo->collapsedAction, aResult);
     case EditAction::undo:
       return DidUndo(aSelection, aResult);
     case EditAction::redo:
@@ -353,7 +362,7 @@ TextEditRules::DidDoAction(Selection* aSelection,
  * nodes.  Otherwise, i.e., there is no meaningful content,
  * return true.
  */
-NS_IMETHODIMP_(bool)
+bool
 TextEditRules::DocumentIsEmpty()
 {
   bool retVal = false;
@@ -1677,7 +1686,7 @@ TextEditRules::CreateBRInternal(const EditorRawDOMPoint& aPointToInsert,
   return brElement.forget();
 }
 
-NS_IMETHODIMP
+nsresult
 TextEditRules::DocumentModified()
 {
   return NS_ERROR_NOT_IMPLEMENTED;

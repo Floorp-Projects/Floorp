@@ -13,10 +13,6 @@ MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
 
-EXPORTS += [
-    'nsIEditRules.h',
-]
-
 EXPORTS.mozilla += [
     'ChangeStyleTransaction.h',
     'CSSEditUtils.h',
