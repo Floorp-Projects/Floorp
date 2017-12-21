@@ -986,9 +986,11 @@ public:
 
 // -----------------------------------------------------------------------------
 // State and State Requests (WebGLContextState.cpp)
+private:
+    void SetEnabled(const char* funcName, GLenum cap, bool enabled);
 public:
-    void Disable(GLenum cap);
-    void Enable(GLenum cap);
+    void Disable(GLenum cap) { SetEnabled("disabled", cap, false); }
+    void Enable(GLenum cap) { SetEnabled("enabled", cap, true); }
     bool GetStencilBits(GLint* const out_stencilBits) const;
     bool GetChannelBits(const char* funcName, GLenum pname, GLint* const out_val);
     virtual JS::Value GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv);
