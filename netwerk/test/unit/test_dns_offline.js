@@ -6,7 +6,7 @@ var mainThread = threadManager.currentThread;
 
 var listener1 = {
   onLookupComplete: function(inRequest, inRecord, inStatus) {
-    do_check_eq(inStatus, Cr.NS_ERROR_OFFLINE);
+    Assert.equal(inStatus, Cr.NS_ERROR_OFFLINE);
     test2();
     do_test_finished();
   }
@@ -14,9 +14,9 @@ var listener1 = {
 
 var listener2 = {
   onLookupComplete: function(inRequest, inRecord, inStatus) {
-    do_check_eq(inStatus, Cr.NS_OK);
+    Assert.equal(inStatus, Cr.NS_OK);
     var answer = inRecord.getNextAddrAsString();
-    do_check_true(answer == "127.0.0.1" || answer == "::1");
+    Assert.ok(answer == "127.0.0.1" || answer == "::1");
     test3();
     do_test_finished();
   }
@@ -24,9 +24,9 @@ var listener2 = {
 
 var listener3 = {
   onLookupComplete: function(inRequest, inRecord, inStatus) {
-    do_check_eq(inStatus, Cr.NS_OK);
+    Assert.equal(inStatus, Cr.NS_OK);
     var answer = inRecord.getNextAddrAsString();
-    do_check_true(answer == "127.0.0.1" || answer == "::1");
+    Assert.ok(answer == "127.0.0.1" || answer == "::1");
     cleanup();
     do_test_finished();
   }
@@ -41,7 +41,7 @@ function run_test() {
   try {
     dns.asyncResolve("localhost", 0, listener1, mainThread, defaultOriginAttributes);
   } catch (e) {
-      do_check_eq(e.result, Cr.NS_ERROR_OFFLINE);
+      Assert.equal(e.result, Cr.NS_ERROR_OFFLINE);
       test2();
       do_test_finished();
   }

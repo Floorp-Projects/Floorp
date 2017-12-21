@@ -36,13 +36,13 @@ function run_test() {
 
 function test_listing_zero_sources() {
   gThreadClient.getSources(function (packet) {
-    do_check_true(!packet.error);
-    do_check_true(!!packet.sources);
-    do_check_eq(packet.sources.length, 0);
+    Assert.ok(!packet.error);
+    Assert.ok(!!packet.sources);
+    Assert.equal(packet.sources.length, 0);
 
-    do_check_true(gNumTimesSourcesSent <= 1,
-                  "Should only send one sources request at most, even though we"
-                  + " might have had to send one to determine feature support.");
+    Assert.ok(gNumTimesSourcesSent <= 1,
+              "Should only send one sources request at most, even though we"
+              + " might have had to send one to determine feature support.");
 
     finishClient(gClient);
   });

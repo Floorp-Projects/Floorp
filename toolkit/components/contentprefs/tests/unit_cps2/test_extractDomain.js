@@ -15,6 +15,6 @@ function run_test() {
   let cps = Cc["@mozilla.org/content-pref/service;1"].
             getService(Ci.nsIContentPrefService2);
   for (let url in tests) {
-    do_check_eq(cps.extractDomain(url), tests[url]);
+    Assert.equal(cps.extractDomain(url), tests[url]);
   }
 }

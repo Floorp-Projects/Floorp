@@ -9,16 +9,16 @@ function run_test() {
   var scope2 = {};
   var global2 = Components.utils.import("resource://gre/modules/NetUtil.jsm", scope2);
 
-  do_check_true(global1 === global2);
-  do_check_true(scope1.NetUtil === scope2.NetUtil);
+  Assert.ok(global1 === global2);
+  Assert.ok(scope1.NetUtil === scope2.NetUtil);
 
   Components.utils.unload("resource://gre/modules/NetUtil.jsm");
 
   var scope3 = {};
   var global3 = Components.utils.import("resource://gre/modules/NetUtil.jsm", scope3);
 
-  do_check_false(global1 === global3);
-  do_check_false(scope1.NetUtil === scope3.NetUtil);
+  Assert.equal(false, global1 === global3);
+  Assert.equal(false, scope1.NetUtil === scope3.NetUtil);
 
   // When the jsm was unloaded, the value of all its global's properties were
   // set to undefined. While it must be safe (not crash) to call into the

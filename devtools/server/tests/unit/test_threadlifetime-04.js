@@ -33,12 +33,12 @@ function test_thread_lifetime() {
 
     gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function (response) {
       // Successful promotion won't return an error.
-      do_check_eq(response.error, undefined);
+      Assert.equal(response.error, undefined);
 
       let threadGrip1 = response.from;
 
       gClient.request({ to: pauseGrip.actor, type: "threadGrip" }, function (response) {
-        do_check_eq(threadGrip1, response.from);
+        Assert.equal(threadGrip1, response.from);
         gThreadClient.resume(function () {
           finishClient(gClient);
         });

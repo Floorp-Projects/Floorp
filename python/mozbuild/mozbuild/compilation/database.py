@@ -7,7 +7,6 @@
 import os
 import types
 
-from mozbuild.compilation import util
 from mozbuild.backend.common import CommonBackend
 from mozbuild.frontend.data import (
     ComputedFlags,
@@ -34,8 +33,6 @@ from collections import (
 class CompileDBBackend(CommonBackend):
     def _init(self):
         CommonBackend._init(self)
-        if not util.check_top_objdir(self.environment.topobjdir):
-            raise Exception()
 
         # The database we're going to dump out to.
         self._db = OrderedDict()

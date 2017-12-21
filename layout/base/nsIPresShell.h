@@ -40,6 +40,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsMargin.h"
 #include "nsFrameState.h"
+#include "nsStubDocumentObserver.h"
 #include "Units.h"
 
 class gfxContext;
@@ -164,7 +165,7 @@ enum nsRectVisibility {
  * frame.
  */
 
-class nsIPresShell : public nsISupports
+class nsIPresShell : public nsStubDocumentObserver
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IPRESSHELL_IID)
@@ -336,12 +337,15 @@ public:
    */
   const nsFrameSelection* ConstFrameSelection() const { return mSelection; }
 
-  // Make shell be a document observer.  If called after Destroy() has
-  // been called on the shell, this will be ignored.
-  virtual void BeginObservingDocument() = 0;
+  // Start receiving notifications from our document. If called after Destroy,
+  // this will be ignored.
+  void BeginObservingDocument();
 
-  // Make shell stop being a document observer
-  virtual void EndObservingDocument() = 0;
+  // Stop receiving notifications from our document. If called after Destroy,
+  // this will be ignored.
+  void EndObservingDocument();
+
+  bool IsObservingDocument() const { return mIsObservingDocument; }
 
   /**
    * Return whether Initialize() was previously called.
@@ -1738,6 +1742,11 @@ protected:
   bool                      mDidInitialize : 1;
   bool                      mIsDestroying : 1;
   bool                      mIsReflowing : 1;
+  bool                      mIsObservingDocument : 1;
+
+  // We've been disconnected from the document.  We will refuse to paint the
+  // document until either our timer fires or all frames are constructed.
+  bool                      mIsDocumentGone : 1;
 
   // For all documents we initially lock down painting.
   bool                      mPaintingSuppressed : 1;

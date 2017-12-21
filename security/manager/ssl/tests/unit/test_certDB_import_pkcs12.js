@@ -70,7 +70,7 @@ const gCertificateDialogs = {
     }
 
     password.value = gCurrentTestcase.passwordToUse;
-    do_print("getPKCS12FilePassword() called");
+    info("getPKCS12FilePassword() called");
     gGetPKCS12FilePasswordCalled = true;
     return true;
   },
@@ -79,7 +79,7 @@ const gCertificateDialogs = {
 const gPrompt = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
   alert: (title, text) => {
-    do_print(`alert('${text}')`);
+    info(`alert('${text}')`);
     ok(gCurrentTestcase.expectingAlert,
        "alert() should only be called if we're expecting it");
     ok(gCurrentTestcase.expectedAlertRegexp.test(text),
@@ -109,7 +109,7 @@ function doesCertExist(commonName) {
 }
 
 function runOneTestcase(testcase) {
-  do_print(`running ${testcase.name}`);
+  info(`running ${testcase.name}`);
   ok(!doesCertExist(CERT_COMMON_NAME),
      "cert should not be in the database before import");
 
@@ -133,7 +133,7 @@ function run_test() {
   let promptFactoryCID =
     MockRegistrar.register("@mozilla.org/prompter;1", gPromptFactory);
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     MockRegistrar.unregister(certificateDialogsCID);
     MockRegistrar.unregister(promptFactoryCID);
   });

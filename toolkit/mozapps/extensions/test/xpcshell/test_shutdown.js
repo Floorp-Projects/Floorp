@@ -54,7 +54,7 @@ async function test_functions() {
     }
 
     try {
-      do_print("AddonManager." + prop);
+      info("AddonManager." + prop);
       await AddonManager[prop](...args);
       do_throw(prop + " did not throw an exception");
     } catch (e) {
@@ -70,7 +70,7 @@ async function test_functions() {
       continue;
 
     try {
-      do_print("AddonManagerPrivate." + prop);
+      info("AddonManagerPrivate." + prop);
       AddonManagerPrivate[prop]();
       do_throw(prop + " did not throw an exception");
     } catch (e) {

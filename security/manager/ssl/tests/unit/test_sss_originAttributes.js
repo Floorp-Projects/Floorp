@@ -8,7 +8,7 @@
 
 // Ensures nsISiteSecurityService APIs respects origin attributes.
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.cert_pinning.enforcement_level");
   Services.prefs.clearUserPref(
     "security.cert_pinning.process_headers_from_non_builtin_roots");

@@ -42,34 +42,65 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using mozilla::AutoJSContext;
 
+enum class IsRemoveNotification
+{
+  Yes,
+  No,
+};
+
+#ifdef DEBUG
+#define COMPOSED_DOC_DECL \
+  const bool wasInComposedDoc = !!node->GetComposedDoc();
+#else
+#define COMPOSED_DOC_DECL
+#endif
+
 // This macro expects the ownerDocument of content_ to be in scope as
 // |nsIDocument* doc|
-#define IMPL_MUTATION_NOTIFICATION(func_, content_, params_)      \
-  PR_BEGIN_MACRO                                                  \
-  bool needsEnterLeave = doc->MayHaveDOMMutationObservers();      \
-  if (needsEnterLeave) {                                          \
-    nsDOMMutationObserver::EnterMutationHandling();               \
-  }                                                               \
-  nsINode* node = content_;                                       \
-  NS_ASSERTION(node->OwnerDoc() == doc, "Bogus document");        \
-  doc->BindingManager()->func_ params_;                           \
-  do {                                                            \
-    nsINode::nsSlots* slots = node->GetExistingSlots();           \
-    if (slots && !slots->mMutationObservers.IsEmpty()) {          \
-      NS_OBSERVER_AUTO_ARRAY_NOTIFY_OBSERVERS(                    \
-        slots->mMutationObservers, nsIMutationObserver, 1,        \
-        func_, params_);                                          \
-    }                                                             \
-    ShadowRoot* shadow = ShadowRoot::FromNode(node);              \
-    if (shadow) {                                                 \
-      node = shadow->GetHost();                                   \
-    } else {                                                      \
-      node = node->GetParentNode();                               \
-    }                                                             \
-  } while (node);                                                 \
-  if (needsEnterLeave) {                                          \
-    nsDOMMutationObserver::LeaveMutationHandling();               \
-  }                                                               \
+#define IMPL_MUTATION_NOTIFICATION(func_, content_, params_, remove_)       \
+  PR_BEGIN_MACRO                                                            \
+  bool needsEnterLeave = doc->MayHaveDOMMutationObservers();                \
+  if (needsEnterLeave) {                                                    \
+    nsDOMMutationObserver::EnterMutationHandling();                         \
+  }                                                                         \
+  nsINode* node = content_;                                                 \
+  COMPOSED_DOC_DECL                                                         \
+  NS_ASSERTION(node->OwnerDoc() == doc, "Bogus document");                  \
+  if (remove_ == IsRemoveNotification::Yes && node->GetComposedDoc()) {     \
+    if (nsIPresShell* shell = doc->GetObservingShell()) {                   \
+      shell->func_ params_;                                                 \
+    }                                                                       \
+  }                                                                         \
+  doc->BindingManager()->func_ params_;                                     \
+  nsINode* last;                                                            \
+  do {                                                                      \
+    nsINode::nsSlots* slots = node->GetExistingSlots();                     \
+    if (slots && !slots->mMutationObservers.IsEmpty()) {                    \
+      NS_OBSERVER_AUTO_ARRAY_NOTIFY_OBSERVERS(                              \
+        slots->mMutationObservers, nsIMutationObserver, 1,                  \
+        func_, params_);                                                    \
+    }                                                                       \
+    last = node;                                                            \
+    if (ShadowRoot* shadow = ShadowRoot::FromNode(node)) {                  \
+      node = shadow->GetHost();                                             \
+    } else {                                                                \
+      node = node->GetParentNode();                                         \
+    }                                                                       \
+  } while (node);                                                           \
+  /* Whitelist NativeAnonymousChildListChange removal notifications from    \
+   * the assertion since it runs from UnbindFromTree, and thus we don't     \
+   * reach the document, but doesn't matter. */                             \
+  MOZ_ASSERT((last == doc) == wasInComposedDoc ||                           \
+             (remove_ == IsRemoveNotification::Yes &&                       \
+              !strcmp(#func_, "NativeAnonymousChildListChange")));          \
+  if (remove_ == IsRemoveNotification::No && last == doc) {                 \
+    if (nsIPresShell* shell = doc->GetObservingShell()) {                   \
+      shell->func_ params_;                                                 \
+    }                                                                       \
+  }                                                                         \
+  if (needsEnterLeave) {                                                    \
+    nsDOMMutationObserver::LeaveMutationHandling();                         \
+  }                                                                         \
   PR_END_MACRO
 
 #define IMPL_ANIMATION_NOTIFICATION(func_, content_, params_)     \
@@ -104,7 +135,7 @@ nsNodeUtils::CharacterDataWillChange(nsIContent* aContent,
 {
   nsIDocument* doc = aContent->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(CharacterDataWillChange, aContent,
-                             (doc, aContent, aInfo));
+                             (doc, aContent, aInfo), IsRemoveNotification::No);
 }
 
 void
@@ -113,7 +144,7 @@ nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
 {
   nsIDocument* doc = aContent->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(CharacterDataChanged, aContent,
-                             (doc, aContent, aInfo));
+                             (doc, aContent, aInfo), IsRemoveNotification::No);
 }
 
 void
@@ -126,7 +157,7 @@ nsNodeUtils::AttributeWillChange(Element* aElement,
   nsIDocument* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(AttributeWillChange, aElement,
                              (doc, aElement, aNameSpaceID, aAttribute,
-                              aModType, aNewValue));
+                              aModType, aNewValue), IsRemoveNotification::No);
 }
 
 void
@@ -139,7 +170,7 @@ nsNodeUtils::AttributeChanged(Element* aElement,
   nsIDocument* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(AttributeChanged, aElement,
                              (doc, aElement, aNameSpaceID, aAttribute,
-                              aModType, aOldValue));
+                              aModType, aOldValue), IsRemoveNotification::No);
 }
 
 void
@@ -149,7 +180,8 @@ nsNodeUtils::AttributeSetToCurrentValue(Element* aElement,
 {
   nsIDocument* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(AttributeSetToCurrentValue, aElement,
-                             (doc, aElement, aNameSpaceID, aAttribute));
+                             (doc, aElement, aNameSpaceID, aAttribute),
+                             IsRemoveNotification::No);
 }
 
 void
@@ -159,7 +191,8 @@ nsNodeUtils::ContentAppended(nsIContent* aContainer,
   nsIDocument* doc = aContainer->OwnerDoc();
 
   IMPL_MUTATION_NOTIFICATION(ContentAppended, aContainer,
-                             (doc, aContainer, aFirstNewContent));
+                             (doc, aContainer, aFirstNewContent),
+                             IsRemoveNotification::No);
 }
 
 void
@@ -167,8 +200,11 @@ nsNodeUtils::NativeAnonymousChildListChange(nsIContent* aContent,
                                             bool aIsRemove)
 {
   nsIDocument* doc = aContent->OwnerDoc();
+  auto isRemove = aIsRemove
+    ? IsRemoveNotification::Yes : IsRemoveNotification::No;
   IMPL_MUTATION_NOTIFICATION(NativeAnonymousChildListChange, aContent,
-                            (doc, aContent, aIsRemove));
+                            (doc, aContent, aIsRemove),
+                            isRemove);
 }
 
 void
@@ -190,7 +226,8 @@ nsNodeUtils::ContentInserted(nsINode* aContainer,
   }
 
   IMPL_MUTATION_NOTIFICATION(ContentInserted, aContainer,
-                             (document, container, aChild));
+                             (document, container, aChild),
+                             IsRemoveNotification::No);
 }
 
 void
@@ -213,7 +250,8 @@ nsNodeUtils::ContentRemoved(nsINode* aContainer,
   }
 
   IMPL_MUTATION_NOTIFICATION(ContentRemoved, aContainer,
-                             (document, container, aChild, aPreviousSibling));
+                             (document, container, aChild, aPreviousSibling),
+                             IsRemoveNotification::Yes);
 }
 
 Maybe<NonOwningAnimationTarget>

@@ -117,6 +117,6 @@ function doneFirstLoad(resolve, req, buffer, expected) {
 }
 
 function doneSecondLoad(resolve, req, buffer, expected) {
-  do_check_eq(handlers_called, expected);
+  Assert.equal(handlers_called, expected);
   resolve();
 }

@@ -15,12 +15,12 @@ add_task(async function check_max_backups_is_respected() {
   let oldJsonPath = OS.Path.join(backupFolder, "bookmarks-2008-01-01.json");
   let oldJsonFile = await OS.File.open(oldJsonPath, { truncate: true });
   oldJsonFile.close();
-  do_check_true(await OS.File.exists(oldJsonPath));
+  Assert.ok(await OS.File.exists(oldJsonPath));
 
   let jsonPath = OS.Path.join(backupFolder, "bookmarks-2008-01-31.json");
   let jsonFile = await OS.File.open(jsonPath, { truncate: true });
   jsonFile.close();
-  do_check_true(await OS.File.exists(jsonPath));
+  Assert.ok(await OS.File.exists(jsonPath));
 
   // Export bookmarks to JSON.
   // Allow 2 backups, the older one should be removed.
@@ -39,10 +39,10 @@ add_task(async function check_max_backups_is_respected() {
     iterator.close();
   }
 
-  do_check_eq(count, 2);
-  do_check_neq(lastBackupPath, null);
-  do_check_false(await OS.File.exists(oldJsonPath));
-  do_check_true(await OS.File.exists(jsonPath));
+  Assert.equal(count, 2);
+  Assert.notEqual(lastBackupPath, null);
+  Assert.equal(false, await OS.File.exists(oldJsonPath));
+  Assert.ok(await OS.File.exists(jsonPath));
 });
 
 add_task(async function check_max_backups_greater_than_backups() {
@@ -65,8 +65,8 @@ add_task(async function check_max_backups_greater_than_backups() {
   } finally {
     iterator.close();
   }
-  do_check_eq(count, 2);
-  do_check_neq(lastBackupPath, null);
+  Assert.equal(count, 2);
+  Assert.notEqual(lastBackupPath, null);
 });
 
 add_task(async function check_max_backups_null() {
@@ -90,8 +90,8 @@ add_task(async function check_max_backups_null() {
   } finally {
     iterator.close();
   }
-  do_check_eq(count, 2);
-  do_check_neq(lastBackupPath, null);
+  Assert.equal(count, 2);
+  Assert.notEqual(lastBackupPath, null);
 });
 
 add_task(async function check_max_backups_undefined() {
@@ -115,6 +115,6 @@ add_task(async function check_max_backups_undefined() {
   } finally {
     iterator.close();
   }
-  do_check_eq(count, 2);
-  do_check_neq(lastBackupPath, null);
+  Assert.equal(count, 2);
+  Assert.notEqual(lastBackupPath, null);
 });

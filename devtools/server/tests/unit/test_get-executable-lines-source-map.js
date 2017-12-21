@@ -34,13 +34,13 @@ function run_test() {
 
 function test_executable_lines() {
   gThreadClient.addOneTimeListener("newSource", function _onNewSource(evt, packet) {
-    do_check_eq(evt, "newSource");
+    Assert.equal(evt, "newSource");
 
     gThreadClient.getSources(function ({error, sources}) {
-      do_check_true(!error);
+      Assert.ok(!error);
       let source = gThreadClient.source(sources[0]);
       source.getExecutableLines(function (lines) {
-        do_check_true(arrays_equal([1, 2, 4, 6], lines));
+        Assert.ok(arrays_equal([1, 2, 4, 6], lines));
         finishClient(gClient);
       });
     });

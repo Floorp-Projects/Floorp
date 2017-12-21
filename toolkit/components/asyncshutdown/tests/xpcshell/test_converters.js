@@ -63,12 +63,12 @@ function test_conversions() {
 
   for (let sample of SAMPLES) {
     let stringified = JSON.stringify(normalize(sample), null, "\t");
-    do_print("Testing conversions of " + stringified);
+    info("Testing conversions of " + stringified);
     let rewrites = [sample];
     for (let i = 1; i < 3; ++i) {
       let source = rewrites[i - 1];
       let bag = PropertyBagConverter.fromValue(source);
-      do_print(" => " + bag);
+      info(" => " + bag);
       if (source == null) {
         Assert.ok(bag == null, "The bag is null");
       } else if (typeof source == "object") {
@@ -78,9 +78,9 @@ function test_conversions() {
       }
       let dest = PropertyBagConverter.toValue(bag);
       let restringified = JSON.stringify(normalize(dest), null, "\t");
-      do_print("Comparing");
-      do_print(stringified);
-      do_print(restringified);
+      info("Comparing");
+      info(stringified);
+      info(restringified);
       Assert.deepEqual(sample, dest, "Testing after " + i + " conversions");
       rewrites.push(dest);
     }

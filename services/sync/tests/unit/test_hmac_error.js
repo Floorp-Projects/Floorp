@@ -28,7 +28,7 @@ async function shared_setup() {
   engine._store.items = {flying: "LNER Class A3 4472",
                          scotsman: "Flying Scotsman"};
   tracker.addChangedID("scotsman", 0);
-  do_check_eq(1, Service.engineManager.getEnabled().length);
+  Assert.equal(1, Service.engineManager.getEnabled().length);
 
   let engines = {rotary:  {version: engine.version,
                            syncID:  engine.syncID},
@@ -90,7 +90,7 @@ add_task(async function hmac_error_during_404() {
     _("---------------------------");
 
     // Two rotary items, one client record... no errors.
-    do_check_eq(hmacErrorCount, 0);
+    Assert.equal(hmacErrorCount, 0);
   } finally {
     tracker.clearChangedIDs();
     Service.engineManager.unregister(engine);
@@ -187,7 +187,7 @@ add_task(async function hmac_error_during_node_reassignment() {
     let hasKeys = keysWBO.modified;
 
     _("We correctly handle 401s by aborting the sync and starting again.");
-    do_check_true(!hasData == !hasKeys);
+    Assert.ok(!hasData == !hasKeys);
 
     _("Be prepared for the second (automatic) sync...");
   }
@@ -202,7 +202,7 @@ add_task(async function hmac_error_during_node_reassignment() {
         let hasData = rotaryColl.wbo("flying") ||
                       rotaryColl.wbo("scotsman");
         let hasKeys = keysWBO.modified;
-        do_check_true(!hasData == !hasKeys);
+        Assert.ok(!hasData == !hasKeys);
 
         // Kick off another sync. Can't just call it, because we're inside the
         // lock...
@@ -215,7 +215,7 @@ add_task(async function hmac_error_during_node_reassignment() {
 
           onSyncFinished = function() {
             // Two rotary items, one client record... no errors.
-            do_check_eq(hmacErrorCount, 0);
+            Assert.equal(hmacErrorCount, 0);
 
             Svc.Obs.remove("weave:service:sync:finish", obs);
             Svc.Obs.remove("weave:service:sync:error", obs);

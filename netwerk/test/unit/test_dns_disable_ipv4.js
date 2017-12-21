@@ -9,7 +9,7 @@ var ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOServi
 var listener = {
   onLookupComplete: function(inRequest, inRecord, inStatus) {
     if (inStatus != Cr.NS_OK) {
-      do_check_eq(inStatus, Cr.NS_ERROR_UNKNOWN_HOST);
+      Assert.equal(inStatus, Cr.NS_ERROR_UNKNOWN_HOST);
       do_test_finished();
       return;
     }
@@ -19,7 +19,7 @@ var listener = {
         var answer = inRecord.getNextAddrAsString();
         // If there is an answer it should be an IPv6  address
         dump(answer);
-        do_check_true(answer.indexOf(':') != -1);
+        Assert.ok(answer.indexOf(':') != -1);
       } catch (e) {
         break;
       }
@@ -37,7 +37,7 @@ function run_test() {
                      listener, null, defaultOriginAttributes);
   } catch (e) {
     dump(e);
-    do_check_true(false);
+    Assert.ok(false);
     do_test_finished();
   }
 }

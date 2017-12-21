@@ -106,7 +106,7 @@ add_task(async function test_livemark_invalid() {
 
   await store.create(lateParentRec);
   let recInfo = await PlacesUtils.bookmarks.fetch(lateParentRec.id);
-  do_check_eq(recInfo.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
+  Assert.equal(recInfo.parentGuid, PlacesUtils.bookmarks.unfiledGuid);
 
   _("No feed URI, which is invalid. Will be skipped.");
   let noFeedURIRec = makeLivemark(record631361.payload, true);
@@ -114,7 +114,7 @@ add_task(async function test_livemark_invalid() {
   await store.create(noFeedURIRec);
   // No exception, but no creation occurs.
   let noFeedURIItem = await PlacesUtils.bookmarks.fetch(noFeedURIRec.id);
-  do_check_null(noFeedURIItem);
+  Assert.equal(null, noFeedURIItem);
 
   _("Parent is a Livemark. Will be skipped.");
   let lmParentRec = makeLivemark(record631361.payload, true);
@@ -122,7 +122,7 @@ add_task(async function test_livemark_invalid() {
   await store.create(lmParentRec);
   // No exception, but no creation occurs.
   let lmParentItem = await PlacesUtils.bookmarks.fetch(lmParentRec.id);
-  do_check_null(lmParentItem);
+  Assert.equal(null, lmParentItem);
 
   await engine.finalize();
 });

@@ -45,13 +45,13 @@ function write_entry_cont(entry, ostream)
 
 function check_doom1(status)
 {
-  do_check_eq(status, Cr.NS_OK);
+  Assert.equal(status, Cr.NS_OK);
   doom("http://nonexistententry/", check_doom2);
 }
 
 function check_doom2(status)
 {
-  do_check_eq(status, Cr.NS_ERROR_NOT_AVAILABLE);
+  Assert.equal(status, Cr.NS_ERROR_NOT_AVAILABLE);
   asyncOpenCacheEntry("http://testentry/", "disk", Ci.nsICacheStorage.OPEN_TRUNCATE, null, function(status, entry) {
     write_entry2(entry, entry.openOutputStream(0));
   });
@@ -71,7 +71,7 @@ function write_entry2(entry, ostream)
 
 function check_doom3(status)
 {
-  do_check_eq(status, Cr.NS_OK);
+  Assert.equal(status, Cr.NS_OK);
   // entry was doomed but writing should still succeed
   var data = "testdata";
   write_and_check(gOstream, data, data.length);
@@ -83,7 +83,7 @@ function check_doom3(status)
 
 function check_doom4(status)
 {
-  do_check_eq(status, Cr.NS_ERROR_NOT_AVAILABLE);
+  Assert.equal(status, Cr.NS_ERROR_NOT_AVAILABLE);
   do_test_finished();
 }
 

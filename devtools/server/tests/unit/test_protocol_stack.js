@@ -58,7 +58,7 @@ var RootFront = protocol.FrontClassWithSpec(rootSpec, {
 
 function run_test() {
   if (!Services.prefs.getBoolPref("javascript.options.asyncstack")) {
-    do_print("Async stacks are disabled.");
+    info("Async stacks are disabled.");
     return;
   }
 
@@ -75,7 +75,7 @@ function run_test() {
     rootClient.simpleReturn().then(() => {
       let stack = Components.stack;
       while (stack) {
-        do_print(stack.name);
+        info(stack.name);
         if (stack.name == "onConnect") {
           // Reached back to outer function before request
           ok(true, "Complete stack");

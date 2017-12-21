@@ -91,9 +91,9 @@ function run_test() {
       },
 
       onUpdateFinished(addon, error) {
-        do_check_eq(error, AddonManager.UPDATE_STATUS_DOWNLOAD_ERROR);
-        do_check_true(gSeenExpectedURL);
-        do_execute_soon(shutdownTest);
+        Assert.equal(error, AddonManager.UPDATE_STATUS_DOWNLOAD_ERROR);
+        Assert.ok(gSeenExpectedURL);
+        executeSoon(shutdownTest);
       }
     }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
   });

@@ -1,6 +1,6 @@
-const {SnippetsFeed} = require("lib/SnippetsFeed.jsm");
-const {actionCreators: ac, actionTypes: at} = require("common/Actions.jsm");
-const {GlobalOverrider} = require("test/unit/utils");
+import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import {GlobalOverrider} from "test/unit/utils";
+import {SnippetsFeed} from "lib/SnippetsFeed.jsm";
 
 const WEEK_IN_MS = 7 * 24 * 60 * 60 * 1000;
 const searchData = {searchEngineIdentifier: "google", engines: ["searchEngine-google", "searchEngine-bing"]};

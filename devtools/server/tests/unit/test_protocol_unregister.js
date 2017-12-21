@@ -12,31 +12,31 @@ function run_test() {
 
   let type = types.getType("test");
   let arrayType = types.getType("array:test");
-  do_check_eq(type.read("foo"), "successful read: foo");
-  do_check_eq(arrayType.read(["foo"])[0], "successful read: foo");
+  Assert.equal(type.read("foo"), "successful read: foo");
+  Assert.equal(arrayType.read(["foo"])[0], "successful read: foo");
 
   types.removeType("test");
 
-  do_check_eq(type.name, "DEFUNCT:test");
+  Assert.equal(type.name, "DEFUNCT:test");
   try {
     types.getType("test");
-    do_check_true(false, "getType should fail");
+    Assert.ok(false, "getType should fail");
   } catch (ex) {
-    do_check_eq(ex.toString(), "Error: Unknown type: test");
+    Assert.equal(ex.toString(), "Error: Unknown type: test");
   }
 
   try {
     type.read("foo");
-    do_check_true(false, "type.read should have thrown an exception.");
+    Assert.ok(false, "type.read should have thrown an exception.");
   } catch (ex) {
-    do_check_eq(ex.toString(), "Error: Using defunct type: test");
+    Assert.equal(ex.toString(), "Error: Using defunct type: test");
   }
 
   try {
     arrayType.read(["foo"]);
-    do_check_true(false, "array:test.read should have thrown an exception.");
+    Assert.ok(false, "array:test.read should have thrown an exception.");
   } catch (ex) {
-    do_check_eq(ex.toString(), "Error: Using defunct type: test");
+    Assert.equal(ex.toString(), "Error: Using defunct type: test");
   }
 }
 

@@ -51,7 +51,7 @@ add_test(function test_delete_removes_data() {
   // string shows up in the database.  Because the previous statement was
   // automatically wrapped in a transaction, the contents are already on disk.
   let contents = getFileContents(file);
-  do_check_neq(-1, contents.indexOf(TEST_STRING));
+  Assert.notEqual(-1, contents.indexOf(TEST_STRING));
 
   // Delete the data, and then close the database.
   stmt = db.createStatement("DELETE FROM test WHERE data = :data");
@@ -65,7 +65,7 @@ add_test(function test_delete_removes_data() {
 
   // Check the file to see if the string can be found.
   contents = getFileContents(file);
-  do_check_eq(-1, contents.indexOf(TEST_STRING));
+  Assert.equal(-1, contents.indexOf(TEST_STRING));
 
   run_next_test();
 });

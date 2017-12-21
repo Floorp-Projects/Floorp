@@ -8,28 +8,28 @@ add_task(async function() {
   Services.search.addEngineWithDetails("AliasedMozSearch", "", "doit", "",
                                        "GET", "http://s.example.com/search");
 
-  do_print("search engine");
+  info("search engine");
   await check_autocomplete({
     search: "mozilla",
     searchParam: "enable-actions",
     matches: [ makeSearchMatch("mozilla", { heuristic: true }) ]
   });
 
-  do_print("search engine, uri-like input");
+  info("search engine, uri-like input");
   await check_autocomplete({
     search: "http:///",
     searchParam: "enable-actions",
     matches: [ makeSearchMatch("http:///", { heuristic: true }) ]
   });
 
-  do_print("search engine, multiple words");
+  info("search engine, multiple words");
   await check_autocomplete({
     search: "mozzarella cheese",
     searchParam: "enable-actions",
     matches: [ makeSearchMatch("mozzarella cheese", { heuristic: true }) ]
   });
 
-  do_print("search engine, after current engine has changed");
+  info("search engine, after current engine has changed");
   Services.search.addEngineWithDetails("MozSearch2", "", "", "", "GET",
                                        "http://s.example.com/search2");
   let engine = Services.search.getEngineByName("MozSearch2");

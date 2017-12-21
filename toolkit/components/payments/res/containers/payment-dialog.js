@@ -23,6 +23,9 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
     this._cancelButton = contents.querySelector("#cancel");
     this._cancelButton.addEventListener("click", this.cancelRequest);
 
+    this._payButton = contents.querySelector("#pay");
+    this._payButton.addEventListener("click", this.pay);
+
     this.appendChild(contents);
 
     super.connectedCallback();
@@ -30,11 +33,25 @@ class PaymentDialog extends PaymentStateSubscriberMixin(HTMLElement) {
 
   disconnectedCallback() {
     this._cancelButtonEl.removeEventListener("click", this.cancelRequest);
+    this._cancelButtonEl.removeEventListener("click", this.pay);
     super.disconnectedCallback();
   }
 
   cancelRequest() {
     PaymentRequest.cancel();
+  }
+
+  pay() {
+    PaymentRequest.pay({
+      methodName: "basic-card",
+      methodData: {
+        cardholderName: "John Doe",
+        cardNumber: "9999999999",
+        expiryMonth: "01",
+        expiryYear: "9999",
+        cardSecurityCode: "999",
+      },
+    });
   }
 
   setLoadingState(state) {

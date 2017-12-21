@@ -24,19 +24,19 @@ function run_test() {
   AddonManager.strictCompatibility = false;
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(aAddon) {
-    do_check_neq(aAddon, null);
+    Assert.notEqual(aAddon, null);
     aAddon.userDisabled = true;
-    do_execute_soon(run_test_1);
+    executeSoon(run_test_1);
   });
 }
 
 function run_test_1() {
   restartManager();
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(aAddon) {
-    do_check_neq(aAddon, null);
-    do_check_true(aAddon.userDisabled);
-    do_check_false(aAddon.isActive);
-    do_check_false(aAddon.appDisabled);
+    Assert.notEqual(aAddon, null);
+    Assert.ok(aAddon.userDisabled);
+    Assert.ok(!aAddon.isActive);
+    Assert.ok(!aAddon.appDisabled);
 
     prepare_test({
       "addon1@tests.mozilla.org": [
@@ -50,10 +50,10 @@ function run_test_1() {
 
 function run_test_2() {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(aAddon) {
-    do_check_neq(aAddon, null);
-    do_check_true(aAddon.userDisabled);
-    do_check_false(aAddon.isActive);
-    do_check_true(aAddon.appDisabled);
+    Assert.notEqual(aAddon, null);
+    Assert.ok(aAddon.userDisabled);
+    Assert.ok(!aAddon.isActive);
+    Assert.ok(aAddon.appDisabled);
 
     prepare_test({
       "addon1@tests.mozilla.org": [

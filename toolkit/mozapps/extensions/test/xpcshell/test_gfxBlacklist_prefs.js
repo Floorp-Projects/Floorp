@@ -74,18 +74,18 @@ function run_test() {
   function blacklistAdded(aSubject, aTopic, aData) {
     // If we wait until after we go through the event loop, gfxInfo is sure to
     // have processed the gfxItems event.
-    do_execute_soon(ensureBlacklistSet);
+    executeSoon(ensureBlacklistSet);
   }
   function ensureBlacklistSet() {
     var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
-    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
+    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
     // Make sure unrelated features aren't affected
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
-    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
-    do_check_eq(Services.prefs.getIntPref("gfx.blacklist.direct2d"),
-                Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
+    Assert.equal(Services.prefs.getIntPref("gfx.blacklist.direct2d"),
+                 Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
     Services.obs.removeObserver(blacklistAdded, "blocklist-data-gfxItems");
     Services.obs.addObserver(blacklistRemoved, "blocklist-data-gfxItems");
@@ -95,15 +95,15 @@ function run_test() {
   function blacklistRemoved(aSubject, aTopic, aData) {
     // If we wait until after we go through the event loop, gfxInfo is sure to
     // have processed the gfxItems event.
-    do_execute_soon(ensureBlacklistUnset);
+    executeSoon(ensureBlacklistUnset);
   }
   function ensureBlacklistUnset() {
     var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
-    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
     // Make sure unrelated features aren't affected
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
-    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+    Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
     var exists = false;
     try {
@@ -111,7 +111,7 @@ function run_test() {
       exists = true;
     } catch (e) {}
 
-    do_check_false(exists);
+    Assert.ok(!exists);
 
     gTestserver.stop(do_test_finished);
   }

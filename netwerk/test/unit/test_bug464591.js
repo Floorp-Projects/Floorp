@@ -60,7 +60,7 @@ function run_test() {
   } catch (e) {
   }
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     for (let pref of prefData) {
       prefs.clearUserPref(pref.name);
     }

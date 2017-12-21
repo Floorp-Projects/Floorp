@@ -6,7 +6,7 @@ function run_test()
   asyncOpenCacheEntry("http://no-data/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
     new OpenCallback(NEW|METAONLY|DONTSETVALID|WAITFORWRITE, "meta", "", function(entry) {
       // Open again, we must get the callback and zero-length data
-      do_execute_soon(() => {
+      executeSoon(() => {
         Cu.forceGC(); // invokes OnHandleClosed on the entry
 
         asyncOpenCacheEntry("http://no-data/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,

@@ -156,7 +156,7 @@ function do_run_test(checker, name, charset, todo_good, todo_bad) {
   let sug = do_get_file("data/" + name + ".sug", true);
 
   dump("Need some expected output\n")
-  do_check_true(good.exists() || bad.exists() || sug.exists());
+  Assert.ok(good.exists() || bad.exists() || sug.exists());
 
   dump("Setting dictionary to " + name + "\n");
   checker.dictionary = name;
@@ -175,7 +175,7 @@ function do_run_test(checker, name, charset, todo_good, todo_bad) {
       if (todo) {
         todo_check_true(checker.check(val));
       } else {
-        do_check_true(checker.check(val));
+        Assert.ok(checker.check(val));
       }
     }
   }
@@ -194,7 +194,7 @@ function do_run_test(checker, name, charset, todo_good, todo_bad) {
       if (todo) {
         todo_check_false(checker.check(val));
       } else {
-        do_check_false(checker.check(val));
+        Assert.ok(!checker.check(val));
       }
     }
   }
@@ -206,7 +206,7 @@ function run_test() {
   let spellChecker = Cc["@mozilla.org/spellchecker/engine;1"].
                      getService(Ci.mozISpellCheckingEngine);
 
-  do_check_true(!!spellChecker, "Should have a spell checker");
+  Assert.ok(!!spellChecker, "Should have a spell checker");
   spellChecker.QueryInterface(Ci.mozISpellCheckingEngine);
   let testdir = do_get_file("data/", false);
   spellChecker.loadDictionariesFromDir(testdir);

@@ -20,7 +20,7 @@ function contentHandler(metadata, response)
 
 function finish_test(request, buffer)
 {
-  do_check_eq(buffer, "");
+  Assert.equal(buffer, "");
   httpServer.stop(do_test_finished);
 }
 

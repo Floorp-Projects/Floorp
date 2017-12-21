@@ -9,7 +9,7 @@ function run_test() {
       crashType = CrashTestUtils.CRASH_INVALID_POINTER_DEREF;
     },
     function(mdump, extra) {
-      do_check_true("ThreadIdNameMapping" in extra);
+      Assert.ok("ThreadIdNameMapping" in extra);
     },
     true);
 }

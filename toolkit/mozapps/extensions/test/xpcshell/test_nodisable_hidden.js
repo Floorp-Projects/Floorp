@@ -33,26 +33,26 @@ add_task(async function() {
   startupManager();
 
   let addon = await promiseAddonByID(NORMAL_ID);
-  do_check_neq(addon, null);
-  do_check_eq(addon.version, "1.0");
-  do_check_eq(addon.name, "Test disabling hidden add-ons, non-hidden add-on case.");
-  do_check_true(addon.isCompatible);
-  do_check_false(addon.appDisabled);
-  do_check_false(addon.userDisabled);
-  do_check_true(addon.isActive);
-  do_check_eq(addon.type, "extension");
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.name, "Test disabling hidden add-ons, non-hidden add-on case.");
+  Assert.ok(addon.isCompatible);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(!addon.userDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.type, "extension");
 
   // normal add-ons can be disabled by the user.
   addon.userDisabled = true;
 
-  do_check_neq(addon, null);
-  do_check_eq(addon.version, "1.0");
-  do_check_eq(addon.name, "Test disabling hidden add-ons, non-hidden add-on case.");
-  do_check_true(addon.isCompatible);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.userDisabled);
-  do_check_false(addon.isActive);
-  do_check_eq(addon.type, "extension");
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.name, "Test disabling hidden add-ons, non-hidden add-on case.");
+  Assert.ok(addon.isCompatible);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.userDisabled);
+  Assert.ok(!addon.isActive);
+  Assert.equal(addon.type, "extension");
 
   addon.uninstall();
 
@@ -79,31 +79,31 @@ add_task(async function() {
   startupManager();
 
   let addon = await promiseAddonByID(SYSTEM_ID);
-  do_check_neq(addon, null);
-  do_check_eq(addon.version, "1.0");
-  do_check_eq(addon.name, "Test disabling hidden add-ons, hidden system add-on case.");
-  do_check_true(addon.isCompatible);
-  do_check_false(addon.appDisabled);
-  do_check_false(addon.userDisabled);
-  do_check_true(addon.isActive);
-  do_check_eq(addon.type, "extension");
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.name, "Test disabling hidden add-ons, hidden system add-on case.");
+  Assert.ok(addon.isCompatible);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(!addon.userDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.type, "extension");
 
   // system add-ons cannot be disabled by the user.
   try {
     addon.userDisabled = true;
     do_throw("Expected addon.userDisabled on a hidden add-on to throw!");
   } catch (e) {
-    do_check_eq(e.message, `Cannot disable hidden add-on ${SYSTEM_ID}`);
+    Assert.equal(e.message, `Cannot disable hidden add-on ${SYSTEM_ID}`);
   }
 
-  do_check_neq(addon, null);
-  do_check_eq(addon.version, "1.0");
-  do_check_eq(addon.name, "Test disabling hidden add-ons, hidden system add-on case.");
-  do_check_true(addon.isCompatible);
-  do_check_false(addon.appDisabled);
-  do_check_false(addon.userDisabled);
-  do_check_true(addon.isActive);
-  do_check_eq(addon.type, "extension");
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.name, "Test disabling hidden add-ons, hidden system add-on case.");
+  Assert.ok(addon.isCompatible);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(!addon.userDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.type, "extension");
 
   shutdownManager();
 });

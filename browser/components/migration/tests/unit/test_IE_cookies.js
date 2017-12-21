@@ -66,7 +66,7 @@ add_task(async function() {
   let data = ctypes.char16_t.array()(256);
   let sizeRef = DWORD(256).address();
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     // Remove the cookie.
     try {
       let expired = new Date(new Date().setDate(date - 2));
@@ -91,7 +91,7 @@ add_task(async function() {
   // Sanity check the cookie has been created.
   Assert.ok(getIECookie(COOKIE.href, COOKIE.name, data, sizeRef),
             "Found the added persistent IE cookie");
-  do_print("Found cookie: " + data.readString());
+  info("Found cookie: " + data.readString());
   Assert.equal(data.readString(), `${COOKIE.name}=${COOKIE.value}`,
             "Found the expected cookie");
 

@@ -21,7 +21,7 @@ const WindowWatcher = {
         // in doTestFinish will prevent writing the update xml files during
         // shutdown.
         gUpdateManager.cleanupActiveUpdate();
-        do_execute_soon(waitForUpdateXMLFiles);
+        executeSoon(waitForUpdateXMLFiles);
       }
     };
   },
@@ -43,7 +43,7 @@ function run_test() {
   let windowWatcherCID =
     MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1",
                            WindowWatcher);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     MockRegistrar.unregister(windowWatcherCID);
   });
 
@@ -69,5 +69,5 @@ function run_test() {
  * Called after the call to waitForUpdateXMLFiles finishes.
  */
 function waitForUpdateXMLFilesFinished() {
-  do_execute_soon(doTestFinish);
+  executeSoon(doTestFinish);
 }

@@ -12,7 +12,7 @@ function run_test() {
 }
 
 function finish_test() {
-  do_execute_soon(function() {
+  executeSoon(function() {
     test_generator.return();
     do_test_finished();
   });
@@ -93,17 +93,17 @@ function* do_run_test() {
   do_load_profile();
 
   // 1) All unexpired, unique cookies exist.
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("foo.com"), 20);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("foo.com"), 20);
 
   // 2) All expired, unique cookies exist.
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("bar.com"), 20);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("bar.com"), 20);
 
   // 3) Only one cookie remains, and it's the one with the highest expiration
   // time.
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("baz.com"), 1);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("baz.com"), 1);
   let enumerator = Services.cookiemgr.getCookiesFromHost("baz.com", {});
   let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
-  do_check_eq(cookie.expiry, futureExpiry + 44);
+  Assert.equal(cookie.expiry, futureExpiry + 44);
 
   do_close_profile(test_generator);
   yield;
@@ -128,10 +128,10 @@ function* do_run_test() {
   do_load_profile();
 
   // Test the expected set of cookies.
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("cat.com"), 20);
+  Assert.equal(Services.cookiemgr.countCookiesFromHost("cat.com"), 20);
   enumerator = Services.cookiemgr.getCookiesFromHost("cat.com", {});
   cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
-  do_check_eq(cookie.creationTime, 0);
+  Assert.equal(cookie.creationTime, 0);
 
   finish_test();
 }

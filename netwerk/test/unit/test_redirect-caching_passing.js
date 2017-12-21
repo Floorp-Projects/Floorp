@@ -34,7 +34,7 @@ function contentHandler(metadata, response)
 
 function firstTimeThrough(request, buffer)
 {
-  do_check_eq(buffer, responseBody);
+  Assert.equal(buffer, responseBody);
   var chan = make_channel(randomURI);
   chan.loadFlags |= Ci.nsIRequest.LOAD_FROM_CACHE;
   chan.asyncOpen2(new ChannelListener(finish_test, null));
@@ -42,7 +42,7 @@ function firstTimeThrough(request, buffer)
 
 function finish_test(request, buffer)
 {
-  do_check_eq(buffer, responseBody);
+  Assert.equal(buffer, responseBody);
   httpserver.stop(do_test_finished);
 }
 

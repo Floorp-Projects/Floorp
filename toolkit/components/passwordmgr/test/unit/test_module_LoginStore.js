@@ -54,19 +54,19 @@ add_task(async function test_save_reload()
   let storeForLoad = new LoginStore(storeForSave.path);
   await storeForLoad.load();
 
-  do_check_eq(storeForLoad.data.logins.length, 1);
-  do_check_matches(storeForLoad.data.logins[0], rawLoginData);
-  do_check_eq(storeForLoad.data.disabledHosts.length, 1);
-  do_check_eq(storeForLoad.data.disabledHosts[0], "http://www.example.org");
+  Assert.equal(storeForLoad.data.logins.length, 1);
+  Assert.deepEqual(storeForLoad.data.logins[0], rawLoginData);
+  Assert.equal(storeForLoad.data.disabledHosts.length, 1);
+  Assert.equal(storeForLoad.data.disabledHosts[0], "http://www.example.org");
 
   // Test the synchronous initialization path.
   storeForLoad = new LoginStore(storeForSave.path);
   storeForLoad.ensureDataReady();
 
-  do_check_eq(storeForLoad.data.logins.length, 1);
-  do_check_matches(storeForLoad.data.logins[0], rawLoginData);
-  do_check_eq(storeForLoad.data.disabledHosts.length, 1);
-  do_check_eq(storeForLoad.data.disabledHosts[0], "http://www.example.org");
+  Assert.equal(storeForLoad.data.logins.length, 1);
+  Assert.deepEqual(storeForLoad.data.logins[0], rawLoginData);
+  Assert.equal(storeForLoad.data.disabledHosts.length, 1);
+  Assert.equal(storeForLoad.data.disabledHosts[0], "http://www.example.org");
 });
 
 /**
@@ -76,14 +76,14 @@ add_task(async function test_load_empty()
 {
   let store = new LoginStore(getTempFile(TEST_STORE_FILE_NAME).path);
 
-  do_check_false(await OS.File.exists(store.path));
+  Assert.equal(false, await OS.File.exists(store.path));
 
   await store.load();
 
-  do_check_false(await OS.File.exists(store.path));
+  Assert.equal(false, await OS.File.exists(store.path));
 
-  do_check_eq(store.data.logins.length, 0);
-  do_check_eq(store.data.disabledHosts.length, 0);
+  Assert.equal(store.data.logins.length, 0);
+  Assert.equal(store.data.disabledHosts.length, 0);
 });
 
 /**
@@ -100,7 +100,7 @@ add_task(async function test_save_empty()
 
   await store._save();
 
-  do_check_true(await OS.File.exists(store.path));
+  Assert.ok(await OS.File.exists(store.path));
 });
 
 /**
@@ -134,8 +134,8 @@ add_task(async function test_load_string_predefined()
 
   await store.load();
 
-  do_check_eq(store.data.logins.length, 1);
-  do_check_matches(store.data.logins[0], {
+  Assert.equal(store.data.logins.length, 1);
+  Assert.deepEqual(store.data.logins[0], {
     id:                  1,
     hostname:            "http://www.example.com",
     httpRealm:           null,
@@ -152,8 +152,8 @@ add_task(async function test_load_string_predefined()
     timesUsed:           1,
   });
 
-  do_check_eq(store.data.disabledHosts.length, 1);
-  do_check_eq(store.data.disabledHosts[0], "http://www.example.org");
+  Assert.equal(store.data.disabledHosts.length, 1);
+  Assert.equal(store.data.disabledHosts[0], "http://www.example.org");
 });
 
 /**
@@ -172,12 +172,12 @@ add_task(async function test_load_string_malformed()
   await store.load();
 
   // A backup file should have been created.
-  do_check_true(await OS.File.exists(store.path + ".corrupt"));
+  Assert.ok(await OS.File.exists(store.path + ".corrupt"));
   await OS.File.remove(store.path + ".corrupt");
 
   // The store should be ready to accept new data.
-  do_check_eq(store.data.logins.length, 0);
-  do_check_eq(store.data.disabledHosts.length, 0);
+  Assert.equal(store.data.logins.length, 0);
+  Assert.equal(store.data.disabledHosts.length, 0);
 });
 
 /**
@@ -197,10 +197,10 @@ add_task(async function test_load_string_malformed_sync()
   store.ensureDataReady();
 
   // A backup file should have been created.
-  do_check_true(await OS.File.exists(store.path + ".corrupt"));
+  Assert.ok(await OS.File.exists(store.path + ".corrupt"));
   await OS.File.remove(store.path + ".corrupt");
 
   // The store should be ready to accept new data.
-  do_check_eq(store.data.logins.length, 0);
-  do_check_eq(store.data.disabledHosts.length, 0);
+  Assert.equal(store.data.logins.length, 0);
+  Assert.equal(store.data.disabledHosts.length, 0);
 });

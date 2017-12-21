@@ -56,23 +56,23 @@ add_task(async function test_historyClear() {
   ["expire_session",
    "expire"].forEach(function(aAnno) {
     let pages = as.getPagesWithAnnotation(aAnno);
-    do_check_eq(pages.length, 0);
+    Assert.equal(pages.length, 0);
   });
 
   ["expire_session", "expire"].forEach(function(aAnno) {
     let items = as.getItemsWithAnnotation(aAnno);
-    do_check_eq(items.length, 0);
+    Assert.equal(items.length, 0);
   });
 
   let pages = as.getPagesWithAnnotation("persist");
-  do_check_eq(pages.length, 5);
+  Assert.equal(pages.length, 5);
 
   let items = as.getItemsWithAnnotation("persist");
-  do_check_eq(items.length, 5);
+  Assert.equal(items.length, 5);
 
   for (let itemId of items) {
     // Check item exists.
     let guid = await PlacesUtils.promiseItemGuid(itemId);
-    do_check_true((await PlacesUtils.bookmarks.fetch({guid})), "item exists");
+    Assert.ok((await PlacesUtils.bookmarks.fetch({guid})), "item exists");
   }
 });

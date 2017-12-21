@@ -28,7 +28,7 @@ add_task(async function test_protocol_trimming() {
       "www.mo te"
     ];
     for (let input of inputs) {
-      do_print("Searching for: " + input);
+      info("Searching for: " + input);
       await check_autocomplete({
         search: input,
         matches

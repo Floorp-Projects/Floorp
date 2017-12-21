@@ -16,7 +16,7 @@ function run_test() {
       Components.utils.getJSTestingFunctions().reportOutOfMemory();
     },
     function(mdump, extra) {
-      do_check_eq(extra.TestingOOMCrash, "Yes");
+      Assert.equal(extra.TestingOOMCrash, "Yes");
 
       // The JSOutOfMemory field is absent if the JS engine never reported OOM,
       // "Reported" if it did, and "Recovered" if it reported OOM but
@@ -27,7 +27,7 @@ function run_test() {
       // this property could be "Recovered" even if the implementation is
       // correct. More likely, though, that indicates a bug, so only accept
       // "Reported".
-      do_check_eq(extra.JSOutOfMemory, "Reported");
+      Assert.equal(extra.JSOutOfMemory, "Reported");
     },
     true);
 }

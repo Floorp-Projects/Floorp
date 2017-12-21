@@ -19,7 +19,7 @@ function run_test() {
   run_next_test();
 }
 
-do_register_cleanup(remove_bookmarks_html);
+registerCleanupFunction(remove_bookmarks_html);
 
 add_task(async function test_migrate_bookmarks() {
   // Initialize Places through the History Service and check that a new

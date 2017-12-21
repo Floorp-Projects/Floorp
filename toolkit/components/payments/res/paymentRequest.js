@@ -96,6 +96,10 @@ let PaymentRequest = {
     this.sendMessageToChrome("paymentCancel");
   },
 
+  pay(data) {
+    this.sendMessageToChrome("pay", data);
+  },
+
   onPaymentRequestUnload() {
     // remove listeners that may be used multiple times here
     window.removeEventListener("paymentChromeToContent", this);

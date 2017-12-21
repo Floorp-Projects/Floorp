@@ -88,19 +88,19 @@ add_task(async function test_autocomplete_non_english() {
     var numSearchesStarted = 0;
     input.onSearchBegin = function() {
       numSearchesStarted++;
-      do_check_eq(numSearchesStarted, 1);
+      Assert.equal(numSearchesStarted, 1);
     };
 
     input.onSearchComplete = function() {
-      do_check_eq(numSearchesStarted, 1);
-      do_check_eq(controller.searchStatus,
-                  Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
+      Assert.equal(numSearchesStarted, 1);
+      Assert.equal(controller.searchStatus,
+                   Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
 
       // test that we found the entry we added
-      do_check_eq(controller.matchCount, 1);
+      Assert.equal(controller.matchCount, 1);
 
       // Make sure the url is the same according to spec, so it can be deleted
-      do_check_eq(controller.getValueAt(0), url.spec);
+      Assert.equal(controller.getValueAt(0), url.spec);
 
       resolve();
     };

@@ -51,7 +51,7 @@ add_task(function* () {
 
   let clientAuth = new AuthenticatorType.Client();
   clientAuth.sendOOB = ({ oob }) => {
-    do_print(oob);
+    info(oob);
     // Pass to server, skipping prompt for tests
     oobData.resolve(oob);
   };
@@ -168,8 +168,8 @@ add_task(function* () {
 
   let clientAuth = new AuthenticatorType.Client();
   clientAuth.sendOOB = ({ oob }) => {
-    do_print(oob);
-    do_print("Modifying K value, should fail");
+    info(oob);
+    info("Modifying K value, should fail");
     // Pass to server, skipping prompt for tests
     oobData.resolve({
       k: oob.k + 1,
@@ -223,8 +223,8 @@ add_task(function* () {
 
   let clientAuth = new AuthenticatorType.Client();
   clientAuth.sendOOB = ({ oob }) => {
-    do_print(oob);
-    do_print("Modifying cert hash, should fail");
+    info(oob);
+    info("Modifying cert hash, should fail");
     // Pass to server, skipping prompt for tests
     oobData.resolve({
       k: oob.k,

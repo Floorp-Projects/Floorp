@@ -16,37 +16,37 @@ add_task(async function() {
   // appropriate error.
   try {
     await OS.File.open(OS.Path.join(".", "This file does not exist"));
-    do_check_true(false, "File opening 1 succeeded (it should fail)");
+    Assert.ok(false, "File opening 1 succeeded (it should fail)");
   } catch (err) {
     if (err instanceof OS.File.Error && err.becauseNoSuchFile) {
-      do_print("File opening 1 failed " + err);
+      info("File opening 1 failed " + err);
     } else {
       throw err;
     }
   }
   // Attempt to open a file with the wrong args, so that it fails before
   // serialization, ensure that it yields the appropriate error.
-  do_print("Attempting to open a file with wrong arguments");
+  info("Attempting to open a file with wrong arguments");
   try {
     let fd = await OS.File.open(1, 2, 3);
-    do_check_true(false, "File opening 2 succeeded (it should fail)" + fd);
+    Assert.ok(false, "File opening 2 succeeded (it should fail)" + fd);
   } catch (err) {
-    do_print("File opening 2 failed " + err);
-    do_check_false(err instanceof OS.File.Error,
-                   "File opening 2 returned something that is not a file error");
-    do_check_true(err.constructor.name == "TypeError",
-                  "File opening 2 returned a TypeError");
+    info("File opening 2 failed " + err);
+    Assert.equal(false, err instanceof OS.File.Error,
+                 "File opening 2 returned something that is not a file error");
+    Assert.ok(err.constructor.name == "TypeError",
+              "File opening 2 returned a TypeError");
   }
 
   // Attempt to open a file correctly
-  do_print("Attempting to open a file correctly");
+  info("Attempting to open a file correctly");
   let openedFile = await OS.File.open(OS.Path.join(do_get_cwd().path, "test_open.js"));
-  do_print("File opened correctly");
+  info("File opened correctly");
 
-  do_print("Attempting to close a file correctly");
+  info("Attempting to close a file correctly");
   await openedFile.close();
 
-  do_print("Attempting to close a file again");
+  info("Attempting to close a file again");
   await openedFile.close();
 });
 
@@ -61,9 +61,9 @@ add_task(async function test_error_attributes() {
 
   try {
     await OS.File.open(fpath, {truncate: true}, {});
-    do_check_true(false, "Opening path suceeded (it should fail) " + fpath);
+    Assert.ok(false, "Opening path suceeded (it should fail) " + fpath);
   } catch (err) {
-    do_check_true(err instanceof OS.File.Error);
-    do_check_true(err.becauseNoSuchFile);
+    Assert.ok(err instanceof OS.File.Error);
+    Assert.ok(err.becauseNoSuchFile);
   }
 });

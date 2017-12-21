@@ -40,10 +40,10 @@ add_task(async function test_execute() {
 
   // check that all links are marked as visited
   for (let visited_uri of count_visited_URIs) {
-    do_check_true(await promiseIsURIVisited(uri(visited_uri)));
+    Assert.ok(await promiseIsURIVisited(uri(visited_uri)));
   }
   for (let visited_uri of notcount_visited_URIs) {
-    do_check_true(await promiseIsURIVisited(uri(visited_uri)));
+    Assert.ok(await promiseIsURIVisited(uri(visited_uri)));
   }
 
   // check that visit_count does not take in count embed and downloads
@@ -58,11 +58,11 @@ add_task(async function test_execute() {
 
   root.containerOpen = true;
   let cc = root.childCount;
-  do_check_eq(cc, count_visited_URIs.length);
+  Assert.equal(cc, count_visited_URIs.length);
 
   for (let i = 0; i < cc; i++) {
     let node = root.getChild(i);
-    do_check_neq(count_visited_URIs.indexOf(node.uri), -1);
+    Assert.notEqual(count_visited_URIs.indexOf(node.uri), -1);
   }
   root.containerOpen = false;
 });

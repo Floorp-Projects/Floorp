@@ -7,7 +7,7 @@
 Components.utils.import("resource://gre/modules/osfile.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   Services.prefs.setBoolPref("toolkit.osfile.log", false);
 });
 
@@ -28,7 +28,7 @@ add_task(async function() {
   let dir = OS.Path.join(OS.Constants.Path.profileDir, "directory");
 
   // Sanity checking for the test
-  do_check_false((await OS.File.exists(dir)));
+  Assert.equal(false, (await OS.File.exists(dir)));
 
   // Remove non-existent directory
   await OS.File.removeEmptyDir(dir);
@@ -44,12 +44,12 @@ add_task(async function() {
     exception = ex;
   }
 
-  do_check_true(!!exception);
-  do_check_true(exception instanceof OS.File.Error);
-  do_check_true(exception.becauseNoSuchFile);
+  Assert.ok(!!exception);
+  Assert.ok(exception instanceof OS.File.Error);
+  Assert.ok(exception.becauseNoSuchFile);
 
   // Remove empty directory
   await OS.File.makeDir(dir);
   await OS.File.removeEmptyDir(dir);
-  do_check_false((await OS.File.exists(dir)));
+  Assert.equal(false, (await OS.File.exists(dir)));
 });

@@ -7,9 +7,9 @@ function run_test() {
                                 .getService(Components.interfaces.nsINetworkLinkService);
 
     // The offline status should depends on the link status
-    do_check_neq(ioService.offline, linkService.isLinkUp);
+    Assert.notEqual(ioService.offline, linkService.isLinkUp);
   } catch (e) {
     // The network link service might not be available
-    do_check_eq(ioService.offline, false);
+    Assert.equal(ioService.offline, false);
   }
 }

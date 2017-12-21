@@ -89,7 +89,7 @@ add_task(async function setup() {
   let path = OS.Path.join(OS.Constants.Path.profileDir, DB_FILENAME);
   let db = await Sqlite.openConnection({ path });
 
-  do_print("Create mobile folder with bookmarks");
+  info("Create mobile folder with bookmarks");
   ({ id: mobileId, guid: mobileGuid } = await insertMobileFolder(db));
   ({ guid: fxGuid } = await insertBookmark(db, {
     type: TYPE_BOOKMARK,
@@ -100,7 +100,7 @@ add_task(async function setup() {
   // We should only have one mobile folder, but, in case an old version of Sync
   // did the wrong thing and created multiple mobile folders, we should merge
   // their contents into the new mobile root.
-  do_print("Create second mobile folder with different bookmarks");
+  info("Create second mobile folder with different bookmarks");
   ({ id: dupeMobileId, guid: dupeMobileGuid } = await insertMobileFolder(db));
   ({ guid: tbGuid } = await insertBookmark(db, {
     type: TYPE_BOOKMARK,

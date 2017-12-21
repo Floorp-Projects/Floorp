@@ -14,9 +14,9 @@ function run_test() {
   function checkPerms(perms) {
     perms.forEach((perm) => {
       // Look up the expected permission
-      do_check_eq(pm.getPermissionObject(mkPrin(perm[0],  perm[1], perm[2]),
-                                         perm[3], true).capability,
-                  perm[4], "Permission is expected in the permission database");
+      Assert.equal(pm.getPermissionObject(mkPrin(perm[0],  perm[1], perm[2]),
+                                          perm[3], true).capability,
+                   perm[4], "Permission is expected in the permission database");
     });
 
     // Count the entries
@@ -24,7 +24,7 @@ function run_test() {
     let enumerator = Services.perms.enumerator;
     while (enumerator.hasMoreElements()) { enumerator.getNext(); count++; }
 
-    do_check_eq(count, perms.length, "There should be the right number of permissions in the DB");
+    Assert.equal(count, perms.length, "There should be the right number of permissions in the DB");
   }
 
   checkPerms([]);

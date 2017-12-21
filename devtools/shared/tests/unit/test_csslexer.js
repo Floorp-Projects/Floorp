@@ -16,7 +16,7 @@ const domutils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
 // An object that acts like a CSSLexer but verifies that the DOM lexer
 // and the JS lexer do the same thing.
 function DoubleLexer(input) {
-  do_print("DoubleLexer input: " + input);
+  info("DoubleLexer input: " + input);
   this.domLexer = domutils.getCSSLexer(input);
   this.jsLexer = jsLexer.getCSSLexer(input);
 }
@@ -182,7 +182,7 @@ function test_lexer_eofchar(cssText, argText, expectedAppend,
     // Nothing.
   }
 
-  do_print("EOF char test, input = " + cssText);
+  info("EOF char test, input = " + cssText);
 
   let result = lexer.performEOFFixup(argText, true);
   equal(result, expectedAppend);

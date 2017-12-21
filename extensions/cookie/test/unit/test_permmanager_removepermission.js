@@ -6,7 +6,7 @@ function run_test() {
   let pm = Cc["@mozilla.org/permissionmanager;1"].
         getService(Ci.nsIPermissionManager);
 
-  do_check_eq(perm_count(), 0);
+  Assert.equal(perm_count(), 0);
 
   // add some permissions
   let uri = NetUtil.newURI("http://amazon.com:8080/foobarbaz");
@@ -25,22 +25,22 @@ function run_test() {
   pm.add(uri2, "pear", 2);
 
   // Make sure that removePermission doesn't remove more than one permission each time
-  do_check_eq(perm_count(), 5);
+  Assert.equal(perm_count(), 5);
 
   remove_one_by_type("apple");
-  do_check_eq(perm_count(), 4);
+  Assert.equal(perm_count(), 4);
 
   remove_one_by_type("apple");
-  do_check_eq(perm_count(), 3);
+  Assert.equal(perm_count(), 3);
 
   remove_one_by_type("pear");
-  do_check_eq(perm_count(), 2);
+  Assert.equal(perm_count(), 2);
 
   remove_one_by_type("cucumber");
-  do_check_eq(perm_count(), 1);
+  Assert.equal(perm_count(), 1);
 
   remove_one_by_type("pear");
-  do_check_eq(perm_count(), 0);
+  Assert.equal(perm_count(), 0);
 
 
   function perm_count() {

@@ -970,6 +970,7 @@ private:
           "mozilla::MediaEncoder::RegisterListener",
           mEncoder, &MediaEncoder::RegisterListener, mEncoderListener));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
 
     if (mRecorder->mAudioNode) {
       mEncoder->ConnectAudioNode(mRecorder->mAudioNode,

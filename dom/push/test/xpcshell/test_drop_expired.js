@@ -25,7 +25,7 @@ var putRecord = async function({scope, perm, quota, lastPush, lastVisit}) {
 
   Services.perms.add(uri, 'desktop-notification',
     Ci.nsIPermissionManager[perm]);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.perms.remove(uri, 'desktop-notification');
   });
 
@@ -52,7 +52,7 @@ function run_test() {
   });
 
   db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+  registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
 
   run_next_test();
 }

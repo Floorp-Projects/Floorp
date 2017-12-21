@@ -9,9 +9,9 @@ function change_content_type() {
   var origType = channel.contentType;
   const newType = "x-foo/x-bar";
   channel.contentType = newType;
-  do_check_eq(channel.contentType, newType);
+  Assert.equal(channel.contentType, newType);
   channel.contentType = origType;
-  do_check_eq(channel.contentType, origType);
+  Assert.equal(channel.contentType, origType);
 }
 
 function TestListener() {

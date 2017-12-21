@@ -27,7 +27,7 @@ function createSymLink(from, to) {
 
   const args = ["-s", from, to];
   process.run(true, args, args.length);
-  do_check_eq(process.exitValue, 0);
+  Assert.equal(process.exitValue, 0);
 }
 
 function makeSymLink(from, toName, relative) {
@@ -40,7 +40,7 @@ function makeSymLink(from, toName, relative) {
     createSymLink(from.path, to.path);
   }
 
-  do_check_true(to.isSymlink());
+  Assert.ok(to.isSymlink());
 
   print("---");
   print(from.path);
@@ -50,9 +50,9 @@ function makeSymLink(from, toName, relative) {
   if (from.leafName != DOES_NOT_EXIST && from.isSymlink()) {
     // XXXjag wish I could set followLinks to false so we'd just get
     // the symlink's direct target instead of the final target.
-    do_check_eq(from.target, to.target);
+    Assert.equal(from.target, to.target);
   } else {
-    do_check_eq(from.path, to.target);
+    Assert.equal(from.path, to.target);
   }
 
   return to;
@@ -65,7 +65,7 @@ function setupTestDir(testDir, relative) {
   if (testDir.exists()) {
     testDir.remove(true);
   }
-  do_check_true(!testDir.exists());
+  Assert.ok(!testDir.exists());
 
   testDir.create(nsIFile.DIRECTORY_TYPE, 0o777);
 
@@ -91,7 +91,7 @@ function setupTestDir(testDir, relative) {
 
   try {
     makeSymLink(loop, LOOP_LINK, relative);
-    do_check_true(false);
+    Assert.ok(false);
   } catch (e) {
   }
 }
@@ -122,9 +122,9 @@ function testSymLinks(testDir, relative) {
     const name = file.leafName;
     print(name + spaces.substring(name.length) + bools[file.isDirectory()] +
           bools[file.isFile()] + bools[file.isSymlink()]);
-    do_check_eq(file.isDirectory(), dirs.indexOf(name) != -1);
-    do_check_eq(file.isFile(), files.indexOf(name) != -1);
-    do_check_eq(file.isSymlink(), links.indexOf(name) != -1);
+    Assert.equal(file.isDirectory(), dirs.indexOf(name) != -1);
+    Assert.equal(file.isFile(), files.indexOf(name) != -1);
+    Assert.equal(file.isSymlink(), links.indexOf(name) != -1);
   }
 }
 

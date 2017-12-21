@@ -71,7 +71,6 @@ typedef nsClassHashtable<nsUint64HashKey, mozilla::CSSIntRegion> VisibleRegions;
 #endif
 
 class PresShell final : public nsIPresShell,
-                        public nsStubDocumentObserver,
                         public nsISelectionController,
                         public nsIObserver,
                         public nsSupportsWeakReference
@@ -109,8 +108,6 @@ public:
                                      int16_t aFlags) override;
   NS_IMETHOD RepaintSelection(RawSelectionType aRawSelectionType) override;
 
-  virtual void BeginObservingDocument() override;
-  virtual void EndObservingDocument() override;
   virtual nsresult Initialize(nscoord aWidth, nscoord aHeight) override;
   virtual nsresult ResizeReflow(nscoord aWidth, nscoord aHeight,
                                 nscoord aOldWidth = 0, nscoord aOldHeight = 0,
@@ -866,10 +863,6 @@ protected:
   bool                      mLastRootReflowHadUnconstrainedBSize : 1;
   bool                      mNoDelayedMouseEvents : 1;
   bool                      mNoDelayedKeyEvents : 1;
-
-  // We've been disconnected from the document.  We will refuse to paint the
-  // document until either our timer fires or all frames are constructed.
-  bool                      mIsDocumentGone : 1;
 
   // Indicates that it is safe to unlock painting once all pending reflows
   // have been processed.

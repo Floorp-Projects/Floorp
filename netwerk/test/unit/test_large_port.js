@@ -30,7 +30,7 @@ function run_test()
         url.port = 65536;
     }, "invalid port in port setter");
 
-    do_check_eq(url.QueryInterface(Ci.nsIURI).port, -1);
+    Assert.equal(url.QueryInterface(Ci.nsIURI).port, -1);
     do_test_finished();
 }
 

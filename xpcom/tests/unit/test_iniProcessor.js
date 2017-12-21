@@ -5,9 +5,9 @@ function parserForFile(filename) {
     let parser = null;
     try {
         let file = do_get_file(filename);
-        do_check_true(!!file);
+        Assert.ok(!!file);
         parser = factory.createINIParser(file);
-        do_check_true(!!parser);
+        Assert.ok(!!parser);
     } catch (e) {
         dump("INFO | caught error: " + e);
         // checkParserOutput will handle a null parser when it's expected.
@@ -20,42 +20,42 @@ function checkParserOutput(parser, expected) {
     // If the expected output is null, we expect the parser to have
     // failed (and vice-versa).
     if (!parser || !expected) {
-        do_check_eq(parser, null);
-        do_check_eq(expected, null);
+        Assert.equal(parser, null);
+        Assert.equal(expected, null);
         return;
     }
 
     let output = getParserOutput(parser);
     for (let section in expected) {
-        do_check_true(section in output);
+        Assert.ok(section in output);
         for (let key in expected[section]) {
-            do_check_true(key in output[section]);
-            do_check_eq(output[section][key], expected[section][key]);
+            Assert.ok(key in output[section]);
+            Assert.equal(output[section][key], expected[section][key]);
             delete output[section][key];
         }
         for (let key in output[section])
-            do_check_eq(key, "wasn't expecting this key!");
+            Assert.equal(key, "wasn't expecting this key!");
         delete output[section];
     }
     for (let section in output)
-        do_check_eq(section, "wasn't expecting this section!");
+        Assert.equal(section, "wasn't expecting this section!");
 }
 
 function getParserOutput(parser) {
     let output = {};
 
     let sections = parser.getSections();
-    do_check_true(!!sections);
+    Assert.ok(!!sections);
     while (sections.hasMore()) {
         let section = sections.getNext();
-        do_check_false(section in output); // catch dupes
+        Assert.equal(false, section in output); // catch dupes
         output[section] = {};
 
         let keys = parser.getKeys(section);
-        do_check_true(!!keys);
+        Assert.ok(!!keys);
         while (keys.hasMore()) {
             let key = keys.getNext();
-            do_check_false(key in output[section]); // catch dupes
+            Assert.equal(false, key in output[section]); // catch dupes
             let value = parser.getString(section, key);
             output[section][key] = value;
         }
@@ -167,7 +167,7 @@ var testdata = [
 /* ========== 0 ========== */
 factory = Cc["@mozilla.org/xpcom/ini-processor-factory;1"].
           getService(Ci.nsIINIParserFactory);
-do_check_true(!!factory);
+Assert.ok(!!factory);
 
 // Test reading from a variety of files. While we're at it, write out each one
 // and read it back to ensure that nothing changed.
@@ -179,7 +179,7 @@ while (testnum < testdata.length) {
     checkParserOutput(parser, testdata[testnum - 1].reference);
     if (!parser)
         continue;
-    do_check_true(parser instanceof Ci.nsIINIParserWriter);
+    Assert.ok(parser instanceof Ci.nsIINIParserWriter);
     // write contents out to a new file
     let newfilename = filename + ".new";
     let newfile = do_get_file(filename);
@@ -199,19 +199,19 @@ var newfile = do_get_file("data/");
 newfile.append("nonexistent-file.ini");
 if (newfile.exists())
     newfile.remove(false);
-do_check_false(newfile.exists());
+Assert.ok(!newfile.exists());
 
 var parser = factory.createINIParser(newfile);
-do_check_true(!!parser);
-do_check_true(parser instanceof Ci.nsIINIParserWriter);
+Assert.ok(!!parser);
+Assert.ok(parser instanceof Ci.nsIINIParserWriter);
 checkParserOutput(parser, {});
 parser.writeFile();
-do_check_true(newfile.exists());
+Assert.ok(newfile.exists());
 
 // test adding a new section and new key
 parser.setString("section", "key", "value");
 parser.writeFile();
-do_check_true(newfile.exists());
+Assert.ok(newfile.exists());
 checkParserOutput(parser, {section: {key: "value"} });
 // read it in again, check for same data.
 parser = parserForFile("data/nonexistent-file.ini");
@@ -225,7 +225,7 @@ dump("INFO | test #" + ++testnum + "\n");
 parser = parserForFile("data/iniparser09.ini");
 checkParserOutput(parser, {section1: {name1: "value1"} });
 
-do_check_true(parser instanceof Ci.nsIINIParserWriter);
+Assert.ok(parser instanceof Ci.nsIINIParserWriter);
 parser.setString("section1", "name1", "value2");
 checkParserOutput(parser, {section1: {name1: "value2"} });
 
@@ -238,47 +238,47 @@ checkParserOutput(parser, {section1: {name1: "value2"} });
 
 // Bad characters in section name
 try { parser.SetString("bad\0", "ok", "ok"); } catch (e) { caughtError = true; }
-do_check_true(caughtError);
+Assert.ok(caughtError);
 caughtError = false;
 try { parser.SetString("bad\r", "ok", "ok"); } catch (e) { caughtError = true; }
-do_check_true(caughtError);
+Assert.ok(caughtError);
 caughtError = false;
 try { parser.SetString("bad\n", "ok", "ok"); } catch (e) { caughtError = true; }
-do_check_true(caughtError);
+Assert.ok(caughtError);
 caughtError = false;
 try { parser.SetString("bad[", "ok", "ok"); } catch (e) { caughtError = true; }
-do_check_true(caughtError);
+Assert.ok(caughtError);
 caughtError = false;
 try { parser.SetString("bad]", "ok", "ok"); } catch (e) { caughtError = true; }
-do_check_true(caughtError);
+Assert.ok(caughtError);
 
 // Bad characters in key name
 caughtError = false;
 try { parser.SetString("ok", "bad\0", "ok"); } catch (e) { caughtError = true; }
-do_check_true(caughtError);
+Assert.ok(caughtError);
 caughtError = false;
 try { parser.SetString("ok", "bad\r", "ok"); } catch (e) { caughtError = true; }
-do_check_true(caughtError);
+Assert.ok(caughtError);
 caughtError = false;
 try { parser.SetString("ok", "bad\n", "ok"); } catch (e) { caughtError = true; }
-do_check_true(caughtError);
+Assert.ok(caughtError);
 caughtError = false;
 try { parser.SetString("ok", "bad=", "ok"); } catch (e) { caughtError = true; }
-do_check_true(caughtError);
+Assert.ok(caughtError);
 
 // Bad characters in value
 caughtError = false;
 try { parser.SetString("ok", "ok", "bad\0"); } catch (e) { caughtError = true; }
-do_check_true(caughtError);
+Assert.ok(caughtError);
 caughtError = false;
 try { parser.SetString("ok", "ok", "bad\r"); } catch (e) { caughtError = true; }
-do_check_true(caughtError);
+Assert.ok(caughtError);
 caughtError = false;
 try { parser.SetString("ok", "ok", "bad\n"); } catch (e) { caughtError = true; }
-do_check_true(caughtError);
+Assert.ok(caughtError);
 caughtError = false;
 try { parser.SetString("ok", "ok", "bad="); } catch (e) { caughtError = true; }
-do_check_true(caughtError);
+Assert.ok(caughtError);
 
 } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + e;

@@ -105,7 +105,7 @@ function promisePartFileReady(aDownload) {
       }
       // This indicates that the file has been created and cannot be accessed.
       // The specific error might vary with the platform.
-      do_print("Expected exception while checking existence: " + ex.toString());
+      info("Expected exception while checking existence: " + ex.toString());
       // Wait some more time to allow the write to complete.
       await promiseTimeout(100);
     }
@@ -128,8 +128,8 @@ function promisePartFileReady(aDownload) {
 var promiseVerifyTarget = async function(downloadTarget,
                                                 expectedContents) {
   await promiseVerifyContents(downloadTarget.path, expectedContents);
-  do_check_true(downloadTarget.exists);
-  do_check_eq(downloadTarget.size, expectedContents.length);
+  Assert.ok(downloadTarget.exists);
+  Assert.equal(downloadTarget.size, expectedContents.length);
 };
 
 /**
@@ -191,8 +191,8 @@ add_task(async function test_basic() {
       saver: { type: "copy" },
     });
 
-    do_check_eq(download.source.url, httpUrl("source.txt"));
-    do_check_eq(download.target.path, targetFile.path);
+    Assert.equal(download.source.url, httpUrl("source.txt"));
+    Assert.equal(download.target.path, targetFile.path);
 
     await download.start();
   } else {
@@ -201,14 +201,14 @@ add_task(async function test_basic() {
     download = await promiseStartLegacyDownload(null,
                                                 { targetFile });
 
-    do_check_eq(download.source.url, httpUrl("source.txt"));
-    do_check_eq(download.target.path, targetFile.path);
+    Assert.equal(download.source.url, httpUrl("source.txt"));
+    Assert.equal(download.target.path, targetFile.path);
 
     await promiseDownloadStopped(download);
   }
 
   // Check additional properties on the finished download.
-  do_check_true(download.source.referrer === null);
+  Assert.ok(download.source.referrer === null);
 
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT);
 });
@@ -225,8 +225,8 @@ add_task(async function test_basic_tryToKeepPartialData() {
 
   // The target file should now have been created, and the ".part" file deleted.
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
-  do_check_false(await OS.File.exists(download.target.partFilePath));
-  do_check_eq(32, download.saver.getSha256Hash().length);
+  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+  Assert.equal(32, download.saver.getSha256Hash().length);
 });
 
 /**
@@ -258,12 +258,12 @@ add_task(async function test_channelIsForDownload_classFlags() {
     await promiseDownloadStopped(download);
   }
 
-  do_check_true(downloadChannel.QueryInterface(Ci.nsIHttpChannelInternal)
-                               .channelIsForDownload);
+  Assert.ok(downloadChannel.QueryInterface(Ci.nsIHttpChannelInternal)
+                           .channelIsForDownload);
 
   // Throttleable is the only class flag assigned to downloads.
-  do_check_eq(downloadChannel.QueryInterface(Ci.nsIClassOfService)
-                             .classFlags, Ci.nsIClassOfService.Throttleable);
+  Assert.equal(downloadChannel.QueryInterface(Ci.nsIClassOfService)
+                              .classFlags, Ci.nsIClassOfService.Throttleable);
 });
 
 /**
@@ -273,7 +273,7 @@ add_task(async function test_unix_permissions() {
   // This test is only executed on some Desktop systems.
   if (Services.appinfo.OS != "Darwin" && Services.appinfo.OS != "Linux" &&
       Services.appinfo.OS != "WINNT") {
-    do_print("Skipping test.");
+    info("Skipping test.");
     return;
   }
 
@@ -282,9 +282,9 @@ add_task(async function test_unix_permissions() {
   for (let autoDelete of [false, true]) {
     for (let isPrivate of [false, true]) {
       for (let launchWhenSucceeded of [false, true]) {
-        do_print("Checking " + JSON.stringify({ autoDelete,
-                                                isPrivate,
-                                                launchWhenSucceeded }));
+        info("Checking " + JSON.stringify({ autoDelete,
+                                            isPrivate,
+                                            launchWhenSucceeded }));
 
         Services.prefs.setBoolPref(kDeleteTempFileOnExit, autoDelete);
 
@@ -311,14 +311,14 @@ add_task(async function test_unix_permissions() {
         if (Services.appinfo.OS == "WINNT") {
           // On Windows
           // Temporary downloads should be read-only
-          do_check_eq(stat.winAttributes.readOnly, !!isTemporary);
+          Assert.equal(stat.winAttributes.readOnly, !!isTemporary);
         } else {
           // On Linux, Mac
           // Temporary downloads should be read-only and not accessible to other
           // users, while permanently downloaded files should be readable and
           // writable as specified by the system umask.
-          do_check_eq(stat.unixMode,
-                      isTemporary ? 0o400 : (0o666 & ~OS.Constants.Sys.umask));
+          Assert.equal(stat.unixMode,
+                       isTemporary ? 0o400 : (0o666 & ~OS.Constants.Sys.umask));
         }
       }
     }
@@ -338,7 +338,7 @@ add_task(async function test_windows_zoneInformation() {
   // system installation drive, while the temporary directory used by the test
   // environment is on the same drive as the test sources.
   if (Services.appinfo.OS != "WINNT") {
-    do_print("Skipping test.");
+    info("Skipping test.");
     return;
   }
 
@@ -369,8 +369,8 @@ add_task(async function test_windows_zoneInformation() {
       let file = await OS.File.open(targetFile.path + ":Zone.Identifier", {},
                  { winAllowLengthBeyondMaxPathWithCaveats: true });
       try {
-        do_check_eq(new TextDecoder().decode(await file.read()),
-                    "[ZoneTransfer]\r\nZoneId=3\r\n");
+        Assert.equal(new TextDecoder().decode(await file.read()),
+                     "[ZoneTransfer]\r\nZoneId=3\r\n");
       } finally {
         file.close();
       }
@@ -391,13 +391,13 @@ add_task(async function test_referrer() {
   function cleanup() {
     gHttpServer.registerPathHandler(sourcePath, null);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
 
-    do_check_true(aRequest.hasHeader("Referer"));
-    do_check_eq(aRequest.getHeader("Referer"), TEST_REFERRER_URL);
+    Assert.ok(aRequest.hasHeader("Referer"));
+    Assert.equal(aRequest.getHeader("Referer"), TEST_REFERRER_URL);
   });
   let download;
   if (!gUseLegacySaver) {
@@ -409,7 +409,7 @@ add_task(async function test_referrer() {
       target: targetPath,
     });
 
-    do_check_eq(download.source.referrer, TEST_REFERRER_URL);
+    Assert.equal(download.source.referrer, TEST_REFERRER_URL);
     await download.start();
 
     download = await Downloads.createDownload({
@@ -417,7 +417,7 @@ add_task(async function test_referrer() {
                 isPrivate: true },
       target: targetPath,
     });
-    do_check_eq(download.source.referrer, TEST_REFERRER_URL);
+    Assert.equal(download.source.referrer, TEST_REFERRER_URL);
     await download.start();
 
     // Test the download still works for non-HTTP channel with referrer.
@@ -425,24 +425,24 @@ add_task(async function test_referrer() {
       source: { url: dataSourceUrl, referrer: TEST_REFERRER_URL },
       target: targetPath,
     });
-    do_check_eq(download.source.referrer, TEST_REFERRER_URL);
+    Assert.equal(download.source.referrer, TEST_REFERRER_URL);
     await download.start();
   } else {
     download = await promiseStartLegacyDownload(
       sourceUrl, { referrer: TEST_REFERRER_URL });
     await promiseDownloadStopped(download);
-    do_check_eq(download.source.referrer, TEST_REFERRER_URL);
+    Assert.equal(download.source.referrer, TEST_REFERRER_URL);
 
     download = await promiseStartLegacyDownload(
       sourceUrl, { referrer: TEST_REFERRER_URL,
                    isPrivate: true});
     await promiseDownloadStopped(download);
-    do_check_eq(download.source.referrer, TEST_REFERRER_URL);
+    Assert.equal(download.source.referrer, TEST_REFERRER_URL);
 
     download = await promiseStartLegacyDownload(
       dataSourceUrl, { referrer: TEST_REFERRER_URL });
     await promiseDownloadStopped(download);
-    do_check_eq(download.source.referrer, null);
+    Assert.equal(download.source.referrer, null);
   }
 
   cleanup();
@@ -461,17 +461,17 @@ add_task(async function test_adjustChannel() {
   function cleanup() {
     gHttpServer.registerPathHandler(sourcePath, null);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   gHttpServer.registerPathHandler(sourcePath, aRequest => {
-    do_check_eq(aRequest.method, "POST");
+    Assert.equal(aRequest.method, "POST");
 
-    do_check_true(aRequest.hasHeader(customHeader.name));
-    do_check_eq(aRequest.getHeader(customHeader.name), customHeader.value);
+    Assert.ok(aRequest.hasHeader(customHeader.name));
+    Assert.equal(aRequest.getHeader(customHeader.name), customHeader.value);
 
     const stream = aRequest.bodyInputStream;
     const body = NetUtil.readInputStreamToString(stream, stream.available());
-    do_check_eq(body, postData);
+    Assert.equal(body, postData);
   });
 
   function adjustChannel(channel) {
@@ -492,8 +492,8 @@ add_task(async function test_adjustChannel() {
     source: { url: sourceUrl, adjustChannel },
     target: targetPath,
   });
-  do_check_eq(download.source.adjustChannel, adjustChannel);
-  do_check_eq(download.toSerializable(), null);
+  Assert.equal(download.source.adjustChannel, adjustChannel);
+  Assert.equal(download.toSerializable(), null);
   await download.start();
 
   cleanup();
@@ -509,14 +509,14 @@ add_task(async function test_initial_final_state() {
     // we can check its state before it starts.
     download = await promiseNewDownload();
 
-    do_check_true(download.stopped);
-    do_check_false(download.succeeded);
-    do_check_false(download.canceled);
-    do_check_true(download.error === null);
-    do_check_eq(download.progress, 0);
-    do_check_true(download.startTime === null);
-    do_check_false(download.target.exists);
-    do_check_eq(download.target.size, 0);
+    Assert.ok(download.stopped);
+    Assert.ok(!download.succeeded);
+    Assert.ok(!download.canceled);
+    Assert.ok(download.error === null);
+    Assert.equal(download.progress, 0);
+    Assert.ok(download.startTime === null);
+    Assert.ok(!download.target.exists);
+    Assert.equal(download.target.size, 0);
 
     await download.start();
   } else {
@@ -526,14 +526,14 @@ add_task(async function test_initial_final_state() {
     await promiseDownloadStopped(download);
   }
 
-  do_check_true(download.stopped);
-  do_check_true(download.succeeded);
-  do_check_false(download.canceled);
-  do_check_true(download.error === null);
-  do_check_eq(download.progress, 100);
-  do_check_true(isValidDate(download.startTime));
-  do_check_true(download.target.exists);
-  do_check_eq(download.target.size, TEST_DATA_SHORT.length);
+  Assert.ok(download.stopped);
+  Assert.ok(download.succeeded);
+  Assert.ok(!download.canceled);
+  Assert.ok(download.error === null);
+  Assert.equal(download.progress, 100);
+  Assert.ok(isValidDate(download.startTime));
+  Assert.ok(download.target.exists);
+  Assert.equal(download.target.size, TEST_DATA_SHORT.length);
 });
 
 /**
@@ -559,9 +559,9 @@ add_task(async function test_final_state_notified() {
   await promiseAttempt;
 
   // The view should have been notified before the download completes.
-  do_check_true(onchangeNotified);
-  do_check_true(lastNotifiedStopped);
-  do_check_eq(lastNotifiedProgress, 100);
+  Assert.ok(onchangeNotified);
+  Assert.ok(lastNotifiedStopped);
+  Assert.equal(lastNotifiedProgress, 100);
 });
 
 /**
@@ -574,20 +574,20 @@ add_task(async function test_intermediate_progress() {
 
   await promiseDownloadMidway(download);
 
-  do_check_true(download.hasProgress);
-  do_check_eq(download.currentBytes, TEST_DATA_SHORT.length);
-  do_check_eq(download.totalBytes, TEST_DATA_SHORT.length * 2);
+  Assert.ok(download.hasProgress);
+  Assert.equal(download.currentBytes, TEST_DATA_SHORT.length);
+  Assert.equal(download.totalBytes, TEST_DATA_SHORT.length * 2);
 
   // The final file size should not be computed for in-progress downloads.
-  do_check_false(download.target.exists);
-  do_check_eq(download.target.size, 0);
+  Assert.ok(!download.target.exists);
+  Assert.equal(download.target.size, 0);
 
   // Continue after the first chunk of data is fully received.
   continueResponses();
   await promiseDownloadStopped(download);
 
-  do_check_true(download.stopped);
-  do_check_eq(download.progress, 100);
+  Assert.ok(download.stopped);
+  Assert.equal(download.progress, 100);
 
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
 });
@@ -599,18 +599,18 @@ add_task(async function test_empty_progress() {
   let download = await promiseStartDownload(httpUrl("empty.txt"));
   await promiseDownloadStopped(download);
 
-  do_check_true(download.stopped);
-  do_check_true(download.hasProgress);
-  do_check_eq(download.progress, 100);
-  do_check_eq(download.currentBytes, 0);
-  do_check_eq(download.totalBytes, 0);
+  Assert.ok(download.stopped);
+  Assert.ok(download.hasProgress);
+  Assert.equal(download.progress, 100);
+  Assert.equal(download.currentBytes, 0);
+  Assert.equal(download.totalBytes, 0);
 
   // We should have received the content type even for an empty file.
-  do_check_eq(download.contentType, "text/plain");
+  Assert.equal(download.contentType, "text/plain");
 
-  do_check_eq((await OS.File.stat(download.target.path)).size, 0);
-  do_check_true(download.target.exists);
-  do_check_eq(download.target.size, 0);
+  Assert.equal((await OS.File.stat(download.target.path)).size, 0);
+  Assert.ok(download.target.exists);
+  Assert.equal(download.target.size, 0);
 });
 
 /**
@@ -638,12 +638,12 @@ add_task(async function test_empty_progress_tryToKeepPartialData() {
   await promiseDownloadStopped(download);
 
   // The target file should now have been created, and the ".part" file deleted.
-  do_check_eq((await OS.File.stat(download.target.path)).size, 0);
-  do_check_true(download.target.exists);
-  do_check_eq(download.target.size, 0);
+  Assert.equal((await OS.File.stat(download.target.path)).size, 0);
+  Assert.ok(download.target.exists);
+  Assert.equal(download.target.size, 0);
 
-  do_check_false(await OS.File.exists(download.target.partFilePath));
-  do_check_eq(32, download.saver.getSha256Hash().length);
+  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+  Assert.equal(32, download.saver.getSha256Hash().length);
 });
 
 /**
@@ -658,7 +658,7 @@ add_task(async function test_empty_noprogress() {
   function cleanup() {
     gHttpServer.registerPathHandler(sourcePath, null);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   registerInterruptibleHandler(sourcePath,
     function firstPart(aRequest, aResponse) {
@@ -677,9 +677,9 @@ add_task(async function test_empty_noprogress() {
 
     download.onchange = function() {
       if (!download.stopped) {
-        do_check_false(download.hasProgress);
-        do_check_eq(download.currentBytes, 0);
-        do_check_eq(download.totalBytes, 0);
+        Assert.ok(!download.hasProgress);
+        Assert.equal(download.currentBytes, 0);
+        Assert.equal(download.totalBytes, 0);
       }
     };
 
@@ -698,28 +698,28 @@ add_task(async function test_empty_noprogress() {
   await promiseExecuteSoon();
 
   // Check that this download has no progress report.
-  do_check_false(download.stopped);
-  do_check_false(download.hasProgress);
-  do_check_eq(download.currentBytes, 0);
-  do_check_eq(download.totalBytes, 0);
+  Assert.ok(!download.stopped);
+  Assert.ok(!download.hasProgress);
+  Assert.equal(download.currentBytes, 0);
+  Assert.equal(download.totalBytes, 0);
 
   // Now allow the response to finish.
   continueResponses();
   await promiseDownloadStopped(download);
 
   // We should have received the content type even if no progress is reported.
-  do_check_eq(download.contentType, "text/plain");
+  Assert.equal(download.contentType, "text/plain");
 
   // Verify the state of the completed download.
-  do_check_true(download.stopped);
-  do_check_false(download.hasProgress);
-  do_check_eq(download.progress, 100);
-  do_check_eq(download.currentBytes, 0);
-  do_check_eq(download.totalBytes, 0);
-  do_check_true(download.target.exists);
-  do_check_eq(download.target.size, 0);
+  Assert.ok(download.stopped);
+  Assert.ok(!download.hasProgress);
+  Assert.equal(download.progress, 100);
+  Assert.equal(download.currentBytes, 0);
+  Assert.equal(download.totalBytes, 0);
+  Assert.ok(download.target.exists);
+  Assert.equal(download.target.size, 0);
 
-  do_check_eq((await OS.File.stat(download.target.path)).size, 0);
+  Assert.equal((await OS.File.stat(download.target.path)).size, 0);
 });
 
 /**
@@ -750,10 +750,10 @@ add_task(async function test_start_twice() {
   await promiseAttempt1;
   await promiseAttempt2;
 
-  do_check_true(download.stopped);
-  do_check_true(download.succeeded);
-  do_check_false(download.canceled);
-  do_check_true(download.error === null);
+  Assert.ok(download.stopped);
+  Assert.ok(download.succeeded);
+  Assert.ok(!download.canceled);
+  Assert.ok(download.error === null);
 
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
 });
@@ -784,7 +784,7 @@ add_task(async function test_cancel_midway() {
 
       // The state change happens immediately after calling "cancel", but
       // temporary files or part files may still exist at this point.
-      do_check_true(download.canceled);
+      Assert.ok(download.canceled);
     }
   };
 
@@ -805,21 +805,21 @@ add_task(async function test_cancel_midway() {
 
   if (gUseLegacySaver) {
     // The nsIWebBrowserPersist instance should have been canceled now.
-    do_check_eq(options.outPersist.result, Cr.NS_ERROR_ABORT);
+    Assert.equal(options.outPersist.result, Cr.NS_ERROR_ABORT);
   }
 
-  do_check_true(download.stopped);
-  do_check_true(download.canceled);
-  do_check_true(download.error === null);
-  do_check_false(download.target.exists);
-  do_check_eq(download.target.size, 0);
+  Assert.ok(download.stopped);
+  Assert.ok(download.canceled);
+  Assert.ok(download.error === null);
+  Assert.ok(!download.target.exists);
+  Assert.equal(download.target.size, 0);
 
-  do_check_false(await OS.File.exists(download.target.path));
+  Assert.equal(false, await OS.File.exists(download.target.path));
 
   // Progress properties are not reset by canceling.
-  do_check_eq(download.progress, 50);
-  do_check_eq(download.totalBytes, TEST_DATA_SHORT.length * 2);
-  do_check_eq(download.currentBytes, TEST_DATA_SHORT.length);
+  Assert.equal(download.progress, 50);
+  Assert.equal(download.totalBytes, TEST_DATA_SHORT.length * 2);
+  Assert.equal(download.currentBytes, TEST_DATA_SHORT.length);
 
   if (!gUseLegacySaver) {
     // The promise returned by "start" should have been rejected meanwhile.
@@ -830,8 +830,8 @@ add_task(async function test_cancel_midway() {
       if (!(ex instanceof Downloads.Error)) {
         throw ex;
       }
-      do_check_false(ex.becauseSourceFailed);
-      do_check_false(ex.becauseTargetFailed);
+      Assert.ok(!ex.becauseSourceFailed);
+      Assert.ok(!ex.becauseTargetFailed);
     }
   }
 });
@@ -843,18 +843,18 @@ add_task(async function test_cancel_midway() {
 add_task(async function test_cancel_midway_tryToKeepPartialData() {
   let download = await promiseStartDownload_tryToKeepPartialData();
 
-  do_check_true(await OS.File.exists(download.target.path));
-  do_check_true(await OS.File.exists(download.target.partFilePath));
+  Assert.ok(await OS.File.exists(download.target.path));
+  Assert.ok(await OS.File.exists(download.target.partFilePath));
 
   await download.cancel();
   await download.removePartialData();
 
-  do_check_true(download.stopped);
-  do_check_true(download.canceled);
-  do_check_true(download.error === null);
+  Assert.ok(download.stopped);
+  Assert.ok(download.canceled);
+  Assert.ok(download.error === null);
 
-  do_check_false(await OS.File.exists(download.target.path));
-  do_check_false(await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
 });
 
 /**
@@ -866,10 +866,10 @@ add_task(async function test_cancel_immediately() {
   let download = await promiseStartDownload(httpUrl("interruptible.txt"));
 
   let promiseAttempt = download.start();
-  do_check_false(download.stopped);
+  Assert.ok(!download.stopped);
 
   let promiseCancel = download.cancel();
-  do_check_true(download.canceled);
+  Assert.ok(download.canceled);
 
   // At this point, we don't know whether the download has already stopped or
   // is still waiting for cancellation.  We can wait on the promise returned
@@ -881,15 +881,15 @@ add_task(async function test_cancel_immediately() {
     if (!(ex instanceof Downloads.Error)) {
       throw ex;
     }
-    do_check_false(ex.becauseSourceFailed);
-    do_check_false(ex.becauseTargetFailed);
+    Assert.ok(!ex.becauseSourceFailed);
+    Assert.ok(!ex.becauseTargetFailed);
   }
 
-  do_check_true(download.stopped);
-  do_check_true(download.canceled);
-  do_check_true(download.error === null);
+  Assert.ok(download.stopped);
+  Assert.ok(download.canceled);
+  Assert.ok(download.error === null);
 
-  do_check_false(await OS.File.exists(download.target.path));
+  Assert.equal(false, await OS.File.exists(download.target.path));
 
   // Check that the promise returned by the "cancel" method has been resolved.
   await promiseCancel;
@@ -907,7 +907,7 @@ add_task(async function test_cancel_midway_restart() {
   await promiseDownloadMidway(download);
   await download.cancel();
 
-  do_check_true(download.stopped);
+  Assert.ok(download.stopped);
 
   // The second time, we'll provide the entire interruptible response.
   continueResponses();
@@ -915,23 +915,23 @@ add_task(async function test_cancel_midway_restart() {
   let promiseAttempt = download.start();
 
   // Download state should have already been reset.
-  do_check_false(download.stopped);
-  do_check_false(download.canceled);
-  do_check_true(download.error === null);
+  Assert.ok(!download.stopped);
+  Assert.ok(!download.canceled);
+  Assert.ok(download.error === null);
 
   // For the following test, we rely on the network layer reporting its progress
   // asynchronously.  Otherwise, there is nothing stopping the restarted
   // download from reaching the same progress as the first request already.
-  do_check_eq(download.progress, 0);
-  do_check_eq(download.totalBytes, 0);
-  do_check_eq(download.currentBytes, 0);
+  Assert.equal(download.progress, 0);
+  Assert.equal(download.totalBytes, 0);
+  Assert.equal(download.currentBytes, 0);
 
   await promiseAttempt;
 
-  do_check_true(download.stopped);
-  do_check_true(download.succeeded);
-  do_check_false(download.canceled);
-  do_check_true(download.error === null);
+  Assert.ok(download.stopped);
+  Assert.ok(download.succeeded);
+  Assert.ok(!download.canceled);
+  Assert.ok(download.error === null);
 
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
 });
@@ -943,17 +943,17 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData() {
   let download = await promiseStartDownload_tryToKeepPartialData();
   await download.cancel();
 
-  do_check_true(download.stopped);
-  do_check_true(download.hasPartialData);
+  Assert.ok(download.stopped);
+  Assert.ok(download.hasPartialData);
 
   // We should have kept the partial data and an empty target file placeholder.
-  do_check_true(await OS.File.exists(download.target.path));
+  Assert.ok(await OS.File.exists(download.target.path));
   await promiseVerifyContents(download.target.partFilePath, TEST_DATA_SHORT);
-  do_check_false(download.target.exists);
-  do_check_eq(download.target.size, 0);
+  Assert.ok(!download.target.exists);
+  Assert.equal(download.target.size, 0);
 
   // Verify that the server sent the response from the start.
-  do_check_eq(gMostRecentFirstBytePos, 0);
+  Assert.equal(gMostRecentFirstBytePos, 0);
 
   // The second time, we'll request and obtain the second part of the response,
   // but we still stop when half of the remaining progress is reached.
@@ -974,18 +974,18 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData() {
   // rounding issues, since the total number of bytes in the response might not
   // be a multiple of four.
   await deferMidway.promise;
-  do_check_true(download.progress > 72 && download.progress < 78);
+  Assert.ok(download.progress > 72 && download.progress < 78);
 
   // Now we allow the download to finish.
   continueResponses();
   await promiseAttempt;
 
   // Check that the server now sent the second part only.
-  do_check_eq(gMostRecentFirstBytePos, TEST_DATA_SHORT.length);
+  Assert.equal(gMostRecentFirstBytePos, TEST_DATA_SHORT.length);
 
   // The target file should now have been created, and the ".part" file deleted.
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
-  do_check_false(await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
 });
 
 /**
@@ -997,22 +997,22 @@ add_task(async function test_cancel_midway_restart_removePartialData() {
   await download.cancel();
   await download.removePartialData();
 
-  do_check_false(download.hasPartialData);
-  do_check_false(await OS.File.exists(download.target.path));
-  do_check_false(await OS.File.exists(download.target.partFilePath));
-  do_check_false(download.target.exists);
-  do_check_eq(download.target.size, 0);
+  Assert.ok(!download.hasPartialData);
+  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+  Assert.ok(!download.target.exists);
+  Assert.equal(download.target.size, 0);
 
   // The second time, we'll request and obtain the entire response again.
   continueResponses();
   await download.start();
 
   // Verify that the server sent the response from the start.
-  do_check_eq(gMostRecentFirstBytePos, 0);
+  Assert.equal(gMostRecentFirstBytePos, 0);
 
   // The target file should now have been created, and the ".part" file deleted.
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
-  do_check_false(await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
 });
 
 /**
@@ -1027,12 +1027,12 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData_false() 
   download.tryToKeepPartialData = false;
 
   // The above property change does not affect existing partial data.
-  do_check_true(download.hasPartialData);
+  Assert.ok(download.hasPartialData);
   await promiseVerifyContents(download.target.partFilePath, TEST_DATA_SHORT);
 
   await download.removePartialData();
-  do_check_false(await OS.File.exists(download.target.path));
-  do_check_false(await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
 
   // Restart the download from the beginning.
   mustInterruptResponses();
@@ -1042,34 +1042,34 @@ add_task(async function test_cancel_midway_restart_tryToKeepPartialData_false() 
   await promisePartFileReady(download);
 
   // While the download is in progress, we should still have a ".part" file.
-  do_check_false(download.hasPartialData);
-  do_check_true(await OS.File.exists(download.target.path));
-  do_check_true(await OS.File.exists(download.target.partFilePath));
+  Assert.ok(!download.hasPartialData);
+  Assert.ok(await OS.File.exists(download.target.path));
+  Assert.ok(await OS.File.exists(download.target.partFilePath));
 
   // On Unix, verify that the file with the partially downloaded data is not
   // accessible by other users on the system.
   if (Services.appinfo.OS == "Darwin" || Services.appinfo.OS == "Linux") {
-    do_check_eq((await OS.File.stat(download.target.partFilePath)).unixMode,
-                0o600);
+    Assert.equal((await OS.File.stat(download.target.partFilePath)).unixMode,
+                 0o600);
   }
 
   await download.cancel();
 
   // The ".part" file should be deleted now that the download is canceled.
-  do_check_false(download.hasPartialData);
-  do_check_false(await OS.File.exists(download.target.path));
-  do_check_false(await OS.File.exists(download.target.partFilePath));
+  Assert.ok(!download.hasPartialData);
+  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
 
   // The third time, we'll request and obtain the entire response again.
   continueResponses();
   await download.start();
 
   // Verify that the server sent the response from the start.
-  do_check_eq(gMostRecentFirstBytePos, 0);
+  Assert.equal(gMostRecentFirstBytePos, 0);
 
   // The target file should now have been created, and the ".part" file deleted.
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
-  do_check_false(await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
 });
 
 /**
@@ -1081,23 +1081,23 @@ add_task(async function test_cancel_immediately_restart_immediately() {
   let download = await promiseStartDownload(httpUrl("interruptible.txt"));
   let promiseAttempt = download.start();
 
-  do_check_false(download.stopped);
+  Assert.ok(!download.stopped);
 
   download.cancel();
-  do_check_true(download.canceled);
+  Assert.ok(download.canceled);
 
   let promiseRestarted = download.start();
-  do_check_false(download.stopped);
-  do_check_false(download.canceled);
-  do_check_true(download.error === null);
+  Assert.ok(!download.stopped);
+  Assert.ok(!download.canceled);
+  Assert.ok(download.error === null);
 
   // For the following test, we rely on the network layer reporting its progress
   // asynchronously.  Otherwise, there is nothing stopping the restarted
   // download from reaching the same progress as the first request already.
-  do_check_eq(download.hasProgress, false);
-  do_check_eq(download.progress, 0);
-  do_check_eq(download.totalBytes, 0);
-  do_check_eq(download.currentBytes, 0);
+  Assert.equal(download.hasProgress, false);
+  Assert.equal(download.progress, 0);
+  Assert.equal(download.totalBytes, 0);
+  Assert.equal(download.currentBytes, 0);
 
   // Ensure the next request is now allowed to complete, regardless of whether
   // the canceled request was received by the server or not.
@@ -1107,21 +1107,21 @@ add_task(async function test_cancel_immediately_restart_immediately() {
     // If we get here, it means that the first attempt actually succeeded.  In
     // fact, this could be a valid outcome, because the cancellation request may
     // not have been processed in time before the download finished.
-    do_print("The download should have been canceled.");
+    info("The download should have been canceled.");
   } catch (ex) {
     if (!(ex instanceof Downloads.Error)) {
       throw ex;
     }
-    do_check_false(ex.becauseSourceFailed);
-    do_check_false(ex.becauseTargetFailed);
+    Assert.ok(!ex.becauseSourceFailed);
+    Assert.ok(!ex.becauseTargetFailed);
   }
 
   await promiseRestarted;
 
-  do_check_true(download.stopped);
-  do_check_true(download.succeeded);
-  do_check_false(download.canceled);
-  do_check_true(download.error === null);
+  Assert.ok(download.stopped);
+  Assert.ok(download.succeeded);
+  Assert.ok(!download.canceled);
+  Assert.ok(download.error === null);
 
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
 });
@@ -1138,20 +1138,20 @@ add_task(async function test_cancel_midway_restart_immediately() {
   // The first time, cancel the download midway.
   await promiseDownloadMidway(download);
   download.cancel();
-  do_check_true(download.canceled);
+  Assert.ok(download.canceled);
 
   let promiseRestarted = download.start();
-  do_check_false(download.stopped);
-  do_check_false(download.canceled);
-  do_check_true(download.error === null);
+  Assert.ok(!download.stopped);
+  Assert.ok(!download.canceled);
+  Assert.ok(download.error === null);
 
   // For the following test, we rely on the network layer reporting its progress
   // asynchronously.  Otherwise, there is nothing stopping the restarted
   // download from reaching the same progress as the first request already.
-  do_check_eq(download.hasProgress, false);
-  do_check_eq(download.progress, 0);
-  do_check_eq(download.totalBytes, 0);
-  do_check_eq(download.currentBytes, 0);
+  Assert.equal(download.hasProgress, false);
+  Assert.equal(download.progress, 0);
+  Assert.equal(download.totalBytes, 0);
+  Assert.equal(download.currentBytes, 0);
 
   // The second request is allowed to complete.
   continueResponses();
@@ -1162,16 +1162,16 @@ add_task(async function test_cancel_midway_restart_immediately() {
     if (!(ex instanceof Downloads.Error)) {
       throw ex;
     }
-    do_check_false(ex.becauseSourceFailed);
-    do_check_false(ex.becauseTargetFailed);
+    Assert.ok(!ex.becauseSourceFailed);
+    Assert.ok(!ex.becauseTargetFailed);
   }
 
   await promiseRestarted;
 
-  do_check_true(download.stopped);
-  do_check_true(download.succeeded);
-  do_check_false(download.canceled);
-  do_check_true(download.error === null);
+  Assert.ok(download.stopped);
+  Assert.ok(download.succeeded);
+  Assert.ok(!download.canceled);
+  Assert.ok(download.error === null);
 
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
 });
@@ -1186,10 +1186,10 @@ add_task(async function test_cancel_successful() {
   // The cancel method should succeed with no effect.
   await download.cancel();
 
-  do_check_true(download.stopped);
-  do_check_true(download.succeeded);
-  do_check_false(download.canceled);
-  do_check_true(download.error === null);
+  Assert.ok(download.stopped);
+  Assert.ok(download.succeeded);
+  Assert.ok(!download.canceled);
+  Assert.ok(download.error === null);
 
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT);
 });
@@ -1203,10 +1203,10 @@ add_task(async function test_cancel_twice() {
   let download = await promiseStartDownload(httpUrl("interruptible.txt"));
 
   let promiseAttempt = download.start();
-  do_check_false(download.stopped);
+  Assert.ok(!download.stopped);
 
   let promiseCancel1 = download.cancel();
-  do_check_true(download.canceled);
+  Assert.ok(download.canceled);
   let promiseCancel2 = download.cancel();
 
   try {
@@ -1216,20 +1216,20 @@ add_task(async function test_cancel_twice() {
     if (!(ex instanceof Downloads.Error)) {
       throw ex;
     }
-    do_check_false(ex.becauseSourceFailed);
-    do_check_false(ex.becauseTargetFailed);
+    Assert.ok(!ex.becauseSourceFailed);
+    Assert.ok(!ex.becauseTargetFailed);
   }
 
   // Both promises should now be resolved.
   await promiseCancel1;
   await promiseCancel2;
 
-  do_check_true(download.stopped);
-  do_check_false(download.succeeded);
-  do_check_true(download.canceled);
-  do_check_true(download.error === null);
+  Assert.ok(download.stopped);
+  Assert.ok(!download.succeeded);
+  Assert.ok(download.canceled);
+  Assert.ok(download.error === null);
 
-  do_check_false(await OS.File.exists(download.target.path));
+  Assert.equal(false, await OS.File.exists(download.target.path));
 });
 
 /**
@@ -1247,8 +1247,8 @@ add_task(async function test_refresh_succeeded() {
   // "size" property should keep its previous value.
   await OS.File.move(download.target.path, download.target.path + ".old");
   await download.refresh();
-  do_check_false(download.target.exists);
-  do_check_eq(download.target.size, TEST_DATA_SHORT.length);
+  Assert.ok(!download.target.exists);
+  Assert.equal(download.target.size, TEST_DATA_SHORT.length);
 
   // The DownloadTarget properties should be restored when the file is put back.
   await OS.File.move(download.target.path + ".old", download.target.path);
@@ -1273,12 +1273,12 @@ add_task(async function test_finalize() {
 
   await promiseFinalized;
 
-  do_check_true(download.stopped);
-  do_check_false(download.succeeded);
-  do_check_true(download.canceled);
-  do_check_true(download.error === null);
+  Assert.ok(download.stopped);
+  Assert.ok(!download.succeeded);
+  Assert.ok(download.canceled);
+  Assert.ok(download.error === null);
 
-  do_check_false(await OS.File.exists(download.target.path));
+  Assert.equal(false, await OS.File.exists(download.target.path));
 });
 
 /**
@@ -1289,9 +1289,9 @@ add_task(async function test_finalize_tryToKeepPartialData() {
   let download = await promiseStartDownload_tryToKeepPartialData();
   await download.finalize();
 
-  do_check_true(download.hasPartialData);
-  do_check_true(await OS.File.exists(download.target.path));
-  do_check_true(await OS.File.exists(download.target.partFilePath));
+  Assert.ok(download.hasPartialData);
+  Assert.ok(await OS.File.exists(download.target.path));
+  Assert.ok(await OS.File.exists(download.target.partFilePath));
 
   // Clean up.
   await download.removePartialData();
@@ -1300,9 +1300,9 @@ add_task(async function test_finalize_tryToKeepPartialData() {
   download = await promiseStartDownload_tryToKeepPartialData();
   await download.finalize(true);
 
-  do_check_false(download.hasPartialData);
-  do_check_false(await OS.File.exists(download.target.path));
-  do_check_false(await OS.File.exists(download.target.partFilePath));
+  Assert.ok(!download.hasPartialData);
+  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
 });
 
 /**
@@ -1337,10 +1337,10 @@ add_task(async function test_whenSucceeded_after_restart() {
   // Wait for the download to finish by waiting on the whenSucceeded promise.
   await promiseSucceeded;
 
-  do_check_true(download.stopped);
-  do_check_true(download.succeeded);
-  do_check_false(download.canceled);
-  do_check_true(download.error === null);
+  Assert.ok(download.stopped);
+  Assert.ok(download.succeeded);
+  Assert.ok(!download.canceled);
+  Assert.ok(download.error === null);
 
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
 });
@@ -1360,7 +1360,7 @@ add_task(async function test_error_source() {
         // returned by the "start" method is rejected.
         download = await promiseNewDownload(sourceUrl);
 
-        do_check_true(download.error === null);
+        Assert.ok(download.error === null);
 
         await download.start();
       } else {
@@ -1380,15 +1380,15 @@ add_task(async function test_error_source() {
     }
 
     // Check the properties now that the download stopped.
-    do_check_true(download.stopped);
-    do_check_false(download.canceled);
-    do_check_true(download.error !== null);
-    do_check_true(download.error.becauseSourceFailed);
-    do_check_false(download.error.becauseTargetFailed);
+    Assert.ok(download.stopped);
+    Assert.ok(!download.canceled);
+    Assert.ok(download.error !== null);
+    Assert.ok(download.error.becauseSourceFailed);
+    Assert.ok(!download.error.becauseTargetFailed);
 
-    do_check_false(await OS.File.exists(download.target.path));
-    do_check_false(download.target.exists);
-    do_check_eq(download.target.size, 0);
+    Assert.equal(false, await OS.File.exists(download.target.path));
+    Assert.ok(!download.target.exists);
+    Assert.equal(download.target.size, 0);
   } finally {
     serverSocket.close();
   }
@@ -1407,7 +1407,7 @@ add_task(async function test_error_source_partial() {
   function cleanup() {
     Services.prefs.setBoolPref("network.http.enforce-framing.http1", enforcePref);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   let download;
   try {
@@ -1416,7 +1416,7 @@ add_task(async function test_error_source_partial() {
       // returned by the "start" method is rejected.
       download = await promiseNewDownload(sourceUrl);
 
-      do_check_true(download.error === null);
+      Assert.ok(download.error === null);
 
       await download.start();
     } else {
@@ -1436,16 +1436,16 @@ add_task(async function test_error_source_partial() {
   }
 
   // Check the properties now that the download stopped.
-  do_check_true(download.stopped);
-  do_check_false(download.canceled);
-  do_check_true(download.error !== null);
-  do_check_true(download.error.becauseSourceFailed);
-  do_check_false(download.error.becauseTargetFailed);
-  do_check_eq(download.error.result, Cr.NS_ERROR_NET_PARTIAL_TRANSFER);
+  Assert.ok(download.stopped);
+  Assert.ok(!download.canceled);
+  Assert.ok(download.error !== null);
+  Assert.ok(download.error.becauseSourceFailed);
+  Assert.ok(!download.error.becauseTargetFailed);
+  Assert.equal(download.error.result, Cr.NS_ERROR_NET_PARTIAL_TRANSFER);
 
-  do_check_false(await OS.File.exists(download.target.path));
-  do_check_false(download.target.exists);
-  do_check_eq(download.target.size, 0);
+  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.ok(!download.target.exists);
+  Assert.equal(download.target.size, 0);
 });
 
 /**
@@ -1484,11 +1484,11 @@ add_task(async function test_error_target() {
     }
 
     // Check the properties now that the download stopped.
-    do_check_true(download.stopped);
-    do_check_false(download.canceled);
-    do_check_true(download.error !== null);
-    do_check_true(download.error.becauseTargetFailed);
-    do_check_false(download.error.becauseSourceFailed);
+    Assert.ok(download.stopped);
+    Assert.ok(!download.canceled);
+    Assert.ok(download.error !== null);
+    Assert.ok(download.error.becauseTargetFailed);
+    Assert.ok(!download.error.becauseSourceFailed);
   } finally {
     // Restore the default permissions to allow deleting the file on Windows.
     if (targetFile.exists()) {
@@ -1543,11 +1543,11 @@ add_task(async function test_error_restart() {
   // Restart the download and wait for completion.
   await download.start();
 
-  do_check_true(download.stopped);
-  do_check_true(download.succeeded);
-  do_check_false(download.canceled);
-  do_check_true(download.error === null);
-  do_check_eq(download.progress, 100);
+  Assert.ok(download.stopped);
+  Assert.ok(download.succeeded);
+  Assert.ok(!download.canceled);
+  Assert.ok(download.error === null);
+  Assert.equal(download.progress, 100);
 
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT);
 });
@@ -1568,24 +1568,24 @@ add_task(async function test_public_and_private() {
     Services.cookies.removeAll();
     gHttpServer.registerPathHandler(sourcePath, null);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
 
     if (testCount == 0) {
       // No cookies should exist for first public download.
-      do_check_false(aRequest.hasHeader("Cookie"));
+      Assert.ok(!aRequest.hasHeader("Cookie"));
       aResponse.setHeader("Set-Cookie", "foobar=1", false);
       testCount++;
     } else if (testCount == 1) {
       // The cookie should exists for second public download.
-      do_check_true(aRequest.hasHeader("Cookie"));
-      do_check_eq(aRequest.getHeader("Cookie"), "foobar=1");
+      Assert.ok(aRequest.hasHeader("Cookie"));
+      Assert.equal(aRequest.getHeader("Cookie"), "foobar=1");
       testCount++;
     } else if (testCount == 2) {
       // No cookies should exist for first private download.
-      do_check_false(aRequest.hasHeader("Cookie"));
+      Assert.ok(!aRequest.hasHeader("Cookie"));
     }
   });
 
@@ -1615,16 +1615,16 @@ add_task(async function test_cancel_immediately_restart_and_check_startTime() {
   let download = await promiseStartDownload();
 
   let startTime = download.startTime;
-  do_check_true(isValidDate(download.startTime));
+  Assert.ok(isValidDate(download.startTime));
 
   await download.cancel();
-  do_check_eq(download.startTime.getTime(), startTime.getTime());
+  Assert.equal(download.startTime.getTime(), startTime.getTime());
 
   // Wait for a timeout.
   await promiseTimeout(10);
 
   await download.start();
-  do_check_true(download.startTime.getTime() > startTime.getTime());
+  Assert.ok(download.startTime.getTime() > startTime.getTime());
 });
 
 /**
@@ -1637,7 +1637,7 @@ add_task(async function test_with_content_encoding() {
   function cleanup() {
     gHttpServer.registerPathHandler(sourcePath, null);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
@@ -1653,8 +1653,8 @@ add_task(async function test_with_content_encoding() {
   let download = await promiseStartDownload(sourceUrl);
   await promiseDownloadStopped(download);
 
-  do_check_eq(download.progress, 100);
-  do_check_eq(download.totalBytes, TEST_DATA_SHORT_GZIP_ENCODED.length);
+  Assert.equal(download.progress, 100);
+  Assert.equal(download.totalBytes, TEST_DATA_SHORT_GZIP_ENCODED.length);
 
   // Ensure the content matches the decoded test data.
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT);
@@ -1672,7 +1672,7 @@ add_task(async function test_with_content_encoding_ignore_extension() {
   function cleanup() {
     gHttpServer.registerPathHandler(sourcePath, null);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   gHttpServer.registerPathHandler(sourcePath, function(aRequest, aResponse) {
     aResponse.setHeader("Content-Type", "text/plain", false);
@@ -1688,9 +1688,9 @@ add_task(async function test_with_content_encoding_ignore_extension() {
   let download = await promiseStartDownload(sourceUrl);
   await promiseDownloadStopped(download);
 
-  do_check_eq(download.progress, 100);
-  do_check_eq(download.totalBytes, TEST_DATA_SHORT_GZIP_ENCODED.length);
-  do_check_eq(download.target.size, TEST_DATA_SHORT_GZIP_ENCODED.length);
+  Assert.equal(download.progress, 100);
+  Assert.equal(download.totalBytes, TEST_DATA_SHORT_GZIP_ENCODED.length);
+  Assert.equal(download.target.size, TEST_DATA_SHORT_GZIP_ENCODED.length);
 
   // Ensure the content matches the encoded test data.  We convert the data to a
   // string before executing the content check.
@@ -1724,15 +1724,15 @@ add_task(async function test_cancel_midway_restart_with_content_encoding() {
 
   });
 
-  do_check_true(download.stopped);
+  Assert.ok(download.stopped);
 
   // The second time, we'll provide the entire interruptible response.
   continueResponses();
   download.onchange = null;
   await download.start();
 
-  do_check_eq(download.progress, 100);
-  do_check_eq(download.totalBytes, TEST_DATA_SHORT_GZIP_ENCODED.length);
+  Assert.equal(download.progress, 100);
+  Assert.equal(download.totalBytes, TEST_DATA_SHORT_GZIP_ENCODED.length);
 
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT);
 });
@@ -1749,7 +1749,7 @@ add_task(async function test_blocked_parental_controls() {
   function cleanup() {
     Integration.downloads.unregister(blockFn);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   let download;
   try {
@@ -1771,12 +1771,12 @@ add_task(async function test_blocked_parental_controls() {
     if (!(ex instanceof Downloads.Error) || !ex.becauseBlocked) {
       throw ex;
     }
-    do_check_true(ex.becauseBlockedByParentalControls);
-    do_check_true(download.error.becauseBlockedByParentalControls);
+    Assert.ok(ex.becauseBlockedByParentalControls);
+    Assert.ok(download.error.becauseBlockedByParentalControls);
   }
 
   // Now that the download stopped, the target file should not exist.
-  do_check_false(await OS.File.exists(download.target.path));
+  Assert.equal(false, await OS.File.exists(download.target.path));
 
   cleanup();
 });
@@ -1800,12 +1800,12 @@ add_task(async function test_blocked_parental_controls_httpstatus450() {
     if (!(ex instanceof Downloads.Error) || !ex.becauseBlocked) {
       throw ex;
     }
-    do_check_true(ex.becauseBlockedByParentalControls);
-    do_check_true(download.error.becauseBlockedByParentalControls);
-    do_check_true(download.stopped);
+    Assert.ok(ex.becauseBlockedByParentalControls);
+    Assert.ok(download.error.becauseBlockedByParentalControls);
+    Assert.ok(download.stopped);
   }
 
-  do_check_false(await OS.File.exists(download.target.path));
+  Assert.equal(false, await OS.File.exists(download.target.path));
 });
 
 /**
@@ -1820,7 +1820,7 @@ add_task(async function test_blocked_runtime_permissions() {
   function cleanup() {
     Integration.downloads.unregister(blockFn);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   let download;
   try {
@@ -1842,12 +1842,12 @@ add_task(async function test_blocked_runtime_permissions() {
     if (!(ex instanceof Downloads.Error) || !ex.becauseBlocked) {
       throw ex;
     }
-    do_check_true(ex.becauseBlockedByRuntimePermissions);
-    do_check_true(download.error.becauseBlockedByRuntimePermissions);
+    Assert.ok(ex.becauseBlockedByRuntimePermissions);
+    Assert.ok(download.error.becauseBlockedByRuntimePermissions);
   }
 
   // Now that the download stopped, the target file should not exist.
-  do_check_false(await OS.File.exists(download.target.path));
+  Assert.equal(false, await OS.File.exists(download.target.path));
 
   cleanup();
 });
@@ -1861,8 +1861,8 @@ add_task(async function test_getSha256Hash() {
   if (!gUseLegacySaver) {
     let download = await promiseStartDownload(httpUrl("source.txt"));
     await promiseDownloadStopped(download);
-    do_check_true(download.stopped);
-    do_check_eq(32, download.saver.getSha256Hash().length);
+    Assert.ok(download.stopped);
+    Assert.equal(32, download.saver.getSha256Hash().length);
   }
 });
 
@@ -1891,7 +1891,7 @@ var promiseBlockedDownload = async function(options) {
   function cleanup() {
     Integration.downloads.unregister(blockFn);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   let download;
 
@@ -1913,16 +1913,16 @@ var promiseBlockedDownload = async function(options) {
     if (!(ex instanceof Downloads.Error) || !ex.becauseBlocked) {
       throw ex;
     }
-    do_check_true(ex.becauseBlockedByReputationCheck);
-    do_check_eq(ex.reputationCheckVerdict,
-                Downloads.Error.BLOCK_VERDICT_UNCOMMON);
-    do_check_true(download.error.becauseBlockedByReputationCheck);
-    do_check_eq(download.error.reputationCheckVerdict,
-                Downloads.Error.BLOCK_VERDICT_UNCOMMON);
+    Assert.ok(ex.becauseBlockedByReputationCheck);
+    Assert.equal(ex.reputationCheckVerdict,
+                 Downloads.Error.BLOCK_VERDICT_UNCOMMON);
+    Assert.ok(download.error.becauseBlockedByReputationCheck);
+    Assert.equal(download.error.reputationCheckVerdict,
+                 Downloads.Error.BLOCK_VERDICT_UNCOMMON);
   }
 
-  do_check_true(download.stopped);
-  do_check_false(download.succeeded);
+  Assert.ok(download.stopped);
+  Assert.ok(!download.succeeded);
 
   cleanup();
   return download;
@@ -1939,12 +1939,12 @@ add_task(async function test_blocked_applicationReputation() {
   });
 
   // Now that the download is blocked, the target file should not exist.
-  do_check_false(await OS.File.exists(download.target.path));
-  do_check_false(download.target.exists);
-  do_check_eq(download.target.size, 0);
+  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.ok(!download.target.exists);
+  Assert.equal(download.target.size, 0);
 
   // There should also be no blocked data in this case
-  do_check_false(download.hasBlockedData);
+  Assert.ok(!download.hasBlockedData);
 });
 
 /**
@@ -1987,7 +1987,7 @@ add_task(async function test_blocked_applicationReputation_race() {
   function cleanup() {
     Integration.downloads.unregister(blockFn);
   }
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   let download;
 
@@ -2014,7 +2014,7 @@ add_task(async function test_blocked_applicationReputation_race() {
   await promiseDownloadStopped(download);
 
   // 7. At this point, "hasBlockedData" should be false.
-  do_check_false(download.hasBlockedData);
+  Assert.ok(!download.hasBlockedData);
 
   cleanup();
 });
@@ -2029,21 +2029,21 @@ add_task(async function test_blocked_applicationReputation_confirmBlock() {
     keepBlockedData: true,
   });
 
-  do_check_true(download.hasBlockedData);
-  do_check_eq((await OS.File.stat(download.target.path)).size, 0);
-  do_check_true(await OS.File.exists(download.target.partFilePath));
+  Assert.ok(download.hasBlockedData);
+  Assert.equal((await OS.File.stat(download.target.path)).size, 0);
+  Assert.ok(await OS.File.exists(download.target.partFilePath));
 
   await download.confirmBlock();
 
   // After confirming the block the download should be in a failed state and
   // have no downloaded data left on disk.
-  do_check_true(download.stopped);
-  do_check_false(download.succeeded);
-  do_check_false(download.hasBlockedData);
-  do_check_false(await OS.File.exists(download.target.partFilePath));
-  do_check_false(await OS.File.exists(download.target.path));
-  do_check_false(download.target.exists);
-  do_check_eq(download.target.size, 0);
+  Assert.ok(download.stopped);
+  Assert.ok(!download.succeeded);
+  Assert.ok(!download.hasBlockedData);
+  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.ok(!download.target.exists);
+  Assert.equal(download.target.size, 0);
 });
 
 /**
@@ -2056,25 +2056,25 @@ add_task(async function test_blocked_applicationReputation_unblock() {
     keepBlockedData: true,
   });
 
-  do_check_true(download.hasBlockedData);
-  do_check_eq((await OS.File.stat(download.target.path)).size, 0);
-  do_check_true(await OS.File.exists(download.target.partFilePath));
+  Assert.ok(download.hasBlockedData);
+  Assert.equal((await OS.File.stat(download.target.path)).size, 0);
+  Assert.ok(await OS.File.exists(download.target.partFilePath));
 
   await download.unblock();
 
   // After unblocking the download should have succeeded and be
   // present at the final path.
-  do_check_true(download.stopped);
-  do_check_true(download.succeeded);
-  do_check_false(download.hasBlockedData);
-  do_check_false(await OS.File.exists(download.target.partFilePath));
+  Assert.ok(download.stopped);
+  Assert.ok(download.succeeded);
+  Assert.ok(!download.hasBlockedData);
+  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
   await promiseVerifyTarget(download.target, TEST_DATA_SHORT + TEST_DATA_SHORT);
 
   // The only indication the download was previously blocked is the
   // existence of the error, so we make sure it's still set.
-  do_check_true(download.error instanceof Downloads.Error);
-  do_check_true(download.error.becauseBlocked);
-  do_check_true(download.error.becauseBlockedByReputationCheck);
+  Assert.ok(download.error instanceof Downloads.Error);
+  Assert.ok(download.error.becauseBlocked);
+  Assert.ok(download.error.becauseBlockedByReputationCheck);
 });
 
 /**
@@ -2091,10 +2091,10 @@ add_task(async function test_blocked_applicationReputation_cancel() {
 
   // Calling cancel should not have changed the current state, the download
   // should still be blocked.
-  do_check_true(download.error.becauseBlockedByReputationCheck);
-  do_check_true(download.stopped);
-  do_check_false(download.succeeded);
-  do_check_true(download.hasBlockedData);
+  Assert.ok(download.error.becauseBlockedByReputationCheck);
+  Assert.ok(download.stopped);
+  Assert.ok(!download.succeeded);
+  Assert.ok(download.hasBlockedData);
 });
 
 /**
@@ -2117,11 +2117,11 @@ add_task(async function test_blocked_applicationReputation_decisionRace() {
 
   // After unblocking the download should have succeeded and be
   // present at the final path.
-  do_check_true(download.stopped);
-  do_check_true(download.succeeded);
-  do_check_false(download.hasBlockedData);
-  do_check_false(await OS.File.exists(download.target.partFilePath));
-  do_check_true(await OS.File.exists(download.target.path));
+  Assert.ok(download.stopped);
+  Assert.ok(download.succeeded);
+  Assert.ok(!download.hasBlockedData);
+  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+  Assert.ok(await OS.File.exists(download.target.path));
 
   download = await promiseBlockedDownload({
     keepPartialData: true,
@@ -2139,13 +2139,13 @@ add_task(async function test_blocked_applicationReputation_decisionRace() {
 
   // After confirming the block the download should be in a failed state and
   // have no downloaded data left on disk.
-  do_check_true(download.stopped);
-  do_check_false(download.succeeded);
-  do_check_false(download.hasBlockedData);
-  do_check_false(await OS.File.exists(download.target.partFilePath));
-  do_check_false(await OS.File.exists(download.target.path));
-  do_check_false(download.target.exists);
-  do_check_eq(download.target.size, 0);
+  Assert.ok(download.stopped);
+  Assert.ok(!download.succeeded);
+  Assert.ok(!download.hasBlockedData);
+  Assert.equal(false, await OS.File.exists(download.target.partFilePath));
+  Assert.equal(false, await OS.File.exists(download.target.path));
+  Assert.ok(!download.target.exists);
+  Assert.equal(download.target.size, 0);
 });
 
 /**
@@ -2158,8 +2158,8 @@ add_task(async function test_blocked_applicationReputation_unblock() {
     keepBlockedData: true,
   });
 
-  do_check_true(download.hasBlockedData);
-  do_check_true(await OS.File.exists(download.target.partFilePath));
+  Assert.ok(download.hasBlockedData);
+  Assert.ok(await OS.File.exists(download.target.partFilePath));
 
   // Remove the blocked data without telling the download.
   await OS.File.remove(download.target.partFilePath);
@@ -2171,11 +2171,11 @@ add_task(async function test_blocked_applicationReputation_unblock() {
 
   // Even though unblocking failed the download state should have been updated
   // to reflect the lack of blocked data.
-  do_check_false(download.hasBlockedData);
-  do_check_true(download.stopped);
-  do_check_false(download.succeeded);
-  do_check_false(download.target.exists);
-  do_check_eq(download.target.size, 0);
+  Assert.ok(!download.hasBlockedData);
+  Assert.ok(download.stopped);
+  Assert.ok(!download.succeeded);
+  Assert.ok(!download.target.exists);
+  Assert.equal(download.target.size, 0);
 });
 
 /**
@@ -2203,7 +2203,7 @@ add_task(async function test_showContainingDirectory() {
     // but with NS_ERROR_FILE_UNRECOGNIZED_PATH on Mac/Linux
     let validResult = ex.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH ||
                       ex.result == Cr.NS_ERROR_FAILURE;
-    do_check_true(validResult);
+    Assert.ok(validResult);
   }
 
   download = await Downloads.createDownload({
@@ -2239,8 +2239,8 @@ add_task(async function test_launch() {
         await download.launch();
         do_throw("Can't launch download file as it has not completed yet");
       } catch (ex) {
-        do_check_eq(ex.message,
-                    "launch can only be called if the download succeeded");
+        Assert.equal(ex.message,
+                     "launch can only be called if the download succeeded");
       }
 
       await download.start();
@@ -2254,7 +2254,7 @@ add_task(async function test_launch() {
       await promiseDownloadStopped(download);
     }
 
-    do_check_true(download.launchWhenSucceeded);
+    Assert.ok(download.launchWhenSucceeded);
 
     let promiseFileLaunched = waitForFileLaunched();
     download.launch();
@@ -2263,13 +2263,13 @@ add_task(async function test_launch() {
     // Verify that the results match the test case.
     if (!launcherPath) {
       // This indicates that the default handler has been chosen.
-      do_check_true(result === null);
+      Assert.ok(result === null);
     } else {
       // Check the nsIMIMEInfo instance that would have been used for launching.
-      do_check_eq(result.preferredAction, Ci.nsIMIMEInfo.useHelperApp);
-      do_check_true(result.preferredApplicationHandler
-                          .QueryInterface(Ci.nsILocalHandlerApp)
-                          .executable.equals(customLauncher));
+      Assert.equal(result.preferredAction, Ci.nsIMIMEInfo.useHelperApp);
+      Assert.ok(result.preferredApplicationHandler
+                      .QueryInterface(Ci.nsILocalHandlerApp)
+                      .executable.equals(customLauncher));
     }
   }
 });
@@ -2310,7 +2310,7 @@ add_task(async function test_launcherPath_invalid() {
     // but with NS_ERROR_FILE_UNRECOGNIZED_PATH on Mac/Linux
     let validResult = ex.result == Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH ||
                       ex.result == Cr.NS_ERROR_FAILURE;
-    do_check_true(validResult);
+    Assert.ok(validResult);
   }
 });
 
@@ -2346,13 +2346,13 @@ add_task(async function test_launchWhenSucceeded() {
     // Verify that the results match the test case.
     if (!launcherPath) {
       // This indicates that the default handler has been chosen.
-      do_check_true(result === null);
+      Assert.ok(result === null);
     } else {
       // Check the nsIMIMEInfo instance that would have been used for launching.
-      do_check_eq(result.preferredAction, Ci.nsIMIMEInfo.useHelperApp);
-      do_check_true(result.preferredApplicationHandler
-                          .QueryInterface(Ci.nsILocalHandlerApp)
-                          .executable.equals(customLauncher));
+      Assert.equal(result.preferredAction, Ci.nsIMIMEInfo.useHelperApp);
+      Assert.ok(result.preferredApplicationHandler
+                      .QueryInterface(Ci.nsILocalHandlerApp)
+                      .executable.equals(customLauncher));
     }
   }
 });
@@ -2364,7 +2364,7 @@ add_task(async function test_contentType() {
   let download = await promiseStartDownload(httpUrl("source.txt"));
   await promiseDownloadStopped(download);
 
-  do_check_eq("text/plain", download.contentType);
+  Assert.equal("text/plain", download.contentType);
 });
 
 /**
@@ -2380,9 +2380,9 @@ add_task(async function test_toSerializable_startTime() {
 
   let download2 = await Downloads.createDownload(reserialized);
 
-  do_check_eq(download1.startTime.constructor.name, "Date");
-  do_check_eq(download2.startTime.constructor.name, "Date");
-  do_check_eq(download1.startTime.toJSON(), download2.startTime.toJSON());
+  Assert.equal(download1.startTime.constructor.name, "Date");
+  Assert.equal(download2.startTime.constructor.name, "Date");
+  Assert.equal(download1.startTime.toJSON(), download2.startTime.toJSON());
 });
 
 /**
@@ -2400,8 +2400,8 @@ add_task(async function test_history() {
 
   // The history notifications should be received before the download completes.
   let [time, transitionType] = await promiseVisit;
-  do_check_eq(time, download.startTime.getTime() * 1000);
-  do_check_eq(transitionType, Ci.nsINavHistoryService.TRANSITION_DOWNLOAD);
+  Assert.equal(time, download.startTime.getTime() * 1000);
+  Assert.equal(transitionType, Ci.nsINavHistoryService.TRANSITION_DOWNLOAD);
 
   // Restart and complete the download after clearing history.
   await PlacesUtils.history.clear();
@@ -2410,7 +2410,7 @@ add_task(async function test_history() {
   await download.start();
 
   // The restart should not have added a new history visit.
-  do_check_false(await promiseIsURIVisited(httpUrl("interruptible.txt")));
+  Assert.equal(false, await promiseIsURIVisited(httpUrl("interruptible.txt")));
 });
 
 /**
@@ -2429,12 +2429,12 @@ add_task(async function test_history_tryToKeepPartialData() {
 
   // The history notifications should be received before the download completes.
   let [time, transitionType] = await promiseVisit;
-  do_check_eq(transitionType, Ci.nsINavHistoryService.TRANSITION_DOWNLOAD);
+  Assert.equal(transitionType, Ci.nsINavHistoryService.TRANSITION_DOWNLOAD);
 
   // The time set by nsIHelperAppService may be different than the start time in
   // the download object, thus we only check that it is a meaningful time.  Note
   // that we subtract one second from the earliest time to account for rounding.
-  do_check_true(time >= beforeStartTimeMs * 1000 - 1000000);
+  Assert.ok(time >= beforeStartTimeMs * 1000 - 1000000);
 
   // Complete the download before finishing the test.
   continueResponses();
@@ -2479,18 +2479,18 @@ add_task(async function test_launchWhenSucceeded_deleteTempFileOnExit() {
 
   Services.prefs.clearUserPref(kDeleteTempFileOnExit);
 
-  do_check_true(await OS.File.exists(autoDeleteTargetPathOne));
-  do_check_true(await OS.File.exists(autoDeleteTargetPathTwo));
-  do_check_true(await OS.File.exists(noAutoDeleteTargetPath));
+  Assert.ok(await OS.File.exists(autoDeleteTargetPathOne));
+  Assert.ok(await OS.File.exists(autoDeleteTargetPathTwo));
+  Assert.ok(await OS.File.exists(noAutoDeleteTargetPath));
 
   // Simulate leaving private browsing mode
   Services.obs.notifyObservers(null, "last-pb-context-exited");
-  do_check_false(await OS.File.exists(autoDeleteTargetPathOne));
+  Assert.equal(false, await OS.File.exists(autoDeleteTargetPathOne));
 
   // Simulate browser shutdown
   let expire = Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
                  .getService(Ci.nsIObserver);
   expire.observe(null, "profile-before-change", null);
-  do_check_false(await OS.File.exists(autoDeleteTargetPathTwo));
-  do_check_true(await OS.File.exists(noAutoDeleteTargetPath));
+  Assert.equal(false, await OS.File.exists(autoDeleteTargetPathTwo));
+  Assert.ok(await OS.File.exists(noAutoDeleteTargetPath));
 });

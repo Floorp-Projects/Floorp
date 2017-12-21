@@ -72,29 +72,29 @@ add_task(async function test_annotation_uploaded() {
   let mostVisitedID = await PlacesUtils.promiseItemId(mostVisitedInfo.guid);
 
   _("New item ID: " + mostVisitedID);
-  do_check_true(!!mostVisitedID);
+  Assert.ok(!!mostVisitedID);
 
   let annoValue = PlacesUtils.annotations.getItemAnnotation(mostVisitedID,
     PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO);
   _("Anno: " + annoValue);
-  do_check_eq("MostVisited", annoValue);
+  Assert.equal("MostVisited", annoValue);
 
   let guid = await PlacesUtils.promiseItemGuid(mostVisitedID);
   _("GUID: " + guid);
-  do_check_true(!!guid);
+  Assert.ok(!!guid);
 
   _("Create record object and verify that it's sane.");
   let record = await store.createRecord(guid);
-  do_check_true(record instanceof Bookmark);
-  do_check_true(record instanceof BookmarkQuery);
+  Assert.ok(record instanceof Bookmark);
+  Assert.ok(record instanceof BookmarkQuery);
 
-  do_check_eq(record.bmkUri, url);
+  Assert.equal(record.bmkUri, url);
 
   _("Make sure the new record carries with it the annotation.");
-  do_check_eq("MostVisited", record.queryId);
+  Assert.equal("MostVisited", record.queryId);
 
   _("Our count has increased since we started.");
-  do_check_eq(smartBookmarkCount(), startCount + 1);
+  Assert.equal(smartBookmarkCount(), startCount + 1);
 
   _("Sync record to the server.");
   let collection = server.user("foo").collection("bookmarks");
@@ -104,18 +104,18 @@ add_task(async function test_annotation_uploaded() {
     let wbos = collection.keys(function(id) {
                  return ["menu", "toolbar", "mobile", "unfiled"].indexOf(id) == -1;
                });
-    do_check_eq(wbos.length, 1);
+    Assert.equal(wbos.length, 1);
 
     _("Verify that the server WBO has the annotation.");
     let serverGUID = wbos[0];
-    do_check_eq(serverGUID, guid);
+    Assert.equal(serverGUID, guid);
     let serverWBO = collection.wbo(serverGUID);
-    do_check_true(!!serverWBO);
+    Assert.ok(!!serverWBO);
     let body = JSON.parse(JSON.parse(serverWBO.payload).ciphertext);
-    do_check_eq(body.queryId, "MostVisited");
+    Assert.equal(body.queryId, "MostVisited");
 
     _("We still have the right count.");
-    do_check_eq(smartBookmarkCount(), startCount + 1);
+    Assert.equal(smartBookmarkCount(), startCount + 1);
 
     _("Clear local records; now we can't find it.");
 
@@ -130,31 +130,31 @@ add_task(async function test_annotation_uploaded() {
       PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO);
     await store.wipe();
     await engine.resetClient();
-    do_check_eq(smartBookmarkCount(), startCount);
+    Assert.equal(smartBookmarkCount(), startCount);
 
     _("Sync. Verify that the downloaded record carries the annotation.");
     await sync_engine_and_validate_telem(engine, false);
 
     _("Verify that the Places DB now has an annotated bookmark.");
     _("Our count has increased again.");
-    do_check_eq(smartBookmarkCount(), startCount + 1);
+    Assert.equal(smartBookmarkCount(), startCount + 1);
 
     _("Find by GUID and verify that it's annotated.");
     let newID = await PlacesUtils.promiseItemId(serverGUID);
     let newAnnoValue = PlacesUtils.annotations.getItemAnnotation(
       newID, PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO);
-    do_check_eq(newAnnoValue, "MostVisited");
+    Assert.equal(newAnnoValue, "MostVisited");
     let newInfo = await PlacesUtils.bookmarks.fetch(serverGUID);
-    do_check_eq(newInfo.url.href, url);
+    Assert.equal(newInfo.url.href, url);
 
     _("Test updating.");
     let newRecord = await store.createRecord(serverGUID);
-    do_check_eq(newRecord.queryId, newAnnoValue);
+    Assert.equal(newRecord.queryId, newAnnoValue);
     newRecord.queryId = "LeastVisited";
     collection.insert(serverGUID, encryptPayload(newRecord.cleartext));
     engine.lastModified = collection.timestamp + 1;
     await sync_engine_and_validate_telem(engine, false);
-    do_check_eq("LeastVisited", PlacesUtils.annotations.getItemAnnotation(
+    Assert.equal("LeastVisited", PlacesUtils.annotations.getItemAnnotation(
       newID, PlacesSyncUtils.bookmarks.SMART_BOOKMARKS_ANNO));
 
   } finally {

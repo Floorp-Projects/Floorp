@@ -147,7 +147,7 @@ function test_display_string() {
     (function loop() {
       const objClient = gThreadClient.pauseGrip(args.pop());
       objClient.getDisplayString(function ({ displayString }) {
-        do_check_eq(displayString, testCases.pop().output);
+        Assert.equal(displayString, testCases.pop().output);
         if (args.length) {
           loop();
         } else {

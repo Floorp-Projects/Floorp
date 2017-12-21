@@ -22,7 +22,7 @@ function redirectHandler(metadata, response) {
 function headerCheckHandler(metadata, response) {
   try {
     let headerValue = metadata.getHeader("X-Custom-Header");
-    do_check_eq(headerValue, "present");
+    Assert.equal(headerValue, "present");
   } catch(e) {
     do_throw("No header present after redirect");
   }
@@ -47,7 +47,7 @@ function run_test() {
   request.setRequestHeader("X-Custom-Header", "present");
   request.addEventListener("readystatechange", function() {
     if (request.readyState == 4) {
-      do_check_eq(request.status, 200);
+      Assert.equal(request.status, 200);
       server.stop(do_test_finished);
     }
   });

@@ -5,7 +5,7 @@ function run_test() {
   var notifications = 0;
   var obs = {
     observe: function(aSubject, aTopic, aData) {
-      do_check_eq(aTopic, "last-pb-context-exited");
+      Assert.equal(aTopic, "last-pb-context-exited");
       notifications++;
     }
   };
@@ -14,7 +14,7 @@ function run_test() {
  
   run_test_in_child("../unit/test_pb_notification.js",
                     function() {
-                      do_check_eq(notifications, 1);
+                      Assert.equal(notifications, 1);
                       do_test_finished();
                     });
 }

@@ -32,31 +32,31 @@ add_task(async function test_javascript_match() {
                       title: "tagged",
                       tags: [ "tag1", "tag2", "tag3" ] });
 
-  do_print("Make sure tags come back in the title when matching tags");
+  info("Make sure tags come back in the title when matching tags");
   await check_autocomplete({
     search: "page1 tag",
     matches: [ { uri: uri1, title: "tagged", tags: [ "tag1" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("Check tags in title for page2");
+  info("Check tags in title for page2");
   await check_autocomplete({
     search: "page2 tag",
     matches: [ { uri: uri2, title: "tagged", tags: [ "tag1", "tag2" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("Make sure tags appear even when not matching the tag");
+  info("Make sure tags appear even when not matching the tag");
   await check_autocomplete({
     search: "page3",
     matches: [ { uri: uri3, title: "tagged", tags: [ "tag1", "tag3" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("Multiple tags come in commas for page4");
+  info("Multiple tags come in commas for page4");
   await check_autocomplete({
     search: "page4",
     matches: [ { uri: uri4, title: "tagged", tags: [ "tag1", "tag2", "tag3" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("Extra test just to make sure we match the title");
+  info("Extra test just to make sure we match the title");
   await check_autocomplete({
     search: "tag2",
     matches: [ { uri: uri2, title: "tagged", tags: [ "tag1", "tag2" ], style: [ "bookmark-tag" ] },

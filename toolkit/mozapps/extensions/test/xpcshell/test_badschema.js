@@ -170,7 +170,7 @@ function run_test() {
         onUpdateFinished() {
           a4.findUpdates({
             onUpdateFinished() {
-              do_execute_soon(run_test_1);
+              executeSoon(run_test_1);
             }
           }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
         }
@@ -197,61 +197,61 @@ function run_test_1() {
                                "theme2@tests.mozilla.org"], function([a1, a2, a3,
                                                                       a4, a5, a6,
                                                                       a7, t1, t2]) {
-    do_check_neq(a1, null);
-    do_check_true(a1.isActive);
-    do_check_false(a1.userDisabled);
-    do_check_false(a1.appDisabled);
-    do_check_eq(a1.pendingOperations, AddonManager.PENDING_NONE);
+    Assert.notEqual(a1, null);
+    Assert.ok(a1.isActive);
+    Assert.ok(!a1.userDisabled);
+    Assert.ok(!a1.appDisabled);
+    Assert.equal(a1.pendingOperations, AddonManager.PENDING_NONE);
 
-    do_check_neq(a2, null);
-    do_check_false(a2.isActive);
-    do_check_true(a2.userDisabled);
-    do_check_false(a2.appDisabled);
-    do_check_eq(a2.pendingOperations, AddonManager.PENDING_NONE);
+    Assert.notEqual(a2, null);
+    Assert.ok(!a2.isActive);
+    Assert.ok(a2.userDisabled);
+    Assert.ok(!a2.appDisabled);
+    Assert.equal(a2.pendingOperations, AddonManager.PENDING_NONE);
 
-    do_check_neq(a3, null);
-    do_check_true(a3.isActive);
-    do_check_false(a3.userDisabled);
-    do_check_false(a3.appDisabled);
-    do_check_eq(a3.pendingOperations, AddonManager.PENDING_NONE);
+    Assert.notEqual(a3, null);
+    Assert.ok(a3.isActive);
+    Assert.ok(!a3.userDisabled);
+    Assert.ok(!a3.appDisabled);
+    Assert.equal(a3.pendingOperations, AddonManager.PENDING_NONE);
 
-    do_check_neq(a4, null);
-    do_check_false(a4.isActive);
-    do_check_true(a4.userDisabled);
-    do_check_false(a4.appDisabled);
-    do_check_eq(a4.pendingOperations, AddonManager.PENDING_NONE);
+    Assert.notEqual(a4, null);
+    Assert.ok(!a4.isActive);
+    Assert.ok(a4.userDisabled);
+    Assert.ok(!a4.appDisabled);
+    Assert.equal(a4.pendingOperations, AddonManager.PENDING_NONE);
 
-    do_check_neq(a5, null);
-    do_check_false(a5.isActive);
-    do_check_false(a5.userDisabled);
-    do_check_true(a5.appDisabled);
-    do_check_eq(a5.pendingOperations, AddonManager.PENDING_NONE);
+    Assert.notEqual(a5, null);
+    Assert.ok(!a5.isActive);
+    Assert.ok(!a5.userDisabled);
+    Assert.ok(a5.appDisabled);
+    Assert.equal(a5.pendingOperations, AddonManager.PENDING_NONE);
 
-    do_check_neq(a6, null);
-    do_check_true(a6.isActive);
-    do_check_false(a6.userDisabled);
-    do_check_false(a6.appDisabled);
-    do_check_eq(a6.pendingOperations, AddonManager.PENDING_NONE);
+    Assert.notEqual(a6, null);
+    Assert.ok(a6.isActive);
+    Assert.ok(!a6.userDisabled);
+    Assert.ok(!a6.appDisabled);
+    Assert.equal(a6.pendingOperations, AddonManager.PENDING_NONE);
 
-    do_check_neq(a7, null);
-    do_check_false(a7.isActive);
-    do_check_true(a7.userDisabled);
-    do_check_false(a7.appDisabled);
-    do_check_eq(a7.pendingOperations, AddonManager.PENDING_NONE);
+    Assert.notEqual(a7, null);
+    Assert.ok(!a7.isActive);
+    Assert.ok(a7.userDisabled);
+    Assert.ok(!a7.appDisabled);
+    Assert.equal(a7.pendingOperations, AddonManager.PENDING_NONE);
 
-    do_check_neq(t1, null);
-    do_check_false(t1.isActive);
-    do_check_true(t1.userDisabled);
-    do_check_false(t1.appDisabled);
-    do_check_eq(t1.pendingOperations, AddonManager.PENDING_NONE);
+    Assert.notEqual(t1, null);
+    Assert.ok(!t1.isActive);
+    Assert.ok(t1.userDisabled);
+    Assert.ok(!t1.appDisabled);
+    Assert.equal(t1.pendingOperations, AddonManager.PENDING_NONE);
 
-    do_check_neq(t2, null);
-    do_check_true(t2.isActive);
-    do_check_false(t2.userDisabled);
-    do_check_false(t2.appDisabled);
-    do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
+    Assert.notEqual(t2, null);
+    Assert.ok(t2.isActive);
+    Assert.ok(!t2.userDisabled);
+    Assert.ok(!t2.appDisabled);
+    Assert.equal(t2.pendingOperations, AddonManager.PENDING_NONE);
 
-    do_execute_soon(run_test_1_modified_db);
+    executeSoon(run_test_1_modified_db);
   });
 }
 
@@ -276,61 +276,61 @@ function run_test_1_modified_db() {
                                  "theme2@tests.mozilla.org"], function([a1, a2, a3,
                                                                         a4, a5, a6,
                                                                         a7, t1, t2]) {
-      do_check_neq(a1, null);
-      do_check_true(a1.isActive);
-      do_check_false(a1.userDisabled);
-      do_check_false(a1.appDisabled);
-      do_check_eq(a1.pendingOperations, AddonManager.PENDING_NONE);
+      Assert.notEqual(a1, null);
+      Assert.ok(a1.isActive);
+      Assert.ok(!a1.userDisabled);
+      Assert.ok(!a1.appDisabled);
+      Assert.equal(a1.pendingOperations, AddonManager.PENDING_NONE);
 
-      do_check_neq(a2, null);
-      do_check_false(a2.isActive);
-      do_check_true(a2.userDisabled);
-      do_check_false(a2.appDisabled);
-      do_check_eq(a2.pendingOperations, AddonManager.PENDING_NONE);
+      Assert.notEqual(a2, null);
+      Assert.ok(!a2.isActive);
+      Assert.ok(a2.userDisabled);
+      Assert.ok(!a2.appDisabled);
+      Assert.equal(a2.pendingOperations, AddonManager.PENDING_NONE);
 
-      do_check_neq(a3, null);
-      do_check_true(a3.isActive);
-      do_check_false(a3.userDisabled);
-      do_check_false(a3.appDisabled);
-      do_check_eq(a3.pendingOperations, AddonManager.PENDING_NONE);
+      Assert.notEqual(a3, null);
+      Assert.ok(a3.isActive);
+      Assert.ok(!a3.userDisabled);
+      Assert.ok(!a3.appDisabled);
+      Assert.equal(a3.pendingOperations, AddonManager.PENDING_NONE);
 
-      do_check_neq(a4, null);
-      do_check_false(a4.isActive);
-      do_check_true(a4.userDisabled);
-      do_check_false(a4.appDisabled);
-      do_check_eq(a4.pendingOperations, AddonManager.PENDING_NONE);
+      Assert.notEqual(a4, null);
+      Assert.ok(!a4.isActive);
+      Assert.ok(a4.userDisabled);
+      Assert.ok(!a4.appDisabled);
+      Assert.equal(a4.pendingOperations, AddonManager.PENDING_NONE);
 
-      do_check_neq(a5, null);
-      do_check_false(a5.isActive);
-      do_check_false(a5.userDisabled);
-      do_check_true(a5.appDisabled);
-      do_check_eq(a5.pendingOperations, AddonManager.PENDING_NONE);
+      Assert.notEqual(a5, null);
+      Assert.ok(!a5.isActive);
+      Assert.ok(!a5.userDisabled);
+      Assert.ok(a5.appDisabled);
+      Assert.equal(a5.pendingOperations, AddonManager.PENDING_NONE);
 
-      do_check_neq(a6, null);
-      do_check_true(a6.isActive);
-      do_check_false(a6.userDisabled);
-      do_check_false(a6.appDisabled);
-      do_check_eq(a6.pendingOperations, AddonManager.PENDING_NONE);
+      Assert.notEqual(a6, null);
+      Assert.ok(a6.isActive);
+      Assert.ok(!a6.userDisabled);
+      Assert.ok(!a6.appDisabled);
+      Assert.equal(a6.pendingOperations, AddonManager.PENDING_NONE);
 
-      do_check_neq(a7, null);
-      do_check_false(a7.isActive);
-      do_check_true(a7.userDisabled);
-      do_check_false(a7.appDisabled);
-      do_check_eq(a7.pendingOperations, AddonManager.PENDING_NONE);
+      Assert.notEqual(a7, null);
+      Assert.ok(!a7.isActive);
+      Assert.ok(a7.userDisabled);
+      Assert.ok(!a7.appDisabled);
+      Assert.equal(a7.pendingOperations, AddonManager.PENDING_NONE);
 
-      do_check_neq(t1, null);
-      do_check_false(t1.isActive);
-      do_check_true(t1.userDisabled);
-      do_check_false(t1.appDisabled);
-      do_check_eq(t1.pendingOperations, AddonManager.PENDING_NONE);
+      Assert.notEqual(t1, null);
+      Assert.ok(!t1.isActive);
+      Assert.ok(t1.userDisabled);
+      Assert.ok(!t1.appDisabled);
+      Assert.equal(t1.pendingOperations, AddonManager.PENDING_NONE);
 
-      do_check_neq(t2, null);
-      do_check_true(t2.isActive);
-      do_check_false(t2.userDisabled);
-      do_check_false(t2.appDisabled);
-      do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
+      Assert.notEqual(t2, null);
+      Assert.ok(t2.isActive);
+      Assert.ok(!t2.userDisabled);
+      Assert.ok(!t2.appDisabled);
+      Assert.equal(t2.pendingOperations, AddonManager.PENDING_NONE);
 
-      do_execute_soon(run_test_1_after_rebuild);
+      executeSoon(run_test_1_after_rebuild);
     });
 }
 
@@ -348,59 +348,59 @@ function run_test_1_after_rebuild() {
                                    "theme2@tests.mozilla.org"], function([a1, a2, a3,
                                                                           a4, a5, a6,
                                                                           a7, t1, t2]) {
-        do_check_neq(a1, null);
-        do_check_true(a1.isActive);
-        do_check_false(a1.userDisabled);
-        do_check_false(a1.appDisabled);
-        do_check_eq(a1.pendingOperations, AddonManager.PENDING_NONE);
+        Assert.notEqual(a1, null);
+        Assert.ok(a1.isActive);
+        Assert.ok(!a1.userDisabled);
+        Assert.ok(!a1.appDisabled);
+        Assert.equal(a1.pendingOperations, AddonManager.PENDING_NONE);
 
-        do_check_neq(a2, null);
-        do_check_false(a2.isActive);
-        do_check_true(a2.userDisabled);
-        do_check_false(a2.appDisabled);
-        do_check_eq(a2.pendingOperations, AddonManager.PENDING_NONE);
+        Assert.notEqual(a2, null);
+        Assert.ok(!a2.isActive);
+        Assert.ok(a2.userDisabled);
+        Assert.ok(!a2.appDisabled);
+        Assert.equal(a2.pendingOperations, AddonManager.PENDING_NONE);
 
-        do_check_neq(a3, null);
-        do_check_true(a3.isActive);
-        do_check_false(a3.userDisabled);
-        do_check_false(a3.appDisabled);
-        do_check_eq(a3.pendingOperations, AddonManager.PENDING_NONE);
+        Assert.notEqual(a3, null);
+        Assert.ok(a3.isActive);
+        Assert.ok(!a3.userDisabled);
+        Assert.ok(!a3.appDisabled);
+        Assert.equal(a3.pendingOperations, AddonManager.PENDING_NONE);
 
-        do_check_neq(a4, null);
-        do_check_false(a4.isActive);
-        do_check_true(a4.userDisabled);
-        do_check_false(a4.appDisabled);
-        do_check_eq(a4.pendingOperations, AddonManager.PENDING_NONE);
+        Assert.notEqual(a4, null);
+        Assert.ok(!a4.isActive);
+        Assert.ok(a4.userDisabled);
+        Assert.ok(!a4.appDisabled);
+        Assert.equal(a4.pendingOperations, AddonManager.PENDING_NONE);
 
-        do_check_neq(a5, null);
-        do_check_false(a5.isActive);
-        do_check_false(a5.userDisabled);
-        do_check_true(a5.appDisabled);
-        do_check_eq(a5.pendingOperations, AddonManager.PENDING_NONE);
+        Assert.notEqual(a5, null);
+        Assert.ok(!a5.isActive);
+        Assert.ok(!a5.userDisabled);
+        Assert.ok(a5.appDisabled);
+        Assert.equal(a5.pendingOperations, AddonManager.PENDING_NONE);
 
-        do_check_neq(a6, null);
-        do_check_true(a6.isActive);
-        do_check_false(a6.userDisabled);
-        do_check_false(a6.appDisabled);
-        do_check_eq(a6.pendingOperations, AddonManager.PENDING_NONE);
+        Assert.notEqual(a6, null);
+        Assert.ok(a6.isActive);
+        Assert.ok(!a6.userDisabled);
+        Assert.ok(!a6.appDisabled);
+        Assert.equal(a6.pendingOperations, AddonManager.PENDING_NONE);
 
-        do_check_neq(a7, null);
-        do_check_false(a7.isActive);
-        do_check_true(a7.userDisabled);
-        do_check_false(a7.appDisabled);
-        do_check_eq(a7.pendingOperations, AddonManager.PENDING_NONE);
+        Assert.notEqual(a7, null);
+        Assert.ok(!a7.isActive);
+        Assert.ok(a7.userDisabled);
+        Assert.ok(!a7.appDisabled);
+        Assert.equal(a7.pendingOperations, AddonManager.PENDING_NONE);
 
-        do_check_neq(t1, null);
-        do_check_false(t1.isActive);
-        do_check_true(t1.userDisabled);
-        do_check_false(t1.appDisabled);
-        do_check_eq(t1.pendingOperations, AddonManager.PENDING_NONE);
+        Assert.notEqual(t1, null);
+        Assert.ok(!t1.isActive);
+        Assert.ok(t1.userDisabled);
+        Assert.ok(!t1.appDisabled);
+        Assert.equal(t1.pendingOperations, AddonManager.PENDING_NONE);
 
-        do_check_neq(t2, null);
-        do_check_true(t2.isActive);
-        do_check_false(t2.userDisabled);
-        do_check_false(t2.appDisabled);
-        do_check_eq(t2.pendingOperations, AddonManager.PENDING_NONE);
+        Assert.notEqual(t2, null);
+        Assert.ok(t2.isActive);
+        Assert.ok(!t2.userDisabled);
+        Assert.ok(!t2.appDisabled);
+        Assert.equal(t2.pendingOperations, AddonManager.PENDING_NONE);
 
         end_test();
       });

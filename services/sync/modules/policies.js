@@ -138,7 +138,7 @@ SyncScheduler.prototype = {
   },
 
   init: function init() {
-    this._log.level = Log.Level[Svc.Prefs.get("log.logger.service.main")];
+    this._log.manageLevelFromPref("services.sync.log.logger.service.main");
     this.setDefaults();
     Svc.Obs.add("weave:engine:score:updated", this);
     Svc.Obs.add("network:offline-status-changed", this);
@@ -663,17 +663,15 @@ ErrorHandler.prototype = {
   },
 
   initLogs: function initLogs() {
+    // Set the root Sync logger level based on a pref. All other logs will
+    // inherit this level unless they specifically override it.
+    Log.repository.getLogger("Sync").manageLevelFromPref(`services.sync.log.logger`);
+    // And allow our specific log to have a custom level via a pref.
     this._log = Log.repository.getLogger("Sync.ErrorHandler");
-    this._log.level = Log.Level[Svc.Prefs.get("log.logger.service.main")];
+    this._log.manageLevelFromPref("services.sync.log.logger.service.main");
 
-    let root = Log.repository.getLogger("Sync");
-    root.level = Log.Level[Svc.Prefs.get("log.rootLogger")];
-
-    let logs = ["Sync", "FirefoxAccounts", "Hawk", "Common.TokenServerClient",
-                "Sync.SyncMigration", "browserwindow.syncui",
-                "Services.Common.RESTRequest", "Services.Common.RESTRequest",
-                "BookmarkSyncUtils",
-                "addons.xpi",
+    let logs = ["Sync", "Services.Common", "FirefoxAccounts", "Hawk",
+                "browserwindow.syncui", "BookmarkSyncUtils", "addons.xpi",
                ];
 
     this._logManager = new LogManager(Svc.Prefs, logs, "sync");

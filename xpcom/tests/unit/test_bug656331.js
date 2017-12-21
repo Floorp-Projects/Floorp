@@ -25,12 +25,12 @@ function run_test() {
   let manifest = do_get_file("components/bug656331.manifest");
   registerAppManifest(manifest);
 
-  do_check_false("{f18fb09b-28b4-4435-bc5b-8027f18df743}" in Components.classesByID);
+  Assert.equal(false, "{f18fb09b-28b4-4435-bc5b-8027f18df743}" in Components.classesByID);
 
   do_test_pending();
   Services.tm.dispatchToMainThread(function() {
     Services.console.unregisterListener(kConsoleListener);
-    do_check_true(gFound);
+    Assert.ok(gFound);
     do_test_finished();
   });
 }

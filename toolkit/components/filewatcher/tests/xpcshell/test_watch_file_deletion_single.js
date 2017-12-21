@@ -38,12 +38,12 @@ add_task(async function test_watch_single_path_file_deletion() {
   await promiseAddPath(watcher, watchedDir, deferred.resolve, deferred.reject);
 
   // Remove the file we created (should trigger a notification).
-  do_print("Removing " + tmpFilePath);
+  info("Removing " + tmpFilePath);
   await OS.File.remove(tmpFilePath);
 
   // Wait until the watcher informs us that the file was deleted.
   let changed = await deferred.promise;
-  do_check_eq(changed, tmpFilePath);
+  Assert.equal(changed, tmpFilePath);
 
   // Remove the watch and free the associated memory (we need to
   // reuse 'deferred.resolve' and 'deferred.reject' to unregister).

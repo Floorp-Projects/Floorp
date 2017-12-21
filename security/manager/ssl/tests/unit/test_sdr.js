@@ -13,8 +13,8 @@ let gSetPasswordShownCount = 0;
 const gTokenPasswordDialogs = {
   setPassword(ctx, tokenName) {
     gSetPasswordShownCount++;
-    do_print(`setPassword() called; shown ${gSetPasswordShownCount} times`);
-    do_print(`tokenName: ${tokenName}`);
+    info(`setPassword() called; shown ${gSetPasswordShownCount} times`);
+    info(`tokenName: ${tokenName}`);
     return false; // Returning false means "the user didn't cancel".
   },
 
@@ -68,7 +68,7 @@ function run_test() {
     let tokenPasswordDialogsCID =
       MockRegistrar.register("@mozilla.org/nsTokenPasswordDialogs;1",
                              gTokenPasswordDialogs);
-    do_register_cleanup(() => {
+    registerCleanupFunction(() => {
       MockRegistrar.unregister(tokenPasswordDialogsCID);
     });
 

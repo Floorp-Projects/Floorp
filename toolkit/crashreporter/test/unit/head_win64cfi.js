@@ -95,7 +95,7 @@ function stackFrameToString(frameIndex, frame) {
 
 function dumpStackFrames(frames, maxFrames) {
   for (let i = 0; i < Math.min(maxFrames, frames.length); ++i) {
-    do_print(stackFrameToString(i, frames[i]));
+    info(stackFrameToString(i, frames[i]));
   }
 }
 
@@ -112,14 +112,14 @@ function assertStack(stack, expected) {
     let frame = stack[i];
     let expectedFrame = expected[i];
     let dumpThisFrame = function() {
-      do_print("  Actual frame: " + stackFrameToString(i, frame));
-      do_print("Expected { symbol: " + expectedFrame.symbol + ", trust: " + expectedFrame.trust + "}");
+      info("  Actual frame: " + stackFrameToString(i, frame));
+      info("Expected { symbol: " + expectedFrame.symbol + ", trust: " + expectedFrame.trust + "}");
     };
 
     if (expectedFrame.trust) {
       if (frame.trust !== expectedFrame.trust) {
         dumpThisFrame();
-        do_print("Expected frame trust did not match.");
+        info("Expected frame trust did not match.");
         ok(false);
       }
     }
@@ -128,12 +128,12 @@ function assertStack(stack, expected) {
       if (typeof frame.module_index === "undefined") {
         // Without a module_index, it happened in an unknown module. Currently
         // you can't specify an expected "unknown" module.
-        do_print("Unknown symbol in unknown module.");
+        info("Unknown symbol in unknown module.");
         ok(false);
       }
       if (frame.module_index < 0 || frame.module_index >= gModules.length) {
         dumpThisFrame();
-        do_print("Unknown module.");
+        info("Unknown module.");
         ok(false);
         return;
       }
@@ -144,14 +144,14 @@ function assertStack(stack, expected) {
         let nearestSym = findNearestTestCrasherSymbol(moduleOffset);
         if (nearestSym === null) {
           dumpThisFrame();
-          do_print("Unknown symbol.");
+          info("Unknown symbol.");
           ok(false);
           return;
         }
 
         if (nearestSym.symbol !== expectedFrame.symbol) {
           dumpThisFrame();
-          do_print("Mismatching symbol.");
+          info("Mismatching symbol.");
           ok(false);
         }
       }

@@ -39,7 +39,7 @@ function check_some_enterprise_roots_imported(certDB) {
     if (!cert.isBuiltInRoot && !savedDBKey) {
       foundNonBuiltIn = true;
       savedDBKey = cert.dbKey;
-      do_print("saving dbKey from " + cert.commonName);
+      info("saving dbKey from " + cert.commonName);
     }
   }
   ok(foundNonBuiltIn, "should have found non-built-in root");

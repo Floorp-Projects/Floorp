@@ -512,6 +512,7 @@ AsyncDecodeWebAudio(const char* aContentType, uint8_t* aBuffer,
     TaskQueue* taskQueue = task->Reader()->OwnerThread();
     nsresult rv = taskQueue->Dispatch(task.forget());
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 }
 

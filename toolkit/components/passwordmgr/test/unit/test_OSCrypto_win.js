@@ -15,48 +15,48 @@ var crypto = new OSCrypto();
 
 add_task(function test_getIELoginHash()
 {
-  do_check_eq(crypto.getIELoginHash("https://bugzilla.mozilla.org/page.cgi"),
-                                    "4A66FE96607885790F8E67B56EEE52AB539BAFB47D");
+  Assert.equal(crypto.getIELoginHash("https://bugzilla.mozilla.org/page.cgi"),
+                                     "4A66FE96607885790F8E67B56EEE52AB539BAFB47D");
 
-  do_check_eq(crypto.getIELoginHash("https://github.com/login"),
-                                    "0112F7DCE67B8579EA01367678AA44AB9868B5A143");
+  Assert.equal(crypto.getIELoginHash("https://github.com/login"),
+                                     "0112F7DCE67B8579EA01367678AA44AB9868B5A143");
 
-  do_check_eq(crypto.getIELoginHash("https://login.live.com/login.srf"),
-                                    "FBF92E5D804C82717A57856533B779676D92903688");
+  Assert.equal(crypto.getIELoginHash("https://login.live.com/login.srf"),
+                                     "FBF92E5D804C82717A57856533B779676D92903688");
 
-  do_check_eq(crypto.getIELoginHash("https://preview.c9.io/riadh/w1/pass.1.html"),
-                                    "6935CF27628830605927F86AB53831016FC8973D1A");
+  Assert.equal(crypto.getIELoginHash("https://preview.c9.io/riadh/w1/pass.1.html"),
+                                     "6935CF27628830605927F86AB53831016FC8973D1A");
 
 
-  do_check_eq(crypto.getIELoginHash("https://reviewboard.mozilla.org/account/login/"),
-                                    "09141FD287E2E59A8B1D3BB5671537FD3D6B61337A");
+  Assert.equal(crypto.getIELoginHash("https://reviewboard.mozilla.org/account/login/"),
+                                     "09141FD287E2E59A8B1D3BB5671537FD3D6B61337A");
 
-  do_check_eq(crypto.getIELoginHash("https://www.facebook.com/"),
-                                    "EF44D3E034009CB0FD1B1D81A1FF3F3335213BD796");
+  Assert.equal(crypto.getIELoginHash("https://www.facebook.com/"),
+                                     "EF44D3E034009CB0FD1B1D81A1FF3F3335213BD796");
 
 });
 
 add_task(function test_decryptData_encryptData()
 {
   function decryptEncryptTest(key) {
-    do_check_eq(crypto.decryptData(crypto.encryptData("", key), key),
-                "");
+    Assert.equal(crypto.decryptData(crypto.encryptData("", key), key),
+                 "");
 
-    do_check_eq(crypto.decryptData(crypto.encryptData("secret", key), key),
-                "secret");
+    Assert.equal(crypto.decryptData(crypto.encryptData("secret", key), key),
+                 "secret");
 
-    do_check_eq(crypto.decryptData(crypto.encryptData("https://www.mozilla.org", key),
-                                   key),
-                "https://www.mozilla.org");
+    Assert.equal(crypto.decryptData(crypto.encryptData("https://www.mozilla.org", key),
+                                    key),
+                 "https://www.mozilla.org");
 
-    do_check_eq(crypto.decryptData(crypto.encryptData("https://reviewboard.mozilla.org", key),
-                                   key),
-                "https://reviewboard.mozilla.org");
+    Assert.equal(crypto.decryptData(crypto.encryptData("https://reviewboard.mozilla.org", key),
+                                    key),
+                 "https://reviewboard.mozilla.org");
 
-    do_check_eq(crypto.decryptData(crypto.encryptData("https://bugzilla.mozilla.org/page.cgi",
-                                                      key),
-                                   key),
-                "https://bugzilla.mozilla.org/page.cgi");
+    Assert.equal(crypto.decryptData(crypto.encryptData("https://bugzilla.mozilla.org/page.cgi",
+                                                       key),
+                                    key),
+                 "https://bugzilla.mozilla.org/page.cgi");
   }
 
   let keys = [null, "a", "keys", "abcdedf", "pass", "https://bugzilla.mozilla.org/page.cgi",
@@ -70,6 +70,6 @@ add_task(function test_decryptData_encryptData()
   let arr1 = crypto.arrayToString(value);
   let arr2 = crypto.stringToArray(crypto.decryptData(crypto.encryptData(arr1, url), url));
   for (let i = 0; i < arr1.length; i++) {
-    do_check_eq(arr2[i], value[i]);
+    Assert.equal(arr2[i], value[i]);
   }
 });

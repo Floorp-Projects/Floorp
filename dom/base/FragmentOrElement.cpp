@@ -1289,23 +1289,6 @@ FragmentOrElement::SetShadowRoot(ShadowRoot* aShadowRoot)
   slots->mShadowRoot = aShadowRoot;
 }
 
-nsTArray<nsIContent*>&
-FragmentOrElement::DestInsertionPoints()
-{
-  nsExtendedDOMSlots* slots = ExtendedDOMSlots();
-  return slots->mDestInsertionPoints;
-}
-
-nsTArray<nsIContent*>*
-FragmentOrElement::GetExistingDestInsertionPoints() const
-{
-  nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-  if (slots) {
-    return &slots->mDestInsertionPoints;
-  }
-  return nullptr;
-}
-
 HTMLSlotElement*
 FragmentOrElement::GetAssignedSlot() const
 {

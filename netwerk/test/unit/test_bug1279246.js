@@ -29,7 +29,7 @@ Listener.prototype = {
   },
 
   onStartRequest: function(request, ctx) {
-    do_check_eq(request.status, Cr.NS_OK);
+    Assert.equal(request.status, Cr.NS_OK);
     this._buffer = "";
   },
 
@@ -48,7 +48,7 @@ Listener.prototype = {
 
   onStopRequest: function(request, ctx, status) {
     if (pass == 0) {
-      do_check_eq(this._buffer.length, responseLen);
+      Assert.equal(this._buffer.length, responseLen);
       pass++;
 
       var channel = setupChannel();
@@ -83,7 +83,7 @@ function run_test() {
 }
 
 function handler(metadata, response) {
-  do_check_eq(pass, 0); // the second response must be server from the cache
+  Assert.equal(pass, 0); // the second response must be server from the cache
 
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.setHeader("Content-Type", "text/plain", false);

@@ -68,9 +68,9 @@ add_task(async function test_insertMany() {
       });
     }
 
-    do_print(name);
-    do_print(`filter: ${filter}`);
-    do_print(`useCallbacks: ${useCallbacks}`);
+    info(name);
+    info(`filter: ${filter}`);
+    info(`useCallbacks: ${useCallbacks}`);
     await PlacesTestUtils.clearHistory();
 
     let result;

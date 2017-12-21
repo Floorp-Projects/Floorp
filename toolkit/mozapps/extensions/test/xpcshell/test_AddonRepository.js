@@ -123,9 +123,9 @@ var GET_TEST = {
 
 // Test that actual results and expected results are equal
 function check_results(aActualAddons, aExpectedAddons, aAddonCount, aInstallNull) {
-  do_check_false(AddonRepository.isSearching);
+  Assert.ok(!AddonRepository.isSearching);
 
-  do_check_eq(aActualAddons.length, aAddonCount);
+  Assert.equal(aActualAddons.length, aAddonCount);
   do_check_addons(aActualAddons, aExpectedAddons, ADDON_PROPERTIES);
 
   // Additional tests
@@ -136,11 +136,11 @@ function check_results(aActualAddons, aExpectedAddons, aAddonCount, aInstallNull
     if (aActualAddon.name != "PASS")
       do_throw(aActualAddon.id + " - invalid add-on name " + aActualAddon.name);
 
-    do_check_eq(aActualAddon.install == null, !!aInstallNull || !aActualAddon.sourceURI);
+    Assert.equal(aActualAddon.install == null, !!aInstallNull || !aActualAddon.sourceURI);
 
     // Check that sourceURI property consistent within actual addon
     if (aActualAddon.install)
-      do_check_eq(aActualAddon.install.sourceURI.spec, aActualAddon.sourceURI.spec);
+      Assert.equal(aActualAddon.install.sourceURI.spec, aActualAddon.sourceURI.spec);
   });
 }
 
@@ -172,17 +172,17 @@ function complete_search(aSearch, aSearchCallback) {
 
   // Should fail because cancelled it immediately
   aSearch(failCallback);
-  do_check_true(AddonRepository.isSearching);
+  Assert.ok(AddonRepository.isSearching);
   AddonRepository.cancelSearch();
-  do_check_false(AddonRepository.isSearching);
+  Assert.ok(!AddonRepository.isSearching);
 
   aSearch(aSearchCallback);
-  do_check_true(AddonRepository.isSearching);
+  Assert.ok(AddonRepository.isSearching);
 
   // searchFailed should be called immediately because already searching
   aSearch(testCallback);
-  do_check_true(callbackCalled);
-  do_check_true(AddonRepository.isSearching);
+  Assert.ok(callbackCalled);
+  Assert.ok(AddonRepository.isSearching);
 }
 
 
@@ -218,7 +218,7 @@ function run_test() {
       try {
         aInstall.install();
       } catch (e) {
-        do_print("Failed to install add-on " + aInstall.sourceURI.spec);
+        info("Failed to install add-on " + aInstall.sourceURI.spec);
         do_report_unexpected_exception(e);
       }
 
@@ -236,10 +236,10 @@ function end_test() {
   gServer.stop(function() {
     function loop() {
       if (!testDir.exists()) {
-        do_print("Staged directory has been cleaned up");
+        info("Staged directory has been cleaned up");
         do_test_finished();
       }
-      do_print("Waiting 1 second until cleanup is complete");
+      info("Waiting 1 second until cleanup is complete");
       do_timeout(1000, loop);
     }
     loop();
@@ -251,7 +251,7 @@ function run_test_1() {
   function check_urls(aPreference, aGetURL, aTests) {
     aTests.forEach(function(aTest) {
       Services.prefs.setCharPref(aPreference, aTest.preferenceValue);
-      do_check_eq(aGetURL(aTest), aTest.expectedURL);
+      Assert.equal(aGetURL(aTest), aTest.expectedURL);
     });
   }
 
@@ -298,9 +298,9 @@ function run_test_1() {
   tests.forEach(function url_test(aTest) {
     if (aTest.initiallyUndefined) {
       // Preference is not defined by default
-      do_check_eq(Services.prefs.getPrefType(aTest.preference),
-                  Services.prefs.PREF_INVALID);
-      do_check_eq(aTest.getURL(), DEFAULT_URL);
+      Assert.equal(Services.prefs.getPrefType(aTest.preference),
+                   Services.prefs.PREF_INVALID);
+      Assert.equal(aTest.getURL(), DEFAULT_URL);
     }
 
     check_urls(aTest.preference, aTest.getURL, aTest.urlTests);
@@ -319,7 +319,7 @@ function run_test_getAddonsByID_fails() {
     },
 
     searchFailed() {
-      do_check_false(AddonRepository.isSearching);
+      Assert.ok(!AddonRepository.isSearching);
       run_test_getAddonsByID_succeeds();
     }
   };
@@ -333,7 +333,7 @@ function run_test_getAddonsByID_fails() {
 function run_test_getAddonsByID_succeeds() {
   var callback = {
     searchSucceeded(aAddonsList, aAddonCount, aTotalResults) {
-      do_check_eq(aTotalResults, -1);
+      Assert.equal(aTotalResults, -1);
       check_results(aAddonsList, GET_RESULTS, aAddonCount, true);
       end_test();
     },

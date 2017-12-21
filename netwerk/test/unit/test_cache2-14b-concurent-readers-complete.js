@@ -17,7 +17,7 @@ function run_test()
     new OpenCallback(NORMAL|COMPLETE|NOTIFYBEFOREREAD, "x1m", "x1d", function(entry, beforeReading) {
       if (beforeReading) {
         ++order;
-        do_check_eq(order, 3);
+        Assert.equal(order, 3);
       } else {
         mc.fired();
       }
@@ -27,7 +27,7 @@ function run_test()
     new OpenCallback(NORMAL|NOTIFYBEFOREREAD, "x1m", "x1d", function(entry, beforeReading) {
       if (beforeReading) {
         ++order;
-        do_check_eq(order, 1);
+        Assert.equal(order, 1);
       } else {
         mc.fired();
       }
@@ -37,7 +37,7 @@ function run_test()
     new OpenCallback(NORMAL|NOTIFYBEFOREREAD, "x1m", "x1d", function(entry, beforeReading) {
       if (beforeReading) {
         ++order;
-        do_check_eq(order, 2);
+        Assert.equal(order, 2);
       } else {
         mc.fired();
       }

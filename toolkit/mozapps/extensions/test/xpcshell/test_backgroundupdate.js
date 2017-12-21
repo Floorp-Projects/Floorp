@@ -36,12 +36,12 @@ function end_test() {
 // called
 function run_test_1() {
   AddonManager.getAddonsByTypes(["extension", "theme", "locale"], function(aAddons) {
-    do_check_eq(aAddons.length, 0);
+    Assert.equal(aAddons.length, 0);
 
     Services.obs.addObserver(function observer() {
       Services.obs.removeObserver(observer, "addons-background-update-complete");
 
-      do_execute_soon(run_test_2);
+      executeSoon(run_test_2);
     }, "addons-background-update-complete");
 
     // Trigger the background update timer handler
@@ -106,7 +106,7 @@ function run_test_2() {
   Services.obs.addObserver(function observer() {
     Services.obs.removeObserver(observer, "addons-background-update-complete");
 
-    do_check_eq(installCount, 3);
+    Assert.equal(installCount, 3);
     sawCompleteNotification = true;
   }, "addons-background-update-complete");
 
@@ -118,7 +118,7 @@ function run_test_2() {
     onDownloadFailed(aInstall) {
       completeCount++;
       if (completeCount == 3) {
-        do_check_true(sawCompleteNotification);
+        Assert.ok(sawCompleteNotification);
         end_test();
       }
     }

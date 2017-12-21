@@ -30,7 +30,7 @@ add_task(async function test_search() {
   });
   Services.search.init();
   await observerPromise;
-  do_check_true(Services.search.isInitialized);
+  Assert.ok(Services.search.isInitialized);
 
   // get initial state of search and check it has correct properties
   let state = await NewTabSearchProvider.search.asyncGetState();

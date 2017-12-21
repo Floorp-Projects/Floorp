@@ -7,17 +7,17 @@
 function test_openUnsharedDatabase_file_DNE() {
   // the file should be created after calling
   var db = getTestDB();
-  do_check_false(db.exists());
+  Assert.ok(!db.exists());
   Services.storage.openUnsharedDatabase(db);
-  do_check_true(db.exists());
+  Assert.ok(db.exists());
 }
 
 function test_openUnsharedDatabase_file_exists() {
   // it should already exist from our last test
   var db = getTestDB();
-  do_check_true(db.exists());
+  Assert.ok(db.exists());
   Services.storage.openUnsharedDatabase(db);
-  do_check_true(db.exists());
+  Assert.ok(db.exists());
 }
 
 var tests = [test_openUnsharedDatabase_file_DNE,

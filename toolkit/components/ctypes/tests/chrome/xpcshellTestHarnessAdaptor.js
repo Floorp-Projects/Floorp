@@ -18,42 +18,40 @@ var Components = {
 };
 
 function do_throw(message, stack) {
-  do_print("error: " + message);
-  do_print("stack: " + (stack ? stack : new Error().stack));
+  info("error: " + message);
+  info("stack: " + (stack ? stack : new Error().stack));
   throw message;
 }
 
-function do_check_neq(left, right, stack) {
-  if (left == right) {
-    var text = "do_check_neq failed";
-    try {
-      text += ": " + left + " == " + right;
-    } catch (e) {
+var Assert = {
+  notEqual(left, right, stack) {
+    if (left == right) {
+      var text = "Assert.notEqual failed";
+      try {
+        text += ": " + left + " == " + right;
+      } catch (e) {
+      }
+      do_throw(text, stack);
     }
-    do_throw(text, stack);
-  }
-}
+  },
 
-function do_check_eq(left, right, stack) {
-  if (left != right) {
-    var text = "do_check_eq failed";
-    try {
-      text += ": " + left + " != " + right;
-    } catch (e) {
+  equal(left, right, stack) {
+    if (left != right) {
+      var text = "Assert.equal failed";
+      try {
+        text += ": " + left + " != " + right;
+      } catch (e) {
+      }
+      do_throw(text, stack);
     }
-    do_throw(text, stack);
+  },
+
+  ok(condition, stack) {
+    this.equal(condition, true, stack);
   }
-}
+};
 
-function do_check_true(condition, stack) {
-  do_check_eq(condition, true, stack);
-}
-
-function do_check_false(condition, stack) {
-  do_check_eq(condition, false, stack);
-}
-
-function do_print(text) {
+function info(text) {
   dump("INFO: " + text + "\n");
 }
 

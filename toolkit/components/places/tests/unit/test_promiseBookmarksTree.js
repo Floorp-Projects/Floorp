@@ -115,7 +115,7 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
         try {
           await compareFavicons(aNode.icon, aItem.iconuri);
         } catch (ex) {
-          do_print(ex);
+          info(ex);
           todo_check_true(false);
         }
       } else {
@@ -140,7 +140,7 @@ async function compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
       if ("title" in aItem)
         compare_prop("title");
       else
-        do_check_null(aNode.title);
+        Assert.equal(null, aNode.title);
   }
 
   if (aIsRootItem)

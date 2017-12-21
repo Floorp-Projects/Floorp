@@ -14,7 +14,7 @@ function test_openSpecialDatabase_invalid_arg() {
   } catch (e) {
     print(e);
     print("e.result is " + e.result);
-    do_check_eq(Cr.NS_ERROR_INVALID_ARG, e.result);
+    Assert.equal(Cr.NS_ERROR_INVALID_ARG, e.result);
   }
 }
 
@@ -25,7 +25,7 @@ function test_openDatabase_null_file() {
   } catch (e) {
     print(e);
     print("e.result is " + e.result);
-    do_check_eq(Cr.NS_ERROR_INVALID_ARG, e.result);
+    Assert.equal(Cr.NS_ERROR_INVALID_ARG, e.result);
   }
 }
 
@@ -36,24 +36,24 @@ function test_openUnsharedDatabase_null_file() {
   } catch (e) {
     print(e);
     print("e.result is " + e.result);
-    do_check_eq(Cr.NS_ERROR_INVALID_ARG, e.result);
+    Assert.equal(Cr.NS_ERROR_INVALID_ARG, e.result);
   }
 }
 
 function test_openDatabase_file_DNE() {
   // the file should be created after calling
   var db = getTestDB();
-  do_check_false(db.exists());
+  Assert.ok(!db.exists());
   Services.storage.openDatabase(db);
-  do_check_true(db.exists());
+  Assert.ok(db.exists());
 }
 
 function test_openDatabase_file_exists() {
   // it should already exist from our last test
   var db = getTestDB();
-  do_check_true(db.exists());
+  Assert.ok(db.exists());
   Services.storage.openDatabase(db);
-  do_check_true(db.exists());
+  Assert.ok(db.exists());
 }
 
 function test_corrupt_db_throws_with_openDatabase() {
@@ -61,7 +61,7 @@ function test_corrupt_db_throws_with_openDatabase() {
     getDatabase(getCorruptDB());
     do_throw("should not be here");
   } catch (e) {
-    do_check_eq(Cr.NS_ERROR_FILE_CORRUPTED, e.result);
+    Assert.equal(Cr.NS_ERROR_FILE_CORRUPTED, e.result);
   }
 }
 
@@ -70,7 +70,7 @@ function test_fake_db_throws_with_openDatabase() {
     getDatabase(getFakeDB());
     do_throw("should not be here");
   } catch (e) {
-    do_check_eq(Cr.NS_ERROR_FILE_CORRUPTED, e.result);
+    Assert.equal(Cr.NS_ERROR_FILE_CORRUPTED, e.result);
   }
 }
 
@@ -78,14 +78,14 @@ function test_backup_not_new_filename() {
   const fname = getTestDB().leafName;
 
   var backup = Services.storage.backupDatabaseFile(getTestDB(), fname);
-  do_check_neq(fname, backup.leafName);
+  Assert.notEqual(fname, backup.leafName);
 
   backup.remove(false);
 }
 
 function test_backup_new_filename() {
   var backup = Services.storage.backupDatabaseFile(getTestDB(), BACKUP_FILE_NAME);
-  do_check_eq(BACKUP_FILE_NAME, backup.leafName);
+  Assert.equal(BACKUP_FILE_NAME, backup.leafName);
 
   backup.remove(false);
 }
@@ -96,12 +96,12 @@ function test_backup_new_folder() {
   if (parentDir.exists())
     parentDir.remove(true);
   parentDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
-  do_check_true(parentDir.exists());
+  Assert.ok(parentDir.exists());
 
   var backup = Services.storage.backupDatabaseFile(getTestDB(), BACKUP_FILE_NAME,
                                                    parentDir);
-  do_check_eq(BACKUP_FILE_NAME, backup.leafName);
-  do_check_true(parentDir.equals(backup.parent));
+  Assert.equal(BACKUP_FILE_NAME, backup.leafName);
+  Assert.ok(parentDir.equals(backup.parent));
 
   parentDir.remove(true);
 }

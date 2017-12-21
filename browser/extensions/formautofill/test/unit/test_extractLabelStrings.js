@@ -53,7 +53,7 @@ const TESTCASES = [
 
 TESTCASES.forEach(testcase => {
   add_task(async function() {
-    do_print("Starting testcase: " + testcase.description);
+    info("Starting testcase: " + testcase.description);
     LabelUtils._labelStrings = new WeakMap();
 
     let doc = MockDocument.createTestDocument(

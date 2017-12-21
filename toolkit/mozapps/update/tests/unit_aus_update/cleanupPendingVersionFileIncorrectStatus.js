@@ -28,7 +28,7 @@ function run_test() {
                "the first update errorCode" + MSG_SHOULD_EQUAL);
   Assert.equal(update.statusText, getString("statusFailed"),
                "the first update statusText " + MSG_SHOULD_EQUAL);
-  do_execute_soon(waitForUpdateXMLFiles);
+  executeSoon(waitForUpdateXMLFiles);
 }
 
 /**

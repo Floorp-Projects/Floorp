@@ -37,7 +37,7 @@ function contentHandler(metadata, response)
 
 function noRedirectStreamObserver(request, buffer)
 {
-  do_check_eq(buffer, requestBody);
+  Assert.equal(buffer, requestBody);
   var chan = make_channel(uri);
   var uploadStream = Cc["@mozilla.org/io/string-input-stream;1"]
                        .createInstance(Ci.nsIStringInputStream);
@@ -50,7 +50,7 @@ function noRedirectStreamObserver(request, buffer)
 
 function noHeaderStreamObserver(request, buffer)
 {
-  do_check_eq(buffer, requestBody);
+  Assert.equal(buffer, requestBody);
   var chan = make_channel(uri);
   var uploadStream = Cc["@mozilla.org/io/string-input-stream;1"]
                        .createInstance(Ci.nsIStringInputStream);
@@ -64,7 +64,7 @@ function noHeaderStreamObserver(request, buffer)
 
 function headerStreamObserver(request, buffer)
 {
-  do_check_eq(buffer, requestBody);
+  Assert.equal(buffer, requestBody);
   httpserver.stop(do_test_finished);
 }
 

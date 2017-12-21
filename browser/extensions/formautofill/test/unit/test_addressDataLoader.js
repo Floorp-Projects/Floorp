@@ -65,7 +65,7 @@ add_task(async function test_loadDataState() {
 
 SUPPORT_COUNTRIES_TESTCASES.forEach(testcase => {
   add_task(async function test_support_country() {
-    do_print("Starting testcase: Check " + testcase.country + " metadata");
+    info("Starting testcase: Check " + testcase.country + " metadata");
     let metadata = FormAutofillUtils.getCountryAddressData(testcase.country);
     Assert.ok(testcase.properties.every(key => metadata[key]),
               "These properties should exist: " + testcase.properties);

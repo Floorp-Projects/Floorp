@@ -33,13 +33,13 @@ function test_pause_frame() {
     // Make a bogus request to the pause-lifetime actor.  Should get
     // unrecognized-packet-type (and not no-such-actor).
     gClient.request({ to: pauseActor, type: "bogusRequest" }, function (response) {
-      do_check_eq(response.error, "unrecognizedPacketType");
+      Assert.equal(response.error, "unrecognizedPacketType");
 
       gThreadClient.resume(function () {
         // Now that we've resumed, should get no-such-actor for the
         // same request.
         gClient.request({ to: pauseActor, type: "bogusRequest" }, function (response) {
-          do_check_eq(response.error, "noSuchActor");
+          Assert.equal(response.error, "noSuchActor");
           finishClient(gClient);
         });
       });

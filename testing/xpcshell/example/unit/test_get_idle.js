@@ -12,7 +12,7 @@ function run_test() {
     do_throw("The fake idle service implements nsIFactory.");
   }
   // We need at least one PASS, thus sanity check the idle time.
-  do_check_eq(fakeIdleService.idleTime, 0);
+  Assert.equal(fakeIdleService.idleTime, 0);
 
   print("Init the real idle service and check its identity.");
   let realIdleService = do_get_idle();

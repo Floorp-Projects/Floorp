@@ -12,7 +12,7 @@ const WindowWatcher = {
 
 const WindowMediator = {
   getMostRecentWindow(aWindowType) {
-    do_execute_soon(check_status);
+    executeSoon(check_status);
     return { getInterface: XPCOMUtils.generateQI([Ci.nsIDOMWindow]) };
   },
 
@@ -40,7 +40,7 @@ function run_test() {
   let windowMediatorCID =
     MockRegistrar.register("@mozilla.org/appshell/window-mediator;1",
                            WindowMediator);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     MockRegistrar.unregister(windowWatcherCID);
     MockRegistrar.unregister(windowMediatorCID);
   });
@@ -64,7 +64,7 @@ function check_status() {
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
   reloadUpdateManagerData();
 
-  do_execute_soon(doTestFinish);
+  executeSoon(doTestFinish);
 }
 
 function check_showUpdateAvailable() {

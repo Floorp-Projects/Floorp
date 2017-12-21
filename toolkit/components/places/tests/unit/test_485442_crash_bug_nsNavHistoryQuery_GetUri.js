@@ -16,6 +16,6 @@ function run_test() {
   var rootNode = result.root;
   rootNode.QueryInterface(Ci.nsINavHistoryQueryResultNode);
   var queries = rootNode.getQueries();
-  do_check_eq(queries[0].uri, null); // Should be null, instead of crashing the browser
+  Assert.equal(queries[0].uri, null); // Should be null, instead of crashing the browser
   rootNode.containerOpen = false;
 }

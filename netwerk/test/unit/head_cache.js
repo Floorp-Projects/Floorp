@@ -101,7 +101,7 @@ function syncWithCacheIOThread(callback, force)
     asyncOpenCacheEntry(
       "http://nonexistententry/", "disk", Ci.nsICacheStorage.OPEN_READONLY, null,
       function(status, entry) {
-        do_check_eq(status, Components.results.NS_ERROR_CACHE_KEY_NOT_FOUND);
+        Assert.equal(status, Components.results.NS_ERROR_CACHE_KEY_NOT_FOUND);
         callback();
       });
   }
@@ -119,7 +119,7 @@ function get_device_entry_count(where, lci, continuation) {
 
   var visitor = {
     onCacheStorageInfo: function (entryCount, consumption) {
-      do_execute_soon(function() {
+      executeSoon(function() {
         continuation(entryCount, consumption);
       });
     },
@@ -135,12 +135,12 @@ function asyncCheckCacheEntryPresence(key, where, shouldExist, continuation, app
     function(status, entry) {
       if (shouldExist) {
         dump("TEST-INFO | checking cache key " + key + " exists @ " + where);
-        do_check_eq(status, Cr.NS_OK);
-        do_check_true(!!entry);
+        Assert.equal(status, Cr.NS_OK);
+        Assert.ok(!!entry);
       } else {
         dump("TEST-INFO | checking cache key " + key + " doesn't exist @ " + where);
-        do_check_eq(status, Cr.NS_ERROR_CACHE_KEY_NOT_FOUND);
-        do_check_null(entry);
+        Assert.equal(status, Cr.NS_ERROR_CACHE_KEY_NOT_FOUND);
+        Assert.equal(null, entry);
       }
       continuation();
     }, appCache);

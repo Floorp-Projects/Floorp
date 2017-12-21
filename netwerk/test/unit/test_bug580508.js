@@ -13,12 +13,12 @@ function run_test() {
     let greFileSpec = ioService.newURI("modules/", null,
                                        resProt.getSubstitution("gre")).spec;
     let aliasURI = resProt.getSubstitution("my-gre-modules");
-    do_check_eq(aliasURI.spec, greFileSpec);
+    Assert.equal(aliasURI.spec, greFileSpec);
 
     // Resolving URIs using the original resource path and the alias
     // should yield the same result.
     let greNetUtilURI = ioService.newURI("resource://gre/modules/NetUtil.jsm");
     let myNetUtilURI = ioService.newURI("resource://my-gre-modules/NetUtil.jsm");
-    do_check_eq(resProt.resolveURI(greNetUtilURI),
-                resProt.resolveURI(myNetUtilURI));
+    Assert.equal(resProt.resolveURI(greNetUtilURI),
+                 resProt.resolveURI(myNetUtilURI));
 }

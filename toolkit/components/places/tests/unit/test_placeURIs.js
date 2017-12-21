@@ -21,8 +21,8 @@ function run_test() {
   // Bug 376798
   var query = histsvc.getNewQuery();
   query.setFolders([PlacesUtils.bookmarks.placesRoot], 1);
-  do_check_eq(histsvc.queriesToQueryString([query], 1, histsvc.getNewQueryOptions()),
-              "place:folder=PLACES_ROOT");
+  Assert.equal(histsvc.queriesToQueryString([query], 1, histsvc.getNewQueryOptions()),
+               "place:folder=PLACES_ROOT");
 
   // Bug 378828
   var options = histsvc.getNewQueryOptions();
@@ -31,10 +31,10 @@ function run_test() {
   var placeURI =
     "place:folder=PLACES_ROOT&sort=" + NHQO.SORT_BY_ANNOTATION_DESCENDING +
     "&sortingAnnotation=test%20anno";
-  do_check_eq(histsvc.queriesToQueryString([query], 1, options),
-              placeURI);
+  Assert.equal(histsvc.queriesToQueryString([query], 1, options),
+               placeURI);
   options = {};
   histsvc.queryStringToQueries(placeURI, { }, {}, options);
-  do_check_eq(options.value.sortingAnnotation, "test anno");
-  do_check_eq(options.value.sortingMode, NHQO.SORT_BY_ANNOTATION_DESCENDING);
+  Assert.equal(options.value.sortingAnnotation, "test anno");
+  Assert.equal(options.value.sortingMode, NHQO.SORT_BY_ANNOTATION_DESCENDING);
 }

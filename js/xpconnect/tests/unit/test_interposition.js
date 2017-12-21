@@ -11,13 +11,13 @@ function expectAccess(prop, f)
 {
   gExpectedProp = prop;
   f();
-  do_check_eq(gExpectedProp, undefined);
+  Assert.equal(gExpectedProp, undefined);
 }
 
 let getter_run = false;
 function test_getter()
 {
-  do_check_eq(getter_run, false);
+  Assert.equal(getter_run, false);
   getter_run = true;
   return 200;
 }
@@ -25,8 +25,8 @@ function test_getter()
 let setter_run = false;
 function test_setter(v)
 {
-  do_check_eq(setter_run, false);
-  do_check_eq(v, 300);
+  Assert.equal(setter_run, false);
+  Assert.equal(v, 300);
   setter_run = true;
 }
 
@@ -40,8 +40,8 @@ let TestInterposition = {
   },
 
   interposeProperty: function(addonId, target, iid, prop) {
-    do_check_eq(addonId, ADDONID);
-    do_check_eq(gExpectedProp, prop);
+    Assert.equal(addonId, ADDONID);
+    Assert.equal(gExpectedProp, prop);
     gExpectedProp = undefined;
 
     if (prop == "dataprop") {
@@ -51,7 +51,7 @@ let TestInterposition = {
     } else if (prop == "setterprop") {
       return { configurable: false, enumerable: true, get: test_getter, set: test_setter };
     } else if (prop == "utils") {
-      do_check_eq(iid, Ci.nsIXPCComponents.number);
+      Assert.equal(iid, Ci.nsIXPCComponents.number);
       return null;
     } else if (prop == "objprop") {
       gExpectedProp = "objprop"; // allow recursive access here
@@ -64,7 +64,7 @@ let TestInterposition = {
   },
 
   interposeCall: function(addonId, originalFunc, originalThis, args) {
-    do_check_eq(addonId, ADDONID);
+    Assert.equal(addonId, ADDONID);
     args.splice(0, 0, addonId);
     return originalFunc.apply(originalThis, args);
   }
@@ -88,13 +88,13 @@ function run_test()
   });
 
   expectAccess("dataprop", () => {
-    do_check_eq(Cu.evalInSandbox("outerObj.dataprop;", sandbox), 100);
+    Assert.equal(Cu.evalInSandbox("outerObj.dataprop;", sandbox), 100);
   });
 
   expectAccess("dataprop", () => {
     try {
       Cu.evalInSandbox("'use strict'; outerObj.dataprop = 400;", sandbox);
-      do_check_true(false); // it should throw
+      Assert.ok(false); // it should throw
     } catch (e) {}
   });
 
@@ -104,30 +104,30 @@ function run_test()
   });
 
   expectAccess("getterprop", () => {
-    do_check_eq(Cu.evalInSandbox("outerObj.getterprop;", sandbox), 200);
-    do_check_eq(getter_run, true);
+    Assert.equal(Cu.evalInSandbox("outerObj.getterprop;", sandbox), 200);
+    Assert.equal(getter_run, true);
     getter_run = false;
   });
 
   expectAccess("getterprop", () => {
     try {
       Cu.evalInSandbox("'use strict'; outerObj.getterprop = 400;", sandbox);
-      do_check_true(false); // it should throw
+      Assert.ok(false); // it should throw
     } catch (e) {}
-    do_check_eq(getter_run, false);
+    Assert.equal(getter_run, false);
   });
 
   expectAccess("setterprop", () => {
-    do_check_eq(Cu.evalInSandbox("outerObj.setterprop;", sandbox), 200);
-    do_check_eq(getter_run, true);
+    Assert.equal(Cu.evalInSandbox("outerObj.setterprop;", sandbox), 200);
+    Assert.equal(getter_run, true);
     getter_run = false;
-    do_check_eq(setter_run, false);
+    Assert.equal(setter_run, false);
   });
 
   expectAccess("setterprop", () => {
     Cu.evalInSandbox("'use strict'; outerObj.setterprop = 300;", sandbox);
-    do_check_eq(getter_run, false);
-    do_check_eq(setter_run, true);
+    Assert.equal(getter_run, false);
+    Assert.equal(setter_run, true);
     setter_run = false;
   });
 
@@ -146,20 +146,20 @@ function run_test()
   // sets it to true.
   expectAccess("configurableprop", () => {
     let desc = Cu.evalInSandbox("Object.getOwnPropertyDescriptor(outerObj, 'configurableprop')", sandbox);
-    do_check_eq(desc.configurable, false);
+    Assert.equal(desc.configurable, false);
   });
 
   let moduleScope = Cu.Sandbox(this);
   moduleScope.ADDONID = ADDONID;
-  moduleScope.do_check_eq = do_check_eq;
+  moduleScope.equal = equal;
   function funToIntercept(addonId) {
-    do_check_eq(addonId, ADDONID);
+    equal(addonId, ADDONID);
     counter++;
   }
   sandbox.moduleFunction = Cu.evalInSandbox(funToIntercept.toSource() + "; funToIntercept", moduleScope);
   Cu.evalInSandbox("var counter = 0;", moduleScope);
   Cu.evalInSandbox("Components.utils.setAddonCallInterposition(this);", moduleScope);
   Cu.evalInSandbox("moduleFunction()", sandbox);
-  do_check_eq(Cu.evalInSandbox("counter", moduleScope), 1);
+  Assert.equal(Cu.evalInSandbox("counter", moduleScope), 1);
   Cu.setAddonInterposition(ADDONID, null);
 }

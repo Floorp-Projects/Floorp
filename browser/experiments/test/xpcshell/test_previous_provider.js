@@ -26,7 +26,7 @@ add_task(function test_setup() {
     res.processAsync();
     res.finish();
   });
-  do_register_cleanup(() => gHttpServer.stop(() => {}));
+  registerCleanupFunction(() => gHttpServer.stop(() => {}));
 
   Services.prefs.setBoolPref("experiments.enabled", true);
   Services.prefs.setCharPref("experiments.manifest.uri",

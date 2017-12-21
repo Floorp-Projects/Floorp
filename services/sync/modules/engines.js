@@ -55,9 +55,7 @@ this.Tracker = function Tracker(name, engine) {
   this.name = this.file = name.toLowerCase();
   this.engine = engine;
 
-  this._log = Log.repository.getLogger("Sync.Tracker." + name);
-  let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
-  this._log.level = Log.Level[level];
+  this._log = Log.repository.getLogger(`Sync.Engine.${name}.Tracker`);
 
   this._score = 0;
   this._ignored = [];
@@ -303,9 +301,7 @@ this.Store = function Store(name, engine) {
   this.name = name.toLowerCase();
   this.engine = engine;
 
-  this._log = Log.repository.getLogger("Sync.Store." + name);
-  let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
-  this._log.level = Log.Level[level];
+  this._log = Log.repository.getLogger(`Sync.Engine.${name}.Store`);
 
   XPCOMUtils.defineLazyGetter(this, "_timer", function() {
     return Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -492,7 +488,10 @@ this.EngineManager = function EngineManager(service) {
   // This will be populated by Service on startup.
   this._declined = new Set();
   this._log = Log.repository.getLogger("Sync.EngineManager");
-  this._log.level = Log.Level[Svc.Prefs.get("log.logger.service.engines", "Debug")];
+  this._log.manageLevelFromPref("services.sync.log.logger.service.engines");
+  // define the default level for all engine logs here (although each engine
+  // allows its level to be controlled via a specific, non-default pref)
+  Log.repository.getLogger(`Sync.Engine`).manageLevelFromPref("services.sync.log.logger.engine");
 };
 EngineManager.prototype = {
   get(name) {
@@ -659,8 +658,7 @@ this.Engine = function Engine(name, service) {
 
   this._notify = Utils.notify("weave:engine:");
   this._log = Log.repository.getLogger("Sync.Engine." + this.Name);
-  let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
-  this._log.level = Log.Level[level];
+  this._log.manageLevelFromPref(`services.sync.log.logger.engine.${this.name}`);
 
   this._modified = this.emptyChangeset();
   this._tracker; // initialize tracker to load previously changed IDs

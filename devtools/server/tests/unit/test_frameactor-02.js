@@ -29,7 +29,7 @@ function run_test() {
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function (event, packet1) {
     gThreadClient.addOneTimeListener("paused", function (event, packet2) {
-      do_check_eq(packet1.frame.actor, packet2.frame.actor);
+      Assert.equal(packet1.frame.actor, packet2.frame.actor);
       gThreadClient.resume(function () {
         finishClient(gClient);
       });

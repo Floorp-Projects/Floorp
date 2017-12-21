@@ -29,7 +29,7 @@ var listener = {
     if ((inRequest == requestWithoutInterfaceNotCanceled) ||
         (inRequest == requestWithInterfaceNotCanceled)) {
       // This request should not be canceled.
-      do_check_neq(inStatus, Cr.NS_ERROR_ABORT);
+      Assert.notEqual(inStatus, Cr.NS_ERROR_ABORT);
 
       do_test_finished();
     } else if (inRequest == requestWithInterfaceCanceled) {

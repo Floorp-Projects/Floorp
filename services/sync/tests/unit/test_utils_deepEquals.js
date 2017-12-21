@@ -28,19 +28,19 @@ function run_test() {
 
     _("Making sure we found the correct # match:", expect);
     _("Actual matches:", numMatch);
-    do_check_eq(numMatch, expect);
+    Assert.equal(numMatch, expect);
   });
 
   _("Make sure adding undefined properties doesn't affect equalness");
   let a = {};
   let b = { a: undefined };
-  do_check_true(Utils.deepEquals(a, b));
+  Assert.ok(Utils.deepEquals(a, b));
   a.b = 5;
-  do_check_false(Utils.deepEquals(a, b));
+  Assert.ok(!Utils.deepEquals(a, b));
   b.b = 5;
-  do_check_true(Utils.deepEquals(a, b));
+  Assert.ok(Utils.deepEquals(a, b));
   a.c = undefined;
-  do_check_true(Utils.deepEquals(a, b));
+  Assert.ok(Utils.deepEquals(a, b));
   b.d = undefined;
-  do_check_true(Utils.deepEquals(a, b));
+  Assert.ok(Utils.deepEquals(a, b));
 }

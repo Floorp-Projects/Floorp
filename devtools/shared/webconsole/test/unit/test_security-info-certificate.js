@@ -33,7 +33,7 @@ const DUMMY_CERT = {
 };
 
 function run_test() {
-  do_print("Testing NetworkHelper.parseCertificateInfo.");
+  info("Testing NetworkHelper.parseCertificateInfo.");
 
   let result = NetworkHelper.parseCertificateInfo(DUMMY_CERT);
 

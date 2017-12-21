@@ -1,5 +1,5 @@
 add_task(async function() {
-  do_print("Add a bookmark.");
+  info("Add a bookmark.");
   let bm = await PlacesUtils.bookmarks.insert({ url: "http://example.com/",
                                                 parentGuid: PlacesUtils.bookmarks.unfiledGuid });
   let id = await PlacesUtils.promiseItemId(bm.guid);
@@ -9,7 +9,7 @@ add_task(async function() {
   PlacesUtils.invalidateCachedGuidFor(null);
   PlacesUtils.invalidateCachedGuidFor(9999);
 
-  do_print("Change the GUID.");
+  info("Change the GUID.");
   await PlacesUtils.withConnectionWrapper("test", async function(db) {
     await db.execute("UPDATE moz_bookmarks SET guid = :guid WHERE id = :id",
                      { guid: "123456789012", id});
@@ -17,7 +17,7 @@ add_task(async function() {
   // The cache should still point to the wrong id.
   Assert.equal((await PlacesUtils.promiseItemGuid(id)), bm.guid);
 
-  do_print("Invalidate the cache.");
+  info("Invalidate the cache.");
   PlacesUtils.invalidateCachedGuidFor(id);
   Assert.equal((await PlacesUtils.promiseItemGuid(id)), "123456789012");
   Assert.equal((await PlacesUtils.promiseItemId("123456789012")), id);

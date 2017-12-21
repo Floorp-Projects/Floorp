@@ -32,5 +32,5 @@ add_task(async function test_execute() {
   const SEARCH_TERM = "ユニコード";
   const TEST_URL = "http://example.com/" + SEARCH_TERM + "/";
   await PlacesTestUtils.addVisits(uri(TEST_URL));
-  do_check_true(search_has_result(SEARCH_TERM));
+  Assert.ok(search_has_result(SEARCH_TERM));
 });

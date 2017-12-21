@@ -113,19 +113,19 @@ function hiddenDataCheck(bytes, uri, path)
   // flattening or array-style access to items in NodeLists.  Suck.
 
   var body = doc.documentElement.getElementsByTagName("body");
-  do_check_eq(body.length, 1);
+  Assert.equal(body.length, 1);
   body = body.item(0);
 
   // header
   var header = body.QueryInterface(Ci.nsIDOMElement)
                    .getElementsByTagName("h1");
-  do_check_eq(header.length, 1);
+  Assert.equal(header.length, 1);
 
-  do_check_eq(header.item(0).QueryInterface(Ci.nsIDOMNode).textContent, path);
+  Assert.equal(header.item(0).QueryInterface(Ci.nsIDOMNode).textContent, path);
 
   // files
   var lst = body.getElementsByTagName("ol");
-  do_check_eq(lst.length, 1);
+  Assert.equal(lst.length, 1);
   var items = lst.item(0).QueryInterface(Ci.nsIDOMElement)
                          .getElementsByTagName("li");
 
@@ -149,10 +149,10 @@ function hiddenDataCheck(bytes, uri, path)
 
     var sep = f.isDirectory ? "/" : "";
 
-    do_check_eq(link.textContent, f.name + sep);
+    Assert.equal(link.textContent, f.name + sep);
 
     uri = ios.newURI(link.getAttribute("href"), null, top);
-    do_check_eq(decodeURIComponent(uri.pathQueryRef), path + f.name + sep);
+    Assert.equal(decodeURIComponent(uri.pathQueryRef), path + f.name + sep);
   }
 }
 
@@ -197,19 +197,19 @@ function dataCheck(bytes, uri, path, dirEntries)
   // flattening or array-style access to items in NodeLists.  Suck.
 
   var body = doc.documentElement.getElementsByTagName("body");
-  do_check_eq(body.length, 1);
+  Assert.equal(body.length, 1);
   body = body.item(0);
 
   // header
   var header = body.QueryInterface(Ci.nsIDOMElement)
                    .getElementsByTagName("h1");
-  do_check_eq(header.length, 1);
+  Assert.equal(header.length, 1);
 
-  do_check_eq(header.item(0).QueryInterface(Ci.nsIDOMNode).textContent, path);
+  Assert.equal(header.item(0).QueryInterface(Ci.nsIDOMNode).textContent, path);
 
   // files
   var lst = body.getElementsByTagName("ol");
-  do_check_eq(lst.length, 1);
+  Assert.equal(lst.length, 1);
   var items = lst.item(0).QueryInterface(Ci.nsIDOMElement)
                          .getElementsByTagName("li");
 
@@ -229,10 +229,10 @@ function dataCheck(bytes, uri, path, dirEntries)
 
     var sep = f.isDirectory ? "/" : "";
 
-    do_check_eq(link.textContent, f.name + sep);
+    Assert.equal(link.textContent, f.name + sep);
 
     uri = ios.newURI(link.getAttribute("href"), null, top);
-    do_check_eq(decodeURIComponent(uri.pathQueryRef), path + f.name + sep);
+    Assert.equal(decodeURIComponent(uri.pathQueryRef), path + f.name + sep);
   }
 }
 
@@ -270,7 +270,7 @@ XPCOMUtils.defineLazyGetter(this, "tests", function() {
 // check top-level directory listing
 function start(ch)
 {
-  do_check_eq(ch.getResponseHeader("Content-Type"), "text/html;charset=utf-8");
+  Assert.equal(ch.getResponseHeader("Content-Type"), "text/html;charset=utf-8");
 }
 function stopRootDirectory(ch, cx, status, data)
 {

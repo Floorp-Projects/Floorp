@@ -14,7 +14,7 @@ function run_test() {
     }
     if (exception_threw != exception_expected)
       do_throw("We did"+(exception_expected?"n't":"")+" throw NS_ERROR_MALFORMED_URI when creating a new URI with "+port+" as a port");
-    do_check_eq(exception_threw, exception_expected);
+    Assert.equal(exception_threw, exception_expected);
   
     exception_threw = false;
     newURI = ios.newURI("http://foo.com");
@@ -26,7 +26,7 @@ function run_test() {
     }
     if (exception_threw != exception_expected)
       do_throw("We did"+(exception_expected?"n't":"")+" throw NS_ERROR_MALFORMED_URI when setting a spec of a URI with "+port+" as a port");
-    do_check_eq(exception_threw, exception_expected);
+    Assert.equal(exception_threw, exception_expected);
   }
   
   test_port(":invalid", true);

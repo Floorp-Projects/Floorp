@@ -57,7 +57,7 @@ async function checkRecordCount(count) {
   await OneCRLBlocklistClient.openCollection(async (collection) => {
     // Check we have the expected number of records
     const records = await collection.list();
-    do_check_eq(count, records.data.length);
+    Assert.equal(count, records.data.length);
   });
 }
 
@@ -514,7 +514,7 @@ function run_test() {
 
   run_next_test();
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     server.stop(function() { });
   });
 }

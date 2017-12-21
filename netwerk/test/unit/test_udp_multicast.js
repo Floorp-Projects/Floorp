@@ -45,15 +45,15 @@ function sendPing(socket, addr) {
   return new Promise((resolve, reject) => {
     socket.asyncListen({
       onPacketReceived: function(s, message) {
-        do_print("Received on port " + socket.port);
-        do_check_eq(message.data, ping);
+        info("Received on port " + socket.port);
+        Assert.equal(message.data, ping);
         socket.close();
         resolve(message.data);
       },
       onStopListening: function(socket, status) {}
     });
 
-    do_print("Multicast send to port " + socket.port);
+    info("Multicast send to port " + socket.port);
     socket.send(addr, socket.port, rawPing, rawPing.length);
 
     // Timers are bad, but it seems like the only way to test *not* getting a
@@ -67,7 +67,7 @@ function sendPing(socket, addr) {
 }
 
 add_test(() => {
-  do_print("Joining multicast group");
+  info("Joining multicast group");
   let socket = createSocketAndJoin(ADDRESS_TEST1);
   sendPing(socket, ADDRESS_TEST1).then(
     run_next_test,
@@ -76,7 +76,7 @@ add_test(() => {
 });
 
 add_test(() => {
-  do_print("Disabling multicast loopback");
+  info("Disabling multicast loopback");
   let socket = createSocketAndJoin(ADDRESS_TEST2);
   socket.multicastLoopback = false;
   sendPing(socket, ADDRESS_TEST2).then(
@@ -90,7 +90,7 @@ add_test(() => {
 // test there.
 if (!isWinXP) {
   add_test(() => {
-    do_print("Changing multicast interface");
+    info("Changing multicast interface");
     let socket = createSocketAndJoin(ADDRESS_TEST3);
     socket.multicastInterface = "127.0.0.1";
     sendPing(socket, ADDRESS_TEST3).then(
@@ -100,7 +100,7 @@ if (!isWinXP) {
   });
 
 add_test(() => {
-  do_print("Leaving multicast group");
+  info("Leaving multicast group");
   let socket = createSocketAndJoin(ADDRESS_TEST4);
   socket.leaveMulticast(ADDRESS_TEST4);
   sendPing(socket, ADDRESS_TEST4).then(

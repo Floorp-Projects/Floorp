@@ -36,22 +36,22 @@ function init(ch)
 }
 function startCustomIndexHandler(ch, cx)
 {
-  do_check_eq(ch.getResponseHeader("Content-Length"), "10");
+  Assert.equal(ch.getResponseHeader("Content-Length"), "10");
   srv.setIndexHandler(null);
 }
 function stopCustomIndexHandler(ch, cx, status, data)
 {
-  do_check_true(Components.isSuccessCode(status));
-  do_check_eq(String.fromCharCode.apply(null, data), "directory!");
+  Assert.ok(Components.isSuccessCode(status));
+  Assert.equal(String.fromCharCode.apply(null, data), "directory!");
 }
 
 function startDefaultIndexHandler(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 200);
+  Assert.equal(ch.responseStatus, 200);
 }
 function stopDefaultIndexHandler(ch, cx, status, data)
 {
-  do_check_true(Components.isSuccessCode(status));
+  Assert.ok(Components.isSuccessCode(status));
 }
 
 // PATH HANDLERS
@@ -59,9 +59,9 @@ function stopDefaultIndexHandler(ch, cx, status, data)
 function myIndexHandler(metadata, response)
 {
   var dir = metadata.getProperty("directory");
-  do_check_true(dir != null);
-  do_check_true(dir instanceof Ci.nsIFile);
-  do_check_true(dir.equals(serverBasePath));
+  Assert.ok(dir != null);
+  Assert.ok(dir instanceof Ci.nsIFile);
+  Assert.ok(dir.equals(serverBasePath));
 
   response.write("directory!");
 }

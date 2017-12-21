@@ -59,7 +59,7 @@ function fetchAsync(data) {
 }
 
 function reducer(state = [], action) {
-  do_print("Action called: " + action.type);
+  info("Action called: " + action.type);
   if (/fetch/.test(action.type)) {
     state.push(action);
   }

@@ -3,5 +3,5 @@ function run_test() {
                    .getService(Ci.nsIIDNService);
 
   var isASCII = {};
-  do_check_eq(idnService.convertToDisplayIDN("xn--", isASCII), "xn--");
+  Assert.equal(idnService.convertToDisplayIDN("xn--", isASCII), "xn--");
 }

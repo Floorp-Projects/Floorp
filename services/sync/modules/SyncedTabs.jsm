@@ -40,17 +40,11 @@ const TOPIC_TABS_CHANGED = "services.sync.tabs.changed";
 // of tabs "fresh enough" and don't force a new sync.
 const TABS_FRESH_ENOUGH_INTERVAL = 30;
 
-let log = Log.repository.getLogger("Sync.RemoteTabs");
-// A new scope to do the logging thang...
-(function() {
-  let level = Preferences.get("services.sync.log.logger.tabs");
-  if (level) {
-    let appender = new Log.DumpAppender();
-    log.level = appender.level = Log.Level[level] || Log.Level.Debug;
-    log.addAppender(appender);
-  }
-})();
-
+XPCOMUtils.defineLazyGetter(this, "log", function() {
+  let log = Log.repository.getLogger("Sync.RemoteTabs");
+  log.manageLevelFromPref("services.sync.log.logger.tabs");
+  return log;
+});
 
 // A private singleton that does the work.
 let SyncedTabsInternal = {

@@ -230,6 +230,10 @@ else:
     env.setdefault('CC', compiler)
     env.setdefault('CXX', cxx)
 
+bindir = os.path.join(OBJDIR, 'dist', 'bin')
+env['LD_LIBRARY_PATH'] = ':'.join(
+    p for p in (bindir, env.get('LD_LIBRARY_PATH')) if p)
+
 rust_dir = os.path.join(DIR.tooltool, 'rustc')
 if os.path.exists(os.path.join(rust_dir, 'bin', 'rustc')):
     env.setdefault('RUSTC', os.path.join(rust_dir, 'bin', 'rustc'))

@@ -49,7 +49,7 @@ add_task(async function test_escape() {
   // match only on word boundaries
   Services.prefs.setIntPref("browser.urlbar.matchBehavior", 2);
 
-  do_print("Match 'match' at the beginning or after / or on a CamelCase");
+  info("Match 'match' at the beginning or after / or on a CamelCase");
   await check_autocomplete({
     search: "match",
     matches: [ { uri: uri1, title: "title1" },
@@ -58,7 +58,7 @@ add_task(async function test_escape() {
                { uri: uri10, title: "title1" } ]
   });
 
-  do_print("Match 'dont' at the beginning or after /");
+  info("Match 'dont' at the beginning or after /");
   await check_autocomplete({
     search: "dont",
     matches: [ { uri: uri2, title: "title1" },
@@ -66,7 +66,7 @@ add_task(async function test_escape() {
                { uri: uri6, title: "title1", tags: [ "dontmatchme3" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("Match 'match' at the beginning or after / or on a CamelCase");
+  info("Match 'match' at the beginning or after / or on a CamelCase");
   await check_autocomplete({
     search: "2",
     matches: [ { uri: uri3, title: "matchme2" },
@@ -75,7 +75,7 @@ add_task(async function test_escape() {
                { uri: uri6, title: "title1", tags: [ "dontmatchme3" ], style: [ "bookmark-tag" ] } ]
   });
 
-  do_print("Match 't' at the beginning or after /");
+  info("Match 't' at the beginning or after /");
   await check_autocomplete({
     search: "t",
     matches: [ { uri: uri1, title: "title1" },
@@ -87,13 +87,13 @@ add_task(async function test_escape() {
                { uri: uri10, title: "title1" } ]
   });
 
-  do_print("Match 'word' after many consecutive word boundaries");
+  info("Match 'word' after many consecutive word boundaries");
   await check_autocomplete({
     search: "word",
     matches: [ { uri: uri7, title: "!@#$%^&*()_+{}|:<>?word" } ]
   });
 
-  do_print("Match a word boundary '/' for everything");
+  info("Match a word boundary '/' for everything");
   await check_autocomplete({
     search: "/",
     matches: [ { uri: uri1, title: "title1" },
@@ -108,13 +108,13 @@ add_task(async function test_escape() {
                { uri: uri10, title: "title1" } ]
   });
 
-  do_print("Match word boundaries '()_+' that are among word boundaries");
+  info("Match word boundaries '()_+' that are among word boundaries");
   await check_autocomplete({
     search: "()_+",
     matches: [ { uri: uri7, title: "!@#$%^&*()_+{}|:<>?word" } ]
   });
 
-  do_print("Katakana characters form a string, so match the beginning");
+  info("Katakana characters form a string, so match the beginning");
   await check_autocomplete({
     search: katakana[0],
     matches: [ { uri: uri8, title: katakana.join("") } ]
@@ -127,31 +127,31 @@ add_task(async function test_escape() {
     matches: [ ]
   });
 */
- do_print("Ideographs are treated as words so 'nin' is one word");
+ info("Ideographs are treated as words so 'nin' is one word");
   await check_autocomplete({
     search: ideograph[0],
     matches: [ { uri: uri9, title: ideograph.join("") } ]
   });
 
- do_print("Ideographs are treated as words so 'ten' is another word");
+ info("Ideographs are treated as words so 'ten' is another word");
   await check_autocomplete({
     search: ideograph[1],
     matches: [ { uri: uri9, title: ideograph.join("") } ]
   });
 
- do_print("Ideographs are treated as words so 'do' is yet another word");
+ info("Ideographs are treated as words so 'do' is yet another word");
   await check_autocomplete({
     search: ideograph[2],
     matches: [ { uri: uri9, title: ideograph.join("") } ]
   });
 
- do_print("Extra negative assert that we don't match in the middle");
+ info("Extra negative assert that we don't match in the middle");
   await check_autocomplete({
     search: "ch",
     matches: [ ]
   });
 
- do_print("Don't match one character after a camel-case word boundary (bug 429498)");
+ info("Don't match one character after a camel-case word boundary (bug 429498)");
   await check_autocomplete({
     search: "atch",
     matches: [ ]
