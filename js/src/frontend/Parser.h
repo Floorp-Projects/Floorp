@@ -543,8 +543,15 @@ class PerHandlerParser
     inline void clearAbortedSyntaxParse();
 
   public:
+    void prepareNodeForMutation(Node node) { handler.prepareNodeForMutation(node); }
+    void freeTree(Node node) { handler.freeTree(node); }
+
     bool isValidSimpleAssignmentTarget(Node node,
                                        FunctionCallBehavior behavior = ForbidAssignmentToFunctionCalls);
+
+    Node newPropertyAccess(Node expr, PropertyName* key, uint32_t end) {
+        return handler.newPropertyAccess(expr, key, end);
+    }
 
     FunctionBox* newFunctionBox(Node fn, JSFunction* fun, uint32_t toStringStart,
                                 Directives directives, GeneratorKind generatorKind,
@@ -862,9 +869,6 @@ class GeneralParser
   public:
     using TokenStream = TokenStreamSpecific<CharT, ParserAnyCharsAccess<GeneralParser>>;
     TokenStream tokenStream;
-
-    void prepareNodeForMutation(Node node) { handler.prepareNodeForMutation(node); }
-    void freeTree(Node node) { handler.freeTree(node); }
 
   public:
     GeneralParser(JSContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
