@@ -268,6 +268,10 @@ public:
     ////////////////
     // WebGL funcs
 
+    bool IsCheckFramebufferStatusComplete(const char* const funcName) const {
+        return CheckFramebufferStatus(funcName) == LOCAL_GL_FRAMEBUFFER_COMPLETE;
+    }
+
     FBStatus CheckFramebufferStatus(const char* funcName) const;
     void FramebufferRenderbuffer(const char* funcName, GLenum attachment, GLenum rbtarget,
                                  WebGLRenderbuffer* rb);
