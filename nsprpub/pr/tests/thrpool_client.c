@@ -21,7 +21,7 @@
 #ifdef XP_UNIX
 #include <sys/mman.h>
 #endif
-#if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
+#if defined(_PR_PTHREADS)
 #include <pthread.h>
 #endif
 

@@ -111,16 +111,6 @@ static int32 threadStartFunc(void *arg)
 static void * threadStartFunc(void *arg)
 #endif
 {
-#ifdef _PR_DCETHREADS
-    {
-        int rv;
-        pthread_t self = pthread_self();
-        rv = pthread_detach(&self);
-        if (debug_mode) PR_ASSERT(0 == rv);
-		else if (0 != rv) failed_already=1;
-    }
-#endif
-
     Measure(AttachDetach, "Attach/Detach");
 
 #ifndef IRIX
@@ -206,14 +196,12 @@ int main(int argc, char **argv)
 		goto exit_now;
 	}
 	
-#ifndef _PR_DCETHREADS
     rv = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
     if (debug_mode) PR_ASSERT(0 == rv);
 	else if (0 != rv) {
 		failed_already=1;
 		goto exit_now;
 	}
-#endif  /* !_PR_DCETHREADS */
     rv = _PT_PTHREAD_CREATE(&threadID, attr, threadStartFunc, NULL);
     if (rv != 0) {
 			fprintf(stderr, "thread creation failed: error code %d\n", rv);
