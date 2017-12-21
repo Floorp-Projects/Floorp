@@ -1238,7 +1238,6 @@ pref("editor.use_div_for_default_newlines",  false);
 pref("dom.disable_beforeunload",            false);
 pref("dom.disable_window_flip",             false);
 pref("dom.disable_window_move_resize",      false);
-pref("dom.disable_window_status_change",    false);
 
 pref("dom.disable_window_open_feature.titlebar",    false);
 pref("dom.disable_window_open_feature.close",       false);
