@@ -10,6 +10,10 @@ export MOZILLA_OFFICIAL=1
 # Enable Telemetry
 export MOZ_TELEMETRY_REPORTING=1
 
+if test "${MOZ_UPDATE_CHANNEL}" = "nightly"; then
+ac_add_options --with-macbundlename-prefix=Firefox
+fi
+
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 
