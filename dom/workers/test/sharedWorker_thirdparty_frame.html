@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<script>
+  let params = new URLSearchParams(document.location.search.substring(1));
+  let name = params.get('name');
+  try {
+    let worker = new SharedWorker('sharedWorker_sharedWorker.js',
+                                  { name: name });
+    worker.port.addEventListener('message', evt => {
+      parent.postMessage( { name: name, result: 'allowed' }, '*');
+    }, { once: true });
+    worker.port.start();
+    worker.port.postMessage('ping');
+  } catch(e) {
+    parent.postMessage({ name: name, result: 'blocked' }, '*');
+  }
+</script>

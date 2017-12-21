@@ -13,7 +13,7 @@
 
 [HTMLConstructor]
 interface HTMLIFrameElement : HTMLElement {
-  [CEReactions, SetterNeedsSubjectPrincipal, SetterThrows, Pure]
+  [CEReactions, SetterNeedsSubjectPrincipal=NonSystem, SetterThrows, Pure]
            attribute DOMString src;
   [CEReactions, SetterThrows, Pure]
            attribute DOMString srcdoc;

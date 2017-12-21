@@ -373,9 +373,6 @@ endif
 ifeq (,$(filter-out FreeBSD OpenBSD BSD_OS QNX Darwin OpenUNIX,$(OS_ARCH)))
 LIBPTHREAD =
 endif
-ifeq ($(OS_ARCH)$(basename $(OS_RELEASE)),HP-UXB.10)
-LIBPTHREAD = -ldce
-endif
 endif
 
 ifeq ($(OS_TARGET),Android)

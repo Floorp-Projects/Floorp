@@ -7,7 +7,7 @@
 
 #include <string.h>
 
-#if defined(HPUX) && defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
+#if defined(HPUX) && defined(_PR_PTHREADS)
 
 #include <pthread.h>
 #define HAVE_UNIX98_RWLOCK

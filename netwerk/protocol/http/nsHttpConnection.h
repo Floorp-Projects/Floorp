@@ -234,6 +234,9 @@ public:
     bool JoinConnection(const nsACString &hostname, int32_t port);
 
     void SetFastOpenStatus(uint8_t tfoStatus);
+    uint8_t GetFastOpenStatus() {
+      return mFastOpenStatus;
+    }
 
     void SetEvent(nsresult aStatus);
 
@@ -401,6 +404,8 @@ private:
 
     bool                           mForceSendDuringFastOpenPending;
     bool                           mReceivedSocketWouldBlockDuringFastOpen;
+    bool                           mCheckNetworkStallsWithTFO;
+    PRIntervalTime                 mLastRequestBytesSentTime;
 
 public:
     void BootstrapTimings(TimingStruct times);
