@@ -45,11 +45,11 @@ function run_test() {
 
   // Check that the mapping is recognized in the simple case.
   var type = mimeService.getTypeFromExtension(kTestExtension);
-  do_check_eq(type, kTestMimeType);
+  Assert.equal(type, kTestMimeType);
 
   // Check that the mapping is recognized even if the extension has mixed case.
   type = mimeService.getTypeFromExtension(kTestExtensionMixedCase);
-  do_check_eq(type, kTestMimeType);
+  Assert.equal(type, kTestMimeType);
 
   // Clean up after ourselves.
   categoryManager.deleteCategoryEntry("ext-to-type-mapping", kTestExtension, false);

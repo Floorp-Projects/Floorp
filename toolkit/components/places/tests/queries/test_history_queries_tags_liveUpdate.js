@@ -67,11 +67,11 @@ add_task(function pages_query() {
     for (let i = 0; i < root.childCount; i++) {
       let node = root.getChild(i);
       let uri = NetUtil.newURI(node.uri);
-      do_check_eq(node.tags, null);
+      Assert.equal(node.tags, null);
       PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, "test-tag");
+      Assert.equal(node.tags, "test-tag");
       PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, null);
+      Assert.equal(node.tags, null);
     }
   });
 });
@@ -84,11 +84,11 @@ add_task(function visits_query() {
     for (let i = 0; i < root.childCount; i++) {
       let node = root.getChild(i);
       let uri = NetUtil.newURI(node.uri);
-      do_check_eq(node.tags, null);
+      Assert.equal(node.tags, null);
       PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, "test-tag");
+      Assert.equal(node.tags, "test-tag");
       PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, null);
+      Assert.equal(node.tags, null);
     }
   });
 });
@@ -101,11 +101,11 @@ add_task(function bookmarks_query() {
     for (let i = 0; i < root.childCount; i++) {
       let node = root.getChild(i);
       let uri = NetUtil.newURI(node.uri);
-      do_check_eq(node.tags, null);
+      Assert.equal(node.tags, null);
       PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, "test-tag");
+      Assert.equal(node.tags, "test-tag");
       PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, null);
+      Assert.equal(node.tags, null);
     }
   });
 });
@@ -118,11 +118,11 @@ add_task(function pages_searchterm_query() {
     for (let i = 0; i < root.childCount; i++) {
       let node = root.getChild(i);
       let uri = NetUtil.newURI(node.uri);
-      do_check_eq(node.tags, null);
+      Assert.equal(node.tags, null);
       PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, "test-tag");
+      Assert.equal(node.tags, "test-tag");
       PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, null);
+      Assert.equal(node.tags, null);
     }
   });
 });
@@ -136,11 +136,11 @@ add_task(function visits_searchterm_query() {
     for (let i = 0; i < root.childCount; i++) {
       let node = root.getChild(i);
       let uri = NetUtil.newURI(node.uri);
-      do_check_eq(node.tags, null);
+      Assert.equal(node.tags, null);
       PlacesUtils.tagging.tagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, "test-tag");
+      Assert.equal(node.tags, "test-tag");
       PlacesUtils.tagging.untagURI(uri, ["test-tag"]);
-      do_check_eq(node.tags, null);
+      Assert.equal(node.tags, null);
     }
   });
 });

@@ -33,7 +33,7 @@ function run_test() {
   startupManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(async function(a1) {
-    do_check_eq(a1, null);
+    Assert.equal(a1, null);
     do_check_not_in_crash_annotation(addon1.id, addon1.version);
 
     writeInstallRDFForExtension(addon1, profileDir, addon1.id, "icon.png");
@@ -42,17 +42,17 @@ function run_test() {
     await promiseRestartManager();
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(newa1) {
-      do_check_neq(newa1, null);
-      do_check_true(newa1.isActive);
-      do_check_false(newa1.userDisabled);
-      do_check_eq(newa1.aboutURL, "chrome://foo/content/about.xul");
-      do_check_eq(newa1.optionsURL, "chrome://foo/content/options.xul");
-      do_check_eq(newa1.iconURL, "chrome://foo/content/icon.png");
-      do_check_true(isExtensionInAddonsList(profileDir, newa1.id));
-      do_check_true(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
-      do_check_false(hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
-      do_check_eq(newa1.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_DISABLE |
-                                                    AddonManager.OP_NEEDS_RESTART_UNINSTALL);
+      Assert.notEqual(newa1, null);
+      Assert.ok(newa1.isActive);
+      Assert.ok(!newa1.userDisabled);
+      Assert.equal(newa1.aboutURL, "chrome://foo/content/about.xul");
+      Assert.equal(newa1.optionsURL, "chrome://foo/content/options.xul");
+      Assert.equal(newa1.iconURL, "chrome://foo/content/icon.png");
+      Assert.ok(isExtensionInAddonsList(profileDir, newa1.id));
+      Assert.ok(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
+      Assert.ok(!hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
+      Assert.equal(newa1.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_DISABLE |
+                                                     AddonManager.OP_NEEDS_RESTART_UNINSTALL);
       do_check_in_crash_annotation(addon1.id, addon1.version);
 
       run_test_1();
@@ -69,37 +69,37 @@ function run_test_1() {
   });
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_neq(a1.operationsRequiringRestart &
-                 AddonManager.OP_NEEDS_RESTART_DISABLE, 0);
+    Assert.notEqual(a1.operationsRequiringRestart &
+                    AddonManager.OP_NEEDS_RESTART_DISABLE, 0);
     a1.userDisabled = true;
-    do_check_eq(a1.aboutURL, "chrome://foo/content/about.xul");
-    do_check_eq(a1.optionsURL, "chrome://foo/content/options.xul");
-    do_check_eq(a1.iconURL, "chrome://foo/content/icon.png");
-    do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));
-    do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_ENABLE));
-    do_check_eq(a1.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_DISABLE |
-                                               AddonManager.OP_NEEDS_RESTART_UNINSTALL);
+    Assert.equal(a1.aboutURL, "chrome://foo/content/about.xul");
+    Assert.equal(a1.optionsURL, "chrome://foo/content/options.xul");
+    Assert.equal(a1.iconURL, "chrome://foo/content/icon.png");
+    Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));
+    Assert.ok(hasFlag(a1.permissions, AddonManager.PERM_CAN_ENABLE));
+    Assert.equal(a1.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_DISABLE |
+                                                AddonManager.OP_NEEDS_RESTART_UNINSTALL);
     do_check_in_crash_annotation(addon1.id, addon1.version);
 
     ensure_test_completed();
 
     AddonManager.getAddonsWithOperationsByTypes(null, callback_soon(function(list) {
-      do_check_eq(list.length, 1);
-      do_check_eq(list[0].id, "addon1@tests.mozilla.org");
+      Assert.equal(list.length, 1);
+      Assert.equal(list[0].id, "addon1@tests.mozilla.org");
 
       restartManager();
 
       AddonManager.getAddonByID("addon1@tests.mozilla.org", function(newa1) {
-        do_check_neq(newa1, null);
-        do_check_false(newa1.isActive);
-        do_check_true(newa1.userDisabled);
-        do_check_eq(newa1.aboutURL, null);
-        do_check_eq(newa1.optionsURL, null);
-        do_check_eq(newa1.iconURL, gIconURL);
-        do_check_false(isExtensionInAddonsList(profileDir, newa1.id));
-        do_check_false(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
-        do_check_true(hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
-        do_check_eq(newa1.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_ENABLE);
+        Assert.notEqual(newa1, null);
+        Assert.ok(!newa1.isActive);
+        Assert.ok(newa1.userDisabled);
+        Assert.equal(newa1.aboutURL, null);
+        Assert.equal(newa1.optionsURL, null);
+        Assert.equal(newa1.iconURL, gIconURL);
+        Assert.ok(!isExtensionInAddonsList(profileDir, newa1.id));
+        Assert.ok(!hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
+        Assert.ok(hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
+        Assert.equal(newa1.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_ENABLE);
         do_check_not_in_crash_annotation(addon1.id, addon1.version);
 
         run_test_2();
@@ -118,33 +118,33 @@ function run_test_2() {
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     a1.userDisabled = false;
-    do_check_eq(a1.aboutURL, null);
-    do_check_eq(a1.optionsURL, null);
-    do_check_eq(a1.iconURL, gIconURL);
-    do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));
-    do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_ENABLE));
-    do_check_eq(a1.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_ENABLE);
+    Assert.equal(a1.aboutURL, null);
+    Assert.equal(a1.optionsURL, null);
+    Assert.equal(a1.iconURL, gIconURL);
+    Assert.ok(hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));
+    Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_ENABLE));
+    Assert.equal(a1.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_ENABLE);
 
     ensure_test_completed();
 
     AddonManager.getAddonsWithOperationsByTypes(null, callback_soon(function(list) {
-      do_check_eq(list.length, 1);
-      do_check_eq(list[0].id, "addon1@tests.mozilla.org");
+      Assert.equal(list.length, 1);
+      Assert.equal(list[0].id, "addon1@tests.mozilla.org");
 
       restartManager();
 
       AddonManager.getAddonByID("addon1@tests.mozilla.org", function(newa1) {
-        do_check_neq(newa1, null);
-        do_check_true(newa1.isActive);
-        do_check_false(newa1.userDisabled);
-        do_check_eq(newa1.aboutURL, "chrome://foo/content/about.xul");
-        do_check_eq(newa1.optionsURL, "chrome://foo/content/options.xul");
-        do_check_eq(newa1.iconURL, "chrome://foo/content/icon.png");
-        do_check_true(isExtensionInAddonsList(profileDir, newa1.id));
-        do_check_true(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
-        do_check_false(hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
-        do_check_eq(newa1.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_DISABLE |
-                                                      AddonManager.OP_NEEDS_RESTART_UNINSTALL);
+        Assert.notEqual(newa1, null);
+        Assert.ok(newa1.isActive);
+        Assert.ok(!newa1.userDisabled);
+        Assert.equal(newa1.aboutURL, "chrome://foo/content/about.xul");
+        Assert.equal(newa1.optionsURL, "chrome://foo/content/options.xul");
+        Assert.equal(newa1.iconURL, "chrome://foo/content/icon.png");
+        Assert.ok(isExtensionInAddonsList(profileDir, newa1.id));
+        Assert.ok(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
+        Assert.ok(!hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
+        Assert.equal(newa1.operationsRequiringRestart, AddonManager.OP_NEEDS_RESTART_DISABLE |
+                                                       AddonManager.OP_NEEDS_RESTART_UNINSTALL);
         do_check_in_crash_annotation(addon1.id, addon1.version);
 
         run_test_3();
@@ -170,25 +170,25 @@ function run_test_3() {
       ]
     });
     a1.userDisabled = false;
-    do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));
-    do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_ENABLE));
+    Assert.ok(hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));
+    Assert.ok(!hasFlag(a1.permissions, AddonManager.PERM_CAN_ENABLE));
 
     ensure_test_completed();
 
     restartManager();
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(newa1) {
-      do_check_neq(newa1, null);
-      do_check_true(newa1.isActive);
-      do_check_false(newa1.userDisabled);
-      do_check_eq(newa1.aboutURL, "chrome://foo/content/about.xul");
-      do_check_eq(newa1.optionsURL, "chrome://foo/content/options.xul");
-      do_check_eq(newa1.iconURL, "chrome://foo/content/icon.png");
-      do_check_true(isExtensionInAddonsList(profileDir, newa1.id));
-      do_check_true(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
-      do_check_false(hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
+      Assert.notEqual(newa1, null);
+      Assert.ok(newa1.isActive);
+      Assert.ok(!newa1.userDisabled);
+      Assert.equal(newa1.aboutURL, "chrome://foo/content/about.xul");
+      Assert.equal(newa1.optionsURL, "chrome://foo/content/options.xul");
+      Assert.equal(newa1.iconURL, "chrome://foo/content/icon.png");
+      Assert.ok(isExtensionInAddonsList(profileDir, newa1.id));
+      Assert.ok(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
+      Assert.ok(!hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
 
-      do_execute_soon(do_test_finished);
+      executeSoon(do_test_finished);
     });
   }));
 }

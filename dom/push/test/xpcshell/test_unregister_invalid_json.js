@@ -19,7 +19,7 @@ function run_test() {
 
 add_task(async function test_unregister_invalid_json() {
   let db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+  registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
   let records = [{
     channelID: '87902e90-c57e-4d18-8354-013f4a556559',
     pushEndpoint: 'https://example.org/update/1',

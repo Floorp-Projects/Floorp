@@ -64,14 +64,14 @@ function set_breakpoints(event, packet) {
 
   source.setBreakpoint(firstLocation, function ({ error, actualLocation },
                                         breakpointClient) {
-    do_check_true(!error, "Should not get an error setting the breakpoint");
-    do_check_true(!actualLocation, "Should not get an actualLocation");
+    Assert.ok(!error, "Should not get an error setting the breakpoint");
+    Assert.ok(!actualLocation, "Should not get an actualLocation");
     first = breakpointClient;
 
     source.setBreakpoint(secondLocation, function ({ error, actualLocation },
                                                           breakpointClient) {
-      do_check_true(!error, "Should not get an error setting the breakpoint");
-      do_check_true(!actualLocation, "Should not get an actualLocation");
+      Assert.ok(!error, "Should not get an error setting the breakpoint");
+      Assert.ok(!actualLocation, "Should not get an actualLocation");
       second = breakpointClient;
 
       test_different_actors(first, second);
@@ -80,41 +80,41 @@ function set_breakpoints(event, packet) {
 }
 
 function test_different_actors(first, second) {
-  do_check_neq(first.actor, second.actor,
-               "Each breakpoint should have a different actor");
+  Assert.notEqual(first.actor, second.actor,
+                  "Each breakpoint should have a different actor");
   test_remove_one(first, second);
 }
 
 function test_remove_one(first, second) {
   first.remove(function ({error}) {
-    do_check_true(!error, "Should not get an error removing a breakpoint");
+    Assert.ok(!error, "Should not get an error removing a breakpoint");
 
     let hitSecond;
     gClient.addListener("paused", function _onPaused(event, {why, frame}) {
       if (why.type == "breakpoint") {
         hitSecond = true;
-        do_check_eq(why.actors.length, 1,
-                    "Should only be paused because of one breakpoint actor");
-        do_check_eq(why.actors[0], second.actor,
-                    "Should be paused because of the correct breakpoint actor");
-        do_check_eq(frame.where.line, secondLocation.line,
-                    "Should be at the right line");
-        do_check_eq(frame.where.column, secondLocation.column,
-                    "Should be at the right column");
+        Assert.equal(why.actors.length, 1,
+                     "Should only be paused because of one breakpoint actor");
+        Assert.equal(why.actors[0], second.actor,
+                     "Should be paused because of the correct breakpoint actor");
+        Assert.equal(frame.where.line, secondLocation.line,
+                     "Should be at the right line");
+        Assert.equal(frame.where.column, secondLocation.column,
+                     "Should be at the right column");
         gThreadClient.resume();
         return;
       }
 
       if (why.type == "debuggerStatement") {
         gClient.removeListener("paused", _onPaused);
-        do_check_true(hitSecond,
-                      "We should still hit `second`, but not `first`.");
+        Assert.ok(hitSecond,
+                  "We should still hit `second`, but not `first`.");
 
         gClient.close().then(gCallback);
         return;
       }
 
-      do_check_true(false, "Should never get here");
+      Assert.ok(false, "Should never get here");
     });
 
     gThreadClient.resume(() => gDebuggee.foo());

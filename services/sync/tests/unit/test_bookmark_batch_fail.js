@@ -18,6 +18,6 @@ add_task(async function run_test() {
     do_throw("Should have failed sync!");
   } catch (ex) {
     _("Making sure what we threw ended up as the exception:", ex);
-    do_check_eq(ex.message, "FAIL!");
+    Assert.equal(ex.message, "FAIL!");
   }
 });

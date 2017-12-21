@@ -84,9 +84,6 @@ var whitelist = [
   // browser/extensions/pdfjs/content/web/viewer.js
   {file: "resource://pdf.js/build/pdf.worker.js"},
 
-  // Add-on API introduced in bug 1118285
-  {file: "resource://app/modules/NewTabURL.jsm"},
-
   // browser/components/newtab bug 1355166
   {file: "resource://app/modules/NewTabSearchProvider.jsm"},
   {file: "resource://app/modules/NewTabWebChannel.jsm"},

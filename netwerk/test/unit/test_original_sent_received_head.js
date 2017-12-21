@@ -105,9 +105,9 @@ function checkResponse(request, data, context) {
   if (dbg) { print("============== checkResponse: in"); }
 
   request.QueryInterface(Components.interfaces.nsIHttpChannel);
-  do_check_eq(request.responseStatus, 200);
-  do_check_eq(request.responseStatusText, "OK");
-  do_check_true(request.requestSucceeded);
+  Assert.equal(request.responseStatus, 200);
+  Assert.equal(request.responseStatusText, "OK");
+  Assert.ok(request.requestSucceeded);
 
   // Response header have only one link header.
   var linkHeaderFound = 0;
@@ -116,16 +116,16 @@ function checkResponse(request, data, context) {
     visitHeader: function visit(aName, aValue) {
       if (aName == "link") {
         linkHeaderFound++;
-        do_check_eq(aValue, "value1, value2");
+        Assert.equal(aValue, "value1, value2");
       }
       if (aName == "location") {
         locationHeaderFound++;
-        do_check_eq(aValue, "loc");
+        Assert.equal(aValue, "loc");
       }
     }
   });
-  do_check_eq(linkHeaderFound, 1);
-  do_check_eq(locationHeaderFound, 1);
+  Assert.equal(linkHeaderFound, 1);
+  Assert.equal(locationHeaderFound, 1);
 
   // The "original header" still contains 3 link headers.
   var linkOrgHeaderFound = 0;
@@ -134,22 +134,22 @@ function checkResponse(request, data, context) {
     visitHeader: function visitOrg(aName, aValue) {
       if (aName == "link") {
         if (linkOrgHeaderFound == 0) {
-          do_check_eq(aValue, "");
+          Assert.equal(aValue, "");
         } else if (linkOrgHeaderFound == 1 ) {
-          do_check_eq(aValue, "value1");
+          Assert.equal(aValue, "value1");
         } else {
-          do_check_eq(aValue, "value2");
+          Assert.equal(aValue, "value2");
         }
         linkOrgHeaderFound++;
       }
       if (aName == "location") {
           locationOrgHeaderFound++;
-          do_check_eq(aValue, "loc");
+          Assert.equal(aValue, "loc");
       }
     }
   });
-  do_check_eq(linkOrgHeaderFound, 3);
-  do_check_eq(locationOrgHeaderFound, 1);
+  Assert.equal(linkOrgHeaderFound, 3);
+  Assert.equal(locationOrgHeaderFound, 1);
 
   if (dbg) { print("============== Remove headers"); }
   // Remove header.
@@ -168,8 +168,8 @@ function checkResponse(request, data, context) {
       }
     }
   });
-  do_check_false(linkHeaderFound2, "There should be no link header");
-  do_check_false(locationHeaderFound2, "There should be no location headers.");
+  Assert.ok(!linkHeaderFound2, "There should be no link header");
+  Assert.ok(!locationHeaderFound2, "There should be no location headers.");
 
   // The "original header" still contains the empty header.
   var linkOrgHeaderFound2 = 0;
@@ -178,41 +178,41 @@ function checkResponse(request, data, context) {
     visitHeader: function visitOrg(aName, aValue) {
       if (aName == "link") {
         if (linkOrgHeaderFound2 == 0) {
-          do_check_eq(aValue, "");
+          Assert.equal(aValue, "");
         } else if (linkOrgHeaderFound2 == 1 ) {
-          do_check_eq(aValue, "value1");
+          Assert.equal(aValue, "value1");
         } else {
-          do_check_eq(aValue, "value2");
+          Assert.equal(aValue, "value2");
         }
         linkOrgHeaderFound2++;
       }
       if (aName == "location") {
         locationOrgHeaderFound2++;
-        do_check_eq(aValue, "loc");
+        Assert.equal(aValue, "loc");
       }
     }
   });
-  do_check_true(linkOrgHeaderFound2 == 3,
-                "Original link header still here.");
-  do_check_true(locationOrgHeaderFound2 == 1,
-                "Original location header still here.");
+  Assert.ok(linkOrgHeaderFound2 == 3,
+            "Original link header still here.");
+  Assert.ok(locationOrgHeaderFound2 == 1,
+            "Original location header still here.");
 
   if (dbg) { print("============== Test GetResponseHeader"); }
   var linkOrgHeaderFound3 = 0;
   request.getOriginalResponseHeader("link",{
     visitHeader: function visitOrg(aName, aValue) {
       if (linkOrgHeaderFound3 == 0) {
-        do_check_eq(aValue, "");
+        Assert.equal(aValue, "");
       } else if (linkOrgHeaderFound3 == 1 ) {
-        do_check_eq(aValue, "value1");
+        Assert.equal(aValue, "value1");
       } else {
-        do_check_eq(aValue, "value2");
+        Assert.equal(aValue, "value2");
       }
       linkOrgHeaderFound3++;
     }
   });
-  do_check_true(linkOrgHeaderFound2 == 3, 
-                "Original link header still here.");
+  Assert.ok(linkOrgHeaderFound2 == 3, 
+            "Original link header still here.");
 
   if (dbg) { print("============== checkResponse: out"); }
 

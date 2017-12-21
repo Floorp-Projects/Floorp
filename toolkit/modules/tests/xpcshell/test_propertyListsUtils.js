@@ -6,12 +6,12 @@
 Components.utils.import("resource://gre/modules/PropertyListUtils.jsm");
 
 function checkValue(aPropertyListObject, aType, aValue) {
-  do_check_eq(PropertyListUtils.getObjectType(aPropertyListObject), aType);
+  Assert.equal(PropertyListUtils.getObjectType(aPropertyListObject), aType);
   if (aValue !== undefined) {
     // Perform strict equality checks until Bug 714467 is fixed.
     let strictEqualityCheck = function(a, b) {
-      do_check_eq(typeof(a), typeof(b));
-      do_check_eq(a, b);
+      Assert.equal(typeof(a), typeof(b));
+      Assert.equal(a, b);
     };
 
     if (typeof(aPropertyListObject) == "object")
@@ -23,12 +23,12 @@ function checkValue(aPropertyListObject, aType, aValue) {
 
 function checkLazyGetterValue(aObject, aPropertyName, aType, aValue) {
   let descriptor = Object.getOwnPropertyDescriptor(aObject, aPropertyName);
-  do_check_eq(typeof(descriptor.get), "function");
-  do_check_eq(typeof(descriptor.value), "undefined");
+  Assert.equal(typeof(descriptor.get), "function");
+  Assert.equal(typeof(descriptor.value), "undefined");
   checkValue(aObject[aPropertyName], aType, aValue);
   descriptor = Object.getOwnPropertyDescriptor(aObject, aPropertyName);
-  do_check_eq(typeof(descriptor.get), "undefined");
-  do_check_neq(typeof(descriptor.value), "undefined");
+  Assert.equal(typeof(descriptor.get), "undefined");
+  Assert.notEqual(typeof(descriptor.value), "undefined");
 }
 
 function checkMainPropertyList(aPropertyListRoot) {
@@ -44,7 +44,7 @@ function checkMainPropertyList(aPropertyListRoot) {
 
   let array = aPropertyListRoot.get("Array");
   checkValue(array, PropertyListUtils.TYPE_ARRAY);
-  do_check_eq(array.length, 8);
+  Assert.equal(array.length, 8);
 
   // Test both long and short values, since binary property lists store
   // long values a little bit differently (see readDataLengthAndOffset).
@@ -68,7 +68,7 @@ function checkMainPropertyList(aPropertyListRoot) {
   // Data
   checkLazyGetterValue(array, 6, PropertyListUtils.TYPE_UINT8_ARRAY);
   let dataAsString = Array.from(array[6]).map(b => String.fromCharCode(b)).join("");
-  do_check_eq(dataAsString, "2011-12-31T11:15:33Z");
+  Assert.equal(dataAsString, "2011-12-31T11:15:33Z");
 
   // Dict
   let dict = array[7];
@@ -89,7 +89,7 @@ function readPropertyList(aFile, aCallback) {
     // Note: It is important not to run do_check_n/eq directly on Dict and array
     // objects, because it cases their toString to get invoked, doing away with
     // all the lazy getter we'd like to test later.
-    do_check_true(aPropertyListRoot !== null);
+    Assert.ok(aPropertyListRoot !== null);
     aCallback(aPropertyListRoot);
     run_next_test();
   });

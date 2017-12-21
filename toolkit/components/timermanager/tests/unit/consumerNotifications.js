@@ -279,7 +279,7 @@ const gTest8TimerCallback = {
   notify: function T8CB_notify(aTimer) {
     TESTS[8].notified = true;
     TESTS[8].notifyTime = Date.now();
-    do_execute_soon(function() {
+    executeSoon(function() {
       check_test8thru10(gTest8TimerCallback);
     });
   },
@@ -299,7 +299,7 @@ const gTest9TimerCallback = {
   notify: function T9CB_notify(aTimer) {
     TESTS[9].notified = true;
     TESTS[9].notifyTime = Date.now();
-    do_execute_soon(function() {
+    executeSoon(function() {
       check_test8thru10(gTest9TimerCallback);
     });
   },
@@ -344,7 +344,7 @@ function run_test() {
          QueryInterface(Ci.nsIObserver);
   gUTM.observe(null, "utm-test-init", "");
 
-  do_execute_soon(run_test0thru7);
+  executeSoon(run_test0thru7);
 }
 
 function end_test() {
@@ -429,7 +429,7 @@ function run_test0thru7() {
 
 function finished_test0thru7() {
   if (TESTS[4].notified && TESTS[5].notified && TESTS[6].notified && TESTS[7].notified) {
-    do_execute_soon(gNextFunc);
+    executeSoon(gNextFunc);
   }
 }
 
@@ -486,7 +486,7 @@ function check_test0thru7() {
             "no " + CATEGORY_UPDATE_TIMER + " categories should still be " +
             "registered");
 
-  do_execute_soon(run_test8thru10);
+  executeSoon(run_test8thru10);
 }
 
 function run_test8thru10() {

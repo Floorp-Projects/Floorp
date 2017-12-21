@@ -7,5 +7,5 @@ function run_test() {
   var commandLine = clClass.createInstance();
   var urlFile = do_get_file("../unit/data/test_bug410156.url");
   var uri = commandLine.resolveURI(urlFile.path);
-  do_check_eq(uri.spec, "http://www.bug410156.com/");
+  Assert.equal(uri.spec, "http://www.bug410156.com/");
 }

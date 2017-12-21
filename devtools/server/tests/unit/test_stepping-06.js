@@ -44,26 +44,26 @@ function test_simple_stepping() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     gThreadClient.addOneTimeListener("paused", function (event, packet) {
       // Check that the return value is 10.
-      do_check_eq(packet.type, "paused");
-      do_check_eq(packet.frame.where.line, gDebuggee.line0 + 5);
-      do_check_eq(packet.why.type, "resumeLimit");
-      do_check_eq(packet.why.frameFinished.return, 10);
+      Assert.equal(packet.type, "paused");
+      Assert.equal(packet.frame.where.line, gDebuggee.line0 + 5);
+      Assert.equal(packet.why.type, "resumeLimit");
+      Assert.equal(packet.why.frameFinished.return, 10);
 
       gThreadClient.addOneTimeListener("paused", function (event, packet) {
         gThreadClient.addOneTimeListener("paused", function (event, packet) {
           // Check that the return value is undefined.
-          do_check_eq(packet.type, "paused");
-          do_check_eq(packet.frame.where.line, gDebuggee.line0 + 8);
-          do_check_eq(packet.why.type, "resumeLimit");
-          do_check_eq(packet.why.frameFinished.return.type, "undefined");
+          Assert.equal(packet.type, "paused");
+          Assert.equal(packet.frame.where.line, gDebuggee.line0 + 8);
+          Assert.equal(packet.why.type, "resumeLimit");
+          Assert.equal(packet.why.frameFinished.return.type, "undefined");
 
           gThreadClient.addOneTimeListener("paused", function (event, packet) {
             gThreadClient.addOneTimeListener("paused", function (event, packet) {
               // Check that the exception was thrown.
-              do_check_eq(packet.type, "paused");
-              do_check_eq(packet.frame.where.line, gDebuggee.line0 + 11);
-              do_check_eq(packet.why.type, "resumeLimit");
-              do_check_eq(packet.why.frameFinished.throw, "ah");
+              Assert.equal(packet.type, "paused");
+              Assert.equal(packet.frame.where.line, gDebuggee.line0 + 11);
+              Assert.equal(packet.why.type, "resumeLimit");
+              Assert.equal(packet.why.frameFinished.throw, "ah");
 
               gThreadClient.resume(function () {
                 gClient.close().then(gCallback);

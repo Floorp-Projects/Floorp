@@ -71,8 +71,8 @@ function run_test() {
 
 add_test(function test_initial_state() {
     _("Verify initial state");
-    do_check_false(!!globalBrowseridManager._token);
-    do_check_false(globalBrowseridManager.hasValidToken());
+    Assert.ok(!globalBrowseridManager._token);
+    Assert.ok(!globalBrowseridManager.hasValidToken());
     run_next_test();
   }
 );
@@ -81,8 +81,8 @@ add_task(async function test_initialializeWithCurrentIdentity() {
     _("Verify start after initializeWithCurrentIdentity");
     globalBrowseridManager.initializeWithCurrentIdentity();
     await globalBrowseridManager.whenReadyToAuthenticate.promise;
-    do_check_true(!!globalBrowseridManager._token);
-    do_check_true(globalBrowseridManager.hasValidToken());
+    Assert.ok(!!globalBrowseridManager._token);
+    Assert.ok(globalBrowseridManager.hasValidToken());
     Assert.deepEqual(getLoginTelemetryScalar(), {SUCCESS: 1});
   }
 );
@@ -129,10 +129,10 @@ add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
     await Assert.rejects(browseridManager.whenReadyToAuthenticate.promise,
                      "should reject due to an auth error");
 
-    do_check_true(signCertificateCalled);
-    do_check_true(accountStatusCalled);
-    do_check_false(browseridManager._token);
-    do_check_false(browseridManager.hasValidToken());
+    Assert.ok(signCertificateCalled);
+    Assert.ok(accountStatusCalled);
+    Assert.ok(!browseridManager._token);
+    Assert.ok(!browseridManager.hasValidToken());
     Assert.deepEqual(getLoginTelemetryScalar(), {REJECTED: 1});
 });
 
@@ -146,25 +146,25 @@ add_task(async function test_initialializeWithNoKeys() {
 
     await globalBrowseridManager.initializeWithCurrentIdentity();
     await globalBrowseridManager.whenReadyToAuthenticate.promise;
-    do_check_eq(Status.login, LOGIN_SUCCEEDED, "login succeeded even without keys");
-    do_check_false(globalBrowseridManager._canFetchKeys(), "_canFetchKeys reflects lack of keys");
-    do_check_eq(globalBrowseridManager._token, null, "we don't have a token");
+    Assert.equal(Status.login, LOGIN_SUCCEEDED, "login succeeded even without keys");
+    Assert.ok(!globalBrowseridManager._canFetchKeys(), "_canFetchKeys reflects lack of keys");
+    Assert.equal(globalBrowseridManager._token, null, "we don't have a token");
 });
 
 add_test(function test_getResourceAuthenticator() {
     _("BrowserIDManager supplies a Resource Authenticator callback which returns a Hawk header.");
     configureFxAccountIdentity(globalBrowseridManager);
     let authenticator = globalBrowseridManager.getResourceAuthenticator();
-    do_check_true(!!authenticator);
+    Assert.ok(!!authenticator);
     let req = {uri: CommonUtils.makeURI(
       "https://example.net/somewhere/over/the/rainbow"),
                method: "GET"};
     let output = authenticator(req, "GET");
-    do_check_true("headers" in output);
-    do_check_true("authorization" in output.headers);
-    do_check_true(output.headers.authorization.startsWith("Hawk"));
+    Assert.ok("headers" in output);
+    Assert.ok("authorization" in output.headers);
+    Assert.ok(output.headers.authorization.startsWith("Hawk"));
     _("Expected internal state after successful call.");
-    do_check_eq(globalBrowseridManager._token.uid, globalIdentityConfig.fxaccount.token.uid);
+    Assert.equal(globalBrowseridManager._token.uid, globalIdentityConfig.fxaccount.token.uid);
     run_next_test();
   }
 );
@@ -193,23 +193,23 @@ add_test(function test_resourceAuthenticatorSkew() {
   fxaClient.hawk = hawkClient;
 
   // Sanity check
-  do_check_eq(hawkClient.now(), now);
-  do_check_eq(hawkClient.localtimeOffsetMsec, localtimeOffsetMsec);
+  Assert.equal(hawkClient.now(), now);
+  Assert.equal(hawkClient.localtimeOffsetMsec, localtimeOffsetMsec);
 
   // Properly picked up by the client
-  do_check_eq(fxaClient.now(), now);
-  do_check_eq(fxaClient.localtimeOffsetMsec, localtimeOffsetMsec);
+  Assert.equal(fxaClient.now(), now);
+  Assert.equal(fxaClient.localtimeOffsetMsec, localtimeOffsetMsec);
 
   let fxa = new MockFxAccounts();
   fxa.internal._now_is = now;
   fxa.internal.fxAccountsClient = fxaClient;
 
   // Picked up by the signed-in user module
-  do_check_eq(fxa.internal.now(), now);
-  do_check_eq(fxa.internal.localtimeOffsetMsec, localtimeOffsetMsec);
+  Assert.equal(fxa.internal.now(), now);
+  Assert.equal(fxa.internal.localtimeOffsetMsec, localtimeOffsetMsec);
 
-  do_check_eq(fxa.now(), now);
-  do_check_eq(fxa.localtimeOffsetMsec, localtimeOffsetMsec);
+  Assert.equal(fxa.now(), now);
+  Assert.equal(fxa.localtimeOffsetMsec, localtimeOffsetMsec);
 
   // Mocks within mocks...
   configureFxAccountIdentity(browseridManager, globalIdentityConfig);
@@ -219,12 +219,12 @@ add_test(function test_resourceAuthenticatorSkew() {
 
   browseridManager._fxaService = fxa;
 
-  do_check_eq(browseridManager._fxaService.internal.now(), now);
-  do_check_eq(browseridManager._fxaService.internal.localtimeOffsetMsec,
+  Assert.equal(browseridManager._fxaService.internal.now(), now);
+  Assert.equal(browseridManager._fxaService.internal.localtimeOffsetMsec,
       localtimeOffsetMsec);
 
-  do_check_eq(browseridManager._fxaService.now(), now);
-  do_check_eq(browseridManager._fxaService.localtimeOffsetMsec,
+  Assert.equal(browseridManager._fxaService.now(), now);
+  Assert.equal(browseridManager._fxaService.localtimeOffsetMsec,
       localtimeOffsetMsec);
 
   let request = new Resource("https://example.net/i/like/pie/");
@@ -232,12 +232,12 @@ add_test(function test_resourceAuthenticatorSkew() {
   let output = authenticator(request, "GET");
   dump("output" + JSON.stringify(output));
   let authHeader = output.headers.authorization;
-  do_check_true(authHeader.startsWith("Hawk"));
+  Assert.ok(authHeader.startsWith("Hawk"));
 
   // Skew correction is applied in the header and we're within the two-minute
   // window.
-  do_check_eq(getTimestamp(authHeader), now - 12 * HOUR_MS);
-  do_check_true(
+  Assert.equal(getTimestamp(authHeader), now - 12 * HOUR_MS);
+  Assert.ok(
       (getTimestampDelta(authHeader, now) - 12 * HOUR_MS) < 2 * MINUTE_MS);
 
   run_next_test();
@@ -272,19 +272,19 @@ add_test(function test_RESTResourceAuthenticatorSkew() {
 
   browseridManager._fxaService = fxa;
 
-  do_check_eq(browseridManager._fxaService.internal.now(), now);
+  Assert.equal(browseridManager._fxaService.internal.now(), now);
 
   let request = new Resource("https://example.net/i/like/pie/");
   let authenticator = browseridManager.getResourceAuthenticator();
   let output = authenticator(request, "GET");
   dump("output" + JSON.stringify(output));
   let authHeader = output.headers.authorization;
-  do_check_true(authHeader.startsWith("Hawk"));
+  Assert.ok(authHeader.startsWith("Hawk"));
 
   // Skew correction is applied in the header and we're within the two-minute
   // window.
-  do_check_eq(getTimestamp(authHeader), now - 12 * HOUR_MS);
-  do_check_true(
+  Assert.equal(getTimestamp(authHeader), now - 12 * HOUR_MS);
+  Assert.ok(
       (getTimestampDelta(authHeader, now) - 12 * HOUR_MS) < 2 * MINUTE_MS);
 
   run_next_test();
@@ -329,7 +329,7 @@ add_test(function test_tokenExpiration() {
     configureFxAccountIdentity(bimExp, globalIdentityConfig);
 
     let authenticator = bimExp.getResourceAuthenticator();
-    do_check_true(!!authenticator);
+    Assert.ok(!!authenticator);
     let req = {uri: CommonUtils.makeURI(
       "https://example.net/somewhere/over/the/rainbow"),
                method: "GET"};
@@ -343,9 +343,9 @@ add_test(function test_tokenExpiration() {
       },
       writable: true,
     });
-    do_check_true(bimExp._token.expiration < bimExp._now());
+    Assert.ok(bimExp._token.expiration < bimExp._now());
     _("... means BrowserIDManager knows to re-fetch it on the next call.");
-    do_check_false(bimExp.hasValidToken());
+    Assert.ok(!bimExp.hasValidToken());
     run_next_test();
   }
 );
@@ -372,7 +372,7 @@ add_test(function test_sha256() {
   ];
   let bidUser = new BrowserIDManager();
   for (let [input, output] of vectors) {
-    do_check_eq(CommonUtils.bytesAsHex(bidUser._sha256(input)), output);
+    Assert.equal(CommonUtils.bytesAsHex(bidUser._sha256(input)), output);
   }
   run_next_test();
 });
@@ -384,7 +384,7 @@ add_test(function test_computeXClientStateHeader() {
   let bidUser = new BrowserIDManager();
   let header = bidUser._computeXClientState(kB);
 
-  do_check_eq(header, "6ae94683571c7a7c54dab4700aa3995f");
+  Assert.equal(header, "6ae94683571c7a7c54dab4700aa3995f");
   run_next_test();
 });
 
@@ -477,11 +477,11 @@ add_task(async function test_refreshCertificateOn401() {
   await browseridManager.initializeWithCurrentIdentity();
   await browseridManager.whenReadyToAuthenticate.promise;
 
-  do_check_eq(getCertCount, 2);
-  do_check_true(didReturn401);
-  do_check_true(didReturn200);
-  do_check_true(browseridManager._token);
-  do_check_true(browseridManager.hasValidToken());
+  Assert.equal(getCertCount, 2);
+  Assert.ok(didReturn401);
+  Assert.ok(didReturn200);
+  Assert.ok(browseridManager._token);
+  Assert.ok(browseridManager.hasValidToken());
 });
 
 

@@ -160,23 +160,23 @@ add_task(async function test_annos_expire_policy() {
 
   ["expire_days", "expire_weeks", "expire_months"].forEach(function(aAnno) {
     let pages = as.getPagesWithAnnotation(aAnno);
-    do_check_eq(pages.length, 0);
+    Assert.equal(pages.length, 0);
   });
 
   ["expire_days", "expire_weeks", "expire_months"].forEach(function(aAnno) {
     let items = as.getItemsWithAnnotation(aAnno);
-    do_check_eq(items.length, 0);
+    Assert.equal(items.length, 0);
   });
 
   ["persist_days", "persist_lm_days", "persist_weeks", "persist_lm_weeks",
    "persist_months", "persist_lm_months"].forEach(function(aAnno) {
     let pages = as.getPagesWithAnnotation(aAnno);
-    do_check_eq(pages.length, 10);
+    Assert.equal(pages.length, 10);
   });
 
   ["persist_days", "persist_lm_days", "persist_weeks", "persist_lm_weeks",
    "persist_months", "persist_lm_months"].forEach(function(aAnno) {
     let items = as.getItemsWithAnnotation(aAnno);
-    do_check_eq(items.length, 5);
+    Assert.equal(items.length, 5);
   });
 });

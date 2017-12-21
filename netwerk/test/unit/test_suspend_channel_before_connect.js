@@ -24,7 +24,7 @@ function TestServer() {
 
 TestServer.prototype = {
   onSocketAccepted: function(socket, trans) {
-    do_check_true(false, "Socket should not have tried to connect!");
+    Assert.ok(false, "Socket should not have tried to connect!");
   },
 
   onStopListening: function(socket) {
@@ -75,7 +75,7 @@ var listener = {
   },
 
   onStopRequest: function test_onStopR(request, ctx, status) {
-    do_execute_soon(run_next_test);
+    executeSoon(run_next_test);
   }
 };
 
@@ -94,7 +94,7 @@ add_test(function testNoConnectChannelCanceledEarly() {
   });
   chan.asyncOpen2(listener);
 
-  do_register_cleanup(function(){ serv.stop(); });
+  registerCleanupFunction(function(){ serv.stop(); });
 });
 
 function run_test() {

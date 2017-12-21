@@ -29,7 +29,7 @@ function run_test()
 
   var lci = LoadContextInfo.default;
   var testingInterface = get_cache_service().QueryInterface(Ci.nsICacheTesting);
-  do_check_true(testingInterface);
+  Assert.ok(testingInterface);
 
   var mc = new MultipleCallbacks(1, function() {
     // (2)
@@ -40,7 +40,7 @@ function run_test()
     // entries that are obviously unreferenced.  Yeah, I know, this is wacky...
     gc();
     gc();
-    do_execute_soon(() => {
+    executeSoon(() => {
       gc();
       gc();
       log_("purging");

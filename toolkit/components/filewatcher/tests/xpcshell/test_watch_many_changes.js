@@ -42,7 +42,7 @@ add_task(async function test_fill_notification_buffer() {
 
   // Initialise the change callback.
   let changeCallback = function(changed) {
-      do_print(changed + " has changed.");
+      info(changed + " has changed.");
 
       detectedChanges += 1;
 

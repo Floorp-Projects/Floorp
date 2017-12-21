@@ -14,7 +14,7 @@ const kExtensionID = "test@example.com";
 const URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";
 
 add_task(async function test_addEngineWithDetails() {
-  do_check_false(Services.search.isInitialized);
+  Assert.ok(!Services.search.isInitialized);
 
   Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF)
           .setBoolPref("reset.enabled", true);
@@ -33,10 +33,10 @@ add_task(async function test_addEngineWithDetails() {
   // An engine added with addEngineWithDetails should have a load path, even
   // though we can't point to a specific file.
   let engine = Services.search.getEngineByName(kSearchEngineID);
-  do_check_eq(engine.wrappedJSObject._loadPath, "[other]addEngineWithDetails:" + kExtensionID);
-  do_check_eq(engine.description, kDescription);
-  do_check_eq(engine.iconURI.spec, kIconURL);
-  do_check_eq(engine.alias, kAlias);
+  Assert.equal(engine.wrappedJSObject._loadPath, "[other]addEngineWithDetails:" + kExtensionID);
+  Assert.equal(engine.description, kDescription);
+  Assert.equal(engine.iconURI.spec, kIconURL);
+  Assert.equal(engine.alias, kAlias);
 
   // Set the engine as default; this should set a loadPath verification hash,
   // which should ensure we don't show the search reset prompt.
@@ -45,9 +45,9 @@ add_task(async function test_addEngineWithDetails() {
   let expectedURL = kSearchEngineURL.replace("{searchTerms}", kSearchTerm);
   let submission =
     Services.search.currentEngine.getSubmission(kSearchTerm, null, "searchbar");
-  do_check_eq(submission.uri.spec, expectedURL);
+  Assert.equal(submission.uri.spec, expectedURL);
   let expectedSuggestURL = kSearchSuggestURL.replace("{searchTerms}", kSearchTerm);
   let submissionSuggest =
     Services.search.currentEngine.getSubmission(kSearchTerm, URLTYPE_SUGGEST_JSON);
-  do_check_eq(submissionSuggest.uri.spec, expectedSuggestURL);
+  Assert.equal(submissionSuggest.uri.spec, expectedSuggestURL);
 });

@@ -17,10 +17,10 @@ function reset() {
 }
 
 function check(aHadCharset, aCharset, aCharsetStart, aCharsetEnd) {
-  do_check_eq(aHadCharset, hadCharset);
-  do_check_eq(aCharset, charset.value);
-  do_check_eq(aCharsetStart, charsetStart.value);
-  do_check_eq(aCharsetEnd, charsetEnd.value);
+  Assert.equal(aHadCharset, hadCharset);
+  Assert.equal(aCharset, charset.value);
+  Assert.equal(aCharsetStart, charsetStart.value);
+  Assert.equal(aCharsetEnd, charsetEnd.value);
 }
 
 function run_test() {

@@ -42,16 +42,16 @@ add_task(async function() {
 
   let addon = await promiseAddonByID(ID);
 
-  do_check_neq(addon, null);
-  do_check_eq(addon.version, "1.0");
-  do_check_eq(addon.name, "Test Bootstrap 1 (proxy)");
-  do_check_true(addon.isCompatible);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
-  do_check_eq(addon.type, "extension");
-  do_check_eq(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.name, "Test Bootstrap 1 (proxy)");
+  Assert.ok(addon.isCompatible);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.type, "extension");
+  Assert.equal(addon.signedState, mozinfo.addon_signing ? AddonManager.SIGNEDSTATE_PRIVILEGED : AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
-  do_check_true(proxyFile.exists());
+  Assert.ok(proxyFile.exists());
 
   addon.uninstall();
   unpackedAddon.remove(true);
@@ -95,9 +95,9 @@ add_task(async function() {
   BootstrapMonitor.checkAddonNotStarted(ID, "1.0");
 
   let addon = await promiseAddonByID(ID);
-  do_check_eq(addon, null);
+  Assert.equal(addon, null);
 
-  do_check_true(proxyFile.exists());
+  Assert.ok(proxyFile.exists());
 
   unpackedAddon.remove(true);
   proxyFile.remove(true);

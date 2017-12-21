@@ -44,7 +44,7 @@ function run_test() {
     loadUsingSystemPrincipal: true
   });
 
-  do_check_null(aboutUnsafeChan.owner, "URI_SAFE_FOR_UNTRUSTED_CONTENT channel has no owner");
+  Assert.equal(null, aboutUnsafeChan.owner, "URI_SAFE_FOR_UNTRUSTED_CONTENT channel has no owner");
 
   registrar.unregisterFactory(classID, factory);
 }

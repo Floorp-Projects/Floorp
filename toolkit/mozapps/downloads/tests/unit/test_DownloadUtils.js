@@ -12,13 +12,13 @@ function _(str) {
 
 function testConvertByteUnits(aBytes, aValue, aUnit) {
   let [value, unit] = DownloadUtils.convertByteUnits(aBytes);
-  do_check_eq(value, aValue);
-  do_check_eq(unit, aUnit);
+  Assert.equal(value, aValue);
+  Assert.equal(unit, aUnit);
 }
 
 function testTransferTotal(aCurrBytes, aMaxBytes, aTransfer) {
   let transfer = DownloadUtils.getTransferTotal(aCurrBytes, aMaxBytes);
-  do_check_eq(transfer, aTransfer);
+  Assert.equal(transfer, aTransfer);
 }
 
 // Get the em-dash character because typing it directly here doesn't work :(
@@ -40,13 +40,13 @@ function testStatus(aFunc, aCurr, aMore, aRate, aTest) {
   }
 
   // Make sure the status text matches
-  do_check_eq(status, _(aTest[0].replace(/--/, gDash)));
+  Assert.equal(status, _(aTest[0].replace(/--/, gDash)));
 
   // Make sure the lastSeconds matches
   if (last == Infinity)
-    do_check_eq(last, aTest[1]);
+    Assert.equal(last, aTest[1]);
   else
-    do_check_true(Math.abs(last - aTest[1]) < .1);
+    Assert.ok(Math.abs(last - aTest[1]) < .1);
 }
 
 function testURI(aURI, aDisp, aHost) {
@@ -55,8 +55,8 @@ function testURI(aURI, aDisp, aHost) {
   let [disp, host] = DownloadUtils.getURIHost(aURI);
 
   // Make sure we have the right display host and full host
-  do_check_eq(disp, aDisp);
-  do_check_eq(host, aHost);
+  Assert.equal(disp, aDisp);
+  Assert.equal(host, aHost);
 }
 
 
@@ -64,7 +64,7 @@ function testGetReadableDates(aDate, aCompactValue) {
   const now = new Date(2000, 11, 31, 11, 59, 59);
 
   let [dateCompact] = DownloadUtils.getReadableDates(aDate, now);
-  do_check_eq(dateCompact, aCompactValue);
+  Assert.equal(dateCompact, aCompactValue);
 }
 
 function testAllGetReadableDates() {
@@ -98,7 +98,7 @@ function testAllGetReadableDates() {
   let [, dateTimeFull] = DownloadUtils.getReadableDates(today_11_30);
 
   const dtOptions = { dateStyle: "long", timeStyle: "short" };
-  do_check_eq(dateTimeFull, cDtf(undefined, dtOptions).format(today_11_30));
+  Assert.equal(dateTimeFull, cDtf(undefined, dtOptions).format(today_11_30));
 }
 
 function run_test() {

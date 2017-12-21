@@ -25,7 +25,7 @@ function BadRedirectHandler(metadata, response)
 
 function checkFailed(request, buffer)
 {
-  do_check_eq(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
 
   httpServer.stop(do_test_finished);
 }

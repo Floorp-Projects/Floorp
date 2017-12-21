@@ -180,8 +180,8 @@ function getXPCOMStatusFromNSS(statusNSS) {
 function checkCertErrorGenericAtTime(certdb, cert, expectedError, usage, time,
                                      /* optional */ hasEVPolicy,
                                      /* optional */ hostname) {
-  do_print(`cert cn=${cert.commonName}`);
-  do_print(`cert issuer cn=${cert.issuerCommonName}`);
+  info(`cert cn=${cert.commonName}`);
+  info(`cert issuer cn=${cert.issuerCommonName}`);
   let verifiedChain = {};
   let error = certdb.verifyCertAtTime(cert, usage, NO_FLAGS, hostname, time,
                                       verifiedChain, hasEVPolicy || {});
@@ -194,8 +194,8 @@ function checkCertErrorGenericAtTime(certdb, cert, expectedError, usage, time,
 function checkCertErrorGeneric(certdb, cert, expectedError, usage,
                                /* optional */ hasEVPolicy,
                                /* optional */ hostname) {
-  do_print(`cert cn=${cert.commonName}`);
-  do_print(`cert issuer cn=${cert.issuerCommonName}`);
+  info(`cert cn=${cert.commonName}`);
+  info(`cert issuer cn=${cert.issuerCommonName}`);
   let verifiedChain = {};
   let error = certdb.verifyCertNow(cert, usage, NO_FLAGS, hostname,
                                    verifiedChain, hasEVPolicy || {});
@@ -455,7 +455,7 @@ function add_connection_test(aHost, aExpectedResult,
       aBeforeConnect();
     }
     connectTo(aHost).then(function(conn) {
-      do_print("handling " + aHost);
+      info("handling " + aHost);
       let expectedNSResult = aExpectedResult == PRErrorCodeSuccess
                            ? Cr.NS_OK
                            : getXPCOMStatusFromNSS(aExpectedResult);
@@ -523,7 +523,7 @@ function _setupTLSServerTest(serverBinName, certsPath) {
         aResponse.setHeader("Content-Type", "text/plain");
         let responseBody = "OK!";
         aResponse.bodyOutputStream.write(responseBody, responseBody.length);
-        do_execute_soon(function() {
+        executeSoon(function() {
           httpServer.stop(run_next_test);
         });
       });
@@ -538,7 +538,7 @@ function _setupTLSServerTest(serverBinName, certsPath) {
   // Using "sql:" causes the SQL DB to be used so we can run tests on Android.
   process.run(false, [ "sql:" + certDir.path ], 1);
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     process.kill();
   });
 }
@@ -563,7 +563,7 @@ function generateOCSPResponses(ocspRespArray, nssDBlocation) {
     argArray.push(ocspRespArray[i][2]); // extranickname
     argArray.push(ocspRespArray[i][3]); // thisUpdate skew
     argArray.push(filename);
-    do_print("argArray = " + argArray);
+    info("argArray = " + argArray);
 
     let process = Cc["@mozilla.org/process/util;1"]
                     .createInstance(Ci.nsIProcess);
@@ -631,7 +631,7 @@ function startOCSPResponder(serverPort, identity, nssDBLocation,
   let httpServer = new HttpServer();
   httpServer.registerPrefixHandler("/",
     function handleServerCallback(aRequest, aResponse) {
-      do_print("got request for: " + aRequest.path);
+      info("got request for: " + aRequest.path);
       let basePath = aRequest.path.slice(1).split("/")[0];
       if (expectedBasePaths.length >= 1) {
         Assert.equal(basePath, expectedBasePaths.shift(),
@@ -703,7 +703,7 @@ FakeSSLStatus.prototype = {
 function add_cert_override(aHost, aExpectedBits, aExpectedErrorRegexp,
                            aSecurityInfo) {
   if (aExpectedErrorRegexp) {
-    do_print(aSecurityInfo.errorMessage);
+    info(aSecurityInfo.errorMessage);
     Assert.ok(aExpectedErrorRegexp.test(aSecurityInfo.errorMessage),
               "Actual error message should match expected error regexp");
   }
@@ -856,7 +856,7 @@ function loadPKCS11TestModule(expectModuleUnloadToFail) {
 
   let pkcs11ModuleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
                          .getService(Ci.nsIPKCS11ModuleDB);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     try {
       pkcs11ModuleDB.deleteModule("PKCS11 Test Module");
     } catch (e) {

@@ -597,7 +597,7 @@ add_task(async function test_pref_observer() {
       };
 
       let gMockCrs = MockRegistrar.register("@mozilla.org/toolkit/crash-reporter;1", crs);
-      do_register_cleanup(function() {
+      registerCleanupFunction(function() {
         MockRegistrar.unregister(gMockCrs);
       });
 

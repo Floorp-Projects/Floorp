@@ -1,7 +1,7 @@
 "use strict";
-const {FaviconFeed} = require("lib/FaviconFeed.jsm");
-const {GlobalOverrider} = require("test/unit/utils");
-const {actionTypes: at} = require("common/Actions.jsm");
+import {actionTypes as at} from "common/Actions.jsm";
+import {FaviconFeed} from "lib/FaviconFeed.jsm";
+import {GlobalOverrider} from "test/unit/utils";
 
 const FAKE_ENDPOINT = "https://foo.com/";
 

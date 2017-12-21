@@ -169,12 +169,12 @@ function run_test() {
   // in doTestFinish will prevent writing the update xml files during
   // shutdown.
   gUpdateManager.cleanupActiveUpdate();
-  do_execute_soon(waitForUpdateXMLFiles);
+  executeSoon(waitForUpdateXMLFiles);
 }
 
 /**
  * Called after the call to waitForUpdateXMLFiles finishes.
  */
 function waitForUpdateXMLFilesFinished() {
-  do_execute_soon(doTestFinish);
+  executeSoon(doTestFinish);
 }

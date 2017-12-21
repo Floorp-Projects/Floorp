@@ -19,7 +19,7 @@ function run_test() {
 
 add_task(async function test_expiration_origin_threshold() {
   let db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => db.drop().then(_ => db.close()));
+  registerCleanupFunction(() => db.drop().then(_ => db.close()));
 
   await db.put({
     channelID: 'eb33fc90-c883-4267-b5cb-613969e8e349',

@@ -38,27 +38,27 @@ function test_object_grip() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     let args = packet.frame.arguments;
 
-    do_check_eq(args[0].class, "Object");
+    Assert.equal(args[0].class, "Object");
 
     let objClient = gThreadClient.pauseGrip(args[0]);
     objClient.getProperty("x", function (response) {
-      do_check_eq(response.descriptor.configurable, true);
-      do_check_eq(response.descriptor.enumerable, true);
-      do_check_eq(response.descriptor.writable, true);
-      do_check_eq(response.descriptor.value, 10);
+      Assert.equal(response.descriptor.configurable, true);
+      Assert.equal(response.descriptor.enumerable, true);
+      Assert.equal(response.descriptor.writable, true);
+      Assert.equal(response.descriptor.value, 10);
 
       objClient.getProperty("y", function (response) {
-        do_check_eq(response.descriptor.configurable, true);
-        do_check_eq(response.descriptor.enumerable, true);
-        do_check_eq(response.descriptor.writable, true);
-        do_check_eq(response.descriptor.value, "kaiju");
+        Assert.equal(response.descriptor.configurable, true);
+        Assert.equal(response.descriptor.enumerable, true);
+        Assert.equal(response.descriptor.writable, true);
+        Assert.equal(response.descriptor.value, "kaiju");
 
         objClient.getProperty("a", function (response) {
-          do_check_eq(response.descriptor.configurable, true);
-          do_check_eq(response.descriptor.enumerable, true);
-          do_check_eq(response.descriptor.get.type, "object");
-          do_check_eq(response.descriptor.get.class, "Function");
-          do_check_eq(response.descriptor.set.type, "undefined");
+          Assert.equal(response.descriptor.configurable, true);
+          Assert.equal(response.descriptor.enumerable, true);
+          Assert.equal(response.descriptor.get.type, "object");
+          Assert.equal(response.descriptor.get.class, "Function");
+          Assert.equal(response.descriptor.set.type, "undefined");
 
           gThreadClient.resume(function () {
             gClient.close().then(gCallback);

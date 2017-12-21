@@ -5,8 +5,8 @@ function run_test()
     return parseInt((new Date()).getTime() / 1000);
   }
   function do_check_time(t, min, max) {
-    do_check_true(t >= min);
-    do_check_true(t <= max);
+    Assert.ok(t >= min);
+    Assert.ok(t <= max);
   }
 
   var timeStart = NowSeconds();
@@ -15,7 +15,7 @@ function run_test()
     new OpenCallback(NEW, "m", "d", function(entry) {
 
       var firstOpen = NowSeconds();
-      do_check_eq(entry.fetchCount, 1);
+      Assert.equal(entry.fetchCount, 1);
       do_check_time(entry.lastFetched, timeStart, firstOpen);
       do_check_time(entry.lastModified, timeStart, firstOpen);
 
@@ -24,7 +24,7 @@ function run_test()
           new OpenCallback(NORMAL, "m", "d", function(entry) {
 
             var secondOpen = NowSeconds();
-            do_check_eq(entry.fetchCount, 2);
+            Assert.equal(entry.fetchCount, 2);
             do_check_time(entry.lastFetched, firstOpen, secondOpen);
             do_check_time(entry.lastModified, timeStart, firstOpen);
 

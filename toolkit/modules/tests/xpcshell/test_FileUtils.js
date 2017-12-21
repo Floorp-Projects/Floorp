@@ -21,12 +21,12 @@ const gProfD = do_get_profile();
 
 add_test(function test_getFile() {
   let file = FileUtils.getFile("ProfD", ["foobar"]);
-  do_check_true(file instanceof Components.interfaces.nsIFile);
-  do_check_false(file.exists());
+  Assert.ok(file instanceof Components.interfaces.nsIFile);
+  Assert.ok(!file.exists());
 
   let other = gProfD.clone();
   other.append("foobar");
-  do_check_true(file.equals(other));
+  Assert.ok(file.equals(other));
 
   run_next_test();
 });
@@ -41,28 +41,28 @@ add_test(function test_getFile_nonexistentDir() {
 
 add_test(function test_getFile_createDirs() {
   let file = FileUtils.getFile("ProfD", ["a", "b", "foobar"]);
-  do_check_true(file instanceof Components.interfaces.nsIFile);
-  do_check_false(file.exists());
+  Assert.ok(file instanceof Components.interfaces.nsIFile);
+  Assert.ok(!file.exists());
 
   let other = gProfD.clone();
   other.append("a");
-  do_check_true(other.isDirectory());
+  Assert.ok(other.isDirectory());
   other.append("b");
-  do_check_true(other.isDirectory());
+  Assert.ok(other.isDirectory());
   other.append("foobar");
-  do_check_true(file.equals(other));
+  Assert.ok(file.equals(other));
 
   run_next_test();
 });
 
 add_test(function test_getDir() {
   let dir = FileUtils.getDir("ProfD", ["foodir"]);
-  do_check_true(dir instanceof Components.interfaces.nsIFile);
-  do_check_false(dir.exists());
+  Assert.ok(dir instanceof Components.interfaces.nsIFile);
+  Assert.ok(!dir.exists());
 
   let other = gProfD.clone();
   other.append("foodir");
-  do_check_true(dir.equals(other));
+  Assert.ok(dir.equals(other));
 
   run_next_test();
 });
@@ -77,16 +77,16 @@ add_test(function test_getDir_nonexistentDir() {
 
 add_test(function test_getDir_shouldCreate() {
   let dir = FileUtils.getDir("ProfD", ["c", "d", "foodir"], true);
-  do_check_true(dir instanceof Components.interfaces.nsIFile);
-  do_check_true(dir.exists());
+  Assert.ok(dir instanceof Components.interfaces.nsIFile);
+  Assert.ok(dir.exists());
 
   let other = gProfD.clone();
   other.append("c");
-  do_check_true(other.isDirectory());
+  Assert.ok(other.isDirectory());
   other.append("d");
-  do_check_true(other.isDirectory());
+  Assert.ok(other.isDirectory());
   other.append("foodir");
-  do_check_true(dir.equals(other));
+  Assert.ok(dir.equals(other));
 
   run_next_test();
 });
@@ -94,7 +94,7 @@ add_test(function test_getDir_shouldCreate() {
 var openFileOutputStream_defaultFlags = function(aKind, aFileName) {
   let file = FileUtils.getFile("ProfD", [aFileName]);
   let fos;
-  do_check_true(aKind == "atomic" || aKind == "safe" || aKind == "");
+  Assert.ok(aKind == "atomic" || aKind == "safe" || aKind == "");
   if (aKind == "atomic") {
     fos = FileUtils.openAtomicFileOutputStream(file);
   } else if (aKind == "safe") {
@@ -102,26 +102,26 @@ var openFileOutputStream_defaultFlags = function(aKind, aFileName) {
   } else {
     fos = FileUtils.openFileOutputStream(file);
   }
-  do_check_true(fos instanceof Components.interfaces.nsIFileOutputStream);
+  Assert.ok(fos instanceof Components.interfaces.nsIFileOutputStream);
   if (aKind == "atomic" || aKind == "safe") {
-    do_check_true(fos instanceof Components.interfaces.nsISafeOutputStream);
+    Assert.ok(fos instanceof Components.interfaces.nsISafeOutputStream);
   }
 
   // FileUtils.openFileOutputStream or FileUtils.openAtomicFileOutputStream()
   // or FileUtils.openSafeFileOutputStream() opens the stream with DEFER_OPEN
   // which means the file will not be open until we write to it.
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
 
   let data = "test_default_flags";
   fos.write(data, data.length);
-  do_check_true(file.exists());
+  Assert.ok(file.exists());
 
   // No nsIXULRuntime in xpcshell, so use this trick to determine whether we're
   // on Windows.
   if ("@mozilla.org/windows-registry-key;1" in Components.classes) {
-    do_check_eq(file.permissions, 0o666);
+    Assert.equal(file.permissions, 0o666);
   } else {
-    do_check_eq(file.permissions, FileUtils.PERMS_FILE);
+    Assert.equal(file.permissions, FileUtils.PERMS_FILE);
   }
 
   run_next_test();
@@ -130,7 +130,7 @@ var openFileOutputStream_defaultFlags = function(aKind, aFileName) {
 var openFileOutputStream_modeFlags = function(aKind, aFileName) {
   let file = FileUtils.getFile("ProfD", [aFileName]);
   let fos;
-  do_check_true(aKind == "atomic" || aKind == "safe" || aKind == "");
+  Assert.ok(aKind == "atomic" || aKind == "safe" || aKind == "");
   if (aKind == "atomic") {
     fos = FileUtils.openAtomicFileOutputStream(file, FileUtils.MODE_WRONLY);
   } else if (aKind == "safe") {
@@ -142,7 +142,7 @@ var openFileOutputStream_modeFlags = function(aKind, aFileName) {
   do_check_throws(function() {
     fos.write(data, data.length);
   }, Components.results.NS_ERROR_FILE_NOT_FOUND);
-  do_check_false(file.exists());
+  Assert.ok(!file.exists());
 
   run_next_test();
 };
@@ -150,7 +150,7 @@ var openFileOutputStream_modeFlags = function(aKind, aFileName) {
 var closeFileOutputStream = function(aKind, aFileName) {
   let file = FileUtils.getFile("ProfD", [aFileName]);
   let fos;
-  do_check_true(aKind == "atomic" || aKind == "safe");
+  Assert.ok(aKind == "atomic" || aKind == "safe");
   if (aKind == "atomic") {
     fos = FileUtils.openAtomicFileOutputStream(file);
   } else if (aKind == "safe") {
@@ -215,8 +215,8 @@ add_test(function test_newFile() {
   let testfile = FileUtils.getFile("ProfD", ["test"]);
   let testpath = testfile.path;
   let file = new FileUtils.File(testpath);
-  do_check_true(file instanceof Components.interfaces.nsIFile);
-  do_check_true(file.equals(testfile));
-  do_check_eq(file.path, testpath);
+  Assert.ok(file instanceof Components.interfaces.nsIFile);
+  Assert.ok(file.equals(testfile));
+  Assert.equal(file.path, testpath);
   run_next_test();
 });

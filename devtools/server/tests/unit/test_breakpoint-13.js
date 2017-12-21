@@ -44,48 +44,48 @@ function test_simple_breakpoint() {
       const testCallbacks = [
         function (packet) {
           // Check that the stepping worked.
-          do_check_eq(packet.frame.where.line, gDebuggee.line0 + 5);
-          do_check_eq(packet.why.type, "resumeLimit");
+          Assert.equal(packet.frame.where.line, gDebuggee.line0 + 5);
+          Assert.equal(packet.why.type, "resumeLimit");
         },
         function (packet) {
           // Entered the foo function call frame.
-          do_check_eq(packet.frame.where.line, location.line);
-          do_check_neq(packet.why.type, "breakpoint");
-          do_check_eq(packet.why.type, "resumeLimit");
+          Assert.equal(packet.frame.where.line, location.line);
+          Assert.notEqual(packet.why.type, "breakpoint");
+          Assert.equal(packet.why.type, "resumeLimit");
         },
         function (packet) {
           // At the end of the foo function call frame.
-          do_check_eq(packet.frame.where.line, gDebuggee.line0 + 3);
-          do_check_neq(packet.why.type, "breakpoint");
-          do_check_eq(packet.why.type, "resumeLimit");
+          Assert.equal(packet.frame.where.line, gDebuggee.line0 + 3);
+          Assert.notEqual(packet.why.type, "breakpoint");
+          Assert.equal(packet.why.type, "resumeLimit");
         },
         function (packet) {
           // Check that the breakpoint wasn't the reason for this pause, but
           // that the frame is about to be popped while stepping.
-          do_check_eq(packet.frame.where.line, gDebuggee.line0 + 3);
-          do_check_neq(packet.why.type, "breakpoint");
-          do_check_eq(packet.why.type, "resumeLimit");
-          do_check_eq(packet.why.frameFinished.return.type, "undefined");
+          Assert.equal(packet.frame.where.line, gDebuggee.line0 + 3);
+          Assert.notEqual(packet.why.type, "breakpoint");
+          Assert.equal(packet.why.type, "resumeLimit");
+          Assert.equal(packet.why.frameFinished.return.type, "undefined");
         },
         function (packet) {
           // The foo function call frame was just popped from the stack.
-          do_check_eq(gDebuggee.a, 1);
-          do_check_eq(gDebuggee.b, undefined);
-          do_check_eq(packet.frame.where.line, gDebuggee.line0 + 5);
-          do_check_eq(packet.why.type, "resumeLimit");
-          do_check_eq(packet.poppedFrames.length, 1);
+          Assert.equal(gDebuggee.a, 1);
+          Assert.equal(gDebuggee.b, undefined);
+          Assert.equal(packet.frame.where.line, gDebuggee.line0 + 5);
+          Assert.equal(packet.why.type, "resumeLimit");
+          Assert.equal(packet.poppedFrames.length, 1);
         },
         function (packet) {
           // Check that the debugger statement wasn't the reason for this pause.
-          do_check_eq(packet.frame.where.line, gDebuggee.line0 + 6);
-          do_check_neq(packet.why.type, "debuggerStatement");
-          do_check_eq(packet.why.type, "resumeLimit");
+          Assert.equal(packet.frame.where.line, gDebuggee.line0 + 6);
+          Assert.notEqual(packet.why.type, "debuggerStatement");
+          Assert.equal(packet.why.type, "resumeLimit");
         },
         function (packet) {
           // Check that the debugger statement wasn't the reason for this pause.
-          do_check_eq(packet.frame.where.line, gDebuggee.line0 + 7);
-          do_check_neq(packet.why.type, "debuggerStatement");
-          do_check_eq(packet.why.type, "resumeLimit");
+          Assert.equal(packet.frame.where.line, gDebuggee.line0 + 7);
+          Assert.notEqual(packet.why.type, "debuggerStatement");
+          Assert.equal(packet.why.type, "resumeLimit");
         },
       ];
 

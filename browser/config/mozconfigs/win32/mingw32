@@ -47,17 +47,17 @@ ac_add_options --disable-webrtc # Bug 1393901
 ac_add_options --disable-maintenance-service
 
 # Find our toolchain
-CC="$TOOLTOOL_DIR/gcc/bin/i686-w64-mingw32-gcc"
-CXX="$TOOLTOOL_DIR/gcc/bin/i686-w64-mingw32-g++"
+CC="$TOOLTOOL_DIR/mingw32/bin/i686-w64-mingw32-gcc"
+CXX="$TOOLTOOL_DIR/mingw32/bin/i686-w64-mingw32-g++"
 
 HOST_CC="$TOOLTOOL_DIR/gcc/bin/gcc"
 HOST_CXX="$TOOLTOOL_DIR/gcc/bin/g++"
 
 # We want to make sure we use binutils and other binaries in the tooltool
 # package.
-mk_add_options PATH="$TOOLTOOL_DIR/gcc/bin:$TOOLTOOL_DIR/gcc/i686-w64-mingw32/bin:$TOOLTOOL_DIR/wine/bin:$TOOLTOOL_DIR/upx/bin:$TOOLTOOL_DIR/fxc2/bin:$PATH"
+mk_add_options PATH="$TOOLTOOL_DIR/gcc/bin:$TOOLTOOL_DIR/mingw32/bin:$TOOLTOOL_DIR/wine/bin:$TOOLTOOL_DIR/upx/bin:$TOOLTOOL_DIR/fxc2/bin:$PATH"
 
-LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/gcc/lib64:$TOOLTOOL_DIR/gcc/lib
+LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/gcc/lib64:$TOOLTOOL_DIR/mingw32/lib64
 mk_add_options "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
 
 # Do not include the visual studio related mozconfigs of course

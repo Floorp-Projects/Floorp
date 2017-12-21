@@ -87,22 +87,22 @@ function run_test_1() {
   startupManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "1.0");
-    do_check_true(a1.isActive);
-    do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
-    do_check_false(a1.foreignInstall);
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "1.0");
+    Assert.ok(a1.isActive);
+    Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
+    Assert.ok(!a1.foreignInstall);
 
     // Modification time should be updated when the addon is copied to the
     // profile.
     let testURI = a1.getResourceURI(TEST_UNPACKED ? "install.rdf" : "");
     let testFile = testURI.QueryInterface(Components.interfaces.nsIFileURL).file;
 
-    do_check_true(testFile.exists());
+    Assert.ok(testFile.exists());
     let difference = testFile.lastModifiedTime - Date.now();
-    do_check_true(Math.abs(difference) < MAX_TIME_DIFFERENCE);
+    Assert.ok(Math.abs(difference) < MAX_TIME_DIFFERENCE);
 
-    do_execute_soon(run_test_2);
+    executeSoon(run_test_2);
   });
 }
 
@@ -116,12 +116,12 @@ function run_test_2() {
   restartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "1.0");
-    do_check_true(a1.isActive);
-    do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "1.0");
+    Assert.ok(a1.isActive);
+    Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
 
-    do_execute_soon(run_test_3);
+    executeSoon(run_test_3);
   });
 }
 
@@ -130,13 +130,13 @@ function run_test_3() {
   restartManager("2");
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "2.0");
-    do_check_true(a1.isActive);
-    do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
-    do_check_false(a1.foreignInstall);
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "2.0");
+    Assert.ok(a1.isActive);
+    Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
+    Assert.ok(!a1.foreignInstall);
 
-    do_execute_soon(run_test_4);
+    executeSoon(run_test_4);
   });
 }
 
@@ -149,12 +149,12 @@ function run_test_4() {
   restartManager("3");
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "2.0");
-    do_check_true(a1.isActive);
-    do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "2.0");
+    Assert.ok(a1.isActive);
+    Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
 
-    do_execute_soon(run_test_5);
+    executeSoon(run_test_5);
   });
 }
 
@@ -166,9 +166,9 @@ function run_test_5() {
     restartManager();
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1_2) {
-      do_check_eq(a1_2, null);
+      Assert.equal(a1_2, null);
 
-      do_execute_soon(run_test_6);
+      executeSoon(run_test_6);
     });
   }));
 }
@@ -179,9 +179,9 @@ function run_test_6() {
   restartManager("4");
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_eq(a1, null);
+    Assert.equal(a1, null);
 
-    do_execute_soon(run_test_7);
+    executeSoon(run_test_7);
   });
 }
 
@@ -194,13 +194,13 @@ function run_test_7() {
     restartManager(2);
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-      do_check_neq(a1, null);
-      do_check_eq(a1.version, "2.0");
-      do_check_true(a1.isActive);
-      do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
+      Assert.notEqual(a1, null);
+      Assert.equal(a1.version, "2.0");
+      Assert.ok(a1.isActive);
+      Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
 
       a1.uninstall();
-      do_execute_soon(run_test_8);
+      executeSoon(run_test_8);
     });
   });
 }
@@ -216,13 +216,13 @@ function run_test_8() {
     restartManager(3);
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-      do_check_neq(a1, null);
-      do_check_eq(a1.version, "3.0");
-      do_check_true(a1.isActive);
-      do_check_eq(a1.scope, AddonManager.SCOPE_PROFILE);
+      Assert.notEqual(a1, null);
+      Assert.equal(a1.version, "3.0");
+      Assert.ok(a1.isActive);
+      Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
 
       a1.uninstall();
-      do_execute_soon(run_test_9);
+      executeSoon(run_test_9);
     });
   });
 }
@@ -239,35 +239,35 @@ function run_test_9() {
   restartManager("5");
 
   AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
-    do_check_neq(a2, null);
-    do_check_true(a2.isActive);
+    Assert.notEqual(a2, null);
+    Assert.ok(a2.isActive);
 
-    do_check_eq(getInstalledVersion(), 2);
-    do_check_eq(getActiveVersion(), 2);
+    Assert.equal(getInstalledVersion(), 2);
+    Assert.equal(getActiveVersion(), 2);
 
-    do_check_true(a2.hasResource("bootstrap.js"));
-    do_check_true(a2.hasResource("subdir/dummy.txt"));
-    do_check_true(a2.hasResource("subdir/subdir2/dummy2.txt"));
+    Assert.ok(a2.hasResource("bootstrap.js"));
+    Assert.ok(a2.hasResource("subdir/dummy.txt"));
+    Assert.ok(a2.hasResource("subdir/subdir2/dummy2.txt"));
 
     // Currently installs are unpacked if the source is a directory regardless
     // of the install.rdf property or the global preference
 
     let addonDir = profileDir.clone();
     addonDir.append("addon2@tests.mozilla.org");
-    do_check_true(addonDir.exists());
-    do_check_true(addonDir.isDirectory());
+    Assert.ok(addonDir.exists());
+    Assert.ok(addonDir.isDirectory());
     addonDir.append("subdir");
-    do_check_true(addonDir.exists());
-    do_check_true(addonDir.isDirectory());
+    Assert.ok(addonDir.exists());
+    Assert.ok(addonDir.isDirectory());
     addonDir.append("subdir2");
-    do_check_true(addonDir.exists());
-    do_check_true(addonDir.isDirectory());
+    Assert.ok(addonDir.exists());
+    Assert.ok(addonDir.isDirectory());
     addonDir.append("dummy2.txt");
-    do_check_true(addonDir.exists());
-    do_check_true(addonDir.isFile());
+    Assert.ok(addonDir.exists());
+    Assert.ok(addonDir.isFile());
 
     a2.uninstall();
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

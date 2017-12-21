@@ -31,10 +31,10 @@ var bookmarksObserver = {
        WHERE id = :item_id`
     );
     stmt.params.item_id = id;
-    do_check_true(stmt.executeStep());
-    do_check_false(stmt.getIsNull(0));
+    Assert.ok(stmt.executeStep());
+    Assert.ok(!stmt.getIsNull(0));
     do_check_valid_places_guid(stmt.row.guid);
-    do_check_eq(stmt.row.guid, guid);
+    Assert.equal(stmt.row.guid, guid);
     stmt.finalize();
   },
   onItemRemoved(id, folder, index, itemType) {
@@ -79,11 +79,11 @@ add_task(async function test_bookmarks() {
   bs.addObserver(bookmarksObserver);
 
   // test special folders
-  do_check_true(bs.placesRoot > 0);
-  do_check_true(bs.bookmarksMenuFolder > 0);
-  do_check_true(bs.tagsFolder > 0);
-  do_check_true(bs.toolbarFolder > 0);
-  do_check_true(bs.unfiledBookmarksFolder > 0);
+  Assert.ok(bs.placesRoot > 0);
+  Assert.ok(bs.bookmarksMenuFolder > 0);
+  Assert.ok(bs.tagsFolder > 0);
+  Assert.ok(bs.toolbarFolder > 0);
+  Assert.ok(bs.unfiledBookmarksFolder > 0);
 
   // test getFolderIdForItem() with bogus item id will throw
   try {
@@ -98,51 +98,51 @@ add_task(async function test_bookmarks() {
   } catch (ex) {}
 
   // test root parentage
-  do_check_eq(bs.getFolderIdForItem(bs.bookmarksMenuFolder), bs.placesRoot);
-  do_check_eq(bs.getFolderIdForItem(bs.tagsFolder), bs.placesRoot);
-  do_check_eq(bs.getFolderIdForItem(bs.toolbarFolder), bs.placesRoot);
-  do_check_eq(bs.getFolderIdForItem(bs.unfiledBookmarksFolder), bs.placesRoot);
+  Assert.equal(bs.getFolderIdForItem(bs.bookmarksMenuFolder), bs.placesRoot);
+  Assert.equal(bs.getFolderIdForItem(bs.tagsFolder), bs.placesRoot);
+  Assert.equal(bs.getFolderIdForItem(bs.toolbarFolder), bs.placesRoot);
+  Assert.equal(bs.getFolderIdForItem(bs.unfiledBookmarksFolder), bs.placesRoot);
 
   // create a folder to hold all the tests
   // this makes the tests more tolerant of changes to default_places.html
   let testRoot = bs.createFolder(root, "places bookmarks xpcshell tests",
                                  bs.DEFAULT_INDEX);
-  do_check_eq(bookmarksObserver._itemAddedId, testRoot);
-  do_check_eq(bookmarksObserver._itemAddedParent, root);
-  do_check_eq(bookmarksObserver._itemAddedIndex, bmStartIndex);
-  do_check_eq(bookmarksObserver._itemAddedURI, null);
+  Assert.equal(bookmarksObserver._itemAddedId, testRoot);
+  Assert.equal(bookmarksObserver._itemAddedParent, root);
+  Assert.equal(bookmarksObserver._itemAddedIndex, bmStartIndex);
+  Assert.equal(bookmarksObserver._itemAddedURI, null);
   let testStartIndex = 0;
 
   // test getItemIndex for folders
-  do_check_eq(bs.getItemIndex(testRoot), bmStartIndex);
+  Assert.equal(bs.getItemIndex(testRoot), bmStartIndex);
 
   // test getItemType for folders
-  do_check_eq(bs.getItemType(testRoot), bs.TYPE_FOLDER);
+  Assert.equal(bs.getItemType(testRoot), bs.TYPE_FOLDER);
 
   // insert a bookmark.
   // the time before we insert, in microseconds
   let beforeInsert = Date.now() * 1000;
-  do_check_true(beforeInsert > 0);
+  Assert.ok(beforeInsert > 0);
 
   let newId = bs.insertBookmark(testRoot, uri("http://google.com/"),
                                 bs.DEFAULT_INDEX, "");
-  do_check_eq(bookmarksObserver._itemAddedId, newId);
-  do_check_eq(bookmarksObserver._itemAddedParent, testRoot);
-  do_check_eq(bookmarksObserver._itemAddedIndex, testStartIndex);
-  do_check_true(bookmarksObserver._itemAddedURI.equals(uri("http://google.com/")));
-  do_check_eq(bs.getBookmarkURI(newId).spec, "http://google.com/");
+  Assert.equal(bookmarksObserver._itemAddedId, newId);
+  Assert.equal(bookmarksObserver._itemAddedParent, testRoot);
+  Assert.equal(bookmarksObserver._itemAddedIndex, testStartIndex);
+  Assert.ok(bookmarksObserver._itemAddedURI.equals(uri("http://google.com/")));
+  Assert.equal(bs.getBookmarkURI(newId).spec, "http://google.com/");
 
   let dateAdded = bs.getItemDateAdded(newId);
   // dateAdded can equal beforeInsert
-  do_check_true(is_time_ordered(beforeInsert, dateAdded));
+  Assert.ok(is_time_ordered(beforeInsert, dateAdded));
 
   // after just inserting, modified should not be set
   let lastModified = bs.getItemLastModified(newId);
-  do_check_eq(lastModified, dateAdded);
+  Assert.equal(lastModified, dateAdded);
 
   // The time before we set the title, in microseconds.
   let beforeSetTitle = Date.now() * 1000;
-  do_check_true(beforeSetTitle >= beforeInsert);
+  Assert.ok(beforeSetTitle >= beforeInsert);
 
   // Workaround possible VM timers issues moving lastModified and dateAdded
   // to the past.
@@ -153,30 +153,30 @@ add_task(async function test_bookmarks() {
 
   // set bookmark title
   bs.setItemTitle(newId, "Google");
-  do_check_eq(bookmarksObserver._itemChangedId, newId);
-  do_check_eq(bookmarksObserver._itemChangedProperty, "title");
-  do_check_eq(bookmarksObserver._itemChangedValue, "Google");
+  Assert.equal(bookmarksObserver._itemChangedId, newId);
+  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
+  Assert.equal(bookmarksObserver._itemChangedValue, "Google");
 
   // check that dateAdded hasn't changed
   let dateAdded2 = bs.getItemDateAdded(newId);
-  do_check_eq(dateAdded2, dateAdded);
+  Assert.equal(dateAdded2, dateAdded);
 
   // check lastModified after we set the title
   let lastModified2 = bs.getItemLastModified(newId);
-  do_print("test setItemTitle");
-  do_print("dateAdded = " + dateAdded);
-  do_print("beforeSetTitle = " + beforeSetTitle);
-  do_print("lastModified = " + lastModified);
-  do_print("lastModified2 = " + lastModified2);
-  do_check_true(is_time_ordered(lastModified, lastModified2));
-  do_check_true(is_time_ordered(dateAdded, lastModified2));
+  info("test setItemTitle");
+  info("dateAdded = " + dateAdded);
+  info("beforeSetTitle = " + beforeSetTitle);
+  info("lastModified = " + lastModified);
+  info("lastModified2 = " + lastModified2);
+  Assert.ok(is_time_ordered(lastModified, lastModified2));
+  Assert.ok(is_time_ordered(dateAdded, lastModified2));
 
   // get item title
   let title = bs.getItemTitle(newId);
-  do_check_eq(title, "Google");
+  Assert.equal(title, "Google");
 
   // test getItemType for bookmarks
-  do_check_eq(bs.getItemType(newId), bs.TYPE_BOOKMARK);
+  Assert.equal(bs.getItemType(newId), bs.TYPE_BOOKMARK);
 
   // get item title bad input
   try {
@@ -186,134 +186,134 @@ add_task(async function test_bookmarks() {
 
   // get the folder that the bookmark is in
   let folderId = bs.getFolderIdForItem(newId);
-  do_check_eq(folderId, testRoot);
+  Assert.equal(folderId, testRoot);
 
   // test getItemIndex for bookmarks
-  do_check_eq(bs.getItemIndex(newId), testStartIndex);
+  Assert.equal(bs.getItemIndex(newId), testStartIndex);
 
   // create a folder at a specific index
   let workFolder = bs.createFolder(testRoot, "Work", 0);
-  do_check_eq(bookmarksObserver._itemAddedId, workFolder);
-  do_check_eq(bookmarksObserver._itemAddedParent, testRoot);
-  do_check_eq(bookmarksObserver._itemAddedIndex, 0);
-  do_check_eq(bookmarksObserver._itemAddedURI, null);
+  Assert.equal(bookmarksObserver._itemAddedId, workFolder);
+  Assert.equal(bookmarksObserver._itemAddedParent, testRoot);
+  Assert.equal(bookmarksObserver._itemAddedIndex, 0);
+  Assert.equal(bookmarksObserver._itemAddedURI, null);
 
-  do_check_eq(bs.getItemTitle(workFolder), "Work");
+  Assert.equal(bs.getItemTitle(workFolder), "Work");
   bs.setItemTitle(workFolder, "Work #");
-  do_check_eq(bs.getItemTitle(workFolder), "Work #");
+  Assert.equal(bs.getItemTitle(workFolder), "Work #");
 
   // add item into subfolder, specifying index
   let newId2 = bs.insertBookmark(workFolder,
                                  uri("http://developer.mozilla.org/"),
                                  0, "");
-  do_check_eq(bookmarksObserver._itemAddedId, newId2);
-  do_check_eq(bookmarksObserver._itemAddedParent, workFolder);
-  do_check_eq(bookmarksObserver._itemAddedIndex, 0);
+  Assert.equal(bookmarksObserver._itemAddedId, newId2);
+  Assert.equal(bookmarksObserver._itemAddedParent, workFolder);
+  Assert.equal(bookmarksObserver._itemAddedIndex, 0);
 
   // change item
   bs.setItemTitle(newId2, "DevMo");
-  do_check_eq(bookmarksObserver._itemChangedProperty, "title");
+  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
 
   // insert item into subfolder
   let newId3 = bs.insertBookmark(workFolder,
                                  uri("http://msdn.microsoft.com/"),
                                  bs.DEFAULT_INDEX, "");
-  do_check_eq(bookmarksObserver._itemAddedId, newId3);
-  do_check_eq(bookmarksObserver._itemAddedParent, workFolder);
-  do_check_eq(bookmarksObserver._itemAddedIndex, 1);
+  Assert.equal(bookmarksObserver._itemAddedId, newId3);
+  Assert.equal(bookmarksObserver._itemAddedParent, workFolder);
+  Assert.equal(bookmarksObserver._itemAddedIndex, 1);
 
   // change item
   bs.setItemTitle(newId3, "MSDN");
-  do_check_eq(bookmarksObserver._itemChangedProperty, "title");
+  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
 
   // remove item
   bs.removeItem(newId2);
-  do_check_eq(bookmarksObserver._itemRemovedId, newId2);
-  do_check_eq(bookmarksObserver._itemRemovedFolder, workFolder);
-  do_check_eq(bookmarksObserver._itemRemovedIndex, 0);
+  Assert.equal(bookmarksObserver._itemRemovedId, newId2);
+  Assert.equal(bookmarksObserver._itemRemovedFolder, workFolder);
+  Assert.equal(bookmarksObserver._itemRemovedIndex, 0);
 
   // insert item into subfolder
   let newId4 = bs.insertBookmark(workFolder,
                                  uri("http://developer.mozilla.org/"),
                                  bs.DEFAULT_INDEX, "");
-  do_check_eq(bookmarksObserver._itemAddedId, newId4);
-  do_check_eq(bookmarksObserver._itemAddedParent, workFolder);
-  do_check_eq(bookmarksObserver._itemAddedIndex, 1);
+  Assert.equal(bookmarksObserver._itemAddedId, newId4);
+  Assert.equal(bookmarksObserver._itemAddedParent, workFolder);
+  Assert.equal(bookmarksObserver._itemAddedIndex, 1);
 
   // create folder
   let homeFolder = bs.createFolder(testRoot, "Home", bs.DEFAULT_INDEX);
-  do_check_eq(bookmarksObserver._itemAddedId, homeFolder);
-  do_check_eq(bookmarksObserver._itemAddedParent, testRoot);
-  do_check_eq(bookmarksObserver._itemAddedIndex, 2);
+  Assert.equal(bookmarksObserver._itemAddedId, homeFolder);
+  Assert.equal(bookmarksObserver._itemAddedParent, testRoot);
+  Assert.equal(bookmarksObserver._itemAddedIndex, 2);
 
   // insert item
   let newId5 = bs.insertBookmark(homeFolder, uri("http://espn.com/"),
                                  bs.DEFAULT_INDEX, "");
-  do_check_eq(bookmarksObserver._itemAddedId, newId5);
-  do_check_eq(bookmarksObserver._itemAddedParent, homeFolder);
-  do_check_eq(bookmarksObserver._itemAddedIndex, 0);
+  Assert.equal(bookmarksObserver._itemAddedId, newId5);
+  Assert.equal(bookmarksObserver._itemAddedParent, homeFolder);
+  Assert.equal(bookmarksObserver._itemAddedIndex, 0);
 
   // change item
   bs.setItemTitle(newId5, "ESPN");
-  do_check_eq(bookmarksObserver._itemChangedId, newId5);
-  do_check_eq(bookmarksObserver._itemChangedProperty, "title");
+  Assert.equal(bookmarksObserver._itemChangedId, newId5);
+  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
 
   // insert query item
   let uri6 = uri("place:domain=google.com&type=" +
                  Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY);
   let newId6 = bs.insertBookmark(testRoot, uri6, bs.DEFAULT_INDEX, "");
-  do_check_eq(bookmarksObserver._itemAddedParent, testRoot);
-  do_check_eq(bookmarksObserver._itemAddedIndex, 3);
+  Assert.equal(bookmarksObserver._itemAddedParent, testRoot);
+  Assert.equal(bookmarksObserver._itemAddedIndex, 3);
 
   // change item
   bs.setItemTitle(newId6, "Google Sites");
-  do_check_eq(bookmarksObserver._itemChangedProperty, "title");
+  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
 
   // test getIdForItemAt
-  do_check_eq(bs.getIdForItemAt(testRoot, 0), workFolder);
+  Assert.equal(bs.getIdForItemAt(testRoot, 0), workFolder);
   // wrong parent, should return -1
-  do_check_eq(bs.getIdForItemAt(1337, 0), -1);
+  Assert.equal(bs.getIdForItemAt(1337, 0), -1);
   // wrong index, should return -1
-  do_check_eq(bs.getIdForItemAt(testRoot, 1337), -1);
+  Assert.equal(bs.getIdForItemAt(testRoot, 1337), -1);
   // wrong parent and index, should return -1
-  do_check_eq(bs.getIdForItemAt(1337, 1337), -1);
+  Assert.equal(bs.getIdForItemAt(1337, 1337), -1);
 
   // move folder, appending, to different folder
   let oldParentCC = getChildCount(testRoot);
   bs.moveItem(workFolder, homeFolder, bs.DEFAULT_INDEX);
-  do_check_eq(bookmarksObserver._itemMovedId, workFolder);
-  do_check_eq(bookmarksObserver._itemMovedOldParent, testRoot);
-  do_check_eq(bookmarksObserver._itemMovedOldIndex, 0);
-  do_check_eq(bookmarksObserver._itemMovedNewParent, homeFolder);
-  do_check_eq(bookmarksObserver._itemMovedNewIndex, 1);
+  Assert.equal(bookmarksObserver._itemMovedId, workFolder);
+  Assert.equal(bookmarksObserver._itemMovedOldParent, testRoot);
+  Assert.equal(bookmarksObserver._itemMovedOldIndex, 0);
+  Assert.equal(bookmarksObserver._itemMovedNewParent, homeFolder);
+  Assert.equal(bookmarksObserver._itemMovedNewIndex, 1);
 
   // test that the new index is properly stored
-  do_check_eq(bs.getItemIndex(workFolder), 1);
-  do_check_eq(bs.getFolderIdForItem(workFolder), homeFolder);
+  Assert.equal(bs.getItemIndex(workFolder), 1);
+  Assert.equal(bs.getFolderIdForItem(workFolder), homeFolder);
 
   // try to get index of the item from within the old parent folder
   // check that it has been really removed from there
-  do_check_neq(bs.getIdForItemAt(testRoot, 0), workFolder);
+  Assert.notEqual(bs.getIdForItemAt(testRoot, 0), workFolder);
   // check the last item from within the old parent folder
-  do_check_neq(bs.getIdForItemAt(testRoot, -1), workFolder);
+  Assert.notEqual(bs.getIdForItemAt(testRoot, -1), workFolder);
   // check the index of the item within the new parent folder
-  do_check_eq(bs.getIdForItemAt(homeFolder, 1), workFolder);
+  Assert.equal(bs.getIdForItemAt(homeFolder, 1), workFolder);
   // try to get index of the last item within the new parent folder
-  do_check_eq(bs.getIdForItemAt(homeFolder, -1), workFolder);
+  Assert.equal(bs.getIdForItemAt(homeFolder, -1), workFolder);
   // XXX expose FolderCount, and check that the old parent has one less child?
-  do_check_eq(getChildCount(testRoot), oldParentCC - 1);
+  Assert.equal(getChildCount(testRoot), oldParentCC - 1);
 
   // move item, appending, to different folder
   bs.moveItem(newId5, testRoot, bs.DEFAULT_INDEX);
-  do_check_eq(bookmarksObserver._itemMovedId, newId5);
-  do_check_eq(bookmarksObserver._itemMovedOldParent, homeFolder);
-  do_check_eq(bookmarksObserver._itemMovedOldIndex, 0);
-  do_check_eq(bookmarksObserver._itemMovedNewParent, testRoot);
-  do_check_eq(bookmarksObserver._itemMovedNewIndex, 3);
+  Assert.equal(bookmarksObserver._itemMovedId, newId5);
+  Assert.equal(bookmarksObserver._itemMovedOldParent, homeFolder);
+  Assert.equal(bookmarksObserver._itemMovedOldIndex, 0);
+  Assert.equal(bookmarksObserver._itemMovedNewParent, testRoot);
+  Assert.equal(bookmarksObserver._itemMovedNewIndex, 3);
 
   // test get folder's index
   let tmpFolder = bs.createFolder(testRoot, "tmp", 2);
-  do_check_eq(bs.getItemIndex(tmpFolder), 2);
+  Assert.equal(bs.getItemIndex(tmpFolder), 2);
 
   // test setKeywordForBookmark
   let kwTestItemId = bs.insertBookmark(testRoot, uri("http://keywordtest.com"),
@@ -322,11 +322,11 @@ add_task(async function test_bookmarks() {
 
   // test getKeywordForBookmark
   let k = bs.getKeywordForBookmark(kwTestItemId);
-  do_check_eq("bar", k);
+  Assert.equal("bar", k);
 
   // test PlacesUtils.keywords.fetch()
   let u = await PlacesUtils.keywords.fetch("bar");
-  do_check_eq("http://keywordtest.com/", u.url);
+  Assert.equal("http://keywordtest.com/", u.url);
   // test removeFolderChildren
   // 1) add/remove each child type (bookmark, separator, folder)
   tmpFolder = bs.createFolder(testRoot, "removeFolderChildren",
@@ -342,7 +342,7 @@ add_task(async function test_bookmarks() {
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;
     rootNode.containerOpen = true;
-    do_check_eq(rootNode.childCount, 3);
+    Assert.equal(rootNode.childCount, 3);
     rootNode.containerOpen = false;
   } catch (ex) {
     do_throw("test removeFolderChildren() - querying for children failed: " + ex);
@@ -354,7 +354,7 @@ add_task(async function test_bookmarks() {
     let result = hs.executeQuery(query, options);
     let rootNode = result.root;
     rootNode.containerOpen = true;
-    do_check_eq(rootNode.childCount, 0);
+    Assert.equal(rootNode.childCount, 0);
     rootNode.containerOpen = false;
   } catch (ex) {
     do_throw("removeFolderChildren(): " + ex);
@@ -371,17 +371,17 @@ add_task(async function test_bookmarks() {
     let rootNode = result.root;
     rootNode.containerOpen = true;
     let cc = rootNode.childCount;
-    do_print("bookmark itemId test: CC = " + cc);
-    do_check_true(cc > 0);
+    info("bookmark itemId test: CC = " + cc);
+    Assert.ok(cc > 0);
     for (let i = 0; i < cc; ++i) {
       let node = rootNode.getChild(i);
       if (node.type == node.RESULT_TYPE_FOLDER ||
           node.type == node.RESULT_TYPE_URI ||
           node.type == node.RESULT_TYPE_SEPARATOR ||
           node.type == node.RESULT_TYPE_QUERY) {
-        do_check_true(node.itemId > 0);
+        Assert.ok(node.itemId > 0);
       } else {
-        do_check_eq(node.itemId, -1);
+        Assert.equal(node.itemId, -1);
       }
     }
     rootNode.containerOpen = false;
@@ -408,9 +408,9 @@ add_task(async function test_bookmarks() {
     let rootNode = result.root;
     rootNode.containerOpen = true;
     let cc = rootNode.childCount;
-    do_check_eq(cc, 2);
-    do_check_eq(rootNode.getChild(0).title, "title 1");
-    do_check_eq(rootNode.getChild(1).title, "title 2");
+    Assert.equal(cc, 2);
+    Assert.equal(rootNode.getChild(0).title, "title 1");
+    Assert.equal(rootNode.getChild(1).title, "title 2");
     rootNode.containerOpen = false;
   } catch (ex) {
     do_throw("bookmarks query: " + ex);
@@ -422,7 +422,7 @@ add_task(async function test_bookmarks() {
   dateAdded = bs.getItemDateAdded(newId10);
   // after just inserting, modified should not be set
   lastModified = bs.getItemLastModified(newId10);
-  do_check_eq(lastModified, dateAdded);
+  Assert.equal(lastModified, dateAdded);
 
   // Workaround possible VM timers issues moving lastModified and dateAdded
   // to the past.
@@ -435,23 +435,23 @@ add_task(async function test_bookmarks() {
 
   // check that lastModified is set after we change the bookmark uri
   lastModified2 = bs.getItemLastModified(newId10);
-  do_print("test changeBookmarkURI");
-  do_print("dateAdded = " + dateAdded);
-  do_print("lastModified = " + lastModified);
-  do_print("lastModified2 = " + lastModified2);
-  do_check_true(is_time_ordered(lastModified, lastModified2));
-  do_check_true(is_time_ordered(dateAdded, lastModified2));
+  info("test changeBookmarkURI");
+  info("dateAdded = " + dateAdded);
+  info("lastModified = " + lastModified);
+  info("lastModified2 = " + lastModified2);
+  Assert.ok(is_time_ordered(lastModified, lastModified2));
+  Assert.ok(is_time_ordered(dateAdded, lastModified2));
 
-  do_check_eq(bookmarksObserver._itemChangedId, newId10);
-  do_check_eq(bookmarksObserver._itemChangedProperty, "uri");
-  do_check_eq(bookmarksObserver._itemChangedValue, "http://foo11.com/");
-  do_check_eq(bookmarksObserver._itemChangedOldValue, "http://foo10.com/");
+  Assert.equal(bookmarksObserver._itemChangedId, newId10);
+  Assert.equal(bookmarksObserver._itemChangedProperty, "uri");
+  Assert.equal(bookmarksObserver._itemChangedValue, "http://foo11.com/");
+  Assert.equal(bookmarksObserver._itemChangedOldValue, "http://foo10.com/");
 
   // test getBookmarkURI
   let newId11 = bs.insertBookmark(testRoot, uri("http://foo11.com/"),
                                   bs.DEFAULT_INDEX, "");
   let bmURI = bs.getBookmarkURI(newId11);
-  do_check_eq("http://foo11.com/", bmURI.spec);
+  Assert.equal("http://foo11.com/", bmURI.spec);
 
   // test getBookmarkURI with non-bookmark items
   try {
@@ -462,7 +462,7 @@ add_task(async function test_bookmarks() {
   // test getItemIndex
   let newId12 = bs.insertBookmark(testRoot, uri("http://foo11.com/"), 1, "");
   let bmIndex = bs.getItemIndex(newId12);
-  do_check_eq(1, bmIndex);
+  Assert.equal(1, bmIndex);
 
   // insert a bookmark with title ZZZXXXYYY and then search for it.
   // this test confirms that we can find bookmarks that we haven't visited
@@ -470,23 +470,23 @@ add_task(async function test_bookmarks() {
   // see bug #369887 for more details
   let newId13 = bs.insertBookmark(testRoot, uri("http://foobarcheese.com/"),
                                   bs.DEFAULT_INDEX, "");
-  do_check_eq(bookmarksObserver._itemAddedId, newId13);
-  do_check_eq(bookmarksObserver._itemAddedParent, testRoot);
-  do_check_eq(bookmarksObserver._itemAddedIndex, 11);
+  Assert.equal(bookmarksObserver._itemAddedId, newId13);
+  Assert.equal(bookmarksObserver._itemAddedParent, testRoot);
+  Assert.equal(bookmarksObserver._itemAddedIndex, 11);
 
   // set bookmark title
   bs.setItemTitle(newId13, "ZZZXXXYYY");
-  do_check_eq(bookmarksObserver._itemChangedId, newId13);
-  do_check_eq(bookmarksObserver._itemChangedProperty, "title");
-  do_check_eq(bookmarksObserver._itemChangedValue, "ZZZXXXYYY");
+  Assert.equal(bookmarksObserver._itemChangedId, newId13);
+  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
+  Assert.equal(bookmarksObserver._itemChangedValue, "ZZZXXXYYY");
 
   // check if setting an item annotation triggers onItemChanged
   bookmarksObserver._itemChangedId = -1;
   anno.setItemAnnotation(newId3, "test-annotation", "foo", 0, 0);
-  do_check_eq(bookmarksObserver._itemChangedId, newId3);
-  do_check_eq(bookmarksObserver._itemChangedProperty, "test-annotation");
-  do_check_true(bookmarksObserver._itemChanged_isAnnotationProperty);
-  do_check_eq(bookmarksObserver._itemChangedValue, "");
+  Assert.equal(bookmarksObserver._itemChangedId, newId3);
+  Assert.equal(bookmarksObserver._itemChangedProperty, "test-annotation");
+  Assert.ok(bookmarksObserver._itemChanged_isAnnotationProperty);
+  Assert.equal(bookmarksObserver._itemChangedValue, "");
 
   // test search on bookmark title ZZZXXXYYY
   try {
@@ -499,10 +499,10 @@ add_task(async function test_bookmarks() {
     let rootNode = result.root;
     rootNode.containerOpen = true;
     let cc = rootNode.childCount;
-    do_check_eq(cc, 1);
+    Assert.equal(cc, 1);
     let node = rootNode.getChild(0);
-    do_check_eq(node.title, "ZZZXXXYYY");
-    do_check_true(node.itemId > 0);
+    Assert.equal(node.title, "ZZZXXXYYY");
+    Assert.ok(node.itemId > 0);
     rootNode.containerOpen = false;
   } catch (ex) {
     do_throw("bookmarks query: " + ex);
@@ -520,14 +520,14 @@ add_task(async function test_bookmarks() {
     let rootNode = result.root;
     rootNode.containerOpen = true;
     let cc = rootNode.childCount;
-    do_check_eq(cc, 1);
+    Assert.equal(cc, 1);
     let node = rootNode.getChild(0);
 
-    do_check_eq(typeof node.dateAdded, "number");
-    do_check_true(node.dateAdded > 0);
+    Assert.equal(typeof node.dateAdded, "number");
+    Assert.ok(node.dateAdded > 0);
 
-    do_check_eq(typeof node.lastModified, "number");
-    do_check_true(node.lastModified > 0);
+    Assert.equal(typeof node.lastModified, "number");
+    Assert.ok(node.lastModified > 0);
 
     rootNode.containerOpen = false;
   } catch (ex) {
@@ -544,16 +544,16 @@ add_task(async function test_bookmarks() {
     let rootNode = result.root;
     rootNode.containerOpen = true;
     let cc = rootNode.childCount;
-    do_check_true(cc > 0);
+    Assert.ok(cc > 0);
     for (let i = 0; i < cc; i++) {
       let node = rootNode.getChild(i);
 
       if (node.type == node.RESULT_TYPE_URI) {
-        do_check_eq(typeof node.dateAdded, "number");
-        do_check_true(node.dateAdded > 0);
+        Assert.equal(typeof node.dateAdded, "number");
+        Assert.ok(node.dateAdded > 0);
 
-        do_check_eq(typeof node.lastModified, "number");
-        do_check_true(node.lastModified > 0);
+        Assert.equal(typeof node.lastModified, "number");
+        Assert.ok(node.lastModified > 0);
         break;
       }
     }
@@ -567,18 +567,18 @@ add_task(async function test_bookmarks() {
                                   bs.DEFAULT_INDEX, "");
   dateAdded = bs.getItemDateAdded(newId14);
   lastModified = bs.getItemLastModified(newId14);
-  do_check_eq(lastModified, dateAdded);
+  Assert.equal(lastModified, dateAdded);
   bs.setItemLastModified(newId14, 1234000000000000);
   let fakeLastModified = bs.getItemLastModified(newId14);
-  do_check_eq(fakeLastModified, 1234000000000000);
+  Assert.equal(fakeLastModified, 1234000000000000);
   bs.setItemDateAdded(newId14, 4321000000000000);
   let fakeDateAdded = bs.getItemDateAdded(newId14);
-  do_check_eq(fakeDateAdded, 4321000000000000);
+  Assert.equal(fakeDateAdded, 4321000000000000);
 
   // ensure that removing an item removes its annotations
-  do_check_true(anno.itemHasAnnotation(newId3, "test-annotation"));
+  Assert.ok(anno.itemHasAnnotation(newId3, "test-annotation"));
   bs.removeItem(newId3);
-  do_check_false(anno.itemHasAnnotation(newId3, "test-annotation"));
+  Assert.ok(!anno.itemHasAnnotation(newId3, "test-annotation"));
 
   // bug 378820
   let uri1 = uri("http://foo.tld/a");
@@ -591,16 +591,16 @@ add_task(async function test_bookmarks() {
   let newId15 = bs.insertBookmark(testRoot, uri("http://evil.com/"),
                                   bs.DEFAULT_INDEX, title15);
 
-  do_check_eq(bs.getItemTitle(newId15).length,
-              title15expected.length);
-  do_check_eq(bookmarksObserver._itemAddedTitle, title15expected);
+  Assert.equal(bs.getItemTitle(newId15).length,
+               title15expected.length);
+  Assert.equal(bookmarksObserver._itemAddedTitle, title15expected);
   // test title length after updates
   bs.setItemTitle(newId15, title15 + " updated");
-  do_check_eq(bs.getItemTitle(newId15).length,
-              title15expected.length);
-  do_check_eq(bookmarksObserver._itemChangedId, newId15);
-  do_check_eq(bookmarksObserver._itemChangedProperty, "title");
-  do_check_eq(bookmarksObserver._itemChangedValue, title15expected);
+  Assert.equal(bs.getItemTitle(newId15).length,
+               title15expected.length);
+  Assert.equal(bookmarksObserver._itemChangedId, newId15);
+  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
+  Assert.equal(bookmarksObserver._itemChangedValue, title15expected);
 
   testSimpleFolderResult();
 });
@@ -609,30 +609,30 @@ function testSimpleFolderResult() {
   // the time before we create a folder, in microseconds
   // Workaround possible VM timers issues subtracting 1us.
   let beforeCreate = Date.now() * 1000 - 1;
-  do_check_true(beforeCreate > 0);
+  Assert.ok(beforeCreate > 0);
 
   // create a folder
   let parent = bs.createFolder(root, "test", bs.DEFAULT_INDEX);
 
   let dateCreated = bs.getItemDateAdded(parent);
-  do_print("check that the folder was created with a valid dateAdded");
-  do_print("beforeCreate = " + beforeCreate);
-  do_print("dateCreated = " + dateCreated);
-  do_check_true(is_time_ordered(beforeCreate, dateCreated));
+  info("check that the folder was created with a valid dateAdded");
+  info("beforeCreate = " + beforeCreate);
+  info("dateCreated = " + dateCreated);
+  Assert.ok(is_time_ordered(beforeCreate, dateCreated));
 
   // the time before we insert, in microseconds
   // Workaround possible VM timers issues subtracting 1ms.
   let beforeInsert = Date.now() * 1000 - 1;
-  do_check_true(beforeInsert > 0);
+  Assert.ok(beforeInsert > 0);
 
   // insert a separator
   let sep = bs.insertSeparator(parent, bs.DEFAULT_INDEX);
 
   let dateAdded = bs.getItemDateAdded(sep);
-  do_print("check that the separator was created with a valid dateAdded");
-  do_print("beforeInsert = " + beforeInsert);
-  do_print("dateAdded = " + dateAdded);
-  do_check_true(is_time_ordered(beforeInsert, dateAdded));
+  info("check that the separator was created with a valid dateAdded");
+  info("beforeInsert = " + beforeInsert);
+  info("dateAdded = " + dateAdded);
+  Assert.ok(is_time_ordered(beforeInsert, dateAdded));
 
   // re-set item title separately so can test nodes' last modified
   let item = bs.insertBookmark(parent, uri("about:blank"),
@@ -645,7 +645,7 @@ function testSimpleFolderResult() {
 
   let longName = Array(TITLE_LENGTH_MAX + 5).join("A");
   let folderLongName = bs.createFolder(parent, longName, bs.DEFAULT_INDEX);
-  do_check_eq(bookmarksObserver._itemAddedTitle, longName.substring(0, TITLE_LENGTH_MAX));
+  Assert.equal(bookmarksObserver._itemAddedTitle, longName.substring(0, TITLE_LENGTH_MAX));
 
   let options = hs.getNewQueryOptions();
   let query = hs.getNewQuery();
@@ -653,37 +653,37 @@ function testSimpleFolderResult() {
   let result = hs.executeQuery(query, options);
   let rootNode = result.root;
   rootNode.containerOpen = true;
-  do_check_eq(rootNode.childCount, 4);
+  Assert.equal(rootNode.childCount, 4);
 
   let node = rootNode.getChild(0);
-  do_check_true(node.dateAdded > 0);
-  do_check_eq(node.lastModified, node.dateAdded);
-  do_check_eq(node.itemId, sep);
-  do_check_eq(node.title, "");
+  Assert.ok(node.dateAdded > 0);
+  Assert.equal(node.lastModified, node.dateAdded);
+  Assert.equal(node.itemId, sep);
+  Assert.equal(node.title, "");
   node = rootNode.getChild(1);
-  do_check_eq(node.itemId, item);
-  do_check_true(node.dateAdded > 0);
-  do_check_true(node.lastModified > 0);
-  do_check_eq(node.title, "test bookmark");
+  Assert.equal(node.itemId, item);
+  Assert.ok(node.dateAdded > 0);
+  Assert.ok(node.lastModified > 0);
+  Assert.equal(node.title, "test bookmark");
   node = rootNode.getChild(2);
-  do_check_eq(node.itemId, folder);
-  do_check_eq(node.title, "test folder");
-  do_check_true(node.dateAdded > 0);
-  do_check_true(node.lastModified > 0);
+  Assert.equal(node.itemId, folder);
+  Assert.equal(node.title, "test folder");
+  Assert.ok(node.dateAdded > 0);
+  Assert.ok(node.lastModified > 0);
   node = rootNode.getChild(3);
-  do_check_eq(node.itemId, folderLongName);
-  do_check_eq(node.title, longName.substring(0, TITLE_LENGTH_MAX));
-  do_check_true(node.dateAdded > 0);
-  do_check_true(node.lastModified > 0);
+  Assert.equal(node.itemId, folderLongName);
+  Assert.equal(node.title, longName.substring(0, TITLE_LENGTH_MAX));
+  Assert.ok(node.dateAdded > 0);
+  Assert.ok(node.lastModified > 0);
 
   // update with another long title
   bs.setItemTitle(folderLongName, longName + " updated");
-  do_check_eq(bookmarksObserver._itemChangedId, folderLongName);
-  do_check_eq(bookmarksObserver._itemChangedProperty, "title");
-  do_check_eq(bookmarksObserver._itemChangedValue, longName.substring(0, TITLE_LENGTH_MAX));
+  Assert.equal(bookmarksObserver._itemChangedId, folderLongName);
+  Assert.equal(bookmarksObserver._itemChangedProperty, "title");
+  Assert.equal(bookmarksObserver._itemChangedValue, longName.substring(0, TITLE_LENGTH_MAX));
 
   node = rootNode.getChild(3);
-  do_check_eq(node.title, longName.substring(0, TITLE_LENGTH_MAX));
+  Assert.equal(node.title, longName.substring(0, TITLE_LENGTH_MAX));
 
   rootNode.containerOpen = false;
 }

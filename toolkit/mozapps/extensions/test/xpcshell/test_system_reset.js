@@ -45,31 +45,31 @@ async function check_installed(conditions) {
 
     if (version) {
       // Add-on should be installed
-      do_check_neq(addon, null);
-      do_check_eq(addon.version, version);
-      do_check_true(addon.isActive);
-      do_check_false(addon.foreignInstall);
-      do_check_true(addon.hidden);
-      do_check_true(addon.isSystem);
-      do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_UPGRADE));
+      Assert.notEqual(addon, null);
+      Assert.equal(addon.version, version);
+      Assert.ok(addon.isActive);
+      Assert.ok(!addon.foreignInstall);
+      Assert.ok(addon.hidden);
+      Assert.ok(addon.isSystem);
+      Assert.ok(!hasFlag(addon.permissions, AddonManager.PERM_CAN_UPGRADE));
       if (isUpgrade) {
-        do_check_true(hasFlag(addon.permissions, AddonManager.PERM_CAN_UNINSTALL));
+        Assert.ok(hasFlag(addon.permissions, AddonManager.PERM_CAN_UNINSTALL));
       } else {
-        do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_UNINSTALL));
+        Assert.ok(!hasFlag(addon.permissions, AddonManager.PERM_CAN_UNINSTALL));
       }
 
       // Verify the add-ons file is in the right place
       let file = expectedDir.clone();
       file.append(id + ".xpi");
-      do_check_true(file.exists());
-      do_check_true(file.isFile());
+      Assert.ok(file.exists());
+      Assert.ok(file.isFile());
 
       let uri = addon.getResourceURI(null);
-      do_check_true(uri instanceof AM_Ci.nsIFileURL);
-      do_check_eq(uri.file.path, file.path);
+      Assert.ok(uri instanceof AM_Ci.nsIFileURL);
+      Assert.equal(uri.file.path, file.path);
 
       if (isUpgrade) {
-        do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);
+        Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);
       }
 
       // Verify the add-on actually started
@@ -77,10 +77,10 @@ async function check_installed(conditions) {
     } else {
       if (isUpgrade) {
         // Add-on should not be installed
-        do_check_eq(addon, null);
+        Assert.equal(addon, null);
       } else {
         // Either add-on should not be installed or it shouldn't be active
-        do_check_true(!addon || !addon.isActive);
+        Assert.ok(!addon || !addon.isActive);
       }
 
       BootstrapMonitor.checkAddonNotStarted(id);
@@ -106,7 +106,7 @@ add_task(async function test_missing_app_dir() {
 
   await check_installed(conditions);
 
-  do_check_false(updatesDir.exists());
+  Assert.ok(!updatesDir.exists());
 
   await promiseShutdownManager();
 });
@@ -126,7 +126,7 @@ add_task(async function test_new_version() {
 
   await check_installed(conditions);
 
-  do_check_false(updatesDir.exists());
+  Assert.ok(!updatesDir.exists());
 
   await promiseShutdownManager();
 });
@@ -146,7 +146,7 @@ add_task(async function test_upgrade() {
 
   await check_installed(conditions);
 
-  do_check_false(updatesDir.exists());
+  Assert.ok(!updatesDir.exists());
 
   await promiseShutdownManager();
 });
@@ -166,7 +166,7 @@ add_task(async function test_downgrade() {
 
   await check_installed(conditions);
 
-  do_check_false(updatesDir.exists());
+  Assert.ok(!updatesDir.exists());
 
   await promiseShutdownManager();
 });
@@ -374,12 +374,12 @@ add_task(async function test_bad_app_cert() {
 
   // Since we updated the app version, the system addon set should be reset as well.
   let addonSet = Services.prefs.getCharPref(PREF_SYSTEM_ADDON_SET);
-  do_check_eq(addonSet, `{"schema":1,"addons":{}}`);
+  Assert.equal(addonSet, `{"schema":1,"addons":{}}`);
 
   // Add-on will still be present
   let addon = await promiseAddonByID("system1@tests.mozilla.org");
-  do_check_neq(addon, null);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_NOT_REQUIRED);
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.signedState, AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let conditions = [
       { isUpgrade: false, version: "1.0" },

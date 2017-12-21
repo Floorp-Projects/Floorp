@@ -12,7 +12,7 @@ add_task(async function test_storing_a_normal_16x16_icon() {
   await setFaviconForPage(PAGE_URL, SMALLPNG_DATA_URI);
 
   // Now set expiration to 0 and change the payload.
-  do_print("Set expiration to 0 and replace favicon data");
+  info("Set expiration to 0 and replace favicon data");
   await PlacesUtils.withConnectionWrapper("Change favicons payload", db => {
     return db.execute(`UPDATE moz_icons SET expire_ms = 0, data = "test"`);
   });
@@ -21,7 +21,7 @@ add_task(async function test_storing_a_normal_16x16_icon() {
   Assert.equal(mimeType, "image/png");
   Assert.deepEqual(data, "test".split("").map(c => c.charCodeAt(0)));
 
-  do_print("Refresh favicon");
+  info("Refresh favicon");
   await setFaviconForPage(PAGE_URL, SMALLPNG_DATA_URI, false);
   await compareFavicons("page-icon:" + PAGE_URL, SMALLPNG_DATA_URI);
 });

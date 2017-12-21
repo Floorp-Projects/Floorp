@@ -63,9 +63,9 @@ function run_test()
 function check_results()
 {
   // check the provider was set to high accuracy during the test
-  do_check_true(provider._seenHigh);
+  Assert.ok(provider._seenHigh);
   // check the provider is not currently set to high accuracy
-  do_check_false(provider._isHigh);
+  Assert.ok(!provider._isHigh);
 
   do_test_finished();
 }

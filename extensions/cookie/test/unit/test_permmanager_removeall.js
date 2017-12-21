@@ -12,7 +12,7 @@ function run_test() {
   // get the db file
   var file = dir.clone();
   file.append("permissions.sqlite");
-  do_check_true(file.exists());
+  Assert.ok(file.exists());
 
   // corrupt the file
   var ostream = Cc["@mozilla.org/network/file-output-stream;1"].

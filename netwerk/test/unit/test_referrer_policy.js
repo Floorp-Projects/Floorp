@@ -1,7 +1,7 @@
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
 function test_policy(test) {
-  do_print("Running test: " + test.toSource());
+  info("Running test: " + test.toSource());
 
   var prefs = Cc["@mozilla.org/preferences-service;1"]
     .getService(Components.interfaces.nsIPrefBranch);
@@ -27,11 +27,11 @@ function test_policy(test) {
       do_throw("Should not find a Referer header!");
     } catch(e) {
     }
-    do_check_eq(chan.referrer, null);
+    Assert.equal(chan.referrer, null);
   } else {
     var header = chan.getRequestHeader("Referer");
-    do_check_eq(header, test.expectedReferrerSpec);
-    do_check_eq(chan.referrer.asciiSpec, test.expectedReferrerSpec);
+    Assert.equal(header, test.expectedReferrerSpec);
+    Assert.equal(chan.referrer.asciiSpec, test.expectedReferrerSpec);
   }
 }
 

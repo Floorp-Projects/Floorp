@@ -9,35 +9,35 @@ var TestObserver = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
 
   observe(subject, topic, data) {
-    do_check_eq(topic, "passwordmgr-storage-changed");
-    do_check_eq(data, expectedNotification);
+    Assert.equal(topic, "passwordmgr-storage-changed");
+    Assert.equal(data, expectedNotification);
 
     switch (data) {
         case "addLogin":
-            do_check_true(subject instanceof Ci.nsILoginInfo);
-            do_check_true(subject instanceof Ci.nsILoginMetaInfo);
-            do_check_true(expectedData.equals(subject)); // nsILoginInfo.equals()
+            Assert.ok(subject instanceof Ci.nsILoginInfo);
+            Assert.ok(subject instanceof Ci.nsILoginMetaInfo);
+            Assert.ok(expectedData.equals(subject)); // nsILoginInfo.equals()
             break;
         case "modifyLogin":
-            do_check_true(subject instanceof Ci.nsIArray);
-            do_check_eq(subject.length, 2);
+            Assert.ok(subject instanceof Ci.nsIArray);
+            Assert.equal(subject.length, 2);
             var oldLogin = subject.queryElementAt(0, Ci.nsILoginInfo);
             var newLogin = subject.queryElementAt(1, Ci.nsILoginInfo);
-            do_check_true(expectedData[0].equals(oldLogin)); // nsILoginInfo.equals()
-            do_check_true(expectedData[1].equals(newLogin));
+            Assert.ok(expectedData[0].equals(oldLogin)); // nsILoginInfo.equals()
+            Assert.ok(expectedData[1].equals(newLogin));
             break;
         case "removeLogin":
-            do_check_true(subject instanceof Ci.nsILoginInfo);
-            do_check_true(subject instanceof Ci.nsILoginMetaInfo);
-            do_check_true(expectedData.equals(subject)); // nsILoginInfo.equals()
+            Assert.ok(subject instanceof Ci.nsILoginInfo);
+            Assert.ok(subject instanceof Ci.nsILoginMetaInfo);
+            Assert.ok(expectedData.equals(subject)); // nsILoginInfo.equals()
             break;
         case "removeAllLogins":
-            do_check_eq(subject, null);
+            Assert.equal(subject, null);
             break;
         case "hostSavingEnabled":
         case "hostSavingDisabled":
-            do_check_true(subject instanceof Ci.nsISupportsString);
-            do_check_eq(subject.data, expectedData);
+            Assert.ok(subject instanceof Ci.nsISupportsString);
+            Assert.equal(subject.data, expectedData);
             break;
         default:
             do_throw("Unhandled notification: " + data + " / " + topic);
@@ -77,7 +77,7 @@ expectedNotification = "addLogin";
 expectedData = testuser1;
 Services.logins.addLogin(testuser1);
 LoginTestUtils.checkLogins([testuser1]);
-do_check_eq(expectedNotification, null); // check that observer got a notification
+Assert.equal(expectedNotification, null); // check that observer got a notification
 
 /* ========== 3 ========== */
 testnum++;
@@ -86,7 +86,7 @@ testdesc = "modifyLogin";
 expectedNotification = "modifyLogin";
 expectedData = [testuser1, testuser2];
 Services.logins.modifyLogin(testuser1, testuser2);
-do_check_eq(expectedNotification, null);
+Assert.equal(expectedNotification, null);
 LoginTestUtils.checkLogins([testuser2]);
 
 /* ========== 4 ========== */
@@ -96,7 +96,7 @@ testdesc = "removeLogin";
 expectedNotification = "removeLogin";
 expectedData = testuser2;
 Services.logins.removeLogin(testuser2);
-do_check_eq(expectedNotification, null);
+Assert.equal(expectedNotification, null);
 LoginTestUtils.checkLogins([]);
 
 /* ========== 5 ========== */
@@ -106,7 +106,7 @@ testdesc = "removeAllLogins";
 expectedNotification = "removeAllLogins";
 expectedData = null;
 Services.logins.removeAllLogins();
-do_check_eq(expectedNotification, null);
+Assert.equal(expectedNotification, null);
 LoginTestUtils.checkLogins([]);
 
 /* ========== 6 ========== */
@@ -116,7 +116,7 @@ testdesc = "removeAllLogins (again)";
 expectedNotification = "removeAllLogins";
 expectedData = null;
 Services.logins.removeAllLogins();
-do_check_eq(expectedNotification, null);
+Assert.equal(expectedNotification, null);
 LoginTestUtils.checkLogins([]);
 
 /* ========== 7 ========== */
@@ -126,7 +126,7 @@ testdesc = "setLoginSavingEnabled / false";
 expectedNotification = "hostSavingDisabled";
 expectedData = "http://site.com";
 Services.logins.setLoginSavingEnabled("http://site.com", false);
-do_check_eq(expectedNotification, null);
+Assert.equal(expectedNotification, null);
 LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
                                         ["http://site.com"]);
 
@@ -137,7 +137,7 @@ testdesc = "setLoginSavingEnabled / false (again)";
 expectedNotification = "hostSavingDisabled";
 expectedData = "http://site.com";
 Services.logins.setLoginSavingEnabled("http://site.com", false);
-do_check_eq(expectedNotification, null);
+Assert.equal(expectedNotification, null);
 LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
                                         ["http://site.com"]);
 
@@ -148,7 +148,7 @@ testdesc = "setLoginSavingEnabled / true";
 expectedNotification = "hostSavingEnabled";
 expectedData = "http://site.com";
 Services.logins.setLoginSavingEnabled("http://site.com", true);
-do_check_eq(expectedNotification, null);
+Assert.equal(expectedNotification, null);
 LoginTestUtils.checkLogins([]);
 
 /* ========== 10 ========== */
@@ -158,7 +158,7 @@ testdesc = "setLoginSavingEnabled / true (again)";
 expectedNotification = "hostSavingEnabled";
 expectedData = "http://site.com";
 Services.logins.setLoginSavingEnabled("http://site.com", true);
-do_check_eq(expectedNotification, null);
+Assert.equal(expectedNotification, null);
 LoginTestUtils.checkLogins([]);
 
 Services.obs.removeObserver(TestObserver, "passwordmgr-storage-changed");

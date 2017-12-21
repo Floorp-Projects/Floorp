@@ -26,8 +26,8 @@ BinaryComparer.prototype = {
 
   onStopRequest: function(aRequest, aContext, aStatusCode) {
     this.fileStream.close();
-    do_check_eq(aStatusCode, Components.results.NS_OK);
-    do_check_eq(this.offset, this.length);
+    Assert.equal(aStatusCode, Components.results.NS_OK);
+    Assert.equal(this.offset, this.length);
     this.callback();
   },
 

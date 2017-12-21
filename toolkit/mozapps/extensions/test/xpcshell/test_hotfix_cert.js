@@ -56,8 +56,8 @@ function promiseInstallListener() {
 function promiseSuccessfulInstall() {
   return promiseInstallListener().then(
     aInstall => {
-      do_check_true(true);
-      do_check_eq(aInstall.addon.id, Services.prefs.getCharPref(PREF_EM_HOTFIX_ID));
+      Assert.ok(true);
+      Assert.equal(aInstall.addon.id, Services.prefs.getCharPref(PREF_EM_HOTFIX_ID));
       aInstall.addon.uninstall();
       Services.prefs.clearUserPref(PREF_EM_HOTFIX_LASTVERSION);
     },
@@ -74,7 +74,7 @@ function promiseFailedInstall() {
       Services.prefs.clearUserPref(PREF_EM_HOTFIX_LASTVERSION);
     },
     aInstall => {
-      do_check_true(true);
+      Assert.ok(true);
     });
 }
 

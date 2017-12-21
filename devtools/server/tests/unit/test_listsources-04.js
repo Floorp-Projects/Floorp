@@ -32,12 +32,12 @@ function run_test_with_server(server, cb) {
     addSources(debuggee);
 
     threadClient.getSources(Task.async(function* (res) {
-      do_check_eq(res.sources.length, 3, "3 sources exist");
+      Assert.equal(res.sources.length, 3, "3 sources exist");
 
       yield threadClient.reconfigure({ useSourceMaps: false });
 
       threadClient.getSources(function (res) {
-        do_check_eq(res.sources.length, 1, "1 source exist");
+        Assert.equal(res.sources.length, 1, "1 source exist");
         client.close().then(cb);
       });
     }));

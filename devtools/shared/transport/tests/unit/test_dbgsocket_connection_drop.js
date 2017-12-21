@@ -12,7 +12,7 @@
 const { RawPacket } = require("devtools/shared/transport/packets");
 
 function run_test() {
-  do_print("Starting test at " + new Date().toTimeString());
+  info("Starting test at " + new Date().toTimeString());
   initTestDebuggerServer();
 
   add_task(test_socket_conn_drops_after_invalid_header);
@@ -73,7 +73,7 @@ var test_helper = Task.async(function* (payload) {
       transport._flushOutgoing();
     },
     onClosed: function (status) {
-      do_check_true(true);
+      Assert.ok(true);
       closedDeferred.resolve();
     },
   };

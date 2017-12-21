@@ -51,7 +51,7 @@ function checkPostUpdateAppLogFinished() {
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
   checkUpdateLogContains(ERR_BACKUP_DISCARD);
   checkUpdateLogContains(STATE_SUCCEEDED + "\n" + CALL_QUIT);
-  do_execute_soon(waitForUpdateXMLFiles);
+  executeSoon(waitForUpdateXMLFiles);
 }
 
 /**

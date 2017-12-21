@@ -5,12 +5,12 @@ var Cr = Components.results;
 
 
 function successCallback() {
-  do_check_true(false);
+  Assert.ok(false);
   do_test_finished();
 }
 
 function errorCallback(err) {
-  do_check_eq(Ci.nsIDOMGeoPositionError.POSITION_UNAVAILABLE, err.code);
+  Assert.equal(Ci.nsIDOMGeoPositionError.POSITION_UNAVAILABLE, err.code);
   do_test_finished();
 }
 

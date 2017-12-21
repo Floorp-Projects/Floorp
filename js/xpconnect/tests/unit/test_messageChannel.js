@@ -5,18 +5,18 @@ add_task(async function() {
   let Cu = Components.utils;
   let sb = new Cu.Sandbox('http://www.example.com',
                           { wantGlobalProperties: ["MessageChannel"] });
-  sb.do_check_true = do_check_true;
-  Cu.evalInSandbox('do_check_true((new MessageChannel()) instanceof MessageChannel);',
+  sb.ok = ok;
+  Cu.evalInSandbox('ok((new MessageChannel()) instanceof MessageChannel);',
                    sb);
-  Cu.evalInSandbox('do_check_true((new MessageChannel()).port1 instanceof MessagePort);',
+  Cu.evalInSandbox('ok((new MessageChannel()).port1 instanceof MessagePort);',
                    sb);
 
   Cu.importGlobalProperties(["MessageChannel"]);
 
   let mc = new MessageChannel();
-  do_check_true(mc instanceof MessageChannel);
-  do_check_true(mc.port1 instanceof MessagePort);
-  do_check_true(mc.port2 instanceof MessagePort);
+  Assert.ok(mc instanceof MessageChannel);
+  Assert.ok(mc.port1 instanceof MessagePort);
+  Assert.ok(mc.port2 instanceof MessagePort);
 
   mc.port1.postMessage(42);
 
@@ -26,5 +26,5 @@ add_task(async function() {
     }
   });
 
-  do_check_eq(result, 42);
+  Assert.equal(result, 42);
 });

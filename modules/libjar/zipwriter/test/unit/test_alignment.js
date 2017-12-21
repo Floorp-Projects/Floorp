@@ -69,7 +69,7 @@ function test_alignment(align_size)
                 .createInstance(Ci.nsIScriptableInputStream);
   stream.init(zipR.getInputStream(FILENAME));
   var result = stream.read(DATA.length);
-  do_check_eq(result, DATA);
+  Assert.equal(result, DATA);
   stream.close();
   zipR.close();
 
@@ -89,15 +89,15 @@ function test_alignment(align_size)
 
   ret = move_to_data(bis, offset); // "test.png"
   offset = ret.offset;
-  do_check_eq(offset % align_size, 0);
+  Assert.equal(offset % align_size, 0);
   bis.readBytes(ret.size);
   offset += ret.size;
 
   ret = move_to_data(bis, offset); // "test_data.txt"
   offset = ret.offset;
   var result = bis.readBytes(DATA.length);
-  do_check_eq(result, DATA);
-  do_check_eq(offset % align_size, 0);
+  Assert.equal(result, DATA);
+  Assert.equal(offset % align_size, 0);
 
   fis.close();
   bis.close();

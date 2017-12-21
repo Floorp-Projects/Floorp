@@ -42,16 +42,16 @@ function play_with_tearoffs(ifs, cls) {
   instances.forEach(function(v, i, a) { v.QueryInterface(ifs.c); });
 
   // Check
-  do_check_true('name' in instances[10], 'Have the prop from A/B');
-  do_check_true('someInteger' in instances[10], 'Have the prop from C');
+  Assert.ok('name' in instances[10], 'Have the prop from A/B');
+  Assert.ok('someInteger' in instances[10], 'Have the prop from C');
 
   // Grab tearoff reflections for a and b.
   var aTearOffs = instances.map(function(v, i, a) { return v.nsIXPCTestInterfaceA; } );
   var bTearOffs = instances.map(function(v, i, a) { return v.nsIXPCTestInterfaceB; } );
 
   // Check
-  do_check_true('name' in aTearOffs[1], 'Have the prop from A');
-  do_check_true(!('someInteger' in aTearOffs[1]), 'Dont have the prop from C');
+  Assert.ok('name' in aTearOffs[1], 'Have the prop from A');
+  Assert.ok(!('someInteger' in aTearOffs[1]), 'Dont have the prop from C');
 
   // Nothing to collect.
   gc();
@@ -90,8 +90,8 @@ function play_with_tearoffs(ifs, cls) {
   var cTearOffs = instances.map(function(v, i, a) { return v ? v.nsIXPCTestInterfaceC : null; } );
 
   // Check.
-  do_check_true(!('name' in cTearOffs[1]), 'Dont have the prop from A');
-  do_check_true('someInteger' in cTearOffs[1], 'have the prop from C');
+  Assert.ok(!('name' in cTearOffs[1]), 'Dont have the prop from A');
+  Assert.ok('someInteger' in cTearOffs[1], 'have the prop from C');
 
   // Null out the a tearoffs.
   aTearOffs = null;
@@ -104,5 +104,5 @@ function play_with_tearoffs(ifs, cls) {
   gc();
 
   // Give ourselves a pat on the back. :-)
-  do_check_true(true, "Got all the way through without crashing!");
+  Assert.ok(true, "Got all the way through without crashing!");
 }

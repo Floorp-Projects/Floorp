@@ -19,139 +19,139 @@ var Unix = ImportUnix;
 function do_check_fail(f) {
   try {
     let result = f();
-    do_print("Failed do_check_fail: " + result);
-    do_check_true(false);
+    info("Failed do_check_fail: " + result);
+    Assert.ok(false);
   } catch (ex) {
-    do_check_true(true);
+    Assert.ok(true);
   }
 }
 
 function run_test() {
-  do_print("Testing Windows paths");
+  info("Testing Windows paths");
 
-  do_print("Backslash-separated, no drive");
-  do_check_eq(Win.basename("a\\b"), "b");
-  do_check_eq(Win.basename("a\\b\\"), "");
-  do_check_eq(Win.basename("abc"), "abc");
-  do_check_eq(Win.dirname("a\\b"), "a");
-  do_check_eq(Win.dirname("a\\b\\"), "a\\b");
-  do_check_eq(Win.dirname("a\\\\\\\\b"), "a");
-  do_check_eq(Win.dirname("abc"), ".");
-  do_check_eq(Win.normalize("\\a\\b\\c"), "\\a\\b\\c");
-  do_check_eq(Win.normalize("\\a\\b\\\\\\\\c"), "\\a\\b\\c");
-  do_check_eq(Win.normalize("\\a\\b\\c\\\\\\"), "\\a\\b\\c");
-  do_check_eq(Win.normalize("\\a\\b\\c\\..\\..\\..\\d\\e\\f"), "\\d\\e\\f");
-  do_check_eq(Win.normalize("a\\b\\c\\..\\..\\..\\d\\e\\f"), "d\\e\\f");
+  info("Backslash-separated, no drive");
+  Assert.equal(Win.basename("a\\b"), "b");
+  Assert.equal(Win.basename("a\\b\\"), "");
+  Assert.equal(Win.basename("abc"), "abc");
+  Assert.equal(Win.dirname("a\\b"), "a");
+  Assert.equal(Win.dirname("a\\b\\"), "a\\b");
+  Assert.equal(Win.dirname("a\\\\\\\\b"), "a");
+  Assert.equal(Win.dirname("abc"), ".");
+  Assert.equal(Win.normalize("\\a\\b\\c"), "\\a\\b\\c");
+  Assert.equal(Win.normalize("\\a\\b\\\\\\\\c"), "\\a\\b\\c");
+  Assert.equal(Win.normalize("\\a\\b\\c\\\\\\"), "\\a\\b\\c");
+  Assert.equal(Win.normalize("\\a\\b\\c\\..\\..\\..\\d\\e\\f"), "\\d\\e\\f");
+  Assert.equal(Win.normalize("a\\b\\c\\..\\..\\..\\d\\e\\f"), "d\\e\\f");
   do_check_fail(() => Win.normalize("\\a\\b\\c\\..\\..\\..\\..\\d\\e\\f"));
 
-  do_check_eq(Win.join("\\tmp", "foo", "bar"), "\\tmp\\foo\\bar", "join \\tmp,foo,bar");
-  do_check_eq(Win.join("\\tmp", "\\foo", "bar"), "\\foo\\bar", "join \\tmp,\\foo,bar");
-  do_check_eq(Win.winGetDrive("\\tmp"), null);
-  do_check_eq(Win.winGetDrive("\\tmp\\a\\b\\c\\d\\e"), null);
-  do_check_eq(Win.winGetDrive("\\"), null);
+  Assert.equal(Win.join("\\tmp", "foo", "bar"), "\\tmp\\foo\\bar", "join \\tmp,foo,bar");
+  Assert.equal(Win.join("\\tmp", "\\foo", "bar"), "\\foo\\bar", "join \\tmp,\\foo,bar");
+  Assert.equal(Win.winGetDrive("\\tmp"), null);
+  Assert.equal(Win.winGetDrive("\\tmp\\a\\b\\c\\d\\e"), null);
+  Assert.equal(Win.winGetDrive("\\"), null);
 
 
-  do_print("Backslash-separated, with a drive");
-  do_check_eq(Win.basename("c:a\\b"), "b");
-  do_check_eq(Win.basename("c:a\\b\\"), "");
-  do_check_eq(Win.basename("c:abc"), "abc");
-  do_check_eq(Win.dirname("c:a\\b"), "c:a");
-  do_check_eq(Win.dirname("c:a\\b\\"), "c:a\\b");
-  do_check_eq(Win.dirname("c:a\\\\\\\\b"), "c:a");
-  do_check_eq(Win.dirname("c:abc"), "c:");
+  info("Backslash-separated, with a drive");
+  Assert.equal(Win.basename("c:a\\b"), "b");
+  Assert.equal(Win.basename("c:a\\b\\"), "");
+  Assert.equal(Win.basename("c:abc"), "abc");
+  Assert.equal(Win.dirname("c:a\\b"), "c:a");
+  Assert.equal(Win.dirname("c:a\\b\\"), "c:a\\b");
+  Assert.equal(Win.dirname("c:a\\\\\\\\b"), "c:a");
+  Assert.equal(Win.dirname("c:abc"), "c:");
   let options = {
     winNoDrive: true
   };
-  do_check_eq(Win.dirname("c:a\\b", options), "a");
-  do_check_eq(Win.dirname("c:a\\b\\", options), "a\\b");
-  do_check_eq(Win.dirname("c:a\\\\\\\\b", options), "a");
-  do_check_eq(Win.dirname("c:abc", options), ".");
-  do_check_eq(Win.join("c:", "abc"), "c:\\abc", "join c:,abc");
+  Assert.equal(Win.dirname("c:a\\b", options), "a");
+  Assert.equal(Win.dirname("c:a\\b\\", options), "a\\b");
+  Assert.equal(Win.dirname("c:a\\\\\\\\b", options), "a");
+  Assert.equal(Win.dirname("c:abc", options), ".");
+  Assert.equal(Win.join("c:", "abc"), "c:\\abc", "join c:,abc");
 
-  do_check_eq(Win.normalize("c:"), "c:\\");
-  do_check_eq(Win.normalize("c:\\"), "c:\\");
-  do_check_eq(Win.normalize("c:\\a\\b\\c"), "c:\\a\\b\\c");
-  do_check_eq(Win.normalize("c:\\a\\b\\\\\\\\c"), "c:\\a\\b\\c");
-  do_check_eq(Win.normalize("c:\\\\\\\\a\\b\\c"), "c:\\a\\b\\c");
-  do_check_eq(Win.normalize("c:\\a\\b\\c\\\\\\"), "c:\\a\\b\\c");
-  do_check_eq(Win.normalize("c:\\a\\b\\c\\..\\..\\..\\d\\e\\f"), "c:\\d\\e\\f");
-  do_check_eq(Win.normalize("c:a\\b\\c\\..\\..\\..\\d\\e\\f"), "c:\\d\\e\\f");
+  Assert.equal(Win.normalize("c:"), "c:\\");
+  Assert.equal(Win.normalize("c:\\"), "c:\\");
+  Assert.equal(Win.normalize("c:\\a\\b\\c"), "c:\\a\\b\\c");
+  Assert.equal(Win.normalize("c:\\a\\b\\\\\\\\c"), "c:\\a\\b\\c");
+  Assert.equal(Win.normalize("c:\\\\\\\\a\\b\\c"), "c:\\a\\b\\c");
+  Assert.equal(Win.normalize("c:\\a\\b\\c\\\\\\"), "c:\\a\\b\\c");
+  Assert.equal(Win.normalize("c:\\a\\b\\c\\..\\..\\..\\d\\e\\f"), "c:\\d\\e\\f");
+  Assert.equal(Win.normalize("c:a\\b\\c\\..\\..\\..\\d\\e\\f"), "c:\\d\\e\\f");
   do_check_fail(() => Win.normalize("c:\\a\\b\\c\\..\\..\\..\\..\\d\\e\\f"));
 
-  do_check_eq(Win.join("c:\\", "foo"), "c:\\foo", "join c:\,foo");
-  do_check_eq(Win.join("c:\\tmp", "foo", "bar"), "c:\\tmp\\foo\\bar", "join c:\\tmp,foo,bar");
-  do_check_eq(Win.join("c:\\tmp", "\\foo", "bar"), "c:\\foo\\bar", "join c:\\tmp,\\foo,bar");
-  do_check_eq(Win.join("c:\\tmp", "c:\\foo", "bar"), "c:\\foo\\bar", "join c:\\tmp,c:\\foo,bar");
-  do_check_eq(Win.join("c:\\tmp", "c:foo", "bar"), "c:\\foo\\bar", "join c:\\tmp,c:foo,bar");
-  do_check_eq(Win.winGetDrive("c:"), "c:");
-  do_check_eq(Win.winGetDrive("c:\\"), "c:");
-  do_check_eq(Win.winGetDrive("c:abc"), "c:");
-  do_check_eq(Win.winGetDrive("c:abc\\d\\e\\f\\g"), "c:");
-  do_check_eq(Win.winGetDrive("c:\\abc"), "c:");
-  do_check_eq(Win.winGetDrive("c:\\abc\\d\\e\\f\\g"), "c:");
+  Assert.equal(Win.join("c:\\", "foo"), "c:\\foo", "join c:\,foo");
+  Assert.equal(Win.join("c:\\tmp", "foo", "bar"), "c:\\tmp\\foo\\bar", "join c:\\tmp,foo,bar");
+  Assert.equal(Win.join("c:\\tmp", "\\foo", "bar"), "c:\\foo\\bar", "join c:\\tmp,\\foo,bar");
+  Assert.equal(Win.join("c:\\tmp", "c:\\foo", "bar"), "c:\\foo\\bar", "join c:\\tmp,c:\\foo,bar");
+  Assert.equal(Win.join("c:\\tmp", "c:foo", "bar"), "c:\\foo\\bar", "join c:\\tmp,c:foo,bar");
+  Assert.equal(Win.winGetDrive("c:"), "c:");
+  Assert.equal(Win.winGetDrive("c:\\"), "c:");
+  Assert.equal(Win.winGetDrive("c:abc"), "c:");
+  Assert.equal(Win.winGetDrive("c:abc\\d\\e\\f\\g"), "c:");
+  Assert.equal(Win.winGetDrive("c:\\abc"), "c:");
+  Assert.equal(Win.winGetDrive("c:\\abc\\d\\e\\f\\g"), "c:");
 
-  do_print("Forwardslash-separated, no drive");
-  do_check_eq(Win.normalize("/a/b/c"), "\\a\\b\\c");
-  do_check_eq(Win.normalize("/a/b////c"), "\\a\\b\\c");
-  do_check_eq(Win.normalize("/a/b/c///"), "\\a\\b\\c");
-  do_check_eq(Win.normalize("/a/b/c/../../../d/e/f"), "\\d\\e\\f");
-  do_check_eq(Win.normalize("a/b/c/../../../d/e/f"), "d\\e\\f");
+  info("Forwardslash-separated, no drive");
+  Assert.equal(Win.normalize("/a/b/c"), "\\a\\b\\c");
+  Assert.equal(Win.normalize("/a/b////c"), "\\a\\b\\c");
+  Assert.equal(Win.normalize("/a/b/c///"), "\\a\\b\\c");
+  Assert.equal(Win.normalize("/a/b/c/../../../d/e/f"), "\\d\\e\\f");
+  Assert.equal(Win.normalize("a/b/c/../../../d/e/f"), "d\\e\\f");
 
-  do_print("Forwardslash-separated, with a drive");
-  do_check_eq(Win.normalize("c:/"), "c:\\");
-  do_check_eq(Win.normalize("c:/a/b/c"), "c:\\a\\b\\c");
-  do_check_eq(Win.normalize("c:/a/b////c"), "c:\\a\\b\\c");
-  do_check_eq(Win.normalize("c:////a/b/c"), "c:\\a\\b\\c");
-  do_check_eq(Win.normalize("c:/a/b/c///"), "c:\\a\\b\\c");
-  do_check_eq(Win.normalize("c:/a/b/c/../../../d/e/f"), "c:\\d\\e\\f");
-  do_check_eq(Win.normalize("c:a/b/c/../../../d/e/f"), "c:\\d\\e\\f");
+  info("Forwardslash-separated, with a drive");
+  Assert.equal(Win.normalize("c:/"), "c:\\");
+  Assert.equal(Win.normalize("c:/a/b/c"), "c:\\a\\b\\c");
+  Assert.equal(Win.normalize("c:/a/b////c"), "c:\\a\\b\\c");
+  Assert.equal(Win.normalize("c:////a/b/c"), "c:\\a\\b\\c");
+  Assert.equal(Win.normalize("c:/a/b/c///"), "c:\\a\\b\\c");
+  Assert.equal(Win.normalize("c:/a/b/c/../../../d/e/f"), "c:\\d\\e\\f");
+  Assert.equal(Win.normalize("c:a/b/c/../../../d/e/f"), "c:\\d\\e\\f");
 
-  do_print("Backslash-separated, UNC-style");
-  do_check_eq(Win.basename("\\\\a\\b"), "b");
-  do_check_eq(Win.basename("\\\\a\\b\\"), "");
-  do_check_eq(Win.basename("\\\\abc"), "");
-  do_check_eq(Win.dirname("\\\\a\\b"), "\\\\a");
-  do_check_eq(Win.dirname("\\\\a\\b\\"), "\\\\a\\b");
-  do_check_eq(Win.dirname("\\\\a\\\\\\\\b"), "\\\\a");
-  do_check_eq(Win.dirname("\\\\abc"), "\\\\abc");
-  do_check_eq(Win.normalize("\\\\a\\b\\c"), "\\\\a\\b\\c");
-  do_check_eq(Win.normalize("\\\\a\\b\\\\\\\\c"), "\\\\a\\b\\c");
-  do_check_eq(Win.normalize("\\\\a\\b\\c\\\\\\"), "\\\\a\\b\\c");
-  do_check_eq(Win.normalize("\\\\a\\b\\c\\..\\..\\d\\e\\f"), "\\\\a\\d\\e\\f");
+  info("Backslash-separated, UNC-style");
+  Assert.equal(Win.basename("\\\\a\\b"), "b");
+  Assert.equal(Win.basename("\\\\a\\b\\"), "");
+  Assert.equal(Win.basename("\\\\abc"), "");
+  Assert.equal(Win.dirname("\\\\a\\b"), "\\\\a");
+  Assert.equal(Win.dirname("\\\\a\\b\\"), "\\\\a\\b");
+  Assert.equal(Win.dirname("\\\\a\\\\\\\\b"), "\\\\a");
+  Assert.equal(Win.dirname("\\\\abc"), "\\\\abc");
+  Assert.equal(Win.normalize("\\\\a\\b\\c"), "\\\\a\\b\\c");
+  Assert.equal(Win.normalize("\\\\a\\b\\\\\\\\c"), "\\\\a\\b\\c");
+  Assert.equal(Win.normalize("\\\\a\\b\\c\\\\\\"), "\\\\a\\b\\c");
+  Assert.equal(Win.normalize("\\\\a\\b\\c\\..\\..\\d\\e\\f"), "\\\\a\\d\\e\\f");
   do_check_fail(() => Win.normalize("\\\\a\\b\\c\\..\\..\\..\\d\\e\\f"));
 
-  do_check_eq(Win.join("\\\\a\\tmp", "foo", "bar"), "\\\\a\\tmp\\foo\\bar");
-  do_check_eq(Win.join("\\\\a\\tmp", "\\foo", "bar"), "\\\\a\\foo\\bar");
-  do_check_eq(Win.join("\\\\a\\tmp", "\\\\foo\\", "bar"), "\\\\foo\\bar");
-  do_check_eq(Win.winGetDrive("\\\\"), null);
-  do_check_eq(Win.winGetDrive("\\\\c"), "\\\\c");
-  do_check_eq(Win.winGetDrive("\\\\c\\abc"), "\\\\c");
+  Assert.equal(Win.join("\\\\a\\tmp", "foo", "bar"), "\\\\a\\tmp\\foo\\bar");
+  Assert.equal(Win.join("\\\\a\\tmp", "\\foo", "bar"), "\\\\a\\foo\\bar");
+  Assert.equal(Win.join("\\\\a\\tmp", "\\\\foo\\", "bar"), "\\\\foo\\bar");
+  Assert.equal(Win.winGetDrive("\\\\"), null);
+  Assert.equal(Win.winGetDrive("\\\\c"), "\\\\c");
+  Assert.equal(Win.winGetDrive("\\\\c\\abc"), "\\\\c");
 
-  do_print("Testing unix paths");
-  do_check_eq(Unix.basename("a/b"), "b");
-  do_check_eq(Unix.basename("a/b/"), "");
-  do_check_eq(Unix.basename("abc"), "abc");
-  do_check_eq(Unix.dirname("a/b"), "a");
-  do_check_eq(Unix.dirname("a/b/"), "a/b");
-  do_check_eq(Unix.dirname("a////b"), "a");
-  do_check_eq(Unix.dirname("abc"), ".");
-  do_check_eq(Unix.normalize("/a/b/c"), "/a/b/c");
-  do_check_eq(Unix.normalize("/a/b////c"), "/a/b/c");
-  do_check_eq(Unix.normalize("////a/b/c"), "/a/b/c");
-  do_check_eq(Unix.normalize("/a/b/c///"), "/a/b/c");
-  do_check_eq(Unix.normalize("/a/b/c/../../../d/e/f"), "/d/e/f");
-  do_check_eq(Unix.normalize("a/b/c/../../../d/e/f"), "d/e/f");
+  info("Testing unix paths");
+  Assert.equal(Unix.basename("a/b"), "b");
+  Assert.equal(Unix.basename("a/b/"), "");
+  Assert.equal(Unix.basename("abc"), "abc");
+  Assert.equal(Unix.dirname("a/b"), "a");
+  Assert.equal(Unix.dirname("a/b/"), "a/b");
+  Assert.equal(Unix.dirname("a////b"), "a");
+  Assert.equal(Unix.dirname("abc"), ".");
+  Assert.equal(Unix.normalize("/a/b/c"), "/a/b/c");
+  Assert.equal(Unix.normalize("/a/b////c"), "/a/b/c");
+  Assert.equal(Unix.normalize("////a/b/c"), "/a/b/c");
+  Assert.equal(Unix.normalize("/a/b/c///"), "/a/b/c");
+  Assert.equal(Unix.normalize("/a/b/c/../../../d/e/f"), "/d/e/f");
+  Assert.equal(Unix.normalize("a/b/c/../../../d/e/f"), "d/e/f");
   do_check_fail(() => Unix.normalize("/a/b/c/../../../../d/e/f"));
 
-  do_check_eq(Unix.join("/tmp", "foo", "bar"), "/tmp/foo/bar", "join /tmp,foo,bar");
-  do_check_eq(Unix.join("/tmp", "/foo", "bar"), "/foo/bar", "join /tmp,/foo,bar");
+  Assert.equal(Unix.join("/tmp", "foo", "bar"), "/tmp/foo/bar", "join /tmp,foo,bar");
+  Assert.equal(Unix.join("/tmp", "/foo", "bar"), "/foo/bar", "join /tmp,/foo,bar");
 
-  do_print("Testing the presence of ospath.jsm");
+  info("Testing the presence of ospath.jsm");
   let Scope = {};
   try {
     Components.utils.import("resource://gre/modules/osfile/ospath.jsm", Scope);
   } catch (ex) {
     // Can't load ospath
   }
-  do_check_true(!!Scope.basename);
+  Assert.ok(!!Scope.basename);
 }

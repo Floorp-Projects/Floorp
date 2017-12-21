@@ -30,11 +30,11 @@ function validateResults(expectedValidItemsCount) {
   toolbar.containerOpen = true;
 
   // test for our bookmark
-  do_check_eq(toolbar.childCount, expectedValidItemsCount);
+  Assert.equal(toolbar.childCount, expectedValidItemsCount);
   for (var i = 0; i < toolbar.childCount; i++) {
     var folderNode = toolbar.getChild(0);
-    do_check_eq(folderNode.type, folderNode.RESULT_TYPE_URI);
-    do_check_eq(folderNode.title, ITEM_TITLE);
+    Assert.equal(folderNode.type, folderNode.RESULT_TYPE_URI);
+    Assert.equal(folderNode.title, ITEM_TITLE);
   }
 
   // clean up

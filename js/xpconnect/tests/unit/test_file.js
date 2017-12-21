@@ -5,15 +5,15 @@
 add_task(function() {
   do_load_manifest("component-file.manifest");
   const contractID = "@mozilla.org/tests/component-file;1";
-  do_check_true(contractID in Components.classes);
+  Assert.ok(contractID in Components.classes);
   var foo = Components.classes[contractID]
                       .createInstance(Components.interfaces.nsIClassInfo);
-  do_check_true(Boolean(foo));
-  do_check_true(foo.contractID == contractID);
-  do_check_true(!!foo.wrappedJSObject);
+  Assert.ok(Boolean(foo));
+  Assert.ok(foo.contractID == contractID);
+  Assert.ok(!!foo.wrappedJSObject);
 
   foo.wrappedJSObject.doTest(result => {
-    do_check_true(result);
+    Assert.ok(result);
     run_next_test();
   });
 });

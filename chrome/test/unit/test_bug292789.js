@@ -14,7 +14,7 @@ var gCR;
 function check_accessibility(spec, desired) {
   var uri = Services.io.newURI(spec);
   var actual = gCR.allowContentToAccess(uri);
-  do_check_eq(desired, actual);
+  Assert.equal(desired, actual);
 }
 
 function run_test() {

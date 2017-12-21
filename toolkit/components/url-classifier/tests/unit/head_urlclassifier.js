@@ -214,7 +214,7 @@ tableData(expectedTables, cb) {
       parts.sort();
       tables = parts.join("\n");
 
-      do_check_eq(tables, expectedTables);
+      Assert.equal(tables, expectedTables);
       cb();
     });
 },
@@ -229,7 +229,7 @@ checkUrls(urls, expected, cb, useMoz = false) {
       var principal = Services.scriptSecurityManager.createCodebasePrincipal(Services.io.newURI("http://" + fragment), {});
       dbservice.lookup(principal, tables,
                                 function(arg) {
-                                  do_check_eq(expected, arg);
+                                  Assert.equal(expected, arg);
                                   doLookup();
                                 }, true);
     } else {
@@ -249,7 +249,7 @@ checkTables(url, expected, cb) {
     }
     parts.sort();
     tables = parts.join(",");
-    do_check_eq(tables, expected);
+    Assert.equal(tables, expected);
     cb();
   }, true);
 },
@@ -411,7 +411,7 @@ function waitUntilMetaDataSaved(expectedState, expectedChecksum, callback) {
                      .getService(Ci.nsIUrlClassifierDBService);
 
   dbService.getTables(metaData => {
-    do_print("metadata: " + metaData);
+    info("metadata: " + metaData);
     let didCallback = false;
     metaData.split("\n").some(line => {
       // Parse [tableName];[stateBase64]
@@ -430,7 +430,7 @@ function waitUntilMetaDataSaved(expectedState, expectedChecksum, callback) {
 
       if (stateBase64 === btoa(expectedState) &&
           checksumBase64 === btoa(expectedChecksum)) {
-        do_print("State has been saved to disk!");
+        info("State has been saved to disk!");
 
         // We slightly defer the callback to see if the in-memory
         // |getTables| caching works correctly.
@@ -458,6 +458,6 @@ function waitUntilMetaDataSaved(expectedState, expectedChecksum, callback) {
 
 cleanUp();
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   cleanUp();
 });

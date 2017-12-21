@@ -39,10 +39,10 @@ add_test(function init_search_service() {
 add_test(function simple_callback_test() {
   let searchCallback = {
     onSuccess(engine) {
-      do_check_true(!!engine);
-      do_check_neq(engine.name, Services.search.defaultEngine.name);
-      do_check_eq(engine.wrappedJSObject._loadPath,
-                  "[http]localhost/test-search-engine.xml");
+      Assert.ok(!!engine);
+      Assert.notEqual(engine.name, Services.search.defaultEngine.name);
+      Assert.equal(engine.wrappedJSObject._loadPath,
+                   "[http]localhost/test-search-engine.xml");
       run_next_test();
     },
     onError(errorCode) {
@@ -60,8 +60,8 @@ add_test(function duplicate_failure_test() {
       do_throw("this addition should not have succeeded");
     },
     onError(errorCode) {
-      do_check_true(!!errorCode);
-      do_check_eq(errorCode, Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
+      Assert.ok(!!errorCode);
+      Assert.equal(errorCode, Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
       run_next_test();
     }
   };
@@ -77,8 +77,8 @@ add_test(function load_failure_test() {
       do_throw("this addition should not have succeeded");
     },
     onError(errorCode) {
-      do_check_true(!!errorCode);
-      do_check_eq(errorCode, Ci.nsISearchInstallCallback.ERROR_UNKNOWN_FAILURE);
+      Assert.ok(!!errorCode);
+      Assert.equal(errorCode, Ci.nsISearchInstallCallback.ERROR_UNKNOWN_FAILURE);
       run_next_test();
     }
   };

@@ -15,7 +15,7 @@ function run_test() {
 }
 
 function finish_test() {
-  do_execute_soon(function() {
+  executeSoon(function() {
     test_generator.return();
     do_test_finished();
   });
@@ -51,8 +51,8 @@ function* do_run_test() {
   do_close_profile(test_generator);
   yield;
   do_load_profile();
-  do_check_eq(Services.cookies.countCookiesFromHost(uri1.host), 4); // HTTP cookies OK
-  do_check_eq(Services.cookies.countCookiesFromHost(uri2.host), 4); // HTTPS cookies OK
+  Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 4); // HTTP cookies OK
+  Assert.equal(Services.cookies.countCookiesFromHost(uri2.host), 4); // HTTPS cookies OK
 
   // test with nonsecure third party cookies for session only.
   Services.prefs.setBoolPref("network.cookie.thirdparty.nonsecureSessionOnly", true);
@@ -64,8 +64,8 @@ function* do_run_test() {
   do_close_profile(test_generator);
   yield;
   do_load_profile();
-  do_check_eq(Services.cookies.countCookiesFromHost(uri1.host), 0); // no HTTP cookies!
-  do_check_eq(Services.cookies.countCookiesFromHost(uri2.host), 4); // HTTPS cookies OK
+  Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 0); // no HTTP cookies!
+  Assert.equal(Services.cookies.countCookiesFromHost(uri2.host), 4); // HTTPS cookies OK
 
   finish_test();
 }

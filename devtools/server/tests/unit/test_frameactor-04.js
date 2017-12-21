@@ -56,7 +56,7 @@ function test_frame_slice() {
   gThreadClient.getFrames(test.start, test.count, function (response) {
     let testFrames = gFrames.slice(test.start,
                                    test.count ? test.start + test.count : undefined);
-    do_check_eq(testFrames.length, response.frames.length);
+    Assert.equal(testFrames.length, response.frames.length);
     for (let i = 0; i < testFrames.length; i++) {
       let expected = testFrames[i];
       let actual = response.frames[i];
@@ -66,7 +66,7 @@ function test_frame_slice() {
       }
 
       for (let key of ["type", "callee-name"]) {
-        do_check_eq(expected[key] || undefined, actual[key]);
+        Assert.equal(expected[key] || undefined, actual[key]);
       }
     }
     test_frame_slice();

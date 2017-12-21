@@ -99,15 +99,15 @@ function terminateFirefox(completion) {
     args = [executableName];
   }
 
-  do_print("launching application: " + file.path);
-  do_print("            with args: " + args.join(" "));
+  info("launching application: " + file.path);
+  info("            with args: " + args.join(" "));
 
   let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
   process.init(file);
 
   let processObserver = {
     observe: function PO_observe(aSubject, aTopic, aData) {
-      do_print("topic: " + aTopic + ", process exitValue: " + process.exitValue);
+      info("topic: " + aTopic + ", process exitValue: " + process.exitValue);
 
       Assert.equal(process.exitValue, 0,
                    "Terminate firefox process exit value should be 0");
@@ -124,7 +124,7 @@ function terminateFirefox(completion) {
 
   process.runAsync(args, args.length, processObserver);
 
-  do_print("             with pid: " + process.pid);
+  info("             with pid: " + process.pid);
 }
 
 
@@ -144,9 +144,9 @@ function launchProcess(file, args, env, timeoutMS, handler, attemptCount) {
         return;
       }
 
-      do_print("topic: " + aTopic + ", process exitValue: " + state.process.exitValue);
+      info("topic: " + aTopic + ", process exitValue: " + state.process.exitValue);
 
-      do_print("Restoring environment variables");
+      info("Restoring environment variables");
       setEnvironmentVariables(state.oldEnv);
 
       state.appTimer.cancel();
@@ -168,11 +168,11 @@ function launchProcess(file, args, env, timeoutMS, handler, attemptCount) {
     notify: function TC_notify(aTimer) {
       state.appTimer = null;
 
-      do_print("Restoring environment variables");
+      info("Restoring environment variables");
       setEnvironmentVariables(state.oldEnv);
 
       if (state.process.isRunning) {
-        do_print("attempting to kill process");
+        info("attempting to kill process");
 
         // This will cause the shell process to exit as well, triggering our process observer.
         terminateFirefox(function terminateFirefoxCompletion() {
@@ -183,11 +183,11 @@ function launchProcess(file, args, env, timeoutMS, handler, attemptCount) {
     QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
   };
 
-  do_print("launching application: " + file.path);
-  do_print("            with args: " + args.join(" "));
-  do_print("     with environment: ");
+  info("launching application: " + file.path);
+  info("            with args: " + args.join(" "));
+  info("     with environment: ");
   for (let i = 0; i < env.length; ++i) {
-    do_print("             " + env[i].key + "=" + env[i].value);
+    info("             " + env[i].key + "=" + env[i].value);
   }
 
   state.process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
@@ -200,7 +200,7 @@ function launchProcess(file, args, env, timeoutMS, handler, attemptCount) {
 
   state.process.runAsync(args, args.length, state.processObserver);
 
-  do_print("             with pid: " + state.process.pid);
+  info("             with pid: " + state.process.pid);
 }
 
 
@@ -228,7 +228,7 @@ function run_test() {
 
   let testTry = function testTry() {
     let shell = wrapLaunchInShell(getFirefoxExecutableFile(), ["-no-remote", "-test-launch-without-hang"]);
-    do_print("Try attempt #" + triesStarted);
+    info("Try attempt #" + triesStarted);
     launchProcess(shell.file, shell.args, env, APP_TIMER_TIMEOUT_MS, handler, triesStarted);
   };
 

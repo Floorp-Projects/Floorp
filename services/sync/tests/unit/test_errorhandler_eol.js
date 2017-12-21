@@ -50,14 +50,14 @@ async function setUp(server) {
 
 function do_check_soft_eol(eh, start) {
   // We subtract 1000 because the stored value is in second precision.
-  do_check_true(eh.earliestNextAlert >= (start + eh.MINIMUM_ALERT_INTERVAL_MSEC - 1000));
-  do_check_eq("soft-eol", eh.currentAlertMode);
+  Assert.ok(eh.earliestNextAlert >= (start + eh.MINIMUM_ALERT_INTERVAL_MSEC - 1000));
+  Assert.equal("soft-eol", eh.currentAlertMode);
 }
 function do_check_hard_eol(eh, start) {
   // We subtract 1000 because the stored value is in second precision.
-  do_check_true(eh.earliestNextAlert >= (start + eh.MINIMUM_ALERT_INTERVAL_MSEC - 1000));
-  do_check_eq("hard-eol", eh.currentAlertMode);
-  do_check_true(Status.eol);
+  Assert.ok(eh.earliestNextAlert >= (start + eh.MINIMUM_ALERT_INTERVAL_MSEC - 1000));
+  Assert.equal("hard-eol", eh.currentAlertMode);
+  Assert.ok(Status.eol);
 }
 
 add_task(async function test_200_hard() {
@@ -72,9 +72,9 @@ add_task(async function test_200_hard() {
   Service.scheduler.adjustSyncInterval(); // As if we failed or succeeded in syncing.
 
   let { subject } = await promiseObserved;
-  do_check_eq("hard-eol", subject.code);
+  Assert.equal("hard-eol", subject.code);
   do_check_hard_eol(eh, start);
-  do_check_eq(Service.scheduler.eolInterval, Service.scheduler.syncInterval);
+  Assert.equal(Service.scheduler.eolInterval, Service.scheduler.syncInterval);
   eh.clearServerAlerts();
   await promiseStopServer(server);
 });
@@ -94,9 +94,9 @@ add_task(async function test_513_hard() {
     // Because fetchInfo will fail on a 513.
   }
   let { subject } = await promiseObserved;
-  do_check_eq("hard-eol", subject.code);
+  Assert.equal("hard-eol", subject.code);
   do_check_hard_eol(eh, start);
-  do_check_eq(Service.scheduler.eolInterval, Service.scheduler.syncInterval);
+  Assert.equal(Service.scheduler.eolInterval, Service.scheduler.syncInterval);
   eh.clearServerAlerts();
 
   await promiseStopServer(server);
@@ -113,9 +113,9 @@ add_task(async function test_200_soft() {
   await Service._fetchInfo();
   Service.scheduler.adjustSyncInterval(); // As if we failed or succeeded in syncing.
   let { subject } = await promiseObserved;
-  do_check_eq("soft-eol", subject.code);
+  Assert.equal("soft-eol", subject.code);
   do_check_soft_eol(eh, start);
-  do_check_eq(Service.scheduler.singleDeviceInterval, Service.scheduler.syncInterval);
+  Assert.equal(Service.scheduler.singleDeviceInterval, Service.scheduler.syncInterval);
   eh.clearServerAlerts();
 
   await promiseStopServer(server);

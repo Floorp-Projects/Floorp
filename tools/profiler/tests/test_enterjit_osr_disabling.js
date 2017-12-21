@@ -7,7 +7,7 @@ function run_test() {
     if (!p)
       return;
 
-    do_check_true(!p.IsActive());
+    Assert.ok(!p.IsActive());
 
     p.StartProfiler(100, 10, ["js"], 1);
     // The function is entered with the profiler enabled

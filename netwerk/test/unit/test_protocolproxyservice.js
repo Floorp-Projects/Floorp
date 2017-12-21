@@ -85,18 +85,18 @@ function register_test_protocol_handler() {
 }
 
 function check_proxy(pi, type, host, port, flags, timeout, hasNext) {
-  do_check_neq(pi, null);
-  do_check_eq(pi.type, type);
-  do_check_eq(pi.host, host);
-  do_check_eq(pi.port, port);
+  Assert.notEqual(pi, null);
+  Assert.equal(pi.type, type);
+  Assert.equal(pi.host, host);
+  Assert.equal(pi.port, port);
   if (flags != -1)
-    do_check_eq(pi.flags, flags);
+    Assert.equal(pi.flags, flags);
   if (timeout != -1)
-    do_check_eq(pi.failoverTimeout, timeout);
+    Assert.equal(pi.failoverTimeout, timeout);
   if (hasNext)
-    do_check_neq(pi.failoverProxy, null);
+    Assert.notEqual(pi.failoverProxy, null);
   else
-    do_check_eq(pi.failoverProxy, null);
+    Assert.equal(pi.failoverProxy, null);
 }
 
 function TestFilter(type, host, port, flags, timeout) {
@@ -190,7 +190,7 @@ var filter01;
 var filter02;
 
 function filter_test0_1(pi) {
-  do_check_eq(pi, null);
+  Assert.equal(pi, null);
 
   // Push a filter and verify the results
 
@@ -246,7 +246,7 @@ var filter03;
 
 function filter_test0_4(pi)
 {
-  do_check_eq(pi, null);
+  Assert.equal(pi, null);
   filter03 = new BasicChannelFilter();
   pps.registerChannelFilter(filter03, 10);
   var cb = new resolveCallback();
@@ -274,7 +274,7 @@ function run_filter_test_uri() {
 }
 
 function filter_test_uri0_1(pi) {
-  do_check_eq(pi, null);
+  Assert.equal(pi, null);
 
   // Push a filter and verify the results
 
@@ -319,7 +319,7 @@ function filter_test_uri0_3(pi)
 
 function filter_test_uri0_4(pi)
 {
-  do_check_eq(pi, null);
+  Assert.equal(pi, null);
   run_filter_test2();
 }
 
@@ -375,7 +375,7 @@ function filter_test1_2(pi) {
 }
 
 function filter_test1_3(pi) {
-  do_check_eq(pi, null);
+  Assert.equal(pi, null);
   run_filter_test3();
 }
 
@@ -418,7 +418,7 @@ function run_pref_test() {
 
 function pref_test1_1(pi)
 {
-  do_check_eq(pi, null);
+  Assert.equal(pi, null);
 
   // Verify 'manual' setting
   prefs.setIntPref("network.proxy.type", 1);
@@ -435,7 +435,7 @@ function pref_test1_1(pi)
 function pref_test1_2(pi)
 {
   // nothing yet configured
-  do_check_eq(pi, null);
+  Assert.equal(pi, null);
 
   // try HTTP configuration
   prefs.setCharPref("network.proxy.http", "foopy");
@@ -478,7 +478,7 @@ function pref_test1_4(pi)
 
 function protocol_handler_test_1(pi)
 {
-  do_check_eq(pi, null);
+  Assert.equal(pi, null);
   prefs.setCharPref("network.proxy.autoconfig_url", "");
   prefs.setIntPref("network.proxy.type", 0);
 
@@ -503,12 +503,12 @@ TestResolveCallback.prototype = {
     dump("*** channelURI=" + channel.URI.spec + ", status=" + status + "\n");
 
     if (this.type == null) {
-      do_check_eq(pi, null);
+      Assert.equal(pi, null);
     } else {
-      do_check_neq(req, null);
-      do_check_neq(channel, null);
-      do_check_eq(status, 0);
-      do_check_neq(pi, null);
+      Assert.notEqual(req, null);
+      Assert.notEqual(channel, null);
+      Assert.equal(status, 0);
+      Assert.notEqual(pi, null);
       check_proxy(pi, this.type, "foopy", 8080, 0, -1, true);
       check_proxy(pi.failoverProxy, "direct", "", -1, -1, -1, false);
     }
@@ -619,10 +619,10 @@ TestResolveCancelationCallback.prototype = {
   function TestResolveCancelationCallback_onProxyAvailable(req, channel, pi, status) {
     dump("*** channelURI=" + channel.URI.spec + ", status=" + status + "\n");
 
-    do_check_neq(req, null);
-    do_check_neq(channel, null);
-    do_check_eq(status, Components.results.NS_ERROR_ABORT);
-    do_check_eq(pi, null);
+    Assert.notEqual(req, null);
+    Assert.notEqual(channel, null);
+    Assert.equal(status, Components.results.NS_ERROR_ABORT);
+    Assert.equal(pi, null);
 
     prefs.setCharPref("network.proxy.autoconfig_url", "");
     prefs.setIntPref("network.proxy.type", 0);
@@ -687,9 +687,9 @@ function check_host_filter(i) {
 function host_filter_cb(proxy)
 {
   if (bShouldBeFiltered) {
-    do_check_eq(proxy, null);
+    Assert.equal(proxy, null);
   } else {
-    do_check_neq(proxy, null);
+    Assert.notEqual(proxy, null);
     // Just to be sure, let's check that the proxy is correct
     // - this should match the proxy setup in the calling function
     check_proxy(proxy, "http", "foopy", 8080, 0, -1, false);
@@ -718,7 +718,7 @@ function run_proxy_host_filters_test() {
   hostFilterList = "www.mozilla.org, www.google.com, www.apple.com, "
                        + ".domain, .domain2.org"
   prefs.setCharPref("network.proxy.no_proxies_on", hostFilterList);
-  do_check_eq(prefs.getCharPref("network.proxy.no_proxies_on"), hostFilterList);
+  Assert.equal(prefs.getCharPref("network.proxy.no_proxies_on"), hostFilterList);
 
   var rv;
   // Check the hosts that should be filtered out
@@ -746,8 +746,8 @@ function host_filters_2()
 {
   // Set no_proxies_on to include local hosts
   prefs.setCharPref("network.proxy.no_proxies_on", hostFilterList + ", <local>");
-  do_check_eq(prefs.getCharPref("network.proxy.no_proxies_on"),
-              hostFilterList + ", <local>");
+  Assert.equal(prefs.getCharPref("network.proxy.no_proxies_on"),
+               hostFilterList + ", <local>");
   // Amend lists - move local domain to filtered list
   uriStrFilterList.push(uriStrUseProxyList.pop());
   check_host_filters(uriStrFilterList, true, host_filters_3);
@@ -762,7 +762,7 @@ function host_filters_4()
 {
   // Cleanup
   prefs.setCharPref("network.proxy.no_proxies_on", "");
-  do_check_eq(prefs.getCharPref("network.proxy.no_proxies_on"), "");
+  Assert.equal(prefs.getCharPref("network.proxy.no_proxies_on"), "");
 
   run_myipaddress_test();
 }
@@ -796,14 +796,14 @@ function run_myipaddress_test()
 
 function myipaddress_callback(pi)
 {
-  do_check_neq(pi, null);
-  do_check_eq(pi.type, "http");
-  do_check_eq(pi.port, 1234);
+  Assert.notEqual(pi, null);
+  Assert.equal(pi.type, "http");
+  Assert.equal(pi.port, 1234);
 
   // make sure we didn't return localhost
-  do_check_neq(pi.host, null);
-  do_check_neq(pi.host, "127.0.0.1");
-  do_check_neq(pi.host, "::1");
+  Assert.notEqual(pi.host, null);
+  Assert.notEqual(pi.host, "127.0.0.1");
+  Assert.notEqual(pi.host, "::1");
 
   run_myipaddress_test_2();
 }
@@ -834,14 +834,14 @@ function run_myipaddress_test_2()
 
 function myipaddress2_callback(pi)
 {
-  do_check_neq(pi, null);
-  do_check_eq(pi.type, "http");
-  do_check_eq(pi.port, 5678);
+  Assert.notEqual(pi, null);
+  Assert.equal(pi.type, "http");
+  Assert.equal(pi.port, 5678);
 
   // make sure we didn't return localhost
-  do_check_neq(pi.host, null);
-  do_check_neq(pi.host, "127.0.0.1");
-  do_check_neq(pi.host, "::1");
+  Assert.notEqual(pi.host, null);
+  Assert.notEqual(pi.host, "127.0.0.1");
+  Assert.notEqual(pi.host, "::1");
 
   run_failed_script_test();
 }
@@ -869,7 +869,7 @@ var directFilter;
 function failed_script_callback(pi)
 {
   // we should go direct
-  do_check_eq(pi, null);
+  Assert.equal(pi, null);
 
   // test that we honor filters when configured to go direct
   prefs.setIntPref("network.proxy.type", 0);
@@ -901,7 +901,7 @@ var directFilterListener = {
     pps.unregisterFilter(directFilter);
 
     // check on the PI from on-modify-request
-    do_check_true(this.onModifyRequestCalled);
+    Assert.ok(this.onModifyRequestCalled);
     var obs = Components.classes["@mozilla.org/observer-service;1"].getService();
     obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
     obs.removeObserver(this, "http-on-modify-request");
@@ -944,10 +944,10 @@ function run_isresolvable_test()
 
 function isresolvable_callback(pi)
 {
-  do_check_neq(pi, null);
-  do_check_eq(pi.type, "http");
-  do_check_eq(pi.port, 1234);
-  do_check_eq(pi.host, "127.0.0.1");
+  Assert.notEqual(pi, null);
+  Assert.equal(pi.type, "http");
+  Assert.equal(pi.port, 1234);
+  Assert.equal(pi.host, "127.0.0.1");
 
   prefs.setIntPref("network.proxy.type", 0);
   do_test_finished();

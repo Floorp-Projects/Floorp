@@ -44,18 +44,18 @@ function registerNewActor() {
     .then(talkToNewActor)
     .catch(e => {
       DevToolsUtils.reportException("registerNewActor", e);
-      do_check_true(false);
+      Assert.ok(false);
     });
 }
 
 function talkToNewActor() {
   gClient.listTabs(({ helloActor }) => {
-    do_check_true(!!helloActor);
+    Assert.ok(!!helloActor);
     gClient.request({
       to: helloActor,
       type: "hello"
     }, response => {
-      do_check_true(!response.error);
+      Assert.ok(!response.error);
       unregisterNewActor();
     });
   });
@@ -67,13 +67,13 @@ function unregisterNewActor() {
     .then(testActorIsUnregistered)
     .catch(e => {
       DevToolsUtils.reportException("unregisterNewActor", e);
-      do_check_true(false);
+      Assert.ok(false);
     });
 }
 
 function testActorIsUnregistered() {
   gClient.listTabs(({ helloActor }) => {
-    do_check_true(!helloActor);
+    Assert.ok(!helloActor);
 
     Services.prefs.setBoolPref("devtools.debugger.forbid-certified-apps", gOldPref);
     finishClient(gClient);

@@ -28,7 +28,7 @@ profileDir.append("extensions");
 var WindowWatcher = {
   openWindow(parent, url, name, features, args) {
     // Should be called to list the newly blocklisted items
-    do_check_eq(url, URI_EXTENSION_BLOCKLIST_DIALOG);
+    Assert.equal(url, URI_EXTENSION_BLOCKLIST_DIALOG);
 
     // Simulate auto-disabling any softblocks
     var list = args.wrappedJSObject.list;
@@ -57,7 +57,7 @@ function load_blocklist(aFile, aCallback) {
   Services.obs.addObserver(function observer() {
     Services.obs.removeObserver(observer, "blocklist-updated");
 
-    do_execute_soon(aCallback);
+    executeSoon(aCallback);
   }, "blocklist-updated");
 
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
@@ -126,7 +126,7 @@ function run_test() {
 
   AddonManager.getAddonsByIDs(addonIDs, function(addons) {
     for (let addon of addons) {
-      do_check_eq(addon.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+      Assert.equal(addon.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
     }
     run_test_1();
   });
@@ -139,12 +139,12 @@ function run_test_1() {
     AddonManager.getAddonsByIDs(addonIDs,
                                function([a1, a2, a3, a4]) {
       // No info in blocklist, shouldn't be blocked
-      do_check_false(Services.blocklist.isAddonBlocklisted(a1, null, null));
+      Assert.ok(!Services.blocklist.isAddonBlocklisted(a1, null, null));
 
       // All these should be blocklisted for the current app.
-      do_check_true(Services.blocklist.isAddonBlocklisted(a2, null, null));
-      do_check_true(Services.blocklist.isAddonBlocklisted(a3, null, null));
-      do_check_true(Services.blocklist.isAddonBlocklisted(a4, null, null));
+      Assert.ok(Services.blocklist.isAddonBlocklisted(a2, null, null));
+      Assert.ok(Services.blocklist.isAddonBlocklisted(a3, null, null));
+      Assert.ok(Services.blocklist.isAddonBlocklisted(a4, null, null));
 
       end_test();
     });

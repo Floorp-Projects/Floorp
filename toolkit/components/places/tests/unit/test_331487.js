@@ -54,24 +54,24 @@ add_task(async function test_hierarchical_query() {
   var result = histsvc.executeQuery(query, options);
   var root = result.root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, 2);
-  do_check_eq(root.getChild(0).bookmarkGuid, b1);
-  do_check_eq(root.getChild(1).bookmarkGuid, sf1);
+  Assert.equal(root.childCount, 2);
+  Assert.equal(root.getChild(0).bookmarkGuid, b1);
+  Assert.equal(root.getChild(1).bookmarkGuid, sf1);
 
   // check the contents of the subfolder
   var sf1Node = root.getChild(1);
   sf1Node = sf1Node.QueryInterface(Ci.nsINavHistoryContainerResultNode);
   sf1Node.containerOpen = true;
-  do_check_eq(sf1Node.childCount, 2);
-  do_check_eq(sf1Node.getChild(0).bookmarkGuid, b2);
-  do_check_eq(sf1Node.getChild(1).bookmarkGuid, sf2);
+  Assert.equal(sf1Node.childCount, 2);
+  Assert.equal(sf1Node.getChild(0).bookmarkGuid, b2);
+  Assert.equal(sf1Node.getChild(1).bookmarkGuid, sf2);
 
   // check the contents of the subfolder's subfolder
   var sf2Node = sf1Node.getChild(1);
   sf2Node = sf2Node.QueryInterface(Ci.nsINavHistoryContainerResultNode);
   sf2Node.containerOpen = true;
-  do_check_eq(sf2Node.childCount, 1);
-  do_check_eq(sf2Node.getChild(0).bookmarkGuid, b3);
+  Assert.equal(sf2Node.childCount, 1);
+  Assert.equal(sf2Node.getChild(0).bookmarkGuid, b3);
 
   sf2Node.containerOpen = false;
   sf1Node.containerOpen = false;
@@ -87,10 +87,10 @@ add_task(async function test_hierarchical_query() {
   result = histsvc.executeQuery(query, options);
   root = result.root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, 3);
-  do_check_eq(root.getChild(0).bookmarkGuid, b1);
-  do_check_eq(root.getChild(1).bookmarkGuid, b2);
-  do_check_eq(root.getChild(2).bookmarkGuid, b3);
+  Assert.equal(root.childCount, 3);
+  Assert.equal(root.getChild(0).bookmarkGuid, b1);
+  Assert.equal(root.getChild(1).bookmarkGuid, b2);
+  Assert.equal(root.getChild(2).bookmarkGuid, b3);
   root.containerOpen = false;
 
   // XXX TODO

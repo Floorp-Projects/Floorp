@@ -834,7 +834,7 @@ const CREDIT_CARD_NORMALIZE_TESTCASES = [
 
 let do_check_record_matches = (expectedRecord, record) => {
   for (let key in expectedRecord) {
-    do_check_eq(expectedRecord[key], record[key]);
+    Assert.equal(expectedRecord[key], record[key]);
   }
 };
 
@@ -845,7 +845,7 @@ add_task(async function test_computeAddressFields() {
   await profileStorage.initialize();
 
   ADDRESS_COMPUTE_TESTCASES.forEach(testcase => {
-    do_print("Verify testcase: " + testcase.description);
+    info("Verify testcase: " + testcase.description);
 
     let guid = profileStorage.addresses.add(testcase.address);
     let address = profileStorage.addresses.get(guid);
@@ -862,7 +862,7 @@ add_task(async function test_normalizeAddressFields() {
   await profileStorage.initialize();
 
   ADDRESS_NORMALIZE_TESTCASES.forEach(testcase => {
-    do_print("Verify testcase: " + testcase.description);
+    info("Verify testcase: " + testcase.description);
 
     let guid = profileStorage.addresses.add(testcase.address);
     let address = profileStorage.addresses.get(guid);
@@ -879,7 +879,7 @@ add_task(async function test_computeCreditCardFields() {
   await profileStorage.initialize();
 
   CREDIT_CARD_COMPUTE_TESTCASES.forEach(testcase => {
-    do_print("Verify testcase: " + testcase.description);
+    info("Verify testcase: " + testcase.description);
 
     let guid = profileStorage.creditCards.add(testcase.creditCard);
     let creditCard = profileStorage.creditCards.get(guid);
@@ -896,7 +896,7 @@ add_task(async function test_normalizeCreditCardFields() {
   await profileStorage.initialize();
 
   CREDIT_CARD_NORMALIZE_TESTCASES.forEach(testcase => {
-    do_print("Verify testcase: " + testcase.description);
+    info("Verify testcase: " + testcase.description);
 
     let guid = profileStorage.creditCards.add(testcase.creditCard);
     let creditCard = profileStorage.creditCards.get(guid, {rawData: true});

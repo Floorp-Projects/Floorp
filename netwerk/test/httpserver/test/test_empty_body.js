@@ -35,7 +35,7 @@ function run_test()
 
 function ensureEmpty(ch, cx)
 {
-  do_check_true(ch.contentLength == 0);
+  Assert.ok(ch.contentLength == 0);
 }
 
 // PATH HANDLERS

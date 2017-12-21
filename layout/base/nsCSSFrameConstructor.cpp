@@ -3966,7 +3966,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   TreeMatchContext::AutoAncestorPusher
     insertionPointPusher(aState.mTreeMatchContext);
   if (adcp.isSome() && adcp->IsEmpty() && parent &&
-      nsContentUtils::IsContentInsertionPoint(parent)) {
+      parent->IsActiveChildrenElement()) {
     if (aState.mTreeMatchContext->mAncestorFilter.HasFilter()) {
       insertionPointPusher.PushAncestorAndStyleScope(parent);
     } else {
@@ -5126,9 +5126,7 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
                                            nsIFrame*                aNewFrame,
                                            bool                     aAllowCounters)
 {
-  NS_PRECONDITION(mUpdateCount != 0,
-                  "Should be in an update while creating frames");
-
+  MOZ_ASSERT(mUpdateCount != 0, "Should be in an update while creating frames");
   MOZ_ASSERT(aNewFrame, "Null frame cannot be initialized");
 
   // Initialize the frame
@@ -7470,8 +7468,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
              !RestyleManager()->IsInStyleRefresh());
 
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
-  NS_PRECONDITION(mUpdateCount != 0,
-                  "Should be in an update while creating frames");
+  MOZ_ASSERT(mUpdateCount != 0, "Should be in an update while creating frames");
 
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
@@ -7874,8 +7871,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
              !RestyleManager()->IsInStyleRefresh());
 
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
-  NS_PRECONDITION(mUpdateCount != 0,
-                  "Should be in an update while creating frames");
+  MOZ_ASSERT(mUpdateCount != 0, "Should be in an update while creating frames");
 
   NS_PRECONDITION(aStartChild, "must always pass a child");
 
@@ -8442,6 +8438,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent* aContainer,
   if (!childFrame || childFrame->GetContent() != aChild) {
     // XXXbz the GetContent() != aChild check is needed due to bug 135040.
     // Remove it once that's fixed.
+    childFrame = nullptr;
     UnregisterDisplayNoneStyleFor(aChild, aContainer);
   }
   MOZ_ASSERT(!childFrame || !GetDisplayContentsStyleFor(aChild),

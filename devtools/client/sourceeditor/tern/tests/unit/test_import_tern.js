@@ -9,8 +9,8 @@ function run_test() {
   const tern = require("devtools/client/sourceeditor/tern/tern");
   const ecma5 = require("devtools/client/sourceeditor/tern/ecma5");
   const browser = require("devtools/client/sourceeditor/tern/browser");
-  do_check_true(!!tern);
-  do_check_true(!!ecma5);
-  do_check_true(!!browser);
-  do_check_eq(typeof tern.Server, "function");
+  Assert.ok(!!tern);
+  Assert.ok(!!ecma5);
+  Assert.ok(!!browser);
+  Assert.equal(typeof tern.Server, "function");
 }

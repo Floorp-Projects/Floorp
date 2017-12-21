@@ -10,7 +10,7 @@ tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_NONE,
 
   async setup() {
-    do_print("Sorting test 1: SORT BY NONE");
+    info("Sorting test 1: SORT BY NONE");
 
     this._unsortedData = [
       { isBookmark: true,
@@ -71,7 +71,7 @@ tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING,
 
   async setup() {
-    do_print("Sorting test 2: SORT BY TITLE");
+    info("Sorting test 2: SORT BY TITLE");
 
     this._unsortedData = [
       { isBookmark: true,
@@ -144,7 +144,7 @@ tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING,
 
   async setup() {
-    do_print("Sorting test 3: SORT BY DATE");
+    info("Sorting test 3: SORT BY DATE");
 
     var timeInMicroseconds = Date.now() * 1000;
     this._unsortedData = [
@@ -242,7 +242,7 @@ tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_URI_ASCENDING,
 
   async setup() {
-    do_print("Sorting test 4: SORT BY URI");
+    info("Sorting test 4: SORT BY URI");
 
     var timeInMicroseconds = Date.now() * 1000;
     this._unsortedData = [
@@ -346,7 +346,7 @@ tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_ASCENDING,
 
   async setup() {
-    do_print("Sorting test 5: SORT BY VISITCOUNT");
+    info("Sorting test 5: SORT BY VISITCOUNT");
 
     var timeInMicroseconds = Date.now() * 1000;
     this._unsortedData = [
@@ -445,7 +445,7 @@ tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_KEYWORD_ASCENDING,
 
   async setup() {
-    do_print("Sorting test 6: SORT BY KEYWORD");
+    info("Sorting test 6: SORT BY KEYWORD");
 
     this._unsortedData = [
       { isBookmark: true,
@@ -542,7 +542,7 @@ tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_ASCENDING,
 
   async setup() {
-    do_print("Sorting test 7: SORT BY DATEADDED");
+    info("Sorting test 7: SORT BY DATEADDED");
 
     var timeInMicroseconds = Date.now() * 1000;
     this._unsortedData = [
@@ -630,7 +630,7 @@ tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_ASCENDING,
 
   async setup() {
-    do_print("Sorting test 8: SORT BY LASTMODIFIED");
+    info("Sorting test 8: SORT BY LASTMODIFIED");
 
     var timeInMicroseconds = Date.now() * 1000;
     var timeAddedInMicroseconds = timeInMicroseconds - 10000;
@@ -726,7 +726,7 @@ tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_TAGS_ASCENDING,
 
   async setup() {
-    do_print("Sorting test 9: SORT BY TAGS");
+    info("Sorting test 9: SORT BY TAGS");
 
     this._unsortedData = [
       { isBookmark: true,
@@ -826,7 +826,7 @@ tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_ASCENDING,
 
   async setup() {
-    do_print("Sorting test 10: SORT BY ANNOTATION (int32)");
+    info("Sorting test 10: SORT BY ANNOTATION (int32)");
 
     var timeInMicroseconds = Date.now() * 1000;
     this._unsortedData = [
@@ -921,7 +921,7 @@ tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_ASCENDING,
 
   async setup() {
-    do_print("Sorting test 11: SORT BY ANNOTATION (int64)");
+    info("Sorting test 11: SORT BY ANNOTATION (int64)");
 
     var timeInMicroseconds = Date.now() * 1000;
     this._unsortedData = [
@@ -1002,7 +1002,7 @@ tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_ASCENDING,
 
   async setup() {
-    do_print("Sorting test 12: SORT BY ANNOTATION (string)");
+    info("Sorting test 12: SORT BY ANNOTATION (string)");
 
     var timeInMicroseconds = Date.now() * 1000;
     this._unsortedData = [
@@ -1083,7 +1083,7 @@ tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_ASCENDING,
 
   async setup() {
-    do_print("Sorting test 13: SORT BY ANNOTATION (double)");
+    info("Sorting test 13: SORT BY ANNOTATION (double)");
 
     var timeInMicroseconds = Date.now() * 1000;
     this._unsortedData = [
@@ -1164,7 +1164,7 @@ tests.push({
   _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_ASCENDING,
 
   async setup() {
-    do_print("Sorting test 13: SORT BY FRECENCY ");
+    info("Sorting test 13: SORT BY FRECENCY ");
 
     let timeInMicroseconds = PlacesUtils.toPRTime(Date.now() - 10000);
 

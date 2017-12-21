@@ -17,8 +17,8 @@ add_task(function test_register() {
   // should fail
   try {
     CrashMonitor.init();
-    do_check_true(false);
+    Assert.ok(false);
   } catch (ex) {
-    do_check_true(true);
+    Assert.ok(true);
   }
 });

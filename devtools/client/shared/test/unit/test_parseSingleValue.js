@@ -68,26 +68,26 @@ const TEST_DATA = [
 
 function run_test() {
   for (let test of TEST_DATA) {
-    do_print("Test input value " + test.input);
+    info("Test input value " + test.input);
     try {
       let output = parseSingleValue(isCssPropertyKnown, test.input);
       assertOutput(output, test.expected);
     } catch (e) {
-      do_print("parseSingleValue threw an exception with the given input " +
+      info("parseSingleValue threw an exception with the given input " +
         "value");
       if (test.throws) {
-        do_print("Exception expected");
-        do_check_true(true);
+        info("Exception expected");
+        Assert.ok(true);
       } else {
-        do_print("Exception unexpected\n" + e);
-        do_check_true(false);
+        info("Exception unexpected\n" + e);
+        Assert.ok(false);
       }
     }
   }
 }
 
 function assertOutput(actual, expected) {
-  do_print("Check that the output has the expected value and priority");
-  do_check_eq(expected.value, actual.value);
-  do_check_eq(expected.priority, actual.priority);
+  info("Check that the output has the expected value and priority");
+  Assert.equal(expected.value, actual.value);
+  Assert.equal(expected.priority, actual.priority);
 }

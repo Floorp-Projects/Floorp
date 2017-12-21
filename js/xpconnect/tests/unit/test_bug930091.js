@@ -5,14 +5,14 @@ function checkThrows(fn) {
     fn();
     ok(false, "Should have thrown");
   } catch (e) {
-    do_check_true(/denied|insecure|prohibited/.test(e));
+    ok(/denied|insecure|prohibited/.test(e));
   }
 }
 
 function run_test() {
   var xosb = new Cu.Sandbox('http://www.example.org');
   var sb = new Cu.Sandbox('http://www.example.com');
-  sb.do_check_true = do_check_true;
+  sb.ok = ok;
   sb.fun = function() { ok(false, "Shouldn't ever reach me"); };
   sb.cow = { foopy: 2, __exposedProps__: { foopy: 'rw' } };
   sb.payload = Cu.evalInSandbox('new Object()', xosb);

@@ -33,7 +33,7 @@ add_task(async function test_createDownload_private() {
     target: { path: getTempFile(TEST_TARGET_FILE_NAME).path },
     saver: { type: "copy" }
   });
-  do_check_true(download.source.isPrivate);
+  Assert.ok(download.source.isPrivate);
 });
 
 /**
@@ -46,14 +46,14 @@ add_task(async function test_createDownload_public() {
     target: { path: tempPath },
     saver: { type: "copy" }
   });
-  do_check_false(download.source.isPrivate);
+  Assert.ok(!download.source.isPrivate);
 
   download = await Downloads.createDownload({
     source: { url: "about:blank" },
     target: { path: tempPath },
     saver: { type: "copy" }
   });
-  do_check_false(download.source.isPrivate);
+  Assert.ok(!download.source.isPrivate);
 });
 
 /**
@@ -75,13 +75,13 @@ add_task(async function test_createDownload_pdf() {
     }
   }
 
-  do_check_false(download.succeeded);
-  do_check_true(download.stopped);
-  do_check_false(download.canceled);
-  do_check_true(download.error !== null);
-  do_check_true(download.error.becauseSourceFailed);
-  do_check_false(download.error.becauseTargetFailed);
-  do_check_false(await OS.File.exists(download.target.path));
+  Assert.ok(!download.succeeded);
+  Assert.ok(download.stopped);
+  Assert.ok(!download.canceled);
+  Assert.ok(download.error !== null);
+  Assert.ok(download.error.becauseSourceFailed);
+  Assert.ok(!download.error.becauseTargetFailed);
+  Assert.equal(false, await OS.File.exists(download.target.path));
 });
 
 /**
@@ -129,10 +129,10 @@ add_task(async function test_getList() {
   let publicListTwo = await Downloads.getList(Downloads.PUBLIC);
   let privateListTwo = await Downloads.getList(Downloads.PRIVATE);
 
-  do_check_eq(publicListOne, publicListTwo);
-  do_check_eq(privateListOne, privateListTwo);
+  Assert.equal(publicListOne, publicListTwo);
+  Assert.equal(privateListOne, privateListTwo);
 
-  do_check_neq(publicListOne, privateListOne);
+  Assert.notEqual(publicListOne, privateListOne);
 });
 
 /**
@@ -148,10 +148,10 @@ add_task(async function test_getSummary() {
   let publicSummaryTwo = await Downloads.getSummary(Downloads.PUBLIC);
   let privateSummaryTwo = await Downloads.getSummary(Downloads.PRIVATE);
 
-  do_check_eq(publicSummaryOne, publicSummaryTwo);
-  do_check_eq(privateSummaryOne, privateSummaryTwo);
+  Assert.equal(publicSummaryOne, publicSummaryTwo);
+  Assert.equal(privateSummaryOne, privateSummaryTwo);
 
-  do_check_neq(publicSummaryOne, privateSummaryOne);
+  Assert.notEqual(publicSummaryOne, privateSummaryOne);
 });
 
 /**
@@ -160,7 +160,7 @@ add_task(async function test_getSummary() {
  */
 add_task(async function test_getSystemDownloadsDirectory() {
   let downloadDir = await Downloads.getSystemDownloadsDirectory();
-  do_check_neq(downloadDir, "");
+  Assert.notEqual(downloadDir, "");
 });
 
 /**
@@ -169,7 +169,7 @@ add_task(async function test_getSystemDownloadsDirectory() {
  */
 add_task(async function test_getPreferredDownloadsDirectory() {
   let downloadDir = await Downloads.getPreferredDownloadsDirectory();
-  do_check_neq(downloadDir, "");
+  Assert.notEqual(downloadDir, "");
 });
 
 /**
@@ -178,5 +178,5 @@ add_task(async function test_getPreferredDownloadsDirectory() {
  */
 add_task(async function test_getTemporaryDownloadsDirectory() {
   let downloadDir = await Downloads.getTemporaryDownloadsDirectory();
-  do_check_neq(downloadDir, "");
+  Assert.notEqual(downloadDir, "");
 });

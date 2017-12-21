@@ -160,23 +160,23 @@ add_task(async function test_updateDeviceRegistration_with_new_device() {
 
   const result = await fxa.updateDeviceRegistration();
 
-  do_check_eq(result, "newly-generated device id");
-  do_check_eq(spy.updateDevice.count, 0);
-  do_check_eq(spy.getDeviceList.count, 0);
-  do_check_eq(spy.registerDevice.count, 1);
-  do_check_eq(spy.registerDevice.args[0].length, 4);
-  do_check_eq(spy.registerDevice.args[0][0], credentials.sessionToken);
-  do_check_eq(spy.registerDevice.args[0][1], deviceName);
-  do_check_eq(spy.registerDevice.args[0][2], "desktop");
-  do_check_eq(spy.registerDevice.args[0][3].pushCallback, "http://mochi.test:8888");
-  do_check_eq(spy.registerDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
-  do_check_eq(spy.registerDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
+  Assert.equal(result, "newly-generated device id");
+  Assert.equal(spy.updateDevice.count, 0);
+  Assert.equal(spy.getDeviceList.count, 0);
+  Assert.equal(spy.registerDevice.count, 1);
+  Assert.equal(spy.registerDevice.args[0].length, 4);
+  Assert.equal(spy.registerDevice.args[0][0], credentials.sessionToken);
+  Assert.equal(spy.registerDevice.args[0][1], deviceName);
+  Assert.equal(spy.registerDevice.args[0][2], "desktop");
+  Assert.equal(spy.registerDevice.args[0][3].pushCallback, "http://mochi.test:8888");
+  Assert.equal(spy.registerDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
+  Assert.equal(spy.registerDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
 
   const state = fxa.internal.currentAccountState;
   const data = await state.getUserAccountData();
 
-  do_check_eq(data.deviceId, "newly-generated device id");
-  do_check_eq(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
+  Assert.equal(data.deviceId, "newly-generated device id");
+  Assert.equal(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
 });
 
 add_task(async function test_updateDeviceRegistration_with_existing_device() {
@@ -212,23 +212,23 @@ add_task(async function test_updateDeviceRegistration_with_existing_device() {
   };
   const result = await fxa.updateDeviceRegistration();
 
-  do_check_eq(result, credentials.deviceId);
-  do_check_eq(spy.registerDevice.count, 0);
-  do_check_eq(spy.getDeviceList.count, 0);
-  do_check_eq(spy.updateDevice.count, 1);
-  do_check_eq(spy.updateDevice.args[0].length, 4);
-  do_check_eq(spy.updateDevice.args[0][0], credentials.sessionToken);
-  do_check_eq(spy.updateDevice.args[0][1], credentials.deviceId);
-  do_check_eq(spy.updateDevice.args[0][2], deviceName);
-  do_check_eq(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
-  do_check_eq(spy.updateDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
-  do_check_eq(spy.updateDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
+  Assert.equal(result, credentials.deviceId);
+  Assert.equal(spy.registerDevice.count, 0);
+  Assert.equal(spy.getDeviceList.count, 0);
+  Assert.equal(spy.updateDevice.count, 1);
+  Assert.equal(spy.updateDevice.args[0].length, 4);
+  Assert.equal(spy.updateDevice.args[0][0], credentials.sessionToken);
+  Assert.equal(spy.updateDevice.args[0][1], credentials.deviceId);
+  Assert.equal(spy.updateDevice.args[0][2], deviceName);
+  Assert.equal(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
+  Assert.equal(spy.updateDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
+  Assert.equal(spy.updateDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
 
   const state = fxa.internal.currentAccountState;
   const data = await state.getUserAccountData();
 
-  do_check_eq(data.deviceId, credentials.deviceId);
-  do_check_eq(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
+  Assert.equal(data.deviceId, credentials.deviceId);
+  Assert.equal(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
 });
 
 add_task(async function test_updateDeviceRegistration_with_unknown_device_error() {
@@ -271,24 +271,24 @@ add_task(async function test_updateDeviceRegistration_with_unknown_device_error(
 
   const result = await fxa.updateDeviceRegistration();
 
-  do_check_null(result);
-  do_check_eq(spy.getDeviceList.count, 0);
-  do_check_eq(spy.registerDevice.count, 0);
-  do_check_eq(spy.updateDevice.count, 1);
-  do_check_eq(spy.updateDevice.args[0].length, 4);
-  do_check_eq(spy.updateDevice.args[0][0], credentials.sessionToken);
-  do_check_eq(spy.updateDevice.args[0][1], credentials.deviceId);
-  do_check_eq(spy.updateDevice.args[0][2], deviceName);
-  do_check_eq(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
-  do_check_eq(spy.updateDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
-  do_check_eq(spy.updateDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
+  Assert.equal(null, result);
+  Assert.equal(spy.getDeviceList.count, 0);
+  Assert.equal(spy.registerDevice.count, 0);
+  Assert.equal(spy.updateDevice.count, 1);
+  Assert.equal(spy.updateDevice.args[0].length, 4);
+  Assert.equal(spy.updateDevice.args[0][0], credentials.sessionToken);
+  Assert.equal(spy.updateDevice.args[0][1], credentials.deviceId);
+  Assert.equal(spy.updateDevice.args[0][2], deviceName);
+  Assert.equal(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
+  Assert.equal(spy.updateDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
+  Assert.equal(spy.updateDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
 
 
   const state = fxa.internal.currentAccountState;
   const data = await state.getUserAccountData();
 
-  do_check_null(data.deviceId);
-  do_check_eq(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
+  Assert.equal(null, data.deviceId);
+  Assert.equal(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
 });
 
 add_task(async function test_deleteDeviceRegistration() {
@@ -298,8 +298,8 @@ add_task(async function test_deleteDeviceRegistration() {
 
   const state = fxa.internal.currentAccountState;
   let data = await state.getUserAccountData();
-  do_check_eq(data.deviceId, credentials.deviceId);
-  do_check_eq(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
+  Assert.equal(data.deviceId, credentials.deviceId);
+  Assert.equal(data.deviceRegistrationVersion, DEVICE_REGISTRATION_VERSION);
 
   const spy = {
     signOutAndDestroyDevice: { count: 0, args: [] }
@@ -312,15 +312,15 @@ add_task(async function test_deleteDeviceRegistration() {
   };
   await fxa.deleteDeviceRegistration(credentials.sessionToken, credentials.deviceId);
 
-  do_check_eq(spy.signOutAndDestroyDevice.count, 1);
-  do_check_eq(spy.signOutAndDestroyDevice.args[0].length, 2);
-  do_check_eq(spy.signOutAndDestroyDevice.args[0][0], credentials.sessionToken);
-  do_check_eq(spy.signOutAndDestroyDevice.args[0][1], credentials.deviceId);
+  Assert.equal(spy.signOutAndDestroyDevice.count, 1);
+  Assert.equal(spy.signOutAndDestroyDevice.args[0].length, 2);
+  Assert.equal(spy.signOutAndDestroyDevice.args[0][0], credentials.sessionToken);
+  Assert.equal(spy.signOutAndDestroyDevice.args[0][1], credentials.deviceId);
 
   data = await state.getUserAccountData();
 
-  do_check_false(data.deviceId);
-  do_check_false(data.deviceRegistrationVersion);
+  Assert.ok(!data.deviceId);
+  Assert.ok(!data.deviceRegistrationVersion);
 });
 
 add_task(async function test_updateDeviceRegistration_with_device_session_conflict_error() {
@@ -369,26 +369,26 @@ add_task(async function test_updateDeviceRegistration_with_device_session_confli
 
   const result = await fxa.updateDeviceRegistration();
 
-  do_check_eq(result, credentials.deviceId);
-  do_check_eq(spy.registerDevice.count, 0);
-  do_check_eq(spy.updateDevice.count, 1);
-  do_check_eq(spy.updateDevice.args[0].length, 4);
-  do_check_eq(spy.updateDevice.args[0][0], credentials.sessionToken);
-  do_check_eq(spy.updateDevice.args[0][1], credentials.deviceId);
-  do_check_eq(spy.updateDevice.args[0][2], deviceName);
-  do_check_eq(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
-  do_check_eq(spy.updateDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
-  do_check_eq(spy.updateDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
-  do_check_eq(spy.getDeviceList.count, 1);
-  do_check_eq(spy.getDeviceList.args[0].length, 1);
-  do_check_eq(spy.getDeviceList.args[0][0], credentials.sessionToken);
-  do_check_true(spy.getDeviceList.time >= spy.updateDevice.time);
+  Assert.equal(result, credentials.deviceId);
+  Assert.equal(spy.registerDevice.count, 0);
+  Assert.equal(spy.updateDevice.count, 1);
+  Assert.equal(spy.updateDevice.args[0].length, 4);
+  Assert.equal(spy.updateDevice.args[0][0], credentials.sessionToken);
+  Assert.equal(spy.updateDevice.args[0][1], credentials.deviceId);
+  Assert.equal(spy.updateDevice.args[0][2], deviceName);
+  Assert.equal(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
+  Assert.equal(spy.updateDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
+  Assert.equal(spy.updateDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
+  Assert.equal(spy.getDeviceList.count, 1);
+  Assert.equal(spy.getDeviceList.args[0].length, 1);
+  Assert.equal(spy.getDeviceList.args[0][0], credentials.sessionToken);
+  Assert.ok(spy.getDeviceList.time >= spy.updateDevice.time);
 
   const state = fxa.internal.currentAccountState;
   const data = await state.getUserAccountData();
 
-  do_check_eq(data.deviceId, credentials.deviceId);
-  do_check_eq(data.deviceRegistrationVersion, null);
+  Assert.equal(data.deviceId, credentials.deviceId);
+  Assert.equal(data.deviceRegistrationVersion, null);
 });
 
 add_task(async function test_updateDeviceRegistration_with_unrecoverable_error() {
@@ -426,16 +426,16 @@ add_task(async function test_updateDeviceRegistration_with_unrecoverable_error()
 
   const result = await fxa.updateDeviceRegistration();
 
-  do_check_null(result);
-  do_check_eq(spy.getDeviceList.count, 0);
-  do_check_eq(spy.updateDevice.count, 0);
-  do_check_eq(spy.registerDevice.count, 1);
-  do_check_eq(spy.registerDevice.args[0].length, 4);
+  Assert.equal(null, result);
+  Assert.equal(spy.getDeviceList.count, 0);
+  Assert.equal(spy.updateDevice.count, 0);
+  Assert.equal(spy.registerDevice.count, 1);
+  Assert.equal(spy.registerDevice.args[0].length, 4);
 
   const state = fxa.internal.currentAccountState;
   const data = await state.getUserAccountData();
 
-  do_check_null(data.deviceId);
+  Assert.equal(null, data.deviceId);
 });
 
 add_task(async function test_getDeviceId_with_no_device_id_invokes_device_registration() {
@@ -457,11 +457,11 @@ add_task(async function test_getDeviceId_with_no_device_id_invokes_device_regist
 
   const result = await fxa.internal.getDeviceId();
 
-  do_check_eq(spy.count, 1);
-  do_check_eq(spy.args[0].length, 1);
-  do_check_eq(spy.args[0][0].email, credentials.email);
-  do_check_null(spy.args[0][0].deviceId);
-  do_check_eq(result, "bar");
+  Assert.equal(spy.count, 1);
+  Assert.equal(spy.args[0].length, 1);
+  Assert.equal(spy.args[0][0].email, credentials.email);
+  Assert.equal(null, spy.args[0][0].deviceId);
+  Assert.equal(result, "bar");
 });
 
 add_task(async function test_getDeviceId_with_registration_version_outdated_invokes_device_registration() {
@@ -481,10 +481,10 @@ add_task(async function test_getDeviceId_with_registration_version_outdated_invo
 
   const result = await fxa.internal.getDeviceId();
 
-  do_check_eq(spy.count, 1);
-  do_check_eq(spy.args[0].length, 1);
-  do_check_eq(spy.args[0][0].deviceId, credentials.deviceId);
-  do_check_eq(result, "wibble");
+  Assert.equal(spy.count, 1);
+  Assert.equal(spy.args[0].length, 1);
+  Assert.equal(spy.args[0][0].deviceId, credentials.deviceId);
+  Assert.equal(result, "wibble");
 });
 
 add_task(async function test_getDeviceId_with_device_id_and_uptodate_registration_version_doesnt_invoke_device_registration() {
@@ -503,8 +503,8 @@ add_task(async function test_getDeviceId_with_device_id_and_uptodate_registratio
 
   const result = await fxa.internal.getDeviceId();
 
-  do_check_eq(spy.count, 0);
-  do_check_eq(result, "foo's device id");
+  Assert.equal(spy.count, 0);
+  Assert.equal(result, "foo's device id");
 });
 
 add_task(async function test_getDeviceId_with_device_id_and_with_no_registration_version_invokes_device_registration() {
@@ -524,10 +524,10 @@ add_task(async function test_getDeviceId_with_device_id_and_with_no_registration
 
   const result = await fxa.internal.getDeviceId();
 
-  do_check_eq(spy.count, 1);
-  do_check_eq(spy.args[0].length, 1);
-  do_check_eq(spy.args[0][0].deviceId, credentials.deviceId);
-  do_check_eq(result, "wibble");
+  Assert.equal(spy.count, 1);
+  Assert.equal(spy.args[0].length, 1);
+  Assert.equal(spy.args[0][0].deviceId, credentials.deviceId);
+  Assert.equal(result, "wibble");
 });
 
 function expandHex(two_hex) {

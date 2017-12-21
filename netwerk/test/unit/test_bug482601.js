@@ -33,9 +33,9 @@ var listener = {
   },
 
   onStopRequest: function (request, ctx, status) {
-    do_check_eq(status, Cr.NS_OK);
-    do_check_eq(buffer, "0123456789");
-    do_check_eq(observers_called, results[test_nr]);
+    Assert.equal(status, Cr.NS_OK);
+    Assert.equal(buffer, "0123456789");
+    Assert.equal(observers_called, results[test_nr]);
     test_nr++;
     do_timeout(0, do_test);
   }
@@ -64,7 +64,7 @@ function do_test() {
     tests[test_nr]();
   }
   else {
-    do_check_eq(handlers_called, "nocache,partial,cached");
+    Assert.equal(handlers_called, "nocache,partial,cached");
     httpserv.stop(do_test_finished);
   }
 }
@@ -116,7 +116,7 @@ function test_partial() {
 }
 
 function test_partial2(status, entry) {
-  do_check_eq(status, Cr.NS_OK);
+  Assert.equal(status, Cr.NS_OK);
   storeCache(entry,
              "HTTP/1.1 200 OK\r\n" +
              "Date: Thu, 1 Jan 2009 00:00:00 GMT\r\n" +
@@ -142,7 +142,7 @@ function test_cached() {
 }
 
 function test_cached2(status, entry) {
-  do_check_eq(status, Cr.NS_OK);
+  Assert.equal(status, Cr.NS_OK);
   storeCache(entry,
              "HTTP/1.1 200 OK\r\n" +
              "Date: Thu, 1 Jan 2009 00:00:00 GMT\r\n" +
@@ -169,7 +169,7 @@ function test_only_from_cache() {
 }
 
 function test_only_from_cache2(status, entry) {
-  do_check_eq(status, Cr.NS_OK);
+  Assert.equal(status, Cr.NS_OK);
   storeCache(entry,
              "HTTP/1.1 200 OK\r\n" +
              "Date: Thu, 1 Jan 2009 00:00:00 GMT\r\n" +
@@ -201,11 +201,11 @@ function bug482601_nocache(metadata, response) {
 
 // /bug482601/partial
 function bug482601_partial(metadata, response) {
-  do_check_true(metadata.hasHeader("If-Range"));
-  do_check_eq(metadata.getHeader("If-Range"),
-              "Thu, 1 Jan 2009 00:00:00 GMT");
-  do_check_true(metadata.hasHeader("Range"));
-  do_check_eq(metadata.getHeader("Range"), "bytes=4-");
+  Assert.ok(metadata.hasHeader("If-Range"));
+  Assert.equal(metadata.getHeader("If-Range"),
+               "Thu, 1 Jan 2009 00:00:00 GMT");
+  Assert.ok(metadata.hasHeader("Range"));
+  Assert.equal(metadata.getHeader("Range"), "bytes=4-");
 
   response.setStatusLine(metadata.httpVersion, 206, "Partial Content");
   response.setHeader("Content-Range", "bytes 4-9/10", false);
@@ -219,9 +219,9 @@ function bug482601_partial(metadata, response) {
 
 // /bug482601/cached
 function bug482601_cached(metadata, response) {
-  do_check_true(metadata.hasHeader("If-Modified-Since"));
-  do_check_eq(metadata.getHeader("If-Modified-Since"),
-              "Thu, 1 Jan 2009 00:00:00 GMT");
+  Assert.ok(metadata.hasHeader("If-Modified-Since"));
+  Assert.equal(metadata.getHeader("If-Modified-Since"),
+               "Thu, 1 Jan 2009 00:00:00 GMT");
 
   response.setStatusLine(metadata.httpVersion, 304, "Not Modified");
   handlers_called += ",cached";

@@ -120,7 +120,7 @@ add_task(async function setup() {
   Preferences.set(TelemetryUtils.Preferences.Server, "http://localhost:" + PingServer.port);
 });
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   if (libModulesHandle) {
     libModulesHandle.close();
   }

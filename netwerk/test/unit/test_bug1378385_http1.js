@@ -122,7 +122,7 @@ function check_response_id(responses, windowId)
   for (var i = 0; i < responses.length; i++) {
     var id = responses[i].getHeader("X-ID");
     log("response id=" + id  + " windowId=" + windowId);
-    do_check_eq(id, windowId);
+    Assert.equal(id, windowId);
   }
 }
 
@@ -163,7 +163,7 @@ function setup_http_server()
 
   });
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     server.stop(serverStopListener);
   });
 

@@ -26,27 +26,27 @@ function run_test() {
   startupManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(async function(olda1) {
-    do_check_eq(olda1, null);
+    Assert.equal(olda1, null);
 
     writeInstallRDFForExtension(addon1, profileDir);
 
     await promiseRestartManager();
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-      do_check_neq(a1, null);
-      do_check_true(a1.isActive);
-      do_check_false(a1.userDisabled);
-      do_check_true(isExtensionInAddonsList(profileDir, a1.id));
-      do_check_eq(a1.pendingOperations, 0);
+      Assert.notEqual(a1, null);
+      Assert.ok(a1.isActive);
+      Assert.ok(!a1.userDisabled);
+      Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
+      Assert.equal(a1.pendingOperations, 0);
       do_check_in_crash_annotation(addon1.id, addon1.version);
 
-      do_execute_soon(run_test_1);
+      executeSoon(run_test_1);
     });
   }));
 }
 
 function end_test() {
-  do_execute_soon(do_test_finished);
+  executeSoon(do_test_finished);
 }
 
 // Uninstalling an add-on should work.
@@ -57,20 +57,20 @@ function run_test_1() {
     ]
   });
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_eq(a1.pendingOperations, 0);
-    do_check_neq(a1.operationsRequiringRestart &
-                 AddonManager.OP_NEEDS_RESTART_UNINSTALL, 0);
+    Assert.equal(a1.pendingOperations, 0);
+    Assert.notEqual(a1.operationsRequiringRestart &
+                    AddonManager.OP_NEEDS_RESTART_UNINSTALL, 0);
     a1.uninstall();
-    do_check_true(hasFlag(a1.pendingOperations, AddonManager.PENDING_UNINSTALL));
+    Assert.ok(hasFlag(a1.pendingOperations, AddonManager.PENDING_UNINSTALL));
     do_check_in_crash_annotation(addon1.id, addon1.version);
 
     ensure_test_completed();
 
     AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
-      do_check_eq(list.length, 1);
-      do_check_eq(list[0].id, "addon1@tests.mozilla.org");
+      Assert.equal(list.length, 1);
+      Assert.equal(list[0].id, "addon1@tests.mozilla.org");
 
-      do_execute_soon(check_test_1);
+      executeSoon(check_test_1);
     });
   });
 }
@@ -79,15 +79,15 @@ function check_test_1() {
   restartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_eq(a1, null);
-    do_check_false(isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
+    Assert.equal(a1, null);
+    Assert.ok(!isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
     do_check_not_in_crash_annotation(addon1.id, addon1.version);
 
     var dest = profileDir.clone();
     dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
-    do_check_false(dest.exists());
+    Assert.ok(!dest.exists());
     writeInstallRDFForExtension(addon1, profileDir);
-    do_execute_soon(run_test_2);
+    executeSoon(run_test_2);
   });
 }
 
@@ -102,13 +102,13 @@ async function run_test_2() {
   });
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_neq(a1, null);
-    do_check_true(a1.isActive);
-    do_check_false(a1.userDisabled);
-    do_check_true(isExtensionInAddonsList(profileDir, a1.id));
-    do_check_eq(a1.pendingOperations, 0);
+    Assert.notEqual(a1, null);
+    Assert.ok(a1.isActive);
+    Assert.ok(!a1.userDisabled);
+    Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
+    Assert.equal(a1.pendingOperations, 0);
     a1.uninstall();
-    do_check_true(hasFlag(a1.pendingOperations, AddonManager.PENDING_UNINSTALL));
+    Assert.ok(hasFlag(a1.pendingOperations, AddonManager.PENDING_UNINSTALL));
 
     ensure_test_completed();
 
@@ -118,11 +118,11 @@ async function run_test_2() {
       ]
     });
     a1.cancelUninstall();
-    do_check_eq(a1.pendingOperations, 0);
+    Assert.equal(a1.pendingOperations, 0);
 
     ensure_test_completed();
 
-    do_execute_soon(check_test_2);
+    executeSoon(check_test_2);
   });
 }
 
@@ -130,10 +130,10 @@ async function check_test_2() {
   await promiseRestartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_neq(a1, null);
-    do_check_true(a1.isActive);
-    do_check_false(a1.userDisabled);
-    do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+    Assert.notEqual(a1, null);
+    Assert.ok(a1.isActive);
+    Assert.ok(!a1.userDisabled);
+    Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
 
     run_test_3();
   });
@@ -150,8 +150,8 @@ function run_test_3() {
     a1.userDisabled = true;
     ensure_test_completed();
 
-    do_check_true(hasFlag(AddonManager.PENDING_DISABLE, a1.pendingOperations));
-    do_check_true(a1.isActive);
+    Assert.ok(hasFlag(AddonManager.PENDING_DISABLE, a1.pendingOperations));
+    Assert.ok(a1.isActive);
 
     prepare_test({
       "addon1@tests.mozilla.org": [
@@ -168,8 +168,8 @@ function check_test_3() {
   ensure_test_completed();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_neq(a1, null);
-    do_check_true(hasFlag(AddonManager.PENDING_UNINSTALL, a1.pendingOperations));
+    Assert.notEqual(a1, null);
+    Assert.ok(hasFlag(AddonManager.PENDING_UNINSTALL, a1.pendingOperations));
 
     prepare_test({
       "addon1@tests.mozilla.org": [
@@ -178,9 +178,9 @@ function check_test_3() {
     });
     a1.cancelUninstall();
     ensure_test_completed();
-    do_check_true(hasFlag(AddonManager.PENDING_DISABLE, a1.pendingOperations));
+    Assert.ok(hasFlag(AddonManager.PENDING_DISABLE, a1.pendingOperations));
 
-    do_execute_soon(run_test_4);
+    executeSoon(run_test_4);
   });
 }
 
@@ -189,10 +189,10 @@ function run_test_4() {
   restartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_neq(a1, null);
-    do_check_false(a1.isActive);
-    do_check_true(a1.userDisabled);
-    do_check_false(isExtensionInAddonsList(profileDir, a1.id));
+    Assert.notEqual(a1, null);
+    Assert.ok(!a1.isActive);
+    Assert.ok(a1.userDisabled);
+    Assert.ok(!isExtensionInAddonsList(profileDir, a1.id));
 
     prepare_test({
       "addon1@tests.mozilla.org": [
@@ -209,7 +209,7 @@ function run_test_4() {
 
 function check_test_4() {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_eq(a1, null);
+    Assert.equal(a1, null);
 
     end_test();
   });

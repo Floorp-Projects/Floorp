@@ -80,10 +80,10 @@ function async_write_file(aContractId, aDeferOpen)
 
   NetUtil.asyncCopy(istream, ostream, function(aResult) {
     // Make sure the copy was successful!
-    do_check_true(Components.isSuccessCode(aResult));
+    Assert.ok(Components.isSuccessCode(aResult));
 
     // Check the file contents.
-    do_check_eq(TEST_DATA, getFileContents(file));
+    Assert.equal(TEST_DATA, getFileContents(file));
 
     // Finish the test.
     do_test_finished();
@@ -165,7 +165,7 @@ function test_async_copy()
           + (bufferedInput?"buffered input":"unbuffered input")
           + ", "
           + (bufferedOutput?"buffered output":"unbuffered output");
-        do_print(text);
+        info(text);
         let TEST_DATA = "[" + make_sample(text) + "]";
         let source = make_input(bufferedInput, TEST_DATA);
         let {file, sink} = make_output(bufferedOutput);
@@ -179,7 +179,7 @@ function test_async_copy()
         }
 
         // Check the file contents.
-        do_check_eq(TEST_DATA, getFileContents(file));
+        Assert.equal(TEST_DATA, getFileContents(file));
       }
     }
 
@@ -211,7 +211,7 @@ function test_newURI_no_spec_throws()
     do_throw("should throw!");
   }
   catch (e) {
-    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
   run_next_test();
@@ -226,7 +226,7 @@ function test_newURI()
   const TEST_URI = "http://mozilla.org";
   let iosURI = ios.newURI(TEST_URI);
   let NetUtilURI = NetUtil.newURI(TEST_URI);
-  do_check_true(iosURI.equals(NetUtilURI));
+  Assert.ok(iosURI.equals(NetUtilURI));
 
   run_next_test();
 }
@@ -245,14 +245,14 @@ function test_newURI_takes_nsIFile()
   // method.
   let iosURI = ios.newFileURI(file);
   let NetUtilURI = NetUtil.newURI(file);
-  do_check_true(iosURI.equals(NetUtilURI));
+  Assert.ok(iosURI.equals(NetUtilURI));
 
   run_next_test();
 }
 
 function test_ioService()
 {
-  do_check_true(NetUtil.ioService instanceof Ci.nsIIOService);
+  Assert.ok(NetUtil.ioService instanceof Ci.nsIIOService);
   run_next_test();
 }
 
@@ -263,7 +263,7 @@ function test_asyncFetch_no_channel()
     do_throw("should throw!");
   }
   catch (e) {
-    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
   run_next_test();
@@ -276,7 +276,7 @@ function test_asyncFetch_no_callback()
     do_throw("should throw!");
   }
   catch (e) {
-    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
   run_next_test();
@@ -304,15 +304,15 @@ function test_asyncFetch_with_nsIChannel()
   // Open our channel asynchronously.
   NetUtil.asyncFetch(channel, function(aInputStream, aResult) {
     // Check that we had success.
-    do_check_true(Components.isSuccessCode(aResult));
+    Assert.ok(Components.isSuccessCode(aResult));
 
     // Check that we got the right data.
-    do_check_eq(aInputStream.available(), TEST_DATA.length);
+    Assert.equal(aInputStream.available(), TEST_DATA.length);
     let is = Cc["@mozilla.org/scriptableinputstream;1"].
              createInstance(Ci.nsIScriptableInputStream);
     is.init(aInputStream);
     let result = is.read(TEST_DATA.length);
-    do_check_eq(TEST_DATA, result);
+    Assert.equal(TEST_DATA, result);
 
     server.stop(run_next_test);
   });
@@ -341,15 +341,15 @@ function test_asyncFetch_with_nsIURI()
     loadUsingSystemPrincipal: true,
   }, function(aInputStream, aResult) {
     // Check that we had success.
-    do_check_true(Components.isSuccessCode(aResult));
+    Assert.ok(Components.isSuccessCode(aResult));
 
     // Check that we got the right data.
-    do_check_eq(aInputStream.available(), TEST_DATA.length);
+    Assert.equal(aInputStream.available(), TEST_DATA.length);
     let is = Cc["@mozilla.org/scriptableinputstream;1"].
              createInstance(Ci.nsIScriptableInputStream);
     is.init(aInputStream);
     let result = is.read(TEST_DATA.length);
-    do_check_eq(TEST_DATA, result);
+    Assert.equal(TEST_DATA, result);
 
     server.stop(run_next_test);
   },
@@ -379,15 +379,15 @@ function test_asyncFetch_with_string()
     loadUsingSystemPrincipal: true,
   }, function(aInputStream, aResult) {
     // Check that we had success.
-    do_check_true(Components.isSuccessCode(aResult));
+    Assert.ok(Components.isSuccessCode(aResult));
 
     // Check that we got the right data.
-    do_check_eq(aInputStream.available(), TEST_DATA.length);
+    Assert.equal(aInputStream.available(), TEST_DATA.length);
     let is = Cc["@mozilla.org/scriptableinputstream;1"].
              createInstance(Ci.nsIScriptableInputStream);
     is.init(aInputStream);
     let result = is.read(TEST_DATA.length);
-    do_check_eq(TEST_DATA, result);
+    Assert.equal(TEST_DATA, result);
 
     server.stop(run_next_test);
   },
@@ -416,7 +416,7 @@ function test_asyncFetch_with_nsIFile()
   ostream.write(TEST_DATA, TEST_DATA.length);
 
   // Sanity check to make sure the data was written.
-  do_check_eq(TEST_DATA, getFileContents(file));
+  Assert.equal(TEST_DATA, getFileContents(file));
 
   // Open our file asynchronously.
   // Note that this causes main-tread I/O and should be avoided in production.
@@ -425,15 +425,15 @@ function test_asyncFetch_with_nsIFile()
     loadUsingSystemPrincipal: true,
   }, function(aInputStream, aResult) {
     // Check that we had success.
-    do_check_true(Components.isSuccessCode(aResult));
+    Assert.ok(Components.isSuccessCode(aResult));
 
     // Check that we got the right data.
-    do_check_eq(aInputStream.available(), TEST_DATA.length);
+    Assert.equal(aInputStream.available(), TEST_DATA.length);
     let is = Cc["@mozilla.org/scriptableinputstream;1"].
              createInstance(Ci.nsIScriptableInputStream);
     is.init(aInputStream);
     let result = is.read(TEST_DATA.length);
-    do_check_eq(TEST_DATA, result);
+    Assert.equal(TEST_DATA, result);
 
     run_next_test();
   },
@@ -454,12 +454,12 @@ function test_asyncFetch_with_nsIInputString()
   // Read the input stream asynchronously.
   NetUtil.asyncFetch(istream, function(aInputStream, aResult) {
     // Check that we had success.
-    do_check_true(Components.isSuccessCode(aResult));
+    Assert.ok(Components.isSuccessCode(aResult));
 
     // Check that we got the right data.
-    do_check_eq(aInputStream.available(), TEST_DATA.length);
-    do_check_eq(NetUtil.readInputStreamToString(aInputStream, TEST_DATA.length),
-                TEST_DATA);
+    Assert.equal(aInputStream.available(), TEST_DATA.length);
+    Assert.equal(NetUtil.readInputStreamToString(aInputStream, TEST_DATA.length),
+                 TEST_DATA);
 
     run_next_test();
   },
@@ -481,7 +481,7 @@ function test_asyncFetch_does_not_block()
   // Open our channel asynchronously.
   NetUtil.asyncFetch(channel, function(aInputStream, aResult) {
     // Check that we had success.
-    do_check_true(Components.isSuccessCode(aResult));
+    Assert.ok(Components.isSuccessCode(aResult));
 
     // Check that reading a byte throws that the stream was closed (as opposed
     // saying it would block).
@@ -493,7 +493,7 @@ function test_asyncFetch_does_not_block()
       do_throw("should throw!");
     }
     catch (e) {
-      do_check_eq(e.result, Cr.NS_BASE_STREAM_CLOSED);
+      Assert.equal(e.result, Cr.NS_BASE_STREAM_CLOSED);
     }
 
     run_next_test();
@@ -507,7 +507,7 @@ function test_newChannel_no_specifier()
     do_throw("should throw!");
   }
   catch (e) {
-    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
   run_next_test();
@@ -532,7 +532,7 @@ function test_newChannel_with_string()
     uri: TEST_SPEC,
     loadUsingSystemPrincipal: true
   });
-  do_check_true(iosChannel.URI.equals(NetUtilChannel.URI));
+  Assert.ok(iosChannel.URI.equals(NetUtilChannel.URI));
 
   run_next_test();
 }
@@ -554,7 +554,7 @@ function test_newChannel_with_nsIURI()
     uri: uri,
     loadUsingSystemPrincipal: true
   });
-  do_check_true(iosChannel.URI.equals(NetUtilChannel.URI));
+  Assert.ok(iosChannel.URI.equals(NetUtilChannel.URI));
 
   run_next_test();
 }
@@ -571,7 +571,7 @@ function test_newChannel_with_options()
                                                         Ci.nsIContentPolicy.TYPE_OTHER);
 
   function checkEqualToIOSChannel(channel) {
-    do_check_true(iosChannel.URI.equals(channel.URI));  
+    Assert.ok(iosChannel.URI.equals(channel.URI));  
   }
 
   checkEqualToIOSChannel(NetUtil.newChannel({
@@ -635,8 +635,8 @@ function test_deprecated_newChannel_API_with_string() {
   let uri = NetUtil.newURI(TEST_SPEC);
   let oneArgChannel = NetUtil.newChannel(TEST_SPEC);
   let threeArgChannel = NetUtil.newChannel(TEST_SPEC, null, null);
-  do_check_true(uri.equals(oneArgChannel.URI));
-  do_check_true(uri.equals(threeArgChannel.URI));
+  Assert.ok(uri.equals(oneArgChannel.URI));
+  Assert.ok(uri.equals(threeArgChannel.URI));
 
   run_next_test();
 }
@@ -659,7 +659,7 @@ function test_deprecated_newChannel_API_with_nsIFile()
   ostream.write(TEST_DATA, TEST_DATA.length);
 
   // Sanity check to make sure the data was written.
-  do_check_eq(TEST_DATA, getFileContents(file));
+  Assert.equal(TEST_DATA, getFileContents(file));
 
   // create a channel using the file
   let channel = NetUtil.newChannel(file);
@@ -675,15 +675,15 @@ function test_deprecated_newChannel_API_with_nsIFile()
     onStartRequest: function(aRequest, aContext) {},
     onStopRequest: function(aRequest, aContext, aStatusCode) {
       pipe.outputStream.close();
-      do_check_true(Components.isSuccessCode(aContext));
+      Assert.ok(Components.isSuccessCode(aContext));
 
       // Check that we got the right data.
-      do_check_eq(pipe.inputStream.available(), TEST_DATA.length);
+      Assert.equal(pipe.inputStream.available(), TEST_DATA.length);
       let is = Cc["@mozilla.org/scriptableinputstream;1"].
                createInstance(Ci.nsIScriptableInputStream);
       is.init(pipe.inputStream);
       let result = is.read(TEST_DATA.length);
-      do_check_eq(TEST_DATA, result);
+      Assert.equal(TEST_DATA, result);
       run_next_test();
     }
   });
@@ -697,8 +697,8 @@ function test_readInputStreamToString()
                 createInstance(Ci.nsISupportsCString);
   istream.data = TEST_DATA;
 
-  do_check_eq(NetUtil.readInputStreamToString(istream, TEST_DATA.length),
-              TEST_DATA);
+  Assert.equal(NetUtil.readInputStreamToString(istream, TEST_DATA.length),
+               TEST_DATA);
 
   run_next_test();
 }
@@ -710,7 +710,7 @@ function test_readInputStreamToString_no_input_stream()
     do_throw("should throw!");
   }
   catch (e) {
-    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
   run_next_test();
@@ -728,7 +728,7 @@ function test_readInputStreamToString_no_bytes_arg()
     do_throw("should throw!");
   }
   catch (e) {
-    do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
+    Assert.equal(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
   run_next_test();
@@ -744,7 +744,7 @@ function test_readInputStreamToString_blocking_stream()
     do_throw("should throw!");
   }
   catch (e) {
-    do_check_eq(e.result, Cr.NS_BASE_STREAM_WOULD_BLOCK);
+    Assert.equal(e.result, Cr.NS_BASE_STREAM_WOULD_BLOCK);
   }
   run_next_test();
 }
@@ -761,7 +761,7 @@ function test_readInputStreamToString_too_many_bytes()
     do_throw("should throw!");
   }
   catch (e) {
-    do_check_eq(e.result, Cr.NS_ERROR_FAILURE);
+    Assert.equal(e.result, Cr.NS_ERROR_FAILURE);
   }
 
   run_next_test();
@@ -777,16 +777,16 @@ function test_readInputStreamToString_with_charset()
                 createInstance(Ci.nsIStringInputStream);
 
   istream.setData(TEST_DATA_UTF8, TEST_DATA_UTF8.length);
-  do_check_eq(NetUtil.readInputStreamToString(istream,
-                                              TEST_DATA_UTF8.length,
-                                              { charset: "UTF-8"}),
-              TEST_DATA);
+  Assert.equal(NetUtil.readInputStreamToString(istream,
+                                               TEST_DATA_UTF8.length,
+                                               { charset: "UTF-8"}),
+               TEST_DATA);
 
   istream.setData(TEST_DATA_SJIS, TEST_DATA_SJIS.length);
-  do_check_eq(NetUtil.readInputStreamToString(istream,
-                                              TEST_DATA_SJIS.length,
-                                              { charset: "Shift_JIS"}),
-              TEST_DATA);
+  Assert.equal(NetUtil.readInputStreamToString(istream,
+                                               TEST_DATA_SJIS.length,
+                                               { charset: "Shift_JIS"}),
+               TEST_DATA);
 
   run_next_test();
 }
@@ -806,15 +806,15 @@ function test_readInputStreamToString_invalid_sequence()
                                     { charset: "UTF-8" });
     do_throw("should throw!");
   } catch (e) {
-    do_check_eq(e.result, Cr.NS_ERROR_ILLEGAL_INPUT);
+    Assert.equal(e.result, Cr.NS_ERROR_ILLEGAL_INPUT);
   }
 
   istream.setData(TEST_DATA_UTF8, TEST_DATA_UTF8.length);
-  do_check_eq(NetUtil.readInputStreamToString(istream,
-                                              TEST_DATA_UTF8.length, {
-                                                charset: "UTF-8",
-                                                replacement: Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER}),
-              TEST_DATA);
+  Assert.equal(NetUtil.readInputStreamToString(istream,
+                                               TEST_DATA_UTF8.length, {
+                                                 charset: "UTF-8",
+                                                 replacement: Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER}),
+               TEST_DATA);
 
   run_next_test();
 }

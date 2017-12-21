@@ -104,7 +104,7 @@ add_task(async function test_experiments_api() {
     },
   });
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     for (let file of [apiAddonFile, addonFile, boringAddonFile]) {
       Services.obs.notifyObservers(file, "flush-cache-entry");
       file.remove(false);
@@ -123,7 +123,7 @@ add_task(async function test_experiments_api() {
 
   Services.obs.addObserver(observer, "webext-api-loaded");
   Services.obs.addObserver(observer, "webext-api-hello");
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.obs.removeObserver(observer, "webext-api-loaded");
     Services.obs.removeObserver(observer, "webext-api-hello");
   });
@@ -180,7 +180,7 @@ add_task(async function test_experiments_api() {
   apiAddon.uninstall();
 
   boringAddon.userDisabled = true;
-  await new Promise(do_execute_soon);
+  await new Promise(executeSoon);
 
   equal(addon.appDisabled, true, "Add-on should be app-disabled after its dependency is removed.");
 

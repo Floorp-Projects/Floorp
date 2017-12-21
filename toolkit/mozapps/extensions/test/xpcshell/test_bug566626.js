@@ -40,56 +40,56 @@ function run_test_1() {
   var count = 0;
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.name, "Test 1");
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.name, "Test 1");
 
     if (count == 0)
       gAddon = a1;
     else
-      do_check_eq(a1, gAddon);
+      Assert.equal(a1, gAddon);
     count++;
     if (count == 4)
       run_test_2();
   });
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.name, "Test 1");
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.name, "Test 1");
 
     if (count == 0)
       gAddon = a1;
     else
-      do_check_eq(a1, gAddon);
+      Assert.equal(a1, gAddon);
     count++;
     if (count == 4)
       run_test_2();
   });
 
-  do_execute_soon(function() {
+  executeSoon(function() {
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-      do_check_neq(a1, null);
-      do_check_eq(a1.name, "Test 1");
+      Assert.notEqual(a1, null);
+      Assert.equal(a1.name, "Test 1");
 
       if (count == 0)
         gAddon = a1;
       else
-        do_check_eq(a1, gAddon);
+        Assert.equal(a1, gAddon);
       count++;
       if (count == 4)
         run_test_2();
     });
   });
 
-  do_execute_soon(function() {
-    do_execute_soon(function() {
+  executeSoon(function() {
+    executeSoon(function() {
       AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-        do_check_neq(a1, null);
-        do_check_eq(a1.name, "Test 1");
+        Assert.notEqual(a1, null);
+        Assert.equal(a1.name, "Test 1");
 
         if (count == 0)
           gAddon = a1;
         else
-          do_check_eq(a1, gAddon);
+          Assert.equal(a1, gAddon);
         count++;
         if (count == 4)
           run_test_2();
@@ -101,12 +101,12 @@ function run_test_1() {
 // Verifies that a subsequent call gets the same add-on from the cache
 function run_test_2() {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.name, "Test 1");
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.name, "Test 1");
 
-    do_check_eq(a1, gAddon);
+    Assert.equal(a1, gAddon);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 
 }

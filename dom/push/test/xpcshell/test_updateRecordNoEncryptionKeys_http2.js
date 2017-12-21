@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyGetter(this, "serverPort", function() {
 });
 
 function listenHandler(metadata, response) {
-  do_check_true(true, "Start listening");
+  Assert.ok(true, "Start listening");
   httpServer.stop(do_test_finished);
   response.setHeader("Retry-After", "10");
   response.setStatusLine(metadata.httpVersion, 500, "Retry");
@@ -40,7 +40,7 @@ function run_test() {
 add_task(async function test1() {
 
   let db = PushServiceHttp2.newPushDB();
-  do_register_cleanup(_ => {
+  registerCleanupFunction(_ => {
     return db.drop().then(_ => db.close());
   });
 

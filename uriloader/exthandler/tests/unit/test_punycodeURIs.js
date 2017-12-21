@@ -57,7 +57,7 @@ function checkFile() {
   // Additionally the lack of OS detection in xpcshell tests sucks, so we'll
   // have to check for the argument mac gives us.
   if (data.substring(0, 7) != "-psn_0_")
-    do_check_eq(data, kExpectedURI);
+    Assert.equal(data, kExpectedURI);
 
   do_test_finished();
 }
@@ -116,7 +116,7 @@ function run_test() {
 
   // Just check we've got these matching, if we haven't there's a problem
   // with ascii spec or our test case.
-  do_check_eq(uri.asciiSpec, kExpectedURI);
+  Assert.equal(uri.asciiSpec, kExpectedURI);
 
   localHandler.executable = exe;
   localHandler.launchWithURI(uri);

@@ -28,7 +28,7 @@ add_task(async function() {
   gAllBookmarksFolderIdGetter = Object.getOwnPropertyDescriptor(PlacesUIUtils, "allBookmarksFolderId");
   Assert.equal(typeof(gAllBookmarksFolderIdGetter.get), "function");
 
-  do_register_cleanup(() => PlacesUtils.bookmarks.eraseEverything());
+  registerCleanupFunction(() => PlacesUtils.bookmarks.eraseEverything());
 });
 
 add_task(async function() {

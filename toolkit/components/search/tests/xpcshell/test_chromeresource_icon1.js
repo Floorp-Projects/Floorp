@@ -21,9 +21,9 @@ add_task(async function test_defaultresourceicon() {
   await asyncInit();
 
   let engine1 = Services.search.getEngineByName("engine-resourceicon");
-  do_check_eq(engine1.iconURI.spec, "resource://search-plugins/icon16.png");
-  do_check_eq(engine1.getIconURLBySize(32, 32), "resource://search-plugins/icon32.png");
+  Assert.equal(engine1.iconURI.spec, "resource://search-plugins/icon16.png");
+  Assert.equal(engine1.getIconURLBySize(32, 32), "resource://search-plugins/icon32.png");
   let engine2 = Services.search.getEngineByName("engine-chromeicon");
-  do_check_eq(engine2.iconURI.spec, "chrome://branding/content/icon16.png");
-  do_check_eq(engine2.getIconURLBySize(32, 32), "chrome://branding/content/icon32.png");
+  Assert.equal(engine2.iconURI.spec, "chrome://branding/content/icon16.png");
+  Assert.equal(engine2.getIconURLBySize(32, 32), "chrome://branding/content/icon32.png");
 });

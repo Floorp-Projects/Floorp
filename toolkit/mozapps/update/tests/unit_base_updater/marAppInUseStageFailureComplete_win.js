@@ -58,7 +58,7 @@ function waitForHelperExitFinished() {
   checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);
   checkUpdateLogContains(ERR_MOVE_DESTDIR_7 + "\n" + CALL_QUIT);
-  do_execute_soon(waitForUpdateXMLFiles);
+  executeSoon(waitForUpdateXMLFiles);
 }
 
 /**

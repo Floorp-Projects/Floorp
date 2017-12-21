@@ -78,22 +78,22 @@ function ensure_tag_results(uris, searchTerm) {
     var numSearchesStarted = 0;
     input.onSearchBegin = function() {
       numSearchesStarted++;
-      do_check_eq(numSearchesStarted, 1);
+      Assert.equal(numSearchesStarted, 1);
     };
 
     input.onSearchComplete = function() {
-      do_check_eq(numSearchesStarted, 1);
-      do_check_eq(controller.searchStatus,
-                  Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
-      do_check_eq(controller.matchCount, uris.length);
+      Assert.equal(numSearchesStarted, 1);
+      Assert.equal(controller.searchStatus,
+                   Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
+      Assert.equal(controller.matchCount, uris.length);
       let vals = [];
       for (let i = 0; i < controller.matchCount; i++) {
         // Keep the URL for later because order of tag results is undefined
         vals.push(controller.getValueAt(i));
-        do_check_eq(controller.getStyleAt(i), "bookmark-tag");
+        Assert.equal(controller.getStyleAt(i), "bookmark-tag");
       }
       // Sort the results then check if we have the right items
-      vals.sort().forEach((val, i) => do_check_eq(val, uris[i]));
+      vals.sort().forEach((val, i) => Assert.equal(val, uris[i]));
 
       resolve();
     };

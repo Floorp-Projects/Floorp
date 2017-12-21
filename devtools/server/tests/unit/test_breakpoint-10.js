@@ -42,23 +42,23 @@ function test_child_breakpoint() {
 
     source.setBreakpoint(location, function (response, bpClient) {
       // actualLocation is not returned when breakpoints don't skip forward.
-      do_check_eq(response.actualLocation, undefined);
+      Assert.equal(response.actualLocation, undefined);
 
       gThreadClient.addOneTimeListener("paused", function (event, packet) {
         // Check the return value.
-        do_check_eq(packet.type, "paused");
-        do_check_eq(packet.why.type, "breakpoint");
-        do_check_eq(packet.why.actors[0], bpClient.actor);
+        Assert.equal(packet.type, "paused");
+        Assert.equal(packet.why.type, "breakpoint");
+        Assert.equal(packet.why.actors[0], bpClient.actor);
         // Check that the breakpoint worked.
-        do_check_eq(gDebuggee.i, 0);
+        Assert.equal(gDebuggee.i, 0);
 
         gThreadClient.addOneTimeListener("paused", function (event, packet) {
           // Check the return value.
-          do_check_eq(packet.type, "paused");
-          do_check_eq(packet.why.type, "breakpoint");
-          do_check_eq(packet.why.actors[0], bpClient.actor);
+          Assert.equal(packet.type, "paused");
+          Assert.equal(packet.why.type, "breakpoint");
+          Assert.equal(packet.why.actors[0], bpClient.actor);
           // Check that the breakpoint worked.
-          do_check_eq(gDebuggee.i, 1);
+          Assert.equal(gDebuggee.i, 1);
 
           // Remove the breakpoint.
           bpClient.remove(function (response) {

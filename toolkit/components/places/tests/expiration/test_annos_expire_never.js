@@ -35,9 +35,9 @@ add_task(async function test_annos_expire_never() {
   }
 
   let pages = as.getPagesWithAnnotation("page_expire1");
-  do_check_eq(pages.length, 5);
+  Assert.equal(pages.length, 5);
   pages = as.getPagesWithAnnotation("page_expire2");
-  do_check_eq(pages.length, 5);
+  Assert.equal(pages.length, 5);
 
   // Add some bookmarked page and a couple expire never annotations for each.
   for (let i = 0; i < 5; i++) {
@@ -55,9 +55,9 @@ add_task(async function test_annos_expire_never() {
   }
 
   let items = as.getItemsWithAnnotation("item_persist1");
-  do_check_eq(items.length, 5);
+  Assert.equal(items.length, 5);
   items = as.getItemsWithAnnotation("item_persist2");
-  do_check_eq(items.length, 5);
+  Assert.equal(items.length, 5);
 
   // Add other visited page and a couple expire never annotations for each.
   // We won't expire these visits, so the annotations should survive.
@@ -69,23 +69,23 @@ add_task(async function test_annos_expire_never() {
   }
 
   pages = as.getPagesWithAnnotation("page_persist1");
-  do_check_eq(pages.length, 5);
+  Assert.equal(pages.length, 5);
   pages = as.getPagesWithAnnotation("page_persist2");
-  do_check_eq(pages.length, 5);
+  Assert.equal(pages.length, 5);
 
   // Expire all visits for the first 5 pages and the bookmarks.
   await promiseForceExpirationStep(10);
 
   pages = as.getPagesWithAnnotation("page_expire1");
-  do_check_eq(pages.length, 0);
+  Assert.equal(pages.length, 0);
   pages = as.getPagesWithAnnotation("page_expire2");
-  do_check_eq(pages.length, 0);
+  Assert.equal(pages.length, 0);
   items = as.getItemsWithAnnotation("item_persist1");
-  do_check_eq(items.length, 5);
+  Assert.equal(items.length, 5);
   items = as.getItemsWithAnnotation("item_persist2");
-  do_check_eq(items.length, 5);
+  Assert.equal(items.length, 5);
   pages = as.getPagesWithAnnotation("page_persist1");
-  do_check_eq(pages.length, 5);
+  Assert.equal(pages.length, 5);
   pages = as.getPagesWithAnnotation("page_persist2");
-  do_check_eq(pages.length, 5);
+  Assert.equal(pages.length, 5);
 });

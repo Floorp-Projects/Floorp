@@ -8,7 +8,7 @@ function run_test() {
              crashReporter.annotateCrashReport("TestKey", "TestValue");
            },
            function(mdump, extra) {
-             do_check_eq(extra.TestKey, "TestValue");
+             Assert.equal(extra.TestKey, "TestValue");
            },
           // process will exit with a zero exit status
           true);

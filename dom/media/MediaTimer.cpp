@@ -46,6 +46,7 @@ MediaTimer::DispatchDestroy()
                        "MediaTimer::Destroy", this, &MediaTimer::Destroy),
                      NS_DISPATCH_NORMAL);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
   (void) rv;
 }
 
@@ -102,6 +103,7 @@ MediaTimer::ScheduleUpdate()
     NewRunnableMethod("MediaTimer::Update", this, &MediaTimer::Update),
     NS_DISPATCH_NORMAL);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
   (void) rv;
 }
 
@@ -180,6 +182,7 @@ MediaTimer::ArmTimer(const TimeStamp& aTarget, const TimeStamp& aNow)
                                                   nsITimer::TYPE_ONE_SHOT,
                                                   "MediaTimer::TimerCallback");
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
   (void) rv;
 }
 

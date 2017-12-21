@@ -27,7 +27,7 @@ profileDir.append("extensions");
 var WindowWatcher = {
   openWindow(parent, url, name, features, args) {
     // Should be called to list the newly blocklisted items
-    do_check_eq(url, URI_EXTENSION_BLOCKLIST_DIALOG);
+    Assert.equal(url, URI_EXTENSION_BLOCKLIST_DIALOG);
 
     // Simulate auto-disabling any softblocks
     var list = args.wrappedJSObject.list;
@@ -56,7 +56,7 @@ function load_blocklist(aFile, aCallback) {
   Services.obs.addObserver(function observer() {
     Services.obs.removeObserver(observer, "blocklist-updated");
 
-    do_execute_soon(aCallback);
+    executeSoon(aCallback);
   }, "blocklist-updated");
 
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
@@ -109,13 +109,13 @@ function run_test() {
   // Before blocklist is loaded.
   AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
                                "block2@tests.mozilla.org"], function([a1, a2]) {
-    do_check_eq(a1.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-    do_check_eq(a2.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+    Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+    Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
 
-    do_check_eq(Services.prefs.getIntPref("test.blocklist.pref1"), 15);
-    do_check_eq(Services.prefs.getIntPref("test.blocklist.pref2"), 15);
-    do_check_eq(Services.prefs.getBoolPref("test.blocklist.pref3"), true);
-    do_check_eq(Services.prefs.getBoolPref("test.blocklist.pref4"), true);
+    Assert.equal(Services.prefs.getIntPref("test.blocklist.pref1"), 15);
+    Assert.equal(Services.prefs.getIntPref("test.blocklist.pref2"), 15);
+    Assert.equal(Services.prefs.getBoolPref("test.blocklist.pref3"), true);
+    Assert.equal(Services.prefs.getBoolPref("test.blocklist.pref4"), true);
     run_test_1();
   });
 }
@@ -127,16 +127,16 @@ function run_test_1() {
     // Blocklist changes should have applied and the prefs must be reset.
     AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
                                  "block2@tests.mozilla.org"], function([a1, a2]) {
-      do_check_neq(a1, null);
-      do_check_eq(a1.blocklistState, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-      do_check_neq(a2, null);
-      do_check_eq(a2.blocklistState, Ci.nsIBlocklistService.STATE_BLOCKED);
+      Assert.notEqual(a1, null);
+      Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
+      Assert.notEqual(a2, null);
+      Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_BLOCKED);
 
       // All these prefs must be reset to defaults.
-      do_check_eq(Services.prefs.prefHasUserValue("test.blocklist.pref1"), false);
-      do_check_eq(Services.prefs.prefHasUserValue("test.blocklist.pref2"), false);
-      do_check_eq(Services.prefs.prefHasUserValue("test.blocklist.pref3"), false);
-      do_check_eq(Services.prefs.prefHasUserValue("test.blocklist.pref4"), false);
+      Assert.equal(Services.prefs.prefHasUserValue("test.blocklist.pref1"), false);
+      Assert.equal(Services.prefs.prefHasUserValue("test.blocklist.pref2"), false);
+      Assert.equal(Services.prefs.prefHasUserValue("test.blocklist.pref3"), false);
+      Assert.equal(Services.prefs.prefHasUserValue("test.blocklist.pref4"), false);
       end_test();
     });
   });

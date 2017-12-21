@@ -82,8 +82,8 @@ function run_test() {
 
   function get_entity_id(request, data, ctx) {
     dump("*** get_entity_id()\n");
-    do_check_true(request instanceof Ci.nsIResumableChannel,
-                  "must be a resumable channel");
+    Assert.ok(request instanceof Ci.nsIResumableChannel,
+              "must be a resumable channel");
     entityID = request.entityID;
     dump("*** entity id = " + entityID + "\n");
 
@@ -95,7 +95,7 @@ function run_test() {
 
   function try_resume(request, data, ctx) {
     dump("*** try_resume()\n");
-    do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
+    Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
 
     // Try a successful resume
     var chan = make_channel(URL + "/range");
@@ -105,8 +105,8 @@ function run_test() {
 
   function try_resume_zero(request, data, ctx) {
     dump("*** try_resume_zero()\n");
-    do_check_true(request.nsIHttpChannel.requestSucceeded);
-    do_check_eq(data, rangeBody.substring(1));
+    Assert.ok(request.nsIHttpChannel.requestSucceeded);
+    Assert.equal(data, rangeBody.substring(1));
 
     // Try a server which doesn't support range requests
     var chan = make_channel(URL + "/acceptranges");
@@ -117,8 +117,8 @@ function run_test() {
 
   function try_no_range(request, data, ctx) {
     dump("*** try_no_range()\n");
-    do_check_true(request.nsIHttpChannel.requestSucceeded);
-    do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
+    Assert.ok(request.nsIHttpChannel.requestSucceeded);
+    Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
 
     // Try a server which supports "bytes" range requests
     var chan = make_channel(URL + "/acceptranges");
@@ -129,8 +129,8 @@ function run_test() {
 
   function try_bytes_range(request, data, ctx) {
     dump("*** try_bytes_range()\n");
-    do_check_true(request.nsIHttpChannel.requestSucceeded);
-    do_check_eq(data, rangeBody);
+    Assert.ok(request.nsIHttpChannel.requestSucceeded);
+    Assert.equal(data, rangeBody);
 
     // Try a server which supports "foo" and "bar" range requests
     var chan = make_channel(URL + "/acceptranges");
@@ -141,8 +141,8 @@ function run_test() {
 
   function try_foo_bar_range(request, data, ctx) {
     dump("*** try_foo_bar_range()\n");
-    do_check_true(request.nsIHttpChannel.requestSucceeded);
-    do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
+    Assert.ok(request.nsIHttpChannel.requestSucceeded);
+    Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
 
     // Try a server which supports "foobar" range requests
     var chan = make_channel(URL + "/acceptranges");
@@ -153,8 +153,8 @@ function run_test() {
 
   function try_foobar_range(request, data, ctx) {
     dump("*** try_foobar_range()\n");
-    do_check_true(request.nsIHttpChannel.requestSucceeded);
-    do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
+    Assert.ok(request.nsIHttpChannel.requestSucceeded);
+    Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
 
     // Try a server which supports "bytes" and "foobar" range requests
     var chan = make_channel(URL + "/acceptranges");
@@ -165,8 +165,8 @@ function run_test() {
 
   function try_bytes_foobar_range(request, data, ctx) {
     dump("*** try_bytes_foobar_range()\n");
-    do_check_true(request.nsIHttpChannel.requestSucceeded);
-    do_check_eq(data, rangeBody);
+    Assert.ok(request.nsIHttpChannel.requestSucceeded);
+    Assert.equal(data, rangeBody);
 
     // Try a server which supports "bytesfoo" and "bar" range requests
     var chan = make_channel(URL + "/acceptranges");
@@ -177,8 +177,8 @@ function run_test() {
 
   function try_bytesfoo_bar_range(request, data, ctx) {
     dump("*** try_bytesfoo_bar_range()\n");
-    do_check_true(request.nsIHttpChannel.requestSucceeded);
-    do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
+    Assert.ok(request.nsIHttpChannel.requestSucceeded);
+    Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
 
     // Try a server which doesn't send Accept-Ranges header at all
     var chan = make_channel(URL + "/acceptranges");
@@ -188,8 +188,8 @@ function run_test() {
 
   function try_no_accept_ranges(request, data, ctx) {
     dump("*** try_no_accept_ranges()\n");
-    do_check_true(request.nsIHttpChannel.requestSucceeded);
-    do_check_eq(data, rangeBody);
+    Assert.ok(request.nsIHttpChannel.requestSucceeded);
+    Assert.equal(data, rangeBody);
 
     // Try a successful suspend/resume from 0
     var chan = make_channel(URL + "/range");
@@ -200,8 +200,8 @@ function run_test() {
 
   function try_suspend_resume(request, data, ctx) {
     dump("*** try_suspend_resume()\n");
-    do_check_true(request.nsIHttpChannel.requestSucceeded);
-    do_check_eq(data, rangeBody);
+    Assert.ok(request.nsIHttpChannel.requestSucceeded);
+    Assert.equal(data, rangeBody);
 
     // Try a successful resume from 0
     var chan = make_channel(URL + "/range");
@@ -211,8 +211,8 @@ function run_test() {
 
   function success(request, data, ctx) {
     dump("*** success()\n");
-    do_check_true(request.nsIHttpChannel.requestSucceeded);
-    do_check_eq(data, rangeBody);
+    Assert.ok(request.nsIHttpChannel.requestSucceeded);
+    Assert.equal(data, rangeBody);
 
 
     // Authentication (no password; working resume)
@@ -225,8 +225,8 @@ function run_test() {
 
   function test_auth_nopw(request, data, ctx) {
     dump("*** test_auth_nopw()\n");
-    do_check_false(request.nsIHttpChannel.requestSucceeded);
-    do_check_eq(request.status, NS_ERROR_ENTITY_CHANGED);
+    Assert.ok(!request.nsIHttpChannel.requestSucceeded);
+    Assert.equal(request.status, NS_ERROR_ENTITY_CHANGED);
 
     // Authentication + not working resume
     var chan = make_channel("http://guest:guest@localhost:" +
@@ -237,8 +237,8 @@ function run_test() {
   }
   function test_auth(request, data, ctx) {
     dump("*** test_auth()\n");
-    do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
-    do_check_true(request.nsIHttpChannel.responseStatus < 300);
+    Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
+    Assert.ok(request.nsIHttpChannel.responseStatus < 300);
 
     // Authentication + working resume
     var chan = make_channel("http://guest:guest@localhost:" +
@@ -251,8 +251,8 @@ function run_test() {
 
   function test_auth_resume(request, data, ctx) {
     dump("*** test_auth_resume()\n");
-    do_check_eq(data, rangeBody.substring(1));
-    do_check_true(request.nsIHttpChannel.requestSucceeded);
+    Assert.equal(data, rangeBody.substring(1));
+    Assert.ok(request.nsIHttpChannel.requestSucceeded);
 
     // 404 page (same content length as real content)
     var chan = make_channel(URL + "/range");
@@ -263,8 +263,8 @@ function run_test() {
 
   function test_404(request, data, ctx) {
     dump("*** test_404()\n");
-    do_check_eq(request.status, NS_ERROR_ENTITY_CHANGED);
-    do_check_eq(request.nsIHttpChannel.responseStatus, 404);
+    Assert.equal(request.status, NS_ERROR_ENTITY_CHANGED);
+    Assert.equal(request.nsIHttpChannel.responseStatus, 404);
 
     // 416 Requested Range Not Satisfiable
     var chan = make_channel(URL + "/range");
@@ -274,8 +274,8 @@ function run_test() {
 
   function test_416(request, data, ctx) {
     dump("*** test_416()\n");
-    do_check_eq(request.status, NS_ERROR_ENTITY_CHANGED);
-    do_check_eq(request.nsIHttpChannel.responseStatus, 416);
+    Assert.equal(request.status, NS_ERROR_ENTITY_CHANGED);
+    Assert.equal(request.nsIHttpChannel.responseStatus, 416);
 
     // Redirect + successful resume
     var chan = make_channel(URL + "/redir");
@@ -286,9 +286,9 @@ function run_test() {
 
   function test_redir_resume(request, data, ctx) {
     dump("*** test_redir_resume()\n");
-    do_check_true(request.nsIHttpChannel.requestSucceeded);
-    do_check_eq(data, rangeBody.substring(1));
-    do_check_eq(request.nsIHttpChannel.responseStatus, 206);
+    Assert.ok(request.nsIHttpChannel.requestSucceeded);
+    Assert.equal(data, rangeBody.substring(1));
+    Assert.equal(request.nsIHttpChannel.responseStatus, 206);
 
     // Redirect + failed resume
     var chan = make_channel(URL + "/redir");
@@ -299,7 +299,7 @@ function run_test() {
 
   function test_redir_noresume(request, data, ctx) {
     dump("*** test_redir_noresume()\n");
-    do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
+    Assert.equal(request.status, NS_ERROR_NOT_RESUMABLE);
 
     httpserver.stop(do_test_finished);
   }

@@ -8,13 +8,13 @@ function check_enumerator(uri, permissions) {
   let enumerator = pm.getAllForURI(uri);
   for ([type, capability] of permissions) {
     let perm = enumerator.getNext();
-    do_check_true(perm != null);
-    do_check_true(perm.principal.URI.equals(uri));
-    do_check_eq(perm.type, type);
-    do_check_eq(perm.capability, capability);
-    do_check_eq(perm.expireType, pm.EXPIRE_NEVER);
+    Assert.ok(perm != null);
+    Assert.ok(perm.principal.URI.equals(uri));
+    Assert.equal(perm.type, type);
+    Assert.equal(perm.capability, capability);
+    Assert.equal(perm.expireType, pm.EXPIRE_NEVER);
   }
-  do_check_false(enumerator.hasMoreElements());
+  Assert.ok(!enumerator.hasMoreElements());
 }
 
 function run_test() {

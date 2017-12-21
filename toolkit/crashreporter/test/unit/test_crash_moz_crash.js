@@ -5,10 +5,10 @@ function run_test() {
              crashReporter.annotateCrashReport("TestKey", "TestValue");
            },
            function(mdump, extra) {
-             do_check_eq(extra.TestKey, "TestValue");
-             do_check_false("OOMAllocationSize" in extra);
-             do_check_false("JSOutOfMemory" in extra);
-             do_check_false("JSLargeAllocationFailure" in extra);
+             Assert.equal(extra.TestKey, "TestValue");
+             Assert.equal(false, "OOMAllocationSize" in extra);
+             Assert.equal(false, "JSOutOfMemory" in extra);
+             Assert.equal(false, "JSLargeAllocationFailure" in extra);
            },
           // process will exit with a zero exit status
           true);

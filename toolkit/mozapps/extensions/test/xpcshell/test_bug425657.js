@@ -16,11 +16,11 @@ function run_test() {
   installAllFiles([do_get_addon(ADDON)], function() {
     restartManager();
     AddonManager.getAddonByID(ID, function(addon) {
-      do_check_neq(addon, null);
-      do_check_eq(addon.name, "Deutsches W\u00f6rterbuch");
-      do_check_eq(addon.name.length, 20);
+      Assert.notEqual(addon, null);
+      Assert.equal(addon.name, "Deutsches W\u00f6rterbuch");
+      Assert.equal(addon.name.length, 20);
 
-      do_execute_soon(do_test_finished);
+      executeSoon(do_test_finished);
     });
   });
 }

@@ -18,12 +18,12 @@ function run_test() {
   zipreader.open(zipfile);
 
   var entries = zipreader.findEntries(null);
-  do_check_true(entries.hasMore()); 
+  Assert.ok(entries.hasMore()); 
 
   var entryName = entries.getNext();
-  do_check_eq(entryName, "test_\u00FC.txt");
+  Assert.equal(entryName, "test_\u00FC.txt");
 
-  do_check_true(zipreader.hasEntry(entryName));
+  Assert.ok(zipreader.hasEntry(entryName));
 
   var target = tmpDir.clone();
   target.append(entryName);
@@ -32,7 +32,7 @@ function run_test() {
   zipreader.extract(entryName, target);
 
   var entry = zipreader.getEntry(entryName);
-  do_check_true(entry != null);
+  Assert.ok(entry != null);
 
   zipreader.test(entryName);
 

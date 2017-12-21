@@ -4,27 +4,29 @@ importScripts("resource://gre/modules/workers/require.js");
 importScripts("resource://gre/modules/osfile.jsm");
 
 
-function do_print(x) {
+function info(x) {
   // self.postMessage({kind: "do_print", args: [x]});
   dump("TEST-INFO: " + x + "\n");
 }
 
-function do_check_true(x) {
-  self.postMessage({kind: "do_check_true", args: [!!x]});
-  if (x) {
-    dump("TEST-PASS: " + x + "\n");
-  } else {
-    throw new Error("do_check_true failed");
-  }
-}
+const Assert = {
+  ok(x) {
+    self.postMessage({kind: "assert_ok", args: [!!x]});
+    if (x) {
+      dump("TEST-PASS: " + x + "\n");
+    } else {
+      throw new Error("Assert.ok failed");
+    }
+  },
 
-function do_check_eq(a, b) {
-  let result = a == b;
-  self.postMessage({kind: "do_check_true", args: [result]});
-  if (!result) {
-    throw new Error("do_check_eq failed " + a + " != " + b);
+  equal(a, b) {
+    let result = a == b;
+    self.postMessage({kind: "assert_ok", args: [result]});
+    if (!result) {
+      throw new Error("Assert.equal failed " + a + " != " + b);
+    }
   }
-}
+};
 
 function do_test_complete() {
   self.postMessage({kind: "do_test_complete", args: []});
@@ -53,23 +55,23 @@ function test_import() {
 function test_bound() {
   for (let k of ["compress", "decompress", "maxCompressedSize"]) {
     try {
-      do_print("Checking the existence of " + k + "\n");
-      do_check_true(!!Internals[k]);
-      do_print(k + " exists");
+      info("Checking the existence of " + k + "\n");
+      Assert.ok(!!Internals[k]);
+      info(k + " exists");
     } catch (ex) {
       // Ignore errors
-      do_print(k + " doesn't exist!");
+      info(k + " doesn't exist!");
     }
   }
 }
 
 function test_reference_file() {
-  do_print("Decompress reference file");
+  info("Decompress reference file");
   let path = OS.Path.join("data", "compression.lz");
   let data = OS.File.read(path);
   let decompressed = Lz4.decompressFileContent(data);
   let text = (new TextDecoder()).decode(decompressed);
-  do_check_eq(text, "Hello, lz4");
+  Assert.equal(text, "Hello, lz4");
 }
 
 function compare_arrays(a, b) {
@@ -77,35 +79,35 @@ function compare_arrays(a, b) {
 }
 
 function run_rawcompression(name, array) {
-  do_print("Raw compression test " + name);
+  info("Raw compression test " + name);
   let length = array.byteLength;
   let compressedArray = new Uint8Array(Internals.maxCompressedSize(length));
   let compressedBytes = Internals.compress(array, length, compressedArray);
   compressedArray = new Uint8Array(compressedArray.buffer, 0, compressedBytes);
-  do_print("Raw compressed: " + length + " into " + compressedBytes);
+  info("Raw compressed: " + length + " into " + compressedBytes);
 
   let decompressedArray = new Uint8Array(length);
   let decompressedBytes = new ctypes.size_t();
   let success = Internals.decompress(compressedArray, compressedBytes,
                                      decompressedArray, length,
                                      decompressedBytes.address());
-  do_print("Raw decompression success? " + success);
-  do_print("Raw decompression size: " + decompressedBytes.value);
-  do_check_true(compare_arrays(array, decompressedArray));
+  info("Raw decompression success? " + success);
+  info("Raw decompression size: " + decompressedBytes.value);
+  Assert.ok(compare_arrays(array, decompressedArray));
 }
 
 function run_filecompression(name, array) {
-  do_print("File compression test " + name);
+  info("File compression test " + name);
   let compressed = Lz4.compressFileContent(array);
-  do_print("Compressed " + array.byteLength + " bytes into " + compressed.byteLength);
+  info("Compressed " + array.byteLength + " bytes into " + compressed.byteLength);
 
   let decompressed = Lz4.decompressFileContent(compressed);
-  do_print("Decompressed " + compressed.byteLength + " bytes into " + decompressed.byteLength);
-  do_check_true(compare_arrays(array, decompressed));
+  info("Decompressed " + compressed.byteLength + " bytes into " + decompressed.byteLength);
+  Assert.ok(compare_arrays(array, decompressed));
 }
 
 function run_faileddecompression(name, array) {
-  do_print("invalid decompression test " + name);
+  info("invalid decompression test " + name);
 
   // Ensure that raw decompression doesn't segfault
   let length = 1 << 14;
@@ -122,11 +124,11 @@ function run_faileddecompression(name, array) {
   } catch (ex) {
     exn = ex;
   }
-  do_check_true(exn);
+  Assert.ok(exn);
   if (array.byteLength < 10) {
-    do_check_true(exn.becauseLZNoHeader);
+    Assert.ok(exn.becauseLZNoHeader);
   } else {
-    do_check_true(exn.becauseLZWrongMagicNumber);
+    Assert.ok(exn.becauseLZWrongMagicNumber);
   }
 }
 

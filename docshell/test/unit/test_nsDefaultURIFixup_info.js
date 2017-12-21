@@ -18,10 +18,10 @@ var oldDefaultEngine = Services.search.defaultEngine;
 Services.search.defaultEngine = Services.search.getEngineByName(kSearchEngineID);
 
 var selectedName = Services.search.defaultEngine.name;
-do_check_eq(selectedName, kSearchEngineID);
+Assert.equal(selectedName, kSearchEngineID);
 
 const kForceHostLookup = "browser.fixup.dns_first_for_single_words";
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   if (oldDefaultEngine) {
     Services.search.defaultEngine = oldDefaultEngine;
   }
@@ -523,14 +523,14 @@ function sanitize(input) {
 var gSingleWordHostLookup = false;
 function run_test() {
   // Only keywordlookup things should be affected by requiring a DNS lookup for single-word hosts:
-  do_print("Check only keyword lookup testcases should be affected by requiring DNS for single hosts");
+  info("Check only keyword lookup testcases should be affected by requiring DNS for single hosts");
   let affectedTests = testcases.filter(t => !t.keywordLookup && t.affectedByDNSForSingleHosts);
   if (affectedTests.length) {
     for (let testcase of affectedTests) {
-      do_print("Affected: " + testcase.input);
+      info("Affected: " + testcase.input);
     }
   }
-  do_check_eq(affectedTests.length, 0);
+  Assert.equal(affectedTests.length, 0);
   do_single_test_run();
   gSingleWordHostLookup = true;
   do_single_test_run();
@@ -560,74 +560,74 @@ function do_single_test_run() {
     expectKeywordLookup = expectKeywordLookup && (!affectedByDNSForSingleHosts || !gSingleWordHostLookup);
 
     for (let flags of flagInputs) {
-      let info;
+      let URIInfo;
       let fixupURIOnly = null;
       try {
         fixupURIOnly = urifixup.createFixupURI(testInput, flags);
       } catch (ex) {
-        do_print("Caught exception: " + ex);
-        do_check_eq(expectedFixedURI, null);
+        info("Caught exception: " + ex);
+        Assert.equal(expectedFixedURI, null);
       }
 
       try {
-        info = urifixup.getFixupURIInfo(testInput, flags);
+        URIInfo = urifixup.getFixupURIInfo(testInput, flags);
       } catch (ex) {
         // Both APIs should return an error in the same cases.
-        do_print("Caught exception: " + ex);
-        do_check_eq(expectedFixedURI, null);
-        do_check_eq(fixupURIOnly, null);
+        info("Caught exception: " + ex);
+        Assert.equal(expectedFixedURI, null);
+        Assert.equal(fixupURIOnly, null);
         continue;
       }
 
-      do_print("Checking \"" + testInput + "\" with flags " + flags +
-               " (host lookup for single words: " + (gSingleWordHostLookup ? "yes" : "no") + ")");
+      info("Checking \"" + testInput + "\" with flags " + flags +
+           " (host lookup for single words: " + (gSingleWordHostLookup ? "yes" : "no") + ")");
 
       // Both APIs should then also be using the same spec.
-      do_check_eq(!!fixupURIOnly, !!info.preferredURI);
+      Assert.equal(!!fixupURIOnly, !!URIInfo.preferredURI);
       if (fixupURIOnly)
-        do_check_eq(fixupURIOnly.spec, info.preferredURI.spec);
+        Assert.equal(fixupURIOnly.spec, URIInfo.preferredURI.spec);
 
       let isFileURL = expectedFixedURI && expectedFixedURI.startsWith("file");
 
       // Check the fixedURI:
       let makeAlternativeURI = flags & urifixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI;
       if (makeAlternativeURI && alternativeURI != null) {
-        do_check_eq(info.fixedURI.spec, alternativeURI);
+        Assert.equal(URIInfo.fixedURI.spec, alternativeURI);
       } else {
-        do_check_eq(info.fixedURI && info.fixedURI.spec, expectedFixedURI);
+        Assert.equal(URIInfo.fixedURI && URIInfo.fixedURI.spec, expectedFixedURI);
       }
 
       // Check booleans on input:
       let couldDoKeywordLookup = flags & urifixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-      do_check_eq(!!info.keywordProviderName, couldDoKeywordLookup && expectKeywordLookup);
-      do_check_eq(info.fixupChangedProtocol, expectProtocolChange);
-      do_check_eq(info.fixupCreatedAlternateURI, makeAlternativeURI && alternativeURI != null);
+      Assert.equal(!!URIInfo.keywordProviderName, couldDoKeywordLookup && expectKeywordLookup);
+      Assert.equal(URIInfo.fixupChangedProtocol, expectProtocolChange);
+      Assert.equal(URIInfo.fixupCreatedAlternateURI, makeAlternativeURI && alternativeURI != null);
 
       // Check the preferred URI
       if (couldDoKeywordLookup) {
         if (expectKeywordLookup) {
           if (!inWhitelist) {
             let urlparamInput = encodeURIComponent(sanitize(testInput)).replace(/%20/g, "+");
-            // If the input starts with `?`, then info.preferredURI.spec will omit it
+            // If the input starts with `?`, then URIInfo.preferredURI.spec will omit it
             // In order to test this behaviour, remove `?` only if it is the first character
             if (urlparamInput.startsWith("%3F")) {
               urlparamInput = urlparamInput.replace("%3F", "");
             }
             let searchURL = kSearchEngineURL.replace("{searchTerms}", urlparamInput);
-            let spec = info.preferredURI.spec.replace(/%27/g, "'");
-            do_check_eq(spec, searchURL);
+            let spec = URIInfo.preferredURI.spec.replace(/%27/g, "'");
+            Assert.equal(spec, searchURL);
           } else {
-            do_check_eq(info.preferredURI, null);
+            Assert.equal(URIInfo.preferredURI, null);
           }
         } else {
-          do_check_eq(info.preferredURI.spec, info.fixedURI.spec);
+          Assert.equal(URIInfo.preferredURI.spec, URIInfo.fixedURI.spec);
         }
       } else {
         // In these cases, we should never be doing a keyword lookup and
         // the fixed URI should be preferred:
-        do_check_eq(info.preferredURI.spec, info.fixedURI.spec);
+        Assert.equal(URIInfo.preferredURI.spec, URIInfo.fixedURI.spec);
       }
-      do_check_eq(sanitize(testInput), info.originalInput);
+      Assert.equal(sanitize(testInput), URIInfo.originalInput);
     }
   }
 }

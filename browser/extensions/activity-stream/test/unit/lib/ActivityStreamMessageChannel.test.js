@@ -1,7 +1,7 @@
-const {ActivityStreamMessageChannel, DEFAULT_OPTIONS} = require("lib/ActivityStreamMessageChannel.jsm");
-const {addNumberReducer, GlobalOverrider} = require("test/unit/utils");
-const {createStore, applyMiddleware} = require("redux");
-const {actionTypes: at, actionCreators: ac} = require("common/Actions.jsm");
+import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import {ActivityStreamMessageChannel, DEFAULT_OPTIONS} from "lib/ActivityStreamMessageChannel.jsm";
+import {addNumberReducer, GlobalOverrider} from "test/unit/utils";
+import {applyMiddleware, createStore} from "redux";
 
 const OPTIONS = ["pageURL, outgoingMessageName", "incomingMessageName", "dispatch"];
 

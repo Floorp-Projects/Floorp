@@ -40,13 +40,13 @@ else:
 TEST_PASS_STRING = "TEST-PASS"
 TEST_FAIL_STRING = "TEST-UNEXPECTED-FAIL"
 
-SIMPLE_PASSING_TEST = "function run_test() { do_check_true(true); }"
-SIMPLE_FAILING_TEST = "function run_test() { do_check_true(false); }"
+SIMPLE_PASSING_TEST = "function run_test() { Assert.ok(true); }"
+SIMPLE_FAILING_TEST = "function run_test() { Assert.ok(false); }"
 
 SIMPLE_UNCAUGHT_REJECTION_TEST = '''
 function run_test() {
   Promise.reject(new Error("Test rejection."));
-  do_check_true(true);
+  Assert.ok(true);
 }
 '''
 
@@ -56,7 +56,7 @@ Components.utils.import("resource://gre/modules/Promise.jsm");
 Promise.reject(new Error("Test rejection."));
 
 function run_test() {
-  do_check_true(true);
+  Assert.ok(true);
 }
 '''
 
@@ -64,7 +64,7 @@ ADD_TEST_SIMPLE = '''
 function run_test() { run_next_test(); }
 
 add_test(function test_simple() {
-  do_check_true(true);
+  Assert.ok(true);
   run_next_test();
 });
 '''
@@ -73,7 +73,7 @@ ADD_TEST_FAILING = '''
 function run_test() { run_next_test(); }
 
 add_test(function test_failing() {
-  do_check_true(false);
+  Assert.ok(false);
   run_next_test();
 });
 '''
@@ -152,7 +152,7 @@ PASSING_TEST_UNICODE = '''
 function run_test () { run_next_test(); }
 
 add_test(function test_unicode_print () {
-  do_check_eq("\u201c\u201d", "\u201c\u201d");
+  Assert.equal("\u201c\u201d", "\u201c\u201d");
   run_next_test();
 });
 '''
@@ -200,7 +200,7 @@ function run_test() { run_next_test(); }
 add_task(function* test() {
   let result = yield Promise.resolve(false);
 
-  do_check_true(result);
+  Assert.ok(result);
 });
 '''
 
@@ -296,7 +296,7 @@ function run_test() {do_report_unexpected_exception(error)};
 '''
 
 ADD_TEST_VERBOSE = '''
-function run_test() {do_print("a message from do_print")};
+function run_test() {info("a message from info")};
 '''
 
 # A test for genuine JS-generated Error objects
@@ -333,41 +333,41 @@ function run_test() {
   let checkpoints = [];
 
   // Cleanup tasks, in reverse order
-  do_register_cleanup(function cleanup_checkout() {
-    do_check_eq(checkpoints.join(""), "123456");
-    do_print("At this stage, the test has succeeded");
+  registerCleanupFunction(function cleanup_checkout() {
+    Assert.equal(checkpoints.join(""), "123456");
+    info("At this stage, the test has succeeded");
     do_throw("Throwing an error to force displaying the log");
   });
 
-  do_register_cleanup(function sync_cleanup_2() {
+  registerCleanupFunction(function sync_cleanup_2() {
     checkpoints.push(6);
   });
 
-  do_register_cleanup(async function async_cleanup_4() {
+  registerCleanupFunction(async function async_cleanup_4() {
     await undefined;
     checkpoints.push(5);
   });
 
-  do_register_cleanup(function* async_cleanup_3() {
+  registerCleanupFunction(function* async_cleanup_3() {
     yield undefined;
     checkpoints.push(4);
   });
 
-  do_register_cleanup(function async_cleanup_2() {
+  registerCleanupFunction(function async_cleanup_2() {
     let deferred = Promise.defer();
-    do_execute_soon(deferred.resolve);
+    executeSoon(deferred.resolve);
     return deferred.promise.then(function() {
       checkpoints.push(3);
     });
   });
 
-  do_register_cleanup(function sync_cleanup() {
+  registerCleanupFunction(function sync_cleanup() {
     checkpoints.push(2);
   });
 
-  do_register_cleanup(function async_cleanup() {
+  registerCleanupFunction(function async_cleanup() {
     let deferred = Promise.defer();
-    do_execute_soon(deferred.resolve);
+    executeSoon(deferred.resolve);
     return deferred.promise.then(function() {
       checkpoints.push(1);
     });
@@ -379,7 +379,7 @@ function run_test() {
 # A test to check that add_test() tests run without run_test()
 NO_RUN_TEST_ADD_TEST = '''
 add_test(function no_run_test_add_test() {
-  do_check_true(true);
+  Assert.ok(true);
   run_next_test();
 });
 '''
@@ -387,19 +387,19 @@ add_test(function no_run_test_add_test() {
 # A test to check that add_task() tests run without run_test()
 NO_RUN_TEST_ADD_TASK = '''
 add_task(function no_run_test_add_task() {
-  do_check_true(true);
+  Assert.ok(true);
 });
 '''
 
 # A test to check that both add_task() and add_test() work without run_test()
 NO_RUN_TEST_ADD_TEST_ADD_TASK = '''
 add_test(function no_run_test_add_test() {
-  do_check_true(true);
+  Assert.ok(true);
   run_next_test();
 });
 
 add_task(function no_run_test_add_task() {
-  do_check_true(true);
+  Assert.ok(true);
 });
 '''
 
@@ -411,14 +411,14 @@ NO_RUN_TEST_EMPTY_TEST = '''
 
 NO_RUN_TEST_ADD_TEST_FAIL = '''
 add_test(function no_run_test_add_test_fail() {
-  do_check_true(false);
+  Assert.ok(false);
   run_next_test();
 });
 '''
 
 NO_RUN_TEST_ADD_TASK_FAIL = '''
 add_task(function no_run_test_add_task_fail() {
-  do_check_true(false);
+  Assert.ok(false);
 });
 '''
 
@@ -436,8 +436,8 @@ add_task(function* test_2() {
 
 LOAD_MOZINFO = '''
 function run_test() {
-  do_check_neq(typeof mozinfo, undefined);
-  do_check_neq(typeof mozinfo.os, undefined);
+  Assert.notEqual(typeof mozinfo, undefined);
+  Assert.notEqual(typeof mozinfo.os, undefined);
 }
 '''
 
@@ -685,7 +685,7 @@ tail =
 add_test({
   skip_if: () => true,
 }, function test_should_be_skipped() {
-  do_check_true(false);
+  Assert.ok(false);
   run_next_test();
 });
 """)
@@ -707,7 +707,7 @@ add_test({
 add_task({
   skip_if: () => false,
 }, function test_should_not_be_skipped() {
-  do_check_true(true);
+  Assert.ok(true);
 });
 """)
         self.writeManifest(["test_not_skip.js"])
@@ -728,7 +728,7 @@ add_task({
 add_task({
   skip_if: () => true,
 }, function test_should_be_skipped() {
-  do_check_true(false);
+  Assert.ok(false);
 });
 """)
         self.writeManifest(["test_skip.js"])
@@ -749,7 +749,7 @@ add_task({
 add_test({
   skip_if: () => false,
 }, function test_should_not_be_skipped() {
-  do_check_true(true);
+  Assert.ok(true);
   run_next_test();
 });
 """)
@@ -943,7 +943,7 @@ add_test({
 
         self.assertTestResult(True, verbose=True)
         self.assertInLog("true == true")
-        self.assertNotInLog("[do_check_true :")
+        self.assertNotInLog("[Assert.ok :")
         self.assertInLog("[test_simple : 5]")
 
     def testAddTestFailing(self):
@@ -1201,28 +1201,28 @@ add_test({
 
     def testDoPrintWhenVerboseNotExplicit(self):
         """
-        Check that do_print() and similar calls that generate output do
+        Check that info() and similar calls that generate output do
         not have the output when not run verbosely.
         """
         self.writeFile("test_verbose.js", ADD_TEST_VERBOSE)
         self.writeManifest(["test_verbose.js"])
 
         self.assertTestResult(True)
-        self.assertNotInLog("a message from do_print")
+        self.assertNotInLog("a message from info")
 
     def testDoPrintWhenVerboseExplicit(self):
         """
-        Check that do_print() and similar calls that generate output have the
+        Check that info() and similar calls that generate output have the
         output shown when run verbosely.
         """
         self.writeFile("test_verbose.js", ADD_TEST_VERBOSE)
         self.writeManifest(["test_verbose.js"])
         self.assertTestResult(True, verbose=True)
-        self.assertInLog("a message from do_print")
+        self.assertInLog("a message from info")
 
     def testDoPrintWhenVerboseInManifest(self):
         """
-        Check that do_print() and similar calls that generate output have the
+        Check that info() and similar calls that generate output have the
         output shown when 'verbose = true' is in the manifest, even when
         not run verbosely.
         """
@@ -1230,11 +1230,11 @@ add_test({
         self.writeManifest([("test_verbose.js", "verbose = true")])
 
         self.assertTestResult(True)
-        self.assertInLog("a message from do_print")
+        self.assertInLog("a message from info")
 
     def testAsyncCleanup(self):
         """
-        Check that do_register_cleanup handles nicely async cleanup tasks
+        Check that registerCleanupFunction handles nicely async cleanup tasks
         """
         self.writeFile("test_asyncCleanup.js", ASYNC_CLEANUP)
         self.writeManifest(["test_asyncCleanup.js"])

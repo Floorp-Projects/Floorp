@@ -5,11 +5,11 @@
  * Tests the hasEngineWithURL() method of the nsIBrowserSearchService.
  */
 function run_test() {
-  do_print("Setting up test");
+  info("Setting up test");
 
   useHttpServer();
 
-  do_print("Test starting");
+  info("Test starting");
   run_next_test();
 }
 
@@ -21,9 +21,9 @@ function getEngineClone(engine) {
 
 // Check whether and engine does or doesn't exist.
 function checkEngineState(exists, engine) {
-  do_check_eq(exists, Services.search.hasEngineWithURL(engine.method,
-                                                       engine.formURL,
-                                                       engine.queryParams));
+  Assert.equal(exists, Services.search.hasEngineWithURL(engine.method,
+                                                        engine.formURL,
+                                                        engine.queryParams));
 }
 
 // Add a search engine for testing.
@@ -95,40 +95,40 @@ add_task(async function test_hasEngineWithURL() {
   // First ensure neither the unsorted engine, nor the same engine
   // with a pre-sorted list of query parms matches.
   checkEngineState(false, UNSORTED_ENGINE);
-  do_print("The unsorted version of the test engine does not exist.");
+  info("The unsorted version of the test engine does not exist.");
   checkEngineState(false, SORTED_ENGINE);
-  do_print("The sorted version of the test engine does not exist.");
+  info("The sorted version of the test engine does not exist.");
 
   // Ensure variations of the engine definition do not match.
   checkEngineState(false, SORTED_ENGINE_METHOD_CHANGE);
   checkEngineState(false, SORTED_ENGINE_FORMURL_CHANGE);
   checkEngineState(false, SORTED_ENGINE_QUERYPARM_CHANGE);
-  do_print("There are no modified versions of the sorted test engine.");
+  info("There are no modified versions of the sorted test engine.");
 
   // Note that this method doesn't check name variations.
   checkEngineState(false, SORTED_ENGINE_NAME_CHANGE);
-  do_print("There is no NAME modified version of the sorted test engine.");
+  info("There is no NAME modified version of the sorted test engine.");
 
 
   // Add the unsorted engine and it's queryParams.
   addEngineWithParams(UNSORTED_ENGINE);
-  do_print("The unsorted engine has been added.");
+  info("The unsorted engine has been added.");
 
 
   // Then, ensure we find a match for the unsorted engine, and for the
   // same engine with a pre-sorted list of query parms.
   checkEngineState(true, UNSORTED_ENGINE);
-  do_print("The unsorted version of the test engine now exists.");
+  info("The unsorted version of the test engine now exists.");
   checkEngineState(true, SORTED_ENGINE);
-  do_print("The sorted version of the same test engine also now exists.");
+  info("The sorted version of the same test engine also now exists.");
 
   // Ensure variations of the engine definition still do not match.
   checkEngineState(false, SORTED_ENGINE_METHOD_CHANGE);
   checkEngineState(false, SORTED_ENGINE_FORMURL_CHANGE);
   checkEngineState(false, SORTED_ENGINE_QUERYPARM_CHANGE);
-  do_print("There are still no modified versions of the sorted test engine.");
+  info("There are still no modified versions of the sorted test engine.");
 
   // Note that this method still doesn't check name variations.
   checkEngineState(true, SORTED_ENGINE_NAME_CHANGE);
-  do_print("There IS now a NAME modified version of the sorted test engine.");
+  info("There IS now a NAME modified version of the sorted test engine.");
 });

@@ -191,7 +191,7 @@ add_task(async function test_match_current() {
 
   // This should remain with the current set instead of creating a new copy
   let set = JSON.parse(Services.prefs.getCharPref(PREF_SYSTEM_ADDON_SET));
-  do_check_eq(set.directory, "prefilled");
+  Assert.equal(set.directory, "prefilled");
 
   await verifySystemAddonState(TEST_CONDITIONS.withBothSets.initialState, undefined, false, distroDir);
 
@@ -264,7 +264,7 @@ add_task(async function test_update_purges() {
   await installSystemAddons(await buildSystemAddonUpdates(null), testserver);
 
   let dirs = await getSystemAddonDirectories();
-  do_check_eq(dirs.length, 1);
+  Assert.equal(dirs.length, 1);
 
   await promiseShutdownManager();
 });

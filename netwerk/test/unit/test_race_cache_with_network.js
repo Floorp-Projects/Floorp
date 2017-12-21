@@ -58,12 +58,12 @@ let gResponseCounter = 0;
 let gIsFromCache = 0;
 function checkContent(request, buffer, context, isFromCache)
 {
-  do_check_eq(buffer, gResponseBody);
+  Assert.equal(buffer, gResponseBody);
   gResponseCounter++;
   if (isFromCache) {
     gIsFromCache++;
   }
-  do_execute_soon(() => { testGenerator.next(); });
+  executeSoon(() => { testGenerator.next(); });
 }
 
 function run_test() {
@@ -138,7 +138,7 @@ function *testSteps() {
   channel.asyncOpen2(new ChannelListener(checkContent, null));
   do_timeout(50, function() {
     channel.QueryInterface(Components.interfaces.nsIRaceCacheWithNetwork).test_triggerNetwork(0);
-    do_execute_soon(() => { channel.QueryInterface(Components.interfaces.nsIRaceCacheWithNetwork).test_triggerDelayedOpenCacheEntry(); });
+    executeSoon(() => { channel.QueryInterface(Components.interfaces.nsIRaceCacheWithNetwork).test_triggerDelayedOpenCacheEntry(); });
   });
   yield undefined;
   equal(gResponseCounter, 6);
@@ -197,8 +197,8 @@ function *testSteps() {
   });
   yield undefined;
   equal(gResponseCounter, 11);
-  do_print("IsFromCache: " + gIsFromCache + "\n");
-  do_print("Number of 200 responses: " + g200Counter + "\n");
+  info("IsFromCache: " + gIsFromCache + "\n");
+  info("Number of 200 responses: " + g200Counter + "\n");
   equal(g304Counter, 4, "check number of 304 responses");
 
   // Set an increasingly high timeout to trigger opening the cache entry

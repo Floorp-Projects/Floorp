@@ -424,11 +424,11 @@ function check_results(aActualAddons, aExpectedAddons, aFromRepository) {
   // REPOSITORY values if they are from the repository)
   aActualAddons.forEach(function(aActualAddon) {
     if (aActualAddon.size)
-      do_check_eq(aActualAddon.size === REPOSITORY_SIZE, aFromRepository);
+      Assert.equal(aActualAddon.size === REPOSITORY_SIZE, aFromRepository);
 
     if (aActualAddon.updateDate) {
       let time = aActualAddon.updateDate.getTime();
-      do_check_eq(time === 1000 * REPOSITORY_UPDATEDATE, aFromRepository);
+      Assert.equal(time === 1000 * REPOSITORY_UPDATEDATE, aFromRepository);
     }
   });
 }
@@ -448,7 +448,7 @@ function check_results(aActualAddons, aExpectedAddons, aFromRepository) {
  *         Resolves once the checks are complete
  */
 function check_cache(aExpectedToFind, aExpectedImmediately) {
-  do_check_eq(aExpectedToFind.length, REPOSITORY_ADDONS.length);
+  Assert.equal(aExpectedToFind.length, REPOSITORY_ADDONS.length);
 
   let lookups = [];
 
@@ -459,9 +459,9 @@ function check_cache(aExpectedToFind, aExpectedImmediately) {
       // can't Promise-wrap this because we're also testing whether the callback is
       // sync or async
       AddonRepository.getCachedAddonByID(REPOSITORY_ADDONS[i].id, function(aAddon) {
-        do_check_eq(immediatelyFound, aExpectedImmediately);
+        Assert.equal(immediatelyFound, aExpectedImmediately);
         if (expected == null)
-          do_check_eq(aAddon, null);
+          Assert.equal(aAddon, null);
         else
           check_results([aAddon], [expected], true);
         resolve();
@@ -507,21 +507,21 @@ add_task(async function setup() {
 // Tests AddonRepository.cacheEnabled
 add_task(async function run_test_1() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, false);
-  do_check_false(AddonRepository.cacheEnabled);
+  Assert.ok(!AddonRepository.cacheEnabled);
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
-  do_check_true(AddonRepository.cacheEnabled);
+  Assert.ok(AddonRepository.cacheEnabled);
 });
 
 // Tests that the cache and database begin as empty
 add_task(async function run_test_2() {
-  do_check_false(gDBFile.exists());
+  Assert.ok(!gDBFile.exists());
   await check_cache([false, false, false], false);
   await AddonRepository.flush();
 });
 
 // Tests repopulateCache when the search fails
 add_task(async function run_test_3() {
-  do_check_true(gDBFile.exists());
+  Assert.ok(gDBFile.exists());
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_FAILED);
 
@@ -559,12 +559,12 @@ add_task(async function run_test_5_1() {
 
 // Tests repopulateCache when caching is disabled
 add_task(async function run_test_6() {
-  do_check_true(gDBFile.exists());
+  Assert.ok(gDBFile.exists());
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, false);
 
   await AddonRepository.repopulateCache();
   // Database should have been deleted
-  do_check_false(gDBFile.exists());
+  Assert.ok(!gDBFile.exists());
 
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
   await check_cache([false, false, false], false);
@@ -573,7 +573,7 @@ add_task(async function run_test_6() {
 
 // Tests cacheAddons when the search fails
 add_task(async function run_test_7() {
-  do_check_true(gDBFile.exists());
+  Assert.ok(gDBFile.exists());
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_FAILED);
 
   await new Promise((resolve, reject) =>
@@ -621,12 +621,12 @@ add_task(async function run_test_10() {
 
 // Tests cacheAddons when caching is disabled
 add_task(async function run_test_11() {
-  do_check_true(gDBFile.exists());
+  Assert.ok(gDBFile.exists());
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, false);
 
   await new Promise((resolve, reject) =>
     AddonRepository.cacheAddons(ADDON_IDS, resolve));
-  do_check_true(gDBFile.exists());
+  Assert.ok(gDBFile.exists());
 
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
   await check_initialized_cache([true, true, true]);
@@ -635,7 +635,7 @@ add_task(async function run_test_11() {
 // Tests that XPI add-ons do not use any of the repository properties if
 // caching is disabled, even if there are repository properties available
 add_task(async function run_test_12() {
-  do_check_true(gDBFile.exists());
+  Assert.ok(gDBFile.exists());
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, false);
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, GETADDONS_RESULTS);
 
@@ -646,12 +646,12 @@ add_task(async function run_test_12() {
 // Tests that a background update with caching disabled deletes the add-ons
 // database, and that XPI add-ons still do not use any of repository properties
 add_task(async function run_test_13() {
-  do_check_true(gDBFile.exists());
+  Assert.ok(gDBFile.exists());
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS_PERFORMANCE, GETADDONS_EMPTY);
 
   await AddonManagerInternal.backgroundUpdateCheck();
   // Database should have been deleted
-  do_check_false(gDBFile.exists());
+  Assert.ok(!gDBFile.exists());
 
   let aAddons = await promiseAddonsByIDs(ADDON_IDS);
   check_results(aAddons, WITHOUT_CACHE);
@@ -664,7 +664,7 @@ add_task(async function run_test_14() {
 
   await AddonManagerInternal.backgroundUpdateCheck();
   await AddonRepository.flush();
-  do_check_true(gDBFile.exists());
+  Assert.ok(gDBFile.exists());
 
   let aAddons = await promiseAddonsByIDs(ADDON_IDS);
   check_results(aAddons, WITHOUT_CACHE);

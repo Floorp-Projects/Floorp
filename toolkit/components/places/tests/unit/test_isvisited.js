@@ -11,23 +11,23 @@ add_task(async function test_execute() {
   var uri1 = uri("http://mozilla.com");
   await PlacesTestUtils.addVisits({uri: uri1, referrer});
   do_check_guid_for_uri(uri1);
-  do_check_true(await promiseIsURIVisited(uri1));
+  Assert.ok(await promiseIsURIVisited(uri1));
 
   // add a https:// uri
   var uri2 = uri("https://etrade.com");
   await PlacesTestUtils.addVisits({uri: uri2, referrer});
   do_check_guid_for_uri(uri2);
-  do_check_true(await promiseIsURIVisited(uri2));
+  Assert.ok(await promiseIsURIVisited(uri2));
 
   // add a ftp:// uri
   var uri3 = uri("ftp://ftp.mozilla.org");
   await PlacesTestUtils.addVisits({uri: uri3, referrer});
   do_check_guid_for_uri(uri3);
-  do_check_true(await promiseIsURIVisited(uri3));
+  Assert.ok(await promiseIsURIVisited(uri3));
 
   // check if a nonexistent uri is visited
   var uri4 = uri("http://foobarcheese.com");
-  do_check_false(await promiseIsURIVisited(uri4));
+  Assert.equal(false, await promiseIsURIVisited(uri4));
 
   // check that certain schemes never show up as visited
   // even if we attempt to add them to history
@@ -53,15 +53,15 @@ add_task(async function test_execute() {
       // nsIIOService.newURI() can throw if e.g. our app knows about imap://
       // but the account is not set up and so the URL is invalid for us.
       // Note this in the log but ignore as it's not the subject of this test.
-      do_print("Could not construct URI for '" + currentURL + "'; ignoring");
+      info("Could not construct URI for '" + currentURL + "'; ignoring");
     }
     if (cantAddUri) {
       PlacesTestUtils.addVisits({uri: cantAddUri, referrer}).then(() => {
         do_throw("Should not have added history for invalid URI.");
       }, error => {
-        do_check_true(error.message.includes("No items were added to history"));
+        Assert.ok(error.message.includes("No items were added to history"));
       });
-      do_check_false(await promiseIsURIVisited(cantAddUri));
+      Assert.equal(false, await promiseIsURIVisited(cantAddUri));
     }
   }
 });

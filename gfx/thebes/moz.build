@@ -217,14 +217,17 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'gfxMacPlatformFontList.mm',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-    EXPORTS.mozilla.gfx += [
-        'PrintTargetEMF.h',
-    ]
     UNIFIED_SOURCES += [
         'D3D11Checks.cpp',
         'DeviceManagerDx.cpp',
-        'PrintTargetEMF.cpp',
     ]
+    if CONFIG['MOZ_ENABLE_SKIA_PDF']:
+        EXPORTS.mozilla.gfx += [
+            'PrintTargetEMF.h',
+        ]
+        UNIFIED_SOURCES += [
+            'PrintTargetEMF.cpp',
+        ]
 
 if CONFIG['MOZ_ENABLE_SKIA_PDF']:
     EXPORTS.mozilla.gfx += [

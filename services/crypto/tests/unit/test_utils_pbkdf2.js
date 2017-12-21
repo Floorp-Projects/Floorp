@@ -8,11 +8,11 @@ var {bytesAsHex: b2h} = CommonUtils;
 
 add_task(function test_pbkdf2() {
   let symmKey16 = CryptoUtils.pbkdf2Generate("secret phrase", "DNXPzPpiwn", 4096, 16);
-  do_check_eq(symmKey16.length, 16);
-  do_check_eq(btoa(symmKey16), "d2zG0d2cBfXnRwMUGyMwyg==");
-  do_check_eq(CommonUtils.encodeBase32(symmKey16), "O5WMNUO5TQC7LZ2HAMKBWIZQZI======");
+  Assert.equal(symmKey16.length, 16);
+  Assert.equal(btoa(symmKey16), "d2zG0d2cBfXnRwMUGyMwyg==");
+  Assert.equal(CommonUtils.encodeBase32(symmKey16), "O5WMNUO5TQC7LZ2HAMKBWIZQZI======");
   let symmKey32 = CryptoUtils.pbkdf2Generate("passphrase", "salt", 4096, 32);
-  do_check_eq(symmKey32.length, 32);
+  Assert.equal(symmKey32.length, 32);
 });
 
 // http://tools.ietf.org/html/rfc6070
@@ -83,7 +83,7 @@ add_task(function test_pbkdf2_hmac_sha1() {
   ];
 
   for (let v of vectors) {
-    do_check_eq(v.DK, b2h(pbkdf2(v.P, v.S, v.c, v.dkLen)));
+    Assert.equal(v.DK, b2h(pbkdf2(v.P, v.S, v.c, v.dkLen)));
   }
 });
 
@@ -145,7 +145,7 @@ add_task(function test_pbkdf2_hmac_sha256() {
   ];
 
   for (let v of vectors) {
-    do_check_eq(v.DK,
+    Assert.equal(v.DK,
         b2h(pbkdf2(v.P, v.S, v.c, v.dkLen, Ci.nsICryptoHMAC.SHA256, 32)));
   }
 });

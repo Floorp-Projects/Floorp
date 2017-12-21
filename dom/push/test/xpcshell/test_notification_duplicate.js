@@ -19,7 +19,7 @@ function run_test() {
 // Should acknowledge duplicate notifications, but not notify apps.
 add_task(async function test_notification_duplicate() {
   let db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+  registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
   let records = [{
     channelID: 'has-recents',
     pushEndpoint: 'https://example.org/update/1',

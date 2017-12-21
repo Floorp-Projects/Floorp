@@ -67,11 +67,11 @@ function release_grips(frameArgs, threadGrips) {
   // Release all actors with releaseMany...
   let release = [threadGrips[0], threadGrips[1], gPauseGrip.actor];
   gThreadClient.releaseMany(release, function (response) {
-    do_check_eq(response.error, "notReleasable");
+    Assert.equal(response.error, "notReleasable");
     // Now ask for thread grips again, they should not exist.
     arg_grips(frameArgs, function (newGrips) {
       for (let i = 0; i < newGrips.length; i++) {
-        do_check_eq(newGrips[i], "noSuchActor");
+        Assert.equal(newGrips[i], "noSuchActor");
       }
       gThreadClient.resume(function () {
         finishClient(gClient);

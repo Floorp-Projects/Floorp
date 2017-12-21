@@ -15,7 +15,7 @@ createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 // Test for a preference to either exist with a specified value, or not exist at all
 function checkPending() {
   try {
-    do_check_false(Services.prefs.getBoolPref("extensions.pendingOperations"));
+    Assert.ok(!Services.prefs.getBoolPref("extensions.pendingOperations"));
   } catch (e) {
     // OK
   }
@@ -23,7 +23,7 @@ function checkPending() {
 
 // Make sure all our extension state is empty/nonexistent
 function check_empty_state() {
-  do_check_eq(Services.prefs.getIntPref("extensions.databaseSchema"), DB_SCHEMA);
+  Assert.equal(Services.prefs.getIntPref("extensions.databaseSchema"), DB_SCHEMA);
   checkPending();
 }
 
@@ -46,7 +46,7 @@ async function trigger_db_load() {
     AddonManager.getAddonsByTypes(["extension"], resolve);
   });
 
-  do_check_eq(addonList.length, 0);
+  Assert.equal(addonList.length, 0);
   check_empty_state();
 
   await true;
@@ -70,6 +70,6 @@ add_task(function upgrade_schema_version() {
   Services.prefs.setIntPref("extensions.databaseSchema", 1);
 
   startupManager();
-  do_check_eq(Services.prefs.getIntPref("extensions.databaseSchema"), DB_SCHEMA);
+  Assert.equal(Services.prefs.getIntPref("extensions.databaseSchema"), DB_SCHEMA);
   check_empty_state();
 });

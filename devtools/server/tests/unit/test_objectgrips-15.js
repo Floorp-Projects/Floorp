@@ -52,7 +52,7 @@ const testObjectGroup = Task.async(function* () {
   const ugh2Client = gThreadClient.pauseGrip(ugh2.value);
 
   packet = yield getPrototypeAndProperties(ugh2Client);
-  do_check_eq(packet.ownProperties.length.value, 2);
+  Assert.equal(packet.ownProperties.length.value, 2);
 
   yield resume(gThreadClient);
   finishClient(gClient);

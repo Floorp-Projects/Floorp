@@ -27,13 +27,13 @@ function main_test() {
   for (let i = 50; i >= 0; --i) {
     set_errno(i);
     let status = ctypes.errno;
-    do_check_eq(status, i);
+    Assert.equal(status, i);
 
     status = get_errno();
-    do_check_eq(status, 0);
+    Assert.equal(status, 0);
 
     status = ctypes.errno;
-    do_check_eq(status, 0);
+    Assert.equal(status, 0);
   }
 
   let set_last_error, get_last_error;
@@ -45,21 +45,21 @@ function main_test() {
                                      ctypes.int);
 
   } catch (x) {
-    do_check_eq(ctypes.winLastError, undefined);
+    Assert.equal(ctypes.winLastError, undefined);
   }
 
   if (set_last_error) {
-    do_check_neq(ctypes.winLastError, undefined);
+    Assert.notEqual(ctypes.winLastError, undefined);
     for (let i = 0; i < 50; ++i) {
       set_last_error(i);
       let status = ctypes.winLastError;
-      do_check_eq(status, i);
+      Assert.equal(status, i);
 
       status = get_last_error();
-      do_check_eq(status, 0);
+      Assert.equal(status, 0);
 
       status = ctypes.winLastError;
-      do_check_eq(status, 0);
+      Assert.equal(status, 0);
     }
   }
 

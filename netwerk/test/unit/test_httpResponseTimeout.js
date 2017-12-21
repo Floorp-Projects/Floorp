@@ -35,9 +35,9 @@ TimeoutListener.prototype = {
 
   onStopRequest: function (request, ctx, status) {
     if (this.expectResponse) {
-      do_check_eq(status, Cr.NS_OK);
+      Assert.equal(status, Cr.NS_OK);
     } else {
-      do_check_eq(status, Cr.NS_ERROR_NET_TIMEOUT);
+      Assert.equal(status, Cr.NS_ERROR_NET_TIMEOUT);
     }
 
     run_next_test();
@@ -104,13 +104,13 @@ function setup_tests() {
   // Reset pref in cleanup.
   if (prefService.getBoolPref(kShortLivedKeepalivePref)) {
     prefService.setBoolPref(kShortLivedKeepalivePref, false);
-    do_register_cleanup(function() {
+    registerCleanupFunction(function() {
       prefService.setBoolPref(kShortLivedKeepalivePref, true);
     });
   }
   if (prefService.getBoolPref(kLongLivedKeepalivePref)) {
     prefService.setBoolPref(kLongLivedKeepalivePref, false);
-    do_register_cleanup(function() {
+    registerCleanupFunction(function() {
       prefService.setBoolPref(kLongLivedKeepalivePref, true);
     });
   }
@@ -137,7 +137,7 @@ function setup_http_server() {
   // Start server; will be stopped at test cleanup time.
   server.start(-1);
   baseURL = "http://localhost:" + server.identity.primaryPort + "/";
-  do_print("Using baseURL: " + baseURL);
+  info("Using baseURL: " + baseURL);
   server.registerPathHandler('/', function(metadata, response) {
     // Wait until the timeout should have passed, then respond.
     response.processAsync();
@@ -148,7 +148,7 @@ function setup_http_server() {
       response.finish();
     });
   });
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     server.stop(serverStopListener);
   });
 }

@@ -10,18 +10,18 @@ const HELLO_WORLD = "Hello World";
 const EMPTY_MESSAGE = "";
 
 add_test(function test_udp_message_raw_data() {
-  do_print("test for nsIUDPMessage.rawData");
+  info("test for nsIUDPMessage.rawData");
 
   let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
 
   socket.init(-1, true, Services.scriptSecurityManager.getSystemPrincipal());
-  do_print("Port assigned : " + socket.port);
+  info("Port assigned : " + socket.port);
   socket.asyncListen({
     QueryInterface : XPCOMUtils.generateQI([Ci.nsIUDPSocketListener]),
     onPacketReceived : function(aSocket, aMessage){
       let recv_data = String.fromCharCode.apply(null, aMessage.rawData);
-      do_check_eq(recv_data, HELLO_WORLD);
-      do_check_eq(recv_data, aMessage.data);
+      Assert.equal(recv_data, HELLO_WORLD);
+      Assert.equal(recv_data, aMessage.data);
       socket.close();
       run_next_test();
     },
@@ -33,11 +33,11 @@ add_test(function test_udp_message_raw_data() {
     rawData[i] = HELLO_WORLD.charCodeAt(i);
   }
   let written = socket.send("127.0.0.1", socket.port, rawData, rawData.length);
-  do_check_eq(written, HELLO_WORLD.length);
+  Assert.equal(written, HELLO_WORLD.length);
 });
 
 add_test(function test_udp_send_stream() {
-  do_print("test for nsIUDPSocket.sendBinaryStream");
+  info("test for nsIUDPSocket.sendBinaryStream");
 
   let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
 
@@ -46,7 +46,7 @@ add_test(function test_udp_send_stream() {
     QueryInterface : XPCOMUtils.generateQI([Ci.nsIUDPSocketListener]),
     onPacketReceived : function(aSocket, aMessage){
       let recv_data = String.fromCharCode.apply(null, aMessage.rawData);
-      do_check_eq(recv_data, HELLO_WORLD);
+      Assert.equal(recv_data, HELLO_WORLD);
       socket.close();
       run_next_test();
     },
@@ -59,18 +59,18 @@ add_test(function test_udp_send_stream() {
 });
 
 add_test(function test_udp_message_zero_length() {
-  do_print("test for nsIUDPMessage with zero length");
+  info("test for nsIUDPMessage with zero length");
 
   let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
 
   socket.init(-1, true, Services.scriptSecurityManager.getSystemPrincipal());
-  do_print("Port assigned : " + socket.port);
+  info("Port assigned : " + socket.port);
   socket.asyncListen({
     QueryInterface : XPCOMUtils.generateQI([Ci.nsIUDPSocketListener]),
     onPacketReceived : function(aSocket, aMessage){
       let recv_data = String.fromCharCode.apply(null, aMessage.rawData);
-      do_check_eq(recv_data, EMPTY_MESSAGE);
-      do_check_eq(recv_data, aMessage.data);
+      Assert.equal(recv_data, EMPTY_MESSAGE);
+      Assert.equal(recv_data, aMessage.data);
       socket.close();
       run_next_test();
     },
@@ -79,7 +79,7 @@ add_test(function test_udp_message_zero_length() {
 
   let rawData = new Uint8Array(EMPTY_MESSAGE.length);
   let written = socket.send("127.0.0.1", socket.port, rawData, rawData.length);
-  do_check_eq(written, EMPTY_MESSAGE.length);
+  Assert.equal(written, EMPTY_MESSAGE.length);
 });
 
 function run_test(){

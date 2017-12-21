@@ -13,7 +13,7 @@ var gProfD = do_get_profile_startup();
 function run_test() {
   allow_all_plugins();
 
-  do_check_true(gIsWindows || gIsOSX || gIsLinux);
+  Assert.ok(gIsWindows || gIsOSX || gIsLinux);
 
   let file = get_test_plugin_no_symlink();
   if (!file)
@@ -52,9 +52,9 @@ function run_test() {
     copy.moveTo(null, leafName + suffix);
     pluginHost.reloadPlugins(false);
     plugin = get_test_plugintag();
-    do_check_false(plugin == null);
-    do_check_true(plugin.disabled);
-    do_check_false(plugin.clicktoplay);
+    Assert.equal(false, plugin == null);
+    Assert.ok(plugin.disabled);
+    Assert.ok(!plugin.clicktoplay);
   });
 
   // check that the state persists even if the plugin is not always present
@@ -64,9 +64,9 @@ function run_test() {
   pluginHost.reloadPlugins(false);
 
   plugin = get_test_plugintag();
-  do_check_false(plugin == null);
-  do_check_true(plugin.disabled);
-  do_check_false(plugin.clicktoplay);
+  Assert.equal(false, plugin == null);
+  Assert.ok(plugin.disabled);
+  Assert.ok(!plugin.clicktoplay);
 
   // clean up
   Services.prefs.clearUserPref(statePref);

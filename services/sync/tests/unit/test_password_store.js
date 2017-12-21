@@ -19,26 +19,26 @@ async function checkRecord(name, record, expectedCount, timeCreated,
   _("Record" + name + ":" + JSON.stringify(logins));
   _("Count" + name + ":" + count.value);
 
-  do_check_eq(count.value, expectedCount);
+  Assert.equal(count.value, expectedCount);
 
   if (expectedCount > 0) {
-    do_check_true(!!(await store.getAllIDs())[record.id]);
+    Assert.ok(!!(await store.getAllIDs())[record.id]);
     let stored_record = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
 
     if (timeCreated !== undefined) {
-      do_check_eq(stored_record.timeCreated, expectedTimeCreated);
+      Assert.equal(stored_record.timeCreated, expectedTimeCreated);
     }
 
     if (timePasswordChanged !== undefined) {
       if (recordIsUpdated) {
-        do_check_true(stored_record.timePasswordChanged >= expectedTimePasswordChanged);
+        Assert.ok(stored_record.timePasswordChanged >= expectedTimePasswordChanged);
       } else {
-        do_check_eq(stored_record.timePasswordChanged, expectedTimePasswordChanged);
+        Assert.equal(stored_record.timePasswordChanged, expectedTimePasswordChanged);
       }
       return stored_record.timePasswordChanged;
     }
   } else {
-    do_check_true(!(await store.getAllIDs())[record.id]);
+    Assert.ok(!(await store.getAllIDs())[record.id]);
   }
   return undefined;
 }
@@ -71,7 +71,7 @@ async function changePassword(name, hostname, password, expectedCount, timeCreat
   let store = engine._store;
 
   if (insert) {
-    do_check_eq((await store.applyIncomingBatch([record])).length, 0);
+    Assert.equal((await store.applyIncomingBatch([record])).length, 0);
   }
 
   return checkRecord(name, record, expectedCount, timeCreated,
@@ -174,7 +174,7 @@ add_task(async function run_test() {
   let store = engine._store;
 
   try {
-    do_check_eq((await store.applyIncomingBatch([recordA, recordB])).length, 0);
+    Assert.equal((await store.applyIncomingBatch([recordA, recordB])).length, 0);
 
     // Only the good record makes it to Services.logins.
     let badCount = {};
@@ -189,11 +189,11 @@ add_task(async function run_test() {
     _("Good: " + JSON.stringify(goodLogins));
     _("Count: " + badCount.value + ", " + goodCount.value);
 
-    do_check_eq(goodCount.value, 1);
-    do_check_eq(badCount.value, 0);
+    Assert.equal(goodCount.value, 1);
+    Assert.equal(badCount.value, 0);
 
-    do_check_true(!!(await store.getAllIDs())[BOGUS_GUID_B]);
-    do_check_true(!(await store.getAllIDs())[BOGUS_GUID_A]);
+    Assert.ok(!!(await store.getAllIDs())[BOGUS_GUID_B]);
+    Assert.ok(!(await store.getAllIDs())[BOGUS_GUID_A]);
 
     await test_LoginRec_toString(store, recordB);
 

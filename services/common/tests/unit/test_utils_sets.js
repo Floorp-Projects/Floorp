@@ -20,11 +20,11 @@ var intersection = CommonUtils.intersection;
 var setEqual = CommonUtils.setEqual;
 
 function do_check_setEqual(a, b) {
-  do_check_true(setEqual(a, b));
+  Assert.ok(setEqual(a, b));
 }
 
 function do_check_not_setEqual(a, b) {
-  do_check_false(setEqual(a, b));
+  Assert.ok(!setEqual(a, b));
 }
 
 add_test(function test_setEqual() {

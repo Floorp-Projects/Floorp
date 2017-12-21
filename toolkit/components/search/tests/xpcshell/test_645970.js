@@ -15,6 +15,6 @@ function run_test() {
   // The search service needs to be started after the jarURIs pref has been
   // set in order to initiate it correctly
   let engine = Services.search.getEngineByName("bug645970");
-  do_check_neq(engine, null);
+  Assert.notEqual(engine, null);
   Services.obs.notifyObservers(null, "quit-application");
 }

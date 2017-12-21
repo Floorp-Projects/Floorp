@@ -16,6 +16,7 @@
 #include "nsILoadGroup.h"                // for member (in nsCOMPtr)
 #include "nsINode.h"                     // for base class
 #include "nsIParser.h"
+#include "nsIPresShell.h"
 #include "nsIScriptGlobalObject.h"       // for member (in nsCOMPtr)
 #include "nsIServiceManager.h"
 #include "nsIUUIDGenerator.h"
@@ -86,7 +87,6 @@ class nsILayoutHistoryState;
 class nsILoadContext;
 class nsIObjectLoadingContent;
 class nsIObserver;
-class nsIPresShell;
 class nsIPrincipal;
 class nsIRequest;
 class nsIRunnable;
@@ -936,6 +936,12 @@ public:
   nsIPresShell* GetShell() const
   {
     return GetBFCacheEntry() ? nullptr : mPresShell;
+  }
+
+  nsIPresShell* GetObservingShell() const
+  {
+    return mPresShell && mPresShell->IsObservingDocument()
+      ? mPresShell : nullptr;
   }
 
   bool HasShellOrBFCacheEntry() const

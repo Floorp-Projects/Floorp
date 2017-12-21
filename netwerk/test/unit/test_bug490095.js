@@ -59,7 +59,7 @@ function triggerNextTest() {
 
 function checkValueAndTrigger(request, data, ctx) {
     logit(index, data);
-    do_check_eq(tests[index].expected, data);
+    Assert.equal(tests[index].expected, data);
 
     if (index < tests.length-1) {
         index++;

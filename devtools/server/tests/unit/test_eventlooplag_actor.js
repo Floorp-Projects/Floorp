@@ -25,9 +25,9 @@ function run_test() {
     client.listTabs(function (resp) {
       front = new EventLoopLagFront(client, resp);
       front.start().then(success => {
-        do_check_true(success);
+        Assert.ok(success);
         front.once("event-loop-lag", gotLagEvent);
-        do_execute_soon(lag);
+        executeSoon(lag);
       });
     });
   });
@@ -46,8 +46,8 @@ function run_test() {
   // Got a lag event. The test will time out if the actor
   // fails to detect the lag.
   function gotLagEvent(time) {
-    do_print("lag: " + time);
-    do_check_true(time >= threshold);
+    info("lag: " + time);
+    Assert.ok(time >= threshold);
     front.stop().then(() => {
       finishClient(client);
     });

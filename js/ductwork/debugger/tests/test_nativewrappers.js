@@ -10,9 +10,9 @@ function run_test()
     let args = aFrame["arguments"];
     try {
       args[0];
-      do_check_true(true);
+      Assert.ok(true);
     } catch(ex) {
-      do_check_true(false);
+      Assert.ok(false);
     }
   };
 

@@ -24,8 +24,8 @@ var httpsBarOrigin; // https://bar.example.com:PORT/
 function run_test() {
   var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
   h2Port = env.get("MOZHTTP2_PORT");
-  do_check_neq(h2Port, null);
-  do_check_neq(h2Port, "");
+  Assert.notEqual(h2Port, null);
+  Assert.notEqual(h2Port, "");
 
   // Set to allow the cert presented by our H2 server
   do_get_profile();
@@ -150,15 +150,15 @@ var originAttributes = {};
 var Listener = function() {};
 Listener.prototype = {
   onStartRequest: function testOnStartRequest(request, ctx) {
-    do_check_true(request instanceof Components.interfaces.nsIHttpChannel);
+    Assert.ok(request instanceof Components.interfaces.nsIHttpChannel);
 
     if (expectPass) {
       if (!Components.isSuccessCode(request.status)) {
         do_throw("Channel should have a success code! (" + request.status + ")");
       }
-      do_check_eq(request.responseStatus, 200);
+      Assert.equal(request.responseStatus, 200);
     } else {
-      do_check_eq(Components.isSuccessCode(request.status), false);
+      Assert.equal(Components.isSuccessCode(request.status), false);
     }
   },
 
@@ -172,20 +172,20 @@ Listener.prototype = {
       routed = request.getRequestHeader("Alt-Used");
     } catch (e) {}
     dump("routed is " + routed + "\n");
-    do_check_eq(Components.isSuccessCode(status), expectPass);
+    Assert.equal(Components.isSuccessCode(status), expectPass);
 
     if (waitFor != 0) {
-      do_check_eq(routed, "");
+      Assert.equal(routed, "");
       do_test_pending();
       loadWithoutClearingMappings = true;
       do_timeout(waitFor, doTest);
       waitFor = 0;
       xaltsvc = "NA";
     } else if (xaltsvc == "NA") {
-      do_check_eq(routed, "");
+      Assert.equal(routed, "");
       nextTest();
     } else if (routed == xaltsvc) {
-      do_check_eq(routed, xaltsvc); // always true, but a useful log
+      Assert.equal(routed, xaltsvc); // always true, but a useful log
       nextTest();
     } else {
       dump ("poll later for alt svc mapping\n");

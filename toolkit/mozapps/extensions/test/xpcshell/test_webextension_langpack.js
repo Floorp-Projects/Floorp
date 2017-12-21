@@ -114,7 +114,7 @@ add_task(async function() {
     promiseInstallFile(do_get_addon("langpack_1"), true),
     promiseLangpackStartup()
   ]);
-  do_check_true(addon.isActive);
+  Assert.ok(addon.isActive);
 
   await promiseShutdownManager();
 
@@ -124,8 +124,8 @@ add_task(async function() {
   await promiseStartupManager(true);
 
   addon = await promiseAddonByID(ID);
-  do_check_false(addon.isActive);
-  do_check_true(addon.appDisabled);
+  Assert.ok(!addon.isActive);
+  Assert.ok(addon.appDisabled);
 
   addon.uninstall();
 });

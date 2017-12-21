@@ -57,20 +57,11 @@ PaymentUIService.prototype = {
     this.log.debug("abortPayment:", requestId);
     let abortResponse = Cc["@mozilla.org/dom/payments/payment-abort-action-response;1"]
                           .createInstance(Ci.nsIPaymentAbortActionResponse);
-
-    let enu = Services.wm.getEnumerator(null);
-    let win;
-    while ((win = enu.getNext())) {
-      if (win.name == `${this.REQUEST_ID_PREFIX}${requestId}`) {
-        this.log.debug(`closing: ${win.name}`);
-        win.close();
-        break;
-      }
-    }
+    let found = this.closeDialog(requestId);
 
     // if `win` is falsy, then we haven't found the dialog, so the abort fails
     // otherwise, the abort is successful
-    let response = win ?
+    let response = found ?
       Ci.nsIPaymentActionResponse.ABORT_SUCCEEDED :
       Ci.nsIPaymentActionResponse.ABORT_FAILED;
 
@@ -80,9 +71,13 @@ PaymentUIService.prototype = {
 
   completePayment(requestId) {
     this.log.debug("completePayment:", requestId);
+    let closed = this.closeDialog(requestId);
+    let responseCode = closed ?
+        Ci.nsIPaymentActionResponse.COMPLETE_SUCCEEDED :
+        Ci.nsIPaymentActionResponse.COMPLETE_FAILED;
     let completeResponse = Cc["@mozilla.org/dom/payments/payment-complete-action-response;1"]
                              .createInstance(Ci.nsIPaymentCompleteActionResponse);
-    completeResponse.init(requestId, Ci.nsIPaymentActionResponse.COMPLTETE_SUCCEEDED);
+    completeResponse.init(requestId, responseCode);
     paymentSrv.respondPayment(completeResponse.QueryInterface(Ci.nsIPaymentActionResponse));
   },
 
@@ -91,6 +86,24 @@ PaymentUIService.prototype = {
   },
 
   // other helper methods
+
+  /**
+   * @param {string} requestId - Payment Request ID of the dialog to close.
+   * @returns {boolean} whether the specified dialog was closed.
+   */
+  closeDialog(requestId) {
+    let enu = Services.wm.getEnumerator(null);
+    let win;
+    while ((win = enu.getNext())) {
+      if (win.name == `${this.REQUEST_ID_PREFIX}${requestId}`) {
+        this.log.debug(`closing: ${win.name}`);
+        win.close();
+        return true;
+      }
+    }
+
+    return false;
+  },
 
   requestIdForWindow(window) {
     let windowName = window.name;

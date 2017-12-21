@@ -29,7 +29,7 @@ function test_succeeded_mapping(namespace) {
   var uri = Services.io.newURI("chrome://" + namespace + "/content/test.xul");
   try {
     var result = chromeReg.convertChromeURL(uri);
-    do_check_eq(result.spec, target);
+    Assert.equal(result.spec, target);
   } catch (ex) {
     do_throw(namespace);
   }

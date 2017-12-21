@@ -16,8 +16,8 @@ function run_test() {
     let signmarBin = do_get_file("signmar" + BIN_SUFFIX);
 
     // Make sure the signmar binary exists and is an executable.
-    do_check_true(signmarBin.exists());
-    do_check_true(signmarBin.isExecutable());
+    Assert.ok(signmarBin.exists());
+    Assert.ok(signmarBin.isExecutable());
 
     // Setup the command line arguments to sign the MAR.
     let NSSConfigDir = do_get_file("data");
@@ -43,9 +43,9 @@ function run_test() {
 
     // Verify signmar returned 0 for success.
     if (wantSuccess) {
-      do_check_eq(exitValue, 0);
+      Assert.equal(exitValue, 0);
     } else {
-      do_check_neq(exitValue, 0);
+      Assert.notEqual(exitValue, 0);
     }
   }
 
@@ -64,8 +64,8 @@ function run_test() {
     let signmarBin = do_get_file("signmar" + BIN_SUFFIX);
 
     // Make sure the signmar binary exists and is an executable.
-    do_check_true(signmarBin.exists());
-    do_check_true(signmarBin.isExecutable());
+    Assert.ok(signmarBin.exists());
+    Assert.ok(signmarBin.isExecutable());
 
     // Setup the command line arguments to extract the signature in the MAR.
     let args = ["-n" + sigIndex, "-X", inMAR.path, extractedSig.path];
@@ -82,9 +82,9 @@ function run_test() {
 
     // Verify signmar returned 0 for success.
     if (wantSuccess) {
-      do_check_eq(exitValue, 0);
+      Assert.equal(exitValue, 0);
     } else {
-      do_check_neq(exitValue, 0);
+      Assert.notEqual(exitValue, 0);
     }
   }
 
@@ -105,8 +105,8 @@ function run_test() {
     let signmarBin = do_get_file("signmar" + BIN_SUFFIX);
 
     // Make sure the signmar binary exists and is an executable.
-    do_check_true(signmarBin.exists());
-    do_check_true(signmarBin.isExecutable());
+    Assert.ok(signmarBin.exists());
+    Assert.ok(signmarBin.isExecutable());
 
     // Setup the command line arguments to import the signature in the MAR.
     let args = ["-n" + sigIndex, "-I", inMAR.path, sigFile.path, outMAR.path];
@@ -123,9 +123,9 @@ function run_test() {
 
     // Verify signmar returned 0 for success.
     if (wantSuccess) {
-      do_check_eq(exitValue, 0);
+      Assert.equal(exitValue, 0);
     } else {
-      do_check_neq(exitValue, 0);
+      Assert.notEqual(exitValue, 0);
     }
   }
 
@@ -141,8 +141,8 @@ function run_test() {
     let signmarBin = do_get_file("signmar" + BIN_SUFFIX);
 
     // Make sure the signmar binary exists and is an executable.
-    do_check_true(signmarBin.exists());
-    do_check_true(signmarBin.isExecutable());
+    Assert.ok(signmarBin.exists());
+    Assert.ok(signmarBin.isExecutable());
 
     // Will reference the arguments to use for verification in signmar
     let args = [];
@@ -187,9 +187,9 @@ function run_test() {
 
     // Verify signmar returned 0 for success.
     if (wantSuccess) {
-      do_check_eq(exitValue, 0);
+      Assert.equal(exitValue, 0);
     } else {
-      do_check_neq(exitValue, 0);
+      Assert.notEqual(exitValue, 0);
     }
   }
 
@@ -206,8 +206,8 @@ function run_test() {
     let signmarBin = do_get_file("signmar" + BIN_SUFFIX);
 
     // Make sure the signmar binary exists and is an executable.
-    do_check_true(signmarBin.exists());
-    do_check_true(signmarBin.isExecutable());
+    Assert.ok(signmarBin.exists());
+    Assert.ok(signmarBin.isExecutable());
 
     // Setup the command line arguments to create the MAR.
     let args = ["-r", signedMAR.path, outMAR.path];
@@ -224,9 +224,9 @@ function run_test() {
 
     // Verify signmar returned 0 for success.
     if (wantSuccess) {
-      do_check_eq(exitValue, 0);
+      Assert.equal(exitValue, 0);
     } else {
-      do_check_neq(exitValue, 0);
+      Assert.notEqual(exitValue, 0);
     }
   }
 
@@ -267,7 +267,7 @@ function run_test() {
         outMAR.remove(false);
       }
       signMAR(inMAR, outMAR, ["mycert"], wantSuccess, true);
-      do_check_true(outMAR.exists());
+      Assert.ok(outMAR.exists());
       let outMARData = getBinaryFileData(outMAR);
       let refMAR = do_get_file("data/signed_pib.mar");
       let refMARData = getBinaryFileData(refMAR);
@@ -281,10 +281,10 @@ function run_test() {
       if (outMAR.exists()) {
         outMAR.remove(false);
       }
-      do_check_false(outMAR.exists());
+      Assert.ok(!outMAR.exists());
       signMAR(inMAR, outMAR, ["mycert", "mycert2", "mycert3"],
               wantSuccess, true);
-      do_check_true(outMAR.exists());
+      Assert.ok(outMAR.exists());
       let outMARData = getBinaryFileData(outMAR);
       let refMAR = do_get_file("data/multiple_signed_pib.mar");
       let refMARData = getBinaryFileData(refMAR);
@@ -360,7 +360,7 @@ function run_test() {
     // Test verifying a file that doesn't exist fails
     test_bad_path_verify_fails: function _test_bad_path_verify_fails() {
       let noMAR = do_get_file("data/does_not_exist.mar", true);
-      do_check_false(noMAR.exists());
+      Assert.ok(!noMAR.exists());
       verifyMAR(noMAR, wantFailure, ["mycert"], true);
     },
     // Test to make sure a stripped MAR is the same as the original MAR
@@ -399,7 +399,7 @@ function run_test() {
         extractedSig.remove(false);
       }
       extractMARSignature(inMAR, 0, extractedSig, wantSuccess);
-      do_check_true(extractedSig.exists());
+      Assert.ok(extractedSig.exists());
 
       let referenceSig = do_get_file("data/signed_pib_mar.signature.0");
       compareBinaryData(extractedSig, referenceSig);
@@ -414,7 +414,7 @@ function run_test() {
           extractedSig.remove(false);
         }
         extractMARSignature(inMAR, i, extractedSig, wantSuccess);
-        do_check_true(extractedSig.exists());
+        Assert.ok(extractedSig.exists());
 
         let referenceSig = do_get_file("data/multiple_signed_pib_mar.sig." + i);
         compareBinaryData(extractedSig, referenceSig);
@@ -429,16 +429,16 @@ function run_test() {
       }
       const outOfBoundsIndex = 5;
       extractMARSignature(inMAR, outOfBoundsIndex, extractedSig, wantFailure);
-      do_check_false(extractedSig.exists());
+      Assert.ok(!extractedSig.exists());
     },
     // Test signing a file that doesn't exist fails
     test_bad_path_sign_fails: function _test_bad_path_sign_fails() {
       let inMAR = do_get_file("data/does_not_exist.mar", true);
       let outMAR = tempDir.clone();
       outMAR.append("signed_out.mar");
-      do_check_false(inMAR.exists());
+      Assert.ok(!inMAR.exists());
       signMAR(inMAR, outMAR, ["mycert"], wantFailure, true);
-      do_check_false(outMAR.exists());
+      Assert.ok(!outMAR.exists());
     },
     // Test verifying only a subset of the signatures fails.
     // The input MAR has: mycert, mycert2, mycert3.
@@ -458,7 +458,7 @@ function run_test() {
 
       // Get the signature file for this MAR signed with the key from mycert2
       let sigFile = do_get_file("data/signed_pib_mar.signature.mycert2");
-      do_check_true(sigFile.exists());
+      Assert.ok(sigFile.exists());
       let outMAR = tempDir.clone();
       outMAR.append("sigchanged_signed_pib.mar");
       if (outMAR.exists()) {
@@ -470,7 +470,7 @@ function run_test() {
 
       // Verify we have a new MAR file, that mycert no longer verifies and that,
       // mycert2 does verify
-      do_check_true(outMAR.exists());
+      Assert.ok(outMAR.exists());
       verifyMAR(outMAR, wantFailure, ["mycert"], false);
       verifyMAR(outMAR, wantSuccess, ["mycert2"], false);
       verifyMAR(outMAR, wantFailure, ["mycert3"], false);
@@ -478,7 +478,7 @@ function run_test() {
       // Compare the binary data to something that was signed originally
       // with the private key from mycert2
       let refMAR = do_get_file("data/signed_pib_with_mycert2.mar");
-      do_check_true(refMAR.exists());
+      Assert.ok(refMAR.exists());
       let refMARData = getBinaryFileData(refMAR);
       let outMARData = getBinaryFileData(outMAR);
       compareBinaryData(outMARData, refMARData);
@@ -495,7 +495,7 @@ function run_test() {
       // Get the signature file for multiple_signed_pib.mar signed with the
       // key from mycert
       let sigFile = do_get_file("data/multiple_signed_pib_mar.sig.0");
-      do_check_true(sigFile.exists());
+      Assert.ok(sigFile.exists());
       let outMAR = tempDir.clone();
       outMAR.append("sigchanged_signed_pib.mar");
       if (outMAR.exists()) {
@@ -507,7 +507,7 @@ function run_test() {
 
       // Verify we have a new MAR file and that the mar file fails to verify
       // when using a signature for another mar file.
-      do_check_true(outMAR.exists());
+      Assert.ok(outMAR.exists());
       verifyMAR(outMAR, wantFailure, ["mycert"], false);
       verifyMAR(outMAR, wantFailure, ["mycert2"], false);
       verifyMAR(outMAR, wantFailure, ["mycert3"], false);
@@ -522,7 +522,7 @@ function run_test() {
 
       // Get the signature file for this MAR signed with the key from mycert
       let sigFile = do_get_file("data/multiple_signed_pib_mar.sig.0");
-      do_check_true(sigFile.exists());
+      Assert.ok(sigFile.exists());
       let outMAR = tempDir.clone();
       outMAR.append("sigchanged_signed_pib.mar");
       if (outMAR.exists()) {
@@ -535,14 +535,14 @@ function run_test() {
 
       // Verify we have a new MAR file and that mycert no longer verifies
       // and that mycert2 does verify
-      do_check_true(outMAR.exists());
+      Assert.ok(outMAR.exists());
       verifyMAR(outMAR, wantSuccess, ["mycert", "mycert", "mycert3"], false);
       verifyMAR(outMAR, wantFailure, ["mycert", "mycert2", "mycert3"], false);
 
       // Compare the binary data to something that was signed originally
       // with the private keys from mycert, mycert, mycert3
       let refMAR = do_get_file("data/multiple_signed_pib_2.mar");
-      do_check_true(refMAR.exists());
+      Assert.ok(refMAR.exists());
       let refMARData = getBinaryFileData(refMAR);
       let outMARData = getBinaryFileData(outMAR);
       compareBinaryData(outMARData, refMARData);
@@ -550,7 +550,7 @@ function run_test() {
     // Test stripping a MAR that doesn't exist fails
     test_bad_path_strip_fails: function _test_bad_path_strip_fails() {
       let noMAR = do_get_file("data/does_not_exist.mar", true);
-      do_check_false(noMAR.exists());
+      Assert.ok(!noMAR.exists());
       let outMAR = tempDir.clone();
       outMAR.append("out.mar");
       stripMARSignature(noMAR, outMAR, wantFailure);
@@ -559,12 +559,12 @@ function run_test() {
     test_extract_bad_path: function _test_extract_bad_path() {
       let noMAR = do_get_file("data/does_not_exist.mar", true);
       let extractedSig = do_get_file("extracted_signature", true);
-      do_check_false(noMAR.exists());
+      Assert.ok(!noMAR.exists());
       if (extractedSig.exists()) {
         extractedSig.remove(false);
       }
       extractMARSignature(noMAR, 0, extractedSig, wantFailure);
-      do_check_false(extractedSig.exists());
+      Assert.ok(!extractedSig.exists());
     },
     // Between each test make sure the out MAR does not exist.
     cleanup_per_test: function _cleanup_per_test() {
@@ -574,7 +574,7 @@ function run_test() {
   cleanup();
 
   // Run all the tests
-  do_check_eq(run_tests(tests), Object.keys(tests).length - 1);
+  Assert.equal(run_tests(tests), Object.keys(tests).length - 1);
 
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 }

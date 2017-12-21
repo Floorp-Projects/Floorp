@@ -80,7 +80,7 @@ function run_test() { // jshint ignore:line
   }
 
   startHttpServer();
-  do_register_cleanup(stopHttpServer);
+  registerCleanupFunction(stopHttpServer);
   run_next_test();
 }
 

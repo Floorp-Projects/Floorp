@@ -21,7 +21,7 @@ add_task(async function() {
   const url = "http://mozilla.com";
   let title = "Mozilla";
 
-  do_print("Insert a visit with a title");
+  info("Insert a visit with a title");
   let result = await PlacesUtils.history.insert({
     url,
     title,
@@ -36,7 +36,7 @@ add_task(async function() {
   let promiseTitleChange = PlacesTestUtils.waitForNotification("onTitleChanged",
   () => notified = true, "history");
 
-  do_print("Insert a visit with a null title, should not clear the previous title");
+  info("Insert a visit with a null title, should not clear the previous title");
   let notified = false;
   result = await PlacesUtils.history.insert({
     url,
@@ -50,7 +50,7 @@ add_task(async function() {
   await Promise.race([promiseTitleChange, new Promise(r => do_timeout(1000, r))]);
   Assert.ok(!notified, "A title change should not be notified");
 
-  do_print("Insert a visit without specifying a title, should not clear the previous title");
+  info("Insert a visit without specifying a title, should not clear the previous title");
   notified = false;
   result = await PlacesUtils.history.insert({
     url,
@@ -63,7 +63,7 @@ add_task(async function() {
   await Promise.race([promiseTitleChange, new Promise(r => do_timeout(1000, r))]);
   Assert.ok(!notified, "A title change should not be notified");
 
-  do_print("Insert a visit with an empty title, should clear the previous title");
+  info("Insert a visit with an empty title, should clear the previous title");
   result = await PlacesUtils.history.insert({
     url,
     title: "",
@@ -71,7 +71,7 @@ add_task(async function() {
       { transition: PlacesUtils.history.TRANSITIONS.LINK }
     ]
   });
-  do_print("Waiting for the title change notification");
+  info("Waiting for the title change notification");
   await promiseTitleChange;
   Assert.equal("", result.title, "title should be empty");
   Assert.equal("", await fetchTitle(url), "title should be empty");

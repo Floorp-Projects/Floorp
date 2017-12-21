@@ -21,11 +21,11 @@ function repeat_test()
   // The test is probably going to fail because setting a batch of cookies took
   // a significant fraction of 'gPurgeAge'. Compensate by rerunning the
   // test with a larger purge age.
-  do_check_true(gPurgeAge < 64);
+  Assert.ok(gPurgeAge < 64);
   gPurgeAge *= 2;
   gShortExpiry *= 2;
 
-  do_execute_soon(function() {
+  executeSoon(function() {
     test_generator.return();
     test_generator = do_run_test();
     do_run_generator(test_generator);
@@ -90,7 +90,7 @@ function* do_run_test()
   do_close_profile(test_generator);
   yield;
   do_load_profile();
-  do_check_true(check_remaining_cookies(111, 5, 106));
+  Assert.ok(check_remaining_cookies(111, 5, 106));
 
   // 2) excess and age are satisfied, and all of the excess are old enough
   // to be purged.
@@ -109,7 +109,7 @@ function* do_run_test()
   do_close_profile(test_generator);
   yield;
   do_load_profile();
-  do_check_true(check_remaining_cookies(111, 10, 101));
+  Assert.ok(check_remaining_cookies(111, 10, 101));
 
   // 3) excess and age are satisfied, and more than the excess are old enough
   // to be purged.
@@ -128,7 +128,7 @@ function* do_run_test()
   do_close_profile(test_generator);
   yield;
   do_load_profile();
-  do_check_true(check_remaining_cookies(111, 50, 101));
+  Assert.ok(check_remaining_cookies(111, 50, 101));
 
   // 4) excess but not age are satisfied.
   Services.cookiemgr.removeAll();
@@ -140,7 +140,7 @@ function* do_run_test()
   do_close_profile(test_generator);
   yield;
   do_load_profile();
-  do_check_true(check_remaining_cookies(120, 0, 120));
+  Assert.ok(check_remaining_cookies(120, 0, 120));
 
   // 5) age but not excess are satisfied.
   Services.cookiemgr.removeAll();
@@ -158,7 +158,7 @@ function* do_run_test()
   do_close_profile(test_generator);
   yield;
   do_load_profile();
-  do_check_true(check_remaining_cookies(110, 20, 110));
+  Assert.ok(check_remaining_cookies(110, 20, 110));
 
   // 6) Excess and age are satisfied, but the cookie limit can be satisfied by
   // purging expired cookies.
@@ -184,7 +184,7 @@ function* do_run_test()
   do_close_profile(test_generator);
   yield;
   do_load_profile();
-  do_check_true(check_remaining_cookies(111, 20, 91));
+  Assert.ok(check_remaining_cookies(111, 20, 91));
 
   do_finish_generator_test(test_generator);
 }
@@ -193,7 +193,7 @@ function* do_run_test()
 // 'begin' to 'end'.
 function set_cookies(begin, end, expiry)
 {
-  do_check_true(begin != end);
+  Assert.ok(begin != end);
 
   let beginTime;
   for (let i = begin; i < end; ++i) {
@@ -206,7 +206,7 @@ function set_cookies(begin, end, expiry)
   }
 
   let endTime = get_creationTime(end - 1);
-  do_check_true(begin == end - 1 || endTime > beginTime);
+  Assert.ok(begin == end - 1 || endTime > beginTime);
   if (endTime - beginTime > gPurgeAge * 1000000) {
     // Setting cookies took an amount of time very close to the purge threshold.
     // Retry the test with a larger threshold.
@@ -220,7 +220,7 @@ function get_creationTime(i)
 {
   let host = "eviction." + i + ".tests";
   let enumerator = Services.cookiemgr.getCookiesFromHost(host, {});
-  do_check_true(enumerator.hasMoreElements());
+  Assert.ok(enumerator.hasMoreElements());
   let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
   return cookie.creationTime;
 }

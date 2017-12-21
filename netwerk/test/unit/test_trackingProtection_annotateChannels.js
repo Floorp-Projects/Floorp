@@ -35,13 +35,13 @@ function listener(tracking, priority, nextTest) {
 }
 listener.prototype = {
   onStartRequest: function(request, context) {
-    do_check_eq(request.QueryInterface(Ci.nsIHttpChannel).isTrackingResource,
-                this._tracking);
-    do_check_eq(request.QueryInterface(Ci.nsISupportsPriority).priority,
-                this._priority);
+    Assert.equal(request.QueryInterface(Ci.nsIHttpChannel).isTrackingResource,
+                 this._tracking);
+    Assert.equal(request.QueryInterface(Ci.nsISupportsPriority).priority,
+                 this._priority);
     if (runtime.processType == runtime.PROCESS_TYPE_DEFAULT && this._tracking) {
-      do_check_true(request.QueryInterface(Ci.nsIClassOfService).classFlags &
-                    Ci.nsIClassOfService.Throttleable);
+      Assert.ok(request.QueryInterface(Ci.nsIClassOfService).classFlags &
+                Ci.nsIClassOfService.Throttleable);
     }
     request.cancel(Components.results.NS_ERROR_ABORT);
     this._nextTest();

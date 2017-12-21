@@ -330,11 +330,11 @@ function check_except(func) {
   try {
     func();
   } catch (e) {
-    do_check_true(true);
+    Assert.ok(true);
     return;
   }
   dumpn("Should have thrown an exception: " + func.toString());
-  do_check_true(false);
+  Assert.ok(false);
 }
 
 function testGlobal(name) {
@@ -565,13 +565,13 @@ TracingTransport.prototype = {
 
   expectSend: function (expected) {
     let packet = this.packets[this.checkIndex++];
-    do_check_eq(packet.type, "sent");
+    Assert.equal(packet.type, "sent");
     deepEqual(packet.packet, this.normalize(expected));
   },
 
   expectReceive: function (expected) {
     let packet = this.packets[this.checkIndex++];
-    do_check_eq(packet.type, "received");
+    Assert.equal(packet.type, "received");
     deepEqual(packet.packet, this.normalize(expected));
   },
 
@@ -593,45 +593,6 @@ StubTransport.prototype.ready = function () {};
 StubTransport.prototype.send = function () {};
 StubTransport.prototype.close = function () {};
 
-function executeSoon(func) {
-  Services.tm.dispatchToMainThread({
-    run: DevToolsUtils.makeInfallible(func)
-  });
-}
-
-// The do_check_* family of functions expect their last argument to be an
-// optional stack object. Unfortunately, most tests actually pass a in a string
-// containing an error message instead, which causes error reporting to break if
-// strict warnings as errors is turned on. To avoid this, we wrap these
-// functions here below to ensure the correct number of arguments is passed.
-//
-// TODO: Remove this once bug 906232 is resolved
-//
-var do_check_true_old = do_check_true;
-var do_check_true = function (condition) {
-  do_check_true_old(condition);
-};
-
-var do_check_false_old = do_check_false;
-var do_check_false = function (condition) {
-  do_check_false_old(condition);
-};
-
-var do_check_eq_old = do_check_eq;
-var do_check_eq = function (left, right) {
-  do_check_eq_old(left, right);
-};
-
-var do_check_neq_old = do_check_neq;
-var do_check_neq = function (left, right) {
-  do_check_neq_old(left, right);
-};
-
-var do_check_matches_old = do_check_matches;
-var do_check_matches = function (pattern, value) {
-  do_check_matches_old(pattern, value);
-};
-
 // Create async version of the object where calling each method
 // is equivalent of calling it with asyncall. Mainly useful for
 // destructuring objects with methods that take callbacks.
@@ -650,7 +611,7 @@ const Test = task => () => {
   run_next_test();
 };
 
-const assert = do_check_true;
+const assert = Assert.ok.bind(Assert);
 
 /**
  * Create a promise that is resolved on the next occurence of the given event.

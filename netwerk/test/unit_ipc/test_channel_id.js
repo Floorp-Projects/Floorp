@@ -56,7 +56,7 @@ function observer(subject, topic, data) {
 
   // did we expect a new channel?
   let expected = expectedParentChannels.shift();
-  do_check_true(!!expected);
+  Assert.ok(!!expected);
 
   // Start waiting for the messages about request/response from child
   for (let event of expected) {

@@ -489,7 +489,7 @@ const TESTCASES = [
 ];
 
 add_task(async function handle_earlyformsubmit_event() {
-  do_print("Starting testcase: Test an invalid form element");
+  info("Starting testcase: Test an invalid form element");
   let fakeForm = MOCK_DOC.createElement("form");
   sinon.spy(FormAutofillContent, "_onFormSubmit");
 
@@ -558,7 +558,7 @@ add_task(async function autofill_disabled() {
 
 TESTCASES.forEach(testcase => {
   add_task(async function check_records_saving_is_called_correctly() {
-    do_print("Starting testcase: " + testcase.description);
+    info("Starting testcase: " + testcase.description);
 
     let form = MOCK_DOC.getElementById("form1");
     form.reset();

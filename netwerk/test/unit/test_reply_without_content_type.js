@@ -79,8 +79,8 @@ function serverHandler_GZip(metadata, response) {
 
 function checkRequest(request, data, context) {
   if (dbg) { print("============== checkRequest: in"); }
-  do_check_eq(data, httpbody);
-  do_check_eq(request.QueryInterface(Ci.nsIChannel).contentType,"text/html");
+  Assert.equal(data, httpbody);
+  Assert.equal(request.QueryInterface(Ci.nsIChannel).contentType,"text/html");
   httpserver.stop(do_test_finished);
   run_next_test();
   if (dbg) { print("============== checkRequest: out"); }

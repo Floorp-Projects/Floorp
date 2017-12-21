@@ -211,6 +211,7 @@ ReaderProxy::ReleaseResources()
                       &MediaFormatReader::ReleaseResources);
   nsresult rv = mReader->OwnerThread()->Dispatch(r.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 void
@@ -224,6 +225,7 @@ ReaderProxy::ResetDecode(TrackSet aTracks)
                                 aTracks);
   nsresult rv = mReader->OwnerThread()->Dispatch(r.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 RefPtr<ShutdownPromise>
@@ -271,6 +273,7 @@ ReaderProxy::SetVideoBlankDecode(bool aIsBlankDecode)
                             aIsBlankDecode);
   nsresult rv = mReader->OwnerThread()->Dispatch(r.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 void
@@ -294,6 +297,7 @@ ReaderProxy::SetCanonicalDuration(
     });
   nsresult rv = mReader->OwnerThread()->Dispatch(r.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 void

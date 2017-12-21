@@ -91,7 +91,7 @@ function run_test() {
   controller.startSearch(inputStr);
 
   input.onSearchComplete = function() {
-    do_check_eq(input.textValue, results[0]);
+    Assert.equal(input.textValue, results[0]);
 
     // Unregister searches
     unregisterAutoCompleteSearch(asyncSearch);

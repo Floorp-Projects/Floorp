@@ -15,7 +15,7 @@ add_task(async function test_removeVisitsByFilter() {
   // Populate a database with 20 entries, remove a subset of entries,
   // ensure consistency.
   let remover = async function(options) {
-    do_print("Remover with options " + JSON.stringify(options));
+    info("Remover with options " + JSON.stringify(options));
     let SAMPLE_SIZE = options.sampleSize;
 
     await PlacesTestUtils.clearHistory();
@@ -43,7 +43,7 @@ add_task(async function test_removeVisitsByFilter() {
         hasBookmark =
           options.bookmarks.filter(n => n < i).some(n => visits[n].uri.spec == spec && visits[n].test.hasBookmark);
       }
-      do_print("Generating " + uri.spec + ", " + dbDate);
+      info("Generating " + uri.spec + ", " + dbDate);
       let visit = {
         uri,
         title: "visit " + i,
@@ -64,20 +64,20 @@ add_task(async function test_removeVisitsByFilter() {
       };
       visits.push(visit);
       if (hasOwnBookmark) {
-        do_print("Adding a bookmark to visit " + i);
+        info("Adding a bookmark to visit " + i);
         await PlacesUtils.bookmarks.insert({
           url: uri,
           parentGuid: PlacesUtils.bookmarks.unfiledGuid,
           title: "test bookmark"
         });
-        do_print("Bookmark added");
+        info("Bookmark added");
       }
     }
 
-    do_print("Adding visits");
+    info("Adding visits");
     await PlacesTestUtils.addVisits(visits);
 
-    do_print("Preparing filters");
+    info("Preparing filters");
     let filter = {
     };
     let beginIndex = 0;
@@ -120,7 +120,7 @@ add_task(async function test_removeVisitsByFilter() {
     let remainingItems = visits.filter(v => !removedItems.includes(v));
     for (let i = 0; i < removedItems.length; i++) {
       let test = removedItems[i].test;
-      do_print("Marking visit " + (beginIndex + i) + " as expecting removal");
+      info("Marking visit " + (beginIndex + i) + " as expecting removal");
       test.toRemove = true;
       if (test.hasBookmark ||
           (options.url && remainingItems.some(v => v.uri.spec == removedItems[i].uri.spec))) {
@@ -147,19 +147,19 @@ add_task(async function test_removeVisitsByFilter() {
         this.deferred.reject(new Error("Unexpected call to onPageChanged " + uri.spec));
       },
       onFrecencyChanged(aURI) {
-        do_print("onFrecencyChanged " + aURI.spec);
+        info("onFrecencyChanged " + aURI.spec);
         let deferred = frecencyChangePromises.get(aURI.spec);
         Assert.ok(!!deferred, "Observing onFrecencyChanged");
         deferred.resolve();
       },
       onManyFrecenciesChanged() {
-        do_print("Many frecencies changed");
+        info("Many frecencies changed");
         for (let [, deferred] of frecencyChangePromises) {
           deferred.resolve();
         }
       },
       onDeleteURI(aURI) {
-        do_print("onDeleteURI " + aURI.spec);
+        info("onDeleteURI " + aURI.spec);
         let deferred = uriDeletePromises.get(aURI.spec);
         Assert.ok(!!deferred, "Observing onDeleteURI");
         deferred.resolve();
@@ -172,10 +172,10 @@ add_task(async function test_removeVisitsByFilter() {
 
     let cbarg;
     if (options.useCallback) {
-      do_print("Setting up callback");
+      info("Setting up callback");
       cbarg = [info => {
         for (let visit of visits) {
-          do_print("Comparing " + info.date + " and " + visit.test.jsDate);
+          info("Comparing " + info.date + " and " + visit.test.jsDate);
           if (Math.abs(visit.test.jsDate - info.date) < 100) { // Assume rounding errors
             Assert.ok(!visit.test.announcedByOnRow,
               "This is the first time we announce the removal of this visit");
@@ -188,7 +188,7 @@ add_task(async function test_removeVisitsByFilter() {
         Assert.ok(false, "Could not find the visit we attempt to remove");
       }];
     } else {
-      do_print("No callback");
+      info("No callback");
       cbarg = [];
     }
     let result = await PlacesUtils.history.removeVisitsByFilter(filter, ...cbarg);
@@ -199,7 +199,7 @@ add_task(async function test_removeVisitsByFilter() {
     // to eliminate.
     for (let i = 0; i < visits.length; ++i) {
       let visit = visits[i];
-      do_print("Controlling the results on visit " + i);
+      info("Controlling the results on visit " + i);
       let remainingVisitsForURI = remainingItems.filter(v => visit.uri.spec == v.uri.spec).length;
       Assert.equal(
         visits_in_database(visit.uri),
@@ -219,9 +219,9 @@ add_task(async function test_removeVisitsByFilter() {
     }
 
     // Make sure that the observer has been called wherever applicable.
-    do_print("Checking URI delete promises.");
+    info("Checking URI delete promises.");
     await Promise.all(Array.from(uriDeletePromises.values()));
-    do_print("Checking frecency change promises.");
+    info("Checking frecency change promises.");
     await Promise.all(Array.from(frecencyChangePromises.values()));
     PlacesUtils.history.removeObserver(observer);
   };

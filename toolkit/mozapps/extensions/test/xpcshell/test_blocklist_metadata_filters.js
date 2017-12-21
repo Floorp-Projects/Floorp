@@ -26,7 +26,7 @@ profileDir.append("extensions");
 var WindowWatcher = {
   openWindow(parent, url, name, features, args) {
     // Should be called to list the newly blocklisted items
-    do_check_eq(url, URI_EXTENSION_BLOCKLIST_DIALOG);
+    Assert.equal(url, URI_EXTENSION_BLOCKLIST_DIALOG);
 
     // Simulate auto-disabling any softblocks
     var list = args.wrappedJSObject.list;
@@ -55,7 +55,7 @@ function load_blocklist(aFile, aCallback) {
   Services.obs.addObserver(function observer() {
     Services.obs.removeObserver(observer, "blocklist-updated");
 
-    do_execute_soon(aCallback);
+    executeSoon(aCallback);
   }, "blocklist-updated");
 
   Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:" +
@@ -123,9 +123,9 @@ function run_test() {
   AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
                                "block2@tests.mozilla.org",
                                "block3@tests.mozilla.org"], function([a1, a2, a3]) {
-    do_check_eq(a1.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-    do_check_eq(a2.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
-    do_check_eq(a3.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+    Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+    Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+    Assert.equal(a3.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
 
     run_test_1();
   });
@@ -138,9 +138,9 @@ function run_test_1() {
     AddonManager.getAddonsByIDs(["block1@tests.mozilla.org",
                                  "block2@tests.mozilla.org",
                                  "block3@tests.mozilla.org"], function([a1, a2, a3]) {
-      do_check_eq(a1.blocklistState, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
-      do_check_eq(a2.blocklistState, Ci.nsIBlocklistService.STATE_BLOCKED);
-      do_check_eq(a3.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
+      Assert.equal(a1.blocklistState, Ci.nsIBlocklistService.STATE_SOFTBLOCKED);
+      Assert.equal(a2.blocklistState, Ci.nsIBlocklistService.STATE_BLOCKED);
+      Assert.equal(a3.blocklistState, Ci.nsIBlocklistService.STATE_NOT_BLOCKED);
       end_test();
     });
   });

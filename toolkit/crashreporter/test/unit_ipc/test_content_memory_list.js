@@ -15,9 +15,9 @@ function run_test() {
   }
 
   do_content_crash(null, function(mdump, extra) {
-             do_check_true(mdump.exists());
-             do_check_true(mdump.fileSize > 0);
+             Assert.ok(mdump.exists());
+             Assert.ok(mdump.fileSize > 0);
              if (is_win7_or_newer)
-               do_check_true(CrashTestUtils.dumpHasStream(mdump.path, CrashTestUtils.MD_MEMORY_INFO_LIST_STREAM));
+               Assert.ok(CrashTestUtils.dumpHasStream(mdump.path, CrashTestUtils.MD_MEMORY_INFO_LIST_STREAM));
            });
 }

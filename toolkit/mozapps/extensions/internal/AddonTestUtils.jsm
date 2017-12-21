@@ -299,7 +299,7 @@ var AddonTestUtils = {
       }
     }
 
-    testScope.do_register_cleanup(() => {
+    testScope.registerCleanupFunction(() => {
       this.cleanupTempXPIs();
 
       // Check that the temporary directory is empty
@@ -316,7 +316,7 @@ var AddonTestUtils = {
       try {
         appDirForAddons.remove(true);
       } catch (ex) {
-        testScope.do_print(`Got exception removing addon app dir: ${ex}`);
+        testScope.info(`Got exception removing addon app dir: ${ex}`);
       }
 
       // ensure no leftover files in the system addon upgrade location

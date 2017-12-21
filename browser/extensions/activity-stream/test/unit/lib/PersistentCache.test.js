@@ -1,7 +1,5 @@
-"use strict";
-
-const {PersistentCache} = require("lib/PersistentCache.jsm");
-const {GlobalOverrider} = require("test/unit/utils");
+import {GlobalOverrider} from "test/unit/utils";
+import {PersistentCache} from "lib/PersistentCache.jsm";
 
 describe("PersistentCache", () => {
   let fakeOS;

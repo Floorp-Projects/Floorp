@@ -12,32 +12,32 @@ function run_test() {
 
   // Make sure that waivers can be set as Xray expandos.
   var xhr = contentSB.xhr;
-  do_check_true(Cu.isXrayWrapper(xhr));
+  Assert.ok(Cu.isXrayWrapper(xhr));
   xhr.unwaivedExpando = xhr;
-  do_check_true(Cu.isXrayWrapper(xhr.unwaivedExpando));
+  Assert.ok(Cu.isXrayWrapper(xhr.unwaivedExpando));
   var waived = xhr.wrappedJSObject;
-  do_check_true(!Cu.isXrayWrapper(waived));
+  Assert.ok(!Cu.isXrayWrapper(waived));
   xhr.waivedExpando = waived;
-  do_check_true(!Cu.isXrayWrapper(xhr.waivedExpando));
+  Assert.ok(!Cu.isXrayWrapper(xhr.waivedExpando));
 
   // Try the same thing for getters/setters, even though that's kind of
   // contrived.
   Cu.evalInSandbox('function f() {}', contentSB);
   var f = contentSB.f;
   var fWaiver = Cu.waiveXrays(f);
-  do_check_true(f != fWaiver);
-  do_check_true(Cu.unwaiveXrays(fWaiver) === f);
+  Assert.ok(f != fWaiver);
+  Assert.ok(Cu.unwaiveXrays(fWaiver) === f);
   Object.defineProperty(xhr, 'waivedAccessors', {get: fWaiver, set: fWaiver});
   var desc = Object.getOwnPropertyDescriptor(xhr, 'waivedAccessors');
-  do_check_true(desc.get === fWaiver);
-  do_check_true(desc.set === fWaiver);
+  Assert.ok(desc.get === fWaiver);
+  Assert.ok(desc.set === fWaiver);
 
   // Make sure we correctly handle same-compartment security wrappers.
   var unwaivedC = contentSB.Components;
-  do_check_true(Cu.isXrayWrapper(unwaivedC));
+  Assert.ok(Cu.isXrayWrapper(unwaivedC));
   var waivedC = unwaivedC.wrappedJSObject;
-  do_check_true(waivedC && unwaivedC && (waivedC != unwaivedC));
+  Assert.ok(waivedC && unwaivedC && (waivedC != unwaivedC));
   xhr.waivedC = waivedC;
-  do_check_true(xhr.waivedC === waivedC);
-  do_check_true(Cu.unwaiveXrays(xhr.waivedC) === unwaivedC);
+  Assert.ok(xhr.waivedC === waivedC);
+  Assert.ok(Cu.unwaiveXrays(xhr.waivedC) === unwaivedC);
 }

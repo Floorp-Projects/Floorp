@@ -53,7 +53,7 @@ function Call_PpbFunc(obj) {
 // PPAPIInstance constructor(id, rt, info, window, eventHandler, containerWindow, mm)
 let instance = new PPAPIInstance(instanceId, rt, info, new Mock_Window(), null /*docShell.chromeEventHandler*/, null, new Mock_MessageManager());
 
-do_register_cleanup(function () {
+registerCleanupFunction(function () {
   resHandler.setSubstitution("ppapi.js", null);
 })
 

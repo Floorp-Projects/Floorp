@@ -38,15 +38,15 @@ function* tests() {
     }
 
     testfile.copyTo(profileDir, "formhistory.sqlite");
-    do_check_eq(999, getDBVersion(testfile));
+    Assert.equal(999, getDBVersion(testfile));
 
-    let checkZero = function(num) { do_check_eq(num, 0); next_test(); };
-    let checkOne = function(num) { do_check_eq(num, 1); next_test(); };
+    let checkZero = function(num) { Assert.equal(num, 0); next_test(); };
+    let checkOne = function(num) { Assert.equal(num, 1); next_test(); };
 
     // ===== 1 =====
     testnum++;
     // Check for expected contents.
-    yield countEntries(null, null, function(num) { do_check_true(num > 0); next_test(); });
+    yield countEntries(null, null, function(num) { Assert.ok(num > 0); next_test(); });
     yield countEntries("name-A", "value-A", checkOne);
     yield countEntries("name-B", "value-B", checkOne);
     yield countEntries("name-C", "value-C1", checkOne);
@@ -54,7 +54,7 @@ function* tests() {
     yield countEntries("name-E", "value-E", checkOne);
 
     // check for downgraded schema.
-    do_check_eq(CURRENT_SCHEMA, FormHistory.schemaVersion);
+    Assert.equal(CURRENT_SCHEMA, FormHistory.schemaVersion);
 
     // ===== 2 =====
     testnum++;

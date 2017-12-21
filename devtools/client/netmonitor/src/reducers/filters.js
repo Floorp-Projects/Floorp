@@ -4,7 +4,6 @@
 
 "use strict";
 
-const I = require("devtools/client/shared/vendor/immutable");
 const {
   ENABLE_REQUEST_FILTER_TYPE_ONLY,
   TOGGLE_REQUEST_FILTER_TYPE,
@@ -12,34 +11,44 @@ const {
   FILTER_TAGS
 } = require("../constants");
 
-const FilterTypes = I.Record(["all"]
-  .concat(FILTER_TAGS)
-  .reduce((o, tag) => Object.assign(o, { [tag]: false }), {})
-);
+function FilterTypes(overrideParams = {}) {
+  let allFilterTypes = ["all"].concat(FILTER_TAGS);
+  // filter only those keys which are valid filter tags
+  overrideParams = Object.keys(overrideParams)
+    .filter(key => allFilterTypes.includes(key))
+    .reduce((obj, key) => {
+      obj[key] = overrideParams[key];
+      return obj;
+    }, {});
+  let filterTypes = allFilterTypes
+    .reduce((o, tag) => Object.assign(o, { [tag]: false }), {});
+  return Object.assign({}, filterTypes, overrideParams);
+}
 
-const Filters = I.Record({
-  requestFilterTypes: new FilterTypes({ all: true }),
-  requestFilterText: "",
-});
+function Filters(overrideParams = {}) {
+  return Object.assign({
+    requestFilterTypes: new FilterTypes({ all: true }),
+    requestFilterText: "",
+  }, overrideParams);
+}
 
 function toggleRequestFilterType(state, action) {
   let { filter } = action;
   let newState;
 
   // Ignore unknown filter type
-  if (!state.has(filter)) {
+  if (!state.hasOwnProperty(filter)) {
     return state;
   }
   if (filter === "all") {
     return new FilterTypes({ all: true });
   }
 
-  newState = state.withMutations(types => {
-    types.set("all", false);
-    types.set(filter, !state.get(filter));
-  });
+  newState = { ...state };
+  newState.all = false;
+  newState[filter] = !state[filter];
 
-  if (!newState.includes(true)) {
+  if (!Object.values(newState).includes(true)) {
     newState = new FilterTypes({ all: true });
   }
 
@@ -50,7 +59,7 @@ function enableRequestFilterTypeOnly(state, action) {
   let { filter } = action;
 
   // Ignore unknown filter type
-  if (!state.has(filter)) {
+  if (!state.hasOwnProperty(filter)) {
     return state;
   }
 
@@ -58,18 +67,23 @@ function enableRequestFilterTypeOnly(state, action) {
 }
 
 function filters(state = new Filters(), action) {
+  state = { ...state };
   switch (action.type) {
     case ENABLE_REQUEST_FILTER_TYPE_ONLY:
-      return state.set("requestFilterTypes",
-        enableRequestFilterTypeOnly(state.requestFilterTypes, action));
+      state.requestFilterTypes =
+        enableRequestFilterTypeOnly(state.requestFilterTypes, action);
+      break;
     case TOGGLE_REQUEST_FILTER_TYPE:
-      return state.set("requestFilterTypes",
-        toggleRequestFilterType(state.requestFilterTypes, action));
+      state.requestFilterTypes =
+        toggleRequestFilterType(state.requestFilterTypes, action);
+      break;
     case SET_REQUEST_FILTER_TEXT:
-      return state.set("requestFilterText", action.text);
+      state.requestFilterText = action.text;
+      break;
     default:
-      return state;
+      break;
   }
+  return state;
 }
 
 module.exports = {

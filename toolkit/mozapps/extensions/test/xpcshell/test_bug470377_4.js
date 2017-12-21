@@ -50,18 +50,18 @@ function run_test_1() {
                                "bug470377_4@tests.mozilla.org",
                                "bug470377_5@tests.mozilla.org"],
                                function([a1, a2, a3, a4, a5]) {
-    do_check_neq(a1, null);
-    do_check_false(a1.isActive);
-    do_check_neq(a2, null);
-    do_check_true(a2.isActive);
-    do_check_neq(a3, null);
-    do_check_true(a3.isActive);
-    do_check_neq(a4, null);
-    do_check_true(a4.isActive);
-    do_check_neq(a5, null);
-    do_check_true(a5.isActive);
+    Assert.notEqual(a1, null);
+    Assert.ok(!a1.isActive);
+    Assert.notEqual(a2, null);
+    Assert.ok(a2.isActive);
+    Assert.notEqual(a3, null);
+    Assert.ok(a3.isActive);
+    Assert.notEqual(a4, null);
+    Assert.ok(a4.isActive);
+    Assert.notEqual(a5, null);
+    Assert.ok(a5.isActive);
 
-    do_execute_soon(run_test_2);
+    executeSoon(run_test_2);
   });
 }
 
@@ -76,17 +76,17 @@ function run_test_2() {
                                "bug470377_4@tests.mozilla.org",
                                "bug470377_5@tests.mozilla.org"],
                                function([a1, a2, a3, a4, a5]) {
-    do_check_neq(a1, null);
-    do_check_false(a1.isActive);
-    do_check_neq(a2, null);
-    do_check_false(a2.isActive);
-    do_check_neq(a3, null);
-    do_check_false(a3.isActive);
-    do_check_neq(a4, null);
-    do_check_true(a4.isActive);
-    do_check_neq(a5, null);
-    do_check_true(a5.isActive);
+    Assert.notEqual(a1, null);
+    Assert.ok(!a1.isActive);
+    Assert.notEqual(a2, null);
+    Assert.ok(!a2.isActive);
+    Assert.notEqual(a3, null);
+    Assert.ok(!a3.isActive);
+    Assert.notEqual(a4, null);
+    Assert.ok(a4.isActive);
+    Assert.notEqual(a5, null);
+    Assert.ok(a5.isActive);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

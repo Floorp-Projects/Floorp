@@ -17,7 +17,7 @@ function run_test() {
     expectedDir.append(ADDON.id);
 
     do_test_pending();
-    do_check_false(expectedDir.exists());
+    Assert.ok(!expectedDir.exists());
 
     createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "1.9");
     startupManager();
@@ -32,16 +32,16 @@ function run_test() {
 }
 
 function promise_callback() {
-    do_check_eq(arguments.length, 2);
+    Assert.equal(arguments.length, 2);
     var expectedDir = gProfD.clone();
     expectedDir.append("extension-data");
     expectedDir.append(ADDON.id);
 
-    do_check_eq(arguments[0], expectedDir.path);
-    do_check_true(expectedDir.exists());
-    do_check_true(expectedDir.isDirectory());
+    Assert.equal(arguments[0], expectedDir.path);
+    Assert.ok(expectedDir.exists());
+    Assert.ok(expectedDir.isDirectory());
 
-    do_check_eq(arguments[1], null);
+    Assert.equal(arguments[1], null);
 
     // Cleanup.
     expectedDir.parent.remove(true);

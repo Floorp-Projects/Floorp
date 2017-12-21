@@ -26,18 +26,18 @@ function run_test()
   var testzip = do_get_file(DATA_DIR + "test.zip");
   testzip.copyTo(tmpDir, tmpFile.leafName);
 
-  do_check_true(tmpFile.exists());
+  Assert.ok(tmpFile.exists());
 
   zipW.open(tmpFile, PR_RDWR);
 
   for (var i = 0; i < TESTS.length; i++) {
-    do_check_true(zipW.hasEntry(TESTS[i].name));
+    Assert.ok(zipW.hasEntry(TESTS[i].name));
     var entry = zipW.getEntry(TESTS[i].name);
-    do_check_true(entry != null);
+    Assert.ok(entry != null);
 
-    do_check_eq(entry.realSize, TESTS[i].size);
-    do_check_eq(entry.CRC32, TESTS[i].crc);
-    do_check_eq(entry.lastModifiedTime / PR_USEC_PER_MSEC, TESTS[i].time);
+    Assert.equal(entry.realSize, TESTS[i].size);
+    Assert.equal(entry.CRC32, TESTS[i].crc);
+    Assert.equal(entry.lastModifiedTime / PR_USEC_PER_MSEC, TESTS[i].time);
   }
 
   try {
@@ -45,7 +45,7 @@ function run_test()
     do_throw("shouldn't be able to remove an entry that doesn't exist");
   }
   catch (e) {
-    do_check_eq(e.result, Components.results.NS_ERROR_FILE_NOT_FOUND);
+    Assert.equal(e.result, Components.results.NS_ERROR_FILE_NOT_FOUND);
   }
 
   for (var i = 0; i < TESTS.length; i++) {
@@ -58,5 +58,5 @@ function run_test()
   tmpFile = tmpFile.clone();
 
   // Empty zip file should just be the end of central directory marker
-  do_check_eq(tmpFile.fileSize, ZIP_EOCDR_HEADER_SIZE);
+  Assert.equal(tmpFile.fileSize, ZIP_EOCDR_HEADER_SIZE);
 }

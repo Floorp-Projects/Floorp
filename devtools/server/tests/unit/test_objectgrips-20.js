@@ -194,7 +194,7 @@ async function test_object_grip(debuggee, dbgClient, threadClient, testData = {}
 
       let objClient = threadClient.pauseGrip(grip);
 
-      do_print(`
+      info(`
         Check enumProperties response for
         ${
           typeof evaledObject === "string"
@@ -231,7 +231,7 @@ async function check_enum_properties(response, expected = []) {
   const {iterator} = response;
   equal(iterator.count, expected.length, "iterator.count has the expected value");
 
-  do_print("Check iterator.slice response for all properties");
+  info("Check iterator.slice response for all properties");
   let sliceResponse = await iterator.slice(0, iterator.count);
   ok(sliceResponse && Object.getOwnPropertyNames(sliceResponse).includes("ownProperties"),
     "The response object has an ownProperties property");

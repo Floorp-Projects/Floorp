@@ -35,12 +35,12 @@ function test_simple_source_map() {
                                  "http://example.com/www/js/c.js"]);
 
   gThreadClient.addListener("newSource", function _onNewSource(event, packet) {
-    do_check_eq(event, "newSource");
-    do_check_eq(packet.type, "newSource");
-    do_check_true(!!packet.source);
+    Assert.equal(event, "newSource");
+    Assert.equal(packet.type, "newSource");
+    Assert.ok(!!packet.source);
 
-    do_check_true(expectedSources.has(packet.source.url),
-                  "The source url should be one of our original sources.");
+    Assert.ok(expectedSources.has(packet.source.url),
+              "The source url should be one of our original sources.");
     expectedSources.delete(packet.source.url);
 
     if (expectedSources.size === 0) {

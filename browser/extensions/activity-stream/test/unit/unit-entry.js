@@ -1,8 +1,8 @@
-const {GlobalOverrider, FakePrefs, FakePerformance, EventEmitter} = require("test/unit/utils");
-const {chaiAssertions} = require("test/schemas/pings");
+import {EventEmitter, FakePerformance, FakePrefs, GlobalOverrider} from "test/unit/utils";
+import Adapter from "enzyme-adapter-react-15";
+import {chaiAssertions} from "test/schemas/pings";
+import enzyme from "enzyme";
 
-const Adapter = require("enzyme-adapter-react-15");
-const enzyme = require("enzyme");
 enzyme.configure({adapter: new Adapter()});
 
 // Cause React warnings to make tests that trigger them fail

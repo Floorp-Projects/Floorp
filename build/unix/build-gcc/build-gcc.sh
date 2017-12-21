@@ -3,7 +3,7 @@
 set -e
 set -x
 
-make_flags='-j12'
+make_flags="-j$(nproc)"
 
 . $data_dir/download-tools.sh
 
@@ -67,7 +67,8 @@ prepare() {
 }
 
 prepare_mingw() {
-  export install_dir=$root_dir/tools/gcc/
+  export prefix=/tools/mingw32
+  export install_dir=$root_dir$prefix
   mkdir -p $install_dir
   export PATH=$PATH:$install_dir/bin/
 
@@ -101,7 +102,7 @@ build_binutils() {
 
   mkdir $root_dir/binutils-objdir
   pushd $root_dir/binutils-objdir
-  ../binutils-$binutils_version/configure --prefix /tools/gcc/ $binutils_configure_flags
+  ../binutils-$binutils_version/configure --prefix=${prefix-/tools/gcc}/ $binutils_configure_flags
   make $make_flags
   make install $make_flags DESTDIR=$root_dir
   popd
@@ -110,11 +111,12 @@ build_binutils() {
 build_gcc() {
   mkdir $root_dir/gcc-objdir
   pushd $root_dir/gcc-objdir
-  ../gcc-$gcc_version/configure --prefix=/tools/gcc --enable-languages=c,c++  --disable-nls --disable-gnu-unique-object --enable-__cxa_atexit --with-arch-32=pentiumpro
+  ../gcc-$gcc_version/configure --prefix=${prefix-/tools/gcc} --enable-languages=c,c++  --disable-nls --disable-gnu-unique-object --enable-__cxa_atexit --with-arch-32=pentiumpro
   make $make_flags
   make $make_flags install DESTDIR=$root_dir
 
   cd $root_dir/tools
+  ln -s gcc gcc/bin/cc
   tar caf $root_dir/gcc.tar.xz gcc/
   popd
 }
@@ -159,7 +161,7 @@ build_gcc_and_mingw() {
   make install
   popd
 
-  pushd $root_dir/tools
-  tar caf $root_dir/mingw32.tar.xz gcc/
+  pushd $(dirname $install_dir)
+  tar caf $root_dir/mingw32.tar.xz $(basename $install_dir)/
   popd
 }

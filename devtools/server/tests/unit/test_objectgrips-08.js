@@ -37,29 +37,29 @@ function test_object_grip() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     let args = packet.frame.arguments;
 
-    do_check_eq(args[0].class, "Object");
+    Assert.equal(args[0].class, "Object");
 
     let objClient = gThreadClient.pauseGrip(args[0]);
     objClient.getPrototypeAndProperties(function (response) {
-      do_check_eq(response.ownProperties.a.configurable, true);
-      do_check_eq(response.ownProperties.a.enumerable, true);
-      do_check_eq(response.ownProperties.a.writable, true);
-      do_check_eq(response.ownProperties.a.value.type, "Infinity");
+      Assert.equal(response.ownProperties.a.configurable, true);
+      Assert.equal(response.ownProperties.a.enumerable, true);
+      Assert.equal(response.ownProperties.a.writable, true);
+      Assert.equal(response.ownProperties.a.value.type, "Infinity");
 
-      do_check_eq(response.ownProperties.b.configurable, true);
-      do_check_eq(response.ownProperties.b.enumerable, true);
-      do_check_eq(response.ownProperties.b.writable, true);
-      do_check_eq(response.ownProperties.b.value.type, "-Infinity");
+      Assert.equal(response.ownProperties.b.configurable, true);
+      Assert.equal(response.ownProperties.b.enumerable, true);
+      Assert.equal(response.ownProperties.b.writable, true);
+      Assert.equal(response.ownProperties.b.value.type, "-Infinity");
 
-      do_check_eq(response.ownProperties.c.configurable, true);
-      do_check_eq(response.ownProperties.c.enumerable, true);
-      do_check_eq(response.ownProperties.c.writable, true);
-      do_check_eq(response.ownProperties.c.value.type, "NaN");
+      Assert.equal(response.ownProperties.c.configurable, true);
+      Assert.equal(response.ownProperties.c.enumerable, true);
+      Assert.equal(response.ownProperties.c.writable, true);
+      Assert.equal(response.ownProperties.c.value.type, "NaN");
 
-      do_check_eq(response.ownProperties.d.configurable, true);
-      do_check_eq(response.ownProperties.d.enumerable, true);
-      do_check_eq(response.ownProperties.d.writable, true);
-      do_check_eq(response.ownProperties.d.value.type, "-0");
+      Assert.equal(response.ownProperties.d.configurable, true);
+      Assert.equal(response.ownProperties.d.enumerable, true);
+      Assert.equal(response.ownProperties.d.writable, true);
+      Assert.equal(response.ownProperties.d.value.type, "-0");
 
       gThreadClient.resume(function () {
         gClient.close().then(gCallback);

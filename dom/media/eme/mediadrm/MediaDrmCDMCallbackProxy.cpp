@@ -80,8 +80,9 @@ MediaDrmCDMCallbackProxy::SessionClosed(const nsCString& aSessionId)
   MOZ_ASSERT(NS_IsMainThread());
   bool keyStatusesChange = false;
   {
-    CDMCaps::AutoLock caps(mProxy->Capabilites());
-    keyStatusesChange = caps.RemoveKeysForSession(NS_ConvertUTF8toUTF16(aSessionId));
+    auto caps = mProxy->Capabilites().Lock();
+    keyStatusesChange =
+      caps->RemoveKeysForSession(NS_ConvertUTF8toUTF16(aSessionId));
   }
   if (keyStatusesChange) {
     mProxy->OnKeyStatusesChange(NS_ConvertUTF8toUTF16(aSessionId));
@@ -116,12 +117,11 @@ MediaDrmCDMCallbackProxy::BatchedKeyStatusChangedInternal(const nsCString& aSess
 {
   bool keyStatusesChange = false;
   {
-    CDMCaps::AutoLock caps(mProxy->Capabilites());
+    auto caps = mProxy->Capabilites().Lock();
     for (size_t i = 0; i < aKeyInfos.Length(); i++) {
-      keyStatusesChange |=
-        caps.SetKeyStatus(aKeyInfos[i].mKeyId,
-                          NS_ConvertUTF8toUTF16(aSessionId),
-                          aKeyInfos[i].mStatus);
+      keyStatusesChange |= caps->SetKeyStatus(aKeyInfos[i].mKeyId,
+                                              NS_ConvertUTF8toUTF16(aSessionId),
+                                              aKeyInfos[i].mStatus);
     }
   }
   if (keyStatusesChange) {

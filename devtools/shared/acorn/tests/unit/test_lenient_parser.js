@@ -10,10 +10,10 @@ const acorn_loose = require("acorn/acorn_loose");
 function run_test() {
   let actualAST = acorn_loose.parse_dammit("let x = 10", {});
 
-  do_print("Actual AST:");
-  do_print(JSON.stringify(actualAST, null, 2));
-  do_print("Expected AST:");
-  do_print(JSON.stringify(expectedAST, null, 2));
+  info("Actual AST:");
+  info(JSON.stringify(actualAST, null, 2));
+  info("Expected AST:");
+  info(JSON.stringify(expectedAST, null, 2));
 
   checkEquivalentASTs(expectedAST, actualAST);
 }

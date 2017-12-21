@@ -24,24 +24,44 @@
     streams.forEach(stream => stream.getTracks().forEach(track => track.stop()));
   };
 
-  let setRemoteDescriptionReturnTrackEvents = async (pc, desc) => {
-    let trackEvents = [];
-    let listener = e => trackEvents.push(e);
-    pc.addEventListener("track", listener);
-    await pc.setRemoteDescription(desc);
-    pc.removeEventListener("track", listener);
+  let collectEvents = (target, name, check) => {
+    let events = [];
+    let handler = e => {
+      check(e);
+      events.push(e);
+    };
 
-    // basic sanity-check, simplifies testing elsewhere
-    for (let e of trackEvents) {
+    target.addEventListener(name, handler);
+
+    let finishCollecting = () => {
+      target.removeEventListener(name, handler);
+      return events;
+    };
+
+    return {finish: finishCollecting};
+  };
+
+  let collectTrackEvents = pc => {
+    let checkEvent = e => {
       ok(e.track, "Track is set on event");
       ok(e.receiver, "Receiver is set on event");
       ok(e.transceiver, "Transceiver is set on event");
       ok(e.streams, "Streams is set on event");
+      e.streams.forEach(stream => {
+        ok(stream.getTracks().includes(e.track),
+           "Each stream in event contains the track");
+      });
       is(e.receiver, e.transceiver.receiver, "Receiver belongs to transceiver");
       is(e.track, e.receiver.track, "Track belongs to receiver");
-    }
+    };
 
-    return trackEvents;
+    return collectEvents(pc, "track", checkEvent);
+  };
+
+  let setRemoteDescriptionReturnTrackEvents = async (pc, desc) => {
+    let trackEventCollector = collectTrackEvents(pc);
+    await pc.setRemoteDescription(desc);
+    return trackEventCollector.finish();
   };
 
   let offerAnswer = async (offerer, answerer) => {
@@ -399,6 +419,7 @@
           streams: [{id: stream.id}]
         }
       ]);
+
 
     hasProps(pc2.getTransceivers(),
       [
@@ -1021,6 +1042,71 @@
     is(2, countUnmuteVideo1.count, "Got 2 unmute events for pc1's video track");
     is(2, countUnmuteAudio2.count, "Got 2 unmute events for pc2's audio track");
     is(2, countUnmuteVideo2.count, "Got 2 unmute events for pc2's video track");
+
+    pc1.close();
+    pc2.close();
+    stopTracks(stream1);
+    stopTracks(stream2);
+  };
+
+  let checkOnAddStream = async () => {
+    let pc1 = new RTCPeerConnection();
+    let stream1 = await getUserMedia({audio: true, video: true});
+    let audio1 = stream1.getAudioTracks()[0];
+    pc1.addTrack(audio1, stream1);
+    let video1 = stream1.getVideoTracks()[0];
+    pc1.addTrack(video1, stream1);
+
+    let pc2 = new RTCPeerConnection();
+    let stream2 = await getUserMedia({audio: true, video: true});
+    let audio2 = stream2.getAudioTracks()[0];
+    pc2.addTrack(audio2, stream2);
+    let video2 = stream2.getVideoTracks()[0];
+    pc2.addTrack(video2, stream2);
+
+    let offer = await pc1.createOffer();
+
+    let trackEventCollector = collectTrackEvents(pc2);
+    let addstreamEventCollector = collectEvents(pc2, "addstream", e => {
+      hasProps(e, {stream: {id: stream1.id}});
+      is(e.stream.getAudioTracks().length, 1, "One audio track");
+      is(e.stream.getVideoTracks().length, 1, "One video track");
+    });
+
+    await pc2.setRemoteDescription(offer);
+
+    let addstreamEvents = addstreamEventCollector.finish();
+    is(addstreamEvents.length, 1, "Should have 1 addstream event");
+
+    let trackEvents = trackEventCollector.finish();
+
+    hasProps(trackEvents,
+      [
+        {streams: [addstreamEvents[0].stream]},
+        {streams: [addstreamEvents[0].stream]}
+      ]);
+
+    await pc1.setLocalDescription(offer);
+    let answer = await pc2.createAnswer();
+
+    trackEventCollector = collectTrackEvents(pc1);
+    addstreamEventCollector = collectEvents(pc1, "addstream", e => {
+      hasProps(e, {stream: {id: stream2.id}});
+      is(e.stream.getAudioTracks().length, 1, "One audio track");
+      is(e.stream.getVideoTracks().length, 1, "One video track");
+    });
+
+    await pc1.setRemoteDescription(answer);
+    addstreamEvents = addstreamEventCollector.finish();
+    is(addstreamEvents.length, 1, "Should have 1 addstream event");
+
+    trackEvents = trackEventCollector.finish();
+
+    hasProps(trackEvents,
+      [
+        {streams: [addstreamEvents[0].stream]},
+        {streams: [addstreamEvents[0].stream]}
+      ]);
 
     pc1.close();
     pc2.close();
@@ -1941,6 +2027,7 @@
     await checkReplaceTrackNullDoesntPreventPairing();
     await checkRemoveAndReadd();
     await checkMute();
+    await checkOnAddStream();
     await checkStop();
     await checkStopAfterCreateOffer();
     await checkStopAfterSetLocalOffer();

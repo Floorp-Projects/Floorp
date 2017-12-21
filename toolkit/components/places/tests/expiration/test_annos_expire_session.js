@@ -41,13 +41,13 @@ add_task(async function test_annos_expire_session() {
 
 
   let pages = as.getPagesWithAnnotation("test1");
-  do_check_eq(pages.length, 10);
+  Assert.equal(pages.length, 10);
   pages = as.getPagesWithAnnotation("test2");
-  do_check_eq(pages.length, 10);
+  Assert.equal(pages.length, 10);
   let items = as.getItemsWithAnnotation("test1");
-  do_check_eq(items.length, 10);
+  Assert.equal(items.length, 10);
   items = as.getItemsWithAnnotation("test2");
-  do_check_eq(items.length, 10);
+  Assert.equal(items.length, 10);
 
   await new Promise(resolve => {
     waitForConnectionClosed(function() {
@@ -69,7 +69,7 @@ add_task(async function test_annos_expire_session() {
                    aError.message + "' returned.");
         },
         handleCompletion(aReason) {
-          do_check_eq(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
+          Assert.equal(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
           resolve();
         }
       });

@@ -24,6 +24,6 @@ function run_test() {
 
   let expected = "foo=bar";
   let actual = cs.getCookieStringFromHttp(uri, null, null);
-  do_check_eq(actual, expected);
+  Assert.equal(actual, expected);
 }
 

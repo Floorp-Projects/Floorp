@@ -18,9 +18,9 @@ add_test(function test_working_bid_exchange() {
 
   let server = httpd_setup({
     "/1.0/foo/1.0": function(request, response) {
-      do_check_true(request.hasHeader("accept"));
-      do_check_false(request.hasHeader("x-conditions-accepted"));
-      do_check_eq("application/json", request.getHeader("accept"));
+      Assert.ok(request.hasHeader("accept"));
+      Assert.ok(!request.hasHeader("x-conditions-accepted"));
+      Assert.equal("application/json", request.getHeader("accept"));
 
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");
@@ -41,13 +41,13 @@ add_test(function test_working_bid_exchange() {
   let url = server.baseURI + "/1.0/foo/1.0";
   client.getTokenFromBrowserIDAssertion(url, "assertion", cb);
   let result = cb.wait();
-  do_check_eq("object", typeof(result));
+  Assert.equal("object", typeof(result));
   do_check_attribute_count(result, 6);
-  do_check_eq(service, result.endpoint);
-  do_check_eq("id", result.id);
-  do_check_eq("key", result.key);
-  do_check_eq("uid", result.uid);
-  do_check_eq(duration, result.duration);
+  Assert.equal(service, result.endpoint);
+  Assert.equal("id", result.id);
+  Assert.equal("key", result.key);
+  Assert.equal("uid", result.uid);
+  Assert.equal(duration, result.duration);
   server.stop(run_next_test);
 });
 
@@ -66,7 +66,7 @@ add_test(function test_invalid_arguments() {
       client.getTokenFromBrowserIDAssertion(arg[0], arg[1], arg[2]);
       do_throw("Should never get here.");
     } catch (ex) {
-      do_check_true(ex instanceof TokenServerClientError);
+      Assert.ok(ex instanceof TokenServerClientError);
     }
   }
 
@@ -81,7 +81,7 @@ add_test(function test_conditions_required_response_handling() {
 
   let server = httpd_setup({
     "/1.0/foo/1.0": function(request, response) {
-      do_check_false(request.hasHeader("x-conditions-accepted"));
+      Assert.ok(!request.hasHeader("x-conditions-accepted"));
 
       response.setStatusLine(request.httpVersion, 403, "Forbidden");
       response.setHeader("Content-Type", "application/json");
@@ -98,13 +98,13 @@ add_test(function test_conditions_required_response_handling() {
   let url = server.baseURI + "/1.0/foo/1.0";
 
   function onResponse(error, token) {
-    do_check_true(error instanceof TokenServerClientServerError);
-    do_check_eq(error.cause, "conditions-required");
+    Assert.ok(error instanceof TokenServerClientServerError);
+    Assert.equal(error.cause, "conditions-required");
     // Check a JSON.stringify works on our errors as our logging will try and use it.
-    do_check_true(JSON.stringify(error), "JSON.stringify worked");
-    do_check_null(token);
+    Assert.ok(JSON.stringify(error), "JSON.stringify worked");
+    Assert.equal(null, token);
 
-    do_check_eq(error.urls.tos, tosURL);
+    Assert.equal(error.urls.tos, tosURL);
 
     server.stop(run_next_test);
   }
@@ -132,11 +132,11 @@ add_test(function test_invalid_403_no_content_type() {
   let url = server.baseURI + "/1.0/foo/1.0";
 
   function onResponse(error, token) {
-    do_check_true(error instanceof TokenServerClientServerError);
-    do_check_eq(error.cause, "malformed-response");
-    do_check_null(token);
+    Assert.ok(error instanceof TokenServerClientServerError);
+    Assert.equal(error.cause, "malformed-response");
+    Assert.equal(null, token);
 
-    do_check_null(error.urls);
+    Assert.equal(null, error.urls);
 
     server.stop(run_next_test);
   }
@@ -163,10 +163,10 @@ add_test(function test_invalid_403_bad_json() {
   let url = server.baseURI + "/1.0/foo/1.0";
 
   function onResponse(error, token) {
-    do_check_true(error instanceof TokenServerClientServerError);
-    do_check_eq(error.cause, "malformed-response");
-    do_check_null(token);
-    do_check_null(error.urls);
+    Assert.ok(error instanceof TokenServerClientServerError);
+    Assert.equal(error.cause, "malformed-response");
+    Assert.equal(null, token);
+    Assert.equal(null, error.urls);
 
     server.stop(run_next_test);
   }
@@ -192,9 +192,9 @@ add_test(function test_403_no_urls() {
 
   client.getTokenFromBrowserIDAssertion(url, "assertion",
                                         function onResponse(error, result) {
-    do_check_true(error instanceof TokenServerClientServerError);
-    do_check_eq(error.cause, "malformed-response");
-    do_check_null(result);
+    Assert.ok(error instanceof TokenServerClientServerError);
+    Assert.equal(error.cause, "malformed-response");
+    Assert.equal(null, result);
 
     server.stop(run_next_test);
 
@@ -207,11 +207,11 @@ add_test(function test_send_extra_headers() {
   let duration = 300;
   let server = httpd_setup({
     "/1.0/foo/1.0": function(request, response) {
-      do_check_true(request.hasHeader("x-foo"));
-      do_check_eq(request.getHeader("x-foo"), "42");
+      Assert.ok(request.hasHeader("x-foo"));
+      Assert.equal(request.getHeader("x-foo"), "42");
 
-      do_check_true(request.hasHeader("x-bar"));
-      do_check_eq(request.getHeader("x-bar"), "17");
+      Assert.ok(request.hasHeader("x-bar"));
+      Assert.equal(request.getHeader("x-bar"), "17");
 
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.setHeader("Content-Type", "application/json");
@@ -231,7 +231,7 @@ add_test(function test_send_extra_headers() {
   let url = server.baseURI + "/1.0/foo/1.0";
 
   function onResponse(error, token) {
-    do_check_null(error);
+    Assert.equal(null, error);
 
     // Other tests validate other things.
 
@@ -253,11 +253,11 @@ add_test(function test_error_404_empty() {
   let client = new TokenServerClient();
   let url = server.baseURI + "/foo";
   client.getTokenFromBrowserIDAssertion(url, "assertion", function(error, r) {
-    do_check_true(error instanceof TokenServerClientServerError);
-    do_check_eq(error.cause, "malformed-response");
+    Assert.ok(error instanceof TokenServerClientServerError);
+    Assert.equal(error.cause, "malformed-response");
 
-    do_check_neq(null, error.response);
-    do_check_null(r);
+    Assert.notEqual(null, error.response);
+    Assert.equal(null, r);
 
     server.stop(run_next_test);
   });
@@ -281,9 +281,9 @@ add_test(function test_error_404_proper_response() {
   });
 
   function onResponse(error, token) {
-    do_check_true(error instanceof TokenServerClientServerError);
-    do_check_eq(error.cause, "unknown-service");
-    do_check_null(token);
+    Assert.ok(error instanceof TokenServerClientServerError);
+    Assert.equal(error.cause, "unknown-service");
+    Assert.equal(null, token);
 
     server.stop(run_next_test);
   }
@@ -309,11 +309,11 @@ add_test(function test_bad_json() {
   let client = new TokenServerClient();
   let url = server.baseURI + "/1.0/foo/1.0";
   client.getTokenFromBrowserIDAssertion(url, "assertion", function(error, r) {
-    do_check_neq(null, error);
-    do_check_eq("TokenServerClientServerError", error.name);
-    do_check_eq(error.cause, "malformed-response");
-    do_check_neq(null, error.response);
-    do_check_eq(null, r);
+    Assert.notEqual(null, error);
+    Assert.equal("TokenServerClientServerError", error.name);
+    Assert.equal(error.cause, "malformed-response");
+    Assert.notEqual(null, error.response);
+    Assert.equal(null, r);
 
     server.stop(run_next_test);
   });
@@ -335,10 +335,10 @@ add_test(function test_400_response() {
   let client = new TokenServerClient();
   let url = server.baseURI + "/1.0/foo/1.0";
   client.getTokenFromBrowserIDAssertion(url, "assertion", function(error, r) {
-    do_check_neq(null, error);
-    do_check_eq("TokenServerClientServerError", error.name);
-    do_check_neq(null, error.response);
-    do_check_eq(error.cause, "malformed-request");
+    Assert.notEqual(null, error);
+    Assert.equal("TokenServerClientServerError", error.name);
+    Assert.notEqual(null, error.response);
+    Assert.equal(error.cause, "malformed-request");
 
     server.stop(run_next_test);
   });
@@ -360,10 +360,10 @@ add_test(function test_401_with_error_cause() {
   let client = new TokenServerClient();
   let url = server.baseURI + "/1.0/foo/1.0";
   client.getTokenFromBrowserIDAssertion(url, "assertion", function(error, r) {
-    do_check_neq(null, error);
-    do_check_eq("TokenServerClientServerError", error.name);
-    do_check_neq(null, error.response);
-    do_check_eq(error.cause, "no-soup-for-you");
+    Assert.notEqual(null, error);
+    Assert.equal("TokenServerClientServerError", error.name);
+    Assert.notEqual(null, error.response);
+    Assert.equal(error.cause, "no-soup-for-you");
 
     server.stop(run_next_test);
   });
@@ -385,10 +385,10 @@ add_test(function test_unhandled_media_type() {
   let url = server.baseURI + "/1.0/foo/1.0";
   let client = new TokenServerClient();
   client.getTokenFromBrowserIDAssertion(url, "assertion", function(error, r) {
-    do_check_neq(null, error);
-    do_check_eq("TokenServerClientServerError", error.name);
-    do_check_neq(null, error.response);
-    do_check_eq(null, r);
+    Assert.notEqual(null, error);
+    Assert.equal("TokenServerClientServerError", error.name);
+    Assert.notEqual(null, error.response);
+    Assert.equal(null, r);
 
     server.stop(run_next_test);
   });
@@ -417,7 +417,7 @@ add_test(function test_rich_media_types() {
   let url = server.baseURI + "/foo";
   let client = new TokenServerClient();
   client.getTokenFromBrowserIDAssertion(url, "assertion", function(error, r) {
-    do_check_eq(null, error);
+    Assert.equal(null, error);
 
     server.stop(run_next_test);
   });
@@ -449,7 +449,7 @@ add_test(function test_exception_during_callback() {
   let callbackCount = 0;
 
   client.getTokenFromBrowserIDAssertion(url, "assertion", function(error, r) {
-    do_check_eq(null, error);
+    Assert.equal(null, error);
 
     cb();
 
@@ -460,7 +460,7 @@ add_test(function test_exception_during_callback() {
   cb.wait();
   // This relies on some heavy event loop magic. The error in the main
   // callback should already have been raised at this point.
-  do_check_eq(callbackCount, 1);
+  Assert.equal(callbackCount, 1);
 
   server.stop(run_next_test);
 });

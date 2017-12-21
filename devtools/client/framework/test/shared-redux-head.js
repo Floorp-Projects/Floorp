@@ -13,21 +13,6 @@
 // to be safe to load in both mochitest and xpcshell environments.
 
 /**
- * A logging function that can be used from xpcshell and browser mochitest
- * environments.
- */
-function commonLog(message) {
-  let log;
-  if (Services && Services.appinfo && Services.appinfo.name &&
-      Services.appinfo.name == "Firefox") {
-    log = info;
-  } else {
-    log = do_print;
-  }
-  log(message);
-}
-
-/**
  * Wait until the store has reached a state that matches the predicate.
  * @param Store store
  *        The Redux store being used.
@@ -41,10 +26,10 @@ function waitUntilState(store, predicate) {
   let deferred = defer();
   let unsubscribe = store.subscribe(check);
 
-  commonLog(`Waiting for state predicate "${predicate}"`);
+  info(`Waiting for state predicate "${predicate}"`);
   function check() {
     if (predicate(store.getState())) {
-      commonLog(`Found state predicate "${predicate}"`);
+      info(`Found state predicate "${predicate}"`);
       unsubscribe();
       deferred.resolve();
     }
@@ -71,11 +56,11 @@ function waitUntilAction(store, actionType) {
   let history = store.history;
   let index = history.length;
 
-  commonLog(`Waiting for action "${actionType}"`);
+  info(`Waiting for action "${actionType}"`);
   function check() {
     let action = history[index++];
     if (action && action.type === actionType) {
-      commonLog(`Found action "${actionType}"`);
+      info(`Found action "${actionType}"`);
       unsubscribe();
       deferred.resolve(store.getState());
     }

@@ -14,12 +14,12 @@ function geoHandler(metadata, response)
 
 function successCallback() {
   // The call shouldn't be sucessful.
-  do_check_true(false);
+  Assert.ok(false);
   do_test_finished();
 }
 
 function errorCallback() {
-  do_check_true(true);
+  Assert.ok(true);
   do_test_finished();
 }
 

@@ -16,7 +16,7 @@ function promisePageChanged() {
   return new Promise(resolve => {
     let observer = new NavHistoryObserver();
     observer.onPageChanged = (uri, attribute, newValue, guid) => {
-      do_print("onPageChanged for attribute " + attribute + " and uri " + uri.spec);
+      info("onPageChanged for attribute " + attribute + " and uri " + uri.spec);
       if (attribute == Ci.nsINavHistoryObserver.ATTRIBUTE_FAVICON) {
         PlacesUtils.history.removeObserver(observer);
         Assert.ok(newValue, "newValue should be a valid value");
@@ -42,26 +42,26 @@ add_task(async function test_copyFavicons_inputcheck() {
 });
 
 add_task(async function test_copyFavicons_noop() {
-  do_print("Unknown uris");
+  info("Unknown uris");
   Assert.equal(await copyFavicons(TEST_URI1, TEST_URI2, false),
                null, "Icon should not have been copied");
 
-  do_print("Unknown dest uri");
+  info("Unknown dest uri");
   await PlacesTestUtils.addVisits(TEST_URI1);
   Assert.equal(await copyFavicons(TEST_URI1, TEST_URI2, false),
                null, "Icon should not have been copied");
 
-  do_print("Unknown dest uri");
+  info("Unknown dest uri");
   await PlacesTestUtils.addVisits(TEST_URI1);
   Assert.equal(await copyFavicons(TEST_URI1, TEST_URI2, false),
                null, "Icon should not have been copied");
 
-  do_print("Unknown dest uri, source has icon");
+  info("Unknown dest uri, source has icon");
   await setFaviconForPage(TEST_URI1, SMALLPNG_DATA_URI);
   Assert.equal(await copyFavicons(TEST_URI1, TEST_URI2, false),
                null, "Icon should not have been copied");
 
-  do_print("Known uris, source has icon, private");
+  info("Known uris, source has icon, private");
   await PlacesTestUtils.addVisits(TEST_URI2);
   Assert.equal(await copyFavicons(TEST_URI1, TEST_URI2, true),
                null, "Icon should not have been copied");
@@ -71,7 +71,7 @@ add_task(async function test_copyFavicons_noop() {
 });
 
 add_task(async function test_copyFavicons() {
-  do_print("Normal copy across 2 pages");
+  info("Normal copy across 2 pages");
   await PlacesTestUtils.addVisits(TEST_URI1);
   await setFaviconForPage(TEST_URI1, SMALLPNG_DATA_URI);
   await setFaviconForPage(TEST_URI1, SMALLSVG_DATA_URI);
@@ -86,7 +86,7 @@ add_task(async function test_copyFavicons() {
   Assert.equal(await getFaviconUrlForPage(TEST_URI2),
                SMALLSVG_DATA_URI.spec, "Large icon found");
 
-  do_print("Private copy to a bookmarked page");
+  info("Private copy to a bookmarked page");
   await PlacesUtils.bookmarks.insert({
     url: TEST_URI3, parentGuid: PlacesUtils.bookmarks.unfiledGuid
   });
@@ -105,7 +105,7 @@ add_task(async function test_copyFavicons() {
 });
 
 add_task(async function test_copyFavicons_overlap() {
-  do_print("Copy to a page that has one of the favicons already");
+  info("Copy to a page that has one of the favicons already");
   await PlacesTestUtils.addVisits(TEST_URI1);
   await setFaviconForPage(TEST_URI1, SMALLPNG_DATA_URI);
   await setFaviconForPage(TEST_URI1, SMALLSVG_DATA_URI);

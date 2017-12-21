@@ -102,7 +102,7 @@ function run_test() {
   let certificateDialogsCID =
     MockRegistrar.register("@mozilla.org/nsCertificateDialogs;1",
                            gCertificateDialogs);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     MockRegistrar.unregister(certificateDialogsCID);
   });
 

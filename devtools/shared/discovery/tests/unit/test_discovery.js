@@ -16,12 +16,12 @@ const { setTimeout, clearTimeout } = Cu.import("resource://gre/modules/Timer.jsm
 
 Services.prefs.setBoolPref("devtools.discovery.log", true);
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.discovery.log");
 });
 
 function log(msg) {
-  do_print("DISCOVERY: " + msg);
+  info("DISCOVERY: " + msg);
 }
 
 // Global map of actively listening ports to TestTransport instances

@@ -24,8 +24,8 @@ add_task(async function test_purpose() {
   let engine = Services.search.getEngineByName("Test search engine");
 
   function check_submission(aExpected, aSearchTerm, aType, aPurpose) {
-    do_check_eq(engine.getSubmission(aSearchTerm, aType, aPurpose).uri.spec,
-                base + aExpected);
+    Assert.equal(engine.getSubmission(aSearchTerm, aType, aPurpose).uri.spec,
+                 base + aExpected);
   }
 
   let base = "http://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t";

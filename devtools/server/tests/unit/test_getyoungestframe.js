@@ -10,13 +10,13 @@ function run_test() {
 
   dbg.addDebuggee(g);
   dbg.onDebuggerStatement = function (frame) {
-    do_check_true(frame === dbg.getNewestFrame());
+    Assert.ok(frame === dbg.getNewestFrame());
     // Execute from the nested event loop, dbg.getNewestFrame() won't
     // be working anymore.
 
-    do_execute_soon(function () {
+    executeSoon(function () {
       try {
-        do_check_true(frame === dbg.getNewestFrame());
+        Assert.ok(frame === dbg.getNewestFrame());
       } finally {
         xpcInspector.exitNestedEventLoop("test");
       }

@@ -62,9 +62,9 @@ add_test(function test_generateCI()
         var ci = x.QueryInterface(Components.interfaces.nsIClassInfo);
         ci = ci.QueryInterface(Components.interfaces.nsISupports);
         ci = ci.QueryInterface(Components.interfaces.nsIClassInfo);
-        do_check_eq(ci.classID, classID);
-        do_check_eq(ci.flags, flags);
-        do_check_eq(ci.classDescription, classDescription);
+        Assert.equal(ci.classID, classID);
+        Assert.equal(ci.flags, flags);
+        Assert.equal(ci.classDescription, classDescription);
     } catch(e) {
         do_throw("Classinfo for x should not be missing or broken");
     }
@@ -83,17 +83,17 @@ add_test(function test_defineLazyGetter()
         this.inScope = true;
         return TEST_VALUE;
     });
-    do_check_eq(accessCount, 0);
+    Assert.equal(accessCount, 0);
 
     // Get the property, making sure the access count has increased.
-    do_check_eq(obj.foo, TEST_VALUE);
-    do_check_eq(accessCount, 1);
-    do_check_true(obj.inScope);
+    Assert.equal(obj.foo, TEST_VALUE);
+    Assert.equal(accessCount, 1);
+    Assert.ok(obj.inScope);
 
     // Get the property once more, making sure the access count has not
     // increased.
-    do_check_eq(obj.foo, TEST_VALUE);
-    do_check_eq(accessCount, 1);
+    Assert.equal(obj.foo, TEST_VALUE);
+    Assert.equal(accessCount, 1);
     run_next_test();
 });
 
@@ -110,9 +110,9 @@ add_test(function test_defineLazyServiceGetter()
     // Check that the lazy service getter and the actual service have the same
     // properties.
     for (let prop in obj.service)
-        do_check_true(prop in service);
+        Assert.ok(prop in service);
     for (let prop in service)
-        do_check_true(prop in obj.service);
+        Assert.ok(prop in obj.service);
     run_next_test();
 });
 
@@ -130,7 +130,7 @@ add_test(function test_defineLazyPreferenceGetter()
     Preferences.set(PREF, "currentValue");
 
 
-    do_print("Create second getter on new object");
+    info("Create second getter on new object");
 
     obj = {};
     XPCOMUtils.defineLazyPreferenceGetter(obj, "pref", PREF, "defaultValue");
@@ -209,11 +209,11 @@ add_test(function test_categoryRegistration()
   for (let [name, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_NAME)) {
     print("Verify that the name/value pair exists in the expected entries.");
     ok(EXPECTED_ENTRIES.has(name));
-    do_check_eq(EXPECTED_ENTRIES.get(name), value);
+    Assert.equal(EXPECTED_ENTRIES.get(name), value);
     EXPECTED_ENTRIES.delete(name);
   }
   print("Check that all of the expected entries have been deleted.");
-  do_check_eq(EXPECTED_ENTRIES.size, 0);
+  Assert.equal(EXPECTED_ENTRIES.size, 0);
   run_next_test();
 });
 
@@ -240,11 +240,11 @@ add_test(function test_generateSingletonFactory()
   // First, try to instance the component.
   let instance = Cc[XPCCOMPONENT_CONTRACTID].createInstance(Ci.nsISupports);
   // Try again, check that it returns the same instance as before.
-  do_check_eq(instance,
-              Cc[XPCCOMPONENT_CONTRACTID].createInstance(Ci.nsISupports));
+  Assert.equal(instance,
+               Cc[XPCCOMPONENT_CONTRACTID].createInstance(Ci.nsISupports));
   // Now, for sanity, check that getService is also returning the same instance.
-  do_check_eq(instance,
-              Cc[XPCCOMPONENT_CONTRACTID].getService(Ci.nsISupports));
+  Assert.equal(instance,
+               Cc[XPCCOMPONENT_CONTRACTID].getService(Ci.nsISupports));
 
   run_next_test();
 });

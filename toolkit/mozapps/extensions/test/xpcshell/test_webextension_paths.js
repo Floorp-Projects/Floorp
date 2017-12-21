@@ -44,9 +44,9 @@ add_task(async function test_bad_unpacked_path() {
     await promiseRestartManager();
 
     let addon = await promiseAddonByID(dir);
-    do_check_eq(addon, null);
+    Assert.equal(addon, null);
     addon = await promiseAddonByID(MANIFEST_ID);
-    do_check_eq(addon, null);
+    Assert.equal(addon, null);
   }
 });
 

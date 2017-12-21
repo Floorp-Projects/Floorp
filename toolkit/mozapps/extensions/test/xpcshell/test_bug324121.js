@@ -138,7 +138,7 @@ function run_test() {
   installAllFiles(ADDONS.map(a => do_get_addon(a.addon)), function() {
     restartManager();
     AddonManager.getAddonByID(ADDONS[0].id, callback_soon(function(firstAddon) {
-      do_check_true(firstAddon);
+      Assert.ok(firstAddon);
       firstAddon.userDisabled = true;
       restartManager();
 
@@ -170,6 +170,6 @@ function run_test() {
 }
 
 function test_complete() {
-  do_check_eq(gItemsNotChecked.length, 0);
+  Assert.equal(gItemsNotChecked.length, 0);
   testserver.stop(do_test_finished);
 }

@@ -28,21 +28,21 @@ function makeMockLongStringActor() {
 
 function test_LSA_destroy() {
   let actor = makeMockLongStringActor();
-  do_check_eq(actor.registeredPool.longStringActors[TEST_STRING], actor);
+  Assert.equal(actor.registeredPool.longStringActors[TEST_STRING], actor);
 
   actor.destroy();
-  do_check_eq(actor.registeredPool.longStringActors[TEST_STRING], void 0);
+  Assert.equal(actor.registeredPool.longStringActors[TEST_STRING], void 0);
 }
 
 function test_LSA_grip() {
   let actor = makeMockLongStringActor();
 
   let grip = actor.grip();
-  do_check_eq(grip.type, "longString");
-  do_check_eq(grip.initial,
-              TEST_STRING.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH));
-  do_check_eq(grip.length, TEST_STRING.length);
-  do_check_eq(grip.actor, actor.actorID);
+  Assert.equal(grip.type, "longString");
+  Assert.equal(grip.initial,
+               TEST_STRING.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH));
+  Assert.equal(grip.length, TEST_STRING.length);
+  Assert.equal(grip.actor, actor.actorID);
 }
 
 function test_LSA_onSubstring() {
@@ -54,40 +54,40 @@ function test_LSA_onSubstring() {
     start: 0,
     end: 4
   });
-  do_check_eq(response.from, actor.actorID);
-  do_check_eq(response.substring, TEST_STRING.substring(0, 4));
+  Assert.equal(response.from, actor.actorID);
+  Assert.equal(response.substring, TEST_STRING.substring(0, 4));
 
   // In the middle
   response = actor.onSubstring({
     start: 5,
     end: 8
   });
-  do_check_eq(response.from, actor.actorID);
-  do_check_eq(response.substring, TEST_STRING.substring(5, 8));
+  Assert.equal(response.from, actor.actorID);
+  Assert.equal(response.substring, TEST_STRING.substring(5, 8));
 
   // Whole string
   response = actor.onSubstring({
     start: 0,
     end: TEST_STRING.length
   });
-  do_check_eq(response.from, actor.actorID);
-  do_check_eq(response.substring, TEST_STRING);
+  Assert.equal(response.from, actor.actorID);
+  Assert.equal(response.substring, TEST_STRING);
 
   // Negative index
   response = actor.onSubstring({
     start: -5,
     end: TEST_STRING.length
   });
-  do_check_eq(response.from, actor.actorID);
-  do_check_eq(response.substring,
-              TEST_STRING.substring(-5, TEST_STRING.length));
+  Assert.equal(response.from, actor.actorID);
+  Assert.equal(response.substring,
+               TEST_STRING.substring(-5, TEST_STRING.length));
 
   // Past the end
   response = actor.onSubstring({
     start: TEST_STRING.length - 5,
     end: 100
   });
-  do_check_eq(response.from, actor.actorID);
-  do_check_eq(response.substring,
-              TEST_STRING.substring(TEST_STRING.length - 5, 100));
+  Assert.equal(response.from, actor.actorID);
+  Assert.equal(response.substring,
+               TEST_STRING.substring(TEST_STRING.length - 5, 100));
 }

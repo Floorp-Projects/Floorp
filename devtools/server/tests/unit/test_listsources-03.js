@@ -28,11 +28,11 @@ function run_test() {
 function test_simple_listsources() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     gThreadClient.getSources(function (response) {
-      do_check_true(
+      Assert.ok(
         !response.error,
         "There shouldn't be an error fetching large amounts of sources.");
 
-      do_check_true(response.sources.some(function (s) {
+      Assert.ok(response.sources.some(function (s) {
         return s.url.match(/foo-999.js$/);
       }));
 

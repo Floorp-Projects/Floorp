@@ -95,11 +95,11 @@ add_task(async function test_can_reload_permanent_addon() {
   let enabledCalled = false;
   AddonManager.addAddonListener({
     onDisabled: (aAddon) => {
-      do_check_false(enabledCalled);
+      Assert.ok(!enabledCalled);
       disabledCalled = true;
     },
     onEnabled: (aAddon) => {
-      do_check_true(disabledCalled);
+      Assert.ok(disabledCalled);
       enabledCalled = true;
     }
   });
@@ -109,8 +109,8 @@ add_task(async function test_can_reload_permanent_addon() {
     promiseWebExtensionStartup(),
   ]);
 
-  do_check_true(disabledCalled);
-  do_check_true(enabledCalled);
+  Assert.ok(disabledCalled);
+  Assert.ok(enabledCalled);
 
   notEqual(addon, null);
   equal(addon.appDisabled, false);

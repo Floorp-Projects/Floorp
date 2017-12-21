@@ -115,7 +115,7 @@ function run_test_for(input) {
 
         encoder = encodeImage(input);
         dataURL = makeDataURL(encoder, "image/png");
-        do_check_eq(dataURL, input.expected);
+        Assert.equal(dataURL, input.expected);
 
         encoder = encodeImageAsync(input);
         dataURL = makeDataURLFromAsync(encoder, "image/png", input.expected);
@@ -211,7 +211,7 @@ function makeDataURLFromAsync(encoder, mimetype, expected) {
                 } else {
                     var base64String = toBase64(bytes);
                     var dataURL = "data:" + mimetype + ";base64," + base64String;
-                    do_check_eq(dataURL, expected);
+                    Assert.equal(dataURL, expected);
                     do_test_finished();
                 }
 

@@ -31,20 +31,20 @@ function test_pause_frame() {
     let bindings = parentEnv.bindings;
     let args = bindings.arguments;
     let vars = bindings.variables;
-    do_check_neq(parentEnv, undefined);
-    do_check_eq(args.length, 0);
-    do_check_eq(vars.stopMe.value.type, "object");
-    do_check_eq(vars.stopMe.value.class, "Function");
-    do_check_true(!!vars.stopMe.value.actor);
+    Assert.notEqual(parentEnv, undefined);
+    Assert.equal(args.length, 0);
+    Assert.equal(vars.stopMe.value.type, "object");
+    Assert.equal(vars.stopMe.value.class, "Function");
+    Assert.ok(!!vars.stopMe.value.actor);
 
     // Skip the global lexical scope.
     parentEnv = parentEnv.parent.parent;
-    do_check_neq(parentEnv, undefined);
+    Assert.notEqual(parentEnv, undefined);
     let objClient = gThreadClient.pauseGrip(parentEnv.object);
     objClient.getPrototypeAndProperties(function (response) {
-      do_check_eq(response.ownProperties.Object.value.type, "object");
-      do_check_eq(response.ownProperties.Object.value.class, "Function");
-      do_check_true(!!response.ownProperties.Object.value.actor);
+      Assert.equal(response.ownProperties.Object.value.type, "object");
+      Assert.equal(response.ownProperties.Object.value.class, "Function");
+      Assert.ok(!!response.ownProperties.Object.value.actor);
 
       gThreadClient.resume(function () {
         finishClient(gClient);

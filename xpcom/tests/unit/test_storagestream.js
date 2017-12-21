@@ -24,8 +24,8 @@ function test1() {
 
   var unusedVariable = ss.getOutputStream(0);
   var inp2 = ss.newInputStream(0);
-  do_check_eq(inp2.available(), 0);
-  do_check_true(inp2.isNonBlocking());
+  Assert.equal(inp2.available(), 0);
+  Assert.ok(inp2.isNonBlocking());
 
   var sis =
       Cc["@mozilla.org/scriptableinputstream;1"]
@@ -42,7 +42,7 @@ function test1() {
       throw ex;
     }
   }
-  do_check_true(threw);
+  Assert.ok(threw);
 }
 
 /**
@@ -80,7 +80,7 @@ function test3() {
     do_throw("newInputStream(0) shouldn't throw if write() is called: " + e);
   }
 
-  do_check_true(inp.isNonBlocking(), "next test expects a non-blocking stream");
+  Assert.ok(inp.isNonBlocking(), "next test expects a non-blocking stream");
 
   try {
     var threw = false;
@@ -91,8 +91,8 @@ function test3() {
       do_throw("wrong error thrown: " + e);
     threw = true;
   }
-  do_check_true(threw,
-                "should have thrown (nsStorageInputStream is nonblocking)");
+  Assert.ok(threw,
+            "should have thrown (nsStorageInputStream is nonblocking)");
 }
 
 /**
@@ -121,7 +121,7 @@ function test4() {
   var count = 0;
   while (count < bytes.length) {
     var data = bis.read8(1);
-    do_check_eq(data, bytes[count++]);
+    Assert.equal(data, bytes[count++]);
   }
 
   var threw = false;

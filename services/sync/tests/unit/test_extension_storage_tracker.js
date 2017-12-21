@@ -27,13 +27,13 @@ add_task(async function test_changing_extension_storage_changes_score() {
   await withSyncContext(async function(context) {
     await extensionStorageSync.set(extension, {"a": "b"}, context);
   });
-  do_check_eq(tracker.score, SCORE_INCREMENT_MEDIUM);
+  Assert.equal(tracker.score, SCORE_INCREMENT_MEDIUM);
 
   tracker.resetScore();
   await withSyncContext(async function(context) {
     await extensionStorageSync.remove(extension, "a", context);
   });
-  do_check_eq(tracker.score, SCORE_INCREMENT_MEDIUM);
+  Assert.equal(tracker.score, SCORE_INCREMENT_MEDIUM);
 
   Svc.Obs.notify("weave:engine:stop-tracking");
 });

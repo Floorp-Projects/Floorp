@@ -15,7 +15,7 @@ let registry = null;
 if (AppConstants.platform == "win") {
   Cu.import("resource://testing-common/MockRegistry.jsm");
   registry = new MockRegistry();
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     registry.shutdown();
   });
 }
@@ -53,7 +53,7 @@ let dirProvider = {
 
 Services.dirsvc.registerProvider(dirProvider);
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   Services.dirsvc.unregisterProvider(dirProvider);
   dir.remove(true);
 });
@@ -305,7 +305,7 @@ while True:
 
   app._cleanup();
 
-  do_print("waiting for async shutdown");
+  info("waiting for async shutdown");
   Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
   AsyncShutdown.profileBeforeChange._trigger();
   Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");

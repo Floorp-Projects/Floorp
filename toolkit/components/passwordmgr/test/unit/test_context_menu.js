@@ -36,7 +36,7 @@ add_task(async function test_contextMenuAddAndRemoveLogins() {
   ];
 
   for (let hostname of testHostnames) {
-    do_print("test for hostname: " + hostname);
+    info("test for hostname: " + hostname);
     // Get expected logins for this test.
     let logins = getExpectedLogins(hostname);
 

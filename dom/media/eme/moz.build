@@ -18,6 +18,7 @@ EXPORTS.mozilla.dom += [
 EXPORTS.mozilla += [
     'CDMCaps.h',
     'CDMProxy.h',
+    'DataMutex.h',
     'DecryptorProxyCallback.h',
     'DetailedPromise.h',
     'EMEUtils.h',

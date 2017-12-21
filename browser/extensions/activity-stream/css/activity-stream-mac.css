@@ -1181,8 +1181,8 @@ main {
       background-size: 18px 10px;
       -moz-context-properties: fill, stroke;
       fill: #FFF;
-      stroke: #D7D7DB;
       height: 32px;
+      stroke: #D7D7DB;
       top: -32px;
       width: 43px; }
     .collapsible-section .section-top-bar .section-info-option .info-option:dir(rtl)::before {
