@@ -614,9 +614,16 @@ class Descriptor(DescriptorProvider):
                 attrs.append("canOOM")
 
         def maybeAppendNeedsSubjectPrincipalToAttrs(attrs, needsSubjectPrincipal):
-            ensureValidNeedsSubjectPrincipalExtendedAttribute(needsSubjectPrincipal)
+            if (needsSubjectPrincipal is not None and
+                needsSubjectPrincipal is not True and
+                needsSubjectPrincipal != ["NonSystem"]):
+                raise TypeError("Unknown value for 'NeedsSubjectPrincipal': %s" %
+                                needsSubjectPrincipal[0])
+
             if needsSubjectPrincipal is not None:
                 attrs.append("needsSubjectPrincipal")
+                if needsSubjectPrincipal == ["NonSystem"]:
+                    attrs.append("needsNonSystemSubjectPrincipal")
 
         name = member.identifier.name
         throws = self.interface.isJSImplemented() or member.getExtendedAttribute("Throws")

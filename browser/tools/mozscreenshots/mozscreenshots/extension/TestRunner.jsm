@@ -79,8 +79,10 @@ this.TestRunner = {
     let screenshotPath = FileUtils.getFile("TmpD", subDirs).path;
 
     const MOZ_UPLOAD_DIR = env.get("MOZ_UPLOAD_DIR");
-    const MOZ_SOURCE_REPO = env.get("MOZ_SOURCE_REPO");
-    if (MOZ_UPLOAD_DIR && !MOZ_SOURCE_REPO.includes("/integration/")) {
+    const GECKO_HEAD_REPOSITORY = env.get("GECKO_HEAD_REPOSITORY");
+    // We don't want to upload images (from MOZ_UPLOAD_DIR) on integration
+    // branches in order to reduce bandwidth/storage.
+    if (MOZ_UPLOAD_DIR && !GECKO_HEAD_REPOSITORY.includes("/integration/")) {
       screenshotPath = MOZ_UPLOAD_DIR;
     }
 

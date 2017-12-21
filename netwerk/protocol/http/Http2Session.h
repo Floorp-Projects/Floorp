@@ -563,6 +563,9 @@ private:
   // We should propagate this events to the first nsHttpTransaction.
   RefPtr<nsHttpTransaction> mFirstHttpTransaction;
   bool mTlsHandshakeFinished;
+
+  bool mCheckNetworkStallsWithTFO;
+  PRIntervalTime mLastRequestBytesSentTime;
 private:
 /// connect tunnels
   void DispatchOnTunnel(nsAHttpTransaction *, nsIInterfaceRequestor *);

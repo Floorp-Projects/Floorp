@@ -7415,12 +7415,27 @@ class CGCallGenerator(CGThing):
         self.cgRoot.append(call)
 
         if needsSubjectPrincipal:
-            getPrincipal = dedent(
+            needsNonSystemPrincipal = (
+                "needsNonSystemSubjectPrincipal" in extendedAttributes)
+            if needsNonSystemPrincipal:
+                checkPrincipal = dedent(
+                    """
+                    if (nsContentUtils::IsSystemPrincipal(principal)) {
+                      principal = nullptr;
+                    }
+                    """)
+            else:
+                checkPrincipal = ""
+
+            getPrincipal = fill(
                 """
                 JSCompartment* compartment = js::GetContextCompartment(cx);
                 MOZ_ASSERT(compartment);
                 JSPrincipals* principals = JS_GetCompartmentPrincipals(compartment);
-                """)
+                nsIPrincipal* principal = nsJSPrincipals::get(principals);
+                ${checkPrincipal}
+                """,
+                checkPrincipal=checkPrincipal)
 
             if descriptor.interface.isExposedInAnyWorker():
                 self.cgRoot.prepend(CGGeneric(fill(
@@ -7428,18 +7443,25 @@ class CGCallGenerator(CGThing):
                     Maybe<nsIPrincipal*> subjectPrincipal;
                     if (NS_IsMainThread()) {
                       $*{getPrincipal}
-                      subjectPrincipal.emplace(nsJSPrincipals::get(principals));
+                      subjectPrincipal.emplace(principal);
                     }
                     """,
                     getPrincipal=getPrincipal)))
             else:
+                if needsNonSystemPrincipal:
+                    principalType = "nsIPrincipal*";
+                else:
+                    principalType = "NonNull<nsIPrincipal>"
+
                 self.cgRoot.prepend(CGGeneric(fill(
                     """
-                    $*{getPrincipal}
-                    // Initializing a nonnull is pretty darn annoying...
-                    NonNull<nsIPrincipal> subjectPrincipal;
-                    subjectPrincipal = static_cast<nsIPrincipal*>(nsJSPrincipals::get(principals));
+                    ${principalType} subjectPrincipal;
+                    {
+                      $*{getPrincipal}
+                      subjectPrincipal = principal;
+                    }
                     """,
+                    principalType=principalType,
                     getPrincipal=getPrincipal)))
 
         if isFallible or canOOM:
@@ -14280,8 +14302,18 @@ class CGBindingRoot(CGThing):
                 dictionary = dictionary.parent
             return False
 
+        def needsNonSystemPrincipal(member):
+            return (
+                member.getExtendedAttribute("NeedsSubjectPrincipal") == ["NonSystem"] or
+                member.getExtendedAttribute("SetterNeedsSubjectPrincipal") == ["NonSystem"] or
+                member.getExtendedAttribute("GetterNeedsSubjectPrincipal") == ["NonSystem"])
+
+        def descriptorNeedsNonSystemPrincipal(d):
+            return any(needsNonSystemPrincipal(m) for m in d.interface.members)
+
         bindingHeaders["nsContentUtils.h"] = (
             any(descriptorHasChromeOnly(d) for d in descriptors) or
+            any(descriptorNeedsNonSystemPrincipal(d) for d in descriptors) or
             any(dictionaryHasChromeOnly(d) for d in dictionaries))
         hasNonEmptyDictionaries = any(
             len(dict.members) > 0 for dict in dictionaries)
@@ -14700,6 +14732,8 @@ class CGNativeMember(ClassMethod):
             # Cheat and assume self.descriptorProvider is a descriptor
             if self.descriptorProvider.interface.isExposedInAnyWorker():
                 args.append(Argument("Maybe<nsIPrincipal*>", "aSubjectPrincipal"))
+            elif 'needsNonSystemSubjectPrincipal' in self.extendedAttrs:
+                args.append(Argument("nsIPrincipal*", "aPrincipal"))
             else:
                 args.append(Argument("nsIPrincipal&", "aPrincipal"))
         # And the caller type, if desired.

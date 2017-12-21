@@ -52,7 +52,7 @@ static int _debug_on = 0;
 
 #define DPRINTF(arg)	if (_debug_on) PR_fprintf arg
 
-#if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
+#if defined(_PR_PTHREADS)
 #include <pthread.h>
 #include "md/_pth.h"
 static void *pthread_start(void *arg)
@@ -63,7 +63,7 @@ static void *pthread_start(void *arg)
     start(data);
     return NULL;
 }  /* pthread_start */
-#endif /* defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS) */
+#endif /* defined(_PR_PTHREADS) */
 
 #if defined(IRIX) && !defined(_PR_PTHREADS)
 #include <sys/types.h>
@@ -109,7 +109,7 @@ static PRStatus NSPRPUB_TESTS_CreateThread(StartFn start, void *arg)
         }
         break;
     case thread_pthread:
-#if defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS)
+#if defined(_PR_PTHREADS)
         {
             int rv;
             pthread_t id;
@@ -137,7 +137,7 @@ static PRStatus NSPRPUB_TESTS_CreateThread(StartFn start, void *arg)
         PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
         rv = PR_FAILURE;
         break;
-#endif /* defined(_PR_PTHREADS) && !defined(_PR_DCETHREADS) */
+#endif /* defined(_PR_PTHREADS) */
 
     case thread_sproc:
 #if defined(IRIX) && !defined(_PR_PTHREADS)

@@ -42,7 +42,7 @@ interface AnonymousContent {
    * Set the value of an attribute of an element inside this custom anonymous
    * content.
    */
-  [NeedsSubjectPrincipal, Throws]
+  [NeedsSubjectPrincipal=NonSystem, Throws]
   void setAttributeForElement(DOMString elementId,
                               DOMString attributeName,
                               DOMString value);
