@@ -8,6 +8,7 @@
 
 #include "nsJSEnvironment.h"
 #include "js/GCAPI.h"
+#include "mozilla/ErrorResult.h"
 #include "nsIAccessibilityService.h"
 #include "xpcAccessibilityService.h"
 
