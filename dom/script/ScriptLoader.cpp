@@ -3038,10 +3038,10 @@ ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
   }
 
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(req);
-  // If this load was subject to a CORS check; don't flag it with a
-  // separate origin principal, so that it will treat our document's
-  // principal as the origin principal
-  if (aRequest->mCORSMode == CORS_NONE) {
+  // If this load was subject to a CORS check, don't flag it with a separate
+  // origin principal, so that it will treat our document's principal as the
+  // origin principal.  Module loads always use CORS.
+  if (!aRequest->IsModuleRequest() && aRequest->mCORSMode == CORS_NONE) {
     rv = nsContentUtils::GetSecurityManager()->
       GetChannelResultPrincipal(channel, getter_AddRefs(aRequest->mOriginPrincipal));
     NS_ENSURE_SUCCESS(rv, rv);
