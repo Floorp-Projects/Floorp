@@ -9,6 +9,6 @@ HTTP load 570884.html
 # Plugin arch is going to change anyway with OOP content so skipping
 # this test for now is OK.
 skip-if(!haveTestPlugin||http.platform!="X11") HTTP load 598862.html
-skip-if(Android) HTTP load 626602-1.html # bug 908363
+skip-if(Android||(webrender&&winWidget)) HTTP load 626602-1.html # bug 908363; bug 1322815 for webrender
 HTTP load 752340.html
 HTTP load 843086.xhtml
