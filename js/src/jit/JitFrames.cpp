@@ -2242,9 +2242,14 @@ MachineState::FromBailout(RegisterDump::GPRArray& regs, RegisterDump::FPUArray& 
     for (unsigned i = 0; i < FloatRegisters::TotalSingle; i++)
         machine.setRegisterLocation(FloatRegister(i, FloatRegister::Single), (double*)&fbase[i]);
 #elif defined(JS_CODEGEN_MIPS32)
-    for (unsigned i = 0; i < FloatRegisters::TotalPhys; i++) {
-        machine.setRegisterLocation(FloatRegister::FromIndex(i, FloatRegister::Double), &fpregs[i]);
-        machine.setRegisterLocation(FloatRegister::FromIndex(i, FloatRegister::Single), &fpregs[i]);
+    float* fbase = (float*)&fpregs[0];
+    for (unsigned i = 0; i < FloatRegisters::TotalDouble; i++) {
+        machine.setRegisterLocation(FloatRegister::FromIndex(i, FloatRegister::Double),
+                                    &fpregs[i].d);
+    }
+    for (unsigned i = 0; i < FloatRegisters::TotalSingle; i++) {
+        machine.setRegisterLocation(FloatRegister::FromIndex(i, FloatRegister::Single),
+                                    (double*)&fbase[i]);
     }
 #elif defined(JS_CODEGEN_MIPS64)
     for (unsigned i = 0; i < FloatRegisters::TotalPhys; i++) {

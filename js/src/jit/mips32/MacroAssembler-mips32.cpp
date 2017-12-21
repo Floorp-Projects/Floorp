@@ -751,7 +751,7 @@ MacroAssemblerMIPS::ma_ss(FloatRegister ft, Address address)
 void
 MacroAssemblerMIPS::ma_pop(FloatRegister fs)
 {
-    ma_ld(fs.doubleOverlay(), Address(StackPointer, 0));
+    ma_ld(fs.doubleOverlay(0), Address(StackPointer, 0));
     as_addiu(StackPointer, StackPointer, sizeof(double));
 }
 
@@ -759,7 +759,7 @@ void
 MacroAssemblerMIPS::ma_push(FloatRegister fs)
 {
     as_addiu(StackPointer, StackPointer, -sizeof(double));
-    ma_sd(fs.doubleOverlay(), Address(StackPointer, 0));
+    ma_sd(fs.doubleOverlay(0), Address(StackPointer, 0));
 }
 
 bool
@@ -2110,22 +2110,18 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set)
     }
     MOZ_ASSERT(diffG == 0);
 
-    if (diffF > 0) {
-        // Double values have to be aligned. We reserve extra space so that we can
-        // start writing from the first aligned location.
-        // We reserve a whole extra double so that the buffer has even size.
-        ma_and(SecondScratchReg, sp, Imm32(~(ABIStackAlignment - 1)));
-        reserveStack(diffF);
+    // Double values have to be aligned. We reserve extra space so that we can
+    // start writing from the first aligned location.
+    // We reserve a whole extra double so that the buffer has even size.
+    ma_and(SecondScratchReg, sp, Imm32(~(ABIStackAlignment - 1)));
+    reserveStack(diffF + sizeof(double));
 
-        diffF -= sizeof(double);
-
-        for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); ++iter) {
+    for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); ++iter) {
+        if ((*iter).code() % 2 == 0)
             as_sd(*iter, SecondScratchReg, -diffF);
-            diffF -= sizeof(double);
-        }
-
-        MOZ_ASSERT(diffF == 0);
+        diffF -= sizeof(double);
     }
+    MOZ_ASSERT(diffF == 0);
 }
 
 void
@@ -2136,22 +2132,18 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
     const int32_t reservedG = diffG;
     const int32_t reservedF = diffF;
 
-    if (reservedF > 0) {
-        // Read the buffer form the first aligned location.
-        ma_addu(SecondScratchReg, sp, Imm32(reservedF));
-        ma_and(SecondScratchReg, SecondScratchReg, Imm32(~(ABIStackAlignment - 1)));
+    // Read the buffer form the first aligned location.
+    ma_addu(SecondScratchReg, sp, Imm32(reservedF + sizeof(double)));
+    ma_and(SecondScratchReg, SecondScratchReg, Imm32(~(ABIStackAlignment - 1)));
 
+    for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); ++iter) {
+        if (!ignore.has(*iter) && ((*iter).code() % 2 == 0))
+            // Use assembly l.d because we have alligned the stack.
+            as_ld(*iter, SecondScratchReg, -diffF);
         diffF -= sizeof(double);
-
-        LiveFloatRegisterSet fpignore(ignore.fpus().reduceSetForPush());
-        for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); ++iter) {
-            if (!ignore.has(*iter))
-                as_ld(*iter, SecondScratchReg, -diffF);
-            diffF -= sizeof(double);
-        }
-        freeStack(reservedF);
-        MOZ_ASSERT(diffF == 0);
     }
+    freeStack(reservedF + sizeof(double));
+    MOZ_ASSERT(diffF == 0);
 
     for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); ++iter) {
         diffG -= sizeof(intptr_t);
@@ -2163,13 +2155,14 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
 }
 
 void
-MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest, Register scratch)
+MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest, Register)
 {
-    int32_t diffF = set.fpus().getPushSizeInBytes();
+    FloatRegisterSet fpuSet(set.fpus().reduceSetForPush());
+    unsigned numFpu = fpuSet.size();
+    int32_t diffF = fpuSet.getPushSizeInBytes();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 
     MOZ_ASSERT(dest.offset >= diffG + diffF);
-    MOZ_ASSERT(dest.base == StackPointer);
 
     for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); ++iter) {
         diffG -= sizeof(intptr_t);
@@ -2178,19 +2171,21 @@ MacroAssembler::storeRegsInMask(LiveRegisterSet set, Address dest, Register scra
     }
     MOZ_ASSERT(diffG == 0);
 
-    if (diffF > 0) {
-
-        computeEffectiveAddress(dest, scratch);
-        ma_and(scratch, scratch, Imm32(~(ABIStackAlignment - 1)));
-
-        diffF -= sizeof(double);
-
-        for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); ++iter) {
-            as_sd(*iter, scratch, -diffF);
-            diffF -= sizeof(double);
-        }
-        MOZ_ASSERT(diffF == 0);
+    for (FloatRegisterBackwardIterator iter(fpuSet); iter.more(); ++iter) {
+        FloatRegister reg = *iter;
+        diffF -= reg.size();
+        numFpu -= 1;
+        dest.offset -= reg.size();
+        if (reg.isDouble())
+            storeDouble(reg, dest);
+        else if (reg.isSingle())
+            storeFloat32(reg, dest);
+        else
+            MOZ_CRASH("Unknown register type.");
     }
+    MOZ_ASSERT(numFpu == 0);
+    diffF -= diffF % sizeof(uintptr_t);
+    MOZ_ASSERT(diffF == 0);
 }
 // ===============================================================
 // ABI function calls.
