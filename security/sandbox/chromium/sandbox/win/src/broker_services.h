@@ -12,7 +12,6 @@
 #include <utility>
 
 #include "base/compiler_specific.h"
-#include "base/environment.h"
 #include "base/macros.h"
 #include "base/win/scoped_handle.h"
 #include "sandbox/win/src/crosscall_server.h"
@@ -50,7 +49,6 @@ class BrokerServicesBase final : public BrokerServices,
   scoped_refptr<TargetPolicy> CreatePolicy() override;
   ResultCode SpawnTarget(const wchar_t* exe_path,
                          const wchar_t* command_line,
-                         base::EnvironmentMap& env_map,
                          scoped_refptr<TargetPolicy> policy,
                          ResultCode* last_warning,
                          DWORD* last_error,
