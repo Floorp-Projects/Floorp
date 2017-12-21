@@ -296,7 +296,7 @@ function run_test() {do_report_unexpected_exception(error)};
 '''
 
 ADD_TEST_VERBOSE = '''
-function run_test() {do_print("a message from do_print")};
+function run_test() {info("a message from info")};
 '''
 
 # A test for genuine JS-generated Error objects
@@ -333,41 +333,41 @@ function run_test() {
   let checkpoints = [];
 
   // Cleanup tasks, in reverse order
-  do_register_cleanup(function cleanup_checkout() {
+  registerCleanupFunction(function cleanup_checkout() {
     Assert.equal(checkpoints.join(""), "123456");
-    do_print("At this stage, the test has succeeded");
+    info("At this stage, the test has succeeded");
     do_throw("Throwing an error to force displaying the log");
   });
 
-  do_register_cleanup(function sync_cleanup_2() {
+  registerCleanupFunction(function sync_cleanup_2() {
     checkpoints.push(6);
   });
 
-  do_register_cleanup(async function async_cleanup_4() {
+  registerCleanupFunction(async function async_cleanup_4() {
     await undefined;
     checkpoints.push(5);
   });
 
-  do_register_cleanup(function* async_cleanup_3() {
+  registerCleanupFunction(function* async_cleanup_3() {
     yield undefined;
     checkpoints.push(4);
   });
 
-  do_register_cleanup(function async_cleanup_2() {
+  registerCleanupFunction(function async_cleanup_2() {
     let deferred = Promise.defer();
-    do_execute_soon(deferred.resolve);
+    executeSoon(deferred.resolve);
     return deferred.promise.then(function() {
       checkpoints.push(3);
     });
   });
 
-  do_register_cleanup(function sync_cleanup() {
+  registerCleanupFunction(function sync_cleanup() {
     checkpoints.push(2);
   });
 
-  do_register_cleanup(function async_cleanup() {
+  registerCleanupFunction(function async_cleanup() {
     let deferred = Promise.defer();
-    do_execute_soon(deferred.resolve);
+    executeSoon(deferred.resolve);
     return deferred.promise.then(function() {
       checkpoints.push(1);
     });
@@ -1201,28 +1201,28 @@ add_test({
 
     def testDoPrintWhenVerboseNotExplicit(self):
         """
-        Check that do_print() and similar calls that generate output do
+        Check that info() and similar calls that generate output do
         not have the output when not run verbosely.
         """
         self.writeFile("test_verbose.js", ADD_TEST_VERBOSE)
         self.writeManifest(["test_verbose.js"])
 
         self.assertTestResult(True)
-        self.assertNotInLog("a message from do_print")
+        self.assertNotInLog("a message from info")
 
     def testDoPrintWhenVerboseExplicit(self):
         """
-        Check that do_print() and similar calls that generate output have the
+        Check that info() and similar calls that generate output have the
         output shown when run verbosely.
         """
         self.writeFile("test_verbose.js", ADD_TEST_VERBOSE)
         self.writeManifest(["test_verbose.js"])
         self.assertTestResult(True, verbose=True)
-        self.assertInLog("a message from do_print")
+        self.assertInLog("a message from info")
 
     def testDoPrintWhenVerboseInManifest(self):
         """
-        Check that do_print() and similar calls that generate output have the
+        Check that info() and similar calls that generate output have the
         output shown when 'verbose = true' is in the manifest, even when
         not run verbosely.
         """
@@ -1230,11 +1230,11 @@ add_test({
         self.writeManifest([("test_verbose.js", "verbose = true")])
 
         self.assertTestResult(True)
-        self.assertInLog("a message from do_print")
+        self.assertInLog("a message from info")
 
     def testAsyncCleanup(self):
         """
-        Check that do_register_cleanup handles nicely async cleanup tasks
+        Check that registerCleanupFunction handles nicely async cleanup tasks
         """
         self.writeFile("test_asyncCleanup.js", ASYNC_CLEANUP)
         self.writeManifest(["test_asyncCleanup.js"])
