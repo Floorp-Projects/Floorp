@@ -58,7 +58,7 @@ public:
   {
     GetURIAttr(nsGkAtoms::src, nullptr, aSrc);
   }
-  void SetSrc(const nsAString& aSrc, nsIPrincipal* aTriggeringPrincipal, mozilla::ErrorResult& rv)
+  void SetSrc(const nsAString& aSrc, nsIPrincipal& aTriggeringPrincipal, mozilla::ErrorResult& rv)
   {
     SetHTMLAttr(nsGkAtoms::src, aSrc, aTriggeringPrincipal, rv);
   }
@@ -86,7 +86,7 @@ public:
   {
     GetHTMLAttr(nsGkAtoms::srcset, aSrcset);
   }
-  void SetSrcset(const nsAString& aSrcset, nsIPrincipal* aTriggeringPrincipal, mozilla::ErrorResult& rv)
+  void SetSrcset(const nsAString& aSrcset, nsIPrincipal& aTriggeringPrincipal, mozilla::ErrorResult& rv)
   {
     SetHTMLAttr(nsGkAtoms::srcset, aSrcset, aTriggeringPrincipal, rv);
   }

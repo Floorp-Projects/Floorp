@@ -957,8 +957,6 @@ interface TestInterface {
   [NeedsSubjectPrincipal] attribute boolean needsSubjectPrincipalAttr;
   [NeedsCallerType] void needsCallerTypeMethod();
   [NeedsCallerType] attribute boolean needsCallerTypeAttr;
-  [NeedsSubjectPrincipal=NonSystem] void needsNonSystemSubjectPrincipalMethod();
-  [NeedsSubjectPrincipal=NonSystem] attribute boolean needsNonSystemSubjectPrincipalAttr;
   [CEReactions] void ceReactionsMethod();
   [CEReactions] void ceReactionsMethodOverload();
   [CEReactions] void ceReactionsMethodOverload(DOMString bar);
@@ -1305,8 +1303,6 @@ interface TestWorkerExposedInterface {
   [NeedsSubjectPrincipal] attribute boolean needsSubjectPrincipalAttr;
   [NeedsCallerType] void needsCallerTypeMethod();
   [NeedsCallerType] attribute boolean needsCallerTypeAttr;
-  [NeedsSubjectPrincipal=NonSystem] void needsNonSystemSubjectPrincipalMethod();
-  [NeedsSubjectPrincipal=NonSystem] attribute boolean needsNonSystemSubjectPrincipalAttr;
 };
 
 [HTMLConstructor]
