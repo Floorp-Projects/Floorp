@@ -30,7 +30,7 @@ add_test(function test_getter_and_setter() {
     onInstallEnded: function onInstallEnded() {
      AddonManager.removeInstallListener(listener);
      // never restart directly inside an onInstallEnded handler!
-     do_execute_soon(function getter_setter_install_ended() {
+     executeSoon(function getter_setter_install_ended() {
       restartManager();
 
       AddonManager.getAddonByID(addonId, function(addon) {
@@ -84,7 +84,7 @@ add_test(function test_error_on_duplicate_syncguid_insert() {
 
       if (installCount == installNames.length) {
        AddonManager.removeInstallListener(listener);
-       do_execute_soon(function duplicate_syncguid_install_ended() {
+       executeSoon(function duplicate_syncguid_install_ended() {
         restartManager();
 
         AddonManager.getAddonsByIDs(installIDs, callback_soon(function(addons) {

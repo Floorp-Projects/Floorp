@@ -112,22 +112,22 @@ const TEST_DATA = [
 
 function run_test() {
   for (let test of TEST_DATA) {
-    do_print("Starting test: " + test.desc);
-    do_print("Input string " + test.input);
+    info("Starting test: " + test.desc);
+    info("Input string " + test.input);
     let output;
     try {
       output = getRuleText(test.input, test.line, test.column);
       if (test.throws) {
-        do_print("Test should have thrown");
+        info("Test should have thrown");
         Assert.ok(false);
       }
     } catch (e) {
-      do_print("getRuleText threw an exception with the given input string");
+      info("getRuleText threw an exception with the given input string");
       if (test.throws) {
-        do_print("Exception expected");
+        info("Exception expected");
         Assert.ok(true);
       } else {
-        do_print("Exception unexpected\n" + e);
+        info("Exception unexpected\n" + e);
         Assert.ok(false);
       }
     }

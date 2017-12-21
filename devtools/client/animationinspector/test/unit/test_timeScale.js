@@ -134,57 +134,57 @@ const TEST_FORMAT_TIME_S = [{
 }];
 
 function run_test() {
-  do_print("Check the default min/max range values");
+  info("Check the default min/max range values");
   equal(TimeScale.minStartTime, Infinity);
   equal(TimeScale.maxEndTime, 0);
 
   for (let {desc, animations, expectedMinStart, expectedMaxEnd} of
        TEST_ANIMATIONS) {
-    do_print("Test adding a few animations: " + desc);
+    info("Test adding a few animations: " + desc);
     for (let state of animations) {
       TimeScale.addAnimation(state);
     }
 
-    do_print("Checking the time scale range");
+    info("Checking the time scale range");
     equal(TimeScale.minStartTime, expectedMinStart);
     equal(TimeScale.maxEndTime, expectedMaxEnd);
 
-    do_print("Test reseting the animations");
+    info("Test reseting the animations");
     TimeScale.reset();
     equal(TimeScale.minStartTime, Infinity);
     equal(TimeScale.maxEndTime, 0);
   }
 
-  do_print("Add a set of animations again");
+  info("Add a set of animations again");
   for (let state of TEST_ANIMATIONS[0].animations) {
     TimeScale.addAnimation(state);
   }
 
-  do_print("Test converting start times to distances");
+  info("Test converting start times to distances");
   for (let {time, expectedDistance} of TEST_STARTTIME_TO_DISTANCE) {
     let distance = TimeScale.startTimeToDistance(time);
     equal(distance, expectedDistance);
   }
 
-  do_print("Test converting durations to distances");
+  info("Test converting durations to distances");
   for (let {time, expectedDistance} of TEST_DURATION_TO_DISTANCE) {
     let distance = TimeScale.durationToDistance(time);
     equal(distance, expectedDistance);
   }
 
-  do_print("Test converting distances to times");
+  info("Test converting distances to times");
   for (let {distance, expectedTime} of TEST_DISTANCE_TO_TIME) {
     let time = TimeScale.distanceToTime(distance);
     equal(time, expectedTime);
   }
 
-  do_print("Test converting distances to relative times");
+  info("Test converting distances to relative times");
   for (let {distance, expectedTime} of TEST_DISTANCE_TO_RELATIVE_TIME) {
     let time = TimeScale.distanceToRelativeTime(distance);
     equal(time, expectedTime);
   }
 
-  do_print("Test formatting times (millis)");
+  info("Test formatting times (millis)");
   for (let {time, expectedFormattedTime} of TEST_FORMAT_TIME_MS) {
     let formattedTime = TimeScale.formatTime(time);
     equal(formattedTime, expectedFormattedTime);
@@ -199,7 +199,7 @@ function run_test() {
     iterationCount: 1
   });
 
-  do_print("Test formatting times (seconds)");
+  info("Test formatting times (seconds)");
   for (let {time, expectedFormattedTime} of TEST_FORMAT_TIME_S) {
     let formattedTime = TimeScale.formatTime(time);
     equal(formattedTime, expectedFormattedTime);

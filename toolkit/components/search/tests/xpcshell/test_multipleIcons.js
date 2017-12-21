@@ -18,19 +18,19 @@ add_task(async function test_multipleIcons() {
     { name: "IconsTest", xmlFileName: "engineImages.xml" },
   ]);
 
-  do_print("The default should be the 16x16 icon");
+  info("The default should be the 16x16 icon");
   Assert.ok(engine.iconURI.spec.includes("ico16"));
 
   Assert.ok(engine.getIconURLBySize(16, 16).includes("ico16"));
   Assert.ok(engine.getIconURLBySize(32, 32).includes("ico32"));
   Assert.ok(engine.getIconURLBySize(74, 74).includes("ico74"));
 
-  do_print("Invalid dimensions should return null.");
+  info("Invalid dimensions should return null.");
   Assert.equal(null, engine.getIconURLBySize(50, 50));
 
   let allIcons = engine.getIcons();
 
-  do_print("Check that allIcons contains expected icon sizes");
+  info("Check that allIcons contains expected icon sizes");
   Assert.equal(allIcons.length, 3);
   let expectedWidths = [16, 32, 74];
   Assert.ok(allIcons.every((item) => {

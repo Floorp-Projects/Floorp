@@ -819,7 +819,7 @@ function getExpectedInstall(aAddon) {
 
 const AddonListener = {
   onPropertyChanged(aAddon, aProperties) {
-    do_print(`Got onPropertyChanged event for ${aAddon.id}`);
+    info(`Got onPropertyChanged event for ${aAddon.id}`);
     let [event, properties] = getExpectedEvent(aAddon.id);
     Assert.equal("onPropertyChanged", event);
     Assert.equal(aProperties.length, properties.length);
@@ -833,7 +833,7 @@ const AddonListener = {
   },
 
   onEnabling(aAddon, aRequiresRestart) {
-    do_print(`Got onEnabling event for ${aAddon.id}`);
+    info(`Got onEnabling event for ${aAddon.id}`);
     let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     Assert.equal("onEnabling", event);
     Assert.equal(aRequiresRestart, expectedRestart);
@@ -844,7 +844,7 @@ const AddonListener = {
   },
 
   onEnabled(aAddon) {
-    do_print(`Got onEnabled event for ${aAddon.id}`);
+    info(`Got onEnabled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
     Assert.equal("onEnabled", event);
     Assert.ok(!hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
@@ -852,7 +852,7 @@ const AddonListener = {
   },
 
   onDisabling(aAddon, aRequiresRestart) {
-    do_print(`Got onDisabling event for ${aAddon.id}`);
+    info(`Got onDisabling event for ${aAddon.id}`);
     let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     Assert.equal("onDisabling", event);
     Assert.equal(aRequiresRestart, expectedRestart);
@@ -863,7 +863,7 @@ const AddonListener = {
   },
 
   onDisabled(aAddon) {
-    do_print(`Got onDisabled event for ${aAddon.id}`);
+    info(`Got onDisabled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
     Assert.equal("onDisabled", event);
     Assert.ok(!hasFlag(aAddon.permissions, AddonManager.PERM_CAN_DISABLE));
@@ -871,7 +871,7 @@ const AddonListener = {
   },
 
   onInstalling(aAddon, aRequiresRestart) {
-    do_print(`Got onInstalling event for ${aAddon.id}`);
+    info(`Got onInstalling event for ${aAddon.id}`);
     let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     Assert.equal("onInstalling", event);
     Assert.equal(aRequiresRestart, expectedRestart);
@@ -881,14 +881,14 @@ const AddonListener = {
   },
 
   onInstalled(aAddon) {
-    do_print(`Got onInstalled event for ${aAddon.id}`);
+    info(`Got onInstalled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
     Assert.equal("onInstalled", event);
     return check_test_completed(arguments);
   },
 
   onUninstalling(aAddon, aRequiresRestart) {
-    do_print(`Got onUninstalling event for ${aAddon.id}`);
+    info(`Got onUninstalling event for ${aAddon.id}`);
     let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     Assert.equal("onUninstalling", event);
     Assert.equal(aRequiresRestart, expectedRestart);
@@ -898,14 +898,14 @@ const AddonListener = {
   },
 
   onUninstalled(aAddon) {
-    do_print(`Got onUninstalled event for ${aAddon.id}`);
+    info(`Got onUninstalled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
     Assert.equal("onUninstalled", event);
     return check_test_completed(arguments);
   },
 
   onOperationCancelled(aAddon) {
-    do_print(`Got onOperationCancelled event for ${aAddon.id}`);
+    info(`Got onOperationCancelled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
     Assert.equal("onOperationCancelled", event);
     return check_test_completed(arguments);
@@ -1130,7 +1130,7 @@ function pathShouldntExist(file) {
   }
 }
 
-do_register_cleanup(function addon_cleanup() {
+registerCleanupFunction(function addon_cleanup() {
   if (timer)
     timer.cancel();
 });
@@ -1150,7 +1150,7 @@ function createHttpServer(port = -1) {
   let server = new HttpServer();
   server.start(port);
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     return new Promise(resolve => {
       server.stop(resolve);
     });
@@ -1270,7 +1270,7 @@ function loadFile(aFile) {
  */
 function loadJSON(aFile) {
   let data = loadFile(aFile);
-  do_print("Loaded JSON file " + aFile.path);
+  info("Loaded JSON file " + aFile.path);
   return (JSON.parse(data));
 }
 
@@ -1278,7 +1278,7 @@ function loadJSON(aFile) {
  * Raw save of a JSON blob to file
  */
 function saveJSON(aData, aFile) {
-  do_print("Starting to save JSON file " + aFile.path);
+  info("Starting to save JSON file " + aFile.path);
   let stream = FileUtils.openSafeFileOutputStream(aFile);
   let converter = AM_Cc["@mozilla.org/intl/converter-output-stream;1"].
     createInstance(AM_Ci.nsIConverterOutputStream);
@@ -1289,7 +1289,7 @@ function saveJSON(aData, aFile) {
   // nsConverterOutputStream doesn't finish() safe output streams on close()
   FileUtils.closeSafeFileOutputStream(stream);
   converter.close();
-  do_print("Done saving JSON file " + aFile.path);
+  info("Done saving JSON file " + aFile.path);
 }
 
 /**
@@ -1326,7 +1326,7 @@ async function serveSystemUpdate(xml, perform_update, testserver) {
 // Runs an update check making it use the passed in xml string. Uses the direct
 // call to the update function so we get rejections on failure.
 async function installSystemAddons(xml, testserver) {
-  do_print("Triggering system add-on update check.");
+  info("Triggering system add-on update check.");
 
   await serveSystemUpdate(xml, async function() {
     let { XPIProvider } = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
@@ -1337,7 +1337,7 @@ async function installSystemAddons(xml, testserver) {
 // Runs a full add-on update check which will in some cases do a system add-on
 // update check. Always succeeds.
 async function updateAllSystemAddons(xml, testserver) {
-  do_print("Triggering full add-on update check.");
+  info("Triggering full add-on update check.");
 
   await serveSystemUpdate(xml, function() {
     return new Promise(resolve => {
@@ -1459,7 +1459,7 @@ async function checkInstalledSystemAddons(conditions, distroDir) {
     let expectedDir = isUpgrade ? getCurrentSystemAddonUpdatesDir() : distroDir;
 
     if (version) {
-      do_print(`Checking state of add-on ${id}, expecting version ${version}`);
+      info(`Checking state of add-on ${id}, expecting version ${version}`);
 
       // Add-on should be installed
       Assert.notEqual(addon, null);
@@ -1486,7 +1486,7 @@ async function checkInstalledSystemAddons(conditions, distroDir) {
       // Verify the add-on actually started
       BootstrapMonitor.checkAddonStarted(id, version);
     } else {
-      do_print(`Checking state of add-on ${id}, expecting it to be missing`);
+      info(`Checking state of add-on ${id}, expecting it to be missing`);
 
       if (isUpgrade) {
         // Add-on should not be installed
@@ -1532,7 +1532,7 @@ async function getSystemAddonDirectories() {
  * @param {nsIFile} distroDir - the system add-on distribution directory (the "features" dir in the app directory)
  */
 async function setupSystemAddonConditions(setup, distroDir) {
-  do_print("Clearing existing database.");
+  info("Clearing existing database.");
   Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_SET);
   distroDir.leafName = "empty";
 
@@ -1541,7 +1541,7 @@ async function setupSystemAddonConditions(setup, distroDir) {
   startupManager(false);
   await promiseShutdownManager();
 
-  do_print("Setting up conditions.");
+  info("Setting up conditions.");
   await setup.setup();
 
   if (distroDir) {
@@ -1555,7 +1555,7 @@ async function setupSystemAddonConditions(setup, distroDir) {
   startupManager(false);
 
   // Make sure the initial state is correct
-  do_print("Checking initial state.");
+  info("Checking initial state.");
   await checkInstalledSystemAddons(setup.initialState, distroDir);
 }
 
@@ -1589,7 +1589,7 @@ async function verifySystemAddonState(initialState, finalState = undefined, alre
     expectedDirs++;
   }
 
-  do_print("Checking final state.");
+  info("Checking final state.");
 
   let dirs = await getSystemAddonDirectories();
   Assert.equal(dirs.length, expectedDirs);

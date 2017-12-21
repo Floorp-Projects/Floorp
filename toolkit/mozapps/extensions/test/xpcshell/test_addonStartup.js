@@ -109,10 +109,10 @@ add_task(async function test_XPIStates_invalid_paths() {
 
     try {
       let result = aomStartup.readStartupData();
-      do_print(`readStartupData() returned ${JSON.stringify(result)}`);
+      info(`readStartupData() returned ${JSON.stringify(result)}`);
     } catch (e) {
       // We don't care if this throws, only that it doesn't crash.
-      do_print(`readStartupData() threw: ${e}`);
+      info(`readStartupData() threw: ${e}`);
       equal(e.result, Cr.NS_ERROR_FILE_UNRECOGNIZED_PATH, "Got expected error code");
     }
   }

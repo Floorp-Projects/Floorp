@@ -34,25 +34,25 @@ function* do_run_test() {
   // Add a permission, to test the 'add' notification. Note that we use
   // do_execute_soon() so that we can use our generator to continue the test
   // where we left off.
-  do_execute_soon(function() {
+  executeSoon(function() {
     pm.addFromPrincipal(principal, permType, pm.ALLOW_ACTION, pm.EXPIRE_TIME, now + 100000);
   });
   yield;
 
   // Alter a permission, to test the 'changed' notification.
-  do_execute_soon(function() {
+  executeSoon(function() {
     pm.addFromPrincipal(principal, permType, pm.ALLOW_ACTION, pm.EXPIRE_TIME, now + 200000);
   });
   yield;
 
   // Remove a permission, to test the 'deleted' notification.
-  do_execute_soon(function() {
+  executeSoon(function() {
     pm.removeFromPrincipal(principal, permType);
   });
   yield;
 
   // Clear permissions, to test the 'cleared' notification.
-  do_execute_soon(function() {
+  executeSoon(function() {
     pm.removeAll();
   });
   yield;

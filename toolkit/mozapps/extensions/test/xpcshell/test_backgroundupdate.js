@@ -41,7 +41,7 @@ function run_test_1() {
     Services.obs.addObserver(function observer() {
       Services.obs.removeObserver(observer, "addons-background-update-complete");
 
-      do_execute_soon(run_test_2);
+      executeSoon(run_test_2);
     }, "addons-background-update-complete");
 
     // Trigger the background update timer handler

@@ -250,7 +250,7 @@ function run_test() {
   run_next_test();
 
   // Teardown.
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     server.stop(function() { });
   });
 }

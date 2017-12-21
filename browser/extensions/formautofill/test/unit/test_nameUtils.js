@@ -268,7 +268,7 @@ const TESTCASES = [
 add_task(async function test_splitName() {
   TESTCASES.forEach(testcase => {
     if (testcase.fullName) {
-      do_print("Starting testcase: " + testcase.description);
+      info("Starting testcase: " + testcase.description);
       let nameParts = FormAutofillNameUtils.splitName(testcase.fullName);
       Assert.deepEqual(nameParts, testcase.nameParts);
     }
@@ -277,7 +277,7 @@ add_task(async function test_splitName() {
 
 add_task(async function test_joinName() {
   TESTCASES.forEach(testcase => {
-    do_print("Starting testcase: " + testcase.description);
+    info("Starting testcase: " + testcase.description);
     let name = FormAutofillNameUtils.joinNameParts(testcase.nameParts);
     Assert.equal(name, testcase.expectedFullName || testcase.fullName);
   });

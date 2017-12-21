@@ -104,12 +104,12 @@ function readServerContent(request, buffer)
   Assert.equal(cc.alternativeDataType, "");
   check_has_alt_data_in_index(false);
 
-  do_execute_soon(() => {
+  executeSoon(() => {
     var os = cc.openAlternativeOutputStream(altContentType);
     os.write(altContent, altContent.length);
     os.close();
 
-    do_execute_soon(flushAndOpenAltChannel);
+    executeSoon(flushAndOpenAltChannel);
   });
 }
 

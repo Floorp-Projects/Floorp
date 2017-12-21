@@ -130,7 +130,7 @@ add_test(function test_defineLazyPreferenceGetter()
     Preferences.set(PREF, "currentValue");
 
 
-    do_print("Create second getter on new object");
+    info("Create second getter on new object");
 
     obj = {};
     XPCOMUtils.defineLazyPreferenceGetter(obj, "pref", PREF, "defaultValue");

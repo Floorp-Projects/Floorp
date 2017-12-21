@@ -40,7 +40,7 @@ function store_entries(cb)
   }
 
   if (store_idx == entries.length) {
-    do_execute_soon(store_cb);
+    executeSoon(store_cb);
     return;
   }
 
@@ -66,7 +66,7 @@ var store_data = function(status, entry) {
   os.close();
   entry.close();
   store_idx++;
-  do_execute_soon(store_entries);
+  executeSoon(store_entries);
 };
 
 var check_idx;
@@ -81,7 +81,7 @@ function check_entries(cb, pbExited)
   }
 
   if (check_idx == entries.length) {
-    do_execute_soon(check_cb);
+    executeSoon(check_cb);
     return;
   }
 
@@ -97,7 +97,7 @@ function check_entries(cb, pbExited)
 var check_data = function (status, entry) {
   var cont = function() {
     check_idx++;
-    do_execute_soon(check_entries);
+    executeSoon(check_entries);
   }
 
   if (!check_pb_exited || entries[check_idx][3]) {

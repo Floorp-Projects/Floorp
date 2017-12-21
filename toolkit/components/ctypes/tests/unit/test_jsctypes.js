@@ -1761,12 +1761,12 @@ function run_PointerType_tests() {
       // Int8Array on unshared memory is interconvertible with Int8Array on
       // shared memory, etc.
       if (i % 8 != j % 8) {
-        do_print("Checking that typed array " + (view.constructor.name) +
-                 " can NOT be converted to " + item_type + " array");
+        info("Checking that typed array " + (view.constructor.name) +
+             " can NOT be converted to " + item_type + " array");
         do_check_throws(function() { array_type(view); }, TypeError);
       } else {
-        do_print("Checking that typed array " + (view.constructor.name) +
-                 " can be converted to " + item_type + " array");
+        info("Checking that typed array " + (view.constructor.name) +
+             " can be converted to " + item_type + " array");
 
         // Convert ArrayBuffer to array of the right size and check contents
         let c_array = array_type(c_arraybuffer);
@@ -1804,8 +1804,8 @@ function run_PointerType_tests() {
       let view = typed_array_samples[i][0];
       let item_type = typed_array_samples[j][1];
 
-      do_print("Checking that typed array " + (view.constructor.name) +
-               " can NOT be converted to " + item_type + " pointer/array");
+      info("Checking that typed array " + (view.constructor.name) +
+           " can NOT be converted to " + item_type + " pointer/array");
       do_check_throws(function() { item_type.ptr(c_arraybuffer); }, TypeError);
       do_check_throws(function() { item_type.ptr(view); }, TypeError);
       do_check_throws(function() { ctypes.voidptr_t(c_arraybuffer); }, TypeError);

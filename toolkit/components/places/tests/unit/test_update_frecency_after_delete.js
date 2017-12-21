@@ -13,8 +13,8 @@
  */
 
 add_task(async function removed_bookmark() {
-  do_print("After removing bookmark, frecency of bookmark's URI should be " +
-           "zero if URI is unvisited and no longer bookmarked.");
+  info("After removing bookmark, frecency of bookmark's URI should be " +
+       "zero if URI is unvisited and no longer bookmarked.");
   const TEST_URI = Services.io.newURI("http://example.com/1");
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -23,13 +23,13 @@ add_task(async function removed_bookmark() {
   });
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  do_print("Bookmarked => frecency of URI should be != 0");
+  info("Bookmarked => frecency of URI should be != 0");
   Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.remove(bm);
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  do_print("Unvisited URI no longer bookmarked => frecency should = 0");
+  info("Unvisited URI no longer bookmarked => frecency should = 0");
   Assert.equal(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
@@ -37,8 +37,8 @@ add_task(async function removed_bookmark() {
 });
 
 add_task(async function removed_but_visited_bookmark() {
-  do_print("After removing bookmark, frecency of bookmark's URI should " +
-           "not be zero if URI is visited.");
+  info("After removing bookmark, frecency of bookmark's URI should " +
+       "not be zero if URI is visited.");
   const TEST_URI = Services.io.newURI("http://example.com/1");
   let bm = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -47,14 +47,14 @@ add_task(async function removed_but_visited_bookmark() {
   });
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  do_print("Bookmarked => frecency of URI should be != 0");
+  info("Bookmarked => frecency of URI should be != 0");
   Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesTestUtils.addVisits(TEST_URI);
   await PlacesUtils.bookmarks.remove(bm);
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  do_print("*Visited* URI no longer bookmarked => frecency should != 0");
+  info("*Visited* URI no longer bookmarked => frecency should != 0");
   Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
@@ -62,8 +62,8 @@ add_task(async function removed_but_visited_bookmark() {
 });
 
 add_task(async function remove_bookmark_still_bookmarked() {
-  do_print("After removing bookmark, frecency of bookmark's URI should " +
-           "not be zero if URI is still bookmarked.");
+  info("After removing bookmark, frecency of bookmark's URI should " +
+       "not be zero if URI is still bookmarked.");
   const TEST_URI = Services.io.newURI("http://example.com/1");
   let bm1 = await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -77,13 +77,13 @@ add_task(async function remove_bookmark_still_bookmarked() {
   });
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  do_print("Bookmarked => frecency of URI should be != 0");
+  info("Bookmarked => frecency of URI should be != 0");
   Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.remove(bm1);
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  do_print("URI still bookmarked => frecency should != 0");
+  info("URI still bookmarked => frecency should != 0");
   Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
@@ -91,8 +91,8 @@ add_task(async function remove_bookmark_still_bookmarked() {
 });
 
 add_task(async function cleared_parent_of_visited_bookmark() {
-  do_print("After removing all children from bookmark's parent, frecency " +
-           "of bookmark's URI should not be zero if URI is visited.");
+  info("After removing all children from bookmark's parent, frecency " +
+       "of bookmark's URI should not be zero if URI is visited.");
   const TEST_URI = Services.io.newURI("http://example.com/1");
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.unfiledGuid,
@@ -101,14 +101,14 @@ add_task(async function cleared_parent_of_visited_bookmark() {
   });
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  do_print("Bookmarked => frecency of URI should be != 0");
+  info("Bookmarked => frecency of URI should be != 0");
   Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesTestUtils.addVisits(TEST_URI);
   await PlacesUtils.bookmarks.eraseEverything();
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  do_print("*Visited* URI no longer bookmarked => frecency should != 0");
+  info("*Visited* URI no longer bookmarked => frecency should != 0");
   Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
@@ -116,9 +116,9 @@ add_task(async function cleared_parent_of_visited_bookmark() {
 });
 
 add_task(async function cleared_parent_of_bookmark_still_bookmarked() {
-  do_print("After removing all children from bookmark's parent, frecency " +
-           "of bookmark's URI should not be zero if URI is still " +
-           "bookmarked.");
+  info("After removing all children from bookmark's parent, frecency " +
+       "of bookmark's URI should not be zero if URI is still " +
+       "bookmarked.");
   const TEST_URI = Services.io.newURI("http://example.com/1");
   await PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
@@ -138,7 +138,7 @@ add_task(async function cleared_parent_of_bookmark_still_bookmarked() {
   });
 
   await PlacesTestUtils.promiseAsyncUpdates();
-  do_print("Bookmarked => frecency of URI should be != 0");
+  info("Bookmarked => frecency of URI should be != 0");
   Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.remove(folder);

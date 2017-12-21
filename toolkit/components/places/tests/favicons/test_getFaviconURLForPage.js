@@ -47,27 +47,27 @@ add_task(async function test_fallback() {
   const ROOT_ICON_URL = ROOT_URL + "favicon.ico";
   const SUBPAGE_URL = ROOT_URL + "/missing";
 
-  do_print("Set icon for the root");
+  info("Set icon for the root");
   await PlacesTestUtils.addVisits(ROOT_URL);
   let data = readFileData(do_get_file("favicon-normal16.png"));
   PlacesUtils.favicons.replaceFaviconData(NetUtil.newURI(ROOT_ICON_URL),
                                           data, data.length, "image/png");
   await setFaviconForPage(ROOT_URL, ROOT_ICON_URL);
 
-  do_print("check fallback icons");
+  info("check fallback icons");
   Assert.equal(await getFaviconUrlForPage(ROOT_URL), ROOT_ICON_URL,
                "The root should have its favicon");
   Assert.equal(await getFaviconUrlForPage(SUBPAGE_URL), ROOT_ICON_URL,
                "The page should fallback to the root icon");
 
-  do_print("Now add a proper icon for the page");
+  info("Now add a proper icon for the page");
   await PlacesTestUtils.addVisits(SUBPAGE_URL);
   let data32 = readFileData(do_get_file("favicon-normal32.png"));
   PlacesUtils.favicons.replaceFaviconData(NetUtil.newURI(ICON32_URL),
                                           data32, data32.length, "image/png");
   await setFaviconForPage(SUBPAGE_URL, ICON32_URL);
 
-  do_print("check no fallback icons");
+  info("check no fallback icons");
   Assert.equal(await getFaviconUrlForPage(ROOT_URL), ROOT_ICON_URL,
                "The root should still have its favicon");
   Assert.equal(await getFaviconUrlForPage(SUBPAGE_URL), ICON32_URL,

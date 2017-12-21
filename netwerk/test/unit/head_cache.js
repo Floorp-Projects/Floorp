@@ -119,7 +119,7 @@ function get_device_entry_count(where, lci, continuation) {
 
   var visitor = {
     onCacheStorageInfo: function (entryCount, consumption) {
-      do_execute_soon(function() {
+      executeSoon(function() {
         continuation(entryCount, consumption);
       });
     },

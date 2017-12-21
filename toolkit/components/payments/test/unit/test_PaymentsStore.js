@@ -44,7 +44,7 @@ add_task(async function test_setState() {
   Assert.equal(state.one, "a", "Check .one");
   Assert.equal(state.two, "b", "Check .two");
 
-  do_print("check consecutive setState for the same prop");
+  info("check consecutive setState for the same prop");
   ps.setState({
     one: "c",
   });
@@ -80,7 +80,7 @@ add_task(async function test_subscribe_unsubscribe() {
   sinon.spy(subscriber, "stateChangeCallback");
   subscriber.reset();
   ps.subscribe(subscriber);
-  do_print("subscribe the same listener twice to ensure it still doesn't call the callback");
+  info("subscribe the same listener twice to ensure it still doesn't call the callback");
   ps.subscribe(subscriber);
   Assert.ok(subscriber.stateChangeCallback.notCalled,
             "Check not called synchronously when subscribing");
@@ -96,7 +96,7 @@ add_task(async function test_subscribe_unsubscribe() {
                "Check resolved state is last state");
   Assert.equal(JSON.stringify(state), `{"a":1}`, "Check callback state");
 
-  do_print("Testing consecutive setState");
+  info("Testing consecutive setState");
   subscriber.reset();
   subscriber.stateChangeCallback.reset();
   changePromise = subscriber.stateChangePromise;
@@ -114,7 +114,7 @@ add_task(async function test_subscribe_unsubscribe() {
   Assert.equal(JSON.stringify(subscriber.stateChangeCallback.getCall(0).args[0]), `{"a":3}`,
                "Check callback state matches second setState");
 
-  do_print("test unsubscribe");
+  info("test unsubscribe");
   subscriber.stateChangeCallback = function unexpectedChange() {
     Assert.ok(false, "stateChangeCallback shouldn't be called after unsubscribing");
   };

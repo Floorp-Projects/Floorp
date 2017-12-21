@@ -30,7 +30,7 @@ var callback = {
 };
 
 let policy;
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   policy.active = false;
 });
 

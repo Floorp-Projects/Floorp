@@ -72,7 +72,7 @@ add_task(async function test_privacy() {
     }
   }
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     // Reset the prefs.
     for (let setting in SETTINGS) {
       for (let pref in SETTINGS[setting]) {
@@ -267,7 +267,7 @@ add_task(async function test_privacy_other_prefs() {
     }
   }
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     // Reset the prefs.
     for (let setting in SETTINGS) {
       for (let pref in SETTINGS[setting]) {

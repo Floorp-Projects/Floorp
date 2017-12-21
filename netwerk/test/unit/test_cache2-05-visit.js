@@ -10,7 +10,7 @@ function run_test()
     // by postponing the writes using do_execute_soon. We must do the same here
     // to make sure that all writes are posted to Cache I/O thread before we
     // visit the storage.
-    do_execute_soon(function() {
+    executeSoon(function() {
       syncWithCacheIOThread(function() {
 
         var expectedConsumption = 4096;

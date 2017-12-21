@@ -508,7 +508,7 @@ add_task(async function test_remove() {
 
 MERGE_TESTCASES.forEach((testcase) => {
   add_task(async function test_merge() {
-    do_print("Starting testcase: " + testcase.description);
+    info("Starting testcase: " + testcase.description);
     let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
                                                   [testcase.addressInStorage]);
     let addresses = profileStorage.addresses.getAll();

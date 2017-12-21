@@ -142,6 +142,6 @@ async function run_test() {
     Assert.ok(!isExtensionInAddonsList(profileDir, a5.id));
     do_check_not_in_crash_annotation(addon5.id, addon5.version);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

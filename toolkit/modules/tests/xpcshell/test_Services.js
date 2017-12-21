@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 function checkService(service, interface) {
-  do_print("Checking that Services." + service + " is an " + interface);
+  info("Checking that Services." + service + " is an " + interface);
   Assert.ok(service in Services);
   Assert.ok(Services[service] instanceof interface);
 }

@@ -25,19 +25,19 @@ async function test_setPosition(forward, current, backward) {
       let pos = 0;
 
       // 1. seek forward from start
-      do_print("Moving forward: " + forward);
+      info("Moving forward: " + forward);
       await file.setPosition(forward, OS.File.POS_START);
       pos += forward;
       Assert.equal((await file.getPosition()), pos);
 
       // 2. seek forward from current position
-      do_print("Moving current: " + current);
+      info("Moving current: " + current);
       await file.setPosition(current, OS.File.POS_CURRENT);
       pos += current;
       Assert.equal((await file.getPosition()), pos);
 
       // 3. seek backward from current position
-      do_print("Moving current backward: " + backward);
+      info("Moving current backward: " + backward);
       await file.setPosition(-backward, OS.File.POS_CURRENT);
       pos -= backward;
       Assert.equal((await file.getPosition()), pos);
@@ -92,7 +92,7 @@ async function test_setPosition_failures() {
         await file.setPosition(1, OS.File.POS_CURRENT);
         do_throw("Shouldn't have succeeded");
       } catch (ex) {
-        do_print(ex.toString());
+        info(ex.toString());
         Assert.ok(!!ex);
       }
 

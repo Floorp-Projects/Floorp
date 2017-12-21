@@ -246,7 +246,7 @@ add_task(async function test_unsetKeyword() {
 
   let bookmarks = [];
   await PlacesUtils.bookmarks.fetch({ url: URI2 }, bookmark => bookmarks.push(bookmark));
-  do_print(bookmarks.length);
+  info(bookmarks.length);
   observer.check([ { name: "onItemChanged",
                      arguments: [ (await PlacesUtils.promiseItemId(bookmarks[0].guid)),
                                   "keyword", false, "",

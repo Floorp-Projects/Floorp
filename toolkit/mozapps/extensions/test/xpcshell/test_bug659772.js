@@ -192,7 +192,7 @@ async function run_test_1() {
         a2_2.uninstall();
         a3_2.uninstall();
         a4_2.uninstall();
-        do_execute_soon(run_test_2);
+        executeSoon(run_test_2);
       });
     });
   });
@@ -248,7 +248,7 @@ async function run_test_2() {
     installAllFiles([
       do_get_addon("test_bug659772"),
       do_get_addon("test_bootstrap1_1")
-    ], function() { do_execute_soon(prepare_schema_migrate); });
+    ], function() { executeSoon(prepare_schema_migrate); });
 
     async function prepare_schema_migrate() {
       shutdownManager();

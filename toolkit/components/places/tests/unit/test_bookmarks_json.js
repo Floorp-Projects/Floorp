@@ -136,7 +136,7 @@ add_task(async function test_clean() {
 
 async function testImportedBookmarks() {
   for (let group in test_bookmarks) {
-    do_print("[testImportedBookmarks()] Checking group '" + group + "'");
+    info("[testImportedBookmarks()] Checking group '" + group + "'");
 
     let root;
     switch (group) {

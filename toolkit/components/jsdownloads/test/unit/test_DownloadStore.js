@@ -224,7 +224,7 @@ add_task(async function test_load_string_malformed() {
     if (ex.name != "SyntaxError") {
       throw ex;
     }
-    do_print("The expected SyntaxError exception was thrown.");
+    info("The expected SyntaxError exception was thrown.");
   }
 
   let items = await list.getAll();

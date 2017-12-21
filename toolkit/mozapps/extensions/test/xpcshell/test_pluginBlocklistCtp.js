@@ -74,7 +74,7 @@ function test_basic() {
   Assert.ok(blocklist.getPluginBlocklistState(PLUGINS[5], "1", "1.9") == nsIBLS.STATE_NOT_BLOCKED);
 
   gNextTest = test_is_not_clicktoplay;
-  do_execute_soon(gNextTest);
+  executeSoon(gNextTest);
 }
 
 function get_test_plugin() {
@@ -153,7 +153,7 @@ function test_disable_blocklist() {
 // Observe "blocklist-updated" so we know when to advance to the next test
 function observer() {
   if (gNextTest)
-    do_execute_soon(gNextTest);
+    executeSoon(gNextTest);
 }
 
 function run_test() {
@@ -167,7 +167,7 @@ function run_test() {
   gNotifier = Components.classes["@mozilla.org/extensions/blocklist;1"].getService(Components.interfaces.nsITimerCallback);
   Services.obs.addObserver(observer, "blocklist-updated");
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     Services.prefs.clearUserPref("extensions.blocklist.url");
     Services.prefs.clearUserPref("extensions.blocklist.enabled");
     Services.prefs.clearUserPref("plugins.click_to_play");

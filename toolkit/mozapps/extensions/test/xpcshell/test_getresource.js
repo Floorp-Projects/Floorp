@@ -85,7 +85,7 @@ function run_test() {
           AddonManager.getAddonByID("addon1@tests.mozilla.org", function(newa1) {
             Assert.equal(newa1, null);
 
-            do_execute_soon(do_test_finished);
+            executeSoon(do_test_finished);
           });
         }));
       });

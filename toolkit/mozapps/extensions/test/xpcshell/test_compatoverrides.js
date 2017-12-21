@@ -242,17 +242,17 @@ function check_compat_status(aCallback) {
     Assert.ok(a10.isCompatible);
     Assert.ok(!a10.appDisabled);
 
-    do_execute_soon(aCallback);
+    executeSoon(aCallback);
   });
 }
 
 function run_test_1() {
-  do_print("Run test 1");
+  info("Run test 1");
   check_compat_status(run_test_2);
 }
 
 function run_test_2() {
-  do_print("Run test 2");
+  info("Run test 2");
   restartManager();
   check_compat_status(end_test);
 }

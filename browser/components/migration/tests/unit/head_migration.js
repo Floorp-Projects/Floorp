@@ -64,7 +64,7 @@ function registerFakePath(key, file) {
   }
 
   dirsvc.set(key, file);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     dirsvc.undefine(key);
     if (originalFile) {
       dirsvc.set(key, originalFile);

@@ -22,7 +22,7 @@ function ensureExtracted(target) {
   for (let i = 0; i < ENTRIES.length; i++) {
     let entry = target.clone();
     entry.append(ENTRIES[i]);
-    do_print("ENTRY " + entry.path);
+    info("ENTRY " + entry.path);
     Assert.ok(entry.exists());
   }
 }
@@ -48,11 +48,11 @@ add_task(async function test_extractFilesAsync() {
 
   await ZipUtils.extractFilesAsync(archive, target).then(
     function success() {
-      do_print("SUCCESS");
+      info("SUCCESS");
       ensureExtracted(target);
     },
     function failure() {
-      do_print("FAILURE");
+      info("FAILURE");
       do_throw("Failed to extract asynchronously!");
     }
   );

@@ -16,7 +16,7 @@ var WORKER_SOURCE_URI = "chrome://promiseworker/content/worker.js";
 do_load_manifest("data/chrome.manifest");
 var worker = new BasePromiseWorker(WORKER_SOURCE_URI);
 worker.log = function(...args) {
-  do_print("Controller: " + args.join(" "));
+  info("Controller: " + args.join(" "));
 };
 
 // Test that simple messages work
@@ -59,7 +59,7 @@ add_task(async function test_rejected_promise_args() {
   } catch (ex) {
     if (ex != error)
       throw ex;
-    do_print("I threw the right error");
+    info("I threw the right error");
   }
 });
 

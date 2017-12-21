@@ -12,11 +12,11 @@
  * Test case comes from test_645970.js
  */
 function run_test() {
-  do_print("Setting up test");
+  info("Setting up test");
 
   do_test_pending();
 
-  do_print("Test starting");
+  info("Test starting");
   let numberOfInitializers = 4;
   let pending = [];
   let numberPending = numberOfInitializers;

@@ -140,7 +140,7 @@ function handleMinidump(callback) {
   memoryfile.leafName = memoryfile.leafName.slice(0, -4) + ".memory.json.gz";
 
   // Just in case, don't let these files linger.
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     if (minidump.exists()) {
       minidump.remove(false);
     }
@@ -217,7 +217,7 @@ function do_content_crash(setup, callback) {
     sendCommand("load(\"" + headfile.path.replace(/\\/g, "/") + "\");", () =>
       sendCommand(setup, () =>
         sendCommand("load(\"" + tailfile.path.replace(/\\/g, "/") + "\");", () =>
-          do_execute_soon(handleCrash)
+          executeSoon(handleCrash)
         )
       )
     );
@@ -267,7 +267,7 @@ function do_triggered_content_crash(trigger, callback) {
   makeFakeAppDir().then(() => {
     sendCommand("load(\"" + headfile.path.replace(/\\/g, "/") + "\");", () =>
       sendCommand(trigger, () =>
-        do_execute_soon(handleCrash)
+        executeSoon(handleCrash)
       )
     );
   });

@@ -315,6 +315,6 @@ function run_next_test() {
     // Set last VACUUM to a date in the past.
     Services.prefs.setIntPref("storage.vacuum.last.testVacuum.sqlite",
                               parseInt(Date.now() / 1000 - 31 * 86400));
-    do_execute_soon(TESTS.shift());
+    executeSoon(TESTS.shift());
   }
 }

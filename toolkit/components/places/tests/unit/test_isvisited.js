@@ -53,7 +53,7 @@ add_task(async function test_execute() {
       // nsIIOService.newURI() can throw if e.g. our app knows about imap://
       // but the account is not set up and so the URL is invalid for us.
       // Note this in the log but ignore as it's not the subject of this test.
-      do_print("Could not construct URI for '" + currentURL + "'; ignoring");
+      info("Could not construct URI for '" + currentURL + "'; ignoring");
     }
     if (cantAddUri) {
       PlacesTestUtils.addVisits({uri: cantAddUri, referrer}).then(() => {

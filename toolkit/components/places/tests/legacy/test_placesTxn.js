@@ -112,7 +112,7 @@ var root = PlacesUtils.bookmarksMenuFolderId;
 
 add_task(async function init() {
   bmsvc.addObserver(observer);
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     bmsvc.removeObserver(observer);
   });
 });

@@ -43,7 +43,7 @@ function run_test_2() {
     Assert.equal(addon.description, "fr-FR Description");
 
     addon.userDisabled = true;
-    do_execute_soon(run_test_3);
+    executeSoon(run_test_3);
   });
 }
 
@@ -55,7 +55,7 @@ function run_test_3() {
     Assert.notEqual(addon, null);
     Assert.equal(addon.name, "fr-FR Name");
 
-    do_execute_soon(run_test_4);
+    executeSoon(run_test_4);
   });
 }
 
@@ -75,7 +75,7 @@ function run_test_4() {
     Assert.equal(contributors[1], "Fr Contributor 2");
     Assert.equal(contributors[2], "Fr Contributor 3");
 
-    do_execute_soon(run_test_5);
+    executeSoon(run_test_5);
   });
 }
 
@@ -90,7 +90,7 @@ function run_test_5() {
     Assert.equal(addon.name, "de-DE Name");
     Assert.equal(addon.description, null);
 
-    do_execute_soon(run_test_6);
+    executeSoon(run_test_6);
   });
 }
 
@@ -106,7 +106,7 @@ function run_test_6() {
     Assert.equal(addon.description, "Fallback Description");
 
     addon.userDisabled = false;
-    do_execute_soon(run_test_7);
+    executeSoon(run_test_7);
   }));
 }
 
@@ -119,7 +119,7 @@ function run_test_7() {
 
     Assert.equal(addon.name, "Name from prefs");
 
-    do_execute_soon(run_test_8);
+    executeSoon(run_test_8);
   });
 }
 
@@ -137,6 +137,6 @@ function run_test_8() {
     Assert.equal(contributors[0], "Contributor 1");
     Assert.equal(contributors[1], "Contributor 2");
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

@@ -107,7 +107,7 @@ function truncateEntry(entry, entryInput) {
 
 function check_open_result(name, expectedRv) {
   return function openSignedAppFileCallback(rv, aZipReader, aSignerCert) {
-    do_print("openSignedAppFileCallback called for " + name);
+    info("openSignedAppFileCallback called for " + name);
     equal(rv, expectedRv, "Actual and expected return value should match");
     equal(aZipReader != null, Components.isSuccessCode(expectedRv),
           "ZIP reader should be null only if the return value denotes failure");

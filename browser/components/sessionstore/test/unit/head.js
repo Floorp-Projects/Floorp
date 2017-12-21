@@ -7,10 +7,10 @@ const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
 
 // Call a function once initialization of SessionStartup is complete
 function afterSessionStartupInitialization(cb) {
-  do_print("Waiting for session startup initialization");
+  info("Waiting for session startup initialization");
   let observer = function() {
     try {
-      do_print("Session startup initialization observed");
+      info("Session startup initialization observed");
       Services.obs.removeObserver(observer, "sessionstore-state-finalized");
       cb();
     } catch (ex) {

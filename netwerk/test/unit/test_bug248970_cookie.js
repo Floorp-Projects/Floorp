@@ -89,7 +89,7 @@ function run_test() {
   let tests = [];
   
   function runNextTest() {
-    do_execute_soon(tests.shift());
+    executeSoon(tests.shift());
   }
   
   tests.push(function() {

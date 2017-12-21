@@ -61,7 +61,7 @@ function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   startupManager();
-  do_register_cleanup(promiseShutdownManager);
+  registerCleanupFunction(promiseShutdownManager);
 
   run_next_test();
 }

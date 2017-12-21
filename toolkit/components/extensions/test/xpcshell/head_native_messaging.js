@@ -23,7 +23,7 @@ tmpDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 const TYPE_SLUG = AppConstants.platform === "linux" ? "native-messaging-hosts" : "NativeMessagingHosts";
 OS.File.makeDir(OS.Path.join(tmpDir.path, TYPE_SLUG));
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   tmpDir.remove(true);
 });
 
@@ -74,7 +74,7 @@ async function setupHosts(scripts) {
       };
 
       Services.dirsvc.registerProvider(dirProvider);
-      do_register_cleanup(() => {
+      registerCleanupFunction(() => {
         Services.dirsvc.unregisterProvider(dirProvider);
       });
 
@@ -89,7 +89,7 @@ async function setupHosts(scripts) {
       const REGKEY = String.raw`Software\Mozilla\NativeMessagingHosts`;
 
       let registry = new MockRegistry();
-      do_register_cleanup(() => {
+      registerCleanupFunction(() => {
         registry.shutdown();
       });
 

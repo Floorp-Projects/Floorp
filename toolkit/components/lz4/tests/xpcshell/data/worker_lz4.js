@@ -55,18 +55,18 @@ function test_import() {
 function test_bound() {
   for (let k of ["compress", "decompress", "maxCompressedSize"]) {
     try {
-      do_print("Checking the existence of " + k + "\n");
+      info("Checking the existence of " + k + "\n");
       Assert.ok(!!Internals[k]);
-      do_print(k + " exists");
+      info(k + " exists");
     } catch (ex) {
       // Ignore errors
-      do_print(k + " doesn't exist!");
+      info(k + " doesn't exist!");
     }
   }
 }
 
 function test_reference_file() {
-  do_print("Decompress reference file");
+  info("Decompress reference file");
   let path = OS.Path.join("data", "compression.lz");
   let data = OS.File.read(path);
   let decompressed = Lz4.decompressFileContent(data);
@@ -79,35 +79,35 @@ function compare_arrays(a, b) {
 }
 
 function run_rawcompression(name, array) {
-  do_print("Raw compression test " + name);
+  info("Raw compression test " + name);
   let length = array.byteLength;
   let compressedArray = new Uint8Array(Internals.maxCompressedSize(length));
   let compressedBytes = Internals.compress(array, length, compressedArray);
   compressedArray = new Uint8Array(compressedArray.buffer, 0, compressedBytes);
-  do_print("Raw compressed: " + length + " into " + compressedBytes);
+  info("Raw compressed: " + length + " into " + compressedBytes);
 
   let decompressedArray = new Uint8Array(length);
   let decompressedBytes = new ctypes.size_t();
   let success = Internals.decompress(compressedArray, compressedBytes,
                                      decompressedArray, length,
                                      decompressedBytes.address());
-  do_print("Raw decompression success? " + success);
-  do_print("Raw decompression size: " + decompressedBytes.value);
+  info("Raw decompression success? " + success);
+  info("Raw decompression size: " + decompressedBytes.value);
   Assert.ok(compare_arrays(array, decompressedArray));
 }
 
 function run_filecompression(name, array) {
-  do_print("File compression test " + name);
+  info("File compression test " + name);
   let compressed = Lz4.compressFileContent(array);
-  do_print("Compressed " + array.byteLength + " bytes into " + compressed.byteLength);
+  info("Compressed " + array.byteLength + " bytes into " + compressed.byteLength);
 
   let decompressed = Lz4.decompressFileContent(compressed);
-  do_print("Decompressed " + compressed.byteLength + " bytes into " + decompressed.byteLength);
+  info("Decompressed " + compressed.byteLength + " bytes into " + decompressed.byteLength);
   Assert.ok(compare_arrays(array, decompressed));
 }
 
 function run_faileddecompression(name, array) {
-  do_print("invalid decompression test " + name);
+  info("invalid decompression test " + name);
 
   // Ensure that raw decompression doesn't segfault
   let length = 1 << 14;

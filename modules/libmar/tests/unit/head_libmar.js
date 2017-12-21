@@ -59,7 +59,7 @@ function run_tests(obj) {
     cleanup_per_test = function __cleanup_per_test() {};
   }
 
-  do_register_cleanup(cleanup_per_test);
+  registerCleanupFunction(cleanup_per_test);
 
   // Make sure there's nothing left over from a preious failed test
   cleanup_per_test();
@@ -114,7 +114,7 @@ function createMAR(outMAR, dataDir, files) {
               "-V", "13.0a1", "-c", outMAR.path];
   args = args.concat(files);
 
-  do_print('Running: ' + signmarBin.path + " " + args.join(" "));
+  info('Running: ' + signmarBin.path + " " + args.join(" "));
   process.init(signmarBin);
   process.run(true, args, args.length);
 
@@ -144,7 +144,7 @@ function extractMAR(mar, dataDir) {
   // Setup the command line arguments to create the MAR.
   let args = ["-C", dataDir.path, "-x", mar.path];
 
-  do_print('Running: ' + signmarBin.path + " " + args.join(" "));
+  info('Running: ' + signmarBin.path + " " + args.join(" "));
   process.init(signmarBin);
   process.run(true, args, args.length);
 

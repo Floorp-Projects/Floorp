@@ -185,7 +185,7 @@ OpenCallback.prototype =
       }
 
       var self = this;
-      do_execute_soon(function() { // emulate network latency
+      executeSoon(function() { // emulate network latency
         entry.setMetaDataElement("meto", self.workingMetadata);
         entry.metaDataReady();
         if (self.behavior & METAONLY) {
@@ -199,7 +199,7 @@ OpenCallback.prototype =
 
           return;
         }
-        do_execute_soon(function() { // emulate more network latency
+        executeSoon(function() { // emulate more network latency
           if (self.behavior & DOOMED) {
             LOG_C2(self, "checking doom state");
             try {
@@ -264,7 +264,7 @@ OpenCallback.prototype =
   {
     LOG_C2(this, "Throwing");
     var self = this;
-    do_execute_soon(function() {
+    executeSoon(function() {
       LOG_C2(self, "Notifying");
       self.goon(entry);
     });
@@ -340,7 +340,7 @@ VisitCallback.prototype =
     Assert.ok(!!this.goon);
     var goon = this.goon;
     this.goon = null;
-    do_execute_soon(goon);
+    executeSoon(goon);
   },
   selfCheck: function()
   {
@@ -391,7 +391,7 @@ MultipleCallbacks.prototype =
     {
       var self = this;
       if (this.delayed)
-        do_execute_soon(function() { self.goon(); });
+        executeSoon(function() { self.goon(); });
       else
         this.goon();
     }

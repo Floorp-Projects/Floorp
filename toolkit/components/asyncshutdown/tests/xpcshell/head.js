@@ -165,8 +165,8 @@ function do_check_exn(exn, constructor) {
     Assert.equal(exn.constructor.name, constructor);
     return;
   }
-  do_print("Wrong error constructor");
-  do_print(exn.constructor.name);
-  do_print(exn.stack);
+  info("Wrong error constructor");
+  info(exn.constructor.name);
+  info(exn.stack);
   Assert.ok(false);
 }

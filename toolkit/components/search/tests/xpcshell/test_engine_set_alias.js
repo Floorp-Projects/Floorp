@@ -8,7 +8,7 @@ function run_test() {
 
 add_task(async function test_engine_set_alias() {
   await asyncInit();
-  do_print("Set engine alias");
+  info("Set engine alias");
   let [engine1] = await addTestEngines([
     {
       name: "bacon",
@@ -22,7 +22,7 @@ add_task(async function test_engine_set_alias() {
 });
 
 add_task(async function test_engine_set_alias_with_left_space() {
-  do_print("Set engine alias with left space");
+  info("Set engine alias with left space");
   let [engine2] = await addTestEngines([
     {
       name: "bacon",
@@ -36,7 +36,7 @@ add_task(async function test_engine_set_alias_with_left_space() {
 });
 
 add_task(async function test_engine_set_alias_with_right_space() {
-  do_print("Set engine alias with right space");
+  info("Set engine alias with right space");
   let [engine3] = await addTestEngines([
     {
       name: "bacon",
@@ -50,7 +50,7 @@ add_task(async function test_engine_set_alias_with_right_space() {
 });
 
 add_task(async function test_engine_set_alias_with_right_left_space() {
-  do_print("Set engine alias with left and right space");
+  info("Set engine alias with left and right space");
   let [engine4] = await addTestEngines([
     {
       name: "bacon",
@@ -64,7 +64,7 @@ add_task(async function test_engine_set_alias_with_right_left_space() {
 });
 
 add_task(async function test_engine_set_alias_with_space() {
-  do_print("Set engine alias with space");
+  info("Set engine alias with space");
   let [engine5] = await addTestEngines([
     {
       name: "bacon",

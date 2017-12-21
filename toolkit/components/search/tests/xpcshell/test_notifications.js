@@ -29,7 +29,7 @@ function search_observer(subject, topic, data) {
   let engine = subject.QueryInterface(Ci.nsISearchEngine);
   gTestLog.push(data + " for " + engine.name);
 
-  do_print("Observer: " + data + " for " + engine.name);
+  info("Observer: " + data + " for " + engine.name);
 
   switch (data) {
     case "engine-added":
@@ -37,15 +37,15 @@ function search_observer(subject, topic, data) {
       Assert.equal(engine, retrievedEngine);
       Services.search.defaultEngine = engine;
       Services.search.currentEngine = engine;
-      do_execute_soon(function() {
+      executeSoon(function() {
         Services.search.removeEngine(engine);
       });
       break;
     case "engine-removed":
       let engineNameOutput = " for Test search engine";
       expectedLog = expectedLog.map(logLine => logLine + engineNameOutput);
-      do_print("expectedLog:\n" + expectedLog.join("\n"));
-      do_print("gTestLog:\n" + gTestLog.join("\n"));
+      info("expectedLog:\n" + expectedLog.join("\n"));
+      info("gTestLog:\n" + gTestLog.join("\n"));
       for (let i = 0; i < expectedLog.length; i++) {
         Assert.equal(gTestLog[i], expectedLog[i]);
       }
@@ -58,7 +58,7 @@ function search_observer(subject, topic, data) {
 function run_test() {
   useHttpServer();
 
-  do_register_cleanup(function cleanup() {
+  registerCleanupFunction(function cleanup() {
     Services.obs.removeObserver(search_observer, "browser-search-engine-modified");
   });
 

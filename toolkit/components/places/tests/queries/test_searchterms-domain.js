@@ -72,9 +72,9 @@ add_task(async function test_searchterms_domain() {
   var root = result.root;
   root.containerOpen = true;
 
-  do_print("Number of items in result set: " + root.childCount);
+  info("Number of items in result set: " + root.childCount);
   for (var i = 0; i < root.childCount; ++i) {
-    do_print("result: " + root.getChild(i).uri + " Title: " + root.getChild(i).title);
+    info("result: " + root.getChild(i).uri + " Title: " + root.getChild(i).title);
   }
 
   // Check our inital result set
@@ -82,14 +82,14 @@ add_task(async function test_searchterms_domain() {
 
   // If that passes, check liveupdate
   // Add to the query set
-  do_print("Adding item to query");
+  info("Adding item to query");
   var change1 = [{isVisit: true, isDetails: true, uri: "http://foo.com/added.htm",
                   title: "moz", transType: PlacesUtils.history.TRANSITION_LINK}];
   await task_populateDB(change1);
   Assert.ok(isInResult(change1, root));
 
   // Update an existing URI
-  do_print("Updating Item");
+  info("Updating Item");
   var change2 = [{isDetails: true, uri: "http://foo.com/changeme1.htm",
                   title: "moz" }];
   await task_populateDB(change2);
@@ -97,7 +97,7 @@ add_task(async function test_searchterms_domain() {
 
   // Add one and take one out of query set, and simply change one so that it
   // still applies to the query.
-  do_print("Updating More Items");
+  info("Updating More Items");
   var change3 = [{isDetails: true, uri: "http://foo.com/changeme2.htm",
                   title: "moz"},
                  {isDetails: true, uri: "http://mail.foo.com/yiihah",
@@ -109,7 +109,7 @@ add_task(async function test_searchterms_domain() {
   Assert.ok(!isInResult({uri: "ftp://foo.com/ftp"}, root));
 
   // And now, delete one
-  do_print("Deleting items");
+  info("Deleting items");
   var change4 = [{isDetails: true, uri: "https://foo.com/",
                   title: "mo,z"}];
   await task_populateDB(change4);

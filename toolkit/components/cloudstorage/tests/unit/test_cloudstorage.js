@@ -29,7 +29,7 @@ function run_test() {
   initPrefs();
   registerFakePath("Home", do_get_file("cloud/"));
   registerFakePath("LocalAppData", do_get_file("cloud/"));
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     cleanupPrefs();
   });
   run_next_test();
@@ -58,7 +58,7 @@ function registerFakePath(key, file) {
   }
 
   dirsvc.set(key, file);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     dirsvc.undefine(key);
     if (originalFile) {
       dirsvc.set(key, originalFile);
@@ -88,7 +88,7 @@ function mock_dropbox() {
     downloadFolder.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   }
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     if (discoveryFolder.exists()) {
       discoveryFolder.remove(false);
     }
@@ -119,7 +119,7 @@ function mock_gdrive() {
     downloadFolder.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   }
 
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     if (discoveryFolder.exists()) {
       discoveryFolder.remove(false);
     }

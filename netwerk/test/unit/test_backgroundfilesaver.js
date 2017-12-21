@@ -297,7 +297,7 @@ add_task(async function test_combinations()
   let currentFile = null;
   function onTargetChange(aTarget) {
     currentFile = null;
-    do_print("Target file changed to: " + aTarget.leafName);
+    info("Target file changed to: " + aTarget.leafName);
     currentFile = aTarget;
   }
 
@@ -311,11 +311,11 @@ add_task(async function test_combinations()
     let useLongData = !!(testFlags & 16);
 
     let startTime = Date.now();
-    do_print("Starting keepPartialOnFailure = " + keepPartialOnFailure +
-                    ", renameAtSomePoint = " + renameAtSomePoint +
-                    ", cancelAtSomePoint = " + cancelAtSomePoint +
-                    ", useStreamListener = " + useStreamListener +
-                    ", useLongData = " + useLongData);
+    info("Starting keepPartialOnFailure = " + keepPartialOnFailure +
+                ", renameAtSomePoint = " + renameAtSomePoint +
+                ", cancelAtSomePoint = " + cancelAtSomePoint +
+                ", useStreamListener = " + useStreamListener +
+                ", useLongData = " + useLongData);
 
     // Create the object and register the observers.
     currentFile = null;
@@ -395,7 +395,7 @@ add_task(async function test_combinations()
       }
     }
 
-    do_print("Test case completed in " + (Date.now() - startTime) + " ms.");
+    info("Test case completed in " + (Date.now() - startTime) + " ms.");
   }
 });
 

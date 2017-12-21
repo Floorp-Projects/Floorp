@@ -6,7 +6,7 @@
 // that largely confuses completeDefaultIndex
 
 add_task(async function test_not_autofill_ws_1() {
-  do_print("Do not autofill whitespaced entry 1");
+  info("Do not autofill whitespaced entry 1");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/link/"),
     transition: TRANSITION_TYPED
@@ -20,7 +20,7 @@ add_task(async function test_not_autofill_ws_1() {
 });
 
 add_task(async function test_not_autofill_ws_2() {
-  do_print("Do not autofill whitespaced entry 2");
+  info("Do not autofill whitespaced entry 2");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/link/"),
     transition: TRANSITION_TYPED
@@ -34,7 +34,7 @@ add_task(async function test_not_autofill_ws_2() {
 });
 
 add_task(async function test_not_autofill_ws_3() {
-  do_print("Do not autofill whitespaced entry 3");
+  info("Do not autofill whitespaced entry 3");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/link/"),
     transition: TRANSITION_TYPED
@@ -48,7 +48,7 @@ add_task(async function test_not_autofill_ws_3() {
 });
 
 add_task(async function test_not_autofill_ws_4() {
-  do_print("Do not autofill whitespaced entry 4");
+  info("Do not autofill whitespaced entry 4");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/link/"),
     transition: TRANSITION_TYPED
@@ -63,7 +63,7 @@ add_task(async function test_not_autofill_ws_4() {
 
 
 add_task(async function test_not_autofill_ws_5() {
-  do_print("Do not autofill whitespaced entry 5");
+  info("Do not autofill whitespaced entry 5");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/link/"),
     transition: TRANSITION_TYPED
@@ -77,7 +77,7 @@ add_task(async function test_not_autofill_ws_5() {
 });
 
 add_task(async function test_not_autofill_ws_6() {
-  do_print("Do not autofill whitespaced entry 6");
+  info("Do not autofill whitespaced entry 6");
   await PlacesTestUtils.addVisits({
     uri: NetUtil.newURI("http://mozilla.org/link/"),
     transition: TRANSITION_TYPED

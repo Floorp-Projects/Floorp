@@ -57,7 +57,7 @@ async function run_test() {
       Assert.ok(a2.isActive);
       Assert.ok(isExtensionInAddonsList(profileDir, a2.id));
 
-      do_execute_soon(do_test_finished);
+      executeSoon(do_test_finished);
     });
   }));
 }

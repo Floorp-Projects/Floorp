@@ -37,7 +37,7 @@ complete(partialHash, gethashUrl, tableName, cb) {
       }
     cb.completionFinished(0);
   };
-  do_execute_soon(doCallback);
+  executeSoon(doCallback);
 },
 
 getHash(fragment) {

@@ -61,14 +61,14 @@ function runAsyncTests(tests, dontResetBefore = false) {
 
   next = asyncRunner.next.bind(asyncRunner);
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     asyncRunner.destroy();
     asyncRunner = null;
   });
 
   tests.forEach(function(test) {
     function* gen() {
-      do_print("Running " + test.name);
+      info("Running " + test.name);
       yield test();
       yield reset();
     }
@@ -383,7 +383,7 @@ function on(event, names, dontRemove) {
     cps.addObserverForName(name, obs);
   });
 
-  do_execute_soon(function() {
+  executeSoon(function() {
     if (!dontRemove)
       names.forEach(n => cps.removeObserverForName(n, observers[n]));
     next(args);
@@ -396,7 +396,7 @@ function schemaVersionIs(expectedVersion) {
 }
 
 function wait() {
-  do_execute_soon(next);
+  executeSoon(next);
 }
 
 function observerArgsOK(actualArgs, expectedArgs) {

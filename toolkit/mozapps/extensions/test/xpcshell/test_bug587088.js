@@ -110,7 +110,7 @@ function run_test_1() {
               check_addon(a1_4, "2.0");
 
               a1_4.uninstall();
-              do_execute_soon(run_test_2);
+              executeSoon(run_test_2);
             });
           }));
         }));
@@ -163,7 +163,7 @@ function run_test_2() {
             Assert.ok(!dir.exists());
             Assert.ok(!isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
 
-            do_execute_soon(do_test_finished);
+            executeSoon(do_test_finished);
           });
         }));
       }));

@@ -35,7 +35,7 @@ function run_test_1() {
       Assert.notEqual(newAddon, null);
       Assert.equal(newAddon.name, "fr Name");
 
-      do_execute_soon(run_test_2);
+      executeSoon(run_test_2);
     });
   }));
 }
@@ -50,7 +50,7 @@ function run_test_2() {
     Assert.equal(addon.name, "de-DE Name");
     Assert.equal(addon.description, null);
 
-    do_execute_soon(run_test_3);
+    executeSoon(run_test_3);
   });
 }
 
@@ -64,7 +64,7 @@ function run_test_3() {
     Assert.equal(addon.name, "de-DE Name");
     Assert.equal(addon.description, null);
 
-    do_execute_soon(run_test_4);
+    executeSoon(run_test_4);
   });
 }
 
@@ -78,7 +78,7 @@ function run_test_4() {
     Assert.equal(addon.name, "es-ES Name");
     Assert.equal(addon.description, "es-ES Description");
 
-    do_execute_soon(run_test_5);
+    executeSoon(run_test_5);
   });
 }
 
@@ -92,7 +92,7 @@ function run_test_5() {
     if (addon.name != "zh-TW Name" && addon.name != "zh-CN Name")
       do_throw("zh matched to " + addon.name);
 
-    do_execute_soon(run_test_6);
+    executeSoon(run_test_6);
   });
 }
 
@@ -107,6 +107,6 @@ function run_test_6() {
     Assert.equal(addon.name, "en Name");
     Assert.equal(addon.description, "en Description");
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

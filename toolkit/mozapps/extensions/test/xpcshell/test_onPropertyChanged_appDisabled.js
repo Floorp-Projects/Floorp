@@ -26,7 +26,7 @@ function run_test() {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(aAddon) {
     Assert.notEqual(aAddon, null);
     aAddon.userDisabled = true;
-    do_execute_soon(run_test_1);
+    executeSoon(run_test_1);
   });
 }
 

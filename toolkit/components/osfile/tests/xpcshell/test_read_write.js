@@ -31,7 +31,7 @@ add_test_pair(async function read_write_all() {
 
   let test_with_options = function(options, suffix) {
     return (async function() {
-      do_print("Running test read_write_all with options " + JSON.stringify(options));
+      info("Running test read_write_all with options " + JSON.stringify(options));
       let TEST = "read_write_all " + suffix;
 
       let optionsBackup = JSON.parse(JSON.stringify(options));
@@ -64,7 +64,7 @@ add_test_pair(async function read_write_all() {
         do_throw("With noOverwrite, writeAtomic should have refused to overwrite file (" + suffix + ")");
       } catch (err) {
         if (err instanceof OS.File.Error && err.becauseExists) {
-          do_print("With noOverwrite, writeAtomic correctly failed (" + suffix + ")");
+          info("With noOverwrite, writeAtomic correctly failed (" + suffix + ")");
         } else {
           throw err;
         }

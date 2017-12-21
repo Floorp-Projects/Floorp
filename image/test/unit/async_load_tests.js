@@ -196,7 +196,7 @@ function cleanup()
 
 function run_test()
 {
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   gCurrentLoader = Cc["@mozilla.org/image/loader;1"].createInstance(Ci.imgILoader);
 

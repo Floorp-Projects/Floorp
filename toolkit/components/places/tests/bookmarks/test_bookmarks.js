@@ -163,11 +163,11 @@ add_task(async function test_bookmarks() {
 
   // check lastModified after we set the title
   let lastModified2 = bs.getItemLastModified(newId);
-  do_print("test setItemTitle");
-  do_print("dateAdded = " + dateAdded);
-  do_print("beforeSetTitle = " + beforeSetTitle);
-  do_print("lastModified = " + lastModified);
-  do_print("lastModified2 = " + lastModified2);
+  info("test setItemTitle");
+  info("dateAdded = " + dateAdded);
+  info("beforeSetTitle = " + beforeSetTitle);
+  info("lastModified = " + lastModified);
+  info("lastModified2 = " + lastModified2);
   Assert.ok(is_time_ordered(lastModified, lastModified2));
   Assert.ok(is_time_ordered(dateAdded, lastModified2));
 
@@ -371,7 +371,7 @@ add_task(async function test_bookmarks() {
     let rootNode = result.root;
     rootNode.containerOpen = true;
     let cc = rootNode.childCount;
-    do_print("bookmark itemId test: CC = " + cc);
+    info("bookmark itemId test: CC = " + cc);
     Assert.ok(cc > 0);
     for (let i = 0; i < cc; ++i) {
       let node = rootNode.getChild(i);
@@ -435,10 +435,10 @@ add_task(async function test_bookmarks() {
 
   // check that lastModified is set after we change the bookmark uri
   lastModified2 = bs.getItemLastModified(newId10);
-  do_print("test changeBookmarkURI");
-  do_print("dateAdded = " + dateAdded);
-  do_print("lastModified = " + lastModified);
-  do_print("lastModified2 = " + lastModified2);
+  info("test changeBookmarkURI");
+  info("dateAdded = " + dateAdded);
+  info("lastModified = " + lastModified);
+  info("lastModified2 = " + lastModified2);
   Assert.ok(is_time_ordered(lastModified, lastModified2));
   Assert.ok(is_time_ordered(dateAdded, lastModified2));
 
@@ -615,9 +615,9 @@ function testSimpleFolderResult() {
   let parent = bs.createFolder(root, "test", bs.DEFAULT_INDEX);
 
   let dateCreated = bs.getItemDateAdded(parent);
-  do_print("check that the folder was created with a valid dateAdded");
-  do_print("beforeCreate = " + beforeCreate);
-  do_print("dateCreated = " + dateCreated);
+  info("check that the folder was created with a valid dateAdded");
+  info("beforeCreate = " + beforeCreate);
+  info("dateCreated = " + dateCreated);
   Assert.ok(is_time_ordered(beforeCreate, dateCreated));
 
   // the time before we insert, in microseconds
@@ -629,9 +629,9 @@ function testSimpleFolderResult() {
   let sep = bs.insertSeparator(parent, bs.DEFAULT_INDEX);
 
   let dateAdded = bs.getItemDateAdded(sep);
-  do_print("check that the separator was created with a valid dateAdded");
-  do_print("beforeInsert = " + beforeInsert);
-  do_print("dateAdded = " + dateAdded);
+  info("check that the separator was created with a valid dateAdded");
+  info("beforeInsert = " + beforeInsert);
+  info("dateAdded = " + dateAdded);
   Assert.ok(is_time_ordered(beforeInsert, dateAdded));
 
   // re-set item title separately so can test nodes' last modified

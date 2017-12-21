@@ -62,7 +62,7 @@ add_task(async function() {
   let systemParentDir = gTmpD.clone();
   systemParentDir.append("systemwide-extensions");
   registerDirectory("XRESysSExtPD", systemParentDir.clone());
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     systemParentDir.remove(true);
   });
 

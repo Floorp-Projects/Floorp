@@ -77,7 +77,7 @@ function run_test() {
   }];
 
   for (let { desc, animation, props, expectedName } of TEST_DATA) {
-    do_print(desc);
+    info(desc);
     for (let key in props) {
       animation[key] = props[key];
     }

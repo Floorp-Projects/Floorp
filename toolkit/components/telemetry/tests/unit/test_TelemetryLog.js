@@ -10,7 +10,7 @@ const TEST_REGEX = new RegExp("^" + TEST_PREFIX);
 const LOG_ENTRY_MAX_COUNT = 1000;
 
 function check_event(event, id, data) {
-  do_print("Checking message " + id);
+  info("Checking message " + id);
   Assert.equal(event[0], id);
   Assert.ok(event[1] > 0);
 

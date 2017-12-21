@@ -23,7 +23,7 @@ function run_test_1() {
       Assert.notEqual(a1, null);
       Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
 
-      do_execute_soon(run_test_2);
+      executeSoon(run_test_2);
     });
   });
 }
@@ -35,6 +35,6 @@ function run_test_2() {
     Assert.notEqual(a1, null);
     Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

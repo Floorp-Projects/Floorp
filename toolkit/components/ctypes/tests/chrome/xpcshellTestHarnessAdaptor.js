@@ -18,8 +18,8 @@ var Components = {
 };
 
 function do_throw(message, stack) {
-  do_print("error: " + message);
-  do_print("stack: " + (stack ? stack : new Error().stack));
+  info("error: " + message);
+  info("stack: " + (stack ? stack : new Error().stack));
   throw message;
 }
 

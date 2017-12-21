@@ -57,16 +57,16 @@ add_task(async function test_searchterms_uri() {
    var root = result.root;
    root.containerOpen = true;
 
-   do_print("Number of items in result set: " + root.childCount);
+   info("Number of items in result set: " + root.childCount);
    for (var i = 0; i < root.childCount; ++i) {
-     do_print("result: " + root.getChild(i).uri + " Title: " + root.getChild(i).title);
+     info("result: " + root.getChild(i).uri + " Title: " + root.getChild(i).title);
    }
 
    // Check our inital result set
    compareArrayToResult(testData, root);
 
    // live update.
-   do_print("change title");
+   info("change title");
    var change1 = [{isDetails: true, uri: "http://foo.com/",
                    title: "mo"}, ];
    await task_populateDB(change1);

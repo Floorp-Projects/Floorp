@@ -14,7 +14,7 @@ function run_test() {
     // Execute from the nested event loop, dbg.getNewestFrame() won't
     // be working anymore.
 
-    do_execute_soon(function () {
+    executeSoon(function () {
       try {
         Assert.ok(frame === dbg.getNewestFrame());
       } finally {

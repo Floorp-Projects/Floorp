@@ -110,6 +110,6 @@ function run_test_2() {
 
     ensure_test_completed();
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

@@ -22,18 +22,18 @@ var testServices = [
   ["browser/favicon-service;1", ["nsIFaviconService"], []],
   ["browser/tagging-service;1", ["nsITaggingService"], []],
 ];
-do_print(testServices.join("\n"));
+info(testServices.join("\n"));
 
 function run_test() {
   for (let [cid, ifaces, nothrow] of testServices) {
-    do_print(`Running test with ${cid} ${ifaces.join(", ")} ${nothrow}`);
+    info(`Running test with ${cid} ${ifaces.join(", ")} ${nothrow}`);
     let s = Cc["@mozilla.org/" + cid].getService(Ci.nsISupports);
     for (let iface of ifaces) {
       s.QueryInterface(Ci[iface]);
     }
 
     let okName = function(name) {
-      do_print(`Checking if function is okay to test: ${name}`);
+      info(`Checking if function is okay to test: ${name}`);
       let func = s[name];
 
       let mesg = "";
@@ -45,45 +45,45 @@ function run_test() {
         mesg = "Ignore QI!";
 
       if (mesg) {
-        do_print(`${mesg} Skipping: ${name}`);
+        info(`${mesg} Skipping: ${name}`);
         return false;
       }
 
       return true;
     };
 
-    do_print(`Generating an array of functions to test service: ${s}`);
+    info(`Generating an array of functions to test service: ${s}`);
     for (let n of Object.keys(s).filter(i => okName(i)).sort()) {
-      do_print(`\nTesting ${ifaces.join(", ")} function with null args: ${n}`);
+      info(`\nTesting ${ifaces.join(", ")} function with null args: ${n}`);
 
       let func = s[n];
       let num = func.length;
-      do_print(`Generating array of nulls for #args: ${num}`);
+      info(`Generating array of nulls for #args: ${num}`);
       let args = Array(num).fill(null);
 
       let tryAgain = true;
       while (tryAgain == true) {
         try {
-          do_print(`Calling with args: ${JSON.stringify(args)}`);
+          info(`Calling with args: ${JSON.stringify(args)}`);
           func.apply(s, args);
 
-          do_print(`The function did not throw! Is it one of the nothrow? ${nothrow}`);
+          info(`The function did not throw! Is it one of the nothrow? ${nothrow}`);
           Assert.notEqual(nothrow.indexOf(n), -1);
 
-          do_print("Must have been an expected nothrow, so no need to try again");
+          info("Must have been an expected nothrow, so no need to try again");
           tryAgain = false;
         } catch (ex) {
           if (ex.result == Cr.NS_ERROR_ILLEGAL_VALUE) {
-            do_print(`Caught an expected exception: ${ex.name}`);
-            do_print("Moving on to the next test..");
+            info(`Caught an expected exception: ${ex.name}`);
+            info("Moving on to the next test..");
             tryAgain = false;
           } else if (ex.result == Cr.NS_ERROR_XPC_NEED_OUT_OBJECT) {
             let pos = Number(ex.message.match(/object arg (\d+)/)[1]);
-            do_print(`Function call expects an out object at ${pos}`);
+            info(`Function call expects an out object at ${pos}`);
             args[pos] = {};
           } else if (ex.result == Cr.NS_ERROR_NOT_IMPLEMENTED) {
-            do_print(`Method not implemented exception: ${ex.name}`);
-            do_print("Moving on to the next test..");
+            info(`Method not implemented exception: ${ex.name}`);
+            info("Moving on to the next test..");
             tryAgain = false;
           } else {
             throw ex;

@@ -56,6 +56,6 @@ function test_4() {
     Assert.notEqual(aInstall.icons, null);
     Assert.equal(aInstall.icons[32], icon32_url);
     Assert.equal(aInstall.icons[64], icon64_url);
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   }, "application/x-xpinstall", null, null, { "32": icon32_url, "64": icon64_url }, null, null);
 }

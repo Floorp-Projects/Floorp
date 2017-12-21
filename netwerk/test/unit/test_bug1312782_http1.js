@@ -155,7 +155,7 @@ function setup_http_server()
 
   });
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     server.stop(serverStopListener);
   });
 

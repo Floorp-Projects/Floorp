@@ -21,7 +21,7 @@ function test_find_app()
 
   let path;
   path = mwaUtils.pathForAppWithIdentifier(sig);
-  do_print("TextEdit path: " + path + "\n");
+  info("TextEdit path: " + path + "\n");
   Assert.notEqual(path, "");
 }
 

@@ -102,7 +102,7 @@ function run_test_1() {
     let difference = testFile.lastModifiedTime - Date.now();
     Assert.ok(Math.abs(difference) < MAX_TIME_DIFFERENCE);
 
-    do_execute_soon(run_test_2);
+    executeSoon(run_test_2);
   });
 }
 
@@ -121,7 +121,7 @@ function run_test_2() {
     Assert.ok(a1.isActive);
     Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
 
-    do_execute_soon(run_test_3);
+    executeSoon(run_test_3);
   });
 }
 
@@ -136,7 +136,7 @@ function run_test_3() {
     Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
     Assert.ok(!a1.foreignInstall);
 
-    do_execute_soon(run_test_4);
+    executeSoon(run_test_4);
   });
 }
 
@@ -154,7 +154,7 @@ function run_test_4() {
     Assert.ok(a1.isActive);
     Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
 
-    do_execute_soon(run_test_5);
+    executeSoon(run_test_5);
   });
 }
 
@@ -168,7 +168,7 @@ function run_test_5() {
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1_2) {
       Assert.equal(a1_2, null);
 
-      do_execute_soon(run_test_6);
+      executeSoon(run_test_6);
     });
   }));
 }
@@ -181,7 +181,7 @@ function run_test_6() {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     Assert.equal(a1, null);
 
-    do_execute_soon(run_test_7);
+    executeSoon(run_test_7);
   });
 }
 
@@ -200,7 +200,7 @@ function run_test_7() {
       Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
 
       a1.uninstall();
-      do_execute_soon(run_test_8);
+      executeSoon(run_test_8);
     });
   });
 }
@@ -222,7 +222,7 @@ function run_test_8() {
       Assert.equal(a1.scope, AddonManager.SCOPE_PROFILE);
 
       a1.uninstall();
-      do_execute_soon(run_test_9);
+      executeSoon(run_test_9);
     });
   });
 }
@@ -268,6 +268,6 @@ function run_test_9() {
 
     a2.uninstall();
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

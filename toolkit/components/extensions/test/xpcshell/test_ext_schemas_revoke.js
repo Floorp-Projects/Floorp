@@ -98,7 +98,7 @@ function verify(expected) {
   recorded.length = 0;
 }
 
-do_register_cleanup(() => {
+registerCleanupFunction(() => {
   equal(recorded.length, 0, "No unchecked recorded events at shutdown");
 });
 
@@ -232,7 +232,7 @@ add_task(async function() {
   }
 
   function check() {
-    do_print(`Check normal access (permissions: [${Array.from(permissions)}])`);
+    info(`Check normal access (permissions: [${Array.from(permissions)}])`);
 
     let ns = root.revokableNs;
 
@@ -267,7 +267,7 @@ add_task(async function() {
   }
 
   function capture() {
-    do_print("Capture values");
+    info("Capture values");
 
     let ns = root.revokableNs;
 
@@ -291,7 +291,7 @@ add_task(async function() {
   }
 
   function checkCaptured() {
-    do_print(`Check captured value access (permissions: [${Array.from(permissions)}])`);
+    info(`Check captured value access (permissions: [${Array.from(permissions)}])`);
 
     let {ns} = captured;
 

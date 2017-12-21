@@ -42,7 +42,7 @@ const responseBody = "response body";
 // A HTTP channel for updating the offline cache should normally succeed.
 function normalHandler(metadata, response)
 {
-  do_print("normalHandler");
+  info("normalHandler");
   response.setHeader("Content-Type", "text/plain");
   response.bodyOutputStream.write(responseBody, responseBody.length);
 }
@@ -60,7 +60,7 @@ add_test(function test_normal() {
 // response with Cache-Control: no-store.
 function noStoreHandler(metadata, response)
 {
-  do_print("noStoreHandler");
+  info("noStoreHandler");
   response.setHeader("Content-Type", "text/plain");
   response.setHeader("Cache-Control", "no-store");
   response.bodyOutputStream.write(responseBody, responseBody.length);

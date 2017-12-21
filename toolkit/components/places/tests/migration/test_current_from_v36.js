@@ -42,8 +42,8 @@ add_task(async function test_icons() {
   await Assert.rejects(db.execute(`SELECT url FROM moz_favicons`),
                        "The moz_favicons table should not exist");
   for (let entry of gTestcases) {
-    do_print("");
-    do_print("Checking " + entry.icon_url + " - " + entry.page_url);
+    info("");
+    info("Checking " + entry.icon_url + " - " + entry.page_url);
     let rows = await db.execute(`SELECT id, expire_ms, width FROM moz_icons
                                  WHERE fixed_icon_url_hash = hash(fixup_url(:icon_url))
                                    AND icon_url = :icon_url

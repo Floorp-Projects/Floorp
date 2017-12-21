@@ -50,7 +50,7 @@ function run_test() {
       ensure_test_completed();
       Assert.ok(resourceProtocol.hasSubstitution("test-addon-1"));
 
-      do_execute_soon(do_test_finished);
+      executeSoon(do_test_finished);
     });
   });
 }

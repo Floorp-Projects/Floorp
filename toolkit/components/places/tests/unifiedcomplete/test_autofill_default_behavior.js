@@ -33,7 +33,7 @@ add_task(async function test_default_behavior_host() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.history.onlyTyped", false);
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
 
-  do_print("Restrict history, common visit, should not autoFill");
+  info("Restrict history, common visit, should not autoFill");
   await check_autocomplete({
     search: "vi",
     matches: [ { uri: uri2, title: "visited" } ],
@@ -41,7 +41,7 @@ add_task(async function test_default_behavior_host() {
     completed: "vi"
   });
 
-  do_print("Restrict history, typed visit, should autoFill");
+  info("Restrict history, typed visit, should autoFill");
   await check_autocomplete({
     search: "ty",
     matches: [ { uri: uri1, title: "typed", style: [ "autofill", "heuristic" ],
@@ -50,7 +50,7 @@ add_task(async function test_default_behavior_host() {
     completed: "typed/"
   });
 
-  do_print("Restrict history, secure typed visit, should autoFill with https");
+  info("Restrict history, secure typed visit, should autoFill with https");
   await check_autocomplete({
     search: "secure",
     matches: [ { uri: uri6, title: "https://secure", style: [ "autofill", "heuristic" ],
@@ -60,7 +60,7 @@ add_task(async function test_default_behavior_host() {
   });
 
   // Don't autoFill this one cause it's not typed.
-  do_print("Restrict history, bookmark, should not autoFill");
+  info("Restrict history, bookmark, should not autoFill");
   await check_autocomplete({
     search: "bo",
     matches: [ ],
@@ -69,7 +69,7 @@ add_task(async function test_default_behavior_host() {
   });
 
   // Note we don't show this one cause it's not typed.
-  do_print("Restrict history, typed bookmark, should autoFill");
+  info("Restrict history, typed bookmark, should autoFill");
   await check_autocomplete({
     search: "tp",
     matches: [ { uri: uri4, title: "tpbk", style: [ "autofill", "heuristic" ] } ],
@@ -82,7 +82,7 @@ add_task(async function test_default_behavior_host() {
   // We are not restricting on typed, so we autoFill the bookmark even if we
   // are restricted to history.  We accept that cause not doing that
   // would be a perf hit and the privacy implications are very weak.
-  do_print("Restrict history, bookmark, autoFill.typed = false, should autoFill");
+  info("Restrict history, bookmark, autoFill.typed = false, should autoFill");
   await check_autocomplete({
     search: "bo",
     matches: [ { uri: uri3, title: "bookmarked", style: [ "autofill", "heuristic" ],
@@ -91,7 +91,7 @@ add_task(async function test_default_behavior_host() {
     completed: "bookmarked/"
   });
 
-  do_print("Restrict history, common visit, autoFill.typed = false, should autoFill");
+  info("Restrict history, common visit, autoFill.typed = false, should autoFill");
   await check_autocomplete({
     search: "vi",
     matches: [ { uri: uri2, title: "visited", style: [ "autofill", "heuristic" ] } ],
@@ -104,7 +104,7 @@ add_task(async function test_default_behavior_host() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.history.onlyTyped", true);
 
   // Typed behavior basically acts like history, but filters on typed.
-  do_print("Restrict typed, common visit, autoFill.typed = false, should not autoFill");
+  info("Restrict typed, common visit, autoFill.typed = false, should not autoFill");
   await check_autocomplete({
     search: "vi",
     matches: [ ],
@@ -112,7 +112,7 @@ add_task(async function test_default_behavior_host() {
     completed: "vi"
   });
 
-  do_print("Restrict typed, typed visit, autofill.typed = false, should autoFill");
+  info("Restrict typed, typed visit, autofill.typed = false, should autoFill");
   await check_autocomplete({
     search: "ty",
     matches: [ { uri: uri1, title: "typed", style: [ "autofill", "heuristic" ],
@@ -121,7 +121,7 @@ add_task(async function test_default_behavior_host() {
     completed: "typed/"
   });
 
-  do_print("Restrict typed, bookmark, autofill.typed = false, should not autoFill");
+  info("Restrict typed, bookmark, autofill.typed = false, should not autoFill");
   await check_autocomplete({
     search: "bo",
     matches: [ ],
@@ -129,7 +129,7 @@ add_task(async function test_default_behavior_host() {
     completed: "bo"
   });
 
-  do_print("Restrict typed, typed bookmark, autofill.typed = false, should autoFill");
+  info("Restrict typed, typed bookmark, autofill.typed = false, should autoFill");
   await check_autocomplete({
     search: "tp",
     matches: [ { uri: uri4, title: "tpbk", style: [ "autofill", "heuristic" ] } ],
@@ -142,7 +142,7 @@ add_task(async function test_default_behavior_host() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", true);
 
-  do_print("Restrict bookmarks, common visit, should not autoFill");
+  info("Restrict bookmarks, common visit, should not autoFill");
   await check_autocomplete({
     search: "vi",
     matches: [ ],
@@ -150,7 +150,7 @@ add_task(async function test_default_behavior_host() {
     completed: "vi"
   });
 
-  do_print("Restrict bookmarks, typed visit, should not autoFill");
+  info("Restrict bookmarks, typed visit, should not autoFill");
   await check_autocomplete({
     search: "ty",
     matches: [ ],
@@ -159,7 +159,7 @@ add_task(async function test_default_behavior_host() {
   });
 
   // Don't autoFill this one cause it's not typed.
-  do_print("Restrict bookmarks, bookmark, should not autoFill");
+  info("Restrict bookmarks, bookmark, should not autoFill");
   await check_autocomplete({
     search: "bo",
     matches: [ { uri: uri3, title: "bookmarked", style: [ "bookmark" ],
@@ -169,7 +169,7 @@ add_task(async function test_default_behavior_host() {
   });
 
   // Note we don't show this one cause it's not typed.
-  do_print("Restrict bookmarks, typed bookmark, should autoFill");
+  info("Restrict bookmarks, typed bookmark, should autoFill");
   await check_autocomplete({
     search: "tp",
     matches: [ { uri: uri4, title: "tpbk", style: [ "autofill", "heuristic" ] } ],
@@ -179,7 +179,7 @@ add_task(async function test_default_behavior_host() {
 
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
 
-  do_print("Restrict bookmarks, bookmark, autofill.typed = false, should autoFill");
+  info("Restrict bookmarks, bookmark, autofill.typed = false, should autoFill");
   await check_autocomplete({
     search: "bo",
     matches: [ { uri: uri3, title: "bookmarked", style: [ "autofill", "heuristic" ],
@@ -189,7 +189,7 @@ add_task(async function test_default_behavior_host() {
   });
 
   // Don't autofill because it's a title.
-  do_print("Restrict bookmarks, title, autofill.typed = false, should not autoFill");
+  info("Restrict bookmarks, title, autofill.typed = false, should not autoFill");
   await check_autocomplete({
     search: "# ta",
     matches: [ ],
@@ -198,7 +198,7 @@ add_task(async function test_default_behavior_host() {
   });
 
   // Don't autofill because it's a tag.
-  do_print("Restrict bookmarks, tag, autofill.typed = false, should not autoFill");
+  info("Restrict bookmarks, tag, autofill.typed = false, should not autoFill");
   await check_autocomplete({
     search: "+ ta",
     matches: [ { uri: uri5, title: "title", tags: [ "foo" ], style: [ "tag" ] } ],
@@ -233,7 +233,7 @@ add_task(async function test_default_behavior_url() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", true);
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", false);
 
-  do_print("URL: Restrict history, common visit, should not autoFill");
+  info("URL: Restrict history, common visit, should not autoFill");
   await check_autocomplete({
     search: "visited/v",
     matches: [ { uri: uri2, title: "visited" } ],
@@ -241,7 +241,7 @@ add_task(async function test_default_behavior_url() {
     completed: "visited/v"
   });
 
-  do_print("URL: Restrict history, typed visit, should autoFill");
+  info("URL: Restrict history, typed visit, should autoFill");
   await check_autocomplete({
     search: "typed/t",
     matches: [ { uri: uri1, title: "typed/ty/", style: [ "autofill", "heuristic" ],
@@ -251,7 +251,7 @@ add_task(async function test_default_behavior_url() {
   });
 
   // Don't autoFill this one cause it's not typed.
-  do_print("URL: Restrict history, bookmark, should not autoFill");
+  info("URL: Restrict history, bookmark, should not autoFill");
   await check_autocomplete({
     search: "bookmarked/b",
     matches: [ ],
@@ -260,7 +260,7 @@ add_task(async function test_default_behavior_url() {
   });
 
   // Note we don't show this one cause it's not typed.
-  do_print("URL: Restrict history, typed bookmark, should autoFill");
+  info("URL: Restrict history, typed bookmark, should autoFill");
   await check_autocomplete({
     search: "tpbk/t",
     matches: [ { uri: uri4, title: "tpbk/tp/", style: [ "autofill", "heuristic" ] } ],
@@ -272,7 +272,7 @@ add_task(async function test_default_behavior_url() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
 
-  do_print("URL: Restrict bookmarks, common visit, should not autoFill");
+  info("URL: Restrict bookmarks, common visit, should not autoFill");
   await check_autocomplete({
     search: "visited/v",
     matches: [ ],
@@ -280,7 +280,7 @@ add_task(async function test_default_behavior_url() {
     completed: "visited/v"
   });
 
-  do_print("URL: Restrict bookmarks, typed visit, should not autoFill");
+  info("URL: Restrict bookmarks, typed visit, should not autoFill");
   await check_autocomplete({
     search: "typed/t",
     matches: [ ],
@@ -289,7 +289,7 @@ add_task(async function test_default_behavior_url() {
   });
 
   // Don't autoFill this one cause it's not typed.
-  do_print("URL: Restrict bookmarks, bookmark, should not autoFill");
+  info("URL: Restrict bookmarks, bookmark, should not autoFill");
   await check_autocomplete({
     search: "bookmarked/b",
     matches: [ { uri: uri3, title: "bookmarked", style: [ "bookmark" ],
@@ -299,7 +299,7 @@ add_task(async function test_default_behavior_url() {
   });
 
   // Note we don't show this one cause it's not typed.
-  do_print("URL: Restrict bookmarks, typed bookmark, should autoFill");
+  info("URL: Restrict bookmarks, typed bookmark, should autoFill");
   await check_autocomplete({
     search: "tpbk/t",
     matches: [ { uri: uri4, title: "tpbk/tp/", style: [ "autofill", "heuristic" ] } ],
@@ -309,7 +309,7 @@ add_task(async function test_default_behavior_url() {
 
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
 
-  do_print("URL: Restrict bookmarks, bookmark, autofill.typed = false, should autoFill");
+  info("URL: Restrict bookmarks, bookmark, autofill.typed = false, should autoFill");
   await check_autocomplete({
     search: "bookmarked/b",
     matches: [ { uri: uri3, title: "bookmarked/bo/", style: [ "autofill", "heuristic" ],

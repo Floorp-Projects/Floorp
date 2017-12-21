@@ -25,7 +25,7 @@ add_task(async function setup() {
   stmt.execute();
   stmt.finalize();
 
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 });
 
 add_task(async function test_upper_ascii() {

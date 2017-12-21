@@ -36,7 +36,7 @@ function run_test() {
   });
 
   srv.start(-1);
-  do_register_cleanup(() => srv.stop(() => {}));
+  registerCleanupFunction(() => srv.stop(() => {}));
 
   let url = "http://localhost:" + srv.identity.primaryPort + "/lookup_defaults?";
   Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).setCharPref(kUrlPref, url);
@@ -212,7 +212,7 @@ add_task(async function should_recheck_when_broken_hash() {
     // If the server takes more than 1000ms to return the result,
     // the commitPromise was resolved by a first save of the cache
     // that saved the engines, but not the request's results.
-    do_print("waiting for the cache to be saved a second time");
+    info("waiting for the cache to be saved a second time");
     await promiseAfterCache();
     metadata = await promiseGlobalMetadata();
   }

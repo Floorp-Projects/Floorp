@@ -86,6 +86,6 @@ function check_test() {
       Assert.ok(!target.active);
     }
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   }));
 }

@@ -41,7 +41,7 @@ function waitForBootstrapEvent(expectedEvent, addonId) {
           resolve(info);
           Services.obs.removeObserver(observer, "bootstrapmonitor-event");
         } else {
-          do_print(
+          info(
             `Ignoring bootstrap event: ${info.event} for ${targetAddonId}`);
         }
       },

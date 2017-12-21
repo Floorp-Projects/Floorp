@@ -6,7 +6,7 @@ var gPort;
 var gExtraListener;
 
 function run_test() {
-  do_print("Starting test at " + new Date().toTimeString());
+  info("Starting test at " + new Date().toTimeString());
   initTestDebuggerServer();
 
   add_task(test_socket_conn);
@@ -30,7 +30,7 @@ function* test_socket_conn() {
   listener.open();
   Assert.equal(DebuggerServer.listeningSockets, 1);
   gPort = DebuggerServer._listeners[0].port;
-  do_print("Debugger server port is " + gPort);
+  info("Debugger server port is " + gPort);
   // Open a second, separate listener
   gExtraListener = DebuggerServer.createListener();
   gExtraListener.portOrPath = -1;
@@ -38,7 +38,7 @@ function* test_socket_conn() {
   gExtraListener.open();
   Assert.equal(DebuggerServer.listeningSockets, 2);
 
-  do_print("Starting long and unicode tests at " + new Date().toTimeString());
+  info("Starting long and unicode tests at " + new Date().toTimeString());
   let unicodeString = "(╯°□°）╯︵ ┻━┻";
   let transport = yield DebuggerClient.socketConnect({
     host: "127.0.0.1",
@@ -83,7 +83,7 @@ function* test_socket_shutdown() {
   Assert.ok(!DebuggerServer.closeAllListeners());
   Assert.equal(DebuggerServer.listeningSockets, 0);
 
-  do_print("Connecting to a server socket at " + new Date().toTimeString());
+  info("Connecting to a server socket at " + new Date().toTimeString());
   try {
     yield DebuggerClient.socketConnect({
       host: "127.0.0.1",

@@ -105,7 +105,7 @@ add_task(function test_rememberSignons()
 
   // Disable storage of saved passwords globally.
   Services.prefs.setBoolPref("signon.rememberSignons", false);
-  do_register_cleanup(
+  registerCleanupFunction(
     () => Services.prefs.clearUserPref("signon.rememberSignons"));
 
   // All hosts should now appear disabled.

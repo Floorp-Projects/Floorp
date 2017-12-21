@@ -7,7 +7,7 @@
 Components.utils.import("resource://gre/modules/osfile.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   Services.prefs.setBoolPref("toolkit.osfile.log", false);
 });
 

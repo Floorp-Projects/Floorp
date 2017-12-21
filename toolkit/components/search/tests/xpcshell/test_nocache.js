@@ -39,10 +39,10 @@ add_task(async function test_nocache() {
     { name: "Test search engine", xmlFileName: "engine.xml" },
   ]);
 
-  do_print("Engine has been added, let's wait for the cache to be built");
+  info("Engine has been added, let's wait for the cache to be built");
   await promiseAfterCache();
 
-  do_print("Searching test engine in cache");
+  info("Searching test engine in cache");
   let cache = await promiseCacheData();
   let found = false;
   for (let engine of cache.engines) {
