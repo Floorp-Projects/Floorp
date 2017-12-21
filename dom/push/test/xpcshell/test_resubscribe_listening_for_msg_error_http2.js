@@ -29,7 +29,7 @@ function resubscribeHandler(metadata, response) {
 }
 
 function listenSuccessHandler(metadata, response) {
-  do_check_true(true, "New listener point");
+  Assert.ok(true, "New listener point");
   httpServer.stop(handlerDone);
   response.setStatusLine(metadata.httpVersion, 204, "Try again");
 }

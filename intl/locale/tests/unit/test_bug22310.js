@@ -50,5 +50,5 @@ function run_test()
     for (var i = 0; i < tests.length; ++i) {
         one_test(tests[i][0], tests[i][1]);
     }
-    do_check_true(all_passed);
+    Assert.ok(all_passed);
 }

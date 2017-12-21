@@ -28,11 +28,11 @@ Services.dirsvc.QueryInterface(Components.interfaces.nsIDirectoryService)
 function run_test() {
   var log = gProfD.clone();
   log.append("extensions.log");
-  do_check_false(log.exists());
+  Assert.ok(!log.exists());
 
   // Setup for test
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1");
 
   startupManager();
-  do_check_false(log.exists());
+  Assert.ok(!log.exists());
 }

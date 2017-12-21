@@ -15,9 +15,9 @@ var CacheFlushObserver = {
     if (aData == "cert-override")
       return;
 
-    do_check_true(gExpectedFile != null);
-    do_check_true(aSubject instanceof AM_Ci.nsIFile);
-    do_check_eq(aSubject.path, gExpectedFile.path);
+    Assert.ok(gExpectedFile != null);
+    Assert.ok(aSubject instanceof AM_Ci.nsIFile);
+    Assert.equal(aSubject.path, gExpectedFile.path);
     gCacheFlushCount++;
   }
 };
@@ -43,7 +43,7 @@ function run_test_1() {
       gExpectedFile.append("addon1@tests.mozilla.org.xpi");
       aInstall.cancel();
 
-      do_check_eq(gCacheFlushCount, 1);
+      Assert.equal(gCacheFlushCount, 1);
       gExpectedFile = null;
       gCacheFlushCount = 0;
 
@@ -61,21 +61,21 @@ function run_test_2() {
     gExpectedFile.append("staged");
     gExpectedFile.append("addon1@tests.mozilla.org.xpi");
     restartManager();
-    do_check_eq(gCacheFlushCount, 1);
+    Assert.equal(gCacheFlushCount, 1);
     gExpectedFile = null;
     gCacheFlushCount = 0;
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
       // We should flush the installed XPI when uninstalling
-      do_check_true(a1 != null);
+      Assert.ok(a1 != null);
       a1.uninstall();
-      do_check_eq(gCacheFlushCount, 0);
+      Assert.equal(gCacheFlushCount, 0);
 
       gExpectedFile = gProfD.clone();
       gExpectedFile.append("extensions");
       gExpectedFile.append("addon1@tests.mozilla.org.xpi");
       restartManager();
-      do_check_eq(gCacheFlushCount, 1);
+      Assert.equal(gCacheFlushCount, 1);
       gExpectedFile = null;
       gCacheFlushCount = 0;
 
@@ -97,7 +97,7 @@ function run_test_3() {
       },
 
       onInstallEnded() {
-        do_check_eq(gCacheFlushCount, 1);
+        Assert.equal(gCacheFlushCount, 1);
         gExpectedFile = null;
         gCacheFlushCount = 0;
 
@@ -118,7 +118,7 @@ function run_test_4() {
     gExpectedFile.append("addon2@tests.mozilla.org.xpi");
 
     a2.uninstall();
-    do_check_eq(gCacheFlushCount, 2);
+    Assert.equal(gCacheFlushCount, 2);
     gExpectedFile = null;
     gCacheFlushCount = 0;
 

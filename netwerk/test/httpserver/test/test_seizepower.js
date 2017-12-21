@@ -150,33 +150,33 @@ var data0 = "GET /raw-data HTTP/1.0\r\n" +
        "\r\n";
 function checkRawData(data)
 {
-  do_check_eq(data, "Raw data!");
+  Assert.equal(data, "Raw data!");
 }
 
 var data1 = "GET /called-too-late HTTP/1.0\r\n" +
        "\r\n";
 function checkTooLate(data)
 {
-  do_check_eq(LineIterator(data).next().value, "too-late passed");
+  Assert.equal(LineIterator(data).next().value, "too-late passed");
 }
 
 var data2 = "GET /exceptions HTTP/1.0\r\n" +
        "\r\n";
 function checkExceptions(data)
 {
-  do_check_eq("exceptions test passed", data);
+  Assert.equal("exceptions test passed", data);
 }
 
 var data3 = "GET /async-seizure HTTP/1.0\r\n" +
        "\r\n";
 function checkAsyncSeizure(data)
 {
-  do_check_eq(data, "async seizure passed");
+  Assert.equal(data, "async seizure passed");
 }
 
 var data4 = "GET /seize-after-async HTTP/1.0\r\n" +
        "\r\n";
 function checkSeizeAfterAsync(data)
 {
-  do_check_eq(LineIterator(data).next().value, "HTTP/1.0 200 async seizure pass");
+  Assert.equal(LineIterator(data).next().value, "HTTP/1.0 200 async seizure pass");
 }

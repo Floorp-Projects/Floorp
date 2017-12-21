@@ -39,8 +39,8 @@ const testSameBreakpoint = Task.async(function* () {
   let [, firstBpClient] = yield setBreakpoint(source, wholeLineLocation);
   let [, secondBpClient] = yield setBreakpoint(source, wholeLineLocation);
 
-  do_check_eq(firstBpClient.actor, secondBpClient.actor,
-              "Should get the same actor w/ whole line breakpoints");
+  Assert.equal(firstBpClient.actor, secondBpClient.actor,
+               "Should get the same actor w/ whole line breakpoints");
 
   // Specific column
 
@@ -52,8 +52,8 @@ const testSameBreakpoint = Task.async(function* () {
   [, firstBpClient] = yield setBreakpoint(source, columnLocation);
   [, secondBpClient] = yield setBreakpoint(source, columnLocation);
 
-  do_check_eq(secondBpClient.actor, secondBpClient.actor,
-              "Should get the same actor column breakpoints");
+  Assert.equal(secondBpClient.actor, secondBpClient.actor,
+               "Should get the same actor column breakpoints");
 
   finishClient(gClient);
 });

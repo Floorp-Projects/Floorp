@@ -78,8 +78,8 @@ function test_client_request_callback() {
     to: gActorId,
     type: "hello"
   }, response => {
-    do_check_eq(response.from, gActorId);
-    do_check_eq(response.hello, "world");
+    Assert.equal(response.from, gActorId);
+    Assert.equal(response.hello, "world");
     checkStack("test_client_request_callback");
     run_next_test();
   });
@@ -93,8 +93,8 @@ function test_client_request_promise() {
   });
 
   request.then(response => {
-    do_check_eq(response.from, gActorId);
-    do_check_eq(response.hello, "world");
+    Assert.equal(response.from, gActorId);
+    Assert.equal(response.hello, "world");
     checkStack("test_client_request_promise");
     run_next_test();
   });
@@ -111,9 +111,9 @@ function test_client_request_promise_error() {
   request.then(() => {
     do_throw("Promise shouldn't be resolved on error");
   }, response => {
-    do_check_eq(response.from, gActorId);
-    do_check_eq(response.error, "code");
-    do_check_eq(response.message, "human message");
+    Assert.equal(response.from, gActorId);
+    Assert.equal(response.error, "code");
+    Assert.equal(response.message, "human message");
     checkStack("test_client_request_promise_error");
     run_next_test();
   });
@@ -126,8 +126,8 @@ function test_client_request_event_emitter() {
     type: "hello"
   });
   request.on("json-reply", reply => {
-    do_check_eq(reply.from, gActorId);
-    do_check_eq(reply.hello, "world");
+    Assert.equal(reply.from, gActorId);
+    Assert.equal(reply.hello, "world");
     checkStack("test_client_request_event_emitter");
     run_next_test();
   });
@@ -151,9 +151,9 @@ function test_close_client_while_sending_requests() {
 
   let expectReply = defer();
   gClient.expectReply("root", function (response) {
-    do_check_eq(response.error, "connectionClosed");
-    do_check_eq(response.message,
-                "server side packet can't be received as the connection just closed.");
+    Assert.equal(response.error, "connectionClosed");
+    Assert.equal(response.message,
+                 "server side packet can't be received as the connection just closed.");
     expectReply.resolve();
   });
 
@@ -161,17 +161,17 @@ function test_close_client_while_sending_requests() {
     activeRequest.then(() => {
       ok(false, "First request unexpectedly succeed while closing the connection");
     }, response => {
-      do_check_eq(response.error, "connectionClosed");
-      do_check_eq(response.message, "'hello' active request packet to '" +
-                  gActorId + "' can't be sent as the connection just closed.");
+      Assert.equal(response.error, "connectionClosed");
+      Assert.equal(response.message, "'hello' active request packet to '" +
+                   gActorId + "' can't be sent as the connection just closed.");
     })
     .then(() => pendingRequest)
     .then(() => {
       ok(false, "Second request unexpectedly succeed while closing the connection");
     }, response => {
-      do_check_eq(response.error, "connectionClosed");
-      do_check_eq(response.message, "'hello' pending request packet to '" +
-                  gActorId + "' can't be sent as the connection just closed.");
+      Assert.equal(response.error, "connectionClosed");
+      Assert.equal(response.message, "'hello' pending request packet to '" +
+                   gActorId + "' can't be sent as the connection just closed.");
     })
     .then(() => expectReply.promise)
     .then(run_next_test);
@@ -190,7 +190,7 @@ function test_client_request_after_close() {
     ok(false, "Request succeed even after client.close");
   }, response => {
     ok(true, "Request failed after client.close");
-    do_check_eq(response.error, "connectionClosed");
+    Assert.equal(response.error, "connectionClosed");
     ok(response.message.match(
         /'hello' request packet to '.*' can't be sent as the connection is closed./));
     run_next_test();
@@ -205,7 +205,7 @@ function test_client_request_after_close_callback() {
     type: "hello"
   }, response => {
     ok(true, "Request failed after client.close");
-    do_check_eq(response.error, "connectionClosed");
+    Assert.equal(response.error, "connectionClosed");
     ok(response.message.match(
         /'hello' request packet to '.*' can't be sent as the connection is closed./));
     run_next_test();

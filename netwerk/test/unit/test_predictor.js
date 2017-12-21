@@ -51,7 +51,7 @@ ValidityChecker.prototype = {
   onCacheEntryAvailable: function(entry, isnew, appCache, status)
   {
     // Check if forced valid
-    do_check_eq(entry.isForcedValid, this.httpStatus === 200);
+    Assert.equal(entry.isForcedValid, this.httpStatus === 200);
     this.verifier.maybe_run_next_test();
   }
 }
@@ -89,7 +89,7 @@ Verifier.prototype = {
         this.expected_preresolves.length === 0 &&
         !this.complete) {
       this.complete = true;
-      do_check_true(true, "Well this is unexpected...");
+      Assert.ok(true, "Well this is unexpected...");
       // This kicks off the ability to run the next test
       reset_predictor();
     }
@@ -98,7 +98,7 @@ Verifier.prototype = {
   onPredictPrefetch: function verifier_onPredictPrefetch(uri, status) {
     var index = this.expected_prefetches.indexOf(uri.asciiSpec);
     if (index == -1 && !this.complete) {
-      do_check_true(false, "Got prefetch for unexpected uri " + uri.asciiSpec);
+      Assert.ok(false, "Got prefetch for unexpected uri " + uri.asciiSpec);
     } else {
       this.expected_prefetches.splice(index, 1);
     }
@@ -114,7 +114,7 @@ Verifier.prototype = {
     var origin = extract_origin(uri);
     var index = this.expected_preconnects.indexOf(origin);
     if (index == -1 && !this.complete) {
-      do_check_true(false, "Got preconnect for unexpected uri " + origin);
+      Assert.ok(false, "Got preconnect for unexpected uri " + origin);
     } else {
       this.expected_preconnects.splice(index, 1);
     }
@@ -125,7 +125,7 @@ Verifier.prototype = {
     var origin = extract_origin(uri);
     var index = this.expected_preresolves.indexOf(origin);
     if (index == -1 && !this.complete) {
-      do_check_true(false, "Got preresolve for unexpected uri " + origin);
+      Assert.ok(false, "Got preresolve for unexpected uri " + origin);
     } else {
       this.expected_preresolves.splice(index, 1);
     }
@@ -168,7 +168,7 @@ var prepListener = {
   },
 
   onCacheEntryAvailable: function (entry, isNew, appCache, result) {
-    do_check_eq(result, Cr.NS_OK);
+    Assert.equal(result, Cr.NS_OK);
     entry.setMetaDataElement("predictor_test", "1");
     entry.metaDataReady();
     this.numEntriesOpened++;
@@ -433,7 +433,7 @@ function prefetchHandler(metadata, response) {
 
 var prefetchListener = {
   onStartRequest: function(request, ctx) {
-    do_check_eq(request.status, Cr.NS_OK);
+    Assert.equal(request.status, Cr.NS_OK);
   },
 
   onDataAvailable: function(request, cx, stream, offset, cnt) {

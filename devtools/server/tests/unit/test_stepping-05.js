@@ -40,31 +40,31 @@ function test_stepping_last() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     gThreadClient.addOneTimeListener("paused", function (event, packet) {
       // Check the return value.
-      do_check_eq(packet.type, "paused");
-      do_check_eq(packet.frame.where.line, gDebuggee.line0 + 2);
-      do_check_eq(packet.why.type, "resumeLimit");
+      Assert.equal(packet.type, "paused");
+      Assert.equal(packet.frame.where.line, gDebuggee.line0 + 2);
+      Assert.equal(packet.why.type, "resumeLimit");
       // Check that stepping worked.
-      do_check_eq(gDebuggee.a, undefined);
-      do_check_eq(gDebuggee.b, undefined);
+      Assert.equal(gDebuggee.a, undefined);
+      Assert.equal(gDebuggee.b, undefined);
 
       gThreadClient.addOneTimeListener("paused", function (event, packet) {
         // Check the return value.
-        do_check_eq(packet.type, "paused");
-        do_check_eq(packet.frame.where.line, gDebuggee.line0 + 3);
-        do_check_eq(packet.why.type, "resumeLimit");
+        Assert.equal(packet.type, "paused");
+        Assert.equal(packet.frame.where.line, gDebuggee.line0 + 3);
+        Assert.equal(packet.why.type, "resumeLimit");
         // Check that stepping worked.
-        do_check_eq(gDebuggee.a, 1);
-        do_check_eq(gDebuggee.b, undefined);
+        Assert.equal(gDebuggee.a, 1);
+        Assert.equal(gDebuggee.b, undefined);
 
         gThreadClient.addOneTimeListener("paused", function (event, packet) {
           // Check the return value.
-          do_check_eq(packet.type, "paused");
+          Assert.equal(packet.type, "paused");
           // When leaving a stack frame the line number doesn't change.
-          do_check_eq(packet.frame.where.line, gDebuggee.line0 + 3);
-          do_check_eq(packet.why.type, "resumeLimit");
+          Assert.equal(packet.frame.where.line, gDebuggee.line0 + 3);
+          Assert.equal(packet.why.type, "resumeLimit");
           // Check that stepping worked.
-          do_check_eq(gDebuggee.a, 1);
-          do_check_eq(gDebuggee.b, 2);
+          Assert.equal(gDebuggee.a, 1);
+          Assert.equal(gDebuggee.b, 2);
 
           gThreadClient.stepIn(function () {
             test_next_pause();
@@ -88,9 +88,9 @@ function test_stepping_last() {
 function test_next_pause() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     // Check the return value.
-    do_check_eq(packet.type, "paused");
+    Assert.equal(packet.type, "paused");
     // Before fixing bug 785689, the type was resumeLimit.
-    do_check_eq(packet.why.type, "debuggerStatement");
+    Assert.equal(packet.why.type, "debuggerStatement");
 
     gThreadClient.resume(function () {
       gClient.close().then(gCallback);

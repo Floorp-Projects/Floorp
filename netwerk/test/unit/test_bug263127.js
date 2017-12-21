@@ -27,7 +27,7 @@ var listener = {
       do_throw(e);
     }
 
-    do_check_false(file.exists());
+    Assert.ok(!file.exists());
 
     do_test_finished();
   }

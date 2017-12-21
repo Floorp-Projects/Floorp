@@ -32,7 +32,7 @@ add_task(async function test_nocache() {
   // Check that search.json.mozlz4 has been created.
   let cacheFile = gProfD.clone();
   cacheFile.append(CACHE_FILENAME);
-  do_check_true(cacheFile.exists());
+  Assert.ok(cacheFile.exists());
 
   // Add engine and wait for cache update
   await addTestEngines([
@@ -51,5 +51,5 @@ add_task(async function test_nocache() {
       break;
     }
   }
-  do_check_true(found);
+  Assert.ok(found);
 });

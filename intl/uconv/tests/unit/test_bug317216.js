@@ -96,7 +96,7 @@ function testCase(testText, expectedText, bufferLength, charset)
   } while (more);
 
   // escape the strings before comparing for better readability
-  do_check_eq(escape(outStr), escape(expectedText));
+  Assert.equal(escape(outStr), escape(expectedText));
 }
 
 // Add 32 dummy characters to the test text to work around the minimum buffer

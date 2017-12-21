@@ -14,9 +14,9 @@ add_task(async function() {
   Cu.importGlobalProperties(["MessageChannel"]);
 
   let mc = new MessageChannel();
-  do_check_true(mc instanceof MessageChannel);
-  do_check_true(mc.port1 instanceof MessagePort);
-  do_check_true(mc.port2 instanceof MessagePort);
+  Assert.ok(mc instanceof MessageChannel);
+  Assert.ok(mc.port1 instanceof MessagePort);
+  Assert.ok(mc.port2 instanceof MessagePort);
 
   mc.port1.postMessage(42);
 
@@ -26,5 +26,5 @@ add_task(async function() {
     }
   });
 
-  do_check_eq(result, 42);
+  Assert.equal(result, 42);
 });

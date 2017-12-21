@@ -35,10 +35,10 @@ add_task(async function test_resolveNullBookmarkTitles() {
   // tagged URIs
   let root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;
-  do_check_eq(root.childCount, 2);
+  Assert.equal(root.childCount, 2);
   // actually RESULTS_AS_TAG_CONTENTS return results ordered by place_id DESC
   // so they are reversed
-  do_check_eq(root.getChild(0).title, "");
-  do_check_eq(root.getChild(1).title, "");
+  Assert.equal(root.getChild(0).title, "");
+  Assert.equal(root.getChild(1).title, "");
   root.containerOpen = false;
 });

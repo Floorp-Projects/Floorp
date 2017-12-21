@@ -44,12 +44,12 @@ TestProviderNoMap.prototype = {
 };
 
 function check_mapping(uri, id) {
-  do_check_eq(AddonManager.mapURIToAddonID(uri), id);
+  Assert.equal(AddonManager.mapURIToAddonID(uri), id);
   let svc = Components.classes["@mozilla.org/addons/integration;1"].
             getService(Components.interfaces.amIAddonManager);
   let val = {};
-  do_check_true(svc.mapURIToAddonID(uri, val));
-  do_check_eq(val.value, id);
+  Assert.ok(svc.mapURIToAddonID(uri, val));
+  Assert.equal(val.value, id);
 }
 
 function run_test() {
@@ -80,16 +80,16 @@ function run_test_early() {
 
       // Make the early API call.
       // AddonManager still misses its provider and so doesn't work yet.
-      do_check_null(AddonManager.mapURIToAddonID(uri));
+      Assert.equal(null, AddonManager.mapURIToAddonID(uri));
       // But calling XPIProvider directly works immediately
-      do_check_eq(s.XPIProvider.mapURIToAddonID(uri), id);
+      Assert.equal(s.XPIProvider.mapURIToAddonID(uri), id);
 
       // Actually start up the manager.
       startupManager(false);
 
       // Check that the mapping is there now.
       check_mapping(uri, id);
-      do_check_eq(s.XPIProvider.mapURIToAddonID(uri), id);
+      Assert.equal(s.XPIProvider.mapURIToAddonID(uri), id);
 
       run_test_nomapping();
     });
@@ -97,12 +97,12 @@ function run_test_early() {
 }
 
 function run_test_nomapping() {
-  do_check_eq(AddonManager.mapURIToAddonID(TestProvider.prototype.uri), null);
+  Assert.equal(AddonManager.mapURIToAddonID(TestProvider.prototype.uri), null);
   try {
     let svc = Components.classes["@mozilla.org/addons/integration;1"].
               getService(Components.interfaces.amIAddonManager);
     let val = {};
-    do_check_false(svc.mapURIToAddonID(TestProvider.prototype.uri, val));
+    Assert.ok(!svc.mapURIToAddonID(TestProvider.prototype.uri, val));
   } catch (ex) {
     do_throw(ex);
   }
@@ -156,7 +156,7 @@ function run_test_2(uri) {
     ensure_test_completed();
 
     AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(newb1) {
-      do_check_true(newb1.userDisabled);
+      Assert.ok(newb1.userDisabled);
       check_mapping(uri, newb1.id);
 
       do_execute_soon(() => run_test_3(uri));
@@ -295,7 +295,7 @@ function run_test_invalidarg() {
       throw new Error("Shouldn't be able to map the URI in question");
     } catch (ex) {
       if (ex.result) {
-        do_check_eq(ex.result, Components.results.NS_ERROR_INVALID_ARG);
+        Assert.equal(ex.result, Components.results.NS_ERROR_INVALID_ARG);
       } else {
         do_throw(ex);
       }
@@ -316,7 +316,7 @@ function run_test_provider() {
 
   let u2 = provider.uri.clone();
   u2.pathQueryRef = "notmapped";
-  do_check_eq(AddonManager.mapURIToAddonID(u2), null);
+  Assert.equal(AddonManager.mapURIToAddonID(u2), null);
 
   AddonManagerPrivate.unregisterProvider(provider);
 
@@ -331,7 +331,7 @@ function run_test_provider_nomap() {
   const provider = new TestProviderNoMap();
   AddonManagerPrivate.registerProvider(provider);
 
-  do_check_eq(AddonManager.mapURIToAddonID(TestProvider.prototype.uri), null);
+  Assert.equal(AddonManager.mapURIToAddonID(TestProvider.prototype.uri), null);
 
   AddonManagerPrivate.unregisterProvider(provider);
 

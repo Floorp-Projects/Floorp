@@ -106,7 +106,7 @@ function getSavePathForPingId(aPingId) {
  * @param aExpectedNum the number of pings we expect to receive.
  */
 function assertReceivedPings(aExpectedNum) {
-  do_check_eq(gSeenPings, aExpectedNum);
+  Assert.equal(gSeenPings, aExpectedNum);
 }
 
 /**

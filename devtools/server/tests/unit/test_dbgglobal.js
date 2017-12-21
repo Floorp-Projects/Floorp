@@ -30,17 +30,17 @@ function run_test() {
   let client1 = DebuggerServer.connectPipe();
   client1.hooks = {
     onPacket: function (packet1) {
-      do_check_eq(packet1.from, "root");
-      do_check_eq(packet1.applicationType, "xpcshell-tests");
+      Assert.equal(packet1.from, "root");
+      Assert.equal(packet1.applicationType, "xpcshell-tests");
 
       // Spin up a second connection, make sure it has its own root
       // actor.
       let client2 = DebuggerServer.connectPipe();
       client2.hooks = {
         onPacket: function (packet2) {
-          do_check_eq(packet2.from, "root");
-          do_check_neq(packet1.testConnectionPrefix,
-                       packet2.testConnectionPrefix);
+          Assert.equal(packet2.from, "root");
+          Assert.notEqual(packet1.testConnectionPrefix,
+                          packet2.testConnectionPrefix);
           client2.close();
         },
         onClosed: function (result) {

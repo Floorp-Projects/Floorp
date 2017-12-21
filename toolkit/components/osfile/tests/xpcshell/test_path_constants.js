@@ -14,39 +14,39 @@ function compare_paths(ospath, key) {
   } catch (ex) {}
 
   if (file) {
-    do_check_true(!!ospath);
-    do_check_eq(ospath, file.path);
+    Assert.ok(!!ospath);
+    Assert.equal(ospath, file.path);
   } else {
     do_print("WARNING: " + key + " is not defined. Test may not be testing anything!");
-    do_check_false(!!ospath);
+    Assert.ok(!ospath);
   }
 }
 
 // Some path constants aren't set up until the profile is available. This
 // test verifies that behavior.
 add_task(async function test_before_after_profile() {
-  do_check_null(OS.Constants.Path.profileDir);
-  do_check_null(OS.Constants.Path.localProfileDir);
-  do_check_null(OS.Constants.Path.userApplicationDataDir);
+  Assert.equal(null, OS.Constants.Path.profileDir);
+  Assert.equal(null, OS.Constants.Path.localProfileDir);
+  Assert.equal(null, OS.Constants.Path.userApplicationDataDir);
 
   do_get_profile();
-  do_check_true(!!OS.Constants.Path.profileDir);
-  do_check_true(!!OS.Constants.Path.localProfileDir);
+  Assert.ok(!!OS.Constants.Path.profileDir);
+  Assert.ok(!!OS.Constants.Path.localProfileDir);
 
   // UAppData is still null because the xpcshell profile doesn't set it up.
   // This test is mostly here to fail in case behavior of do_get_profile() ever
   // changes. We want to know if our assumptions no longer hold!
-  do_check_null(OS.Constants.Path.userApplicationDataDir);
+  Assert.equal(null, OS.Constants.Path.userApplicationDataDir);
 
   await makeFakeAppDir();
-  do_check_true(!!OS.Constants.Path.userApplicationDataDir);
+  Assert.ok(!!OS.Constants.Path.userApplicationDataDir);
 
   // FUTURE: verify AppData too (bug 964291).
 });
 
 // Test simple paths
 add_task(async function test_simple_paths() {
-  do_check_true(!!OS.Constants.Path.tmpDir);
+  Assert.ok(!!OS.Constants.Path.tmpDir);
   compare_paths(OS.Constants.Path.tmpDir, "TmpD");
 
 });
@@ -56,8 +56,8 @@ add_task(async function test_desktop_paths() {
   if (OS.Constants.Sys.Name == "Android") {
     return;
   }
-  do_check_true(!!OS.Constants.Path.desktopDir);
-  do_check_true(!!OS.Constants.Path.homeDir);
+  Assert.ok(!!OS.Constants.Path.desktopDir);
+  Assert.ok(!!OS.Constants.Path.homeDir);
 
   compare_paths(OS.Constants.Path.homeDir, "Home");
   compare_paths(OS.Constants.Path.desktopDir, "Desk");

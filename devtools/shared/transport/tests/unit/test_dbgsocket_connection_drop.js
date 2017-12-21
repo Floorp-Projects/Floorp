@@ -73,7 +73,7 @@ var test_helper = Task.async(function* (payload) {
       transport._flushOutgoing();
     },
     onClosed: function (status) {
-      do_check_true(true);
+      Assert.ok(true);
       closedDeferred.resolve();
     },
   };

@@ -73,9 +73,9 @@ add_task(async function test_construction() {
   let privateDownloadListOne = await promiseNewList(true);
   let privateDownloadListTwo = await promiseNewList(true);
 
-  do_check_neq(downloadListOne, downloadListTwo);
-  do_check_neq(privateDownloadListOne, privateDownloadListTwo);
-  do_check_neq(downloadListOne, privateDownloadListOne);
+  Assert.notEqual(downloadListOne, downloadListTwo);
+  Assert.notEqual(privateDownloadListOne, privateDownloadListTwo);
+  Assert.notEqual(downloadListOne, privateDownloadListOne);
 });
 
 /**
@@ -88,19 +88,19 @@ add_task(async function test_add_getAll() {
   await list.add(downloadOne);
 
   let itemsOne = await list.getAll();
-  do_check_eq(itemsOne.length, 1);
-  do_check_eq(itemsOne[0], downloadOne);
+  Assert.equal(itemsOne.length, 1);
+  Assert.equal(itemsOne[0], downloadOne);
 
   let downloadTwo = await promiseNewDownload();
   await list.add(downloadTwo);
 
   let itemsTwo = await list.getAll();
-  do_check_eq(itemsTwo.length, 2);
-  do_check_eq(itemsTwo[0], downloadOne);
-  do_check_eq(itemsTwo[1], downloadTwo);
+  Assert.equal(itemsTwo.length, 2);
+  Assert.equal(itemsTwo[0], downloadOne);
+  Assert.equal(itemsTwo[1], downloadTwo);
 
   // The first snapshot should not have been modified.
-  do_check_eq(itemsOne.length, 1);
+  Assert.equal(itemsOne.length, 1);
 });
 
 /**
@@ -119,7 +119,7 @@ add_task(async function test_remove() {
   await list.remove(await promiseNewDownload());
 
   items = await list.getAll();
-  do_check_eq(items.length, 1);
+  Assert.equal(items.length, 1);
 });
 
 /**
@@ -141,24 +141,24 @@ add_task(async function test_DownloadCombinedList_add_remove_getAll() {
   await publicList.add(publicDownload);
   await privateList.add(privateDownload);
 
-  do_check_eq((await combinedList.getAll()).length, 2);
+  Assert.equal((await combinedList.getAll()).length, 2);
 
   await combinedList.remove(publicDownload);
   await combinedList.remove(privateDownload);
 
-  do_check_eq((await combinedList.getAll()).length, 0);
+  Assert.equal((await combinedList.getAll()).length, 0);
 
   await combinedList.add(publicDownload);
   await combinedList.add(privateDownload);
 
-  do_check_eq((await publicList.getAll()).length, 1);
-  do_check_eq((await privateList.getAll()).length, 1);
-  do_check_eq((await combinedList.getAll()).length, 2);
+  Assert.equal((await publicList.getAll()).length, 1);
+  Assert.equal((await privateList.getAll()).length, 1);
+  Assert.equal((await combinedList.getAll()).length, 2);
 
   await publicList.remove(publicDownload);
   await privateList.remove(privateDownload);
 
-  do_check_eq((await combinedList.getAll()).length, 0);
+  Assert.equal((await combinedList.getAll()).length, 0);
 });
 
 /**
@@ -188,41 +188,41 @@ add_task(async function test_notifications_add_remove() {
       onDownloadAdded(aDownload) {
         // The first download to be notified should be the first that was added.
         if (addNotifications == 0) {
-          do_check_eq(aDownload, downloadOne);
+          Assert.equal(aDownload, downloadOne);
         } else if (addNotifications == 1) {
-          do_check_eq(aDownload, downloadTwo);
+          Assert.equal(aDownload, downloadTwo);
         }
         addNotifications++;
       },
     };
     await list.addView(viewOne);
-    do_check_eq(addNotifications, 2);
+    Assert.equal(addNotifications, 2);
 
     // Check that we receive add notifications for new elements.
     await list.add(await promiseNewDownload());
-    do_check_eq(addNotifications, 3);
+    Assert.equal(addNotifications, 3);
 
     // Check that we receive remove notifications.
     let removeNotifications = 0;
     let viewTwo = {
       onDownloadRemoved(aDownload) {
-        do_check_eq(aDownload, downloadOne);
+        Assert.equal(aDownload, downloadOne);
         removeNotifications++;
       },
     };
     await list.addView(viewTwo);
     await list.remove(downloadOne);
-    do_check_eq(removeNotifications, 1);
+    Assert.equal(removeNotifications, 1);
 
     // We should not receive remove notifications after the view is removed.
     await list.removeView(viewTwo);
     await list.remove(downloadTwo);
-    do_check_eq(removeNotifications, 1);
+    Assert.equal(removeNotifications, 1);
 
     // We should not receive add notifications after the view is removed.
     await list.removeView(viewOne);
     await list.add(await promiseNewDownload());
-    do_check_eq(addNotifications, 3);
+    Assert.equal(addNotifications, 3);
   }
 });
 
@@ -250,18 +250,18 @@ add_task(async function test_notifications_change() {
     let receivedOnDownloadChanged = false;
     await list.addView({
       onDownloadChanged(aDownload) {
-        do_check_eq(aDownload, downloadOne);
+        Assert.equal(aDownload, downloadOne);
         receivedOnDownloadChanged = true;
       },
     });
     await downloadOne.start();
-    do_check_true(receivedOnDownloadChanged);
+    Assert.ok(receivedOnDownloadChanged);
 
     // We should not receive change notifications after a download is removed.
     receivedOnDownloadChanged = false;
     await list.remove(downloadTwo);
     await downloadTwo.start();
-    do_check_false(receivedOnDownloadChanged);
+    Assert.ok(!receivedOnDownloadChanged);
   }
 });
 
@@ -277,18 +277,18 @@ add_task(async function test_notifications_this() {
   let receivedOnDownloadRemoved = false;
   let view = {
     onDownloadAdded() {
-      do_check_eq(this, view);
+      Assert.equal(this, view);
       receivedOnDownloadAdded = true;
     },
     onDownloadChanged() {
       // Only do this check once.
       if (!receivedOnDownloadChanged) {
-        do_check_eq(this, view);
+        Assert.equal(this, view);
         receivedOnDownloadChanged = true;
       }
     },
     onDownloadRemoved() {
-      do_check_eq(this, view);
+      Assert.equal(this, view);
       receivedOnDownloadRemoved = true;
     },
   };
@@ -300,9 +300,9 @@ add_task(async function test_notifications_this() {
   await list.remove(download);
 
   // Verify that we executed the checks.
-  do_check_true(receivedOnDownloadAdded);
-  do_check_true(receivedOnDownloadChanged);
-  do_check_true(receivedOnDownloadRemoved);
+  Assert.ok(receivedOnDownloadAdded);
+  Assert.ok(receivedOnDownloadChanged);
+  Assert.ok(receivedOnDownloadRemoved);
 });
 
 /**
@@ -408,10 +408,10 @@ add_task(async function test_removeFinished() {
   let removeNotifications = 0;
   let downloadView = {
     onDownloadRemoved(aDownload) {
-      do_check_true(aDownload == downloadOne ||
-                    aDownload == downloadTwo ||
-                    aDownload == downloadThree);
-      do_check_true(removeNotifications < 3);
+      Assert.ok(aDownload == downloadOne ||
+                aDownload == downloadTwo ||
+                aDownload == downloadThree);
+      Assert.ok(removeNotifications < 3);
       if (++removeNotifications == 3) {
         deferred.resolve();
       }
@@ -431,7 +431,7 @@ add_task(async function test_removeFinished() {
   await deferred.promise;
 
   let downloads = await list.getAll();
-  do_check_eq(downloads.length, 1);
+  Assert.equal(downloads.length, 1);
 });
 
 /**
@@ -483,47 +483,47 @@ add_task(async function test_DownloadSummary() {
   // current state is immediately propagated to the summary object, which is
   // true in the current implementation, though it is not guaranteed as all the
   // download operations may happen asynchronously.
-  do_check_false(publicSummary.allHaveStopped);
-  do_check_eq(publicSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
-  do_check_eq(publicSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
+  Assert.ok(!publicSummary.allHaveStopped);
+  Assert.equal(publicSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
+  Assert.equal(publicSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
 
-  do_check_false(privateSummary.allHaveStopped);
-  do_check_eq(privateSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
-  do_check_eq(privateSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
+  Assert.ok(!privateSummary.allHaveStopped);
+  Assert.equal(privateSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
+  Assert.equal(privateSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
 
-  do_check_false(combinedSummary.allHaveStopped);
-  do_check_eq(combinedSummary.progressTotalBytes, TEST_DATA_SHORT.length * 4);
-  do_check_eq(combinedSummary.progressCurrentBytes, TEST_DATA_SHORT.length * 2);
+  Assert.ok(!combinedSummary.allHaveStopped);
+  Assert.equal(combinedSummary.progressTotalBytes, TEST_DATA_SHORT.length * 4);
+  Assert.equal(combinedSummary.progressCurrentBytes, TEST_DATA_SHORT.length * 2);
 
   await inProgressPublicDownload.cancel();
 
   // Stopping the download should have excluded it from the summary.
-  do_check_true(publicSummary.allHaveStopped);
-  do_check_eq(publicSummary.progressTotalBytes, 0);
-  do_check_eq(publicSummary.progressCurrentBytes, 0);
+  Assert.ok(publicSummary.allHaveStopped);
+  Assert.equal(publicSummary.progressTotalBytes, 0);
+  Assert.equal(publicSummary.progressCurrentBytes, 0);
 
-  do_check_false(privateSummary.allHaveStopped);
-  do_check_eq(privateSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
-  do_check_eq(privateSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
+  Assert.ok(!privateSummary.allHaveStopped);
+  Assert.equal(privateSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
+  Assert.equal(privateSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
 
-  do_check_false(combinedSummary.allHaveStopped);
-  do_check_eq(combinedSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
-  do_check_eq(combinedSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
+  Assert.ok(!combinedSummary.allHaveStopped);
+  Assert.equal(combinedSummary.progressTotalBytes, TEST_DATA_SHORT.length * 2);
+  Assert.equal(combinedSummary.progressCurrentBytes, TEST_DATA_SHORT.length);
 
   await inProgressPrivateDownload.cancel();
 
   // All the downloads should be stopped now.
-  do_check_true(publicSummary.allHaveStopped);
-  do_check_eq(publicSummary.progressTotalBytes, 0);
-  do_check_eq(publicSummary.progressCurrentBytes, 0);
+  Assert.ok(publicSummary.allHaveStopped);
+  Assert.equal(publicSummary.progressTotalBytes, 0);
+  Assert.equal(publicSummary.progressCurrentBytes, 0);
 
-  do_check_true(privateSummary.allHaveStopped);
-  do_check_eq(privateSummary.progressTotalBytes, 0);
-  do_check_eq(privateSummary.progressCurrentBytes, 0);
+  Assert.ok(privateSummary.allHaveStopped);
+  Assert.equal(privateSummary.progressTotalBytes, 0);
+  Assert.equal(privateSummary.progressCurrentBytes, 0);
 
-  do_check_true(combinedSummary.allHaveStopped);
-  do_check_eq(combinedSummary.progressTotalBytes, 0);
-  do_check_eq(combinedSummary.progressCurrentBytes, 0);
+  Assert.ok(combinedSummary.allHaveStopped);
+  Assert.equal(combinedSummary.progressTotalBytes, 0);
+  Assert.equal(combinedSummary.progressCurrentBytes, 0);
 });
 
 /**
@@ -546,5 +546,5 @@ add_task(async function test_DownloadSummary_notifications() {
     },
   });
   await download.start();
-  do_check_true(receivedOnSummaryChanged);
+  Assert.ok(receivedOnSummaryChanged);
 });

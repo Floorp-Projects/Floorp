@@ -17,8 +17,8 @@ add_task(async function testFileError_with_writeAtomic() {
   } catch (ex) {
     exception = ex;
   }
-  do_check_true(exception instanceof File.Error);
-  do_check_true(exception.path == path);
+  Assert.ok(exception instanceof File.Error);
+  Assert.ok(exception.path == path);
 });
 
 add_task(async function testFileError_with_makeDir() {
@@ -32,8 +32,8 @@ add_task(async function testFileError_with_makeDir() {
   } catch (ex) {
     exception = ex;
   }
-  do_check_true(exception instanceof File.Error);
-  do_check_true(exception.path == path);
+  Assert.ok(exception instanceof File.Error);
+  Assert.ok(exception.path == path);
 });
 
 add_task(async function testFileError_with_move() {
@@ -53,6 +53,6 @@ add_task(async function testFileError_with_move() {
     exception = ex;
   }
   do_print(exception);
-  do_check_true(exception instanceof File.Error);
-  do_check_true(exception.path == sourcePath);
+  Assert.ok(exception instanceof File.Error);
+  Assert.ok(exception.path == sourcePath);
 });

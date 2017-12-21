@@ -70,10 +70,10 @@ function run_test() {
   function checkBlacklist() {
     if (Services.appinfo.OS == "WINNT") {
       var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
-      do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
     } else if (Services.appinfo.OS == "Darwin") {
       status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_OPENGL_LAYERS);
-      do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
     }
 
     gTestserver.stop(do_test_finished);

@@ -45,42 +45,42 @@ function test_nesting() {
 
     executeSoon(function () {
       // Should be at step 2
-      do_check_eq(++currentStep, 2);
+      Assert.equal(++currentStep, 2);
       // Before resolving, should have the unsafeSynchronize event loop and the
       // one just created.
-      do_check_eq(thread._nestedEventLoops.size, 2);
+      Assert.equal(thread._nestedEventLoops.size, 2);
 
       executeSoon(function () {
         // Should be at step 3
-        do_check_eq(++currentStep, 3);
+        Assert.equal(++currentStep, 3);
         // Before exiting the manually created event loop, should have the
         // unsafeSynchronize event loop and the manual event loop.
-        do_check_eq(thread._nestedEventLoops.size, 2);
+        Assert.equal(thread._nestedEventLoops.size, 2);
         // Should have the event loop
-        do_check_true(!!eventLoop);
+        Assert.ok(!!eventLoop);
         eventLoop.resolve();
       });
 
       resolve(true);
       // Shouldn't exit any event loops because a new one started since the call
       // to unsafeSynchronize
-      do_check_eq(thread._nestedEventLoops.size, 2);
+      Assert.equal(thread._nestedEventLoops.size, 2);
     });
 
     // Should be at step 1
-    do_check_eq(++currentStep, 1);
+    Assert.equal(++currentStep, 1);
     // Should have only the unsafeSynchronize event loop
-    do_check_eq(thread._nestedEventLoops.size, 1);
+    Assert.equal(thread._nestedEventLoops.size, 1);
     eventLoop = thread._nestedEventLoops.push();
     eventLoop.enter();
   });
 
-  do_check_eq(thread.unsafeSynchronize(p), true);
+  Assert.equal(thread.unsafeSynchronize(p), true);
 
   // Should be on the fourth step
-  do_check_eq(++currentStep, 4);
+  Assert.equal(++currentStep, 4);
   // There shouldn't be any nested event loops anymore
-  do_check_eq(thread._nestedEventLoops.size, 0);
+  Assert.equal(thread._nestedEventLoops.size, 0);
 
   finishClient(gClient);
 }

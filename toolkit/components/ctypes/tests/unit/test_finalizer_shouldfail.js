@@ -118,7 +118,7 @@ function test_null_dispose() {
   } catch (x) {
     exception = true;
   }
-  do_check_true(exception);
+  Assert.ok(exception);
 }
 
 /**
@@ -130,7 +130,7 @@ function test_pass_disposed() {
 
   exception = false;
   v = ctypes.CDataFinalizer(acquire(0), dispose);
-  do_check_true(compare(v, 0));
+  Assert.ok(compare(v, 0));
   v.forget();
 
   try {
@@ -138,11 +138,11 @@ function test_pass_disposed() {
   } catch (x) {
     exception = true;
   }
-  do_check_true(exception);
+  Assert.ok(exception);
 
   exception = false;
   v = ctypes.CDataFinalizer(acquire(0), dispose);
-  do_check_true(compare(v, 0));
+  Assert.ok(compare(v, 0));
   v.dispose();
 
   try {
@@ -150,7 +150,7 @@ function test_pass_disposed() {
   } catch (x) {
     exception = true;
   }
-  do_check_true(exception);
+  Assert.ok(exception);
 
   exception = false;
   try {
@@ -158,7 +158,7 @@ function test_pass_disposed() {
   } catch (x) {
     exception = true;
   }
-  do_check_true(exception);
+  Assert.ok(exception);
 }
 
 function test_wrong_type() {
@@ -170,6 +170,6 @@ function test_wrong_type() {
     exception = x;
   }
 
-  do_check_true(!!exception);
-  do_check_eq(exception.constructor.name, "TypeError");
+  Assert.ok(!!exception);
+  Assert.equal(exception.constructor.name, "TypeError");
 }

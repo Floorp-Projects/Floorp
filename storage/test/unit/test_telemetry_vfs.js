@@ -22,5 +22,5 @@ function run_test() {
   var d = getDatabase(file);
   run_sql(d, "CREATE TABLE bloat(data varchar)");
   run_sql(d, "DROP TABLE bloat");
-  do_check_true(read_hgram.snapshot().sum > old_sum);
+  Assert.ok(read_hgram.snapshot().sum > old_sum);
 }

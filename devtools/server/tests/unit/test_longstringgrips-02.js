@@ -39,8 +39,8 @@ function test_longstring_grip() {
       let longStringClient = gThreadClient.pauseLongString(fakeLongStringGrip);
       longStringClient.substring(22, 28, function (response) {
         try {
-          do_check_true(!!response.error,
-                        "We should not get a response, but an error.");
+          Assert.ok(!!response.error,
+                    "We should not get a response, but an error.");
         } finally {
           gThreadClient.resume(function () {
             finishClient(gClient);

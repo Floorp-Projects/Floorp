@@ -67,7 +67,7 @@ function check_has_alt_data_in_index(aHasAltData)
   }
   var hasAltData = {};
   cache_storage.getCacheIndexEntryAttrs(createURI(URL), "", hasAltData, {});
-  do_check_eq(hasAltData.value, aHasAltData);
+  Assert.equal(hasAltData.value, aHasAltData);
 }
 
 function run_test()
@@ -100,8 +100,8 @@ function readServerContent(request, buffer)
 {
   var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
-  do_check_eq(buffer, responseContent);
-  do_check_eq(cc.alternativeDataType, "");
+  Assert.equal(buffer, responseContent);
+  Assert.equal(cc.alternativeDataType, "");
   check_has_alt_data_in_index(false);
 
   do_execute_soon(() => {
@@ -145,9 +145,9 @@ function readAltContent(request, buffer)
 {
   var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
-  do_check_eq(servedNotModified, true);
-  do_check_eq(cc.alternativeDataType, altContentType);
-  do_check_eq(buffer, altContent);
+  Assert.equal(servedNotModified, true);
+  Assert.equal(cc.alternativeDataType, altContentType);
+  Assert.equal(buffer, altContent);
   check_has_alt_data_in_index(true);
 
   requestAgain();
@@ -167,8 +167,8 @@ function readEmptyAltContent(request, buffer)
   var cc = request.QueryInterface(Ci.nsICacheInfoChannel);
 
   // the cache is overwrite and the alt-data is reset
-  do_check_eq(cc.alternativeDataType, "");
-  do_check_eq(buffer, responseContent2);
+  Assert.equal(cc.alternativeDataType, "");
+  Assert.equal(buffer, responseContent2);
   check_has_alt_data_in_index(false);
 
   httpServer.stop(do_test_finished);

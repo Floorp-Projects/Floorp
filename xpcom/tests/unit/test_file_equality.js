@@ -16,7 +16,7 @@ function test_normalized_vs_non_normalized() {
   // get a directory that exists on all platforms
   var tmp1 = Services.dirsvc.get("TmpD", Ci.nsIFile);
   var exists = tmp1.exists();
-  do_check_true(exists);
+  Assert.ok(exists);
   if (!exists)
     return;
 
@@ -26,13 +26,13 @@ function test_normalized_vs_non_normalized() {
 
   // this has the same exact path as tmp1, it should equal tmp1
   var tmp2 = new LocalFile(tmp1.path);
-  do_check_true(tmp1.equals(tmp2));
+  Assert.ok(tmp1.equals(tmp2));
 
   // this is a non-normalized version of tmp1, it should not equal tmp1
   tmp2.appendRelativePath(".");
-  do_check_false(tmp1.equals(tmp2));
+  Assert.ok(!tmp1.equals(tmp2));
 
   // normalize and make sure they are equivalent again
   tmp2.normalize();
-  do_check_true(tmp1.equals(tmp2));
+  Assert.ok(tmp1.equals(tmp2));
 }

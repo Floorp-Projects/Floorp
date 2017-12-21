@@ -30,6 +30,6 @@ function run_test()
   var copy = input.readObject(true);
   copy.QueryInterface(Ci.nsIURI);
 
-  do_check_eq(copy.asciiSpec, aboutLicense.asciiSpec);
-  do_check_true(copy.equals(aboutLicense));
+  Assert.equal(copy.asciiSpec, aboutLicense.asciiSpec);
+  Assert.ok(copy.equals(aboutLicense));
 }

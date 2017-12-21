@@ -4,12 +4,12 @@
 Cu.import("resource://services-common/utils.js");
 
 function run_test() {
-    do_check_null(CommonUtils.ensureMillisecondsTimestamp(null));
-    do_check_null(CommonUtils.ensureMillisecondsTimestamp(0));
-    do_check_null(CommonUtils.ensureMillisecondsTimestamp("0"));
-    do_check_null(CommonUtils.ensureMillisecondsTimestamp("000"));
+    Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp(null));
+    Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp(0));
+    Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp("0"));
+    Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp("000"));
 
-    do_check_null(CommonUtils.ensureMillisecondsTimestamp(999 * 10000000000));
+    Assert.equal(null, CommonUtils.ensureMillisecondsTimestamp(999 * 10000000000));
 
     do_check_throws(function err() { CommonUtils.ensureMillisecondsTimestamp(-1); });
     do_check_throws(function err() { CommonUtils.ensureMillisecondsTimestamp(1); });

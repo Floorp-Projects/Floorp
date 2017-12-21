@@ -19,16 +19,16 @@ add_task(async function() {
   let root = PlacesUtils.history.executeQuery(query, options).root;
   root.containerOpen = true;
   let cc = root.childCount;
-  do_check_eq(cc, 1);
+  Assert.equal(cc, 1);
 
   print("Checking url is in the query.");
   let node = root.getChild(0);
   print("Found " + node.uri);
 
-  do_check_true(await PlacesTestUtils.isPageInDB(TEST_URL.u));
+  Assert.ok(await PlacesTestUtils.isPageInDB(TEST_URL.u));
 
   root.containerOpen = false;
   await PlacesUtils.history.remove(node.uri);
 
-  do_check_false(await PlacesTestUtils.isPageInDB(TEST_URL.u));
+  Assert.equal(false, await PlacesTestUtils.isPageInDB(TEST_URL.u));
 });

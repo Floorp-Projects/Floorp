@@ -58,7 +58,7 @@ let gResponseCounter = 0;
 let gIsFromCache = 0;
 function checkContent(request, buffer, context, isFromCache)
 {
-  do_check_eq(buffer, gResponseBody);
+  Assert.equal(buffer, gResponseBody);
   gResponseCounter++;
   if (isFromCache) {
     gIsFromCache++;

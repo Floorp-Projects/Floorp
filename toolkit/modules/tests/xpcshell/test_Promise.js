@@ -111,10 +111,10 @@ tests.push(make_promise_test(
     let install_observer = function install_observer(i) {
       observe_failures(source.promise.then(
         function onSuccess(value) {
-          do_check_true(!notified[i], "Ensuring that observer is notified at most once");
+          Assert.ok(!notified[i], "Ensuring that observer is notified at most once");
           notified[i] = true;
 
-          do_check_eq(value, RESULT, "Ensuring that the observed value is correct");
+          Assert.equal(value, RESULT, "Ensuring that the observed value is correct");
           if (--expected == 0) {
             result.resolve();
           }
@@ -143,14 +143,14 @@ tests.push(
     return Promise.resolve().then(
       function onResolve() {
         // Since this file is in strict mode, the correct value is "undefined".
-        do_check_eq(this, undefined);
+        Assert.equal(this, undefined);
         throw "reject";
       }
     ).then(
       null,
       function onReject() {
         // Since this file is in strict mode, the correct value is "undefined".
-        do_check_eq(this, undefined);
+        Assert.equal(this, undefined);
       }
     );
   }));
@@ -165,21 +165,21 @@ tests.push(
 
     promise.then(
       function onResolve() {
-        do_check_eq(order, 0);
+        Assert.equal(order, 0);
         order++;
       }
     );
 
     promise.then(
       function onResolve() {
-        do_check_eq(order, 1);
+        Assert.equal(order, 1);
         order++;
       }
     );
 
     let newPromise = promise.then(
       function onResolve() {
-        do_check_eq(order, 2);
+        Assert.equal(order, 2);
       }
     );
 
@@ -198,14 +198,14 @@ tests.push(
 
     promise.then(
       function onResolve() {
-        do_check_eq(order, 0);
+        Assert.equal(order, 0);
         order++;
       }
     );
 
     promise.then(
       function onResolve() {
-        do_check_eq(order, 1);
+        Assert.equal(order, 1);
         order++;
       }
     );
@@ -213,7 +213,7 @@ tests.push(
     // This test finishes after the last handler succeeds.
     return promise.then(
       function onResolve() {
-        do_check_eq(order, 2);
+        Assert.equal(order, 2);
       }
     );
   }));
@@ -239,10 +239,10 @@ tests.push(make_promise_test(
     let install_observer = function install_observer(i) {
       observe_failures(observed.promise.then(
         function onSuccess(value) {
-          do_check_true(!notified[i], "Ensuring that observer is notified at most once");
+          Assert.ok(!notified[i], "Ensuring that observer is notified at most once");
           notified[i] = true;
 
-          do_check_eq(value, RESULT, "Ensuring that the observed value is correct");
+          Assert.equal(value, RESULT, "Ensuring that the observed value is correct");
           if (--expected == 0) {
             result.resolve();
           }
@@ -289,7 +289,7 @@ tests.push(
 
     source.promise.then(
       function onResolve() {
-        do_check_true(exception_thrown, "Second observer called after first observer has thrown");
+        Assert.ok(exception_thrown, "Second observer called after first observer has thrown");
       }
     );
 
@@ -298,7 +298,7 @@ tests.push(
         do_throw("observer_1 should not have resolved");
       },
       function onReject(reason) {
-        do_check_true(reason == exception_content, "Obtained correct rejection");
+        Assert.ok(reason == exception_content, "Obtained correct rejection");
       }
     );
 
@@ -318,7 +318,7 @@ tests.push(
 
     let result = deferred.promise.then(
       function onResolve(value) {
-        do_check_eq(value, 1, "Resolution chose the first value");
+        Assert.equal(value, 1, "Resolution chose the first value");
       },
       function onReject(reason) {
         do_throw("Obtained a rejection while the promise was already resolved");
@@ -342,7 +342,7 @@ tests.push(
         do_throw("Obtained a resolution while the promise was already rejected");
       },
       function onReject(reason) {
-        do_check_eq(reason, 1, "Rejection chose the first value");
+        Assert.equal(reason, 1, "Rejection chose the first value");
       }
     );
 
@@ -362,14 +362,14 @@ tests.push(
         do_throw("A rejected promise should not resolve");
       },
       function onReject(reason) {
-        do_check_true(reason == boom, "Promise was rejected with the correct error");
+        Assert.ok(reason == boom, "Promise was rejected with the correct error");
         return RESULT;
       }
     );
 
     promise = promise.then(
       function onResolve(value) {
-        do_check_eq(value, RESULT, "Promise was recovered with the correct value");
+        Assert.equal(value, RESULT, "Promise was recovered with the correct value");
       }
     );
 
@@ -393,7 +393,7 @@ tests.push(
         do_throw("A rejected promise should not resolve");
       },
       function onReject(reason) {
-        do_check_true(reason == boom, "Promise was rejected with the correct error");
+        Assert.ok(reason == boom, "Promise was rejected with the correct error");
         return Promise.resolve(RESULT);
       }
     );
@@ -401,14 +401,14 @@ tests.push(
     // return a rejected promise from a onResolve listener
     promise = promise.then(
       function onResolve(value) {
-        do_check_eq(value, RESULT, "Promise was recovered with the correct value");
+        Assert.equal(value, RESULT, "Promise was recovered with the correct value");
         return Promise.reject(boom2);
       }
     );
 
     promise = promise.catch(
       function onReject(reason) {
-        do_check_eq(reason, boom2, "Rejection was propagated with the correct " +
+        Assert.equal(reason, boom2, "Rejection was propagated with the correct " +
                 "reason, through a promise");
       }
     );
@@ -431,7 +431,7 @@ tests.push(
 
     return d3.promise.then(
       function onSuccess(value) {
-        do_check_eq(value, RESULT, "Resolution with a promise eventually yielded "
+        Assert.equal(value, RESULT, "Resolution with a promise eventually yielded "
                 + " the correct result");
       }
     );
@@ -455,7 +455,7 @@ tests.push(
     // Check that result_1 is correctly propagated
     promise = promise.then(
       function onSuccess(result) {
-        do_check_eq(result, result_1, "Result was propagated correctly through " +
+        Assert.equal(result, result_1, "Result was propagated correctly through " +
                 " several applications of |then|");
         return result_2;
       }
@@ -471,7 +471,7 @@ tests.push(
     // ... and that the check did not alter the value
     promise = promise.then(
       function onResolve(value) {
-        do_check_eq(value, result_2, "Result was propagated correctly once again");
+        Assert.equal(value, result_2, "Result was propagated correctly once again");
       }
     );
 
@@ -490,14 +490,14 @@ tests.push(
 
     promise = promise.catch(
       function onReject(reason) {
-        do_check_true(reason == error_1, "Reason was propagated correctly");
+        Assert.ok(reason == error_1, "Reason was propagated correctly");
         throw error_2;
       }
     );
 
     promise = promise.catch(
       function onReject(reason) {
-        do_check_true(reason == error_2, "Throwing an error altered the reason " +
+        Assert.ok(reason == error_2, "Throwing an error altered the reason " +
             "as expected");
         return result_3;
       }
@@ -505,7 +505,7 @@ tests.push(
 
     promise = promise.then(
       function onResolve(result) {
-        do_check_eq(result, result_3, "Error was correctly recovered");
+        Assert.equal(result, result_3, "Error was correctly recovered");
       }
     );
 
@@ -523,7 +523,7 @@ tests.push(
         do_throw("Incorrect call to onResolve listener");
       },
       function onReject(reason) {
-        do_check_eq(reason, error, "Rejection lead to the expected reason");
+        Assert.equal(reason, error, "Rejection lead to the expected reason");
       }
     );
 
@@ -538,11 +538,11 @@ tests.push(
     const RESULT = "arbitrary value";
     let p1 = Promise.resolve(RESULT);
     let p2 = Promise.resolve(p1);
-    do_check_eq(p1, p2, "Promise.resolve used on a promise just returns the promise");
+    Assert.equal(p1, p2, "Promise.resolve used on a promise just returns the promise");
 
     return p1.then(
       function onResolve(result) {
-        do_check_eq(result, RESULT, "Promise.resolve propagated the correct result");
+        Assert.equal(result, RESULT, "Promise.resolve propagated the correct result");
       }
     );
   }));
@@ -568,7 +568,7 @@ tests.push(
       }
     );
 
-    do_check_false(thenExecuted);
+    Assert.ok(!thenExecuted);
 
     return promise;
   }));
@@ -593,7 +593,7 @@ tests.push(
       function onResolve(result) {
         // Check that the execution went as expected.
         let expectedString = new Array(1 + NUM_ITERATIONS).join(".");
-        do_check_true(result == expectedString);
+        Assert.ok(result == expectedString);
 
         // Check that we didn't generate one or more stack frames per iteration.
         let stackFrameCount = 0;
@@ -603,7 +603,7 @@ tests.push(
           stackFrame = stackFrame.caller;
         }
 
-        do_check_true(stackFrameCount < NUM_ITERATIONS);
+        Assert.ok(stackFrameCount < NUM_ITERATIONS);
       }
     );
 
@@ -628,10 +628,10 @@ tests.push(
 
     return Promise.all(promises).then(
       function onResolve([val1, val2, val3, val4]) {
-        do_check_eq(val1, 1);
-        do_check_eq(val2, 2);
-        do_check_eq(val3, 3);
-        do_check_eq(val4, 4);
+        Assert.equal(val1, 1);
+        Assert.equal(val2, 2);
+        Assert.equal(val3, 3);
+        Assert.equal(val4, 4);
       }
     );
   }));
@@ -657,7 +657,7 @@ tests.push(
         do_throw("Incorrect call to onResolve listener");
       },
       function onReject(reason) {
-        do_check_eq(reason, error, "Rejection lead to the expected reason");
+        Assert.equal(reason, error, "Rejection lead to the expected reason");
       }
     );
   }));
@@ -668,22 +668,22 @@ tests.push(
   make_promise_test(function all_resolve_no_promises(test) {
     try {
       Promise.all(null);
-      do_check_true(false, "all() should only accept iterables");
+      Assert.ok(false, "all() should only accept iterables");
     } catch (e) {
-      do_check_true(true, "all() fails when first the arg is not an iterable");
+      Assert.ok(true, "all() fails when first the arg is not an iterable");
     }
 
     let p1 = Promise.all([]).then(
       function onResolve(val) {
-        do_check_true(Array.isArray(val) && val.length == 0);
+        Assert.ok(Array.isArray(val) && val.length == 0);
       }
     );
 
     let p2 = Promise.all([1, 2, 3]).then(
       function onResolve([val1, val2, val3]) {
-        do_check_eq(val1, 1);
-        do_check_eq(val2, 2);
-        do_check_eq(val3, 3);
+        Assert.equal(val1, 1);
+        Assert.equal(val2, 2);
+        Assert.equal(val3, 3);
       }
     );
 
@@ -701,9 +701,9 @@ tests.push(
 
     return Promise.all(iterable()).then(
       function onResolve([val1, val2, val3]) {
-        do_check_eq(val1, 1);
-        do_check_eq(val2, 2);
-        do_check_eq(val3, 3);
+        Assert.equal(val1, 1);
+        Assert.equal(val2, 2);
+        Assert.equal(val3, 3);
       },
       function onReject() {
         do_throw("all() unexpectedly rejected");
@@ -724,7 +724,7 @@ tests.push(
         do_throw("all() unexpectedly resolved");
       },
       function onReject(reason) {
-        do_check_eq(reason, 1, "all() rejects when the iterator throws");
+        Assert.equal(reason, 1, "all() rejects when the iterator throws");
       }
     );
   }));
@@ -737,7 +737,7 @@ tests.push(
 
     return Promise.race([p1, p2]).then(
       function onResolve(value) {
-        do_check_eq(value, 1);
+        Assert.equal(value, 1);
       }
     );
   }));
@@ -747,14 +747,14 @@ tests.push(
   make_promise_test(function race_resolve_no_promises(test) {
     try {
       Promise.race(null);
-      do_check_true(false, "race() should only accept iterables");
+      Assert.ok(false, "race() should only accept iterables");
     } catch (e) {
-      do_check_true(true, "race() fails when first the arg is not an iterable");
+      Assert.ok(true, "race() fails when first the arg is not an iterable");
     }
 
     return Promise.race([1, 2, 3]).then(
       function onResolve(value) {
-        do_check_eq(value, 1);
+        Assert.equal(value, 1);
       }
     );
   }));
@@ -788,7 +788,7 @@ tests.push(
 
     return Promise.race(iterable()).then(
       function onResolve(value) {
-        do_check_eq(value, 1);
+        Assert.equal(value, 1);
       },
       function onReject() {
         do_throw("race() unexpectedly rejected");
@@ -809,7 +809,7 @@ tests.push(
         do_throw("race() unexpectedly resolved");
       },
       function onReject(reason) {
-        do_check_eq(reason, 1, "race() rejects when the iterator throws");
+        Assert.equal(reason, 1, "race() rejects when the iterator throws");
       }
     );
   }));
@@ -827,7 +827,7 @@ tests.push(
         do_throw("race() unexpectedly resolved");
       },
       function onReject(reason) {
-        do_check_eq(reason, 1, "race() rejects when given a rejected promise");
+        Assert.equal(reason, 1, "race() rejects when given a rejected promise");
       }
     );
   }));
@@ -837,24 +837,24 @@ tests.push(
   make_promise_test(function test_constructor(test) {
     try {
       new Promise(null);
-      do_check_true(false, "Constructor should fail when not passed a function");
+      Assert.ok(false, "Constructor should fail when not passed a function");
     } catch (e) {
-      do_check_true(true, "Constructor fails when not passed a function");
+      Assert.ok(true, "Constructor fails when not passed a function");
     }
 
     let executorRan = false;
     let promise = new Promise(
       function executor(resolve, reject) {
         executorRan = true;
-        do_check_eq(this, undefined);
-        do_check_eq(typeof resolve, "function",
-                    "resolve function should be passed to the executor");
-        do_check_eq(typeof reject, "function",
-                    "reject function should be passed to the executor");
+        Assert.equal(this, undefined);
+        Assert.equal(typeof resolve, "function",
+                     "resolve function should be passed to the executor");
+        Assert.equal(typeof reject, "function",
+                     "reject function should be passed to the executor");
       }
     );
     do_check_instanceof(promise, Promise);
-    do_check_true(executorRan, "Executor should execute synchronously");
+    Assert.ok(executorRan, "Executor should execute synchronously");
 
     // resolve a promise from the executor
     let resolvePromise = new Promise(
@@ -863,7 +863,7 @@ tests.push(
       }
     ).then(
       function onResolve(value) {
-        do_check_eq(value, 1, "Executor resolved with correct value");
+        Assert.equal(value, 1, "Executor resolved with correct value");
       },
       function onReject() {
         do_throw("Executor unexpectedly rejected");
@@ -880,7 +880,7 @@ tests.push(
         do_throw("Executor unexpectedly resolved");
       },
       function onReject(reason) {
-        do_check_eq(reason, 1, "Executor rejected with correct value");
+        Assert.equal(reason, 1, "Executor rejected with correct value");
       }
     );
 
@@ -894,7 +894,7 @@ tests.push(
         do_throw("Throwing inside an executor should not resolve the promise");
       },
       function onReject(reason) {
-        do_check_eq(reason, 1, "Executor rejected with correct value");
+        Assert.equal(reason, 1, "Executor rejected with correct value");
       }
     );
 

@@ -30,9 +30,9 @@ add_task(async function setup() {
 
 add_task(async function test_upper_ascii() {
   var stmt = createStatement("SELECT name, id FROM test WHERE name = upper('a')");
-  do_check_true(stmt.executeStep());
-  do_check_eq("A", stmt.getString(0));
-  do_check_eq(2, stmt.getInt32(1));
+  Assert.ok(stmt.executeStep());
+  Assert.equal("A", stmt.getString(0));
+  Assert.equal(2, stmt.getInt32(1));
   stmt.reset();
   stmt.finalize();
 });
@@ -40,18 +40,18 @@ add_task(async function test_upper_ascii() {
 add_task(async function test_upper_non_ascii() {
   var stmt = createStatement("SELECT name, id FROM test WHERE name = upper(?1)");
   stmt.bindByIndex(0, LATIN1_ae);
-  do_check_true(stmt.executeStep());
-  do_check_eq(LATIN1_AE, stmt.getString(0));
-  do_check_eq(1, stmt.getInt32(1));
+  Assert.ok(stmt.executeStep());
+  Assert.equal(LATIN1_AE, stmt.getString(0));
+  Assert.equal(1, stmt.getInt32(1));
   stmt.reset();
   stmt.finalize();
 });
 
 add_task(async function test_lower_ascii() {
   var stmt = createStatement("SELECT name, id FROM test WHERE name = lower('B')");
-  do_check_true(stmt.executeStep());
-  do_check_eq("b", stmt.getString(0));
-  do_check_eq(3, stmt.getInt32(1));
+  Assert.ok(stmt.executeStep());
+  Assert.equal("b", stmt.getString(0));
+  Assert.equal(3, stmt.getInt32(1));
   stmt.reset();
   stmt.finalize();
 });
@@ -59,9 +59,9 @@ add_task(async function test_lower_ascii() {
 add_task(async function test_lower_non_ascii() {
   var stmt = createStatement("SELECT name, id FROM test WHERE name = lower(?1)");
   stmt.bindByIndex(0, LATIN1_AE);
-  do_check_true(stmt.executeStep());
-  do_check_eq(LATIN1_ae, stmt.getString(0));
-  do_check_eq(4, stmt.getInt32(1));
+  Assert.ok(stmt.executeStep());
+  Assert.equal(LATIN1_ae, stmt.getString(0));
+  Assert.equal(4, stmt.getInt32(1));
   stmt.reset();
   stmt.finalize();
 });
@@ -69,15 +69,15 @@ add_task(async function test_lower_non_ascii() {
 add_task(async function test_like_search_different() {
   var stmt = createStatement("SELECT COUNT(*) FROM test WHERE name LIKE ?1");
   stmt.bindByIndex(0, LATIN1_AE);
-  do_check_true(stmt.executeStep());
-  do_check_eq(2, stmt.getInt32(0));
+  Assert.ok(stmt.executeStep());
+  Assert.equal(2, stmt.getInt32(0));
   stmt.finalize();
 });
 
 add_task(async function test_like_search_same() {
   var stmt = createStatement("SELECT COUNT(*) FROM test WHERE name LIKE ?1");
   stmt.bindByIndex(0, LATIN1_ae);
-  do_check_true(stmt.executeStep());
-  do_check_eq(2, stmt.getInt32(0));
+  Assert.ok(stmt.executeStep());
+  Assert.equal(2, stmt.getInt32(0));
   stmt.finalize();
 });

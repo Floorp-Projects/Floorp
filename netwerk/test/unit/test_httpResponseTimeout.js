@@ -35,9 +35,9 @@ TimeoutListener.prototype = {
 
   onStopRequest: function (request, ctx, status) {
     if (this.expectResponse) {
-      do_check_eq(status, Cr.NS_OK);
+      Assert.equal(status, Cr.NS_OK);
     } else {
-      do_check_eq(status, Cr.NS_ERROR_NET_TIMEOUT);
+      Assert.equal(status, Cr.NS_ERROR_NET_TIMEOUT);
     }
 
     run_next_test();

@@ -24,13 +24,13 @@ add_task(async function removed_bookmark() {
 
   await PlacesTestUtils.promiseAsyncUpdates();
   do_print("Bookmarked => frecency of URI should be != 0");
-  do_check_neq(frecencyForUrl(TEST_URI), 0);
+  Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.remove(bm);
 
   await PlacesTestUtils.promiseAsyncUpdates();
   do_print("Unvisited URI no longer bookmarked => frecency should = 0");
-  do_check_eq(frecencyForUrl(TEST_URI), 0);
+  Assert.equal(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesTestUtils.clearHistory();
@@ -48,14 +48,14 @@ add_task(async function removed_but_visited_bookmark() {
 
   await PlacesTestUtils.promiseAsyncUpdates();
   do_print("Bookmarked => frecency of URI should be != 0");
-  do_check_neq(frecencyForUrl(TEST_URI), 0);
+  Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesTestUtils.addVisits(TEST_URI);
   await PlacesUtils.bookmarks.remove(bm);
 
   await PlacesTestUtils.promiseAsyncUpdates();
   do_print("*Visited* URI no longer bookmarked => frecency should != 0");
-  do_check_neq(frecencyForUrl(TEST_URI), 0);
+  Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesTestUtils.clearHistory();
@@ -78,13 +78,13 @@ add_task(async function remove_bookmark_still_bookmarked() {
 
   await PlacesTestUtils.promiseAsyncUpdates();
   do_print("Bookmarked => frecency of URI should be != 0");
-  do_check_neq(frecencyForUrl(TEST_URI), 0);
+  Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.remove(bm1);
 
   await PlacesTestUtils.promiseAsyncUpdates();
   do_print("URI still bookmarked => frecency should != 0");
-  do_check_neq(frecencyForUrl(TEST_URI), 0);
+  Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesTestUtils.clearHistory();
@@ -102,14 +102,14 @@ add_task(async function cleared_parent_of_visited_bookmark() {
 
   await PlacesTestUtils.promiseAsyncUpdates();
   do_print("Bookmarked => frecency of URI should be != 0");
-  do_check_neq(frecencyForUrl(TEST_URI), 0);
+  Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesTestUtils.addVisits(TEST_URI);
   await PlacesUtils.bookmarks.eraseEverything();
 
   await PlacesTestUtils.promiseAsyncUpdates();
   do_print("*Visited* URI no longer bookmarked => frecency should != 0");
-  do_check_neq(frecencyForUrl(TEST_URI), 0);
+  Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesTestUtils.clearHistory();
@@ -139,12 +139,12 @@ add_task(async function cleared_parent_of_bookmark_still_bookmarked() {
 
   await PlacesTestUtils.promiseAsyncUpdates();
   do_print("Bookmarked => frecency of URI should be != 0");
-  do_check_neq(frecencyForUrl(TEST_URI), 0);
+  Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.remove(folder);
   await PlacesTestUtils.promiseAsyncUpdates();
   // URI still bookmarked => frecency should != 0.
-  do_check_neq(frecencyForUrl(TEST_URI), 0);
+  Assert.notEqual(frecencyForUrl(TEST_URI), 0);
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesTestUtils.clearHistory();

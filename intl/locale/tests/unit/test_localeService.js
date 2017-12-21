@@ -24,27 +24,27 @@ function run_test()
 
 add_test(function test_defaultLocale() {
   const defaultLocale = localeService.defaultLocale;
-  do_check_true(defaultLocale.length !== 0, "Default locale is not empty");
+  Assert.ok(defaultLocale.length !== 0, "Default locale is not empty");
   run_next_test();
 });
 
 add_test(function test_lastFallbackLocale() {
   const lastFallbackLocale = localeService.lastFallbackLocale;
-  do_check_true(lastFallbackLocale === "en-US", "Last fallback locale is en-US");
+  Assert.ok(lastFallbackLocale === "en-US", "Last fallback locale is en-US");
   run_next_test();
 });
 
 add_test(function test_getAppLocalesAsLangTags() {
   const appLocale = localeService.getAppLocaleAsLangTag();
-  do_check_true(appLocale != "", "appLocale is non-empty");
+  Assert.ok(appLocale != "", "appLocale is non-empty");
 
   const appLocales = localeService.getAppLocalesAsLangTags();
-  do_check_true(Array.isArray(appLocales), "appLocales returns an array");
+  Assert.ok(Array.isArray(appLocales), "appLocales returns an array");
 
-  do_check_true(appLocale == appLocales[0], "appLocale matches first entry in appLocales");
+  Assert.ok(appLocale == appLocales[0], "appLocale matches first entry in appLocales");
 
   const enUSLocales = appLocales.filter(loc => loc === "en-US");
-  do_check_true(enUSLocales.length == 1, "en-US is present exactly one time");
+  Assert.ok(enUSLocales.length == 1, "en-US is present exactly one time");
 
   run_next_test();
 });
@@ -54,7 +54,7 @@ const REQ_LOC_CHANGE_EVENT = "intl:requested-locales-changed";
 
 add_test(function test_getRequestedLocales() {
   const requestedLocales = localeService.getRequestedLocales();
-  do_check_true(Array.isArray(requestedLocales), "requestedLocales returns an array");
+  Assert.ok(Array.isArray(requestedLocales), "requestedLocales returns an array");
 
   run_next_test();
 });
@@ -77,7 +77,7 @@ add_test(function test_getRequestedLocales_matchOS() {
       switch (aTopic) {
         case REQ_LOC_CHANGE_EVENT:
           const reqLocs = localeService.getRequestedLocales();
-          do_check_true(reqLocs[0] === osPrefs.systemLocale);
+          Assert.ok(reqLocs[0] === osPrefs.systemLocale);
           Services.obs.removeObserver(observer, REQ_LOC_CHANGE_EVENT);
           do_test_finished();
       }
@@ -105,7 +105,7 @@ add_test(function test_getRequestedLocales_onChange() {
       switch (aTopic) {
         case REQ_LOC_CHANGE_EVENT:
           const reqLocs = localeService.getRequestedLocales();
-          do_check_true(reqLocs[0] === "sr-RU");
+          Assert.ok(reqLocs[0] === "sr-RU");
           Services.obs.removeObserver(observer, REQ_LOC_CHANGE_EVENT);
           do_test_finished();
       }
@@ -122,7 +122,7 @@ add_test(function test_getRequestedLocale() {
   Services.prefs.setCharPref(PREF_REQUESTED_LOCALES, "tlh");
 
   let requestedLocale = localeService.getRequestedLocale();
-  do_check_true(requestedLocale === "tlh", "requestedLocale returns the right value");
+  Assert.ok(requestedLocale === "tlh", "requestedLocale returns the right value");
 
   Services.prefs.clearUserPref(PREF_REQUESTED_LOCALES);
 
@@ -135,15 +135,15 @@ add_test(function test_setRequestedLocales() {
   localeService.setRequestedLocales(['de-AT', 'de-DE', 'de-CH']);
 
   let locales = localeService.getRequestedLocales();;
-  do_check_true(locales[0] === 'de-AT');
-  do_check_true(locales[1] === 'de-DE');
-  do_check_true(locales[2] === 'de-CH');
+  Assert.ok(locales[0] === 'de-AT');
+  Assert.ok(locales[1] === 'de-DE');
+  Assert.ok(locales[2] === 'de-CH');
 
   run_next_test();
 });
 
 add_test(function test_isAppLocaleRTL() {
-  do_check_true(typeof localeService.isAppLocaleRTL === 'boolean');
+  Assert.ok(typeof localeService.isAppLocaleRTL === 'boolean');
 
   run_next_test();
 });
@@ -155,12 +155,12 @@ add_test(function test_getRequestedLocales_sanitize() {
   Services.prefs.setCharPref(PREF_REQUESTED_LOCALES, "de,2,#$@#,pl,!a2,DE-at,,;");
 
   let locales = localeService.getRequestedLocales();
-  do_check_eq(locales[0], "de");
-  do_check_eq(locales[1], "pl");
-  do_check_eq(locales[2], "de-AT");
-  do_check_eq(locales[3], "und");
-  do_check_eq(locales[4], localeService.lastFallbackLocale);
-  do_check_eq(locales.length, 5);
+  Assert.equal(locales[0], "de");
+  Assert.equal(locales[1], "pl");
+  Assert.equal(locales[2], "de-AT");
+  Assert.equal(locales[3], "und");
+  Assert.equal(locales[4], localeService.lastFallbackLocale);
+  Assert.equal(locales.length, 5);
 
   Services.prefs.clearUserPref(PREF_REQUESTED_LOCALES);
 

@@ -271,7 +271,7 @@ function compareArrayToResult(aArray, aRoot) {
         do_print(aArray[i].uri);
     }
   }
-  do_check_eq(expectedResultCount, aRoot.childCount);
+  Assert.equal(expectedResultCount, aRoot.childCount);
 
   var inQueryIndex = 0;
   for (var i = 0; i < aArray.length; i++) {

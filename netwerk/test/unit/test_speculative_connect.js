@@ -73,7 +73,7 @@ TestServer.prototype = {
     },
     onSocketAccepted: function(socket, trans) {
         try { this.listener.close(); } catch(e) {}
-        do_check_true(true);
+        Assert.ok(true);
         next_test();
     },
 
@@ -103,13 +103,13 @@ TestFailedStreamCallback.prototype = {
     processException: function(e) {
         do_check_instanceof(e, Ci.nsIException);
         // A refusal to connect speculatively should throw an error.
-        do_check_eq(e.result, Cr.NS_ERROR_CONNECTION_REFUSED);
+        Assert.equal(e.result, Cr.NS_ERROR_CONNECTION_REFUSED);
         this.transport.close(Cr.NS_BINDING_ABORTED);
         return true;
     },
     onOutputStreamReady: function(outstream) {
         do_print("outputstream handler.");
-        do_check_neq(typeof(outstream), undefined);
+        Assert.notEqual(typeof(outstream), undefined);
         try {
             outstream.write(this.dummyContent, this.dummyContent.length);
         } catch (e) {
@@ -121,7 +121,7 @@ TestFailedStreamCallback.prototype = {
     },
     onInputStreamReady: function(instream) {
         do_print("inputstream handler.");
-        do_check_neq(typeof(instream), undefined);
+        Assert.notEqual(typeof(instream), undefined);
         try {
             instream.available();
         } catch (e) {
@@ -172,22 +172,22 @@ function test_hostnames_resolving_to_addresses(host, next) {
     do_print(host);
     var sts = Cc["@mozilla.org/network/socket-transport-service;1"]
               .getService(Ci.nsISocketTransportService);
-    do_check_neq(typeof(sts), undefined);
+    Assert.notEqual(typeof(sts), undefined);
     var transport = sts.createTransport(null, 0, host, 80, null);
-    do_check_neq(typeof(transport), undefined);
+    Assert.notEqual(typeof(transport), undefined);
 
     transport.connectionFlags = Ci.nsISocketTransport.DISABLE_RFC1918;
     transport.setTimeout(Ci.nsISocketTransport.TIMEOUT_CONNECT, 1);
     transport.setTimeout(Ci.nsISocketTransport.TIMEOUT_READ_WRITE, 1);
-    do_check_eq(1, transport.getTimeout(Ci.nsISocketTransport.TIMEOUT_CONNECT));
+    Assert.equal(1, transport.getTimeout(Ci.nsISocketTransport.TIMEOUT_CONNECT));
 
     var outStream = transport.openOutputStream(Ci.nsITransport.OPEN_UNBUFFERED,0,0);
     var inStream  = transport.openInputStream(0,0,0);
-    do_check_neq(typeof(outStream), undefined);
-    do_check_neq(typeof(inStream), undefined);
+    Assert.notEqual(typeof(outStream), undefined);
+    Assert.notEqual(typeof(inStream), undefined);
 
     var callback = new TestFailedStreamCallback(transport, host, next);
-    do_check_neq(typeof(callback), undefined);
+    Assert.notEqual(typeof(callback), undefined);
 
     // Need to get main thread pointer to ensure nsSocketTransport::AsyncWait
     // adds callback to ns*StreamReadyEvent on main thread, and doesn't
@@ -240,30 +240,30 @@ function test_proxies(proxyHost, next) {
     do_print("Proxy: " + proxyHost);
     var sts = Cc["@mozilla.org/network/socket-transport-service;1"]
               .getService(Ci.nsISocketTransportService);
-    do_check_neq(typeof(sts), undefined);
+    Assert.notEqual(typeof(sts), undefined);
     var pps = Cc["@mozilla.org/network/protocol-proxy-service;1"]
               .getService();
-    do_check_neq(typeof(pps), undefined);
+    Assert.notEqual(typeof(pps), undefined);
 
     var proxyInfo = pps.newProxyInfo("http", proxyHost, 8080, 0, 1, null);
-    do_check_neq(typeof(proxyInfo), undefined);
+    Assert.notEqual(typeof(proxyInfo), undefined);
 
     var transport = sts.createTransport(null, 0, "dummyHost", 80, proxyInfo);
-    do_check_neq(typeof(transport), undefined);
+    Assert.notEqual(typeof(transport), undefined);
 
     transport.connectionFlags = Ci.nsISocketTransport.DISABLE_RFC1918;
 
     transport.setTimeout(Ci.nsISocketTransport.TIMEOUT_CONNECT, 1);
-    do_check_eq(1, transport.getTimeout(Ci.nsISocketTransport.TIMEOUT_CONNECT));
+    Assert.equal(1, transport.getTimeout(Ci.nsISocketTransport.TIMEOUT_CONNECT));
     transport.setTimeout(Ci.nsISocketTransport.TIMEOUT_READ_WRITE, 1);
 
     var outStream = transport.openOutputStream(Ci.nsITransport.OPEN_UNBUFFERED,0,0);
     var inStream  = transport.openInputStream(0,0,0);
-    do_check_neq(typeof(outStream), undefined);
-    do_check_neq(typeof(inStream), undefined);
+    Assert.notEqual(typeof(outStream), undefined);
+    Assert.notEqual(typeof(inStream), undefined);
 
     var callback = new TestFailedStreamCallback(transport, proxyHost, next);
-    do_check_neq(typeof(callback), undefined);
+    Assert.notEqual(typeof(callback), undefined);
 
     // Need to get main thread pointer to ensure nsSocketTransport::AsyncWait
     // adds callback to ns*StreamReadyEvent on main thread, and doesn't

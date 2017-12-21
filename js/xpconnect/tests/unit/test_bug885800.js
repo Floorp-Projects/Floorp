@@ -5,9 +5,9 @@ function run_test() {
   var obj = Cu.evalInSandbox('this.obj = {foo: 2}; obj', sb);
   var chromeSb = new Cu.Sandbox(this);
   chromeSb.objRef = obj;
-  do_check_eq(Cu.evalInSandbox('objRef.foo', chromeSb), 2);
+  Assert.equal(Cu.evalInSandbox('objRef.foo', chromeSb), 2);
   Cu.nukeSandbox(sb);
-  do_check_true(Cu.isDeadWrapper(obj));
+  Assert.ok(Cu.isDeadWrapper(obj));
   // CCWs to nuked wrappers should be considered dead.
-  do_check_true(Cu.isDeadWrapper(chromeSb.objRef));
+  Assert.ok(Cu.isDeadWrapper(chromeSb.objRef));
 }

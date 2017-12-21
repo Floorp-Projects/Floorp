@@ -12,9 +12,9 @@ function run_test() {
       Components.utils.forceGC();
     },
     function(mdump, extra) {
-      do_check_eq(extra.TestingOOMCrash, "Yes");
-      do_check_false("JSOutOfMemory" in extra);
-      do_check_eq(extra.JSLargeAllocationFailure, "Recovered");
+      Assert.equal(extra.TestingOOMCrash, "Yes");
+      Assert.equal(false, "JSOutOfMemory" in extra);
+      Assert.equal(extra.JSLargeAllocationFailure, "Recovered");
     },
     true);
 }

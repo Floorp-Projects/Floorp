@@ -10,7 +10,7 @@ Services.scriptloader.loadSubScript(bootstrapURI, sandbox, "utf-8");
 do_print("bootstrapURI: " + bootstrapURI);
 
 add_task(async function test_defaultTestEnvironment() {
-  do_check_true(sandbox.isAvailable());
+  Assert.ok(sandbox.isAvailable());
 });
 
 add_task(async function test_unsupportedRegion() {
@@ -19,7 +19,7 @@ add_task(async function test_unsupportedRegion() {
   do_register_cleanup(function cleanupRegion() {
     Services.prefs.clearUserPref("browser.search.region");
   });
-  do_check_false(sandbox.isAvailable());
+  Assert.ok(!sandbox.isAvailable());
 });
 
 add_task(async function test_supportedRegion() {
@@ -28,5 +28,5 @@ add_task(async function test_supportedRegion() {
   do_register_cleanup(function cleanupRegion() {
     Services.prefs.clearUserPref("browser.search.region");
   });
-  do_check_true(sandbox.isAvailable());
+  Assert.ok(sandbox.isAvailable());
 });

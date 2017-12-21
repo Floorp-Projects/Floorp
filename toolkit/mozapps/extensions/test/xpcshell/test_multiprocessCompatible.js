@@ -55,33 +55,33 @@ function build_test(multiprocessCompatible, bootstrap, updateMultiprocessCompati
 
     let xpifile = createTempXPIFile(addonData);
     let install = await AddonManager.getInstallForFile(xpifile);
-    do_check_eq(install.addon.multiprocessCompatible, !!multiprocessCompatible);
-    do_check_eq(install.addon.mpcOptedOut, multiprocessCompatible === false);
+    Assert.equal(install.addon.multiprocessCompatible, !!multiprocessCompatible);
+    Assert.equal(install.addon.mpcOptedOut, multiprocessCompatible === false);
     await promiseCompleteAllInstalls([install]);
 
     if (!bootstrap) {
       await promiseRestartManager();
-      do_check_true(isExtensionInAddonsList(profileDir, addonData.id));
-      do_check_eq(isItemMarkedMPIncompatible(addonData.id), !multiprocessCompatible);
+      Assert.ok(isExtensionInAddonsList(profileDir, addonData.id));
+      Assert.equal(isItemMarkedMPIncompatible(addonData.id), !multiprocessCompatible);
     }
 
     let addon = await promiseAddonByID(addonData.id);
-    do_check_neq(addon, null);
-    do_check_eq(addon.multiprocessCompatible, !!multiprocessCompatible);
-    do_check_eq(addon.mpcOptedOut, multiprocessCompatible === false);
+    Assert.notEqual(addon, null);
+    Assert.equal(addon.multiprocessCompatible, !!multiprocessCompatible);
+    Assert.equal(addon.mpcOptedOut, multiprocessCompatible === false);
 
     await promiseFindAddonUpdates(addon);
 
     // Should have applied the compatibility change
-    do_check_eq(addon.multiprocessCompatible, !!expectedMPC);
+    Assert.equal(addon.multiprocessCompatible, !!expectedMPC);
     await promiseRestartManager();
 
     addon = await promiseAddonByID(addonData.id);
     // Should have persisted the compatibility change
-    do_check_eq(addon.multiprocessCompatible, !!expectedMPC);
+    Assert.equal(addon.multiprocessCompatible, !!expectedMPC);
     if (!bootstrap) {
-      do_check_true(isExtensionInAddonsList(profileDir, addonData.id));
-      do_check_eq(isItemMarkedMPIncompatible(addonData.id), !multiprocessCompatible);
+      Assert.ok(isExtensionInAddonsList(profileDir, addonData.id));
+      Assert.equal(isItemMarkedMPIncompatible(addonData.id), !multiprocessCompatible);
     }
 
     addon.uninstall();
@@ -151,36 +151,36 @@ add_task(async function test_disable() {
     await promiseCompleteAllInstalls([install1, install2, install3]);
 
     let [addon1, addon2, addon3] = await AddonManager.getAddonsByIDs([ID_MPC, ID_NON_MPC, ID_DICTIONARY]);
-    do_check_neq(addon1, null);
-    do_check_eq(addon1.multiprocessCompatible, true);
-    do_check_eq(addon1.appDisabled, false);
+    Assert.notEqual(addon1, null);
+    Assert.equal(addon1.multiprocessCompatible, true);
+    Assert.equal(addon1.appDisabled, false);
 
-    do_check_neq(addon2, null);
-    do_check_eq(addon2.multiprocessCompatible, false);
-    do_check_eq(addon2.appDisabled, initialAllow === false);
+    Assert.notEqual(addon2, null);
+    Assert.equal(addon2.multiprocessCompatible, false);
+    Assert.equal(addon2.appDisabled, initialAllow === false);
 
-    do_check_neq(addon3, null);
-    do_check_eq(addon3.appDisabled, false);
+    Assert.notEqual(addon3, null);
+    Assert.equal(addon3.appDisabled, false);
 
     // Flip the allow-non-mpc preference
     let newValue = !(initialAllow === true);
     Services.prefs.setBoolPref(NON_MPC_PREF, newValue);
 
     // the mpc extension should never become appDisabled
-    do_check_eq(addon1.appDisabled, false);
+    Assert.equal(addon1.appDisabled, false);
 
     // The non-mpc extension should become disabled if we don't allow non-mpc
-    do_check_eq(addon2.appDisabled, !newValue);
+    Assert.equal(addon2.appDisabled, !newValue);
 
     // A non-extension (eg a dictionary) should not become disabled
-    do_check_eq(addon3.appDisabled, false);
+    Assert.equal(addon3.appDisabled, false);
 
     // Flip the pref back and check appDisabled
     Services.prefs.setBoolPref(NON_MPC_PREF, !newValue);
 
-    do_check_eq(addon1.appDisabled, false);
-    do_check_eq(addon2.appDisabled, newValue);
-    do_check_eq(addon3.appDisabled, false);
+    Assert.equal(addon1.appDisabled, false);
+    Assert.equal(addon2.appDisabled, newValue);
+    Assert.equal(addon3.appDisabled, false);
 
     addon1.uninstall();
     addon2.uninstall();

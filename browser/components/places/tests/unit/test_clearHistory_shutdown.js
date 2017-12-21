@@ -86,7 +86,7 @@ add_task(async function test_execute() {
   try {
     URIS.forEach(function(aUrl) {
       stmt.params.page_url = aUrl;
-      do_check_false(stmt.executeStep());
+      Assert.ok(!stmt.executeStep());
       stmt.reset();
     });
   } finally {
@@ -133,7 +133,7 @@ function storeCache(aURL, aContent) {
       },
 
       onCacheEntryAvailable(entry, isnew, appcache, status) {
-        do_check_eq(status, Cr.NS_OK);
+        Assert.equal(status, Cr.NS_OK);
 
         entry.setMetaDataElement("servertype", "0");
         var os = entry.openOutputStream(0);
@@ -164,7 +164,7 @@ function checkCache(aURL) {
   return new Promise(resolve => {
     let checkCacheListener = {
       onCacheEntryAvailable(entry, isnew, appcache, status) {
-        do_check_eq(status, Cr.NS_ERROR_CACHE_KEY_NOT_FOUND);
+        Assert.equal(status, Cr.NS_ERROR_CACHE_KEY_NOT_FOUND);
         resolve();
       }
     };

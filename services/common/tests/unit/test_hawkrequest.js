@@ -55,9 +55,9 @@ add_test(function test_intl_accept_language() {
   function checkLanguagePref() {
     CommonUtils.nextTick(function() {
       // Ensure we're only called for the number of entries in languages[].
-      do_check_true(testCount < languages.length);
+      Assert.ok(testCount < languages.length);
 
-      do_check_eq(hawk._intl.accept_languages, languages[testCount]);
+      Assert.equal(hawk._intl.accept_languages, languages[testCount]);
 
       testCount++;
       if (testCount < languages.length) {
@@ -99,14 +99,14 @@ add_test(function test_hawk_authenticated_request() {
 
   let server = httpd_setup({
     "/elysium": function(request, response) {
-      do_check_true(request.hasHeader("Authorization"));
+      Assert.ok(request.hasHeader("Authorization"));
 
       // check that the header timestamp is our arbitrary system date, not
       // today's date.  Note that hawk header timestamps are in seconds, not
       // milliseconds.
       let authorization = request.getHeader("Authorization");
       let tsMS = parseInt(/ts="(\d+)"/.exec(authorization)[1], 10) * 1000;
-      do_check_eq(tsMS, then);
+      Assert.equal(tsMS, then);
 
       // This testing can be a little wonky. In an environment where
       //   pref("intl.accept_languages") === 'en-US, en'
@@ -114,7 +114,7 @@ add_test(function test_hawk_authenticated_request() {
       //   'en-US,en;q=0.5'
       // hence our fake value for acceptLanguage.
       let lang = request.getHeader("Accept-Language");
-      do_check_eq(lang, acceptLanguage);
+      Assert.equal(lang, acceptLanguage);
 
       let message = "yay";
       response.setStatusLine(request.httpVersion, 200, "OK");
@@ -127,14 +127,14 @@ add_test(function test_hawk_authenticated_request() {
   }
 
   function onComplete(error) {
-    do_check_eq(200, this.response.status);
-    do_check_eq(this.response.body, "yay");
-    do_check_true(onProgressCalled);
+    Assert.equal(200, this.response.status);
+    Assert.equal(this.response.body, "yay");
+    Assert.ok(onProgressCalled);
 
     Services.prefs.resetUserPrefs();
     let pref = Services.prefs.getComplexValue(
       "intl.accept_languages", Ci.nsIPrefLocalizedString);
-    do_check_neq(acceptLanguage, pref.data);
+    Assert.notEqual(acceptLanguage, pref.data);
 
     server.stop(run_next_test);
   }
@@ -171,7 +171,7 @@ add_test(function test_hawk_language_pref_changed() {
 
   let server = httpd_setup({
     "/foo": function(request, response) {
-      do_check_eq(languages[1], request.getHeader("Accept-Language"));
+      Assert.equal(languages[1], request.getHeader("Accept-Language"));
 
       response.setStatusLine(request.httpVersion, 200, "OK");
     },
@@ -188,7 +188,7 @@ add_test(function test_hawk_language_pref_changed() {
   CommonUtils.nextTick(testFirstLanguage);
 
   function testFirstLanguage() {
-    do_check_eq(languages[0], request._intl.accept_languages);
+    Assert.equal(languages[0], request._intl.accept_languages);
 
     // Change the language pref ...
     setLanguage(languages[1]);
@@ -200,8 +200,8 @@ add_test(function test_hawk_language_pref_changed() {
     // server by inspecting the request headers.
     request = new HAWKAuthenticatedRESTRequest(url, credentials);
     request.post({}, function(error) {
-      do_check_null(error);
-      do_check_eq(200, this.response.status);
+      Assert.equal(null, error);
+      Assert.equal(200, this.response.status);
 
       Services.prefs.resetUserPrefs();
 
@@ -214,9 +214,9 @@ add_task(function test_deriveHawkCredentials() {
   let credentials = deriveHawkCredentials(
     SESSION_KEYS.sessionToken, "sessionToken");
 
-  do_check_eq(credentials.algorithm, "sha256");
-  do_check_eq(credentials.id, SESSION_KEYS.tokenID);
-  do_check_eq(CommonUtils.bytesAsHex(credentials.key), SESSION_KEYS.reqHMACkey);
+  Assert.equal(credentials.algorithm, "sha256");
+  Assert.equal(credentials.id, SESSION_KEYS.tokenID);
+  Assert.equal(CommonUtils.bytesAsHex(credentials.key), SESSION_KEYS.reqHMACkey);
 });
 
 // turn formatted test vectors into normal hex strings

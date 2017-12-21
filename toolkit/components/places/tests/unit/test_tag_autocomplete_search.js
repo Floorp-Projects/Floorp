@@ -79,21 +79,21 @@ function ensure_tag_results(results, searchTerm) {
   var numSearchesStarted = 0;
   input.onSearchBegin = function input_onSearchBegin() {
     numSearchesStarted++;
-    do_check_eq(numSearchesStarted, 1);
+    Assert.equal(numSearchesStarted, 1);
   };
 
   input.onSearchComplete = function input_onSearchComplete() {
-    do_check_eq(numSearchesStarted, 1);
+    Assert.equal(numSearchesStarted, 1);
     if (results.length)
-      do_check_eq(controller.searchStatus,
-                  Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
+      Assert.equal(controller.searchStatus,
+                   Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH);
     else
-      do_check_eq(controller.searchStatus,
-                  Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
+      Assert.equal(controller.searchStatus,
+                   Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
 
-    do_check_eq(controller.matchCount, results.length);
+    Assert.equal(controller.matchCount, results.length);
     for (var i = 0; i < controller.matchCount; i++) {
-      do_check_eq(controller.getValueAt(i), results[i]);
+      Assert.equal(controller.getValueAt(i), results[i]);
     }
 
     if (current_test < (tests.length - 1)) {

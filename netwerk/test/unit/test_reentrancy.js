@@ -55,13 +55,13 @@ var listener = {
   },
 
   onDataAvailable: function(request, context, stream, offset, count) {
-    do_check_true(this._done_onStart);
+    Assert.ok(this._done_onStart);
     read_stream(stream, count);
     this._done_onData = true;
   },
 
   onStopRequest: function(request, ctx, status) {
-    do_check_true(this._done_onData);
+    Assert.ok(this._done_onData);
     this._reset();
     if (this._test <= MAX_TESTS)
       next_test();

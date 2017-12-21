@@ -47,17 +47,17 @@ function getDataChecker(aExpectedMethod, aExpectedData, aExpectedMimeType = null
     while ((avail = body.available()) > 0)
       Array.prototype.push.apply(bytes, body.readByteArray(avail));
 
-    do_check_eq(aRequest.method, aExpectedMethod);
+    Assert.equal(aRequest.method, aExpectedMethod);
 
     // Checking if the Content-Type is as expected.
     if (aExpectedMimeType) {
       let contentType = aRequest.getHeader("Content-Type");
-      do_check_eq(contentType, aExpectedMimeType);
+      Assert.equal(contentType, aExpectedMimeType);
     }
 
     var data = String.fromCharCode.apply(null, bytes);
 
-    do_check_eq(data, aExpectedData);
+    Assert.equal(data, aExpectedData);
 
     aResponse.setStatusLine(null, 200, "OK");
     aResponse.setHeader("Content-Type", "application/json");
@@ -69,12 +69,12 @@ add_test(function test_successCallback() {
   do_test_pending();
   let options = {
     onLoad(aResponse) {
-      do_check_eq(aResponse, "Success!");
+      Assert.equal(aResponse, "Success!");
       do_test_finished();
       run_next_test();
     },
     onError(e) {
-      do_check_true(false);
+      Assert.ok(false);
       do_test_finished();
       run_next_test();
     }
@@ -86,12 +86,12 @@ add_test(function test_errorCallback() {
   do_test_pending();
   let options = {
     onSuccess(aResponse) {
-      do_check_true(false);
+      Assert.ok(false);
       do_test_finished();
       run_next_test();
     },
     onError(e, aResponse) {
-      do_check_eq(e, "404 - Not Found");
+      Assert.equal(e, "404 - Not Found");
       do_test_finished();
       run_next_test();
     }
@@ -103,12 +103,12 @@ add_test(function test_PostData() {
   do_test_pending();
   let options = {
     onLoad(aResponse) {
-      do_check_eq(aResponse, "Success!");
+      Assert.equal(aResponse, "Success!");
       do_test_finished();
       run_next_test();
     },
     onError(e) {
-      do_check_true(false);
+      Assert.ok(false);
       do_test_finished();
       run_next_test();
     },
@@ -122,12 +122,12 @@ add_test(function test_PutData() {
   let options = {
     method: "PUT",
     onLoad(aResponse) {
-      do_check_eq(aResponse, "Success!");
+      Assert.equal(aResponse, "Success!");
       do_test_finished();
       run_next_test();
     },
     onError(e) {
-      do_check_true(false);
+      Assert.ok(false);
       do_test_finished();
       run_next_test();
     },
@@ -140,12 +140,12 @@ add_test(function test_GetData() {
   do_test_pending();
   let options = {
     onLoad(aResponse) {
-      do_check_eq(aResponse, "Success!");
+      Assert.equal(aResponse, "Success!");
       do_test_finished();
       run_next_test();
     },
     onError(e) {
-      do_check_true(false);
+      Assert.ok(false);
       do_test_finished();
       run_next_test();
     },
@@ -176,12 +176,12 @@ add_test(function test_CustomContentTypeOnPost() {
   // Preparing the request parameters.
   let options = {
     onLoad(aResponse) {
-      do_check_eq(aResponse, "Success!");
+      Assert.equal(aResponse, "Success!");
       do_test_finished();
       run_next_test();
     },
     onError(e) {
-      do_check_true(false);
+      Assert.ok(false);
       do_test_finished();
       run_next_test();
     },
@@ -205,20 +205,20 @@ add_test(function test_OverrideMimeType() {
   const kMimeType = "text/xml; charset=UTF-8";
   let options = {
     onLoad(aResponse, xhr) {
-      do_check_eq(aResponse, "Success!");
+      Assert.equal(aResponse, "Success!");
 
       // Set the expected MIME-type.
       let reportedMimeType = xhr.getResponseHeader("Content-Type");
-      do_check_neq(reportedMimeType, kMimeType);
+      Assert.notEqual(reportedMimeType, kMimeType);
 
       // responseXML should not be not null if overriding mime type succeeded.
-      do_check_true(xhr.responseXML != null);
+      Assert.ok(xhr.responseXML != null);
 
       do_test_finished();
       run_next_test();
     },
     onError(e) {
-      do_check_true(false);
+      Assert.ok(false);
       do_test_finished();
       run_next_test();
     }

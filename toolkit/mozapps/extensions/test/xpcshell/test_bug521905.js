@@ -26,8 +26,8 @@ function run_test() {
     restartManager();
 
     AddonManager.getAddonByID(ID, function(addon) {
-      do_check_neq(addon, null);
-      do_check_true(addon.isActive);
+      Assert.notEqual(addon, null);
+      Assert.ok(addon.isActive);
 
       do_execute_soon(run_test_1);
     });
@@ -39,8 +39,8 @@ function run_test_1() {
 
   restartManager();
   AddonManager.getAddonByID(ID, function(addon) {
-    do_check_neq(addon, null);
-    do_check_false(addon.isActive);
+    Assert.notEqual(addon, null);
+    Assert.ok(!addon.isActive);
 
     do_execute_soon(run_test_2);
   });
@@ -51,8 +51,8 @@ function run_test_2() {
 
   restartManager();
   AddonManager.getAddonByID(ID, function(addon) {
-    do_check_neq(addon, null);
-    do_check_false(addon.isActive);
+    Assert.notEqual(addon, null);
+    Assert.ok(!addon.isActive);
 
     do_execute_soon(do_test_finished);
   });

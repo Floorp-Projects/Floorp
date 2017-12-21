@@ -54,20 +54,20 @@ add_task(function test_setLoginSavingEnabled_getLoginSavingEnabled()
   let hostname2 = "https://disabled.example.com";
 
   // Hosts should not be disabled by default.
-  do_check_true(Services.logins.getLoginSavingEnabled(hostname1));
-  do_check_true(Services.logins.getLoginSavingEnabled(hostname2));
+  Assert.ok(Services.logins.getLoginSavingEnabled(hostname1));
+  Assert.ok(Services.logins.getLoginSavingEnabled(hostname2));
 
   // Test setting initial values.
   Services.logins.setLoginSavingEnabled(hostname1, false);
   Services.logins.setLoginSavingEnabled(hostname2, true);
-  do_check_false(Services.logins.getLoginSavingEnabled(hostname1));
-  do_check_true(Services.logins.getLoginSavingEnabled(hostname2));
+  Assert.ok(!Services.logins.getLoginSavingEnabled(hostname1));
+  Assert.ok(Services.logins.getLoginSavingEnabled(hostname2));
 
   // Test changing values.
   Services.logins.setLoginSavingEnabled(hostname1, true);
   Services.logins.setLoginSavingEnabled(hostname2, false);
-  do_check_true(Services.logins.getLoginSavingEnabled(hostname1));
-  do_check_false(Services.logins.getLoginSavingEnabled(hostname2));
+  Assert.ok(Services.logins.getLoginSavingEnabled(hostname1));
+  Assert.ok(!Services.logins.getLoginSavingEnabled(hostname2));
 
   // Clean up.
   Services.logins.setLoginSavingEnabled(hostname2, true);
@@ -96,12 +96,12 @@ add_task(function test_rememberSignons()
   let hostname2 = "http://localhost";
 
   // The default value for the preference should be true.
-  do_check_true(Services.prefs.getBoolPref("signon.rememberSignons"));
+  Assert.ok(Services.prefs.getBoolPref("signon.rememberSignons"));
 
   // Hosts should not be disabled by default.
   Services.logins.setLoginSavingEnabled(hostname1, false);
-  do_check_false(Services.logins.getLoginSavingEnabled(hostname1));
-  do_check_true(Services.logins.getLoginSavingEnabled(hostname2));
+  Assert.ok(!Services.logins.getLoginSavingEnabled(hostname1));
+  Assert.ok(Services.logins.getLoginSavingEnabled(hostname2));
 
   // Disable storage of saved passwords globally.
   Services.prefs.setBoolPref("signon.rememberSignons", false);
@@ -109,8 +109,8 @@ add_task(function test_rememberSignons()
     () => Services.prefs.clearUserPref("signon.rememberSignons"));
 
   // All hosts should now appear disabled.
-  do_check_false(Services.logins.getLoginSavingEnabled(hostname1));
-  do_check_false(Services.logins.getLoginSavingEnabled(hostname2));
+  Assert.ok(!Services.logins.getLoginSavingEnabled(hostname1));
+  Assert.ok(!Services.logins.getLoginSavingEnabled(hostname2));
 
   // The list of disabled hosts should be unaltered.
   LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
@@ -121,8 +121,8 @@ add_task(function test_rememberSignons()
   Services.logins.setLoginSavingEnabled(hostname2, false);
 
   // All hosts should still appear disabled.
-  do_check_false(Services.logins.getLoginSavingEnabled(hostname1));
-  do_check_false(Services.logins.getLoginSavingEnabled(hostname2));
+  Assert.ok(!Services.logins.getLoginSavingEnabled(hostname1));
+  Assert.ok(!Services.logins.getLoginSavingEnabled(hostname2));
 
   // The list of disabled hosts should have been changed.
   LoginTestUtils.assertDisabledHostsEqual(Services.logins.getAllDisabledHosts(),
@@ -132,8 +132,8 @@ add_task(function test_rememberSignons()
   Services.prefs.setBoolPref("signon.rememberSignons", true);
 
   // Hosts should now appear enabled as requested.
-  do_check_true(Services.logins.getLoginSavingEnabled(hostname1));
-  do_check_false(Services.logins.getLoginSavingEnabled(hostname2));
+  Assert.ok(Services.logins.getLoginSavingEnabled(hostname1));
+  Assert.ok(!Services.logins.getLoginSavingEnabled(hostname2));
 
   // Clean up.
   Services.logins.setLoginSavingEnabled(hostname2, true);

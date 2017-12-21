@@ -18,11 +18,11 @@ AutoCompleteInput.prototype = Object.create(AutoCompleteInputBase.prototype);
 add_test(function test_handleEnterWithDirectMatchCompleteSelectedIndex() {
   doSearch("moz", "mozilla.com", "http://www.mozilla.com",
     { forceComplete: true, completeSelectedIndex: true }, function(aController) {
-    do_check_eq(aController.input.textValue, "moz");
-    do_check_eq(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
+    Assert.equal(aController.input.textValue, "moz");
+    Assert.equal(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
     aController.handleEnter(false);
     // After enter the final complete value should be shown in the input.
-    do_check_eq(aController.input.textValue, "http://www.mozilla.com");
+    Assert.equal(aController.input.textValue, "http://www.mozilla.com");
   });
 });
 
@@ -30,11 +30,11 @@ add_test(function test_handleEnterWithDirectMatch() {
   doSearch("mozilla", "mozilla.com", "http://www.mozilla.com",
     { forceComplete: true, completeDefaultIndex: true }, function(aController) {
     // Should autocomplete the search string to a suggestion.
-    do_check_eq(aController.input.textValue, "mozilla.com");
-    do_check_eq(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
+    Assert.equal(aController.input.textValue, "mozilla.com");
+    Assert.equal(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
     aController.handleEnter(false);
     // After enter the final complete value should be shown in the input.
-    do_check_eq(aController.input.textValue, "http://www.mozilla.com");
+    Assert.equal(aController.input.textValue, "http://www.mozilla.com");
   });
 });
 
@@ -42,14 +42,14 @@ add_test(function test_handleEnterWithNoMatch() {
   doSearch("mozilla", "mozilla.com", "http://www.mozilla.com",
     { forceComplete: true, completeDefaultIndex: true }, function(aController) {
     // Should autocomplete the search string to a suggestion.
-    do_check_eq(aController.input.textValue, "mozilla.com");
-    do_check_eq(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
+    Assert.equal(aController.input.textValue, "mozilla.com");
+    Assert.equal(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
     // Now input something that does not match...
     aController.input.textValue = "mozillax";
     // ... and confirm. We don't want one of the values from the previous
     // results to be taken, since what's now in the input field doesn't match.
     aController.handleEnter(false);
-    do_check_eq(aController.input.textValue, "mozillax");
+    Assert.equal(aController.input.textValue, "mozillax");
   });
 });
 
@@ -57,12 +57,12 @@ add_test(function test_handleEnterWithIndirectMatch() {
   doSearch("com", "mozilla.com", "http://www.mozilla.com",
     { forceComplete: true, completeDefaultIndex: true }, function(aController) {
     // Should autocomplete the search string to a suggestion.
-    do_check_eq(aController.input.textValue, "com >> mozilla.com");
-    do_check_eq(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
+    Assert.equal(aController.input.textValue, "com >> mozilla.com");
+    Assert.equal(aController.getFinalCompleteValueAt(0), "http://www.mozilla.com");
     aController.handleEnter(false);
     // After enter the final complete value from the suggestion should be shown
     // in the input.
-    do_check_eq(aController.input.textValue, "http://www.mozilla.com");
+    Assert.equal(aController.input.textValue, "http://www.mozilla.com");
   });
 });
 

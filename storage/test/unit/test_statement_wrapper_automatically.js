@@ -33,7 +33,7 @@ function setup() {
  */
 function checkVal(aActualVal, aReturnedVal) {
   if (aActualVal instanceof Date) aActualVal = aActualVal.valueOf() * 1000.0;
-  do_check_eq(aActualVal, aReturnedVal);
+  Assert.equal(aActualVal, aReturnedVal);
 }
 
 /**
@@ -55,8 +55,8 @@ function clearTable() {
  */
 function ensureNumRows(aNumRows) {
   var stmt = createStatement("SELECT COUNT(*) AS number FROM test");
-  do_check_true(stmt.step());
-  do_check_eq(aNumRows, stmt.row.number);
+  Assert.ok(stmt.step());
+  Assert.equal(aNumRows, stmt.row.number);
   stmt.reset();
   stmt.finalize();
 }
@@ -80,7 +80,7 @@ function insertAndCheckSingleParam(aVal) {
   ensureNumRows(1);
 
   stmt = createStatement("SELECT val FROM test WHERE id = 1");
-  do_check_true(stmt.step());
+  Assert.ok(stmt.step());
   checkVal(aVal, stmt.row.val);
   stmt.reset();
   stmt.finalize();
@@ -107,7 +107,7 @@ function insertAndCheckMultipleParams(aVal) {
   ensureNumRows(1);
 
   stmt = createStatement("SELECT val, alt_val FROM test WHERE id = 1");
-  do_check_true(stmt.step());
+  Assert.ok(stmt.step());
   checkVal(aVal, stmt.row.val);
   checkVal(aVal, stmt.row.alt_val);
   stmt.reset();

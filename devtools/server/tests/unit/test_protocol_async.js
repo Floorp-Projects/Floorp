@@ -117,32 +117,32 @@ function run_test() {
     // more calls have happened
     calls.push(rootClient.promiseReturn(2).then(ret => {
       // Check right return order
-      do_check_eq(sequence, 0);
+      Assert.equal(sequence, 0);
       // Check request handling order
-      do_check_eq(ret, sequence++);
+      Assert.equal(ret, sequence++);
     }));
 
     // Put a few requests into the backlog
 
     calls.push(rootClient.simpleReturn().then(ret => {
       // Check right return order
-      do_check_eq(sequence, 1);
+      Assert.equal(sequence, 1);
       // Check request handling order
-      do_check_eq(ret, sequence++);
+      Assert.equal(ret, sequence++);
     }));
 
     calls.push(rootClient.simpleReturn().then(ret => {
       // Check right return order
-      do_check_eq(sequence, 2);
+      Assert.equal(sequence, 2);
       // Check request handling order
-      do_check_eq(ret, sequence++);
+      Assert.equal(ret, sequence++);
     }));
 
     calls.push(rootClient.simpleThrow().then(() => {
-      do_check_true(false, "simpleThrow shouldn't succeed!");
+      Assert.ok(false, "simpleThrow shouldn't succeed!");
     }, error => {
       // Check right return order
-      do_check_eq(sequence++, 3);
+      Assert.equal(sequence++, 3);
     }));
 
     // While packets are sent in the correct order, rejection handlers
@@ -151,20 +151,20 @@ function run_test() {
     let deferAfterRejection = defer();
 
     calls.push(rootClient.promiseThrow().then(() => {
-      do_check_true(false, "promiseThrow shouldn't succeed!");
+      Assert.ok(false, "promiseThrow shouldn't succeed!");
     }, error => {
       // Check right return order
-      do_check_eq(sequence++, 4);
-      do_check_true(true, "simple throw should throw");
+      Assert.equal(sequence++, 4);
+      Assert.ok(true, "simple throw should throw");
       deferAfterRejection.resolve();
     }));
 
     calls.push(rootClient.simpleReturn().then(ret => {
       return deferAfterRejection.promise.then(function () {
         // Check right return order
-        do_check_eq(sequence, 5);
+        Assert.equal(sequence, 5);
         // Check request handling order
-        do_check_eq(ret, sequence++);
+        Assert.equal(ret, sequence++);
       });
     }));
 
@@ -173,18 +173,18 @@ function run_test() {
     calls.push(rootClient.promiseReturn(1).then(ret => {
       return deferAfterRejection.promise.then(function () {
         // Check right return order
-        do_check_eq(sequence, 6);
+        Assert.equal(sequence, 6);
         // Check request handling order
-        do_check_eq(ret, sequence++);
+        Assert.equal(ret, sequence++);
       });
     }));
 
     calls.push(rootClient.simpleReturn().then(ret => {
       return deferAfterRejection.promise.then(function () {
         // Check right return order
-        do_check_eq(sequence, 7);
+        Assert.equal(sequence, 7);
         // Check request handling order
-        do_check_eq(ret, sequence++);
+        Assert.equal(ret, sequence++);
       });
     }));
 

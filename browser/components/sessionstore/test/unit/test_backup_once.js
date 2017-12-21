@@ -118,7 +118,7 @@ add_task(async function test_shutdown() {
 
   await SessionWorker.post("write", [output, { isFinalWrite: true, performShutdownCleanup: true}]);
 
-  do_check_false((await File.exists(Paths.recovery)));
-  do_check_false((await File.exists(Paths.recoveryBackup)));
+  Assert.equal(false, (await File.exists(Paths.recovery)));
+  Assert.equal(false, (await File.exists(Paths.recoveryBackup)));
   await promise_check_contents(Paths.clean, output);
 });

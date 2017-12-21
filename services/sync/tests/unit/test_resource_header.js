@@ -56,9 +56,9 @@ add_task(async function test_headers_copied() {
   let result = await resource.get(TEST_URL);
   _("Result: " + result);
 
-  do_check_eq(result, BODY);
-  do_check_eq(auth, "Basic foobar");
-  do_check_eq(foo, "foofoo");
+  Assert.equal(result, BODY);
+  Assert.equal(auth, "Basic foobar");
+  Assert.equal(foo, "foofoo");
 
   await promiseStopServer(httpServer);
 });

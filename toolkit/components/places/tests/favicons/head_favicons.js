@@ -50,8 +50,8 @@ function waitForFaviconChanged(aExpectedPageURI, aExpectedFaviconURI,
       }
       PlacesUtils.history.removeObserver(this);
 
-      do_check_true(aURI.equals(aExpectedPageURI));
-      do_check_eq(aValue, aExpectedFaviconURI.spec);
+      Assert.ok(aURI.equals(aExpectedPageURI));
+      Assert.equal(aValue, aExpectedFaviconURI.spec);
       do_check_guid_for_uri(aURI, aGUID);
       aCallback();
     }
@@ -75,8 +75,8 @@ function checkFaviconDataForPage(aPageURI, aExpectedMimeType, aExpectedData,
                                  aCallback) {
   PlacesUtils.favicons.getFaviconDataForPage(aPageURI,
     function(aURI, aDataLen, aData, aMimeType) {
-      do_check_eq(aExpectedMimeType, aMimeType);
-      do_check_true(compareArrays(aExpectedData, aData));
+      Assert.equal(aExpectedMimeType, aMimeType);
+      Assert.ok(compareArrays(aExpectedData, aData));
       do_check_guid_for_uri(aPageURI);
       aCallback();
     });
@@ -93,7 +93,7 @@ function checkFaviconDataForPage(aPageURI, aExpectedMimeType, aExpectedData,
 function checkFaviconMissingForPage(aPageURI, aCallback) {
   PlacesUtils.favicons.getFaviconURLForPage(aPageURI,
     function(aURI, aDataLen, aData, aMimeType) {
-      do_check_true(aURI === null);
+      Assert.ok(aURI === null);
       aCallback();
     });
 }

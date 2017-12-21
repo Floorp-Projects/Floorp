@@ -104,13 +104,13 @@ function runChecks(dbgObject, dbgEnv) {
 
   do_print("Test that suggestions are not given for syntax errors.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "'foo\"");
-  do_check_null(results);
+  Assert.equal(null, results);
   results = JSPropertyProvider(dbgObject, dbgEnv, "[1,',2]");
-  do_check_null(results);
+  Assert.equal(null, results);
   results = JSPropertyProvider(dbgObject, dbgEnv, "'[1,2].");
-  do_check_null(results);
+  Assert.equal(null, results);
   results = JSPropertyProvider(dbgObject, dbgEnv, "'foo'..");
-  do_check_null(results);
+  Assert.equal(null, results);
 
   do_print("Test that suggestions are not given without a dot.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "'foo'");
@@ -122,29 +122,29 @@ function runChecks(dbgObject, dbgEnv) {
 
   do_print("Test that suggestions are not given for numeric literals.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "1.");
-  do_check_null(results);
+  Assert.equal(null, results);
 
   do_print("Test that suggestions are not given for index that's out of bounds.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "testArray[10].");
-  do_check_null(results);
+  Assert.equal(null, results);
 
   do_print("Test that no suggestions are given if an index is not numerical "
            + "somewhere in the chain.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "testArray[0]['propC'][0].");
-  do_check_null(results);
+  Assert.equal(null, results);
 
   results = JSPropertyProvider(dbgObject, dbgEnv, "testObject['propA'][0].");
-  do_check_null(results);
+  Assert.equal(null, results);
 
   results = JSPropertyProvider(dbgObject, dbgEnv, "testArray[0]['propC'].");
-  do_check_null(results);
+  Assert.equal(null, results);
 
   results = JSPropertyProvider(dbgObject, dbgEnv, "testArray[][1].");
-  do_check_null(results);
+  Assert.equal(null, results);
 
   do_print("Test that suggestions are not given if there is an hyphen in the chain.");
   results = JSPropertyProvider(dbgObject, dbgEnv, "testHyphenated['prop-A'].");
-  do_check_null(results);
+  Assert.equal(null, results);
 }
 
 /**
@@ -153,8 +153,8 @@ function runChecks(dbgObject, dbgEnv) {
  *        The results returned by JSPropertyProvider.
  */
 function test_has_no_results(results) {
-  do_check_neq(results, null);
-  do_check_eq(results.matches.length, 0);
+  Assert.notEqual(results, null);
+  Assert.equal(results.matches.length, 0);
 }
 /**
  * A helper that ensures (required) results were found.
@@ -164,7 +164,7 @@ function test_has_no_results(results) {
  *        A suggestion that must be found from the results.
  */
 function test_has_result(results, requiredSuggestion) {
-  do_check_neq(results, null);
-  do_check_true(results.matches.length > 0);
-  do_check_true(results.matches.indexOf(requiredSuggestion) !== -1);
+  Assert.notEqual(results, null);
+  Assert.ok(results.matches.length > 0);
+  Assert.ok(results.matches.indexOf(requiredSuggestion) !== -1);
 }

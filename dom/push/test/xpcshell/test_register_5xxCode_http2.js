@@ -36,7 +36,7 @@ function subscribe5xxCodeHandler(metadata, response) {
 }
 
 function listenSuccessHandler(metadata, response) {
-  do_check_true(true, "New listener point");
+  Assert.ok(true, "New listener point");
   ok(retries == 2, "Should try 2 times.");
   do_test_finished();
   response.setHeader("Retry-After", '10');

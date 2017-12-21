@@ -40,7 +40,7 @@ function checkFile(file, str) {
                          .createInstance(Ci.nsIScriptableInputStream);
     scriptStream.init(stream);
 
-    do_check_eq(scriptStream.read(scriptStream.available()), str);
+    Assert.equal(scriptStream.read(scriptStream.available()), str);
     scriptStream.close();
 }
 

@@ -53,7 +53,7 @@ function run_test() {
     }
 
     zipW.addEntryFile(TESTS[i].name, Ci.nsIZipWriter.COMPRESSION_NONE, file, false);
-    do_check_eq(zipW.getEntry(TESTS[i].name).permissions, TESTS[i].permission | 0o400);
+    Assert.equal(zipW.getEntry(TESTS[i].name).permissions, TESTS[i].permission | 0o400);
     file.permissions = 0o600;
     file.remove(true);
   }
@@ -62,18 +62,18 @@ function run_test() {
   zipW.open(tmpFile, PR_RDWR);
   for (let i = 0; i < TESTS.length; i++) {
     dump("Testing zipwriter file permissions for " + TESTS[i].name + "\n");
-    do_check_eq(zipW.getEntry(TESTS[i].name).permissions, TESTS[i].permission | 0o400);
+    Assert.equal(zipW.getEntry(TESTS[i].name).permissions, TESTS[i].permission | 0o400);
   }
   zipW.close();
 
   var zipR = new ZipReader(tmpFile);
   for (let i = 0; i < TESTS.length; i++) {
     dump("Testing zipreader file permissions for " + TESTS[i].name + "\n");
-    do_check_eq(zipR.getEntry(TESTS[i].name).permissions, TESTS[i].permission | 0o400);
+    Assert.equal(zipR.getEntry(TESTS[i].name).permissions, TESTS[i].permission | 0o400);
     dump("Testing extracted file permissions for " + TESTS[i].name + "\n");
     zipR.extract(TESTS[i].name, file);
-    do_check_eq(file.permissions & 0xfff, TESTS[i].permission);
-    do_check_false(file.isDirectory());
+    Assert.equal(file.permissions & 0xfff, TESTS[i].permission);
+    Assert.ok(!file.isDirectory());
     file.permissions = 0o600;
     file.remove(true);
   }

@@ -71,7 +71,7 @@ async function initProfileStorage(fileName, records, collectionName = "addresses
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
   for (let record of records) {
-    do_check_true(profileStorage[collectionName].add(record));
+    Assert.ok(profileStorage[collectionName].add(record));
     await onChanged;
   }
   await profileStorage._saveImmediately();

@@ -27,11 +27,11 @@ function test_policy(test) {
       do_throw("Should not find a Referer header!");
     } catch(e) {
     }
-    do_check_eq(chan.referrer, null);
+    Assert.equal(chan.referrer, null);
   } else {
     var header = chan.getRequestHeader("Referer");
-    do_check_eq(header, test.expectedReferrerSpec);
-    do_check_eq(chan.referrer.asciiSpec, test.expectedReferrerSpec);
+    Assert.equal(header, test.expectedReferrerSpec);
+    Assert.equal(chan.referrer.asciiSpec, test.expectedReferrerSpec);
   }
 }
 

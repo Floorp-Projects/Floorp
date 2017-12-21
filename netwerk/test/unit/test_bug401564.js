@@ -16,7 +16,7 @@ function redirectHandler(metadata, response)
 
 function contentHandler(metadata, response)
 {
-  do_check_eq(metadata.getHeader("Accept"), acceptType);
+  Assert.equal(metadata.getHeader("Accept"), acceptType);
   httpserver.stop(do_test_finished);
 }
 

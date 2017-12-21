@@ -24,8 +24,8 @@ function run_test() {
 
   for (var i = 0; i < tests.length; ++i) {
     dump("Test " + i + " (" + tests[i][0] + ", " + tests[i][2] + ")\n");
-    do_check_eq(util.unescapeString(tests[i][0], tests[i][2]),
-                                    tests[i][1]);
+    Assert.equal(util.unescapeString(tests[i][0], tests[i][2]),
+                                     tests[i][1]);
   }
   dump(tests.length + " tests passed\n");
 }

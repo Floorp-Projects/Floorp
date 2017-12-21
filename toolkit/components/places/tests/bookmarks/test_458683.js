@@ -24,18 +24,18 @@ function validateResults() {
   toolbar.containerOpen = true;
 
   // test for our bookmark
-  do_check_eq(toolbar.childCount, 1);
+  Assert.equal(toolbar.childCount, 1);
   for (var i = 0; i < toolbar.childCount; i++) {
     var folderNode = toolbar.getChild(0);
-    do_check_eq(folderNode.type, folderNode.RESULT_TYPE_URI);
-    do_check_eq(folderNode.title, ITEM_TITLE);
+    Assert.equal(folderNode.type, folderNode.RESULT_TYPE_URI);
+    Assert.equal(folderNode.title, ITEM_TITLE);
   }
   toolbar.containerOpen = false;
 
   // test for our tag
   var tags = PlacesUtils.tagging.getTagsForURI(PlacesUtils._uri(ITEM_URL));
-  do_check_eq(tags.length, 1);
-  do_check_eq(tags[0], TAG_NAME);
+  Assert.equal(tags.length, 1);
+  Assert.equal(tags[0], TAG_NAME);
 }
 
 add_task(async function() {
@@ -57,7 +57,7 @@ add_task(async function() {
   var result = PlacesUtils.history.executeQuery(query, options);
   var tagRoot = result.root;
   tagRoot.containerOpen = true;
-  do_check_eq(tagRoot.childCount, 1);
+  Assert.equal(tagRoot.childCount, 1);
   var tagNode = tagRoot.getChild(0)
                         .QueryInterface(Ci.nsINavHistoryContainerResultNode);
   let tagItemId = tagNode.itemId;

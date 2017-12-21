@@ -22,11 +22,11 @@ function run_test() {
 
 function checkValue(uri, id, attr, reference) {
   let value = XULStore.getValue(uri, id, attr);
-  do_check_eq(value, reference);
+  Assert.equal(value, reference);
 }
 
 function checkValueExists(uri, id, attr, exists) {
-  do_check_eq(XULStore.hasValue(uri, id, attr), exists);
+  Assert.equal(XULStore.hasValue(uri, id, attr), exists);
 }
 
 function getIDs(uri) {
@@ -59,7 +59,7 @@ function getAttributes(uri, id) {
 function checkArrays(a, b) {
   a.sort();
   b.sort();
-  do_check_eq(a.toString(), b.toString());
+  Assert.equal(a.toString(), b.toString());
 }
 
 function checkOldStore() {
@@ -111,7 +111,7 @@ add_task(async function testTruncation() {
   // Long values should be truncated
   XULStore.setValue(browserURI, "dos", "dos", dos);
   dos = XULStore.getValue(browserURI, "dos", "dos");
-  do_check_true(dos.length == 4096);
+  Assert.ok(dos.length == 4096);
   XULStore.removeValue(browserURI, "dos", "dos");
 });
 

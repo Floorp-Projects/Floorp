@@ -27,19 +27,19 @@ function run_test() {
 
 function test_minified() {
   gThreadClient.addOneTimeListener("newSource", function _onNewSource(event, packet) {
-    do_check_eq(event, "newSource");
-    do_check_eq(packet.type, "newSource");
-    do_check_true(!!packet.source);
+    Assert.equal(event, "newSource");
+    Assert.equal(packet.type, "newSource");
+    Assert.ok(!!packet.source);
 
-    do_check_eq(packet.source.url, "http://example.com/foo.js",
-                "The new source should be foo.js");
-    do_check_eq(packet.source.url.indexOf("foo.min.js"), -1,
-                "The new source should not be the minified file");
+    Assert.equal(packet.source.url, "http://example.com/foo.js",
+                 "The new source should be foo.js");
+    Assert.equal(packet.source.url.indexOf("foo.min.js"), -1,
+                 "The new source should not be the minified file");
   });
 
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
-    do_check_eq(event, "paused");
-    do_check_eq(packet.why.type, "debuggerStatement");
+    Assert.equal(event, "paused");
+    Assert.equal(packet.why.type, "debuggerStatement");
 
     let location = {
       line: 5
@@ -47,7 +47,7 @@ function test_minified() {
 
     getSource(gThreadClient, "http://example.com/foo.js").then(source => {
       source.setBreakpoint(location, function (response, bpClient) {
-        do_check_true(!response.error);
+        Assert.ok(!response.error);
         testHitBreakpoint();
       });
     });
@@ -79,8 +79,8 @@ function testHitBreakpoint(timesHit = 0) {
   gClient.addOneTimeListener("paused", function (event, packet) {
     ++timesHit;
 
-    do_check_eq(event, "paused");
-    do_check_eq(packet.why.type, "breakpoint");
+    Assert.equal(event, "paused");
+    Assert.equal(packet.why.type, "breakpoint");
 
     if (timesHit === 10) {
       gThreadClient.resume(() => finishClient(gClient));

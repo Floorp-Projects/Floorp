@@ -19,5 +19,5 @@ function run_test() {
   docshell.addWeakPrivacyTransitionObserver(observer);
   docshell.setOriginAttributes({ privateBrowsingId : 1 });
   docshell.setOriginAttributes({ privateBrowsingId : 0 });
-  do_check_eq(gNotifications, 2);
+  Assert.equal(gNotifications, 2);
 }

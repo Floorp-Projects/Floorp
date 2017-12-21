@@ -28,7 +28,7 @@ function run_test() {
     let me = i;
     pending[me] = true;
     Services.search.init(function search_initialized(aStatus) {
-      do_check_true(Components.isSuccessCode(aStatus));
+      Assert.ok(Components.isSuccessCode(aStatus));
       init_complete(me);
     });
   }
@@ -36,11 +36,11 @@ function run_test() {
   // Ensure that all asynchronous initializers eventually complete
   let init_complete = function init_complete(i) {
     do_print("init complete " + i);
-    do_check_true(pending[i]);
+    Assert.ok(pending[i]);
     pending[i] = false;
     numberPending--;
-    do_check_true(numberPending >= 0);
-    do_check_true(Services.search.isInitialized);
+    Assert.ok(numberPending >= 0);
+    Assert.ok(Services.search.isInitialized);
     if (numberPending != 0) {
       do_print("Still waiting for the following initializations: " + JSON.stringify(pending));
       return;
@@ -48,7 +48,7 @@ function run_test() {
     do_print("All initializations have completed");
     // Just check that we can access a list of engines.
     let engines = Services.search.getEngines();
-    do_check_neq(engines, null);
+    Assert.notEqual(engines, null);
 
     do_print("Waiting a second before quitting");
     // Wait a little before quitting: if some initializer is
@@ -61,7 +61,7 @@ function run_test() {
 
   // ... but don't wait for asynchronous initializations to complete
   let engines = Services.search.getEngines();
-  do_check_neq(engines, null);
+  Assert.notEqual(engines, null);
   do_print("Synchronous part of the test complete");
 }
 

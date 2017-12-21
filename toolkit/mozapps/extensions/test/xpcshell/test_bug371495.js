@@ -15,14 +15,14 @@ function run_test() {
   startupManager();
   installAllFiles([do_get_addon(ADDON)], function() {
     AddonManager.getAddonByID(ID, callback_soon(function(addon) {
-      do_check_neq(addon, null);
-      do_check_eq(addon.name, "Test theme");
+      Assert.notEqual(addon, null);
+      Assert.equal(addon.name, "Test theme");
       restartManager();
 
       AddonManager.getAddonByID(ID, callback_soon(function(addon2) {
-        do_check_neq(addon2, null);
-        do_check_eq(addon2.optionsURL, null);
-        do_check_eq(addon2.aboutURL, null);
+        Assert.notEqual(addon2, null);
+        Assert.equal(addon2.optionsURL, null);
+        Assert.equal(addon2.aboutURL, null);
 
         do_execute_soon(do_test_finished);
       }));

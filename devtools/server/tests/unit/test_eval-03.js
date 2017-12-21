@@ -29,14 +29,14 @@ function run_test() {
 function test_syntax_error_eval() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     gThreadClient.eval(null, "%$@!@#", function (response) {
-      do_check_eq(response.type, "resumed");
+      Assert.equal(response.type, "resumed");
       // Expect a pause notification immediately.
       gThreadClient.addOneTimeListener("paused", function (event, packet) {
         // Check the return value...
-        do_check_eq(packet.type, "paused");
-        do_check_eq(packet.why.type, "clientEvaluated");
-        do_check_eq(packet.why.frameFinished.throw.type, "object");
-        do_check_eq(packet.why.frameFinished.throw.class, "Error");
+        Assert.equal(packet.type, "paused");
+        Assert.equal(packet.why.type, "clientEvaluated");
+        Assert.equal(packet.why.frameFinished.throw.type, "object");
+        Assert.equal(packet.why.frameFinished.throw.class, "Error");
 
         gThreadClient.resume(function () {
           finishClient(gClient);

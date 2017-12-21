@@ -61,12 +61,12 @@ function after_osfile_crash_noerror(mdump, extra) {
   let info = JSON.parse(extra.AsyncShutdownTimeout);
   let state = info.conditions[0].state;
   do_print("Keys: " + Object.keys(state).join(", "));
-  do_check_eq(info.phase, "profile-before-change");
-  do_check_true(state.launched);
-  do_check_false(state.shutdown);
-  do_check_true(state.worker);
-  do_check_true(!!state.latestSent);
-  do_check_eq(state.latestSent[1], "getCurrentDirectory");
+  Assert.equal(info.phase, "profile-before-change");
+  Assert.ok(state.launched);
+  Assert.ok(!state.shutdown);
+  Assert.ok(state.worker);
+  Assert.ok(!!state.latestSent);
+  Assert.equal(state.latestSent[1], "getCurrentDirectory");
 }
 
 // Test that AsyncShutdown + OS.File reports errors correctly, in a case in which
@@ -92,11 +92,11 @@ function after_osfile_crash_exn(mdump, extra) {
   let info = JSON.parse(extra.AsyncShutdownTimeout);
   let state = info.conditions[0].state;
   do_print("Keys: " + Object.keys(state).join(", "));
-  do_check_eq(info.phase, "profile-before-change");
-  do_check_false(state.shutdown);
-  do_check_true(state.worker);
-  do_check_true(!!state.latestSent);
-  do_check_eq(state.latestSent[1], "read");
+  Assert.equal(info.phase, "profile-before-change");
+  Assert.ok(!state.shutdown);
+  Assert.ok(state.worker);
+  Assert.ok(!!state.latestSent);
+  Assert.equal(state.latestSent[1], "read");
 }
 
 function run_test() {

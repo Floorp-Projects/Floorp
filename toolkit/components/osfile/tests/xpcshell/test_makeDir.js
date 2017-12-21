@@ -34,7 +34,7 @@ add_task(async function test_basic() {
   let dir = Path.join(profileDir, "directory");
 
   // Sanity checking for the test
-  do_check_false((await OS.File.exists(dir)));
+  Assert.equal(false, (await OS.File.exists(dir)));
 
   // Make a directory
   await OS.File.makeDir(dir);
@@ -56,9 +56,9 @@ add_task(async function test_basic() {
     exception = ex;
   }
 
-  do_check_true(!!exception);
-  do_check_true(exception instanceof OS.File.Error);
-  do_check_true(exception.becauseExists);
+  Assert.ok(!!exception);
+  Assert.ok(exception instanceof OS.File.Error);
+  Assert.ok(exception.becauseExists);
 });
 
 // Make a root directory that already exists
@@ -78,7 +78,7 @@ add_task(async function test_option_from() {
   let dir = Path.join(profileDir, "a", "b", "c");
 
   // Sanity checking for the test
-  do_check_false((await OS.File.exists(dir)));
+  Assert.equal(false, (await OS.File.exists(dir)));
 
   // Make a directory
   await OS.File.makeDir(dir, {from: profileDir});
@@ -100,9 +100,9 @@ add_task(async function test_option_from() {
     exception = ex;
   }
 
-  do_check_true(!!exception);
-  do_check_true(exception instanceof OS.File.Error);
-  do_check_true(exception.becauseExists);
+  Assert.ok(!!exception);
+  Assert.ok(exception instanceof OS.File.Error);
+  Assert.ok(exception.becauseExists);
 
   // Make a directory without |from| and fail
   let dir2 = Path.join(profileDir, "g", "h", "i");
@@ -113,16 +113,16 @@ add_task(async function test_option_from() {
     exception = ex;
   }
 
-  do_check_true(!!exception);
-  do_check_true(exception instanceof OS.File.Error);
-  do_check_true(exception.becauseNoSuchFile);
+  Assert.ok(!!exception);
+  Assert.ok(exception instanceof OS.File.Error);
+  Assert.ok(exception.becauseNoSuchFile);
 
   // Test edge cases on paths
 
   let dir3 = Path.join(profileDir, "d", "", "e", "f");
-  do_check_false((await OS.File.exists(dir3)));
+  Assert.equal(false, (await OS.File.exists(dir3)));
   await OS.File.makeDir(dir3, {from: profileDir});
-  do_check_true((await OS.File.exists(dir3)));
+  Assert.ok((await OS.File.exists(dir3)));
 
   let dir4;
   if (OS.Constants.Win) {
@@ -132,7 +132,7 @@ add_task(async function test_option_from() {
   } else {
     dir4 = profileDir + "////g";
   }
-  do_check_false((await OS.File.exists(dir4)));
+  Assert.equal(false, (await OS.File.exists(dir4)));
   await OS.File.makeDir(dir4, {from: profileDir});
-  do_check_true((await OS.File.exists(dir4)));
+  Assert.ok((await OS.File.exists(dir4)));
 });

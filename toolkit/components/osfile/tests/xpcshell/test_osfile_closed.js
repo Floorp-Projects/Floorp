@@ -14,7 +14,7 @@ add_task(async function test_closed() {
   let path = OS.Path.join(currentDir, "test_osfile_closed.js");
   let file = await OS.File.open(path);
   await file.stat();
-  do_check_true(true);
+  Assert.ok(true);
 
   await file.close();
 
@@ -26,9 +26,9 @@ add_task(async function test_closed() {
     exn = ex;
   }
   do_print("Ensure that this raises the correct error");
-  do_check_true(!!exn);
-  do_check_true(exn instanceof OS.File.Error);
-  do_check_true(exn.becauseClosed);
+  Assert.ok(!!exn);
+  Assert.ok(exn instanceof OS.File.Error);
+  Assert.ok(exn.becauseClosed);
 
   do_print("Ensure that we cannot read() on closed file");
   exn = null;
@@ -38,9 +38,9 @@ add_task(async function test_closed() {
     exn = ex;
   }
   do_print("Ensure that this raises the correct error");
-  do_check_true(!!exn);
-  do_check_true(exn instanceof OS.File.Error);
-  do_check_true(exn.becauseClosed);
+  Assert.ok(!!exn);
+  Assert.ok(exn instanceof OS.File.Error);
+  Assert.ok(exn.becauseClosed);
 
 });
 

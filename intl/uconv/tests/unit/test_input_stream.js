@@ -17,7 +17,7 @@ function test_char(code) {
     var utf8Result = stream.read(stream.available());
     stream.close();
     var result = converter.ConvertToUnicode(utf8Result);
-    do_check_eq(escape(original), escape(result));
+    Assert.equal(escape(original), escape(result));
 }
 
 function run_test() {

@@ -71,6 +71,6 @@ function* test_one(url, encoding) {
   // Be sure to set the encoding to something that will yield an
   // invalid result if BOM sniffing is not done.
   yield DevToolsUtils.fetch(url, { charset: "ISO-8859-1" }).then(({content}) => {
-    do_check_eq(content, "hı", "The content looks correct for " + encoding);
+    Assert.equal(content, "hı", "The content looks correct for " + encoding);
   });
 }

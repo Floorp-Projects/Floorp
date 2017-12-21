@@ -36,18 +36,18 @@ function test_nesting() {
 
   executeSoon(function () {
     // Should be on the first step
-    do_check_eq(++currentStep, 1);
+    Assert.equal(++currentStep, 1);
     // We should have one nested event loop from unsfeSynchronize
-    do_check_eq(thread._nestedEventLoops.size, 1);
+    Assert.equal(thread._nestedEventLoops.size, 1);
     resolve(true);
   });
 
-  do_check_eq(thread.unsafeSynchronize(p), true);
+  Assert.equal(thread.unsafeSynchronize(p), true);
 
   // Should be on the second step
-  do_check_eq(++currentStep, 2);
+  Assert.equal(++currentStep, 2);
   // There shouldn't be any nested event loops anymore
-  do_check_eq(thread._nestedEventLoops.size, 0);
+  Assert.equal(thread._nestedEventLoops.size, 0);
 
   finishClient(gClient);
 }

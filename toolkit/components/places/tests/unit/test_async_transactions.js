@@ -114,7 +114,7 @@ function run_test() {
 }
 
 function sanityCheckTransactionHistory() {
-  do_check_true(PT.undoPosition <= PT.length);
+  Assert.ok(PT.undoPosition <= PT.length);
 
   let check_entry_throws = f => {
     try {
@@ -127,13 +127,13 @@ function sanityCheckTransactionHistory() {
   check_entry_throws( () => PT.entry(PT.length) );
 
   if (PT.undoPosition < PT.length)
-    do_check_eq(PT.topUndoEntry, PT.entry(PT.undoPosition));
+    Assert.equal(PT.topUndoEntry, PT.entry(PT.undoPosition));
   else
-    do_check_null(PT.topUndoEntry);
+    Assert.equal(null, PT.topUndoEntry);
   if (PT.undoPosition > 0)
-    do_check_eq(PT.topRedoEntry, PT.entry(PT.undoPosition - 1));
+    Assert.equal(PT.topRedoEntry, PT.entry(PT.undoPosition - 1));
   else
-    do_check_null(PT.topRedoEntry);
+    Assert.equal(null, PT.topRedoEntry);
 }
 
 function getTransactionsHistoryState() {
@@ -151,12 +151,12 @@ function ensureUndoState(aExpectedEntries = [], aExpectedUndoPosition = 0) {
   sanityCheckTransactionHistory();
 
   let [actualEntries, actualUndoPosition] = getTransactionsHistoryState();
-  do_check_eq(actualEntries.length, aExpectedEntries.length);
-  do_check_eq(actualUndoPosition, aExpectedUndoPosition);
+  Assert.equal(actualEntries.length, aExpectedEntries.length);
+  Assert.equal(actualUndoPosition, aExpectedUndoPosition);
 
   function checkEqualEntries(aExpectedEntry, aActualEntry) {
-    do_check_eq(aExpectedEntry.length, aActualEntry.length);
-    aExpectedEntry.forEach( (t, i) => do_check_eq(t, aActualEntry[i]) );
+    Assert.equal(aExpectedEntry.length, aActualEntry.length);
+    aExpectedEntry.forEach( (t, i) => Assert.equal(t, aActualEntry[i]) );
   }
   aExpectedEntries.forEach( (e, i) => checkEqualEntries(e, actualEntries[i]) );
 }
@@ -214,56 +214,56 @@ function ensureItemsRemoved(...items) {
 
 function ensureItemsChanged(...items) {
   for (let item of items) {
-    do_check_true(observer.itemsChanged.has(item.guid));
+    Assert.ok(observer.itemsChanged.has(item.guid));
     let changes = observer.itemsChanged.get(item.guid);
-    do_check_true(changes.has(item.property));
+    Assert.ok(changes.has(item.property));
     let info = changes.get(item.property);
     if (!("isAnnoProperty" in item)) {
-      do_check_false(info.isAnnoProperty);
+      Assert.ok(!info.isAnnoProperty);
     } else {
-      do_check_eq(info.isAnnoProperty, Boolean(item.isAnnoProperty));
+      Assert.equal(info.isAnnoProperty, Boolean(item.isAnnoProperty));
     }
-    do_check_eq(info.newValue, item.newValue);
+    Assert.equal(info.newValue, item.newValue);
     if ("url" in item)
-      do_check_true(item.url.equals(info.url));
+      Assert.ok(item.url.equals(info.url));
   }
 }
 
 function ensureAnnotationsSet(aGuid, aAnnos) {
-  do_check_true(observer.itemsChanged.has(aGuid));
+  Assert.ok(observer.itemsChanged.has(aGuid));
   let changes = observer.itemsChanged.get(aGuid);
   for (let anno of aAnnos) {
-    do_check_true(changes.has(anno.name));
+    Assert.ok(changes.has(anno.name));
     let changeInfo = changes.get(anno.name);
-    do_check_true(changeInfo.isAnnoProperty);
-    do_check_eq(changeInfo.newValue, anno.value);
+    Assert.ok(changeInfo.isAnnoProperty);
+    Assert.equal(changeInfo.newValue, anno.value);
   }
 }
 
 function ensureItemsMoved(...items) {
-  do_check_true(observer.itemsMoved.size, items.length);
+  Assert.ok(observer.itemsMoved.size, items.length);
   for (let item of items) {
-    do_check_true(observer.itemsMoved.has(item.guid));
+    Assert.ok(observer.itemsMoved.has(item.guid));
     let info = observer.itemsMoved.get(item.guid);
-    do_check_eq(info.oldParentGuid, item.oldParentGuid);
-    do_check_eq(info.oldIndex, item.oldIndex);
-    do_check_eq(info.newParentGuid, item.newParentGuid);
-    do_check_eq(info.newIndex, item.newIndex);
+    Assert.equal(info.oldParentGuid, item.oldParentGuid);
+    Assert.equal(info.oldIndex, item.oldIndex);
+    Assert.equal(info.newParentGuid, item.newParentGuid);
+    Assert.equal(info.newIndex, item.newIndex);
   }
 }
 
 function ensureTimestampsUpdated(aGuid, aCheckDateAdded = false) {
-  do_check_true(observer.itemsChanged.has(aGuid));
+  Assert.ok(observer.itemsChanged.has(aGuid));
   let changes = observer.itemsChanged.get(aGuid);
   if (aCheckDateAdded)
-    do_check_true(changes.has("dateAdded"));
-  do_check_true(changes.has("lastModified"));
+    Assert.ok(changes.has("dateAdded"));
+  Assert.ok(changes.has("lastModified"));
 }
 
 function ensureTagsForURI(aURI, aTags) {
   let tagsSet = tagssvc.getTagsForURI(aURI);
-  do_check_eq(tagsSet.length, aTags.length);
-  do_check_true(aTags.every( t => tagsSet.includes(t)));
+  Assert.equal(tagsSet.length, aTags.length);
+  Assert.ok(aTags.every( t => tagsSet.includes(t)));
 }
 
 function createTestFolderInfo(title = "Test Folder", parentGuid = menuGuid,
@@ -688,7 +688,7 @@ add_task(async function test_move_items_to_folder() {
   // Clean up
   await PT.undo(); // folder_b_txn
   await PT.undo(); // folder_a_txn + the bookmarks;
-  do_check_eq(observer.itemsRemoved.size, 4);
+  Assert.equal(observer.itemsRemoved.size, 4);
   ensureUndoState([ [moveTxn],
                     [folder_b_txn],
                     [bkm_b_txn_result, bkm_a_txn_result, folder_a_txn_result] ], 3);
@@ -1488,7 +1488,7 @@ add_task(async function test_sort_folder_by_name() {
   let folderContainer = PlacesUtils.getFolderContents(folderId).root;
   function ensureOrder(aOrder) {
     for (let i = 0; i < folderContainer.childCount; i++) {
-      do_check_eq(folderContainer.getChild(i).bookmarkGuid, aOrder[i].guid);
+      Assert.equal(folderContainer.getChild(i).bookmarkGuid, aOrder[i].guid);
     }
   }
 

@@ -7,13 +7,13 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 
 add_test(function test_set_get_pref() {
   Preferences.set("test_set_get_pref.integer", 1);
-  do_check_eq(Preferences.get("test_set_get_pref.integer"), 1);
+  Assert.equal(Preferences.get("test_set_get_pref.integer"), 1);
 
   Preferences.set("test_set_get_pref.string", "foo");
-  do_check_eq(Preferences.get("test_set_get_pref.string"), "foo");
+  Assert.equal(Preferences.get("test_set_get_pref.string"), "foo");
 
   Preferences.set("test_set_get_pref.boolean", true);
-  do_check_eq(Preferences.get("test_set_get_pref.boolean"), true);
+  Assert.equal(Preferences.get("test_set_get_pref.boolean"), true);
 
   // Clean up.
   Preferences.resetBranch("test_set_get_pref.");
@@ -25,8 +25,8 @@ add_test(function test_set_get_branch_pref() {
   let prefs = new Preferences("test_set_get_branch_pref.");
 
   prefs.set("something", 1);
-  do_check_eq(prefs.get("something"), 1);
-  do_check_false(Preferences.has("something"));
+  Assert.equal(prefs.get("something"), 1);
+  Assert.ok(!Preferences.has("something"));
 
   // Clean up.
   prefs.reset("something");
@@ -43,9 +43,9 @@ add_test(function test_set_get_multiple_prefs() {
                                    "test_set_get_multiple_prefs.string",
                                    "test_set_get_multiple_prefs.boolean"]);
 
-  do_check_eq(i, 1);
-  do_check_eq(s, "foo");
-  do_check_eq(b, true);
+  Assert.equal(i, 1);
+  Assert.equal(s, "foo");
+  Assert.equal(b, true);
 
   // Clean up.
   Preferences.resetBranch("test_set_get_multiple_prefs.");
@@ -62,9 +62,9 @@ add_test(function test_get_multiple_prefs_with_default_value() {
                                    "test_get_multiple_prefs_with_default_value.c"],
                                   0);
 
-  do_check_eq(a, 1);
-  do_check_eq(b, 2);
-  do_check_eq(c, 0);
+  Assert.equal(a, 1);
+  Assert.equal(b, 2);
+  Assert.equal(c, 0);
 
   // Clean up.
   Preferences.resetBranch("test_get_multiple_prefs_with_default_value.");
@@ -74,7 +74,7 @@ add_test(function test_get_multiple_prefs_with_default_value() {
 
 add_test(function test_set_get_unicode_pref() {
   Preferences.set("test_set_get_unicode_pref", String.fromCharCode(960));
-  do_check_eq(Preferences.get("test_set_get_unicode_pref"), String.fromCharCode(960));
+  Assert.equal(Preferences.get("test_set_get_unicode_pref"), String.fromCharCode(960));
 
   // Clean up.
   Preferences.reset("test_set_get_unicode_pref");
@@ -86,7 +86,7 @@ add_test(function test_set_null_pref() {
   try {
     Preferences.set("test_set_null_pref", null);
     // We expect this to throw, so the test is designed to fail if it doesn't.
-    do_check_true(false);
+    Assert.ok(false);
   } catch (ex) {}
 
   run_next_test();
@@ -96,7 +96,7 @@ add_test(function test_set_undefined_pref() {
   try {
     Preferences.set("test_set_undefined_pref");
     // We expect this to throw, so the test is designed to fail if it doesn't.
-    do_check_true(false);
+    Assert.ok(false);
   } catch (ex) {}
 
   run_next_test();
@@ -106,7 +106,7 @@ add_test(function test_set_unsupported_pref() {
   try {
     Preferences.set("test_set_unsupported_pref", []);
     // We expect this to throw, so the test is designed to fail if it doesn't.
-    do_check_true(false);
+    Assert.ok(false);
   } catch (ex) {}
 
   run_next_test();
@@ -115,7 +115,7 @@ add_test(function test_set_unsupported_pref() {
 // Make sure that we can get a string pref that we didn't set ourselves.
 add_test(function test_get_string_pref() {
   Services.prefs.setCharPref("test_get_string_pref", "a normal string");
-  do_check_eq(Preferences.get("test_get_string_pref"), "a normal string");
+  Assert.equal(Preferences.get("test_get_string_pref"), "a normal string");
 
   // Clean up.
   Preferences.reset("test_get_string_pref");
@@ -129,7 +129,7 @@ add_test(function test_get_localized_string_pref() {
     .createInstance(Ci.nsIPrefLocalizedString);
   localizedString.data = "a localized string";
   Services.prefs.setComplexValue(prefName, Ci.nsIPrefLocalizedString, localizedString);
-  do_check_eq(Preferences.get(prefName, null, Ci.nsIPrefLocalizedString),
+  Assert.equal(Preferences.get(prefName, null, Ci.nsIPrefLocalizedString),
     "a localized string");
 
   // Clean up.
@@ -140,17 +140,17 @@ add_test(function test_get_localized_string_pref() {
 
 add_test(function test_set_get_number_pref() {
   Preferences.set("test_set_get_number_pref", 5);
-  do_check_eq(Preferences.get("test_set_get_number_pref"), 5);
+  Assert.equal(Preferences.get("test_set_get_number_pref"), 5);
 
   // Non-integer values get converted to integers.
   Preferences.set("test_set_get_number_pref", 3.14159);
-  do_check_eq(Preferences.get("test_set_get_number_pref"), 3);
+  Assert.equal(Preferences.get("test_set_get_number_pref"), 3);
 
   // Values outside the range -(2^31-1) to 2^31-1 overflow.
   try {
     Preferences.set("test_set_get_number_pref", Math.pow(2, 31));
     // We expect this to throw, so the test is designed to fail if it doesn't.
-    do_check_true(false);
+    Assert.ok(false);
   } catch (ex) {}
 
   // Clean up.
@@ -162,7 +162,7 @@ add_test(function test_set_get_number_pref() {
 add_test(function test_reset_pref() {
   Preferences.set("test_reset_pref", 1);
   Preferences.reset("test_reset_pref");
-  do_check_eq(Preferences.get("test_reset_pref"), undefined);
+  Assert.equal(Preferences.get("test_reset_pref"), undefined);
 
   run_next_test();
 });
@@ -171,8 +171,8 @@ add_test(function test_reset_pref_branch() {
   Preferences.set("test_reset_pref_branch.foo", 1);
   Preferences.set("test_reset_pref_branch.bar", 2);
   Preferences.resetBranch("test_reset_pref_branch.");
-  do_check_eq(Preferences.get("test_reset_pref_branch.foo"), undefined);
-  do_check_eq(Preferences.get("test_reset_pref_branch.bar"), undefined);
+  Assert.equal(Preferences.get("test_reset_pref_branch.foo"), undefined);
+  Assert.equal(Preferences.get("test_reset_pref_branch.bar"), undefined);
 
   run_next_test();
 });
@@ -199,13 +199,13 @@ add_test(function test_observe_prefs_function() {
 
   Preferences.observe("test_observe_prefs_function", observer);
   Preferences.set("test_observe_prefs_function.subpref", "something");
-  do_check_false(observed);
+  Assert.ok(!observed);
   Preferences.set("test_observe_prefs_function", "something");
-  do_check_true(observed);
+  Assert.ok(observed);
 
   Preferences.ignore("test_observe_prefs_function", observer);
   Preferences.set("test_observe_prefs_function", "something else");
-  do_check_true(observed);
+  Assert.ok(observed);
 
   // Clean up.
   Preferences.reset("test_observe_prefs_function");
@@ -224,13 +224,13 @@ add_test(function test_observe_prefs_object() {
 
   Preferences.observe("test_observe_prefs_object", observer.observe, observer);
   Preferences.set("test_observe_prefs_object.subpref", "something");
-  do_check_false(observer.observed);
+  Assert.ok(!observer.observed);
   Preferences.set("test_observe_prefs_object", "something");
-  do_check_true(observer.observed);
+  Assert.ok(observer.observed);
 
   Preferences.ignore("test_observe_prefs_object", observer.observe, observer);
   Preferences.set("test_observe_prefs_object", "something else");
-  do_check_true(observer.observed);
+  Assert.ok(observer.observed);
 
   // Clean up.
   Preferences.reset("test_observe_prefs_object");
@@ -244,20 +244,20 @@ add_test(function test_observe_prefs_nsIObserver() {
     observed: false,
     observe(subject, topic, data) {
       this.observed = !this.observed;
-      do_check_true(subject instanceof Ci.nsIPrefBranch);
-      do_check_eq(topic, "nsPref:changed");
-      do_check_eq(data, "test_observe_prefs_nsIObserver");
+      Assert.ok(subject instanceof Ci.nsIPrefBranch);
+      Assert.equal(topic, "nsPref:changed");
+      Assert.equal(data, "test_observe_prefs_nsIObserver");
     }
   };
 
   Preferences.observe("test_observe_prefs_nsIObserver", observer);
   Preferences.set("test_observe_prefs_nsIObserver.subpref", "something");
   Preferences.set("test_observe_prefs_nsIObserver", "something");
-  do_check_true(observer.observed);
+  Assert.ok(observer.observed);
 
   Preferences.ignore("test_observe_prefs_nsIObserver", observer);
   Preferences.set("test_observe_prefs_nsIObserver", "something else");
-  do_check_true(observer.observed);
+  Assert.ok(observer.observed);
 
   // Clean up.
   Preferences.reset("test_observe_prefs_nsIObserver");
@@ -278,7 +278,7 @@ add_test(function test_observe_exact_pref() {
 
   Preferences.observe("test_observe_exact_pref", observer);
   Preferences.set("test_observe_exact_pref.sub-pref", "something");
-  do_check_false(observed);
+  Assert.ok(!observed);
 
   // Clean up.
   Preferences.ignore("test_observe_exact_pref", observer);
@@ -288,7 +288,7 @@ add_test(function test_observe_exact_pref() {
 });
 
 add_test(function test_observe_value_of_set_pref() {
-  let observer = function(newVal) { do_check_eq(newVal, "something"); };
+  let observer = function(newVal) { Assert.equal(newVal, "something"); };
 
   Preferences.observe("test_observe_value_of_set_pref", observer);
   Preferences.set("test_observe_value_of_set_pref.subpref", "somethingelse");
@@ -303,7 +303,7 @@ add_test(function test_observe_value_of_set_pref() {
 });
 
 add_test(function test_observe_value_of_reset_pref() {
-  let observer = function(newVal) { do_check_true(typeof newVal == "undefined"); };
+  let observer = function(newVal) { Assert.ok(typeof newVal == "undefined"); };
 
   Preferences.set("test_observe_value_of_reset_pref", "something");
   Preferences.observe("test_observe_value_of_reset_pref", observer);
@@ -316,18 +316,18 @@ add_test(function test_observe_value_of_reset_pref() {
 });
 
 add_test(function test_has_pref() {
-  do_check_false(Preferences.has("test_has_pref"));
+  Assert.ok(!Preferences.has("test_has_pref"));
   Preferences.set("test_has_pref", "foo");
-  do_check_true(Preferences.has("test_has_pref"));
+  Assert.ok(Preferences.has("test_has_pref"));
 
   Preferences.set("test_has_pref.foo", "foo");
   Preferences.set("test_has_pref.bar", "bar");
   let [hasFoo, hasBar, hasBaz] = Preferences.has(["test_has_pref.foo",
                                                   "test_has_pref.bar",
                                                   "test_has_pref.baz"]);
-  do_check_true(hasFoo);
-  do_check_true(hasBar);
-  do_check_false(hasBaz);
+  Assert.ok(hasFoo);
+  Assert.ok(hasBar);
+  Assert.ok(!hasBaz);
 
   // Clean up.
   Preferences.resetBranch("test_has_pref");
@@ -339,9 +339,9 @@ add_test(function test_isSet_pref() {
   // Use a pref that we know has a default value but no user-set value.
   // This feels dangerous; perhaps we should create some other default prefs
   // that we can use for testing.
-  do_check_false(Preferences.isSet("toolkit.defaultChromeURI"));
+  Assert.ok(!Preferences.isSet("toolkit.defaultChromeURI"));
   Preferences.set("toolkit.defaultChromeURI", "foo");
-  do_check_true(Preferences.isSet("toolkit.defaultChromeURI"));
+  Assert.ok(Preferences.isSet("toolkit.defaultChromeURI"));
 
   // Clean up.
   Preferences.reset("toolkit.defaultChromeURI");

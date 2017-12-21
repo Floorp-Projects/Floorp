@@ -47,24 +47,24 @@ add_task(async function run_test() {
   let ff = makeObs("foo:bar:finish");
   let fe = makeObs("foo:bar:error");
   ret = await obj.func();
-  do_check_eq(ret, 5);
-  do_check_true(rightThis);
-  do_check_true(didCall);
+  Assert.equal(ret, 5);
+  Assert.ok(rightThis);
+  Assert.ok(didCall);
 
-  do_check_eq(fs.state, 1);
-  do_check_eq(fs.subject, undefined);
-  do_check_eq(fs.topic, "foo:bar:start");
-  do_check_eq(fs.data, "baz");
+  Assert.equal(fs.state, 1);
+  Assert.equal(fs.subject, undefined);
+  Assert.equal(fs.topic, "foo:bar:start");
+  Assert.equal(fs.data, "baz");
 
-  do_check_eq(ff.state, 2);
-  do_check_eq(ff.subject, 5);
-  do_check_eq(ff.topic, "foo:bar:finish");
-  do_check_eq(ff.data, "baz");
+  Assert.equal(ff.state, 2);
+  Assert.equal(ff.subject, 5);
+  Assert.equal(ff.topic, "foo:bar:finish");
+  Assert.equal(ff.data, "baz");
 
-  do_check_eq(fe.state, undefined);
-  do_check_eq(fe.subject, undefined);
-  do_check_eq(fe.topic, undefined);
-  do_check_eq(fe.data, undefined);
+  Assert.equal(fe.state, undefined);
+  Assert.equal(fe.subject, undefined);
+  Assert.equal(fe.topic, undefined);
+  Assert.equal(fe.data, undefined);
 
   _("Make sure a throwy call will call and throw with notifications");
   ret = null;
@@ -76,24 +76,24 @@ add_task(async function run_test() {
     ret = await obj.throwy();
     do_throw("throwy should have thrown!");
   } catch (ex) {
-    do_check_eq(ex.message, "covfefe");
+    Assert.equal(ex.message, "covfefe");
   }
-  do_check_eq(ret, null);
-  do_check_true(rightThis);
-  do_check_true(didCall);
+  Assert.equal(ret, null);
+  Assert.ok(rightThis);
+  Assert.ok(didCall);
 
-  do_check_eq(ts.state, 3);
-  do_check_eq(ts.subject, undefined);
-  do_check_eq(ts.topic, "foo:bad:start");
-  do_check_eq(ts.data, "one");
+  Assert.equal(ts.state, 3);
+  Assert.equal(ts.subject, undefined);
+  Assert.equal(ts.topic, "foo:bad:start");
+  Assert.equal(ts.data, "one");
 
-  do_check_eq(tf.state, undefined);
-  do_check_eq(tf.subject, undefined);
-  do_check_eq(tf.topic, undefined);
-  do_check_eq(tf.data, undefined);
+  Assert.equal(tf.state, undefined);
+  Assert.equal(tf.subject, undefined);
+  Assert.equal(tf.topic, undefined);
+  Assert.equal(tf.data, undefined);
 
-  do_check_eq(te.state, 4);
-  do_check_eq(te.subject.message, "covfefe");
-  do_check_eq(te.topic, "foo:bad:error");
-  do_check_eq(te.data, "one");
+  Assert.equal(te.state, 4);
+  Assert.equal(te.subject.message, "covfefe");
+  Assert.equal(te.topic, "foo:bad:error");
+  Assert.equal(te.data, "one");
 });

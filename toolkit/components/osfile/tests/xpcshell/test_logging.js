@@ -30,10 +30,10 @@ function run_test() {
 
         ++messageCount;
         if (messageCount == 1) {
-          do_check_eq(aMessage.message, "TEST OS {\"name\":\"test\"}\n");
+          Assert.equal(aMessage.message, "TEST OS {\"name\":\"test\"}\n");
         }
         if (messageCount == 2) {
-          do_check_eq(aMessage.message, "TEST OS name is test\n");
+          Assert.equal(aMessage.message, "TEST OS name is test\n");
           toggleConsoleListener(false);
           do_test_finished();
         }

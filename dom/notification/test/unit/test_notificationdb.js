@@ -11,8 +11,8 @@ add_test(function test_get_none() {
   let requestID = 0;
   let msgReply = "Notification:GetAll:Return:OK";
   let msgHandler = function(message) {
-    do_check_eq(requestID, message.data.requestID);
-    do_check_eq(0, message.data.notifications.length);
+    Assert.equal(requestID, message.data.requestID);
+    Assert.equal(0, message.data.notifications.length);
   };
 
   addAndSend("Notification:GetAll", msgReply, msgHandler, {
@@ -26,7 +26,7 @@ add_test(function test_send_one() {
   let requestID = 1;
   let msgReply = "Notification:Save:Return:OK";
   let msgHandler = function(message) {
-    do_check_eq(requestID, message.data.requestID);
+    Assert.equal(requestID, message.data.requestID);
   };
 
   addAndSend("Notification:Save", msgReply, msgHandler, {
@@ -41,8 +41,8 @@ add_test(function test_get_one() {
   let requestID = 2;
   let msgReply = "Notification:GetAll:Return:OK";
   let msgHandler = function(message) {
-    do_check_eq(requestID, message.data.requestID);
-    do_check_eq(1, message.data.notifications.length);
+    Assert.equal(requestID, message.data.requestID);
+    Assert.equal(1, message.data.notifications.length);
     // compare the content
     compareNotification(systemNotification, message.data.notifications[0]);
   };
@@ -58,7 +58,7 @@ add_test(function test_delete_one() {
   let requestID = 3;
   let msgReply = "Notification:Delete:Return:OK";
   let msgHandler = function(message) {
-    do_check_eq(requestID, message.data.requestID);
+    Assert.equal(requestID, message.data.requestID);
   };
 
   addAndSend("Notification:Delete", msgReply, msgHandler, {
@@ -73,8 +73,8 @@ add_test(function test_get_none_again() {
   let requestID = 4;
   let msgReply = "Notification:GetAll:Return:OK";
   let msgHandler = function(message) {
-    do_check_eq(requestID, message.data.requestID);
-    do_check_eq(0, message.data.notifications.length);
+    Assert.equal(requestID, message.data.requestID);
+    Assert.equal(0, message.data.notifications.length);
   };
 
   addAndSend("Notification:GetAll", msgReply, msgHandler, {
@@ -88,7 +88,7 @@ add_test(function test_delete_one_nonexistent() {
   let requestID = 5;
   let msgReply = "Notification:Delete:Return:OK";
   let msgHandler = function(message) {
-    do_check_eq(requestID, message.data.requestID);
+    Assert.equal(requestID, message.data.requestID);
   };
 
   addAndSend("Notification:Delete", msgReply, msgHandler, {
@@ -105,8 +105,8 @@ add_test(function test_send_two_get_one() {
 
   let msgGetReply = "Notification:GetAll:Return:OK";
   let msgGetHandler = function(message) {
-    do_check_eq(requestID + 2, message.data.requestID);
-    do_check_eq(1, message.data.notifications.length);
+    Assert.equal(requestID + 2, message.data.requestID);
+    Assert.equal(1, message.data.notifications.length);
     // compare the content
     compareNotification(systemNotification, message.data.notifications[0]);
   };
@@ -140,7 +140,7 @@ add_test(function test_delete_previous() {
   let requestID = 8;
   let msgReply = "Notification:Delete:Return:OK";
   let msgHandler = function(message) {
-    do_check_eq(requestID, message.data.requestID);
+    Assert.equal(requestID, message.data.requestID);
   };
 
   addAndSend("Notification:Delete", msgReply, msgHandler, {
@@ -167,7 +167,7 @@ add_test(function test_send_two_get_one() {
         cpmm.removeMessageListener(msgGetReply, msgGetNotifHandler);
         let notifications = message.data.notifications;
         // same tag, so replaced
-        do_check_eq(1, notifications.length);
+        Assert.equal(1, notifications.length);
         // compare the content
         compareNotification(systemNotification2, notifications[0]);
         run_next_test();
@@ -208,7 +208,7 @@ add_test(function test_delete_previous() {
   let requestID = 15;
   let msgReply = "Notification:Delete:Return:OK";
   let msgHandler = function(message) {
-    do_check_eq(requestID, message.data.requestID);
+    Assert.equal(requestID, message.data.requestID);
   };
 
   addAndSend("Notification:Delete", msgReply, msgHandler, {
@@ -238,7 +238,7 @@ add_test(function test_send_two_get_two() {
         let notifications = message.data.notifications;
 
         // one notification per origin
-        do_check_eq(1, notifications.length);
+        Assert.equal(1, notifications.length);
 
         // first call should be system notification
         if (msgGetCalls === 1) {
@@ -299,7 +299,7 @@ add_test(function test_delete_previous() {
   let requestID = 25;
   let msgReply = "Notification:Delete:Return:OK";
   let msgHandler = function(message) {
-    do_check_eq(requestID, message.data.requestID);
+    Assert.equal(requestID, message.data.requestID);
   };
 
   addAndSend("Notification:Delete", msgReply, msgHandler, {

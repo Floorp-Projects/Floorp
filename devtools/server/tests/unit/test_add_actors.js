@@ -46,7 +46,7 @@ function init() {
 function test_pre_init_global_actor() {
   gClient.request({ to: gActors.preInitGlobalActor, type: "ping" },
     function onResponse(response) {
-      do_check_eq(response.message, "pong");
+      Assert.equal(response.message, "pong");
       run_next_test();
     }
   );
@@ -55,7 +55,7 @@ function test_pre_init_global_actor() {
 function test_pre_init_tab_actor() {
   gClient.request({ to: gActors.preInitTabActor, type: "ping" },
     function onResponse(response) {
-      do_check_eq(response.message, "pong");
+      Assert.equal(response.message, "pong");
       run_next_test();
     }
   );
@@ -64,7 +64,7 @@ function test_pre_init_tab_actor() {
 function test_post_init_global_actor() {
   gClient.request({ to: gActors.postInitGlobalActor, type: "ping" },
     function onResponse(response) {
-      do_check_eq(response.message, "pong");
+      Assert.equal(response.message, "pong");
       run_next_test();
     }
   );
@@ -73,7 +73,7 @@ function test_post_init_global_actor() {
 function test_post_init_tab_actor() {
   gClient.request({ to: gActors.postInitTabActor, type: "ping" },
     function onResponse(response) {
-      do_check_eq(response.message, "pong");
+      Assert.equal(response.message, "pong");
       run_next_test();
     }
   );
@@ -91,10 +91,10 @@ function test_stable_global_actor_instances() {
   let postInitGlobalActor = getActorInstance(connID, gActors.postInitGlobalActor);
   let preInitGlobalActor = getActorInstance(connID, gActors.preInitGlobalActor);
   gClient.listTabs(function onListTabs(response) {
-    do_check_eq(postInitGlobalActor,
-                getActorInstance(connID, response.postInitGlobalActor));
-    do_check_eq(preInitGlobalActor,
-                getActorInstance(connID, response.preInitGlobalActor));
+    Assert.equal(postInitGlobalActor,
+                 getActorInstance(connID, response.postInitGlobalActor));
+    Assert.equal(preInitGlobalActor,
+                 getActorInstance(connID, response.preInitGlobalActor));
     run_next_test();
   });
 }

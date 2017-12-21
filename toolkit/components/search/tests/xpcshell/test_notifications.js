@@ -34,7 +34,7 @@ function search_observer(subject, topic, data) {
   switch (data) {
     case "engine-added":
       let retrievedEngine = Services.search.getEngineByName("Test search engine");
-      do_check_eq(engine, retrievedEngine);
+      Assert.equal(engine, retrievedEngine);
       Services.search.defaultEngine = engine;
       Services.search.currentEngine = engine;
       do_execute_soon(function() {
@@ -47,9 +47,9 @@ function search_observer(subject, topic, data) {
       do_print("expectedLog:\n" + expectedLog.join("\n"));
       do_print("gTestLog:\n" + gTestLog.join("\n"));
       for (let i = 0; i < expectedLog.length; i++) {
-        do_check_eq(gTestLog[i], expectedLog[i]);
+        Assert.equal(gTestLog[i], expectedLog[i]);
       }
-      do_check_eq(gTestLog.length, expectedLog.length);
+      Assert.equal(gTestLog.length, expectedLog.length);
       do_test_finished();
       break;
   }

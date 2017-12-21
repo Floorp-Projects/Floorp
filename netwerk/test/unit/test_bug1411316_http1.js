@@ -79,7 +79,7 @@ HttpResponseListener.prototype =
 
   onStopRequest: function (request, ctx, status) {
     log("STOP id=" + this.id + " status=" + status);
-    do_check_true(this.onStopRequestStatus == status);
+    Assert.ok(this.onStopRequestStatus == status);
     do_test_finished();
   }
 };

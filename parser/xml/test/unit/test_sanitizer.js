@@ -16,6 +16,6 @@ function run_test() {
     var evil = vectors[item].data;
     var sanitized = vectors[item].sanitized;
     var out = ParserUtils.sanitize(evil, sanitizeFlags);
-    do_check_eq(sanitized, out);
+    Assert.equal(sanitized, out);
   }
 }

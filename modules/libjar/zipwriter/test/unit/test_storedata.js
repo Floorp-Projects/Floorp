@@ -13,25 +13,25 @@ const time = 1199145600000; // Jan 1st 2008
 function testpass(source)
 {
   // Should exist.
-  do_check_true(source.hasEntry(FILENAME));
+  Assert.ok(source.hasEntry(FILENAME));
 
   var entry = source.getEntry(FILENAME);
-  do_check_neq(entry, null);
+  Assert.notEqual(entry, null);
 
-  do_check_false(entry.isDirectory);
+  Assert.ok(!entry.isDirectory);
 
   // Should be stored
-  do_check_eq(entry.compression, ZIP_METHOD_STORE);
+  Assert.equal(entry.compression, ZIP_METHOD_STORE);
 
-  do_check_eq(entry.lastModifiedTime / PR_USEC_PER_MSEC, time);
+  Assert.equal(entry.lastModifiedTime / PR_USEC_PER_MSEC, time);
 
   // File size should match our data size.
-  do_check_eq(entry.realSize, DATA.length);
+  Assert.equal(entry.realSize, DATA.length);
   // When stored sizes should match.
-  do_check_eq(entry.size, entry.realSize);
+  Assert.equal(entry.size, entry.realSize);
 
   // Check that the CRC is accurate
-  do_check_eq(entry.CRC32, CRC);
+  Assert.equal(entry.CRC32, CRC);
 }
 
 function run_test()
@@ -39,9 +39,9 @@ function run_test()
   zipW.open(tmpFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
   // Shouldn't be there to start with.
-  do_check_false(zipW.hasEntry(FILENAME));
+  Assert.ok(!zipW.hasEntry(FILENAME));
 
-  do_check_false(zipW.inQueue);
+  Assert.ok(!zipW.inQueue);
 
   var stream = Cc["@mozilla.org/io/string-input-stream;1"]
                 .createInstance(Ci.nsIStringInputStream);
@@ -53,10 +53,10 @@ function run_test()
   testpass(zipW);
   zipW.close();
 
-  do_check_eq(tmpFile.fileSize,
-              DATA.length + ZIP_FILE_HEADER_SIZE + ZIP_CDS_HEADER_SIZE +
-              (ZIP_EXTENDED_TIMESTAMP_SIZE * 2) +
-              (FILENAME.length * 2) + ZIP_EOCDR_HEADER_SIZE);
+  Assert.equal(tmpFile.fileSize,
+               DATA.length + ZIP_FILE_HEADER_SIZE + ZIP_CDS_HEADER_SIZE +
+               (ZIP_EXTENDED_TIMESTAMP_SIZE * 2) +
+               (FILENAME.length * 2) + ZIP_EOCDR_HEADER_SIZE);
 
   // Check to see if we get the same results loading afresh.
   zipW.open(tmpFile, PR_RDWR);
@@ -74,5 +74,5 @@ function run_test()
   stream.close();
   zipR.close();
 
-  do_check_eq(result, DATA);
+  Assert.equal(result, DATA);
 }

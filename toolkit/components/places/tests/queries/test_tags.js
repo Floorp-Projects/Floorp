@@ -14,12 +14,12 @@ add_task(async function tags_getter_setter() {
   do_print("Tags getter/setter should work correctly");
   do_print("Without setting tags, tags getter should return empty array");
   var [query] = makeQuery();
-  do_check_eq(query.tags.length, 0);
+  Assert.equal(query.tags.length, 0);
 
   do_print("Setting tags to an empty array, tags getter should return " +
            "empty array");
   [query] = makeQuery([]);
-  do_check_eq(query.tags.length, 0);
+  Assert.equal(query.tags.length, 0);
 
   do_print("Setting a few tags, tags getter should return correct array");
   var tags = ["bar", "baz", "foo"];
@@ -627,7 +627,7 @@ function checkQueryURI(aTags, aTagsAreNot) {
   var [query, opts] = makeQuery(aTags, aTagsAreNot);
   var actualURI = queryURI(query, opts);
   do_print("Query URI should be what we expect for the given tags");
-  do_check_eq(actualURI, expURI);
+  Assert.equal(actualURI, expURI);
 }
 
 /**
@@ -735,8 +735,8 @@ function makeQuery(aTags, aTagsAreNot) {
   if (uniqueTags)
     setsAreEqual(query.tags, uniqueTags, true);
   var expCount = uniqueTags ? uniqueTags.length : 0;
-  do_check_eq(query.tags.length, expCount);
-  do_check_eq(query.tagsAreNot, aTagsAreNot);
+  Assert.equal(query.tags.length, expCount);
+  Assert.equal(query.tagsAreNot, aTagsAreNot);
 
   return [query, PlacesUtils.history.getNewQueryOptions()];
 }
@@ -780,13 +780,13 @@ function queryURI(aQuery, aQueryOpts) {
  * same order.
  */
 function setsAreEqual(aArr1, aArr2, aIsOrdered) {
-  do_check_eq(aArr1.length, aArr2.length);
+  Assert.equal(aArr1.length, aArr2.length);
   if (aIsOrdered) {
     for (let i = 0; i < aArr1.length; i++) {
-      do_check_eq(aArr1[i], aArr2[i]);
+      Assert.equal(aArr1[i], aArr2[i]);
     }
   } else {
-    aArr1.forEach(u => do_check_true(aArr2.indexOf(u) >= 0));
-    aArr2.forEach(u => do_check_true(aArr1.indexOf(u) >= 0));
+    aArr1.forEach(u => Assert.ok(aArr2.indexOf(u) >= 0));
+    aArr2.forEach(u => Assert.ok(aArr1.indexOf(u) >= 0));
   }
 }

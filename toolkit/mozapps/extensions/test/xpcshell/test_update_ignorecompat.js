@@ -55,7 +55,7 @@ for (let test of testParams) {
       onNewInstall(aInstall) {
         if (aInstall.existingAddon.id != "addon9@tests.mozilla.org")
           do_throw("Saw unexpected onNewInstall for " + aInstall.existingAddon.id);
-        do_check_eq(aInstall.version, "4.0");
+        Assert.equal(aInstall.version, "4.0");
       },
       onDownloadFailed(aInstall) {
         run_next_test();
@@ -87,7 +87,7 @@ for (let test of testParams) {
     restartManager();
 
     AddonManager.getAddonByID("addon11@tests.mozilla.org", function(a11) {
-      do_check_neq(a11, null);
+      Assert.notEqual(a11, null);
 
       a11.findUpdates({
         onCompatibilityUpdateAvailable() {

@@ -11,16 +11,16 @@ const LOG_ENTRY_MAX_COUNT = 1000;
 
 function check_event(event, id, data) {
   do_print("Checking message " + id);
-  do_check_eq(event[0], id);
-  do_check_true(event[1] > 0);
+  Assert.equal(event[0], id);
+  Assert.ok(event[1] > 0);
 
   if (data === undefined) {
-    do_check_true(event.length == 2);
+    Assert.ok(event.length == 2);
   } else {
-    do_check_eq(event.length, data.length + 2);
+    Assert.equal(event.length, data.length + 2);
     for (var i = 0; i < data.length; ++i) {
-      do_check_eq(typeof(event[i + 2]), "string");
-      do_check_eq(event[i + 2], data[i]);
+      Assert.equal(typeof(event[i + 2]), "string");
+      Assert.equal(event[i + 2], data[i]);
     }
   }
 }
@@ -38,12 +38,12 @@ add_task(async function() {
     return TEST_REGEX.test(e[0]);
   });
 
-  do_check_eq(log.length, 3);
+  Assert.equal(log.length, 3);
   check_event(log[0], TEST_PREFIX + "1", ["val", "123", "undefined"]);
   check_event(log[1], TEST_PREFIX + "2", []);
   check_event(log[2], TEST_PREFIX + "3", undefined);
-  do_check_true(log[0][1] <= log[1][1]);
-  do_check_true(log[1][1] <= log[2][1]);
+  Assert.ok(log[0][1] <= log[1][1]);
+  Assert.ok(log[1][1] <= log[2][1]);
 
   // Test that we limit the overall length of the log, and that pushing
   // it over the limit keeps the older events.
@@ -51,7 +51,7 @@ add_task(async function() {
     TelemetryLog.log(TEST_PREFIX + "to_tha_limit");
   }
   log = TelemetrySession.getPayload().log;
-  do_check_eq(log.length, LOG_ENTRY_MAX_COUNT);
+  Assert.equal(log.length, LOG_ENTRY_MAX_COUNT);
   check_event(log[0], TEST_PREFIX + "1", ["val", "123", "undefined"]);
 
   await TelemetryController.testShutdown();

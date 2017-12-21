@@ -53,7 +53,7 @@ add_task(async function test_something() {
     const list = await collection.list();
     // We know there will be initial values from the JSON dump.
     // (at least as many as in the dump shipped when this test was written).
-    do_check_true(list.data.length >= 363);
+    Assert.ok(list.data.length >= 363);
   });
 
   // No sync will be intented if maybeSync() is up-to-date.
@@ -62,7 +62,7 @@ add_task(async function test_something() {
   // Use any last_modified older than highest shipped in JSON dump.
   await OneCRLBlocklistClient.maybeSync(123456, Date.now());
   // Last check value was updated.
-  do_check_neq(0, Services.prefs.getIntPref("services.blocklist.onecrl.checked"));
+  Assert.notEqual(0, Services.prefs.getIntPref("services.blocklist.onecrl.checked"));
 
   // Restore server pref.
   Services.prefs.setCharPref("services.settings.server", dummyServerURL);
@@ -82,7 +82,7 @@ add_task(async function test_something() {
     // Open the collection, verify it's been updated:
     // Our test data now has two records; both should be in the local collection
     const list = await collection.list();
-    do_check_eq(list.data.length, 1);
+    Assert.equal(list.data.length, 1);
   });
 
   // Test the db is updated when we call again with a later lastModified value
@@ -92,7 +92,7 @@ add_task(async function test_something() {
     // Open the collection, verify it's been updated:
     // Our test data now has two records; both should be in the local collection
     const list = await collection.list();
-    do_check_eq(list.data.length, 3);
+    Assert.equal(list.data.length, 3);
   });
 
   // Try to maybeSync with the current lastModified value - no connection
@@ -109,7 +109,7 @@ add_task(async function test_something() {
   Services.prefs.setIntPref("services.blocklist.onecrl.checked", 0);
   await OneCRLBlocklistClient.maybeSync(3000, Date.now());
   let newValue = Services.prefs.getIntPref("services.blocklist.onecrl.checked");
-  do_check_neq(newValue, 0);
+  Assert.notEqual(newValue, 0);
 
   // Check that a sync completes even when there's bad data in the
   // collection. This will throw on fail, so just calling maybeSync is an

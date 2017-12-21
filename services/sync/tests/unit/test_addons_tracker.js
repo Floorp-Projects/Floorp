@@ -52,8 +52,8 @@ add_task(async function setup() {
 add_task(async function test_empty() {
   _("Verify the tracker is empty to start with.");
 
-  do_check_eq(0, Object.keys(tracker.changedIDs).length);
-  do_check_eq(0, tracker.score);
+  Assert.equal(0, Object.keys(tracker.changedIDs).length);
+  Assert.equal(0, tracker.score);
 
   await cleanup();
 });
@@ -64,8 +64,8 @@ add_task(async function test_not_tracking() {
   let addon = installAddon("test_bootstrap1_1");
   uninstallAddon(addon);
 
-  do_check_eq(0, Object.keys(tracker.changedIDs).length);
-  do_check_eq(0, tracker.score);
+  Assert.equal(0, Object.keys(tracker.changedIDs).length);
+  Assert.equal(0, tracker.score);
 
   await cleanup();
 });
@@ -77,13 +77,13 @@ add_task(async function test_track_install() {
 
   Svc.Obs.notify("weave:engine:start-tracking");
 
-  do_check_eq(0, tracker.score);
+  Assert.equal(0, tracker.score);
   let addon = installAddon("test_bootstrap1_1");
   let changed = tracker.changedIDs;
 
-  do_check_eq(1, Object.keys(changed).length);
-  do_check_true(addon.syncGUID in changed);
-  do_check_eq(SCORE_INCREMENT_XLARGE, tracker.score);
+  Assert.equal(1, Object.keys(changed).length);
+  Assert.ok(addon.syncGUID in changed);
+  Assert.equal(SCORE_INCREMENT_XLARGE, tracker.score);
 
   uninstallAddon(addon);
   await cleanup();
@@ -96,15 +96,15 @@ add_task(async function test_track_uninstall() {
 
   let addon = installAddon("test_bootstrap1_1");
   let guid = addon.syncGUID;
-  do_check_eq(0, tracker.score);
+  Assert.equal(0, tracker.score);
 
   Svc.Obs.notify("weave:engine:start-tracking");
 
   uninstallAddon(addon);
   let changed = tracker.changedIDs;
-  do_check_eq(1, Object.keys(changed).length);
-  do_check_true(guid in changed);
-  do_check_eq(SCORE_INCREMENT_XLARGE, tracker.score);
+  Assert.equal(1, Object.keys(changed).length);
+  Assert.ok(guid in changed);
+  Assert.equal(SCORE_INCREMENT_XLARGE, tracker.score);
 
   await cleanup();
 });
@@ -115,12 +115,12 @@ add_task(async function test_track_user_disable() {
   reconciler.startListening();
 
   let addon = installAddon("test_bootstrap1_1");
-  do_check_false(addon.userDisabled);
-  do_check_false(addon.appDisabled);
-  do_check_true(addon.isActive);
+  Assert.ok(!addon.userDisabled);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
 
   Svc.Obs.notify("weave:engine:start-tracking");
-  do_check_eq(0, tracker.score);
+  Assert.equal(0, tracker.score);
 
   let cb = Async.makeSyncCallback();
 
@@ -144,9 +144,9 @@ add_task(async function test_track_user_disable() {
   Async.waitForSyncCallback(cb);
 
   let changed = tracker.changedIDs;
-  do_check_eq(1, Object.keys(changed).length);
-  do_check_true(addon.syncGUID in changed);
-  do_check_eq(SCORE_INCREMENT_XLARGE, tracker.score);
+  Assert.equal(1, Object.keys(changed).length);
+  Assert.ok(addon.syncGUID in changed);
+  Assert.equal(SCORE_INCREMENT_XLARGE, tracker.score);
 
   uninstallAddon(addon);
   await cleanup();
@@ -161,16 +161,16 @@ add_task(async function test_track_enable() {
   addon.userDisabled = true;
   await Async.promiseYield();
 
-  do_check_eq(0, tracker.score);
+  Assert.equal(0, tracker.score);
 
   Svc.Obs.notify("weave:engine:start-tracking");
   addon.userDisabled = false;
   await Async.promiseYield();
 
   let changed = tracker.changedIDs;
-  do_check_eq(1, Object.keys(changed).length);
-  do_check_true(addon.syncGUID in changed);
-  do_check_eq(SCORE_INCREMENT_XLARGE, tracker.score);
+  Assert.equal(1, Object.keys(changed).length);
+  Assert.ok(addon.syncGUID in changed);
+  Assert.equal(SCORE_INCREMENT_XLARGE, tracker.score);
 
   uninstallAddon(addon);
   await cleanup();

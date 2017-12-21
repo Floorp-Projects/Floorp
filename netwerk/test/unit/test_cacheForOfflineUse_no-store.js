@@ -48,7 +48,7 @@ function normalHandler(metadata, response)
 }
 function checkNormal(request, buffer)
 {
-  do_check_eq(buffer, responseBody);
+  Assert.equal(buffer, responseBody);
   asyncCheckCacheEntryPresence(baseURI + normalEntry, "appcache", true, run_next_test, appCache);
 }
 add_test(function test_normal() {
@@ -67,7 +67,7 @@ function noStoreHandler(metadata, response)
 }
 function checkNoStore(request, buffer)
 {
-  do_check_eq(buffer, "");
+  Assert.equal(buffer, "");
   asyncCheckCacheEntryPresence(baseURI + noStoreEntry, "appcache", false, run_next_test, appCache);
 }
 add_test(function test_noStore() {

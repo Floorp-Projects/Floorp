@@ -19,20 +19,20 @@ add_task(async function test_updatechannel() {
   let defaultPrefs = new Preferences({ defaultBranch: true });
   let currentChannel = defaultPrefs.get(PREF_APP_UPDATE_CHANNEL);
 
-  do_check_eq(UpdateUtils.UpdateChannel, currentChannel);
-  do_check_eq(UpdateUtils.getUpdateChannel(true), currentChannel);
-  do_check_eq(UpdateUtils.getUpdateChannel(false), currentChannel);
+  Assert.equal(UpdateUtils.UpdateChannel, currentChannel);
+  Assert.equal(UpdateUtils.getUpdateChannel(true), currentChannel);
+  Assert.equal(UpdateUtils.getUpdateChannel(false), currentChannel);
 
   defaultPrefs.set(PREF_APP_UPDATE_CHANNEL, TEST_CHANNEL);
-  do_check_eq(UpdateUtils.UpdateChannel, TEST_CHANNEL);
-  do_check_eq(UpdateUtils.getUpdateChannel(true), TEST_CHANNEL);
-  do_check_eq(UpdateUtils.getUpdateChannel(false), TEST_CHANNEL);
+  Assert.equal(UpdateUtils.UpdateChannel, TEST_CHANNEL);
+  Assert.equal(UpdateUtils.getUpdateChannel(true), TEST_CHANNEL);
+  Assert.equal(UpdateUtils.getUpdateChannel(false), TEST_CHANNEL);
 
   defaultPrefs.set(PREF_PARTNER_A, TEST_PARTNER_A);
   defaultPrefs.set(PREF_PARTNER_B, TEST_PARTNER_B);
-  do_check_eq(UpdateUtils.UpdateChannel,
-              TEST_CHANNEL + "-cck-" + TEST_PARTNER_A + "-" + TEST_PARTNER_B);
-  do_check_eq(UpdateUtils.getUpdateChannel(true),
-              TEST_CHANNEL + "-cck-" + TEST_PARTNER_A + "-" + TEST_PARTNER_B);
-  do_check_eq(UpdateUtils.getUpdateChannel(false), TEST_CHANNEL);
+  Assert.equal(UpdateUtils.UpdateChannel,
+               TEST_CHANNEL + "-cck-" + TEST_PARTNER_A + "-" + TEST_PARTNER_B);
+  Assert.equal(UpdateUtils.getUpdateChannel(true),
+               TEST_CHANNEL + "-cck-" + TEST_PARTNER_A + "-" + TEST_PARTNER_B);
+  Assert.equal(UpdateUtils.getUpdateChannel(false), TEST_CHANNEL);
 });

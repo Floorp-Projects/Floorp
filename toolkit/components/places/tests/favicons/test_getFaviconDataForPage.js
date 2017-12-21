@@ -7,7 +7,7 @@ const FAVICON_MIMETYPE = "image/png";
 const ICON32_URL = "http://places.test/favicon-normal32.png";
 
 add_task(async function test_normal() {
-  do_check_eq(FAVICON_DATA.length, 344);
+  Assert.equal(FAVICON_DATA.length, 344);
   let pageURI = NetUtil.newURI("http://example.com/normal");
 
   await PlacesTestUtils.addVisits(pageURI);
@@ -18,10 +18,10 @@ add_task(async function test_normal() {
         function() {
         PlacesUtils.favicons.getFaviconDataForPage(pageURI,
           function(aURI, aDataLen, aData, aMimeType) {
-            do_check_true(aURI.equals(FAVICON_URI));
-            do_check_eq(FAVICON_DATA.length, aDataLen);
-            do_check_true(compareArrays(FAVICON_DATA, aData));
-            do_check_eq(FAVICON_MIMETYPE, aMimeType);
+            Assert.ok(aURI.equals(FAVICON_URI));
+            Assert.equal(FAVICON_DATA.length, aDataLen);
+            Assert.ok(compareArrays(FAVICON_DATA, aData));
+            Assert.equal(FAVICON_MIMETYPE, aMimeType);
             resolve();
           });
       }, Services.scriptSecurityManager.getSystemPrincipal());
@@ -35,10 +35,10 @@ add_task(async function test_missing() {
     PlacesUtils.favicons.getFaviconDataForPage(pageURI,
       function(aURI, aDataLen, aData, aMimeType) {
         // Check also the expected data types.
-        do_check_true(aURI === null);
-        do_check_true(aDataLen === 0);
-        do_check_true(aData.length === 0);
-        do_check_true(aMimeType === "");
+        Assert.ok(aURI === null);
+        Assert.ok(aDataLen === 0);
+        Assert.ok(aData.length === 0);
+        Assert.ok(aMimeType === "");
         resolve();
       });
   });

@@ -27,7 +27,7 @@ function run_test() {
 
 function test_attach() {
   gTabClient.attachThread({}, (response, threadClient) => {
-    do_check_eq(threadClient.state, "paused");
+    Assert.equal(threadClient.state, "paused");
     gThreadClient = threadClient;
     threadClient.resume(test_detach);
   });
@@ -35,17 +35,17 @@ function test_attach() {
 
 function test_detach() {
   gThreadClient.detach(() => {
-    do_check_eq(gThreadClient.state, "detached");
-    do_check_eq(gTabClient.thread, null);
+    Assert.equal(gThreadClient.state, "detached");
+    Assert.equal(gTabClient.thread, null);
     test_reattach();
   });
 }
 
 function test_reattach() {
   gTabClient.attachThread({}, (response, threadClient) => {
-    do_check_neq(gThreadClient, threadClient);
-    do_check_eq(threadClient.state, "paused");
-    do_check_eq(gTabClient.thread, threadClient);
+    Assert.notEqual(gThreadClient, threadClient);
+    Assert.equal(threadClient.state, "paused");
+    Assert.equal(gTabClient.thread, threadClient);
     threadClient.resume(cleanup);
   });
 }

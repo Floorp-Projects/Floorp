@@ -12,9 +12,9 @@ function test_BrokenFile(path, shouldThrow, expectedName) {
     didThrow = true;
   }
 
-  do_check_eq(didThrow, shouldThrow);
+  Assert.equal(didThrow, shouldThrow);
   if (didThrow)
-    do_check_eq(exceptionName, expectedName);
+    Assert.equal(exceptionName, expectedName);
 }
 
 function run_test() {
@@ -32,11 +32,11 @@ function run_test() {
 
   // check that we can access modules' global objects even if
   // EXPORTED_SYMBOLS is missing or ill-formed:
-  do_check_eq(typeof(Components.utils.import("resource://test/bogus_exports_type.jsm",
-                                             null)),
-              "object");
+  Assert.equal(typeof(Components.utils.import("resource://test/bogus_exports_type.jsm",
+                                              null)),
+               "object");
 
-  do_check_eq(typeof(Components.utils.import("resource://test/bogus_element_type.jsm",
-                                             null)),
-              "object");
+  Assert.equal(typeof(Components.utils.import("resource://test/bogus_element_type.jsm",
+                                              null)),
+               "object");
 }

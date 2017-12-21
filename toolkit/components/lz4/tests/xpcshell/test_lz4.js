@@ -14,7 +14,7 @@ add_task(function() {
       switch (data.kind) {
         case "do_check_true":
           try {
-            do_check_true(data.args[0]);
+            Assert.ok(data.args[0]);
           } catch (ex) {
             // Ignore errors
           }

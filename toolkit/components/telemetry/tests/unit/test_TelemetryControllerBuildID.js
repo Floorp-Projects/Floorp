@@ -29,10 +29,10 @@ updateAppInfo();
 add_task(async function test_firstRun() {
   await TelemetryController.testReset();
   let metadata = TelemetrySession.getMetadata();
-  do_check_false("previousBuildID" in metadata);
+  Assert.equal(false, "previousBuildID" in metadata);
   let appBuildID = getAppInfo().appBuildID;
   let buildIDPref = Services.prefs.getCharPref(TelemetryUtils.Preferences.PreviousBuildID);
-  do_check_eq(appBuildID, buildIDPref);
+  Assert.equal(appBuildID, buildIDPref);
 });
 
 // Check that a subsequent run with the same build ID does not put prev build ID in
@@ -40,7 +40,7 @@ add_task(async function test_firstRun() {
 add_task(async function test_secondRun() {
   await TelemetryController.testReset();
   let metadata = TelemetrySession.getMetadata();
-  do_check_false("previousBuildID" in metadata);
+  Assert.equal(false, "previousBuildID" in metadata);
 });
 
 // Set up telemetry with a different app build ID and check that the old build ID
@@ -53,9 +53,9 @@ add_task(async function test_newBuild() {
   info.appBuildID = NEW_BUILD_ID;
   await TelemetryController.testReset();
   let metadata = TelemetrySession.getMetadata();
-  do_check_eq(metadata.previousBuildId, oldBuildID);
+  Assert.equal(metadata.previousBuildId, oldBuildID);
   let buildIDPref = Services.prefs.getCharPref(TelemetryUtils.Preferences.PreviousBuildID);
-  do_check_eq(NEW_BUILD_ID, buildIDPref);
+  Assert.equal(NEW_BUILD_ID, buildIDPref);
 });
 
 

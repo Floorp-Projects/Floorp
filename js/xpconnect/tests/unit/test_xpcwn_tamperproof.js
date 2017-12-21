@@ -26,16 +26,16 @@ function check_throws(f) {
 function test_tamperproof(realObj, accessObj, {method, constant, attribute}) {
   // Assignment can't create an expando property.
   check_throws(function () { accessObj.expando = 14; });
-  do_check_false("expando" in realObj);
+  Assert.equal(false, "expando" in realObj);
 
   // Strict assignment throws.
   check_throws(function () { "use strict"; accessObj.expando = 14; });
-  do_check_false("expando" in realObj);
+  Assert.equal(false, "expando" in realObj);
 
   // Assignment to an inherited method name doesn't work either.
   check_throws(function () { accessObj.hasOwnProperty = () => "lies"; });
   check_throws(function () { "use strict"; accessObj.hasOwnProperty = () => "lies"; });
-  do_check_false(realObj.hasOwnProperty("hasOwnProperty"));
+  Assert.ok(!realObj.hasOwnProperty("hasOwnProperty"));
 
   // Assignment to a method name doesn't work either.
   let originalMethod;
@@ -43,7 +43,7 @@ function test_tamperproof(realObj, accessObj, {method, constant, attribute}) {
     originalMethod = accessObj[method];
     accessObj[method] = "nope";  // non-writable data property, no exception in non-strict code
     check_throws(function () { "use strict"; accessObj[method] = "nope"; });
-    do_check_true(realObj[method] === originalMethod);
+    Assert.ok(realObj[method] === originalMethod);
   }
 
   // A constant is the same thing.
@@ -51,35 +51,35 @@ function test_tamperproof(realObj, accessObj, {method, constant, attribute}) {
   if (constant) {
     originalConstantValue = accessObj[constant];
     accessObj[constant] = "nope";
-    do_check_eq(realObj[constant], originalConstantValue);
+    Assert.equal(realObj[constant], originalConstantValue);
     check_throws(function () { "use strict"; accessObj[constant] = "nope"; });
-    do_check_eq(realObj[constant], originalConstantValue);
+    Assert.equal(realObj[constant], originalConstantValue);
   }
 
   // Assignment to a readonly accessor property with no setter doesn't work either.
   let originalAttributeDesc;
   if (attribute) {
     originalAttributeDesc = Object.getOwnPropertyDescriptor(realObj, attribute);
-    do_check_true("set" in originalAttributeDesc);
-    do_check_true(originalAttributeDesc.set === undefined);
+    Assert.ok("set" in originalAttributeDesc);
+    Assert.ok(originalAttributeDesc.set === undefined);
 
     accessObj[attribute] = "nope";  // accessor property with no setter: no exception in non-strict code
     check_throws(function () { "use strict"; accessObj[attribute] = "nope"; });
 
     let desc = Object.getOwnPropertyDescriptor(realObj, attribute);
-    do_check_true("set" in desc);
-    do_check_eq(originalAttributeDesc.get, desc.get);
-    do_check_eq(undefined, desc.set);
+    Assert.ok("set" in desc);
+    Assert.equal(originalAttributeDesc.get, desc.get);
+    Assert.equal(undefined, desc.set);
   }
 
   // Reflect.set doesn't work either.
   if (method) {
-    do_check_false(Reflect.set({}, method, "bad", accessObj));
-    do_check_eq(realObj[method], originalMethod);
+    Assert.ok(!Reflect.set({}, method, "bad", accessObj));
+    Assert.equal(realObj[method], originalMethod);
   }
   if (attribute) {
-    do_check_false(Reflect.set({}, attribute, "bad", accessObj));
-    do_check_eq(originalAttributeDesc.get, Object.getOwnPropertyDescriptor(realObj, attribute).get);
+    Assert.ok(!Reflect.set({}, attribute, "bad", accessObj));
+    Assert.equal(originalAttributeDesc.get, Object.getOwnPropertyDescriptor(realObj, attribute).get);
   }
 
   // Object.defineProperty can't do anything either.
@@ -103,33 +103,33 @@ function test_tamperproof(realObj, accessObj, {method, constant, attribute}) {
     });
     let desc = Object.getOwnPropertyDescriptor(realObj, name);
     if (originalDesc === undefined) {
-      do_check_eq(undefined, desc);
+      Assert.equal(undefined, desc);
     } else {
-      do_check_eq(originalDesc.configurable, desc.configurable);
-      do_check_eq(originalDesc.enumerable, desc.enumerable);
-      do_check_eq(originalDesc.writable, desc.writable);
-      do_check_eq(originalDesc.value, desc.value);
-      do_check_eq(originalDesc.get, desc.get);
-      do_check_eq(originalDesc.set, desc.set);
+      Assert.equal(originalDesc.configurable, desc.configurable);
+      Assert.equal(originalDesc.enumerable, desc.enumerable);
+      Assert.equal(originalDesc.writable, desc.writable);
+      Assert.equal(originalDesc.value, desc.value);
+      Assert.equal(originalDesc.get, desc.get);
+      Assert.equal(originalDesc.set, desc.set);
     }
   }
 
   // Existing properties can't be deleted.
   if (method) {
-    do_check_false(delete accessObj[method]);
+    Assert.equal(false, delete accessObj[method]);
     check_throws(function () { "use strict"; delete accessObj[method]; });
-    do_check_eq(realObj[method], originalMethod);
+    Assert.equal(realObj[method], originalMethod);
   }
   if (constant) {
-    do_check_false(delete accessObj[constant]);
+    Assert.equal(false, delete accessObj[constant]);
     check_throws(function () { "use strict"; delete accessObj[constant]; });
-    do_check_eq(realObj[constant], originalConstantValue);
+    Assert.equal(realObj[constant], originalConstantValue);
   }
   if (attribute) {
-    do_check_false(delete accessObj[attribute]);
+    Assert.equal(false, delete accessObj[attribute]);
     check_throws(function () { "use strict"; delete accessObj[attribute]; });
     desc = Object.getOwnPropertyDescriptor(realObj, attribute);
-    do_check_eq(originalAttributeDesc.get, desc.get);
+    Assert.equal(originalAttributeDesc.get, desc.get);
   }
 }
 

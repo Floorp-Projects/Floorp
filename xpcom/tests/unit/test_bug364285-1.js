@@ -25,7 +25,7 @@ function create_file(fileName) {
     stream.write("foo", 3);
     stream.close();
 
-    do_check_eq(outFile.leafName.substr(0, fileName.length), fileName);
+    Assert.equal(outFile.leafName.substr(0, fileName.length), fileName);
 
     return outFile;
 }

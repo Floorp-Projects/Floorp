@@ -37,7 +37,7 @@ function set_private_cookie(value, callback) {
 function check_cookie_presence(value, isPrivate, expected, callback) {
   var chan = setup_chan('present?cookie=' + value.replace('=','|'), isPrivate, function(req) {
     req.QueryInterface(Ci.nsIHttpChannel);
-    do_check_eq(req.responseStatus, expected ? 200 : 404);
+    Assert.equal(req.responseStatus, expected ? 200 : 404);
     callback(req);
   });
 }
@@ -76,9 +76,9 @@ function run_test() {
   
   function check_cookie(req) {
     req.QueryInterface(Ci.nsIHttpChannel);
-    do_check_eq(req.responseStatus, 200);
+    Assert.equal(req.responseStatus, 200);
     try {
-      do_check_true(req.getResponseHeader("Set-Cookie") != "", "expected a Set-Cookie header");
+      Assert.ok(req.getResponseHeader("Set-Cookie") != "", "expected a Set-Cookie header");
     } catch (x) {
       do_throw("missing Set-Cookie header");
     }

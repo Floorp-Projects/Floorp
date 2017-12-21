@@ -78,7 +78,7 @@ add_task(async function test_getRecords() {
     await formAutofillParent._getRecords({collectionName}, target);
     mock.verify();
     if (collection) {
-      do_check_eq(collection.getAll.called, true);
+      Assert.equal(collection.getAll.called, true);
       collection.getAll.restore();
     }
   }

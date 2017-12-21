@@ -9,5 +9,5 @@ function run_test() {
   Cu.evalInSandbox('do_check_eq(new URLSearchParams("one=1&two=2").get("one"), "1");',
                    sb);
   Cu.importGlobalProperties(["URLSearchParams"]);
-  do_check_eq(new URLSearchParams("one=1&two=2").get("one"), "1");
+  Assert.equal(new URLSearchParams("one=1&two=2").get("one"), "1");
 }

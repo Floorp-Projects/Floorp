@@ -186,61 +186,61 @@ function check_compat_status(aCallback) {
                                "addon10@tests.mozilla.org"],
                               function([a1, a2, a3, a4, a5, a6, a7, a8, a9, a10]) {
 
-    do_check_neq(a1, null);
-    do_check_eq(a1.compatibilityOverrides, null);
-    do_check_true(a1.isCompatible);
-    do_check_false(a1.appDisabled);
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.compatibilityOverrides, null);
+    Assert.ok(a1.isCompatible);
+    Assert.ok(!a1.appDisabled);
 
-    do_check_neq(a2, null);
-    do_check_eq(a2.compatibilityOverrides, null);
-    do_check_true(a2.isCompatible);
-    do_check_false(a2.appDisabled);
+    Assert.notEqual(a2, null);
+    Assert.equal(a2.compatibilityOverrides, null);
+    Assert.ok(a2.isCompatible);
+    Assert.ok(!a2.appDisabled);
 
-    do_check_neq(a3, null);
-    do_check_neq(a3.compatibilityOverrides, null);
-    do_check_eq(a3.compatibilityOverrides.length, 1);
-    do_check_false(a3.isCompatible);
-    do_check_true(a3.appDisabled);
+    Assert.notEqual(a3, null);
+    Assert.notEqual(a3.compatibilityOverrides, null);
+    Assert.equal(a3.compatibilityOverrides.length, 1);
+    Assert.ok(!a3.isCompatible);
+    Assert.ok(a3.appDisabled);
 
-    do_check_neq(a4, null);
-    do_check_neq(a4.compatibilityOverrides, null);
-    do_check_eq(a4.compatibilityOverrides.length, 1);
-    do_check_false(a4.isCompatible);
-    do_check_true(a4.appDisabled);
+    Assert.notEqual(a4, null);
+    Assert.notEqual(a4.compatibilityOverrides, null);
+    Assert.equal(a4.compatibilityOverrides.length, 1);
+    Assert.ok(!a4.isCompatible);
+    Assert.ok(a4.appDisabled);
 
-    do_check_neq(a5, null);
-    do_check_eq(a5.compatibilityOverrides, null);
-    do_check_true(a5.isCompatible);
-    do_check_false(a5.appDisabled);
+    Assert.notEqual(a5, null);
+    Assert.equal(a5.compatibilityOverrides, null);
+    Assert.ok(a5.isCompatible);
+    Assert.ok(!a5.appDisabled);
 
-    do_check_neq(a6, null);
-    do_check_neq(a6.compatibilityOverrides, null);
-    do_check_eq(a6.compatibilityOverrides.length, 1);
-    do_check_true(a6.isCompatible);
-    do_check_false(a6.appDisabled);
+    Assert.notEqual(a6, null);
+    Assert.notEqual(a6.compatibilityOverrides, null);
+    Assert.equal(a6.compatibilityOverrides.length, 1);
+    Assert.ok(a6.isCompatible);
+    Assert.ok(!a6.appDisabled);
 
-    do_check_neq(a7, null);
-    do_check_neq(a7.compatibilityOverrides, null);
-    do_check_eq(a7.compatibilityOverrides.length, 1);
-    do_check_true(a7.isCompatible);
-    do_check_false(a7.appDisabled);
+    Assert.notEqual(a7, null);
+    Assert.notEqual(a7.compatibilityOverrides, null);
+    Assert.equal(a7.compatibilityOverrides.length, 1);
+    Assert.ok(a7.isCompatible);
+    Assert.ok(!a7.appDisabled);
 
-    do_check_neq(a8, null);
-    do_check_neq(a8.compatibilityOverrides, null);
-    do_check_eq(a8.compatibilityOverrides.length, 3);
-    do_check_false(a8.isCompatible);
-    do_check_true(a8.appDisabled);
+    Assert.notEqual(a8, null);
+    Assert.notEqual(a8.compatibilityOverrides, null);
+    Assert.equal(a8.compatibilityOverrides.length, 3);
+    Assert.ok(!a8.isCompatible);
+    Assert.ok(a8.appDisabled);
 
-    do_check_neq(a9, null);
-    do_check_neq(a9.compatibilityOverrides, null);
-    do_check_eq(a9.compatibilityOverrides.length, 1);
-    do_check_false(a9.isCompatible);
-    do_check_true(a9.appDisabled);
+    Assert.notEqual(a9, null);
+    Assert.notEqual(a9.compatibilityOverrides, null);
+    Assert.equal(a9.compatibilityOverrides.length, 1);
+    Assert.ok(!a9.isCompatible);
+    Assert.ok(a9.appDisabled);
 
-    do_check_neq(a10, null);
-    do_check_eq(a10.compatibilityOverrides, null);
-    do_check_true(a10.isCompatible);
-    do_check_false(a10.appDisabled);
+    Assert.notEqual(a10, null);
+    Assert.equal(a10.compatibilityOverrides, null);
+    Assert.ok(a10.isCompatible);
+    Assert.ok(!a10.appDisabled);
 
     do_execute_soon(aCallback);
   });

@@ -30,19 +30,19 @@ function test3() {
 
 function test4() {
   var doc = ParseXML("<root/>");
-  do_check_eq(doc.documentElement.namespaceURI, null); 
+  Assert.equal(doc.documentElement.namespaceURI, null); 
   return true;
 }
 
 function test5() {
   var doc = ParseXML("<root xmlns=''/>");
-  do_check_eq(doc.documentElement.namespaceURI, null); 
+  Assert.equal(doc.documentElement.namespaceURI, null); 
   return true;
 }
 
 function test6() {
   var doc = ParseXML("<root xmlns='ns1'/>");
-  do_check_neq(doc.documentElement.namespaceURI, null); 
-  do_check_eq(doc.documentElement.namespaceURI, 'ns1'); 
+  Assert.notEqual(doc.documentElement.namespaceURI, null); 
+  Assert.equal(doc.documentElement.namespaceURI, 'ns1'); 
   return true;
 }

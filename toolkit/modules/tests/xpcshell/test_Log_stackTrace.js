@@ -15,7 +15,7 @@ function run_test() {
     trace = Log.stackTrace(ex);
   }
   print(`Got trace: ${trace}`);
-  do_check_neq(trace, "");
+  Assert.notEqual(trace, "");
 
   let bazPos = trace.indexOf("baz@test_Log_stackTrace.js:4");
   let barPos = trace.indexOf("bar@test_Log_stackTrace.js:3");
@@ -23,7 +23,7 @@ function run_test() {
   print(`String positions: ${bazPos} ${barPos} ${fooPos}`);
 
   print("Make sure the desired messages show up");
-  do_check_true(bazPos >= 0);
-  do_check_true(barPos > bazPos);
-  do_check_true(fooPos > barPos);
+  Assert.ok(bazPos >= 0);
+  Assert.ok(barPos > bazPos);
+  Assert.ok(fooPos > barPos);
 }

@@ -97,7 +97,7 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
   await new Promise(res => {
     let request = new RESTRequest(url);
     request.get(function() {
-      do_check_eq(request.response.status, 401);
+      Assert.equal(request.response.status, 401);
       res();
     });
   });
@@ -107,7 +107,7 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
     Svc.Obs.remove(firstNotification, onFirstSync);
     Svc.Obs.add(secondNotification, onSecondSync);
 
-    do_check_eq(Service.clusterURL, "");
+    Assert.equal(Service.clusterURL, "");
 
     // Allow for tests to clean up error conditions.
     between();
@@ -121,7 +121,7 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
     // before we proceed.
     waitForZeroTimer(function() {
       _("Second sync nextTick.");
-      do_check_eq(getTokenCount, 1);
+      Assert.equal(getTokenCount, 1);
       Service.startOver().then(() => {
         server.stop(deferred.resolve);
       });
@@ -172,7 +172,7 @@ add_task(async function test_momentary_401_engine() {
       // lastSyncReassigned shouldn't be cleared until a sync has succeeded.
       _("Ensuring that lastSyncReassigned is still set at next sync start.");
       Svc.Obs.remove("weave:service:login:start", onLoginStart);
-      do_check_true(getReassigned());
+      Assert.ok(getReassigned());
     }
 
     _("Adding observer that lastSyncReassigned is still set on login.");
@@ -234,7 +234,7 @@ add_task(async function test_momentary_401_storage_loggedin() {
     server.toplevelHandlers.storage = oldHandler;
   }
 
-  do_check_true(Service.isLoggedIn, "already logged in");
+  Assert.ok(Service.isLoggedIn, "already logged in");
   await syncAndExpectNodeReassignment(server,
                                       "weave:service:sync:error",
                                       undo,
@@ -258,7 +258,7 @@ add_task(async function test_momentary_401_storage_loggedout() {
     server.toplevelHandlers.storage = oldHandler;
   }
 
-  do_check_false(Service.isLoggedIn, "not already logged in");
+  Assert.ok(!Service.isLoggedIn, "not already logged in");
   await syncAndExpectNodeReassignment(server,
                                       "weave:service:login:error",
                                       undo,
@@ -305,10 +305,10 @@ add_task(async function test_loop_avoidance_storage() {
     Svc.Obs.remove(firstNotification, onFirstSync);
     Svc.Obs.add(secondNotification, onSecondSync);
 
-    do_check_eq(Service.clusterURL, "");
+    Assert.equal(Service.clusterURL, "");
 
     // We got a 401 mid-sync, and set the pref accordingly.
-    do_check_true(Services.prefs.getBoolPref("services.sync.lastSyncReassigned"));
+    Assert.ok(Services.prefs.getBoolPref("services.sync.lastSyncReassigned"));
 
     // Update the timestamp.
     now = Date.now();
@@ -321,10 +321,10 @@ add_task(async function test_loop_avoidance_storage() {
 
     // This sync occurred within the backoff interval.
     let elapsedTime = Date.now() - now;
-    do_check_true(elapsedTime < MINIMUM_BACKOFF_INTERVAL);
+    Assert.ok(elapsedTime < MINIMUM_BACKOFF_INTERVAL);
 
     // This pref will be true until a sync completes successfully.
-    do_check_true(getReassigned());
+    Assert.ok(getReassigned());
 
     // The timer will be set for some distant time.
     // We store nextSync in prefs, which offers us only limited resolution.
@@ -333,8 +333,8 @@ add_task(async function test_loop_avoidance_storage() {
     _("Next sync scheduled for " + Service.scheduler.nextSync);
     _("Expected to be slightly greater than " + expectedNextSync);
 
-    do_check_true(Service.scheduler.nextSync >= expectedNextSync);
-    do_check_true(!!Service.scheduler.syncTimer);
+    Assert.ok(Service.scheduler.nextSync >= expectedNextSync);
+    Assert.ok(!!Service.scheduler.syncTimer);
 
     // Undo our evil scheme.
     server.toplevelHandlers.storage = oldHandler;
@@ -353,8 +353,8 @@ add_task(async function test_loop_avoidance_storage() {
     // before we proceed.
     waitForZeroTimer(function() {
       _("Third sync nextTick.");
-      do_check_false(getReassigned());
-      do_check_eq(getTokenCount, 2);
+      Assert.ok(!getReassigned());
+      Assert.equal(getTokenCount, 2);
       Service.startOver().then(() => {
         server.stop(deferred.resolve);
       });
@@ -413,7 +413,7 @@ add_task(async function test_loop_avoidance_engine() {
   function onLoginStart() {
     // lastSyncReassigned shouldn't be cleared until a sync has succeeded.
     _("Ensuring that lastSyncReassigned is still set at next sync start.");
-    do_check_true(getReassigned());
+    Assert.ok(getReassigned());
   }
 
   function beforeSuccessfulSync() {
@@ -435,13 +435,13 @@ add_task(async function test_loop_avoidance_engine() {
     Svc.Obs.remove(firstNotification, onFirstSync);
     Svc.Obs.add(secondNotification, onSecondSync);
 
-    do_check_eq(Service.clusterURL, "");
+    Assert.equal(Service.clusterURL, "");
 
     _("Adding observer that lastSyncReassigned is still set on login.");
     Svc.Obs.add("weave:service:login:start", onLoginStart);
 
     // We got a 401 mid-sync, and set the pref accordingly.
-    do_check_true(Services.prefs.getBoolPref("services.sync.lastSyncReassigned"));
+    Assert.ok(Services.prefs.getBoolPref("services.sync.lastSyncReassigned"));
 
     // Update the timestamp.
     now = Date.now();
@@ -454,10 +454,10 @@ add_task(async function test_loop_avoidance_engine() {
 
     // This sync occurred within the backoff interval.
     let elapsedTime = Date.now() - now;
-    do_check_true(elapsedTime < MINIMUM_BACKOFF_INTERVAL);
+    Assert.ok(elapsedTime < MINIMUM_BACKOFF_INTERVAL);
 
     // This pref will be true until a sync completes successfully.
-    do_check_true(getReassigned());
+    Assert.ok(getReassigned());
 
     // The timer will be set for some distant time.
     // We store nextSync in prefs, which offers us only limited resolution.
@@ -466,8 +466,8 @@ add_task(async function test_loop_avoidance_engine() {
     _("Next sync scheduled for " + Service.scheduler.nextSync);
     _("Expected to be slightly greater than " + expectedNextSync);
 
-    do_check_true(Service.scheduler.nextSync >= expectedNextSync);
-    do_check_true(!!Service.scheduler.syncTimer);
+    Assert.ok(Service.scheduler.nextSync >= expectedNextSync);
+    Assert.ok(!!Service.scheduler.syncTimer);
 
     // Undo our evil scheme.
     beforeSuccessfulSync();
@@ -487,8 +487,8 @@ add_task(async function test_loop_avoidance_engine() {
     // before we proceed.
     waitForZeroTimer(function() {
       _("Third sync nextTick.");
-      do_check_false(getReassigned());
-      do_check_eq(getTokenCount, 2);
+      Assert.ok(!getReassigned());
+      Assert.equal(getTokenCount, 2);
       Svc.Obs.remove("weave:service:login:start", onLoginStart);
       Service.startOver().then(() => {
         server.stop(deferred.resolve);

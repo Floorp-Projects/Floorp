@@ -92,31 +92,31 @@ function run_test() {
  *          The Addon for addon5@tests.mozilla.org
  */
 function check_state(overridden, a1, a2, a3, a4, a5) {
-  do_check_neq(a1, null);
-  do_check_false(a1.isActive);
-  do_check_false(a1.isCompatible);
+  Assert.notEqual(a1, null);
+  Assert.ok(!a1.isActive);
+  Assert.ok(!a1.isCompatible);
 
-  do_check_neq(a2, null);
+  Assert.notEqual(a2, null);
   if (overridden)
-    do_check_true(a2.isActive);
+    Assert.ok(a2.isActive);
   else
-    do_check_false(a2.isActive);
-  do_check_false(a2.isCompatible);
+    Assert.ok(!a2.isActive);
+  Assert.ok(!a2.isCompatible);
 
-  do_check_neq(a3, null);
+  Assert.notEqual(a3, null);
   if (overridden)
-    do_check_true(a3.isActive);
+    Assert.ok(a3.isActive);
   else
-    do_check_false(a3.isActive);
-  do_check_false(a3.isCompatible);
+    Assert.ok(!a3.isActive);
+  Assert.ok(!a3.isCompatible);
 
-  do_check_neq(a4, null);
-  do_check_true(a4.isActive);
-  do_check_true(a4.isCompatible);
+  Assert.notEqual(a4, null);
+  Assert.ok(a4.isActive);
+  Assert.ok(a4.isCompatible);
 
-  do_check_neq(a5, null);
-  do_check_true(a5.isActive);
-  do_check_true(a5.isCompatible);
+  Assert.notEqual(a5, null);
+  Assert.ok(a5.isActive);
+  Assert.ok(a5.isCompatible);
 }
 
 // Tests that with compatibility checking enabled we see the incompatible
