@@ -15,17 +15,18 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
+#include "nsContentList.h"
 #include "nsAtom.h"
+#include "nsIDocument.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 
 class nsIContent;
-class nsContentList;
-class nsBaseContentList;
 
 /**
  * Right now our identifier map entries contain information for 'name'
@@ -41,15 +42,6 @@ class nsBaseContentList;
  */
 class nsIdentifierMapEntry : public PLDHashEntryHdr
 {
-  typedef mozilla::dom::Element Element;
-  typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
-
-  /**
-   * @see nsIDocument::IDTargetObserver, this is just here to avoid include
-   * hell.
-   */
-  typedef bool (* IDTargetObserver)(Element* aOldElement,
-                                    Element* aNewelement, void* aData);
 public:
   struct AtomOrString
   {
@@ -74,9 +66,25 @@ public:
   typedef const AtomOrString& KeyType;
   typedef const AtomOrString* KeyTypePointer;
 
-  explicit nsIdentifierMapEntry(const AtomOrString& aKey);
-  explicit nsIdentifierMapEntry(const AtomOrString* aKey);
-  nsIdentifierMapEntry(nsIdentifierMapEntry&& aOther);
+  typedef mozilla::dom::Element Element;
+  typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
+
+  explicit nsIdentifierMapEntry(const AtomOrString& aKey)
+    : mKey(aKey)
+  {
+  }
+  explicit nsIdentifierMapEntry(const AtomOrString* aKey)
+    : mKey(aKey ? *aKey : nullptr)
+  {
+  }
+  nsIdentifierMapEntry(nsIdentifierMapEntry&& aOther) :
+    mKey(mozilla::Move(aOther.mKey)),
+    mIdContentList(mozilla::Move(aOther.mIdContentList)),
+    mNameContentList(aOther.mNameContentList.forget()),
+    mChangeCallbacks(aOther.mChangeCallbacks.forget()),
+    mImageElement(aOther.mImageElement.forget())
+  {
+  }
   ~nsIdentifierMapEntry();
 
   nsString GetKeyAsString() const
@@ -121,7 +129,9 @@ public:
   nsBaseContentList* GetNameContentList() {
     return mNameContentList;
   }
-  bool HasNameElement() const;
+  bool HasNameElement() const {
+    return mNameContentList && mNameContentList->Length() != 0;
+  }
 
   /**
    * Returns the element if we know the element associated with this
@@ -161,15 +171,15 @@ public:
   bool HasIdElementExposedAsHTMLDocumentProperty();
 
   bool HasContentChangeCallback() { return mChangeCallbacks != nullptr; }
-  void AddContentChangeCallback(IDTargetObserver aCallback,
+  void AddContentChangeCallback(nsIDocument::IDTargetObserver aCallback,
                                 void* aData, bool aForImage);
-  void RemoveContentChangeCallback(IDTargetObserver aCallback,
+  void RemoveContentChangeCallback(nsIDocument::IDTargetObserver aCallback,
                                 void* aData, bool aForImage);
 
   void Traverse(nsCycleCollectionTraversalCallback* aCallback);
 
   struct ChangeCallback {
-    IDTargetObserver mCallback;
+    nsIDocument::IDTargetObserver mCallback;
     void* mData;
     bool mForImage;
   };
