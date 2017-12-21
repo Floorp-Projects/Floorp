@@ -13,6 +13,11 @@ else:
         '/js/src/tests',
     ]
 
+if CONFIG['JS_STANDALONE'] and CONFIG['OS_ARCH'] != 'WINNT':
+    DIRS += [
+        '/build/unix',
+    ]
+
 DIRS += [
     '/config/external/fdlibm',
     '/config/external/nspr',
