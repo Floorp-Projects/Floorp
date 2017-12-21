@@ -3117,11 +3117,10 @@ nsGlobalWindowOuter::SetStatusOuter(const nsAString& aStatus)
   mStatus = aStatus;
 
   /*
-   * If caller is not chrome and dom.disable_window_status_change is true,
-   * prevent propagating window.status to the UI by exiting early
+   * If caller is not chrome, prevent propagating window.status to the UI by
+   * exiting early.
    */
-
-  if (!CanSetProperty("dom.disable_window_status_change")) {
+  if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
     return;
   }
 
