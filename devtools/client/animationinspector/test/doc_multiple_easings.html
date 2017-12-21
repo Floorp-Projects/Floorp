@@ -149,6 +149,31 @@
         duration: DURATION,
       }
     },
+    {
+      id: "duplicate-offsets",
+      frames: [
+        {
+          offset: 0,
+          opacity: 1,
+        },
+        {
+          offset: 0.5,
+          opacity: 1,
+        },
+        {
+          offset: 0.5,
+          easing: "steps(1)",
+          opacity: 0,
+        },
+        {
+          offset: 1,
+          opacity: 1,
+        },
+      ],
+      timing: {
+        duration: DURATION,
+      }
+    },
   ].forEach(({ id, frames, timing }) => {
     const target = document.createElement("div");
     document.body.appendChild(target);
