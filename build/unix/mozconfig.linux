@@ -28,5 +28,3 @@ fi
 
 # PKG_CONFIG_LIBDIR is appropriately overridden in mozconfig.linux32
 export PKG_CONFIG_LIBDIR=/usr/local/lib64/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig
-
-. "$topsrcdir/build/unix/mozconfig.gtk"

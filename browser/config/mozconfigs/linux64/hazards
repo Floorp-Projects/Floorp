@@ -41,6 +41,5 @@ CPPFLAGS="$CPPFLAGS -Wno-attributes"
 CXXFLAGS="$CXXFLAGS -Wno-attributes"
 
 export PKG_CONFIG_LIBDIR=/usr/local/lib64/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig
-. $topsrcdir/build/unix/mozconfig.gtk
 
 . "$topsrcdir/build/mozconfig.common.override"
