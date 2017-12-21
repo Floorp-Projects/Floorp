@@ -158,8 +158,8 @@
 
   <!-- Data Choices tab -->
 #ifdef MOZ_CRASHREPORTER
-  <preference id="browser.crashReports.unsubmittedCheck.autoSubmit"
-              name="browser.crashReports.unsubmittedCheck.autoSubmit"
+  <preference id="browser.crashReports.unsubmittedCheck.autoSubmit2"
+              name="browser.crashReports.unsubmittedCheck.autoSubmit2"
               type="bool"/>
 #endif
 
@@ -735,7 +735,7 @@
     <hbox align="center">
       <checkbox id="automaticallySubmitCrashesBox"
                 class="tail-with-learn-more"
-                preference="browser.crashReports.unsubmittedCheck.autoSubmit"
+                preference="browser.crashReports.unsubmittedCheck.autoSubmit2"
                 label="&alwaysSubmitCrashReports1.label;"
                 accesskey="&alwaysSubmitCrashReports1.accesskey;"/>
       <label id="crashReporterLearnMore"
