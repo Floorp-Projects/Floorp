@@ -553,8 +553,19 @@ MediaEngineWebRTCMicrophoneSource::NotifyPull(MediaStreamGraph *aGraph,
                                               StreamTime aDesiredTime,
                                               const PrincipalHandle& aPrincipalHandle)
 {
-  // Ignore - we push audio data
   LOG_FRAMES(("NotifyPull, desired = %" PRId64, (int64_t) aDesiredTime));
+
+  StreamTime delta = aDesiredTime - aSource->GetEndOfAppendedData(aID);
+  if (delta <= 0) {
+    return;
+  }
+
+  // Not enough data has been pushed so we fill it with silence.
+  // This could be due to underruns or because we have been stopped.
+
+  AudioSegment audio;
+  audio.AppendNullData(delta);
+  aSource->AppendToTrack(aID, &audio);
 }
 
 void
