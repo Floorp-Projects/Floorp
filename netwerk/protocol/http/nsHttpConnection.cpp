@@ -90,6 +90,8 @@ nsHttpConnection::nsHttpConnection()
     , mFastOpenStatus(TFO_NOT_SET)
     , mForceSendDuringFastOpenPending(false)
     , mReceivedSocketWouldBlockDuringFastOpen(false)
+    , mCheckNetworkStallsWithTFO(false)
+    , mLastRequestBytesSentTime(0)
 {
     LOG(("Creating nsHttpConnection @%p\n", this));
 
@@ -641,6 +643,18 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
     NS_ENSURE_ARG_POINTER(trans);
     NS_ENSURE_TRUE(!mTransaction, NS_ERROR_IN_PROGRESS);
 
+    // If TCP fast Open has been used and conection was idle for some time
+    // we will be cautious and watch out for bug 1395494.
+    if (mNPNComplete && (mFastOpenStatus == TFO_DATA_SENT) &&
+        gHttpHandler->CheckIfConnectionIsStalledOnlyIfIdleForThisAmountOfSeconds() &&
+        IdleTime() >= gHttpHandler->CheckIfConnectionIsStalledOnlyIfIdleForThisAmountOfSeconds()) {
+        // If a connection was using the TCP FastOpen and it was idle for a
+        // long time we should check for stalls like bug 1395494.
+        mCheckNetworkStallsWithTFO = true;
+        // Also reset last write. We should start measuring a stall time only
+        // after we really write a request to the network.
+        mLastRequestBytesSentTime = 0;
+    }
     // reset the read timers to wash away any idle time
     mLastWriteTime = mLastReadTime = PR_IntervalNow();
 
@@ -1355,6 +1369,19 @@ nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
         nextTickAfter = std::max(nextTickAfter, 1U);
     }
 
+    // Check for the TCP Fast Open related stalls.
+    if (mCheckNetworkStallsWithTFO && mLastRequestBytesSentTime) {
+        PRIntervalTime initialResponseDelta = now - mLastRequestBytesSentTime;
+        if (initialResponseDelta >= gHttpHandler->FastOpenStallsTimeout()) {
+            gHttpHandler->IncrementFastOpenStallsCounter();
+            mCheckNetworkStallsWithTFO = false;
+        } else {
+            uint32_t next = PR_IntervalToSeconds(gHttpHandler->FastOpenStallsTimeout()) -
+                            PR_IntervalToSeconds(initialResponseDelta);
+            nextTickAfter = std::min(nextTickAfter, next);
+        }
+    }
+
     if (!mNPNComplete) {
       // We can reuse mLastWriteTime here, because it is set when the
       // connection is activated and only change when a transaction
@@ -1856,6 +1883,9 @@ nsHttpConnection::OnSocketWritable()
                 mTransaction->OnTransportStatus(mSocketTransport,
                                                 NS_NET_STATUS_WAITING_FOR,
                                                 0);
+                if (mCheckNetworkStallsWithTFO) {
+                    mLastRequestBytesSentTime = PR_IntervalNow();
+                }
 
                 rv = ResumeRecv(); // start reading
             }
@@ -1897,6 +1927,8 @@ nsHttpConnection::OnWriteSegment(char *buf,
         mSocketInCondition = NS_BASE_STREAM_CLOSED;
     else
         mSocketInCondition = NS_OK; // reset condition
+
+    mCheckNetworkStallsWithTFO = false;
 
     return mSocketInCondition;
 }
