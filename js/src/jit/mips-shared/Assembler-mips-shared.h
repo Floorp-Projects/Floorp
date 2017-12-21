@@ -219,14 +219,15 @@ class InstJump;
 
 uint32_t RS(Register r);
 uint32_t RT(Register r);
+uint32_t RT(uint32_t regCode);
 uint32_t RT(FloatRegister r);
 uint32_t RD(Register r);
 uint32_t RD(FloatRegister r);
+uint32_t RD(uint32_t regCode);
 uint32_t RZ(Register r);
 uint32_t RZ(FloatRegister r);
 uint32_t SA(uint32_t value);
 uint32_t SA(FloatRegister r);
-uint32_t FS(uint32_t value);
 
 Register toRS (Instruction& i);
 Register toRT (Instruction& i);
@@ -1421,9 +1422,6 @@ class InstReg : public Instruction
       : Instruction(op | code | ff)
     { }
     // for float point
-    InstReg(Opcode op, RSField rs, Register rt, uint32_t fs)
-      : Instruction(op | rs | RT(rt) | FS(fs))
-    { }
     InstReg(Opcode op, RSField rs, Register rt, FloatRegister rd)
       : Instruction(op | rs | RT(rt) | RD(rd))
     { }

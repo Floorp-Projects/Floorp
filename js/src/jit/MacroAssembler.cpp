@@ -1967,7 +1967,7 @@ MacroAssembler::convertValueToFloatingPoint(ValueOperand value, FloatRegister ou
     jump(&done);
 
     bind(&isDouble);
-    FloatRegister tmp = output.asDouble();
+    FloatRegister tmp = output;
     if (outputType == MIRType::Float32 && hasMultiAlias())
         tmp = ScratchDoubleReg;
 

@@ -28,33 +28,38 @@ const Registers::SetType Registers::CallMask =
     (1 << Registers::v0) |
     (1 << Registers::v1);  // used for double-size returns
 
-FloatRegisters::Encoding
+FloatRegisters::Code
 FloatRegisters::FromName(const char* name)
 {
-    for (size_t i = 0; i < RegisterIdLimit; i++) {
+    for (size_t i = 0; i < Total; i++) {
         if (strcmp(GetName(i), name) == 0)
-            return Encoding(i);
+            return Code(i);
     }
 
     return Invalid;
 }
 
 FloatRegister
-FloatRegister::doubleOverlay() const
+FloatRegister::doubleOverlay(unsigned int which) const
 {
-    MOZ_ASSERT(isNotOdd());
-    if (isSingle())
-        return FloatRegister(code_, Double);
+    MOZ_ASSERT(!isInvalid());
+    if (kind_ != Double)
+        return FloatRegister(code_ & ~1, Double);
     return *this;
 }
 
 FloatRegister
-FloatRegister::singleOverlay() const
+FloatRegister::singleOverlay(unsigned int which) const
 {
-    MOZ_ASSERT(isNotOdd());
-    if (isDouble())
-        return FloatRegister(code_, Single);
-    return *this;
+    MOZ_ASSERT(!isInvalid());
+    if (kind_ == Double) {
+        // Only even registers are double
+        MOZ_ASSERT(code_ % 2 == 0);
+        MOZ_ASSERT(which < 2);
+        return FloatRegister(code_ + which, Single);
+    }
+    MOZ_ASSERT(which == 0);
+    return FloatRegister(code_, Single);
 }
 
 FloatRegisterSet
@@ -62,8 +67,12 @@ FloatRegister::ReduceSetForPush(const FloatRegisterSet& s)
 {
     LiveFloatRegisterSet mod;
     for (FloatRegisterIterator iter(s); iter.more(); ++iter) {
-        // Even for single size registers save complete double register.
-        mod.addUnchecked((*iter).doubleOverlay());
+        if ((*iter).isSingle()) {
+            // Even for single size registers save complete double register.
+            mod.addUnchecked((*iter).doubleOverlay());
+        } else {
+            mod.addUnchecked(*iter);
+        }
     }
     return mod.set();
 }
@@ -74,21 +83,18 @@ FloatRegister::GetPushSizeInBytes(const FloatRegisterSet& s)
     FloatRegisterSet ss = s.reduceSetForPush();
     uint64_t bits = ss.bits();
     // We are only pushing double registers.
-    MOZ_ASSERT((bits & 0xFFFF) == 0);
-    uint32_t ret =  mozilla::CountPopulation32(bits) * sizeof(double);
-
-    // Additional space needed by MacroAssembler::PushRegsInMask to ensure
-    // correct alignment of double values.
-    if (ret)
-        ret += sizeof(double);
-
+    MOZ_ASSERT((bits & 0xffffffff) == 0);
+    uint32_t ret =  mozilla::CountPopulation32(bits >> 32) * sizeof(double);
     return ret;
 }
 uint32_t
 FloatRegister::getRegisterDumpOffsetInBytes()
 {
-    MOZ_ASSERT(isNotOdd());
-    return id() * sizeof(float);
+    if (isSingle())
+        return id() * sizeof(float);
+    if (isDouble())
+        return id() * sizeof(double);
+    MOZ_CRASH();
 }
 
 } // namespace ion
