@@ -831,21 +831,24 @@ class RTCPeerConnection {
       this._ensureOfferToReceive("video");
     }
 
-    if (options.offerToReceiveVideo === false) {
-      this.logWarning("offerToReceiveVideo: false is ignored now. If you " +
-                      "want to disallow a recv track, use " +
-                      "RTCRtpTransceiver.direction");
-    }
-
     if (options.offerToReceiveAudio) {
       this._ensureOfferToReceive("audio");
     }
 
-    if (options.offerToReceiveAudio === false) {
-      this.logWarning("offerToReceiveAudio: false is ignored now. If you " +
-                      "want to disallow a recv track, use " +
-                      "RTCRtpTransceiver.direction");
-    }
+    this._transceivers
+      .filter(transceiver => {
+        return (options.offerToReceiveVideo === false &&
+                transceiver.receiver.track.kind == "video") ||
+               (options.offerToReceiveAudio === false &&
+                transceiver.receiver.track.kind == "audio");
+      })
+      .forEach(transceiver => {
+        if (transceiver.direction == "sendrecv") {
+          transceiver.setDirectionInternal("sendonly");
+        } else if (transceiver.direction == "recvonly") {
+          transceiver.setDirectionInternal("inactive");
+        }
+      });
   }
 
   async _createOffer(options) {

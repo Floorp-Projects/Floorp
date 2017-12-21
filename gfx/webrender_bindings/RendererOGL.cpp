@@ -227,6 +227,7 @@ void
 RendererOGL::NotifyWebRenderError(WebRenderError aError)
 {
   layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
+    "DoNotifyWebRenderErrorRunnable",
     &DoNotifyWebRenderError,
     mBridge,
     aError

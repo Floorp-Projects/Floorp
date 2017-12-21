@@ -24,7 +24,7 @@ DevToolsModules(
     'RequestListColumnLatency.js',
     'RequestListColumnMethod.js',
     'RequestListColumnProtocol.js',
-    'RequestListColumnRemoteIp.js',
+    'RequestListColumnRemoteIP.js',
     'RequestListColumnResponseHeader.js',
     'RequestListColumnResponseTime.js',
     'RequestListColumnScheme.js',

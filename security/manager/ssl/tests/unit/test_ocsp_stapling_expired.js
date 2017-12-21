@@ -193,8 +193,7 @@ function run_test() {
 }
 
 function check_ocsp_stapling_telemetry() {
-  let histogram = Cc["@mozilla.org/base/telemetry;1"]
-                    .getService(Ci.nsITelemetry)
+  let histogram = Services.telemetry
                     .getHistogramById("SSL_OCSP_STAPLING")
                     .snapshot();
   equal(histogram.counts[0], 0,

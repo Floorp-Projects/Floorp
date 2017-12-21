@@ -89,7 +89,7 @@ public:
   /// Retrieves the buffer into which the Decoder should write each row.
   uint8_t* RowBuffer()
   {
-    return mRowBuffer.get() + mFrameRect.x * sizeof(uint32_t);
+    return mRowBuffer.get() + mFrameRect.X() * sizeof(uint32_t);
   }
 
   /// Clears the current row buffer.

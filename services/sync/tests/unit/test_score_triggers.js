@@ -8,7 +8,6 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/rotaryengine.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 // Tracking info/collections.
 var collectionsHelper = track_collections_helper();
@@ -41,14 +40,6 @@ async function setUp(server) {
   let engineInfo = await registerRotaryEngine();
   await SyncTestingInfrastructure(server, "johndoe", "ilovejane");
   return engineInfo;
-}
-
-function run_test() {
-  initTestLogging("Trace");
-
-  Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
-
-  run_next_test();
 }
 
 add_task(async function test_tracker_score_updated() {

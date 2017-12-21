@@ -7,11 +7,6 @@ Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
-
-Svc.Prefs.set("log.logger.engine.bookmarks", "Trace");
-initTestLogging("Trace");
-Log.repository.getLogger("Sqlite").level = Log.Level.Info;
 
 async function serverForFoo(engine) {
   await generateNewKeys(Service.collectionKeys);

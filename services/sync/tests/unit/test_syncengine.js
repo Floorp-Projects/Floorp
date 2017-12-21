@@ -5,7 +5,6 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 async function makeSteamEngine() {
   let engine = new SyncEngine("Steam", Service);

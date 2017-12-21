@@ -4,9 +4,6 @@
 // Verify that we wipe the server if we have to regenerate keys.
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
-
-initTestLogging("Trace");
 
 add_task(async function test_missing_crypto_collection() {
   enableValidationPrefs();

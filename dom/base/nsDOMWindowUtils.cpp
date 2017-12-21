@@ -2338,6 +2338,14 @@ nsDOMWindowUtils::GetUsingAdvancedLayers(bool* retval)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::GetIsWebRenderRequested(bool* retval)
+{
+  *retval = gfxPlatform::WebRenderPrefEnabled() ||
+            gfxPlatform::WebRenderEnvvarEnabled();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::GetCurrentAudioBackend(nsAString& aBackend)
 {
   CubebUtils::GetCurrentBackend(aBackend);

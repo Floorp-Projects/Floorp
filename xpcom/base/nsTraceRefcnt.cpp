@@ -433,7 +433,8 @@ GetBloatEntry(const char* aTypeName, uint32_t aInstanceSize)
                  "The usual cause of this is having a templated class that uses "
                  "MOZ_COUNT_{C,D}TOR in the constructor or destructor, respectively. "
                  "As a workaround, the MOZ_COUNT_{C,D}TOR calls can be moved to a "
-                 "non-templated base class.");
+                 "non-templated base class. Another possible cause is a runnable with "
+                 "an mName that matches another refcounted class.");
     }
   }
   return entry;

@@ -1425,6 +1425,7 @@ struct SetEnumValueHelper
     aField = static_cast<type_>(value); \
   }
 
+  DEFINE_ENUM_CLASS_SETTER(StyleBorderImageRepeat, Stretch, Space)
   DEFINE_ENUM_CLASS_SETTER(StyleBoxAlign, Stretch, End)
   DEFINE_ENUM_CLASS_SETTER(StyleBoxDecorationBreak, Slice, Clone)
   DEFINE_ENUM_CLASS_SETTER(StyleBoxDirection, Normal, Reverse)
@@ -7602,14 +7603,14 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
            conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentBorder->mBorderImageRepeatH,
-           NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH);
+           StyleBorderImageRepeat::Stretch);
 
   SetValue(borderImageRepeat.mYValue,
            border->mBorderImageRepeatV,
            conditions,
            SETVAL_ENUMERATED | SETVAL_UNSET_INITIAL,
            parentBorder->mBorderImageRepeatV,
-           NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH);
+           StyleBorderImageRepeat::Stretch);
 
   COMPUTE_END_RESET(Border, border)
 }

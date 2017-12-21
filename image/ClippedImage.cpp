@@ -459,7 +459,7 @@ ClippedImage::DrawSingleTile(gfxContext* aContext,
   MOZ_ASSERT(!MustCreateSurface(aContext, aSize, aRegion, aFlags),
              "Shouldn't need to create a surface");
 
-  gfxRect clip(mClip.x, mClip.y, mClip.Width(), mClip.Height());
+  gfxRect clip(mClip.X(), mClip.Y(), mClip.Width(), mClip.Height());
   nsIntSize size(aSize), innerSize(aSize);
   bool needScale = false;
   if (mSVGViewportSize && !mSVGViewportSize->IsEmpty()) {
@@ -486,11 +486,11 @@ ClippedImage::DrawSingleTile(gfxContext* aContext,
   // We restrict our drawing to only the clipping region, and translate so that
   // the clipping region is placed at the position the caller expects.
   ImageRegion region(aRegion);
-  region.MoveBy(clip.x, clip.y);
+  region.MoveBy(clip.X(), clip.Y());
   region = region.Intersect(clip);
 
   gfxContextMatrixAutoSaveRestore saveMatrix(aContext);
-  aContext->Multiply(gfxMatrix::Translation(-clip.x, -clip.y));
+  aContext->Multiply(gfxMatrix::Translation(-clip.X(), -clip.Y()));
 
   auto unclipViewport = [&](const SVGImageContext& aOldContext) {
     // Map the viewport to the inner image. Note that we don't take the aSize
@@ -601,7 +601,7 @@ ClippedImage::GetImageSpaceInvalidationRect(const nsIntRect& aRect)
 
   nsIntRect rect(InnerImage()->GetImageSpaceInvalidationRect(aRect));
   rect = rect.Intersect(mClip);
-  rect.MoveBy(-mClip.x, -mClip.y);
+  rect.MoveBy(-mClip.X(), -mClip.Y());
   return rect;
 }
 

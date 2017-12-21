@@ -121,6 +121,7 @@ private:
   WindowBackBuffer*         mBackBuffer;
   wl_callback*              mFrameCallback;
   wl_surface*               mFrameCallbackSurface;
+  MessageLoop*              mDisplayThreadMessageLoop;
   bool                      mDelayedCommit;
   bool                      mFullScreenDamage;
   bool                      mIsMainThread;

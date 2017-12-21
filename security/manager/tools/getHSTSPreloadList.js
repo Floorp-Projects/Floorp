@@ -347,9 +347,7 @@ function getHSTSStatuses(inHosts, outStatuses) {
 // handlers are not preemptible, there shouldn't be any concurrency issues.
 function waitForAResponse(outputList) {
   // From <https://developer.mozilla.org/en/XPConnect/xpcshell/HOWTO>
-  var threadManager = Cc["@mozilla.org/thread-manager;1"]
-                      .getService(Ci.nsIThreadManager);
-  threadManager.spinEventLoopUntil(() => outputList.length != 0);
+  Services.tm.spinEventLoopUntil(() => outputList.length != 0);
 }
 
 function readCurrentList(filename) {

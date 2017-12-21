@@ -4,7 +4,6 @@
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 function do_check_throws(func) {
   var raised = false;
@@ -17,6 +16,7 @@ function do_check_throws(func) {
 }
 
 add_test(function test_findCluster() {
+  syncTestLogging();
   _("Test Service._findCluster()");
   try {
 
@@ -45,6 +45,7 @@ add_test(function test_findCluster() {
 });
 
 add_test(function test_setCluster() {
+  syncTestLogging();
   _("Test Service._setCluster()");
   try {
     _("Check initial state.");
@@ -70,8 +71,3 @@ add_test(function test_setCluster() {
     run_next_test();
   }
 });
-
-function run_test() {
-  initTestLogging();
-  run_next_test();
-}

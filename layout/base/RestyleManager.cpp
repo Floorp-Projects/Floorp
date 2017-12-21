@@ -744,15 +744,6 @@ RecomputePosition(nsIFrame* aFrame)
   if (display->IsRelativelyPositionedStyle()) {
     // Move the frame
     if (display->mPosition == NS_STYLE_POSITION_STICKY) {
-      if (display->IsInnerTableStyle()) {
-        // We don't currently support sticky positioning of inner table
-        // elements (bug 975644). Bail.
-        //
-        // When this is fixed, remove the null-check for the computed
-        // offsets in nsTableRowFrame::ReflowChildren.
-        return true;
-      }
-
       // Update sticky positioning for an entire element at once, starting with
       // the first continuation or ib-split sibling.
       // It's rare that the frame we already have isn't already the first

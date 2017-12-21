@@ -104,7 +104,7 @@ stylo-disabled-tests:
 reftest-stylo:
     - reftest-stylo
 
-qr-talos:
+linux-qr-talos:
     - talos-chrome
     - talos-dromaeojs
     - talos-g1
@@ -123,7 +123,7 @@ qr-talos:
     - talos-h1
     - talos-h2
 
-qr-tests:
+linux-qr-tests:
     - cppunit
     - crashtest
     - gtest
@@ -136,6 +136,10 @@ qr-tests:
     - mochitest-webgl
     - reftest
     - xpcshell
+
+windows-qr-tests:
+    - crashtest
+    - mochitest-gpu
 
 jsdcov-code-coverage-tests:
     - mochitest

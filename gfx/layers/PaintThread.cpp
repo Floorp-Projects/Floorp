@@ -196,7 +196,9 @@ PaintThread::Shutdown()
     return;
   }
 
-  sThread->Dispatch(NewRunnableFunction(DestroyPaintThread, Move(pt)));
+  sThread->Dispatch(NewRunnableFunction("DestroyPaintThreadRunnable",
+                                        DestroyPaintThread,
+                                        Move(pt)));
   sThread->Shutdown();
   sThread = nullptr;
 }

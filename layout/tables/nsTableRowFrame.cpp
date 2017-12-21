@@ -941,12 +941,13 @@ nsTableRowFrame::ReflowChildren(nsPresContext*           aPresContext,
         // be merged into the else below if we can.)
         nsMargin* computedOffsetProp =
           kidFrame->GetProperty(nsIFrame::ComputedOffsetProperty());
-        // Bug 975644: a position:sticky kid can end up with a null
-        // property value here.
-        LogicalMargin computedOffsets(wm, computedOffsetProp ?
-                                            *computedOffsetProp : nsMargin());
-        ReflowInput::ApplyRelativePositioning(kidFrame, wm, computedOffsets,
-                                                    &kidPosition, containerSize);
+
+        // On our fist reflow sticky children may not have the property yet (we
+        // need to reflow the children first to size the scroll frame).
+        LogicalMargin computedOffsets(
+          wm, computedOffsetProp ? *computedOffsetProp : nsMargin());
+        ReflowInput::ApplyRelativePositioning(
+            kidFrame, wm, computedOffsets, &kidPosition, containerSize);
       }
 
       // In vertical-rl mode, we are likely to have containerSize.width = 0

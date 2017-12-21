@@ -4,11 +4,6 @@
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/engines/history.js");
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
-
-add_task(async function setup() {
-  initTestLogging("Trace");
-});
 
 async function rawAddVisit(id, uri, visitPRTime, transitionType) {
   return new Promise((resolve, reject) => {
