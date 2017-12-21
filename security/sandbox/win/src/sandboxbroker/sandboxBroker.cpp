@@ -782,6 +782,11 @@ SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel)
     sandbox::MITIGATION_NONSYSTEM_FONT_DISABLE |
     sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
 
+  if (!sRunningFromNetworkDrive) {
+    mitigations |= sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
+                   sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL;
+  }
+
   result = mPolicy->SetProcessMitigations(mitigations);
   SANDBOX_ENSURE_SUCCESS(result,
                          "Invalid flags for SetProcessMitigations.");
