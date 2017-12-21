@@ -844,7 +844,7 @@ this.ExtensionData = class {
       if (permission.startsWith("moz-extension:")) {
         continue;
       }
-      let match = /^https?:\/\/([^/]+)\//.exec(permission);
+      let match = /^[a-z*]+:\/\/([^/]+)\//.exec(permission);
       if (!match) {
         Cu.reportError(`Unparseable host permission ${permission}`);
         continue;
