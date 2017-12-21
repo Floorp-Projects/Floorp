@@ -1,5 +1,5 @@
 # Avoid dependency on libstdc++ 4.7
-ac_add_options --enable-stdcxx-compat
+export MOZ_STDCXX_COMPAT=1
 
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
 
