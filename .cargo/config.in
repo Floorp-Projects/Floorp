@@ -9,5 +9,3 @@ replace-with = "vendored-sources"
 
 [source.vendored-sources]
 directory = '@top_srcdir@/third_party/rust'
-
-@WIN64_CARGO_LINKER_CONFIG@
