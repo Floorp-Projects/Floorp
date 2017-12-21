@@ -41,7 +41,8 @@ function enterEventLoop() {
 
     Assert.equal(inspector.eventLoopNestLevel, gCount);
     Assert.equal(inspector.lastNestRequestor.url, requestor(gCount - 1).url);
-    Assert.equal(inspector.lastNestRequestor.connection, requestor(gCount - 1).connection);
+    Assert.equal(inspector.lastNestRequestor.connection,
+                 requestor(gCount - 1).connection);
     Assert.equal(inspector.enterNestedEventLoop(requestor(gCount)), gCount);
   } else {
     Assert.equal(gCount, MAX + 1);
@@ -52,7 +53,8 @@ function enterEventLoop() {
 function exitEventLoop() {
   if (inspector.lastNestRequestor != null) {
     Assert.equal(inspector.lastNestRequestor.url, requestor(gCount - 1).url);
-    Assert.equal(inspector.lastNestRequestor.connection, requestor(gCount - 1).connection);
+    Assert.equal(inspector.lastNestRequestor.connection,
+                 requestor(gCount - 1).connection);
     if (gCount-- > 1) {
       tm.dispatchToMainThread({ run: exitEventLoop});
     }

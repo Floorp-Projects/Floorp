@@ -359,7 +359,7 @@ add_task(async function test_repair_client_missing() {
     // sanity check we aren't going to sync this removal.
     do_check_empty((await bookmarksEngine.pullNewChanges()));
     // sanity check that the bookmark is not there anymore
-    Assert.equal(false, await PlacesUtils.bookmarks.fetch(bookmarkInfo.guid));
+    Assert.equal(null, await PlacesUtils.bookmarks.fetch(bookmarkInfo.guid));
 
     // sync again - we should have a few problems...
     _("Syncing again.");

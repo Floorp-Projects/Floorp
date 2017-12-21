@@ -151,9 +151,9 @@ function run_test()
 
   let moduleScope = Cu.Sandbox(this);
   moduleScope.ADDONID = ADDONID;
-  moduleScope.do_check_eq = do_check_eq;
+  moduleScope.equal = equal;
   function funToIntercept(addonId) {
-    Assert.equal(addonId, ADDONID);
+    equal(addonId, ADDONID);
     counter++;
   }
   sandbox.moduleFunction = Cu.evalInSandbox(funToIntercept.toSource() + "; funToIntercept", moduleScope);

@@ -151,7 +151,7 @@ function test_find_actors() {
       first = false;
     } else {
       Assert.notEqual(bp.originalColumn, undefined,
-                      "Should not get the whole line breakpoint any time other than first.");
+        "Should not get the whole line breakpoint any time other than first.");
     }
     bpSet.delete(bp);
   }

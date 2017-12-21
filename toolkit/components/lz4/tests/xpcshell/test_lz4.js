@@ -12,7 +12,7 @@ add_task(function() {
     worker.onmessage = function(event) {
       let data = event.data;
       switch (data.kind) {
-        case "do_check_true":
+        case "assert_ok":
           try {
             Assert.ok(data.args[0]);
           } catch (ex) {

@@ -827,7 +827,7 @@ add_task(async function test_getAssertion_invalid_token() {
   let user = await fxa.internal.getUserAccountData();
   Assert.equal(user.email, creds.email);
   Assert.equal(user.sessionToken, null);
-  Assert.equal(false, await fxa.hasLocalSession());
+  Assert.ok(!(await fxa.hasLocalSession()));
 });
 
 add_task(async function test_getAssertion() {
