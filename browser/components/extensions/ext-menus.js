@@ -182,10 +182,26 @@ var gMenuBuilder = {
         // The rendering engine will truncate the title if it's longer than 64 characters.
         // But if it makes sense let's try truncate selection text only, to handle cases like
         // 'look up "%s" in MyDictionary' more elegantly.
-        let maxSelectionLength = gMaxLabelLength - label.length + 2;
-        if (maxSelectionLength > 4) {
-          selection = selection.substring(0, maxSelectionLength - 3) + "...";
+
+        let codePointsToRemove = 0;
+
+        let selectionArray = Array.from(selection);
+
+        let completeLabelLength = label.length - 2 + selectionArray.length;
+        if (completeLabelLength > gMaxLabelLength) {
+          codePointsToRemove = completeLabelLength - gMaxLabelLength;
         }
+
+        if (codePointsToRemove) {
+          let ellipsis = "\u2026";
+          try {
+            ellipsis = Services.prefs.getComplexValue("intl.ellipsis",
+                                                      Ci.nsIPrefLocalizedString).data;
+          } catch (e) { }
+          codePointsToRemove += 1;
+          selection = selectionArray.slice(0, -codePointsToRemove).join("") + ellipsis;
+        }
+
         label = label.replace(/%s/g, selection);
       }
 
