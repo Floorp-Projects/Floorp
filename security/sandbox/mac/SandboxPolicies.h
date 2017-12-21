@@ -183,19 +183,11 @@ static const char contentSandboxRules[] = R"(
 
   (allow ipc-posix-shm-read-data ipc-posix-shm-write-data
     (ipc-posix-name-regex #"^CFPBS:"))
-  (allow ipc-posix-shm-read* ipc-posix-shm-write-data
-    (ipc-posix-name-regex #"^AudioIO"))
 
   (allow signal (target self))
 
-  (allow mach-lookup
-      (global-name "com.apple.audio.coreaudiod")
-      (global-name "com.apple.audio.audiohald"))
-
   (if (>= macosMinorVersion 13)
     (allow mach-lookup
-      ; bug 1376163
-      (global-name "com.apple.audio.AudioComponentRegistrar")
       ; bug 1392988
       (xpc-service-name "com.apple.coremedia.videodecoder")
       (xpc-service-name "com.apple.coremedia.videoencoder")))
@@ -205,8 +197,7 @@ static const char contentSandboxRules[] = R"(
      (allow mach-lookup (global-name "com.apple.xpcd")))
 
   (allow iokit-open
-     (iokit-user-client-class "IOHIDParamUserClient")
-     (iokit-user-client-class "IOAudioEngineUserClient"))
+     (iokit-user-client-class "IOHIDParamUserClient"))
 
   ; Only supported on macOS 10.10+
   (if (defined? 'iokit-get-properties)
@@ -230,7 +221,6 @@ static const char contentSandboxRules[] = R"(
   (allow file-read-data (literal "/Library/Preferences/.GlobalPreferences.plist"))
 
   (allow file-read*
-      (subpath "/Library/Audio/Plug-Ins")
       (subpath "/Library/Spelling")
       (literal "/")
       (literal "/private/tmp")
@@ -280,10 +270,6 @@ static const char contentSandboxRules[] = R"(
           (vnode-type REGULAR-FILE)))))
 
   (allow-shared-list "org.mozilla.plugincontainer")
-
-; the following rule should be removed when microphone access
-; is brokered through the content process
-  (allow device-microphone)
 
 ; Per-user and system-wide Extensions dir
   (allow file-read*
@@ -368,6 +354,8 @@ static const char contentSandboxRules[] = R"(
     (extension "com.apple.app-sandbox.read"))
 )";
 
+// These are additional rules that are added to the content process rules for
+// file content processes.
 static const char fileContentProcessAddend[] = R"(
   ; This process has blanket file read privileges
   (allow file-read*)
@@ -377,6 +365,28 @@ static const char fileContentProcessAddend[] = R"(
   (allow mach-lookup (global-name "com.apple.iconservices"))
 )";
 
+// These are additional rules that are added to the content process rules when
+// audio remoting is not enabled. (Once audio remoting is always used these
+// will be deleted.)
+static const char contentProcessAudioAddend[] = R"(
+  (allow ipc-posix-shm-read* ipc-posix-shm-write-data
+    (ipc-posix-name-regex #"^AudioIO"))
+
+  (allow mach-lookup
+    (global-name "com.apple.audio.coreaudiod")
+    (global-name "com.apple.audio.audiohald"))
+
+  (if (>= macosMinorVersion 13)
+    (allow mach-lookup
+      ; bug 1376163
+      (global-name "com.apple.audio.AudioComponentRegistrar")))
+
+  (allow iokit-open (iokit-user-client-class "IOAudioEngineUserClient"))
+
+  (allow file-read* (subpath "/Library/Audio/Plug-Ins"))
+
+  (allow device-microphone)
+)";
 
 }
 
