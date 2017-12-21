@@ -1570,9 +1570,14 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
     return false;
   }
 
-  // Inline scripts ignore ther CORS mode and are always CORS_NONE.
+  // Inline classic scripts ignore ther CORS mode and are always CORS_NONE.
+  CORSMode corsMode = CORS_NONE;
+  if (scriptKind == ScriptKind::Module) {
+    corsMode = aElement->GetCORSMode();
+  }
+
   request = CreateLoadRequest(scriptKind, mDocument->GetDocumentURI(), aElement,
-                              validJSVersion, CORS_NONE,
+                              validJSVersion, corsMode,
                               SRIMetadata(), // SRI doesn't apply
                               ourRefPolicy);
   request->mValidJSVersion = validJSVersion;
