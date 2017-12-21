@@ -28,6 +28,13 @@ MozFramebuffer::Create(GLContext* const gl, const gfx::IntSize& size,
     if (samples && !gl->IsSupported(GLFeature::framebuffer_multisample))
         return nullptr;
 
+    if (uint32_t(size.width) > gl->MaxTexOrRbSize() ||
+        uint32_t(size.height) > gl->MaxTexOrRbSize() ||
+        samples > gl->MaxSamples())
+    {
+        return nullptr;
+    }
+
     gl->MakeCurrent();
 
     GLContext::LocalErrorScope errorScope(*gl);
@@ -35,23 +42,12 @@ MozFramebuffer::Create(GLContext* const gl, const gfx::IntSize& size,
     GLenum colorTarget;
     GLuint colorName;
     if (samples) {
-        if (uint32_t(size.width) > gl->MaxRenderbufferSize() ||
-            uint32_t(size.height) > gl->MaxRenderbufferSize() ||
-            samples > gl->MaxSamples())
-        {
-            return nullptr;
-        }
         colorTarget = LOCAL_GL_RENDERBUFFER;
         colorName = gl->CreateRenderbuffer();
         const ScopedBindRenderbuffer bindRB(gl, colorName);
         gl->fRenderbufferStorageMultisample(colorTarget, samples, LOCAL_GL_RGBA8,
                                             size.width, size.height);
     } else {
-        if (uint32_t(size.width) > gl->MaxTextureSize() ||
-            uint32_t(size.height) > gl->MaxTextureSize())
-        {
-            return nullptr;
-        }
         colorTarget = LOCAL_GL_TEXTURE_2D;
         colorName = gl->CreateTexture();
         const ScopedBindTexture bindTex(gl, colorName);

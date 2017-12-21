@@ -958,6 +958,8 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
         fGetIntegerv(LOCAL_GL_MAX_SAMPLES, (GLint*)&mMaxSamples);
     }
 
+    mMaxTexOrRbSize = std::min(mMaxTextureSize, mMaxRenderbufferSize);
+
     ////////////////////////////////////////////////////////////////////////////
 
     // We're ready for final setup.
