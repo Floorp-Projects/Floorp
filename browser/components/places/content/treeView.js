@@ -1738,11 +1738,11 @@ PlacesTreeView.prototype = {
       Cu.reportError("isEditable called for an unbuilt row.");
       return false;
     }
-    let itemId = node.itemId;
+    let itemGuid = node.bookmarkGuid;
 
     // Only bookmark-nodes are editable.  Fortunately, this checks also takes
     // care of livemark children.
-    if (itemId == -1)
+    if (itemGuid == "")
       return false;
 
     // The following items are also not editable, even though they are bookmark
@@ -1755,7 +1755,7 @@ PlacesTreeView.prototype = {
     // Note that concrete itemIds aren't used intentionally.  For example, we
     // have no reason to disallow renaming a shortcut to the Bookmarks Toolbar,
     // except for the one under All Bookmarks.
-    if (PlacesUtils.nodeIsSeparator(node) || PlacesUtils.isRootItem(itemId))
+    if (PlacesUtils.nodeIsSeparator(node) || PlacesUtils.isRootItem(itemGuid))
       return false;
 
     let parentId = PlacesUtils.getConcreteItemId(node.parent);
