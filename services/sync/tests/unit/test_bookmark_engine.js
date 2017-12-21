@@ -11,10 +11,6 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
-
-
-initTestLogging("Trace");
 
 async function fetchAllRecordIds() {
   let db = await PlacesUtils.promiseDBConnection();
@@ -38,15 +34,8 @@ async function fetchAllRecordIds() {
   return recordIds;
 }
 add_task(async function setup() {
-  initTestLogging("Trace");
   await generateNewKeys(Service.collectionKeys);
-});
-
-add_task(async function setup() {
   await Service.engineManager.unregister("bookmarks");
-
-  initTestLogging("Trace");
-  generateNewKeys(Service.collectionKeys);
 });
 
 add_task(async function test_delete_invalid_roots_from_server() {

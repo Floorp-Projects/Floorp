@@ -401,10 +401,13 @@ ProgressTracker::SyncNotify(IProgressObserver* aObserver)
 
   nsIntRect rect;
   if (image) {
-    if (NS_FAILED(image->GetWidth(&rect.width)) ||
-        NS_FAILED(image->GetHeight(&rect.height))) {
+    int32_t width, height;
+    if (NS_FAILED(image->GetWidth(&width)) ||
+        NS_FAILED(image->GetHeight(&height))) {
       // Either the image has no intrinsic size, or it has an error.
       rect = GetMaxSizedIntRect();
+    } else {
+      rect.SizeTo(width, height);
     }
   }
 

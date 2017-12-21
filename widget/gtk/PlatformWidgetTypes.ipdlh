@@ -11,7 +11,7 @@ using mozilla::LayoutDeviceIntSize from "Units.h";
 namespace mozilla {
 namespace widget {
 
-struct X11CompositorWidgetInitData
+struct GtkCompositorWidgetInitData
 {
   uintptr_t           XWindow;
   nsCString           XDisplayString;
@@ -21,7 +21,7 @@ struct X11CompositorWidgetInitData
 
 union CompositorWidgetInitData
 {
-  X11CompositorWidgetInitData;
+  GtkCompositorWidgetInitData;
   HeadlessCompositorWidgetInitData;
 };
 

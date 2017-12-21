@@ -33,7 +33,7 @@ class SourceSurface;
 namespace widget {
 
 class WinCompositorWidget;
-class X11CompositorWidget;
+class GtkCompositorWidget;
 class AndroidCompositorWidget;
 class CompositorWidgetInitData;
 
@@ -287,7 +287,7 @@ public:
   virtual WinCompositorWidget* AsWindows() {
     return nullptr;
   }
-  virtual X11CompositorWidget* AsX11() {
+  virtual GtkCompositorWidget* AsX11() {
     return nullptr;
   }
   virtual AndroidCompositorWidget* AsAndroid() {

@@ -120,11 +120,12 @@ this.AddonStudies = {
         for (const study of studies) {
           await getStore(db).add(study);
         }
+        await AddonStudies.close();
 
         try {
           await testFunction(...args, studies);
         } finally {
-          db = await getDatabase(); // Re-acquire in case the test closed the connection.
+          db = await getDatabase();
           await AddonStudies.clear();
           for (const study of oldStudies) {
             await getStore(db).add(study);

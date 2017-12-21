@@ -2,8 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 Cu.import("resource://services-sync/bookmark_repair.js");
 
-initTestLogging("Trace");
-
 function makeClientRecord(id, fields = {}) {
   return {
     id,

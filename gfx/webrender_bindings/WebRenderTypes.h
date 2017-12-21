@@ -490,16 +490,16 @@ static inline wr::SideOffsets2D_f32 ToSideOffsets2D_f32(float top, float right, 
   return offset;
 }
 
-static inline wr::RepeatMode ToRepeatMode(uint8_t repeatMode)
+static inline wr::RepeatMode ToRepeatMode(mozilla::StyleBorderImageRepeat repeatMode)
 {
   switch (repeatMode) {
-  case NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH:
+  case mozilla::StyleBorderImageRepeat::Stretch:
     return wr::RepeatMode::Stretch;
-  case NS_STYLE_BORDER_IMAGE_REPEAT_REPEAT:
+  case mozilla::StyleBorderImageRepeat::Repeat:
     return wr::RepeatMode::Repeat;
-  case NS_STYLE_BORDER_IMAGE_REPEAT_ROUND:
+  case mozilla::StyleBorderImageRepeat::Round:
     return wr::RepeatMode::Round;
-  case NS_STYLE_BORDER_IMAGE_REPEAT_SPACE:
+  case mozilla::StyleBorderImageRepeat::Space:
     return wr::RepeatMode::Space;
   default:
     MOZ_ASSERT(false);

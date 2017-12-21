@@ -41,7 +41,7 @@ function createAndStartHTTPServer(port = HTTP_PORT) {
 }
 
 function run_test() {
-  initTestLogging("Trace");
+  syncTestLogging();
 
   run_next_test();
 }

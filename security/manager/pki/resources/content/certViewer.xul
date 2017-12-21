@@ -20,9 +20,9 @@
 
 <stringbundle id="pippki_bundle" src="chrome://pippki/locale/pippki.properties"/>
 
+<script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
 <script type="application/javascript"
         src="chrome://pippki/content/certViewer.js"/>
-<script type="application/javascript" src="chrome://pippki/content/pippki.js"/>
 
   <tabbox flex="1">
     <tabs>

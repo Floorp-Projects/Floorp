@@ -432,7 +432,7 @@ Int32Result::GetCacheableResult(JSContext* cx, JS::MutableHandleValue aResult)
 /**
  * An event used to notify asynchronously of an error.
  */
-class ErrorEvent final : public Runnable {
+class OSFileErrorEvent final : public Runnable {
 public:
   /**
    * @param aOnSuccess The success callback.
@@ -449,12 +449,12 @@ public:
    * alread_AddRefed to ensure that we do not manipulate main-thread
    * only refcounters off the main thread.
    */
-  ErrorEvent(nsMainThreadPtrHandle<nsINativeOSFileSuccessCallback>& aOnSuccess,
-             nsMainThreadPtrHandle<nsINativeOSFileErrorCallback>& aOnError,
-             already_AddRefed<AbstractResult>& aDiscardedResult,
-             const nsACString& aOperation,
-             int32_t aOSError)
-    : Runnable("ErrorEvent")
+  OSFileErrorEvent(nsMainThreadPtrHandle<nsINativeOSFileSuccessCallback>& aOnSuccess,
+                   nsMainThreadPtrHandle<nsINativeOSFileErrorCallback>& aOnError,
+                   already_AddRefed<AbstractResult>& aDiscardedResult,
+                   const nsACString& aOperation,
+                   int32_t aOSError)
+    : Runnable("OSFileErrorEvent")
     , mOnSuccess(aOnSuccess)
     , mOnError(aOnError)
     , mDiscardedResult(aDiscardedResult)
@@ -566,17 +566,18 @@ public:
             already_AddRefed<AbstractResult>&& aDiscardedResult,
             int32_t aOSError = 0) {
     Resolve();
-    RefPtr<ErrorEvent> event = new ErrorEvent(mOnSuccess,
-                                                mOnError,
-                                                aDiscardedResult,
-                                                aOperation,
-                                                aOSError);
+
+    RefPtr<OSFileErrorEvent> event = new OSFileErrorEvent(mOnSuccess,
+                                                          mOnError,
+                                                          aDiscardedResult,
+                                                          aOperation,
+                                                          aOSError);
     nsresult rv = NS_DispatchToMainThread(event);
     if (NS_FAILED(rv)) {
       // Last ditch attempt to release on the main thread - some of
       // the members of event are not thread-safe, so letting the
       // pointer go out of scope would cause a crash.
-      NS_ReleaseOnMainThreadSystemGroup("AbstractDoEvent::ErrorEvent",
+      NS_ReleaseOnMainThreadSystemGroup("AbstractDoEvent::OSFileErrorEvent",
                                         event.forget());
     }
   }
@@ -587,8 +588,8 @@ public:
   void Succeed(already_AddRefed<nsINativeOSFileResult>&& aResult) {
     Resolve();
     RefPtr<SuccessEvent> event = new SuccessEvent(mOnSuccess,
-                                                    mOnError,
-                                                    aResult);
+                                                  mOnError,
+                                                  aResult);
     nsresult rv = NS_DispatchToMainThread(event);
     if (NS_FAILED(rv)) {
       // Last ditch attempt to release on the main thread - some of

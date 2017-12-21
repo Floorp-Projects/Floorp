@@ -7,7 +7,6 @@ Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/browserid_identity.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 var collectionKeys = new CollectionKeyManager();
 

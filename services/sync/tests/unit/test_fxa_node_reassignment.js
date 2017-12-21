@@ -16,17 +16,9 @@ Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/rotaryengine.js");
 Cu.import("resource://services-sync/browserid_identity.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
 add_task(async function setup() {
-  Log.repository.getLogger("Sync.ErrorHandler").level  = Log.Level.Trace;
-  Log.repository.getLogger("Sync.Resource").level      = Log.Level.Trace;
-  Log.repository.getLogger("Sync.RESTRequest").level   = Log.Level.Trace;
-  Log.repository.getLogger("Sync.Service").level       = Log.Level.Trace;
-  Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
-  initTestLogging();
-
   // Disables all built-in engines. Important for avoiding errors thrown by the
   // add-ons engine.
   Service.engineManager.clear();
@@ -56,6 +48,7 @@ function handleReassign(handler, req, resp) {
 var numTokenRequests = 0;
 
 function prepareServer(cbAfterTokenFetch) {
+  syncTestLogging();
   let config = makeIdentityConfig({username: "johndoe"});
   // A server callback to ensure we don't accidentally hit the wrong endpoint
   // after a node reassignment.

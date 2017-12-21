@@ -52,11 +52,6 @@ async function applyEnsureNoFailures(records) {
 
 var fxuri, fxguid, tburi, tbguid;
 
-function run_test() {
-  initTestLogging("Trace");
-  run_next_test();
-}
-
 add_task(async function test_store() {
   _("Verify that we've got an empty store to work with.");
   do_check_empty((await store.getAllIDs()));

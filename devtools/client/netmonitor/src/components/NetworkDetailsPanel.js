@@ -12,8 +12,12 @@ const Actions = require("../actions/index");
 const { getSelectedRequest } = require("../selectors/index");
 
 // Components
-const CustomRequestPanel = createFactory(require("./CustomRequestPanel"));
-const TabboxPanel = createFactory(require("./TabboxPanel"));
+loader.lazyGetter(this, "CustomRequestPanel", function () {
+  return createFactory(require("./CustomRequestPanel"));
+});
+loader.lazyGetter(this, "TabboxPanel", function () {
+  return createFactory(require("./TabboxPanel"));
+});
 
 const { div } = dom;
 
