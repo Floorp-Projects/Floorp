@@ -180,7 +180,7 @@ add_task(async function test_experiments_api() {
   apiAddon.uninstall();
 
   boringAddon.userDisabled = true;
-  await new Promise(do_execute_soon);
+  await new Promise(executeSoon);
 
   equal(addon.appDisabled, true, "Add-on should be app-disabled after its dependency is removed.");
 

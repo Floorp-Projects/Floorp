@@ -121,7 +121,7 @@ add_task(async function test_addVisitAndCheckGuid() {
   // add a visit and test page guid and non-existing bookmark guids.
   let sourceURI = uri("http://test4.com/");
   await PlacesTestUtils.addVisits({ uri: sourceURI });
-  do_check_eq(await PlacesUtils.bookmarks.fetch({ url: sourceURI }, null));
+  Assert.equal(await PlacesUtils.bookmarks.fetch({ url: sourceURI }, null));
 
   let options = histsvc.getNewQueryOptions();
   let query = histsvc.getNewQuery();

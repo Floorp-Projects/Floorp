@@ -1031,7 +1031,7 @@ for (let test of testParams) {
 
     shutdownManager();
 
-    await new Promise(do_execute_soon);
+    await new Promise(executeSoon);
   });
 }
 

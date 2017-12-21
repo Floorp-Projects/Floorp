@@ -10,11 +10,11 @@ const { console } = Cu.import("resource://gre/modules/Console.jsm", {});
 this.validator = require("devtools/client/shared/vendor/stringvalidator/validator");
 
 function describe(suite, testFunc) {
-  do_print(`\n                            Test suite: ${suite}`.toUpperCase());
+  info(`\n                            Test suite: ${suite}`.toUpperCase());
   testFunc();
 }
 
 function it(description, testFunc) {
-  do_print(`\n                              - ${description}:\n`.toUpperCase());
+  info(`\n                              - ${description}:\n`.toUpperCase());
   testFunc();
 }

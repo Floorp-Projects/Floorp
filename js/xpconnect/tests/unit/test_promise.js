@@ -1,8 +1,8 @@
 function run_test() {
   var Cu = Components.utils;
   sb = new Cu.Sandbox('http://www.example.com');
-  sb.do_check_eq = do_check_eq;
-  Cu.evalInSandbox('do_check_eq(typeof new Promise(function(resolve){resolve();}), "object");',
+  sb.equal = equal;
+  Cu.evalInSandbox('equal(typeof new Promise(function(resolve){resolve();}), "object");',
                    sb);
   Assert.equal(typeof new Promise(function(resolve){resolve();}), "object");
 }

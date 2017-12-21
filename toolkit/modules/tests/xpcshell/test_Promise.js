@@ -956,7 +956,7 @@ function wait_for_uncaught(aMustAppear, aTimeout = undefined) {
     remaining.add(k);
   }
   let deferred = Promise.defer();
-  let print = do_print;
+  let print = info;
   let observer = function({message, stack}) {
     let data = message + stack;
     print("Observing " + message + ", looking for " + aMustAppear.join(", "));

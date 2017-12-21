@@ -96,7 +96,7 @@ function tryActors(reachables, completed) {
         }
 
         if (--count == 0) {
-          do_execute_soon(completed, "tryActors callback " + completed.name);
+          executeSoon(completed, "tryActors callback " + completed.name);
         }
       });
   }
