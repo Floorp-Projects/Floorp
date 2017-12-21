@@ -1,5 +1,5 @@
 {
-    "configure-args": "--enable-stdcxx-compat --enable-simulator=arm64",
+    "configure-args": "--enable-simulator=arm64",
     "optimize": true,
     "debug": true,
     "env": {
