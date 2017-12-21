@@ -4,8 +4,6 @@
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://services-sync/util.js");
 
-initTestLogging();
-
 add_task(async function test_roundtrip() {
   _("Do a simple write of an array to json and read");
   await Utils.jsonSave("foo", {}, ["v1", "v2"]);

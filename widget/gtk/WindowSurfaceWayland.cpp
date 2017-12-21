@@ -423,7 +423,7 @@ void
 WaylandShmPool::SetImageDataFromPool(class WaylandShmPool* aSourcePool,
                                      int aImageDataSize)
 {
-  MOZ_ASSERT(mAllocatedSize <= aImageDataSize, "WaylandShmPool overflows!");
+  MOZ_ASSERT(mAllocatedSize >= aImageDataSize, "WaylandShmPool overflows!");
   memcpy(mImageData, aSourcePool->GetImageData(), aImageDataSize);
 }
 
@@ -556,6 +556,7 @@ WindowSurfaceWayland::WindowSurfaceWayland(nsWindow *aWindow)
   , mBackBuffer(nullptr)
   , mFrameCallback(nullptr)
   , mFrameCallbackSurface(nullptr)
+  , mDisplayThreadMessageLoop(MessageLoop::current())
   , mDelayedCommit(false)
   , mFullScreenDamage(false)
   , mIsMainThread(NS_IsMainThread())
@@ -574,8 +575,8 @@ WindowSurfaceWayland::~WindowSurfaceWayland()
   if (!mIsMainThread) {
     // We can be destroyed from main thread even though we was created/used
     // in compositor thread. We have to unref/delete WaylandDisplay in compositor
-    // thread then.
-    MessageLoop::current()->PostTask(
+    // thread then and we can't use MessageLoop::current() here.
+    mDisplayThreadMessageLoop->PostTask(
       NewRunnableFunction(&WaylandDisplayRelease, mWaylandDisplay->GetDisplay()));
   } else {
     WaylandDisplayRelease(mWaylandDisplay->GetDisplay());

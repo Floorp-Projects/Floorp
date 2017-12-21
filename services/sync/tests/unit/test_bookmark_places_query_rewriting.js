@@ -21,9 +21,6 @@ function makeTagRecord(id, uri) {
 }
 
 add_task(async function run_test() {
-  initTestLogging("Trace");
-  Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.Store.Bookmarks").level = Log.Level.Trace;
 
   let uri = "place:folder=499&type=7&queryType=1";
   let tagRecord = makeTagRecord("abcdefabcdef", uri);

@@ -6,11 +6,6 @@
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://services-sync/resource.js");
 
-function run_test() {
-  initTestLogging("Trace");
-  run_next_test();
-}
-
 var httpServer = new HttpServer();
 httpServer.registerPathHandler("/content", contentHandler);
 httpServer.start(-1);

@@ -234,6 +234,7 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId)
 
   auto epochs = renderer->FlushRenderedEpochs();
   layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
+    "NotifyDidRenderRunnable",
     &NotifyDidRender,
     renderer->GetCompositorBridge(),
     epochs,

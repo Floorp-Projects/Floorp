@@ -2,18 +2,15 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-common/async.js");
-Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://services-sync/bookmark_validator.js");
 
 const bms = PlacesUtils.bookmarks;
 
 add_task(async function setup() {
-  initTestLogging("Trace");
   await Service.engineManager.unregister("bookmarks");
 });
 
@@ -21,10 +18,6 @@ async function sharedSetup() {
   let engine = new BookmarksEngine(Service);
   await engine.initialize();
   let store = engine._store;
-
-  store._log.level = Log.Level.Trace;
-  engine._log.level = Log.Level.Trace;
-
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 

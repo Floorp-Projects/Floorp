@@ -749,10 +749,10 @@ nsCSSRendering::CreateWebRenderCommandsForBorder(nsDisplayItem* aItem,
     return false;
   }
 
-  if (styleBorder->mBorderImageRepeatH == NS_STYLE_BORDER_IMAGE_REPEAT_ROUND ||
-      styleBorder->mBorderImageRepeatH == NS_STYLE_BORDER_IMAGE_REPEAT_SPACE ||
-      styleBorder->mBorderImageRepeatV == NS_STYLE_BORDER_IMAGE_REPEAT_ROUND ||
-      styleBorder->mBorderImageRepeatV == NS_STYLE_BORDER_IMAGE_REPEAT_SPACE) {
+  if (styleBorder->mBorderImageRepeatH == StyleBorderImageRepeat::Round ||
+      styleBorder->mBorderImageRepeatH == StyleBorderImageRepeat::Space ||
+      styleBorder->mBorderImageRepeatV == StyleBorderImageRepeat::Round ||
+      styleBorder->mBorderImageRepeatV == StyleBorderImageRepeat::Space) {
     return false;
   }
 

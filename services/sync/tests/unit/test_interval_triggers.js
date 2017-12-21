@@ -6,7 +6,6 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 Svc.Prefs.set("registerEngines", "");
 Cu.import("resource://services-sync/service.js");
@@ -37,6 +36,7 @@ function sync_httpd_setup() {
 }
 
 async function setUp(server) {
+  syncTestLogging();
   await configureIdentity({username: "johndoe"}, server);
   await generateNewKeys(Service.collectionKeys);
   let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
@@ -45,11 +45,6 @@ async function setUp(server) {
 }
 
 add_task(async function setup() {
-  initTestLogging("Trace");
-
-  Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
-
   scheduler = Service.scheduler;
   clientsEngine = Service.clientsEngine;
 

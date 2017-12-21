@@ -11,6 +11,9 @@
 #include "WindowSurfaceX11Image.h"
 #include "WindowSurfaceX11SHM.h"
 #include "WindowSurfaceXRender.h"
+#ifdef MOZ_WAYLAND
+#include "WindowSurfaceWayland.h"
+#endif
 
 namespace mozilla {
 namespace widget {
@@ -19,11 +22,15 @@ using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 WindowSurfaceProvider::WindowSurfaceProvider()
-    : mXDisplay(nullptr)
+    : mIsX11Display(false)
+    , mXDisplay(nullptr)
     , mXWindow(0)
     , mXVisual(nullptr)
     , mXDepth(0)
     , mWindowSurface(nullptr)
+#ifdef MOZ_WAYLAND
+    , mWidget(nullptr)
+#endif
 {
 }
 
@@ -43,7 +50,20 @@ void WindowSurfaceProvider::Initialize(
   mXWindow = aWindow;
   mXVisual = aVisual;
   mXDepth = aDepth;
+  mIsX11Display = true;
 }
+
+#ifdef MOZ_WAYLAND
+void WindowSurfaceProvider::Initialize(nsWindow *aWidget)
+{
+  MOZ_ASSERT(!aWidget->IsX11Display(),
+             "We are supposed to have a Wayland display!");
+
+  mWidget = aWidget;
+  mIsX11Display = false;
+}
+#endif
+
 void WindowSurfaceProvider::CleanupResources()
 {
   mWindowSurface = nullptr;
@@ -52,6 +72,13 @@ void WindowSurfaceProvider::CleanupResources()
 UniquePtr<WindowSurface>
 WindowSurfaceProvider::CreateWindowSurface()
 {
+#ifdef MOZ_WAYLAND
+  if (!mIsX11Display) {
+    LOGDRAW(("Drawing to nsWindow %p using wl_surface\n", (void*)this));
+    return MakeUnique<WindowSurfaceWayland>(mWidget);
+  }
+#endif
+
   // We should be initialized
   MOZ_ASSERT(mXDisplay);
 
@@ -94,7 +121,9 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvali
   *aBufferMode = BufferMode::BUFFER_NONE;
   RefPtr<DrawTarget> dt = nullptr;
   if (!(dt = mWindowSurface->Lock(aInvalidRegion)) &&
-      !mWindowSurface->IsFallback()) {
+      mIsX11Display && !mWindowSurface->IsFallback()) {
+    // We can't use WindowSurfaceX11Image fallback on Wayland but
+    // Lock() call on WindowSurfaceWayland should never fail.
     gfxWarningOnce() << "Failed to lock WindowSurface, falling back to XPutImage backend.";
     mWindowSurface = MakeUnique<WindowSurfaceX11Image>(mXDisplay, mXWindow, mXVisual, mXDepth);
     dt = mWindowSurface->Lock(aInvalidRegion);

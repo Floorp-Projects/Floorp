@@ -9,7 +9,6 @@ Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
 
@@ -43,12 +42,6 @@ let errorHandler = Service.errorHandler;
 let engine;
 
 add_task(async function setup() {
-  initTestLogging("Trace");
-
-  Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
-  Log.repository.getLogger("Sync.ErrorHandler").level = Log.Level.Trace;
-
   Service.engineManager.clear();
   await Service.engineManager.register(EHTestsCommon.CatapultEngine);
   engine = Service.engineManager.get("catapult");
@@ -61,6 +54,8 @@ async function clean() {
   Status.resetSync();
   Status.resetBackoff();
   errorHandler.didReportProlongedError = false;
+  // Move log levels back to trace (startOver will have reversed this), sicne
+  syncTestLogging();
 }
 
 add_task(async function test_401_logout() {
@@ -137,6 +132,7 @@ add_task(async function test_credentials_changed_logout() {
 });
 
 add_task(function test_no_lastSync_pref() {
+  syncTestLogging();
   // Test reported error.
   Status.resetSync();
   errorHandler.dontIgnoreErrors = true;

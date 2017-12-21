@@ -105,6 +105,7 @@ const EHTestsCommon = {
   },
 
   async setUp(server) {
+    syncTestLogging();
     await configureIdentity({ username: "johndoe" }, server);
     return EHTestsCommon.generateAndUploadKeys();
   },

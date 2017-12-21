@@ -434,6 +434,7 @@ public:
             return;
         }
         uiThread->Dispatch(NewRunnableFunction(
+                "OnDetachRunnable",
                 static_cast<void(*)(const NPZCRef&)>(callDestroy),
                 mozilla::Move(npzc)), nsIThread::DISPATCH_NORMAL);
     }
