@@ -156,7 +156,11 @@ public:
                          bool aPreallocateChildren) const override;
 
   virtual void RemovedFromDocShell() override;
-  using mozilla::dom::DocumentOrShadowRoot::GetElementById;
+
+  virtual mozilla::dom::Element *GetElementById(const nsAString& aElementId) override
+  {
+    return nsDocument::GetElementById(aElementId);
+  }
 
   virtual void DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const override;
   // DocAddSizeOfIncludingThis is inherited from nsIDocument.

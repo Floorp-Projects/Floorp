@@ -183,7 +183,6 @@ class EventStateManager;
 
 namespace dom {
 
-struct CustomElementDefinition;
 class Animation;
 class CustomElementRegistry;
 class Link;
