@@ -19,7 +19,7 @@ ac_add_options --enable-mozsearch-plugin
 
 . "$topsrcdir/build/unix/mozconfig.stdcxx"
 
-export PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig:/usr/share/pkgconfig
+export PKG_CONFIG_LIBDIR=/usr/local/lib64/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig
 . $topsrcdir/build/unix/mozconfig.gtk
 
 . "$topsrcdir/build/mozconfig.common.override"
