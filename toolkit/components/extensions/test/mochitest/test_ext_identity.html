@@ -77,8 +77,13 @@ add_task(async function test_badAuthURI() {
       ],
     },
     async background() {
-      await browser.test.assertRejects(browser.identity.launchWebAuthFlow({interactive: true, url: "foobar"}),
-                                       "details.url is invalid", "invalid param url");
+      for (let url of ["foobar", "about:addons", "about:blank", "ftp://example.com/test"]) {
+        await browser.test.assertThrows(
+          () => { browser.identity.launchWebAuthFlow({interactive: true, url}); },
+          /Type error for parameter details/,
+          "details.url is invalid");
+      }
+
       browser.test.sendMessage("done");
     },
   });
