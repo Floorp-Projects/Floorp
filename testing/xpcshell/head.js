@@ -145,8 +145,8 @@ try {
       return this;
     },
     observe(msg) {
-      if (typeof do_print === "function")
-        do_print("CONSOLE_MESSAGE: (" + levelNames[msg.logLevel] + ") " + msg.toString());
+      if (typeof info === "function")
+        info("CONSOLE_MESSAGE: (" + levelNames[msg.logLevel] + ") " + msg.toString());
     }
   };
   Components.classes["@mozilla.org/consoleservice;1"]
@@ -435,7 +435,7 @@ function _setupDebuggerServer(breakpointFiles, callback) {
             sourceActor._getOrCreateBreakpointActor(new OriginalLocation(sourceActor, 1));
           }
         } catch (ex) {
-          do_print("Failed to initialize breakpoints: " + ex + "\n" + ex.stack);
+          info("Failed to initialize breakpoints: " + ex + "\n" + ex.stack);
         }
         break;
       case "xpcshell-test-devtools-shutdown":
@@ -459,14 +459,14 @@ function _initDebugging(port) {
   let initialized = false;
   let DebuggerServer = _setupDebuggerServer(_TEST_FILE, () => { initialized = true; });
 
-  do_print("");
-  do_print("*******************************************************************");
-  do_print("Waiting for the debugger to connect on port " + port);
-  do_print("");
-  do_print("To connect the debugger, open a Firefox instance, select 'Connect'");
-  do_print("from the Developer menu and specify the port as " + port);
-  do_print("*******************************************************************");
-  do_print("");
+  info("");
+  info("*******************************************************************");
+  info("Waiting for the debugger to connect on port " + port);
+  info("");
+  info("To connect the debugger, open a Firefox instance, select 'Connect'");
+  info("from the Developer menu and specify the port as " + port);
+  info("*******************************************************************");
+  info("");
 
   let AuthenticatorType = DebuggerServer.Authenticators.get("PROMPT");
   let authenticator = new AuthenticatorType.Server();
@@ -485,13 +485,13 @@ function _initDebugging(port) {
     if (initialized) {
       return true;
     }
-    do_print("Still waiting for debugger to connect...");
+    info("Still waiting for debugger to connect...");
     return false;
   });
   // NOTE: if you want to debug the harness itself, you can now add a 'debugger'
   // statement anywhere and it will stop - but we've already added a breakpoint
   // for the first line of the test scripts, so we just continue...
-  do_print("Debugger connected, starting test execution");
+  info("Debugger connected, starting test execution");
 }
 
 function _execute_test() {
@@ -671,7 +671,7 @@ function _wrap_with_quotes_if_necessary(val) {
 /**
  * Prints a message to the output log.
  */
-function do_print(msg, data) {
+function info(msg, data) {
   msg = _wrap_with_quotes_if_necessary(msg);
   data = data ? data : null;
   _testLogger.info(msg, data);
@@ -691,7 +691,7 @@ function do_timeout(delay, func) {
   new _Timer(func, Number(delay));
 }
 
-function do_execute_soon(callback, aName) {
+function executeSoon(callback, aName) {
   let funcName = (aName ? aName : callback.name);
   do_test_pending(funcName);
   var tm = Components.classes["@mozilla.org/thread-manager;1"]
@@ -1070,7 +1070,7 @@ function do_parse_document(aPath, aType) {
  * @param aFunction
  *        The function to be called when the test harness has finished running.
  */
-function do_register_cleanup(aFunction) {
+function registerCleanupFunction(aFunction) {
   _cleanupFunctions.push(aFunction);
 }
 
@@ -1448,7 +1448,7 @@ function run_next_test() {
                                "SKIP",
                                "SKIP",
                                _message);
-        do_execute_soon(run_next_test);
+        executeSoon(run_next_test);
         return;
       }
 
@@ -1480,8 +1480,8 @@ function run_next_test() {
   // For sane stacks during failures, we execute this code soon, but not now.
   // We do this now, before we call do_test_finished(), to ensure the pending
   // counter (_tests_pending) never reaches 0 while we still have tests to run
-  // (do_execute_soon bumps that counter).
-  do_execute_soon(_run_next_test, "run_next_test " + _gTestIndex);
+  // (executeSoon bumps that counter).
+  executeSoon(_run_next_test, "run_next_test " + _gTestIndex);
 
   if (_gRunningTest !== null) {
     // Close the previous test do_test_pending call.
