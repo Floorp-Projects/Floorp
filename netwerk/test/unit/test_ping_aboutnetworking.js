@@ -26,16 +26,16 @@ function test_sockets(serverSocket) {
   do_test_pending();
   gDashboard.requestSockets(function(data) {
     let index = -1;
-    do_print("requestSockets: " + JSON.stringify(data.sockets));
+    info("requestSockets: " + JSON.stringify(data.sockets));
     for (let i = 0; i < data.sockets.length; i++) {
       if (data.sockets[i].host == "127.0.0.1") {
         index = i;
         break;
       }
     }
-    do_check_neq(index, -1);
-    do_check_eq(data.sockets[index].port, serverSocket.port);
-    do_check_eq(data.sockets[index].tcp, 1);
+    Assert.notEqual(index, -1);
+    Assert.equal(data.sockets[index].port, serverSocket.port);
+    Assert.equal(data.sockets[index].tcp, 1);
 
     do_test_finished();
   });
@@ -48,7 +48,7 @@ function run_test() {
   // cache getting flushed behind our back
   ps.setBoolPref("network.notify.changed", false);
 
-  do_register_cleanup(function() {
+  registerCleanupFunction(function() {
     ps.clearUserPref("network.notify.changed");
   });
 
@@ -63,14 +63,14 @@ function run_test() {
       do_test_pending();
       gDashboard.requestDNSInfo(function(data) {
         let found = false;
-        do_print("requestDNSInfo: " + JSON.stringify(data.entries));
+        info("requestDNSInfo: " + JSON.stringify(data.entries));
         for (let i = 0; i < data.entries.length; i++) {
           if (data.entries[i].hostname == "localhost") {
             found = true;
             break;
           }
         }
-        do_check_eq(found, true);
+        Assert.equal(found, true);
 
         do_test_finished();
         test_sockets(serverSocket);

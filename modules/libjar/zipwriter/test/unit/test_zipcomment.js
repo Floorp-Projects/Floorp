@@ -13,15 +13,15 @@ function run_test()
   zipW.close();
 
   // Should have created a zip file
-  do_check_true(tmpFile.exists());
+  Assert.ok(tmpFile.exists());
 
   // Empty zip file should just be the end of central directory marker
   // and comment
-  do_check_eq(tmpFile.fileSize, ZIP_EOCDR_HEADER_SIZE + DATA.length);
+  Assert.equal(tmpFile.fileSize, ZIP_EOCDR_HEADER_SIZE + DATA.length);
 
   zipW.open(tmpFile, PR_RDWR);
   // Should have the set comment
-  do_check_eq(zipW.comment, DATA);
+  Assert.equal(zipW.comment, DATA);
   zipW.comment = DATA2;
   zipW.close();
 
@@ -30,5 +30,5 @@ function run_test()
 
   // Empty zip file should just be the end of central directory marker
   // and comment. This should now be shorter
-  do_check_eq(tmpFile.fileSize, ZIP_EOCDR_HEADER_SIZE + DATA2.length);
+  Assert.equal(tmpFile.fileSize, ZIP_EOCDR_HEADER_SIZE + DATA2.length);
 }

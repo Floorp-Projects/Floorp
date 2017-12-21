@@ -650,20 +650,6 @@ public:
   virtual mozilla::dom::ShadowRoot *GetContainingShadow() const = 0;
 
   /**
-   * Gets an array of destination insertion points where this content
-   * is distributed by web component distribution algorithms.
-   * The array is created if it does not already exist.
-   */
-  virtual nsTArray<nsIContent*> &DestInsertionPoints() = 0;
-
-  /**
-   * Same as DestInsertionPoints except that this method will return
-   * null if the array of destination insertion points does not already
-   * exist.
-   */
-  virtual nsTArray<nsIContent*> *GetExistingDestInsertionPoints() const = 0;
-
-  /**
    * Gets the assigned slot associated with this content.
    *
    * @return The assigned slot element or null.

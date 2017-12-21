@@ -68,7 +68,7 @@ function setNextCookie(request, data, context)
     i = 0;
     checkCookie();
   } else {
-    do_print("setNextCookie:i=" + i);
+    info("setNextCookie:i=" + i);
     setCookie();
   }
 }
@@ -101,8 +101,8 @@ function completeCheckCookie(request, data, context) {
     }
   }
   // If we get here we're good.
-  do_print("Saw only correct cookie '" + expectedCookie + "'");
-  do_check_true(true);
+  info("Saw only correct cookie '" + expectedCookie + "'");
+  Assert.ok(true);
 
 
   if (++i == tests.length) {

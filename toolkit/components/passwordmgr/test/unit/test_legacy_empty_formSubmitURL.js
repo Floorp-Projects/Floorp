@@ -71,25 +71,25 @@ add_task(function test_search_all_wildcard()
 {
   // Search a given formSubmitURL on any host.
   let matchData = newPropertyBag({ formSubmitURL: "http://www.example.com" });
-  do_check_eq(Services.logins.searchLogins({}, matchData).length, 2);
+  Assert.equal(Services.logins.searchLogins({}, matchData).length, 2);
 
-  do_check_eq(Services.logins.findLogins({}, "", "http://www.example.com",
-                                         null).length, 2);
+  Assert.equal(Services.logins.findLogins({}, "", "http://www.example.com",
+                                          null).length, 2);
 
-  do_check_eq(Services.logins.countLogins("", "http://www.example.com",
-                                          null), 2);
+  Assert.equal(Services.logins.countLogins("", "http://www.example.com",
+                                           null), 2);
 
   // Restrict the search to one host.
   matchData.setProperty("hostname", "http://any.example.com");
-  do_check_eq(Services.logins.searchLogins({}, matchData).length, 1);
+  Assert.equal(Services.logins.searchLogins({}, matchData).length, 1);
 
-  do_check_eq(Services.logins.findLogins({}, "http://any.example.com",
-                                             "http://www.example.com",
-                                             null).length, 1);
+  Assert.equal(Services.logins.findLogins({}, "http://any.example.com",
+                                              "http://www.example.com",
+                                              null).length, 1);
 
-  do_check_eq(Services.logins.countLogins("http://any.example.com",
-                                          "http://www.example.com",
-                                          null), 1);
+  Assert.equal(Services.logins.countLogins("http://any.example.com",
+                                           "http://www.example.com",
+                                           null), 1);
 });
 
 /**

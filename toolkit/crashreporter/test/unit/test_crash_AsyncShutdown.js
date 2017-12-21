@@ -29,13 +29,13 @@ function setup_crash() {
 }
 
 function after_crash(mdump, extra) {
-  do_print("after crash: " + extra.AsyncShutdownTimeout);
-  let info = JSON.parse(extra.AsyncShutdownTimeout);
-  Assert.equal(info.phase, "testing-async-shutdown-crash");
-  Assert.equal(info.conditions[0].name, "A blocker that is never satisfied");
+  info("after crash: " + extra.AsyncShutdownTimeout);
+  let data = JSON.parse(extra.AsyncShutdownTimeout);
+  Assert.equal(data.phase, "testing-async-shutdown-crash");
+  Assert.equal(data.conditions[0].name, "A blocker that is never satisfied");
   // This test spawns subprocesses by using argument "-e" of xpcshell, so
   // this is the filename known to xpcshell.
-  Assert.equal(info.conditions[0].filename, "-e");
+  Assert.equal(data.conditions[0].filename, "-e");
 }
 
 // Test that AsyncShutdown + OS.File reports errors correctly, in a case in which
@@ -57,16 +57,16 @@ function setup_osfile_crash_noerror() {
 }
 
 function after_osfile_crash_noerror(mdump, extra) {
-  do_print("after OS.File crash: " + extra.AsyncShutdownTimeout);
-  let info = JSON.parse(extra.AsyncShutdownTimeout);
-  let state = info.conditions[0].state;
-  do_print("Keys: " + Object.keys(state).join(", "));
-  do_check_eq(info.phase, "profile-before-change");
-  do_check_true(state.launched);
-  do_check_false(state.shutdown);
-  do_check_true(state.worker);
-  do_check_true(!!state.latestSent);
-  do_check_eq(state.latestSent[1], "getCurrentDirectory");
+  info("after OS.File crash: " + extra.AsyncShutdownTimeout);
+  let data = JSON.parse(extra.AsyncShutdownTimeout);
+  let state = data.conditions[0].state;
+  info("Keys: " + Object.keys(state).join(", "));
+  Assert.equal(data.phase, "profile-before-change");
+  Assert.ok(state.launched);
+  Assert.ok(!state.shutdown);
+  Assert.ok(state.worker);
+  Assert.ok(!!state.latestSent);
+  Assert.equal(state.latestSent[1], "getCurrentDirectory");
 }
 
 // Test that AsyncShutdown + OS.File reports errors correctly, in a case in which
@@ -88,15 +88,15 @@ function setup_osfile_crash_exn() {
 }
 
 function after_osfile_crash_exn(mdump, extra) {
-  do_print("after OS.File crash: " + extra.AsyncShutdownTimeout);
-  let info = JSON.parse(extra.AsyncShutdownTimeout);
-  let state = info.conditions[0].state;
-  do_print("Keys: " + Object.keys(state).join(", "));
-  do_check_eq(info.phase, "profile-before-change");
-  do_check_false(state.shutdown);
-  do_check_true(state.worker);
-  do_check_true(!!state.latestSent);
-  do_check_eq(state.latestSent[1], "read");
+  info("after OS.File crash: " + extra.AsyncShutdownTimeout);
+  let data = JSON.parse(extra.AsyncShutdownTimeout);
+  let state = data.conditions[0].state;
+  info("Keys: " + Object.keys(state).join(", "));
+  Assert.equal(data.phase, "profile-before-change");
+  Assert.ok(!state.shutdown);
+  Assert.ok(state.worker);
+  Assert.ok(!!state.latestSent);
+  Assert.equal(state.latestSent[1], "read");
 }
 
 function run_test() {

@@ -47,8 +47,8 @@ var testData =
 
 function responseHandler(request, buffer)
 {
-  do_check_eq(buffer, testData[testNum].data);
-  do_check_eq(request.QueryInterface(Ci.nsIChannel).contentType,
+  Assert.equal(buffer, testData[testNum].data);
+  Assert.equal(request.QueryInterface(Ci.nsIChannel).contentType,
   testData[testNum].type);
   if (++testNum == numTests)
     httpserver.stop(do_test_finished);
@@ -82,7 +82,7 @@ var multipartListener = {
   onStopRequest: function(request, context, status) {
     this._index++;
     // Second part should be last part
-    do_check_eq(request.QueryInterface(Ci.nsIMultiPartChannel).isLastPart, this._index == testData.length);
+    Assert.equal(request.QueryInterface(Ci.nsIMultiPartChannel).isLastPart, this._index == testData.length);
     try {
       responseHandler(request, this._buffer);
     } catch (ex) {

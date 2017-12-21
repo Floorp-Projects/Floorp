@@ -18,15 +18,15 @@ add_test(function test_toJSON() {
 
   _("Verify that the JSON representation contains the WBO properties, but not TTL.");
   let json = JSON.parse(JSON.stringify(wbo));
-  do_check_eq(json.modified, 12345);
-  do_check_eq(json.sortindex, 42);
-  do_check_eq(json.payload, "{}");
-  do_check_false("ttl" in json);
+  Assert.equal(json.modified, 12345);
+  Assert.equal(json.sortindex, 42);
+  Assert.equal(json.payload, "{}");
+  Assert.equal(false, "ttl" in json);
 
   _("Set a TTL, make sure it's present in the JSON representation.");
   wbo.ttl = 30 * 60;
   json = JSON.parse(JSON.stringify(wbo));
-  do_check_eq(json.ttl, 30 * 60);
+  Assert.equal(json.ttl, 30 * 60);
   run_next_test();
 });
 
@@ -53,24 +53,24 @@ add_task(async function test_fetch() {
     _("Fetching a WBO record");
     let rec = new WBORecord("coll", "record");
     await rec.fetch(Service.resource(server.baseURI + "/record"));
-    do_check_eq(rec.id, "asdf-1234-asdf-1234"); // NOT "record"!
+    Assert.equal(rec.id, "asdf-1234-asdf-1234"); // NOT "record"!
 
-    do_check_eq(rec.modified, 2454725.98283);
-    do_check_eq(typeof(rec.payload), "object");
-    do_check_eq(rec.payload.cheese, "roquefort");
+    Assert.equal(rec.modified, 2454725.98283);
+    Assert.equal(typeof(rec.payload), "object");
+    Assert.equal(rec.payload.cheese, "roquefort");
 
     _("Fetching a WBO record using the record manager");
     let rec2 = await Service.recordManager.get(server.baseURI + "/record2");
-    do_check_eq(rec2.id, "record2");
-    do_check_eq(rec2.modified, 2454725.98284);
-    do_check_eq(typeof(rec2.payload), "object");
-    do_check_eq(rec2.payload.cheese, "gruyere");
-    do_check_eq(Service.recordManager.response.status, 200);
+    Assert.equal(rec2.id, "record2");
+    Assert.equal(rec2.modified, 2454725.98284);
+    Assert.equal(typeof(rec2.payload), "object");
+    Assert.equal(rec2.payload.cheese, "gruyere");
+    Assert.equal(Service.recordManager.response.status, 200);
 
     // Testing collection extraction.
     _("Extracting collection.");
     let rec3 = new WBORecord("tabs", "foo"); // Create through constructor.
-    do_check_eq(rec3.collection, "tabs");
+    Assert.equal(rec3.collection, "tabs");
 
   } finally {
     await promiseStopServer(server);

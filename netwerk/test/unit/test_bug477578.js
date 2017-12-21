@@ -45,6 +45,6 @@ function run_test() {
 
   for (var i = 0; i < testMethods.length; i++) {
     chan.requestMethod = testMethods[i];
-    do_check_eq(chan.requestMethod, testMethods[i]);
+    Assert.equal(chan.requestMethod, testMethods[i]);
   }
 }

@@ -58,16 +58,16 @@ function run_test()
 
 function start_normal(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 200);
-  do_check_eq(ch.getResponseHeader("Content-Length"), "21");
-  do_check_eq(ch.getResponseHeader("Content-Type"), "text/plain");
+  Assert.equal(ch.responseStatus, 200);
+  Assert.equal(ch.getResponseHeader("Content-Length"), "21");
+  Assert.equal(ch.getResponseHeader("Content-Type"), "text/plain");
 }
 
 function stop_normal(ch, cx, status, data)
 {
-  do_check_eq(data.length, 21);
-  do_check_eq(data[0],  0x54);
-  do_check_eq(data[20], 0x0a);
+  Assert.equal(data.length, 21);
+  Assert.equal(data[0],  0x54);
+  Assert.equal(data[20], 0x0a);
 }
 
 function init_byterange(ch)
@@ -77,17 +77,17 @@ function init_byterange(ch)
 
 function start_byterange(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 206);
-  do_check_eq(ch.getResponseHeader("Content-Length"), "11");
-  do_check_eq(ch.getResponseHeader("Content-Type"), "text/plain");
-  do_check_eq(ch.getResponseHeader("Content-Range"), "bytes 10-20/21");
+  Assert.equal(ch.responseStatus, 206);
+  Assert.equal(ch.getResponseHeader("Content-Length"), "11");
+  Assert.equal(ch.getResponseHeader("Content-Type"), "text/plain");
+  Assert.equal(ch.getResponseHeader("Content-Range"), "bytes 10-20/21");
 }
 
 function stop_byterange(ch, cx, status, data)
 {
-  do_check_eq(data.length, 11);
-  do_check_eq(data[0], 0x64);
-  do_check_eq(data[10], 0x0a);
+  Assert.equal(data.length, 11);
+  Assert.equal(data[0], 0x64);
+  Assert.equal(data[10], 0x0a);
 }
 
 function init_byterange2(ch)
@@ -97,7 +97,7 @@ function init_byterange2(ch)
 
 function start_byterange2(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 416);
+  Assert.equal(ch.responseStatus, 416);
 }
 
 function init_byterange3(ch)
@@ -107,21 +107,21 @@ function init_byterange3(ch)
 
 function start_byterange3(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 206);
-  do_check_eq(ch.getResponseHeader("Content-Length"), "6");
-  do_check_eq(ch.getResponseHeader("Content-Type"), "text/plain");
-  do_check_eq(ch.getResponseHeader("Content-Range"), "bytes 10-15/21");
+  Assert.equal(ch.responseStatus, 206);
+  Assert.equal(ch.getResponseHeader("Content-Length"), "6");
+  Assert.equal(ch.getResponseHeader("Content-Type"), "text/plain");
+  Assert.equal(ch.getResponseHeader("Content-Range"), "bytes 10-15/21");
 }
 
 function stop_byterange3(ch, cx, status, data)
 {
-  do_check_eq(data.length, 6);
-  do_check_eq(data[0], 0x64);
-  do_check_eq(data[1], 0x20);
-  do_check_eq(data[2], 0x62);
-  do_check_eq(data[3], 0x65);
-  do_check_eq(data[4], 0x20);
-  do_check_eq(data[5], 0x73);
+  Assert.equal(data.length, 6);
+  Assert.equal(data[0], 0x64);
+  Assert.equal(data[1], 0x20);
+  Assert.equal(data[2], 0x62);
+  Assert.equal(data[3], 0x65);
+  Assert.equal(data[4], 0x20);
+  Assert.equal(data[5], 0x73);
 }
 
 function init_byterange4(ch)
@@ -131,7 +131,7 @@ function init_byterange4(ch)
 
 function start_byterange4(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 400);
+  Assert.equal(ch.responseStatus, 400);
 }
 
 function init_byterange5(ch)
@@ -141,17 +141,17 @@ function init_byterange5(ch)
 
 function start_byterange5(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 206);
+  Assert.equal(ch.responseStatus, 206);
 }
 
 function stop_byterange5(ch, cx, status, data)
 {
-  do_check_eq(data.length, 5);
-  do_check_eq(data[0], 0x65);
-  do_check_eq(data[1], 0x65);
-  do_check_eq(data[2], 0x6e);
-  do_check_eq(data[3], 0x2e);
-  do_check_eq(data[4], 0x0a);
+  Assert.equal(data.length, 5);
+  Assert.equal(data[0], 0x65);
+  Assert.equal(data[1], 0x65);
+  Assert.equal(data[2], 0x6e);
+  Assert.equal(data[3], 0x2e);
+  Assert.equal(data[4], 0x0a);
 }
 
 function init_byterange6(ch)
@@ -161,14 +161,14 @@ function init_byterange6(ch)
 
 function start_byterange6(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 200);
+  Assert.equal(ch.responseStatus, 200);
 }
 
 function stop_byterange6(ch, cx, status, data)
 {
-  do_check_eq(data.length, 21);
-  do_check_eq(data[0],  0x54);
-  do_check_eq(data[20], 0x0a);
+  Assert.equal(data.length, 21);
+  Assert.equal(data[0],  0x54);
+  Assert.equal(data[20], 0x0a);
 }
 
 function init_byterange7(ch)
@@ -178,21 +178,21 @@ function init_byterange7(ch)
 
 function start_byterange7(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 206);
-  do_check_eq(ch.getResponseHeader("Content-Length"), "6");
-  do_check_eq(ch.getResponseHeader("Content-Type"), "text/plain");
-  do_check_eq(ch.getResponseHeader("Content-Range"), "bytes 0-5/21");
+  Assert.equal(ch.responseStatus, 206);
+  Assert.equal(ch.getResponseHeader("Content-Length"), "6");
+  Assert.equal(ch.getResponseHeader("Content-Type"), "text/plain");
+  Assert.equal(ch.getResponseHeader("Content-Range"), "bytes 0-5/21");
 }
 
 function stop_byterange7(ch, cx, status, data)
 {
-  do_check_eq(data.length, 6);
-  do_check_eq(data[0], 0x54);
-  do_check_eq(data[1], 0x68);
-  do_check_eq(data[2], 0x69);
-  do_check_eq(data[3], 0x73);
-  do_check_eq(data[4], 0x20);
-  do_check_eq(data[5], 0x73);
+  Assert.equal(data.length, 6);
+  Assert.equal(data[0], 0x54);
+  Assert.equal(data[1], 0x68);
+  Assert.equal(data[2], 0x69);
+  Assert.equal(data[3], 0x73);
+  Assert.equal(data[4], 0x20);
+  Assert.equal(data[5], 0x73);
 }
 
 function init_byterange8(ch)
@@ -202,14 +202,14 @@ function init_byterange8(ch)
 
 function start_byterange8(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 206);
-  do_check_eq(ch.getResponseHeader("Content-Range"), "bytes 20-20/21");
+  Assert.equal(ch.responseStatus, 206);
+  Assert.equal(ch.getResponseHeader("Content-Range"), "bytes 20-20/21");
 }
 
 function stop_byterange8(ch, cx, status, data)
 {
-  do_check_eq(data.length, 1);
-  do_check_eq(data[0], 0x0a);
+  Assert.equal(data.length, 1);
+  Assert.equal(data[0], 0x0a);
 }
 
 function init_byterange9(ch)
@@ -219,13 +219,13 @@ function init_byterange9(ch)
 
 function start_byterange9(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 206);
+  Assert.equal(ch.responseStatus, 206);
 }
 
 function stop_byterange9(ch, cx, status, data)
 {
-  do_check_eq(data.length, 1);
-  do_check_eq(data[0], 0x0a);
+  Assert.equal(data.length, 1);
+  Assert.equal(data[0], 0x0a);
 }
 
 function init_byterange10(ch)
@@ -235,7 +235,7 @@ function init_byterange10(ch)
 
 function start_byterange10(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 400);
+  Assert.equal(ch.responseStatus, 400);
 }
 
 function init_byterange11(ch)
@@ -245,25 +245,25 @@ function init_byterange11(ch)
 
 function start_byterange11(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 206);
+  Assert.equal(ch.responseStatus, 206);
 }
 
 function stop_byterange11(ch, cx, status, data)
 {
-  do_check_eq(data.length, 21);
-  do_check_eq(data[0],  0x54);
-  do_check_eq(data[20], 0x0a);
+  Assert.equal(data.length, 21);
+  Assert.equal(data[0],  0x54);
+  Assert.equal(data[20], 0x0a);
 }
 
 function start_byterange12(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 200);
-  do_check_eq(ch.getResponseHeader("Content-Length"), "0");
+  Assert.equal(ch.responseStatus, 200);
+  Assert.equal(ch.getResponseHeader("Content-Length"), "0");
 }
 
 function stop_byterange12(ch, cx, status, data)
 {
-  do_check_eq(data.length, 0);
+  Assert.equal(data.length, 0);
 }
 
 function init_byterange13(ch)
@@ -273,6 +273,6 @@ function init_byterange13(ch)
 
 function start_byterange13(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 416);
-  do_check_eq(ch.getResponseHeader("X-SJS-Header"), "customized");
+  Assert.equal(ch.responseStatus, 416);
+  Assert.equal(ch.getResponseHeader("X-SJS-Header"), "customized");
 }

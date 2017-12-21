@@ -1,7 +1,14 @@
-const initStore = require("content-src/lib/init-store");
-const {MERGE_STORE_ACTION, EARLY_QUEUED_ACTIONS, rehydrationMiddleware, queueEarlyMessageMiddleware} = initStore;
-const {GlobalOverrider, addNumberReducer} = require("test/unit/utils");
-const {actionCreators: ac, actionTypes: at} = require("common/Actions.jsm");
+import {actionCreators as ac, actionTypes as at} from "common/Actions.jsm";
+import {addNumberReducer, GlobalOverrider} from "test/unit/utils";
+import {
+  EARLY_QUEUED_ACTIONS,
+  INCOMING_MESSAGE_NAME,
+  initStore,
+  MERGE_STORE_ACTION,
+  OUTGOING_MESSAGE_NAME,
+  queueEarlyMessageMiddleware,
+  rehydrationMiddleware
+} from "content-src/lib/init-store";
 
 describe("initStore", () => {
   let globals;
@@ -18,10 +25,10 @@ describe("initStore", () => {
     assert.property(store.getState(), "number");
   });
   it("should add a listener that dispatches actions", () => {
-    assert.calledWith(global.addMessageListener, initStore.INCOMING_MESSAGE_NAME);
+    assert.calledWith(global.addMessageListener, INCOMING_MESSAGE_NAME);
     const listener = global.addMessageListener.firstCall.args[1];
     globals.sandbox.spy(store, "dispatch");
-    const message = {name: initStore.INCOMING_MESSAGE_NAME, data: {type: "FOO"}};
+    const message = {name: INCOMING_MESSAGE_NAME, data: {type: "FOO"}};
 
     listener(message);
 
@@ -43,19 +50,19 @@ describe("initStore", () => {
     globals.sandbox.stub(global.console, "error");
     globals.sandbox.stub(store, "dispatch").throws(Error("failed"));
 
-    const message = {name: initStore.INCOMING_MESSAGE_NAME, data: {type: MERGE_STORE_ACTION}};
+    const message = {name: INCOMING_MESSAGE_NAME, data: {type: MERGE_STORE_ACTION}};
     callback(message);
 
     assert.calledOnce(global.console.error);
   });
   it("should replace the state if a MERGE_STORE_ACTION is dispatched", () => {
-    store.dispatch({type: initStore.MERGE_STORE_ACTION, data: {number: 42}});
+    store.dispatch({type: MERGE_STORE_ACTION, data: {number: 42}});
     assert.deepEqual(store.getState(), {number: 42});
   });
   it("should send out SendToMain actions", () => {
     const action = ac.SendToMain({type: "FOO"});
     store.dispatch(action);
-    assert.calledWith(global.sendAsyncMessage, initStore.OUTGOING_MESSAGE_NAME, action);
+    assert.calledWith(global.sendAsyncMessage, OUTGOING_MESSAGE_NAME, action);
   });
   it("should not send out other types of actions", () => {
     store.dispatch({type: "FOO"});

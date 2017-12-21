@@ -105,6 +105,10 @@
   padding: 0;
 }
 
+.theme-firebug .requests-list-headers-wrapper {
+  padding: 0 !important;
+}
+
 .requests-list-headers {
   display: table-header-group;
   height: 24px;

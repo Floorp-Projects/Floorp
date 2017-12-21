@@ -115,9 +115,7 @@ this.Status = {
 
   resetSync: function resetSync() {
     // Logger setup.
-    let logPref = PREFS_BRANCH + "log.logger.status";
-    let logLevel = Services.prefs.getCharPref(logPref, "Trace");
-    this._log.level = Log.Level[logLevel];
+    this._log.manageLevelFromPref("services.sync.log.logger.status");
 
     this._log.info("Resetting Status.");
     this.service = STATUS_OK;

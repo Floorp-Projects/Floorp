@@ -265,12 +265,33 @@ function Logger(name, repository) {
   this._repository = repository;
 }
 Logger.prototype = {
+  _levelPrefName: null,
+  _levelPrefValue: null,
+
   get name() {
     return this._name;
   },
 
   _level: null,
   get level() {
+    if (this._levelPrefName) {
+      // We've been asked to use a preference to configure the logs. If the
+      // pref has a value we use it, otherwise we continue to use the parent.
+      const lpv = this._levelPrefValue;
+      if (lpv) {
+        const levelValue = Log.Level[lpv];
+        if (levelValue) {
+          // stash it in _level just in case a future value of the pref is
+          // invalid, in which case we end up continuing to use this value.
+          this._level = levelValue;
+          return levelValue;
+        }
+      } else {
+        // in case the pref has transitioned from a value to no value, we reset
+        // this._level and fall through to using the parent.
+        this._level = null;
+      }
+    }
     if (this._level != null)
       return this._level;
     if (this.parent)
@@ -279,6 +300,15 @@ Logger.prototype = {
     return Log.Level.All;
   },
   set level(level) {
+    if (this._levelPrefName) {
+      // I guess we could honor this by nuking this._levelPrefValue, but it
+      // almost certainly implies confusion, so we'll warn and ignore.
+      dumpError(`Log warning: The log '${this.name}' is configured to use ` +
+                `the preference '${this._levelPrefName}' - you must adjust ` +
+                `the level by setting this preference, not by using the ` +
+                `level setter`);
+      return;
+    }
     this._level = level;
   },
 
@@ -300,6 +330,21 @@ Logger.prototype = {
     this._parent = parent;
     parent.children.push(this);
     this.updateAppenders();
+  },
+
+  manageLevelFromPref(prefName) {
+    if (prefName == this._levelPrefName) {
+      // We've already configured this log with an observer for that pref.
+      return;
+    }
+    if (this._levelPrefName) {
+      dumpError(`The log '${this.name}' is already configured with the ` +
+                `preference '${this._levelPrefName}' - ignoring request to ` +
+                `also use the preference '${prefName}'`);
+      return;
+    }
+    this._levelPrefName = prefName;
+    XPCOMUtils.defineLazyPreferenceGetter(this, "_levelPrefValue", prefName);
   },
 
   updateAppenders: function updateAppenders() {

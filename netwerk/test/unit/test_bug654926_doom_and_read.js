@@ -26,7 +26,7 @@ function make_input_stream_scriptable(input) {
 
 function write_datafile(status, entry)
 {
-  do_check_eq(status, Cr.NS_OK);
+  Assert.equal(status, Cr.NS_OK);
   var os = entry.openOutputStream(0);
   var data = gen_1MiB();
 
@@ -44,7 +44,7 @@ function write_datafile(status, entry)
 
 function test_read_after_doom(status, entry)
 {
-  do_check_eq(status, Cr.NS_OK);
+  Assert.equal(status, Cr.NS_OK);
   var os = entry.openOutputStream(entry.dataSize);
   var data = gen_1MiB();
 
@@ -55,7 +55,7 @@ function test_read_after_doom(status, entry)
 
   var is = entry.openInputStream(0);
   pumpReadStream(is, function(read) {
-    do_check_eq(read.length, 2*1024*1024);
+    Assert.equal(read.length, 2*1024*1024);
     is.close();
 
     entry.close();

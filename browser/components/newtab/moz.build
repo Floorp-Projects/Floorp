@@ -17,7 +17,6 @@ EXTRA_JS_MODULES += [
     'NewTabPrefsProvider.jsm',
     'NewTabRemoteResources.jsm',
     'NewTabSearchProvider.jsm',
-    'NewTabURL.jsm',
     'NewTabWebChannel.jsm'
 ]
 

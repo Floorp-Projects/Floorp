@@ -15,7 +15,7 @@ add_task(async function() {
   promises.push(new Promise(resolve => {
     let observer = new NavHistoryObserver();
     observer.onVisit = uri => {
-      do_print("Got visit for " + uri.spec);
+      info("Got visit for " + uri.spec);
       let observers = PlacesUtils.history.getObservers();
       let observersCount = observers.length;
       Assert.ok(observersCount > initialObservers.length);
@@ -36,7 +36,7 @@ add_task(async function() {
     PlacesUtils.history.addObserver(observer);
   }));
 
-  do_print("Add a visit");
+  info("Add a visit");
   await PlacesTestUtils.addVisits(uri("http://typed.mozilla.org"));
   await Promise.all(promises);
 });

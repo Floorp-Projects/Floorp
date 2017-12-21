@@ -57,7 +57,7 @@ function redirectHandler(metadata, response)
 // finally check we got fallback content
 function finish_test(request, buffer)
 {
-  do_check_eq(buffer, responseBody);
+  Assert.equal(buffer, responseBody);
   httpServer.stop(do_test_finished);
 }
 

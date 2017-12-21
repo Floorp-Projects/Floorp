@@ -54,7 +54,7 @@ add_task(async function test_embedded_webextension_utils() {
 
   // Remove the generated xpi file and flush the its jar cache
   // on cleanup.
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.obs.notifyObservers(fakeHybridAddonFile, "flush-cache-entry");
     fakeHybridAddonFile.remove(false);
   });
@@ -71,7 +71,7 @@ add_task(async function test_embedded_webextension_utils() {
   equal(EmbeddedExtensionManager.embeddedExtensionsByAddonId.size, 1,
         "Got the expected number of tracked embedded extension instances");
 
-  do_print("waiting embeddedExtension.startup");
+  info("waiting embeddedExtension.startup");
   let embeddedExtensionAPI = await embeddedExtension.startup();
   ok(embeddedExtensionAPI, "Got the embeddedExtensionAPI object");
 
@@ -103,9 +103,9 @@ add_task(async function test_embedded_webextension_utils() {
     port.onDisconnect.addListener(resolve);
   });
 
-  do_print("Wait for the disconnect port event");
+  info("Wait for the disconnect port event");
   await waitForDisconnect;
-  do_print("Got the disconnect port event");
+  info("Got the disconnect port event");
 
   await embeddedExtension.shutdown();
 
@@ -116,7 +116,7 @@ add_task(async function test_embedded_webextension_utils() {
 async function createManifestErrorTestCase(id, xpi, expectedError) {
   // Remove the generated xpi file and flush the its jar cache
   // on cleanup.
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Services.obs.notifyObservers(xpi, "flush-cache-entry");
     xpi.remove(false);
   });

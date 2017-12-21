@@ -58,30 +58,30 @@ function contentHandler(metadata, response)
 
 function check_response(path, request, buffer, expectedExpiration, continuation)
 {
-  do_check_eq(buffer, responseBody);
+  Assert.equal(buffer, responseBody);
 
   // Entry is always there, old cache wrapping code does session->SetDoomEntriesIfExpired(false),
   // just check it's not persisted or is expired (dep on the test).
   asyncOpenCacheEntry(path, "disk", Ci.nsICacheStorage.OPEN_READONLY, null, function(status, entry) {
-    do_check_eq(status, 0);
+    Assert.equal(status, 0);
 
     // Expired entry is on disk, no-store entry is in memory
-    do_check_eq(entry.persistent, expectedExpiration);
+    Assert.equal(entry.persistent, expectedExpiration);
 
     // Do the request again and check the server handler is called appropriately
     var chan = make_channel(path);
     chan.asyncOpen2(new ChannelListener(function(request, buffer) {
-      do_check_eq(buffer, responseBody);
+      Assert.equal(buffer, responseBody);
 
       if (expectedExpiration) {
         // Handler had to be called second time
-        do_check_eq(redirectHandler_ExpiresInPast_calls, 2);
+        Assert.equal(redirectHandler_ExpiresInPast_calls, 2);
       }
       else {
         // Handler had to be called second time (no-store forces validate),
         // and we are just in memory
-        do_check_eq(redirectHandler_NoStore_calls, 2);
-        do_check_true(!entry.persistent);
+        Assert.equal(redirectHandler_NoStore_calls, 2);
+        Assert.ok(!entry.persistent);
       }
 
       continuation();

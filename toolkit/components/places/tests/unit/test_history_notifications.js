@@ -38,7 +38,7 @@ add_task(async function locked() {
     try {
       db.remove(false);
     } catch (e) {
-      do_print("Unable to remove dummy places.sqlite");
+      info("Unable to remove dummy places.sqlite");
     }
   }
 });

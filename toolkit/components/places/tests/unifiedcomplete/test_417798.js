@@ -16,32 +16,32 @@ add_task(async function test_javascript_match() {
   await addBookmark({ uri: uri2,
                       title: "Title with javascript:" });
 
-  do_print("Match non-javascript: with plain search");
+  info("Match non-javascript: with plain search");
   await check_autocomplete({
     search: "a",
     matches: [ { uri: uri1, title: "Title with javascript:" } ]
   });
 
-  do_print("Match non-javascript: with almost javascript:");
+  info("Match non-javascript: with almost javascript:");
   await check_autocomplete({
     search: "javascript",
     matches: [ { uri: uri1, title: "Title with javascript:" } ]
   });
 
-  do_print("Match javascript:");
+  info("Match javascript:");
   await check_autocomplete({
     search: "javascript:",
     matches: [ { uri: uri1, title: "Title with javascript:" },
                { uri: uri2, title: "Title with javascript:", style: [ "bookmark" ]} ]
   });
 
-  do_print("Match nothing with non-first javascript:");
+  info("Match nothing with non-first javascript:");
   await check_autocomplete({
     search: "5 javascript:",
     matches: [ ]
   });
 
-  do_print("Match javascript: with multi-word search");
+  info("Match javascript: with multi-word search");
   await check_autocomplete({
     search: "javascript: 5",
     matches: [ { uri: uri2, title: "Title with javascript:", style: [ "bookmark" ]} ]

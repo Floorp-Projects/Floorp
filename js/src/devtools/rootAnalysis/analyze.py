@@ -32,6 +32,8 @@ def env(config):
     e['XDB'] = '%(sixgill_bin)s/xdb.so' % config
     e['SOURCE'] = config['source']
     e['ANALYZED_OBJDIR'] = config['objdir']
+    bindir = os.path.dirname(config['js'])
+    e['LD_LIBRARY_PATH'] = ':'.join(p for p in (e.get('LD_LIBRARY_PATH'), bindir) if p)
     return e
 
 def fill(command, config):

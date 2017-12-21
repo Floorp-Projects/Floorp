@@ -10,16 +10,16 @@ function run_test() {
       crashReporter.annotateCrashReport("TestingOOMCrash", "Yes");
     },
     function(mdump, extra) {
-      do_check_eq(extra.TestingOOMCrash, "Yes");
-      do_check_true("OOMAllocationSize" in extra);
-      do_check_true(Number(extra.OOMAllocationSize) > 0);
-      do_check_true("SystemMemoryUsePercentage" in extra);
-      do_check_true("TotalVirtualMemory" in extra);
-      do_check_true("AvailableVirtualMemory" in extra);
-      do_check_true("TotalPageFile" in extra);
-      do_check_true("AvailablePageFile" in extra);
-      do_check_true("TotalPhysicalMemory" in extra);
-      do_check_true("AvailablePhysicalMemory" in extra);
+      Assert.equal(extra.TestingOOMCrash, "Yes");
+      Assert.ok("OOMAllocationSize" in extra);
+      Assert.ok(Number(extra.OOMAllocationSize) > 0);
+      Assert.ok("SystemMemoryUsePercentage" in extra);
+      Assert.ok("TotalVirtualMemory" in extra);
+      Assert.ok("AvailableVirtualMemory" in extra);
+      Assert.ok("TotalPageFile" in extra);
+      Assert.ok("AvailablePageFile" in extra);
+      Assert.ok("TotalPhysicalMemory" in extra);
+      Assert.ok("AvailablePhysicalMemory" in extra);
 
     },
     true);

@@ -15,7 +15,7 @@ function run_test() {
 
 add_task(async function test_registrations_error() {
   let db = PushServiceWebSocket.newPushDB();
-  do_register_cleanup(() => {return db.drop().then(_ => db.close());});
+  registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
 
   PushService.init({
     serverURI: "wss://push.example.org/",

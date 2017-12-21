@@ -27,7 +27,7 @@ function run_test() {
       function (response, tabClient, threadClient) {
         gThreadClient = threadClient;
         gThreadClient.reconfigure({ observeAsmJS: true }, function (response) {
-          do_check_eq(!!response.error, false);
+          Assert.equal(!!response.error, false);
           test_pause_frame();
         });
       });
@@ -38,16 +38,16 @@ function run_test() {
 function test_pause_frame() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     gThreadClient.getFrames(0, null, function (frameResponse) {
-      do_check_eq(frameResponse.frames.length, 4);
+      Assert.equal(frameResponse.frames.length, 4);
 
       let wasmFrame = frameResponse.frames[1];
-      do_check_eq(wasmFrame.type, "wasmcall");
-      do_check_eq(wasmFrame.this, undefined);
+      Assert.equal(wasmFrame.type, "wasmcall");
+      Assert.equal(wasmFrame.this, undefined);
 
       let location = wasmFrame.where;
-      do_check_eq(location.line > 0, true);
-      do_check_eq(location.column > 0, true);
-      do_check_eq(/^wasm:(?:[^:]*:)*?[0-9a-f]{16}$/.test(location.source.url), true);
+      Assert.equal(location.line > 0, true);
+      Assert.equal(location.column > 0, true);
+      Assert.equal(/^wasm:(?:[^:]*:)*?[0-9a-f]{16}$/.test(location.source.url), true);
 
       finishClient(gClient);
     });

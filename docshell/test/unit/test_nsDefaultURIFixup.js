@@ -72,7 +72,7 @@ add_task(function test_unset_pref_fixes_typos() {
     let result =
       urifixup.createFixupURI(item.wrong,
                               urifixup.FIXUP_FLAG_FIX_SCHEME_TYPOS).spec;
-    do_check_eq(result, item.fixed);
+    Assert.equal(result, item.fixed);
   }
 });
   
@@ -85,7 +85,7 @@ add_task(function test_false_pref_keeps_typos() {
     let result =
       urifixup.createFixupURI(item.wrong,
                               urifixup.FIXUP_FLAG_FIX_SCHEME_TYPOS).spec;
-    do_check_eq(result, item.wrong);
+    Assert.equal(result, item.wrong);
   }
 });
 
@@ -98,6 +98,6 @@ add_task(function test_true_pref_fixes_typos() {
     let result =
         urifixup.createFixupURI(item.wrong,
                                 urifixup.FIXUP_FLAG_FIX_SCHEME_TYPOS).spec;
-    do_check_eq(result, item.fixed);
+    Assert.equal(result, item.fixed);
   }
 });

@@ -37,14 +37,14 @@ function test_object_grip() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     let args = packet.frame.arguments;
 
-    do_check_eq(args[0].class, "Object");
+    Assert.equal(args[0].class, "Object");
 
     let objClient = gThreadClient.pauseGrip(args[0]);
     objClient.getOwnPropertyNames(function (response) {
-      do_check_eq(response.ownPropertyNames.length, 3);
-      do_check_eq(response.ownPropertyNames[0], "a");
-      do_check_eq(response.ownPropertyNames[1], "b");
-      do_check_eq(response.ownPropertyNames[2], "c");
+      Assert.equal(response.ownPropertyNames.length, 3);
+      Assert.equal(response.ownPropertyNames[0], "a");
+      Assert.equal(response.ownPropertyNames[1], "b");
+      Assert.equal(response.ownPropertyNames[2], "c");
 
       gThreadClient.resume(function () {
         gClient.close().then(gCallback);

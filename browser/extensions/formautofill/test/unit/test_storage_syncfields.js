@@ -79,14 +79,14 @@ add_task(async function test_pushChanges() {
   await onChanged;
 
   changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
-  do_check_eq(changeCounter, 2);
+  Assert.equal(changeCounter, 2);
 
   profileStorage.addresses.pushSyncChanges(changes);
   address = profileStorage.addresses.get(guid);
   changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
 
   // Counter should still be 1, since our sync didn't record the mid-sync change
-  do_check_eq(changeCounter, 1, "Counter shouldn't be zero because it didn't record update");
+  Assert.equal(changeCounter, 1, "Counter shouldn't be zero because it didn't record update");
 
   // now, push a new set of changes, which should make the changeCounter 0
   profileStorage.addresses.pushSyncChanges({
@@ -99,7 +99,7 @@ add_task(async function test_pushChanges() {
   });
 
   changeCounter = getSyncChangeCounter(profileStorage.addresses, guid);
-  do_check_eq(changeCounter, 0);
+  Assert.equal(changeCounter, 0);
 });
 
 async function checkingSyncChange(action, callback) {

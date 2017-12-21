@@ -34,45 +34,45 @@ function run_test()
   // The default location is http://localhost:PORT, where PORT is whatever you
   // provided when you started the server.  http://127.0.0.1:PORT is also part
   // of the default set of locations.
-  do_check_eq(id.primaryScheme, "http");
-  do_check_eq(id.primaryHost, "localhost");
-  do_check_eq(id.primaryPort, FAKE_PORT_ONE);
-  do_check_true(id.has("http", "localhost", FAKE_PORT_ONE));
-  do_check_true(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
+  Assert.equal(id.primaryScheme, "http");
+  Assert.equal(id.primaryHost, "localhost");
+  Assert.equal(id.primaryPort, FAKE_PORT_ONE);
+  Assert.ok(id.has("http", "localhost", FAKE_PORT_ONE));
+  Assert.ok(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
 
   // This should be a nop.
   id.add("http", "localhost", FAKE_PORT_ONE);
-  do_check_eq(id.primaryScheme, "http");
-  do_check_eq(id.primaryHost, "localhost");
-  do_check_eq(id.primaryPort, FAKE_PORT_ONE);
-  do_check_true(id.has("http", "localhost", FAKE_PORT_ONE));
-  do_check_true(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
+  Assert.equal(id.primaryScheme, "http");
+  Assert.equal(id.primaryHost, "localhost");
+  Assert.equal(id.primaryPort, FAKE_PORT_ONE);
+  Assert.ok(id.has("http", "localhost", FAKE_PORT_ONE));
+  Assert.ok(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
 
   // Change the primary location and make sure all the getters work correctly.
   id.setPrimary("http", "127.0.0.1", FAKE_PORT_ONE);
-  do_check_eq(id.primaryScheme, "http");
-  do_check_eq(id.primaryHost, "127.0.0.1");
-  do_check_eq(id.primaryPort, FAKE_PORT_ONE);
-  do_check_true(id.has("http", "localhost", FAKE_PORT_ONE));
-  do_check_true(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
+  Assert.equal(id.primaryScheme, "http");
+  Assert.equal(id.primaryHost, "127.0.0.1");
+  Assert.equal(id.primaryPort, FAKE_PORT_ONE);
+  Assert.ok(id.has("http", "localhost", FAKE_PORT_ONE));
+  Assert.ok(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
 
   // Okay, now remove the primary location -- we fall back to the original
   // location.
   id.remove("http", "127.0.0.1", FAKE_PORT_ONE);
-  do_check_eq(id.primaryScheme, "http");
-  do_check_eq(id.primaryHost, "localhost");
-  do_check_eq(id.primaryPort, FAKE_PORT_ONE);
-  do_check_true(id.has("http", "localhost", FAKE_PORT_ONE));
-  do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
+  Assert.equal(id.primaryScheme, "http");
+  Assert.equal(id.primaryHost, "localhost");
+  Assert.equal(id.primaryPort, FAKE_PORT_ONE);
+  Assert.ok(id.has("http", "localhost", FAKE_PORT_ONE));
+  Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_ONE));
 
   // You can't remove every location -- try this and the original default
   // location will be silently readded.
   id.remove("http", "localhost", FAKE_PORT_ONE);
-  do_check_eq(id.primaryScheme, "http");
-  do_check_eq(id.primaryHost, "localhost");
-  do_check_eq(id.primaryPort, FAKE_PORT_ONE);
-  do_check_true(id.has("http", "localhost", FAKE_PORT_ONE));
-  do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
+  Assert.equal(id.primaryScheme, "http");
+  Assert.equal(id.primaryHost, "localhost");
+  Assert.equal(id.primaryPort, FAKE_PORT_ONE);
+  Assert.ok(id.has("http", "localhost", FAKE_PORT_ONE));
+  Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_ONE));
 
   // Okay, now that we've exercised that behavior, shut down the server and
   // restart it on the correct port, to exercise port-changing behaviors at
@@ -101,44 +101,44 @@ function run_test_2()
   // Our primary location is gone because it was dependent on the port on which
   // the server was running.
   checkPrimariesThrow(id);
-  do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
-  do_check_false(id.has("http", "localhost", FAKE_PORT_ONE));
+  Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_ONE));
+  Assert.ok(!id.has("http", "localhost", FAKE_PORT_ONE));
 
   srv.start(FAKE_PORT_TWO);
 
   // We should have picked up http://localhost:8889 as our primary location now
   // that we've restarted.
-  do_check_eq(id.primaryScheme, "http");
-  do_check_eq(id.primaryHost, "localhost", FAKE_PORT_TWO);
-  do_check_eq(id.primaryPort, FAKE_PORT_TWO);
-  do_check_false(id.has("http", "localhost", FAKE_PORT_ONE));
-  do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
-  do_check_true(id.has("http", "localhost", FAKE_PORT_TWO));
-  do_check_true(id.has("http", "127.0.0.1", FAKE_PORT_TWO));
+  Assert.equal(id.primaryScheme, "http");
+  Assert.equal(id.primaryHost, "localhost", FAKE_PORT_TWO);
+  Assert.equal(id.primaryPort, FAKE_PORT_TWO);
+  Assert.ok(!id.has("http", "localhost", FAKE_PORT_ONE));
+  Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_ONE));
+  Assert.ok(id.has("http", "localhost", FAKE_PORT_TWO));
+  Assert.ok(id.has("http", "127.0.0.1", FAKE_PORT_TWO));
 
   // Now we're going to see what happens when we shut down with a primary
   // location that wasn't a default.  That location should persist, and the
   // default we remove should still not be present.
   id.setPrimary("http", "example.com", FAKE_PORT_TWO);
-  do_check_true(id.has("http", "example.com", FAKE_PORT_TWO));
-  do_check_true(id.has("http", "127.0.0.1", FAKE_PORT_TWO));
-  do_check_true(id.has("http", "localhost", FAKE_PORT_TWO));
-  do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
-  do_check_false(id.has("http", "localhost", FAKE_PORT_ONE));
+  Assert.ok(id.has("http", "example.com", FAKE_PORT_TWO));
+  Assert.ok(id.has("http", "127.0.0.1", FAKE_PORT_TWO));
+  Assert.ok(id.has("http", "localhost", FAKE_PORT_TWO));
+  Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_ONE));
+  Assert.ok(!id.has("http", "localhost", FAKE_PORT_ONE));
 
   id.remove("http", "localhost", FAKE_PORT_TWO);
-  do_check_true(id.has("http", "example.com", FAKE_PORT_TWO));
-  do_check_false(id.has("http", "localhost", FAKE_PORT_TWO));
-  do_check_true(id.has("http", "127.0.0.1", FAKE_PORT_TWO));
-  do_check_false(id.has("http", "localhost", FAKE_PORT_ONE));
-  do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
+  Assert.ok(id.has("http", "example.com", FAKE_PORT_TWO));
+  Assert.ok(!id.has("http", "localhost", FAKE_PORT_TWO));
+  Assert.ok(id.has("http", "127.0.0.1", FAKE_PORT_TWO));
+  Assert.ok(!id.has("http", "localhost", FAKE_PORT_ONE));
+  Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_ONE));
 
   id.remove("http", "127.0.0.1", FAKE_PORT_TWO);
-  do_check_true(id.has("http", "example.com", FAKE_PORT_TWO));
-  do_check_false(id.has("http", "localhost", FAKE_PORT_TWO));
-  do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_TWO));
-  do_check_false(id.has("http", "localhost", FAKE_PORT_ONE));
-  do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
+  Assert.ok(id.has("http", "example.com", FAKE_PORT_TWO));
+  Assert.ok(!id.has("http", "localhost", FAKE_PORT_TWO));
+  Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_TWO));
+  Assert.ok(!id.has("http", "localhost", FAKE_PORT_ONE));
+  Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_ONE));
 
   do_test_pending();
   srv.stop(function()
@@ -164,25 +164,25 @@ function run_test_3()
   // Only the default added location disappears; any others stay around,
   // possibly as the primary location.  We may have removed the default primary
   // location, but the one we set manually should persist here.
-  do_check_eq(id.primaryScheme, "http");
-  do_check_eq(id.primaryHost, "example.com");
-  do_check_eq(id.primaryPort, FAKE_PORT_TWO);
-  do_check_true(id.has("http", "example.com", FAKE_PORT_TWO));
-  do_check_false(id.has("http", "localhost", FAKE_PORT_TWO));
-  do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_TWO));
-  do_check_false(id.has("http", "localhost", FAKE_PORT_ONE));
-  do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
+  Assert.equal(id.primaryScheme, "http");
+  Assert.equal(id.primaryHost, "example.com");
+  Assert.equal(id.primaryPort, FAKE_PORT_TWO);
+  Assert.ok(id.has("http", "example.com", FAKE_PORT_TWO));
+  Assert.ok(!id.has("http", "localhost", FAKE_PORT_TWO));
+  Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_TWO));
+  Assert.ok(!id.has("http", "localhost", FAKE_PORT_ONE));
+  Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_ONE));
 
   srv.start(PORT);
 
   // Starting always adds HTTP entries for 127.0.0.1:port and localhost:port.
-  do_check_true(id.has("http", "example.com", FAKE_PORT_TWO));
-  do_check_false(id.has("http", "localhost", FAKE_PORT_TWO));
-  do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_TWO));
-  do_check_false(id.has("http", "localhost", FAKE_PORT_ONE));
-  do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
-  do_check_true(id.has("http", "localhost", PORT));
-  do_check_true(id.has("http", "127.0.0.1", PORT));
+  Assert.ok(id.has("http", "example.com", FAKE_PORT_TWO));
+  Assert.ok(!id.has("http", "localhost", FAKE_PORT_TWO));
+  Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_TWO));
+  Assert.ok(!id.has("http", "localhost", FAKE_PORT_ONE));
+  Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_ONE));
+  Assert.ok(id.has("http", "localhost", PORT));
+  Assert.ok(id.has("http", "127.0.0.1", PORT));
 
   // Remove the primary location we'd left set from last time.
   id.remove("http", "example.com", FAKE_PORT_TWO);
@@ -194,17 +194,17 @@ function run_test_3()
   // Make sure we don't have anything lying around from running on either the
   // first or the second port -- all we should have is our generated default,
   // plus the additional port to test "portless" hostport variants.
-  do_check_true(id.has("http", "localhost", 80));
-  do_check_eq(id.primaryScheme, "http");
-  do_check_eq(id.primaryHost, "localhost");
-  do_check_eq(id.primaryPort, PORT);
-  do_check_true(id.has("http", "localhost", PORT));
-  do_check_true(id.has("http", "127.0.0.1", PORT));
-  do_check_false(id.has("http", "localhost", FAKE_PORT_ONE));
-  do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_ONE));
-  do_check_false(id.has("http", "example.com", FAKE_PORT_TWO));
-  do_check_false(id.has("http", "localhost", FAKE_PORT_TWO));
-  do_check_false(id.has("http", "127.0.0.1", FAKE_PORT_TWO));
+  Assert.ok(id.has("http", "localhost", 80));
+  Assert.equal(id.primaryScheme, "http");
+  Assert.equal(id.primaryHost, "localhost");
+  Assert.equal(id.primaryPort, PORT);
+  Assert.ok(id.has("http", "localhost", PORT));
+  Assert.ok(id.has("http", "127.0.0.1", PORT));
+  Assert.ok(!id.has("http", "localhost", FAKE_PORT_ONE));
+  Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_ONE));
+  Assert.ok(!id.has("http", "example.com", FAKE_PORT_TWO));
+  Assert.ok(!id.has("http", "localhost", FAKE_PORT_TWO));
+  Assert.ok(!id.has("http", "127.0.0.1", FAKE_PORT_TWO));
 
   // Okay, finally done with identity testing.  Our primary location is the one
   // we want it to be, so we're off!
@@ -234,7 +234,7 @@ function checkPrimariesThrow(id)
   {
     threw = e === Cr.NS_ERROR_NOT_INITIALIZED;
   }
-  do_check_true(threw);
+  Assert.ok(threw);
 
   threw = false;
   try
@@ -245,7 +245,7 @@ function checkPrimariesThrow(id)
   {
     threw = e === Cr.NS_ERROR_NOT_INITIALIZED;
   }
-  do_check_true(threw);
+  Assert.ok(threw);
 
   threw = false;
   try
@@ -256,7 +256,7 @@ function checkPrimariesThrow(id)
   {
     threw = e === Cr.NS_ERROR_NOT_INITIALIZED;
   }
-  do_check_true(threw);
+  Assert.ok(threw);
 }
 
 /**
@@ -268,7 +268,7 @@ function check400(data)
 
   // Status-Line
   var { value: firstLine } = iter.next();
-  do_check_eq(firstLine.substring(0, HTTP_400_LEADER_LENGTH), HTTP_400_LEADER);
+  Assert.equal(firstLine.substring(0, HTTP_400_LEADER_LENGTH), HTTP_400_LEADER);
 }
 
 
@@ -296,7 +296,7 @@ function check10(data)
   var iter = LineIterator(data);
 
   // Status-Line
-  do_check_eq(iter.next().value, "HTTP/1.0 200 TEST PASSED");
+  Assert.equal(iter.next().value, "HTTP/1.0 200 TEST PASSED");
 
   skipHeaders(iter);
 
@@ -395,7 +395,7 @@ function check11goodHost(data)
   var iter = LineIterator(data);
 
   // Status-Line
-  do_check_eq(iter.next().value, "HTTP/1.1 200 TEST PASSED");
+  Assert.equal(iter.next().value, "HTTP/1.1 200 TEST PASSED");
 
   skipHeaders(iter);
 
@@ -432,7 +432,7 @@ function check11ipHost(data)
   var iter = LineIterator(data);
 
   // Status-Line
-  do_check_eq(iter.next().value, "HTTP/1.1 200 TEST PASSED");
+  Assert.equal(iter.next().value, "HTTP/1.1 200 TEST PASSED");
 
   skipHeaders(iter);
 
@@ -517,7 +517,7 @@ function check10ip(data)
   var iter = LineIterator(data);
 
   // Status-Line
-  do_check_eq(iter.next().value, "HTTP/1.0 200 TEST PASSED");
+  Assert.equal(iter.next().value, "HTTP/1.0 200 TEST PASSED");
 
   skipHeaders(iter);
 
@@ -554,7 +554,7 @@ function check11goodHostWackyPort(data)
   var iter = LineIterator(data);
 
   // Status-Line
-  do_check_eq(iter.next().value, "HTTP/1.1 200 TEST PASSED");
+  Assert.equal(iter.next().value, "HTTP/1.1 200 TEST PASSED");
 
   skipHeaders(iter);
 

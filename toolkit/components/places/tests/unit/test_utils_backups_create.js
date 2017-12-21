@@ -37,7 +37,7 @@ add_task(async function() {
     let backupFile = bookmarksBackupDir.clone();
     backupFile.append(backupFilename);
     backupFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, parseInt("0666", 8));
-    do_print("Creating fake backup " + backupFile.leafName);
+    info("Creating fake backup " + backupFile.leafName);
     if (!backupFile.exists())
       do_throw("Unable to create fake backup " + backupFile.leafName);
   }
@@ -81,5 +81,5 @@ add_task(async function() {
     let entry = files.getNext().QueryInterface(Ci.nsIFile);
     entry.remove(false);
   }
-  do_check_false(bookmarksBackupDir.directoryEntries.hasMoreElements());
+  Assert.ok(!bookmarksBackupDir.directoryEntries.hasMoreElements());
 });

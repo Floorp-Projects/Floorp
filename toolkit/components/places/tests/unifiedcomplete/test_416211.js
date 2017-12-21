@@ -8,7 +8,7 @@
  */
 
 add_task(async function test_tag_match_has_bookmark_title() {
-  do_print("Make sure the tag match gives the bookmark title");
+  info("Make sure the tag match gives the bookmark title");
   let uri = NetUtil.newURI("http://theuri/");
   await PlacesTestUtils.addVisits({ uri, title: "Page title" });
   await addBookmark({ uri,

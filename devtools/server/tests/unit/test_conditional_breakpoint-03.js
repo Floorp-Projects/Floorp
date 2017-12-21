@@ -35,8 +35,8 @@ function test_simple_breakpoint() {
     }, function (response, bpClient) {
       gThreadClient.addOneTimeListener("paused", function (event, packet) {
         // Check the return value.
-        do_check_eq(packet.why.type, "breakpointConditionThrown");
-        do_check_eq(packet.frame.where.line, 3);
+        Assert.equal(packet.why.type, "breakpointConditionThrown");
+        Assert.equal(packet.frame.where.line, 3);
 
         // Remove the breakpoint.
         bpClient.remove(function (response) {

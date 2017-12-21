@@ -13,7 +13,7 @@ function run_test() {
 }
 
 function finish_test() {
-  do_execute_soon(function() {
+  executeSoon(function() {
     test_generator.return();
     do_test_finished();
   });
@@ -49,8 +49,8 @@ function* do_run_test() {
   do_close_profile(test_generator);
   yield;
   do_load_profile();
-  do_check_eq(Services.cookies.countCookiesFromHost(uri1.host), 4);
-  do_check_eq(Services.cookies.countCookiesFromHost(uri2.host), 0);
+  Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 4);
+  Assert.equal(Services.cookies.countCookiesFromHost(uri2.host), 0);
 
   // test with third party cookies for session only.
   Services.prefs.setBoolPref("network.cookie.thirdparty.sessionOnly", true);
@@ -62,8 +62,8 @@ function* do_run_test() {
   do_close_profile(test_generator);
   yield;
   do_load_profile();
-  do_check_eq(Services.cookies.countCookiesFromHost(uri1.host), 0);
-  do_check_eq(Services.cookies.countCookiesFromHost(uri2.host), 0);
+  Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 0);
+  Assert.equal(Services.cookies.countCookiesFromHost(uri2.host), 0);
 
   finish_test();
 }

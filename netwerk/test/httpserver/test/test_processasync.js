@@ -63,8 +63,8 @@ handlers["/handleSync"] = handleSync;
 
 function start_handleSync(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 200);
-  do_check_eq(ch.responseStatusText, "handleSync pass");
+  Assert.equal(ch.responseStatus, 200);
+  Assert.equal(ch.responseStatusText, "handleSync pass");
 }
 
 function handleAsync1(request, response)
@@ -123,14 +123,14 @@ handlers["/handleAsync1"] = handleAsync1;
 
 function start_handleAsync1(ch, cx)
 {
-  do_check_eq(ch.responseStatus, 200);
-  do_check_eq(ch.responseStatusText, "New status line!");
-  do_check_eq(ch.getResponseHeader("X-Foo"), "new value");
+  Assert.equal(ch.responseStatus, 200);
+  Assert.equal(ch.responseStatusText, "New status line!");
+  Assert.equal(ch.getResponseHeader("X-Foo"), "new value");
 }
 
 function stop_handleAsync1(ch, cx, status, data)
 {
-  do_check_eq(data.length, 0);
+  Assert.equal(data.length, 0);
 }
 
 const startToHeaderDelay = 500;
@@ -219,11 +219,11 @@ function start_handleAsync2(ch, cx)
   var now = Date.now();
   dumpn("*** start_handleAsync2: onStartRequest time " + now + ", " +
         (now - startTime_handleAsync2) + "ms after start time");
-  do_check_true(now >= startTime_handleAsync2 + startToHeaderDelay);
+  Assert.ok(now >= startTime_handleAsync2 + startToHeaderDelay);
 
-  do_check_eq(ch.responseStatus, 200);
-  do_check_eq(ch.responseStatusText, "Status line");
-  do_check_eq(ch.getResponseHeader("X-Custom-Header"), "value");
+  Assert.equal(ch.responseStatus, 200);
+  Assert.equal(ch.responseStatusText, "Status line");
+  Assert.equal(ch.getResponseHeader("X-Custom-Header"), "value");
 }
 
 function stop_handleAsync2(ch, cx, status, data)
@@ -231,9 +231,9 @@ function stop_handleAsync2(ch, cx, status, data)
   var now = Date.now();
   dumpn("*** stop_handleAsync2: onStopRequest time " + now + ", " +
         (now - startTime_handleAsync2) + "ms after header time");
-  do_check_true(now >= startTime_handleAsync2 + startToFinishedDelay);
+  Assert.ok(now >= startTime_handleAsync2 + startToFinishedDelay);
 
-  do_check_eq(String.fromCharCode.apply(null, data), "BODY");
+  Assert.equal(String.fromCharCode.apply(null, data), "BODY");
 }
 
 /*
@@ -294,7 +294,7 @@ handlers["/handleAsyncOrdering"] = handleAsyncOrdering;
 
 function stop_handleAsyncOrdering(ch, cx, status, data)
 {
-  do_check_eq(data.length, 20 * 65536);
+  Assert.equal(data.length, 20 * 65536);
   data.forEach(function(v, index)
   {
     if (v !== 0)

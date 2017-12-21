@@ -31,6 +31,6 @@ function run_test() {
   } catch (ex) {
     failed = true;
   }
-  do_check_true(failed);
+  Assert.ok(failed);
 }
 

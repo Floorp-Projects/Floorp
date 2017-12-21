@@ -75,9 +75,9 @@ Test.prototype = {
   },
 
   onStopRequest: function(request, context, status) {
-    do_check_eq(Components.isSuccessCode(status), this.expectSuccess);
-    do_check_eq(this._isFromCache, this.readFromCache);
-    do_check_eq(gHitServer, this.hitServer);
+    Assert.equal(Components.isSuccessCode(status), this.expectSuccess);
+    Assert.equal(this._isFromCache, this.readFromCache);
+    Assert.equal(gHitServer, this.hitServer);
 
     do_timeout(0, run_next_test);
   },

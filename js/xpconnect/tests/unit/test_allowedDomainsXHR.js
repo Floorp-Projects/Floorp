@@ -28,11 +28,11 @@ function checkResults(xhr)
   if (xhr.readyState != 4)
     return false;
 
-  do_check_eq(xhr.status, 200);
-  do_check_eq(xhr.responseText, httpbody);
+  equal(xhr.status, 200);
+  equal(xhr.responseText, httpbody);
 
   var root_node = xhr.responseXML.getElementsByTagName('root').item(0);
-  do_check_eq(root_node.firstChild.data, "0123456789");
+  equal(root_node.firstChild.data, "0123456789");
   return true;
 }
 
@@ -60,20 +60,20 @@ function run_test()
   // Test sync XHR sending
   cu.evalInSandbox('var createXHR = ' + createXHR.toString(), sb);
   var res = cu.evalInSandbox('var sync = createXHR("4444/simple"); sync.send(null); sync', sb);
-  do_check_true(checkResults(res));
+  Assert.ok(checkResults(res));
 
   var principal = res.responseXML.nodePrincipal;
-  do_check_true(principal.isCodebasePrincipal);
+  Assert.ok(principal.isCodebasePrincipal);
   var requestURL = "http://localhost:4444/simple";
-  do_check_eq(principal.URI.spec, requestURL);
+  Assert.equal(principal.URI.spec, requestURL);
 
   // negative test sync XHR sending (to ensure that the xhr do not have chrome caps, see bug 779821)
   try {
     cu.evalInSandbox('var createXHR = ' + createXHR.toString(), sb);
     var res = cu.evalInSandbox('var sync = createXHR("4445/negative"); sync.send(null); sync', sb);
-    do_check_false(true, "XHR created from sandbox should not have chrome caps");
+    Assert.equal(false, true, "XHR created from sandbox should not have chrome caps");
   } catch (e) {
-    do_check_true(true);
+    Assert.ok(true);
   }
 
   // Test redirect handling.
@@ -82,12 +82,12 @@ function run_test()
   // triggering principal, this should work.
   cu.evalInSandbox('var createXHR = ' + createXHR.toString(), sb);
   var res = cu.evalInSandbox('var sync = createXHR("4444/redirect"); sync.send(null); sync', sb);
-  do_check_true(checkResults(res));
+  Assert.ok(checkResults(res));
 
   var principal = res.responseXML.nodePrincipal;
-  do_check_true(principal.isCodebasePrincipal);
+  Assert.ok(principal.isCodebasePrincipal);
   var requestURL = "http://localhost:4444/simple";
-  do_check_eq(principal.URI.spec, requestURL);
+  Assert.equal(principal.URI.spec, requestURL);
 
   httpserver2.stop(finishIfDone);
   httpserver3.stop(finishIfDone);
@@ -102,7 +102,7 @@ function run_test()
   // we need to clone the function into the sandbox and make a few things
   // available for it.
   cu.evalInSandbox('var checkResults = ' + checkResults.toSource(), sb);
-  sb.do_check_eq = do_check_eq;
+  sb.equal = equal;
   sb.httpbody = httpbody;
 
   function changeListener(event) {

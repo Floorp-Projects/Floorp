@@ -69,10 +69,10 @@ function run_test() {
   function checkBlacklist() {
     if (Services.appinfo.OS == "WINNT") {
       var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
-      do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
     } else if (Services.appinfo.OS == "Darwin") {
       status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_OPENGL_LAYERS);
-      do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+      Assert.equal(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
     }
 
     gTestserver.stop(do_test_finished);
@@ -81,7 +81,7 @@ function run_test() {
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     // If we wait until after we go through the event loop, gfxInfo is sure to
     // have processed the gfxItems event.
-    do_execute_soon(checkBlacklist);
+    executeSoon(checkBlacklist);
   }, "blocklist-data-gfxItems");
 
   load_blocklist("test_gfxBlacklist_OSVersion.xml");

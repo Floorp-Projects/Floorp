@@ -4,5 +4,5 @@ function run_test() {
                         .getService(Components.interfaces.nsISocketTransportService);
   } catch(e) {}
 
-  do_check_true(!!sts);
+  Assert.ok(!!sts);
 }

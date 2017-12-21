@@ -29,11 +29,11 @@ var requests = [];
 function getCloneStopCallback(original_listener)
 {
   return function cloneStop(listener) {
-    do_check_eq(original_listener.state, listener.state);
+    Assert.equal(original_listener.state, listener.state);
 
     // Sanity check to make sure we didn't accidentally use the same listener
     // twice.
-    do_check_neq(original_listener, listener);
+    Assert.notEqual(original_listener, listener);
     do_test_finished();
   }
 }
@@ -56,8 +56,8 @@ function checkClone(other_listener, aRequest)
 // Ensure that all the callbacks were called on aRequest.
 function checkSizeAndLoad(listener, aRequest)
 {
-  do_check_neq(listener.state & SIZE_AVAILABLE, 0);
-  do_check_neq(listener.state & LOAD_COMPLETE, 0);
+  Assert.notEqual(listener.state & SIZE_AVAILABLE, 0);
+  Assert.notEqual(listener.state & LOAD_COMPLETE, 0);
 
   do_test_finished();
 }
@@ -196,7 +196,7 @@ function cleanup()
 
 function run_test()
 {
-  do_register_cleanup(cleanup);
+  registerCleanupFunction(cleanup);
 
   gCurrentLoader = Cc["@mozilla.org/image/loader;1"].createInstance(Ci.imgILoader);
 

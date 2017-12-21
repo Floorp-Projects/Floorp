@@ -7,6 +7,6 @@ function run_test() {
   s.a = [];
   s.Cu = Components.utils;
   s.C = Components;
-  s.do_check_neq = do_check_neq;
-  Components.utils.evalInSandbox("do_check_neq(Cu.import, undefined);", s);
+  s.notEqual = notEqual;
+  Components.utils.evalInSandbox("notEqual(Cu.import, undefined);", s);
 }

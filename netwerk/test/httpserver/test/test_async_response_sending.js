@@ -487,8 +487,8 @@ function CustomPipe(name)
       {
         dumpn("*** [" + this.name + "].interceptStreamReadyCallbacks");
 
-        do_check_true(this._streamReadyInterceptCreator === null,
-                      "intercepting twice");
+        Assert.ok(this._streamReadyInterceptCreator === null,
+                  "intercepting twice");
         this._streamReadyInterceptCreator = streamReadyInterceptCreator;
         if (this._waiter)
         {
@@ -505,8 +505,8 @@ function CustomPipe(name)
       {
         dumpn("*** [" + this.name + "].removeStreamReadyInterceptor()");
 
-        do_check_true(this._streamReadyInterceptCreator !== null,
-                      "removing interceptor when none present?");
+        Assert.ok(this._streamReadyInterceptCreator !== null,
+                  "removing interceptor when none present?");
         this._streamReadyInterceptCreator = null;
         if (this._waiter)
           this._waiter.callback = this._waiter.callback.wrappedCallback;
@@ -519,15 +519,15 @@ function CustomPipe(name)
       {
         dumpn("*** [" + this.name + "].asyncWait");
 
-        do_check_true(callback && typeof callback !== "function");
+        Assert.ok(callback && typeof callback !== "function");
 
         var closureOnly =
           (flags & Ci.nsIAsyncInputStream.WAIT_CLOSURE_ONLY) !== 0;
 
-        do_check_true(this._waiter === null ||
-                      (this._waiter.closureOnly && !closureOnly),
-                      "asyncWait already called with a non-closure-only " +
-                      "callback?  unexpected!");
+        Assert.ok(this._waiter === null ||
+                  (this._waiter.closureOnly && !closureOnly),
+                  "asyncWait already called with a non-closure-only " +
+                  "callback?  unexpected!");
 
         this._waiter =
           {
@@ -588,9 +588,9 @@ function CustomPipe(name)
               : self._status;
         }
 
-        do_check_true(this._readable <= self._data.length ||
-                      this._readable === Infinity,
-                      "consistency check");
+        Assert.ok(this._readable <= self._data.length ||
+                  this._readable === Infinity,
+                  "consistency check");
 
         if (this._readable < count || self._data.length < count)
           throw Cr.NS_BASE_STREAM_WOULD_BLOCK;
@@ -612,10 +612,10 @@ function CustomPipe(name)
       {
         dumpn("*** [" + this.name + "].makeReadable(" + count + ")");
 
-        do_check_true(Components.isSuccessCode(self._status), "errant call");
-        do_check_true(this._readable + count <= self._data.length ||
-                      this._readable === Infinity,
-                      "increasing readable beyond written amount");
+        Assert.ok(Components.isSuccessCode(self._status), "errant call");
+        Assert.ok(this._readable + count <= self._data.length ||
+                  this._readable === Infinity,
+                  "increasing readable beyond written amount");
 
         this._readable += count;
 
@@ -670,7 +670,7 @@ function CustomPipe(name)
       {
         dumpn("*** [" + this.name + "].maybeNotifyFinally()");
 
-        do_check_true(this._waiter !== null, "must be waiting now");
+        Assert.ok(this._waiter !== null, "must be waiting now");
 
         if (self._data.length > 0)
         {
@@ -698,7 +698,7 @@ function CustomPipe(name)
         dumpn("*** [" + this.name + "]._notify()");
 
         var waiter = this._waiter;
-        do_check_true(waiter !== null, "no waiter?");
+        Assert.ok(waiter !== null, "no waiter?");
 
         if (this._event === null)
         {
@@ -710,8 +710,8 @@ function CustomPipe(name)
                 input._event = null;
                 try
                 {
-                  do_check_true(!Components.isSuccessCode(self._status) ||
-                                input._readable >= waiter.requestedCount);
+                  Assert.ok(!Components.isSuccessCode(self._status) ||
+                            input._readable >= waiter.requestedCount);
                   waiter.callback.onInputStreamReady(input);
                 }
                 catch (e)
@@ -789,8 +789,8 @@ function CustomPipe(name)
       {
         dumpn("*** [" + this.name + "].interceptStreamReadyCallbacks");
 
-        do_check_true(this._streamReadyInterceptCreator !== null,
-                      "intercepting onOutputStreamReady twice");
+        Assert.ok(this._streamReadyInterceptCreator !== null,
+                  "intercepting onOutputStreamReady twice");
         this._streamReadyInterceptCreator = streamReadyInterceptCreator;
         if (this._waiter)
         {
@@ -807,8 +807,8 @@ function CustomPipe(name)
       {
         dumpn("*** [" + this.name + "].removeStreamReadyInterceptor()");
 
-        do_check_true(this._streamReadyInterceptCreator !== null,
-                      "removing interceptor when none present?");
+        Assert.ok(this._streamReadyInterceptCreator !== null,
+                  "removing interceptor when none present?");
         this._streamReadyInterceptCreator = null;
         if (this._waiter)
           this._waiter.callback = this._waiter.callback.wrappedCallback;
@@ -821,15 +821,15 @@ function CustomPipe(name)
       {
         dumpn("*** [" + this.name + "].asyncWait");
 
-        do_check_true(callback && typeof callback !== "function");
+        Assert.ok(callback && typeof callback !== "function");
 
         var closureOnly =
           (flags & Ci.nsIAsyncInputStream.WAIT_CLOSURE_ONLY) !== 0;
 
-        do_check_true(this._waiter === null ||
-                      (this._waiter.closureOnly && !closureOnly),
-                      "asyncWait already called with a non-closure-only " +
-                      "callback?  unexpected!");
+        Assert.ok(this._waiter === null ||
+                  (this._waiter.closureOnly && !closureOnly),
+                  "asyncWait already called with a non-closure-only " +
+                  "callback?  unexpected!");
 
         this._waiter =
           {
@@ -888,12 +888,12 @@ function CustomPipe(name)
         dumpn("*** [" + this.name + "].writeByteArray" +
               "([" + bytes + "], " + length + ")");
 
-        do_check_eq(bytes.length, length, "sanity");
+        Assert.equal(bytes.length, length, "sanity");
         if (!Components.isSuccessCode(self._status))
           throw self._status;
 
-        do_check_eq(this._writableAmounts.length, 0,
-                    "writeByteArray can't support specified-length writes");
+        Assert.equal(this._writableAmounts.length, 0,
+                     "writeByteArray can't support specified-length writes");
 
         if (this._writable < length)
           throw Cr.NS_BASE_STREAM_WOULD_BLOCK;
@@ -915,7 +915,7 @@ function CustomPipe(name)
       {
         dumpn("*** [" + this.name + "].write");
 
-        do_check_eq(str.length, length, "sanity");
+        Assert.equal(str.length, length, "sanity");
         if (!Components.isSuccessCode(self._status))
           throw self._status;
         if (this._writable === 0)
@@ -928,11 +928,11 @@ function CustomPipe(name)
         }
         else
         {
-          do_check_true(this._writable >= this._writableAmounts[0],
-                        "writable amounts value greater than writable data?");
-          do_check_eq(this._writable, sum(this._writableAmounts),
-                      "total writable amount not equal to sum of writable " +
-                      "increments");
+          Assert.ok(this._writable >= this._writableAmounts[0],
+                    "writable amounts value greater than writable data?");
+          Assert.equal(this._writable, sum(this._writableAmounts),
+                       "total writable amount not equal to sum of writable " +
+                       "increments");
           actualWritten = this._writableAmounts.shift();
         }
 
@@ -963,7 +963,7 @@ function CustomPipe(name)
       {
         dumpn("*** [" + this.name + "].makeWritable(" + count + ")");
 
-        do_check_true(Components.isSuccessCode(self._status));
+        Assert.ok(Components.isSuccessCode(self._status));
 
         this._writable += count;
 
@@ -1000,11 +1000,11 @@ function CustomPipe(name)
         dumpn("*** [" + this.name + "].makeWritableByIncrements" +
               "([" + increments.join(", ") + "])");
 
-        do_check_true(increments.length > 0, "bad increments");
-        do_check_true(increments.every(function(v) { return v > 0; }),
-                      "zero increment?");
+        Assert.ok(increments.length > 0, "bad increments");
+        Assert.ok(increments.every(function(v) { return v > 0; }),
+                  "zero increment?");
 
-        do_check_true(Components.isSuccessCode(self._status));
+        Assert.ok(Components.isSuccessCode(self._status));
 
         this._writable += sum(increments);
         this._writableAmounts = increments;
@@ -1026,7 +1026,7 @@ function CustomPipe(name)
         dumpn("*** [" + this.name + "]._notify()");
 
         var waiter = this._waiter;
-        do_check_true(waiter !== null, "no waiter?");
+        Assert.ok(waiter !== null, "no waiter?");
 
         if (this._event === null)
         {
@@ -1211,12 +1211,12 @@ CopyTest.prototype =
   {
     var self = this;
 
-    do_check_eq(bytes,
-                dataQuantums.reduce(function(partial, current)
-                {
-                  return partial + current.length;
-                }, 0),
-                "bytes/quantums mismatch");
+    Assert.equal(bytes,
+                 dataQuantums.reduce(function(partial, current)
+                 {
+                   return partial + current.length;
+                 }, 0),
+                 "bytes/quantums mismatch");
 
     function increaseSinkSpaceTask()
     {
@@ -1245,7 +1245,7 @@ CopyTest.prototype =
     var self = this;
 
     var desiredAmounts = dataQuantums.map(function(v) { return v.length; });
-    do_check_eq(bytes, sum(desiredAmounts), "bytes/quantums mismatch");
+    Assert.equal(bytes, sum(desiredAmounts), "bytes/quantums mismatch");
 
     function increaseSinkSpaceByIncrementsTask()
     {
@@ -1294,8 +1294,8 @@ CopyTest.prototype =
   {
     var self = this;
 
-    do_check_eq(bytes, sum(dataQuantums.map(function(v) { return v.length; })),
-                "bytes/quantums mismatch");
+    Assert.equal(bytes, sum(dataQuantums.map(function(v) { return v.length; })),
+                 "bytes/quantums mismatch");
 
     function closeSourceAndWaitForTask()
     {
@@ -1428,7 +1428,7 @@ CopyTest.prototype =
             dumpn("*** streamReadyCallback.onInputStreamReady" +
                   "(" + input.name + ")");
 
-            do_check_eq(this, streamReadyCallback, "sanity");
+            Assert.equal(this, streamReadyCallback, "sanity");
 
             try
             {
@@ -1436,12 +1436,12 @@ CopyTest.prototype =
               {
                 var quantum = dataQuantums[quantumIndex++];
                 var sz = quantum.length;
-                do_check_eq(self._lastQuantum.length, sz,
-                            "different quantum lengths");
+                Assert.equal(self._lastQuantum.length, sz,
+                             "different quantum lengths");
                 for (var i = 0; i < sz; i++)
                 {
-                  do_check_eq(self._lastQuantum[i], quantum[i],
-                              "bad data at " + i);
+                  Assert.equal(self._lastQuantum[i], quantum[i],
+                               "bad data at " + i);
                 }
 
                 dumpn("*** waiting to check remaining " +
@@ -1518,8 +1518,8 @@ CopyTest.prototype =
           if (avail > 0)
           {
             var data = input.readByteArray(avail);
-            do_check_eq(data.length, avail,
-                        "readByteArray returned wrong number of bytes?");
+            Assert.equal(data.length, avail,
+                         "readByteArray returned wrong number of bytes?");
             self._lastQuantum = data;
             self._receivedData.push.apply(self._receivedData, data);
           }
@@ -1564,17 +1564,17 @@ CopyTest.prototype =
 
     try
     {
-      do_check_true(this._allDataWritten, "expect all data written now!");
-      do_check_true(this._copyingFinished, "expect copying finished now!");
+      Assert.ok(this._allDataWritten, "expect all data written now!");
+      Assert.ok(this._copyingFinished, "expect copying finished now!");
 
-      do_check_eq(this._actualStatus, this._expectedStatus,
-                  "wrong final status");
+      Assert.equal(this._actualStatus, this._expectedStatus,
+                   "wrong final status");
 
       var expected = this._expectedData, received = this._receivedData;
       dumpn("received: [" + received + "], expected: [" + expected + "]");
-      do_check_eq(received.length, expected.length, "wrong data");
+      Assert.equal(received.length, expected.length, "wrong data");
       for (var i = 0, sz = expected.length; i < sz; i++)
-        do_check_eq(received[i], expected[i], "bad data at " + i);
+        Assert.equal(received[i], expected[i], "bad data at " + i);
     }
     catch (e)
     {
@@ -1637,9 +1637,9 @@ CopyTest.prototype =
   {
     dumpn("*** CopyTest.onStartRequest (" + self.name + ")");
 
-    do_check_true(_ === null);
-    do_check_eq(this._receivedData.length, 0);
-    do_check_eq(this._lastQuantum.length, 0);
+    Assert.ok(_ === null);
+    Assert.equal(this._receivedData.length, 0);
+    Assert.equal(this._lastQuantum.length, 0);
   },
 
   //
@@ -1649,7 +1649,7 @@ CopyTest.prototype =
   {
     dumpn("*** CopyTest.onStopRequest (" + self.name + ", " + status + ")");
 
-    do_check_true(_ === null);
+    Assert.ok(_ === null);
     this._actualStatus = status;
 
     this._copyingFinished = true;

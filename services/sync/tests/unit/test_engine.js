@@ -50,7 +50,7 @@ var engineObserver = {
   topics: [],
 
   observe(subject, topic, data) {
-    do_check_eq(data, "steam");
+    Assert.equal(data, "steam");
     this.topics.push(topic);
   },
 
@@ -77,18 +77,18 @@ async function cleanup(engine) {
 add_task(async function test_members() {
   _("Engine object members");
   let engine = new SteamEngine("Steam", Service);
-  do_check_eq(engine.Name, "Steam");
-  do_check_eq(engine.prefName, "steam");
-  do_check_true(engine._store instanceof SteamStore);
-  do_check_true(engine._tracker instanceof SteamTracker);
+  Assert.equal(engine.Name, "Steam");
+  Assert.equal(engine.prefName, "steam");
+  Assert.ok(engine._store instanceof SteamStore);
+  Assert.ok(engine._tracker instanceof SteamTracker);
 });
 
 add_task(async function test_score() {
   _("Engine.score corresponds to tracker.score and is readonly");
   let engine = new SteamEngine("Steam", Service);
-  do_check_eq(engine.score, 0);
+  Assert.equal(engine.score, 0);
   engine._tracker.score += 5;
-  do_check_eq(engine.score, 5);
+  Assert.equal(engine.score, 5);
 
   try {
     engine.score = 10;
@@ -97,18 +97,18 @@ add_task(async function test_score() {
     // Firefox <= 3.6 and is ignored in later versions.  Either way,
     // the attribute's value won't change.
   }
-  do_check_eq(engine.score, 5);
+  Assert.equal(engine.score, 5);
 });
 
 add_task(async function test_resetClient() {
   _("Engine.resetClient calls _resetClient");
   let engine = new SteamEngine("Steam", Service);
-  do_check_false(engine.wasReset);
+  Assert.ok(!engine.wasReset);
 
   await engine.resetClient();
-  do_check_true(engine.wasReset);
-  do_check_eq(engineObserver.topics[0], "weave:engine:reset-client:start");
-  do_check_eq(engineObserver.topics[1], "weave:engine:reset-client:finish");
+  Assert.ok(engine.wasReset);
+  Assert.equal(engineObserver.topics[0], "weave:engine:reset-client:start");
+  Assert.equal(engineObserver.topics[1], "weave:engine:reset-client:finish");
 
   await cleanup(engine);
 });
@@ -128,26 +128,26 @@ add_task(async function test_invalidChangedIDs() {
     "Accessing changed IDs should load changes from disk as a side effect");
   ok(tracker._storage.dataReady);
 
-  do_check_true(tracker.changedIDs.placeholder);
+  Assert.ok(tracker.changedIDs.placeholder);
   await cleanup(engine);
 });
 
 add_task(async function test_wipeClient() {
   _("Engine.wipeClient calls resetClient, wipes store, clears changed IDs");
   let engine = new SteamEngine("Steam", Service);
-  do_check_false(engine.wasReset);
-  do_check_false(engine._store.wasWiped);
-  do_check_true(engine._tracker.addChangedID("a-changed-id"));
-  do_check_true("a-changed-id" in engine._tracker.changedIDs);
+  Assert.ok(!engine.wasReset);
+  Assert.ok(!engine._store.wasWiped);
+  Assert.ok(engine._tracker.addChangedID("a-changed-id"));
+  Assert.ok("a-changed-id" in engine._tracker.changedIDs);
 
   await engine.wipeClient();
-  do_check_true(engine.wasReset);
-  do_check_true(engine._store.wasWiped);
-  do_check_eq(JSON.stringify(engine._tracker.changedIDs), "{}");
-  do_check_eq(engineObserver.topics[0], "weave:engine:wipe-client:start");
-  do_check_eq(engineObserver.topics[1], "weave:engine:reset-client:start");
-  do_check_eq(engineObserver.topics[2], "weave:engine:reset-client:finish");
-  do_check_eq(engineObserver.topics[3], "weave:engine:wipe-client:finish");
+  Assert.ok(engine.wasReset);
+  Assert.ok(engine._store.wasWiped);
+  Assert.equal(JSON.stringify(engine._tracker.changedIDs), "{}");
+  Assert.equal(engineObserver.topics[0], "weave:engine:wipe-client:start");
+  Assert.equal(engineObserver.topics[1], "weave:engine:reset-client:start");
+  Assert.equal(engineObserver.topics[2], "weave:engine:reset-client:finish");
+  Assert.equal(engineObserver.topics[3], "weave:engine:wipe-client:finish");
 
   await cleanup(engine);
 });
@@ -156,12 +156,12 @@ add_task(async function test_enabled() {
   _("Engine.enabled corresponds to preference");
   let engine = new SteamEngine("Steam", Service);
   try {
-    do_check_false(engine.enabled);
+    Assert.ok(!engine.enabled);
     Svc.Prefs.set("engine.steam", true);
-    do_check_true(engine.enabled);
+    Assert.ok(engine.enabled);
 
     engine.enabled = false;
-    do_check_false(Svc.Prefs.get("engine.steam"));
+    Assert.ok(!Svc.Prefs.get("engine.steam"));
   } finally {
     await cleanup(engine);
   }
@@ -171,19 +171,19 @@ add_task(async function test_sync() {
   let engine = new SteamEngine("Steam", Service);
   try {
     _("Engine.sync doesn't call _sync if it's not enabled");
-    do_check_false(engine.enabled);
-    do_check_false(engine.wasSynced);
+    Assert.ok(!engine.enabled);
+    Assert.ok(!engine.wasSynced);
     await engine.sync();
 
-    do_check_false(engine.wasSynced);
+    Assert.ok(!engine.wasSynced);
 
     _("Engine.sync calls _sync if it's enabled");
     engine.enabled = true;
 
     await engine.sync();
-    do_check_true(engine.wasSynced);
-    do_check_eq(engineObserver.topics[0], "weave:engine:sync:start");
-    do_check_eq(engineObserver.topics[1], "weave:engine:sync:finish");
+    Assert.ok(engine.wasSynced);
+    Assert.equal(engineObserver.topics[0], "weave:engine:sync:start");
+    Assert.equal(engineObserver.topics[1], "weave:engine:sync:finish");
   } finally {
     await cleanup(engine);
   }
@@ -193,26 +193,26 @@ add_task(async function test_disabled_no_track() {
   _("When an engine is disabled, its tracker is not tracking.");
   let engine = new SteamEngine("Steam", Service);
   let tracker = engine._tracker;
-  do_check_eq(engine, tracker.engine);
+  Assert.equal(engine, tracker.engine);
 
-  do_check_false(engine.enabled);
-  do_check_false(tracker._isTracking);
+  Assert.ok(!engine.enabled);
+  Assert.ok(!tracker._isTracking);
   do_check_empty(tracker.changedIDs);
 
-  do_check_false(tracker.engineIsEnabled());
+  Assert.ok(!tracker.engineIsEnabled());
   tracker.observe(null, "weave:engine:start-tracking", null);
-  do_check_false(tracker._isTracking);
+  Assert.ok(!tracker._isTracking);
   do_check_empty(tracker.changedIDs);
 
   engine.enabled = true;
   tracker.observe(null, "weave:engine:start-tracking", null);
-  do_check_true(tracker._isTracking);
+  Assert.ok(tracker._isTracking);
   do_check_empty(tracker.changedIDs);
 
   tracker.addChangedID("abcdefghijkl");
-  do_check_true(0 < tracker.changedIDs.abcdefghijkl);
+  Assert.ok(0 < tracker.changedIDs.abcdefghijkl);
   Svc.Prefs.set("engine." + engine.prefName, false);
-  do_check_false(tracker._isTracking);
+  Assert.ok(!tracker._isTracking);
   do_check_empty(tracker.changedIDs);
 
   await cleanup(engine);

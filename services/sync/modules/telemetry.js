@@ -428,7 +428,7 @@ function cleanErrorMessage(error) {
 
 class SyncTelemetryImpl {
   constructor(allowedEngines) {
-    log.level = Log.Level[Svc.Prefs.get("log.logger.telemetry", "Trace")];
+    log.manageLevelFromPref("services.sync.log.logger.telemetry");
     // This is accessible so we can enable custom engines during tests.
     this.allowedEngines = allowedEngines;
     this.current = null;

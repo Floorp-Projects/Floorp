@@ -740,7 +740,7 @@ function serializeDeserialize(aQueryArr, aQueryOptions) {
   opts2 = opts2.value;
 
   // The two sets of queries cannot be the same if their lengths differ.
-  do_check_eq(aQueryArr.length, queryArr2.length);
+  Assert.equal(aQueryArr.length, queryArr2.length);
 
   // Although the query serialization code as it is written now practically
   // ensures that queries appear in the query string in the same order they
@@ -758,10 +758,10 @@ function serializeDeserialize(aQueryArr, aQueryOptions) {
     if (j < queryArr2.length)
       queryArr2.splice(j, 1);
   }
-  do_check_eq(queryArr2.length, 0);
+  Assert.equal(queryArr2.length, 0);
 
   // Finally check the query options objects.
-  do_check_true(queryObjsEqual(queryOptionSwitches, aQueryOptions, opts2));
+  Assert.ok(queryObjsEqual(queryOptionSwitches, aQueryOptions, opts2));
 }
 
 /**

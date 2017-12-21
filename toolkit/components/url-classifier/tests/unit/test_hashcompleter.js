@@ -355,13 +355,13 @@ function callback(completion) {
 
 callback.prototype = {
   completionV2: function completionV2(hash, table, chunkId, trusted) {
-    do_check_true(this._completion.expectCompletion);
+    Assert.ok(this._completion.expectCompletion);
     if (this._completion.multipleCompletions) {
       for (let completion of this._completion.completions) {
         if (completion.hash == hash) {
-          do_check_eq(JSON.stringify(hash), JSON.stringify(completion.hash));
-          do_check_eq(table, completion.table);
-          do_check_eq(chunkId, completion.chunkId);
+          Assert.equal(JSON.stringify(hash), JSON.stringify(completion.hash));
+          Assert.equal(table, completion.table);
+          Assert.equal(chunkId, completion.chunkId);
 
           completion._completed = true;
 
@@ -373,9 +373,9 @@ callback.prototype = {
       }
     } else {
       // Hashes are not actually strings and can contain arbitrary data.
-      do_check_eq(JSON.stringify(hash), JSON.stringify(this._completion.hash));
-      do_check_eq(table, this._completion.table);
-      do_check_eq(chunkId, this._completion.chunkId);
+      Assert.equal(JSON.stringify(hash), JSON.stringify(this._completion.hash));
+      Assert.equal(table, this._completion.table);
+      Assert.equal(chunkId, this._completion.chunkId);
 
       this._completed = true;
     }
@@ -383,7 +383,7 @@ callback.prototype = {
 
   completionFinished: function completionFinished(status) {
     finishedCompletions++;
-    do_check_eq(!!this._completion.expectCompletion, !!this._completed);
+    Assert.equal(!!this._completion.expectCompletion, !!this._completed);
     this._completion._finished = true;
 
     // currentCompletionSet can mutate before all of the callbacks are complete.
@@ -397,7 +397,7 @@ callback.prototype = {
 function finish() {
   Services.prefs.clearUserPref("browser.safebrowsing.provider.test.disableBackoff");
 
-  do_check_eq(expectedMaxServerCompletionSet, maxServerCompletionSet);
+  Assert.equal(expectedMaxServerCompletionSet, maxServerCompletionSet);
   server.stop(function() {
     do_test_finished();
   });

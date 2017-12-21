@@ -29,13 +29,13 @@ add_task(async function validCacheMidPopulation() {
 
   // isTopSiteGivenProvider() and getProviderLinks() should still return results
   // even when cache is empty or being populated.
-  do_check_false(NewTabUtils.isTopSiteGivenProvider("example1.com", provider));
+  Assert.ok(!NewTabUtils.isTopSiteGivenProvider("example1.com", provider));
   do_check_links(NewTabUtils.getProviderLinks(provider), []);
 
   await promise;
 
   // Once the cache is populated, we get the expected results
-  do_check_true(NewTabUtils.isTopSiteGivenProvider("example1.com", provider));
+  Assert.ok(NewTabUtils.isTopSiteGivenProvider("example1.com", provider));
   do_check_links(NewTabUtils.getProviderLinks(provider), expectedLinks);
   NewTabUtils.links.removeProvider(provider);
 });
@@ -61,16 +61,16 @@ add_task(async function notifyLinkDelete() {
   do_check_links(NewTabUtils.links.getLinks(), expectedLinks.slice(0, 2));
 
   // Check that linkMap is accurately updated.
-  do_check_eq(links.linkMap.size, 2);
-  do_check_true(links.linkMap.get(expectedLinks[0].url));
-  do_check_true(links.linkMap.get(expectedLinks[1].url));
-  do_check_false(links.linkMap.get(removedLink.url));
+  Assert.equal(links.linkMap.size, 2);
+  Assert.ok(links.linkMap.get(expectedLinks[0].url));
+  Assert.ok(links.linkMap.get(expectedLinks[1].url));
+  Assert.ok(!links.linkMap.get(removedLink.url));
 
   // Check that siteMap is correctly updated.
-  do_check_eq(links.siteMap.size, 2);
-  do_check_true(links.siteMap.has(NewTabUtils.extractSite(expectedLinks[0].url)));
-  do_check_true(links.siteMap.has(NewTabUtils.extractSite(expectedLinks[1].url)));
-  do_check_false(links.siteMap.has(NewTabUtils.extractSite(removedLink.url)));
+  Assert.equal(links.siteMap.size, 2);
+  Assert.ok(links.siteMap.has(NewTabUtils.extractSite(expectedLinks[0].url)));
+  Assert.ok(links.siteMap.has(NewTabUtils.extractSite(expectedLinks[1].url)));
+  Assert.ok(!links.siteMap.has(NewTabUtils.extractSite(removedLink.url)));
 
   NewTabUtils.links.removeProvider(provider);
 });
@@ -82,7 +82,7 @@ add_task(async function populatePromise() {
   let getLinksFcn = async function(callback) {
     // Should not be calling getLinksFcn twice
     count++;
-    do_check_eq(count, 1);
+    Assert.equal(count, 1);
     await Promise.resolve();
     callback(expectedLinks);
   };
@@ -112,16 +112,16 @@ add_task(async function isTopSiteGivenProvider() {
   NewTabUtils.links.addProvider(provider);
   await new Promise(resolve => NewTabUtils.links.populateCache(resolve));
 
-  do_check_eq(NewTabUtils.isTopSiteGivenProvider("example2.com", provider), true);
-  do_check_eq(NewTabUtils.isTopSiteGivenProvider("example1.com", provider), false);
+  Assert.equal(NewTabUtils.isTopSiteGivenProvider("example2.com", provider), true);
+  Assert.equal(NewTabUtils.isTopSiteGivenProvider("example1.com", provider), false);
 
   // Push out frecency 2 because the maxNumLinks is reached when adding frecency 3
   let newLink = makeLink(3);
   provider.notifyLinkChanged(newLink);
 
   // There is still a frecent url with example2 domain, so it's still frecent.
-  do_check_eq(NewTabUtils.isTopSiteGivenProvider("example3.com", provider), true);
-  do_check_eq(NewTabUtils.isTopSiteGivenProvider("example2.com", provider), true);
+  Assert.equal(NewTabUtils.isTopSiteGivenProvider("example3.com", provider), true);
+  Assert.equal(NewTabUtils.isTopSiteGivenProvider("example2.com", provider), true);
 
   // Push out frecency 3
   newLink = makeLink(5);
@@ -132,8 +132,8 @@ add_task(async function isTopSiteGivenProvider() {
   provider.notifyLinkChanged(newLink);
 
   // Our count reached 0 for the example2.com domain so it's no longer a frecent site.
-  do_check_eq(NewTabUtils.isTopSiteGivenProvider("example5.com", provider), true);
-  do_check_eq(NewTabUtils.isTopSiteGivenProvider("example2.com", provider), false);
+  Assert.equal(NewTabUtils.isTopSiteGivenProvider("example5.com", provider), true);
+  Assert.equal(NewTabUtils.isTopSiteGivenProvider("example2.com", provider), false);
 
   NewTabUtils.links.removeProvider(provider);
 });
@@ -156,7 +156,7 @@ add_task(async function multipleProviders() {
   let expectedLinks = makeLinks(NewTabUtils.links.maxNumLinks,
                                 2 * NewTabUtils.links.maxNumLinks,
                                 1);
-  do_check_eq(links.length, NewTabUtils.links.maxNumLinks);
+  Assert.equal(links.length, NewTabUtils.links.maxNumLinks);
   do_check_links(links, expectedLinks);
 
   NewTabUtils.links.removeProvider(evenProvider);
@@ -203,7 +203,7 @@ add_task(async function changeLinks() {
   newLink = makeLink(21);
   expectedLinks.unshift(newLink);
   expectedLinks.pop();
-  do_check_eq(expectedLinks.length, provider.maxNumLinks); // Sanity check.
+  Assert.equal(expectedLinks.length, provider.maxNumLinks); // Sanity check.
   provider.notifyLinkChanged(newLink);
   do_check_links(NewTabUtils.links.getLinks(), expectedLinks);
 
@@ -278,7 +278,7 @@ add_task(async function extractSite() {
     "www3.mozilla.org",
   ].forEach(host => {
     let url = "http://" + host;
-    do_check_eq(NewTabUtils.extractSite(url), "mozilla.org", "extracted same " + host);
+    Assert.equal(NewTabUtils.extractSite(url), "mozilla.org", "extracted same " + host);
   });
 
   // All these should extract to the same subdomain
@@ -286,7 +286,7 @@ add_task(async function extractSite() {
     "www.bugzilla.mozilla.org",
   ].forEach(host => {
     let url = "http://" + host;
-    do_check_eq(NewTabUtils.extractSite(url), "bugzilla.mozilla.org", "extracted eTLD+2 " + host);
+    Assert.equal(NewTabUtils.extractSite(url), "bugzilla.mozilla.org", "extracted eTLD+2 " + host);
   });
 
   // All these should not extract to the same site
@@ -308,7 +308,7 @@ add_task(async function extractSite() {
     "localhost",
   ].forEach(host => {
     let url = "http://" + host;
-    do_check_neq(NewTabUtils.extractSite(url), "mozilla.org", "extracted diff " + host);
+    Assert.notEqual(NewTabUtils.extractSite(url), "mozilla.org", "extracted diff " + host);
   });
 
   // All these should not extract to the same site
@@ -317,7 +317,7 @@ add_task(async function extractSite() {
     "chrome://browser/something",
     "ftp://ftp.mozilla.org/",
   ].forEach(url => {
-    do_check_neq(NewTabUtils.extractSite(url), "mozilla.org", "extracted diff url " + url);
+    Assert.notEqual(NewTabUtils.extractSite(url), "mozilla.org", "extracted diff url " + url);
   });
 });
 

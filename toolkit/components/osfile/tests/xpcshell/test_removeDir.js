@@ -7,7 +7,7 @@
 Components.utils.import("resource://gre/modules/osfile.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-do_register_cleanup(function() {
+registerCleanupFunction(function() {
   Services.prefs.setBoolPref("toolkit.osfile.log", false);
 });
 
@@ -30,7 +30,7 @@ add_task(async function() {
   let fileInSubDir = OS.Path.join(subDir, "file");
 
   // Sanity checking for the test
-  do_check_false((await OS.File.exists(dir)));
+  Assert.equal(false, (await OS.File.exists(dir)));
 
   // Remove non-existent directory
   let exception = null;
@@ -40,8 +40,8 @@ add_task(async function() {
     exception = ex;
   }
 
-  do_check_true(!!exception);
-  do_check_true(exception instanceof OS.File.Error);
+  Assert.ok(!!exception);
+  Assert.ok(exception instanceof OS.File.Error);
 
   // Remove non-existent directory with ignoreAbsent
   await OS.File.removeDir(dir, {ignoreAbsent: true});
@@ -56,26 +56,26 @@ add_task(async function() {
     exception = ex;
   }
 
-  do_check_true(!!exception);
-  do_check_true(exception instanceof OS.File.Error);
+  Assert.ok(!!exception);
+  Assert.ok(exception instanceof OS.File.Error);
 
   // Remove empty directory
   await OS.File.makeDir(dir);
   await OS.File.removeDir(dir);
-  do_check_false((await OS.File.exists(dir)));
+  Assert.equal(false, (await OS.File.exists(dir)));
 
   // Remove directory that contains one file
   await OS.File.makeDir(dir);
   await OS.File.writeAtomic(file1, "content", { tmpPath: file1 + ".tmp" });
   await OS.File.removeDir(dir);
-  do_check_false((await OS.File.exists(dir)));
+  Assert.equal(false, (await OS.File.exists(dir)));
 
   // Remove directory that contains multiple files
   await OS.File.makeDir(dir);
   await OS.File.writeAtomic(file1, "content", { tmpPath: file1 + ".tmp" });
   await OS.File.writeAtomic(file2, "content", { tmpPath: file2 + ".tmp" });
   await OS.File.removeDir(dir);
-  do_check_false((await OS.File.exists(dir)));
+  Assert.equal(false, (await OS.File.exists(dir)));
 
   // Remove directory that contains a file and a directory
   await OS.File.makeDir(dir);
@@ -83,7 +83,7 @@ add_task(async function() {
   await OS.File.makeDir(subDir);
   await OS.File.writeAtomic(fileInSubDir, "content", { tmpPath: fileInSubDir + ".tmp" });
   await OS.File.removeDir(dir);
-  do_check_false((await OS.File.exists(dir)));
+  Assert.equal(false, (await OS.File.exists(dir)));
 });
 
 add_task(async function test_unix_symlink() {
@@ -112,63 +112,63 @@ add_task(async function test_unix_symlink() {
   // <profileDir>/directory/link2 => ../directory3 (regular file)
 
   // Sanity checking for the test
-  do_check_false((await OS.File.exists(dir)));
+  Assert.equal(false, (await OS.File.exists(dir)));
 
   await OS.File.writeAtomic(file, "content", { tmpPath: file + ".tmp" });
-  do_check_true((await OS.File.exists(file)));
+  Assert.ok((await OS.File.exists(file)));
   let info = await OS.File.stat(file, {unixNoFollowingLinks: true});
-  do_check_false(info.isDir);
-  do_check_false(info.isSymLink);
+  Assert.ok(!info.isDir);
+  Assert.ok(!info.isSymLink);
 
   await OS.File.unixSymLink(file, file + ".link");
-  do_check_true((await OS.File.exists(file + ".link")));
+  Assert.ok((await OS.File.exists(file + ".link")));
   info = await OS.File.stat(file + ".link", {unixNoFollowingLinks: true});
-  do_check_false(info.isDir);
-  do_check_true(info.isSymLink);
+  Assert.ok(!info.isDir);
+  Assert.ok(info.isSymLink);
   info = await OS.File.stat(file + ".link");
-  do_check_false(info.isDir);
-  do_check_false(info.isSymLink);
+  Assert.ok(!info.isDir);
+  Assert.ok(!info.isSymLink);
   await OS.File.remove(file + ".link");
-  do_check_false((await OS.File.exists(file + ".link")));
+  Assert.equal(false, (await OS.File.exists(file + ".link")));
 
   await OS.File.makeDir(dir);
-  do_check_true((await OS.File.exists(dir)));
+  Assert.ok((await OS.File.exists(dir)));
   info = await OS.File.stat(dir, {unixNoFollowingLinks: true});
-  do_check_true(info.isDir);
-  do_check_false(info.isSymLink);
+  Assert.ok(info.isDir);
+  Assert.ok(!info.isSymLink);
 
   let link = OS.Path.join(OS.Constants.Path.profileDir, "linkdir");
 
   await OS.File.unixSymLink(dir, link);
-  do_check_true((await OS.File.exists(link)));
+  Assert.ok((await OS.File.exists(link)));
   info = await OS.File.stat(link, {unixNoFollowingLinks: true});
-  do_check_false(info.isDir);
-  do_check_true(info.isSymLink);
+  Assert.ok(!info.isDir);
+  Assert.ok(info.isSymLink);
   info = await OS.File.stat(link);
-  do_check_true(info.isDir);
-  do_check_false(info.isSymLink);
+  Assert.ok(info.isDir);
+  Assert.ok(!info.isSymLink);
 
   let dir3 = OS.Path.join(OS.Constants.Path.profileDir, "directory3");
   let file3 = OS.Path.join(dir3, "file3");
   let link2 = OS.Path.join(dir, "link2");
 
   await OS.File.writeAtomic(file1, "content", { tmpPath: file1 + ".tmp" });
-  do_check_true((await OS.File.exists(file1)));
+  Assert.ok((await OS.File.exists(file1)));
   await OS.File.makeDir(dir3);
-  do_check_true((await OS.File.exists(dir3)));
+  Assert.ok((await OS.File.exists(dir3)));
   await OS.File.writeAtomic(file3, "content", { tmpPath: file3 + ".tmp" });
-  do_check_true((await OS.File.exists(file3)));
+  Assert.ok((await OS.File.exists(file3)));
   await OS.File.unixSymLink("../directory3", link2);
-  do_check_true((await OS.File.exists(link2)));
+  Assert.ok((await OS.File.exists(link2)));
 
   await OS.File.removeDir(link);
-  do_check_false((await OS.File.exists(link)));
-  do_check_true((await OS.File.exists(file1)));
+  Assert.equal(false, (await OS.File.exists(link)));
+  Assert.ok((await OS.File.exists(file1)));
   await OS.File.removeDir(dir);
-  do_check_false((await OS.File.exists(dir)));
-  do_check_true((await OS.File.exists(file3)));
+  Assert.equal(false, (await OS.File.exists(dir)));
+  Assert.ok((await OS.File.exists(file3)));
   await OS.File.removeDir(dir3);
-  do_check_false((await OS.File.exists(dir3)));
+  Assert.equal(false, (await OS.File.exists(dir3)));
 
   // This task will be executed only on Unix-like systems.
   // Please do not add tests independent to operating systems here

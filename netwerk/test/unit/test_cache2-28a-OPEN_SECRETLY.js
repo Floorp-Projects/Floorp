@@ -5,21 +5,21 @@ function run_test()
     return parseInt((new Date()).getTime() / 1000);
   }
   function do_check_time(a, b) {
-    do_check_true(Math.abs(a - b) < 0.5);
+    Assert.ok(Math.abs(a - b) < 0.5);
   }
 
   asyncOpenCacheEntry("http://t/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
     new OpenCallback(NEW, "m", "d", function(entry) {
 
       var now1 = NowSeconds();
-      do_check_eq(entry.fetchCount, 1);
+      Assert.equal(entry.fetchCount, 1);
       do_check_time(entry.lastFetched, now1);
       do_check_time(entry.lastModified, now1);
 
       do_timeout(2000, () => {
         asyncOpenCacheEntry("http://t/", "disk", Ci.nsICacheStorage.OPEN_SECRETLY, null,
           new OpenCallback(NORMAL, "m", "d", function(entry) {
-            do_check_eq(entry.fetchCount, 1);
+            Assert.equal(entry.fetchCount, 1);
             do_check_time(entry.lastFetched, now1);
             do_check_time(entry.lastModified, now1);
 

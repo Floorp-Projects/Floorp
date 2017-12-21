@@ -255,15 +255,15 @@ const MERGE_TESTCASES = [
 
 let do_check_record_matches = (recordWithMeta, record) => {
   for (let key in record) {
-    do_check_eq(recordWithMeta[key], record[key]);
+    Assert.equal(recordWithMeta[key], record[key]);
   }
 };
 
 add_task(async function test_initialize() {
   let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME);
 
-  do_check_eq(profileStorage._store.data.version, 1);
-  do_check_eq(profileStorage._store.data.addresses.length, 0);
+  Assert.equal(profileStorage._store.data.version, 1);
+  Assert.equal(profileStorage._store.data.addresses.length, 0);
 
   let data = profileStorage._store.data;
   Assert.deepEqual(data.addresses, []);
@@ -285,20 +285,20 @@ add_task(async function test_getAll() {
 
   let addresses = profileStorage.addresses.getAll();
 
-  do_check_eq(addresses.length, 2);
+  Assert.equal(addresses.length, 2);
   do_check_record_matches(addresses[0], TEST_ADDRESS_1);
   do_check_record_matches(addresses[1], TEST_ADDRESS_2);
 
   // Check computed fields.
-  do_check_eq(addresses[0].name, "Timothy John Berners-Lee");
-  do_check_eq(addresses[0]["address-line1"], "32 Vassar Street");
-  do_check_eq(addresses[0]["address-line2"], "MIT Room 32-G524");
+  Assert.equal(addresses[0].name, "Timothy John Berners-Lee");
+  Assert.equal(addresses[0]["address-line1"], "32 Vassar Street");
+  Assert.equal(addresses[0]["address-line2"], "MIT Room 32-G524");
 
   // Test with rawData set.
   addresses = profileStorage.addresses.getAll({rawData: true});
-  do_check_eq(addresses[0].name, undefined);
-  do_check_eq(addresses[0]["address-line1"], undefined);
-  do_check_eq(addresses[0]["address-line2"], undefined);
+  Assert.equal(addresses[0].name, undefined);
+  Assert.equal(addresses[0]["address-line1"], undefined);
+  Assert.equal(addresses[0]["address-line2"], undefined);
 
   // Modifying output shouldn't affect the storage.
   addresses[0].organization = "test";
@@ -317,15 +317,15 @@ add_task(async function test_get() {
 
   // Test with rawData set.
   address = profileStorage.addresses.get(guid, {rawData: true});
-  do_check_eq(address.name, undefined);
-  do_check_eq(address["address-line1"], undefined);
-  do_check_eq(address["address-line2"], undefined);
+  Assert.equal(address.name, undefined);
+  Assert.equal(address["address-line1"], undefined);
+  Assert.equal(address["address-line2"], undefined);
 
   // Modifying output shouldn't affect the storage.
   address.organization = "test";
   do_check_record_matches(profileStorage.addresses.get(guid), TEST_ADDRESS_1);
 
-  do_check_eq(profileStorage.addresses.get("INVALID_GUID"), null);
+  Assert.equal(profileStorage.addresses.get("INVALID_GUID"), null);
 });
 
 add_task(async function test_add() {
@@ -334,28 +334,28 @@ add_task(async function test_add() {
 
   let addresses = profileStorage.addresses.getAll();
 
-  do_check_eq(addresses.length, 2);
+  Assert.equal(addresses.length, 2);
 
   do_check_record_matches(addresses[0], TEST_ADDRESS_1);
   do_check_record_matches(addresses[1], TEST_ADDRESS_2);
 
-  do_check_neq(addresses[0].guid, undefined);
-  do_check_eq(addresses[0].version, 1);
-  do_check_neq(addresses[0].timeCreated, undefined);
-  do_check_eq(addresses[0].timeLastModified, addresses[0].timeCreated);
-  do_check_eq(addresses[0].timeLastUsed, 0);
-  do_check_eq(addresses[0].timesUsed, 0);
+  Assert.notEqual(addresses[0].guid, undefined);
+  Assert.equal(addresses[0].version, 1);
+  Assert.notEqual(addresses[0].timeCreated, undefined);
+  Assert.equal(addresses[0].timeLastModified, addresses[0].timeCreated);
+  Assert.equal(addresses[0].timeLastUsed, 0);
+  Assert.equal(addresses[0].timesUsed, 0);
 
   // Empty string should be deleted before saving.
   profileStorage.addresses.add(TEST_ADDRESS_WITH_EMPTY_FIELD);
   let address = profileStorage.addresses._data[2];
-  do_check_eq(address.name, TEST_ADDRESS_WITH_EMPTY_FIELD.name);
-  do_check_eq(address["street-address"], undefined);
+  Assert.equal(address.name, TEST_ADDRESS_WITH_EMPTY_FIELD.name);
+  Assert.equal(address["street-address"], undefined);
 
   // Empty computed fields shouldn't cause any problem.
   profileStorage.addresses.add(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD);
   address = profileStorage.addresses._data[3];
-  do_check_eq(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
+  Assert.equal(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
 
   Assert.throws(() => profileStorage.addresses.add(TEST_ADDRESS_WITH_INVALID_FIELD),
     /"invalidField" is not a valid field\./);
@@ -381,7 +381,7 @@ add_task(async function test_update() {
       data == "update" && subject.QueryInterface(Ci.nsISupportsString).data == guid
   );
 
-  do_check_neq(addresses[1].country, undefined);
+  Assert.notEqual(addresses[1].country, undefined);
 
   profileStorage.addresses.update(guid, TEST_ADDRESS_3);
   await onChanged;
@@ -391,10 +391,10 @@ add_task(async function test_update() {
 
   let address = profileStorage.addresses.get(guid, {rawData: true});
 
-  do_check_eq(address.country, undefined);
-  do_check_neq(address.timeLastModified, timeLastModified);
+  Assert.equal(address.country, undefined);
+  Assert.notEqual(address.timeLastModified, timeLastModified);
   do_check_record_matches(address, TEST_ADDRESS_3);
-  do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 1);
+  Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 
   // Test preserveOldProperties parameter and field with empty string.
   profileStorage.addresses.update(guid, TEST_ADDRESS_WITH_EMPTY_FIELD, true);
@@ -405,26 +405,26 @@ add_task(async function test_update() {
 
   address = profileStorage.addresses.get(guid, {rawData: true});
 
-  do_check_eq(address["given-name"], "Tim");
-  do_check_eq(address["family-name"], "Berners");
-  do_check_eq(address["street-address"], undefined);
-  do_check_eq(address["postal-code"], "12345");
-  do_check_neq(address.timeLastModified, timeLastModified);
-  do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 2);
+  Assert.equal(address["given-name"], "Tim");
+  Assert.equal(address["family-name"], "Berners");
+  Assert.equal(address["street-address"], undefined);
+  Assert.equal(address["postal-code"], "12345");
+  Assert.notEqual(address.timeLastModified, timeLastModified);
+  Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 2);
 
   // Empty string should be deleted while updating.
   profileStorage.addresses.update(profileStorage.addresses._data[0].guid, TEST_ADDRESS_WITH_EMPTY_FIELD);
   address = profileStorage.addresses._data[0];
-  do_check_eq(address.name, TEST_ADDRESS_WITH_EMPTY_FIELD.name);
-  do_check_eq(address["street-address"], undefined);
+  Assert.equal(address.name, TEST_ADDRESS_WITH_EMPTY_FIELD.name);
+  Assert.equal(address["street-address"], undefined);
 
   // Empty computed fields shouldn't cause any problem.
   profileStorage.addresses.update(profileStorage.addresses._data[0].guid, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, false);
   address = profileStorage.addresses._data[0];
-  do_check_eq(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
+  Assert.equal(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
   profileStorage.addresses.update(profileStorage.addresses._data[1].guid, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, true);
   address = profileStorage.addresses._data[1];
-  do_check_eq(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
+  Assert.equal(address.email, TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD.email);
 
   Assert.throws(
     () => profileStorage.addresses.update("INVALID_GUID", TEST_ADDRESS_3),
@@ -473,11 +473,11 @@ add_task(async function test_notifyUsed() {
 
   let address = profileStorage.addresses.get(guid);
 
-  do_check_eq(address.timesUsed, timesUsed + 1);
-  do_check_neq(address.timeLastUsed, timeLastUsed);
+  Assert.equal(address.timesUsed, timesUsed + 1);
+  Assert.notEqual(address.timeLastUsed, timeLastUsed);
 
   // Using a record should not bump its change counter.
-  do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid),
+  Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid),
     changeCounter);
 
   Assert.throws(() => profileStorage.addresses.notifyUsed("INVALID_GUID"),
@@ -494,21 +494,21 @@ add_task(async function test_remove() {
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "remove");
 
-  do_check_eq(addresses.length, 2);
+  Assert.equal(addresses.length, 2);
 
   profileStorage.addresses.remove(guid);
   await onChanged;
 
   addresses = profileStorage.addresses.getAll();
 
-  do_check_eq(addresses.length, 1);
+  Assert.equal(addresses.length, 1);
 
-  do_check_eq(profileStorage.addresses.get(guid), null);
+  Assert.equal(profileStorage.addresses.get(guid), null);
 });
 
 MERGE_TESTCASES.forEach((testcase) => {
   add_task(async function test_merge() {
-    do_print("Starting testcase: " + testcase.description);
+    info("Starting testcase: " + testcase.description);
     let profileStorage = await initProfileStorage(TEST_STORE_FILE_NAME,
                                                   [testcase.addressInStorage]);
     let addresses = profileStorage.addresses.getAll();
@@ -524,7 +524,7 @@ MERGE_TESTCASES.forEach((testcase) => {
 
     // Force to create sync metadata.
     profileStorage.addresses.pullSyncChanges();
-    do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 1);
+    Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 
     Assert.ok(profileStorage.addresses.mergeIfPossible(guid,
                                                        testcase.addressToMerge,
@@ -540,12 +540,12 @@ MERGE_TESTCASES.forEach((testcase) => {
       Assert.equal(addresses[0].timeLastModified, timeLastModified);
 
       // No need to bump the change counter if the data is unchanged.
-      do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 1);
+      Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
     } else {
       Assert.notEqual(addresses[0].timeLastModified, timeLastModified);
 
       // Record merging should bump the change counter.
-      do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 2);
+      Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 2);
     }
   });
 });
@@ -558,14 +558,14 @@ add_task(async function test_merge_same_address() {
 
   // Force to create sync metadata.
   profileStorage.addresses.pullSyncChanges();
-  do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 1);
+  Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 
   // Merge same address will still return true but it won't update timeLastModified.
   Assert.ok(profileStorage.addresses.mergeIfPossible(guid, TEST_ADDRESS_1));
   Assert.equal(addresses[0].timeLastModified, timeLastModified);
 
   // ... and won't bump the change counter, either.
-  do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 1);
+  Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 });
 
 add_task(async function test_merge_unable_merge() {
@@ -577,21 +577,21 @@ add_task(async function test_merge_unable_merge() {
 
   // Force to create sync metadata.
   profileStorage.addresses.pullSyncChanges();
-  do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 1);
+  Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 
   // Unable to merge because of conflict
-  do_check_eq(profileStorage.addresses.mergeIfPossible(guid, TEST_ADDRESS_3), false);
+  Assert.equal(profileStorage.addresses.mergeIfPossible(guid, TEST_ADDRESS_3), false);
 
   // Unable to merge because no overlap
-  do_check_eq(profileStorage.addresses.mergeIfPossible(guid, TEST_ADDRESS_4), false);
+  Assert.equal(profileStorage.addresses.mergeIfPossible(guid, TEST_ADDRESS_4), false);
 
   // Unable to strict merge because subset with empty string
   let subset = Object.assign({}, TEST_ADDRESS_1);
   subset.organization = "";
-  do_check_eq(profileStorage.addresses.mergeIfPossible(guid, subset, true), false);
+  Assert.equal(profileStorage.addresses.mergeIfPossible(guid, subset, true), false);
 
   // Shouldn't bump the change counter
-  do_check_eq(getSyncChangeCounter(profileStorage.addresses, guid), 1);
+  Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
 });
 
 add_task(async function test_mergeToStorage() {
@@ -601,12 +601,12 @@ add_task(async function test_mergeToStorage() {
   let anotherAddress = profileStorage.addresses._clone(TEST_ADDRESS_2);
   profileStorage.addresses.add(anotherAddress);
   anotherAddress.email = "timbl@w3.org";
-  do_check_eq(profileStorage.addresses.mergeToStorage(anotherAddress).length, 2);
-  do_check_eq(profileStorage.addresses.getAll()[1].email, anotherAddress.email);
-  do_check_eq(profileStorage.addresses.getAll()[2].email, anotherAddress.email);
+  Assert.equal(profileStorage.addresses.mergeToStorage(anotherAddress).length, 2);
+  Assert.equal(profileStorage.addresses.getAll()[1].email, anotherAddress.email);
+  Assert.equal(profileStorage.addresses.getAll()[2].email, anotherAddress.email);
 
   // Empty computed fields shouldn't cause any problem.
-  do_check_eq(profileStorage.addresses.mergeToStorage(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD).length, 3);
+  Assert.equal(profileStorage.addresses.mergeToStorage(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD).length, 3);
 });
 
 add_task(async function test_mergeToStorage_strict() {
@@ -615,9 +615,9 @@ add_task(async function test_mergeToStorage_strict() {
   // Try to merge a subset with empty string
   let anotherAddress = profileStorage.addresses._clone(TEST_ADDRESS_1);
   anotherAddress.email = "";
-  do_check_eq(profileStorage.addresses.mergeToStorage(anotherAddress, true).length, 0);
-  do_check_eq(profileStorage.addresses.getAll()[0].email, TEST_ADDRESS_1.email);
+  Assert.equal(profileStorage.addresses.mergeToStorage(anotherAddress, true).length, 0);
+  Assert.equal(profileStorage.addresses.getAll()[0].email, TEST_ADDRESS_1.email);
 
   // Empty computed fields shouldn't cause any problem.
-  do_check_eq(profileStorage.addresses.mergeToStorage(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, true).length, 1);
+  Assert.equal(profileStorage.addresses.mergeToStorage(TEST_ADDRESS_WITH_EMPTY_COMPUTED_FIELD, true).length, 1);
 });

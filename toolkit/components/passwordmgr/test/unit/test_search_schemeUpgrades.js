@@ -42,14 +42,14 @@ function buildExpectedLogins(aQuery) {
  *        don't make the current test meaningless.
  */
 function checkSearch(aQuery, aExpectedCount) {
-  do_print("Testing searchLogins for " + JSON.stringify(aQuery));
+  info("Testing searchLogins for " + JSON.stringify(aQuery));
 
   let expectedLogins = buildExpectedLogins(aQuery);
-  do_check_eq(expectedLogins.length, aExpectedCount);
+  Assert.equal(expectedLogins.length, aExpectedCount);
 
   let outCount = {};
   let logins = Services.logins.searchLogins(outCount, newPropertyBag(aQuery));
-  do_check_eq(outCount.value, expectedLogins.length);
+  Assert.equal(outCount.value, expectedLogins.length);
   LoginTestUtils.assertLoginListsEqual(logins, expectedLogins);
 }
 
@@ -175,7 +175,7 @@ add_task(function test_search_schemeUpgrades_downgrade() {
     formSubmitURL: HTTP_ORIGIN,
     hostname: HTTP_ORIGIN,
   }, 1);
-  do_print("The same number should be found with schemeUpgrades since we're searching for HTTP");
+  info("The same number should be found with schemeUpgrades since we're searching for HTTP");
   checkSearch({
     formSubmitURL: HTTP_ORIGIN,
     hostname: HTTP_ORIGIN,

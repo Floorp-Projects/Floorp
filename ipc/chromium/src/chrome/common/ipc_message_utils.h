@@ -20,7 +20,6 @@
 #include "chrome/common/file_descriptor_set_posix.h"
 #endif
 #include "chrome/common/ipc_message.h"
-#include "chrome/common/transport_dib.h"
 
 namespace IPC {
 
@@ -480,28 +479,6 @@ struct ParamTraitsIPC<base::FileDescriptor> {
   }
 };
 #endif // defined(OS_POSIX)
-
-#if defined(OS_WIN)
-template<>
-struct ParamTraitsIPC<TransportDIB::Id> {
-  typedef TransportDIB::Id param_type;
-  static void Write(Message* m, const param_type& p) {
-    WriteParam(m, p.handle);
-    WriteParam(m, p.sequence_num);
-  }
-  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
-    return (ReadParam(m, iter, &r->handle) &&
-            ReadParam(m, iter, &r->sequence_num));
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    l->append(L"TransportDIB(");
-    LogParam(p.handle, l);
-    l->append(L", ");
-    LogParam(p.sequence_num, l);
-    l->append(L")");
-  }
-};
-#endif
 
 // Mozilla-specific types.
 

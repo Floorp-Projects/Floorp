@@ -25,14 +25,14 @@ async function testBackgroundPage(expected) {
 }
 
 add_task(async function test_background_incognito() {
-  do_print("Test background page incognito value with permanent private browsing disabled");
+  info("Test background page incognito value with permanent private browsing disabled");
 
   await testBackgroundPage({incognito: false});
 
-  do_print("Test background page incognito value with permanent private browsing enabled");
+  info("Test background page incognito value with permanent private browsing enabled");
 
   Preferences.set("browser.privatebrowsing.autostart", true);
-  do_register_cleanup(() => {
+  registerCleanupFunction(() => {
     Preferences.reset("browser.privatebrowsing.autostart");
   });
 

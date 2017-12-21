@@ -26,16 +26,16 @@ var gPluginHost = null;
 function test_expected_permission_string(aPermString) {
   gPluginHost.reloadPlugins(false);
   let plugin = get_test_plugintag();
-  do_check_false(plugin == null);
-  do_check_eq(gPluginHost.getPermissionStringForType("application/x-test"),
-              aPermString);
+  Assert.equal(false, plugin == null);
+  Assert.equal(gPluginHost.getPermissionStringForType("application/x-test"),
+               aPermString);
 }
 
 function run_test() {
   allow_all_plugins();
-  do_check_true(gIsWindows || gIsOSX || gIsLinux);
-  do_check_true(!(gIsWindows && gIsOSX) && !(gIsWindows && gIsLinux) &&
-                !(gIsOSX && gIsLinux));
+  Assert.ok(gIsWindows || gIsOSX || gIsLinux);
+  Assert.ok(!(gIsWindows && gIsOSX) && !(gIsWindows && gIsLinux) &&
+            !(gIsOSX && gIsLinux));
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
   gPluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);

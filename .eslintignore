@@ -90,6 +90,7 @@ browser/extensions/pocket/content/panels/js/tmpl.js
 browser/extensions/pocket/content/panels/js/vendor/**
 # generated or library files in activity-stream
 browser/extensions/activity-stream/data/content/activity-stream.bundle.js
+browser/extensions/activity-stream/test/**
 browser/extensions/activity-stream/vendor/**
 # The only file in browser/locales/ is pre-processed.
 browser/locales/**

@@ -41,16 +41,16 @@ function run_test_with_server(server, callback) {
 function test_object_grip() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     let obj1 = packet.frame.arguments[0];
-    do_check_true(obj1.frozen);
+    Assert.ok(obj1.frozen);
 
     let obj1Client = gThreadClient.pauseGrip(obj1);
-    do_check_true(obj1Client.isFrozen);
+    Assert.ok(obj1Client.isFrozen);
 
     let obj2 = packet.frame.arguments[1];
-    do_check_false(obj2.frozen);
+    Assert.ok(!obj2.frozen);
 
     let obj2Client = gThreadClient.pauseGrip(obj2);
-    do_check_false(obj2Client.isFrozen);
+    Assert.ok(!obj2Client.isFrozen);
 
     gThreadClient.resume(_ => {
       gClient.close().then(gCallback);

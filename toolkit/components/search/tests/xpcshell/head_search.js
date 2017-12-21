@@ -285,12 +285,12 @@ function readJSONFile(aFile) {
 function isSubObjectOf(expectedObj, actualObj) {
   for (let prop in expectedObj) {
     if (expectedObj[prop] instanceof Object) {
-      do_check_eq(expectedObj[prop].length, actualObj[prop].length);
+      Assert.equal(expectedObj[prop].length, actualObj[prop].length);
       isSubObjectOf(expectedObj[prop], actualObj[prop]);
     } else {
       if (expectedObj[prop] != actualObj[prop])
-        do_print("comparing property " + prop);
-      do_check_eq(expectedObj[prop], actualObj[prop]);
+        info("comparing property " + prop);
+      Assert.equal(expectedObj[prop], actualObj[prop]);
     }
   }
 }
@@ -327,7 +327,7 @@ function useHttpServer() {
   httpServer.start(-1);
   httpServer.registerDirectory("/", do_get_cwd());
   gDataUrl = "http://localhost:" + httpServer.identity.primaryPort + "/data/";
-  do_register_cleanup(async function cleanup_httpServer() {
+  registerCleanupFunction(async function cleanup_httpServer() {
     await new Promise(resolve => {
       httpServer.stop(resolve);
     });
@@ -357,12 +357,12 @@ var addTestEngines = async function(aItems) {
   let engines = [];
 
   for (let item of aItems) {
-    do_print("Adding engine: " + item.name);
+    info("Adding engine: " + item.name);
     await new Promise((resolve, reject) => {
       Services.obs.addObserver(function obs(subject, topic, data) {
         try {
           let engine = subject.QueryInterface(Ci.nsISearchEngine);
-          do_print("Observed " + data + " for " + engine.name);
+          info("Observed " + data + " for " + engine.name);
           if (data != "engine-added" || engine.name != item.name) {
             return;
           }
@@ -449,7 +449,7 @@ function waitForSearchNotification(aExpectedData) {
 function asyncInit() {
   return new Promise(resolve => {
     Services.search.init(function() {
-      do_check_true(Services.search.isInitialized);
+      Assert.ok(Services.search.isInitialized);
       resolve();
     });
   });

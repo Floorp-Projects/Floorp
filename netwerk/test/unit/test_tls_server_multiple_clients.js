@@ -47,7 +47,7 @@ function startServer(cert) {
 
   let listener = {
     onSocketAccepted: function(socket, transport) {
-      do_print("Accept TLS client connection");
+      info("Accept TLS client connection");
       let connectionInfo = transport.securityInfo
                            .QueryInterface(Ci.nsITLSServerConnectionInfo);
       connectionInfo.setSecurityObserver(listener);
@@ -55,7 +55,7 @@ function startServer(cert) {
       output = transport.openOutputStream(0, 0, 0);
     },
     onHandshakeDone: function(socket, status) {
-      do_print("TLS handshake done");
+      info("TLS handshake done");
 
       input.asyncWait({
         onInputStreamReady: function(input) {
@@ -113,7 +113,7 @@ function startClient(port) {
     onOutputStreamReady: function(output) {
       try {
         output.write("HELLO", 5);
-        do_print("Output to server written");
+        info("Output to server written");
         outputDeferred.resolve();
         input = transport.openInputStream(0, 0, 0);
         input.asyncWait(handler, 0, 0, Services.tm.currentThread);

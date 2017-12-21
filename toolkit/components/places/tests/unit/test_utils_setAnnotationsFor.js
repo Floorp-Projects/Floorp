@@ -45,16 +45,16 @@ add_task(async function test_setAnnotationsFor() {
   PlacesUtils.setAnnotationsForItem(itemId, testAnnos);
   // Check for correct addition
   testAnnos.forEach(function(anno) {
-    do_check_true(as.itemHasAnnotation(itemId, anno.name));
-    do_check_eq(as.getItemAnnotation(itemId, anno.name), anno.value);
+    Assert.ok(as.itemHasAnnotation(itemId, anno.name));
+    Assert.equal(as.getItemAnnotation(itemId, anno.name), anno.value);
   });
 
   // Add page annotations
   PlacesUtils.setAnnotationsForURI(testURI, testAnnos);
   // Check for correct addition
   testAnnos.forEach(function(anno) {
-    do_check_true(as.pageHasAnnotation(testURI, anno.name));
-    do_check_eq(as.getPageAnnotation(testURI, anno.name), anno.value);
+    Assert.ok(as.pageHasAnnotation(testURI, anno.name));
+    Assert.equal(as.getPageAnnotation(testURI, anno.name), anno.value);
   });
 
   // To unset annotations we unset their values or set them to
@@ -68,15 +68,15 @@ add_task(async function test_setAnnotationsFor() {
   PlacesUtils.setAnnotationsForItem(itemId, testAnnos);
   // Check for correct removal
   testAnnos.forEach(function(anno) {
-    do_check_false(as.itemHasAnnotation(itemId, anno.name));
+    Assert.ok(!as.itemHasAnnotation(itemId, anno.name));
     // sanity: page annotations should not be removed here
-    do_check_true(as.pageHasAnnotation(testURI, anno.name));
+    Assert.ok(as.pageHasAnnotation(testURI, anno.name));
   });
 
   // Unset all page annotations
   PlacesUtils.setAnnotationsForURI(testURI, testAnnos);
   // Check for correct removal
   testAnnos.forEach(function(anno) {
-    do_check_false(as.pageHasAnnotation(testURI, anno.name));
+    Assert.ok(!as.pageHasAnnotation(testURI, anno.name));
   });
 });

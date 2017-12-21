@@ -9,16 +9,16 @@ function run_test()
     .getService(Components.interfaces.mozIOSPreferences);
 
   const systemLocale = osprefs.systemLocale;
-  do_check_true(systemLocale != "", "systemLocale is non-empty");
+  Assert.ok(systemLocale != "", "systemLocale is non-empty");
 
   const systemLocales = osprefs.getSystemLocales();
-  do_check_true(Array.isArray(systemLocales), "systemLocales returns an array");
+  Assert.ok(Array.isArray(systemLocales), "systemLocales returns an array");
 
-  do_check_true(systemLocale == systemLocales[0],
+  Assert.ok(systemLocale == systemLocales[0],
     "systemLocale matches first entry in systemLocales");
 
   const rgLocales = osprefs.getRegionalPrefsLocales();
-  do_check_true(Array.isArray(rgLocales), "regionalPrefsLocales returns an array");
+  Assert.ok(Array.isArray(rgLocales), "regionalPrefsLocales returns an array");
 
   const getDateTimePatternTests = [
     [osprefs.dateTimeFormatStyleNone, osprefs.dateTimeFormatStyleNone, ""],
@@ -33,9 +33,9 @@ function run_test()
     const pattern = osprefs.getDateTimePattern(...test);
     if (test[0] !== osprefs.dateTimeFormatStyleNone &&
         test[1] !== osprefs.dateTImeFormatStyleNone) {
-      do_check_true(pattern.length > 0, "pattern is not empty.");
+      Assert.ok(pattern.length > 0, "pattern is not empty.");
     }
   }
 
-  do_check_true(1, "osprefs didn't crash");
+  Assert.ok(1, "osprefs didn't crash");
 }

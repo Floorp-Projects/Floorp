@@ -62,6 +62,22 @@ GridLines::IndexedGetter(uint32_t aIndex,
   return mLines[aIndex];
 }
 
+static void AddLineNameIfNotPresent(nsTArray<nsString>& aLineNames,
+                             const nsString& aName)
+{
+  if (!aLineNames.Contains(aName)) {
+    aLineNames.AppendElement(aName);
+  }
+}
+
+static void AddLineNamesIfNotPresent(nsTArray<nsString>& aLineNames,
+                              const nsTArray<nsString>& aNames)
+{
+  for (const auto& name : aNames) {
+    AddLineNameIfNotPresent(aLineNames, name);
+  }
+}
+
 void
 GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
                        const ComputedGridLineInfo* aLineInfo,
@@ -114,8 +130,22 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
                          aTrackInfo->mPositions[i] :
                          lastTrackEdge;
 
+      // Get the line names for the current line. aLineInfo->mNames
+      // may contain duplicate names. This is intentional, since grid
+      // layout works fine with duplicate names, and we don't want to
+      // detect and remove duplicates in layout since it is an O(n^2)
+      // problem. We do the work here since this is only run when
+      // requested by devtools, and slowness here will not affect
+      // normal browsing.
+      nsTArray<nsString> possiblyDuplicateLineNames(
+        aLineInfo->mNames.SafeElementAt(i, nsTArray<nsString>()));
+
+      // Add the possiblyDuplicateLineNames one at a time to filter
+      // out the duplicates.
       nsTArray<nsString> lineNames;
-      lineNames = aLineInfo->mNames.SafeElementAt(i, nsTArray<nsString>());
+      for (const auto& name : possiblyDuplicateLineNames) {
+        AddLineNameIfNotPresent(lineNames, name);
+      }
 
       // Add in names from grid areas where this line is used as a boundary.
       for (auto area : aAreas) {
@@ -140,8 +170,8 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
           }
         }
 
-        if (haveNameToAdd && !lineNames.Contains(nameToAdd)) {
-          lineNames.AppendElement(nameToAdd);
+        if (haveNameToAdd) {
+          AddLineNameIfNotPresent(lineNames, nameToAdd);
         }
       }
 
@@ -242,7 +272,7 @@ GridLines::AppendRemovedAutoFits(const ComputedGridTrackInfo* aTrackInfo,
     // If this is the second or later time through, or didn't already
     // have before names, add them.
     if (linesAdded > 0 || !alreadyHasBeforeLineNames) {
-      aLineNames.AppendElements(aLineInfo->mNamesBefore);
+      AddLineNamesIfNotPresent(aLineNames, aLineInfo->mNamesBefore);
     }
 
     RefPtr<GridLine> line = new GridLine(this);
@@ -285,13 +315,13 @@ GridLines::AppendRemovedAutoFits(const ComputedGridTrackInfo* aTrackInfo,
 
   if (extractedExplicitLineNames) {
     // Pass on the explicit names we saved to the next explicit line.
-    aLineNames.AppendElements(explicitLineNames);
+    AddLineNamesIfNotPresent(aLineNames, explicitLineNames);
   }
 
   if (alreadyHasBeforeLineNames && linesAdded > 0) {
     // If we started with before names, pass them on to the next explicit
     // line.
-    aLineNames.AppendElements(aLineInfo->mNamesBefore);
+    AddLineNamesIfNotPresent(aLineNames, aLineInfo->mNamesBefore);
   }
   return linesAdded;
 }

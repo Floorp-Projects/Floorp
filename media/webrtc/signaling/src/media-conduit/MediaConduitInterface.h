@@ -519,6 +519,12 @@ public:
                                               int32_t capture_delay,
                                               int& lengthSamples) = 0;
 
+  /**
+   * Checks if given sampling frequency is supported
+   * @param freq: Sampling rate (in Hz) to check
+   */
+  virtual bool IsSamplingFreqSupported(int freq) const = 0;
+
    /**
     * Function to configure send codec for the audio session
     * @param sendSessionConfig: CodecConfiguration

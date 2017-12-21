@@ -41,13 +41,13 @@ add_task(async function test_app_addons() {
   });
 
   let cached = await getCachedAddon("system1@tests.mozilla.org");
-  do_check_eq(cached, null);
+  Assert.equal(cached, null);
 
   cached = await getCachedAddon("system2@tests.mozilla.org");
-  do_check_eq(cached, null);
+  Assert.equal(cached, null);
 
   cached = await getCachedAddon("system3@tests.mozilla.org");
-  do_check_eq(cached, null);
+  Assert.equal(cached, null);
 
   await promiseShutdownManager();
   await new Promise(resolve => gServer.stop(resolve));

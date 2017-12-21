@@ -13,23 +13,23 @@ function run_test() {
   if (!profiler)
     return;
 
-  do_check_true(!profiler.IsActive());
-  do_check_true(!profiler.IsPaused());
+  Assert.ok(!profiler.IsActive());
+  Assert.ok(!profiler.IsPaused());
 
   profiler.StartProfiler(1000, 10, [], 0);
 
-  do_check_true(profiler.IsActive());
+  Assert.ok(profiler.IsActive());
 
   profiler.PauseSampling();
 
-  do_check_true(profiler.IsPaused());
+  Assert.ok(profiler.IsPaused());
 
   profiler.ResumeSampling();
 
-  do_check_true(!profiler.IsPaused());
+  Assert.ok(!profiler.IsPaused());
 
   profiler.StopProfiler();
-  do_check_true(!profiler.IsActive());
-  do_check_true(!profiler.IsPaused());
+  Assert.ok(!profiler.IsActive());
+  Assert.ok(!profiler.IsPaused());
   do_test_finished();
 }

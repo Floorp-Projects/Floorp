@@ -71,7 +71,7 @@ async function initProfileStorage(fileName, records, collectionName = "addresses
   let onChanged = TestUtils.topicObserved("formautofill-storage-changed",
                                           (subject, data) => data == "add");
   for (let record of records) {
-    do_check_true(profileStorage[collectionName].add(record));
+    Assert.ok(profileStorage[collectionName].add(record));
     await onChanged;
   }
   await profileStorage._saveImmediately();
@@ -82,8 +82,8 @@ function verifySectionFieldDetails(sections, expectedResults) {
   Assert.equal(sections.length, expectedResults.length, "Expected section count.");
   sections.forEach((sectionInfo, sectionIndex) => {
     let expectedSectionInfo = expectedResults[sectionIndex];
-    do_print("FieldName Prediction Results: " + sectionInfo.map(i => i.fieldName));
-    do_print("FieldName Expected Results:   " + expectedSectionInfo.map(i => i.fieldName));
+    info("FieldName Prediction Results: " + sectionInfo.map(i => i.fieldName));
+    info("FieldName Expected Results:   " + expectedSectionInfo.map(i => i.fieldName));
     Assert.equal(sectionInfo.length, expectedSectionInfo.length, "Expected field count.");
 
     sectionInfo.forEach((field, fieldIndex) => {
@@ -101,7 +101,7 @@ function runHeuristicsTest(patterns, fixturePathPrefix) {
 
   patterns.forEach(testPattern => {
     add_task(async function() {
-      do_print("Starting test fixture: " + testPattern.fixturePath);
+      info("Starting test fixture: " + testPattern.fixturePath);
       let file = do_get_file(fixturePathPrefix + testPattern.fixturePath);
       let doc = MockDocument.createTestDocumentFromFile("http://localhost:8080/test/", file);
 
@@ -180,7 +180,7 @@ add_task(async function head_initialize() {
   Services.prefs.setBoolPref("dom.forms.autocomplete.formautofill", true);
 
   // Clean up after every test.
-  do_register_cleanup(function head_cleanup() {
+  registerCleanupFunction(function head_cleanup() {
     Services.prefs.clearUserPref("extensions.formautofill.available");
     Services.prefs.clearUserPref("extensions.formautofill.creditCards.available");
     Services.prefs.clearUserPref("extensions.formautofill.heuristics.enabled");

@@ -64,7 +64,7 @@ function check_access(aContractId, aDeferOpen, aTrickDeferredOpen)
   ensure_unique(file);
   let ostream = Cc[aContractId].createInstance(Ci.nsIFileOutputStream);
   ostream.init(file, -1, -1, aDeferOpen ? Ci.nsIFileOutputStream.DEFER_OPEN : 0);
-  do_check_eq(aDeferOpen, !file.clone().exists()); // If defer, should not exist and vice versa
+  Assert.equal(aDeferOpen, !file.clone().exists()); // If defer, should not exist and vice versa
   if (aDeferOpen) {
     // File should appear when we do write to it.
     if (aTrickDeferredOpen) {
@@ -76,7 +76,7 @@ function check_access(aContractId, aDeferOpen, aTrickDeferredOpen)
       file.leafName = LEAF_NAME;
     }
     // We did a write, so the file should now exist
-    do_check_true(file.clone().exists());
+    Assert.ok(file.clone().exists());
   }
   ostream.close();
 
@@ -107,8 +107,8 @@ function check_access(aContractId, aDeferOpen, aTrickDeferredOpen)
   // intend to read does not exist, and then trying to read from it should
   // fail. The other case is where the open is not deferred, and there we should
   // get an error when we Init (and also when we try to read).
-  do_check_true( (aDeferOpen && initOk && !getOk) ||
-                 (!aDeferOpen && !initOk && !getOk) );
+  Assert.ok( (aDeferOpen && initOk && !getOk) ||
+             (!aDeferOpen && !initOk && !getOk) );
   istream.close();
 }
 
@@ -150,7 +150,7 @@ function sync_operations(aDeferOpen)
   cstream.close();
   fstream.close();
 
-  do_check_eq(string.value, TEST_DATA);
+  Assert.equal(string.value, TEST_DATA);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,21 +237,21 @@ function do_test_zero_size_buffered(disableBuffering)
                 createInstance(Ci.nsIConverterInputStream);
   cstream.init(buffered, "UTF-8", 0, 0);
 
-  do_check_eq(buffered.available(), 0);
+  Assert.equal(buffered.available(), 0);
 
   // Now try reading from this stream
   let string = {};
-  do_check_eq(cstream.readString(BUFFERSIZE, string), 0);
-  do_check_eq(string.value, "");
+  Assert.equal(cstream.readString(BUFFERSIZE, string), 0);
+  Assert.equal(string.value, "");
 
   // Now check that available() throws
   var exceptionThrown = false;
   try {
-    do_check_eq(buffered.available(), 0);
+    Assert.equal(buffered.available(), 0);
   } catch (e) {
     exceptionThrown = true;
   }
-  do_check_true(exceptionThrown);
+  Assert.ok(exceptionThrown);
 
   // OK, now seek back to start
   buffered.seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
@@ -259,11 +259,11 @@ function do_test_zero_size_buffered(disableBuffering)
   // Now check that available() does not throw
   exceptionThrown = false;
   try {
-    do_check_eq(buffered.available(), 0);
+    Assert.equal(buffered.available(), 0);
   } catch (e) {
     exceptionThrown = true;
   }
-  do_check_false(exceptionThrown);
+  Assert.ok(!exceptionThrown);
 }
 
 function test_zero_size_buffered()

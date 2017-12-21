@@ -36,7 +36,7 @@ function createFavicon(fileName) {
   stream.write(uniqueStr, uniqueStr.length);
   stream.close();
 
-  do_check_eq(outfile.leafName.substr(0, fileName.length), fileName);
+  Assert.equal(outfile.leafName.substr(0, fileName.length), fileName);
 
   return {
     file: outfile,
@@ -51,18 +51,18 @@ function createDataURLForFavicon(favicon) {
 }
 
 function checkCallbackSucceeded(callbackMimetype, callbackData, sourceMimetype, sourceData) {
-  do_check_eq(callbackMimetype, sourceMimetype);
-  do_check_true(compareArrays(callbackData, sourceData));
+  Assert.equal(callbackMimetype, sourceMimetype);
+  Assert.ok(compareArrays(callbackData, sourceData));
 }
 
 function run_test() {
   // check that the favicon loaded correctly
-  do_check_eq(originalFavicon.data.length, 286);
+  Assert.equal(originalFavicon.data.length, 286);
   run_next_test();
 }
 
 add_task(async function test_replaceFaviconDataFromDataURL_validHistoryURI() {
-  do_print("test replaceFaviconDataFromDataURL for valid history uri");
+  info("test replaceFaviconDataFromDataURL for valid history uri");
 
   let pageURI = uri("http://test1.bar/");
   await PlacesTestUtils.addVisits(pageURI);
@@ -89,7 +89,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_validHistoryURI() {
 });
 
 add_task(async function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon() {
-  do_print("test replaceFaviconDataFromDataURL to override a later setAndFetchFaviconForPage");
+  info("test replaceFaviconDataFromDataURL to override a later setAndFetchFaviconForPage");
 
   let pageURI = uri("http://test2.bar/");
   await PlacesTestUtils.addVisits(pageURI);
@@ -120,7 +120,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_overrideDefaultFavico
 });
 
 add_task(async function test_replaceFaviconDataFromDataURL_replaceExisting() {
-  do_print("test replaceFaviconDataFromDataURL to override a previous setAndFetchFaviconForPage");
+  info("test replaceFaviconDataFromDataURL to override a previous setAndFetchFaviconForPage");
 
   let pageURI = uri("http://test3.bar");
   await PlacesTestUtils.addVisits(pageURI);
@@ -154,7 +154,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_replaceExisting() {
 });
 
 add_task(async function test_replaceFaviconDataFromDataURL_unrelatedReplace() {
-  do_print("test replaceFaviconDataFromDataURL to not make unrelated changes");
+  info("test replaceFaviconDataFromDataURL to not make unrelated changes");
 
   let pageURI = uri("http://test4.bar/");
   await PlacesTestUtils.addVisits(pageURI);
@@ -185,7 +185,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_unrelatedReplace() {
 });
 
 add_task(async function test_replaceFaviconDataFromDataURL_badInputs() {
-  do_print("test replaceFaviconDataFromDataURL to throw on bad inputs");
+  info("test replaceFaviconDataFromDataURL to throw on bad inputs");
 
   let favicon = createFavicon("favicon8.png");
 
@@ -196,7 +196,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_badInputs() {
   } catch (e) {
     ex = e;
   } finally {
-    do_check_true(!!ex);
+    Assert.ok(!!ex);
   }
 
   ex = null;
@@ -206,7 +206,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_badInputs() {
   } catch (e) {
     ex = e;
   } finally {
-    do_check_true(!!ex);
+    Assert.ok(!!ex);
   }
 
   favicon.file.remove(false);
@@ -215,7 +215,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_badInputs() {
 });
 
 add_task(async function test_replaceFaviconDataFromDataURL_twiceReplace() {
-  do_print("test replaceFaviconDataFromDataURL on multiple replacements");
+  info("test replaceFaviconDataFromDataURL on multiple replacements");
 
   let pageURI = uri("http://test5.bar/");
   await PlacesTestUtils.addVisits(pageURI);
@@ -248,7 +248,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_twiceReplace() {
 });
 
 add_task(async function test_replaceFaviconDataFromDataURL_afterRegularAssign() {
-  do_print("test replaceFaviconDataFromDataURL after replaceFaviconData");
+  info("test replaceFaviconDataFromDataURL after replaceFaviconData");
 
   let pageURI = uri("http://test6.bar/");
   await PlacesTestUtils.addVisits(pageURI);
@@ -282,7 +282,7 @@ add_task(async function test_replaceFaviconDataFromDataURL_afterRegularAssign() 
 });
 
 add_task(async function test_replaceFaviconDataFromDataURL_beforeRegularAssign() {
-  do_print("test replaceFaviconDataFromDataURL before replaceFaviconData");
+  info("test replaceFaviconDataFromDataURL before replaceFaviconData");
 
   let pageURI = uri("http://test7.bar/");
   await PlacesTestUtils.addVisits(pageURI);

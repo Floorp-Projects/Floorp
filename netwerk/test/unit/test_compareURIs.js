@@ -44,6 +44,6 @@ function run_test()
 	} catch (e) {
 	    equal = false
 	}
-	do_check_eq(equal, aTest[2]);
+	Assert.equal(equal, aTest[2]);
     });
 }

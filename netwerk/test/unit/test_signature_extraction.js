@@ -162,35 +162,35 @@ add_task(async function test_signature()
   await completionPromise;
 
   // There's only one nsIX509CertList in the signature array.
-  do_check_eq(1, saver.signatureInfo.length);
+  Assert.equal(1, saver.signatureInfo.length);
   let certLists = saver.signatureInfo.enumerate();
-  do_check_true(certLists.hasMoreElements());
+  Assert.ok(certLists.hasMoreElements());
   let certList = certLists.getNext().QueryInterface(Ci.nsIX509CertList);
-  do_check_false(certLists.hasMoreElements());
+  Assert.ok(!certLists.hasMoreElements());
 
   // Check that it has 3 certs.
   let certs = certList.getEnumerator();
-  do_check_true(certs.hasMoreElements());
+  Assert.ok(certs.hasMoreElements());
   let signer = certs.getNext().QueryInterface(Ci.nsIX509Cert);
-  do_check_true(certs.hasMoreElements());
+  Assert.ok(certs.hasMoreElements());
   let issuer = certs.getNext().QueryInterface(Ci.nsIX509Cert);
-  do_check_true(certs.hasMoreElements());
+  Assert.ok(certs.hasMoreElements());
   let root = certs.getNext().QueryInterface(Ci.nsIX509Cert);
-  do_check_false(certs.hasMoreElements());
+  Assert.ok(!certs.hasMoreElements());
 
   // Check that the certs have expected strings attached.
   let organization = "Microsoft Corporation";
-  do_check_eq("Microsoft Corporation", signer.commonName);
-  do_check_eq(organization, signer.organization);
-  do_check_eq("Copyright (c) 2002 Microsoft Corp.", signer.organizationalUnit);
+  Assert.equal("Microsoft Corporation", signer.commonName);
+  Assert.equal(organization, signer.organization);
+  Assert.equal("Copyright (c) 2002 Microsoft Corp.", signer.organizationalUnit);
 
-  do_check_eq("Microsoft Code Signing PCA", issuer.commonName);
-  do_check_eq(organization, issuer.organization);
-  do_check_eq("Copyright (c) 2000 Microsoft Corp.", issuer.organizationalUnit);
+  Assert.equal("Microsoft Code Signing PCA", issuer.commonName);
+  Assert.equal(organization, issuer.organization);
+  Assert.equal("Copyright (c) 2000 Microsoft Corp.", issuer.organizationalUnit);
 
-  do_check_eq("Microsoft Root Authority", root.commonName);
-  do_check_false(root.organization);
-  do_check_eq("Copyright (c) 1997 Microsoft Corp.", root.organizationalUnit);
+  Assert.equal("Microsoft Root Authority", root.commonName);
+  Assert.ok(!root.organization);
+  Assert.equal("Copyright (c) 1997 Microsoft Corp.", root.organizationalUnit);
 
   // Clean up.
   destFile.remove(false);

@@ -67,17 +67,17 @@ function run_test_1() {
   AddonManager.addAddonListener(listener3);
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org"], function([a1]) {
-    do_check_neq(a1, null);
-    do_check_false(a1.userDisabled);
-    do_check_true(a1.isActive);
+    Assert.notEqual(a1, null);
+    Assert.ok(!a1.userDisabled);
+    Assert.ok(a1.isActive);
 
     a1.userDisabled = true;
 
-    do_check_true(listener1.sawEvent);
+    Assert.ok(listener1.sawEvent);
     listener1.sawEvent = false;
-    do_check_true(listener2.sawEvent);
+    Assert.ok(listener2.sawEvent);
     listener2.sawEvent = false;
-    do_check_true(listener3.sawEvent);
+    Assert.ok(listener3.sawEvent);
     listener3.sawEvent = false;
 
     AddonManager.removeAddonListener(listener1);
@@ -96,17 +96,17 @@ function run_test_2() {
 
   AddonManager.getInstallForFile(do_get_addon("test_bug757663"), function(aInstall) {
 
-    do_check_true(listener1.sawEvent);
+    Assert.ok(listener1.sawEvent);
     listener1.sawEvent = false;
-    do_check_true(listener2.sawEvent);
+    Assert.ok(listener2.sawEvent);
     listener2.sawEvent = false;
-    do_check_true(listener3.sawEvent);
+    Assert.ok(listener3.sawEvent);
     listener3.sawEvent = false;
 
     AddonManager.removeInstallListener(listener1);
     AddonManager.removeInstallListener(listener2);
     AddonManager.removeInstallListener(listener3);
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

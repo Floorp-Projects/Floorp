@@ -23,7 +23,7 @@ function run_test() {
 
 function test_attach(tabClient) {
   tabClient.attachThread({}, function (response, threadClient) {
-    do_check_eq(threadClient.state, "paused");
+    Assert.equal(threadClient.state, "paused");
     threadClient.resume(cleanup);
   });
 }

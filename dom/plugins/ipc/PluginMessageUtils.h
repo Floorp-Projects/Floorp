@@ -9,6 +9,7 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "base/message_loop.h"
+#include "base/shared_memory.h"
 
 #include "mozilla/ipc/CrossProcessMutex.h"
 #include "mozilla/ipc/MessageChannel.h"

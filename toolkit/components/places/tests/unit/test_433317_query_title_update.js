@@ -27,7 +27,7 @@ add_task(async function test_query_title_update() {
   var root = result.root;
   root.containerOpen = true;
   var queryNode = root.getChild(0);
-  do_check_eq(queryNode.title, "test query");
+  Assert.equal(queryNode.title, "test query");
 
   // change the title
   await PlacesUtils.bookmarks.update({
@@ -36,7 +36,7 @@ add_task(async function test_query_title_update() {
   });
 
   // confirm the node was updated
-  do_check_eq(queryNode.title, "foo");
+  Assert.equal(queryNode.title, "foo");
 
   root.containerOpen = false;
 });

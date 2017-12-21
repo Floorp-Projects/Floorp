@@ -43,7 +43,7 @@ async function cleanup() {
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesTestUtils.clearHistory();
 }
-do_register_cleanup(cleanup);
+registerCleanupFunction(cleanup);
 
 /**
  * @param {Array} aSearches Array of AutoCompleteSearch names.
@@ -128,7 +128,7 @@ async function _check_autocomplete_matches(match, result) {
   else
     style = ["favicon"];
 
-  do_print(`Checking against expected "${uri.spec}", "${title}"`);
+  info(`Checking against expected "${uri.spec}", "${title}"`);
   // Got a match on both uri and title?
   if (stripPrefix(uri.spec) != stripPrefix(result.value) || title != result.comment) {
     return false;
@@ -186,12 +186,12 @@ async function check_autocomplete(test) {
 
   let numSearchesStarted = 0;
   input.onSearchBegin = () => {
-    do_print("onSearchBegin received");
+    info("onSearchBegin received");
     numSearchesStarted++;
   };
   let searchCompletePromise = new Promise(resolve => {
     input.onSearchComplete = () => {
-      do_print("onSearchComplete received");
+      info("onSearchComplete received");
       resolve();
     };
   });
@@ -201,7 +201,7 @@ async function check_autocomplete(test) {
     expectedSearches++;
   }
 
-  do_print("Searching for: '" + test.search + "'");
+  info("Searching for: '" + test.search + "'");
   controller.startSearch(test.search);
   await searchCompletePromise;
 
@@ -220,16 +220,16 @@ async function check_autocomplete(test) {
       let firstIndexToCheck = 0;
       if (test.searchParam && test.searchParam.includes("enable-actions")) {
         firstIndexToCheck = 1;
-        do_print("Checking first match is first autocomplete entry");
+        info("Checking first match is first autocomplete entry");
         let result = {
           value: controller.getValueAt(0),
           comment: controller.getCommentAt(0),
           style: controller.getStyleAt(0),
           image: controller.getImageAt(0),
         };
-        do_print(`First match is "${result.value}", "${result.comment}"`);
+        info(`First match is "${result.value}", "${result.comment}"`);
         Assert.ok(await _check_autocomplete_matches(matches[0], result), "first item is correct");
-        do_print("Checking rest of the matches");
+        info("Checking rest of the matches");
       }
 
       for (let i = firstIndexToCheck; i < controller.matchCount; i++) {
@@ -239,7 +239,7 @@ async function check_autocomplete(test) {
           style: controller.getStyleAt(i),
           image: controller.getImageAt(i),
         };
-        do_print(`Found value: "${result.value}", comment: "${result.comment}", style: "${result.style}" in results...`);
+        info(`Found value: "${result.value}", comment: "${result.comment}", style: "${result.style}" in results...`);
         let lowerBound = test.checkSorting ? i : firstIndexToCheck;
         let upperBound = test.checkSorting ? i + 1 : matches.length;
         let found = false;
@@ -248,7 +248,7 @@ async function check_autocomplete(test) {
           if (matches[j] == undefined)
             continue;
           if (await _check_autocomplete_matches(matches[j], result)) {
-            do_print("Got a match at index " + j + "!");
+            info("Got a match at index " + j + "!");
             // Make it undefined so we don't process it again
             matches[j] = undefined;
             found = true;
@@ -265,9 +265,9 @@ async function check_autocomplete(test) {
                  "Got as many results as expected");
 
     // If we expect results, make sure we got matches.
-    do_check_eq(controller.searchStatus, matches.length ?
-                Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
-                Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
+    Assert.equal(controller.searchStatus, matches.length ?
+                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_MATCH :
+                 Ci.nsIAutoCompleteController.STATUS_COMPLETE_NO_MATCH);
   }
 
   if (test.autofilled) {
@@ -433,7 +433,7 @@ function makeExtensionMatch(extra = {}) {
 function makeTestServer(port = -1) {
   let httpServer = new HttpServer();
   httpServer.start(port);
-  do_register_cleanup(() => httpServer.stop(() => {}));
+  registerCleanupFunction(() => httpServer.stop(() => {}));
   return httpServer;
 }
 
@@ -443,21 +443,21 @@ function addTestEngine(basename, httpServer = undefined) {
   let dataUrl =
     "http://localhost:" + httpServer.identity.primaryPort + "/data/";
 
-  do_print("Adding engine: " + basename);
+  info("Adding engine: " + basename);
   return new Promise(resolve => {
     Services.obs.addObserver(function obs(subject, topic, data) {
       let engine = subject.QueryInterface(Ci.nsISearchEngine);
-      do_print("Observed " + data + " for " + engine.name);
+      info("Observed " + data + " for " + engine.name);
       if (data != "engine-added" || engine.name != basename) {
         return;
       }
 
       Services.obs.removeObserver(obs, "browser-search-engine-modified");
-      do_register_cleanup(() => Services.search.removeEngine(engine));
+      registerCleanupFunction(() => Services.search.removeEngine(engine));
       resolve(engine);
     }, "browser-search-engine-modified");
 
-    do_print("Adding engine from URL: " + dataUrl + basename);
+    info("Adding engine from URL: " + dataUrl + basename);
     Services.search.addEngine(dataUrl + basename, null, null, false);
   });
 }
@@ -474,7 +474,7 @@ add_task(async function ensure_search_engine() {
   // allowed.
   let geoPref = "browser.search.geoip.url";
   Services.prefs.setCharPref(geoPref, "");
-  do_register_cleanup(() => Services.prefs.clearUserPref(geoPref));
+  registerCleanupFunction(() => Services.prefs.clearUserPref(geoPref));
   await new Promise(resolve => {
     Services.search.init(resolve);
   });

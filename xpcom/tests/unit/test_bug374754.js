@@ -20,7 +20,7 @@ var observer = {
 
   observe(subject, topic, data) {
     if (topic == "timer-callback") {
-      do_check_eq(result, expected);
+      Assert.equal(result, expected);
 
       Services.obs.removeObserver(this, addedTopic);
       Services.obs.removeObserver(this, removedTopic);

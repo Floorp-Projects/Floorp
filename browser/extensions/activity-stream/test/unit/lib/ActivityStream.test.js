@@ -1,5 +1,5 @@
-const injector = require("inject!lib/ActivityStream.jsm");
-const {CONTENT_MESSAGE_TYPE} = require("common/Actions.jsm");
+import {CONTENT_MESSAGE_TYPE} from "common/Actions.jsm";
+import injector from "inject!lib/ActivityStream.jsm";
 
 const REASON_ADDON_UNINSTALL = 6;
 

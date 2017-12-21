@@ -50,14 +50,14 @@ function run_test()
 
 function start_test(ch, cx)
 {
-  do_check_eq(ch.responseStatusText, "QI Tests Passed");
-  do_check_eq(ch.responseStatus, 200);
+  Assert.equal(ch.responseStatusText, "QI Tests Passed");
+  Assert.equal(ch.responseStatus, 200);
 }
 
 function start_sjs_qi(ch, cx)
 {
-  do_check_eq(ch.responseStatusText, "SJS QI Tests Passed");
-  do_check_eq(ch.responseStatus, 200);
+  Assert.equal(ch.responseStatusText, "SJS QI Tests Passed");
+  Assert.equal(ch.responseStatus, 200);
 }
 
 

@@ -17,17 +17,17 @@ AutoCompleteInput.prototype = Object.create(AutoCompleteInputBase.prototype);
 
 add_test(function test_keyNavigation() {
   doSearch("MOZ", "mozilla", function(aController) {
-    do_check_eq(aController.input.textValue, "MOZilla");
+    Assert.equal(aController.input.textValue, "MOZilla");
     aController.handleKeyNavigation(Ci.nsIDOMKeyEvent.DOM_VK_RIGHT);
-    do_check_eq(aController.input.textValue, "mozilla");
+    Assert.equal(aController.input.textValue, "mozilla");
   });
 });
 
 add_test(function test_handleEnter() {
   doSearch("MOZ", "mozilla", function(aController) {
-    do_check_eq(aController.input.textValue, "MOZilla");
+    Assert.equal(aController.input.textValue, "MOZilla");
     aController.handleEnter(false);
-    do_check_eq(aController.input.textValue, "mozilla");
+    Assert.equal(aController.input.textValue, "mozilla");
   });
 });
 

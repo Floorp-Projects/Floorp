@@ -21,11 +21,11 @@ function run_test() {
                                  bs.DEFAULT_INDEX,
                                  "");
   // Check returned title is an empty string.
-  do_check_eq(bs.getItemTitle(itemId), "");
+  Assert.equal(bs.getItemTitle(itemId), "");
   // Set title to null.
   bs.setItemTitle(itemId, null);
   // Check returned title defaults to an empty string.
-  do_check_eq(bs.getItemTitle(itemId), "");
+  Assert.equal(bs.getItemTitle(itemId), "");
   // Cleanup.
   bs.removeItem(itemId);
 
@@ -35,11 +35,11 @@ function run_test() {
                              bs.DEFAULT_INDEX,
                              null);
   // Check returned title defaults to an empty string.
-  do_check_eq(bs.getItemTitle(itemId), "");
+  Assert.equal(bs.getItemTitle(itemId), "");
   // Set title to an empty string.
   bs.setItemTitle(itemId, "");
   // Check returned title is an empty string.
-  do_check_eq(bs.getItemTitle(itemId), "");
+  Assert.equal(bs.getItemTitle(itemId), "");
   // Cleanup.
   bs.removeItem(itemId);
 }

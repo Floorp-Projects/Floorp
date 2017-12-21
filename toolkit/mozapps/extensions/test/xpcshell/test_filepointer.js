@@ -112,20 +112,20 @@ function run_test_1() {
   startupManager();
 
   AddonManager.getAddonByID(addon1.id, function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "1.0");
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "1.0");
 
     let file = a1.getResourceURI().QueryInterface(AM_Ci.nsIFileURL).file;
-    do_check_eq(file.parent.path, sourceDir.path);
+    Assert.equal(file.parent.path, sourceDir.path);
 
     let rootUri = do_get_addon_root_uri(sourceDir, addon1.id);
     let uri = a1.getResourceURI("/");
-    do_check_eq(uri.spec, rootUri);
+    Assert.equal(uri.spec, rootUri);
     uri = a1.getResourceURI("install.rdf");
-    do_check_eq(uri.spec, rootUri + "install.rdf");
+    Assert.equal(uri.spec, rootUri + "install.rdf");
 
     // Check that upgrade is disabled for addons installed by file-pointers.
-    do_check_eq(a1.permissions & AddonManager.PERM_CAN_UPGRADE, 0);
+    Assert.equal(a1.permissions & AddonManager.PERM_CAN_UPGRADE, 0);
     run_test_2();
   });
 }
@@ -160,25 +160,25 @@ function check_test_2() {
   restartManager();
 
   AddonManager.getAddonByID(addon1.id, function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "2.0");
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "2.0");
 
     let file = a1.getResourceURI().QueryInterface(AM_Ci.nsIFileURL).file;
-    do_check_eq(file.parent.path, profileDir.path);
+    Assert.equal(file.parent.path, profileDir.path);
 
     let rootUri = do_get_addon_root_uri(profileDir, addon1.id);
     let uri = a1.getResourceURI("/");
-    do_check_eq(uri.spec, rootUri);
+    Assert.equal(uri.spec, rootUri);
     uri = a1.getResourceURI("install.rdf");
-    do_check_eq(uri.spec, rootUri + "install.rdf");
+    Assert.equal(uri.spec, rootUri + "install.rdf");
 
     let source = sourceDir.clone();
     source.append(addon1.id);
-    do_check_true(source.exists());
+    Assert.ok(source.exists());
 
     a1.uninstall();
 
-    do_execute_soon(run_test_3);
+    executeSoon(run_test_3);
   });
 }
 
@@ -191,8 +191,8 @@ function run_test_3() {
   restartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "1.0");
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "1.0");
 
     a1.uninstall();
 
@@ -200,9 +200,9 @@ function run_test_3() {
 
     let source = sourceDir.clone();
     source.append(addon1.id);
-    do_check_true(source.exists());
+    Assert.ok(source.exists());
 
-    do_execute_soon(run_test_4);
+    executeSoon(run_test_4);
   }));
 }
 
@@ -214,18 +214,18 @@ function run_test_4() {
 
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org"], function([a1, a2]) {
-    do_check_eq(a1, null);
-    do_check_eq(a2, null);
+    Assert.equal(a1, null);
+    Assert.equal(a2, null);
 
     let source = sourceDir.clone();
     source.append(addon1.id);
-    do_check_true(source.exists());
+    Assert.ok(source.exists());
 
     let pointer = profileDir.clone();
     pointer.append("addon2@tests.mozilla.org");
-    do_check_false(pointer.exists());
+    Assert.ok(!pointer.exists());
 
-    do_execute_soon(run_test_5);
+    executeSoon(run_test_5);
   });
 }
 
@@ -239,8 +239,8 @@ function run_test_5() {
   restartManager();
 
   AddonManager.getAddonByID(addon1.id, callback_soon(function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "1.0");
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "1.0");
 
     writeInstallRDFForExtension(addon2, sourceDir, addon1.id);
 
@@ -248,18 +248,18 @@ function run_test_5() {
 
     AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                  "addon2@tests.mozilla.org"], function([a1_2, a2_2]) {
-      do_check_eq(a1_2, null);
-      do_check_eq(a2_2, null);
+      Assert.equal(a1_2, null);
+      Assert.equal(a2_2, null);
 
       let source = sourceDir.clone();
       source.append(addon1.id);
-      do_check_true(source.exists());
+      Assert.ok(source.exists());
 
       let pointer = profileDir.clone();
       pointer.append(addon1.id);
-      do_check_false(pointer.exists());
+      Assert.ok(!pointer.exists());
 
-      do_execute_soon(run_test_6);
+      executeSoon(run_test_6);
     });
   }));
 }
@@ -274,8 +274,8 @@ function run_test_6() {
   restartManager();
 
   AddonManager.getAddonByID(addon1.id, callback_soon(function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "1.0");
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "1.0");
 
     let pointer = profileDir.clone();
     pointer.append(addon1.id);
@@ -284,9 +284,9 @@ function run_test_6() {
     restartManager();
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1_2) {
-      do_check_eq(a1_2, null);
+      Assert.equal(a1_2, null);
 
-      do_execute_soon(run_test_7);
+      executeSoon(run_test_7);
     });
   }));
 }
@@ -298,8 +298,8 @@ function run_test_7() {
   restartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "1.0");
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "1.0");
 
     let pointer = profileDir.clone();
     pointer.append(addon1.id);
@@ -310,12 +310,12 @@ function run_test_7() {
     restartManager();
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1_2) {
-      do_check_neq(a1_2, null);
-      do_check_eq(a1_2.version, "2.0");
+      Assert.notEqual(a1_2, null);
+      Assert.equal(a1_2.version, "2.0");
 
       a1_2.uninstall();
 
-      do_execute_soon(run_test_8);
+      executeSoon(run_test_8);
     });
   }));
 }
@@ -329,20 +329,20 @@ function run_test_8() {
   restartManager();
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "1.0");
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "1.0");
 
     writeInstallRDFForExtension(addon1_2, sourceDir);
 
     restartManager();
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1_2) {
-      do_check_neq(a1_2, null);
-      do_check_eq(a1_2.version, "2.0");
+      Assert.notEqual(a1_2, null);
+      Assert.equal(a1_2.version, "2.0");
 
       a1_2.uninstall();
 
-      do_execute_soon(run_test_9);
+      executeSoon(run_test_9);
     });
   }));
 }
@@ -357,21 +357,21 @@ function run_test_9() {
   restartManager();
 
   AddonManager.getAddonByID(addon1.id, callback_soon(function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "1.0");
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "1.0");
 
     dest.remove(true);
 
     restartManager();
 
     AddonManager.getAddonByID(addon1.id, function(a1_2) {
-      do_check_eq(a1_2, null);
+      Assert.equal(a1_2, null);
 
       let pointer = profileDir.clone();
       pointer.append(addon1.id);
-      do_check_false(pointer.exists());
+      Assert.ok(!pointer.exists());
 
-      do_execute_soon(run_test_10);
+      executeSoon(run_test_10);
     });
   }));
 }
@@ -384,20 +384,20 @@ function run_test_10() {
   restartManager();
 
   AddonManager.getAddonByID(addon1.id, function(a1) {
-    do_check_neq(a1, null);
-    do_check_eq(a1.version, "1.0");
+    Assert.notEqual(a1, null);
+    Assert.equal(a1.version, "1.0");
 
     let file = a1.getResourceURI().QueryInterface(AM_Ci.nsIFileURL).file;
-    do_check_eq(file.parent.path, sourceDir.path);
+    Assert.equal(file.parent.path, sourceDir.path);
 
     let rootUri = do_get_addon_root_uri(sourceDir, addon1.id);
     let uri = a1.getResourceURI("/");
-    do_check_eq(uri.spec, rootUri);
+    Assert.equal(uri.spec, rootUri);
     uri = a1.getResourceURI("install.rdf");
-    do_check_eq(uri.spec, rootUri + "install.rdf");
+    Assert.equal(uri.spec, rootUri + "install.rdf");
 
     // Check that upgrade is disabled for addons installed by file-pointers.
-    do_check_eq(a1.permissions & AddonManager.PERM_CAN_UPGRADE, 0);
+    Assert.equal(a1.permissions & AddonManager.PERM_CAN_UPGRADE, 0);
     end_test();
   });
 }

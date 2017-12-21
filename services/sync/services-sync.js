@@ -54,26 +54,17 @@ pref("services.sync.log.appender.file.logOnSuccess", true);
 pref("services.sync.log.appender.file.logOnSuccess", false);
 #endif
 pref("services.sync.log.appender.file.maxErrorAge", 864000); // 10 days
-pref("services.sync.log.rootLogger", "Debug");
-pref("services.sync.log.logger.addonutils", "Debug");
-pref("services.sync.log.logger.declined", "Debug");
-pref("services.sync.log.logger.service.main", "Debug");
-pref("services.sync.log.logger.status", "Debug");
-pref("services.sync.log.logger.authenticator", "Debug");
-pref("services.sync.log.logger.network.resources", "Debug");
-pref("services.sync.log.logger.engine.bookmarks", "Debug");
-pref("services.sync.log.logger.engine.clients", "Debug");
-pref("services.sync.log.logger.engine.forms", "Debug");
-pref("services.sync.log.logger.engine.history", "Debug");
-pref("services.sync.log.logger.engine.passwords", "Debug");
-pref("services.sync.log.logger.engine.prefs", "Debug");
-pref("services.sync.log.logger.engine.tabs", "Debug");
-pref("services.sync.log.logger.engine.addons", "Debug");
-pref("services.sync.log.logger.engine.addresses", "Debug");
-pref("services.sync.log.logger.engine.creditcards", "Debug");
-pref("services.sync.log.logger.engine.extension-storage", "Debug");
-pref("services.sync.log.logger.engine.apps", "Debug");
-pref("services.sync.log.logger.identity", "Debug");
+
+// The default log level for all "Sync.*" logs. Adjusting this pref will
+// adjust the level for *all* Sync logs (except engines, and that's only
+// because we supply a default for the engines below.)
+pref("services.sync.log.logger", "Debug");
+
+// Prefs for Sync engines can be controlled globally or per-engine.
+// We only define the global level here, but manually creating prefs
+// like "services.sync.log.logger.engine.bookmarks" will control just
+// that engine.
+pref("services.sync.log.logger.engine", "Debug");
 pref("services.sync.log.cryptoDebug", false);
 
 pref("services.sync.fxa.termsURL", "https://accounts.firefox.com/legal/terms");

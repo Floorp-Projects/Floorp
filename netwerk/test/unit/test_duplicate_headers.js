@@ -74,7 +74,7 @@ function handler1(metadata, response)
 
 function completeTest1(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(2);
 }
@@ -97,7 +97,7 @@ function handler2(metadata, response)
 
 function completeTest2(request, data, ctx)
 {
-  do_check_eq(request.status, 0);
+  Assert.equal(request.status, 0);
   run_test_number(3);
 }
 
@@ -120,7 +120,7 @@ function handler3(metadata, response)
 
 function completeTest3(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(4);
 }
@@ -150,7 +150,7 @@ function handler4(metadata, response)
 
 function completeTest4(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(5);
 }
@@ -178,7 +178,7 @@ function completeTest5(request, data, ctx)
 {
   try {
     referer = request.getResponseHeader("Referer");
-    do_check_eq(referer, "naive.org");
+    Assert.equal(referer, "naive.org");
   } catch (ex) {
     do_throw("Referer header should be present");
   }
@@ -208,7 +208,7 @@ function handler6(metadata, response)
 
 function completeTest6(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
 
 //  run_test_number(7);   // Test 7 leaking under e10s: unrelated bug?
   run_test_number(8);
@@ -240,7 +240,7 @@ function completeTest7(request, data, ctx)
 
   try {
     referer = request.getResponseHeader("Referer");
-    do_check_eq(referer, "naive.org");
+    Assert.equal(referer, "naive.org");
   } catch (ex) {
     do_throw("Referer header should be present");
   }
@@ -270,7 +270,7 @@ function handler8(metadata, response)
 
 function completeTest8(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(9);
 }
@@ -301,7 +301,7 @@ function handler9(metadata, response)
 function completeTest9(request, data, ctx)
 {
   // All redirection should fail:
-  do_check_eq(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(10);
 }
@@ -328,7 +328,7 @@ function handler10(metadata, response)
 
 function completeTest10(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(11);
 }
@@ -352,13 +352,13 @@ function handler11(metadata, response)
 
 function completeTest11(request, data, ctx)
 {
-  do_check_eq(request.status, 0);
+  Assert.equal(request.status, 0);
 
   try {
     var chan = request.QueryInterface(Ci.nsIChannel);
-    do_check_eq(chan.contentDisposition, chan.DISPOSITION_ATTACHMENT);
-    do_check_eq(chan.contentDispositionFilename, "foo");
-    do_check_eq(chan.contentDispositionHeader, "attachment; filename=foo");
+    Assert.equal(chan.contentDisposition, chan.DISPOSITION_ATTACHMENT);
+    Assert.equal(chan.contentDispositionFilename, "foo");
+    Assert.equal(chan.contentDispositionHeader, "attachment; filename=foo");
   } catch (ex) {
     do_throw("error parsing Content-Disposition: " + ex);
   }
@@ -385,8 +385,8 @@ function handler12(metadata, response)
 
 function completeTest12(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_OK);
-  do_check_eq(30, data.length);
+  Assert.equal(request.status, Components.results.NS_OK);
+  Assert.equal(30, data.length);
 
   run_test_number(13);
 }
@@ -410,8 +410,8 @@ function handler13(metadata, response)
 
 function completeTest13(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_OK);
-  do_check_eq(30, data.length);
+  Assert.equal(request.status, Components.results.NS_OK);
+  Assert.equal(30, data.length);
 
   run_test_number(14);
 }
@@ -437,7 +437,7 @@ function handler14(metadata, response)
 
 function completeTest14(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(15);
 }
@@ -463,7 +463,7 @@ function handler15(metadata, response)
 
 function completeTest15(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(16);
 }
@@ -489,8 +489,8 @@ function handler16(metadata, response)
 
 function completeTest16(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_OK);
-  do_check_eq(30, data.length);
+  Assert.equal(request.status, Components.results.NS_OK);
+  Assert.equal(30, data.length);
 
   if (!reran16) {
     reran16 = true;
@@ -521,7 +521,7 @@ function handler17(metadata, response)
 
 function completeTest17(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
 
   run_test_number(18);
 }
@@ -545,8 +545,8 @@ function handler18(metadata, response)
 
 function completeTest18(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_OK);
-  do_check_eq(30, data.length);
+  Assert.equal(request.status, Components.results.NS_OK);
+  Assert.equal(30, data.length);
 
   run_test_number(19);
 }
@@ -570,8 +570,8 @@ function handler19(metadata, response)
 
 function completeTest19(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_OK);
-  do_check_eq(30, data.length);
+  Assert.equal(request.status, Components.results.NS_OK);
+  Assert.equal(30, data.length);
 
   run_test_number(20);
 }
@@ -598,7 +598,7 @@ function handler20(metadata, response)
 
 function completeTest20(request, data, ctx)
 {
-  do_check_eq(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
+  Assert.equal(request.status, Components.results.NS_ERROR_CORRUPTED_CONTENT);
 
   endTests();
 }

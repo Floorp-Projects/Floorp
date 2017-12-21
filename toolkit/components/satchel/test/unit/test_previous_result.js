@@ -4,14 +4,14 @@
 
 var aaaListener = {
   onSearchResult(search, result) {
-    do_check_eq(result.searchString, "aaa");
+    Assert.equal(result.searchString, "aaa");
     do_test_finished();
   },
 };
 
 var aaListener = {
   onSearchResult(search, result) {
-    do_check_eq(result.searchString, "aa");
+    Assert.equal(result.searchString, "aa");
     search.startSearch("aaa", "", result, aaaListener);
   },
 };

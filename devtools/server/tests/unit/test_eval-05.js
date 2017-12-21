@@ -30,15 +30,15 @@ function test_pauses_eval() {
   gThreadClient.addOneTimeListener("paused", function (event, packet) {
     gThreadClient.eval(null, "debugger", function (response) {
       // Expect a resume then a debuggerStatement pause.
-      do_check_eq(response.type, "resumed");
+      Assert.equal(response.type, "resumed");
       gThreadClient.addOneTimeListener("paused", function (event, packet) {
-        do_check_eq(packet.why.type, "debuggerStatement");
+        Assert.equal(packet.why.type, "debuggerStatement");
         // Resume from the debugger statement should immediately re-pause
         // with a clientEvaluated reason.
         gThreadClient.resume(function (packet) {
-          do_check_eq(packet.type, "resumed");
+          Assert.equal(packet.type, "resumed");
           gThreadClient.addOneTimeListener("paused", function (event, packet) {
-            do_check_eq(packet.why.type, "clientEvaluated");
+            Assert.equal(packet.why.type, "clientEvaluated");
             gThreadClient.resume(function () {
               finishClient(gClient);
             });

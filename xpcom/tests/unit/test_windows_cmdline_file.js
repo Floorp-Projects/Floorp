@@ -6,7 +6,7 @@ function run_test() {
   let quote = '"'; // Windows' cmd processor doesn't actually use single quotes.
   for (let suffix of ["", " -osint", ` --blah "%PROGRAMFILES%"`]) {
     let cmdline = quote + executableFile.path + quote + suffix;
-    do_print(`Testing with ${cmdline}`);
+    info(`Testing with ${cmdline}`);
     let f = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFileWin);
     f.initWithCommandLine(cmdline);
     Assert.equal(f.path, executableFile.path, "Should be able to recover executable path");

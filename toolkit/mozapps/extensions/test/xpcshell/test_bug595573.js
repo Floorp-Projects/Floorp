@@ -20,10 +20,10 @@ function run_test_1() {
     await promiseRestartManager();
 
     AddonManager.getAddonByID("{2f69dacd-03df-4150-a9f1-e8a7b2748829}", function(a1) {
-      do_check_neq(a1, null);
-      do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+      Assert.notEqual(a1, null);
+      Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
 
-      do_execute_soon(run_test_2);
+      executeSoon(run_test_2);
     });
   });
 }
@@ -32,9 +32,9 @@ function run_test_2() {
   restartManager();
 
   AddonManager.getAddonByID("{2f69dacd-03df-4150-a9f1-e8a7b2748829}", function(a1) {
-    do_check_neq(a1, null);
-    do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+    Assert.notEqual(a1, null);
+    Assert.ok(isExtensionInAddonsList(profileDir, a1.id));
 
-    do_execute_soon(do_test_finished);
+    executeSoon(do_test_finished);
   });
 }

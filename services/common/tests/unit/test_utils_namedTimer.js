@@ -21,12 +21,12 @@ add_test(function test_simple() {
   let that = {};
   let t0 = Date.now();
   CommonUtils.namedTimer(function callback(timer) {
-    do_check_eq(this, that);
-    do_check_eq(this._zetimer, null);
-    do_check_true(timer instanceof Ci.nsITimer);
+    Assert.equal(this, that);
+    Assert.equal(this._zetimer, null);
+    Assert.ok(timer instanceof Ci.nsITimer);
     // Difference should be ~delay, but hard to predict on all platforms,
     // particularly Windows XP.
-    do_check_true(Date.now() > t0);
+    Assert.ok(Date.now() > t0);
     run_next_test();
   }, delay, that, "_zetimer");
 });
@@ -40,7 +40,7 @@ add_test(function test_delay() {
   function callback(timer) {
     // Difference should be ~2*delay, but hard to predict on all platforms,
     // particularly Windows XP.
-    do_check_true((Date.now() - t0) > delay);
+    Assert.ok((Date.now() - t0) > delay);
     run_next_test();
   }
   CommonUtils.namedTimer(callback, delay, that, "_zetimer");
@@ -58,7 +58,7 @@ add_test(function test_clear() {
   }, delay, that, "_zetimer");
 
   that._zetimer.clear();
-  do_check_eq(that._zetimer, null);
+  Assert.equal(that._zetimer, null);
   CommonUtils.nextTick(run_next_test);
 
   run_next_test();

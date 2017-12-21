@@ -4,7 +4,7 @@ function run_test()
 
   var storage = getCacheStorage("disk");
   var entry = storage.openTruncate(createURI("http://new1/"), "");
-  do_check_true(!!entry);
+  Assert.ok(!!entry);
 
   // Fill the entry, and when done, check it's content
   (new OpenCallback(NEW, "meta", "data", function() {

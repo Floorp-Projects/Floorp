@@ -77,7 +77,7 @@ add_task(async function svg_icon() {
     faviconURI, SMALLSVG_DATA_URI.spec, 0, Services.scriptSecurityManager.getSystemPrincipal());
   await setFaviconForPage(TEST_URI, faviconURI);
   let svgIcon = await fetchIconForSpec(SMALLSVG_DATA_URI.spec);
-  do_print(svgIcon.contentType);
+  info(svgIcon.contentType);
   let pageIcon = await fetchIconForSpec("page-icon:" + TEST_URI.spec);
   Assert.equal(svgIcon.contentType, pageIcon.contentType);
   Assert.deepEqual(svgIcon.data, pageIcon.data, "Got the root favicon data");

@@ -26,7 +26,7 @@ add_task(async function test_allowed_addons() {
   notEqual(addon, null);
 
   addon = await AddonManager.getAddonByID("system3@tests.mozilla.org");
-  do_check_eq(addon, null);
+  Assert.equal(addon, null);
   equal(addon, null);
 
   // 3 is now allowed, 1 and 2 are not.

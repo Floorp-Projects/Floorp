@@ -163,7 +163,7 @@ add_task(async function test_legacy_extension_context() {
 
   await waitForDisconnect;
 
-  do_print("Got the disconnect event on unload");
+  info("Got the disconnect event on unload");
 
   await extension.shutdown();
 });

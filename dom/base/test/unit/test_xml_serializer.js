@@ -33,7 +33,7 @@ var tests = [
 ];
 
 function testString(str) {
-  do_check_eq(roundtrip(str), str);
+  Assert.equal(roundtrip(str), str);
 }
 
 function test1() {
@@ -73,25 +73,25 @@ function test3() {
   var child = doc.createElementNS("ns2", "child");
   root.appendChild(child);
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc),
-              '<root xmlns="ns1"><child xmlns="ns2"/></root>');
+  Assert.equal(SerializeXML(doc),
+               '<root xmlns="ns1"><child xmlns="ns2"/></root>');
 
   doc = ParseXML('<root xmlns="ns1"/>');
   root = doc.documentElement;
   child = doc.createElementNS("ns2", "prefix:child");
   root.appendChild(child);
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc),
-              '<root xmlns="ns1"><prefix:child xmlns:prefix="ns2"/></root>');
+  Assert.equal(SerializeXML(doc),
+               '<root xmlns="ns1"><prefix:child xmlns:prefix="ns2"/></root>');
 
   doc = ParseXML('<prefix:root xmlns:prefix="ns1"/>');
   root = doc.documentElement;
   child = doc.createElementNS("ns2", "prefix:child");
   root.appendChild(child);
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc),
-              '<prefix:root xmlns:prefix="ns1"><a0:child xmlns:a0="ns2"/>'+
-              '</prefix:root>');
+  Assert.equal(SerializeXML(doc),
+               '<prefix:root xmlns:prefix="ns1"><a0:child xmlns:a0="ns2"/>'+
+               '</prefix:root>');
 
 }
 
@@ -102,22 +102,22 @@ function test4() {
   var root = doc.documentElement;
   root.setAttributeNS("ns1", "prefix:local", "val");
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc),
-              '<root xmlns="ns1" prefix:local="val" xmlns:prefix="ns1"/>');
+  Assert.equal(SerializeXML(doc),
+               '<root xmlns="ns1" prefix:local="val" xmlns:prefix="ns1"/>');
 
   doc = ParseXML('<prefix:root xmlns:prefix="ns1"/>');
   root = doc.documentElement;
   root.setAttributeNS("ns1", "local", "val");
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc),
-              '<prefix:root xmlns:prefix="ns1" prefix:local="val"/>');
+  Assert.equal(SerializeXML(doc),
+               '<prefix:root xmlns:prefix="ns1" prefix:local="val"/>');
 
   doc = ParseXML('<root xmlns="ns1"/>');
   root = doc.documentElement;
   root.setAttributeNS("ns2", "local", "val");
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc),
-              '<root xmlns="ns1" a0:local="val" xmlns:a0="ns2"/>');
+  Assert.equal(SerializeXML(doc),
+               '<root xmlns="ns1" a0:local="val" xmlns:a0="ns2"/>');
 
   // Handling of prefix-generation for non-null-namespace attributes
   // which have the same namespace as the current default namespace
@@ -126,8 +126,8 @@ function test4() {
   root = doc.documentElement;
   root.setAttributeNS("ns1", "local", "val");
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc),
-                '<root xmlns="ns1" a0:local="val" xmlns:a0="ns1"/>');
+  Assert.equal(SerializeXML(doc),
+                 '<root xmlns="ns1" a0:local="val" xmlns:a0="ns1"/>');
 
   // Tree-walking test
   doc = ParseXML('<root xmlns="ns1" xmlns:a="ns2">'+
@@ -153,22 +153,22 @@ function test4() {
   //  Note: we end up with "a2" as the prefix on "l11" and "l12" because we use
   //  "a1" earlier, and discard it in favor of something we get off the
   //  namespace stack, apparently
-  do_check_eq(SerializeXML(doc),
-              '<root xmlns="ns1" xmlns:a="ns2">'+
-              '<child xmlns:b="ns2" xmlns:a="ns3">'+
-              '<child2 a0:l1="v1" xmlns:a0="ns4"' +
-              ' a0:l2="v2"' +
-              ' l3="v3"' +
-              ' a:l4="v4"' +
-              ' a:l5="v5"' +
-              ' a:l6="v6"' +
-              ' b:l7="v7"' +
-              ' b:l8="v8"' +
-              ' b:l9="v9"' +
-              ' b:l10="v10"' +
-              ' a2:l11="v11" xmlns:a2="ns1"' +
-              ' a2:l12="v12"' +
-              ' a2:l13="v13"/></child></root>');
+  Assert.equal(SerializeXML(doc),
+               '<root xmlns="ns1" xmlns:a="ns2">'+
+               '<child xmlns:b="ns2" xmlns:a="ns3">'+
+               '<child2 a0:l1="v1" xmlns:a0="ns4"' +
+               ' a0:l2="v2"' +
+               ' l3="v3"' +
+               ' a:l4="v4"' +
+               ' a:l5="v5"' +
+               ' a:l6="v6"' +
+               ' b:l7="v7"' +
+               ' b:l8="v8"' +
+               ' b:l9="v9"' +
+               ' b:l10="v10"' +
+               ' a2:l11="v11" xmlns:a2="ns1"' +
+               ' a2:l12="v12"' +
+               ' a2:l13="v13"/></child></root>');
 }
 
 function test5() {
@@ -178,8 +178,8 @@ function test5() {
   var child = doc.createElement('child');
   doc.documentElement.appendChild(child);
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc),
-              '<root xmlns="ns1"><child xmlns=""/></root>');
+  Assert.equal(SerializeXML(doc),
+               '<root xmlns="ns1"><child xmlns=""/></root>');
 }
 
 function test6() {
@@ -192,9 +192,9 @@ function test6() {
   child1.appendChild(child2);
   root.appendChild(child1);
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc),
-              '<prefix:root xmlns:prefix="ns1"><a0:child1 xmlns:a0="ns2">'+
-              '<prefix:child2/></a0:child1></prefix:root>');
+  Assert.equal(SerializeXML(doc),
+               '<prefix:root xmlns:prefix="ns1"><a0:child1 xmlns:a0="ns2">'+
+               '<prefix:child2/></a0:child1></prefix:root>');
 
   doc = ParseXML('<root xmlns="ns1"><prefix:child1 xmlns:prefix="ns2"/></root>');
   root = doc.documentElement;
@@ -202,9 +202,9 @@ function test6() {
   child2 = doc.createElementNS("ns1", "prefix:child2");
   child1.appendChild(child2);
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc),
-              '<root xmlns="ns1"><prefix:child1 xmlns:prefix="ns2">'+
-              '<child2/></prefix:child1></root>');
+  Assert.equal(SerializeXML(doc),
+               '<root xmlns="ns1"><prefix:child1 xmlns:prefix="ns2">'+
+               '<child2/></prefix:child1></root>');
 
   doc = ParseXML('<prefix:root xmlns:prefix="ns1">'+
                  '<prefix:child1 xmlns:prefix="ns2"/></prefix:root>');
@@ -213,9 +213,9 @@ function test6() {
   child2 = doc.createElementNS("ns1", "prefix:child2");
   child1.appendChild(child2);
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc),
-              '<prefix:root xmlns:prefix="ns1"><prefix:child1 xmlns:prefix="ns2">'+
-              '<a0:child2 xmlns:a0="ns1"/></prefix:child1></prefix:root>');
+  Assert.equal(SerializeXML(doc),
+               '<prefix:root xmlns:prefix="ns1"><prefix:child1 xmlns:prefix="ns2">'+
+               '<a0:child2 xmlns:a0="ns1"/></prefix:child1></prefix:root>');
 
 
   doc = ParseXML('<root xmlns="ns1"/>');
@@ -225,9 +225,9 @@ function test6() {
   child1.appendChild(child2);
   root.appendChild(child1);
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc),
-                '<root xmlns="ns1"><child1 xmlns="ns2"><child2 xmlns="ns1"/>'+
-                '</child1></root>');
+  Assert.equal(SerializeXML(doc),
+                 '<root xmlns="ns1"><child1 xmlns="ns2"><child2 xmlns="ns1"/>'+
+                 '</child1></root>');
 }
 
 function test7() {
@@ -238,14 +238,14 @@ function test7() {
   root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns",
                       "http://www.w3.org/1999/xhtml");
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc), '<root/>');
+  Assert.equal(SerializeXML(doc), '<root/>');
 
   doc = ParseXML('<root xmlns=""><child1/></root>')
   root = doc.documentElement;
   root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns",
                       "http://www.w3.org/1999/xhtml");
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc), '<root><child1/></root>');
+  Assert.equal(SerializeXML(doc), '<root><child1/></root>');
 
   doc = ParseXML('<root xmlns="http://www.w3.org/1999/xhtml">' +
                  '<child1 xmlns=""><child2/></child1></root>')
@@ -256,9 +256,9 @@ function test7() {
   child1.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns",
                         "http://www.w3.org/1999/xhtml");
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc),
-              '<root xmlns="http://www.w3.org/1999/xhtml"><child1 xmlns="">' +
-              '<child2/></child1></root>');
+  Assert.equal(SerializeXML(doc),
+               '<root xmlns="http://www.w3.org/1999/xhtml"><child1 xmlns="">' +
+               '<child2/></child1></root>');
 
   doc = ParseXML('<root xmlns="http://www.w3.org/1999/xhtml">' +
                  '<child1 xmlns="">' +
@@ -272,9 +272,9 @@ function test7() {
                         "http://www.w3.org/1999/xhtml");
   child2.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "");
   do_check_serialize(doc);
-  do_check_eq(SerializeXML(doc),
-              '<root xmlns="http://www.w3.org/1999/xhtml"><child1 xmlns="">' +
-              '<a0:child2 xmlns:a0="http://www.w3.org/1999/xhtml" xmlns=""></a0:child2></child1></root>');
+  Assert.equal(SerializeXML(doc),
+               '<root xmlns="http://www.w3.org/1999/xhtml"><child1 xmlns="">' +
+               '<a0:child2 xmlns:a0="http://www.w3.org/1999/xhtml" xmlns=""></a0:child2></child1></root>');
 }
 
 function test8() {
@@ -287,22 +287,22 @@ function test8() {
   var p = Pipe();
   DOMSerializer().serializeToStream(doc1, p.outputStream, "windows-1252");
   p.outputStream.close();
-  do_check_eq(ScriptableInput(p).read(-1), str1);
+  Assert.equal(ScriptableInput(p).read(-1), str1);
 
   p = Pipe();
   DOMSerializer().serializeToStream(doc2, p.outputStream, "windows-1252");
   p.outputStream.close();
-  do_check_eq(ScriptableInput(p).read(-1), str1);
+  Assert.equal(ScriptableInput(p).read(-1), str1);
 
   p = Pipe();
   DOMSerializer().serializeToStream(doc1, p.outputStream, "UTF-8");
   p.outputStream.close();
-  do_check_eq(ScriptableInput(p).read(-1), str2);
+  Assert.equal(ScriptableInput(p).read(-1), str2);
 
   p = Pipe();
   DOMSerializer().serializeToStream(doc2, p.outputStream, "UTF-8");
   p.outputStream.close();
-  do_check_eq(ScriptableInput(p).read(-1), str2);
+  Assert.equal(ScriptableInput(p).read(-1), str2);
 }
 
 function test9() {
@@ -366,10 +366,10 @@ function checkSerialization(doc, toCharset, expectedString) {
   // compare the first expectedString.length characters for equality
   var outString = {};
   var count = cin.readString(expectedString.length, outString);
-  do_check_eq(count, expectedString.length);
-  do_check_eq(outString.value, expectedString);
+  Assert.equal(count, expectedString.length);
+  Assert.equal(outString.value, expectedString);
 
   // if there's anything more in the stream, it's a bug
-  do_check_eq(0, cin.readString(1, outString));
-  do_check_eq(outString.value, "");
+  Assert.equal(0, cin.readString(1, outString));
+  Assert.equal(outString.value, "");
 }
