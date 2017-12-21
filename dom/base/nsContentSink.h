@@ -151,20 +151,20 @@ protected:
   nsresult ProcessHeaderData(nsAtom* aHeader, const nsAString& aValue,
                              nsIContent* aContent = nullptr);
   nsresult ProcessLinkHeader(const nsAString& aLinkData);
-  nsresult ProcessLink(const nsAString& aAnchor,
-                       const nsAString& aHref, const nsAString& aRel,
-                       const nsAString& aTitle, const nsAString& aType,
-                       const nsAString& aMedia, const nsAString& aCrossOrigin,
-                       const nsAString& aReferrerPolicy,
-                       const nsAString& aAs);
+  nsresult ProcessLinkFromHeader(const nsAString& aAnchor,
+                                 const nsAString& aHref, const nsAString& aRel,
+                                 const nsAString& aTitle, const nsAString& aType,
+                                 const nsAString& aMedia,
+                                 const nsAString& aCrossOrigin,
+                                 const nsAString& aReferrerPolicy,
+                                 const nsAString& aAs);
 
-  virtual nsresult ProcessStyleLink(nsIContent* aElement,
-                                    const nsAString& aHref,
-                                    bool aAlternate,
-                                    const nsAString& aTitle,
-                                    const nsAString& aType,
-                                    const nsAString& aMedia,
-                                    const nsAString& aReferrerPolicy);
+  virtual nsresult ProcessStyleLinkFromHeader(const nsAString& aHref,
+                                              bool aAlternate,
+                                              const nsAString& aTitle,
+                                              const nsAString& aType,
+                                              const nsAString& aMedia,
+                                              const nsAString& aReferrerPolicy);
 
   void PrefetchPreloadHref(const nsAString &aHref, nsINode *aSource,
                            uint32_t aLinkTypes, const nsAString& aAs,

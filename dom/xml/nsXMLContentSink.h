@@ -27,6 +27,7 @@ class nsIParser;
 namespace mozilla {
 namespace dom {
 class NodeInfo;
+class ProcessingInstruction;
 } // namespace dom
 } // namespace mozilla
 
@@ -145,13 +146,13 @@ protected:
   }
 
   // nsContentSink override
-  virtual nsresult ProcessStyleLink(nsIContent* aElement,
-                                    const nsAString& aHref,
-                                    bool aAlternate,
-                                    const nsAString& aTitle,
-                                    const nsAString& aType,
-                                    const nsAString& aMedia,
-                                    const nsAString& aReferrerPolicy) override;
+  virtual nsresult ProcessStyleLinkFromHeader(
+    const nsAString& aHref,
+    bool aAlternate,
+    const nsAString& aTitle,
+    const nsAString& aType,
+    const nsAString& aMedia,
+    const nsAString& aReferrerPolicy) override;
 
   // Try to handle an XSLT style link.  If NS_OK is returned and aWasXSLT is not
   // null, *aWasXSLT will be set to whether we processed this link as XSLT.
@@ -160,7 +161,7 @@ protected:
   // header; otherwise it will be the xml-styleshset XML PI that the loading
   // information comes from.
   virtual nsresult MaybeProcessXSLTLink(
-    nsIContent* aProcessingInstruction,
+    mozilla::dom::ProcessingInstruction* aProcessingInstruction,
     const nsAString& aHref,
     bool aAlternate,
     const nsAString& aTitle,
