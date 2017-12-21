@@ -4782,7 +4782,7 @@ pref("network.tcp.keepalive.retry_interval", 1); // seconds
 pref("network.tcp.keepalive.probe_count", 4);
 #endif
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(XP_MACOSX)
 pref("network.tcp.tcp_fastopen_enable", true);
 #else
 pref("network.tcp.tcp_fastopen_enable", false);
