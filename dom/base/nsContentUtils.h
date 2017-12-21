@@ -1090,8 +1090,6 @@ public:
                                   uint32_t aLineNumber = 0,
                                   uint32_t aColumnNumber = 0);
 
-  static void ReportEmptyGetElementByIdArg(const nsIDocument* aDoc);
-
   static void LogMessageToConsole(const char* aMsg);
 
   /**

@@ -1599,13 +1599,24 @@ XULDocument::GetCommandDispatcher(nsIDOMXULCommandDispatcher** aTracker)
 }
 
 Element*
-XULDocument::GetRefById(const nsAString& aID)
+XULDocument::GetElementById(const nsAString& aId)
 {
-    if (nsRefMapEntry* refEntry = mRefMap.GetEntry(aID)) {
-        MOZ_ASSERT(refEntry->GetFirstElement());
-        return refEntry->GetFirstElement();
+    if (!CheckGetElementByIdArg(aId))
+        return nullptr;
+
+    nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aId);
+    if (entry) {
+        Element* element = entry->GetIdElement();
+        if (element)
+            return element;
     }
 
+    nsRefMapEntry* refEntry = mRefMap.GetEntry(aId);
+    if (refEntry) {
+        NS_ASSERTION(refEntry->GetFirstElement(),
+                     "nsRefMapEntries should have nonempty content lists");
+        return refEntry->GetFirstElement();
+    }
     return nullptr;
 }
 

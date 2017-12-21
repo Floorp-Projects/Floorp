@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_StyleSheetList_h
 #define mozilla_dom_StyleSheetList_h
 
-#include "mozilla/dom/DocumentOrShadowRoot.h"
+#include "mozilla/dom/StyleScope.h"
 #include "nsIDOMStyleSheetList.h"
 #include "nsWrapperCache.h"
 #include "nsStubDocumentObserver.h"
@@ -31,28 +31,28 @@ public:
 
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-  explicit StyleSheetList(DocumentOrShadowRoot& aScope);
+  explicit StyleSheetList(StyleScope& aScope);
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override final;
 
   nsINode* GetParentObject() const
   {
-    return mDocumentOrShadowRoot ? &mDocumentOrShadowRoot->AsNode() : nullptr;
+    return mStyleScope ? &mStyleScope->AsNode() : nullptr;
   }
 
   uint32_t Length() const
   {
-    return mDocumentOrShadowRoot ? mDocumentOrShadowRoot->SheetCount() : 0;
+    return mStyleScope ? mStyleScope->SheetCount() : 0;
   }
 
   StyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) const
   {
-    if (!mDocumentOrShadowRoot) {
+    if (!mStyleScope) {
       aFound = false;
       return nullptr;
     }
 
-    StyleSheet* sheet = mDocumentOrShadowRoot->SheetAt(aIndex);
+    StyleSheet* sheet = mStyleScope->SheetAt(aIndex);
     aFound = !!sheet;
     return sheet;
   }
@@ -66,7 +66,7 @@ public:
 protected:
   virtual ~StyleSheetList();
 
-  DocumentOrShadowRoot* mDocumentOrShadowRoot; // Weak, cleared on "NodeWillBeDestroyed".
+  StyleScope* mStyleScope; // Weak, cleared on "NodeWillBeDestroyed".
 };
 
 } // namespace dom

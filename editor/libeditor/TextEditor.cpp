@@ -26,7 +26,6 @@
 #include "nsCharTraits.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentCID.h"
-#include "nsContentList.h"
 #include "nsCopySupport.h"
 #include "nsDebug.h"
 #include "nsDependentSubstring.h"
