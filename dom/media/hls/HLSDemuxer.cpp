@@ -96,6 +96,7 @@ public:
          }
        }));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   void OnError(int aErrorCode)
@@ -114,6 +115,7 @@ public:
          }
        }));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   void Detach()
@@ -642,6 +644,7 @@ HLSTrackDemuxer::BreakCycles()
     } );
   nsresult rv = mParent->GetTaskQueue()->Dispatch(task.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 HLSTrackDemuxer::~HLSTrackDemuxer()

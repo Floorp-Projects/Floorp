@@ -1128,6 +1128,7 @@ public:
         NS_NewRunnableFunction("MediaFormatReader::DemuxerProxy::Wrapper::Reset",
                                [self]() { self->mTrackDemuxer->Reset(); }));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
   nsresult GetNextRandomAccessPoint(TimeUnit* aTime) override
@@ -1189,6 +1190,7 @@ private:
         "MediaFormatReader::DemuxerProxy::Wrapper::~Wrapper",
         [trackDemuxer]() { trackDemuxer->BreakCycles(); }));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
     DecoderDoctorLogger::LogDestruction(
       "MediaFormatReader::DemuxerProxy::Wrapper", this);
   }
@@ -2234,6 +2236,7 @@ MediaFormatReader::ScheduleUpdate(TrackType aTrack)
     "MediaFormatReader::Update", this, &MediaFormatReader::Update, aTrack));
   nsresult rv = OwnerThread()->Dispatch(task.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 bool
@@ -3174,6 +3177,7 @@ MediaFormatReader::ScheduleSeek()
     OwnerThread()->Dispatch(NewRunnableMethod(
       "MediaFormatReader::AttemptSeek", this, &MediaFormatReader::AttemptSeek));
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 void
