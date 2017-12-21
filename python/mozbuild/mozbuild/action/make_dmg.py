@@ -4,32 +4,35 @@
 
 from __future__ import print_function
 
-from mozbuild.base import MozbuildObject
 from mozpack import dmg
 
-import os
+import argparse
 import sys
 
 
-def make_dmg(source_directory, output_dmg):
-    build = MozbuildObject.from_environment()
-    extra_files = [
-        (os.path.join(build.distdir, 'branding', 'dsstore'), '.DS_Store'),
-        (os.path.join(build.distdir, 'branding', 'background.png'),
-         '.background/background.png'),
-        (os.path.join(build.distdir, 'branding', 'disk.icns'),
-         '.VolumeIcon.icns'),
-    ]
-    volume_name = build.substs['MOZ_APP_DISPLAYNAME']
-    dmg.create_dmg(source_directory, output_dmg, volume_name, extra_files)
-
-
 def main(args):
-    if len(args) != 2:
-        print('Usage: make_dmg.py <source directory> <output dmg>',
-              file=sys.stderr)
-        return 1
-    make_dmg(args[0], args[1])
+    parser = argparse.ArgumentParser(
+        description='Explode a DMG into its relevant files')
+
+    parser.add_argument('--dsstore', help='DSStore file from')
+    parser.add_argument('--background', help='Background file from')
+    parser.add_argument('--icon', help='Icon file from')
+    parser.add_argument('--volume-name', help='Disk image volume name')
+
+    parser.add_argument('inpath', metavar='PATH_IN',
+                        help='Location of files to pack')
+    parser.add_argument('dmgfile', metavar='DMG_OUT',
+                        help='DMG File to create')
+
+    options = parser.parse_args(args)
+
+    extra_files = [
+        (options.dsstore, '.DS_Store'),
+        (options.background, '.background/background.png'),
+        (options.icon, '.VolumeIcon.icns'),
+    ]
+    dmg.create_dmg(options.inpath, options.dmgfile, options.volume_name, extra_files)
+
     return 0
 
 
