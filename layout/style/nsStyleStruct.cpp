@@ -337,8 +337,8 @@ nsStylePadding::CalcDifference(const nsStylePadding& aNewData) const
 
 nsStyleBorder::nsStyleBorder(const nsPresContext* aContext)
   : mBorderImageFill(NS_STYLE_BORDER_IMAGE_SLICE_NOFILL)
-  , mBorderImageRepeatH(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH)
-  , mBorderImageRepeatV(NS_STYLE_BORDER_IMAGE_REPEAT_STRETCH)
+  , mBorderImageRepeatH(StyleBorderImageRepeat::Stretch)
+  , mBorderImageRepeatV(StyleBorderImageRepeat::Stretch)
   , mFloatEdge(StyleFloatEdge::ContentBox)
   , mBoxDecorationBreak(StyleBoxDecorationBreak::Slice)
   , mComputedBorder(0, 0, 0, 0)
