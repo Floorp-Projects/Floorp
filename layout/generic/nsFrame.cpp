@@ -997,9 +997,8 @@ nsIFrame::RemoveDisplayItemDataForDeletion()
 void
 nsIFrame::MarkNeedsDisplayItemRebuild()
 {
-  if (!gfxPrefs::LayoutRetainDisplayList() || !XRE_IsContentProcess() ||
-      IsFrameModified()) {
-    // Skip non-content processes and frames that are already marked modified.
+  if (!nsLayoutUtils::AreRetainedDisplayListsEnabled() || IsFrameModified()) {
+    // Skip frames that are already marked modified.
     return;
   }
 
@@ -1558,6 +1557,9 @@ nsIFrame::IsSVGTransformed(gfx::Matrix *aOwnTransforms,
 bool
 nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay, mozilla::EffectSet* aEffectSet) const
 {
+  if (!(mState & NS_FRAME_MAY_BE_TRANSFORMED)) {
+    return false;
+  }
   const nsStyleDisplay* disp = StyleDisplayWithOptionalParam(aStyleDisplay);
   if (disp->mTransformStyle != NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
       !IsFrameOfType(nsIFrame::eSupportsCSSTransforms)) {
@@ -3562,8 +3564,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       return;
     savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(child);
     if (savedOutOfFlowData) {
-      visible = savedOutOfFlowData->mVisibleRect;
-      dirty = savedOutOfFlowData->mDirtyRect;
+      visible = savedOutOfFlowData->GetVisibleRectForFrame(aBuilder, child, &dirty);
     } else {
       // The out-of-flow frame did not intersect the dirty area. We may still
       // need to traverse into it, since it may contain placeholders we need

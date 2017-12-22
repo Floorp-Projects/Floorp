@@ -57,7 +57,7 @@ add_task(async function() {
   }
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.crashReports.unsubmittedCheck.autoSubmit", true]],
+    set: [["browser.crashReports.unsubmittedCheck.autoSubmit2", true]],
   });
   await openPreferencesViaOpenPreferencesAPI("privacy-reports", {leaveOpen: true});
 
@@ -78,7 +78,7 @@ add_task(async function() {
   }
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.crashReports.unsubmittedCheck.autoSubmit", false]],
+    set: [["browser.crashReports.unsubmittedCheck.autoSubmit2", false]],
   });
   await openPreferencesViaOpenPreferencesAPI("privacy-reports", {leaveOpen: true});
 

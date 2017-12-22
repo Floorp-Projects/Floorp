@@ -1,4 +1,4 @@
-loadRelativeToScript("../../../tests/ecma_6/Math/shell.js");
+loadRelativeToScript("../../../tests/non262/Math/shell.js");
 
 for (var i = -20; i < 20; i++) {
     assertEq(Math.hypot(+0, i), Math.abs(i));

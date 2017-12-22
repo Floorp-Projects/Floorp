@@ -49,15 +49,7 @@ nsDisplayItemBoundsGeometry::nsDisplayItemBoundsGeometry(nsDisplayItem* aItem, n
 nsDisplayBorderGeometry::nsDisplayBorderGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
   : nsDisplayItemGeometry(aItem, aBuilder)
   , nsImageGeometryMixin(aItem, aBuilder)
-  , mContentRect(aItem->GetContentRect())
 {}
-
-void
-nsDisplayBorderGeometry::MoveBy(const nsPoint& aOffset)
-{
-  nsDisplayItemGeometry::MoveBy(aOffset);
-  mContentRect.MoveBy(aOffset);
-}
 
 nsDisplayBackgroundGeometry::nsDisplayBackgroundGeometry(nsDisplayBackgroundImage* aItem,
                                                          nsDisplayListBuilder* aBuilder)
