@@ -11,7 +11,7 @@
 %ifdef XP_MACOSX
   -moz-window-shadow: none;
 %endif
-  background: hsla(0,0%,33%,.85);
+  background: hsla(0,0%,40%,.85);
   color: white;
   border-style: none;
   padding: 20px 10px 10px;
@@ -21,19 +21,34 @@
   text-shadow: 0 0 1px hsl(0,0%,12%), 0 0 2px hsl(0,0%,12%);
 }
 
+.ctrlTab-preview > html|img,
+.ctrlTab-preview > html|canvas {
+  min-width: inherit;
+  max-width: inherit;
+  min-height: inherit;
+  max-height: inherit;
+}
+
+.ctrlTab-favicon-container {
+  position: relative;
+  -moz-box-pack: end;
+}
+
 .ctrlTab-favicon[src] {
-  background-color: white;
-  width: 20px;
-  height: 20px;
-  padding: 2px;
-}
-
-.ctrlTab-preview-inner > .tabPreview-canvas {
-  box-shadow: 1px 1px 2px hsl(0,0%,12%);
-}
-
-.ctrlTab-preview:not(#ctrlTab-showAll) > * > .ctrlTab-preview-inner > .tabPreview-canvas {
+  width: 42px;
+  height: 42px;
+  margin-top: -44px;
   margin-bottom: 2px;
+  margin-inline-end: -6px;
+  padding: 5px;
+  background-color: #F9F9FA;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.1);
+}
+
+.ctrlTab-preview:not(#ctrlTab-showAll) > .ctrlTab-preview-inner > .ctrlTab-canvas {
+  box-shadow: 1px 1px 2px hsl(0,0%,12%);
+  margin-bottom: 8px;
 }
 
 .ctrlTab-preview-inner {
@@ -42,19 +57,23 @@
   border-radius: .5em;
 }
 
-.ctrlTab-preview:not(#ctrlTab-showAll) > * > .ctrlTab-preview-inner {
+.ctrlTab-preview:not(#ctrlTab-showAll) > .ctrlTab-preview-inner {
   margin: -10px -10px 0;
 }
 
-#ctrlTab-showAll:not(:focus) > * > .ctrlTab-preview-inner {
+#ctrlTab-showAll:not(:focus) > .ctrlTab-preview-inner {
   background-color: rgba(255,255,255,.2);
 }
 
-.ctrlTab-preview:focus > * > .ctrlTab-preview-inner {
+.ctrlTab-preview:focus > .ctrlTab-preview-inner {
   color: white;
-  background-color: rgba(0,0,0,.6);
+  background-color: rgba(0,0,0,.75);
   text-shadow: none;
-  border-color: white;
+  border-color: #45a1ff;
+}
+
+.ctrlTab-label {
+  text-align: center;
 }
 
 #ctrlTab-showAll {
