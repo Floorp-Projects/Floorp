@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+-->
+<head>
+  <title>Cookie changes from XHR requests are observed in content processes.</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+
+<script type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('file_1331680.js'));
+gScript.addMessageListener("cookieName", confirmCookieName);
+gScript.addMessageListener("removeObserver:return", finishTest);
+gScript.sendAsyncMessage('createObserver');
+
+// Confirm the notify which represents the cookie is updating.
+var testsNum = 0;
+function confirmCookieName(name) {
+  testsNum++;
+  switch(testsNum) {
+    case 1:
+      is(name, "testXHR1=xhr_val1", "The cookie which names " + name + " is update to db");
+      break;
+    case 2:
+      document.cookie = "testXHR2=xhr_val2; path=/";
+      break;
+    case 3:
+      is(document.cookie, "testXHR2=xhr_val2", "Confirm the cookie string");
+      document.cookie = "testXHR1=; path=/; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+      document.cookie = "testXHR2=; path=/; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+      gScript.sendAsyncMessage('removeObserver');
+      break;
+  }
+}
+
+function finishTest() {
+  SimpleTest.finish();
+}
+
+function createXHR(url) {
+  return new Promise(function (resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true); // async request
+    xhr.onload = function () {
+      if (this.status >= 200 && this.status < 300) {
+        resolve(xhr.response);
+      } else {
+        reject({
+          status: this.status,
+          statusText: xhr.statusText
+        });
+      }
+    };
+    xhr.onerror = function () {
+      reject({
+        status: this.status,
+        statusText: xhr.statusText
+      });
+    };
+    xhr.send();
+  });
+}
+
+
+/* Test XHR
+ * 1. Create two XHR.
+ * 2. One of the XHR create a cookie names "set_cookie", and other one create a http-only cookie names "modify_cookie".
+ * 3. Child process only set testXHR1 to cookies hash table.
+ * 4. Child process only can get the testXHR1 cookie from cookies hash table.
+ */
+Promise.resolve()
+  .then(_ => createXHR('reset_cookie_xhr.sjs?set_cookie'))
+  .then(_ => createXHR('reset_cookie_xhr.sjs?modify_cookie'));
+
+</script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+</pre>
+</body>
+</html>
+
