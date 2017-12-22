@@ -43,6 +43,7 @@
 #include "nsCRT.h"
 #include "nsDataHashtable.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsHashKeys.h"
 #include "nsICategoryManager.h"
 #include "nsIConsoleService.h"
 #include "nsIDirectoryService.h"
@@ -776,8 +777,8 @@ pref_HashTableLookup(const char* aPrefName)
 #ifdef DEBUG
   if (!XRE_IsParentProcess()) {
     if (gPhase == ContentProcessPhase::eNoPrefsSet) {
-      MOZ_CRASH_UNSAFE_PRINTF(
-        "accessing pref %s before early prefs are set", aPrefName);
+      MOZ_CRASH_UNSAFE_PRINTF("accessing pref %s before early prefs are set",
+                              aPrefName);
     }
 
     if (gPhase == ContentProcessPhase::eEarlyPrefsSet &&
@@ -919,6 +920,15 @@ NotifyCallbacks(const char* aPrefName)
 // Prefs parsing
 //===========================================================================
 
+struct TelemetryLoadData
+{
+  uint32_t mFileLoadSize_B;
+  uint32_t mFileLoadNumPrefs;
+  uint32_t mFileLoadTime_us;
+};
+
+static nsDataHashtable<nsCStringHashKey, TelemetryLoadData>* gTelemetryLoadData;
+
 class Parser
 {
 public:
@@ -943,7 +953,10 @@ public:
 
   ~Parser() { free(mLb); }
 
-  bool Parse(const char* aBuf, int aBufLen);
+  bool Parse(const nsCString& aName,
+             const TimeStamp& aStartTime,
+             const char* aBuf,
+             size_t aBufLen);
 
   bool GrowBuf();
 
@@ -1102,10 +1115,15 @@ Parser::ReportProblem(const char* aMessage, int aLine, bool aError)
 // bcomment-line = <bourne-shell style comment line>
 //
 bool
-Parser::Parse(const char* aBuf, int aBufLen)
+Parser::Parse(const nsCString& aName,
+              const TimeStamp& aStartTime,
+              const char* aBuf,
+              size_t aBufLen)
 {
   // The line number is currently only used for the error/warning reporting.
   int lineNum = 0;
+
+  uint32_t numPrefs = 0;
 
   State state = mState;
   for (const char* end = aBuf + aBufLen; aBuf != end; ++aBuf) {
@@ -1504,6 +1522,7 @@ Parser::Parse(const char* aBuf, int aBufLen)
 
           // We've extracted a complete name/value pair.
           HandleValue(mLb, *mVtype, value, mIsDefault, mIsSticky);
+          numPrefs++;
 
           state = State::eInit;
         } else if (c == '/') {
@@ -1528,7 +1547,34 @@ Parser::Parse(const char* aBuf, int aBufLen)
     }
   }
   mState = state;
+
+  uint32_t loadTime_us = (TimeStamp::Now() - aStartTime).ToMicroseconds();
+
+  // Most prefs files are read before telemetry initializes, so we have to save
+  // these measurements now and send them to telemetry later.
+  TelemetryLoadData loadData = { uint32_t(aBufLen), numPrefs, loadTime_us };
+  gTelemetryLoadData->Put(aName, loadData);
+
   return true;
+}
+
+void
+SendTelemetryLoadData()
+{
+  for (auto iter = gTelemetryLoadData->Iter(); !iter.Done(); iter.Next()) {
+    const nsCString& filename = PromiseFlatCString(iter.Key());
+    const TelemetryLoadData& data = iter.Data();
+    Telemetry::Accumulate(
+      Telemetry::PREFERENCES_FILE_LOAD_SIZE_B, filename, data.mFileLoadSize_B);
+    Telemetry::Accumulate(Telemetry::PREFERENCES_FILE_LOAD_NUM_PREFS,
+                          filename,
+                          data.mFileLoadNumPrefs);
+    Telemetry::Accumulate(Telemetry::PREFERENCES_FILE_LOAD_TIME_US,
+                          filename,
+                          data.mFileLoadTime_us);
+  }
+
+  gTelemetryLoadData->Clear();
 }
 
 //===========================================================================
@@ -3279,6 +3325,9 @@ Preferences::GetInstanceForService()
   gHashTable = new PLDHashTable(
     &pref_HashTableOps, sizeof(Pref), PREF_HASHTABLE_INITIAL_LENGTH);
 
+  gTelemetryLoadData =
+    new nsDataHashtable<nsCStringHashKey, TelemetryLoadData>();
+
   Result<Ok, const char*> res = InitInitialObjects();
   if (res.isErr()) {
     sPreferences = nullptr;
@@ -3403,6 +3452,10 @@ Preferences::~Preferences()
 
   delete gHashTable;
   gHashTable = nullptr;
+
+  delete gTelemetryLoadData;
+  gTelemetryLoadData = nullptr;
+
   gPrefNameArena.Clear();
 }
 
@@ -3465,6 +3518,10 @@ Preferences::InitializeUserPrefs()
   sPreferences->mCurrentFile = prefsFile.forget();
 
   sPreferences->NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
+
+  // At this point all the prefs files have been read and telemetry has been
+  // initialized. Send all the file load measurements to telemetry.
+  SendTelemetryLoadData();
 }
 
 NS_IMETHODIMP
@@ -3935,11 +3992,17 @@ Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod)
 static nsresult
 openPrefFile(nsIFile* aFile)
 {
+  TimeStamp startTime = TimeStamp::Now();
+
   nsCString data;
   MOZ_TRY_VAR(data, URLPreloader::ReadFile(aFile));
 
+  nsAutoString filenameUtf16;
+  aFile->GetLeafName(filenameUtf16);
+  NS_ConvertUTF16toUTF8 filename(filenameUtf16);
+
   Parser parser;
-  if (!parser.Parse(data.get(), data.Length())) {
+  if (!parser.Parse(filename, startTime, data.get(), data.Length())) {
     return NS_ERROR_FILE_CORRUPTED;
   }
 
@@ -4066,12 +4129,15 @@ pref_LoadPrefsInDir(nsIFile* aDir,
 static nsresult
 pref_ReadPrefFromJar(nsZipArchive* aJarReader, const char* aName)
 {
+  TimeStamp startTime = TimeStamp::Now();
+
   nsCString manifest;
   MOZ_TRY_VAR(manifest,
               URLPreloader::ReadZip(aJarReader, nsDependentCString(aName)));
 
+  nsDependentCString name(aName);
   Parser parser;
-  if (!parser.Parse(manifest.get(), manifest.Length())) {
+  if (!parser.Parse(name, startTime, manifest.get(), manifest.Length())) {
     return NS_ERROR_FILE_CORRUPTED;
   }
 

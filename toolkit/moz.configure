@@ -514,16 +514,6 @@ def check_places_and_android_history(places, android_history):
     if places and android_history:
         die('Cannot use MOZ_ANDROID_HISTORY alongside MOZ_PLACES.')
 
-# Permissions system
-# ==============================================================
-option(name='--disable-permissions',
-       help='Disable permissions (popup and cookie blocking)')
-
-moz_permissions = depends_if('--disable-permissions')(lambda _: True)
-
-set_config('MOZ_PERMISSIONS', moz_permissions)
-set_define('MOZ_PERMISSIONS', moz_permissions)
-
 # gpsd support
 # ==============================================================
 option('--enable-gpsd', env='MOZ_GPSD',

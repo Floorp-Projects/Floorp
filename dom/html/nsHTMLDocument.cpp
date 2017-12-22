@@ -1598,6 +1598,18 @@ nsHTMLDocument::Open(JSContext* cx,
         nsCOMPtr<nsIDocument> ret = this;
         return ret.forget();
       }
+
+      // Now double-check that our invariants still hold.
+      if (!mScriptGlobalObject) {
+        nsCOMPtr<nsIDocument> ret = this;
+        return ret.forget();
+      }
+
+      nsPIDOMWindowOuter* outer = GetWindow();
+      if (!outer || (GetInnerWindow() != outer->GetCurrentInnerWindow())) {
+        nsCOMPtr<nsIDocument> ret = this;
+        return ret.forget();
+      }
     }
 
     nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(shell));
