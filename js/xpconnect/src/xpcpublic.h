@@ -356,17 +356,17 @@ inline
 bool NonVoidStringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
                           JS::MutableHandleValue rval)
 {
+    if (str.IsEmpty()) {
+        rval.set(JS_GetEmptyStringValue(cx));
+        return true;
+    }
+
     if (!str.HasStringBuffer()) {
         // It's an actual XPCOM string
         return NonVoidStringToJsval(cx, str.AsAString(), rval);
     }
 
     uint32_t length = str.StringBufferLength();
-    if (length == 0) {
-        rval.set(JS_GetEmptyStringValue(cx));
-        return true;
-    }
-
     nsStringBuffer* buf = str.StringBuffer();
     bool shared;
     if (!XPCStringConvert::StringBufferToJSVal(cx, buf, length, rval,
