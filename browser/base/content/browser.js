@@ -6609,7 +6609,7 @@ var CanvasPermissionPromptHelper = {
     let message = gNavigatorBundle.getFormattedString("canvas.siteprompt", [ uri.asciiHost ]);
 
     function setCanvasPermission(aURI, aPerm, aPersistent) {
-      Services.perms.add(aURI, "canvas/extractData", aPerm,
+      Services.perms.add(aURI, "canvas", aPerm,
                           aPersistent ? Ci.nsIPermissionManager.EXPIRE_NEVER
                                       : Ci.nsIPermissionManager.EXPIRE_SESSION);
     }

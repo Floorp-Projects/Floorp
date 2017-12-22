@@ -9,5 +9,10 @@
 check_and_add_gcc_flag('-fno-sized-deallocation', compiler=cxx_compiler)
 
 # Please keep these last in this file.
-add_old_configure_assignment('_COMPILATION_CFLAGS', compilation_cflags)
-add_old_configure_assignment('_COMPILATION_CXXFLAGS', compilation_cxxflags)
+add_old_configure_assignment('_COMPILATION_CFLAGS', compilation_flags.cflags)
+add_old_configure_assignment(
+    '_COMPILATION_CXXFLAGS', compilation_flags.cxxflags)
+add_old_configure_assignment(
+    '_COMPILATION_HOST_CFLAGS', compilation_flags.host_cflags)
+add_old_configure_assignment(
+    '_COMPILATION_HOST_CXXFLAGS', compilation_flags.host_cxxflags)

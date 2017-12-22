@@ -24,13 +24,10 @@ namespace mozilla {
 
 using namespace dom;
 
-// note that aEditorBase is not refcounted
 DeleteRangeTransaction::DeleteRangeTransaction(EditorBase& aEditorBase,
-                                               nsRange& aRangeToDelete,
-                                               RangeUpdater* aRangeUpdater)
+                                               nsRange& aRangeToDelete)
   : mEditorBase(&aEditorBase)
   , mRangeToDelete(aRangeToDelete.CloneRange())
-  , mRangeUpdater(aRangeUpdater)
 {
 }
 
@@ -160,11 +157,11 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(
       static_cast<nsGenericDOMDataNode*>(aStart.Container());
 
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
-      new DeleteTextTransaction(*mEditorBase, *charDataNode, aStart.Offset(),
-                                numToDel, mRangeUpdater);
+      DeleteTextTransaction::MaybeCreate(*mEditorBase, *charDataNode,
+                                         aStart.Offset(), numToDel);
     // If the text node isn't editable, it should be never undone/redone.
     // So, the transaction shouldn't be recorded.
-    if (NS_WARN_IF(!deleteTextTransaction->CanDoIt())) {
+    if (NS_WARN_IF(!deleteTextTransaction)) {
       return NS_ERROR_FAILURE;
     }
     AppendChild(deleteTextTransaction);
@@ -177,12 +174,12 @@ DeleteRangeTransaction::CreateTxnsToDeleteBetween(
        child && child != aEnd.GetChildAtOffset();
        child = child->GetNextSibling()) {
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-      new DeleteNodeTransaction(*mEditorBase, *child, mRangeUpdater);
+      DeleteNodeTransaction::MaybeCreate(*mEditorBase, *child);
     // XXX This is odd handling.  Even if some children are not editable,
     //     editor should append transactions because they could be editable
     //     at undoing/redoing.  Additionally, if the transaction needs to
     //     delete/restore all nodes, it should at undoing/redoing.
-    if (deleteNodeTransaction->CanDoIt()) {
+    if (deleteNodeTransaction) {
       AppendChild(deleteNodeTransaction);
     }
   }
@@ -224,11 +221,11 @@ DeleteRangeTransaction::CreateTxnsToDeleteContent(
   RefPtr<nsGenericDOMDataNode> dataNode =
     static_cast<nsGenericDOMDataNode*>(aPoint.Container());
   RefPtr<DeleteTextTransaction> deleteTextTransaction =
-    new DeleteTextTransaction(*mEditorBase, *dataNode, startOffset, numToDelete,
-                              mRangeUpdater);
+    DeleteTextTransaction::MaybeCreate(*mEditorBase, *dataNode,
+                                       startOffset, numToDelete);
   // If the text node isn't editable, it should be never undone/redone.
   // So, the transaction shouldn't be recorded.
-  if (NS_WARN_IF(!deleteTextTransaction->CanDoIt())) {
+  if (NS_WARN_IF(!deleteTextTransaction)) {
     return NS_ERROR_FAILURE;
   }
   AppendChild(deleteTextTransaction);
@@ -255,12 +252,12 @@ DeleteRangeTransaction::CreateTxnsToDeleteNodesBetween(nsRange* aRangeToDelete)
     }
 
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-      new DeleteNodeTransaction(*mEditorBase, *node, mRangeUpdater);
+      DeleteNodeTransaction::MaybeCreate(*mEditorBase, *node);
     // XXX This is odd handling.  Even if some nodes in the range are not
     //     editable, editor should append transactions because they could
     //     at undoing/redoing.  Additionally, if the transaction needs to
     //     delete/restore all nodes, it should at undoing/redoing.
-    if (NS_WARN_IF(!deleteNodeTransaction->CanDoIt())) {
+    if (NS_WARN_IF(!deleteNodeTransaction)) {
       return NS_ERROR_FAILURE;
     }
     AppendChild(deleteNodeTransaction);

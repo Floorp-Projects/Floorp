@@ -22,18 +22,31 @@ class EditorBase;
  */
 class InsertNodeTransaction final : public EditTransactionBase
 {
-public:
-  /**
-   * Initialize the transaction.
-   *
-   * @param aEditorBase         The editor.
-   * @param aContentToInsert    The node to insert.
-   * @param aPointToInsert      The node to insert into.  I.e., aContentToInsert
-   *                            will be inserted before the child at offset.
-   */
+protected:
   InsertNodeTransaction(EditorBase& aEditorBase,
                         nsIContent& aContentToInsert,
                         const EditorRawDOMPoint& aPointToInsert);
+
+public:
+  /**
+   * Create a transaction for inserting aContentToInsert before the child
+   * at aPointToInsert.
+   *
+   * @param aEditorBase         The editor which manages the transaction.
+   * @param aContentToInsert    The node to be inserted.
+   * @param aPointToInsert      The insertion point of aContentToInsert.
+   *                            If this refers end of the container, the
+   *                            transaction will append the node to the
+   *                            container.  Otherwise, will insert the node
+   *                            before child node referred by this.
+   * @return                    A InsertNodeTranaction which was initialized
+   *                            with the arguments.
+   */
+  static already_AddRefed<InsertNodeTransaction>
+  Create(EditorBase& aEditorBase,
+         nsIContent& aContentToInsert,
+         const EditorRawDOMPoint& aPointToInsert);
+
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertNodeTransaction,

@@ -178,6 +178,13 @@ this.SitePermissions = {
         if (permission.type == "install") {
           continue;
         }
+
+        // Hide canvas permission when privacy.resistFingerprinting is false.
+        if ((permission.type == "canvas") &&
+            !Services.prefs.getBoolPref("privacy.resistFingerprinting")) {
+          continue;
+        }
+
         let scope = this.SCOPE_PERSISTENT;
         if (permission.expireType == Services.perms.EXPIRE_SESSION) {
           scope = this.SCOPE_SESSION;
@@ -264,7 +271,14 @@ this.SitePermissions = {
    * @return {Array<String>} an array of all permission IDs.
    */
   listPermissions() {
-    return Object.keys(gPermissionObject);
+    let permissions = Object.keys(gPermissionObject);
+
+    // Hide canvas permission when privacy.resistFingerprinting is false.
+    if (!Services.prefs.getBoolPref("privacy.resistFingerprinting")) {
+      permissions = permissions.filter(permission => permission !== "canvas");
+    }
+
+    return permissions;
   },
 
   /**
@@ -630,6 +644,9 @@ var gPermissionObject = {
 
   "shortcuts": {
     states: [ SitePermissions.ALLOW, SitePermissions.BLOCK ],
+  },
+
+  "canvas": {
   },
 };
 

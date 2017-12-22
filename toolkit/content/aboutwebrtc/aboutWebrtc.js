@@ -440,7 +440,11 @@ PeerConnection.prototype = {
 
 function renderElement(elemName, elemText, options = {}) {
   let elem = document.createElement(elemName);
-  elem.textContent = elemText || "";
+  // check for null instead of using elemText || "" so we don't hide
+  // elements with 0 values
+  if (elemText != null) {
+    elem.textContent = elemText;
+  }
   Object.assign(elem, options);
   return elem;
 }
@@ -631,12 +635,29 @@ ICEStats.prototype = {
 
   renderICECandidateTable() {
     let caption = renderElement("caption", null, {className: "no-print"});
+
+    // This takes the caption message with the replacement token, breaks
+    // it around the token, and builds the spans for each portion of the
+    // caption.  This is to allow localization to put the color name for
+    // the highlight wherever it is appropriate in the translated string
+    // while avoiding innerHTML warnings from eslint.
+    let captionTemplate = getString("trickle_caption_msg2");
+    let [start, end] = captionTemplate.split(/%(?:1\$)?S/);
+
+    // only append span if non-whitespace chars present
+    if (/\S/.test(start)) {
+      caption.appendChild(
+          renderElement("span", `${start}`));
+    }
     caption.appendChild(
-        renderElement("span", `${getString("trickle_caption_msg")} `));
-    caption.appendChild(
-        renderElement("span", getString("trickle_highlight_color_name"), {
+        renderElement("span", getString("trickle_highlight_color_name2"), {
           className: "trickled"
         }));
+    // only append span if non-whitespace chars present
+    if (/\S/.test(end)) {
+      caption.appendChild(
+          renderElement("span", `${end}`));
+    }
 
     let stats = this.generateICEStats();
     // don't use |stat.x || ""| here because it hides 0 values

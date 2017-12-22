@@ -100,39 +100,6 @@ XPCOMUtils.defineLazyGetter(this, "LocaleData", () => ExtensionCommon.LocaleData
 // The maximum time to wait for extension shutdown blockers to complete.
 const SHUTDOWN_BLOCKER_MAX_MS = 8000;
 
-// The list of properties that themes are allowed to contain.
-XPCOMUtils.defineLazyGetter(this, "allowedThemeProperties", () => {
-  Cu.import("resource://gre/modules/ExtensionParent.jsm");
-  let propertiesInBaseManifest = ExtensionParent.baseManifestProperties;
-
-  // The properties found in the base manifest contain all of the properties that
-  // themes are allowed to have. However, the list also contains several properties
-  // that aren't allowed, so we need to filter them out first before the list can
-  // be used to validate themes.
-  return propertiesInBaseManifest.filter(prop => {
-    const propertiesToRemove = ["background", "content_scripts", "permissions"];
-    return !propertiesToRemove.includes(prop);
-  });
-});
-
-/**
- * Validates a theme to ensure it only contains static resources.
- *
- * @param {Array<string>} manifestProperties The list of top-level keys found in the
- *    the extension's manifest.
- * @returns {Array<string>} A list of invalid properties or an empty list
- *    if none are found.
- */
-function validateThemeManifest(manifestProperties) {
-  let invalidProps = [];
-  for (let propName of manifestProperties) {
-    if (propName != "theme" && !allowedThemeProperties.includes(propName)) {
-      invalidProps.push(propName);
-    }
-  }
-  return invalidProps;
-}
-
 /**
  * Classify an individual permission from a webextension manifest
  * as a host/origin permission, an api permission, or a regular permission.
@@ -524,15 +491,7 @@ class ExtensionData {
     let manifestType = "manifest.WebExtensionManifest";
     if (this.manifest.theme) {
       this.type = "theme";
-      // XXX create a separate manifest type for themes
-      let invalidProps = validateThemeManifest(Object.getOwnPropertyNames(this.manifest));
-
-      if (invalidProps.length) {
-        let message = `Themes defined in the manifest may only contain static resources. ` +
-          `If you would like to use additional properties, please use the "theme" permission instead. ` +
-          `(the invalid properties found are: ${invalidProps})`;
-        this.manifestError(message);
-      }
+      manifestType = "manifest.ThemeManifest";
     } else if (this.manifest.langpack_id) {
       this.type = "langpack";
       manifestType = "manifest.WebExtensionLangpackManifest";

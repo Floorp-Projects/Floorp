@@ -72,7 +72,29 @@ class BaseCompileChecks(unittest.TestCase):
 
             @wrap_compiler
             @depends(when=True)
+            def host_c_compiler():
+                return namespace(
+                    flags=[],
+                    type='gcc',
+                    compiler=os.path.abspath('/usr/bin/mockcc'),
+                    wrapper=[],
+                    language='C',
+                )
+
+            @wrap_compiler
+            @depends(when=True)
             def cxx_compiler():
+                return namespace(
+                    flags=[],
+                    type='gcc',
+                    compiler=os.path.abspath('/usr/bin/mockcc'),
+                    wrapper=[],
+                    language='C++',
+                )
+
+            @wrap_compiler
+            @depends(when=True)
+            def host_cxx_compiler():
                 return namespace(
                     flags=[],
                     type='gcc',
@@ -272,8 +294,8 @@ class TestHeaderChecks(BaseCompileChecks):
 class TestWarningChecks(BaseCompileChecks):
     def get_warnings(self):
         return textwrap.dedent('''\
-            set_config('_WARNINGS_CFLAGS', warnings_cflags)
-            set_config('_WARNINGS_CXXFLAGS', warnings_cxxflags)
+            set_config('_WARNINGS_CFLAGS', warnings_flags.cflags)
+            set_config('_WARNINGS_CXXFLAGS', warnings_flags.cxxflags)
         ''')
 
     def test_check_and_add_gcc_warning(self):

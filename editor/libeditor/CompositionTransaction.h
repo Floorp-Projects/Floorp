@@ -17,7 +17,6 @@
 namespace mozilla {
 
 class EditorBase;
-class RangeUpdater;
 class TextComposition;
 class TextRangeArray;
 
@@ -33,22 +32,34 @@ class Text;
  */
 class CompositionTransaction final : public EditTransactionBase
 {
+protected:
+  CompositionTransaction(EditorBase& aEditorBase,
+                         const nsAString& aStringToInsert,
+                         dom::Text& aTextNode,
+                         uint32_t aOffset);
+
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMETEXTTXN_IID)
 
   /**
+   * Creates a composition transaction.  aEditorBase must not return from
+   * GetComposition() while calling this method.  Note that this method will
+   * update text node information of aEditorBase.mComposition.
+   *
    * @param aEditorBase         The editor which has composition.
    * @param aStringToInsert     The new composition string to insert.  This may
    *                            be different from actual composition string.
    *                            E.g., password editor can hide the character
    *                            with a different character.
-   * @param aTextComposition    The composition.
-   * @param aRangeUpdater       The range updater.
+   * @param aTextNode           The text node which will have aStringToInsert.
+   * @param aOffset             The offset in aTextNode where aStringToInsert
+   *                            will be inserted.
    */
-  CompositionTransaction(EditorBase& aEditorBase,
-                         const nsAString& aStringToInsert,
-                         const TextComposition& aTextComposition,
-                         RangeUpdater* aRangeUpdater);
+  static already_AddRefed<CompositionTransaction>
+  Create(EditorBase& aEditorBase,
+         const nsAString& aStringToInsert,
+         dom::Text& aTextNode,
+         uint32_t aOffset);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CompositionTransaction,
                                            EditTransactionBase)
@@ -88,8 +99,6 @@ private:
 
   // The editor, which is used to get the selection controller.
   RefPtr<EditorBase> mEditorBase;
-
-  RangeUpdater* mRangeUpdater;
 
   bool mFixed;
 };

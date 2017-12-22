@@ -7,6 +7,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/EditorBase.h"
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/SelectionState.h"
 #include "mozilla/dom/Selection.h"
 #include "nsDebug.h"
@@ -19,19 +20,82 @@ namespace mozilla {
 
 using namespace dom;
 
+// static
+already_AddRefed<DeleteTextTransaction>
+DeleteTextTransaction::MaybeCreate(EditorBase& aEditorBase,
+                                   nsGenericDOMDataNode& aCharData,
+                                   uint32_t aOffset,
+                                   uint32_t aLengthToDelete)
+{
+  RefPtr<DeleteTextTransaction> transaction =
+    new DeleteTextTransaction(aEditorBase, aCharData, aOffset, aLengthToDelete);
+  return transaction.forget();
+}
+
+// static
+already_AddRefed<DeleteTextTransaction>
+DeleteTextTransaction::MaybeCreateForPreviousCharacter(
+                         EditorBase& aEditorBase,
+                         nsGenericDOMDataNode& aCharData,
+                         uint32_t aOffset)
+{
+  if (NS_WARN_IF(!aOffset)) {
+    return nullptr;
+  }
+
+  nsAutoString data;
+  aCharData.GetData(data);
+  if (NS_WARN_IF(data.IsEmpty())) {
+    return nullptr;
+  }
+
+  uint32_t length = 1;
+  uint32_t offset = aOffset - 1;
+  if (offset &&
+      NS_IS_LOW_SURROGATE(data[offset]) &&
+      NS_IS_HIGH_SURROGATE(data[offset - 1])) {
+    ++length;
+    --offset;
+  }
+  return DeleteTextTransaction::MaybeCreate(aEditorBase, aCharData,
+                                            offset, length);
+}
+
+// static
+already_AddRefed<DeleteTextTransaction>
+DeleteTextTransaction::MaybeCreateForNextCharacter(
+                         EditorBase& aEditorBase,
+                         nsGenericDOMDataNode& aCharData,
+                         uint32_t aOffset)
+{
+  nsAutoString data;
+  aCharData.GetData(data);
+  if (NS_WARN_IF(aOffset >= data.Length()) ||
+      NS_WARN_IF(data.IsEmpty())) {
+    return nullptr;
+  }
+
+  uint32_t length = 1;
+  if (aOffset + 1 < data.Length() &&
+      NS_IS_HIGH_SURROGATE(data[aOffset]) &&
+      NS_IS_LOW_SURROGATE(data[aOffset + 1])) {
+    ++length;
+  }
+  return DeleteTextTransaction::MaybeCreate(aEditorBase, aCharData,
+                                            aOffset, length);
+}
+
 DeleteTextTransaction::DeleteTextTransaction(
                          EditorBase& aEditorBase,
                          nsGenericDOMDataNode& aCharData,
                          uint32_t aOffset,
-                         uint32_t aNumCharsToDelete,
-                         RangeUpdater* aRangeUpdater)
+                         uint32_t aLengthToDelete)
   : mEditorBase(&aEditorBase)
   , mCharData(&aCharData)
   , mOffset(aOffset)
-  , mNumCharsToDelete(aNumCharsToDelete)
-  , mRangeUpdater(aRangeUpdater)
+  , mLengthToDelete(aLengthToDelete)
 {
-  NS_ASSERTION(mCharData->Length() >= aOffset + aNumCharsToDelete,
+  NS_ASSERTION(mCharData->Length() >= aOffset + aLengthToDelete,
                "Trying to delete more characters than in node");
 }
 
@@ -59,24 +123,28 @@ DeleteTextTransaction::DoTransaction()
   }
 
   // Get the text that we're about to delete
-  nsresult rv = mCharData->SubstringData(mOffset, mNumCharsToDelete,
+  nsresult rv = mCharData->SubstringData(mOffset, mLengthToDelete,
                                          mDeletedText);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-  rv = mCharData->DeleteData(mOffset, mNumCharsToDelete);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mRangeUpdater) {
-    mRangeUpdater->SelAdjDeleteText(mCharData, mOffset, mNumCharsToDelete);
+  rv = mCharData->DeleteData(mOffset, mLengthToDelete);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
+
+  mEditorBase->RangeUpdaterRef().
+                 SelAdjDeleteText(mCharData, mOffset, mLengthToDelete);
 
   // Only set selection to deletion point if editor gives permission
   if (mEditorBase->GetShouldTxnSetSelection()) {
     RefPtr<Selection> selection = mEditorBase->GetSelection();
-    NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-    rv = selection->Collapse(mCharData, mOffset);
-    NS_ASSERTION(NS_SUCCEEDED(rv),
-                 "Selection could not be collapsed after undo of deletetext");
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(!selection)) {
+      return NS_ERROR_FAILURE;
+    }
+    ErrorResult error;
+    selection->Collapse(EditorRawDOMPoint(mCharData, mOffset), error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
   }
   // Else do nothing - DOM Range gravity will adjust selection
   return NS_OK;

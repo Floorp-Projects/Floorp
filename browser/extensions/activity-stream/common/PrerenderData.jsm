@@ -51,7 +51,7 @@ this.PrerenderData = new _PrerenderData({
     "migrationExpired": true,
     "showTopSites": true,
     "showSearch": true,
-    "topSitesCount": 6,
+    "topSitesCount": 12,
     "collapseTopSites": false,
     "section.highlights.collapsed": false,
     "section.topstories.collapsed": false,
@@ -67,6 +67,7 @@ this.PrerenderData = new _PrerenderData({
   validation: [
     "showTopSites",
     "showSearch",
+    "topSitesCount",
     "collapseTopSites",
     "section.highlights.collapsed",
     "section.topstories.collapsed",

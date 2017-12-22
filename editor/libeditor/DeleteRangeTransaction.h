@@ -27,14 +27,25 @@ class RangeUpdater;
  */
 class DeleteRangeTransaction final : public EditAggregateTransaction
 {
+protected:
+  DeleteRangeTransaction(EditorBase& aEditorBase,
+                         nsRange& aRangeToDelete);
+
 public:
   /**
+   * Creates a delete range transaction.  This never returns nullptr.
+   *
    * @param aEditorBase         The object providing basic editing operations.
    * @param aRangeToDelete      The range to delete.
    */
-  DeleteRangeTransaction(EditorBase& aEditorBase,
-                         nsRange& aRangeToDelete,
-                         RangeUpdater* aRangeUpdater);
+  static already_AddRefed<DeleteRangeTransaction>
+  Create(EditorBase& aEditorBase,
+         nsRange& aRangeToDelete)
+  {
+    RefPtr<DeleteRangeTransaction> transaction =
+      new DeleteRangeTransaction(aEditorBase, aRangeToDelete);
+    return transaction.forget();
+  }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DeleteRangeTransaction,
                                            EditAggregateTransaction)
@@ -43,12 +54,6 @@ public:
   NS_DECL_EDITTRANSACTIONBASE
 
   NS_IMETHOD RedoTransaction() override;
-
-  virtual void LastRelease() override
-  {
-    mRangeToDelete = nullptr;
-    EditAggregateTransaction::LastRelease();
-  }
 
 protected:
   /**
@@ -106,9 +111,6 @@ protected:
   // P1 in the range.  This is only non-null until DoTransaction is called and
   // we convert it into child transactions.
   RefPtr<nsRange> mRangeToDelete;
-
-  // Range updater object.
-  RangeUpdater* mRangeUpdater;
 };
 
 } // namespace mozilla

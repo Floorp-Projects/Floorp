@@ -81,9 +81,8 @@ def check_headers(*headers, **kwargs):
 # Determine whether to add a given flag to the given lists of flags for C or
 # C++ compilation.
 # - `flag` is the flag to test
-# - `cflags` is a @depends function for the list of C compiler flags to add to
-# - `cxxflags` is a @depends function for the list of C++ compiler flags to
-#   add to
+# - `flags_collection` is a @depends function for a namespace of lists of
+#    C/C++ compiler flags to add to.
 # - `test_flags` is a list of flags to pass to the compiler instead of merely
 #   passing `flag`. This is especially useful for checking warning flags. If
 #   this list is empty, `flag` will be passed on its own.
@@ -95,7 +94,7 @@ def check_headers(*headers, **kwargs):
 # - `check`, when not set, skips checking whether the flag is supported and
 #   adds it to the list of flags unconditionally.
 @template
-def check_and_add_flags(flag, cflags, cxxflags, test_flags,
+def check_and_add_flags(flag, flags_collection, test_flags,
                         compiler=None, when=None, check=True):
     if compiler is not None:
         compilers = (compiler,)
@@ -113,10 +112,13 @@ def check_and_add_flags(flag, cflags, cxxflags, test_flags,
         flags = [flag]
 
     for c in compilers:
-        assert c in (c_compiler, cxx_compiler)
+        assert c in (c_compiler, cxx_compiler,
+                     host_c_compiler, host_cxx_compiler)
         lang, list_of_flags = {
-            c_compiler: ('C', cflags),
-            cxx_compiler: ('C++', cxxflags),
+            c_compiler: ('C', flags_collection.cflags),
+            cxx_compiler: ('C++', flags_collection.cxxflags),
+            host_c_compiler: ('host C', flags_collection.host_cflags),
+            host_cxx_compiler: ('host C++', flags_collection.host_cxxflags),
         }[c]
 
         @depends(c, when)
@@ -140,13 +142,8 @@ def check_and_add_flags(flag, cflags, cxxflags, test_flags,
 
 
 @dependable
-def warnings_cflags():
-    return []
-
-
-@dependable
-def warnings_cxxflags():
-    return []
+def warnings_flags():
+    return namespace(cflags=[], cxxflags=[], host_cflags=[], host_cxxflags=[])
 
 
 # Tests whether GCC or clang support the given warning flag, and if it is,
@@ -174,8 +171,8 @@ def check_and_add_gcc_warning(warning, compiler=None, when=None, check=True):
     else:
         flags = ['-Werror', warning]
 
-    return check_and_add_flags(warning, warnings_cflags, warnings_cxxflags,
-                               flags, compiler=compiler, when=when, check=check)
+    return check_and_add_flags(warning, warnings_flags, flags,
+                               compiler=compiler, when=when, check=check)
 
 
 # Add the given warning to the list of warning flags for the build.
@@ -194,13 +191,8 @@ def add_gcc_warning(warning, compiler=None, when=None):
 
 # Like the warning checks above, but for general compilation flags.
 @dependable
-def compilation_cflags():
-    return []
-
-
-@dependable
-def compilation_cxxflags():
-    return []
+def compilation_flags():
+    return namespace(cflags=[], cxxflags=[], host_cflags=[], host_cxxflags=[])
 
 
 # Tests whether GCC or clang support the given compilation flag; if the flag
@@ -218,8 +210,8 @@ def compilation_cxxflags():
 def check_and_add_gcc_flag(flag, compiler=None, when=None, check=True):
     flags = ['-Werror', flag]
 
-    return check_and_add_flags(flag, compilation_cflags, compilation_cxxflags,
-                               flags, compiler=compiler, when=when, check=check)
+    return check_and_add_flags(flag, compilation_flags, flags,
+                               compiler=compiler, when=when, check=check)
 
 
 # Add the given flag to the list of flags for the build.

@@ -94,7 +94,7 @@ const globalImportContext = typeof Window === "undefined" ? BACKGROUND_PROCESS :
 //   UNINIT: "UNINIT"
 // }
 const actionTypes = {};
-for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_ADD", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
+for (const type of ["BLOCK_URL", "BOOKMARK_URL", "DELETE_BOOKMARK_BY_ID", "DELETE_HISTORY_URL", "DELETE_HISTORY_URL_CONFIRM", "DIALOG_CANCEL", "DIALOG_OPEN", "DISABLE_ONBOARDING", "INIT", "MIGRATION_CANCEL", "MIGRATION_COMPLETED", "MIGRATION_START", "NEW_TAB_INIT", "NEW_TAB_INITIAL_STATE", "NEW_TAB_LOAD", "NEW_TAB_REHYDRATED", "NEW_TAB_STATE_REQUEST", "NEW_TAB_UNLOAD", "OPEN_LINK", "OPEN_NEW_WINDOW", "OPEN_PRIVATE_WINDOW", "PAGE_PRERENDERED", "PLACES_BOOKMARK_ADDED", "PLACES_BOOKMARK_CHANGED", "PLACES_BOOKMARK_REMOVED", "PLACES_HISTORY_CLEARED", "PLACES_LINKS_DELETED", "PLACES_LINK_BLOCKED", "PREFS_INITIAL_VALUES", "PREF_CHANGED", "RICH_ICON_MISSING", "SAVE_SESSION_PERF_DATA", "SAVE_TO_POCKET", "SCREENSHOT_UPDATED", "SECTION_DEREGISTER", "SECTION_DISABLE", "SECTION_ENABLE", "SECTION_OPTIONS_CHANGED", "SECTION_REGISTER", "SECTION_UPDATE", "SECTION_UPDATE_CARD", "SETTINGS_CLOSE", "SETTINGS_OPEN", "SET_PREF", "SHOW_FIREFOX_ACCOUNTS", "SNIPPETS_BLOCKLIST_UPDATED", "SNIPPETS_DATA", "SNIPPETS_RESET", "SNIPPET_BLOCKED", "SYSTEM_TICK", "TELEMETRY_IMPRESSION_STATS", "TELEMETRY_PERFORMANCE_EVENT", "TELEMETRY_UNDESIRED_EVENT", "TELEMETRY_USER_EVENT", "TOP_SITES_CANCEL_EDIT", "TOP_SITES_EDIT", "TOP_SITES_INSERT", "TOP_SITES_PIN", "TOP_SITES_UNPIN", "TOP_SITES_UPDATED", "UNINIT"]) {
   actionTypes[type] = type;
 }
 
@@ -368,7 +368,7 @@ const INITIAL_STATE = {
     // context menu to TopSitesEdit.
     editForm: {
       visible: false,
-      site: null
+      index: -1
     }
   },
   Prefs: {
@@ -437,7 +437,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       }
       return Object.assign({}, prevState, { initialized: true, rows: action.data });
     case at.TOP_SITES_EDIT:
-      return Object.assign({}, prevState, { editForm: { visible: true, site: action.data } });
+      return Object.assign({}, prevState, { editForm: { visible: true, index: action.data.index } });
     case at.TOP_SITES_CANCEL_EDIT:
       return Object.assign({}, prevState, { editForm: { visible: false } });
     case at.SCREENSHOT_UPDATED:
@@ -884,12 +884,12 @@ const LinkMenuOptions = {
     }),
     userEvent: "SAVE_TO_POCKET"
   }),
-  EditTopSite: site => ({
+  EditTopSite: (site, index) => ({
     id: "edit_topsites_button_text",
     icon: "edit",
     action: {
       type: Actions["actionTypes"].TOP_SITES_EDIT,
-      data: { url: site.url, label: site.label }
+      data: { index }
     }
   }),
   CheckBookmark: site => site.bookmarkGuid ? LinkMenuOptions.RemoveBookmark(site) : LinkMenuOptions.AddBookmark(site),
@@ -902,7 +902,7 @@ const LinkMenuOptions = {
 
 
 
-const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"];
+const DEFAULT_SITE_MENU_OPTIONS = ["CheckPinTopSite", "EditTopSite", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"];
 
 class LinkMenu__LinkMenu extends external__React__default.a.PureComponent {
   getOptions() {
@@ -2502,71 +2502,125 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 
 
-const TopSiteLink = props => {
-  const { link, title } = props;
-  const topSiteOuterClassName = `top-site-outer${props.className ? ` ${props.className}` : ""}`;
-  const { tippyTopIcon, faviconSize } = link;
-  const letterFallback = title[0];
-  let imageClassName;
-  let imageStyle;
-  let showSmallFavicon = false;
-  let smallFaviconStyle;
-  let smallFaviconFallback;
-  if (tippyTopIcon || faviconSize >= MIN_RICH_FAVICON_SIZE) {
-    // styles and class names for top sites with rich icons
-    imageClassName = "top-site-icon rich-icon";
-    imageStyle = {
-      backgroundColor: link.backgroundColor,
-      backgroundImage: `url(${tippyTopIcon || link.favicon})`
-    };
-  } else {
-    // styles and class names for top sites with screenshot + small icon in top left corner
-    imageClassName = `screenshot${link.screenshot ? " active" : ""}`;
-    imageStyle = { backgroundImage: link.screenshot ? `url(${link.screenshot})` : "none" };
 
-    // only show a favicon in top left if it's greater than 16x16
-    if (faviconSize >= MIN_CORNER_FAVICON_SIZE) {
-      showSmallFavicon = true;
-      smallFaviconStyle = { backgroundImage: `url(${link.favicon})` };
-    } else if (link.screenshot) {
-      // Don't show a small favicon if there is no screenshot, because that
-      // would result in two fallback icons
-      showSmallFavicon = true;
-      smallFaviconFallback = true;
+class TopSite_TopSiteLink extends external__React__default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onDragEvent = this.onDragEvent.bind(this);
+  }
+
+  /*
+   * Helper to determine whether the drop zone should allow a drop. We only allow
+   * dropping top sites for now.
+   */
+  _allowDrop(e, index) {
+    let draggedIndex = parseInt(e.dataTransfer.getData("text/topsite-index"), 10);
+    if (!isNaN(draggedIndex) && draggedIndex !== index) {
+      return true;
+    }
+    return false;
+  }
+  onDragEvent(event) {
+    switch (event.type) {
+      case "dragstart":
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/topsite-index", this.props.index);
+        event.target.blur();
+        this.props.onDragEvent(event, this.props.index, this.props.link, this.props.title);
+        break;
+      case "dragend":
+        this.props.onDragEvent(event);
+        break;
+      case "dragover":
+      case "dragenter":
+      case "dragleave":
+      case "drop":
+        if (this._allowDrop(event, this.props.index)) {
+          event.preventDefault();
+          this.props.onDragEvent(event, this.props.index);
+        }
+        break;
     }
   }
-  return external__React__default.a.createElement(
-    "li",
-    { className: topSiteOuterClassName, key: link.guid || link.url },
-    external__React__default.a.createElement(
-      "a",
-      { href: link.url, onClick: props.onClick },
+  render() {
+    const { children, className, isDraggable, link, onClick, title } = this.props;
+    const topSiteOuterClassName = `top-site-outer${className ? ` ${className}` : ""}`;
+    const { tippyTopIcon, faviconSize } = link;
+    const letterFallback = title[0];
+    let imageClassName;
+    let imageStyle;
+    let showSmallFavicon = false;
+    let smallFaviconStyle;
+    let smallFaviconFallback;
+    if (tippyTopIcon || faviconSize >= MIN_RICH_FAVICON_SIZE) {
+      // styles and class names for top sites with rich icons
+      imageClassName = "top-site-icon rich-icon";
+      imageStyle = {
+        backgroundColor: link.backgroundColor,
+        backgroundImage: `url(${tippyTopIcon || link.favicon})`
+      };
+    } else {
+      // styles and class names for top sites with screenshot + small icon in top left corner
+      imageClassName = `screenshot${link.screenshot ? " active" : ""}`;
+      imageStyle = { backgroundImage: link.screenshot ? `url(${link.screenshot})` : "none" };
+
+      // only show a favicon in top left if it's greater than 16x16
+      if (faviconSize >= MIN_CORNER_FAVICON_SIZE) {
+        showSmallFavicon = true;
+        smallFaviconStyle = { backgroundImage: `url(${link.favicon})` };
+      } else if (link.screenshot) {
+        // Don't show a small favicon if there is no screenshot, because that
+        // would result in two fallback icons
+        showSmallFavicon = true;
+        smallFaviconFallback = true;
+      }
+    }
+    let draggableProps = {};
+    if (isDraggable) {
+      draggableProps = {
+        draggable: true,
+        onDragStart: this.onDragEvent,
+        onDragEnd: this.onDragEvent
+      };
+    }
+    return external__React__default.a.createElement(
+      "li",
+      _extends({ className: topSiteOuterClassName, key: link.guid || link.url, onDrop: this.onDragEvent, onDragOver: this.onDragEvent, onDragEnter: this.onDragEvent, onDragLeave: this.onDragEvent }, draggableProps),
       external__React__default.a.createElement(
         "div",
-        { className: "tile", "aria-hidden": true, "data-fallback": letterFallback },
-        external__React__default.a.createElement("div", { className: imageClassName, style: imageStyle }),
-        showSmallFavicon && external__React__default.a.createElement("div", {
-          className: "top-site-icon default-icon",
-          "data-fallback": smallFaviconFallback && letterFallback,
-          style: smallFaviconStyle })
-      ),
-      external__React__default.a.createElement(
-        "div",
-        { className: `title ${link.isPinned ? "pinned" : ""}` },
-        link.isPinned && external__React__default.a.createElement("div", { className: "icon icon-pin-small" }),
+        { className: "top-site-inner" },
         external__React__default.a.createElement(
-          "span",
-          { dir: "auto" },
-          title
-        )
+          "a",
+          { href: link.url, onClick: onClick },
+          external__React__default.a.createElement(
+            "div",
+            { className: "tile", "aria-hidden": true, "data-fallback": letterFallback },
+            external__React__default.a.createElement("div", { className: imageClassName, style: imageStyle }),
+            showSmallFavicon && external__React__default.a.createElement("div", {
+              className: "top-site-icon default-icon",
+              "data-fallback": smallFaviconFallback && letterFallback,
+              style: smallFaviconStyle })
+          ),
+          external__React__default.a.createElement(
+            "div",
+            { className: `title ${link.isPinned ? "pinned" : ""}` },
+            link.isPinned && external__React__default.a.createElement("div", { className: "icon icon-pin-small" }),
+            external__React__default.a.createElement(
+              "span",
+              { dir: "auto" },
+              title
+            )
+          )
+        ),
+        children
       )
-    ),
-    props.children
-  );
-};
-TopSiteLink.defaultProps = {
+    );
+  }
+}
+TopSite_TopSiteLink.defaultProps = {
   title: "",
-  link: {}
+  link: {},
+  isDraggable: true
 };
 
 class TopSite_TopSite extends external__React__default.a.PureComponent {
@@ -2579,6 +2633,7 @@ class TopSite_TopSite extends external__React__default.a.PureComponent {
     this.onDismissButtonClick = this.onDismissButtonClick.bind(this);
     this.onPinButtonClick = this.onPinButtonClick.bind(this);
     this.onEditButtonClick = this.onEditButtonClick.bind(this);
+    this.onDragEvent = this.onDragEvent.bind(this);
   }
   toggleContextMenu(event, index) {
     this.setState({
@@ -2641,14 +2696,23 @@ class TopSite_TopSite extends external__React__default.a.PureComponent {
   onEditButtonClick() {
     this.props.onEdit(this.props.index);
   }
+  onDragEvent(event, index, link, title) {
+    if (event.type === "dragstart") {
+      this.setState({
+        activeTile: null,
+        showContextMenu: false
+      });
+    }
+    this.props.onDragEvent(event, index, link, title);
+  }
   render() {
     const { props } = this;
     const { link } = props;
     const isContextMenuOpen = this.state.showContextMenu && this.state.activeTile === props.index;
     const title = link.label || link.hostname;
     return external__React__default.a.createElement(
-      TopSiteLink,
-      _extends({}, props, { onClick: this.onLinkClick, className: isContextMenuOpen ? "active" : "", title: title }),
+      TopSite_TopSiteLink,
+      _extends({}, props, { onClick: this.onLinkClick, onDragEvent: this.onDragEvent, className: isContextMenuOpen ? "active" : "", title: title }),
       !props.onEdit && external__React__default.a.createElement(
         "div",
         null,
@@ -2689,29 +2753,180 @@ class TopSite_TopSite extends external__React__default.a.PureComponent {
     );
   }
 }
-TopSite_TopSite.defaultProps = { link: {} };
-
-const TopSitePlaceholder = () => external__React__default.a.createElement(TopSiteLink, { className: "placeholder" });
-
-const TopSiteList = props => {
-  const topSites = props.TopSites.rows.slice(0, props.TopSitesCount);
-  const topSitesUI = [];
-  for (let i = 0, l = props.TopSitesCount; i < l; i++) {
-    const link = topSites[i];
-    topSitesUI.push(!link ? external__React__default.a.createElement(TopSitePlaceholder, { key: i }) : external__React__default.a.createElement(TopSite_TopSite, {
-      key: link.guid || link.url,
-      dispatch: props.dispatch,
-      link: link,
-      index: i,
-      intl: props.intl,
-      onEdit: props.onEdit }));
-  }
-  return external__React__default.a.createElement(
-    "ul",
-    { className: "top-sites-list" },
-    topSitesUI
-  );
+TopSite_TopSite.defaultProps = {
+  link: {},
+  onDragStart() {}
 };
+
+class TopSite_TopSitePlaceholder extends external__React__default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onEditButtonClick = this.onEditButtonClick.bind(this);
+  }
+  onEditButtonClick() {
+    this.props.dispatch({
+      type: Actions["actionTypes"].TOP_SITES_EDIT,
+      data: { index: this.props.index }
+    });
+  }
+  render() {
+    return external__React__default.a.createElement(
+      TopSite_TopSiteLink,
+      _extends({ className: "placeholder", isDraggable: false }, this.props),
+      external__React__default.a.createElement(
+        "div",
+        { className: "edit-menu" },
+        external__React__default.a.createElement("button", {
+          className: "icon icon-edit",
+          title: this.props.intl.formatMessage({ id: "edit_topsites_edit_button" }),
+          onClick: this.onEditButtonClick })
+      )
+    );
+  }
+}
+
+class TopSite__TopSiteList extends external__React__default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = this.DEFAULT_STATE = {
+      draggedIndex: null,
+      draggedSite: null,
+      draggedTitle: null,
+      topSitesPreview: null
+    };
+    this.onDragEvent = this.onDragEvent.bind(this);
+  }
+  componentWillUpdate(nextProps) {
+    if (this.state.draggedSite) {
+      const prevTopSites = this.props.TopSites && this.props.TopSites.rows;
+      const newTopSites = nextProps.TopSites && nextProps.TopSites.rows;
+      if (prevTopSites && prevTopSites[this.state.draggedIndex] && prevTopSites[this.state.draggedIndex].url === this.state.draggedSite.url && (!newTopSites[this.state.draggedIndex] || newTopSites[this.state.draggedIndex].url !== this.state.draggedSite.url)) {
+        // We got the new order from the redux store via props. We can clear state now.
+        this.setState(this.DEFAULT_STATE);
+      }
+    }
+  }
+  userEvent(event, index) {
+    this.props.dispatch(Actions["actionCreators"].UserEvent({
+      event,
+      source: TOP_SITES_SOURCE,
+      action_position: index
+    }));
+  }
+  onDragEvent(event, index, link, title) {
+    switch (event.type) {
+      case "dragstart":
+        this.setState({
+          draggedIndex: index,
+          draggedSite: link,
+          draggedTitle: title
+        });
+        this.userEvent("DRAG", index);
+        break;
+      case "dragend":
+        this.setState(this.DEFAULT_STATE);
+        break;
+      case "dragenter":
+        this.setState({ topSitesPreview: this._makeTopSitesPreview(index) });
+        break;
+      case "dragleave":
+        this.setState({ topSitesPreview: null });
+        break;
+      case "drop":
+        this.props.dispatch(Actions["actionCreators"].SendToMain({
+          type: Actions["actionTypes"].TOP_SITES_INSERT,
+          data: { site: { url: this.state.draggedSite.url, label: this.state.draggedTitle }, index }
+        }));
+        this.userEvent("DROP", index);
+        break;
+      default:
+        break;
+    }
+  }
+  _getTopSites() {
+    return this.props.TopSites.rows.slice(0, this.props.TopSitesCount);
+  }
+
+  /**
+   * Make a preview of the topsites that will be the result of dropping the currently
+   * dragged site at the specified index.
+   */
+  _makeTopSitesPreview(index) {
+    const preview = this._getTopSites();
+    this._fillOrLeaveHole(preview, this.state.draggedIndex);
+    this._insertSite(preview, Object.assign({}, this.state.draggedSite, { isPinned: true }), index);
+    return preview;
+  }
+
+  /**
+   * Fill in the slot at the specified index with a non pinned site further down the
+   * list, if any. Otherwise leave an empty slot.
+   */
+  _fillOrLeaveHole(sites, index) {
+    let slotIndex = index;
+    sites[slotIndex] = null;
+    for (let i = slotIndex + 1; i < sites.length; i++) {
+      const site = sites[i];
+      if (site && !site.isPinned) {
+        sites[i] = null;
+        sites[slotIndex] = site;
+        // Update the index to fill to be the spot we just grabbed a site from
+        slotIndex = i;
+      }
+    }
+  }
+
+  /**
+   * Insert the given site in the slot at the specified index. If the slot is occupied,
+   * move it appropriately.
+   */
+  _insertSite(sites, site, index) {
+    const replacedSite = sites[index];
+    if (replacedSite && index < this.props.TopSitesCount - 1) {
+      if (replacedSite.isPinned) {
+        // If the replaced site is pinned, it goes into the next slot no matter what.
+        this._insertSite(sites, replacedSite, index + 1);
+      } else {
+        // If the replaced site isn't pinned, it goes into the next slot that doesn't havea pinned site;
+        for (let i = index + 1, l = sites.length; i < l; i++) {
+          if (!sites[i] || !sites[i].isPinned) {
+            this._insertSite(sites, replacedSite, i);
+            break;
+          }
+        }
+      }
+    }
+    sites[index] = site;
+  }
+  render() {
+    const { props } = this;
+    const topSites = this.state.topSitesPreview || this._getTopSites();
+    const topSitesUI = [];
+    const commonProps = {
+      onDragEvent: this.onDragEvent,
+      dispatch: props.dispatch,
+      intl: props.intl
+    };
+    for (let i = 0, l = props.TopSitesCount; i < l; i++) {
+      const link = topSites[i];
+      const slotProps = {
+        key: i,
+        index: i
+      };
+      topSitesUI.push(!link ? external__React__default.a.createElement(TopSite_TopSitePlaceholder, _extends({}, slotProps, commonProps)) : external__React__default.a.createElement(TopSite_TopSite, _extends({
+        link: link,
+        onEdit: props.onEdit
+      }, slotProps, commonProps)));
+    }
+    return external__React__default.a.createElement(
+      "ul",
+      { className: "top-sites-list" },
+      topSitesUI
+    );
+  }
+}
+
+const TopSiteList = Object(external__ReactIntl_["injectIntl"])(TopSite__TopSiteList);
 // CONCATENATED MODULE: ./system-addon/content-src/components/TopSites/TopSiteForm.jsx
 
 
@@ -2753,7 +2968,7 @@ class TopSiteForm_TopSiteForm extends external__React__default.a.PureComponent {
         site.label = this.state.label;
       }
       this.props.dispatch(Actions["actionCreators"].SendToMain({
-        type: Actions["actionTypes"].TOP_SITES_ADD,
+        type: Actions["actionTypes"].TOP_SITES_INSERT,
         data: { site }
       }));
       this.props.dispatch(Actions["actionCreators"].UserEvent({
@@ -2956,12 +3171,13 @@ class TopSitesEdit__TopSitesEdit extends external__React__default.a.PureComponen
     }));
   }
   render() {
-    const showEditForm = this.props.TopSites.editForm && this.props.TopSites.editForm.visible || this.state.showEditModal && this.state.showEditForm;
+    const { editForm } = this.props.TopSites;
+    const showEditForm = editForm && editForm.visible || this.state.showEditModal && this.state.showEditForm;
     let editIndex = this.state.editIndex;
-    if (showEditForm && this.props.TopSites.editForm.visible) {
-      const targetURL = this.props.TopSites.editForm.site.url;
-      editIndex = this.props.TopSites.rows.findIndex(s => s.url === targetURL);
+    if (editIndex < 0 && editForm) {
+      editIndex = editForm.index;
     }
+    const editSite = this.props.TopSites.rows[editIndex] || {};
     return external__React__default.a.createElement(
       "div",
       { className: "edit-topsites-wrapper" },
@@ -3038,8 +3254,8 @@ class TopSitesEdit__TopSitesEdit extends external__React__default.a.PureComponen
           "div",
           { className: "modal" },
           external__React__default.a.createElement(TopSiteForm_TopSiteForm, {
-            label: this.props.TopSites.rows[editIndex].label || this.props.TopSites.rows[editIndex].hostname,
-            url: this.props.TopSites.rows[editIndex].url,
+            label: editSite.label || editSite.hostname || "",
+            url: editSite.url || "",
             index: editIndex,
             editMode: true,
             onClose: this.onFormClose,
@@ -3341,7 +3557,7 @@ var PrerenderData = new _PrerenderData({
     "migrationExpired": true,
     "showTopSites": true,
     "showSearch": true,
-    "topSitesCount": 6,
+    "topSitesCount": 12,
     "collapseTopSites": false,
     "section.highlights.collapsed": false,
     "section.topstories.collapsed": false,
@@ -3354,7 +3570,7 @@ var PrerenderData = new _PrerenderData({
   // too different for the prerendered version to be used. Unfortunately, this
   // will result in users who have modified some of their preferences not being
   // able to get the benefits of prerendering.
-  validation: ["showTopSites", "showSearch", "collapseTopSites", "section.highlights.collapsed", "section.topstories.collapsed",
+  validation: ["showTopSites", "showSearch", "topSitesCount", "collapseTopSites", "section.highlights.collapsed", "section.topstories.collapsed",
   // This means if either of these are set to their default values,
   // prerendering can be used.
   { oneOf: ["feeds.section.topstories", "feeds.section.highlights"] }],
