@@ -50,8 +50,8 @@ public:
   void TransferFromImageBitmap(ImageBitmap& aImageBitmap);
 
   // nsICanvasRenderingContextInternal
-  virtual int32_t GetWidth() const override;
-  virtual int32_t GetHeight() const override;
+  virtual int32_t GetWidth() override { return mWidth; }
+  virtual int32_t GetHeight() override { return mHeight; }
 
   NS_IMETHOD SetDimensions(int32_t aWidth, int32_t aHeight) override;
 

@@ -362,7 +362,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             const auto& fb = mBoundDrawFramebuffer;
             auto samples = [&]() -> Maybe<uint32_t> {
                 if (!fb) {
-                    if (!EnsureDefaultFB())
+                    if (!EnsureDefaultFB(funcName))
                         return Nothing();
                     return Some(mDefaultFB->mSamples);
                 }

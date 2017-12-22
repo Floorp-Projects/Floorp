@@ -426,9 +426,9 @@ public:
 
   nsresult Redraw();
 
-  virtual int32_t GetWidth() const override;
-  virtual int32_t GetHeight() const override;
   gfx::IntSize GetSize() const { return gfx::IntSize(mWidth, mHeight); }
+  virtual int32_t GetWidth() override { return GetSize().width; }
+  virtual int32_t GetHeight() override { return GetSize().height; }
 
   // nsICanvasRenderingContextInternal
   /**
