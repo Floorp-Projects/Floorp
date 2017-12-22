@@ -14,8 +14,8 @@ import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
-import org.mozilla.focus.activity.helpers.HostScreencapScreenshotStrategy;
-import org.mozilla.focus.activity.helpers.SessionLoadedIdlingResource;
+import org.mozilla.focus.helpers.HostScreencapScreenshotStrategy;
+import org.mozilla.focus.helpers.SessionLoadedIdlingResource;
 
 import tools.fastlane.screengrab.Screengrab;
 

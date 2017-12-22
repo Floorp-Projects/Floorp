@@ -20,7 +20,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
-import org.mozilla.focus.activity.helpers.SessionLoadedIdlingResource;
+import org.mozilla.focus.helpers.SessionLoadedIdlingResource;
 
 import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
@@ -32,8 +32,8 @@ import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.containsString;
-import static org.mozilla.focus.activity.helpers.EspressoHelper.assertToolbarMatchesText;
-import static org.mozilla.focus.activity.helpers.EspressoHelper.openMenu;
+import static org.mozilla.focus.helpers.EspressoHelper.assertToolbarMatchesText;
+import static org.mozilla.focus.helpers.EspressoHelper.openMenu;
 import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 
 // This test visits each page and checks whether some essential elements are being displayed

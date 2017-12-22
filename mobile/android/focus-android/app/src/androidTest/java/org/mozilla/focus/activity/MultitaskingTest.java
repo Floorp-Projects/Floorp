@@ -14,7 +14,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
-import org.mozilla.focus.activity.helpers.MainActivityFirstrunTestRule;
+import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
 import org.mozilla.focus.session.SessionManager;
 import org.mozilla.focus.web.IWebView;
 
@@ -36,10 +36,10 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
 import static org.mozilla.focus.activity.TestHelper.createMockResponseFromAsset;
-import static org.mozilla.focus.activity.helpers.EspressoHelper.navigateToMockWebServer;
-import static org.mozilla.focus.activity.helpers.EspressoHelper.onFloatingEraseButton;
-import static org.mozilla.focus.activity.helpers.EspressoHelper.onFloatingTabsButton;
-import static org.mozilla.focus.activity.helpers.WebViewFakeLongPress.injectHitTarget;
+import static org.mozilla.focus.helpers.EspressoHelper.navigateToMockWebServer;
+import static org.mozilla.focus.helpers.EspressoHelper.onFloatingEraseButton;
+import static org.mozilla.focus.helpers.EspressoHelper.onFloatingTabsButton;
+import static org.mozilla.focus.helpers.WebViewFakeLongPress.injectHitTarget;
 
 /**
  * Open multiple sessions and verify that the UI looks like it should.

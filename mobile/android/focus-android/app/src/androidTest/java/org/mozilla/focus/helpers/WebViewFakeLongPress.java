@@ -1,4 +1,4 @@
-package org.mozilla.focus.activity.helpers;
+package org.mozilla.focus.helpers;
 
 import android.support.test.espresso.UiController;
 import android.support.test.espresso.ViewAction;

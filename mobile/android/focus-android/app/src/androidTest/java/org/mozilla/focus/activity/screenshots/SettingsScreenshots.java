@@ -22,7 +22,7 @@ import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.activity.TestHelper;
-import org.mozilla.focus.activity.helpers.MainActivityFirstrunTestRule;
+import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
 import org.mozilla.focus.autocomplete.CustomAutocomplete;
 
 import java.util.Collections;
@@ -51,8 +51,8 @@ import static android.support.test.espresso.web.webdriver.DriverAtoms.webClick;
 import static junit.framework.Assert.assertTrue;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.endsWith;
-import static org.mozilla.focus.activity.helpers.EspressoHelper.assertToolbarMatchesText;
-import static org.mozilla.focus.activity.helpers.EspressoHelper.openSettings;
+import static org.mozilla.focus.helpers.EspressoHelper.assertToolbarMatchesText;
+import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 
 @RunWith(AndroidJUnit4.class)
 public class SettingsScreenshots extends ScreenshotTest {
