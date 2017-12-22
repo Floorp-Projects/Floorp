@@ -53,35 +53,34 @@ class nsHtml5MetaScanner;
 class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 
-
 class nsHtml5Portability
 {
-  public:
-    static nsAtom* newLocalNameFromBuffer(char16_t* buf, int32_t length, nsHtml5AtomTable* interner);
-    static nsHtml5String newStringFromBuffer(char16_t* buf,
-                                             int32_t offset,
-                                             int32_t length,
-                                             nsHtml5TreeBuilder* treeBuilder,
-                                             bool maybeAtomize);
-    static nsHtml5String newEmptyString();
-    static nsHtml5String newStringFromLiteral(const char* literal);
-    static nsHtml5String newStringFromString(nsHtml5String string);
-    static jArray<char16_t,int32_t> newCharArrayFromLocal(nsAtom* local);
-    static jArray<char16_t, int32_t> newCharArrayFromString(
-      nsHtml5String string);
-    static nsAtom* newLocalFromLocal(nsAtom* local, nsHtml5AtomTable* interner);
-    static bool localEqualsBuffer(nsAtom* local, char16_t* buf, int32_t length);
-    static bool lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
-      const char* lowerCaseLiteral,
-      nsHtml5String string);
-    static bool lowerCaseLiteralEqualsIgnoreAsciiCaseString(
-      const char* lowerCaseLiteral,
-      nsHtml5String string);
-    static bool literalEqualsString(const char* literal, nsHtml5String string);
-    static bool stringEqualsString(nsHtml5String one, nsHtml5String other);
-    static void initializeStatics();
-    static void releaseStatics();
+public:
+  static nsAtom* newLocalNameFromBuffer(char16_t* buf,
+                                        int32_t length,
+                                        nsHtml5AtomTable* interner);
+  static nsHtml5String newStringFromBuffer(char16_t* buf,
+                                           int32_t offset,
+                                           int32_t length,
+                                           nsHtml5TreeBuilder* treeBuilder,
+                                           bool maybeAtomize);
+  static nsHtml5String newEmptyString();
+  static nsHtml5String newStringFromLiteral(const char* literal);
+  static nsHtml5String newStringFromString(nsHtml5String string);
+  static jArray<char16_t, int32_t> newCharArrayFromLocal(nsAtom* local);
+  static jArray<char16_t, int32_t> newCharArrayFromString(nsHtml5String string);
+  static nsAtom* newLocalFromLocal(nsAtom* local, nsHtml5AtomTable* interner);
+  static bool localEqualsBuffer(nsAtom* local, char16_t* buf, int32_t length);
+  static bool lowerCaseLiteralIsPrefixOfIgnoreAsciiCaseString(
+    const char* lowerCaseLiteral,
+    nsHtml5String string);
+  static bool lowerCaseLiteralEqualsIgnoreAsciiCaseString(
+    const char* lowerCaseLiteral,
+    nsHtml5String string);
+  static bool literalEqualsString(const char* literal, nsHtml5String string);
+  static bool stringEqualsString(nsHtml5String one, nsHtml5String other);
+  static void initializeStatics();
+  static void releaseStatics();
 };
 
 #endif
-

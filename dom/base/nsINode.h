@@ -1818,7 +1818,7 @@ public:
   void GetNodeName(mozilla::dom::DOMString& aNodeName)
   {
     const nsString& nodeName = NodeName();
-    aNodeName.SetOwnedString(nodeName);
+    aNodeName.SetKnownLiveString(nodeName);
   }
   MOZ_MUST_USE nsresult GetBaseURI(nsAString& aBaseURI) const;
   // Return the base URI for the document.
@@ -1882,7 +1882,7 @@ public:
   void GetLocalName(mozilla::dom::DOMString& aLocalName) const
   {
     const nsString& localName = LocalName();
-    aLocalName.SetOwnedString(localName);
+    aLocalName.SetKnownLiveString(localName);
   }
 
   nsDOMAttributeMap* GetAttributes();

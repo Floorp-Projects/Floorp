@@ -232,7 +232,7 @@ public abstract class MetaScanner {
                                 continue;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case TAG_OPEN:
                     tagopenloop: for (;;) {
                         c = read();
@@ -267,7 +267,7 @@ public abstract class MetaScanner {
                                 continue stateloop;
                         }
                     }
-                    // FALL THROUGH DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case TAG_NAME:
                     tagnameloop: for (;;) {
                         c = read();
@@ -316,7 +316,7 @@ public abstract class MetaScanner {
                                 continue;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case BEFORE_ATTRIBUTE_NAME:
                     beforeattributenameloop: for (;;) {
                         if (reconsume) {
@@ -370,7 +370,7 @@ public abstract class MetaScanner {
                             // continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case ATTRIBUTE_NAME:
                     attributenameloop: for (;;) {
                         c = read();
@@ -422,7 +422,7 @@ public abstract class MetaScanner {
                                 continue;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case BEFORE_ATTRIBUTE_VALUE:
                     beforeattributevalueloop: for (;;) {
                         c = read();
@@ -453,7 +453,7 @@ public abstract class MetaScanner {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case ATTRIBUTE_VALUE_DOUBLE_QUOTED:
                     attributevaluedoublequotedloop: for (;;) {
                         if (reconsume) {
@@ -474,7 +474,7 @@ public abstract class MetaScanner {
                                 continue;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case AFTER_ATTRIBUTE_VALUE_QUOTED:
                     afterattributevaluequotedloop: for (;;) {
                         c = read();
@@ -503,7 +503,7 @@ public abstract class MetaScanner {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SELF_CLOSING_START_TAG:
                     c = read();
                     switch (c) {
@@ -520,7 +520,6 @@ public abstract class MetaScanner {
                             reconsume = true;
                             continue stateloop;
                     }
-                    // XXX reorder point
                 case ATTRIBUTE_VALUE_UNQUOTED:
                     for (;;) {
                         if (reconsume) {
@@ -551,7 +550,6 @@ public abstract class MetaScanner {
                                 continue;
                         }
                     }
-                    // XXX reorder point
                 case AFTER_ATTRIBUTE_NAME:
                     for (;;) {
                         c = read();
@@ -592,7 +590,6 @@ public abstract class MetaScanner {
                                 continue stateloop;
                         }
                     }
-                    // XXX reorder point
                 case MARKUP_DECLARATION_OPEN:
                     markupdeclarationopenloop: for (;;) {
                         c = read();
@@ -609,7 +606,7 @@ public abstract class MetaScanner {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case MARKUP_DECLARATION_HYPHEN:
                     markupdeclarationhyphenloop: for (;;) {
                         c = read();
@@ -626,7 +623,7 @@ public abstract class MetaScanner {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case COMMENT_START:
                     commentstartloop: for (;;) {
                         c = read();
@@ -645,7 +642,7 @@ public abstract class MetaScanner {
                             // continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case COMMENT:
                     commentloop: for (;;) {
                         c = read();
@@ -660,7 +657,7 @@ public abstract class MetaScanner {
                                 continue;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case COMMENT_END_DASH:
                     commentenddashloop: for (;;) {
                         c = read();
@@ -676,7 +673,7 @@ public abstract class MetaScanner {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case COMMENT_END:
                     for (;;) {
                         c = read();
@@ -693,7 +690,6 @@ public abstract class MetaScanner {
                                 continue stateloop;
                         }
                     }
-                    // XXX reorder point
                 case COMMENT_START_DASH:
                     c = read();
                     switch (c) {
@@ -709,7 +705,6 @@ public abstract class MetaScanner {
                             state = MetaScanner.COMMENT;
                             continue stateloop;
                     }
-                    // XXX reorder point
                 case ATTRIBUTE_VALUE_SINGLE_QUOTED:
                     for (;;) {
                         if (reconsume) {
@@ -729,7 +724,6 @@ public abstract class MetaScanner {
                                 continue;
                         }
                     }
-                    // XXX reorder point
                 case SCAN_UNTIL_GT:
                     for (;;) {
                         if (reconsume) {

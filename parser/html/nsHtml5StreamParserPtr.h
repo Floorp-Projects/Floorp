@@ -2,8 +2,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #ifndef nsHtml5StreamParserPtr_h
 #define nsHtml5StreamParserPtr_h
+
+#include "nsHtml5StreamParser.h"
 #include "nsThreadUtils.h"
 #include "mozilla/dom/DocGroup.h"
 
@@ -24,6 +27,7 @@ public:
     return NS_OK;
   }
 };
+
 /**
  * Like nsRefPtr except release is proxied to the main
  * thread. Mostly copied from nsRefPtr.
@@ -265,4 +269,5 @@ operator!=(decltype(nullptr), const nsHtml5StreamParserPtr& rhs)
 {
   return nullptr != rhs.get();
 }
+
 #endif // !defined(nsHtml5StreamParserPtr_h)

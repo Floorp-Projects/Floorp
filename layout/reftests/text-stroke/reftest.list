@@ -7,3 +7,4 @@ fuzzy-if(gtkWidget,255,20) fuzzy-if(winWidget,20,10) fails-if(skiaContent&&(gtkW
 fuzzy-if(gtkWidget,255,20) fuzzy-if(winWidget,20,10) fails-if(skiaContent&&(gtkWidget||winWidget)) == webkit-text-stroke-property-003.html webkit-text-stroke-property-003-ref.html
 fuzzy-if(gtkWidget,255,20) fuzzy-if(winWidget,20,10) fails-if(skiaContent&&(gtkWidget||winWidget)) == webkit-text-stroke-property-004.html webkit-text-stroke-property-004-ref.html
 fuzzy-if(gtkWidget,255,20) fuzzy-if(winWidget,20,10) fails-if(skiaContent&&(gtkWidget||winWidget)) == webkit-text-stroke-property-005.html webkit-text-stroke-property-005-ref.html
+fuzzy-if(gtkWidget,255,392) fuzzy-if(winWidget&&!d2d,48,372) fuzzy-if(winWidget&&d2d,71,10) == webkit-text-stroke-property-006.html webkit-text-stroke-property-006-ref.html

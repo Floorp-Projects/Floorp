@@ -31653,19 +31653,40 @@ module.exports = isEmpty;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.parseScriptTags = exports.parseScripts = exports.parseScript = exports.getCandidateScriptLocations = exports.generateWhitespace = exports.extractScriptTags = undefined;
 
-var _babelTypes = __webpack_require__(493);
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-var types = _interopRequireWildcard(_babelTypes);
+var babylon = __webpack_require__(435);
+var types = __webpack_require__(493);
 
-var _babylon = __webpack_require__(435);
+var startScript = /<script[^>]*>/im;
+var endScript = /<\/script\s*>/im;
+// https://stackoverflow.com/questions/5034781/js-regex-to-split-by-line#comment5633979_5035005
+var newLines = /\r\n|[\n\v\f\r\x85\u2028\u2029]/;
 
-var babylon = _interopRequireWildcard(_babylon);
+function getCandidateScriptLocations(source, index) {
+  var i = index || 0;
+  var str = source.substring(i);
 
-var _customParse = __webpack_require__(1794);
+  var startMatch = startScript.exec(str);
+  if (startMatch) {
+    var startsAt = startMatch.index + startMatch[0].length;
+    var afterStart = str.substring(startsAt);
+    var endMatch = endScript.exec(afterStart);
+    if (endMatch) {
+      var locLength = endMatch.index;
+      var locIndex = i + startsAt;
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+      return [adjustForLineAndColumn(source, {
+        index: locIndex,
+        length: locLength,
+        source: source.substring(locIndex, locIndex + locLength)
+      })].concat(_toConsumableArray(getCandidateScriptLocations(source, locIndex + locLength + endMatch[0].length)));
+    }
+  }
+
+  return [];
+}
 
 function parseScript(_ref) {
   var source = _ref.source,
@@ -31689,11 +31710,69 @@ function parseScript(_ref) {
 function parseScripts(locations) {
   var parser = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : parseScript;
 
-  return (0, _customParse.parseScripts)(locations, parser);
+  return locations.map(parser);
+}
+
+function generateWhitespace(length) {
+  return Array.from(new Array(length + 1)).join(" ");
+}
+
+function calcLineAndColumn(source, index) {
+  var lines = source.substring(0, index).split(newLines);
+  var line = lines.length;
+  var column = lines.pop().length + 1;
+
+  return {
+    column: column,
+    line: line
+  };
+}
+
+function adjustForLineAndColumn(fullSource, location) {
+  var _calcLineAndColumn = calcLineAndColumn(fullSource, location.index),
+      column = _calcLineAndColumn.column,
+      line = _calcLineAndColumn.line;
+
+  return Object.assign({}, location, {
+    line: line,
+    column: column,
+    // prepend whitespace for scripts that do not start on the first column
+    source: generateWhitespace(column) + location.source
+  });
+}
+
+function parseScriptTags(source, parser) {
+  var scripts = parseScripts(getCandidateScriptLocations(source), parser).filter(types.isFile).reduce(function (main, script) {
+    return {
+      statements: main.statements.concat(script.program.body),
+      comments: main.comments.concat(script.comments),
+      tokens: main.tokens.concat(script.tokens)
+    };
+  }, {
+    statements: [],
+    comments: [],
+    tokens: []
+  });
+
+  var program = types.program(scripts.statements);
+  var file = types.file(program, scripts.comments, scripts.tokens);
+
+  var end = calcLineAndColumn(source, source.length);
+  file.start = program.start = 0;
+  file.end = program.end = source.length;
+  file.loc = program.loc = {
+    start: {
+      line: 1,
+      column: 0
+    },
+    end: end
+  };
+
+  return file;
 }
 
 function extractScriptTags(source) {
-  return parseScripts((0, _customParse.getCandidateScriptLocations)(source), function (loc) {
+  return parseScripts(getCandidateScriptLocations(source), function (loc) {
     var ast = parseScript(loc);
 
     if (ast) {
@@ -31704,16 +31783,10 @@ function extractScriptTags(source) {
   }).filter(types.isFile);
 }
 
-function parseScriptTags(source) {
-  var parser = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : parseScript;
-
-  return (0, _customParse.parseScriptTags)(source, parser);
-}
-
 exports.default = parseScriptTags;
 exports.extractScriptTags = extractScriptTags;
-exports.generateWhitespace = _customParse.generateWhitespace;
-exports.getCandidateScriptLocations = _customParse.getCandidateScriptLocations;
+exports.generateWhitespace = generateWhitespace;
+exports.getCandidateScriptLocations = getCandidateScriptLocations;
 exports.parseScript = parseScript;
 exports.parseScripts = parseScripts;
 exports.parseScriptTags = parseScriptTags;
@@ -35492,7 +35565,7 @@ function getAst(source) {
   const { contentType } = source;
   if (contentType == "text/html") {
     ast = (0, _parseScriptTags2.default)(source.text, htmlParser) || {};
-  } else if (contentType && contentType.includes("javascript")) {
+  } else if (contentType && contentType.match(/(javascript|jsx)/)) {
     ast = parse(source.text);
   }
 
@@ -35565,6 +35638,7 @@ exports.isAwaitExpression = isAwaitExpression;
 exports.isYieldExpression = isYieldExpression;
 exports.isVariable = isVariable;
 exports.getMemberExpression = getMemberExpression;
+exports.getVariables = getVariables;
 
 var _babelTypes = __webpack_require__(493);
 
@@ -35614,6 +35688,22 @@ function getMemberExpression(root) {
 
   const expr = _getMemberExpression(root, []);
   return expr.join(".");
+}
+
+function getVariables(dec) {
+  if (dec.id.type === "ArrayPattern") {
+    return dec.id.elements.map(element => {
+      return {
+        name: element.name || element.argument.name,
+        location: element.loc
+      };
+    });
+  }
+
+  return [{
+    name: dec.id.name,
+    location: dec.loc
+  }];
 }
 
 /***/ }),
@@ -35834,6 +35924,10 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 exports.default = getSymbols;
 exports.clearSymbols = clearSymbols;
 
+var _flatten = __webpack_require__(706);
+
+var _flatten2 = _interopRequireDefault(_flatten);
+
 var _ast = __webpack_require__(1375);
 
 var _helpers = __webpack_require__(1411);
@@ -35848,9 +35942,9 @@ var _getFunctionName = __webpack_require__(1621);
 
 var _getFunctionName2 = _interopRequireDefault(_getFunctionName);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 let symbolDeclarations = new Map();
 
@@ -35868,7 +35962,12 @@ function getVariableNames(path) {
         name: path.node.key.value,
         location: path.node.loc
       }];
+    } else if (path.node.value.type === "Identifier") {
+      return [{ name: path.node.value.name, location: path.node.loc }];
+    } else if (path.node.value.type === "AssignmentPattern") {
+      return [{ name: path.node.value.left.name, location: path.node.loc }];
     }
+
     return [{
       name: path.node.key.name,
       location: path.node.loc
@@ -35882,10 +35981,9 @@ function getVariableNames(path) {
     }));
   }
 
-  return path.node.declarations.map(dec => ({
-    name: dec.id.name,
-    location: dec.loc
-  }));
+  const declarations = path.node.declarations.filter(dec => dec.id.type !== "ObjectPattern").map(_helpers.getVariables);
+
+  return (0, _flatten2.default)(declarations);
 }
 
 function getComments(ast) {
@@ -35975,10 +36073,12 @@ function extractSymbols(source) {
 
       if (t.isCallExpression(path)) {
         const callee = path.node.callee;
+        const args = path.node.arguments;
         if (!t.isMemberExpression(callee)) {
           const { start, end, identifierName } = callee.loc;
           callExpressions.push({
             name: identifierName,
+            values: args.filter(arg => arg.value).map(arg => arg.value),
             location: { start, end }
           });
         }
@@ -36436,9 +36536,9 @@ var _getScopes2 = _interopRequireDefault(_getScopes);
 
 var _sources = __webpack_require__(1458);
 
-var _getOutOfScopeLocations = __webpack_require__(1624);
+var _findOutOfScopeLocations = __webpack_require__(1624);
 
-var _getOutOfScopeLocations2 = _interopRequireDefault(_getOutOfScopeLocations);
+var _findOutOfScopeLocations2 = _interopRequireDefault(_findOutOfScopeLocations);
 
 var _steps = __webpack_require__(1625);
 
@@ -36460,7 +36560,7 @@ const { workerHandler } = _devtoolsUtils.workerUtils; /* This Source Code Form i
 
 self.onmessage = workerHandler({
   getClosestExpression: _closest.getClosestExpression,
-  getOutOfScopeLocations: _getOutOfScopeLocations2.default,
+  findOutOfScopeLocations: _findOutOfScopeLocations2.default,
   getSymbols: _getSymbols2.default,
   getScopes: _getScopes2.default,
   clearSymbols: _getSymbols.clearSymbols,
@@ -37002,6 +37102,14 @@ var _get = __webpack_require__(1073);
 
 var _get2 = _interopRequireDefault(_get);
 
+var _findIndex = __webpack_require__(262);
+
+var _findIndex2 = _interopRequireDefault(_findIndex);
+
+var _findLastIndex = __webpack_require__(1686);
+
+var _findLastIndex2 = _interopRequireDefault(_findLastIndex);
+
 var _contains = __webpack_require__(1456);
 
 var _getSymbols = __webpack_require__(1457);
@@ -37035,22 +37143,55 @@ function getLocation(func) {
 }
 
 /**
- * Reduces an array of locations to remove items that are completely enclosed
- * by another location in the array.
+ * Find the nearest location containing the input position and
+ * return new locations without inner locations under that nearest location
+ *
+ * @param locations Notice! The locations MUST be sorted by `sortByStart`
+ *                  so that we can do linear time complexity operation.
  */
-function removeOverlaps(locations, location) {
-  // support reducing without an initializing array
-  if (!Array.isArray(locations)) {
-    locations = [locations];
+function removeInnerLocations(locations, position) {
+  // First, let's find the nearest position-enclosing function location,
+  // which is to find the last location enclosing the position.
+  const newLocs = locations.slice();
+  const parentIndex = (0, _findLastIndex2.default)(newLocs, loc => (0, _contains.containsPosition)(loc, position));
+  if (parentIndex < 0) {
+    return newLocs;
   }
 
-  const contains = locations.filter(a => (0, _contains.containsLocation)(a, location)).length > 0;
+  // Second, from the nearest location, loop locations again, stop looping
+  // once seeing the 1st location not enclosed by the nearest location
+  // to find the last inner locations inside the nearest location.
+  const innerStartIndex = parentIndex + 1;
+  const parentLoc = newLocs[parentIndex];
+  const outerBoundaryIndex = (0, _findIndex2.default)(newLocs, loc => !(0, _contains.containsLocation)(parentLoc, loc), innerStartIndex);
+  const innerBoundaryIndex = outerBoundaryIndex < 0 ? newLocs.length - 1 : outerBoundaryIndex - 1;
 
-  if (!contains) {
-    locations.push(location);
+  // Third, remove those inner functions
+  newLocs.splice(innerStartIndex, innerBoundaryIndex - parentIndex);
+  return newLocs;
+}
+
+/**
+ * Return an new locations array which excludes
+ * items that are completely enclosed by another location in the input locations
+ *
+ * @param locations Notice! The locations MUST be sorted by `sortByStart`
+ *                  so that we can do linear time complexity operation.
+ */
+function removeOverlaps(locations) {
+  if (locations.length == 0) {
+    return [];
   }
+  const firstParent = locations[0];
+  return locations.reduce(deduplicateNode, [firstParent]);
+}
 
-  return locations;
+function deduplicateNode(nodes, location) {
+  const parent = nodes[nodes.length - 1];
+  if (!(0, _contains.containsLocation)(parent, location)) {
+    nodes.push(location);
+  }
+  return nodes;
 }
 
 /**
@@ -37070,14 +37211,17 @@ function sortByStart(a, b) {
  * Returns an array of locations that are considered out of scope for the given
  * location.
  */
-function getOutOfScopeLocations(source, position) {
+function findOutOfScopeLocations(source, position) {
   const { functions, comments } = findSymbols(source);
   const commentLocations = comments.map(c => c.location);
-
-  return functions.map(getLocation).concat(commentLocations).filter(loc => !(0, _contains.containsPosition)(loc, position)).reduce(removeOverlaps, []).sort(sortByStart);
+  let locations = functions.map(getLocation).concat(commentLocations).sort(sortByStart);
+  // Must remove inner locations then filter, otherwise,
+  // we will mis-judge in-scope inner locations as out of scope.
+  locations = removeInnerLocations(locations, position).filter(loc => !(0, _contains.containsPosition)(loc, position));
+  return removeOverlaps(locations);
 }
 
-exports.default = getOutOfScopeLocations;
+exports.default = findOutOfScopeLocations;
 
 /***/ }),
 /* 1625 */
@@ -41671,13 +41815,8 @@ var _getSymbols2 = _interopRequireDefault(_getSymbols);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function isReactComponent(source) {
-  const { imports, classes } = (0, _getSymbols2.default)(source);
-
-  if (!imports || !classes) {
-    return false;
-  }
-
-  return importsReact(imports) && extendsComponent(classes);
+  const { imports, classes, callExpressions } = (0, _getSymbols2.default)(source);
+  return (importsReact(imports) || requiresReact(callExpressions)) && extendsComponent(classes);
 } /* This Source Code Form is subject to the terms of the Mozilla Public
    * License, v. 2.0. If a copy of the MPL was not distributed with this
    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
@@ -41686,10 +41825,14 @@ function importsReact(imports) {
   return imports.some(importObj => importObj.source === "react" && importObj.specifiers.some(specifier => specifier === "React"));
 }
 
+function requiresReact(callExpressions) {
+  return callExpressions.some(callExpression => callExpression.name === "require" && callExpression.values.some(value => value === "react"));
+}
+
 function extendsComponent(classes) {
   let result = false;
   classes.some(classObj => {
-    if (classObj.parent.name === "Component" || classObj.parent.name === "PureComponent") {
+    if (classObj.parent.name === "Component" || classObj.parent.name === "PureComponent" || classObj.parent.property.name === "Component") {
       result = true;
     }
   });
@@ -41808,344 +41951,6 @@ function baseToPairs(object, props) {
 
 module.exports = baseToPairs;
 
-
-/***/ }),
-/* 1758 */,
-/* 1759 */,
-/* 1760 */,
-/* 1761 */,
-/* 1762 */,
-/* 1763 */,
-/* 1764 */,
-/* 1765 */,
-/* 1766 */,
-/* 1767 */,
-/* 1768 */,
-/* 1769 */,
-/* 1770 */,
-/* 1771 */,
-/* 1772 */,
-/* 1773 */,
-/* 1774 */,
-/* 1775 */,
-/* 1776 */,
-/* 1777 */,
-/* 1778 */,
-/* 1779 */,
-/* 1780 */,
-/* 1781 */,
-/* 1782 */,
-/* 1783 */,
-/* 1784 */,
-/* 1785 */,
-/* 1786 */,
-/* 1787 */,
-/* 1788 */,
-/* 1789 */,
-/* 1790 */,
-/* 1791 */,
-/* 1792 */,
-/* 1793 */,
-/* 1794 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.parseScriptTags = exports.parseScripts = exports.getCandidateScriptLocations = exports.generateWhitespace = undefined;
-
-var _babelTypes = __webpack_require__(493);
-
-var types = _interopRequireWildcard(_babelTypes);
-
-var _parseScriptFragment = __webpack_require__(1795);
-
-var _parseScriptFragment2 = _interopRequireDefault(_parseScriptFragment);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-var startScript = /<script[^>]*>/im;
-var endScript = /<\/script\s*>/im;
-// https://stackoverflow.com/questions/5034781/js-regex-to-split-by-line#comment5633979_5035005
-var newLines = /\r\n|[\n\v\f\r\x85\u2028\u2029]/;
-
-function getType(tag) {
-  var fragment = (0, _parseScriptFragment2.default)(tag);
-
-  if (fragment) {
-    var type = fragment.attributes.type;
-
-    return type ? type.toLowerCase() : null;
-  }
-
-  return null;
-}
-
-function getCandidateScriptLocations(source, index) {
-  var i = index || 0;
-  var str = source.substring(i);
-
-  var startMatch = startScript.exec(str);
-  if (startMatch) {
-    var startsAt = startMatch.index + startMatch[0].length;
-    var afterStart = str.substring(startsAt);
-    var endMatch = endScript.exec(afterStart);
-    if (endMatch) {
-      var locLength = endMatch.index;
-      var locIndex = i + startsAt;
-      var endIndex = locIndex + locLength + endMatch[0].length;
-
-      // extract the complete tag (incl start and end tags and content). if the
-      // type is invalid (= not JS), skip this tag and continue
-      var tag = source.substring(i + startMatch.index, endIndex);
-      var type = getType(tag);
-      if (type && type !== "javascript" && type !== "text/javascript") {
-        return getCandidateScriptLocations(source, endIndex);
-      }
-
-      return [adjustForLineAndColumn(source, {
-        index: locIndex,
-        length: locLength,
-        source: source.substring(locIndex, locIndex + locLength)
-      })].concat(_toConsumableArray(getCandidateScriptLocations(source, endIndex)));
-    }
-  }
-
-  return [];
-}
-
-function parseScripts(locations, parser) {
-  return locations.map(parser);
-}
-
-function generateWhitespace(length) {
-  return Array.from(new Array(length + 1)).join(" ");
-}
-
-function calcLineAndColumn(source, index) {
-  var lines = source.substring(0, index).split(newLines);
-  var line = lines.length;
-  var column = lines.pop().length + 1;
-
-  return {
-    column: column,
-    line: line
-  };
-}
-
-function adjustForLineAndColumn(fullSource, location) {
-  var _calcLineAndColumn = calcLineAndColumn(fullSource, location.index),
-      column = _calcLineAndColumn.column,
-      line = _calcLineAndColumn.line;
-
-  return Object.assign({}, location, {
-    line: line,
-    column: column,
-    // prepend whitespace for scripts that do not start on the first column
-    source: generateWhitespace(column) + location.source
-  });
-}
-
-function parseScriptTags(source, parser) {
-  var scripts = parseScripts(getCandidateScriptLocations(source), parser).filter(types.isFile).reduce(function (main, script) {
-    return {
-      statements: main.statements.concat(script.program.body),
-      comments: main.comments.concat(script.comments),
-      tokens: main.tokens.concat(script.tokens)
-    };
-  }, {
-    statements: [],
-    comments: [],
-    tokens: []
-  });
-
-  var program = types.program(scripts.statements);
-  var file = types.file(program, scripts.comments, scripts.tokens);
-
-  var end = calcLineAndColumn(source, source.length);
-  file.start = program.start = 0;
-  file.end = program.end = source.length;
-  file.loc = program.loc = {
-    start: {
-      line: 1,
-      column: 0
-    },
-    end: end
-  };
-
-  return file;
-}
-
-exports.default = parseScriptTags;
-exports.generateWhitespace = generateWhitespace;
-exports.getCandidateScriptLocations = getCandidateScriptLocations;
-exports.parseScripts = parseScripts;
-exports.parseScriptTags = parseScriptTags;
-
-/***/ }),
-/* 1795 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var alphanum = /[a-z0-9\-]/i;
-
-function parseToken(str, start) {
-  var i = start;
-  while (i < str.length && alphanum.test(str.charAt(i++))) {
-    continue;
-  }
-
-  if (i !== start) {
-    return {
-      token: str.substring(start, i - 1),
-      index: i
-    };
-  }
-
-  return null;
-}
-
-function parseAttributes(str, start) {
-  var i = start;
-  var attributes = {};
-  var attribute = null;
-
-  while (i < str.length) {
-    var c = str.charAt(i);
-
-    if (attribute === null && c == ">") {
-      break;
-    } else if (attribute === null && alphanum.test(c)) {
-      attribute = {
-        name: null,
-        value: true,
-        bool: true,
-        terminator: null
-      };
-
-      var attributeNameNode = parseToken(str, i);
-      if (attributeNameNode) {
-        attribute.name = attributeNameNode.token;
-        i = attributeNameNode.index - 2;
-      }
-    } else if (attribute !== null) {
-      if (c === "=") {
-        // once we've started an attribute, look for = to indicate
-        // it's a non-boolean attribute
-        attribute.bool = false;
-        if (attribute.value === true) {
-          attribute.value = "";
-        }
-      } else if (!attribute.bool && attribute.terminator === null && (c === '"' || c === "'")) {
-        // once we've determined it's non-boolean, look for a
-        // value terminator (", ')
-        attribute.terminator = c;
-      } else if (attribute.terminator) {
-        if (c === attribute.terminator) {
-          // if we had a terminator and found another, we've
-          // reach the end of the attribute
-          attributes[attribute.name] = attribute.value;
-          attribute = null;
-        } else {
-          // otherwise, append the character to the attribute value
-          attribute.value += c;
-
-          // check for an escaped terminator and push it as well
-          // to avoid terminating prematurely
-          if (c === "\\") {
-            var next = str.charAt(i + 1);
-            if (next === attribute.terminator) {
-              attribute.value += next;
-              i += 1;
-            }
-          }
-        }
-      } else if (!/\s/.test(c)) {
-        // if we've hit a non-space character and aren't processing a value,
-        // we're starting a new attribute so push the attribute and clear the
-        // local variable
-        attributes[attribute.name] = attribute.value;
-        attribute = null;
-
-        // move the cursor back to re-find the start of the attribute
-        i -= 1;
-      }
-    }
-
-    i++;
-  }
-
-  if (i !== start) {
-    return {
-      attributes: attributes,
-      index: i
-    };
-  }
-
-  return null;
-}
-
-function parseFragment(str) {
-  var start = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-
-  var tag = null;
-  var open = false;
-  var attributes = {};
-
-  var i = start;
-  while (i < str.length) {
-    var c = str.charAt(i++);
-
-    if (!open && !tag && c === "<") {
-      // Open Start Tag
-      open = true;
-
-      var tagNode = parseToken(str, i);
-      if (!tagNode) {
-        return null;
-      }
-
-      i = tagNode.index - 1;
-      tag = tagNode.token;
-    } else if (open && c === ">") {
-      // Close Start Tag
-      break;
-    } else if (open) {
-      // Attributes
-      var attributeNode = parseAttributes(str, i - 1);
-
-      if (attributeNode) {
-        i = attributeNode.index;
-        attributes = attributeNode.attributes || attributes;
-      }
-    }
-  }
-
-  if (tag) {
-    return {
-      tag: tag,
-      attributes: attributes
-    };
-  }
-
-  return null;
-}
-
-exports.default = parseFragment;
-exports.parseFragment = parseFragment;
 
 /***/ })
 /******/ ]);

@@ -17,7 +17,7 @@ add_task(async function() {
   const { selectors: { getSelectedSource }, getState } = dbg;
 
   await selectSource(dbg, "simple1", 1);
-  await waitForLoadedSource(dbg, "simple1");
+  await waitForSelectedSource(dbg, "simple1");
 
   findElementWithSelector(dbg, ".outline-tab").click();
   is(getItems(dbg).length, 5, "5 items in the list");

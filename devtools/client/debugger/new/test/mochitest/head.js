@@ -352,6 +352,12 @@ function assertHighlightLocation(dbg, source, line) {
   const lineEl = findElement(dbg, "highlightLine");
   ok(lineEl, "Line is highlighted");
 
+  is(
+    findAllElements(dbg, "highlightLine").length,
+    1,
+    "Only 1 line is highlighted"
+  );
+
   ok(isVisibleInEditor(dbg, lineEl), "Highlighted line is visible");
   ok(
     getCM(dbg)
