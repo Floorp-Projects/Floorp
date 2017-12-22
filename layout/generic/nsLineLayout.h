@@ -471,6 +471,7 @@ protected:
     bool mIsBullet : 1;
     bool mSkipWhenTrimmingWhitespace : 1;
     bool mIsEmpty : 1;
+    bool mIsPlaceholder : 1;
     bool mIsLinkedToBase : 1;
 
     // Other state we use
