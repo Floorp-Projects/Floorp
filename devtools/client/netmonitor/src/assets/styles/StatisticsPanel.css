@@ -4,6 +4,8 @@
 
 /* Statistics panel */
 
+@import "chrome://devtools/skin/chart.css";
+
 .statistics-panel {
   display: flex;
   height: 100vh;
@@ -194,4 +196,3 @@
     height: 1px;
   }
 }
-
