@@ -28,7 +28,7 @@ const INITIAL_STATE = {
     // context menu to TopSitesEdit.
     editForm: {
       visible: false,
-      site: null
+      index: -1
     }
   },
   Prefs: {
@@ -95,7 +95,7 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
       }
       return Object.assign({}, prevState, {initialized: true, rows: action.data});
     case at.TOP_SITES_EDIT:
-      return Object.assign({}, prevState, {editForm: {visible: true, site: action.data}});
+      return Object.assign({}, prevState, {editForm: {visible: true, index: action.data.index}});
     case at.TOP_SITES_CANCEL_EDIT:
       return Object.assign({}, prevState, {editForm: {visible: false}});
     case at.SCREENSHOT_UPDATED:
