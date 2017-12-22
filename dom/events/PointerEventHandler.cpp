@@ -582,7 +582,7 @@ PointerEventHandler::DispatchPointerFromMouseOrTouch(
 
         PreHandlePointerEventsPreventDefault(&event, aEvent);
         shell->HandleEventWithTarget(&event, frame, content, aStatus, true,
-                                     aTargetContent);
+                                     nullptr);
         PostHandlePointerEventsPreventDefault(&event, aEvent);
       } else {
         // We didn't hit test for other touch events. Spec doesn't mention that
@@ -590,8 +590,7 @@ PointerEventHandler::DispatchPointerFromMouseOrTouch(
         // corresponding touch events. Call PresShell::HandleEvent so that we do
         // hit test for pointer events.
         PreHandlePointerEventsPreventDefault(&event, aEvent);
-        shell->HandleEvent(aFrame, &event, aDontRetargetEvents, aStatus,
-                           aTargetContent);
+        shell->HandleEvent(aFrame, &event, aDontRetargetEvents, aStatus);
         PostHandlePointerEventsPreventDefault(&event, aEvent);
       }
     }
