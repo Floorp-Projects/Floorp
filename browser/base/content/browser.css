@@ -912,35 +912,6 @@ html|*#fullscreen-exit-button {
 
 /* ::::: Ctrl-Tab Panel ::::: */
 
-.ctrlTab-preview > html|img,
-.ctrlTab-preview > html|canvas {
-  min-width: inherit;
-  max-width: inherit;
-  min-height: inherit;
-  max-height: inherit;
-}
-
-.ctrlTab-favicon-container {
-  -moz-box-align: start;
-%ifdef XP_MACOSX
-  -moz-box-pack: end;
-%else
-  -moz-box-pack: start;
-%endif
-}
-
-.ctrlTab-favicon {
-  width: 16px;
-  height: 16px;
-}
-
-/* Apply crisp rendering for favicons at exactly 2dppx resolution */
-@media (resolution: 2dppx) {
-  .ctrlTab-favicon {
-    image-rendering: -moz-crisp-edges;
-  }
-}
-
 .ctrlTab-preview {
   -moz-binding: url("chrome://browser/content/browser-tabPreviews.xml#ctrlTab-preview");
 }

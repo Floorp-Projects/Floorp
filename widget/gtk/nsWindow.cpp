@@ -64,6 +64,10 @@
 #include <gtk/gtkprivate.h>
 #endif
 
+#if defined(MOZ_WAYLAND)
+#include <gdk/gdkwayland.h>
+#endif
+
 #include "nsGkAtoms.h"
 
 #ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
@@ -1709,16 +1713,22 @@ nsWindow::GetNativeData(uint32_t aDataType)
 #ifdef MOZ_X11
         GdkDisplay* gdkDisplay = gdk_display_get_default();
         if (GDK_IS_X11_DISPLAY(gdkDisplay)) {
-          return GDK_DISPLAY_XDISPLAY(gdkDisplay);
+            return GDK_DISPLAY_XDISPLAY(gdkDisplay);
         }
 #endif /* MOZ_X11 */
+        // Don't bother to return native display on Wayland as it's for
+        // X11 only NPAPI plugins.
         return nullptr;
     }
     case NS_NATIVE_SHELLWIDGET:
         return GetToplevelWidget();
 
     case NS_NATIVE_SHAREABLE_WINDOW:
-        return (void *) GDK_WINDOW_XID(gdk_window_get_toplevel(mGdkWindow));
+        if (mIsX11Display) {
+            return (void *) GDK_WINDOW_XID(gdk_window_get_toplevel(mGdkWindow));
+        }
+        NS_WARNING("nsWindow::GetNativeData(): NS_NATIVE_SHAREABLE_WINDOW is not handled on Wayland!");
+        return nullptr;
     case NS_RAW_NATIVE_IME_CONTEXT: {
         void* pseudoIMEContext = GetPseudoIMEContext();
         if (pseudoIMEContext) {
@@ -2140,7 +2150,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
     LOGDRAW(("sending expose event [%p] %p 0x%lx (rects follow):\n",
              (void *)this, (void *)mGdkWindow,
-             gdk_x11_window_get_xid(mGdkWindow)));
+             mIsX11Display ? gdk_x11_window_get_xid(mGdkWindow) : 0));
 
     // Our bounds may have changed after calling WillPaintWindow.  Clip
     // to the new bounds here.  The region is relative to this
@@ -3652,10 +3662,14 @@ nsWindow::Create(nsIWidget* aParent,
         // which will use a Window with the override-redirect attribute
         // (for temporary windows).
         // For long-lived windows, their stacking order is managed by the
-        // window manager, as indicated by GTK_WINDOW_TOPLEVEL ...
-        GtkWindowType type =
-            mWindowType != eWindowType_popup || aInitData->mNoAutoHide ?
-              GTK_WINDOW_TOPLEVEL : GTK_WINDOW_POPUP;
+        // window manager, as indicated by GTK_WINDOW_TOPLEVEL.
+        // For Wayland we have to always use GTK_WINDOW_POPUP to control
+        // popup window position.
+        GtkWindowType type = GTK_WINDOW_TOPLEVEL;
+        if (mWindowType == eWindowType_popup) {
+            type = (mIsX11Display && aInitData->mNoAutoHide) ?
+                GTK_WINDOW_TOPLEVEL : GTK_WINDOW_POPUP;
+        }
         mShell = gtk_window_new(type);
 
         bool useAlphaVisual = (mWindowType == eWindowType_popup &&
@@ -3727,9 +3741,11 @@ nsWindow::Create(nsIWidget* aParent,
 #ifdef MOZ_X11
                 // ... but when the window manager offers focus through
                 // WM_TAKE_FOCUS, focus is requested on the parent window.
-                gtk_widget_realize(mShell);
-                gdk_window_add_filter(gtk_widget_get_window(mShell),
-                                      popup_take_focus_filter, nullptr);
+                if (mIsX11Display) {
+                    gtk_widget_realize(mShell);
+                    gdk_window_add_filter(gtk_widget_get_window(mShell),
+                                          popup_take_focus_filter, nullptr);
+                }
 #endif
             }
 
@@ -3741,7 +3757,11 @@ nsWindow::Create(nsIWidget* aParent,
             else {
                 switch (aInitData->mPopupHint) {
                     case ePopupTypeMenu:
-                        gtkTypeHint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
+                        // Use GDK_WINDOW_TYPE_HINT_UTILITY on Wayland which
+                        // guides Gtk to create the popup as subsurface
+                        // instead of xdg_shell popup (see Bug 1423598).
+                        gtkTypeHint = mIsX11Display ? GDK_WINDOW_TYPE_HINT_POPUP_MENU :
+                                                      GDK_WINDOW_TYPE_HINT_UTILITY;
                         break;
                     case ePopupTypeTooltip:
                         gtkTypeHint = GDK_WINDOW_TYPE_HINT_TOOLTIP;
@@ -3793,9 +3813,12 @@ nsWindow::Create(nsIWidget* aParent,
          * 2) We're running on Gtk+ and client side decorations
          *    are drawn by Gtk+ to mShell. Content is rendered to mContainer
          *    and we listen to the Gtk+ events on mContainer.
+         * 3) We're running on Wayland. All gecko content is rendered
+         *    to mContainer and we listen to the Gtk+ events on mContainer.
          */
         GtkStyleContext* style = gtk_widget_get_style_context(mShell);
         drawToContainer =
+            !mIsX11Display ||
             (mIsCSDAvailable && GetCSDSupportLevel() == CSD_SUPPORT_FLAT ) ||
             gtk_style_context_has_class(style, "csd");
 #endif
@@ -4044,7 +4067,7 @@ nsWindow::Create(nsIWidget* aParent,
     if (mShell) {
         LOG(("\tmShell %p mContainer %p mGdkWindow %p 0x%lx\n",
              mShell, mContainer, mGdkWindow,
-             gdk_x11_window_get_xid(mGdkWindow)));
+             mIsX11Display ? gdk_x11_window_get_xid(mGdkWindow) : 0));
     } else if (mContainer) {
         LOG(("\tmContainer %p mGdkWindow %p\n", mContainer, mGdkWindow));
     }
@@ -4789,6 +4812,12 @@ nsWindow::GrabPointer(guint32 aTime)
     if (!mGdkWindow)
         return;
 
+    if (!mIsX11Display) {
+        // Don't to the grab on Wayland as it causes a regression
+        // from Bug 1377084.
+        return;
+    }
+
     gint retval;
     retval = gdk_pointer_grab(mGdkWindow, TRUE,
                               (GdkEventMask)(GDK_BUTTON_PRESS_MASK |
@@ -4822,6 +4851,13 @@ nsWindow::ReleaseGrabs(void)
     LOG(("ReleaseGrabs\n"));
 
     mRetryPointerGrab = false;
+
+    if (!mIsX11Display) {
+        // Don't to the ungrab on Wayland as it causes a regression
+        // from Bug 1377084.
+        return;
+    }
+
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
 }
 
@@ -7099,3 +7135,19 @@ nsWindow::IsComposited() const
          (gdk_window_get_visual(mGdkWindow)
             == gdk_screen_get_rgba_visual(gdkScreen));
 }
+
+#ifdef MOZ_WAYLAND
+wl_display*
+nsWindow::GetWaylandDisplay()
+{
+  GdkDisplay* gdkDisplay = gdk_display_get_default();
+  return mIsX11Display ? nullptr :
+                         gdk_wayland_display_get_wl_display(gdkDisplay);
+}
+
+wl_surface*
+nsWindow::GetWaylandSurface()
+{
+  return moz_container_get_wl_surface(MOZ_CONTAINER(mContainer));
+}
+#endif
