@@ -245,7 +245,7 @@
                   icon="save" id="imagesaveasbutton"
                   oncommand="saveMedia();"/>
         </hbox>
-        <vbox id="imagecontainerbox" class="inset iframe" flex="1" pack="center">
+        <vbox id="imagecontainerbox" flex="1" pack="center">
           <hbox id="theimagecontainer" pack="center">
             <image id="thepreviewimage"/>
           </hbox>

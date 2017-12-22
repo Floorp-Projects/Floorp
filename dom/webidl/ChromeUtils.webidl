@@ -89,6 +89,40 @@ namespace ChromeUtils {
   ArrayBuffer base64URLDecode(ByteString string,
                               Base64URLDecodeOptions options);
 
+#ifdef NIGHTLY_BUILD
+
+  /**
+   * If the chrome code has thrown a JavaScript Dev Error
+   * in the current JSRuntime. the first such error, or `undefined`
+   * otherwise.
+   *
+   * A JavaScript Dev Error is an exception thrown by JavaScript
+   * code that matches both conditions:
+   * - it was thrown by chrome code;
+   * - it is either a `ReferenceError`, a `TypeError` or a `SyntaxError`.
+   *
+   * Such errors are stored regardless of whether they have been
+   * caught.
+   *
+   * This mechanism is designed to help ensure that the code of
+   * Firefox is free from Dev Errors, even if they are accidentally
+   * caught by clients.
+   *
+   * The object returned is not an exception. It has fields:
+   * - DOMString stack
+   * - DOMString filename
+   * - DOMString lineNumber
+   * - DOMString message
+   */
+  [Throws]
+  readonly attribute any recentJSDevError;
+
+  /**
+   * Reset `recentJSDevError` to `undefined` for the current JSRuntime.
+   */
+  void clearRecentJSDevError();
+#endif // NIGHTLY_BUILD
+
   /**
    * IF YOU ADD NEW METHODS HERE, MAKE SURE THEY ARE THREAD-SAFE.
    */
