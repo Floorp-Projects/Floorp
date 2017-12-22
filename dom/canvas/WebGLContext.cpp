@@ -740,7 +740,7 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
 // Fallback for resizes:
 
 bool
-WebGLContext::EnsureDefaultFB() const
+WebGLContext::EnsureDefaultFB(const char* const funcName)
 {
     if (mDefaultFB) {
         MOZ_ASSERT(mDefaultFB->mSize == mRequestedSize);
@@ -776,8 +776,11 @@ WebGLContext::EnsureDefaultFB() const
         attemptSize.height /= 2;
     }
 
-    if (!mDefaultFB)
+    if (!mDefaultFB) {
+        GenerateWarning("%s: Backbuffer resize failed. Losing context.", funcName);
+        ForceLoseContext();
         return false;
+    }
 
     mDefaultFB_IsInvalid = true;
 
@@ -787,6 +790,7 @@ WebGLContext::EnsureDefaultFB() const
                         mRequestedSize.width, mRequestedSize.height,
                         mDefaultFB->mSize.width, mDefaultFB->mSize.height);
     }
+    mRequestedSize = mDefaultFB->mSize;
     return true;
 }
 
@@ -969,7 +973,6 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
         return NS_ERROR_FAILURE;
     }
     MOZ_ASSERT(gl);
-    MOZ_ASSERT_IF(mOptions.alpha, gl->Caps().alpha);
 
     if (mOptions.failIfMajorPerformanceCaveat) {
         if (gl->IsWARP()) {
@@ -1000,7 +1003,9 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
 
     MOZ_ASSERT(!mDefaultFB);
     mRequestedSize = {width, height};
-    if (!EnsureDefaultFB()) {
+    if (!EnsureDefaultFB("context initialization")) {
+        MOZ_ASSERT(!gl);
+
         failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WEBGL_BACKBUFFER");
         const nsLiteralCString text("Initializing WebGL backbuffer failed.");
         ThrowEvent_WebGLContextCreationError(text);
@@ -1320,7 +1325,7 @@ WebGLContext::InitializeCanvasRenderer(nsDisplayListBuilder* aBuilder,
     }
 
     data.mGLContext = gl;
-    data.mSize = DrawingBufferSize();
+    data.mSize = DrawingBufferSize("InitializeCanvasRenderer");
     data.mHasAlpha = mOptions.alpha;
     data.mIsGLAlphaPremult = IsPremultAlpha() || !data.mHasAlpha;
 
@@ -1961,13 +1966,13 @@ WebGLContext::DidRefresh()
 ////////////////////////////////////////////////////////////////////////////////
 
 gfx::IntSize
-WebGLContext::DrawingBufferSize() const
+WebGLContext::DrawingBufferSize(const char* const funcName)
 {
     const gfx::IntSize zeros{0, 0};
     if (IsContextLost())
         return zeros;
 
-    if (!EnsureDefaultFB())
+    if (!EnsureDefaultFB(funcName))
         return zeros;
 
     return mDefaultFB->mSize;
@@ -1980,11 +1985,8 @@ WebGLContext::ValidateAndInitFB(const char* const funcName,
     if (fb)
         return fb->ValidateAndInitAttachments(funcName);
 
-    if (!EnsureDefaultFB()) {
-        GenerateWarning("%s: Lazy resize failed. Losing context.", funcName);
-        ForceLoseContext();
+    if (!EnsureDefaultFB(funcName))
         return false;
-    }
 
     if (mDefaultFB_IsInvalid) {
         gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mDefaultFB->mFB);

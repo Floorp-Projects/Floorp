@@ -6,6 +6,7 @@
 #include "MozFramebuffer.h"
 
 #include "GLContext.h"
+#include "mozilla/gfx/Logging.h"
 #include "ScopedGLHelpers.h"
 
 namespace mozilla {
@@ -61,7 +62,10 @@ MozFramebuffer::Create(GLContext* const gl, const gfx::IntSize& size,
 
     const auto err = errorScope.GetError();
     if (err) {
-        MOZ_ASSERT(err == LOCAL_GL_OUT_OF_MEMORY);
+        if (err != LOCAL_GL_OUT_OF_MEMORY) {
+            gfxCriticalNote << "Unexpected error: " << gfx::hexa(err) << ": "
+                            << GLContext::GLErrorToString(err);
+        }
         DeleteByTarget(gl, colorTarget, colorName);
         return nullptr;
     }
