@@ -37,6 +37,148 @@ function getActiveTab(window) {
   return window.gBrowser.selectedTab;
 }
 
+/************** Debugger Helper ***************/
+/*
+ * These methods are used for working with debugger state changes in order
+ * to make it easier to manipulate the ui and test different behavior. These
+ * methods roughly reflect those found in debugger/new/test/mochi/head.js with
+ * a few exceptions. The `dbg` object is not exactly the same, and the methods
+ * have been simplified. We may want to consider unifying them in the future
+ */
+
+const DEBUGGER_POLLING_INTERVAL = 50;
+
+const debuggerHelper = {
+  waitForState(dbg, predicate, msg) {
+    return new Promise(resolve => {
+      dump(`Waiting for state change: ${msg}\n`);
+      if (predicate(dbg.store.getState())) {
+        dump(`Finished waiting for state change: ${msg}\n`);
+        return resolve();
+      }
+
+      const unsubscribe = dbg.store.subscribe(() => {
+        if (predicate(dbg.store.getState())) {
+          dump(`Finished waiting for state change: ${msg}\n`);
+          unsubscribe();
+          resolve();
+        }
+      });
+    });
+  },
+
+  waitForDispatch(dbg, type) {
+    return new Promise(resolve => {
+      dbg.store.dispatch({
+        type: "@@service/waitUntil",
+        predicate: action => {
+          if (action.type === type) {
+            return action.status
+              ? action.status === "done" || action.status === "error"
+              : true;
+          }
+        },
+        run: (dispatch, getState, action) => {
+          resolve(action);
+        }
+      });
+    });
+  },
+
+  async waitUntil(predicate, msg) {
+    dump(`Waiting until: ${msg}\n`);
+    return new Promise(resolve => {
+      const timer = setInterval(() => {
+        if (predicate()) {
+          clearInterval(timer);
+          dump(`Finished Waiting until: ${msg}\n`);
+          resolve();
+        }
+      }, DEBUGGER_POLLING_INTERVAL);
+    });
+  },
+
+  findSource(dbg, url) {
+    const sources = dbg.selectors.getSources(dbg.getState());
+    return sources.find(s => (s.get("url") || "").includes(url));
+  },
+
+  getCM(dbg) {
+    const el = dbg.win.document.querySelector(".CodeMirror");
+    return el.CodeMirror;
+  },
+
+  waitForText(dbg, url, text) {
+    return this.waitUntil(() => {
+      // the welcome box is removed once text is displayed
+      const welcomebox = dbg.win.document.querySelector(".welcomebox");
+      if (welcomebox) {
+        return false;
+      }
+      const cm = this.getCM(dbg);
+      const editorText = cm.doc.getValue();
+      return editorText.includes(text);
+    }, "text is visible");
+  },
+
+  waitForMetaData(dbg) {
+    return this.waitUntil(
+      () => {
+        const state = dbg.store.getState();
+        const source = dbg.selectors.getSelectedSource(state);
+        // wait for metadata -- this involves parsing the file to determine its type.
+        // if the object is empty, the data has not yet loaded
+        const metaData = dbg.selectors.getSourceMetaData(state, source.get("id"));
+        return !!Object.keys(metaData).length;
+      },
+      "has file metadata"
+    );
+  },
+
+  waitForSources(dbg, expectedSources) {
+    const { selectors, store } = dbg;
+    function countSources(state) {
+      const sources = selectors.getSources(state);
+      return sources.size >= expectedSources;
+    }
+    return this.waitForState(dbg, countSources, "count sources");
+  },
+
+  async createContext(panel) {
+    const { store, client, selectors, actions } = panel.getVarsForTests();
+
+    return {
+      actions,
+      selectors,
+      getState: store.getState,
+      win: panel.panelWin,
+      store
+    };
+  },
+
+  selectSource(dbg, url) {
+    dump(`Selecting source: ${url}\n`);
+    const line = 1;
+    const source = this.findSource(dbg, url);
+    dbg.actions.selectLocation({ sourceId: source.get("id"), line });
+    return this.waitForState(
+      dbg,
+      state => {
+        const source = dbg.selectors.getSelectedSource(state);
+        const isLoaded = source && source.get("loadedState") === "loaded";
+        if (!isLoaded) {
+          return false;
+        }
+
+        // wait for symbols -- a flat map of all named variables in a file -- to be calculated.
+        // this is a slow process and becomes slower the larger the file is
+        return dbg.selectors.hasSymbols(state, source.toJS());
+      },
+      "selected source"
+    );
+  }
+}
+
 async function garbageCollect() {
   dump("Garbage collect\n");
 
@@ -591,7 +733,44 @@ async _consoleOpenWithCachedMessagesTest() {
     await this.testTeardown();
   },
 
-  _getToolLoadingTests(url, label, { expectedMessages, expectedSources }) {
+  async openDebuggerAndLog(label, expectedSources, selectedFile, expectedText) {
+   const onLoad = async (toolbox, panel) => {
+    const dbg = await debuggerHelper.createContext(panel);
+    await debuggerHelper.waitForSources(dbg, expectedSources);
+    await debuggerHelper.selectSource(dbg, selectedFile);
+    await debuggerHelper.waitForText(dbg, selectedFile, expectedText);
+    await debuggerHelper.waitForMetaData(dbg);
+   };
+   const toolbox = await this.openToolboxAndLog(label + ".jsdebugger", "jsdebugger", onLoad);
+   return toolbox;
+  },
+
+  async reloadDebuggerAndLog(label, toolbox, expectedSources, selectedFile, expectedText) {
+    const onReload = async () => {
+      const panel = await toolbox.getPanelWhenReady("jsdebugger")
+      const dbg = await debuggerHelper.createContext(panel);
+      await debuggerHelper.waitForDispatch(dbg, "NAVIGATE");
+      await debuggerHelper.waitForSources(dbg, expectedSources);
+      await debuggerHelper.waitForText(dbg, selectedFile, expectedText);
+      await debuggerHelper.waitForMetaData(dbg);
+    }
+    await this.reloadPageAndLog(`${label}.jsdebugger`, toolbox, onReload);
+  },
+
+  async customDebugger() {
+    const label = "custom";
+    const expectedSources = 7;
+    let url = CUSTOM_URL.replace(/\$TOOL/, "debugger/index");
+    await this.testSetup(url);
+    const selectedFile = "App.js";
+    const expectedText = "import React, { Component } from 'react';";
+    const toolbox = await this.openDebuggerAndLog(label, expectedSources, selectedFile, expectedText);
+    await this.reloadDebuggerAndLog(label, toolbox, expectedSources, selectedFile, expectedText);
+    await this.closeToolboxAndLog("custom.jsdebugger", toolbox);
+    await this.testTeardown();
+  },
+
+  _getToolLoadingTests(url, label, { expectedMessages, expectedSources, selectedFile, expectedText }) {
     let tests = {
       async inspector() {
         await this.testSetup(url);
@@ -624,36 +803,8 @@ async _consoleOpenWithCachedMessagesTest() {
 
       async debugger() {
         await this.testSetup(url);
-        let onLoad = async function(toolbox, dbg) {
-          await new Promise(done => {
-            let { selectors, store } = dbg.panelWin.getGlobalsForTesting();
-            let unsubscribe;
-            function countSources() {
-              const sources = selectors.getSources(store.getState());
-              if (sources.size >= expectedSources) {
-                unsubscribe();
-                done();
-              }
-            }
-            unsubscribe = store.subscribe(countSources);
-            countSources();
-          });
-        };
-        let toolbox = await this.openToolboxAndLog(label + ".jsdebugger", "jsdebugger", onLoad);
-        let onReload = async function() {
-          await new Promise(done => {
-            let count = 0;
-            let { client } = toolbox.target;
-            let onSource = async (_, actor) => {
-              if (++count >= expectedSources) {
-                client.removeListener("newSource", onSource);
-                done();
-              }
-            };
-            client.addListener("newSource", onSource);
-          });
-        };
-        await this.reloadPageAndLog(label + ".jsdebugger", toolbox, onReload);
+        let toolbox = await this.openDebuggerAndLog(label, expectedSources, selectedFile, expectedText);
+        await this.reloadDebuggerAndLog(label, toolbox, expectedSources, selectedFile, expectedText);
         await this.closeToolboxAndLog(label + ".jsdebugger", toolbox);
         await this.testTeardown();
       },
@@ -876,16 +1027,21 @@ async _consoleOpenWithCachedMessagesTest() {
     Object.assign(tests, this._getToolLoadingTests(SIMPLE_URL, "simple", {
       expectedMessages: 1,
       expectedSources: 1,
+      selectedFile: "simple.html",
+      expectedText: "This is a simple page"
     }));
 
     // Run all tests against "complicated" document
     Object.assign(tests, this._getToolLoadingTests(COMPLICATED_URL, "complicated", {
       expectedMessages: 7,
       expectedSources: 14,
+      selectedFile: "ga.js",
+      expectedText: "Math;function ga(a,b){return a.name=b}"
     }));
 
     // Run all tests against a document specific to each tool
     tests["custom.inspector"] = this.customInspector;
+    tests["custom.debugger"] = this.customDebugger;
 
     // Run individual tests covering a very precise tool feature
     tests["console.bulklog"] = this._consoleBulkLoggingTest;
