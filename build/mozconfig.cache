@@ -104,13 +104,7 @@ if test -z "$platform"; then
     esac
 fi
 
-if test -z "$bucket"; then
-    case "$platform" in
-    win*) : ;;
-    *)
-        export CCACHE=ccache
-    esac
-else
+if test -n "$bucket"; then
     mk_add_options "export SCCACHE_BUCKET=$bucket"
     case "$master" in
     *us[ew][12].mozilla.com*|*euc1.mozilla.com*)
