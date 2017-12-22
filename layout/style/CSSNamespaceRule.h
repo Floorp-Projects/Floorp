@@ -40,7 +40,7 @@ public:
     GetURLSpec(aNamespaceURI);
   }
   void GetPrefix(DOMString& aPrefix) {
-    aPrefix.SetOwnedAtom(GetPrefix(), DOMString::eTreatNullAsEmpty);
+    aPrefix.SetKnownLiveAtom(GetPrefix(), DOMString::eTreatNullAsEmpty);
   }
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const = 0;

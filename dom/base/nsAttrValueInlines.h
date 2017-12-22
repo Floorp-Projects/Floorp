@@ -270,7 +270,8 @@ nsAttrValue::ToString(mozilla::dom::DOMString& aResult) const
     {
       nsStringBuffer* str = static_cast<nsStringBuffer*>(GetPtr());
       if (str) {
-        aResult.SetStringBuffer(str, str->StorageSize()/sizeof(char16_t) - 1);
+        aResult.SetKnownLiveStringBuffer(
+          str, str->StorageSize()/sizeof(char16_t) - 1);
       }
       // else aResult is already empty
       return;
@@ -278,7 +279,7 @@ nsAttrValue::ToString(mozilla::dom::DOMString& aResult) const
     case eAtom:
     {
       nsAtom *atom = static_cast<nsAtom*>(GetPtr());
-      aResult.SetOwnedAtom(atom, mozilla::dom::DOMString::eNullNotExpected);
+      aResult.SetKnownLiveAtom(atom, mozilla::dom::DOMString::eNullNotExpected);
       break;
     }
     default:

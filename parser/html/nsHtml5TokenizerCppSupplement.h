@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Likely.h"
 
 // INT32_MAX is (2^31)-1. Therefore, the highest power-of-two that fits
@@ -19,7 +20,7 @@ nsHtml5Tokenizer::EnsureBufferSpace(int32_t aLength)
     // Can't happen when loading from network.
     return false;
   }
-  CheckedInt<int32_t> worstCase(strBufLen);
+  mozilla::CheckedInt<int32_t> worstCase(strBufLen);
   worstCase += aLength;
   worstCase += charRefBufLen;
   // Add 2 to account for emissions of LT_GT, LT_SOLIDUS and RSQB_RSQB.

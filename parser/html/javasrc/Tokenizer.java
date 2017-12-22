@@ -932,7 +932,7 @@ public class Tokenizer implements Locator {
         switch (commentPolicy) {
             case ALTER_INFOSET:
                 appendStrBuf(' ');
-                // FALLTHROUGH
+                // CPPONLY: MOZ_FALLTHROUGH;
             case ALLOW:
                 warn("The document is not mappable to XML 1.0 due to two consecutive hyphens in a comment.");
                 // ]NOCPP]
@@ -951,7 +951,7 @@ public class Tokenizer implements Locator {
         switch (commentPolicy) {
             case ALTER_INFOSET:
                 appendStrBuf(' ');
-                // FALLTHROUGH
+                // CPPONLY: MOZ_FALLTHROUGH;
             case ALLOW:
                 warn("The document is not mappable to XML 1.0 due to a trailing hyphen in a comment.");
                 break;
@@ -974,7 +974,7 @@ public class Tokenizer implements Locator {
                 // given the length of input!
                 appendStrBuf(' ');
                 appendStrBuf('-');
-                // FALLTHROUGH
+                // CPPONLY: MOZ_FALLTHROUGH;
             case ALLOW:
                 warn("The document is not mappable to XML 1.0 due to two consecutive hyphens in a comment.");
                 // ]NOCPP]
@@ -1189,7 +1189,7 @@ public class Tokenizer implements Locator {
                             interner),
                     namePolicy != XmlViolationPolicy.ALLOW);
             // ]NOCPP]
-            // CPPONLY:     nonInternedAttributeName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, 0, strBufLen, interner));
+            // CPPONLY:     nonInternedAttributeName.setNameForNonInterned(Portability.newLocalNameFromBuffer(strBuf, strBufLen, interner));
             // CPPONLY:     attributeName = nonInternedAttributeName;
         }
         clearStrBufAfterUse();
@@ -1549,6 +1549,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Emit the input character as a
@@ -1559,7 +1560,7 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case TAG_OPEN:
                     tagopenloop: for (;;) {
                         /*
@@ -1687,7 +1688,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // FALL THROUGH DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case TAG_NAME:
                     tagnameloop: for (;;) {
                         if (++pos == endPos) {
@@ -1705,6 +1706,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -1741,7 +1743,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 if (c >= 'A' && c <= 'Z') {
                                     /*
@@ -1768,7 +1770,7 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case BEFORE_ATTRIBUTE_NAME:
                     beforeattributenameloop: for (;;) {
                         if (reconsume) {
@@ -1788,7 +1790,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -1820,7 +1822,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case '\"':
                             case '\'':
                             case '<':
@@ -1835,6 +1837,7 @@ public class Tokenizer implements Locator {
                                  * Treat it as per the "anything else" entry
                                  * below.
                                  */
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Start a new attribute in the
@@ -1869,7 +1872,7 @@ public class Tokenizer implements Locator {
                             // continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case ATTRIBUTE_NAME:
                     attributenameloop: for (;;) {
                         if (++pos == endPos) {
@@ -1887,7 +1890,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -1934,7 +1937,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case '\"':
                             case '\'':
                             case '<':
@@ -1947,6 +1950,7 @@ public class Tokenizer implements Locator {
                                  * Treat it as per the "anything else" entry
                                  * below.
                                  */
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 if (c >= 'A' && c <= 'Z') {
                                     /*
@@ -1970,7 +1974,7 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case BEFORE_ATTRIBUTE_VALUE:
                     beforeattributevalueloop: for (;;) {
                         if (++pos == endPos) {
@@ -1986,7 +1990,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -2046,7 +2050,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case '<':
                             case '=':
                             case '`':
@@ -2059,6 +2063,7 @@ public class Tokenizer implements Locator {
                                  * Treat it as per the "anything else" entry
                                  * below.
                                  */
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 // [NOCPP[
                                 errHtml4NonNameInUnquotedAttribute(c);
@@ -2080,7 +2085,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case ATTRIBUTE_VALUE_DOUBLE_QUOTED:
                     attributevaluedoublequotedloop: for (;;) {
                         if (reconsume) {
@@ -2126,7 +2131,7 @@ public class Tokenizer implements Locator {
                                 continue;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Append the current input
@@ -2140,7 +2145,7 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case AFTER_ATTRIBUTE_VALUE_QUOTED:
                     afterattributevaluequotedloop: for (;;) {
                         if (++pos == endPos) {
@@ -2157,7 +2162,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -2203,7 +2208,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SELF_CLOSING_START_TAG:
                     if (++pos == endPos) {
                         break stateloop;
@@ -2241,7 +2246,6 @@ public class Tokenizer implements Locator {
                             state = transition(state, Tokenizer.BEFORE_ATTRIBUTE_NAME, reconsume, pos);
                             continue stateloop;
                     }
-                    // XXX reorder point
                 case ATTRIBUTE_VALUE_UNQUOTED:
                     for (;;) {
                         if (reconsume) {
@@ -2263,7 +2267,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -2304,7 +2308,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case '<':
                             case '\"':
                             case '\'':
@@ -2320,7 +2324,7 @@ public class Tokenizer implements Locator {
                                  * Treat it as per the "anything else" entry
                                  * below.
                                  */
-                                // fall through
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 // [NOCPP]
                                 errHtml4NonNameInUnquotedAttribute(c);
@@ -2336,7 +2340,6 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // XXX reorder point
                 case AFTER_ATTRIBUTE_NAME:
                     for (;;) {
                         if (++pos == endPos) {
@@ -2352,7 +2355,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -2393,7 +2396,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case '\"':
                             case '\'':
                             case '<':
@@ -2402,6 +2405,7 @@ public class Tokenizer implements Locator {
                                  * Treat it as per the "anything else" entry
                                  * below.
                                  */
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 addAttributeWithoutValue();
                                 /*
@@ -2435,7 +2439,6 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // XXX reorder point
                 case MARKUP_DECLARATION_OPEN:
                     markupdeclarationopenloop: for (;;) {
                         if (++pos == endPos) {
@@ -2489,7 +2492,7 @@ public class Tokenizer implements Locator {
                                     state = transition(state, Tokenizer.CDATA_START, reconsume, pos);
                                     continue stateloop;
                                 }
-                                // else fall through
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 errBogusComment();
                                 clearStrBufBeforeUse();
@@ -2498,7 +2501,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case MARKUP_DECLARATION_HYPHEN:
                     markupdeclarationhyphenloop: for (;;) {
                         if (++pos == endPos) {
@@ -2520,7 +2523,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case COMMENT_START:
                     commentstartloop: for (;;) {
                         if (++pos == endPos) {
@@ -2564,7 +2567,7 @@ public class Tokenizer implements Locator {
                                 break commentstartloop;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Append the input character to
@@ -2579,7 +2582,7 @@ public class Tokenizer implements Locator {
                             // continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case COMMENT:
                     commentloop: for (;;) {
                         if (++pos == endPos) {
@@ -2607,7 +2610,7 @@ public class Tokenizer implements Locator {
                                 continue;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Append the input character to
@@ -2620,7 +2623,7 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case COMMENT_END_DASH:
                     commentenddashloop: for (;;) {
                         if (++pos == endPos) {
@@ -2651,7 +2654,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Append a U+002D HYPHEN-MINUS
@@ -2666,7 +2669,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case COMMENT_END:
                     commentendloop: for (;;) {
                         if (++pos == endPos) {
@@ -2715,7 +2718,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Append two U+002D HYPHEN-MINUS (-) characters
@@ -2730,7 +2733,6 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // XXX reorder point
                 case COMMENT_END_BANG:
                     for (;;) {
                         if (++pos == endPos) {
@@ -2774,7 +2776,7 @@ public class Tokenizer implements Locator {
                                 continue;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Append two U+002D HYPHEN-MINUS
@@ -2791,7 +2793,6 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // XXX reorder point
                 case COMMENT_START_DASH:
                     if (++pos == endPos) {
                         break stateloop;
@@ -2830,7 +2831,7 @@ public class Tokenizer implements Locator {
                             continue stateloop;
                         case '\u0000':
                             c = '\uFFFD';
-                            // fall thru
+                            // CPPONLY: MOZ_FALLTHROUGH;
                         default:
                             /*
                              * Append a U+002D HYPHEN-MINUS character (-) and
@@ -2844,7 +2845,6 @@ public class Tokenizer implements Locator {
                             state = transition(state, Tokenizer.COMMENT, reconsume, pos);
                             continue stateloop;
                     }
-                    // XXX reorder point
                 case CDATA_START:
                     for (;;) {
                         if (++pos == endPos) {
@@ -2870,7 +2870,7 @@ public class Tokenizer implements Locator {
                             break; // FALL THROUGH continue stateloop;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case CDATA_SECTION:
                     cdatasectionloop: for (;;) {
                         if (reconsume) {
@@ -2894,12 +2894,12 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 continue;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case CDATA_RSQB:
                     cdatarsqb: for (;;) {
                         if (++pos == endPos) {
@@ -2919,7 +2919,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case CDATA_RSQB_RSQB:
                     cdatarsqbrsqb: for (;;) {
                         if (++pos == endPos) {
@@ -2946,7 +2946,6 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // XXX reorder point
                 case ATTRIBUTE_VALUE_SINGLE_QUOTED:
                     attributevaluesinglequotedloop: for (;;) {
                         if (reconsume) {
@@ -2992,7 +2991,7 @@ public class Tokenizer implements Locator {
                                 continue;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Append the current input
@@ -3006,7 +3005,7 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case CONSUME_CHARACTER_REFERENCE:
                     if (++pos == endPos) {
                         break stateloop;
@@ -3086,7 +3085,7 @@ public class Tokenizer implements Locator {
                             state = transition(state, Tokenizer.CHARACTER_REFERENCE_HILO_LOOKUP, reconsume, pos);
                             // FALL THROUGH continue stateloop;
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case CHARACTER_REFERENCE_HILO_LOOKUP:
                     {
                         if (++pos == endPos) {
@@ -3165,6 +3164,7 @@ public class Tokenizer implements Locator {
                         state = transition(state, Tokenizer.CHARACTER_REFERENCE_TAIL, reconsume, pos);
                         // FALL THROUGH continue stateloop;
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case CHARACTER_REFERENCE_TAIL:
                     outer: for (;;) {
                         if (++pos == endPos) {
@@ -3350,7 +3350,6 @@ public class Tokenizer implements Locator {
                          * I'm ∉ I tell you.
                          */
                     }
-                    // XXX reorder point
                 case CONSUME_NCR:
                     if (++pos == endPos) {
                         break stateloop;
@@ -3396,7 +3395,7 @@ public class Tokenizer implements Locator {
                             state = transition(state, Tokenizer.DECIMAL_NRC_LOOP, reconsume, pos);
                             // FALL THROUGH continue stateloop;
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case DECIMAL_NRC_LOOP:
                     decimalloop: for (;;) {
                         if (reconsume) {
@@ -3471,7 +3470,7 @@ public class Tokenizer implements Locator {
                             }
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case HANDLE_NCR_VALUE:
                     // WARNING previous state sets reconsume
                     // We are not going to emit the contents of charRefBuf.
@@ -3480,7 +3479,6 @@ public class Tokenizer implements Locator {
                     handleNcrValue(returnState);
                     state = transition(state, returnState, reconsume, pos);
                     continue stateloop;
-                    // XXX reorder point
                 case HEX_NCR_LOOP:
                     for (;;) {
                         if (++pos == endPos) {
@@ -3565,7 +3563,6 @@ public class Tokenizer implements Locator {
                             }
                         }
                     }
-                    // XXX reorder point
                 case PLAINTEXT:
                     plaintextloop: for (;;) {
                         if (reconsume) {
@@ -3585,6 +3582,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Emit the current input
@@ -3594,7 +3592,6 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // XXX reorder point
                 case CLOSE_TAG_OPEN:
                     if (++pos == endPos) {
                         break stateloop;
@@ -3639,7 +3636,7 @@ public class Tokenizer implements Locator {
                             continue stateloop;
                         case '\u0000':
                             c = '\uFFFD';
-                            // fall thru
+                            // CPPONLY: MOZ_FALLTHROUGH;
                         default:
                             if (c >= 'A' && c <= 'Z') {
                                 c += 0x20;
@@ -3676,7 +3673,6 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             }
                     }
-                    // XXX reorder point
                 case RCDATA:
                     rcdataloop: for (;;) {
                         if (reconsume) {
@@ -3718,6 +3714,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Emit the current input character as a
@@ -3726,7 +3723,6 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // XXX reorder point
                 case RAWTEXT:
                     rawtextloop: for (;;) {
                         if (reconsume) {
@@ -3757,6 +3753,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Emit the current input character as a
@@ -3765,7 +3762,7 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // XXX fallthru don't reorder
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case RAWTEXT_RCDATA_LESS_THAN_SIGN:
                     rawtextrcdatalessthansignloop: for (;;) {
                         if (++pos == endPos) {
@@ -3800,7 +3797,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // XXX fall thru. don't reorder.
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case NON_DATA_END_TAG_NAME:
                     for (;;) {
                         if (++pos == endPos) {
@@ -3847,7 +3844,7 @@ public class Tokenizer implements Locator {
                                     break stateloop;
                                 case '\n':
                                     silentLineFeed();
-                                    // fall thru
+                                    // CPPONLY: MOZ_FALLTHROUGH;
                                 case ' ':
                                 case '\t':
                                 case '\u000C':
@@ -3911,7 +3908,6 @@ public class Tokenizer implements Locator {
                             }
                         }
                     }
-                    // XXX reorder point
                     // BEGIN HOTSPOT WORKAROUND
                 case BOGUS_COMMENT:
                     boguscommentloop: for (;;) {
@@ -3958,13 +3954,13 @@ public class Tokenizer implements Locator {
                                 continue;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 appendStrBuf(c);
                                 continue;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case BOGUS_COMMENT_HYPHEN:
                     boguscommenthyphenloop: for (;;) {
                         if (++pos == endPos) {
@@ -3992,14 +3988,13 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 appendStrBuf(c);
                                 state = transition(state, Tokenizer.BOGUS_COMMENT, reconsume, pos);
                                 continue stateloop;
                         }
                     }
-                    // XXX reorder point
                 case SCRIPT_DATA:
                     scriptdataloop: for (;;) {
                         if (reconsume) {
@@ -4029,6 +4024,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Emit the current input
@@ -4038,7 +4034,7 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SCRIPT_DATA_LESS_THAN_SIGN:
                     scriptdatalessthansignloop: for (;;) {
                         if (++pos == endPos) {
@@ -4079,7 +4075,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SCRIPT_DATA_ESCAPE_START:
                     scriptdataescapestartloop: for (;;) {
                         if (++pos == endPos) {
@@ -4110,7 +4106,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SCRIPT_DATA_ESCAPE_START_DASH:
                     scriptdataescapestartdashloop: for (;;) {
                         if (++pos == endPos) {
@@ -4140,7 +4136,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SCRIPT_DATA_ESCAPED_DASH_DASH:
                     scriptdataescapeddashdashloop: for (;;) {
                         if (++pos == endPos) {
@@ -4184,6 +4180,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Emit the current input
@@ -4195,7 +4192,7 @@ public class Tokenizer implements Locator {
                             // continue stateloop;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SCRIPT_DATA_ESCAPED:
                     scriptdataescapedloop: for (;;) {
                         if (reconsume) {
@@ -4236,6 +4233,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Emit the current input
@@ -4245,7 +4243,7 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SCRIPT_DATA_ESCAPED_DASH:
                     scriptdataescapeddashloop: for (;;) {
                         if (++pos == endPos) {
@@ -4283,6 +4281,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Emit the current input
@@ -4293,7 +4292,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SCRIPT_DATA_ESCAPED_LESS_THAN_SIGN:
                     scriptdataescapedlessthanloop: for (;;) {
                         if (++pos == endPos) {
@@ -4351,7 +4350,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SCRIPT_DATA_DOUBLE_ESCAPE_START:
                     scriptdatadoubleescapestartloop: for (;;) {
                         if (++pos == endPos) {
@@ -4379,6 +4378,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -4406,7 +4406,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SCRIPT_DATA_DOUBLE_ESCAPED:
                     scriptdatadoubleescapedloop: for (;;) {
                         if (reconsume) {
@@ -4448,6 +4448,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Emit the current input
@@ -4457,7 +4458,7 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SCRIPT_DATA_DOUBLE_ESCAPED_DASH:
                     scriptdatadoubleescapeddashloop: for (;;) {
                         if (++pos == endPos) {
@@ -4496,6 +4497,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Emit the current input
@@ -4506,7 +4508,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SCRIPT_DATA_DOUBLE_ESCAPED_DASH_DASH:
                     scriptdatadoubleescapeddashdashloop: for (;;) {
                         if (++pos == endPos) {
@@ -4551,6 +4553,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Emit the current input
@@ -4561,7 +4564,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SCRIPT_DATA_DOUBLE_ESCAPED_LESS_THAN_SIGN:
                     scriptdatadoubleescapedlessthanloop: for (;;) {
                         if (++pos == endPos) {
@@ -4593,7 +4596,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // WARNING FALLTHRU CASE TRANSITION: DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case SCRIPT_DATA_DOUBLE_ESCAPE_END:
                     scriptdatadoubleescapeendloop: for (;;) {
                         if (++pos == endPos) {
@@ -4620,6 +4623,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -4646,7 +4650,6 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // XXX reorder point
                 case MARKUP_DECLARATION_OCTYPE:
                     markupdeclarationdoctypeloop: for (;;) {
                         if (++pos == endPos) {
@@ -4675,7 +4678,7 @@ public class Tokenizer implements Locator {
                             // continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case DOCTYPE:
                     doctypeloop: for (;;) {
                         if (reconsume) {
@@ -4697,7 +4700,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -4724,7 +4727,7 @@ public class Tokenizer implements Locator {
                             // continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case BEFORE_DOCTYPE_NAME:
                     beforedoctypenameloop: for (;;) {
                         if (reconsume) {
@@ -4744,7 +4747,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -4775,7 +4778,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 if (c >= 'A' && c <= 'Z') {
                                     /*
@@ -4803,7 +4806,7 @@ public class Tokenizer implements Locator {
                             // continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case DOCTYPE_NAME:
                     doctypenameloop: for (;;) {
                         if (++pos == endPos) {
@@ -4821,7 +4824,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -4848,7 +4851,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * U+0041 LATIN CAPITAL LETTER A through to
@@ -4872,7 +4875,7 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case AFTER_DOCTYPE_NAME:
                     afterdoctypenameloop: for (;;) {
                         if (++pos == endPos) {
@@ -4888,7 +4891,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -4938,7 +4941,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case DOCTYPE_UBLIC:
                     doctypeublicloop: for (;;) {
                         if (++pos == endPos) {
@@ -4972,7 +4975,7 @@ public class Tokenizer implements Locator {
                             // continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case AFTER_DOCTYPE_PUBLIC_KEYWORD:
                     afterdoctypepublickeywordloop: for (;;) {
                         if (reconsume) {
@@ -4993,7 +4996,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -5069,7 +5072,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case BEFORE_DOCTYPE_PUBLIC_IDENTIFIER:
                     beforedoctypepublicidentifierloop: for (;;) {
                         if (++pos == endPos) {
@@ -5085,7 +5088,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -5154,7 +5157,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case DOCTYPE_PUBLIC_IDENTIFIER_DOUBLE_QUOTED:
                     doctypepublicidentifierdoublequotedloop: for (;;) {
                         if (++pos == endPos) {
@@ -5202,7 +5205,7 @@ public class Tokenizer implements Locator {
                                 continue;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Append the current input
@@ -5217,7 +5220,7 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case AFTER_DOCTYPE_PUBLIC_IDENTIFIER:
                     afterdoctypepublicidentifierloop: for (;;) {
                         if (++pos == endPos) {
@@ -5234,7 +5237,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -5304,7 +5307,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS:
                     betweendoctypepublicandsystemidentifiersloop: for (;;) {
                         if (++pos == endPos) {
@@ -5320,7 +5323,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -5383,7 +5386,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case DOCTYPE_SYSTEM_IDENTIFIER_DOUBLE_QUOTED:
                     doctypesystemidentifierdoublequotedloop: for (;;) {
                         if (++pos == endPos) {
@@ -5430,7 +5433,7 @@ public class Tokenizer implements Locator {
                                 continue;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Append the current input
@@ -5445,7 +5448,6 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
                 case AFTER_DOCTYPE_SYSTEM_IDENTIFIER:
                     afterdoctypesystemidentifierloop: for (;;) {
                         if (++pos == endPos) {
@@ -5461,7 +5463,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -5494,7 +5496,7 @@ public class Tokenizer implements Locator {
                             // continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case BOGUS_DOCTYPE:
                     for (;;) {
                         if (reconsume) {
@@ -5525,7 +5527,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Stay in the bogus DOCTYPE
@@ -5534,7 +5536,6 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // XXX reorder point
                 case DOCTYPE_YSTEM:
                     doctypeystemloop: for (;;) {
                         if (++pos == endPos) {
@@ -5568,7 +5569,7 @@ public class Tokenizer implements Locator {
                             // continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case AFTER_DOCTYPE_SYSTEM_KEYWORD:
                     afterdoctypesystemkeywordloop: for (;;) {
                         if (reconsume) {
@@ -5589,7 +5590,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -5665,7 +5666,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case BEFORE_DOCTYPE_SYSTEM_IDENTIFIER:
                     beforedoctypesystemidentifierloop: for (;;) {
                         if (++pos == endPos) {
@@ -5681,7 +5682,7 @@ public class Tokenizer implements Locator {
                                 break stateloop;
                             case '\n':
                                 silentLineFeed();
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case ' ':
                             case '\t':
                             case '\u000C':
@@ -5750,7 +5751,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                         }
                     }
-                    // FALLTHRU DON'T REORDER
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case DOCTYPE_SYSTEM_IDENTIFIER_SINGLE_QUOTED:
                     for (;;) {
                         if (++pos == endPos) {
@@ -5794,7 +5795,7 @@ public class Tokenizer implements Locator {
                                 continue;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Append the current input
@@ -5809,7 +5810,6 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // XXX reorder point
                 case DOCTYPE_PUBLIC_IDENTIFIER_SINGLE_QUOTED:
                     for (;;) {
                         if (++pos == endPos) {
@@ -5853,7 +5853,7 @@ public class Tokenizer implements Locator {
                                 continue;
                             case '\u0000':
                                 c = '\uFFFD';
-                                // fall thru
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             default:
                                 /*
                                  * Anything else Append the current input
@@ -5868,7 +5868,6 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
-                    // XXX reorder point
                 case PROCESSING_INSTRUCTION:
                     processinginstructionloop: for (;;) {
                         if (++pos == endPos) {
@@ -5887,6 +5886,7 @@ public class Tokenizer implements Locator {
                                 continue;
                         }
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case PROCESSING_INSTRUCTION_QUESTION_MARK:
                     if (++pos == endPos) {
                         break stateloop;

@@ -70,10 +70,10 @@ public:
     //      DOMString.
     nsStringBuffer* buf = nsStringBuffer::FromString(mData);
     if (buf) {
-      // We have to use SetEphemeralStringBuffer, because once we release our
-      // mutex mData can get mutated from some other thread while the DOMString
-      // is still alive.
-      aString.SetEphemeralStringBuffer(buf, aLength);
+      // We have to use SetStringBuffer, because once we release our mutex mData
+      // can get mutated from some other thread while the DOMString is still
+      // alive.
+      aString.SetStringBuffer(buf, aLength);
       return true;
     }
 

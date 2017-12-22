@@ -281,8 +281,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const { workerHandler } = _devtoolsUtils.workerUtils;
 
-function prettyPrint({ url, indent, source }) {
-  const prettified = (0, _prettyFast2.default)(source, {
+function prettyPrint({ url, indent, sourceText }) {
+  const prettified = (0, _prettyFast2.default)(sourceText, {
     url: url,
     indent: " ".repeat(indent)
   });
