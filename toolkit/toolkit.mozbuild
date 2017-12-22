@@ -83,11 +83,10 @@ if CONFIG['COMPILE_ENVIRONMENT']:
         '/media/libyuv',
     ]
 
-if CONFIG['MOZ_PERMISSIONS']:
-    DIRS += [
-        '/extensions/cookie',
-        '/extensions/permissions',
-    ]
+DIRS += [
+    '/extensions/cookie',
+    '/extensions/permissions',
+]
 
 DIRS += [
     '/rdf',
