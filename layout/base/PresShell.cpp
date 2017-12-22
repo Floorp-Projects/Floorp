@@ -6893,8 +6893,7 @@ nsresult
 PresShell::HandleEvent(nsIFrame* aFrame,
                        WidgetGUIEvent* aEvent,
                        bool aDontRetargetEvents,
-                       nsEventStatus* aEventStatus,
-                       nsIContent** aTargetContent)
+                       nsEventStatus* aEventStatus)
 {
 #ifdef MOZ_TASK_TRACER
   Maybe<AutoSourceEvent> taskTracerEvent;
