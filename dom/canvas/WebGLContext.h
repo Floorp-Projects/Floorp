@@ -342,8 +342,8 @@ public:
     virtual void OnMemoryPressure() override;
 
     // nsICanvasRenderingContextInternal
-    virtual int32_t GetWidth() const override { return DrawingBufferWidth(); }
-    virtual int32_t GetHeight() const override { return DrawingBufferHeight(); }
+    virtual int32_t GetWidth() override { return DrawingBufferWidth("get width"); }
+    virtual int32_t GetHeight() override { return DrawingBufferHeight("get height"); }
 
     NS_IMETHOD SetDimensions(int32_t width, int32_t height) override;
     NS_IMETHOD InitializeWithDrawTarget(nsIDocShell*,
@@ -501,10 +501,14 @@ public:
     void Commit();
     void GetCanvas(Nullable<dom::OwningHTMLCanvasElementOrOffscreenCanvas>& retval);
 private:
-    gfx::IntSize DrawingBufferSize() const;
+    gfx::IntSize DrawingBufferSize(const char* funcName);
 public:
-    GLsizei DrawingBufferWidth() const { return DrawingBufferSize().width; }
-    GLsizei DrawingBufferHeight() const { return DrawingBufferSize().height; }
+    GLsizei DrawingBufferWidth(const char* const funcName = "drawingBufferWidth") {
+        return DrawingBufferSize(funcName).width;
+    }
+    GLsizei DrawingBufferHeight(const char* const funcName = "drawingBufferHeight") {
+        return DrawingBufferSize(funcName).height;
+    }
 
     layers::LayersBackend GetCompositorBackendType() const;
 
@@ -1990,14 +1994,14 @@ protected:
     // --
 
     const uint8_t mMsaaSamples;
-    gfx::IntSize mRequestedSize;
+    mutable gfx::IntSize mRequestedSize;
     mutable UniquePtr<gl::MozFramebuffer> mDefaultFB;
     mutable bool mDefaultFB_IsInvalid;
     mutable UniquePtr<gl::MozFramebuffer> mResolvedDefaultFB;
 
     // --
 
-    bool EnsureDefaultFB() const;
+    bool EnsureDefaultFB(const char* funcName);
     bool ValidateAndInitFB(const char* funcName, const WebGLFramebuffer* fb);
     void DoBindFB(const WebGLFramebuffer* fb, GLenum target = LOCAL_GL_FRAMEBUFFER) const;
 

@@ -179,7 +179,7 @@ WebGLContext::ValidateInvalidateFramebuffer(const char* funcName, GLenum target,
         if (fbStatus != LOCAL_GL_FRAMEBUFFER_COMPLETE)
             return false; // Not an error, but don't run forward to driver either.
     } else {
-        if (!EnsureDefaultFB())
+        if (!EnsureDefaultFB(funcName))
             return false;
     }
     DoBindFB(fb, target);
