@@ -125,6 +125,7 @@ is_power_of_two(int v)
 static void
 DestroySurface(EGLSurface oldSurface) {
     if (oldSurface != EGL_NO_SURFACE) {
+        // TODO: This breaks TLS MakeCurrent caching.
         sEGLLibrary.fMakeCurrent(EGL_DISPLAY(),
                                  EGL_NO_SURFACE, EGL_NO_SURFACE,
                                  EGL_NO_CONTEXT);
@@ -227,7 +228,7 @@ GLContextEGLFactory::Create(EGLNativeWindowType aWindow,
 GLContextEGL::GLContextEGL(CreateContextFlags flags, const SurfaceCaps& caps,
                            bool isOffscreen, EGLConfig config, EGLSurface surface,
                            EGLContext context)
-    : GLContext(flags, caps, nullptr, isOffscreen, sEGLLibrary.IsANGLE())
+    : GLContext(flags, caps, nullptr, isOffscreen, false)
     , mConfig(config)
     , mSurface(surface)
     , mContext(context)
