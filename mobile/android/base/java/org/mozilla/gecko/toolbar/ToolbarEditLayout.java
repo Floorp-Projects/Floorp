@@ -54,6 +54,7 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
     }
 
     private final ToolbarEditText mEditText;
+    private final ThemedLinearLayout mThemeBackground;
 
     private final ThemedImageButton mSearchIcon;
     private final ThemedImageButton mVoiceInput;
@@ -71,6 +72,7 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
         LayoutInflater.from(context).inflate(R.layout.toolbar_edit_layout, this);
 
         mEditText = (ToolbarEditText) findViewById(R.id.url_edit_text);
+        mThemeBackground = (ThemedLinearLayout) findViewById(R.id.url_bar_title_bg);
 
         mSearchIcon = (ThemedImageButton) findViewById(R.id.search_icon);
         mVoiceInput = (ThemedImageButton) findViewById(R.id.mic);
@@ -177,6 +179,7 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
     public void setPrivateMode(boolean isPrivate) {
         super.setPrivateMode(isPrivate);
         mEditText.setPrivateMode(isPrivate);
+        mThemeBackground.setPrivateMode(isPrivate);
         mSearchIcon.setPrivateMode(isPrivate);
         mVoiceInput.setPrivateMode(isPrivate);
         mQrCode.setPrivateMode(isPrivate);
