@@ -790,7 +790,8 @@ def build_docker_worker_payload(config, task, task_def):
     if task.get('needs-sccache'):
         features['taskclusterProxy'] = True
         task_def['scopes'].append(
-            'assume:project:taskcluster:level-{level}-sccache-buckets'.format(
+            'assume:project:taskcluster:{trust_domain}:level-{level}-sccache-buckets'.format(
+                trust_domain=config.graph_config['trust-domain'],
                 level=config.params['level'])
         )
         worker['env']['USE_SCCACHE'] = '1'

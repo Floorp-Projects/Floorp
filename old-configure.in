@@ -3781,23 +3781,6 @@ MOZ_ARG_ENABLE_BOOL(install-strip,
     PKG_SKIP_STRIP=1)
 
 dnl ========================================================
-dnl = libstdc++ compatibility hacks
-dnl ========================================================
-
-STDCXX_COMPAT=
-MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
-[  --enable-stdcxx-compat  Enable compatibility with older libstdc++],
-    STDCXX_COMPAT=1)
-
-if test -n "$STDCXX_COMPAT" -a -n "$COMPILE_ENVIRONMENT"; then
-   eval $(CXX="$CXX" HOST_CXX="$HOST_CXX" $PYTHON -m mozbuild.configure.libstdcxx)
-   AC_SUBST(MOZ_LIBSTDCXX_TARGET_VERSION)
-   AC_SUBST(MOZ_LIBSTDCXX_HOST_VERSION)
-   CXXFLAGS="$CXXFLAGS -D_GLIBCXX_USE_CXX11_ABI=0"
-   HOST_CXXFLAGS="$HOST_CXXFLAGS -D_GLIBCXX_USE_CXX11_ABI=0"
-fi
-
-dnl ========================================================
 dnl = frontend JS debug mode
 dnl ========================================================
 
@@ -4643,9 +4626,13 @@ COMPILE_CXXFLAGS=`echo \
     $COMPILE_CXXFLAGS`
 
 HOST_CFLAGS=`echo \
+    $_WARNINGS_HOST_CFLAGS \
+    $_COMPILATION_HOST_CFLAGS \
     $HOST_CFLAGS`
 
 HOST_CXXFLAGS=`echo \
+    $_WARNINGS_HOST_CXXFLAGS \
+    $_COMPILATION_HOST_CXXFLAGS \
     $HOST_CXXFLAGS`
 
 AC_SUBST(_DEPEND_CFLAGS)

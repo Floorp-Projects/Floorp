@@ -1,5 +1,5 @@
 {
-    "configure-args": "--enable-stdcxx-compat --enable-ctypes",
+    "configure-args": "--enable-ctypes",
     "optimize": true,
     "debug": true,
     "env": {

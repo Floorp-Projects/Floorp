@@ -703,7 +703,7 @@ EditorBase::DoTransaction(Selection* aSelection, nsITransaction* aTxn)
 {
   if (mPlaceholderBatch && !mPlaceholderTransaction) {
     mPlaceholderTransaction =
-      new PlaceholderTransaction(*this, mPlaceholderName, Move(mSelState));
+      PlaceholderTransaction::Create(*this, mPlaceholderName, Move(mSelState));
     MOZ_ASSERT(mSelState.isNothing());
 
     // We will recurse, but will not hit this case in the nested call
@@ -1272,7 +1272,7 @@ EditorBase::SetAttribute(Element* aElement,
                          const nsAString& aValue)
 {
   RefPtr<ChangeAttributeTransaction> transaction =
-    CreateTxnForSetAttribute(*aElement, *aAttribute, aValue);
+    ChangeAttributeTransaction::Create(*aElement, *aAttribute, aValue);
   return DoTransaction(transaction);
 }
 
@@ -1316,7 +1316,7 @@ EditorBase::RemoveAttribute(Element* aElement,
                             nsAtom* aAttribute)
 {
   RefPtr<ChangeAttributeTransaction> transaction =
-    CreateTxnForRemoveAttribute(*aElement, *aAttribute);
+    ChangeAttributeTransaction::CreateToRemove(*aElement, *aAttribute);
   return DoTransaction(transaction);
 }
 
@@ -1441,7 +1441,7 @@ EditorBase::CreateNode(nsAtom* aTag,
   nsCOMPtr<Element> ret;
 
   RefPtr<CreateElementTransaction> transaction =
-    CreateTxnForCreateElement(*aTag, pointToInsert);
+    CreateElementTransaction::Create(*this, *aTag, pointToInsert);
   nsresult rv = DoTransaction(transaction);
   if (NS_SUCCEEDED(rv)) {
     ret = transaction->GetNewNode();
@@ -1505,7 +1505,7 @@ EditorBase::InsertNode(nsIContent& aContentToInsert,
   }
 
   RefPtr<InsertNodeTransaction> transaction =
-    CreateTxnForInsertNode(aContentToInsert, aPointToInsert);
+    InsertNodeTransaction::Create(*this, aContentToInsert, aPointToInsert);
   nsresult rv = DoTransaction(transaction);
 
   mRangeUpdater.SelAdjInsertNode(aPointToInsert.GetContainer(),
@@ -1571,12 +1571,14 @@ EditorBase::SplitNode(const EditorRawDOMPoint& aStartOfRightNode,
   }
 
   RefPtr<SplitNodeTransaction> transaction =
-    CreateTxnForSplitNode(aStartOfRightNode);
+    SplitNodeTransaction::Create(*this, aStartOfRightNode);
   aError = DoTransaction(transaction);
 
   nsCOMPtr<nsIContent> newNode = transaction->GetNewNode();
   NS_WARNING_ASSERTION(newNode, "Failed to create a new left node");
 
+  // XXX Some other transactions manage range updater by themselves.
+  //     Why doesn't SplitNodeTransaction do it?
   mRangeUpdater.SelAdjSplitNode(*aStartOfRightNode.GetContainerAsContent(),
                                 newNode);
 
@@ -1632,11 +1634,13 @@ EditorBase::JoinNodes(nsINode& aLeftNode,
 
   nsresult rv = NS_OK;
   RefPtr<JoinNodeTransaction> transaction =
-    CreateTxnForJoinNode(aLeftNode, aRightNode);
+    JoinNodeTransaction::MaybeCreate(*this, aLeftNode, aRightNode);
   if (transaction)  {
     rv = DoTransaction(transaction);
   }
 
+  // XXX Some other transactions manage range updater by themselves.
+  //     Why doesn't JoinNodeTransaction do it?
   mRangeUpdater.SelAdjJoinNodes(aLeftNode, aRightNode, *parent, offset,
                                 (int32_t)oldLeftNodeLen);
 
@@ -1662,6 +1666,10 @@ EditorBase::DeleteNode(nsIDOMNode* aNode)
 nsresult
 EditorBase::DeleteNode(nsINode* aNode)
 {
+  if (NS_WARN_IF(!aNode)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   AutoRules beginRulesSniffing(this, EditAction::createNode,
                                nsIEditor::ePrevious);
 
@@ -1674,7 +1682,7 @@ EditorBase::DeleteNode(nsINode* aNode)
   }
 
   RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-    CreateTxnForDeleteNode(aNode);
+    DeleteNodeTransaction::MaybeCreate(*this, *aNode);
   nsresult rv = deleteNodeTransaction ? DoTransaction(deleteNodeTransaction) :
                                         NS_ERROR_FAILURE;
 
@@ -2784,18 +2792,20 @@ EditorBase::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   // part of the current IME operation. Example: adjusting whitespace around an
   // IME insertion.
   if (ShouldHandleIMEComposition() && !aSuppressIME) {
-    // XXX Here is still ugly.  This should be fixed by a follow up bug.
-    mComposition->WillCreateCompositionTransaction(&aTextNode, aOffset);
-    transaction = CreateTxnForComposition(aStringToInsert);
-    mComposition->DidCreateCompositionTransaction(aStringToInsert);
+    transaction =
+      CompositionTransaction::Create(*this, aStringToInsert,
+                                     aTextNode, aOffset);
     isIMETransaction = true;
     // All characters of the composition string will be replaced with
     // aStringToInsert.  So, we need to emulate to remove the composition
     // string.
+    // FYI: The text node information in mComposition has been updated by
+    //      CompositionTransaction::Create().
     insertedTextNode = mComposition->GetContainerTextNode();
     insertedOffset = mComposition->XPOffsetInTextNode();
   } else {
-    transaction = CreateTxnForInsertText(aStringToInsert, aTextNode, aOffset);
+    transaction =
+      InsertTextTransaction::Create(*this, aStringToInsert, aTextNode, aOffset);
   }
 
   // Let listeners know what's up
@@ -2998,25 +3008,16 @@ EditorBase::SetTextImpl(Selection& aSelection, const nsAString& aString,
   return rv;
 }
 
-already_AddRefed<InsertTextTransaction>
-EditorBase::CreateTxnForInsertText(const nsAString& aStringToInsert,
-                                   Text& aTextNode,
-                                   int32_t aOffset)
-{
-  RefPtr<InsertTextTransaction> transaction =
-    new InsertTextTransaction(aTextNode, aOffset, aStringToInsert, *this,
-                              &mRangeUpdater);
-  return transaction.forget();
-}
-
 nsresult
 EditorBase::DeleteText(nsGenericDOMDataNode& aCharData,
                        uint32_t aOffset,
                        uint32_t aLength)
 {
   RefPtr<DeleteTextTransaction> transaction =
-    CreateTxnForDeleteText(aCharData, aOffset, aLength);
-  NS_ENSURE_STATE(transaction);
+    DeleteTextTransaction::MaybeCreate(*this, aCharData, aOffset, aLength);
+  if (NS_WARN_IF(!transaction)) {
+    return NS_ERROR_FAILURE;
+  }
 
   AutoRules beginRulesSniffing(this, EditAction::deleteText,
                                nsIEditor::ePrevious);
@@ -3044,45 +3045,6 @@ EditorBase::DeleteText(nsGenericDOMDataNode& aCharData,
   }
 
   return rv;
-}
-
-already_AddRefed<DeleteTextTransaction>
-EditorBase::CreateTxnForDeleteText(nsGenericDOMDataNode& aCharData,
-                                   uint32_t aOffset,
-                                   uint32_t aLength)
-{
-  RefPtr<DeleteTextTransaction> deleteTextTransaction =
-    new DeleteTextTransaction(*this, aCharData, aOffset, aLength,
-                              &mRangeUpdater);
-  // If it's not editable, the transaction shouldn't be recorded since it
-  // should never be undone/redone.
-  if (NS_WARN_IF(!deleteTextTransaction->CanDoIt())) {
-    return nullptr;
-  }
-  return deleteTextTransaction.forget();
-}
-
-already_AddRefed<SplitNodeTransaction>
-EditorBase::CreateTxnForSplitNode(const EditorRawDOMPoint& aStartOfRightNode)
-{
-  MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
-  RefPtr<SplitNodeTransaction> transaction =
-    new SplitNodeTransaction(*this, aStartOfRightNode);
-  return transaction.forget();
-}
-
-already_AddRefed<JoinNodeTransaction>
-EditorBase::CreateTxnForJoinNode(nsINode& aLeftNode,
-                                 nsINode& aRightNode)
-{
-  RefPtr<JoinNodeTransaction> joinNodeTransaction =
-    new JoinNodeTransaction(*this, aLeftNode, aRightNode);
-  // If it's not editable, the transaction shouldn't be recorded since it
-  // should never be undone/redone.
-  if (NS_WARN_IF(!joinNodeTransaction->CanDoIt())) {
-    return nullptr;
-  }
-  return joinNodeTransaction.forget();
 }
 
 struct SavedRange final
@@ -4621,96 +4583,6 @@ EditorBase::DoAfterRedoTransaction()
   MOZ_ALWAYS_SUCCEEDS(IncrementModificationCount(1));
 }
 
-already_AddRefed<ChangeAttributeTransaction>
-EditorBase::CreateTxnForSetAttribute(Element& aElement,
-                                     nsAtom& aAttribute,
-                                     const nsAString& aValue)
-{
-  RefPtr<ChangeAttributeTransaction> transaction =
-    new ChangeAttributeTransaction(aElement, aAttribute, &aValue);
-
-  return transaction.forget();
-}
-
-already_AddRefed<ChangeAttributeTransaction>
-EditorBase::CreateTxnForRemoveAttribute(Element& aElement,
-                                        nsAtom& aAttribute)
-{
-  RefPtr<ChangeAttributeTransaction> transaction =
-    new ChangeAttributeTransaction(aElement, aAttribute, nullptr);
-
-  return transaction.forget();
-}
-
-already_AddRefed<CreateElementTransaction>
-EditorBase::CreateTxnForCreateElement(nsAtom& aTag,
-                                      const EditorRawDOMPoint& aPointToInsert)
-{
-  RefPtr<CreateElementTransaction> transaction =
-    new CreateElementTransaction(*this, aTag, aPointToInsert);
-
-  return transaction.forget();
-}
-
-
-already_AddRefed<InsertNodeTransaction>
-EditorBase::CreateTxnForInsertNode(nsIContent& aNode,
-                                   const EditorRawDOMPoint& aPointToInsert)
-{
-  RefPtr<InsertNodeTransaction> transaction =
-    new InsertNodeTransaction(*this, aNode, aPointToInsert);
-  return transaction.forget();
-}
-
-already_AddRefed<DeleteNodeTransaction>
-EditorBase::CreateTxnForDeleteNode(nsINode* aNode)
-{
-  if (NS_WARN_IF(!aNode)) {
-    return nullptr;
-  }
-
-  RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-    new DeleteNodeTransaction(*this, *aNode, &mRangeUpdater);
-  // This should be OK because if currently it cannot delete the node,
-  // it should never be able to undo/redo.
-  if (!deleteNodeTransaction->CanDoIt()) {
-    return nullptr;
-  }
-  return deleteNodeTransaction.forget();
-}
-
-already_AddRefed<CompositionTransaction>
-EditorBase::CreateTxnForComposition(const nsAString& aStringToInsert)
-{
-  MOZ_ASSERT(mComposition);
-  MOZ_ASSERT(mComposition->GetContainerTextNode());
-  // During handling IME composition, mComposition must have been initialized.
-  // TODO: We can simplify CompositionTransaction::Init() with TextComposition
-  //       class.
-  RefPtr<CompositionTransaction> transaction =
-    new CompositionTransaction(*this, aStringToInsert, *mComposition,
-                               &mRangeUpdater);
-  return transaction.forget();
-}
-
-already_AddRefed<AddStyleSheetTransaction>
-EditorBase::CreateTxnForAddStyleSheet(StyleSheet* aSheet)
-{
-  RefPtr<AddStyleSheetTransaction> transaction =
-    new AddStyleSheetTransaction(*this, aSheet);
-
-  return transaction.forget();
-}
-
-already_AddRefed<RemoveStyleSheetTransaction>
-EditorBase::CreateTxnForRemoveStyleSheet(StyleSheet* aSheet)
-{
-  RefPtr<RemoveStyleSheetTransaction> transaction =
-    new RemoveStyleSheetTransaction(*this, aSheet);
-
-  return transaction.forget();
-}
-
 already_AddRefed<EditAggregateTransaction>
 EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
                                         nsINode** aRemovingNode,
@@ -4729,7 +4601,7 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
 
   // allocate the out-param transaction
   RefPtr<EditAggregateTransaction> aggregateTransaction =
-    new EditAggregateTransaction();
+    EditAggregateTransaction::Create();
 
   for (uint32_t rangeIdx = 0; rangeIdx < selection->RangeCount(); ++rangeIdx) {
     RefPtr<nsRange> range = selection->GetRangeAt(rangeIdx);
@@ -4741,7 +4613,7 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
     // is eNone, do nothing.
     if (!range->Collapsed()) {
       RefPtr<DeleteRangeTransaction> deleteRangeTransaction =
-        new DeleteRangeTransaction(*this, *range, &mRangeUpdater);
+        DeleteRangeTransaction::Create(*this, *range);
       // XXX Oh, not checking if deleteRangeTransaction can modify the range...
       aggregateTransaction->AppendChild(deleteRangeTransaction);
     } else if (aAction != eNone) {
@@ -4763,40 +4635,6 @@ EditorBase::CreateTxnForDeleteSelection(EDirection aAction,
   }
 
   return aggregateTransaction.forget();
-}
-
-already_AddRefed<DeleteTextTransaction>
-EditorBase::CreateTxnForDeleteCharacter(nsGenericDOMDataNode& aData,
-                                        uint32_t aOffset,
-                                        EDirection aDirection)
-{
-  NS_ASSERTION(aDirection == eNext || aDirection == ePrevious,
-               "Invalid direction");
-  nsAutoString data;
-  aData.GetData(data);
-  NS_ASSERTION(data.Length(), "Trying to delete from a zero-length node");
-  NS_ENSURE_TRUE(data.Length(), nullptr);
-
-  uint32_t segOffset = aOffset, segLength = 1;
-  if (aDirection == eNext) {
-    if (segOffset + 1 < data.Length() &&
-        NS_IS_HIGH_SURROGATE(data[segOffset]) &&
-        NS_IS_LOW_SURROGATE(data[segOffset+1])) {
-      // Delete both halves of the surrogate pair
-      ++segLength;
-    }
-  } else if (aOffset > 0) {
-    --segOffset;
-    if (segOffset > 0 &&
-      NS_IS_LOW_SURROGATE(data[segOffset]) &&
-      NS_IS_HIGH_SURROGATE(data[segOffset-1])) {
-      ++segLength;
-      --segOffset;
-    }
-  } else {
-    return nullptr;
-  }
-  return CreateTxnForDeleteText(aData, segOffset, segLength);
 }
 
 //XXX: currently, this doesn't handle edge conditions because GetNext/GetPrior
@@ -4851,19 +4689,20 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
         return nullptr;
       }
       RefPtr<DeleteTextTransaction> deleteTextTransaction =
-        CreateTxnForDeleteCharacter(*priorNodeAsCharData, length, ePrevious);
+        DeleteTextTransaction::MaybeCreateForPreviousCharacter(
+                                 *this, *priorNodeAsCharData, length);
       if (NS_WARN_IF(!deleteTextTransaction)) {
         return nullptr;
       }
-      *aOffset = deleteTextTransaction->GetOffset();
-      *aLength = deleteTextTransaction->GetNumCharsToDelete();
+      *aOffset = deleteTextTransaction->Offset();
+      *aLength = deleteTextTransaction->LengthToDelete();
       priorNode.forget(aRemovingNode);
       return deleteTextTransaction.forget();
     }
 
     // priorNode is not chardata, so tell its parent to delete it
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-      CreateTxnForDeleteNode(priorNode);
+      DeleteNodeTransaction::MaybeCreate(*this, *priorNode);
     if (NS_WARN_IF(!deleteNodeTransaction)) {
       return nullptr;
     }
@@ -4890,19 +4729,20 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
         return nullptr;
       }
       RefPtr<DeleteTextTransaction> deleteTextTransaction =
-        CreateTxnForDeleteCharacter(*nextNodeAsCharData, 0, eNext);
+        DeleteTextTransaction::MaybeCreateForNextCharacter(
+                                 *this, *nextNodeAsCharData, 0);
       if (NS_WARN_IF(!deleteTextTransaction)) {
         return nullptr;
       }
-      *aOffset = deleteTextTransaction->GetOffset();
-      *aLength = deleteTextTransaction->GetNumCharsToDelete();
+      *aOffset = deleteTextTransaction->Offset();
+      *aLength = deleteTextTransaction->LengthToDelete();
       nextNode.forget(aRemovingNode);
       return deleteTextTransaction.forget();
     }
 
     // nextNode is not chardata, so tell its parent to delete it
     RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-      CreateTxnForDeleteNode(nextNode);
+      DeleteNodeTransaction::MaybeCreate(*this, *nextNode);
     if (NS_WARN_IF(!deleteNodeTransaction)) {
       return nullptr;
     }
@@ -4911,16 +4751,23 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
   }
 
   if (node->IsNodeOfType(nsINode::eDATA_NODE)) {
+    if (NS_WARN_IF(aAction != ePrevious && aAction != eNext)) {
+      return nullptr;
+    }
     RefPtr<nsGenericDOMDataNode> nodeAsCharData =
       static_cast<nsGenericDOMDataNode*>(node.get());
-    // we have chardata, so delete a char at the proper offset
+    // We have chardata, so delete a char at the proper offset
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
-      CreateTxnForDeleteCharacter(*nodeAsCharData, offset, aAction);
+      aAction == ePrevious ?
+        DeleteTextTransaction::MaybeCreateForPreviousCharacter(
+                                 *this, *nodeAsCharData, offset) :
+        DeleteTextTransaction::MaybeCreateForNextCharacter(
+                                 *this, *nodeAsCharData, offset);
     if (NS_WARN_IF(!deleteTextTransaction)) {
       return nullptr;
     }
-    *aOffset = deleteTextTransaction->GetOffset();
-    *aLength = deleteTextTransaction->GetNumCharsToDelete();
+    *aOffset = deleteTextTransaction->Offset();
+    *aLength = deleteTextTransaction->LengthToDelete();
     node.forget(aRemovingNode);
     return deleteTextTransaction.forget();
   }
@@ -4951,6 +4798,9 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
   }
 
   if (selectedNode->IsNodeOfType(nsINode::eDATA_NODE)) {
+    if (NS_WARN_IF(aAction != ePrevious && aAction != eNext)) {
+      return nullptr;
+    }
     RefPtr<nsGenericDOMDataNode> selectedNodeAsCharData =
       static_cast<nsGenericDOMDataNode*>(selectedNode.get());
     // we are deleting from a chardata node, so do a character deletion
@@ -4959,19 +4809,22 @@ EditorBase::CreateTxnForDeleteRange(nsRange* aRangeToDelete,
       position = selectedNode->Length();
     }
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
-      CreateTxnForDeleteCharacter(*selectedNodeAsCharData, position,
-                                  aAction);
+      aAction == ePrevious ?
+        DeleteTextTransaction::MaybeCreateForPreviousCharacter(
+                                 *this, *selectedNodeAsCharData, position) :
+        DeleteTextTransaction::MaybeCreateForNextCharacter(
+                                 *this, *selectedNodeAsCharData, position);
     if (NS_WARN_IF(!deleteTextTransaction)) {
       return nullptr;
     }
-    *aOffset = deleteTextTransaction->GetOffset();
-    *aLength = deleteTextTransaction->GetNumCharsToDelete();
+    *aOffset = deleteTextTransaction->Offset();
+    *aLength = deleteTextTransaction->LengthToDelete();
     selectedNode.forget(aRemovingNode);
     return deleteTextTransaction.forget();
   }
 
   RefPtr<DeleteNodeTransaction> deleteNodeTransaction =
-    CreateTxnForDeleteNode(selectedNode);
+    DeleteNodeTransaction::MaybeCreate(*this, *selectedNode);
   if (NS_WARN_IF(!deleteNodeTransaction)) {
     return nullptr;
   }

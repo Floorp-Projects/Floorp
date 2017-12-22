@@ -114,8 +114,13 @@
 }
 
 #canvas-notification-icon,
-.popup-notification-icon[popupid="canvas-permissions-prompt"] {
+.popup-notification-icon[popupid="canvas-permissions-prompt"],
+.canvas-icon {
   list-style-image: url(chrome://browser/skin/notification-icons/canvas.svg);
+}
+
+.canvas-icon.blocked-permission-icon {
+  list-style-image: url(chrome://browser/skin/notification-icons/canvas-blocked.svg);
 }
 
 #webRTC-preview:not([hidden]) {

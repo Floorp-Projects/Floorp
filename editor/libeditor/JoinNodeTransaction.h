@@ -26,14 +26,21 @@ class EditorBase;
  */
 class JoinNodeTransaction final : public EditTransactionBase
 {
+protected:
+  JoinNodeTransaction(EditorBase& aEditorBase,
+                      nsINode& aLeftNode, nsINode& aRightNode);
+
 public:
   /**
+   * Creates a join node transaction.  This returns nullptr if cannot join the
+   * nodes.
+   *
    * @param aEditorBase     The provider of core editing operations.
    * @param aLeftNode       The first of two nodes to join.
    * @param aRightNode      The second of two nodes to join.
    */
-  JoinNodeTransaction(EditorBase& aEditorBase,
-                      nsINode& aLeftNode, nsINode& aRightNode);
+  static already_AddRefed<JoinNodeTransaction>
+  MaybeCreate(EditorBase& aEditorBase, nsINode& aLeftNode, nsINode& aRightNode);
 
   /**
    * CanDoIt() returns true if there are enough members and can join or

@@ -22,7 +22,6 @@ class nsITransaction;
 namespace mozilla {
 
 class EditorBase;
-class RangeUpdater;
 
 namespace dom {
 class Text;
@@ -33,19 +32,29 @@ class Text;
  */
 class InsertTextTransaction final : public EditTransactionBase
 {
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INSERTTEXTTXN_IID)
+protected:
+  InsertTextTransaction(EditorBase& aEditorBase,
+                        const nsAString& aStringToInsert,
+                        dom::Text& aTextNode,
+                        uint32_t aOffset);
 
+public:
   /**
-   * @param aElement        The text content node.
-   * @param aOffset         The location in aElement to do the insertion.
-   * @param aString         The new text to insert.
-   * @param aPresShell      Used to get and set the selection.
-   * @param aRangeUpdater   The range updater
+   * Creates new InsertTextTransaction instance.  This never returns nullptr.
+   *
+   * @param aEditorBase     The editor which manages the transaction.
+   * @param aTextNode       The text content node to be inserted
+   *                        aStringToInsert.
+   * @param aOffset         The offset in aTextNode to do the insertion.
+   * @param aStringToInsert The new string to insert.
    */
-  InsertTextTransaction(dom::Text& aTextNode, uint32_t aOffset,
-                        const nsAString& aString, EditorBase& aEditorBase,
-                        RangeUpdater* aRangeUpdater);
+  static already_AddRefed<InsertTextTransaction>
+  Create(EditorBase& aEditorBase,
+         const nsAString& aStringToInsert,
+         dom::Text& aTextNode,
+         uint32_t aOffset);
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INSERTTEXTTXN_IID)
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(InsertTextTransaction,
@@ -77,8 +86,6 @@ private:
 
   // The editor, which we'll need to get the selection.
   RefPtr<EditorBase> mEditorBase;
-
-  RangeUpdater* mRangeUpdater;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(InsertTextTransaction, NS_INSERTTEXTTXN_IID)

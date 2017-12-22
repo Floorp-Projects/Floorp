@@ -22,6 +22,44 @@ namespace mozilla {
 
 using namespace dom;
 
+// static
+already_AddRefed<ChangeStyleTransaction>
+ChangeStyleTransaction::Create(Element& aElement,
+                               nsAtom& aProperty,
+                               const nsAString& aValue)
+{
+  RefPtr<ChangeStyleTransaction> transaction =
+    new ChangeStyleTransaction(aElement, aProperty, aValue, false);
+  return transaction.forget();
+}
+
+// static
+already_AddRefed<ChangeStyleTransaction>
+ChangeStyleTransaction::CreateToRemove(Element& aElement,
+                                       nsAtom& aProperty,
+                                       const nsAString& aValue)
+{
+  RefPtr<ChangeStyleTransaction> transaction =
+    new ChangeStyleTransaction(aElement, aProperty, aValue, true);
+  return transaction.forget();
+}
+
+ChangeStyleTransaction::ChangeStyleTransaction(Element& aElement,
+                                               nsAtom& aProperty,
+                                               const nsAString& aValue,
+                                               bool aRemove)
+  : EditTransactionBase()
+  , mElement(&aElement)
+  , mProperty(&aProperty)
+  , mValue(aValue)
+  , mRemoveProperty(aRemove)
+  , mUndoValue()
+  , mRedoValue()
+  , mUndoAttributeWasSet(false)
+  , mRedoAttributeWasSet(false)
+{
+}
+
 #define kNullCh (char16_t('\0'))
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ChangeStyleTransaction, EditTransactionBase,
@@ -117,22 +155,6 @@ ChangeStyleTransaction::RemoveValueFromListOfValues(
     start = ++end;
   }
   aValues.Assign(outString);
-}
-
-ChangeStyleTransaction::ChangeStyleTransaction(Element& aElement,
-                                               nsAtom& aProperty,
-                                               const nsAString& aValue,
-                                               EChangeType aChangeType)
-  : EditTransactionBase()
-  , mElement(&aElement)
-  , mProperty(&aProperty)
-  , mValue(aValue)
-  , mRemoveProperty(aChangeType == eRemove)
-  , mUndoValue()
-  , mRedoValue()
-  , mUndoAttributeWasSet(false)
-  , mRedoAttributeWasSet(false)
-{
 }
 
 NS_IMETHODIMP
