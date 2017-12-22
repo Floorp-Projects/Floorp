@@ -2802,11 +2802,7 @@ HTMLEditor::RemoveStyleSheet(const nsAString& aURL)
   NS_ENSURE_TRUE(sheet, NS_ERROR_UNEXPECTED);
 
   RefPtr<RemoveStyleSheetTransaction> transaction =
-    CreateTxnForRemoveStyleSheet(sheet);
-  if (!transaction) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
+    RemoveStyleSheetTransaction::Create(*this, *sheet);
   nsresult rv = DoTransaction(transaction);
   if (NS_SUCCEEDED(rv)) {
     mLastStyleSheetURL.Truncate();        // forget it
@@ -3382,11 +3378,7 @@ HTMLEditor::StyleSheetLoaded(StyleSheet* aSheet,
     RemoveStyleSheet(mLastStyleSheetURL);
 
   RefPtr<AddStyleSheetTransaction> transaction =
-    CreateTxnForAddStyleSheet(aSheet);
-  if (!transaction) {
-    return NS_OK;
-  }
-
+    AddStyleSheetTransaction::Create(*this, *aSheet);
   nsresult rv = DoTransaction(transaction);
   if (NS_SUCCEEDED(rv)) {
     // Get the URI, then url spec from the sheet
@@ -3935,55 +3927,55 @@ HTMLEditor::GetLastEditableLeaf(nsINode& aNode)
   return child;
 }
 
-/**
- * IsVisTextNode() figures out if textnode aTextNode has any visible content.
- */
-nsresult
-HTMLEditor::IsVisTextNode(nsIContent* aNode,
-                          bool* outIsEmptyNode,
-                          bool aSafeToAskFrames)
+bool
+HTMLEditor::IsInVisibleTextFrames(Text& aText)
 {
-  MOZ_ASSERT(aNode);
-  MOZ_ASSERT(aNode->NodeType() == nsIDOMNode::TEXT_NODE);
-  MOZ_ASSERT(outIsEmptyNode);
-
-  *outIsEmptyNode = true;
-
-  uint32_t length = aNode->TextLength();
-  if (aSafeToAskFrames) {
-    nsISelectionController* selectionController = GetSelectionController();
-    if (NS_WARN_IF(!selectionController)) {
-      return NS_ERROR_FAILURE;
-    }
-    bool isVisible = false;
-    // ask the selection controller for information about whether any
-    // of the data in the node is really rendered.  This is really
-    // something that frames know about, but we aren't supposed to talk to frames.
-    // So we put a call in the selection controller interface, since it's already
-    // in bed with frames anyway.  (this is a fix for bug 22227, and a
-    // partial fix for bug 46209)
-    nsresult rv = selectionController->CheckVisibilityContent(aNode, 0, length,
-                                                              &isVisible);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (isVisible) {
-      *outIsEmptyNode = false;
-    }
-  } else if (length) {
-    if (aNode->TextIsOnlyWhitespace()) {
-      WSRunObject wsRunObj(this, aNode, 0);
-      nsCOMPtr<nsINode> visNode;
-      int32_t outVisOffset=0;
-      WSType visType;
-      wsRunObj.NextVisibleNode(aNode, 0, address_of(visNode),
-                               &outVisOffset, &visType);
-      if (visType == WSType::normalWS || visType == WSType::text) {
-        *outIsEmptyNode = (aNode != visNode);
-      }
-    } else {
-      *outIsEmptyNode = false;
-    }
+  nsISelectionController* selectionController = GetSelectionController();
+  if (NS_WARN_IF(!selectionController)) {
+    return false;
   }
-  return NS_OK;
+
+  if (!aText.TextDataLength()) {
+    return false;
+  }
+
+  // Ask the selection controller for information about whether any of the
+  // data in the node is really rendered.  This is really something that
+  // frames know about, but we aren't supposed to talk to frames.  So we put
+  // a call in the selection controller interface, since it's already in bed
+  // with frames anyway.  (This is a fix for bug 22227, and a partial fix for
+  // bug 46209.)
+  bool isVisible = false;
+  nsresult rv =
+    selectionController->CheckVisibilityContent(&aText,
+                                                0, aText.TextDataLength(),
+                                                &isVisible);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+  return isVisible;
+}
+
+bool
+HTMLEditor::IsVisibleTextNode(Text& aText)
+{
+  if (!aText.TextDataLength()) {
+    return false;
+  }
+
+  if (!aText.TextIsOnlyWhitespace()) {
+    return true;
+  }
+
+  WSRunObject wsRunObj(this, &aText, 0);
+  nsCOMPtr<nsINode> nextVisibleNode;
+  int32_t unused = 0;
+  WSType visibleNodeType;
+  wsRunObj.NextVisibleNode(&aText, 0, address_of(nextVisibleNode),
+                           &unused, &visibleNodeType);
+  return (visibleNodeType == WSType::normalWS ||
+          visibleNodeType == WSType::text) &&
+         &aText == nextVisibleNode;
 }
 
 /**
@@ -4030,8 +4022,10 @@ HTMLEditor::IsEmptyNodeImpl(nsINode* aNode,
 {
   NS_ENSURE_TRUE(aNode && outIsEmptyNode && aSeenBR, NS_ERROR_NULL_POINTER);
 
-  if (aNode->NodeType() == nsIDOMNode::TEXT_NODE) {
-    return IsVisTextNode(static_cast<nsIContent*>(aNode), outIsEmptyNode, aSafeToAskFrames);
+  if (Text* text = aNode->GetAsText()) {
+    *outIsEmptyNode = aSafeToAskFrames ? !IsInVisibleTextFrames(*text) :
+                                         !IsVisibleTextNode(*text);
+    return NS_OK;
   }
 
   // if it's not a text node (handled above) and it's not a container,
@@ -4061,11 +4055,11 @@ HTMLEditor::IsEmptyNodeImpl(nsINode* aNode,
        child = child->GetNextSibling()) {
     // Is the child editable and non-empty?  if so, return false
     if (EditorBase::IsEditable(child)) {
-      if (child->NodeType() == nsIDOMNode::TEXT_NODE) {
-        nsresult rv = IsVisTextNode(child, outIsEmptyNode, aSafeToAskFrames);
-        NS_ENSURE_SUCCESS(rv, rv);
-        // break out if we find we aren't emtpy
-        if (!*outIsEmptyNode) {
+      if (Text* text = child->GetAsText()) {
+        // break out if we find we aren't empty
+        *outIsEmptyNode = aSafeToAskFrames ? !IsInVisibleTextFrames(*text) :
+                                             !IsVisibleTextNode(*text);
+        if (!*outIsEmptyNode){
           return NS_OK;
         }
       } else {

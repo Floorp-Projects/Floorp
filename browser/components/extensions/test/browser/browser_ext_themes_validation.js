@@ -33,18 +33,7 @@ async function testThemeWithInvalidProperties(invalidProps) {
   });
 
   let extension = ExtensionTestUtils.loadExtension({manifest});
-
-  SimpleTest.waitForExplicitFinish();
-  let waitForConsole = new Promise(resolve => {
-    SimpleTest.monitorConsole(resolve, [{
-      message: /Reading manifest: Themes defined in the manifest may only contain static resources/,
-    }]);
-  });
-
   await Assert.rejects(extension.startup(), null, "Theme should fail to load if it contains invalid properties");
-
-  SimpleTest.endMonitorConsole();
-  await waitForConsole;
 }
 
 add_task(async function test_that_theme_with_invalid_properties_fails_to_load() {

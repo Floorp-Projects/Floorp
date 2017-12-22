@@ -32,6 +32,16 @@ namespace mozilla {
 
 using namespace dom;
 
+already_AddRefed<CreateElementTransaction>
+CreateElementTransaction::Create(EditorBase& aEditorBase,
+                                 nsAtom& aTag,
+                                 const EditorRawDOMPoint& aPointToInsert)
+{
+  RefPtr<CreateElementTransaction> transaction =
+    new CreateElementTransaction(aEditorBase, aTag, aPointToInsert);
+  return transaction.forget();
+}
+
 CreateElementTransaction::CreateElementTransaction(
                             EditorBase& aEditorBase,
                             nsAtom& aTag,

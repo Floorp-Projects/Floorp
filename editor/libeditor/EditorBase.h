@@ -497,41 +497,11 @@ public:
 
   void SwitchTextDirectionTo(uint32_t aDirection);
 
+  RangeUpdater& RangeUpdaterRef() { return mRangeUpdater; }
+
 protected:
   nsresult DetermineCurrentDirection();
   void FireInputEvent();
-
-  /**
-   * Create a transaction for setting aAttribute to aValue on aElement.  Never
-   * returns null.
-   */
-  already_AddRefed<ChangeAttributeTransaction>
-    CreateTxnForSetAttribute(Element& aElement, nsAtom& aAttribute,
-                             const nsAString& aValue);
-
-  /**
-   * Create a transaction for removing aAttribute on aElement.  Never returns
-   * null.
-   */
-  already_AddRefed<ChangeAttributeTransaction>
-    CreateTxnForRemoveAttribute(Element& aElement, nsAtom& aAttribute);
-
-  /**
-   * Create a transaction for creating a new child node of the container of
-   * aPointToInsert of type aTag.
-   *
-   * @param aTag            The element name to create.
-   * @param aPointToInsert  The insertion point of new element.  If this refers
-   *                        end of the container or after, the transaction
-   *                        will append the element to the container.
-   *                        Otherwise, will insert the element before the
-   *                        child node referred by this.
-   * @return                A CreateElementTransaction which was initialized
-   *                        with the arguments.
-   */
-  already_AddRefed<CreateElementTransaction>
-    CreateTxnForCreateElement(nsAtom& aTag,
-                              const EditorRawDOMPoint& aPointToInsert);
 
   /**
    * Create an element node whose name is aTag at before aPointToInsert.  When
@@ -550,29 +520,6 @@ protected:
    */
   already_AddRefed<Element> CreateNode(nsAtom* aTag,
                                        const EditorRawDOMPoint& aPointToInsert);
-
-  /**
-   * Create a transaction for inserting aContentToInsert before the child
-   * at aPointToInsert.
-   *
-   * @param aContentToInsert    The node to be inserted.
-   * @param aPointToInsert      The insertion point of aContentToInsert.
-   *                            If this refers end of the container, the
-   *                            transaction will append the node to the
-   *                            container.  Otherwise, will insert the node
-   *                            before child node referred by this.
-   * @return                    A InsertNodeTranaction which was initialized
-   *                            with the arguments.
-   */
-  already_AddRefed<InsertNodeTransaction>
-    CreateTxnForInsertNode(nsIContent& aContentToInsert,
-                           const EditorRawDOMPoint& aPointToInsert);
-
-  /**
-   * Create a transaction for removing aNode from its parent.
-   */
-  already_AddRefed<DeleteNodeTransaction>
-    CreateTxnForDeleteNode(nsINode* aNode);
 
   /**
    * Create an aggregate transaction for delete selection.  The result may
@@ -613,60 +560,8 @@ protected:
                             int32_t* aOffset,
                             int32_t* aLength);
 
-  /**
-   * Create a transaction for inserting aStringToInsert into aTextNode.  Never
-   * returns null.
-   */
-  already_AddRefed<mozilla::InsertTextTransaction>
-    CreateTxnForInsertText(const nsAString& aStringToInsert, Text& aTextNode,
-                           int32_t aOffset);
-
-  /**
-   * Never returns null.
-   */
-  already_AddRefed<mozilla::CompositionTransaction>
-    CreateTxnForComposition(const nsAString& aStringToInsert);
-
-  /**
-   * Create a transaction for adding a style sheet.
-   */
-  already_AddRefed<mozilla::AddStyleSheetTransaction>
-    CreateTxnForAddStyleSheet(StyleSheet* aSheet);
-
-  /**
-   * Create a transaction for removing a style sheet.
-   */
-  already_AddRefed<mozilla::RemoveStyleSheetTransaction>
-    CreateTxnForRemoveStyleSheet(StyleSheet* aSheet);
-
   nsresult DeleteText(nsGenericDOMDataNode& aElement,
                       uint32_t aOffset, uint32_t aLength);
-
-  already_AddRefed<DeleteTextTransaction>
-    CreateTxnForDeleteText(nsGenericDOMDataNode& aElement,
-                           uint32_t aOffset, uint32_t aLength);
-
-  already_AddRefed<DeleteTextTransaction>
-    CreateTxnForDeleteCharacter(nsGenericDOMDataNode& aData, uint32_t aOffset,
-                                EDirection aDirection);
-
-  /**
-   * CreateTxnForSplitNode() creates a transaction to create a new node
-   * (left node) identical to an existing node (right node), and split the
-   * contents between the same point in both nodes.
-   *
-   * @param aStartOfRightNode   The point to split.  Its container will be
-   *                            the right node, i.e., become the new node's
-   *                            next sibling.  And the point will be start
-   *                            of the right node.
-   * @return                    The new transaction to split the container of
-   *                            aStartOfRightNode.
-   */
-  already_AddRefed<SplitNodeTransaction>
-    CreateTxnForSplitNode(const EditorRawDOMPoint& aStartOfRightNode);
-
-  already_AddRefed<JoinNodeTransaction>
-    CreateTxnForJoinNode(nsINode& aLeftNode, nsINode& aRightNode);
 
   /**
    * This method first deletes the selection, if it's not collapsed.  Then if

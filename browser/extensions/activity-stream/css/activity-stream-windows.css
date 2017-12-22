@@ -242,9 +242,8 @@ main {
 
 .top-sites-list {
   list-style: none;
-  margin: 0;
+  margin: 0 -16px;
   margin-bottom: -18px;
-  margin-inline-end: -32px;
   padding: 0; }
   @media (max-width: 416px) {
     .top-sites-list :nth-child(2n+1) .context-menu {
@@ -290,17 +289,18 @@ main {
       offset-inline-start: auto; } }
   .top-sites-list li {
     display: inline-block;
-    margin: 0 0 8px;
-    margin-inline-end: 32px; }
+    margin: 0 0 8px; }
   .top-sites-list .top-site-outer {
-    position: relative; }
-    .top-sites-list .top-site-outer > a {
-      color: inherit;
-      display: block;
-      outline: none; }
-      .top-sites-list .top-site-outer > a:-moz-any(.active, :focus) .tile {
-        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1), 0 0 0 5px #D7D7DB;
-        transition: box-shadow 150ms; }
+    padding: 0 16px; }
+    .top-sites-list .top-site-outer .top-site-inner {
+      position: relative; }
+      .top-sites-list .top-site-outer .top-site-inner > a {
+        color: inherit;
+        display: block;
+        outline: none; }
+        .top-sites-list .top-site-outer .top-site-inner > a:-moz-any(.active, :focus) .tile {
+          box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1), 0 0 0 5px #D7D7DB;
+          transition: box-shadow 150ms; }
     .top-sites-list .top-site-outer .context-menu-button {
       background-clip: padding-box;
       background-color: #FFF;
@@ -347,10 +347,6 @@ main {
       text-transform: uppercase; }
       .top-sites-list .top-site-outer .tile::before {
         content: attr(data-fallback); }
-    .top-sites-list .top-site-outer.placeholder .tile {
-      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1); }
-    .top-sites-list .top-site-outer.placeholder .screenshot {
-      display: none; }
     .top-sites-list .top-site-outer .screenshot {
       background-color: #FFF;
       background-position: top left;
@@ -446,6 +442,13 @@ main {
           border-right: 0; }
         .top-sites-list .top-site-outer .edit-menu button:first-child:dir(rtl) {
           border-right: 0; }
+    .top-sites-list .top-site-outer.placeholder .tile {
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1); }
+    .top-sites-list .top-site-outer.placeholder .screenshot {
+      display: none; }
+    .top-sites-list .top-site-outer.placeholder .edit-menu:last-child button {
+      background-size: 13px;
+      width: 23px; }
 
 .edit-topsites-wrapper .edit-topsites-button {
   border-right: 1px solid #D7D7DB;

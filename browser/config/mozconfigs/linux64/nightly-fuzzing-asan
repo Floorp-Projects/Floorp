@@ -10,7 +10,7 @@ ac_add_options --enable-valgrind
 . $topsrcdir/build/unix/mozconfig.fuzzing
 
 ac_add_options --enable-fuzzing
-ac_add_options --disable-stdcxx-compat
+unset MOZ_STDCXX_COMPAT
 
 export PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig:/usr/share/pkgconfig
 . $topsrcdir/build/unix/mozconfig.gtk

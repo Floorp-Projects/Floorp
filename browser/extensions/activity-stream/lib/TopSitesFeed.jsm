@@ -241,6 +241,13 @@ this.TopSitesFeed = class TopSitesFeed {
    * Insert a site to pin at a position shifting over any other pinned sites.
    */
   _insertPin(site, index) {
+    // Don't insert any pins past the end of the visible top sites. Otherwise,
+    // we can end up with a bunch of pinned sites that can never be unpinned again
+    // from the UI.
+    if (index >= this.store.getState().Prefs.values.topSitesCount) {
+      return;
+    }
+
     // For existing sites, recursively push it and others to the next positions
     let pinned = NewTabUtils.pinnedLinks.links;
     if (pinned.length > index && pinned[index]) {
@@ -250,12 +257,12 @@ this.TopSitesFeed = class TopSitesFeed {
   }
 
   /**
-   * Handle an add action of a site.
+   * Handle an insert (drop/add) action of a site.
    */
-  add(action) {
-    // Adding a top site pins it in the first slot, pushing over any link already
-    // pinned in the slot.
-    this._insertPin(action.data.site, 0);
+  insert(action) {
+    // Inserting a top site pins it in the specified slot, pushing over any link already
+    // pinned in the slot (unless it's the last slot, then it replaces).
+    this._insertPin(action.data.site, action.data.index || 0);
     this._broadcastPinnedSitesUpdated();
   }
 
@@ -293,8 +300,8 @@ this.TopSitesFeed = class TopSitesFeed {
       case at.TOP_SITES_UNPIN:
         this.unpin(action);
         break;
-      case at.TOP_SITES_ADD:
-        this.add(action);
+      case at.TOP_SITES_INSERT:
+        this.insert(action);
         break;
       case at.UNINIT:
         this.uninit();

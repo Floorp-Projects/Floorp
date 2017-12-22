@@ -1464,7 +1464,7 @@ let SubModuleType;
 
 class ObjectType extends Type {
   static get EXTRA_PROPERTIES() {
-    return ["properties", "patternProperties", ...super.EXTRA_PROPERTIES];
+    return ["properties", "patternProperties", "$import", ...super.EXTRA_PROPERTIES];
   }
 
   static parseSchema(schema, path, extraProperties = []) {
@@ -1477,6 +1477,17 @@ class ObjectType extends Type {
       extraProperties = ["additionalProperties", "isInstanceOf", ...extraProperties];
     }
     this.checkSchemaProperties(schema, path, extraProperties);
+
+    let imported = null;
+    if ("$import" in schema) {
+      let importPath = schema.$import;
+      let idx = importPath.indexOf(".");
+      if (idx === -1) {
+        imported = [path[0], importPath];
+      } else {
+        imported = [importPath.slice(0, idx), importPath.slice(idx + 1)];
+      }
+    }
 
     let parseProperty = (schema, extraProps = []) => {
       return {
@@ -1522,15 +1533,33 @@ class ObjectType extends Type {
       additionalProperties = Schemas.parseSchema(type, path);
     }
 
-    return new this(schema, properties, additionalProperties, patternProperties, schema.isInstanceOf || null);
+    return new this(schema, properties, additionalProperties, patternProperties, schema.isInstanceOf || null, imported);
   }
 
-  constructor(schema, properties, additionalProperties, patternProperties, isInstanceOf) {
+  constructor(schema, properties, additionalProperties, patternProperties, isInstanceOf, imported) {
     super(schema);
     this.properties = properties;
     this.additionalProperties = additionalProperties;
     this.patternProperties = patternProperties;
     this.isInstanceOf = isInstanceOf;
+
+    if (imported) {
+      let [ns, path] = imported;
+      ns = Schemas.getNamespace(ns);
+      let importedType = ns.get(path);
+      if (!importedType) {
+        throw new Error(`Internal error: imported type ${path} not found`);
+      }
+
+      if (DEBUG && !(importedType instanceof ObjectType)) {
+        throw new Error(`Internal error: cannot import non-object type ${path}`);
+      }
+
+      this.properties = Object.assign({}, importedType.properties, this.properties);
+      this.patternProperties = [...importedType.patternProperties,
+                                ...this.patternProperties];
+      this.additionalProperties = importedType.additionalProperties || this.additionalProperties;
+    }
   }
 
   extend(type) {
@@ -1667,8 +1696,7 @@ class ObjectType extends Type {
 
       if (this.additionalProperties) {
         for (let prop of remainingProps) {
-          let type = this.additionalProperties;
-          let r = context.withPath(prop, () => type.normalize(properties[prop], context));
+          let r = context.withPath(prop, () => this.additionalProperties.normalize(properties[prop], context));
           if (r.error) {
             return r;
           }

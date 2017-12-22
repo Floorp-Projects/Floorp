@@ -56,6 +56,7 @@ ShadowRoot::ShadowRoot(Element* aElement, bool aClosed,
                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                        nsXBLPrototypeBinding* aProtoBinding)
   : DocumentFragment(aNodeInfo)
+  , DocumentOrShadowRoot(*this)
   , mProtoBinding(aProtoBinding)
   , mInsertionPointChanged(false)
   , mIsComposedDocParticipant(false)
@@ -240,7 +241,7 @@ ShadowRoot::InsertSheet(StyleSheet* aSheet,
 
   linkingElement->SetStyleSheet(aSheet); // This sets the ownerNode on the sheet
 
-  MOZ_DIAGNOSTIC_ASSERT(mProtoBinding->SheetCount() == StyleScope::SheetCount());
+  MOZ_DIAGNOSTIC_ASSERT(mProtoBinding->SheetCount() == DocumentOrShadowRoot::SheetCount());
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // FIXME(emilio, bug 1425759): For now we keep them duplicated, the proto
   // binding will disappear soon (tm).
@@ -278,42 +279,11 @@ void
 ShadowRoot::RemoveSheet(StyleSheet* aSheet)
 {
   mProtoBinding->RemoveStyleSheet(aSheet);
-  StyleScope::RemoveSheet(*aSheet);
+  DocumentOrShadowRoot::RemoveSheet(*aSheet);
 
   if (aSheet->IsApplicable()) {
     StyleSheetChanged();
   }
-}
-
-Element*
-ShadowRoot::GetElementById(const nsAString& aElementId)
-{
-  nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aElementId);
-  return entry ? entry->GetIdElement() : nullptr;
-}
-
-already_AddRefed<nsContentList>
-ShadowRoot::GetElementsByTagName(const nsAString& aTagName)
-{
-  return NS_GetContentList(this, kNameSpaceID_Unknown, aTagName);
-}
-
-already_AddRefed<nsContentList>
-ShadowRoot::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
-                                   const nsAString& aLocalName)
-{
-  int32_t nameSpaceId = kNameSpaceID_Wildcard;
-
-  if (!aNamespaceURI.EqualsLiteral("*")) {
-    nsresult rv =
-      nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
-                                                            nameSpaceId);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-  }
-
-  NS_ASSERTION(nameSpaceId != kNameSpaceID_Unknown, "Unexpected namespace ID!");
-
-  return NS_GetContentList(this, nameSpaceId, aLocalName);
 }
 
 void
@@ -335,12 +305,6 @@ ShadowRoot::RemoveFromIdTable(Element* aElement, nsAtom* aId)
       mIdentifierMap.RemoveEntry(entry);
     }
   }
-}
-
-already_AddRefed<nsContentList>
-ShadowRoot::GetElementsByClassName(const nsAString& aClasses)
-{
-  return nsContentUtils::GetElementsByClassName(this, aClasses);
 }
 
 nsresult

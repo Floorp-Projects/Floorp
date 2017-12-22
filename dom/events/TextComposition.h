@@ -146,11 +146,12 @@ public:
 
   /**
    * The length of composition string in the text node.  If composition string
-   * hasn't been inserted in any text node yet, this returns UINT32_MAX.
+   * hasn't been inserted in any text node yet, this returns 0.
    */
   uint32_t XPLengthInTextNode() const
   {
-    return mCompositionLengthInTextNode;
+    return mCompositionLengthInTextNode == UINT32_MAX ?
+             0 : mCompositionLengthInTextNode;
   }
 
   /**
@@ -236,14 +237,21 @@ public:
   };
 
   /**
-   * WillCreateCompositionTransaction() is called by the focused editor
-   * immediately before creating CompositionTransaction.
+   * OnCreateCompositionTransaction() is called by
+   * CompositionTransaction::Create() immediately after creating
+   * new CompositionTransaction instance.
    *
-   * @param aTextNode       The text node which includes composition string.
-   * @param aOffset         The offset of composition string in aTextNode.
+   * @param aStringToInsert     The string to insert the text node actually.
+   *                            This may be different from the data of
+   *                            dispatching composition event because it may
+   *                            be replaced with different character for
+   *                            passwords, or truncated due to maxlength.
+   * @param aTextNode           The text node which includes composition string.
+   * @param aOffset             The offset of composition string in aTextNode.
    */
-  void WillCreateCompositionTransaction(Text* aTextNode,
-                                        uint32_t aOffset)
+  void OnCreateCompositionTransaction(const nsAString& aStringToInsert,
+                                      Text* aTextNode,
+                                      uint32_t aOffset)
   {
     if (!mContainerTextNode) {
       mContainerTextNode = aTextNode;
@@ -253,30 +261,10 @@ public:
     }
 #ifdef DEBUG
     else {
-      NS_WARNING_ASSERTION(aTextNode == mContainerTextNode,
-        "The editor tries to insert composition string into different node");
-      NS_WARNING_ASSERTION(aOffset == mCompositionStartOffsetInTextNode,
-        "The editor tries to insert composition string into different offset");
+      MOZ_ASSERT(aTextNode == mContainerTextNode);
+      MOZ_ASSERT(aOffset == mCompositionStartOffsetInTextNode);
     }
 #endif // #ifdef DEBUG
-    if (mCompositionLengthInTextNode == UINT32_MAX) {
-      mCompositionLengthInTextNode = 0;
-    }
-  }
-
-  /**
-   * DidCreateCompositionTransaction() is called by the focused editor
-   * immediately after creating CompositionTransaction.
-   *
-   * @param aStringToInsert     The string to insert the text node actually.
-   *                            This may be different from the data of
-   *                            dispatching composition event because it may
-   *                            be replaced with different character for
-   *                            passwords, or truncated due to maxlength.
-   */
-  void DidCreateCompositionTransaction(const nsAString& aStringToInsert)
-  {
-    MOZ_ASSERT(mCompositionStartOffsetInTextNode != UINT32_MAX);
     mCompositionLengthInTextNode = aStringToInsert.Length();
     NS_WARNING_ASSERTION(mCompositionLengthInTextNode != UINT32_MAX,
       "The string to insert is really too long.");

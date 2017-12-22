@@ -504,7 +504,15 @@ Toolbox.prototype = {
       // can take a few hundred milliseconds seconds to start up.
       // But wait for toolbar buttons to be set before updating this react component.
       buttonsPromise.then(() => {
-        this.component.setCanRender();
+        // Delay React rendering as Toolbox.open and buttonsPromise are synchronous.
+        // Even if this involve promises, this is synchronous. Toolbox.open already loads
+        // react modules and freeze the event loop for a significant time.
+        // requestIdleCallback allows releasing it to allow user events to be processed.
+        // Use 16ms maximum delay to allow one frame to be rendered at 60FPS
+        // (1000ms/60FPS=16ms)
+        this.win.requestIdleCallback(() => {
+          this.component.setCanRender();
+        }, {timeout: 16});
       });
 
       yield this.selectTool(this._defaultToolId);

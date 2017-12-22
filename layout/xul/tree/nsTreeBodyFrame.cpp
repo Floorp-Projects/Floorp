@@ -426,7 +426,8 @@ nsTreeBodyFrame::ReflowFinished()
     ScrollParts parts = GetScrollParts();
     mHorzWidth = CalcHorzWidth(parts);
     if (!mHasFixedRowCount) {
-      mPageLength = mInnerBox.height / mRowHeight;
+      mPageLength =
+        (mRowHeight > 0) ? (mInnerBox.height / mRowHeight) : mRowCount;
     }
 
     int32_t lastPageTopRow = std::max(0, mRowCount - mPageLength);
@@ -1288,6 +1289,9 @@ nsTreeBodyFrame::GetCoordsForCellItem(int32_t aRow, nsITreeColumn* aCol, const n
 int32_t
 nsTreeBodyFrame::GetRowAt(int32_t aX, int32_t aY)
 {
+  if (mRowHeight <= 0)
+    return -1;
+
   // Now just mod by our total inner box height and add to our top row index.
   int32_t row = (aY/mRowHeight)+mTopRowIndex;
 
@@ -2915,7 +2919,7 @@ nsTreeBodyFrame::PaintTreeBody(gfxContext& aRenderingContext,
                         *drawTarget));
   int32_t oldPageCount = mPageLength;
   if (!mHasFixedRowCount)
-    mPageLength = mInnerBox.height/mRowHeight;
+    mPageLength = (mRowHeight > 0) ? (mInnerBox.height/mRowHeight) : mRowCount;
 
   if (oldPageCount != mPageLength || mHorzWidth != CalcHorzWidth(GetScrollParts())) {
     // Schedule a ResizeReflow that will update our info properly.
@@ -4452,7 +4456,7 @@ nsTreeBodyFrame::ThumbMoved(nsScrollbarFrame* aScrollbar,
   if (parts.mVScrollbar == aScrollbar) {
     nscoord rh = nsPresContext::AppUnitsToIntCSSPixels(mRowHeight);
     nscoord newIndex = nsPresContext::AppUnitsToIntCSSPixels(aNewPos);
-    nscoord newrow = newIndex/rh;
+    nscoord newrow = (rh > 0) ? (newIndex/rh) : 0;
     ScrollInternal(parts, newrow);
   // Horizontal Scrollbar
   } else if (parts.mHScrollbar == aScrollbar) {
