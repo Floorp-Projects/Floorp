@@ -4310,7 +4310,7 @@ public class BrowserApp extends GeckoApp
         // Don't store searches that happen in private tabs. This assumes the user can only
         // perform a search inside the currently selected tab, which is true for searches
         // that come from SearchEngineRow.
-        if (!Tabs.getInstance().getSelectedTab().isPrivate()) {
+        if (!mBrowserToolbar.isPrivateMode()) {
             storeSearchQuery(text);
         }
 
