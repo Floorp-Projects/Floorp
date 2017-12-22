@@ -9,6 +9,7 @@
 #include "GLContext.h"
 #include "jsapi.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/gfx/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Sprintf.h"
 #include "nsIDOMEvent.h"
@@ -805,10 +806,17 @@ WebGLContext::AssertCachedGlobalState() const
 
     GLfloat colorClearValue[4] = {0.0f, 0.0f, 0.0f, 0.0f};
     gl->fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, colorClearValue);
-    MOZ_ASSERT(IsCacheCorrect(mColorClearValue[0], colorClearValue[0]) &&
+    const bool ok = IsCacheCorrect(mColorClearValue[0], colorClearValue[0]) &&
                IsCacheCorrect(mColorClearValue[1], colorClearValue[1]) &&
                IsCacheCorrect(mColorClearValue[2], colorClearValue[2]) &&
-               IsCacheCorrect(mColorClearValue[3], colorClearValue[3]));
+               IsCacheCorrect(mColorClearValue[3], colorClearValue[3]);
+    if (!ok) {
+        gfxCriticalNote << mColorClearValue[0] << " - " << colorClearValue[0] << " = " << (mColorClearValue[0] - colorClearValue[0]) << "\n"
+                        << mColorClearValue[1] << " - " << colorClearValue[1] << " = " << (mColorClearValue[1] - colorClearValue[1]) << "\n"
+                        << mColorClearValue[2] << " - " << colorClearValue[2] << " = " << (mColorClearValue[2] - colorClearValue[2]) << "\n"
+                        << mColorClearValue[3] << " - " << colorClearValue[3] << " = " << (mColorClearValue[3] - colorClearValue[3]);
+    }
+    MOZ_ASSERT(ok);
 
     realGLboolean depthWriteMask = 0;
     gl->fGetBooleanv(LOCAL_GL_DEPTH_WRITEMASK, &depthWriteMask);
