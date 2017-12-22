@@ -11,16 +11,30 @@ generated automatically by the build phase 'package-tests' using the
 Creating a test
 ---------------
 For general information, see
-https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Creating_JavaScript_tests
+https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Creating_JavaScript_tests/jsreftests
+
 
 Adding a test
 -------------
-    Drop it in an appropriate directory under the tests directory.
+    Drop your test file in an appropriate directory under js/src/tests/non262/.
 
         <fineprint> Some names are forbidden. Do not name your test browser.js,
         shell.js, template.js, user.js, js-test-driver-begin.js, or
         js-test-driver-end.js.
         </fineprint>
+
+Test262, ECMAScript conformance tests
+-------------------------------------
+
+    The js/src/tests/test262/ folder contains tests imported from the ECMAScript
+    conformance test suite: https://github.com/tc39/test262. To update the test
+    suite to get the latest version (including tests of new ECMAScript features
+    or feature proposals), you can use the updater script:
+
+        test262-update.py
+
+    Additionally, you can find the test262-export.py script to export tests to
+    the test262 format for potential contribution to test262.
 
 Adjusting when and how a test runs
 ----------------------------------

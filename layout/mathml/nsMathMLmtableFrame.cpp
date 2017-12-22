@@ -300,7 +300,7 @@ public:
     nsStyleBorder styleBorder = *mFrame->StyleBorder();
     nsMathMLmtdFrame* frame = static_cast<nsMathMLmtdFrame*>(mFrame);
     ApplyBorderToStyle(frame, styleBorder);
-    nsRect bounds = CalculateBounds(styleBorder).GetBounds();
+    nsRect bounds = CalculateBounds<nsRect>(styleBorder);
     nsMargin overflow = ComputeBorderOverflow(frame, styleBorder);
     bounds.Inflate(overflow);
     return bounds;
