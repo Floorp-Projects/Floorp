@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<title>webkit-text-stroke: SVG text reference</title>
+<link rel="author" title="Jonathan Kew" href="jfkthame@gmail.com">
+<link rel="author" title="Mozilla" href="https://www.mozilla.org">
+<style>
+@font-face { font-family: test; src: url(../fonts/sil/CharisSIL-R.ttf); }
+body { font-family: test; }
+</style>
+<body>
+<div style="width: 500px; height: 400px;">
+<svg xmlns="http://www.w3.org/2000/svg" style="width: 100%; height: 100%;">
+<text x="50" y="200" font-size="64px" stroke="green"
+      stroke-width="10px">g&#x324;&#x326;&#x308;&#x302;</text>
+</svg>
+</div>
+</body>
+</html>
