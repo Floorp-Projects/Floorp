@@ -632,11 +632,6 @@ GLReadTexImageHelper::ReadTexImage(DataSourceSurface* aDest,
             CLEANUP_IF_GLERROR_OCCURRED("when binding texture");
         }
 
-        /* Draw quad */
-        mGL->fClearColor(1.0f, 0.0f, 1.0f, 1.0f);
-        mGL->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
-        CLEANUP_IF_GLERROR_OCCURRED("when clearing color buffer");
-
         mGL->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
         CLEANUP_IF_GLERROR_OCCURRED("when drawing texture");
 

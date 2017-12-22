@@ -366,7 +366,7 @@ public:
     GetSurfaceSnapshot(gfxAlphaType* out_alphaType) override;
 
     virtual void SetIsOpaque(bool) override {};
-    bool GetIsOpaque() override { return false; }
+    bool GetIsOpaque() override { return !mOptions.alpha; }
     NS_IMETHOD SetContextOptions(JSContext* cx,
                                  JS::Handle<JS::Value> options,
                                  ErrorResult& aRvForDictionaryInit) override;
