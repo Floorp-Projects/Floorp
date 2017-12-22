@@ -44,8 +44,10 @@ namespace dom {
  *
  * The proper way to extract a value is to check IsNull().  If not null, then
  * check IsEmpty().  If neither of those is true, check HasStringBuffer().  If
- * that's true, call StringBuffer().  If HasStringBuffer() returns false, call
- * AsAString() and get the value from that.
+ * that's true, call StringBuffer()/StringBufferLength().  If HasStringBuffer()
+ * returns false, check HasLiteral, and if that returns true call
+ * Literal()/LiteralLength().  If HasLiteral() is false, call AsAString() and
+ * get the value from that.
  */
 class MOZ_STACK_CLASS DOMString {
 public:
@@ -130,6 +132,33 @@ public:
     }
   }
 
+  bool HasLiteral() const
+  {
+    MOZ_ASSERT(!mString || !mStringBuffer,
+               "Shouldn't have both present!");
+    MOZ_ASSERT(mState > State::Null,
+               "Caller should have checked IsNull() and IsEmpty() first");
+    return mState == State::Literal;
+  }
+
+  // Get the literal string.  This can only be called if HasLiteral()
+  // returned true.  If that's true, it will never return null.
+  const char16_t* Literal() const
+  {
+    MOZ_ASSERT(HasLiteral(),
+               "Don't ask for the literal if we don't have it");
+    MOZ_ASSERT(mLiteral,
+               "We better have a literal if we claim to");
+    return mLiteral;
+  }
+
+  // Get the length of the literal.  Can only be called if HasLiteral().
+  uint32_t LiteralLength() const
+  {
+    MOZ_ASSERT(HasLiteral(), "Don't call this if there is no literal");
+    return mLength;
+  }
+
   // Initialize the DOMString to a (nsStringBuffer, length) pair.  The length
   // does NOT have to be the full length of the (null-terminated) string in the
   // nsStringBuffer.
@@ -166,6 +195,8 @@ public:
       nsStringBuffer* buf = nsStringBuffer::FromString(aString);
       if (buf) {
         SetKnownLiveStringBuffer(buf, aString.Length());
+      } else if (aString.IsLiteral()) {
+        SetLiteralInternal(aString.BeginReading(), aString.Length());
       } else {
         AsAString() = aString;
       }
@@ -187,9 +218,8 @@ public:
     MOZ_ASSERT(aAtom || aNullHandling != eNullNotExpected);
     if (aNullHandling == eNullNotExpected || aAtom) {
       if (aAtom->IsStaticAtom()) {
-        // XXX: bug 1407858 will replace this with a direct assignment of the
-        // static atom that doesn't go via nsString.
-        AsAString().AssignLiteral(aAtom->GetUTF16String(), aAtom->GetLength());
+        // Static atoms are backed by literals.
+        SetLiteralInternal(aAtom->GetUTF16String(), aAtom->GetLength());
       } else {
         // Dynamic atoms always have a string buffer and never have 0 length,
         // because nsGkAtoms::_empty is a static atom.
@@ -244,6 +274,8 @@ public:
         // We need to copy, unfortunately.
         aString.Assign(chars, len);
       }
+    } else if (HasLiteral()) {
+      aString.AssignLiteral(Literal(), LiteralLength());
     } else {
       aString = AsAString();
     }
@@ -261,6 +293,14 @@ private:
     mLength = aLength;
   }
 
+  void SetLiteralInternal(const char16_t* aLiteral, uint32_t aLength)
+  {
+    MOZ_ASSERT(!mLiteral, "What's going on here?");
+    mLiteral = aLiteral;
+    mLength = aLength;
+    mState = State::Literal;
+  }
+
   enum class State : uint8_t
   {
     Empty, // An empty string.  Default state.
@@ -270,6 +310,7 @@ private:
     // Empty and Null.
 
     String, // An XPCOM string stored in mString.
+    Literal, // A string literal (static lifetime).
     OwnedStringBuffer, // mStringBuffer is valid and we have a ref to it.
     UnownedStringBuffer, // mStringBuffer is valid; we are not holding a ref.
     // The two string buffer values must come last.  This lets us avoid doing
@@ -279,11 +320,17 @@ private:
   // We need to be able to act like a string as needed
   Maybe<nsAutoString> mString;
 
-  // The nsStringBuffer in the OwnedStringBuffer/UnownedStringBuffer cases.
-  nsStringBuffer* MOZ_UNSAFE_REF("The ways in which this can be safe are "
+  union
+  {
+    // The nsStringBuffer in the OwnedStringBuffer/UnownedStringBuffer cases.
+    nsStringBuffer* MOZ_UNSAFE_REF("The ways in which this can be safe are "
                                  "documented above and enforced through "
                                  "assertions") mStringBuffer;
-  // Length in the stringbuffer cases.
+    // The literal in the Literal case.
+    const char16_t* mLiteral;
+  };
+
+  // Length in the stringbuffer and literal cases.
   uint32_t mLength;
 
   State mState;
