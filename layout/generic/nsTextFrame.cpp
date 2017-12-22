@@ -5786,14 +5786,13 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
                                    UpdateTextEmphasis(parentWM, aProvider));
   }
 
-  // text-stroke overflows
+  // text-stroke overflows: add half of text-stroke-width on all sides
   nscoord textStrokeWidth = StyleText()->mWebkitTextStrokeWidth;
   if (textStrokeWidth > 0) {
+    // Inflate rect by stroke-width/2; we add an extra pixel to allow for
+    // antialiasing, rounding errors, etc.
     nsRect strokeRect = *aVisualOverflowRect;
-    strokeRect.x -= textStrokeWidth;
-    strokeRect.y -= textStrokeWidth;
-    strokeRect.width += textStrokeWidth;
-    strokeRect.height += textStrokeWidth;
+    strokeRect.Inflate(textStrokeWidth / 2 + appUnitsPerDevUnit);
     aVisualOverflowRect->UnionRect(*aVisualOverflowRect, strokeRect);
   }
 
