@@ -75,6 +75,13 @@
     </content>
   </binding>
 
+  <binding id="toolbarbutton-image"
+           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
+    <content>
+      <xul:image class="toolbarbutton-icon" xbl:inherits="src=image"/>
+    </content>
+  </binding>
+
   <binding id="toolbarbutton-badged"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
     <content>
