@@ -51,10 +51,10 @@ TinderBoxPrintRe = {
         'known_fail_group': "Known problems",
     },
     "xpcshell_summary": {
-        'regex': re.compile(r'''INFO \| (Passed|Failed): (\d+)'''),
+        'regex': re.compile(r'''INFO \| (Passed|Failed|Todo): (\d+)'''),
         'pass_group': "Passed",
         'fail_group': "Failed",
-        'known_fail_group': None,
+        'known_fail_group': "Todo",
     },
     "jsreftest_summary": {
         'regex': re.compile(r'''REFTEST INFO \| (Successful|Unexpected|Known problems): (\d+) \('''),

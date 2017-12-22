@@ -189,14 +189,17 @@ class VerifyToolsMixin(object):
             # in verify mode, run nothing by default (unsupported suite or no files modified)
             args = []
             # otherwise, run once for each file in requested suite
-            files = self.verify_suites.get(suite)
             references = re.compile(r"(-ref|-noref|-noref.)\.")
+            files = []
+            for file in self.verify_suites.get(suite):
+                if (self.config.get('verify_category') != "web-platform" and
+                    suite in ['reftest', 'crashtest']):
+                    file = os.path.join(self.reftest_test_dir, file)
+                files.append(file)
             for file in files:
                 if self.config.get('verify_category') == "web-platform":
                     args.append(['--verify-log-full', '--verify', file])
                 else:
-                    if suite in ['reftest', 'crashtest']:
-                        file = os.path.join(self.reftest_test_dir, file)
                     if suite == 'reftest':
                         # Special handling for modified reftest reference files:
                         #  - if both test and reference modified, verify the test file

@@ -147,7 +147,7 @@ add_task(async function test_background_crash_simple() {
  */
 add_task(async function test_background_crash_autosubmit_backlogged() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.crashReports.unsubmittedCheck.autoSubmit", true]],
+    set: [["browser.crashReports.unsubmittedCheck.autoSubmit2", true]],
   });
 
   await setupBackgroundTabs(async function([tab1, tab2]) {
