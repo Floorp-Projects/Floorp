@@ -1913,8 +1913,11 @@ nsLayoutUtils::DoCompareTreePosition(nsIFrame* aFrame1,
   }
 
   AutoTArray<nsIFrame*,20> frame1Ancestors;
-  if (aCommonAncestor &&
-      !FillAncestors(aFrame1, aCommonAncestor, &frame1Ancestors)) {
+  // Note that the order of the condition is important. We need to fill the
+  // ancestors even if aCommonAncestor is null, otherwise the code below makes
+  // no sense.
+  if (!FillAncestors(aFrame1, aCommonAncestor, &frame1Ancestors) &&
+      aCommonAncestor) {
     // We reached the root of the frame tree ... if aCommonAncestor was set,
     // it is wrong
     return DoCompareTreePosition(aFrame1, aFrame2,
