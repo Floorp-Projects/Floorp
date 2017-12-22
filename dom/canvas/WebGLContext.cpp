@@ -1576,6 +1576,15 @@ WebGLContext::PresentScreenBuffer()
     gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
     BlitBackbufferToCurDriverFB();
 
+#ifdef DEBUG
+    if (!mOptions.alpha) {
+        gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+        uint32_t pixel = 3;
+        gl->fReadPixels(0, 0, 1, 1, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, &pixel);
+        MOZ_ASSERT((pixel & 0xff000000) == 0xff000000);
+    }
+#endif
+
     if (!screen->PublishFrame(screen->Size())) {
         GenerateWarning("PublishFrame failed. Losing context.");
         ForceLoseContext();

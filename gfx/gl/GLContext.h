@@ -1543,7 +1543,6 @@ public:
     }
 
     void raw_fReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels) {
-        ASSERT_NOT_PASSING_STACK_BUFFER_TO_GL(pixels);
         BEFORE_GL_CALL;
         mSymbols.fReadPixels(x, y, width, height, format, type, pixels);
         OnSyncCall();
