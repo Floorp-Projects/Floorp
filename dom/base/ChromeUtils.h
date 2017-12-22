@@ -148,6 +148,12 @@ public:
                            IdleRequestCallback& callback,
                            const IdleRequestOptions& options,
                            ErrorResult& aRv);
+
+  static void GetRecentJSDevError(GlobalObject& aGlobal,
+                                  JS::MutableHandleValue aRetval,
+                                  ErrorResult& aRv);
+
+  static void ClearRecentJSDevError(GlobalObject& aGlobal);
 };
 
 } // namespace dom

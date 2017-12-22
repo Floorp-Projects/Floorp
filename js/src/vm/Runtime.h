@@ -1081,6 +1081,30 @@ struct JSRuntime : public js::MallocProvider<JSRuntime>
     void* wasmUnwindPC() const {
         return wasmUnwindPC_;
     }
+
+  public:
+#if defined(NIGHTLY_BUILD)
+    // Support for informing the embedding of any error thrown.
+    // This mechanism is designed to let the embedding
+    // log/report/fail in case certain errors are thrown
+    // (e.g. SyntaxError, ReferenceError or TypeError
+    // in critical code).
+    struct ErrorInterceptionSupport {
+        ErrorInterceptionSupport()
+          : isExecuting(false)
+          , interceptor(nullptr)
+        { }
+
+        // true if the error interceptor is currently executing,
+        // false otherwise. Used to avoid infinite loops.
+        bool isExecuting;
+
+        // if non-null, any call to `setPendingException`
+        // in this runtime will trigger the call to `interceptor`
+        JSErrorInterceptor* interceptor;
+    };
+    ErrorInterceptionSupport errorInterception;
+#endif // defined(NIGHTLY_BUILD)
 };
 
 namespace js {

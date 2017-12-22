@@ -88,6 +88,17 @@ def get_digest_data(config, run, taskdesc):
     if deps:
         data.extend(sorted(deps.values()))
 
+    # If the task uses an in-tree docker image, we want it to influence
+    # the index path as well. Ideally, the content of the docker image itself
+    # should have an influence, but at the moment, we can't get that
+    # information here. So use the docker image name as a proxy. Not a lot of
+    # changes to docker images actually have an impact on the resulting
+    # toolchain artifact, so we'll just rely on such important changes to be
+    # accompanied with a docker image name change.
+    image = taskdesc['worker'].get('docker-image', {}).get('in-tree')
+    if image:
+        data.extend(image)
+
     # Likewise script arguments should influence the index.
     args = run.get('arguments')
     if args:
