@@ -9,6 +9,7 @@
 
 #include <type_traits> // std::enable_if
 
+#include "mozilla/Char16.h"
 #include "nsStringFlags.h"
 #include "nsCharTraits.h"
 
