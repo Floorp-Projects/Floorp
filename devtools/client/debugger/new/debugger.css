@@ -428,22 +428,13 @@ body {
 }
 
 .modal {
+  display: flex;
   width: 80%;
-  height: auto;
+  max-height: 80vh;
   overflow-y: auto;
   background-color: var(--theme-toolbar-background);
   transition: transform 150ms cubic-bezier(0.07, 0.95, 0, 1);
   box-shadow: 1px 1px 3px 1px var(--popup-shadow-color);
-}
-
-.modal .input-wrapper {
-  display: flex;
-  justify-content: center;
-}
-
-.modal .result-list {
-  height: calc(100% - 28px);
-  overflow-y: auto;
 }
 
 .modal.entering,
@@ -454,20 +445,17 @@ body {
 .modal.entered,
 .modal.exiting {
   transform: translateY(5px);
+  flex-direction: column;
 }
 
-/* This rule is active when the screen is not short and narrow */
-@media (min-width: 580px) and (min-height: 340px) {
+/* This rule is active when the screen is not narrow */
+@media (min-width: 580px) {
   .modal {
     width: 50%;
   }
 }
 
 @media (min-height: 340px) {
-  .modal {
-    height: auto;
-    max-height: 80vh;
-  }
   .modal.entered,
   .modal.exiting {
     transform: translateY(30px);
@@ -1757,6 +1745,10 @@ html .toggle-button.end.vertical svg {
   justify-content: center;
 }
 
+.source-footer > button.action:hover {
+  background: var(--theme-toolbar-background-hover);
+}
+
 .source-footer > .commands > button.action:focus {
   outline: none;
 }
@@ -2279,10 +2271,15 @@ html[dir="rtl"] .arrow svg,
 
 .popover .preview-popup .header-container {
   width: 100%;
-  line-height: 20px;
+  line-height: 15px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   margin-bottom: 5px;
+}
+
+.popover .preview-popup .immutable-logo {
+  width: 20px;
+  margin-right: 5px;
 }
 
 .popover .preview-popup .header-container h3 {
@@ -3325,7 +3322,7 @@ img.resume {
   border-bottom: none;
   background-color: var(--theme-body-background);
   border-top: 1px solid var(--theme-splitter-color);
-  flex: 0 0 27px;
+  flex: 0 0 26px;
 }
 
 .command-bar.bottom {
@@ -3810,6 +3807,7 @@ html .welcomebox .toggle-button-end.collapsed {
   padding: 0px;
   overflow: auto;
   width: calc(100% - 1px); /* 1px fixes the hidden right border */
+  background: var(--theme-body-background);
 }
 
 .result-list * {
@@ -3822,7 +3820,6 @@ html .welcomebox .toggle-button-end.collapsed {
   padding: 4px 13px;
   display: flex;
   justify-content: space-between;
-  border: 1px solid transparent;
 }
 
 .result-list.big li {
@@ -3836,7 +3833,7 @@ html .welcomebox .toggle-button-end.collapsed {
 }
 
 .result-list li.selected {
-  border-color: var(--theme-selection-background);
+  background: var(--accordion-header-background);
 }
 
 .result-list.small li.selected {
