@@ -1,0 +1,135 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Chart */
+
+.generic-chart-container {
+  /* Hack: force hardware acceleration */
+  transform: translateZ(1px);
+}
+
+.theme-dark .generic-chart-container {
+  color: var(--theme-selection-color);
+}
+
+.theme-light .generic-chart-container {
+  color: var(--theme-body-color-alt);
+}
+
+.chart-colored-blob {
+  fill: var(--theme-content-color2);
+  background: var(--theme-content-color2);
+}
+
+/* Chart: Pie */
+
+.pie-chart-slice {
+  stroke-width: 1px;
+  cursor: pointer;
+}
+
+.theme-dark .pie-chart-slice {
+  stroke: rgba(0,0,0,0.2);
+}
+
+.theme-light .pie-chart-slice {
+  stroke: rgba(255,255,255,0.8);
+}
+
+.theme-dark .pie-chart-slice[largest] {
+  stroke-width: 2px;
+  stroke: #fff;
+}
+
+.theme-light .pie-chart-slice[largest] {
+  stroke: #000;
+}
+
+.pie-chart-label {
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+}
+
+.theme-dark .pie-chart-label {
+  fill: #000;
+}
+
+.theme-light .pie-chart-label {
+  fill: #fff;
+}
+
+.pie-chart-container[slices="1"] > .pie-chart-slice {
+  stroke-width: 0px;
+}
+
+.pie-chart-slice,
+.pie-chart-label {
+  transition: all 0.1s ease-out;
+}
+
+.pie-chart-slice:not(:hover):not([focused]),
+.pie-chart-slice:not(:hover):not([focused]) + .pie-chart-label {
+  transform: none !important;
+}
+
+/* Chart: Table */
+
+.table-chart-title {
+  padding-bottom: 10px;
+  font-size: 120%;
+  font-weight: 600;
+}
+
+.table-chart-row {
+  margin-top: 1px;
+  cursor: pointer;
+}
+
+.table-chart-grid:hover > .table-chart-row {
+  transition: opacity 0.1s ease-in-out;
+}
+
+.table-chart-grid:not(:hover) > .table-chart-row {
+  transition: opacity 0.2s ease-in-out;
+}
+
+.generic-chart-container:hover > .table-chart-grid:hover > .table-chart-row:not(:hover),
+.generic-chart-container:hover ~ .table-chart-container > .table-chart-grid > .table-chart-row:not([focused]) {
+  opacity: 0.4;
+}
+
+.table-chart-row-box {
+  width: 8px;
+  height: 1.5em;
+  margin-inline-end: 10px;
+}
+
+.table-chart-row-label {
+  width: 8em;
+  padding-inline-end: 6px;
+  cursor: inherit;
+}
+
+.table-chart-totals {
+  margin-top: 8px;
+  padding-top: 6px;
+}
+
+.table-chart-totals {
+  border-top: 1px solid var(--theme-body-color-alt); /* Grey foreground text */
+}
+
+.table-chart-summary-label {
+  font-weight: 600;
+  padding: 1px 0px;
+}
+
+.theme-dark .table-chart-summary-label {
+  color: var(--theme-selection-color);
+}
+
+.theme-light .table-chart-summary-label {
+  color: var(--theme-body-color);
+}
