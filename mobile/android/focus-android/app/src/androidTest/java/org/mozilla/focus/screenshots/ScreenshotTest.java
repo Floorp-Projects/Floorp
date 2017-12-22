@@ -1,4 +1,4 @@
-package org.mozilla.focus.activity.screenshots;
+package org.mozilla.focus.screenshots;
 
 import android.app.Instrumentation;
 import android.content.Context;

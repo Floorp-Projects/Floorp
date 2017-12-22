@@ -7,7 +7,7 @@
 # file and generate the final configuration that we use inside
 # a taskcluster task.
 
-use_tests_in_packages ['org.mozilla.focus.activity.screenshots']
+use_tests_in_packages ['org.mozilla.focus.screenshots']
 
 app_package_name 'org.mozilla.focus.debug'
 use_tests_in_packages ['org.mozilla.focus.activity']
