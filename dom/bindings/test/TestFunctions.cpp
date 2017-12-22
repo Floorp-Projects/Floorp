@@ -75,7 +75,7 @@ TestFunctions::GetStringDataAsDOMString(const Optional<uint32_t>& aLength,
 
   nsStringBuffer* buf = nsStringBuffer::FromString(mStringData);
   if (buf) {
-    aString.SetStringBuffer(buf, length);
+    aString.SetKnownLiveStringBuffer(buf, length);
     return;
   }
 
