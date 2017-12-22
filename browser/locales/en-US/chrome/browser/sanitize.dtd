@@ -8,14 +8,6 @@
      The column width should be set at half of the dialog width. -->
 <!ENTITY sanitizePrefs2.modal.width    "34em">
 <!ENTITY sanitizePrefs2.column.width   "17em">
-<!-- LOCALIZATION NOTE (sanitizePrefs2.inContent.dialog.width): width of the
-     Clear History on Shutdown subdialog in the in-content preferences.
-     Should be large enough to contain the item* strings on a single line.
-     The column width adjusts the width of the first column in the dialog.
-     You can set the column width to a value that makes the dialog look visually balanced,
-     or at half of the dialog width if unsure. -->
-<!ENTITY sanitizePrefs2.inContent.dialog.width "34em">
-<!ENTITY sanitizePrefs2.inContent.column.width "24em">
 
 <!ENTITY sanitizeDialog2.title         "Clear Recent History">
 <!-- LOCALIZATION NOTE (sanitizeDialog2.width): width of the Clear Recent History dialog -->

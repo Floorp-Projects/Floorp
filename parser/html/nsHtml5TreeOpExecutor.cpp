@@ -16,6 +16,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
+#include "nsINestedURI.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebShellServices.h"
 #include "nsContentUtils.h"

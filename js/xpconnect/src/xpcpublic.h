@@ -281,6 +281,19 @@ public:
         return true;
     }
 
+    static inline bool
+    StringLiteralToJSVal(JSContext* cx, const char16_t* literal, uint32_t length,
+                         JS::MutableHandleValue rval)
+    {
+        bool ignored;
+        JSString* str = JS_NewMaybeExternalString(cx, literal, length,
+                                                  &sLiteralFinalizer, &ignored);
+        if (!str)
+            return false;
+        rval.setString(str);
+        return true;
+    }
+
     static MOZ_ALWAYS_INLINE bool IsLiteral(JSString* str)
     {
         return JS_IsExternalString(str) &&
@@ -356,28 +369,33 @@ inline
 bool NonVoidStringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
                           JS::MutableHandleValue rval)
 {
-    if (!str.HasStringBuffer()) {
-        // It's an actual XPCOM string
-        return NonVoidStringToJsval(cx, str.AsAString(), rval);
-    }
-
-    uint32_t length = str.StringBufferLength();
-    if (length == 0) {
+    if (str.IsEmpty()) {
         rval.set(JS_GetEmptyStringValue(cx));
         return true;
     }
 
-    nsStringBuffer* buf = str.StringBuffer();
-    bool shared;
-    if (!XPCStringConvert::StringBufferToJSVal(cx, buf, length, rval,
-                                               &shared)) {
-        return false;
+    if (str.HasStringBuffer()) {
+        uint32_t length = str.StringBufferLength();
+        nsStringBuffer* buf = str.StringBuffer();
+        bool shared;
+        if (!XPCStringConvert::StringBufferToJSVal(cx, buf, length, rval,
+                                                   &shared)) {
+            return false;
+        }
+        if (shared) {
+            // JS now needs to hold a reference to the buffer
+            str.RelinquishBufferOwnership();
+        }
+        return true;
     }
-    if (shared) {
-        // JS now needs to hold a reference to the buffer
-        str.RelinquishBufferOwnership();
+
+    if (str.HasLiteral()) {
+        return XPCStringConvert::StringLiteralToJSVal(cx, str.Literal(),
+                                                      str.LiteralLength(), rval);
     }
-    return true;
+
+    // It's an actual XPCOM string
+    return NonVoidStringToJsval(cx, str.AsAString(), rval);
 }
 
 MOZ_ALWAYS_INLINE

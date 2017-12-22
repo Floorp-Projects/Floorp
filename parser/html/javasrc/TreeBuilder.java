@@ -1072,7 +1072,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 if (!isInForeignButNotHtmlOrMathTextIntegrationPoint()) {
                     reconstructTheActiveFormattingElements();
                 }
-                // fall through
+                // CPPONLY: MOZ_FALLTHROUGH;
             case TEXT:
                 accumulateCharacters(buf, start, length);
                 return;
@@ -1573,6 +1573,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     }
 
                     // fall through to IN_TEMPLATE
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_TEMPLATE:
                     int eltPos = findLast("template");
                     if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
@@ -1738,7 +1739,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                     continue starttagloop;
                                 } // else fall thru
                             }
-                            // else fall thru
+                            // CPPONLY: MOZ_FALLTHROUGH;
                         default:
                             if ("http://www.w3.org/2000/svg" == currNs) {
                                 attributes.adjustForSvg();
@@ -1866,6 +1867,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         default:
                             // fall through to IN_TABLE
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_TABLE_BODY:
                     switch (group) {
                         case TR:
@@ -1902,6 +1904,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         default:
                             // fall through to IN_TABLE
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_TABLE:
                     intableloop: for (;;) {
                         switch (group) {
@@ -2017,6 +2020,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 break intableloop;
                         }
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_CAPTION:
                     switch (group) {
                         case CAPTION:
@@ -2043,6 +2047,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         default:
                             // fall through to IN_BODY
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_CELL:
                     switch (group) {
                         case CAPTION:
@@ -2062,6 +2067,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         default:
                             // fall through to IN_BODY
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case FRAMESET_OK:
                     switch (group) {
                         case FRAMESET:
@@ -2113,10 +2119,11 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 framesetOk = false;
                                 mode = IN_BODY;
                             }
-                            // fall through to IN_BODY
+                            // CPPONLY: MOZ_FALLTHROUGH;
                         default:
                             // fall through to IN_BODY
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_BODY:
                     inbodyloop: for (;;) {
                         switch (group) {
@@ -2333,6 +2340,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             case AREA_OR_WBR:
                                 reconstructTheActiveFormattingElements();
                                 // FALL THROUGH to PARAM_OR_SOURCE_OR_TRACK
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             // CPPONLY: case MENUITEM:
                             case PARAM_OR_SOURCE_OR_TRACK:
                                 appendVoidElementToCurrentMayFoster(
@@ -2394,9 +2402,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                             attributes);
                                     attributes = null; // CPP
                                     break starttagloop;
-                                } else {
-                                    // fall through
                                 }
+                                // CPPONLY: MOZ_FALLTHROUGH;
                             case NOFRAMES:
                             case IFRAME:
                             case NOEMBED:
@@ -2524,6 +2531,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 break starttagloop;
                         }
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_HEAD:
                     inheadloop: for (;;) {
                         switch (group) {
@@ -2590,6 +2598,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 continue starttagloop;
                         }
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_HEAD_NOSCRIPT:
                     switch (group) {
                         case HTML:
@@ -2690,6 +2699,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         default:
                             // fall through to IN_SELECT
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_SELECT:
                     switch (group) {
                         case HTML:
@@ -2792,6 +2802,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         default:
                             // fall through to AFTER_FRAMESET
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case AFTER_FRAMESET:
                     switch (group) {
                         case HTML:
@@ -3371,6 +3382,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             errStrayEndTag(name);
                             break endtagloop;
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_ROW:
                     switch (group) {
                         case TR:
@@ -3421,6 +3433,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         default:
                             // fall through to IN_TABLE
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_TABLE_BODY:
                     switch (group) {
                         case TBODY_OR_THEAD_OR_TFOOT:
@@ -3456,6 +3469,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         default:
                             // fall through to IN_TABLE
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_TABLE:
                     switch (group) {
                         case TABLE:
@@ -3487,6 +3501,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             errStrayEndTag(name);
                             // fall through to IN_BODY
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_CAPTION:
                     switch (group) {
                         case CAPTION:
@@ -3532,6 +3547,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         default:
                             // fall through to IN_BODY
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_CELL:
                     switch (group) {
                         case TD_OR_TH:
@@ -3570,6 +3586,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         default:
                             // fall through to IN_BODY
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case FRAMESET_OK:
                 case IN_BODY:
                     switch (group) {
@@ -3807,9 +3824,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                             if (scriptingEnabled) {
                                 errStrayEndTag(name);
                                 break endtagloop;
-                            } else {
-                                // fall through
                             }
+                            // CPPONLY: MOZ_FALLTHROUGH;
                         case A:
                         case B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
                         case FONT:
@@ -3818,6 +3834,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 break endtagloop;
                             }
                             // else handle like any other tag
+                            // CPPONLY: MOZ_FALLTHROUGH;
                         default:
                             if (isCurrent(name)) {
                                 pop();
@@ -3844,6 +3861,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 eltPos--;
                             }
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_HEAD:
                     switch (group) {
                         case HEAD:
@@ -3932,6 +3950,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         default:
                             // fall through to IN_SELECT
                     }
+                    // CPPONLY: MOZ_FALLTHROUGH;
                 case IN_SELECT:
                     switch (group) {
                         case OPTION:
@@ -6288,6 +6307,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getFormPointer()
      */
+    @Override
     public T getFormPointer() {
         return formPointer;
     }
@@ -6297,6 +6317,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      *
      * @return the headPointer
      */
+    @Override
     public T getHeadPointer() {
         return headPointer;
     }
@@ -6306,6 +6327,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      *
      * @return the deepTreeSurrogateParent
      */
+    @Override
     public T getDeepTreeSurrogateParent() {
         return deepTreeSurrogateParent;
     }
@@ -6313,6 +6335,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getListOfActiveFormattingElements()
      */
+    @Override
     public StackNode<T>[] getListOfActiveFormattingElements() {
         return listOfActiveFormattingElements;
     }
@@ -6320,6 +6343,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getStack()
      */
+    @Override
     public StackNode<T>[] getStack() {
         return stack;
     }
@@ -6327,6 +6351,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getTemplateModeStack()
      */
+    @Override
     public int[] getTemplateModeStack() {
         return templateModeStack;
     }
@@ -6336,6 +6361,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      *
      * @return the mode
      */
+    @Override
     public int getMode() {
         return mode;
     }
@@ -6345,6 +6371,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      *
      * @return the originalMode
      */
+    @Override
     public int getOriginalMode() {
         return originalMode;
     }
@@ -6354,6 +6381,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      *
      * @return the framesetOk
      */
+    @Override
     public boolean isFramesetOk() {
         return framesetOk;
     }
@@ -6363,6 +6391,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      *
      * @return the needToDropLF
      */
+    @Override
     public boolean isNeedToDropLF() {
         return needToDropLF;
     }
@@ -6372,6 +6401,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
      *
      * @return the quirks
      */
+    @Override
     public boolean isQuirks() {
         return quirks;
     }
@@ -6379,6 +6409,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getListOfActiveFormattingElementsLength()
      */
+    @Override
     public int getListOfActiveFormattingElementsLength() {
         return listPtr + 1;
     }
@@ -6386,6 +6417,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getStackLength()
      */
+    @Override
     public int getStackLength() {
         return currentPtr + 1;
     }
@@ -6393,6 +6425,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     /**
      * @see nu.validator.htmlparser.impl.TreeBuilderState#getTemplateModeStackLength()
      */
+    @Override
     public int getTemplateModeStackLength() {
         return templateModePtr + 1;
     }

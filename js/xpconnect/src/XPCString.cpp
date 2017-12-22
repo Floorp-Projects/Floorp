@@ -60,14 +60,7 @@ XPCStringConvert::ReadableToJSVal(JSContext* cx,
     uint32_t length = readable.Length();
 
     if (readable.IsLiteral()) {
-        bool ignored;
-        JSString* str = JS_NewMaybeExternalString(cx,
-                                                  static_cast<const char16_t*>(readable.BeginReading()),
-                                                  length, &sLiteralFinalizer, &ignored);
-        if (!str)
-            return false;
-        vp.setString(str);
-        return true;
+        return StringLiteralToJSVal(cx, readable.BeginReading(), length, vp);
     }
 
     nsStringBuffer* buf = nsStringBuffer::FromString(readable);

@@ -55,31 +55,31 @@
 
 #include "nsHtml5StackNode.h"
 
-int32_t 
+int32_t
 nsHtml5StackNode::getGroup()
 {
   return flags & nsHtml5ElementName::GROUP_MASK;
 }
 
-bool 
+bool
 nsHtml5StackNode::isScoping()
 {
   return (flags & nsHtml5ElementName::SCOPING);
 }
 
-bool 
+bool
 nsHtml5StackNode::isSpecial()
 {
   return (flags & nsHtml5ElementName::SPECIAL);
 }
 
-bool 
+bool
 nsHtml5StackNode::isFosterParenting()
 {
   return (flags & nsHtml5ElementName::FOSTER_PARENTING);
 }
 
-bool 
+bool
 nsHtml5StackNode::isHtmlIntegrationPoint()
 {
   return (flags & nsHtml5ElementName::HTML_INTEGRATION_POINT);
@@ -204,7 +204,7 @@ nsHtml5StackNode::setValues(nsHtml5ElementName* elementName,
   this->htmlCreator = nullptr;
 }
 
-int32_t 
+int32_t
 nsHtml5StackNode::prepareSvgFlags(int32_t flags)
 {
   flags &=
@@ -217,7 +217,7 @@ nsHtml5StackNode::prepareSvgFlags(int32_t flags)
   return flags;
 }
 
-int32_t 
+int32_t
 nsHtml5StackNode::prepareMathFlags(int32_t flags, bool markAsIntegrationPoint)
 {
   flags &=
@@ -232,19 +232,18 @@ nsHtml5StackNode::prepareMathFlags(int32_t flags, bool markAsIntegrationPoint)
   return flags;
 }
 
-
 nsHtml5StackNode::~nsHtml5StackNode()
 {
   MOZ_COUNT_DTOR(nsHtml5StackNode);
 }
 
-void 
+void
 nsHtml5StackNode::dropAttributes()
 {
   attributes = nullptr;
 }
 
-void 
+void
 nsHtml5StackNode::retain()
 {
   refcount++;
@@ -281,5 +280,3 @@ void
 nsHtml5StackNode::releaseStatics()
 {
 }
-
-

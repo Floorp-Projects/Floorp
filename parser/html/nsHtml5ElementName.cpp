@@ -79,7 +79,6 @@ nsHtml5ElementName::nsHtml5ElementName()
   MOZ_COUNT_CTOR(nsHtml5ElementName);
 }
 
-
 nsHtml5ElementName::~nsHtml5ElementName()
 {
   MOZ_COUNT_DTOR(nsHtml5ElementName);
@@ -330,7 +329,10 @@ static int32_t const ELEMENT_HASHES_DATA[] = {
   1938817026, 1941178676, 1963982850, 1965334268, 1967128578, 1967788867,
   1967795958, 1968836118
 };
-staticJArray<int32_t,int32_t> nsHtml5ElementName::ELEMENT_HASHES = { ELEMENT_HASHES_DATA, MOZ_ARRAY_LENGTH(ELEMENT_HASHES_DATA) };
+staticJArray<int32_t, int32_t> nsHtml5ElementName::ELEMENT_HASHES = {
+  ELEMENT_HASHES_DATA,
+  MOZ_ARRAY_LENGTH(ELEMENT_HASHES_DATA)
+};
 void
 nsHtml5ElementName::initializeStatics()
 {
@@ -1926,5 +1928,3 @@ nsHtml5ElementName::releaseStatics()
   delete ELT_TBODY;
   delete[] ELEMENT_NAMES;
 }
-
-
