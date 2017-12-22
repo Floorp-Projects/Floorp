@@ -22,8 +22,10 @@
 }
 
 #topBar {
-  -moz-appearance: listbox;
-  margin: 8px 8px 0;
+  border-bottom: 1px solid ThreeDShadow;
+  padding-inline-start: 10px;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
 }
 
 #generalTab {
@@ -51,8 +53,8 @@
   padding-right: 2px;
 }
 
-deck {
-  padding: 10px 10px 10px 10px;
+#mainDeck {
+  padding: 10px;
 }
 
 /* Misc */
@@ -67,7 +69,7 @@ tree {
 textbox {
   background: transparent !important;
   border: none;
-  padding: 0px;
+  padding: 0;
   margin-top: 1px;
   -moz-appearance: none;
 }
@@ -76,14 +78,11 @@ textbox.header {
   margin-inline-start: 0;
 }
 
-.iframe {
+#imagecontainerbox {
   margin: .5em;
   background: white;
   overflow: auto;
-}
-
-.fixedsize {
-  height: 8.5em;
+  border: 1px solid ThreeDLightShadow;
 }
 
 textbox[disabled] {
@@ -162,11 +161,6 @@ treechildren::-moz-tree-cell-text(broken) {
   color: graytext;
 }
 
-#mediaPreviewBox .inset {
-  -moz-appearance: listbox;
-  margin-bottom: 0;
-}
-
 /* Feeds Tab */
 #feedPanel {
   margin-left: 2px;
@@ -183,7 +177,7 @@ treechildren::-moz-tree-cell-text(broken) {
   padding-inline-start: 7px;
   padding-inline-end: 7px;
   min-height: 25px;
-  border-bottom: 1px dotted #C0C0C0;
+  border-bottom: 1px dotted ThreeDShadow;
   color: -moz-FieldText;
 }
 
@@ -194,11 +188,6 @@ treechildren::-moz-tree-cell-text(broken) {
 
 #feedListbox {
   margin-bottom: 0;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
 }
 
 .feedTitle {
@@ -206,31 +195,18 @@ treechildren::-moz-tree-cell-text(broken) {
 }
 
 /* Permissions Tab */
-#permPanel {
-  margin-left: 6px;
-  margin-right: 6px;
-}
 
 #permList {
   -moz-appearance: listbox;
-  margin-top: .5em;
+  margin: .5em;
   overflow: auto;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  background-color: -moz-field;
   color: -moz-FieldText;
 }
 
 .permission {
-  padding-top: 6px;
-  padding-bottom: 6px;
-  padding-inline-start: 7px;
-  padding-inline-end: 7px;
+  padding: 6px 7px;
   min-height: 25px;
-  border-bottom: 1px dotted #C0C0C0;
+  border-bottom: 1px dotted ThreeDShadow;
 }
 
 .permissionLabel {
