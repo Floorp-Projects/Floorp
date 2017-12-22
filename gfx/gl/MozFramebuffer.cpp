@@ -53,8 +53,6 @@ MozFramebuffer::Create(GLContext* const gl, const gfx::IntSize& size,
         colorName = gl->CreateTexture();
         const ScopedBindTexture bindTex(gl, colorName);
         gl->TexParams_SetClampNoMips();
-        const ScopedBindPBO bindPBO(gl, LOCAL_GL_PIXEL_UNPACK_BUFFER);
-        gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
         gl->fTexImage2D(colorTarget, 0, LOCAL_GL_RGBA,
                         size.width, size.height, 0,
                         LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, nullptr);

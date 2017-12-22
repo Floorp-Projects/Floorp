@@ -1034,6 +1034,15 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
         }
     }
 
+    mNeedsFakeNoStencil_UserFBs = false;
+#ifdef MOZ_WIDGET_COCOA
+    if (!nsCocoaFeatures::IsAtLeastVersion(10, 12) &&
+        gl->Vendor() == GLVendor::Intel)
+    {
+        mNeedsFakeNoStencil_UserFBs = true;
+    }
+#endif
+
     mResetLayer = true;
     mOptionsFrozen = true;
 
@@ -2112,7 +2121,8 @@ ScopedDrawCallWrapper::ScopedDrawCallWrapper(WebGLContext& webgl)
     uint8_t driverColorMask = mWebGL.mColorWriteMask;
     bool driverDepthTest    = mWebGL.mDepthTestEnabled;
     bool driverStencilTest  = mWebGL.mStencilTestEnabled;
-    if (!mWebGL.mBoundDrawFramebuffer) {
+    const auto& fb = mWebGL.mBoundDrawFramebuffer;
+    if (!fb) {
         if (mWebGL.mDefaultFB_DrawBuffer0 == LOCAL_GL_NONE) {
             driverColorMask = 0; // Is this well-optimized enough for depth-first
                                  // rendering?
@@ -2121,6 +2131,13 @@ ScopedDrawCallWrapper::ScopedDrawCallWrapper(WebGLContext& webgl)
         }
         driverDepthTest   &= !mWebGL.mNeedsFakeNoDepth;
         driverStencilTest &= !mWebGL.mNeedsFakeNoStencil;
+    } else {
+        if (mWebGL.mNeedsFakeNoStencil_UserFBs &&
+            fb->DepthAttachment().IsDefined() &&
+            !fb->StencilAttachment().IsDefined())
+        {
+            driverStencilTest = false;
+        }
     }
 
     const auto& gl = mWebGL.gl;
