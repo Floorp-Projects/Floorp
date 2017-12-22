@@ -631,10 +631,10 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     return;
   }
 
-  // Wait for parent's notifications, to get proper ordering between e.g. tab
-  // event and content event.
+  // Process parent's notifications before ours, to get proper ordering between
+  // e.g. tab event and content event.
   if (WaitingForParent()) {
-    return;
+    mDocument->ParentDocument()->mNotificationController->WillRefresh(aTime);
   }
 
   // Any generic notifications should be queued if we're processing content

@@ -182,6 +182,11 @@ struct BaseRect {
     *static_cast<Sub*>(this) = aRect1.Union(aRect2);
   }
 
+  void OrWith(const Sub& aRect1)
+  {
+    UnionRect(*static_cast<Sub*>(this), aRect1);
+  }
+
   // Computes the smallest rectangle that contains both the points (including
   // edges) of both aRect1 and aRect2.
   // Thus, empty input rectangles are allowed to affect the result.

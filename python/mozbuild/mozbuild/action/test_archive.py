@@ -171,13 +171,19 @@ ARCHIVE_FILES = {
         {
             'source': buildconfig.topsrcdir,
             'base': 'js/src/tests',
-            'pattern': 'ecma_6/**',
+            'pattern': 'non262/shell.js',
             'dest': 'jit-test/tests',
         },
         {
             'source': buildconfig.topsrcdir,
             'base': 'js/src/tests',
-            'pattern': 'js1_8_5/**',
+            'pattern': 'non262/Math/shell.js',
+            'dest': 'jit-test/tests',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'js/src/tests',
+            'pattern': 'non262/reflect-parse/Match.js',
             'dest': 'jit-test/tests',
         },
         {

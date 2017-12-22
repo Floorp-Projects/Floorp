@@ -552,11 +552,8 @@ Inspector.prototype = {
     let state = this.splitBox.state;
     Services.prefs.setIntPref("devtools.toolsidebar-width.inspector", state.width);
     Services.prefs.setIntPref("devtools.toolsidebar-height.inspector", state.height);
-
-    if (this.isSplitRuleViewEnabled) {
-      Services.prefs.setIntPref("devtools.toolsidebar-width.inspector.splitsidebar",
-        this.sidebarSplitBox.state.width);
-    }
+    Services.prefs.setIntPref("devtools.toolsidebar-width.inspector.splitsidebar",
+      this.sidebarSplitBox.state.width);
   },
 
   onSidebarResized: function (width, height) {

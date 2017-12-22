@@ -2340,6 +2340,11 @@ public:
   static bool IsAnimationLoggingEnabled();
 
   /**
+   * Checks if retained display lists are enabled.
+   */
+  static bool AreRetainedDisplayListsEnabled();
+
+  /**
    * Find a suitable scale for a element (aFrame's content) over the course of any
    * animations and transitions of the CSS transform property on the
    * element that run on the compositor thread.

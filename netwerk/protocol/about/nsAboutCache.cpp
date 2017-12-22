@@ -313,7 +313,7 @@ nsAboutCache::Channel::OnCacheStorageInfo(uint32_t aEntryCount, uint64_t aConsum
     }
 
     mBuffer.AssignLiteral("<h2>");
-    mBuffer.Append(mStorageName);
+    nsAppendEscapedHTML(mStorageName, mBuffer);
     mBuffer.AppendLiteral("</h2>\n"
                           "<table id=\"");
     mBuffer.AppendLiteral("\">\n");
@@ -361,7 +361,7 @@ nsAboutCache::Channel::OnCacheStorageInfo(uint32_t aEntryCount, uint64_t aConsum
         if (aEntryCount != 0) { // Add the "List Cache Entries" link
             mBuffer.AppendLiteral("  <tr>\n"
                                   "    <th><a href=\"about:cache?storage=");
-            mBuffer.Append(mStorageName);
+            nsAppendEscapedHTML(mStorageName, mBuffer);
             mBuffer.AppendLiteral("&amp;context=");
             nsAppendEscapedHTML(mContextString, mBuffer);
             mBuffer.AppendLiteral("\">List Cache Entries</a></th>\n"
@@ -429,7 +429,7 @@ nsAboutCache::Channel::OnCacheEntryInfo(nsIURI *aURI, const nsACString & aIdEnha
 
     nsAutoCString url;
     url.AssignLiteral("about:cache-entry?storage=");
-    url.Append(mStorageName);
+    nsAppendEscapedHTML(mStorageName, url);
 
     url.AppendLiteral("&amp;context=");
     nsAppendEscapedHTML(mContextString, url);
@@ -452,7 +452,7 @@ nsAboutCache::Channel::OnCacheEntryInfo(nsIURI *aURI, const nsACString & aIdEnha
     mBuffer.Append(url);
     mBuffer.AppendLiteral("\">");
     if (!aIdEnhance.IsEmpty()) {
-        mBuffer.Append(aIdEnhance);
+        nsAppendEscapedHTML(aIdEnhance, mBuffer);
         mBuffer.Append(':');
     }
     mBuffer.Append(escapedCacheURI);

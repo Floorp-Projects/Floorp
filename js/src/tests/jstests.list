@@ -4,7 +4,7 @@
 # Skip the folder with tests for the scripts
 skip include test/jstests.list
 
-skip script ecma_6/String/normalize-generateddata-input.js # input data for other test
+skip script non262/String/normalize-generateddata-input.js # input data for other test
 
 # Skip intl402 tests when Intl isn't available.
 skip-if(!this.hasOwnProperty('Intl')) include test262/intl402/jstests.list

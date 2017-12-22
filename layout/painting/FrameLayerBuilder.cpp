@@ -1299,7 +1299,8 @@ protected:
    * aItem in that layer.
    */
   void InvalidateForLayerChange(nsDisplayItem* aItem,
-                                PaintedLayer* aNewLayer);
+                                PaintedLayer* aNewLayer,
+                                DisplayItemData* aData);
   /**
    * Returns true if aItem's opaque area (in aOpaque) covers the entire
    * scrollable area of its presshell.
@@ -2106,18 +2107,6 @@ FrameLayerBuilder::GetOldLayerFor(nsDisplayItem* aItem,
   }
 
   return nullptr;
-}
-
-void
-FrameLayerBuilder::ClearCachedGeometry(nsDisplayItem* aItem)
-{
-  uint32_t key = aItem->GetPerFrameKey();
-  nsIFrame* frame = aItem->Frame();
-
-  DisplayItemData* oldData = GetOldLayerForFrame(frame, key);
-  if (oldData) {
-    oldData->mGeometry = nullptr;
-  }
 }
 
 /* static */ DisplayItemData*
@@ -3152,10 +3141,13 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
   for (auto& item : data->mAssignedDisplayItems) {
     MOZ_ASSERT(item.mItem->GetType() != DisplayItemType::TYPE_LAYER_EVENT_REGIONS);
 
-    InvalidateForLayerChange(item.mItem, data->mLayer);
+    DisplayItemData* oldData =
+      mLayerBuilder->GetOldLayerForFrame(item.mItem->Frame(), item.mItem->GetPerFrameKey());
+    InvalidateForLayerChange(item.mItem, data->mLayer, oldData);
     mLayerBuilder->AddPaintedDisplayItem(data, item.mItem, item.mClip,
                                          *this, item.mLayerState,
-                                         data->mAnimatedGeometryRootOffset);
+                                         data->mAnimatedGeometryRootOffset,
+                                         oldData);
   }
 
   NewLayerEntry* newLayerEntry = &mNewChildLayers[data->mNewChildLayersIndex];
@@ -4147,7 +4139,9 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       // InvalidateForLayerChange doesn't need the new layer pointer.
       // We also need to check the old data now, because BuildLayer
       // can overwrite it.
-      InvalidateForLayerChange(item, nullptr);
+      DisplayItemData* oldData =
+        mLayerBuilder->GetOldLayerForFrame(item->Frame(), item->GetPerFrameKey());
+      InvalidateForLayerChange(item, nullptr, oldData);
 
       // If the item would have its own layer but is invisible, just hide it.
       // Note that items without their own layers can't be skipped this
@@ -4445,7 +4439,9 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
        * No need to allocate geometry for items that aren't
        * part of a PaintedLayer.
        */
-      mLayerBuilder->AddLayerDisplayItem(ownLayer, item, layerState, nullptr);
+      oldData =
+        mLayerBuilder->GetOldLayerForFrame(item->Frame(), item->GetPerFrameKey());
+      mLayerBuilder->AddLayerDisplayItem(ownLayer, item, layerState, nullptr, oldData);
     } else {
       PaintedLayerData* paintedLayerData =
         mPaintedLayerDataTree.FindPaintedLayerFor(animatedGeometryRoot, itemASR, layerClipChain,
@@ -4491,18 +4487,18 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 }
 
 void
-ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, PaintedLayer* aNewLayer)
+ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
+                                         PaintedLayer* aNewLayer,
+                                         DisplayItemData* aData)
 {
   NS_ASSERTION(aItem->GetPerFrameKey(),
                "Display items that render using Thebes must have a key");
-  nsDisplayItemGeometry* oldGeometry = nullptr;
-  DisplayItemClip* oldClip = nullptr;
-  Layer* oldLayer = mLayerBuilder->GetOldLayerFor(aItem, &oldGeometry, &oldClip);
+  Layer* oldLayer = aData ? aData->mLayer.get() : nullptr;
   if (aNewLayer != oldLayer && oldLayer) {
     // The item has changed layers.
     // Invalidate the old bounds in the old layer and new bounds in the new layer.
     PaintedLayer* t = oldLayer->AsPaintedLayer();
-    if (t && oldGeometry) {
+    if (t && aData->mGeometry) {
       // Note that whenever the layer's scale changes, we invalidate the whole thing,
       // so it doesn't matter whether we are using the old scale at last paint
       // or a new scale here
@@ -4512,13 +4508,13 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, PaintedLayer* aNe
       }
 #endif
       InvalidatePostTransformRegion(t,
-          oldGeometry->ComputeInvalidationRegion(),
-          *oldClip,
+          aData->mGeometry->ComputeInvalidationRegion(),
+          aData->mClip,
           mLayerBuilder->GetLastPaintOffset(t));
     }
     // Clear the old geometry so that invalidation thinks the item has been
     // added this paint.
-    mLayerBuilder->ClearCachedGeometry(aItem);
+    aData->mGeometry = nullptr;
     aItem->NotifyRenderingChanged();
   }
 }
@@ -4647,7 +4643,8 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
                                         const DisplayItemClip& aClip,
                                         ContainerState& aContainerState,
                                         LayerState aLayerState,
-                                        const nsPoint& aTopLeft)
+                                        const nsPoint& aTopLeft,
+                                        DisplayItemData* aData)
 {
   PaintedLayer* layer = aLayerData->mLayer;
   PaintedDisplayItemLayerUserData* paintedData =
@@ -4680,7 +4677,7 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
     }
   }
 
-  AddLayerDisplayItem(layer, aItem, aLayerState, tempManager);
+  AddLayerDisplayItem(layer, aItem, aLayerState, tempManager, aData);
 
   PaintedLayerItemsEntry* entry = mPaintedLayerItems.PutEntry(layer);
   if (entry) {
@@ -4733,7 +4730,8 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
           (tempManager->GetUserData(&gLayerManagerUserData));
         lmd->mParent = parentLmd;
 #endif
-        layerBuilder->StoreDataForFrame(aItem, tmpLayer, LAYER_ACTIVE);
+        DisplayItemData* data = layerBuilder->GetDisplayItemDataForManager(aItem, tempManager);
+        layerBuilder->StoreDataForFrame(aItem, tmpLayer, LAYER_ACTIVE, data);
       }
 
       tempManager->SetRoot(tmpLayer);
@@ -4787,14 +4785,14 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
 }
 
 DisplayItemData*
-FrameLayerBuilder::StoreDataForFrame(nsDisplayItem* aItem, Layer* aLayer, LayerState aState)
+FrameLayerBuilder::StoreDataForFrame(nsDisplayItem* aItem, Layer* aLayer,
+                                     LayerState aState, DisplayItemData* aData)
 {
-  DisplayItemData* oldData = GetDisplayItemDataForManager(aItem, mRetainingManager);
-  if (oldData) {
-    if (!oldData->mUsed) {
-      oldData->BeginUpdate(aLayer, aState, mContainerLayerGeneration, aItem);
+  if (aData) {
+    if (!aData->mUsed) {
+      aData->BeginUpdate(aLayer, aState, mContainerLayerGeneration, aItem);
     }
-    return oldData;
+    return aData;
   }
 
   LayerManagerData* lmd = static_cast<LayerManagerData*>
@@ -4871,12 +4869,13 @@ void
 FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
                                        nsDisplayItem* aItem,
                                        LayerState aLayerState,
-                                       BasicLayerManager* aManager)
+                                       BasicLayerManager* aManager,
+                                       DisplayItemData* aData)
 {
   if (aLayer->Manager() != mRetainingManager)
     return;
 
-  DisplayItemData *data = StoreDataForFrame(aItem, aLayer, aLayerState);
+  DisplayItemData *data = StoreDataForFrame(aItem, aLayer, aLayerState, aData);
   data->mInactiveManager = aManager;
 }
 
@@ -5641,7 +5640,8 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
 
   if (mRetainingManager) {
     if (aContainerItem) {
-      StoreDataForFrame(aContainerItem, containerLayer, LAYER_ACTIVE);
+      DisplayItemData* data = GetDisplayItemDataForManager(aContainerItem, mRetainingManager);
+      StoreDataForFrame(aContainerItem, containerLayer, LAYER_ACTIVE, data);
     } else {
       StoreDataForFrame(aContainerFrame, containerDisplayItemKey, containerLayer, LAYER_ACTIVE);
     }

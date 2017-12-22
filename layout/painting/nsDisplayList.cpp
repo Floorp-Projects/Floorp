@@ -1058,11 +1058,9 @@ nsDisplayListBuilder::EndFrame()
 }
 
 void
-nsDisplayListBuilder::MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame, bool aAlreadyAddedFrame)
+nsDisplayListBuilder::MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame)
 {
-  if (!aAlreadyAddedFrame) {
-    mFramesMarkedForDisplay.AppendElement(aFrame);
-  }
+  mFramesMarkedForDisplay.AppendElement(aFrame);
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
     if (f->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO)
@@ -1189,53 +1187,17 @@ AnyContentAncestorModified(nsIFrame* aFrame,
   return false;
 }
 
-void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
+bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
                                                         nsIFrame* aFrame)
 {
-  nsRect visible = GetVisibleRect();
-  nsRect dirtyRectRelativeToDirtyFrame = GetDirtyRect();
-
-  if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
-      IsPaintingToWindow()) {
-    NS_ASSERTION(aDirtyFrame == aFrame->GetParent(), "Dirty frame should be viewport frame");
-    // position: fixed items are reflowed into and only drawn inside the
-    // viewport, or the scroll position clamping scrollport size, if one is
-    // set.
-    nsIPresShell* ps = aFrame->PresShell();
-    if (ps->IsScrollPositionClampingScrollPortSizeSet()) {
-      dirtyRectRelativeToDirtyFrame =
-        nsRect(nsPoint(0, 0), ps->GetScrollPositionClampingScrollPortSize());
-      visible = dirtyRectRelativeToDirtyFrame;
-#ifdef MOZ_WIDGET_ANDROID
-    } else {
-      dirtyRectRelativeToDirtyFrame =
-        nsRect(nsPoint(0, 0), aDirtyFrame->GetSize());
-      visible = dirtyRectRelativeToDirtyFrame;
-#endif
-    }
-  }
-  nsPoint offset = aFrame->GetOffsetTo(aDirtyFrame);
-  visible -= offset;
-  nsRect dirty = dirtyRectRelativeToDirtyFrame - offset;
-  nsRect overflowRect = aFrame->GetVisualOverflowRect();
-
-  if (aFrame->IsTransformed() &&
-      EffectCompositor::HasAnimationsForCompositor(aFrame,
-                                                   eCSSProperty_transform)) {
-   /**
-    * Add a fuzz factor to the overflow rectangle so that elements only just
-    * out of view are pulled into the display list, so they can be
-    * prerendered if necessary.
-    */
-    overflowRect.Inflate(nsPresContext::CSSPixelsToAppUnits(32));
-  }
-
-  visible.IntersectRect(visible, overflowRect);
-  dirty.IntersectRect(dirty, overflowRect);
-
+  MOZ_ASSERT(aFrame->GetParent() == aDirtyFrame);
+  nsRect dirty;
+  nsRect visible =
+    OutOfFlowDisplayData::ComputeVisibleRectForFrame(this, aFrame, GetVisibleRect(),
+                                                     GetDirtyRect(), &dirty);
   if (!(aFrame->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) &&
       visible.IsEmpty()) {
-    return;
+    return false;
   }
 
   // If the nearest stacking context for the modified frame is an ancestor of
@@ -1246,31 +1208,17 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
     dirty = visible;
   }
 
-  // Always store OutOfFlowDisplayData for visible frames (even when they aren't dirty)
-  // since a nested out-of-flow frame might force building and we'll need to have this
-  // data available.
-
-  // mClipState.GetClipChainForContainingBlockDescendants can return pointers
-  // to objects on the stack, so we need to clone the chain.
-  const DisplayItemClipChain* clipChain =
-    CopyWholeChain(mClipState.GetClipChainForContainingBlockDescendants());
-  const DisplayItemClipChain* combinedClipChain = mClipState.GetCurrentCombinedClipChain(this);
-  const ActiveScrolledRoot* asr = mCurrentActiveScrolledRoot;
-  OutOfFlowDisplayData* data = new OutOfFlowDisplayData(clipChain, combinedClipChain, asr, visible, dirty);
-  aFrame->SetProperty(nsDisplayListBuilder::OutOfFlowDisplayDataProperty(), data);
-  mFramesMarkedForDisplay.AppendElement(aFrame);
-
   // Only MarkFrameForDisplay if we're dirty. If this is a nested out-of-flow frame, then it will
   // also mark any outer frames to ensure that building reaches the dirty feame.
   if (!dirty.IsEmpty() ||
       aFrame->ForceDescendIntoIfVisible()) {
-    MarkFrameForDisplay(aFrame, aDirtyFrame, true);
+    MarkFrameForDisplay(aFrame, aDirtyFrame);
   }
+
+  return (aFrame->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO);
 }
 
 static void UnmarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
-  aFrame->DeleteProperty(nsDisplayListBuilder::OutOfFlowDisplayDataProperty());
-
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
     if (!(f->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO))
@@ -1295,6 +1243,8 @@ static void UnmarkFrameForDisplayIfVisible(nsIFrame* aFrame) {
 nsDisplayListBuilder::~nsDisplayListBuilder() {
   NS_ASSERTION(mFramesMarkedForDisplay.Length() == 0,
                "All frames should have been unmarked");
+  NS_ASSERTION(mFramesWithOOFData.Length() == 0,
+               "All OOF data should have been removed");
   NS_ASSERTION(mPresShellStates.Length() == 0,
                "All presshells should have been exited");
   NS_ASSERTION(!mCurrentTableItem, "No table item should be active");
@@ -1360,6 +1310,7 @@ nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
   state->mPresShell = aReferenceFrame->PresShell();
   state->mCaretFrame = nullptr;
   state->mFirstFrameMarkedForDisplay = mFramesMarkedForDisplay.Length();
+  state->mFirstFrameWithOOFData = mFramesWithOOFData.Length();
 
   nsIScrollableFrame* sf = state->mPresShell->GetRootScrollFrameAsScrollable();
   if (sf) {
@@ -1518,6 +1469,12 @@ nsDisplayListBuilder::ResetMarkedFramesForDisplayList(nsIFrame* aReferenceFrame)
     UnmarkFrameForDisplay(mFramesMarkedForDisplay[i], aReferenceFrame);
   }
   mFramesMarkedForDisplay.SetLength(firstFrameForShell);
+
+  firstFrameForShell = CurrentPresShellState()->mFirstFrameWithOOFData;
+  for (uint32_t i = firstFrameForShell; i < mFramesWithOOFData.Length(); ++i) {
+    mFramesWithOOFData[i]->DeleteProperty(OutOfFlowDisplayDataProperty());
+  }
+  mFramesWithOOFData.SetLength(firstFrameForShell);
 }
 
 void
@@ -1528,7 +1485,9 @@ nsDisplayListBuilder::ClearFixedBackgroundDisplayData()
 
 void
 nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
-                                               const nsFrameList& aFrames) {
+                                               const nsFrameList& aFrames)
+{
+  bool markedFrames = false;
   for (nsIFrame* e : aFrames) {
     // Skip the AccessibleCaret frame when building no caret.
     if (!IsBuildingCaret()) {
@@ -1540,7 +1499,21 @@ nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
         }
       }
     }
-    MarkOutOfFlowFrameForDisplay(aDirtyFrame, e);
+    if (MarkOutOfFlowFrameForDisplay(aDirtyFrame, e)) {
+      markedFrames = true;
+    }
+  }
+
+  if (markedFrames) {
+    // mClipState.GetClipChainForContainingBlockDescendants can return pointers
+    // to objects on the stack, so we need to clone the chain.
+    const DisplayItemClipChain* clipChain =
+      CopyWholeChain(mClipState.GetClipChainForContainingBlockDescendants());
+    const DisplayItemClipChain* combinedClipChain = mClipState.GetCurrentCombinedClipChain(this);
+    const ActiveScrolledRoot* asr = mCurrentActiveScrolledRoot;
+    OutOfFlowDisplayData* data = new OutOfFlowDisplayData(clipChain, combinedClipChain, asr, GetVisibleRect(), GetDirtyRect());
+    aDirtyFrame->SetProperty(nsDisplayListBuilder::OutOfFlowDisplayDataProperty(), data);
+    mFramesWithOOFData.AppendElement(aDirtyFrame);
   }
 
   if (!aDirtyFrame->GetParent()) {
@@ -5398,7 +5371,7 @@ nsDisplayBorder::nsDisplayBorder(nsDisplayListBuilder* aBuilder, nsIFrame* aFram
 {
   MOZ_COUNT_CTOR(nsDisplayBorder);
 
-  mBounds = CalculateBounds(*mFrame->StyleBorder()).GetBounds();
+  mBounds = CalculateBounds<nsRect>(*mFrame->StyleBorder());
 }
 
 bool
@@ -5436,8 +5409,7 @@ nsDisplayBorder::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
   const nsDisplayBorderGeometry* geometry = static_cast<const nsDisplayBorderGeometry*>(aGeometry);
   bool snap;
 
-  if (!geometry->mBounds.IsEqualInterior(GetBounds(aBuilder, &snap)) ||
-      !geometry->mContentRect.IsEqualInterior(GetContentRect())) {
+  if (!geometry->mBounds.IsEqualInterior(GetBounds(aBuilder, &snap))) {
     // We can probably get away with only invalidating the difference
     // between the border and padding rects, but the XUL ui at least
     // is apparently painting a background with this?
@@ -5711,53 +5683,6 @@ nsDisplayBorder::GetBounds(nsDisplayListBuilder* aBuilder,
 {
   *aSnap = true;
   return mBounds;
-}
-
-nsRegion
-nsDisplayBorder::CalculateBounds(const nsStyleBorder& aStyleBorder) const
-{
-  nsRect borderBounds(ToReferenceFrame(), mFrame->GetSize());
-  if (aStyleBorder.IsBorderImageLoaded()) {
-    borderBounds.Inflate(aStyleBorder.GetImageOutset());
-    return borderBounds;
-  } else {
-    nsMargin border = aStyleBorder.GetComputedBorder();
-    nsRegion result;
-    if (border.top > 0) {
-      result = nsRect(borderBounds.X(), borderBounds.Y(), borderBounds.Width(), border.top);
-    }
-    if (border.right > 0) {
-      result.OrWith(nsRect(borderBounds.XMost() - border.right, borderBounds.Y(), border.right, borderBounds.Height()));
-    }
-    if (border.bottom > 0) {
-      result.OrWith(nsRect(borderBounds.X(), borderBounds.YMost() - border.bottom, borderBounds.Width(), border.bottom));
-    }
-    if (border.left > 0) {
-      result.OrWith(nsRect(borderBounds.X(), borderBounds.Y(), border.left, borderBounds.Height()));
-    }
-
-    nscoord radii[8];
-    if (mFrame->GetBorderRadii(radii)) {
-      if (border.left > 0 || border.top > 0) {
-        nsSize cornerSize(radii[eCornerTopLeftX], radii[eCornerTopLeftY]);
-        result.OrWith(nsRect(borderBounds.TopLeft(), cornerSize));
-      }
-      if (border.top > 0 || border.right > 0) {
-        nsSize cornerSize(radii[eCornerTopRightX], radii[eCornerTopRightY]);
-        result.OrWith(nsRect(borderBounds.TopRight() - nsPoint(cornerSize.width, 0), cornerSize));
-      }
-      if (border.right > 0 || border.bottom > 0) {
-        nsSize cornerSize(radii[eCornerBottomRightX], radii[eCornerBottomRightY]);
-        result.OrWith(nsRect(borderBounds.BottomRight() - nsPoint(cornerSize.width, cornerSize.height), cornerSize));
-      }
-      if (border.bottom > 0 || border.left > 0) {
-        nsSize cornerSize(radii[eCornerBottomLeftX], radii[eCornerBottomLeftY]);
-        result.OrWith(nsRect(borderBounds.BottomLeft() - nsPoint(0, cornerSize.height), cornerSize));
-      }
-    }
-
-    return result;
-  }
 }
 
 // Given a region, compute a conservative approximation to it as a list

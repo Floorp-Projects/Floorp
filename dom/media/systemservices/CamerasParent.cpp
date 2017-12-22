@@ -883,31 +883,34 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
 
             auto candidateCapabilities = self->mAllCandidateCapabilities.find(
               nsCString(cap.VideoCapture()->CurrentDeviceName()));
-            MOZ_ASSERT(candidateCapabilities != self->mAllCandidateCapabilities.end());
-            MOZ_ASSERT(candidateCapabilities->second.size() > 0);
-            int32_t minIdx = -1;
-            uint64_t minDistance = UINT64_MAX;
+            MOZ_DIAGNOSTIC_ASSERT(candidateCapabilities != self->mAllCandidateCapabilities.end());
+            MOZ_DIAGNOSTIC_ASSERT(candidateCapabilities->second.size() > 0);
+            if ((candidateCapabilities != self->mAllCandidateCapabilities.end()) &&
+                (candidateCapabilities->second.size() > 0)) {
+              int32_t minIdx = -1;
+              uint64_t minDistance = UINT64_MAX;
 
-            for (auto & candidateCapability : candidateCapabilities->second) {
-              if (candidateCapability.second.rawType != capability.rawType) {
-                continue;
+              for (auto & candidateCapability : candidateCapabilities->second) {
+                if (candidateCapability.second.rawType != capability.rawType) {
+                  continue;
+                }
+                // The first priority is finding a suitable resolution.
+                // So here we raise the weight of width and height
+                uint64_t distance =
+                  uint64_t(ResolutionFeasibilityDistance(
+                    candidateCapability.second.width, capability.width)) +
+                  uint64_t(ResolutionFeasibilityDistance(
+                    candidateCapability.second.height, capability.height)) +
+                  uint64_t(FeasibilityDistance(
+                    candidateCapability.second.maxFPS, capability.maxFPS));
+                if (distance < minDistance) {
+                  minIdx = candidateCapability.first;
+                  minDistance = distance;
+                }
               }
-              // The first priority is finding a suitable resolution.
-              // So here we raise the weight of width and height
-              uint64_t distance =
-                uint64_t(ResolutionFeasibilityDistance(
-                  candidateCapability.second.width, capability.width)) +
-                uint64_t(ResolutionFeasibilityDistance(
-                  candidateCapability.second.height, capability.height)) +
-                uint64_t(FeasibilityDistance(
-                  candidateCapability.second.maxFPS, capability.maxFPS));
-              if (distance < minDistance) {
-                minIdx = candidateCapability.first;;
-                minDistance = distance;
-              }
+              MOZ_ASSERT(minIdx != -1);
+              capability = candidateCapabilities->second[minIdx];
             }
-            MOZ_ASSERT(minIdx != -1);
-            capability = candidateCapabilities->second[minIdx];
           } else if (aCapEngine == ScreenEngine ||
                      aCapEngine == BrowserEngine ||
                      aCapEngine == WinEngine ||
