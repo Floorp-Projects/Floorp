@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<title>webkit-text-stroke: fat stroke should not be clipped</title>
+<link rel="author" title="Jonathan Kew" href="jfkthame@gmail.com">
+<link rel="author" title="Mozilla" href="https://www.mozilla.org">
+<style>
+@font-face { font-family: test; src: url(../fonts/sil/CharisSIL-R.ttf); }
+body { font-family: test; }
+</style>
+<body>
+<div style="width: 500px; height: 400px;">
+<span style="margin-left: 50px; font-size: 64px;
+             -webkit-text-stroke: 10px green;">g&#x324;&#x326;&#x308;&#x302;</span>
+<!-- need this inline-block to make sure text is rendered at the same position as the SVG reference -->
+<div style="display:inline-block; width:0px; height:200px;"/>
+</div>
+<body>
+<html>
