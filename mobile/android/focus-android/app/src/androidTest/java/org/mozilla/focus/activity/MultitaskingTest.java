@@ -35,7 +35,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
-import static org.mozilla.focus.activity.TestHelper.createMockResponseFromAsset;
+import static org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset;
 import static org.mozilla.focus.helpers.EspressoHelper.navigateToMockWebServer;
 import static org.mozilla.focus.helpers.EspressoHelper.onFloatingEraseButton;
 import static org.mozilla.focus.helpers.EspressoHelper.onFloatingTabsButton;
