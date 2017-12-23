@@ -42,6 +42,7 @@ class ClientHandle final : public ClientThing<ClientHandleChild>
 
   RefPtr<ClientManager> mManager;
   nsCOMPtr<nsISerialEventTarget> mSerialEventTarget;
+  RefPtr<GenericPromise::Private> mDetachPromise;
   ClientInfo mClientInfo;
 
   ~ClientHandle();
@@ -51,6 +52,10 @@ class ClientHandle final : public ClientThing<ClientHandleChild>
 
   already_AddRefed<ClientOpPromise>
   StartOp(const ClientOpConstructorArgs& aArgs);
+
+  // ClientThing interface
+  void
+  OnShutdownThing() override;
 
   // Private methods called by ClientHandleChild
   void
@@ -89,6 +94,17 @@ public:
   RefPtr<GenericPromise>
   PostMessage(ipc::StructuredCloneData& aData,
               const ServiceWorkerDescriptor& aSource);
+
+  // Return a Promise that resolves when the ClientHandle object is detached
+  // from its remote actors.  This will happen if the ClientSource is destroyed
+  // and triggers the cleanup of the handle actors.  It will also naturally
+  // happen when the ClientHandle is de-referenced and tears down its own
+  // actors.
+  //
+  // Note: This method can only be called on the ClientHandle owning thread,
+  //       but the MozPromise lets you Then() to another thread.
+  RefPtr<GenericPromise>
+  OnDetach();
 
   NS_INLINE_DECL_REFCOUNTING(ClientHandle);
 };
