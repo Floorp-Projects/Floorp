@@ -3,4 +3,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOZ_APP_DISPLAYNAME="Firefox Nightly"
-MOZ_MACBUNDLE_ID=nightly
+MOZ_MACBUNDLE_ID=firefoxnightly
