@@ -635,6 +635,9 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   // e.g. tab event and content event.
   if (WaitingForParent()) {
     mDocument->ParentDocument()->mNotificationController->WillRefresh(aTime);
+    if (!mDocument) {
+      return;
+    }
   }
 
   // Any generic notifications should be queued if we're processing content
