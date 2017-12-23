@@ -384,7 +384,11 @@ public:
                                   bool aIsTrustedEvent) override;
     void ClickWithInputSource(uint16_t aInputSource, bool aIsTrustedEvent);
 
-    virtual nsIContent *GetBindingParent() const override;
+    nsIContent* GetBindingParent() const final
+    {
+      return mBindingParent;
+    }
+
     virtual bool IsNodeOfType(uint32_t aFlags) const override;
     virtual bool IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse) override;
 
