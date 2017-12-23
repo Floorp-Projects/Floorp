@@ -65,16 +65,6 @@ ClientHandle::StartOp(const ClientOpConstructorArgs& aArgs)
   return ref.forget();
 }
 
-void
-ClientHandle::OnShutdownThing()
-{
-  NS_ASSERT_OWNINGTHREAD(ClientHandle);
-  if (!mDetachPromise) {
-    return;
-  }
-  mDetachPromise->Resolve(true, __func__);
-}
-
 ClientHandle::ClientHandle(ClientManager* aManager,
                            nsISerialEventTarget* aSerialEventTarget,
                            const ClientInfo& aClientInfo)
@@ -190,22 +180,6 @@ ClientHandle::PostMessage(StructuredCloneData& aData,
 
   ref = outerPromise.get();
   return ref.forget();
-}
-
-RefPtr<GenericPromise>
-ClientHandle::OnDetach()
-{
-  NS_ASSERT_OWNINGTHREAD(ClientSource);
-
-  if (!mDetachPromise) {
-    mDetachPromise = new GenericPromise::Private(__func__);
-    if (IsShutdown()) {
-      mDetachPromise->Resolve(true, __func__);
-    }
-  }
-
-  RefPtr<GenericPromise> ref(mDetachPromise);
-  return Move(ref);
 }
 
 } // namespace dom

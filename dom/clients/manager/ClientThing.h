@@ -90,15 +90,6 @@ protected:
       mActor->MaybeStartTeardown();
       mActor = nullptr;
     }
-
-    OnShutdownThing();
-  }
-
-  // Allow extending classes to take action when shutdown.
-  virtual void
-  OnShutdownThing()
-  {
-    // by default do nothing
   }
 
 public:
@@ -115,8 +106,6 @@ public:
     // instead of calling ShutdownThing() to avoid calling MaybeStartTeardown()
     // on the destroyed actor.
     mShutdown = true;
-
-    OnShutdownThing();
   }
 };
 
