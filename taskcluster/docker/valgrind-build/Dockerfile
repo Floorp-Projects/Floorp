@@ -39,10 +39,13 @@ ADD topsrcdir/taskcluster/docker/recipes/centos6-build-system-setup.sh /setup/sy
 # %include taskcluster/docker/recipes/centos-install-debug-symbols.sh
 ADD topsrcdir/taskcluster/docker/recipes/centos-install-debug-symbols.sh /setup/install-debug-symbols.sh
 
+# %include build/unix/build-gtk3/build-gtk3.sh
+ADD topsrcdir/build/unix/build-gtk3/build-gtk3.sh /setup/build-gtk3.sh
+
 # TODO remove once base image doesn't install Mercurial
 RUN pip uninstall -y Mercurial
 
-RUN bash /setup/system-setup.sh
+RUN bash /setup/build-gtk3.sh && bash /setup/system-setup.sh
 
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
 # %include taskcluster/docker/recipes/xvfb.sh
