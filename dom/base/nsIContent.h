@@ -530,32 +530,6 @@ public:
   virtual nsXBLBinding* DoGetXBLBinding() const = 0;
 
   /**
-   * Sets or unsets an XBL binding for this element. Setting a
-   * binding on an element that already has a binding will remove the
-   * old binding.
-   *
-   * @param aBinding The binding to bind to this content. If nullptr is
-   *        provided as the argument, then existing binding will be
-   *        removed.
-   *
-   * @param aOldBindingManager The old binding manager that contains
-   *                           this content if this content was adopted
-   *                           to another document.
-   */
-  virtual void SetXBLBinding(nsXBLBinding* aBinding,
-                             nsBindingManager* aOldBindingManager = nullptr) = 0;
-
-  /**
-   * Sets the ShadowRoot binding for this element. The contents of the
-   * binding is rendered in place of this node's children.
-   *
-   * @param aShadowRoot The ShadowRoot to be bound to this element.
-   *
-   * FIXME(emilio): No reason this lives in nsIContent, should move to Element.
-   */
-  virtual void SetShadowRoot(mozilla::dom::ShadowRoot* aShadowRoot) = 0;
-
-  /**
    * Gets the ShadowRoot binding for this element.
    *
    * @return The ShadowRoot currently bound to this element.

@@ -159,9 +159,6 @@ public:
 #endif
 
   virtual nsXBLBinding* DoGetXBLBinding() const override;
-  virtual void SetXBLBinding(nsXBLBinding* aBinding,
-                             nsBindingManager* aOldBindingManager = nullptr) override;
-  virtual void SetShadowRoot(mozilla::dom::ShadowRoot* aShadowRoot) override;
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
   virtual bool IsLink(nsIURI** aURI) const override;
 

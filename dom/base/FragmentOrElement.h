@@ -149,9 +149,6 @@ public:
   MOZ_MUST_USE
   virtual bool AppendTextTo(nsAString& aResult, const mozilla::fallible_t&) override;
   virtual nsXBLBinding* DoGetXBLBinding() const override;
-  virtual void SetXBLBinding(nsXBLBinding* aBinding,
-                             nsBindingManager* aOldBindingManager = nullptr) override;
-  virtual void SetShadowRoot(ShadowRoot* aBinding) override;
   virtual bool IsLink(nsIURI** aURI) const override;
 
   virtual void DestroyContent() override;
