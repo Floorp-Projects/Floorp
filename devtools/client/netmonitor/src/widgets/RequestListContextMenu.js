@@ -40,6 +40,7 @@ class RequestListContextMenu {
       requestPostDataAvailable,
       responseHeaders,
       responseHeadersAvailable,
+      responseContent,
       responseContentAvailable,
       url,
     } = selectedRequest;
@@ -73,7 +74,7 @@ class RequestListContextMenu {
       // Menu item will be visible even if data hasn't arrived, so we need to check
       // *Available property and then fetch data lazily once user triggers the action.
       visible: !!(selectedRequest && (requestPostDataAvailable || requestPostData)),
-      click: () => this.copyPostData(id, formDataSections),
+      click: () => this.copyPostData(id, formDataSections, requestPostData),
     });
 
     copySubmenu.push({
@@ -82,8 +83,11 @@ class RequestListContextMenu {
       accesskey: L10N.getStr("netmonitor.context.copyAsCurl.accesskey"),
       // Menu item will be visible even if data hasn't arrived, so we need to check
       // *Available property and then fetch data lazily once user triggers the action.
-      visible: !!(selectedRequest && (requestHeadersAvailable || requestHeaders)),
-      click: () => this.copyAsCurl(id, url, method, requestHeaders, httpVersion),
+      visible: !!(selectedRequest &&
+        (requestHeadersAvailable || requestHeaders) &&
+        (responseContentAvailable || responseContent)),
+      click: () =>
+        this.copyAsCurl(id, url, method, httpVersion, requestHeaders, responseContent),
     });
 
     copySubmenu.push({
@@ -117,16 +121,17 @@ class RequestListContextMenu {
       accesskey: L10N.getStr("netmonitor.context.copyResponse.accesskey"),
       // Menu item will be visible even if data hasn't arrived, so we need to check
       // *Available property and then fetch data lazily once user triggers the action.
-      visible: !!(selectedRequest && responseContentAvailable),
-      click: () => this.copyResponse(id),
+      visible: !!(selectedRequest && (responseContentAvailable || responseContent)),
+      click: () => this.copyResponse(id, responseContent),
     });
 
     copySubmenu.push({
       id: "request-list-context-copy-image-as-data-uri",
       label: L10N.getStr("netmonitor.context.copyImageAsDataUri"),
       accesskey: L10N.getStr("netmonitor.context.copyImageAsDataUri.accesskey"),
-      visible: !!(selectedRequest && mimeType && mimeType.includes("image/")),
-      click: () => this.copyImageAsDataUri(id, mimeType),
+      visible: !!(selectedRequest && (responseContentAvailable || responseContent) &&
+        mimeType && mimeType.includes("image/")),
+      click: () => this.copyImageAsDataUri(id, mimeType, responseContent),
     });
 
     copySubmenu.push({
@@ -161,8 +166,9 @@ class RequestListContextMenu {
       id: "request-list-context-save-image-as",
       label: L10N.getStr("netmonitor.context.saveImageAs"),
       accesskey: L10N.getStr("netmonitor.context.saveImageAs.accesskey"),
-      visible: !!(selectedRequest && mimeType && mimeType.includes("image/")),
-      click: () => this.saveImageAs(id, url),
+      visible: !!(selectedRequest && (responseContentAvailable || responseContent) &&
+        mimeType && mimeType.includes("image/")),
+      click: () => this.saveImageAs(id, url, responseContent),
     });
 
     menu.push({
@@ -263,7 +269,7 @@ class RequestListContextMenu {
    * Copy the request form data parameters (or raw payload) from
    * the currently selected item.
    */
-  async copyPostData(id, formDataSections) {
+  async copyPostData(id, formDataSections, requestPostData) {
     let params = [];
     // Try to extract any form data parameters.
     formDataSections.forEach(section => {
@@ -279,8 +285,9 @@ class RequestListContextMenu {
 
     // Fall back to raw payload.
     if (!string) {
-      let { requestPostData } = await this.props.connector
-        .requestData(id, "requestPostData");
+      requestPostData = requestPostData ||
+        await this.props.connector.requestData(id, "requestPostData").requestPostData;
+
       string = requestPostData.postData.text;
       if (Services.appinfo.OS !== "WINNT") {
         string = string.replace(/\r/g, "");
@@ -292,18 +299,19 @@ class RequestListContextMenu {
   /**
    * Copy a cURL command from the currently selected item.
    */
-  async copyAsCurl(id, url, method, requestHeaders, httpVersion) {
-    if (!requestHeaders) {
-      requestHeaders = await this.props.connector.requestData(id, "requestHeaders");
-    }
-    let { requestPostData } = await this.props.connector
-      .requestData(id, "requestPostData");
+  async copyAsCurl(id, url, method, httpVersion, requestHeaders, requestPostData) {
+    requestHeaders = requestHeaders ||
+      await this.props.connector.requestData(id, "requestHeaders");
+
+    requestPostData = requestPostData ||
+      await this.props.connector.requestData(id, "requestPostData").requestPostData;
+
     // Create a sanitized object for the Curl command generator.
     let data = {
       url,
       method,
       headers: requestHeaders.headers,
-      httpVersion: httpVersion,
+      httpVersion,
       postDataText: requestPostData ? requestPostData.postData.text : "",
     };
     copyString(Curl.generateCommand(data));
@@ -313,9 +321,9 @@ class RequestListContextMenu {
    * Copy the raw request headers from the currently selected item.
    */
   async copyRequestHeaders(id, requestHeaders) {
-    if (!requestHeaders) {
-      requestHeaders = await this.props.connector.requestData(id, "requestHeaders");
-    }
+    requestHeaders = requestHeaders ||
+      await this.props.connector.requestData(id, "requestHeaders");
+
     let rawHeaders = requestHeaders.rawHeaders.trim();
 
     if (Services.appinfo.OS !== "WINNT") {
@@ -328,9 +336,9 @@ class RequestListContextMenu {
    * Copy the raw response headers from the currently selected item.
    */
   async copyResponseHeaders(id, responseHeaders) {
-    if (!responseHeaders) {
-      responseHeaders = await this.props.connector.requestData(id, "responseHeaders");
-    }
+    responseHeaders = responseHeaders ||
+      await this.props.connector.requestData(id, "responseHeaders");
+
     let rawHeaders = responseHeaders.rawHeaders.trim();
 
     if (Services.appinfo.OS !== "WINNT") {
@@ -342,8 +350,10 @@ class RequestListContextMenu {
   /**
    * Copy image as data uri.
    */
-  async copyImageAsDataUri(id, mimeType) {
-    let responseContent = await this.props.connector.requestData(id, "responseContent");
+  async copyImageAsDataUri(id, mimeType, responseContent) {
+    responseContent = responseContent ||
+      await this.props.connector.requestData(id, "responseContent");
+
     let { encoding, text } = responseContent.content;
     copyString(formDataURI(mimeType, encoding, text));
   }
@@ -351,8 +361,10 @@ class RequestListContextMenu {
   /**
    * Save image as.
    */
-  async saveImageAs(id, url) {
-    let responseContent = await this.props.connector.requestData(id, "responseContent");
+  async saveImageAs(id, url, responseContent) {
+    responseContent = responseContent ||
+      await this.props.connector.requestData(id, "responseContent");
+
     let { encoding, text } = responseContent.content;
     let fileName = getUrlBaseName(url);
     let data;
@@ -371,8 +383,10 @@ class RequestListContextMenu {
   /**
    * Copy response data as a string.
    */
-  async copyResponse(id) {
-    let responseContent = await this.props.connector.requestData(id, "responseContent");
+  async copyResponse(id, responseContent) {
+    responseContent = responseContent ||
+      await this.props.connector.requestData(id, "responseContent");
+
     copyString(responseContent.content.text);
   }
 
