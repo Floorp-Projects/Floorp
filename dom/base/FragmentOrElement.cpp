@@ -1192,54 +1192,6 @@ FragmentOrElement::DoGetXBLBinding() const
 }
 
 void
-FragmentOrElement::SetXBLBinding(nsXBLBinding* aBinding,
-                                 nsBindingManager* aOldBindingManager)
-{
-  nsBindingManager* bindingManager;
-  if (aOldBindingManager) {
-    MOZ_ASSERT(!aBinding, "aOldBindingManager should only be provided "
-                          "when removing a binding.");
-    bindingManager = aOldBindingManager;
-  } else {
-    bindingManager = OwnerDoc()->BindingManager();
-  }
-
-  // After this point, aBinding will be the most-derived binding for aContent.
-  // If we already have a binding for aContent, make sure to
-  // remove it from the attached stack.  Otherwise we might end up firing its
-  // constructor twice (if aBinding inherits from it) or firing its constructor
-  // after aContent has been deleted (if aBinding is null and the content node
-  // dies before we process mAttachedStack).
-  RefPtr<nsXBLBinding> oldBinding = GetXBLBinding();
-  if (oldBinding) {
-    bindingManager->RemoveFromAttachedQueue(oldBinding);
-  }
-
-  if (aBinding) {
-    SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
-    nsExtendedDOMSlots* slots = ExtendedDOMSlots();
-    slots->mXBLBinding = aBinding;
-    bindingManager->AddBoundContent(this);
-  } else {
-    nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-    if (slots) {
-      slots->mXBLBinding = nullptr;
-    }
-    bindingManager->RemoveBoundContent(this);
-    if (oldBinding) {
-      oldBinding->SetBoundElement(nullptr);
-    }
-  }
-}
-
-void
-FragmentOrElement::SetShadowRoot(ShadowRoot* aShadowRoot)
-{
-  nsExtendedDOMSlots* slots = ExtendedDOMSlots();
-  slots->mShadowRoot = aShadowRoot;
-}
-
-void
 nsIContent::SetAssignedSlot(HTMLSlotElement* aSlot)
 {
   ExtendedContentSlots()->mAssignedSlot = aSlot;

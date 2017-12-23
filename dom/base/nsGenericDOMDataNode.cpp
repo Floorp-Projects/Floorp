@@ -669,17 +669,6 @@ nsGenericDOMDataNode::DoGetXBLBinding() const
   return nullptr;
 }
 
-void
-nsGenericDOMDataNode::SetXBLBinding(nsXBLBinding* aBinding,
-                                    nsBindingManager* aOldBindingManager)
-{
-}
-
-void
-nsGenericDOMDataNode::SetShadowRoot(ShadowRoot* aShadowRoot)
-{
-}
-
 bool
 nsGenericDOMDataNode::IsNodeOfType(uint32_t aFlags) const
 {
