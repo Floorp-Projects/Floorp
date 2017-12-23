@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import yaml
 
 from mozbuild.util import memoize
 from mozpack.files import GeneratedFile
@@ -191,11 +192,33 @@ def build_from_context(docker_bin, context_path, prefix, tag=None):
 
 
 @memoize
+def image_paths():
+    """Return a map of image name to paths containing their Dockerfile.
+    """
+    with open(os.path.join(GECKO, 'taskcluster', 'ci', 'docker-image',
+                           'kind.yml')) as fh:
+        config = yaml.load(fh)
+        return {
+            k: os.path.join(IMAGE_DIR, v.get('definition', k))
+            for k, v in config['jobs'].items()
+        }
+
+
+def image_path(name):
+    paths = image_paths()
+    if name in paths:
+        return paths[name]
+    return os.path.join(IMAGE_DIR, name)
+
+
+@memoize
 def parse_volumes(image):
     """Parse VOLUME entries from a Dockerfile for an image."""
     volumes = set()
 
-    with open(os.path.join(IMAGE_DIR, image, 'Dockerfile'), 'rb') as fh:
+    path = image_path(image)
+
+    with open(os.path.join(path, 'Dockerfile'), 'rb') as fh:
         for line in fh:
             line = line.strip()
             # We assume VOLUME definitions don't use %ARGS.
