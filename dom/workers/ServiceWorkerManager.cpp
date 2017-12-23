@@ -2309,17 +2309,18 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
     entry.Remove();
   }
 
-  // The registration should generally only be removed if there are no controlled
-  // documents, but mControlledDocuments can contain references to potentially
-  // controlled docs.  This happens when the service worker is not active yet.
-  // We must purge these references since we are evicting the registration.
+  // Verify there are no controlled documents for the purged registration.
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   for (auto iter = swm->mControlledDocuments.Iter(); !iter.Done(); iter.Next()) {
     ServiceWorkerRegistrationInfo* reg = iter.UserData();
-    MOZ_ASSERT(reg);
     if (reg->mScope.Equals(aRegistration->mScope)) {
+      MOZ_DIAGNOSTIC_ASSERT(false,
+                            "controlled document when removing registration");
       iter.Remove();
+      break;
     }
   }
+#endif
 
   RefPtr<ServiceWorkerRegistrationInfo> info;
   data->mInfos.Remove(aRegistration->mScope, getter_AddRefs(info));
