@@ -1786,34 +1786,11 @@ nsGlobalWindowInner::EnsureClientSource()
     }
   }
 
-  // Verify the final ClientSource principal matches the final document
-  // principal.  The ClientChannelHelper handles things like network
-  // redirects, but there are other ways the document principal can change.
-  // For example, if something sets the nsIChannel.owner property, then
-  // the final channel principal can be anything.  Unfortunately there is
-  // no good way to detect this until after the channel completes loading.
-  //
-  // For now we handle this just by reseting the ClientSource.  This will
-  // result in a new ClientSource with the correct principal being created.
-  // To APIs like ServiceWorker and Clients API it will look like there was
-  // an initial content page created that was then immediately replaced.
-  // This is pretty close to what we are actually doing.
-  if (mClientSource) {
-    nsCOMPtr<nsIPrincipal> clientPrincipal(mClientSource->Info().GetPrincipal());
-    if (!clientPrincipal || !clientPrincipal->Equals(mDoc->NodePrincipal())) {
-      mClientSource.reset();
-    }
-  }
-
   // If we don't have a reserved client or an initial client, then create
   // one now.  This can happen in certain cases where we avoid preallocating
   // the client in the docshell.  This mainly occurs in situations where
   // the principal is not clearly inherited from the parent; e.g. sandboxed
   // iframes, window.open(), etc.
-  //
-  // We also do this late ClientSource creation if the final document ended
-  // up with a different principal.
-  //
   // TODO: We may not be marking initial about:blank documents created
   //       this way as controlled by a service worker properly.  The
   //       controller should be coming from the same place as the inheritted
@@ -1827,23 +1804,13 @@ nsGlobalWindowInner::EnsureClientSource()
                                                 mDoc->NodePrincipal());
     MOZ_DIAGNOSTIC_ASSERT(mClientSource);
     newClientSource = true;
-
-    // Note, we don't apply the loadinfo controller below if we create
-    // the ClientSource here.
   }
 
   // The load may have started controlling the Client as well.  If
   // so, mark it as controlled immediately here.  The actor may
   // or may not have been notified by the parent side about being
   // controlled yet.
-  //
-  // Note: We should be careful not to control a client that was created late.
-  //       These clients were not seen by the ServiceWorkerManager when it
-  //       marked the LoadInfo controlled and it won't know about them.  Its
-  //       also possible we are creating the client late due to the final
-  //       principal changing and these clients should definitely not be
-  //       controlled by a service worker with a different principal.
-  else if (loadInfo) {
+  if (loadInfo) {
     const Maybe<ServiceWorkerDescriptor> controller = loadInfo->GetController();
     if (controller.isSome()) {
       mClientSource->SetController(controller.ref());
