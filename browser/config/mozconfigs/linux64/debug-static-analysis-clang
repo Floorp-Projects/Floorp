@@ -18,7 +18,6 @@ ac_add_options --enable-clang-plugin
 
 . "$topsrcdir/build/unix/mozconfig.stdcxx"
 
-export PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig:/usr/share/pkgconfig
-. $topsrcdir/build/unix/mozconfig.gtk
+export PKG_CONFIG_LIBDIR=/usr/local/lib64/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig
 
 . "$topsrcdir/build/mozconfig.common.override"
