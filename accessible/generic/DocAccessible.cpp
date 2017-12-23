@@ -1853,6 +1853,7 @@ InsertIterator::Next()
       if (finder.Seek(node)) {
         mChild = mWalker.Scope(node);
         if (mChild) {
+          MOZ_ASSERT(!mChild->IsRelocated(), "child cannot be aria owned");
           mChildBefore = finder.Prev();
           return true;
         }

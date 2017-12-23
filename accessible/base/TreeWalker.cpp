@@ -76,6 +76,8 @@ TreeWalker::Scope(nsIContent* aAnchorNode)
 
   mAnchorNode = aAnchorNode;
 
+  mFlags |= eScoped;
+
   bool skipSubtree = false;
   Accessible* acc = AccessibleFor(aAnchorNode, 0, &skipSubtree);
   if (acc) {
@@ -112,6 +114,8 @@ TreeWalker::Seek(nsIContent* aChildNode)
     // If ARIA owned child.
     Accessible* child = mDoc->GetAccessible(childNode);
     if (child && child->IsRelocated()) {
+      MOZ_ASSERT(!(mFlags & eScoped),
+        "Walker should not be scoped when seeking into relocated children");
       if (child->Parent() != mContext) {
         return false;
       }
@@ -149,12 +153,16 @@ TreeWalker::Next()
     }
 
     if (mPhase == eAtDOM || mPhase == eAtARIAOwns) {
-      mPhase = eAtARIAOwns;
-      Accessible* child = mDoc->ARIAOwnedAt(mContext, mARIAOwnsIdx);
-      if (child) {
-        mARIAOwnsIdx++;
-        return child;
+      if (!(mFlags & eScoped)) {
+        mPhase = eAtARIAOwns;
+        Accessible* child = mDoc->ARIAOwnedAt(mContext, mARIAOwnsIdx);
+        if (child) {
+          mARIAOwnsIdx++;
+          return child;
+        }
       }
+      MOZ_ASSERT(!(mFlags & eScoped) || mPhase != eAtARIAOwns,
+        "Don't walk relocated children in scoped mode");
       mPhase = eAtEnd;
       return nullptr;
     }
@@ -230,11 +238,17 @@ TreeWalker::Prev()
     }
 
     if (mPhase == eAtEnd) {
-      mARIAOwnsIdx = mDoc->ARIAOwnedCount(mContext);
-      mPhase = eAtARIAOwns;
+      if (mFlags & eScoped) {
+        mPhase = eAtDOM;
+      } else {
+        mPhase = eAtARIAOwns;
+        mARIAOwnsIdx = mDoc->ARIAOwnedCount(mContext);
+      }
     }
 
     if (mPhase == eAtARIAOwns) {
+      MOZ_ASSERT(!(mFlags & eScoped),
+        "Should not walk relocated children in scoped mode");
       if (mARIAOwnsIdx > 0) {
         return mDoc->ARIAOwnedAt(mContext, --mARIAOwnsIdx);
       }
