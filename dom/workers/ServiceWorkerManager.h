@@ -21,6 +21,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/ClientHandle.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerCommon.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
@@ -104,6 +105,21 @@ public:
   nsTObserverArray<ServiceWorkerRegistrationListener*> mServiceWorkerRegistrationListeners;
 
   nsRefPtrHashtable<nsISupportsHashKey, ServiceWorkerRegistrationInfo> mControlledDocuments;
+
+  struct ControlledClientData
+  {
+    RefPtr<ClientHandle> mClientHandle;
+    RefPtr<ServiceWorkerRegistrationInfo> mRegistrationInfo;
+
+    ControlledClientData(ClientHandle* aClientHandle,
+                         ServiceWorkerRegistrationInfo* aRegistrationInfo)
+      : mClientHandle(aClientHandle)
+      , mRegistrationInfo(aRegistrationInfo)
+    {
+    }
+  };
+
+  nsClassHashtable<nsIDHashKey, ControlledClientData> mControlledClients;
 
   // Track all documents that have attempted to register a service worker for a
   // given scope.
@@ -327,6 +343,13 @@ private:
 
   void
   Init(ServiceWorkerRegistrar* aRegistrar);
+
+  void
+  StartControllingClient(const ClientInfo& aClientInfo,
+                         ServiceWorkerRegistrationInfo* aRegistrationInfo);
+
+  void
+  StopControllingClient(const ClientInfo& aClientInfo);
 
   void
   MaybeStartShutdown();
