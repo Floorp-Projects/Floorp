@@ -534,7 +534,7 @@ def print_test_summary(num_tests, failures, complete, doing, options):
             if options.show_failed:
                 print('    ' + subprocess.list2cmdline(res.cmd))
             else:
-                print('    ' + ' '.join(res.test.jitflags + [res.test.path]))
+                print('    ' + ' '.join(res.test.jitflags + [res.test.relpath_tests]))
 
         print('FAILURES:')
         for res in failures:
