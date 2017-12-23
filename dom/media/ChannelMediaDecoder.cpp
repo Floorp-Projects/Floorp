@@ -337,6 +337,7 @@ ChannelMediaDecoder::NotifyDownloadEnded(nsresult aStatus)
       });
     nsresult rv = GetStateMachine()->OwnerThread()->Dispatch(r.forget());
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
     owner->DownloadSuspended();
     // NotifySuspendedStatusChanged will tell the element that download
     // has been suspended "by the cache", which is true since we never
@@ -403,6 +404,7 @@ ChannelMediaDecoder::DurationChanged()
     });
   nsresult rv = GetStateMachine()->OwnerThread()->Dispatch(r.forget());
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
 }
 
 void
