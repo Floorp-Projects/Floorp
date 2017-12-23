@@ -155,6 +155,7 @@
 #include "mozIAsyncFavicons.h"
 #endif
 #include "nsINetworkPredictor.h"
+#include "nsIServiceWorkerManager.h"
 
 // Editor-related
 #include "nsIEditingSession.h"
@@ -3464,13 +3465,27 @@ nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal)
     return;
   }
 
+  nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
+  if (!swm) {
+    return;
+  }
+
   // If the parent is controlled then propagate that controller to the
   // initial about:blank client as well.  This will set the controller
   // in the ClientManagerService in the parent.
-  RefPtr<ClientHandle> handle =
-    ClientManager::CreateHandle(mInitialClientSource->Info(),
-                                parentInner->EventTargetFor(TaskCategory::Other));
-  handle->Control(controller.ref());
+  //
+  // Note: If the registration is missing from the SWM we avoid setting
+  //       the controller on the client.  We can do this synchronously
+  //       for now since SWM is in the child process.  In the future
+  //       when SWM is in the parent process we will probably have to
+  //       always set the initial client source and then somehow clear
+  //       it if we find the registration is acutally gone.  Its also
+  //       possible this race only occurs in cases where the resulting
+  //       window is no longer exposed.  For example, in theory the SW
+  //       should not go away if our parent window is controlled.
+  if (!swm->StartControlling(mInitialClientSource->Info(), controller.ref())) {
+    return;
+  }
 
   // Also mark the ClientSource as controlled directly in case script
   // immediately accesses navigator.serviceWorker.controller.
