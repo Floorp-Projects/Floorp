@@ -17,7 +17,7 @@ namespace workers {
 class ServiceWorkerRegistrationInfo final
   : public nsIServiceWorkerRegistrationInfo
 {
-  uint32_t mControlledClientsCounter;
+  uint32_t mControlledDocumentsCounter;
 
   enum
   {
@@ -79,22 +79,22 @@ public:
   GetServiceWorkerInfoById(uint64_t aId);
 
   void
-  StartControllingClient()
+  StartControllingADocument()
   {
-    ++mControlledClientsCounter;
+    ++mControlledDocumentsCounter;
   }
 
   void
-  StopControllingClient()
+  StopControllingADocument()
   {
-    MOZ_ASSERT(mControlledClientsCounter);
-    --mControlledClientsCounter;
+    MOZ_ASSERT(mControlledDocumentsCounter);
+    --mControlledDocumentsCounter;
   }
 
   bool
-  IsControllingClients() const
+  IsControllingDocuments() const
   {
-    return mActiveWorker && mControlledClientsCounter;
+    return mActiveWorker && mControlledDocumentsCounter;
   }
 
   void

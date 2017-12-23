@@ -13,15 +13,14 @@
 <p id="display"></p>
 <div id="content"></div>
 <pre id="test"></pre>
-<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
   var registration;
   var promise;
 
-  async function start() {
-    registration = await navigator.serviceWorker.register("worker_updatefoundevent.js",
-                                                          { scope: "./updatefoundevent.html" })
-    await waitForState(registration.installing, 'activated');
+  function start() {
+    return navigator.serviceWorker.register("worker_updatefoundevent.js",
+                                            { scope: "./updatefoundevent.html" })
+      .then((swr) => registration = swr);
   }
 
   function startWaitForUpdateFound() {
