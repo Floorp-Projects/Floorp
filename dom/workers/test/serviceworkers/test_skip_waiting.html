@@ -13,6 +13,7 @@
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>
+<script src="utils.js"></script>
 <script class="testbody" type="text/javascript">
   var registration, iframe, content;
 
@@ -21,19 +22,9 @@
                                             {scope: "./skip_waiting_scope/"});
   }
 
-  function waitForActivated(swr) {
+  async function waitForActivated(swr) {
     registration = swr;
-    var promise = new Promise(function(resolve, reject) {
-      window.onmessage = function(e) {
-        if (e.data === "READY") {
-          ok(true, "Active worker is activated now");
-          resolve();
-        } else {
-          ok(false, "Wrong value. Somenting went wrong");
-          resolve();
-        }
-      }
-    });
+    await waitForState(registration.installing, "activated")
 
     iframe = document.createElement("iframe");
     iframe.setAttribute("src", "skip_waiting_scope/index.html");
@@ -41,7 +32,7 @@
     content = document.getElementById("content");
     content.appendChild(iframe);
 
-    return promise;
+    await new Promise(resolve => iframe.onload = resolve);
   }
 
   function checkWhetherItSkippedWaiting() {
