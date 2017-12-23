@@ -3418,7 +3418,7 @@ nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal)
   // Don't pre-allocate the client when we are sandboxed.  The inherited
   // principal does not take sandboxing into account.
   // TODO: Refactor sandboxing principal code out so we can use it here.
-  if (!aPrincipal && (mSandboxFlags & SANDBOXED_ORIGIN)) {
+  if (!aPrincipal && mSandboxFlags) {
     return;
   }
 
@@ -3460,8 +3460,11 @@ nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal)
     return;
   }
 
+  // We're done if there is no parent controller.  Also, don't inherit
+  // the controller if we're sandboxed.  This matches our behavior in
+  // ShouldPrepareForIntercept(),
   Maybe<ServiceWorkerDescriptor> controller(parentInner->GetController());
-  if (controller.isNothing()) {
+  if (controller.isNothing() || mSandboxFlags) {
     return;
   }
 
