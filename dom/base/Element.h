@@ -552,12 +552,10 @@ public:
    */
   inline CustomElementData* GetCustomElementData() const
   {
-    nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-    if (slots) {
-      return slots->mCustomElementData;
-    }
-    return nullptr;
+    const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
+    return slots ? slots->mCustomElementData.get() : nullptr;
   }
+
 
   /**
    * Sets the custom element data, ownership of the
@@ -1295,9 +1293,11 @@ public:
   // [deprecated] Shadow DOM v0
   already_AddRefed<ShadowRoot> CreateShadowRoot(ErrorResult& aError);
 
-  ShadowRoot *FastGetShadowRoot() const
+  // FIXME(emilio): Should just shadow GetShadowRoot(), that way we get the fast
+  // version by default everywhere we already have an Element...
+  ShadowRoot* FastGetShadowRoot() const
   {
-    nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
+    const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
     return slots ? slots->mShadowRoot.get() : nullptr;
   }
 
@@ -1481,9 +1481,9 @@ public:
    *
    * @return existing attribute map or nullptr.
    */
-  nsDOMAttributeMap *GetAttributeMap()
+  nsDOMAttributeMap* GetAttributeMap()
   {
-    nsDOMSlots *slots = GetExistingDOMSlots();
+    nsDOMSlots* slots = GetExistingDOMSlots();
 
     return slots ? slots->mAttributeMap.get() : nullptr;
   }

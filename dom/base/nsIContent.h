@@ -507,7 +507,11 @@ public:
    *
    * @return the binding parent
    */
-  virtual nsIContent* GetBindingParent() const = 0;
+  virtual nsIContent* GetBindingParent() const
+  {
+    const nsExtendedContentSlots* slots = GetExistingExtendedContentSlots();
+    return slots ? slots->mBindingParent : nullptr;
+  }
 
   /**
    * Gets the current XBL binding that is bound to this element.
@@ -546,6 +550,8 @@ public:
    * binding is rendered in place of this node's children.
    *
    * @param aShadowRoot The ShadowRoot to be bound to this element.
+   *
+   * FIXME(emilio): No reason this lives in nsIContent, should move to Element.
    */
   virtual void SetShadowRoot(mozilla::dom::ShadowRoot* aShadowRoot) = 0;
 
@@ -563,21 +569,29 @@ public:
    *
    * @return The ShadowRoot that is the root of the node tree.
    */
-  virtual mozilla::dom::ShadowRoot *GetContainingShadow() const = 0;
+  mozilla::dom::ShadowRoot* GetContainingShadow() const
+  {
+    const nsExtendedContentSlots* slots = GetExistingExtendedContentSlots();
+    return slots ? slots->mContainingShadow.get() : nullptr;
+  }
 
   /**
    * Gets the assigned slot associated with this content.
    *
    * @return The assigned slot element or null.
    */
-  virtual mozilla::dom::HTMLSlotElement* GetAssignedSlot() const = 0;
+  mozilla::dom::HTMLSlotElement* GetAssignedSlot() const
+  {
+    const nsExtendedContentSlots* slots = GetExistingExtendedContentSlots();
+    return slots ? slots->mAssignedSlot.get() : nullptr;
+  }
 
   /**
    * Sets the assigned slot associated with this content.
    *
    * @param aSlot The assigned slot.
    */
-  virtual void SetAssignedSlot(mozilla::dom::HTMLSlotElement* aSlot) = 0;
+  void SetAssignedSlot(mozilla::dom::HTMLSlotElement* aSlot);
 
   /**
    * Gets the assigned slot associated with this content based on parent's
@@ -600,14 +614,18 @@ public:
    *
    * @return the insertion parent element.
    */
-  virtual nsIContent* GetXBLInsertionPoint() const = 0;
+  nsIContent* GetXBLInsertionPoint() const
+  {
+    const nsExtendedContentSlots* slots = GetExistingExtendedContentSlots();
+    return slots ? slots->mXBLInsertionPoint.get() : nullptr;
+  }
 
   /**
    * Sets the insertion parent element of the XBL binding.
    *
    * @param aContent The insertion parent element.
    */
-  virtual void SetXBLInsertionPoint(nsIContent* aContent) = 0;
+  void SetXBLInsertionPoint(nsIContent* aContent);
 
   /**
    * Same as GetFlattenedTreeParentNode, but returns null if the parent is
@@ -849,6 +867,114 @@ public:
   }
 
 protected:
+  /**
+   * Lazily allocated extended slots to avoid
+   * that may only be instantiated when a content object is accessed
+   * through the DOM. Rather than burn actual slots in the content
+   * objects for each of these instance variables, we put them off
+   * in a side structure that's only allocated when the content is
+   * accessed through the DOM.
+   */
+  class nsExtendedContentSlots
+  {
+  public:
+    nsExtendedContentSlots();
+    virtual ~nsExtendedContentSlots();
+
+    virtual void Traverse(nsCycleCollectionTraversalCallback&);
+    virtual void Unlink();
+
+    /**
+     * The nearest enclosing content node with a binding that created us.
+     * @see nsIContent::GetBindingParent
+     */
+    nsIContent* mBindingParent;  // [Weak]
+
+    /**
+     * @see nsIContent::GetXBLInsertionPoint
+     */
+    nsCOMPtr<nsIContent> mXBLInsertionPoint;
+
+    /**
+     * @see nsIContent::GetContainingShadow
+     */
+    RefPtr<mozilla::dom::ShadowRoot> mContainingShadow;
+
+    /**
+     * @see nsIContent::GetAssignedSlot
+     */
+    RefPtr<mozilla::dom::HTMLSlotElement> mAssignedSlot;
+  };
+
+  class nsContentSlots : public nsINode::nsSlots
+  {
+  public:
+    void Traverse(nsCycleCollectionTraversalCallback& aCb) override
+    {
+      nsINode::nsSlots::Traverse(aCb);
+      if (mExtendedSlots) {
+        mExtendedSlots->Traverse(aCb);
+      }
+    }
+
+    void Unlink() override
+    {
+      nsINode::nsSlots::Unlink();
+      if (mExtendedSlots) {
+        mExtendedSlots->Unlink();
+      }
+    }
+
+    mozilla::UniquePtr<nsExtendedContentSlots> mExtendedSlots;
+  };
+
+  // Override from nsINode
+  nsContentSlots* CreateSlots() override
+  {
+    return new nsContentSlots();
+  }
+
+  nsContentSlots* ContentSlots()
+  {
+    return static_cast<nsContentSlots*>(Slots());
+  }
+
+  const nsContentSlots* GetExistingContentSlots() const
+  {
+    return static_cast<nsContentSlots*>(GetExistingSlots());
+  }
+
+  nsContentSlots* GetExistingContentSlots()
+  {
+    return static_cast<nsContentSlots*>(GetExistingSlots());
+  }
+
+  virtual nsExtendedContentSlots* CreateExtendedSlots()
+  {
+    return new nsExtendedContentSlots();
+  }
+
+  const nsExtendedContentSlots* GetExistingExtendedContentSlots() const
+  {
+    const nsContentSlots* slots = GetExistingContentSlots();
+    return slots ? slots->mExtendedSlots.get() : nullptr;
+  }
+
+  nsExtendedContentSlots* GetExistingExtendedContentSlots()
+  {
+    nsContentSlots* slots = GetExistingContentSlots();
+    return slots ? slots->mExtendedSlots.get() : nullptr;
+  }
+
+  nsExtendedContentSlots* ExtendedContentSlots()
+  {
+    nsContentSlots* slots = ContentSlots();
+    if (!slots->mExtendedSlots) {
+      slots->mExtendedSlots.reset(CreateExtendedSlots());
+    }
+    return slots->mExtendedSlots.get();
+  }
+
   /**
    * Hook for implementing GetID.  This is guaranteed to only be
    * called if HasID() is true.
