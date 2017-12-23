@@ -3309,31 +3309,19 @@ ServiceWorkerManager::UpdateClientControllers(ServiceWorkerRegistrationInfo* aRe
   RefPtr<ServiceWorkerInfo> activeWorker = aRegistration->GetActive();
   MOZ_DIAGNOSTIC_ASSERT(activeWorker);
 
-  AutoTArray<nsCOMPtr<nsIDocument>, 16> docList;
-  for (auto iter = mControlledDocuments.Iter(); !iter.Done(); iter.Next()) {
-    if (iter.UserData() != aRegistration) {
+  AutoTArray<RefPtr<ClientHandle>, 16> handleList;
+  for (auto iter = mControlledClients.Iter(); !iter.Done(); iter.Next()) {
+    if (iter.UserData()->mRegistrationInfo != aRegistration) {
       continue;
     }
 
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(iter.Key());
-    if (NS_WARN_IF(!doc)) {
-      continue;
-    }
-
-    docList.AppendElement(doc.forget());
+    handleList.AppendElement(iter.UserData()->mClientHandle);
   }
 
-  // Fire event after iterating mControlledDocuments is done to prevent
+  // Fire event after iterating mControlledClients is done to prevent
   // modification by reentering from the event handlers during iteration.
-  for (auto& doc : docList) {
-    Maybe<ClientInfo> clientInfo = doc->GetClientInfo();
-    if (clientInfo.isNothing()) {
-      continue;
-    }
-    RefPtr<ClientHandle> clientHandle =
-      ClientManager::CreateHandle(clientInfo.ref(),
-                                  SystemGroup::EventTargetFor(TaskCategory::Other));
-    clientHandle->Control(activeWorker->Descriptor());
+  for (auto& handle : handleList) {
+    handle->Control(activeWorker->Descriptor());
   }
 }
 
