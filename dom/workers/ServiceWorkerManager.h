@@ -403,7 +403,7 @@ private:
                             nsIDocument* aDoc);
 
   void
-  StopControllingADocument(ServiceWorkerRegistrationInfo* aRegistration);
+  StopControllingRegistration(ServiceWorkerRegistrationInfo* aRegistration);
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetServiceWorkerRegistrationInfo(nsPIDOMWindowInner* aWindow);
