@@ -81,7 +81,7 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
     const nsACString& aScope,
     nsIPrincipal* aPrincipal,
     ServiceWorkerUpdateViaCache aUpdateViaCache)
-  : mControlledDocumentsCounter(0)
+  : mControlledClientsCounter(0)
   , mUpdateState(NoUpdate)
   , mCreationTime(PR_Now())
   , mCreationTimeStamp(TimeStamp::Now())
@@ -94,9 +94,7 @@ ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(
 
 ServiceWorkerRegistrationInfo::~ServiceWorkerRegistrationInfo()
 {
-  if (IsControllingDocuments()) {
-    NS_WARNING("ServiceWorkerRegistrationInfo is still controlling documents. This can be a bug or a leak in ServiceWorker API or in any other API that takes the document alive.");
-  }
+  MOZ_DIAGNOSTIC_ASSERT(!IsControllingClients());
 }
 
 NS_IMPL_ISUPPORTS(ServiceWorkerRegistrationInfo, nsIServiceWorkerRegistrationInfo)
@@ -248,7 +246,7 @@ void
 ServiceWorkerRegistrationInfo::TryToActivate()
 {
   AssertIsOnMainThread();
-  bool controlling = IsControllingDocuments();
+  bool controlling = IsControllingClients();
   bool skipWaiting = mWaitingWorker && mWaitingWorker->SkipWaitingFlag();
   bool idle = IsIdle();
   if (idle && (!controlling || skipWaiting)) {
