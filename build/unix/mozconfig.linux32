@@ -1,6 +1,6 @@
 . "$topsrcdir/build/unix/mozconfig.linux"
 
-export PKG_CONFIG_LIBDIR=/usr/lib/pkgconfig:/usr/share/pkgconfig
+export PKG_CONFIG_LIBDIR=/usr/local/lib/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
 
 export MOZ_LINUX_32_SSE2_STARTUP_ERROR=1
 
@@ -12,5 +12,4 @@ if test `uname -m` = "x86_64"; then
   CXX="$CXX -m32 -march=pentium-m"
   ac_add_options --target=i686-pc-linux
   ac_add_options --host=i686-pc-linux
-  ac_add_options --x-libraries=/usr/lib
 fi
