@@ -86,6 +86,13 @@ debug
 
    Always defined.
 
+devedition
+   Whether this is a devedition build.
+
+   Values are ``true`` and ``false``.
+
+   Always defined.
+
 healthreport
    Whether the Health Report feature is enabled.
 
