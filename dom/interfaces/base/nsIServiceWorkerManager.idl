@@ -15,17 +15,6 @@ interface nsIInterceptedChannel;
 interface nsIPrincipal;
 interface nsIRunnable;
 interface nsIURI;
-%{C++
-namespace mozilla {
-namespace dom {
-class ClientInfo;
-class ServiceWorkerDescriptor;
-} // namespace dom
-} // namespace mozilla
-%}
-
-[ref] native const_ClientInfoRef(const mozilla::dom::ClientInfo);
-[ref] native const_ServiceWorkerDescriptorRef(const mozilla::dom::ServiceWorkerDescriptor);
 
 [scriptable, uuid(52ee2c9d-ee87-4caf-9588-23ae77ff8798)]
 interface nsIServiceWorkerUnregisterCallback : nsISupports
@@ -160,9 +149,6 @@ interface nsIServiceWorkerManager : nsISupports
    * This MUST only be called once per document!
    */
   [notxpcom,nostdcall] void MaybeStartControlling(in nsIDocument aDoc);
-
-  [notxpcom, nostdcall] bool StartControlling(in const_ClientInfoRef aClientInfo,
-                                              in const_ServiceWorkerDescriptorRef aServiceWorker);
 
   /**
    * Documents that have called MaybeStartControlling() should call this when
