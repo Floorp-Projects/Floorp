@@ -1467,8 +1467,13 @@ ServiceWorkerManager::GetActiveWorkerInfoForDocument(nsIDocument* aDocument)
 {
   AssertIsOnMainThread();
 
+  Maybe<ClientInfo> clientInfo(aDocument->GetClientInfo());
+  if (clientInfo.isNothing()) {
+    return nullptr;
+  }
+
   RefPtr<ServiceWorkerRegistrationInfo> registration;
-  GetDocumentRegistration(aDocument, getter_AddRefs(registration));
+  GetClientRegistration(clientInfo.ref(), getter_AddRefs(registration));
 
   if (!registration) {
     return nullptr;
@@ -2832,20 +2837,21 @@ ServiceWorkerManager::IsAvailable(nsIPrincipal* aPrincipal,
 }
 
 nsresult
-ServiceWorkerManager::GetDocumentRegistration(nsIDocument* aDoc,
-                                              ServiceWorkerRegistrationInfo** aRegistrationInfo)
+ServiceWorkerManager::GetClientRegistration(const ClientInfo& aClientInfo,
+                                            ServiceWorkerRegistrationInfo** aRegistrationInfo)
 {
-  RefPtr<ServiceWorkerRegistrationInfo> registration;
-  if (!mControlledDocuments.Get(aDoc, getter_AddRefs(registration))) {
+  ControlledClientData* data = mControlledClients.Get(aClientInfo.Id());
+  if (!data || !data->mRegistrationInfo) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   // If the document is controlled, the current worker MUST be non-null.
-  if (!registration->GetActive()) {
+  if (!data->mRegistrationInfo->GetActive()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  registration.forget(aRegistrationInfo);
+  RefPtr<ServiceWorkerRegistrationInfo> ref = data->mRegistrationInfo;
+  ref.forget(aRegistrationInfo);
   return NS_OK;
 }
 
@@ -3216,13 +3222,21 @@ ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDocument,
     return ref.forget();
   }
 
+  Maybe<ClientInfo> clientInfo(aDocument->GetClientInfo());
+  if (NS_WARN_IF(clientInfo.isNothing())) {
+    ref = GenericPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                                          __func__);
+    return ref.forget();
+  }
+
   // The registration that should be controlling the client
   RefPtr<ServiceWorkerRegistrationInfo> matchingRegistration =
     GetServiceWorkerRegistrationInfo(aDocument);
 
   // The registration currently controlling the client
   RefPtr<ServiceWorkerRegistrationInfo> controllingRegistration;
-  GetDocumentRegistration(aDocument, getter_AddRefs(controllingRegistration));
+  GetClientRegistration(clientInfo.ref(),
+                        getter_AddRefs(controllingRegistration));
 
   if (aWorkerRegistration != matchingRegistration ||
       aWorkerRegistration == controllingRegistration) {
