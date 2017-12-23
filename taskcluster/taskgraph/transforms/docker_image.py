@@ -37,6 +37,10 @@ docker_image_schema = Schema({
 
     # Arguments to use for the Dockerfile.
     Optional('args'): {basestring: basestring},
+
+    # Name of the docker image definition under taskcluster/docker, when
+    # different from the docker image name.
+    Optional('definition'): basestring,
 })
 
 
@@ -54,8 +58,9 @@ def fill_template(config, tasks):
         image_name = task.pop('name')
         job_symbol = task.pop('symbol')
         args = task.pop('args', {})
+        definition = task.pop('definition', image_name)
 
-        context_path = os.path.join('taskcluster', 'docker', image_name)
+        context_path = os.path.join('taskcluster', 'docker', definition)
         context_hash = generate_context_hash(
             GECKO, context_path, image_name, args)
 
