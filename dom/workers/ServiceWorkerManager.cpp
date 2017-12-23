@@ -2432,10 +2432,9 @@ ServiceWorkerManager::MaybeStopControlling(nsIDocument* aDoc)
 }
 
 void
-ServiceWorkerManager::MaybeCheckNavigationUpdate(nsIDocument* aDoc)
+ServiceWorkerManager::MaybeCheckNavigationUpdate(const ClientInfo& aClientInfo)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(aDoc);
   // We perform these success path navigation update steps when the
   // document tells us its more or less done loading.  This avoids
   // slowing down page load and also lets pages consistently get
@@ -2445,10 +2444,9 @@ ServiceWorkerManager::MaybeCheckNavigationUpdate(nsIDocument* aDoc)
   // 9.8.22 Else: (respondWith was entered and succeeded)
   //    If request is a non-subresource request, then: Invoke Soft Update
   //    algorithm.
-  RefPtr<ServiceWorkerRegistrationInfo> registration;
-  mControlledDocuments.Get(aDoc, getter_AddRefs(registration));
-  if (registration) {
-    registration->MaybeScheduleUpdate();
+  ControlledClientData* data = mControlledClients.Get(aClientInfo.Id());
+  if (data && data->mRegistrationInfo) {
+    data->mRegistrationInfo->MaybeScheduleUpdate();
   }
 }
 
