@@ -9564,6 +9564,11 @@ nsDisplayMask::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
   bool snap;
   nsRect bounds = GetBounds(aBuilder, &snap);
 
+  if (mFrame->StyleEffects()->mOpacity != geometry->mOpacity ||
+      mHandleOpacity != geometry->mHandleOpacity) {
+    aInvalidRegion->Or(*aInvalidRegion, bounds);
+  }
+
   if (mDestRects.Length() != geometry->mDestRects.Length()) {
     aInvalidRegion->Or(bounds, geometry->mBounds);
   } else {
