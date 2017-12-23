@@ -662,6 +662,7 @@ nsLineLayout::NewPerFrameData(nsIFrame* aFrame)
   pfd->mIsBullet = false;
   pfd->mSkipWhenTrimmingWhitespace = false;
   pfd->mIsEmpty = false;
+  pfd->mIsPlaceholder = false;
   pfd->mIsLinkedToBase = false;
 
   pfd->mWritingMode = aFrame->GetWritingMode();
@@ -840,7 +841,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
   // Figure out whether we're talking about a textframe here
   LayoutFrameType frameType = aFrame->Type();
-  bool isText = frameType == LayoutFrameType::Text;
+  const bool isText = frameType == LayoutFrameType::Text;
 
   // Inline-ish and text-ish things don't compute their width;
   // everything else does.  We need to give them an available width that
@@ -940,6 +941,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   } else {
     if (LayoutFrameType::Placeholder == frameType) {
       isEmpty = true;
+      pfd->mIsPlaceholder = true;
       pfd->mSkipWhenTrimmingWhitespace = true;
       nsIFrame* outOfFlowFrame = nsLayoutUtils::GetFloatFromPlaceholder(aFrame);
       if (outOfFlowFrame) {
@@ -2209,17 +2211,17 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       //           For example in quirks mode, avoiding empty text frames prevents
       //           "tall" lines around elements like <hr> since the rules of <hr>
       //           in quirks.css have pseudo text contents with LF in them.
-#if 0
-      if (!pfd->mIsTextFrame) {
-#else
-      // Only consider non empty text frames when line-height=normal
-      bool canUpdate = !pfd->mIsTextFrame;
-      if (!canUpdate && pfd->mIsNonWhitespaceTextFrame) {
-        canUpdate =
+      bool canUpdate;
+      if (pfd->mIsTextFrame) {
+        // Only consider text frames if they're not empty and
+        // line-height=normal.
+        canUpdate = pfd->mIsNonWhitespaceTextFrame &&
           frame->StyleText()->mLineHeight.GetUnit() == eStyleUnit_Normal;
+      } else {
+        canUpdate = !pfd->mIsPlaceholder;
       }
+
       if (canUpdate) {
-#endif
         nscoord blockStart, blockEnd;
         if (frameSpan) {
           // For spans that were are now placing, use their position

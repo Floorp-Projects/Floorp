@@ -124,6 +124,8 @@ nsDisplayMaskGeometry::nsDisplayMaskGeometry(nsDisplayMask* aItem, nsDisplayList
   : nsDisplaySVGEffectGeometry(aItem, aBuilder)
   , nsImageGeometryMixin(aItem, aBuilder)
   , mDestRects(aItem->GetDestRects())
+  , mOpacity(aItem->Frame()->StyleEffects()->mOpacity)
+  , mHandleOpacity(aItem->ShouldHandleOpacity())
 {}
 
 nsDisplayFilterGeometry::nsDisplayFilterGeometry(nsDisplayFilter* aItem, nsDisplayListBuilder* aBuilder)
