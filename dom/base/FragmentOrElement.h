@@ -148,16 +148,10 @@ public:
   virtual void AppendTextTo(nsAString& aResult) override;
   MOZ_MUST_USE
   virtual bool AppendTextTo(nsAString& aResult, const mozilla::fallible_t&) override;
-  virtual nsIContent* GetBindingParent() const override;
   virtual nsXBLBinding* DoGetXBLBinding() const override;
   virtual void SetXBLBinding(nsXBLBinding* aBinding,
                              nsBindingManager* aOldBindingManager = nullptr) override;
-  virtual ShadowRoot *GetContainingShadow() const override;
   virtual void SetShadowRoot(ShadowRoot* aBinding) override;
-  virtual mozilla::dom::HTMLSlotElement* GetAssignedSlot() const override;
-  virtual void SetAssignedSlot(mozilla::dom::HTMLSlotElement* aSlot) override;
-  virtual nsIContent *GetXBLInsertionPoint() const override;
-  virtual void SetXBLInsertionPoint(nsIContent* aContent) override;
   virtual bool IsLink(nsIURI** aURI) const override;
 
   virtual void DestroyContent() override;
@@ -246,12 +240,14 @@ public:
    * accessed through the DOM.
    */
 
-  class nsExtendedDOMSlots
+  class nsExtendedDOMSlots final : public nsIContent::nsExtendedContentSlots
   {
   public:
     nsExtendedDOMSlots();
+    ~nsExtendedDOMSlots() final;
 
-    ~nsExtendedDOMSlots();
+    void Traverse(nsCycleCollectionTraversalCallback&) final;
+    void Unlink() final;
 
     /**
      * SMIL Overridde style rules (for SMIL animation of CSS properties)
@@ -263,12 +259,6 @@ public:
      * Holds any SMIL override style declaration for this element.
      */
     RefPtr<mozilla::DeclarationBlock> mSMILOverrideStyleDeclaration;
-
-    /**
-    * The nearest enclosing content node with a binding that created us.
-    * @see FragmentOrElement::GetBindingParent
-    */
-    nsIContent* mBindingParent;  // [Weak]
 
     /**
     * The controllers of the XUL Element.
@@ -286,24 +276,9 @@ public:
     RefPtr<ShadowRoot> mShadowRoot;
 
     /**
-     * The root ShadowRoot of this element if it is in a shadow tree.
-     */
-    RefPtr<ShadowRoot> mContainingShadow;
-
-    /**
-     * The assigned slot associated with this element.
-     */
-    RefPtr<mozilla::dom::HTMLSlotElement> mAssignedSlot;
-
-    /**
      * XBL binding installed on the element.
      */
     RefPtr<nsXBLBinding> mXBLBinding;
-
-    /**
-     * XBL binding insertion point.
-     */
-    nsCOMPtr<nsIContent> mXBLInsertionPoint;
 
     /**
      * Web components custom element data.
@@ -317,14 +292,14 @@ public:
 
   };
 
-  class nsDOMSlots : public nsINode::nsSlots
+  class nsDOMSlots final : public nsIContent::nsContentSlots
   {
   public:
     nsDOMSlots();
-    virtual ~nsDOMSlots();
+    ~nsDOMSlots() final;
 
-    void Traverse(nsCycleCollectionTraversalCallback &cb);
-    void Unlink();
+    void Traverse(nsCycleCollectionTraversalCallback&) final;
+    void Unlink() final;
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -356,8 +331,6 @@ public:
      * An object implementing the .classList property for this element.
      */
     RefPtr<nsDOMTokenList> mClassList;
-
-    mozilla::UniquePtr<nsExtendedDOMSlots> mExtendedSlots;
   };
 
 protected:
@@ -365,9 +338,17 @@ protected:
   void SetInnerHTMLInternal(const nsAString& aInnerHTML, ErrorResult& aError);
 
   // Override from nsINode
-  virtual nsINode::nsSlots* CreateSlots() override;
+  nsIContent::nsContentSlots* CreateSlots() override
+  {
+    return new nsDOMSlots();
+  }
 
-  nsDOMSlots *DOMSlots()
+  nsIContent::nsExtendedContentSlots* CreateExtendedSlots() final
+  {
+    return new nsExtendedDOMSlots();
+  }
+
+  nsDOMSlots* DOMSlots()
   {
     return static_cast<nsDOMSlots*>(Slots());
   }
@@ -379,22 +360,18 @@ protected:
 
   nsExtendedDOMSlots* ExtendedDOMSlots()
   {
-    nsDOMSlots* slots = DOMSlots();
-    if (!slots->mExtendedSlots) {
-      slots->mExtendedSlots = MakeUnique<nsExtendedDOMSlots>();
-    }
-
-    return slots->mExtendedSlots.get();
+    return static_cast<nsExtendedDOMSlots*>(ExtendedContentSlots());
   }
 
-  nsExtendedDOMSlots* GetExistingExtendedDOMSlots() const
+  const nsExtendedDOMSlots* GetExistingExtendedDOMSlots() const
   {
-    nsDOMSlots* slots = GetExistingDOMSlots();
-    if (slots) {
-      return slots->mExtendedSlots.get();
-    }
+    return static_cast<const nsExtendedDOMSlots*>(
+      GetExistingExtendedContentSlots());
+  }
 
-    return nullptr;
+  nsExtendedDOMSlots* GetExistingExtendedDOMSlots()
+  {
+    return static_cast<nsExtendedDOMSlots*>(GetExistingExtendedContentSlots());
   }
 
   /**
