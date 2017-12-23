@@ -61,7 +61,7 @@ def build_context(name, outputFile, args=None):
     if not outputFile:
         raise ValueError('must provide a outputFile')
 
-    image_dir = os.path.join(docker.IMAGE_DIR, name)
+    image_dir = docker.image_path(name)
     if not os.path.isdir(image_dir):
         raise Exception('image directory does not exist: %s' % image_dir)
 
@@ -76,7 +76,7 @@ def build_image(name, args=None):
     if not name:
         raise ValueError('must provide a Docker image name')
 
-    image_dir = os.path.join(docker.IMAGE_DIR, name)
+    image_dir = docker.image_path(name)
     if not os.path.isdir(image_dir):
         raise Exception('image directory does not exist: %s' % image_dir)
 
