@@ -7,13 +7,11 @@
 #include "ClientInfo.h"
 
 #include "mozilla/dom/ClientIPCTypes.h"
-#include "mozilla/ipc/BackgroundUtils.h"
 
 namespace mozilla {
 namespace dom {
 
 using mozilla::ipc::PrincipalInfo;
-using mozilla::ipc::PrincipalInfoToPrincipal;
 
 ClientInfo::ClientInfo(const nsID& aId,
                        ClientType aType,
@@ -138,14 +136,6 @@ ClientInfo::IsPrivateBrowsing() const
       MOZ_CRASH("unexpected principal type!");
     }
   }
-}
-
-nsCOMPtr<nsIPrincipal>
-ClientInfo::GetPrincipal() const
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIPrincipal> ref = PrincipalInfoToPrincipal(PrincipalInfo());
-  return Move(ref);
 }
 
 } // namespace dom

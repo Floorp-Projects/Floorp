@@ -21,7 +21,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/ClientHandle.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerCommon.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
@@ -105,21 +104,6 @@ public:
   nsTObserverArray<ServiceWorkerRegistrationListener*> mServiceWorkerRegistrationListeners;
 
   nsRefPtrHashtable<nsISupportsHashKey, ServiceWorkerRegistrationInfo> mControlledDocuments;
-
-  struct ControlledClientData
-  {
-    RefPtr<ClientHandle> mClientHandle;
-    RefPtr<ServiceWorkerRegistrationInfo> mRegistrationInfo;
-
-    ControlledClientData(ClientHandle* aClientHandle,
-                         ServiceWorkerRegistrationInfo* aRegistrationInfo)
-      : mClientHandle(aClientHandle)
-      , mRegistrationInfo(aRegistrationInfo)
-    {
-    }
-  };
-
-  nsClassHashtable<nsIDHashKey, ControlledClientData> mControlledClients;
 
   // Track all documents that have attempted to register a service worker for a
   // given scope.
@@ -320,7 +304,7 @@ public:
                                   ServiceWorkerRegistrationListener* aListener);
 
   void
-  MaybeCheckNavigationUpdate(const ClientInfo& aClientInfo);
+  MaybeCheckNavigationUpdate(nsIDocument* aDoc);
 
   nsresult
   SendPushEvent(const nsACString& aOriginAttributes,
@@ -344,13 +328,6 @@ private:
   void
   Init(ServiceWorkerRegistrar* aRegistrar);
 
-  RefPtr<GenericPromise>
-  StartControllingClient(const ClientInfo& aClientInfo,
-                         ServiceWorkerRegistrationInfo* aRegistrationInfo);
-
-  void
-  StopControllingClient(const ClientInfo& aClientInfo);
-
   void
   MaybeStartShutdown();
 
@@ -372,8 +349,8 @@ private:
   Update(ServiceWorkerRegistrationInfo* aRegistration);
 
   nsresult
-  GetClientRegistration(const ClientInfo& aClientInfo,
-                        ServiceWorkerRegistrationInfo** aRegistrationInfo);
+  GetDocumentRegistration(nsIDocument* aDoc,
+                          ServiceWorkerRegistrationInfo** aRegistrationInfo);
 
   nsresult
   GetServiceWorkerForScope(nsPIDOMWindowInner* aWindow,
@@ -398,12 +375,12 @@ private:
   void
   NotifyServiceWorkerRegistrationRemoved(ServiceWorkerRegistrationInfo* aRegistration);
 
-  void
+  RefPtr<GenericPromise>
   StartControllingADocument(ServiceWorkerRegistrationInfo* aRegistration,
                             nsIDocument* aDoc);
 
   void
-  StopControllingRegistration(ServiceWorkerRegistrationInfo* aRegistration);
+  StopControllingADocument(ServiceWorkerRegistrationInfo* aRegistration);
 
   already_AddRefed<ServiceWorkerRegistrationInfo>
   GetServiceWorkerRegistrationInfo(nsPIDOMWindowInner* aWindow);

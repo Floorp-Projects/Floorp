@@ -313,75 +313,6 @@ ServiceWorkerManager::Init(ServiceWorkerRegistrar* aRegistrar)
   mActor = static_cast<ServiceWorkerManagerChild*>(actor);
 }
 
-RefPtr<GenericPromise>
-ServiceWorkerManager::StartControllingClient(const ClientInfo& aClientInfo,
-                                             ServiceWorkerRegistrationInfo* aRegistrationInfo)
-{
-  MOZ_DIAGNOSTIC_ASSERT(aRegistrationInfo->GetActive());
-
-  RefPtr<GenericPromise> ref;
-
-  const ServiceWorkerDescriptor& active =
-    aRegistrationInfo->GetActive()->Descriptor();
-
-  auto entry = mControlledClients.LookupForAdd(aClientInfo.Id());
-  if (entry) {
-    RefPtr<ServiceWorkerRegistrationInfo> old =
-      entry.Data()->mRegistrationInfo.forget();
-
-    ref = Move(entry.Data()->mClientHandle->Control(active));
-    entry.Data()->mRegistrationInfo = aRegistrationInfo;
-
-    if (old != aRegistrationInfo) {
-      StopControllingRegistration(old);
-      aRegistrationInfo->StartControllingClient();
-    }
-
-    Telemetry::Accumulate(Telemetry::SERVICE_WORKER_CONTROLLED_DOCUMENTS, 1);
-
-    return Move(ref);
-  }
-
-  RefPtr<ClientHandle> clientHandle =
-    ClientManager::CreateHandle(aClientInfo,
-                                SystemGroup::EventTargetFor(TaskCategory::Other));
-
-  ref = Move(clientHandle->Control(active));
-
-  aRegistrationInfo->StartControllingClient();
-
-  entry.OrInsert([&] {
-    return new ControlledClientData(clientHandle, aRegistrationInfo);
-  });
-
-  RefPtr<ServiceWorkerManager> self(this);
-  clientHandle->OnDetach()->Then(
-    SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
-    [self = Move(self), aClientInfo] {
-      self->StopControllingClient(aClientInfo);
-    });
-
-  Telemetry::Accumulate(Telemetry::SERVICE_WORKER_CONTROLLED_DOCUMENTS, 1);
-
-  return Move(ref);
-}
-
-void
-ServiceWorkerManager::StopControllingClient(const ClientInfo& aClientInfo)
-{
-  auto entry = mControlledClients.Lookup(aClientInfo.Id());
-  if (!entry) {
-    return;
-  }
-
-  RefPtr<ServiceWorkerRegistrationInfo> reg =
-    entry.Data()->mRegistrationInfo.forget();
-
-  entry.Remove();
-
-  StopControllingRegistration(reg);
-}
-
 void
 ServiceWorkerManager::MaybeStartShutdown()
 {
@@ -1501,13 +1432,8 @@ ServiceWorkerManager::GetActiveWorkerInfoForDocument(nsIDocument* aDocument)
 {
   AssertIsOnMainThread();
 
-  Maybe<ClientInfo> clientInfo(aDocument->GetClientInfo());
-  if (clientInfo.isNothing()) {
-    return nullptr;
-  }
-
   RefPtr<ServiceWorkerRegistrationInfo> registration;
-  GetClientRegistration(clientInfo.ref(), getter_AddRefs(registration));
+  GetDocumentRegistration(aDocument, getter_AddRefs(registration));
 
   if (!registration) {
     return nullptr;
@@ -1652,7 +1578,7 @@ ServiceWorkerManager::WorkerIsIdle(ServiceWorkerInfo* aWorker)
     return;
   }
 
-  if (!reg->IsControllingClients() && reg->mPendingUninstall) {
+  if (!reg->IsControllingDocuments() && reg->mPendingUninstall) {
     RemoveRegistration(reg);
     return;
   }
@@ -2343,25 +2269,15 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
     entry.Remove();
   }
 
-  // Verify there are no controlled clients for the purged registration.
-  for (auto iter = swm->mControlledClients.Iter(); !iter.Done(); iter.Next()) {
-    auto& reg = iter.UserData()->mRegistrationInfo;
-    if (reg->mScope.Equals(aRegistration->mScope)) {
-      MOZ_DIAGNOSTIC_ASSERT(false,
-                            "controlled client when removing registration");
-      iter.Remove();
-      break;
-    }
-  }
-
-  // Registration lifecycle is managed via mControlledClients now.  Do not
-  // assert on on mControlledDocuments as races may cause this to still be
-  // set when the registration is destroyed.
+  // The registration should generally only be removed if there are no controlled
+  // documents, but mControlledDocuments can contain references to potentially
+  // controlled docs.  This happens when the service worker is not active yet.
+  // We must purge these references since we are evicting the registration.
   for (auto iter = swm->mControlledDocuments.Iter(); !iter.Done(); iter.Next()) {
     ServiceWorkerRegistrationInfo* reg = iter.UserData();
+    MOZ_ASSERT(reg);
     if (reg->mScope.Equals(aRegistration->mScope)) {
       iter.Remove();
-      break;
     }
   }
 
@@ -2392,35 +2308,10 @@ ServiceWorkerManager::MaybeStartControlling(nsIDocument* aDoc)
   MOZ_ASSERT(aDoc);
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     GetServiceWorkerRegistrationInfo(aDoc);
-  if (registration && registration->GetActive() &&
-      aDoc->GetSandboxFlags() == 0) {
+  if (registration) {
     MOZ_ASSERT(!mControlledDocuments.Contains(aDoc));
     StartControllingADocument(registration, aDoc);
   }
-}
-
-bool
-ServiceWorkerManager::StartControlling(const ClientInfo& aClientInfo,
-                                       const ServiceWorkerDescriptor& aServiceWorker)
-{
-  AssertIsOnMainThread();
-
-  nsCOMPtr<nsIPrincipal> principal =
-    PrincipalInfoToPrincipal(aServiceWorker.PrincipalInfo());
-  NS_ENSURE_TRUE(principal, false);
-
-  nsCOMPtr<nsIURI> scope;
-  nsresult rv =
-    NS_NewURI(getter_AddRefs(scope), aServiceWorker.Scope(), nullptr, nullptr);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  RefPtr<ServiceWorkerRegistrationInfo> registration =
-    GetServiceWorkerRegistrationInfo(principal, scope);
-  NS_ENSURE_TRUE(registration, false);
-
-  StartControllingClient(aClientInfo, registration);
-
-  return true;
 }
 
 void
@@ -2428,13 +2319,21 @@ ServiceWorkerManager::MaybeStopControlling(nsIDocument* aDoc)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aDoc);
-  mControlledDocuments.Remove(aDoc);
+  RefPtr<ServiceWorkerRegistrationInfo> registration;
+  mControlledDocuments.Remove(aDoc, getter_AddRefs(registration));
+  // A document which was uncontrolled does not maintain that state itself, so
+  // it will always call MaybeStopControlling() even if there isn't an
+  // associated registration. So this check is required.
+  if (registration) {
+    StopControllingADocument(registration);
+  }
 }
 
 void
-ServiceWorkerManager::MaybeCheckNavigationUpdate(const ClientInfo& aClientInfo)
+ServiceWorkerManager::MaybeCheckNavigationUpdate(nsIDocument* aDoc)
 {
   AssertIsOnMainThread();
+  MOZ_ASSERT(aDoc);
   // We perform these success path navigation update steps when the
   // document tells us its more or less done loading.  This avoids
   // slowing down page load and also lets pages consistently get
@@ -2444,27 +2343,52 @@ ServiceWorkerManager::MaybeCheckNavigationUpdate(const ClientInfo& aClientInfo)
   // 9.8.22 Else: (respondWith was entered and succeeded)
   //    If request is a non-subresource request, then: Invoke Soft Update
   //    algorithm.
-  ControlledClientData* data = mControlledClients.Get(aClientInfo.Id());
-  if (data && data->mRegistrationInfo) {
-    data->mRegistrationInfo->MaybeScheduleUpdate();
+  RefPtr<ServiceWorkerRegistrationInfo> registration;
+  mControlledDocuments.Get(aDoc, getter_AddRefs(registration));
+  if (registration) {
+    registration->MaybeScheduleUpdate();
   }
 }
 
-void
+RefPtr<GenericPromise>
 ServiceWorkerManager::StartControllingADocument(ServiceWorkerRegistrationInfo* aRegistration,
                                                 nsIDocument* aDoc)
 {
   MOZ_ASSERT(aRegistration);
   MOZ_ASSERT(aDoc);
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  auto storageAllowed = nsContentUtils::StorageAllowedForDocument(aDoc);
+  MOZ_DIAGNOSTIC_ASSERT(storageAllowed == nsContentUtils::StorageAccess::eAllow);
+#endif // MOZ_DIAGNOSTIC_ASSERT_ENABLED
+
+  RefPtr<GenericPromise> ref = GenericPromise::CreateAndResolve(true, __func__);
+
+  aRegistration->StartControllingADocument();
   mControlledDocuments.Put(aDoc, aRegistration);
+
+  // Mark the document's ClientSource as controlled using the ClientHandle
+  // interface.  While we could get at the ClientSource directly from the
+  // document here, our goal is to move ServiceWorkerManager to a separate
+  // process.  Using the ClientHandle supports this remote operation.
+  ServiceWorkerInfo* activeWorker = aRegistration->GetActive();
+  Maybe<ClientInfo> clientInfo = aDoc->GetClientInfo();
+  if (activeWorker && clientInfo.isSome()) {
+    RefPtr<ClientHandle> clientHandle =
+      ClientManager::CreateHandle(clientInfo.ref(),
+                                  SystemGroup::EventTargetFor(TaskCategory::Other));
+    ref = Move(clientHandle->Control(activeWorker->Descriptor()));
+  }
+
+  Telemetry::Accumulate(Telemetry::SERVICE_WORKER_CONTROLLED_DOCUMENTS, 1);
+  return Move(ref);
 }
 
 void
-ServiceWorkerManager::StopControllingRegistration(ServiceWorkerRegistrationInfo* aRegistration)
+ServiceWorkerManager::StopControllingADocument(ServiceWorkerRegistrationInfo* aRegistration)
 {
-  aRegistration->StopControllingClient();
-  if (aRegistration->IsControllingClients() || !aRegistration->IsIdle()) {
+  aRegistration->StopControllingADocument();
+  if (aRegistration->IsControllingDocuments() || !aRegistration->IsIdle()) {
     return;
   }
 
@@ -2794,7 +2718,10 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
         // First, attempt to mark the reserved client controlled directly.  This
         // will update the controlled status in the ClientManagerService in the
         // parent.  It will also eventually propagate back to the ClientSource.
-        StartControllingClient(clientInfo.ref(), registration);
+        RefPtr<ClientHandle> clientHandle =
+          ClientManager::CreateHandle(clientInfo.ref(),
+                                      SystemGroup::EventTargetFor(TaskCategory::Other));
+        clientHandle->Control(serviceWorker->Descriptor());
       }
 
       // But we also note the reserved state on the LoadInfo.  This allows the
@@ -2858,21 +2785,20 @@ ServiceWorkerManager::IsAvailable(nsIPrincipal* aPrincipal,
 }
 
 nsresult
-ServiceWorkerManager::GetClientRegistration(const ClientInfo& aClientInfo,
-                                            ServiceWorkerRegistrationInfo** aRegistrationInfo)
+ServiceWorkerManager::GetDocumentRegistration(nsIDocument* aDoc,
+                                              ServiceWorkerRegistrationInfo** aRegistrationInfo)
 {
-  ControlledClientData* data = mControlledClients.Get(aClientInfo.Id());
-  if (!data || !data->mRegistrationInfo) {
+  RefPtr<ServiceWorkerRegistrationInfo> registration;
+  if (!mControlledDocuments.Get(aDoc, getter_AddRefs(registration))) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   // If the document is controlled, the current worker MUST be non-null.
-  if (!data->mRegistrationInfo->GetActive()) {
+  if (!registration->GetActive()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  RefPtr<ServiceWorkerRegistrationInfo> ref = data->mRegistrationInfo;
-  ref.forget(aRegistrationInfo);
+  registration.forget(aRegistrationInfo);
   return NS_OK;
 }
 
@@ -3243,21 +3169,13 @@ ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDocument,
     return ref.forget();
   }
 
-  Maybe<ClientInfo> clientInfo(aDocument->GetClientInfo());
-  if (NS_WARN_IF(clientInfo.isNothing())) {
-    ref = GenericPromise::CreateAndReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                                          __func__);
-    return ref.forget();
-  }
-
   // The registration that should be controlling the client
   RefPtr<ServiceWorkerRegistrationInfo> matchingRegistration =
     GetServiceWorkerRegistrationInfo(aDocument);
 
   // The registration currently controlling the client
   RefPtr<ServiceWorkerRegistrationInfo> controllingRegistration;
-  GetClientRegistration(clientInfo.ref(),
-                        getter_AddRefs(controllingRegistration));
+  GetDocumentRegistration(aDocument, getter_AddRefs(controllingRegistration));
 
   if (aWorkerRegistration != matchingRegistration ||
       aWorkerRegistration == controllingRegistration) {
@@ -3265,8 +3183,11 @@ ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDocument,
     return ref.forget();
   }
 
-  StartControllingADocument(aWorkerRegistration, aDocument);
-  ref = StartControllingClient(clientInfo.ref(), aWorkerRegistration);
+  if (controllingRegistration) {
+    StopControllingADocument(controllingRegistration);
+  }
+
+  ref = StartControllingADocument(aWorkerRegistration, aDocument);
   return ref.forget();
 }
 
@@ -3327,19 +3248,31 @@ ServiceWorkerManager::UpdateClientControllers(ServiceWorkerRegistrationInfo* aRe
   RefPtr<ServiceWorkerInfo> activeWorker = aRegistration->GetActive();
   MOZ_DIAGNOSTIC_ASSERT(activeWorker);
 
-  AutoTArray<RefPtr<ClientHandle>, 16> handleList;
-  for (auto iter = mControlledClients.Iter(); !iter.Done(); iter.Next()) {
-    if (iter.UserData()->mRegistrationInfo != aRegistration) {
+  AutoTArray<nsCOMPtr<nsIDocument>, 16> docList;
+  for (auto iter = mControlledDocuments.Iter(); !iter.Done(); iter.Next()) {
+    if (iter.UserData() != aRegistration) {
       continue;
     }
 
-    handleList.AppendElement(iter.UserData()->mClientHandle);
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(iter.Key());
+    if (NS_WARN_IF(!doc)) {
+      continue;
+    }
+
+    docList.AppendElement(doc.forget());
   }
 
-  // Fire event after iterating mControlledClients is done to prevent
+  // Fire event after iterating mControlledDocuments is done to prevent
   // modification by reentering from the event handlers during iteration.
-  for (auto& handle : handleList) {
-    handle->Control(activeWorker->Descriptor());
+  for (auto& doc : docList) {
+    Maybe<ClientInfo> clientInfo = doc->GetClientInfo();
+    if (clientInfo.isNothing()) {
+      continue;
+    }
+    RefPtr<ClientHandle> clientHandle =
+      ClientManager::CreateHandle(clientInfo.ref(),
+                                  SystemGroup::EventTargetFor(TaskCategory::Other));
+    clientHandle->Control(activeWorker->Descriptor());
   }
 }
 
