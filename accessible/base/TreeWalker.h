@@ -29,7 +29,8 @@ public:
     // used to walk the existing tree of the given node
     eWalkCache = 1,
     // used to walk the context tree starting from given node
-    eWalkContextTree = 2 | eWalkCache
+    eWalkContextTree = 2 | eWalkCache,
+    eScoped = 4
   };
 
   /**
