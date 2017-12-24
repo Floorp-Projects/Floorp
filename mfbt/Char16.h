@@ -66,7 +66,7 @@ public:
   {
     return mPtr;
   }
-  MOZ_IMPLICIT operator bool() const
+  explicit operator bool() const
   {
     return mPtr != nullptr;
   }
