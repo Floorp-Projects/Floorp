@@ -117,7 +117,7 @@ NS_strncmp(const char16_t* aStrA, const char16_t* aStrB, size_t aLen)
     --aLen;
   }
 
-  return aLen ? *aStrA != '\0' : *aStrA - *aStrB;
+  return aLen ? *aStrA != '\0' : 0;
 }
 
 char16_t*
