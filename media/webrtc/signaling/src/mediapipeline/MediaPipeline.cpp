@@ -578,6 +578,7 @@ public:
         self->InternalProcessAudioChunk(aRate, aChunk, aEnabled);
       }));
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
   }
 
 protected:
