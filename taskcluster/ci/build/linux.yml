@@ -9,6 +9,8 @@ linux64/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -38,6 +40,8 @@ linux64-dmd/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -68,6 +72,8 @@ linux64/pgo:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -99,6 +105,7 @@ linux64-fuzzing/debug:
         max-run-time: 36000
         env:
             PERFHERDER_EXTRA_OPTIONS: fuzzing
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -128,6 +135,8 @@ linux64/debug:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -162,6 +171,8 @@ linux64-devedition-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -196,6 +207,7 @@ linux64-base-toolchains/opt:
         max-run-time: 36000
         env:
             PERFHERDER_EXTRA_OPTIONS: base-toolchains
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/base-toolchains.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -226,6 +238,7 @@ linux64-base-toolchains/debug:
         max-run-time: 36000
         env:
             PERFHERDER_EXTRA_OPTIONS: base-toolchains
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/base-toolchains.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -255,6 +268,8 @@ linux/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -283,6 +298,8 @@ linux/debug:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -312,6 +329,8 @@ linux/pgo:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -344,6 +363,7 @@ linux-rusttests/opt:
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: rusttests
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -378,6 +398,7 @@ linux-rusttests/debug:
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: rusttests
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -414,6 +435,8 @@ linux-devedition-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -451,6 +474,8 @@ linux-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux32/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -482,6 +507,7 @@ linux64-asan/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "opt asan"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         max-run-time: 36000
     run:
         using: mozharness
@@ -514,6 +540,7 @@ linux64-asan-fuzzing/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         max-run-time: 36000
     run:
         using: mozharness
@@ -545,6 +572,7 @@ linux64-asan-reporter/opt:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-reporter
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         max-run-time: 36000
     run:
         using: mozharness
@@ -576,6 +604,7 @@ linux64-asan/debug:
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: "debug asan"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         max-run-time: 36000
     run:
         using: mozharness
@@ -611,6 +640,8 @@ linux64-nightly/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -641,6 +672,8 @@ linux64-noopt/debug:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 3600
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -675,6 +708,7 @@ linux64-rusttests/opt:
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: rusttests
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -709,6 +743,7 @@ linux64-rusttests/debug:
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: rusttests
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -742,6 +777,8 @@ linux64-jsdcov/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -772,6 +809,8 @@ linux64-ccov/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
@@ -801,6 +840,8 @@ linux64-add-on-devel/opt:
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 36000
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
     run:
         using: mozharness
         actions: [get-secrets build check-test update]
