@@ -449,12 +449,14 @@ cubeb* GetCubebContextUnlocked()
   }
 
 #ifdef MOZ_CUBEB_REMOTING
-  if (XRE_IsParentProcess()) {
-    // TODO: Don't use audio IPC when within the same process.
-    MOZ_ASSERT(!sIPCConnection.IsValid());
-    sIPCConnection = CreateAudioIPCConnection();
-  } else {
-    MOZ_DIAGNOSTIC_ASSERT(sIPCConnection.IsValid());
+  if (sCubebSandbox) {
+    if (XRE_IsParentProcess()) {
+      // TODO: Don't use audio IPC when within the same process.
+      MOZ_ASSERT(!sIPCConnection.IsValid());
+      sIPCConnection = CreateAudioIPCConnection();
+    } else {
+      MOZ_DIAGNOSTIC_ASSERT(sIPCConnection.IsValid());
+    }
   }
 
   MOZ_LOG(gCubebLog, LogLevel::Info, ("%s: %s", PREF_CUBEB_SANDBOX, sCubebSandbox ? "true" : "false"));
@@ -556,7 +558,7 @@ void InitLibrary()
     NS_NewRunnableFunction("CubebUtils::InitLibrary", &InitBrandName));
 #endif
 #ifdef MOZ_CUBEB_REMOTING
-  if (XRE_IsContentProcess()) {
+  if (sCubebSandbox && XRE_IsContentProcess()) {
     AbstractThread::MainThread()->Dispatch(
       NS_NewRunnableFunction("CubebUtils::InitLibrary", &InitAudioIPCConnection));
   }

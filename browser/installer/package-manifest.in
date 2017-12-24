@@ -555,7 +555,7 @@
 @RESPATH@/components/TestInterfaceJSMaplike.js
 #endif
 
-#if defined(MOZ_DEBUG) || defined(NIGHTLY_BUILD)
+#if defined(MOZ_DEBUG) || defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)
 @RESPATH@/browser/components/testComponents.manifest
 @RESPATH@/browser/components/startupRecorder.js
 #endif
