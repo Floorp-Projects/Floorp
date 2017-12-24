@@ -10,8 +10,6 @@
 #include <ctype.h> // for |EOF|, |WEOF|
 #include <string.h> // for |memcpy|, et al
 
-#include "nscore.h" // for |char16_t|
-
 // This file may be used (through nsUTF8Utils.h) from non-XPCOM code, in
 // particular the standalone software updater. In that case stub out
 // the macros provided by nsDebug.h which are only usable when linking XPCOM

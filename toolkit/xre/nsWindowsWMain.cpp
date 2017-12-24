@@ -10,6 +10,7 @@
 #error This file only makes sense on Windows.
 #endif
 
+#include "mozilla/Char16.h"
 #include "nsUTF8Utils.h"
 #include <intrin.h>
 #include <math.h>
