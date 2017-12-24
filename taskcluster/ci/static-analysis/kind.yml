@@ -32,6 +32,8 @@ jobs:
         worker:
             docker-image: {in-tree: desktop-build}
             max-run-time: 36000
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         run:
             using: mozharness
             actions: [build]
@@ -57,6 +59,8 @@ jobs:
         worker:
             docker-image: {in-tree: desktop-build}
             max-run-time: 36000
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         run:
             using: mozharness
             actions: [build]
