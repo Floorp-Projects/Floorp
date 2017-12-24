@@ -14,6 +14,7 @@
 #ifdef XP_WIN
 // Need the HANDLE typedef.
 #include <winnt.h>
+#include <cstdint>
 #else
 #include "base/file_descriptor_posix.h"
 #endif

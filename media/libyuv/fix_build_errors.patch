@@ -1,23 +1,12 @@
-# HG changeset patch
-# Parent  034c99a4c2010c8d60ff52daf0a183ac1fd05777
-Bug 1341543: Fix build errors for libyuv in mozilla tree r=sotaro
-
 diff --git a/media/libyuv/libyuv/include/libyuv/basic_types.h b/media/libyuv/libyuv/include/libyuv/basic_types.h
 --- a/media/libyuv/libyuv/include/libyuv/basic_types.h
 +++ b/media/libyuv/libyuv/include/libyuv/basic_types.h
-@@ -8,22 +8,36 @@
-  *  be found in the AUTHORS file in the root of the source tree.
-  */
- 
- #ifndef INCLUDE_LIBYUV_BASIC_TYPES_H_
- #define INCLUDE_LIBYUV_BASIC_TYPES_H_
- 
+@@ -14,16 +14,32 @@
  #include <stddef.h>  // for NULL, size_t
  
--#if defined(_MSC_VER) && (_MSC_VER < 1600)
--#include <sys/types.h>  // for uintptr_t on x86
--#else
-+#if !defined(_MSC_VER) && (_MSC_VER < 1600)
+ #if defined(_MSC_VER) && (_MSC_VER < 1600)
+ #include <sys/types.h>  // for uintptr_t on x86
+ #else
  #include <stdint.h>  // for uintptr_t
  #endif
  
