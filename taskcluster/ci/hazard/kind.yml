@@ -31,6 +31,9 @@ jobs:
         treeherder:
             platform: linux64/debug
             symbol: SM-tc(H)
+        worker:
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         run:
             using: hazard
             command: >
@@ -54,6 +57,9 @@ jobs:
         treeherder:
             platform: linux64/debug
             symbol: tc(H)
+        worker:
+            env:
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/linux64/releng.manifest"
         run:
             using: hazard
             mozconfig: "browser/config/mozconfigs/linux64/hazards"
