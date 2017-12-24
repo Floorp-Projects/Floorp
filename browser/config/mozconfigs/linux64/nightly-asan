@@ -9,7 +9,8 @@ ac_add_options --enable-valgrind
 
 . $topsrcdir/build/unix/mozconfig.asan
 
-export PKG_CONFIG_LIBDIR=/usr/local/lib64/pkgconfig:/usr/lib64/pkgconfig:/usr/share/pkgconfig
+export PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig:/usr/share/pkgconfig
+. $topsrcdir/build/unix/mozconfig.gtk
 
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
