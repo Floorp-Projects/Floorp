@@ -30,11 +30,16 @@ int sign(int val) {
 // Verify that nsCRT versions of string comparison routines get the
 // same answers as the native non-unicode versions. We only pass in
 // iso-latin-1 strings, so the comparison must be valid.
-static void Check(const char* s1, const char* s2, int n)
+static void Check(const char* s1, const char* s2, size_t n)
 {
-  int clib = PL_strcmp(s1, s2);
+  bool longerThanN = strlen(s1) > n || strlen(s2) > n;
 
+  int clib = PL_strcmp(s1, s2);
   int clib_n = PL_strncmp(s1, s2, n);
+
+  if (!longerThanN) {
+    EXPECT_EQ(sign(clib), sign(clib_n));
+  }
 
   nsAutoString t1,t2;
   CopyASCIItoUTF16(s1, t1);
@@ -42,19 +47,28 @@ static void Check(const char* s1, const char* s2, int n)
   const char16_t* us1 = t1.get();
   const char16_t* us2 = t2.get();
 
-  int u2 = nsCRT::strcmp(us1, us2);
+  int u2, u2_n;
+  // nsCRT::strncmp will cause buffer overrun
+  // if the string buffer is shorter than |n|.
+  if (!longerThanN) {
+    u2 = nsCRT::strcmp(us1, us2);
+    u2_n = nsCRT::strncmp(us1, us2, n);
 
-  int u2_n = nsCRT::strncmp(us1, us2, n);
+    EXPECT_EQ(sign(clib), sign(u2));
+    EXPECT_EQ(sign(clib_n), sign(u2_n));
+  }
+
+  u2 = NS_strcmp(us1, us2);
+  u2_n = NS_strncmp(us1, us2, n);
 
   EXPECT_EQ(sign(clib), sign(u2));
-  EXPECT_EQ(sign(clib), sign(u2_n));
-  EXPECT_EQ(sign(clib), sign(clib_n));
+  EXPECT_EQ(sign(clib_n), sign(u2_n));
 }
 
 struct Test {
   const char* s1;
   const char* s2;
-  int n;
+  size_t n;
 };
 
 static Test tests[] = {
@@ -72,6 +86,11 @@ static Test tests[] = {
 
   { "bar", "foo", 3 },
   { "bar", "fo", 3 },
+
+  { "foo", "foobar", 3 },
+  { "foobar", "foo", 3 },
+  { "foobar", "foozap", 3 },
+  { "foozap", "foobar", 3 },
 };
 #define NUM_TESTS int((sizeof(tests) / sizeof(tests[0])))
 
