@@ -207,278 +207,25 @@ protected:
   bool                    mSuppressed;
 };
 
-// -------------------------------------------------------
-// Helpers
-// -------------------------------------------------------
-
-static bool
-HasFramesetChild(nsIContent* aContent)
-{
-  if (!aContent) {
-    return false;
-  }
-
-  // do a breadth search across all siblings
-  for (nsIContent* child = aContent->GetFirstChild();
-       child;
-       child = child->GetNextSibling()) {
-    if (child->IsHTMLElement(nsGkAtoms::frameset)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-static bool
-IsParentAFrameSet(nsIDocShell* aParent)
-{
-  // See if the incoming doc is the root document
-  if (!aParent) return false;
-
-  // When it is the top level document we need to check
-  // to see if it contains a frameset. If it does, then
-  // we only want to print the doc's children and not the document itself
-  // For anything else we always print all the children and the document
-  // for example, if the doc contains an IFRAME we eant to print the child
-  // document (the IFRAME) and then the rest of the document.
-  //
-  // XXX we really need to search the frame tree, and not the content
-  // but there is no way to distinguish between IFRAMEs and FRAMEs
-  // with the GetFrameType call.
-  // Bug 53459 has been files so we can eventually distinguish
-  // between IFRAME frames and FRAME frames
-  bool isFrameSet = false;
-  // only check to see if there is a frameset if there is
-  // NO parent doc for this doc. meaning this parent is the root doc
-  nsCOMPtr<nsIDocument> doc = aParent->GetDocument();
-  if (doc) {
-    nsIContent *rootElement = doc->GetRootElement();
-    if (rootElement) {
-      isFrameSet = HasFramesetChild(rootElement);
-    }
-  }
-  return isFrameSet;
-}
-
-static nsPrintObject*
-FindPrintObjectByDOMWin(nsPrintObject* aPO,
-                        nsPIDOMWindowOuter* aDOMWin)
-{
-  NS_ASSERTION(aPO, "Pointer is null!");
-
-  // Often the CurFocused DOMWindow is passed in
-  // andit is valid for it to be null, so short circut
-  if (!aDOMWin) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDocument> doc = aDOMWin->GetDoc();
-  if (aPO->mDocument && aPO->mDocument->GetOriginalDocument() == doc) {
-    return aPO;
-  }
-
-  for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
-    nsPrintObject* po = FindPrintObjectByDOMWin(kid.get(), aDOMWin);
-    if (po) {
-      return po;
-    }
-  }
-
-  return nullptr;
-}
-
-static void
-GetDocumentTitleAndURL(nsIDocument* aDoc,
-                       nsAString& aTitle,
-                       nsAString& aURLStr)
-{
-  NS_ASSERTION(aDoc, "Pointer is null!");
-
-  aTitle.Truncate();
-  aURLStr.Truncate();
-
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aDoc);
-  doc->GetTitle(aTitle);
-
-  nsIURI* url = aDoc->GetDocumentURI();
-  if (!url) return;
-
-  nsCOMPtr<nsIURIFixup> urifixup(do_GetService(NS_URIFIXUP_CONTRACTID));
-  if (!urifixup) return;
-
-  nsCOMPtr<nsIURI> exposableURI;
-  urifixup->CreateExposableURI(url, getter_AddRefs(exposableURI));
-
-  if (!exposableURI) return;
-
-  nsAutoCString urlCStr;
-  nsresult rv = exposableURI->GetSpec(urlCStr);
-  if (NS_FAILED(rv)) return;
-
-  nsCOMPtr<nsITextToSubURI> textToSubURI =
-    do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return;
-
-  textToSubURI->UnEscapeURIForUI(NS_LITERAL_CSTRING("UTF-8"),
-                                 urlCStr, aURLStr);
-}
-
-static nsresult
-GetSeqFrameAndCountPagesInternal(const UniquePtr<nsPrintObject>& aPO,
-                                 nsIFrame*& aSeqFrame,
-                                 int32_t& aCount)
-{
-  NS_ENSURE_ARG_POINTER(aPO);
-
-  // This is sometimes incorrectly called before the pres shell has been created
-  // (bug 1141756). MOZ_DIAGNOSTIC_ASSERT so we'll still see the crash in
-  // Nightly/Aurora in case the other patch fixes this.
-  if (!aPO->mPresShell) {
-    MOZ_DIAGNOSTIC_ASSERT(false,
-                          "GetSeqFrameAndCountPages needs a non-null pres shell");
-    return NS_ERROR_FAILURE;
-  }
-
-  // Finds the SimplePageSequencer frame
-  nsIPageSequenceFrame* seqFrame = aPO->mPresShell->GetPageSequenceFrame();
-  aSeqFrame = do_QueryFrame(seqFrame);
-  if (!aSeqFrame) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // count the total number of pages
-  aCount = aSeqFrame->PrincipalChildList().GetLength();
-
-  return NS_OK;
-}
-
-/**
- * Recursively sets the PO items to be printed "As Is"
- * from the given item down into the treei
- */
-static void
-SetPrintAsIs(nsPrintObject* aPO, bool aAsIs = true)
-{
-  NS_ASSERTION(aPO, "Pointer is null!");
-
-  aPO->mPrintAsIs = aAsIs;
-  for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
-    SetPrintAsIs(kid.get(), aAsIs);
-  }
-}
-
-/**
- * This method is key to the entire print mechanism.
- *
- * This "maps" or figures out which sub-doc represents a
- * given Frame or IFrame in its parent sub-doc.
- *
- * So the Mcontent pointer in the child sub-doc points to the
- * content in the its parent document, that caused it to be printed.
- * This is used later to (after reflow) to find the absolute location
- * of the sub-doc on its parent's page frame so it can be
- * printed in the correct location.
- *
- * This method recursvely "walks" the content for a document finding
- * all the Frames and IFrames, then sets the "mFrameType" data member
- * which tells us what type of PO we have
- */
-static void
-MapContentForPO(const UniquePtr<nsPrintObject>& aPO,
-                nsIContent* aContent)
-{
-  NS_PRECONDITION(aPO && aContent, "Null argument");
-
-  nsIDocument* doc = aContent->GetComposedDoc();
-
-  NS_ASSERTION(doc, "Content without a document from a document tree?");
-
-  nsIDocument* subDoc = doc->GetSubDocumentFor(aContent);
-
-  if (subDoc) {
-    nsCOMPtr<nsIDocShell> docShell(subDoc->GetDocShell());
-
-    if (docShell) {
-      nsPrintObject * po = nullptr;
-      for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
-        if (kid->mDocument == subDoc) {
-          po = kid.get();
-          break;
-        }
-      }
-
-      // XXX If a subdocument has no onscreen presentation, there will be no PO
-      //     This is even if there should be a print presentation
-      if (po) {
-        // "frame" elements not in a frameset context should be treated
-        // as iframes
-        if (aContent->IsHTMLElement(nsGkAtoms::frame) && po->mParent->mFrameType == eFrameSet) {
-          po->mFrameType = eFrame;
-        } else {
-          // Assume something iframe-like, i.e. iframe, object, or embed
-          po->mFrameType = eIFrame;
-          SetPrintAsIs(po, true);
-          NS_ASSERTION(po->mParent, "The root must be a parent");
-          po->mParent->mPrintAsIs = true;
-        }
-      }
-    }
-  }
-
-  // walk children content
-  for (nsIContent* child = aContent->GetFirstChild();
-       child;
-       child = child->GetNextSibling()) {
-    MapContentForPO(aPO, child);
-  }
-}
-
-/**
- * The walks the PO tree and for each document it walks the content
- * tree looking for any content that are sub-shells
- *
- * It then sets the mContent pointer in the "found" PO object back to the
- * the document that contained it.
- */
-static void
-MapContentToWebShells(const UniquePtr<nsPrintObject>& aRootPO,
-                      const UniquePtr<nsPrintObject>& aPO)
-{
-  NS_ASSERTION(aRootPO, "Pointer is null!");
-  NS_ASSERTION(aPO, "Pointer is null!");
-
-  // Recursively walk the content from the root item
-  // XXX Would be faster to enumerate the subdocuments, although right now
-  //     nsIDocument doesn't expose quite what would be needed.
-  nsCOMPtr<nsIContentViewer> viewer;
-  aPO->mDocShell->GetContentViewer(getter_AddRefs(viewer));
-  if (!viewer) return;
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  viewer->GetDOMDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
-  if (!doc) return;
-
-  Element* rootElement = doc->GetRootElement();
-  if (rootElement) {
-    MapContentForPO(aPO, rootElement);
-  } else {
-    NS_WARNING("Null root content on (sub)document.");
-  }
-
-  // Continue recursively walking the chilren of this PO
-  for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
-    MapContentToWebShells(aRootPO, kid);
-  }
-
-}
-
-
-//-------------------------------------------------------
-
 NS_IMPL_ISUPPORTS(nsPrintJob, nsIWebProgressListener,
                   nsISupportsWeakReference, nsIObserver)
+
+//---------------------------------------------------
+//-- nsPrintJob Class Impl
+//---------------------------------------------------
+nsPrintJob::nsPrintJob()
+  : mIsCreatingPrintPreview(false)
+  , mIsDoingPrinting(false)
+  , mIsDoingPrintPreview(false)
+  , mProgressDialogIsShown(false)
+  , mScreenDPI(115.0f)
+  , mPagePrintTimer(nullptr)
+  , mLoadCounter(0)
+  , mDidLoadDataForPrinting(false)
+  , mIsDestroying(false)
+  , mDisallowSelectionPrint(false)
+{
+}
 
 //-------------------------------------------------------
 nsPrintJob::~nsPrintJob()
@@ -500,6 +247,7 @@ nsPrintJob::Destroy()
 
 #ifdef NS_PRINT_PREVIEW
   mPrtPreview = nullptr;
+  mOldPrtPreview = nullptr;
 #endif
   mDocViewerPrint = nullptr;
 }
@@ -577,6 +325,36 @@ nsPrintJob::InstallPrintPreviewListener()
   }
 }
 
+//----------------------------------------------------------------------
+nsresult
+nsPrintJob::GetSeqFrameAndCountPagesInternal(const UniquePtr<nsPrintObject>& aPO,
+                                             nsIFrame*&    aSeqFrame,
+                                             int32_t&      aCount)
+{
+  NS_ENSURE_ARG_POINTER(aPO);
+
+  // This is sometimes incorrectly called before the pres shell has been created
+  // (bug 1141756). MOZ_DIAGNOSTIC_ASSERT so we'll still see the crash in
+  // Nightly/Aurora in case the other patch fixes this.
+  if (!aPO->mPresShell) {
+    MOZ_DIAGNOSTIC_ASSERT(false,
+                          "GetSeqFrameAndCountPages needs a non-null pres shell");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Finds the SimplePageSequencer frame
+  nsIPageSequenceFrame* seqFrame = aPO->mPresShell->GetPageSequenceFrame();
+  aSeqFrame = do_QueryFrame(seqFrame);
+  if (!aSeqFrame) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // count the total number of pages
+  aCount = aSeqFrame->PrincipalChildList().GetLength();
+
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------
 nsresult
 nsPrintJob::GetSeqFrameAndCountPages(nsIFrame*& aSeqFrame, int32_t& aCount)
@@ -628,7 +406,7 @@ nsPrintJob::CommonPrint(bool                    aIsPrintPreview,
                               aWebProgressListener, aDoc);
   if (NS_FAILED(rv)) {
     if (aIsPrintPreview) {
-      mIsCreatingPrintPreview = false;
+      SetIsCreatingPrintPreview(false);
       SetIsPrintPreview(false);
     } else {
       SetIsPrinting(false);
@@ -657,6 +435,10 @@ nsPrintJob::DoCommonPrint(bool                    aIsPrintPreview,
     // then that means the progress dialog is already being shown.
     nsCOMPtr<nsIPrintingPromptService> pps(do_QueryInterface(aWebProgressListener));
     mProgressDialogIsShown = pps != nullptr;
+
+    if (mIsDoingPrintPreview) {
+      mOldPrtPreview = Move(mPrtPreview);
+    }
   } else {
     mProgressDialogIsShown = false;
   }
@@ -681,7 +463,7 @@ nsPrintJob::DoCommonPrint(bool                    aIsPrintPreview,
   printData->mPrintSettings->GetShrinkToFit(&printData->mShrinkToFit);
 
   if (aIsPrintPreview) {
-    mIsCreatingPrintPreview = true;
+    SetIsCreatingPrintPreview(true);
     SetIsPrintPreview(true);
     nsCOMPtr<nsIContentViewer> viewer =
       do_QueryInterface(mDocViewerPrint);
@@ -766,7 +548,7 @@ nsPrintJob::DoCommonPrint(bool                    aIsPrintPreview,
   // cause our print/print-preview operation to finish. In this case, we
   // should immediately return an error code so that the root caller knows
   // it shouldn't continue to do anything with this instance.
-  if (mIsDestroying || (aIsPrintPreview && !mIsCreatingPrintPreview)) {
+  if (mIsDestroying || (aIsPrintPreview && !GetIsCreatingPrintPreview())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1381,6 +1163,39 @@ nsPrintJob::IsThereARangeSelection(nsPIDOMWindowOuter* aDOMWin)
 }
 
 //---------------------------------------------------------------------
+bool
+nsPrintJob::IsParentAFrameSet(nsIDocShell* aParent)
+{
+  // See if the incoming doc is the root document
+  if (!aParent) return false;
+
+  // When it is the top level document we need to check
+  // to see if it contains a frameset. If it does, then
+  // we only want to print the doc's children and not the document itself
+  // For anything else we always print all the children and the document
+  // for example, if the doc contains an IFRAME we eant to print the child
+  // document (the IFRAME) and then the rest of the document.
+  //
+  // XXX we really need to search the frame tree, and not the content
+  // but there is no way to distinguish between IFRAMEs and FRAMEs
+  // with the GetFrameType call.
+  // Bug 53459 has been files so we can eventually distinguish
+  // between IFRAME frames and FRAME frames
+  bool isFrameSet = false;
+  // only check to see if there is a frameset if there is
+  // NO parent doc for this doc. meaning this parent is the root doc
+  nsCOMPtr<nsIDocument> doc = aParent->GetDocument();
+  if (doc) {
+    nsIContent *rootElement = doc->GetRootElement();
+    if (rootElement) {
+      isFrameSet = HasFramesetChild(rootElement);
+    }
+  }
+  return isFrameSet;
+}
+
+
+//---------------------------------------------------------------------
 // Recursively build a list of sub documents to be printed
 // that mirrors the document tree
 void
@@ -1417,6 +1232,82 @@ nsPrintJob::BuildDocTree(nsIDocShell*      aParentNode,
   }
 }
 
+//---------------------------------------------------------------------
+void
+nsPrintJob::GetDocumentTitleAndURL(nsIDocument* aDoc,
+                                   nsAString&   aTitle,
+                                   nsAString&   aURLStr)
+{
+  NS_ASSERTION(aDoc, "Pointer is null!");
+
+  aTitle.Truncate();
+  aURLStr.Truncate();
+
+  nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(aDoc);
+  doc->GetTitle(aTitle);
+
+  nsIURI* url = aDoc->GetDocumentURI();
+  if (!url) return;
+
+  nsCOMPtr<nsIURIFixup> urifixup(do_GetService(NS_URIFIXUP_CONTRACTID));
+  if (!urifixup) return;
+
+  nsCOMPtr<nsIURI> exposableURI;
+  urifixup->CreateExposableURI(url, getter_AddRefs(exposableURI));
+
+  if (!exposableURI) return;
+
+  nsAutoCString urlCStr;
+  nsresult rv = exposableURI->GetSpec(urlCStr);
+  if (NS_FAILED(rv)) return;
+
+  nsCOMPtr<nsITextToSubURI> textToSubURI =
+    do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return;
+
+  textToSubURI->UnEscapeURIForUI(NS_LITERAL_CSTRING("UTF-8"),
+                                 urlCStr, aURLStr);
+}
+
+//---------------------------------------------------------------------
+// The walks the PO tree and for each document it walks the content
+// tree looking for any content that are sub-shells
+//
+// It then sets the mContent pointer in the "found" PO object back to the
+// the document that contained it.
+void
+nsPrintJob::MapContentToWebShells(const UniquePtr<nsPrintObject>& aRootPO,
+                                  const UniquePtr<nsPrintObject>& aPO)
+{
+  NS_ASSERTION(aRootPO, "Pointer is null!");
+  NS_ASSERTION(aPO, "Pointer is null!");
+
+  // Recursively walk the content from the root item
+  // XXX Would be faster to enumerate the subdocuments, although right now
+  //     nsIDocument doesn't expose quite what would be needed.
+  nsCOMPtr<nsIContentViewer> viewer;
+  aPO->mDocShell->GetContentViewer(getter_AddRefs(viewer));
+  if (!viewer) return;
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  viewer->GetDOMDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  if (!doc) return;
+
+  Element* rootElement = doc->GetRootElement();
+  if (rootElement) {
+    MapContentForPO(aPO, rootElement);
+  } else {
+    NS_WARNING("Null root content on (sub)document.");
+  }
+
+  // Continue recursively walking the chilren of this PO
+  for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
+    MapContentToWebShells(aRootPO, kid);
+  }
+
+}
+
 //-------------------------------------------------------
 // A Frame's sub-doc may contain content or a FrameSet
 // When it contains a FrameSet the mFrameType for the PrintObject
@@ -1447,6 +1338,71 @@ nsPrintJob::CheckForChildFrameSets(const UniquePtr<nsPrintObject>& aPO)
 
   if (hasChildFrames && aPO->mFrameType == eFrame) {
     aPO->mFrameType = eFrameSet;
+  }
+}
+
+//---------------------------------------------------------------------
+// This method is key to the entire print mechanism.
+//
+// This "maps" or figures out which sub-doc represents a
+// given Frame or IFrame in its parent sub-doc.
+//
+// So the Mcontent pointer in the child sub-doc points to the
+// content in the its parent document, that caused it to be printed.
+// This is used later to (after reflow) to find the absolute location
+// of the sub-doc on its parent's page frame so it can be
+// printed in the correct location.
+//
+// This method recursvely "walks" the content for a document finding
+// all the Frames and IFrames, then sets the "mFrameType" data member
+// which tells us what type of PO we have
+void
+nsPrintJob::MapContentForPO(const UniquePtr<nsPrintObject>& aPO,
+                            nsIContent* aContent)
+{
+  NS_PRECONDITION(aPO && aContent, "Null argument");
+
+  nsIDocument* doc = aContent->GetComposedDoc();
+
+  NS_ASSERTION(doc, "Content without a document from a document tree?");
+
+  nsIDocument* subDoc = doc->GetSubDocumentFor(aContent);
+
+  if (subDoc) {
+    nsCOMPtr<nsIDocShell> docShell(subDoc->GetDocShell());
+
+    if (docShell) {
+      nsPrintObject * po = nullptr;
+      for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
+        if (kid->mDocument == subDoc) {
+          po = kid.get();
+          break;
+        }
+      }
+
+      // XXX If a subdocument has no onscreen presentation, there will be no PO
+      //     This is even if there should be a print presentation
+      if (po) {
+        // "frame" elements not in a frameset context should be treated
+        // as iframes
+        if (aContent->IsHTMLElement(nsGkAtoms::frame) && po->mParent->mFrameType == eFrameSet) {
+          po->mFrameType = eFrame;
+        } else {
+          // Assume something iframe-like, i.e. iframe, object, or embed
+          po->mFrameType = eIFrame;
+          SetPrintAsIs(po, true);
+          NS_ASSERTION(po->mParent, "The root must be a parent");
+          po->mParent->mPrintAsIs = true;
+        }
+      }
+    }
+  }
+
+  // walk children content
+  for (nsIContent* child = aContent->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    MapContentForPO(aPO, child);
   }
 }
 
@@ -1588,7 +1544,7 @@ nsPrintJob::CleanupOnFailure(nsresult aResult, bool aIsPrinting)
     SetIsPrinting(false);
   } else {
     SetIsPrintPreview(false);
-    mIsCreatingPrintPreview = false;
+    SetIsCreatingPrintPreview(false);
   }
 
   /* cleanup done, let's fire-up an error dialog to notify the user
@@ -2985,6 +2941,29 @@ nsPrintJob::CleanupDocTitleArray(char16_t**& aArray, int32_t& aCount)
   aCount = 0;
 }
 
+//---------------------------------------------------------------------
+// static
+bool
+nsPrintJob::HasFramesetChild(nsIContent* aContent)
+{
+  if (!aContent) {
+    return false;
+  }
+
+  // do a breadth search across all siblings
+  for (nsIContent* child = aContent->GetFirstChild();
+       child;
+       child = child->GetNextSibling()) {
+    if (child->IsHTMLElement(nsGkAtoms::frameset)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+
+
 /** ---------------------------------------------------
  *  Get the Focused Frame for a documentviewer
  */
@@ -3091,6 +3070,49 @@ nsPrintJob::DonePrintingPages(nsPrintObject* aPO, nsresult aResult)
   DisconnectPagePrintTimer();
 
   return true;
+}
+
+//-------------------------------------------------------
+// Recursively sets the PO items to be printed "As Is"
+// from the given item down into the tree
+void
+nsPrintJob::SetPrintAsIs(nsPrintObject* aPO, bool aAsIs)
+{
+  NS_ASSERTION(aPO, "Pointer is null!");
+
+  aPO->mPrintAsIs = aAsIs;
+  for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
+    SetPrintAsIs(kid.get(), aAsIs);
+  }
+}
+
+//-------------------------------------------------------
+// Given a DOMWindow it recursively finds the PO object that matches
+nsPrintObject*
+nsPrintJob::FindPrintObjectByDOMWin(nsPrintObject* aPO,
+                                    nsPIDOMWindowOuter* aDOMWin)
+{
+  NS_ASSERTION(aPO, "Pointer is null!");
+
+  // Often the CurFocused DOMWindow is passed in
+  // andit is valid for it to be null, so short circut
+  if (!aDOMWin) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocument> doc = aDOMWin->GetDoc();
+  if (aPO->mDocument && aPO->mDocument->GetOriginalDocument() == doc) {
+    return aPO;
+  }
+
+  for (const UniquePtr<nsPrintObject>& kid : aPO->mKids) {
+    nsPrintObject* po = FindPrintObjectByDOMWin(kid.get(), aDOMWin);
+    if (po) {
+      return po;
+    }
+  }
+
+  return nullptr;
 }
 
 //-------------------------------------------------------
@@ -3428,11 +3450,11 @@ nsPrintJob::FinishPrintPreview()
   // Note that this method may be called while the instance is being
   // initialized.  Some methods which initialize the instance (e.g.,
   // DoCommonPrint) may need to stop initializing and return error if
-  // this is called.  Therefore it's important to set mIsCreatingPrintPreview
-  // state to false here.  If you need to stop setting that here, you need to
-  // keep them being able to check whether the owner stopped using this
-  // instance.
-  mIsCreatingPrintPreview = false;
+  // this is called.  Therefore it's important to set IsCreatingPrintPreview
+  // state to false here.  If you need to remove this call of
+  // SetIsCreatingPrintPreview here, you need to keep them being able to
+  // check whether the owner stopped using this instance.
+  SetIsCreatingPrintPreview(false);
 
   // mPrt may be cleared during a call of nsPrintData::OnEndPrinting()
   // because that method invokes some arbitrary listeners.
@@ -3451,6 +3473,10 @@ nsPrintJob::FinishPrintPreview()
 
   // At this point we are done preparing everything
   // before it is to be created
+
+  if (mIsDoingPrintPreview && mOldPrtPreview) {
+    mOldPrtPreview = nullptr;
+  }
 
   printData->OnEndPrinting();
   // XXX If mPrt becomes nullptr or different instance here, what should we
