@@ -66,10 +66,10 @@ XULSortServiceImpl::SetSortColumnHints(nsIContent *content,
       SetSortColumnHints(child, sortResource, sortDirection);
     } else if (child->IsXULElement(nsGkAtoms::treecol)) {
       nsAutoString value;
-      child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, value);
+      child->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, value);
       // also check the resource attribute for older code
       if (value.IsEmpty())
-        child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::resource, value);
+        child->GetAttr(kNameSpaceID_None, nsGkAtoms::resource, value);
       if (value == sortResource) {
         child->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::sortActive,
                                     NS_LITERAL_STRING("true"), true);
@@ -194,18 +194,12 @@ testSortCallback(const void *data1, const void *data2, void *privateData)
                                              sortState->sortHints, &sortOrder);
         if (sortOrder)
           break;
-      } else {
+      }
+      else {
         // no template, so just compare attributes. Ignore namespaces for now.
         nsAutoString leftstr, rightstr;
-        if (left->content->IsElement()) {
-          left->content->AsElement()->GetAttr(kNameSpaceID_None,
-                                              sortState->sortKeys[t],
-                                              leftstr);
-        }
-        if (right->content->IsElement()) {
-          right->content->AsElement()->GetAttr(kNameSpaceID_None,
-                                               sortState->sortKeys[t], rightstr);
-        }
+        left->content->GetAttr(kNameSpaceID_None, sortState->sortKeys[t], leftstr);
+        right->content->GetAttr(kNameSpaceID_None, sortState->sortKeys[t], rightstr);
 
         sortOrder = XULSortServiceImpl::CompareValues(leftstr, rightstr, sortState->sortHints);
       }
@@ -292,10 +286,8 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
 
       // if it's a container in a tree or menu, find its children,
       // and sort those also
-      if (!child->IsElement() ||
-          !child->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                           nsGkAtoms::container,
-                                           nsGkAtoms::_true, eCaseMatters))
+      if (!child->AttrValueIs(kNameSpaceID_None, nsGkAtoms::container,
+                              nsGkAtoms::_true, eCaseMatters))
         continue;
 
       for (nsIContent* grandchild = child->GetFirstChild();

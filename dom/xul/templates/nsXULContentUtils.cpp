@@ -261,7 +261,7 @@ nsXULContentUtils::GetResource(int32_t aNameSpaceID, const nsAString& aAttribute
 
 
 nsresult
-nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, Element* aElement)
+nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElement)
 {
     // Deal with setting up a 'commandupdater'. Pulls the 'events' and
     // 'targets' attributes off of aElement, and adds it to the

@@ -2061,7 +2061,7 @@ void
 nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame* aFrame,
                                             EventStates aButtonStates[])
 {
-  static Element::AttrValuesArray attributeValues[] = {
+  static nsIContent::AttrValuesArray attributeValues[] = {
     &nsGkAtoms::scrollbarUpTop,
     &nsGkAtoms::scrollbarDownTop,
     &nsGkAtoms::scrollbarUpBottom,
@@ -2072,10 +2072,9 @@ nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame* aFrame,
   // Get the state of any scrollbar buttons in our child frames
   for (nsIFrame *childFrame : aFrame->PrincipalChildList()) {
     nsIContent *childContent = childFrame->GetContent();
-    if (!childContent || !childContent->IsElement()) continue;
-    int32_t attrIndex =
-      childContent->AsElement()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::sbattr,
-                                                 attributeValues, eCaseMatters);
+    if (!childContent) continue;
+    int32_t attrIndex = childContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::sbattr,
+                                                      attributeValues, eCaseMatters);
     if (attrIndex < 0) continue;
 
     aButtonStates[attrIndex] = GetContentState(childFrame, NS_THEME_BUTTON);
@@ -2563,14 +2562,13 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
         break;
       }
       ThemeDrawState state = kThemeStateActive;
-      if (content->IsElement()) {
-        if (content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::state,
-                                              NS_LITERAL_STRING("up"), eCaseMatters)) {
-          state = kThemeStatePressedUp;
-        } else if (content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::state,
-                                                     NS_LITERAL_STRING("down"), eCaseMatters)) {
-          state = kThemeStatePressedDown;
-        }
+      if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::state,
+                               NS_LITERAL_STRING("up"), eCaseMatters)) {
+        state = kThemeStatePressedUp;
+      }
+      else if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::state,
+                                    NS_LITERAL_STRING("down"), eCaseMatters)) {
+        state = kThemeStatePressedDown;
       }
 
       DrawSpinButtons(cgContext, kThemeIncDecButton, macRect, state,
@@ -2757,10 +2755,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext,
       if (!maxpos)
         maxpos = 100;
 
-      bool reverse =
-        aFrame->GetContent()->IsElement() &&
-        aFrame->GetContent()->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
-                                                       NS_LITERAL_STRING("reverse"), eCaseMatters);
+      bool reverse = aFrame->GetContent()->
+        AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
+                    NS_LITERAL_STRING("reverse"), eCaseMatters);
       DrawScale(cgContext, macRect, eventState,
                 (aWidgetType == NS_THEME_SCALE_VERTICAL), reverse,
                 curpos, minpos, maxpos, aFrame);

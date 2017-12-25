@@ -1145,7 +1145,7 @@ HTMLImageElement::UpdateResponsiveSource()
         // an otherwise-usable source element may still have a media query that may not
         // match any more.
         if (candidateSource->IsHTMLElement(nsGkAtoms::source) &&
-            !SourceElementMatches(candidateSource->AsElement())) {
+            !SourceElementMatches(candidateSource->AsContent())) {
           isUsableCandidate = false;
         }
 
@@ -1162,13 +1162,13 @@ HTMLImageElement::UpdateResponsiveSource()
       }
     } else if (candidateSource == this) {
       // We are the last possible source
-      if (!TryCreateResponsiveSelector(candidateSource->AsElement())) {
+      if (!TryCreateResponsiveSelector(candidateSource->AsContent())) {
         // Failed to find any source
         mResponsiveSelector = nullptr;
       }
       break;
     } else if (candidateSource->IsHTMLElement(nsGkAtoms::source) &&
-               TryCreateResponsiveSelector(candidateSource->AsElement())) {
+               TryCreateResponsiveSelector(candidateSource->AsContent())) {
       // This led to a valid source, stop
       break;
     }
@@ -1205,22 +1205,22 @@ HTMLImageElement::SupportedPictureSourceType(const nsAString& aType)
 }
 
 bool
-HTMLImageElement::SourceElementMatches(Element* aSourceElement)
+HTMLImageElement::SourceElementMatches(nsIContent* aSourceNode)
 {
-  MOZ_ASSERT(aSourceElement->IsHTMLElement(nsGkAtoms::source));
+  MOZ_ASSERT(aSourceNode->IsHTMLElement(nsGkAtoms::source));
 
   DebugOnly<Element *> parent(nsINode::GetParentElement());
   MOZ_ASSERT(parent && parent->IsHTMLElement(nsGkAtoms::picture));
-  MOZ_ASSERT(IsPreviousSibling(aSourceElement, this));
+  MOZ_ASSERT(IsPreviousSibling(aSourceNode, this));
 
   // Check media and type
-  auto* src = static_cast<HTMLSourceElement*>(aSourceElement);
+  HTMLSourceElement *src = static_cast<HTMLSourceElement*>(aSourceNode);
   if (!src->MatchesCurrentMedia()) {
     return false;
   }
 
   nsAutoString type;
-  if (src->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
+  if (aSourceNode->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
       !SupportedPictureSourceType(type)) {
     return false;
   }
@@ -1229,27 +1229,27 @@ HTMLImageElement::SourceElementMatches(Element* aSourceElement)
 }
 
 bool
-HTMLImageElement::TryCreateResponsiveSelector(Element* aSourceElement)
+HTMLImageElement::TryCreateResponsiveSelector(nsIContent *aSourceNode)
 {
   nsCOMPtr<nsIPrincipal> principal;
 
   // Skip if this is not a <source> with matching media query
-  bool isSourceTag = aSourceElement->IsHTMLElement(nsGkAtoms::source);
+  bool isSourceTag = aSourceNode->IsHTMLElement(nsGkAtoms::source);
   if (isSourceTag) {
-    if (!SourceElementMatches(aSourceElement)) {
+    if (!SourceElementMatches(aSourceNode)) {
       return false;
     }
-    auto* source = HTMLSourceElement::FromContent(aSourceElement);
+    auto* source = HTMLSourceElement::FromContent(aSourceNode);
     principal = source->GetSrcsetTriggeringPrincipal();
-  } else if (aSourceElement->IsHTMLElement(nsGkAtoms::img)) {
+  } else if (aSourceNode->IsHTMLElement(nsGkAtoms::img)) {
     // Otherwise this is the <img> tag itself
-    MOZ_ASSERT(aSourceElement == this);
+    MOZ_ASSERT(aSourceNode == this);
     principal = mSrcsetTriggeringPrincipal;
   }
 
   // Skip if has no srcset or an empty srcset
   nsString srcset;
-  if (!aSourceElement->GetAttr(kNameSpaceID_None, nsGkAtoms::srcset, srcset)) {
+  if (!aSourceNode->GetAttr(kNameSpaceID_None, nsGkAtoms::srcset, srcset)) {
     return false;
   }
 
@@ -1259,20 +1259,19 @@ HTMLImageElement::TryCreateResponsiveSelector(Element* aSourceElement)
 
 
   // Try to parse
-  RefPtr<ResponsiveImageSelector> sel =
-    new ResponsiveImageSelector(aSourceElement);
+  RefPtr<ResponsiveImageSelector> sel = new ResponsiveImageSelector(aSourceNode);
   if (!sel->SetCandidatesFromSourceSet(srcset, principal)) {
     // No possible candidates, don't need to bother parsing sizes
     return false;
   }
 
   nsAutoString sizes;
-  aSourceElement->GetAttr(kNameSpaceID_None, nsGkAtoms::sizes, sizes);
+  aSourceNode->GetAttr(kNameSpaceID_None, nsGkAtoms::sizes, sizes);
   sel->SetSizesFromDescriptor(sizes);
 
   // If this is the <img> tag, also pull in src as the default source
   if (!isSourceTag) {
-    MOZ_ASSERT(aSourceElement == this);
+    MOZ_ASSERT(aSourceNode == this);
     nsAutoString src;
     if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src) && !src.IsEmpty()) {
       sel->SetDefaultSource(src, mSrcTriggeringPrincipal);

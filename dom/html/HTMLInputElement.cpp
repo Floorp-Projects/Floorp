@@ -4135,7 +4135,7 @@ HTMLInputElement::ShouldPreventDOMActivateDispatch(EventTarget* aOriginalTarget)
     return false;
   }
 
-  nsCOMPtr<Element> target = do_QueryInterface(aOriginalTarget);
+  nsCOMPtr<nsIContent> target = do_QueryInterface(aOriginalTarget);
   if (!target) {
     return false;
   }

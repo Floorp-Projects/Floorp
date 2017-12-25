@@ -766,82 +766,22 @@ public:
   // either the input or output value of aParsedValue is StoresOwnData.
   nsresult SetParsedAttr(int32_t aNameSpaceID, nsAtom* aName, nsAtom* aPrefix,
                          nsAttrValue& aParsedValue, bool aNotify);
-  /**
-   * Get the current value of the attribute. This returns a form that is
-   * suitable for passing back into SetAttr.
-   *
-   * @param aNameSpaceID the namespace of the attr
-   * @param aName the name of the attr
-   * @param aResult the value (may legitimately be the empty string) [OUT]
-   * @returns true if the attribute was set (even when set to empty string)
-   *          false when not set.
-   * GetAttr is not inlined on purpose, to keep down codesize from all the
-   * inlined nsAttrValue bits for C++ callers.
-   */
-  bool GetAttr(int32_t aNameSpaceID, nsAtom* aName, nsAString& aResult) const;
-
-  /**
-   * Determine if an attribute has been set (empty string or otherwise).
-   *
-   * @param aNameSpaceId the namespace id of the attribute
-   * @param aAttr the attribute name
-   * @return whether an attribute exists
-   */
+  // GetAttr is not inlined on purpose, to keep down codesize from all
+  // the inlined nsAttrValue bits for C++ callers.
+  bool GetAttr(int32_t aNameSpaceID, nsAtom* aName,
+               nsAString& aResult) const;
   inline bool HasAttr(int32_t aNameSpaceID, nsAtom* aName) const;
-  /**
-   * Test whether this Element's given attribute has the given value.  If the
-   * attribute is not set at all, this will return false.
-   *
-   * @param aNameSpaceID The namespace ID of the attribute.  Must not
-   *                     be kNameSpaceID_Unknown.
-   * @param aName The name atom of the attribute.  Must not be null.
-   * @param aValue The value to compare to.
-   * @param aCaseSensitive Whether to do a case-sensitive compare on the value.
-   */
+  // aCaseSensitive == eIgnoreCaase means ASCII case-insensitive matching.
   inline bool AttrValueIs(int32_t aNameSpaceID, nsAtom* aName,
                           const nsAString& aValue,
                           nsCaseTreatment aCaseSensitive) const;
-
-  /**
-   * Test whether this Element's given attribute has the given value.  If the
-   * attribute is not set at all, this will return false.
-   *
-   * @param aNameSpaceID The namespace ID of the attribute.  Must not
-   *                     be kNameSpaceID_Unknown.
-   * @param aName The name atom of the attribute.  Must not be null.
-   * @param aValue The value to compare to.  Must not be null.
-   * @param aCaseSensitive Whether to do a case-sensitive compare on the value.
-   */
-  bool AttrValueIs(int32_t aNameSpaceID,
-                   nsAtom* aName,
-                   nsAtom* aValue,
-                   nsCaseTreatment aCaseSensitive) const;
-
-  enum {
-    ATTR_MISSING = -1,
-    ATTR_VALUE_NO_MATCH = -2
-  };
-  /**
-   * Check whether this Element's given attribute has one of a given list of
-   * values. If there is a match, we return the index in the list of the first
-   * matching value. If there was no attribute at all, then we return
-   * ATTR_MISSING. If there was an attribute but it didn't match, we return
-   * ATTR_VALUE_NO_MATCH. A non-negative result always indicates a match.
-   *
-   * @param aNameSpaceID The namespace ID of the attribute.  Must not
-   *                     be kNameSpaceID_Unknown.
-   * @param aName The name atom of the attribute.  Must not be null.
-   * @param aValues a nullptr-terminated array of pointers to atom values to test
-   *                against.
-   * @param aCaseSensitive Whether to do a case-sensitive compare on the values.
-   * @return ATTR_MISSING, ATTR_VALUE_NO_MATCH or the non-negative index
-   * indicating the first value of aValues that matched
-   */
-  typedef nsStaticAtom* const* const AttrValuesArray;
+  inline bool AttrValueIs(int32_t aNameSpaceID, nsAtom* aName,
+                          nsAtom* aValue,
+                          nsCaseTreatment aCaseSensitive) const;
   int32_t FindAttrValueIn(int32_t aNameSpaceID,
-                                  nsAtom* aName,
-                                  AttrValuesArray* aValues,
-                                  nsCaseTreatment aCaseSensitive) const;
+                          nsAtom* aName,
+                          AttrValuesArray* aValues,
+                          nsCaseTreatment aCaseSensitive) const override;
 
   /**
    * Set attribute values. All attribute values are assumed to have a

@@ -870,12 +870,12 @@ XULDocument::ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
         // ought to have an |element| attribute that refers to
         // aBroadcaster, and an |attribute| element that tells us what
         // attriubtes we're listening for.
-        if (!child->IsXULElement(nsGkAtoms::observes))
+        if (!child->NodeInfo()->Equals(nsGkAtoms::observes, kNameSpaceID_XUL))
             continue;
 
         // Is this the element that was listening to us?
         nsAutoString listeningToID;
-        child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::element, listeningToID);
+        child->GetAttr(kNameSpaceID_None, nsGkAtoms::element, listeningToID);
 
         nsAutoString broadcasterID;
         aBroadcaster->GetAttr(kNameSpaceID_None, nsGkAtoms::id, broadcasterID);
@@ -886,8 +886,8 @@ XULDocument::ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
         // We are observing the broadcaster, but is this the right
         // attribute?
         nsAutoString listeningToAttribute;
-        child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::attribute,
-                                    listeningToAttribute);
+        child->GetAttr(kNameSpaceID_None, nsGkAtoms::attribute,
+                       listeningToAttribute);
 
         if (!aAttr->Equals(listeningToAttribute) &&
             !listeningToAttribute.EqualsLiteral("*")) {
@@ -1036,7 +1036,7 @@ XULDocument::AttributeChanged(nsIDocument* aDocument,
         // XXXldb This should check that it's a token, not just a substring.
         persist.Find(nsDependentAtomString(aAttribute)) >= 0) {
       nsContentUtils::AddScriptRunner(
-        NewRunnableMethod<Element*, int32_t, nsAtom*>(
+        NewRunnableMethod<nsIContent*, int32_t, nsAtom*>(
           "dom::XULDocument::DoPersist",
           this,
           &XULDocument::DoPersist,
@@ -1308,7 +1308,7 @@ XULDocument::Persist(const nsAString& aID,
 }
 
 nsresult
-XULDocument::Persist(Element* aElement, int32_t aNameSpaceID,
+XULDocument::Persist(nsIContent* aElement, int32_t aNameSpaceID,
                      nsAtom* aAttribute)
 {
     // For non-chrome documents, persistance is simply broken
@@ -3631,7 +3631,7 @@ XULDocument::AddAttributes(nsXULPrototypeElement* aPrototype,
 
 
 nsresult
-XULDocument::CheckTemplateBuilderHookup(Element* aElement,
+XULDocument::CheckTemplateBuilderHookup(nsIContent* aElement,
                                         bool* aNeedsHookup)
 {
     // See if the element already has a `database' attribute. If it
@@ -4260,15 +4260,11 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify)
     bool wasInserted = false;
 
     // insert after an element of a given id
-    if (aChild->IsElement()) {
-        aChild->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::insertafter, posStr);
-    }
-
+    aChild->GetAttr(kNameSpaceID_None, nsGkAtoms::insertafter, posStr);
     bool isInsertAfter = true;
+
     if (posStr.IsEmpty()) {
-        if (aChild->IsElement()) {
-            aChild->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::insertbefore, posStr);
-        }
+        aChild->GetAttr(kNameSpaceID_None, nsGkAtoms::insertbefore, posStr);
         isInsertAfter = false;
     }
 
@@ -4305,9 +4301,8 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild, bool aNotify)
     }
 
     if (!wasInserted) {
-        if (aChild->IsElement() &&
-            aChild->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::position, posStr) &&
-            !posStr.IsEmpty()) {
+        aChild->GetAttr(kNameSpaceID_None, nsGkAtoms::position, posStr);
+        if (!posStr.IsEmpty()) {
             nsresult rv;
             // Positions are one-indexed.
             int32_t pos = posStr.ToInteger(&rv);
@@ -4483,7 +4478,7 @@ XULDocument::IsDocumentRightToLeft()
     // specific direction for the document.
     Element* element = GetRootElement();
     if (element) {
-        static Element::AttrValuesArray strings[] =
+        static nsIContent::AttrValuesArray strings[] =
             {&nsGkAtoms::ltr, &nsGkAtoms::rtl, nullptr};
         switch (element->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::localedir,
                                          strings, eCaseMatters)) {

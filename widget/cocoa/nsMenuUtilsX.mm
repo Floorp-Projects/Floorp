@@ -172,11 +172,10 @@ NSMenuItem* nsMenuUtilsX::GetStandardEditMenuItem()
 
 bool nsMenuUtilsX::NodeIsHiddenOrCollapsed(nsIContent* inContent)
 {
-  return inContent->IsElement() &&
-    (inContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
-                                         nsGkAtoms::_true, eCaseMatters) ||
-     inContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::collapsed,
-                                         nsGkAtoms::_true, eCaseMatters));
+  return (inContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
+                                 nsGkAtoms::_true, eCaseMatters) ||
+          inContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::collapsed,
+                                 nsGkAtoms::_true, eCaseMatters));
 }
 
 // Determines how many items are visible among the siblings in a menu that are

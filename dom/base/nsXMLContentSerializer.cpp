@@ -1294,12 +1294,12 @@ void
 nsXMLContentSerializer::MaybeEnterInPreContent(nsIContent* aNode)
 {
   // support of the xml:space attribute
-  nsAutoString space;
   if (ShouldMaintainPreLevel() &&
-      aNode->IsElement() &&
-      aNode->AsElement()->GetAttr(kNameSpaceID_XML, nsGkAtoms::space, space) &&
-      space.EqualsLiteral("preserve")) {
-    ++PreLevel();
+      aNode->HasAttr(kNameSpaceID_XML, nsGkAtoms::space)) {
+    nsAutoString space;
+    aNode->GetAttr(kNameSpaceID_XML, nsGkAtoms::space, space);
+    if (space.EqualsLiteral("preserve"))
+      ++PreLevel();
   }
 }
 
@@ -1307,12 +1307,12 @@ void
 nsXMLContentSerializer::MaybeLeaveFromPreContent(nsIContent* aNode)
 {
   // support of the xml:space attribute
-  nsAutoString space;
   if (ShouldMaintainPreLevel() &&
-      aNode->IsElement() &&
-      aNode->AsElement()->GetAttr(kNameSpaceID_XML, nsGkAtoms::space, space) &&
-      space.EqualsLiteral("preserve")) {
-    --PreLevel();
+      aNode->HasAttr(kNameSpaceID_XML, nsGkAtoms::space)) {
+    nsAutoString space;
+    aNode->GetAttr(kNameSpaceID_XML, nsGkAtoms::space, space);
+    if (space.EqualsLiteral("preserve"))
+      --PreLevel();
   }
 }
 

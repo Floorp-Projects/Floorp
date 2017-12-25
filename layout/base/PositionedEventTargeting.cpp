@@ -182,8 +182,7 @@ IsDescendant(nsIFrame* aFrame, nsIContent* aAncestor, nsAutoString* aLabelTarget
   for (nsIContent* content = aFrame->GetContent(); content;
        content = content->GetFlattenedTreeParent()) {
     if (aLabelTargetId && content->IsHTMLElement(nsGkAtoms::label)) {
-      content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::_for,
-                                    *aLabelTargetId);
+      content->GetAttr(kNameSpaceID_None, nsGkAtoms::_for, *aLabelTargetId);
     }
     if (content == aAncestor) {
       return true;
@@ -213,8 +212,7 @@ GetClickableAncestor(nsIFrame* aFrame, nsAtom* stopAt = nullptr, nsAutoString* a
     }
     if (content->IsHTMLElement(nsGkAtoms::label)) {
       if (aLabelTargetId) {
-        content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::_for,
-                                      *aLabelTargetId);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::_for, *aLabelTargetId);
       }
       return content;
     }
@@ -223,10 +221,10 @@ GetClickableAncestor(nsIFrame* aFrame, nsAtom* stopAt = nullptr, nsAutoString* a
     // So fluffing won't go there. We do an optimistic assumption here:
     // that the content of the remote iframe needs to be a target.
     if (content->IsHTMLElement(nsGkAtoms::iframe) &&
-        content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mozbrowser,
-                                          nsGkAtoms::_true, eIgnoreCase) &&
-        content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::Remote,
-                                          nsGkAtoms::_true, eIgnoreCase)) {
+        content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mozbrowser,
+                             nsGkAtoms::_true, eIgnoreCase) &&
+        content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::Remote,
+                             nsGkAtoms::_true, eIgnoreCase)) {
       return content;
     }
 
@@ -245,11 +243,10 @@ GetClickableAncestor(nsIFrame* aFrame, nsAtom* stopAt = nullptr, nsAutoString* a
       return content;
     }
 
-    static Element::AttrValuesArray clickableRoles[] =
+    static nsIContent::AttrValuesArray clickableRoles[] =
       { &nsGkAtoms::button, &nsGkAtoms::key, nullptr };
-    if (content->IsElement() &&
-        content->AsElement()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::role,
-                                              clickableRoles, eIgnoreCase) >= 0) {
+    if (content->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::role,
+                                 clickableRoles, eIgnoreCase) >= 0) {
       return content;
     }
     if (content->IsEditable()) {

@@ -284,12 +284,11 @@ bool
 txXPathNodeUtils::getAttr(const txXPathNode& aNode, nsAtom* aLocalName,
                           int32_t aNSID, nsAString& aValue)
 {
-    if (aNode.isDocument() || aNode.isAttribute() ||
-        !aNode.Content()->IsElement()) {
+    if (aNode.isDocument() || aNode.isAttribute()) {
         return false;
     }
 
-    return aNode.Content()->AsElement()->GetAttr(aNSID, aLocalName, aValue);
+    return aNode.Content()->GetAttr(aNSID, aLocalName, aValue);
 }
 
 /* static */
@@ -453,14 +452,13 @@ txXPathNodeUtils::appendNodeValue(const txXPathNode& aNode, nsAString& aResult)
         const nsAttrName* name = aNode.Content()->AsElement()->GetAttrNameAt(aNode.mIndex);
 
         if (aResult.IsEmpty()) {
-            aNode.Content()->AsElement()->GetAttr(name->NamespaceID(),
-                                                  name->LocalName(),
-                                                  aResult);
-        } else {
+            aNode.Content()->GetAttr(name->NamespaceID(), name->LocalName(),
+                                     aResult);
+        }
+        else {
             nsAutoString result;
-            aNode.Content()->AsElement()->GetAttr(name->NamespaceID(),
-                                                  name->LocalName(),
-                                                  result);
+            aNode.Content()->GetAttr(name->NamespaceID(), name->LocalName(),
+                                     result);
             aResult.Append(result);
         }
 

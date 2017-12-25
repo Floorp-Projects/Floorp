@@ -7896,7 +7896,7 @@ nsLayoutUtils::SurfaceFromElement(dom::Element* aElement,
 }
 
 /* static */
-Element*
+nsIContent*
 nsLayoutUtils::GetEditableRootContentByContentEditable(nsIDocument* aDocument)
 {
   // If the document is in designMode we should return nullptr.
@@ -7922,7 +7922,7 @@ nsLayoutUtils::GetEditableRootContentByContentEditable(nsIDocument* aDocument)
   // Note that the body element could be <frameset> element.
   nsCOMPtr<nsIDOMHTMLElement> body;
   nsresult rv = domHTMLDoc->GetBody(getter_AddRefs(body));
-  nsCOMPtr<Element> content = do_QueryInterface(body);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(body);
   if (NS_SUCCEEDED(rv) && content && content->IsEditable()) {
     return content;
   }

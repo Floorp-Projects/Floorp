@@ -189,9 +189,8 @@ nsresult nsMenuX::Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOw
   mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
   [mNativeMenuItem setSubmenu:mNativeMenu];
 
-  SetEnabled(!mContent->IsElement() ||
-             !mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
-                                                 nsGkAtoms::_true, eCaseMatters));
+  SetEnabled(!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                                    nsGkAtoms::_true, eCaseMatters));
 
   // We call MenuConstruct here because keyboard commands are dependent upon
   // native menu items being created. If we only call MenuConstruct when a menu
@@ -522,7 +521,7 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent)
     itemType = eSeparatorMenuItemType;
   }
   else {
-    static Element::AttrValuesArray strings[] =
+    static nsIContent::AttrValuesArray strings[] =
   {&nsGkAtoms::checkbox, &nsGkAtoms::radio, nullptr};
     switch (inMenuItemContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
                                                strings, eCaseMatters)) {

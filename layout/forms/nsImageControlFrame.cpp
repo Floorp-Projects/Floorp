@@ -149,9 +149,7 @@ nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
       uiStyle->mUserInput == StyleUserInput::Disabled) {
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   }
-
-  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) {
-    // XXX cache disabled
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled)) { // XXX cache disabled
     return NS_OK;
   }
 

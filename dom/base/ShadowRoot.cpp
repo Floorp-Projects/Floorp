@@ -157,9 +157,7 @@ ShadowRoot::AddSlot(HTMLSlotElement* aSlot)
          child;
          child = child->GetNextSibling()) {
       nsAutoString slotName;
-      if (child->IsElement()) {
-        child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::slot, slotName);
-      }
+      child->GetAttr(kNameSpaceID_None, nsGkAtoms::slot, slotName);
       if (child->IsSlotable() && slotName.Equals(name)) {
         currentSlot->AppendAssignedNode(child);
         doEnqueueSlotChange = true;
@@ -352,10 +350,7 @@ ShadowRoot::AssignSlotFor(nsIContent* aContent)
   nsAutoString slotName;
   // Note that if slot attribute is missing, assign it to the first default
   // slot, if exists.
-  if (aContent->IsElement()) {
-    aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::slot, slotName);
-  }
-
+  aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::slot, slotName);
   nsTArray<HTMLSlotElement*>* slots = mSlotMap.Get(slotName);
   if (!slots) {
     return nullptr;
@@ -601,9 +596,7 @@ ShadowRoot::ContentRemoved(nsIDocument* aDocument,
 
   if (aContainer && aContainer == GetHost()) {
     nsAutoString slotName;
-    if (aChild->IsElement()) {
-      aChild->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::slot, slotName);
-    }
+    aChild->GetAttr(kNameSpaceID_None, nsGkAtoms::slot, slotName);
     if (const HTMLSlotElement* slot = UnassignSlotFor(aChild, slotName)) {
       slot->EnqueueSlotChangeEvent();
     }

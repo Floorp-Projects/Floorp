@@ -344,18 +344,14 @@ nsDateTimeControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   if (inputAreaContent) {
     // Propogate our tabindex.
     nsAutoString tabIndexStr;
-    if (mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::tabindex,
-                                       tabIndexStr)) {
+    if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::tabindex, tabIndexStr)) {
       inputAreaContent->SetEditAttribute(NS_LITERAL_STRING("tabindex"),
                                          tabIndexStr);
     }
 
     // Propagate our readonly state.
     nsAutoString readonly;
-    if (mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::readonly,
-                                       readonly)) {
+    if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::readonly, readonly)) {
       inputAreaContent->SetEditAttribute(NS_LITERAL_STRING("readonly"),
                                          readonly);
     }
@@ -433,7 +429,7 @@ nsDateTimeControlFrame::AttributeChanged(int32_t aNameSpaceID,
             if (inputAreaContent) {
               nsAtomString name(aAttribute);
               nsAutoString value;
-              contentAsInputElem->GetAttr(aNameSpaceID, aAttribute, value);
+              mContent->GetAttr(aNameSpaceID, aAttribute, value);
               inputAreaContent->SetEditAttribute(name, value);
             }
           }

@@ -370,7 +370,7 @@ protected:
   // If the node's srcset/sizes make for an invalid selector, returns
   // false. This does not guarantee the resulting selector matches an image,
   // only that it is valid.
-  bool TryCreateResponsiveSelector(Element* aSourceElement);
+  bool TryCreateResponsiveSelector(nsIContent *aSourceNode);
 
   MOZ_CAN_RUN_SCRIPT CSSIntPoint GetXY();
   virtual JSObject* WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -400,7 +400,7 @@ protected:
   RefPtr<ResponsiveImageSelector> mResponsiveSelector;
 
 private:
-  bool SourceElementMatches(Element* aSourceElement);
+  bool SourceElementMatches(nsIContent* aSourceNode);
 
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     GenericSpecifiedValues* aGenericData);

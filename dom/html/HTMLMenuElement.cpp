@@ -215,9 +215,9 @@ HTMLMenuElement::TraverseContent(nsIContent* aContent,
     } else if (child->IsHTMLElement(nsGkAtoms::hr)) {
       aBuilder->AddSeparator();
     } else if (child->IsHTMLElement(nsGkAtoms::menu) && !element->IsHidden()) {
-      if (child->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::label)) {
+      if (child->HasAttr(kNameSpaceID_None, nsGkAtoms::label)) {
         nsAutoString label;
-        child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, label);
+        child->GetAttr(kNameSpaceID_None, nsGkAtoms::label, label);
 
         BuildSubmenu(label, child, aBuilder);
 

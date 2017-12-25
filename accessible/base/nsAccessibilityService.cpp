@@ -209,25 +209,20 @@ static Accessible* New_HTMLLabel(nsIContent* aContent, Accessible* aContext)
 
 static Accessible* New_HTMLInput(nsIContent* aContent, Accessible* aContext)
 {
-  if (!aContent->IsElement()) {
-    return nullptr;
-  }
-
-  Element* element = aContent->AsElement();
-  if (element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                           nsGkAtoms::checkbox, eIgnoreCase)) {
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::checkbox, eIgnoreCase)) {
     return new HTMLCheckboxAccessible(aContent, aContext->Document());
   }
-  if (element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                           nsGkAtoms::radio, eIgnoreCase)) {
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::radio, eIgnoreCase)) {
     return new HTMLRadioButtonAccessible(aContent, aContext->Document());
   }
-  if (element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                           nsGkAtoms::time, eIgnoreCase)) {
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::time, eIgnoreCase)) {
     return new EnumRoleAccessible<roles::GROUPING>(aContent, aContext->Document());
   }
-  if (element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                           nsGkAtoms::date, eIgnoreCase)) {
+  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::date, eIgnoreCase)) {
     return new EnumRoleAccessible<roles::DATE_EDITOR>(aContent, aContext->Document());
   }
   return nullptr;
@@ -266,8 +261,7 @@ static Accessible*
 New_HTMLTableHeaderCellIfScope(nsIContent* aContent, Accessible* aContext)
 {
   if (aContext->IsTableRow() && aContext->GetContent() == aContent->GetParent() &&
-      aContent->IsElement() &&
-      aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::scope))
+      aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::scope))
     return new HTMLTableHeaderCellAccessibleWrap(aContent, aContext->Document());
   return nullptr;
 }
@@ -277,14 +271,12 @@ static Accessible*
 New_MaybeImageOrToolbarButtonAccessible(nsIContent* aContent,
                                         Accessible* aContext)
 {
-  if (aContent->IsElement() &&
-      aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::onclick)) {
+  if (aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::onclick)) {
     return new XULToolbarButtonAccessible(aContent, aContext->Document());
   }
 
   // Don't include nameless images in accessible tree.
-  if (!aContent->IsElement() ||
-      !aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext)) {
+  if (!aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext)) {
     return nullptr;
   }
 
@@ -1559,10 +1551,8 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     accessible = new EnumRoleAccessible<roles::PANE>(aContent, aDoc);
 
   } else if (role.EqualsLiteral("xul:panel")) {
-    if (aContent->IsElement() &&
-        aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                           nsGkAtoms::noautofocus,
-                                           nsGkAtoms::_true, eCaseMatters))
+    if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::noautofocus,
+                              nsGkAtoms::_true, eCaseMatters))
       accessible = new XULAlertAccessible(aContent, aDoc);
     else
       accessible = new EnumRoleAccessible<roles::PANE>(aContent, aDoc);
@@ -1775,22 +1765,15 @@ nsAccessibilityService::MarkupAttributes(const nsIContent* aContent,
 
     if (info->DOMAttrName) {
       if (info->DOMAttrValue) {
-        if (aContent->IsElement() &&
-            aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                               *info->DOMAttrName,
-                                               *info->DOMAttrValue,
-                                               eCaseMatters)) {
+        if (aContent->AttrValueIs(kNameSpaceID_None, *info->DOMAttrName,
+                                  *info->DOMAttrValue, eCaseMatters)) {
           nsAccUtils::SetAccAttr(aAttributes, *info->name, *info->DOMAttrValue);
         }
         continue;
       }
 
       nsAutoString value;
-
-      if (aContent->IsElement()) {
-        aContent->AsElement()->GetAttr(kNameSpaceID_None, *info->DOMAttrName, value);
-      }
-
+      aContent->GetAttr(kNameSpaceID_None, *info->DOMAttrName, value);
       if (!value.IsEmpty())
         nsAccUtils::SetAccAttr(aAttributes, *info->name, value);
 
