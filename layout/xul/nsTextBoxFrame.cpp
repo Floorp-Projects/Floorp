@@ -205,10 +205,9 @@ nsTextBoxFrame::UpdateAccesskey(WeakFrame& aWeakThis)
         // Accesskey may be stored on control.
         labelElement->GetAccessKey(accesskey);
         NS_ENSURE_TRUE(aWeakThis.IsAlive(), false);
-    } else {
-        mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::accesskey,
-                                       accesskey);
+    }
+    else {
+        mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accesskey);
     }
 
     if (!accesskey.Equals(mAccessKey)) {
@@ -234,13 +233,12 @@ nsTextBoxFrame::UpdateAttributes(nsAtom*         aAttribute,
     aRedraw = false;
 
     if (aAttribute == nullptr || aAttribute == nsGkAtoms::crop) {
-        static Element::AttrValuesArray strings[] =
+        static nsIContent::AttrValuesArray strings[] =
           {&nsGkAtoms::left, &nsGkAtoms::start, &nsGkAtoms::center,
            &nsGkAtoms::right, &nsGkAtoms::end, &nsGkAtoms::none, nullptr};
         CroppingStyle cropType;
-        switch (mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
-                                                       nsGkAtoms::crop, strings,
-                                                       eCaseMatters)) {
+        switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::crop,
+                                          strings, eCaseMatters)) {
           case 0:
           case 1:
             cropType = CropLeft;
@@ -940,7 +938,7 @@ nsTextBoxFrame::UpdateAccessIndex()
 void
 nsTextBoxFrame::RecomputeTitle()
 {
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value, mTitle);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, mTitle);
 
   // This doesn't handle language-specific uppercasing/lowercasing
   // rules, unlike textruns.
@@ -1218,13 +1216,12 @@ nsTextBoxFrame::RegUnregAccessKey(bool aDoReg)
     // in e.g. <menu>, <menuitem>, <button>. These <label>s inherit
     // |accesskey| and would otherwise register themselves, overwriting
     // the content we really meant to be registered.
-    if (!mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::control))
+    if (!mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::control))
         return NS_OK;
 
     // see if we even have an access key
     nsAutoString accessKey;
-    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey,
-                                   accessKey);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
 
     if (accessKey.IsEmpty())
         return NS_OK;
@@ -1235,9 +1232,9 @@ nsTextBoxFrame::RegUnregAccessKey(bool aDoReg)
 
     uint32_t key = accessKey.First();
     if (aDoReg)
-        esm->RegisterAccessKey(mContent->AsElement(), key);
+        esm->RegisterAccessKey(mContent, key);
     else
-        esm->UnregisterAccessKey(mContent->AsElement(), key);
+        esm->UnregisterAccessKey(mContent, key);
 
     return NS_OK;
 }

@@ -465,7 +465,7 @@ nsIFrame::GetXULOrdinal()
     nsresult error;
     nsAutoString value;
 
-    content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::ordinal, value);
+    content->GetAttr(kNameSpaceID_None, nsGkAtoms::ordinal, value);
     if (!value.IsEmpty()) {
       ordinal = value.ToInteger(&error);
     }
@@ -636,7 +636,7 @@ nsIFrame::AddXULPrefSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &a
         nsAutoString value;
         nsresult error;
 
-        content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::width, value);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::width, value);
         if (!value.IsEmpty()) {
             value.Trim("%");
 
@@ -645,7 +645,7 @@ nsIFrame::AddXULPrefSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &a
             aWidthSet = true;
         }
 
-        content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::height, value);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::height, value);
         if (!value.IsEmpty()) {
             value.Trim("%");
 
@@ -737,7 +737,7 @@ nsIFrame::AddXULMinSize(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize& aSize,
         nsAutoString value;
         nsresult error;
 
-        content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::minwidth, value);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::minwidth, value);
         if (!value.IsEmpty())
         {
             value.Trim("%");
@@ -749,7 +749,7 @@ nsIFrame::AddXULMinSize(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize& aSize,
             aWidthSet = true;
         }
 
-        content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::minheight, value);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::minheight, value);
         if (!value.IsEmpty())
         {
             value.Trim("%");
@@ -800,7 +800,7 @@ nsIFrame::AddXULMaxSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &aH
         nsAutoString value;
         nsresult error;
 
-        content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::maxwidth, value);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::maxwidth, value);
         if (!value.IsEmpty()) {
             value.Trim("%");
 
@@ -810,7 +810,7 @@ nsIFrame::AddXULMaxSize(nsIFrame* aBox, nsSize& aSize, bool &aWidthSet, bool &aH
             aWidthSet = true;
         }
 
-        content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::maxheight, value);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::maxheight, value);
         if (!value.IsEmpty()) {
             value.Trim("%");
 
@@ -839,7 +839,7 @@ nsIFrame::AddXULFlex(nsIFrame* aBox, nscoord& aFlex)
         nsresult error;
         nsAutoString value;
 
-        content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::flex, value);
+        content->GetAttr(kNameSpaceID_None, nsGkAtoms::flex, value);
         if (!value.IsEmpty()) {
             value.Trim("%");
             aFlex = value.ToInteger(&error);

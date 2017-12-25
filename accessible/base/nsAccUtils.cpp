@@ -141,8 +141,7 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
     // container-relevant attribute
     if (relevant.IsEmpty() &&
         HasDefinedARIAToken(ancestor, nsGkAtoms::aria_relevant) &&
-        ancestor->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::aria_relevant, relevant))
+        ancestor->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_relevant, relevant))
       SetAccAttr(aAttributes, nsGkAtoms::containerRelevant, relevant);
 
     // container-live, and container-live-role attributes
@@ -152,7 +151,7 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
         role = aria::GetRoleMap(ancestor->AsElement());
       }
       if (HasDefinedARIAToken(ancestor, nsGkAtoms::aria_live)) {
-        ancestor->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_live, live);
+        ancestor->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_live, live);
       } else if (role) {
         GetLiveAttrValue(role->liveAttRule, live);
       }
@@ -166,10 +165,8 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
     }
 
     // container-atomic attribute
-    if (ancestor->IsElement() &&
-        ancestor->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                           nsGkAtoms::aria_atomic,
-                                           nsGkAtoms::_true, eCaseMatters)) {
+    if (ancestor->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_atomic,
+                              nsGkAtoms::_true, eCaseMatters)) {
       SetAccAttr(aAttributes, nsGkAtoms::containerAtomic,
                  NS_LITERAL_STRING("true"));
     }
@@ -177,7 +174,7 @@ nsAccUtils::SetLiveContainerAttributes(nsIPersistentProperties *aAttributes,
     // container-busy attribute
     if (busy.IsEmpty() &&
         HasDefinedARIAToken(ancestor, nsGkAtoms::aria_busy) &&
-        ancestor->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_busy, busy))
+        ancestor->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_busy, busy))
       SetAccAttr(aAttributes, nsGkAtoms::containerBusy, busy);
 
     if (ancestor == aTopEl)
@@ -194,15 +191,11 @@ nsAccUtils::HasDefinedARIAToken(nsIContent *aContent, nsAtom *aAtom)
 {
   NS_ASSERTION(aContent, "aContent is null in call to HasDefinedARIAToken!");
 
-  if (!aContent->IsElement())
-    return false;
-
-  Element* element = aContent->AsElement();
-  if (!element->HasAttr(kNameSpaceID_None, aAtom) ||
-      element->AttrValueIs(kNameSpaceID_None, aAtom, nsGkAtoms::_empty,
-                           eCaseMatters) ||
-      element->AttrValueIs(kNameSpaceID_None, aAtom, nsGkAtoms::_undefined,
-                           eCaseMatters)) {
+  if (!aContent->HasAttr(kNameSpaceID_None, aAtom) ||
+      aContent->AttrValueIs(kNameSpaceID_None, aAtom,
+                            nsGkAtoms::_empty, eCaseMatters) ||
+      aContent->AttrValueIs(kNameSpaceID_None, aAtom,
+                            nsGkAtoms::_undefined, eCaseMatters)) {
         return false;
   }
   return true;
@@ -214,7 +207,7 @@ nsAccUtils::GetARIAToken(dom::Element* aElement, nsAtom* aAttr)
   if (!HasDefinedARIAToken(aElement, aAttr))
     return nsGkAtoms::_empty;
 
-  static Element::AttrValuesArray tokens[] =
+  static nsIContent::AttrValuesArray tokens[] =
     { &nsGkAtoms::_false, &nsGkAtoms::_true,
       &nsGkAtoms::mixed, nullptr};
 
@@ -246,9 +239,7 @@ nsAccUtils::GetSelectableContainer(Accessible* aAccessible, uint64_t aState)
 bool
 nsAccUtils::IsARIASelected(Accessible* aAccessible)
 {
-  if (!aAccessible->GetContent()->IsElement())
-    return false;
-  return aAccessible->GetContent()->AsElement()->
+  return aAccessible->GetContent()->
     AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_selected,
                 nsGkAtoms::_true, eCaseMatters);
 }

@@ -187,7 +187,7 @@ nsTreeBodyFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState)
 {
   EnsureView();
 
-  Element* baseElement = GetBaseElement();
+  nsIContent* baseElement = GetBaseElement();
 
   nsSize min(0,0);
   int32_t desiredRows;
@@ -207,7 +207,8 @@ nsTreeBodyFrame::GetXULMinSize(nsBoxLayoutState& aBoxLayoutState)
     else {
       desiredRows = 1;
     }
-  } else {
+  }
+  else {
     // tree
     nsAutoString rows;
     baseElement->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);
@@ -433,7 +434,7 @@ nsTreeBodyFrame::ReflowFinished()
     if (mTopRowIndex > lastPageTopRow)
       ScrollToRowInternal(parts, lastPageTopRow);
 
-    Element* treeContent = GetBaseElement();
+    nsIContent *treeContent = GetBaseElement();
     if (treeContent &&
         treeContent->AttrValueIs(kNameSpaceID_None,
                                  nsGkAtoms::keepcurrentinview,
@@ -2006,7 +2007,7 @@ nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex, nsTreeColumn* aCol)
     else
       mScratchArray.AppendElement(nsGkAtoms::even);
 
-    Element* baseContent = GetBaseElement();
+    nsIContent* baseContent = GetBaseElement();
     if (baseContent && baseContent->HasAttr(kNameSpaceID_None, nsGkAtoms::editing))
       mScratchArray.AppendElement(nsGkAtoms::editing);
 
@@ -2045,17 +2046,13 @@ nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex, nsTreeColumn* aCol)
     }
 
     // Read special properties from attributes on the column content node
-    if (aCol->mContent->IsElement() &&
-        aCol->mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                 nsGkAtoms::insertbefore,
-                                                 nsGkAtoms::_true,
-                                                 eCaseMatters))
+    if (aCol->mContent->AttrValueIs(kNameSpaceID_None,
+                                    nsGkAtoms::insertbefore,
+                                    nsGkAtoms::_true, eCaseMatters))
       mScratchArray.AppendElement(nsGkAtoms::insertbefore);
-    if (aCol->mContent->IsElement() &&
-        aCol->mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                 nsGkAtoms::insertafter,
-                                                 nsGkAtoms::_true,
-                                                 eCaseMatters))
+    if (aCol->mContent->AttrValueIs(kNameSpaceID_None,
+                                    nsGkAtoms::insertafter,
+                                    nsGkAtoms::_true, eCaseMatters))
       mScratchArray.AppendElement(nsGkAtoms::insertafter);
   }
 }
@@ -4480,7 +4477,7 @@ nsTreeBodyFrame::GetPseudoStyleContext(nsICSSAnonBoxPseudo* aPseudoElement)
                                      mScratchArray);
 }
 
-Element*
+nsIContent*
 nsTreeBodyFrame::GetBaseElement()
 {
   nsIFrame* parent = GetParent();
@@ -4492,7 +4489,7 @@ nsTreeBodyFrame::GetBaseElement()
       if (ni->Equals(nsGkAtoms::tree, kNameSpaceID_XUL) ||
           (ni->Equals(nsGkAtoms::select) &&
            content->IsHTMLElement()))
-        return content->AsElement();
+        return content;
     }
 
     parent = parent->GetParent();

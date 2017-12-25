@@ -834,7 +834,7 @@ nsStyleUtil::ObjectPropsMightCauseOverflow(const nsStylePosition* aStylePos)
 
 
 /* static */ bool
-nsStyleUtil::CSPAllowsInlineStyle(Element* aElement,
+nsStyleUtil::CSPAllowsInlineStyle(nsIContent* aContent,
                                   nsIPrincipal* aPrincipal,
                                   nsIPrincipal* aTriggeringPrincipal,
                                   nsIURI* aSourceURI,
@@ -848,8 +848,8 @@ nsStyleUtil::CSPAllowsInlineStyle(Element* aElement,
     *aRv = NS_OK;
   }
 
-  MOZ_ASSERT(!aElement || aElement->NodeInfo()->NameAtom() == nsGkAtoms::style,
-      "aElement passed to CSPAllowsInlineStyle "
+  MOZ_ASSERT(!aContent || aContent->NodeInfo()->NameAtom() == nsGkAtoms::style,
+      "aContent passed to CSPAllowsInlineStyle "
       "for an element that is not <style>");
 
   nsIPrincipal* principal = aPrincipal;
@@ -874,8 +874,8 @@ nsStyleUtil::CSPAllowsInlineStyle(Element* aElement,
 
   // query the nonce
   nsAutoString nonce;
-  if (aElement) {
-    aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::nonce, nonce);
+  if (aContent) {
+    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::nonce, nonce);
   }
 
   nsCOMPtr<nsISupportsString> styleText(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));

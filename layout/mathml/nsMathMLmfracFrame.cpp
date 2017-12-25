@@ -255,13 +255,13 @@ nsMathMLmfracFrame::PlaceInternal(DrawTarget*          aDrawTarget,
 
   // see if the linethickness attribute is there
   nsAutoString value;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::linethickness_, value);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::linethickness_, value);
   mLineThickness = CalcLineThickness(presContext, mStyleContext, value,
                                      onePixel, defaultRuleThickness,
                                      fontSizeInflation);
 
   // bevelled attribute
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::bevelled_, value);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::bevelled_, value);
   mIsBevelled = value.EqualsLiteral("true");
 
   bool displayStyle = StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_BLOCK;
@@ -413,14 +413,14 @@ nsMathMLmfracFrame::PlaceInternal(DrawTarget*          aDrawTarget,
     width += leftSpace + rightSpace;
 
     // see if the numalign attribute is there
-    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::numalign_, value);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::numalign_, value);
     if (value.EqualsLiteral("left"))
       dxNum = leftSpace;
     else if (value.EqualsLiteral("right"))
       dxNum = width - rightSpace - sizeNum.Width();
 
     // see if the denomalign attribute is there
-    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::denomalign_, value);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::denomalign_, value);
     if (value.EqualsLiteral("left"))
       dxDen = leftSpace;
     else if (value.EqualsLiteral("right"))

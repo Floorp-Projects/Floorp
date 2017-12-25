@@ -313,9 +313,7 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
             uint32_t index = parameterCount;
             nsAutoString name, indexValue;
 
-            if (child->AsElement()->GetAttr(kNameSpaceID_None,
-                                            nsGkAtoms::name,
-                                            name)) {
+            if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name)) {
                 rv = statement->GetParameterIndex(NS_ConvertUTF16toUTF8(name),
                                                   &index);
                 if (NS_FAILED(rv)) {
@@ -323,9 +321,8 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
                     return rv;
                 }
                 parameterCount++;
-            } else if (child->AsElement()->GetAttr(kNameSpaceID_None,
-                                                   nsGkAtoms::index,
-                                                   indexValue)) {
+            }
+            else if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::index, indexValue)) {
                 PR_sscanf(NS_ConvertUTF16toUTF8(indexValue).get(),"%d",&index);
                 if (index > 0)
                     index--;
@@ -334,14 +331,13 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
                 parameterCount++;
             }
 
-            static Element::AttrValuesArray sTypeValues[] =
+            static nsIContent::AttrValuesArray sTypeValues[] =
                 { &nsGkAtoms::int32, &nsGkAtoms::integer, &nsGkAtoms::int64,
                   &nsGkAtoms::null, &nsGkAtoms::double_, &nsGkAtoms::string, nullptr };
 
             int32_t typeError = 1;
-            int32_t typeValue = child->AsElement()->
-              FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type, sTypeValues,
-                              eCaseMatters);
+            int32_t typeValue = child->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
+                                                       sTypeValues, eCaseMatters);
             rv = NS_ERROR_ILLEGAL_VALUE;
             int32_t valInt32 = 0;
             int64_t valInt64 = 0;
@@ -368,7 +364,7 @@ nsXULTemplateQueryProcessorStorage::CompileQuery(nsIXULTemplateBuilder* aBuilder
                     rv = statement->BindDoubleByIndex(index, valFloat);
                 break;
               case 5:
-              case Element::ATTR_MISSING:
+              case nsIContent::ATTR_MISSING:
                 rv = statement->BindStringByIndex(index, value);
                 break;
               default:

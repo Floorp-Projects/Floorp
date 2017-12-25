@@ -2149,17 +2149,17 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       // gets checked too.
       if (parent) {
         nsIContent* content = parent->GetContent();
-        if (content && content->IsElement()) {
-          if (content->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                nsGkAtoms::fontstyle_,
-                                                NS_LITERAL_STRING("normal"),
-                                                eCaseMatters)) {
+        if (content) {
+          if (content->AttrValueIs(kNameSpaceID_None,
+                                  nsGkAtoms::fontstyle_,
+                                  NS_LITERAL_STRING("normal"),
+                                  eCaseMatters)) {
             mathFlags |= MathMLTextRunFactory::MATH_FONT_STYLING_NORMAL;
           }
-          if (content->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                nsGkAtoms::fontweight_,
-                                                NS_LITERAL_STRING("bold"),
-                                                eCaseMatters)) {
+          if (content->AttrValueIs(kNameSpaceID_None,
+                                   nsGkAtoms::fontweight_,
+                                   NS_LITERAL_STRING("bold"),
+                                   eCaseMatters)) {
             mathFlags |= MathMLTextRunFactory::MATH_FONT_WEIGHT_BOLD;
           }
         }

@@ -290,7 +290,7 @@ NS_IMETHODIMP nsTreeSelection::SetTree(nsITreeBoxObject * aTree)
 
 NS_IMETHODIMP nsTreeSelection::GetSingle(bool* aSingle)
 {
-  static Element::AttrValuesArray strings[] =
+  static nsIContent::AttrValuesArray strings[] =
     {&nsGkAtoms::single, &nsGkAtoms::cell, &nsGkAtoms::text, nullptr};
 
   nsCOMPtr<nsIContent> content = GetContent();
@@ -298,10 +298,9 @@ NS_IMETHODIMP nsTreeSelection::GetSingle(bool* aSingle)
     return NS_ERROR_NULL_POINTER;
   }
 
-  *aSingle = content->IsElement() &&
-    content->AsElement()->FindAttrValueIn(kNameSpaceID_None,
-                                          nsGkAtoms::seltype,
-                                          strings, eCaseMatters) >= 0;
+  *aSingle = content->FindAttrValueIn(kNameSpaceID_None,
+                                      nsGkAtoms::seltype,
+                                      strings, eCaseMatters) >= 0;
 
   return NS_OK;
 }

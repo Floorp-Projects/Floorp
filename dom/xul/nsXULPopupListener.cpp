@@ -309,14 +309,14 @@ nsXULPopupListener::ClosePopup()
   }
 } // ClosePopup
 
-static already_AddRefed<Element>
+static already_AddRefed<nsIContent>
 GetImmediateChild(nsIContent* aContent, nsAtom *aTag)
 {
   for (nsIContent* child = aContent->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
     if (child->IsXULElement(aTag)) {
-      RefPtr<Element> ret = child->AsElement();
+      nsCOMPtr<nsIContent> ret = child;
       return ret.forget();
     }
   }
@@ -370,7 +370,7 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
   }
 
   // Handle the _child case for popups and context menus
-  RefPtr<Element> popup;
+  nsCOMPtr<nsIContent> popup;
   if (identifier.EqualsLiteral("_child")) {
     popup = GetImmediateChild(mElement, nsGkAtoms::menupopup);
     if (!popup) {
@@ -388,7 +388,7 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
 
           if (childContent->NodeInfo()->Equals(nsGkAtoms::menupopup,
                                                kNameSpaceID_XUL)) {
-            popup = childContent->AsElement();
+            popup.swap(childContent);
             break;
           }
         }

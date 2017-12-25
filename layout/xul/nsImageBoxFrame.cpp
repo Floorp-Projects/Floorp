@@ -234,7 +234,7 @@ nsImageBoxFrame::UpdateImage()
 
   // get the new image src
   nsAutoString src;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
   mUseSrcAttr = !src.IsEmpty();
   if (mUseSrcAttr) {
     nsIDocument* doc = mContent->GetComposedDoc();
@@ -305,11 +305,10 @@ nsImageBoxFrame::UpdateImage()
 void
 nsImageBoxFrame::UpdateLoadFlags()
 {
-  static Element::AttrValuesArray strings[] =
+  static nsIContent::AttrValuesArray strings[] =
     {&nsGkAtoms::always, &nsGkAtoms::never, nullptr};
-  switch (mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
-                                                 nsGkAtoms::validate, strings,
-                                                 eCaseMatters)) {
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::validate,
+                                    strings, eCaseMatters)) {
     case 0:
       mLoadFlags = nsIRequest::VALIDATE_ALWAYS;
       break;

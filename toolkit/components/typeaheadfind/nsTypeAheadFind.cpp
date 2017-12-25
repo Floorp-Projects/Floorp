@@ -923,6 +923,9 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   // We now have the correct start node for the range
   // Search for links, starting with startNode, and going up parent chain
 
+  RefPtr<nsAtom> hrefAtom(NS_Atomize("href"));
+  RefPtr<nsAtom> typeAtom(NS_Atomize("type"));
+
   while (true) {
     // Keep testing while startContent is equal to something,
     // eventually we'll run out of ancestors
@@ -931,18 +934,17 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
       nsCOMPtr<mozilla::dom::Link> link(do_QueryInterface(startContent));
       if (link) {
         // Check to see if inside HTML link
-        *aIsInsideLink = startContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::href);
+        *aIsInsideLink = startContent->HasAttr(kNameSpaceID_None, hrefAtom);
         return;
       }
-    } else {
+    }
+    else {
       // Any xml element can be an xlink
-      *aIsInsideLink = startContent->IsElement() &&
-        startContent->AsElement()->HasAttr(kNameSpaceID_XLink, nsGkAtoms::href);
+      *aIsInsideLink = startContent->HasAttr(kNameSpaceID_XLink, hrefAtom);
       if (*aIsInsideLink) {
-        if (!startContent->AsElement()->AttrValueIs(kNameSpaceID_XLink,
-                                                    nsGkAtoms::type,
-                                                    NS_LITERAL_STRING("simple"),
-                                                    eCaseMatters)) {
+        if (!startContent->AttrValueIs(kNameSpaceID_XLink, typeAtom,
+                                       NS_LITERAL_STRING("simple"),
+                                       eCaseMatters)) {
           *aIsInsideLink = false;  // Xlink must be type="simple"
         }
 

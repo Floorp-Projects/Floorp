@@ -276,7 +276,7 @@ nsNumberControlFrame::AttributeChanged(int32_t  aNameSpaceID,
         MOZ_ASSERT(aModType == nsIDOMMutationEvent::ADDITION ||
                    aModType == nsIDOMMutationEvent::MODIFICATION);
         nsAutoString value;
-        mContent->AsElement()->GetAttr(aNameSpaceID, aAttribute, value);
+        mContent->GetAttr(aNameSpaceID, aAttribute, value);
         mTextField->SetAttr(aNameSpaceID, aAttribute, value, true);
       }
     }
@@ -398,8 +398,7 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   // If we're readonly, make sure our anonymous text control is too:
   nsAutoString readonly;
-  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::readonly,
-                                     readonly)) {
+  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::readonly, readonly)) {
     mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::readonly, readonly, false);
   }
 
@@ -409,8 +408,7 @@ nsNumberControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   // Initialize the text field's placeholder, if ours is set:
   nsAutoString placeholder;
-  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder,
-                                     placeholder)) {
+  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder, placeholder)) {
     mTextField->SetAttr(kNameSpaceID_None, nsGkAtoms::placeholder, placeholder, false);
   }
 
@@ -484,10 +482,8 @@ nsNumberControlFrame::GetNumberControlFrameForTextField(nsIFrame* aFrame)
       content->GetParent() && content->GetParent()->GetParent()) {
     nsIContent* grandparent = content->GetParent()->GetParent();
     if (grandparent->IsHTMLElement(nsGkAtoms::input) &&
-        grandparent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                              nsGkAtoms::type,
-                                              nsGkAtoms::number,
-                                              eCaseMatters)) {
+        grandparent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                 nsGkAtoms::number, eCaseMatters)) {
       return do_QueryFrame(grandparent->GetPrimaryFrame());
     }
   }
@@ -508,10 +504,8 @@ nsNumberControlFrame::GetNumberControlFrameForSpinButton(nsIFrame* aFrame)
       content->GetParent()->GetParent()->GetParent()) {
     nsIContent* greatgrandparent = content->GetParent()->GetParent()->GetParent();
     if (greatgrandparent->IsHTMLElement(nsGkAtoms::input) &&
-        greatgrandparent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                   nsGkAtoms::type,
-                                                   nsGkAtoms::number,
-                                                   eCaseMatters)) {
+        greatgrandparent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                      nsGkAtoms::number, eCaseMatters)) {
       return do_QueryFrame(greatgrandparent->GetPrimaryFrame());
     }
   }

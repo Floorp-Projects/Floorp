@@ -28,16 +28,20 @@ NS_IMPL_FRAMEARENA_HELPERS(nsXULLabelFrame)
 nsresult
 nsXULLabelFrame::RegUnregAccessKey(bool aDoReg)
 {
+  // if we have no content, we can't do anything
+  if (!mContent)
+    return NS_ERROR_FAILURE;
+
   // To filter out <label>s without a control attribute.
   // XXXjag a side-effect is that we filter out anonymous <label>s
   // in e.g. <menu>, <menuitem>, <button>. These <label>s inherit
   // |accesskey| and would otherwise register themselves, overwriting
   // the content we really meant to be registered.
-  if (!mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::control))
+  if (!mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::control))
     return NS_OK;
 
   nsAutoString accessKey;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
 
   if (accessKey.IsEmpty())
     return NS_OK;
@@ -48,9 +52,9 @@ nsXULLabelFrame::RegUnregAccessKey(bool aDoReg)
 
   uint32_t key = accessKey.First();
   if (aDoReg)
-    esm->RegisterAccessKey(mContent->AsElement(), key);
+    esm->RegisterAccessKey(mContent, key);
   else
-    esm->UnregisterAccessKey(mContent->AsElement(), key);
+    esm->UnregisterAccessKey(mContent, key);
 
   return NS_OK;
 }

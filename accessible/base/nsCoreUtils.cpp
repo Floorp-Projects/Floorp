@@ -184,8 +184,7 @@ nsCoreUtils::GetAccessKeyFor(nsIContent* aContent)
   // Accesskeys are registered by @accesskey attribute only. At first check
   // whether it is presented on the given element to avoid the slow
   // EventStateManager::GetRegisteredAccessKey() method.
-  if (!aContent->IsElement() ||
-      !aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::accesskey))
+  if (!aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::accesskey))
     return 0;
 
   nsIPresShell* presShell = aContent->OwnerDoc()->GetShell();
@@ -200,7 +199,7 @@ nsCoreUtils::GetAccessKeyFor(nsIContent* aContent)
   if (!esm)
     return 0;
 
-  return esm->GetRegisteredAccessKey(aContent->AsElement());
+  return esm->GetRegisteredAccessKey(aContent);
 }
 
 nsIContent *
@@ -456,18 +455,14 @@ nsCoreUtils::IsErrorPage(nsIDocument *aDocument)
 bool
 nsCoreUtils::GetID(nsIContent *aContent, nsAString& aID)
 {
-  return aContent->IsElement() &&
-    aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::id, aID);
+  return aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::id, aID);
 }
 
 bool
 nsCoreUtils::GetUIntAttr(nsIContent *aContent, nsAtom *aAttr, int32_t *aUInt)
 {
   nsAutoString value;
-  if (!aContent->IsElement()) {
-    return false;
-  }
-  aContent->AsElement()->GetAttr(kNameSpaceID_None, aAttr, value);
+  aContent->GetAttr(kNameSpaceID_None, aAttr, value);
   if (!value.IsEmpty()) {
     nsresult error = NS_OK;
     int32_t integer = value.ToInteger(&error);
@@ -488,8 +483,7 @@ nsCoreUtils::GetLanguageFor(nsIContent *aContent, nsIContent *aRootContent,
 
   nsIContent *walkUp = aContent;
   while (walkUp && walkUp != aRootContent &&
-         (!walkUp->IsElement() ||
-          !walkUp->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::lang, aLanguage)))
+         !walkUp->GetAttr(kNameSpaceID_None, nsGkAtoms::lang, aLanguage))
     walkUp = walkUp->GetParent();
 }
 
@@ -623,7 +617,7 @@ nsCoreUtils::IsColumnHidden(nsITreeColumn *aColumn)
 {
   nsCOMPtr<nsIDOMElement> element;
   aColumn->GetElement(getter_AddRefs(element));
-  nsCOMPtr<Element> content = do_QueryInterface(element);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(element);
   return content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
                               nsGkAtoms::_true, eCaseMatters);
 }
@@ -683,7 +677,7 @@ nsCoreUtils::XBLBindingRole(const nsIContent* aEl, nsAString& aRole)
 {
   for (const nsXBLBinding* binding = aEl->GetXBLBinding(); binding;
        binding = binding->GetBaseBinding()) {
-    Element* bindingElm = binding->PrototypeBinding()->GetBindingElement();
+    nsIContent* bindingElm = binding->PrototypeBinding()->GetBindingElement();
     bindingElm->GetAttr(kNameSpaceID_None, nsGkAtoms::role, aRole);
     if (!aRole.IsEmpty())
       break;

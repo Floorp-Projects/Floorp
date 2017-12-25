@@ -921,9 +921,7 @@ Element*
 nsImageFrame::GetMapElement() const
 {
   nsAutoString usemap;
-  if (mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                     nsGkAtoms::usemap,
-                                     usemap)) {
+  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usemap, usemap)) {
     return mContent->OwnerDoc()->FindImageMap(usemap);
   }
   return nullptr;
@@ -1503,7 +1501,7 @@ nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
     nsIContent* content = GetContent();
     if (content) {
       nsAutoString altText;
-      nsCSSFrameConstructor::GetAlternateTextFor(content->AsElement(),
+      nsCSSFrameConstructor::GetAlternateTextFor(content,
                                                  content->NodeInfo()->NameAtom(),
                                                  altText);
       DisplayAltText(PresContext(), aRenderingContext, altText, inner);
@@ -1969,7 +1967,7 @@ nsImageFrame::GetImageMap()
 bool
 nsImageFrame::IsServerImageMap()
 {
-  return mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::ismap);
+  return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::ismap);
 }
 
 // Translate an point that is relative to our frame

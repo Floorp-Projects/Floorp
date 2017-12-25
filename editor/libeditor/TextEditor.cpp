@@ -283,8 +283,7 @@ TextEditor::UpdateMetaCharset(nsIDocument& aDocument,
     }
 
     nsAutoString currentValue;
-    metaNode->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv,
-                                   currentValue);
+    metaNode->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, currentValue);
 
     if (!FindInReadable(NS_LITERAL_STRING("content-type"),
                         currentValue,
@@ -292,8 +291,7 @@ TextEditor::UpdateMetaCharset(nsIDocument& aDocument,
       continue;
     }
 
-    metaNode->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::content,
-                                   currentValue);
+    metaNode->GetAttr(kNameSpaceID_None, nsGkAtoms::content, currentValue);
 
     NS_NAMED_LITERAL_STRING(charsetEquals, "charset=");
     nsAString::const_iterator originalStart, start, end;

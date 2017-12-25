@@ -3021,13 +3021,10 @@ static inline void KeyAppendInt(int32_t aInt, nsACString& aKey)
   aKey.Append(nsPrintfCString("%d", aInt));
 }
 
-static inline bool IsAutocompleteOff(const nsIContent* aContent)
+static inline bool IsAutocompleteOff(const nsIContent* aElement)
 {
-  return aContent->IsElement() &&
-    aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                       nsGkAtoms::autocomplete,
-                                       NS_LITERAL_STRING("off"),
-                                       eIgnoreCase);
+  return aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::autocomplete,
+                               NS_LITERAL_STRING("off"), eIgnoreCase);
 }
 
 /*static*/ nsresult
@@ -3146,7 +3143,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 
       // Append the control name
       nsAutoString name;
-      aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
+      aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
       KeyAppendString(name, aKey);
     }
   }
@@ -3826,10 +3823,8 @@ nsContentUtils::ContentIsDraggable(nsIContent* aContent)
     if (draggable)
       return true;
 
-    if (aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                           nsGkAtoms::draggable,
-                                           nsGkAtoms::_false,
-                                           eIgnoreCase))
+    if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::draggable,
+                              nsGkAtoms::_false, eIgnoreCase))
       return false;
   }
 
@@ -4708,14 +4703,12 @@ nsContentUtils::UnregisterShutdownObserver(nsIObserver* aObserver)
 
 /* static */
 bool
-nsContentUtils::HasNonEmptyAttr(const nsIContent* aContent,
-                                int32_t aNameSpaceID,
+nsContentUtils::HasNonEmptyAttr(const nsIContent* aContent, int32_t aNameSpaceID,
                                 nsAtom* aName)
 {
-  static Element::AttrValuesArray strings[] = {&nsGkAtoms::_empty, nullptr};
-  return aContent->IsElement() &&
-    aContent->AsElement()->FindAttrValueIn(aNameSpaceID, aName, strings, eCaseMatters)
-      == Element::ATTR_VALUE_NO_MATCH;
+  static nsIContent::AttrValuesArray strings[] = {&nsGkAtoms::_empty, nullptr};
+  return aContent->FindAttrValueIn(aNameSpaceID, aName, strings, eCaseMatters)
+    == nsIContent::ATTR_VALUE_NO_MATCH;
 }
 
 /* static */
@@ -5552,7 +5545,7 @@ nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
     if ((!aContent->IsHTMLElement(nsGkAtoms::a) &&
          !aContent->IsHTMLElement(nsGkAtoms::area) &&
          !aContent->IsSVGElement(nsGkAtoms::a)) ||
-        !aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::download, fileName) ||
+        !aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::download, fileName) ||
         NS_FAILED(aContent->NodePrincipal()->CheckMayLoad(aLinkURI, false, true))) {
       fileName.SetIsVoid(true); // No actionable download attribute was found.
     }
@@ -10558,11 +10551,8 @@ nsContentUtils::QueryTriggeringPrincipal(nsIContent* aLoadingNode,
   }
 
   nsAutoString loadingStr;
-  if (aLoadingNode->IsElement()) {
-    aLoadingNode->AsElement()->GetAttr(kNameSpaceID_None,
-				       nsGkAtoms::triggeringprincipal,
-				       loadingStr);
-  }
+  aLoadingNode->GetAttr(kNameSpaceID_None, nsGkAtoms::triggeringprincipal,
+                        loadingStr);
 
   // Fall back if 'triggeringprincipal' isn't specified,
   if (loadingStr.IsEmpty()) {
@@ -10600,11 +10590,8 @@ nsContentUtils::GetContentPolicyTypeForUIImageLoading(nsIContent* aLoadingNode,
     aContentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE_FAVICON;
 
     nsAutoString requestContextID;
-    if (aLoadingNode->IsElement()) {
-      aLoadingNode->AsElement()->GetAttr(kNameSpaceID_None,
-                                         nsGkAtoms::requestcontextid,
-                                         requestContextID);
-    }
+    aLoadingNode->GetAttr(kNameSpaceID_None, nsGkAtoms::requestcontextid,
+                          requestContextID);
     nsresult rv;
     int64_t val  = requestContextID.ToInteger64(&rv);
     *aRequestContextID = NS_SUCCEEDED(rv)
@@ -11130,16 +11117,9 @@ nsContentUtils::DevToolsEnabled(JSContext* aCx)
 /* static */ bool
 nsContentUtils::ContentIsLink(nsIContent* aContent)
 {
-  if (!aContent || !aContent->IsElement()) {
-    return false;
-  }
-
-  if (aContent->IsHTMLElement(nsGkAtoms::a)) {
-    return true;
-  }
-
-  return aContent->AsElement()->AttrValueIs(
-      kNameSpaceID_XLink, nsGkAtoms::type, nsGkAtoms::simple, eCaseMatters);
+  return aContent && (aContent->IsHTMLElement(nsGkAtoms::a) ||
+                      aContent->AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
+                                            nsGkAtoms::simple, eCaseMatters));
 }
 
 /* static */ already_AddRefed<EventTarget>

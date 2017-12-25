@@ -193,9 +193,7 @@ int32_t
 nsSliderFrame::GetIntegerAttribute(nsIContent* content, nsAtom* atom, int32_t defaultValue)
 {
     nsAutoString value;
-    if (content->IsElement()) {
-      content->AsElement()->GetAttr(kNameSpaceID_None, atom, value);
-    }
+    content->GetAttr(kNameSpaceID_None, atom, value);
     if (!value.IsEmpty()) {
       nsresult error;
 
@@ -543,9 +541,8 @@ nsSliderFrame::DoXULLayout(nsBoxLayoutState& aState)
   // in reverse mode, curpos is reversed such that lower values are to the
   // right or bottom and increase leftwards or upwards. In this case, use the
   // offset from the end instead of the beginning.
-  bool reverse =
-    mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
-                                       nsGkAtoms::reverse, eCaseMatters);
+  bool reverse = mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
+                                         nsGkAtoms::reverse, eCaseMatters);
   nscoord pos = reverse ? (maxPos - curPos) : (curPos - minPos);
 
   // set the thumb's coord to be the current pos * the ratio.
@@ -757,12 +754,12 @@ nsSliderFrame::GetScrollToClick()
     return LookAndFeel::GetInt(LookAndFeel::eIntID_ScrollToClick, false);
   }
 
-  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::movetoclick,
-                                         nsGkAtoms::_true, eCaseMatters)) {
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::movetoclick,
+                            nsGkAtoms::_true, eCaseMatters)) {
     return true;
   }
-  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::movetoclick,
-                                         nsGkAtoms::_false, eCaseMatters)) {
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::movetoclick,
+                            nsGkAtoms::_false, eCaseMatters)) {
     return false;
   }
 
@@ -846,9 +843,8 @@ nsSliderFrame::CurrentPositionChanged()
   // figure out the new rect
   nsRect newThumbRect(thumbRect);
 
-  bool reverse =
-    mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
-                                       nsGkAtoms::reverse, eCaseMatters);
+  bool reverse = mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
+                                         nsGkAtoms::reverse, eCaseMatters);
   nscoord pos = reverse ? (maxPos - curPos) : (curPos - minPos);
 
   if (IsXULHorizontal())
@@ -916,10 +912,8 @@ nsSliderFrame::SetCurrentThumbPosition(nsIContent* aScrollbar, nscoord aNewThumb
   nscoord offset = IsXULHorizontal() ? crect.x : crect.y;
   int32_t newPos = NSToIntRound((aNewThumbPos - offset) / mRatio);
 
-  if (aMaySnap && mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                     nsGkAtoms::snap,
-                                                     nsGkAtoms::_true,
-                                                     eCaseMatters)) {
+  if (aMaySnap && mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::snap,
+                                        nsGkAtoms::_true, eCaseMatters)) {
     // If snap="true", then the slider may only be set to min + (increment * x).
     // Otherwise, the slider may be set to any positive integer.
     int32_t increment = GetIncrement(aScrollbar);
@@ -943,8 +937,8 @@ nsSliderFrame::SetCurrentPosition(nsIContent* aScrollbar, int32_t aNewPos,
 
   // in reverse direction sliders, flip the value so that it goes from
   // right to left, or bottom to top.
-  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
-                                         nsGkAtoms::reverse, eCaseMatters))
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
+                            nsGkAtoms::reverse, eCaseMatters))
     aNewPos = maxpos - aNewPos;
   else
     aNewPos += minpos;
@@ -1174,8 +1168,8 @@ nsSliderFrame::StartDrag(nsIDOMEvent* aEvent)
 #ifdef DEBUG_SLIDER
   printf("Begin dragging\n");
 #endif
-  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
-                                         nsGkAtoms::_true, eCaseMatters))
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                            nsGkAtoms::_true, eCaseMatters))
     return NS_OK;
 
   WidgetGUIEvent* event = aEvent->WidgetEventPtr()->AsGUIEvent();
@@ -1443,8 +1437,8 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext,
   if (!thumbFrame) // display:none?
     return NS_OK;
 
-  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
-                                         nsGkAtoms::_true, eCaseMatters))
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                            nsGkAtoms::_true, eCaseMatters))
     return NS_OK;
 
   nsRect thumbRect = thumbFrame->GetRect();
@@ -1602,8 +1596,8 @@ nsSliderFrame::Notify(void)
 void
 nsSliderFrame::PageScroll(nscoord aChange)
 {
-  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
-                                         nsGkAtoms::reverse, eCaseMatters)) {
+  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::dir,
+                            nsGkAtoms::reverse, eCaseMatters)) {
     aChange = -aChange;
   }
   nsIFrame* scrollbar = GetScrollbar();

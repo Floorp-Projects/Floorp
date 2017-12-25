@@ -313,12 +313,12 @@ nsTextEquivUtils::AppendFromDOMNode(nsIContent *aContent, nsAString *aString)
     } else {
       if (aContent->NodeInfo()->Equals(nsGkAtoms::label,
                                        kNameSpaceID_XUL))
-        aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
-                                       textEquivalent);
+        aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
+                          textEquivalent);
 
       if (textEquivalent.IsEmpty())
-        aContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::tooltiptext, textEquivalent);
+        aContent->GetAttr(kNameSpaceID_None,
+                          nsGkAtoms::tooltiptext, textEquivalent);
     }
 
     AppendString(aString, textEquivalent);
