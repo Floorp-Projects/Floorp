@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1525027142839000);
+const PRTime gPreloadListExpirationTime = INT64_C(1525113142382000);
 %%
 0-1.party, 1
 0.me.uk, 1
@@ -109,6 +109,7 @@ const PRTime gPreloadListExpirationTime = INT64_C(1525027142839000);
 11scc.com, 1
 11thstreetcoffee.com, 1
 11urss.com, 1
+1212873467.rsc.cdn77.org, 1
 1218641649.rsc.cdn77.org, 1
 123comparer.fr, 1
 123djdrop.com, 1
@@ -5718,7 +5719,7 @@ cirugiasplasticas.com.mx, 1
 cirujanooral.com, 1
 cirurgicagervasio.com.br, 1
 cirurgicalucena.com.br, 1
-ciscodude.net, 0
+ciscodude.net, 1
 cisoaid.com, 1
 ciss.ltd, 1
 cisy.me, 1
@@ -7171,7 +7172,6 @@ darcymarshall.com, 1
 daren.com.br, 1
 dareyou.be, 1
 darinkotter.com, 1
-darioackermann.ch, 1
 darioturchetti.me, 1
 darisni.me, 1
 dark-infection.de, 1
@@ -7374,6 +7374,7 @@ ddel.de, 1
 dden.ca, 0
 dden.website, 1
 dden.xyz, 1
+ddepot.us, 1
 ddfreedish.site, 0
 ddhosted.com, 1
 ddmeportal.com, 1
@@ -7690,7 +7691,6 @@ dethemium.com, 1
 dethikiemtra.com, 1
 detoxetmoi.com, 1
 detoxsinutritie.ro, 1
-detroit-english.de, 1
 detroitstylepizza.com, 1
 detroitzoo.org, 1
 detskysad.com, 1
@@ -7764,6 +7764,7 @@ devyn.ca, 1
 devzero.io, 1
 dewalch.net, 1
 dewapress.com, 1
+dewebwerf.nl, 1
 dexalo.de, 1
 dezeregio.nl, 1
 dezet-ev.de, 1
@@ -7842,7 +7843,6 @@ dicionarioetimologico.com.br, 1
 dick.red, 1
 dickieslife.com, 1
 dickpics.ru, 1
-dicoding.com, 1
 didacte.com, 1
 didche.net, 1
 diddens.de, 1
@@ -8019,7 +8019,7 @@ disconformity.net, 1
 discord-chan.net, 1
 discordapp.com, 1
 discordghost.space, 1
-discotek.club, 0
+discotek.club, 1
 discount24.de, 1
 discountmania.eu, 1
 discountmetaux.fr, 1
@@ -8253,6 +8253,7 @@ domian.cz, 1
 dominationgame.co.uk, 1
 dominicself.co.uk, 1
 dominik-schlueter.de, 1
+dominikkulaga.pl, 1
 dominioanimal.com.br, 1
 dominoknihy.cz, 1
 dominomatrix.com, 1
@@ -8644,7 +8645,6 @@ dustygroove.com, 1
 dustyspokesbnb.ca, 1
 dutch.desi, 1
 dutch1.nl, 1
-dutchessuganda.com, 1
 dutchrank.nl, 1
 dutchwanderers.nl, 1
 dutchweballiance.nl, 1
@@ -9341,6 +9341,7 @@ enet-navigator.de, 1
 enfantsdelarue.ch, 1
 enfield-kitchens.co.uk, 1
 enflow.nl, 1
+enfoqueseguro.com, 1
 enfu.se, 1
 engarde.net, 1
 engaugetools.com, 1
@@ -9454,7 +9455,7 @@ epiteugma.com, 1
 epizentrum.work, 1
 epizentrum.works, 1
 epmcentroitalia.it, 1
-epoch.com, 1
+epoch.com, 0
 epolitiker.com, 1
 epos-distributor.co.uk, 1
 eposbirmingham.co.uk, 1
@@ -9933,6 +9934,7 @@ exploit.party, 1
 exploit.ph, 1
 exploited.cz, 1
 exploodo.rocks, 1
+exploravacations.in, 1
 expo-america.ru, 1
 expo-asia.ru, 1
 expo-europe.ru, 1
@@ -10439,7 +10441,6 @@ fili.org, 1
 filingsmadeeasy.com, 1
 filip-prochazka.com, 1
 filippo.io, 1
-filipsebesta.com, 1
 filleritemsindia.com, 1
 fillitupchallenge.eu, 1
 fillmysuitca.se, 1
@@ -11292,6 +11293,8 @@ fuzzing-project.org, 1
 fveevaete.com, 1
 fwdx.net, 1
 fwei.tk, 1
+fwest.ovh, 1
+fwest98.ovh, 1
 fwww7.com, 1
 fx24.uk, 1
 fx5.de, 1
@@ -14073,6 +14076,7 @@ imperialonlinestore.com, 1
 imperiumnova.info, 1
 impex.com.bd, 1
 impiantistica.org, 1
+implicitdenial.com, 1
 impotsimple.ca, 1
 imppac.de, 1
 imprendo.co, 1
@@ -17535,6 +17539,7 @@ livekort.dk, 1
 livekort.no, 1
 livekort.se, 1
 livekortti.com, 1
+livekortti.fi, 1
 livelexi.com, 1
 livepaperhelp.com, 1
 livepath.ch, 1
@@ -17731,7 +17736,6 @@ lookastic.es, 1
 lookastic.fr, 1
 lookastic.mx, 1
 lookastic.ru, 1
-lookatmysco.re, 1
 lookbetweenthelines.com, 1
 lookyman.net, 1
 loom.no, 1
@@ -17768,7 +17772,6 @@ lotz.li, 1
 lou.lt, 1
 louange-reconvilier.ch, 1
 loucanfixit.com, 1
-louduniverse.net, 1
 louisvillecarguys.com, 1
 louisvillevmug.info, 1
 loune.net, 1
@@ -18927,7 +18930,6 @@ melhorproduto.com.br, 1
 melikoff.es, 1
 melina-schefczyk.de, 1
 melissaadkins.com, 1
-melitopol.co.ua, 1
 melnessgroup.com, 1
 melnikov.ch, 1
 melodic.com.au, 1
@@ -20857,7 +20859,6 @@ nibb13.tech, 1
 nic.gov, 1
 niceb5y.net, 0
 niceguyit.biz, 1
-nicesco.re, 1
 nicestudio.co.il, 0
 nichijou.com, 1
 nicholaspruss.com, 1
@@ -21525,6 +21526,7 @@ olback.net, 1
 oldandyounglesbians.us, 1
 oldbrookinflatables.co.uk, 1
 oldbrookmarqueehire.co.uk, 1
+oldchaphome.nl, 1
 oldenglishsheepdog.com.br, 1
 oldking.net, 1
 oldnews.news, 1
@@ -22976,7 +22978,6 @@ plaque-funeraire.fr, 1
 plassmann.ws, 1
 plasti-pac.ch, 1
 plasticsurgeryartist.com, 1
-plasvilledescartaveis.com.br, 1
 platformadmin.com, 1
 platinumpeek.com, 1
 platomania.nl, 1
@@ -23601,7 +23602,6 @@ promopony.com, 1
 promoscuola.net, 1
 promoterms.com.au, 1
 promotiongeeks.com, 0
-pronto-intervento.net, 1
 proobec.cz, 1
 proofwiki.org, 1
 proos.nl, 1
@@ -25178,7 +25178,7 @@ runschrauger.com, 1
 runvs.io, 1
 ruobiyi.com, 1
 ruri.io, 1
-rus-trip.ru, 0
+rus-trip.ru, 1
 rusempire.ru, 1
 rushball.net, 1
 rushiiworks.com, 1
@@ -26158,7 +26158,6 @@ setfix.de, 1
 sethcaplan.com, 1
 sethvargo.com, 1
 seti-germany.de, 1
-setkit.net, 1
 settberg.de, 1
 setterirlandes.com.br, 1
 settleapp.co, 1
@@ -26737,7 +26736,6 @@ sjleisure.co.uk, 1
 sjoorm.com, 1
 sjsc.fr, 1
 sk-net.cz, 1
-skalender.ch, 0
 skanvordoff.ru, 1
 skaraborgsassistans.com, 0
 skarox.com, 1
@@ -29358,7 +29356,6 @@ timstoffel.net, 0
 timtaubert.de, 1
 timtelfer.com, 1
 timtj.ca, 1
-timvandekamp.nl, 1
 timvivian.ca, 1
 timweb.ca, 1
 timysewyn.be, 1
@@ -29375,6 +29372,7 @@ tintencenter.com, 1
 tintenfix.net, 1
 tintenfux.de, 1
 tintenland.de, 1
+tintenprofi.de, 1
 tinyhousefinance.com.au, 1
 tinylan.com, 1
 tinyspeck.com, 1
@@ -29426,7 +29424,6 @@ tkn.tokyo, 1
 tkts.cl, 1
 tkusano.jp, 1
 tkw01536.de, 1
-tlach.cz, 1
 tlca.org, 1
 tlcnet.info, 1
 tlehseasyads.com, 1
@@ -29912,7 +29909,6 @@ travisfranck.com, 1
 travler.net, 1
 travotion.com, 1
 trbanka.com, 1
-treasuredinheritanceministry.com, 1
 treasurydirect.gov, 1
 treasuryhunt.gov, 1
 treasuryscams.gov, 1
@@ -30548,6 +30544,7 @@ urbanietz-immobilien.de, 1
 urbanmelbourne.info, 1
 urbannewsservice.com, 1
 urbansparrow.in, 1
+urbanstylestaging.com, 1
 urbanwildlifealliance.org, 1
 urbexdk.nl, 1
 urcentral.com, 1
@@ -30858,7 +30855,6 @@ vendigital.com, 1
 vendorconnect.nyc, 1
 vendserve.eu, 1
 venicecomputerrepair.com, 1
-venicefloridawebsitedesign.com, 1
 venicerealdeal.com, 1
 venirextra.com, 1
 venirideal.com, 1
@@ -31211,7 +31207,6 @@ volcain.io, 1
 volcanconcretos.com, 1
 volga.us, 1
 volgavibes.ru, 1
-voliere-info.nl, 0
 volker-gropp.de, 1
 volkergropp.de, 1
 volkerwesselstransfer.nl, 1
@@ -31242,7 +31237,7 @@ vorodevops.com, 1
 vos-fleurs.ch, 1
 vos-fleurs.com, 1
 vosgym.jp, 1
-voshod.org, 0
+voshod.org, 1
 vosky.fr, 1
 vostronet.com, 1
 voter-info.uk, 1
@@ -31464,6 +31459,7 @@ waterschaplimburg.nl, 1
 watertrails.io, 1
 waterworkscondos.com, 1
 watsonwork.me, 1
+wattechweb.com, 1
 wave-ola.es, 1
 wavesboardshop.com, 1
 wavesoftime.com, 1
@@ -31478,7 +31474,6 @@ waytt.cf, 1
 waze.com, 1
 wbci.us, 1
 wbg-vs.de, 1
-wbit.co.il, 1
 wbt-solutions.ch, 1
 wbt-solutions.net, 1
 wbuntu.com, 1
@@ -33168,7 +33163,6 @@ zaratan.fr, 1
 zargaripour.com, 1
 zarmarket.org, 1
 zarpo.com.br, 1
-zary.me, 1
 zaufanatrzeciastrona.pl, 1
 zavec.com.ec, 1
 zavetaji.lv, 1
