@@ -745,14 +745,14 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "67faa6f410c4"
+        "revision": "635d31047874"
     }, 
     "ja-JP-mac": {
         "platforms": [
             "macosx64", 
             "macosx64-devedition"
         ], 
-        "revision": "e8e7c8b0bfbb"
+        "revision": "8d42df5cd191"
     }, 
     "ka": {
         "platforms": [
@@ -782,7 +782,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "22e86cb329da"
+        "revision": "92a696cab661"
     }, 
     "kk": {
         "platforms": [
@@ -1157,7 +1157,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "db01737fe421"
+        "revision": "db7cb610de3d"
     }, 
     "si": {
         "platforms": [
