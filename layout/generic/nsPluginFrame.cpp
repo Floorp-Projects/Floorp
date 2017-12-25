@@ -771,9 +771,7 @@ nsPluginFrame::IsHidden(bool aCheckVisibilityStyle) const
     // compatibility w/ 4.x and IE so we don't create a non-painting
     // widget in layout. See bug 188959.
     nsAutoString hidden;
-    if (mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::hidden,
-                                       hidden) &&
+    if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::hidden, hidden) &&
        (hidden.IsEmpty() ||
         (!hidden.LowerCaseEqualsLiteral("false") &&
          !hidden.LowerCaseEqualsLiteral("no") &&

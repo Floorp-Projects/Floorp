@@ -489,7 +489,7 @@ char nsMenuBarX::GetLocalizedAccelKey(const char *shortcutID)
   NS_ConvertASCIItoUTF16 shortcutIDStr((const char *)shortcutID);
   nsCOMPtr<nsIDOMElement> shortcutElement;
   domDoc->GetElementById(shortcutIDStr, getter_AddRefs(shortcutElement));
-  nsCOMPtr<Element> shortcutContent = do_QueryInterface(shortcutElement);
+  nsCOMPtr<nsIContent> shortcutContent = do_QueryInterface(shortcutElement);
   if (!shortcutContent)
     return 0;
 
@@ -627,7 +627,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
     nsCOMPtr<nsIDOMElement> keyElement;
     domdoc->GetElementById(key, getter_AddRefs(keyElement));
     if (keyElement) {
-      nsCOMPtr<Element> keyContent (do_QueryInterface(keyElement));
+      nsCOMPtr<nsIContent> keyContent (do_QueryInterface(keyElement));
       // first grab the key equivalent character
       nsAutoString keyChar(NS_LITERAL_STRING(" "));
       keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyChar);

@@ -167,7 +167,7 @@ protected:
      * Given a row and a column ID, use the row's match to figure out
      * the appropriate <treecell> in the rule's <action>.
      */
-    mozilla::dom::Element*
+    nsIContent*
     GetTemplateActionCellFor(int32_t aRow, nsTreeColumn& aCol);
 
     /**

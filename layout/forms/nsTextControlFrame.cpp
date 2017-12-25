@@ -493,8 +493,7 @@ nsTextControlFrame::CreatePlaceholderIfNeeded()
 
   // Do we need a placeholder node?
   nsAutoString placeholderTxt;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder,
-                                 placeholderTxt);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::placeholder, placeholderTxt);
   if (IsTextArea()) { // <textarea>s preserve newlines...
     nsContentUtils::PlatformToDOMLineBreaks(placeholderTxt);
   } else { // ...<input>s don't

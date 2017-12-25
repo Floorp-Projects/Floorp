@@ -1805,7 +1805,7 @@ nsContainerFrame::RenumberList()
   int32_t ordinal = 1;
   int32_t increment;
   if (mContent->IsHTMLElement(nsGkAtoms::ol) &&
-      mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::reversed)) {
+      mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::reversed)) {
     increment = -1;
   } else {
     increment = 1;

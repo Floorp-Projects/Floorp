@@ -85,8 +85,8 @@ XULTabAccessible::NativeState()
     if (NS_SUCCEEDED(tab->GetSelected(&selected)) && selected)
       state |= states::SELECTED;
 
-    if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::pinned,
-                                           nsGkAtoms::_true, eCaseMatters))
+    if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::pinned,
+                              nsGkAtoms::_true, eCaseMatters))
       state |= states::PINNED;
 
   }

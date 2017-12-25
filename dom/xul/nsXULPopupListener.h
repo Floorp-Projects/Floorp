@@ -49,10 +49,10 @@ private:
 #endif
 
     // |mElement| is the node to which this listener is attached.
-    RefPtr<mozilla::dom::Element> mElement;
+    nsCOMPtr<mozilla::dom::Element> mElement;
 
     // The popup that is getting shown on top of mElement.
-    RefPtr<mozilla::dom::Element> mPopupContent;
+    nsCOMPtr<nsIContent> mPopupContent;
 
     // true if a context popup
     bool mIsContext;

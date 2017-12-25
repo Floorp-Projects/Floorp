@@ -258,13 +258,13 @@ protected:
    * @note This method might destroy the frame, pres shell and other objects.
    * Returns false if calling it destroyed |this|.
    */
-  bool UpdateSelection();
+  bool       UpdateSelection();
 
   /**
    * Returns whether mContent supports multiple selection.
    */
-  bool GetMultiple() const {
-    return mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
+  bool       GetMultiple() const {
+    return mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
   }
 
 
@@ -272,7 +272,7 @@ protected:
    * Toggles (show/hide) the combobox dropdown menu.
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void DropDownToggleKey(nsIDOMEvent* aKeyEvent);
+  void       DropDownToggleKey(nsIDOMEvent* aKeyEvent);
 
   nsresult   IsOptionDisabled(int32_t anIndex, bool &aIsDisabled);
   /**

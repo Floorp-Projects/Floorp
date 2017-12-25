@@ -8,7 +8,6 @@
 #define nsTextControlFrame_h___
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/Element.h"
 #include "nsContainerFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIContent.h"
@@ -300,7 +299,7 @@ protected:
    * @returns false if it does not exist
    */
   bool AttributeExists(nsAtom *aAtt) const
-  { return mContent && mContent->AsElement()->HasAttr(kNameSpaceID_None, aAtt); }
+  { return mContent && mContent->HasAttr(kNameSpaceID_None, aAtt); }
 
   /**
    * We call this when we are being destroyed or removed from the PFM.

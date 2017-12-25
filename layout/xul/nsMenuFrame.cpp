@@ -693,7 +693,7 @@ nsMenuFrame::GetAnchor()
   mozilla::dom::Element* anchor = nullptr;
 
   nsAutoString id;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::anchor, id);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::anchor, id);
   if (!id.IsEmpty()) {
     nsIDocument* doc = mContent->OwnerDoc();
 
@@ -736,10 +736,8 @@ nsMenuFrame::CloseMenu(bool aDeselectMenu)
 bool
 nsMenuFrame::IsSizedToPopup(nsIContent* aContent, bool aRequireAlways)
 {
-  MOZ_ASSERT(aContent->IsElement());
   nsAutoString sizedToPopup;
-  aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup,
-                                 sizedToPopup);
+  aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup, sizedToPopup);
   return sizedToPopup.EqualsLiteral("always") ||
          (!aRequireAlways && sizedToPopup.EqualsLiteral("pref"));
 }
@@ -893,9 +891,8 @@ nsMenuFrame::Notify(nsITimer* aTimer)
       nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
       if (pm) {
         if ((!pm->HasContextMenu(nullptr) || menuParent->IsContextMenu()) &&
-            mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                               nsGkAtoms::menuactive,
-                                               nsGkAtoms::_true, eCaseMatters)) {
+            mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::menuactive,
+                                  nsGkAtoms::_true, eCaseMatters)) {
           OpenMenu(false);
         }
       }
@@ -936,23 +933,21 @@ nsMenuFrame::Notify(nsITimer* aTimer)
 bool
 nsMenuFrame::IsDisabled()
 {
-  return mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                            nsGkAtoms::disabled,
-                                            nsGkAtoms::_true, eCaseMatters);
+  return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                               nsGkAtoms::_true, eCaseMatters);
 }
 
 void
 nsMenuFrame::UpdateMenuType()
 {
-  static Element::AttrValuesArray strings[] =
+  static nsIContent::AttrValuesArray strings[] =
     {&nsGkAtoms::checkbox, &nsGkAtoms::radio, nullptr};
-  switch (mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
-                                                 nsGkAtoms::type,
-                                                 strings, eCaseMatters)) {
+  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
+                                    strings, eCaseMatters)) {
     case 0: mType = eMenuType_Checkbox; break;
     case 1:
       mType = eMenuType_Radio;
-      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::name, mGroupName);
+      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, mGroupName);
       break;
 
     default:
@@ -973,8 +968,8 @@ void
 nsMenuFrame::UpdateMenuSpecialState()
 {
   bool newChecked =
-    mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
-                                       nsGkAtoms::_true, eCaseMatters);
+    mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
+                          nsGkAtoms::_true, eCaseMatters);
   if (newChecked == mChecked) {
     /* checked state didn't change */
 
@@ -1041,8 +1036,7 @@ nsMenuFrame::BuildAcceleratorText(bool aNotify)
   nsAutoString accelText;
 
   if ((GetStateBits() & NS_STATE_ACCELTEXT_IS_DERIVED) == 0) {
-    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::acceltext,
-                                   accelText);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::acceltext, accelText);
     if (!accelText.IsEmpty())
       return;
   }
@@ -1058,7 +1052,7 @@ nsMenuFrame::BuildAcceleratorText(bool aNotify)
 
   // See if we have a key node and use that instead.
   nsAutoString keyValue;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyValue);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyValue);
   if (keyValue.IsEmpty())
     return;
 
@@ -1069,11 +1063,11 @@ nsMenuFrame::BuildAcceleratorText(bool aNotify)
 
   //XXXsmaug If mContent is in shadow dom, should we use
   //         ShadowRoot::GetElementById()?
-  Element* keyElement = document->GetElementById(keyValue);
+  nsIContent *keyElement = document->GetElementById(keyValue);
   if (!keyElement) {
 #ifdef DEBUG
     nsAutoString label;
-    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, label);
+    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, label);
     nsAutoString msg = NS_LITERAL_STRING("Key '") +
                        keyValue +
                        NS_LITERAL_STRING("' of menu item '") +
@@ -1201,10 +1195,8 @@ nsMenuFrame::Execute(WidgetGUIEvent* aEvent)
   // flip "checked" state if we're a checkbox menu, or an un-checked radio menu
   bool needToFlipChecked = false;
   if (mType == eMenuType_Checkbox || (mType == eMenuType_Radio && !mChecked)) {
-    needToFlipChecked = !mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                            nsGkAtoms::autocheck,
-                                                            nsGkAtoms::_false,
-                                                            eCaseMatters);
+    needToFlipChecked = !mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::autocheck,
+                                               nsGkAtoms::_false, eCaseMatters);
   }
 
   nsCOMPtr<nsISound> sound(do_CreateInstance("@mozilla.org/sound;1"));

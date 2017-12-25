@@ -695,7 +695,7 @@ nsresult
 HTMLFormElement::SubmitSubmission(HTMLFormSubmission* aFormSubmission)
 {
   nsresult rv;
-  Element* originatingElement = aFormSubmission->GetOriginatingElement();
+  nsIContent* originatingElement = aFormSubmission->GetOriginatingElement();
 
   //
   // Get the action and target
@@ -1545,7 +1545,7 @@ HTMLFormElement::DoResolveName(const nsAString& aName,
 }
 
 void
-HTMLFormElement::OnSubmitClickBegin(Element* aOriginatingElement)
+HTMLFormElement::OnSubmitClickBegin(nsIContent* aOriginatingElement)
 {
   mDeferSubmission = true;
 
@@ -1613,7 +1613,7 @@ HTMLFormElement::GetAction(nsString& aValue)
 
 nsresult
 HTMLFormElement::GetActionURL(nsIURI** aActionURL,
-                              Element* aOriginatingElement)
+                              nsIContent* aOriginatingElement)
 {
   nsresult rv = NS_OK;
 
@@ -2262,9 +2262,9 @@ HTMLFormElement::WalkRadioGroup(const nsAString& aName,
     for (uint32_t i = 0; i < len; i++) {
       control = GetElementAt(i);
       if (control->ControlType() == NS_FORM_INPUT_RADIO) {
-        nsCOMPtr<Element> controlElement = do_QueryInterface(control);
-        if (controlElement &&
-            controlElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+        nsCOMPtr<nsIContent> controlContent = do_QueryInterface(control);
+        if (controlContent &&
+            controlContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                                         EmptyString(), eCaseMatters) &&
             !aVisitor->Visit(control)) {
           break;
@@ -2461,8 +2461,7 @@ HTMLFormElement::AddElementToTableInternal(
 
       // If an element has a @form, we can assume it *might* be able to not have
       // a parent and still be in the form.
-      NS_ASSERTION((content->IsElement() &&
-                    content->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::form)) ||
+      NS_ASSERTION(content->HasAttr(kNameSpaceID_None, nsGkAtoms::form) ||
                    content->GetParent(), "Item in list without parent");
 
       // Determine the ordering between the new and old element.

@@ -8,8 +8,8 @@
 #define mozilla_dom_HTMLFormSubmission_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/Element.h"
 #include "nsCOMPtr.h"
+#include "nsIContent.h"
 #include "mozilla/Encoding.h"
 #include "nsString.h"
 
@@ -95,7 +95,7 @@ public:
    */
   void GetCharset(nsACString& aCharset) { mEncoding->Name(aCharset); }
 
-  Element* GetOriginatingElement() const
+  nsIContent* GetOriginatingElement() const
   {
     return mOriginatingElement.get();
   }
@@ -108,7 +108,7 @@ protected:
    * @param aOriginatingElement the originating element (can be null)
    */
   HTMLFormSubmission(mozilla::NotNull<const mozilla::Encoding*> aEncoding,
-                     Element* aOriginatingElement)
+                     nsIContent* aOriginatingElement)
     : mEncoding(aEncoding)
     , mOriginatingElement(aOriginatingElement)
   {
@@ -119,14 +119,14 @@ protected:
   mozilla::NotNull<const mozilla::Encoding*> mEncoding;
 
   // Originating element.
-  RefPtr<Element> mOriginatingElement;
+  nsCOMPtr<nsIContent> mOriginatingElement;
 };
 
 class EncodingFormSubmission : public HTMLFormSubmission
 {
 public:
   EncodingFormSubmission(mozilla::NotNull<const mozilla::Encoding*> aEncoding,
-                         Element* aOriginatingElement);
+                         nsIContent* aOriginatingElement);
 
   virtual ~EncodingFormSubmission();
 
@@ -154,7 +154,7 @@ public:
    * @param aEncoding the character encoding of the form
    */
   FSMultipartFormData(mozilla::NotNull<const mozilla::Encoding*> aEncoding,
-                      Element* aOriginatingElement);
+                      nsIContent* aOriginatingElement);
   ~FSMultipartFormData();
 
   virtual nsresult

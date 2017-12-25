@@ -257,7 +257,7 @@ nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
     // This would be used to allow adjusting the caret position in an
     // autocomplete field without hiding the popup for example.
     bool noRollupOnAnchor = (!consume && pos &&
-      item->Frame()->GetContent()->AsElement()->AttrValueIs(kNameSpaceID_None,
+      item->Frame()->GetContent()->AttrValueIs(kNameSpaceID_None,
         nsGkAtoms::norolluponanchor, nsGkAtoms::_true, eCaseMatters));
 
     // When ConsumeOutsideClicks_ParentOnly is used, always consume the click
@@ -277,11 +277,10 @@ nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
           // for roll-up. That way, we can anchor a popup on anonymous content or
           // an individual icon, while clicking elsewhere within a button or other
           // container doesn't result in us re-opening the popup.
-          if (anchor && anchor->IsElement()) {
+          if (anchor) {
             nsAutoString consumeAnchor;
-            anchor->AsElement()->GetAttr(kNameSpaceID_None,
-                                         nsGkAtoms::consumeanchor,
-                                         consumeAnchor);
+            anchor->GetAttr(kNameSpaceID_None, nsGkAtoms::consumeanchor,
+                            consumeAnchor);
             if (!consumeAnchor.IsEmpty()) {
               nsIDocument* doc = anchor->GetOwnerDocument();
               nsIContent* newAnchor = doc->GetElementById(consumeAnchor);
@@ -356,20 +355,19 @@ bool nsXULPopupManager::ShouldRollupOnMouseWheelEvent()
     return false;
 
   nsIContent* content = item->Frame()->GetContent();
-  if (!content || !content->IsElement())
+  if (!content)
     return false;
 
-  Element* element = content->AsElement();
-  if (element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rolluponmousewheel,
+  if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rolluponmousewheel,
                            nsGkAtoms::_true, eCaseMatters))
     return true;
 
-  if (element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rolluponmousewheel,
+  if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::rolluponmousewheel,
                            nsGkAtoms::_false, eCaseMatters))
     return false;
 
   nsAutoString value;
-  element->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
+  content->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
   return StringBeginsWith(value, NS_LITERAL_STRING("autocomplete"));
 }
 
@@ -383,8 +381,9 @@ bool nsXULPopupManager::ShouldConsumeOnMouseWheelEvent()
   if (frame->PopupType() != ePopupTypePanel)
     return true;
 
-  return frame->GetContent()->AsElement()->AttrValueIs(
-      kNameSpaceID_None, nsGkAtoms::type, nsGkAtoms::arrow, eCaseMatters);
+  nsIContent* content = frame->GetContent();
+  return !(content && content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                           nsGkAtoms::arrow, eCaseMatters));
 }
 
 // a menu should not roll up if activated by a mouse activate message (eg. X-mouse)
@@ -941,9 +940,7 @@ nsXULPopupManager::ShowPopupCallback(nsIContent* aPopup,
   // attribute may be used to disable adding these event listeners for popups
   // that want to handle their own keyboard events.
   nsAutoString ignorekeys;
-  if (aPopup->IsElement()) {
-    aPopup->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::ignorekeys, ignorekeys);
-  }
+  aPopup->GetAttr(kNameSpaceID_None, nsGkAtoms::ignorekeys, ignorekeys);
   if (ignorekeys.EqualsLiteral("true")) {
     item->SetIgnoreKeys(eIgnoreKeys_True);
   } else if (ignorekeys.EqualsLiteral("shortcuts")) {
@@ -1384,23 +1381,19 @@ nsXULPopupManager::ExecuteMenu(nsIContent* aMenu, nsXULMenuCommandEvent* aEvent)
 {
   CloseMenuMode cmm = CloseMenuMode_Auto;
 
-  static Element::AttrValuesArray strings[] =
+  static nsIContent::AttrValuesArray strings[] =
     {&nsGkAtoms::none, &nsGkAtoms::single, nullptr};
 
-  if (aMenu->IsElement()) {
-    switch (aMenu->AsElement()->FindAttrValueIn(kNameSpaceID_None,
-                                                nsGkAtoms::closemenu,
-                                                strings,
-                                                eCaseMatters)) {
-      case 0:
-        cmm = CloseMenuMode_None;
-        break;
-      case 1:
-        cmm = CloseMenuMode_Single;
-        break;
-      default:
-        break;
-    }
+  switch (aMenu->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::closemenu,
+                                 strings, eCaseMatters)) {
+    case 0:
+      cmm = CloseMenuMode_None;
+      break;
+    case 1:
+      cmm = CloseMenuMode_Single;
+      break;
+    default:
+      break;
   }
 
   // When a menuitem is selected to be executed, first hide all the open
@@ -1505,9 +1498,8 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
   // Using noautofocus="true" will disable this behaviour, which is needed for
   // the autocomplete widget as it manages focus itself.
   if (popupType == ePopupTypePanel &&
-      !popup->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                       nsGkAtoms::noautofocus,
-                                       nsGkAtoms::_true, eCaseMatters)) {
+      !popup->AttrValueIs(kNameSpaceID_None, nsGkAtoms::noautofocus,
+                           nsGkAtoms::_true, eCaseMatters)) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
       nsIDocument* doc = popup->GetUncomposedDoc();
@@ -1539,13 +1531,14 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
     if (status == nsEventStatus_eConsumeNoDefault) {
       popupFrame->SetPopupState(ePopupClosed);
       popupFrame->ClearTriggerContent();
-    } else {
+    }
+    else {
       // Now check if we need to fire the popuppositioned event. If not, call
       // ShowPopupCallback directly.
 
       // The popuppositioned event only fires on arrow panels for now.
-      if (popup->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                          nsGkAtoms::arrow, eCaseMatters)) {
+      if (popup->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                          nsGkAtoms::arrow, eCaseMatters)) {
         popupFrame->ShowWithPositionedEvent();
         presShell->FrameNeedsReflow(popupFrame, nsIPresShell::eTreeChange,
                                     NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -1576,10 +1569,8 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
 
   // when a panel is closed, blur whatever has focus inside the popup
   if (aPopupType == ePopupTypePanel &&
-      (!aPopup->IsElement() ||
-       !aPopup->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                         nsGkAtoms::noautofocus,
-                                         nsGkAtoms::_true, eCaseMatters))) {
+      !aPopup->AttrValueIs(kNameSpaceID_None, nsGkAtoms::noautofocus,
+                           nsGkAtoms::_true, eCaseMatters)) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (fm) {
       nsIDocument* doc = aPopup->GetUncomposedDoc();
@@ -1618,14 +1609,12 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
       // would likely be undesirable. Transitions are currently disabled on Linux
       // due to rendering issues on certain configurations.
 #ifndef MOZ_WIDGET_GTK
-      if (!aNextPopup &&
-          aPopup->IsElement() &&
-          aPopup->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::animate)) {
+      if (!aNextPopup && aPopup->HasAttr(kNameSpaceID_None, nsGkAtoms::animate)) {
         // If animate="false" then don't transition at all. If animate="cancel",
         // only show the transition if cancelling the popup or rolling up.
         // Otherwise, always show the transition.
         nsAutoString animate;
-        aPopup->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::animate, animate);
+        aPopup->GetAttr(kNameSpaceID_None, nsGkAtoms::animate, animate);
 
         if (!animate.EqualsLiteral("false") &&
             (!animate.EqualsLiteral("cancel") || aIsCancel)) {
@@ -2406,9 +2395,8 @@ nsXULPopupManager::HandleKeyboardEventWithKeyCode(
     case nsIDOMKeyEvent::DOM_VK_F10:
 #endif
       if (aTopVisibleMenuItem &&
-          !aTopVisibleMenuItem->Frame()->GetContent()->AsElement()->AttrValueIs(
-            kNameSpaceID_None, nsGkAtoms::activateontab, nsGkAtoms::_true,
-            eCaseMatters)) {
+          !aTopVisibleMenuItem->Frame()->GetContent()->AttrValueIs(kNameSpaceID_None,
+           nsGkAtoms::activateontab, nsGkAtoms::_true, eCaseMatters)) {
         // close popups or deactivate menubar when Tab or F10 are pressed
         Rollup(0, false, nullptr, nullptr);
         break;
@@ -2611,9 +2599,8 @@ nsXULPopupManager::IsValidMenuItem(nsIContent* aContent, bool aOnPopup)
   }
 
   return !(skipNavigatingDisabledMenuItem &&
-    aContent->IsElement() &&
-    aContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
-                                       nsGkAtoms::_true, eCaseMatters));
+           aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                                 nsGkAtoms::_true, eCaseMatters));
 }
 
 nsresult
@@ -2819,9 +2806,8 @@ nsXULPopupPositionedEvent::DispatchIfNeeded(nsIContent *aPopup,
                                             bool aSelectFirstItem)
 {
   // The popuppositioned event only fires on arrow panels for now.
-  if (aPopup->IsElement() &&
-      aPopup->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                       nsGkAtoms::arrow, eCaseMatters)) {
+  if (aPopup->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                          nsGkAtoms::arrow, eCaseMatters)) {
     nsCOMPtr<nsIRunnable> event =
       new nsXULPopupPositionedEvent(aPopup, aIsContextMenu, aSelectFirstItem);
     aPopup->OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());

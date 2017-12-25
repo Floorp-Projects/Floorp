@@ -255,12 +255,8 @@ IsScriptEventHandler(ScriptKind kind, nsIContent* aScriptElement)
   }
 
   nsAutoString forAttr, eventAttr;
-  if (!aScriptElement->AsElement()->GetAttr(kNameSpaceID_None,
-                                            nsGkAtoms::_for,
-                                            forAttr) ||
-      !aScriptElement->AsElement()->GetAttr(kNameSpaceID_None,
-                                            nsGkAtoms::event,
-                                            eventAttr)) {
+  if (!aScriptElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_for, forAttr) ||
+      !aScriptElement->GetAttr(kNameSpaceID_None, nsGkAtoms::event, eventAttr)) {
     return false;
   }
 
@@ -1252,7 +1248,7 @@ CSPAllowsInlineScript(nsIScriptElement* aElement, nsIDocument* aDocument)
   }
 
   // query the nonce
-  nsCOMPtr<Element> scriptContent = do_QueryInterface(aElement);
+  nsCOMPtr<nsIContent> scriptContent = do_QueryInterface(aElement);
   nsAutoString nonce;
   scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::nonce, nonce);
   bool parserCreated = aElement->GetParserCreated() != mozilla::dom::NOT_FROM_PARSER;
@@ -1332,9 +1328,7 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
       // HTML script elements.
       if (scriptContent->IsHTMLElement()) {
         nsAutoString language;
-        scriptContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                            nsGkAtoms::language,
-                                            language);
+        scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::language, language);
         if (!language.IsEmpty()) {
           if (!nsContentUtils::IsJavaScriptLanguage(language)) {
             return false;
@@ -1351,7 +1345,7 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
   if (ModuleScriptsEnabled() &&
       scriptKind == ScriptKind::Classic &&
       scriptContent->IsHTMLElement() &&
-      scriptContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::nomodule)) {
+      scriptContent->HasAttr(kNameSpaceID_None, nsGkAtoms::nomodule)) {
     return false;
   }
 
@@ -1410,9 +1404,8 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
       SRIMetadata sriMetadata;
       {
         nsAutoString integrity;
-        scriptContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                            nsGkAtoms::integrity,
-                                            integrity);
+        scriptContent->GetAttr(kNameSpaceID_None, nsGkAtoms::integrity,
+                               integrity);
         if (!integrity.IsEmpty()) {
           MOZ_LOG(SRILogHelper::GetSriLog(), mozilla::LogLevel::Debug,
                   ("ScriptLoader::ProcessScriptElement, integrity=%s",

@@ -370,8 +370,13 @@ ForEachPing(nsIContent* aContent, ForEachPingCallback aCallback, void* aClosure)
     return;
   }
 
+  RefPtr<nsAtom> pingAtom = NS_Atomize("ping");
+  if (!pingAtom) {
+    return;
+  }
+
   nsAutoString value;
-  aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::ping, value);
+  aContent->GetAttr(kNameSpaceID_None, pingAtom, value);
   if (value.IsEmpty()) {
     return;
   }
@@ -14562,7 +14567,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
   if (IsElementAnchor(aContent)) {
     MOZ_ASSERT(aContent->IsHTMLElement());
     nsAutoString referrer;
-    aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, referrer);
+    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, referrer);
     nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(referrer);
     while (tok.hasMoreTokens()) {
       const nsAString& token = tok.nextToken();

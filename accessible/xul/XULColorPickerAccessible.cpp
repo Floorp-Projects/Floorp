@@ -35,7 +35,7 @@ XULColorPickerTileAccessible::Value(nsString& aValue)
 {
   aValue.Truncate();
 
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::color, aValue);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::color, aValue);
 }
 
 role
@@ -48,7 +48,7 @@ uint64_t
 XULColorPickerTileAccessible::NativeState()
 {
   uint64_t state = AccessibleWrap::NativeState();
-  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::selected))
+  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::selected))
     state |= states::SELECTED;
 
   return state;
@@ -138,7 +138,6 @@ XULColorPickerAccessible::IsAcceptableChild(nsIContent* aEl) const
   nsAutoString role;
   nsCoreUtils::XBLBindingRole(aEl, role);
   return role.EqualsLiteral("xul:panel") &&
-    aEl->IsElement() &&
-    aEl->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::noautofocus,
-                                  nsGkAtoms::_true, eCaseMatters);
+    aEl->AttrValueIs(kNameSpaceID_None, nsGkAtoms::noautofocus,
+                     nsGkAtoms::_true, eCaseMatters);
 }

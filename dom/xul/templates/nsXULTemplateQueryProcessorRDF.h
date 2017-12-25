@@ -156,7 +156,7 @@ public:
      */
     nsresult
     CompileTripleCondition(nsRDFQuery* aQuery,
-                           Element* aCondition,
+                           nsIContent* aCondition,
                            TestNode* aParentNode,
                            TestNode** aResult);
 
@@ -167,7 +167,7 @@ public:
      */
     nsresult
     CompileMemberCondition(nsRDFQuery* aQuery,
-                           Element* aCondition,
+                           nsIContent* aCondition,
                            TestNode* aParentNode,
                            TestNode** aResult);
 

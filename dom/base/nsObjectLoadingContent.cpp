@@ -620,10 +620,10 @@ nsObjectLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
 {
   nsImageLoadingContent::UnbindFromTree(aDeep, aNullParent);
 
-  nsCOMPtr<Element> thisElement =
+  nsCOMPtr<nsIContent> thisContent =
     do_QueryInterface(static_cast<nsIObjectLoadingContent*>(this));
-  MOZ_ASSERT(thisElement);
-  nsIDocument* ownerDoc = thisElement->OwnerDoc();
+  MOZ_ASSERT(thisContent);
+  nsIDocument* ownerDoc = thisContent->OwnerDoc();
   ownerDoc->RemovePlugin(this);
 
   /// XXX(johns): Do we want to somehow propogate the reparenting behavior to
@@ -642,7 +642,7 @@ nsObjectLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
     UnloadObject();
   }
   if (mType == eType_Plugin) {
-    nsIDocument* doc = thisElement->GetComposedDoc();
+    nsIDocument* doc = thisContent->GetComposedDoc();
     if (doc && doc->IsActive()) {
       nsCOMPtr<nsIRunnable> ev = new nsSimplePluginEvent(doc,
                                                          NS_LITERAL_STRING("PluginRemoved"));
@@ -1557,9 +1557,9 @@ nsObjectLoadingContent::CheckProcessPolicy(int16_t *aContentPolicy)
 nsObjectLoadingContent::ParameterUpdateFlags
 nsObjectLoadingContent::UpdateObjectParameters()
 {
-  nsCOMPtr<Element> thisElement =
+  nsCOMPtr<nsIContent> thisContent =
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  MOZ_ASSERT(thisElement, "Must be an Element");
+  NS_ASSERTION(thisContent, "Must be an instance of content");
 
   uint32_t caps = GetCapabilities();
   LOG(("OBJLC [%p]: Updating object parameters", this));
@@ -1593,13 +1593,16 @@ nsObjectLoadingContent::UpdateObjectParameters()
   ///
 
   nsAutoString codebaseStr;
-  nsCOMPtr<nsIURI> docBaseURI = thisElement->GetBaseURI();
-  thisElement->GetAttr(kNameSpaceID_None, nsGkAtoms::codebase, codebaseStr);
+  nsCOMPtr<nsIURI> docBaseURI = thisContent->GetBaseURI();
+  bool hasCodebase = thisContent->HasAttr(kNameSpaceID_None, nsGkAtoms::codebase);
+  if (hasCodebase) {
+    thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::codebase, codebaseStr);
+  }
 
   if (!codebaseStr.IsEmpty()) {
     rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(newBaseURI),
                                                    codebaseStr,
-                                                   thisElement->OwnerDoc(),
+                                                   thisContent->OwnerDoc(),
                                                    docBaseURI);
     if (NS_SUCCEEDED(rv)) {
       NS_TryToSetImmutable(newBaseURI);
@@ -1611,7 +1614,7 @@ nsObjectLoadingContent::UpdateObjectParameters()
   }
 
   nsAutoString rawTypeAttr;
-  thisElement->GetAttr(kNameSpaceID_None, nsGkAtoms::type, rawTypeAttr);
+  thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, rawTypeAttr);
   if (!rawTypeAttr.IsEmpty()) {
     typeAttr = rawTypeAttr;
     CopyUTF16toUTF8(rawTypeAttr, newMime);
@@ -1628,10 +1631,10 @@ nsObjectLoadingContent::UpdateObjectParameters()
 
   nsAutoString uriStr;
   // Different elements keep this in various locations
-  if (thisElement->NodeInfo()->Equals(nsGkAtoms::object)) {
-    thisElement->GetAttr(kNameSpaceID_None, nsGkAtoms::data, uriStr);
-  } else if (thisElement->NodeInfo()->Equals(nsGkAtoms::embed)) {
-    thisElement->GetAttr(kNameSpaceID_None, nsGkAtoms::src, uriStr);
+  if (thisContent->NodeInfo()->Equals(nsGkAtoms::object)) {
+    thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::data, uriStr);
+  } else if (thisContent->NodeInfo()->Equals(nsGkAtoms::embed)) {
+    thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::src, uriStr);
   } else {
     NS_NOTREACHED("Unrecognized plugin-loading tag");
   }
@@ -1642,7 +1645,7 @@ nsObjectLoadingContent::UpdateObjectParameters()
   if (!uriStr.IsEmpty()) {
     rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(newURI),
                                                    uriStr,
-                                                   thisElement->OwnerDoc(),
+                                                   thisContent->OwnerDoc(),
                                                    newBaseURI);
     nsCOMPtr<nsIURI> rewrittenURI;
     MaybeRewriteYoutubeEmbed(newURI,
@@ -1744,7 +1747,7 @@ nsObjectLoadingContent::UpdateObjectParameters()
     // 5) Use the channel type
 
     bool overrideChannelType = false;
-    if (thisElement->HasAttr(kNameSpaceID_None, nsGkAtoms::typemustmatch)) {
+    if (thisContent->HasAttr(kNameSpaceID_None, nsGkAtoms::typemustmatch)) {
       if (!typeAttr.LowerCaseEqualsASCII(channelType.get())) {
         stateInvalid = true;
       }

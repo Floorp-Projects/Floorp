@@ -358,9 +358,9 @@ nsXHTMLContentSerializer::AfterElementStart(nsIContent* aContent,
          child;
          child = child->GetNextSibling()) {
       if (child->IsHTMLElement(nsGkAtoms::meta) &&
-          child->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::content)) {
+          child->HasAttr(kNameSpaceID_None, nsGkAtoms::content)) {
         nsAutoString header;
-        child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
+        child->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
 
         if (header.LowerCaseEqualsLiteral("content-type")) {
           hasMeta = true;

@@ -184,13 +184,13 @@ XULLinkAccessible::Value(nsString& aValue)
 {
   aValue.Truncate();
 
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::href, aValue);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, aValue);
 }
 
 ENameValueFlag
 XULLinkAccessible::NativeName(nsString& aName)
 {
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
   if (!aName.IsEmpty())
     return eNameOK;
 
@@ -274,7 +274,7 @@ XULLinkAccessible::AnchorURIAt(uint32_t aAnchorIndex)
     return nullptr;
 
   nsAutoString href;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
+  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
 
   nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
   nsIDocument* document = mContent->OwnerDoc();

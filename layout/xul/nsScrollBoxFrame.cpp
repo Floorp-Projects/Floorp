@@ -179,6 +179,6 @@ nsAutoRepeatBoxFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPos
 bool
 nsAutoRepeatBoxFrame::IsActivatedOnHover()
 {
-  return mContent->AsElement()->AttrValueIs(
-      kNameSpaceID_None, nsGkAtoms::repeat, nsGkAtoms::hover, eCaseMatters);
+  return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::repeat,
+                               nsGkAtoms::hover, eCaseMatters);
 }

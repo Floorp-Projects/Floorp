@@ -836,28 +836,23 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
         fc = fc->Next();
       }
 
-      if (prevFrame) {
+      if(prevFrame) {
         //get the frame type
         if (prevFrame->IsTableWrapperFrame()) {
           //see if it has "align="
-          // IE makes a difference between align and the float property.
-          //
-          // We're interested only if previous frame is align=left IE messes
-          // things up when "right" (overlapping frames).
-          //
-          // FIXME(emilio, bug 1426747): This looks fishy.
+          // IE makes a difference between align and he float property
           nsIContent* content = prevFrame->GetContent();
-          if (content &&
-              content->IsElement() &&
-              content->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                nsGkAtoms::align,
-                                                NS_LITERAL_STRING("left"),
-                                                eIgnoreCase)) {
-            keepFloatOnSameLine = true;
-            // don't advance to next line (IE quirkie behaviour)
-            // it breaks rule CSS2/9.5.1/1, but what the hell
-            // since we cannot evangelize the world
-            break;
+          if (content) {
+            // we're interested only if previous frame is align=left
+            // IE messes things up when "right" (overlapping frames)
+            if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::align,
+                                     NS_LITERAL_STRING("left"), eIgnoreCase)) {
+              keepFloatOnSameLine = true;
+              // don't advance to next line (IE quirkie behaviour)
+              // it breaks rule CSS2/9.5.1/1, but what the hell
+              // since we cannot evangelize the world
+              break;
+            }
           }
         }
       }

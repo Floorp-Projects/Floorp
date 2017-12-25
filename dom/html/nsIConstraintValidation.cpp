@@ -62,11 +62,11 @@ nsIConstraintValidation::GetValidationMessage(nsAString& aValidationMessage,
   aValidationMessage.Truncate();
 
   if (IsCandidateForConstraintValidation() && !IsValid()) {
-    nsCOMPtr<Element> element = do_QueryInterface(this);
-    NS_ASSERTION(element, "This class should be inherited by HTML elements only!");
+    nsCOMPtr<nsIContent> content = do_QueryInterface(this);
+    NS_ASSERTION(content, "This class should be inherited by HTML elements only!");
 
     nsAutoString authorMessage;
-    element->GetAttr(kNameSpaceID_None, nsGkAtoms::x_moz_errormessage,
+    content->GetAttr(kNameSpaceID_None, nsGkAtoms::x_moz_errormessage,
                      authorMessage);
 
     if (!authorMessage.IsEmpty()) {
@@ -187,7 +187,9 @@ nsIConstraintValidation::ReportValidity()
 
   if (content->IsHTMLElement(nsGkAtoms::input) &&
       nsContentUtils::IsFocusedContent(content)) {
-    HTMLInputElement* inputElement = HTMLInputElement::FromContent(content);
+    HTMLInputElement* inputElement =
+    HTMLInputElement::FromContentOrNull(content);
+
     inputElement->UpdateValidityUIBits(true);
   }
 
