@@ -387,7 +387,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "67faa6f410c4"
+        "revision": "adb79c9a3367"
     }, 
     "ka": {
         "platforms": [
@@ -403,7 +403,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "22e86cb329da"
+        "revision": "92a696cab661"
     }, 
     "kk": {
         "platforms": [
@@ -601,7 +601,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "db01737fe421"
+        "revision": "db7cb610de3d"
     }, 
     "sk": {
         "platforms": [
