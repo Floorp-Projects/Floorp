@@ -36,7 +36,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "d16ec596facc"
+        "revision": "cbc936f6c5a0"
     }, 
     "az": {
         "platforms": [
@@ -195,7 +195,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "251b6656f820"
+        "revision": "ee730a9a7bc4"
     }, 
     "es-ES": {
         "platforms": [
@@ -227,7 +227,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "255b75ced9cc"
+        "revision": "1f3941984a7d"
     }, 
     "fa": {
         "platforms": [
@@ -235,7 +235,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "00dd93c058a8"
+        "revision": "0ed17c83a3a3"
     }, 
     "ff": {
         "platforms": [
@@ -243,7 +243,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "b0554d71f6fa"
+        "revision": "56dc39b3aeb7"
     }, 
     "fi": {
         "platforms": [
@@ -395,7 +395,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "28e5ac19e5d1"
+        "revision": "16cb98a53c69"
     }, 
     "kab": {
         "platforms": [
@@ -506,7 +506,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "1c5948f6a504"
+        "revision": "39b9fe0c9195"
     }, 
     "ne-NP": {
         "platforms": [
@@ -530,14 +530,14 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "5eee7ddc8346"
+        "revision": "e51286180326"
     }, 
     "oc": {
         "platforms": [
             "android", 
             "android-api-16"
         ], 
-        "revision": "df64ad45b55d"
+        "revision": "1acc206c1e89"
     }, 
     "or": {
         "platforms": [
@@ -569,7 +569,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "2c7a9e25f500"
+        "revision": "7a117331ecd2"
     }, 
     "pt-PT": {
         "platforms": [
@@ -633,7 +633,7 @@
             "android-api-16", 
             "android-multilocale"
         ], 
-        "revision": "6b892d98c2f4"
+        "revision": "964329b4733c"
     }, 
     "sr": {
         "platforms": [
@@ -688,7 +688,7 @@
             "android", 
             "android-api-16"
         ], 
-        "revision": "f87b9fb11b27"
+        "revision": "2abff3afcf96"
     }, 
     "uk": {
         "platforms": [
@@ -719,7 +719,7 @@
             "android", 
             "android-api-16"
         ], 
-        "revision": "1c6c31e9fd97"
+        "revision": "d47f854e80c3"
     }, 
     "wo": {
         "platforms": [
