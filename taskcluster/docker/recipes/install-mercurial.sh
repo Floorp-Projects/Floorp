@@ -131,6 +131,7 @@ assume-tty = true
 cacerts = ${CERT_PATH}
 
 [extensions]
+share =
 sparse =
 robustcheckout = /usr/local/mercurial/robustcheckout.py
 
