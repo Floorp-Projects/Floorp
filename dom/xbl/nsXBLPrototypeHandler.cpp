@@ -104,7 +104,7 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const char16_t* aEvent,
                      aGroup, aPreventDefault, aAllowUntrusted);
 }
 
-nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement, XBLReservedKey aReserved)
+nsXBLPrototypeHandler::nsXBLPrototypeHandler(Element* aHandlerElement, XBLReservedKey aReserved)
   : mHandlerElement(nullptr),
     mLineNumber(0),
     mReserved(aReserved),
@@ -200,11 +200,11 @@ nsXBLPrototypeHandler::TryConvertToKeyboardShortcut(
   return true;
 }
 
-already_AddRefed<nsIContent>
+already_AddRefed<Element>
 nsXBLPrototypeHandler::GetHandlerElement()
 {
   if (mType & NS_HANDLER_TYPE_XUL) {
-    nsCOMPtr<nsIContent> element = do_QueryReferent(mHandlerElement);
+    nsCOMPtr<Element> element = do_QueryReferent(mHandlerElement);
     return element.forget();
   }
 
@@ -573,7 +573,7 @@ nsXBLPrototypeHandler::DispatchXBLCommand(EventTarget* aTarget, nsIDOMEvent* aEv
 nsresult
 nsXBLPrototypeHandler::DispatchXULKeyCommand(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIContent> handlerElement = GetHandlerElement();
+  nsCOMPtr<Element> handlerElement = GetHandlerElement();
   NS_ENSURE_STATE(handlerElement);
   if (handlerElement->AttrValueIs(kNameSpaceID_None,
                                   nsGkAtoms::disabled,
@@ -836,7 +836,7 @@ nsXBLPrototypeHandler::AccelKeyMask()
 void
 nsXBLPrototypeHandler::GetEventType(nsAString& aEvent)
 {
-  nsCOMPtr<nsIContent> handlerElement = GetHandlerElement();
+  nsCOMPtr<Element> handlerElement = GetHandlerElement();
   if (!handlerElement) {
     aEvent.Truncate();
     return;
@@ -849,7 +849,7 @@ nsXBLPrototypeHandler::GetEventType(nsAString& aEvent)
 }
 
 void
-nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
+nsXBLPrototypeHandler::ConstructPrototype(Element* aKeyElement,
                                           const char16_t* aEvent,
                                           const char16_t* aPhase,
                                           const char16_t* aAction,
@@ -1010,7 +1010,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
 }
 
 void
-nsXBLPrototypeHandler::ReportKeyConflict(const char16_t* aKey, const char16_t* aModifiers, nsIContent* aKeyElement, const char *aMessageName)
+nsXBLPrototypeHandler::ReportKeyConflict(const char16_t* aKey, const char16_t* aModifiers, Element* aKeyElement, const char *aMessageName)
 {
   nsCOMPtr<nsIDocument> doc;
   if (mPrototypeBinding) {

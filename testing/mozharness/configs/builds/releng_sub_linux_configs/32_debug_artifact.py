@@ -109,7 +109,5 @@ config = {
         ######## 32 bit specific ###########
     ],
     'mozconfig_variant': 'debug-artifact',
-    'tooltool_manifest_src': "browser/config/tooltool-manifests/linux32/\
-releng.manifest",
     #########################################################################
 }

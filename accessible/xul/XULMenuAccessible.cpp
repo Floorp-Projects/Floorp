@@ -52,25 +52,25 @@ XULMenuitemAccessible::NativeState()
   // Has Popup?
   if (mContent->NodeInfo()->Equals(nsGkAtoms::menu, kNameSpaceID_XUL)) {
     state |= states::HASPOPUP;
-    if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::open))
+    if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::open))
       state |= states::EXPANDED;
     else
       state |= states::COLLAPSED;
   }
 
   // Checkable/checked?
-  static nsIContent::AttrValuesArray strings[] =
+  static Element::AttrValuesArray strings[] =
     { &nsGkAtoms::radio, &nsGkAtoms::checkbox, nullptr };
 
-  if (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type, strings,
-                                eCaseMatters) >= 0) {
+  if (mContent->AsElement()->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::type,
+                                             strings, eCaseMatters) >= 0) {
 
     // Checkable?
     state |= states::CHECKABLE;
 
     // Checked?
-    if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
-                              nsGkAtoms::_true, eCaseMatters))
+    if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
+                                           nsGkAtoms::_true, eCaseMatters))
       state |= states::CHECKED;
   }
 
@@ -137,15 +137,15 @@ XULMenuitemAccessible::NativeInteractiveState() const
 ENameValueFlag
 XULMenuitemAccessible::NativeName(nsString& aName)
 {
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
   return eNameOK;
 }
 
 void
 XULMenuitemAccessible::Description(nsString& aDescription)
 {
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::description,
-                    aDescription);
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::description,
+                                 aDescription);
 }
 
 KeyBinding
@@ -157,8 +157,8 @@ XULMenuitemAccessible::AccessKey() const
   // We do not use nsCoreUtils::GetAccesskeyFor() because accesskeys for
   // menu are't registered by EventStateManager.
   nsAutoString accesskey;
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey,
-                    accesskey);
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey,
+                                 accesskey);
   if (accesskey.IsEmpty())
     return KeyBinding();
 
@@ -198,11 +198,11 @@ KeyBinding
 XULMenuitemAccessible::KeyboardShortcut() const
 {
   nsAutoString keyElmId;
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyElmId);
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyElmId);
   if (keyElmId.IsEmpty())
     return KeyBinding();
 
-  nsIContent* keyElm = mContent->OwnerDoc()->GetElementById(keyElmId);
+  Element* keyElm = mContent->OwnerDoc()->GetElementById(keyElmId);
   if (!keyElm)
     return KeyBinding();
 
@@ -253,13 +253,12 @@ XULMenuitemAccessible::NativeRole()
   if (mParent && mParent->Role() == roles::COMBOBOX_LIST)
     return roles::COMBOBOX_OPTION;
 
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                            nsGkAtoms::radio, eCaseMatters))
+  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                         nsGkAtoms::radio, eCaseMatters))
     return roles::RADIO_MENU_ITEM;
 
-  if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                            nsGkAtoms::checkbox,
-                            eCaseMatters))
+  if (mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                         nsGkAtoms::checkbox, eCaseMatters))
     return roles::CHECK_MENU_ITEM;
 
   return roles::MENUITEM;
@@ -421,13 +420,14 @@ XULMenupopupAccessible::NativeState()
 
 #ifdef DEBUG
   // We are onscreen if our parent is active
-  bool isActive = mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::menuactive);
+  bool isActive =
+    mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::menuactive);
   if (!isActive) {
     Accessible* parent = Parent();
     if (parent) {
       nsIContent* parentContent = parent->GetContent();
-      if (parentContent)
-        isActive = parentContent->HasAttr(kNameSpaceID_None, nsGkAtoms::open);
+      if (parentContent && parentContent->IsElement())
+        isActive = parentContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::open);
     }
   }
 
@@ -446,7 +446,9 @@ XULMenupopupAccessible::NativeName(nsString& aName)
 {
   nsIContent* content = mContent;
   while (content && aName.IsEmpty()) {
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
+    if (content->IsElement()) {
+      content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
+    }
     content = content->GetFlattenedTreeParent();
   }
 

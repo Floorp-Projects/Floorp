@@ -817,12 +817,15 @@ nsresult
 nsContentSink::ProcessMETATag(nsIContent* aContent)
 {
   NS_ASSERTION(aContent, "missing meta-element");
+  MOZ_ASSERT(aContent->IsElement());
+
+  Element* element = aContent->AsElement();
 
   nsresult rv = NS_OK;
 
   // set any HTTP-EQUIV data into document's header data as well as url
   nsAutoString header;
-  aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
+  element->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
   if (!header.IsEmpty()) {
     // Ignore META REFRESH when document is sandboxed from automatic features.
     nsContentUtils::ASCIIToLower(header);
@@ -838,18 +841,18 @@ nsContentSink::ProcessMETATag(nsIContent* aContent)
     }
 
     nsAutoString result;
-    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
+    element->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
     if (!result.IsEmpty()) {
       RefPtr<nsAtom> fieldAtom(NS_Atomize(header));
-      rv = ProcessHeaderData(fieldAtom, result, aContent);
+      rv = ProcessHeaderData(fieldAtom, result, element);
     }
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                            nsGkAtoms::handheldFriendly, eIgnoreCase)) {
+  if (element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                           nsGkAtoms::handheldFriendly, eIgnoreCase)) {
     nsAutoString result;
-    aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
+    element->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
     if (!result.IsEmpty()) {
       nsContentUtils::ASCIIToLower(result);
       mDocument->SetHeaderData(nsGkAtoms::handheldFriendly, result);
@@ -1079,7 +1082,7 @@ nsContentSink::ProcessOfflineManifest(nsIContent *aElement)
 
   // Check for a manifest= attribute.
   nsAutoString manifestSpec;
-  aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::manifest, manifestSpec);
+  aElement->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::manifest, manifestSpec);
   ProcessOfflineManifest(manifestSpec);
 }
 

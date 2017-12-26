@@ -133,8 +133,9 @@ nsProgressMeterFrame::AttributeChanged(int32_t aNameSpaceID,
   }
 
   // did the progress change?
-  bool undetermined = mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mode,
-                                            nsGkAtoms::undetermined, eCaseMatters);
+  bool undetermined =
+    mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mode,
+                                       nsGkAtoms::undetermined, eCaseMatters);
   if (nsGkAtoms::mode == aAttribute ||
       (!undetermined &&
        (nsGkAtoms::value == aAttribute || nsGkAtoms::max == aAttribute))) {
@@ -148,8 +149,8 @@ nsProgressMeterFrame::AttributeChanged(int32_t aNameSpaceID,
     int32_t flex = 1, maxFlex = 1;
     if (!undetermined) {
       nsAutoString value, maxValue;
-      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, value);
-      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxValue);
+      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value, value);
+      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxValue);
 
       nsresult error;
       flex = value.ToInteger(&error);

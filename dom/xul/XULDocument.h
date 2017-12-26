@@ -298,10 +298,14 @@ protected:
     static LazyLogModule gXULLog;
 
     nsresult
-    Persist(nsIContent* aElement, int32_t aNameSpaceID, nsAtom* aAttribute);
+    Persist(mozilla::dom::Element* aElement,
+            int32_t aNameSpaceID,
+            nsAtom* aAttribute);
     // Just like Persist but ignores the return value so we can use it
     // as a runnable method.
-    void DoPersist(nsIContent* aElement, int32_t aNameSpaceID, nsAtom* aAttribute)
+    void DoPersist(mozilla::dom::Element* aElement,
+                   int32_t aNameSpaceID,
+                   nsAtom* aAttribute)
     {
         Persist(aElement, aNameSpaceID, aAttribute);
     }
@@ -468,7 +472,7 @@ protected:
      * Check if a XUL template builder has already been hooked up.
      */
     static nsresult
-    CheckTemplateBuilderHookup(nsIContent* aElement, bool* aNeedsHookup);
+    CheckTemplateBuilderHookup(mozilla::dom::Element* aElement, bool* aNeedsHookup);
 
     /**
      * Create a XUL template builder on the specified node.

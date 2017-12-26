@@ -712,8 +712,12 @@ HTMLEditor::RemoveStyleInside(nsIContent& aNode,
     // if we weren't passed an attribute, then we want to
     // remove any matching inlinestyles entirely
     if (!aAttribute || aAttribute->IsEmpty()) {
-      bool hasStyleAttr = aNode.HasAttr(kNameSpaceID_None, nsGkAtoms::style);
-      bool hasClassAttr = aNode.HasAttr(kNameSpaceID_None, nsGkAtoms::_class);
+      bool hasStyleAttr =
+        aNode.IsElement() &&
+        aNode.AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::style);
+      bool hasClassAttr =
+        aNode.IsElement() &&
+        aNode.AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::_class);
       if (aProperty && (hasStyleAttr || hasClassAttr)) {
         // aNode carries inline styles or a class attribute so we can't
         // just remove the element... We need to create above the element

@@ -10,6 +10,7 @@
 #include "nsNameSpaceManager.h"        // for kNameSpaceID_None
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nscore.h"                     // for NS_IMETHODIMP
+#include "mozilla/dom/Element.h"                 // for nsIContent
 
 nsComposeTxtSrvFilter::nsComposeTxtSrvFilter() :
   mIsForMail(false)
@@ -30,16 +31,22 @@ nsComposeTxtSrvFilter::Skip(nsIDOMNode* aNode, bool *_retval)
   if (content) {
     if (content->IsHTMLElement(nsGkAtoms::blockquote)) {
       if (mIsForMail) {
-        *_retval = content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                        nsGkAtoms::cite, eIgnoreCase);
+        *_retval = content->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                     nsGkAtoms::type,
+                                                     nsGkAtoms::cite,
+                                                     eIgnoreCase);
       }
     } else if (content->IsHTMLElement(nsGkAtoms::span)) {
       if (mIsForMail) {
-        *_retval = content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mozquote,
-                                        nsGkAtoms::_true, eIgnoreCase);
+        *_retval = content->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                     nsGkAtoms::mozquote,
+                                                     nsGkAtoms::_true,
+                                                     eIgnoreCase);
         if (!*_retval) {
-          *_retval = content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::_class,
-                                          nsGkAtoms::mozsignature, eCaseMatters);
+          *_retval = content->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                                       nsGkAtoms::_class,
+                                                       nsGkAtoms::mozsignature,
+                                                       eCaseMatters);
         }
       }
     } else if (content->IsAnyOfHTMLElements(nsGkAtoms::script,
@@ -51,9 +58,10 @@ nsComposeTxtSrvFilter::Skip(nsIDOMNode* aNode, bool *_retval)
     } else if (content->IsHTMLElement(nsGkAtoms::table)) {
       if (mIsForMail) {
         *_retval =
-          content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::_class,
-                               NS_LITERAL_STRING("moz-email-headers-table"),
-                               eCaseMatters);
+          content->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                            nsGkAtoms::_class,
+                                            NS_LITERAL_STRING("moz-email-headers-table"),
+                                            eCaseMatters);
       }
     }
   }

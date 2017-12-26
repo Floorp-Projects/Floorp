@@ -75,7 +75,9 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
   // to the command DOM node
   if (doc) {
     nsAutoString ourCommand;
-    mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::command, ourCommand);
+    if (mContent->IsElement()) {
+      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::command, ourCommand);
+    }
 
     if (!ourCommand.IsEmpty()) {
       Element* commandElement = doc->GetElementById(ourCommand);
@@ -94,7 +96,8 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
   if (mCommandElement)
     isEnabled = !mCommandElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled, nsGkAtoms::_true, eCaseMatters);
   else
-    isEnabled = !mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled, nsGkAtoms::_true, eCaseMatters);
+    isEnabled = !mContent->IsElement() ||
+      !mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled, nsGkAtoms::_true, eCaseMatters);
 
   // set up the native menu item
   if (mType == eSeparatorMenuItemType) {
@@ -106,8 +109,9 @@ nsresult nsMenuItemX::Create(nsMenuX* aParent, const nsString& aLabel, EMenuItem
 
     [mNativeMenuItem setEnabled:(BOOL)isEnabled];
 
-    SetChecked(mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
-                                     nsGkAtoms::_true, eCaseMatters));
+    SetChecked(mContent->IsElement() &&
+               mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
+                                                  nsGkAtoms::_true, eCaseMatters));
     SetKeyEquiv();
   }
 
@@ -155,8 +159,9 @@ void nsMenuItemX::DoCommand()
   // flip "checked" state if we're a checkbox menu, or an un-checked radio menu
   if (mType == eCheckboxMenuItemType ||
       (mType == eRadioMenuItemType && !mIsChecked)) {
-    if (!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::autocheck,
-                               nsGkAtoms::_false, eCaseMatters))
+    if (!mContent->IsElement() ||
+        !mContent->AsElement()->AttrValueIs(
+          kNameSpaceID_None, nsGkAtoms::autocheck, nsGkAtoms::_false, eCaseMatters))
     SetChecked(!mIsChecked);
     /* the AttributeChanged code will update all the internal state */
   }
@@ -206,7 +211,9 @@ nsresult nsMenuItemX::DispatchDOMEvent(const nsString &eventName, bool *preventD
 void nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
 {
   nsAutoString myGroupName;
-  inCheckedContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, myGroupName);
+  if (inCheckedContent->IsElement()) {
+    inCheckedContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::name, myGroupName);
+  }
   if (!myGroupName.Length()) // no groupname, nothing to do
     return;
 
@@ -236,9 +243,12 @@ void nsMenuItemX::SetKeyEquiv()
 
   // Set key shortcut and modifiers
   nsAutoString keyValue;
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyValue);
+  if (mContent->IsElement()) {
+    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyValue);
+  }
+
   if (!keyValue.IsEmpty() && mContent->GetUncomposedDoc()) {
-    nsIContent *keyContent = mContent->GetUncomposedDoc()->GetElementById(keyValue);
+    Element* keyContent = mContent->GetUncomposedDoc()->GetElementById(keyValue);
     if (keyContent) {
       nsAutoString keyChar;
       bool hasKey = keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyChar);
@@ -296,10 +306,11 @@ nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConten
     if (aAttribute == nsGkAtoms::checked) {
       // if we're a radio menu, uncheck our sibling radio items. No need to
       // do any of this if we're just a normal check menu.
-      if (mType == eRadioMenuItemType) {
-        if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
-                                  nsGkAtoms::_true, eCaseMatters))
-          UncheckRadioSiblings(mContent);
+      if (mType == eRadioMenuItemType &&
+          mContent->IsElement() &&
+          mContent->AsElement()->AttrValueIs(
+            kNameSpaceID_None, nsGkAtoms::checked, nsGkAtoms::_true, eCaseMatters)) {
+        UncheckRadioSiblings(mContent);
       }
       mMenuParent->SetRebuild(true);
     }
@@ -315,7 +326,7 @@ nsMenuItemX::ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aConten
       SetupIcon();
     }
     else if (aAttribute == nsGkAtoms::disabled) {
-      if (aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled, nsGkAtoms::_true, eCaseMatters))
+      if (aContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled, nsGkAtoms::_true, eCaseMatters))
         [mNativeMenuItem setEnabled:NO];
       else
         [mNativeMenuItem setEnabled:YES];

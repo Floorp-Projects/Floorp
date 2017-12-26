@@ -558,10 +558,10 @@ nsContentList::NamedItem(const nsAString& aName, bool aDoFlush)
     // XXX Should this pass eIgnoreCase?
     if (content &&
         ((content->IsHTMLElement() &&
-          content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                               name, eCaseMatters)) ||
-         content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
-                              name, eCaseMatters))) {
+          content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                                            name, eCaseMatters)) ||
+         content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
+                                           name, eCaseMatters))) {
       return content->AsElement();
     }
   }
@@ -684,8 +684,10 @@ nsContentList::Item(uint32_t aIndex)
 }
 
 void
-nsContentList::AttributeChanged(nsIDocument *aDocument, Element* aElement,
-                                int32_t aNameSpaceID, nsAtom* aAttribute,
+nsContentList::AttributeChanged(nsIDocument* aDocument,
+                                Element* aElement,
+                                int32_t aNameSpaceID,
+                                nsAtom* aAttribute,
                                 int32_t aModType,
                                 const nsAttrValue* aOldValue)
 {
@@ -716,7 +718,8 @@ nsContentList::AttributeChanged(nsIDocument *aDocument, Element* aElement,
 }
 
 void
-nsContentList::ContentAppended(nsIDocument* aDocument, nsIContent* aContainer,
+nsContentList::ContentAppended(nsIDocument* aDocument,
+                               nsIContent* aContainer,
                                nsIContent* aFirstNewContent)
 {
   NS_PRECONDITION(aContainer, "Can't get at the new content if no container!");

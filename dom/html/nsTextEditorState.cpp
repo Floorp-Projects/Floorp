@@ -206,11 +206,12 @@ nsITextControlElement::GetWrapPropertyEnum(nsIContent* aContent,
 
   nsAutoString wrap;
   if (aContent->IsHTMLElement()) {
-    static nsIContent::AttrValuesArray strings[] =
+    static Element::AttrValuesArray strings[] =
       {&nsGkAtoms::HARD, &nsGkAtoms::OFF, nullptr};
 
-    switch (aContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::wrap,
-                                      strings, eIgnoreCase)) {
+    switch (aContent->AsElement()->FindAttrValueIn(kNameSpaceID_None,
+                                                   nsGkAtoms::wrap, strings,
+                                                   eIgnoreCase)) {
       case 0: aWrapProp = eHTMLTextWrap_Hard; break;
       case 1: aWrapProp = eHTMLTextWrap_Off; break;
     }
@@ -1555,17 +1556,16 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
   // Set max text field length
   newTextEditor->SetMaxTextLength(GetMaxLength());
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
-  if (content) {
+  if (nsCOMPtr<Element> element = do_QueryInterface(mTextCtrlElement)) {
     editorFlags = newTextEditor->Flags();
 
     // Check if the readonly attribute is set.
-    if (content->HasAttr(kNameSpaceID_None, nsGkAtoms::readonly))
+    if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::readonly))
       editorFlags |= nsIPlaintextEditor::eEditorReadonlyMask;
 
     // Check if the disabled attribute is set.
     // TODO: call IsDisabled() here!
-    if (content->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled))
+    if (element->HasAttr(kNameSpaceID_None, nsGkAtoms::disabled))
       editorFlags |= nsIPlaintextEditor::eEditorDisabledMask;
 
     // Disable the selection if necessary.

@@ -203,12 +203,12 @@ nsStackLayout::GetOffset(nsIFrame* aChild, nsMargin& aOffset)
 
   uint8_t offsetSpecified = 0;
   nsIContent* content = aChild->GetContent();
-  if (content) {
+  if (content && content->IsElement()) {
     bool ltr = aChild->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
     nsAutoString value;
     nsresult error;
 
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::start, value);
+    content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::start, value);
     if (!value.IsEmpty()) {
       value.Trim("%");
       if (ltr) {
@@ -222,7 +222,7 @@ nsStackLayout::GetOffset(nsIFrame* aChild, nsMargin& aOffset)
       }
     }
 
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::end, value);
+    content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::end, value);
     if (!value.IsEmpty()) {
       value.Trim("%");
       if (ltr) {
@@ -236,7 +236,7 @@ nsStackLayout::GetOffset(nsIFrame* aChild, nsMargin& aOffset)
       }
     }
 
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::left, value);
+    content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::left, value);
     if (!value.IsEmpty()) {
       value.Trim("%");
       aOffset.left =
@@ -244,7 +244,7 @@ nsStackLayout::GetOffset(nsIFrame* aChild, nsMargin& aOffset)
       offsetSpecified |= SPECIFIED_LEFT;
     }
 
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::right, value);
+    content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::right, value);
     if (!value.IsEmpty()) {
       value.Trim("%");
       aOffset.right =
@@ -252,7 +252,7 @@ nsStackLayout::GetOffset(nsIFrame* aChild, nsMargin& aOffset)
       offsetSpecified |= SPECIFIED_RIGHT;
     }
 
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::top, value);
+    content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::top, value);
     if (!value.IsEmpty()) {
       value.Trim("%");
       aOffset.top =
@@ -260,7 +260,7 @@ nsStackLayout::GetOffset(nsIFrame* aChild, nsMargin& aOffset)
       offsetSpecified |= SPECIFIED_TOP;
     }
 
-    content->GetAttr(kNameSpaceID_None, nsGkAtoms::bottom, value);
+    content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::bottom, value);
     if (!value.IsEmpty()) {
       value.Trim("%");
       aOffset.bottom =

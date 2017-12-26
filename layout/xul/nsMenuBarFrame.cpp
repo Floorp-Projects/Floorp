@@ -180,7 +180,10 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
     if (nsXULPopupManager::IsValidMenuItem(current, false)) {
       // Get the shortcut attribute.
       nsAutoString shortcutKey;
-      current->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, shortcutKey);
+      if (current->IsElement()) {
+        current->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey,
+                                      shortcutKey);
+      }
       if (!shortcutKey.IsEmpty()) {
         ToLowerCase(shortcutKey);
         const char16_t* start = shortcutKey.BeginReading();

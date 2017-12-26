@@ -963,7 +963,7 @@ protected:
    */
   ContentEditableTristate GetContentEditableValue() const
   {
-    static const nsIContent::AttrValuesArray values[] =
+    static const Element::AttrValuesArray values[] =
       { &nsGkAtoms::_false, &nsGkAtoms::_true, &nsGkAtoms::_empty, nullptr };
 
     if (!MayHaveContentEditableAttr())
