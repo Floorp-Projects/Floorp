@@ -446,7 +446,9 @@ NS_EscapeAndFilterURL(const nsACString& aStr, uint32_t aFlags,
   }
 
   if (!appended) {
-    aResult = aStr;
+    if (!aResult.Assign(aStr, fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   return rv;
