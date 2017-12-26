@@ -1409,7 +1409,8 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
       // Wait for Firefox to get fixed to detect pre-formatting correctly,
       // bug 1174452.
       nsAutoString styleVal;
-      if (selContent->GetAttr(kNameSpaceID_None, nsGkAtoms::style, styleVal) &&
+      if (selContent->IsElement() &&
+          selContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::style, styleVal) &&
           styleVal.Find(NS_LITERAL_STRING("pre-wrap")) != kNotFound) {
         mIsTextWidget = true;
         break;
