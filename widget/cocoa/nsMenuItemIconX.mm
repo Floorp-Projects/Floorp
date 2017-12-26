@@ -165,9 +165,11 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
 
   // First, look at the content node's "image" attribute.
   nsAutoString imageURIString;
-  bool hasImageAttr = mContent->GetAttr(kNameSpaceID_None,
-                                        nsGkAtoms::image,
-                                        imageURIString);
+  bool hasImageAttr =
+    mContent->IsElement() &&
+    mContent->AsElement()->GetAttr(kNameSpaceID_None,
+                                   nsGkAtoms::image,
+                                   imageURIString);
 
   nsresult rv;
   nsCOMPtr<nsIDOMCSSValue> cssValue;

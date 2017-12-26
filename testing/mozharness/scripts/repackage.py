@@ -5,7 +5,6 @@ sys.path.insert(1, os.path.dirname(sys.path[0]))  # noqa - don't warn about impo
 
 from mozharness.base.log import FATAL
 from mozharness.base.script import BaseScript
-from mozharness.mozilla.mock import ERROR_MSGS
 
 
 class Repackage(BaseScript):
@@ -89,11 +88,12 @@ class Repackage(BaseScript):
     def _run_tooltool(self):
         config = self.config
         dirs = self.query_abs_dirs()
+        toolchains = os.environ.get('MOZ_TOOLCHAINS')
         manifest_src = os.environ.get('TOOLTOOL_MANIFEST')
         if not manifest_src:
             manifest_src = config.get('tooltool_manifest_src')
-        if not manifest_src:
-            return self.warning(ERROR_MSGS['tooltool_manifest_undetermined'])
+        if not manifest_src and not toolchains:
+            return
 
         tooltool_manifest_path = os.path.join(dirs['abs_mozilla_dir'],
                                               manifest_src)
@@ -117,6 +117,8 @@ class Repackage(BaseScript):
         cache = config.get('tooltool_cache')
         if cache:
             cmd.extend(['--cache-dir', cache])
+        if toolchains:
+            cmd.extend(toolchains.split())
         self.info(str(cmd))
         self.run_command(cmd, cwd=dirs['abs_mozilla_dir'], halt_on_failure=True)
 

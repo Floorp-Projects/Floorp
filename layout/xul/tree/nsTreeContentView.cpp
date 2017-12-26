@@ -184,6 +184,7 @@ void
 nsTreeContentView::GetRowProperties(int32_t aRow, nsAString& aProperties,
                                     ErrorResult& aError)
 {
+  aProperties.Truncate();
   if (!IsValidRowIndex(aRow)) {
     aError.Throw(NS_ERROR_INVALID_ARG);
     return;
@@ -196,8 +197,8 @@ nsTreeContentView::GetRowProperties(int32_t aRow, nsAString& aProperties,
   else
     realRow = nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
 
-  if (realRow) {
-    realRow->GetAttr(kNameSpaceID_None, nsGkAtoms::properties, aProperties);
+  if (realRow && realRow->IsElement()) {
+    realRow->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::properties, aProperties);
   }
 }
 
@@ -223,7 +224,7 @@ nsTreeContentView::GetCellProperties(int32_t aRow, nsTreeColumn& aColumn,
   nsIContent* realRow =
     nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
+    Element* cell = GetCell(realRow, aColumn);
     if (cell) {
       cell->GetAttr(kNameSpaceID_None, nsGkAtoms::properties, aProperties);
     }
@@ -475,7 +476,7 @@ nsTreeContentView::GetImageSrc(int32_t aRow, nsTreeColumn& aColumn,
   nsIContent* realRow =
     nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
+    Element* cell = GetCell(realRow, aColumn);
     if (cell)
       cell->GetAttr(kNameSpaceID_None, nsGkAtoms::src, aSrc);
   }
@@ -506,9 +507,9 @@ nsTreeContentView::GetProgressMode(int32_t aRow, nsTreeColumn& aColumn,
   nsIContent* realRow =
     nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
+    Element* cell = GetCell(realRow, aColumn);
     if (cell) {
-      static nsIContent::AttrValuesArray strings[] =
+      static Element::AttrValuesArray strings[] =
         {&nsGkAtoms::normal, &nsGkAtoms::undetermined, nullptr};
       switch (cell->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::mode,
                                     strings, eCaseMatters)) {
@@ -552,7 +553,7 @@ nsTreeContentView::GetCellValue(int32_t aRow, nsTreeColumn& aColumn,
   nsIContent* realRow =
     nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
+    Element* cell = GetCell(realRow, aColumn);
     if (cell)
       cell->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue);
   }
@@ -591,7 +592,7 @@ nsTreeContentView::GetCellText(int32_t aRow, nsTreeColumn& aColumn,
     nsIContent* realRow =
       nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
     if (realRow) {
-      nsIContent* cell = GetCell(realRow, aColumn);
+      Element* cell = GetCell(realRow, aColumn);
       if (cell)
         cell->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aText);
     }
@@ -691,14 +692,14 @@ nsTreeContentView::CycleHeader(nsTreeColumn& aColumn, ErrorResult& aError)
   nsCOMPtr<nsIDOMElement> element;
   aColumn.GetElement(getter_AddRefs(element));
   if (element) {
-    nsCOMPtr<nsIContent> column = do_QueryInterface(element);
+    nsCOMPtr<Element> column = do_QueryInterface(element);
     nsAutoString sort;
     column->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
     if (!sort.IsEmpty()) {
       nsCOMPtr<nsIXULSortService> xs = do_GetService("@mozilla.org/xul/xul-sort-service;1");
       if (xs) {
         nsAutoString sortdirection;
-        static nsIContent::AttrValuesArray strings[] =
+        static Element::AttrValuesArray strings[] =
           {&nsGkAtoms::ascending, &nsGkAtoms::descending, nullptr};
         switch (column->FindAttrValueIn(kNameSpaceID_None,
                                         nsGkAtoms::sortDirection,
@@ -757,7 +758,7 @@ nsTreeContentView::IsEditable(int32_t aRow, nsTreeColumn& aColumn,
   nsIContent* realRow =
     nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
+    Element* cell = GetCell(realRow, aColumn);
     if (cell && cell->AttrValueIs(kNameSpaceID_None, nsGkAtoms::editable,
                                   nsGkAtoms::_false, eCaseMatters)) {
       return false;
@@ -792,7 +793,7 @@ nsTreeContentView::IsSelectable(int32_t aRow, nsTreeColumn& aColumn,
   nsIContent* realRow =
     nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
-    nsIContent* cell = GetCell(realRow, aColumn);
+    Element* cell = GetCell(realRow, aColumn);
     if (cell && cell->AttrValueIs(kNameSpaceID_None, nsGkAtoms::selectable,
                                   nsGkAtoms::_false, eCaseMatters)) {
       return false;
@@ -1342,13 +1343,14 @@ nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer,
       break;
 
     if (content->IsXULElement(nsGkAtoms::treeitem)) {
-      if (! content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
-                                 nsGkAtoms::_true, eCaseMatters)) {
+      if (!content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
+                                             nsGkAtoms::_true, eCaseMatters)) {
         (*aIndex)++;
-        if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::container,
-                                 nsGkAtoms::_true, eCaseMatters) &&
-            content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::open,
-                                 nsGkAtoms::_true, eCaseMatters)) {
+        if (content->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                              nsGkAtoms::container,
+                                              nsGkAtoms::_true, eCaseMatters) &&
+            content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::open,
+                                              nsGkAtoms::_true, eCaseMatters)) {
           nsIContent* child =
             nsTreeUtils::GetImmediateChild(content, nsGkAtoms::treechildren);
           if (child && child->IsXULElement())
@@ -1357,8 +1359,8 @@ nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer,
       }
     }
     else if (content->IsXULElement(nsGkAtoms::treeseparator)) {
-      if (! content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
-                                 nsGkAtoms::_true, eCaseMatters))
+      if (!content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
+                                             nsGkAtoms::_true, eCaseMatters))
         (*aIndex)++;
     }
   }
@@ -1578,8 +1580,9 @@ nsTreeContentView::GetCell(nsIContent* aContainer, nsTreeColumn& aCol)
   dom::FlattenedChildIterator iter(aContainer);
   for (nsIContent* cell = iter.GetNextChild(); cell; cell = iter.GetNextChild()) {
     if (cell->IsXULElement(nsGkAtoms::treecell)) {
-      if (colAtom && cell->AttrValueIs(kNameSpaceID_None, nsGkAtoms::ref,
-                                       colAtom, eCaseMatters)) {
+      if (colAtom &&
+          cell->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::ref,
+                                         colAtom, eCaseMatters)) {
         result = cell->AsElement();
         break;
       }

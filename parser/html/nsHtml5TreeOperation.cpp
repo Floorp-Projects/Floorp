@@ -656,7 +656,7 @@ nsHtml5TreeOperation::SetFormElement(nsIContent* aNode, nsIContent* aParent)
   NS_ASSERTION(formElement, "The form element doesn't implement nsIDOMHTMLFormElement.");
   // avoid crashing on <keygen>
   if (formControl &&
-      !aNode->HasAttr(kNameSpaceID_None, nsGkAtoms::form)) {
+      !aNode->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::form)) {
     formControl->SetForm(formElement);
   } else if (domImageElement) {
     domImageElement->SetForm(formElement);

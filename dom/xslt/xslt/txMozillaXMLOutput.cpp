@@ -752,10 +752,10 @@ txMozillaXMLOutput::endHTMLElement(nsIContent* aElement)
     else if (mCreatingNewDocument && aElement->IsHTMLElement(nsGkAtoms::meta)) {
         // handle HTTP-EQUIV data
         nsAutoString httpEquiv;
-        aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, httpEquiv);
+        aElement->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, httpEquiv);
         if (!httpEquiv.IsEmpty()) {
             nsAutoString value;
-            aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::content, value);
+            aElement->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::content, value);
             if (!value.IsEmpty()) {
                 nsContentUtils::ASCIIToLower(httpEquiv);
                 RefPtr<nsAtom> header = NS_Atomize(httpEquiv);

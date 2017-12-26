@@ -641,11 +641,10 @@ ARIAGridCellAccessible::ApplyARIAState(uint64_t* aState) const
     return;
 
   nsIContent *rowContent = row->GetContent();
-  if (nsAccUtils::HasDefinedARIAToken(rowContent,
-                                      nsGkAtoms::aria_selected) &&
-      !rowContent->AttrValueIs(kNameSpaceID_None,
-                               nsGkAtoms::aria_selected,
-                               nsGkAtoms::_false, eCaseMatters))
+  if (nsAccUtils::HasDefinedARIAToken(rowContent, nsGkAtoms::aria_selected) &&
+      !rowContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                            nsGkAtoms::aria_selected,
+                                            nsGkAtoms::_false, eCaseMatters))
     *aState |= states::SELECTABLE | states::SELECTED;
 }
 

@@ -401,7 +401,7 @@ PromptDelegate.prototype = {
       return true;
 
     } catch (ex) {
-      Cu.reportError("Failed to change modal state: " + e);
+      Cu.reportError("Failed to change modal state: " + ex);
     }
     return false;
   },

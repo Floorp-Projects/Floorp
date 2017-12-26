@@ -791,7 +791,7 @@ nsImageMap::UpdateAreas()
 void
 nsImageMap::AddArea(HTMLAreaElement* aArea)
 {
-  static nsIContent::AttrValuesArray strings[] =
+  static Element::AttrValuesArray strings[] =
     {&nsGkAtoms::rect, &nsGkAtoms::rectangle,
      &nsGkAtoms::circle, &nsGkAtoms::circ,
      &nsGkAtoms::_default,
@@ -801,8 +801,8 @@ nsImageMap::AddArea(HTMLAreaElement* aArea)
   UniquePtr<Area> area;
   switch (aArea->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::shape,
                                  strings, eIgnoreCase)) {
-  case nsIContent::ATTR_VALUE_NO_MATCH:
-  case nsIContent::ATTR_MISSING:
+  case Element::ATTR_VALUE_NO_MATCH:
+  case Element::ATTR_MISSING:
   case 0:
   case 1:
     area = MakeUnique<RectArea>(aArea);

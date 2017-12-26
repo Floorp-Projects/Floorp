@@ -43,8 +43,9 @@ nsListItemFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                              const nsDisplayListSet& aLists)
 {
   if (aBuilder->IsForEventDelivery()) {
-    if (!mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::allowevents,
-                               nsGkAtoms::_true, eCaseMatters))
+    if (!mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                            nsGkAtoms::allowevents,
+                                            nsGkAtoms::_true, eCaseMatters))
       return;
   }
 

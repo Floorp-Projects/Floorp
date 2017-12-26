@@ -13,7 +13,10 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const Actions = require("../actions/index");
 const { updateFormDataSections } = require("../utils/request-utils");
-const { getSelectedRequest } = require("../selectors/index");
+const {
+  getSelectedRequest,
+  isSelectedRequestVisible,
+} = require("../selectors/index");
 
 // Components
 const SplitBox = createFactory(require("devtools/client/shared/components/splitter/SplitBox"));
@@ -38,6 +41,7 @@ class MonitorPanel extends Component {
       networkDetailsOpen: PropTypes.bool.isRequired,
       openNetworkDetails: PropTypes.func.isRequired,
       request: PropTypes.object,
+      selectedRequestVisible: PropTypes.func.isRequired,
       sourceMapService: PropTypes.object,
       openLink: PropTypes.func,
       updateRequest: PropTypes.func.isRequired,
@@ -60,6 +64,13 @@ class MonitorPanel extends Component {
 
   componentWillReceiveProps(nextProps) {
     updateFormDataSections(nextProps);
+  }
+
+  componentDidUpdate() {
+    let { selectedRequestVisible, openNetworkDetails } = this.props;
+    if (!selectedRequestVisible) {
+      openNetworkDetails(false);
+    }
   }
 
   componentWillUnmount() {
@@ -128,6 +139,7 @@ module.exports = connect(
     isEmpty: state.requests.requests.isEmpty(),
     networkDetailsOpen: state.ui.networkDetailsOpen,
     request: getSelectedRequest(state),
+    selectedRequestVisible: isSelectedRequestVisible(state),
   }),
   (dispatch) => ({
     openNetworkDetails: (open) => dispatch(Actions.openNetworkDetails(open)),

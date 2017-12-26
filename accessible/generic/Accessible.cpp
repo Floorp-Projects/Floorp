@@ -153,12 +153,12 @@ Accessible::Name(nsString& aName)
 
   // In the end get the name from tooltip.
   if (mContent->IsHTMLElement()) {
-    if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aName)) {
+    if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aName)) {
       aName.CompressWhitespace();
       return eNameFromTooltip;
     }
   } else if (mContent->IsXULElement()) {
-    if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext, aName)) {
+    if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext, aName)) {
       aName.CompressWhitespace();
       return eNameFromTooltip;
     }
@@ -202,9 +202,9 @@ Accessible::Description(nsString& aDescription)
     if (aDescription.IsEmpty()) {
       // Keep the Name() method logic.
       if (mContent->IsHTMLElement()) {
-        mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aDescription);
+        mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::title, aDescription);
       } else if (mContent->IsXULElement()) {
-        mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext, aDescription);
+        mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext, aDescription);
       } else if (mContent->IsSVGElement()) {
         for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
              childElm = childElm->GetNextSibling()) {
@@ -451,7 +451,7 @@ Accessible::NativeState()
 
   // Check if a XUL element has the popup attribute (an attached popup menu).
   if (HasOwnContent() && mContent->IsXULElement() &&
-      mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popup))
+      mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::popup))
     state |= states::HASPOPUP;
 
   // Bypass the link states specialization for non links.
@@ -491,8 +491,9 @@ Accessible::NativelyUnavailable() const
   if (mContent->IsHTMLElement())
     return mContent->AsElement()->State().HasState(NS_EVENT_STATE_DISABLED);
 
-  return mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
-                               nsGkAtoms::_true, eCaseMatters);
+  return mContent->IsElement() &&
+    mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                                       nsGkAtoms::_true, eCaseMatters);
 }
 
 Accessible*
@@ -827,9 +828,10 @@ Accessible::XULElmName(DocAccessible* aDocument,
   nsAutoString ancestorTitle;
   while (parent) {
     if (parent->IsXULElement(nsGkAtoms::toolbaritem) &&
-        parent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, ancestorTitle)) {
+        parent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::title, ancestorTitle)) {
       // Before returning this, check if the element itself has a tooltip:
-      if (aElm->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext, aName)) {
+      if (aElm->IsElement() &&
+          aElm->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext, aName)) {
         aName.CompressWhitespace();
         return;
       }
@@ -944,7 +946,7 @@ Accessible::Attributes()
   } else {
     // 'xml-roles' attribute coming from ARIA.
     nsAutoString xmlRoles;
-    if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::role, xmlRoles))
+    if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::role, xmlRoles))
       nsAccUtils::SetAccAttr(attributes, nsGkAtoms::xmlroles, xmlRoles);
   }
 
@@ -1065,7 +1067,7 @@ Accessible::NativeAttributes()
 
   // Expose class because it may have useful microformat information.
   nsAutoString _class;
-  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, _class))
+  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, _class))
     nsAccUtils::SetAccAttr(attributes, nsGkAtoms::_class, _class);
 
   // Expose tag.
@@ -1179,9 +1181,10 @@ Accessible::State()
   // it as selected to make ARIA widget authors life easier.
   const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
   if (roleMapEntry && !(state & states::SELECTED) &&
-      !mContent->AttrValueIs(kNameSpaceID_None,
-                             nsGkAtoms::aria_selected,
-                             nsGkAtoms::_false, eCaseMatters)) {
+      (!mContent->IsElement() ||
+       !mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                           nsGkAtoms::aria_selected,
+                                           nsGkAtoms::_false, eCaseMatters))) {
     // Special case for tabs: focused tab or focus inside related tab panel
     // implies selected state.
     if (roleMapEntry->role == roles::PAGETAB) {
@@ -1339,10 +1342,14 @@ Accessible::Value(nsString& aValue)
     // aria-valuenow is a number, and aria-valuetext is the optional text
     // equivalent. For the string value, we will try the optional text
     // equivalent first.
-    if (!mContent->GetAttr(kNameSpaceID_None,
-                           nsGkAtoms::aria_valuetext, aValue)) {
-      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_valuenow,
-                        aValue);
+    if (!mContent->IsElement()) {
+      return;
+    }
+
+    if (!mContent->AsElement()->GetAttr(kNameSpaceID_None,
+                                        nsGkAtoms::aria_valuetext, aValue)) {
+      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_valuenow,
+                                     aValue);
     }
     return;
   }
@@ -1454,10 +1461,11 @@ Accessible::ARIATransformRole(role aRole)
       return roles::TOGGLE_BUTTON;
     }
 
-    if (mContent->AttrValueIs(kNameSpaceID_None,
-                              nsGkAtoms::aria_haspopup,
-                              nsGkAtoms::_true,
-                              eCaseMatters)) {
+    if (mContent->IsElement() &&
+        mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                           nsGkAtoms::aria_haspopup,
+                                           nsGkAtoms::_true,
+                                           eCaseMatters)) {
       // For button with aria-haspopup="true".
       return roles::BUTTONMENU;
     }
@@ -1482,8 +1490,9 @@ Accessible::ARIATransformRole(role aRole)
 
   } else if (aRole == roles::MENUITEM) {
     // Menuitem has a submenu.
-    if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_haspopup,
-                              nsGkAtoms::_true, eCaseMatters)) {
+    if (mContent->IsElement() &&
+        mContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_haspopup,
+                                           nsGkAtoms::_true, eCaseMatters)) {
       return roles::PARENT_MENUITEM;
     }
   }
@@ -1597,7 +1606,10 @@ Accessible::GetAtomicRegion() const
 {
   nsIContent *loopContent = mContent;
   nsAutoString atomic;
-  while (loopContent && !loopContent->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_atomic, atomic))
+  while (loopContent &&
+         (!loopContent->IsElement() ||
+          !loopContent->AsElement()->GetAttr(kNameSpaceID_None,
+                                             nsGkAtoms::aria_atomic, atomic)))
     loopContent = loopContent->GetParent();
 
   return atomic.EqualsLiteral("true") ? loopContent : nullptr;
@@ -1987,7 +1999,9 @@ Accessible::ARIAName(nsString& aName)
   }
 
   if (aName.IsEmpty() &&
-      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_label, aName)) {
+      mContent->IsElement() &&
+      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_label,
+                                     aName)) {
     aName.CompressWhitespace();
   }
 }
@@ -2544,7 +2558,8 @@ bool
 Accessible::AreItemsOperable() const
 {
   return HasOwnContent() &&
-    mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_activedescendant);
+    mContent->IsElement() &&
+    mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_activedescendant);
 }
 
 Accessible*
@@ -2556,8 +2571,9 @@ Accessible::CurrentItem()
   // with the aria-activedescendant attribute.
   nsAutoString id;
   if (HasOwnContent() &&
-      mContent->GetAttr(kNameSpaceID_None,
-                        nsGkAtoms::aria_activedescendant, id)) {
+      mContent->IsElement() &&
+      mContent->AsElement()->GetAttr(kNameSpaceID_None,
+                                     nsGkAtoms::aria_activedescendant, id)) {
     nsIDocument* DOMDoc = mContent->OwnerDoc();
     dom::Element* activeDescendantElm = DOMDoc->GetElementById(id);
     if (activeDescendantElm) {
@@ -2590,8 +2606,9 @@ Accessible::ContainerWidget() const
     for (Accessible* parent = Parent(); parent; parent = parent->Parent()) {
       nsIContent* parentContent = parent->GetContent();
       if (parentContent &&
-        parentContent->HasAttr(kNameSpaceID_None,
-                               nsGkAtoms::aria_activedescendant)) {
+          parentContent->IsElement() &&
+          parentContent->AsElement()->HasAttr(kNameSpaceID_None,
+                                              nsGkAtoms::aria_activedescendant)) {
         return parent;
       }
 
@@ -2664,7 +2681,8 @@ Accessible::AttrNumericValue(nsAtom* aAttr) const
     return UnspecifiedNaN<double>();
 
   nsAutoString attrValue;
-  if (!mContent->GetAttr(kNameSpaceID_None, aAttr, attrValue))
+  if (!mContent->IsElement() ||
+      !mContent->AsElement()->GetAttr(kNameSpaceID_None, aAttr, attrValue))
     return UnspecifiedNaN<double>();
 
   nsresult error = NS_OK;
@@ -2680,7 +2698,7 @@ Accessible::GetActionRule() const
 
   // Return "click" action on elements that have an attached popup menu.
   if (mContent->IsXULElement())
-    if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popup))
+    if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::popup))
       return eClickAction;
 
   // Has registered 'click' event handler.

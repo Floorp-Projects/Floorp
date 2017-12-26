@@ -2361,7 +2361,7 @@ void HTMLMediaElement::LoadFromSourceChildren()
   AddMutationObserverUnlessExists(this);
 
   while (true) {
-    nsIContent* child = GetNextSource();
+    Element* child = GetNextSource();
     if (!child) {
       // Exhausted candidates, wait for more candidates to be appended to
       // the media element.
@@ -6769,7 +6769,8 @@ void HTMLMediaElement::NotifyAddedSource()
   }
 }
 
-nsIContent* HTMLMediaElement::GetNextSource()
+Element*
+HTMLMediaElement::GetNextSource()
 {
   mSourceLoadCandidate = nullptr;
 
@@ -6788,7 +6789,7 @@ nsIContent* HTMLMediaElement::GetNextSource()
     // If child is a <source> element, it is the next candidate.
     if (child && child->IsHTMLElement(nsGkAtoms::source)) {
       mSourceLoadCandidate = child;
-      return child;
+      return child->AsElement();
     }
   }
   NS_NOTREACHED("Execution should not reach here!");
