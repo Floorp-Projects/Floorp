@@ -9,12 +9,12 @@ import os
 import sys
 import shutil
 import tempfile
-import urllib2
 import zipfile
 import hashlib
 from xml.dom import minidom
 
-from six import reraise
+from six import reraise, string_types
+from six.moves.urllib import request
 
 import mozfile
 from mozlog.unstructured import getLogger
@@ -113,7 +113,7 @@ class AddonManager(object):
         :param target_folder: Folder to store the XPI file in
 
         """
-        response = urllib2.urlopen(url)
+        response = request.urlopen(url)
         fd, path = tempfile.mkstemp(suffix='.xpi')
         os.write(fd, response.read())
         os.close(fd)
@@ -177,14 +177,14 @@ class AddonManager(object):
 
         # install addon paths
         if addons:
-            if isinstance(addons, basestring):
+            if isinstance(addons, string_types):
                 addons = [addons]
             for addon in set(addons):
                 self.install_from_path(addon)
 
         # install addon manifests
         if manifests:
-            if isinstance(manifests, basestring):
+            if isinstance(manifests, string_types):
                 manifests = [manifests]
             for manifest in manifests:
                 self.install_from_manifest(manifest)
@@ -235,7 +235,7 @@ class AddonManager(object):
 
         .. _query-documentation: https://developer.mozilla.org/en/addons.mozilla.org_%28AMO%29_API_Developers%27_Guide/The_generic_AMO_API # noqa
         """
-        response = urllib2.urlopen(query)
+        response = request.urlopen(query)
         dom = minidom.parseString(response.read())
         for node in dom.getElementsByTagName('install')[0].childNodes:
             if node.nodeType == node.TEXT_NODE:
@@ -353,7 +353,7 @@ class AddonManager(object):
                 reraise(AddonFormatError(str(e)), None, sys.exc_info()[2])
 
         # turn unpack into a true/false value
-        if isinstance(details['unpack'], basestring):
+        if isinstance(details['unpack'], string_types):
             details['unpack'] = details['unpack'].lower() == 'true'
 
         # If no ID is set, the add-on is invalid
