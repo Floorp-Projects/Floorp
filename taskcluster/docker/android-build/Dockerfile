@@ -95,12 +95,6 @@ COPY topsrcdir/taskcluster/docker/recipes/common.sh /setup/common.sh
 # %include taskcluster/docker/recipes/install-mercurial.sh
 COPY topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
 
-# %include taskcluster/docker/recipes/install-make.sh
-COPY topsrcdir/taskcluster/docker/recipes/install-make.sh /setup/install-make.sh
-
-# %include taskcluster/docker/recipes/install-cmake.sh
-COPY topsrcdir/taskcluster/docker/recipes/install-cmake.sh /setup/install-cmake.sh
-
 # %include taskcluster/docker/recipes/debian-build-system-setup.sh
 COPY topsrcdir/taskcluster/docker/recipes/debian-build-system-setup.sh /setup/system-setup.sh
 
