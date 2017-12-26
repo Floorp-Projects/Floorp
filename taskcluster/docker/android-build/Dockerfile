@@ -16,12 +16,6 @@ VOLUME /builds/worker/checkouts
 VOLUME /builds/worker/workspace
 VOLUME /builds/worker/tooltool-cache
 
-# Add build scripts; these are the entry points from the taskcluster worker, and
-# operate on environment variables
-# %include taskcluster/docker/desktop-build/bin/
-COPY topsrcdir/taskcluster/docker/desktop-build/bin/ /builds/worker/bin/
-RUN chmod +x /builds/worker/bin/*
-
 # Add common hg configuration.
 # %include taskcluster/docker/centos6-build/hgrc
 COPY topsrcdir/taskcluster/docker/centos6-build/hgrc /builds/worker/.hgrc
