@@ -358,8 +358,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
         if (aWidgetType == NS_THEME_CHECKMENUITEM ||
             aWidgetType == NS_THEME_RADIOMENUITEM) {
           *aWidgetFlags = 0;
-          if (aFrame && aFrame->GetContent()) {
-            *aWidgetFlags = aFrame->GetContent()->
+          if (aFrame && aFrame->GetContent() &&
+              aFrame->GetContent()->IsElement()) {
+            *aWidgetFlags = aFrame->GetContent()->AsElement()->
               AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
                           nsGkAtoms::_true, eIgnoreCase);
           }

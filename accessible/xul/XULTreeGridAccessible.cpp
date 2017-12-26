@@ -822,14 +822,14 @@ XULTreeGridCellAccessible::IsEditable() const
   if (!columnElm)
     return false;
 
-  nsCOMPtr<nsIContent> columnContent(do_QueryInterface(columnElm));
+  nsCOMPtr<Element> columnContent(do_QueryInterface(columnElm));
   if (!columnContent->AttrValueIs(kNameSpaceID_None,
                                   nsGkAtoms::editable,
                                   nsGkAtoms::_true,
                                   eCaseMatters))
     return false;
 
-  return mContent->AttrValueIs(kNameSpaceID_None,
-                               nsGkAtoms::editable,
-                               nsGkAtoms::_true, eCaseMatters);
+  return mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                            nsGkAtoms::editable,
+                                            nsGkAtoms::_true, eCaseMatters);
 }

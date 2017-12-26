@@ -257,8 +257,10 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
 
-  nsCOMPtr<nsIContent> content = mFrame->GetContent();
-  bool supportsMultiple = content && content->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
+  RefPtr<HTMLInputElement> inputElement =
+    HTMLInputElement::FromContent(mFrame->GetContent());
+  bool supportsMultiple =
+    inputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
   if (!CanDropTheseFiles(dataTransfer, supportsMultiple)) {
     dataTransfer->SetDropEffect(NS_LITERAL_STRING("none"));
     aEvent->StopPropagation();
@@ -277,11 +279,6 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
     aEvent->StopPropagation();
     aEvent->PreventDefault();
 
-    NS_ASSERTION(content, "The frame has no content???");
-
-    HTMLInputElement* inputElement = HTMLInputElement::FromContent(content);
-    NS_ASSERTION(inputElement, "No input element for this file upload control frame!");
-
     nsCOMPtr<nsIDOMFileList> fileList;
     dataTransfer->GetFiles(getter_AddRefs(fileList));
 
@@ -292,7 +289,7 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
 
     nsTArray<OwningFileOrDirectory> array;
     if (webkitDir) {
-      AppendBlobImplAsDirectory(array, webkitDir, content);
+      AppendBlobImplAsDirectory(array, webkitDir, inputElement);
       inputElement->MozSetDndFilesAndDirectories(array);
     } else {
       bool blinkFileSystemEnabled =
@@ -306,7 +303,7 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
             File* file = files->Item(i);
             if (file) {
               if (file->Impl() && file->Impl()->IsDirectory()) {
-                AppendBlobImplAsDirectory(array, file->Impl(), content);
+                AppendBlobImplAsDirectory(array, file->Impl(), inputElement);
               } else {
                 OwningFileOrDirectory* element = array.AppendElement();
                 element->SetAsFile() = file;
@@ -333,10 +330,12 @@ nsFileControlFrame::DnDListener::HandleEvent(nsIDOMEvent* aEvent)
         inputElement->SetFiles(fileList, true);
       }
 
-      nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
+      nsContentUtils::DispatchTrustedEvent(inputElement->OwnerDoc(),
+                                           static_cast<nsINode*>(inputElement),
                                            NS_LITERAL_STRING("input"), true,
                                            false);
-      nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
+      nsContentUtils::DispatchTrustedEvent(inputElement->OwnerDoc(),
+                                           static_cast<nsINode*>(inputElement),
                                            NS_LITERAL_STRING("change"), true,
                                            false);
     }
@@ -454,7 +453,7 @@ nsFileControlFrame::AttributeChanged(int32_t  aNameSpaceID,
       mBrowseFilesOrDirs->UnsetAttr(aNameSpaceID, aAttribute, true);
     } else {
       nsAutoString value;
-      mContent->GetAttr(aNameSpaceID, aAttribute, value);
+      mContent->AsElement()->GetAttr(aNameSpaceID, aAttribute, value);
       mBrowseFilesOrDirs->SetAttr(aNameSpaceID, aAttribute, value, true);
     }
   }

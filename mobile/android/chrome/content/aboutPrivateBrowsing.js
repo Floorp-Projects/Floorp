@@ -21,7 +21,7 @@ XPCOMUtils.defineLazyGetter(window, "gChromeWin", () =>
     .QueryInterface(Ci.nsIDOMChromeWindow));
 
 document.addEventListener("DOMContentLoaded", function() {
-    let BrowserApp = gChromeWin.BrowserApp;
+    let BrowserApp = window.gChromeWin.BrowserApp;
 
     if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
       document.body.setAttribute("class", "normal");

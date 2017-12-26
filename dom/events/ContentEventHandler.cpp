@@ -546,14 +546,14 @@ ContentEventHandler::QueryContentRect(nsIContent* aContent,
 static bool IsContentBR(nsIContent* aContent)
 {
   return aContent->IsHTMLElement(nsGkAtoms::br) &&
-         !aContent->AttrValueIs(kNameSpaceID_None,
-                                nsGkAtoms::type,
-                                nsGkAtoms::moz,
-                                eIgnoreCase) &&
-         !aContent->AttrValueIs(kNameSpaceID_None,
-                                nsGkAtoms::mozeditorbogusnode,
-                                nsGkAtoms::_true,
-                                eIgnoreCase);
+         !aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                             nsGkAtoms::type,
+                                             nsGkAtoms::moz,
+                                             eIgnoreCase) &&
+         !aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
+                                             nsGkAtoms::mozeditorbogusnode,
+                                             nsGkAtoms::_true,
+                                             eIgnoreCase);
 }
 
 static bool IsMozBR(nsIContent* aContent)

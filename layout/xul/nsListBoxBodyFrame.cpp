@@ -658,12 +658,11 @@ nsListBoxBodyFrame::GetFixedRowSize()
   nsresult dummy;
 
   nsAutoString rows;
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::rows, rows);
   if (!rows.IsEmpty())
     return rows.ToInteger(&dummy);
 
-  mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::size, rows);
-
+  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::size, rows);
   if (!rows.IsEmpty())
     return rows.ToInteger(&dummy);
 

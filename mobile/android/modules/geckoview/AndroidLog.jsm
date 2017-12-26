@@ -88,5 +88,6 @@ var AndroidLog = {
 
 if (typeof Components == "undefined") {
   // Specify exported symbols for require.js module loader.
+  // eslint-disable-next-line no-undef
   module.exports = AndroidLog;
 }

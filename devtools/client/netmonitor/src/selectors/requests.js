@@ -129,6 +129,13 @@ const getSelectedRequest = createSelector(
   ({ selectedId, requests }) => selectedId ? requests.get(selectedId) : undefined
 );
 
+const isSelectedRequestVisible = createSelector(
+  state => state.requests,
+  getDisplayedRequests,
+  ({ selectedId }, displayedRequests) =>
+    displayedRequests.some(r => r.id === selectedId)
+);
+
 function getRequestById(state, id) {
   return state.requests.requests.get(id);
 }
@@ -154,4 +161,5 @@ module.exports = {
   getSelectedRequest,
   getSortedRequests,
   getTypeFilteredRequests,
+  isSelectedRequestVisible,
 };

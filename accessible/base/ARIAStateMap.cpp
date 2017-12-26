@@ -23,7 +23,7 @@ struct EnumTypeData
   nsStaticAtom* const mAttrName;
 
   // States if the attribute value is matched to the enum value. Used as
-  // nsIContent::AttrValuesArray, last item must be nullptr.
+  // Element::AttrValuesArray, last item must be nullptr.
   nsStaticAtom* const* const mValues[4];
 
   // States applied if corresponding enum values are matched.
