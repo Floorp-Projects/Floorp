@@ -753,8 +753,12 @@
          }
 
          let isDir, isSymLink;
-         if (!("d_type" in contents)) {
-           // |dirent| doesn't have d_type on some platforms (e.g. Solaris).
+         if (!("d_type" in contents) || !("DT_UNKNOWN" in Const) || contents.d_type == Const.DT_UNKNOWN) {
+           // File type information is not available in d_type. The cases are:
+           // 1. |dirent| doesn't have d_type on some platforms (e.g. Solaris).
+           // 2. DT_UNKNOWN and other DT_ constants are not defined.
+           // 3. d_type is set to unknown (e.g. not supported by the
+           //    filesystem).
            let path = Path.join(this._path, name);
            throw_on_negative("lstat", UnixFile.lstat(path, gStatDataPtr), this._path);
            isDir = (gStatData.st_mode & Const.S_IFMT) == Const.S_IFDIR;
