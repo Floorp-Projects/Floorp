@@ -1,0 +1,39 @@
+diff --git a/media/libcubeb/src/cubeb_wasapi.cpp b/media/libcubeb/src/cubeb_wasapi.cpp
+--- a/media/libcubeb/src/cubeb_wasapi.cpp
++++ b/media/libcubeb/src/cubeb_wasapi.cpp
+@@ -1120,33 +1120,33 @@ stream_set_volume(cubeb_stream * stm, fl
+   stm->stream_reset_lock.assert_current_thread_owns();
+ 
+   if (!stm->audio_stream_volume) {
+     return CUBEB_ERROR;
+   }
+ 
+   uint32_t channels;
+   HRESULT hr = stm->audio_stream_volume->GetChannelCount(&channels);
+-  if (hr != S_OK) {
++  if (FAILED(hr)) {
+     LOG("could not get the channel count: %lx", hr);
+     return CUBEB_ERROR;
+   }
+ 
+   /* up to 9.1 for now */
+   if (channels > 10) {
+     return CUBEB_ERROR_NOT_SUPPORTED;
+   }
+ 
+   float volumes[10];
+   for (uint32_t i = 0; i < channels; i++) {
+     volumes[i] = volume;
+   }
+ 
+   hr = stm->audio_stream_volume->SetAllVolumes(channels,  volumes);
+-  if (hr != S_OK) {
++  if (FAILED(hr)) {
+     LOG("could not set the channels volume: %lx", hr);
+     return CUBEB_ERROR;
+   }
+ 
+   return CUBEB_OK;
+ }
+ } // namespace anonymous
+ 
