@@ -1037,7 +1037,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "e51286180326"
+        "revision": "bad9c6ea5e1b"
     }, 
     "or": {
         "platforms": [
@@ -1337,7 +1337,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "6a9a3fab798b"
+        "revision": "722c46af3b27"
     }, 
     "ur": {
         "platforms": [
