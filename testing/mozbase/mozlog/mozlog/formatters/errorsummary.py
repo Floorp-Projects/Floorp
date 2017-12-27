@@ -38,7 +38,7 @@ class ErrorSummaryFormatter(BaseFormatter):
 
     def suite_start(self, item):
         self.groups = {v: k for k in item["tests"] for v in item["tests"][k]}
-        return self._output("test_groups", {"groups": item["tests"].keys()})
+        return self._output("test_groups", {"groups": list(item["tests"].keys())})
 
     def test_status(self, item):
         if "expected" not in item:
