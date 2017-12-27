@@ -64,7 +64,6 @@ nsMathMLmfencedFrame::AttributeChanged(int32_t         aNameSpaceID,
                                        nsAtom*        aAttribute,
                                        int32_t         aModType)
 {
-  MarkNeedsDisplayItemRebuild();
   RemoveFencesAndSeparators();
   CreateFencesAndSeparators(PresContext());
 
@@ -84,6 +83,7 @@ nsMathMLmfencedFrame::ChildListChanged(int32_t aModType)
 void
 nsMathMLmfencedFrame::RemoveFencesAndSeparators()
 {
+  MarkNeedsDisplayItemRebuild();
   delete mOpenChar;
   delete mCloseChar;
   if (mSeparatorsChar) delete[] mSeparatorsChar;
