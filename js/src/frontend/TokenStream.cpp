@@ -1122,6 +1122,22 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getDirectives(bool isMultiline,
            getSourceMappingURL(isMultiline, shouldWarnDeprecated);
 }
 
+template<class AnyCharsAccess>
+MOZ_MUST_USE bool
+TokenStreamChars<char16_t, AnyCharsAccess>::copyTokenbufTo(JSContext* cx,
+                                                           UniquePtr<char16_t[], JS::FreePolicy>* destination)
+{
+    size_t length = tokenbuf.length();
+
+    *destination = cx->make_pod_array<char16_t>(length + 1);
+    if (!*destination)
+        return false;
+
+    PodCopy(destination->get(), tokenbuf.begin(), length);
+    (*destination)[length] = '\0';
+    return true;
+}
+
 template<typename CharT, class AnyCharsAccess>
 MOZ_MUST_USE bool
 TokenStreamSpecific<CharT, AnyCharsAccess>::getDirective(bool isMultiline,
@@ -1185,16 +1201,7 @@ TokenStreamSpecific<CharT, AnyCharsAccess>::getDirective(bool isMultiline,
         return true;
     }
 
-    size_t length = tokenbuf.length();
-
-    *destination = anyCharsAccess().cx->template make_pod_array<char16_t>(length + 1);
-    if (!*destination)
-        return false;
-
-    PodCopy(destination->get(), tokenbuf.begin(), length);
-    (*destination)[length] = '\0';
-
-    return true;
+    return copyTokenbufTo(anyCharsAccess().cx, destination);
 }
 
 template<typename CharT, class AnyCharsAccess>
