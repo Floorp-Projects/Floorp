@@ -13,6 +13,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import android.content.SharedPreferences;
+import android.support.annotation.CheckResult;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -385,11 +386,12 @@ public class Tabs implements BundleEventListener {
     /**
      * Gets the selected tab.
      *
-     * The selected tab can be null if we're doing a session restore after a
-     * crash and Gecko isn't ready yet.
+     * The selected tab can be null immediately after startup, in the worst case until after Gecko
+     * is up and running.
      *
      * @return the selected tab, or null if no tabs exist
      */
+    @CheckResult
     @Nullable
     public Tab getSelectedTab() {
         return mSelectedTab;
