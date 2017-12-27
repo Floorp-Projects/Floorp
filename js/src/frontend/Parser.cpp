@@ -8951,8 +8951,11 @@ Parser<FullParseHandler, CharT>::newRegExp()
 {
     MOZ_ASSERT(!options().selfHostingMode);
 
+    static_assert(mozilla::IsSame<CharT, char16_t>::value,
+                  "code below will need changing for UTF-8 handling");
+
     // Create the regexp and check its syntax.
-    const char16_t* chars = tokenStream.getTokenbuf().begin();
+    const CharT* chars = tokenStream.getTokenbuf().begin();
     size_t length = tokenStream.getTokenbuf().length();
     RegExpFlag flags = anyChars.currentToken().regExpFlags();
 
@@ -8970,12 +8973,15 @@ Parser<SyntaxParseHandler, CharT>::newRegExp()
 {
     MOZ_ASSERT(!options().selfHostingMode);
 
+    static_assert(mozilla::IsSame<CharT, char16_t>::value,
+                  "code below will need changing for UTF-8 handling");
+
     // Only check the regexp's syntax, but don't create a regexp object.
-    const char16_t* chars = tokenStream.getTokenbuf().begin();
+    const CharT* chars = tokenStream.getTokenbuf().begin();
     size_t length = tokenStream.getTokenbuf().length();
     RegExpFlag flags = anyChars.currentToken().regExpFlags();
 
-    mozilla::Range<const char16_t> source(chars, length);
+    mozilla::Range<const CharT> source(chars, length);
     if (!js::irregexp::ParsePatternSyntax(anyChars, alloc, source, flags & UnicodeFlag))
         return null();
 
