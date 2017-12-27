@@ -253,7 +253,8 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
       const closeState = {...state};
       let messageId = action.id;
       let index = closeState.messagesUiById.indexOf(messageId);
-      closeState.messagesUiById = [...closeState.messagesUiById].splice(index, 1);
+      closeState.messagesUiById.splice(index, 1);
+      closeState.messagesUiById = [...closeState.messagesUiById];
 
       // If the message is a group
       if (isGroupType(messagesById.get(messageId).type)) {

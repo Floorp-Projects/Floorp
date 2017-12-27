@@ -6,14 +6,6 @@ VOLUME /builds/worker/checkouts
 VOLUME /builds/worker/workspace
 VOLUME /builds/worker/tooltool-cache
 
-# Add build scripts; these are the entry points from the taskcluster worker, and
-# operate on environment variables
-
-# %include taskcluster/docker/desktop-build/bin
-ADD topsrcdir/taskcluster/docker/desktop-build/bin /builds/worker/bin
-
-RUN chmod +x /builds/worker/bin/*
-
 # %include python/mozbuild/mozbuild/action/tooltool.py
 ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /builds/tooltool.py
 ADD topsrcdir/python/mozbuild/mozbuild/action/tooltool.py /setup/tooltool.py
