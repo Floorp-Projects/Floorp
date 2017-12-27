@@ -11,6 +11,7 @@ flake8:
         - python/mach
         - python/mach_commands.py
         - python/mozboot
+        - python/mozbuild/mozpack/path.py
         - python/mozlint
         - python/mozterm
         - python/mozversioncontrol
