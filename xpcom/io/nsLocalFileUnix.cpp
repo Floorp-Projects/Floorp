@@ -591,10 +591,16 @@ nsLocalFile::SetNativeLeafName(const nsACString& aLeafName)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsLocalFile::GetNativePath(nsACString& aResult)
+nsCString
+nsLocalFile::NativePath()
 {
-  aResult = mPath;
+  return mPath;
+}
+
+nsresult
+nsIFile::GetNativePath(nsACString& aResult)
+{
+  aResult = NativePath();
   return NS_OK;
 }
 
