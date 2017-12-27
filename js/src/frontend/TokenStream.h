@@ -977,6 +977,9 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
         return AnyCharsAccess::anyChars(this);
     }
 
+    MOZ_MUST_USE bool copyTokenbufTo(JSContext* cx,
+                                     UniquePtr<char16_t[], JS::FreePolicy>* destination);
+
     MOZ_ALWAYS_INLINE bool isMultiUnitCodepoint(char16_t c, uint32_t* codepoint) {
         if (MOZ_LIKELY(!unicode::IsLeadSurrogate(c)))
             return false;
@@ -1066,6 +1069,9 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     using CharsSharedBase::tokenbuf;
 
     using typename CharsSharedBase::Position;
+
+  private:
+    using CharsBase::copyTokenbufTo;
 
   public:
     TokenStreamSpecific(JSContext* cx, const ReadOnlyCompileOptions& options,
