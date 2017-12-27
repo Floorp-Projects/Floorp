@@ -84,20 +84,31 @@
   X(pa_context_set_subscribe_callback)          \
   X(pa_context_subscribe)                       \
   X(pa_mainloop_api_once)                       \
+  X(pa_get_library_version)                     \
 
 #define MAKE_TYPEDEF(x) static typeof(x) * cubeb_##x;
 LIBPULSE_API_VISIT(MAKE_TYPEDEF);
 #undef MAKE_TYPEDEF
 #endif
 
+#if PA_CHECK_VERSION(2, 0, 0)
+static int has_pulse_v2 = 0;
+#endif
+
 static struct cubeb_ops const pulse_ops;
+
+struct cubeb_default_sink_info {
+  pa_channel_map channel_map;
+  uint32_t sample_spec_rate;
+  pa_sink_flags_t flags;
+};
 
 struct cubeb {
   struct cubeb_ops const * ops;
   void * libpulse;
   pa_threaded_mainloop * mainloop;
   pa_context * context;
-  pa_sink_info * default_sink_info;
+  struct cubeb_default_sink_info * default_sink_info;
   char * context_name;
   int error;
   cubeb_device_collection_changed_callback collection_changed_callback;
@@ -153,8 +164,10 @@ sink_info_callback(pa_context * context, const pa_sink_info * info, int eol, voi
   cubeb * ctx = u;
   if (!eol) {
     free(ctx->default_sink_info);
-    ctx->default_sink_info = malloc(sizeof(pa_sink_info));
-    memcpy(ctx->default_sink_info, info, sizeof(pa_sink_info));
+    ctx->default_sink_info = malloc(sizeof(struct cubeb_default_sink_info));
+    memcpy(&ctx->default_sink_info->channel_map, &info->channel_map, sizeof(pa_channel_map));
+    ctx->default_sink_info->sample_spec_rate = info->sample_spec.rate;
+    ctx->default_sink_info->flags = info->flags;
   }
   WRAP(pa_threaded_mainloop_signal)(ctx->mainloop, 0);
 }
@@ -622,6 +635,11 @@ pulse_init(cubeb ** context, char const * context_name)
 #undef LOAD
 #endif
 
+#if PA_CHECK_VERSION(2, 0, 0)
+  const char* version = WRAP(pa_get_library_version)();
+  has_pulse_v2 = strtol(version, NULL, 10) >= 2;
+#endif
+
   ctx = calloc(1, sizeof(*ctx));
   assert(ctx);
 
@@ -689,7 +707,7 @@ pulse_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
   if (!ctx->default_sink_info)
     return CUBEB_ERROR;
 
-  *rate = ctx->default_sink_info->sample_spec.rate;
+  *rate = ctx->default_sink_info->sample_spec_rate;
 
   return CUBEB_OK;
 }
@@ -1225,7 +1243,7 @@ pulse_get_state_from_sink_port(pa_sink_port_info * info)
 {
   if (info != NULL) {
 #if PA_CHECK_VERSION(2, 0, 0)
-    if (info->available == PA_PORT_AVAILABLE_NO)
+    if (has_pulse_v2 && info->available == PA_PORT_AVAILABLE_NO)
       return CUBEB_DEVICE_STATE_UNPLUGGED;
     else /*if (info->available == PA_PORT_AVAILABLE_YES) + UNKNOWN */
 #endif
@@ -1297,7 +1315,7 @@ pulse_get_state_from_source_port(pa_source_port_info * info)
 {
   if (info != NULL) {
 #if PA_CHECK_VERSION(2, 0, 0)
-    if (info->available == PA_PORT_AVAILABLE_NO)
+    if (has_pulse_v2 && info->available == PA_PORT_AVAILABLE_NO)
       return CUBEB_DEVICE_STATE_UNPLUGGED;
     else /*if (info->available == PA_PORT_AVAILABLE_YES) + UNKNOWN */
 #endif
