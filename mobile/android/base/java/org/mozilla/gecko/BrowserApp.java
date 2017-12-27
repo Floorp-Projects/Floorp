@@ -2439,14 +2439,14 @@ public class BrowserApp extends GeckoApp
             return false;
         }
 
+        final boolean isPrivate = mBrowserToolbar.isPrivateMode();
         final Tabs tabs = Tabs.getInstance();
-        final Tab selectedTab = tabs.getSelectedTab();
         final Tab tab;
 
         if (AboutPages.isAboutReader(url)) {
-            tab = tabs.getFirstReaderTabForUrl(url, selectedTab.isPrivate());
+            tab = tabs.getFirstReaderTabForUrl(url, isPrivate);
         } else {
-            tab = tabs.getFirstTabForUrl(url, selectedTab.isPrivate());
+            tab = tabs.getFirstTabForUrl(url, isPrivate);
         }
 
         if (tab == null) {
@@ -4310,7 +4310,7 @@ public class BrowserApp extends GeckoApp
         // Don't store searches that happen in private tabs. This assumes the user can only
         // perform a search inside the currently selected tab, which is true for searches
         // that come from SearchEngineRow.
-        if (!Tabs.getInstance().getSelectedTab().isPrivate()) {
+        if (!mBrowserToolbar.isPrivateMode()) {
             storeSearchQuery(text);
         }
 
