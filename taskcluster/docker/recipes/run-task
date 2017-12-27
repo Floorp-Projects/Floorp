@@ -547,7 +547,9 @@ def main(args):
 
     prepare_checkout_dir(args.vcs_checkout)
     prepare_checkout_dir(args.tools_checkout)
-    prepare_hg_store_path()
+    prepare_checkout_dir(args.comm_checkout)
+    if args.vcs_checkout or args.tools_checkout or args.comm_checkout:
+        prepare_hg_store_path()
 
     if running_as_root:
         # Drop permissions to requested user.
