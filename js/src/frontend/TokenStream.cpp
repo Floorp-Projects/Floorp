@@ -1262,10 +1262,7 @@ bool
 TokenStreamChars<char16_t, AnyCharsAccess>::matchTrailForLeadSurrogate(char16_t lead,
                                                                        uint32_t* codePoint)
 {
-    static_assert(mozilla::IsBaseOf<TokenStreamChars<char16_t, AnyCharsAccess>,
-                                    TokenStreamSpecific<char16_t, AnyCharsAccess>>::value,
-                  "static_cast below presumes an inheritance relationship");
-    auto* ts = static_cast<TokenStreamSpecific<char16_t, AnyCharsAccess>*>(this);
+    TokenStreamSpecific* ts = asSpecific();
 
     int32_t maybeTrail = ts->getCharIgnoreEOL();
     if (!unicode::IsTrailSurrogate(maybeTrail)) {

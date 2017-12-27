@@ -133,6 +133,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
 #include <stdarg.h>
@@ -951,7 +952,17 @@ template<class AnyCharsAccess>
 class TokenStreamChars<char16_t, AnyCharsAccess>
   : public TokenStreamCharsBase<char16_t>
 {
+    using Self = TokenStreamChars<char16_t, AnyCharsAccess>;
     using CharsBase = TokenStreamCharsBase<char16_t>;
+
+    using TokenStreamSpecific = frontend::TokenStreamSpecific<char16_t, AnyCharsAccess>;
+
+    TokenStreamSpecific* asSpecific() {
+        static_assert(mozilla::IsBaseOf<Self, TokenStreamSpecific>::value,
+                      "static_cast below presumes an inheritance relationship");
+
+        return static_cast<TokenStreamSpecific*>(this);
+    }
 
     bool matchTrailForLeadSurrogate(char16_t lead, uint32_t* codePoint);
 
