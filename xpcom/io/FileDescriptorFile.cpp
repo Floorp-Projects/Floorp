@@ -120,10 +120,10 @@ FileDescriptorFile::GetPath(nsAString& aRetVal)
   return mFile->GetPath(aRetVal);
 }
 
-NS_IMETHODIMP
-FileDescriptorFile::GetNativePath(nsACString& aRetVal)
+PathString
+FileDescriptorFile::NativePath()
 {
-  return mFile->GetNativePath(aRetVal);
+  return mFile->NativePath();
 }
 
 NS_IMETHODIMP

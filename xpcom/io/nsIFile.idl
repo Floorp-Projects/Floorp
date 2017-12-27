@@ -9,11 +9,18 @@
 struct PRFileDesc;
 struct PRLibrary;
 #include <stdio.h>
+#include "mozilla/Path.h"
+#include "nsStringFwd.h"
+namespace mozilla {
+using PathString = nsTString<filesystem::Path::value_type>;
+using PathSubstring = nsTSubstring<filesystem::Path::value_type>;
+} // namespace mozilla
 %}
 
 [ptr] native PRFileDescStar(PRFileDesc);
 [ptr] native PRLibraryStar(PRLibrary);
 [ptr] native FILE(FILE);
+native PathString(mozilla::PathString);
 
 interface nsISimpleEnumerator;
 
@@ -251,7 +258,10 @@ interface nsIFile : nsISupports
     readonly attribute AString target;
     [noscript] readonly attribute ACString nativeTarget;
     readonly attribute AString path;
-    [noscript] readonly attribute ACString nativePath;
+    [notxpcom,nostdcall] PathString nativePath();
+%{C++
+    nsresult GetNativePath(nsACString& aPath);
+%}
 
     boolean exists();
     boolean isWritable();
