@@ -441,13 +441,6 @@ TokenStreamCharsBase<CharT>::TokenStreamCharsBase(JSContext* cx, const CharT* ch
     tokenbuf(cx)
 {}
 
-template<class AnyCharsAccess>
-TokenStreamChars<char16_t, AnyCharsAccess>::TokenStreamChars(JSContext* cx,
-                                                             const char16_t* base, size_t length,
-                                                             size_t startOffset)
-  : TokenStreamCharsBase<char16_t>(cx, base, length, startOffset)
-{}
-
 template<typename CharT, class AnyCharsAccess>
 TokenStreamSpecific<CharT, AnyCharsAccess>::TokenStreamSpecific(JSContext* cx,
                                                                 const ReadOnlyCompileOptions& options,

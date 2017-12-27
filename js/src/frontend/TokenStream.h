@@ -956,7 +956,7 @@ class TokenStreamChars<char16_t, AnyCharsAccess>
     bool matchTrailForLeadSurrogate(char16_t lead, uint32_t* codePoint);
 
   public:
-    TokenStreamChars(JSContext* cx, const char16_t* chars, size_t length, size_t startOffset);
+    using CharsBase::CharsBase;
 
     TokenStreamAnyChars& anyChars() {
         return AnyCharsAccess::anyChars(this);
