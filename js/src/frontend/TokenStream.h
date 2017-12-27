@@ -1054,24 +1054,23 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     // class, using explicit qualification to address the dependent-name
     // problem.  |this| or other qualification is no longer necessary -- at
     // cost of this ever-changing laundry list of |using|s.  So it goes.
-    using CharsBase::isMultiUnitCodepoint;
-    using CharsBase::atomizeChars;
-
-    using typename CharsSharedBase::CharBuffer;
-
-    using CharsSharedBase::getTokenbuf;
-
-    using typename CharsSharedBase::TokenBuf;
-
-    using CharsSharedBase::appendMultiUnitCodepointToTokenbuf;
-
-    using CharsSharedBase::userbuf;
-    using CharsSharedBase::tokenbuf;
-
+  public:
     using typename CharsSharedBase::Position;
 
+  public:
+    using CharsSharedBase::getTokenbuf;
+
   private:
+    using typename CharsSharedBase::CharBuffer;
+    using typename CharsSharedBase::TokenBuf;
+
+  private:
+    using CharsSharedBase::appendMultiUnitCodepointToTokenbuf;
+    using CharsBase::atomizeChars;
     using CharsBase::copyTokenbufTo;
+    using CharsBase::isMultiUnitCodepoint;
+    using CharsSharedBase::tokenbuf;
+    using CharsSharedBase::userbuf;
 
   public:
     TokenStreamSpecific(JSContext* cx, const ReadOnlyCompileOptions& options,
