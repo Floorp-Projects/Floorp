@@ -14,6 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
+#include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/net/WebSocketFrame.h"
 #include "mozilla/TimeStamp.h"
@@ -915,6 +916,27 @@ struct ParamTraits<mozilla::Maybe<T>>
       *result = mozilla::Nothing();
     }
     return true;
+  }
+};
+
+template<typename T>
+struct ParamTraits<mozilla::EnumSet<T>>
+{
+  typedef mozilla::EnumSet<T> paramType;
+
+  static void Write(Message* msg, const paramType& param)
+  {
+    WriteParam(msg, param.serialize());
+  }
+
+  static bool Read(const Message* msg, PickleIterator* iter, paramType* result)
+  {
+    decltype(result->serialize()) tmp;
+    if (ReadParam(msg, iter, &tmp)) {
+      result->deserialize(tmp);
+      return true;
+    }
+    return false;
   }
 };
 
