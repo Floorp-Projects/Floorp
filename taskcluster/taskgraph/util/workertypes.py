@@ -33,6 +33,7 @@ WORKER_TYPES = {
     'aws-provisioner-v1/taskcluster-generic': ('docker-worker', 'linux'),
     'buildbot-bridge/buildbot-bridge': ('buildbot-bridge', None),
     'invalid/invalid': ('invalid', None),
+    'invalid/always-optimized': ('always-optimized', None),
     'null-provisioner/human-breakpoint': ('push-apk-breakpoint', None),
     'null-provisioner/human-breakpoint': ('push-apk-breakpoint', None),
     'releng-hardware/gecko-t-linux-talos': ('native-engine', 'linux'),
