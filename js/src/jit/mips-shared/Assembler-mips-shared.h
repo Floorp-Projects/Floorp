@@ -626,7 +626,7 @@ class GSImm13
       : value(imm & ~0xf)
     { }
     uint32_t encode(uint32_t shift) {
-        return ((value >> 4) & 0x1f) << shift;
+        return ((value >> 4) & 0x1ff) << shift;
     }
     int32_t decodeSigned() {
         return value;
