@@ -537,7 +537,7 @@
             "android", 
             "android-api-16"
         ], 
-        "revision": "82fb249d5afb"
+        "revision": "d726b01f15e4"
     }, 
     "or": {
         "platforms": [
