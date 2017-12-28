@@ -146,6 +146,7 @@ following ``run-using`` are available
   * ``spidermonkey`` or ``spidermonkey-package`` or ``spidermonkey-mozjs-crate`` or ``spidermonkey-rust-bindings``
   * ``debian-package``
   * ``toolchain-script``
+  * ``always-optimized``
 
 
 Task Descriptions
