@@ -10,7 +10,7 @@ from setuptools import setup
 
 try:
     here = os.path.dirname(os.path.abspath(__file__))
-    description = file(os.path.join(here, 'README.md')).read()
+    description = open(os.path.join(here, 'README.md')).read()
 except IOError:
     description = None
 
@@ -34,7 +34,7 @@ setup(name='mozInstall',
                    'Operating System :: OS Independent',
                    'Topic :: Software Development :: Libraries :: Python Modules',
                    'Programming Language :: Python :: 2.7',
-                   'Programming Language :: Python :: 2 :: Only'],
+                   'Programming Language :: Python :: 3'],
       keywords='mozilla',
       author='Mozilla Automation and Tools team',
       author_email='tools@lists.mozilla.org',
