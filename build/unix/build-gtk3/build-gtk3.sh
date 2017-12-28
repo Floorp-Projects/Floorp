@@ -40,6 +40,7 @@ build() {
 	eval ../../$name-$version/configure --disable-static $* $configure_args --libdir=/usr/local/$lib
 	make $make_flags
 	make install
+	find /usr/local/$lib -name \*.la -delete
 	cd ../..
 }
 
