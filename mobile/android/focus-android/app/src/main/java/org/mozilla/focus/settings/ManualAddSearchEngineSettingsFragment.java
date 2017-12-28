@@ -219,6 +219,7 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
         HttpURLConnection connection = null;
         try {
             connection = (HttpURLConnection) searchURL.openConnection();
+            connection.setInstanceFollowRedirects(true);
             connection.setConnectTimeout(SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS);
             connection.setReadTimeout(SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS);
 
