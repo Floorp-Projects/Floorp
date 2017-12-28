@@ -49,7 +49,9 @@ function initExceptionDialog() {
   gDialog = document.documentElement;
   gBundleBrand = document.getElementById("brand_bundle");
   gPKIBundle = document.getElementById("pippki_bundle");
-  gSecHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
+  gSecHistogram = Components.classes["@mozilla.org/base/telemetry;1"].
+                    getService(Components.interfaces.nsITelemetry).
+                    getHistogramById("SECURITY_UI");
   gNsISecTel = Components.interfaces.nsISecurityUITelemetry;
 
   var brandName = gBundleBrand.getString("brandShortName");
@@ -141,8 +143,10 @@ function getURI() {
   // Use fixup service instead of just ioservice's newURI since it's quite
   // likely that the host will be supplied without a protocol prefix, resulting
   // in malformed uri exceptions being thrown.
+  let fus = Components.classes["@mozilla.org/docshell/urifixup;1"]
+                      .getService(Components.interfaces.nsIURIFixup);
   let locationTextBox = document.getElementById("locationTextBox");
-  let uri = Services.uriFixup.createFixupURI(locationTextBox.value, 0);
+  let uri = fus.createFixupURI(locationTextBox.value, 0);
 
   if (!uri) {
     return null;
@@ -260,7 +264,9 @@ function updateCertStatus() {
     document.getElementById("viewCertButton").disabled = false;
 
     // Notify observers about the availability of the certificate
-    Services.obs.notifyObservers(null, "cert-exception-ui-ready");
+    Components.classes["@mozilla.org/observer-service;1"]
+              .getService(Components.interfaces.nsIObserverService)
+              .notifyObservers(null, "cert-exception-ui-ready");
   } else if (gChecking) {
     shortDesc = "addExceptionCheckingShort";
     longDesc  = "addExceptionCheckingLong2";

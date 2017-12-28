@@ -6,7 +6,6 @@
 
 const { MockRegistrar } =
   Cu.import("resource://testing-common/MockRegistrar.jsm", {});
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const gMockPKCS11ModuleDB = {
   addModuleCallCount: 0,
@@ -96,7 +95,9 @@ var gMockPromptServiceCID =
 var gMockFilePicker = SpecialPowers.MockFilePicker;
 gMockFilePicker.init(window);
 
-var gTempFile = Services.dirsvc.get("TmpD", Ci.nsIFile);
+var gTempFile = Cc["@mozilla.org/file/directory_service;1"]
+                  .getService(Ci.nsIProperties)
+                  .get("TmpD", Ci.nsIFile);
 gTempFile.append("browser_loadPKCS11Module_ui-fakeModule");
 
 registerCleanupFunction(() => {
