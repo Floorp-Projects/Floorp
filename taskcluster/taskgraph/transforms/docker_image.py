@@ -1,11 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-"""
-Transform the upload-symbols task description template,
-  taskcluster/ci/upload-symbols/job-template.yml
-into an actual task description.
-"""
 
 from __future__ import absolute_import, print_function, unicode_literals
 
@@ -18,8 +13,36 @@ from taskgraph.util.docker import (
     generate_context_hash,
 )
 from taskgraph.util.cached_tasks import add_optimization
+from taskgraph.util.schema import (
+    Schema,
+    validate_schema,
+)
+from voluptuous import (
+    Optional,
+    Required,
+)
 
 transforms = TransformSequence()
+
+docker_image_schema = Schema({
+    # Name of the docker image.
+    Required('name'): basestring,
+
+    # Treeherder symbol.
+    Required('symbol'): basestring,
+
+    # relative path (from config.path) to the file the docker image was defined
+    # in.
+    Optional('job-from'): basestring,
+})
+
+
+@transforms.add
+def validate(config, tasks):
+    for task in tasks:
+        yield validate_schema(
+            docker_image_schema, task,
+            "In docker image {!r}:".format(task.get('name', 'unknown')))
 
 
 @transforms.add
