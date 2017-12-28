@@ -1339,9 +1339,9 @@ imply_option('RUSTC_OPT_LEVEL', '2', when='--enable-release')
 
 
 @depends('RUSTC_OPT_LEVEL', debug_rust, '--enable-debug-symbols',
-         moz_optimize, host, target)
+         moz_optimize)
 def rust_compiler_flags(opt_level_option, debug_rust, debug_symbols,
-                        moz_optimize, host, target):
+                        moz_optimize):
     optimize = moz_optimize.optimize
 
     # Cargo currently supports only two interesting profiles for building:
@@ -1371,11 +1371,7 @@ def rust_compiler_flags(opt_level_option, debug_rust, debug_symbols,
         debug_assertions = False
 
     if debug_symbols:
-        if host.kernel == 'Linux' and target.kernel == 'Darwin':
-            # hack to work around dsymutil failing on cross-OSX builds (bug 1410148)
-            debug_info = '0'
-        else:
-            debug_info = '2'
+        debug_info = '2'
 
     opts = []
 
