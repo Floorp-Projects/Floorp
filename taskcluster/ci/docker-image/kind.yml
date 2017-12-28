@@ -43,3 +43,5 @@ jobs:
     symbol: I(bm)
   update-verify:
     symbol: I(uv)
+  diffoscope:
+    symbol: I(diff)

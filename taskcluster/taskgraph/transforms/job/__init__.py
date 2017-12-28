@@ -193,6 +193,12 @@ def run_job_using(worker_implementation, run_using, schema=None):
     return wrap
 
 
+@run_job_using('always-optimized', 'always-optimized',
+               Schema({'using': 'always-optimized'}))
+def always_optimized(config, job, taskdesc):
+    pass
+
+
 def configure_taskdesc_for_run(config, job, taskdesc, worker_implementation):
     """
     Run the appropriate function for this job against the given task
