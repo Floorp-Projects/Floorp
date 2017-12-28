@@ -66,7 +66,9 @@ function checkModuleTelemetry(additionalExpectedModule = undefined) {
     expectedModules.push(additionalExpectedModule);
   }
   expectedModules.sort();
-  let telemetry = Services.telemetry.snapshotKeyedScalars(
+  let telemetryService = Cc["@mozilla.org/base/telemetry;1"]
+                           .getService(Ci.nsITelemetry);
+  let telemetry = telemetryService.snapshotKeyedScalars(
     Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT).parent;
   let moduleTelemetry = telemetry["security.pkcs11_modules_loaded"];
   let actualModules = [];

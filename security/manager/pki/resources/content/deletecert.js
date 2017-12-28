@@ -23,6 +23,8 @@
  *           false otherwise.
  */
 
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
 /**
  * Returns the most appropriate string to represent the given nsICertTreeItem.
  * @param {nsICertTreeItem} certTreeItem
