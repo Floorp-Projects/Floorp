@@ -132,8 +132,10 @@ var dialog = {
         elm.setAttribute("description", uri.prePath);
       } else if (app instanceof Ci.nsIDBusHandlerApp) {
         elm.setAttribute("description", app.method);
-      } else
+      } else if (!(app instanceof Ci.nsIGIOMimeApp)) {
+        // We support GIO application handler, but no action required there
         throw "unknown handler type";
+      }
 
       items.insertBefore(elm, this._itemChoose);
       if (preferredHandler && app == preferredHandler)
@@ -151,6 +153,39 @@ var dialog = {
           Ci.nsIHandlerInfo.useSystemDefault)
           this.selectedItem = elm;
     }
+
+    // Add gio handlers
+    if (Cc["@mozilla.org/gio-service;1"]) {
+      let gIOSvc = Cc["@mozilla.org/gio-service;1"]
+                     .getService(Ci.nsIGIOService);
+      var gioApps = gIOSvc.getAppsForURIScheme(this._URI.scheme);
+      let enumerator = gioApps.enumerate();
+      while (enumerator.hasMoreElements()) {
+        let handler = enumerator.getNext().QueryInterface(Ci.nsIHandlerApp);
+        // OS handler share the same name, it's most likely the same app, skipping...
+        if (handler.name == this._handlerInfo.defaultDescription) {
+          continue;
+        }
+        // Check if the handler is already in possibleHandlers
+        let appAlreadyInHandlers = false;
+        for (let i = possibleHandlers.length - 1; i >= 0; --i) {
+          let app = possibleHandlers.queryElementAt(i, Ci.nsIHandlerApp);
+          // nsGIOMimeApp::Equals is able to compare with nsILocalHandlerApp
+          if (handler.equals(app)) {
+            appAlreadyInHandlers = true;
+            break;
+          }
+        }
+        if (!appAlreadyInHandlers) {
+          let elm = document.createElement("richlistitem");
+          elm.setAttribute("type", "handler");
+          elm.setAttribute("name", handler.name);
+          elm.obj = handler;
+          items.insertBefore(elm, this._itemChoose);
+        }
+      }
+    }
+
     items.ensureSelectedElementIsVisible();
   },
 
