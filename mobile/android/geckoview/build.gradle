@@ -94,7 +94,7 @@ android {
         // This makes no sense for GeckoView and should be removed as soon as possible.
         buildConfigField 'boolean', 'NIGHTLY_BUILD', mozconfig.substs.NIGHTLY_BUILD ? 'true' : 'false';
         // This makes no sense for GeckoView and should be removed as soon as possible.
-        buildConfigField 'boolean', 'MOZ_CRASHREPORTER', mozconfig.substs.MOZ_CRASH_REPORTER ? 'true' : 'false';
+        buildConfigField 'boolean', 'MOZ_CRASHREPORTER', mozconfig.substs.MOZ_CRASHREPORTER ? 'true' : 'false';
 
         // Official corresponds, roughly, to whether this build is performed on
         // Mozilla's continuous integration infrastructure. You should disable
