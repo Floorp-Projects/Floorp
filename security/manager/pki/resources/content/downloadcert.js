@@ -29,6 +29,8 @@
  *           otherwise. Undefined value if |importConfirmed| is not true.
  */
 
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
 /**
  * The cert to potentially import.
  * @type nsIX509Cert
