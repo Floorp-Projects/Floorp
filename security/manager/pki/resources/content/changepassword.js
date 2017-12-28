@@ -4,7 +4,6 @@
 "use strict";
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
 const nsPKCS11ModuleDB = "@mozilla.org/security/pkcs11moduledb;1";
@@ -17,7 +16,9 @@ var tokenName = "";
 var pw1;
 
 function doPrompt(msg) {
-  Services.prompt.alert(window, null, msg);
+  let prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+    getService(Components.interfaces.nsIPromptService);
+  prompts.alert(window, null, msg);
 }
 
 function onLoad() {

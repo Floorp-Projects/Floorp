@@ -20,7 +20,6 @@
   function runTest() {
     let script = SpecialPowers.loadChromeScript(function() {
       const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-      const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
       // Force download to be w/o user assistance for our testing mime type
       const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
       let handlerInfo =
@@ -33,10 +32,14 @@
                            .getService(Ci.nsIHandlerService);
       handlerSvc.store(handlerInfo);
 
-      let profileDir = Services.dirsvc.get("ProfDS", Ci.nsIFile);
+      let dirProvider = Cc["@mozilla.org/file/directory_service;1"]
+                          .getService(Ci.nsIProperties);
+      let profileDir = dirProvider.get("ProfDS", Ci.nsIFile);
       profileDir.append("downloads");
 
-      let prefBranch = Services.prefs.getBranch("browser.download.");
+      let prefs = Cc["@mozilla.org/preferences-service;1"]
+                    .getService(Ci.nsIPrefService);
+      let prefBranch = prefs.getBranch("browser.download.");
 
       prefBranch.setCharPref("dir", profileDir.path);
       prefBranch.setBoolPref("useDownloadDir", true);
@@ -66,8 +69,7 @@
 
   testCleanUp = function cleanup() {
     SpecialPowers.loadChromeScript(function() {
-      const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-      const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+      const { classes: Cc, interfaces: Ci } = Components;
       const mimeSvc = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
       let handlerInfo =
         mimeSvc.getFromTypeAndExtension("application/x-auto-download", "auto");
@@ -76,7 +78,9 @@
                            .getService(Ci.nsIHandlerService);
       handlerSvc.remove(handlerInfo);
 
-      let prefBranch = Services.prefs.getBranch("browser.download.");
+      let prefs = Cc["@mozilla.org/preferences-service;1"]
+                    .getService(Ci.nsIPrefService);
+      let prefBranch = prefs.getBranch("browser.download.");
 
       const prefKeys = ["dir", "useDownloadDir", "folderList"];
       for (let prefKey of prefKeys) {

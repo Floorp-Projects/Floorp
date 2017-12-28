@@ -14,7 +14,8 @@
 do_get_profile();
 
 function check_telemetry() {
-  let histogram = Services.telemetry
+  let histogram = Cc["@mozilla.org/base/telemetry;1"]
+                    .getService(Ci.nsITelemetry)
                     .getHistogramById("SSL_CERT_ERROR_OVERRIDES")
                     .snapshot();
   equal(histogram.counts[0], 0, "Should have 0 unclassified counts");
@@ -51,7 +52,8 @@ function check_telemetry() {
   equal(histogram.counts[17], 1,
         "Actual and expected MOZILLA_PKIX_ERROR_EMPTY_ISSUER_NAME counts should match");
 
-  let keySizeHistogram = Services.telemetry
+  let keySizeHistogram = Cc["@mozilla.org/base/telemetry;1"]
+                           .getService(Ci.nsITelemetry)
                            .getHistogramById("CERT_CHAIN_KEY_SIZE_STATUS")
                            .snapshot();
   equal(keySizeHistogram.counts[0], 0,
