@@ -207,9 +207,10 @@ function test_enforce_test_mode() {
 }
 
 function check_pinning_telemetry() {
-  let prod_histogram = Services.telemetry.getHistogramById("CERT_PINNING_RESULTS")
+  let service = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+  let prod_histogram = service.getHistogramById("CERT_PINNING_RESULTS")
                          .snapshot();
-  let test_histogram = Services.telemetry.getHistogramById("CERT_PINNING_TEST_RESULTS")
+  let test_histogram = service.getHistogramById("CERT_PINNING_TEST_RESULTS")
                          .snapshot();
   // Because all of our test domains are pinned to user-specified trust
   // anchors, effectively only strict mode and enforce test-mode get evaluated
@@ -222,10 +223,10 @@ function check_pinning_telemetry() {
   equal(test_histogram.counts[1], 0,
         "Actual and expected test (non-Mozilla) success count should match");
 
-  let moz_prod_histogram = Services.telemetry.getHistogramById("CERT_PINNING_MOZ_RESULTS")
+  let moz_prod_histogram = service.getHistogramById("CERT_PINNING_MOZ_RESULTS")
                              .snapshot();
   let moz_test_histogram =
-    Services.telemetry.getHistogramById("CERT_PINNING_MOZ_TEST_RESULTS").snapshot();
+    service.getHistogramById("CERT_PINNING_MOZ_TEST_RESULTS").snapshot();
   equal(moz_prod_histogram.counts[0], 0,
         "Actual and expected prod (Mozilla) failure count should match");
   equal(moz_prod_histogram.counts[1], 0,
@@ -236,7 +237,7 @@ function check_pinning_telemetry() {
         "Actual and expected test (Mozilla) success count should match");
 
   let per_host_histogram =
-    Services.telemetry.getHistogramById("CERT_PINNING_MOZ_RESULTS_BY_HOST").snapshot();
+    service.getHistogramById("CERT_PINNING_MOZ_RESULTS_BY_HOST").snapshot();
   equal(per_host_histogram.counts[0], 0,
         "Actual and expected per host (Mozilla) failure count should match");
   equal(per_host_histogram.counts[1], 2,
