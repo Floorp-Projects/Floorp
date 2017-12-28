@@ -294,15 +294,10 @@ nsGNOMEShellService::SetDefaultBrowser(bool aClaimAllTypes,
     // use brandShortName as the application id.
     NS_ConvertUTF16toUTF8 id(brandShortName);
     nsCOMPtr<nsIGIOMimeApp> appInfo;
-    rv = giovfs->FindAppFromCommand(mAppPath, getter_AddRefs(appInfo));
-    if (NS_FAILED(rv)) {
-      // Application was not found in the list of installed applications provided
-      // by OS. Fallback to create appInfo from command and name.
-      rv = giovfs->CreateAppFromCommand(mAppPath,
-                                        id,
-                                        getter_AddRefs(appInfo));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = giovfs->CreateAppFromCommand(mAppPath,
+                                      id,
+                                      getter_AddRefs(appInfo));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // set handler for the protocols
     for (unsigned int i = 0; i < ArrayLength(appProtocols); ++i) {

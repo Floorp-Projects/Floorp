@@ -9,10 +9,6 @@
 #include "nsTArray.h"
 #include "nsIStringEnumerator.h"
 #include "nsAutoPtr.h"
-#include "nsIMIMEInfo.h"
-#include "nsComponentManagerUtils.h"
-#include "nsArray.h"
-#include "nsIFile.h"
 
 #include <gio/gio.h>
 #include <gtk/gtk.h>
@@ -22,33 +18,10 @@
 #endif
 
 
-/**
- * Get command without any additional arguments
- * @param aCommandWithArguments full commandline input string
- * @param aCommand string for storing command without arguments
- * @return NS_ERROR_FAILURE when unable to parse commandline
- */
-static nsresult
-GetCommandFromCommandline(nsACString const& aCommandWithArguments, nsACString& aCommand) {
-  GError *error = nullptr;
-  gchar **argv = nullptr;
-  if (!g_shell_parse_argv(aCommandWithArguments.BeginReading(), nullptr, &argv, &error) ||
-      !argv[0]) {
-    g_warning("Cannot parse command with arguments: %s", error->message);
-    g_error_free(error);
-    g_strfreev(argv);
-    return NS_ERROR_FAILURE;
-  }
-  aCommand.Assign(argv[0]);
-  g_strfreev(argv);
-  return NS_OK;
-}
-
 class nsGIOMimeApp final : public nsIGIOMimeApp
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIHANDLERAPP
   NS_DECL_NSIGIOMIMEAPP
 
   explicit nsGIOMimeApp(GAppInfo* aApp) : mApp(aApp) {}
@@ -59,7 +32,7 @@ private:
   GAppInfo *mApp;
 };
 
-NS_IMPL_ISUPPORTS(nsGIOMimeApp, nsIGIOMimeApp, nsIHandlerApp)
+NS_IMPL_ISUPPORTS(nsGIOMimeApp, nsIGIOMimeApp)
 
 NS_IMETHODIMP
 nsGIOMimeApp::GetId(nsACString& aId)
@@ -69,17 +42,9 @@ nsGIOMimeApp::GetId(nsACString& aId)
 }
 
 NS_IMETHODIMP
-nsGIOMimeApp::GetName(nsAString& aName)
+nsGIOMimeApp::GetName(nsACString& aName)
 {
-  aName.Assign(NS_ConvertUTF8toUTF16(g_app_info_get_name(mApp)));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGIOMimeApp::SetName(const nsAString& aName)
-{
-  // We don't implement SetName because we're using mGIOMimeApp instance for
-  // obtaining application name
+  aName.Assign(g_app_info_get_name(mApp));
   return NS_OK;
 }
 
@@ -117,71 +82,6 @@ nsGIOMimeApp::Launch(const nsACString& aUri)
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGIOMimeApp::GetDetailedDescription(nsAString& aDetailedDescription)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsGIOMimeApp::SetDetailedDescription(const nsAString& aDetailedDescription)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsGIOMimeApp::Equals(nsIHandlerApp* aHandlerApp, bool* _retval)
-{
-  if (!aHandlerApp)
-    return NS_ERROR_FAILURE;
-
-  // Compare with nsILocalHandlerApp instance by name
-  nsCOMPtr<nsILocalHandlerApp> localHandlerApp = do_QueryInterface(aHandlerApp);
-  if (localHandlerApp) {
-    nsAutoString theirName;
-    nsAutoString thisName;
-    GetName(thisName);
-    localHandlerApp->GetName(theirName);
-    *_retval = thisName.Equals(theirName);
-    return NS_OK;
-  }
-
-  // Compare with nsIGIOMimeApp instance by command with stripped arguments
-  nsCOMPtr<nsIGIOMimeApp> gioMimeApp = do_QueryInterface(aHandlerApp);
-  if (gioMimeApp) {
-    nsAutoCString thisCommandline, thisCommand;
-    nsresult rv = GetCommand(thisCommandline);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = GetCommandFromCommandline(thisCommandline,
-                                   thisCommand);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoCString theirCommandline, theirCommand;
-    gioMimeApp->GetCommand(theirCommandline);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = GetCommandFromCommandline(theirCommandline,
-                                   theirCommand);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    *_retval = thisCommand.Equals(theirCommand);
-    return NS_OK;
-  }
-
-  // We can only compare with nsILocalHandlerApp and nsGIOMimeApp
-  *_retval = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGIOMimeApp::LaunchWithURI(nsIURI* aUri, nsIInterfaceRequestor* aRequestor)
-{
-  nsCString uri_string;
-  aUri->GetSpec(uri_string);
-  return Launch(uri_string);
 }
 
 class GIOUTF8StringEnumerator final : public nsIUTF8StringEnumerator
@@ -383,33 +283,6 @@ nsGIOService::GetAppForURIScheme(const nsACString& aURIScheme,
 }
 
 NS_IMETHODIMP
-nsGIOService::GetAppsForURIScheme(const nsACString& aURIScheme,
-                                  nsIMutableArray** aResult)
-{
-  nsCOMPtr<nsIMutableArray> handlersArray =
-    do_CreateInstance(NS_ARRAY_CONTRACTID);
-
-  nsAutoCString contentType("x-scheme-handler/");
-  contentType.Append(aURIScheme);
-
-  GList* appInfoList = g_app_info_get_all_for_type(contentType.get());
-  // g_app_info_get_all_for_type returns NULL when no appinfo is found
-  // or error occurs (contentType is NULL). We are fine with empty app list
-  // and we're sure that contentType is not NULL, so we won't return failure.
-  if (appInfoList) {
-    GList* appInfo = appInfoList;
-    while (appInfo) {
-      nsCOMPtr<nsIGIOMimeApp> mimeApp = new nsGIOMimeApp(G_APP_INFO(appInfo->data));
-      handlersArray->AppendElement(mimeApp);
-      appInfo = appInfo->next;
-    }
-    g_list_free(appInfoList);
-  }
-  NS_ADDREF(*aResult = handlersArray);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsGIOService::GetAppForMimeType(const nsACString& aMimeType,
                                 nsIGIOMimeApp**   aApp)
 {
@@ -544,17 +417,21 @@ nsGIOService::OrgFreedesktopFileManager1ShowItems(const nsACString& aPath)
 }
 
 /**
- * Find GIO Mime App from given commandline.
- * This is different from CreateAppFromCommand because instead of creating the
- * GIO Mime App in case it's not found in the GIO application list, the method
- * returns error.
- * @param aCmd command with parameters used to start the application
- * @return NS_OK when application is found, NS_ERROR_NOT_AVAILABLE otherwise
+ * Create or find already existing application info for specified command
+ * and application name.
+ * @param cmd command to execute
+ * @param appName application name
+ * @param appInfo location where created GAppInfo is stored
+ * @return NS_OK when object is created, NS_ERROR_FAILURE otherwise.
  */
 NS_IMETHODIMP
-nsGIOService::FindAppFromCommand(nsACString const& aCmd,
-                                 nsIGIOMimeApp** aAppInfo)
+nsGIOService::CreateAppFromCommand(nsACString const& cmd,
+                                   nsACString const& appName,
+                                   nsIGIOMimeApp**   appInfo)
 {
+  GError *error = nullptr;
+  *appInfo = nullptr;
+
   GAppInfo *app_info = nullptr, *app_info_from_list = nullptr;
   GList *apps = g_app_info_get_all();
   GList *apps_p = apps;
@@ -567,7 +444,7 @@ nsGIOService::FindAppFromCommand(nsACString const& aCmd,
       // If the executable is not absolute, get it's full path
       char *executable = g_find_program_in_path(g_app_info_get_executable(app_info_from_list));
 
-      if (executable && strcmp(executable, PromiseFlatCString(aCmd).get()) == 0) {
+      if (executable && strcmp(executable, PromiseFlatCString(cmd).get()) == 0) {
         g_object_ref (app_info_from_list);
         app_info = app_info_from_list;
       }
@@ -578,60 +455,19 @@ nsGIOService::FindAppFromCommand(nsACString const& aCmd,
     apps_p = apps_p->next;
   }
   g_list_free(apps);
-  if (app_info) {
-    nsGIOMimeApp* app = new nsGIOMimeApp(app_info);
-    NS_ENSURE_TRUE(app, NS_ERROR_OUT_OF_MEMORY);
-    NS_ADDREF(*aAppInfo = app);
-    return NS_OK;
+
+  if (!app_info) {
+    app_info = g_app_info_create_from_commandline(PromiseFlatCString(cmd).get(),
+                                                  PromiseFlatCString(appName).get(),
+                                                  G_APP_INFO_CREATE_SUPPORTS_URIS,
+                                                  &error);
   }
 
-  *aAppInfo = nullptr;
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-/**
- * Create application info for specified command and application name.
- * Command arguments are ignored and the "%u" is always added.
- * @param cmd command to execute
- * @param appName application name
- * @param appInfo location where created GAppInfo is stored
- * @return NS_OK when object is created, NS_ERROR_FILE_NOT_FOUND when executable
- * is not found in the system path or NS_ERROR_FAILURE otherwise.
- */
-NS_IMETHODIMP
-nsGIOService::CreateAppFromCommand(nsACString const& cmd,
-                                   nsACString const& appName,
-                                   nsIGIOMimeApp**   appInfo)
-{
-  GError *error = nullptr;
-  *appInfo = nullptr;
-
-  // Using G_APP_INFO_CREATE_SUPPORTS_URIS calling g_app_info_create_from_commandline
-  // appends %u to the cmd even when cmd already contains this parameter.
-  // To avoid that we're going to remove arguments before passing to it.
-  nsAutoCString commandWithoutArgs;
-  nsresult rv = GetCommandFromCommandline(cmd,
-                                          commandWithoutArgs);
-  NS_ENSURE_SUCCESS(rv, rv);
-  GAppInfo *app_info = g_app_info_create_from_commandline(
-      commandWithoutArgs.BeginReading(),
-      PromiseFlatCString(appName).get(),
-      G_APP_INFO_CREATE_SUPPORTS_URIS,
-      &error);
   if (!app_info) {
     g_warning("Cannot create application info from command: %s", error->message);
     g_error_free(error);
     return NS_ERROR_FAILURE;
   }
-
-  // Check if executable exist in path
-  gchar* executableWithFullPath =
-    g_find_program_in_path(commandWithoutArgs.BeginReading());
-  if (!executableWithFullPath) {
-    return NS_ERROR_FILE_NOT_FOUND;
-  }
-  g_free(executableWithFullPath);
-
   nsGIOMimeApp *mozApp = new nsGIOMimeApp(app_info);
   NS_ENSURE_TRUE(mozApp, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*appInfo = mozApp);
