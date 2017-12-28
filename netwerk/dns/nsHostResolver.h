@@ -37,11 +37,24 @@ class nsResolveHostCallback;
 
 struct nsHostKey
 {
-    const char *host;
-    uint16_t    flags;
-    uint16_t    af;
-    const char *netInterface;
-    const char *originSuffix;
+    const nsCString host;
+    uint16_t flags;
+    uint16_t af;
+    const nsCString netInterface;
+    const nsCString originSuffix;
+
+    nsHostKey(const nsACString& host, uint16_t flags,
+              uint16_t af, const nsACString& netInterface,
+              const nsACString& originSuffix)
+        : host(host)
+        , flags(flags)
+        , af(af)
+        , netInterface(netInterface)
+        , originSuffix(originSuffix) {
+    }
+
+    bool operator==(const nsHostKey& other) const;
+    size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 /**
@@ -131,6 +144,7 @@ public:
 private:
     friend class nsHostResolver;
 
+    explicit nsHostRecord(const nsHostKey& key);
     mozilla::LinkedList<RefPtr<nsResolveHostCallback>> mCallbacks;
 
     bool    resolving; /* true if this record is being resolved, which means
