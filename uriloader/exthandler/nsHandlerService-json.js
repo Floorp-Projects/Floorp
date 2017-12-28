@@ -431,11 +431,6 @@ HandlerService.prototype = {
         objectPath: handler.objectPath,
         dBusInterface: handler.dBusInterface,
       };
-    } else if (handler instanceof Ci.nsIGIOMimeApp) {
-      return {
-        name: handler.name,
-        command: handler.command,
-      };
     }
     // If the handler is an unknown handler type, return null.
     // Android default application handler is the case.
@@ -472,15 +467,6 @@ HandlerService.prototype = {
       handlerApp.method = handlerObj.method;
       handlerApp.objectPath = handlerObj.objectPath;
       handlerApp.dBusInterface = handlerObj.dBusInterface;
-    } else if ("command" in handlerObj &&
-               "@mozilla.org/gio-service;1" in Cc) {
-      try {
-        handlerApp = Cc["@mozilla.org/gio-service;1"]
-                       .getService(Ci.nsIGIOService)
-                       .createAppFromCommand(handlerObj.command, handlerObj.name);
-      } catch (ex) {
-        return null;
-      }
     } else {
       return null;
     }

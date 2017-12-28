@@ -4,24 +4,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIMIMEInfo.idl"
 
 interface nsIUTF8StringEnumerator;
 interface nsIURI;
-interface nsIMutableArray;
 
 /* nsIGIOMimeApp holds information about an application that is looked up
    with nsIGIOService::GetAppForMimeType. */
 // 66009894-9877-405b-9321-bf30420e34e6 prev uuid
 
-[scriptable, uuid(ca6bad0c-8a48-48ac-82c7-27bb8f510fbe)]
-interface nsIGIOMimeApp : nsIHandlerApp
+[scriptable, uuid(ca6bad0c-8a48-48ac-82c7-27bb8f510fbe)] 
+interface nsIGIOMimeApp : nsISupports
 {
   const long EXPECTS_URIS  = 0;
   const long EXPECTS_PATHS = 1;
   const long EXPECTS_URIS_FOR_NON_FILES = 2;
 
   readonly attribute AUTF8String         id;
+  readonly attribute AUTF8String         name;
   readonly attribute AUTF8String         command;
   readonly attribute long                expectsURIs;  // see constants above
   readonly attribute nsIUTF8StringEnumerator supportedURISchemes;
@@ -58,18 +57,12 @@ interface nsIGIOService : nsISupports
   /* Obtain the preferred application for opening a given URI scheme */
   nsIGIOMimeApp      getAppForURIScheme(in AUTF8String aURIScheme);
 
-  /* Obtain list of application capable of opening given URI scheme */
-  nsIMutableArray    getAppsForURIScheme(in AUTF8String aURIScheme);
-
   /* Obtain the preferred application for opening a given MIME type */
   nsIGIOMimeApp      getAppForMimeType(in AUTF8String mimeType);
 
-  /* Create application info for given command and name */
-  nsIGIOMimeApp      createAppFromCommand(in AUTF8String cmd,
+  /* Obtain the preferred application for opening a given MIME type */
+  nsIGIOMimeApp      createAppFromCommand(in AUTF8String cmd, 
                                           in AUTF8String appName);
-
-  /* Find the application info by given command */
-  nsIGIOMimeApp      findAppFromCommand(in AUTF8String cmd);
 
   /* Obtain a description for the given MIME type */
   AUTF8String        getDescriptionForMimeType(in AUTF8String mimeType);
