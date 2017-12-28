@@ -9,6 +9,10 @@
  *       a PKCS #11 module to be loaded into Firefox.
  */
 
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+
 function onBrowseBtnPress() {
   let bundle = document.getElementById("pippki_bundle");
   let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);

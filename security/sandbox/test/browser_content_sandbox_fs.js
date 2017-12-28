@@ -3,6 +3,9 @@
  /* import-globals-from browser_content_sandbox_utils.js */
  "use strict";
 
+var prefs = Cc["@mozilla.org/preferences-service;1"]
+            .getService(Ci.nsIPrefBranch);
+
 Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/" +
     "security/sandbox/test/browser_content_sandbox_utils.js", this);
 
@@ -187,7 +190,7 @@ add_task(async function() {
   // on Nightly at this time.
   // eslint-disable-next-line mozilla/use-default-preference-values
   try {
-    level = Services.prefs.getIntPref("security.sandbox.content.level");
+    level = prefs.getIntPref("security.sandbox.content.level");
   } catch (e) {
     prefExists = false;
   }
@@ -304,7 +307,7 @@ async function testFileAccess() {
 
   // Ensure that the file content process is enabled.
   let fileContentProcessEnabled =
-    Services.prefs.getBoolPref("browser.tabs.remote.separateFileUriProcess");
+    prefs.getBoolPref("browser.tabs.remote.separateFileUriProcess");
   ok(fileContentProcessEnabled, "separate file content process is enabled");
 
   // for tests that run in a file content process
@@ -318,7 +321,7 @@ async function testFileAccess() {
   }
 
   // Current level
-  let level = Services.prefs.getIntPref("security.sandbox.content.level");
+  let level = prefs.getIntPref("security.sandbox.content.level");
 
   // Directories/files to test accessing from content processes.
   // For directories, we test whether a directory listing is allowed
