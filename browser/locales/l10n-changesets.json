@@ -207,7 +207,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "905c2f809c6a"
+        "revision": "e66253ab342a"
     }, 
     "cak": {
         "platforms": [
@@ -447,7 +447,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "24db7bd05125"
+        "revision": "877db523cd39"
     }, 
     "fa": {
         "platforms": [
@@ -627,7 +627,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "3a95a6358b92"
+        "revision": "5ee9a5fc8bff"
     }, 
     "hr": {
         "platforms": [
@@ -1037,7 +1037,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "42616c5eb221"
+        "revision": "f2ca7d5b6f5b"
     }, 
     "or": {
         "platforms": [
@@ -1142,7 +1142,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "133dcbd81532"
+        "revision": "002792d559f7"
     }, 
     "ru": {
         "platforms": [
@@ -1382,7 +1382,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "696947ac4d9a"
+        "revision": "b44f5fe06c52"
     }, 
     "xh": {
         "platforms": [
