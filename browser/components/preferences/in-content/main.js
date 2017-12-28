@@ -1706,6 +1706,9 @@ var gMainPane = {
     if (aHandlerApp instanceof Ci.nsIWebContentHandlerInfo)
       return aHandlerApp.uri;
 
+    if (aHandlerApp instanceof Ci.nsIGIOMimeApp)
+      return aHandlerApp.command;
+
     return false;
   },
 
@@ -1842,6 +1845,46 @@ var gMainPane = {
 
       menuPopup.appendChild(menuItem);
       possibleAppMenuItems.push(menuItem);
+    }
+    // Add gio handlers
+    if (Cc["@mozilla.org/gio-service;1"]) {
+      let gIOSvc = Cc["@mozilla.org/gio-service;1"].
+                   getService(Ci.nsIGIOService);
+      var gioApps = gIOSvc.getAppsForURIScheme(typeItem.type);
+      let enumerator = gioApps.enumerate();
+      let possibleHandlers = handlerInfo.possibleApplicationHandlers;
+      while (enumerator.hasMoreElements()) {
+        let handler = enumerator.getNext().QueryInterface(Ci.nsIHandlerApp);
+        // OS handler share the same name, it's most likely the same app, skipping...
+        if (handler.name == handlerInfo.defaultDescription) {
+          continue;
+        }
+        // Check if the handler is already in possibleHandlers
+        let appAlreadyInHandlers = false;
+        for (let i = possibleHandlers.length - 1; i >= 0; --i) {
+          let app = possibleHandlers.queryElementAt(i, Ci.nsIHandlerApp);
+          // nsGIOMimeApp::Equals is able to compare with nsILocalHandlerApp
+          if (handler.equals(app)) {
+            appAlreadyInHandlers = true;
+            break;
+          }
+        }
+        if (!appAlreadyInHandlers) {
+          let menuItem = document.createElement("menuitem");
+          menuItem.setAttribute("action", Ci.nsIHandlerInfo.useHelperApp);
+          let label = this._prefsBundle.getFormattedString("useApp", [handler.name]);
+          menuItem.setAttribute("label", label);
+          menuItem.setAttribute("tooltiptext", label);
+          menuItem.setAttribute("image", this._getIconURLForHandlerApp(handler));
+
+          // Attach the handler app object to the menu item so we can use it
+          // to make changes to the datastore when the user selects the item.
+          menuItem.handlerApp = handler;
+
+          menuPopup.appendChild(menuItem);
+          possibleAppMenuItems.push(menuItem);
+        }
+      }
     }
 
     // Create a menu item for the plugin.
