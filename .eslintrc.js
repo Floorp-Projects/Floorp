@@ -37,6 +37,7 @@ module.exports = {
       "dom/media/**",
       "extensions/pref/**",
       "mobile/android/**",
+      "security/**",
       "testing/**",
       "tools/profiler/**",
     ],

@@ -16,7 +16,8 @@ function isWin() { return Services.appinfo.OS == "WINNT"; }
 function isLinux() { return Services.appinfo.OS == "Linux"; }
 
 function isNightly() {
-  let version = SpecialPowers.Services.appinfo.version;
+  let version = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].
+    getService(SpecialPowers.Ci.nsIXULAppInfo).version;
   return (version.endsWith("a1"));
 }
 
