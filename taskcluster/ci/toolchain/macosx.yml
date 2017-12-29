@@ -2,6 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+job-defaults:
+    worker:
+        docker-image: {in-tree: toolchain-build}
+
 macosx64-clang:
     description: "Clang toolchain build"
     treeherder:
@@ -11,7 +15,6 @@ macosx64-clang:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
-        docker-image: {in-tree: desktop-build}
         max-run-time: 36000
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
@@ -41,7 +44,6 @@ macosx64-clang-tidy:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
-        docker-image: {in-tree: desktop-build}
         max-run-time: 36000
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
@@ -69,7 +71,6 @@ macosx64-cctools-port:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
-        docker-image: {in-tree: desktop-build}
         max-run-time: 36000
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
@@ -93,7 +94,6 @@ macosx64-gn:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
     worker:
-        docker-image: {in-tree: desktop-build}
         max-run-time: 36000
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
