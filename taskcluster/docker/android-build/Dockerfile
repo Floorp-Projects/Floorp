@@ -103,7 +103,8 @@ COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
 COPY topsrcdir/taskcluster/docker/recipes/run-task /builds/worker/bin/run-task
 
 # Add pip configuration, among other things.
-COPY dot-config /builds/worker/.config
+# %include taskcluster/docker/recipes/dot-config
+COPY topsrcdir/taskcluster/docker/recipes/dot-config /builds/worker/.config
 
 # Stubbed out credentials; mozharness looks for this file an issues a WARNING
 # if it's not found, which causes the build to fail.  Note that this needs to
