@@ -807,23 +807,8 @@ textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete");
 }
 
-panel[type="autocomplete"] {
-  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-result-popup");
-}
-
 panel[type="autocomplete-richlistbox"] {
   -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup");
-}
-
-/* FIXME: bug 616258 */
-
-.autocomplete-tree {
-  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-tree");
-  -moz-user-focus: ignore;
-}
-
-.autocomplete-treebody {
-  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-treebody");
 }
 
 .autocomplete-richlistbox {
@@ -841,17 +826,7 @@ panel[type="autocomplete-richlistbox"] {
   overflow: -moz-hidden-unscrollable;
 }
 
-.autocomplete-treerows {
-  -moz-binding: url("chrome://global/content/bindings/autocomplete.xml#autocomplete-treerows");
-}
-
 %endif
-
-/* the C++ implementation of widgets is too eager to make popups visible.
-   this causes problems (bug 120155 and others), thus this workaround: */
-popup[type="autocomplete"][hidden="true"] {
-  visibility: hidden;
-}
 
 /* The following rule is here to fix bug 96899 (and now 117952).
    Somehow trees create a situation
