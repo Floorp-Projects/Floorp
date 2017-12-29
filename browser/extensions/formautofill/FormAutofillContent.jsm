@@ -446,6 +446,9 @@ var FormAutofillContent = {
    *
    */
   _getFormHandler(element) {
+    if (!element) {
+      return null;
+    }
     let rootElement = FormLikeFactory.findRootForField(element);
     return this._formsDetails.get(rootElement);
   },
@@ -474,6 +477,10 @@ var FormAutofillContent = {
    */
   updateActiveInput(element) {
     element = element || formFillController.focusedInput;
+    if (!element) {
+      this._activeItems = {};
+      return;
+    }
     let handler = this._getFormHandler(element);
     if (handler) {
       handler.focusedInput = element;
@@ -487,7 +494,8 @@ var FormAutofillContent = {
   },
 
   get activeInput() {
-    return this._activeItems.elementWeakRef.get();
+    let elementWeakRef = this._activeItems.elementWeakRef;
+    return elementWeakRef ? elementWeakRef.get() : null;
   },
 
   get activeHandler() {
