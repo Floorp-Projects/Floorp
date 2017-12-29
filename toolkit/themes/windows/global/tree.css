@@ -364,7 +364,7 @@ treechildren::-moz-tree-cell-text(active, selected, editing) {
     --treechildren-hoverSelectedImage: linear-gradient(rgb(205,232,255), rgb(205,232,255));
   }
 
-  treechildren:not(.autocomplete-treebody)::-moz-tree-row {
+  treechildren::-moz-tree-row {
     height: 1.8em;
     color: -moz-FieldText;
     margin-inline-start: 1px;
@@ -375,7 +375,7 @@ treechildren::-moz-tree-cell-text(active, selected, editing) {
     background-size: 100% 100%;
   }
 
-  treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected) {
+  treechildren::-moz-tree-row(selected) {
     border-color: var(--treechildren-selectedBorder);
     border-bottom-color: var(--treechildren-selectedBottomBorder);
     background-image: var(--treechildren-selectedImage);
@@ -383,14 +383,14 @@ treechildren::-moz-tree-cell-text(active, selected, editing) {
     outline: var(--treechildren-outline);
   }
 
-  treechildren:not(.autocomplete-treebody)::-moz-tree-row(current, focus) {
+  treechildren::-moz-tree-row(current, focus) {
     border-style: solid;
     border-color: var(--treechildren-currentFocusBorder);
     border-bottom-color: var(--treechildren-currentFocusBottomBorder);
     outline: var(--treechildren-outline);
   }
 
-  treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected, focus),
+  treechildren::-moz-tree-row(selected, focus),
   treechildren::-moz-tree-row(dropOn) {
     border-color: var(--treechildren-selectedFocusBorder);
     border-bottom-color: var(--treechildren-selectedFocusBottomBorder);
@@ -398,27 +398,27 @@ treechildren::-moz-tree-cell-text(active, selected, editing) {
     background-color: var(--treechildren-selectedFocusBackground);
   }
 
-  treechildren:not(.autocomplete-treebody)::-moz-tree-row(selected, current, focus) {
+  treechildren::-moz-tree-row(selected, current, focus) {
     border-style: solid;
     border-color: var(--treechildren-selectedFocusCurrentBorder);
     border-bottom-color: var(--treechildren-selectedFocusCurrentBottomBorder);
     background-image: var(--treechildren-selectedFocusCurrentImage);
   }
 
-  treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover) {
+  treechildren::-moz-tree-row(hover) {
     border-color: var(--treechildren-hoverBottomBorder);
     border-bottom-color: var(--treechildren-hoverBottomBorder);
     background-image: var(--treechildren-hoverImage);
     outline: var(--treechildren-outline);
   }
 
-  treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover, current) {
+  treechildren::-moz-tree-row(hover, current) {
     border-color: var(--treechildren-hoverCurrentBorder);
     border-bottom-color: var(--treechildren-hoverCurrentBottomBorder);
     background-image: var(--treechildren-hoverCurrentImage);
   }
 
-  treechildren:not(.autocomplete-treebody)::-moz-tree-row(hover, selected) {
+  treechildren::-moz-tree-row(hover, selected) {
     border-color: var(--treechildren-hoverSelectedBorder);
     border-bottom-color: var(--treechildren-hoverSelectedBottomBorder);
     background-image: var(--treechildren-hoverSelectedImage);
@@ -439,13 +439,13 @@ treechildren::-moz-tree-cell-text(active, selected, editing) {
     color: -moz-FieldText;
   }
 
-  treechildren:not(.autocomplete-treebody)::-moz-tree-cell-text {
+  treechildren::-moz-tree-cell-text {
     padding-bottom: initial;
     border-color: transparent;
     background-color: transparent;
   }
 
-  treechildren:not(.autocomplete-treebody)::-moz-tree-cell-text(selected, focus) {
+  treechildren::-moz-tree-cell-text(selected, focus) {
     color: -moz-DialogText;
   }
 
@@ -484,7 +484,7 @@ treechildren::-moz-tree-cell-text(active, selected, editing) {
       --treechildren-hoverSelectedImage: linear-gradient(rgba(131,183,249,.28), rgba(131,183,249,.5));
     }
 
-    treechildren:not(.autocomplete-treebody)::-moz-tree-row {
+    treechildren::-moz-tree-row {
       border-radius: 3px;
       -moz-outline-radius: 3px;
     }

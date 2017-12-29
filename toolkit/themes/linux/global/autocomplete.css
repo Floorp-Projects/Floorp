@@ -17,7 +17,6 @@ textbox[nomatch="true"][highlightnonmatches="true"] {
 
 /* ::::: autocomplete popups ::::: */
 
-panel[type="autocomplete"],
 panel[type="autocomplete-richlistbox"],
 .autocomplete-history-popup {
   border: 1px solid ThreeDShadow;
@@ -29,43 +28,6 @@ panel[type="autocomplete-richlistbox"],
 
 .autocomplete-history-popup {
   max-height: 180px;
-}
-
-/* ::::: tree ::::: */
-
-.autocomplete-tree {
-  -moz-appearance: none !important;
-  border: none !important;
-  background-color: transparent !important;
-}
-
-.autocomplete-treecol {
-  -moz-appearance: none !important;
-  margin: 0 !important;
-  border: none !important;
-  padding: 0 !important;
-}
-
-/* GTK calculates space for a sort arrow */
-.autocomplete-treecol > .treecol-sortdirection {
-  -moz-appearance: none !important;
-}
-
-.autocomplete-treebody::-moz-tree-cell-text {
-  padding-inline-start: 8px;
-}
-
-treechildren.autocomplete-treebody::-moz-tree-row(selected) {
- background-color: Highlight;
-}
-
-treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
-  color: HighlightText !important;
-}
-
-.autocomplete-treebody::-moz-tree-image(treecolAutoCompleteValue) {
-  max-width: 16px;
-  height: 16px;
 }
 
 /* ::::: richlistbox autocomplete ::::: */
