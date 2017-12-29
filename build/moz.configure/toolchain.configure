@@ -1371,7 +1371,11 @@ def rust_compiler_flags(opt_level_option, debug_rust, debug_symbols,
         debug_assertions = False
 
     if debug_symbols:
-        debug_info = '2'
+        if host.kernel == 'Linux' and target.kernel == 'Darwin':
+            # hack to work around dsymutil failing on cross-OSX builds (bug 1410148)
+            debug_info = '0'
+        else:
+            debug_info = '2'
 
     opts = []
 
