@@ -348,3 +348,7 @@ Dummy tasks to consolidate beetmover dependencies to avoid taskcluster limits on
 post-beetmover-checksums-dummy
 ------------------------------
 Dummy tasks to consolidate beetmover-checksums dependencies to avoid taskcluster limits on number of dependencies per task.
+
+packages
+--------
+Tasks used to build packages for use in docker images.
