@@ -112,7 +112,8 @@ def create_context_tar(topsrcdir, context_dir, out_path, prefix):
                 for root, dirs, files in os.walk(fs_path):
                     for f in files:
                         source_path = os.path.join(root, f)
-                        archive_path = os.path.join(prefix, 'topsrcdir', p, f)
+                        rel = source_path[len(fs_path) + 1:]
+                        archive_path = os.path.join(prefix, 'topsrcdir', p, rel)
                         archive_files[archive_path] = source_path
             else:
                 archive_path = os.path.join(prefix, 'topsrcdir', p)
