@@ -18,7 +18,6 @@
       "llvm-debug-frame.patch",
       "r277806.patch",
       "r285657.patch",
-      "r289565-for-3.9.patch",
-      "r313872.patch"
+      "r313872-for-3.9.patch"
     ]
 }
