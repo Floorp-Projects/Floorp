@@ -51,6 +51,7 @@ RUN apt-get -o Acquire::Check-Valid-Until=false update -q && \
       bison \
       build-essential \
       curl \
+      cmake \
       flex \
       gawk \
       gcc-multilib \
@@ -58,6 +59,7 @@ RUN apt-get -o Acquire::Check-Valid-Until=false update -q && \
       gnupg \
       libtool \
       make \
+      ninja-build \
       p7zip-full \
       procps \
       pxz/wheezy-backports \
