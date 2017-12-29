@@ -47,7 +47,8 @@ ADD topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
 ADD topsrcdir/taskcluster/docker/recipes/run-task /builds/worker/bin/run-task
 
 # Add configuration
-COPY            dot-config                    /builds/worker/.config
+# %include taskcluster/docker/recipes/dot-config
+COPY topsrcdir/taskcluster/docker/recipes/dot-config /builds/worker/.config
 
 # Generate machine uuid file
 RUN dbus-uuidgen --ensure=/var/lib/dbus/machine-id
