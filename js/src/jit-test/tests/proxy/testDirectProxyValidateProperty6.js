@@ -8,7 +8,7 @@ load(libdir + "asserts.js");
  */
 var target = {};
 Object.defineProperty(target, 'foo', {
-    set: function (value) {i
+    set: function (value) {
         target.foo = 'bar';
     },
     configurable: false
