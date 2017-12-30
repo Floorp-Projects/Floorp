@@ -44,10 +44,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
       // more than one callbackHappened message before we manage to close it.
       // Protect against calling SimpleTest.finish() more than once.
       if (!done) {
-	w.close();
+        w.close();
         window.onmessage = null;
-	SimpleTest.finish();
-	done = true;
+        SimpleTest.finish();
+        done = true;
       }
     } else {
       var msg = JSON.parse(e.data);
