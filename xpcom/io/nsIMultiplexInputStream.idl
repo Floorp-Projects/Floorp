@@ -27,14 +27,6 @@ interface nsIMultiplexInputStream : nsISupports
     void appendStream(in nsIInputStream stream);
 
     /**
-     * Remove stream at specified index. If this stream is the one currently
-     * being read the readcursor is moved to the beginning of the next
-     * stream
-     * @param index   remove stream at this index, must be < count
-     */
-    void removeStream(in unsigned long index);
-
-    /**
      * Get stream at specified index.
      * @param index   return stream at this index, must be < count
      * @return        stream at specified index
