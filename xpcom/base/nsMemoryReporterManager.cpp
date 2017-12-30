@@ -724,6 +724,14 @@ SystemHeapSize(int64_t* aSizeOut)
   for (DWORD i = 0; i < nHeaps; i++) {
     HANDLE heap = heaps[i];
 
+    // Bug 1235982: When Control Flow Guard is enabled for the process,
+    // GetProcessHeap may return some protected heaps that are in read-only
+    // memory and thus crash in HeapLock. Ignore such heaps.
+    MEMORY_BASIC_INFORMATION mbi = {0};
+    if (VirtualQuery(heap, &mbi, sizeof(mbi)) && mbi.Protect == PAGE_READONLY) {
+      continue;
+    }
+
     NS_ENSURE_TRUE(HeapLock(heap), NS_ERROR_FAILURE);
 
     int64_t heapSize = 0;
