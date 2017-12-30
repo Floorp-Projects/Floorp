@@ -231,26 +231,6 @@ nsMultiplexInputStream::AppendStream(nsIInputStream* aStream)
 }
 
 NS_IMETHODIMP
-nsMultiplexInputStream::RemoveStream(uint32_t aIndex)
-{
-  MutexAutoLock lock(mLock);
-  if (aIndex >= mStreams.Length()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  UpdateQIMap(mStreams[aIndex], -1);
-
-  mStreams.RemoveElementAt(aIndex);
-  if (mCurrentStream > aIndex) {
-    --mCurrentStream;
-  } else if (mCurrentStream == aIndex) {
-    mStartedReadingCurrent = false;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsMultiplexInputStream::GetStream(uint32_t aIndex, nsIInputStream** aResult)
 {
   MutexAutoLock lock(mLock);

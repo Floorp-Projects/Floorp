@@ -266,7 +266,7 @@ DOMSVGLength::SetValue(float aUserUnitValue, ErrorResult& aRv)
   }
 
   if (mVal) {
-    mVal->SetBaseValue(aUserUnitValue, mSVGElement, true);
+    aRv = mVal->SetBaseValue(aUserUnitValue, mSVGElement, true);
     return;
   }
 
