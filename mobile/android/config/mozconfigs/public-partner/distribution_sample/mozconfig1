@@ -16,10 +16,6 @@ ac_add_options --with-branding=mobile/android/branding/nightly
 
 ac_add_options --with-android-distribution-directory=/builds/worker/workspace/build/partner
 
-# This will overwrite the default of stripping everything and keep the symbol table.
-# This is useful for profiling with eideticker. See bug 788680
-STRIP_FLAGS="--strip-debug"
-
 export MOZILLA_OFFICIAL=1
 export MOZ_TELEMETRY_REPORTING=1
 
