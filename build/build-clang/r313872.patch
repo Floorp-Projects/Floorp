@@ -2,8 +2,7 @@ Index: tools/dsymutil/DwarfLinker.cpp
 ===================================================================
 --- a/llvm/tools/dsymutil/DwarfLinker.cpp	(revision 313871)
 +++ b/llvm/tools/dsymutil/DwarfLinker.cpp	(revision 313872)
-@@ -1495,8 +1495,12 @@
-   uint64_t RefOffset = *RefValue.getAsReference();
+@@ -1496,7 +1496,11 @@
  
    if ((RefCU = getUnitForOffset(Units, RefOffset)))
 -    if (const auto RefDie = RefCU->getOrigUnit().getDIEForOffset(RefOffset))
