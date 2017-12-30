@@ -51,6 +51,9 @@ pushlog_api_url = "{0}/json-rev/{1}"
 ###
 def get_dt_from_hg(path):
     with mozversioncontrol.get_repository_object(path=path) as repo:
+        phase = repo._run_in_client(["log", "-r", ".", "-T" "{phase}"])
+        if phase.strip() != "public":
+            return datetime.datetime.utcnow()
         repo_url = repo._run_in_client(["paths", "default"])
         repo_url = repo_url.strip().replace("ssh://", "https://")
         repo_url = repo_url.replace("hg://", "https://")
