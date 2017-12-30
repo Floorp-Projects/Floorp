@@ -258,9 +258,13 @@ interface nsIFile : nsISupports
     readonly attribute AString target;
     [noscript] readonly attribute ACString nativeTarget;
     readonly attribute AString path;
-    [notxpcom,nostdcall] PathString nativePath();
+    [notxpcom,nostdcall,must_use] PathString nativePath();
 %{C++
     nsresult GetNativePath(nsACString& aPath);
+    /*
+     * Returns a human-readable path string.
+     */
+    nsCString HumanReadablePath();
 %}
 
     boolean exists();
