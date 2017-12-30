@@ -18,7 +18,7 @@ then
 
   # We want to make sure we use binutils and other binaries in the tooltool
   # package.
-  mk_add_options PATH="$TOOLTOOL_DIR/gcc/bin:$PATH"
+  mk_add_options "export PATH=$TOOLTOOL_DIR/gcc/bin:$PATH"
 else
   CC="/tools/gcc-4.7.3-0moz1/bin/gcc"
   CXX="/tools/gcc-4.7.3-0moz1/bin/g++"
