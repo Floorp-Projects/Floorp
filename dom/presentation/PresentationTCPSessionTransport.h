@@ -64,7 +64,7 @@ private:
 
   nsresult CreateInputStreamPump();
 
-  void EnsureCopying();
+  nsresult EnsureCopying();
 
   enum class ReadyState {
     CONNECTING,
@@ -96,12 +96,11 @@ private:
   nsCOMPtr<nsIInputStreamPump> mInputStreamPump;
   nsCOMPtr<nsIScriptableInputStream> mInputStreamScriptable;
 
-  // Output stream machinery
-  nsCOMPtr<nsIMultiplexInputStream> mMultiplexStream;
-  nsCOMPtr<nsIAsyncStreamCopier> mMultiplexStreamCopier;
-
   nsCOMPtr<nsIPresentationSessionTransportCallback> mCallback;
   nsCOMPtr<nsIPresentationSessionTransportBuilderListener> mListener;
+
+  // The data to be sent.
+  nsTArray<nsCOMPtr<nsIInputStream>> mPendingData;
 };
 
 } // namespace dom
