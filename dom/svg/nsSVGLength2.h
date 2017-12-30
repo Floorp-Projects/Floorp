@@ -122,16 +122,16 @@ public:
   void GetAnimValueString(nsAString& aValue) const;
 
   float GetBaseValue(nsSVGElement* aSVGElement) const
-    { return mBaseVal / GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType); }
+    { return mBaseVal * GetPixelsPerUnit(aSVGElement, mSpecifiedUnitType); }
 
   float GetAnimValue(nsSVGElement* aSVGElement) const
-    { return mAnimVal / GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType); }
+    { return mAnimVal * GetPixelsPerUnit(aSVGElement, mSpecifiedUnitType); }
   float GetAnimValue(nsIFrame* aFrame) const
-    { return mAnimVal / GetUnitScaleFactor(aFrame, mSpecifiedUnitType); }
+    { return mAnimVal * GetPixelsPerUnit(aFrame, mSpecifiedUnitType); }
   float GetAnimValue(SVGViewportElement* aCtx) const
-    { return mAnimVal / GetUnitScaleFactor(aCtx, mSpecifiedUnitType); }
+    { return mAnimVal * GetPixelsPerUnit(aCtx, mSpecifiedUnitType); }
   float GetAnimValue(const UserSpaceMetrics& aMetrics) const
-    { return mAnimVal / GetUnitScaleFactor(aMetrics, mSpecifiedUnitType); }
+    { return mAnimVal * GetPixelsPerUnit(aMetrics, mSpecifiedUnitType); }
 
   uint8_t GetCtxType() const { return mCtxType; }
   uint8_t GetSpecifiedUnitType() const { return mSpecifiedUnitType; }
@@ -141,7 +141,7 @@ public:
   float GetBaseValInSpecifiedUnits() const { return mBaseVal; }
 
   float GetBaseValue(SVGViewportElement* aCtx) const
-    { return mBaseVal / GetUnitScaleFactor(aCtx, mSpecifiedUnitType); }
+    { return mBaseVal * GetPixelsPerUnit(aCtx, mSpecifiedUnitType); }
 
   bool HasBaseVal() const {
     return mIsBaseSet;
@@ -168,16 +168,23 @@ private:
   bool mIsAnimated:1;
   bool mIsBaseSet:1;
 
-  float GetUnitScaleFactor(nsIFrame* aFrame, uint8_t aUnitType) const;
-  float GetUnitScaleFactor(const UserSpaceMetrics& aMetrics, uint8_t aUnitType) const;
-  float GetUnitScaleFactor(nsSVGElement* aSVGElement, uint8_t aUnitType) const;
-  float GetUnitScaleFactor(SVGViewportElement* aCtx, uint8_t aUnitType) const;
+  // These APIs returns the number of user-unit pixels per unit of the
+  // given type, in a given context (frame/element/etc).
+  float GetPixelsPerUnit(nsIFrame* aFrame, uint8_t aUnitType) const;
+  float GetPixelsPerUnit(const UserSpaceMetrics& aMetrics, uint8_t aUnitType) const;
+  float GetPixelsPerUnit(nsSVGElement* aSVGElement, uint8_t aUnitType) const;
+  float GetPixelsPerUnit(SVGViewportElement* aCtx, uint8_t aUnitType) const;
 
-  // SetBaseValue and SetAnimValue set the value in user units
-  void SetBaseValue(float aValue, nsSVGElement *aSVGElement, bool aDoSetAttr);
+  // SetBaseValue and SetAnimValue set the value in user units. This may fail
+  // if unit conversion fails e.g. conversion to ex or em units where the
+  // font-size is 0.
+  // SetBaseValueInSpecifiedUnits and SetAnimValueInSpecifiedUnits do not
+  // perform unit conversion and are therefore infallible.
+  nsresult SetBaseValue(float aValue, nsSVGElement *aSVGElement,
+                        bool aDoSetAttr);
   void SetBaseValueInSpecifiedUnits(float aValue, nsSVGElement *aSVGElement,
                                     bool aDoSetAttr);
-  void SetAnimValue(float aValue, nsSVGElement *aSVGElement);
+  nsresult SetAnimValue(float aValue, nsSVGElement *aSVGElement);
   void SetAnimValueInSpecifiedUnits(float aValue, nsSVGElement *aSVGElement);
   nsresult NewValueSpecifiedUnits(uint16_t aUnitType, float aValue,
                                   nsSVGElement *aSVGElement);
