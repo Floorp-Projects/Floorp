@@ -24,6 +24,7 @@
 #include "mozilla/Unused.h"
 #include "nsCRTGlue.h"
 #include "nsNSSCertificate.h"
+#include "nsNativeCharsetUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nss.h"
@@ -1063,7 +1064,9 @@ InitializeNSS(const nsACString& dir, bool readOnly, bool loadPKCS11Modules)
   if (!loadPKCS11Modules) {
     flags |= NSS_INIT_NOMODDB;
   }
-  bool useSQLDB = Preferences::GetBool("security.use_sqldb", false);
+  // At the moment, sqldb does not work with non-ASCII file paths on Windows.
+  bool useSQLDB = Preferences::GetBool("security.use_sqldb", false) &&
+    (NS_IsNativeUTF8() || NS_IsAscii(PromiseFlatCString(dir).get()));
   nsAutoCString dbTypeAndDirectory;
   // Don't change any behavior if the user has specified an alternative database
   // location with MOZPSM_NSSDBDIR_OVERRIDE.
