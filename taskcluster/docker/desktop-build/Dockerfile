@@ -34,6 +34,9 @@ ADD topsrcdir/build/unix/build-gtk3/build-gtk3.sh /setup/build-gtk3.sh
 # TODO remove once base image doesn't install Mercurial
 RUN pip uninstall -y Mercurial
 
+# Install expat-devel for fontconfig, part of build-gtk3.
+RUN yum install -y expat-devel.i686 expat-devel.x86_64
+
 RUN bash /setup/build-gtk3.sh && bash /setup/system-setup.sh
 
 # Add wrapper scripts for xvfb allowing tasks to easily retry starting up xvfb
