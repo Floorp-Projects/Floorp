@@ -95,8 +95,6 @@ class Repackage(BaseScript):
         if not manifest_src and not toolchains:
             return
 
-        tooltool_manifest_path = os.path.join(dirs['abs_mozilla_dir'],
-                                              manifest_src)
         cmd = [
             sys.executable, '-u',
             os.path.join(dirs['abs_mozilla_dir'], 'mach'),
@@ -104,16 +102,19 @@ class Repackage(BaseScript):
             'toolchain',
             '-v',
             '--retry', '4',
-            '--tooltool-manifest',
-            tooltool_manifest_path,
             '--artifact-manifest',
             os.path.join(dirs['abs_mozilla_dir'], 'toolchains.json'),
-            '--tooltool-url',
-            config['tooltool_url'],
         ]
-        auth_file = self._get_tooltool_auth_file()
-        if auth_file:
-            cmd.extend(['--authentication-file', auth_file])
+        if manifest_src:
+            cmd.extend([
+                '--tooltool-manifest',
+                os.path.join(dirs['abs_mozilla_dir'], manifest_src),
+                '--tooltool-url',
+                config['tooltool_url'],
+            ])
+            auth_file = self._get_tooltool_auth_file()
+            if auth_file:
+                cmd.extend(['--authentication-file', auth_file])
         cache = config.get('tooltool_cache')
         if cache:
             cmd.extend(['--cache-dir', cache])
