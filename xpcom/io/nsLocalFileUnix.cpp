@@ -10,6 +10,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/Sprintf.h"
 
 #include <sys/types.h>
@@ -602,6 +603,15 @@ nsIFile::GetNativePath(nsACString& aResult)
 {
   aResult = NativePath();
   return NS_OK;
+}
+
+nsCString
+nsIFile::HumanReadablePath()
+{
+  nsCString path;
+  DebugOnly<nsresult> rv = GetNativePath(path);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  return path;
 }
 
 nsresult
