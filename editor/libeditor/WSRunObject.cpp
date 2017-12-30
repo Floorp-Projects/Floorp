@@ -33,7 +33,7 @@ namespace mozilla {
 
 using namespace dom;
 
-const char16_t nbsp = 160;
+const char16_t kNBSP = 160;
 
 WSRunObject::WSRunObject(HTMLEditor* aHTMLEditor,
                          nsINode* aNode,
@@ -209,8 +209,10 @@ WSRunObject::InsertBreak(Selection& aSelection,
         if (!prevPoint.mTextNode ||
             (prevPoint.mTextNode && !nsCRT::IsAsciiSpace(prevPoint.mChar))) {
           // We are at start of non-nbsps.  Convert to a single nbsp.
-          nsresult rv = ConvertToNBSP(thePoint);
-          NS_ENSURE_SUCCESS(rv, nullptr);
+          nsresult rv = InsertNBSPAndRemoveFollowingASCIIWhitespaces(thePoint);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            return nullptr;
+          }
         }
       }
     }
@@ -329,15 +331,15 @@ WSRunObject::InsertText(nsIDocument& aDocument,
     // We have a leading space
     if (beforeRun) {
       if (beforeRun->mType & WSType::leadingWS) {
-        theString.SetCharAt(nbsp, 0);
+        theString.SetCharAt(kNBSP, 0);
       } else if (beforeRun->mType & WSType::normalWS) {
         WSPoint wspoint = GetPreviousCharPoint(pointToInsert.AsRaw());
         if (wspoint.mTextNode && nsCRT::IsAsciiSpace(wspoint.mChar)) {
-          theString.SetCharAt(nbsp, 0);
+          theString.SetCharAt(kNBSP, 0);
         }
       }
     } else if (mStartReason & WSType::block || mStartReason == WSType::br) {
-      theString.SetCharAt(nbsp, 0);
+      theString.SetCharAt(kNBSP, 0);
     }
   }
 
@@ -348,15 +350,15 @@ WSRunObject::InsertText(nsIDocument& aDocument,
     // We have a leading space
     if (afterRun) {
       if (afterRun->mType & WSType::trailingWS) {
-        theString.SetCharAt(nbsp, lastCharIndex);
+        theString.SetCharAt(kNBSP, lastCharIndex);
       } else if (afterRun->mType & WSType::normalWS) {
         WSPoint wspoint = GetNextCharPoint(pointToInsert.AsRaw());
         if (wspoint.mTextNode && nsCRT::IsAsciiSpace(wspoint.mChar)) {
-          theString.SetCharAt(nbsp, lastCharIndex);
+          theString.SetCharAt(kNBSP, lastCharIndex);
         }
       }
     } else if (mEndReason & WSType::block) {
-      theString.SetCharAt(nbsp, lastCharIndex);
+      theString.SetCharAt(kNBSP, lastCharIndex);
     }
   }
 
@@ -369,7 +371,7 @@ WSRunObject::InsertText(nsIDocument& aDocument,
     if (nsCRT::IsAsciiSpace(theString[i])) {
       if (prevWS) {
         // i - 1 can't be negative because prevWS starts out false
-        theString.SetCharAt(nbsp, i - 1);
+        theString.SetCharAt(kNBSP, i - 1);
       } else {
         prevWS = true;
       }
@@ -395,7 +397,7 @@ WSRunObject::DeleteWSBackward()
   NS_ENSURE_TRUE(point.mTextNode, NS_OK);  // nothing to delete
 
   // Easy case, preformatted ws.
-  if (mPRE &&  (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == nbsp)) {
+  if (mPRE &&  (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == kNBSP)) {
     nsresult rv =
       DeleteRange(EditorRawDOMPoint(point.mTextNode, point.mOffset),
                   EditorRawDOMPoint(point.mTextNode, point.mOffset + 1));
@@ -410,9 +412,9 @@ WSRunObject::DeleteWSBackward()
   if (nsCRT::IsAsciiSpace(point.mChar)) {
     RefPtr<Text> startNodeText, endNodeText;
     int32_t startOffset, endOffset;
-    GetAsciiWSBounds(eBoth, point.mTextNode, point.mOffset + 1,
-                     getter_AddRefs(startNodeText), &startOffset,
-                     getter_AddRefs(endNodeText), &endOffset);
+    GetASCIIWhitespacesBounds(eBoth, point.mTextNode, point.mOffset + 1,
+                              getter_AddRefs(startNodeText), &startOffset,
+                              getter_AddRefs(endNodeText), &endOffset);
 
     // adjust surrounding ws
     nsCOMPtr<nsINode> startNode = startNodeText.get();
@@ -432,7 +434,7 @@ WSRunObject::DeleteWSBackward()
     return NS_OK;
   }
 
-  if (point.mChar == nbsp) {
+  if (point.mChar == kNBSP) {
     nsCOMPtr<nsINode> node(point.mTextNode);
     // adjust surrounding ws
     int32_t startOffset = point.mOffset;
@@ -462,7 +464,7 @@ WSRunObject::DeleteWSForward()
   NS_ENSURE_TRUE(point.mTextNode, NS_OK); // nothing to delete
 
   // Easy case, preformatted ws.
-  if (mPRE && (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == nbsp)) {
+  if (mPRE && (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == kNBSP)) {
     nsresult rv =
       DeleteRange(EditorRawDOMPoint(point.mTextNode, point.mOffset),
                   EditorRawDOMPoint(point.mTextNode, point.mOffset + 1));
@@ -477,9 +479,9 @@ WSRunObject::DeleteWSForward()
   if (nsCRT::IsAsciiSpace(point.mChar)) {
     RefPtr<Text> startNodeText, endNodeText;
     int32_t startOffset, endOffset;
-    GetAsciiWSBounds(eBoth, point.mTextNode, point.mOffset + 1,
-                     getter_AddRefs(startNodeText), &startOffset,
-                     getter_AddRefs(endNodeText), &endOffset);
+    GetASCIIWhitespacesBounds(eBoth, point.mTextNode, point.mOffset + 1,
+                              getter_AddRefs(startNodeText), &startOffset,
+                              getter_AddRefs(endNodeText), &endOffset);
 
     // Adjust surrounding ws
     nsCOMPtr<nsINode> startNode(startNodeText), endNode(endNodeText);
@@ -498,7 +500,7 @@ WSRunObject::DeleteWSForward()
     return NS_OK;
   }
 
-  if (point.mChar == nbsp) {
+  if (point.mChar == kNBSP) {
     nsCOMPtr<nsINode> node(point.mTextNode);
     // Adjust surrounding ws
     int32_t startOffset = point.mOffset;
@@ -543,7 +545,7 @@ WSRunObject::PriorVisibleNode(nsINode* aNode,
       if (point.mTextNode && point.mTextNode->Length()) {
         *outVisNode = point.mTextNode;
         *outVisOffset = point.mOffset + 1;
-        if (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == nbsp) {
+        if (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == kNBSP) {
           *outType = WSType::normalWS;
         } else {
           *outType = WSType::text;
@@ -584,7 +586,7 @@ WSRunObject::NextVisibleNode(nsINode* aNode,
       if (point.mTextNode && point.mTextNode->Length()) {
         *outVisNode = point.mTextNode;
         *outVisOffset = point.mOffset;
-        if (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == nbsp) {
+        if (nsCRT::IsAsciiSpace(point.mChar) || point.mChar == kNBSP) {
           *outType = WSType::normalWS;
         } else {
           *outType = WSType::text;
@@ -669,7 +671,7 @@ WSRunObject::GetWSNodes()
         }
         char16_t theChar = textFrag->CharAt(pos);
         if (!nsCRT::IsAsciiSpace(theChar)) {
-          if (theChar != nbsp) {
+          if (theChar != kNBSP) {
             mStartNode = textNode;
             mStartOffset = pos + 1;
             mStartReason = WSType::text;
@@ -722,7 +724,7 @@ WSRunObject::GetWSNodes()
             }
             char16_t theChar = textFrag->CharAt(pos);
             if (!nsCRT::IsAsciiSpace(theChar)) {
-              if (theChar != nbsp) {
+              if (theChar != kNBSP) {
                 mStartNode = textNode;
                 mStartOffset = pos + 1;
                 mStartReason = WSType::text;
@@ -777,7 +779,7 @@ WSRunObject::GetWSNodes()
         }
         char16_t theChar = textFrag->CharAt(pos);
         if (!nsCRT::IsAsciiSpace(theChar)) {
-          if (theChar != nbsp) {
+          if (theChar != kNBSP) {
             mEndNode = textNode;
             mEndOffset = pos;
             mEndReason = WSType::text;
@@ -831,7 +833,7 @@ WSRunObject::GetWSNodes()
             }
             char16_t theChar = textFrag->CharAt(pos);
             if (!nsCRT::IsAsciiSpace(theChar)) {
-              if (theChar != nbsp) {
+              if (theChar != kNBSP) {
                 mEndNode = textNode;
                 mEndOffset = pos;
                 mEndReason = WSType::text;
@@ -1233,8 +1235,11 @@ WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject)
       // make sure leading char of following ws is an nbsp, so that it will show up
       WSPoint point = aEndObject->GetNextCharPoint(aEndObject->Point());
       if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar)) {
-        nsresult rv = aEndObject->ConvertToNBSP(point);
-        NS_ENSURE_SUCCESS(rv, rv);
+        nsresult rv =
+          aEndObject->InsertNBSPAndRemoveFollowingASCIIWhitespaces(point);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
     }
   }
@@ -1253,13 +1258,15 @@ WSRunObject::PrepareToDeleteRangePriv(WSRunObject* aEndObject)
       if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar)) {
         RefPtr<Text> wsStartNode, wsEndNode;
         int32_t wsStartOffset, wsEndOffset;
-        GetAsciiWSBounds(eBoth, mNode, mOffset,
-                         getter_AddRefs(wsStartNode), &wsStartOffset,
-                         getter_AddRefs(wsEndNode), &wsEndOffset);
+        GetASCIIWhitespacesBounds(eBoth, mNode, mOffset,
+                                  getter_AddRefs(wsStartNode), &wsStartOffset,
+                                  getter_AddRefs(wsEndNode), &wsEndOffset);
         point.mTextNode = wsStartNode;
         point.mOffset = wsStartOffset;
-        nsresult rv = ConvertToNBSP(point);
-        NS_ENSURE_SUCCESS(rv, rv);
+        nsresult rv = InsertNBSPAndRemoveFollowingASCIIWhitespaces(point);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
       }
     }
   }
@@ -1282,8 +1289,10 @@ WSRunObject::PrepareToSplitAcrossBlocksPriv()
     // make sure leading char of following ws is an nbsp, so that it will show up
     WSPoint point = GetNextCharPoint(Point());
     if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar)) {
-      nsresult rv = ConvertToNBSP(point);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv = InsertNBSPAndRemoveFollowingASCIIWhitespaces(point);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
   }
 
@@ -1294,13 +1303,15 @@ WSRunObject::PrepareToSplitAcrossBlocksPriv()
     if (point.mTextNode && nsCRT::IsAsciiSpace(point.mChar)) {
       RefPtr<Text> wsStartNode, wsEndNode;
       int32_t wsStartOffset, wsEndOffset;
-      GetAsciiWSBounds(eBoth, mNode, mOffset,
-                       getter_AddRefs(wsStartNode), &wsStartOffset,
-                       getter_AddRefs(wsEndNode), &wsEndOffset);
+      GetASCIIWhitespacesBounds(eBoth, mNode, mOffset,
+                                getter_AddRefs(wsStartNode), &wsStartOffset,
+                                getter_AddRefs(wsEndNode), &wsEndOffset);
       point.mTextNode = wsStartNode;
       point.mOffset = wsStartOffset;
-      nsresult rv = ConvertToNBSP(point);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsresult rv = InsertNBSPAndRemoveFollowingASCIIWhitespaces(point);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
     }
   }
   return NS_OK;
@@ -1492,27 +1503,42 @@ WSRunObject::GetPreviousCharPoint(const WSPoint &aPoint)
 }
 
 nsresult
-WSRunObject::ConvertToNBSP(WSPoint aPoint)
+WSRunObject::InsertNBSPAndRemoveFollowingASCIIWhitespaces(WSPoint aPoint)
 {
   // MOOSE: this routine needs to be modified to preserve the integrity of the
   // wsFragment info.
-  NS_ENSURE_TRUE(aPoint.mTextNode, NS_ERROR_NULL_POINTER);
+  if (NS_WARN_IF(!aPoint.mTextNode)) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-  // First, insert an nbsp
+ // First, insert an NBSP.
   AutoTransactionsConserveSelection dontChangeMySelection(mHTMLEditor);
-  nsAutoString nbspStr(nbsp);
   nsresult rv =
-    mHTMLEditor->InsertTextIntoTextNodeImpl(nbspStr, *aPoint.mTextNode,
-                                            aPoint.mOffset, true);
-  NS_ENSURE_SUCCESS(rv, rv);
+    mHTMLEditor->InsertTextIntoTextNodeImpl(nsDependentSubstring(&kNBSP, 1),
+                                            *aPoint.mTextNode, aPoint.mOffset,
+                                            true);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-  // Next, find range of ws it will replace
+  // Now, the text node may have been modified by mutation observer.
+  // So, the NBSP may have gone.
+  if (aPoint.mTextNode->TextDataLength() <= aPoint.mOffset ||
+      aPoint.mTextNode->GetText()->CharAt(aPoint.mOffset) != kNBSP) {
+    // This is just preparation of an edit action.  Let's return NS_OK.
+    // XXX Perhaps, we should return another success code which indicates
+    //     mutation observer touched the DOM tree.  However, that should
+    //     be returned from each transaction's DoTransaction.
+    return NS_OK;
+  }
+
+  // Next, find range of whitespaces it will be replaced.
   RefPtr<Text> startNode, endNode;
   int32_t startOffset = 0, endOffset = 0;
 
-  GetAsciiWSBounds(eAfter, aPoint.mTextNode, aPoint.mOffset + 1,
-                   getter_AddRefs(startNode), &startOffset,
-                   getter_AddRefs(endNode), &endOffset);
+  GetASCIIWhitespacesBounds(eAfter, aPoint.mTextNode, aPoint.mOffset + 1,
+                            getter_AddRefs(startNode), &startOffset,
+                            getter_AddRefs(endNode), &endOffset);
 
   // Finally, delete that replaced ws, if any
   if (startNode) {
@@ -1527,13 +1553,13 @@ WSRunObject::ConvertToNBSP(WSPoint aPoint)
 }
 
 void
-WSRunObject::GetAsciiWSBounds(int16_t aDir,
-                              nsINode* aNode,
-                              int32_t aOffset,
-                              Text** outStartNode,
-                              int32_t* outStartOffset,
-                              Text** outEndNode,
-                              int32_t* outEndOffset)
+WSRunObject::GetASCIIWhitespacesBounds(int16_t aDir,
+                                       nsINode* aNode,
+                                       int32_t aOffset,
+                                       Text** outStartNode,
+                                       int32_t* outStartOffset,
+                                       Text** outEndNode,
+                                       int32_t* outEndOffset)
 {
   MOZ_ASSERT(aNode && outStartNode && outStartOffset && outEndNode &&
              outEndOffset);
@@ -1761,7 +1787,7 @@ WSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
 
   // first check for trailing nbsp
   WSPoint thePoint = GetPreviousCharPoint(aRun->EndPoint());
-  if (thePoint.mTextNode && thePoint.mChar == nbsp) {
+  if (thePoint.mTextNode && thePoint.mChar == kNBSP) {
     // now check that what is to the left of it is compatible with replacing nbsp with space
     WSPoint prevPoint = GetPreviousCharPoint(thePoint);
     if (prevPoint.mTextNode) {
@@ -1843,9 +1869,10 @@ WSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
 
       RefPtr<Text> startNode, endNode;
       int32_t startOffset, endOffset;
-      GetAsciiWSBounds(eBoth, prevPoint.mTextNode, prevPoint.mOffset + 1,
-                       getter_AddRefs(startNode), &startOffset,
-                       getter_AddRefs(endNode), &endOffset);
+      GetASCIIWhitespacesBounds(eBoth, prevPoint.mTextNode,
+                                prevPoint.mOffset + 1,
+                                getter_AddRefs(startNode), &startOffset,
+                                getter_AddRefs(endNode), &endOffset);
 
       // Delete that nbsp
       nsresult rv = DeleteRange(EditorRawDOMPoint(thePoint.mTextNode,
@@ -1858,9 +1885,9 @@ WSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
 
       // Finally, insert that nbsp before the ASCII ws run
       AutoTransactionsConserveSelection dontChangeMySelection(htmlEditor);
-      nsAutoString nbspStr(nbsp);
-      rv = htmlEditor->InsertTextIntoTextNodeImpl(nbspStr, *startNode,
-                                                  startOffset, true);
+      rv =
+        htmlEditor->InsertTextIntoTextNodeImpl(nsDependentSubstring(&kNBSP, 1),
+                                               *startNode, startOffset, true);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -1884,7 +1911,7 @@ WSRunObject::ReplacePreviousNBSPIfUnncessary(WSFragment* aRun,
   // inserted object.
   bool canConvert = false;
   WSPoint thePoint = GetPreviousCharPoint(aPoint);
-  if (thePoint.mTextNode && thePoint.mChar == nbsp) {
+  if (thePoint.mTextNode && thePoint.mChar == kNBSP) {
     WSPoint prevPoint = GetPreviousCharPoint(thePoint);
     if (prevPoint.mTextNode) {
       if (!nsCRT::IsAsciiSpace(prevPoint.mChar)) {
@@ -1938,7 +1965,7 @@ WSRunObject::CheckLeadingNBSP(WSFragment* aRun,
   // before it.  What is before it now will end up before the inserted text.
   bool canConvert = false;
   WSPoint thePoint = GetNextCharPoint(EditorRawDOMPoint(aNode, aOffset));
-  if (thePoint.mChar == nbsp) {
+  if (thePoint.mChar == kNBSP) {
     WSPoint tmp = thePoint;
     // we want to be after thePoint
     tmp.mOffset++;

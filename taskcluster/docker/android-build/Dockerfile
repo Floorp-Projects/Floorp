@@ -16,11 +16,6 @@ VOLUME /builds/worker/checkouts
 VOLUME /builds/worker/workspace
 VOLUME /builds/worker/tooltool-cache
 
-# Add common hg configuration.
-# %include taskcluster/docker/centos6-build/hgrc
-COPY topsrcdir/taskcluster/docker/centos6-build/hgrc /builds/worker/.hgrc
-RUN chown worker:worker /builds/worker/.hgrc
-
 # Set variables normally configured at login, by the shell' parent process,
 # these are taken from GNU su manual.  Also set DEBIAN_FRONTEND to advise
 # apt-get of our situation.
