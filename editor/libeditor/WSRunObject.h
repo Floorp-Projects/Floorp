@@ -410,10 +410,40 @@ protected:
   WSPoint GetNextCharPointInternal(const EditorRawDOMPoint& aPoint);
   WSPoint GetPreviousCharPointInternal(const EditorRawDOMPoint& aPoint);
 
-  nsresult ConvertToNBSP(WSPoint aPoint);
-  void GetAsciiWSBounds(int16_t aDir, nsINode* aNode, int32_t aOffset,
-                        dom::Text** outStartNode, int32_t* outStartOffset,
-                        dom::Text** outEndNode, int32_t* outEndOffset);
+  /**
+   * InsertNBSPAndRemoveFollowingASCIIWhitespaces() inserts an NBSP first.
+   * Then, if following characters are ASCII whitespaces, will remove them.
+   */
+  nsresult InsertNBSPAndRemoveFollowingASCIIWhitespaces(WSPoint aPoint);
+
+  /**
+   * GetASCIIWhitespacesBounds() retrieves whitespaces before and/or after the
+   * point specified by aNode and aOffset.
+   *
+   * @param aDir            Specify eBefore if you want to scan text backward.
+   *                        Specify eAfter if you want to scan text forward.
+   *                        Specify eBoth if you want to scan text to both
+   *                        direction.
+   * @param aNode           The container node where you want to start to scan
+   *                        whitespaces from.
+   * @param aOffset         The offset in aNode where you want to start to scan
+   *                        whitespaces from.
+   * @param outStartNode    [out] The container of first ASCII whitespace.
+   *                              If there is no whitespaces, returns nullptr.
+   * @param outStartOffset  [out] The offset of first ASCII whitespace in
+   *                              outStartNode.
+   * @param outEndNode      [out] The container of last ASCII whitespace.
+   *                              If there is no whitespaces, returns nullptr.
+   * @param outEndOffset    [out] The offset of last ASCII whitespace in
+   *                              outEndNode.
+   */
+  void GetASCIIWhitespacesBounds(int16_t aDir,
+                                 nsINode* aNode,
+                                 int32_t aOffset,
+                                 dom::Text** outStartNode,
+                                 int32_t* outStartOffset,
+                                 dom::Text** outEndNode,
+                                 int32_t* outEndOffset);
 
   /**
    * FindNearestRun() looks for a WSFragment which is closest to specified

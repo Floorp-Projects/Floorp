@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1425997
+-->
+<html>
+<head>
+  <title>Test for Bug 1425997</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1425997">Mozilla Bug 1425997</a>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div id="editor" contenteditable>
+<!-- -->
+<span id="inline">foo</span>
+</div>
+
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let selection = window.getSelection();
+  let editor = document.getElementById("editor");
+  let originalContent = editor.innerHTML;
+  function onCharacterDataModified() {
+    // Until removing all NBSPs which were inserted by the editor,
+    // emulates Backspace key with "delete" command.
+    // When this test is created, the behavior is:
+    //   after 1st delete: "\n<!-- -->&nbsp;&nbsp;\n"
+    //   after 2nd delete: "\n<!-- -->&nbsp;\n"
+    //   after 3rd delete: "\n<!-- -->\n"
+    while (editor.innerHTML.indexOf("&nbsp;") !== -1) {
+      document.execCommand("delete", false);
+    }
+  }
+  editor.addEventListener("DOMCharacterDataModified", onCharacterDataModified, { once: true });
+  editor.focus();
+  selection.selectAllChildren(document.getElementById("inline"));
+  document.execCommand('insertHTML', false, 'text');
+  // This expected result is just same as the result of Chrome.
+  // If the spec says this is wrong, feel free to change this result.
+  todo_is(editor.innerHTML, "\n<!-- --><span id=\"inline\">text</span>",
+          "The 'foo' should be replaced with 'text' and whitespaces before the span element should be removed");
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
