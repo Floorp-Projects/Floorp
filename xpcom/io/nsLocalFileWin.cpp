@@ -3565,6 +3565,15 @@ nsIFile::GetNativePath(nsACString& aResult)
   return NS_CopyUnicodeToNative(NativePath(), aResult);
 }
 
+nsCString
+nsIFile::HumanReadablePath()
+{
+  nsString path;
+  DebugOnly<nsresult> rv = GetPath(path);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  return NS_ConvertUTF16toUTF8(path);
+}
+
 
 NS_IMETHODIMP
 nsLocalFile::GetNativeCanonicalPath(nsACString& aResult)
