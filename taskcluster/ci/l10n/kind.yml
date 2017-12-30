@@ -53,6 +53,9 @@ job-template:
    toolchains:
       by-build-platform:
          default: []
+         macosx64:
+            - linux64-libdmg
+            - linux64-hfsplus
          android-api-16-l10n:
             - android-gradle-dependencies
             - android-sdk-linux

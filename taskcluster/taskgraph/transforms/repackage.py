@@ -187,6 +187,12 @@ def make_job_description(config, jobs):
             'worker': worker,
             'run': run,
         }
+
+        if build_platform.startswith('macosx'):
+            task['toolchains'] = [
+                'linux64-libdmg',
+                'linux64-hfsplus',
+            ]
         yield task
 
 

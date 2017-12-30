@@ -29,7 +29,6 @@ from .data import (
     AndroidResDirs,
     BaseRustProgram,
     BaseSources,
-    BrandingFiles,
     ChromeManifestEntry,
     ComputedFlags,
     ConfigFileSubstitution,
@@ -1142,7 +1141,6 @@ class TreeMetadataEmitter(LoggingMixin):
 
         components = []
         for var, cls in (
-            ('BRANDING_FILES', BrandingFiles),
             ('EXPORTS', Exports),
             ('FINAL_TARGET_FILES', FinalTargetFiles),
             ('FINAL_TARGET_PP_FILES', FinalTargetPreprocessedFiles),

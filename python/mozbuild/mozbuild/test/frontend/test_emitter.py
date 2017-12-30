@@ -15,7 +15,6 @@ from mozbuild.frontend.context import (
 )
 from mozbuild.frontend.data import (
     AndroidResDirs,
-    BrandingFiles,
     ChromeManifestEntry,
     ComputedFlags,
     ConfigFileSubstitution,
@@ -639,22 +638,6 @@ class TestEmitterBasic(unittest.TestCase):
         with self.assertRaisesRegexp(SandboxValidationError,
             'Cannot install files to the root of TEST_HARNESS_FILES'):
             self.read_topsrcdir(reader)
-
-    def test_branding_files(self):
-        reader = self.reader('branding-files')
-        objs = self.read_topsrcdir(reader)
-
-        self.assertEqual(len(objs), 1)
-        self.assertIsInstance(objs[0], BrandingFiles)
-
-        files = objs[0].files
-
-        self.assertEqual(files._strings, ['bar.ico', 'baz.png', 'foo.xpm'])
-
-        self.assertIn('icons', files._children)
-        icons = files._children['icons']
-
-        self.assertEqual(icons._strings, ['quux.icns'])
 
     def test_program(self):
         reader = self.reader('program')
