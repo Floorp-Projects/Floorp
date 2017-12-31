@@ -874,26 +874,15 @@ element.inViewport = function(el, x = undefined, y = undefined) {
  *     Container element of <var>el</var>.
  */
 element.getContainer = function(el) {
-  function findAncestralElement(startNode, validAncestors) {
-    let node = startNode;
-    while (node.parentNode) {
-      node = node.parentNode;
-      if (validAncestors.includes(node.localName)) {
-        return node;
-      }
-    }
-    return startNode;
-  }
-
   // Does <option> or <optgroup> have a valid context,
   // meaning is it a child of <datalist> or <select>?
   if (["option", "optgroup"].includes(el.localName)) {
-    return findAncestralElement(el, ["datalist", "select"]);
+    return element.findClosest(el, "datalist,select") || el;
   }
 
   // Child nodes of button will not be part of the element tree for
   // elementsFromPoint until bug 1089326 is fixed.
-  return findAncestralElement(el, ["button"]);
+  return element.findClosest(el, "button") || el;
 };
 
 /**
