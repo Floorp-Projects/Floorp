@@ -656,6 +656,30 @@ function findElements(strategy, selector, document, startNode = undefined) {
 }
 
 /**
+ * Finds the closest parent node of <var>startNode</var> by CSS a
+ * <var>selector</var> expression.
+ *
+ * @param {Node} startNode
+ *     Cyce through <var>startNode</var>'s parent nodes in tree-order
+ *     and return the first match to <var>selector</var>.
+ * @param {string} selector
+ *     CSS selector expression.
+ *
+ * @return {Node=}
+ *     First match to <var>selector</var>, or null if no match was found.
+ */
+element.findClosest = function(startNode, selector) {
+  let node = startNode;
+  while (node.parentNode && node.parentNode.nodeType == ELEMENT_NODE) {
+    node = node.parentNode;
+    if (node.matches(selector)) {
+      return node;
+    }
+  }
+  return null;
+};
+
+/**
  * Determines if <var>obj<var> is an HTML or JS collection.
  *
  * @param {*} seq
