@@ -783,6 +783,22 @@ element.isSelected = function(el) {
 };
 
 /**
+ * An element is considered read only if it is an
+ * <code>&lt;input&gt;</code> or <code>&lt;textarea&gt;</code>
+ * element whose <code>readOnly</code> content IDL attribute is set.
+ *
+ * @param {Element} el
+ *     Element to test is read only.
+ *
+ * @return {boolean}
+ *     True if element is read only.
+ */
+element.isReadOnly = function(el) {
+  return element.isDOMElement(el) &&
+      ["input", "textarea"].includes(el.localName) && el.readOnly;
+};
+
+/**
  * This function generates a pair of coordinates relative to the viewport
  * given a target element and coordinates relative to that element's
  * top-left corner.
