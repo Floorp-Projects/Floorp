@@ -847,10 +847,9 @@ element.inViewport = function(el, x = undefined, y = undefined) {
  *     Element to get the container of.
  *
  * @return {Element}
- *     Container element of |el|.
+ *     Container element of <var>el</var>.
  */
 element.getContainer = function(el) {
-
   function findAncestralElement(startNode, validAncestors) {
     let node = startNode;
     while (node.parentNode) {
@@ -859,13 +858,12 @@ element.getContainer = function(el) {
         return node;
       }
     }
-
     return startNode;
   }
 
-  // Does <option> have a valid context,
+  // Does <option> or <optgroup> have a valid context,
   // meaning is it a child of <datalist> or <select>?
-  if (el.localName === "option") {
+  if (["option", "optgroup"].includes(el.localName)) {
     return findAncestralElement(el, ["datalist", "select"]);
   }
 
