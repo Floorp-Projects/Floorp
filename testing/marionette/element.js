@@ -799,6 +799,42 @@ element.isReadOnly = function(el) {
 };
 
 /**
+ * An element is considered disabled if it is a an element
+ * that can be disabled, or it belongs to a container group which
+ * <code>disabled</code> content IDL attribute affects it.
+ *
+ * @param {Element} el
+ *     Element to test for disabledness.
+ *
+ * @return {boolean}
+ *     True if element, or its container group, is disabled.
+ */
+element.isDisabled = function(el) {
+  if (!element.isDOMElement(el)) {
+    return false;
+  }
+
+  switch (el.localName) {
+    case "option":
+    case "optgroup":
+      if (el.disabled) {
+        return true;
+      }
+      let parent = element.findClosest(el, "optgroup,select");
+      return element.isDisabled(parent);
+
+    case "button":
+    case "input":
+    case "select":
+    case "textarea":
+      return el.disabled;
+
+    default:
+      return false;
+  }
+};
+
+/**
  * This function generates a pair of coordinates relative to the viewport
  * given a target element and coordinates relative to that element's
  * top-left corner.
