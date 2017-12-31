@@ -194,6 +194,16 @@ add_test(function test_isDOMWindow() {
   run_next_test();
 });
 
+add_test(function test_isReadOnly() {
+  ok(!element.isReadOnly(null));
+  ok(!element.isReadOnly(domEl));
+  ok(!element.isReadOnly(new DOMElement("p", {readOnly: true})));
+  ok(element.isReadOnly(new DOMElement("input", {readOnly: true})));
+  ok(element.isReadOnly(new DOMElement("textarea", {readOnly: true})));
+
+  run_next_test();
+});
+
 add_test(function test_coordinates() {
   let p = element.coordinates(domEl);
   ok(p.hasOwnProperty("x"));
