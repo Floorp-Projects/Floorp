@@ -31,6 +31,13 @@ class Element {
 
   get nodeType() { return 1; }
   get ELEMENT_NODE() { return 1; }
+
+  // this is a severely limited CSS selector
+  // that only supports lists of tag names
+  matches(selector) {
+    let tags = selector.split(",");
+    return tags.includes(this.localName);
+  }
 }
 
 class DOMElement extends Element {
@@ -93,6 +100,17 @@ const domWin = new WindowProxy();
 const domFrame = new class extends WindowProxy {
   get parent() { return domWin; }
 };
+
+add_test(function test_findClosest() {
+  equal(element.findClosest(domEl, "foo"), null);
+
+  let foo = new DOMElement("foo");
+  let bar = new DOMElement("bar");
+  bar.parentNode = foo;
+  equal(element.findClosest(bar, "foo"), foo);
+
+  run_next_test();
+});
 
 add_test(function test_isSelected() {
   let checkbox = new DOMElement("input", {type: "checkbox"});
