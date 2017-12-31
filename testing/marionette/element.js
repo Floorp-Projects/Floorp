@@ -34,6 +34,15 @@ const {
 const ELEMENT_NODE = 1;
 const DOCUMENT_NODE = 9;
 
+const UNEDITABLE_INPUTS = new Set([
+  "checkbox",
+  "radio",
+  "hidden",
+  "submit",
+  "button",
+  "image",
+]);
+
 const XBLNS = "http://www.mozilla.org/xbl";
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
@@ -832,6 +841,60 @@ element.isDisabled = function(el) {
     default:
       return false;
   }
+};
+
+/**
+ * An editing host is a node that is either an HTML element with a
+ * <code>contenteditable</code> attribute, or the HTML element child
+ * of a document whose <code>designMode</code> is enabled.
+ *
+ * @param {Element} el
+ *     Element to determine if is an editing host.
+ *
+ * @return {boolean}
+ *     True if editing host, false otherwise.
+ */
+element.isEditingHost = function(el) {
+  return element.isDOMElement(el) &&
+      (el.isContentEditable || el.ownerDocument.designMode == "on");
+};
+
+/**
+ * Determines if an element is editable according to WebDriver.
+ *
+ * An element is considered editable if it is not read-only or
+ * disabled, and one of the following conditions are met:
+ *
+ * <ul>
+ * <li>It is a <code>&lt;textarea&gt;</code> element.
+ *
+ * <li>It is an <code>&lt;input&gt;</code> element that is not of
+ * the <code>checkbox</code>, <code>radio</code>, <code>hidden</code>,
+ * <code>submit</code>, <code>button</code>, or <code>image</code> types.
+ *
+ * <li>It is content-editable.
+ *
+ * <li>It belongs to a document in design mode.
+ * </ul>
+ *
+ * @param {Element}
+ *     Element to test if editable.
+ *
+ * @return {boolean}
+ *     True if editable, false otherwise.
+ */
+element.isEditable = function(el) {
+  if (!element.isDOMElement(el)) {
+    return false;
+  }
+
+  if (element.isReadOnly(el) || element.isDisabled(el)) {
+    return false;
+  }
+
+  return (el.localName == "input" && !UNEDITABLE_INPUTS.has(el.type)) ||
+      el.localName == "textarea" ||
+      element.isEditingHost(el);
 };
 
 /**

@@ -45,6 +45,9 @@ class DOMElement extends Element {
     super(tagName, attrs);
 
     this.namespaceURI = XHTMLNS;
+    if (typeof this.ownerDocument == "undefined") {
+      this.ownerDocument = {designMode: "off"};
+    }
 
     if (this.localName == "option") {
       this.selected = false;
@@ -224,6 +227,33 @@ add_test(function test_isDisabled() {
   ok(element.isDisabled(new DOMElement("input", {disabled: true})));
   ok(element.isDisabled(new DOMElement("select", {disabled: true})));
   ok(element.isDisabled(new DOMElement("textarea", {disabled: true})));
+
+  run_next_test();
+});
+
+add_test(function test_isEditingHost() {
+  ok(!element.isEditingHost(null));
+  ok(element.isEditingHost(new DOMElement("p", {isContentEditable: true})));
+  ok(element.isEditingHost(new DOMElement("p", {ownerDocument: {designMode: "on"}})));
+
+  run_next_test();
+});
+
+add_test(function test_isEditable() {
+  ok(!element.isEditable(null));
+  ok(!element.isEditable(domEl));
+  ok(!element.isEditable(new DOMElement("textarea", {readOnly: true})));
+  ok(!element.isEditable(new DOMElement("textarea", {disabled: true})));
+
+  for (let type of ["checkbox", "radio", "hidden", "submit", "button", "image"]) {
+    ok(!element.isEditable(new DOMElement("input", {type})));
+  }
+  ok(element.isEditable(new DOMElement("input", {type: "text"})));
+  ok(element.isEditable(new DOMElement("input")));
+
+  ok(element.isEditable(new DOMElement("textarea")));
+  ok(element.isEditable(new DOMElement("p", {ownerDocument: {designMode: "on"}})));
+  ok(element.isEditable(new DOMElement("p", {isContentEditable: true})));
 
   run_next_test();
 });
