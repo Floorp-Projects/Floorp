@@ -51,7 +51,6 @@ class ArchlinuxBootstrapper(StyloInstall, BaseBootstrapper):
         'imake',
         'inetutils',
         'libpulse',
-        'mesa',
         'xorg-server-xvfb',
         'yasm',
         'gst-libav',
