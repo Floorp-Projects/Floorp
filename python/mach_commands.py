@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import logging
 import os
+import sys
 import tempfile
 
 from concurrent.futures import (
@@ -35,18 +36,29 @@ from mach.decorators import (
 class MachCommands(MachCommandBase):
     @Command('python', category='devenv',
              description='Run Python.')
+    @CommandArgument('--no-virtualenv', action='store_true',
+                     help='Do not set up a virtualenv')
     @CommandArgument('args', nargs=argparse.REMAINDER)
-    def python(self, args):
+    def python(self, no_virtualenv, args):
         # Avoid logging the command
         self.log_manager.terminal_handler.setLevel(logging.CRITICAL)
 
-        self._activate_virtualenv()
+        # Note: subprocess requires native strings in os.environ on Windows.
+        append_env = {
+            b'PYTHONDONTWRITEBYTECODE': str('1'),
+        }
 
-        return self.run_process([self.virtualenv_manager.python_path] + args,
+        if no_virtualenv:
+            python_path = sys.executable
+            append_env[b'PYTHONPATH'] = os.pathsep.join(sys.path)
+        else:
+            self._activate_virtualenv()
+            python_path = self.virtualenv_manager.python_path
+
+        return self.run_process([python_path] + args,
                                 pass_thru=True,  # Allow user to run Python interactively.
                                 ensure_exit_code=False,  # Don't throw on non-zero exit code.
-                                # Note: subprocess requires native strings in os.environ on Windows
-                                append_env={b'PYTHONDONTWRITEBYTECODE': str('1')})
+                                append_env=append_env)
 
     @Command('python-test', category='testing',
              description='Run Python unit tests with an appropriate test runner.')
