@@ -1701,10 +1701,8 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
     // If the node is a ShadowRoot, the frame needs to be adjusted,
     // because a ShadowRoot does not get a frame. Its children are rendered
     // as children of the host.
-    mozilla::dom::ShadowRoot* shadowRoot =
-      mozilla::dom::ShadowRoot::FromNode(theNode);
-    if (shadowRoot) {
-      theNode = shadowRoot->GetHost();
+    if (ShadowRoot* shadow = ShadowRoot::FromNode(theNode)) {
+      theNode = shadow->GetHost();
     }
 
     returnFrame = theNode->GetPrimaryFrame();

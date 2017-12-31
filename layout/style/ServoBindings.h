@@ -152,7 +152,6 @@ void Gecko_RecordTraversalStatistics(uint32_t total, uint32_t parallel,
                                      uint32_t total_t, uint32_t parallel_t,
                                      uint32_t total_s, uint32_t parallel_s);
 bool Gecko_IsInDocument(RawGeckoNodeBorrowed node);
-bool Gecko_FlattenedTreeParentIsParent(RawGeckoNodeBorrowed node);
 bool Gecko_IsSignificantChild(RawGeckoNodeBorrowed node,
                               bool text_is_significant,
                               bool whitespace_is_significant);

@@ -24,6 +24,7 @@
 #include "nsPresState.h"
 #include "nsView.h"
 #include "nsViewManager.h"
+#include "nsIContentInlines.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMNode.h"
 #include "nsISelectControlFrame.h"
