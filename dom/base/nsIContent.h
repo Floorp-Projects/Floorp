@@ -534,7 +534,7 @@ public:
    *
    * @return The ShadowRoot currently bound to this element.
    */
-  inline mozilla::dom::ShadowRoot *GetShadowRoot() const;
+  inline mozilla::dom::ShadowRoot* GetShadowRoot() const;
 
   /**
    * Gets the root of the node tree for this content if it is in a shadow tree.
@@ -605,11 +605,17 @@ public:
    * Same as GetFlattenedTreeParentNode, but returns null if the parent is
    * non-nsIContent.
    */
-  inline nsIContent *GetFlattenedTreeParent() const;
+  inline nsIContent* GetFlattenedTreeParent() const;
 
-  // Helper method, which we leave public so that it's accessible from nsINode.
-  enum FlattenedParentType { eNotForStyle, eForStyle };
-  nsINode* GetFlattenedTreeParentNodeInternal(FlattenedParentType aType) const;
+  /**
+   * Get the flattened tree parent for NAC holding from the document element,
+   * from the point of view of the style system.
+   *
+   * Document-level anonymous content holds from the document element, even
+   * though they should not be treated as such (they should be parented to the
+   * document instead, and shouldn't inherit from the document element).
+   */
+  nsINode* GetFlattenedTreeParentForDocumentElementNAC() const;
 
   /**
    * API to check if this is a link that's traversed in response to user input
@@ -954,12 +960,6 @@ protected:
    * called if HasID() is true.
    */
   nsAtom* DoGetID() const;
-
-  /**
-   * Returns the assigned slot, if it exists, or the direct parent, if it's a
-   * fallback content of a slot.
-   */
-  nsINode* GetFlattenedTreeParentForMaybeAssignedNode() const;
 
 public:
 #ifdef DEBUG
