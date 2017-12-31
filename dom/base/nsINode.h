@@ -705,6 +705,14 @@ public:
     return IsMathMLElement() && IsNodeInternal(aFirst, aArgs...);
   }
 
+  bool IsShadowRoot() const
+  {
+    const bool isShadowRoot = IsInShadowTree() && !GetParentNode();
+    MOZ_ASSERT_IF(isShadowRoot,
+                  NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE);
+    return isShadowRoot;
+  }
+
   /**
    * Insert a content node at a particular index.  This method handles calling
    * BindToTree on the child appropriately.
@@ -942,6 +950,8 @@ public:
     return mParent;
   }
 
+  enum FlattenedParentType { eNotForStyle, eForStyle };
+
   /**
    * Returns the node that is the parent of this node in the flattened
    * tree. This differs from the normal parent if the node is filtered
@@ -953,10 +963,10 @@ public:
   inline nsINode* GetFlattenedTreeParentNode() const;
 
   /**
-   * Like GetFlattenedTreeParentNode, but returns null for any native
-   * anonymous content that was generated for ancestor frames of the
-   * root element's primary frame, such as scrollbar elements created
-   * by the root scroll frame.
+   * Like GetFlattenedTreeParentNode, but returns the document for any native
+   * anonymous content that was generated for ancestor frames of the document
+   * element's primary frame, such as scrollbar elements created by the root
+   * scroll frame.
    */
   inline nsINode* GetFlattenedTreeParentNodeForStyle() const;
 

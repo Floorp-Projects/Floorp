@@ -7990,8 +7990,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
   // a parent. While its uncommon to change the structure of the default content itself, a label,
   // for example, can be reframed by having its value attribute set or removed.
   if (!parentFrame &&
-      !(aContainer->IsActiveChildrenElement() ||
-        ShadowRoot::FromNode(aContainer))) {
+      !(aContainer->IsActiveChildrenElement() || aContainer->IsShadowRoot())) {
     // We're punting on frame construction because there's no container frame.
     // The Servo-backed style system handles this case like the lazy frame
     // construction case, except when we're already constructing frames, in
@@ -8003,7 +8002,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     return;
   }
 
-  MOZ_ASSERT_IF(ShadowRoot::FromNode(aContainer), !parentFrame);
+  MOZ_ASSERT_IF(aContainer->IsShadowRoot(), !parentFrame);
 
   // Otherwise, we've got parent content. Find its frame.
   NS_ASSERTION(!parentFrame || parentFrame->GetContent() == aContainer ||
@@ -9330,12 +9329,14 @@ nsCSSFrameConstructor::GetInsertionPoint(nsIContent* aContainer,
     }
 
     if (nsContentUtils::HasDistributedChildren(aContainer) ||
-        ShadowRoot::FromNode(aContainer)) {
+        aContainer->IsShadowRoot()) {
       // The container distributes nodes or is a shadow root, use the frame of
       // the flattened tree parent.
       //
       // It may be the case that the node is distributed but not matched to any
       // insertion points, so there is no flattened parent.
+      //
+      // FIXME(emilio): We should be able to use this path all the time.
       nsIContent* flattenedParent = aChild->GetFlattenedTreeParent();
       if (flattenedParent) {
         return InsertionPoint(GetContentInsertionFrameFor(flattenedParent),
