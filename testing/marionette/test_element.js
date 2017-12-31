@@ -204,6 +204,30 @@ add_test(function test_isReadOnly() {
   run_next_test();
 });
 
+add_test(function test_isDisabled() {
+  ok(!element.isDisabled(new DOMElement("p")));
+  ok(!element.isDisabled(new SVGElement("rect", {disabled: true})));
+  ok(!element.isDisabled(new XULElement("browser", {disabled: true})));
+
+  let select = new DOMElement("select", {disabled: true});
+  let option = new DOMElement("option");
+  option.parentNode = select;
+  ok(element.isDisabled(option));
+
+  let optgroup = new DOMElement("optgroup", {disabled: true});
+  option.parentNode = optgroup;
+  optgroup.parentNode = select;
+  select.disabled = false;
+  ok(element.isDisabled(option));
+
+  ok(element.isDisabled(new DOMElement("button", {disabled: true})));
+  ok(element.isDisabled(new DOMElement("input", {disabled: true})));
+  ok(element.isDisabled(new DOMElement("select", {disabled: true})));
+  ok(element.isDisabled(new DOMElement("textarea", {disabled: true})));
+
+  run_next_test();
+});
+
 add_test(function test_coordinates() {
   let p = element.coordinates(domEl);
   ok(p.hasOwnProperty("x"));
