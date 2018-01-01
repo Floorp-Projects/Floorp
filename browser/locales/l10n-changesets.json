@@ -282,7 +282,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "d6b04b490335"
+        "revision": "b989c5821397"
     }, 
     "dsb": {
         "platforms": [
@@ -327,7 +327,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "a5e249d8dba9"
+        "revision": "b1d3ab509c68"
     }, 
     "en-ZA": {
         "platforms": [
@@ -1322,7 +1322,7 @@
             "win64", 
             "win64-devedition"
         ], 
-        "revision": "df0622a5a157"
+        "revision": "e13fac432f88"
     }, 
     "uk": {
         "platforms": [
