@@ -98,7 +98,7 @@ const TEST_CREDIT_CARD_1 = {
   "cc-name": "John Doe",
   "cc-number": "1234567812345678",
   "cc-exp-month": 4,
-  "cc-exp-year": (new Date()).getFullYear(),
+  "cc-exp-year": 2017,
 };
 
 const TEST_CREDIT_CARD_2 = {
