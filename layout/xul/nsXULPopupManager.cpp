@@ -2433,19 +2433,32 @@ nsXULPopupManager::HandleKeyboardEventWithKeyCode(
   return true;
 }
 
+nsContainerFrame*
+nsXULPopupManager::ImmediateParentFrame(nsContainerFrame* aFrame)
+{
+  MOZ_ASSERT(aFrame && aFrame->GetContent());
+
+  bool multiple = false; // Unused
+  nsIContent* insertionPoint =
+    aFrame->GetContent()->OwnerDoc()->BindingManager()->
+      FindNestedSingleInsertionPoint(aFrame->GetContent(), &multiple);
+
+  nsCSSFrameConstructor* fc = aFrame->PresContext()->FrameConstructor();
+  nsContainerFrame* insertionFrame =
+    insertionPoint
+      ? fc->GetContentInsertionFrameFor(insertionPoint)
+      : nullptr;
+
+  return insertionFrame ? insertionFrame : aFrame;
+}
+
 nsMenuFrame*
 nsXULPopupManager::GetNextMenuItem(nsContainerFrame* aParent,
                                    nsMenuFrame* aStart,
                                    bool aIsPopup,
                                    bool aWrap)
 {
-  nsPresContext* presContext = aParent->PresContext();
-  auto insertion = presContext->PresShell()->
-    FrameConstructor()->GetInsertionPoint(aParent->GetContent(), nullptr);
-  nsContainerFrame* immediateParent = insertion.mParentFrame;
-  if (!immediateParent)
-    immediateParent = aParent;
-
+  nsContainerFrame* immediateParent = ImmediateParentFrame(aParent);
   nsIFrame* currFrame = nullptr;
   if (aStart) {
     if (aStart->GetNextSibling())
@@ -2505,13 +2518,7 @@ nsXULPopupManager::GetPreviousMenuItem(nsContainerFrame* aParent,
                                        bool aIsPopup,
                                        bool aWrap)
 {
-  nsPresContext* presContext = aParent->PresContext();
-  auto insertion = presContext->PresShell()->
-    FrameConstructor()->GetInsertionPoint(aParent->GetContent(), nullptr);
-  nsContainerFrame* immediateParent = insertion.mParentFrame;
-  if (!immediateParent)
-    immediateParent = aParent;
-
+  nsContainerFrame* immediateParent = ImmediateParentFrame(aParent);
   const nsFrameList& frames(immediateParent->PrincipalChildList());
 
   nsIFrame* currFrame = nullptr;
