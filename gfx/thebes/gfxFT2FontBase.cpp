@@ -163,6 +163,22 @@ gfxFT2FontBase::GetCharExtents(char aChar, cairo_text_extents_t* aExtents)
     return gid;
 }
 
+/**
+ * Get glyph id and width for a simple character.
+ * The return value is the glyph id of that glyph or zero if no such glyph
+ * exists.  aWidth is only set when this returns a non-zero glyph id.
+ * This is just for use during initialization, and doesn't use the width cache.
+ */
+uint32_t
+gfxFT2FontBase::GetCharWidth(char aChar, gfxFloat* aWidth)
+{
+    FT_UInt gid = GetGlyph(aChar);
+    if (gid) {
+        *aWidth = FLOAT_FROM_16_16(GetFTGlyphAdvance(gid));
+    }
+    return gid;
+}
+
 void
 gfxFT2FontBase::InitMetrics()
 {
@@ -376,16 +392,16 @@ gfxFT2FontBase::InitMetrics()
     // necessary without recursively locking.
     cairo_ft_scaled_font_unlock_face(GetCairoScaledFont());
 
-    cairo_text_extents_t extents;
-    mSpaceGlyph = GetCharExtents(' ', &extents);
+    gfxFloat width;
+    mSpaceGlyph = GetCharWidth(' ', &width);
     if (mSpaceGlyph) {
-        mMetrics.spaceWidth = extents.x_advance;
+        mMetrics.spaceWidth = width;
     } else {
         mMetrics.spaceWidth = mMetrics.maxAdvance; // guess
     }
 
-    if (GetCharExtents('0', &extents)) {
-        mMetrics.zeroOrAveCharWidth = extents.x_advance;
+    if (GetCharWidth('0', &width)) {
+        mMetrics.zeroOrAveCharWidth = width;
     } else {
         mMetrics.zeroOrAveCharWidth = 0.0;
     }
@@ -394,6 +410,7 @@ gfxFT2FontBase::InitMetrics()
     // hinting, but maybe the x extents are not quite right in some fancy
     // script fonts.  CSS 2.1 suggests possibly using the height of an "o",
     // which would have a more consistent glyph across fonts.
+    cairo_text_extents_t extents;
     if (GetCharExtents('x', &extents) && extents.y_bearing < 0.0) {
         mMetrics.xHeight = -extents.y_bearing;
         mMetrics.aveCharWidth =
@@ -490,19 +507,9 @@ gfxFT2FontBase::GetGlyph(uint32_t unicode, uint32_t variation_selector)
     return GetGlyph(unicode);
 }
 
-int32_t
-gfxFT2FontBase::GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID)
+FT_Fixed
+gfxFT2FontBase::GetFTGlyphAdvance(uint16_t aGID)
 {
-    if (!mGlyphWidths) {
-        mGlyphWidths =
-            mozilla::MakeUnique<nsDataHashtable<nsUint32HashKey,int32_t>>(128);
-    }
-
-    int32_t width;
-    if (mGlyphWidths->Get(aGID, &width)) {
-        return width;
-    }
-
     gfxFT2LockedFace face(this);
     int32_t flags =
         gfxPlatform::GetPlatform()->FontHintingEnabled()
@@ -542,7 +549,23 @@ gfxFT2FontBase::GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID)
         advance += strength;
     }
 
-    width = advance;
+    return advance;
+}
+
+int32_t
+gfxFT2FontBase::GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID)
+{
+    if (!mGlyphWidths) {
+        mGlyphWidths =
+            mozilla::MakeUnique<nsDataHashtable<nsUint32HashKey,int32_t>>(128);
+    }
+
+    int32_t width;
+    if (mGlyphWidths->Get(aGID, &width)) {
+        return width;
+    }
+
+    width = GetFTGlyphAdvance(aGID);
     mGlyphWidths->Put(aGID, width);
 
     return width;
