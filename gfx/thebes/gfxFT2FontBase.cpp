@@ -504,13 +504,32 @@ gfxFT2FontBase::GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID)
     }
 
     gfxFT2LockedFace face(this);
-    int32_t flags = gfxPlatform::GetPlatform()->FontHintingEnabled()
-                    ? FT_LOAD_DEFAULT
-                    : FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING;
+    int32_t flags =
+        gfxPlatform::GetPlatform()->FontHintingEnabled()
+            ? FT_LOAD_ADVANCE_ONLY
+            : FT_LOAD_ADVANCE_ONLY | FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING;
     FT_Fixed advance = 0;
-    mozilla::DebugOnly<FT_Error> ftError =
-        FT_Get_Advance(face.get(), aGID, flags, &advance);
-    MOZ_ASSERT(!ftError);
+    // FT_Get_Advance is not reliable with variations until FreeType 2.8.2,
+    // so fall back to calling FT_Load_Glyph and reading the glyph slot's
+    // linearHoriAdvance.
+    // See https://savannah.nongnu.org/bugs/index.php?52683.
+    static uint32_t sFTVersion = 0;
+    if (!sFTVersion) {
+        FT_Int major, minor, patch;
+        FT_Library_Version(face.get()->glyph->library, &major, &minor, &patch);
+        sFTVersion = (major << 16) | (minor << 8) | patch;
+    }
+    if (sFTVersion < 0x020802 &&
+        (face.get()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS)) {
+        mozilla::DebugOnly<FT_Error> ftError =
+            FT_Load_Glyph(face.get(), aGID, flags);
+        MOZ_ASSERT(!ftError);
+        advance = face.get()->glyph->linearHoriAdvance;
+    } else {
+        mozilla::DebugOnly<FT_Error> ftError =
+            FT_Get_Advance(face.get(), aGID, flags, &advance);
+        MOZ_ASSERT(!ftError);
+    }
 
     // If freetype emboldening is being used, and it's not a zero-width glyph,
     // adjust the advance to account for the increased width.
