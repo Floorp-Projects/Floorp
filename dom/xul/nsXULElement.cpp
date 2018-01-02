@@ -1680,12 +1680,6 @@ nsXULElement::DoCommand()
     }
 }
 
-nsIContent *
-nsXULElement::GetBindingParent() const
-{
-    return mBindingParent;
-}
-
 bool
 nsXULElement::IsNodeOfType(uint32_t aFlags) const
 {

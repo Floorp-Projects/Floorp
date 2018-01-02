@@ -710,7 +710,7 @@ nsParentNodeChildContentList::ValidateCache()
 nsIHTMLCollection*
 FragmentOrElement::Children()
 {
-  FragmentOrElement::nsDOMSlots *slots = DOMSlots();
+  nsDOMSlots* slots = DOMSlots();
 
   if (!slots->mChildrenList) {
     slots->mChildrenList = new nsContentList(this, kNameSpaceID_Wildcard,
@@ -788,8 +788,36 @@ static_assert(sizeof(nsINode::nsSlots) <= MaxDOMSlotSizeAllowed,
 static_assert(sizeof(FragmentOrElement::nsDOMSlots) <= MaxDOMSlotSizeAllowed,
               "DOM slots cannot be grown without consideration");
 
+void
+nsIContent::nsExtendedContentSlots::Unlink()
+{
+  mXBLInsertionPoint = nullptr;
+  mContainingShadow = nullptr;
+  mAssignedSlot = nullptr;
+}
+
+void
+nsIContent::nsExtendedContentSlots::Traverse(nsCycleCollectionTraversalCallback& aCb)
+{
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mContainingShadow");
+  aCb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mContainingShadow));
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mAssignedSlot");
+  aCb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mAssignedSlot.get()));
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mXBLInsertionPoint");
+  aCb.NoteXPCOMChild(mXBLInsertionPoint.get());
+}
+
+nsIContent::nsExtendedContentSlots::nsExtendedContentSlots()
+  : mBindingParent(nullptr)
+{
+}
+
+nsIContent::nsExtendedContentSlots::~nsExtendedContentSlots() = default;
+
 FragmentOrElement::nsDOMSlots::nsDOMSlots()
-  : nsINode::nsSlots(),
+  : nsIContent::nsContentSlots(),
     mDataset(nullptr)
 {
 }
@@ -802,60 +830,27 @@ FragmentOrElement::nsDOMSlots::~nsDOMSlots()
 }
 
 void
-FragmentOrElement::nsDOMSlots::Traverse(nsCycleCollectionTraversalCallback &cb)
+FragmentOrElement::nsDOMSlots::Traverse(nsCycleCollectionTraversalCallback& aCb)
 {
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mStyle");
-  cb.NoteXPCOMChild(mStyle.get());
+  nsIContent::nsContentSlots::Traverse(aCb);
 
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mAttributeMap");
-  cb.NoteXPCOMChild(mAttributeMap.get());
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mSlots->mStyle");
+  aCb.NoteXPCOMChild(mStyle.get());
 
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mChildrenList");
-  cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMNodeList*, mChildrenList));
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mSlots->mAttributeMap");
+  aCb.NoteXPCOMChild(mAttributeMap.get());
 
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mClassList");
-  cb.NoteXPCOMChild(mClassList.get());
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mSlots->mChildrenList");
+  aCb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMNodeList*, mChildrenList));
 
-  if (!mExtendedSlots) {
-    return;
-  }
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExtendedSlots->mSMILOverrideStyle");
-  cb.NoteXPCOMChild(mExtendedSlots->mSMILOverrideStyle.get());
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExtendedSlots->mControllers");
-  cb.NoteXPCOMChild(mExtendedSlots->mControllers);
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExtendedSlots->mLabelsList");
-  cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMNodeList*,mExtendedSlots-> mLabelsList));
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExtendedSlots->mShadowRoot");
-  cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mExtendedSlots->mShadowRoot));
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExtendedSlots->mContainingShadow");
-  cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mExtendedSlots->mContainingShadow));
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExtendedSlots->mAssignedSlot");
-  cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mExtendedSlots->mAssignedSlot.get()));
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExtendedSlots->mXBLBinding");
-  cb.NoteNativeChild(mExtendedSlots->mXBLBinding,
-                     NS_CYCLE_COLLECTION_PARTICIPANT(nsXBLBinding));
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExtendedSlots->mXBLInsertionPoint");
-  cb.NoteXPCOMChild(mExtendedSlots->mXBLInsertionPoint.get());
-
-  if (mExtendedSlots->mCustomElementData) {
-    mExtendedSlots->mCustomElementData->Traverse(cb);
-  }
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mExtendedSlots->mFrameLoaderOrOpener");
-  cb.NoteXPCOMChild(mExtendedSlots->mFrameLoaderOrOpener);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mSlots->mClassList");
+  aCb.NoteXPCOMChild(mClassList.get());
 }
 
 void
 FragmentOrElement::nsDOMSlots::Unlink()
 {
+  nsIContent::nsContentSlots::Unlink();
   mStyle = nullptr;
   if (mAttributeMap) {
     mAttributeMap->DropReference();
@@ -863,29 +858,6 @@ FragmentOrElement::nsDOMSlots::Unlink()
   }
   mChildrenList = nullptr;
   mClassList = nullptr;
-
-  if (!mExtendedSlots) {
-    return;
-  }
-
-  mExtendedSlots->mSMILOverrideStyle = nullptr;
-  mExtendedSlots->mControllers = nullptr;
-  mExtendedSlots->mLabelsList = nullptr;
-  mExtendedSlots->mShadowRoot = nullptr;
-  mExtendedSlots->mContainingShadow = nullptr;
-  mExtendedSlots->mAssignedSlot = nullptr;
-  MOZ_ASSERT(!(mExtendedSlots->mXBLBinding));
-  mExtendedSlots->mXBLInsertionPoint = nullptr;
-  if (mExtendedSlots->mCustomElementData) {
-    mExtendedSlots->mCustomElementData->Unlink();
-    mExtendedSlots->mCustomElementData = nullptr;
-  }
-  nsCOMPtr<nsIFrameLoader> frameLoader =
-    do_QueryInterface(mExtendedSlots->mFrameLoaderOrOpener);
-  if (frameLoader) {
-    static_cast<nsFrameLoader*>(frameLoader.get())->Destroy();
-  }
-  mExtendedSlots->mFrameLoaderOrOpener = nullptr;
 }
 
 size_t
@@ -915,10 +887,7 @@ FragmentOrElement::nsDOMSlots::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) c
   return n;
 }
 
-FragmentOrElement::nsExtendedDOMSlots::nsExtendedDOMSlots()
-  : mBindingParent(nullptr)
-{
-}
+FragmentOrElement::nsExtendedDOMSlots::nsExtendedDOMSlots() = default;
 
 FragmentOrElement::nsExtendedDOMSlots::~nsExtendedDOMSlots()
 {
@@ -926,6 +895,58 @@ FragmentOrElement::nsExtendedDOMSlots::~nsExtendedDOMSlots()
   if (frameLoader) {
     static_cast<nsFrameLoader*>(frameLoader.get())->Destroy();
   }
+}
+
+void
+FragmentOrElement::nsExtendedDOMSlots::Unlink()
+{
+  nsIContent::nsExtendedContentSlots::Unlink();
+
+  // Don't clear mXBLBinding, it'll be done in
+  // BindingManager::RemovedFromDocument from FragmentOrElement::Unlink.
+  mSMILOverrideStyle = nullptr;
+  mControllers = nullptr;
+  mLabelsList = nullptr;
+  mShadowRoot = nullptr;
+  if (mCustomElementData) {
+    mCustomElementData->Unlink();
+    mCustomElementData = nullptr;
+  }
+  nsCOMPtr<nsIFrameLoader> frameLoader =
+    do_QueryInterface(mFrameLoaderOrOpener);
+  if (frameLoader) {
+    static_cast<nsFrameLoader*>(frameLoader.get())->Destroy();
+  }
+  mFrameLoaderOrOpener = nullptr;
+}
+
+void
+FragmentOrElement::nsExtendedDOMSlots::Traverse(nsCycleCollectionTraversalCallback& aCb)
+{
+  nsIContent::nsExtendedContentSlots::Traverse(aCb);
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mSMILOverrideStyle");
+  aCb.NoteXPCOMChild(mSMILOverrideStyle.get());
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mControllers");
+  aCb.NoteXPCOMChild(mControllers);
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mLabelsList");
+  aCb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMNodeList*, mLabelsList));
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mShadowRoot");
+  aCb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mShadowRoot));
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mXBLBinding");
+  aCb.NoteNativeChild(mXBLBinding,
+                     NS_CYCLE_COLLECTION_PARTICIPANT(nsXBLBinding));
+
+  if (mCustomElementData) {
+    mCustomElementData->Traverse(aCb);
+  }
+
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mFrameLoaderOrOpener");
+  aCb.NoteXPCOMChild(mFrameLoaderOrOpener);
 }
 
 FragmentOrElement::FragmentOrElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
@@ -1162,123 +1183,31 @@ FragmentOrElement::IsLink(nsIURI** aURI) const
   return false;
 }
 
-nsIContent*
-FragmentOrElement::GetBindingParent() const
-{
-  nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-
-  if (slots) {
-    return slots->mBindingParent;
-  }
-  return nullptr;
-}
-
 nsXBLBinding*
 FragmentOrElement::DoGetXBLBinding() const
 {
   MOZ_ASSERT(HasFlag(NODE_MAY_BE_IN_BINDING_MNGR));
-  if (nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots()) {
-    return slots->mXBLBinding;
-  }
-  return nullptr;
+  const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
+  return slots ? slots->mXBLBinding.get() : nullptr;
 }
 
 void
-FragmentOrElement::SetXBLBinding(nsXBLBinding* aBinding,
-                                 nsBindingManager* aOldBindingManager)
+nsIContent::SetAssignedSlot(HTMLSlotElement* aSlot)
 {
-  nsBindingManager* bindingManager;
-  if (aOldBindingManager) {
-    MOZ_ASSERT(!aBinding, "aOldBindingManager should only be provided "
-                          "when removing a binding.");
-    bindingManager = aOldBindingManager;
-  } else {
-    bindingManager = OwnerDoc()->BindingManager();
-  }
-
-  // After this point, aBinding will be the most-derived binding for aContent.
-  // If we already have a binding for aContent, make sure to
-  // remove it from the attached stack.  Otherwise we might end up firing its
-  // constructor twice (if aBinding inherits from it) or firing its constructor
-  // after aContent has been deleted (if aBinding is null and the content node
-  // dies before we process mAttachedStack).
-  RefPtr<nsXBLBinding> oldBinding = GetXBLBinding();
-  if (oldBinding) {
-    bindingManager->RemoveFromAttachedQueue(oldBinding);
-  }
-
-  if (aBinding) {
-    SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
-    nsExtendedDOMSlots* slots = ExtendedDOMSlots();
-    slots->mXBLBinding = aBinding;
-    bindingManager->AddBoundContent(this);
-  } else {
-    nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-    if (slots) {
-      slots->mXBLBinding = nullptr;
-    }
-    bindingManager->RemoveBoundContent(this);
-    if (oldBinding) {
-      oldBinding->SetBoundElement(nullptr);
-    }
-  }
-}
-
-nsIContent*
-FragmentOrElement::GetXBLInsertionPoint() const
-{
-  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-    if (slots) {
-      return slots->mXBLInsertionPoint;
-    }
-  }
-
-  return nullptr;
-}
-
-ShadowRoot*
-FragmentOrElement::GetContainingShadow() const
-{
-  nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-  if (slots) {
-    return slots->mContainingShadow;
-  }
-  return nullptr;
+  ExtendedContentSlots()->mAssignedSlot = aSlot;
 }
 
 void
-FragmentOrElement::SetShadowRoot(ShadowRoot* aShadowRoot)
-{
-  nsExtendedDOMSlots* slots = ExtendedDOMSlots();
-  slots->mShadowRoot = aShadowRoot;
-}
-
-HTMLSlotElement*
-FragmentOrElement::GetAssignedSlot() const
-{
-  nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-  return slots ? slots->mAssignedSlot.get() : nullptr;
-}
-
-void
-FragmentOrElement::SetAssignedSlot(HTMLSlotElement* aSlot)
-{
-  nsExtendedDOMSlots* slots = ExtendedDOMSlots();
-  slots->mAssignedSlot = aSlot;
-}
-
-void
-FragmentOrElement::SetXBLInsertionPoint(nsIContent* aContent)
+nsIContent::SetXBLInsertionPoint(nsIContent* aContent)
 {
   nsCOMPtr<nsIContent> oldInsertionPoint = nullptr;
   if (aContent) {
-    nsExtendedDOMSlots* slots = ExtendedDOMSlots();
+    nsExtendedContentSlots* slots = ExtendedContentSlots();
     SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
     oldInsertionPoint = slots->mXBLInsertionPoint.forget();
     slots->mXBLInsertionPoint = aContent;
   } else {
-    if (nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots()) {
+    if (nsExtendedContentSlots* slots = GetExistingExtendedContentSlots()) {
       oldInsertionPoint = slots->mXBLInsertionPoint.forget();
       slots->mXBLInsertionPoint = nullptr;
     }
@@ -1570,15 +1499,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
   nsIDocument* doc = tmp->OwnerDoc();
   doc->BindingManager()->RemovedFromDocument(tmp, doc,
                                              nsBindingManager::eDoNotRunDtor);
-
-  // Unlink any DOM slots of interest.
-  {
-    nsDOMSlots *slots = tmp->GetExistingDOMSlots();
-    if (slots) {
-      slots->Unlink();
-    }
-  }
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(FragmentOrElement)
@@ -2148,14 +2068,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
       cb.NoteXPCOMChild(tmp->mAttrsAndChildren.GetSafeChildAt(i));
     }
   }
-
-  // Traverse any DOM slots of interest.
-  {
-    nsDOMSlots *slots = tmp->GetExistingDOMSlots();
-    if (slots) {
-      slots->Traverse(cb);
-    }
-  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 
@@ -2499,12 +2411,6 @@ FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML, ErrorResult
       mb.NodesAdded();
     }
   }
-}
-
-nsINode::nsSlots*
-FragmentOrElement::CreateSlots()
-{
-  return new nsDOMSlots();
 }
 
 void
