@@ -2713,12 +2713,6 @@ public:
   static mozilla::LogModule* DOMDumpLog();
 
   /**
-   * Returns whether the children of the provided content are
-   * nodes that are distributed to Shadow DOM insertion points.
-   */
-  static bool HasDistributedChildren(nsIContent* aContent);
-
-  /**
    * Returns whether a given header is forbidden for an XHR or fetch
    * request.
    */

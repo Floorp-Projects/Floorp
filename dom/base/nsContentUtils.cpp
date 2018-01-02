@@ -7507,30 +7507,6 @@ nsContentUtils::GetHTMLEditor(nsPresContext* aPresContext)
 
 // static
 bool
-nsContentUtils::HasDistributedChildren(nsIContent* aContent)
-{
-  if (!aContent || !nsDocument::IsWebComponentsEnabled(aContent)) {
-    return false;
-  }
-
-  if (aContent->GetShadowRoot()) {
-    // Children of a shadow root host are distributed
-    // to content insertion points in the shadow root.
-    return true;
-  }
-
-  HTMLSlotElement* slotEl = HTMLSlotElement::FromContent(aContent);
-  if (slotEl && slotEl->GetContainingShadow()) {
-    // Children of a slot are rendered if the slot does not have any assigned
-    // nodes (fallback content).
-    return slotEl->AssignedNodes().IsEmpty();
-  }
-
-  return false;
-}
-
-// static
-bool
 nsContentUtils::IsForbiddenRequestHeader(const nsACString& aHeader)
 {
   if (IsForbiddenSystemRequestHeader(aHeader)) {
