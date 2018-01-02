@@ -46,11 +46,13 @@ For developers
 .. toctree::
    :maxdepth: 1
 
-   ../CONTRIBUTING.md
+   `Contributing to Marionette`_
    NewContributors.md
    Debugging.md
    PythonTests.md
    SeleniumAtoms.md
+
+.. _Contributing to Marionette: https://searchfox.org/mozilla-central/source/testing/marionette/CONTRIBUTING.md
 
 
 Bugs
