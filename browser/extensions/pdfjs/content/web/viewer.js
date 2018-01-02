@@ -1,4 +1,8 @@
-/* Copyright 2017 Mozilla Foundation
+/**
+ * @licstart The following is the entire license notice for the
+ * Javascript code in this page
+ *
+ * Copyright 2017 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -11,6 +15,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * @licend The above is the entire license notice for the
+ * Javascript code in this page
  */
 
 /******/ (function(modules) { // webpackBootstrap
@@ -6859,7 +6866,7 @@ class PDFPageView {
       scaleY = width / height;
     }
     let cssTransform = 'rotate(' + relativeRotation + 'deg) ' + 'scale(' + scaleX + ',' + scaleY + ')';
-    _pdfjsLib.CustomStyle.setProp('transform', target, cssTransform);
+    target.style.transform = cssTransform;
     if (this.textLayer) {
       let textLayerViewport = this.textLayer.viewport;
       let textRelativeRotation = this.viewport.rotation - textLayerViewport.rotation;
@@ -6890,8 +6897,8 @@ class PDFPageView {
           console.error('Bad rotation value.');
           break;
       }
-      _pdfjsLib.CustomStyle.setProp('transform', textLayerDiv, 'rotate(' + textAbsRotation + 'deg) ' + 'scale(' + scale + ', ' + scale + ') ' + 'translate(' + transX + ', ' + transY + ')');
-      _pdfjsLib.CustomStyle.setProp('transformOrigin', textLayerDiv, '0% 0%');
+      textLayerDiv.style.transform = 'rotate(' + textAbsRotation + 'deg) ' + 'scale(' + scale + ', ' + scale + ') ' + 'translate(' + transX + ', ' + transY + ')';
+      textLayerDiv.style.transformOrigin = '0% 0%';
     }
     if (redrawAnnotations && this.annotationLayer) {
       this.annotationLayer.render(this.viewport, 'display');
