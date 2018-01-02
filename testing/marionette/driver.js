@@ -278,18 +278,20 @@ GeckoDriver.prototype.QueryInterface = XPCOMUtils.generateQI([
 ]);
 
 GeckoDriver.prototype.init = function() {
+  this.mm.addMessageListener("Marionette:WebDriver:GetCapabilities", this);
   this.mm.addMessageListener("Marionette:GetLogLevel", this);
   this.mm.addMessageListener("Marionette:getVisibleCookies", this);
-  this.mm.addMessageListener("Marionette:listenersAttached", this);
-  this.mm.addMessageListener("Marionette:register", this);
+  this.mm.addMessageListener("Marionette:ListenersAttached", this);
+  this.mm.addMessageListener("Marionette:Register", this);
   this.mm.addMessageListener("Marionette:switchedToFrame", this);
 };
 
 GeckoDriver.prototype.uninit = function() {
+  this.mm.removeMessageListener("Marionette:WebDriver:GetCapabilities", this);
   this.mm.removeMessageListener("Marionette:GetLogLevel", this);
   this.mm.removeMessageListener("Marionette:getVisibleCookies", this);
-  this.mm.removeMessageListener("Marionette:listenersAttached", this);
-  this.mm.removeMessageListener("Marionette:register", this);
+  this.mm.removeMessageListener("Marionette:ListenersAttached", this);
+  this.mm.removeMessageListener("Marionette:Register", this);
   this.mm.removeMessageListener("Marionette:switchedToFrame", this);
 };
 
@@ -443,7 +445,6 @@ GeckoDriver.prototype.startBrowser = function(window, isNewSession = false) {
   this.mainFrame = window;
   this.curFrame = null;
   this.addBrowser(window);
-  this.curBrowser.isNewSession = isNewSession;
   this.whenBrowserStarted(window, isNewSession);
 };
 
@@ -536,26 +537,20 @@ GeckoDriver.prototype.registerBrowser = function(id, be) {
 
   this.wins.set(id, listenerWindow);
   if (nullPrevious && (this.curBrowser.curFrameId !== null)) {
-    this.sendAsync(
-        "newSession",
-        this.capabilities,
-        this.newSessionCommandId);
-    if (this.curBrowser.isNewSession) {
-      this.newSessionCommandId = null;
-    }
+    this.sendAsync("newSession");
   }
 
-  return [id, this.capabilities.toJSON()];
+  return id;
 };
 
 GeckoDriver.prototype.registerPromise = function() {
-  const li = "Marionette:register";
+  const li = "Marionette:Register";
 
   return new Promise(resolve => {
     let cb = msg => {
       let wid = msg.json.value;
       let be = msg.target;
-      let rv = this.registerBrowser(wid, be);
+      let outerWindowID = this.registerBrowser(wid, be);
 
       if (this.curBrowser.frameRegsPending > 0) {
         this.curBrowser.frameRegsPending--;
@@ -567,18 +562,18 @@ GeckoDriver.prototype.registerPromise = function() {
       }
 
       // this is a sync message and listeners expect the ID back
-      return rv;
+      return outerWindowID;
     };
     this.mm.addMessageListener(li, cb);
   });
 };
 
 GeckoDriver.prototype.listeningPromise = function() {
-  const li = "Marionette:listenersAttached";
+  const li = "Marionette:ListenersAttached";
 
   return new Promise(resolve => {
     let cb = msg => {
-      if (msg.json.listenerId === this.curBrowser.curFrameId) {
+      if (msg.json.outerWindowID === this.curBrowser.curFrameId) {
         this.mm.removeMessageListener(li, cb);
         resolve();
       }
@@ -699,7 +694,6 @@ GeckoDriver.prototype.newSession = async function(cmd) {
     throw new SessionNotCreatedError("Maximum number of active sessions");
   }
   this.sessionID = WebElement.generateUUID();
-  this.newSessionCommandId = cmd.id;
 
   try {
     this.capabilities = session.Capabilities.fromJSON(cmd.parameters);
@@ -3343,21 +3337,24 @@ GeckoDriver.prototype.receiveMessage = function(message) {
       }
       break;
 
-    case "Marionette:register":
+    case "Marionette:Register":
       let wid = message.json.value;
       let be = message.target;
-      let rv = this.registerBrowser(wid, be);
-      return rv;
+      let outerWindowID = this.registerBrowser(wid, be);
+      return {outerWindowID};
 
-    case "Marionette:listenersAttached":
-      if (message.json.listenerId === this.curBrowser.curFrameId) {
+    case "Marionette:ListenersAttached":
+      if (message.json.outerWindowID === this.curBrowser.curFrameId) {
         // If the frame script gets reloaded we need to call newSession.
         // In the case of desktop this just sets up a small amount of state
         // that doesn't change over the course of a session.
-        this.sendAsync("newSession", this.capabilities);
+        this.sendAsync("newSession");
         this.curBrowser.flushPendingCommands();
       }
       break;
+
+    case "Marionette:WebDriver:GetCapabilities":
+      return this.capabilities.toJSON();
 
     case "Marionette:GetLogLevel":
       return logger.level;
