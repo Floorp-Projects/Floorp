@@ -10,8 +10,8 @@ RUN dpkg --add-architecture i386 && apt-get -q update \
     && apt-get clean
 
 RUN mkdir /builds
-RUN groupadd -g 500 worker
-RUN useradd -u 500 -g 500 -d /builds/worker -s /bin/bash -m worker
+RUN groupadd -g 1000 worker
+RUN useradd -u 1000 -g 1000 -d /builds/worker -s /bin/bash -m worker
 WORKDIR /builds/worker
 
 VOLUME /builds/worker/.cache

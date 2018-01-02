@@ -875,7 +875,7 @@ def build_docker_worker_payload(config, task, task_def):
         # string literal in the variable below can be changed. This is
         # preferred to changing run-task because it doesn't require images
         # to be rebuilt.
-        cache_version = 'v2'
+        cache_version = 'v3'
 
         if run_task:
             suffix = '-%s-%s' % (cache_version, _run_task_suffix())
