@@ -159,7 +159,7 @@ similar to using xvfb(1) which you may know from the X windowing system,
 but has the additional benefit of also working on macOS and Windows.
 
 We have a separate page documenting how to write good Python tests in
-[[doc/PythonTests.md]].  These tests will run as part of the _Mn_
+<doc/PythonTests.md>.  These tests will run as part of the _Mn_
 job on Treeherder.
 
 In addition to these two test types that specifically test the
@@ -189,6 +189,7 @@ granted commit access level 1 you will have permission to use the
 
 [MozReview]: http://mozilla-version-control-tools.readthedocs.io/en/latest/mozreview.html
 [becoming a Mozilla committer]: https://www.mozilla.org/en-US/about/governance/policies/commit/
+[Firefox CI]: https://treeherder.mozilla.org/
 
 
 Communication
