@@ -267,6 +267,30 @@ public:
   void SetTabIndex(int32_t aTabIndex, mozilla::ErrorResult& aError);
 
   /**
+   * Sets or unsets an XBL binding for this element. Setting a
+   * binding on an element that already has a binding will remove the
+   * old binding.
+   *
+   * @param aBinding The binding to bind to this content. If nullptr is
+   *        provided as the argument, then existing binding will be
+   *        removed.
+   *
+   * @param aOldBindingManager The old binding manager that contains
+   *                           this content if this content was adopted
+   *                           to another document.
+   */
+  void SetXBLBinding(nsXBLBinding* aBinding,
+                     nsBindingManager* aOldBindingManager = nullptr);
+
+  /**
+   * Sets the ShadowRoot binding for this element. The contents of the
+   * binding is rendered in place of this node's children.
+   *
+   * @param aShadowRoot The ShadowRoot to be bound to this element.
+   */
+  void SetShadowRoot(ShadowRoot* aShadowRoot);
+
+  /**
    * Make focus on this element.
    */
   virtual void Focus(mozilla::ErrorResult& aError);
@@ -552,12 +576,10 @@ public:
    */
   inline CustomElementData* GetCustomElementData() const
   {
-    nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-    if (slots) {
-      return slots->mCustomElementData;
-    }
-    return nullptr;
+    const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
+    return slots ? slots->mCustomElementData.get() : nullptr;
   }
+
 
   /**
    * Sets the custom element data, ownership of the
@@ -1295,9 +1317,11 @@ public:
   // [deprecated] Shadow DOM v0
   already_AddRefed<ShadowRoot> CreateShadowRoot(ErrorResult& aError);
 
-  ShadowRoot *FastGetShadowRoot() const
+  // FIXME(emilio): Should just shadow GetShadowRoot(), that way we get the fast
+  // version by default everywhere we already have an Element...
+  ShadowRoot* FastGetShadowRoot() const
   {
-    nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
+    const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
     return slots ? slots->mShadowRoot.get() : nullptr;
   }
 
@@ -1481,9 +1505,9 @@ public:
    *
    * @return existing attribute map or nullptr.
    */
-  nsDOMAttributeMap *GetAttributeMap()
+  nsDOMAttributeMap* GetAttributeMap()
   {
-    nsDOMSlots *slots = GetExistingDOMSlots();
+    nsDOMSlots* slots = GetExistingDOMSlots();
 
     return slots ? slots->mAttributeMap.get() : nullptr;
   }

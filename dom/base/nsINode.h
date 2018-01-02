@@ -1112,8 +1112,8 @@ public:
     // putting a DestroySlots function on nsINode
     virtual ~nsSlots();
 
-    void Traverse(nsCycleCollectionTraversalCallback &cb);
-    void Unlink();
+    virtual void Traverse(nsCycleCollectionTraversalCallback&);
+    virtual void Unlink();
 
     /**
      * A list of mutation observers

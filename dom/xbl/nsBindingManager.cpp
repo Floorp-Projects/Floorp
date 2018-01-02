@@ -216,7 +216,7 @@ nsBindingManager::RemovedFromDocumentInternal(nsIContent* aContent,
       binding->ChangeDocument(aOldDocument, nullptr);
     }
 
-    aContent->SetXBLBinding(nullptr, this);
+    aContent->AsElement()->SetXBLBinding(nullptr, this);
   }
 
   // Clear out insertion point and content lists.
