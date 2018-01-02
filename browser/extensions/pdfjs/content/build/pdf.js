@@ -1,4 +1,8 @@
-/* Copyright 2017 Mozilla Foundation
+/**
+ * @licstart The following is the entire license notice for the
+ * Javascript code in this page
+ *
+ * Copyright 2017 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -11,6 +15,9 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * @licend The above is the entire license notice for the
+ * Javascript code in this page
  */
 
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -1395,7 +1402,7 @@ exports.unreachable = unreachable;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.DummyStatTimer = exports.StatTimer = exports.SimpleXMLParser = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.getDefaultSetting = exports.LinkTarget = exports.getFilenameFromUrl = exports.isExternalLinkTargetSet = exports.addLinkAttributes = exports.RenderingCancelledException = exports.CustomStyle = undefined;
+exports.DummyStatTimer = exports.StatTimer = exports.SimpleXMLParser = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.getDefaultSetting = exports.LinkTarget = exports.getFilenameFromUrl = exports.isExternalLinkTargetSet = exports.addLinkAttributes = exports.RenderingCancelledException = undefined;
 
 var _util = __w_pdfjs_require__(0);
 
@@ -1602,38 +1609,6 @@ class SimpleXMLParser {
     });
   }
 }
-var CustomStyle = function CustomStyleClosure() {
-  var prefixes = ['ms', 'Moz', 'Webkit', 'O'];
-  var _cache = Object.create(null);
-  function CustomStyle() {}
-  CustomStyle.getProp = function get(propName, element) {
-    if (arguments.length === 1 && typeof _cache[propName] === 'string') {
-      return _cache[propName];
-    }
-    element = element || document.documentElement;
-    var style = element.style,
-        prefixed,
-        uPropName;
-    if (typeof style[propName] === 'string') {
-      return _cache[propName] = propName;
-    }
-    uPropName = propName.charAt(0).toUpperCase() + propName.slice(1);
-    for (var i = 0, l = prefixes.length; i < l; i++) {
-      prefixed = prefixes[i] + uPropName;
-      if (typeof style[prefixed] === 'string') {
-        return _cache[propName] = prefixed;
-      }
-    }
-    return _cache[propName] = 'undefined';
-  };
-  CustomStyle.setProp = function set(propName, element, str) {
-    var prop = this.getProp(propName);
-    if (prop !== 'undefined') {
-      element.style[prop] = str;
-    }
-  };
-  return CustomStyle;
-}();
 var RenderingCancelledException = function RenderingCancelledException() {
   function RenderingCancelledException(msg, type) {
     this.message = msg;
@@ -1805,7 +1780,6 @@ class DummyStatTimer {
     return '';
   }
 }
-exports.CustomStyle = CustomStyle;
 exports.RenderingCancelledException = RenderingCancelledException;
 exports.addLinkAttributes = addLinkAttributes;
 exports.isExternalLinkTargetSet = isExternalLinkTargetSet;
@@ -1962,7 +1936,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
   if (worker.destroyed) {
     return Promise.reject(new Error('Worker was destroyed'));
   }
-  let apiVersion = '2.0.213';
+  let apiVersion = '2.0.244';
   source.disableRange = (0, _dom_utils.getDefaultSetting)('disableRange');
   source.disableAutoFetch = (0, _dom_utils.getDefaultSetting)('disableAutoFetch');
   source.disableStream = (0, _dom_utils.getDefaultSetting)('disableStream');
@@ -2767,9 +2741,8 @@ var WorkerTransport = function WorkerTransportClosure() {
           _rangeReader.cancel(reason);
         };
       }, this);
-      messageHandler.on('GetDoc', function transportDoc(data) {
-        var pdfInfo = data.pdfInfo;
-        this.numPages = data.pdfInfo.numPages;
+      messageHandler.on('GetDoc', function transportDoc({ pdfInfo }) {
+        this.numPages = pdfInfo.numPages;
         var loadingTask = this.loadingTask;
         var pdfDocument = new PDFDocumentProxy(pdfInfo, this, loadingTask);
         this.pdfDocument = pdfDocument;
@@ -3260,8 +3233,8 @@ var InternalRenderTask = function InternalRenderTaskClosure() {
 }();
 var version, build;
 {
-  exports.version = version = '2.0.213';
-  exports.build = build = '8ae3fd49';
+  exports.version = version = '2.0.244';
+  exports.build = build = '5bf4fb97';
 }
 exports.getDocument = getDocument;
 exports.LoopbackPort = LoopbackPort;
@@ -3462,8 +3435,8 @@ class AnnotationElement {
     let height = data.rect[3] - data.rect[1];
     container.setAttribute('data-annotation-id', data.id);
     let rect = _util.Util.normalizeRect([data.rect[0], page.view[3] - data.rect[1] + page.view[1], data.rect[2], page.view[3] - data.rect[3] + page.view[1]]);
-    _dom_utils.CustomStyle.setProp('transform', container, 'matrix(' + viewport.transform.join(',') + ')');
-    _dom_utils.CustomStyle.setProp('transformOrigin', container, -rect[0] + 'px ' + -rect[1] + 'px');
+    container.style.transform = 'matrix(' + viewport.transform.join(',') + ')';
+    container.style.transformOrigin = -rect[0] + 'px ' + -rect[1] + 'px';
     if (!ignoreBorder && data.borderStyle.width > 0) {
       container.style.borderWidth = data.borderStyle.width + 'px';
       if (data.borderStyle.style !== _util.AnnotationBorderStyleType.UNDERLINE) {
@@ -3474,7 +3447,7 @@ class AnnotationElement {
       let verticalRadius = data.borderStyle.verticalCornerRadius;
       if (horizontalRadius > 0 || verticalRadius > 0) {
         let radius = horizontalRadius + 'px / ' + verticalRadius + 'px';
-        _dom_utils.CustomStyle.setProp('borderRadius', container, radius);
+        container.style.borderRadius = radius;
       }
       switch (data.borderStyle.style) {
         case _util.AnnotationBorderStyleType.SOLID:
@@ -3751,7 +3724,7 @@ class PopupAnnotationElement extends AnnotationElement {
     });
     let parentLeft = parseFloat(parentElement.style.left);
     let parentWidth = parseFloat(parentElement.style.width);
-    _dom_utils.CustomStyle.setProp('transformOrigin', this.container, -(parentLeft + parentWidth) + 'px -' + parentElement.style.top);
+    this.container.style.transformOrigin = -(parentLeft + parentWidth) + 'px -' + parentElement.style.top;
     this.container.style.left = parentLeft + parentWidth + 'px';
     this.container.appendChild(popup.render());
     return this.container;
@@ -4073,7 +4046,7 @@ class AnnotationLayer {
       let data = parameters.annotations[i];
       let element = parameters.div.querySelector('[data-annotation-id="' + data.id + '"]');
       if (element) {
-        _dom_utils.CustomStyle.setProp('transform', element, 'matrix(' + parameters.viewport.transform.join(',') + ')');
+        element.style.transform = 'matrix(' + parameters.viewport.transform.join(',') + ')';
       }
     }
     parameters.div.removeAttribute('hidden');
@@ -4507,7 +4480,7 @@ var renderTextLayer = function renderTextLayerClosure() {
       }
       if (transform !== '') {
         textDivProperties.originalTransform = transform;
-        _dom_utils.CustomStyle.setProp('transform', textDiv, transform);
+        textDiv.style.transform = transform;
       }
       this._textDivProperties.set(textDiv, textDivProperties);
       textLayerFrag.appendChild(textDiv);
@@ -4593,11 +4566,11 @@ var renderTextLayer = function renderTextLayerClosure() {
             div.setAttribute('style', divProperties.style + padding);
           }
           if (transform !== '') {
-            _dom_utils.CustomStyle.setProp('transform', div, transform);
+            div.style.transform = transform;
           }
         } else {
           div.style.padding = 0;
-          _dom_utils.CustomStyle.setProp('transform', div, divProperties.originalTransform || '');
+          div.style.transform = divProperties.originalTransform || '';
         }
       }
     }
@@ -4648,8 +4621,8 @@ exports.SVGGraphics = SVGGraphics;
 "use strict";
 
 
-var pdfjsVersion = '2.0.213';
-var pdfjsBuild = '8ae3fd49';
+var pdfjsVersion = '2.0.244';
+var pdfjsBuild = '5bf4fb97';
 var pdfjsSharedUtil = __w_pdfjs_require__(0);
 var pdfjsDisplayGlobal = __w_pdfjs_require__(12);
 var pdfjsDisplayAPI = __w_pdfjs_require__(3);
@@ -4667,7 +4640,6 @@ exports.PDFDataRangeTransport = pdfjsDisplayAPI.PDFDataRangeTransport;
 exports.PDFWorker = pdfjsDisplayAPI.PDFWorker;
 exports.renderTextLayer = pdfjsDisplayTextLayer.renderTextLayer;
 exports.AnnotationLayer = pdfjsDisplayAnnotationLayer.AnnotationLayer;
-exports.CustomStyle = pdfjsDisplayDOMUtils.CustomStyle;
 exports.createPromiseCapability = pdfjsSharedUtil.createPromiseCapability;
 exports.PasswordResponses = pdfjsSharedUtil.PasswordResponses;
 exports.InvalidPDFException = pdfjsSharedUtil.InvalidPDFException;
@@ -7772,8 +7744,8 @@ if (!_global_scope2.default.PDFJS) {
 }
 var PDFJS = _global_scope2.default.PDFJS;
 {
-  PDFJS.version = '2.0.213';
-  PDFJS.build = '8ae3fd49';
+  PDFJS.version = '2.0.244';
+  PDFJS.build = '5bf4fb97';
 }
 PDFJS.pdfBug = false;
 if (PDFJS.verbosity !== undefined) {
@@ -7837,7 +7809,6 @@ PDFJS.getDocument = _api.getDocument;
 PDFJS.LoopbackPort = _api.LoopbackPort;
 PDFJS.PDFDataRangeTransport = _api.PDFDataRangeTransport;
 PDFJS.PDFWorker = _api.PDFWorker;
-PDFJS.CustomStyle = _dom_utils.CustomStyle;
 PDFJS.LinkTarget = _dom_utils.LinkTarget;
 PDFJS.addLinkAttributes = _dom_utils.addLinkAttributes;
 PDFJS.getFilenameFromUrl = _dom_utils.getFilenameFromUrl;
@@ -9272,7 +9243,7 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
         var baseTransform = this.baseTransform || this.ctx.mozCurrentTransform.slice();
         var canvasGraphicsFactory = {
           createCanvasGraphics: ctx => {
-            return new CanvasGraphics(ctx, this.commonObjs, this.objs, this.canvasFactory);
+            return new CanvasGraphics(ctx, this.commonObjs, this.objs, this.canvasFactory, this.webGLContext);
           }
         };
         pattern = new _pattern_helper.TilingPattern(IR, color, this.ctx, canvasGraphicsFactory, baseTransform);
