@@ -11,7 +11,7 @@ RUN apt-get update -q && \
     bzip2 clamav clamav-freshclam python3-requests python3-sh curl \
     python3-dev gcc liblzma-dev xz-utils jq && \
     apt-get clean
-RUN useradd -d /home/worker -s /bin/bash -m worker
+RUN useradd -d /home/worker -s /bin/bash -m worker -u 1000 -g 1000
 COPY requirements.txt /tmp/
 
 # Freshclam may be flaky, retry if it fails
