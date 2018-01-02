@@ -282,6 +282,13 @@ def main(args):
                   args.group)
             return 1
 
+        if user.pw_name == 'worker' and user.pw_uid != 1000:
+            print('user `worker` must have uid=1000.')
+            return 1
+        if group.gr_name == 'worker' and group.gr_gid != 1000:
+            print('group `worker` must have gid=1000.')
+            return 1
+
         # Find all groups to which this user is a member.
         gids = [g.gr_gid for g in grp.getgrall() if args.group in g.gr_mem]
 

@@ -2,7 +2,7 @@ FROM          ubuntu:16.04
 MAINTAINER    Joel Maher <joel.maher@gmail.com>
 
 RUN mkdir /builds
-RUN useradd -d /builds/worker -s /bin/bash -m worker
+RUN useradd -d /builds/worker -s /bin/bash -m worker -u 1000 -g 1000
 WORKDIR /builds/worker
 
 # We need to declare all potentially cache volumes as caches. Also,
