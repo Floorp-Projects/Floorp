@@ -179,6 +179,10 @@ dependencies {
 
     geckoCompile(name: 'geckoview-latest', ext: 'aar')
 
+    // Leakcanary is only being used with debug build variant as of now, all others use a no-op version
+    debugCompile "com.squareup.leakcanary:leakcanary-android:$leakcanary_version"
+    compile "com.squareup.leakcanary:leakcanary-android-no-op:$leakcanary_version"
+
     testCompile 'junit:junit:4.12'
     testCompile "org.robolectric:robolectric:3.5.1"
     testCompile 'org.mockito:mockito-core:2.12.0'

@@ -5,6 +5,7 @@ buildscript {
     ext.architecture_components_version = '1.0.0'
     ext.espresso_version = '3.0.1'
     ext.kotlin_version = '1.2.0'
+    ext.leakcanary_version = '1.5.4'
 
     repositories {
         jcenter()
@@ -55,6 +56,16 @@ task clean(type: Delete) {
 
 configurations {
     ktlint
+}
+// To ensure unit tests and instrumentation tests remain consistent after the introduction of leakcanary
+configurations.all { config ->
+    if (config.name.contains('UnitTest') || config.name.contains('AndroidTest')) {
+        config.resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'com.squareup.leakcanary' && details.requested.name == 'leakcanary-android') {
+                details.useTarget(group: details.requested.group, name: 'leakcanary-android-no-op', version: details.requested.version)
+            }
+        }
+    }
 }
 
 dependencies {
