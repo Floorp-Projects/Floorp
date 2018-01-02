@@ -7758,7 +7758,9 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
         // have a binding applied. Remove the binding from the element now
         // that it's getting adopted into a new document.
         // TODO Fully tear down the binding.
-        adoptedNode->AsContent()->SetXBLBinding(nullptr);
+        if (adoptedNode->IsElement()) {
+          adoptedNode->AsElement()->SetXBLBinding(nullptr);
+        }
       }
 
       break;

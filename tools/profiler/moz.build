@@ -103,9 +103,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
     if not CONFIG['MOZ_CRASHREPORTER'] and CONFIG['OS_TARGET'] == 'Android':
         SOURCES += ['/toolkit/crashreporter/google-breakpad/src/common/android/breakpad_getcontext.S']
 
-    if CONFIG['ANDROID_CPU_ARCH'] == 'armeabi':
-        DEFINES['ARCH_ARMV6'] = True
-
     if CONFIG['ENABLE_TESTS']:
         DIRS += ['tests/gtest']
 

@@ -99,24 +99,19 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGenericDOMDataNode)
     NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsGenericDOMDataNode, tmp->mRefCnt.get())
   }
 
-  if (!nsINode::Traverse(tmp, cb)) {
+  if (!nsIContent::Traverse(tmp, cb)) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
-  }
-
-  nsDataSlots *slots = tmp->GetExistingDataSlots();
-  if (slots) {
-    slots->Traverse(cb);
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericDOMDataNode)
-  nsINode::Unlink(tmp);
+  nsIContent::Unlink(tmp);
 
   // Clear flag here because unlinking slots will clear the
   // containing shadow root pointer.
   tmp->UnsetFlags(NODE_IS_IN_SHADOW_TREE);
 
-  nsDataSlots *slots = tmp->GetExistingDataSlots();
+  nsContentSlots* slots = tmp->GetExistingContentSlots();
   if (slots) {
     slots->Unlink();
   }
@@ -508,7 +503,7 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                  (aParent && aParent->IsInNativeAnonymousSubtree()),
                  "Trying to re-bind content from native anonymous subtree to "
                  "non-native anonymous parent!");
-    DataSlots()->mBindingParent = aBindingParent; // Weak, so no addref happens.
+    ExtendedContentSlots()->mBindingParent = aBindingParent; // Weak, so no addref happens.
     if (aParent->IsInNativeAnonymousSubtree()) {
       SetFlags(NODE_IS_IN_NATIVE_ANONYMOUS_SUBTREE);
     }
@@ -524,7 +519,7 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     }
     ShadowRoot* parentContainingShadow = aParent->GetContainingShadow();
     if (parentContainingShadow) {
-      DataSlots()->mContainingShadow = parentContainingShadow;
+      ExtendedContentSlots()->mContainingShadow = parentContainingShadow;
     }
   }
 
@@ -620,7 +615,7 @@ nsGenericDOMDataNode::UnbindFromTree(bool aDeep, bool aNullParent)
     }
   }
 
-  nsDataSlots *slots = GetExistingDataSlots();
+  nsExtendedContentSlots* slots = GetExistingExtendedContentSlots();
   if (slots) {
     slots->mBindingParent = nullptr;
     if (aNullParent || !mParent->IsInShadowTree()) {
@@ -668,80 +663,10 @@ nsGenericDOMDataNode::RemoveChildAt(uint32_t aIndex, bool aNotify)
 {
 }
 
-nsIContent *
-nsGenericDOMDataNode::GetBindingParent() const
-{
-  nsDataSlots *slots = GetExistingDataSlots();
-  return slots ? slots->mBindingParent : nullptr;
-}
-
-ShadowRoot *
-nsGenericDOMDataNode::GetContainingShadow() const
-{
-  nsDataSlots *slots = GetExistingDataSlots();
-  if (!slots) {
-    return nullptr;
-  }
-  return slots->mContainingShadow;
-}
-
-void
-nsGenericDOMDataNode::SetShadowRoot(ShadowRoot* aShadowRoot)
-{
-}
-
-HTMLSlotElement*
-nsGenericDOMDataNode::GetAssignedSlot() const
-{
-  nsDataSlots *slots = GetExistingDataSlots();
-  return slots ? slots->mAssignedSlot.get() : nullptr;
-}
-
-void
-nsGenericDOMDataNode::SetAssignedSlot(HTMLSlotElement* aSlot)
-{
-  nsDataSlots *slots = DataSlots();
-  slots->mAssignedSlot = aSlot;
-}
-
 nsXBLBinding *
 nsGenericDOMDataNode::DoGetXBLBinding() const
 {
   return nullptr;
-}
-
-void
-nsGenericDOMDataNode::SetXBLBinding(nsXBLBinding* aBinding,
-                                    nsBindingManager* aOldBindingManager)
-{
-}
-
-nsIContent *
-nsGenericDOMDataNode::GetXBLInsertionPoint() const
-{
-  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    nsDataSlots *slots = GetExistingDataSlots();
-    if (slots) {
-      return slots->mXBLInsertionPoint;
-    }
-  }
-
-  return nullptr;
-}
-
-void
-nsGenericDOMDataNode::SetXBLInsertionPoint(nsIContent* aContent)
-{
-  if (aContent) {
-    nsDataSlots *slots = DataSlots();
-    SetFlags(NODE_MAY_BE_IN_BINDING_MNGR);
-    slots->mXBLInsertionPoint = aContent;
-  } else {
-    nsDataSlots *slots = GetExistingDataSlots();
-    if (slots) {
-      slots->mXBLInsertionPoint = nullptr;
-    }
-  }
 }
 
 bool
@@ -773,38 +698,6 @@ nsGenericDOMDataNode::IsLink(nsIURI** aURI) const
 {
   *aURI = nullptr;
   return false;
-}
-
-nsINode::nsSlots*
-nsGenericDOMDataNode::CreateSlots()
-{
-  return new nsDataSlots();
-}
-
-nsGenericDOMDataNode::nsDataSlots::nsDataSlots()
-  : nsINode::nsSlots(), mBindingParent(nullptr)
-{
-}
-
-void
-nsGenericDOMDataNode::nsDataSlots::Traverse(nsCycleCollectionTraversalCallback &cb)
-{
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mXBLInsertionPoint");
-  cb.NoteXPCOMChild(mXBLInsertionPoint.get());
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mContainingShadow");
-  cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mContainingShadow));
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mSlots->mAssignedSlot");
-  cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mAssignedSlot.get()));
-}
-
-void
-nsGenericDOMDataNode::nsDataSlots::Unlink()
-{
-  mXBLInsertionPoint = nullptr;
-  mContainingShadow = nullptr;
-  mAssignedSlot = nullptr;
 }
 
 //----------------------------------------------------------------------
