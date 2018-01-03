@@ -639,7 +639,7 @@ nsGenericDOMDataNode::GetChildCount() const
 }
 
 nsIContent *
-nsGenericDOMDataNode::GetChildAt(uint32_t aIndex) const
+nsGenericDOMDataNode::GetChildAt_Deprecated(uint32_t aIndex) const
 {
   return nullptr;
 }
@@ -776,7 +776,7 @@ nsGenericDOMDataNode::FirstLogicallyAdjacentTextNode(nsIContent* aParent,
                                                      int32_t aIndex)
 {
   while (aIndex-- > 0) {
-    nsIContent* sibling = aParent->GetChildAt(aIndex);
+    nsIContent* sibling = aParent->GetChildAt_Deprecated(aIndex);
     if (!sibling->IsNodeOfType(nsINode::eTEXT))
       return aIndex + 1;
   }
@@ -789,7 +789,7 @@ nsGenericDOMDataNode::LastLogicallyAdjacentTextNode(nsIContent* aParent,
                                                     uint32_t aCount)
 {
   while (++aIndex < int32_t(aCount)) {
-    nsIContent* sibling = aParent->GetChildAt(aIndex);
+    nsIContent* sibling = aParent->GetChildAt_Deprecated(aIndex);
     if (!sibling->IsNodeOfType(nsINode::eTEXT))
       return aIndex - 1;
   }
@@ -820,7 +820,7 @@ nsGenericDOMDataNode::GetWholeText(nsAString& aWholeText)
   nsCOMPtr<nsIDOMText> node;
   nsAutoString tmp;
   do {
-    node = do_QueryInterface(parent->GetChildAt(first));
+    node = do_QueryInterface(parent->GetChildAt_Deprecated(first));
     node->GetData(tmp);
     aWholeText.Append(tmp);
   } while (first++ < last);

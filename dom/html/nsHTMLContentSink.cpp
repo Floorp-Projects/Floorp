@@ -330,7 +330,7 @@ SinkContext::DidAddContent(nsIContent* aContent)
       mStack[mStackPos - 1].mContent->GetChildCount()) {
     nsIContent* parent = mStack[mStackPos - 1].mContent;
     int32_t childIndex = mStack[mStackPos - 1].mInsertionPoint - 1;
-    NS_ASSERTION(parent->GetChildAt(childIndex) == aContent,
+    NS_ASSERTION(parent->GetChildAt_Deprecated(childIndex) == aContent,
                  "Flushing the wrong child.");
     mSink->NotifyInsert(parent, aContent, childIndex);
     mStack[mStackPos - 1].mNumFlushed = parent->GetChildCount();
@@ -524,7 +524,7 @@ SinkContext::FlushTags()
           // directly from its parent node.
 
           int32_t childIndex = mStack[stackPos].mInsertionPoint - 1;
-          nsIContent* child = content->GetChildAt(childIndex);
+          nsIContent* child = content->GetChildAt_Deprecated(childIndex);
           // Child not on stack anymore; can't assert it's correct
           NS_ASSERTION(!(mStackPos > (stackPos + 1)) ||
                        (child == mStack[stackPos + 1].mContent),

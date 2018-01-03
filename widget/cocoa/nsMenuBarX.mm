@@ -165,7 +165,7 @@ void nsMenuBarX::ConstructNativeMenus()
 {
   uint32_t count = mContent->GetChildCount();
   for (uint32_t i = 0; i < count; i++) {
-    nsIContent *menuContent = mContent->GetChildAt(i);
+    nsIContent *menuContent = mContent->GetChildAt_Deprecated(i);
     if (menuContent &&
         menuContent->IsXULElement(nsGkAtoms::menu)) {
       nsMenuX* newMenu = new nsMenuX();

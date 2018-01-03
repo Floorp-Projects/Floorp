@@ -688,7 +688,7 @@ nsTreeColumns::RestoreNaturalOrder()
     return NS_OK;
 
   for (uint32_t i = 0; i < colsContent->GetChildCount(); ++i) {
-    nsCOMPtr<nsIContent> child = colsContent->GetChildAt(i);
+    nsCOMPtr<nsIContent> child = colsContent->GetChildAt_Deprecated(i);
     nsAutoString ordinal;
     ordinal.AppendInt(i);
     if (child->IsElement()) {

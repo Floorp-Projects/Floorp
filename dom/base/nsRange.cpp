@@ -3859,7 +3859,7 @@ nsRange::GetInnerTextNoFlush(DOMString& aValue, ErrorResult& aError,
     AppendTransformedText(result, t, aStartOffset, t->TextLength());
   } else {
     if (uint32_t(aStartOffset) < aStartContainer->GetChildCount()) {
-      currentNode = aStartContainer->GetChildAt(aStartOffset);
+      currentNode = aStartContainer->GetChildAt_Deprecated(aStartOffset);
       currentState = AT_NODE;
     }
   }
@@ -3870,7 +3870,7 @@ nsRange::GetInnerTextNoFlush(DOMString& aValue, ErrorResult& aError,
     endState = AT_NODE;
   } else {
     if (aEndOffset < aEndContainer->GetChildCount()) {
-      endNode = aEndContainer->GetChildAt(aEndOffset);
+      endNode = aEndContainer->GetChildAt_Deprecated(aEndOffset);
       endState = AT_NODE;
     }
   }

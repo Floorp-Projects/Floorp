@@ -5306,7 +5306,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     uint32_t removeIndex = 0;
 
     for (uint32_t i = 0; i < childCount; ++i) {
-      nsIContent* child = aContent->GetChildAt(removeIndex);
+      nsIContent* child = aContent->GetChildAt_Deprecated(removeIndex);
       if (removeIndex == 0 && child && child->IsNodeOfType(nsINode::eTEXT)) {
         nsresult rv = child->SetText(aValue, true);
         NS_ENSURE_SUCCESS(rv, rv);

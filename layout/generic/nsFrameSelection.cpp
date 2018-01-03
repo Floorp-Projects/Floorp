@@ -1639,7 +1639,7 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
       }
 
       if (childIndex > 0 || numChildren > 0) {
-        nsCOMPtr<nsIContent> childNode = theNode->GetChildAt(childIndex);
+        nsCOMPtr<nsIContent> childNode = theNode->GetChildAt_Deprecated(childIndex);
 
         if (!childNode) {
           break;
@@ -1680,7 +1680,7 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
               aHint == CARET_ASSOCIATE_BEFORE ? childIndex - 1 : childIndex + 1;
 
             if (newChildIndex >= 0 && newChildIndex < numChildren) {
-              nsCOMPtr<nsIContent> newChildNode = aNode->GetChildAt(newChildIndex);
+              nsCOMPtr<nsIContent> newChildNode = aNode->GetChildAt_Deprecated(newChildIndex);
               if (!newChildNode) {
                 return nullptr;
               }
@@ -2065,7 +2065,7 @@ GetFirstSelectedContent(nsRange* aRange)
   NS_PRECONDITION(aRange->GetStartContainer()->IsElement(),
                   "Unexpected parent");
 
-  return aRange->GetStartContainer()->GetChildAt(aRange->StartOffset());
+  return aRange->GetStartContainer()->GetChildAt_Deprecated(aRange->StartOffset());
 }
 
 // Table selection support.
@@ -2088,7 +2088,7 @@ nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
 
   nsresult result = NS_OK;
 
-  nsIContent *childContent = aParentContent->GetChildAt(aContentOffset);
+  nsIContent *childContent = aParentContent->GetChildAt_Deprecated(aContentOffset);
 
   // When doing table selection, always set the direction to next so
   // we can be sure that anchorNode's offset always points to the
@@ -2350,7 +2350,7 @@ printf("HandleTableSelection: Unselecting mUnselectCellOnMouseUp; rangeCount=%d\
 
           int32_t offset = range->StartOffset();
           // Be sure previous selection is a table cell
-          nsIContent* child = container->GetChildAt(offset);
+          nsIContent* child = container->GetChildAt_Deprecated(offset);
           if (child && IsCell(child)) {
             previousCellParent = container;
           }
@@ -2702,7 +2702,7 @@ nsFrameSelection::GetFirstCellNodeInRange(nsRange *aRange) const
 
   int32_t offset = aRange->StartOffset();
 
-  nsIContent* childContent = startContainer->GetChildAt(offset);
+  nsIContent* childContent = startContainer->GetChildAt_Deprecated(offset);
   if (!childContent)
     return nullptr;
   // Don't return node if not a cell
