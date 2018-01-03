@@ -1331,13 +1331,11 @@ void
 nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer,
                                      nsIContent* aContent, int32_t* aIndex)
 {
-  uint32_t childCount = aContainer->GetChildCount();
-
   if (!aContainer->IsXULElement())
     return;
 
-  for (uint32_t i = 0; i < childCount; i++) {
-    nsIContent *content = aContainer->GetChildAt_Deprecated(i);
+  for (nsIContent* content = aContainer->GetFirstChild();
+       content; content = content->GetNextSibling()) {
 
     if (content == aContent)
       break;
