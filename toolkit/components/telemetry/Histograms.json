@@ -3934,7 +3934,7 @@
     "record_in_processes": ["main", "content"],
     "alert_emails": [],
     "bug_numbers": [1361855],
-    "expires_in_version": "60",
+    "expires_in_version": "65",
     "kind": "exponential",
     "high": 1000,
     "n_buckets": 100,
