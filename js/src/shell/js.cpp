@@ -181,7 +181,7 @@ static const size_t gMaxStackSize = 128 * sizeof(size_t) * 1024;
  */
 static const double MAX_TIMEOUT_SECONDS = 1800.0;
 
-// SharedArrayBuffer and Atomics are enabled by default (tracking Firefox).
+// Not necessarily in sync with the browser
 #define SHARED_MEMORY_DEFAULT 1
 
 // Code to support GCOV code coverage measurements on standalone shell
