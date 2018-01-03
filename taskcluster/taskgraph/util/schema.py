@@ -5,10 +5,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import re
-import copy
 import pprint
 import collections
 import voluptuous
+
+import taskgraph
 
 from .attributes import keymatch
 
@@ -18,9 +19,10 @@ def validate_schema(schema, obj, msg_prefix):
     Validate that object satisfies schema.  If not, generate a useful exception
     beginning with msg_prefix.
     """
+    if taskgraph.fast:
+        return
     try:
-        # deep copy the result since it may include mutable defaults
-        return copy.deepcopy(schema(obj))
+        schema(obj)
     except voluptuous.MultipleInvalid as exc:
         msg = [msg_prefix]
         for error in exc.errors:
