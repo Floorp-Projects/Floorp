@@ -499,7 +499,7 @@
             <image class="fxaSyncIllustrationIssue"/>
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.unverified.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-button"
-                           label="&appMenuRemoteTabs.signin.label;"
+                           label="&appMenuRemoteTabs.openprefs.label;"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
         </hbox>

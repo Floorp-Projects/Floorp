@@ -110,12 +110,9 @@ protected:
     if (mFlags & SkipInvisibleContent) {
       // Treat the visibility of the ShadowRoot as if it were
       // the host content.
-      nsCOMPtr<nsIContent> content;
-      ShadowRoot* shadowRoot = ShadowRoot::FromNode(aNode);
-      if (shadowRoot) {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+      if (ShadowRoot* shadowRoot = ShadowRoot::FromNodeOrNull(content)) {
         content = shadowRoot->GetHost();
-      } else {
-        content = do_QueryInterface(aNode);
       }
 
       if (content) {
