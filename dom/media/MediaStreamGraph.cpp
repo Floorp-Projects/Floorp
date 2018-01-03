@@ -1974,13 +1974,17 @@ MediaStream::FinishOnGraphThread()
   }
   LOG(LogLevel::Debug, ("MediaStream %p will finish", this));
 #ifdef DEBUG
-  for (StreamTracks::TrackIter track(mTracks); !track.IsEnded(); track.Next()) {
-    if (!track->IsEnded()) {
-      LOG(LogLevel::Error,
-          ("MediaStream %p will finish, but track %d has not ended.",
-           this,
-           track->GetID()));
-      NS_ASSERTION(false, "Finished stream cannot contain live track");
+  if (!mGraph->mForceShutDown) {
+    // All tracks must be ended by the source before the stream finishes.
+    // The exception is in forced shutdown, where we finish all streams as is.
+    for (StreamTracks::TrackIter track(mTracks); !track.IsEnded(); track.Next()) {
+      if (!track->IsEnded()) {
+        LOG(LogLevel::Error,
+            ("MediaStream %p will finish, but track %d has not ended.",
+             this,
+             track->GetID()));
+        NS_ASSERTION(false, "Finished stream cannot contain live track");
+      }
     }
   }
 #endif
