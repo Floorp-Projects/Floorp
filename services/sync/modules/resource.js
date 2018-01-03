@@ -176,6 +176,7 @@ Resource.prototype = {
     try {
       response = await responsePromise;
     } catch (e) {
+      this._log.warn(`${method} request to ${this.uri.spec} failed`, e);
       if (!didTimeout) {
         throw e;
       }
