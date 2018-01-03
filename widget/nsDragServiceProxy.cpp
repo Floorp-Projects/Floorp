@@ -9,7 +9,6 @@
 #include "nsISupportsPrimitives.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/EventStateManager.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
@@ -88,22 +87,4 @@ nsDragServiceProxy::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
                                                   mozilla::void_t(), 0, 0, dragRect);
   StartDragSession();
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDragServiceProxy::StartDragSession()
-{
-  // Normally, OS stops firing input events when a drag operation starts. But
-  // there may be some pending input events queued in the content process. We
-  // have to suppress them since spec says that input events must be suppressed
-  // when there is a dnd session.
-  EventStateManager::SuppressInputEvents();
-  return nsBaseDragService::StartDragSession();
-}
-
-NS_IMETHODIMP
-nsDragServiceProxy::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers)
-{
-  EventStateManager::UnsuppressInputEvents();
-  return nsBaseDragService::EndDragSession(aDoneDrag, aKeyModifiers);
 }
