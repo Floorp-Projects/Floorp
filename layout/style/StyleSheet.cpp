@@ -28,7 +28,7 @@ StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMod
   , mParsingMode(aParsingMode)
   , mType(aType)
   , mDisabled(false)
-  , mDirty(false)
+  , mDirtyFlags(0)
   , mDocumentAssociationMode(NotOwnedByDocument)
   , mInner(nullptr)
 {
@@ -47,7 +47,7 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
   , mParsingMode(aCopy.mParsingMode)
   , mType(aCopy.mType)
   , mDisabled(aCopy.mDisabled)
-  , mDirty(aCopy.mDirty)
+  , mDirtyFlags(aCopy.mDirtyFlags)
   // We only use this constructor during cloning.  It's the cloner's
   // responsibility to notify us if we end up being owned by a document.
   , mDocumentAssociationMode(NotOwnedByDocument)
@@ -196,7 +196,9 @@ StyleSheet::IsComplete() const
 void
 StyleSheet::SetComplete()
 {
-  NS_ASSERTION(!mDirty, "Can't set a dirty sheet complete!");
+  NS_ASSERTION(!HasForcedUniqueInner(),
+               "Can't complete a sheet that's already been forced "
+               "unique.");
   SheetInfo().mComplete = true;
   if (mDocument && !mDisabled) {
     // Let the document know
@@ -377,7 +379,7 @@ StyleSheet::EnsureUniqueInner()
 {
   MOZ_ASSERT(mInner->mSheets.Length() != 0,
              "unexpected number of outers");
-  mDirty = true;
+  mDirtyFlags |= FORCED_UNIQUE_INNER;
 
   if (HasUniqueInner()) {
     // already unique
