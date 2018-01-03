@@ -47,9 +47,7 @@ function logMsg(msg, file, line, flag, winID) {
   let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
   scriptError.initWithWindowID(msg, file, null, line, 0, flag,
                                "content javascript", winID);
-  let console = Cc["@mozilla.org/consoleservice;1"].
-  getService(Ci.nsIConsoleService);
-  console.logMessage(scriptError);
+  Services.console.logMessage(scriptError);
 }
 
 let setupPrototype = (_class, dict) => {
@@ -649,11 +647,9 @@ class RTCPeerConnection {
       }
     });
 
-    let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-
     let nicerNewURI = uriStr => {
       try {
-        return ios.newURI(uriStr);
+        return Services.io.newURI(uriStr);
       } catch (e) {
         if (e.result == Cr.NS_ERROR_MALFORMED_URI) {
           throw new this._win.DOMException(msg + " - malformed URI: " + uriStr,
