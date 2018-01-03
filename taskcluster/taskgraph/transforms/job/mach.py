@@ -19,12 +19,12 @@ mach_schema = Schema({
 
     # if true, perform a checkout of a comm-central based branch inside the
     # gecko checkout
-    Required('comm-checkout'): bool,
+    Required('comm-checkout', default=False): bool,
 })
 
 
-@run_job_using("docker-worker", "mach", schema=mach_schema, defaults={'comm-checkout': False})
-@run_job_using("native-engine", "mach", schema=mach_schema, defaults={'comm-checkout': False})
+@run_job_using("docker-worker", "mach", schema=mach_schema)
+@run_job_using("native-engine", "mach", schema=mach_schema)
 def docker_worker_mach(config, job, taskdesc):
     run = job['run']
 

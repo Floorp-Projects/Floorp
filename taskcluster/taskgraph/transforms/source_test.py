@@ -44,7 +44,7 @@ source_test_description_schema = Schema({
     # depend on a build task and the installer url will be saved to the
     # GECKO_INSTALLER_URL environment variable. Build labels are determined by the
     # `dependent-build-platforms` config in kind.yml.
-    Required('require-build'): bool,
+    Required('require-build', default=False): bool,
 
     # These fields can be keyed by "platform", and are otherwise identical to
     # job descriptions.
@@ -62,18 +62,10 @@ transforms = TransformSequence()
 
 
 @transforms.add
-def set_defaults(config, jobs):
-    for job in jobs:
-        job.setdefault('require-build', False)
-        yield job
-
-
-@transforms.add
 def validate(config, jobs):
     for job in jobs:
-        validate_schema(source_test_description_schema, job,
-                        "In job {!r}:".format(job['name']))
-        yield job
+        yield validate_schema(source_test_description_schema, job,
+                              "In job {!r}:".format(job['name']))
 
 
 @transforms.add
