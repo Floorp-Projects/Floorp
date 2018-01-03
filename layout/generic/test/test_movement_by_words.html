@@ -127,6 +127,21 @@ function test1() {
   testLeft(editor.firstChild, 5);
   testLeft(editor.firstChild, 0);
 
+  editor.innerHTML = "layout.word_select.stop_at_punctuation";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 12);
+  testRight(editor.firstChild, 19);
+  testRight(editor.firstChild, 24);
+  testRight(editor.firstChild, 27);
+  testRight(editor.firstChild, 38);
+  testLeft(editor.firstChild, 27);
+  testLeft(editor.firstChild, 24);
+  testLeft(editor.firstChild, 19);
+  testLeft(editor.firstChild, 12);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
   editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 2);
@@ -316,6 +331,21 @@ function test2() {
   testLeft(editor.firstChild, 5);
   testLeft(editor.firstChild, 0);
 
+  editor.innerHTML = "layout.word_select.stop_at_punctuation";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 12);
+  testRight(editor.firstChild, 19);
+  testRight(editor.firstChild, 24);
+  testRight(editor.firstChild, 27);
+  testRight(editor.firstChild, 38);
+  testLeft(editor.firstChild, 27);
+  testLeft(editor.firstChild, 24);
+  testLeft(editor.firstChild, 19);
+  testLeft(editor.firstChild, 12);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
   editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 2);
@@ -428,6 +458,11 @@ function test3() {
   testLeft(editor.firstChild, 4);
   testLeft(editor.firstChild, 0);
 
+  editor.innerHTML = "layout.word_select.stop_at_punctuation";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 38);
+  testLeft(editor.firstChild, 0);
+
   editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 2);
@@ -526,6 +561,11 @@ function test4() {
   testLeft(editor.firstChild, 11);
   testLeft(editor.firstChild, 8);
   testLeft(editor.firstChild, 4);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "layout.word_select.stop_at_punctuation";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 38);
   testLeft(editor.firstChild, 0);
 
   editor.innerHTML = ChineseChars + HiraganaChars + ChineseChars;
