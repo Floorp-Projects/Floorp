@@ -15,5 +15,3 @@
 ../mozbase/mozscreenshot
 ../mozbase/moztest
 ../mozbase/mozversion
-
-../tools/mozterm
