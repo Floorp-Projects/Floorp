@@ -161,6 +161,7 @@ async function doTest(aBrowser) {
       let trackLoaded = false;
 
       let audioListener = () => {
+        info(`Audio suspended: ${audioURL + URLSuffix}`);
         audio.removeEventListener("suspend", audioListener);
 
         audioLoaded = true;
@@ -170,6 +171,7 @@ async function doTest(aBrowser) {
       };
 
       let trackListener = () => {
+        info(`Audio track loaded: ${audioURL + URLSuffix}`);
         audioTrack.removeEventListener("load", trackListener);
 
         trackLoaded = true;
@@ -177,6 +179,8 @@ async function doTest(aBrowser) {
           resolve();
         }
       };
+
+      info(`Loading audio: ${audioURL + URLSuffix}`);
 
       // Add the event listeners before everything in case we lose events.
       audioTrack.addEventListener("load", trackListener);
@@ -198,9 +202,12 @@ async function doTest(aBrowser) {
     // Append the video element into the body, and wait until it's finished.
     await new Promise(resolve => {
       let listener = () => {
+        info(`Video suspended: ${videoURL + URLSuffix}`);
         video.removeEventListener("suspend", listener);
         resolve();
       };
+
+      info(`Loading video: ${videoURL + URLSuffix}`);
 
       // Add the event listener before everything in case we lose the event.
       video.addEventListener("suspend", listener);
