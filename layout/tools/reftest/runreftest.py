@@ -293,6 +293,8 @@ class RefTest(object):
             prefs['reftest.repeat'] = options.repeat
         if options.runUntilFailure:
             prefs['reftest.runUntilFailure'] = True
+        if options.verify:
+            prefs['reftest.verify'] = True
         if options.cleanupCrashes:
             prefs['reftest.cleanupPendingCrashes'] = True
         prefs['reftest.focusFilterMode'] = options.focusFilterMode
