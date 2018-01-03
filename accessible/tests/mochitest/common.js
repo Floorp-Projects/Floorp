@@ -710,11 +710,6 @@ function getLoadContext() {
  * Return text from clipboard.
  */
 function getTextFromClipboard() {
-  var clip = Components.classes["@mozilla.org/widget/clipboard;1"].
-    getService(Components.interfaces.nsIClipboard);
-  if (!clip)
-    return "";
-
   var trans = Components.classes["@mozilla.org/widget/transferable;1"].
     createInstance(Components.interfaces.nsITransferable);
   trans.init(getLoadContext());
@@ -722,7 +717,7 @@ function getTextFromClipboard() {
     return "";
 
   trans.addDataFlavor("text/unicode");
-  clip.getData(trans, clip.kGlobalClipboard);
+  Services.clipboard.getData(trans, Services.clipboard.kGlobalClipboard);
 
   var str = {};
   var strLength = {};
