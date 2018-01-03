@@ -845,9 +845,28 @@ ScriptLoader::CheckModuleDependenciesLoaded(ModuleLoadRequest* aRequest)
  LOG(("ScriptLoadRequest (%p):   all ok", aRequest));
 }
 
+class ScriptRequestProcessor : public Runnable
+{
+private:
+  RefPtr<ScriptLoader> mLoader;
+  RefPtr<ScriptLoadRequest> mRequest;
+public:
+  ScriptRequestProcessor(ScriptLoader* aLoader, ScriptLoadRequest* aRequest)
+    : Runnable("dom::ScriptRequestProcessor")
+    , mLoader(aLoader)
+    , mRequest(aRequest)
+  {}
+  NS_IMETHOD Run() override
+  {
+    return mLoader->ProcessRequest(mRequest);
+  }
+};
+
 void
 ScriptLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest)
 {
+  MOZ_ASSERT(aRequest->IsReadyToRun());
+
   if (aRequest->IsTopLevel()) {
     ModuleScript* moduleScript = aRequest->mModuleScript;
     if (moduleScript && !moduleScript->HasErrorToRethrow()) {
@@ -855,8 +874,17 @@ ScriptLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest)
         aRequest->mModuleScript = nullptr;
       }
     }
-    MaybeMoveToLoadedList(aRequest);
-    ProcessPendingRequests();
+
+    if (aRequest->mIsInline &&
+        aRequest->mElement->GetParserCreated() == NOT_FROM_PARSER)
+    {
+      MOZ_ASSERT(!aRequest->isInList());
+      nsContentUtils::AddScriptRunner(
+        new ScriptRequestProcessor(this, aRequest));
+    } else {
+      MaybeMoveToLoadedList(aRequest);
+      ProcessPendingRequests();
+    }
   }
 
   if (aRequest->mWasCompiledOMT) {
@@ -1164,23 +1192,6 @@ ScriptLoader::PreloadURIComparator::Equals(const PreloadInfo& aPi,
   return NS_SUCCEEDED(aPi.mRequest->mURI->Equals(aURI, &same)) &&
          same;
 }
-
-class ScriptRequestProcessor : public Runnable
-{
-private:
-  RefPtr<ScriptLoader> mLoader;
-  RefPtr<ScriptLoadRequest> mRequest;
-public:
-  ScriptRequestProcessor(ScriptLoader* aLoader, ScriptLoadRequest* aRequest)
-    : Runnable("dom::ScriptRequestProcessor")
-    , mLoader(aLoader)
-    , mRequest(aRequest)
-  {}
-  NS_IMETHOD Run() override
-  {
-    return mLoader->ProcessRequest(mRequest);
-  }
-};
 
 /**
  * Returns ValidJSVersion::Valid if aVersionStr is a string of the form
@@ -1583,12 +1594,14 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
   if (request->IsModuleRequest()) {
     ModuleLoadRequest* modReq = request->AsModuleRequest();
     modReq->mBaseURL = mDocument->GetDocBaseURI();
+    modReq->mIsAsync = aElement->GetScriptAsync();
 
-    if (aElement->GetScriptAsync()) {
-      modReq->mIsAsync = true;
-      mLoadingAsyncRequests.AppendElement(modReq);
-    } else {
-      AddDeferRequest(modReq);
+    if (aElement->GetParserCreated() != NOT_FROM_PARSER) {
+      if (modReq->mIsAsync) {
+        mLoadingAsyncRequests.AppendElement(modReq);
+      } else {
+        AddDeferRequest(modReq);
+      }
     }
 
     nsresult rv = ProcessFetchedModuleSource(modReq);
@@ -1612,7 +1625,7 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
     NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
         "A script-inserted script is inserted without an update batch?");
     nsContentUtils::AddScriptRunner(new ScriptRequestProcessor(this,
-                                                                 request));
+                                                               request));
     return false;
   }
   if (aElement->GetParserCreated() == FROM_PARSER_NETWORK &&
