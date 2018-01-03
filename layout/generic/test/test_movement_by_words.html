@@ -130,15 +130,9 @@ function test1() {
   editor.innerHTML = "layout.word_select.stop_at_punctuation";
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 7);
-  testRight(editor.firstChild, 12);
   testRight(editor.firstChild, 19);
-  testRight(editor.firstChild, 24);
-  testRight(editor.firstChild, 27);
   testRight(editor.firstChild, 38);
-  testLeft(editor.firstChild, 27);
-  testLeft(editor.firstChild, 24);
   testLeft(editor.firstChild, 19);
-  testLeft(editor.firstChild, 12);
   testLeft(editor.firstChild, 7);
   testLeft(editor.firstChild, 0);
 
@@ -334,15 +328,9 @@ function test2() {
   editor.innerHTML = "layout.word_select.stop_at_punctuation";
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 7);
-  testRight(editor.firstChild, 12);
   testRight(editor.firstChild, 19);
-  testRight(editor.firstChild, 24);
-  testRight(editor.firstChild, 27);
   testRight(editor.firstChild, 38);
-  testLeft(editor.firstChild, 27);
-  testLeft(editor.firstChild, 24);
   testLeft(editor.firstChild, 19);
-  testLeft(editor.firstChild, 12);
   testLeft(editor.firstChild, 7);
   testLeft(editor.firstChild, 0);
 
