@@ -413,7 +413,7 @@ sdnAccessible::get_childAt(unsigned aChildIndex,
   if (IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  nsINode* resultNode = mNode->GetChildAt(aChildIndex);
+  nsINode* resultNode = mNode->GetChildAt_Deprecated(aChildIndex);
   if (resultNode) {
     *aNode = static_cast<ISimpleDOMNode*>(new sdnAccessible(resultNode));
     (*aNode)->AddRef();
