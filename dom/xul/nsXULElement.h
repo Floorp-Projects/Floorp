@@ -366,7 +366,7 @@ public:
                                 nsIContent* aBindingParent,
                                 bool aCompileEventHandlers) override;
     virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
-    virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) override;
+    virtual void RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify) override;
     virtual void DestroyContent() override;
 
 #ifdef DEBUG

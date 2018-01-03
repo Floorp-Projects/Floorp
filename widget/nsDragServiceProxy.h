@@ -19,11 +19,6 @@ public:
   virtual nsresult InvokeDragSessionImpl(nsIArray* anArrayTransferables,
                                          nsIScriptableRegion* aRegion,
                                          uint32_t aActionType) override;
-
-  // nsIDragService
-  NS_IMETHOD StartDragSession() override;
-  NS_IMETHOD EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) override;
-
 private:
   virtual ~nsDragServiceProxy();
 };

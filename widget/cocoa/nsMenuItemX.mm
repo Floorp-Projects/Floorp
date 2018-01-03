@@ -224,7 +224,7 @@ void nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
   // loop over siblings
   uint32_t count = parent->GetChildCount();
   for (uint32_t i = 0; i < count; i++) {
-    nsIContent *sibling = parent->GetChildAt(i);
+    nsIContent *sibling = parent->GetChildAt_Deprecated(i);
     if (sibling &&
         sibling != inCheckedContent &&
         sibling->IsElement()) { // skip this node

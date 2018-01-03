@@ -3785,13 +3785,13 @@ XULDocument::OverlayForwardReference::Merge(Element* aTargetElement,
                 // non-null ID.
                 rv = Merge(elementInDocument, currContent->AsElement(), aNotify);
                 if (NS_FAILED(rv)) return rv;
-                aOverlayElement->RemoveChildAt(0, false);
+                aOverlayElement->RemoveChildAt_Deprecated(0, false);
 
                 continue;
             }
         }
 
-        aOverlayElement->RemoveChildAt(0, false);
+        aOverlayElement->RemoveChildAt_Deprecated(0, false);
 
         rv = InsertElement(aTargetElement, currContent, aNotify);
         if (NS_FAILED(rv)) return rv;
@@ -4151,7 +4151,7 @@ XULDocument::RemoveElement(nsINode* aParent, nsINode* aChild)
 {
     int32_t nodeOffset = aParent->IndexOf(aChild);
 
-    aParent->RemoveChildAt(nodeOffset, true);
+    aParent->RemoveChildAt_Deprecated(nodeOffset, true);
     return NS_OK;
 }
 
