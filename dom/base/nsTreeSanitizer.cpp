@@ -1112,8 +1112,8 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
   }
   NS_ENSURE_SUCCESS(rv, true);
   // Mark the sheet as complete.
-  MOZ_ASSERT(!sheet->IsModified(),
-             "should not get marked modified during parsing");
+  MOZ_ASSERT(!sheet->HasForcedUniqueInner(),
+             "should not get a forced unique inner during parsing");
   sheet->SetComplete();
   // Loop through all the rules found in the CSS text
   ErrorResult err;
