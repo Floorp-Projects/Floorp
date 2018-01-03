@@ -41,10 +41,12 @@ although the latter is impossible in protocol levels 2 and earlier
 due to the lack of message sequencing.
 
 
-Bugs
-====
+Contributing
+============
 
-Bugs are tracked in the `Testing :: Marionette` component.
+If you want to help improve Marionette, we have more information in
+<CONTRIBUTING.md>.  You will find additional development documentation at
+<https://firefox-source-docs.mozilla.org/testing/marionette/marionette>.
 
 
 Communication
