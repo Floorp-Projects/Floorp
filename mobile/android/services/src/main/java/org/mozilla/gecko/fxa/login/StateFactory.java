@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko.fxa.login;
 
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
@@ -47,15 +49,18 @@ public class StateFactory {
     return DSACryptoImplementation.fromJSONObject(o);
   }
 
-  public static State fromJSONObject(StateLabel stateLabel, ExtendedJSONObject o) throws InvalidKeySpecException, NoSuchAlgorithmException, NonObjectJSONException {
+  public static State fromJSONObject(StateLabel stateLabel, ExtendedJSONObject o) throws InvalidKeySpecException, InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException, NonObjectJSONException {
     Long version = o.getLong("version");
     if (version == null) {
       throw new IllegalStateException("version must not be null");
     }
 
     final int v = version.intValue();
+    // The most common case is the most recent version.
+    if (v == 4) {
+      return fromJSONObjectV4(stateLabel, o);
+    }
     if (v == 3) {
-      // The most common case is the most recent version.
       return fromJSONObjectV3(stateLabel, o);
     }
     if (v == 2) {
@@ -68,7 +73,8 @@ public class StateFactory {
     throw new IllegalStateException("version must be in {1, 2}");
   }
 
-  protected static State fromJSONObjectV1(StateLabel stateLabel, ExtendedJSONObject o) throws InvalidKeySpecException, NoSuchAlgorithmException, NonObjectJSONException {
+  protected static State fromJSONObjectV1(StateLabel stateLabel, ExtendedJSONObject o) throws InvalidKeySpecException, InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException, NonObjectJSONException {
+    byte[] kB;
     switch (stateLabel) {
     case Engaged:
       return new Engaged(
@@ -79,20 +85,22 @@ public class StateFactory {
           Utils.hex2Byte(o.getString("sessionToken")),
           Utils.hex2Byte(o.getString("keyFetchToken")));
     case Cohabiting:
+      kB = Utils.hex2Byte(o.getString("kB"));
       return new Cohabiting(
           o.getString("email"),
           o.getString("uid"),
           Utils.hex2Byte(o.getString("sessionToken")),
-          Utils.hex2Byte(o.getString("kA")),
-          Utils.hex2Byte(o.getString("kB")),
+          FxAccountUtils.deriveSyncKey(kB),
+          FxAccountUtils.computeClientState(kB),
           keyPairFromJSONObjectV1(o.getObject("keyPair")));
     case Married:
+      kB = Utils.hex2Byte(o.getString("kB"));
       return new Married(
           o.getString("email"),
           o.getString("uid"),
           Utils.hex2Byte(o.getString("sessionToken")),
-          Utils.hex2Byte(o.getString("kA")),
-          Utils.hex2Byte(o.getString("kB")),
+          FxAccountUtils.deriveSyncKey(kB),
+          FxAccountUtils.computeClientState(kB),
           keyPairFromJSONObjectV1(o.getObject("keyPair")),
           o.getString("certificate"));
     case Separated:
@@ -111,25 +119,28 @@ public class StateFactory {
   }
 
   /**
-   * Exactly the same as {@link fromJSONObjectV1}, except that all key pairs are DSA key pairs.
+   * Exactly the same as {@link StateFactory#fromJSONObjectV1}, except that all key pairs are DSA key pairs.
    */
-  protected static State fromJSONObjectV2(StateLabel stateLabel, ExtendedJSONObject o) throws InvalidKeySpecException, NoSuchAlgorithmException, NonObjectJSONException {
+  private static State fromJSONObjectV2(StateLabel stateLabel, ExtendedJSONObject o) throws InvalidKeySpecException, InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException, NonObjectJSONException {
+    byte[] kB;
     switch (stateLabel) {
     case Cohabiting:
+      kB = Utils.hex2Byte(o.getString("kB"));
       return new Cohabiting(
           o.getString("email"),
           o.getString("uid"),
           Utils.hex2Byte(o.getString("sessionToken")),
-          Utils.hex2Byte(o.getString("kA")),
-          Utils.hex2Byte(o.getString("kB")),
+          FxAccountUtils.deriveSyncKey(kB),
+          FxAccountUtils.computeClientState(kB),
           keyPairFromJSONObjectV2(o.getObject("keyPair")));
     case Married:
+      kB = Utils.hex2Byte(o.getString("kB"));
       return new Married(
           o.getString("email"),
           o.getString("uid"),
           Utils.hex2Byte(o.getString("sessionToken")),
-          Utils.hex2Byte(o.getString("kA")),
-          Utils.hex2Byte(o.getString("kB")),
+          FxAccountUtils.deriveSyncKey(kB),
+          FxAccountUtils.computeClientState(kB),
           keyPairFromJSONObjectV2(o.getObject("keyPair")),
           o.getString("certificate"));
     default:
@@ -138,10 +149,10 @@ public class StateFactory {
   }
 
   /**
-   * Exactly the same as {@link fromJSONObjectV2}, except that there's a new
+   * Exactly the same as {@link StateFactory#fromJSONObjectV2}, except that there's a new
    * MigratedFromSyncV11 state.
    */
-  protected static State fromJSONObjectV3(StateLabel stateLabel, ExtendedJSONObject o) throws InvalidKeySpecException, NoSuchAlgorithmException, NonObjectJSONException {
+  private static State fromJSONObjectV3(StateLabel stateLabel, ExtendedJSONObject o) throws InvalidKeySpecException, InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException, NonObjectJSONException {
     switch (stateLabel) {
     case MigratedFromSync11:
       return new MigratedFromSync11(
@@ -154,7 +165,35 @@ public class StateFactory {
     }
   }
 
-  protected static void logMigration(State from, State to) {
+  /**
+   * Exactly the same as {@link StateFactory#fromJSONObjectV3}, except instead of kB it contains
+   * derived kSync and kXCS.
+   */
+  private static State fromJSONObjectV4(StateLabel stateLabel, ExtendedJSONObject o) throws InvalidKeySpecException, InvalidKeyException, UnsupportedEncodingException, NoSuchAlgorithmException, NonObjectJSONException {
+    switch (stateLabel) {
+      case Cohabiting:
+        return new Cohabiting(
+                o.getString("email"),
+                o.getString("uid"),
+                Utils.hex2Byte(o.getString("sessionToken")),
+                Utils.hex2Byte(o.getString("kSync")),
+                o.getString("kXCS"),
+                keyPairFromJSONObjectV2(o.getObject("keyPair")));
+      case Married:
+        return new Married(
+                o.getString("email"),
+                o.getString("uid"),
+                Utils.hex2Byte(o.getString("sessionToken")),
+                Utils.hex2Byte(o.getString("kSync")),
+                o.getString("kXCS"),
+                keyPairFromJSONObjectV2(o.getObject("keyPair")),
+                o.getString("certificate"));
+      default:
+        return fromJSONObjectV3(stateLabel, o);
+    }
+  }
+
+  private static void logMigration(State from, State to) {
     if (!FxAccountUtils.LOG_PERSONAL_INFORMATION) {
       return;
     }
@@ -166,7 +205,7 @@ public class StateFactory {
     FxAccountUtils.pii(LOG_TAG, "Generated new V2 state: " + to.toJSONObject().toJSONString());
   }
 
-  protected static State migrateV1toV2(StateLabel stateLabel, State state) throws NoSuchAlgorithmException {
+  private static State migrateV1toV2(StateLabel stateLabel, State state) throws NoSuchAlgorithmException {
     if (state == null) {
       // This should never happen, but let's be careful.
       Logger.error(LOG_TAG, "Got null state in migrateV1toV2; returning null.");
@@ -183,7 +222,7 @@ public class StateFactory {
       // In the Cohabiting state, we can just generate a new key pair and move on.
       final Cohabiting cohabiting = (Cohabiting) state;
       final BrowserIDKeyPair keyPair = generateKeyPair();
-      final State migrated = new Cohabiting(cohabiting.email, cohabiting.uid, cohabiting.sessionToken, cohabiting.kA, cohabiting.kB, keyPair);
+      final State migrated = new Cohabiting(cohabiting.email, cohabiting.uid, cohabiting.sessionToken, cohabiting.kSync, cohabiting.kXCS, keyPair);
       logMigration(cohabiting, migrated);
       return migrated;
     }
@@ -194,7 +233,7 @@ public class StateFactory {
       // advance back to Married.
       final Married married = (Married) state;
       final BrowserIDKeyPair keyPair = generateKeyPair();
-      final State migrated = new Cohabiting(married.email, married.uid, married.sessionToken, married.kA, married.kB, keyPair);
+      final State migrated = new Cohabiting(married.email, married.uid, married.sessionToken, married.kSync, married.kXCS, keyPair);
       logMigration(married, migrated);
       return migrated;
     }
