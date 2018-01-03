@@ -22,9 +22,7 @@
 #include "TextEditUtils.h"
 #include "TypeInState.h"
 
-#include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMAttr.h"
 #include "nsIDocumentInlines.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMMouseEvent.h"
@@ -2613,27 +2611,21 @@ HTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
   AutoPlaceholderBatch beginBatching(this);
 
   // Set all attributes found on the supplied anchor element
-  nsCOMPtr<nsIDOMMozNamedAttrMap> attrMap;
-  aAnchorElement->GetAttributes(getter_AddRefs(attrMap));
+  RefPtr<nsDOMAttributeMap> attrMap = anchor->Attributes();
   NS_ENSURE_TRUE(attrMap, NS_ERROR_FAILURE);
 
-  uint32_t count;
-  attrMap->GetLength(&count);
-  nsAutoString name, value;
+  uint32_t count = attrMap->Length();
+  nsAutoString value;
 
   for (uint32_t i = 0; i < count; ++i) {
-    nsCOMPtr<nsIDOMAttr> attribute;
-    rv = attrMap->Item(i, getter_AddRefs(attribute));
-    NS_ENSURE_SUCCESS(rv, rv);
+    RefPtr<Attr> attribute = attrMap->Item(i);
 
     if (attribute) {
       // We must clear the string buffers
-      //   because GetName, GetValue appends to previous string!
-      name.Truncate();
+      //   because GetValue appends to previous string!
       value.Truncate();
 
-      rv = attribute->GetName(name);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsAtom* name = attribute->NodeInfo()->NameAtom();
 
       rv = attribute->GetValue(value);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -3519,7 +3511,7 @@ HTMLEditor::SelectAll()
 bool
 HTMLEditor::IsTextPropertySetByContent(nsINode* aNode,
                                        nsAtom* aProperty,
-                                       const nsAString* aAttribute,
+                                       nsAtom* aAttribute,
                                        const nsAString* aValue,
                                        nsAString* outValue)
 {
@@ -3529,11 +3521,11 @@ HTMLEditor::IsTextPropertySetByContent(nsINode* aNode,
     if (aNode->IsElement()) {
       Element* element = aNode->AsElement();
       if (aProperty == element->NodeInfo()->NameAtom()) {
-        if (!aAttribute || aAttribute->IsEmpty()) {
+        if (!aAttribute) {
           return true;
         }
         nsAutoString value;
-        element->GetAttribute(*aAttribute, value);
+        element->GetAttr(kNameSpaceID_None, aAttribute, value);
         if (outValue) {
           *outValue = value;
         }
