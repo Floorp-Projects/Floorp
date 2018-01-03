@@ -1184,23 +1184,32 @@ body #output-container {
 
 /* Object Inspector */
 .webconsole-output-wrapper .object-inspector.tree {
-  /*
-   * Make the arrow the same color and approximately the same size of the twisty icon.
-   * Should be properly fixed in https://bugzilla.mozilla.org/show_bug.cgi?id=1307937.
-   */
-  --arrow-width: 8px;
-  --arrow-fill-color: #AFA8AB;
-  --arrow-single-margin: 0.5rem;
-  --tree-indent-width: var(--console-output-indent-width);
-  --tree-indent-border-color: var(--console-output-indent-border-color);
-  --tree-node-hover-background-color : var(--object-inspector-hover-background);
   display: inline-block;
 }
 
-.theme-dark .webconsole-output-wrapper .object-inspector.tree {
-  --arrow-fill-color: #7F7E81;
+.webconsole-output-wrapper .object-inspector.tree .tree-indent {
+  border-inline-start-color: var(--console-output-indent-border-color);
 }
 
+.webconsole-output-wrapper .object-inspector.tree .tree-node:hover:not(.focused) {
+  background-color: var(--object-inspector-hover-background);
+}
+
+/*
+ * Make the arrow the same color and approximately the same size of the twisty icon.
+ * Should be properly fixed in https://bugzilla.mozilla.org/show_bug.cgi?id=1307937.
+ */
+.webconsole-output-wrapper .object-inspector.tree .tree-node .arrow svg {
+  width: 8px;
+  fill: #AFA8AB;
+  margin-inline-start: 1px;
+}
+
+.theme-dark .webconsole-output-wrapper .object-inspector.tree .tree-node .arrow svg {
+  fill: #7F7E81;
+}
+
+/* Sidebar */
 .sidebar {
   display: flex;
   grid-row: 1 / -1;
