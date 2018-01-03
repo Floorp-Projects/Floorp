@@ -318,15 +318,6 @@ CSSEditUtils::~CSSEditUtils()
 bool
 CSSEditUtils::IsCSSEditableProperty(nsINode* aNode,
                                     nsAtom* aProperty,
-                                    const nsAString* aAttribute)
-{
-  RefPtr<nsAtom> attribute = aAttribute ? NS_Atomize(*aAttribute) : nullptr;
-  return IsCSSEditableProperty(aNode, aProperty, attribute);
-}
-
-bool
-CSSEditUtils::IsCSSEditableProperty(nsINode* aNode,
-                                    nsAtom* aProperty,
                                     nsAtom* aAttribute)
 {
   MOZ_ASSERT(aNode);
@@ -597,7 +588,7 @@ CSSEditUtils::RemoveCSSInlineStyle(nsINode& aNode,
 // on a node
 bool
 CSSEditUtils::IsCSSInvertible(nsAtom& aProperty,
-                              const nsAString* aAttribute)
+                              nsAtom* aAttribute)
 {
   return nsGkAtoms::b == &aProperty;
 }
@@ -1051,7 +1042,7 @@ CSSEditUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
 bool
 CSSEditUtils::IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aNode,
                                                   nsAtom* aProperty,
-                                                  const nsAString* aAttribute,
+                                                  nsAtom* aAttribute,
                                                   const nsAString& aValue,
                                                   StyleType aStyleType)
 {

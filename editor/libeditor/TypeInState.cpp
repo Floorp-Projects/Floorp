@@ -139,7 +139,7 @@ TypeInState::Reset()
 
 void
 TypeInState::SetProp(nsAtom* aProp,
-                     const nsAString& aAttr,
+                     nsAtom* aAttr,
                      const nsAString& aValue)
 {
   // special case for big/small, these nest
@@ -171,12 +171,12 @@ void
 TypeInState::ClearAllProps()
 {
   // null prop means "all" props
-  ClearProp(nullptr, EmptyString());
+  ClearProp(nullptr, nullptr);
 }
 
 void
 TypeInState::ClearProp(nsAtom* aProp,
-                       const nsAString& aAttr)
+                       nsAtom* aAttr)
 {
   // if it's already cleared we are done
   if (IsPropCleared(aProp, aAttr)) {
@@ -244,16 +244,8 @@ TypeInState::TakeRelativeFontSize()
 void
 TypeInState::GetTypingState(bool& isSet,
                             bool& theSetting,
-                            nsAtom* aProp)
-{
-  GetTypingState(isSet, theSetting, aProp, EmptyString(), nullptr);
-}
-
-void
-TypeInState::GetTypingState(bool& isSet,
-                            bool& theSetting,
                             nsAtom* aProp,
-                            const nsString& aAttr,
+                            nsAtom* aAttr,
                             nsString* aValue)
 {
   if (IsPropSet(aProp, aAttr, aValue)) {
@@ -269,7 +261,7 @@ TypeInState::GetTypingState(bool& isSet,
 
 void
 TypeInState::RemovePropFromSetList(nsAtom* aProp,
-                                   const nsAString& aAttr)
+                                   nsAtom* aAttr)
 {
   int32_t index;
   if (!aProp) {
@@ -287,7 +279,7 @@ TypeInState::RemovePropFromSetList(nsAtom* aProp,
 
 void
 TypeInState::RemovePropFromClearedList(nsAtom* aProp,
-                                       const nsAString& aAttr)
+                                       nsAtom* aAttr)
 {
   int32_t index;
   if (FindPropInList(aProp, aAttr, nullptr, mClearedArray, index)) {
@@ -298,7 +290,7 @@ TypeInState::RemovePropFromClearedList(nsAtom* aProp,
 
 bool
 TypeInState::IsPropSet(nsAtom* aProp,
-                       const nsAString& aAttr,
+                       nsAtom* aAttr,
                        nsAString* outValue)
 {
   int32_t i;
@@ -307,7 +299,7 @@ TypeInState::IsPropSet(nsAtom* aProp,
 
 bool
 TypeInState::IsPropSet(nsAtom* aProp,
-                       const nsAString& aAttr,
+                       nsAtom* aAttr,
                        nsAString* outValue,
                        int32_t& outIndex)
 {
@@ -329,7 +321,7 @@ TypeInState::IsPropSet(nsAtom* aProp,
 
 bool
 TypeInState::IsPropCleared(nsAtom* aProp,
-                           const nsAString& aAttr)
+                           nsAtom* aAttr)
 {
   int32_t i;
   return IsPropCleared(aProp, aAttr, i);
@@ -338,13 +330,13 @@ TypeInState::IsPropCleared(nsAtom* aProp,
 
 bool
 TypeInState::IsPropCleared(nsAtom* aProp,
-                           const nsAString& aAttr,
+                           nsAtom* aAttr,
                            int32_t& outIndex)
 {
   if (FindPropInList(aProp, aAttr, nullptr, mClearedArray, outIndex)) {
     return true;
   }
-  if (FindPropInList(0, EmptyString(), nullptr, mClearedArray, outIndex)) {
+  if (FindPropInList(nullptr, nullptr, nullptr, mClearedArray, outIndex)) {
     // special case for all props cleared
     outIndex = -1;
     return true;
@@ -354,7 +346,7 @@ TypeInState::IsPropCleared(nsAtom* aProp,
 
 bool
 TypeInState::FindPropInList(nsAtom* aProp,
-                            const nsAString& aAttr,
+                            nsAtom* aAttr,
                             nsAString* outValue,
                             nsTArray<PropItem*>& aList,
                             int32_t& outIndex)
@@ -380,12 +372,13 @@ TypeInState::FindPropInList(nsAtom* aProp,
 
 PropItem::PropItem()
   : tag(nullptr)
+  , attr(nullptr)
 {
   MOZ_COUNT_CTOR(PropItem);
 }
 
 PropItem::PropItem(nsAtom* aTag,
-                   const nsAString& aAttr,
+                   nsAtom* aAttr,
                    const nsAString &aValue)
   : tag(aTag)
   , attr(aAttr)
