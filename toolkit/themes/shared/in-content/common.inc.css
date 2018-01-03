@@ -135,11 +135,6 @@ xul|tabs {
   background-color: var(--in-content-page-background);
 }
 
-xul|*.tabs-left,
-xul|*.tabs-right {
-  border-bottom: none;
-}
-
 xul|tab {
   -moz-appearance: none;
   margin-top: 0;
