@@ -134,6 +134,8 @@ public:
 
   bool HasForcedUniqueInner() const { return mDirtyFlags &
                                              FORCED_UNIQUE_INNER; }
+  bool HasModifiedRules() const { return mDirtyFlags &
+                                         MODIFIED_RULES; }
 
   inline bool HasUniqueInner() const;
   void EnsureUniqueInner();
@@ -341,6 +343,7 @@ protected:
 
   enum dirtyFlagAttributes {
     FORCED_UNIQUE_INNER = 0x1,
+    MODIFIED_RULES = 0x2,
   };
   uint8_t mDirtyFlags; // has been modified
 
