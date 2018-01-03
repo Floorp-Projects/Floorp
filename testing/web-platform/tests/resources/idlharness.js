@@ -165,6 +165,7 @@ self.IdlArray = function()
      */
     this.partials = [];
     this["implements"] = {};
+    this["includes"] = {};
 };
 
 //@}
@@ -258,6 +259,20 @@ IdlArray.prototype.internal_add_idls = function(parsed_idls, options)
             return;
         }
 
+        if (parsed_idl.type == "includes")
+        {
+            if (should_skip(parsed_idl.target))
+            {
+                return;
+            }
+            if (!(parsed_idl.target in this["includes"]))
+            {
+                this["includes"][parsed_idl.target] = [];
+            }
+            this["includes"][parsed_idl.target].push(parsed_idl["includes"]);
+            return;
+        }
+
         parsed_idl.array = this;
         if (parsed_idl.name in this.members)
         {
@@ -271,7 +286,12 @@ IdlArray.prototype.internal_add_idls = function(parsed_idls, options)
         {
         case "interface":
             this.members[parsed_idl.name] =
-                new IdlInterface(parsed_idl, /* is_callback = */ false);
+                new IdlInterface(parsed_idl, /* is_callback = */ false, /* is_mixin = */ false);
+            break;
+
+        case "interface mixin":
+            this.members[parsed_idl.name] =
+                new IdlInterface(parsed_idl, /* is_callback = */ false, /* is_mixin = */ true);
             break;
 
         case "dictionary":
@@ -295,7 +315,7 @@ IdlArray.prototype.internal_add_idls = function(parsed_idls, options)
 
         case "callback interface":
             this.members[parsed_idl.name] =
-                new IdlInterface(parsed_idl, /* is_callback = */ true);
+                new IdlInterface(parsed_idl, /* is_callback = */ true, /* is_mixin = */ false);
             break;
 
         default:
@@ -355,6 +375,36 @@ IdlArray.prototype.recursively_get_implements = function(interface_name)
         if (ret.indexOf(ret[i]) != ret.lastIndexOf(ret[i]))
         {
             throw "Circular implements statements involving " + ret[i];
+        }
+    }
+    return ret;
+};
+
+//@}
+IdlArray.prototype.recursively_get_includes = function(interface_name)
+//@{
+{
+    /**
+     * Helper function for test().  Returns an array of things that implement
+     * interface_name, so if the IDL contains
+     *
+     *   A includes B;
+     *   B includes C;
+     *   B includes D;
+     *
+     * then recursively_get_includes("A") should return ["B", "C", "D"].
+     */
+    var ret = this["includes"][interface_name];
+    if (ret === undefined)
+    {
+        return [];
+    }
+    for (var i = 0; i < this["includes"][interface_name].length; i++)
+    {
+        ret = ret.concat(this.recursively_get_includes(ret[i]));
+        if (ret.indexOf(ret[i]) != ret.lastIndexOf(ret[i]))
+        {
+            throw "Circular includes statements involving " + ret[i];
         }
     }
     return ret;
@@ -456,7 +506,7 @@ IdlArray.prototype.is_json_type = function(type)
                while (thing)
                {
                    if (thing.has_to_json_regular_operation()) { return true; }
-                   var mixins = this.implements[thing.name];
+                   var mixins = this.implements[thing.name] || this.includes[thing.name];
                    if (mixins) {
                        mixins = mixins.map(function(id) {
                            var mixin = this.members[id];
@@ -565,6 +615,23 @@ IdlArray.prototype.test = function()
         }.bind(this));
     }
     this["implements"] = {};
+
+    for (var lhs in this["includes"])
+    {
+        this.recursively_get_includes(lhs).forEach(function(rhs)
+        {
+            var errStr = lhs + " includes " + rhs + ", but ";
+            if (!(lhs in this.members)) throw errStr + lhs + " is undefined.";
+            if (!(this.members[lhs] instanceof IdlInterface)) throw errStr + lhs + " is not an interface.";
+            if (!(rhs in this.members)) throw errStr + rhs + " is undefined.";
+            if (!(this.members[rhs] instanceof IdlInterface)) throw errStr + rhs + " is not an interface.";
+            this.members[rhs].members.forEach(function(member)
+            {
+                this.members[lhs].members.push(new IdlInterfaceMember(member));
+            }.bind(this));
+        }.bind(this));
+    }
+    this["includes"] = {};
 
     Object.getOwnPropertyNames(this.members).forEach(function(memberName) {
         var member = this.members[memberName];
@@ -875,7 +942,7 @@ IdlDictionary.prototype.get_inheritance_stack = function() {
 };
 
 /// IdlInterface ///
-function IdlInterface(obj, is_callback)
+function IdlInterface(obj, is_callback, is_mixin)
 //@{
 {
     /**
@@ -913,6 +980,7 @@ function IdlInterface(obj, is_callback)
     this.base = obj.inheritance;
 
     this._is_callback = is_callback;
+    this._is_mixin = is_mixin;
 }
 //@}
 IdlInterface.prototype = Object.create(IdlObject.prototype);
@@ -920,6 +988,13 @@ IdlInterface.prototype.is_callback = function()
 //@{
 {
     return this._is_callback;
+};
+//@}
+
+IdlInterface.prototype.is_mixin = function()
+//@{
+{
+    return this._is_mixin;
 };
 //@}
 
@@ -936,8 +1011,7 @@ IdlInterface.prototype.is_global = function()
 //@{
 {
     return this.extAttrs.some(function(attribute) {
-        return attribute.name === "Global" ||
-               attribute.name === "PrimaryGlobal";
+        return attribute.name === "Global";
     });
 };
 //@}
@@ -1047,7 +1121,7 @@ IdlInterface.prototype.traverse_inherited_and_consequential_interfaces = functio
 function _traverse_inherited_and_consequential_interfaces(stack, callback) {
     var I = stack.pop();
     callback(I);
-    var mixins = I.array["implements"][I.name];
+    var mixins = I.array["implements"][I.name] || I.array["includes"][I.name];
     if (mixins) {
         mixins.forEach(function(id) {
             var mixin = I.array.members[id];
@@ -1066,7 +1140,7 @@ function _traverse_inherited_and_consequential_interfaces(stack, callback) {
 IdlInterface.prototype.test = function()
 //@{
 {
-    if (this.has_extended_attribute("NoInterfaceObject"))
+    if (this.has_extended_attribute("NoInterfaceObject") || this.is_mixin())
     {
         // No tests to do without an instance.  TODO: We should still be able
         // to run tests on the prototype object, if we obtain one through some
@@ -1356,7 +1430,7 @@ IdlInterface.prototype.test_self = function()
         // "The interface prototype object for a given interface A must have an
         // internal [[Prototype]] property whose value is returned from the
         // following steps:
-        // "If A is declared with the [Global] or [PrimaryGlobal] extended
+        // "If A is declared with the [Global] extended
         // attribute, and A supports named properties, then return the named
         // properties object for A, as defined in §3.6.4 Named properties
         // object.
@@ -1434,7 +1508,7 @@ IdlInterface.prototype.test_self = function()
         }
     }.bind(this), this.name + " interface: existence and properties of interface prototype object");
 
-    // "If the interface is declared with the [Global] or [PrimaryGlobal]
+    // "If the interface is declared with the [Global]
     // extended attribute, or the interface is in the set of inherited
     // interfaces for any other interface that is declared with one of these
     // attributes, then the interface prototype object must be an immutable
@@ -1780,7 +1854,7 @@ IdlInterface.prototype.test_member_operation = function(member)
                     "interface object missing static operation");
             memberHolderObject = self[this.name];
         // "* Otherwise, [...] if the interface was declared with the [Global]
-        //    or [PrimaryGlobal] extended attribute, then the property exists
+        //    extended attribute, then the property exists
         //    on every object that implements the interface."
         } else if (this.is_global()) {
             assert_own_property(self, member.name,
@@ -2128,7 +2202,7 @@ IdlInterface.prototype.test_primary_interface_of = function(desc, obj, exception
     }
 
     // "The internal [[SetPrototypeOf]] method of every platform object that
-    // implements an interface with the [Global] or [PrimaryGlobal] extended
+    // implements an interface with the [Global] extended
     // attribute must execute the same algorithm as is defined for the
     // [[SetPrototypeOf]] internal method of an immutable prototype exotic
     // object."
