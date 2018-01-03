@@ -2482,7 +2482,7 @@ GetCorrespondingNodeInDocument(const nsINode* aNode, nsIDocument* aDoc)
 
   nsINode* correspondingNode = aDoc;
   for (int32_t i = indexArray.Length() - 1; i >= 0; --i) {
-    correspondingNode = correspondingNode->GetChildAt(indexArray[i]);
+    correspondingNode = correspondingNode->GetChildAt_Deprecated(indexArray[i]);
     NS_ENSURE_TRUE(correspondingNode, nullptr);
   }
 

@@ -22,6 +22,10 @@ cppunit:
     description: "CPP Unit Tests"
     suite: cppunittest
     treeherder-symbol: tc(Cpp)
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
     run-on-projects:
         by-test-platform:
             windows10-64-asan/opt: []  # as an exception to windows.*

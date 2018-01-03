@@ -3106,7 +3106,7 @@ nsGenericHTMLElement::SetInnerText(const nsAString& aValue)
 
   mb.Init(this, true, false);
   for (uint32_t i = 0; i < childCount; ++i) {
-    RemoveChildAt(0, true);
+    RemoveChildAt_Deprecated(0, true);
   }
   mb.RemovalDone();
 

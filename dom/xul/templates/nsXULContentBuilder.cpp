@@ -874,12 +874,12 @@ nsXULContentBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
     uint32_t count = aTemplateNode->GetChildCount();
 
     for (uint32_t loop = 0; loop < count; ++loop) {
-        nsIContent *tmplKid = aTemplateNode->GetChildAt(loop);
+        nsIContent *tmplKid = aTemplateNode->GetChildAt_Deprecated(loop);
 
         if (! tmplKid)
             break;
 
-        nsIContent *realKid = aRealNode->GetChildAt(loop);
+        nsIContent *realKid = aRealNode->GetChildAt_Deprecated(loop);
         if (! realKid)
             break;
 
@@ -915,10 +915,9 @@ nsXULContentBuilder::RemoveMember(nsIContent* aContent)
         NS_ASSERTION(pos >= 0, "parent doesn't think this child has an index");
         if (pos < 0) return NS_OK;
 
-        // Note: RemoveChildAt sets |child|'s document to null so that
-        // it'll get knocked out of the XUL doc's resource-to-element
-        // map.
-        parent->RemoveChildAt(pos, true);
+        // Note: RemoveChildAt_Deprecated sets |child|'s document to null so
+        // that it'll get knocked out of the XUL doc's resource-to-element map.
+        parent->RemoveChildAt_Deprecated(pos, true);
     }
 
     // Remove from the content support map.
@@ -1055,7 +1054,7 @@ nsXULContentBuilder::CreateContainerContents(Element* aElement,
         MOZ_AUTO_DOC_UPDATE(container->GetUncomposedDoc(), UPDATE_CONTENT_MODEL,
                             true);
         nsNodeUtils::ContentAppended(container,
-                                     container->GetChildAt(newIndexInContainer));
+                                     container->GetChildAt_Deprecated(newIndexInContainer));
     }
 
     NS_IF_RELEASE(container);
@@ -1285,7 +1284,7 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
         uint32_t i = element->GetChildCount();
 
         while (i-- > 0) {
-            nsCOMPtr<nsIContent> child = element->GetChildAt(i);
+            nsCOMPtr<nsIContent> child = element->GetChildAt_Deprecated(i);
 
             // Optimize for the <template> element, because we *know*
             // it won't have any generated content: there's no reason
@@ -1311,7 +1310,7 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
             }
 
             // If we get here, it's "generated". Bye bye!
-            element->RemoveChildAt(i, true);
+            element->RemoveChildAt_Deprecated(i, true);
 
             // Remove this and any children from the content support map.
             mContentSupportMap.Remove(child);
@@ -1908,7 +1907,7 @@ nsXULContentBuilder::InsertSortedNode(Element* aContainer,
             // binary search insertion sort... with interpolation at either end-point.
 
             if (mSortState.lastWasFirst) {
-                child = aContainer->GetChildAt(staticCount);
+                child = aContainer->GetChildAt_Deprecated(staticCount);
                 temp = child;
                 rv = CompareResultToNode(aResult, temp, &direction);
                 if (direction < 0) {
@@ -1917,7 +1916,7 @@ nsXULContentBuilder::InsertSortedNode(Element* aContainer,
                 } else
                     mSortState.lastWasFirst = false;
             } else if (mSortState.lastWasLast) {
-                child = aContainer->GetChildAt(realNumChildren - 1);
+                child = aContainer->GetChildAt_Deprecated(realNumChildren - 1);
                 temp = child;
                 rv = CompareResultToNode(aResult, temp, &direction);
                 if (direction > 0) {
@@ -1930,7 +1929,7 @@ nsXULContentBuilder::InsertSortedNode(Element* aContainer,
             int32_t left = staticCount + 1, right = realNumChildren, x;
             while (!childAdded && right >= left) {
                 x = (left + right) / 2;
-                child = aContainer->GetChildAt(x - 1);
+                child = aContainer->GetChildAt_Deprecated(x - 1);
                 temp = child;
 
                 rv = CompareResultToNode(aResult, temp, &direction);

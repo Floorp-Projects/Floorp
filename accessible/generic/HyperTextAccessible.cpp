@@ -242,7 +242,7 @@ HyperTextAccessible::DOMPointToOffset(nsINode* aNode, int32_t aNodeOffset,
     //    we're an empty nsIAccessibleText
     // 3) there are children and we're at the end of the children
 
-    findNode = aNode->GetChildAt(aNodeOffset);
+    findNode = aNode->GetChildAt_Deprecated(aNodeOffset);
     if (!findNode) {
       if (aNodeOffset == 0) {
         if (aNode == GetNode()) {

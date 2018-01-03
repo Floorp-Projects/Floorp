@@ -145,7 +145,7 @@ public:
     MOZ_ASSERT(mOffset.value() <= mParent->Length());
     MOZ_ASSERT(mChild || mParent->Length() == mOffset.value());
     MOZ_ASSERT(!mChild || mParent == mChild->GetParentNode());
-    MOZ_ASSERT(mParent->GetChildAt(mOffset.value()) == mChild);
+    MOZ_ASSERT(mParent->GetChildAt_Deprecated(mOffset.value()) == mChild);
   }
 
   template<typename PT, typename CT>
@@ -550,7 +550,7 @@ public:
         return true;
       }
       NS_WARNING_ASSERTION(!mOffset.isSome() ||
-                           mParent->GetChildAt(mOffset.value()) == mChild,
+                           mParent->GetChildAt_Deprecated(mOffset.value()) == mChild,
         "If mOffset and mChild are mismatched");
       return false;
     }
@@ -578,7 +578,7 @@ public:
         return true;
       }
       NS_WARNING_ASSERTION(!mOffset.isSome() ||
-                           mParent->GetChildAt(mOffset.value()) == mChild,
+                           mParent->GetChildAt_Deprecated(mOffset.value()) == mChild,
         "If mOffset and mChild are mismatched");
       return false;
     }
@@ -703,7 +703,7 @@ public:
 #ifdef DEBUG
       if (mChild) {
         MOZ_ASSERT(mParent == mChild->GetParentNode());
-        MOZ_ASSERT(mParent->GetChildAt(mOffset.value()) == mChild);
+        MOZ_ASSERT(mParent->GetChildAt_Deprecated(mOffset.value()) == mChild);
       } else {
         MOZ_ASSERT(mParent->Length() == mOffset.value());
       }
@@ -738,7 +738,7 @@ private:
     if (!mParent->IsContainerNode()) {
       return;
     }
-    mChild = mParent->GetChildAt(mOffset.value());
+    mChild = mParent->GetChildAt_Deprecated(mOffset.value());
     MOZ_ASSERT(mChild || mOffset.value() == mParent->Length());
   }
 

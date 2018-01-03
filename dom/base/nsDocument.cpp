@@ -4441,7 +4441,7 @@ nsDocument::GetRootElementInternal() const
 }
 
 nsIContent *
-nsDocument::GetChildAt(uint32_t aIndex) const
+nsDocument::GetChildAt_Deprecated(uint32_t aIndex) const
 {
   return mChildren.GetSafeChildAt(aIndex);
 }
@@ -4471,9 +4471,9 @@ nsDocument::InsertChildAt(nsIContent* aKid, uint32_t aIndex,
 }
 
 void
-nsDocument::RemoveChildAt(uint32_t aIndex, bool aNotify)
+nsDocument::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
 {
-  nsCOMPtr<nsIContent> oldKid = GetChildAt(aIndex);
+  nsCOMPtr<nsIContent> oldKid = GetChildAt_Deprecated(aIndex);
   if (!oldKid) {
     return;
   }
@@ -7550,7 +7550,7 @@ nsDOMAttributeMap::BlastSubtreeToPieces(nsINode *aNode)
   uint32_t count = aNode->GetChildCount();
   for (uint32_t i = 0; i < count; ++i) {
     BlastSubtreeToPieces(aNode->GetFirstChild());
-    aNode->RemoveChildAt(0, false);
+    aNode->RemoveChildAt_Deprecated(0, false);
   }
 }
 
@@ -7750,7 +7750,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
       if (parent) {
         int32_t idx = parent->IndexOf(adoptedNode);
         MOZ_ASSERT(idx >= 0);
-        parent->RemoveChildAt(idx, true);
+        parent->RemoveChildAt_Deprecated(idx, true);
       } else {
         MOZ_ASSERT(!adoptedNode->IsInUncomposedDoc());
 

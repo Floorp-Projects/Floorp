@@ -257,6 +257,10 @@ mochitest-gpu:
             .*-qr/.*: ['mozilla-central', 'autoland', 'mozilla-inbound', 'try']  # exclude beta and project branches
             default: built-projects
     loopback-video: true
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
     virtualization: virtual-with-gpu
     e10s:
         by-test-platform:
