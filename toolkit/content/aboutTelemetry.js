@@ -1281,6 +1281,8 @@ var Search = {
 
   // A list of ids of sections that do not support search.
   blacklist: [
+    "late-writes-section",
+    "chrome-hangs-section",
     "raw-payload-section"
   ],
 

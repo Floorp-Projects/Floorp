@@ -4,8 +4,6 @@
 /* import-globals-from pippki.js */
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
 const nsFilePicker = "@mozilla.org/filepicker;1";
 const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
@@ -17,7 +15,6 @@ const nsCertTree = "@mozilla.org/security/nsCertTree;1";
 const gCertFileTypes = "*.p7b; *.crt; *.cert; *.cer; *.pem; *.der";
 
 var { NetUtil } = Components.utils.import("resource://gre/modules/NetUtil.jsm", {});
-var { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
 
 var key;
 

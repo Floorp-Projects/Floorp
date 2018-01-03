@@ -126,7 +126,7 @@
 <!ENTITY debuggerUI.searchToken.key       "F">
 <!ENTITY debuggerUI.searchToken.accesskey "F">
 
-<!-- LOCALIZATION NOTE (debuggerUI.searchLine): This is the text that appears
+<!-- LOCALIZATION NOTE (debuggerUI.searchGoToLine): This is the text that appears
   -  in the source editor's context menu for the line search operation. -->
 <!ENTITY debuggerUI.searchGoToLine           "Go to Line…">
 <!ENTITY debuggerUI.searchGoToLine.key       "L">
@@ -159,7 +159,7 @@
 <!ENTITY debuggerUI.seMenuCondBreak     "Add Conditional Breakpoint">
 <!ENTITY debuggerUI.seMenuCondBreak.key "B">
 
-<!-- LOCALIZATION NOTE (debuggerUI.seMenuBreak): This is the text that
+<!-- LOCALIZATION NOTE (debuggerUI.seEditMenuCondBreak): This is the text that
   -  appears in the source editor context menu for editing a breakpoint. -->
 <!ENTITY debuggerUI.seEditMenuCondBreak     "Edit Conditional Breakpoint">
 <!ENTITY debuggerUI.seEditMenuCondBreak.key "B">
@@ -183,7 +183,7 @@
 <!ENTITY debuggerUI.addWatch            "Add Watch Expression">
 <!ENTITY debuggerUI.addWatch.accesskey  "E">
 
-<!-- LOCALIZATION NOTE (debuggerUI.removeWatch): This is the text that
+<!-- LOCALIZATION NOTE (debuggerUI.removeAllWatch): This is the text that
   -  appears in the watch expressions context menu for removing all expressions. -->
 <!ENTITY debuggerUI.removeAllWatch           "Remove All Watch Expressions">
 <!ENTITY debuggerUI.removeAllWatch.key       "E">
