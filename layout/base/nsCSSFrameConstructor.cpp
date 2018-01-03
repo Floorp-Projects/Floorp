@@ -7252,11 +7252,10 @@ nsCSSFrameConstructor::CreateNeededFrames(
 
   // Scan the children of aContent to see what operations (if any) we need to
   // perform.
-  uint32_t childCount = aContent->GetChildCount();
   bool inRun = false;
   nsIContent* firstChildInRun = nullptr;
-  for (uint32_t i = 0; i < childCount; i++) {
-    nsIContent* child = aContent->GetChildAt_Deprecated(i);
+  for (nsIContent* child = aContent->GetFirstChild();
+       child; child = child->GetNextSibling()) {
     if (child->HasFlag(NODE_NEEDS_FRAME)) {
       NS_ASSERTION(!child->GetPrimaryFrame() ||
                    child->GetPrimaryFrame()->GetContent() != child,
