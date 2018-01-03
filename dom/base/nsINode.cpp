@@ -1928,7 +1928,7 @@ nsINode::doRemoveChildAt(uint32_t aIndex, bool aNotify,
   // aChildArray. Any calls before then could potentially restore a stale
   // value for our cached root element, per note in nsDocument::RemoveChildAt().
   MOZ_ASSERT(aKid && aKid->GetParentNode() == this &&
-             aKid == GetChildAt(aIndex) &&
+             aKid == GetChildAt_Deprecated(aIndex) &&
              IndexOf(aKid) == (int32_t)aIndex, "Bogus aKid");
   MOZ_ASSERT(!IsNodeOfType(nsINode::eATTRIBUTE));
 
@@ -2262,8 +2262,8 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       oldParent->RemoveChildAt(removeIndex, true);
       if (nsAutoMutationBatch::GetCurrentBatch() == &mb) {
         mb.RemovalDone();
-        mb.SetPrevSibling(oldParent->GetChildAt(removeIndex - 1));
-        mb.SetNextSibling(oldParent->GetChildAt(removeIndex));
+        mb.SetPrevSibling(oldParent->GetChildAt_Deprecated(removeIndex - 1));
+        mb.SetNextSibling(oldParent->GetChildAt_Deprecated(removeIndex));
       }
     }
 
@@ -2472,8 +2472,8 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     nsAutoMutationBatch* mutationBatch = nsAutoMutationBatch::GetCurrentBatch();
     if (mutationBatch) {
       mutationBatch->RemovalDone();
-      mutationBatch->SetPrevSibling(GetChildAt(insPos - 1));
-      mutationBatch->SetNextSibling(GetChildAt(insPos));
+      mutationBatch->SetPrevSibling(GetChildAt_Deprecated(insPos - 1));
+      mutationBatch->SetNextSibling(GetChildAt_Deprecated(insPos));
     }
 
     uint32_t count = fragChildren->Length();
@@ -2530,8 +2530,8 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
 
     if (nsAutoMutationBatch::GetCurrentBatch() == &mb) {
       mb.RemovalDone();
-      mb.SetPrevSibling(GetChildAt(insPos - 1));
-      mb.SetNextSibling(GetChildAt(insPos));
+      mb.SetPrevSibling(GetChildAt_Deprecated(insPos - 1));
+      mb.SetNextSibling(GetChildAt_Deprecated(insPos));
     }
     aError = InsertChildAt(newContent, insPos, true);
     if (aError.Failed()) {

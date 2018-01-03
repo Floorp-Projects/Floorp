@@ -308,7 +308,7 @@ Attr::GetChildCount() const
 }
 
 nsIContent *
-Attr::GetChildAt(uint32_t aIndex) const
+Attr::GetChildAt_Deprecated(uint32_t aIndex) const
 {
   return nullptr;
 }

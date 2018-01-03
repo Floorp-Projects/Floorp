@@ -146,7 +146,7 @@ nsIContent::FindFirstNonChromeOnlyAccessContent() const
        content = content->GetBindingParent()) {
     if (!content->ChromeOnlyAccess()) {
       // Oops, this function signature allows casting const to
-      // non-const.  (Then again, so does GetChildAt(0)->GetParent().)
+      // non-const.  (Then again, so does GetChildAt_Deprecated(0)->GetParent().)
       return const_cast<nsIContent*>(content);
     }
   }
@@ -545,7 +545,7 @@ nsIContent*
 nsAttrChildContentList::Item(uint32_t aIndex)
 {
   if (mNode) {
-    return mNode->GetChildAt(aIndex);
+    return mNode->GetChildAt_Deprecated(aIndex);
   }
 
   return nullptr;
@@ -1162,7 +1162,7 @@ void
 FragmentOrElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 {
   nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.GetSafeChildAt(aIndex);
-  NS_ASSERTION(oldKid == GetChildAt(aIndex), "Unexpected child in RemoveChildAt");
+  NS_ASSERTION(oldKid == GetChildAt_Deprecated(aIndex), "Unexpected child in RemoveChildAt");
 
   if (oldKid) {
     doRemoveChildAt(aIndex, aNotify, oldKid, mAttrsAndChildren);
@@ -2118,7 +2118,7 @@ FragmentOrElement::GetChildCount() const
 }
 
 nsIContent *
-FragmentOrElement::GetChildAt(uint32_t aIndex) const
+FragmentOrElement::GetChildAt_Deprecated(uint32_t aIndex) const
 {
   return mAttrsAndChildren.GetSafeChildAt(aIndex);
 }

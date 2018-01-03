@@ -174,7 +174,7 @@ HTMLFieldSetElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 {
   bool firstLegendHasChanged = false;
 
-  if (mFirstLegend && (GetChildAt(aIndex) == mFirstLegend)) {
+  if (mFirstLegend && (GetChildAt_Deprecated(aIndex) == mFirstLegend)) {
     // If we are removing the first legend we have to found another one.
     nsIContent* child = mFirstLegend->GetNextSibling();
     mFirstLegend = nullptr;

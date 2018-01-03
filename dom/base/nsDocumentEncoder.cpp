@@ -643,7 +643,7 @@ static nsresult ChildAt(nsIDOMNode* aNode, int32_t aIndex, nsIDOMNode*& aChild)
 
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-  nsIContent *child = content->GetChildAt(aIndex);
+  nsIContent *child = content->GetChildAt_Deprecated(aIndex);
 
   if (child)
     return CallQueryInterface(child, &aChild);
@@ -845,7 +845,7 @@ nsDocumentEncoder::SerializeRangeNodes(nsRange* aRange,
       // serialize the children of this node that are in the range
       for (j=startOffset; j<endOffset; j++)
       {
-        childAsNode = content->GetChildAt(j);
+        childAsNode = content->GetChildAt_Deprecated(j);
 
         if ((j==startOffset) || (j==endOffset-1))
           rv = SerializeRangeNodes(aRange, childAsNode, aString, aDepth+1);
@@ -1858,7 +1858,7 @@ nsHTMLCopyEncoder::GetChildAt(nsIDOMNode *aParent, int32_t aOffset)
   nsCOMPtr<nsIContent> content = do_QueryInterface(aParent);
   NS_PRECONDITION(content, "null content in nsHTMLCopyEncoder::GetChildAt");
 
-  resultNode = do_QueryInterface(content->GetChildAt(aOffset));
+  resultNode = do_QueryInterface(content->GetChildAt_Deprecated(aOffset));
 
   return resultNode;
 }

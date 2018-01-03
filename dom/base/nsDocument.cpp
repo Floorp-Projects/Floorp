@@ -4441,7 +4441,7 @@ nsDocument::GetRootElementInternal() const
 }
 
 nsIContent *
-nsDocument::GetChildAt(uint32_t aIndex) const
+nsDocument::GetChildAt_Deprecated(uint32_t aIndex) const
 {
   return mChildren.GetSafeChildAt(aIndex);
 }
@@ -4473,7 +4473,7 @@ nsDocument::InsertChildAt(nsIContent* aKid, uint32_t aIndex,
 void
 nsDocument::RemoveChildAt(uint32_t aIndex, bool aNotify)
 {
-  nsCOMPtr<nsIContent> oldKid = GetChildAt(aIndex);
+  nsCOMPtr<nsIContent> oldKid = GetChildAt_Deprecated(aIndex);
   if (!oldKid) {
     return;
   }

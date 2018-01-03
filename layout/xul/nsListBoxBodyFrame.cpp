@@ -737,7 +737,7 @@ nsListBoxBodyFrame::ComputeIntrinsicISize(nsBoxLayoutState& aBoxLayoutState)
           nsAutoString value;
           uint32_t textCount = child->GetChildCount();
           for (uint32_t j = 0; j < textCount; ++j) {
-            nsIContent* text = child->GetChildAt(j);
+            nsIContent* text = child->GetChildAt_Deprecated(j);
             if (text && text->IsNodeOfType(nsINode::eTEXT)) {
               text->AppendTextTo(value);
             }
@@ -1171,7 +1171,7 @@ nsListBoxBodyFrame::GetFirstItemBox(int32_t aOffset, bool* aCreated)
     contentIndex -= aOffset;
     if (contentIndex < 0)
       return nullptr;
-    startContent = topParent->GetChildAt(contentIndex - mRowsToPrepend);
+    startContent = topParent->GetChildAt_Deprecated(contentIndex - mRowsToPrepend);
   } else {
     // This will be the first item frame we create.  Use the content
     // at the current index, which is the first index scrolled into view
@@ -1234,7 +1234,7 @@ nsListBoxBodyFrame::GetNextItemBox(nsIFrame* aBox, int32_t aOffset,
     uint32_t childCount = parentContent->GetChildCount();
     if (((uint32_t)i + aOffset + 1) < childCount) {
       // There is a content node that wants a frame.
-      nsIContent *nextContent = parentContent->GetChildAt(i + aOffset + 1);
+      nsIContent *nextContent = parentContent->GetChildAt_Deprecated(i + aOffset + 1);
 
       nsIFrame* existingFrame;
       if (!IsListItemChild(this, nextContent, &existingFrame)) {

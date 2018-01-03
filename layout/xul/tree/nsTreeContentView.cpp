@@ -1337,7 +1337,7 @@ nsTreeContentView::GetIndexInSubtree(nsIContent* aContainer,
     return;
 
   for (uint32_t i = 0; i < childCount; i++) {
-    nsIContent *content = aContainer->GetChildAt(i);
+    nsIContent *content = aContainer->GetChildAt_Deprecated(i);
 
     if (content == aContent)
       break;
