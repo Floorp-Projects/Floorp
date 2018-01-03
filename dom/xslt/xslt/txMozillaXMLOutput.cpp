@@ -650,7 +650,7 @@ txMozillaXMLOutput::createTxWrapper()
             ++j;
         }
         else {
-            mDocument->RemoveChildAt(j, true);
+            mDocument->RemoveChildAt_Deprecated(j, true);
 
             rv = wrapper->AppendChildTo(childContent, true);
             NS_ENSURE_SUCCESS(rv, rv);

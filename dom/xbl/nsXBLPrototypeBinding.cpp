@@ -386,7 +386,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsAtom* aAttribute,
         // Flush out all our kids.
         uint32_t childCount = realElement->GetChildCount();
         for (uint32_t i = 0; i < childCount; i++)
-          realElement->RemoveChildAt(0, aNotify);
+          realElement->RemoveChildAt_Deprecated(0, aNotify);
 
         if (!aRemoveFlag) {
           // Construct a new text node and insert it.

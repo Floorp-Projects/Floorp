@@ -1159,10 +1159,10 @@ FragmentOrElement::InsertChildAt(nsIContent* aKid,
 }
 
 void
-FragmentOrElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
+FragmentOrElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
 {
   nsCOMPtr<nsIContent> oldKid = mAttrsAndChildren.GetSafeChildAt(aIndex);
-  NS_ASSERTION(oldKid == GetChildAt_Deprecated(aIndex), "Unexpected child in RemoveChildAt");
+  NS_ASSERTION(oldKid == GetChildAt_Deprecated(aIndex), "Unexpected child in RemoveChildAt_Deprecated");
 
   if (oldKid) {
     doRemoveChildAt(aIndex, aNotify, oldKid, mAttrsAndChildren);
@@ -2296,7 +2296,7 @@ FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML, ErrorResult
   uint32_t childCount = target->GetChildCount();
   nsAutoMutationBatch mb(target, true, false);
   for (uint32_t i = 0; i < childCount; ++i) {
-    target->RemoveChildAt(0, true);
+    target->RemoveChildAt_Deprecated(0, true);
   }
   mb.RemovalDone();
 

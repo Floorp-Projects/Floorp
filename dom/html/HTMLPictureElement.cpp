@@ -33,7 +33,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(HTMLPictureElement, nsGenericHTMLElement)
 NS_IMPL_ELEMENT_CLONE(HTMLPictureElement)
 
 void
-HTMLPictureElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
+HTMLPictureElement::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
 {
   nsCOMPtr<nsIContent> child = GetChildAt_Deprecated(aIndex);
 
@@ -55,7 +55,7 @@ HTMLPictureElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
     }
   }
 
-  nsGenericHTMLElement::RemoveChildAt(aIndex, aNotify);
+  nsGenericHTMLElement::RemoveChildAt_Deprecated(aIndex, aNotify);
 }
 
 nsresult
