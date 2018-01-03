@@ -34,6 +34,8 @@ Var AddTaskbarSC
 Var AddQuickLaunchSC
 Var AddDesktopSC
 Var InstallMaintenanceService
+Var InstallOptionalExtensions
+Var ExtensionRecommender
 Var PageName
 Var PreventRebootRequired
 
@@ -168,6 +170,11 @@ Page custom preComponents leaveComponents
 
 ; Custom Shortcuts Page
 Page custom preShortcuts leaveShortcuts
+
+; Custom Extensions Page
+!ifdef MOZ_OPTIONAL_EXTENSIONS
+Page custom preExtensions leaveExtensions
+!endif
 
 ; Custom Summary Page
 Page custom preSummary leaveSummary
@@ -589,6 +596,42 @@ Section "-Application" APP_IDX
     ${EndUnless}
   ${EndIf}
 
+!ifdef MOZ_OPTIONAL_EXTENSIONS
+  ${If} ${FileExists} "$INSTDIR\distribution\optional-extensions"
+    ${LogHeader} "Installing optional extensions if requested"
+
+    ${If} $InstallOptionalExtensions != "0"
+    ${AndIf} ${FileExists} "$INSTDIR\distribution\setup.ini"
+      ${Unless} ${FileExists} "$INSTDIR\distribution\extensions"
+        CreateDirectory "$INSTDIR\distribution\extensions"
+      ${EndUnless}
+
+      StrCpy $0 0
+      ${Do}
+        ClearErrors
+        ReadINIStr $1 "$INSTDIR\distribution\setup.ini" "OptionalExtensions" \
+                                                        "extension.$0.id"
+        ${If} ${Errors}
+          ${ExitDo}
+        ${EndIf}
+
+        ReadINIStr $2 "$INSTDIR\distribution\setup.ini" "OptionalExtensions" \
+                                                        "extension.$0.checked"
+        ${If} $2 != ${BST_UNCHECKED}
+          ${LogMsg} "Installing optional extension: $1"
+          CopyFiles /SILENT "$INSTDIR\distribution\optional-extensions\$1.xpi" \
+                            "$INSTDIR\distribution\extensions"
+        ${EndIf}
+
+        IntOp $0 $0 + 1
+      ${Loop}
+    ${EndIf}
+
+    ${LogMsg} "Removing the optional-extensions directory"
+    RMDir /r /REBOOTOK "$INSTDIR\distribution\optional-extensions"
+  ${EndIf}
+!endif
+
 !ifdef MOZ_MAINTENANCE_SERVICE
   ${If} $TmpVal == "HKLM"
     ; Add the registry keys for allowed certificates.
@@ -865,6 +908,9 @@ FunctionEnd
 !verbose 3
 !include "overrideLocale.nsh"
 !include "customLocale.nsh"
+!ifdef MOZ_OPTIONAL_EXTENSIONS
+!include "extensionsLocale.nsh"
+!endif
 !verbose pop
 
 ; Set this after the locale files to override it if it is in the locale
@@ -993,6 +1039,119 @@ Function leaveComponents
   ${MUI_INSTALLOPTIONS_READ} $InstallMaintenanceService "components.ini" "Field 2" "State"
   ${If} $InstallType == ${INSTALLTYPE_CUSTOM}
     Call CheckExistingInstall
+  ${EndIf}
+FunctionEnd
+!endif
+
+!ifdef MOZ_OPTIONAL_EXTENSIONS
+Function preExtensions
+  StrCpy $PageName "Extensions"
+  ${CheckCustomCommon}
+
+  ; Abort if no optional extensions configured in distribution/setup.ini
+  ${If} ${FileExists} "$EXEDIR\core\distribution\setup.ini"
+    ClearErrors
+    ReadINIStr $ExtensionRecommender "$EXEDIR\core\distribution\setup.ini" \
+      "OptionalExtensions" "Recommender.${AB_CD}"
+    ${If} ${Errors}
+      ClearErrors
+      ReadINIStr $ExtensionRecommender "$EXEDIR\core\distribution\setup.ini" \
+        "OptionalExtensions" "Recommender"
+    ${EndIf}
+
+    ${If} ${Errors}
+      ClearErrors
+      Abort
+    ${EndIf}
+  ${Else}
+    Abort
+  ${EndIf}
+
+  !insertmacro MUI_HEADER_TEXT "$(EXTENSIONS_PAGE_TITLE)" "$(EXTENSIONS_PAGE_SUBTITLE)"
+  !insertmacro MUI_INSTALLOPTIONS_DISPLAY "extensions.ini"
+FunctionEnd
+
+Function leaveExtensions
+  ${MUI_INSTALLOPTIONS_READ} $0 "extensions.ini" "Settings" "NumFields"
+  ${MUI_INSTALLOPTIONS_READ} $1 "extensions.ini" "Settings" "State"
+
+  ; $0 is count of checkboxes
+  IntOp $0 $0 - 1
+
+  ${If} $1 > $0
+    Abort
+  ${ElseIf} $1 == 0
+    ; $1 is count of selected optional extension(s)
+    StrCpy $1 0
+
+    StrCpy $2 2
+    ${Do}
+      ${MUI_INSTALLOPTIONS_READ} $3 "extensions.ini" "Field $2" "State"
+      ${If} $3 == ${BST_CHECKED}
+        IntOp $1 $1 + 1
+      ${EndIf}
+
+      IntOp $4 $2 - 2
+      WriteINIStr "$EXEDIR\core\distribution\setup.ini" \
+        "OptionalExtensions" "extension.$4.checked" "$3"
+
+      ${If} $0 == $2
+        ${ExitDo}
+      ${Else}
+        IntOp $2 $2 + 1
+      ${EndIf}
+    ${Loop}
+
+    ; Different from state of field 1, "0" means no optional extensions selected
+    ${If} $1 > 0
+      StrCpy $InstallOptionalExtensions "1"
+    ${Else}
+      StrCpy $InstallOptionalExtensions "0"
+    ${EndIf}
+
+    ${If} $InstallType == ${INSTALLTYPE_CUSTOM}
+      Call CheckExistingInstall
+    ${EndIf}
+  ${ElseIf} $1 == 1
+    ; Check/uncheck all optional extensions with field 1
+    ${MUI_INSTALLOPTIONS_READ} $1 "extensions.ini" "Field 1" "State"
+
+    StrCpy $2 2
+    ${Do}
+      ${MUI_INSTALLOPTIONS_READ} $3 "extensions.ini" "Field $2" "HWND"
+      SendMessage $3 ${BM_SETCHECK} $1 0
+
+      ${If} $0 == $2
+        ${ExitDo}
+      ${Else}
+        IntOp $2 $2 + 1
+      ${EndIf}
+    ${Loop}
+
+    Abort
+  ${ElseIf} $1 > 1
+    StrCpy $1 ${BST_CHECKED}
+
+    StrCpy $2 2
+    ${Do}
+      ${MUI_INSTALLOPTIONS_READ} $3 "extensions.ini" "Field $2" "State"
+      ${If} $3 == ${BST_UNCHECKED}
+        StrCpy $1 ${BST_UNCHECKED}
+        ${ExitDo}
+      ${EndIf}
+
+      ${If} $0 == $2
+        ${ExitDo}
+      ${Else}
+        IntOp $2 $2 + 1
+      ${EndIf}
+    ${Loop}
+
+    ; Check field 1 only if all optional extensions are selected
+    ${MUI_INSTALLOPTIONS_READ} $3 "extensions.ini" "Field 1" "HWND"
+    SendMessage $3 ${BM_SETCHECK} $1 0
+
+    Abort
   ${EndIf}
 FunctionEnd
 !endif
@@ -1171,6 +1330,7 @@ Function .onInit
   !insertmacro InitInstallOptionsFile "options.ini"
   !insertmacro InitInstallOptionsFile "shortcuts.ini"
   !insertmacro InitInstallOptionsFile "components.ini"
+  !insertmacro InitInstallOptionsFile "extensions.ini"
   !insertmacro InitInstallOptionsFile "summary.ini"
 
   WriteINIStr "$PLUGINSDIR\options.ini" "Settings" NumFields "5"
@@ -1274,6 +1434,74 @@ Function .onInit
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Bottom "37"
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" State  "1"
   WriteINIStr "$PLUGINSDIR\components.ini" "Field 2" Flags  "GROUP"
+
+  ; Setup the extensions.ini file for the Custom Extensions Page
+  StrCpy $R9 0
+  StrCpy $R8 ${BST_CHECKED}
+
+  ${If} ${FileExists} "$EXEDIR\core\distribution\setup.ini"
+    ${Do}
+      IntOp $R7 $R9 + 2
+
+      ClearErrors
+      ReadINIStr $R6 "$EXEDIR\core\distribution\setup.ini" \
+        "OptionalExtensions" "extension.$R9.name.${AB_CD}"
+      ${If} ${Errors}
+        ClearErrors
+        ReadINIStr $R6 "$EXEDIR\core\distribution\setup.ini" \
+          "OptionalExtensions" "extension.$R9.name"
+      ${EndIf}
+
+      ${If} ${Errors}
+        ${ExitDo}
+      ${EndIf}
+
+      ; Each row moves down by 13 DLUs
+      IntOp $R2 $R9 * 13
+      IntOp $R2 $R2 + 21
+      IntOp $R1 $R2 + 10
+
+      ClearErrors
+      ReadINIStr $R0 "$EXEDIR\core\distribution\setup.ini" \
+        "OptionalExtensions" "extension.$R9.checked"
+      ${If} ${Errors}
+        StrCpy $R0 ${BST_CHECKED}
+      ${ElseIf} $R0 == "0"
+        StrCpy $R8 ${BST_UNCHECKED}
+      ${EndIf}
+
+      WriteINIStr "$PLUGINSDIR\extensions.ini" "Field $R7" Type   "checkbox"
+      WriteINIStr "$PLUGINSDIR\extensions.ini" "Field $R7" Text   "$R6"
+      WriteINIStr "$PLUGINSDIR\extensions.ini" "Field $R7" Left   "11"
+      WriteINIStr "$PLUGINSDIR\extensions.ini" "Field $R7" Right  "-1"
+      WriteINIStr "$PLUGINSDIR\extensions.ini" "Field $R7" Top    "$R2"
+      WriteINIStr "$PLUGINSDIR\extensions.ini" "Field $R7" Bottom "$R1"
+      WriteINIStr "$PLUGINSDIR\extensions.ini" "Field $R7" State  "$R0"
+      WriteINIStr "$PLUGINSDIR\extensions.ini" "Field $R7" Flags  "NOTIFY"
+
+      IntOp $R9 $R9 + 1
+    ${Loop}
+  ${EndIf}
+
+  IntOp $R9 $R9 + 2
+
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Settings" NumFields "$R9"
+
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Field 1" Type   "checkbox"
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Field 1" Text   "$(OPTIONAL_EXTENSIONS_CHECKBOX_DESC)"
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Field 1" Left   "0"
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Field 1" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Field 1" Top    "5"
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Field 1" Bottom "15"
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Field 1" State  "$R8"
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Field 1" Flags  "GROUP|NOTIFY"
+
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Field $R9" Type   "label"
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Field $R9" Text   "$(OPTIONAL_EXTENSIONS_DESC)"
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Field $R9" Left   "0"
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Field $R9" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Field $R9" Top    "-23"
+  WriteINIStr "$PLUGINSDIR\extensions.ini" "Field $R9" Bottom "-5"
 
   ; There must always be a core directory.
   ${GetSize} "$EXEDIR\core\" "/S=0K" $R5 $R7 $R8
