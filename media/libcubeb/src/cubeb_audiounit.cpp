@@ -33,6 +33,7 @@
 #include <atomic>
 #include <vector>
 #include <sys/time.h>
+#include <string>
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
 typedef UInt32 AudioFormatFlags;
@@ -1681,6 +1682,54 @@ audiounit_activate_clock_drift_compensation(const AudioDeviceID aggregate_device
 static int audiounit_destroy_aggregate_device(AudioObjectID plugin_id, AudioDeviceID * aggregate_device_id);
 static void audiounit_get_available_samplerate(AudioObjectID devid, AudioObjectPropertyScope scope,
                                    uint32_t * min, uint32_t * max, uint32_t * def);
+static int
+audiounit_create_device_from_hwdev(cubeb_device_info * ret, AudioObjectID devid, cubeb_device_type type);
+
+static void
+audiounit_workaround_for_airpod(cubeb_stream * stm)
+{
+  cubeb_device_info input_device_info;
+  audiounit_create_device_from_hwdev(&input_device_info, stm->input_device.id, CUBEB_DEVICE_TYPE_INPUT);
+
+  cubeb_device_info output_device_info;
+  audiounit_create_device_from_hwdev(&output_device_info, stm->output_device.id, CUBEB_DEVICE_TYPE_OUTPUT);
+
+  std::string input_name_str(input_device_info.friendly_name);
+  std::string output_name_str(output_device_info.friendly_name);
+
+  if( input_name_str.find("AirPods") != std::string::npos
+    && output_name_str.find("AirPods") != std::string::npos ) {
+    uint32_t input_min_rate = 0;
+    uint32_t input_max_rate = 0;
+    uint32_t input_nominal_rate = 0;
+    audiounit_get_available_samplerate(stm->input_device.id, kAudioObjectPropertyScopeGlobal,
+                                       &input_min_rate, &input_max_rate, &input_nominal_rate);
+    LOG("(%p) Input device %u, name: %s, min: %u, max: %u, nominal rate: %u", stm, stm->input_device.id
+    , input_device_info.friendly_name, input_min_rate, input_max_rate, input_nominal_rate);
+    uint32_t output_min_rate = 0;
+    uint32_t output_max_rate = 0;
+    uint32_t output_nominal_rate = 0;
+    audiounit_get_available_samplerate(stm->output_device.id, kAudioObjectPropertyScopeGlobal,
+                                       &output_min_rate, &output_max_rate, &output_nominal_rate);
+    LOG("(%p) Output device %u, name: %s, min: %u, max: %u, nominal rate: %u", stm, stm->output_device.id
+    , output_device_info.friendly_name, output_min_rate, output_max_rate, output_nominal_rate);
+
+    Float64 rate = input_nominal_rate;
+    AudioObjectPropertyAddress addr = {kAudioDevicePropertyNominalSampleRate,
+                                       kAudioObjectPropertyScopeGlobal,
+                                       kAudioObjectPropertyElementMaster};
+
+    OSStatus rv = AudioObjectSetPropertyData(stm->aggregate_device_id,
+                                             &addr,
+                                             0,
+                                             nullptr,
+                                             sizeof(Float64),
+                                             &rate);
+    if (rv != noErr) {
+      LOG("Non fatal error, AudioObjectSetPropertyData/kAudioDevicePropertyNominalSampleRate, rv=%d", rv);
+    }
+  }
+}
 
 /*
  * Aggregate Device is a virtual audio interface which utilizes inputs and outputs
@@ -1704,26 +1753,6 @@ static void audiounit_get_available_samplerate(AudioObjectID devid, AudioObjectP
 static int
 audiounit_create_aggregate_device(cubeb_stream * stm)
 {
-  uint32_t input_min_rate = 0;
-  uint32_t input_max_rate = 0;
-  uint32_t input_nominal_rate = 0;
-  audiounit_get_available_samplerate(stm->input_device.id, kAudioObjectPropertyScopeGlobal,
-                                     &input_min_rate, &input_max_rate, &input_nominal_rate);
-  LOG("(%p) Input device %u min: %u, max: %u, nominal: %u rate", stm, stm->input_device.id
-      , input_min_rate, input_max_rate, input_nominal_rate);
-  uint32_t output_min_rate = 0;
-  uint32_t output_max_rate = 0;
-  uint32_t output_nominal_rate = 0;
-  audiounit_get_available_samplerate(stm->output_device.id, kAudioObjectPropertyScopeGlobal,
-                                     &output_min_rate, &output_max_rate, &output_nominal_rate);
-  LOG("(%p) Output device %u min: %u, max: %u, nominal: %u rate", stm, stm->output_device.id
-      , output_min_rate, output_max_rate, output_nominal_rate);
-
-  if ((output_nominal_rate < input_min_rate || output_nominal_rate > output_max_rate)
-      || (input_nominal_rate < output_min_rate || input_nominal_rate > output_max_rate)){
-    return CUBEB_ERROR;
-  }
-
   int r = audiounit_create_blank_aggregate_device(&stm->plugin_id, &stm->aggregate_device_id);
   if (r != CUBEB_OK) {
     LOG("(%p) Failed to create blank aggregate device", stm);
@@ -1752,26 +1781,7 @@ audiounit_create_aggregate_device(cubeb_stream * stm)
     return  CUBEB_ERROR;
   }
 
-  /* Do not attempt to change the nominal rate if it's the same with the nominal rate of
-   * output device because it's the master device and rate will set to that anyway. */
-  uint32_t min_rate = std::min(input_nominal_rate, output_nominal_rate);
-  if (input_nominal_rate != output_nominal_rate && min_rate != output_nominal_rate) {
-    LOG("Update aggregate device rate to %u", min_rate);
-    Float64 rate = min_rate;
-    AudioObjectPropertyAddress addr = {kAudioDevicePropertyNominalSampleRate,
-                                       kAudioObjectPropertyScopeGlobal,
-                                       kAudioObjectPropertyElementMaster};
-
-    OSStatus rv = AudioObjectSetPropertyData(stm->aggregate_device_id,
-                                             &addr,
-                                             0,
-                                             nullptr,
-                                             sizeof(Float64),
-                                             &rate);
-    if (rv != noErr) {
-      LOG("Non fatal error, AudioObjectSetPropertyData/kAudioDevicePropertyNominalSampleRate, rv=%d", rv);
-    }
-  }
+  audiounit_workaround_for_airpod(stm);
 
   return CUBEB_OK;
 }

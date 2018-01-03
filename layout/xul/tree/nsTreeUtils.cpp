@@ -94,12 +94,9 @@ nsTreeUtils::UpdateSortIndicators(Element* aColumn, const nsAString& aDirection)
   if (parentContent &&
       parentContent->NodeInfo()->Equals(nsGkAtoms::treecols,
                                         kNameSpaceID_XUL)) {
-    uint32_t i, numChildren = parentContent->GetChildCount();
-    for (i = 0; i < numChildren; ++i) {
-      nsCOMPtr<nsIContent> childContent = parentContent->GetChildAt(i);
-
-      if (childContent &&
-          childContent != aColumn &&
+    for (nsINode* childContent = parentContent->GetFirstChild();
+         childContent; childContent = childContent->GetNextSibling()) {
+      if (childContent != aColumn &&
           childContent->NodeInfo()->Equals(nsGkAtoms::treecol,
                                            kNameSpaceID_XUL)) {
         childContent->AsElement()->UnsetAttr(kNameSpaceID_None,
@@ -120,12 +117,11 @@ nsTreeUtils::GetColumnIndex(Element* aColumn, int32_t* aResult)
   if (parentContent &&
       parentContent->NodeInfo()->Equals(nsGkAtoms::treecols,
                                         kNameSpaceID_XUL)) {
-    uint32_t i, numChildren = parentContent->GetChildCount();
     int32_t colIndex = 0;
-    for (i = 0; i < numChildren; ++i) {
-      nsIContent* childContent = parentContent->GetChildAt(i);
-      if (childContent &&
-          childContent->NodeInfo()->Equals(nsGkAtoms::treecol,
+
+    for (nsINode* childContent = parentContent->GetFirstChild();
+         childContent; childContent = childContent->GetNextSibling()) {
+      if (childContent->NodeInfo()->Equals(nsGkAtoms::treecol,
                                            kNameSpaceID_XUL)) {
         if (childContent == aColumn) {
           *aResult = colIndex;

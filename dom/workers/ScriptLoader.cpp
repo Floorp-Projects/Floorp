@@ -1200,8 +1200,11 @@ private:
       mWorkerPrivate->InitChannelInfo(channel);
 
       // Our final channel principal should match the loading principal
-      // in terms of the origin.
-      MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate->FinalChannelPrincipalIsValid(channel));
+      // in terms of the origin.  This used to be an assert, but it seems
+      // there are some rare cases where this check can fail in practice.
+      // Perhaps some browser script setting nsIChannel.owner, etc.
+      NS_ENSURE_TRUE(mWorkerPrivate->FinalChannelPrincipalIsValid(channel),
+                     NS_ERROR_FAILURE);
 
       // However, we must still override the principal since the nsIPrincipal
       // URL may be different due to same-origin redirects.  Unfortunately this

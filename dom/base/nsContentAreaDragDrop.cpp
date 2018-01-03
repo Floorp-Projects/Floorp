@@ -868,7 +868,7 @@ DragDataProducer::GetDraggableSelectionData(nsISelection* inSelection,
               int32_t childOffset =
                 (anchorOffset < focusOffset) ? anchorOffset : focusOffset;
               nsIContent *childContent =
-                selStartContent->GetChildAt(childOffset);
+                selStartContent->GetChildAt_Deprecated(childOffset);
               // if we find an image, we'll fall into the node-dragging code,
               // rather the the selection-dragging code
               if (nsContentUtils::IsDraggableImage(childContent)) {

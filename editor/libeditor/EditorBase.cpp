@@ -2624,7 +2624,7 @@ EditorBase::FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint)
     // aInOutOffset to the preceding text node, if any.
     if (!aPoint.IsStartOfContainer()) {
       if (AsHTMLEditor()) {
-        // Fall back to a slow path that uses GetChildAt() for Thunderbird's
+        // Fall back to a slow path that uses GetChildAt_Deprecated() for Thunderbird's
         // plaintext editor.
         nsIContent* child = aPoint.GetPreviousSiblingOfChild();
         if (child && child->IsNodeOfType(nsINode::eTEXT)) {
@@ -2635,7 +2635,7 @@ EditorBase::FindBetterInsertionPoint(const EditorRawDOMPoint& aPoint)
         }
       } else {
         // If we're in a real plaintext editor, use a fast path that avoids
-        // calling GetChildAt() which may perform a linear search.
+        // calling GetChildAt_Deprecated() which may perform a linear search.
         nsIContent* child = aPoint.GetContainer()->GetLastChild();
         while (child) {
           if (child->IsNodeOfType(nsINode::eTEXT)) {
@@ -4280,7 +4280,7 @@ EditorBase::JoinNodeDeep(nsIContent& aLeftNode,
 
     // Get new left and right nodes, and begin anew
     parentNode = rightNodeToJoin;
-    rightNodeToJoin = parentNode->GetChildAt(length);
+    rightNodeToJoin = parentNode->GetChildAt_Deprecated(length);
     if (rightNodeToJoin) {
       leftNodeToJoin = rightNodeToJoin->GetPreviousSibling();
     } else {

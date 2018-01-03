@@ -1277,7 +1277,7 @@ IMEContentObserver::GetChildNode(nsINode* aParent, int32_t aOffset)
   if (aOffset == static_cast<int32_t>(aParent->Length() - 1)) {
     return aParent->GetLastChild();
   }
-  return aParent->GetChildAt(aOffset);
+  return aParent->GetChildAt_Deprecated(aOffset);
 }
 
 bool

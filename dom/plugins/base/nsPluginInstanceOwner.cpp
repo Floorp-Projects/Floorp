@@ -2300,7 +2300,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
           rootPoint = anEvent.mRefPoint + widget->WidgetToScreenOffset();
         }
 #ifdef MOZ_WIDGET_GTK
-        Window root = gfxPlatform::IsHeadless() ? X11None : GDK_ROOT_WINDOW();
+        Window root = GDK_ROOT_WINDOW();
 #else
         Window root = X11None; // Could XQueryTree, but this is not important.
 #endif
@@ -2387,7 +2387,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
         {
           XKeyEvent &event = pluginEvent.xkey;
 #ifdef MOZ_WIDGET_GTK
-          event.root = gfxPlatform::IsHeadless() ? X11None : GDK_ROOT_WINDOW();
+          event.root = GDK_ROOT_WINDOW();
           event.time = anEvent.mTime;
           const GdkEventKey* gdkEvent =
             static_cast<const GdkEventKey*>(anEvent.mPluginEvent);

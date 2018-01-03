@@ -625,15 +625,14 @@ txMozillaXMLOutput::createTxWrapper()
       mDocument->CreateElem(nsDependentAtomString(nsGkAtoms::result),
                             nsGkAtoms::transformiix, namespaceID);
 
-    uint32_t i, j, childCount = mDocument->GetChildCount();
+    uint32_t j = 0;
 #ifdef DEBUG
     // Keep track of the location of the current documentElement, if there is
     // one, so we can verify later
     uint32_t rootLocation = 0;
 #endif
-    for (i = 0, j = 0; i < childCount; ++i) {
-        nsCOMPtr<nsIContent> childContent = mDocument->GetChildAt(j);
-
+    for (nsCOMPtr<nsIContent> childContent = mDocument->GetFirstChild();
+         childContent; childContent = childContent->GetNextSibling()) {
 #ifdef DEBUG
         if (childContent->IsElement()) {
             rootLocation = j;
@@ -650,7 +649,7 @@ txMozillaXMLOutput::createTxWrapper()
             ++j;
         }
         else {
-            mDocument->RemoveChildAt(j, true);
+            mDocument->RemoveChildAt_Deprecated(j, true);
 
             rv = wrapper->AppendChildTo(childContent, true);
             NS_ENSURE_SUCCESS(rv, rv);
