@@ -2916,6 +2916,10 @@ MediaCacheStream::InitAsCloneInternal(MediaCacheStream* aOriginal)
   mDownloadStatistics = aOriginal->mDownloadStatistics;
   mDownloadStatistics.Stop();
 
+  // Notify the client that we have new data so the decoder has a chance to
+  // compute 'canplaythrough' and buffer ranges.
+  mClient->CacheClientNotifyDataReceived();
+
   if (aOriginal->mDidNotifyDataEnded &&
       NS_SUCCEEDED(aOriginal->mNotifyDataEndedStatus)) {
     mNotifyDataEndedStatus = aOriginal->mNotifyDataEndedStatus;
