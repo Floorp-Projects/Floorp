@@ -2730,11 +2730,22 @@ SourceMediaStream::DestroyImpl()
 void
 SourceMediaStream::SetPullEnabled(bool aEnabled)
 {
-  MutexAutoLock lock(mMutex);
-  mPullEnabled = aEnabled;
-  if (mPullEnabled && GraphImpl()) {
-    GraphImpl()->EnsureNextIteration();
-  }
+  class Message : public ControlMessage {
+  public:
+    Message(SourceMediaStream* aStream, bool aEnabled)
+      : ControlMessage(nullptr)
+      , mStream(aStream)
+      , mEnabled(aEnabled)
+    {}
+    void Run() override
+    {
+      MutexAutoLock lock(mStream->mMutex);
+      mStream->mPullEnabled = mEnabled;
+    }
+    SourceMediaStream* mStream;
+    bool mEnabled;
+  };
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aEnabled));
 }
 
 bool

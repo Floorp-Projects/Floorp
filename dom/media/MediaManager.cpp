@@ -1289,7 +1289,8 @@ public:
     RefPtr<GetUserMediaStreamRunnable> self = this;
     MediaManager::PostTask(NewTaskFrom([self, domStream, callback]() mutable {
       MOZ_ASSERT(MediaManager::IsInMediaThread());
-      SourceMediaStream* source = self->mSourceListener->GetSourceStream();
+      RefPtr<SourceMediaStream> source =
+        self->mSourceListener->GetSourceStream();
 
       RefPtr<MediaMgrError> error = nullptr;
       if (self->mAudioDevice) {
@@ -1334,7 +1335,6 @@ public:
       // Start() queued the tracks to be added synchronously to avoid races
       source->FinishAddTracks();
 
-      source->SetPullEnabled(true);
       source->AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
       LOG(("started all sources"));
@@ -1342,7 +1342,9 @@ public:
       // onTracksAvailableCallback must be added to domStream on the main thread.
       uint64_t windowID = self->mWindowID;
       NS_DispatchToMainThread(NS_NewRunnableFunction("MediaManager::NotifyChromeOfStart",
-                                                     [domStream, callback, windowID]() mutable {
+                                                     [source, domStream, callback, windowID]() mutable {
+        source->SetPullEnabled(true);
+
         MediaManager* manager = MediaManager::GetIfExists();
         if (!manager) {
           return;
