@@ -156,10 +156,7 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
-    virtual ~nsFileInputStream()
-    {
-        Close();
-    }
+    virtual ~nsFileInputStream() = default;
 
     nsresult SeekInternal(int32_t aWhence, int64_t aOffset, bool aClearBuf=true);
 
@@ -207,10 +204,7 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
-    virtual ~nsFileOutputStream()
-    {
-        Close();
-    }
+   virtual ~nsFileOutputStream() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -238,10 +232,7 @@ public:
     NS_IMETHOD Init(nsIFile* file, int32_t ioFlags, int32_t perm, int32_t behaviorFlags) override;
 
 protected:
-    virtual ~nsAtomicFileOutputStream()
-    {
-        Close();
-    }
+    virtual ~nsAtomicFileOutputStream() = default;
 
     nsCOMPtr<nsIFile>         mTargetFile;
     nsCOMPtr<nsIFile>         mTempFile;
@@ -301,10 +292,7 @@ public:
     }
 
 protected:
-    virtual ~nsFileStream()
-    {
-        Close();
-    }
+    virtual ~nsFileStream() = default;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

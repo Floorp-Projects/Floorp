@@ -516,6 +516,7 @@ class TestTypeConversions(BaseStructuredTest):
             data = logfile.readlines()[-1].strip()
             self.assertEquals(data, "☺")
             self.logger.suite_end()
+            self.logger.remove_handler(_handler)
 
     def test_arguments(self):
         self.logger.info(message="test")

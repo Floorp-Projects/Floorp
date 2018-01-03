@@ -181,7 +181,7 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
       // may generate results which get placed in different locations.
       items[i].parent = parent;
       int32_t index = parent->IndexOf(child);
-      parent->RemoveChildAt(index, true);
+      parent->RemoveChildAt_Deprecated(index, true);
     }
   }
 

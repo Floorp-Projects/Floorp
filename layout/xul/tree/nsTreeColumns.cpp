@@ -687,10 +687,11 @@ nsTreeColumns::RestoreNaturalOrder()
   if (!colsContent)
     return NS_OK;
 
-  for (uint32_t i = 0; i < colsContent->GetChildCount(); ++i) {
-    nsCOMPtr<nsIContent> child = colsContent->GetChildAt(i);
+  int32_t i = 0;
+  for (nsINode* child = colsContent->GetFirstChild();
+       child; child = child->GetNextSibling()) {
     nsAutoString ordinal;
-    ordinal.AppendInt(i);
+    ordinal.AppendInt(i++);
     if (child->IsElement()) {
       child->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::ordinal, ordinal,
                                   true);

@@ -6930,16 +6930,6 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     return NS_OK;
   }
 
-  if (EventStateManager::IsInputEventsSuppressed() &&
-      (aEvent->mClass == eMouseEventClass ||
-       aEvent->mClass == eWheelEventClass ||
-       aEvent->mClass == ePointerEventClass ||
-       aEvent->mClass == eTouchEventClass ||
-       aEvent->mClass == eKeyboardEventClass ||
-       aEvent->mClass == eCompositionEventClass)) {
-    return NS_OK;
-  }
-
   RecordMouseLocation(aEvent);
 
   if (AccessibleCaretEnabled(mDocument->GetDocShell())) {

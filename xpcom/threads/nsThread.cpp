@@ -992,7 +992,8 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 
           // High-priority runnables are ignored here since they'll run right away
           // even with the cooperative scheduler.
-          if (!labeled && priority == EventPriority::Normal) {
+          if (!labeled && (priority == EventPriority::Normal ||
+                           priority == EventPriority::Idle)) {
             TimeStamp now = TimeStamp::Now();
             double diff = (now - mLastUnlabeledRunnable).ToMilliseconds();
             Telemetry::Accumulate(Telemetry::TIME_BETWEEN_UNLABELED_RUNNABLES_MS, diff);

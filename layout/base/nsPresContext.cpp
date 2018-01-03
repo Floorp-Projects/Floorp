@@ -1295,7 +1295,7 @@ void nsPresContext::SetImgAnimations(nsIContent *aParent, uint16_t aMode)
 
   uint32_t count = aParent->GetChildCount();
   for (uint32_t i = 0; i < count; ++i) {
-    SetImgAnimations(aParent->GetChildAt(i), aMode);
+    SetImgAnimations(aParent->GetChildAt_Deprecated(i), aMode);
   }
 }
 
