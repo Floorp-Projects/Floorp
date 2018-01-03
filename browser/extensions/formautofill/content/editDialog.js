@@ -197,8 +197,11 @@ class EditDialog {
 
 class EditAddress extends EditDialog {
   constructor(elements, record) {
-    super("addresses", elements, record);
-    this.formatForm(record && record.country);
+    let country = record ? record.country :
+                  FormAutofillUtils.supportedCountries.find(supported => supported == FormAutofillUtils.DEFAULT_REGION);
+    super("addresses", elements, record || {country});
+
+    this.formatForm(country);
   }
 
   /**
