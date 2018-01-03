@@ -23,47 +23,6 @@ dialog {
   font: menu;
 }
 
-/* ::::: dialog header ::::: */
-
-dialogheader {
-  margin: 0 5px 5px;
-  padding: 5px 8px;
-}
-
-.dialogheader-title {
-  margin: 0 !important;
-  font-size: larger;
-  font-weight: bold;
-  display: none;
-}
-
-/* ::::: large dialog header ::::: */
-
-.header-large {
-  -moz-box-orient: vertical;
-  margin: -14px -14px 0;
-  padding: 12px;
-  padding-inline-end: 5px;
-  padding-inline-start: 25px;
-}
-
-.header-large > .dialogheader-title {
-  font: inherit;
-  font-weight: bold;
-}
-
-.header-large > .dialogheader-description {
-  margin-left: 12px !important;
-}
-
-.dialogheader-description {
-  font-weight: bold !important;
-}
-
-.dialogheader-title {
-  font-weight: bold !important;
-}
-
 /*XXX - belongs to toolkit/content/finddialog.xul: */
 
 #findDialog,
