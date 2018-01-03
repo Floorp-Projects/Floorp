@@ -3127,7 +3127,19 @@ ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
       return NS_ERROR_FAILURE;
     }
 
-    channel->GetURI(getter_AddRefs(request->mBaseURL));
+    nsCOMPtr<nsIURI> uri;
+    rv = channel->GetOriginalURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Fixup moz-extension URIs, because the channel URI points to file:,
+    // which won't be allowed to load.
+    bool isWebExt = false;
+    if (uri && NS_SUCCEEDED(uri->SchemeIs("moz-extension", &isWebExt)) && isWebExt) {
+      request->mBaseURL = uri;
+    } else {
+      channel->GetURI(getter_AddRefs(request->mBaseURL));
+    }
+
 
     // Attempt to compile off main thread.
     rv = AttemptAsyncScriptCompile(request);
