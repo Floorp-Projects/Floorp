@@ -509,7 +509,7 @@ Function .onInit
 
   Call CanWrite
   ${If} "$CanWriteToInstallDir" == "false"
-    MessageBox MB_OK|MB_ICONEXCLAMATION "$(WARN_WRITE_ACCESS_QUIT)\n\n$INSTDIR"
+    MessageBox MB_OK|MB_ICONEXCLAMATION "$(WARN_WRITE_ACCESS_QUIT)$\n$\n$INSTDIR"
     Quit
   ${EndIf}
 
