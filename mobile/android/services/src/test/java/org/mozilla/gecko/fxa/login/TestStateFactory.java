@@ -6,6 +6,7 @@ package org.mozilla.gecko.fxa.login;
 import junit.framework.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.DSACryptoImplementation;
@@ -24,7 +25,7 @@ public class TestStateFactory {
     State state;
 
     o = migrated.toJSONObject();
-    Assert.assertEquals(3, o.getLong("version").intValue());
+    Assert.assertEquals(4, o.getLong("version").intValue());
     state = StateFactory.fromJSONObject(migrated.stateLabel, o);
     Assert.assertEquals(StateLabel.MigratedFromSync11, state.stateLabel);
     Assert.assertEquals(o, state.toJSONObject());
@@ -33,7 +34,7 @@ public class TestStateFactory {
     MigratedFromSync11 migratedNullPassword = new MigratedFromSync11("email", "uid", true, null);
 
     o = migratedNullPassword.toJSONObject();
-    Assert.assertEquals(3, o.getLong("version").intValue());
+    Assert.assertEquals(4, o.getLong("version").intValue());
     state = StateFactory.fromJSONObject(migratedNullPassword.stateLabel, o);
     Assert.assertEquals(StateLabel.MigratedFromSync11, state.stateLabel);
     Assert.assertEquals(o, state.toJSONObject());
@@ -42,25 +43,26 @@ public class TestStateFactory {
   @Test
   public void testGetStateV2() throws Exception {
     byte[] sessionToken = Utils.generateRandomBytes(32);
-    byte[] kA = Utils.generateRandomBytes(32);
     byte[] kB = Utils.generateRandomBytes(32);
+    byte[] kSync = FxAccountUtils.deriveSyncKey(kB);
+    String kXCS = FxAccountUtils.computeClientState(kB);
     BrowserIDKeyPair keyPair = DSACryptoImplementation.generateKeyPair(512);
-    Cohabiting cohabiting = new Cohabiting("email", "uid", sessionToken, kA, kB, keyPair);
+    Cohabiting cohabiting = new Cohabiting("email", "uid", sessionToken, kSync, kXCS, keyPair);
     String certificate = "certificate";
-    Married married = new Married("email", "uid", sessionToken, kA, kB, keyPair, certificate);
+    Married married = new Married("email", "uid", sessionToken, kSync, kXCS, keyPair, certificate);
 
     // For the current version, we expect to read back what we wrote.
     ExtendedJSONObject o;
     State state;
 
     o = married.toJSONObject();
-    Assert.assertEquals(3, o.getLong("version").intValue());
+    Assert.assertEquals(4, o.getLong("version").intValue());
     state = StateFactory.fromJSONObject(married.stateLabel, o);
     Assert.assertEquals(StateLabel.Married, state.stateLabel);
     Assert.assertEquals(o, state.toJSONObject());
 
     o = cohabiting.toJSONObject();
-    Assert.assertEquals(3, o.getLong("version").intValue());
+    Assert.assertEquals(4, o.getLong("version").intValue());
     state = StateFactory.fromJSONObject(cohabiting.stateLabel, o);
     Assert.assertEquals(StateLabel.Cohabiting, state.stateLabel);
     Assert.assertEquals(o, state.toJSONObject());

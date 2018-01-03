@@ -27,18 +27,11 @@ public class Married extends TokensAndKeysState {
   private static final String LOG_TAG = Married.class.getSimpleName();
 
   protected final String certificate;
-  protected final String clientState;
 
-  public Married(String email, String uid, byte[] sessionToken, byte[] kA, byte[] kB, BrowserIDKeyPair keyPair, String certificate) {
-    super(StateLabel.Married, email, uid, sessionToken, kA, kB, keyPair);
+  public Married(String email, String uid, byte[] sessionToken, byte[] kSync, String kXCS, BrowserIDKeyPair keyPair, String certificate) {
+    super(StateLabel.Married, email, uid, sessionToken, kSync, kXCS, keyPair);
     Utils.throwIfNull(certificate);
     this.certificate = certificate;
-    try {
-      this.clientState = FxAccountUtils.computeClientState(kB);
-    } catch (NoSuchAlgorithmException e) {
-      // This should never occur.
-      throw new IllegalStateException("Unable to compute client state from kB.");
-    }
   }
 
   @Override
@@ -100,18 +93,17 @@ public class Married extends TokensAndKeysState {
   }
 
   public KeyBundle getSyncKeyBundle() throws InvalidKeyException, NoSuchAlgorithmException, UnsupportedEncodingException {
-    // TODO Document this choice for deriving from kB.
-    return FxAccountUtils.generateSyncKeyBundle(kB);
+    return FxAccountUtils.generateSyncKeyBundle(kSync);
   }
 
   public String getClientState() {
     if (FxAccountUtils.LOG_PERSONAL_INFORMATION) {
-      FxAccountUtils.pii(LOG_TAG, "Client state: " + this.clientState);
+      FxAccountUtils.pii(LOG_TAG, "Client state: " + this.kXCS);
     }
-    return this.clientState;
+    return this.kXCS;
   }
 
   public Cohabiting makeCohabitingState() {
-    return new Cohabiting(email, uid, sessionToken, kA, kB, keyPair);
+    return new Cohabiting(email, uid, sessionToken, kSync, kXCS, keyPair);
   }
 }
