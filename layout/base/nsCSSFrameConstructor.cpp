@@ -7252,11 +7252,10 @@ nsCSSFrameConstructor::CreateNeededFrames(
 
   // Scan the children of aContent to see what operations (if any) we need to
   // perform.
-  uint32_t childCount = aContent->GetChildCount();
   bool inRun = false;
   nsIContent* firstChildInRun = nullptr;
-  for (uint32_t i = 0; i < childCount; i++) {
-    nsIContent* child = aContent->GetChildAt(i);
+  for (nsIContent* child = aContent->GetFirstChild();
+       child; child = child->GetNextSibling()) {
     if (child->HasFlag(NODE_NEEDS_FRAME)) {
       NS_ASSERTION(!child->GetPrimaryFrame() ||
                    child->GetPrimaryFrame()->GetContent() != child,
@@ -7720,8 +7719,8 @@ nsCSSFrameConstructor::ContentAppended(nsIContent* aContainer,
     // Invalidate now instead of before the WipeContainingBlock call, just in
     // case we do wipe; in that case we don't need to do this walk at all.
     // XXXbz does that matter?  Would it make more sense to save some virtual
-    // GetChildAt calls instead and do this during construction of our
-    // FrameConstructionItemList?
+    // GetChildAt_Deprecated calls instead and do this during construction of
+    // our FrameConstructionItemList?
     InvalidateCanvasIfNeeded(mPresShell, child);
   }
 

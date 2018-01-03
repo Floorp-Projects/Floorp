@@ -386,7 +386,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsAtom* aAttribute,
         // Flush out all our kids.
         uint32_t childCount = realElement->GetChildCount();
         for (uint32_t i = 0; i < childCount; i++)
-          realElement->RemoveChildAt(0, aNotify);
+          realElement->RemoveChildAt_Deprecated(0, aNotify);
 
         if (!aRemoveFlag) {
           // Construct a new text node and insert it.
@@ -483,7 +483,7 @@ nsXBLPrototypeBinding::LocateInstance(Element* aBoundElement,
   if (!copyParent)
     return nullptr;
 
-  nsIContent* child = copyParent->GetChildAt(templParent->IndexOf(aTemplChild));
+  nsIContent* child = copyParent->GetChildAt_Deprecated(templParent->IndexOf(aTemplChild));
   if (child && child->IsElement()) {
     return child->AsElement();
   }
@@ -1487,7 +1487,7 @@ nsXBLPrototypeBinding::WriteContentNode(nsIObjectOutputStream* aStream,
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (i = 0; i < count; i++) {
-    rv = WriteContentNode(aStream, element->GetChildAt(i));
+    rv = WriteContentNode(aStream, element->GetChildAt_Deprecated(i));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

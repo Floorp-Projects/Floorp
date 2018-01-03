@@ -555,13 +555,10 @@ static void
 GetImmediateChild(nsIContent* aContent, nsAtom *aTag, nsIContent** aResult)
 {
   *aResult = nullptr;
-  uint32_t childCount = aContent->GetChildCount();
-  for (uint32_t i = 0; i < childCount; i++) {
-    nsIContent *child = aContent->GetChildAt(i);
-
-    if (child->IsXULElement(aTag)) {
-      *aResult = child;
-      NS_ADDREF(*aResult);
+  for (nsCOMPtr<nsIContent> childContent = aContent->GetFirstChild();
+       childContent; childContent = childContent->GetNextSibling()) {
+    if (childContent->IsXULElement(aTag)) {
+      childContent.forget(aResult);
       return;
     }
   }

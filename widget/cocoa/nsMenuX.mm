@@ -440,7 +440,7 @@ void nsMenuX::MenuConstruct()
   // Iterate over the kids
   uint32_t count = menuPopup->GetChildCount();
   for (uint32_t i = 0; i < count; i++) {
-    nsIContent *child = menuPopup->GetChildAt(i);
+    nsIContent *child = menuPopup->GetChildAt_Deprecated(i);
     if (child) {
       // depending on the type, create a menu item, separator, or submenu
       if (child->IsAnyOfXULElements(nsGkAtoms::menuitem,
@@ -658,7 +658,7 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
 
   for (uint32_t i = 0; i < count; i++) {
     int32_t dummy;
-    nsIContent *child = mContent->GetChildAt(i);
+    nsIContent *child = mContent->GetChildAt_Deprecated(i);
     RefPtr<nsAtom> tag = child->OwnerDoc()->BindingManager()->ResolveTag(child, &dummy);
     if (tag == nsGkAtoms::menupopup) {
       *aResult = child;
