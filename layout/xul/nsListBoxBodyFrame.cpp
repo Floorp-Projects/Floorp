@@ -735,10 +735,9 @@ nsListBoxBodyFrame::ComputeIntrinsicISize(nsBoxLayoutState& aBoxLayoutState)
         gfxContext* rendContext = aBoxLayoutState.GetRenderingContext();
         if (rendContext) {
           nsAutoString value;
-          uint32_t textCount = child->GetChildCount();
-          for (uint32_t j = 0; j < textCount; ++j) {
-            nsIContent* text = child->GetChildAt_Deprecated(j);
-            if (text && text->IsNodeOfType(nsINode::eTEXT)) {
+          for (nsIContent* text = child->GetFirstChild();
+               text; text = text->GetNextSibling()) {
+            if (text->IsNodeOfType(nsINode::eTEXT)) {
               text->AppendTextTo(value);
             }
           }
