@@ -450,6 +450,12 @@ ClientLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags)
     return false;
   }
 
+  if (mTransactionIncomplete) {
+    // If the previous transaction was incomplete then we may have buffer operations
+    // running on the paint thread that haven't finished yet
+    GetCompositorBridgeChild()->FlushAsyncPaints();
+  }
+
   if (!EndTransactionInternal(nullptr, nullptr, aFlags)) {
     // Return without calling ForwardTransaction. This leaves the
     // ShadowLayerForwarder transaction open; the following
