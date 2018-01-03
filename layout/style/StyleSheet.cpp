@@ -558,6 +558,7 @@ void
 StyleSheet::RuleAdded(css::Rule& aRule)
 {
   DidDirty();
+  mDirtyFlags |= MODIFIED_RULES;
   NOTIFY_STYLE_SETS(RuleAdded, (*this, aRule));
 
   if (mDocument) {
@@ -569,6 +570,7 @@ void
 StyleSheet::RuleRemoved(css::Rule& aRule)
 {
   DidDirty();
+  mDirtyFlags |= MODIFIED_RULES;
   NOTIFY_STYLE_SETS(RuleRemoved, (*this, aRule));
 
   if (mDocument) {
@@ -580,6 +582,7 @@ void
 StyleSheet::RuleChanged(css::Rule* aRule)
 {
   DidDirty();
+  mDirtyFlags |= MODIFIED_RULES;
   NOTIFY_STYLE_SETS(RuleChanged, (*this, aRule));
 
   if (mDocument) {
