@@ -1460,6 +1460,7 @@ var Search = {
 
   homeSearch(text) {
     changeUrlSearch(text);
+    removeSearchSectionTitles();
     if (text === "") {
       this.resetHome();
       return;
@@ -1475,7 +1476,13 @@ var Search = {
       }
       section.classList.add("active");
       let sectionHidden = this.search(text, section);
-      if (noSearchResults && !sectionHidden) {
+      if (!sectionHidden) {
+        let sectionTitle = document.querySelector(`.category[value="${section.id}"] .category-name`).textContent;
+        let sectionDataDiv = document.querySelector(`#${section.id}.has-data.active .data`);
+        let titleDiv = document.createElement("h1");
+        titleDiv.classList.add("data", "search-section-title");
+        titleDiv.textContent = sectionTitle;
+        section.insertBefore(titleDiv, sectionDataDiv);
         noSearchResults = false;
       }
     });
@@ -1874,6 +1881,7 @@ function displayProcessesSelector(selectedSection) {
 }
 
 function refreshSearch() {
+  removeSearchSectionTitles();
   let selectedSection = document.querySelector(".category.selected").getAttribute("value");
   let search = document.getElementById("search");
   if (!Search.blacklist.includes(selectedSection)) {
@@ -1882,12 +1890,19 @@ function refreshSearch() {
 }
 
 function adjustSearchState() {
+  removeSearchSectionTitles();
   let selectedSection = document.querySelector(".category.selected").getAttribute("value");
   let search = document.getElementById("search");
   search.value = "";
   search.hidden = Search.blacklist.includes(selectedSection);
   document.getElementById("no-search-results").classList.add("hidden");
   Search.search(""); // reinitialize search state.
+}
+
+function removeSearchSectionTitles() {
+    for (let sectionTitleDiv of Array.from(document.getElementsByClassName("search-section-title"))) {
+        sectionTitleDiv.remove();
+    }
 }
 
 function adjustSection() {
