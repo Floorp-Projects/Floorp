@@ -178,7 +178,7 @@ task_description_schema = Schema({
 
     # The `shipping_phase` attribute, defaulting to None. This specifies the
     # release promotion phase that this task belongs to.
-    Required('shipping-phase'): Any(
+    Required('shipping-phase', default=None): Any(
         None,
         'build',
         'promote',
@@ -188,7 +188,7 @@ task_description_schema = Schema({
 
     # The `shipping_product` attribute, defaulting to None. This specifies the
     # release promotion product that this task belongs to.
-    Required('shipping-product'): Any(
+    Required('shipping-product', default=None): Any(
         None,
         'devedition',
         'fennec',
@@ -221,11 +221,11 @@ task_description_schema = Schema({
     # will be candidates for optimization even when `optimize_target_tasks` is
     # False, unless the task was also explicitly chosen by the target_tasks
     # method.
-    Required('always-target'): bool,
+    Required('always-target', default=False): bool,
 
     # Optimization to perform on this task during the optimization phase.
     # Optimizations are defined in taskcluster/taskgraph/optimize.py.
-    Required('optimization'): Any(
+    Required('optimization', default=None): Any(
         # always run this task (default)
         None,
         # search the index for the given index namespaces, and replace this task if found
@@ -250,7 +250,7 @@ task_description_schema = Schema({
     'worker-type': basestring,
 
     # Whether the job should use sccache compiler caching.
-    Required('needs-sccache'): bool,
+    Required('needs-sccache', default=False): bool,
 
     # Send notifications using pulse-notifier[1] service:
     #
@@ -287,13 +287,13 @@ task_description_schema = Schema({
         ),
 
         # worker features that should be enabled
-        Required('relengapi-proxy'): bool,
-        Required('chain-of-trust'): bool,
-        Required('taskcluster-proxy'): bool,
-        Required('allow-ptrace'): bool,
-        Required('loopback-video'): bool,
-        Required('loopback-audio'): bool,
-        Required('docker-in-docker'): bool,  # (aka 'dind')
+        Required('relengapi-proxy', default=False): bool,
+        Required('chain-of-trust', default=False): bool,
+        Required('taskcluster-proxy', default=False): bool,
+        Required('allow-ptrace', default=False): bool,
+        Required('loopback-video', default=False): bool,
+        Required('loopback-audio', default=False): bool,
+        Required('docker-in-docker', default=False): bool,  # (aka 'dind')
 
         # Paths to Docker volumes.
         #
@@ -305,7 +305,7 @@ task_description_schema = Schema({
         # Caches are often mounted to the same path as Docker volumes. In this
         # case, they take precedence over a Docker volume. But a volume still
         # needs to be declared for the path.
-        Optional('volumes'): [basestring],
+        Optional('volumes', default=[]): [basestring],
 
         # caches to set up for the task
         Optional('caches'): [{
@@ -321,7 +321,7 @@ task_description_schema = Schema({
 
             # Whether the cache is not used in untrusted environments
             # (like the Try repo).
-            Optional('skip-untrusted'): bool,
+            Optional('skip-untrusted', default=False): bool,
         }],
 
         # artifacts to extract from the task image after completion
@@ -338,7 +338,7 @@ task_description_schema = Schema({
         }],
 
         # environment variables
-        Required('env'): {basestring: taskref_or_string},
+        Required('env', default={}): {basestring: taskref_or_string},
 
         # the command to run; if not given, docker-worker will default to the
         # command in the docker image
@@ -419,16 +419,16 @@ task_description_schema = Schema({
         }],
 
         # environment variables
-        Required('env'): {basestring: taskref_or_string},
+        Required('env', default={}): {basestring: taskref_or_string},
 
         # the maximum time to run, in seconds
         Required('max-run-time'): int,
 
         # os user groups for test task workers
-        Optional('os-groups'): [basestring],
+        Optional('os-groups', default=[]): [basestring],
 
         # optional features
-        Required('chain-of-trust'): bool,
+        Required('chain-of-trust', default=False): bool,
     }, {
         Required('implementation'): 'buildbot-bridge',
 
@@ -483,7 +483,7 @@ task_description_schema = Schema({
         Required('implementation'): 'scriptworker-signing',
 
         # the maximum time to run, in seconds
-        Required('max-run-time'): int,
+        Required('max-run-time', default=600): int,
 
         # list of artifact URLs for the artifacts that should be signed
         Required('upstream-artifacts'): [{
@@ -505,7 +505,7 @@ task_description_schema = Schema({
         Required('implementation'): 'beetmover',
 
         # the maximum time to run, in seconds
-        Required('max-run-time'): int,
+        Required('max-run-time', default=600): int,
 
         # locale key, if this is a locale beetmover job
         Optional('locale'): basestring,
@@ -528,7 +528,7 @@ task_description_schema = Schema({
         Required('implementation'): 'beetmover-cdns',
 
         # the maximum time to run, in seconds
-        Required('max-run-time'): int,
+        Required('max-run-time', default=600): int,
         Required('product'): basestring,
     }, {
         Required('implementation'): 'balrog',
@@ -571,7 +571,7 @@ task_description_schema = Schema({
 
         # "Invalid" is a noop for try and other non-supported branches
         Required('google-play-track'): Any('production', 'beta', 'alpha', 'rollout', 'invalid'),
-        Required('commit'): bool,
+        Required('commit', default=False): bool,
         Optional('rollout-percentage'): int,
     }),
 })
@@ -1116,45 +1116,6 @@ transforms = TransformSequence()
 
 
 @transforms.add
-def set_defaults(config, tasks):
-    for task in tasks:
-        task.setdefault('shipping-phase', None)
-        task.setdefault('shipping-product', None)
-        task.setdefault('always-target', False)
-        task.setdefault('optimization', None)
-        task.setdefault('needs-sccache', False)
-
-        worker = task['worker']
-        if worker['implementation'] in ('docker-worker', 'docker-engine'):
-            worker.setdefault('relengapi-proxy', False)
-            worker.setdefault('chain-of-trust', False)
-            worker.setdefault('taskcluster-proxy', False)
-            worker.setdefault('allow-ptrace', False)
-            worker.setdefault('loopback-video', False)
-            worker.setdefault('loopback-audio', False)
-            worker.setdefault('docker-in-docker', False)
-            worker.setdefault('volumes', [])
-            worker.setdefault('env', {})
-            if 'caches' in worker:
-                for c in worker['caches']:
-                    c.setdefault('skip-untrusted', False)
-        elif worker['implementation'] == 'generic-worker':
-            worker.setdefault('env', {})
-            worker.setdefault('os-groups', [])
-            worker.setdefault('chain-of-trust', False)
-        elif worker['implementation'] == 'scriptworker-signing':
-            worker.setdefault('max-run-time', 600)
-        elif worker['implementation'] == 'beetmover':
-            worker.setdefault('max-run-time', 600)
-        elif worker['implementation'] == 'beetmover-cdns':
-            worker.setdefault('max-run-time', 600)
-        elif worker['implementation'] == 'push-apk':
-            worker.setdefault('commit', False)
-
-        yield task
-
-
-@transforms.add
 def task_name_from_label(config, tasks):
     for task in tasks:
         if 'label' not in task:
@@ -1169,10 +1130,9 @@ def task_name_from_label(config, tasks):
 @transforms.add
 def validate(config, tasks):
     for task in tasks:
-        validate_schema(
+        yield validate_schema(
             task_description_schema, task,
             "In task {!r}:".format(task.get('label', '?no-label?')))
-        yield task
 
 
 @index_builder('generic')

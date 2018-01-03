@@ -17,18 +17,18 @@ run_task_schema = Schema({
 
     # if true, add a cache at ~worker/.cache, which is where things like pip
     # tend to hide their caches.  This cache is never added for level-1 jobs.
-    Required('cache-dotcache'): bool,
+    Required('cache-dotcache', default=False): bool,
 
     # if true (the default), perform a checkout in /builds/worker/checkouts/gecko
-    Required('checkout'): bool,
+    Required('checkout', default=True): bool,
 
     # The sparse checkout profile to use. Value is the filename relative to the
     # directory where sparse profiles are defined (build/sparse-profiles/).
-    Required('sparse-profile'): Any(basestring, None),
+    Required('sparse-profile', default=None): basestring,
 
     # if true, perform a checkout of a comm-central based branch inside the
     # gecko checkout
-    Required('comm-checkout'): bool,
+    Required('comm-checkout', default=False): bool,
 
     # The command arguments to pass to the `run-task` script, after the
     # checkout arguments.  If a list, it will be passed directly; otherwise
@@ -57,15 +57,7 @@ def add_checkout_to_command(run, command):
                        run['sparse-profile'])
 
 
-docker_defaults = {
-    'cache-dotcache': False,
-    'checkout': True,
-    'comm-checkout': False,
-    'sparse-profile': None,
-}
-
-
-@run_job_using("docker-worker", "run-task", schema=run_task_schema, defaults=docker_defaults)
+@run_job_using("docker-worker", "run-task", schema=run_task_schema)
 def docker_worker_run_task(config, job, taskdesc):
     run = job['run']
     worker = taskdesc['worker'] = job['worker']

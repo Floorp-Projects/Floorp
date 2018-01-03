@@ -53,10 +53,9 @@ balrog_description_schema = Schema({
 def validate(config, jobs):
     for job in jobs:
         label = job.get('dependent-task', object).__dict__.get('label', '?no-label?')
-        validate_schema(
+        yield validate_schema(
             balrog_description_schema, job,
             "In balrog ({!r} kind) task for {!r}:".format(config.kind, label))
-        yield job
 
 
 @transforms.add

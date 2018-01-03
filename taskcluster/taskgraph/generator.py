@@ -96,8 +96,7 @@ def load_graph_config(root_dir):
     with open(config_yml) as f:
         config = yaml.load(f)
 
-    validate_graph_config(config)
-    return config
+    return validate_graph_config(config)
 
 
 class TaskGraphGenerator(object):
