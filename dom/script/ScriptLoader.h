@@ -244,6 +244,8 @@ public:
                             nsresult aSRIStatus,
                             mozilla::dom::SRICheckDataVerifier* aSRIDataVerifier);
 
+  void HandleLoadError(ScriptLoadRequest *aRequest, nsresult aResult);
+
   /**
    * Returns wether any request is queued, and not executed yet.
    */
