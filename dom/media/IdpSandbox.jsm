@@ -156,9 +156,7 @@ IdpSandbox.createIdpUri = function(domain, protocol) {
   let message = "Invalid IdP parameters: ";
   try {
     let wkIdp = "https://" + domain + "/.well-known/idp-proxy/" + protocol;
-    let ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                    .getService(Ci.nsIIOService);
-    let uri = ioService.newURI(wkIdp);
+    let uri = Services.io.newURI(wkIdp);
 
     if (uri.hostPort !== domain) {
       throw new Error(message + "domain is invalid");
@@ -252,9 +250,7 @@ IdpSandbox.prototype = {
                                  e.lineNumber, e.columnNumber,
                                  Ci.nsIScriptError.errorFlag,
                                  "content javascript", winID);
-    let consoleService = Cc["@mozilla.org/consoleservice;1"]
-        .getService(Ci.nsIConsoleService);
-    consoleService.logMessage(scriptError);
+    Services.console.logMessage(scriptError);
   },
 
   stop() {
