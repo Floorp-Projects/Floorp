@@ -502,19 +502,22 @@ public:
   virtual uint32_t GetChildCount() const = 0;
 
   /**
+   * NOTE: this function is going to be removed soon (hopefully!) Don't use it
+   * in new code.
+   *
    * Get a child by index
    * @param aIndex the index of the child to get
    * @return the child, or null if index out of bounds
    */
-  virtual nsIContent* GetChildAt(uint32_t aIndex) const = 0;
+  virtual nsIContent* GetChildAt_Deprecated(uint32_t aIndex) const = 0;
 
   /**
    * Get the index of a child within this content
    * @param aPossibleChild the child to get the index of.
    * @return the index of the child, or -1 if not a child
    *
-   * If the return value is not -1, then calling GetChildAt() with that value
-   * will return aPossibleChild.
+   * If the return value is not -1, then calling GetChildAt_Deprecated() with
+   * that value will return aPossibleChild.
    */
   virtual int32_t IndexOf(const nsINode* aPossibleChild) const = 0;
 
@@ -1304,7 +1307,7 @@ public:
   {
     uint32_t count = GetChildCount();
 
-    return count > 0 ? GetChildAt(count - 1) : nullptr;
+    return count > 0 ? GetChildAt_Deprecated(count - 1) : nullptr;
   }
 
   /**

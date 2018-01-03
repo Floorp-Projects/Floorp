@@ -483,7 +483,7 @@ nsXBLPrototypeBinding::LocateInstance(Element* aBoundElement,
   if (!copyParent)
     return nullptr;
 
-  nsIContent* child = copyParent->GetChildAt(templParent->IndexOf(aTemplChild));
+  nsIContent* child = copyParent->GetChildAt_Deprecated(templParent->IndexOf(aTemplChild));
   if (child && child->IsElement()) {
     return child->AsElement();
   }
@@ -1487,7 +1487,7 @@ nsXBLPrototypeBinding::WriteContentNode(nsIObjectOutputStream* aStream,
   NS_ENSURE_SUCCESS(rv, rv);
 
   for (i = 0; i < count; i++) {
-    rv = WriteContentNode(aStream, element->GetChildAt(i));
+    rv = WriteContentNode(aStream, element->GetChildAt_Deprecated(i));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

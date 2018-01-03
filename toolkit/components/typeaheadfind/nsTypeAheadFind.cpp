@@ -897,7 +897,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   origContent = startContent;
 
   if (startContent->IsElement()) {
-    nsIContent *childContent = startContent->GetChildAt(startOffset);
+    nsIContent *childContent = startContent->GetChildAt_Deprecated(startOffset);
     if (childContent) {
       startContent = childContent;
     }

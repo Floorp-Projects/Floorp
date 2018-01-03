@@ -35,7 +35,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLPictureElement)
 void
 HTMLPictureElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 {
-  nsCOMPtr<nsIContent> child = GetChildAt(aIndex);
+  nsCOMPtr<nsIContent> child = GetChildAt_Deprecated(aIndex);
 
   if (child && child->IsHTMLElement(nsGkAtoms::img)) {
     HTMLImageElement* img = HTMLImageElement::FromContent(child);

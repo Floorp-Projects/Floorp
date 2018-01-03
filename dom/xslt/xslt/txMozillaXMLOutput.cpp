@@ -632,7 +632,7 @@ txMozillaXMLOutput::createTxWrapper()
     uint32_t rootLocation = 0;
 #endif
     for (i = 0, j = 0; i < childCount; ++i) {
-        nsCOMPtr<nsIContent> childContent = mDocument->GetChildAt(j);
+        nsCOMPtr<nsIContent> childContent = mDocument->GetChildAt_Deprecated(j);
 
 #ifdef DEBUG
         if (childContent->IsElement()) {

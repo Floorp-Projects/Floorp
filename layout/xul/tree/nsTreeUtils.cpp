@@ -96,7 +96,7 @@ nsTreeUtils::UpdateSortIndicators(Element* aColumn, const nsAString& aDirection)
                                         kNameSpaceID_XUL)) {
     uint32_t i, numChildren = parentContent->GetChildCount();
     for (i = 0; i < numChildren; ++i) {
-      nsCOMPtr<nsIContent> childContent = parentContent->GetChildAt(i);
+      nsCOMPtr<nsIContent> childContent = parentContent->GetChildAt_Deprecated(i);
 
       if (childContent &&
           childContent != aColumn &&
@@ -123,7 +123,7 @@ nsTreeUtils::GetColumnIndex(Element* aColumn, int32_t* aResult)
     uint32_t i, numChildren = parentContent->GetChildCount();
     int32_t colIndex = 0;
     for (i = 0; i < numChildren; ++i) {
-      nsIContent* childContent = parentContent->GetChildAt(i);
+      nsIContent* childContent = parentContent->GetChildAt_Deprecated(i);
       if (childContent &&
           childContent->NodeInfo()->Equals(nsGkAtoms::treecol,
                                            kNameSpaceID_XUL)) {

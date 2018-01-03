@@ -947,13 +947,13 @@ nsTextControlFrame::SelectAllOrCollapseToEndOfText(bool aSelect)
   if (numChildren > 0) {
     // We never want to place the selection after the last
     // br under the root node!
-    nsIContent *child = rootContent->GetChildAt(numChildren - 1);
+    nsIContent *child = rootContent->GetChildAt_Deprecated(numChildren - 1);
     if (child) {
       if (child->IsHTMLElement(nsGkAtoms::br))
         --numChildren;
     }
     if (!aSelect && numChildren) {
-      child = rootContent->GetChildAt(numChildren - 1);
+      child = rootContent->GetChildAt_Deprecated(numChildren - 1);
       if (child && child->IsNodeOfType(nsINode::eTEXT)) {
         rootNode = do_QueryInterface(child);
         const nsTextFragment* fragment = child->GetText();
@@ -1270,7 +1270,7 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   NS_PRECONDITION(!mEditorHasBeenInitialized,
                   "Do not call this after editor has been initialized");
 
-  nsIContent* textContent = mRootNode->GetChildAt(0);
+  nsIContent* textContent = mRootNode->GetChildAt_Deprecated(0);
   if (!textContent) {
     // Set up a textnode with our value
     RefPtr<nsTextNode> textNode =
