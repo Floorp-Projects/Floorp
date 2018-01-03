@@ -577,7 +577,7 @@ BackgroundHangMonitor::DisableOnBeta() {
   nsAutoCString clientID;
   nsresult rv =
     Preferences::GetCString("toolkit.telemetry.cachedClientID", clientID);
-  bool telemetryEnabled = Preferences::GetBool("toolkit.telemetry.enabled");
+  bool telemetryEnabled = Telemetry::CanRecordPrereleaseData();
 
   if (!telemetryEnabled || NS_FAILED(rv) ||
       BackgroundHangMonitor::ShouldDisableOnBeta(clientID)) {
