@@ -979,28 +979,33 @@ class StopRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild>
  public:
   StopRequestEvent(HttpChannelChild* child,
                    const nsresult& channelStatus,
-                   const ResourceTimingStruct& timing)
+                   const ResourceTimingStruct& timing,
+                   const nsHttpHeaderArray& aResponseTrailers)
   : NeckoTargetChannelEvent<HttpChannelChild>(child)
   , mChannelStatus(channelStatus)
-  , mTiming(timing) {}
+  , mTiming(timing)
+  , mResponseTrailers(aResponseTrailers) {}
 
-  void Run() { mChild->OnStopRequest(mChannelStatus, mTiming); }
+  void Run() { mChild->OnStopRequest(mChannelStatus, mTiming, mResponseTrailers); }
 
  private:
   nsresult mChannelStatus;
   ResourceTimingStruct mTiming;
+  nsHttpHeaderArray mResponseTrailers;
 };
 
 void
 HttpChannelChild::ProcessOnStopRequest(const nsresult& aChannelStatus,
-                                       const ResourceTimingStruct& aTiming)
+                                       const ResourceTimingStruct& aTiming,
+                                       const nsHttpHeaderArray& aResponseTrailers)
 {
   LOG(("HttpChannelChild::ProcessOnStopRequest [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
   MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
     "Should not be receiving any more callbacks from parent!");
 
-  mEventQ->RunOrEnqueue(new StopRequestEvent(this, aChannelStatus, aTiming),
+  mEventQ->RunOrEnqueue(new StopRequestEvent(this, aChannelStatus,
+                                             aTiming, aResponseTrailers),
                         mDivertingToParent);
 }
 
@@ -1036,7 +1041,8 @@ HttpChannelChild::MaybeDivertOnStop(const nsresult& aChannelStatus)
 
 void
 HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
-                                const ResourceTimingStruct& timing)
+                                const ResourceTimingStruct& timing,
+                                const nsHttpHeaderArray& aResponseTrailers)
 {
   LOG(("HttpChannelChild::OnStopRequest [this=%p status=%" PRIx32 "]\n",
        this, static_cast<uint32_t>(channelStatus)));
@@ -1088,6 +1094,8 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
 
   mCacheReadStart = timing.cacheReadStart;
   mCacheReadEnd = timing.cacheReadEnd;
+
+  mResponseTrailers = new nsHttpHeaderArray(aResponseTrailers);
 
   DoPreOnStopRequest(channelStatus);
 
