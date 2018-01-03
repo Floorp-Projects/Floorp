@@ -333,46 +333,23 @@ SVGAElement::IntrinsicState() const
 }
 
 nsresult
-SVGAElement::SetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                     nsAtom* aPrefix, const nsAString& aValue,
-                     nsIPrincipal* aSubjectPrincipal,
-                     bool aNotify)
+SVGAElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                          const nsAttrValue* aValue,
+                          const nsAttrValue* aOldValue,
+                          nsIPrincipal* aMaybeScriptedPrincipal,
+                          bool aNotify)
 {
-  nsresult rv = SVGAElementBase::SetAttr(aNameSpaceID, aName, aPrefix,
-                                         aValue, aSubjectPrincipal, aNotify);
-
-  // The ordering of the parent class's SetAttr call and Link::ResetLinkState
-  // is important here!  The attribute is not set until SetAttr returns, and
-  // we will need the updated attribute value because notifying the document
-  // that content states have changed will call IntrinsicState, which will try
-  // to get updated information about the visitedness from Link.
   if (aName == nsGkAtoms::href &&
       (aNameSpaceID == kNameSpaceID_XLink ||
        aNameSpaceID == kNameSpaceID_None)) {
-    Link::ResetLinkState(!!aNotify, true);
+    // We can't assume that null aValue means we no longer have an href, because
+    // we could be unsetting xlink:href but still have a null-namespace href, or
+    // vice versa.  But we can fast-path the case when we _do_ have a new value.
+    Link::ResetLinkState(aNotify, aValue || Link::ElementHasHref());
   }
 
-  return rv;
-}
-
-nsresult
-SVGAElement::UnsetAttr(int32_t aNameSpaceID, nsAtom* aAttr,
-                       bool aNotify)
-{
-  nsresult rv = nsSVGElement::UnsetAttr(aNameSpaceID, aAttr, aNotify);
-
-  // The ordering of the parent class's UnsetAttr call and Link::ResetLinkState
-  // is important here!  The attribute is not unset until UnsetAttr returns, and
-  // we will need the updated attribute value because notifying the document
-  // that content states have changed will call IntrinsicState, which will try
-  // to get updated information about the visitedness from Link.
-  if (aAttr == nsGkAtoms::href &&
-      (aNameSpaceID == kNameSpaceID_XLink ||
-       aNameSpaceID == kNameSpaceID_None)) {
-    Link::ResetLinkState(!!aNotify, Link::ElementHasHref());
-  }
-
-  return rv;
+  return SVGAElementBase::AfterSetAttr(aNameSpaceID, aName, aValue, aOldValue,
+                                       aMaybeScriptedPrincipal, aNotify);
 }
 
 //----------------------------------------------------------------------
