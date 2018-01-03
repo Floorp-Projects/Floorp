@@ -997,7 +997,9 @@ nsIFrame::RemoveDisplayItemDataForDeletion()
 void
 nsIFrame::MarkNeedsDisplayItemRebuild()
 {
-  if (!nsLayoutUtils::AreRetainedDisplayListsEnabled() || IsFrameModified()) {
+  if (!nsLayoutUtils::AreRetainedDisplayListsEnabled() ||
+      IsFrameModified() ||
+      HasAnyStateBits(NS_FRAME_IN_POPUP)) {
     // Skip frames that are already marked modified.
     return;
   }
