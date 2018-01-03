@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1521401514659000);
+const PRTime gPreloadListExpirationTime = INT64_C(1525737600000000);
 %%
 0-1.party, 1
 0.me.uk, 1
