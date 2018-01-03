@@ -25,6 +25,7 @@ job-defaults:
    worker:
       properties:
          platforms: "linux,linux64,macosx64,win32,win64"
+         updater_platform: "linux64"
    notifications:
       completed:
          subject: "COMPLETED: [{task[shipping-product]} {release_config[version]} build{release_config[build_number]}/{config[params][project]}] {task_def[metadata][name]} task"
