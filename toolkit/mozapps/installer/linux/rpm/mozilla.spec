@@ -31,15 +31,6 @@ BuildRequires:  desktop-file-utils
 #files were generated.  Like the tests subpackage, we
 #probably only need to conditionaly define the %files
 #section.
-%if %{?createdevel:1}
-%package devel
-Summary:    %{pr_name} SDK
-Group:      Development/Libraries
-requires:   %{name} = %{version}-%{release}
-%description devel
-%{pr_name} SDK libraries, headers and interface descriptions
-%endif
-
 %if %{?createtests:1}
 %package tests
 Summary:    %{pr_name} tests
@@ -113,15 +104,6 @@ fi
 %{_datadir}/applications/
 %{_datadir}/icons/
 %doc
-
-
-%if %{?createdevel:1}
-%files devel
-%defattr(-,root,root,-)
-%{_includedir}
-%{_sdkdir}
-%{_idldir}
-%endif
 
 
 %if %{?createtests:1}

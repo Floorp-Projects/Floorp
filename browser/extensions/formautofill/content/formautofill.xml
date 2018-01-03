@@ -347,7 +347,7 @@
           this._adjustAutofillItemLayout();
           this.setAttribute("formautofillattached", "true");
 
-          let clearFormBtnLabel = this._stringBundle.GetStringFromName("clearFormBtnLabel");
+          let clearFormBtnLabel = this._stringBundle.GetStringFromName("clearFormBtnLabel2");
           this._clearBtn.textContent = clearFormBtnLabel;
         ]]>
         </body>
