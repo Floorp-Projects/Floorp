@@ -7,7 +7,10 @@ from __future__ import absolute_import
 
 import time
 
-from mozterm import Terminal
+try:
+    import blessings
+except ImportError:
+    blessings = None
 
 from . import base
 from .process import strstatus
@@ -20,11 +23,25 @@ def format_seconds(total):
     return '%2d:%05.2f' % (minutes, seconds)
 
 
+class NullTerminal(object):
+
+    def __getattr__(self, name):
+        return self._id
+
+    def _id(self, value):
+        return value
+
+
 class MachFormatter(base.BaseFormatter):
 
     def __init__(self, start_time=None, write_interval=False, write_times=True,
                  terminal=None, disable_colors=False, summary_on_shutdown=False, **kwargs):
         super(MachFormatter, self).__init__(**kwargs)
+
+        if disable_colors:
+            terminal = None
+        elif terminal is None and blessings is not None:
+            terminal = blessings.Terminal()
 
         if start_time is None:
             start_time = time.time()
@@ -35,7 +52,7 @@ class MachFormatter(base.BaseFormatter):
         self.status_buffer = {}
         self.has_unexpected = {}
         self.last_time = None
-        self.term = Terminal(disable_styling=disable_colors)
+        self.terminal = terminal
         self.verbose = False
         self._known_pids = set()
 
@@ -49,8 +66,38 @@ class MachFormatter(base.BaseFormatter):
         if s is None:
             return
 
-        time = self.term.dim_blue(format_seconds(self._time(data)))
-        return "%s %s\n" % (time, s)
+        time = format_seconds(self._time(data))
+        action = data["action"].upper()
+        thread = data["thread"]
+
+        # Not using the NullTerminal here is a small optimisation to cut the number of
+        # function calls
+        if self.terminal is not None:
+            test = self._get_test_id(data)
+
+            time = self.terminal.blue(time)
+
+            color = None
+
+            if data["action"] == "test_end":
+                if "expected" not in data and not self.has_unexpected[test]:
+                    color = self.terminal.green
+                else:
+                    color = self.terminal.red
+            elif data["action"] in ("suite_start", "suite_end",
+                                    "test_start", "test_status"):
+                color = self.terminal.yellow
+            elif data["action"] == "crash":
+                color = self.terminal.red
+            elif data["action"] == "assertion_count":
+                if (data["count"] > data["max_expected"] or
+                    data["count"] < data["min_expected"]):
+                    color = self.terminal.red
+
+            if color is not None:
+                action = color(action)
+
+        return "%s %s: %s %s\n" % (time, action, thread, s)
 
     def _get_test_id(self, data):
         test_id = data.get("test")
@@ -69,31 +116,31 @@ class MachFormatter(base.BaseFormatter):
 
     def suite_start(self, data):
         num_tests = reduce(lambda x, y: x + len(y), data['tests'].itervalues(), 0)
-        action = self.term.yellow(data['action'].upper())
-        name = ""
-        if 'name' in data:
-            name = " %s -" % (data['name'],)
-        return "%s:%s running %i tests" % (action, name, num_tests)
+        return "%i" % num_tests
 
     def suite_end(self, data):
-        action = self.term.yellow(data['action'].upper())
-        rv = [action]
         if not self.summary_on_shutdown:
-            rv.append(self._format_suite_summary(self.summary.current_suite, self.summary.current))
-        return "\n".join(rv)
+            return self._format_suite_summary(self.summary.current_suite, self.summary.current)
 
     def _format_expected(self, status, expected):
-        color = self.term.red
+        term = self.terminal if self.terminal is not None else NullTerminal()
+        if status == "ERROR":
+            color = term.red
+        else:
+            color = term.yellow
+
         if expected in ("PASS", "OK"):
             return color(status)
 
         return color("%s expected %s" % (status, expected))
 
     def _format_suite_summary(self, suite, summary):
+        term = self.terminal if self.terminal is not None else NullTerminal()
+
         count = summary['counts']
         logs = summary['unexpected_logs']
 
-        rv = ["", self.term.yellow(suite), self.term.yellow("~" * len(suite))]
+        rv = ["", suite, "~" * len(suite)]
 
         # Format check counts
         checks = self.summary.aggregate('count', count)
@@ -128,7 +175,7 @@ class MachFormatter(base.BaseFormatter):
 
         # Format status
         if not any(count[key]["unexpected"] for key in ('test', 'subtest', 'assert')):
-            rv.append(self.term.green("OK"))
+            rv.append(term.green("OK"))
         else:
             heading = "Unexpected Logs"
             rv.extend(["", heading, "-" * len(heading)])
@@ -148,13 +195,12 @@ class MachFormatter(base.BaseFormatter):
                     data = results[0]
                     assert "subtest" not in data
                     rv.append("  %s %s" % (self._format_expected(
-                                           data["status"], data["expected"]), test))
+                                         data["status"], data["expected"]), test))
 
         return "\n".join(rv)
 
     def test_start(self, data):
-        action = self.term.yellow(data['action'].upper())
-        return "%s: %s" % (action, self._get_test_id(data))
+        return "%s" % (self._get_test_id(data),)
 
     def test_end(self, data):
         subtests = self._get_subtest_data(data)
@@ -198,13 +244,7 @@ class MachFormatter(base.BaseFormatter):
                     rv += "%s\n" % (
                         "\n".join([name, "-" * len(name), expected_str, data.get("message", "")]))
                 rv = rv[:-1]
-
-        if "expected" not in data and not bool(subtests['unexpected']):
-            color = self.term.green
-        else:
-            color = self.term.red
-        action = color(data['action'].upper())
-        return "%s: %s" % (action, rv)
+        return rv
 
     def valgrind_error(self, data):
         rv = " " + data['primary'] + "\n"
@@ -232,14 +272,13 @@ class MachFormatter(base.BaseFormatter):
         status, subtest = data["status"], data["subtest"]
         unexpected = "expected" in data
         if self.verbose:
-            status = (self.term.red if unexpected else self.term.green)(status)
+            if self.terminal is not None:
+                status = (self.terminal.red if unexpected else self.terminal.green)(status)
             rv = " ".join([subtest, status, message])
 
         if unexpected:
             self.status_buffer[test]["unexpected"] += 1
-        if rv:
-            action = self.term.yellow(data['action'].upper())
-            return "%s: %s" % (action, rv)
+        return rv
 
     def assertion_count(self, data):
         if data["min_expected"] <= data["count"] <= data["max_expected"]:
@@ -251,9 +290,7 @@ class MachFormatter(base.BaseFormatter):
         else:
             expected = "%i" % data["min_expected"]
 
-        action = self.term.red("ASSERT")
-        return "%s: Assertion count %i, expected %i assertions\n" % (
-                action, data["count"], expected)
+        return "Assertion count %i, expected %s assertions\n" % (data["count"], expected)
 
     def process_output(self, data):
         rv = []
@@ -261,13 +298,12 @@ class MachFormatter(base.BaseFormatter):
         pid = data['process']
         if pid.isdigit():
             pid = 'pid:%s' % pid
-        pid = self.term.dim_cyan(pid)
 
         if "command" in data and data["process"] not in self._known_pids:
             self._known_pids.add(data["process"])
-            rv.append('%s Full command: %s' % (pid, data["command"]))
+            rv.append('(%s) Full command: %s' % (pid, data["command"]))
 
-        rv.append('%s %s' % (pid, data["data"]))
+        rv.append('(%s) "%s"' % (pid, data["data"]))
         return "\n".join(rv)
 
     def crash(self, data):
@@ -301,8 +337,7 @@ class MachFormatter(base.BaseFormatter):
         if not rv[-1] == "\n":
             rv += "\n"
 
-        action = self.term.red(data['action'].upper())
-        return "%s: %s" % (action, rv)
+        return rv
 
     def process_start(self, data):
         rv = "Started process `%s`" % data['process']
@@ -317,12 +352,13 @@ class MachFormatter(base.BaseFormatter):
     def log(self, data):
         level = data.get("level").upper()
 
-        if level in ("CRITICAL", "ERROR"):
-            level = self.term.red(level)
-        elif level == "WARNING":
-            level = self.term.yellow(level)
-        elif level == "INFO":
-            level = self.term.blue(level)
+        if self.terminal is not None:
+            if level in ("CRITICAL", "ERROR"):
+                level = self.terminal.red(level)
+            elif level == "WARNING":
+                level = self.terminal.yellow(level)
+            elif level == "INFO":
+                level = self.terminal.blue(level)
 
         if data.get('component'):
             rv = " ".join([data["component"], level, data["message"]])
@@ -335,13 +371,14 @@ class MachFormatter(base.BaseFormatter):
         return rv
 
     def lint(self, data):
+        term = self.terminal if self.terminal is not None else NullTerminal()
         fmt = "{path}  {c1}{lineno}{column}  {c2}{level}{normal}  {message}" \
               "  {c1}{rule}({linter}){normal}"
         message = fmt.format(
             path=data["path"],
-            normal=self.term.normal,
-            c1=self.term.grey,
-            c2=self.term.red if data["level"] == 'error' else self.term.yellow,
+            normal=term.normal,
+            c1=term.grey,
+            c2=term.red if data["level"] == 'error' else term.yellow,
             lineno=str(data["lineno"]),
             column=(":" + str(data["column"])) if data.get("column") else "",
             level=data["level"],
@@ -357,7 +394,7 @@ class MachFormatter(base.BaseFormatter):
             return
 
         heading = "Overall Summary"
-        rv = ["", self.term.bold_yellow(heading), self.term.bold_yellow("=" * len(heading))]
+        rv = ["", heading, "=" * len(heading)]
         for suite, summary in self.summary:
             rv.append(self._format_suite_summary(suite, summary))
         return "\n".join(rv)
