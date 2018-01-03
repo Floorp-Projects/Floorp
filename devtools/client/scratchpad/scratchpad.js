@@ -1732,6 +1732,9 @@ var Scratchpad = {
       this.editor.focus();
       this.editor.setCursor({ line: lines.length, ch: lines.pop().length });
 
+      // Add the commands controller for the source-editor.
+      this.editor.insertCommandsController();
+
       if (state)
         this.dirty = !state.saved;
 
