@@ -47,6 +47,9 @@ nsFileStreamBase::nsFileStreamBase()
 
 nsFileStreamBase::~nsFileStreamBase()
 {
+    // We don't want to try to rewrind the stream when shutting down.
+    mBehaviorFlags &= ~nsIFileInputStream::REOPEN_ON_REWIND;
+
     Close();
 }
 
