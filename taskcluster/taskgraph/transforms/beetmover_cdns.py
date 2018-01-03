@@ -51,10 +51,9 @@ beetmover_cdns_description_schema = Schema({
 def validate(config, jobs):
     for job in jobs:
         label = job['name']
-        validate_schema(
+        yield validate_schema(
             beetmover_cdns_description_schema, job,
             "In cdns-signing ({!r} kind) task for {!r}:".format(config.kind, label))
-        yield job
 
 
 @transforms.add
