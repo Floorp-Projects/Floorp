@@ -116,8 +116,7 @@ this.PlacesRemoteTabsAutocompleteProvider = {
   // a promise that resolves with an array of matching remote tabs.
   getMatches(searchString) {
     // If Sync isn't configured we bail early.
-    if (Weave === null ||
-        !Services.prefs.prefHasUserValue("services.sync.username")) {
+    if (!weaveXPCService.ready || !weaveXPCService.enabled) {
       return Promise.resolve([]);
     }
 
