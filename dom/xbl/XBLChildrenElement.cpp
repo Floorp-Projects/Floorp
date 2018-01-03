@@ -123,7 +123,7 @@ nsAnonymousContentList::Item(uint32_t aIndex)
       }
       else {
         if (remIndex < point->GetChildCount()) {
-          return point->GetChildAt(remIndex);
+          return point->GetChildAt_Deprecated(remIndex);
         }
         remIndex -= point->GetChildCount();
       }

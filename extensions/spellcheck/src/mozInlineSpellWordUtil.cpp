@@ -133,7 +133,7 @@ FindNextTextNode(nsINode* aNode, int32_t aOffset, nsINode* aRoot)
 
   nsINode* checkNode;
   // Need to start at the aOffset'th child
-  nsIContent* child = aNode->GetChildAt(aOffset);
+  nsIContent* child = aNode->GetChildAt_Deprecated(aOffset);
 
   if (child) {
     checkNode = child;

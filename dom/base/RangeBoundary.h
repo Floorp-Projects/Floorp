@@ -77,7 +77,7 @@ public:
       if (aOffset == static_cast<int32_t>(aContainer->GetChildCount())) {
         mRef = aContainer->GetLastChild();
       } else if (aOffset != 0) {
-        mRef = mParent->GetChildAt(aOffset - 1);
+        mRef = mParent->GetChildAt_Deprecated(aOffset - 1);
       }
 
       NS_WARNING_ASSERTION(mRef || aOffset == 0,
@@ -125,7 +125,7 @@ public:
       MOZ_ASSERT(Offset() == 0, "invalid RangeBoundary");
       return mParent->GetFirstChild();
     }
-    MOZ_ASSERT(mParent->GetChildAt(Offset()) == mRef->GetNextSibling());
+    MOZ_ASSERT(mParent->GetChildAt_Deprecated(Offset()) == mRef->GetNextSibling());
     return mRef->GetNextSibling();
   }
 
@@ -208,7 +208,7 @@ public:
       } else if (aOffset == 0) {
         mRef = nullptr;
       } else {
-        mRef = mParent->GetChildAt(aOffset - 1);
+        mRef = mParent->GetChildAt_Deprecated(aOffset - 1);
         MOZ_ASSERT(mRef);
       }
 

@@ -2170,12 +2170,11 @@ function synthesizeDragOver(aSrcElement, aDestElement, aDragData, aDropEffect, a
 
   const obs = _EU_Cc["@mozilla.org/observer-service;1"].getService(_EU_Ci.nsIObserverService);
   const ds = _EU_Cc["@mozilla.org/widget/dragservice;1"].getService(_EU_Ci.nsIDragService);
+  var sess = ds.getCurrentSession();
 
   // This method runs before other callbacks, and acts as a way to inject the
   // initial drag data into the DataTransfer.
   function fillDrag(event) {
-    ds.startDragSession();
-
     if (aDragData) {
       for (var i = 0; i < aDragData.length; i++) {
         var item = aDragData[i];
@@ -2190,15 +2189,13 @@ function synthesizeDragOver(aSrcElement, aDestElement, aDragData, aDropEffect, a
 
   function trapDrag(subject, topic) {
     if (topic == "on-datatransfer-available") {
-      var sess = ds.getCurrentSession();
       sess.dataTransfer = _EU_maybeUnwrap(_EU_maybeWrap(subject).mozCloneForEvent("drop"));
       sess.dataTransfer.dropEffect = subject.dropEffect;
-      obs.removeObserver(trapDrag, "on-datatransfer-available");
     }
   }
 
   // need to use real mouse action
-  aWindow.addEventListener("dragstart", fillDrag, { capture: true, once: true });
+  aWindow.addEventListener("dragstart", fillDrag, true);
   obs.addObserver(trapDrag, "on-datatransfer-available");
   synthesizeMouseAtCenter(aSrcElement, { type: "mousedown" }, aWindow);
 
@@ -2207,8 +2204,10 @@ function synthesizeDragOver(aSrcElement, aDestElement, aDragData, aDropEffect, a
   var y = rect.height / 2;
   synthesizeMouse(aSrcElement, x, y, { type: "mousemove" }, aWindow);
   synthesizeMouse(aSrcElement, x+10, y+10, { type: "mousemove" }, aWindow);
+  aWindow.removeEventListener("dragstart", fillDrag, true);
+  obs.removeObserver(trapDrag, "on-datatransfer-available");
 
-  var dataTransfer = ds.getCurrentSession().dataTransfer;
+  var dataTransfer = sess.dataTransfer;
 
   // The EventStateManager will fire our dragenter event if it needs to.
   var event = createDragEventObject("dragover", aDestElement, aDestWindow,
@@ -2284,6 +2283,11 @@ function synthesizeDrop(aSrcElement, aDestElement, aDragData, aDropEffect, aWind
     aDestWindow = aWindow;
   }
 
+  var ds = _EU_Cc["@mozilla.org/widget/dragservice;1"]
+           .getService(_EU_Ci.nsIDragService);
+
+  ds.startDragSession();
+
   try {
     var [result, dataTransfer] = synthesizeDragOver(aSrcElement, aDestElement,
                                                     aDragData, aDropEffect,
@@ -2292,7 +2296,6 @@ function synthesizeDrop(aSrcElement, aDestElement, aDragData, aDropEffect, aWind
     return synthesizeDropAfterDragOver(result, dataTransfer, aDestElement,
                                        aDestWindow, aDragEvent);
   } finally {
-    var ds = _EU_Cc["@mozilla.org/widget/dragservice;1"].getService(_EU_Ci.nsIDragService);
     ds.endDragSession(true, _parseModifiers(aDragEvent));
   }
 }

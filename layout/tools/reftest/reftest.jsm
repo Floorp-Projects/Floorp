@@ -367,6 +367,8 @@ function StartTests()
 
     g.runUntilFailure = prefs.getBoolPref("reftest.runUntilFailure", false);
 
+    g.verify = prefs.getBoolPref("reftest.verify", false);
+
     g.cleanupPendingCrashes = prefs.getBoolPref("reftest.cleanupPendingCrashes", false);
 
     // Check if there are any crash dump files from the startup procedure, before
@@ -479,7 +481,7 @@ function StartTests()
 
         g.totalTests = g.urls.length;
 
-        if (!g.totalTests)
+        if (!g.totalTests && !g.verify)
             throw "No tests to run";
 
         g.uriCanvases = {};
