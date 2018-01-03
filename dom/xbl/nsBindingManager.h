@@ -171,9 +171,6 @@ public:
   // Called when the document is going away
   void DropDocumentReference();
 
-  nsIContent* FindNestedInsertionPoint(nsIContent* aContainer,
-                                       nsIContent* aChild);
-
   nsIContent* FindNestedSingleInsertionPoint(nsIContent* aContainer, bool* aMulti);
 
   bool AnyBindingHasDocumentStateDependency(mozilla::EventStates aStateMask);
