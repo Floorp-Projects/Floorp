@@ -659,7 +659,7 @@ nsGenericDOMDataNode::InsertChildAt(nsIContent* aKid, uint32_t aIndex,
 }
 
 void
-nsGenericDOMDataNode::RemoveChildAt(uint32_t aIndex, bool aNotify)
+nsGenericDOMDataNode::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
 {
 }
 

@@ -1304,7 +1304,7 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   }
 
   if (aBeforeEditorInit && value.IsEmpty()) {
-    mRootNode->RemoveChildAt(0, true);
+    mRootNode->RemoveChildAt_Deprecated(0, true);
     return NS_OK;
   }
 

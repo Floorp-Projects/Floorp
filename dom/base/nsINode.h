@@ -763,6 +763,9 @@ public:
   }
 
   /**
+   * NOTE: this function is going to be removed soon (hopefully!) Don't use it
+   * in new code.
+   *
    * Remove a child from this node.  This method handles calling UnbindFromTree
    * on the child appropriately.
    *
@@ -773,7 +776,7 @@ public:
    *
    * Note: If there is no child at aIndex, this method will simply do nothing.
    */
-  virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) = 0;
+  virtual void RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify) = 0;
 
   /**
    * Get a property associated with this node.

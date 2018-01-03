@@ -245,7 +245,7 @@ nsHtml5TreeOperation::Detach(nsIContent* aNode, nsHtml5DocumentBuilder* aBuilder
         aBuilder->GetDocument());
     int32_t pos = parent->IndexOf(aNode);
     NS_ASSERTION((pos >= 0), "Element not found as child of its parent");
-    parent->RemoveChildAt(pos, true);
+    parent->RemoveChildAt_Deprecated(pos, true);
   }
 }
 
@@ -262,7 +262,7 @@ nsHtml5TreeOperation::AppendChildrenToNewParent(nsIContent* aNode,
   bool didAppend = false;
   while (aNode->HasChildren()) {
     nsCOMPtr<nsIContent> child = aNode->GetFirstChild();
-    aNode->RemoveChildAt(0, true);
+    aNode->RemoveChildAt_Deprecated(0, true);
     nsresult rv = aParent->AppendChildTo(child, false);
     NS_ENSURE_SUCCESS(rv, rv);
     didAppend = true;
