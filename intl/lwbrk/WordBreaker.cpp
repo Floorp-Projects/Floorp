@@ -53,7 +53,7 @@ WordBreaker::GetClass(char16_t c)
 	  if(IS_ASCII(c))  {
 		  if(ASCII_IS_SPACE(c)) {
 			  return kWbClassSpace;
-		  } else if(ASCII_IS_ALPHA(c) || ASCII_IS_DIGIT(c)) {
+		  } else if(ASCII_IS_ALPHA(c) || ASCII_IS_DIGIT(c) || c == '_') {
 			  return kWbClassAlphaLetter;
 		  } else {
 			  return kWbClassPunct;
