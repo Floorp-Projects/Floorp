@@ -104,6 +104,12 @@
 !define MOZ_MAINTENANCE_SERVICE
 #endif
 
+!if "@AB_CD@" == "en-US"
+!define MOZ_OPTIONAL_EXTENSIONS
+!else if "@AB_CD@" == "zh-CN"
+!define MOZ_OPTIONAL_EXTENSIONS
+!endif
+
 # File details shared by both the installer and uninstaller
 VIProductVersion "1.0.0.0"
 VIAddVersionKey "ProductName"     "${BrandShortName}"
