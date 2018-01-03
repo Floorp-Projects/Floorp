@@ -24,17 +24,18 @@ For users
 .. toctree::
    :maxdepth: 1
 
+   `Marionette README`_
    Intro.md
    Protocol.md
 
-
 See also:
 
-* Documentation for `Marionette Python client`_., which is used
+* Documentation for `Marionette Python client`_, which is used
   in-tree to write many kinds of Marionette-based tests.
 * Documentation for `Firefox Puppeteer`_, which is used to in-tree
   to write Firefox UI tests.
 
+.. _Marionette README: https://searchfox.org/mozilla-central/source/testing/marionette/README.md
 .. _Marionette Python client: http://marionette-client.readthedocs.io
 .. _Firefox Puppeteer: http://firefox-puppeteer.readthedocs.io
 
@@ -45,11 +46,13 @@ For developers
 .. toctree::
    :maxdepth: 1
 
-   ../CONTRIBUTING.md
+   `Contributing to Marionette`_
    NewContributors.md
    Debugging.md
    PythonTests.md
    SeleniumAtoms.md
+
+.. _Contributing to Marionette: https://searchfox.org/mozilla-central/source/testing/marionette/CONTRIBUTING.md
 
 
 Bugs
