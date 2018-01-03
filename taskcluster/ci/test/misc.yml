@@ -57,6 +57,10 @@ test-verify:
     suite: test-verification
     treeherder-symbol: tc(TV)
     loopback-video: true
+    instance-size:
+        by-test-platform:
+            android.*: xlarge
+            default: default
     max-run-time: 5400
     allow-software-gl-layers: false
     run-on-projects:
