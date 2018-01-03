@@ -51,7 +51,7 @@ struct StyleCache final : public PropItem
   }
 
   StyleCache(nsAtom* aTag,
-             const nsAString& aAttr,
+             nsAtom* aAttr,
              const nsAString& aValue)
     : PropItem(aTag, aAttr, aValue)
     , mPresent(false)
@@ -60,7 +60,7 @@ struct StyleCache final : public PropItem
   }
 
   StyleCache(nsAtom* aTag,
-             const nsAString& aAttr)
+             nsAtom* aAttr)
     : PropItem(aTag, aAttr, EmptyString())
     , mPresent(false)
   {

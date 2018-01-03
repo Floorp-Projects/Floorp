@@ -206,7 +206,7 @@ nsStyleUpdatingCommand::GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
   bool anyOfSelectionHasProp = false;
   bool allOfSelectionHasProp = false;
 
-  nsresult rv = aHTMLEditor->GetInlineProperty(mTagName, EmptyString(),
+  nsresult rv = aHTMLEditor->GetInlineProperty(mTagName, nullptr,
                                                EmptyString(),
                                                &firstOfSelectionHasProp,
                                                &anyOfSelectionHasProp,
@@ -721,25 +721,23 @@ nsFontFaceStateCommand::SetState(mozilla::HTMLEditor* aHTMLEditor,
 
   if (newState.EqualsLiteral("tt")) {
     // The old "teletype" attribute
-    nsresult rv = aHTMLEditor->SetInlineProperty(nsGkAtoms::tt, EmptyString(),
+    nsresult rv = aHTMLEditor->SetInlineProperty(nsGkAtoms::tt, nullptr,
                                                  EmptyString());
     NS_ENSURE_SUCCESS(rv, rv);
     // Clear existing font face
-    return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::font,
-                                             NS_LITERAL_STRING("face"));
+    return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::font, nsGkAtoms::face);
   }
 
   // Remove any existing TT nodes
-  nsresult rv = aHTMLEditor->RemoveInlineProperty(nsGkAtoms::tt, EmptyString());
+  nsresult rv = aHTMLEditor->RemoveInlineProperty(nsGkAtoms::tt, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (newState.IsEmpty() || newState.EqualsLiteral("normal")) {
-    return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::font,
-                                             NS_LITERAL_STRING("face"));
+    return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::font, nsGkAtoms::face);
   }
 
-  return aHTMLEditor->SetInlineProperty(nsGkAtoms::font,
-                                        NS_LITERAL_STRING("face"), newState);
+  return aHTMLEditor->SetInlineProperty(nsGkAtoms::font, nsGkAtoms::face,
+                                        newState);
 }
 
 nsFontSizeStateCommand::nsFontSizeStateCommand()
@@ -759,7 +757,7 @@ nsFontSizeStateCommand::GetCurrentState(mozilla::HTMLEditor* aHTMLEditor,
   bool firstHas, anyHas, allHas;
   nsresult rv = aHTMLEditor->GetInlinePropertyWithAttrValue(
                                nsGkAtoms::font,
-                               NS_LITERAL_STRING("size"),
+                               nsGkAtoms::size,
                                EmptyString(),
                                &firstHas, &anyHas, &allHas,
                                outStateString);
@@ -796,18 +794,18 @@ nsFontSizeStateCommand::SetState(mozilla::HTMLEditor* aHTMLEditor,
       !newState.EqualsLiteral("normal") &&
       !newState.EqualsLiteral("medium")) {
     return aHTMLEditor->SetInlineProperty(nsGkAtoms::font,
-                                          NS_LITERAL_STRING("size"), newState);
+                                          nsGkAtoms::size, newState);
   }
 
   // remove any existing font size, big or small
   nsresult rv = aHTMLEditor->RemoveInlineProperty(nsGkAtoms::font,
-                                                  NS_LITERAL_STRING("size"));
+                                                  nsGkAtoms::size);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = aHTMLEditor->RemoveInlineProperty(nsGkAtoms::big, EmptyString());
+  rv = aHTMLEditor->RemoveInlineProperty(nsGkAtoms::big, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::small, EmptyString());
+  return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::small, nullptr);
 }
 
 nsFontColorStateCommand::nsFontColorStateCommand()
@@ -845,11 +843,11 @@ nsFontColorStateCommand::SetState(mozilla::HTMLEditor* aHTMLEditor,
 
   if (newState.IsEmpty() || newState.EqualsLiteral("normal")) {
     return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::font,
-                                             NS_LITERAL_STRING("color"));
+                                             nsGkAtoms::color);
   }
 
-  return aHTMLEditor->SetInlineProperty(nsGkAtoms::font,
-                                        NS_LITERAL_STRING("color"), newState);
+  return aHTMLEditor->SetInlineProperty(nsGkAtoms::font, nsGkAtoms::color,
+                                        newState);
 }
 
 nsHighlightColorStateCommand::nsHighlightColorStateCommand()
@@ -887,11 +885,11 @@ nsHighlightColorStateCommand::SetState(mozilla::HTMLEditor* aHTMLEditor,
 
   if (newState.IsEmpty() || newState.EqualsLiteral("normal")) {
     return aHTMLEditor->RemoveInlineProperty(nsGkAtoms::font,
-                                             NS_LITERAL_STRING("bgcolor"));
+                                             nsGkAtoms::bgcolor);
   }
 
   return aHTMLEditor->SetInlineProperty(nsGkAtoms::font,
-                                        NS_LITERAL_STRING("bgcolor"),
+                                        nsGkAtoms::bgcolor,
                                         newState);
 }
 
@@ -1599,7 +1597,7 @@ RemoveOneProperty(mozilla::HTMLEditor* aHTMLEditor,
   RefPtr<nsAtom> styleAtom = NS_Atomize(aProp);
   NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
 
-  return aHTMLEditor->RemoveInlineProperty(styleAtom, EmptyString());
+  return aHTMLEditor->RemoveInlineProperty(styleAtom, nullptr);
 }
 
 
@@ -1630,6 +1628,5 @@ SetTextProperty(mozilla::HTMLEditor* aHTMLEditor,
   RefPtr<nsAtom> styleAtom = NS_Atomize(aProp);
   NS_ENSURE_TRUE(styleAtom, NS_ERROR_OUT_OF_MEMORY);
 
-  return aHTMLEditor->SetInlineProperty(styleAtom,
-                                        EmptyString(), EmptyString());
+  return aHTMLEditor->SetInlineProperty(styleAtom, nullptr, EmptyString());
 }
