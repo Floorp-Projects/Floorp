@@ -10,16 +10,16 @@ import org.mozilla.gecko.sync.Utils;
 
 public abstract class TokensAndKeysState extends State {
   protected final byte[] sessionToken;
-  protected final byte[] kA;
-  protected final byte[] kB;
+  /* package-private */ final byte[] kSync;
+  /* package-private */ final String kXCS;
   protected final BrowserIDKeyPair keyPair;
 
-  public TokensAndKeysState(StateLabel stateLabel, String email, String uid, byte[] sessionToken, byte[] kA, byte[] kB, BrowserIDKeyPair keyPair) {
+  /* package-private */ TokensAndKeysState(StateLabel stateLabel, String email, String uid, byte[] sessionToken, byte[] kSync, String kXCS, BrowserIDKeyPair keyPair) {
     super(stateLabel, email, uid, true);
-    Utils.throwIfNull(sessionToken, kA, kB, keyPair);
+    Utils.throwIfNull(sessionToken, kSync, kXCS, keyPair);
     this.sessionToken = sessionToken;
-    this.kA = kA;
-    this.kB = kB;
+    this.kSync = kSync;
+    this.kXCS = kXCS;
     this.keyPair = keyPair;
   }
 
@@ -28,8 +28,8 @@ public abstract class TokensAndKeysState extends State {
     ExtendedJSONObject o = super.toJSONObject();
     // Fields are non-null by constructor.
     o.put("sessionToken", Utils.byte2Hex(sessionToken));
-    o.put("kA", Utils.byte2Hex(kA));
-    o.put("kB", Utils.byte2Hex(kB));
+    o.put("kSync", Utils.byte2Hex(kSync));
+    o.put("kXCS", kXCS);
     o.put("keyPair", keyPair.toJSONObject());
     return o;
   }
