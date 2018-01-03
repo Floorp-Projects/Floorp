@@ -87,6 +87,9 @@ $(CONFIG_DIR)/setup.exe::
 	  --preprocess-single-file $(topsrcdir) \
 	  $(PPL_LOCALE_ARGS) $(CONFIG_DIR) \
 	  nsisstrings.properties nsisstrings.nlf
+	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
+	  --convert-utf8-utf16le \
+	  $(srcdir)/nsis/extensionsLocale.nsh $(CONFIG_DIR)/extensionsLocale.nsh
 
 GARBARGE_DIRS += instgen
 
