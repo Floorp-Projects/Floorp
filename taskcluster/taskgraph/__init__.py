@@ -16,5 +16,5 @@ MAX_DEPENDENCIES = 99
 
 # Enable fast task generation for local debugging
 # This is normally switched on via the --fast/-F flag to `mach taskgraph`
-# Currently this skips toolchain task optimizations
+# Currently this skips toolchain task optimizations and schema validation
 fast = False
