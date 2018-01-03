@@ -22,6 +22,8 @@ class ArchlinuxBootstrapper(StyloInstall, BaseBootstrapper):
         'base-devel',
         'ccache',
         'mercurial',
+        'nodejs',
+        'npm',
         'python2',
         'python2-setuptools',
         'unzip',
