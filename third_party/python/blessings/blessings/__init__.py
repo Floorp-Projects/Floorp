@@ -1,14 +1,18 @@
-from collections import defaultdict
+"""A thin, practical wrapper around terminal coloring, styling, and
+positioning"""
+
+from contextlib import contextmanager
 import curses
-from curses import tigetstr, tigetnum, setupterm, tparm
+from curses import setupterm, tigetnum, tigetstr, tparm
 from fcntl import ioctl
+
 try:
     from io import UnsupportedOperation as IOUnsupportedOperation
 except ImportError:
     class IOUnsupportedOperation(Exception):
-        """A dummy exception to take the place of Python 3's ``io.UnsupportedOperation`` in Python 2"""
-        pass
-import os
+        """A dummy exception to take the place of Python 3's
+        ``io.UnsupportedOperation`` in Python 2"""
+
 from os import isatty, environ
 from platform import python_version_tuple
 import struct
@@ -16,13 +20,14 @@ import sys
 from termios import TIOCGWINSZ
 
 
-if ('3', '0', '0') <= python_version_tuple() < ('3', '2', '2+'):  # Good till 3.2.10
+__all__ = ['Terminal']
+
+
+if ('3', '0', '0') <= python_version_tuple() < ('3', '2', '2+'):  # Good till
+                                                                  # 3.2.10
     # Python 3.x < 3.2.3 has a bug in which tparm() erroneously takes a string.
     raise ImportError('Blessings needs Python 3.2.3 or greater for Python 3 '
                       'support due to http://bugs.python.org/issue10570.')
-
-
-__all__ = ['Terminal']
 
 
 class Terminal(object):
@@ -40,9 +45,6 @@ class Terminal(object):
         around with the terminal; it's almost always needed when the terminal
         is and saves sticking lots of extra args on client functions in
         practice.
-      ``is_a_tty``
-        Whether ``stream`` appears to be a terminal. You can examine this value
-        to decide whether to draw progress bars or other frippery.
 
     """
     def __init__(self, kind=None, stream=None, force_styling=False):
@@ -69,26 +71,31 @@ class Terminal(object):
             somewhere, and stdout is probably where the output is ultimately
             headed. If not, stderr is probably bound to the same terminal.)
 
+            If you want to force styling to not happen, pass
+            ``force_styling=None``.
+
         """
         if stream is None:
             stream = sys.__stdout__
         try:
             stream_descriptor = (stream.fileno() if hasattr(stream, 'fileno')
-                                                 and callable(stream.fileno)
+                                 and callable(stream.fileno)
                                  else None)
         except IOUnsupportedOperation:
             stream_descriptor = None
 
-        self.is_a_tty = stream_descriptor is not None and isatty(stream_descriptor)
-        self._does_styling = self.is_a_tty or force_styling
+        self._is_a_tty = (stream_descriptor is not None and
+                         isatty(stream_descriptor))
+        self._does_styling = ((self.is_a_tty or force_styling) and
+                              force_styling is not None)
 
-        # The desciptor to direct terminal initialization sequences to.
+        # The descriptor to direct terminal initialization sequences to.
         # sys.__stdout__ seems to always have a descriptor of 1, even if output
         # is redirected.
         self._init_descriptor = (sys.__stdout__.fileno()
                                  if stream_descriptor is None
                                  else stream_descriptor)
-        if self._does_styling:
+        if self.does_styling:
             # Make things like tigetstr() work. Explicit args make setupterm()
             # work even when -s is passed to nosetests. Lean toward sending
             # init sequences to the stream if it has a file descriptor, and
@@ -111,10 +118,20 @@ class Terminal(object):
         clear_eol='el',
         clear_bol='el1',
         clear_eos='ed',
+        # 'clear' clears the whole screen.
         position='cup',  # deprecated
+        enter_fullscreen='smcup',
+        exit_fullscreen='rmcup',
         move='cup',
         move_x='hpa',
         move_y='vpa',
+        move_left='cub1',
+        move_right='cuf1',
+        move_up='cuu1',
+        move_down='cud1',
+
+        hide_cursor='civis',
+        normal_cursor='cnorm',
 
         reset_colors='op',  # oc doesn't work on my OS X terminal.
 
@@ -138,7 +155,7 @@ class Terminal(object):
         no_underline='rmul')
 
     def __getattr__(self, attr):
-        """Return parametrized terminal capabilities, like bold.
+        """Return a terminal capability, like bold.
 
         For example, you can say ``term.bold`` to get the string that turns on
         bold formatting and ``term.normal`` to get the string that turns it off
@@ -154,9 +171,26 @@ class Terminal(object):
         Return values are always Unicode.
 
         """
-        resolution = self._resolve_formatter(attr) if self._does_styling else NullCallableString()
+        resolution = (self._resolve_formatter(attr) if self.does_styling
+                      else NullCallableString())
         setattr(self, attr, resolution)  # Cache capability codes.
         return resolution
+
+    @property
+    def does_styling(self):
+        """Whether attempt to emit capabilities
+
+        This is influenced by the ``is_a_tty`` property and by the
+        ``force_styling`` argument to the constructor. You can examine
+        this value to decide whether to draw progress bars or other frippery.
+
+        """
+        return self._does_styling
+
+    @property
+    def is_a_tty(self):
+        """Whether my ``stream`` appears to be associated with a terminal"""
+        return self._is_a_tty
 
     @property
     def height(self):
@@ -167,8 +201,8 @@ class Terminal(object):
         piping to things that eventually display on the terminal (like ``less
         -R``) work. If a stream representing a terminal was passed in, return
         the dimensions of that terminal. If there somehow is no controlling
-        terminal, return ``None``. (Thus, you should check that ``is_a_tty`` is
-        true before doing any math on the result.)
+        terminal, return ``None``. (Thus, you should check that the property
+        ``is_a_tty`` is true before doing any math on the result.)
 
         """
         return self._height_and_width()[0]
@@ -183,16 +217,30 @@ class Terminal(object):
         return self._height_and_width()[1]
 
     def _height_and_width(self):
-        """Return a tuple of (terminal height, terminal width)."""
+        """Return a tuple of (terminal height, terminal width).
+
+        Start by trying TIOCGWINSZ (Terminal I/O-Control: Get Window Size),
+        falling back to environment variables (LINES, COLUMNS), and returning
+        (None, None) if those are unavailable or invalid.
+
+        """
         # tigetnum('lines') and tigetnum('cols') update only if we call
         # setupterm() again.
         for descriptor in self._init_descriptor, sys.__stdout__:
             try:
-                return struct.unpack('hhhh', ioctl(descriptor, TIOCGWINSZ, '\000' * 8))[0:2]
+                return struct.unpack(
+                        'hhhh', ioctl(descriptor, TIOCGWINSZ, '\000' * 8))[0:2]
             except IOError:
+                # when the output stream or init descriptor is not a tty, such
+                # as when when stdout is piped to another program, fe. tee(1),
+                # these ioctls will raise IOError
                 pass
-        return None, None  # Should never get here
+        try:
+            return int(environ.get('LINES')), int(environ.get('COLUMNS'))
+        except TypeError:
+            return None, None
 
+    @contextmanager
     def location(self, x=None, y=None):
         """Return a context manager for temporarily moving the cursor.
 
@@ -206,10 +254,45 @@ class Terminal(object):
                     print 'I can do it %i times!' % x
 
         Specify ``x`` to move to a certain column, ``y`` to move to a certain
-        row, or both.
+        row, both, or neither. If you specify neither, only the saving and
+        restoration of cursor position will happen. This can be useful if you
+        simply want to restore your place after doing some manual cursor
+        movement.
 
         """
-        return Location(self, x, y)
+        # Save position and move to the requested column, row, or both:
+        self.stream.write(self.save)
+        if x is not None and y is not None:
+            self.stream.write(self.move(y, x))
+        elif x is not None:
+            self.stream.write(self.move_x(x))
+        elif y is not None:
+            self.stream.write(self.move_y(y))
+        try:
+            yield
+        finally:
+            # Restore original cursor position:
+            self.stream.write(self.restore)
+
+    @contextmanager
+    def fullscreen(self):
+        """Return a context manager that enters fullscreen mode while inside it
+        and restores normal mode on leaving."""
+        self.stream.write(self.enter_fullscreen)
+        try:
+            yield
+        finally:
+            self.stream.write(self.exit_fullscreen)
+
+    @contextmanager
+    def hidden_cursor(self):
+        """Return a context manager that hides the cursor while inside it and
+        makes it visible on leaving."""
+        self.stream.write(self.hide_cursor)
+        try:
+            yield
+        finally:
+            self.stream.write(self.normal_cursor)
 
     @property
     def color(self):
@@ -254,12 +337,22 @@ class Terminal(object):
         # don't name it after the underlying capability, because we deviate
         # slightly from its behavior, and we might someday wish to give direct
         # access to it.
-        colors = tigetnum('colors')  # Returns -1 if no color support, -2 if no such cap.
-        #self.__dict__['colors'] = ret  # Cache it. It's not changing. (Doesn't work.)
+        if not self._does_styling:
+            return 0
+
+        colors = tigetnum('colors')  # Returns -1 if no color support, -2 if no
+                                     # such cap.
+        #  self.__dict__['colors'] = ret  # Cache it. It's not changing.
+                                          # (Doesn't work.)
         return colors if colors >= 0 else 0
 
     def _resolve_formatter(self, attr):
-        """Resolve a sugary or plain capability name, color, or compound formatting function name into a callable capability."""
+        """Resolve a sugary or plain capability name, color, or compound
+        formatting function name into a callable capability.
+
+        Return a ``ParametrizingString`` or a ``FormattingString``.
+
+        """
         if attr in COLORS:
             return self._resolve_color(attr)
         elif attr in COMPOUNDABLES:
@@ -277,7 +370,8 @@ class Terminal(object):
                 return ParametrizingString(self._resolve_capability(attr))
 
     def _resolve_capability(self, atom):
-        """Return a terminal code for a capname or a sugary name, or an empty Unicode.
+        """Return a terminal code for a capname or a sugary name, or an empty
+        Unicode.
 
         The return value is always Unicode, because otherwise it is clumsy
         (especially in Python 3) to concatenate with real (Unicode) strings.
@@ -285,14 +379,13 @@ class Terminal(object):
         """
         code = tigetstr(self._sugar.get(atom, atom))
         if code:
-            # We can encode escape sequences as UTF-8 because they never
-            # contain chars > 127, and UTF-8 never changes anything within that
-            # range..
-            return code.decode('utf-8')
+            # See the comment in ParametrizingString for why this is latin1.
+            return code.decode('latin1')
         return u''
 
     def _resolve_color(self, color):
-        """Resolve a color like red or on_bright_green into a callable capability."""
+        """Resolve a color like red or on_bright_green into a callable
+        capability."""
         # TODO: Does curses automatically exchange red and blue and cyan and
         # yellow when a terminal supports setf/setb rather than setaf/setab?
         # I'll be blasted if I can find any documentation. The following
@@ -315,7 +408,8 @@ class Terminal(object):
         return self.setab or self.setb
 
     def _formatting_string(self, formatting):
-        """Return a new ``FormattingString`` which implicitly receives my notion of "normal"."""
+        """Return a new ``FormattingString`` which implicitly receives my
+        notion of "normal"."""
         return FormattingString(formatting, self.normal)
 
 
@@ -326,7 +420,8 @@ def derivative_colors(colors):
                [('on_bright_' + c) for c in colors])
 
 
-COLORS = set(['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white'])
+COLORS = set(['black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan',
+              'white'])
 COLORS.update(derivative_colors(COLORS))
 COMPOUNDABLES = (COLORS |
                  set(['bold', 'underline', 'reverse', 'blink', 'dim', 'italic',
@@ -334,7 +429,9 @@ COMPOUNDABLES = (COLORS |
 
 
 class ParametrizingString(unicode):
-    """A Unicode string which can be called to parametrize it as a terminal capability"""
+    """A Unicode string which can be called to parametrize it as a terminal
+    capability"""
+
     def __new__(cls, formatting, normal=None):
         """Instantiate.
 
@@ -352,7 +449,15 @@ class ParametrizingString(unicode):
             # Re-encode the cap, because tparm() takes a bytestring in Python
             # 3. However, appear to be a plain Unicode string otherwise so
             # concats work.
-            parametrized = tparm(self.encode('utf-8'), *args).decode('utf-8')
+            #
+            # We use *latin1* encoding so that bytes emitted by tparm are
+            # encoded to their native value: some terminal kinds, such as
+            # 'avatar' or 'kermit', emit 8-bit bytes in range 0x7f to 0xff.
+            # latin1 leaves these values unmodified in their conversion to
+            # unicode byte values. The terminal emulator will "catch" and
+            # handle these values, even if emitting utf8-encoded text, where
+            # these bytes would otherwise be illegal utf8 start bytes.
+            parametrized = tparm(self.encode('latin1'), *args).decode('latin1')
             return (parametrized if self._normal is None else
                     FormattingString(parametrized, self._normal))
         except curses.error:
@@ -376,7 +481,9 @@ class ParametrizingString(unicode):
 
 
 class FormattingString(unicode):
-    """A Unicode string which can be called upon a piece of text to wrap it in formatting"""
+    """A Unicode string which can be called upon a piece of text to wrap it in
+    formatting"""
+
     def __new__(cls, formatting, normal):
         new = unicode.__new__(cls, formatting)
         new._normal = normal
@@ -394,21 +501,48 @@ class FormattingString(unicode):
 
 
 class NullCallableString(unicode):
-    """A dummy class to stand in for ``FormattingString`` and ``ParametrizingString``
+    """A dummy callable Unicode to stand in for ``FormattingString`` and
+    ``ParametrizingString``
 
-    A callable bytestring that returns an empty Unicode when called with an int
-    and the arg otherwise. We use this when there is no tty and so all
-    capabilities are blank.
+    We use this when there is no tty and thus all capabilities should be blank.
 
     """
     def __new__(cls):
         new = unicode.__new__(cls, u'')
         return new
 
-    def __call__(self, arg):
-        if isinstance(arg, int):
+    def __call__(self, *args):
+        """Return a Unicode or whatever you passed in as the first arg
+        (hopefully a string of some kind).
+
+        When called with an int as the first arg, return an empty Unicode. An
+        int is a good hint that I am a ``ParametrizingString``, as there are
+        only about half a dozen string-returning capabilities on OS X's
+        terminfo man page which take any param that's not an int, and those are
+        seldom if ever used on modern terminal emulators. (Most have to do with
+        programming function keys. Blessings' story for supporting
+        non-string-returning caps is undeveloped.) And any parametrized
+        capability in a situation where all capabilities themselves are taken
+        to be blank are, of course, themselves blank.
+
+        When called with a non-int as the first arg (no no args at all), return
+        the first arg. I am acting as a ``FormattingString``.
+
+        """
+        if len(args) != 1 or isinstance(args[0], int):
+            # I am acting as a ParametrizingString.
+
+            # tparm can take not only ints but also (at least) strings as its
+            # second...nth args. But we don't support callably parametrizing
+            # caps that take non-ints yet, so we can cheap out here. TODO: Go
+            # through enough of the motions in the capability resolvers to
+            # determine which of 2 special-purpose classes,
+            # NullParametrizableString or NullFormattingString, to return, and
+            # retire this one.
             return u''
-        return arg  # TODO: Force even strs in Python 2.x to be unicodes? Nah. How would I know what encoding to use to convert it?
+        return args[0]  # Should we force even strs in Python 2.x to be
+                        # unicodes? No. How would I know what encoding to use
+                        # to convert it?
 
 
 def split_into_formatters(compound):
@@ -427,24 +561,3 @@ def split_into_formatters(compound):
         else:
             merged_segs.append(s)
     return merged_segs
-
-
-class Location(object):
-    """Context manager for temporarily moving the cursor"""
-    def __init__(self, term, x=None, y=None):
-        self.x, self.y = x, y
-        self.term = term
-
-    def __enter__(self):
-        """Save position and move to the requested column, row, or both."""
-        self.term.stream.write(self.term.save)  # save position
-        if self.x and self.y:
-            self.term.stream.write(self.term.move(self.y, self.x))
-        elif self.x:
-            self.term.stream.write(self.term.move_x(self.x))
-        elif self.y:
-            self.term.stream.write(self.term.move_y(self.y))
-
-    def __exit__(self, type, value, tb):
-        """Restore original cursor position."""
-        self.term.stream.write(self.term.restore)
