@@ -327,7 +327,7 @@ Attr::InsertChildAt(nsIContent* aKid, uint32_t aIndex,
 }
 
 void
-Attr::RemoveChildAt(uint32_t aIndex, bool aNotify)
+Attr::RemoveChildAt_Deprecated(uint32_t aIndex, bool aNotify)
 {
 }
 

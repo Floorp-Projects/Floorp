@@ -5314,7 +5314,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
         removeIndex = 1;
       }
       else {
-        aContent->RemoveChildAt(removeIndex, true);
+        aContent->RemoveChildAt_Deprecated(removeIndex, true);
       }
     }
 
@@ -5325,7 +5325,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
   else {
     mb.Init(aContent, true, false);
     for (uint32_t i = 0; i < childCount; ++i) {
-      aContent->RemoveChildAt(0, true);
+      aContent->RemoveChildAt_Deprecated(0, true);
     }
   }
   mb.RemovalDone();

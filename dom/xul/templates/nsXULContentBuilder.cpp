@@ -915,10 +915,9 @@ nsXULContentBuilder::RemoveMember(nsIContent* aContent)
         NS_ASSERTION(pos >= 0, "parent doesn't think this child has an index");
         if (pos < 0) return NS_OK;
 
-        // Note: RemoveChildAt sets |child|'s document to null so that
-        // it'll get knocked out of the XUL doc's resource-to-element
-        // map.
-        parent->RemoveChildAt(pos, true);
+        // Note: RemoveChildAt_Deprecated sets |child|'s document to null so
+        // that it'll get knocked out of the XUL doc's resource-to-element map.
+        parent->RemoveChildAt_Deprecated(pos, true);
     }
 
     // Remove from the content support map.
@@ -1311,7 +1310,7 @@ nsXULContentBuilder::RemoveGeneratedContent(nsIContent* aElement)
             }
 
             // If we get here, it's "generated". Bye bye!
-            element->RemoveChildAt(i, true);
+            element->RemoveChildAt_Deprecated(i, true);
 
             // Remove this and any children from the content support map.
             mContentSupportMap.Remove(child);

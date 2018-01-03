@@ -614,7 +614,7 @@ nsINode::RemoveChild(nsINode& aOldChild, ErrorResult& aError)
     return nullptr;
   }
 
-  RemoveChildAt(index, true);
+  RemoveChildAt_Deprecated(index, true);
   return &aOldChild;
 }
 
@@ -721,7 +721,7 @@ nsINode::Normalize()
                  "Should always have a parent unless "
                  "mutation events messed us up");
     if (parent) {
-      parent->RemoveChildAt(parent->IndexOf(node), true);
+      parent->RemoveChildAt_Deprecated(parent->IndexOf(node), true);
     }
   }
 }
@@ -1926,7 +1926,8 @@ nsINode::doRemoveChildAt(uint32_t aIndex, bool aNotify,
   // NOTE: This function must not trigger any calls to
   // nsIDocument::GetRootElement() calls until *after* it has removed aKid from
   // aChildArray. Any calls before then could potentially restore a stale
-  // value for our cached root element, per note in nsDocument::RemoveChildAt().
+  // value for our cached root element, per note in
+  // nsDocument::RemoveChildAt_Deprecated().
   MOZ_ASSERT(aKid && aKid->GetParentNode() == this &&
              aKid == GetChildAt_Deprecated(aIndex) &&
              IndexOf(aKid) == (int32_t)aIndex, "Bogus aKid");
@@ -2259,7 +2260,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       mozAutoDocUpdate batch(newContent->GetComposedDoc(),
                              UPDATE_CONTENT_MODEL, true);
       nsAutoMutationBatch mb(oldParent, true, true);
-      oldParent->RemoveChildAt(removeIndex, true);
+      oldParent->RemoveChildAt_Deprecated(removeIndex, true);
       if (nsAutoMutationBatch::GetCurrentBatch() == &mb) {
         mb.RemovalDone();
         mb.SetPrevSibling(oldParent->GetChildAt_Deprecated(removeIndex - 1));
@@ -2339,7 +2340,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       nsAutoMutationBatch mb(newContent, false, true);
 
       for (uint32_t i = count; i > 0;) {
-        newContent->RemoveChildAt(--i, true);
+        newContent->RemoveChildAt_Deprecated(--i, true);
       }
     }
 
@@ -2437,7 +2438,7 @@ nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
     // An since nodeToInsertBefore is at index insPos, we want to remove
     // at the previous index.
     NS_ASSERTION(insPos >= 1, "insPos too small");
-    RemoveChildAt(insPos-1, true);
+    RemoveChildAt_Deprecated(insPos-1, true);
     --insPos;
   }
 
