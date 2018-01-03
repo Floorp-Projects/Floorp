@@ -350,7 +350,7 @@ class OSXBootstrapper(BaseBootstrapper):
         self._ensure_homebrew_packages(packages)
 
         casks = [
-            'java',
+            'java8',
         ]
         installed = self._ensure_homebrew_casks(casks)
         if installed:
