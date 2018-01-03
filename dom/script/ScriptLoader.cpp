@@ -1441,28 +1441,7 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
 
       rv = StartLoad(request);
       if (NS_FAILED(rv)) {
-        const char* message;
-        bool isScript = scriptKind == ScriptKind::Classic;
-        if (rv == NS_ERROR_MALFORMED_URI) {
-          message =
-            isScript ? "ScriptSourceMalformed" : "ModuleSourceMalformed";
-        }
-        else if (rv == NS_ERROR_DOM_BAD_URI) {
-          message =
-            isScript ? "ScriptSourceNotAllowed" : "ModuleSourceNotAllowed";
-        } else {
-          message =
-            isScript ? "ScriptSourceLoadFailed" : "ModuleSourceLoadFailed";
-        }
-
-        NS_ConvertUTF8toUTF16 url(scriptURI->GetSpecOrDefault());
-        const char16_t* params[] = { url.get() };
-
-        nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-            NS_LITERAL_CSTRING("Script Loader"), mDocument,
-            nsContentUtils::eDOM_PROPERTIES, message,
-            params, ArrayLength(params), nullptr,
-            EmptyString(), aElement->GetScriptLineNumber());
+        ReportErrorToConsole(request, rv);
 
         // Asynchronously report the load failure
         NS_DispatchToCurrentThread(
@@ -2765,11 +2744,51 @@ ScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
                                ScriptLoadRequest* aRequest,
                                nsresult aChannelStatus,
                                nsresult aSRIStatus,
-                               mozilla::dom::SRICheckDataVerifier* aSRIDataVerifier)
+                               SRICheckDataVerifier* aSRIDataVerifier)
 {
   NS_ASSERTION(aRequest, "null request in stream complete handler");
   NS_ENSURE_TRUE(aRequest, NS_ERROR_FAILURE);
 
+  nsresult rv = VerifySRI(aRequest, aLoader, aSRIStatus, aSRIDataVerifier);
+
+  if (NS_SUCCEEDED(rv)) {
+    // If we are loading from source, save the computed SRI hash or a dummy SRI
+    // hash in case we are going to save the bytecode of this script in the cache.
+    if (aRequest->IsSource()) {
+      rv = SaveSRIHash(aRequest, aSRIDataVerifier);
+    }
+
+    if (NS_SUCCEEDED(rv)) {
+      rv = PrepareLoadedRequest(aRequest, aLoader, aChannelStatus);
+    }
+
+    if (NS_FAILED(rv)) {
+      ReportErrorToConsole(aRequest, rv);
+    }
+  }
+
+  if (NS_FAILED(rv)) {
+    // When loading bytecode, we verify the SRI hash. If it does not match the
+    // one from the document we restart the load, forcing us to load the source
+    // instead. If this happens do not remove the current request from script
+    // loader's data structures or fire any events.
+    if (aChannelStatus != NS_BINDING_RETARGETED) {
+      HandleLoadError(aRequest, rv);
+    }
+  }
+
+  // Process our request and/or any pending ones
+  ProcessPendingRequests();
+
+  return NS_OK;
+}
+
+nsresult
+ScriptLoader::VerifySRI(ScriptLoadRequest* aRequest,
+                        nsIIncrementalStreamLoader* aLoader,
+                        nsresult aSRIStatus,
+                        SRICheckDataVerifier* aSRIDataVerifier) const
+{
   nsCOMPtr<nsIRequest> channelRequest;
   aLoader->GetRequest(getter_AddRefs(channelRequest));
   nsCOMPtr<nsIChannel> channel;
@@ -2815,87 +2834,89 @@ ScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     }
   }
 
-  // If we are loading from source, save the computed SRI hash or a dummy SRI
-  // hash in case we are going to save the bytecode of this script in the cache.
-  if (NS_SUCCEEDED(rv)) {
-    if (aRequest->IsSource()) {
-      MOZ_ASSERT(aRequest->mScriptBytecode.empty());
-      // If the integrity metadata does not correspond to a valid hash function,
-      // IsComplete would be false.
-      if (!aRequest->mIntegrity.IsEmpty() && aSRIDataVerifier->IsComplete()) {
-        // Encode the SRI computed hash.
-        uint32_t len = aSRIDataVerifier->DataSummaryLength();
-        if (!aRequest->mScriptBytecode.growBy(len)) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-        aRequest->mBytecodeOffset = len;
+  return rv;
+}
 
-        DebugOnly<nsresult> res = aSRIDataVerifier->ExportDataSummary(
-          aRequest->mScriptBytecode.length(),
-          aRequest->mScriptBytecode.begin());
-        MOZ_ASSERT(NS_SUCCEEDED(res));
-      } else {
-        // Encode a dummy SRI hash.
-        uint32_t len = SRICheckDataVerifier::EmptyDataSummaryLength();
-        if (!aRequest->mScriptBytecode.growBy(len)) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-        aRequest->mBytecodeOffset = len;
+nsresult
+ScriptLoader::SaveSRIHash(ScriptLoadRequest *aRequest,
+                          SRICheckDataVerifier* aSRIDataVerifier) const
+{
+  MOZ_ASSERT(aRequest->IsSource());
+  MOZ_ASSERT(aRequest->mScriptBytecode.empty());
 
-        DebugOnly<nsresult> res = SRICheckDataVerifier::ExportEmptyDataSummary(
-          aRequest->mScriptBytecode.length(),
-          aRequest->mScriptBytecode.begin());
-        MOZ_ASSERT(NS_SUCCEEDED(res));
-      }
-
-      // Verify that the exported and predicted length correspond.
-      mozilla::DebugOnly<uint32_t> srilen;
-      MOZ_ASSERT(NS_SUCCEEDED(SRICheckDataVerifier::DataSummaryLength(
-                                aRequest->mScriptBytecode.length(),
-                                aRequest->mScriptBytecode.begin(),
-                                &srilen)));
-      MOZ_ASSERT(srilen == aRequest->mBytecodeOffset);
+  // If the integrity metadata does not correspond to a valid hash function,
+  // IsComplete would be false.
+  if (!aRequest->mIntegrity.IsEmpty() && aSRIDataVerifier->IsComplete()) {
+    // Encode the SRI computed hash.
+    uint32_t len = aSRIDataVerifier->DataSummaryLength();
+    if (!aRequest->mScriptBytecode.growBy(len)) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+    aRequest->mBytecodeOffset = len;
 
-    rv = PrepareLoadedRequest(aRequest, aLoader, aChannelStatus);
-
-    if (NS_FAILED(rv) && aRequest->mElement) {
-      uint32_t lineNo = aRequest->mElement->GetScriptLineNumber();
-
-      nsAutoString url;
-      if (aRequest->mURI) {
-        AppendUTF8toUTF16(aRequest->mURI->GetSpecOrDefault(), url);
-      }
-
-      const char* message = "ScriptSourceLoadFailed";
-      if (aRequest->IsModuleRequest()) {
-        message = "ModuleSourceLoadFailed";
-      }
-
-      const char16_t* params[] = { url.get() };
-
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("Script Loader"), mDocument,
-                                      nsContentUtils::eDOM_PROPERTIES, message,
-                                      params, ArrayLength(params), nullptr,
-                                      EmptyString(), lineNo);
+    DebugOnly<nsresult> res = aSRIDataVerifier->ExportDataSummary(
+      aRequest->mScriptBytecode.length(),
+      aRequest->mScriptBytecode.begin());
+    MOZ_ASSERT(NS_SUCCEEDED(res));
+  } else {
+    // Encode a dummy SRI hash.
+    uint32_t len = SRICheckDataVerifier::EmptyDataSummaryLength();
+    if (!aRequest->mScriptBytecode.growBy(len)) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+    aRequest->mBytecodeOffset = len;
+
+    DebugOnly<nsresult> res = SRICheckDataVerifier::ExportEmptyDataSummary(
+      aRequest->mScriptBytecode.length(),
+      aRequest->mScriptBytecode.begin());
+    MOZ_ASSERT(NS_SUCCEEDED(res));
   }
 
-  if (NS_FAILED(rv)) {
-    // When loading bytecode, we verify the SRI hash. If it does not match the
-    // one from the document we restart the load, forcing us to load the source
-    // instead. If this happens do not remove the current request from script
-    // loader's data structures or fire any events.
-    if (aChannelStatus != NS_BINDING_RETARGETED) {
-      HandleLoadError(aRequest, rv);
-    }
-  }
-
-  // Process our request and/or any pending ones
-  ProcessPendingRequests();
+  // Verify that the exported and predicted length correspond.
+  mozilla::DebugOnly<uint32_t> srilen;
+  MOZ_ASSERT(NS_SUCCEEDED(SRICheckDataVerifier::DataSummaryLength(
+                            aRequest->mScriptBytecode.length(),
+                            aRequest->mScriptBytecode.begin(),
+                            &srilen)));
+  MOZ_ASSERT(srilen == aRequest->mBytecodeOffset);
 
   return NS_OK;
+}
+
+void
+ScriptLoader::ReportErrorToConsole(ScriptLoadRequest *aRequest,
+                                   nsresult aResult) const
+{
+  MOZ_ASSERT(aRequest);
+
+  if (!aRequest->mElement) {
+    return;
+  }
+
+  bool isScript = !aRequest->IsModuleRequest();
+  const char* message;
+  if (aResult == NS_ERROR_MALFORMED_URI) {
+    message =
+      isScript ? "ScriptSourceMalformed" : "ModuleSourceMalformed";
+  }
+  else if (aResult == NS_ERROR_DOM_BAD_URI) {
+    message =
+      isScript ? "ScriptSourceNotAllowed" : "ModuleSourceNotAllowed";
+  } else {
+    message =
+      isScript ? "ScriptSourceLoadFailed" : "ModuleSourceLoadFailed";
+  }
+
+  NS_ConvertUTF8toUTF16 url(aRequest->mURI->GetSpecOrDefault());
+  const char16_t* params[] = { url.get() };
+
+  uint32_t lineNo = aRequest->mElement->GetScriptLineNumber();
+
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("Script Loader"), mDocument,
+                                  nsContentUtils::eDOM_PROPERTIES, message,
+                                  params, ArrayLength(params), nullptr,
+                                  EmptyString(), lineNo);
 }
 
 void
