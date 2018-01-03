@@ -83,13 +83,11 @@ public:
    *
    * @param aNode          [IN] A DOM node.
    * @param aProperty      [IN] An atom containing a HTML tag name.
-   * @param aAttribute     [IN] A string containing the name of a HTML
+   * @param aAttribute     [IN] An atom containing a HTML
    *                            attribute carried by the element above.
    * @return               A boolean saying if the tag/attribute has a CSS
    *                       equiv.
    */
-  bool IsCSSEditableProperty(nsINode* aNode, nsAtom* aProperty,
-                             const nsAString* aAttribute);
   bool IsCSSEditableProperty(nsINode* aNode, nsAtom* aProperty,
                              nsAtom* aAttribute);
 
@@ -166,7 +164,7 @@ public:
    * @return              A boolean saying if the property can be remove by
    *                      setting a "none" value.
    */
-  bool IsCSSInvertible(nsAtom& aProperty, const nsAString* aAttribute);
+  bool IsCSSInvertible(nsAtom& aProperty, nsAtom* aAttribute);
 
   /**
    * Get the default browser background color if we need it for
@@ -223,7 +221,7 @@ public:
 
   bool IsCSSEquivalentToHTMLInlineStyleSet(nsINode* aContent,
                                            nsAtom* aProperty,
-                                           const nsAString* aAttribute,
+                                           nsAtom* aAttribute,
                                            const nsAString& aValue,
                                            StyleType aStyleType);
 
