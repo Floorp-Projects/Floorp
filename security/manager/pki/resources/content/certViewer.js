@@ -1,6 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* import-globals-from pippki.js */
 "use strict";
 
 /**
@@ -10,9 +12,6 @@
  * @argument {nsISupports} window.arguments[0]
  *           The cert to view, queryable to nsIX509Cert.
  */
-
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const nsIX509Cert = Ci.nsIX509Cert;
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
@@ -26,12 +25,6 @@ const nsIASN1Tree = Ci.nsIASN1Tree;
 const nsASN1Tree = "@mozilla.org/security/nsASN1Tree;1";
 
 var bundle;
-
-function doPrompt(msg) {
-  let prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
-    getService(Components.interfaces.nsIPromptService);
-  prompts.alert(window, null, msg);
-}
 
 /**
  * Fills out the "Certificate Hierarchy" tree of the cert viewer "Details" tab.
@@ -364,9 +357,7 @@ function updateCertDump() {
           .view.QueryInterface(nsIASN1Tree);
 
   var tree = document.getElementById("treesetDump");
-  if (tree.currentIndex < 0) {
-    doPrompt("No items are selected."); // This should never happen.
-  } else {
+  if (tree.currentIndex >= 0) {
     var item = tree.contentView.getItemAtIndex(tree.currentIndex);
     var dbKey = item.firstChild.firstChild.getAttribute("display");
     //  Get the cert from the cert database

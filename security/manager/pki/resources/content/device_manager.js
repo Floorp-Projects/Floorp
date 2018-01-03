@@ -3,6 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+
 const nsIPKCS11Slot = Components.interfaces.nsIPKCS11Slot;
 const nsIPKCS11Module = Components.interfaces.nsIPKCS11Module;
 const nsPKCS11ModuleDB = "@mozilla.org/security/pkcs11moduledb;1";
@@ -29,15 +32,11 @@ function getNSSString(name) {
 }
 
 function doPrompt(msg) {
-  let prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
-    getService(Components.interfaces.nsIPromptService);
-  prompts.alert(window, null, msg);
+  Services.prompt.alert(window, null, msg);
 }
 
 function doConfirm(msg) {
-  let prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
-    getService(Components.interfaces.nsIPromptService);
-  return prompts.confirm(window, null, msg);
+  return Services.prompt.confirm(window, null, msg);
 }
 
 function RefreshDeviceList() {

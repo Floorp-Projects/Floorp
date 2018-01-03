@@ -70,7 +70,9 @@ static const char contentSandboxRules[] = R"(
   ; Allow read access to standard system paths.
   (allow file-read*
     (require-all (file-mode #o0004)
-      (require-any (subpath "/Library/Filesystems/NetFSPlugins")
+      (require-any
+        (subpath "/Library/Filesystems/NetFSPlugins")
+        (subpath "/Library/GPUBundles")
         (subpath "/System")
         (subpath "/usr/lib")
         (subpath "/usr/share"))))
@@ -127,6 +129,7 @@ static const char contentSandboxRules[] = R"(
       (sysctl-name "hw.cpufrequency_max")
       (sysctl-name "hw.l2cachesize")
       (sysctl-name "hw.l3cachesize")
+      (sysctl-name "hw.cachelinesize")
       (sysctl-name "hw.cachelinesize_compat")
       (sysctl-name "hw.tbfrequency_compat")
       (sysctl-name "hw.vectorunit")

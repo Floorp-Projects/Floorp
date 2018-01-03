@@ -11,9 +11,7 @@ function resetPassword() {
   token.reset();
 
   try {
-    var loginManager = Components.classes["@mozilla.org/login-manager;1"].
-                       getService(Components.interfaces.nsILoginManager);
-    loginManager.removeAllLogins();
+    Services.logins.removeAllLogins();
   } catch (e) {
   }
 
