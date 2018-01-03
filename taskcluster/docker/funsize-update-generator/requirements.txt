@@ -2,4 +2,6 @@ mar==2.1.2
 backports.lzma==0.0.8
 datadog==0.17.0
 redo==1.6
+aiohttp==2.3.6
 awscli==1.14.10
+scriptworker==6.0.0
