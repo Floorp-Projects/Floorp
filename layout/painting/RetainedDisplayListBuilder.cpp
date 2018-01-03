@@ -603,6 +603,10 @@ RetainedDisplayListBuilder::ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedF
       aOutFramesWithProps->AppendElement(f);
     }
 
+    if (f->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
+      continue;
+    }
+
     // TODO: There is almost certainly a faster way of doing this, probably can be combined with the ancestor
     // walk for TransformFrameRectToAncestor.
     AnimatedGeometryRoot* agr = mBuilder.FindAnimatedGeometryRootFor(f)->GetAsyncAGR();
