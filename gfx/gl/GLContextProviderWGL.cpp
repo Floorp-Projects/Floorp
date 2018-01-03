@@ -31,12 +31,25 @@ using namespace mozilla::widget;
 
 WGLLibrary sWGLLib;
 
-HWND
-WGLLibrary::CreateDummyWindow(HDC* aWindowDC)
+
+
+/*
+ScopedWindow::~ScopedWindow()
 {
-    WNDCLASSW wc;
+    if (mDC) {
+        MOZ_ALWAYS_TRUE( ReleaseDC(mDC) );
+    }
+    if (mWindow) {
+        MOZ_ALWAYS_TRUE( DestroyWindow(mWindow) );
+    }
+}
+*/
+static HWND
+CreateDummyWindow()
+{
+    WNDCLASSW wc{};
     if (!GetClassInfoW(GetModuleHandle(nullptr), L"GLContextWGLClass", &wc)) {
-        ZeroMemory(&wc, sizeof(WNDCLASSW));
+        wc = {};
         wc.style = CS_OWNDC;
         wc.hInstance = GetModuleHandle(nullptr);
         wc.lpfnWndProc = DefWindowProc;
@@ -48,46 +61,10 @@ WGLLibrary::CreateDummyWindow(HDC* aWindowDC)
         }
     }
 
-    HWND win = CreateWindowW(L"GLContextWGLClass", L"GLContextWGL", 0,
-                             0, 0, 16, 16,
-                             nullptr, nullptr, GetModuleHandle(nullptr),
-                             nullptr);
-    NS_ENSURE_TRUE(win, nullptr);
-
-    HDC dc = GetDC(win);
-    NS_ENSURE_TRUE(dc, nullptr);
-
-    if (mWindowPixelFormat == 0) {
-        PIXELFORMATDESCRIPTOR pfd;
-        ZeroMemory(&pfd, sizeof(PIXELFORMATDESCRIPTOR));
-        pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-        pfd.nVersion = 1;
-        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-        pfd.iPixelType = PFD_TYPE_RGBA;
-        pfd.cColorBits = 24;
-        pfd.cRedBits = 8;
-        pfd.cGreenBits = 8;
-        pfd.cBlueBits = 8;
-        pfd.cAlphaBits = 8;
-        pfd.cDepthBits = gfxVars::UseWebRender() ? 24 : 0;
-        pfd.iLayerType = PFD_MAIN_PLANE;
-
-        mWindowPixelFormat = ChoosePixelFormat(dc, &pfd);
-    }
-
-    if (!mWindowPixelFormat ||
-        !SetPixelFormat(dc, mWindowPixelFormat, nullptr))
-    {
-        NS_WARNING("SetPixelFormat failed!");
-        DestroyWindow(win);
-        return nullptr;
-    }
-
-    if (aWindowDC) {
-        *aWindowDC = dc;
-    }
-
-    return win;
+    return CreateWindowW(L"GLContextWGLClass", L"GLContextWGL", 0,
+                         0, 0, 1, 1,
+                         nullptr, nullptr, GetModuleHandle(nullptr),
+                         nullptr);
 }
 
 static inline bool
@@ -137,127 +114,136 @@ WGLLibrary::EnsureInitialized()
         return false;
     }
 
-    // This is ridiculous -- we have to actually create a context to
-    // get the OpenGL ICD to load.
-    mWindow = CreateDummyWindow(&mWindowDC);
-    NS_ENSURE_TRUE(mWindow, false);
+    mDummyWindow = CreateDummyWindow();
+    MOZ_ASSERT(mDummyWindow);
+    if (!mDummyWindow)
+        return false;
+    auto cleanup = MakeScopeExit([&]() {
+        Reset();
+    });
+
+    mRootDc = GetDC(mDummyWindow);
+    MOZ_ASSERT(mRootDc);
+    if (!mRootDc)
+        return false;
+
+    // --
+
+    {
+        PIXELFORMATDESCRIPTOR pfd{};
+        pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+        pfd.nVersion = 1;
+        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
+        //pfd.iPixelType = PFD_TYPE_RGBA;
+        //pfd.cColorBits = 24;
+        //pfd.cRedBits = 8;
+        //pfd.cGreenBits = 8;
+        //pfd.cBlueBits = 8;
+        //pfd.cAlphaBits = 8;
+        pfd.iLayerType = PFD_MAIN_PLANE;
+
+        const auto pixelFormat = ChoosePixelFormat(mRootDc, &pfd);
+        MOZ_ASSERT(pixelFormat);
+        if (!pixelFormat)
+            return false;
+        const bool setPixelFormatOk = SetPixelFormat(mRootDc, pixelFormat, nullptr);
+        MOZ_ASSERT(setPixelFormatOk);
+        if (!setPixelFormatOk)
+            return false;
+    }
+
+    // --
 
     // create rendering context
-    mWindowGLContext = mSymbols.fCreateContext(mWindowDC);
-    NS_ENSURE_TRUE(mWindowGLContext, false);
+    mDummyGlrc = mSymbols.fCreateContext(mRootDc);
+    if (!mDummyGlrc)
+        return false;
 
-    if (!mSymbols.fMakeCurrent(mWindowDC, mWindowGLContext)) {
+    const auto curCtx = mSymbols.fGetCurrentContext();
+    const auto curDC = mSymbols.fGetCurrentDC();
+
+    if (!mSymbols.fMakeCurrent(mRootDc, mDummyGlrc)) {
         NS_WARNING("wglMakeCurrent failed");
         return false;
     }
+    const auto resetContext = MakeScopeExit([&]() {
+        mSymbols.fMakeCurrent(curDC, curCtx);
+    });
 
-    const auto& curCtx = mSymbols.fGetCurrentContext();
-    const auto& curDC = mSymbols.fGetCurrentDC();
-
-    const auto& lookupFunc = (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
+    const auto lookupFunc = (GLLibraryLoader::PlatformLookupFunction)mSymbols.fGetProcAddress;
 
     // Now we can grab all the other symbols that we couldn't without having
     // a context current.
-    const GLLibraryLoader::SymLoadStruct pbufferSymbols[] = {
+    const GLLibraryLoader::SymLoadStruct reqExtSymbols[] = {
         { (PRFuncPtr*)&mSymbols.fCreatePbuffer, { "wglCreatePbufferARB", "wglCreatePbufferEXT", nullptr } },
         { (PRFuncPtr*)&mSymbols.fDestroyPbuffer, { "wglDestroyPbufferARB", "wglDestroyPbufferEXT", nullptr } },
         { (PRFuncPtr*)&mSymbols.fGetPbufferDC, { "wglGetPbufferDCARB", "wglGetPbufferDCEXT", nullptr } },
-        { (PRFuncPtr*)&mSymbols.fBindTexImage, { "wglBindTexImageARB", "wglBindTexImageEXT", nullptr } },
-        { (PRFuncPtr*)&mSymbols.fReleaseTexImage, { "wglReleaseTexImageARB", "wglReleaseTexImageEXT", nullptr } },
-        END_OF_SYMBOLS
-    };
-
-    const GLLibraryLoader::SymLoadStruct pixFmtSymbols[] = {
+        { (PRFuncPtr*)&mSymbols.fReleasePbufferDC, { "wglReleasePbufferDCARB", "wglReleasePbufferDCEXT", nullptr } },
+    //    { (PRFuncPtr*)&mSymbols.fBindTexImage, { "wglBindTexImageARB", "wglBindTexImageEXT", nullptr } },
+    //    { (PRFuncPtr*)&mSymbols.fReleaseTexImage, { "wglReleaseTexImageARB", "wglReleaseTexImageEXT", nullptr } },
         { (PRFuncPtr*)&mSymbols.fChoosePixelFormat, { "wglChoosePixelFormatARB", "wglChoosePixelFormatEXT", nullptr } },
-        { (PRFuncPtr*)&mSymbols.fGetPixelFormatAttribiv, { "wglGetPixelFormatAttribivARB", "wglGetPixelFormatAttribivEXT", nullptr } },
-        END_OF_SYMBOLS
-    };
-
-    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, pbufferSymbols, lookupFunc)) {
-        // this isn't an error, just means that pbuffers aren't supported
-        ClearSymbols(pbufferSymbols);
-    }
-
-    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, pixFmtSymbols, lookupFunc)) {
-        // this isn't an error, just means that we don't have the pixel format extension
-        ClearSymbols(pixFmtSymbols);
-    }
-
-    const GLLibraryLoader::SymLoadStruct extensionsSymbols[] = {
+    //    { (PRFuncPtr*)&mSymbols.fGetPixelFormatAttribiv, { "wglGetPixelFormatAttribivARB", "wglGetPixelFormatAttribivEXT", nullptr } },
         SYMBOL(GetExtensionsStringARB),
         END_OF_SYMBOLS
     };
-
-    const GLLibraryLoader::SymLoadStruct robustnessSymbols[] = {
-        SYMBOL(CreateContextAttribsARB),
-        END_OF_SYMBOLS
-    };
-
-    const GLLibraryLoader::SymLoadStruct dxInteropSymbols[] = {
-        SYMBOL(DXSetResourceShareHandleNV),
-        SYMBOL(DXOpenDeviceNV),
-        SYMBOL(DXCloseDeviceNV),
-        SYMBOL(DXRegisterObjectNV),
-        SYMBOL(DXUnregisterObjectNV),
-        SYMBOL(DXObjectAccessNV),
-        SYMBOL(DXLockObjectsNV),
-        SYMBOL(DXUnlockObjectsNV),
-        END_OF_SYMBOLS
-    };
-
-    if (GLLibraryLoader::LoadSymbols(mOGLLibrary, extensionsSymbols, lookupFunc)) {
-        const char* extString = mSymbols.fGetExtensionsStringARB(mWindowDC);
-        MOZ_ASSERT(extString);
-        MOZ_ASSERT(HasExtension(extString, "WGL_ARB_extensions_string"));
-
-        if (HasExtension(extString, "WGL_ARB_create_context")) {
-            if (GLLibraryLoader::LoadSymbols(mOGLLibrary, robustnessSymbols, lookupFunc)) {
-                if (HasExtension(extString, "WGL_ARB_create_context_robustness")) {
-                    mHasRobustness = true;
-                }
-            } else {
-                NS_ERROR("WGL supports ARB_create_context without supplying its functions.");
-                ClearSymbols(robustnessSymbols);
-            }
-        }
-
-        ////
-
-        bool hasDXInterop2 = HasExtension(extString, "WGL_NV_DX_interop2");
-        if (gfxVars::DXInterop2Blocked() &&
-            !gfxPrefs::IgnoreDXInterop2Blacklist())
-        {
-            hasDXInterop2 = false;
-        }
-
-        if (hasDXInterop2) {
-            if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, dxInteropSymbols,
-                                              lookupFunc))
-            {
-                NS_ERROR("WGL supports NV_DX_interop(2) without supplying its functions.");
-                ClearSymbols(dxInteropSymbols);
-            }
-        }
+    if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, reqExtSymbols, lookupFunc)) {
+        NS_WARNING("reqExtSymbols missing");
+        return false;
     }
 
-    // reset back to the previous context, just in case
-    mSymbols.fMakeCurrent(curDC, curCtx);
+    // --
 
-    if (mHasRobustness) {
-        mSymbols.fDeleteContext(mWindowGLContext);
+    const auto extString = mSymbols.fGetExtensionsStringARB(mRootDc);
+    MOZ_ASSERT(extString);
+    MOZ_ASSERT(HasExtension(extString, "WGL_ARB_extensions_string"));
 
-        const int attribs[] = {
-            LOCAL_WGL_CONTEXT_FLAGS_ARB, LOCAL_WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
-            LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
-            0
+    // --
+
+    if (HasExtension(extString, "WGL_ARB_create_context")) {
+        const GLLibraryLoader::SymLoadStruct createContextSymbols[] = {
+            SYMBOL(CreateContextAttribsARB),
+            END_OF_SYMBOLS
         };
-
-        mWindowGLContext = mSymbols.fCreateContextAttribsARB(mWindowDC, nullptr, attribs);
-        if (!mWindowGLContext) {
-            mHasRobustness = false;
-            mWindowGLContext = mSymbols.fCreateContext(mWindowDC);
+        if (GLLibraryLoader::LoadSymbols(mOGLLibrary, createContextSymbols, lookupFunc)) {
+            if (HasExtension(extString, "WGL_ARB_create_context_robustness")) {
+                mHasRobustness = true;
+            }
+        } else {
+            NS_ERROR("WGL_ARB_create_context announced without supplying its functions.");
+            ClearSymbols(createContextSymbols);
         }
     }
+
+    // --
+
+    bool hasDXInterop2 = HasExtension(extString, "WGL_NV_DX_interop2");
+    if (gfxVars::DXInterop2Blocked() &&
+        !gfxPrefs::IgnoreDXInterop2Blacklist())
+    {
+        hasDXInterop2 = false;
+    }
+
+    if (hasDXInterop2) {
+        const GLLibraryLoader::SymLoadStruct dxInteropSymbols[] = {
+            SYMBOL(DXSetResourceShareHandleNV),
+            SYMBOL(DXOpenDeviceNV),
+            SYMBOL(DXCloseDeviceNV),
+            SYMBOL(DXRegisterObjectNV),
+            SYMBOL(DXUnregisterObjectNV),
+            SYMBOL(DXObjectAccessNV),
+            SYMBOL(DXLockObjectsNV),
+            SYMBOL(DXUnlockObjectsNV),
+            END_OF_SYMBOLS
+        };
+        if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, dxInteropSymbols, lookupFunc)) {
+            NS_ERROR("WGL_NV_DX_interop2 announceed without supplying its functions.");
+            ClearSymbols(dxInteropSymbols);
+        }
+    }
+
+    // --
+
+    cleanup.release();
 
     mInitialized = true;
 
@@ -267,6 +253,23 @@ WGLLibrary::EnsureInitialized()
 
 #undef SYMBOL
 #undef END_OF_SYMBOLS
+
+void
+WGLLibrary::Reset()
+{
+    if (mDummyGlrc) {
+        (void)mSymbols.fDeleteContext(mDummyGlrc);
+        mDummyGlrc = nullptr;
+    }
+    if (mRootDc) {
+        (void)ReleaseDC(mDummyWindow, mRootDc);
+        mRootDc = nullptr;
+    }
+    if (mDummyWindow) {
+        (void)DestroyWindow(mDummyWindow);
+        mDummyWindow = nullptr;
+    }
+}
 
 GLContextWGL::GLContextWGL(CreateContextFlags flags, const SurfaceCaps& caps,
                            bool isOffscreen, HDC aDC, HGLRC aContext, HWND aWindow)
@@ -297,12 +300,16 @@ GLContextWGL::~GLContextWGL()
 {
     MarkDestroyed();
 
-    sWGLLib.mSymbols.fDeleteContext(mContext);
+    (void)sWGLLib.mSymbols.fDeleteContext(mContext);
 
-    if (mPBuffer)
-        sWGLLib.mSymbols.fDestroyPbuffer(mPBuffer);
-    if (mWnd)
+    if (mPBuffer) {
+        (void)sWGLLib.mSymbols.fReleasePbufferDC(mPBuffer, mDC);
+        (void)sWGLLib.mSymbols.fDestroyPbuffer(mPBuffer);
+    }
+    if (mWnd) {
+        (void)ReleaseDC(mWnd, mDC);
         DestroyWindow(mWnd);
+    }
 }
 
 bool
@@ -336,20 +343,9 @@ GLContextWGL::IsCurrentImpl() const
     return sWGLLib.mSymbols.fGetCurrentContext() == mContext;
 }
 
-void
-GLContextWGL::SetIsDoubleBuffered(bool aIsDB)
-{
-    mIsDoubleBuffered = aIsDB;
-}
-
 bool
-GLContextWGL::IsDoubleBuffered() const
+GLContextWGL::SwapBuffers()
 {
-    return mIsDoubleBuffered;
-}
-
-bool
-GLContextWGL::SwapBuffers() {
     if (!mIsDoubleBuffered)
         return false;
     return ::SwapBuffers(mDC);
@@ -375,89 +371,112 @@ GLContextWGL::SetupLookupFunction()
     return true;
 }
 
-static bool
-GetMaxSize(HDC hDC, int format, IntSize& size)
-{
-    int query[] = {LOCAL_WGL_MAX_PBUFFER_WIDTH_ARB, LOCAL_WGL_MAX_PBUFFER_HEIGHT_ARB};
-    int result[2];
-
-    // (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, int* piAttributes, int* piValues)
-    if (!sWGLLib.mSymbols.fGetPixelFormatAttribiv(hDC, format, 0, 2, query, result))
-        return false;
-
-    size.width = result[0];
-    size.height = result[1];
-    return true;
-}
-
-static bool
-IsValidSizeForFormat(HDC hDC, int format,
-                     const IntSize& requested)
-{
-    IntSize max;
-    if (!GetMaxSize(hDC, format, max))
-        return true;
-
-    if (requested.width > max.width)
-        return false;
-    if (requested.height > max.height)
-        return false;
-
-    return true;
-}
-
 already_AddRefed<GLContext>
 GLContextProviderWGL::CreateWrappingExisting(void*, void*)
 {
     return nullptr;
 }
 
-already_AddRefed<GLContext>
-CreateForWidget(HWND aHwnd,
-                bool aWebRender,
-                bool aForceAccelerated)
+HGLRC
+WGLLibrary::CreateContextWithFallback(const HDC dc, const bool tryRobustBuffers) const
 {
-    if (!sWGLLib.EnsureInitialized()) {
-        return nullptr;
-    }
+    if (mHasRobustness) {
+        if (tryRobustBuffers) {
+            const int attribs[] = {
+                LOCAL_WGL_CONTEXT_FLAGS_ARB, LOCAL_WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
+                LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
+                0
+            };
+            const auto context = mSymbols.fCreateContextAttribsARB(dc, nullptr, attribs);
+            if (context)
+                return context;
+        }
 
-    /**
-       * We need to make sure we call SetPixelFormat -after- calling
-       * EnsureInitialized, otherwise it can load/unload the dll and
-       * wglCreateContext will fail.
-       */
-
-    HDC dc = ::GetDC(aHwnd);
-
-    SetPixelFormat(dc, sWGLLib.GetWindowPixelFormat(), nullptr);
-    HGLRC context;
-
-    if (sWGLLib.HasRobustness()) {
-        int attribs[] = {
-            LOCAL_WGL_CONTEXT_FLAGS_ARB, LOCAL_WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
+        const int attribs[] = {
             LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
             0
         };
-
-        context = sWGLLib.mSymbols.fCreateContextAttribsARB(dc, nullptr, attribs);
-    } else {
-        context = sWGLLib.mSymbols.fCreateContext(dc);
+        const auto context = mSymbols.fCreateContextAttribsARB(dc, nullptr, attribs);
+        if (context)
+            return context;
     }
+    if (mSymbols.fCreateContextAttribsARB) {
+        const auto context = mSymbols.fCreateContextAttribsARB(dc, nullptr, nullptr);
+        if (context)
+            return context;
+    }
+    return mSymbols.fCreateContext(dc);
+}
 
-    if (!context) {
+static RefPtr<GLContext>
+CreateForWidget(const HWND window, const bool isWebRender, const bool requireAccelerated)
+{
+    auto& wgl = sWGLLib;
+    if (!wgl.EnsureInitialized())
         return nullptr;
+
+    const auto dc = GetDC(window);
+    if (!dc)
+        return nullptr;
+    auto cleanupDc = MakeScopeExit([&](){
+        (void)ReleaseDC(window, dc);
+    });
+
+    int chosenFormat;
+    UINT foundFormats = 0;
+
+    if (!foundFormats) {
+        const int kAttribs[] = {
+            LOCAL_WGL_DRAW_TO_WINDOW_ARB, true,
+            LOCAL_WGL_SUPPORT_OPENGL_ARB, true,
+            LOCAL_WGL_DOUBLE_BUFFER_ARB, true,
+            LOCAL_WGL_ACCELERATION_ARB, LOCAL_WGL_FULL_ACCELERATION_ARB,
+            0
+        };
+        if (!wgl.mSymbols.fChoosePixelFormat(wgl.RootDc(), kAttribs, nullptr, 1,
+                                             &chosenFormat, &foundFormats))
+        {
+            foundFormats = 0;
+        }
     }
+    if (!foundFormats) {
+        if (requireAccelerated)
+            return nullptr;
+
+        const int kAttribs[] = {
+            LOCAL_WGL_DRAW_TO_WINDOW_ARB, true,
+            LOCAL_WGL_SUPPORT_OPENGL_ARB, true,
+            LOCAL_WGL_DOUBLE_BUFFER_ARB, true,
+            0
+        };
+        if (!wgl.mSymbols.fChoosePixelFormat(wgl.RootDc(), kAttribs, nullptr, 1,
+                                             &chosenFormat, &foundFormats))
+        {
+            foundFormats = 0;
+        }
+    }
+    if (!foundFormats)
+        return nullptr;
+
+    // We need to make sure we call SetPixelFormat -after- calling
+    // EnsureInitialized, otherwise it can load/unload the dll and
+    // wglCreateContext will fail.
+
+    SetPixelFormat(dc, chosenFormat, nullptr);
+    const auto context = sWGLLib.CreateContextWithFallback(dc, false);
+    if (!context)
+        return nullptr;
 
     SurfaceCaps caps = SurfaceCaps::ForRGBA();
-    RefPtr<GLContextWGL> glContext = new GLContextWGL(CreateContextFlags::NONE, caps,
-                                                      false, dc, context);
-    if (!glContext->Init()) {
+    const RefPtr<GLContextWGL> gl = new GLContextWGL(CreateContextFlags::NONE,
+                                                     SurfaceCaps::ForRGBA(), false,
+                                                     dc, context);
+    cleanupDc.release();
+    gl->mIsDoubleBuffered = true;
+    if (!gl->Init())
         return nullptr;
-    }
 
-    glContext->SetIsDoubleBuffered(true);
-
-    return glContext.forget();
+    return gl;
 }
 
 already_AddRefed<GLContext>
@@ -465,145 +484,84 @@ GLContextProviderWGL::CreateForCompositorWidget(CompositorWidget* aCompositorWid
 {
     return CreateForWidget(aCompositorWidget->AsWindows()->GetHwnd(),
                            aCompositorWidget->GetCompositorOptions().UseWebRender(),
-                           aForceAccelerated);
+                           aForceAccelerated).forget();
 }
 
 already_AddRefed<GLContext>
 GLContextProviderWGL::CreateForWindow(nsIWidget* aWidget, bool aWebRender, bool aForceAccelerated)
 {
-    return CreateForWidget((HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW), aWebRender, aForceAccelerated);
-}
-
-static already_AddRefed<GLContextWGL>
-CreatePBufferOffscreenContext(CreateContextFlags flags, const IntSize& aSize)
-{
-    WGLLibrary& wgl = sWGLLib;
-
-    const int pfAttribs[] = {
-        LOCAL_WGL_SUPPORT_OPENGL_ARB, LOCAL_GL_TRUE,
-        LOCAL_WGL_ACCELERATION_ARB, LOCAL_WGL_FULL_ACCELERATION_ARB,
-
-        LOCAL_WGL_DRAW_TO_PBUFFER_ARB, LOCAL_GL_TRUE,
-        LOCAL_WGL_DOUBLE_BUFFER_ARB, LOCAL_GL_FALSE,
-        LOCAL_WGL_STEREO_ARB, LOCAL_GL_FALSE,
-
-        0
-    };
-
-    // We only need one!
-    static const uint32_t kMaxFormats = 1024;
-    int formats[kMaxFormats];
-    uint32_t foundFormats;
-    HDC windowDC = wgl.GetWindowDC();
-    if (!wgl.mSymbols.fChoosePixelFormat(windowDC, pfAttribs, nullptr, kMaxFormats,
-                                         formats, &foundFormats)
-        || foundFormats == 0)
-    {
-        return nullptr;
-    }
-
-    // We don't care; just pick the first one.
-    int chosenFormat = formats[0];
-    if (!IsValidSizeForFormat(windowDC, chosenFormat, aSize))
-        return nullptr;
-
-    const int pbAttribs[] = { 0 };
-    HANDLE pbuffer = wgl.mSymbols.fCreatePbuffer(windowDC, chosenFormat, aSize.width,
-                                                 aSize.height, pbAttribs);
-    if (!pbuffer) {
-        return nullptr;
-    }
-
-    HDC pbdc = wgl.mSymbols.fGetPbufferDC(pbuffer);
-    NS_ASSERTION(pbdc, "expected a dc");
-
-    HGLRC context;
-    if (wgl.HasRobustness()) {
-        const int attribs[] = {
-            LOCAL_WGL_CONTEXT_FLAGS_ARB, LOCAL_WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
-            LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
-            0
-        };
-        context = wgl.mSymbols.fCreateContextAttribsARB(pbdc, nullptr, attribs);
-    } else {
-        context = wgl.mSymbols.fCreateContext(pbdc);
-    }
-
-    if (!context) {
-        wgl.mSymbols.fDestroyPbuffer(pbuffer);
-        return nullptr;
-    }
-
-    SurfaceCaps dummyCaps = SurfaceCaps::Any();
-    RefPtr<GLContextWGL> glContext = new GLContextWGL(flags, dummyCaps, true, pbuffer,
-                                                      pbdc, context, chosenFormat);
-    return glContext.forget();
-}
-
-static already_AddRefed<GLContextWGL>
-CreateWindowOffscreenContext()
-{
-    HDC dc;
-    HWND win = sWGLLib.CreateDummyWindow(&dc);
-    if (!win) {
-        return nullptr;
-    }
-
-    HGLRC context = sWGLLib.mSymbols.fCreateContext(dc);
-    if (sWGLLib.HasRobustness()) {
-        int attribs[] = {
-            LOCAL_WGL_CONTEXT_FLAGS_ARB, LOCAL_WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB,
-            LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
-            0
-        };
-
-        context = sWGLLib.mSymbols.fCreateContextAttribsARB(dc, nullptr, attribs);
-    } else {
-        context = sWGLLib.mSymbols.fCreateContext(dc);
-    }
-
-    if (!context) {
-        return nullptr;
-    }
-
-    SurfaceCaps caps = SurfaceCaps::ForRGBA();
-    RefPtr<GLContextWGL> glContext = new GLContextWGL(CreateContextFlags::NONE, caps,
-                                                      true, dc, context, win);
-    return glContext.forget();
+    return CreateForWidget((HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW), aWebRender,
+                           aForceAccelerated).forget();
 }
 
 /*static*/ already_AddRefed<GLContext>
-GLContextProviderWGL::CreateHeadless(CreateContextFlags flags,
+GLContextProviderWGL::CreateHeadless(const CreateContextFlags flags,
                                      nsACString* const out_failureId)
 {
-    if (!sWGLLib.EnsureInitialized()) {
+    auto& wgl = sWGLLib;
+    if (!wgl.EnsureInitialized())
         return nullptr;
+
+    int chosenFormat;
+    UINT foundFormats = 0;
+
+    if (!foundFormats) {
+        const int kAttribs[] = {
+            LOCAL_WGL_DRAW_TO_PBUFFER_ARB, true,
+            LOCAL_WGL_SUPPORT_OPENGL_ARB, true,
+            LOCAL_WGL_ACCELERATION_ARB, LOCAL_WGL_FULL_ACCELERATION_ARB,
+            0
+        };
+        if (!wgl.mSymbols.fChoosePixelFormat(wgl.RootDc(), kAttribs, nullptr, 1,
+                                             &chosenFormat, &foundFormats))
+        {
+            foundFormats = 0;
+        }
     }
-
-    RefPtr<GLContextWGL> glContext;
-
-    // Always try to create a pbuffer context first, because we
-    // want the context isolation.
-    if (sWGLLib.mSymbols.fCreatePbuffer &&
-        sWGLLib.mSymbols.fChoosePixelFormat)
-    {
-        IntSize dummySize = IntSize(16, 16);
-        glContext = CreatePBufferOffscreenContext(flags, dummySize);
+    if (!foundFormats) {
+        const int kAttribs[] = {
+            LOCAL_WGL_DRAW_TO_PBUFFER_ARB, true,
+            LOCAL_WGL_SUPPORT_OPENGL_ARB, true,
+            0
+        };
+        if (!wgl.mSymbols.fChoosePixelFormat(wgl.RootDc(), kAttribs, nullptr, 1,
+                                             &chosenFormat, &foundFormats))
+        {
+            foundFormats = 0;
+        }
     }
-
-    // If it failed, then create a window context and use a FBO.
-    if (!glContext) {
-        glContext = CreateWindowOffscreenContext();
-    }
-
-    if (!glContext ||
-        !glContext->Init())
-    {
+    if (!foundFormats)
         return nullptr;
-    }
+    const int kPbufferAttribs[] = {0};
+    const auto pbuffer = wgl.mSymbols.fCreatePbuffer(wgl.RootDc(), chosenFormat, 1, 1,
+                                                     kPbufferAttribs);
+    if (!pbuffer)
+        return nullptr;
+    auto cleanupPbuffer = MakeScopeExit([&]() {
+        (void)wgl.mSymbols.fDestroyPbuffer(pbuffer);
+    });
 
-    RefPtr<GLContext> retGL = glContext.get();
-    return retGL.forget();
+    const auto dc = wgl.mSymbols.fGetPbufferDC(pbuffer);
+    if (!dc)
+        return nullptr;
+    auto cleanupDc = MakeScopeExit([&]() {
+        (void)wgl.mSymbols.fReleasePbufferDC(pbuffer, dc);
+    });
+
+    const auto context = wgl.CreateContextWithFallback(dc, true);
+    if (!context)
+        return nullptr;
+
+    const bool isOffscreen = true;
+    const RefPtr<GLContextWGL> gl = new GLContextWGL(flags, SurfaceCaps::Any(),
+                                                     isOffscreen, pbuffer, dc, context,
+                                                     chosenFormat);
+    cleanupPbuffer.release();
+    cleanupDc.release();
+    if (!gl->Init())
+        return nullptr;
+
+    return RefPtr<GLContext>(gl.get()).forget();
 }
 
 /*static*/ already_AddRefed<GLContext>
@@ -612,14 +570,14 @@ GLContextProviderWGL::CreateOffscreen(const IntSize& size,
                                       CreateContextFlags flags,
                                       nsACString* const out_failureId)
 {
+    *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WGL_INIT");
+
     RefPtr<GLContext> gl = CreateHeadless(flags, out_failureId);
     if (!gl)
         return nullptr;
 
-    if (!gl->InitOffscreen(size, minCaps)) {
-        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WGL_INIT");
+    if (!gl->InitOffscreen(size, minCaps))
         return nullptr;
-    }
 
     return gl.forget();
 }
