@@ -713,7 +713,6 @@ class RefTest(object):
                      interactive=interactive,
                      outputTimeout=timeout)
         proc = runner.process_handler
-        outputHandler.proc_name = 'GECKO({})'.format(proc.pid)
 
         # Used to defer a possible IOError exception from Marionette
         marionette_exception = None
@@ -750,7 +749,6 @@ class RefTest(object):
 
         status = runner.wait()
         runner.process_handler = None
-        outputHandler.proc_name = None
 
         if status:
             msg = "TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s" % \
