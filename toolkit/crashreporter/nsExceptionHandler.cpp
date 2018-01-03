@@ -42,6 +42,7 @@
 #include "nsDirectoryServiceUtils.h"
 
 #include "nsWindowsDllInterceptor.h"
+#include "mozilla/WindowsVersion.h"
 #elif defined(XP_MACOSX)
 #include "breakpad-client/mac/crash_generation/client_info.h"
 #include "breakpad-client/mac/crash_generation/crash_generation_server.h"
@@ -1410,6 +1411,15 @@ GetMinidumpType()
   minidump_type = static_cast<MINIDUMP_TYPE>(minidump_type |
       MiniDumpWithUnloadedModules |
       MiniDumpWithProcessThreadData);
+
+  // dbghelp.dll on Win7 can't handle overlapping memory regions so we only
+  // enable this feature on Win8 or later.
+  if (IsWin8OrLater()) {
+    minidump_type = static_cast<MINIDUMP_TYPE>(minidump_type |
+      // This allows us to examine heap objects referenced from stack objects
+      // at the cost of further doubling the size of minidumps.
+      MiniDumpWithIndirectlyReferencedMemory);
+  }
 #endif
 
   const char* e = PR_GetEnv("MOZ_CRASHREPORTER_FULLDUMP");
