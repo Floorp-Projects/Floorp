@@ -14,8 +14,7 @@ XPCOMUtils.defineLazyGetter(this, "Utils", () => {
   return Cu.import("resource://services-sync/util.js", {}).Utils;
 });
 
-const SYNC_PREFS_BRANCH = "services.sync.";
-
+XPCOMUtils.defineLazyPreferenceGetter(this, "syncUsername", "services.sync.username");
 
 /**
  * Sync's XPCOM service.
@@ -128,8 +127,7 @@ WeaveService.prototype = {
    * For that, you'll want to check Weave.Status.checkSetup().
    */
   get enabled() {
-    let prefs = Services.prefs.getBranch(SYNC_PREFS_BRANCH);
-    return prefs.prefHasUserValue("username");
+    return !!syncUsername;
   }
 };
 
