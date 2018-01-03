@@ -19,6 +19,7 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             'gmake',
             'gtar',
             'mercurial',
+            'node',
             'pkgconf',
             'py%s%s-sqlite3' % sys.version_info[0:2],
             'rust',
