@@ -18,7 +18,8 @@ curl --location --retry 10 --retry-delay 10 -o /home/worker/task.json \
 S3_BUCKET_AND_PATH=$(jq -r '.scopes[] | select(contains ("auth:aws-s3"))' /home/worker/task.json | awk -F: '{print $4}')
 
 # Will be empty if there's no scope for AWS S3.
-if [ -n "${S3_BUCKET_AND_PATH}" ]; then
+if [ -n "${S3_BUCKET_AND_PATH}" ] && getent hosts taskcluster
+then
   # Does this parse as we expect?
   S3_PATH=${S3_BUCKET_AND_PATH#*/}
   AWS_BUCKET_NAME=${S3_BUCKET_AND_PATH%/${S3_PATH}*}
