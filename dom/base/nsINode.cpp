@@ -260,14 +260,13 @@ nsINode* nsINode::GetRootNode(const GetRootNodeOptions& aOptions)
     }
 
     nsINode* node = this;
-    ShadowRoot* shadowRootParent = nullptr;
     while(node) {
       node = node->SubtreeRoot();
-      shadowRootParent = ShadowRoot::FromNode(node);
-      if (!shadowRootParent) {
-         break;
+      ShadowRoot* shadow = ShadowRoot::FromNode(node);
+      if (!shadow) {
+        break;
       }
-      node = shadowRootParent->GetHost();
+      node = shadow->GetHost();
     }
 
     return node;
@@ -395,8 +394,7 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
     content = GetRootForContentSubtree(static_cast<nsIContent*>(this));
     // Fixup for ShadowRoot because the ShadowRoot itself does not have a frame.
     // Use the host as the root.
-    ShadowRoot* shadowRoot = ShadowRoot::FromNode(content);
-    if (shadowRoot) {
+    if (ShadowRoot* shadowRoot = ShadowRoot::FromNode(content)) {
       content = shadowRoot->GetHost();
     }
   }
@@ -3062,12 +3060,9 @@ nsINode::GetParentElementCrossingShadowRoot() const
     return mParent->AsElement();
   }
 
-  ShadowRoot* shadowRoot = ShadowRoot::FromNode(mParent);
-  if (shadowRoot) {
-    nsIContent* host = shadowRoot->GetHost();
-    MOZ_ASSERT(host, "ShowRoots should always have a host");
-    MOZ_ASSERT(host->IsElement(), "ShadowRoot hosts should always be Elements");
-    return host->AsElement();
+  if (ShadowRoot* shadowRoot = ShadowRoot::FromNode(mParent)) {
+    MOZ_ASSERT(shadowRoot->GetHost(), "ShowRoots should always have a host");
+    return shadowRoot->GetHost();
   }
 
   return nullptr;

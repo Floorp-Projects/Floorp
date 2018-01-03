@@ -153,16 +153,6 @@ Gecko_IsInDocument(RawGeckoNodeBorrowed aNode)
   return aNode->IsInComposedDoc();
 }
 
-#ifdef MOZ_DEBUG_RUST
-bool
-Gecko_FlattenedTreeParentIsParent(RawGeckoNodeBorrowed aNode)
-{
-  // Servo calls this in debug builds to verify the result of its own
-  // flattened_tree_parent_is_parent() function.
-  return FlattenedTreeParentIsParent<nsIContent::eForStyle>(aNode);
-}
-#endif
-
 /*
  * Does this child count as significant for selector matching?
  *
@@ -186,11 +176,7 @@ Gecko_GetLastChild(RawGeckoNodeBorrowed aNode)
 RawGeckoNodeBorrowedOrNull
 Gecko_GetFlattenedTreeParentNode(RawGeckoNodeBorrowed aNode)
 {
-  MOZ_ASSERT(!FlattenedTreeParentIsParent<nsIContent::eForStyle>(aNode),
-             "Should have taken the inline path");
-  MOZ_ASSERT(aNode->IsContent(), "Slow path only applies to content");
-  const nsIContent* c = aNode->AsContent();
-  return c->GetFlattenedTreeParentNodeInternal(nsIContent::eForStyle);
+  return aNode->GetFlattenedTreeParentNodeForStyle();
 }
 
 RawGeckoElementBorrowedOrNull

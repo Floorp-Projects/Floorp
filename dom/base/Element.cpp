@@ -1734,12 +1734,9 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Propagate scoped style sheet tracking bit.
   if (mParent->IsContent()) {
-    nsIContent* parent;
-    ShadowRoot* shadowRootParent = ShadowRoot::FromNode(mParent);
-    if (shadowRootParent) {
+    nsIContent* parent = mParent->AsContent();
+    if (ShadowRoot* shadowRootParent = ShadowRoot::FromNode(parent)) {
       parent = shadowRootParent->GetHost();
-    } else {
-      parent = mParent->AsContent();
     }
 
     bool inStyleScope = parent->IsElementInStyleScope();

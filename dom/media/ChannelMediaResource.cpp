@@ -30,7 +30,7 @@ ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
                                            bool aIsPrivateBrowsing)
   : BaseMediaResource(aCallback, aChannel, aURI)
   , mCacheStream(this, aIsPrivateBrowsing)
-  , mSuspendAgent(mCacheStream)
+  , mSuspendAgent(mCacheStream, !aChannel /*aSuspended*/)
 {
 }
 
@@ -580,15 +580,7 @@ ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
   // which will recreate the channel. This way, if all of the media data
   // is already in the cache we don't create an unnecessary HTTP channel
   // and perform a useless HTTP transaction.
-  nsresult rv = resource->mCacheStream.InitAsClone(&mCacheStream);
-  if (NS_FAILED(rv)) {
-    resource->Close();
-    return nullptr;
-  }
-  // mSuspendAgent.Suspend() accesses mCacheStream which is not ready
-  // until InitAsClone() is done.
-  resource->mSuspendAgent.Suspend();
-
+  resource->mCacheStream.InitAsClone(&mCacheStream);
   return resource.forget();
 }
 

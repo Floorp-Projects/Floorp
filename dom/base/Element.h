@@ -1317,9 +1317,7 @@ public:
   // [deprecated] Shadow DOM v0
   already_AddRefed<ShadowRoot> CreateShadowRoot(ErrorResult& aError);
 
-  // FIXME(emilio): Should just shadow GetShadowRoot(), that way we get the fast
-  // version by default everywhere we already have an Element...
-  ShadowRoot* FastGetShadowRoot() const
+  ShadowRoot* GetShadowRoot() const
   {
     const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
     return slots ? slots->mShadowRoot.get() : nullptr;
