@@ -203,6 +203,7 @@ class Bootstrapper(object):
                 args['distro'] = distro
             elif distro in DEBIAN_DISTROS:
                 cls = DebianBootstrapper
+                args['distro'] = distro
             elif distro == 'Gentoo Base System':
                 cls = GentooBootstrapper
             elif os.path.exists('/etc/arch-release'):
