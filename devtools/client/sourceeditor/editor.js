@@ -484,6 +484,16 @@ Editor.prototype = {
   },
 
   /**
+   * The source editor can expose several commands linked from system and context menus.
+   * Kept for backward compatibility with scratchpad and styleeditor.
+   */
+  insertCommandsController: function () {
+    const { insertCommandsController } =
+      require("devtools/client/sourceeditor/editor-commands-controller");
+    insertCommandsController(this);
+  },
+
+  /**
    * Returns text from the text area. If line argument is provided
    * the method returns only that line.
    */
