@@ -11,7 +11,6 @@
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIContentInlines.h"
 #include "nsIdentifierMapEntry.h"
 #include "nsTHashtable.h"
 
@@ -32,6 +31,26 @@ class ShadowRoot final : public DocumentFragment,
                          public nsStubMutationObserver
 {
 public:
+  static ShadowRoot* FromNode(nsINode* aNode)
+  {
+    return aNode->IsShadowRoot() ? static_cast<ShadowRoot*>(aNode) : nullptr;
+  }
+
+  static const ShadowRoot* FromNode(const nsINode* aNode)
+  {
+    return aNode->IsShadowRoot() ? static_cast<const ShadowRoot*>(aNode) : nullptr;
+  }
+
+  static ShadowRoot* FromNodeOrNull(nsINode* aNode)
+  {
+    return aNode ? FromNode(aNode) : nullptr;
+  }
+
+  static const ShadowRoot* FromNodeOrNull(const nsINode* aNode)
+  {
+    return aNode ? FromNode(aNode) : nullptr;
+  }
+
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ShadowRoot,
                                            DocumentFragment)
   NS_DECL_ISUPPORTS_INHERITED
@@ -112,8 +131,6 @@ public:
   void SetAssociatedBinding(nsXBLBinding* aBinding) { mAssociatedBinding = aBinding; }
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  static ShadowRoot* FromNode(nsINode* aNode);
 
   void AddToIdTable(Element* aElement, nsAtom* aId);
   void RemoveFromIdTable(Element* aElement, nsAtom* aId);

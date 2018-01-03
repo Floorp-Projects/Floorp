@@ -6542,7 +6542,7 @@ nsIDocument::ImportNode(nsINode& aNode, bool aDeep, ErrorResult& rv) const
     }
     case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
     {
-      if (ShadowRoot::FromNode(imported)) {
+      if (imported->IsShadowRoot()) {
         break;
       }
       MOZ_FALLTHROUGH;
@@ -7710,7 +7710,7 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
     }
     case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
     {
-      if (ShadowRoot::FromNode(adoptedNode)) {
+      if (adoptedNode->IsShadowRoot()) {
         rv.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
         return nullptr;
       }

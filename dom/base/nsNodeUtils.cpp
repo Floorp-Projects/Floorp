@@ -9,6 +9,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsINode.h"
 #include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "mozilla/dom/Element.h"
 #include "nsIMutationObserver.h"
 #include "nsIDocument.h"
@@ -117,8 +118,7 @@ enum class IsRemoveNotification
         slots->mMutationObservers, nsIMutationObserver, 1,        \
         nsIAnimationObserver, func_, params_);                    \
     }                                                             \
-    ShadowRoot* shadow = ShadowRoot::FromNode(node);              \
-    if (shadow) {                                                 \
+    if (ShadowRoot* shadow = ShadowRoot::FromNode(node)) {        \
       node = shadow->GetHost();                                   \
     } else {                                                      \
       node = node->GetParentNode();                               \

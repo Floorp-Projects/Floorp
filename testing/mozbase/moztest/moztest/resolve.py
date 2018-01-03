@@ -48,6 +48,12 @@ TEST_SUITES = {
         'mach_command': 'check-spidermonkey',
         'kwargs': {'valgrind': False},
     },
+    # TODO(ato): integrate geckodriver tests with moz.build
+    'geckodriver': {
+        'mach_command': 'geckodriver-test',
+        'aliases': ('testing/geckodriver',),
+        'kwargs': {},
+    },
     'mochitest-a11y': {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'a11y', 'test_paths': None},
@@ -133,12 +139,12 @@ TEST_FLAVORS = {
     },
     'reftest': {
         'mach_command': 'reftest',
-        'kwargs': {'tests': []}
+        'kwargs': {'tests': []},
     },
     'steeplechase': {},
     'web-platform-tests': {
         'mach_command': 'web-platform-tests',
-        'kwargs': {'include': []}
+        'kwargs': {'include': []},
     },
     'xpcshell': {
         'mach_command': 'xpcshell-test',

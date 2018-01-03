@@ -218,7 +218,7 @@ public:
   // as the aOriginal stream.
   // Exactly one of InitAsClone or Init must be called before any other method
   // on this class.
-  nsresult InitAsClone(MediaCacheStream* aOriginal);
+  void InitAsClone(MediaCacheStream* aOriginal);
 
   nsIEventTarget* OwnerThread() const;
 
@@ -466,6 +466,7 @@ private:
   void UpdateDownloadStatistics(AutoLock&);
 
   void CloseInternal(AutoLock&);
+  void InitAsCloneInternal(MediaCacheStream* aOriginal);
 
   // Instance of MediaCache to use with this MediaCacheStream.
   RefPtr<MediaCache> mMediaCache;
