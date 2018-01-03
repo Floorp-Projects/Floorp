@@ -3606,7 +3606,7 @@ ContainerState::NewPaintedLayerData(nsDisplayItem* aItem,
   data.mClipChain = aClipChain;
   data.mAnimatedGeometryRootOffset = aTopLeft;
   data.mReferenceFrame = aItem->ReferenceFrame();
-  data.mBackfaceHidden = aItem->Frame()->In3DContextAndBackfaceIsHidden();
+  data.mBackfaceHidden = aItem->In3DContextAndBackfaceIsHidden();
 
   data.mNewChildLayersIndex = mNewChildLayers.Length();
   NewLayerEntry* newLayerEntry = mNewChildLayers.AppendElement();
@@ -4442,7 +4442,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       PaintedLayerData* paintedLayerData =
         mPaintedLayerDataTree.FindPaintedLayerFor(animatedGeometryRoot, itemASR, layerClipChain,
                                                   itemVisibleRect,
-                                                  item->Frame()->In3DContextAndBackfaceIsHidden(),
+                                                  item->In3DContextAndBackfaceIsHidden(),
                                                   [&]() {
           return NewPaintedLayerData(item, animatedGeometryRoot, itemASR, layerClipChain, scrollMetadataASR,
                                      topLeft);
