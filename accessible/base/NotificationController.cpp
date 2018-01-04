@@ -680,9 +680,8 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     // If the text node is not in tree or doesn't have a frame, or placed in
     // another document, then this case should have been handled already by
     // content removal notifications.
-    nsINode* containerNode = textNode->GetParentNode();
-    if (!containerNode ||
-        textNode->GetOwnerDocument() != mDocument->DocumentNode()) {
+    nsINode* containerNode = textNode->GetFlattenedTreeParentNode();
+    if (!containerNode || textNode->OwnerDoc() != mDocument->DocumentNode()) {
       MOZ_ASSERT(!textAcc,
                  "Text node was removed but accessible is kept alive!");
       continue;

@@ -1,3 +1,4 @@
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -9,11 +10,11 @@ from setuptools import setup
 
 try:
     here = os.path.dirname(os.path.abspath(__file__))
-    description = file(os.path.join(here, 'README.md')).read()
+    description = open(os.path.join(here, 'README.md')).read()
 except IOError:
     description = None
 
-PACKAGE_VERSION = '1.14'
+PACKAGE_VERSION = '1.15'
 
 deps = ['mozinfo >= 0.7',
         'mozfile >= 1.0',
@@ -33,7 +34,7 @@ setup(name='mozInstall',
                    'Operating System :: OS Independent',
                    'Topic :: Software Development :: Libraries :: Python Modules',
                    'Programming Language :: Python :: 2.7',
-                   'Programming Language :: Python :: 2 :: Only'],
+                   'Programming Language :: Python :: 3'],
       keywords='mozilla',
       author='Mozilla Automation and Tools team',
       author_email='tools@lists.mozilla.org',

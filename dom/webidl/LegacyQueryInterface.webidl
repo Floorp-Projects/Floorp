@@ -92,4 +92,3 @@ XMLHttpRequest implements LegacyQueryInterface;
 XMLHttpRequestUpload implements LegacyQueryInterface;
 XMLSerializer implements LegacyQueryInterface;
 XPathEvaluator implements LegacyQueryInterface;
-XULTemplateBuilder implements LegacyQueryInterface;

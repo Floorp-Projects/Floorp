@@ -6,11 +6,11 @@ import argparse
 import json
 import optparse
 import os
-import StringIO
 import sys
 import unittest
 import signal
 import xml.etree.ElementTree as ET
+from six import StringIO
 
 import mozunit
 
@@ -635,7 +635,7 @@ class FormatterTest(unittest.TestCase):
         self.position = 0
         self.logger = structuredlog.StructuredLogger(
             "test_%s" % type(self).__name__)
-        self.output_file = StringIO.StringIO()
+        self.output_file = StringIO()
         self.handler = handlers.StreamHandler(
             self.output_file, self.get_formatter())
         self.logger.add_handler(self.handler)
@@ -1104,7 +1104,7 @@ class TestReader(unittest.TestCase):
 
     def to_file_like(self, obj):
         data_str = "\n".join(json.dumps(item) for item in obj)
-        return StringIO.StringIO(data_str)
+        return StringIO(data_str)
 
     def test_read(self):
         data = [{"action": "action_0", "data": "data_0"},

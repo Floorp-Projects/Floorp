@@ -10,23 +10,6 @@
 <button id="button1" label="Button1" persist="value"/>
 <button id="button2" label="Button2" value="Normal" persist="value"/>
 
-<tree id="tree" datasources="animals.rdf" ref="http://www.some-fictitious-zoo.com/all-animals" 
-       flags="dont-build-content" width="200" height="200">
-  <treecols orient="horizontal" id="treecols">
-    <treecol id="treecol" primary="true" label="Name" flex="1"/>
-  </treecols>
-  <template id="template">
-    <treechildren>
-      <treeitem uri="rdf:*">
-        <treerow>
-          <treecell label="rdf:http://www.some-fictitious-zoo.com/rdf#name"/>
-          <treecell/>
-        </treerow>
-      </treeitem>
-    </treechildren>
-  </template>
-</tree>
-
 <script>
 <![CDATA[
 
@@ -38,17 +21,10 @@ let URI = "chrome://mochitests/content/chrome/toolkit/components/xulstore/tests/
 
 function opened()
 {
-  // If the data in the tree has not been loaded yet, wait a bit and try again.
-  var treeView = document.getElementById("tree").view;
-  if (treeView.rowCount != 6 && treeView.rowCount != 17) {
-    setTimeout(opened, 50);
-    return;
-  }
-
-  runTest(treeView);
+  runTest();
 }
 
-function runTest(treeView)
+function runTest()
 {
   var firstRun = window.arguments[0];
   if (firstRun) {
@@ -61,10 +37,6 @@ function runTest(treeView)
     document.getElementById("button2").removeAttribute("foo");
     document.persist("button2", "foo");
     is(XULStore.hasValue(URI, "button2", "foo"), false, "attribute removed")
-
-    is(treeView.rowCount, 6, "tree rows are closed");
-    treeView.toggleOpenState(1);
-    treeView.toggleOpenState(7);
 
     window.close();
     window.opener.windowOpened();
@@ -80,11 +52,6 @@ function runTest(treeView)
        "Attribute cleared");
     is(document.getElementById("button2").getAttribute("foo"), "",
        "Attribute cleared");
-
-    is(treeView.rowCount, 17, "tree rows are open");
-    is(treeView.isContainerOpen(0), false, "first closed row");
-    is(treeView.isContainerOpen(1), true, "first open row");
-    is(treeView.isContainerOpen(7), true, "second open row");
 
     window.close();
     window.opener.testDone();

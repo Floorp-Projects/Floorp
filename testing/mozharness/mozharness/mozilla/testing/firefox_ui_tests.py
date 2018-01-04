@@ -150,6 +150,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
                         'firefox-ui/*',
                         'marionette/*',
                         'mozbase/*',
+                        'tools/mozterm/*',
                         'tools/wptserve/*',
                         ]
         super(FirefoxUITests, self).download_and_extract(extract_dirs=extract_dirs)

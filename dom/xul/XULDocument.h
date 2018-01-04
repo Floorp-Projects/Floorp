@@ -130,10 +130,6 @@ public:
 
     NS_IMETHOD AddSubtreeToDocument(nsIContent* aContent) override;
     NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aContent) override;
-    NS_IMETHOD SetTemplateBuilderFor(nsIContent* aContent,
-                                     nsIXULTemplateBuilder* aBuilder) override;
-    NS_IMETHOD GetTemplateBuilderFor(nsIContent* aContent,
-                                     nsIXULTemplateBuilder** aResult) override;
     NS_IMETHOD OnPrototypeLoadDone(bool aResumeWalk) override;
     bool OnDocumentParserError() override;
 
@@ -352,12 +348,6 @@ protected:
 
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
-    // Maintains the template builders that have been attached to
-    // content elements
-    typedef nsInterfaceHashtable<nsISupportsHashKey, nsIXULTemplateBuilder>
-        BuilderTable;
-    BuilderTable* mTemplateBuilderTable;
-
     uint32_t mPendingSheets;
 
     /**
@@ -469,18 +459,6 @@ protected:
     size_t mOffThreadCompileStringLength;
 
     /**
-     * Check if a XUL template builder has already been hooked up.
-     */
-    static nsresult
-    CheckTemplateBuilderHookup(mozilla::dom::Element* aElement, bool* aNeedsHookup);
-
-    /**
-     * Create a XUL template builder on the specified node.
-     */
-    static nsresult
-    CreateTemplateBuilder(Element* aElement);
-
-    /**
      * Add the current prototype's style sheets (currently it's just
      * style overlays from the chrome registry) to the document.
      */
@@ -566,21 +544,6 @@ protected:
     };
 
     friend class OverlayForwardReference;
-
-    class TemplateBuilderHookup : public nsForwardReference
-    {
-    protected:
-        nsCOMPtr<Element> mElement; // [OWNER]
-
-    public:
-        explicit TemplateBuilderHookup(Element* aElement)
-            : mElement(aElement) {}
-
-        virtual Phase GetPhase() override { return eHookup; }
-        virtual Result Resolve() override;
-    };
-
-    friend class TemplateBuilderHookup;
 
     // The out params of FindBroadcaster only have values that make sense when
     // the method returns NS_FINDBROADCASTER_FOUND.  In all other cases, the

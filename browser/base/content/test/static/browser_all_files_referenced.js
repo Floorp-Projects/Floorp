@@ -173,13 +173,7 @@ whitelist = new Set(whitelist.filter(item =>
 ).map(item => item.file));
 
 const ignorableWhitelist = new Set([
-  // chrome://xslt-qa/ isn't referenced, but isn't included in packaged builds,
-  // so it's fine to just ignore it and ignore if the exceptions are unused.
-  "chrome://xslt-qa/content/buster/result-view.xul",
-  "chrome://xslt-qa/content/xslt-qa-overlay.xul",
-  // The communicator.css file is kept for add-on backward compat, but it is
-  // referenced by something in xslt-qa, so the exception won't be used when
-  // running the test on a local non-packaged build.
+  // The communicator.css file is kept for add-on backward compat.
   "chrome://communicator/skin/communicator.css",
 
   // These 2 files are unreferenced only when building without the crash

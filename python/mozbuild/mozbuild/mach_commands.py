@@ -30,6 +30,7 @@ from mach.decorators import (
 from mach.main import Mach
 
 from mozbuild.base import (
+    BuildEnvironmentNotFoundException,
     MachCommandBase,
     MachCommandConditions as conditions,
     MozbuildObject,
@@ -363,6 +364,13 @@ class Clobber(MachCommandBase):
                 cmd = ['find', '.', '-type', 'f', '-name', '*.py[co]', '-delete']
             ret = subprocess.call(cmd, cwd=self.topsrcdir)
         return ret
+
+    @property
+    def substs(self):
+        try:
+            return super(Clobber, self).substs
+        except BuildEnvironmentNotFoundException:
+            return {}
 
 @CommandProvider
 class Logs(MachCommandBase):

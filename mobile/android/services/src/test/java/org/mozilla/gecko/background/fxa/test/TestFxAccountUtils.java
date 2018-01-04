@@ -74,7 +74,8 @@ public class TestFxAccountUtils {
   @Test
   public void testGenerateSyncKeyBundle() throws Exception {
     byte[] kB = Utils.hex2Byte("d02d8fe39f28b601159c543f2deeb8f72bdf2043e8279aa08496fbd9ebaea361");
-    KeyBundle bundle = FxAccountUtils.generateSyncKeyBundle(kB);
+    byte[] kSync = FxAccountUtils.deriveSyncKey(kB);
+    KeyBundle bundle = FxAccountUtils.generateSyncKeyBundle(kSync);
     Assert.assertEquals("rsLwECkgPYeGbYl92e23FskfIbgld9TgeifEaB9ZwTI=", Base64.encodeBase64String(bundle.getEncryptionKey()));
     Assert.assertEquals("fs75EseCD/VOLodlIGmwNabBjhTYBHFCe7CGIf0t8Tw=", Base64.encodeBase64String(bundle.getHMACKey()));
   }

@@ -22,11 +22,6 @@
 <!ENTITY changeBlockList2.label               "Change Block List…">
 <!ENTITY changeBlockList2.accesskey           "C">
 
-<!ENTITY  doNotTrack.description        "Send websites a “Do Not Track” signal that you don’t want to be tracked">
-<!ENTITY  doNotTrack.learnMore.label    "Learn more">
-<!ENTITY  doNotTrack.default.label      "Only when using Tracking Protection">
-<!ENTITY  doNotTrack.always.label       "Always">
-
 <!ENTITY  history.label                 "History">
 <!ENTITY  permissions.label             "Permissions">
 

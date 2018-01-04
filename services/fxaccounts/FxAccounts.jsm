@@ -1561,7 +1561,11 @@ FxAccountsInternal.prototype = {
   },
 
   /**
-   * Get the user's account and profile data
+   * Get the user's account and profile data if it is locally cached. If
+   * not cached it will return null, but cause the profile data to be fetched
+   * in the background, after which a ON_PROFILE_CHANGE_NOTIFICATION
+   * observer notification will be sent, at which time this can be called
+   * again to obtain the most recent profile info.
    *
    * @param options
    *        {

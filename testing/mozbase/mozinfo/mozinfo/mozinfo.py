@@ -16,6 +16,7 @@ import re
 import sys
 from .string_version import StringVersion
 from ctypes.util import find_library
+from six import string_types
 
 # keep a copy of the os module since updating globals overrides this
 _os = os
@@ -188,7 +189,7 @@ def update(new_info):
                      to a json file containing the new info.
     """
 
-    if isinstance(new_info, basestring):
+    if isinstance(new_info, string_types):
         # lazy import
         import mozfile
         import json
@@ -252,7 +253,7 @@ def output_to_file(path):
 update({})
 
 # exports
-__all__ = info.keys()
+__all__ = list(info.keys())
 __all__ += ['is' + os_name.title() for os_name in choices['os']]
 __all__ += [
     'info',
@@ -283,7 +284,7 @@ def main(args=None):
         import json
         for arg in args:
             if _os.path.exists(arg):
-                string = file(arg).read()
+                string = open(arg).read()
             else:
                 string = arg
             update(json.loads(string))

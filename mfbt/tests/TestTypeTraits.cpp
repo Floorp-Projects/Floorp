@@ -71,7 +71,7 @@ static_assert(!IsPointer<IsPointerTest>::value,
               "IsPointerTest not a pointer");
 static_assert(IsPointer<IsPointerTest*>::value,
               "IsPointerTest* is a pointer");
-static_assert(!IsPointer<bool(IsPointerTest::*)>::value,
+static_assert(!IsPointer<bool(IsPointerTest::*)()>::value,
               "bool(IsPointerTest::*) not a pointer");
 static_assert(!IsPointer<void(IsPointerTest::*)(void)>::value,
               "void(IsPointerTest::*)(void) not a pointer");
