@@ -150,6 +150,9 @@ child:
 
   async AttachStreamFilter(Endpoint<PStreamFilterParent> aEndpoint);
 
+  // See ADivertableParentChannel::CancelDiversion
+  async CancelDiversion();
+
 both:
   // After receiving this message, the parent also calls
   // SendFinishInterceptedRedirect, and makes sure not to send any more messages
