@@ -171,7 +171,12 @@
     "en-GB": {
       "default": {
         "visibleDefaultEngines": [
-          "google", "yahoo-en-GB",  "bing", "amazon-co-uk", "ddg", "qwant", "twitter", "wikipedia"
+          "google", "yahoo-en-GB", "bing", "amazon-co-uk", "ddg", "qwant", "twitter", "wikipedia"
+        ]
+      },
+      "RU": {
+        "visibleDefaultEngines": [
+          "google", "yahoo-en-GB", "bing", "amazon-co-uk", "ddg", "qwant", "twitter", "wikipedia", "yandex-en"
         ]
       }
     },
@@ -179,6 +184,11 @@
       "default": {
         "visibleDefaultEngines": [
           "google", "yahoo", "bing", "amazondotcom", "ddg", "twitter", "wikipedia"
+        ]
+      },
+      "RU": {
+        "visibleDefaultEngines": [
+          "google", "yahoo", "bing", "amazondotcom", "ddg", "twitter", "wikipedia", "yandex-en"
         ]
       },
       "experimental-hidden": {
