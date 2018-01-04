@@ -49,40 +49,45 @@ add_task(async function run_test() {
     Assert.equal(tracker.score, 0);
 
     _("Tell the tracker to start tracking changes.");
-    Svc.Obs.notify("weave:engine:start-tracking");
+    tracker.start();
     prefs.set("testing.int", 23);
+    await tracker.asyncObserver.promiseObserversComplete();
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE);
     Assert.equal(tracker.modified, true);
 
     _("Clearing changed IDs reset modified status.");
-    tracker.clearChangedIDs();
+    await tracker.clearChangedIDs();
     Assert.equal(tracker.modified, false);
 
     _("Resetting a pref ups the score, too.");
     prefs.reset("testing.int");
+    await tracker.asyncObserver.promiseObserversComplete();
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 2);
     Assert.equal(tracker.modified, true);
-    tracker.clearChangedIDs();
+    await tracker.clearChangedIDs();
 
     _("So does changing a pref sync pref.");
     Svc.Prefs.set("prefs.sync.testing.int", false);
+    await tracker.asyncObserver.promiseObserversComplete();
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     Assert.equal(tracker.modified, true);
-    tracker.clearChangedIDs();
+    await tracker.clearChangedIDs();
 
     _("Now that the pref sync pref has been flipped, changes to it won't be picked up.");
     prefs.set("testing.int", 42);
+    await tracker.asyncObserver.promiseObserversComplete();
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     Assert.equal(tracker.modified, false);
-    tracker.clearChangedIDs();
+    await tracker.clearChangedIDs();
 
     _("Changing some other random pref won't do anything.");
     prefs.set("testing.other", "blergh");
+    await tracker.asyncObserver.promiseObserversComplete();
     Assert.equal(tracker.score, SCORE_INCREMENT_XLARGE * 3);
     Assert.equal(tracker.modified, false);
 
   } finally {
-    Svc.Obs.notify("weave:engine:stop-tracking");
+    await tracker.stop();
     prefs.resetBranch("");
   }
 });

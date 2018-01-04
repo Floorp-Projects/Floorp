@@ -47,23 +47,15 @@ async function verifyTrackedItems(tracked) {
     JSON.stringify(Array.from(trackedIDs))}`);
 }
 
-async function startTracking() {
-  Svc.Obs.notify("weave:engine:start-tracking");
-}
-
-async function stopTracking() {
-  Svc.Obs.notify("weave:engine:stop-tracking");
-}
-
 async function resetTracker() {
-  tracker.clearChangedIDs();
+  await tracker.clearChangedIDs();
   tracker.resetScore();
 }
 
 async function cleanup() {
   await PlacesTestUtils.clearHistory();
   await resetTracker();
-  await stopTracking();
+  await tracker.stop();
 }
 
 add_task(async function test_empty() {
@@ -102,7 +94,7 @@ add_task(async function test_start_tracking() {
   });
 
   _("Tell the tracker to start tracking changes.");
-  await startTracking();
+  tracker.start();
   let scorePromise = promiseOneObserver("weave:engine:score:updated");
   await addVisit("start_tracking");
   await scorePromise;
@@ -119,13 +111,13 @@ add_task(async function test_start_tracking() {
 
 add_task(async function test_start_tracking_twice() {
   _("Verifying preconditions.");
-  await startTracking();
+  tracker.start();
   await addVisit("start_tracking_twice1");
   await verifyTrackedCount(1);
   Assert.equal(tracker.score, SCORE_INCREMENT_SMALL);
 
   _("Notifying twice won't do any harm.");
-  await startTracking();
+  tracker.start();
   let scorePromise = promiseOneObserver("weave:engine:score:updated");
   await addVisit("start_tracking_twice2");
   await scorePromise;
@@ -146,7 +138,7 @@ add_task(async function test_track_delete() {
   let guid = await engine._store.GUIDForUri(uri.spec);
   await verifyTrackerEmpty();
 
-  await startTracking();
+  tracker.start();
   let visitRemovedPromise = promiseVisit("removed", uri);
   let scorePromise = promiseOneObserver("weave:engine:score:updated");
   await PlacesUtils.history.remove(uri);
@@ -166,7 +158,7 @@ add_task(async function test_dont_track_expiration() {
   await resetTracker();
   await verifyTrackerEmpty();
 
-  await startTracking();
+  tracker.start();
   let visitRemovedPromise = promiseVisit("removed", uriToRemove);
   let scorePromise = promiseOneObserver("weave:engine:score:updated");
 
@@ -191,7 +183,7 @@ add_task(async function test_dont_track_expiration() {
 
 add_task(async function test_stop_tracking() {
   _("Let's stop tracking again.");
-  await stopTracking();
+  await tracker.stop();
   await addVisit("stop_tracking");
   await verifyTrackerEmpty();
 
@@ -199,11 +191,11 @@ add_task(async function test_stop_tracking() {
 });
 
 add_task(async function test_stop_tracking_twice() {
-  await stopTracking();
+  await tracker.stop();
   await addVisit("stop_tracking_twice1");
 
   _("Notifying twice won't do any harm.");
-  await stopTracking();
+  await tracker.stop();
   await addVisit("stop_tracking_twice2");
   await verifyTrackerEmpty();
 
@@ -211,7 +203,7 @@ add_task(async function test_stop_tracking_twice() {
 });
 
 add_task(async function test_filter_file_uris() {
-  await startTracking();
+  tracker.start();
 
   let uri = CommonUtils.makeURI("file:///Users/eoger/tps/config.json");
   let visitAddedPromise = promiseVisit("added", uri);
@@ -223,12 +215,12 @@ add_task(async function test_filter_file_uris() {
   await visitAddedPromise;
 
   await verifyTrackerEmpty();
-  await stopTracking();
+  await tracker.stop();
   await cleanup();
 });
 
 add_task(async function test_filter_hidden() {
-  await startTracking();
+  tracker.start();
 
   _("Add visit; should be hidden by the redirect");
   let hiddenURI = await addVisit("hidden");

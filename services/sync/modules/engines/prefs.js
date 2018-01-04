@@ -235,9 +235,7 @@ PrefStore.prototype = {
 
 function PrefTracker(name, engine) {
   Tracker.call(this, name, engine);
-  Svc.Obs.add("profile-before-change", this);
-  Svc.Obs.add("weave:engine:start-tracking", this);
-  Svc.Obs.add("weave:engine:stop-tracking", this);
+  Svc.Obs.add("profile-before-change", this.asyncObserver);
 }
 PrefTracker.prototype = {
   __proto__: Tracker.prototype,
@@ -261,21 +259,19 @@ PrefTracker.prototype = {
     return this.__prefs;
   },
 
-  startTracking() {
-    Services.prefs.addObserver("", this);
+  onStart() {
+    Services.prefs.addObserver("", this.asyncObserver);
   },
 
-  stopTracking() {
+  onStop() {
     this.__prefs = null;
-    Services.prefs.removeObserver("", this);
+    Services.prefs.removeObserver("", this.asyncObserver);
   },
 
-  observe(subject, topic, data) {
-    Tracker.prototype.observe.call(this, subject, topic, data);
-
+  async observe(subject, topic, data) {
     switch (topic) {
       case "profile-before-change":
-        this.stopTracking();
+        await this.stop();
         break;
       case "nsPref:changed":
         if (this.ignoreAll) {

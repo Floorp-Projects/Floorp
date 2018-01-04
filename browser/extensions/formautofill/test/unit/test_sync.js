@@ -142,6 +142,7 @@ add_task(async function test_outgoing() {
       },
     ]);
 
+    await engine._tracker.asyncObserver.promiseObserversComplete();
     // The tracker should have a score recorded for the 2 additions we had.
     equal(engine._tracker.score, SCORE_INCREMENT_XLARGE * 2);
 
