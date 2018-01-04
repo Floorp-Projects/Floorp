@@ -67,7 +67,7 @@ const size_t ChunkMarkBitmapBits = 129024;
 const size_t ChunkRuntimeOffset = ChunkSize - sizeof(void*);
 const size_t ChunkTrailerSize = 2 * sizeof(uintptr_t) + sizeof(uint64_t);
 const size_t ChunkLocationOffset = ChunkSize - ChunkTrailerSize;
-const size_t ChunkStoreBufferOffset = ChunkLocationOffset + sizeof(uint64_t);
+const size_t ChunkStoreBufferOffset = ChunkSize - ChunkTrailerSize + sizeof(uint64_t);
 const size_t ArenaZoneOffset = sizeof(size_t);
 const size_t ArenaHeaderSize = sizeof(size_t) + 2 * sizeof(uintptr_t) +
                                sizeof(size_t) + sizeof(uintptr_t);

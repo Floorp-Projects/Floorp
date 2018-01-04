@@ -622,6 +622,16 @@ class JSString : public js::gc::Cell
         js::gc::TenuredCell::writeBarrierPre(&thing->asTenured());
     }
 
+    static void addCellAddressToStoreBuffer(js::gc::StoreBuffer* buffer, js::gc::Cell** cellp)
+    {
+        buffer->putCell(cellp);
+    }
+
+    static void removeCellAddressFromStoreBuffer(js::gc::StoreBuffer* buffer, js::gc::Cell** cellp)
+    {
+        buffer->unputCell(cellp);
+    }
+
     static void writeBarrierPost(void* cellp, JSString* prev, JSString* next) {
         // See JSObject::writeBarrierPost for a description of the logic here.
         MOZ_ASSERT(cellp);
