@@ -365,7 +365,7 @@ function parseCodeFile(fileUri) {
     let baseUri;
     for (let line of data.split("\n")) {
       let urls =
-        line.match(/["'`]chrome:\/\/[a-zA-Z0-9 -]+\/(content|skin|locale)\/[^"'` ]*["'`]/g);
+        line.match(/["'`]chrome:\/\/[a-zA-Z0-9-]+\/(content|skin|locale)\/[^"'` ]*["'`]/g);
       if (!urls) {
         urls = line.match(/["']resource:\/\/[^"']+["']/g);
         if (urls && isDevtools &&
@@ -521,9 +521,8 @@ function findChromeUrlsFromArray(array, prefix) {
     }
 
     // Only keep strings that look like real chrome or resource urls.
-    if (/chrome:\/\/[a-zA-Z09 -]+\/(content|skin|locale)\//.test(string) ||
-        /resource:\/\/gre.*\.[a-z]+/.test(string) ||
-        string.startsWith("resource://content-accessible/"))
+    if (/chrome:\/\/[a-zA-Z09-]+\/(content|skin|locale)\//.test(string) ||
+        /resource:\/\/[a-zA-Z09-]*\/.*\.[a-z]+/.test(string))
       gReferencesFromCode.set(string, null);
   }
 }
