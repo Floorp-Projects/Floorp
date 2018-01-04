@@ -1,11 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-"""
-Transform the upload-symbols task description template,
-  taskcluster/ci/upload-symbols/job-template.yml
-into an actual task description.
-"""
 
 from __future__ import absolute_import, print_function, unicode_literals
 
@@ -18,8 +13,43 @@ from taskgraph.util.docker import (
     generate_context_hash,
 )
 from taskgraph.util.cached_tasks import add_optimization
+from taskgraph.util.schema import (
+    Schema,
+    validate_schema,
+)
+from voluptuous import (
+    Optional,
+    Required,
+)
 
 transforms = TransformSequence()
+
+docker_image_schema = Schema({
+    # Name of the docker image.
+    Required('name'): basestring,
+
+    # Treeherder symbol.
+    Required('symbol'): basestring,
+
+    # relative path (from config.path) to the file the docker image was defined
+    # in.
+    Optional('job-from'): basestring,
+
+    # Arguments to use for the Dockerfile.
+    Optional('args'): {basestring: basestring},
+
+    # Name of the docker image definition under taskcluster/docker, when
+    # different from the docker image name.
+    Optional('definition'): basestring,
+})
+
+
+@transforms.add
+def validate(config, tasks):
+    for task in tasks:
+        yield validate_schema(
+            docker_image_schema, task,
+            "In docker image {!r}:".format(task.get('name', 'unknown')))
 
 
 @transforms.add
@@ -27,9 +57,12 @@ def fill_template(config, tasks):
     for task in tasks:
         image_name = task.pop('name')
         job_symbol = task.pop('symbol')
+        args = task.pop('args', {})
+        definition = task.pop('definition', image_name)
 
-        context_path = os.path.join('taskcluster', 'docker', image_name)
-        context_hash = generate_context_hash(GECKO, context_path, image_name)
+        context_path = os.path.join('taskcluster', 'docker', definition)
+        context_hash = generate_context_hash(
+            GECKO, context_path, image_name, args)
 
         description = 'Build the docker image {} for use by dependent tasks'.format(
             image_name)
@@ -96,6 +129,9 @@ def fill_template(config, tasks):
                 'max-run-time': 7200,
             },
         }
+
+        for k, v in args.items():
+            taskdesc['worker']['env'][k] = v
 
         add_optimization(
             config, taskdesc,

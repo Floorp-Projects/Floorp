@@ -477,12 +477,6 @@ protected:
   virtual nsCString GetDebugInfo();
 
 private:
-  // Ensures our media resource has been pinned.
-  virtual void PinForSeek() = 0;
-
-  // Ensures our media resource has been unpinned.
-  virtual void UnpinForSeek() = 0;
-
   // Called when the owner's activity changed.
   void NotifyCompositor();
 

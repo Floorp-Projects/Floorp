@@ -15,13 +15,12 @@
           src="../events.js"></script>
 
   <script type="application/javascript">
+    /* import-globals-from ../common.js */
     /**
      * Turn on/off the caret browsing mode.
      */
     function turnCaretBrowsing(aIsOn) {
-      var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-        getService(Components.interfaces.nsIPrefBranch);
-      prefs.setBoolPref("accessibility.browsewithcaret", aIsOn);
+      Services.prefs.setBoolPref("accessibility.browsewithcaret", aIsOn);
     }
 
     /**

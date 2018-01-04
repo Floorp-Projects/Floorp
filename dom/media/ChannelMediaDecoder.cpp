@@ -579,29 +579,6 @@ ChannelMediaDecoder::Resume()
 }
 
 void
-ChannelMediaDecoder::PinForSeek()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!mResource || mPinnedForSeek) {
-    return;
-  }
-  mPinnedForSeek = true;
-  mResource->Pin();
-}
-
-void
-ChannelMediaDecoder::UnpinForSeek()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  if (!mResource || !mPinnedForSeek) {
-    return;
-  }
-  mPinnedForSeek = false;
-  mResource->Unpin();
-}
-
-void
 ChannelMediaDecoder::MetadataLoaded(
   UniquePtr<MediaInfo> aInfo,
   UniquePtr<MetadataTags> aTags,
