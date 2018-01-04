@@ -1188,6 +1188,13 @@ VRSystemManagerOpenVR::ScanForControllers()
       openVRController->SetTrackedIndex(trackedDevice);
       mOpenVRController.AppendElement(openVRController);
 
+      // If the Windows MR controller doesn't has the amount
+      // of buttons or axes as our expectation, switching off
+      // the workaround for Windows MR.
+      if (mIsWindowsMR && (numAxes < 4 || numButtons < 5)) {
+        mIsWindowsMR = false;
+        NS_WARNING("OpenVR - Switching off Windows MR mode.");
+      }
       // Not already present, add it.
       AddGamepad(openVRController->GetControllerInfo());
       ++mControllerCount;
@@ -1216,7 +1223,7 @@ VRSystemManagerOpenVR::GetControllerDeviceId(::vr::ETrackedDeviceClass aDeviceTy
     {
       ::vr::ETrackedPropertyError err;
       uint32_t requiredBufferLen;
-      bool founded = false;
+      bool isFound = false;
       char charBuf[128];
       requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(aDeviceIndex,
                           ::vr::Prop_RenderModelName_String, charBuf, 128, &err);
@@ -1227,7 +1234,7 @@ VRSystemManagerOpenVR::GetControllerDeviceId(::vr::ETrackedDeviceClass aDeviceTy
       nsCString deviceId(charBuf);
       if (deviceId.Find("knuckles") != kNotFound) {
         aId.AssignLiteral("OpenVR Knuckles");
-        founded = true;
+        isFound = true;
       }
       requiredBufferLen = mVRSystem->GetStringTrackedDeviceProperty(aDeviceIndex,
         ::vr::Prop_SerialNumber_String, charBuf, 128, &err);
@@ -1239,9 +1246,9 @@ VRSystemManagerOpenVR::GetControllerDeviceId(::vr::ETrackedDeviceClass aDeviceTy
       if (deviceId.Find("MRSOURCE") != kNotFound) {
         aId.AssignLiteral("Spatial Controller (Spatial Interaction Source) ");
         mIsWindowsMR = true;
-        founded = true;
+        isFound = true;
       }
-      if (!founded) {
+      if (!isFound) {
         aId.AssignLiteral("OpenVR Gamepad");
       }
       break;

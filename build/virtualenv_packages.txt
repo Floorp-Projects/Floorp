@@ -4,6 +4,7 @@ mozilla.pth:python/mozbuild
 mozilla.pth:python/mozlint
 mozilla.pth:python/mozterm
 mozilla.pth:python/mozversioncontrol
+mozilla.pth:python/l10n
 mozilla.pth:third_party/python/blessings
 mozilla.pth:third_party/python/compare-locales
 mozilla.pth:third_party/python/configobj

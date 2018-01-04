@@ -14,12 +14,12 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 public class Cohabiting extends TokensAndKeysState {
   private static final String LOG_TAG = Cohabiting.class.getSimpleName();
 
-  public Cohabiting(String email, String uid, byte[] sessionToken, byte[] kA, byte[] kB, BrowserIDKeyPair keyPair) {
-    super(StateLabel.Cohabiting, email, uid, sessionToken, kA, kB, keyPair);
+  /* package-private */ Cohabiting(String email, String uid, byte[] sessionToken, byte[] kSync, String kXCS, BrowserIDKeyPair keyPair) {
+    super(StateLabel.Cohabiting, email, uid, sessionToken, kSync, kXCS, keyPair);
   }
 
   public Married withCertificate(String certificate) {
-    return new Married(email, uid, sessionToken, kA, kB, keyPair, certificate);
+    return new Married(email, uid, sessionToken, kSync, kXCS, keyPair, certificate);
   }
 
   @Override

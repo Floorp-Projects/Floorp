@@ -30,7 +30,6 @@ include ../../dom/xbl/crashtests/crashtests.list
 include ../../dom/xml/crashtests/crashtests.list
 include ../../dom/xslt/crashtests/crashtests.list
 include ../../dom/xul/crashtests/crashtests.list
-include ../../dom/xul/templates/crashtests/crashtests.list
 
 include ../../editor/composer/crashtests/crashtests.list
 include ../../editor/libeditor/crashtests/crashtests.list

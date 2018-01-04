@@ -85,32 +85,35 @@ SyncScheduler.prototype = {
   },
 
   get syncInterval() {
-    return Svc.Prefs.get("syncInterval", this.singleDeviceInterval);
+    return this._syncInterval;
   },
   set syncInterval(value) {
-    Svc.Prefs.set("syncInterval", value);
+    if (value != this._syncInterval) {
+      Services.prefs.setIntPref("services.sync.syncInterval", value);
+    }
   },
 
   get syncThreshold() {
-    return Svc.Prefs.get("syncThreshold", SINGLE_USER_THRESHOLD);
+    return this._syncThreshold;
   },
   set syncThreshold(value) {
-    Svc.Prefs.set("syncThreshold", value);
+    if (value != this._syncThreshold) {
+      Services.prefs.setIntPref("services.sync.syncThreshold", value);
+    }
   },
 
   get globalScore() {
-    return Svc.Prefs.get("globalScore", 0);
+    return this._globalScore;
   },
   set globalScore(value) {
-    Svc.Prefs.set("globalScore", value);
+    if (this._globalScore != value) {
+      Services.prefs.setIntPref("services.sync.globalScore", value);
+    }
   },
 
-  // The number of clients we have is maintained in preferences via the
-  // clients engine, and only updated after a successsful sync.
+  // Managed by the clients engine (by way of prefs)
   get numClients() {
-    return Svc.Prefs.get("clients.devices.desktop", 0) +
-           Svc.Prefs.get("clients.devices.mobile", 0);
-
+    return this.numDesktopClients + this.numMobileClients;
   },
   set numClients(value) {
     throw new Error("Don't set numClients - the clients engine manages it.");
@@ -137,9 +140,34 @@ SyncScheduler.prototype = {
     return false;
   },
 
+  _initPrefGetters() {
+
+    XPCOMUtils.defineLazyPreferenceGetter(this,
+      "idleTime", "services.sync.scheduler.idleTime");
+    XPCOMUtils.defineLazyPreferenceGetter(this,
+      "maxResyncs", "services.sync.maxResyncs", 0);
+
+    // The number of clients we have is maintained in preferences via the
+    // clients engine, and only updated after a successsful sync.
+    XPCOMUtils.defineLazyPreferenceGetter(this,
+      "numDesktopClients", "services.sync.clients.devices.desktop", 0);
+    XPCOMUtils.defineLazyPreferenceGetter(this,
+      "numMobileClients", "services.sync.clients.devices.mobile", 0);
+
+    // Scheduler state that seems to be read more often than it's written.
+    // We also check if the value has changed before writing in the setters.
+    XPCOMUtils.defineLazyPreferenceGetter(this,
+      "_syncThreshold", "services.sync.syncThreshold", SINGLE_USER_THRESHOLD);
+    XPCOMUtils.defineLazyPreferenceGetter(this,
+      "_syncInterval", "services.sync.syncInterval", this.singleDeviceInterval);
+    XPCOMUtils.defineLazyPreferenceGetter(this,
+      "_globalScore", "services.sync.globalScore", 0);
+  },
+
   init: function init() {
     this._log.manageLevelFromPref("services.sync.log.logger.service.main");
     this.setDefaults();
+    this._initPrefGetters();
     Svc.Obs.add("weave:engine:score:updated", this);
     Svc.Obs.add("network:offline-status-changed", this);
     Svc.Obs.add("network:link-status-changed", this);
@@ -162,7 +190,7 @@ SyncScheduler.prototype = {
       Svc.Obs.add("wake_notification", this);
       Svc.Obs.add("captive-portal-login-success", this);
       Svc.Obs.add("sleep_notification", this);
-      IdleService.addIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
+      IdleService.addIdleObserver(this, this.idleTime);
     }
   },
 
@@ -308,7 +336,7 @@ SyncScheduler.prototype = {
         break;
       case "weave:service:setup-complete":
          Services.prefs.savePrefFile(null);
-         IdleService.addIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
+         IdleService.addIdleObserver(this, this.idleTime);
          Svc.Obs.add("wake_notification", this);
          Svc.Obs.add("captive-portal-login-success", this);
          Svc.Obs.add("sleep_notification", this);
@@ -316,7 +344,7 @@ SyncScheduler.prototype = {
       case "weave:service:start-over":
          this.setDefaults();
          try {
-           IdleService.removeIdleObserver(this, Svc.Prefs.get("scheduler.idleTime"));
+           IdleService.removeIdleObserver(this, this.idleTime);
          } catch (ex) {
            if (ex.result != Cr.NS_ERROR_FAILURE) {
              throw ex;
@@ -412,13 +440,14 @@ SyncScheduler.prototype = {
 
   updateGlobalScore() {
     let engines = [this.service.clientsEngine].concat(this.service.engineManager.getEnabled());
+    let globalScore = this.globalScore;
     for (let i = 0;i < engines.length;i++) {
       this._log.trace(engines[i].name + ": score: " + engines[i].score);
-      this.globalScore += engines[i].score;
+      globalScore += engines[i].score;
       engines[i]._tracker.resetScore();
     }
-
-    this._log.trace("Global score updated: " + this.globalScore);
+    this.globalScore = globalScore;
+    this._log.trace("Global score updated: " + globalScore);
   },
 
   calculateScore() {
@@ -516,11 +545,11 @@ SyncScheduler.prototype = {
                       Status.backoffInterval + " ms instead.");
       interval = Status.backoffInterval;
     }
-
-    if (this.nextSync != 0) {
+    let nextSync = this.nextSync;
+    if (nextSync != 0) {
       // There's already a sync scheduled. Don't reschedule if there's already
       // a timer scheduled for sooner than requested.
-      let currentInterval = this.nextSync - Date.now();
+      let currentInterval = nextSync - Date.now();
       this._log.trace("There's already a sync scheduled in " +
                       currentInterval + " ms.");
       if (currentInterval < interval && this.syncTimer) {
@@ -627,9 +656,6 @@ SyncScheduler.prototype = {
       this.syncTimer.clear();
   },
 
-  get maxResyncs() {
-    return Svc.Prefs.get("maxResyncs", 0);
-  },
 };
 
 this.ErrorHandler = function ErrorHandler(service) {

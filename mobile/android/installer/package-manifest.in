@@ -260,7 +260,6 @@
 @BINPATH@/components/xpconnect.xpt
 @BINPATH@/components/xulapp.xpt
 @BINPATH@/components/xul.xpt
-@BINPATH@/components/xultmpl.xpt
 @BINPATH@/components/zipwriter.xpt
 
 ; JavaScript components

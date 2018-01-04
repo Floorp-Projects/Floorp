@@ -544,12 +544,12 @@
       </vbox>
     </hbox>
     <vbox id="doNotTrackLearnMoreBox">
-      <label><label class="tail-with-learn-more">&doNotTrack.description;</label><label
+      <label><label class="tail-with-learn-more" data-l10n-id="do-not-track-description"></label><label
       class="learnMore text-link" href="https://www.mozilla.org/dnt"
-      >&doNotTrack.learnMore.label;</label></label>
+      data-l10n-id="do-not-track-learn-more"></label></label>
       <radiogroup id="doNotTrackRadioGroup" aria-labelledby="doNotTrackDesc" preference="privacy.donottrackheader.enabled">
-        <radio value="false" label="&doNotTrack.default.label;"/>
-        <radio value="true" label="&doNotTrack.always.label;"/>
+        <radio value="false" data-l10n-id="do-not-track-option-default"/>
+        <radio value="true" data-l10n-id="do-not-track-option-always"/>
       </radiogroup>
     </vbox>
   </vbox>

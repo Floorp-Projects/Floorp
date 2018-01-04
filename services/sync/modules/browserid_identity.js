@@ -36,6 +36,9 @@ XPCOMUtils.defineLazyGetter(this, "log", function() {
   return log;
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "IGNORE_CACHED_AUTH_CREDENTIALS",
+                                      "services.sync.debug.ignoreCachedAuthCredentials");
+
 // FxAccountsCommon.js doesn't use a "namespace", so create one here.
 var fxAccountsCommon = {};
 Cu.import("resource://gre/modules/FxAccountsCommon.js", fxAccountsCommon);
@@ -170,6 +173,7 @@ this.BrowserIDManager = function BrowserIDManager() {
   // will be a promise that resolves when we are ready to authenticate
   this.whenReadyToAuthenticate = null;
   this._log = log;
+  XPCOMUtils.defineLazyPreferenceGetter(this, "_username", "services.sync.username");
 };
 
 this.BrowserIDManager.prototype = {
@@ -432,7 +436,7 @@ this.BrowserIDManager.prototype = {
   },
 
   get username() {
-    return Svc.Prefs.get("username", null);
+    return this._username;
   },
 
   /**
@@ -586,13 +590,7 @@ this.BrowserIDManager.prototype = {
   hasValidToken() {
     // If pref is set to ignore cached authentication credentials for debugging,
     // then return false to force the fetching of a new token.
-    let ignoreCachedAuthCredentials = false;
-    try {
-      ignoreCachedAuthCredentials = Svc.Prefs.get("debug.ignoreCachedAuthCredentials");
-    } catch (e) {
-      // Pref doesn't exist
-    }
-    if (ignoreCachedAuthCredentials) {
+    if (IGNORE_CACHED_AUTH_CREDENTIALS) {
       return false;
     }
     if (!this._token) {

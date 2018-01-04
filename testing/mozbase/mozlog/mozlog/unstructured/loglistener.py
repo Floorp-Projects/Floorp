@@ -4,21 +4,21 @@
 
 from __future__ import absolute_import
 
-import SocketServer
-import socket
+from six.moves import socketserver
 import json
+import socket
 
 
-class LogMessageServer(SocketServer.TCPServer):
+class LogMessageServer(socketserver.TCPServer):
 
     def __init__(self, server_address, logger, message_callback=None, timeout=3):
-        SocketServer.TCPServer.__init__(self, server_address, LogMessageHandler)
+        socketserver.TCPServer.__init__(self, server_address, LogMessageHandler)
         self._logger = logger
         self._message_callback = message_callback
         self.timeout = timeout
 
 
-class LogMessageHandler(SocketServer.BaseRequestHandler):
+class LogMessageHandler(socketserver.BaseRequestHandler):
     """Processes output from a connected log source, logging to an
     existing logger upon receipt of a well-formed log messsage."""
 
