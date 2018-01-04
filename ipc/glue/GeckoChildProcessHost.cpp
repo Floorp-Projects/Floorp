@@ -38,6 +38,7 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
+#include "mozilla/ipc/EnvironmentMap.h"
 #include "mozilla/Omnijar.h"
 #include "mozilla/Telemetry.h"
 #include "ProtocolUtils.h"
@@ -440,15 +441,9 @@ GeckoChildProcessHost::SetAlreadyDead()
 int32_t GeckoChildProcessHost::mChildCounter = 0;
 
 void
-GeckoChildProcessHost::SetChildLogName(const char* varName, const char* origLogName,
+GeckoChildProcessHost::GetChildLogName(const char* origLogName,
                                        nsACString &buffer)
 {
-  // We currently have no portable way to launch child with environment
-  // different than parent.  So temporarily change NSPR_LOG_FILE so child
-  // inherits value we want it to have. (NSPR only looks at NSPR_LOG_FILE at
-  // startup, so it's 'safe' to play with the parent's environment this way.)
-  buffer.Assign(varName);
-
 #ifdef XP_WIN
   // On Windows we must expand relative paths because sandboxing rules
   // bound only to full paths.  fopen fowards to NtCreateFile which checks
@@ -475,11 +470,6 @@ GeckoChildProcessHost::SetChildLogName(const char* varName, const char* origLogN
   // Append child-specific postfix to name
   buffer.AppendLiteral(".child-");
   buffer.AppendInt(mChildCounter);
-
-  // Passing temporary to PR_SetEnv is ok here if we keep the temporary
-  // for the time we launch the sub-process.  It's copied to the new
-  // environment.
-  PR_SetEnv(buffer.BeginReading());
 }
 
 bool
@@ -489,61 +479,34 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts)
   AutoSetProfilerEnvVarsForChildProcess profilerEnvironment;
 #endif
 
-  const char* origNSPRLogName = PR_GetEnv("NSPR_LOG_FILE");
-  const char* origMozLogName = PR_GetEnv("MOZ_LOG_FILE");
-  const char* origRustLog = PR_GetEnv("RUST_LOG");
-  const char* childRustLog = PR_GetEnv("RUST_LOG_CHILD");
-
   // - Note: this code is not called re-entrantly, nor are restoreOrig*LogName
   //   or mChildCounter touched by any other thread, so this is safe.
   ++mChildCounter;
 
-  // Must keep these on the same stack where from we call PerformAsyncLaunchInternal
-  // so that PR_DuplicateEnvironment() still sees a valid memory.
-  nsAutoCString nsprLogName;
-  nsAutoCString mozLogName;
-  nsAutoCString rustLog;
+  const char* origNSPRLogName = PR_GetEnv("NSPR_LOG_FILE");
+  const char* origMozLogName = PR_GetEnv("MOZ_LOG_FILE");
 
   if (origNSPRLogName) {
-    if (mRestoreOrigNSPRLogName.IsEmpty()) {
-      mRestoreOrigNSPRLogName.AssignLiteral("NSPR_LOG_FILE=");
-      mRestoreOrigNSPRLogName.Append(origNSPRLogName);
-    }
-    SetChildLogName("NSPR_LOG_FILE=", origNSPRLogName, nsprLogName);
+    nsAutoCString nsprLogName;
+    GetChildLogName(origNSPRLogName, nsprLogName);
+    mLaunchOptions->env_map[ENVIRONMENT_LITERAL("NSPR_LOG_FILE")]
+        = ENVIRONMENT_STRING(nsprLogName);
   }
   if (origMozLogName) {
-    if (mRestoreOrigMozLogName.IsEmpty()) {
-      mRestoreOrigMozLogName.AssignLiteral("MOZ_LOG_FILE=");
-      mRestoreOrigMozLogName.Append(origMozLogName);
-    }
-    SetChildLogName("MOZ_LOG_FILE=", origMozLogName, mozLogName);
+    nsAutoCString mozLogName;
+    GetChildLogName(origMozLogName, mozLogName);
+    mLaunchOptions->env_map[ENVIRONMENT_LITERAL("MOZ_LOG_FILE")]
+        = ENVIRONMENT_STRING(mozLogName);
   }
 
   // `RUST_LOG_CHILD` is meant for logging child processes only.
-  if (childRustLog) {
-    if (mRestoreOrigRustLog.IsEmpty()) {
-      mRestoreOrigRustLog.AssignLiteral("RUST_LOG=");
-      mRestoreOrigRustLog.Append(origRustLog);
-    }
-    rustLog.AssignLiteral("RUST_LOG=");
-    rustLog.Append(childRustLog);
-    PR_SetEnv(rustLog.get());
+  nsAutoCString childRustLog(PR_GetEnv("RUST_LOG_CHILD"));
+  if (!childRustLog.IsEmpty()) {
+    mLaunchOptions->env_map[ENVIRONMENT_LITERAL("RUST_LOG")]
+        = ENVIRONMENT_STRING(childRustLog);
   }
 
-  bool retval = PerformAsyncLaunchInternal(aExtraOpts);
-
-  // Revert to original value
-  if (origNSPRLogName) {
-    PR_SetEnv(mRestoreOrigNSPRLogName.get());
-  }
-  if (origMozLogName) {
-    PR_SetEnv(mRestoreOrigMozLogName.get());
-  }
-  if (origRustLog) {
-    PR_SetEnv(mRestoreOrigRustLog.get());
-  }
-
-  return retval;
+  return PerformAsyncLaunchInternal(aExtraOpts);
 }
 
 bool
@@ -644,17 +607,16 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   // and passing wstrings from one config to the other is unsafe.  So
   // we split the logic here.
 
-# if defined(OS_LINUX) || defined(OS_MACOSX) || defined(OS_BSD) || defined(OS_SOLARIS)
-
+# if defined(OS_POSIX)
 #  if defined(MOZ_WIDGET_GTK)
   if (mProcessType == GeckoProcessType_Content) {
     // disable IM module to avoid sandbox violation
-    mLaunchOptions->environ["GTK_IM_MODULE"] = "gtk-im-context-simple";
+    mLaunchOptions->env_map["GTK_IM_MODULE"] = "gtk-im-context-simple";
 
     // Disable ATK accessibility code in content processes because it conflicts
     // with the sandbox, and we proxy that information through the main process
     // anyway.
-    mLaunchOptions->environ["NO_AT_BRIDGE"] = "1";
+    mLaunchOptions->env_map["NO_AT_BRIDGE"] = "1";
   }
 #  endif // defined(MOZ_WIDGET_GTK)
 
@@ -680,10 +642,10 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
       new_ld_lib_path.Append(':');
       new_ld_lib_path.Append(ld_library_path);
     }
-    mLaunchOptions->environ["LD_LIBRARY_PATH"] = new_ld_lib_path.get();
+    mLaunchOptions->env_map["LD_LIBRARY_PATH"] = new_ld_lib_path.get();
 
 #  elif OS_MACOSX // defined(OS_LINUX) || defined(OS_BSD)
-    mLaunchOptions->environ["DYLD_LIBRARY_PATH"] = path.get();
+    mLaunchOptions->env_map["DYLD_LIBRARY_PATH"] = path.get();
     // XXX DYLD_INSERT_LIBRARIES should only be set when launching a plugin
     //     process, and has no effect on other subprocesses (the hooks in
     //     libplugin_child_interpose.dylib become noops).  But currently it
@@ -702,10 +664,10 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
     }
     interpose.Append(path.get());
     interpose.AppendLiteral("/libplugin_child_interpose.dylib");
-    mLaunchOptions->environ["DYLD_INSERT_LIBRARIES"] = interpose.get();
+    mLaunchOptions->env_map["DYLD_INSERT_LIBRARIES"] = interpose.get();
 #  endif // defined(OS_LINUX) || defined(OS_BSD)
   }
-# endif // defined(OS_LINUX) || defined(OS_MACOSX) || defined(OS_BSD) || defined(OS_SOLARIS)
+# endif // defined(OS_POSIX)
 
   FilePath exePath;
   BinaryPathType pathType = GetPathToBinary(exePath, mProcessType);
@@ -1030,6 +992,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   if (shouldSandboxCurrentProcess) {
     if (mSandboxBroker.LaunchApp(cmdLine.program().c_str(),
                                  cmdLine.command_line_string().c_str(),
+                                 mLaunchOptions->env_map,
                                  mProcessType,
                                  mEnableSandboxLogging,
                                  &process)) {
