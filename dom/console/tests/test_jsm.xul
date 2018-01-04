@@ -17,6 +17,12 @@
 
 const JSM = "chrome://mochitests/content/chrome/dom/console/tests/console.jsm";
 
+let dumpCalled = 0;
+function dumpFunction(msg) {
+  dump("Message received: " + msg); // Just for debugging
+  dumpCalled++;
+}
+
 function consoleListener() {
   SpecialPowers.addObserver(this, "console-api-log-event");
 }
@@ -29,7 +35,7 @@ consoleListener.prototype  = {
       var obj = aSubject.wrappedJSObject;
       if (obj.innerID == JSM) {
         is(obj.ID, "jsm", "ID and InnerID are correctly set.");
-        is (obj.arguments[0], "Hello world!", "Message matches");
+        is(obj.arguments[0], "Hello world!", "Message matches");
         is(obj.consoleID, "", "No consoleID for console API");
 
         // We want to see 2 messages from this innerID, the first is generated
@@ -37,12 +43,13 @@ consoleListener.prototype  = {
         ++this.count;
       } else if (obj.innerID = "CUSTOM INNER") {
         is(obj.ID, "jsm", "ID and InnerID are correctly set.");
-        is (obj.arguments[0], "Hello world!", "Message matches");
+        is(obj.arguments[0], "Hello world!", "Message matches");
         is(obj.consoleID, "wow", "consoleID is set by consoleInstance");
         ++this.count;
       }
 
-      if (this.count == 3) {
+      if (this.count == 4) {
+        is(dumpCalled, 2, "Dump has been called!");
         SpecialPowers.removeObserver(this, "console-api-log-event");
         SimpleTest.finish();
       }
@@ -54,7 +61,7 @@ function test() {
 
   var cl = new consoleListener();
   Components.utils.import(JSM);
-  ConsoleTest.go();
+  ConsoleTest.go(dumpFunction);
 }
 
   ]]>
