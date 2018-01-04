@@ -820,6 +820,7 @@ Console::Console(nsPIDOMWindowInner* aWindow)
   , mOuterID(0)
   , mInnerID(0)
   , mDumpToStdout(false)
+  , mChromeInstance(false)
   , mStatus(eUnknown)
   , mCreationTimeStamp(TimeStamp::Now())
 {
@@ -1068,12 +1069,23 @@ Console::ProfileMethod(const GlobalObject& aGlobal, const nsAString& aAction,
   console->ProfileMethodInternal(cx, aAction, aData);
 }
 
+bool
+Console::IsEnabled(JSContext* aCx) const
+{
+  // Console is always enabled if it is a custom Chrome-Only instance.
+  if (mChromeInstance) {
+    return true;
+  }
+
+  // Make all Console API no-op if DevTools aren't enabled.
+  return nsContentUtils::DevToolsEnabled(aCx);
+}
+
 void
 Console::ProfileMethodInternal(JSContext* aCx, const nsAString& aAction,
                                const Sequence<JS::Value>& aData)
 {
-  // Make all Console API no-op if DevTools aren't enabled.
-  if (!nsContentUtils::DevToolsEnabled(aCx)) {
+  if (!IsEnabled(aCx)) {
     return;
   }
 
@@ -1227,8 +1239,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
                         const nsAString& aMethodString,
                         const Sequence<JS::Value>& aData)
 {
-  // Make all Console API no-op if DevTools aren't enabled.
-  if (!nsContentUtils::DevToolsEnabled(aCx)) {
+  if (!IsEnabled(aCx)) {
     return;
   }
 
