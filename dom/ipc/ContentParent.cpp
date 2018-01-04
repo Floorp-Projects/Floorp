@@ -1136,9 +1136,9 @@ ContentParent::CreateBrowser(const TabContext& aContext,
 
   bool isPreloadBrowser = false;
   nsAutoString isPreloadBrowserStr;
-  if (aFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::isPreloadBrowser,
+  if (aFrameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::preloadedState,
                              isPreloadBrowserStr)) {
-    isPreloadBrowser = isPreloadBrowserStr.EqualsLiteral("true");
+    isPreloadBrowser = isPreloadBrowserStr.EqualsLiteral("preloaded");
   }
 
   RefPtr<nsIContentParent> constructorSender;
