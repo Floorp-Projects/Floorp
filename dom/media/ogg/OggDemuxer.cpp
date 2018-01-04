@@ -1054,7 +1054,7 @@ OggDemuxer::SeekInternal(TrackInfo::TrackType aType, const TimeUnit& aTarget)
   nsresult res;
   int64_t adjustedTarget = target;
   int64_t startTime = StartTime(aType);
-  int64_t endTime = mInfo.mMetadataDuration->ToMicroseconds();
+  int64_t endTime = mInfo.mMetadataDuration->ToMicroseconds() + startTime;
   if (aType == TrackInfo::kAudioTrack && mOpusState){
     adjustedTarget = std::max(startTime, target - OGG_SEEK_OPUS_PREROLL);
   }
