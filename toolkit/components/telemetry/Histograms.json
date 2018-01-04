@@ -5297,7 +5297,7 @@
   },
   "FENNEC_ORBOT_INSTALLED": {
     "record_in_processes": ["main", "content"],
-    "expires_in_version": "60",
+    "expires_in_version": "70",
     "kind": "flag",
     "cpp_guard": "ANDROID",
     "description": "Whether or not users have Orbot installed",
