@@ -67,7 +67,7 @@ let prefHelper = async function(primary, customFn = null) {
     readyPromise = TestUtils.topicObserved("sync-pane-loaded");
   }
 
-  browserWindow.openPreferences(primary);
+  browserWindow.openPreferences(primary, {origin: "mozscreenshots"});
 
   await readyPromise;
 

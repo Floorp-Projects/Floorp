@@ -1646,7 +1646,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                      value="&urlbar.searchSuggestionsNotification.changeSettingsUnix;"
                      accesskey="&urlbar.searchSuggestionsNotification.changeSettingsUnix.accesskey;"
 #endif
-                     onclick="openPreferences('paneSearch');"
+                     onclick="openPreferences('paneSearch', {origin: 'searchChangeSettings'});"
                      control="search-suggestions-change-settings"/>
         </xul:hbox>
       </xul:deck>
