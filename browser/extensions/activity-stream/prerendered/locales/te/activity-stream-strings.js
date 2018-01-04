@@ -64,7 +64,7 @@ window.gActivityStreamStrings = {
   "settings_pane_highlights_body2": "Find your way back to interesting things you’ve recently visited or bookmarked.",
   "settings_pane_highlights_options_bookmarks": "ఇష్టాంశాలు",
   "settings_pane_highlights_options_visited": "చూసిన సైటులు",
-  "settings_pane_snippets_header": "Snippets",
+  "settings_pane_snippets_header": "చిన్న ముక్క",
   "settings_pane_snippets_body": "Read short and sweet updates from Mozilla about Firefox, internet culture, and the occasional random meme.",
   "settings_pane_done_button": "పూర్తయింది",
   "settings_pane_topstories_options_sponsored": "Show Sponsored Stories",
