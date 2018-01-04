@@ -22,12 +22,12 @@ from taskgraph.util.cached_tasks import add_optimization
 run_schema = Schema({
     Required('using'): 'debian-package',
     # Debian distribution
-    Required('dist'): basestring,
+    Optional('dist'): basestring,
 
     # Date of the snapshot (from snapshot.debian.org) to use, in the format
     # YYYYMMDDTHHMMSSZ. The same date is used for the base docker-image name
     # (only the YYYYMMDD part).
-    Required('snapshot'): basestring,
+    Optional('snapshot'): basestring,
 
     # URL of the source control (.dsc) file to build.
     Required('dsc'): basestring,
