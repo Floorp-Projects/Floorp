@@ -2,6 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+//! This crate contains the functionality required in order to both implement
+//! and call XPCOM methods from rust code.
+//!
+//! For documentation on how to implement XPCOM methods, see the documentation
+//! for the [`xpcom_macros`](../xpcom_macros/index.html) crate.
+
 #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
 
@@ -25,3 +31,7 @@ pub use refptr::*;
 
 // XPCOM interface definitions.
 pub mod interfaces;
+
+// Implementation details of the xpcom_macros crate.
+#[doc(hidden)]
+pub mod reexports;

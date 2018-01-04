@@ -18,6 +18,7 @@ from io import BytesIO
 from buildconfig import topsrcdir
 from xpidl.header import print_header
 from xpidl.rust import print_rust_bindings
+from xpidl.rust_macros import print_rust_macros_bindings
 from xpidl.typelib import write_typelib
 from xpidl.xpidl import IDLParser
 from xpt import xpt_link
@@ -48,6 +49,7 @@ def process(input_dir, inc_paths, cache_dir, header_dir, xpcrs_dir,
 
         header_path = os.path.join(header_dir, '%s.h' % stem)
         rs_rt_path = os.path.join(xpcrs_dir, 'rt', '%s.rs' % stem)
+        rs_bt_path = os.path.join(xpcrs_dir, 'bt', '%s.rs' % stem)
 
         xpt = BytesIO()
         write_typelib(idl, xpt, path)
@@ -61,6 +63,9 @@ def process(input_dir, inc_paths, cache_dir, header_dir, xpcrs_dir,
 
         with FileAvoidWrite(rs_rt_path) as fh:
             print_rust_bindings(idl, fh, path)
+
+        with FileAvoidWrite(rs_bt_path) as fh:
+            print_rust_macros_bindings(idl, fh, path)
 
     # TODO use FileAvoidWrite once it supports binary mode.
     xpt_path = os.path.join(xpt_dir, '%s.xpt' % module)
