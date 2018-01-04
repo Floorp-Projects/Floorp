@@ -84,7 +84,10 @@ function startTest(test, token) {
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv(
   {
-    "set": [["media.seekToNextFrame.enabled", true ]]
+    "set": [
+      ["media.seekToNextFrame.enabled", true ],
+      ["media.dormant-on-pause-timeout-ms", -1]
+    ]
   },
   function() {
     manager.runTests(gSeekToNextFrameTests, startTest);
