@@ -2626,6 +2626,14 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   {
     return mTransitions[aIndex % mTransitionTimingFunctionCount].GetTimingFunction();
   }
+  float GetTransitionCombinedDuration(uint32_t aIndex) const
+  {
+    // https://drafts.csswg.org/css-transitions/#transition-combined-duration
+    return
+      std::max(mTransitions[aIndex % mTransitionDurationCount].GetDuration(),
+               0.0f)
+        + mTransitions[aIndex % mTransitionDelayCount].GetDelay();
+  }
 
   nsStyleAutoArray<mozilla::StyleAnimation> mAnimations; // [reset]
 
