@@ -1811,7 +1811,10 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
     RefPtr<CancelableRunnable> firstIdleTask = NewCancelableRunnableFunction("FirstIdleRunnable",
                                                                              FirstIdle);
     gFirstIdleTask = firstIdleTask;
-    NS_IdleDispatchToCurrentThread(firstIdleTask.forget());
+    if (NS_FAILED(NS_IdleDispatchToCurrentThread(firstIdleTask.forget()))) {
+      gFirstIdleTask = nullptr;
+      hasRunOnce = false;
+    }
   }
 
   return nsIContentChild::RecvPBrowserConstructor(aActor,
@@ -2317,6 +2320,7 @@ ContentChild::ActorDestroy(ActorDestroyReason why)
 #else
   if (gFirstIdleTask) {
     gFirstIdleTask->Cancel();
+    gFirstIdleTask = nullptr;
   }
 
   nsHostObjectProtocolHandler::RemoveDataEntries();
