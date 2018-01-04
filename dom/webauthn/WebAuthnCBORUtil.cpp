@@ -21,27 +21,23 @@ CBOREncodePublicKeyObj(const CryptoBuffer& aPubKeyBuf,
     return rv;
   }
 
-  /*
-  Public Key Object, encoded in CBOR (description is CDDL)
-
-  pubKey = $pubKeyFmt
-
-  pubKeyFmt /= eccPubKey
-  eccPubKey = { alg: eccAlgName, x: biguint, y: biguint }
-  eccAlgName = "ES256" / "ES384" / "ES512"
-  */
+  // COSE_Key object. See https://tools.ietf.org/html/rfc8152#section-7
   cbor::output_dynamic cborPubKeyOut;
   cbor::encoder encoder(cborPubKeyOut);
-  encoder.write_map(3);
+  encoder.write_map(5);
   {
-    encoder.write_string("x");
+    encoder.write_int(1);   // kty
+    encoder.write_int(2);   // EC2
+    encoder.write_int(3);   // alg
+    encoder.write_int(-7);  // ES256
+
+    // See https://tools.ietf.org/html/rfc8152#section-13.1
+    encoder.write_int(-1);  // crv
+    encoder.write_int(1);   // P-256
+    encoder.write_int(-2);  // x
     encoder.write_bytes(xBuf.Elements(), xBuf.Length());
-
-    encoder.write_string("y");
+    encoder.write_int(-3);  // y
     encoder.write_bytes(yBuf.Elements(), yBuf.Length());
-
-    encoder.write_string("alg");
-    encoder.write_string(JWK_ALG_ECDSA_P_256); // Always ES256 for U2F
   }
 
   if (!aPubKeyObj.Assign(cborPubKeyOut.data(), cborPubKeyOut.size())) {
