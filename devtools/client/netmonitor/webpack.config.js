@@ -39,8 +39,6 @@ let webpackConfig = {
           "rewrite-browser-require",
           // Replace all references to loader.lazyRequire() by require()
           "rewrite-lazy-require",
-          // Replace all references to loader.lazyGetter() by require()
-          "rewrite-lazy-getter",
         ],
       }
     ]
