@@ -664,9 +664,11 @@ private:
 class ConsoleProfileRunnable final : public ConsoleRunnable
 {
 public:
-  ConsoleProfileRunnable(Console* aConsole, const nsAString& aAction,
+  ConsoleProfileRunnable(Console* aConsole, Console::MethodName aName,
+                         const nsAString& aAction,
                          const Sequence<JS::Value>& aArguments)
     : ConsoleRunnable(aConsole)
+    , mName(aName)
     , mAction(aAction)
     , mArguments(aArguments)
   {
@@ -747,13 +749,14 @@ private:
       }
     }
 
-    mConsole->ProfileMethodInternal(aCx, mAction, arguments);
+    mConsole->ProfileMethodInternal(aCx, mName, mAction, arguments);
   }
 
   virtual void
   ReleaseData() override
   {}
 
+  Console::MethodName mName;
   nsString mAction;
 
   // This is a reference of the sequence of arguments we receive from the DOM
@@ -821,6 +824,7 @@ Console::Console(nsPIDOMWindowInner* aWindow)
   , mInnerID(0)
   , mDumpToStdout(false)
   , mChromeInstance(false)
+  , mMaxLogLevel(ConsoleLogLevel::All)
   , mStatus(eUnknown)
   , mCreationTimeStamp(TimeStamp::Now())
 {
@@ -1046,18 +1050,20 @@ Console::TimeStamp(const GlobalObject& aGlobal,
 /* static */ void
 Console::Profile(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData)
 {
-  ProfileMethod(aGlobal, NS_LITERAL_STRING("profile"), aData);
+  ProfileMethod(aGlobal, MethodProfile, NS_LITERAL_STRING("profile"), aData);
 }
 
 /* static */ void
 Console::ProfileEnd(const GlobalObject& aGlobal,
                     const Sequence<JS::Value>& aData)
 {
-  ProfileMethod(aGlobal, NS_LITERAL_STRING("profileEnd"), aData);
+  ProfileMethod(aGlobal, MethodProfileEnd, NS_LITERAL_STRING("profileEnd"),
+                aData);
 }
 
 /* static */ void
-Console::ProfileMethod(const GlobalObject& aGlobal, const nsAString& aAction,
+Console::ProfileMethod(const GlobalObject& aGlobal, MethodName aName,
+                       const nsAString& aAction,
                        const Sequence<JS::Value>& aData)
 {
   RefPtr<Console> console = GetConsole(aGlobal);
@@ -1066,7 +1072,7 @@ Console::ProfileMethod(const GlobalObject& aGlobal, const nsAString& aAction,
   }
 
   JSContext* cx = aGlobal.Context();
-  console->ProfileMethodInternal(cx, aAction, aData);
+  console->ProfileMethodInternal(cx, aName, aAction, aData);
 }
 
 bool
@@ -1082,10 +1088,15 @@ Console::IsEnabled(JSContext* aCx) const
 }
 
 void
-Console::ProfileMethodInternal(JSContext* aCx, const nsAString& aAction,
+Console::ProfileMethodInternal(JSContext* aCx, MethodName aMethodName,
+                               const nsAString& aAction,
                                const Sequence<JS::Value>& aData)
 {
   if (!IsEnabled(aCx)) {
+    return;
+  }
+
+  if (!ShouldProceed(aMethodName)) {
     return;
   }
 
@@ -1094,7 +1105,7 @@ Console::ProfileMethodInternal(JSContext* aCx, const nsAString& aAction,
   if (!NS_IsMainThread()) {
     // Here we are in a worker thread.
     RefPtr<ConsoleProfileRunnable> runnable =
-      new ConsoleProfileRunnable(this, aAction, aData);
+      new ConsoleProfileRunnable(this, aMethodName, aAction, aData);
 
     runnable->Dispatch(aCx);
     return;
@@ -1240,6 +1251,10 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
                         const Sequence<JS::Value>& aData)
 {
   if (!IsEnabled(aCx)) {
+    return;
+  }
+
+  if (!ShouldProceed(aMethodName)) {
     return;
   }
 
@@ -2701,6 +2716,75 @@ Console::ExecuteDumpFunction(const nsAString& aMessage)
 #endif
   fputs(str.get(), stdout);
   fflush(stdout);
+}
+
+bool
+Console::ShouldProceed(MethodName aName) const
+{
+  return WebIDLLogLevelToInteger(mMaxLogLevel) <=
+           InternalLogLevelToInteger(aName);
+}
+
+uint32_t
+Console::WebIDLLogLevelToInteger(ConsoleLogLevel aLevel) const
+{
+  switch (aLevel) {
+    case ConsoleLogLevel::All: return 0;
+    case ConsoleLogLevel::Debug: return 2;
+    case ConsoleLogLevel::Log: return 3;
+    case ConsoleLogLevel::Info: return 3;
+    case ConsoleLogLevel::Clear: return 3;
+    case ConsoleLogLevel::Trace: return 3;
+    case ConsoleLogLevel::TimeEnd: return 3;
+    case ConsoleLogLevel::Time: return 3;
+    case ConsoleLogLevel::Group: return 3;
+    case ConsoleLogLevel::GroupEnd: return 3;
+    case ConsoleLogLevel::Profile: return 3;
+    case ConsoleLogLevel::ProfileEnd: return 3;
+    case ConsoleLogLevel::Dir: return 3;
+    case ConsoleLogLevel::Dirxml: return 3;
+    case ConsoleLogLevel::Warn: return 4;
+    case ConsoleLogLevel::Error: return 5;
+    case ConsoleLogLevel::Off: return UINT32_MAX;
+    default:
+      MOZ_CRASH("ConsoleLogLevel is out of sync with the Console implementation!");
+      return 0;
+  }
+
+  return 0;
+}
+
+uint32_t
+Console::InternalLogLevelToInteger(MethodName aName) const
+{
+  switch (aName) {
+    case MethodLog: return 3;
+    case MethodInfo: return 3;
+    case MethodWarn: return 4;
+    case MethodError: return 5;
+    case MethodException: return 5;
+    case MethodDebug: return 2;
+    case MethodTable: return 3;
+    case MethodTrace: return 3;
+    case MethodDir: return 3;
+    case MethodDirxml: return 3;
+    case MethodGroup: return 3;
+    case MethodGroupCollapsed: return 3;
+    case MethodGroupEnd: return 3;
+    case MethodTime: return 3;
+    case MethodTimeEnd: return 3;
+    case MethodTimeStamp: return 3;
+    case MethodAssert: return 3;
+    case MethodCount: return 3;
+    case MethodClear: return 3;
+    case MethodProfile: return 3;
+    case MethodProfileEnd: return 3;
+    default:
+      MOZ_CRASH("MethodName is out of sync with the Console implementation!");
+      return 0;
+  }
+
+  return 0;
 }
 
 } // namespace dom

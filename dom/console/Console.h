@@ -7,8 +7,7 @@
 #ifndef mozilla_dom_Console_h
 #define mozilla_dom_Console_h
 
-#include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/ConsoleBinding.h"
 #include "mozilla/JSObjectHolder.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCycleCollectionParticipant.h"
@@ -33,9 +32,6 @@ class ConsoleInstanceDumpCallback;
 class ConsoleRunnable;
 class ConsoleCallDataRunnable;
 class ConsoleProfileRunnable;
-struct ConsoleInstanceOptions;
-struct ConsoleTimerError;
-struct ConsoleStackEntry;
 
 class Console final : public nsIObserver
                     , public nsSupportsWeakReference
@@ -162,7 +158,9 @@ private:
     MethodTimeStamp,
     MethodAssert,
     MethodCount,
-    MethodClear
+    MethodClear,
+    MethodProfile,
+    MethodProfileEnd,
   };
 
   static already_AddRefed<Console>
@@ -172,11 +170,12 @@ private:
   GetConsoleInternal(const GlobalObject& aGlobal, ErrorResult &aRv);
 
   static void
-  ProfileMethod(const GlobalObject& aGlobal, const nsAString& aAction,
-                const Sequence<JS::Value>& aData);
+  ProfileMethod(const GlobalObject& aGlobal, MethodName aName,
+                const nsAString& aAction, const Sequence<JS::Value>& aData);
 
   void
-  ProfileMethodInternal(JSContext* aCx, const nsAString& aAction,
+  ProfileMethodInternal(JSContext* aCx, MethodName aName,
+                        const nsAString& aAction,
                         const Sequence<JS::Value>& aData);
 
   static void
@@ -401,6 +400,15 @@ private:
   bool
   IsEnabled(JSContext* aCx) const;
 
+  bool
+  ShouldProceed(MethodName aName) const;
+
+  uint32_t
+  WebIDLLogLevelToInteger(ConsoleLogLevel aLevel) const;
+
+  uint32_t
+  InternalLogLevelToInteger(MethodName aName) const;
+
   // All these nsCOMPtr are touched on main thread only.
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIConsoleAPIStorage> mStorage;
@@ -438,6 +446,7 @@ private:
   bool mDumpToStdout;
   nsString mDumpPrefix;
   bool mChromeInstance;
+  ConsoleLogLevel mMaxLogLevel;
 
   enum {
     eUnknown,
