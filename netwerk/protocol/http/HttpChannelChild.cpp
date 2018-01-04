@@ -615,8 +615,6 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
   DoOnStartRequest(this, mListenerContext);
 }
 
-namespace {
-
 class SyntheticDiversionListener final : public nsIStreamListener
 {
   RefPtr<HttpChannelChild> mChannel;
@@ -643,8 +641,10 @@ public:
   OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
                 nsresult aStatus) override
   {
-    mChannel->SendDivertOnStopRequest(aStatus);
-    mChannel->SendDivertComplete();
+    if (mChannel->mIPCOpen) {
+      mChannel->SendDivertOnStopRequest(aStatus);
+      mChannel->SendDivertComplete();
+    }
     return NS_OK;
   }
 
@@ -653,6 +653,11 @@ public:
                   nsIInputStream* aInputStream, uint64_t aOffset,
                   uint32_t aCount) override
   {
+    if (!mChannel->mIPCOpen) {
+      aRequest->Cancel(NS_ERROR_ABORT);
+      return NS_ERROR_ABORT;
+    }
+
     nsAutoCString data;
     nsresult rv = NS_ConsumeStream(aInputStream, aCount, data);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -668,8 +673,6 @@ public:
 };
 
 NS_IMPL_ISUPPORTS(SyntheticDiversionListener, nsIStreamListener);
-
-} // anonymous namespace
 
 void
 HttpChannelChild::DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
