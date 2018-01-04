@@ -11,6 +11,7 @@
 #include "SharedSSLState.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/Unused.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsILineInputStream.h"
@@ -378,11 +379,13 @@ nsCertOverrideService::RememberValidityOverride(const nsACString& aHostName,
       return NS_ERROR_FAILURE;
     }
 
-    SECStatus srv = PK11_ImportCert(slot.get(), nsscert.get(), CK_INVALID_HANDLE,
-                                    nickname.get(), false);
-    if (srv != SECSuccess) {
-      return NS_ERROR_FAILURE;
-    }
+    // This can fail (for example, if we're in read-only mode). Luckily, we
+    // don't even need it to succeed - we always match on the stored hash of the
+    // certificate rather than the full certificate. It makes the display a bit
+    // less informative (since we won't have a certificate to display), but it's
+    // better than failing the entire operation.
+    Unused << PK11_ImportCert(slot.get(), nsscert.get(), CK_INVALID_HANDLE,
+                              nickname.get(), false);
   }
 
   nsAutoCString fpStr;
