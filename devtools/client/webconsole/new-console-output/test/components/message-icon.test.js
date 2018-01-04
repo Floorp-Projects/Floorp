@@ -18,6 +18,7 @@ describe("MessageIcon component:", () => {
     const rendered = renderComponent(MessageIcon, { level: MESSAGE_LEVEL.ERROR });
 
     expect(rendered.classList.contains("icon")).toBe(true);
+    expect(rendered.getAttribute("aria-live")).toBe("off");
     expect(rendered.getAttribute("title")).toBe("Error");
   });
 });
