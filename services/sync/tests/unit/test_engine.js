@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 ChromeUtils.import("resource://gre/modules/osfile.jsm");
+ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm");
 ChromeUtils.import("resource://services-common/observers.js");
 ChromeUtils.import("resource://services-sync/engines.js");
 ChromeUtils.import("resource://services-sync/service.js");
@@ -70,7 +71,7 @@ async function cleanup(engine) {
   engine.wasReset = false;
   engine.wasSynced = false;
   engineObserver.reset();
-  engine._tracker.clearChangedIDs();
+  await engine._tracker.clearChangedIDs();
   await engine.finalize();
 }
 
@@ -123,12 +124,13 @@ add_task(async function test_invalidChangedIDs() {
                             { tmpPath: tracker._storage.path + ".tmp" });
 
   ok(!tracker._storage.dataReady);
-  tracker.changedIDs.placeholder = true;
-  deepEqual(tracker.changedIDs, { placeholder: true },
+  const changes = await tracker.getChangedIDs();
+  changes.placeholder = true;
+  deepEqual(changes, { placeholder: true },
     "Accessing changed IDs should load changes from disk as a side effect");
   ok(tracker._storage.dataReady);
 
-  Assert.ok(tracker.changedIDs.placeholder);
+  Assert.ok(changes.placeholder);
   await cleanup(engine);
 });
 
@@ -137,13 +139,15 @@ add_task(async function test_wipeClient() {
   let engine = new SteamEngine("Steam", Service);
   Assert.ok(!engine.wasReset);
   Assert.ok(!engine._store.wasWiped);
-  Assert.ok(engine._tracker.addChangedID("a-changed-id"));
-  Assert.ok("a-changed-id" in engine._tracker.changedIDs);
+  Assert.ok((await engine._tracker.addChangedID("a-changed-id")));
+  let changes = await engine._tracker.getChangedIDs();
+  Assert.ok("a-changed-id" in changes);
 
   await engine.wipeClient();
   Assert.ok(engine.wasReset);
   Assert.ok(engine._store.wasWiped);
-  Assert.equal(JSON.stringify(engine._tracker.changedIDs), "{}");
+  changes = await engine._tracker.getChangedIDs();
+  Assert.equal(JSON.stringify(changes), "{}");
   Assert.equal(engineObserver.topics[0], "weave:engine:wipe-client:start");
   Assert.equal(engineObserver.topics[1], "weave:engine:reset-client:start");
   Assert.equal(engineObserver.topics[2], "weave:engine:reset-client:finish");
@@ -197,23 +201,36 @@ add_task(async function test_disabled_no_track() {
 
   Assert.ok(!engine.enabled);
   Assert.ok(!tracker._isTracking);
-  do_check_empty(tracker.changedIDs);
+  let changes = await tracker.getChangedIDs();
+  do_check_empty(changes);
 
   Assert.ok(!tracker.engineIsEnabled());
-  tracker.observe(null, "weave:engine:start-tracking", null);
   Assert.ok(!tracker._isTracking);
-  do_check_empty(tracker.changedIDs);
+  changes = await tracker.getChangedIDs();
+  do_check_empty(changes);
 
-  engine.enabled = true;
-  tracker.observe(null, "weave:engine:start-tracking", null);
+  let promisePrefChangeHandled = PromiseUtils.defer();
+  const origMethod = tracker.onEngineEnabledChanged;
+  tracker.onEngineEnabledChanged = async (...args) => {
+    await origMethod.apply(tracker, args);
+    promisePrefChangeHandled.resolve();
+  };
+
+  engine.enabled = true; // Also enables the tracker automatically.
+  await promisePrefChangeHandled.promise;
   Assert.ok(tracker._isTracking);
-  do_check_empty(tracker.changedIDs);
+  changes = await tracker.getChangedIDs();
+  do_check_empty(changes);
 
-  tracker.addChangedID("abcdefghijkl");
-  Assert.ok(0 < tracker.changedIDs.abcdefghijkl);
+  await tracker.addChangedID("abcdefghijkl");
+  changes = await tracker.getChangedIDs();
+  Assert.ok(0 < changes.abcdefghijkl);
+  promisePrefChangeHandled = PromiseUtils.defer();
   Svc.Prefs.set("engine." + engine.prefName, false);
+  await promisePrefChangeHandled.promise;
   Assert.ok(!tracker._isTracking);
-  do_check_empty(tracker.changedIDs);
+  changes = await tracker.getChangedIDs();
+  do_check_empty(changes);
 
   await cleanup(engine);
 });

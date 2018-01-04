@@ -137,7 +137,7 @@ add_task(async function test_history_visit_roundtrip() {
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
-  Svc.Obs.notify("weave:engine:start-tracking");
+  engine._tracker.start();
 
   let id = "aaaaaaaaaaaa";
   let oneHourMS = 60 * 60 * 1000;
@@ -192,7 +192,7 @@ add_task(async function test_history_visit_dedupe_old() {
   let server = await serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
-  Svc.Obs.notify("weave:engine:start-tracking");
+  engine._tracker.start();
 
   await PlacesUtils.history.insert({
     url: "https://www.example.com",
