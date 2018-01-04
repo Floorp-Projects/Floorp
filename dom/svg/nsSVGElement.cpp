@@ -895,11 +895,14 @@ nsSVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
 }
 
 nsresult
-nsSVGElement::UnsetAttr(int32_t aNamespaceID, nsAtom* aName,
-                        bool aNotify)
+nsSVGElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                            const nsAttrValueOrString* aValue,
+                            bool aNotify)
 {
-  UnsetAttrInternal(aNamespaceID, aName, aNotify);
-  return nsSVGElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
+  if (!aValue) {
+    UnsetAttrInternal(aNamespaceID, aName, aNotify);
+  }
+  return nsSVGElementBase::BeforeSetAttr(aNamespaceID, aName, aValue, aNotify);
 }
 
 nsChangeHint
