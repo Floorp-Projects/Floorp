@@ -252,7 +252,7 @@ AsyncImagePipelineManager::UpdateWithoutExternalImage(wr::ResourceUpdateQueue& a
   wr::ImageDescriptor descriptor(size, map.mStride, dSurf->GetFormat());
 
   // Costly copy right here...
-  wr::Vec_u8 bytes;
+  wr::Vec<uint8_t> bytes;
   bytes.PushBytes(Range<uint8_t>(map.mData, size.height * map.mStride));
 
   if (aOp == TextureHost::UPDATE_IMAGE) {

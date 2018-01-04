@@ -265,7 +265,7 @@ WebRenderAPI::SetDisplayList(gfx::Color aBgColor,
                              wr::WrPipelineId pipeline_id,
                              const LayoutSize& content_size,
                              wr::BuiltDisplayListDescriptor dl_descriptor,
-                             wr::Vec_u8& dl_data,
+                             wr::Vec<uint8_t>& dl_data,
                              ResourceUpdateQueue& aResources)
 {
   wr_api_set_display_list(mDocHandle,
@@ -505,7 +505,7 @@ ResourceUpdateQueue::Clear()
 
 void
 ResourceUpdateQueue::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
-                              wr::Vec_u8& aBytes)
+                              wr::Vec<uint8_t>& aBytes)
 {
   wr_resource_updates_add_image(mUpdates,
                                 key,
@@ -515,7 +515,7 @@ ResourceUpdateQueue::AddImage(ImageKey key, const ImageDescriptor& aDescriptor,
 
 void
 ResourceUpdateQueue::AddBlobImage(ImageKey key, const ImageDescriptor& aDescriptor,
-                                  wr::Vec_u8& aBytes)
+                                  wr::Vec<uint8_t>& aBytes)
 {
   wr_resource_updates_add_blob_image(mUpdates,
                                      key,
@@ -552,7 +552,7 @@ ResourceUpdateQueue::AddExternalImageBuffer(ImageKey aKey,
 void
 ResourceUpdateQueue::UpdateImageBuffer(ImageKey aKey,
                                        const ImageDescriptor& aDescriptor,
-                                       wr::Vec_u8& aBytes)
+                                       wr::Vec<uint8_t>& aBytes)
 {
   wr_resource_updates_update_image(mUpdates,
                                    aKey,
@@ -563,7 +563,7 @@ ResourceUpdateQueue::UpdateImageBuffer(ImageKey aKey,
 void
 ResourceUpdateQueue::UpdateBlobImage(ImageKey aKey,
                                      const ImageDescriptor& aDescriptor,
-                                     wr::Vec_u8& aBytes,
+                                     wr::Vec<uint8_t>& aBytes,
                                      const wr::DeviceUintRect& aDirtyRect)
 {
   wr_resource_updates_update_blob_image(mUpdates,
@@ -595,13 +595,13 @@ ResourceUpdateQueue::DeleteImage(ImageKey aKey)
 }
 
 void
-ResourceUpdateQueue::AddRawFont(wr::FontKey aKey, wr::Vec_u8& aBytes, uint32_t aIndex)
+ResourceUpdateQueue::AddRawFont(wr::FontKey aKey, wr::Vec<uint8_t>& aBytes, uint32_t aIndex)
 {
   wr_resource_updates_add_raw_font(mUpdates, aKey, &aBytes.inner, aIndex);
 }
 
 void
-ResourceUpdateQueue::AddFontDescriptor(wr::FontKey aKey, wr::Vec_u8& aBytes, uint32_t aIndex)
+ResourceUpdateQueue::AddFontDescriptor(wr::FontKey aKey, wr::Vec<uint8_t>& aBytes, uint32_t aIndex)
 {
   wr_resource_updates_add_font_descriptor(mUpdates, aKey, &aBytes.inner, aIndex);
 }
@@ -618,7 +618,7 @@ ResourceUpdateQueue::AddFontInstance(wr::FontInstanceKey aKey,
                                      float aGlyphSize,
                                      const wr::FontInstanceOptions* aOptions,
                                      const wr::FontInstancePlatformOptions* aPlatformOptions,
-                                     wr::Vec_u8& aVariations)
+                                     wr::Vec<uint8_t>& aVariations)
 {
   wr_resource_updates_add_font_instance(mUpdates, aKey, aFontKey, aGlyphSize,
                                         aOptions, aPlatformOptions,
@@ -1131,7 +1131,7 @@ DisplayListBuilder::PushBorderImage(const wr::LayoutRect& aBounds,
                                     const wr::BorderWidths& aWidths,
                                     wr::ImageKey aImage,
                                     const wr::NinePatchDescriptor& aPatch,
-                                    const wr::SideOffsets2D_f32& aOutset,
+                                    const wr::SideOffsets2D<float>& aOutset,
                                     const wr::RepeatMode& aRepeatHorizontal,
                                     const wr::RepeatMode& aRepeatVertical)
 {
@@ -1149,7 +1149,7 @@ DisplayListBuilder::PushBorderGradient(const wr::LayoutRect& aBounds,
                                        const wr::LayoutPoint& aEndPoint,
                                        const nsTArray<wr::GradientStop>& aStops,
                                        wr::ExtendMode aExtendMode,
-                                       const wr::SideOffsets2D_f32& aOutset)
+                                       const wr::SideOffsets2D<float>& aOutset)
 {
   wr_dp_push_border_gradient(mWrState, aBounds, aClip, aIsBackfaceVisible,
                              aWidths, aStartPoint, aEndPoint,
@@ -1166,7 +1166,7 @@ DisplayListBuilder::PushBorderRadialGradient(const wr::LayoutRect& aBounds,
                                              const wr::LayoutSize& aRadius,
                                              const nsTArray<wr::GradientStop>& aStops,
                                              wr::ExtendMode aExtendMode,
-                                             const wr::SideOffsets2D_f32& aOutset)
+                                             const wr::SideOffsets2D<float>& aOutset)
 {
   wr_dp_push_border_radial_gradient(
     mWrState, aBounds, aClip, aIsBackfaceVisible, aWidths, aCenter,

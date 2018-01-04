@@ -173,7 +173,7 @@ ShmSegmentsReader::ShmSegmentsReader(const nsTArray<ipc::Shmem>& aSmallShmems,
 }
 
 bool
-ShmSegmentsReader::ReadLarge(const layers::OffsetRange& aRange, wr::Vec_u8& aInto)
+ShmSegmentsReader::ReadLarge(const layers::OffsetRange& aRange, wr::Vec<uint8_t>& aInto)
 {
   // source = zero is for small allocs.
   MOZ_RELEASE_ASSERT(aRange.source() != 0);
@@ -193,7 +193,7 @@ ShmSegmentsReader::ReadLarge(const layers::OffsetRange& aRange, wr::Vec_u8& aInt
 }
 
 bool
-ShmSegmentsReader::Read(const layers::OffsetRange& aRange, wr::Vec_u8& aInto)
+ShmSegmentsReader::Read(const layers::OffsetRange& aRange, wr::Vec<uint8_t>& aInto)
 {
   if (aRange.length() == 0) {
     return true;
