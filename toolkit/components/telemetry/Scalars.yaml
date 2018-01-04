@@ -269,7 +269,7 @@ browser.usage:
       - 1331915
     description: >
       The number of times a graphite2 font has been loaded.
-    expires: "60"
+    expires: "65"
     kind: uint
     notification_emails:
       - tom@mozilla.com
