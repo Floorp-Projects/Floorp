@@ -7,14 +7,6 @@
 <script type="application/javascript"
         src="chrome://browser/content/preferences/in-content/containers.js"/>
 
-<preferences id="containerPreferences" hidden="true" data-category="paneContainer">
-  <!-- Containers -->
-  <preference id="privacy.userContext.enabled"
-              name="privacy.userContext.enabled"
-              type="bool"/>
-
-</preferences>
-
 <hbox hidden="true"
       class="container-header-links"
       data-category="paneContainers">
