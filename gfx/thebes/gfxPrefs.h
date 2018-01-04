@@ -746,8 +746,8 @@ private:
   DECL_GFX_PREF(Once, "webgl.force-layers-readback",           WebGLForceLayersReadback, bool, false);
   DECL_GFX_PREF(Live, "webgl.force-index-validation",          WebGLForceIndexValidation, int32_t, 0);
   DECL_GFX_PREF(Live, "webgl.lose-context-on-memory-pressure", WebGLLoseContextOnMemoryPressure, bool, false);
-  DECL_GFX_PREF(Once, "webgl.max-contexts",                    WebGLMaxContexts, uint32_t, 32);
-  DECL_GFX_PREF(Once, "webgl.max-contexts-per-principal",      WebGLMaxContextsPerPrincipal, uint32_t, 16);
+  DECL_GFX_PREF(Live, "webgl.max-contexts",                    WebGLMaxContexts, uint32_t, 32);
+  DECL_GFX_PREF(Live, "webgl.max-contexts-per-principal",      WebGLMaxContextsPerPrincipal, uint32_t, 16);
   DECL_GFX_PREF(Live, "webgl.max-warnings-per-context",        WebGLMaxWarningsPerContext, uint32_t, 32);
   DECL_GFX_PREF(Live, "webgl.min_capability_mode",             WebGLMinCapabilityMode, bool, false);
   DECL_GFX_PREF(Live, "webgl.msaa-force",                      WebGLForceMSAA, bool, false);

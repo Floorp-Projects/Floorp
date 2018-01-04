@@ -23,14 +23,3 @@ dialog {
   font: menu;
 }
 
-/*XXX - belongs to toolkit/content/finddialog.xul: */
-
-#findDialog,
-#findDialog > menu,
-#findDialog > groupbox {
-  font: menu !important;
-}
-
-#dialog\.caseSensitive {
-  margin-top: 8px;
-}

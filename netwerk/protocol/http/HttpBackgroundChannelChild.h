@@ -49,7 +49,8 @@ protected:
 
   IPCResult RecvOnStopRequest(const nsresult& aChannelStatus,
                               const ResourceTimingStruct& aTiming,
-                              const TimeStamp& aLastActiveTabOptHit) override;
+                              const TimeStamp& aLastActiveTabOptHit,
+                              const nsHttpHeaderArray& aResponseTrailers) override;
 
   IPCResult RecvOnProgress(const int64_t& aProgress,
                            const int64_t& aProgressMax) override;

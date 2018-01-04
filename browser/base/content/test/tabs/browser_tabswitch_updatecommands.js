@@ -7,13 +7,18 @@ add_task(async function() {
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
 
-  let updates = 0;
-  function countUpdates(event) { updates++; }
+  let updates = [];
+  function countUpdates(event) { updates.push((new Error()).stack); }
   let updater = document.getElementById("editMenuCommandSetAll");
   updater.addEventListener("commandupdate", countUpdates, true);
   await BrowserTestUtils.switchTab(gBrowser, tab1);
 
-  is(updates, 1, "only one command update per tab switch");
+  is(updates.length, 1, "only one command update per tab switch");
+  if (updates.length > 1) {
+    for (let stack of updates) {
+      info("Update stack:\n" + stack);
+    }
+  }
 
   updater.removeEventListener("commandupdate", countUpdates, true);
   await BrowserTestUtils.removeTab(tab1);
