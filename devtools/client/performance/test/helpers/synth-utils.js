@@ -55,14 +55,14 @@ exports.synthesizeProfile = () => {
 exports.synthesizeCustomTreeClass = () => {
   const { Cu } = require("chrome");
   const { AbstractTreeItem } = Cu.import("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm", {});
-  const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
+  const { extend } = require("devtools/shared/extend");
 
   function MyCustomTreeItem(dataSrc, properties) {
     AbstractTreeItem.call(this, properties);
     this.itemDataSrc = dataSrc;
   }
 
-  MyCustomTreeItem.prototype = Heritage.extend(AbstractTreeItem.prototype, {
+  MyCustomTreeItem.prototype = extend(AbstractTreeItem.prototype, {
     _displaySelf: function (document, arrowNode) {
       let node = document.createElement("hbox");
       node.style.marginInlineStart = (this.level * 10) + "px";

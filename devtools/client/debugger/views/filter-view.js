@@ -551,7 +551,7 @@ function FilteredSourcesView(DebuggerView) {
   this._onSelect = this._onSelect.bind(this);
 }
 
-FilteredSourcesView.prototype = Heritage.extend(ResultsPanelContainer.prototype, {
+FilteredSourcesView.prototype = extend(ResultsPanelContainer.prototype, {
   /**
    * Initialization function, called when the debugger is started.
    */
@@ -714,7 +714,7 @@ function FilteredFunctionsView(SourceScripts, Parser, DebuggerView) {
   this._onSelect = this._onSelect.bind(this);
 }
 
-FilteredFunctionsView.prototype = Heritage.extend(ResultsPanelContainer.prototype, {
+FilteredFunctionsView.prototype = extend(ResultsPanelContainer.prototype, {
   /**
    * Initialization function, called when the debugger is started.
    */

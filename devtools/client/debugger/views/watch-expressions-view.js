@@ -29,7 +29,7 @@ function WatchExpressionsView(DebuggerController, DebuggerView) {
   this._onKeyPress = this._onKeyPress.bind(this);
 }
 
-WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
+WatchExpressionsView.prototype = extend(WidgetMethods, {
   /**
    * Initialization function, called when the debugger is started.
    */

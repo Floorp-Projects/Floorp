@@ -15,7 +15,8 @@ const EventEmitter = require("devtools/shared/old-event-emitter");
 const Tooltip = require("devtools/client/shared/widgets/tooltip/Tooltip");
 const Editor = require("devtools/client/sourceeditor/editor");
 const {LocalizationHelper} = require("devtools/shared/l10n");
-const {Heritage, WidgetMethods, setNamedTimeout} =
+const {extend} = require("devtools/shared/extend");
+const {WidgetMethods, setNamedTimeout} =
   require("devtools/client/shared/widgets/view-helpers");
 const {Task} = require("devtools/shared/task");
 
@@ -198,7 +199,7 @@ var EventsHandler = {
 /**
  * Functions handling the sources UI.
  */
-var ShadersListView = Heritage.extend(WidgetMethods, {
+var ShadersListView = extend(WidgetMethods, {
   /**
    * Initialization function, called when the tool is started.
    */

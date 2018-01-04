@@ -25,7 +25,7 @@ function StackFramesView(DebuggerController, DebuggerView) {
   this._getStackAsString = this._getStackAsString.bind(this);
 }
 
-StackFramesView.prototype = Heritage.extend(WidgetMethods, {
+StackFramesView.prototype = extend(WidgetMethods, {
   /**
    * Initialization function, called when the debugger is started.
    */

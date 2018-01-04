@@ -14,10 +14,11 @@ const EventEmitter = require("devtools/shared/old-event-emitter");
 const { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");
 const { CanvasFront } = require("devtools/shared/fronts/canvas");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const { extend } = require("devtools/shared/extend");
 const flags = require("devtools/shared/flags");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const { PluralForm } = require("devtools/shared/plural-form");
-const { Heritage, WidgetMethods, setNamedTimeout, clearNamedTimeout,
+const { WidgetMethods, setNamedTimeout, clearNamedTimeout,
         setConditionalTimeout } = require("devtools/client/shared/widgets/view-helpers");
 
 // Use privileged promise in panel documents to prevent having them to freeze
