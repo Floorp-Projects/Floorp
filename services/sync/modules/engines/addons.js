@@ -114,7 +114,7 @@ Utils.deferGetSet(AddonRecord, "cleartext", ["addonID",
 this.AddonsEngine = function AddonsEngine(service) {
   SyncEngine.call(this, "Addons", service);
 
-  this._reconciler = new AddonsReconciler();
+  this._reconciler = new AddonsReconciler(this._tracker.asyncObserver);
 };
 AddonsEngine.prototype = {
   __proto__:              SyncEngine.prototype,
@@ -159,7 +159,8 @@ AddonsEngine.prototype = {
    */
   async getChangedIDs() {
     let changes = {};
-    for (let [id, modified] of Object.entries(this._tracker.changedIDs)) {
+    const changedIDs = await this._tracker.getChangedIDs();
+    for (let [id, modified] of Object.entries(changedIDs)) {
       changes[id] = modified;
     }
 
@@ -708,20 +709,18 @@ AddonsTracker.prototype = {
       return;
     }
 
-    if (this.addChangedID(addon.guid, date.getTime() / 1000)) {
+    const added = await this.addChangedID(addon.guid, date.getTime() / 1000);
+    if (added) {
       this.score += SCORE_INCREMENT_XLARGE;
     }
   },
 
-  startTracking() {
-    if (this.engine.enabled) {
-      this.reconciler.startListening();
-    }
-
+  onStart() {
+    this.reconciler.startListening();
     this.reconciler.addChangeListener(this);
   },
 
-  stopTracking() {
+  onStop() {
     this.reconciler.removeChangeListener(this);
     this.reconciler.stopListening();
   },
