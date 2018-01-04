@@ -30,6 +30,7 @@ class nsIRequestContext;
 namespace mozilla { namespace net {
 
 class nsHttpChunkedDecoder;
+class nsHttpHeaderArray;
 class nsHttpRequestHead;
 class nsHttpResponseHead;
 
@@ -103,6 +104,10 @@ public:
     // Called to take ownership of the response headers; the transaction
     // will drop any reference to the response headers after this call.
     nsHttpResponseHead *TakeResponseHead();
+
+    // Called to take ownership of the trailer headers.
+    // Returning null if there is no trailer.
+    nsHttpHeaderArray *TakeResponseTrailers();
 
     // Provides a thread safe reference of the connection
     // nsHttpTransaction::Connection should only be used on the socket thread
@@ -377,6 +382,8 @@ private:
     // protected by nsHttp::GetLock()
     nsHttpResponseHead             *mForTakeResponseHead;
     bool                            mResponseHeadTaken;
+    nsAutoPtr<nsHttpHeaderArray>    mForTakeResponseTrailers;
+    bool                            mResponseTrailersTaken;
 
     // The time when the transaction was submitted to the Connection Manager
     TimeStamp                       mPendingTime;

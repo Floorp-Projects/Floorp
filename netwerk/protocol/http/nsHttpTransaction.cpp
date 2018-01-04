@@ -136,6 +136,8 @@ nsHttpTransaction::nsHttpTransaction()
     , mReportedResponseHeader(false)
     , mForTakeResponseHead(nullptr)
     , mResponseHeadTaken(false)
+    , mForTakeResponseTrailers(nullptr)
+    , mResponseTrailersTaken(false)
     , mTopLevelOuterContentWindowId(0)
     , mSubmittedRatePacing(false)
     , mPassedRatePacing(false)
@@ -484,6 +486,18 @@ nsHttpTransaction::TakeResponseHead()
     head = mResponseHead;
     mResponseHead = nullptr;
     return head;
+}
+
+nsHttpHeaderArray *
+nsHttpTransaction::TakeResponseTrailers()
+{
+    MOZ_ASSERT(!mResponseTrailersTaken, "TakeResponseTrailers called 2x");
+
+    // Lock TakeResponseTrailers() against main thread
+    MutexAutoLock lock(*nsHttp::GetLock());
+
+    mResponseTrailersTaken = true;
+    return mForTakeResponseTrailers.forget();
 }
 
 void
@@ -1776,6 +1790,11 @@ nsHttpTransaction::HandleContent(char *buf,
     // check for end-of-file
     if ((mContentRead == mContentLength) ||
         (mChunkedDecoder && mChunkedDecoder->ReachedEOF())) {
+        MutexAutoLock lock(*nsHttp::GetLock());
+        mForTakeResponseTrailers = mChunkedDecoder
+            ? mChunkedDecoder->TakeTrailers()
+            : nullptr;
+
         // the transaction is done with a complete response.
         mTransactionDone = true;
         mResponseIsComplete = true;

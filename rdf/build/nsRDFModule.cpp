@@ -14,7 +14,6 @@
 #include "nsISupports.h"
 #include "nsRDFBaseDataSources.h"
 #include "nsRDFBuiltInDataSources.h"
-#include "nsFileSystemDataSource.h"
 #include "nsRDFCID.h"
 #include "nsIComponentManager.h"
 #include "rdf.h"
@@ -66,7 +65,6 @@ MAKE_CTOR(RDFContentSink,RDFContentSink,RDFContentSink)
 MAKE_CTOR(RDFDefaultResource,DefaultResource,RDFResource)
 
 NS_DEFINE_NAMED_CID(NS_RDFCOMPOSITEDATASOURCE_CID);
-NS_DEFINE_NAMED_CID(NS_RDFFILESYSTEMDATASOURCE_CID);
 NS_DEFINE_NAMED_CID(NS_RDFINMEMORYDATASOURCE_CID);
 NS_DEFINE_NAMED_CID(NS_RDFXMLDATASOURCE_CID);
 NS_DEFINE_NAMED_CID(NS_RDFDEFAULTRESOURCE_CID);
@@ -81,7 +79,6 @@ NS_DEFINE_NAMED_CID(NS_LOCALSTORE_CID);
 
 static const mozilla::Module::CIDEntry kRDFCIDs[] = {
     { &kNS_RDFCOMPOSITEDATASOURCE_CID, false, nullptr, CreateNewRDFCompositeDataSource },
-    { &kNS_RDFFILESYSTEMDATASOURCE_CID, false, nullptr, FileSystemDataSource::Create },
     { &kNS_RDFINMEMORYDATASOURCE_CID, false, nullptr, NS_NewRDFInMemoryDataSource },
     { &kNS_RDFXMLDATASOURCE_CID, false, nullptr, CreateNewRDFXMLDataSource },
     { &kNS_RDFDEFAULTRESOURCE_CID, false, nullptr, CreateNewRDFDefaultResource },
@@ -97,7 +94,6 @@ static const mozilla::Module::CIDEntry kRDFCIDs[] = {
 
 static const mozilla::Module::ContractIDEntry kRDFContracts[] = {
     { NS_RDF_DATASOURCE_CONTRACTID_PREFIX "composite-datasource", &kNS_RDFCOMPOSITEDATASOURCE_CID },
-    { NS_RDF_DATASOURCE_CONTRACTID_PREFIX "files", &kNS_RDFFILESYSTEMDATASOURCE_CID },
     { NS_RDF_DATASOURCE_CONTRACTID_PREFIX "in-memory-datasource", &kNS_RDFINMEMORYDATASOURCE_CID },
     { NS_RDF_DATASOURCE_CONTRACTID_PREFIX "xml-datasource", &kNS_RDFXMLDATASOURCE_CID },
     { NS_RDF_RESOURCE_FACTORY_CONTRACTID, &kNS_RDFDEFAULTRESOURCE_CID },
