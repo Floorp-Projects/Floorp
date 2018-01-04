@@ -483,6 +483,7 @@ skip script test262/language/expressions/bitwise-xor/bigint-non-primitive.js
 #############################################
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1415303
+skip-if(!this.hasOwnProperty("SharedArrayBuffer")) script non262/SIMD/load-sab-buffer-compat.js
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) script test262/built-ins/DataView/toindex-bytelength-sab.js
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) script test262/built-ins/DataView/return-abrupt-tonumber-bytelength-sab.js
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) script test262/built-ins/DataView/byteoffset-is-negative-throws-sab.js
