@@ -15,3 +15,13 @@ extern crate nserror;
 extern crate xpcom_macros;
 #[doc(hidden)]
 pub use xpcom_macros::*;
+
+// Helper functions and data structures are exported in the root of the crate.
+mod base;
+pub use base::*;
+
+mod refptr;
+pub use refptr::*;
+
+// XPCOM interface definitions.
+pub mod interfaces;
