@@ -14,7 +14,6 @@ config = {
     ],
     'stage_platform': 'macosx64-debug',
     'debug_build': True,
-    'enable_talos_sendchange': False,
     'enable_unittest_sendchange': False,
     #### 64 bit build specific #####
     'env': {

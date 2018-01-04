@@ -2191,11 +2191,6 @@ or run without that action (ie: --no-{action})"
             self.info("We are not running this in buildbot; skipping")
             return
 
-        if self.config.get('enable_talos_sendchange'):
-            self._do_sendchange('talos')
-        else:
-            self.info("'enable_talos_sendchange' is false; skipping")
-
         if self.config.get('enable_unittest_sendchange'):
             self._do_sendchange('unittest')
         else:

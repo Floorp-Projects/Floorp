@@ -24,7 +24,6 @@ config = {
     'enable_count_ctors': False,
     # allows triggering of dependent jobs when --artifact try syntax is detected on buildbot
     'enable_unittest_sendchange': False,
-    'enable_talos_sendchange': False,
     'perfherder_extra_options': ['artifact'],
     #########################################################################
 

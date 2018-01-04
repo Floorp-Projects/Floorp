@@ -14,7 +14,6 @@ config = {
     ],
     'stage_platform': 'win32-add-on-devel',
     'build_type': 'add-on-devel',
-    'enable_talos_sendchange': False,
     #### 32 bit build specific #####
     'env': {
         'BINSCOPE': 'C:/Program Files (x86)/Microsoft/SDL BinScope/BinScope.exe',
