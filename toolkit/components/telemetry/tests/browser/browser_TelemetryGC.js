@@ -100,8 +100,6 @@ function check(entries) {
       }
     }
   }
-
-  ok(foundGCs > 0, "saw at least one GC");
 }
 
 add_task(async function test() {
