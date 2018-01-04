@@ -181,16 +181,6 @@
           "google", "yahoo", "bing", "amazondotcom", "ddg", "twitter", "wikipedia"
         ]
       },
-      "US": {
-        "visibleDefaultEngines": [
-          "yahoo", "google-nocodes", "bing", "amazondotcom", "ddg", "twitter", "wikipedia"
-        ]
-      },
-      "CA": {
-        "visibleDefaultEngines": [
-          "google-nocodes", "yahoo", "bing", "amazondotcom", "ddg", "twitter", "wikipedia"
-        ]
-      },
       "experimental-hidden": {
         "visibleDefaultEngines": [
           "amazon-ca", "amazon-au", "google-2018", "duckduckgo"
