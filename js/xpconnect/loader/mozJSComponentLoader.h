@@ -37,6 +37,10 @@ namespace mozilla {
     { 0xbb, 0xef, 0xf0, 0xcc, 0xb5, 0xfa, 0x64, 0xb6 }}
 #define MOZJSCOMPONENTLOADER_CONTRACTID "@mozilla.org/moz/jsloader;1"
 
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
+#define STARTUP_RECORDER_ENABLED
+#endif
+
 class mozJSComponentLoader final : public mozilla::ModuleLoader,
                                    public xpcIJSModuleLoader,
                                    public nsIObserver
@@ -158,7 +162,7 @@ class mozJSComponentLoader final : public mozilla::ModuleLoader,
             obj = nullptr;
             thisObjectKey = nullptr;
             location = nullptr;
-#if defined(NIGHTLY_BUILD) || defined(DEBUG)
+#ifdef STARTUP_RECORDER_ENABLED
             importStack.Truncate();
 #endif
         }
@@ -173,7 +177,7 @@ class mozJSComponentLoader final : public mozilla::ModuleLoader,
         JS::PersistentRootedScript thisObjectKey;
         char* location;
         nsCString resolvedURL;
-#if defined(NIGHTLY_BUILD) || defined(DEBUG)
+#ifdef STARTUP_RECORDER_ENABLED
         nsCString importStack;
 #endif
     };
