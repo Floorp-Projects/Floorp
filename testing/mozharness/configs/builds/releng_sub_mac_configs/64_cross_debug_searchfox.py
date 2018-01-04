@@ -13,9 +13,7 @@ config = {
     ],
     'stage_platform': 'macosx64-searchfox-debug',
     'debug_build': True,
-    'enable_talos_sendchange': False,
     'enable_signing': False,
-    'enable_talos_sendchange': False,
     'enable_unittest_sendchange': False,
     'perfherder_extra_options': ['static-analysis'],
     #### 64 bit build specific #####

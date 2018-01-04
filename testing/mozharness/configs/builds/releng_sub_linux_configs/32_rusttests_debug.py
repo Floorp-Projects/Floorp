@@ -14,7 +14,6 @@ config = {
     'debug_build': True,
     'stage_platform': 'linux-rusttests-debug',
     'enable_signing': False,
-    'enable_talos_sendchange': False,
     #### 32 bit build specific #####
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
