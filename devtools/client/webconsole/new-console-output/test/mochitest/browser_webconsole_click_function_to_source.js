@@ -8,53 +8,37 @@
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-bug_1050691_click_function_to_source.html";
+                 "new-console-output/test/mochitest/test-click-function-to-source.html";
 
 // Force the old debugger UI since it's directly used (see Bug 1301705)
-Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
-registerCleanupFunction(function* () {
-  Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
-});
+pushPref("devtools.debugger.new-debugger-frontend", false);
 
-add_task(function* () {
-  yield loadTab(TEST_URI);
-  let hud = yield openConsole();
+add_task(async function () {
+  const hud = await openNewTabAndConsole(TEST_URI);
 
-  // Open the Debugger panel.
-  let debuggerPanel = yield openDebugger();
-  // And right after come back to the Console panel.
-  yield openConsole();
-  yield testWithDebuggerOpen(hud, debuggerPanel);
-});
+  info("Open the Debugger panel.");
+  const {panel} = await openDebugger();
+  let panelWin = panel.panelWin;
 
-function* testWithDebuggerOpen(hud, debuggerPanel) {
-  let clickable = yield printFunction(hud);
-  let panelWin = debuggerPanel.panelWin;
-  let onEditorLocationSet = panelWin.once(panelWin.EVENTS.EDITOR_LOCATION_SET);
-  synthesizeClick(clickable, hud);
-  yield onEditorLocationSet;
-  ok(isDebuggerCaretPos(debuggerPanel, 7),
-    "Clicking on a function should go to its source in the debugger view");
-}
+  info("And right after come back to the Console panel.")
+  await openConsole();
 
-function synthesizeClick(clickable, hud) {
-  EventUtils.synthesizeMouse(clickable, 2, 2, {}, hud.iframeWindow);
-}
-
-var printFunction = Task.async(function* (hud) {
-  hud.jsterm.clearOutput();
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+  info("Log a function");
+  const onLoggedFunction = waitForMessage(hud, "function foo")
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function () {
     content.wrappedJSObject.foo();
   });
-  let [result] = yield waitForMessages({
-    webconsole: hud,
-    messages: [{
-      category: CATEGORY_WEBDEV,
-      severity: SEVERITY_LOG,
-    }],
-  });
-  let msg = [...result.matched][0];
-  let clickable = msg.querySelector("a");
-  ok(clickable, "clickable item for object should exist");
-  return clickable;
+  const {node} = await onLoggedFunction;
+  const jumpIcon = node.querySelector(".jump-definition")
+  ok(jumpIcon, "A jump to definition button is rendered, as expected");
+
+  info("Click on the jump to definition button.");
+  let onEditorLocationSet = panelWin.once(panelWin.EVENTS.EDITOR_LOCATION_SET);
+  jumpIcon.click();
+  await onEditorLocationSet;
+
+  const {editor} = panelWin.DebuggerView;
+  const {line, ch} = editor.getCursor();
+  // Source editor starts counting line and column numbers from 0.
+  ok(line === 6 && ch === 0, "Debugger is open at the expected position");
 });

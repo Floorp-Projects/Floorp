@@ -53,7 +53,7 @@ def load_image_by_task_id(task_id, tag=None):
     return True
 
 
-def build_context(name, outputFile):
+def build_context(name, outputFile, args=None):
     """Build a context.tar for image with specified name.
     """
     if not name:
@@ -61,14 +61,14 @@ def build_context(name, outputFile):
     if not outputFile:
         raise ValueError('must provide a outputFile')
 
-    image_dir = os.path.join(docker.IMAGE_DIR, name)
+    image_dir = docker.image_path(name)
     if not os.path.isdir(image_dir):
         raise Exception('image directory does not exist: %s' % image_dir)
 
-    docker.create_context_tar(GECKO, image_dir, outputFile, "")
+    docker.create_context_tar(GECKO, image_dir, outputFile, "", args)
 
 
-def build_image(name):
+def build_image(name, args=None):
     """Build a Docker image of specified name.
 
     Output from image building process will be printed to stdout.
@@ -76,7 +76,7 @@ def build_image(name):
     if not name:
         raise ValueError('must provide a Docker image name')
 
-    image_dir = os.path.join(docker.IMAGE_DIR, name)
+    image_dir = docker.image_path(name)
     if not os.path.isdir(image_dir):
         raise Exception('image directory does not exist: %s' % image_dir)
 
@@ -98,7 +98,7 @@ def build_image(name):
     fd, context_path = tempfile.mkstemp()
     os.close(fd)
     try:
-        docker.create_context_tar(GECKO, image_dir, context_path, name)
+        docker.create_context_tar(GECKO, image_dir, context_path, name, args)
         docker.build_from_context(docker_bin, context_path, name, tag)
     finally:
         os.unlink(context_path)

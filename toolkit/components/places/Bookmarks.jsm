@@ -603,6 +603,9 @@ var Bookmarks = Object.freeze({
         async db => {
         let parent;
         if (updateInfo.hasOwnProperty("parentGuid")) {
+          if (PlacesUtils.isRootItem(item.guid)) {
+            throw new Error("It's not possible to move Places root folders.");
+          }
           if (item.type == this.TYPE_FOLDER) {
             // Make sure we are not moving a folder into itself or one of its
             // descendants.
@@ -628,6 +631,9 @@ var Bookmarks = Object.freeze({
         }
 
         if (updateInfo.hasOwnProperty("index")) {
+          if (PlacesUtils.isRootItem(item.guid)) {
+            throw new Error("It's not possible to move Places root folders.");
+          }
           // If at this point we don't have a parent yet, we are moving into
           // the same container.  Thus we know it exists.
           if (!parent)

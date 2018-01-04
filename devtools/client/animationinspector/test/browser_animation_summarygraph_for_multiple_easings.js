@@ -130,6 +130,17 @@ const TEST_CASES = {
       ]
     ]
   },
+  "duplicate-offsets": {
+    expectedKeyframeEasingGraphs: [
+      [
+        { x: 0, y: 0 },
+        { x: 25000, y: 0.25 },
+        { x: 50000, y: 0.5 },
+        { x: 75000, y: 0.5 },
+        { x: 99999, y: 0.5 },
+      ]
+    ]
+  },
 };
 
 add_task(function* () {

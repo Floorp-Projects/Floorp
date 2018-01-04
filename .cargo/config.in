@@ -1,3 +1,8 @@
+# Note: if you add more configure substitutions here with required values
+# you will also need to fix the sed commands in:
+# taskcluster/scripts/builder/build-sm-mozjs-crate.sh
+# taskcluster/scripts/builder/build-sm-rust-bindings.sh
+
 [source.crates-io]
 registry = 'https://github.com/rust-lang/crates.io-index'
 replace-with = 'vendored-sources'
@@ -9,3 +14,5 @@ replace-with = "vendored-sources"
 
 [source.vendored-sources]
 directory = '@top_srcdir@/third_party/rust'
+
+@WIN64_CARGO_LINKER_CONFIG@

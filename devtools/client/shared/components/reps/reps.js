@@ -414,18 +414,13 @@ function getGripPreviewItems(grip) {
  * @return {boolean}
  */
 function getGripType(object, noGrip) {
-  let type = typeof object;
-  if (type == "object" && object instanceof String) {
-    type = "string";
-  } else if (object && type == "object" && object.type && noGrip !== true) {
-    type = object.type;
+  if (noGrip || Object(object) !== object) {
+    return typeof object;
   }
-
-  if (isGrip(object)) {
-    type = object.class;
+  if (object.type === "object") {
+    return object.class;
   }
-
-  return type;
+  return object.type;
 }
 
 /**
@@ -814,7 +809,7 @@ function StringRep(props) {
     text = sanitizeString(text);
   }
 
-  const shouldCrop = (!member || !member.open) && cropLimit;
+  const shouldCrop = (!member || !member.open) && cropLimit && text.length > cropLimit;
   if (!containsURL(text)) {
     if (shouldCrop) {
       text = rawCropString(text, cropLimit);
@@ -3240,7 +3235,10 @@ function SymbolRep(props) {
   } = props;
   let { name } = object;
 
-  return span({ className }, `Symbol(${name || ""})`);
+  return span({
+    className,
+    "data-link-actor-id": object.actor
+  }, `Symbol(${name || ""})`);
 }
 
 function supportsObject(object, noGrip = false) {
@@ -3809,19 +3807,31 @@ const arrayProperty = /\[(.*?)\]$/;
 const functionProperty = /([\w\d]+)[\/\.<]*?$/;
 const annonymousProperty = /([\w\d]+)\(\^\)$/;
 
-function getFunctionName(grip, props) {
-  let name = grip.userDisplayName || grip.displayName || grip.name || props.functionName || "";
+function getFunctionName(grip, props = {}) {
+  let { functionName } = props;
+  let name;
 
-  const scenarios = [objectProperty, arrayProperty, functionProperty, annonymousProperty];
+  if (functionName) {
+    let end = functionName.length - 1;
+    functionName = functionName.startsWith('"') && functionName.endsWith('"') ? functionName.substring(1, end) : functionName;
+  }
 
-  scenarios.some(reg => {
-    const match = reg.exec(name);
-    if (match) {
-      name = match[1];
-      return true;
-    }
-    return false;
-  });
+  if (grip.displayName != undefined && functionName != undefined && grip.displayName != functionName) {
+    name = functionName + ":" + grip.displayName;
+  } else {
+    name = grip.userDisplayName || grip.displayName || grip.name || props.functionName || "";
+
+    const scenarios = [objectProperty, arrayProperty, functionProperty, annonymousProperty];
+
+    scenarios.some(reg => {
+      const match = reg.exec(name);
+      if (match) {
+        name = match[1];
+        return true;
+      }
+      return false;
+    });
+  }
 
   return cropString(name, 100);
 }

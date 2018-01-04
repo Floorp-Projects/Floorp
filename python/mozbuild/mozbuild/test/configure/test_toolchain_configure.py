@@ -1420,7 +1420,7 @@ class RustTest(BaseConfigureTest):
 
     def invoke_rustc(self, stdin, args):
         if args == ('--version', '--verbose'):
-            return 0, 'rustc 2.0\nrelease: 2.0', ''
+            return 0, 'rustc 2.0\nrelease: 2.0\nhost: x86_64-unknown-linux-gnu', ''
         if args == ('--print', 'target-list'):
             # Raw list returned by rustc version 1.19, + ios, which somehow
             # don't appear in the default list.

@@ -596,9 +596,13 @@ function isPassingThrough(pathSegList, x, y) {
  * @return <stop> element.
  */
 function findStopElement(svgEl, offset) {
-  return [...svgEl.querySelectorAll("stop")].find(stopEl => {
-    return stopEl.getAttribute("offset") == offset;
-  });
+  for (const stopEl of svgEl.querySelectorAll("stop")) {
+    if (offset <= parseFloat(stopEl.getAttribute("offset"))) {
+      return stopEl;
+    }
+  }
+
+  return null;
 }
 
 /*

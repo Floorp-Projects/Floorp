@@ -1,38 +1,24 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-// See Bug 588342.
+// Check that focus is restored to content page after closing the console. See Bug 588342.
+const TEST_URI = "data:text/html;charset=utf-8,Test content focus after closing console";
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 588342";
+add_task(async function () {
+  let hud = await openNewTabAndConsole(TEST_URI);
 
-add_task(function* () {
-  let { browser } = yield loadTab(TEST_URI);
-  let hud = yield openConsole();
+  let inputNode = hud.jsterm.inputNode;
+  info("Focus after console is opened");
+  ok(hasFocus(inputNode), "input node is focused after console is opened");
 
-  yield checkConsoleFocus(hud);
-
-  let isFocused = yield ContentTask.spawn(browser, { }, function* () {
-    var fm = Components.classes["@mozilla.org/focus-manager;1"].
-                         getService(Components.interfaces.nsIFocusManager);
+  info("Closing console");
+  await closeConsole();
+  const isFocused = await ContentTask.spawn(gBrowser.selectedBrowser, { }, function () {
+    const cmp = "@mozilla.org/focus-manager;1";
+    const fm = Components.classes[cmp].getService(Components.interfaces.nsIFocusManager);
     return fm.focusedWindow == content;
   });
-
-  ok(isFocused, "content document has focus");
+  ok(isFocused, "content document has focus after closing the console");
 });
-
-function* checkConsoleFocus(hud) {
-  let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
-
-  yield new Promise(resolve => {
-    waitForFocus(resolve);
-  });
-
-  is(hud.jsterm.inputNode.getAttribute("focused"), "true",
-     "jsterm input is focused on web console open");
-  is(fm.focusedWindow, hud.iframeWindow, "hud window is focused");
-  yield closeConsole(null);
-}

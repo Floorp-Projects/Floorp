@@ -417,9 +417,9 @@ class TaskClusterImagesProvider(object):
         from taskgraph.docker import build_image, build_context
         try:
             if context_only is None:
-                build_image(image_name)
+                build_image(image_name, os.environ)
             else:
-                build_context(image_name, context_only)
+                build_context(image_name, context_only, os.environ)
         except Exception:
             traceback.print_exc()
             sys.exit(1)

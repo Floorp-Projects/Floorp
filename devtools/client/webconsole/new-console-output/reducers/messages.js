@@ -65,6 +65,7 @@ function addMessage(state, filtersState, prefsState, newMessage) {
     repeatById,
     visibleMessages,
     filteredMessagesCount,
+    networkMessagesUpdateById,
   } = state;
 
   if (newMessage.type === constants.MESSAGE_TYPE.NULL_MESSAGE) {
@@ -134,6 +135,14 @@ function addMessage(state, filtersState, prefsState, newMessage) {
       global: filteredMessagesCount.global + 1,
       [cause]: filteredMessagesCount[cause] + 1
     };
+  }
+
+  // Append received network-data also into networkMessagesUpdateById
+  // that is responsible for collecting (lazy loaded) HTTP payload data.
+  if (newMessage.source == "network") {
+    newState.networkMessagesUpdateById = Object.assign({}, networkMessagesUpdateById, {
+      [newMessage.actor]: newMessage
+    });
   }
 
   return newState;

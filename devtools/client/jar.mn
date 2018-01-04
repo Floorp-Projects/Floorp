@@ -128,6 +128,7 @@ devtools.jar:
     skin/images/performance-details-call-tree.svg (themes/images/performance-details-call-tree.svg)
     skin/images/performance-details-flamegraph.svg (themes/images/performance-details-flamegraph.svg)
     skin/breadcrumbs.css (themes/breadcrumbs.css)
+    skin/chart.css (themes/chart.css)
     skin/widgets.css (themes/widgets.css)
     skin/images/power.svg (themes/images/power.svg)
     skin/images/filetypes/dir-close.svg (themes/images/filetypes/dir-close.svg)
