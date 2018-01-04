@@ -54,6 +54,8 @@ public:
   nsresult SuspendForDiversion() override;
   nsresult SuspendMessageDiversion() override;
   nsresult ResumeMessageDiversion() override;
+  nsresult CancelDiversion() override;
+
 
   // Calls OnStartRequest for "DivertTo" listener, then notifies child channel
   // that it should divert OnDataAvailable and OnStopRequest calls to this
