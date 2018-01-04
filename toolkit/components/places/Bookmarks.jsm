@@ -173,6 +173,38 @@ var Bookmarks = Object.freeze({
   },
 
   /**
+   * Returns the title to use on the UI for a bookmark item. Root folders
+   * in the database don't store fully localised versions of the title. To
+   * get those this function should be called.
+   *
+   * Hence, this function should only be called if a root folder object is
+   * likely to be displayed to the user.
+   *
+   * @param {Object} info An object representing a bookmark-item.
+   * @returns {String} The correct string.
+   * @throws {Error} If the guid in PlacesUtils.bookmarks.userContentRoots is
+   *                 not supported.
+   */
+  getLocalizedTitle(info) {
+    if (!PlacesUtils.bookmarks.userContentRoots.includes(info.guid)) {
+      return info.title;
+    }
+
+    switch (info.guid) {
+      case PlacesUtils.bookmarks.toolbarGuid:
+        return PlacesUtils.getString("BookmarksToolbarFolderTitle");
+      case PlacesUtils.bookmarks.menuGuid:
+        return PlacesUtils.getString("BookmarksMenuFolderTitle");
+      case PlacesUtils.bookmarks.unfiledGuid:
+        return PlacesUtils.getString("OtherBookmarksFolderTitle");
+      case PlacesUtils.bookmarks.mobileGuid:
+        return PlacesUtils.getString("MobileBookmarksFolderTitle");
+      default:
+        throw new Error(`Unsupported guid ${info.guid} passed to getLocalizedTitle!`);
+    }
+  },
+
+  /**
    * Inserts a bookmark-item into the bookmarks tree.
    *
    * For creating a bookmark, the following set of properties is required:

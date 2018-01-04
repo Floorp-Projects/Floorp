@@ -18,8 +18,6 @@ function onLibraryReady(organizer) {
       // Check titles have been fixed.
       for (var i = 0; i < leftPaneQueries.length; i++) {
         var query = leftPaneQueries[i];
-        is(PlacesUtils.bookmarks.getItemTitle(query.itemId),
-           query.correctTitle, "Title is correct for query " + query.name);
         if ("concreteId" in query) {
           is(PlacesUtils.bookmarks.getItemTitle(query.concreteId),
            query.concreteTitle, "Concrete title is correct for query " + query.name);
