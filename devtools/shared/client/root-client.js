@@ -5,7 +5,7 @@
 "use strict";
 
 const { Ci } = require("chrome");
-const {DebuggerClient} = require("devtools/shared/client/debugger-client");
+const { arg, DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 /**
  * A RootClient object represents a root actor on the server. Each
@@ -48,10 +48,13 @@ RootClient.prototype = {
    /**
    * List the open tabs.
    *
+   * @param object options
+   *        Optional flags for listTabs:
+   *        - boolean favicons: return favicon data
    * @param function onResponse
    *        Called with the response packet.
    */
-  listTabs: DebuggerClient.requester({ type: "listTabs" }),
+  listTabs: DebuggerClient.requester({ type: "listTabs", options: arg(0) }),
 
   /**
    * List the installed addons.
