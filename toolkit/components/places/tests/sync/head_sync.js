@@ -10,6 +10,12 @@ ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 ChromeUtils.import("resource://testing-common/PlacesTestUtils.jsm");
 ChromeUtils.import("resource://testing-common/httpd.js");
 
+// These titles are defined in Database::CreateBookmarkRoots
+const BookmarksMenuTitle = "menu";
+const BookmarksToolbarTitle = "toolbar";
+const UnfiledBookmarksTitle = "unfiled";
+const MobileBookmarksTitle = "mobile";
+
 function run_test() {
   let bufLog = Log.repository.getLogger("Sync.Engine.Bookmarks.Mirror");
   bufLog.level = Log.Level.Error;

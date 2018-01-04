@@ -71,7 +71,7 @@ add_task(async function() {
         break;
       case Ci.nsIDOMNode.TEXT_NODE:
         // Check Title and description.
-        if (!current.data.startsWith("\n") && !current.data.includes("Bookmarks")) {
+        if (!current.data.startsWith("\n") && current.data.includes("test")) {
           Assert.equal(current.data.trim(), unescaped, "Text node should be complete");
           checksCount--;
         }

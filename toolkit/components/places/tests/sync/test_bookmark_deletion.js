@@ -117,7 +117,7 @@ add_task(async function test_complex_orphaning() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
       children: [{
         guid: "folderGGGGGG",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -142,7 +142,7 @@ add_task(async function test_complex_orphaning() {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "Bookmarks Toolbar",
+      title: BookmarksToolbarTitle,
       children: [{
         guid: "folderAAAAAA",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -161,12 +161,12 @@ add_task(async function test_complex_orphaning() {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
-      title: "Other Bookmarks",
+      title: UnfiledBookmarksTitle,
     }, {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
-      title: "mobile",
+      title: MobileBookmarksTitle,
     }],
   }, "Should move orphans to closest surviving parent");
 
@@ -292,7 +292,7 @@ add_task(async function test_locally_modified_remotely_deleted() {
     guid: PlacesUtils.bookmarks.menuGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     index: 0,
-    title: "Bookmarks Menu",
+    title: BookmarksMenuTitle,
     children: [{
       guid: "bookmarkAAAA",
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -427,7 +427,7 @@ add_task(async function test_locally_deleted_remotely_modified() {
     guid: PlacesUtils.bookmarks.menuGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     index: 0,
-    title: "Bookmarks Menu",
+    title: BookmarksMenuTitle,
     children: [{
       guid: "bookmarkAAAA",
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -549,7 +549,7 @@ add_task(async function test_move_to_new_then_delete() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
       children: [{
         guid: "bookmarkCCCC",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -561,17 +561,17 @@ add_task(async function test_move_to_new_then_delete() {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "Bookmarks Toolbar",
+      title: BookmarksToolbarTitle,
     }, {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
-      title: "Other Bookmarks",
+      title: UnfiledBookmarksTitle,
     }, {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
-      title: "mobile",
+      title: MobileBookmarksTitle,
     }],
   }, "Should move C to closest surviving parent");
 
@@ -633,7 +633,7 @@ add_task(async function test_nonexistent_on_one_side() {
         hasDupe: false,
         parentName: "",
         dateAdded: menuDateAdded.getTime(),
-        title: "Bookmarks Menu",
+        title: BookmarksMenuTitle,
         children: [],
       },
     },
@@ -748,7 +748,7 @@ add_task(async function test_clear_folder_then_delete() {
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(idsToUpload, {
-    updated: ["bookmarkEEEE", "bookmarkFFFF", "menu", "mobile"],
+    updated: ["bookmarkEEEE", "bookmarkFFFF", "menu", MobileBookmarksTitle],
     deleted: ["bookmarkDDDD"],
   }, "Should upload locally moved and deleted items");
 
@@ -761,7 +761,7 @@ add_task(async function test_clear_folder_then_delete() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
       children: [{
         guid: "bookmarkBBBB",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -779,12 +779,12 @@ add_task(async function test_clear_folder_then_delete() {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "Bookmarks Toolbar",
+      title: BookmarksToolbarTitle,
     }, {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
-      title: "Other Bookmarks",
+      title: UnfiledBookmarksTitle,
       children: [{
         guid: "bookmarkCCCC",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -796,7 +796,7 @@ add_task(async function test_clear_folder_then_delete() {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
-      title: "mobile",
+      title: MobileBookmarksTitle,
       children: [{
         guid: "bookmarkFFFF",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -934,7 +934,7 @@ add_task(async function test_newer_move_to_deleted() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
       children: [{
         guid: "bookmarkEEEE",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -952,7 +952,7 @@ add_task(async function test_newer_move_to_deleted() {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "Bookmarks Toolbar",
+      title: BookmarksToolbarTitle,
       children: [{
         guid: "bookmarkDDDD",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -970,12 +970,12 @@ add_task(async function test_newer_move_to_deleted() {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
-      title: "Other Bookmarks",
+      title: UnfiledBookmarksTitle,
     }, {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
-      title: "mobile",
+      title: MobileBookmarksTitle,
     }],
   }, "Should not decide to keep newly moved items in deleted parents");
 
