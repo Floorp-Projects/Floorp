@@ -340,7 +340,6 @@
 @RESPATH@/components/xpconnect.xpt
 @RESPATH@/components/xulapp.xpt
 @RESPATH@/components/xul.xpt
-@RESPATH@/components/xultmpl.xpt
 @RESPATH@/components/zipwriter.xpt
 @RESPATH@/components/telemetry.xpt
 

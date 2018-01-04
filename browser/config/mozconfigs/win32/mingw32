@@ -55,7 +55,7 @@ HOST_CXX="$TOOLTOOL_DIR/gcc/bin/g++"
 
 # We want to make sure we use binutils and other binaries in the tooltool
 # package.
-mk_add_options PATH="$TOOLTOOL_DIR/gcc/bin:$TOOLTOOL_DIR/mingw32/bin:$TOOLTOOL_DIR/wine/bin:$TOOLTOOL_DIR/upx/bin:$TOOLTOOL_DIR/fxc2/bin:$PATH"
+mk_add_options "export PATH=$TOOLTOOL_DIR/gcc/bin:$TOOLTOOL_DIR/mingw32/bin:$TOOLTOOL_DIR/wine/bin:$TOOLTOOL_DIR/upx/bin:$TOOLTOOL_DIR/fxc2/bin:$PATH"
 
 LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/gcc/lib64:$TOOLTOOL_DIR/mingw32/lib64
 mk_add_options "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"

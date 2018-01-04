@@ -1524,35 +1524,6 @@ add_test(function test_getSignedInUserProfile_error_uses_account_data() {
   });
 });
 
-add_test(function test_getSignedInUserProfile_unverified_account() {
-  let fxa = new MockFxAccounts();
-  let alice = getTestUser("alice");
-
-  fxa.setSignedInUser(alice).then(() => {
-    fxa.getSignedInUserProfile()
-      .catch(error => {
-         Assert.equal(error.message, "UNVERIFIED_ACCOUNT");
-         fxa.signOut().then(run_next_test);
-      });
-  });
-
-});
-
-add_test(function test_getSignedInUserProfile_no_account_data() {
-  let fxa = new MockFxAccounts();
-
-  fxa.internal.getSignedInUser = function() {
-    return Promise.resolve(null);
-  };
-
-  fxa.getSignedInUserProfile()
-    .catch(error => {
-       Assert.equal(error.message, "NO_ACCOUNT");
-       fxa.signOut().then(run_next_test);
-    });
-
-});
-
 add_task(async function test_checkVerificationStatusFailed() {
   let fxa = new MockFxAccounts();
   let alice = getTestUser("alice");

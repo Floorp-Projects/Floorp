@@ -69,7 +69,6 @@ this.Tracker = function Tracker(name, engine) {
   Svc.Obs.add("weave:engine:start-tracking", this);
   Svc.Obs.add("weave:engine:stop-tracking", this);
 
-  Svc.Prefs.observe("engine." + this.engine.prefName, this);
 };
 
 Tracker.prototype = {
@@ -248,11 +247,6 @@ Tracker.prototype = {
           this.stopTracking();
           this._isTracking = false;
         }
-        return;
-      case "nsPref:changed":
-        if (data == PREFS_BRANCH + "engine." + this.engine.prefName) {
-          this.onEngineEnabledChanged(this.engine.enabled);
-        }
     }
   },
 
@@ -261,7 +255,6 @@ Tracker.prototype = {
     // Important for tests where we unregister the engine during cleanup.
     Svc.Obs.remove("weave:engine:start-tracking", this);
     Svc.Obs.remove("weave:engine:stop-tracking", this);
-    Svc.Prefs.ignore("engine." + this.engine.prefName, this);
 
     // Persist all pending tracked changes to disk, and wait for the final write
     // to finish.
@@ -663,6 +656,11 @@ this.Engine = function Engine(name, service) {
   this._modified = this.emptyChangeset();
   this._tracker; // initialize tracker to load previously changed IDs
   this._log.debug("Engine constructed");
+
+  XPCOMUtils.defineLazyPreferenceGetter(this, "_enabled",
+    `services.sync.engine.${this.prefName}`, false,
+    (data, previous, latest) =>
+      this._tracker.onEngineEnabledChanged(latest));
 };
 Engine.prototype = {
   // _storeObj, and _trackerObj should to be overridden in subclasses
@@ -689,11 +687,13 @@ Engine.prototype = {
   },
 
   get enabled() {
-    return Svc.Prefs.get("engine." + this.prefName, false);
+    return this._enabled;
   },
 
   set enabled(val) {
-    Svc.Prefs.set("engine." + this.prefName, !!val);
+    if (!!val != this._enabled) {
+      Svc.Prefs.set("engine." + this.prefName, !!val);
+    }
   },
 
   get score() {
@@ -776,7 +776,16 @@ this.SyncEngine = function SyncEngine(name, service) {
     dataPostProcessor: json => this._metadataPostProcessor(json),
     beforeSave: () => this._beforeSaveMetadata(),
   });
+  Utils.defineLazyIDProperty(this, "syncID", `services.sync.${this.name}.syncID`);
 
+  XPCOMUtils.defineLazyPreferenceGetter(this, "_lastSync",
+                                        `services.sync.${this.name}.lastSync`,
+                                        "0", null,
+                                        v => parseFloat(v));
+  XPCOMUtils.defineLazyPreferenceGetter(this, "_lastSyncLocal",
+                                        `services.sync.${this.name}.lastSyncLocal`,
+                                        "0", null,
+                                        v => parseInt(v, 10));
   // Async initializations can be made in the initialize() method.
 
   // The map of ids => metadata for records needing a weak upload.
@@ -880,30 +889,18 @@ SyncEngine.prototype = {
     return this.storageURL + "meta/global";
   },
 
-  get syncID() {
-    // Generate a random syncID if we don't have one
-    let syncID = Svc.Prefs.get(this.name + ".syncID", "");
-    return syncID == "" ? this.syncID = Utils.makeGUID() : syncID;
-  },
-  set syncID(value) {
-    Svc.Prefs.set(this.name + ".syncID", value);
-  },
-
   /*
    * lastSync is a timestamp in server time.
    */
   get lastSync() {
-    return parseFloat(Svc.Prefs.get(this.name + ".lastSync", "0"));
+    return this._lastSync;
   },
   set lastSync(value) {
-    // Reset the pref in-case it's a number instead of a string
-    Svc.Prefs.reset(this.name + ".lastSync");
     // Store the value as a string to keep floating point precision
     Svc.Prefs.set(this.name + ".lastSync", value.toString());
   },
   resetLastSync() {
     this._log.debug("Resetting " + this.name + " last sync time");
-    Svc.Prefs.reset(this.name + ".lastSync");
     Svc.Prefs.set(this.name + ".lastSync", "0");
     this.lastSyncLocal = 0;
   },
@@ -931,7 +928,7 @@ SyncEngine.prototype = {
    * lastSyncLocal is a timestamp in local time.
    */
   get lastSyncLocal() {
-    return parseInt(Svc.Prefs.get(this.name + ".lastSyncLocal", "0"), 10);
+    return this._lastSyncLocal;
   },
   set lastSyncLocal(value) {
     // Store as a string because pref can only store C longs as numbers.

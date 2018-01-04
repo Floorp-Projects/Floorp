@@ -124,7 +124,7 @@ def add_logging_group(parser, include_formatters=None):
                          "or '-' to write to stdout.")
 
     if include_formatters is None:
-        include_formatters = log_formatters.keys()
+        include_formatters = list(log_formatters.keys())
 
     if isinstance(parser, optparse.OptionParser):
         group = optparse.OptionGroup(parser,

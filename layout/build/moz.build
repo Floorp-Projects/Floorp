@@ -48,7 +48,6 @@ LOCAL_INCLUDES += [
     '/dom/xslt/xpath',
     '/dom/xslt/xslt',
     '/dom/xul',
-    '/dom/xul/templates',
     '/editor/composer',
     '/editor/txmgr',
     '/editor/txtsvc',

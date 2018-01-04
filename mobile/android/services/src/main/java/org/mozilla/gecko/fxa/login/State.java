@@ -9,13 +9,13 @@ import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 
 public abstract class State {
-  public static final long CURRENT_VERSION = 3L;
+  private static final long CURRENT_VERSION = 4L; // Bug 1426305.
 
   public static final class NotASessionTokenState extends Exception {
 
     private static final long serialVersionUID = 8628129091996684799L;
 
-    public NotASessionTokenState(String message) {
+    /* package-private */ NotASessionTokenState(String message) {
       super(message);
     }
   }
@@ -37,7 +37,7 @@ public abstract class State {
     None,
   }
 
-  protected final StateLabel stateLabel;
+  /* package-private */ final StateLabel stateLabel;
   public final String email;
   public final String uid;
   public final boolean verified;

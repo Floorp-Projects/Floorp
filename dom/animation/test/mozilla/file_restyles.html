@@ -101,7 +101,7 @@ function startsRightNow(aAnimation) {
 
 function tweakExpectedRestyleCount(aAnimation, aExpectedRestyleCount) {
   // Normally we expect one restyling for each requestAnimationFrame (as
-  // called by observeRestyling) PLUS one for the last frame becasue of bug
+  // called by observeRestyling) PLUS one for the last frame because of bug
   // 1193394.  However, we won't observe that initial restyling unless BOTH of
   // the following two conditions hold:
   //
@@ -941,6 +941,11 @@ waitForAllPaints(() => {
 
     div.remove();
 
+    // It's possible that the animation begins at this moment.  If this is the
+    // case, an additional superfluous restyle request that we will check later
+    // can't be observed.
+    const expectedRestyleCount = tweakExpectedRestyleCount(animation, 1);
+
     var markers = await observeStyling(5);
     is(markers.length, 0,
        'Animation on orphaned element should not cause restyles');
@@ -961,10 +966,10 @@ waitForAllPaints(() => {
       // restyle (bug 1388560), we should add a test case that fails if we
       // continue to unnecessarily request a standard restyle.
       //
-      // Bug 1417354: There will be an additional superfluos restyle request
-      // whichi results when we detach an element from the document between
+      // Bug 1417354: There will be an additional superfluous restyle request
+      // which results when we detach an element from the document between
       // the Animation tick and styling, and then re-attach it.
-      is(markers.length, 2,
+      is(markers.length, expectedRestyleCount,
          'We should observe one restyle in the first frame right after ' +
          're-attaching to the document');
     } else {

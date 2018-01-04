@@ -99,18 +99,11 @@ public class FxAccountUtils {
     return Utils.byte2Hex(Utils.hex2Byte((x.mod(N)).toString(16), byteLength), hexLength);
   }
 
-  /**
-   * The first engineering milestone of PICL (Profile-in-the-Cloud) was
-   * comprised of Sync 1.1 fronted by a Firefox Account. The sync key was
-   * generated from the Firefox Account password-derived kB value using this
-   * method.
-   */
-  public static KeyBundle generateSyncKeyBundle(final byte[] kB) throws InvalidKeyException, NoSuchAlgorithmException, UnsupportedEncodingException {
+  public static KeyBundle generateSyncKeyBundle(final byte[] kSync) throws InvalidKeyException, NoSuchAlgorithmException, UnsupportedEncodingException {
     byte[] encryptionKey = new byte[32];
     byte[] hmacKey = new byte[32];
-    byte[] derived = HKDF.derive(kB, new byte[0], FxAccountUtils.KW("oldsync"), 2*32);
-    System.arraycopy(derived, 0*32, encryptionKey, 0, 1*32);
-    System.arraycopy(derived, 1*32, hmacKey, 0, 1*32);
+    System.arraycopy(kSync, 0*32, encryptionKey, 0, 1*32);
+    System.arraycopy(kSync, 1*32, hmacKey, 0, 1*32);
     return new KeyBundle(encryptionKey, hmacKey);
   }
 
@@ -167,6 +160,16 @@ public class FxAccountUtils {
       kB[i] = (byte) (wrapkB[i] ^ unwrapkB[i]);
     }
     return kB;
+  }
+
+  /**
+   * The first engineering milestone of PICL (Profile-in-the-Cloud) was
+   * comprised of Sync 1.1 fronted by a Firefox Account. The sync key was
+   * generated from the Firefox Account password-derived kB value using this
+   * method.
+   */
+  public static byte[] deriveSyncKey(byte[] kB) throws UnsupportedEncodingException, InvalidKeyException, NoSuchAlgorithmException {
+    return HKDF.derive(kB, new byte[0], FxAccountUtils.KW("oldsync"), 2*32);
   }
 
   /**

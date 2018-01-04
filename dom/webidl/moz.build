@@ -971,7 +971,6 @@ WEBIDL_FILES = [
     'XULCommandEvent.webidl',
     'XULDocument.webidl',
     'XULElement.webidl',
-    'XULTemplateBuilder.webidl',
 ]
 
 if CONFIG['MOZ_WEBRTC']:

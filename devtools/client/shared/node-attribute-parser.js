@@ -112,8 +112,6 @@ const ATTRIBUTE_TYPES = [
   {namespaceURI: XUL_NS, attributeName: "popup", tagName: "*", type: TYPE_IDREF},
   {namespaceURI: XUL_NS, attributeName: "ref", tagName: "*", type: TYPE_URI},
   {namespaceURI: XUL_NS, attributeName: "removeelement", tagName: "*", type: TYPE_IDREF},
-  {namespaceURI: XUL_NS, attributeName: "sortResource", tagName: "*", type: TYPE_URI},
-  {namespaceURI: XUL_NS, attributeName: "sortResource2", tagName: "*", type: TYPE_URI},
   {namespaceURI: XUL_NS, attributeName: "src", tagName: "stringbundle", type: TYPE_URI},
   {namespaceURI: XUL_NS, attributeName: "template", tagName: "*", type: TYPE_IDREF},
   {namespaceURI: XUL_NS, attributeName: "tooltip", tagName: "*", type: TYPE_IDREF},

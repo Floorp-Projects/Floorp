@@ -54,19 +54,6 @@ public:
   NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aElement) = 0;
 
   /**
-   * Attach a XUL template builder to the specified content node.
-   * @param aBuilder the template builder to attach, or null if
-   *   the builder is to be removed.
-   */
-  NS_IMETHOD SetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder* aBuilder) = 0;
-
-  /**
-   * Retrieve the XUL template builder that's attached to a content
-   * node.
-   */
-  NS_IMETHOD GetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder** aResult) = 0;
-
-  /**
    * This is invoked whenever the prototype for this document is loaded
    * and should be walked, regardless of whether the XUL cache is
    * disabled, whether the protototype was loaded, whether the

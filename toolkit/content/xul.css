@@ -985,10 +985,6 @@ dialog:root /* override :root from above */ {
   -moz-box-orient: vertical;
 }
 
-dialogheader {
-  -moz-binding: url("chrome://global/content/bindings/dialog.xml#dialogheader");
-}
-
 /********* page ************/
 
 page {

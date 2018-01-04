@@ -1,7 +1,0 @@
-load 257752-1-recursion.xul
-load 329884-1.xul
-skip-if(winWidget) load 330012-1.xul # bug 742455
-load 404346-1.xul
-load 415019-1.xul
-load 417840-1.xul
-load 424418-1.xul
