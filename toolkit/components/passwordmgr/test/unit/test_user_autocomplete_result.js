@@ -24,7 +24,7 @@ matchingLogins.push(new nsLoginInfo("http://mochi.test:8888", "http://autocomple
                                     "zzzuser4", "zzzpass4", "uname", "pword"));
 
 let meta = matchingLogins[0].QueryInterface(Ci.nsILoginMetaInfo);
-let dateAndTimeFormatter = Services.intl.createDateTimeFormat(undefined,
+let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined,
                             { dateStyle: "medium" });
 let time = dateAndTimeFormatter.format(new Date(meta.timePasswordChanged));
 const LABEL_NO_USERNAME = "No username (" + time + ")";

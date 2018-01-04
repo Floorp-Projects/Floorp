@@ -151,7 +151,7 @@ add_task(async function checkWrongSystemTimeWarning() {
     });
   }
 
-  let formatter = Services.intl.createDateTimeFormat(undefined, {
+  let formatter = new Services.intl.DateTimeFormat(undefined, {
     dateStyle: "short"
   });
 

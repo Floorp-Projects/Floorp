@@ -424,7 +424,7 @@ var PingPicker = {
     for (let p of this._archivedPings) {
       pingTypes.add(p.type);
       const pingDate = new Date(p.timestampCreated);
-      const datetimeText = Services.intl.createDateTimeFormat(undefined, {
+      const datetimeText = new Services.intl.DateTimeFormat(undefined, {
           dateStyle: "short",
           timeStyle: "medium"
         }).format(pingDate);

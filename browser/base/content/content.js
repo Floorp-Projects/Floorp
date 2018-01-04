@@ -314,7 +314,7 @@ var AboutNetAndCertErrorListener = {
         // and adjusting the date per the interval would make the cert valid, warn the user:
         if (Math.abs(difference) > 60 * 60 * 24 && (now - lastFetched) <= 60 * 60 * 24 * 5 &&
             certRange.notBefore < approximateDate && certRange.notAfter > approximateDate) {
-          let formatter = Services.intl.createDateTimeFormat(undefined, {
+          let formatter = new Services.intl.DateTimeFormat(undefined, {
             dateStyle: "short"
           });
           let systemDate = formatter.format(new Date());
@@ -350,7 +350,7 @@ var AboutNetAndCertErrorListener = {
           // so we shouldn't exclude the possibility that the cert has become valid
           // since the build date.
           if (buildDate > systemDate && new Date(certRange.notAfter) > buildDate) {
-            let formatter = Services.intl.createDateTimeFormat(undefined, {
+            let formatter = new Services.intl.DateTimeFormat(undefined, {
               dateStyle: "short"
             });
 
