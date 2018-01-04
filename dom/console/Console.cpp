@@ -771,12 +771,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Console)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Console)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsoleEventNotifier)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDumpFunction)
   tmp->Shutdown();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Console)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsoleEventNotifier)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDumpFunction)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Console)
@@ -817,6 +819,7 @@ Console::Console(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
   , mOuterID(0)
   , mInnerID(0)
+  , mDumpToStdout(false)
   , mStatus(eUnknown)
   , mCreationTimeStamp(TimeStamp::Now())
 {
@@ -1074,6 +1077,8 @@ Console::ProfileMethodInternal(JSContext* aCx, const nsAString& aAction,
     return;
   }
 
+  MaybeExecuteDumpFunction(aCx, aAction, aData);
+
   if (!NS_IsMainThread()) {
     // Here we are in a worker thread.
     RefPtr<ConsoleProfileRunnable> runnable =
@@ -1226,6 +1231,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   if (!nsContentUtils::DevToolsEnabled(aCx)) {
     return;
   }
+
   AssertIsOnOwningThread();
 
   RefPtr<ConsoleCallData> callData(new ConsoleCallData());
@@ -1334,6 +1340,14 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
     if (!callData->mCountValue) {
       return;
     }
+  }
+
+  // Before processing this CallData differently, it's time to call the dump
+  // function.
+  if (aMethodName == MethodTrace) {
+    MaybeExecuteDumpFunctionForTrace(aCx, stack);
+  } else {
+    MaybeExecuteDumpFunction(aCx, aMethodString, aData);
   }
 
   if (NS_IsMainThread()) {
@@ -2561,6 +2575,111 @@ Console::CreateInstance(const GlobalObject& aGlobal,
 {
   RefPtr<ConsoleInstance> console = new ConsoleInstance(aOptions);
   return console.forget();
+}
+
+void
+Console::MaybeExecuteDumpFunction(JSContext* aCx,
+                                  const nsAString& aMethodName,
+                                  const Sequence<JS::Value>& aData)
+{
+  if (!mDumpFunction && !mDumpToStdout) {
+    return;
+  }
+
+  nsAutoString message;
+  message.AssignLiteral("console.");
+  message.Append(aMethodName);
+  message.AppendLiteral(": ");
+
+  for (uint32_t i = 0; i < aData.Length(); ++i) {
+    JS::Rooted<JS::Value> v(aCx, aData[i]);
+    JS::Rooted<JSString*> jsString(aCx, JS_ValueToSource(aCx, v));
+    if (!jsString) {
+      continue;
+    }
+
+    nsAutoJSString string;
+    if (NS_WARN_IF(!string.init(aCx, jsString))) {
+      return;
+    }
+
+    if (i != 0) {
+      message.AppendLiteral(" ");
+    }
+
+    message.Append(string);
+  }
+
+  message.AppendLiteral("\n");
+  ExecuteDumpFunction(message);
+}
+
+void
+Console::MaybeExecuteDumpFunctionForTrace(JSContext* aCx, nsIStackFrame* aStack)
+{
+  if (!aStack || (!mDumpFunction && !mDumpToStdout)) {
+    return;
+  }
+
+  nsAutoString message;
+  message.AssignLiteral("console.trace:\n");
+
+  nsCOMPtr<nsIStackFrame> stack(aStack);
+
+  while (stack) {
+    nsAutoString filename;
+    nsresult rv = stack->GetFilename(aCx, filename);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    message.Append(filename);
+    message.AppendLiteral(" ");
+
+    int32_t lineNumber;
+    rv = stack->GetLineNumber(aCx, &lineNumber);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    message.AppendInt(lineNumber);
+    message.AppendLiteral(" ");
+
+    nsAutoString functionName;
+    rv = stack->GetName(aCx, functionName);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    message.Append(filename);
+    message.AppendLiteral("\n");
+
+    nsCOMPtr<nsIStackFrame> caller;
+    rv = stack->GetCaller(aCx, getter_AddRefs(caller));
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    if (!caller) {
+      rv = stack->GetAsyncCaller(aCx, getter_AddRefs(caller));
+      NS_ENSURE_SUCCESS_VOID(rv);
+    }
+
+    stack.swap(caller);
+  }
+
+  message.AppendLiteral("\n");
+  ExecuteDumpFunction(message);
+}
+
+void
+Console::ExecuteDumpFunction(const nsAString& aMessage)
+{
+  if (mDumpFunction) {
+    IgnoredErrorResult rv;
+    mDumpFunction->Call(aMessage, rv);
+    return;
+  }
+
+  NS_ConvertUTF16toUTF8 str(aMessage);
+  MOZ_LOG(nsContentUtils::DOMDumpLog(), LogLevel::Debug, ("%s", str.get()));
+#ifdef ANDROID
+  __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", str.get());
+#endif
+  fputs(str.get(), stdout);
+  fflush(stdout);
 }
 
 } // namespace dom
