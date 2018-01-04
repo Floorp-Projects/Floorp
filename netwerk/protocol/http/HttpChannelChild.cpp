@@ -644,6 +644,7 @@ public:
                 nsresult aStatus) override
   {
     mChannel->SendDivertOnStopRequest(aStatus);
+    mChannel->SendDivertComplete();
     return NS_OK;
   }
 
@@ -1884,7 +1885,11 @@ HttpChannelChild::FlushedForDiversion()
   // received from the parent channel, nor dequeued from the ChannelEventQueue.
   mFlushedForDiversion = true;
 
-  SendDivertComplete();
+  // If we're synthesized, it's up to the SyntheticDiversionListener to invoke
+  // SendDivertComplete after it has sent the DivertOnStopRequestMessage.
+  if (!mSynthesizedResponse) {
+    SendDivertComplete();
+  }
 }
 
 void
