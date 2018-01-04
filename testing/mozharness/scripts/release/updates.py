@@ -95,7 +95,7 @@ class UpdatesBumper(MercurialScript, BuildbotMixin,
         props = self.buildbot_config["properties"]
         for prop in ['product', 'version', 'build_number', 'revision',
                      'appVersion', 'balrog_api_root', "channels",
-                     'generate_bz2_blob']:
+                     'generate_bz2_blob', 'updater_platform']:
             if props.get(prop):
                 self.info("Overriding %s with %s" % (prop, props[prop]))
                 self.config[prop] = props.get(prop)
@@ -253,6 +253,8 @@ class UpdatesBumper(MercurialScript, BuildbotMixin,
             ])
             if "stage_product" in self.config:
                 cmd.extend(["--stage-product", self.config["stage_product"]])
+            if "updater_platform" in self.config:
+                cmd.extend(["--updater-platform", self.config["updater_platform"]])
 
             self.run_command(cmd, halt_on_failure=True)
 
