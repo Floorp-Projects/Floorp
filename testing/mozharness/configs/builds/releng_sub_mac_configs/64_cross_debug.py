@@ -13,7 +13,6 @@ config = {
     ],
     'stage_platform': 'macosx64-debug',
     'debug_build': True,
-    'enable_talos_sendchange': False,
     #### 64 bit build specific #####
     'env': {
         'MOZBUILD_STATE_PATH': os.path.join(os.getcwd(), '.mozbuild'),
