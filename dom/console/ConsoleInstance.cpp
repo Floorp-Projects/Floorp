@@ -33,6 +33,9 @@ ConsoleInstance::ConsoleInstance(const ConsoleInstanceOptions& aOptions)
   }
 
   mConsole->mDumpPrefix = aOptions.mPrefix;
+
+  // Let's inform that this is a custom instance.
+  mConsole->mChromeInstance = true;
 }
 
 ConsoleInstance::~ConsoleInstance()

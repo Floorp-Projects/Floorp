@@ -398,6 +398,9 @@ private:
   void
   ExecuteDumpFunction(const nsAString& aMessage);
 
+  bool
+  IsEnabled(JSContext* aCx) const;
+
   // All these nsCOMPtr are touched on main thread only.
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIConsoleAPIStorage> mStorage;
@@ -434,6 +437,7 @@ private:
   RefPtr<ConsoleInstanceDumpCallback> mDumpFunction;
   bool mDumpToStdout;
   nsString mDumpPrefix;
+  bool mChromeInstance;
 
   enum {
     eUnknown,
