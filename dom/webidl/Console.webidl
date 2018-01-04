@@ -159,7 +159,7 @@ dictionary ConsoleInstanceOptions {
   boolean dump = false;
   DOMString prefix = "";
   DOMString maxLogLevel = "";
-  DOMString innerID = "";
 */
+  DOMString innerID = "";
   DOMString consoleID = "";
 };

@@ -1339,6 +1339,8 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
   if (NS_IsMainThread()) {
     if (mWindow) {
       callData->SetIDs(mOuterID, mInnerID);
+    } else if (!mPassedInnerID.IsEmpty()) {
+      callData->SetIDs(NS_LITERAL_STRING("jsm"), mPassedInnerID);
     } else {
       nsAutoString filename;
       if (callData->mTopStackFrame.isSome()) {

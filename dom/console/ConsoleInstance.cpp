@@ -23,6 +23,7 @@ ConsoleInstance::ConsoleInstance(const ConsoleInstanceOptions& aOptions)
   : mConsole(new Console(nullptr))
 {
   mConsole->mConsoleID = aOptions.mConsoleID;
+  mConsole->mPassedInnerID = aOptions.mInnerID;
 }
 
 ConsoleInstance::~ConsoleInstance()
