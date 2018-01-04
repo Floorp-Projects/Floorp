@@ -653,6 +653,9 @@ class Marionette(object):
         if self.instance:
             # stop application and, if applicable, stop emulator
             self.instance.close(clean=True)
+            if self.instance.unresponsive_count >= 3:
+                raise errors.UnresponsiveInstanceException(
+                    "Application clean-up has failed >2 consecutive times.")
 
     def __del__(self):
         self.cleanup()

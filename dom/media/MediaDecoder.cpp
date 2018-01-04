@@ -279,8 +279,6 @@ MediaDecoder::Shutdown()
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
   AbstractThread::AutoEnter context(AbstractMainThread());
 
-  UnpinForSeek();
-
   // Unwatch all watch targets to prevent further notifications.
   mWatchManager.Shutdown();
 
@@ -543,7 +541,6 @@ MediaDecoder::Seek(double aTime, SeekTarget::Type aSeekType)
   CallSeek(target);
 
   if (mPlayState == PLAY_STATE_ENDED) {
-    PinForSeek();
     ChangeState(GetOwner()->GetPaused() ? PLAY_STATE_PAUSED : PLAY_STATE_PLAYING);
   }
   return NS_OK;
@@ -793,12 +790,7 @@ MediaDecoder::OnSeekResolved()
   AbstractThread::AutoEnter context(AbstractMainThread());
   mSeekRequest.Complete();
 
-  {
-    // An additional seek was requested while the current seek was
-    // in operation.
-    UnpinForSeek();
-    mLogicallySeeking = false;
-  }
+  mLogicallySeeking = false;
 
   // Ensure logical position is updated after seek.
   UpdateLogicalPositionInternal();

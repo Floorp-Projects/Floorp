@@ -24,10 +24,8 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/layers/ScrollInputMethods.h"
 
 using namespace mozilla;
-using mozilla::layers::ScrollInputMethod;
 
 //
 // NS_NewToolbarFrame
@@ -172,9 +170,6 @@ nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
     if (!weakFrame.IsAlive()) {
       return false;
     }
-
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-        (uint32_t) ScrollInputMethod::MainThreadScrollbarButtonClick);
 
     if (!m) {
       sb->MoveToNewPosition();

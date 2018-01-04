@@ -10,7 +10,6 @@
 
 #include "AsyncPanZoomController.h"
 #include "mozilla/Telemetry.h"                  // for Telemetry
-#include "mozilla/layers/ScrollInputMethods.h"  // for ScrollInputMethod
 
 namespace mozilla {
 namespace layers {
@@ -45,9 +44,6 @@ AutoscrollAnimation::DoSample(FrameMetrics& aFrameMetrics, const TimeDuration& a
   if (!treeManager) {
     return false;
   }
-
-  Telemetry::Accumulate(Telemetry::SCROLL_INPUT_METHODS,
-      (uint32_t) ScrollInputMethod::ApzAutoscrolling);
 
   ScreenPoint mouseLocation = treeManager->GetCurrentMousePosition();
 

@@ -2,17 +2,18 @@
 
 <head>
   <title>application accessible name</title>
-  <link rel="stylesheet" type="text/css" 
+  <link rel="stylesheet" type="text/css"
          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
-  <script type="application/javascript" 
+  <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
-  <script type="application/javascript" 
+  <script type="application/javascript"
           src="../common.js"></script>
-  <script type="application/javascript" 
+  <script type="application/javascript"
           src="../role.js"></script>
 
   <script type="application/javascript">
+    /* import-globals-from ../common.js */
     function doTest() {
       var accessible = getApplicationAccessible();
       if (!accessible) {
@@ -20,19 +21,13 @@
         return;
       }
 
-      var bundleServ =
-        Components.classes["@mozilla.org/intl/stringbundle;1"].
-        getService(Components.interfaces.nsIStringBundleService);
       var brandBundle =
-        bundleServ.createBundle("chrome://branding/locale/brand.properties");
-
-      var appInfo = Components.classes["@mozilla.org/xre/app-info;1"].
-        getService(Components.interfaces.nsIXULAppInfo);
+        Services.strings.createBundle("chrome://branding/locale/brand.properties");
 
       // nsIAccessible::name
       var applicationName = "";
       if (LINUX || SOLARIS) {
-        applicationName = appInfo.name;
+        applicationName = Services.appinfo.name;
       } else {
         try {
           applicationName = brandBundle.GetStringFromName("brandShortName");
@@ -45,10 +40,10 @@
       is(accessible.name, applicationName, "wrong application accessible name");
 
       // nsIAccessibleApplication
-      is(accessible.appName, appInfo.name, "Wrong application name");
-      is(accessible.appVersion, appInfo.version, "Wrong application version");
+      is(accessible.appName, Services.appinfo.name, "Wrong application name");
+      is(accessible.appVersion, Services.appinfo.version, "Wrong application version");
       is(accessible.platformName, "Gecko", "Wrong platform name");
-      is(accessible.platformVersion, appInfo.platformVersion,
+      is(accessible.platformVersion, Services.appinfo.platformVersion,
          "Wrong platform version");
 
       SimpleTest.finish();

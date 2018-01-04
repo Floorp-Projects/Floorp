@@ -78,6 +78,22 @@ add_task(async function invalid_input_throws() {
                 /The following properties were expected: index/);
 });
 
+add_task(async function move_roots_fail() {
+  let guids = [PlacesUtils.bookmarks.unfiledGuid,
+               PlacesUtils.bookmarks.menuGuid,
+               PlacesUtils.bookmarks.toolbarGuid,
+               PlacesUtils.bookmarks.tagsGuid,
+               PlacesUtils.bookmarks.mobileGuid];
+  for (let guid of guids) {
+    Assert.rejects(PlacesUtils.bookmarks.update({
+      guid,
+      index: -1,
+      parentGuid: PlacesUtils.bookmarks.rootGuid,
+    }), /It's not possible to move Places root folders\./,
+    `Should reject when attempting to move ${guid}`);
+  }
+});
+
 add_task(async function nonexisting_bookmark_throws() {
   try {
     await PlacesUtils.bookmarks.update({ guid: "123456789012",

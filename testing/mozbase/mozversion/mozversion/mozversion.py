@@ -5,10 +5,10 @@
 from __future__ import absolute_import
 
 import argparse
-import ConfigParser
-from StringIO import StringIO
 import os
 import re
+from six import StringIO
+from six.moves import configparser
 import sys
 import tempfile
 import xml.dom.minidom
@@ -40,7 +40,7 @@ class Version(object):
                 self._logger.warning('Unable to find %s' % config_file)
 
     def _parse_ini_file(self, fp, type, section):
-        config = ConfigParser.RawConfigParser()
+        config = configparser.RawConfigParser()
         config.readfp(fp)
         name_map = {'codename': 'display_name',
                     'milestone': 'version',

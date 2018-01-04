@@ -3141,10 +3141,20 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
+        final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+        final String panelId;
+        final Bundle panelData;
+        if (selectedTab != null) {
+            panelId = selectedTab.getMostRecentHomePanel();
+            panelData = selectedTab.getMostRecentHomePanelData();
+        } else {
+            panelId = null;
+            panelData = null;
+        }
+
         // To prevent overdraw, the HomePager is hidden when BrowserSearch is displayed:
         // reverse that.
-        showHomePager(Tabs.getInstance().getSelectedTab().getMostRecentHomePanel(),
-                Tabs.getInstance().getSelectedTab().getMostRecentHomePanelData());
+        showHomePager(panelId, panelData);
 
         mBrowserSearchContainer.setVisibility(View.INVISIBLE);
 

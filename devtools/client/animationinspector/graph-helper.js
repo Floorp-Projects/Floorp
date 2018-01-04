@@ -265,20 +265,30 @@ ProgressGraphHelper.prototype = {
     for (let i = 0; i < this.devtoolsKeyframes.length - 1; i++) {
       const startKeyframe = this.devtoolsKeyframes[i];
       const endKeyframe = this.devtoolsKeyframes[i + 1];
+      const startTime = startKeyframe.offset * duration;
+      const endTime = endKeyframe.offset * duration;
 
-      let threshold = getPreferredProgressThreshold(startKeyframe.easing);
-      if (threshold !== DEFAULT_MIN_PROGRESS_THRESHOLD) {
-        // We should consider the keyframe's duration.
-        threshold *= (endKeyframe.offset - startKeyframe.offset);
+      if (startKeyframe.offset === endKeyframe.offset) {
+        const startSegment = this.getSegment(startTime - BOUND_EXCLUDING_TIME);
+        startSegment.x = startTime;
+        const endSegment = this.getSegment(endTime);
+        segments.push(startSegment, endSegment);
+      } else {
+        let threshold = getPreferredProgressThreshold(startKeyframe.easing);
+
+        if (threshold !== DEFAULT_MIN_PROGRESS_THRESHOLD) {
+          // We should consider the keyframe's duration.
+          threshold *= (endKeyframe.offset - startKeyframe.offset);
+        }
+
+        segments.push(...createPathSegments(startTime, endTime - BOUND_EXCLUDING_TIME,
+                                            minSegmentDuration, threshold, this));
       }
-
-      const startTime = parseFloat((startKeyframe.offset * duration).toFixed(3));
-      const endTime = parseFloat((endKeyframe.offset * duration).toFixed(3));
-
-      segments.push(...createPathSegments(startTime, endTime,
-                                          minSegmentDuration, threshold, this));
     }
 
+    const lastKeyframe = this.devtoolsKeyframes[this.devtoolsKeyframes.length - 1];
+    const lastTime = lastKeyframe.offset * duration;
+    segments.push(this.getSegment(lastTime));
     return segments;
   },
 
@@ -385,7 +395,7 @@ SummaryGraphHelper.prototype = {
       // include the easing in keyframes as well. Although the computed timing progress
       // is not affected by the easing in keyframes at all, computed value reflects that.
       frames = keyframes.map(keyframe => {
-        if (previousOffset) {
+        if (previousOffset && previousOffset != keyframe.offset) {
           const interval = keyframe.offset - previousOffset;
           durationResolution = Math.max(durationResolution, Math.ceil(1 / interval));
         }

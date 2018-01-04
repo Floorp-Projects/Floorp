@@ -45,6 +45,7 @@ add_task(async function test_cookie_containers() {
       session: false,
       expirationDate: THE_FUTURE,
       storeId: "firefox-container-1",
+      firstPartyDomain: "",
     };
 
     let cookie = await browser.cookies.set({
@@ -67,7 +68,7 @@ add_task(async function test_cookie_containers() {
     assertExpected(expected, cookies[0]);
 
     let details = await browser.cookies.remove({url: TEST_URL, name: "name1", storeId: "firefox-container-1"});
-    assertExpected({url: TEST_URL, name: "name1", storeId: "firefox-container-1"}, details);
+    assertExpected({url: TEST_URL, name: "name1", storeId: "firefox-container-1", firstPartyDomain: ""}, details);
 
     cookie = await browser.cookies.get({url: TEST_URL, name: "name1", storeId: "firefox-container-1"});
     browser.test.assertEq(null, cookie, "removed cookie not found");

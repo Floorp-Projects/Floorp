@@ -48,7 +48,6 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/InputAPZContext.h"
-#include "mozilla/layers/ScrollInputMethods.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -56,7 +55,6 @@ using mozilla::layers::APZCCallbackHelper;
 using mozilla::layers::AsyncDragMetrics;
 using mozilla::layers::InputAPZContext;
 using mozilla::layers::ScrollDirection;
-using mozilla::layers::ScrollInputMethod;
 using mozilla::layers::ScrollThumbData;
 
 bool nsSliderFrame::gMiddlePref = false;
@@ -622,9 +620,6 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
         return NS_OK;
       }
 
-      mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-          (uint32_t) ScrollInputMethod::MainThreadScrollbarDrag);
-
       // take our current position and subtract the start location
       pos -= mDragStart;
       bool isMouseOutsideThumb = false;
@@ -690,9 +685,6 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
     }
     nsSize thumbSize = thumbFrame->GetSize();
     nscoord thumbLength = isHorizontal ? thumbSize.width : thumbSize.height;
-
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-        (uint32_t) ScrollInputMethod::MainThreadScrollbarTrackClick);
 
     // set it
     AutoWeakFrame weakFrame(this);
@@ -1454,9 +1446,6 @@ nsSliderFrame::HandlePress(nsPresContext* aPresContext,
   if (!GetEventPoint(aEvent, eventPoint)) {
     return NS_OK;
   }
-
-  mozilla::Telemetry::Accumulate(mozilla::Telemetry::SCROLL_INPUT_METHODS,
-      (uint32_t) ScrollInputMethod::MainThreadScrollbarTrackClick);
 
   if (IsXULHorizontal() ? eventPoint.x < thumbRect.x
                         : eventPoint.y < thumbRect.y)

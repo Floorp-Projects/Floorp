@@ -134,10 +134,6 @@ class FirefoxDataProvider {
       let response = await this.getLongString(text);
       responseContent.content.text = response;
       payload.responseContent = responseContent;
-
-      // Lock down responseContentAvailable once we fetch data from back-end.
-      // Using this as flag to prevent fetching arrived data again.
-      payload.responseContentAvailable = false;
     }
     return payload;
   }
@@ -149,10 +145,6 @@ class FirefoxDataProvider {
       if (headers) {
         payload.requestHeaders = headers;
       }
-
-      // Lock down requestHeadersAvailable once we fetch data from back-end.
-      // Using this as flag to prevent fetching arrived data again.
-      payload.requestHeadersAvailable = false;
     }
     return payload;
   }
@@ -164,10 +156,6 @@ class FirefoxDataProvider {
       if (headers) {
         payload.responseHeaders = headers;
       }
-
-      // Lock down responseHeadersAvailable once we fetch data from back-end.
-      // Using this as flag to prevent fetching arrived data again.
-      payload.responseHeadersAvailable = false;
     }
     return payload;
   }
@@ -188,10 +176,6 @@ class FirefoxDataProvider {
       requestPostData.postData.text = postData;
       payload.requestPostData = Object.assign({}, requestPostData);
       payload.requestHeadersFromUploadStream = { headers, headersSize };
-
-      // Lock down requestPostDataAvailable once we fetch data from back-end.
-      // Using this as flag to prevent fetching arrived data again.
-      payload.requestPostDataAvailable = false;
     }
     return payload;
   }
@@ -214,10 +198,6 @@ class FirefoxDataProvider {
           payload.requestCookies = reqCookies;
         }
       }
-
-      // Lock down requestCookiesAvailable once we fetch data from back-end.
-      // Using this as flag to prevent fetching arrived data again.
-      payload.requestCookiesAvailable = false;
     }
     return payload;
   }
@@ -240,10 +220,6 @@ class FirefoxDataProvider {
           payload.responseCookies = resCookies;
         }
       }
-
-      // Lock down responseCookiesAvailable once we fetch data from back-end.
-      // Using this as flag to prevent fetching arrived data again.
-      payload.responseCookiesAvailable = false;
     }
     return payload;
   }
@@ -365,7 +341,13 @@ class FirefoxDataProvider {
         });
         break;
       case "eventTimings":
-        this.pushRequestToQueue(actor, { totalTime: networkInfo.totalTime });
+        // Total time doesn't have to be always set e.g. net provider enhancer
+        // in Console panel is using this method to fetch data when network log
+        // is expanded. So, make sure to not push undefined into the payload queue
+        // (it could overwrite an existing value).
+        if (typeof networkInfo.totalTime != "undefined") {
+          this.pushRequestToQueue(actor, { totalTime: networkInfo.totalTime });
+        }
         await this._requestData(actor, updateType);
         break;
     }
@@ -434,7 +416,12 @@ class FirefoxDataProvider {
       this.lazyRequestData.delete(key);
 
       if (this.actions.updateRequest) {
-        await this.actions.updateRequest(actor, payload, true);
+        await this.actions.updateRequest(actor, {
+          ...payload,
+          // Lockdown *Available property once we fetch data from back-end.
+          // Using this as a flag to prevent fetching arrived data again.
+          [`${method}Available`]: false,
+        }, true);
       }
 
       return payload;
