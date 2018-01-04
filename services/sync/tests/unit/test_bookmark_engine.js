@@ -69,7 +69,7 @@ add_bookmark_test(async function test_delete_invalid_roots_from_server(engine) {
 
   let collection = server.user("foo").collection("bookmarks");
 
-  Svc.Obs.notify("weave:engine:start-tracking");
+  engine._tracker.start();
 
   try {
     let placesRecord = await store.createRecord("places");
@@ -116,7 +116,7 @@ add_bookmark_test(async function test_delete_invalid_roots_from_server(engine) {
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
     await promiseStopServer(server);
-    Svc.Obs.notify("weave:engine:stop-tracking");
+    await engine._tracker.stop();
   }
 });
 
@@ -254,7 +254,7 @@ async function test_restoreOrImport(engine, { replace }) {
 
   let collection = server.user("foo").collection("bookmarks");
 
-  Svc.Obs.notify("weave:engine:start-tracking"); // We skip usual startup...
+  engine._tracker.start(); // We skip usual startup...
 
   try {
 
@@ -308,6 +308,7 @@ async function test_restoreOrImport(engine, { replace }) {
 
     _(`Now ${verb} from a backup.`);
     await bookmarkUtils.importFromFile(backupFilePath, replace);
+    await engine._tracker.asyncObserver.promiseObserversComplete();
 
     let bookmarksCollection = server.user("foo").collection("bookmarks");
     if (replace) {
@@ -700,7 +701,7 @@ add_bookmark_test(async function test_sync_dateAdded(engine) {
   // intermittently - reset the last sync date so that we'll get all bookmarks.
   await engine.setLastSync(1);
 
-  Svc.Obs.notify("weave:engine:start-tracking"); // We skip usual startup...
+  engine._tracker.start(); // We skip usual startup...
 
   // Just matters that it's in the past, not how far.
   let now = Date.now();
@@ -849,7 +850,7 @@ add_task(async function test_sync_imap_URLs() {
 
   let collection = server.user("foo").collection("bookmarks");
 
-  Svc.Obs.notify("weave:engine:start-tracking"); // We skip usual startup...
+  engine._tracker.start(); // We skip usual startup...
 
   try {
     collection.insert("menu", encryptPayload({
