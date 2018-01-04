@@ -920,8 +920,12 @@ function BookmarkExporter(aBookmarksTree) {
   // Create a map of the roots.
   let rootsMap = new Map();
   for (let child of aBookmarksTree.children) {
-    if (child.root)
+    if (child.root) {
       rootsMap.set(child.root, child);
+      // Also take the opportunity to get the correctly localised title for the
+      // root.
+      child.title = PlacesUtils.bookmarks.getLocalizedTitle(child);
+    }
   }
 
   // For backwards compatibility reasons the bookmarks menu is the root, while

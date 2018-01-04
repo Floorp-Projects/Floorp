@@ -29,7 +29,7 @@ add_task(async function test_missing_children() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
       children: [{
         guid: "bookmarkCCCC",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -68,7 +68,7 @@ add_task(async function test_missing_children() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
       children: [{
         guid: "bookmarkBBBB",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -114,7 +114,7 @@ add_task(async function test_missing_children() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
       children: [{
         guid: "bookmarkBBBB",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -192,7 +192,7 @@ add_task(async function test_new_orphan_without_local_parent() {
     guid: PlacesUtils.bookmarks.unfiledGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     index: 3,
-    title: "Other Bookmarks",
+    title: UnfiledBookmarksTitle,
     children: [{
       guid: "bookmarkBBBB",
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -239,7 +239,7 @@ add_task(async function test_new_orphan_without_local_parent() {
     guid: PlacesUtils.bookmarks.unfiledGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     index: 3,
-    title: "Other Bookmarks",
+    title: UnfiledBookmarksTitle,
     children: [{
       guid: "folderAAAAAA",
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -291,7 +291,7 @@ add_task(async function test_new_orphan_without_local_parent() {
     guid: PlacesUtils.bookmarks.unfiledGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     index: 3,
-    title: "Other Bookmarks",
+    title: UnfiledBookmarksTitle,
     children: [{
       guid: "folderEEEEEE",
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -352,7 +352,7 @@ add_task(async function test_new_orphan_without_local_parent() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
       children: [{
         guid: "folderEEEEEE",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -388,17 +388,17 @@ add_task(async function test_new_orphan_without_local_parent() {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "Bookmarks Toolbar",
+      title: BookmarksToolbarTitle,
     }, {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
-      title: "Other Bookmarks",
+      title: UnfiledBookmarksTitle,
     }, {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
-      title: "mobile",
+      title: MobileBookmarksTitle,
     }],
   }, "Should form complete tree after applying E");
 
@@ -525,7 +525,7 @@ add_task(async function test_move_into_orphaned() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
       children: [{
         // A remains in its original place, since we don't use the `parentid`,
         // and we don't have a record for G.
@@ -578,17 +578,17 @@ add_task(async function test_move_into_orphaned() {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "Bookmarks Toolbar",
+      title: BookmarksToolbarTitle,
     }, {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
-      title: "Other Bookmarks",
+      title: UnfiledBookmarksTitle,
     }, {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
-      title: "mobile",
+      title: MobileBookmarksTitle,
     }],
   }, "Should treat local tree as canonical if server is missing new parent");
 
@@ -676,7 +676,7 @@ add_task(async function test_new_orphan_with_local_parent() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
       children: [{
         guid: "folderAAAAAA",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -700,12 +700,12 @@ add_task(async function test_new_orphan_with_local_parent() {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "Bookmarks Toolbar",
+      title: BookmarksToolbarTitle,
     }, {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
-      title: "Other Bookmarks",
+      title: UnfiledBookmarksTitle,
       children: [{
         guid: "bookmarkCCCC",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -723,7 +723,7 @@ add_task(async function test_new_orphan_with_local_parent() {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
-      title: "mobile",
+      title: MobileBookmarksTitle,
     }],
   }, "Should move (C D) to unfiled");
 
@@ -870,17 +870,17 @@ add_task(async function test_partial_cycle() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
     }, {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "Bookmarks Toolbar",
+      title: BookmarksToolbarTitle,
     }, {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
-      title: "Other Bookmarks",
+      title: UnfiledBookmarksTitle,
       children: [{
         guid: "folderBBBBBB",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -904,7 +904,7 @@ add_task(async function test_partial_cycle() {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
-      title: "mobile",
+      title: MobileBookmarksTitle,
     }],
   }, "Should move A and B to unfiled");
 
@@ -969,22 +969,22 @@ add_task(async function test_complete_cycle() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
     }, {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "Bookmarks Toolbar",
+      title: BookmarksToolbarTitle,
     }, {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
-      title: "Other Bookmarks",
+      title: UnfiledBookmarksTitle,
     }, {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
-      title: "mobile",
+      title: MobileBookmarksTitle,
     }],
   }, "Should not be confused into creating a cycle");
 

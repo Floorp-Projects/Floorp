@@ -137,7 +137,7 @@ add_task(async function test_value_structure_conflict() {
     guid: PlacesUtils.bookmarks.menuGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     index: 0,
-    title: "Bookmarks Menu",
+    title: BookmarksMenuTitle,
     children: [{
       guid: "folderAAAAAA",
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -358,12 +358,12 @@ add_task(async function test_move() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
     }, {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "Bookmarks Toolbar",
+      title: BookmarksToolbarTitle,
       children: [{
         guid: "devFolder___",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -387,7 +387,7 @@ add_task(async function test_move() {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
-      title: "Other Bookmarks",
+      title: UnfiledBookmarksTitle,
       children: [{
         guid: "mozFolder___",
         type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -417,7 +417,7 @@ add_task(async function test_move() {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
-      title: "mobile",
+      title: MobileBookmarksTitle,
     }],
   }, "Should move and reorder bookmarks to match remote");
 
@@ -517,7 +517,7 @@ add_task(async function test_move_into_parent_sibling() {
     guid: PlacesUtils.bookmarks.menuGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,
     index: 0,
-    title: "Bookmarks Menu",
+    title: BookmarksMenuTitle,
     children: [{
       guid: "folderAAAAAA",
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
@@ -673,7 +673,7 @@ add_task(async function test_complex_move_with_additions() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
       children: [{
         guid: "bookmarkCCCC",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -685,7 +685,7 @@ add_task(async function test_complex_move_with_additions() {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "Bookmarks Toolbar",
+      title: BookmarksToolbarTitle,
       children: [{
         // We can guarantee child order (B E D), since we always walk remote
         // children first, and the remote folder A record is newer than the
@@ -719,12 +719,12 @@ add_task(async function test_complex_move_with_additions() {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
-      title: "Other Bookmarks",
+      title: UnfiledBookmarksTitle,
     }, {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
-      title: "mobile",
+      title: MobileBookmarksTitle,
     }],
   }, "Should take remote order and preserve local children");
 
@@ -882,7 +882,7 @@ add_task(async function test_reorder_and_insert() {
       guid: PlacesUtils.bookmarks.menuGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 0,
-      title: "Bookmarks Menu",
+      title: BookmarksMenuTitle,
       children: [{
         guid: "bookmarkCCCC",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -918,7 +918,7 @@ add_task(async function test_reorder_and_insert() {
       guid: PlacesUtils.bookmarks.toolbarGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 1,
-      title: "Bookmarks Toolbar",
+      title: BookmarksToolbarTitle,
       children: [{
         guid: "bookmarkFFFF",
         type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -954,12 +954,12 @@ add_task(async function test_reorder_and_insert() {
       guid: PlacesUtils.bookmarks.unfiledGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 3,
-      title: "Other Bookmarks",
+      title: UnfiledBookmarksTitle,
     }, {
       guid: PlacesUtils.bookmarks.mobileGuid,
       type: PlacesUtils.bookmarks.TYPE_FOLDER,
       index: 4,
-      title: "mobile",
+      title: MobileBookmarksTitle,
     }],
   }, "Should use timestamps to decide base folder order");
 
