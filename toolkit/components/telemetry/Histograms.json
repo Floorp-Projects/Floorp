@@ -13150,7 +13150,7 @@
   "BUSY_TAB_ABANDONED": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["hkirschner@mozilla.com"],
-    "expires_in_version": "60",
+    "expires_in_version": "65",
     "kind": "categorical",
     "bug_numbers": [1307689],
     "description": "Records a value each time a tab that is showing the loading throbber is interrupted. Desktop only.",
