@@ -96,9 +96,7 @@ add_task(async function test_newAccount() {
 
   try {
     _("Engine is enabled from the beginning.");
-    Service._ignorePrefObserver = true;
-    engine.enabled = true;
-    Service._ignorePrefObserver = false;
+    Svc.Prefs.set("engine." + engine.prefName, true);
 
     _("Sync.");
     await Service.sync();
@@ -166,9 +164,7 @@ add_task(async function test_disabledLocally() {
 
   try {
     _("Disable engine locally.");
-    Service._ignorePrefObserver = true;
-    engine.enabled = true;
-    Service._ignorePrefObserver = false;
+    Svc.Prefs.set("engine." + engine.prefName, true);
     engine.enabled = false;
 
     _("Sync.");
@@ -215,9 +211,7 @@ add_task(async function test_disabledLocally_wipe503() {
   await setUp(server);
 
   _("Disable engine locally.");
-  Service._ignorePrefObserver = true;
-  engine.enabled = true;
-  Service._ignorePrefObserver = false;
+  Svc.Prefs.set("engine." + engine.prefName, true);
   engine.enabled = false;
 
   let promiseObserved = promiseOneObserver("weave:ui:sync:error");
@@ -297,9 +291,7 @@ add_task(async function test_disabledRemotelyTwoClients() {
 
   try {
     _("Enable engine locally.");
-    Service._ignorePrefObserver = true;
-    engine.enabled = true;
-    Service._ignorePrefObserver = false;
+    Svc.Prefs.set("engine." + engine.prefName, true);
 
     _("Sync.");
     await Service.sync();
@@ -340,9 +332,7 @@ add_task(async function test_disabledRemotely() {
 
   try {
     _("Enable engine locally.");
-    Service._ignorePrefObserver = true;
-    engine.enabled = true;
-    Service._ignorePrefObserver = false;
+    Svc.Prefs.set("engine." + engine.prefName, true);
 
     _("Sync.");
     await Service.sync();
@@ -421,10 +411,8 @@ add_task(async function test_dependentEnginesDisabledLocally() {
 
   try {
     _("Disable engines locally. Doing it on one is enough.");
-    Service._ignorePrefObserver = true;
-    steamEngine.enabled = true;
+    Svc.Prefs.set("engine." + steamEngine.prefName, true);
     Assert.ok(stirlingEngine.enabled);
-    Service._ignorePrefObserver = false;
     steamEngine.enabled = false;
     Assert.ok(!stirlingEngine.enabled);
 
