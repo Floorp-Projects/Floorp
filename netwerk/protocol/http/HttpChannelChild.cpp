@@ -3872,6 +3872,21 @@ HttpChannelChild::RecvAttachStreamFilter(Endpoint<extensions::PStreamFilterParen
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+HttpChannelChild::RecvCancelDiversion()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // This method is a very special case for cancellation of a diverted
+  // intercepted channel.  Normally we would go through the mEventQ in order to
+  // serialize event execution in the face of sync XHR and now background
+  // channels.  However, similar to how CancelOnMainThread describes, Cancel()
+  // pre-empts everything.  (And frankly, we want this stack frame on the stack
+  // if a crash happens.)
+  Cancel(NS_ERROR_ABORT);
+  return IPC_OK();
+}
+
 void
 HttpChannelChild::ActorDestroy(ActorDestroyReason aWhy)
 {
