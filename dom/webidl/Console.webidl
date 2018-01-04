@@ -12,6 +12,10 @@
  ClassString="Console",
  ProtoObjectHack]
 namespace console {
+
+  // NOTE: if you touch this namespace, remember to update the ConsoleInstance
+  // interface as well!
+
   // Logging
   void assert(optional boolean condition = false, any... data);
   void clear();
@@ -45,12 +49,16 @@ namespace console {
 
   [ChromeOnly]
   const boolean IS_NATIVE_CONSOLE = true;
+
+  [ChromeOnly, NewObject]
+  ConsoleInstance createInstance(optional ConsoleInstanceOptions options);
 };
 
 // This is used to propagate console events to the observers.
 dictionary ConsoleEvent {
   (unsigned long long or DOMString) ID;
   (unsigned long long or DOMString) innerID;
+  DOMString consoleID = "";
   DOMString addonId = "";
   DOMString level = "";
   DOMString filename = "";
@@ -108,4 +116,73 @@ dictionary ConsoleCounter {
 
 dictionary ConsoleCounterError {
   DOMString error = "maxCountersExceeded";
+};
+
+[ChromeOnly,
+ Exposed=(Window,Worker,WorkerDebugger,Worklet,System)]
+// This is basically a copy of the console namespace.
+interface ConsoleInstance {
+  // Logging
+  void assert(optional boolean condition = false, any... data);
+  void clear();
+  void count(optional DOMString label = "default");
+  void debug(any... data);
+  void error(any... data);
+  void info(any... data);
+  void log(any... data);
+  void table(any... data); // FIXME: The spec is still unclear about this.
+  void trace(any... data);
+  void warn(any... data);
+  void dir(any... data); // FIXME: This doesn't follow the spec yet.
+  void dirxml(any... data);
+
+  // Grouping
+  void group(any... data);
+  void groupCollapsed(any... data);
+  void groupEnd();
+
+  // Timing
+  void time(optional DOMString label = "default");
+  void timeEnd(optional DOMString label = "default");
+
+  // Mozilla only or Webcompat methods
+
+  void _exception(any... data);
+  void timeStamp(optional any data);
+
+  void profile(any... data);
+  void profileEnd(any... data);
+};
+
+callback ConsoleInstanceDumpCallback = void (DOMString message);
+
+enum ConsoleLogLevel {
+  "all", "debug", "log", "info", "clear", "trace", "timeEnd", "time", "group",
+  "groupEnd", "profile", "profileEnd", "dir", "dirxml", "warn", "error", "off"
+};
+
+dictionary ConsoleInstanceOptions {
+  // An optional function to intercept all strings written to stdout.
+  ConsoleInstanceDumpCallback dump;
+
+  // An optional prefix string to be printed before the actual logged message.
+  DOMString prefix = "";
+
+  // An ID representing the source of the message. Normally the inner ID of a
+  // DOM window.
+  DOMString innerID = "";
+
+  // String identified for the console, this will be passed through the console
+  // notifications.
+  DOMString consoleID = "";
+
+  // Identifier that allows to filter which messages are logged based on their
+  // log level.
+  ConsoleLogLevel maxLogLevel;
+
+  // String pref name which contains the level to use for maxLogLevel. If the
+  // pref doesn't exist, gets removed or it is used in workers, the maxLogLevel
+  // will default to the value passed to this constructor (or "all" if it wasn't
+  // specified).
+  DOMString maxLogLevelPref = "";
 };

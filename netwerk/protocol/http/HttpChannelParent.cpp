@@ -1596,12 +1596,16 @@ HttpChannelParent::OnStopRequest(nsIRequest *aRequest,
     httpChannelImpl->SetWarningReporter(nullptr);
   }
 
+  nsHttpHeaderArray *responseTrailer = mChannel->GetResponseTrailers();
+
   // Either IPC channel is closed or background channel
   // is ready to send OnStopRequest.
   MOZ_ASSERT(mIPCClosed || mBgParent);
 
   if (mIPCClosed ||
-      !mBgParent || !mBgParent->OnStopRequest(aStatusCode, timing)) {
+      !mBgParent ||
+      !mBgParent->OnStopRequest(aStatusCode, timing,
+                                responseTrailer ? *responseTrailer : nsHttpHeaderArray())) {
     return NS_ERROR_UNEXPECTED;
   }
 

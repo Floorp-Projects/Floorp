@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+interface nsIArray;
 interface nsIPrincipal;
 %{C++
 namespace mozilla {
@@ -11,6 +12,13 @@ class TimeStamp;
 %}
 
 native TimeStamp(mozilla::TimeStamp);
+
+[scriptable, uuid(c2d9e95b-9cc9-4f47-9ef6-1de0cf7ebc75)]
+interface nsIServerTiming : nsISupports {
+  [must_use] readonly attribute ACString name;
+  [must_use] readonly attribute double duration;
+  [must_use] readonly attribute ACString description;
+};
 
 // All properties return zero if the value is not available
 [scriptable, uuid(ca63784d-959c-4c3a-9a59-234a2a520de0)]
@@ -100,4 +108,6 @@ interface nsITimedChannel : nsISupports {
 
   // If this attribute is false, this resource MUST NOT be reported in resource timing.
   [noscript] attribute boolean reportResourceTiming;
+
+  readonly attribute nsIArray serverTiming;
 };

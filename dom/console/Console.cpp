@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/Console.h"
+#include "mozilla/dom/ConsoleInstance.h"
 #include "mozilla/dom/ConsoleBinding.h"
 
 #include "mozilla/dom/BlobBinding.h"
@@ -663,9 +664,11 @@ private:
 class ConsoleProfileRunnable final : public ConsoleRunnable
 {
 public:
-  ConsoleProfileRunnable(Console* aConsole, const nsAString& aAction,
+  ConsoleProfileRunnable(Console* aConsole, Console::MethodName aName,
+                         const nsAString& aAction,
                          const Sequence<JS::Value>& aArguments)
     : ConsoleRunnable(aConsole)
+    , mName(aName)
     , mAction(aAction)
     , mArguments(aArguments)
   {
@@ -746,13 +749,14 @@ private:
       }
     }
 
-    mConsole->ProfileMethodInternal(aCx, mAction, arguments);
+    mConsole->ProfileMethodInternal(aCx, mName, mAction, arguments);
   }
 
   virtual void
   ReleaseData() override
   {}
 
+  Console::MethodName mName;
   nsString mAction;
 
   // This is a reference of the sequence of arguments we receive from the DOM
@@ -770,12 +774,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Console)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Console)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsoleEventNotifier)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDumpFunction)
   tmp->Shutdown();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Console)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsoleEventNotifier)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDumpFunction)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Console)
@@ -816,6 +822,9 @@ Console::Console(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
   , mOuterID(0)
   , mInnerID(0)
+  , mDumpToStdout(false)
+  , mChromeInstance(false)
+  , mMaxLogLevel(ConsoleLogLevel::All)
   , mStatus(eUnknown)
   , mCreationTimeStamp(TimeStamp::Now())
 {
@@ -950,19 +959,21 @@ METHOD(Debug, "debug")
 METHOD(Table, "table")
 METHOD(Trace, "trace")
 
-/* static */ void
-Console::Clear(const GlobalObject& aGlobal)
-{
-  const Sequence<JS::Value> data;
-  Method(aGlobal, MethodClear, NS_LITERAL_STRING("clear"), data);
-}
-
 // Displays an interactive listing of all the properties of an object.
 METHOD(Dir, "dir");
 METHOD(Dirxml, "dirxml");
 
 METHOD(Group, "group")
 METHOD(GroupCollapsed, "groupCollapsed")
+
+#undef METHOD
+
+/* static */ void
+Console::Clear(const GlobalObject& aGlobal)
+{
+  const Sequence<JS::Value> data;
+  Method(aGlobal, MethodClear, NS_LITERAL_STRING("clear"), data);
+}
 
 /* static */ void
 Console::GroupEnd(const GlobalObject& aGlobal)
@@ -987,15 +998,27 @@ Console::TimeEnd(const GlobalObject& aGlobal, const nsAString& aLabel)
 Console::StringMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
                       MethodName aMethodName, const nsAString& aMethodString)
 {
-  JSContext* cx = aGlobal.Context();
+  RefPtr<Console> console = GetConsole(aGlobal);
+  if (!console) {
+    return;
+  }
 
-  ClearException ce(cx);
+  console->StringMethodInternal(aGlobal.Context(), aLabel, aMethodName,
+                                aMethodString);
+}
+
+void
+Console::StringMethodInternal(JSContext* aCx, const nsAString& aLabel,
+                              MethodName aMethodName,
+                              const nsAString& aMethodString)
+{
+  ClearException ce(aCx);
 
   Sequence<JS::Value> data;
-  SequenceRooter<JS::Value> rooter(cx, &data);
+  SequenceRooter<JS::Value> rooter(aCx, &data);
 
-  JS::Rooted<JS::Value> value(cx);
-  if (!dom::ToJSValue(cx, aLabel, &value)) {
+  JS::Rooted<JS::Value> value(aCx);
+  if (!dom::ToJSValue(aCx, aLabel, &value)) {
     return;
   }
 
@@ -1003,7 +1026,7 @@ Console::StringMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
     return;
   }
 
-  Method(aGlobal, aMethodName, aMethodString, data);
+  MethodInternal(aCx, aMethodName, aMethodString, data);
 }
 
 /* static */ void
@@ -1027,18 +1050,20 @@ Console::TimeStamp(const GlobalObject& aGlobal,
 /* static */ void
 Console::Profile(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData)
 {
-  ProfileMethod(aGlobal, NS_LITERAL_STRING("profile"), aData);
+  ProfileMethod(aGlobal, MethodProfile, NS_LITERAL_STRING("profile"), aData);
 }
 
 /* static */ void
 Console::ProfileEnd(const GlobalObject& aGlobal,
                     const Sequence<JS::Value>& aData)
 {
-  ProfileMethod(aGlobal, NS_LITERAL_STRING("profileEnd"), aData);
+  ProfileMethod(aGlobal, MethodProfileEnd, NS_LITERAL_STRING("profileEnd"),
+                aData);
 }
 
 /* static */ void
-Console::ProfileMethod(const GlobalObject& aGlobal, const nsAString& aAction,
+Console::ProfileMethod(const GlobalObject& aGlobal, MethodName aName,
+                       const nsAString& aAction,
                        const Sequence<JS::Value>& aData)
 {
   RefPtr<Console> console = GetConsole(aGlobal);
@@ -1047,22 +1072,40 @@ Console::ProfileMethod(const GlobalObject& aGlobal, const nsAString& aAction,
   }
 
   JSContext* cx = aGlobal.Context();
-  console->ProfileMethodInternal(cx, aAction, aData);
+  console->ProfileMethodInternal(cx, aName, aAction, aData);
+}
+
+bool
+Console::IsEnabled(JSContext* aCx) const
+{
+  // Console is always enabled if it is a custom Chrome-Only instance.
+  if (mChromeInstance) {
+    return true;
+  }
+
+  // Make all Console API no-op if DevTools aren't enabled.
+  return nsContentUtils::DevToolsEnabled(aCx);
 }
 
 void
-Console::ProfileMethodInternal(JSContext* aCx, const nsAString& aAction,
+Console::ProfileMethodInternal(JSContext* aCx, MethodName aMethodName,
+                               const nsAString& aAction,
                                const Sequence<JS::Value>& aData)
 {
-  // Make all Console API no-op if DevTools aren't enabled.
-  if (!nsContentUtils::DevToolsEnabled(aCx)) {
+  if (!IsEnabled(aCx)) {
     return;
   }
+
+  if (!ShouldProceed(aMethodName)) {
+    return;
+  }
+
+  MaybeExecuteDumpFunction(aCx, aAction, aData);
 
   if (!NS_IsMainThread()) {
     // Here we are in a worker thread.
     RefPtr<ConsoleProfileRunnable> runnable =
-      new ConsoleProfileRunnable(this, aAction, aData);
+      new ConsoleProfileRunnable(this, aMethodName, aAction, aData);
 
     runnable->Dispatch(aCx);
     return;
@@ -1207,10 +1250,14 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
                         const nsAString& aMethodString,
                         const Sequence<JS::Value>& aData)
 {
-  // Make all Console API no-op if DevTools aren't enabled.
-  if (!nsContentUtils::DevToolsEnabled(aCx)) {
+  if (!IsEnabled(aCx)) {
     return;
   }
+
+  if (!ShouldProceed(aMethodName)) {
+    return;
+  }
+
   AssertIsOnOwningThread();
 
   RefPtr<ConsoleCallData> callData(new ConsoleCallData());
@@ -1321,9 +1368,19 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
     }
   }
 
+  // Before processing this CallData differently, it's time to call the dump
+  // function.
+  if (aMethodName == MethodTrace) {
+    MaybeExecuteDumpFunctionForTrace(aCx, stack);
+  } else {
+    MaybeExecuteDumpFunction(aCx, aMethodString, aData);
+  }
+
   if (NS_IsMainThread()) {
     if (mWindow) {
       callData->SetIDs(mOuterID, mInnerID);
+    } else if (!mPassedInnerID.IsEmpty()) {
+      callData->SetIDs(NS_LITERAL_STRING("jsm"), mPassedInnerID);
     } else {
       nsAutoString filename;
       if (callData->mTopStackFrame.isSome()) {
@@ -1492,6 +1549,7 @@ Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
     event.mInnerID.Value().SetAsUnsignedLongLong() = 0;
   }
 
+  event.mConsoleID = mConsoleID;
   event.mLevel = aData->mMethodString;
   event.mFilename = frame.mFilename;
 
@@ -2535,6 +2593,198 @@ Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
 
   *aTimeStamp = workerPrivate->TimeStampToDOMHighRes(TimeStamp::Now());
   return true;
+}
+
+/* static */ already_AddRefed<ConsoleInstance>
+Console::CreateInstance(const GlobalObject& aGlobal,
+                        const ConsoleInstanceOptions& aOptions)
+{
+  RefPtr<ConsoleInstance> console = new ConsoleInstance(aOptions);
+  return console.forget();
+}
+
+void
+Console::MaybeExecuteDumpFunction(JSContext* aCx,
+                                  const nsAString& aMethodName,
+                                  const Sequence<JS::Value>& aData)
+{
+  if (!mDumpFunction && !mDumpToStdout) {
+    return;
+  }
+
+  nsAutoString message;
+  message.AssignLiteral("console.");
+  message.Append(aMethodName);
+  message.AppendLiteral(": ");
+
+  if (!mDumpPrefix.IsEmpty()) {
+    message.Append(mDumpPrefix);
+    message.AppendLiteral(": ");
+  }
+
+  for (uint32_t i = 0; i < aData.Length(); ++i) {
+    JS::Rooted<JS::Value> v(aCx, aData[i]);
+    JS::Rooted<JSString*> jsString(aCx, JS_ValueToSource(aCx, v));
+    if (!jsString) {
+      continue;
+    }
+
+    nsAutoJSString string;
+    if (NS_WARN_IF(!string.init(aCx, jsString))) {
+      return;
+    }
+
+    if (i != 0) {
+      message.AppendLiteral(" ");
+    }
+
+    message.Append(string);
+  }
+
+  message.AppendLiteral("\n");
+  ExecuteDumpFunction(message);
+}
+
+void
+Console::MaybeExecuteDumpFunctionForTrace(JSContext* aCx, nsIStackFrame* aStack)
+{
+  if (!aStack || (!mDumpFunction && !mDumpToStdout)) {
+    return;
+  }
+
+  nsAutoString message;
+  message.AssignLiteral("console.trace:\n");
+
+  if (!mDumpPrefix.IsEmpty()) {
+    message.Append(mDumpPrefix);
+    message.AppendLiteral(": ");
+  }
+
+  nsCOMPtr<nsIStackFrame> stack(aStack);
+
+  while (stack) {
+    nsAutoString filename;
+    nsresult rv = stack->GetFilename(aCx, filename);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    message.Append(filename);
+    message.AppendLiteral(" ");
+
+    int32_t lineNumber;
+    rv = stack->GetLineNumber(aCx, &lineNumber);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    message.AppendInt(lineNumber);
+    message.AppendLiteral(" ");
+
+    nsAutoString functionName;
+    rv = stack->GetName(aCx, functionName);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    message.Append(filename);
+    message.AppendLiteral("\n");
+
+    nsCOMPtr<nsIStackFrame> caller;
+    rv = stack->GetCaller(aCx, getter_AddRefs(caller));
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    if (!caller) {
+      rv = stack->GetAsyncCaller(aCx, getter_AddRefs(caller));
+      NS_ENSURE_SUCCESS_VOID(rv);
+    }
+
+    stack.swap(caller);
+  }
+
+  message.AppendLiteral("\n");
+  ExecuteDumpFunction(message);
+}
+
+void
+Console::ExecuteDumpFunction(const nsAString& aMessage)
+{
+  if (mDumpFunction) {
+    IgnoredErrorResult rv;
+    mDumpFunction->Call(aMessage, rv);
+    return;
+  }
+
+  NS_ConvertUTF16toUTF8 str(aMessage);
+  MOZ_LOG(nsContentUtils::DOMDumpLog(), LogLevel::Debug, ("%s", str.get()));
+#ifdef ANDROID
+  __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", str.get());
+#endif
+  fputs(str.get(), stdout);
+  fflush(stdout);
+}
+
+bool
+Console::ShouldProceed(MethodName aName) const
+{
+  return WebIDLLogLevelToInteger(mMaxLogLevel) <=
+           InternalLogLevelToInteger(aName);
+}
+
+uint32_t
+Console::WebIDLLogLevelToInteger(ConsoleLogLevel aLevel) const
+{
+  switch (aLevel) {
+    case ConsoleLogLevel::All: return 0;
+    case ConsoleLogLevel::Debug: return 2;
+    case ConsoleLogLevel::Log: return 3;
+    case ConsoleLogLevel::Info: return 3;
+    case ConsoleLogLevel::Clear: return 3;
+    case ConsoleLogLevel::Trace: return 3;
+    case ConsoleLogLevel::TimeEnd: return 3;
+    case ConsoleLogLevel::Time: return 3;
+    case ConsoleLogLevel::Group: return 3;
+    case ConsoleLogLevel::GroupEnd: return 3;
+    case ConsoleLogLevel::Profile: return 3;
+    case ConsoleLogLevel::ProfileEnd: return 3;
+    case ConsoleLogLevel::Dir: return 3;
+    case ConsoleLogLevel::Dirxml: return 3;
+    case ConsoleLogLevel::Warn: return 4;
+    case ConsoleLogLevel::Error: return 5;
+    case ConsoleLogLevel::Off: return UINT32_MAX;
+    default:
+      MOZ_CRASH("ConsoleLogLevel is out of sync with the Console implementation!");
+      return 0;
+  }
+
+  return 0;
+}
+
+uint32_t
+Console::InternalLogLevelToInteger(MethodName aName) const
+{
+  switch (aName) {
+    case MethodLog: return 3;
+    case MethodInfo: return 3;
+    case MethodWarn: return 4;
+    case MethodError: return 5;
+    case MethodException: return 5;
+    case MethodDebug: return 2;
+    case MethodTable: return 3;
+    case MethodTrace: return 3;
+    case MethodDir: return 3;
+    case MethodDirxml: return 3;
+    case MethodGroup: return 3;
+    case MethodGroupCollapsed: return 3;
+    case MethodGroupEnd: return 3;
+    case MethodTime: return 3;
+    case MethodTimeEnd: return 3;
+    case MethodTimeStamp: return 3;
+    case MethodAssert: return 3;
+    case MethodCount: return 3;
+    case MethodClear: return 3;
+    case MethodProfile: return 3;
+    case MethodProfileEnd: return 3;
+    default:
+      MOZ_CRASH("MethodName is out of sync with the Console implementation!");
+      return 0;
+  }
+
+  return 0;
 }
 
 } // namespace dom

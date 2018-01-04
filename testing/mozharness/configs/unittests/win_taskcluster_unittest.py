@@ -201,7 +201,8 @@ config = {
             'tests': ["tests/reftest/tests/testing/crashtest/crashtests.list"]
         },
         "jsreftest": {
-            'options':["--extra-profile-file=tests/jsreftest/tests/user.js"],
+            'options':["--extra-profile-file=tests/jsreftest/tests/user.js",
+                       "--suite=jstestbrowser"],
             'tests': ["tests/jsreftest/tests/jstests.list"]
         },
         "reftest": {
