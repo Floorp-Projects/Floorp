@@ -58,6 +58,7 @@ namespace console {
 dictionary ConsoleEvent {
   (unsigned long long or DOMString) ID;
   (unsigned long long or DOMString) innerID;
+  DOMString consoleID = "";
   DOMString addonId = "";
   DOMString level = "";
   DOMString filename = "";
@@ -154,5 +155,11 @@ interface ConsoleInstance {
 };
 
 dictionary ConsoleInstanceOptions {
-  // TODO
+/* TODO:
+  boolean dump = false;
+  DOMString prefix = "";
+  DOMString maxLogLevel = "";
+  DOMString innerID = "";
+*/
+  DOMString consoleID = "";
 };
