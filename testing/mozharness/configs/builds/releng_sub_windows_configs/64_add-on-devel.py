@@ -5,7 +5,6 @@ config = {
         'clobber',
         'clone-tools',
         'checkout-sources',
-        # 'setup-mock', windows do not use mock
         'build',
         'upload-files',
 #        'sendchange',

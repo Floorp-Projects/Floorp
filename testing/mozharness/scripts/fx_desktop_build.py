@@ -37,7 +37,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
                 'clobber',
                 'clone-tools',
                 'checkout-sources',
-                'setup-mock',
                 'build',
                 'upload-files',  # upload from BB to TC
                 'sendchange',
@@ -241,9 +240,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
         # Actions {{{2
         # read_buildbot_config in BuildingMixin
         # clobber in BuildingMixin -> PurgeMixin
-        # if Linux config:
-        # reset_mock in BuildingMixing -> MockMixin
-        # setup_mock in BuildingMixing (overrides MockMixin.mock_setup)
 
     def set_extra_try_arguments(self, action, success=None):
         """ Override unneeded method from TryToolsMixin """
