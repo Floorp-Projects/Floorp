@@ -935,7 +935,7 @@ function openPrefsHelp() {
   // since its probably behind the window.
   var instantApply = getBoolPref("browser.preferences.instantApply");
 
-  var helpTopic = document.documentElement.getAttribute("helpTopic");
+  var helpTopic = document.getElementsByTagName("prefwindow")[0].currentPane.helpTopic;
   openHelpLink(helpTopic, !instantApply);
 }
 

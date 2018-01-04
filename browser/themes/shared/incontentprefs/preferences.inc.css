@@ -28,12 +28,7 @@
   padding: 0;
 }
 
-.prefwindow[type="child"] > .prefpane {
-  -moz-box-flex: 1;
-  overflow: -moz-hidden-unscrollable;
-}
-
-.prefpane > groupbox + groupbox {
+prefpane > groupbox + groupbox {
   margin-top: 16px;
 }
 

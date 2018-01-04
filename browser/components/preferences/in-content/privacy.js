@@ -34,87 +34,6 @@ XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
   }
 });
 
-Preferences.addAll([
-  // Tracking
-  { id: "privacy.trackingprotection.enabled", type: "bool" },
-  { id: "privacy.trackingprotection.pbmode.enabled", type: "bool" },
-
-  // Button prefs
-  { id: "pref.privacy.disable_button.cookie_exceptions", type: "bool" },
-  { id: "pref.privacy.disable_button.view_cookies", type: "bool" },
-  { id: "pref.privacy.disable_button.change_blocklist", type: "bool" },
-  { id: "pref.privacy.disable_button.tracking_protection_exceptions", type: "bool" },
-
-  // Location Bar
-  { id: "browser.urlbar.autocomplete.enabled", type: "bool" },
-  { id: "browser.urlbar.suggest.bookmark", type: "bool" },
-  { id: "browser.urlbar.suggest.history", type: "bool" },
-  { id: "browser.urlbar.suggest.openpage", type: "bool" },
-
-  // History
-  { id: "places.history.enabled", type: "bool" },
-  { id: "browser.formfill.enable", type: "bool" },
-  { id: "privacy.history.custom", type: "bool" },
-  // Cookies
-  { id: "network.cookie.cookieBehavior", type: "int" },
-  { id: "network.cookie.lifetimePolicy", type: "int" },
-  { id: "network.cookie.blockFutureCookies", type: "bool" },
-  // Clear Private Data
-  { id: "privacy.sanitize.sanitizeOnShutdown", type: "bool" },
-  { id: "privacy.sanitize.timeSpan", type: "int" },
-  // Do not track
-  { id: "privacy.donottrackheader.enabled", type: "bool" },
-
-  // Popups
-  { id: "dom.disable_open_during_load", type: "bool" },
-  // Passwords
-  { id: "signon.rememberSignons", type: "bool" },
-
-  // Buttons
-  { id: "pref.privacy.disable_button.view_passwords", type: "bool" },
-  { id: "pref.privacy.disable_button.view_passwords_exceptions", type: "bool" },
-
-  /* Certificates tab
-   * security.default_personal_cert
-   *   - a string:
-   *       "Select Automatically"   select a certificate automatically when a site
-   *                                requests one
-   *       "Ask Every Time"         present a dialog to the user so he can select
-   *                                the certificate to use on a site which
-   *                                requests one
-   */
-  { id: "security.default_personal_cert", type: "string" },
-
-  { id: "security.disable_button.openCertManager", type: "bool" },
-
-  { id: "security.disable_button.openDeviceManager", type: "bool" },
-
-  { id: "security.OCSP.enabled", type: "int" },
-
-  // Add-ons, malware, phishing
-  { id: "xpinstall.whitelist.required", type: "bool" },
-
-  { id: "browser.safebrowsing.malware.enabled", type: "bool" },
-  { id: "browser.safebrowsing.phishing.enabled", type: "bool" },
-
-  { id: "browser.safebrowsing.downloads.enabled", type: "bool" },
-
-  { id: "urlclassifier.malwareTable", type: "string" },
-
-  { id: "browser.safebrowsing.downloads.remote.block_potentially_unwanted", type: "bool" },
-  { id: "browser.safebrowsing.downloads.remote.block_uncommon", type: "bool" },
-
-  // Network tab
-  { id: "browser.cache.disk.capacity", type: "int" },
-
-  { id: "browser.cache.disk.smart_size.enabled", type: "bool", inverted: "true" },
-]);
-
-// Data Choices tab
-if (AppConstants.MOZ_CRASHREPORTER) {
-  Preferences.add({ id: "browser.crashReports.unsubmittedCheck.autoSubmit2", type: "bool" });
-}
-
 var gPrivacyPane = {
   _pane: null,
 
@@ -185,10 +104,10 @@ var gPrivacyPane = {
     this._initTrackingProtectionPBM();
     this._initAutocomplete();
 
-    Preferences.get("privacy.sanitize.sanitizeOnShutdown").on("change",
-      gPrivacyPane._updateSanitizeSettingsButton.bind(gPrivacyPane));
-    Preferences.get("browser.privatebrowsing.autostart").on("change",
-      gPrivacyPane.updatePrivacyMicroControls.bind(gPrivacyPane));
+    setEventListener("privacy.sanitize.sanitizeOnShutdown", "change",
+      gPrivacyPane._updateSanitizeSettingsButton);
+    setEventListener("browser.privatebrowsing.autostart", "change",
+      gPrivacyPane.updatePrivacyMicroControls);
     setEventListener("historyMode", "command", function() {
       gPrivacyPane.updateHistoryModePane();
       gPrivacyPane.updateHistoryModePrefs();
@@ -407,8 +326,8 @@ var gPrivacyPane = {
    * Selects the right item of the Tracking Protection radiogroup.
    */
   trackingProtectionReadPrefs() {
-    let enabledPref = Preferences.get("privacy.trackingprotection.enabled");
-    let pbmPref = Preferences.get("privacy.trackingprotection.pbmode.enabled");
+    let enabledPref = document.getElementById("privacy.trackingprotection.enabled");
+    let pbmPref = document.getElementById("privacy.trackingprotection.pbmode.enabled");
     let radiogroup = document.getElementById("trackingProtectionRadioGroup");
 
     // Global enable takes precedence over enabled in Private Browsing.
@@ -425,8 +344,8 @@ var gPrivacyPane = {
    * Sets the pref values based on the selected item of the radiogroup.
    */
   trackingProtectionWritePrefs() {
-    let enabledPref = Preferences.get("privacy.trackingprotection.enabled");
-    let pbmPref = Preferences.get("privacy.trackingprotection.pbmode.enabled");
+    let enabledPref = document.getElementById("privacy.trackingprotection.enabled");
+    let pbmPref = document.getElementById("privacy.trackingprotection.pbmode.enabled");
     let radiogroup = document.getElementById("trackingProtectionRadioGroup");
 
     switch (radiogroup.value) {
@@ -492,7 +411,7 @@ var gPrivacyPane = {
    */
   _checkHistoryValues(aPrefs) {
     for (let pref of Object.keys(aPrefs)) {
-      if (Preferences.get(pref).value != aPrefs[pref])
+      if (document.getElementById(pref).value != aPrefs[pref])
         return false;
     }
     return true;
@@ -503,7 +422,7 @@ var gPrivacyPane = {
    */
   initializeHistoryMode() {
     let mode;
-    let getVal = aPref => Preferences.get(aPref).value;
+    let getVal = aPref => document.getElementById(aPref).value;
 
     if (getVal("privacy.history.custom"))
       mode = "custom";
@@ -535,7 +454,7 @@ var gPrivacyPane = {
         break;
     }
     document.getElementById("historyPane").selectedIndex = selectedIndex;
-    Preferences.get("privacy.history.custom").value = selectedIndex == 2;
+    document.getElementById("privacy.history.custom").value = selectedIndex == 2;
   },
 
   /**
@@ -543,25 +462,25 @@ var gPrivacyPane = {
    * micro-management prefs based on the history mode menulist
    */
   updateHistoryModePrefs() {
-    let pref = Preferences.get("browser.privatebrowsing.autostart");
+    let pref = document.getElementById("browser.privatebrowsing.autostart");
     switch (document.getElementById("historyMode").value) {
       case "remember":
         if (pref.value)
           pref.value = false;
 
         // select the remember history option if needed
-        Preferences.get("places.history.enabled").value = true;
+        document.getElementById("places.history.enabled").value = true;
 
         // select the remember forms history option
-        Preferences.get("browser.formfill.enable").value = true;
+        document.getElementById("browser.formfill.enable").value = true;
 
         // select the allow cookies option
-        Preferences.get("network.cookie.cookieBehavior").value = 0;
+        document.getElementById("network.cookie.cookieBehavior").value = 0;
         // select the cookie lifetime policy option
-        Preferences.get("network.cookie.lifetimePolicy").value = 0;
+        document.getElementById("network.cookie.lifetimePolicy").value = 0;
 
         // select the clear on close option
-        Preferences.get("privacy.sanitize.sanitizeOnShutdown").value = false;
+        document.getElementById("privacy.sanitize.sanitizeOnShutdown").value = false;
         break;
       case "dontremember":
         if (!pref.value)
@@ -577,7 +496,7 @@ var gPrivacyPane = {
   updatePrivacyMicroControls() {
     if (document.getElementById("historyMode").value == "custom") {
       let disabled = this._autoStartPrivateBrowsing =
-        Preferences.get("browser.privatebrowsing.autostart").value;
+        document.getElementById("browser.privatebrowsing.autostart").value;
       this.dependentControls.forEach(function(aElement) {
         let control = document.getElementById(aElement);
         let preferenceId = control.getAttribute("preference");
@@ -589,13 +508,13 @@ var gPrivacyPane = {
           }
         }
 
-        let preference = preferenceId ? Preferences.get(preferenceId) : {};
+        let preference = preferenceId ? document.getElementById(preferenceId) : {};
         control.disabled = disabled || preference.locked;
       });
 
       // adjust the cookie controls status
       this.readAcceptCookies();
-      let lifetimePolicy = Preferences.get("network.cookie.lifetimePolicy").value;
+      let lifetimePolicy = document.getElementById("network.cookie.lifetimePolicy").value;
       if (lifetimePolicy != Ci.nsICookieService.ACCEPT_NORMALLY &&
         lifetimePolicy != Ci.nsICookieService.ACCEPT_SESSION &&
         lifetimePolicy != Ci.nsICookieService.ACCEPT_FOR_N_DAYS) {
@@ -605,13 +524,13 @@ var gPrivacyPane = {
 
       // adjust the checked state of the sanitizeOnShutdown checkbox
       document.getElementById("alwaysClear").checked = disabled ? false :
-        Preferences.get("privacy.sanitize.sanitizeOnShutdown").value;
+        document.getElementById("privacy.sanitize.sanitizeOnShutdown").value;
 
       // adjust the checked state of the remember history checkboxes
       document.getElementById("rememberHistory").checked = disabled ? false :
-        Preferences.get("places.history.enabled").value;
+        document.getElementById("places.history.enabled").value;
       document.getElementById("rememberForms").checked = disabled ? false :
-        Preferences.get("browser.formfill.enable").value;
+        document.getElementById("browser.formfill.enable").value;
 
       if (!disabled) {
         // adjust the Settings button for sanitizeOnShutdown
@@ -637,7 +556,7 @@ var gPrivacyPane = {
   updateAutostart() {
     let mode = document.getElementById("historyMode");
     let autoStart = document.getElementById("privateBrowsingAutoStart");
-    let pref = Preferences.get("browser.privatebrowsing.autostart");
+    let pref = document.getElementById("browser.privatebrowsing.autostart");
     if ((mode.value == "custom" && this._lastCheckState == autoStart.checked) ||
       (mode.value == "remember" && !this._lastCheckState) ||
       (mode.value == "dontremember" && this._lastCheckState)) {
@@ -741,7 +660,7 @@ var gPrivacyPane = {
    * if cookies are enabled.
    */
   readAcceptCookies() {
-    var pref = Preferences.get("network.cookie.cookieBehavior");
+    var pref = document.getElementById("network.cookie.cookieBehavior");
     var acceptThirdPartyLabel = document.getElementById("acceptThirdPartyLabel");
     var acceptThirdPartyMenu = document.getElementById("acceptThirdPartyMenu");
     var keepUntil = document.getElementById("keepUntil");
@@ -775,7 +694,7 @@ var gPrivacyPane = {
    * Converts between network.cookie.cookieBehavior and the third-party cookie UI
    */
   readAcceptThirdPartyCookies() {
-    var pref = Preferences.get("network.cookie.cookieBehavior");
+    var pref = document.getElementById("network.cookie.cookieBehavior");
     switch (pref.value) {
       case 0:
         return "always";
@@ -852,7 +771,7 @@ var gPrivacyPane = {
    * cleared.
    */
   clearPrivateDataNow(aClearEverything) {
-    var ts = Preferences.get("privacy.sanitize.timeSpan");
+    var ts = document.getElementById("privacy.sanitize.timeSpan");
     var timeSpanOrig = ts.value;
 
     if (aClearEverything) {
@@ -875,7 +794,7 @@ var gPrivacyPane = {
    */
   _updateSanitizeSettingsButton() {
     var settingsButton = document.getElementById("clearDataSettings");
-    var sanitizeOnShutdownPref = Preferences.get("privacy.sanitize.sanitizeOnShutdown");
+    var sanitizeOnShutdownPref = document.getElementById("privacy.sanitize.sanitizeOnShutdown");
 
     settingsButton.disabled = !sanitizeOnShutdownPref.value;
   },
@@ -981,7 +900,7 @@ var gPrivacyPane = {
    */
   updateButtons(aButtonID, aPreferenceID) {
     var button = document.getElementById(aButtonID);
-    var preference = Preferences.get(aPreferenceID);
+    var preference = document.getElementById(aPreferenceID);
     button.disabled = preference.value != true;
     return undefined;
   },
@@ -1099,7 +1018,7 @@ var gPrivacyPane = {
    * Browsing mode, the "Remember passwords" UI is useless, so we disable it.
    */
   readSavePasswords() {
-    var pref = Preferences.get("signon.rememberSignons");
+    var pref = document.getElementById("signon.rememberSignons");
     var excepts = document.getElementById("passwordExceptions");
 
     if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
@@ -1117,7 +1036,7 @@ var gPrivacyPane = {
    * or not add-on installation warnings are displayed.
    */
   readWarnAddonInstall() {
-    var warn = Preferences.get("xpinstall.whitelist.required");
+    var warn = document.getElementById("xpinstall.whitelist.required");
     var exceptions = document.getElementById("addonExceptions");
 
     exceptions.disabled = !warn.value;
@@ -1131,14 +1050,14 @@ var gPrivacyPane = {
     let blockDownloads = document.getElementById("blockDownloads");
     let blockUncommonUnwanted = document.getElementById("blockUncommonUnwanted");
 
-    let safeBrowsingPhishingPref = Preferences.get("browser.safebrowsing.phishing.enabled");
-    let safeBrowsingMalwarePref = Preferences.get("browser.safebrowsing.malware.enabled");
+    let safeBrowsingPhishingPref = document.getElementById("browser.safebrowsing.phishing.enabled");
+    let safeBrowsingMalwarePref = document.getElementById("browser.safebrowsing.malware.enabled");
 
-    let blockDownloadsPref = Preferences.get("browser.safebrowsing.downloads.enabled");
-    let malwareTable = Preferences.get("urlclassifier.malwareTable");
+    let blockDownloadsPref = document.getElementById("browser.safebrowsing.downloads.enabled");
+    let malwareTable = document.getElementById("urlclassifier.malwareTable");
 
-    let blockUnwantedPref = Preferences.get("browser.safebrowsing.downloads.remote.block_potentially_unwanted");
-    let blockUncommonPref = Preferences.get("browser.safebrowsing.downloads.remote.block_uncommon");
+    let blockUnwantedPref = document.getElementById("browser.safebrowsing.downloads.remote.block_potentially_unwanted");
+    let blockUncommonPref = document.getElementById("browser.safebrowsing.downloads.remote.block_uncommon");
 
     let learnMoreLink = document.getElementById("enableSafeBrowsingLearnMore");
     let phishingUrl = Services.urlFormatter.formatURLPref("app.support.baseURL") + "phishing-malware";
@@ -1272,7 +1191,7 @@ var gPrivacyPane = {
    * checked. Otherwise, it should be unchecked.
    */
   readEnableOCSP() {
-    var preference = Preferences.get("security.OCSP.enabled");
+    var preference = document.getElementById("security.OCSP.enabled");
     // This is the case if the preference is the default value.
     if (preference.value === undefined) {
       return true;
@@ -1385,7 +1304,7 @@ var gPrivacyPane = {
   readSmartSizeEnabled() {
     // The smart_size.enabled preference element is inverted="true", so its
     // value is the opposite of the actual pref value
-    var disabled = Preferences.get("browser.cache.disk.smart_size.enabled").value;
+    var disabled = document.getElementById("browser.cache.disk.smart_size.enabled").value;
     this.updateCacheSizeUI(!disabled);
   },
 
@@ -1401,7 +1320,7 @@ var gPrivacyPane = {
    */
   updateCacheSizeInputField() {
     let cacheSizeElem = document.getElementById("cacheSize");
-    let cachePref = Preferences.get("browser.cache.disk.capacity");
+    let cachePref = document.getElementById("browser.cache.disk.capacity");
     cacheSizeElem.value = cachePref.value / 1024;
     if (cachePref.locked)
       cacheSizeElem.disabled = true;
@@ -1415,7 +1334,7 @@ var gPrivacyPane = {
    */
   updateCacheSizePref() {
     let cacheSizeElem = document.getElementById("cacheSize");
-    let cachePref = Preferences.get("browser.cache.disk.capacity");
+    let cachePref = document.getElementById("browser.cache.disk.capacity");
     // Converts the cache size as specified in UI (in MB) to KB.
     let intValue = parseInt(cacheSizeElem.value, 10);
     cachePref.value = isNaN(intValue) ? 0 : intValue * 1024;
