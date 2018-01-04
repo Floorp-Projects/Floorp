@@ -142,9 +142,10 @@ if (!gBrowser.selectedBrowser.isRemoteBrowser) {
 }
 
 add_task(async function() {
-  if (!AppConstants.NIGHTLY_BUILD && !AppConstants.DEBUG) {
+  if (!AppConstants.NIGHTLY_BUILD && !AppConstants.MOZ_DEV_EDITION && !AppConstants.DEBUG) {
     ok(!("@mozilla.org/test/startuprecorder;1" in Cc),
-       "the startup recorder component shouldn't exist in this non-nightly non-debug build.");
+       "the startup recorder component shouldn't exist in this non-nightly/non-devedition/" +
+       "non-debug build.");
     return;
   }
 

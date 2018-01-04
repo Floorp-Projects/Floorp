@@ -1035,7 +1035,7 @@ NS_IMETHODIMP
 mozJSComponentLoader::GetModuleImportStack(const nsACString& aLocation,
                                            nsACString& retval)
 {
-#if defined(NIGHTLY_BUILD) || defined(DEBUG)
+#ifdef STARTUP_RECORDER_ENABLED
     MOZ_ASSERT(nsContentUtils::IsCallerChrome());
     MOZ_ASSERT(mInitialized);
 
@@ -1058,7 +1058,7 @@ NS_IMETHODIMP
 mozJSComponentLoader::GetComponentLoadStack(const nsACString& aLocation,
                                             nsACString& retval)
 {
-#if defined(NIGHTLY_BUILD) || defined(DEBUG)
+#ifdef STARTUP_RECORDER_ENABLED
     MOZ_ASSERT(nsContentUtils::IsCallerChrome());
     MOZ_ASSERT(mInitialized);
 
@@ -1177,7 +1177,7 @@ mozJSComponentLoader::ImportInto(const nsACString& aLocation,
             return NS_ERROR_FILE_NOT_FOUND;
         }
 
-#if defined(NIGHTLY_BUILD) || defined(DEBUG)
+#ifdef STARTUP_RECORDER_ENABLED
         if (Preferences::GetBool("browser.startup.record", false)) {
             newEntry->importStack =
                 xpc_PrintJSStack(callercx, false, false, false).get();
