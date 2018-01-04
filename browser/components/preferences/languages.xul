@@ -1,51 +1,47 @@
 <?xml version="1.0"?>
 
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+<!-- -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- -->
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/languages.dtd">
+<!DOCTYPE dialog [
+  <!ENTITY % preferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
+  %preferencesDTD;
+  <!ENTITY % languagesDTD SYSTEM "chrome://browser/locale/preferences/languages.dtd">
+  %languagesDTD;
+]>
 
 <?xml-stylesheet href="chrome://global/skin/"?>
-#ifdef XP_MACOSX
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
-#endif
 
-<prefwindow id="LanguagesDialog" type="child"
-            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            title="&languages.customize.Header;"
-            dlgbuttons="accept,cancel,help"
-            ondialoghelp="openPrefsHelp()"
-            style="width: &window.width;"
-# hack around XUL bug 1194844 by triggering extra reflow (see bug 1194346):
-            onfocus="gLanguagesDialog.forceReflow()"
-            onresize="gLanguagesDialog.forceReflow()">
+<dialog id="LanguagesDialog" type="child" class="prefwindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&languages.customize.Header;"
+        buttons="accept,cancel,help"
+        persist="lastSelected screenX screenY"
+        closebuttonlabel="&preferencesCloseButton.label;"
+        closebuttonaccesskey="&preferencesCloseButton.accesskey;"
+        role="dialog"
+        onload="gLanguagesDialog.init();"
+        helpTopic="prefs-languages"
+        ondialoghelp="openPrefsHelp()"
+        style="width: &window.width;"
+        onfocus="gLanguagesDialog.forceReflow()"
+        onresize="gLanguagesDialog.forceReflow()">
+
+<!-- The onfocus and onresize handlers above hack around XUL bug 1194844
+   - by triggering extra reflow (see bug 1194346). -->
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
+  <script type="application/javascript" src="chrome://browser/content/preferences/languages.js"/>
 
-  <prefpane id="LanguagesDialogPane"
-            class="largeDialogContainer"
-            onpaneload="gLanguagesDialog.init();"
-            helpTopic="prefs-languages">
+  <keyset>
+    <key key="&windowClose.key;" modifiers="accel" oncommand="Preferences.close(event)"/>
+  </keyset>
 
-    <preferences>
-      <preference id="intl.accept_languages" name="intl.accept_languages" type="wstring"/>
-      <preference id="pref.browser.language.disable_button.up"
-                  name="pref.browser.language.disable_button.up"
-                  type="bool"/>
-      <preference id="pref.browser.language.disable_button.down"
-                  name="pref.browser.language.disable_button.down"
-                  type="bool"/>
-      <preference id="pref.browser.language.disable_button.remove"
-                  name="pref.browser.language.disable_button.remove"
-                  type="bool"/>
-      <preference id="privacy.spoof_english"
-                  name="privacy.spoof_english"
-                  type="int"/>
-    </preferences>
-
-    <script type="application/javascript" src="chrome://browser/content/preferences/languages.js"/>
+  <vbox id="LanguagesDialogPane" class="prefpane largeDialogContainer">
 
     <stringbundleset id="languageSet">
       <stringbundle id="bundleRegions"      src="chrome://global/locale/regionNames.properties"/>
@@ -107,6 +103,5 @@
     </grid>
     <separator/>
     <separator/>
-  </prefpane>
-</prefwindow>
-
+  </vbox>
+</dialog>
