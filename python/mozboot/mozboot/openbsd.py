@@ -12,7 +12,6 @@ class OpenBSDBootstrapper(BaseBootstrapper):
         BaseBootstrapper.__init__(self, **kwargs)
 
         self.packages = [
-            'mercurial',
             'autoconf-2.13',
             'gmake',
             'gtar',

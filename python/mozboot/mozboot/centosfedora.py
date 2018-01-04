@@ -22,7 +22,6 @@ class CentOSFedoraBootstrapper(StyloInstall, BaseBootstrapper):
 
         self.packages = [
             'autoconf213',
-            'mercurial',
             'nodejs',
             'npm',
             'which',

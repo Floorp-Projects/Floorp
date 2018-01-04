@@ -34,7 +34,6 @@ class DebianBootstrapper(StyloInstall, BaseBootstrapper):
     COMMON_PACKAGES = [
         'autoconf2.13',
         'build-essential',
-        'ccache',
         'nodejs',
         'python-dev',
         'python-pip',
