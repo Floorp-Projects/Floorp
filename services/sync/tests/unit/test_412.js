@@ -27,7 +27,7 @@ add_task(async function test_412_not_treated_as_failure() {
     // create a new record that should be uploaded and arrange for our lastSync
     // timestamp to be wrong so we get a 412.
     engine._store.items = {new: "new record"};
-    engine._tracker.addChangedID("new", 0);
+    await engine._tracker.addChangedID("new", 0);
 
     let saw412 = false;
     let _uploadOutgoing = engine._uploadOutgoing;
