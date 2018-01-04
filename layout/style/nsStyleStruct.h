@@ -2623,6 +2623,38 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
            mAnimationPlayStateCount,
            mAnimationIterationCountCount;
 
+  nsAtom* GetAnimationName(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationNameCount].GetName();
+  }
+  float GetAnimationDelay(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationDelayCount].GetDelay();
+  }
+  float GetAnimationDuration(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationDurationCount].GetDuration();
+  }
+  mozilla::dom::PlaybackDirection GetAnimationDirection(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationDirectionCount].GetDirection();
+  }
+  mozilla::dom::FillMode GetAnimationFillMode(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationFillModeCount].GetFillMode();
+  }
+  uint8_t GetAnimationPlayState(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationPlayStateCount].GetPlayState();
+  }
+  float GetAnimationIterationCount(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationIterationCountCount].GetIterationCount();
+  }
+  const nsTimingFunction& GetAnimationTimingFunction(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationTimingFunctionCount].GetTimingFunction();
+  }
 
   // The threshold used for extracting a shape from shape-outside: <image>.
   float mShapeImageThreshold = 0.0f; // [reset]
