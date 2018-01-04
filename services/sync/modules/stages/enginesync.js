@@ -252,8 +252,6 @@ EngineSynchronizer.prototype = {
       return;
     }
 
-    this.service._ignorePrefObserver = true;
-
     let enabled = engineManager.enabledEngineNames;
 
     let toDecline = new Set();
@@ -332,7 +330,6 @@ EngineSynchronizer.prototype = {
     engineManager.undecline(toUndecline);
 
     Svc.Prefs.resetBranch("engineStatusChanged.");
-    this.service._ignorePrefObserver = false;
   },
 
   async _updateEnabledEngines() {

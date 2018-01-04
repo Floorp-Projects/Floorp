@@ -98,8 +98,8 @@ const OBSERVER_TOPICS = ["fxaccounts:onlogin",
                          "private-browsing",
                          "profile-before-change",
                          "sessionstore-windows-restored",
-                         "weave:engine:start-tracking",
-                         "weave:engine:stop-tracking",
+                         "weave:service:tracking-started",
+                         "weave:service:tracking-stopped",
                          "weave:service:login:error",
                          "weave:service:setup-complete",
                          "weave:service:sync:finish",
@@ -247,11 +247,11 @@ var TPS = {
           this._syncActive = true;
           break;
 
-        case "weave:engine:start-tracking":
+        case "weave:service:tracking-started":
           this._isTracking = true;
           break;
 
-        case "weave:engine:stop-tracking":
+        case "weave:service:tracking-stopped":
           this._isTracking = false;
           break;
       }
@@ -1099,7 +1099,7 @@ var TPS = {
    */
   async waitForTracking() {
     if (!this._isTracking) {
-      await this.waitForEvent("weave:engine:start-tracking");
+      await this.waitForEvent("weave:service:tracking-started");
     }
   },
 
