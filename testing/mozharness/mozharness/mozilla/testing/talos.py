@@ -578,7 +578,7 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin, TooltoolMixin,
             mozbase_requirements = os.path.join(
                 os.path.dirname(self.talos_path),
                 'config',
-                'mozbase_requirements.txt'
+                'mozbase_source_requirements.txt'
             )
         self.register_virtualenv_module(
             requirements=[mozbase_requirements],
