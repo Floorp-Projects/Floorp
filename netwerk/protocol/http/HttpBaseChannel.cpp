@@ -34,6 +34,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"
+#include "nsIMutableArray.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIObserverService.h"
 #include "nsProxyRelease.h"
@@ -65,6 +66,7 @@
 #include "nsIDOMWindowUtils.h"
 #include "nsHttpChannel.h"
 #include "nsRedirectHistoryEntry.h"
+#include "nsServerTiming.h"
 
 #include <algorithm>
 #include "HttpBaseChannel.h"
@@ -4448,6 +4450,47 @@ HttpBaseChannel::CallTypeSniffers(void *aClosure, const uint8_t *aData,
   if (!newType.IsEmpty()) {
     chan->SetContentType(newType);
   }
+}
+
+template <class T>
+static void
+ParseServerTimingHeader(const nsAutoPtr<T> &aHeader,
+                        nsIMutableArray* aOutput)
+{
+  if (!aHeader) {
+    return;
+  }
+
+  nsAutoCString serverTimingHeader;
+  Unused << aHeader->GetHeader(nsHttp::Server_Timing, serverTimingHeader);
+  if (serverTimingHeader.IsEmpty()) {
+    return;
+  }
+
+  ServerTimingParser parser(serverTimingHeader);
+  parser.Parse();
+
+  nsTArray<nsCOMPtr<nsIServerTiming>> array = parser.TakeServerTimingHeaders();
+  for (const auto &data : array) {
+    aOutput->AppendElement(data);
+  }
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetServerTiming(nsIArray **aServerTiming)
+{
+  NS_ENSURE_ARG_POINTER(aServerTiming);
+
+  nsTArray<nsCOMPtr<nsIServerTiming>> data;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMutableArray> array = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  ParseServerTimingHeader(mResponseHead, array);
+  ParseServerTimingHeader(mResponseTrailers, array);
+
+  array.forget(aServerTiming);
+  return NS_OK;
 }
 
 } // namespace net

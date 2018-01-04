@@ -263,9 +263,6 @@ with Files('direction*'):
 with Files('edit*'):
     BUG_COMPONENT = ('Toolkit', 'XUL Widgets')
 
-with Files('*find*'):
-    BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
-
 with Files('globalOverlay.*'):
     BUG_COMPONENT = ('Toolkit', 'General')
 

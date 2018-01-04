@@ -220,7 +220,8 @@ HttpBackgroundChannelParent::OnTransportAndData(
 
 bool
 HttpBackgroundChannelParent::OnStopRequest(const nsresult& aChannelStatus,
-                                           const ResourceTimingStruct& aTiming)
+                                           const ResourceTimingStruct& aTiming,
+                                           const nsHttpHeaderArray& aResponseTrailers)
 {
   LOG(("HttpBackgroundChannelParent::OnStopRequest [this=%p "
         "status=%" PRIx32 "]\n", this, static_cast<uint32_t>(aChannelStatus)));
@@ -233,12 +234,15 @@ HttpBackgroundChannelParent::OnStopRequest(const nsresult& aChannelStatus,
   if (!IsOnBackgroundThread()) {
     MutexAutoLock lock(mBgThreadMutex);
     nsresult rv = mBackgroundThread->Dispatch(
-      NewRunnableMethod<const nsresult, const ResourceTimingStruct>(
+      NewRunnableMethod<const nsresult,
+                        const ResourceTimingStruct,
+                        const nsHttpHeaderArray>(
         "net::HttpBackgroundChannelParent::OnStopRequest",
         this,
         &HttpBackgroundChannelParent::OnStopRequest,
         aChannelStatus,
-        aTiming),
+        aTiming,
+        aResponseTrailers),
       NS_DISPATCH_NORMAL);
 
     MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
@@ -249,7 +253,7 @@ HttpBackgroundChannelParent::OnStopRequest(const nsresult& aChannelStatus,
   // See the child code for why we do this.
   TimeStamp lastActTabOpt = nsHttp::GetLastActiveTabLoadOptimizationHit();
 
-  return SendOnStopRequest(aChannelStatus, aTiming, lastActTabOpt);
+  return SendOnStopRequest(aChannelStatus, aTiming, lastActTabOpt, aResponseTrailers);
 }
 
 bool
