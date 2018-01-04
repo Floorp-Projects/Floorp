@@ -452,6 +452,8 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame* aFrame,
                                  bool* aFoundVisibleTextOrAtomic,
                                  InnerClipEdges* aClippedMarkerEdges)
 {
+  MOZ_ASSERT(aFrameType == LayoutFrameType::Text ||
+             IsAtomicElement(aFrame, aFrameType));
   LogicalRect borderRect(mBlockWM,
                          nsRect(aFrame->GetOffsetTo(mBlock),
                                 aFrame->GetSize()),
@@ -481,11 +483,12 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame* aFrame,
   if ((istartOverlap > 0 && insideIStartEdge) ||
       (iendOverlap > 0 && insideIEndEdge)) {
     if (aFrameType == LayoutFrameType::Text) {
-      if (aInsideMarkersArea.IStart(mBlockWM) <
-          aInsideMarkersArea.IEnd(mBlockWM)) {
+      auto textFrame = static_cast<nsTextFrame*>(aFrame);
+      if ((aInsideMarkersArea.IStart(mBlockWM) <
+           aInsideMarkersArea.IEnd(mBlockWM)) &&
+          textFrame->HasNonSuppressedText()) {
         // a clipped text frame and there is some room between the markers
         nscoord snappedIStart, snappedIEnd;
-        auto textFrame = static_cast<nsTextFrame*>(aFrame);
         bool isFullyClipped = mBlockWM.IsBidiLTR() ?
           IsFullyClipped(textFrame, istartOverlap, iendOverlap,
                          &snappedIStart, &snappedIEnd) :
@@ -515,7 +518,14 @@ TextOverflow::AnalyzeMarkerEdges(nsIFrame* aFrame,
   } else {
     // frame is inside
     aAlignmentEdges->Accumulate(mBlockWM, borderRect);
-    *aFoundVisibleTextOrAtomic = true;
+    if (aFrameType == LayoutFrameType::Text) {
+      auto textFrame = static_cast<nsTextFrame*>(aFrame);
+      if (textFrame->HasNonSuppressedText()) {
+        *aFoundVisibleTextOrAtomic = true;
+      }
+    } else {
+      *aFoundVisibleTextOrAtomic = true;
+    }
   }
 }
 
