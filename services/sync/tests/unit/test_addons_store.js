@@ -119,7 +119,7 @@ add_task(async function setup() {
 add_task(async function test_remove() {
   _("Ensure removing add-ons from deleted records works.");
 
-  let addon = await installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
   let record = createRecordForThisApp(addon.syncGUID, addon.id, true, true);
 
   let failed = await store.applyIncomingBatch([record]);
@@ -132,7 +132,7 @@ add_task(async function test_remove() {
 add_task(async function test_apply_enabled() {
   _("Ensures that changes to the userEnabled flag apply.");
 
-  let addon = await installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
   Assert.ok(addon.isActive);
   Assert.ok(!addon.userDisabled);
 
@@ -164,7 +164,7 @@ add_task(async function test_apply_enabled() {
   Assert.ok(!addon.userDisabled);
   records = [];
 
-  await uninstallAddon(addon);
+  await uninstallAddon(addon, reconciler);
   Svc.Prefs.reset("addons.ignoreUserEnabledChanges");
 });
 
@@ -197,14 +197,14 @@ add_task(async function test_apply_enabled_appDisabled() {
   await checkReconcilerUpToDate(addon);
   records = [];
 
-  await uninstallAddon(addon);
+  await uninstallAddon(addon, reconciler);
 });
 
 add_task(async function test_ignore_different_appid() {
   _("Ensure that incoming records with a different application ID are ignored.");
 
   // We test by creating a record that should result in an update.
-  let addon = await installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
   Assert.ok(!addon.userDisabled);
 
   let record = createRecordForThisApp(addon.syncGUID, addon.id, false, false);
@@ -216,13 +216,13 @@ add_task(async function test_ignore_different_appid() {
   let newAddon = await AddonManager.getAddonByID(addon.id);
   Assert.ok(!newAddon.userDisabled);
 
-  await uninstallAddon(addon);
+  await uninstallAddon(addon, reconciler);
 });
 
 add_task(async function test_ignore_unknown_source() {
   _("Ensure incoming records with unknown source are ignored.");
 
-  let addon = await installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
 
   let record = createRecordForThisApp(addon.syncGUID, addon.id, false, false);
   record.source = "DUMMY_SOURCE";
@@ -233,13 +233,13 @@ add_task(async function test_ignore_unknown_source() {
   let newAddon = await AddonManager.getAddonByID(addon.id);
   Assert.ok(!newAddon.userDisabled);
 
-  await uninstallAddon(addon);
+  await uninstallAddon(addon, reconciler);
 });
 
 add_task(async function test_apply_uninstall() {
   _("Ensures that uninstalling an add-on from a record works.");
 
-  let addon = await installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
 
   let records = [];
   records.push(createRecordForThisApp(addon.syncGUID, addon.id, true, true));
@@ -258,7 +258,7 @@ add_task(async function test_addon_syncability() {
 
   Assert.ok(!(await store.isAddonSyncable(null)));
 
-  let addon = await installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
   Assert.ok((await store.isAddonSyncable(addon)));
 
   let dummy = {};
@@ -285,7 +285,7 @@ add_task(async function test_addon_syncability() {
   Assert.ok(!(await store.isAddonSyncable(dummy)));
   dummy.foreignInstall = false;
 
-  await uninstallAddon(addon);
+  await uninstallAddon(addon, reconciler);
 
   Assert.ok(!store.isSourceURITrusted(null));
 
@@ -329,9 +329,9 @@ add_task(async function test_get_all_ids() {
   // So if any tests above ever add a new addon ID, they are going to need to
   // be added here too.
   // Assert.equal(0, Object.keys(store.getAllIDs()).length);
-  let addon1 = await installAddon("test_install1");
-  let addon2 = await installAddon("test_bootstrap1_1");
-  let addon3 = await installAddon("test_install3");
+  let addon1 = await installAddon("test_install1", reconciler);
+  let addon2 = await installAddon("test_bootstrap1_1", reconciler);
+  let addon3 = await installAddon("test_install3", reconciler);
 
   _("Ensure they're syncable.");
   Assert.ok((await store.isAddonSyncable(addon1)));
@@ -347,14 +347,14 @@ add_task(async function test_get_all_ids() {
   Assert.ok(addon3.syncGUID in ids);
 
   addon1.install.cancel();
-  await uninstallAddon(addon2);
-  await uninstallAddon(addon3);
+  await uninstallAddon(addon2, reconciler);
+  await uninstallAddon(addon3, reconciler);
 });
 
 add_task(async function test_change_item_id() {
   _("Ensures that changeItemID() works properly.");
 
-  let addon = await installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
 
   let oldID = addon.syncGUID;
   let newID = Utils.makeGUID();
@@ -365,7 +365,7 @@ add_task(async function test_change_item_id() {
   Assert.notEqual(null, newAddon);
   Assert.equal(newID, newAddon.syncGUID);
 
-  await uninstallAddon(newAddon);
+  await uninstallAddon(newAddon, reconciler);
 });
 
 add_task(async function test_create() {
@@ -373,9 +373,9 @@ add_task(async function test_create() {
 
   let server = createAndStartHTTPServer(HTTP_PORT);
 
-  let addon = await installAddon("test_bootstrap1_1");
+  let addon = await installAddon("test_bootstrap1_1", reconciler);
   let id = addon.id;
-  await uninstallAddon(addon);
+  await uninstallAddon(addon, reconciler);
 
   let guid = Utils.makeGUID();
   let record = createRecordForThisApp(guid, id, true, false);
@@ -388,7 +388,7 @@ add_task(async function test_create() {
   Assert.equal(guid, newAddon.syncGUID);
   Assert.ok(!newAddon.userDisabled);
 
-  await uninstallAddon(newAddon);
+  await uninstallAddon(newAddon, reconciler);
 
   await promiseStopServer(server);
 });
@@ -486,7 +486,7 @@ add_task(async function test_incoming_system() {
 add_task(async function test_wipe() {
   _("Ensures that wiping causes add-ons to be uninstalled.");
 
-  let addon1 = await installAddon("test_bootstrap1_1");
+  let addon1 = await installAddon("test_bootstrap1_1", reconciler);
 
   await store.wipe();
 
@@ -500,7 +500,7 @@ add_task(async function test_wipe_and_install() {
   // This tests the reset sync flow where remote data is replaced by local. The
   // receiving client will see a wipe followed by a record which should undo
   // the wipe.
-  let installed = await installAddon("test_bootstrap1_1");
+  let installed = await installAddon("test_bootstrap1_1", reconciler);
 
   let record = createRecordForThisApp(installed.syncGUID, installed.id, true,
                                       false);

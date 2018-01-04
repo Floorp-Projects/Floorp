@@ -17,6 +17,7 @@ function MockTabsEngine() {
 MockTabsEngine.prototype = {
   name: "tabs",
 
+  startTracking() {},
   getAllClients() {
     return this.clients;
   },
