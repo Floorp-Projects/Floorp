@@ -590,33 +590,37 @@ template<class BuilderType>
 static already_AddRefed<CSSAnimation>
 BuildAnimation(nsPresContext* aPresContext,
                const NonOwningAnimationTarget& aTarget,
-               const StyleAnimation& aSrc,
+               const nsStyleDisplay& aStyleDisplay,
+               uint32_t animIdx,
                BuilderType& aBuilder,
                nsAnimationManager::CSSAnimationCollection* aCollection)
 {
   MOZ_ASSERT(aPresContext);
 
+  nsAtom* animationName = aStyleDisplay.GetAnimationName(animIdx);
   nsTArray<Keyframe> keyframes;
   if (!aBuilder.BuildKeyframes(aPresContext,
-                               aSrc.GetName(),
-                               aSrc.GetTimingFunction(),
+                               animationName,
+                               aStyleDisplay.GetAnimationTimingFunction(animIdx),
                                keyframes)) {
     return nullptr;
   }
 
-  TimingParams timing = TimingParamsFromCSSParams(aSrc.GetDuration(),
-                                                  aSrc.GetDelay(),
-                                                  aSrc.GetIterationCount(),
-                                                  aSrc.GetDirection(),
-                                                  aSrc.GetFillMode());
+  TimingParams timing =
+    TimingParamsFromCSSParams(aStyleDisplay.GetAnimationDuration(animIdx),
+                              aStyleDisplay.GetAnimationDelay(animIdx),
+                              aStyleDisplay.GetAnimationIterationCount(animIdx),
+                              aStyleDisplay.GetAnimationDirection(animIdx),
+                              aStyleDisplay.GetAnimationFillMode(animIdx));
 
   bool isStylePaused =
-    aSrc.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
+    aStyleDisplay.GetAnimationPlayState(animIdx) ==
+      NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
 
   // Find the matching animation with animation name in the old list
   // of animations and remove the matched animation from the list.
   RefPtr<CSSAnimation> oldAnim =
-    PopExistingAnimation(aSrc.GetName(), aCollection);
+    PopExistingAnimation(animationName, aCollection);
 
   if (oldAnim) {
     // Copy over the start times and (if still paused) pause starts
@@ -646,8 +650,7 @@ BuildAnimation(nsPresContext* aPresContext,
   aBuilder.SetKeyframes(*effect, Move(keyframes));
 
   RefPtr<CSSAnimation> animation =
-    new CSSAnimation(aPresContext->Document()->GetScopeObject(),
-                     aSrc.GetName());
+    new CSSAnimation(aPresContext->Document()->GetScopeObject(), animationName);
   animation->SetOwningElement(
     OwningElementRef(*aTarget.mElement, aTarget.mPseudoType));
 
@@ -1015,28 +1018,26 @@ template<class BuilderType>
 static nsAnimationManager::OwningCSSAnimationPtrArray
 BuildAnimations(nsPresContext* aPresContext,
                 const NonOwningAnimationTarget& aTarget,
-                const nsStyleAutoArray<StyleAnimation>& aStyleAnimations,
-                uint32_t aStyleAnimationNameCount,
+                const nsStyleDisplay& aStyleDisplay,
                 BuilderType& aBuilder,
                 nsAnimationManager::CSSAnimationCollection* aCollection)
 {
   nsAnimationManager::OwningCSSAnimationPtrArray result;
 
-  for (size_t animIdx = aStyleAnimationNameCount; animIdx-- != 0;) {
-    const StyleAnimation& src = aStyleAnimations[animIdx];
-
+  for (size_t animIdx = aStyleDisplay.mAnimationNameCount; animIdx-- != 0;) {
     // CSS Animations whose animation-name does not match a @keyframes rule do
     // not generate animation events. This includes when the animation-name is
     // "none" which is represented by an empty name in the StyleAnimation.
     // Since such animations neither affect style nor dispatch events, we do
     // not generate a corresponding CSSAnimation for them.
-    if (src.GetName() == nsGkAtoms::_empty) {
+    if (aStyleDisplay.GetAnimationName(animIdx) == nsGkAtoms::_empty) {
       continue;
     }
 
     RefPtr<CSSAnimation> dest = BuildAnimation(aPresContext,
                                                aTarget,
-                                               src,
+                                               aStyleDisplay,
+                                               animIdx,
                                                aBuilder,
                                                aCollection);
     if (!dest) {
@@ -1132,8 +1133,7 @@ nsAnimationManager::DoUpdateAnimations(
   OwningCSSAnimationPtrArray newAnimations;
   newAnimations = BuildAnimations(mPresContext,
                                   aTarget,
-                                  aStyleDisplay.mAnimations,
-                                  aStyleDisplay.mAnimationNameCount,
+                                  aStyleDisplay,
                                   aBuilder,
                                   collection);
 
