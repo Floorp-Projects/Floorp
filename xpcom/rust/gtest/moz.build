@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
     'nsstring/Test.cpp',
+    'xpcom/Test.cpp',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
