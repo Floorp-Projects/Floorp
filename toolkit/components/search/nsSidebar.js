@@ -7,9 +7,6 @@ const { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-// File extension for Sherlock search plugin description files
-const SHERLOCK_FILE_EXT_REGEXP = /\.src$/i;
-
 function nsSidebar() {
 }
 
@@ -24,16 +21,6 @@ nsSidebar.prototype = {
     } catch (e) {
       Cu.reportError(e);
     }
-  },
-
-  // Deprecated, only left here to avoid breaking old browser-detection scripts.
-  addSearchEngine(engineURL, iconURL, suggestedTitle, suggestedCategory) {
-    if (SHERLOCK_FILE_EXT_REGEXP.test(engineURL)) {
-      Cu.reportError("Installing Sherlock search plugins is no longer supported.");
-      return;
-    }
-
-    this.AddSearchProvider(engineURL);
   },
 
   // This function implements window.external.AddSearchProvider().
