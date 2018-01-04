@@ -44,6 +44,7 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
         'chromium/base/cpu.cc',
         'chromium/base/debug/alias.cc',
         'chromium/base/debug/profiler.cc',
+        'chromium/base/environment.cc',
         'chromium/base/hash.cc',
         'chromium/base/lazy_instance.cc',
         'chromium/base/location.cc',
