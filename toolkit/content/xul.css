@@ -1055,3 +1055,50 @@ tabmodalprompt {
 .menu-iconic-text[highlightable="true"] {
   display: none;
 }
+
+@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
+  /* Support common XUL attributes in the emulated flex mode so we can
+     test the browser in this configuration without mass-changing existing
+     markup and CSS. */
+  [orient="vertical"] { -moz-box-orient: vertical; }
+  [orient="horizontal"] { -moz-box-orient: horizontal; }
+
+  [dir="reverse"] { -moz-box-direction: reverse; }
+
+  [align="start"] { -moz-box-align: start; }
+  [align="center"] { -moz-box-align: center; }
+  [align="end"] { -moz-box-align: end; }
+  [align="baseline"] { -moz-box-align: baseline; }
+  [align="stretch"] { -moz-box-align: stretch; }
+
+  [pack="start"] { -moz-box-pack: start; }
+  [pack="center"] { -moz-box-pack: center; }
+  [pack="end"] { -moz-box-pack: end; }
+
+  /* This isn't a real solution for [flex] and [ordinal], but it covers enough
+     cases to render the browser chrome. If we get attr() in Bug 435426 this could
+     work for all cases. */
+  [flex="1"] { -moz-box-flex: 1; }
+  [flex="2"] { -moz-box-flex: 2; }
+  [flex="3"] { -moz-box-flex: 3; }
+  [flex="4"] { -moz-box-flex: 4; }
+  [flex="5"] { -moz-box-flex: 5; }
+  [flex="6"] { -moz-box-flex: 6; }
+  [flex="7"] { -moz-box-flex: 7; }
+  [flex="8"] { -moz-box-flex: 8; }
+  [flex="9"] { -moz-box-flex: 9; }
+  [flex="100"] { -moz-box-flex: 100; }
+  [flex="400"] { -moz-box-flex: 400; }
+  [flex="1000"] { -moz-box-flex: 1000; }
+
+  [ordinal="1"] { -moz-box-ordinal-group: 1; }
+  [ordinal="2"] { -moz-box-ordinal-group: 2; }
+  [ordinal="3"] { -moz-box-ordinal-group: 3; }
+  [ordinal="4"] { -moz-box-ordinal-group: 4; }
+  [ordinal="5"] { -moz-box-ordinal-group: 5; }
+  [ordinal="6"] { -moz-box-ordinal-group: 6; }
+  [ordinal="7"] { -moz-box-ordinal-group: 7; }
+  [ordinal="8"] { -moz-box-ordinal-group: 8; }
+  [ordinal="9"] { -moz-box-ordinal-group: 9; }
+  [ordinal="1000"] { -moz-box-ordinal-group: 1000; }
+}
