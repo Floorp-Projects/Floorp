@@ -242,7 +242,13 @@ def tar_for_host(host):
 
 
 def fetch_manifest(channel='stable'):
-    url = 'https://static.rust-lang.org/dist/channel-rust-' + channel + '.toml'
+    if '-' in channel:
+        channel, date = channel.split('-', 1)
+        prefix = '/' + date
+    else:
+        prefix = ''
+    url = 'https://static.rust-lang.org/dist%s/channel-rust-%s.toml' % (
+        prefix, channel)
     req = requests.get(url)
     req.raise_for_status()
     manifest = toml.loads(req.content)

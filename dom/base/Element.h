@@ -914,10 +914,10 @@ public:
    * @param aNotify specifies how whether or not the document should be
    *        notified of the attribute change.
    */
-  virtual nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName,
-                           nsAtom* aPrefix, const nsAString& aValue,
-                           nsIPrincipal* aMaybeScriptedPrincipal,
-                           bool aNotify);
+  nsresult SetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                   nsAtom* aPrefix, const nsAString& aValue,
+                   nsIPrincipal* aMaybeScriptedPrincipal,
+                   bool aNotify);
 
   /**
    * Remove an attribute so that it is no longer explicitly specified.
