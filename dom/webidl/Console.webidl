@@ -154,9 +154,11 @@ interface ConsoleInstance {
   void profileEnd(any... data);
 };
 
+callback ConsoleInstanceDumpCallback = void (DOMString message);
+
 dictionary ConsoleInstanceOptions {
+  ConsoleInstanceDumpCallback dump;
 /* TODO:
-  boolean dump = false;
   DOMString prefix = "";
   DOMString maxLogLevel = "";
 */

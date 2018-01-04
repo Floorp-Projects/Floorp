@@ -21,6 +21,7 @@
 
 class nsIConsoleAPIStorage;
 class nsIPrincipal;
+class nsIStackFrame;
 
 namespace mozilla {
 namespace dom {
@@ -28,6 +29,7 @@ namespace dom {
 class AnyCallback;
 class ConsoleCallData;
 class ConsoleInstance;
+class ConsoleInstanceDumpCallback;
 class ConsoleRunnable;
 class ConsoleCallDataRunnable;
 class ConsoleProfileRunnable;
@@ -386,6 +388,16 @@ private:
                  const Sequence<JS::Value>& aData,
                  DOMHighResTimeStamp* aTimeStamp);
 
+  void
+  MaybeExecuteDumpFunction(JSContext* aCx, const nsAString& aMethodName,
+                           const Sequence<JS::Value>& aData);
+
+  void
+  MaybeExecuteDumpFunctionForTrace(JSContext* aCx, nsIStackFrame* aStack);
+
+  void
+  ExecuteDumpFunction(const nsAString& aMessage);
+
   // All these nsCOMPtr are touched on main thread only.
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
   nsCOMPtr<nsIConsoleAPIStorage> mStorage;
@@ -419,6 +431,8 @@ private:
   // Set only by ConsoleInstance:
   nsString mConsoleID;
   nsString mPassedInnerID;
+  RefPtr<ConsoleInstanceDumpCallback> mDumpFunction;
+  bool mDumpToStdout;
 
   enum {
     eUnknown,

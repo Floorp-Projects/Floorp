@@ -24,6 +24,13 @@ ConsoleInstance::ConsoleInstance(const ConsoleInstanceOptions& aOptions)
 {
   mConsole->mConsoleID = aOptions.mConsoleID;
   mConsole->mPassedInnerID = aOptions.mInnerID;
+
+  if (aOptions.mDump.WasPassed()) {
+    mConsole->mDumpFunction = &aOptions.mDump.Value();
+  } else {
+    // For historical reasons, ConsoleInstance prints messages on stdout.
+    mConsole->mDumpToStdout = true;
+  }
 }
 
 ConsoleInstance::~ConsoleInstance()

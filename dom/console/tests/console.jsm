@@ -5,12 +5,17 @@
 this.EXPORTED_SYMBOLS = [ "ConsoleTest" ];
 
 this.ConsoleTest = {
-  go: function() {
+  go: function(dumpFunction) {
     console.log("Hello world!");
     console.createInstance().log("Hello world!");
-    console.createInstance({
+
+    let c = console.createInstance({
       consoleID: "wow",
       innerID: "CUSTOM INNER",
-    }).log("Hello world!");
+      dump: dumpFunction,
+    });
+
+    c.log("Hello world!");
+    c.trace("Hello world!");
   }
 };
