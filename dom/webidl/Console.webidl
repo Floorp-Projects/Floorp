@@ -156,9 +156,15 @@ interface ConsoleInstance {
 
 callback ConsoleInstanceDumpCallback = void (DOMString message);
 
+enum ConsoleLogLevel {
+  "all", "debug", "log", "info", "clear", "trace", "timeEnd", "time", "group",
+  "groupEnd", "profile", "profileEnd", "dir", "dirxml", "warn", "error", "off"
+};
+
 dictionary ConsoleInstanceOptions {
   ConsoleInstanceDumpCallback dump;
   DOMString prefix = "";
   DOMString innerID = "";
   DOMString consoleID = "";
+  ConsoleLogLevel maxLogLevel;
 };

@@ -36,6 +36,10 @@ ConsoleInstance::ConsoleInstance(const ConsoleInstanceOptions& aOptions)
 
   // Let's inform that this is a custom instance.
   mConsole->mChromeInstance = true;
+
+  if (aOptions.mMaxLogLevel.WasPassed()) {
+    mConsole->mMaxLogLevel = aOptions.mMaxLogLevel.Value();
+  }
 }
 
 ConsoleInstance::~ConsoleInstance()
@@ -111,13 +115,15 @@ ConsoleInstance::TimeStamp(JSContext* aCx, const JS::Handle<JS::Value> aData)
 void
 ConsoleInstance::Profile(JSContext* aCx, const Sequence<JS::Value>& aData)
 {
-  mConsole->ProfileMethodInternal(aCx, NS_LITERAL_STRING("profile"), aData);
+  mConsole->ProfileMethodInternal(aCx, Console::MethodProfile,
+                                  NS_LITERAL_STRING("profile"), aData);
 }
 
 void
 ConsoleInstance::ProfileEnd(JSContext* aCx, const Sequence<JS::Value>& aData)
 {
-  mConsole->ProfileMethodInternal(aCx, NS_LITERAL_STRING("profileEnd"), aData);
+  mConsole->ProfileMethodInternal(aCx, Console::MethodProfileEnd,
+                                  NS_LITERAL_STRING("profileEnd"), aData);
 }
 
 void
