@@ -40,12 +40,12 @@ ChannelEventQueue::FlushQueue()
   nsCOMPtr<nsISupports> kungFuDeathGrip(mOwner);
   mozilla::Unused << kungFuDeathGrip; // Not used in this function
 
-  // Prevent flushed events from flushing the queue recursively
+#ifdef DEBUG
   {
     MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(!mFlushing);
-    mFlushing = true;
+    MOZ_ASSERT(mFlushing);
   }
+#endif // DEBUG
 
   bool needResumeOnOtherThread = false;
 
@@ -137,8 +137,9 @@ ChannelEventQueue::ResumeInternal()
   }
 
   if (!--mSuspendCount) {
-    if (mEventQueue.IsEmpty()) {
-      // Nothing in queue to flush, simply clear the flag.
+    if (mEventQueue.IsEmpty() || !!mForcedCount) {
+      // Nothing in queue to flush or waiting for AutoEventEnqueuer to
+      // finish the force enqueue period, simply clear the flag.
       mSuspended = false;
       return;
     }
