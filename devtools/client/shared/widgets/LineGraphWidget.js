@@ -1,7 +1,7 @@
 "use strict";
 
 const { Task } = require("devtools/shared/task");
-const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
+const { extend } = require("devtools/shared/extend");
 const { AbstractCanvasGraph, CanvasGraphUtils } = require("devtools/client/shared/widgets/Graphs");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
@@ -89,7 +89,7 @@ this.LineGraphWidget = function (parent, options = {}, ...args) {
   });
 };
 
-LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
+LineGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
   backgroundColor: GRAPH_BACKGROUND_COLOR,
   backgroundGradientStart: GRAPH_BACKGROUND_GRADIENT_START,
   backgroundGradientEnd: GRAPH_BACKGROUND_GRADIENT_END,

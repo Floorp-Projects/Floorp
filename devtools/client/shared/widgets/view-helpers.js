@@ -14,29 +14,6 @@ const WIDGET_FOCUSABLE_NODES = new Set(["vbox", "hbox"]);
 var namedTimeoutsStore = new Map();
 
 /**
- * Inheritance helpers from the addon SDK's core/heritage.
- * Remove these when all devtools are loadered.
- */
-exports.Heritage = {
-  /**
-   * @see extend in sdk/core/heritage.
-   */
-  extend: function (prototype, properties = {}) {
-    return Object.create(prototype, this.getOwnPropertyDescriptors(properties));
-  },
-
-  /**
-   * @see getOwnPropertyDescriptors in sdk/core/heritage.
-   */
-  getOwnPropertyDescriptors: function (object) {
-    return Object.getOwnPropertyNames(object).reduce((descriptor, name) => {
-      descriptor[name] = Object.getOwnPropertyDescriptor(object, name);
-      return descriptor;
-    }, {});
-  }
-};
-
-/**
  * Helper for draining a rapid succession of events and invoking a callback
  * once everything settles down.
  *
@@ -490,7 +467,7 @@ Item.prototype = {
  *     this.widget = new MyWidget(document.querySelector(".my-node"));
  *   }
  *
- *   MyView.prototype = Heritage.extend(WidgetMethods, {
+ *   MyView.prototype = extend(WidgetMethods, {
  *     myMethod: function() {},
  *     ...
  *   });

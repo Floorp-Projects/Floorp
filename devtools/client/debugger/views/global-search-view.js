@@ -23,7 +23,7 @@ function GlobalSearchView(DebuggerController, DebuggerView) {
   this._onMatchClick = this._onMatchClick.bind(this);
 }
 
-GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
+GlobalSearchView.prototype = extend(WidgetMethods, {
   /**
    * Initialization function, called when the debugger is started.
    */

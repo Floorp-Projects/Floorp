@@ -1,6 +1,6 @@
 "use strict";
 
-const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
+const { extend } = require("devtools/shared/extend");
 const { AbstractCanvasGraph } = require("devtools/client/shared/widgets/Graphs");
 
 // Bar graph constants.
@@ -57,7 +57,7 @@ this.MountainGraphWidget = function (parent, ...args) {
   AbstractCanvasGraph.apply(this, [parent, "mountain-graph", ...args]);
 };
 
-MountainGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
+MountainGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
   backgroundColor: GRAPH_BACKGROUND_COLOR,
   strokeColor: GRAPH_STROKE_COLOR,
   strokeWidth: GRAPH_STROKE_WIDTH,
