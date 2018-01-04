@@ -494,8 +494,6 @@ public:
   // NS_FRAME_IS_DIRTY bit set
   static void VerifyDirtyBitSet(const nsFrameList& aFrameList);
 
-  static void XMLQuote(nsString& aString);
-
   // Display Reflow Debugging
   static void* DisplayReflowEnter(nsPresContext*          aPresContext,
                                   nsIFrame*                aFrame,
@@ -727,11 +725,6 @@ public:
 
 #ifdef DEBUG
 public:
-  /**
-   * Return the state bits that are relevant to regression tests (that
-   * is, those bits which indicate a real difference when they differ
-   */
-  nsFrameState GetDebugStateBits() const override;
   /**
    * See if style tree verification is enabled. To enable style tree
    * verification add "styleverifytree:1" to your MOZ_LOG
