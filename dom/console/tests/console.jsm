@@ -13,10 +13,15 @@ this.ConsoleTest = {
       consoleID: "wow",
       innerID: "CUSTOM INNER",
       dump: dumpFunction,
-      prefix: "_PREFIX_";
+      prefix: "_PREFIX_",
     });
 
     c.log("Hello world!");
     c.trace("Hello world!");
+
+    console.createInstance({ innerID: "LEVEL", maxLogLevel: "off" }).log("Invisible!");
+    console.createInstance({ innerID: "LEVEL",  maxLogLevel: "all" }).log("Hello world!");
+    console.createInstance({ innerID: "LEVEL", maxLogLevelPref: "foo.pref" }).log("Invisible!");
+    console.createInstance({ innerID: "LEVEL", maxLogLevelPref: "pref.test.console" }).log("Hello world!");
   }
 };

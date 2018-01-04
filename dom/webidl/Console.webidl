@@ -162,9 +162,27 @@ enum ConsoleLogLevel {
 };
 
 dictionary ConsoleInstanceOptions {
+  // An optional function to intercept all strings written to stdout.
   ConsoleInstanceDumpCallback dump;
+
+  // An optional prefix string to be printed before the actual logged message.
   DOMString prefix = "";
+
+  // An ID representing the source of the message. Normally the inner ID of a
+  // DOM window.
   DOMString innerID = "";
+
+  // String identified for the console, this will be passed through the console
+  // notifications.
   DOMString consoleID = "";
+
+  // Identifier that allows to filter which messages are logged based on their
+  // log level.
   ConsoleLogLevel maxLogLevel;
+
+  // String pref name which contains the level to use for maxLogLevel. If the
+  // pref doesn't exist, gets removed or it is used in workers, the maxLogLevel
+  // will default to the value passed to this constructor (or "all" if it wasn't
+  // specified).
+  DOMString maxLogLevelPref = "";
 };
