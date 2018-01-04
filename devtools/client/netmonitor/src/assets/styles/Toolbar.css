@@ -6,6 +6,7 @@
 
 .devtools-toolbar {
   display: flex;
+  line-height: 23px;
 }
 
 .devtools-toolbar-container {
@@ -21,9 +22,30 @@
   align-items: center;
 }
 
+.devtools-toolbar-group .devtools-separator {
+  height: 24px;
+}
+
+.devtools-toolbar-two-rows-1,
+.devtools-toolbar-two-rows-2,
+.devtools-toolbar-single-row {
+  flex-grow: 1;
+  min-height: var(--primary-toolbar-height);
+}
+
+.devtools-toolbar-two-rows-1 {
+  width: -moz-available;
+}
+
+.devtools-toolbar-two-rows-2 {
+  justify-content: space-between;
+  border-top: 1px solid var(--theme-splitter-color);
+}
+
 .requests-list-filter-buttons {
   display: flex;
   flex-wrap: wrap;
+  margin: 0 2px;
 }
 
 .devtools-button.devtools-pause-icon::before {
@@ -44,4 +66,5 @@
   margin-inline-start: 10px;
   margin-inline-end: 3px;
   white-space: nowrap;
+  margin-top: 1px;
 }
