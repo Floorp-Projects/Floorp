@@ -63,11 +63,11 @@ public:
 
   void AddImage(wr::ImageKey aKey,
                 const ImageDescriptor& aDescriptor,
-                wr::Vec_u8& aBytes);
+                wr::Vec<uint8_t>& aBytes);
 
   void AddBlobImage(wr::ImageKey aKey,
                     const ImageDescriptor& aDescriptor,
-                    wr::Vec_u8& aBytes);
+                    wr::Vec<uint8_t>& aBytes);
 
   void AddExternalImageBuffer(ImageKey key,
                               const ImageDescriptor& aDescriptor,
@@ -81,11 +81,11 @@ public:
 
   void UpdateImageBuffer(wr::ImageKey aKey,
                          const ImageDescriptor& aDescriptor,
-                         wr::Vec_u8& aBytes);
+                         wr::Vec<uint8_t>& aBytes);
 
   void UpdateBlobImage(wr::ImageKey aKey,
                        const ImageDescriptor& aDescriptor,
-                       wr::Vec_u8& aBytes,
+                       wr::Vec<uint8_t>& aBytes,
                        const wr::DeviceUintRect& aDirtyRect);
 
   void UpdateExternalImage(ImageKey aKey,
@@ -96,9 +96,9 @@ public:
 
   void DeleteImage(wr::ImageKey aKey);
 
-  void AddRawFont(wr::FontKey aKey, wr::Vec_u8& aBytes, uint32_t aIndex);
+  void AddRawFont(wr::FontKey aKey, wr::Vec<uint8_t>& aBytes, uint32_t aIndex);
 
-  void AddFontDescriptor(wr::FontKey aKey, wr::Vec_u8& aBytes, uint32_t aIndex);
+  void AddFontDescriptor(wr::FontKey aKey, wr::Vec<uint8_t>& aBytes, uint32_t aIndex);
 
   void DeleteFont(wr::FontKey aKey);
 
@@ -107,7 +107,7 @@ public:
                        float aGlyphSize,
                        const wr::FontInstanceOptions* aOptions,
                        const wr::FontInstancePlatformOptions* aPlatformOptions,
-                       wr::Vec_u8& aVariations);
+                       wr::Vec<uint8_t>& aVariations);
 
   void DeleteFontInstance(wr::FontInstanceKey aKey);
 
@@ -161,7 +161,7 @@ public:
                       wr::WrPipelineId pipeline_id,
                       const wr::LayoutSize& content_size,
                       wr::BuiltDisplayListDescriptor dl_descriptor,
-                      wr::Vec_u8& dl_data,
+                      wr::Vec<uint8_t>& dl_data,
                       ResourceUpdateQueue& aResources);
 
   void ClearDisplayList(Epoch aEpoch, wr::WrPipelineId pipeline_id);
@@ -361,7 +361,7 @@ public:
                        const wr::BorderWidths& aWidths,
                        wr::ImageKey aImage,
                        const wr::NinePatchDescriptor& aPatch,
-                       const wr::SideOffsets2D_f32& aOutset,
+                       const wr::SideOffsets2D<float>& aOutset,
                        const wr::RepeatMode& aRepeatHorizontal,
                        const wr::RepeatMode& aRepeatVertical);
 
@@ -373,7 +373,7 @@ public:
                           const wr::LayoutPoint& aEndPoint,
                           const nsTArray<wr::GradientStop>& aStops,
                           wr::ExtendMode aExtendMode,
-                          const wr::SideOffsets2D_f32& aOutset);
+                          const wr::SideOffsets2D<float>& aOutset);
 
   void PushBorderRadialGradient(const wr::LayoutRect& aBounds,
                                 const wr::LayoutRect& aClip,
@@ -383,7 +383,7 @@ public:
                                 const wr::LayoutSize& aRadius,
                                 const nsTArray<wr::GradientStop>& aStops,
                                 wr::ExtendMode aExtendMode,
-                                const wr::SideOffsets2D_f32& aOutset);
+                                const wr::SideOffsets2D<float>& aOutset);
 
   void PushText(const wr::LayoutRect& aBounds,
                 const wr::LayoutRect& aClip,

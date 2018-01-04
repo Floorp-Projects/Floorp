@@ -51,10 +51,10 @@ public:
   ShmSegmentsReader(const nsTArray<ipc::Shmem>& aSmallShmems,
                     const nsTArray<ipc::Shmem>& aLargeShmems);
 
-  bool Read(const layers::OffsetRange& aRange, wr::Vec_u8& aInto);
+  bool Read(const layers::OffsetRange& aRange, wr::Vec<uint8_t>& aInto);
 
 protected:
-  bool ReadLarge(const layers::OffsetRange& aRange, wr::Vec_u8& aInto);
+  bool ReadLarge(const layers::OffsetRange& aRange, wr::Vec<uint8_t>& aInto);
 
   const nsTArray<ipc::Shmem>& mSmallAllocs;
   const nsTArray<ipc::Shmem>& mLargeAllocs;
