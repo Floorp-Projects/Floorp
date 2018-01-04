@@ -42,10 +42,15 @@ consoleListener.prototype  = {
         // We want to see 2 messages from this innerID, the first is generated
         // by console.log, the second one from createInstance().log();
         ++this.count;
-      } else if (obj.innerID = "CUSTOM INNER") {
+      } else if (obj.innerID == "CUSTOM INNER") {
         is(obj.ID, "jsm", "ID and InnerID are correctly set.");
         is(obj.arguments[0], "Hello world!", "Message matches");
         is(obj.consoleID, "wow", "consoleID is set by consoleInstance");
+        ++this.count;
+      } else if (obj.innerID == "LEVEL") {
+        // Nothing special... just we don't want to see 'invisible' messages.
+        is(obj.ID, "jsm", "ID and InnerID are correctly set.");
+        is(obj.arguments[0], "Hello world!", "Message matches");
         ++this.count;
       }
 
@@ -60,9 +65,11 @@ consoleListener.prototype  = {
 function test() {
   SimpleTest.waitForExplicitFinish();
 
-  var cl = new consoleListener();
-  Components.utils.import(JSM);
-  ConsoleTest.go(dumpFunction);
+  SpecialPowers.pushPrefEnv({set: [["pref.test.console", "log"]]}).then(() => {
+    var cl = new consoleListener();
+    Components.utils.import(JSM);
+    ConsoleTest.go(dumpFunction);
+  });
 }
 
   ]]>

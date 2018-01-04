@@ -19,6 +19,34 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ConsoleInstance)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
 NS_INTERFACE_MAP_END
 
+namespace {
+
+ConsoleLogLevel
+PrefToValue(const nsCString& aPref)
+{
+  if (!NS_IsMainThread()) {
+    NS_WARNING("Console.maxLogLevelPref is not supported on workers!");
+    return ConsoleLogLevel::All;
+  }
+
+  nsAutoCString value;
+  nsresult rv = Preferences::GetCString(aPref.get(), value);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return ConsoleLogLevel::All;
+  }
+
+  int index = FindEnumStringIndexImpl(value.get(), value.Length(),
+                                      ConsoleLogLevelValues::strings);
+  if (NS_WARN_IF(index < 0)) {
+    return ConsoleLogLevel::All;
+  }
+
+  MOZ_ASSERT(index < (int)ConsoleLogLevel::EndGuard_);
+  return static_cast<ConsoleLogLevel>(index);
+}
+
+} // anonymous
+
 ConsoleInstance::ConsoleInstance(const ConsoleInstanceOptions& aOptions)
   : mConsole(new Console(nullptr))
 {
@@ -39,6 +67,11 @@ ConsoleInstance::ConsoleInstance(const ConsoleInstanceOptions& aOptions)
 
   if (aOptions.mMaxLogLevel.WasPassed()) {
     mConsole->mMaxLogLevel = aOptions.mMaxLogLevel.Value();
+  }
+
+  if (!aOptions.mMaxLogLevelPref.IsEmpty()) {
+    mConsole->mMaxLogLevel =
+      PrefToValue(NS_ConvertUTF16toUTF8(aOptions.mMaxLogLevelPref));
   }
 }
 
