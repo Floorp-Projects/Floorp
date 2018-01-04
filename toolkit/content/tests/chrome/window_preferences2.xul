@@ -3,23 +3,25 @@
 <!--
   XUL Widget Test for preferences window
 -->
-<prefwindow xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            title="preferences window"
-            windowtype="test:preferences2"
-            buttons="accept,cancel"
-            onload="RunTest(window.arguments)"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="prefwindow"
+        title="preferences window"
+        windowtype="test:preferences2"
+        buttons="accept,cancel"
+        onload="RunTest(window.arguments)"
 >
+  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
   <script type="application/javascript">
   <![CDATA[
     function RunTest(aArgs)
     {
       // open child
-      document.documentElement.openSubDialog("window_preferences3.xul", "", {test: aArgs[0], accept: aArgs[1]});
+      openDialog("window_preferences3.xul", "", "modal,centerscreen,resizable=no", {test: aArgs[0], accept: aArgs[1]});
       // close dialog
       document.documentElement[aArgs[1] ? "acceptDialog" : "cancelDialog"]();
     }
   ]]>
   </script>
 
-  <prefpane id="sample_pane" label="Sample Prefpane"/>
-</prefwindow>
+  <vbox id="sample_pane" class="prefpane" label="Sample Prefpane"/>
+</dialog>

@@ -3,7 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* import-globals-from ../../../toolkit/content/preferencesBindings.js */
+
 Components.utils.import("resource://gre/modules/Services.jsm");
+
+Preferences.addAll([
+  { id: "intl.accept_languages", type: "wstring" },
+  { id: "pref.browser.language.disable_button.up", type: "bool" },
+  { id: "pref.browser.language.disable_button.down", type: "bool" },
+  { id: "pref.browser.language.disable_button.remove", type: "bool" },
+  { id: "privacy.spoof_english", type: "int" },
+]);
 
 var gLanguagesDialog = {
 
@@ -126,7 +136,7 @@ var gLanguagesDialog = {
       this._activeLanguages.firstChild.remove();
 
     var selectedIndex = 0;
-    var preference = document.getElementById("intl.accept_languages");
+    var preference = Preferences.get("intl.accept_languages");
     if (preference.value == "")
       return undefined;
     var languages = preference.value.toLowerCase().split(/\s*,\s*/);
@@ -173,7 +183,7 @@ var gLanguagesDialog = {
 
   addLanguage() {
     var selectedID = this._availableLanguages.selectedItem.id;
-    var preference = document.getElementById("intl.accept_languages");
+    var preference = Preferences.get("intl.accept_languages");
     var arrayOfPrefs = preference.value.toLowerCase().split(/\s*,\s*/);
     for (var i = 0; i < arrayOfPrefs.length; ++i ) {
       if (arrayOfPrefs[i] == selectedID)
@@ -219,7 +229,7 @@ var gLanguagesDialog = {
     this._selectedItemID = selectItem;
 
     // Update the preference and force a UI rebuild
-    var preference = document.getElementById("intl.accept_languages");
+    var preference = Preferences.get("intl.accept_languages");
     preference.value = string;
 
     this._buildAvailableLanguageList();
@@ -254,7 +264,7 @@ var gLanguagesDialog = {
     this._selectedItemID = selectedItem.id;
 
     // Update the preference and force a UI rebuild
-    var preference = document.getElementById("intl.accept_languages");
+    var preference = Preferences.get("intl.accept_languages");
     preference.value = string;
   },
 
@@ -277,7 +287,7 @@ var gLanguagesDialog = {
     this._selectedItemID = selectedItem.id;
 
     // Update the preference and force a UI rebuild
-    var preference = document.getElementById("intl.accept_languages");
+    var preference = Preferences.get("intl.accept_languages");
     preference.value = string;
   },
 
@@ -335,4 +345,3 @@ var gLanguagesDialog = {
     return document.getElementById("spoofEnglish").checked ? 2 : 1;
   }
 };
-

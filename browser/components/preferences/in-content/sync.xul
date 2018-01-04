@@ -4,33 +4,6 @@
 
 <!-- Sync panel -->
 
-<preferences id="syncEnginePrefs" hidden="true" data-category="paneSync">
-  <preference id="engine.addons"
-              name="services.sync.engine.addons"
-              type="bool"/>
-  <preference id="engine.bookmarks"
-              name="services.sync.engine.bookmarks"
-              type="bool"/>
-  <preference id="engine.history"
-              name="services.sync.engine.history"
-              type="bool"/>
-  <preference id="engine.tabs"
-              name="services.sync.engine.tabs"
-              type="bool"/>
-  <preference id="engine.prefs"
-              name="services.sync.engine.prefs"
-              type="bool"/>
-  <preference id="engine.passwords"
-              name="services.sync.engine.passwords"
-              type="bool"/>
-  <preference id="engine.addresses"
-              name="services.sync.engine.addresses"
-              type="bool"/>
-  <preference id="engine.creditcards"
-              name="services.sync.engine.creditcards"
-              type="bool"/>
-</preferences>
-
 <script type="application/javascript"
         src="chrome://browser/content/preferences/in-content/sync.js"/>
 

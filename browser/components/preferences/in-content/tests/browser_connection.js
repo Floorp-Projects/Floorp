@@ -48,8 +48,8 @@ function test() {
 function runConnectionTests(win) {
   let doc = win.document;
   let networkProxyNone = doc.getElementById("networkProxyNone");
-  let networkProxyNonePref = doc.getElementById("network.proxy.no_proxies_on");
-  let networkProxyTypePref = doc.getElementById("network.proxy.type");
+  let networkProxyNonePref = win.Preferences.get("network.proxy.no_proxies_on");
+  let networkProxyTypePref = win.Preferences.get("network.proxy.type");
 
   // make sure the networkProxyNone textbox is formatted properly
   is(networkProxyNone.getAttribute("multiline"), "true",
