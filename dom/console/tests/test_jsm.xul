@@ -19,6 +19,7 @@ const JSM = "chrome://mochitests/content/chrome/dom/console/tests/console.jsm";
 
 let dumpCalled = 0;
 function dumpFunction(msg) {
+  ok(msg.indexOf("_PREFIX_") != -1, "we have a prefix");
   dump("Message received: " + msg); // Just for debugging
   dumpCalled++;
 }

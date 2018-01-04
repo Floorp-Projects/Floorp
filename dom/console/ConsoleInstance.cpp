@@ -31,6 +31,8 @@ ConsoleInstance::ConsoleInstance(const ConsoleInstanceOptions& aOptions)
     // For historical reasons, ConsoleInstance prints messages on stdout.
     mConsole->mDumpToStdout = true;
   }
+
+  mConsole->mDumpPrefix = aOptions.mPrefix;
 }
 
 ConsoleInstance::~ConsoleInstance()

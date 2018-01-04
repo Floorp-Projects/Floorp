@@ -13,6 +13,7 @@ this.ConsoleTest = {
       consoleID: "wow",
       innerID: "CUSTOM INNER",
       dump: dumpFunction,
+      prefix: "_PREFIX_";
     });
 
     c.log("Hello world!");
