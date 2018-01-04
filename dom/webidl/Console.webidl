@@ -159,9 +159,6 @@ callback ConsoleInstanceDumpCallback = void (DOMString message);
 dictionary ConsoleInstanceOptions {
   ConsoleInstanceDumpCallback dump;
   DOMString prefix = "";
-/* TODO:
-  DOMString maxLogLevel = "";
-*/
   DOMString innerID = "";
   DOMString consoleID = "";
 };
