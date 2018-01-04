@@ -27,9 +27,11 @@ namespace dom {
 
 class AnyCallback;
 class ConsoleCallData;
+class ConsoleInstance;
 class ConsoleRunnable;
 class ConsoleCallDataRunnable;
 class ConsoleProfileRunnable;
+struct ConsoleInstanceOptions;
 struct ConsoleTimerError;
 struct ConsoleStackEntry;
 
@@ -114,6 +116,10 @@ public:
   static void
   Clear(const GlobalObject& aGlobal);
 
+  static already_AddRefed<ConsoleInstance>
+  CreateInstance(const GlobalObject& aGlobal,
+                 const ConsoleInstanceOptions& aOptions);
+
   void
   ClearStorage();
 
@@ -182,6 +188,10 @@ private:
   static void
   StringMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
                MethodName aMethodName, const nsAString& aMethodString);
+
+  void
+  StringMethodInternal(JSContext* aCx, const nsAString& aLabel,
+                       MethodName aMethodName, const nsAString& aMethodString);
 
   // This method must receive aCx and aArguments in the same JSCompartment.
   void
@@ -417,6 +427,7 @@ private:
   mozilla::TimeStamp mCreationTimeStamp;
 
   friend class ConsoleCallData;
+  friend class ConsoleInstance;
   friend class ConsoleRunnable;
   friend class ConsoleCallDataRunnable;
   friend class ConsoleProfileRunnable;

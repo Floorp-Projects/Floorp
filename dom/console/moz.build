@@ -23,10 +23,12 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     'Console.h',
+    'ConsoleInstance.h',
 ]
 
 UNIFIED_SOURCES += [
     'Console.cpp',
+    'ConsoleInstance.cpp',
     'ConsoleReportCollector.cpp',
 ]
 
