@@ -13,6 +13,8 @@ use nserror::{NsresultExt, nsresult, NS_OK};
 
 use libc;
 
+use interfaces::nsrefcnt;
+
 /// A trait representing a type which can be reference counted invasively.
 /// The object is responsible for freeing its backing memory when its
 /// reference count reaches 0.
@@ -196,4 +198,80 @@ pub fn getter_addrefs<T: RefCounted, F>(f: F) -> Result<RefPtr<T>, nsresult>
         return Err(rv);
     }
     ga.refptr().ok_or(NS_OK)
+}
+
+/// The type of the reference count type for xpcom structs.
+///
+/// `#[derive(xpcom)]` will use this type for the `__refcnt` field when
+/// `#[refcnt = "nonatomic"]` is used.
+#[derive(Debug)]
+pub struct Refcnt(Cell<nsrefcnt>);
+impl Refcnt {
+    /// Create a new reference count value. This is unsafe as manipulating
+    /// Refcnt values is an easy footgun.
+    pub unsafe fn new() -> Self {
+        Refcnt(Cell::new(0))
+    }
+
+    /// Increment the reference count. Returns the new reference count. This is
+    /// unsafe as modifying this value can cause a use-after-free.
+    pub unsafe fn inc(&self) -> nsrefcnt {
+        // XXX: Checked add?
+        let new = self.0.get() + 1;
+        self.0.set(new);
+        new
+    }
+
+    /// Decrement the reference count. Returns the new reference count. This is
+    /// unsafe as modifying this value can cause a use-after-free.
+    pub unsafe fn dec(&self) -> nsrefcnt {
+        // XXX: Checked sub?
+        let new = self.0.get() - 1;
+        self.0.set(new);
+        new
+    }
+
+    /// Get the current value of the reference count.
+    pub fn get(&self) -> nsrefcnt {
+        self.0.get()
+    }
+}
+
+/// The type of the atomic reference count used for xpcom structs.
+///
+/// `#[derive(xpcom)]` will use this type for the `__refcnt` field when
+/// `#[refcnt = "atomic"]` is used.
+///
+/// See `nsISupportsImpl.h`'s `ThreadSafeAutoRefCnt` class for reasoning behind
+/// memory ordering decisions.
+#[derive(Debug)]
+pub struct AtomicRefcnt(AtomicUsize);
+impl AtomicRefcnt {
+    /// Create a new reference count value. This is unsafe as manipulating
+    /// Refcnt values is an easy footgun.
+    pub unsafe fn new() -> Self {
+        AtomicRefcnt(AtomicUsize::new(0))
+    }
+
+    /// Increment the reference count. Returns the new reference count. This is
+    /// unsafe as modifying this value can cause a use-after-free.
+    pub unsafe fn inc(&self) -> nsrefcnt {
+        self.0.fetch_add(1, Ordering::Relaxed) as nsrefcnt + 1
+    }
+
+    /// Decrement the reference count. Returns the new reference count. This is
+    /// unsafe as modifying this value can cause a use-after-free.
+    pub unsafe fn dec(&self) -> nsrefcnt {
+        let result = self.0.fetch_sub(1, Ordering::Release) as nsrefcnt - 1;
+        if result == 0 {
+            // We're going to destroy the object on this thread.
+            atomic::fence(Ordering::Acquire);
+        }
+        result
+    }
+
+    /// Get the current value of the reference count.
+    pub fn get(&self) -> nsrefcnt {
+        self.0.load(Ordering::Acquire) as nsrefcnt
+    }
 }

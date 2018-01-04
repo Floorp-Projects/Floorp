@@ -569,3 +569,11 @@ class CommonBackend(BuildBackend):
             for idl in manager.idls.values():
                 fh.write(include_tmpl % ("rt", idl['root']))
                 fh.write(";\n")
+
+        with self._write_file(mozpath.join(topobjdir, 'dist', 'xpcrs', 'bt', 'all.rs')) as fh:
+            fh.write("// THIS FILE IS GENERATED - DO NOT EDIT\n\n")
+            fh.write("&[\n")
+            for idl in manager.idls.values():
+                fh.write(include_tmpl % ("bt", idl['root']))
+                fh.write(",\n")
+            fh.write("]\n")
