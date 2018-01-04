@@ -2591,6 +2591,11 @@ Console::MaybeExecuteDumpFunction(JSContext* aCx,
   message.Append(aMethodName);
   message.AppendLiteral(": ");
 
+  if (!mDumpPrefix.IsEmpty()) {
+    message.Append(mDumpPrefix);
+    message.AppendLiteral(": ");
+  }
+
   for (uint32_t i = 0; i < aData.Length(); ++i) {
     JS::Rooted<JS::Value> v(aCx, aData[i]);
     JS::Rooted<JSString*> jsString(aCx, JS_ValueToSource(aCx, v));
@@ -2623,6 +2628,11 @@ Console::MaybeExecuteDumpFunctionForTrace(JSContext* aCx, nsIStackFrame* aStack)
 
   nsAutoString message;
   message.AssignLiteral("console.trace:\n");
+
+  if (!mDumpPrefix.IsEmpty()) {
+    message.Append(mDumpPrefix);
+    message.AppendLiteral(": ");
+  }
 
   nsCOMPtr<nsIStackFrame> stack(aStack);
 
