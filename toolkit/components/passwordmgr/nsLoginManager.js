@@ -307,6 +307,26 @@ LoginManager.prototype = {
     return this._storage.addLogin(login);
   },
 
+  async addLogins(logins) {
+    let crypto = Cc["@mozilla.org/login-manager/crypto/SDR;1"].
+                 getService(Ci.nsILoginManagerCrypto);
+    let plaintexts = logins.map(l => l.username).concat(logins.map(l => l.password));
+    let ciphertexts = await crypto.encryptMany(plaintexts);
+    let usernames = ciphertexts.slice(0, logins.length);
+    let passwords = ciphertexts.slice(logins.length);
+    for (let i = 0; i < logins.length; i++) {
+      let plaintextUsername = logins[i].username;
+      let plaintextPassword = logins[i].password;
+      logins[i].username = usernames[i];
+      logins[i].password = passwords[i];
+      log.debug("Adding login");
+      this._storage.addLogin(logins[i], true);
+      // Reset the username and password to keep the same guarantees as addLogin
+      logins[i].username = plaintextUsername;
+      logins[i].password = plaintextPassword;
+    }
+  },
+
   /**
    * Remove the specified login from the stored logins.
    */
