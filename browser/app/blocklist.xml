@@ -1805,6 +1805,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="455772a3-8360-4f5a-9a5f-a45b904d0b51" id="{dfa727cb-0246-4c5a-843a-e4a8592cc7b9}">
+      <prefs/>
+      <versionRange minVersion="2.0.0" maxVersion="2.0.0" severity="1"/>
+    </emItem>
     <emItem blockID="i98" id="youtubeeing@youtuberie.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
