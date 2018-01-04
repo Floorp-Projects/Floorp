@@ -78,6 +78,15 @@ VREventObserver::UpdateSpentTimeIn2DTelemetry(bool aUpdate)
 }
 
 void
+VREventObserver::NotifyAfterLoad()
+{
+  if (VRManagerChild::IsCreated()) {
+    VRManagerChild* vmc = VRManagerChild::Get();
+    vmc->FireDOMVRDisplayConnectEventsForLoad(this);
+  }
+}
+
+void
 VREventObserver::NotifyVRDisplayMounted(uint32_t aDisplayID)
 {
   if (mWindow && mWindow->AsInner()->IsCurrentInnerWindow()) {

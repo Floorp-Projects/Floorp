@@ -2118,6 +2118,10 @@ nsGlobalWindowInner::PostHandleEvent(EventChainPostVisitor& aVisitor)
       EventDispatcher::Dispatch(element, nullptr, &event, nullptr, &status);
     }
 
+    if (mVREventObserver) {
+      mVREventObserver->NotifyAfterLoad();
+    }
+
     uint32_t autoActivateVRDisplayID = 0;
     nsGlobalWindowOuter* outer = GetOuterWindowInternal();
     if (outer) {
@@ -7019,6 +7023,9 @@ void
 nsGlobalWindowInner::DispatchVRDisplayActivate(uint32_t aDisplayID,
                                                mozilla::dom::VRDisplayEventReason aReason)
 {
+  // Ensure that our list of displays is up to date
+  VRDisplay::UpdateVRDisplays(mVRDisplays, this);
+
   // Search for the display identified with aDisplayID and fire the
   // event if found.
   for (const auto& display : mVRDisplays) {
@@ -7063,6 +7070,9 @@ void
 nsGlobalWindowInner::DispatchVRDisplayDeactivate(uint32_t aDisplayID,
                                                  mozilla::dom::VRDisplayEventReason aReason)
 {
+  // Ensure that our list of displays is up to date
+  VRDisplay::UpdateVRDisplays(mVRDisplays, this);
+
   // Search for the display identified with aDisplayID and fire the
   // event if found.
   for (const auto& display : mVRDisplays) {
@@ -7093,6 +7103,9 @@ nsGlobalWindowInner::DispatchVRDisplayDeactivate(uint32_t aDisplayID,
 void
 nsGlobalWindowInner::DispatchVRDisplayConnect(uint32_t aDisplayID)
 {
+  // Ensure that our list of displays is up to date
+  VRDisplay::UpdateVRDisplays(mVRDisplays, this);
+
   // Search for the display identified with aDisplayID and fire the
   // event if found.
   for (const auto& display : mVRDisplays) {
@@ -7121,6 +7134,9 @@ nsGlobalWindowInner::DispatchVRDisplayConnect(uint32_t aDisplayID)
 void
 nsGlobalWindowInner::DispatchVRDisplayDisconnect(uint32_t aDisplayID)
 {
+  // Ensure that our list of displays is up to date
+  VRDisplay::UpdateVRDisplays(mVRDisplays, this);
+
   // Search for the display identified with aDisplayID and fire the
   // event if found.
   for (const auto& display : mVRDisplays) {
@@ -7149,6 +7165,9 @@ nsGlobalWindowInner::DispatchVRDisplayDisconnect(uint32_t aDisplayID)
 void
 nsGlobalWindowInner::DispatchVRDisplayPresentChange(uint32_t aDisplayID)
 {
+  // Ensure that our list of displays is up to date
+  VRDisplay::UpdateVRDisplays(mVRDisplays, this);
+
   // Search for the display identified with aDisplayID and fire the
   // event if found.
   for (const auto& display : mVRDisplays) {

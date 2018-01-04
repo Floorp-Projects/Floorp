@@ -542,6 +542,33 @@ VRManagerChild::FireDOMVRDisplayPresentChangeEventInternal(uint32_t aDisplayID)
 }
 
 void
+VRManagerChild::FireDOMVRDisplayConnectEventsForLoadInternal(uint32_t aDisplayID,
+                                                            dom::VREventObserver* aObserver)
+{
+  aObserver->NotifyVRDisplayConnect(aDisplayID);
+}
+
+void
+VRManagerChild::FireDOMVRDisplayConnectEventsForLoad(dom::VREventObserver* aObserver)
+{
+  // We need to fire the VRDisplayConnect event when a page is loaded
+  // for each VR Display that has already been enumerated
+  nsTArray<RefPtr<VRDisplayClient>> displays;
+  displays = mDisplays;
+  for (auto& display : displays) {
+    const VRDisplayInfo& info = display->GetDisplayInfo();
+    if (info.GetIsConnected()) {
+        nsContentUtils::AddScriptRunner(NewRunnableMethod<uint32_t, RefPtr<dom::VREventObserver>>(
+      "gfx::VRManagerChild::FireDOMVRDisplayConnectEventsForLoadInternal",
+      this,
+      &VRManagerChild::FireDOMVRDisplayConnectEventsForLoadInternal,
+      info.GetDisplayID(),
+      aObserver));
+    }
+  }
+}
+
+void
 VRManagerChild::AddListener(dom::VREventObserver* aObserver)
 {
   MOZ_ASSERT(aObserver);
