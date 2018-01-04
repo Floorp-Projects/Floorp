@@ -174,9 +174,6 @@
 @BINPATH@/components/jsdownloads.xpt
 @BINPATH@/components/jsinspector.xpt
 @BINPATH@/components/layout_base.xpt
-#ifdef MOZ_DEBUG
-@BINPATH@/components/layout_debug.xpt
-#endif
 #ifdef NS_PRINTING
 @BINPATH@/components/layout_printing.xpt
 #endif
