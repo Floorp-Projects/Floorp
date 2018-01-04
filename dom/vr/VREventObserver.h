@@ -21,6 +21,7 @@ public:
   NS_INLINE_DECL_REFCOUNTING(VREventObserver)
   explicit VREventObserver(nsGlobalWindowInner* aGlobalWindow);
 
+  void NotifyAfterLoad();
   void NotifyVRDisplayMounted(uint32_t aDisplayID);
   void NotifyVRDisplayUnmounted(uint32_t aDisplayID);
   void NotifyVRDisplayNavigation(uint32_t aDisplayID);
