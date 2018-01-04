@@ -316,8 +316,8 @@ DebuggerClient.prototype = {
    * This function exists only to preserve DebuggerClient's interface;
    * new code should say 'client.mainRoot.listTabs()'.
    */
-  listTabs: function (onResponse) {
-    return this.mainRoot.listTabs(onResponse);
+  listTabs: function (options, onResponse) {
+    return this.mainRoot.listTabs(options, onResponse);
   },
 
   /*
