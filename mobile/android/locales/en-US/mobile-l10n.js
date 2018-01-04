@@ -3,3 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #filter substitution
+
+// This comment is to avoid errors during packaging due to the file
+// being empty and therefore causing MD5 hash collisions with other
+// empty files. See bug 1426943 for details.
