@@ -2001,3 +2001,27 @@ XRE_AddJarManifestLocation(NSLocationType aType, nsIFile* aLocation)
   return NS_OK;
 }
 
+// Expose some important global interfaces to rust for the rust xpcom API. These
+// methods return a non-owning reference to the component manager, which should
+// live for the lifetime of XPCOM.
+extern "C" {
+
+const nsIComponentManager*
+Gecko_GetComponentManager()
+{
+  return nsComponentManagerImpl::gComponentManager;
+}
+
+const nsIServiceManager*
+Gecko_GetServiceManager()
+{
+  return nsComponentManagerImpl::gComponentManager;
+}
+
+const nsIComponentRegistrar*
+Gecko_GetComponentRegistrar()
+{
+  return nsComponentManagerImpl::gComponentManager;
+}
+
+}
