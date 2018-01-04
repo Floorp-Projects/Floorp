@@ -13,7 +13,7 @@ function WorkersView() {
   this._onWorkerSelect = this._onWorkerSelect.bind(this);
 }
 
-WorkersView.prototype = Heritage.extend(WidgetMethods, {
+WorkersView.prototype = extend(WidgetMethods, {
   initialize: function () {
     if (!Prefs.workersEnabled) {
       return;

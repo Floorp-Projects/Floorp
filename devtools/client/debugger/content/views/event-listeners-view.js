@@ -8,7 +8,8 @@
 
 const actions = require("../actions/event-listeners");
 const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
-const { Heritage, WidgetMethods } = require("devtools/client/shared/widgets/view-helpers");
+const { extend } = require("devtools/shared/extend");
+const { WidgetMethods } = require("devtools/client/shared/widgets/view-helpers");
 const { SideMenuWidget } = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 
 /**
@@ -26,7 +27,7 @@ function EventListenersView(controller) {
   controller.onChange("event-listeners", this.renderListeners.bind(this));
 }
 
-EventListenersView.prototype = Heritage.extend(WidgetMethods, {
+EventListenersView.prototype = extend(WidgetMethods, {
   /**
    * Initialization function, called when the debugger is started.
    */

@@ -9,7 +9,7 @@
 /**
  * CallTree view containing memory allocation sites, controlled by DetailsView.
  */
-var MemoryCallTreeView = Heritage.extend(DetailsSubview, {
+var MemoryCallTreeView = extend(DetailsSubview, {
 
   rerenderPrefs: [
     "invert-call-tree"

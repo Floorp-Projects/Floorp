@@ -41,7 +41,7 @@ this.EXPORTED_SYMBOLS = ["AbstractTreeItem"];
  *   this.itemDataSrc = dataSrc;
  * }
  *
- * MyCustomTreeItem.prototype = Heritage.extend(AbstractTreeItem.prototype, {
+ * MyCustomTreeItem.prototype = extend(AbstractTreeItem.prototype, {
  *   _displaySelf: function(document, arrowNode) {
  *     let node = document.createElement("hbox");
  *     ...

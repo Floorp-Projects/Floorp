@@ -24,7 +24,8 @@ const Services = require("Services");
 const { getSourceNames } = require("devtools/client/shared/source-utils");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
-const { Heritage, ViewHelpers, setNamedTimeout } =
+const { extend } = require("devtools/shared/extend");
+const { ViewHelpers, setNamedTimeout } =
   require("devtools/client/shared/widgets/view-helpers");
 const { Task } = require("devtools/shared/task");
 const nodeConstants = require("devtools/shared/dom-node-constants");
@@ -2179,7 +2180,7 @@ function Variable(aScope, aName, aDescriptor, aOptions) {
   this.setGrip(aDescriptor.value);
 }
 
-Variable.prototype = Heritage.extend(Scope.prototype, {
+Variable.prototype = extend(Scope.prototype, {
   /**
    * Whether this Variable should be prefetched when it is remoted.
    */
@@ -3072,7 +3073,7 @@ function Property(aVar, aName, aDescriptor, aOptions) {
   Variable.call(this, aVar, aName, aDescriptor, aOptions);
 }
 
-Property.prototype = Heritage.extend(Variable.prototype, {
+Property.prototype = extend(Variable.prototype, {
   /**
    * The class name applied to this property's target element.
    */
@@ -3160,7 +3161,7 @@ VariablesView.prototype.commitHierarchy = function () {
 
 // Some variables are likely to contain a very large number of properties.
 // It would be a bad idea to re-expand them or perform expensive operations.
-VariablesView.prototype.commitHierarchyIgnoredItems = Heritage.extend(null, {
+VariablesView.prototype.commitHierarchyIgnoredItems = extend(null, {
   "window": true,
   "this": true
 });
@@ -4116,7 +4117,7 @@ function EditableName(aVariable, aOptions) {
 
 EditableName.create = Editable.create;
 
-EditableName.prototype = Heritage.extend(Editable.prototype, {
+EditableName.prototype = extend(Editable.prototype, {
   className: "element-name-input",
 
   get label() {
@@ -4138,7 +4139,7 @@ function EditableValue(aVariable, aOptions) {
 
 EditableValue.create = Editable.create;
 
-EditableValue.prototype = Heritage.extend(Editable.prototype, {
+EditableValue.prototype = extend(Editable.prototype, {
   className: "element-value-input",
 
   get label() {
@@ -4160,7 +4161,7 @@ function EditableNameAndValue(aVariable, aOptions) {
 
 EditableNameAndValue.create = Editable.create;
 
-EditableNameAndValue.prototype = Heritage.extend(EditableName.prototype, {
+EditableNameAndValue.prototype = extend(EditableName.prototype, {
   _reset: function (e) {
     // Hide the Variable or Property if the user presses escape.
     this._variable.remove();

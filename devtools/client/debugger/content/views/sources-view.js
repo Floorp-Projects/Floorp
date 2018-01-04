@@ -20,8 +20,8 @@ const actions = Object.assign(
   require("../actions/breakpoints")
 );
 const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
+const { extend } = require("devtools/shared/extend");
 const {
-  Heritage,
   WidgetMethods,
   setNamedTimeout
 } = require("devtools/client/shared/widgets/view-helpers");
@@ -80,7 +80,7 @@ function SourcesView(controller, DebuggerView) {
   this._onConditionalPopupHidden = this._onConditionalPopupHidden.bind(this);
 }
 
-SourcesView.prototype = Heritage.extend(WidgetMethods, {
+SourcesView.prototype = extend(WidgetMethods, {
   /**
    * Initialization function, called when the debugger is started.
    */
@@ -350,13 +350,13 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     }
 
     // Create the element node and menu popup for the breakpoint item.
-    let breakpointArgs = Heritage.extend(breakpoint.asMutable(), options);
+    let breakpointArgs = extend(breakpoint.asMutable(), options);
     let breakpointView = this._createBreakpointView.call(this, breakpointArgs);
     let contextMenu = this._createContextMenu.call(this, breakpointArgs);
 
     // Append a breakpoint child item to the corresponding source item.
     sourceItem.append(breakpointView.container, {
-      attachment: Heritage.extend(breakpointArgs, {
+      attachment: extend(breakpointArgs, {
         actor: location.actor,
         line: location.line,
         view: breakpointView,

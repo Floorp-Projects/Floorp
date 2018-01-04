@@ -9,7 +9,7 @@
  * markers are visible in the "waterfall".
  */
 
-const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
+const { extend } = require("devtools/shared/extend");
 const { AbstractCanvasGraph } = require("devtools/client/shared/widgets/Graphs");
 
 const { colorUtils } = require("devtools/shared/css/color");
@@ -48,7 +48,7 @@ function MarkersOverview(parent, filter = [], ...args) {
   this.setFilter(filter);
 }
 
-MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
+MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
   clipheadLineColor: OVERVIEW_CLIPHEAD_LINE_COLOR,
   selectionLineColor: OVERVIEW_SELECTION_LINE_COLOR,
   headerHeight: OVERVIEW_HEADER_HEIGHT,
