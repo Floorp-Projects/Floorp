@@ -572,7 +572,7 @@ OggDemuxer::ReadMetadata()
       // Seek to the end of file to find the end time.
       int64_t length = Resource(TrackInfo::kAudioTrack)->GetLength();
 
-      NS_ASSERTION(length > 0, "Must have a content length to get end time");
+      MOZ_ASSERT(length > 0, "Must have a content length to get end time");
 
       int64_t endTime = RangeEndTime(TrackInfo::kAudioTrack, length);
 
@@ -781,7 +781,7 @@ OggDemuxer::ReadOggPage(TrackInfo::TrackType aType, ogg_page* aPage)
     // with the given size. This buffer is stored
     // in the ogg synchronisation structure.
     char* buffer = ogg_sync_buffer(OggSyncState(aType), 4096);
-    NS_ASSERTION(buffer, "ogg_sync_buffer failed");
+    MOZ_ASSERT(buffer, "ogg_sync_buffer failed");
 
     // Read from the resource into the buffer
     uint32_t bytesRead = 0;
@@ -956,19 +956,19 @@ OggDemuxer::GetBuffered(TrackInfo::TrackType aType)
       if (aType == TrackInfo::kAudioTrack && mVorbisState &&
           serial == mVorbisState->mSerial) {
         startTime = mVorbisState->Time(granulepos);
-        NS_ASSERTION(startTime > 0, "Must have positive start time");
+        MOZ_ASSERT(startTime > 0, "Must have positive start time");
       } else if (aType == TrackInfo::kAudioTrack && mOpusState &&
                  serial == mOpusState->mSerial) {
         startTime = mOpusState->Time(granulepos);
-        NS_ASSERTION(startTime > 0, "Must have positive start time");
+        MOZ_ASSERT(startTime > 0, "Must have positive start time");
       } else if (aType == TrackInfo::kAudioTrack && mFlacState &&
                  serial == mFlacState->mSerial) {
         startTime = mFlacState->Time(granulepos);
-        NS_ASSERTION(startTime > 0, "Must have positive start time");
+        MOZ_ASSERT(startTime > 0, "Must have positive start time");
       } else if (aType == TrackInfo::kVideoTrack && mTheoraState &&
                  serial == mTheoraState->mSerial) {
         startTime = mTheoraState->Time(granulepos);
-        NS_ASSERTION(startTime > 0, "Must have positive start time");
+        MOZ_ASSERT(startTime > 0, "Must have positive start time");
       } else if (mCodecStore.Contains(serial)) {
         // Stream is not the theora or vorbis stream we're playing,
         // but is one that we have header data for.
@@ -1240,12 +1240,12 @@ OggDemuxer::PageSync(MediaResourceIndex* aResource,
     ret = ogg_sync_pageseek(aState, aPage);
     if (ret == 0) {
       char* buffer = ogg_sync_buffer(aState, PAGE_STEP);
-      NS_ASSERTION(buffer, "Must have a buffer");
+      MOZ_ASSERT(buffer, "Must have a buffer");
 
       // Read from the file into the buffer
       int64_t bytesToRead = std::min(static_cast<int64_t>(PAGE_STEP),
                                    aEndOffset - readHead);
-      NS_ASSERTION(bytesToRead <= UINT32_MAX, "bytesToRead range check");
+      MOZ_ASSERT(bytesToRead <= UINT32_MAX, "bytesToRead range check");
       if (bytesToRead <= 0) {
         return PAGE_SYNC_END_OF_RANGE;
       }
@@ -1277,9 +1277,9 @@ OggDemuxer::PageSync(MediaResourceIndex* aResource,
     }
 
     if (ret < 0) {
-      NS_ASSERTION(aSkippedBytes >= 0, "Offset >= 0");
+      MOZ_ASSERT(aSkippedBytes >= 0, "Offset >= 0");
       aSkippedBytes += -ret;
-      NS_ASSERTION(aSkippedBytes >= 0, "Offset >= 0");
+      MOZ_ASSERT(aSkippedBytes >= 0, "Offset >= 0");
       continue;
     }
   }
@@ -1542,14 +1542,14 @@ OggDemuxer::RangeEndTime(TrackInfo::TrackType aType,
       uint32_t bytesToRead = static_cast<uint32_t>(limit);
       uint32_t bytesRead = 0;
       char* buffer = ogg_sync_buffer(&sync.mState, bytesToRead);
-      NS_ASSERTION(buffer, "Must have buffer");
+      MOZ_ASSERT(buffer, "Must have buffer");
       nsresult res;
       if (aCachedDataOnly) {
         res = Resource(aType)->GetResource()->ReadFromCache(buffer, readHead, bytesToRead);
         NS_ENSURE_SUCCESS(res, -1);
         bytesRead = bytesToRead;
       } else {
-        NS_ASSERTION(readHead < aEndOffset,
+        MOZ_ASSERT(readHead < aEndOffset,
                      "resource pos must be before range end");
         res = Resource(aType)->Seek(nsISeekableStream::NS_SEEK_SET, readHead);
         NS_ENSURE_SUCCESS(res, -1);
@@ -1710,7 +1710,7 @@ OggDemuxer::SeekInBufferedRange(TrackInfo::TrackType aType,
     if (packet && !mTheoraState->IsKeyframe(packet)) {
       // First post-seek frame isn't a keyframe, seek back to previous keyframe,
       // otherwise we'll get visual artifacts.
-      NS_ASSERTION(packet->granulepos != -1, "Must have a granulepos");
+      MOZ_ASSERT(packet->granulepos != -1, "Must have a granulepos");
       int shift = mTheoraState->KeyFrameGranuleJobs();
       int64_t keyframeGranulepos = (packet->granulepos >> shift) << shift;
       int64_t keyframeTime = mTheoraState->StartTime(keyframeGranulepos);
@@ -1802,7 +1802,7 @@ OggDemuxer::SeekBisection(TrackInfo::TrackType aType,
   DebugOnly<ogg_int64_t> previousGuess = -1;
   int backsteps = 0;
   const int maxBackStep = 10;
-  NS_ASSERTION(static_cast<uint64_t>(PAGE_STEP) * pow(2.0, maxBackStep) < INT32_MAX,
+  MOZ_ASSERT(static_cast<uint64_t>(PAGE_STEP) * pow(2.0, maxBackStep) < INT32_MAX,
                "Backstep calculation must not overflow");
 
   // Seek via bisection search. Loop until we find the offset where the page
@@ -1879,9 +1879,9 @@ OggDemuxer::SeekBisection(TrackInfo::TrackType aType,
                               startOffset, (startOffset+startLength), startTime,
                               endOffset, endTime, interval, target, guess));
 
-      NS_ASSERTION(guess >= startOffset + startLength, "Guess must be after range start");
-      NS_ASSERTION(guess < endOffset, "Guess must be before range end");
-      NS_ASSERTION(guess != previousGuess, "Guess should be different to previous");
+      MOZ_ASSERT(guess >= startOffset + startLength, "Guess must be after range start");
+      MOZ_ASSERT(guess < endOffset, "Guess must be before range end");
+      MOZ_ASSERT(guess != previousGuess, "Guess should be different to previous");
       previousGuess = guess;
 
       hops++;
@@ -1981,7 +1981,7 @@ OggDemuxer::SeekBisection(TrackInfo::TrackType aType,
       // We've found appropriate time stamps here. Proceed to bisect
       // the search space.
       granuleTime = aType == TrackInfo::kAudioTrack ? audioTime : videoTime;
-      NS_ASSERTION(granuleTime > 0, "Must get a granuletime");
+      MOZ_ASSERT(granuleTime > 0, "Must get a granuletime");
       break;
     } // End of "until we determine time at guess offset" loop.
 
@@ -1989,7 +1989,7 @@ OggDemuxer::SeekBisection(TrackInfo::TrackType aType,
       // Seek termination condition; we've found the page boundary of the
       // last page before the target, and the first page after the target.
       SEEK_LOG(LogLevel::Debug, ("Terminating seek at offset=%lld", startOffset));
-      NS_ASSERTION(startTime < aTarget, "Start time must always be less than target");
+      MOZ_ASSERT(startTime < aTarget, "Start time must always be less than target");
       res = Resource(aType)->Seek(nsISeekableStream::NS_SEEK_SET, startOffset);
       NS_ENSURE_SUCCESS(res,res);
       if (NS_FAILED(Reset(aType))) {
@@ -2012,19 +2012,19 @@ OggDemuxer::SeekBisection(TrackInfo::TrackType aType,
 
     if (granuleTime >= seekTarget) {
       // We've landed after the seek target.
-      NS_ASSERTION(pageOffset < endOffset, "offset_end must decrease");
+      MOZ_ASSERT(pageOffset < endOffset, "offset_end must decrease");
       endOffset = pageOffset;
       endTime = granuleTime;
     } else if (granuleTime < seekTarget) {
       // Landed before seek target.
-      NS_ASSERTION(pageOffset >= startOffset + startLength,
+      MOZ_ASSERT(pageOffset >= startOffset + startLength,
         "Bisection point should be at or after end of first page in interval");
       startOffset = pageOffset;
       startLength = pageLength;
       startTime = granuleTime;
     }
-    NS_ASSERTION(startTime <= seekTarget, "Must be before seek target");
-    NS_ASSERTION(endTime >= seekTarget, "End must be after seek target");
+    MOZ_ASSERT(startTime <= seekTarget, "Must be before seek target");
+    MOZ_ASSERT(endTime >= seekTarget, "End must be after seek target");
   }
 
   SEEK_LOG(LogLevel::Debug, ("Seek complete in %d bisections.", hops));
