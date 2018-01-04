@@ -49,9 +49,6 @@ toolkit.jar:
 #ifndef MOZ_FENNEC
    content/global/editMenuOverlay.js
 *  content/global/editMenuOverlay.xul
-   content/global/finddialog.js
-*  content/global/finddialog.xul
-   content/global/findUtils.js
 #endif
    content/global/filepicker.properties
    content/global/globalOverlay.js
