@@ -422,14 +422,14 @@ public:
   }
 
   bool BuildKeyframes(nsPresContext* aPresContext,
-                      const StyleAnimation& aSrc,
+                      nsAtom* aName,
+                      const nsTimingFunction& aTimingFunction,
                       nsTArray<Keyframe>& aKeyframes)
   {
     ServoStyleSet* styleSet = aPresContext->StyleSet()->AsServo();
     MOZ_ASSERT(styleSet);
-    const nsTimingFunction& timingFunction = aSrc.GetTimingFunction();
-    return styleSet->GetKeyframesForName(aSrc.GetName(),
-                                         timingFunction,
+    return styleSet->GetKeyframesForName(aName,
+                                         aTimingFunction,
                                          aKeyframes);
   }
   void SetKeyframes(KeyframeEffectReadOnly& aEffect,
@@ -493,7 +493,8 @@ public:
   }
 
   bool BuildKeyframes(nsPresContext* aPresContext,
-                      const StyleAnimation& aSrc,
+                      nsAtom* aName,
+                      const nsTimingFunction& aTimingFunction,
                       nsTArray<Keyframe>& aKeyframs);
   void SetKeyframes(KeyframeEffectReadOnly& aEffect,
                     nsTArray<Keyframe>&& aKeyframes)
@@ -505,7 +506,7 @@ public:
 
 private:
   nsTArray<Keyframe> BuildAnimationFrames(nsPresContext* aPresContext,
-                                          const StyleAnimation& aSrc,
+                                          const nsTimingFunction& aTimingFunction,
                                           const nsCSSKeyframesRule* aRule);
   Maybe<ComputedTimingFunction> GetKeyframeTimingFunction(
     nsPresContext* aPresContext,
@@ -596,7 +597,10 @@ BuildAnimation(nsPresContext* aPresContext,
   MOZ_ASSERT(aPresContext);
 
   nsTArray<Keyframe> keyframes;
-  if (!aBuilder.BuildKeyframes(aPresContext, aSrc, keyframes)) {
+  if (!aBuilder.BuildKeyframes(aPresContext,
+                               aSrc.GetName(),
+                               aSrc.GetTimingFunction(),
+                               keyframes)) {
     return nullptr;
   }
 
@@ -663,27 +667,29 @@ BuildAnimation(nsPresContext* aPresContext,
 
 bool
 GeckoCSSAnimationBuilder::BuildKeyframes(nsPresContext* aPresContext,
-                                         const StyleAnimation& aSrc,
+                                         nsAtom* aName,
+                                         const nsTimingFunction& aTimingFunction,
                                          nsTArray<Keyframe>& aKeyframes)
 {
   MOZ_ASSERT(aPresContext);
   MOZ_ASSERT(aPresContext->StyleSet()->IsGecko());
 
   nsCSSKeyframesRule* rule =
-    aPresContext->StyleSet()->AsGecko()->KeyframesRuleForName(aSrc.GetName());
+    aPresContext->StyleSet()->AsGecko()->KeyframesRuleForName(aName);
   if (!rule) {
     return false;
   }
 
-  aKeyframes = BuildAnimationFrames(aPresContext, aSrc, rule);
+  aKeyframes = BuildAnimationFrames(aPresContext, aTimingFunction, rule);
 
   return true;
 }
 
 nsTArray<Keyframe>
-GeckoCSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
-                                               const StyleAnimation& aSrc,
-                                               const nsCSSKeyframesRule* aRule)
+GeckoCSSAnimationBuilder::BuildAnimationFrames(
+  nsPresContext* aPresContext,
+  const nsTimingFunction& aTimingFunction,
+  const nsCSSKeyframesRule* aRule)
 {
   // Ideally we'd like to build up a set of Keyframe objects that more-or-less
   // reflect the keyframes as-specified in the @keyframes rule(s) so that
@@ -733,7 +739,7 @@ GeckoCSSAnimationBuilder::BuildAnimationFrames(nsPresContext* aPresContext,
   // rules with the same name cascade but we don't support that yet.
 
   Maybe<ComputedTimingFunction> inheritedTimingFunction =
-    ConvertTimingFunction(aSrc.GetTimingFunction());
+    ConvertTimingFunction(aTimingFunction);
 
   // First, make up Keyframe objects for each rule
   nsTArray<Keyframe> keyframes;
