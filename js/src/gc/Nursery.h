@@ -511,9 +511,6 @@ class Nursery
 
     JSRuntime* runtime() const { return runtime_; }
 
-    /* Allocates a new GC thing from the tenured generation during minor GC. */
-    gc::TenuredCell* allocateFromTenured(JS::Zone* zone, gc::AllocKind thingKind);
-
     /* Common internal allocator function. */
     void* allocate(size_t size);
 

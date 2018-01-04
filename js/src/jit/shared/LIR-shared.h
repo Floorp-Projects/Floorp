@@ -7746,6 +7746,33 @@ class LPostWriteBarrierO : public LInstructionHelper<0, 2, 1>
     }
 };
 
+// Generational write barrier used when writing a string to an object.
+class LPostWriteBarrierS : public LInstructionHelper<0, 2, 1>
+{
+  public:
+    LIR_HEADER(PostWriteBarrierS)
+
+    LPostWriteBarrierS(const LAllocation& obj, const LAllocation& value,
+                       const LDefinition& temp) {
+        setOperand(0, obj);
+        setOperand(1, value);
+        setTemp(0, temp);
+    }
+
+    const MPostWriteBarrier* mir() const {
+        return mir_->toPostWriteBarrier();
+    }
+    const LAllocation* object() {
+        return getOperand(0);
+    }
+    const LAllocation* value() {
+        return getOperand(1);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+};
+
 // Generational write barrier used when writing a value to another object.
 class LPostWriteBarrierV : public LInstructionHelper<0, 1 + BOX_PIECES, 1>
 {
@@ -7780,6 +7807,42 @@ class LPostWriteElementBarrierO : public LInstructionHelper<0, 3, 1>
     LIR_HEADER(PostWriteElementBarrierO)
 
     LPostWriteElementBarrierO(const LAllocation& obj, const LAllocation& value,
+                              const LAllocation& index, const LDefinition& temp) {
+        setOperand(0, obj);
+        setOperand(1, value);
+        setOperand(2, index);
+        setTemp(0, temp);
+    }
+
+    const MPostWriteElementBarrier* mir() const {
+        return mir_->toPostWriteElementBarrier();
+    }
+
+    const LAllocation* object() {
+        return getOperand(0);
+    }
+
+    const LAllocation* value() {
+        return getOperand(1);
+    }
+
+    const LAllocation* index() {
+        return getOperand(2);
+    }
+
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+};
+
+// Generational write barrier used when writing a string to an object's
+// elements.
+class LPostWriteElementBarrierS : public LInstructionHelper<0, 3, 1>
+{
+  public:
+    LIR_HEADER(PostWriteElementBarrierS)
+
+    LPostWriteElementBarrierS(const LAllocation& obj, const LAllocation& value,
                               const LAllocation& index, const LDefinition& temp) {
         setOperand(0, obj);
         setOperand(1, value);

@@ -189,9 +189,14 @@ CompileZone::addressOfNurseryCurrentEnd()
 }
 
 bool
+CompileZone::canNurseryAllocateStrings()
+{
+    return nurseryExists() && zone()->group()->nursery().canAllocateStrings();
+}
+
+bool
 CompileZone::nurseryExists()
 {
-    MOZ_ASSERT(CurrentThreadCanAccessZone(zone()));
     return zone()->group()->nursery().exists();
 }
 
