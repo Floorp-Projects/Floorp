@@ -158,7 +158,7 @@ win32-rust-1.23.0-beta.2:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', 'beta',
+            '--channel', 'beta-2017-12-08',
             '--host', 'i686-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
         ]
