@@ -21,7 +21,9 @@ NS_INTERFACE_MAP_END
 
 ConsoleInstance::ConsoleInstance(const ConsoleInstanceOptions& aOptions)
   : mConsole(new Console(nullptr))
-{}
+{
+  mConsole->mConsoleID = aOptions.mConsoleID;
+}
 
 ConsoleInstance::~ConsoleInstance()
 {}
