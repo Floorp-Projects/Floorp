@@ -1164,7 +1164,7 @@ or run without that action (ie: --no-{action})"
         env.update(self.query_mach_build_env())
 
         self._assert_cfg_valid_for_action(
-            ['tooltool_script', 'tooltool_url'],
+            ['tooltool_url'],
             'build'
         )
         c = self.config

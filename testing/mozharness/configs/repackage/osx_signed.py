@@ -25,6 +25,5 @@ config = {
 
     # ToolTool
     "tooltool_url": 'http://relengapi/tooltool/',
-    'tooltool_script': ["/builds/tooltool.py"],
     'tooltool_cache': os.environ.get('TOOLTOOL_CACHE'),
 }

@@ -27,8 +27,6 @@ config = {
 
     # tooltool
     'tooltool_url': 'https://tooltool.mozilla-releng.net/',
-    'tooltool_script': [sys.executable,
-                        'C:/mozilla-build/tooltool.py'],
     'tooltool_manifest_src': 'browser/config/tooltool-manifests/win32/l10n.manifest',
     # balrog credential file:
     'balrog_credentials_file': 'oauth.txt',
