@@ -153,7 +153,7 @@ add_task(async function() {
 
   let loader = Cc["@mozilla.org/moz/jsloader;1"].getService(Ci.xpcIJSModuleLoader);
   let componentStacks = new Map();
-  let data = startupRecorder.data.code;
+  let data = Cu.cloneInto(startupRecorder.data.code, {});
   // Keep only the file name for components, as the path is an absolute file
   // URL rather than a resource:// URL like for modules.
   for (let phase in data) {

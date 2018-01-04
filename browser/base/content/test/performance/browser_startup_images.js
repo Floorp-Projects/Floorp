@@ -93,7 +93,7 @@ add_task(async function() {
   let startupRecorder = Cc["@mozilla.org/test/startuprecorder;1"].getService().wrappedJSObject;
   await startupRecorder.done;
 
-  let data = startupRecorder.data.images;
+  let data = Cu.cloneInto(startupRecorder.data.images, {});
   let filteredWhitelist = whitelist.filter(el => {
     return el.platforms.includes(AppConstants.platform);
   });
