@@ -26,9 +26,6 @@ config = {
         'TOOLTOOL_CACHE': '/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/builds',
         'MOZ_CRASHREPORTER_NO_REPORT': '1',
-        'CCACHE_DIR': '/builds/ccache',
-        'CCACHE_COMPRESS': '1',
-        'CCACHE_UMASK': '002',
         'LC_ALL': 'C',
         ## 64 bit specific
         'PATH': '/builds/worker/workspace/build/src/gcc/bin:/usr/local/bin:/usr/lib64/ccache:/bin:\
