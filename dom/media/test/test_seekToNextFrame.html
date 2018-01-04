@@ -32,7 +32,9 @@ function startTest(test, token) {
   function callSeekToNextFrame() {
     v.seekToNextFrame().then(
       () => {
-        ok(v.seenSeeking, "Should have already received seeking event.")
+        if (!v.seenSeeking) {
+          ok(false, v.token + ": Should have already received seeking event.");
+        }
         v.seenSeeking = false;
         if (!v.seenEnded)
           callSeekToNextFrame();
@@ -66,7 +68,9 @@ function startTest(test, token) {
   }}(test, v);
 
   var onSeeking = function(test, v) { return function() {
-    ok(!v.seenSeeking, "Should yet receive seeking event.")
+    if (v.seenSeeking) {
+      ok(false, v.token + ": Should yet receive seeking event.");
+    }
     v.seenSeeking = true;
   }}(test, v);
 
