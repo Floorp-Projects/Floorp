@@ -27,7 +27,7 @@ async function shared_setup() {
   engine.lastSync = 123; // Needs to be non-zero so that tracker is queried.
   engine._store.items = {flying: "LNER Class A3 4472",
                          scotsman: "Flying Scotsman"};
-  tracker.addChangedID("scotsman", 0);
+  await tracker.addChangedID("scotsman", 0);
   Assert.equal(1, Service.engineManager.getEnabled().length);
 
   let engines = {rotary:  {version: engine.version,
@@ -92,7 +92,7 @@ add_task(async function hmac_error_during_404() {
     // Two rotary items, one client record... no errors.
     Assert.equal(hmacErrorCount, 0);
   } finally {
-    tracker.clearChangedIDs();
+    await tracker.clearChangedIDs();
     await Service.engineManager.unregister(engine);
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
@@ -220,11 +220,13 @@ add_task(async function hmac_error_during_node_reassignment() {
             Svc.Obs.remove("weave:service:sync:finish", obs);
             Svc.Obs.remove("weave:service:sync:error", obs);
 
-            tracker.clearChangedIDs();
-            Service.engineManager.unregister(engine);
-            Svc.Prefs.resetBranch("");
-            Service.recordManager.clearCache();
-            server.stop(resolve);
+            (async () => {
+              await tracker.clearChangedIDs();
+              Service.engineManager.unregister(engine);
+              Svc.Prefs.resetBranch("");
+              Service.recordManager.clearCache();
+              server.stop(resolve);
+            })();
           };
 
           Service.sync();
