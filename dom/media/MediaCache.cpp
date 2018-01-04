@@ -2405,7 +2405,7 @@ MediaCacheStream::CloseInternal(AutoLock& aLock)
 void
 MediaCacheStream::Pin()
 {
-  // TODO: Assert non-main thread.
+  MOZ_ASSERT(!NS_IsMainThread());
   AutoLock lock(mMediaCache->Monitor());
   ++mPinCount;
   // Queue an Update since we may no longer want to read more into the
@@ -2416,7 +2416,7 @@ MediaCacheStream::Pin()
 void
 MediaCacheStream::Unpin()
 {
-  // TODO: Assert non-main thread.
+  MOZ_ASSERT(!NS_IsMainThread());
   AutoLock lock(mMediaCache->Monitor());
   NS_ASSERTION(mPinCount > 0, "Unbalanced Unpin");
   --mPinCount;
