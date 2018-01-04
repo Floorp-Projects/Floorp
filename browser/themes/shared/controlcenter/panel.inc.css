@@ -309,6 +309,14 @@ description#identity-popup-content-verifier,
   padding-bottom: 1.5em;
 }
 
+@supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
+  /* The extra padding-bottom is there to work around XUL flex (Bug 1368281).
+     This rule and the 1.5em above can both be removed once we are only using CSS flex. */
+  #identity-popup-permissions-content {
+    padding-bottom: 1em;
+  }
+}
+
 #identity-popup-permissions-headline {
   /* Make sure the label is as tall as the icon so that the permission list
      which is aligned with the icon doesn't cover it up. */
