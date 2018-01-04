@@ -660,10 +660,6 @@ BookmarksEngine.prototype = {
     return mapped ? mapped.toString() : mapped;
   },
 
-  async pullNewChanges() {
-    return this._tracker.promiseChangedIDs();
-  },
-
   // Called when _findDupe returns a dupe item and the engine has decided to
   // switch the existing item to the new incoming item.
   async _switchItemToDupe(localDupeGUID, incomingItem) {
@@ -1143,9 +1139,9 @@ BufferedBookmarksStore.prototype = {
 // all concepts of "add a changed ID." However, it still registers an observer
 // to bump the score, so that changed bookmarks are synced immediately.
 function BookmarksTracker(name, engine) {
+  Tracker.call(this, name, engine);
   this._batchDepth = 0;
   this._batchSawScoreIncrement = false;
-  Tracker.call(this, name, engine);
 }
 BookmarksTracker.prototype = {
   __proto__: Tracker.prototype,
@@ -1164,18 +1160,18 @@ BookmarksTracker.prototype = {
   // in Places.
   persistChangedIDs: false,
 
-  startTracking() {
+  onStart() {
     PlacesUtils.bookmarks.addObserver(this, true);
-    Svc.Obs.add("bookmarks-restore-begin", this);
-    Svc.Obs.add("bookmarks-restore-success", this);
-    Svc.Obs.add("bookmarks-restore-failed", this);
+    Svc.Obs.add("bookmarks-restore-begin", this.asyncObserver);
+    Svc.Obs.add("bookmarks-restore-success", this.asyncObserver);
+    Svc.Obs.add("bookmarks-restore-failed", this.asyncObserver);
   },
 
-  stopTracking() {
+  onStop() {
     PlacesUtils.bookmarks.removeObserver(this);
-    Svc.Obs.remove("bookmarks-restore-begin", this);
-    Svc.Obs.remove("bookmarks-restore-success", this);
-    Svc.Obs.remove("bookmarks-restore-failed", this);
+    Svc.Obs.remove("bookmarks-restore-begin", this.asyncObserver);
+    Svc.Obs.remove("bookmarks-restore-success", this.asyncObserver);
+    Svc.Obs.remove("bookmarks-restore-failed", this.asyncObserver);
   },
 
   // Ensure we aren't accidentally using the base persistence.
@@ -1191,24 +1187,16 @@ BookmarksTracker.prototype = {
   // instead of throwing.
   clearChangedIDs() {},
 
-  promiseChangedIDs() {
+  async getChangedIDs() {
     return PlacesSyncUtils.bookmarks.pullChanges();
-  },
-
-  get changedIDs() {
-    throw new Error("Use promiseChangedIDs");
   },
 
   set changedIDs(obj) {
     throw new Error("Don't set initial changed bookmark IDs");
   },
 
-  observe: function observe(subject, topic, data) {
-    Tracker.prototype.observe.call(this, subject, topic, data);
-
+  async observe(subject, topic, data) {
     switch (topic) {
-      case "weave:engine:start-tracking":
-        break;
       case "bookmarks-restore-begin":
         this._log.debug("Ignoring changes from importing bookmarks.");
         break;
@@ -1217,12 +1205,10 @@ BookmarksTracker.prototype = {
 
         if (data == "json") {
           this._log.debug("Restore succeeded: wiping server and other clients.");
-          Async.promiseSpinningly((async () => {
-            await this.engine.service.resetClient([this.name]);
-            await this.engine.service.wipeServer([this.name]);
-            await this.engine.service.clientsEngine.sendCommand("wipeEngine", [this.name],
-                                                                null, { reason: "bookmark-restore" });
-          })());
+          await this.engine.service.resetClient([this.name]);
+          await this.engine.service.wipeServer([this.name]);
+          await this.engine.service.clientsEngine.sendCommand("wipeEngine", [this.name],
+                                                              null, { reason: "bookmark-restore" });
         } else {
           // "html", "html-initial", or "json-append"
           this._log.debug("Import succeeded.");

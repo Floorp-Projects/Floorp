@@ -148,12 +148,19 @@ async function installAddonFromInstall(install) {
  *
  * @param  name
  *         String name of add-on to install. e.g. test_install1
+ * @param  reconciler
+ *         addons reconciler, if passed we will wait on the events to be
+ *         processed before resolving
  * @return addon object that was installed
  */
-async function installAddon(name) {
+async function installAddon(name, reconciler = null) {
   let install = await getAddonInstall(name);
   Assert.notEqual(null, install);
-  return installAddonFromInstall(install);
+  const addon = await installAddonFromInstall(install);
+  if (reconciler) {
+    await reconciler.queueCaller.promiseCallsComplete();
+  }
+  return addon;
 }
 
 /**
@@ -161,19 +168,27 @@ async function installAddon(name) {
  *
  * @param addon
  *        Addon instance to uninstall
+ * @param reconciler
+ *        addons reconciler, if passed we will wait on the events to be
+ *        processed before resolving
  */
-function uninstallAddon(addon) {
-  return new Promise(res => {
-    let listener = {onUninstalled(uninstalled) {
-      if (uninstalled.id == addon.id) {
-        AddonManager.removeAddonListener(listener);
-        res(uninstalled);
+async function uninstallAddon(addon, reconciler = null) {
+  const uninstallPromise = new Promise(res => {
+    let listener = {
+      onUninstalled(uninstalled) {
+        if (uninstalled.id == addon.id) {
+          AddonManager.removeAddonListener(listener);
+          res(uninstalled);
+        }
       }
-    }};
-
+    };
     AddonManager.addAddonListener(listener);
-    addon.uninstall();
   });
+  addon.uninstall();
+  await uninstallPromise;
+  if (reconciler) {
+    await reconciler.queueCaller.promiseCallsComplete();
+  }
 }
 
 async function generateNewKeys(collectionKeys, collections = null) {

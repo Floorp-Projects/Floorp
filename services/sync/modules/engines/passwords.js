@@ -329,23 +329,19 @@ PasswordStore.prototype = {
 
 function PasswordTracker(name, engine) {
   Tracker.call(this, name, engine);
-  Svc.Obs.add("weave:engine:start-tracking", this);
-  Svc.Obs.add("weave:engine:stop-tracking", this);
 }
 PasswordTracker.prototype = {
   __proto__: Tracker.prototype,
 
-  startTracking() {
-    Svc.Obs.add("passwordmgr-storage-changed", this);
+  onStart() {
+    Svc.Obs.add("passwordmgr-storage-changed", this.asyncObserver);
   },
 
-  stopTracking() {
-    Svc.Obs.remove("passwordmgr-storage-changed", this);
+  onStop() {
+    Svc.Obs.remove("passwordmgr-storage-changed", this.asyncObserver);
   },
 
-  observe(subject, topic, data) {
-    Tracker.prototype.observe.call(this, subject, topic, data);
-
+  async observe(subject, topic, data) {
     if (this.ignoreAll) {
       return;
     }
@@ -361,7 +357,8 @@ PasswordTracker.prototype = {
           this._log.trace(`${data}: Ignoring change for ${newLogin.guid}`);
           break;
         }
-        if (this._trackLogin(newLogin)) {
+        const tracked = await this._trackLogin(newLogin);
+        if (tracked) {
           this._log.trace(`${data}: Tracking change for ${newLogin.guid}`);
         }
         break;
@@ -370,7 +367,8 @@ PasswordTracker.prototype = {
       case "addLogin":
       case "removeLogin":
         subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
-        if (this._trackLogin(subject)) {
+        const tracked = await this._trackLogin(subject);
+        if (tracked) {
           this._log.trace(data + ": " + subject.guid);
         }
         break;
@@ -382,12 +380,13 @@ PasswordTracker.prototype = {
     }
   },
 
-  _trackLogin(login) {
+  async _trackLogin(login) {
     if (Utils.getSyncCredentialsHosts().has(login.hostname)) {
       // Skip over Weave password/passphrase changes.
       return false;
     }
-    if (!this.addChangedID(login.guid)) {
+    const added = await this.addChangedID(login.guid);
+    if (!added) {
       return false;
     }
     this.score += SCORE_INCREMENT_XLARGE;
