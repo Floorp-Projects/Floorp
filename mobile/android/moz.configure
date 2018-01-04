@@ -8,9 +8,22 @@ project_flag('MOZ_ANDROID_EXCLUDE_FONTS',
              help='Whether to exclude font files from the build',
              default=True)
 
+option('--with-google-play-services',
+       help='Enable features that depend on non-free Google Play Services',
+       default=True)
+
+@depends('--with-google-play-services')
+def google_play_services(value):
+    return bool(value)
+
+set_config('MOZ_ANDROID_GOOGLE_PLAY_SERVICES', depends_if(google_play_services)(lambda _: True))
+
+set_config('ANDROID_GOOGLE_PLAY_SERVICES_VERSION', '8.4.0')
+add_old_configure_assignment('ANDROID_GOOGLE_PLAY_SERVICES_VERSION', '8.4.0')
+
 option(env='MOZ_ANDROID_GCM',
        help='Enable GCM (Google Cloud Messaging) registration',
-       default=True)
+       default=google_play_services)
 
 set_config('MOZ_ANDROID_GCM',
            depends_if('MOZ_ANDROID_GCM')(lambda _: True))
@@ -19,18 +32,17 @@ add_old_configure_assignment('MOZ_ANDROID_GCM',
 
 option(env='MOZ_NATIVE_DEVICES',
        help='Enable second screen support using native Android libraries.',
-       default=True)
+       default=google_play_services)
 
 set_config('MOZ_NATIVE_DEVICES',
            depends_if('MOZ_NATIVE_DEVICES')(lambda _: True))
 add_old_configure_assignment('MOZ_NATIVE_DEVICES',
                              depends_if('MOZ_NATIVE_DEVICES')(lambda _: True))
 
-# Enable install tracking SDK if we have Google Play support; MOZ_NATIVE_DEVICES
-# is a proxy flag for that support.
-@depends(milestone, 'MOZ_NATIVE_DEVICES', '--help')
-def install_tracking_default(milestone, native_devices, help):
-    return bool(milestone.is_release_or_beta and native_devices)
+# Enable install tracking SDK if we have Google Play support.
+@depends(milestone, google_play_services, '--help')
+def install_tracking_default(milestone, google_play_services, help):
+    return bool(milestone.is_release_or_beta and google_play_services)
 
 option(env='MOZ_INSTALL_TRACKING',
        help='Enable install tracking (currently using the Adjust SDK).',
@@ -107,9 +119,6 @@ imply_option('--enable-small-chunk-size', True)
 set_config('ANDROID_SUPPORT_LIBRARY_VERSION', '23.4.0')
 add_old_configure_assignment('ANDROID_SUPPORT_LIBRARY_VERSION', '23.4.0')
 
-set_config('ANDROID_GOOGLE_PLAY_SERVICES_VERSION', '8.4.0')
-add_old_configure_assignment('ANDROID_GOOGLE_PLAY_SERVICES_VERSION', '8.4.0')
-
 @depends(target)
 def check_target(target):
     if target.os != 'Android':
@@ -124,13 +133,13 @@ include('../../build/moz.configure/java.configure')
 include('gradle.configure')
 
 # Must come after the ../../toolkit/moz.configure.
-@depends('MOZ_INSTALL_TRACKING', 'MOZ_NATIVE_DEVICES', '--with-adjust-sdk-keyfile')
+@depends('MOZ_INSTALL_TRACKING', google_play_services, '--with-adjust-sdk-keyfile')
 def check_install_tracking(install_tracking,
-                           native_devices,
+                           google_play_services,
                            adjust_sdk_keyfile):
     if install_tracking:
-        if not native_devices:
-            die('You must specify MOZ_NATIVE_DEVICES=1 when'
+        if not google_play_services:
+            die('You must specify --with-google-play-services when'
                 ' building with MOZ_INSTALL_TRACKING=1')
         if not adjust_sdk_keyfile:
             die('You must specify --with-adjust-sdk-keyfile=/path/to/keyfile when'
@@ -138,16 +147,16 @@ def check_install_tracking(install_tracking,
 
 # Must come after the ../../toolkit/moz.configure.
 @depends('MOZ_ANDROID_MMA',
-         'MOZ_NATIVE_DEVICES',
+         google_play_services,
          'MOZ_ANDROID_GCM',
          '--with-leanplum-sdk-keyfile')
 def check_android_mma(android_mma,
-                      native_devices,
+                      google_play_services,
                       android_gcm,
                       leanplum_sdk_keyfile):
     if android_mma:
-        if not native_devices:
-            die('You must specify MOZ_NATIVE_DEVICES=1 when'
+        if not google_play_services:
+            die('You must specify --with-google-play-services when'
                 ' building with MOZ_ANDROID_MMA=1')
         if not android_gcm:
             die('You must specify MOZ_ANDROID_GCM=1 when'
@@ -164,10 +173,10 @@ def check_android_pocket(android_pocket, pocket_api_keyfile):
             ' building with MOZ_ANDROID_POCKET=1')
 
 # Must come after the ../../toolkit/moz.configure.
-@depends('MOZ_ANDROID_GCM', 'MOZ_NATIVE_DEVICES')
+@depends('MOZ_ANDROID_GCM', google_play_services)
 def check_android_gcm(android_gcm,
-                      native_devices):
+                      google_play_services):
     if android_gcm:
-        if not native_devices:
-            die('You must specify MOZ_NATIVE_DEVICES=1 when'
+        if not google_play_services:
+            die('You must specify --with-google-play-services when'
                 ' building with MOZ_ANDROID_GCM=1')
