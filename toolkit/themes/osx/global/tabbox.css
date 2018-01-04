@@ -6,9 +6,6 @@
     The default style of these tabs is that of an NSTabView with tabs at
     the top in the "regular" size. These tabs can be used with or without
     a tabbox element.
-    For bottom tabs you should use the "tabs-bottom" class on the tabbox
-    or the tabs element. Bottom tabs use a style that's similar to the
-    one used in Adium.
 */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -69,87 +66,4 @@ tab[visuallyselected="true"]:not(:-moz-window-inactive) {
 .tabs-left,
 .tabs-right  {
   -moz-box-flex: 1;
-}
-
-/* Tabs at the bottom
- * These tabs are smaller, left aligned and don't extend into the tabpanel.
- */
-
-tabbox.tabs-bottom > tabpanels {
-  padding: 10px;
-}
-
-tabbox.tabs-bottom > tabs,
-tabs.tabs-bottom {
-  background-color: rgba(0, 0, 0, 0.1);
-  padding: 0;
-  margin: 0;
-  border-top: 2px solid;
-  -moz-border-top-colors: #888 rgba(0, 0, 0, 0.08);
-  -moz-box-align: start;
-  font: message-box;
-}
-
-tabbox.tabs-bottom > tabs > .tabs-left,
-tabs.tabs-bottom > .tabs-left {
-  -moz-box-flex: 0;
-}
-
-tabbox.tabs-bottom > tabs > tab,
-tabs.tabs-bottom > tab {
-  -moz-appearance: none;
-  margin: -1px 0 0;
-  padding: 0 0 2px 0;
-  position: relative;
-  border-inline-end: 1px solid rgba(0, 0, 0, 0.19);
-}
-
-tabbox.tabs-bottom > tabs > tab > .tab-middle,
-tabs.tabs-bottom > tab > .tab-middle {
-  padding: 1px 2px 0 2px;
-}
-
-tabbox.tabs-bottom > tabs > tab:not([visuallyselected=true]):hover,
-tabs.tabs-bottom > tab:not([visuallyselected=true]):hover {
-  background-color: rgba(0, 0, 0, 0.1);
-  border-inline-end-color: rgba(0, 0, 0, 0.1);
-}
-
-tabbox.tabs-bottom > tabs > tab[visuallyselected=true],
-tabs.tabs-bottom > tab[visuallyselected=true] {
-  color: #000;
-  text-shadow: none;
-  border: solid #888;
-  border-width: 0 2px 2px;
-  border-radius: 2px;
-  -moz-border-left-colors: rgba(0, 0, 0, 0.08) #888;
-  -moz-border-right-colors: rgba(0, 0, 0, 0.08) #888;
-  -moz-border-bottom-colors: rgba(0, 0, 0, 0.08) #888;
-  margin-inline-end: -1px;
-  margin-top: -2px;
-  margin-bottom: 1px;
-  padding: 0;
-}
-
-tabbox.tabs-bottom > tabs > tab[beforeselected=true],
-tabs.tabs-bottom > tab[beforeselected=true] {
-  border-inline-end-color: transparent;
-  margin-inline-end: -2px;
-}
-
-tabbox.tabs-bottom > tabs > tab:first-of-type:not([visuallyselected=true]),
-tabs.tabs-bottom > tab:first-of-type:not([visuallyselected=true]) {
-  border-inline-start: 4px solid transparent;
-}
-
-tabbox.tabs-bottom > tabs > tab:first-of-type[visuallyselected=true],
-tabs.tabs-bottom > tab:first-of-type[visuallyselected=true] {
-  margin-inline-start: 2px;
-}
-
-tabbox.tabs-bottom,
-tabbox.tabs-bottom > tabpanels,
-tabbox.tabs-bottom > tabs > tab[visuallyselected=true] > .tab-middle,
-tabs.tabs-bottom > tab[visuallyselected=true] > .tab-middle {
-  -moz-appearance: dialog;
 }
