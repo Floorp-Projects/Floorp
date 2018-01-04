@@ -1507,6 +1507,7 @@ Console::PopulateConsoleNotificationInTheTargetScope(JSContext* aCx,
     event.mInnerID.Value().SetAsUnsignedLongLong() = 0;
   }
 
+  event.mConsoleID = mConsoleID;
   event.mLevel = aData->mMethodString;
   event.mFilename = frame.mFilename;
 
