@@ -2758,17 +2758,6 @@ SourceMediaStream::PullNewData(
   if (t <= current) {
     return false;
   }
-#ifdef DEBUG
-  if (mListeners.Length() == 0) {
-    LOG(
-      LogLevel::Error,
-      ("No listeners in NotifyPull aStream=%p desired=%f current end=%f",
-        this,
-        GraphImpl()->MediaTimeToSeconds(t),
-        GraphImpl()->MediaTimeToSeconds(current)));
-    DumpTrackInfo();
-  }
-#endif
   for (uint32_t j = 0; j < mListeners.Length(); ++j) {
     MediaStreamListener* l = mListeners[j];
     {
