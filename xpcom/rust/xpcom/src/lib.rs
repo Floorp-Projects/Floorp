@@ -32,6 +32,9 @@ pub use refptr::*;
 // XPCOM interface definitions.
 pub mod interfaces;
 
+// XPCOM service getters.
+pub mod services;
+
 // Implementation details of the xpcom_macros crate.
 #[doc(hidden)]
 pub mod reexports;
