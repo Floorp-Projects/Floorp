@@ -168,6 +168,8 @@ protected:
 
   mozilla::ipc::IPCResult RecvAttachStreamFilter(Endpoint<extensions::PStreamFilterParent>&& aEndpoint) override;
 
+  mozilla::ipc::IPCResult RecvCancelDiversion() override;
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   MOZ_MUST_USE bool
