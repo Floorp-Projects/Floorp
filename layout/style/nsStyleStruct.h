@@ -2610,6 +2610,23 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
            mTransitionDelayCount,
            mTransitionPropertyCount;
 
+  nsCSSPropertyID GetTransitionProperty(uint32_t aIndex) const
+  {
+    return mTransitions[aIndex % mTransitionPropertyCount].GetProperty();
+  }
+  float GetTransitionDelay(uint32_t aIndex) const
+  {
+    return mTransitions[aIndex % mTransitionDelayCount].GetDelay();
+  }
+  float GetTransitionDuration(uint32_t aIndex) const
+  {
+    return mTransitions[aIndex % mTransitionDurationCount].GetDuration();
+  }
+  const nsTimingFunction& GetTransitionTimingFunction(uint32_t aIndex) const
+  {
+    return mTransitions[aIndex % mTransitionTimingFunctionCount].GetTimingFunction();
+  }
+
   nsStyleAutoArray<mozilla::StyleAnimation> mAnimations; // [reset]
 
   // The number of elements in mAnimations that are not from repeating
