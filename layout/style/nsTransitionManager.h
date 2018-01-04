@@ -439,7 +439,8 @@ protected:
 
   template<typename StyleType> void
   ConsiderInitiatingTransition(nsCSSPropertyID aProperty,
-                               const mozilla::StyleTransition& aTransition,
+                               const nsStyleDisplay& aStyleDisplay,
+                               uint32_t transitionIdx,
                                mozilla::dom::Element* aElement,
                                mozilla::CSSPseudoElementType aPseudoType,
                                CSSTransitionCollection*& aElementTransitions,
