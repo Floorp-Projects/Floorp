@@ -36,16 +36,12 @@ function startTest(test, token) {
           ok(false, v.token + ": Should have already received seeking event.");
         }
         v.seenSeeking = false;
-        if (!v.seenEnded)
+        if (!v.ended) {
           callSeekToNextFrame();
+        }
       },
       () => {
-        // When seek reaches the end, the promise is resolved before 'ended'
-        // is fired. The resolver calls callSeekToNextFrame() to schedule
-        // another seek and then the 'ended' handler calls finish() to shut
-        // down the MediaDecoder which will reject the seek promise. So we don't
-        // raise an error in this case.
-        ok(v.finished, "seekToNextFrame() failed.");
+        ok(false, v.token + ": seekToNextFrame() failed.");
       }
     );
   }
