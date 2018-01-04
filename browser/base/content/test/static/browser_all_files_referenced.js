@@ -138,8 +138,6 @@ var whitelist = [
    platforms: ["linux", "macosx"]},
   // Bug 1316187
   {file: "chrome://global/content/customizeToolbar.xul"},
-  // Bug 1343837
-  {file: "chrome://global/content/findUtils.js"},
   // Bug 1356031 (only used by devtools)
   {file: "chrome://global/skin/icons/error-16.png"},
   // Bug 1348362
