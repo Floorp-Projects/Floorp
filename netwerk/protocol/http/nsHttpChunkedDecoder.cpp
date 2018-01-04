@@ -120,7 +120,17 @@ nsHttpChunkedDecoder::ParseChunkRemaining(char *buf,
                 if (!mTrailers) {
                     mTrailers = new nsHttpHeaderArray();
                 }
-                Unused << mTrailers->ParseHeaderLine(nsDependentCSubstring(buf, count));
+
+                nsHttpAtom hdr = {0};
+                nsAutoCString headerNameOriginal;
+                nsAutoCString val;
+                if (NS_SUCCEEDED(mTrailers->ParseHeaderLine(nsDependentCSubstring(buf, count),
+                                                            &hdr, &headerNameOriginal, &val))) {
+                    if (hdr == nsHttp::Server_Timing) {
+                        Unused << mTrailers->SetHeaderFromNet(hdr, headerNameOriginal,
+                                                              val, true);
+                    }
+                }
             }
             else {
                 mWaitEOF = false;

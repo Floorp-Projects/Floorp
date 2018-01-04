@@ -179,9 +179,10 @@ HttpBackgroundChannelChild::RecvOnTransportAndData(
 
 IPCResult
 HttpBackgroundChannelChild::RecvOnStopRequest(
-                                            const nsresult& aChannelStatus,
-                                            const ResourceTimingStruct& aTiming,
-                                            const TimeStamp& aLastActiveTabOptHit)
+                                    const nsresult& aChannelStatus,
+                                    const ResourceTimingStruct& aTiming,
+                                    const TimeStamp& aLastActiveTabOptHit,
+                                    const nsHttpHeaderArray& aResponseTrailers)
 {
   LOG(("HttpBackgroundChannelChild::RecvOnStopRequest [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
@@ -200,18 +201,22 @@ HttpBackgroundChannelChild::RecvOnStopRequest(
          static_cast<uint32_t>(aChannelStatus)));
 
     mQueuedRunnables.AppendElement(
-      NewRunnableMethod<const nsresult, const ResourceTimingStruct, const TimeStamp>(
+      NewRunnableMethod<const nsresult,
+                        const ResourceTimingStruct,
+                        const TimeStamp,
+                        const nsHttpHeaderArray>(
         "HttpBackgroundChannelChild::RecvOnStopRequest",
         this,
         &HttpBackgroundChannelChild::RecvOnStopRequest,
         aChannelStatus,
         aTiming,
-        aLastActiveTabOptHit));
+        aLastActiveTabOptHit,
+        aResponseTrailers));
 
     return IPC_OK();
   }
 
-  mChannelChild->ProcessOnStopRequest(aChannelStatus, aTiming);
+  mChannelChild->ProcessOnStopRequest(aChannelStatus, aTiming, aResponseTrailers);
 
   return IPC_OK();
 }

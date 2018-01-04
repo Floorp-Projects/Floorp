@@ -6,6 +6,7 @@
 #ifndef nsHttpChunkedDecoder_h__
 #define nsHttpChunkedDecoder_h__
 
+#include "nsAutoPtr.h"
 #include "nsError.h"
 #include "nsString.h"
 #include "nsHttpHeaderArray.h"
@@ -29,11 +30,9 @@ public:
                                                uint32_t *contentRead,
                                                uint32_t *contentRemaining);
 
-    nsHttpHeaderArray *Trailers() { return mTrailers; }
+    nsHttpHeaderArray *Trailers() { return mTrailers.get(); }
 
-    nsHttpHeaderArray *TakeTrailers() { nsHttpHeaderArray *h = mTrailers;
-                                        mTrailers = nullptr;
-                                        return h; }
+    nsHttpHeaderArray *TakeTrailers() { return mTrailers.forget(); }
 
     uint32_t GetChunkRemaining() { return mChunkRemaining; }
 
@@ -43,11 +42,11 @@ private:
                                               uint32_t *countRead);
 
 private:
-    nsHttpHeaderArray *mTrailers;
-    uint32_t           mChunkRemaining;
-    nsCString          mLineBuf; // may hold a partial line
-    bool               mReachedEOF;
-    bool               mWaitEOF;
+    nsAutoPtr<nsHttpHeaderArray>  mTrailers;
+    uint32_t                      mChunkRemaining;
+    nsCString                     mLineBuf; // may hold a partial line
+    bool                          mReachedEOF;
+    bool                          mWaitEOF;
 };
 
 } // namespace net

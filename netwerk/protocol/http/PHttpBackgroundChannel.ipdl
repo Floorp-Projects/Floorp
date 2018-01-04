@@ -11,6 +11,7 @@ include PURLClassifierInfo;
 
 include "mozilla/net/NeckoMessageUtils.h";
 
+using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
 using struct mozilla::net::ResourceTimingStruct from "mozilla/net/TimingStruct.h";
 
 namespace mozilla {
@@ -36,8 +37,10 @@ child:
                            uint32_t  count,
                            nsCString data);
 
-  async OnStopRequest(nsresult channelStatus, ResourceTimingStruct timing,
-                      TimeStamp lastActiveTabOptimization);
+  async OnStopRequest(nsresult channelStatus,
+                      ResourceTimingStruct timing,
+                      TimeStamp lastActiveTabOptimization,
+                      nsHttpHeaderArray responseTrailers);
 
   async OnProgress(int64_t progress, int64_t progressMax);
 
