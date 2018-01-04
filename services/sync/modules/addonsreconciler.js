@@ -57,7 +57,7 @@ this.EXPORTED_SYMBOLS = ["AddonsReconciler", "CHANGE_INSTALLED",
  *
  * The usage pattern for instances of this class is:
  *
- *   let reconciler = new AddonsReconciler();
+ *   let reconciler = new AddonsReconciler(...);
  *   await reconciler.ensureStateLoaded();
  *
  *   // At this point, your instance should be ready to use.
@@ -113,9 +113,10 @@ this.EXPORTED_SYMBOLS = ["AddonsReconciler", "CHANGE_INSTALLED",
  * events will occur immediately. However, we still see disabling events and
  * heed them like they were normal. In the end, the state is proper.
  */
-this.AddonsReconciler = function AddonsReconciler() {
+this.AddonsReconciler = function AddonsReconciler(queueCaller) {
   this._log = Log.repository.getLogger("Sync.AddonsReconciler");
   this._log.manageLevelFromPref("services.sync.log.logger.addonsreconciler");
+  this.queueCaller = queueCaller;
 
   Svc.Obs.add("xpcom-shutdown", this.stopListening, this);
 };
@@ -585,35 +586,35 @@ AddonsReconciler.prototype = {
 
   // AddonListeners
   onEnabling: function onEnabling(addon, requiresRestart) {
-    Async.promiseSpinningly(this._handleListener("onEnabling", addon, requiresRestart));
+    this.queueCaller.enqueueCall(() => this._handleListener("onEnabling", addon, requiresRestart));
   },
   onEnabled: function onEnabled(addon) {
-    Async.promiseSpinningly(this._handleListener("onEnabled", addon));
+    this.queueCaller.enqueueCall(() => this._handleListener("onEnabled", addon));
   },
   onDisabling: function onDisabling(addon, requiresRestart) {
-    Async.promiseSpinningly(this._handleListener("onDisabling", addon, requiresRestart));
+    this.queueCaller.enqueueCall(() => this._handleListener("onDisabling", addon, requiresRestart));
   },
   onDisabled: function onDisabled(addon) {
-    Async.promiseSpinningly(this._handleListener("onDisabled", addon));
+    this.queueCaller.enqueueCall(() => this._handleListener("onDisabled", addon));
   },
   onInstalling: function onInstalling(addon, requiresRestart) {
-    Async.promiseSpinningly(this._handleListener("onInstalling", addon, requiresRestart));
+    this.queueCaller.enqueueCall(() => this._handleListener("onInstalling", addon, requiresRestart));
   },
   onInstalled: function onInstalled(addon) {
-    Async.promiseSpinningly(this._handleListener("onInstalled", addon));
+    this.queueCaller.enqueueCall(() => this._handleListener("onInstalled", addon));
   },
   onUninstalling: function onUninstalling(addon, requiresRestart) {
-    Async.promiseSpinningly(this._handleListener("onUninstalling", addon, requiresRestart));
+    this.queueCaller.enqueueCall(() => this._handleListener("onUninstalling", addon, requiresRestart));
   },
   onUninstalled: function onUninstalled(addon) {
-    Async.promiseSpinningly(this._handleListener("onUninstalled", addon));
+    this.queueCaller.enqueueCall(() => this._handleListener("onUninstalled", addon));
   },
   onOperationCancelled: function onOperationCancelled(addon) {
-    Async.promiseSpinningly(this._handleListener("onOperationCancelled", addon));
+    this.queueCaller.enqueueCall(() => this._handleListener("onOperationCancelled", addon));
   },
 
   // InstallListeners
   onInstallEnded: function onInstallEnded(install, addon) {
-    Async.promiseSpinningly(this._handleListener("onInstallEnded", addon));
+    this.queueCaller.enqueueCall(() => this._handleListener("onInstallEnded", addon));
   }
 };
