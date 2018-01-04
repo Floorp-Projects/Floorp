@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* import-globals-from ../../content/preferencesBindings.js */
-
 var FontBuilder = {
   _enumerator: null,
   get enumerator() {
@@ -93,7 +91,7 @@ var FontBuilder = {
     // - there is no setting
     // - the font selected by the user is no longer present (e.g. deleted from
     //   fonts folder)
-    const preference = Preferences.get(aElement.getAttribute("preference"));
+    const preference = document.getElementById(aElement.getAttribute("preference"));
     if (preference.value) {
       const fontItems = aElement.getElementsByAttribute("value", preference.value);
 

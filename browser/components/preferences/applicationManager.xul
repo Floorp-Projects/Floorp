@@ -20,8 +20,6 @@
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript"
-          src="chrome://global/content/preferencesBindings.js"/>
-  <script type="application/javascript"
           src="chrome://browser/content/preferences/applicationManager.js"/>
 
   <commandset id="appManagerCommandSet">

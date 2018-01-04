@@ -30,11 +30,19 @@ menulist > menupopup {
 window,
 page,
 dialog,
-wizard {
+wizard,
+prefwindow {
   -moz-appearance: dialog;
   background-color: #FFFFFF;
   color: -moz-DialogText;
   font: message-box;
+}
+
+prefwindow[type="child"] {
+  padding-top: 18px;
+  padding-bottom: 15px;
+  padding-inline-start: 18px;
+  padding-inline-end: 20px;
 }
 
 /* deprecated */

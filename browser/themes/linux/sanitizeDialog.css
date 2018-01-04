@@ -99,7 +99,7 @@
 
 
 /* Align the last dialog button with the end of the warning box */
-.dialog-button-box {
+.prefWindow-dlgbuttons {
   margin-inline-end: 0;
 }
 .dialog-button[dlgtype="accept"] {

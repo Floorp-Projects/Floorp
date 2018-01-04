@@ -6,7 +6,8 @@
 
 dialog,
 window,
-.prefpane,
+prefpane,
+prefwindow,
 .windowDialog {
   -moz-appearance: none;
   background-color: #fbfbfb;
@@ -56,7 +57,7 @@ groupbox {
   padding-bottom: 5px;
 }
 
-.prefpane .groupbox-body {
+prefpane .groupbox-body {
   padding: 0 0 5px;
 }
 
