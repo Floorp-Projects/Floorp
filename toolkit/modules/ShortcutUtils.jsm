@@ -88,9 +88,11 @@ var ShortcutUtils = {
     let key;
     let keyCode = aElemKey.getAttribute("keycode");
     if (keyCode) {
+      keyCode = keyCode.toUpperCase();
       try {
-        // Some keys might not exist in the locale file, which will throw:
-        key = Keys.GetStringFromName(keyCode.toUpperCase());
+        let bundle = keyCode == "VK_RETURN" ? PlatformKeys : Keys;
+        // Some keys might not exist in the locale file, which will throw.
+        key = bundle.GetStringFromName(keyCode);
       } catch (ex) {
         Cu.reportError("Error finding " + keyCode + ": " + ex);
         key = keyCode.replace(/^VK_/, "");
