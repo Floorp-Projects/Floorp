@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/Console.h"
+#include "mozilla/dom/ConsoleInstance.h"
 #include "mozilla/dom/ConsoleBinding.h"
 
 #include "mozilla/dom/BlobBinding.h"
@@ -950,19 +951,21 @@ METHOD(Debug, "debug")
 METHOD(Table, "table")
 METHOD(Trace, "trace")
 
-/* static */ void
-Console::Clear(const GlobalObject& aGlobal)
-{
-  const Sequence<JS::Value> data;
-  Method(aGlobal, MethodClear, NS_LITERAL_STRING("clear"), data);
-}
-
 // Displays an interactive listing of all the properties of an object.
 METHOD(Dir, "dir");
 METHOD(Dirxml, "dirxml");
 
 METHOD(Group, "group")
 METHOD(GroupCollapsed, "groupCollapsed")
+
+#undef METHOD
+
+/* static */ void
+Console::Clear(const GlobalObject& aGlobal)
+{
+  const Sequence<JS::Value> data;
+  Method(aGlobal, MethodClear, NS_LITERAL_STRING("clear"), data);
+}
 
 /* static */ void
 Console::GroupEnd(const GlobalObject& aGlobal)
@@ -987,15 +990,27 @@ Console::TimeEnd(const GlobalObject& aGlobal, const nsAString& aLabel)
 Console::StringMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
                       MethodName aMethodName, const nsAString& aMethodString)
 {
-  JSContext* cx = aGlobal.Context();
+  RefPtr<Console> console = GetConsole(aGlobal);
+  if (!console) {
+    return;
+  }
 
-  ClearException ce(cx);
+  console->StringMethodInternal(aGlobal.Context(), aLabel, aMethodName,
+                                aMethodString);
+}
+
+void
+Console::StringMethodInternal(JSContext* aCx, const nsAString& aLabel,
+                              MethodName aMethodName,
+                              const nsAString& aMethodString)
+{
+  ClearException ce(aCx);
 
   Sequence<JS::Value> data;
-  SequenceRooter<JS::Value> rooter(cx, &data);
+  SequenceRooter<JS::Value> rooter(aCx, &data);
 
-  JS::Rooted<JS::Value> value(cx);
-  if (!dom::ToJSValue(cx, aLabel, &value)) {
+  JS::Rooted<JS::Value> value(aCx);
+  if (!dom::ToJSValue(aCx, aLabel, &value)) {
     return;
   }
 
@@ -1003,7 +1018,7 @@ Console::StringMethod(const GlobalObject& aGlobal, const nsAString& aLabel,
     return;
   }
 
-  Method(aGlobal, aMethodName, aMethodString, data);
+  MethodInternal(aCx, aMethodName, aMethodString, data);
 }
 
 /* static */ void
@@ -2535,6 +2550,14 @@ Console::MonotonicTimer(JSContext* aCx, MethodName aMethodName,
 
   *aTimeStamp = workerPrivate->TimeStampToDOMHighRes(TimeStamp::Now());
   return true;
+}
+
+/* static */ already_AddRefed<ConsoleInstance>
+Console::CreateInstance(const GlobalObject& aGlobal,
+                        const ConsoleInstanceOptions& aOptions)
+{
+  RefPtr<ConsoleInstance> console = new ConsoleInstance(aOptions);
+  return console.forget();
 }
 
 } // namespace dom

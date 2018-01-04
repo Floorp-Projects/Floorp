@@ -12,6 +12,10 @@
  ClassString="Console",
  ProtoObjectHack]
 namespace console {
+
+  // NOTE: if you touch this namespace, remember to update the ConsoleInstance
+  // interface as well!
+
   // Logging
   void assert(optional boolean condition = false, any... data);
   void clear();
@@ -45,6 +49,9 @@ namespace console {
 
   [ChromeOnly]
   const boolean IS_NATIVE_CONSOLE = true;
+
+  [ChromeOnly, NewObject]
+  ConsoleInstance createInstance(optional ConsoleInstanceOptions options);
 };
 
 // This is used to propagate console events to the observers.
@@ -108,4 +115,44 @@ dictionary ConsoleCounter {
 
 dictionary ConsoleCounterError {
   DOMString error = "maxCountersExceeded";
+};
+
+[ChromeOnly,
+ Exposed=(Window,Worker,WorkerDebugger,Worklet,System)]
+// This is basically a copy of the console namespace.
+interface ConsoleInstance {
+  // Logging
+  void assert(optional boolean condition = false, any... data);
+  void clear();
+  void count(optional DOMString label = "default");
+  void debug(any... data);
+  void error(any... data);
+  void info(any... data);
+  void log(any... data);
+  void table(any... data); // FIXME: The spec is still unclear about this.
+  void trace(any... data);
+  void warn(any... data);
+  void dir(any... data); // FIXME: This doesn't follow the spec yet.
+  void dirxml(any... data);
+
+  // Grouping
+  void group(any... data);
+  void groupCollapsed(any... data);
+  void groupEnd();
+
+  // Timing
+  void time(optional DOMString label = "default");
+  void timeEnd(optional DOMString label = "default");
+
+  // Mozilla only or Webcompat methods
+
+  void _exception(any... data);
+  void timeStamp(optional any data);
+
+  void profile(any... data);
+  void profileEnd(any... data);
+};
+
+dictionary ConsoleInstanceOptions {
+  // TODO
 };
