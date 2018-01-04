@@ -42,10 +42,8 @@ from mozharness.mozilla.buildbot import (
     TBPL_WORST_LEVEL_TUPLE,
 )
 from mozharness.mozilla.purge import PurgeMixin
-from mozharness.mozilla.mock import MockMixin
 from mozharness.mozilla.secrets import SecretsMixin
 from mozharness.mozilla.signing import SigningMixin
-from mozharness.mozilla.mock import ERROR_MSGS as MOCK_ERROR_MSGS
 from mozharness.mozilla.testing.errors import TinderBoxPrintRe
 from mozharness.mozilla.testing.unittest import tbox_print_summary
 from mozharness.mozilla.updates.balrog import BalrogMixin
@@ -70,7 +68,6 @@ because it was a forced build.',
     'tooltool_manifest_undetermined': '"tooltool_manifest_src" not set, \
 Skipping run_tooltool...',
 }
-ERROR_MSGS.update(MOCK_ERROR_MSGS)
 
 
 ### Output Parsers
@@ -661,12 +658,6 @@ BUILD_BASE_CONFIG_OPTIONS = [
         "dest": "who",
         "default": '',
         "help": "stores who made the created the buildbot change."}],
-    [["--disable-mock"], {
-        "dest": "disable_mock",
-        "action": "store_true",
-        "help": "do not run under mock despite what gecko-config says",
-    }],
-
 ]
 
 
@@ -678,7 +669,7 @@ def generate_build_UID():
     return uuid.uuid4().hex
 
 
-class BuildScript(BuildbotMixin, PurgeMixin, MockMixin, BalrogMixin,
+class BuildScript(BuildbotMixin, PurgeMixin, BalrogMixin,
                   SigningMixin, VirtualenvMixin, MercurialScript,
                   SecretsMixin, PerfherderResourceOptionsMixin):
     def __init__(self, **kwargs):
@@ -834,7 +825,7 @@ or run without that action (ie: --no-{action})"
             # dirs['abs_obj_dir'] can be different from env['MOZ_OBJDIR'] on
             # mac, and that confuses mach.
             del env['MOZ_OBJDIR']
-            return self.get_output_from_command_m(cmd,
+            return self.get_output_from_command(cmd,
                 cwd=dirs['abs_obj_dir'], env=env)
         else:
             return None
@@ -1210,8 +1201,8 @@ or run without that action (ie: --no-{action})"
         if toolchains:
             cmd.extend(toolchains.split())
         self.info(str(cmd))
-        self.run_command_m(cmd, cwd=dirs['abs_src_dir'], halt_on_failure=True,
-                           env=env)
+        self.run_command(cmd, cwd=dirs['abs_src_dir'], halt_on_failure=True,
+                         env=env)
 
     def query_revision(self, source_path=None):
         """ returns the revision of the build
@@ -1374,7 +1365,7 @@ or run without that action (ie: --no-{action})"
         # mac, and that confuses mach.
         del env['MOZ_OBJDIR']
         for prop in properties_needed:
-            prop_val = self.get_output_from_command_m(
+            prop_val = self.get_output_from_command(
                 base_cmd + [prop['ini_name']], cwd=dirs['abs_obj_dir'],
                 halt_on_failure=halt_on_failure, env=env
             )
@@ -1700,7 +1691,7 @@ or run without that action (ie: --no-{action})"
         else:
             mach = [sys.executable, 'mach']
 
-        return_code = self.run_command_m(
+        return_code = self.run_command(
             command=mach + ['--log-no-times', 'build', '-v'],
             cwd=dirs['abs_src_dir'],
             env=env,
@@ -1764,15 +1755,15 @@ or run without that action (ie: --no-{action})"
             '--summary',
         ]
 
-        self.run_command_m(cmd, env=self.query_build_env(), cwd=base_work_dir,
-                           halt_on_failure=True)
+        self.run_command(cmd, env=self.query_build_env(), cwd=base_work_dir,
+                         halt_on_failure=True)
 
         package_cmd = [
             'make',
             'echo-variable-PACKAGE',
             'AB_CD=multi',
         ]
-        package_filename = self.get_output_from_command_m(
+        package_filename = self.get_output_from_command(
             package_cmd,
             cwd=objdir,
         )
@@ -1787,10 +1778,10 @@ or run without that action (ie: --no-{action})"
                                         package_filename=package_filename,
                                         )
         upload_cmd = ['make', 'upload', 'AB_CD=multi']
-        self.run_command_m(upload_cmd,
-                           env=self.query_mach_build_env(multiLocale=False),
-                           cwd=objdir, halt_on_failure=True,
-                           output_parser=parser)
+        self.run_command(upload_cmd,
+                         env=self.query_mach_build_env(multiLocale=False),
+                         cwd=objdir, halt_on_failure=True,
+                         output_parser=parser)
         for prop in parser.matches:
             self.set_buildbot_property(prop,
                                        parser.matches[prop],
@@ -1800,7 +1791,7 @@ or run without that action (ie: --no-{action})"
             'echo-variable-UPLOAD_FILES',
             'AB_CD=multi',
         ]
-        output = self.get_output_from_command_m(
+        output = self.get_output_from_command(
             upload_files_cmd,
             cwd=objdir,
         )
@@ -1823,7 +1814,7 @@ or run without that action (ie: --no-{action})"
         command = [sys.executable, 'mach', '--log-no-times']
         command.extend(mach_command_args)
 
-        self.run_command_m(
+        self.run_command(
             command=command,
             cwd=self.query_abs_dirs()['abs_src_dir'],
             env=env, output_timeout=self.config.get('max_build_output_timeout', 60 * 20),
@@ -1839,12 +1830,12 @@ or run without that action (ie: --no-{action})"
         env.update(self.query_mach_build_env())
         dirs = self.query_abs_dirs()
 
-        self.run_command_m(
+        self.run_command(
             command=[sys.executable, 'mach', '--log-no-times', 'configure'],
             cwd=dirs['abs_src_dir'],
             env=env, output_timeout=60*3, halt_on_failure=True,
         )
-        self.run_command_m(
+        self.run_command(
             command=[
                 'make', 'source-package', 'hg-bundle', 'source-upload',
                 'HG_BUNDLE_REVISION=%s' % self.query_revision(),
@@ -1871,7 +1862,7 @@ or run without that action (ie: --no-{action})"
         dirs = self.query_abs_dirs()
         objdir = dirs['abs_obj_dir']
 
-        output = self.get_output_from_command_m(
+        output = self.get_output_from_command(
             command=['make', 'echo-variable-SOURCE_CHECKSUM_FILE'],
             cwd=objdir,
         )
@@ -1903,10 +1894,10 @@ or run without that action (ie: --no-{action})"
 
         parser = CheckTestCompleteParser(config=c,
                                          log_obj=self.log_obj)
-        return_code = self.run_command_m(command=cmd,
-                                         cwd=dirs['abs_src_dir'],
-                                         env=env,
-                                         output_parser=parser)
+        return_code = self.run_command(command=cmd,
+                                       cwd=dirs['abs_src_dir'],
+                                       env=env,
+                                       output_parser=parser)
         tbpl_status = parser.evaluate_parser(return_code)
         return_code = EXIT_STATUS_DICT[tbpl_status]
 
@@ -2304,7 +2295,7 @@ or run without that action (ie: --no-{action})"
         env = self.query_build_env()
         env.update(self.query_mach_build_env())
 
-        return_code = self.run_command_m(
+        return_code = self.run_command(
             command=[sys.executable, 'mach', 'valgrind-test'],
             cwd=self.query_abs_dirs()['abs_src_dir'],
             env=env, output_timeout=self.config.get('max_build_output_timeout', 60 * 40)

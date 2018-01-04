@@ -8,7 +8,6 @@ config = {
     'default_actions': [
         'clobber',
         'clone-tools',
-        # 'setup-mock',
         'checkout-sources',
         'build',
         'sendchange',
