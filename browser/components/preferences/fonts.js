@@ -18,12 +18,6 @@ const kFontSizeFmtVariable      = "font.size.variable.%LANG%";
 const kFontSizeFmtFixed         = "font.size.fixed.%LANG%";
 const kFontMinSizeFmt           = "font.minimum-size.%LANG%";
 
-Preferences.addAll([
-  { id: "font.language.group", type: "wstring" },
-  { id: "browser.display.use_document_fonts", type: "int" },
-  { id: "intl.charset.fallback.override", type: "string" },
-]);
-
 var gFontsDialog = {
   _selectLanguageGroupPromise: Promise.resolve(),
 
@@ -50,11 +44,16 @@ var gFontsDialog = {
         { format: kFontSizeFmtFixed,         type: "int",      element: "sizeMono",   fonttype: null          },
         { format: kFontMinSizeFmt,           type: "int",      element: "minSize",    fonttype: null          }
       ];
+      var preferences = document.getElementById("fontPreferences");
       for (var i = 0; i < prefs.length; ++i) {
-        var name = prefs[i].format.replace(/%LANG%/, aLanguageGroup);
-        var preference = Preferences.get(name);
+        var preference = document.getElementById(prefs[i].format.replace(/%LANG%/, aLanguageGroup));
         if (!preference) {
-          preference = Preferences.add({ id: name, type: prefs[i].type });
+          preference = document.createElement("preference");
+          var name = prefs[i].format.replace(/%LANG%/, aLanguageGroup);
+          preference.id = name;
+          preference.setAttribute("name", name);
+          preference.setAttribute("type", prefs[i].type);
+          preferences.appendChild(preference);
         }
 
         if (!prefs[i].element)
@@ -75,13 +74,13 @@ var gFontsDialog = {
   },
 
   readFontLanguageGroup() {
-    var languagePref = Preferences.get("font.language.group");
+    var languagePref = document.getElementById("font.language.group");
     this._selectLanguageGroup(languagePref.value);
     return undefined;
   },
 
   readUseDocumentFonts() {
-    var preference = Preferences.get("browser.display.use_document_fonts");
+    var preference = document.getElementById("browser.display.use_document_fonts");
     return preference.value == 1;
   },
 
@@ -91,12 +90,13 @@ var gFontsDialog = {
   },
 
   onBeforeAccept() {
+    let preferences = document.querySelectorAll("preference[id*='font.minimum-size']");
     // It would be good if we could avoid touching languages the pref pages won't use, but
     // unfortunately the language group APIs (deducing language groups from language codes)
     // are C++ - only. So we just check all the things the user touched:
     // Don't care about anything up to 24px, or if this value is the same as set previously:
-    let preferences = Preferences.getAll().filter(pref => {
-      return pref.id.includes("font.minimum-size") && pref.value > 24 && pref.value != pref.valueFromPreferences;
+    preferences = Array.filter(preferences, prefEl => {
+      return prefEl.value > 24 && prefEl.value != prefEl.valueFromPreferences;
     });
     if (!preferences.length) {
       return true;

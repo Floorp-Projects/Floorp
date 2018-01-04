@@ -25,10 +25,9 @@ add_task(async function() {
   ]);
 
   let doc = gBrowser.contentDocument;
-  let win = gBrowser.contentWindow;
   await doc.l10n.ready;
 
-  let processCountPref = win.Preferences.get("dom.ipc.processCount");
+  let processCountPref = doc.getElementById("dom.ipc.processCount");
   let defaultProcessCount = processCountPref.defaultValue;
 
   let [ msg ] = await doc.l10n.formatMessages([
