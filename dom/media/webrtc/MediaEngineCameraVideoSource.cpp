@@ -361,7 +361,7 @@ MediaEngineCameraVideoSource::ChooseCapability(
     GetCapability(candidateSet[0].mIndex, aCapability);
   }
 
-  LogCapability("Chosen capability", mCapability, sameDistance);
+  LogCapability("Chosen capability", aCapability, sameDistance);
   return true;
 }
 
