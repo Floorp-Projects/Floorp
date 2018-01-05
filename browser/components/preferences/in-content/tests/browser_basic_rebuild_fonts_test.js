@@ -10,8 +10,10 @@ add_task(async function() {
   await gBrowser.contentWindow.gMainPane._selectDefaultLanguageGroupPromise;
   // eslint-disable-next-line mozilla/no-cpows-in-tests
   let doc = gBrowser.contentDocument;
+  // eslint-disable-next-line mozilla/no-cpows-in-tests
+  let contentWindow = gBrowser.contentWindow;
   var langGroup = Services.prefs.getComplexValue("font.language.group", Ci.nsIPrefLocalizedString).data;
-  is(doc.getElementById("font.language.group").value, langGroup,
+  is(contentWindow.Preferences.get("font.language.group").value, langGroup,
      "Language group should be set correctly.");
 
   let defaultFontType = Services.prefs.getCharPref("font.default." + langGroup);
@@ -44,7 +46,7 @@ add_task(async function() {
   win.FontBuilder._allFonts = null;
   win.FontBuilder._langGroupSupported = false;
 
-  let langGroupElement = doc.getElementById("font.language.group");
+  let langGroupElement = win.Preferences.get("font.language.group");
   let selectLangsField = doc.getElementById("selectLangs");
   let serifField = doc.getElementById("serif");
   let armenian = "x-armn";
@@ -63,7 +65,7 @@ add_task(async function() {
   selectLangsField.value = armenian;
   is(serifField.value, "", "Font family should not be set.");
 
-  let armenianSerifElement = doc.getElementById("font.name.serif.x-armn");
+  let armenianSerifElement = win.Preferences.get("font.name.serif.x-armn");
 
   langGroupElement.value = western;
   await fontListsRebuilt();

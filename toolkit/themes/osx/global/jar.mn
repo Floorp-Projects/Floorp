@@ -25,7 +25,6 @@ toolkit.jar:
   skin/classic/global/netError.css
   skin/classic/global/numberbox.css
   skin/classic/global/popup.css
-  skin/classic/global/preferences.css
   skin/classic/global/progressmeter.css
   skin/classic/global/radio.css
   skin/classic/global/resizer.css
@@ -71,8 +70,6 @@ toolkit.jar:
   skin/classic/global/icons/glyph-dropdown.png                       (icons/glyph-dropdown.png)
   skin/classic/global/icons/glyph-dropdown@2x.png                    (icons/glyph-dropdown@2x.png)
   skin/classic/global/icons/notfound.png                             (icons/notfound.png)
-  skin/classic/global/icons/panebutton-active.png                    (icons/panebutton-active.png)
-  skin/classic/global/icons/panebutton-inactive.png                  (icons/panebutton-inactive.png)
   skin/classic/global/icons/panel-dropmarker.png                     (icons/panel-dropmarker.png)
   skin/classic/global/icons/resizer.png                              (icons/resizer.png)
   skin/classic/global/icons/resizer@2x.png                           (icons/resizer@2x.png)

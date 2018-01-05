@@ -3,6 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!DOCTYPE bindings [
+  <!ENTITY % globalKeysDTD SYSTEM "chrome://global/locale/globalKeys.dtd">
+  %globalKeysDTD;
+]>
 
 <bindings id="dialogBindings"
           xmlns="http://www.mozilla.org/xbl"
@@ -40,6 +44,16 @@
         <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
 #endif
       </xul:hbox>
+
+    <xul:keyset>
+      <xul:key phase="capturing" oncommand="document.documentElement.openHelp(event)"
+#ifdef XP_MACOSX
+           key="&openHelpMac.commandkey;" modifiers="accel"/>
+#else
+           keycode="&openHelp.commandkey;"/>
+#endif
+    </xul:keyset>
+
     </content>
 
     <implementation>
@@ -205,6 +219,20 @@
 
           // Give focus after onload completes, see bug 103197.
           setTimeout(focusInit, 0);
+        ]]>
+        </body>
+      </method>
+
+      <method name="openHelp">
+        <parameter name="event"/>
+        <body>
+        <![CDATA[
+          var helpButton = document.documentElement.getButton("help");
+          if (helpButton.disabled || helpButton.hidden)
+            return;
+          this._fireButtonEvent("help");
+          event.stopPropagation();
+          event.preventDefault();
         ]]>
         </body>
       </method>

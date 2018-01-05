@@ -3,11 +3,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* import-globals-from ../../../toolkit/content/preferencesBindings.js */
+
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
 var {Sanitizer} = Cu.import("resource:///modules/Sanitizer.jsm", {});
+
+Preferences.addAll([
+  { id: "privacy.cpd.history", type: "bool" },
+  { id: "privacy.cpd.formdata", type: "bool" },
+  { id: "privacy.cpd.downloads", type: "bool", disabled: true },
+  { id: "privacy.cpd.cookies", type: "bool" },
+  { id: "privacy.cpd.cache", type: "bool" },
+  { id: "privacy.cpd.sessions", type: "bool" },
+  { id: "privacy.cpd.offlineApps", type: "bool" },
+  { id: "privacy.cpd.siteSettings", type: "bool" },
+  { id: "privacy.sanitize.timeSpan", type: "int" },
+]);
 
 var gSanitizePromptDialog = {
 
@@ -20,14 +34,6 @@ var gSanitizePromptDialog = {
   get selectedTimespan() {
     var durList = document.getElementById("sanitizeDurationChoice");
     return parseInt(durList.value);
-  },
-
-  get sanitizePreferences() {
-    if (!this._sanitizePreferences) {
-      this._sanitizePreferences =
-        document.getElementById("sanitizePreferences");
-    }
-    return this._sanitizePreferences;
   },
 
   get warningBox() {
@@ -141,21 +147,21 @@ var gSanitizePromptDialog = {
   },
 
   /**
+   * Return the boolean prefs that enable/disable clearing of various kinds
+   * of history.  The only pref this excludes is privacy.sanitize.timeSpan.
+   */
+  _getItemPrefs() {
+    return Preferences.getAll().filter(p => p.id !== "privacy.sanitize.timeSpan");
+  },
+
+  /**
    * Called when the value of a preference element is synced from the actual
    * pref.  Enables or disables the OK button appropriately.
    */
   onReadGeneric() {
-    var found = false;
-
-    // Find any other pref that's checked and enabled.
-    var i = 0;
-    while (!found && i < this.sanitizePreferences.childNodes.length) {
-      var preference = this.sanitizePreferences.childNodes[i];
-
-      found = !!preference.value &&
-              !preference.disabled;
-      i++;
-    }
+    // Find any other pref that's checked and enabled (except for
+    // privacy.sanitize.timeSpan, which doesn't affect the button's status).
+    var found = this._getItemPrefs().some(pref => !!pref.value && !pref.disabled);
 
     try {
       document.documentElement.getButton("accept").disabled = !found;
@@ -171,23 +177,22 @@ var gSanitizePromptDialog = {
    * Sanitizer.prototype.sanitize() requires the prefs to be up-to-date.
    * Because the type of this prefwindow is "child" -- and that's needed because
    * without it the dialog has no OK and Cancel buttons -- the prefs are not
-   * updated on dialogaccept on platforms that don't support instant-apply
-   * (i.e., Windows).  We must therefore manually set the prefs from their
-   * corresponding preference elements.
+   * updated on dialogaccept.  We must therefore manually set the prefs
+   * from their corresponding preference elements.
    */
   updatePrefs() {
     Sanitizer.prefs.setIntPref("timeSpan", this.selectedTimespan);
 
     // Keep the pref for the download history in sync with the history pref.
-    document.getElementById("privacy.cpd.downloads").value =
-      document.getElementById("privacy.cpd.history").value;
+    Preferences.get("privacy.cpd.downloads").value =
+      Preferences.get("privacy.cpd.history").value;
 
     // Now manually set the prefs from their corresponding preference
     // elements.
-    var prefs = this.sanitizePreferences.rootBranch;
-    for (let i = 0; i < this.sanitizePreferences.childNodes.length; ++i) {
-      var p = this.sanitizePreferences.childNodes[i];
-      prefs.setBoolPref(p.name, p.value);
+    var prefs = this._getItemPrefs();
+    for (let i = 0; i < prefs.length; ++i) {
+      var p = prefs[i];
+      Services.prefs.setBoolPref(p.name, p.value);
     }
   },
 
@@ -197,7 +202,7 @@ var gSanitizePromptDialog = {
   hasNonSelectedItems() {
     let checkboxes = document.querySelectorAll("#itemList > [preference]");
     for (let i = 0; i < checkboxes.length; ++i) {
-      let pref = document.getElementById(checkboxes[i].getAttribute("preference"));
+      let pref = Preferences.get(checkboxes[i].getAttribute("preference"));
       if (!pref.value)
         return true;
     }

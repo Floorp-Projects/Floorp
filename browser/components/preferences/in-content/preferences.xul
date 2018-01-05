@@ -105,6 +105,8 @@
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript"
+          src="chrome://global/content/preferencesBindings.js"/>
+  <script type="application/javascript"
           src="chrome://browser/content/preferences/in-content/preferences.js"/>
   <script src="chrome://browser/content/preferences/in-content/findInPage.js"/>
   <script src="chrome://browser/content/preferences/in-content/subdialogs.js"/>
@@ -196,14 +198,14 @@
         <hbox class="search-container" pack="end">
           <textbox type="search" id="searchInput" style="width: &searchField.width;" hidden="true" clickSelectsAll="true"/>
         </hbox>
-        <prefpane id="mainPrefPane">
+        <vbox id="mainPrefPane" class="prefpane prefwindow">
 #include searchResults.xul
 #include main.xul
 #include search.xul
 #include privacy.xul
 #include containers.xul
 #include sync.xul
-        </prefpane>
+        </vbox>
       </vbox>
     </vbox>
   </hbox>

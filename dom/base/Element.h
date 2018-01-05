@@ -927,9 +927,7 @@ public:
    * @param aNotify specifies whether or not the document should be
    * notified of the attribute change
    */
-  virtual nsresult UnsetAttr(int32_t aNameSpaceID,
-                             nsAtom* aAttribute,
-                             bool aNotify);
+  nsresult UnsetAttr(int32_t aNameSpaceID, nsAtom* aAttribute, bool aNotify);
 
   /**
    * Get the namespace / name / prefix of a given attribute.

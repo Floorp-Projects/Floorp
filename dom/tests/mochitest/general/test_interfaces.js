@@ -271,6 +271,10 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "DelayNode",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    "DesktopNotification",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    "DesktopNotificationCenter",
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "DeviceLightEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "DeviceMotionEvent",

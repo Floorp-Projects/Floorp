@@ -128,28 +128,33 @@
       return aPrefWindow.document.getElementById(aID);
     }
 
+    function GetPreference(aPrefWindow, aID)
+    {
+      return aPrefWindow.Preferences.get(aID);
+    }
+
     function WritePrefsToPreferences(aPrefWindow, aPrefValueSet)
     {
-      // write preference data into <preference>s
-      GetXULElement(aPrefWindow, "tests.static_preference_int"    ).value = aPrefValueSet.int;
-      GetXULElement(aPrefWindow, "tests.static_preference_bool"   ).value = aPrefValueSet.bool;
-      GetXULElement(aPrefWindow, "tests.static_preference_string" ).value = aPrefValueSet.string;
-      GetXULElement(aPrefWindow, "tests.static_preference_unichar").value = aPrefValueSet.unichar;
-      GetXULElement(aPrefWindow, "tests.static_preference_wstring").value = aPrefValueSet.wstring_data;
-      GetXULElement(aPrefWindow, "tests.static_preference_file"   ).value = aPrefValueSet.file_data;
+      // write preference data into Preference instances
+      GetPreference(aPrefWindow, "tests.static_preference_int"    ).value = aPrefValueSet.int;
+      GetPreference(aPrefWindow, "tests.static_preference_bool"   ).value = aPrefValueSet.bool;
+      GetPreference(aPrefWindow, "tests.static_preference_string" ).value = aPrefValueSet.string;
+      GetPreference(aPrefWindow, "tests.static_preference_unichar").value = aPrefValueSet.unichar;
+      GetPreference(aPrefWindow, "tests.static_preference_wstring").value = aPrefValueSet.wstring_data;
+      GetPreference(aPrefWindow, "tests.static_preference_file"   ).value = aPrefValueSet.file_data;
     }
 
     function ReadPrefsFromPreferences(aPrefWindow)
     {
-      // read preference data from <preference>s
+      // read preference data from Preference instances
       var result =
       {
-        int:          GetXULElement(aPrefWindow, "tests.static_preference_int"    ).value,
-        bool:         GetXULElement(aPrefWindow, "tests.static_preference_bool"   ).value,
-        string:       GetXULElement(aPrefWindow, "tests.static_preference_string" ).value,
-        unichar:      GetXULElement(aPrefWindow, "tests.static_preference_unichar").value,
-        wstring_data: GetXULElement(aPrefWindow, "tests.static_preference_wstring").value,
-        file_data:    GetXULElement(aPrefWindow, "tests.static_preference_file"   ).value,
+        int:          GetPreference(aPrefWindow, "tests.static_preference_int"    ).value,
+        bool:         GetPreference(aPrefWindow, "tests.static_preference_bool"   ).value,
+        string:       GetPreference(aPrefWindow, "tests.static_preference_string" ).value,
+        unichar:      GetPreference(aPrefWindow, "tests.static_preference_unichar").value,
+        wstring_data: GetPreference(aPrefWindow, "tests.static_preference_wstring").value,
+        file_data:    GetPreference(aPrefWindow, "tests.static_preference_file"   ).value,
         wstring: Components.classes["@mozilla.org/pref-localizedstring;1"]
                            .createInstance(Components.interfaces.nsIPrefLocalizedString),
         file:    Components.classes["@mozilla.org/file/local;1"]
@@ -173,7 +178,7 @@
 
     function ReadPrefsFromUI(aPrefWindow)
     {
-      // read preference data from <preference>s
+      // read preference data from Preference instances
       var result =
       {
         int:          GetXULElement(aPrefWindow, "static_element_int"    ).value,
@@ -197,7 +202,7 @@
     {
       // remark: there's currently no UI element binding for files
 
-      // were all <preferences> correctly initialized?
+      // were all Preference instances correctly initialized?
       var expected = kPrefValueSet1;
       var found    = ReadPrefsFromPreferences(aPrefWindow);
       ok(found.int          === expected.int,          "instant pref init int"    );
@@ -220,7 +225,7 @@
       expected = kPrefValueSet2;
       WritePrefsToUI(aPrefWindow, expected);
 
-      // UI changes should get passed to the <preference>s,
+      // UI changes should get passed to the Preference instances,
       // but currently they aren't if the changes are made programmatically
       // (the handlers preference.change/prefpane.input and prefpane.change
       //  are called for manual changes, though).
@@ -243,12 +248,12 @@
       todo(found.file_data    === expected.file_data,    "instant change element file"   );
 
       // try resetting the prefs to default values (which should be empty here)
-      GetXULElement(aPrefWindow, "tests.static_preference_int"    ).reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_bool"   ).reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_string" ).reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_unichar").reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_wstring").reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_file"   ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_int"    ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_bool"   ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_string" ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_unichar").reset();
+      GetPreference(aPrefWindow, "tests.static_preference_wstring").reset();
+      GetPreference(aPrefWindow, "tests.static_preference_file"   ).reset();
 
       // check system
       expected = CreateEmptyPrefValueSet();
@@ -283,12 +288,12 @@
 //      ok(found.file_data    === expected.file_data,    "instant reset element file"   );
 
       // check hasUserValue
-      ok(GetXULElement(aPrefWindow, "tests.static_preference_int"    ).hasUserValue === false, "instant reset hasUserValue int"    );
-      ok(GetXULElement(aPrefWindow, "tests.static_preference_bool"   ).hasUserValue === false, "instant reset hasUserValue bool"   );
-      ok(GetXULElement(aPrefWindow, "tests.static_preference_string" ).hasUserValue === false, "instant reset hasUserValue string" );
-      ok(GetXULElement(aPrefWindow, "tests.static_preference_unichar").hasUserValue === false, "instant reset hasUserValue unichar");
-      ok(GetXULElement(aPrefWindow, "tests.static_preference_wstring").hasUserValue === false, "instant reset hasUserValue wstring");
-      ok(GetXULElement(aPrefWindow, "tests.static_preference_file"   ).hasUserValue === false, "instant reset hasUserValue file"   );
+      ok(GetPreference(aPrefWindow, "tests.static_preference_int"    ).hasUserValue === false, "instant reset hasUserValue int"    );
+      ok(GetPreference(aPrefWindow, "tests.static_preference_bool"   ).hasUserValue === false, "instant reset hasUserValue bool"   );
+      ok(GetPreference(aPrefWindow, "tests.static_preference_string" ).hasUserValue === false, "instant reset hasUserValue string" );
+      ok(GetPreference(aPrefWindow, "tests.static_preference_unichar").hasUserValue === false, "instant reset hasUserValue unichar");
+      ok(GetPreference(aPrefWindow, "tests.static_preference_wstring").hasUserValue === false, "instant reset hasUserValue wstring");
+      ok(GetPreference(aPrefWindow, "tests.static_preference_file"   ).hasUserValue === false, "instant reset hasUserValue file"   );
 
       // done with instant apply checks
     }
@@ -301,7 +306,7 @@
 
       // remark: there's currently no UI element binding for files
 
-      // were all <preferences> correctly initialized?
+      // were all Preference instances correctly initialized?
       var expected = kPrefValueSet1;
       var found    = ReadPrefsFromPreferences(aPrefWindow);
       ok(found.int          === expected.int,          "non-instant pref init int"    );
@@ -324,7 +329,7 @@
       expected = kPrefValueSet2;
       WritePrefsToUI(aPrefWindow, expected);
 
-      // UI changes should get passed to the <preference>s,
+      // UI changes should get passed to the Preference instances,
       // but currently they aren't if the changes are made programmatically
       // (the handlers preference.change/prefpane.input and prefpane.change
       //  are called for manual changes, though).
@@ -348,12 +353,12 @@
       todo(found.file_data  === expected.file_data,    "non-instant change element file"   );
 
       // try resetting the prefs to default values (which should be empty here)
-      GetXULElement(aPrefWindow, "tests.static_preference_int"    ).reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_bool"   ).reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_string" ).reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_unichar").reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_wstring").reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_file"   ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_int"    ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_bool"   ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_string" ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_unichar").reset();
+      GetPreference(aPrefWindow, "tests.static_preference_wstring").reset();
+      GetPreference(aPrefWindow, "tests.static_preference_file"   ).reset();
 
       // check system: the current values *MUST NOT* change
       expected = kPrefValueSet1;
@@ -388,12 +393,12 @@
 //      ok(found.file_data    === expected.file_data,    "non-instant reset element file"   );
 
       // check hasUserValue
-      ok(GetXULElement(aPrefWindow, "tests.static_preference_int"    ).hasUserValue === false, "non-instant reset hasUserValue int"    );
-      ok(GetXULElement(aPrefWindow, "tests.static_preference_bool"   ).hasUserValue === false, "non-instant reset hasUserValue bool"   );
-      ok(GetXULElement(aPrefWindow, "tests.static_preference_string" ).hasUserValue === false, "non-instant reset hasUserValue string" );
-      ok(GetXULElement(aPrefWindow, "tests.static_preference_unichar").hasUserValue === false, "non-instant reset hasUserValue unichar");
-      ok(GetXULElement(aPrefWindow, "tests.static_preference_wstring").hasUserValue === false, "non-instant reset hasUserValue wstring");
-      ok(GetXULElement(aPrefWindow, "tests.static_preference_file"   ).hasUserValue === false, "non-instant reset hasUserValue file"   );
+      ok(GetPreference(aPrefWindow, "tests.static_preference_int"    ).hasUserValue === false, "non-instant reset hasUserValue int"    );
+      ok(GetPreference(aPrefWindow, "tests.static_preference_bool"   ).hasUserValue === false, "non-instant reset hasUserValue bool"   );
+      ok(GetPreference(aPrefWindow, "tests.static_preference_string" ).hasUserValue === false, "non-instant reset hasUserValue string" );
+      ok(GetPreference(aPrefWindow, "tests.static_preference_unichar").hasUserValue === false, "non-instant reset hasUserValue unichar");
+      ok(GetPreference(aPrefWindow, "tests.static_preference_wstring").hasUserValue === false, "non-instant reset hasUserValue wstring");
+      ok(GetPreference(aPrefWindow, "tests.static_preference_file"   ).hasUserValue === false, "non-instant reset hasUserValue file"   );
     }
 
     function RunNonInstantPrefTestClose(aPrefWindow)
@@ -404,20 +409,20 @@
     function RunCheckCommandRedirect(aPrefWindow)
     {
       GetXULElement(aPrefWindow, "checkbox").click();
-      ok(GetXULElement(aPrefWindow, "tests.static_preference_bool").value, "redirected command bool");
+      ok(GetPreference(aPrefWindow, "tests.static_preference_bool").value, "redirected command bool");
       GetXULElement(aPrefWindow, "checkbox").click();
-      ok(!GetXULElement(aPrefWindow, "tests.static_preference_bool").value, "redirected command bool");
+      ok(!GetPreference(aPrefWindow, "tests.static_preference_bool").value, "redirected command bool");
     }
 
     function RunResetPrefTest(aPrefWindow)
     {
       // try resetting the prefs to default values
-      GetXULElement(aPrefWindow, "tests.static_preference_int"    ).reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_bool"   ).reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_string" ).reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_unichar").reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_wstring").reset();
-      GetXULElement(aPrefWindow, "tests.static_preference_file"   ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_int"    ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_bool"   ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_string" ).reset();
+      GetPreference(aPrefWindow, "tests.static_preference_unichar").reset();
+      GetPreference(aPrefWindow, "tests.static_preference_wstring").reset();
+      GetPreference(aPrefWindow, "tests.static_preference_file"   ).reset();
     }
 
     function InitTestPrefs(aInstantApply)

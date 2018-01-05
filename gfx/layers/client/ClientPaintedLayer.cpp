@@ -228,7 +228,7 @@ ClientPaintedLayer::PaintOffMainThread()
   uint32_t flags = GetPaintFlags();
   PaintState state = mContentClient->BeginPaint(this, flags | ContentClient::PAINT_ASYNC);
 
-  if (state.mBufferState) {
+  if (state.mBufferState && state.mBufferState->HasOperations()) {
     PaintThread::Get()->PrepareBuffer(state.mBufferState);
     asyncPaints.Queue();
   }

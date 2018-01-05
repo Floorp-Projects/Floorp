@@ -1314,6 +1314,11 @@ MediaStreamGraphImpl::UpdateMainThreadState()
 bool
 MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
 {
+  // Changes to LIFECYCLE_RUNNING occur before starting or reviving the graph
+  // thread, and so the monitor need not be held to check mLifecycleState.
+  // LIFECYCLE_THREAD_NOT_STARTED is possible when shutting down offline
+  // graphs that have not started.
+  MOZ_DIAGNOSTIC_ASSERT(mLifecycleState <= LIFECYCLE_RUNNING);
   MOZ_ASSERT(OnGraphThread());
   WebCore::DenormalDisabler disabler;
 
@@ -1742,6 +1747,9 @@ MediaStreamGraphImpl::SignalMainThreadCleanup()
   MOZ_ASSERT(mDriver->OnThread());
 
   MonitorAutoLock lock(mMonitor);
+  // LIFECYCLE_THREAD_NOT_STARTED is possible when shutting down offline
+  // graphs that have not started.
+  MOZ_DIAGNOSTIC_ASSERT(mLifecycleState <= LIFECYCLE_RUNNING);
   LOG(LogLevel::Debug,
       ("MediaStreamGraph %p waiting for main thread cleanup", this));
   LifecycleStateRef() =

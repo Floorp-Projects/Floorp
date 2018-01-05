@@ -12,12 +12,40 @@
   font: -moz-dialog;
 }
 
-/* ----- APPLICATIONS PREFPANE ----- */
+.prefwindow {
+  padding: 0;
+  font: -moz-dialog !important;
+}
+
+.prefwindow[type="child"] {
+  padding-top: 18px;
+  padding-bottom: 15px;
+  padding-inline-start: 18px;
+  padding-inline-end: 20px;
+}
+
+.dialog-button-box {
+  margin: 0 12px 12px;
+  padding-top: 0 !important;
+}
+
 description {
   margin-bottom: 4px !important;
 }
 
-prefpane .groupbox-body {
+.prefpane {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  padding-inline-start: 0;
+  padding-inline-end: 12px;
+}
+
+.prefwindow[type="child"] > .prefpane {
+  padding: 0;
+}
+
+.prefpane .groupbox-body,
+.prefpane .groupbox-body {
   -moz-appearance: none;
   padding: 8px 4px 4px 4px;
 }

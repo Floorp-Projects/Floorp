@@ -5,11 +5,13 @@
   a checkbox with a command attribute properly updates even though the command
   event gets retargeted.
 -->
-<prefwindow xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            title="preferences window"
-            windowtype="test:preferences"
-            buttons="accept,cancel"
-            onload="RunTest(window.arguments)">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="prefwindow"
+        title="preferences window"
+        windowtype="test:preferences"
+        buttons="accept,cancel"
+        onload="RunTest(window.arguments)">
+  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
   <script type="application/javascript">
   <![CDATA[
     function RunTest(aArgs)
@@ -17,20 +19,18 @@
       aArgs[0](this);
       document.documentElement.cancelDialog();
     }
+
+    Preferences.addAll([
+      { id: "tests.static_preference_bool", type: "bool" },
+    ]);
   ]]>
   </script>
 
-  <prefpane id="sample_pane" label="Sample Prefpane">
-    <preferences id="sample_preferences">
-      <preference id="tests.static_preference_bool"
-                  name="tests.static_preference_bool"
-                  type="bool"/>
-    </preferences>
-
+  <vbox id="sample_pane" class="prefpane" label="Sample Prefpane">
     <commandset>
       <command id="cmd_test" preference="tests.static_preference_bool"/>
     </commandset>
 
     <checkbox id="checkbox" label="Enable Option" preference="tests.static_preference_bool" command="cmd_test"/>
-  </prefpane>
-</prefwindow>
+  </vbox>
+</dialog>
