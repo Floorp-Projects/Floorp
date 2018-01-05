@@ -95,6 +95,11 @@ public:
   // Determine if the client is in private browsing mode.
   bool
   IsPrivateBrowsing() const;
+
+  // Get a main-thread nsIPrincipal for the client.  This may return nullptr
+  // if the PrincipalInfo() fails to deserialize for some reason.
+  nsCOMPtr<nsIPrincipal>
+  GetPrincipal() const;
 };
 
 } // namespace dom
