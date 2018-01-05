@@ -1263,23 +1263,6 @@ IMEContentObserver::ClearAddedNodesDuringDocumentChange()
      ", finished storing consecutive nodes", this));
 }
 
-// static
-nsIContent*
-IMEContentObserver::GetChildNode(nsINode* aParent, int32_t aOffset)
-{
-  if (!aParent->HasChildren() || aOffset < 0 ||
-      aOffset >= static_cast<int32_t>(aParent->Length())) {
-    return nullptr;
-  }
-  if (!aOffset) {
-    return aParent->GetFirstChild();
-  }
-  if (aOffset == static_cast<int32_t>(aParent->Length() - 1)) {
-    return aParent->GetLastChild();
-  }
-  return aParent->GetChildAt_Deprecated(aOffset);
-}
-
 bool
 IMEContentObserver::IsNextNodeOfLastAddedNode(nsINode* aParent,
                                               nsIContent* aChild) const

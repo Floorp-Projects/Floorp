@@ -1,0 +1,56 @@
+<html>
+<head>
+<title>Bug 1421887 reftest reference</title>
+<style type="text/css">
+table
+{
+        border-collapse : collapse;
+}
+td
+{
+        padding : 5px;
+        background-color : #F7F7F8;
+        border-left : dashed 1px;
+        border-right : dashed 1px;
+        text-align : left;
+}
+.bb {
+        border-bottom : solid 1px;
+        border-top : solid 1px;
+
+}
+</style>
+</head>
+
+<body>
+<table>
+<thead>
+        <tr>
+                <th>test</th>
+                <th>test</th>
+        </tr>
+</thead>
+<tbody>
+        <tr>
+                <td class="bb">test</td>
+
+                <td class="bb" rowspan="2">test</td>
+        </tr>
+        <tr><td class="bb">test</td></tr>
+
+        <tr>
+
+                <td class="bb">test</td>
+                <td></td>
+        </tr>
+        <tr><td class="bb">test</td><td></td></tr>
+
+        <tr>
+                <td class="bb">test</td>
+                <td class="bb" rowspan="2">test</td>
+        </tr>
+        <tr><td class="bb">test</td></tr>
+</tbody>
+</table>
+</body>
+</html>

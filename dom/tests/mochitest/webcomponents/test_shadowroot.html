@@ -5,79 +5,87 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=806506
 -->
 <head>
   <title>Test for ShadowRoot</title>
+  <script type="text/javascript" src="head.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<div id="movedtoshadow" class="testclass"></div>
-<svg id="svgmovedtoshadow"></svg>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=806506">Bug 806506</a>
 <script>
-// Create ShadowRoot.
-var element = document.createElement("div");
-ok(!element.shadowRoot, "div element should not have a shadow root.");
-var shadow = element.createShadowRoot();
-is(element.shadowRoot, shadow, "shadowRoot property should return the same shadow root that was just created.");
 
-// Move an element from the document to the ShadowRoot.
-var inShadowEl = document.getElementById("movedtoshadow");
-var inShadowSVGEl = document.getElementById("svgmovedtoshadow");
+SimpleTest.waitForExplicitFinish();
 
-// Test getElementById
-ok(!shadow.getElementById("movedtoshadow"), "Element not in ShadowRoot should not be accessible from ShadowRoot API.");
-ok(!shadow.getElementById("svgmovedtoshadow"), "SVG element not in ShadowRoot should not be accessible from ShadowRoot API.");
-shadow.appendChild(inShadowEl);
-shadow.appendChild(inShadowSVGEl);
-is(shadow.getElementById("movedtoshadow"), inShadowEl, "Element appended to a ShadowRoot should be accessible from ShadowRoot API.");
-ok(!document.getElementById("movedtoshadow"), "Element appended to a ShadowRoot should not be accessible from document.");
-is(shadow.getElementById("svgmovedtoshadow"), inShadowSVGEl, "SVG element appended to a ShadowRoot should be accessible from ShadowRoot API.");
-ok(!document.getElementById("svgmovedtoshadow"), "SVG element appended to a ShadowRoot should not be accessible from document.");
+var content = '<div id="movedtoshadow" class="testclass"></div>' +
+              '<svg id="svgmovedtoshadow"></svg>';
+setWebComponentsPrefAndCreateIframe(content)
+  .then((aDocument) => {
+    // Create ShadowRoot.
+    var element = aDocument.createElement("div");
+    ok(!element.shadowRoot, "div element should not have a shadow root.");
+    var shadow = element.attachShadow({mode: "open"});
+    is(element.shadowRoot, shadow, "shadowRoot property should return the same shadow root that was just created.");
 
-// Test getElementsByClassName
-is(document.getElementsByClassName("testclass").length, 0, "Element removed from DOM should not be accessible by DOM accessors.");
-is(shadow.getElementsByClassName("testclass").length, 1, "Element added to ShadowRoot should be accessible by ShadowRoot API.");
+    // Move an element from the document to the ShadowRoot.
+    var inShadowEl = aDocument.getElementById("movedtoshadow");
+    var inShadowSVGEl = aDocument.getElementById("svgmovedtoshadow");
 
-// Test getElementsByTagName{NS}
-is(document.getElementsByTagName("div").length, 0, "Element removed from DOM should not be accessible from DOM accessors.");
-is(shadow.getElementsByTagName("div").length, 1, "Elements in the ShadowRoot should be accessible from the ShadowRoot API.");
-is(document.getElementsByTagName("svg").length, 0, "SVG elements removed from DOM should not be accessible from DOM accessors.");
-is(shadow.getElementsByTagName("svg").length, 1, "SVG element in the ShadowRoot should be accessible from the ShadowRoot API.");
-is(shadow.getElementsByTagNameNS("http://www.w3.org/2000/svg", "svg").length, 1, "SVG element in the ShadowRoot should be accessible from the ShadowRoot API.");
+    // Test getElementById
+    ok(!shadow.getElementById("movedtoshadow"), "Element not in ShadowRoot should not be accessible from ShadowRoot API.");
+    ok(!shadow.getElementById("svgmovedtoshadow"), "SVG element not in ShadowRoot should not be accessible from ShadowRoot API.");
+    shadow.appendChild(inShadowEl);
+    shadow.appendChild(inShadowSVGEl);
+    is(shadow.getElementById("movedtoshadow"), inShadowEl, "Element appended to a ShadowRoot should be accessible from ShadowRoot API.");
+    ok(!aDocument.getElementById("movedtoshadow"), "Element appended to a ShadowRoot should not be accessible from document.");
+    is(shadow.getElementById("svgmovedtoshadow"), inShadowSVGEl, "SVG element appended to a ShadowRoot should be accessible from ShadowRoot API.");
+    ok(!aDocument.getElementById("svgmovedtoshadow"), "SVG element appended to a ShadowRoot should not be accessible from document.");
 
-// Remove elements from ShadowRoot and make sure that they are no longer accessible via the ShadowRoot API.
-shadow.removeChild(inShadowEl);
-shadow.removeChild(inShadowSVGEl);
-ok(!shadow.getElementById("movedtoshadow"), "ShadowRoot API should not be able to access elements removed from ShadowRoot.");
-ok(!shadow.getElementById("svgmovedtoshadow"), "ShadowRoot API should not be able to access elements removed from ShadowRoot.");
-is(shadow.getElementsByClassName("testclass").length, 0, "ShadowRoot getElementsByClassName should not be able to access elements removed from ShadowRoot.");
-is(shadow.getElementsByTagName("svg").length, 0, "ShadowRoot getElementsByTagName should not be able to access elements removed from ShadowRoot.");
-is(shadow.getElementsByTagNameNS("http://www.w3.org/2000/svg", "svg").length, 0, "ShadowRoot getElementsByTagNameNS should not be able to access elements removed from ShadowRoot.");
+    // Test getElementsByClassName
+    is(aDocument.getElementsByClassName("testclass").length, 0, "Element removed from DOM should not be accessible by DOM accessors.");
+    is(shadow.getElementsByClassName("testclass").length, 1, "Element added to ShadowRoot should be accessible by ShadowRoot API.");
 
-// Test querySelector on element in a ShadowRoot.
-element = document.createElement("div");
-shadow = element.createShadowRoot();
-var parentDiv = document.createElement("div");
-var childSpan = document.createElement("span");
-childSpan.id = "innerdiv";
-parentDiv.appendChild(childSpan);
-is(parentDiv.querySelector("#innerdiv"), childSpan, "ID query selector should work on element in ShadowRoot.");
-is(parentDiv.querySelector("span"), childSpan, "Tag query selector should work on element in ShadowRoot.");
+    // Test getElementsByTagName{NS}
+    is(aDocument.getElementsByTagName("div").length, 0, "Element removed from DOM should not be accessible from DOM accessors.");
+    is(shadow.getElementsByTagName("div").length, 1, "Elements in the ShadowRoot should be accessible from the ShadowRoot API.");
+    is(aDocument.getElementsByTagName("svg").length, 0, "SVG elements removed from DOM should not be accessible from DOM accessors.");
+    is(shadow.getElementsByTagName("svg").length, 1, "SVG element in the ShadowRoot should be accessible from the ShadowRoot API.");
+    is(shadow.getElementsByTagNameNS("http://www.w3.org/2000/svg", "svg").length, 1, "SVG element in the ShadowRoot should be accessible from the ShadowRoot API.");
 
-// Test that exception is thrown when trying to create a cycle with host node.
-element = document.createElement("div");
-shadow = element.createShadowRoot();
-try {
-  shadow.appendChild(element);
-  ok(false, "Excpetion should be thrown when creating a cycle with host content.");
-} catch (ex) {
-  ok(true, "Excpetion should be thrown when creating a cycle with host content.");
-}
+    // Remove elements from ShadowRoot and make sure that they are no longer accessible via the ShadowRoot API.
+    shadow.removeChild(inShadowEl);
+    shadow.removeChild(inShadowSVGEl);
+    ok(!shadow.getElementById("movedtoshadow"), "ShadowRoot API should not be able to access elements removed from ShadowRoot.");
+    ok(!shadow.getElementById("svgmovedtoshadow"), "ShadowRoot API should not be able to access elements removed from ShadowRoot.");
+    is(shadow.getElementsByClassName("testclass").length, 0, "ShadowRoot getElementsByClassName should not be able to access elements removed from ShadowRoot.");
+    is(shadow.getElementsByTagName("svg").length, 0, "ShadowRoot getElementsByTagName should not be able to access elements removed from ShadowRoot.");
+    is(shadow.getElementsByTagNameNS("http://www.w3.org/2000/svg", "svg").length, 0, "ShadowRoot getElementsByTagNameNS should not be able to access elements removed from ShadowRoot.");
 
-// Basic innerHTML tests.
-shadow.innerHTML = '<span id="first"></span><div id="second"></div>';
-is(shadow.childNodes.length, 2, "There should be two children in the ShadowRoot.");
-is(shadow.getElementById("second").tagName, "DIV", "Elements created by innerHTML should be accessible by ShadowRoot API.");
+    // Test querySelector on element in a ShadowRoot.
+    element = aDocument.createElement("div");
+    shadow = element.attachShadow({mode: "open"});
+    var parentDiv = aDocument.createElement("div");
+    var childSpan = aDocument.createElement("span");
+    childSpan.id = "innerdiv";
+    parentDiv.appendChild(childSpan);
+    is(parentDiv.querySelector("#innerdiv"), childSpan, "ID query selector should work on element in ShadowRoot.");
+    is(parentDiv.querySelector("span"), childSpan, "Tag query selector should work on element in ShadowRoot.");
 
+    // Test that exception is thrown when trying to create a cycle with host node.
+    element = aDocument.createElement("div");
+    shadow = element.attachShadow({mode: "open"});
+    try {
+      shadow.appendChild(element);
+      ok(false, "Excpetion should be thrown when creating a cycle with host content.");
+    } catch (ex) {
+      ok(true, "Excpetion should be thrown when creating a cycle with host content.");
+    }
+
+    // Basic innerHTML tests.
+    shadow.innerHTML = '<span id="first"></span><div id="second"></div>';
+    is(shadow.childNodes.length, 2, "There should be two children in the ShadowRoot.");
+    is(shadow.getElementById("second").tagName, "DIV", "Elements created by innerHTML should be accessible by ShadowRoot API.");
+
+    SimpleTest.finish();
+  });
 </script>
 </body>
 </html>

@@ -18,9 +18,14 @@
 
   <script type="application/javascript">
     function runTest() {
+      let iframe = document.getElementById("iframe");
+
       // children change will recreate the table
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, getNode("c1"))
+        new invokerChecker(EVENT_REORDER, () => {
+          let doc = getNode("iframe").contentDocument;
+          return doc && doc.getElementById("c1");
+        })
       ];
 
       this.invoke = function runTest_invoke() {
@@ -33,9 +38,9 @@
             { TEXT_LEAF: [] } // More text
           ]
         };
-        testAccessibleTree("c1", tree);
+        testAccessibleTree(iframe.contentDocument.getElementById("c1"), tree);
 
-        getNode("c1_t").querySelector("span").remove();
+        iframe.contentDocument.getElementById("c1_t").querySelector("span").remove();
       };
 
       this.finalCheck = function runTest_finalCheck() {
@@ -45,7 +50,7 @@
             { TEXT_LEAF: [] } // More text
           ]
         };
-        testAccessibleTree("c1", tree);
+        testAccessibleTree(iframe.contentDocument.getElementById("c1"), tree);
       };
 
       this.getID = function runTest_getID() {
@@ -56,7 +61,10 @@
     function runShadowTest() {
       // children change will recreate the table
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, "c2")
+        new invokerChecker(EVENT_REORDER, () => {
+          let doc = getNode("iframe").contentDocument;
+          return doc && doc.getElementById("c2");
+        })
       ];
 
       this.invoke = function runShadowTest_invoke() {
@@ -69,9 +77,10 @@
             { TEXT_LEAF: [] } // More text
           ]
         };
-        testAccessibleTree("c2", tree);
+        testAccessibleTree(iframe.contentDocument.getElementById("c2"), tree);
 
-        gShadowRoot.firstElementChild.querySelector("span").remove();
+        var shadowRoot = iframe.contentDocument.getElementById("c2_c").shadowRoot;
+        shadowRoot.firstElementChild.querySelector("span").remove();
       };
 
       this.finalCheck = function runShadowTest_finalCheck() {
@@ -81,7 +90,7 @@
             { TEXT_LEAF: [] } // More text
           ]
         };
-        testAccessibleTree("c2", tree);
+        testAccessibleTree(iframe.contentDocument.getElementById("c2"), tree);
       };
 
       this.getID = function runShadowTest_getID() {
@@ -101,39 +110,22 @@
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    SpecialPowers.pushPrefEnv({
+      set: [
+        ["dom.webcomponents.enabled", true]
+      ]
+    }, function() {
+      // This test loads in an iframe, to ensure that the element instance is
+      // loaded with the correct value of the preference.
+      let iframe = document.createElement("iframe");
+      iframe.id = "iframe";
+      iframe.src = "test_bug1276857_subframe.html";
+      addA11yLoadEvent(doTest, iframe.contentWindow);
+      document.body.appendChild(iframe);
+    });
   </script>
 
 </head>
-
 <body>
-  <p id="display"></p>
-  <div id="content" style="display: none"></div>
-  <pre id="test">
-  </pre>
-
-  <div id="c1">
-    <div id="c1_t" style="display: table" role="presentation">
-    Some text
-    <span style="display: table-cell">something with accessibles goes here</span>
-    More text
-    </div>
-  </div>
-
-  <template id="tmpl">
-    <div style="display: table" role="presentation">
-    Some text
-    <span style="display: table-cell">something with accessibles goes here</span>
-    More text
-    </div>
-  </template>
-
-  <div id="c2"><div id="c2_c" role="presentation"></div></div>
-
-  <script>
-    var gShadowRoot = document.getElementById("c2_c").createShadowRoot();
-    var tmpl = document.getElementById("tmpl");
-    gShadowRoot.appendChild(document.importNode(tmpl.content, true));
-  </script>
 </body>
 </html>
