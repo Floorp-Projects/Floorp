@@ -36,6 +36,7 @@ struct nsRuleData final : mozilla::GenericSpecifiedValues
   bool mIsImportantRule;
   mozilla::SheetType mLevel;
   mozilla::GeckoStyleContext* const mStyleContext;
+  nsPresContext* const mPresContext;
 
   // We store nsCSSValues needed to compute the data for one or more
   // style structs (specified by the bitfield mSIDs).  These are stored
@@ -55,7 +56,6 @@ struct nsRuleData final : mozilla::GenericSpecifiedValues
 
   nsRuleData(uint32_t aSIDs,
              nsCSSValue* aValueStorage,
-             nsPresContext* aContext,
              mozilla::GeckoStyleContext* aStyleContext);
 
 #ifdef DEBUG

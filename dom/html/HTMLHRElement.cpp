@@ -169,8 +169,7 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Color))) {
     // color: a color
     // (we got the color attribute earlier)
-    if (colorIsSet &&
-        aData->PresContext()->UseDocumentColors()) {
+    if (colorIsSet && !aData->ShouldIgnoreColors()) {
       aData->SetColorValueIfUnset(eCSSProperty_color, color);
     }
   }
