@@ -10,62 +10,56 @@
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-eval-in-stackframe.html";
+                 "new-console-output/test/mochitest/test-eval-in-stackframe.html";
 
-// Force the old debugger UI since it's directly used (see Bug 1301705)
-Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", false);
-registerCleanupFunction(function* () {
-  Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
-});
+add_task(async function () {
+  // Force the old debugger UI since it's directly used (see Bug 1301705).
+  await pushPref("devtools.debugger.new-debugger-frontend", false);
 
-add_task(function* () {
-  yield loadTab(TEST_URI);
-
-  info("open the web console");
-  let hud = yield openConsole();
-  let {jsterm} = hud;
+  info("open the console");
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const {jsterm} = hud;
 
   info("open the debugger");
-  let {panelWin} = yield openDebugger();
-  let {DebuggerController} = panelWin;
-  let {activeThread} = DebuggerController;
+  let {panel} = await openDebugger();
+  let {activeThread} = panel.panelWin.DebuggerController;
 
-  let firstCall = defer();
-  let frameAdded = defer();
-  executeSoon(() => {
-    info("Executing firstCall");
-    activeThread.addOneTimeListener("framesadded", () => {
-      executeSoon(frameAdded.resolve);
-    });
-    jsterm.execute("firstCall()").then(firstCall.resolve);
+  const onFirstCallFramesAdded = activeThread.addOneTimeListener("framesadded");
+  // firstCall calls secondCall, which has a debugger statement, so we'll be paused.
+  const onFirstCallMessageReceived = waitForMessage(hud, "undefined");
+
+  const unresolvedSymbol = Symbol();
+  let firstCallEvaluationResult = unresolvedSymbol;
+  onFirstCallMessageReceived.then(message => {
+    firstCallEvaluationResult = message;
   });
+  jsterm.execute("firstCall()");
 
   info("Waiting for a frame to be added");
-  yield frameAdded.promise;
+  await onFirstCallFramesAdded;
+
+  info("frames added, select the console again");
+  await openConsole();
 
   info("Executing basic command while paused");
-  yield executeAndConfirm(jsterm, "1 + 2", "3");
+  let onMessageReceived = waitForMessage(hud, "3");
+  jsterm.execute("1 + 2");
+  let message = await onMessageReceived;
+  ok(message, "`1 + 2` was evaluated whith debugger paused");
 
   info("Executing command using scoped variables while paused");
-  yield executeAndConfirm(jsterm, "foo + foo2",
-                          '"globalFooBug783499foo2SecondCall"');
+  onMessageReceived = waitForMessage(hud, `"globalFooBug783499foo2SecondCall"`);
+  jsterm.execute("foo + foo2");
+  message = await onMessageReceived;
+  ok(message, "`foo + foo2` was evaluated as expected with debugger paused");
+
+  info("Checking the first command, which is the last to resolve since it paused");
+  ok(firstCallEvaluationResult === unresolvedSymbol, "firstCall was not evaluated yet");
 
   info("Resuming the thread");
   activeThread.resume();
 
-  info("Checking the first command, which is the last to resolve since it " +
-       "paused");
-  let node = yield firstCall.promise;
-  is(node.querySelector(".message-body").textContent,
-     "undefined",
-     "firstCall() returned correct value");
+  message = await onFirstCallMessageReceived;
+  ok(firstCallEvaluationResult !== unresolvedSymbol,
+    "firstCall() returned correct value");
 });
-
-function* executeAndConfirm(jsterm, input, output) {
-  info("Executing command `" + input + "`");
-
-  let node = yield jsterm.execute(input);
-
-  is(node.querySelector(".message-body").textContent, output,
-     "Expected result from call to " + input);
-}
