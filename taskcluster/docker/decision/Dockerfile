@@ -3,7 +3,7 @@ MAINTAINER    Greg Arndt <garndt@mozilla.com>
 
 # Add worker user
 RUN mkdir /builds
-RUN useradd -d /builds/worker -s /bin/bash -m worker -u 1000 -g 1000
+RUN useradd -d /builds/worker -s /bin/bash -m worker
 RUN mkdir /builds/worker/artifacts && chown worker:worker /builds/worker/artifacts
 
 # %include python/mozbuild/mozbuild/action/tooltool.py
