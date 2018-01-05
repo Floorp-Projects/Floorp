@@ -9,8 +9,11 @@ from __future__ import unicode_literals
 
 import logging
 import os
-import sys
 import difflib
+import unittest
+
+import buildconfig
+import mozunit
 
 FAILURE_CODE = 1
 SUCCESS_CODE = 0
@@ -155,15 +158,12 @@ def compare(topsrcdir):
     return success
 
 
+class TestCompareMozconfigs(unittest.TestCase):
+    def test_compare_mozconfigs(self):
+        topsrcdir = buildconfig.substs['top_srcdir']
+        self.assertTrue(compare(topsrcdir))
+
+
 if __name__ == '__main__':
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('topsrcdir', help='Path to root of source checkout')
-
-    args = parser.parse_args()
-
     logging.basicConfig(level=logging.INFO)
-
-    if not compare(args.topsrcdir):
-        sys.exit(1)
+    mozunit.main()
