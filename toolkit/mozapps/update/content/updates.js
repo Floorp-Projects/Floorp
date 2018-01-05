@@ -83,27 +83,6 @@ function openUpdateURL(event) {
 }
 
 /**
- * Gets a preference value, handling the case where there is no default.
- * @param   func
- *          The name of the preference function to call, on nsIPrefBranch
- * @param   preference
- *          The name of the preference
- * @param   defaultValue
- *          The default value to return in the event the preference has
- *          no setting
- * @returns The value of the preference, or undefined if there was no
- *          user or default value.
- */
-function getPref(func, preference, defaultValue) {
-  try {
-    return Services.prefs[func](preference);
-  } catch (e) {
-    LOG("General", "getPref - failed to get preference: " + preference);
-  }
-  return defaultValue;
-}
-
-/**
  * A set of shared data and control functions for the wizard as a whole.
  */
 var gUpdates = {
@@ -311,7 +290,7 @@ var gUpdates = {
   onLoad() {
     this.wiz = document.documentElement;
 
-    gLogEnabled = getPref("getBoolPref", PREF_APP_UPDATE_LOG, false);
+    gLogEnabled = Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false);
 
     this.strings = document.getElementById("updateStrings");
     var brandStrings = document.getElementById("brandStrings");
@@ -595,7 +574,7 @@ var gNoUpdatesPage = {
     LOG("gNoUpdatesPage", "onPageShow - could not select an appropriate " +
         "update. Either there were no updates or |selectUpdate| failed");
 
-    if (getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true))
+    if (Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED, true))
       document.getElementById("noUpdatesAutoEnabled").hidden = false;
     else
       document.getElementById("noUpdatesAutoDisabled").hidden = false;
@@ -1295,7 +1274,7 @@ var gFinishedPage = {
       moreElevatedLinkLabel.setAttribute("hidden", "false");
     }
 
-    if (getPref("getBoolPref", PREF_APP_UPDATE_TEST_LOOP, false)) {
+    if (Services.prefs.getBoolPref(PREF_APP_UPDATE_TEST_LOOP, false)) {
       setTimeout(function() { gUpdates.wiz.getButton("finish").click(); },
                  UPDATE_TEST_LOOP_INTERVAL);
     }
