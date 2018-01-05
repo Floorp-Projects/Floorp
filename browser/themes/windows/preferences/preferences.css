@@ -28,16 +28,6 @@
   padding: 0px;
 }
 
-.dialog-button-box {
-  padding-bottom: 10px;
-  padding-inline-start: 8px;
-  padding-inline-end: 10px;
-}
-
-.prefwindow[type="child"] .dialog-button-box {
-  padding: 0px;
-}
-
 /* General Pane */
 
 #useFirefoxSync,
