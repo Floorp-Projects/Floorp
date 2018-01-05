@@ -107,7 +107,9 @@ ExpectedOwnerForChild(const nsIFrame& aFrame)
       // Handle :-moz-table and :-moz-inline-table.
       parent = IsAnonBox(*tableFrame) ? parent->GetParent() : tableFrame;
     } else {
-      parent = parent->GetParent();
+      // We get the in-flow parent here so that we can handle the OOF anonymous
+      // boxed to get the correct parent.
+      parent = parent->GetInFlowParent();
     }
     parent = FirstContinuationOrPartOfIBSplit(parent);
   }
