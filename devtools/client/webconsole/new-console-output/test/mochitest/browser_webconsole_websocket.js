@@ -17,7 +17,7 @@ add_task(async function () {
 
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI);
 
-  await waitFor(() => findMessage(hud, "ws://0.0.0.0:81"));
-  await waitFor(() => findMessage(hud, "ws://0.0.0.0:82"));
+  await waitFor(() => findMessage(hud, "ws://0.0.0.0:81"), null, 100);
+  await waitFor(() => findMessage(hud, "ws://0.0.0.0:82"), null, 100);
   ok(true, "WebSocket error messages are displayed in the console");
 });
