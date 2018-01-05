@@ -267,6 +267,8 @@ class ProfileEntry
 JS_FRIEND_API(void)
 SetContextProfilingStack(JSContext* cx, PseudoStack* pseudoStack);
 
+// GetContextProfilingStack also exists, but it's defined in RootingAPI.h.
+
 JS_FRIEND_API(void)
 EnableContextProfilingStack(JSContext* cx, bool enabled);
 
@@ -381,5 +383,48 @@ class PseudoStack
     // for more details.
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> stackPointer;
 };
+
+namespace js {
+
+class AutoGeckoProfilerEntry;
+class GeckoProfilerEntryMarker;
+class GeckoProfilerBaselineOSRMarker;
+
+class GeckoProfilerThread
+{
+    friend class AutoGeckoProfilerEntry;
+    friend class GeckoProfilerEntryMarker;
+    friend class GeckoProfilerBaselineOSRMarker;
+
+    PseudoStack*         pseudoStack_;
+
+  public:
+    GeckoProfilerThread();
+
+    uint32_t stackPointer() { MOZ_ASSERT(installed()); return pseudoStack_->stackPointer; }
+    ProfileEntry* stack() { return pseudoStack_->entries; }
+    PseudoStack* getPseudoStack() { return pseudoStack_; }
+
+    /* management of whether instrumentation is on or off */
+    bool installed() { return pseudoStack_ != nullptr; }
+
+    void setProfilingStack(PseudoStack* pseudoStack);
+    void trace(JSTracer* trc);
+
+    /*
+     * Functions which are the actual instrumentation to track run information
+     *
+     *   - enter: a function has started to execute
+     *   - updatePC: updates the pc information about where a function
+     *               is currently executing
+     *   - exit: this function has ceased execution, and no further
+     *           entries/exits will be made
+     */
+    bool enter(JSContext* cx, JSScript* script, JSFunction* maybeFun);
+    void exit(JSScript* script, JSFunction* maybeFun);
+    inline void updatePC(JSContext* cx, JSScript* script, jsbytecode* pc);
+};
+
+} // namespace js
 
 #endif  /* js_ProfilingStack_h */
