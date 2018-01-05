@@ -1,38 +1,40 @@
 <?xml version="1.0"?>
 
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+<!-- -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- -->
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-#ifdef XP_MACOSX
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
-#endif
 
-<!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/fonts.dtd" >
+<!DOCTYPE dialog [
+  <!ENTITY % preferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
+  %preferencesDTD;
+  <!ENTITY % fontsDTD SYSTEM "chrome://browser/locale/preferences/fonts.dtd">
+  %fontsDTD;
+]>
 
-<prefwindow id="FontsDialog" type="child"
-            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            title="&fontsDialog.title;"
-            dlgbuttons="accept,cancel,help"
-            ondialoghelp="openPrefsHelp()"
-            onbeforeaccept="return gFontsDialog.onBeforeAccept();"
-            style="">
+<dialog id="FontsDialog" type="child" class="prefwindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&fontsDialog.title;"
+        buttons="accept,cancel,help"
+        persist="lastSelected screenX screenY"
+        closebuttonlabel="&preferencesCloseButton.label;"
+        closebuttonaccesskey="&preferencesCloseButton.accesskey;"
+        role="dialog"
+        helpTopic="prefs-fonts-and-colors"
+        ondialoghelp="openPrefsHelp()"
+        onbeforeaccept="return gFontsDialog.onBeforeAccept();">
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
 
-  <prefpane id="FontsDialogPane"
-            class="largeDialogContainer"
-            helpTopic="prefs-fonts-and-colors">
+  <keyset>
+    <key key="&windowClose.key;" modifiers="accel" oncommand="Preferences.close(event)"/>
+  </keyset>
 
-    <preferences id="fontPreferences">
-      <preference id="font.language.group"  name="font.language.group"  type="wstring"/>
-      <preference id="browser.display.use_document_fonts"
-                  name="browser.display.use_document_fonts"
-                  type="int"/>
-      <preference id="intl.charset.fallback.override" name="intl.charset.fallback.override" type="string"/>
-    </preferences>
+  <vbox id="FontsDialogPane" class="prefpane largeDialogContainer">
 
     <stringbundle id="bundlePreferences" src="chrome://browser/locale/preferences/preferences.properties"/>
     <script type="application/javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
@@ -297,5 +299,5 @@
         </hbox>
       </hbox>
     </groupbox>
-  </prefpane>
-</prefwindow>
+  </vbox>
+</dialog>

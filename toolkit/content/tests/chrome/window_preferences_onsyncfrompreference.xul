@@ -8,24 +8,24 @@
   This test ensures that onsyncfrompreference handlers are called after all the
   values of the corresponding preference element have been set correctly
 -->
-<prefwindow xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            title="preferences window"
-            width="300" height="300"
-            windowtype="test:preferences">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="prefwindow"
+        title="preferences window"
+        width="300" height="300"
+        windowtype="test:preferences">
 
-  <prefpane id="sample_pane" label="Sample Prefpane">
-    <preferences id="sample_preferences">
-      <preference id="tests.onsyncfrompreference.pref1"
-                  name="tests.onsyncfrompreference.pref1"
-                  type="int"/>
-      <preference id="tests.onsyncfrompreference.pref2"
-                  name="tests.onsyncfrompreference.pref2"
-                  type="int"/>
-      <preference id="tests.onsyncfrompreference.pref3"
-                  name="tests.onsyncfrompreference.pref3"
-                  type="int"/>
-    </preferences>
-  </prefpane>
+  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
+  <script type="application/javascript">
+  <![CDATA[
+    Preferences.addAll([
+      { id: "tests.onsyncfrompreference.pref1", type: "int" },
+      { id: "tests.onsyncfrompreference.pref2", type: "int" },
+      { id: "tests.onsyncfrompreference.pref3", type: "int" },
+    ]);
+  ]]>
+  </script>
+  <vbox id="sample_pane" class="prefpane" label="Sample Prefpane">
+  </vbox>
   <label>Test Prefpane</label>
         <checkbox id="check1" label="Label1"
                 preference="tests.onsyncfrompreference.pref1"
@@ -39,4 +39,4 @@
                 preference="tests.onsyncfrompreference.pref3"
                 onsyncfrompreference="return window.arguments[0]();"
                 onsynctopreference="return 1;"/>
-</prefwindow>
+</dialog>

@@ -11,6 +11,7 @@
 /* import-globals-from sync.js */
 /* import-globals-from findInPage.js */
 /* import-globals-from ../../../base/content/utilityOverlay.js */
+/* import-globals-from ../../../../toolkit/content/preferencesBindings.js */
 
 "use strict";
 
@@ -57,7 +58,7 @@ function register_module(categoryName, categoryObject) {
 document.addEventListener("DOMContentLoaded", init_all, {once: true});
 
 function init_all() {
-  document.documentElement.instantApply = true;
+  Preferences.forceEnableInstantApply();
 
   gSubDialog.init();
   register_module("paneGeneral", gMainPane);
@@ -316,14 +317,6 @@ function scrollContentTo(element) {
     top,
     behavior: "smooth",
   });
-}
-
-function helpButtonCommand() {
-  let pane = history.state;
-  let categories = document.getElementById("categories");
-  let helpTopic = categories.querySelector(".category[value=" + pane + "]")
-                            .getAttribute("helpTopic");
-  openHelpLink(helpTopic);
 }
 
 function friendlyPrefCategoryNameToInternalName(aName) {
