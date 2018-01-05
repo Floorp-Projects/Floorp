@@ -1,4 +1,4 @@
-../tools/mozterm
+../../python/mozterm
 
 ../mozbase/manifestparser
 ../mozbase/mozcrash

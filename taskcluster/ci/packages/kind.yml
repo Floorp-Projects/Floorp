@@ -1,0 +1,28 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+  - taskgraph.transforms.try_job:transforms
+  - taskgraph.transforms.job:transforms
+  - taskgraph.transforms.task:transforms
+
+jobs:
+  deb7-python:
+    description: "Python backport for Debian wheezy"
+    treeherder:
+      kind: build
+      platform: packages/opt
+      symbol: Deb7(python)
+      tier: 1
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+      max-run-time: 1800
+    run:
+      using: debian-package
+      dsc: "http://snapshot.debian.org/archive/debian/20160813T164221Z/pool/main/p/python2.7/python2.7_2.7.9-2+deb8u1.dsc"
+      dsc-sha256: 274c293e7156edf59cb9f0a9d8cedcd94fa801df35adf39b8a9f3d776a250ead
+      patch: python-wheezy.diff
+      pre-build-command: debian/rules control-file

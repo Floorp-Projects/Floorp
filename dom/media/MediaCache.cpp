@@ -724,16 +724,18 @@ void
 MediaCache::CloseStreamsForPrivateBrowsing()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  sThread->Dispatch(
-    NS_NewRunnableFunction("MediaCache::CloseStreamsForPrivateBrowsing",
-                           [self = RefPtr<MediaCache>(this)]() {
-                             AutoLock lock(self->mMonitor);
-                             for (MediaCacheStream* s : self->mStreams) {
-                               if (s->mIsPrivateBrowsing) {
-                                 s->CloseInternal(lock);
-                               }
-                             }
-                           }));
+  sThread->Dispatch(NS_NewRunnableFunction(
+    "MediaCache::CloseStreamsForPrivateBrowsing",
+    [self = RefPtr<MediaCache>(this)]() {
+      AutoLock lock(self->mMonitor);
+      // Copy mStreams since CloseInternal() will change the array.
+      nsTArray<MediaCacheStream*> streams(self->mStreams);
+      for (MediaCacheStream* s : streams) {
+        if (s->mIsPrivateBrowsing) {
+          s->CloseInternal(lock);
+        }
+      }
+    }));
 }
 
 /* static */ RefPtr<MediaCache>

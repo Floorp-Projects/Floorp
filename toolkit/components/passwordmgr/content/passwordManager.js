@@ -60,9 +60,9 @@ let signonReloadDisplay = {
 };
 
 // Formatter for localization.
-let dateFormatter = Services.intl.createDateTimeFormat(undefined,
+let dateFormatter = new Services.intl.DateTimeFormat(undefined,
                       { dateStyle: "medium" });
-let dateAndTimeFormatter = Services.intl.createDateTimeFormat(undefined,
+let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined,
                              { dateStyle: "medium",
                                timeStyle: "short" });
 

@@ -102,7 +102,7 @@ function checkLoginItems(logins, items) {
   }
   let duplicates = findDuplicates(logins);
 
-  let dateAndTimeFormatter = Services.intl.createDateTimeFormat(undefined,
+  let dateAndTimeFormatter = new Services.intl.DateTimeFormat(undefined,
                              { dateStyle: "medium" });
   for (let login of logins) {
     if (login.username && !duplicates.has(login.username)) {

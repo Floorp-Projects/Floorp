@@ -41,6 +41,7 @@ treeherder:
         'tc-rs': 'Repackage signing executed by Taskcluster'
         'tc-BMcs': 'Beetmover checksums, executed by Taskcluster'
         'Aries': 'Aries Device Image'
+        'Deb7': 'Packages for Debian 7'
         'Nexus 5-L': 'Nexus 5-L Device Image'
         'I': 'Docker Image Builds'
         'TL': 'Toolchain builds for Linux 64-bits'

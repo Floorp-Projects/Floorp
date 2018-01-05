@@ -69,27 +69,31 @@ class MozIntl {
     return this._cache.getLocaleInfo(getLocales(locales), ...args);
   }
 
-  createDateTimeFormat(locales, options, ...args) {
+  get DateTimeFormat() {
     if (!this._cache.hasOwnProperty("DateTimeFormat")) {
       mozIntlHelper.addDateTimeFormatConstructor(this._cache);
     }
 
-    let resolvedLocales =
-      this._cache.DateTimeFormat.supportedLocalesOf(getLocales(locales));
+    let DateTimeFormat = this._cache.DateTimeFormat;
 
-    if (options) {
-      if (options.dateStyle || options.timeStyle) {
-        options.pattern = osPrefs.getDateTimePattern(
-          getDateTimePatternStyle(options.dateStyle),
-          getDateTimePatternStyle(options.timeStyle),
-          resolvedLocales[0]);
-      } else {
-        // make sure that user doesn't pass a pattern explicitly
-        options.pattern = undefined;
+    class MozDateTimeFormat extends this._cache.DateTimeFormat {
+      constructor(locales, options, ...args) {
+        let resolvedLocales = DateTimeFormat.supportedLocalesOf(getLocales(locales));
+        if (options) {
+          if (options.dateStyle || options.timeStyle) {
+            options.pattern = osPrefs.getDateTimePattern(
+              getDateTimePatternStyle(options.dateStyle),
+              getDateTimePatternStyle(options.timeStyle),
+              resolvedLocales[0]);
+          } else {
+            // make sure that user doesn't pass a pattern explicitly
+            options.pattern = undefined;
+          }
+        }
+        super(resolvedLocales, options, ...args);
       }
     }
-
-    return new this._cache.DateTimeFormat(resolvedLocales, options, ...args);
+    return MozDateTimeFormat;
   }
 }
 

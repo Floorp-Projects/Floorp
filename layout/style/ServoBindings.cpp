@@ -1802,19 +1802,25 @@ Gecko_EnsureImageLayersLength(nsStyleImageLayers* aLayers, size_t aLen,
   }
 }
 
+template <typename StyleType>
+static void
+EnsureStyleAutoArrayLength(StyleType* aArray, size_t aLen)
+{
+  size_t oldLength = aArray->Length();
+
+  aArray->EnsureLengthAtLeast(aLen);
+
+  for (size_t i = oldLength; i < aLen; ++i) {
+    (*aArray)[i].SetInitialValues();
+  }
+}
+
 void
 Gecko_EnsureStyleAnimationArrayLength(void* aArray, size_t aLen)
 {
   auto base =
     static_cast<nsStyleAutoArray<StyleAnimation>*>(aArray);
-
-  size_t oldLength = base->Length();
-
-  base->EnsureLengthAtLeast(aLen);
-
-  for (size_t i = oldLength; i < aLen; ++i) {
-    (*base)[i].SetInitialValues();
-  }
+  EnsureStyleAutoArrayLength(base, aLen);
 }
 
 void
@@ -1822,14 +1828,7 @@ Gecko_EnsureStyleTransitionArrayLength(void* aArray, size_t aLen)
 {
   auto base =
     reinterpret_cast<nsStyleAutoArray<StyleTransition>*>(aArray);
-
-  size_t oldLength = base->Length();
-
-  base->EnsureLengthAtLeast(aLen);
-
-  for (size_t i = oldLength; i < aLen; ++i) {
-    (*base)[i].SetInitialValues();
-  }
+  EnsureStyleAutoArrayLength(base, aLen);
 }
 
 void
