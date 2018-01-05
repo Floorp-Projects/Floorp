@@ -2503,7 +2503,7 @@ function displayRichPingData(ping, updatePayloadList) {
   }
 
   // Show chrome hang stacks
-  ChromeHangs.render(payload);
+  ChromeHangs.render(payload.chromeHangs);
 
   // Show telemetry log.
   TelLog.render(payload);

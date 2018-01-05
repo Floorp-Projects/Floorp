@@ -17,10 +17,6 @@ button {
   box-shadow: 0 1px 1px 0 #fff, inset 0 2px 2px 0 #fff;
   text-shadow: 0 1px 1px #fefffe;
   -moz-appearance: none;
-  -moz-border-top-colors: none !important;
-  -moz-border-right-colors: none !important;
-  -moz-border-bottom-colors: none !important;
-  -moz-border-left-colors: none !important;
 }
 
 button:hover {
