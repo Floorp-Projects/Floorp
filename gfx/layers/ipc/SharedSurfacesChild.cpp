@@ -137,14 +137,24 @@ public:
       if (entry.mManager->IsDestroyed()) {
         mKeys.RemoveElementAt(i);
       } else if (entry.mManager == aManager) {
-        found = true;
-        if (entry.mInvalidations != aInvalidations) {
-          aManager->AddImageKeyForDiscard(entry.mImageKey);
+        WebRenderBridgeChild* wrBridge = aManager->WrBridge();
+        MOZ_ASSERT(wrBridge);
+
+        // Even if the manager is the same, its underlying WebRenderBridgeChild
+        // can change state. If our namespace differs, then our old key has
+        // already been discarded.
+        bool ownsKey = wrBridge->GetNamespace() == entry.mImageKey.mNamespace;
+        if (!ownsKey || entry.mInvalidations != aInvalidations) {
+          if (ownsKey) {
+            aManager->AddImageKeyForDiscard(entry.mImageKey);
+          }
           entry.mInvalidations = aInvalidations;
-          entry.mImageKey = aManager->WrBridge()->GetNextImageKey();
+          entry.mImageKey = wrBridge->GetNextImageKey();
           aResources.AddExternalImage(mId, entry.mImageKey);
         }
+
         key = entry.mImageKey;
+        found = true;
       }
     }
 

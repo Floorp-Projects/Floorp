@@ -1105,9 +1105,11 @@ nsMenuFrame::BuildAcceleratorText(bool aNotify)
         mozilla::services::GetStringBundleService();
       if (bundleService) {
         nsCOMPtr<nsIStringBundle> bundle;
-        rv = bundleService->CreateBundle("chrome://global/locale/keys.properties",
-                                         getter_AddRefs(bundle));
-
+        rv = bundleService->CreateBundle(
+               keyCode.EqualsLiteral("VK_RETURN")
+                 ? "chrome://global-platform/locale/platformKeys.properties"
+                 : "chrome://global/locale/keys.properties",
+               getter_AddRefs(bundle));
         if (NS_SUCCEEDED(rv) && bundle) {
           nsAutoString keyName;
           rv = bundle->GetStringFromName(NS_ConvertUTF16toUTF8(keyCode).get(),

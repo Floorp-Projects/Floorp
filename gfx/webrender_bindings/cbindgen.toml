@@ -27,7 +27,6 @@ rename_args = "GeckoCase"
 
 [struct]
 derive_eq = true
-generic_template_specialization = false
 
 [enum]
 add_sentinel = true
