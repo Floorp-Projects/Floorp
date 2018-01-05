@@ -18,6 +18,7 @@ Client-side, this consists of:
    :maxdepth: 5
    :titlesonly:
 
+   start/index
    concepts/index
    collection/index
    data/index

@@ -3406,6 +3406,9 @@ CanAttachAddElement(JSObject* obj, bool isInit)
         if (!proto->isNative())
             return false;
 
+        if (proto->as<NativeObject>().denseElementsAreFrozen())
+            return false;
+
         obj = proto;
     } while (true);
 

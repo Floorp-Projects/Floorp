@@ -37,8 +37,7 @@ menulist > menupopup {
 window,
 page,
 dialog,
-wizard,
-prefwindow {
+wizard {
   -moz-appearance: window;
   background-color: -moz-Dialog;
   color: -moz-DialogText;

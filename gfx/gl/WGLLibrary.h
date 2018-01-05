@@ -4,26 +4,51 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GLContextTypes.h"
+#include "mozilla/UniquePtr.h"
 #include <windows.h>
 
 struct PRLibrary;
 
 namespace mozilla {
 namespace gl {
+/*
+struct ScopedDC
+{
+    const HDC mDC;
 
+    ScopedDC() = delete;
+    virtual ~ScopedDC() = 0;
+};
+
+struct WindowDC final : public ScopedDC
+{
+    const HWND mWindow;
+
+    WindowDC() = delete;
+    ~WindowDC();
+};
+
+struct PBufferDC final : public ScopedDC
+{
+    const HWND mWindow;
+
+    PBufferDC() = delete;
+    ~PBufferDC();
+};
+*/
 class WGLLibrary
 {
 public:
     WGLLibrary()
-      : mSymbols{nullptr}
-      , mInitialized(false)
-      , mOGLLibrary(nullptr)
-      , mHasRobustness(false)
-      , mWindow (0)
-      , mWindowDC(0)
-      , mWindowGLContext(0)
-      , mWindowPixelFormat(0)
+      : mSymbols{}
     { }
+
+    ~WGLLibrary() {
+        Reset();
+    }
+
+private:
+    void Reset();
 
 public:
     struct {
@@ -33,20 +58,21 @@ public:
         PROC   (GLAPIENTRY * fGetProcAddress) (LPCSTR);
         HGLRC  (GLAPIENTRY * fGetCurrentContext) (void);
         HDC    (GLAPIENTRY * fGetCurrentDC) (void);
-        BOOL   (GLAPIENTRY * fShareLists) (HGLRC oldContext, HGLRC newContext);
+        //BOOL   (GLAPIENTRY * fShareLists) (HGLRC oldContext, HGLRC newContext);
         HANDLE (GLAPIENTRY * fCreatePbuffer) (HDC hDC, int iPixelFormat, int iWidth,
                                               int iHeight, const int* piAttribList);
         BOOL (GLAPIENTRY * fDestroyPbuffer) (HANDLE hPbuffer);
         HDC  (GLAPIENTRY * fGetPbufferDC) (HANDLE hPbuffer);
-        BOOL (GLAPIENTRY * fBindTexImage) (HANDLE hPbuffer, int iBuffer);
-        BOOL (GLAPIENTRY * fReleaseTexImage) (HANDLE hPbuffer, int iBuffer);
+        int  (GLAPIENTRY * fReleasePbufferDC) (HANDLE hPbuffer, HDC dc);
+        //BOOL (GLAPIENTRY * fBindTexImage) (HANDLE hPbuffer, int iBuffer);
+        //BOOL (GLAPIENTRY * fReleaseTexImage) (HANDLE hPbuffer, int iBuffer);
         BOOL (GLAPIENTRY * fChoosePixelFormat) (HDC hdc, const int* piAttribIList,
                                                 const FLOAT* pfAttribFList,
                                                 UINT nMaxFormats, int* piFormats,
                                                 UINT* nNumFormats);
-        BOOL (GLAPIENTRY * fGetPixelFormatAttribiv) (HDC hdc, int iPixelFormat,
-                                                     int iLayerPlane, UINT nAttributes,
-                                                     int* piAttributes, int* piValues);
+        //BOOL (GLAPIENTRY * fGetPixelFormatAttribiv) (HDC hdc, int iPixelFormat,
+        //                                             int iLayerPlane, UINT nAttributes,
+        //                                             int* piAttributes, int* piValues);
         const char* (GLAPIENTRY * fGetExtensionsStringARB) (HDC hdc);
         HGLRC (GLAPIENTRY * fCreateContextAttribsARB) (HDC hdc, HGLRC hShareContext,
                                                        const int* attribList);
@@ -67,27 +93,21 @@ public:
     } mSymbols;
 
     bool EnsureInitialized();
-    HWND CreateDummyWindow(HDC* aWindowDC = nullptr);
+    //UniquePtr<WindowDC> CreateDummyWindow();
+    HGLRC CreateContextWithFallback(HDC dc, bool tryRobustBuffers) const;
 
-    bool HasRobustness() const { return mHasRobustness; }
     bool HasDXInterop2() const { return bool(mSymbols.fDXOpenDeviceNV); }
     bool IsInitialized() const { return mInitialized; }
-    HWND GetWindow() const { return mWindow; }
-    HDC GetWindowDC() const {return mWindowDC; }
-    HGLRC GetWindowGLContext() const {return mWindowGLContext; }
-    int GetWindowPixelFormat() const { return mWindowPixelFormat; }
-    PRLibrary* GetOGLLibrary() { return mOGLLibrary; }
+    auto GetOGLLibrary() const { return mOGLLibrary; }
+    auto RootDc() const { return mRootDc; }
 
 private:
-    bool mInitialized;
+    bool mInitialized = false;
     PRLibrary* mOGLLibrary;
     bool mHasRobustness;
-
-    HWND mWindow;
-    HDC mWindowDC;
-    HGLRC mWindowGLContext;
-    int mWindowPixelFormat;
-
+    HWND mDummyWindow;
+    HDC mRootDc;
+    HGLRC mDummyGlrc;
 };
 
 // a global WGLLibrary instance

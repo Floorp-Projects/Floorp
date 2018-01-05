@@ -78,6 +78,69 @@ enum {
 - (void)_removeDisplayedNotification:(id<FakeNSUserNotification>)notification;
 @end
 
+@interface mozNotificationCenterDelegate : NSObject <NSUserNotificationCenterDelegate>
+{
+  OSXNotificationCenter *mOSXNC;
+}
+  - (id)initWithOSXNC:(OSXNotificationCenter*)osxnc;
+@end
+
+@implementation mozNotificationCenterDelegate
+
+- (id)initWithOSXNC:(OSXNotificationCenter*)osxnc
+{
+  [super init];
+  // We should *never* outlive this OSXNotificationCenter.
+  mOSXNC = osxnc;
+  return self;
+}
+
+- (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
+        didDeliverNotification:(id<FakeNSUserNotification>)notification
+{
+
+}
+
+- (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
+       didActivateNotification:(id<FakeNSUserNotification>)notification
+{
+  unsigned long long additionalActionIndex = ULLONG_MAX;
+  if ([notification respondsToSelector:@selector(_alternateActionIndex)]) {
+    NSNumber *alternateActionIndex = [(NSObject*)notification valueForKey:@"_alternateActionIndex"];
+    additionalActionIndex = [alternateActionIndex unsignedLongLongValue];
+  }
+  mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"],
+                     notification.activationType,
+                     additionalActionIndex);
+}
+
+- (BOOL)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
+     shouldPresentNotification:(id<FakeNSUserNotification>)notification
+{
+  return YES;
+}
+
+// This is an undocumented method that we need for parity with Safari.
+// Apple bug #15440664.
+- (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
+  didRemoveDeliveredNotifications:(NSArray *)notifications
+{
+  for (id<FakeNSUserNotification> notification in notifications) {
+    NSString *name = [[notification userInfo] valueForKey:@"name"];
+    mOSXNC->CloseAlertCocoaString(name);
+  }
+}
+
+// This is an undocumented method that we need to be notified if a user clicks the close button.
+- (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
+  didDismissAlert:(id<FakeNSUserNotification>)notification
+{
+  NSString *name = [[notification userInfo] valueForKey:@"name"];
+  mOSXNC->CloseAlertCocoaString(name);
+}
+
+@end
+
 namespace mozilla {
 
 enum {
@@ -138,10 +201,22 @@ static id<FakeNSUserNotificationCenter> GetNotificationCenter() {
 
 OSXNotificationCenter::OSXNotificationCenter()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  mDelegate = [[mozNotificationCenterDelegate alloc] initWithOSXNC:this];
+  GetNotificationCenter().delegate = mDelegate;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 OSXNotificationCenter::~OSXNotificationCenter()
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  [GetNotificationCenter() removeAllDeliveredNotifications];
+  [mDelegate release];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 NS_IMPL_ISUPPORTS(OSXNotificationCenter, nsIAlertsService, nsIAlertsIconData,

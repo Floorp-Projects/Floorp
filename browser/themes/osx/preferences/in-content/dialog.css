@@ -4,15 +4,11 @@
 
 %include ../../../shared/incontentprefs/dialog.inc.css
 
-prefwindow,
+.prefwindow,
 .windowDialog {
   font: message-box !important;
 }
 
 :root > * {
   font-size: 1.18em;
-}
-
-.prefWindow-dlgbuttons {
-  margin: 0;
 }

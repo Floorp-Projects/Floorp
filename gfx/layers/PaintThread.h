@@ -116,6 +116,11 @@ public:
    */
   bool PrepareBuffer();
 
+  bool HasOperations() const
+  {
+    return mBufferFinalize || mBufferUnrotate || mBufferInitialize;
+  }
+
   template<typename F>
   void ForEachTextureClient(F aClosure) const
   {

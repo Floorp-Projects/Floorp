@@ -2000,7 +2000,6 @@ WorkerLoadInfo::SetPrincipalFromChannel(nsIChannel* aChannel)
   return SetPrincipalOnMainThread(principal, loadGroup);
 }
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 bool
 WorkerLoadInfo::FinalChannelPrincipalIsValid(nsIChannel* aChannel)
 {
@@ -2030,6 +2029,7 @@ WorkerLoadInfo::FinalChannelPrincipalIsValid(nsIChannel* aChannel)
   return false;
 }
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 bool
 WorkerLoadInfo::PrincipalIsValid() const
 {
@@ -4000,7 +4000,6 @@ WorkerPrivateParent<Derived>::SetPrincipalFromChannel(nsIChannel* aChannel)
   return mLoadInfo.SetPrincipalFromChannel(aChannel);
 }
 
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 template <class Derived>
 bool
 WorkerPrivateParent<Derived>::FinalChannelPrincipalIsValid(nsIChannel* aChannel)
@@ -4008,6 +4007,7 @@ WorkerPrivateParent<Derived>::FinalChannelPrincipalIsValid(nsIChannel* aChannel)
   return mLoadInfo.FinalChannelPrincipalIsValid(aChannel);
 }
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 template <class Derived>
 bool
 WorkerPrivateParent<Derived>::PrincipalURIMatchesScriptURL()
