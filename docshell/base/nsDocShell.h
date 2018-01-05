@@ -352,17 +352,6 @@ public:
     mAncestorOuterWindowIDs = mozilla::Move(aAncestorOuterWindowIDs);
   }
 
-  // Determine if a service worker is allowed to control a window in this
-  // docshell with the given URL.  If there are any reasons it should not,
-  // this will return false.  If true is returned then the window *may* be
-  // controlled.  The caller must still consult either the parent controller
-  // or the ServiceWorkerManager to determine if a service worker should
-  // actually control the window.
-  //
-  // A nullptr URL is considered to be an about:blank window and will not
-  // trigger 3rd party iframe checks.
-  bool ServiceWorkerAllowedToControlWindow(nsIURI* aURI);
-
   const mozilla::OriginAttributes& GetOriginAttributes()
   {
     return mOriginAttributes;
@@ -796,6 +785,17 @@ private: // member functions
   // In these cases the initial about:blank will appear to not exist until
   // its real document and window are created.
   void MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal = nullptr);
+
+  // Determine if a service worker is allowed to control a window in this
+  // docshell with the given URL.  If there are any reasons it should not,
+  // this will return false.  If true is returned then the window *may* be
+  // controlled.  The caller must still consult either the parent controller
+  // or the ServiceWorkerManager to determine if a service worker should
+  // actually control the window.
+  //
+  // A nullptr URL is considered to be an about:blank window and will not
+  // trigger 3rd party iframe checks.
+  bool ServiceWorkerAllowedToControlWindow(nsIURI* aURI);
 
   // Return the ClientInfo for the initial about:blank window, if it exists
   // or we have speculatively created a ClientSource in
