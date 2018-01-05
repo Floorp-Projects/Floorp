@@ -344,7 +344,7 @@ private:
   void
   Init(ServiceWorkerRegistrar* aRegistrar);
 
-  void
+  RefPtr<GenericPromise>
   StartControllingClient(const ClientInfo& aClientInfo,
                          ServiceWorkerRegistrationInfo* aRegistrationInfo);
 
@@ -398,7 +398,7 @@ private:
   void
   NotifyServiceWorkerRegistrationRemoved(ServiceWorkerRegistrationInfo* aRegistration);
 
-  RefPtr<GenericPromise>
+  void
   StartControllingADocument(ServiceWorkerRegistrationInfo* aRegistration,
                             nsIDocument* aDoc);
 
