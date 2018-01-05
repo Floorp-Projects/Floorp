@@ -90,11 +90,13 @@ add_task(async function test_webRequest_filter_window() {
 
   // We should not get background events.
   let registration = await navigator.serviceWorker.register("webrequest_worker.js?test0", {scope: "."});
+  await waitForState(registration.installing, "activated");
 
   // We should get events for the reload.
   testWindow.location = "file_image_bad.png";
   await extension.awaitMessage("done");
 
+  testWindow.location = "about:blank";
   await registration.unregister();
   await extension.unload();
 });
@@ -138,11 +140,13 @@ add_task(async function test_webRequest_filter_tab() {
 
   // We should not get background events.
   let registration = await navigator.serviceWorker.register("webrequest_worker.js?test1", {scope: "."});
+  await waitForState(registration.installing, "activated");
 
   // We should get events for the reload.
   testWindow.location = img;
   await extension.awaitMessage("done");
 
+  testWindow.location = "about:blank";
   await registration.unregister();
   await extension.unload();
 });
@@ -186,7 +190,9 @@ add_task(async function test_webRequest_filter_background() {
 
   // We should get events for the background page.
   let registration = await navigator.serviceWorker.register(SimpleTest.getTestFileURL("webrequest_worker.js?test2"), {scope: "."});
+  await waitForState(registration.installing, "activated");
   await extension.awaitMessage("done");
+  testWindow.location = "about:blank";
   await registration.unregister();
 
   await extension.unload();
