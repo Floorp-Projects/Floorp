@@ -17,7 +17,6 @@
 #include "mozilla/Move.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
-#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
 #include "nsTArray.h"
@@ -139,10 +138,6 @@ public:
    * the image element will be returned, otherwise the same as GetIdElement().
    */
   Element* GetImageIdElement();
-  /**
-   * Append all the elements with this id to aElements
-   */
-  void AppendAllIdContent(nsCOMArray<Element>* aElements);
   /**
    * This can fire ID change callbacks.
    * @return true if the content could be added, false if we failed due
