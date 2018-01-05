@@ -301,12 +301,7 @@ function waitForPageShow(browser) {
 }
 
 function waitForViewportLoad(ui) {
-  return new Promise(resolve => {
-    let browser = ui.getViewportBrowser();
-    browser.addEventListener("mozbrowserloadend", () => {
-      resolve();
-    }, { once: true });
-  });
+  return BrowserTestUtils.waitForContentEvent(ui.getViewportBrowser(), "load", true);
 }
 
 function load(browser, url) {
@@ -371,8 +366,12 @@ function* toggleTouchSimulation(ui) {
   yield Promise.all([ changed, loaded ]);
 }
 
-function* testUserAgent(ui, expected) {
-  let ua = yield ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
+function testUserAgent(ui, expected) {
+  testUserAgentFromBrowser(ui.getViewportBrowser(), expected);
+}
+
+async function testUserAgentFromBrowser(browser, expected) {
+  let ua = await ContentTask.spawn(browser, {}, function* () {
     return content.navigator.userAgent;
   });
   is(ua, expected, `UA should be set to ${expected}`);
