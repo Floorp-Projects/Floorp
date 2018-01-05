@@ -62,8 +62,9 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
-#include "js/TypeDecls.h"
 #include "js/ProfilingStack.h"
+#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
 #include "nscore.h"
 
 // Make sure that we can use std::min here without the Windows headers messing
@@ -505,6 +506,16 @@ PseudoStack* profiler_get_pseudo_stack();
                                     js::ProfileEntry::Category::category); \
   }
 
+// Similar to AUTO_PROFILER_LABEL, but accepting a JSContext* parameter, and a
+// no-op if the profiler is disabled.
+// Used to annotate functions for which overhead in the range of nanoseconds is
+// noticeable. It avoids overhead from the TLS lookup because it can get the
+// PseudoStack from the JS context, and avoids almost all overhead in the case
+// where the profiler is disabled.
+#define AUTO_PROFILER_LABEL_FAST(label, category, ctx) \
+  mozilla::AutoProfilerLabel PROFILER_RAII(ctx, label, nullptr, __LINE__, \
+                                           js::ProfileEntry::Category::category)
+
 // Insert a marker in the profile timeline. This is useful to delimit something
 // important happening such as the first paint. Unlike labels, which are only
 // recorded in the profile buffer if a sample is collected while the label is
@@ -660,15 +671,40 @@ private:
 class MOZ_RAII AutoProfilerLabel
 {
 public:
+  // This is the AUTO_PROFILER_LABEL and AUTO_PROFILER_LABEL_DYNAMIC variant.
   AutoProfilerLabel(const char* aLabel, const char* aDynamicString,
                     uint32_t aLine, js::ProfileEntry::Category aCategory
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
+    // Get the PseudoStack from TLS.
+    Push(sPseudoStack.get(), aLabel, aDynamicString, aLine, aCategory);
+  }
+
+  // This is the AUTO_PROFILER_LABEL_FAST variant. It's guarded on
+  // profiler_is_active() and retrieves the PseudoStack from the JSContext.
+  AutoProfilerLabel(JSContext* aJSContext,
+                    const char* aLabel, const char* aDynamicString,
+                    uint32_t aLine, js::ProfileEntry::Category aCategory
+                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    if (profiler_is_active()) {
+      Push(js::GetContextProfilingStack(aJSContext),
+           aLabel, aDynamicString, aLine, aCategory);
+    } else {
+      mPseudoStack = nullptr;
+    }
+  }
+
+  void Push(PseudoStack* aPseudoStack,
+            const char* aLabel, const char* aDynamicString,
+            uint32_t aLine, js::ProfileEntry::Category aCategory)
+  {
     // This function runs both on and off the main thread.
 
-    mPseudoStack = sPseudoStack.get();
+    mPseudoStack = aPseudoStack;
     if (mPseudoStack) {
       mPseudoStack->pushCppFrame(aLabel, aDynamicString, this, aLine,
                                  js::ProfileEntry::Kind::CPP_NORMAL, aCategory);
