@@ -3455,11 +3455,10 @@ nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal)
     return;
   }
 
-  // We're done if there is no parent controller.  Also, don't inherit
-  // the controller if we're sandboxed.  This matches our behavior in
-  // ShouldPrepareForIntercept(),
+  // We're done if there is no parent controller or if this docshell
+  // is not permitted to control for some reason.
   Maybe<ServiceWorkerDescriptor> controller(parentInner->GetController());
-  if (controller.isNothing() || mSandboxFlags) {
+  if (controller.isNothing() || !ServiceWorkerAllowedToControlWindow(nullptr)) {
     return;
   }
 
@@ -15003,6 +15002,54 @@ nsDocShell::CanSetOriginAttributes()
   return true;
 }
 
+bool
+nsDocShell::ServiceWorkerAllowedToControlWindow(nsIURI* aURI)
+{
+  // NOTE: Ideally this method would call one of the
+  //       nsContentUtils::StorageAllowed*() methods to determine if the
+  //       interception is allowed.  Unfortunately we cannot safely do this
+  //       before the first window loads in the child process because the
+  //       permission manager might not have all its data yet.  Therefore,
+  //       we use this somewhat lame alternate implementation here.  Once
+  //       interception is moved to the parent process we should switch
+  //       to calling nsContentUtils::StorageAllowed*().  See bug 1428130.
+
+  if (UsePrivateBrowsing() || mSandboxFlags) {
+    return false;
+  }
+
+  uint32_t cookieBehavior = nsContentUtils::CookiesBehavior();
+  uint32_t lifetimePolicy = nsContentUtils::CookiesLifetimePolicy();
+  if (cookieBehavior == nsICookieService::BEHAVIOR_REJECT ||
+      lifetimePolicy == nsICookieService::ACCEPT_SESSION) {
+    return false;
+  }
+
+  if (!aURI || cookieBehavior == nsICookieService::BEHAVIOR_ACCEPT) {
+    return true;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> parent;
+  GetSameTypeParent(getter_AddRefs(parent));
+  nsCOMPtr<nsPIDOMWindowOuter> parentWindow = parent ? parent->GetWindow()
+                                                     : nullptr;
+  if (parentWindow) {
+    nsresult rv = NS_OK;
+    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
+      do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
+    if (thirdPartyUtil) {
+      bool isThirdPartyURI = true;
+      rv = thirdPartyUtil->IsThirdPartyWindow(parentWindow, aURI,
+                                              &isThirdPartyURI);
+      if (NS_SUCCEEDED(rv) && isThirdPartyURI) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 nsresult
 nsDocShell::SetOriginAttributes(const OriginAttributes& aAttrs)
 {
@@ -15207,27 +15254,11 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
                                       bool* aShouldIntercept)
 {
   *aShouldIntercept = false;
-  // No in private browsing
-  if (UsePrivateBrowsing()) {
-    return NS_OK;
-  }
 
-  if (mSandboxFlags) {
-    // If we're sandboxed, don't intercept.
-    return NS_OK;
-  }
-
-  uint32_t cookieBehavior = nsContentUtils::CookiesBehavior();
-  if (cookieBehavior == nsICookieService::BEHAVIOR_REJECT) {
-    // If cookies are disabled, don't intercept.
-    return NS_OK;
-  }
-
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (!swm) {
-    return NS_OK;
-  }
-
+  // For subresource requests we base our decision solely on the client's
+  // controller value.  Any settings that would have blocked service worker
+  // access should have been set before the initial navigation created the
+  // window.
   if (!aIsNonSubresourceRequest) {
     nsCOMPtr<nsIDocument> doc = GetDocument();
     if (!doc) {
@@ -15243,27 +15274,19 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
     return NS_OK;
   }
 
-  // If the user has set a cookie policy that restricts cookies, then
-  // avoid intercepting 3rd party iframes.
-  if (cookieBehavior != nsICookieService::BEHAVIOR_ACCEPT) {
-    nsCOMPtr<nsIDocShellTreeItem> parent;
-    GetSameTypeParent(getter_AddRefs(parent));
-    nsCOMPtr<nsPIDOMWindowOuter> parentWindow = parent ? parent->GetWindow()
-                                                       : nullptr;
-    if (parentWindow) {
-      nsresult rv = NS_OK;
-      nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-        do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      bool isThirdPartyURI = true;
-      rv = thirdPartyUtil->IsThirdPartyWindow(parentWindow, aURI, &isThirdPartyURI);
-      if (NS_SUCCEEDED(rv) && isThirdPartyURI) {
-        return NS_OK;
-      }
-    }
+  // For navigations, first check to see if we are allowed to control a
+  // window with the given URL.
+  if (!ServiceWorkerAllowedToControlWindow(aURI)) {
+    return NS_OK;
   }
 
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm) {
+    return NS_OK;
+  }
+
+  // We're allowed to control a window, so check with the ServiceWorkerManager
+  // for a matching service worker.
   nsCOMPtr<nsIPrincipal> principal =
     BasePrincipal::CreateCodebasePrincipal(aURI, mOriginAttributes);
   *aShouldIntercept = swm->IsAvailable(principal, aURI);
