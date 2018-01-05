@@ -4747,7 +4747,8 @@ EventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
              aMessage == eDragEnter);
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetDragEvent event(aDragEvent->IsTrusted(), aMessage, aDragEvent->mWidget);
-  event.AssignDragEventData(*aDragEvent, true);
+  event.AssignDragEventData(*aDragEvent, false);
+  event.mRelatedTarget = aRelatedTarget;
   mCurrentTargetContent = aTargetContent;
 
   if (aTargetContent != aRelatedTarget) {
