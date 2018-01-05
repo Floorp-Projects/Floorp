@@ -132,7 +132,7 @@ public:
   CreateXBLServoStyleSet(nsPresContext* aPresContext,
                          const nsTArray<RefPtr<ServoStyleSheet>>& aNewSheets);
 
-  void Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager);
+  void Init(nsPresContext* aPresContext);
   void BeginShutdown() {}
   void Shutdown();
 
@@ -648,9 +648,6 @@ private:
   // Map from raw Servo style rule to Gecko's wrapper object.
   // Constructed lazily when requested by devtools.
   UniquePtr<ServoStyleRuleMap> mStyleRuleMap;
-
-  // This can be null if we are used to hold XBL style sheets.
-  RefPtr<nsBindingManager> mBindingManager;
 
   static ServoStyleSet* sInServoTraversal;
 };
