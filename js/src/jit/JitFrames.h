@@ -532,11 +532,6 @@ class ExitFrameLayout : public CommonFrameLayout
     }
 
   public:
-    // Pushed for "bare" fake exit frames that have no GC things on stack to be
-    // traced.
-    static ExitFrameType BareType() { return ExitFrameType::Bare; }
-    static ExitFrameType VMFunctionType() { return ExitFrameType::VMFunction; }
-
     static inline size_t Size() {
         return sizeof(ExitFrameLayout);
     }
