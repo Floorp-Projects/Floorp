@@ -677,18 +677,19 @@ describe("TelemetryFeed", () => {
   describe("#handleNewTabInit", () => {
     it("should set the session as preloaded if the browser is preloaded", () => {
       const session = {perf: {}};
+      let preloadedBrowser = {getAttribute() { return "preloaded"; }};
       sandbox.stub(instance, "addSession").returns(session);
 
       instance.onAction(ac.SendToMain({
         type: at.NEW_TAB_INIT,
-        data: {url: "about:newtab", browser}
+        data: {url: "about:newtab", browser: preloadedBrowser}
       }));
 
       assert.ok(session.perf.is_preloaded);
     });
     it("should set the session as non-preloaded if the browser is non-preloaded", () => {
       const session = {perf: {}};
-      let nonPreloadedBrowser = {getAttribute() { return "false"; }};
+      let nonPreloadedBrowser = {getAttribute() { return ""; }};
       sandbox.stub(instance, "addSession").returns(session);
 
       instance.onAction(ac.SendToMain({
