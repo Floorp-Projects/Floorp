@@ -1405,6 +1405,25 @@ const gCSSProperties = {
       { type: 'discrete', options: [ [ 'flat', 'preserve-3d' ] ] }
     ]
   },
+  'rotate': {
+    // https://drafts.csswg.org/css-transforms-2/#individual-transforms
+    types: [ 'rotateList' ]
+  },
+  'translate': {
+    // https://drafts.csswg.org/css-transforms-2/#individual-transforms
+    types: [ 'translateList' ],
+    setup: t => {
+      // We need to set a width/height for resolving percentages against.
+      const element = createElement(t);
+      element.style.width = '100px';
+      element.style.height = '100px';
+      return element;
+    }
+  },
+  'scale': {
+    // https://drafts.csswg.org/css-transforms-2/#individual-transforms
+    types: [ 'scaleList' ]
+  },
   'unicode-bidi': {
     // https://drafts.csswg.org/css-writing-modes-3/#propdef-unicode-bidi
     types: [
