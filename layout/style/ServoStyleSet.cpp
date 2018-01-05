@@ -120,7 +120,7 @@ ServoStyleSet::CreateXBLServoStyleSet(
   const nsTArray<RefPtr<ServoStyleSheet>>& aNewSheets)
 {
   auto set = MakeUnique<ServoStyleSet>(Kind::ForXBL);
-  set->Init(aPresContext, nullptr);
+  set->Init(aPresContext);
 
   // The XBL style sheets aren't document level sheets, but we need to
   // decide a particular SheetType to add them to style set. This type
@@ -154,7 +154,7 @@ ServoStyleSet::GetPresContext()
 }
 
 void
-ServoStyleSet::Init(nsPresContext* aPresContext, nsBindingManager* aBindingManager)
+ServoStyleSet::Init(nsPresContext* aPresContext)
 {
   mDocument = aPresContext->Document();
   MOZ_ASSERT(GetPresContext() == aPresContext);
@@ -162,7 +162,6 @@ ServoStyleSet::Init(nsPresContext* aPresContext, nsBindingManager* aBindingManag
   mLastPresContextUsesXBLStyleSet = aPresContext;
 
   mRawSet.reset(Servo_StyleSet_Init(aPresContext));
-  mBindingManager = aBindingManager;
 
   aPresContext->DeviceContext()->InitFontCache();
 
@@ -832,8 +831,8 @@ ServoStyleSet::StyleSheetAt(SheetType aType, int32_t aIndex) const
 void
 ServoStyleSet::AppendAllXBLStyleSheets(nsTArray<StyleSheet*>& aArray) const
 {
-  if (mBindingManager) {
-    mBindingManager->AppendAllSheets(aArray);
+  if (mDocument) {
+    mDocument->BindingManager()->AppendAllSheets(aArray);
   }
 }
 
