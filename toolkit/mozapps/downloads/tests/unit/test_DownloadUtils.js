@@ -78,12 +78,12 @@ function testAllGetReadableDates() {
   const sixdaysago      = new Date(2000, 11, 25, 11, 30, 15);
   const sevendaysago    = new Date(2000, 11, 24, 11, 30, 15);
 
-  let cDtf = Services.intl.createDateTimeFormat;
+  let cDtf = Services.intl.DateTimeFormat;
 
   testGetReadableDates(today_11_30,
-                       cDtf(undefined, {timeStyle: "short"}).format(today_11_30));
+                       (new cDtf(undefined, {timeStyle: "short"})).format(today_11_30));
   testGetReadableDates(today_12_30,
-                       cDtf(undefined, {timeStyle: "short"}).format(today_12_30));
+                       (new cDtf(undefined, {timeStyle: "short"})).format(today_12_30));
 
   testGetReadableDates(yesterday_11_30, "Yesterday");
   testGetReadableDates(yesterday_12_30, "Yesterday");
@@ -98,7 +98,7 @@ function testAllGetReadableDates() {
   let [, dateTimeFull] = DownloadUtils.getReadableDates(today_11_30);
 
   const dtOptions = { dateStyle: "long", timeStyle: "short" };
-  Assert.equal(dateTimeFull, cDtf(undefined, dtOptions).format(today_11_30));
+  Assert.equal(dateTimeFull, (new cDtf(undefined, dtOptions)).format(today_11_30));
 }
 
 function run_test() {
