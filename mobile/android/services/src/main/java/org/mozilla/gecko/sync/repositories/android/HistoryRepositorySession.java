@@ -66,7 +66,7 @@ public class HistoryRepositorySession extends StoreTrackingRepositorySession {
 
   @Override
   public void fetch(String[] guids, RepositorySessionFetchRecordsDelegate delegate) throws InactiveSessionException {
-    executeDelegateCommand(sessionHelper.getFetchRunnable(guids, now(), null, delegate));
+    fetchWorkQueue.execute(sessionHelper.getFetchRunnable(guids, now(), null, delegate));
   }
 
   @Override
@@ -80,7 +80,7 @@ public class HistoryRepositorySession extends StoreTrackingRepositorySession {
     }
 
     Logger.debug(LOG_TAG, "Running fetchSince(" + timestamp + ").");
-    delegateQueue.execute(
+    fetchWorkQueue.execute(
             sessionHelper.getFetchSinceRunnable(
                     timestamp, now(), this.storeTracker.getFilter(), delegate
             )

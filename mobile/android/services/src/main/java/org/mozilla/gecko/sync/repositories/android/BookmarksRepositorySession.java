@@ -143,7 +143,7 @@ public class BookmarksRepositorySession extends StoreTrackingRepositorySession {
     }
 
     Logger.debug(LOG_TAG, "Running fetchModified.");
-    delegateQueue.execute(
+    fetchWorkQueue.execute(
             sessionHelper.getFetchModifiedRunnable(
                     now(),
                     this.storeTracker.getFilter(),
@@ -154,7 +154,7 @@ public class BookmarksRepositorySession extends StoreTrackingRepositorySession {
 
   @Override
   public void fetch(String[] guids, RepositorySessionFetchRecordsDelegate delegate) throws InactiveSessionException {
-    executeDelegateCommand(sessionHelper.getFetchRunnable(
+    fetchWorkQueue.execute(sessionHelper.getFetchRunnable(
             guids, now(), null, versioningDelegateHelper.getFetchDelegate(delegate))
     );
   }
@@ -168,7 +168,7 @@ public class BookmarksRepositorySession extends StoreTrackingRepositorySession {
     final long since = -1L;
 
     Logger.debug(LOG_TAG, "Running fetchSince(" + since + ").");
-    delegateQueue.execute(
+    fetchWorkQueue.execute(
             sessionHelper.getFetchSinceRunnable(
                     since,
                     now(),
