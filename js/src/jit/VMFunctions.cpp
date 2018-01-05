@@ -391,7 +391,7 @@ ArrayPushDense(JSContext* cx, HandleArrayObject arr, HandleValue v, uint32_t* le
     // possible the setOrExtendDenseElements call already invalidated the
     // IonScript. JSJitFrameIter::ionScript works when the script is invalidated
     // so we use that instead.
-    JSJitFrameIter frame(cx);
+    JSJitFrameIter frame(cx->activation()->asJit());
     MOZ_ASSERT(frame.type() == JitFrame_Exit);
     ++frame;
     IonScript* ionScript = frame.ionScript();
@@ -872,7 +872,7 @@ DebugEpilogue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool ok)
         // Pop this frame by updating packedExitFP, so that the exception
         // handling code will start at the previous frame.
         JitFrameLayout* prefix = frame->framePrefix();
-        EnsureBareExitFrame(cx, prefix);
+        EnsureBareExitFrame(cx->activation()->asJit(), prefix);
         return false;
     }
 

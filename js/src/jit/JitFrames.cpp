@@ -746,7 +746,7 @@ HandleException(ResumeFromException* rfe)
             // see this frame when they use ScriptFrameIter, and (2)
             // ScriptFrameIter does not crash when accessing an IonScript
             // that's destroyed by the ionScript->decref call.
-            EnsureBareExitFrame(cx, current);
+            EnsureBareExitFrame(cx->activation()->asJit(), current);
         }
 
         if (overrecursed) {
@@ -763,11 +763,11 @@ HandleException(ResumeFromException* rfe)
 // Turns a JitFrameLayout into an ExitFrameLayout. Note that it has to be a
 // bare exit frame so it's ignored by TraceJitExitFrame.
 void
-EnsureBareExitFrame(JSContext* cx, JitFrameLayout* frame)
+EnsureBareExitFrame(JitActivation* act, JitFrameLayout* frame)
 {
     ExitFrameLayout* exitFrame = reinterpret_cast<ExitFrameLayout*>(frame);
 
-    if (cx->activation()->asJit()->jsExitFP() == (uint8_t*)frame) {
+    if (act->jsExitFP() == (uint8_t*)frame) {
         // If we already called this function for the current frame, do
         // nothing.
         MOZ_ASSERT(exitFrame->isBareExit());
@@ -775,17 +775,17 @@ EnsureBareExitFrame(JSContext* cx, JitFrameLayout* frame)
     }
 
 #ifdef DEBUG
-    JSJitFrameIter iter(cx);
+    JSJitFrameIter iter(act);
     while (!iter.isScripted())
         ++iter;
     MOZ_ASSERT(iter.current() == frame, "|frame| must be the top JS frame");
 
-    MOZ_ASSERT(!!cx->activation()->asJit()->jsExitFP());
-    MOZ_ASSERT((uint8_t*)exitFrame->footer() >= cx->activation()->asJit()->jsExitFP(),
+    MOZ_ASSERT(!!act->jsExitFP());
+    MOZ_ASSERT((uint8_t*)exitFrame->footer() >= act->jsExitFP(),
                "Must have space for ExitFooterFrame before jsExitFP");
 #endif
 
-    cx->activation()->asJit()->setJSExitFP((uint8_t*)frame);
+    act->setJSExitFP((uint8_t*)frame);
     exitFrame->footer()->setBareExitFrame();
     MOZ_ASSERT(exitFrame->isBareExit());
 }

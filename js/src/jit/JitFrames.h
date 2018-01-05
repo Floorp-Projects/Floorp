@@ -284,7 +284,7 @@ struct ResumeFromException
 
 void HandleException(ResumeFromException* rfe);
 
-void EnsureBareExitFrame(JSContext* cx, JitFrameLayout* frame);
+void EnsureBareExitFrame(JitActivation* act, JitFrameLayout* frame);
 
 void TraceJitActivations(JSContext* cx, const CooperatingContext& target, JSTracer* trc);
 
@@ -312,7 +312,7 @@ MakeFrameDescriptor(uint32_t frameSize, FrameType type, uint32_t headerSize)
 inline JSScript*
 GetTopJitJSScript(JSContext* cx)
 {
-    JSJitFrameIter frame(cx);
+    JSJitFrameIter frame(cx->activation()->asJit());
     MOZ_ASSERT(frame.type() == JitFrame_Exit);
     ++frame;
 

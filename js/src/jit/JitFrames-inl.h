@@ -29,7 +29,7 @@ SafepointIndex::resolve()
 inline BaselineFrame*
 GetTopBaselineFrame(JSContext* cx)
 {
-    JSJitFrameIter frame(cx);
+    JSJitFrameIter frame(cx->activation()->asJit());
     MOZ_ASSERT(frame.type() == JitFrame_Exit);
     ++frame;
     if (frame.isBaselineStub())
