@@ -407,6 +407,8 @@ main {
         white-space: nowrap; }
       .top-sites-list .top-site-outer .title.pinned span {
         padding: 0 13px; }
+    .top-sites-list .top-site-outer .edit-button {
+      background-image: url("../data/content/assets/glyph-edit-16.svg"); }
     .top-sites-list .top-site-outer .edit-menu {
       background: #FFF;
       border: 1px solid #B1B1B3;
