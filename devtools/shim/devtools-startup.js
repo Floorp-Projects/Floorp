@@ -210,6 +210,12 @@ DevToolsStartup.prototype = {
       // Only top level Firefox Windows fire a browser-delayed-startup-finished event
       Services.obs.addObserver(this.onWindowReady, "browser-delayed-startup-finished");
 
+      if (AppConstants.MOZ_DEV_EDITION) {
+        // On DevEdition, the developer toggle is displayed by default in the navbar area
+        // and should be created before the first paint.
+        this.hookDeveloperToggle();
+      }
+
       // Update menu items when devtools.enabled changes.
       Services.prefs.addObserver(DEVTOOLS_ENABLED_PREF, this.onEnabledPrefChanged);
     }
@@ -297,10 +303,7 @@ DevToolsStartup.prototype = {
     // In some situations (e.g. starting Firefox with --jsconsole) DevTools will be
     // initialized before the first browser-delayed-startup-finished event is received.
     // We use a dedicated flag because we still need to hook the developer toggle.
-    if (!this.developerToggleCreated) {
-      this.hookDeveloperToggle();
-      this.developerToggleCreated = true;
-    }
+    this.hookDeveloperToggle();
 
     // The developer menu hook only needs to be added if devtools have not been
     // initialized yet.
@@ -329,6 +332,10 @@ DevToolsStartup.prototype = {
    * initDevTools, from onViewShowing is also calling browser-menu.
    */
   hookDeveloperToggle() {
+    if (this.developerToggleCreated) {
+      return;
+    }
+
     let id = "developer-button";
     let widget = CustomizableUI.getWidget(id);
     if (widget && widget.provider == CustomizableUI.PROVIDER_API) {
@@ -371,7 +378,12 @@ DevToolsStartup.prototype = {
         // it right away.
         this.onBeforeCreated(anchor.ownerDocument);
       },
-      onBeforeCreated(doc) {
+      onBeforeCreated: (doc) => {
+        // The developer toggle needs the "key_toggleToolbox" <key> element.
+        // In DEV EDITION, the toggle is added before 1st paint and hookKeyShortcuts() is
+        // not called yet when CustomizableUI creates the widget.
+        this.hookKeyShortcuts(doc.defaultView);
+
         // Bug 1223127, CUI should make this easier to do.
         if (doc.getElementById("PanelUI-developerItems")) {
           return;
@@ -384,11 +396,10 @@ DevToolsStartup.prototype = {
         doc.getElementById("PanelUI-multiView").appendChild(view);
       }
     };
-    if (AppConstants.MOZ_DEV_EDITION) {
-      item.defaultArea = CustomizableUI.AREA_NAVBAR;
-    }
     CustomizableUI.createWidget(item);
     CustomizableWidgets.push(item);
+
+    this.developerToggleCreated = true;
   },
 
   /*
@@ -508,6 +519,13 @@ DevToolsStartup.prototype = {
 
   hookKeyShortcuts(window) {
     let doc = window.document;
+
+    // hookKeyShortcuts can be called both from hookWindow and from the developer toggle
+    // onBeforeCreated. Make sure shortcuts are only added once per window.
+    if (doc.getElementById("devtoolsKeyset")) {
+      return;
+    }
+
     let keyset = doc.createElement("keyset");
     keyset.setAttribute("id", "devtoolsKeyset");
 
