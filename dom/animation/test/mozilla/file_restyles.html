@@ -1189,6 +1189,52 @@ waitForAllPaints(() => {
     }
   );
 
+  add_task(
+    async function throttling_animations_in_out_of_view_position_fixed_element() {
+      if (!offscreenThrottlingEnabled) {
+        return;
+      }
+
+      var parentDiv = addDiv(null,
+                             { style: 'position: fixed; top: -1000px;' });
+      var targetDiv = addDiv(null,
+                             { style: 'animation: background-color 100s;' });
+      parentDiv.appendChild(targetDiv);
+
+      var animation = targetDiv.getAnimations()[0];
+      await animation.ready;
+
+      var markers = await observeStyling(5);
+      is(markers.length, 0,
+         'CSS animation on an out-of-view position:fixed element should be ' +
+         'throttled');
+
+      await ensureElementRemoval(parentDiv);
+    }
+  );
+
+  add_task(
+    async function throttling_animations_on_out_of_view_position_fixed_element() {
+      if (!offscreenThrottlingEnabled) {
+        return;
+      }
+
+      var div = addDiv(null,
+                       { style: 'animation: background-color 100s; ' +
+                                'position: fixed; top: -1000px;' });
+
+      var animation = div.getAnimations()[0];
+      await animation.ready;
+
+      var markers = await observeStyling(5);
+      is(markers.length, 0,
+         'CSS animation on an out-of-view position:fixed element should be ' +
+         'throttled');
+
+      await ensureElementRemoval(div);
+    }
+  );
+
   add_task_if_omta_enabled(
     async function no_restyling_for_compositor_animation_on_unrelated_style_change() {
       var div = addDiv(null);
