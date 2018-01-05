@@ -1786,6 +1786,7 @@ public abstract class GeckoApp extends GeckoActivity
             });
         } else if (Intent.ACTION_ASSIST.equals(action)) {
             Tabs.getInstance().addTab(Tabs.LOADURL_START_EDITING | Tabs.LOADURL_EXTERNAL);
+            autoHideTabs();
         } else if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
             final GeckoBundle data = new GeckoBundle(2);
             data.putString("uri", uri);
