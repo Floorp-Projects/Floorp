@@ -50,16 +50,71 @@ add_task(async function() {
     });
   }, EXPECTED_OVERFLOW_REFLOWS, window);
 
-  await withReflowObserver(async function() {
+  Assert.ok(gBrowser.tabContainer.hasAttribute("overflow"),
+            "Tabs should now be overflowed.");
+
+  // Now test that opening and closing a tab while overflowed doesn't cause
+  // us to reflow.
+  await withReflowObserver(async function(dirtyFrame) {
     let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
-    let transitionPromise =
-      BrowserTestUtils.waitForEvent(gBrowser.selectedTab,
-                                    "transitionend", false,
-                                    e => e.propertyName === "max-width");
-    await BrowserTestUtils.removeTab(gBrowser.selectedTab, { animate: true });
-    await transitionPromise;
+    BrowserOpenTab();
     await switchDone;
-  }, EXPECTED_UNDERFLOW_REFLOWS, window);
+    await BrowserTestUtils.waitForCondition(() => {
+      return gBrowser.tabContainer.arrowScrollbox.hasAttribute("scrolledtoend");
+    });
+  }, [], window);
+
+  await withReflowObserver(async function(dirtyFrame) {
+    let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
+    await BrowserTestUtils.removeTab(gBrowser.selectedTab, { animate: true });
+    await switchDone;
+  }, [], window);
+
+  // At this point, we have an overflowed tab strip, and we've got the last tab
+  // selected. This should mean that the first tab is scrolled out of view.
+  // Let's test that we don't reflow when switching to that first tab.
+  let lastTab = gBrowser.selectedTab;
+  let arrowScrollbox = gBrowser.tabContainer.arrowScrollbox;
+
+  // First, we'll check that the first tab is actually scrolled
+  // at least partially out of view.
+  Assert.ok(arrowScrollbox.scrollPosition > 0,
+            "First tab should be partially scrolled out of view.");
+
+  // Now switch to the first tab. We shouldn't flush layout at all.
+  await withReflowObserver(async function(dirtyFrame) {
+    let firstTab = gBrowser.tabContainer.firstChild;
+    await BrowserTestUtils.switchTab(gBrowser, firstTab);
+    await BrowserTestUtils.waitForCondition(() => {
+      return gBrowser.tabContainer.arrowScrollbox.hasAttribute("scrolledtostart");
+    });
+  }, [], window);
+
+  // Okay, now close the last tab. The tabstrip should stay overflowed, but removing
+  // one more after that should underflow it.
+  await BrowserTestUtils.removeTab(lastTab);
+
+  Assert.ok(gBrowser.tabContainer.hasAttribute("overflow"),
+            "Tabs should still be overflowed.");
+
+  // Depending on the size of the window, it might take one or more tab
+  // removals to put the tab strip out of the overflow state, so we'll just
+  // keep testing removals until that occurs.
+  while (gBrowser.tabContainer.hasAttribute("overflow")) {
+    lastTab = gBrowser.tabContainer.lastElementChild;
+    if (gBrowser.selectedTab !== lastTab) {
+      await BrowserTestUtils.switchTab(gBrowser, lastTab);
+    }
+
+    // ... and make sure we don't flush layout when closing it, and exiting
+    // the overflowed state.
+    await withReflowObserver(async function() {
+      let switchDone = BrowserTestUtils.waitForEvent(window, "TabSwitchDone");
+      await BrowserTestUtils.removeTab(lastTab, { animate: true });
+      await switchDone;
+      await BrowserTestUtils.waitForCondition(() => !lastTab.isConnected);
+    }, EXPECTED_UNDERFLOW_REFLOWS, window);
+  }
 
   await removeAllButFirstTab();
 });

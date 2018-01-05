@@ -1754,7 +1754,7 @@ DrawPaintedLayer(PaintedLayer* aLayer,
 }
 
 void
-nsWebBrowser::WindowRaised(nsIWidget* aWidget)
+nsWebBrowser::WindowActivated()
 {
 #if defined(DEBUG_smaug)
   nsCOMPtr<nsIDocument> document = mDocShell->GetDocument();
@@ -1767,7 +1767,7 @@ nsWebBrowser::WindowRaised(nsIWidget* aWidget)
 }
 
 void
-nsWebBrowser::WindowLowered(nsIWidget* aWidget)
+nsWebBrowser::WindowDeactivated()
 {
 #if defined(DEBUG_smaug)
   nsCOMPtr<nsIDocument> document = mDocShell->GetDocument();

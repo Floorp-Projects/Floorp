@@ -12,7 +12,7 @@ function* testBody(url, expecting) {
   yield enableServiceWorkerDebugging();
   let { tab, document } = yield openAboutDebugging("workers");
 
-  let swTab = yield addTab(url);
+  let swTab = yield addTab(url, {background: true});
 
   let serviceWorkersElement = getServiceWorkerList(document);
 

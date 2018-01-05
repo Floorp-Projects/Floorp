@@ -191,7 +191,7 @@ XPCOMUtils.defineLazyGetter(LoginManagerContextMenu, "_stringBundle", function()
 });
 
 XPCOMUtils.defineLazyGetter(LoginManagerContextMenu, "dateAndTimeFormatter", function() {
-  return Services.intl.createDateTimeFormat(undefined, {
+  return new Services.intl.DateTimeFormat(undefined, {
     dateStyle: "medium"
   });
 });

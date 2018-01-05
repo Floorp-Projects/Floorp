@@ -430,7 +430,7 @@ protected:
   // aElementTransitions is the collection of current transitions, and it
   // could be a nullptr if we don't have any transitions.
   template<typename StyleType> bool
-  DoUpdateTransitions(const nsStyleDisplay* aDisp,
+  DoUpdateTransitions(const nsStyleDisplay& aDisp,
                       mozilla::dom::Element* aElement,
                       mozilla::CSSPseudoElementType aPseudoType,
                       CSSTransitionCollection*& aElementTransitions,
@@ -439,7 +439,8 @@ protected:
 
   template<typename StyleType> void
   ConsiderInitiatingTransition(nsCSSPropertyID aProperty,
-                               const mozilla::StyleTransition& aTransition,
+                               const nsStyleDisplay& aStyleDisplay,
+                               uint32_t transitionIdx,
                                mozilla::dom::Element* aElement,
                                mozilla::CSSPseudoElementType aPseudoType,
                                CSSTransitionCollection*& aElementTransitions,

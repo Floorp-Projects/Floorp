@@ -390,14 +390,14 @@ VROculusSession::Refresh(bool aForceRefresh)
       if (mSession && mTextureSet) {
         if (!aForceRefresh) {
           // VROculusSession didn't start submitting frames yet.
-          if (!mSubmitThread) {
+          // Or, the VR thread has been shut down already.
+          if (!mSubmitThread || !mSubmitThread->IsActive()) {
             return;
           }
           // ovr_SubmitFrame is running at VR Submit thread,
           // so we post this task to VR Submit thread and let it paint
           // a black frame.
           mDrawBlack = true;
-          MOZ_ASSERT(mSubmitThread->IsActive());
           mSubmitThread->PostTask(NewRunnableMethod<bool>(
             "gfx::VROculusSession::Refresh",
             this,

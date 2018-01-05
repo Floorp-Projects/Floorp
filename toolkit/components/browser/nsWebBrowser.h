@@ -118,8 +118,8 @@ protected:
   NS_IMETHOD EnableGlobalHistory(bool aEnable);
 
   // nsIWidgetListener
-  virtual void WindowRaised(nsIWidget* aWidget);
-  virtual void WindowLowered(nsIWidget* aWidget);
+  virtual void WindowActivated() override;
+  virtual void WindowDeactivated() override;
   virtual bool PaintWindow(nsIWidget* aWidget,
                            mozilla::LayoutDeviceIntRegion aRegion) override;
 

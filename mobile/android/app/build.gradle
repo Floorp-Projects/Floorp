@@ -27,6 +27,12 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
 
+    aaptOptions {
+        // The omnijar is already a compressed file itself and Gecko expects it to be
+        // STORED within the APK rather than DEFLATED.
+        noCompress 'ja'
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
