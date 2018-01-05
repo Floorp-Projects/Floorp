@@ -8,49 +8,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1037687
   <title>Test for Bug 1037687</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-  <script type="application/javascript">
-
-  /** Test for Bug 1037687 **/
-
-  SimpleTest.waitForExplicitFinish();
-
-  var host;
-  var sr;
-  var embed;
-  var object;
-  var iframe;
-  var resourceLoadCount = 0;
-
-  function resourceLoaded(event) {
-    ++resourceLoadCount;
-    ok(true, event.target + " got " + event.load);
-    if (resourceLoadCount == 3) {
-      SimpleTest.finish();
-    }
-  }
-
-  function createResource(sr, type) {
-    var el = document.createElement(type);
-    var attrName = type == "object" ? "data" : "src";
-    el.setAttribute(attrName, "file_mozfiledataurl_img.jpg");
-    el.onload = resourceLoaded;
-    var info = document.createElement("div");
-    info.textContent = type;
-    sr.appendChild(info);
-    sr.appendChild(el);
-  }
-
-  function test() {
-    host = document.getElementById("host");
-    sr = host.createShadowRoot();
-    embed = createResource(sr, "embed");
-    object = createResource(sr, "object");
-    iframe = createResource(sr, "iframe");
-  }
-
-  </script>
 </head>
-<body onload="test()">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1037687">Mozilla Bug 1037687</a>
 <p id="display"></p>
 <div id="content" style="display: none">
@@ -58,6 +17,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1037687
 </div>
 <pre id="test">
 </pre>
-<div id="host"></div>
+<script type="application/javascript">
+  /** Test for Bug 1037687 **/
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.webcomponents.enabled", true]
+    ]
+  }, function() {
+    // This test loads in an iframe, to ensure that the element instance is
+    // loaded with the correct value of the preference.
+    let iframe = document.createElement("iframe");
+    iframe.src = "test_bug1037687_subframe.html";
+    document.body.appendChild(iframe);
+  });
+</script>
 </body>
 </html>

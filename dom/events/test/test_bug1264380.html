@@ -6,20 +6,21 @@
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
 <script>
 
-SimpleTest.waitForExplicitFinish();
-
-SpecialPowers.pushPrefEnv({"set": [
-  ["dom.webcomponents.enabled", true]
-]});
-
 function runTests()
 {
   let dragService = SpecialPowers.Cc["@mozilla.org/widget/dragservice;1"].
     getService(SpecialPowers.Ci.nsIDragService);
 
-  let shadow = document.querySelector('#outter').createShadowRoot();
-  let target = document.createElement('a');
-  let linkText = document.createTextNode("Drag me if you can!");
+  let iframe = document.createElement('iframe');
+  document.body.appendChild(iframe);
+  iframe.contentDocument.body.innerHTML = '<div id="outter"/>';
+
+  let iframeDoc = iframe.contentDocument;
+  let iframeWin = iframe.contentWindow;
+
+  let shadow = iframeDoc.querySelector('#outter').attachShadow({mode: 'open'});
+  let target = iframeDoc.createElement('a');
+  let linkText = iframeDoc.createTextNode("Drag me if you can!");
   target.appendChild(linkText);
   target.href = "http://www.mozilla.org/";
   shadow.appendChild(target);
@@ -35,20 +36,29 @@ function runTests()
   }
 
   ok(!dragService.getCurrentSession(), "There shouldn't be a drag session!");
-  window.addEventListener("dragstart", trapDrag, true);
-  synthesizeMouse(target, 2, 2, { type: "mousedown" });
-  synthesizeMouse(target, 11, 11, { type: "mousemove" });
-  synthesizeMouse(target, 20, 20, { type: "mousemove" });
-  window.removeEventListener("dragstart", trapDrag, true);
+  iframeWin.addEventListener("dragstart", trapDrag, true);
+  synthesizeMouse(target, 2, 2, { type: "mousedown" }, iframeWin);
+  synthesizeMouse(target, 11, 11, { type: "mousemove" }, iframeWin);
+  synthesizeMouse(target, 20, 20, { type: "mousemove" }, iframeWin);
+  iframeWin.removeEventListener("dragstart", trapDrag, true);
   ok(dragService.getCurrentSession(), "Drag session is available.");
   dragService.endDragSession(false);
   ok(!dragService.getCurrentSession(), "There shouldn't be a drag session anymore!");
   SimpleTest.finish();
 }
 
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.webcomponents.enabled", true]
+    ]
+  }, runTests);
+});
+
 </script>
 
-<body onload="window.setTimeout(runTests, 0);">
-<div id="outter"/>
+<body>
 </body>
 </html>

@@ -38,6 +38,7 @@ class DeviceManagerADB(DeviceManager):
     _tempDir = None
     _adb_version = None
     _sdk_version = None
+    _noDevicesOutput = "no devices/emulators found"
     connected = False
 
     def __init__(self, host=None, port=5555, retryLimit=5, packageName='fennec',
@@ -544,7 +545,7 @@ class DeviceManagerADB(DeviceManager):
             # Raise a DMError when the device is missing, but not when the
             # directory is empty or missing.
             output = ''.join(proc.output)
-            if ("no devices/emulators found" in output or
+            if (self._noDevicesOutput in output or
                 ("pulled" not in output and
                  "does not exist" not in output)):
                 raise DMError("getDirectory() failed to pull %s: %s" %
@@ -746,6 +747,9 @@ class DeviceManagerADB(DeviceManager):
                 if ret_code != 0:
                     self._logger.error("Non-zero return code (%d) from %s" % (ret_code, finalArgs))
                     self._logger.error("Output: %s" % proc.output)
+                output = ''.join(proc.output)
+                if self._noDevicesOutput in output:
+                    raise DMError(self._noDevicesOutput)
                 return ret_code
 
         raise DMError("Timeout exceeded for _checkCmd call after %d retries." % retries)

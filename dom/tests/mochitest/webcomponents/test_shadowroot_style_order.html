@@ -5,38 +5,48 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=806506
 -->
 <head>
   <title>Test for ShadowRoot style order</title>
+  <script type="text/javascript" src="head.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<div id="container"></div>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=806506">Bug 806506</a>
 <script>
-// Create ShadowRoot.
-var container = document.getElementById("container");
-var elem = document.createElement("div");
-container.appendChild(elem); // Put ShadowRoot host in document.
-var root = elem.createShadowRoot();
 
-// Style elements that will be appended into the ShadowRoot.
-var tallShadowStyle = document.createElement("style");
-tallShadowStyle.innerHTML = ".tall { height: 100px; }";
+SimpleTest.waitForExplicitFinish();
 
-var veryTallShadowStyle = document.createElement("style");
-veryTallShadowStyle.innerHTML = ".tall { height: 200px; }";
+var content = '<div id="container"></div>';
+setWebComponentsPrefAndCreateIframe(content)
+  .then((aDocument) => {
+    var iframeWin = aDocument.defaultView;
 
-var divToStyle = document.createElement("div");
-divToStyle.setAttribute("class", "tall");
-root.appendChild(divToStyle);
+    // Create ShadowRoot.
+    var container = aDocument.getElementById("container");
+    var elem = aDocument.createElement("div");
+    container.appendChild(elem); // Put ShadowRoot host in document.
+    var root = elem.attachShadow({mode: "open"});
 
-// Make sure the styles are applied in tree order.
-root.appendChild(tallShadowStyle);
-is(root.styleSheets.length, 1, "ShadowRoot should have one style sheet.");
-is(window.getComputedStyle(divToStyle).getPropertyValue("height"), "100px", "Style in ShadowRoot should apply to elements in ShadowRoot.");
-root.appendChild(veryTallShadowStyle);
-is(root.styleSheets.length, 2, "ShadowRoot should have two style sheets.");
-is(window.getComputedStyle(divToStyle).getPropertyValue("height"), "200px", "Style in ShadowRoot should apply to elements in ShadowRoot in tree order.");
+    // Style elements that will be appended into the ShadowRoot.
+    var tallShadowStyle = aDocument.createElement("style");
+    tallShadowStyle.innerHTML = ".tall { height: 100px; }";
 
+    var veryTallShadowStyle = aDocument.createElement("style");
+    veryTallShadowStyle.innerHTML = ".tall { height: 200px; }";
+
+    var divToStyle = aDocument.createElement("div");
+    divToStyle.setAttribute("class", "tall");
+    root.appendChild(divToStyle);
+
+    // Make sure the styles are applied in tree order.
+    root.appendChild(tallShadowStyle);
+    is(root.styleSheets.length, 1, "ShadowRoot should have one style sheet.");
+    is(iframeWin.getComputedStyle(divToStyle).getPropertyValue("height"), "100px", "Style in ShadowRoot should apply to elements in ShadowRoot.");
+    root.appendChild(veryTallShadowStyle);
+    is(root.styleSheets.length, 2, "ShadowRoot should have two style sheets.");
+    is(iframeWin.getComputedStyle(divToStyle).getPropertyValue("height"), "200px", "Style in ShadowRoot should apply to elements in ShadowRoot in tree order.");
+
+    SimpleTest.finish();
+  });
 </script>
 </body>
 </html>

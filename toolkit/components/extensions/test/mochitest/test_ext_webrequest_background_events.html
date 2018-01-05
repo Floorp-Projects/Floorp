@@ -60,6 +60,7 @@ add_task(async function test_webRequest_serviceworker_events() {
 
   await extension.startup();
   let registration = await navigator.serviceWorker.register("webrequest_worker.js", {scope: "."});
+  await waitForState(registration.installing, "activated");
   await extension.awaitMessage("done");
   await registration.unregister();
   await extension.unload();

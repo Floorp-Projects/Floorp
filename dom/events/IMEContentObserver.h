@@ -188,12 +188,6 @@ private:
   bool IsSafeToNotifyIME() const;
   bool IsEditorComposing() const;
 
-  /**
-   * nsINode::GetChildAt() is slow.  So, this avoids to use it if it's
-   * first child or last child of aParent.
-   */
-  static nsIContent* GetChildNode(nsINode* aParent, int32_t aOffset);
-
   // Following methods are called by DocumentObserver when
   // beginning to update the contents and ending updating the contents.
   void BeginDocumentUpdate();

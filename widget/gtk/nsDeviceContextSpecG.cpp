@@ -147,8 +147,8 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget()
   // Determine the real format with some GTK magic
   if (format == nsIPrintSettings::kOutputFormatNative) {
     if (mIsPPreview) {
-      // There is nothing to detect on Print Preview, use PS.
-      format = nsIPrintSettings::kOutputFormatPS;
+      // There is nothing to detect on Print Preview, use PDF.
+      format = nsIPrintSettings::kOutputFormatPDF;
     } else {
       return nullptr;
     }

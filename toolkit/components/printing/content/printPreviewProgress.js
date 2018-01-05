@@ -18,6 +18,9 @@ var docURL   = "";
 var progressParams = null;
 
 function ellipseString(aStr, doFront) {
+  if (!aStr)
+    return "";
+
   if (aStr.length > 3 && (aStr.substr(0, 3) == "..." || aStr.substr(aStr.length - 4, 3) == "..."))
     return aStr;
 

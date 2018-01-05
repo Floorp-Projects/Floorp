@@ -898,9 +898,12 @@ bool nsTableCellMap::RowHasSpanningCells(int32_t aRowIndex,
   return false;
 }
 
+// FIXME: The only value callers pass for aSide is eLogicalSideBEnd.
+// Consider removing support for the other three values.
 void
 nsTableCellMap::ResetBStartStart(LogicalSide aSide,
                                  nsCellMap&  aCellMap,
+                                 uint32_t    aRowGroupStart,
                                  uint32_t    aRowIndex,
                                  uint32_t    aColIndex,
                                  bool        aIsBEndIEnd)
@@ -915,7 +918,7 @@ nsTableCellMap::ResetBStartStart(LogicalSide aSide,
     aRowIndex++;
     MOZ_FALLTHROUGH;
   case eLogicalSideBStart:
-    cellData = (BCCellData*)aCellMap.GetDataAt(aRowIndex, aColIndex);
+    cellData = (BCCellData*)aCellMap.GetDataAt(aRowIndex - aRowGroupStart, aColIndex);
     if (cellData) {
       bcData = &cellData->mData;
     }
@@ -938,7 +941,7 @@ nsTableCellMap::ResetBStartStart(LogicalSide aSide,
     aColIndex++;
     MOZ_FALLTHROUGH;
   case eLogicalSideIStart:
-    cellData = (BCCellData*)aCellMap.GetDataAt(aRowIndex, aColIndex);
+    cellData = (BCCellData*)aCellMap.GetDataAt(aRowIndex - aRowGroupStart, aColIndex);
     if (cellData) {
       bcData = &cellData->mData;
     }

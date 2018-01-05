@@ -37,7 +37,7 @@ BlobSet::AppendVoidPtr(const void* aData, uint32_t aLength)
 nsresult
 BlobSet::AppendString(const nsAString& aString, bool nativeEOL)
 {
-  nsAutoCString utf8Str;
+  nsCString utf8Str;
   if (NS_WARN_IF(!AppendUTF16toUTF8(aString, utf8Str, mozilla::fallible))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

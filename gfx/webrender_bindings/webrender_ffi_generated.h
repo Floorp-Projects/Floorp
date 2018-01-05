@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* Generated with cbindgen:0.2.2 */
+/* Generated with cbindgen:0.3.3 */
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -13,8 +13,6 @@
 
 #include <cstdint>
 #include <cstdlib>
-
-extern "C" {
 
 namespace mozilla {
 namespace wr {
@@ -237,9 +235,17 @@ enum class YuvColorSpace : uint32_t {
   Sentinel /* this must be last for serialization purposes. */
 };
 
-struct Arc_VecU8;
+template<typename T>
+struct Arc;
+
+// Geometry in the coordinate system of the render target (screen or intermediate
+// surface) in physical pixels.
+struct DevicePixel;
 
 struct DocumentHandle;
+
+// Geometry in a layer's local coordinate space (logical pixels).
+struct LayerPixel;
 
 // The renderer is responsible for submitting to the GPU the work prepared by the
 // RenderBackend.
@@ -248,7 +254,17 @@ struct Renderer;
 // The resource updates for a given transaction (they must be applied in the same frame).
 struct ResourceUpdates;
 
-struct Vec_u8;
+// Offset in number of tiles.
+struct Tiles;
+
+// The default unit.
+struct UnknownUnit;
+
+template<typename T>
+struct Vec;
+
+// Geometry in the document's coordinate space (logical pixels).
+struct WorldPixel;
 
 struct WrProgramCache;
 
@@ -285,11 +301,11 @@ struct FontKey {
   }
 };
 
-typedef FontKey WrFontKey;
+using WrFontKey = FontKey;
 
-typedef Arc_VecU8 ArcVecU8;
+using VecU8 = Vec<uint8_t>;
 
-typedef Vec_u8 VecU8;
+using ArcVecU8 = Arc<VecU8>;
 
 struct Epoch {
   uint32_t mHandle;
@@ -305,13 +321,13 @@ struct Epoch {
   }
 };
 
-typedef Epoch WrEpoch;
+using WrEpoch = Epoch;
 
 // This type carries no valuable semantics for WR. However, it reflects the fact that
 // clients (Servo) may generate pipelines by different semi-independent sources.
 // These pipelines still belong to the same `IdNamespace` and the same `DocumentId`.
 // Having this extra Id field enables them to generate `PipelineId` without collision.
-typedef uint32_t PipelineSourceId;
+using PipelineSourceId = uint32_t;
 
 // From the point of view of WR, `PipelineId` is completely opaque and generic as long as
 // it's clonable, serializable, comparable, and hashable.
@@ -325,21 +341,22 @@ struct PipelineId {
   }
 };
 
-typedef PipelineId WrPipelineId;
+using WrPipelineId = PipelineId;
 
-struct TypedSize2D_f32__LayerPixel {
-  float width;
-  float height;
+template<typename T, typename U>
+struct TypedSize2D {
+  T width;
+  T height;
 
-  bool operator==(const TypedSize2D_f32__LayerPixel& aOther) const {
+  bool operator==(const TypedSize2D& aOther) const {
     return width == aOther.width &&
            height == aOther.height;
   }
 };
 
-typedef TypedSize2D_f32__LayerPixel LayerSize;
+using LayerSize = TypedSize2D<float, LayerPixel>;
 
-typedef LayerSize LayoutSize;
+using LayoutSize = LayerSize;
 
 // Describes the memory layout of a display list.
 //
@@ -382,6 +399,11 @@ struct WrOpacityProperty {
   }
 };
 
+// Geometry in a stacking context's local coordinate space (logical pixels).
+//
+// For now layout pixels are equivalent to layer pixels, but it may change.
+using LayoutPixel = LayerPixel;
+
 // A 3d transform stored as a 4 by 4 matrix in row-major order in memory.
 //
 // Transforms can be parametrized over the source and destination units, to describe a
@@ -393,25 +415,26 @@ struct WrOpacityProperty {
 // A pre-transformation corresponds to adding an operation that is applied before
 // the rest of the transformation, while a post-transformation adds an operation
 // that is applied after.
-struct TypedTransform3D_f32__LayoutPixel__LayoutPixel {
-  float m11;
-  float m12;
-  float m13;
-  float m14;
-  float m21;
-  float m22;
-  float m23;
-  float m24;
-  float m31;
-  float m32;
-  float m33;
-  float m34;
-  float m41;
-  float m42;
-  float m43;
-  float m44;
+template<typename T, typename Src, typename Dst>
+struct TypedTransform3D {
+  T m11;
+  T m12;
+  T m13;
+  T m14;
+  T m21;
+  T m22;
+  T m23;
+  T m24;
+  T m31;
+  T m32;
+  T m33;
+  T m34;
+  T m41;
+  T m42;
+  T m43;
+  T m44;
 
-  bool operator==(const TypedTransform3D_f32__LayoutPixel__LayoutPixel& aOther) const {
+  bool operator==(const TypedTransform3D& aOther) const {
     return m11 == aOther.m11 &&
            m12 == aOther.m12 &&
            m13 == aOther.m13 &&
@@ -431,27 +454,28 @@ struct TypedTransform3D_f32__LayoutPixel__LayoutPixel {
   }
 };
 
-typedef TypedTransform3D_f32__LayoutPixel__LayoutPixel LayoutTransform;
+using LayoutTransform = TypedTransform3D<float, LayoutPixel, LayoutPixel>;
 
 struct WrTransformProperty {
   uint64_t id;
   LayoutTransform transform;
 };
 
-typedef IdNamespace WrIdNamespace;
+using WrIdNamespace = IdNamespace;
 
 // A 2d Point tagged with a unit.
-struct TypedPoint2D_f32__WorldPixel {
-  float x;
-  float y;
+template<typename T, typename U>
+struct TypedPoint2D {
+  T x;
+  T y;
 
-  bool operator==(const TypedPoint2D_f32__WorldPixel& aOther) const {
+  bool operator==(const TypedPoint2D& aOther) const {
     return x == aOther.x &&
            y == aOther.y;
   }
 };
 
-typedef TypedPoint2D_f32__WorldPixel WorldPoint;
+using WorldPoint = TypedPoint2D<float, WorldPixel>;
 
 // Represents RGBA screen colors with floating point numbers.
 //
@@ -471,31 +495,21 @@ struct ColorF {
   }
 };
 
-// A 2d Point tagged with a unit.
-struct TypedPoint2D_f32__LayerPixel {
-  float x;
-  float y;
-
-  bool operator==(const TypedPoint2D_f32__LayerPixel& aOther) const {
-    return x == aOther.x &&
-           y == aOther.y;
-  }
-};
-
 // A 2d Rectangle optionally tagged with a unit.
-struct TypedRect_f32__LayerPixel {
-  TypedPoint2D_f32__LayerPixel origin;
-  TypedSize2D_f32__LayerPixel size;
+template<typename T, typename U>
+struct TypedRect {
+  TypedPoint2D<T, U> origin;
+  TypedSize2D<T, U> size;
 
-  bool operator==(const TypedRect_f32__LayerPixel& aOther) const {
+  bool operator==(const TypedRect& aOther) const {
     return origin == aOther.origin &&
            size == aOther.size;
   }
 };
 
-typedef TypedRect_f32__LayerPixel LayerRect;
+using LayerRect = TypedRect<float, LayerPixel>;
 
-typedef LayerRect LayoutRect;
+using LayoutRect = LayerRect;
 
 struct BorderRadius {
   LayoutSize top_left;
@@ -541,7 +555,7 @@ struct ImageKey {
   }
 };
 
-typedef ImageKey WrImageKey;
+using WrImageKey = ImageKey;
 
 struct WrImageMask {
   WrImageKey image;
@@ -573,19 +587,20 @@ struct StickyOffsetBounds {
 };
 
 // A 2d Vector tagged with a unit.
-struct TypedVector2D_f32__LayerPixel {
-  float x;
-  float y;
+template<typename T, typename U>
+struct TypedVector2D {
+  T x;
+  T y;
 
-  bool operator==(const TypedVector2D_f32__LayerPixel& aOther) const {
+  bool operator==(const TypedVector2D& aOther) const {
     return x == aOther.x &&
            y == aOther.y;
   }
 };
 
-typedef TypedVector2D_f32__LayerPixel LayerVector2D;
+using LayerVector2D = TypedVector2D<float, LayerPixel>;
 
-typedef LayerVector2D LayoutVector2D;
+using LayoutVector2D = LayerVector2D;
 
 struct BorderWidths {
   float left;
@@ -611,9 +626,9 @@ struct BorderSide {
   }
 };
 
-typedef TypedPoint2D_f32__LayerPixel LayerPoint;
+using LayerPoint = TypedPoint2D<float, LayerPixel>;
 
-typedef LayerPoint LayoutPoint;
+using LayoutPoint = LayerPoint;
 
 struct GradientStop {
   float offset;
@@ -625,14 +640,14 @@ struct GradientStop {
   }
 };
 
-// The default side offset type with no unit.
-struct SideOffsets2D_f32 {
-  float top;
-  float right;
-  float bottom;
-  float left;
+template<typename T, typename U>
+struct TypedSideOffsets2D {
+  T top;
+  T right;
+  T bottom;
+  T left;
 
-  bool operator==(const SideOffsets2D_f32& aOther) const {
+  bool operator==(const TypedSideOffsets2D& aOther) const {
     return top == aOther.top &&
            right == aOther.right &&
            bottom == aOther.bottom &&
@@ -641,24 +656,13 @@ struct SideOffsets2D_f32 {
 };
 
 // The default side offset type with no unit.
-struct SideOffsets2D_u32 {
-  uint32_t top;
-  uint32_t right;
-  uint32_t bottom;
-  uint32_t left;
-
-  bool operator==(const SideOffsets2D_u32& aOther) const {
-    return top == aOther.top &&
-           right == aOther.right &&
-           bottom == aOther.bottom &&
-           left == aOther.left;
-  }
-};
+template<typename T>
+using SideOffsets2D = TypedSideOffsets2D<T, UnknownUnit>;
 
 struct NinePatchDescriptor {
   uint32_t width;
   uint32_t height;
-  SideOffsets2D_u32 slice;
+  SideOffsets2D<uint32_t> slice;
 
   bool operator==(const NinePatchDescriptor& aOther) const {
     return width == aOther.width &&
@@ -713,9 +717,9 @@ struct FontInstanceKey {
   }
 };
 
-typedef FontInstanceKey WrFontInstanceKey;
+using WrFontInstanceKey = FontInstanceKey;
 
-typedef uint32_t GlyphIndex;
+using GlyphIndex = uint32_t;
 
 struct GlyphInstance {
   GlyphIndex index;
@@ -735,9 +739,9 @@ struct GlyphOptions {
   }
 };
 
-typedef YuvColorSpace WrYuvColorSpace;
+using WrYuvColorSpace = YuvColorSpace;
 
-typedef LogLevelFilter WrLogLevelFilter;
+using WrLogLevelFilter = LogLevelFilter;
 
 struct ByteSlice {
   const uint8_t *buffer;
@@ -749,18 +753,7 @@ struct ByteSlice {
   }
 };
 
-// A 2d Point tagged with a unit.
-struct TypedPoint2D_u16__Tiles {
-  uint16_t x;
-  uint16_t y;
-
-  bool operator==(const TypedPoint2D_u16__Tiles& aOther) const {
-    return x == aOther.x &&
-           y == aOther.y;
-  }
-};
-
-typedef TypedPoint2D_u16__Tiles TileOffset;
+using TileOffset = TypedPoint2D<uint16_t, Tiles>;
 
 struct MutByteSlice {
   uint8_t *buffer;
@@ -824,9 +817,9 @@ struct WrExternalImageId {
   }
 };
 
-typedef WrExternalImage (*LockExternalImageCallback)(void*, WrExternalImageId, uint8_t);
+using LockExternalImageCallback = WrExternalImage(*)(void*, WrExternalImageId, uint8_t);
 
-typedef void (*UnlockExternalImageCallback)(void*, WrExternalImageId, uint8_t);
+using UnlockExternalImageCallback = void(*)(void*, WrExternalImageId, uint8_t);
 
 struct WrExternalImageHandler {
   void *external_image_obj;
@@ -856,7 +849,7 @@ struct WrImageDescriptor {
   }
 };
 
-typedef ExternalImageType WrExternalImageBufferType;
+using WrExternalImageBufferType = ExternalImageType;
 
 // Represents RGBA screen colors with one byte per channel.
 //
@@ -924,39 +917,9 @@ struct FontInstancePlatformOptions {
 };
 #endif
 
-// A 2d Point tagged with a unit.
-struct TypedPoint2D_u32__DevicePixel {
-  uint32_t x;
-  uint32_t y;
+using DeviceUintRect = TypedRect<uint32_t, DevicePixel>;
 
-  bool operator==(const TypedPoint2D_u32__DevicePixel& aOther) const {
-    return x == aOther.x &&
-           y == aOther.y;
-  }
-};
-
-struct TypedSize2D_u32__DevicePixel {
-  uint32_t width;
-  uint32_t height;
-
-  bool operator==(const TypedSize2D_u32__DevicePixel& aOther) const {
-    return width == aOther.width &&
-           height == aOther.height;
-  }
-};
-
-// A 2d Rectangle optionally tagged with a unit.
-struct TypedRect_u32__DevicePixel {
-  TypedPoint2D_u32__DevicePixel origin;
-  TypedSize2D_u32__DevicePixel size;
-
-  bool operator==(const TypedRect_u32__DevicePixel& aOther) const {
-    return origin == aOther.origin &&
-           size == aOther.size;
-  }
-};
-
-typedef TypedRect_u32__DevicePixel DeviceUintRect;
+extern "C" {
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
@@ -1184,7 +1147,7 @@ void wr_dp_push_border_gradient(WrState *aState,
                                 const GradientStop *aStops,
                                 size_t aStopsCount,
                                 ExtendMode aExtendMode,
-                                SideOffsets2D_f32 aOutset)
+                                SideOffsets2D<float> aOutset)
 WR_FUNC;
 
 WR_INLINE
@@ -1195,7 +1158,7 @@ void wr_dp_push_border_image(WrState *aState,
                              BorderWidths aWidths,
                              WrImageKey aImage,
                              NinePatchDescriptor aPatch,
-                             SideOffsets2D_f32 aOutset,
+                             SideOffsets2D<float> aOutset,
                              RepeatMode aRepeatHorizontal,
                              RepeatMode aRepeatVertical)
 WR_FUNC;
@@ -1211,7 +1174,7 @@ void wr_dp_push_border_radial_gradient(WrState *aState,
                                        const GradientStop *aStops,
                                        size_t aStopsCount,
                                        ExtendMode aExtendMode,
-                                       SideOffsets2D_f32 aOutset)
+                                       SideOffsets2D<float> aOutset)
 WR_FUNC;
 
 WR_INLINE
@@ -1638,10 +1601,10 @@ bool wr_window_new(WrWindowId aWindowId,
                    uint32_t *aOutMaxTextureSize)
 WR_FUNC;
 
+} // extern "C"
+
 } // namespace wr
 } // namespace mozilla
-
-} // extern "C"
 
 /* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen.
  * To generate this file:
