@@ -214,21 +214,18 @@ this.FxAccountsStorageManager.prototype = {
     log.debug("_updateAccountData with items", Object.keys(newFields));
     // work out what bucket.
     for (let [name, value] of Object.entries(newFields)) {
-      if (FXA_PWDMGR_MEMORY_FIELDS.has(name)) {
-        if (value == null) {
-          delete this.cachedMemory[name];
-        } else {
-          this.cachedMemory[name] = value;
-        }
+      if (value == null) {
+        delete this.cachedMemory[name];
+        delete this.cachedPlain[name];
+        // no need to do the "delete on null" thing for this.cachedSecure -
+        // we need to keep it until we have managed to read so we can nuke
+        // it on write.
+        this.cachedSecure[name] = null;
+      } else if (FXA_PWDMGR_MEMORY_FIELDS.has(name)) {
+        this.cachedMemory[name] = value;
       } else if (FXA_PWDMGR_PLAINTEXT_FIELDS.has(name)) {
-        if (value == null) {
-          delete this.cachedPlain[name];
-        } else {
-          this.cachedPlain[name] = value;
-        }
+        this.cachedPlain[name] = value;
       } else if (FXA_PWDMGR_SECURE_FIELDS.has(name)) {
-        // don't do the "delete on null" thing here - we need to keep it until
-        // we have managed to read so we can nuke it on write.
         this.cachedSecure[name] = value;
       } else {
         // Throwing seems reasonable here as some client code has explicitly
