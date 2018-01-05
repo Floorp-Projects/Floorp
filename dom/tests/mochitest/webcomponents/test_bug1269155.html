@@ -5,83 +5,89 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1269155
 -->
 <head>
   <title>Test for Bug 1269155</title>
+  <script type="text/javascript" src="head.js"></script>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank"
-	href="https://bugzilla.mozilla.org/show_bug.cgi?id=1269155">Mozilla Bug 1269155</a>
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=1269155">Mozilla Bug 1269155</a>
 <p id="display"></p>
-<div id="content" style="display: none">
 
-</div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 1269155 **/
-var host = document.querySelector('#content');
- var root = host.createShadowRoot();
+SimpleTest.waitForExplicitFinish();
 
- var header1 = document.createElement('h1');
- header1.textContent = 'Shadow Header1';
+var content = '<div id="content" style="display: none"> </div>';
+setWebComponentsPrefAndCreateIframe(content)
+  .then((aDocument) => {
+    var host = aDocument.querySelector('#content');
+    var root = host.attachShadow({mode: "open"});
 
- var paragraph1 = document.createElement('p');
- paragraph1.textContent = 'shadow text paragraph1';
+    var header1 = aDocument.createElement('h1');
+    header1.textContent = 'Shadow Header1';
 
- root.appendChild(header1);
- root.appendChild(paragraph1);
+    var paragraph1 = aDocument.createElement('p');
+    paragraph1.textContent = 'shadow text paragraph1';
 
-var root2 = paragraph1.createShadowRoot();
-var header2 = document.createElement('h2');
-header2.textContent = 'Shadow Header2';
+    root.appendChild(header1);
+    root.appendChild(paragraph1);
 
-var paragraph2 = document.createElement('p');
-paragraph2.textContent = 'shadow text paragraph2';
-root2.appendChild(header2);
-root2.appendChild(paragraph2);
+    var root2 = paragraph1.attachShadow({mode: "open"});
+    var header2 = aDocument.createElement('h2');
+    header2.textContent = 'Shadow Header2';
+
+    var paragraph2 = aDocument.createElement('p');
+    paragraph2.textContent = 'shadow text paragraph2';
+    root2.appendChild(header2);
+    root2.appendChild(paragraph2);
 
 
-var frag = document.createDocumentFragment();
-var paragraph3 = document.createElement('p');
-paragraph3.textContent = 'fragment paragraph3';
-frag.appendChild(paragraph3);
+    var frag = aDocument.createDocumentFragment();
+    var paragraph3 = aDocument.createElement('p');
+    paragraph3.textContent = 'fragment paragraph3';
+    frag.appendChild(paragraph3);
 
-var root3 = paragraph3.createShadowRoot();
-var header4 = document.createElement('h2');
-header4.textContent = 'Shadow Header3';
+    var root3 = paragraph3.attachShadow({mode: "open"});
+    var header4 = aDocument.createElement('h2');
+    header4.textContent = 'Shadow Header3';
 
-var paragraph4 = document.createElement('p');
-paragraph4.textContent = 'shadow text paragraph4';
+    var paragraph4 = aDocument.createElement('p');
+    paragraph4.textContent = 'shadow text paragraph4';
 
-root3.appendChild(header4);
-root3.appendChild(paragraph4);
+    root3.appendChild(header4);
+    root3.appendChild(paragraph4);
 
-//shadow dom without compose
-is(root.getRootNode(), root, "root.getRootNode() should be root.");
-is(root2.getRootNode(), root2, "root2.getRootNode() should be root.");
-is(root3.getRootNode(), root3, "root3.getRootNode() should be root.");
-is(header1.getRootNode(), root, "header1.getRootNode() should be root.");
-is(header2.getRootNode(), root2, "header1.getRootNode() should be root2.");
-is(header4.getRootNode(), root3, "header1.getRootNode() should be root3.");
-//shadow dom with compose
-is(root.getRootNode({ composed: true }), document, "root.getRootNode() with composed flag should be document.");
-is(root2.getRootNode({ composed: true }), document, "root2.getRootNode() with composed flag should be document.");
-is(root3.getRootNode({ composed: true }), frag, "root3.getRootNode() with composed flag should be frag.");
-is(header1.getRootNode({ composed: true }) , document, "header1.getRootNode() with composed flag should be document.");
-is(header2.getRootNode({ composed: true }) , document, "header2.getRootNode() with composed flag should be document.");
-is(header4.getRootNode({ composed: true }) , frag, "head4.getRootNode() with composed flag should be frag.");
-//dom without compose
-is(host.getRootNode(), document, "host.getRootNode() should be document.");
-is(header1.getRootNode(), root, "header1.getRootNode() should be root.");
-is(paragraph1.getRootNode(), root, "paragraph1.getRootNode() should be root.");
-is(frag.getRootNode(), frag, "frag.getRootNode() should be frag.");
-//dom with compose
-is(host.getRootNode({ composed: true }) , document, "host.getRootNode() with composed flag should be document.");
-is(header1.getRootNode({ composed: true }) , document, "header1.getRootNode() with composed flag should be document.");
-is(paragraph1.getRootNode({ composed: true }) , document, "paragraph1.getRootNode() with composed flag should be document.");
-is(frag.getRootNode({ composed: true }) , frag, "frag.getRootNode() with composed flag should be frag.");
+    //shadow dom without compose
+    is(root.getRootNode(), root, "root.getRootNode() should be root.");
+    is(root2.getRootNode(), root2, "root2.getRootNode() should be root.");
+    is(root3.getRootNode(), root3, "root3.getRootNode() should be root.");
+    is(header1.getRootNode(), root, "header1.getRootNode() should be root.");
+    is(header2.getRootNode(), root2, "header1.getRootNode() should be root2.");
+    is(header4.getRootNode(), root3, "header1.getRootNode() should be root3.");
+    //shadow dom with compose
+    is(root.getRootNode({ composed: true }), aDocument, "root.getRootNode() with composed flag should be document.");
+    is(root2.getRootNode({ composed: true }), aDocument, "root2.getRootNode() with composed flag should be document.");
+    is(root3.getRootNode({ composed: true }), frag, "root3.getRootNode() with composed flag should be frag.");
+    is(header1.getRootNode({ composed: true }) , aDocument, "header1.getRootNode() with composed flag should be document.");
+    is(header2.getRootNode({ composed: true }) , aDocument, "header2.getRootNode() with composed flag should be document.");
+    is(header4.getRootNode({ composed: true }) , frag, "head4.getRootNode() with composed flag should be frag.");
+    //dom without compose
+    is(host.getRootNode(), aDocument, "host.getRootNode() should be document.");
+    is(header1.getRootNode(), root, "header1.getRootNode() should be root.");
+    is(paragraph1.getRootNode(), root, "paragraph1.getRootNode() should be root.");
+    is(frag.getRootNode(), frag, "frag.getRootNode() should be frag.");
+    //dom with compose
+    is(host.getRootNode({ composed: true }) , aDocument, "host.getRootNode() with composed flag should be document.");
+    is(header1.getRootNode({ composed: true }) , aDocument, "header1.getRootNode() with composed flag should be document.");
+    is(paragraph1.getRootNode({ composed: true }) , aDocument, "paragraph1.getRootNode() with composed flag should be document.");
+    is(frag.getRootNode({ composed: true }) , frag, "frag.getRootNode() with composed flag should be frag.");
 
+    SimpleTest.finish();
+  });
 </script>
 </pre>
 </body>
