@@ -82,9 +82,10 @@ function runTest(aExpectedResponses) {
 
 // Verify that we can register and intercept a 3rd party iframe with
 // the given cookie policy.
-function testShouldIntercept(policy, done) {
+function testShouldIntercept(behavior, lifetime, done) {
   SpecialPowers.pushPrefEnv({"set": [
-      ["network.cookie.cookieBehavior", policy]
+      ["network.cookie.cookieBehavior", behavior],
+      ["network.cookie.lifetimePolicy", lifetime],
   ]}, function() {
     runTest([{
       status: "ok"
@@ -121,9 +122,10 @@ function testShouldIntercept(policy, done) {
 
 // Verify that we cannot register a service worker in a 3rd party
 // iframe with the given cookie policy.
-function testShouldNotRegister(policy, done) {
+function testShouldNotRegister(behavior, lifetime, done) {
   SpecialPowers.pushPrefEnv({"set": [
-      ["network.cookie.cookieBehavior", policy]
+      ["network.cookie.cookieBehavior", behavior],
+      ["network.cookie.lifetimePolicy", lifetime],
   ]}, function() {
     runTest([{
       status: "registrationfailed",
@@ -152,9 +154,10 @@ function testShouldNotRegister(policy, done) {
 // Verify that if a service worker is already registered a 3rd
 // party iframe will still not be intercepted with the given cookie
 // policy.
-function testShouldNotIntercept(policy, done) {
+function testShouldNotIntercept(behavior, lifetime, done) {
   SpecialPowers.pushPrefEnv({"set": [
-      ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_ACCEPT]
+    ["network.cookie.cookieBehavior", BEHAVIOR_ACCEPT],
+    ["network.cookie.lifetimePolicy", LIFETIME_EXPIRE],
   ]}, function() {
     runTest([{
       status: "ok"
@@ -163,7 +166,8 @@ function testShouldNotIntercept(policy, done) {
       next: function() {
         iframe.addEventListener("load", testIframeLoaded);
         SpecialPowers.pushPrefEnv({"set": [
-            ["network.cookie.cookieBehavior", policy],
+            ["network.cookie.cookieBehavior", behavior],
+            ["network.cookie.lifetimePolicy", lifetime],
           ]}, function() {
             iframe.src = origin + basePath + "iframe1.html";
           });
@@ -186,7 +190,8 @@ function testShouldNotIntercept(policy, done) {
       status: "getregistrationfailed",
       next: function() {
         SpecialPowers.pushPrefEnv({"set": [
-            ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_ACCEPT],
+            ["network.cookie.cookieBehavior", BEHAVIOR_ACCEPT],
+            ["network.cookie.lifetimePolicy", LIFETIME_EXPIRE],
           ]}, function() {
             iframe.src = thirdPartyOrigin + basePath + "unregister.html";
           });
@@ -204,10 +209,13 @@ function testShouldNotIntercept(policy, done) {
   });
 }
 
-const COOKIE_BEHAVIOR_ACCEPT        = 0;
-const COOKIE_BEHAVIOR_REJECTFOREIGN = 1;
-const COOKIE_BEHAVIOR_REJECT        = 2;
-const COOKIE_BEHAVIOR_LIMITFOREIGN  = 3;
+const BEHAVIOR_ACCEPT        = 0;
+const BEHAVIOR_REJECTFOREIGN = 1;
+const BEHAVIOR_REJECT        = 2;
+const BEHAVIOR_LIMITFOREIGN  = 3;
+
+const LIFETIME_EXPIRE        = 0;
+const LIFETIME_SESSION       = 2;
 
 let steps = [() => {
   SpecialPowers.pushPrefEnv({"set": [
@@ -215,22 +223,37 @@ let steps = [() => {
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true],
     ["browser.dom.window.dump.enabled", true],
-    ["network.cookie.cookieBehavior", COOKIE_BEHAVIOR_ACCEPT]
+    ["network.cookie.cookieBehavior", BEHAVIOR_ACCEPT],
+    ["network.cookie.lifetimePolicy", LIFETIME_EXPIRE],
   ]}, next);
 }, () => {
-  testShouldIntercept(COOKIE_BEHAVIOR_ACCEPT, next);
+  testShouldIntercept(BEHAVIOR_ACCEPT, LIFETIME_EXPIRE, next);
 }, () => {
-  testShouldNotRegister(COOKIE_BEHAVIOR_REJECTFOREIGN, next);
+  testShouldNotRegister(BEHAVIOR_REJECTFOREIGN, LIFETIME_EXPIRE, next);
 }, () => {
-  testShouldNotIntercept(COOKIE_BEHAVIOR_REJECTFOREIGN, next);
+  testShouldNotIntercept(BEHAVIOR_REJECTFOREIGN, LIFETIME_EXPIRE, next);
 }, () => {
-  testShouldNotRegister(COOKIE_BEHAVIOR_REJECT, next);
+  testShouldNotRegister(BEHAVIOR_REJECT, LIFETIME_EXPIRE, next);
 }, () => {
-  testShouldNotIntercept(COOKIE_BEHAVIOR_REJECT, next);
+  testShouldNotIntercept(BEHAVIOR_REJECT, LIFETIME_EXPIRE, next);
 }, () => {
-  testShouldNotRegister(COOKIE_BEHAVIOR_LIMITFOREIGN, next);
+  testShouldNotRegister(BEHAVIOR_LIMITFOREIGN, LIFETIME_EXPIRE, next);
 }, () => {
-  testShouldNotIntercept(COOKIE_BEHAVIOR_LIMITFOREIGN, next);
+  testShouldNotIntercept(BEHAVIOR_LIMITFOREIGN, LIFETIME_EXPIRE, next);
+}, () => {
+  testShouldNotIntercept(BEHAVIOR_ACCEPT, LIFETIME_SESSION, next);
+}, () => {
+  testShouldNotRegister(BEHAVIOR_REJECTFOREIGN, LIFETIME_SESSION, next);
+}, () => {
+  testShouldNotIntercept(BEHAVIOR_REJECTFOREIGN, LIFETIME_SESSION, next);
+}, () => {
+  testShouldNotRegister(BEHAVIOR_REJECT, LIFETIME_SESSION, next);
+}, () => {
+  testShouldNotIntercept(BEHAVIOR_REJECT, LIFETIME_SESSION, next);
+}, () => {
+  testShouldNotRegister(BEHAVIOR_LIMITFOREIGN, LIFETIME_SESSION, next);
+}, () => {
+  testShouldNotIntercept(BEHAVIOR_LIMITFOREIGN, LIFETIME_SESSION, next);
 }];
 
 </script>
