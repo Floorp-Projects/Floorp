@@ -478,8 +478,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         final String sql;
         if (keepAfter > 0) {
+            // See Bug 1428165: 'modified' value might be missing; assume 0 if that's the case.
             sql = "DELETE FROM " + TABLE_HISTORY + " " +
-                  "WHERE MAX(" + History.DATE_LAST_VISITED + ", " + History.DATE_MODIFIED + ") < " + keepAfter + " " +
+                  "WHERE MAX("
+                    + History.DATE_LAST_VISITED + ", " +
+                    "COALESCE(" + History.DATE_MODIFIED + ", 0))" +
+                  " < " + keepAfter + " " +
                   " AND " + History._ID + " IN ( SELECT " +
                     History._ID + " FROM " + TABLE_HISTORY + " " +
                     "ORDER BY " + History.DATE_LAST_VISITED + " ASC LIMIT " + toRemove +
