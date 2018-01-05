@@ -237,9 +237,6 @@ function TabActor(connection) {
   this._onWorkerActorListChanged = this._onWorkerActorListChanged.bind(this);
 }
 
-// XXX (bug 710213): TabActor attach/detach/exit/destroy is a
-// *complete* mess, needs to be rethought asap.
-
 TabActor.prototype = {
   traits: null,
 
