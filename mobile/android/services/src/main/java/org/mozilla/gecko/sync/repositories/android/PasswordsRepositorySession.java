@@ -110,7 +110,7 @@ public class PasswordsRepositorySession extends
       }
     };
 
-    delegateQueue.execute(fetchSinceRunnable);
+    fetchWorkQueue.execute(fetchSinceRunnable);
   }
 
   @Override
@@ -127,7 +127,7 @@ public class PasswordsRepositorySession extends
   public void fetch(final String[] guids, final RepositorySessionFetchRecordsDelegate delegate) {
     if (guids == null || guids.length < 1) {
       Logger.error(LOG_TAG, "No guids to be fetched.");
-      delegateQueue.execute(new Runnable() {
+      fetchWorkQueue.execute(new Runnable() {
         @Override
         public void run() {
           delegate.onFetchCompleted();
@@ -177,7 +177,7 @@ public class PasswordsRepositorySession extends
       }
     };
 
-    delegateQueue.execute(fetchRunnable);
+    fetchWorkQueue.execute(fetchRunnable);
   }
 
   @Override
