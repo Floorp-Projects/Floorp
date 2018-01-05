@@ -217,7 +217,7 @@ public class FormHistoryRepositorySession extends
       }
     };
 
-    delegateQueue.execute(command);
+    fetchWorkQueue.execute(command);
   }
 
   protected static String regularBetween(long start, long end) {

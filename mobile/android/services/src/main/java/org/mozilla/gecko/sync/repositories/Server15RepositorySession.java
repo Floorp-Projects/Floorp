@@ -26,7 +26,7 @@ public class Server15RepositorySession extends RepositorySession {
     super(repository);
     this.serverRepository = (Server15Repository) repository;
     this.downloader = new BatchingDownloader(
-            this.delegateQueue,
+            this.fetchWorkQueue,
             this.serverRepository.authHeaderProvider,
             Uri.parse(this.serverRepository.collectionURI().toString()),
             this.serverRepository.getSyncDeadline(),
