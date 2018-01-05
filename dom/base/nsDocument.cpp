@@ -445,6 +445,14 @@ nsIdentifierMapEntry::GetImageIdElement()
 }
 
 void
+nsIdentifierMapEntry::AppendAllIdContent(nsCOMArray<Element>* aElements)
+{
+  for (Element* element : mIdContentList) {
+    aElements->AppendObject(element);
+  }
+}
+
+void
 nsIdentifierMapEntry::AddContentChangeCallback(nsIDocument::IDTargetObserver aCallback,
                                                void* aData, bool aForImage)
 {
