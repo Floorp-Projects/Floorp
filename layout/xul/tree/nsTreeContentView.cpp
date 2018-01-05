@@ -1073,8 +1073,7 @@ nsTreeContentView::AttributeChanged(nsIDocument*  aDocument,
     }
   }
   else if (aElement->IsXULElement(nsGkAtoms::treecell)) {
-    if (aAttribute == nsGkAtoms::ref ||
-        aAttribute == nsGkAtoms::properties ||
+    if (aAttribute == nsGkAtoms::properties ||
         aAttribute == nsGkAtoms::mode ||
         aAttribute == nsGkAtoms::src ||
         aAttribute == nsGkAtoms::value ||
@@ -1571,21 +1570,15 @@ nsTreeContentView::GetCell(nsIContent* aContainer, nsTreeColumn& aCol)
   RefPtr<nsAtom> colAtom(aCol.GetAtom());
   int32_t colIndex(aCol.GetIndex());
 
-  // Traverse through cells, try to find the cell by "ref" attribute or by cell
-  // index in a row. "ref" attribute has higher priority.
+  // Traverse through cells, try to find the cell by index in a row.
   Element* result = nullptr;
   int32_t j = 0;
   dom::FlattenedChildIterator iter(aContainer);
   for (nsIContent* cell = iter.GetNextChild(); cell; cell = iter.GetNextChild()) {
     if (cell->IsXULElement(nsGkAtoms::treecell)) {
-      if (colAtom &&
-          cell->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::ref,
-                                         colAtom, eCaseMatters)) {
+      if (j == colIndex) {
         result = cell->AsElement();
         break;
-      }
-      else if (j == colIndex) {
-        result = cell->AsElement();
       }
       j++;
     }
