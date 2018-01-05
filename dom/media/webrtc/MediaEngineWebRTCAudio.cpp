@@ -714,11 +714,11 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
   MOZ_ASSERT(!PassThrough(), "This should be bypassed when in PassThrough mode.");
   size_t offset = 0;
 
-  if (!mPacketizer ||
-      mPacketizer->PacketSize() != aRate/100u ||
-      mPacketizer->Channels() != aChannels) {
+  if (!mPacketizerInput ||
+      mPacketizerInput->PacketSize() != aRate/100u ||
+      mPacketizerInput->Channels() != aChannels) {
     // It's ok to drop the audio still in the packetizer here.
-    mPacketizer =
+    mPacketizerInput =
       new AudioPacketizer<AudioDataValue, float>(aRate/100, aChannels);
   }
 
@@ -814,11 +814,11 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
 
   // Packetize our input data into 10ms chunks, deinterleave into planar channel
   // buffers, process, and append to the right MediaStreamTrack.
-  mPacketizer->Input(aBuffer, static_cast<uint32_t>(aFrames));
+  mPacketizerInput->Input(aBuffer, static_cast<uint32_t>(aFrames));
 
-  while (mPacketizer->PacketsAvailable()) {
-    uint32_t samplesPerPacket = mPacketizer->PacketSize() *
-      mPacketizer->Channels();
+  while (mPacketizerInput->PacketsAvailable()) {
+    uint32_t samplesPerPacket = mPacketizerInput->PacketSize() *
+      mPacketizerInput->Channels();
     if (mInputBuffer.Length() < samplesPerPacket) {
       mInputBuffer.SetLength(samplesPerPacket);
     }
@@ -826,7 +826,7 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
       mDeinterleavedBuffer.SetLength(samplesPerPacket);
     }
     float* packet = mInputBuffer.Data();
-    mPacketizer->Output(packet);
+    mPacketizerInput->Output(packet);
 
     // Deinterleave the input data
     // Prepare an array pointing to deinterleaved channels.
@@ -835,11 +835,11 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
     offset = 0;
     for (size_t i = 0; i < deinterleavedPacketizedInputDataChannelPointers.Length(); ++i) {
       deinterleavedPacketizedInputDataChannelPointers[i] = mDeinterleavedBuffer.Data() + offset;
-      offset += mPacketizer->PacketSize();
+      offset += mPacketizerInput->PacketSize();
     }
 
     // Deinterleave to mInputBuffer, pointed to by inputBufferChannelPointers.
-    Deinterleave(packet, mPacketizer->PacketSize(), aChannels,
+    Deinterleave(packet, mPacketizerInput->PacketSize(), aChannels,
         deinterleavedPacketizedInputDataChannelPointers.Elements());
 
     StreamConfig inputConfig(aRate,
@@ -852,7 +852,7 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
 
     // Bug 1414837: find a way to not allocate here.
     RefPtr<SharedBuffer> buffer =
-      SharedBuffer::Create(mPacketizer->PacketSize() * aChannels * sizeof(float));
+      SharedBuffer::Create(mPacketizerInput->PacketSize() * aChannels * sizeof(float));
     AudioSegment segment;
 
     // Prepare channel pointers to the SharedBuffer created above.
@@ -865,7 +865,7 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
     for (size_t i = 0; i < processedOutputChannelPointers.Length(); ++i) {
       processedOutputChannelPointers[i] = static_cast<float*>(buffer->Data()) + offset;
       processedOutputChannelPointersConst[i] = static_cast<float*>(buffer->Data()) + offset;
-      offset += mPacketizer->PacketSize();
+      offset += mPacketizerInput->PacketSize();
     }
 
     mAudioProcessing->ProcessStream(deinterleavedPacketizedInputDataChannelPointers.Elements(),
@@ -887,7 +887,7 @@ MediaEngineWebRTCMicrophoneSource::PacketizeAndProcess(MediaStreamGraph* aGraph,
       RefPtr<SharedBuffer> other = buffer;
       segment.AppendFrames(other.forget(),
                            processedOutputChannelPointersConst,
-                           mPacketizer->PacketSize(),
+                           mPacketizerInput->PacketSize(),
                            mPrincipalHandles[i]);
       mSources[i]->AppendToTrack(mTrackID, &segment);
     }
