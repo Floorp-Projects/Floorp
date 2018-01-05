@@ -23,7 +23,6 @@ The current data collection possibilities include:
 * :doc:`Use counters <use-counters>` measure the usage of web platform features
 * :doc:`Experiment annotations <experiments>`
 * :doc:`Remote content uptake <uptake>`
-* :doc:`hybrid content telemety <hybrid-content>` allows recording telemetry from semi-privileged hosted content
 
 .. toctree::
    :maxdepth: 2
@@ -39,7 +38,6 @@ The current data collection possibilities include:
    stack-capture
    experiments
    uptake
-   hybrid-content
    *
 
 Browser Usage Telemetry
