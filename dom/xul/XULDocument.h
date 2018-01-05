@@ -91,9 +91,6 @@ public:
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
     // nsIXULDocument interface
-    virtual void GetElementsForID(const nsAString& aID,
-                                  nsCOMArray<mozilla::dom::Element>& aElements) override;
-
     NS_IMETHOD AddSubtreeToDocument(nsIContent* aContent) override;
     NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aContent) override;
     NS_IMETHOD OnPrototypeLoadDone(bool aResumeWalk) override;
