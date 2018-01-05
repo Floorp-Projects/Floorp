@@ -4,65 +4,46 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/connection.dtd">
+<!DOCTYPE dialog [
+  <!ENTITY % preferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
+  %preferencesDTD;
+  <!ENTITY % connectionDTD SYSTEM "chrome://browser/locale/preferences/connection.dtd">
+  %connectionDTD;
+]>
 
 <?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
 
-<prefwindow id="ConnectionsDialog" type="child"
-            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            title="&connectionsDialog.title;"
-            dlgbuttons="accept,cancel,help"
-            onbeforeaccept="return gConnectionsDialog.beforeAccept();"
-            onload="gConnectionsDialog.checkForSystemProxy();"
-            ondialoghelp="openPrefsHelp()"
+<dialog id="ConnectionsDialog" type="child" class="prefwindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&connectionsDialog.title;"
+        buttons="accept,cancel,help"
+        persist="lastSelected screenX screenY"
+        closebuttonlabel="&preferencesCloseButton.label;"
+        closebuttonaccesskey="&preferencesCloseButton.accesskey;"
+        role="dialog"
+        onbeforeaccept="return gConnectionsDialog.beforeAccept();"
+        onload="gConnectionsDialog.checkForSystemProxy();"
+        helpTopic="prefs-connection-settings"
+        ondialoghelp="openPrefsHelp()"
+
 #ifdef XP_MACOSX
-            style="width: &window.macWidth2; !important;">
+        style="width: &window.macWidth2; !important;">
 #else
-            style="width: &window.width2; !important;">
+        style="width: &window.width2; !important;">
 #endif
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
 
-  <prefpane id="ConnectionsDialogPane"
-            class="largeDialogContainer"
-            helpTopic="prefs-connection-settings">
+  <keyset>
+    <key key="&windowClose.key;" modifiers="accel" oncommand="Preferences.close(event)"/>
+  </keyset>
 
-    <preferences>
-      <preference id="network.proxy.type"         name="network.proxy.type"         type="int" onchange="gConnectionsDialog.proxyTypeChanged();"/>
-      <preference id="network.proxy.http"         name="network.proxy.http"         type="string"/>
-      <preference id="network.proxy.http_port"    name="network.proxy.http_port"    type="int"/>
-      <preference id="network.proxy.ftp"          name="network.proxy.ftp"          type="string"/>
-      <preference id="network.proxy.ftp_port"     name="network.proxy.ftp_port"     type="int"/>
-      <preference id="network.proxy.ssl"          name="network.proxy.ssl"          type="string"/>
-      <preference id="network.proxy.ssl_port"     name="network.proxy.ssl_port"     type="int"/>
-      <preference id="network.proxy.socks"        name="network.proxy.socks"        type="string"/>
-      <preference id="network.proxy.socks_port"   name="network.proxy.socks_port"   type="int"/>
-      <preference id="network.proxy.socks_version"  name="network.proxy.socks_version"  type="int" onchange="gConnectionsDialog.updateDNSPref();"/>
-      <preference id="network.proxy.socks_remote_dns"  name="network.proxy.socks_remote_dns"  type="bool"/>
-      <preference id="network.proxy.no_proxies_on"  name="network.proxy.no_proxies_on"  type="string"/>
-      <preference id="network.proxy.autoconfig_url" name="network.proxy.autoconfig_url" type="string"/>
-      <preference id="network.proxy.share_proxy_settings"
-                  name="network.proxy.share_proxy_settings"
-                  type="bool"/>
-      <preference id="signon.autologin.proxy"
-                  name="signon.autologin.proxy"
-                  type="bool"/>
-
-      <preference id="pref.advanced.proxies.disable_button.reload"
-                  name="pref.advanced.proxies.disable_button.reload"
-                  type="bool"/>
-
-      <preference id="network.proxy.backup.ftp"          name="network.proxy.backup.ftp"          type="string"/>
-      <preference id="network.proxy.backup.ftp_port"     name="network.proxy.backup.ftp_port"     type="int"/>
-      <preference id="network.proxy.backup.ssl"          name="network.proxy.backup.ssl"          type="string"/>
-      <preference id="network.proxy.backup.ssl_port"     name="network.proxy.backup.ssl_port"     type="int"/>
-      <preference id="network.proxy.backup.socks"        name="network.proxy.backup.socks"        type="string"/>
-      <preference id="network.proxy.backup.socks_port"   name="network.proxy.backup.socks_port"   type="int"/>
-    </preferences>
-
-    <script type="application/javascript" src="chrome://browser/content/preferences/connection.js"/>
+  <vbox id="ConnectionsDialogPane" class="prefpane largeDialogContainer">
 
     <stringbundle id="preferencesBundle" src="chrome://browser/locale/preferences/preferences.properties"/>
+    <script type="application/javascript" src="chrome://browser/content/preferences/connection.js"/>
 
     <groupbox>
       <caption><label>&proxyTitle.label;</label></caption>
@@ -169,5 +150,5 @@
               tooltiptext="&autologinproxy.tooltip;"/>
     <checkbox id="networkProxySOCKSRemoteDNS"  preference="network.proxy.socks_remote_dns" label="&socksRemoteDNS.label2;" accesskey="&socksRemoteDNS.accesskey;" />
     <separator/>
-  </prefpane>
-</prefwindow>
+  </vbox>
+</dialog>

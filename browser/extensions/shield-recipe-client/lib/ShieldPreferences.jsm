@@ -120,18 +120,17 @@ this.ShieldPreferences = {
     viewStudies.classList.add("learnMore", "text-link");
     hContainer.appendChild(viewStudies);
 
-    // <prefrence> elements for prefs that we need to monitor while the page is open.
     const optOutPref = doc.createElementNS(XUL_NS, "preference");
     optOutPref.setAttribute("id", OPT_OUT_STUDIES_ENABLED_PREF);
     optOutPref.setAttribute("name", OPT_OUT_STUDIES_ENABLED_PREF);
     optOutPref.setAttribute("type", "bool");
 
+    // Preference instances for prefs that we need to monitor while the page is open.
+    doc.defaultView.Preferences.add({ id: OPT_OUT_STUDIES_ENABLED_PREF, type: "bool" });
+
     // Weirdly, FHR doesn't have a <preference> element on the page, so we create it.
-    const fhrPref = doc.createElementNS(XUL_NS, "preference");
-    fhrPref.setAttribute("id", FHR_UPLOAD_ENABLED_PREF);
-    fhrPref.setAttribute("name", FHR_UPLOAD_ENABLED_PREF);
-    fhrPref.setAttribute("type", "bool");
-    fhrPref.addEventListener("change", function(event) {
+    const fhrPref = doc.defaultView.Preferences.add({ id: FHR_UPLOAD_ENABLED_PREF, type: "bool" });
+    fhrPref.on("change", function(event) {
       // Avoid reference to the document directly, to avoid leaks.
       const eventTargetCheckbox = event.target.ownerDocument.getElementById("optOutStudiesEnabled");
       eventTargetCheckbox.disabled = !Services.prefs.getBoolPref(FHR_UPLOAD_ENABLED_PREF);
@@ -140,9 +139,5 @@ this.ShieldPreferences = {
     // Actually inject the elements we've created.
     const parent = doc.getElementById("submitHealthReportBox").closest("vbox");
     parent.appendChild(container);
-
-    const preferences = doc.getElementById("privacyPreferences");
-    preferences.appendChild(optOutPref);
-    preferences.appendChild(fhrPref);
   },
 };

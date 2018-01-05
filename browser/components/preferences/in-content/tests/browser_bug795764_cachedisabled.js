@@ -34,9 +34,6 @@ function runTest(win) {
   // Test if privacy pane is opened correctly
   win.gotoPref("panePrivacy");
   for (let element of elements) {
-    if (element.nodeName == "preferences") {
-      continue;
-    }
     let attributeValue = element.getAttribute("data-category");
     if (attributeValue == "panePrivacy") {
       is_element_visible(element, `Privacy element of id=${element.id} should be visible`);

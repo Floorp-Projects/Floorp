@@ -3,12 +3,14 @@
 <!--
   XUL Widget Test for preferences window
 -->
-<prefwindow xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            title="preferences window"
-            windowtype="test:preferences"
-            buttons="accept,cancel"
-            onload="RunTest(window.arguments)"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="prefwindow"
+        title="preferences window"
+        windowtype="test:preferences"
+        buttons="accept,cancel"
+        onload="RunTest(window.arguments)"
 >
+  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
   <script type="application/javascript">
   <![CDATA[
     function RunTest(aArgs)
@@ -18,31 +20,20 @@
       // close dialog
       document.documentElement[aArgs[1] ? "acceptDialog" : "cancelDialog"]();
     }
+
+    Preferences.addAll([
+      // one of each type known to Preference.valueFromPreferences
+      { id: "tests.static_preference_int", type: "int" },
+      { id: "tests.static_preference_bool", type: "bool" },
+      { id: "tests.static_preference_string", type: "string" },
+      { id: "tests.static_preference_wstring", type: "wstring" },
+      { id: "tests.static_preference_unichar", type: "unichar" },
+      { id: "tests.static_preference_file", type: "file" },
+    ]);
   ]]>
   </script>
 
-  <prefpane id="sample_pane" label="Sample Prefpane">
-    <preferences id="sample_preferences">
-      <!-- one of each type known to <preferences>.valueFromPreferences -->
-      <preference id  ="tests.static_preference_int"
-                  name="tests.static_preference_int"
-                  type="int"/>
-      <preference id  ="tests.static_preference_bool"
-                  name="tests.static_preference_bool"
-                  type="bool"/>
-      <preference id  ="tests.static_preference_string"
-                  name="tests.static_preference_string"
-                  type="string"/>
-      <preference id  ="tests.static_preference_wstring"
-                  name="tests.static_preference_wstring"
-                  type="wstring"/>
-      <preference id  ="tests.static_preference_unichar"
-                  name="tests.static_preference_unichar"
-                  type="unichar"/>
-      <preference id  ="tests.static_preference_file"
-                  name="tests.static_preference_file"
-                  type="file"/>
-    </preferences>
+  <vbox id="sample_pane" class="prefpane" label="Sample Prefpane">
 
     <!-- one element for each preference type above -->
     <hbox>
@@ -69,5 +60,5 @@
       <label flex="1" value="file"/>
       <textbox id="static_element_file"    preference="tests.static_preference_file"/>
     </hbox>
-  </prefpane>
-</prefwindow>
+  </vbox>
+</dialog>
