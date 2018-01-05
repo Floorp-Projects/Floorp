@@ -115,6 +115,16 @@ CodeGeneratorX64::visitUnbox(LUnbox* unbox)
             MOZ_CRASH("Given MIRType cannot be unboxed.");
         }
         bailoutIf(cond, unbox->snapshot());
+    } else {
+#ifdef DEBUG
+        Operand input = ToOperand(unbox->getOperand(LUnbox::Input));
+        JSValueTag tag = MIRTypeToTag(mir->type());
+        Label ok;
+        masm.splitTag(input, ScratchReg);
+        masm.branch32(Assembler::Equal, ScratchReg, Imm32(tag), &ok);
+        masm.assumeUnreachable("Infallible unbox type mismatch");
+        masm.bind(&ok);
+#endif
     }
 
     Operand input = ToOperand(unbox->getOperand(LUnbox::Input));
