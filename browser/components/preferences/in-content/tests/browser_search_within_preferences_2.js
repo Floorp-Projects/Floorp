@@ -14,8 +14,8 @@ add_task(async function() {
 
 /**
  * Test that we only search the selected child of a XUL deck.
- * When we search "Forget this Email",
- * it should not show the "Forget this Email" button if the Firefox account is not logged in yet.
+ * When we search "Cancel Setup",
+ * it should not show the "Cancel Setup" button if the Firefox account is not logged in yet.
  */
 add_task(async function() {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {leaveOpen: true});
@@ -50,13 +50,13 @@ add_task(async function() {
     }
   }
 
-  // Ensure the "Forget this email" button exists in the hidden child of the <xul:deck>.
+  // Ensure the "Cancel Setup" button exists in the hidden child of the <xul:deck>.
   let unlinkFxaAccount = weavePrefsDeck.childNodes[1].querySelector("#unverifiedUnlinkFxaAccount");
-  is(unlinkFxaAccount.label, "Forget this email", "The Forget this email button should exist");
+  is(unlinkFxaAccount.label, "Cancel Setup", "The Cancel Setup button should exist");
 
   // Performs search.
   searchInput.focus();
-  query = "Forget this Email";
+  query = "Cancel Setup";
   searchCompletedPromise = BrowserTestUtils.waitForEvent(
       gBrowser.contentWindow, "PreferencesSearchCompleted", evt => evt.detail == query);
   EventUtils.sendString(query);

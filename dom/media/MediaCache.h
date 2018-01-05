@@ -26,7 +26,7 @@ namespace mozilla {
 class ChannelMediaResource;
 typedef media::IntervalSet<int64_t> MediaByteRangeSet;
 class MediaResource;
-class ReentrantMonitorAutoEnter;
+class MonitorAutoLock;
 
 /**
  * Media applications want fast, "on demand" random access to media data,
@@ -192,7 +192,7 @@ DDLoggedTypeDeclName(MediaCacheStream);
  */
 class MediaCacheStream : public DecoderDoctorLifeLogger<MediaCacheStream>
 {
-  using AutoLock = ReentrantMonitorAutoEnter;
+  using AutoLock = MonitorAutoLock;
 
 public:
   // This needs to be a power of two
@@ -350,7 +350,7 @@ public:
   // be less than aCount. If the first byte of data is not in the cache,
   // this will block until the data is available or the stream is
   // closed, otherwise it won't block.
-  nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes);
+  nsresult Read(AutoLock&, char* aBuffer, uint32_t aCount, uint32_t* aBytes);
   // Seeks to aOffset in the stream then performs a Read operation. See
   // 'Read' for argument and return details.
   nsresult ReadAt(int64_t aOffset, char* aBuffer,
