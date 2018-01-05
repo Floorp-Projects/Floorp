@@ -817,17 +817,10 @@ MediaCache::ReadCacheFile(AutoLock&,
                           int32_t aLength,
                           int32_t* aBytes)
 {
-  RefPtr<MediaBlockCacheBase> blockCache = mBlockCache;
-  if (!blockCache) {
+  if (!mBlockCache) {
     return NS_ERROR_FAILURE;
   }
-  {
-    // Since the monitor might be acquired on the main thread, we need to drop
-    // the monitor while doing IO in order not to block the main thread.
-    AutoUnlock unlock(mMonitor);
-    return blockCache->Read(
-      aOffset, reinterpret_cast<uint8_t*>(aData), aLength, aBytes);
-  }
+  return mBlockCache->Read(aOffset, reinterpret_cast<uint8_t*>(aData), aLength, aBytes);
 }
 
 // Allowed range is whatever can be accessed with an int32_t block index.
