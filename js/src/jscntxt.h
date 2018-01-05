@@ -593,12 +593,6 @@ struct JSContext : public JS::RootingContext,
         suppressProfilerSampling = false;
     }
 
-  private:
-    /* Gecko profiling metadata */
-    js::UnprotectedData<js::GeckoProfilerThread> geckoProfiler_;
-  public:
-    js::GeckoProfilerThread& geckoProfiler() { return geckoProfiler_.ref(); }
-
 #if defined(XP_DARWIN)
     js::wasm::MachExceptionHandler wasmMachExceptionHandler;
 #endif
