@@ -5026,9 +5026,6 @@ pref("extensions.webcompat-reporter.enabled", false);
 pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  32768);
 
-// Desktop Notification
-pref("notification.feature.enabled", false);
-
 // Web Notification
 pref("dom.webnotifications.enabled", true);
 pref("dom.webnotifications.serviceworker.enabled", true);
