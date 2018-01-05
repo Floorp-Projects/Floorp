@@ -623,6 +623,14 @@ public:
     {
         SetXULAttr(nsGkAtoms::top, aValue, rv);
     }
+    void GetRef(DOMString& aValue) const
+    {
+        GetXULAttr(nsGkAtoms::ref, aValue);
+    }
+    void SetRef(const nsAString& aValue, mozilla::ErrorResult& rv)
+    {
+        SetXULAttr(nsGkAtoms::ref, aValue, rv);
+    }
     void GetTooltipText(DOMString& aValue) const
     {
         GetXULAttr(nsGkAtoms::tooltiptext, aValue);

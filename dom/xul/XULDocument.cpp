@@ -149,6 +149,36 @@ struct BroadcasterMapEntry : public PLDHashEntryHdr
     nsTArray<BroadcastListener*> mListeners;  // [OWNING] of BroadcastListener objects
 };
 
+Element*
+nsRefMapEntry::GetFirstElement()
+{
+    return mRefContentList.SafeElementAt(0);
+}
+
+void
+nsRefMapEntry::AppendAll(nsCOMArray<Element>* aElements)
+{
+    for (size_t i = 0; i < mRefContentList.Length(); ++i) {
+        aElements->AppendObject(mRefContentList[i]);
+    }
+}
+
+bool
+nsRefMapEntry::AddElement(Element* aElement)
+{
+    if (mRefContentList.Contains(aElement)) {
+        return true;
+    }
+    return mRefContentList.AppendElement(aElement);
+}
+
+bool
+nsRefMapEntry::RemoveElement(Element* aElement)
+{
+    mRefContentList.RemoveElement(aElement);
+    return mRefContentList.IsEmpty();
+}
+
 //----------------------------------------------------------------------
 //
 // ctors & dtors
@@ -581,10 +611,11 @@ ClearBroadcasterMapEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 static bool
 CanBroadcast(int32_t aNameSpaceID, nsAtom* aAttribute)
 {
-    // Don't push changes to the |id|, |persist|, |command| or
+    // Don't push changes to the |id|, |ref|, |persist|, |command| or
     // |observes| attribute.
     if (aNameSpaceID == kNameSpaceID_None) {
         if ((aAttribute == nsGkAtoms::id) ||
+            (aAttribute == nsGkAtoms::ref) ||
             (aAttribute == nsGkAtoms::persist) ||
             (aAttribute == nsGkAtoms::command) ||
             (aAttribute == nsGkAtoms::observes)) {
@@ -860,6 +891,24 @@ XULDocument::ExecuteOnBroadcastHandlerFor(Element* aBroadcaster,
     return NS_OK;
 }
 
+void
+XULDocument::AttributeWillChange(nsIDocument* aDocument,
+                                 Element* aElement, int32_t aNameSpaceID,
+                                 nsAtom* aAttribute, int32_t aModType,
+                                 const nsAttrValue* aNewValue)
+{
+    MOZ_ASSERT(aElement, "Null content!");
+    NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
+
+    // XXXbz check aNameSpaceID, dammit!
+    // See if we need to update our ref map.
+    if (aAttribute == nsGkAtoms::ref) {
+        // Might not need this, but be safe for now.
+        nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+        RemoveElementFromRefMap(aElement);
+    }
+}
+
 static bool
 ShouldPersistAttribute(Element* aElement, nsAtom* aAttribute)
 {
@@ -892,6 +941,12 @@ XULDocument::AttributeChanged(nsIDocument* aDocument,
 
     // Might not need this, but be safe for now.
     nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
+
+    // XXXbz check aNameSpaceID, dammit!
+    // See if we need to update our ref map.
+    if (aAttribute == nsGkAtoms::ref) {
+        AddElementToRefMap(aElement);
+    }
 
     // Synchronize broadcast listeners
     if (mBroadcasterMap &&
@@ -1019,6 +1074,22 @@ XULDocument::ContentRemoved(nsIDocument* aDocument,
 //
 // nsIXULDocument interface
 //
+
+void
+XULDocument::GetElementsForID(const nsAString& aID,
+                              nsCOMArray<Element>& aElements)
+{
+    aElements.Clear();
+
+    nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aID);
+    if (entry) {
+        entry->AppendAllIdContent(&aElements);
+    }
+    nsRefMapEntry *refEntry = mRefMap.GetEntry(aID);
+    if (refEntry) {
+        refEntry->AppendAll(&aElements);
+    }
+}
 
 nsresult
 XULDocument::AddForwardReference(nsForwardReference* aRef)
@@ -1506,6 +1577,17 @@ XULDocument::GetCommandDispatcher(nsIDOMXULCommandDispatcher** aTracker)
     return NS_OK;
 }
 
+Element*
+XULDocument::GetRefById(const nsAString& aID)
+{
+    if (nsRefMapEntry* refEntry = mRefMap.GetEntry(aID)) {
+        MOZ_ASSERT(refEntry->GetFirstElement());
+        return refEntry->GetFirstElement();
+    }
+
+    return nullptr;
+}
+
 nsresult
 XULDocument::AddElementToDocumentPre(Element* aElement)
 {
@@ -1513,14 +1595,17 @@ XULDocument::AddElementToDocumentPre(Element* aElement)
     // to the XUL Document.
     nsresult rv;
 
-    // 1. Add the element to the id map, since it seems this can be
-    // called when creating elements from prototypes.
+    // 1. Add the element to the resource-to-element map. Also add it to
+    // the id map, since it seems this can be called when creating
+    // elements from prototypes.
     nsAtom* id = aElement->GetID();
     if (id) {
         // FIXME: Shouldn't BindToTree take care of this?
         nsAutoScriptBlocker scriptBlocker;
         AddToIdTable(aElement, id);
     }
+    rv = AddElementToRefMap(aElement);
+    if (NS_FAILED(rv)) return rv;
 
     // 2. If the element is a 'command updater' (i.e., has a
     // "commandupdater='true'" attribute), then add the element to the
@@ -1621,8 +1706,10 @@ XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
             return rv;
     }
 
-    // Remove the element from the id map, since we added it in
+    // 2. Remove the element from the resource-to-element map.
+    // Also remove it from the id map, since we added it in
     // AddElementToDocumentPre().
+    RemoveElementFromRefMap(aElement);
     nsAtom* id = aElement->GetID();
     if (id) {
         // FIXME: Shouldn't UnbindFromTree take care of this?
@@ -1654,6 +1741,46 @@ XULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
     }
 
     return NS_OK;
+}
+
+static void
+GetRefMapAttribute(Element* aElement, nsAutoString* aValue)
+{
+    aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::ref, *aValue);
+}
+
+nsresult
+XULDocument::AddElementToRefMap(Element* aElement)
+{
+    // Look at the element's 'ref' attribute, and if set,
+    // add an entry in the resource-to-element map to the element.
+    nsAutoString value;
+    GetRefMapAttribute(aElement, &value);
+    if (!value.IsEmpty()) {
+        nsRefMapEntry *entry = mRefMap.PutEntry(value);
+        if (!entry)
+            return NS_ERROR_OUT_OF_MEMORY;
+        if (!entry->AddElement(aElement))
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    return NS_OK;
+}
+
+void
+XULDocument::RemoveElementFromRefMap(Element* aElement)
+{
+    // Remove the element from the resource-to-element map.
+    nsAutoString value;
+    GetRefMapAttribute(aElement, &value);
+    if (!value.IsEmpty()) {
+        nsRefMapEntry *entry = mRefMap.GetEntry(value);
+        if (!entry)
+            return;
+        if (entry->RemoveElement(aElement)) {
+            mRefMap.RemoveEntry(entry);
+        }
+    }
 }
 
 //----------------------------------------------------------------------
@@ -1880,19 +2007,9 @@ XULDocument::ApplyPersistentAttributesInternal()
             continue;
         }
 
-        nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(id);
-        if (!entry) {
-            continue;
-        }
-
-        // We want to hold strong refs to the elements while applying
-        // persistent attributes, just in case.
-        elements.Clear();
-        elements.SetCapacity(entry->GetIdElements().Length());
-        for (Element* element : entry->GetIdElements()) {
-            elements.AppendObject(element);
-        }
-        if (elements.IsEmpty()) {
+        // This will clear the array if there are no elements.
+        GetElementsForID(id, elements);
+        if (!elements.Count()) {
             continue;
         }
 
@@ -2119,6 +2236,9 @@ XULDocument::PrepareToWalk()
         if (NS_FAILED(rv)) return rv;
 
         rv = AppendChildTo(root, false);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = AddElementToRefMap(root);
         if (NS_FAILED(rv)) return rv;
 
         // Block onload until we've finished building the complete
