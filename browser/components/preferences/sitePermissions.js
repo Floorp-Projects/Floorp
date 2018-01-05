@@ -27,6 +27,9 @@ var gSitePermissionsManager = {
   _removeButton: null,
   _removeAllButton: null,
   _searchBox: null,
+  _checkbox: null,
+  _currentDefaultPermissionsState: null,
+  _defaultPermissionStatePrefName: null,
 
   onLoad() {
     let params = window.arguments[0];
@@ -45,13 +48,37 @@ var gSitePermissionsManager = {
     this._removeButton = document.getElementById("removePermission");
     this._removeAllButton = document.getElementById("removeAllPermissions");
     this._searchBox = document.getElementById("searchBox");
+    this._checkbox = document.getElementById("permissionsDisableCheckbox");
 
     let permissionsText = document.getElementById("permissionsText");
     while (permissionsText.hasChildNodes())
       permissionsText.firstChild.remove();
     permissionsText.appendChild(document.createTextNode(params.introText));
 
+    let permissionsDisableLabel = document.getElementById("permissionsDisableLabel");
+    permissionsDisableLabel.value = params.disablePermissionsLabel;
+
+    let permissionsDisableDescription = document.getElementById("permissionsDisableDescription");
+    permissionsDisableDescription.appendChild(document.createTextNode(params.disablePermissionsDescription));
+
     document.title = params.windowTitle;
+
+    // Initialize the checkbox state.
+    this._defaultPermissionStatePrefName = "permissions.default." + this._type;
+    let pref = Services.prefs.getPrefType(this._defaultPermissionStatePrefName);
+    if (pref != Services.prefs.PREF_INVALID) {
+      this._currentDefaultPermissionsState = Services.prefs.getIntPref(this._defaultPermissionStatePrefName);
+    }
+
+    if (this._currentDefaultPermissionsState === null) {
+      this._checkbox.setAttribute("hidden", true);
+      permissionsDisableLabel.setAttribute("hidden", true);
+      permissionsDisableDescription.setAttribute("hidden", true);
+    } else if (this._currentDefaultPermissionsState == SitePermissions.BLOCK) {
+      this._checkbox.checked = true;
+    } else {
+      this._checkbox.checked = false;
+    }
 
     this._loadPermissions();
     this.buildPermissionsList();
@@ -264,6 +291,13 @@ var gSitePermissionsManager = {
       let uri = Services.io.newURI(p.origin);
       SitePermissions.remove(uri, p.type);
     }
+
+    if (this._checkbox.checked) {
+      Services.prefs.setIntPref(this._defaultPermissionStatePrefName, SitePermissions.BLOCK);
+    } else if (this._currentDefaultPermissionsState == SitePermissions.BLOCK) {
+      Services.prefs.setIntPref(this._defaultPermissionStatePrefName, SitePermissions.UNKNOWN);
+    }
+
     window.close();
   },
 
