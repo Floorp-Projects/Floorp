@@ -19,7 +19,7 @@ RUN pip install -r /tmp/requirements.txt
 
 RUN hg clone https://hg.mozilla.org/build/tools /home/worker/tools
 
-RUN useradd -d /home/worker -s /bin/bash -m worker -u 1000 -g 1000
+RUN useradd -d /home/worker -s /bin/bash -m worker
 
 RUN mkdir /home/worker/bin
 COPY scripts/* /home/worker/bin/

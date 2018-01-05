@@ -4,7 +4,7 @@ MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 RUN mkdir /builds
 
 ### add worker user and setup its workspace
-RUN useradd -d /builds/worker -s /bin/bash -m worker -u 1000 -g 1000
+RUN useradd -d /builds/worker -s /bin/bash -m worker
 # Declare default working folder
 WORKDIR       /builds/worker
 
