@@ -382,11 +382,6 @@ interface nsIHTMLEditor : nsISupports
   nsIDOMElement getSelectedElement(in AString aTagName);
 
   /**
-   * Output the contents of the <HEAD> section as text/HTML format
-   */
-  AString getHeadContentsAsHTML();
-
-  /**
    * Replace all children of <HEAD> with string of HTML source
    */
   void replaceHeadContentsWithHTML(in AString aSourceToInsert);
