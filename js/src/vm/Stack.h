@@ -1780,12 +1780,13 @@ class JitFrameIter
   protected:
     jit::JitActivation* act_;
     mozilla::MaybeOneOf<jit::JSJitFrameIter, wasm::WasmFrameIter> iter_;
+    bool mustUnwindActivation_;
 
     void settle();
 
   public:
-    JitFrameIter() : act_(nullptr), iter_() {}
-    explicit JitFrameIter(jit::JitActivation* activation);
+    JitFrameIter() : act_(nullptr), iter_(), mustUnwindActivation_(false) {}
+    explicit JitFrameIter(jit::JitActivation* activation, bool mustUnwindActivation = false);
 
     explicit JitFrameIter(const JitFrameIter& another);
     JitFrameIter& operator=(const JitFrameIter& another);
