@@ -51,7 +51,7 @@ try {
           const { WebExtensionChildActor } = require("devtools/server/actors/webextension");
           actor = new WebExtensionChildActor(conn, chromeGlobal, prefix, addonId);
         } else {
-          const { ContentActor } = require("devtools/server/actors/childtab");
+          const { ContentActor } = require("devtools/server/actors/content");
           actor = new ContentActor(conn, chromeGlobal, prefix);
         }
 

@@ -48,7 +48,7 @@ RootActor (root.js)
    |   via message manager is always used, even when e10s is disabled.
    |   Returned by "listTabs" or "getTab" requests.
    |   |
-   |   \-> ContentActor (childtab.js)
+   |   \-> ContentActor (content.js)
    |       The "real" actor for a tab, which runs in whichever process holds the
    |       content.  BrowserTabActor communicates with this via the tab's
    |       message manager.
