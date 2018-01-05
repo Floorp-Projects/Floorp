@@ -36,14 +36,6 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXULDOCUMENT_IID)
 
   /**
-   * Get the elements for a particular resource --- all elements whose 'id'
-   * or 'ref' is aID. The nsCOMArray will be truncated and filled in with
-   * nsIContent pointers.
-   */
-  virtual void GetElementsForID(const nsAString& aID,
-                                nsCOMArray<mozilla::dom::Element>& aElements) = 0;
-
-  /**
    * Notify the XUL document that a subtree has been added
    */
   NS_IMETHOD AddSubtreeToDocument(nsIContent* aElement) = 0;
