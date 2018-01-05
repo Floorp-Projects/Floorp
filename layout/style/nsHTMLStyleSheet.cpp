@@ -567,18 +567,15 @@ nsHTMLStyleSheet::DropMappedAttributes(nsMappedAttributes* aMapped)
 }
 
 void
-nsHTMLStyleSheet::CalculateMappedServoDeclarations(nsPresContext* aPresContext)
+nsHTMLStyleSheet::CalculateMappedServoDeclarations()
 {
-  MOZ_ASSERT(!mDocument->GetShell() ||
-             mDocument->GetShell()->GetPresContext() == aPresContext);
-
   for (auto iter = mMappedAttrTable.Iter(); !iter.Done(); iter.Next()) {
     MappedAttrTableEntry* attr = static_cast<MappedAttrTableEntry*>(iter.Get());
     if (attr->mAttributes->GetServoStyle()) {
       // Only handle cases which haven't been filled in already
       continue;
     }
-    attr->mAttributes->LazilyResolveServoDeclaration(aPresContext);
+    attr->mAttributes->LazilyResolveServoDeclaration(mDocument);
   }
 }
 
