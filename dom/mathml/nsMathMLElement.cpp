@@ -528,7 +528,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
         } else {
           ReportParseErrorNoTag(str,
                                 nsGkAtoms::scriptsizemultiplier_,
-                                aData->mPresContext->Document());
+                                aData->Document());
         }
       }
     }
@@ -550,7 +550,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       nsCSSValue scriptMinSize;
       ParseNumericValue(value->GetStringValue(), scriptMinSize,
                         PARSE_ALLOW_UNITLESS | CONVERT_UNITLESS_TO_PERCENT,
-                        aData->mPresContext->Document());
+                        aData->Document());
 
       if (scriptMinSize.GetUnit() == eCSSUnit_Percent) {
         scriptMinSize.SetFloatValue(8.0 * scriptMinSize.GetPercentValue(),
@@ -594,7 +594,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
         } else {
           ReportParseErrorNoTag(str,
                                 nsGkAtoms::scriptlevel_,
-                                aData->mPresContext->Document());
+                                aData->Document());
         }
       }
     }
@@ -628,7 +628,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       if (value) {
         WarnDeprecated(nsGkAtoms::fontsize_->GetUTF16String(),
                        nsGkAtoms::mathsize_->GetUTF16String(),
-                       aData->mPresContext->Document());
+                       aData->Document());
       }
     }
     if (value && value->Type() == nsAttrValue::eString &&
@@ -671,7 +671,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     if (value) {
       WarnDeprecated(nsGkAtoms::fontfamily_->GetUTF16String(),
                      nsGkAtoms::mathvariant_->GetUTF16String(),
-                     aData->mPresContext->Document());
+                     aData->Document());
     }
     if (value && value->Type() == nsAttrValue::eString &&
         !aData->PropertyIsSet(eCSSProperty_font_family)) {
@@ -692,7 +692,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     if (value) {
       WarnDeprecated(nsGkAtoms::fontstyle_->GetUTF16String(),
                        nsGkAtoms::mathvariant_->GetUTF16String(),
-                       aData->mPresContext->Document());
+                       aData->Document());
       if (value->Type() == nsAttrValue::eString &&
           !aData->PropertyIsSet(eCSSProperty_font_style)) {
         nsAutoString str(value->GetStringValue());
@@ -721,7 +721,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
     if (value) {
       WarnDeprecated(nsGkAtoms::fontweight_->GetUTF16String(),
                        nsGkAtoms::mathvariant_->GetUTF16String(),
-                       aData->mPresContext->Document());
+                       aData->Document());
       if (value->Type() == nsAttrValue::eString &&
           !aData->PropertyIsSet(eCSSProperty_font_weight)) {
         nsAutoString str(value->GetStringValue());
@@ -806,7 +806,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       if (value) {
         WarnDeprecated(nsGkAtoms::background->GetUTF16String(),
                        nsGkAtoms::mathbackground_->GetUTF16String(),
-                       aData->mPresContext->Document());
+                       aData->Document());
       }
     }
     if (value) {
@@ -841,7 +841,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       if (value) {
         WarnDeprecated(nsGkAtoms::color->GetUTF16String(),
                        nsGkAtoms::mathcolor_->GetUTF16String(),
-                       aData->mPresContext->Document());
+                       aData->Document());
       }
     }
     nscolor color;
@@ -868,8 +868,7 @@ nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
       nsCSSValue width;
       // This does not handle auto and unitless values
       if (value && value->Type() == nsAttrValue::eString) {
-        ParseNumericValue(value->GetStringValue(), width, 0,
-                          aData->mPresContext->Document());
+        ParseNumericValue(value->GetStringValue(), width, 0, aData->Document());
         if (width.GetUnit() == eCSSUnit_Percent) {
           aData->SetPercentValue(eCSSProperty_width,
                                  width.GetPercentValue());
