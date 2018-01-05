@@ -41,6 +41,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Utils",
 // All properties exposed by the public FxAccounts API.
 var publicProperties = [
   "accountStatus",
+  "canGetKeys",
   "checkVerificationStatus",
   "getAccountsClient",
   "getAssertion",
@@ -519,8 +520,10 @@ FxAccountsInternal.prototype = {
    *          email: The user's email address
    *          uid: The user's unique id
    *          sessionToken: Session for the FxA server
-   *          kA: An encryption key from the FxA server
-   *          kB: An encryption key derived from the user's FxA password
+   *          kSync: An encryption key for Sync
+   *          kXCS: A key hash of kB for the X-Client-State header
+   *          kExtSync: An encryption key for WebExtensions syncing
+   *          kExtKbHash: A key hash of kB for WebExtensions syncing
    *          verified: email verification status
    *          authAt: The time (seconds since epoch) that this record was
    *                  authenticated
@@ -898,6 +901,24 @@ FxAccountsInternal.prototype = {
   },
 
   /**
+   * Checks if we currently have encryption keys or if we have enough to
+   * be able to successfully fetch them for the signed-in-user.
+   */
+  async canGetKeys() {
+    let currentState = this.currentAccountState;
+    let userData = await currentState.getUserAccountData();
+    if (!userData) {
+      throw new Error("Can't possibly get keys; User is not signed in");
+    }
+    // - keyFetchToken means we can almost certainly grab them.
+    // - kSync, kXCS, kExtSync and kExtKbHash means we already have them.
+    // - kB is deprecated but |getKeys| will help us migrate to kSync and friends.
+    return userData && (userData.keyFetchToken ||
+                        DERIVED_KEYS_NAMES.every(k => userData[k]) ||
+                        userData.kB);
+  },
+
+  /**
    * Fetch encryption keys for the signed-in-user from the FxA API server.
    *
    * Not for user consumption.  Exists to cause the keys to be fetch.
@@ -910,29 +931,44 @@ FxAccountsInternal.prototype = {
    *          email: The user's email address
    *          uid: The user's unique id
    *          sessionToken: Session for the FxA server
-   *          kA: An encryption key from the FxA server
-   *          kB: An encryption key derived from the user's FxA password
+   *          kSync: An encryption key for Sync
+   *          kXCS: A key hash of kB for the X-Client-State header
+   *          kExtSync: An encryption key for WebExtensions syncing
+   *          kExtKbHash: A key hash of kB for WebExtensions syncing
    *          verified: email verification status
    *        }
    *        or null if no user is signed in
    */
-  getKeys() {
+  async getKeys() {
     let currentState = this.currentAccountState;
-    return currentState.getUserAccountData().then((userData) => {
+    try {
+      let userData = await currentState.getUserAccountData();
       if (!userData) {
         throw new Error("Can't get keys; User is not signed in");
       }
-      if (userData.kA && userData.kB) {
-        return userData;
+      if (userData.kB) { // Bug 1426306 - Migrate from kB to derived keys.
+        log.info("Migrating kB to derived keys.");
+        const {uid, kB} = userData;
+        await this.updateUserAccountData({
+          uid,
+          ...this._deriveKeys(uid, CommonUtils.hexToBytes(kB)),
+          kA: null, // Remove kA and kB from storage.
+          kB: null
+        });
+        userData = await this.getUserAccountData();
+      }
+      if (DERIVED_KEYS_NAMES.every(k => userData[k])) {
+        return currentState.resolve(userData);
       }
       if (!currentState.whenKeysReadyDeferred) {
         currentState.whenKeysReadyDeferred = PromiseUtils.defer();
         if (userData.keyFetchToken) {
           this.fetchAndUnwrapKeys(userData.keyFetchToken).then(
             (dataWithKeys) => {
-              if (!dataWithKeys.kA || !dataWithKeys.kB) {
+              if (DERIVED_KEYS_NAMES.some(k => !userData[k])) {
+                const missing = DERIVED_KEYS_NAMES.filter(k => !userData[k]);
                 currentState.whenKeysReadyDeferred.reject(
-                  new Error("user data missing kA or kB")
+                  new Error(`user data missing: ${missing.join(", ")}`)
                 );
                 return;
               }
@@ -946,11 +982,11 @@ FxAccountsInternal.prototype = {
           currentState.whenKeysReadyDeferred.reject("No keyFetchToken");
         }
       }
-      return currentState.whenKeysReadyDeferred.promise;
-    }).catch(err =>
-      this._handleTokenError(err)
-    ).then(result => currentState.resolve(result));
-   },
+      return await currentState.resolve(currentState.whenKeysReadyDeferred.promise);
+    } catch (err) {
+      return currentState.resolve(this._handleTokenError(err));
+    }
+  },
 
   async fetchAndUnwrapKeys(keyFetchToken) {
     if (logPII) {
@@ -964,7 +1000,7 @@ FxAccountsInternal.prototype = {
       return currentState.resolve(null);
     }
 
-    let {kA, wrapKB} = await this.fetchKeys(keyFetchToken);
+    let {wrapKB} = await this.fetchKeys(keyFetchToken);
 
     let data = await currentState.getUserAccountData();
 
@@ -975,22 +1011,23 @@ FxAccountsInternal.prototype = {
 
     // Next statements must be synchronous until we setUserAccountData
     // so that we don't risk getting into a weird state.
-    let kB_hex = CryptoUtils.xor(CommonUtils.hexToBytes(data.unwrapBKey),
-                                 wrapKB);
+    let kBbytes = CryptoUtils.xor(CommonUtils.hexToBytes(data.unwrapBKey),
+                                  wrapKB);
 
     if (logPII) {
-      log.debug("kB_hex: " + kB_hex);
+      log.debug("kBbytes: " + kBbytes);
     }
     let updateData = {
-      kA: CommonUtils.bytesAsHex(kA),
-      kB: CommonUtils.bytesAsHex(kB_hex),
+      ...this._deriveKeys(data.uid, kBbytes),
       keyFetchToken: null, // null values cause the item to be removed.
       unwrapBKey: null,
     };
 
-    log.debug("Keys Obtained: kA=" + !!updateData.kA + ", kB=" + !!updateData.kB);
+    log.debug("Keys Obtained:" +
+              DERIVED_KEYS_NAMES.map(k => `${k}=${!!updateData[k]}`).join(", "));
     if (logPII) {
-      log.debug("Keys Obtained: kA=" + updateData.kA + ", kB=" + updateData.kB);
+      log.debug("Keys Obtained:" +
+                DERIVED_KEYS_NAMES.map(k => `${k}=${updateData[k]}`).join(", "));
     }
 
     await currentState.updateUserAccountData(updateData);
@@ -1000,6 +1037,61 @@ FxAccountsInternal.prototype = {
     await this.notifyObservers(ONVERIFIED_NOTIFICATION);
     data = await currentState.getUserAccountData();
     return currentState.resolve(data);
+  },
+
+  _deriveKeys(uid, kBbytes) {
+    return {
+      kSync: CommonUtils.bytesAsHex(this._deriveSyncKey(kBbytes)),
+      kXCS: CommonUtils.bytesAsHex(this._deriveXClientState(kBbytes)),
+      kExtSync: CommonUtils.bytesAsHex(this._deriveWebExtSyncStoreKey(kBbytes)),
+      kExtKbHash: CommonUtils.bytesAsHex(this._deriveWebExtKbHash(uid, kBbytes)),
+    };
+  },
+
+  /**
+   * Derive the Sync Key given the byte string kB.
+   *
+   * @returns HKDF(kB, undefined, "identity.mozilla.com/picl/v1/oldsync", 64)
+   */
+  _deriveSyncKey(kBbytes) {
+    return CryptoUtils.hkdf(kBbytes, undefined,
+                            "identity.mozilla.com/picl/v1/oldsync", 2 * 32);
+  },
+
+  /**
+   * Derive the WebExtensions Sync Storage Key given the byte string kB.
+   *
+   * @returns HKDF(kB, undefined, "identity.mozilla.com/picl/v1/chrome.storage.sync", 64)
+   */
+  _deriveWebExtSyncStoreKey(kBbytes) {
+    return CryptoUtils.hkdf(kBbytes, undefined,
+                            "identity.mozilla.com/picl/v1/chrome.storage.sync",
+                            2 * 32);
+  },
+
+  /**
+   * Derive the WebExtensions kbHash given the byte string kB.
+   *
+   * @returns SHA256(uid + kB)
+   */
+  _deriveWebExtKbHash(uid, kBbytes) {
+    return this._sha256(uid + kBbytes);
+  },
+
+  /**
+   * Derive the X-Client-State header given the byte string kB.
+   *
+   * @returns SHA256(kB)[:16]
+   */
+  _deriveXClientState(kBbytes) {
+    return this._sha256(kBbytes).slice(0, 16);
+  },
+
+  _sha256(bytes) {
+    let hasher = Cc["@mozilla.org/security/hash;1"]
+                    .createInstance(Ci.nsICryptoHash);
+    hasher.init(hasher.SHA256);
+    return CryptoUtils.digestBytes(bytes, hasher);
   },
 
   async getAssertionFromCert(data, keyPair, cert, audience) {
@@ -1160,8 +1252,8 @@ FxAccountsInternal.prototype = {
     // that will fire when we are completely ready.
     //
     // Login is truly complete once keys have been fetched, so once getKeys()
-    // obtains and stores kA and kB, it will fire the onverified observer
-    // notification.
+    // obtains and stores kSync kXCS kExtSync and kExtKbHash, it will fire the
+    // onverified observer notification.
 
     // The callers of startVerifiedCheck never consume a returned promise (ie,
     // this is simply kicking off a background fetch) so we must add a rejection
