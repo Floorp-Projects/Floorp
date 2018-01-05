@@ -651,13 +651,10 @@ ChannelMediaResource::Suspend(bool aCloseImmediately)
 
   if (mChannel && aCloseImmediately && mIsTransportSeekable) {
     CloseChannel();
-    element->DownloadSuspended();
   }
 
   if (mSuspendAgent.Suspend()) {
-    if (mChannel) {
-      element->DownloadSuspended();
-    }
+    element->DownloadSuspended();
   }
 }
 
