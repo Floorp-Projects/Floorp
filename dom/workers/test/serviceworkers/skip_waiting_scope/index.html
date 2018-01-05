@@ -19,10 +19,6 @@
     info("skip_waiting_scope/index.html shouldn't be launched directly!");
   }
 
-  navigator.serviceWorker.ready.then(function() {
-    parent.postMessage("READY", "*");
-  });
-
   navigator.serviceWorker.oncontrollerchange = function() {
     parent.postMessage({
       event: "controllerchange",
