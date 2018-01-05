@@ -180,6 +180,12 @@ def create_parser(mach_interface=False):
     debug_options.add_argument('--debugger-args', default=None, metavar='params',
                                help='Command-line arguments to pass to the debugger itself; split'
                                     'as the Bourne shell would.')
+    add_arg('--code-coverage', action="store_true",
+            dest='code_coverage',
+            help='Remove any existing ccov gcda output files after browser'
+                 ' initialization but before starting the tests. NOTE:'
+                 ' Currently only supported in production.')
+
     add_logging_group(parser)
     return parser
 

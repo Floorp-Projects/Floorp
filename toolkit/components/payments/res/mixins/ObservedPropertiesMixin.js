@@ -32,7 +32,7 @@ function ObservedPropertiesMixin(superClass) {
             return this.getAttribute(name);
           },
           set(value) {
-            if (value === null || value === undefined) {
+            if (value === null || value === undefined || value === false) {
               this.removeAttribute(name);
             } else {
               this.setAttribute(name, value);
