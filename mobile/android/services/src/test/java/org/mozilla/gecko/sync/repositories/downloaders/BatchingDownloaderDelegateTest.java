@@ -28,6 +28,7 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 
 import java.net.URI;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import ch.boye.httpclientandroidlib.ProtocolVersion;
@@ -51,6 +52,7 @@ public class BatchingDownloaderDelegateTest {
 
         public MockDownloader(RepositorySession repositorySession) {
             super(
+                    null,
                     null,
                     Uri.EMPTY,
                     SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
@@ -128,6 +130,7 @@ public class BatchingDownloaderDelegateTest {
     @Test
     public void testIfUnmodifiedSince() throws Exception {
         BatchingDownloader downloader = new BatchingDownloader(
+                Executors.newSingleThreadExecutor(),
                 null,
                 Uri.EMPTY,
                 SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),

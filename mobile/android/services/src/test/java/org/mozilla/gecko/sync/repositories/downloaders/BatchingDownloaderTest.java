@@ -38,6 +38,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -176,7 +177,7 @@ public class BatchingDownloaderTest {
         public boolean abort;
 
         MockDownloader(RepositorySession repositorySession, boolean allowMultipleBatches, boolean keepTrackOfHighWaterMark, RepositoryStateProvider repositoryStateProvider) {
-            super(null, Uri.EMPTY, SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
+            super(null, null, Uri.EMPTY, SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
                     allowMultipleBatches, keepTrackOfHighWaterMark, repositoryStateProvider, repositorySession);
         }
 
@@ -546,10 +547,10 @@ public class BatchingDownloaderTest {
     public void testAbortRequests() {
         MockRepositorySession mockRepositorySession = new MockRepositorySession(serverRepository);
         BatchingDownloader downloader = new BatchingDownloader(
-                null, Uri.EMPTY, SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
+                Executors.newSingleThreadExecutor(), null, Uri.EMPTY, SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
                 true, true, new NonPersistentRepositoryStateProvider(), mockRepositorySession);
         assertFalse(mockRepositorySession.abort);
-        downloader.abortRequests();
+        downloader.handleFetchFailed(sessionFetchRecordsDelegate, null, null);
         assertTrue(mockRepositorySession.abort);
     }
 
