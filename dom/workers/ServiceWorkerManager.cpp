@@ -1618,7 +1618,7 @@ ServiceWorkerManager::WorkerIsIdle(ServiceWorkerInfo* aWorker)
     return;
   }
 
-  if (!reg->IsControllingDocuments() && reg->mPendingUninstall) {
+  if (!reg->IsControllingClients() && reg->mPendingUninstall) {
     RemoveRegistration(reg);
     return;
   }
@@ -2366,7 +2366,7 @@ ServiceWorkerManager::MaybeStopControlling(nsIDocument* aDoc)
   // it will always call MaybeStopControlling() even if there isn't an
   // associated registration. So this check is required.
   if (registration) {
-    StopControllingADocument(registration);
+    StopControllingRegistration(registration);
   }
 }
 
@@ -2419,7 +2419,7 @@ ServiceWorkerManager::StartControllingADocument(ServiceWorkerRegistrationInfo* a
     return ref.forget();
   }
 
-  aRegistration->StartControllingADocument();
+  aRegistration->StartControllingClient();
   mControlledDocuments.Put(aDoc, aRegistration);
 
   StartControllingClient(clientInfo.ref(), aRegistration);
@@ -2438,10 +2438,10 @@ ServiceWorkerManager::StartControllingADocument(ServiceWorkerRegistrationInfo* a
 }
 
 void
-ServiceWorkerManager::StopControllingADocument(ServiceWorkerRegistrationInfo* aRegistration)
+ServiceWorkerManager::StopControllingRegistration(ServiceWorkerRegistrationInfo* aRegistration)
 {
-  aRegistration->StopControllingADocument();
-  if (aRegistration->IsControllingDocuments() || !aRegistration->IsIdle()) {
+  aRegistration->StopControllingClient();
+  if (aRegistration->IsControllingClients() || !aRegistration->IsIdle()) {
     return;
   }
 
@@ -3246,7 +3246,7 @@ ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDocument,
   }
 
   if (controllingRegistration) {
-    StopControllingADocument(controllingRegistration);
+    StopControllingRegistration(controllingRegistration);
   }
 
   ref = StartControllingADocument(aWorkerRegistration, aDocument);
