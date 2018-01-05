@@ -8,15 +8,16 @@ browser.jar:
     content/browser/preferences/blocklists.xul
     content/browser/preferences/blocklists.js
 *   content/browser/preferences/colors.xul
+    content/browser/preferences/colors.js
 *   content/browser/preferences/cookies.xul
     content/browser/preferences/cookies.js
 *   content/browser/preferences/connection.xul
     content/browser/preferences/connection.js
-*   content/browser/preferences/fonts.xul
+    content/browser/preferences/fonts.xul
     content/browser/preferences/fonts.js
     content/browser/preferences/handlers.xml
     content/browser/preferences/handlers.css
-*   content/browser/preferences/languages.xul
+    content/browser/preferences/languages.xul
     content/browser/preferences/languages.js
     content/browser/preferences/permissions.xul
     content/browser/preferences/sitePermissions.xul

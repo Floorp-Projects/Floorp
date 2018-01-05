@@ -1962,9 +1962,13 @@ WebrtcVideoConduit::SendVideoFrame(const webrtc::VideoFrame& frame)
       // Waiting for it to finish
       return kMediaConduitNoError;
     }
+    // mLastWidth/Height starts at 0, so we'll never call SelectSendResolution with a 0 size.
+    // We in some cases set them back to 0 to force SelectSendResolution to be called again.
     if (frame.width() != mLastWidth || frame.height() != mLastHeight) {
       CSFLogVerbose(LOGTAG, "%s: call SelectSendResolution with %ux%u",
                     __FUNCTION__, frame.width(), frame.height());
+      MOZ_ASSERT(frame.width() != 0 && frame.height() != 0);
+      // Note coverity will flag this since it thinks they can be 0
       if (SelectSendResolution(frame.width(), frame.height(), &frame)) {
         // SelectSendResolution took ownership of the data in i420_frame.
         // Submit the frame after reconfig is done

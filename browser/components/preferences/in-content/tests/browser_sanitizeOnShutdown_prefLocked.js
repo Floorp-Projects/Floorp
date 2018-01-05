@@ -14,7 +14,7 @@ function testPrefStateMatchesLockedState() {
   switchToCustomHistoryMode(doc);
 
   let checkbox = doc.getElementById("alwaysClear");
-  let preference = doc.getElementById("privacy.sanitize.sanitizeOnShutdown");
+  let preference = win.Preferences.get("privacy.sanitize.sanitizeOnShutdown");
   is(checkbox.disabled, preference.locked, "Always Clear checkbox should be enabled when preference is not locked.");
 
   Services.prefs.clearUserPref("privacy.history.custom");

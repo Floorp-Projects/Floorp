@@ -53,12 +53,12 @@ function test() {
       dialogClosingPromise = waitForEvent(dialog.document.documentElement, "dialogclosing");
 
       doc = dialog.document;
-      proxyTypePref = doc.getElementById("network.proxy.type");
-      sharePref = doc.getElementById("network.proxy.share_proxy_settings");
-      httpPref = doc.getElementById("network.proxy.http");
-      httpPortPref = doc.getElementById("network.proxy.http_port");
-      ftpPref = doc.getElementById("network.proxy.ftp");
-      ftpPortPref = doc.getElementById("network.proxy.ftp_port");
+      proxyTypePref = dialog.Preferences.get("network.proxy.type");
+      sharePref = dialog.Preferences.get("network.proxy.share_proxy_settings");
+      httpPref = dialog.Preferences.get("network.proxy.http");
+      httpPortPref = dialog.Preferences.get("network.proxy.http_port");
+      ftpPref = dialog.Preferences.get("network.proxy.ftp");
+      ftpPortPref = dialog.Preferences.get("network.proxy.ftp_port");
     }
 
     // This batch of tests should not close the dialog

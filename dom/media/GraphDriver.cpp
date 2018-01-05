@@ -49,6 +49,7 @@ void GraphDriver::SetGraphTime(GraphDriver* aPreviousDriver,
 
   MOZ_ASSERT(!PreviousDriver());
   MOZ_ASSERT(aPreviousDriver);
+  MOZ_DIAGNOSTIC_ASSERT(GraphImpl()->CurrentDriver() == aPreviousDriver);
 
   LOG(LogLevel::Debug,
       ("Setting previous driver: %p (%s)",
