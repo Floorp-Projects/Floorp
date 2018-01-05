@@ -591,10 +591,7 @@ struct AutoResetLastProfilerFrameOnReturnFromException
 void
 HandleExceptionWasm(JSContext* cx, wasm::WasmFrameIter* iter, ResumeFromException* rfe)
 {
-    // Maintain the wasm invariant that we have wasm frames when unwinding.
-    JitActivation* act = cx->activation()->asJit();
-    act->setWasmExitFP((const wasm::Frame*) act->jsExitFP());
-
+    MOZ_ASSERT(cx->activation()->asJit()->hasWasmExitFP());
     rfe->kind = ResumeFromException::RESUME_WASM;
     rfe->framePointer = (uint8_t*) wasm::FailFP;
     rfe->stackPointer = (uint8_t*) wasm::HandleThrow(cx, *iter);
@@ -736,18 +733,7 @@ HandleException(ResumeFromException* rfe)
                 return;
         }
 
-        JitFrameLayout* current = frame.isScripted() ? frame.jsFrame() : nullptr;
-
         ++iter;
-
-        if (current) {
-            // Unwind the frame by updating packedExitFP. This is necessary so
-            // that (1) debugger exception unwind and leave frame hooks don't
-            // see this frame when they use ScriptFrameIter, and (2)
-            // ScriptFrameIter does not crash when accessing an IonScript
-            // that's destroyed by the ionScript->decref call.
-            EnsureBareExitFrame(cx->activation()->asJit(), current);
-        }
 
         if (overrecursed) {
             // We hit an overrecursion error during bailout. Report it now.
