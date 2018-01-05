@@ -453,23 +453,43 @@ IDBFactory::Open(JSContext* aCx,
 {
   if (!IsChrome() &&
       aOptions.mStorage.WasPassed()) {
-    switch (aOptions.mStorage.Value()) {
-      case StorageType::Persistent: {
-        Telemetry::ScalarAdd(Telemetry::ScalarID::IDB_TYPE_PERSISTENT_COUNT, 1);
-        break;
+
+    bool ignore = false;
+    // Ignore internal usage on about: pages.
+    if (NS_IsMainThread()) {
+      nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(*mPrincipalInfo);
+      if (principal) {
+        nsCOMPtr<nsIURI> uri;
+        nsresult rv = principal->GetURI(getter_AddRefs(uri));
+        if (NS_SUCCEEDED(rv) && uri) {
+          bool isAbout;
+          rv = uri->SchemeIs("about", &isAbout);
+          if (NS_SUCCEEDED(rv) && isAbout) {
+            ignore = true;
+          }
+        }
       }
+    }
 
-      case StorageType::Temporary: {
-        Telemetry::ScalarAdd(Telemetry::ScalarID::IDB_TYPE_TEMPORARY_COUNT, 1);
-        break;
+    if (!ignore) {
+      switch (aOptions.mStorage.Value()) {
+        case StorageType::Persistent: {
+          Telemetry::ScalarAdd(Telemetry::ScalarID::IDB_TYPE_PERSISTENT_COUNT, 1);
+          break;
+        }
+
+        case StorageType::Temporary: {
+          Telemetry::ScalarAdd(Telemetry::ScalarID::IDB_TYPE_TEMPORARY_COUNT, 1);
+          break;
+        }
+
+        case StorageType::Default:
+        case StorageType::EndGuard_:
+          break;
+
+        default:
+          MOZ_CRASH("Invalid storage type!");
       }
-
-      case StorageType::Default:
-      case StorageType::EndGuard_:
-        break;
-
-      default:
-        MOZ_CRASH("Invalid storage type!");
     }
   }
 
