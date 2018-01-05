@@ -497,7 +497,9 @@ function addMenuEventInfo(info, contextData, includeSensitiveData) {
     if (contextData.onAudio || contextData.onImage || contextData.onVideo) {
       info.srcUrl = contextData.srcUrl;
     }
-    info.pageUrl = contextData.pageUrl;
+    if (!contextData.onBookmark) {
+      info.pageUrl = contextData.pageUrl;
+    }
     if (contextData.inFrame) {
       info.frameUrl = contextData.frameUrl;
     }
