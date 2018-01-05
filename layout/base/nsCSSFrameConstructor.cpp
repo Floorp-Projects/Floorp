@@ -6502,9 +6502,6 @@ FindAppendPrevSibling(nsIFrame* aParentFrame, nsIFrame* aNextSibling)
 
   if (aNextSibling) {
     MOZ_ASSERT(aNextSibling->GetParent() == aParentFrame, "Wrong parent");
-    MOZ_ASSERT(aNextSibling->GetPrevSibling() ||
-               aParentFrame->PrincipalChildList().FirstChild() == aNextSibling,
-               "next sibling must be on the principal child list here");
     return aNextSibling->GetPrevSibling();
   }
 

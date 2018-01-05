@@ -158,6 +158,7 @@
 .network-monitor .tree-container .treeTable tr:last-child td[colspan="2"] {
   display: block;
   height: 100%;
+  flex: 1;
 }
 
 .network-monitor .source-editor-mount {

@@ -910,20 +910,6 @@ DebuggerClient.prototype = {
       this._clients.get(packet.from)._onThreadState(packet);
     }
 
-    // TODO: Bug 1151156 - Remove once Gecko 40 is on b2g-stable.
-    if (!this.traits.noNeedToFakeResumptionOnNavigation) {
-      // On navigation the server resumes, so the client must resume as well.
-      // We achieve that by generating a fake resumption packet that triggers
-      // the client's thread state change listeners.
-      if (packet.type == UnsolicitedNotifications.tabNavigated &&
-          this._clients.has(packet.from) &&
-          this._clients.get(packet.from).thread) {
-        let thread = this._clients.get(packet.from).thread;
-        let resumption = { from: thread._actor, type: "resumed" };
-        thread._onThreadState(resumption);
-      }
-    }
-
     // Only try to notify listeners on events, not responses to requests
     // that lack a packet type.
     if (packet.type) {
