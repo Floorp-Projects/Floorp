@@ -110,7 +110,9 @@ private:
     return reinterpret_cast<nsString*>(this);
   }
 
+  // mData is left uninitialized for optimization purposes.
   nsString::char_type* mData;
+  // mLength is left uninitialized for optimization purposes.
   nsString::size_type mLength;
   nsString::DataFlags mDataFlags;
   nsString::ClassFlags mClassFlags;
