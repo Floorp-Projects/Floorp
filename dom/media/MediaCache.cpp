@@ -2874,13 +2874,6 @@ MediaCacheStream::InitAsClone(MediaCacheStream* aOriginal)
 
   // Use the same MediaCache as our clone.
   mMediaCache = aOriginal->mMediaCache;
-  // This needs to be done before OpenStream() to avoid data race.
-  mClientSuspended = true;
-  // Cloned streams are initially suspended, since there is no channel open
-  // initially for a clone.
-  mCacheSuspended = true;
-  mChannelEnded = true;
-
   OwnerThread()->Dispatch(
     NS_NewRunnableFunction("MediaCacheStream::InitAsClone", [
       this,
@@ -2894,27 +2887,19 @@ void
 MediaCacheStream::InitAsCloneInternal(MediaCacheStream* aOriginal)
 {
   MOZ_ASSERT(OwnerThread()->IsOnCurrentThread());
-  AutoLock lock(aOriginal->mMediaCache->Monitor());
+  AutoLock lock(mMediaCache->Monitor());
 
+  // Download data and notify events if necessary. Note the order is important
+  // in order to mimic the behavior of data being downloaded from the channel.
+
+  // Step 1: copy/download data from the original stream.
   mResourceID = aOriginal->mResourceID;
-
-  // Grab cache blocks from aOriginal as readahead blocks for our stream
   mStreamLength = aOriginal->mStreamLength;
   mIsTransportSeekable = aOriginal->mIsTransportSeekable;
   mDownloadStatistics = aOriginal->mDownloadStatistics;
   mDownloadStatistics.Stop();
 
-  // Notify the client that we have new data so the decoder has a chance to
-  // compute 'canplaythrough' and buffer ranges.
-  mClient->CacheClientNotifyDataReceived();
-
-  if (aOriginal->mDidNotifyDataEnded &&
-      NS_SUCCEEDED(aOriginal->mNotifyDataEndedStatus)) {
-    mNotifyDataEndedStatus = aOriginal->mNotifyDataEndedStatus;
-    mDidNotifyDataEnded = true;
-    mClient->CacheClientNotifyDataEnded(mNotifyDataEndedStatus);
-  }
-
+  // Grab cache blocks from aOriginal as readahead blocks for our stream
   for (uint32_t i = 0; i < aOriginal->mBlocks.Length(); ++i) {
     int32_t cacheBlockIndex = aOriginal->mBlocks[i];
     if (cacheBlockIndex < 0)
@@ -2934,8 +2919,26 @@ MediaCacheStream::InitAsCloneInternal(MediaCacheStream* aOriginal)
          aOriginal->mPartialBlockBuffer.get(),
          BLOCK_SIZE);
 
-  mMediaCache->OpenStream(lock, this, true /* aIsClone */);
+  // Step 2: notify the client that we have new data so the decoder has a chance
+  // to compute 'canplaythrough' and buffer ranges.
+  mClient->CacheClientNotifyDataReceived();
 
+  // Step 3: notify download ended if necessary.
+  if (aOriginal->mDidNotifyDataEnded &&
+      NS_SUCCEEDED(aOriginal->mNotifyDataEndedStatus)) {
+    mNotifyDataEndedStatus = aOriginal->mNotifyDataEndedStatus;
+    mDidNotifyDataEnded = true;
+    mClient->CacheClientNotifyDataEnded(mNotifyDataEndedStatus);
+  }
+
+  // Step 4: notify download is suspended by the cache.
+  mClientSuspended = true;
+  mCacheSuspended = true;
+  mChannelEnded = true;
+  mClient->CacheClientSuspend();
+
+  // Step 5: add the stream to be managed by the cache.
+  mMediaCache->OpenStream(lock, this, true /* aIsClone */);
   // Wake up the reader which is waiting for the cloned data.
   lock.NotifyAll();
 }
