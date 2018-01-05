@@ -44,7 +44,6 @@
 #endif
 
 #include "mozilla/UniquePtr.h"
-#include "mozilla/ipc/EnvironmentMap.h"
 
 #if defined(OS_MACOSX)
 struct kinfo_proc;
@@ -108,13 +107,12 @@ struct LaunchOptions {
 
 #if defined(OS_WIN)
   bool start_hidden = false;
+#endif
 
+#if defined(OS_POSIX)
   // Environment variables to be applied in addition to the current
   // process's environment, replacing them where necessary.
-  EnvironmentMap env_map;
-#endif
-#if defined(OS_POSIX)
-  environment_map env_map;
+  environment_map environ;
 
   // A mapping of (src fd -> dest fd) to propagate into the child
   // process.  All other fds will be closed, except std{in,out,err}.

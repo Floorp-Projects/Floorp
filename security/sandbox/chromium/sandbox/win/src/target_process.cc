@@ -89,7 +89,6 @@ ResultCode TargetProcess::Create(
     bool inherit_handles,
     const base::win::StartupInformation& startup_info,
     base::win::ScopedProcessInformation* target_info,
-    base::EnvironmentMap& env_changes,
     DWORD* win_error) {
   exe_name_.reset(_wcsdup(exe_path));
 
@@ -109,19 +108,12 @@ ResultCode TargetProcess::Create(
     flags |= CREATE_BREAKAWAY_FROM_JOB;
   }
 
-  LPTCH original_environment = GetEnvironmentStrings();
-  base::NativeEnvironmentString new_environment =
-    base::AlterEnvironment(original_environment, env_changes);
-  // Ignore return value? What can we do?
-  FreeEnvironmentStrings(original_environment);
-  LPVOID new_env_ptr = (void*)new_environment.data();
-
   PROCESS_INFORMATION temp_process_info = {};
   if (!::CreateProcessAsUserW(lockdown_token_.Get(), exe_path, cmd_line.get(),
                               NULL,  // No security attribute.
                               NULL,  // No thread attribute.
                               inherit_handles, flags,
-                              new_env_ptr,
+                              NULL,  // Use the environment of the caller.
                               NULL,  // Use current directory of the caller.
                               startup_info.startup_info(),
                               &temp_process_info)) {

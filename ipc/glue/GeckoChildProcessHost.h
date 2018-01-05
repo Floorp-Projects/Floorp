@@ -182,7 +182,8 @@ private:
 
   // The buffer is passed to preserve its lifetime until we are done
   // with launching the sub-process.
-  void GetChildLogName(const char* origLogName, nsACString &buffer);
+  void SetChildLogName(const char* varName, const char* origLogName,
+                       nsACString &buffer);
 
   // In between launching the subprocess and handing off its IPC
   // channel, there's a small window of time in which *we* might still
@@ -192,6 +193,13 @@ private:
   //
   // FIXME/cjones: this strongly indicates bad design.  Shame on us.
   std::queue<IPC::Message> mQueue;
+
+  // Remember original env values so we can restore it (there is no other
+  // simple way how to change environment of a child process than to modify
+  // the current environment).
+  nsCString mRestoreOrigNSPRLogName;
+  nsCString mRestoreOrigMozLogName;
+  nsCString mRestoreOrigRustLog;
 
   static uint32_t sNextUniqueID;
 
