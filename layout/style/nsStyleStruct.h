@@ -2803,6 +2803,10 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
            (mWillChangeBitField & NS_STYLE_WILL_CHANGE_TRANSFORM);
   }
 
+  bool HasIndividualTransform() const {
+    return mSpecifiedRotate || mSpecifiedTranslate || mSpecifiedScale;
+  }
+
   bool HasPerspectiveStyle() const {
     return mChildPerspective.GetUnit() == eStyleUnit_Coord;
   }
