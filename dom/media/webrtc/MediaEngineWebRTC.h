@@ -525,7 +525,7 @@ private:
   const RefPtr<AudioOutputObserver> mAudioOutputObserver;
 
   // accessed from the GraphDriver thread except for deletion
-  nsAutoPtr<AudioPacketizer<AudioDataValue, float>> mPacketizer;
+  nsAutoPtr<AudioPacketizer<AudioDataValue, float>> mPacketizerInput;
   ScopedCustomReleasePtr<webrtc::VoEExternalMedia> mVoERenderListener;
 
   // mMonitor protects mSources[] and mPrinicpalIds[] access/changes, and
