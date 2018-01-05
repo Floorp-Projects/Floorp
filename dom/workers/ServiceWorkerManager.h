@@ -372,8 +372,8 @@ private:
   Update(ServiceWorkerRegistrationInfo* aRegistration);
 
   nsresult
-  GetDocumentRegistration(nsIDocument* aDoc,
-                          ServiceWorkerRegistrationInfo** aRegistrationInfo);
+  GetClientRegistration(const ClientInfo& aClientInfo,
+                        ServiceWorkerRegistrationInfo** aRegistrationInfo);
 
   nsresult
   GetServiceWorkerForScope(nsPIDOMWindowInner* aWindow,
