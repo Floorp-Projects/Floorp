@@ -352,8 +352,6 @@ public:
     mAncestorOuterWindowIDs = mozilla::Move(aAncestorOuterWindowIDs);
   }
 
-  bool CanSetOriginAttributes();
-
   // Determine if a service worker is allowed to control a window in this
   // docshell with the given URL.  If there are any reasons it should not,
   // this will return false.  If true is returned then the window *may* be
