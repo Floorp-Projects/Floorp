@@ -77,7 +77,6 @@ toolkit.jar:
    content/global/bindings/datetimebox.css     (widgets/datetimebox.css)
 *  content/global/bindings/dialog.xml          (widgets/dialog.xml)
    content/global/bindings/editor.xml          (widgets/editor.xml)
-   content/global/bindings/expander.xml        (widgets/expander.xml)
    content/global/bindings/filefield.xml       (widgets/filefield.xml)
 *  content/global/bindings/findbar.xml         (widgets/findbar.xml)
    content/global/bindings/general.xml         (widgets/general.xml)
