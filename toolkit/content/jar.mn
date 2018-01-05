@@ -53,6 +53,7 @@ toolkit.jar:
    content/global/filepicker.properties
    content/global/globalOverlay.js
    content/global/mozilla.xhtml
+   content/global/preferencesBindings.js
    content/global/process-content.js
    content/global/resetProfile.css
    content/global/resetProfile.js
@@ -87,7 +88,6 @@ toolkit.jar:
    content/global/bindings/notification.xml    (widgets/notification.xml)
    content/global/bindings/numberbox.xml       (widgets/numberbox.xml)
    content/global/bindings/popup.xml           (widgets/popup.xml)
-*  content/global/bindings/preferences.xml     (widgets/preferences.xml)
    content/global/bindings/progressmeter.xml   (widgets/progressmeter.xml)
    content/global/bindings/radio.xml           (widgets/radio.xml)
    content/global/bindings/remote-browser.xml  (widgets/remote-browser.xml)

@@ -28,6 +28,17 @@ const FXA_LOGIN_UNVERIFIED = 1;
 // We are logged in locally, but the server rejected our credentials.
 const FXA_LOGIN_FAILED = 2;
 
+Preferences.addAll([
+  { id: "engine.addons", name: "services.sync.engine.addons", type: "bool" },
+  { id: "engine.bookmarks", name: "services.sync.engine.bookmarks", type: "bool" },
+  { id: "engine.history", name: "services.sync.engine.history", type: "bool" },
+  { id: "engine.tabs", name: "services.sync.engine.tabs", type: "bool" },
+  { id: "engine.prefs", name: "services.sync.engine.prefs", type: "bool" },
+  { id: "engine.passwords", name: "services.sync.engine.passwords", type: "bool" },
+  { id: "engine.addresses", name: "services.sync.engine.addresses", type: "bool" },
+  { id: "engine.creditcards", name: "services.sync.engine.creditcards", type: "bool" },
+]);
+
 var gSyncPane = {
   get page() {
     return document.getElementById("weavePrefsDeck").selectedIndex;

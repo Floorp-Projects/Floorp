@@ -1,23 +1,3 @@
-    <preferences id="searchPreferences" hidden="true" data-category="paneSearch">
-
-      <preference id="browser.search.suggest.enabled"
-                  name="browser.search.suggest.enabled"
-                  type="bool"/>
-
-      <preference id="browser.urlbar.suggest.searches"
-                  name="browser.urlbar.suggest.searches"
-                  type="bool"/>
-
-      <preference id="browser.search.hiddenOneOffs"
-                  name="browser.search.hiddenOneOffs"
-                  type="unichar"/>
-
-      <preference id="browser.search.widget.inNavBar"
-                  name="browser.search.widget.inNavBar"
-                  type="bool"/>
-
-    </preferences>
-
     <script type="application/javascript"
             src="chrome://browser/content/preferences/in-content/search.js"/>
 

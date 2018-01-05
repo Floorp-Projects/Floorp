@@ -715,7 +715,7 @@ WindowHelper.prototype = {
     var cb = this.win.document.querySelectorAll("#itemList > [preference]");
     ok(cb.length > 1, "found checkboxes for preferences");
     for (var i = 0; i < cb.length; ++i) {
-      var pref = this.win.document.getElementById(cb[i].getAttribute("preference"));
+      var pref = this.win.Preferences.get(cb[i].getAttribute("preference"));
       if (!!pref.value ^ check)
         cb[i].click();
     }

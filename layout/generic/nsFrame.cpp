@@ -9794,7 +9794,7 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
       return parent;
     }
 
-    parent = parent->GetParent();
+    parent = parent->GetInFlowParent();
   } while (parent);
 
   if (aProspectiveParent->StyleContext()->GetPseudo() ==
@@ -10639,7 +10639,7 @@ nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
                                     ServoRestyleState& aRestyleState)
 {
 #ifdef DEBUG
-  nsIFrame* parent = aChildFrame->GetParent();;
+  nsIFrame* parent = aChildFrame->GetInFlowParent();
   if (aChildFrame->IsTableFrame()) {
     parent = parent->GetParent();
   }

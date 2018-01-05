@@ -13,6 +13,7 @@
 #include "nsMimeTypeArray.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BodyExtractor.h"
+#include "mozilla/dom/DesktopNotification.h"
 #include "mozilla/dom/FetchBinding.h"
 #include "mozilla/dom/File.h"
 #include "nsGeolocation.h"
@@ -194,6 +195,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPlugins)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPermissions)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGeolocation)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotification)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBatteryPromise)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
@@ -234,6 +236,11 @@ Navigator::Invalidate()
   if (mGeolocation) {
     mGeolocation->Shutdown();
     mGeolocation = nullptr;
+  }
+
+  if (mNotification) {
+    mNotification->Shutdown();
+    mNotification = nullptr;
   }
 
   if (mBatteryManager) {
@@ -1307,6 +1314,22 @@ Navigator::MozGetUserMediaDevices(const MediaStreamConstraints& aConstraints,
   MediaManager* manager = MediaManager::Get();
   aRv = manager->GetUserMediaDevices(mWindow, aConstraints, onsuccess, onerror,
                                      aInnerWindowID, aCallID);
+}
+
+DesktopNotificationCenter*
+Navigator::GetMozNotification(ErrorResult& aRv)
+{
+  if (mNotification) {
+    return mNotification;
+  }
+
+  if (!mWindow || !mWindow->GetDocShell()) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  mNotification = new DesktopNotificationCenter(mWindow);
+  return mNotification;
 }
 
 //*****************************************************************************

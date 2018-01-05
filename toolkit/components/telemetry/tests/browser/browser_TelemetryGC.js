@@ -29,8 +29,6 @@ function check(entries) {
     ok(FIELDS.includes(k), `${k} found in FIELDS`);
   }
 
-  let foundGCs = 0;
-
   for (let f of FIELDS) {
     ok(Array.isArray(entries[f]), "have an array of GCs");
 
@@ -38,8 +36,6 @@ function check(entries) {
 
     for (let gc of entries[f]) {
       isnot(gc, null, "GC is non-null");
-
-      foundGCs++;
 
       ok(Object.keys(gc).length <= 24, "number of keys in GC is not too large");
 
@@ -100,8 +96,6 @@ function check(entries) {
       }
     }
   }
-
-  ok(foundGCs > 0, "saw at least one GC");
 }
 
 add_task(async function test() {
