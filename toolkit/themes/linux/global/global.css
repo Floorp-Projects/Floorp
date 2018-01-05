@@ -41,8 +41,7 @@ progressmeter[mode="undetermined"] {
 window,
 page,
 dialog,
-wizard,
-prefwindow {
+wizard {
   -moz-appearance: window;
   background-color: -moz-Dialog;
   color: -moz-DialogText;

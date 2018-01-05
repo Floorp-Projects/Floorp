@@ -220,7 +220,7 @@ function test_dependent_prefs(win) {
   function expect_checked(checked) {
     controls.forEach(function(control) {
       is(control.checked, checked,
-        control.getAttribute("id") + " should " + (checked ? "not " : "") + "be checked");
+        control.getAttribute("id") + " should " + (checked ? "" : "not ") + "be checked");
     });
 
     is(thirdPartyCookieMenu.value == "always" || thirdPartyCookieMenu.value == "visited", checked, "third-party cookies should " + (checked ? "not " : "") + "be limited");
@@ -311,13 +311,13 @@ function test_locbar_suggestion_retention(suggestion, autocomplete) {
 const gPrefCache = new Map();
 
 function cache_preferences(win) {
-  let prefs = win.document.querySelectorAll("#privacyPreferences > preference");
+  let prefs = win.Preferences.getAll();
   for (let pref of prefs)
     gPrefCache.set(pref.name, pref.value);
 }
 
 function reset_preferences(win) {
-  let prefs = win.document.querySelectorAll("#privacyPreferences > preference");
+  let prefs = win.Preferences.getAll();
   for (let pref of prefs)
     pref.value = gPrefCache.get(pref.name);
 }

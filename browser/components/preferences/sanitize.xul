@@ -6,40 +6,40 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/"?>
-<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
 
 <!DOCTYPE dialog [
+  <!ENTITY % preferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
+  %preferencesDTD;
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-  <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
   %brandDTD;
+  <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
   %sanitizeDTD;
 ]>
 
-<prefwindow id="SanitizeDialog" type="child"
-            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            dlgbuttons="accept,cancel,help"
-            ondialoghelp="openPrefsHelp()"
-            style="width: &sanitizePrefs2.modal.width;"
-            title="&sanitizePrefs2.title;"
-            onload="gSanitizeDialog.init();">
+<dialog id="SanitizeDialog" type="child" class="prefwindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        buttons="accept,cancel,help"
+        persist="lastSelected screenX screenY"
+        closebuttonlabel="&preferencesCloseButton.label;"
+        closebuttonaccesskey="&preferencesCloseButton.accesskey;"
+        role="dialog"
+        ondialoghelp="openPrefsHelp()"
+        style="width: &sanitizePrefs2.modal.width;"
+        title="&sanitizePrefs2.title;"
+        helpTopic="prefs-clear-private-data"
+        onload="gSanitizeDialog.init();">
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
-  <script type="application/javascript" src="chrome://browser/content/preferences/sanitize.js"/>
+  <script type="application/javascript" src="chrome://global/content/preferencesBindings.js"/>
 
-  <prefpane id="SanitizeDialogPane"
-            helpTopic="prefs-clear-private-data">
+  <keyset>
+    <key key="&windowClose.key;" modifiers="accel" oncommand="Preferences.close(event)"/>
+  </keyset>
 
-    <preferences>
-      <preference id="privacy.clearOnShutdown.history"               name="privacy.clearOnShutdown.history"               type="bool"
-                  onchange="return gSanitizeDialog.onClearHistoryChanged();"/>
-      <preference id="privacy.clearOnShutdown.formdata"              name="privacy.clearOnShutdown.formdata"              type="bool"/>
-      <preference id="privacy.clearOnShutdown.downloads"             name="privacy.clearOnShutdown.downloads"             type="bool"/>
-      <preference id="privacy.clearOnShutdown.cookies"               name="privacy.clearOnShutdown.cookies"               type="bool"/>
-      <preference id="privacy.clearOnShutdown.cache"                 name="privacy.clearOnShutdown.cache"                 type="bool"/>
-      <preference id="privacy.clearOnShutdown.offlineApps"           name="privacy.clearOnShutdown.offlineApps"           type="bool"/>
-      <preference id="privacy.clearOnShutdown.sessions"              name="privacy.clearOnShutdown.sessions"              type="bool"/>
-      <preference id="privacy.clearOnShutdown.siteSettings"          name="privacy.clearOnShutdown.siteSettings"          type="bool"/>
-    </preferences>
+  <vbox id="SanitizeDialogPane" class="prefpane">
+
+    <script type="application/javascript" src="chrome://browser/content/preferences/sanitize.js"/>
 
     <description>&clearDataSettings3.label;</description>
 
@@ -94,5 +94,5 @@
         </rows>
       </grid>
     </groupbox>
-  </prefpane>
-</prefwindow>
+  </vbox>
+</dialog>

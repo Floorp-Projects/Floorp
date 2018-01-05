@@ -17,8 +17,8 @@
     var prefWindow = openDialog("window_preferences_beforeaccept.xul", "", "", windowOnload);
 
     function windowOnload() {
-      var dialogShown = prefWindow.document.getElementById("tests.beforeaccept.dialogShown");
-      var called = prefWindow.document.getElementById("tests.beforeaccept.called");
+      var dialogShown = prefWindow.Preferences.get("tests.beforeaccept.dialogShown");
+      var called = prefWindow.Preferences.get("tests.beforeaccept.called");
       is(dialogShown.value, true, "dialog opened, shown pref set");
       is(dialogShown.valueFromPreferences, null, "shown pref not committed");
       is(called.value, null, "beforeaccept not yet called");
