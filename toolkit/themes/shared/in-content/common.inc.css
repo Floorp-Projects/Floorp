@@ -170,10 +170,6 @@ xul|menulist {
   min-height: 30px;
   color: var(--in-content-text-color);
   border: 1px solid var(--in-content-box-border-color);
-  -moz-border-top-colors: none !important;
-  -moz-border-right-colors: none !important;
-  -moz-border-bottom-colors: none !important;
-  -moz-border-left-colors: none !important;
   border-radius: 2px;
   background-color: var(--in-content-page-background);
   margin: 4px 8px;
@@ -473,10 +469,6 @@ xul|textbox {
   -moz-appearance: none;
   color: var(--in-content-text-color);
   border: 1px solid var(--in-content-box-border-color);
-  -moz-border-top-colors: none !important;
-  -moz-border-right-colors: none !important;
-  -moz-border-bottom-colors: none !important;
-  -moz-border-left-colors: none !important;
   border-radius: 2px;
   background-color: var(--in-content-box-background);
 }
