@@ -275,6 +275,7 @@ struct InputContext final
   InputContext()
     : mOrigin(XRE_IsParentProcess() ? ORIGIN_MAIN : ORIGIN_CONTENT)
     , mMayBeIMEUnaware(false)
+    , mHasHandledUserInput(false)
     , mInPrivateBrowsing(false)
   {
   }
