@@ -17,24 +17,25 @@ add_task(async function() {
 
   // Wait for the source text to load and make sure we're in the right
   // place.
-  await waitForLoadedSource(dbg, sourceUrl);
+  await waitForSelectedSource(dbg, sourceUrl);
+  log(`loaded source`);
 
   // TODO: revisit highlighting lines when the debugger opens
   // assertHighlightLocation(dbg, "long.js", 66);
 
-  // Jump to line 16 and make sure the editor scrolled.
+  log(`Select line 16 and make sure the editor scrolled.`);
   await selectSource(dbg, "long.js", 16);
   await waitForElement(dbg, ".CodeMirror-code > .highlight-line");
   assertHighlightLocation(dbg, "long.js", 16);
 
-  // Make sure only one line is ever highlighted and the flash
-  // animation is cancelled on old lines.
+  log(`Select several locations and check that we have one highlight`);
   await selectSource(dbg, "long.js", 17);
   await selectSource(dbg, "long.js", 18);
   assertHighlightLocation(dbg, "long.js", 18);
 
   // Test jumping to a line in a source that exists but hasn't been
   // loaded yet.
+  log(`Select an unloaded source`);
   selectSource(dbg, "simple1.js", 6);
 
   // Make sure the source is in the loading state, wait for it to be
@@ -42,7 +43,7 @@ add_task(async function() {
   const simple1 = findSource(dbg, "simple1.js");
   is(getSource(getState(), simple1.id).get("loadedState"), "loading");
 
-  await waitForLoadedSource(dbg, "simple1.js");
+  await waitForSelectedSource(dbg, "simple1.js");
   ok(getSource(getState(), simple1.id).get("text"));
   assertHighlightLocation(dbg, "simple1.js", 6);
 });
