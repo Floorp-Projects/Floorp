@@ -5,21 +5,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1062578
 -->
 <head>
   <title>Test for creating style in shadow root of host not in document.</title>
+  <script type="text/javascript" src="head.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<div id="grabme"></div>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1062578">Bug 1062578</a>
 <script>
-var host = document.createElement("div");
-var shadow = host.createShadowRoot();
-shadow.innerHTML = '<style> #inner { height: 200px; } </style><div id="inner">Hello</div>';
 
-grabme.appendChild(host);
+SimpleTest.waitForExplicitFinish();
 
-var inner = shadow.getElementById("inner");
-is(getComputedStyle(inner, null).getPropertyValue("height"), "200px", "Style in shadow root should take effect.");
+var content = '<div id="grabme"></div>';
+setWebComponentsPrefAndCreateIframe(content)
+  .then((aDocument) => {
+    var host = aDocument.createElement("div");
+    var shadow = host.attachShadow({mode: "open"});
+    shadow.innerHTML = '<style> #inner { height: 200px; } </style><div id="inner">Hello</div>';
+
+    var iframeWin = aDocument.defaultView;
+    iframeWin.grabme.appendChild(host);
+
+    var inner = shadow.getElementById("inner");
+    is(iframeWin.getComputedStyle(inner, null).getPropertyValue("height"), "200px", "Style in shadow root should take effect.");
+
+    SimpleTest.finish();
+  });
 </script>
 </body>
 </html>

@@ -206,6 +206,14 @@ ClientSource::WorkerExecutionReady(WorkerPrivate* aWorkerPrivate)
     return;
   }
 
+  // A client without access to storage should never be controlled by
+  // a service worker.  Check this here in case we were controlled before
+  // execution ready.  We can't reliably determine what our storage policy
+  // is before execution ready, unfortunately.
+  if (mController.isSome()) {
+    MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate->IsStorageAllowed());
+  }
+
   // Its safe to store the WorkerPrivate* here because the ClientSource
   // is explicitly destroyed by WorkerPrivate before exiting its run loop.
   MOZ_DIAGNOSTIC_ASSERT(mOwner.is<Nothing>());
@@ -233,6 +241,15 @@ ClientSource::WindowExecutionReady(nsPIDOMWindowInner* aInnerWindow)
   nsIDocument* doc = aInnerWindow->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
     return NS_ERROR_UNEXPECTED;
+  }
+
+  // A client without access to storage should never be controlled by
+  // a service worker.  Check this here in case we were controlled before
+  // execution ready.  We can't reliably determine what our storage policy
+  // is before execution ready, unfortunately.
+  if (mController.isSome()) {
+    MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::StorageAllowedForWindow(aInnerWindow) ==
+                          nsContentUtils::StorageAccess::eAllow);
   }
 
   // Don't use nsAutoCString here since IPC requires a full nsCString anyway.
@@ -289,6 +306,10 @@ ClientSource::DocShellExecutionReady(nsIDocShell* aDocShell)
   if (NS_WARN_IF(!outer)) {
     return NS_ERROR_UNEXPECTED;
   }
+
+  // Note: We don't assert storage access for a controlled client.  If
+  // the about:blank actually gets used then WindowExecutionReady() will
+  // get called which asserts storage access.
 
   // TODO: dedupe this with WindowExecutionReady
   FrameType frameType = FrameType::Top_level;
@@ -359,6 +380,16 @@ ClientSource::SetController(const ServiceWorkerDescriptor& aServiceWorker)
   // a service worker.  The principal origin attributes should guarantee
   // this invariant.
   MOZ_DIAGNOSTIC_ASSERT(!mClientInfo.IsPrivateBrowsing());
+
+  // A client without access to storage should never be controlled a
+  // a service worker.  If we are already execution ready with a real
+  // window or worker, then verify assert the storage policy is correct.
+  if (GetInnerWindow()) {
+    MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::StorageAllowedForWindow(GetInnerWindow()) ==
+                          nsContentUtils::StorageAccess::eAllow);
+  } else if (GetWorkerPrivate()) {
+    MOZ_DIAGNOSTIC_ASSERT(GetWorkerPrivate()->IsStorageAllowed());
+  }
 
   if (mController.isSome() && mController.ref() == aServiceWorker) {
     return;

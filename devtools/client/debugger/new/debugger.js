@@ -16425,11 +16425,11 @@ var _isSelectedFrameVisible = __webpack_require__(1505);
 
 var _isSelectedFrameVisible2 = _interopRequireDefault(_isSelectedFrameVisible);
 
-var _getCallStackFrames = __webpack_require__(1780);
+var _getCallStackFrames = __webpack_require__(1779);
 
 var _getCallStackFrames2 = _interopRequireDefault(_getCallStackFrames);
 
-var _visibleSelectedFrame = __webpack_require__(1781);
+var _visibleSelectedFrame = __webpack_require__(1780);
 
 var _visibleSelectedFrame2 = _interopRequireDefault(_visibleSelectedFrame);
 
@@ -16941,7 +16941,7 @@ var _toolbox = __webpack_require__(1534);
 
 var toolbox = _interopRequireWildcard(_toolbox);
 
-var _preview = __webpack_require__(1787);
+var _preview = __webpack_require__(1786);
 
 var preview = _interopRequireWildcard(_preview);
 
@@ -16972,7 +16972,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.isLoading = exports.isLoaded = exports.getMode = exports.getSourceLineCount = exports.getSourcePath = exports.getFileURL = exports.getFilenameFromURL = exports.getFilename = exports.getRawSourceURL = exports.getPrettySourceURL = exports.shouldPrettyPrint = exports.isThirdParty = exports.isPretty = exports.isJavaScript = exports.isMinified = undefined;
 
-var _isMinified = __webpack_require__(1779);
+var _isMinified = __webpack_require__(1778);
 
 Object.defineProperty(exports, "isMinified", {
   enumerable: true,
@@ -17244,6 +17244,7 @@ function getMode(source, sourceMetaData) {
 function isLoaded(source) {
   return source.get("loadedState") === "loaded";
 }
+
 function isLoading(source) {
   return source.get("loadedState") === "loading";
 }
@@ -17301,7 +17302,7 @@ var sourceDocumentUtils = _interopRequireWildcard(_sourceDocuments);
 
 var _source = __webpack_require__(1356);
 
-var _getTokenLocation = __webpack_require__(1784);
+var _getTokenLocation = __webpack_require__(1783);
 
 var _sourceSearch = __webpack_require__(1526);
 
@@ -17378,21 +17379,25 @@ function createEditor() {
 }
 
 function toEditorLine(sourceId, lineOrOffset) {
-  return (0, _wasm.isWasm)(sourceId) ? (0, _wasm.wasmOffsetToLine)(sourceId, lineOrOffset) : lineOrOffset - 1;
+  if ((0, _wasm.isWasm)(sourceId)) {
+    return (0, _wasm.wasmOffsetToLine)(sourceId, lineOrOffset);
+  }
+
+  return lineOrOffset ? lineOrOffset - 1 : 1;
 }
 
-function toEditorPosition(sourceId, location) {
+function toEditorPosition(location) {
   return {
-    line: toEditorLine(sourceId, location.line),
-    column: (0, _wasm.isWasm)(sourceId) ? 0 : location.column
+    line: toEditorLine(location.sourceId, location.line),
+    column: (0, _wasm.isWasm)(location.sourceId) || !location.column ? 0 : location.column
   };
 }
 
 function toEditorRange(sourceId, location) {
   const { start, end } = location;
   return {
-    start: toEditorPosition(sourceId, start),
-    end: toEditorPosition(sourceId, end)
+    start: toEditorPosition(_extends({}, start, { sourceId })),
+    end: toEditorPosition(_extends({}, end, { sourceId }))
   };
 }
 
@@ -18342,10 +18347,6 @@ function update(state = initialState(), action) {
       }
 
     case "SELECT_SOURCE":
-      if (action.status != "start") {
-        return state;
-      }
-
       location = _extends({}, action.location, {
         url: action.source.url
       });
@@ -18554,7 +18555,7 @@ function getSourceByURL(state, url) {
 }
 
 function getGeneratedSource(state, source) {
-  if (!(0, _devtoolsSourceMap.isOriginalId)(source.id)) {
+  if (!source || !(0, _devtoolsSourceMap.isOriginalId)(source.id)) {
     return null;
   }
   return getSource(state, (0, _devtoolsSourceMap.originalToGeneratedId)(source.id));
@@ -18910,7 +18911,7 @@ var _ui = __webpack_require__(1385);
 
 var _source2 = __webpack_require__(1356);
 
-var _location = __webpack_require__(1783);
+var _location = __webpack_require__(1782);
 
 var _createPrettySource = __webpack_require__(1523);
 
@@ -19088,7 +19089,7 @@ function selectSource(sourceId, tabIndex = "") {
  * @static
  */
 function selectLocation(location, tabIndex = "") {
-  return ({ dispatch, getState, client }) => {
+  return async ({ dispatch, getState, client }) => {
     if (!client) {
       // No connection, do nothing. This happens when the debugger is
       // shut down too fast and it tries to display a default source.
@@ -19108,21 +19109,20 @@ function selectLocation(location, tabIndex = "") {
 
     dispatch(addTab(source.toJS(), 0));
 
-    return dispatch({
+    dispatch({
       type: "SELECT_SOURCE",
       source: source.toJS(),
       tabIndex,
-      location,
-      [_promise.PROMISE]: (async () => {
-        await dispatch((0, _loadSourceText.loadSourceText)(source));
-        dispatch((0, _ast.setOutOfScopeLocations)());
-        const src = (0, _selectors.getSource)(getState(), location.sourceId);
-        const { autoPrettyPrint } = _prefs.prefs;
-        if (autoPrettyPrint && (0, _source2.shouldPrettyPrint)(src) && (0, _source2.isMinified)(src)) {
-          await dispatch(togglePrettyPrint(src.get("id")));
-        }
-      })()
+      location
     });
+
+    await dispatch((0, _loadSourceText.loadSourceText)(source));
+    dispatch((0, _ast.setOutOfScopeLocations)());
+    const src = (0, _selectors.getSource)(getState(), location.sourceId);
+    const { autoPrettyPrint } = _prefs.prefs;
+    if (autoPrettyPrint && (0, _source2.shouldPrettyPrint)(src) && (0, _source2.isMinified)(src)) {
+      await dispatch(togglePrettyPrint(src.get("id")));
+    }
   };
 }
 
@@ -20346,7 +20346,7 @@ function update(state = initialState(), action) {
         });
       }
 
-    case "RESUMED":
+    case "RESUME":
       {
         return state.set("outOfScopeLocations", null);
       }
@@ -21883,7 +21883,7 @@ exports.setOutOfScopeLocations = setOutOfScopeLocations;
 
 var _selectors = __webpack_require__(1352);
 
-var _setInScopeLines = __webpack_require__(1782);
+var _setInScopeLines = __webpack_require__(1781);
 
 var _parser = __webpack_require__(1365);
 
@@ -22704,7 +22704,7 @@ var _Svg = __webpack_require__(1359);
 
 var _Svg2 = _interopRequireDefault(_Svg);
 
-var _CommandBarButton = __webpack_require__(1765);
+var _CommandBarButton = __webpack_require__(1764);
 
 var _CommandBarButton2 = _interopRequireDefault(_CommandBarButton);
 
@@ -23105,7 +23105,7 @@ module.exports = Grip;
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const React = __webpack_require__(0);
-const InlineSVG = __webpack_require__(1790);
+const InlineSVG = __webpack_require__(1789);
 
 const svg = {
   "arrow": __webpack_require__(1152),
@@ -23173,7 +23173,7 @@ module.exports = function defer() {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Menu, MenuItem } = __webpack_require__(1768);
+const { Menu, MenuItem } = __webpack_require__(1767);
 
 function inToolbox() {
   return window.parent.document.documentURI == "about:devtools-toolbox";
@@ -23701,7 +23701,6 @@ function addBreakpoint(state, action) {
   if (action.status !== "done") {
     return state;
   }
-
   // when the action completes, we can commit the breakpoint
   const { value: { breakpoint } } = action;
   const locationId = (0, _breakpoint.makePendingLocationId)(breakpoint.location);
@@ -24221,7 +24220,8 @@ function InitialState() {
 function update(state = InitialState(), action) {
   switch (action.type) {
     case "ADD_QUERY":
-      return state.update("query", value => action.query);
+      const actionCopy = action;
+      return state.update("query", value => actionCopy.query);
 
     case "CLEAR_QUERY":
       return state.remove("query");
@@ -24914,7 +24914,7 @@ function loadSourceText(source) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.showLoading = exports.showSourceText = exports.updateDocument = exports.updateLineNumberFormat = exports.resetLineNumberFormat = exports.clearDocuments = exports.removeDocument = exports.setDocument = exports.getDocument = undefined;
+exports.showLoading = exports.showSourceText = exports.updateDocument = exports.updateLineNumberFormat = exports.resetLineNumberFormat = exports.clearDocuments = exports.removeDocument = exports.hasDocument = exports.setDocument = exports.getDocument = undefined;
 
 var _source = __webpack_require__(1356);
 
@@ -24928,6 +24928,10 @@ let sourceDocs = {}; /* This Source Code Form is subject to the terms of the Moz
 
 function getDocument(key) {
   return sourceDocs[key];
+}
+
+function hasDocument(key) {
+  return !!getDocument(key);
 }
 
 function setDocument(key, doc) {
@@ -24960,11 +24964,12 @@ function updateLineNumberFormat(editor, sourceId) {
   (0, _ui.resizeToggleButton)(cm);
 }
 
-function updateDocument(editor, sourceId) {
-  if (!sourceId) {
+function updateDocument(editor, source) {
+  if (!source) {
     return;
   }
 
+  const sourceId = source.get("id");
   const doc = getDocument(sourceId) || editor.createDocument();
   editor.replaceDocument(doc);
 
@@ -24972,7 +24977,7 @@ function updateDocument(editor, sourceId) {
 }
 
 function showLoading(editor) {
-  if (getDocument("loading")) {
+  if (hasDocument("loading")) {
     return;
   }
 
@@ -25004,20 +25009,20 @@ function showSourceText(editor, source, sourceMetaData) {
     return;
   }
 
-  let doc = getDocument(source.id);
-  if (editor.codeMirror.doc === doc) {
-    editor.setMode((0, _source.getMode)(source, sourceMetaData));
-    return;
-  }
+  if (hasDocument(source.id)) {
+    const doc = getDocument(source.id);
+    if (editor.codeMirror.doc === doc) {
+      editor.setMode((0, _source.getMode)(source, sourceMetaData));
+      return;
+    }
 
-  if (doc) {
     editor.replaceDocument(doc);
     updateLineNumberFormat(editor, source.id);
     editor.setMode((0, _source.getMode)(source, sourceMetaData));
     return doc;
   }
 
-  doc = editor.createDocument();
+  const doc = editor.createDocument();
   setDocument(source.id, doc);
   editor.replaceDocument(doc);
 
@@ -25028,6 +25033,7 @@ function showSourceText(editor, source, sourceMetaData) {
 
 exports.getDocument = getDocument;
 exports.setDocument = setDocument;
+exports.hasDocument = hasDocument;
 exports.removeDocument = removeDocument;
 exports.clearDocuments = clearDocuments;
 exports.resetLineNumberFormat = resetLineNumberFormat;
@@ -27025,7 +27031,7 @@ var _client = __webpack_require__(1499);
 
 var _bootstrap = __webpack_require__(1430);
 
-var _sourceQueue = __webpack_require__(1762);
+var _sourceQueue = __webpack_require__(1795);
 
 var _sourceQueue2 = _interopRequireDefault(_sourceQueue);
 
@@ -29301,7 +29307,7 @@ module.exports = connect(mapStateToProps, mapDispatchToProps)(LaunchpadApp);
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { score } = __webpack_require__(1775);
+const { score } = __webpack_require__(1774);
 
 function getTabs(state) {
   let tabs = state.tabs.get("tabs");
@@ -29706,7 +29712,7 @@ module.exports = Sidebar;
 
 
 const React = __webpack_require__(0);
-const { default: InlineSVG } = __webpack_require__(1764);
+const { default: InlineSVG } = __webpack_require__(1763);
 const { isDevelopment } = __webpack_require__(1355);
 
 const svg = {
@@ -30692,7 +30698,7 @@ exports.clientEvents = exports.setupEvents = undefined;
 
 var _create = __webpack_require__(1428);
 
-var _sourceQueue = __webpack_require__(1762);
+var _sourceQueue = __webpack_require__(1795);
 
 var _sourceQueue2 = _interopRequireDefault(_sourceQueue);
 
@@ -30709,6 +30715,7 @@ const CALL_STACK_PAGE_SIZE = 1000;
 let threadClient;
 let actions;
 let supportsWasm;
+let isInterrupted;
 
 function setupEvents(dependencies) {
   threadClient = dependencies.threadClient;
@@ -30729,6 +30736,7 @@ async function paused(_, packet) {
   // breakpoints, ignore the event.
   const { why } = packet;
   if (why.type === "interrupted" && !packet.why.onNext) {
+    isInterrupted = true;
     return;
   }
 
@@ -30743,6 +30751,14 @@ async function paused(_, packet) {
 }
 
 function resumed(_, packet) {
+  // NOTE: the client suppresses resumed events while interrupted
+  // to prevent unintentional behavior.
+  // see [client docs](../README.md#interrupted) for more information.
+  if (isInterrupted) {
+    isInterrupted = false;
+    return;
+  }
+
   actions.resumed(packet);
 }
 
@@ -32341,7 +32357,7 @@ exports.navigated = navigated;
 
 var _editor = __webpack_require__(1358);
 
-var _sourceQueue = __webpack_require__(1762);
+var _sourceQueue = __webpack_require__(1795);
 
 var _sourceQueue2 = _interopRequireDefault(_sourceQueue);
 
@@ -32516,7 +32532,6 @@ function traverseResults(rev, editor) {
       const matchedLocations = matches || [];
       const { ch, line } = rev ? (0, _editor.findPrev)(ctx, query, true, modifiers.toJS()) : (0, _editor.findNext)(ctx, query, true, modifiers.toJS());
 
-      console.log(line);
       dispatch(updateSearchResults(ch, line, matchedLocations));
     }
   };
@@ -33478,7 +33493,7 @@ TextSearch.contextTypes = {
 "use strict";
 
 
-var _svgInlineReact = __webpack_require__(1764);
+var _svgInlineReact = __webpack_require__(1763);
 
 var _svgInlineReact2 = _interopRequireDefault(_svgInlineReact);
 
@@ -33503,7 +33518,7 @@ const svg = {
   domain: __webpack_require__(353),
   file: __webpack_require__(354),
   folder: __webpack_require__(355),
-  function: __webpack_require__(1788),
+  function: __webpack_require__(1787),
   globe: __webpack_require__(356),
   jquery: __webpack_require__(999),
   underscore: __webpack_require__(1117),
@@ -35232,6 +35247,10 @@ var _DebugLine = __webpack_require__(1593);
 
 var _DebugLine2 = _interopRequireDefault(_DebugLine);
 
+var _HighlightLine = __webpack_require__(1796);
+
+var _HighlightLine2 = _interopRequireDefault(_HighlightLine);
+
 var _EmptyLines = __webpack_require__(1594);
 
 var _EmptyLines2 = _interopRequireDefault(_EmptyLines);
@@ -35258,14 +35277,18 @@ __webpack_require__(1333);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// Redux actions
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
 const cssVars = {
   searchbarHeight: "var(--editor-searchbar-height)",
   secondSearchbarHeight: "var(--editor-second-searchbar-height)",
   footerHeight: "var(--editor-footer-height)"
-}; /* This Source Code Form is subject to the terms of the Mozilla Public
-    * License, v. 2.0. If a copy of the MPL was not distributed with this
-    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+};
+
+// Redux actions
+
 
 class Editor extends _react.PureComponent {
 
@@ -35371,9 +35394,6 @@ class Editor extends _react.PureComponent {
       return this.props.closeConditionalPanel();
     };
 
-    this.pendingJumpLocation = null;
-    this.lastJumpLine = null;
-
     this.state = {
       highlightedLineRange: null,
       editor: null
@@ -35387,6 +35407,12 @@ class Editor extends _react.PureComponent {
 
     (0, _editor.resizeBreakpointGutter)(this.state.editor.codeMirror);
     (0, _ui.resizeToggleButton)(this.state.editor.codeMirror);
+  }
+
+  componentWillUpdate(nextProps) {
+    this.setText(nextProps);
+    this.setSize(nextProps);
+    this.scrollToLocation(nextProps);
   }
 
   setupEditor() {
@@ -35442,7 +35468,7 @@ class Editor extends _react.PureComponent {
   componentDidMount() {
     const editor = this.setupEditor();
 
-    const { selectedSource, selectedLocation } = this.props;
+    const { selectedSource } = this.props;
     const { shortcuts } = this.context;
 
     const searchAgainKey = L10N.getStr("sourceSearch.search.again.key2");
@@ -35454,12 +35480,7 @@ class Editor extends _react.PureComponent {
     shortcuts.on(searchAgainPrevKey, this.onSearchAgain);
     shortcuts.on(searchAgainKey, this.onSearchAgain);
 
-    if (selectedLocation && !!selectedLocation.line) {
-      this.pendingJumpLocation = selectedLocation;
-    }
-
-    const sourceId = selectedSource ? selectedSource.get("id") : undefined;
-    (0, _editor.updateDocument)(editor, sourceId);
+    (0, _editor.updateDocument)(editor, selectedSource);
   }
 
   componentWillUnmount() {
@@ -35475,37 +35496,7 @@ class Editor extends _react.PureComponent {
     shortcuts.off(searchAgainKey);
   }
 
-  componentWillUpdate(nextProps) {
-    this.setText(nextProps);
-    this.setSize(nextProps);
-  }
-
   componentDidUpdate(prevProps, prevState) {
-    // This is in `componentDidUpdate` so helper functions can expect
-    // `this.props` to be the current props. This lifecycle method is
-    // responsible for updating the editor annotations.
-    const { selectedLocation, selectedSource } = this.props;
-
-    // If the location is different and a new line is requested,
-    // update the pending jump line. Note that if jumping to a line in
-    // a source where the text hasn't been loaded yet, we will set the
-    // line here but not jump until rendering the actual source.
-
-    if (prevProps.selectedLocation !== selectedLocation) {
-      if (selectedLocation && selectedLocation.line != undefined) {
-        this.pendingJumpLocation = selectedLocation;
-      } else {
-        this.pendingJumpLocation = null;
-      }
-    }
-
-    // Only update and jump around in real source texts. This will
-    // keep the jump state around until the real source text is
-    // loaded.
-    if (selectedSource && (0, _source.isLoaded)(selectedSource)) {
-      this.highlightLine();
-    }
-
     // NOTE: when devtools are opened, the editor is not set when
     // the source loads so we need to wait until the editor is
     // set to update the text and size.
@@ -35569,44 +35560,35 @@ class Editor extends _react.PureComponent {
     }
   }
 
-  // If the location has changed and a specific line is requested,
-  // move to that line and flash it.
-  highlightLine() {
-    const { selectedLocation, selectedFrame } = this.props;
-    if (!selectedLocation) {
-      return;
+  shouldScrollToLocation(nextProps) {
+    const { selectedLocation, selectedSource } = this.props;
+    const { editor } = this.state;
+
+    if (!nextProps.selectedSource || !editor || !nextProps.selectedLocation) {
+      return false;
     }
 
-    // Make sure to clean up after ourselves. Not only does this
-    // cancel any existing animation, but it avoids it from
-    // happening ever again (in case CodeMirror re-applies the
-    // class, etc).
-    if (this.lastJumpLine !== null) {
-      (0, _editor.clearLineClass)(this.state.editor.codeMirror, "highlight-line");
+    if (!(0, _source.isLoaded)(nextProps.selectedSource)) {
+      return false;
     }
 
-    let line = null;
-    if (selectedLocation.line >= 0) {
-      line = this.scrollToPosition();
+    if (!nextProps.selectedLocation.line) {
+      return false;
     }
 
-    // We only want to do the flashing animation if it's not a debug
-    // line, which has it's own styling.
-    // Also, if it the first time the debugger is being loaded, we don't want
-    // to flash the previously saved selected line.
-    if (line !== null && this.lastJumpLine !== null && (!selectedFrame || selectedFrame.location.line !== line)) {
-      this.state.editor.codeMirror.addLineClass(line, "line", "highlight-line");
-    }
+    const isFirstLoad = (!selectedSource || !(0, _source.isLoaded)(selectedSource)) && (0, _source.isLoaded)(nextProps.selectedSource);
 
-    this.lastJumpLine = line;
-    this.pendingJumpLocation = null;
+    const locationChanged = selectedLocation !== nextProps.selectedLocation;
+    return isFirstLoad || locationChanged;
   }
 
-  scrollToPosition() {
-    const { sourceId, line, column } = this.props.selectedLocation;
-    const editorLine = (0, _editor.toEditorLine)(sourceId, line);
-    (0, _editor.scrollToColumn)(this.state.editor.codeMirror, editorLine, column);
-    return editorLine;
+  scrollToLocation(nextProps) {
+    const { editor } = this.state;
+
+    if (this.shouldScrollToLocation(nextProps)) {
+      const { line, column } = (0, _editor.toEditorPosition)(nextProps.selectedLocation);
+      (0, _editor.scrollToColumn)(editor.codeMirror, line, column);
+    }
   }
 
   setSize(nextProps) {
@@ -35621,6 +35603,7 @@ class Editor extends _react.PureComponent {
 
   setText(props) {
     const { selectedSource, sourceMetaData } = props;
+
     if (!this.state.editor) {
       return;
     }
@@ -35637,9 +35620,7 @@ class Editor extends _react.PureComponent {
       return this.showMessage(selectedSource.get("error"));
     }
 
-    if (selectedSource) {
-      return (0, _editor.showSourceText)(this.state.editor, selectedSource.toJS(), sourceMetaData);
-    }
+    return (0, _editor.showSourceText)(this.state.editor, selectedSource.toJS(), sourceMetaData);
   }
 
   showMessage(msg) {
@@ -35685,17 +35666,18 @@ class Editor extends _react.PureComponent {
   }
 
   renderItems() {
-    const { selectedSource, horizontal } = this.props;
+    const { horizontal, selectedSource } = this.props;
     const { editor } = this.state;
 
-    if (!editor || !selectedSource || !(0, _source.isLoaded)(selectedSource)) {
+    if (!editor || !selectedSource) {
       return null;
     }
 
     return _react2.default.createElement(
       "div",
       null,
-      _react2.default.createElement(_DebugLine2.default, { editor: editor }),
+      _react2.default.createElement(_DebugLine2.default, null),
+      _react2.default.createElement(_HighlightLine2.default, null),
       _react2.default.createElement(_EmptyLines2.default, { editor: editor }),
       _react2.default.createElement(_Breakpoints2.default, { editor: editor }),
       _react2.default.createElement(_Preview2.default, { editor: editor }),
@@ -35752,7 +35734,6 @@ const mapStateToProps = state => {
     selectedSource,
     searchOn: (0, _selectors.getActiveSearch)(state) === "file",
     hitCount: (0, _selectors.getHitCountForSource)(state, sourceId),
-    selectedFrame: (0, _selectors.getSelectedFrame)(state),
     coverageOn: (0, _selectors.getCoverageEnabled)(state),
     conditionalPanelLine: (0, _selectors.getConditionalPanelLine)(state),
     sourceMetaData: (0, _selectors.getSourceMetaData)(state, sourceId)
@@ -35972,7 +35953,7 @@ class SourceFooter extends _react.PureComponent {
 
 exports.default = (0, _reactRedux.connect)(state => {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
-  const selectedId = selectedSource && selectedSource.get("id");
+  const selectedId = selectedSource.get("id");
   const source = selectedSource.toJS();
   return {
     selectedSource,
@@ -40026,86 +40007,77 @@ var _react = __webpack_require__(0);
 
 var _editor = __webpack_require__(1358);
 
-var _sourceDocuments = __webpack_require__(1436);
+var _source = __webpack_require__(1356);
 
 var _reactRedux = __webpack_require__(1189);
 
 var _selectors = __webpack_require__(1352);
 
+function isException(pauseInfo) {
+  return pauseInfo && pauseInfo.why.type === "exception";
+} /* This Source Code Form is subject to the terms of the Mozilla Public
+   * License, v. 2.0. If a copy of the MPL was not distributed with this
+   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function isDocumentReady(selectedSource, selectedFrame) {
+  return selectedFrame && (0, _source.isLoaded)(selectedSource) && (0, _editor.hasDocument)(selectedFrame.location.sourceId);
+}
+
 class DebugLine extends _react.Component {
-  constructor() {
-    super();
-    this.state = { debugExpression: { clear: () => {} } };
+
+  componentDidUpdate(prevProps) {
+    const { pauseInfo, selectedFrame, selectedSource } = this.props;
+    this.setDebugLine(pauseInfo, selectedFrame, selectedSource);
+  }
+
+  componentWillUpdate() {
+    const { pauseInfo, selectedFrame, selectedSource } = this.props;
+    this.clearDebugLine(selectedFrame, selectedSource, pauseInfo);
   }
 
   componentDidMount() {
-    this.setDebugLine(this.props.pauseInfo, this.props.selectedFrame, this.props.editor);
+    const { pauseInfo, selectedFrame, selectedSource } = this.props;
+    this.setDebugLine(pauseInfo, selectedFrame, selectedSource);
   }
 
-  componentWillReceiveProps(nextProps) {
-    this.clearDebugLine(this.props.selectedFrame, this.props.editor);
-    this.setDebugLine(nextProps.pauseInfo, nextProps.selectedFrame, nextProps.editor);
-  }
-
-  componentWillUnmount() {
-    this.clearDebugLine(this.props.selectedFrame, this.props.editor);
-  }
-
-  setDebugLine(pauseInfo, selectedFrame, editor) {
-    if (!selectedFrame) {
+  setDebugLine(pauseInfo, selectedFrame, selectedSource) {
+    if (!isDocumentReady(selectedSource, selectedFrame)) {
       return;
     }
-
     const sourceId = selectedFrame.location.sourceId;
-    const doc = (0, _sourceDocuments.getDocument)(sourceId);
-    if (!doc) {
-      return;
-    }
+    const doc = (0, _editor.getDocument)(sourceId);
 
-    const { line, column } = (0, _editor.toEditorPosition)(sourceId, selectedFrame.location);
-
-    // make sure the line is visible
-    if (editor && editor.alignLine) {
-      editor.alignLine(line);
-    }
-
+    const { line, column } = (0, _editor.toEditorPosition)(selectedFrame.location);
     const { markTextClass, lineClass } = this.getTextClasses(pauseInfo);
     doc.addLineClass(line, "line", lineClass);
 
-    const debugExpression = (0, _editor.markText)(editor, markTextClass, {
-      start: { line, column },
-      end: { line, column: null }
-    });
-    this.setState({ debugExpression });
+    this.debugExpression = doc.markText({ ch: column, line }, { ch: null, line }, { className: markTextClass });
   }
 
-  clearDebugLine(selectedFrame, editor) {
-    if (!selectedFrame) {
-      return;
-    }
-    const { line, sourceId } = selectedFrame.location;
-    const { debugExpression } = this.state;
-    if (debugExpression) {
-      debugExpression.clear();
-    }
-
-    const editorLine = line - 1;
-    const doc = (0, _sourceDocuments.getDocument)(sourceId);
-    if (!doc) {
+  clearDebugLine(selectedFrame, selectedSource, pause) {
+    if (!isDocumentReady(selectedSource, selectedFrame)) {
       return;
     }
 
-    doc.removeLineClass(editorLine, "line", "new-debug-line");
-    doc.removeLineClass(editorLine, "line", "new-debug-line-error");
+    if (this.debugExpression) {
+      this.debugExpression.clear();
+    }
+
+    const sourceId = selectedFrame.location.sourceId;
+    const { line } = (0, _editor.toEditorPosition)(selectedFrame.location);
+    const doc = (0, _editor.getDocument)(sourceId);
+    const { lineClass } = this.getTextClasses(pause);
+    doc.removeLineClass(line, "line", lineClass);
   }
 
-  getTextClasses(pauseInfo) {
-    if (pauseInfo && pauseInfo.why.type === "exception") {
+  getTextClasses(pause) {
+    if (isException(pause)) {
       return {
         markTextClass: "debug-expression-error",
         lineClass: "new-debug-line-error"
       };
     }
+
     return { markTextClass: "debug-expression", lineClass: "new-debug-line" };
   }
 
@@ -40114,14 +40086,14 @@ class DebugLine extends _react.Component {
   }
 }
 
-exports.DebugLine = DebugLine; /* This Source Code Form is subject to the terms of the Mozilla Public
-                                * License, v. 2.0. If a copy of the MPL was not distributed with this
-                                * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
-
-exports.default = (0, _reactRedux.connect)(state => ({
-  selectedFrame: (0, _selectors.getVisibleSelectedFrame)(state),
-  pauseInfo: (0, _selectors.getPause)(state)
-}))(DebugLine);
+exports.DebugLine = DebugLine;
+exports.default = (0, _reactRedux.connect)(state => {
+  return {
+    selectedFrame: (0, _selectors.getVisibleSelectedFrame)(state),
+    selectedSource: (0, _selectors.getSelectedSource)(state),
+    pauseInfo: (0, _selectors.getPause)(state)
+  };
+})(DebugLine);
 
 /***/ }),
 /* 1594 */
@@ -40903,7 +40875,7 @@ var _UtilsBar = __webpack_require__(1609);
 
 var _UtilsBar2 = _interopRequireDefault(_UtilsBar);
 
-var _BreakpointsDropdown = __webpack_require__(1791);
+var _BreakpointsDropdown = __webpack_require__(1790);
 
 var _BreakpointsDropdown2 = _interopRequireDefault(_BreakpointsDropdown);
 
@@ -40984,7 +40956,6 @@ class SecondaryPanes extends _react.Component {
 
   getScopeItem() {
     const isPaused = () => !!this.props.pauseData;
-
     return {
       header: L10N.getStr("scopes.header"),
       className: "scopes-pane",
@@ -42494,7 +42465,7 @@ var _actions = __webpack_require__(1354);
 
 var _actions2 = _interopRequireDefault(_actions);
 
-var _CommandBarButton = __webpack_require__(1765);
+var _CommandBarButton = __webpack_require__(1764);
 
 var _CommandBarButton2 = _interopRequireDefault(_CommandBarButton);
 
@@ -43013,7 +42984,7 @@ var _actions2 = _interopRequireDefault(_actions);
 
 var _selectors = __webpack_require__(1352);
 
-var _scopes = __webpack_require__(1793);
+var _scopes = __webpack_require__(1792);
 
 var _devtoolsReps = __webpack_require__(1408);
 
@@ -45016,7 +44987,7 @@ var _loadSourceText = __webpack_require__(1435);
 
 var _parser = __webpack_require__(1365);
 
-var _updateScopeBindings = __webpack_require__(1785);
+var _updateScopeBindings = __webpack_require__(1784);
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -45843,7 +45814,7 @@ module.exports = "<!-- This Source Code Form is subject to the terms of the Mozi
 var EventEmitter = function EventEmitter() {};
 module.exports = EventEmitter;
 
-const promise = __webpack_require__(1770);
+const promise = __webpack_require__(1769);
 
 /**
  * Decorate an object with event emitter functionality.
@@ -46421,49 +46392,6 @@ EventEmitter.prototype = {
 "use strict";
 
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _lodash = __webpack_require__(2);
-
-let newSources;
-let createSource;
-let queuedSources;
-let supportsWasm = false;
-
-const queue = (0, _lodash.throttle)(() => {
-  if (!newSources || !createSource) {
-    return;
-  }
-  newSources(queuedSources.map(source => {
-    return createSource(source, { supportsWasm });
-  }));
-  queuedSources = [];
-}, 100);
-
-exports.default = {
-  initialize: options => {
-    newSources = options.actions.newSources;
-    createSource = options.createSource;
-    supportsWasm = options.supportsWasm;
-    queuedSources = [];
-  },
-  queue: source => {
-    queuedSources.push(source);
-    queue();
-  },
-  flush: () => queue.flush(),
-  clear: () => queue.cancel()
-};
-
-/***/ }),
-/* 1763 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
 (function () {
   var Query, coreChars, countDir, getCharCodes, getExtension, opt_char_re, truncatedUpperCase, _ref;
 
@@ -46521,7 +46449,7 @@ exports.default = {
 }).call(undefined);
 
 /***/ }),
-/* 1764 */
+/* 1763 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46541,7 +46469,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _propTypes = __webpack_require__(20);
 
-var _util = __webpack_require__(1778);
+var _util = __webpack_require__(1777);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -46619,7 +46547,7 @@ InlineSVG.propTypes = {
 };
 
 /***/ }),
-/* 1765 */
+/* 1764 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46639,7 +46567,7 @@ var _react = __webpack_require__(0);
 
 var _react2 = _interopRequireDefault(_react);
 
-__webpack_require__(1789);
+__webpack_require__(1788);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -46662,7 +46590,7 @@ const CommandBarButton = props => {
 exports.default = CommandBarButton;
 
 /***/ }),
-/* 1766 */
+/* 1765 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46733,7 +46661,7 @@ function getBindingVariables(bindings, parentName) {
 }
 
 /***/ }),
-/* 1767 */
+/* 1766 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46796,7 +46724,7 @@ function getThisVariable(frame, path) {
 }
 
 /***/ }),
-/* 1768 */
+/* 1767 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -46806,12 +46734,12 @@ function getThisVariable(frame, path) {
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Menu = __webpack_require__(1769);
-const MenuItem = __webpack_require__(1771);
-const { PrefsHelper } = __webpack_require__(1772);
+const Menu = __webpack_require__(1768);
+const MenuItem = __webpack_require__(1770);
+const { PrefsHelper } = __webpack_require__(1771);
 const Services = __webpack_require__(22);
-const KeyShortcuts = __webpack_require__(1773);
-const { ZoomKeys } = __webpack_require__(1774);
+const KeyShortcuts = __webpack_require__(1772);
+const { ZoomKeys } = __webpack_require__(1773);
 const EventEmitter = __webpack_require__(1759);
 
 module.exports = {
@@ -46825,7 +46753,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 1769 */
+/* 1768 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -47019,7 +46947,7 @@ Menu.buildFromTemplate = () => {
 module.exports = Menu;
 
 /***/ }),
-/* 1770 */
+/* 1769 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -47056,7 +46984,7 @@ p.defer = function defer() {
 module.exports = p;
 
 /***/ }),
-/* 1771 */
+/* 1770 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -47125,7 +47053,7 @@ function MenuItem({
 module.exports = MenuItem;
 
 /***/ }),
-/* 1772 */
+/* 1771 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -47313,7 +47241,7 @@ function makeObserver(self, cache, prefsRoot, prefsBlueprint) {
 exports.PrefsHelper = PrefsHelper;
 
 /***/ }),
-/* 1773 */
+/* 1772 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -47560,7 +47488,7 @@ KeyShortcuts.prototype = {
 module.exports = KeyShortcuts;
 
 /***/ }),
-/* 1774 */
+/* 1773 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -47580,7 +47508,7 @@ module.exports = KeyShortcuts;
 exports.register = function (window) {};
 
 /***/ }),
-/* 1775 */
+/* 1774 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -47589,15 +47517,15 @@ exports.register = function (window) {};
 (function () {
   var Query, defaultPathSeparator, filter, matcher, parseOptions, pathScorer, preparedQueryCache, scorer;
 
-  filter = __webpack_require__(1776);
+  filter = __webpack_require__(1775);
 
-  matcher = __webpack_require__(1777);
+  matcher = __webpack_require__(1776);
 
   scorer = __webpack_require__(1760);
 
   pathScorer = __webpack_require__(1761);
 
-  Query = __webpack_require__(1763);
+  Query = __webpack_require__(1762);
 
   preparedQueryCache = null;
 
@@ -47701,7 +47629,7 @@ exports.register = function (window) {};
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(120)))
 
 /***/ }),
-/* 1776 */
+/* 1775 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -47714,7 +47642,7 @@ exports.register = function (window) {};
 
   pathScorer = __webpack_require__(1761);
 
-  Query = __webpack_require__(1763);
+  Query = __webpack_require__(1762);
 
   pluckCandidates = function (a) {
     return a.candidate;
@@ -47758,7 +47686,7 @@ exports.register = function (window) {};
 }).call(undefined);
 
 /***/ }),
-/* 1777 */
+/* 1776 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -47980,7 +47908,7 @@ exports.register = function (window) {};
 }).call(undefined);
 
 /***/ }),
-/* 1778 */
+/* 1777 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -48035,7 +47963,7 @@ function extractSVGProps(src) {
 }
 
 /***/ }),
-/* 1779 */
+/* 1778 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -48098,7 +48026,7 @@ function isMinified(source) {
 }
 
 /***/ }),
-/* 1780 */
+/* 1779 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -48159,7 +48087,7 @@ function getCallStackFrames(state) {
 }
 
 /***/ }),
-/* 1781 */
+/* 1780 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -48168,7 +48096,6 @@ function getCallStackFrames(state) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = getVisibleSelectedFrame;
 
 var _sources = __webpack_require__(1369);
 
@@ -48176,28 +48103,33 @@ var _pause = __webpack_require__(1394);
 
 var _devtoolsSourceMap = __webpack_require__(1360);
 
-function getLocation(frame, isGeneratedSource) {
-  return isGeneratedSource ? frame.generatedLocation || frame.location : frame.location;
-} /* This Source Code Form is subject to the terms of the Mozilla Public
-   * License, v. 2.0. If a copy of the MPL was not distributed with this
-   * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+var _reselect = __webpack_require__(993);
 
-function getVisibleSelectedFrame(state) {
-  const selectedLocation = (0, _sources.getSelectedLocation)(state);
-  const isGeneratedSource = !(0, _devtoolsSourceMap.isOriginalId)(selectedLocation.sourceId);
-  const selectedFrame = (0, _pause.getSelectedFrame)(state);
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-  if (!selectedFrame) {
-    return;
-  }
-
-  return {
-    location: getLocation(selectedFrame, isGeneratedSource)
-  };
+function getLocation(frame, location) {
+  return !(0, _devtoolsSourceMap.isOriginalId)(location.sourceId) ? frame.generatedLocation || frame.location : frame.location;
 }
 
+const getVisibleSelectedFrame = (0, _reselect.createSelector)(_sources.getSelectedLocation, _pause.getSelectedFrame, (selectedLocation, selectedFrame) => {
+  if (!selectedFrame || !selectedLocation) {
+    return null;
+  }
+
+  const { id } = selectedFrame;
+
+  return {
+    id,
+    location: getLocation(selectedFrame, selectedLocation)
+  };
+});
+
+exports.default = getVisibleSelectedFrame;
+
 /***/ }),
-/* 1782 */
+/* 1781 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -48250,7 +48182,7 @@ function setInScopeLines() {
 }
 
 /***/ }),
-/* 1783 */
+/* 1782 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -48275,7 +48207,7 @@ function createLocation({
 }
 
 /***/ }),
-/* 1784 */
+/* 1783 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -48303,7 +48235,7 @@ function getTokenLocation(codeMirror, tokenEl) {
 }
 
 /***/ }),
-/* 1785 */
+/* 1784 */
 /***/ (function(module, exports, __webpack_require__) {
 
 let updateScopeBindings = (() => {
@@ -48328,7 +48260,7 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { remapScopes } = __webpack_require__(1786);
+const { remapScopes } = __webpack_require__(1785);
 
 function extendScope(scope, generatedScopes, index, remapedScopes, remapedScopesIndex) {
   if (!scope) {
@@ -48366,7 +48298,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 1786 */
+/* 1785 */
 /***/ (function(module, exports) {
 
 
@@ -48449,7 +48381,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 1787 */
+/* 1786 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -48474,6 +48406,8 @@ var _devtoolsSourceMap = __webpack_require__(1360);
 var _promise = __webpack_require__(1653);
 
 var _selectors = __webpack_require__(1352);
+
+var _expressions = __webpack_require__(1398);
 
 var _lodash = __webpack_require__(2);
 
@@ -48506,7 +48440,9 @@ function updatePreview(target, editor) {
     }
 
     const source = (0, _selectors.getSelectedSource)(getState());
-    if ((0, _selectors.getSymbols)(getState(), source.toJS()).functions.length == 0) {
+
+    const symbols = (0, _selectors.getSymbols)(getState(), source.toJS());
+    if (symbols.functions.length == 0) {
       return;
     }
 
@@ -48560,7 +48496,7 @@ function setPreview(token, tokenPos, cursorPos) {
         if (location && !(0, _devtoolsSourceMap.isGeneratedId)(sourceId)) {
           const generatedLocation = await sourceMaps.getGeneratedLocation(_extends({}, location.start, { sourceId }), source.toJS());
 
-          expression = await (0, _selectors.getMappedExpression)({ sourceMaps }, generatedLocation, expression);
+          expression = await (0, _expressions.getMappedExpression)({ sourceMaps }, generatedLocation, expression);
         }
 
         const selectedFrame = (0, _selectors.getSelectedFrame)(getState());
@@ -48628,19 +48564,19 @@ function clearPreview() {
 }
 
 /***/ }),
-/* 1788 */
+/* 1787 */
 /***/ (function(module, exports) {
 
 module.exports = "<!-- This Source Code Form is subject to the terms of the Mozilla Public - License, v. 2.0. If a copy of the MPL was not distributed with this - file, You can obtain one at http://mozilla.org/MPL/2.0/. --><svg viewBox=\"0 0 9 15\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"><title>Group 2</title><desc>Created with Sketch.</desc><g id=\"Symbols\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\"><g id=\"Group-2\" transform=\"translate(-3.000000, 0.000000)\" fill-rule=\"nonzero\" fill=\"#000000\"><g transform=\"translate(2.000000, 0.000000)\" id=\"path10\"><path d=\"M8.66478978,0.152329483 L6.24859226,7.23234215 L6.24859226,7.23234215 C6.22451137,7.30290469 6.14778771,7.34058551 6.07722517,7.31650462 C6.0437665,7.30508617 6.01612208,7.2809984 6.00023206,7.24941723 L2.49196511,0.276788279 L2.49196511,0.276788279 C2.4537519,0.200840088 2.3759926,0.152917255 2.29097274,0.152917255 L1.08420686,0.152917255 L1.08420686,0.152917255 C1.02897839,0.152917255 0.984206865,0.19768878 0.984206865,0.252917255 C0.984206865,0.268916365 0.988045664,0.284681937 0.99540091,0.2988901 L5.47310495,8.94849143 L5.47310495,8.94849143 C5.53346173,9.06508289 5.54553974,9.2007357 5.50673082,9.3261565 L4.0917648,13.8989752 L4.0917648,13.8989752 C4.06260539,13.9932111 3.97546399,14.0574648 3.87681975,14.0574648 L1.45804052,14.0574648 L1.45804052,14.0574648 C1.33377645,14.0574648 1.23304051,14.1582007 1.23304051,14.2824648 L1.23304051,14.775 L1.23304051,14.775 C1.23304051,14.8992641 1.33377645,15 1.45804052,15 L4.50020953,15 L4.50020953,15 C4.71271509,15 4.90200445,14.8656767 4.97216898,14.6650887 L10.0088745,0.266035474 L10.0088745,0.266035474 C10.0453448,0.161773071 9.99038856,0.0476866038 9.88612615,0.0112162185 C9.86490135,0.00379190571 9.84257651,2.78889645e-14 9.82009068,2.5895952e-14 L8.87773108,-4.83289971e-14 L8.87773108,-4.79061235e-14 C8.78147405,-5.47279145e-14 8.69587888,0.061231278 8.66478978,0.152329483 Z\" transform=\"translate(5.502176, 7.500000) scale(1, -1) translate(-5.502176, -7.500000) \"></path></g></g></g></svg>"
 
 /***/ }),
-/* 1789 */
+/* 1788 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 1790 */
+/* 1789 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -48841,7 +48777,7 @@ exports['default'] = InlineSVG;
 module.exports = exports['default'];
 
 /***/ }),
-/* 1791 */
+/* 1790 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -48868,7 +48804,7 @@ var _classnames = __webpack_require__(175);
 
 var _classnames2 = _interopRequireDefault(_classnames);
 
-__webpack_require__(1792);
+__webpack_require__(1791);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -49002,13 +48938,13 @@ function renderBreakpointsDropdown(breakOnNext, pauseOnExceptions, shouldPauseOn
 }
 
 /***/ }),
-/* 1792 */
+/* 1791 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 1793 */
+/* 1792 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -49019,9 +48955,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getScopes = getScopes;
 
-var _synthesizeScopes = __webpack_require__(1794);
+var _synthesizeScopes = __webpack_require__(1793);
 
-var _getScope = __webpack_require__(1795);
+var _getScope = __webpack_require__(1794);
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -49072,7 +49008,7 @@ function getScopes(pauseInfo, selectedFrame, frameScopes) {
 }
 
 /***/ }),
-/* 1794 */
+/* 1793 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -49083,11 +49019,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.synthesizeScopes = synthesizeScopes;
 
-var _getVariables = __webpack_require__(1766);
+var _getVariables = __webpack_require__(1765);
 
 var _frame = __webpack_require__(1380);
 
-var _utils = __webpack_require__(1767);
+var _utils = __webpack_require__(1766);
 
 function getSynteticScopeTitle(type, generatedScopes) {
   if (type === "function") {
@@ -49217,7 +49153,7 @@ function synthesizeScopes(scope, selectedFrame, frameScopes, pauseInfo, scopeInd
 }
 
 /***/ }),
-/* 1795 */
+/* 1794 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -49233,9 +49169,9 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 exports.getScope = getScope;
 
-var _getVariables = __webpack_require__(1766);
+var _getVariables = __webpack_require__(1765);
 
-var _utils = __webpack_require__(1767);
+var _utils = __webpack_require__(1766);
 
 var _frame = __webpack_require__(1380);
 
@@ -49294,6 +49230,137 @@ function getScope(scope, selectedFrame, frameScopes, pauseInfo, scopeIndex) {
 
   return null;
 }
+
+/***/ }),
+/* 1795 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _lodash = __webpack_require__(2);
+
+let newSources;
+let createSource;
+let queuedSources;
+let supportsWasm = false;
+
+const queue = (0, _lodash.throttle)(() => {
+  if (!newSources || !createSource) {
+    return;
+  }
+  newSources(queuedSources.map(source => {
+    return createSource(source, { supportsWasm });
+  }));
+  queuedSources = [];
+}, 100);
+
+exports.default = {
+  initialize: options => {
+    newSources = options.actions.newSources;
+    createSource = options.createSource;
+    supportsWasm = options.supportsWasm;
+    queuedSources = [];
+  },
+  queue: source => {
+    queuedSources.push(source);
+    queue();
+  },
+  flush: () => queue.flush(),
+  clear: () => queue.cancel()
+};
+
+/***/ }),
+/* 1796 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.HighlightLine = undefined;
+
+var _react = __webpack_require__(0);
+
+var _editor = __webpack_require__(1358);
+
+var _sourceDocuments = __webpack_require__(1436);
+
+var _source = __webpack_require__(1356);
+
+var _reactRedux = __webpack_require__(1189);
+
+var _selectors = __webpack_require__(1352);
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+function isDebugLine(selectedFrame, selectedLocation) {
+  if (!selectedFrame) {
+    return;
+  }
+
+  return selectedFrame.location.sourceId == selectedLocation.sourceId && selectedFrame.location.line == selectedLocation.line;
+}
+
+function isDocumentReady(selectedSource, selectedLocation) {
+  return selectedLocation && (0, _source.isLoaded)(selectedSource) && (0, _sourceDocuments.hasDocument)(selectedLocation.sourceId);
+}
+
+class HighlightLine extends _react.PureComponent {
+  componentDidUpdate(prevProps) {
+    const { selectedLocation, selectedFrame, selectedSource } = this.props;
+
+    this.clearHighlightLine(prevProps.selectedLocation, prevProps.selectedSource);
+
+    this.setHighlightLine(selectedLocation, selectedFrame, selectedSource);
+  }
+
+  setHighlightLine(selectedLocation, selectedFrame, selectedSource) {
+    if (!isDocumentReady(selectedSource, selectedLocation)) {
+      return;
+    }
+
+    const { sourceId, line } = selectedLocation;
+
+    if (!line || isDebugLine(selectedFrame, selectedLocation)) {
+      return;
+    }
+
+    const editorLine = (0, _editor.toEditorLine)(sourceId, line);
+    const doc = (0, _sourceDocuments.getDocument)(sourceId);
+    doc.addLineClass(editorLine, "line", "highlight-line");
+  }
+
+  clearHighlightLine(selectedLocation, selectedSource) {
+    if (!isDocumentReady(selectedSource, selectedLocation)) {
+      return;
+    }
+
+    const { line, sourceId } = selectedLocation;
+    const editorLine = (0, _editor.toEditorLine)(sourceId, line);
+    const doc = (0, _sourceDocuments.getDocument)(sourceId);
+    doc.removeLineClass(editorLine, "line", "highlight-line");
+  }
+
+  render() {
+    return null;
+  }
+}
+
+exports.HighlightLine = HighlightLine;
+exports.default = (0, _reactRedux.connect)(state => ({
+  selectedFrame: (0, _selectors.getVisibleSelectedFrame)(state),
+  selectedLocation: (0, _selectors.getSelectedLocation)(state),
+  selectedSource: (0, _selectors.getSelectedSource)(state)
+}))(HighlightLine);
 
 /***/ })
 /******/ ]);

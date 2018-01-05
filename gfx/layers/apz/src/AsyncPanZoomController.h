@@ -656,6 +656,11 @@ protected:
   void HandlePanningUpdate(const ScreenPoint& aDelta);
 
   /**
+   * Set and update the pinch lock
+   */
+  void HandlePinchLocking(ScreenCoord spanDistance, ScreenPoint focusChange);
+
+  /**
    * Sets up anything needed for panning. This takes us out of the "TOUCHING"
    * state and starts actually panning us.
    */
@@ -723,6 +728,14 @@ protected:
   };
 
   static AxisLockMode GetAxisLockMode();
+
+  enum PinchLockMode {
+    PINCH_FREE,     /* No locking at all */
+    PINCH_STANDARD, /* Default pinch locking mode that remains locked until pinch gesture ends*/
+    PINCH_STICKY,   /* Allow lock to be broken, with hysteresis */
+  };
+
+  static PinchLockMode GetPinchLockMode();
 
   // Helper function for OnSingleTapUp(), OnSingleTapConfirmed(), and
   // OnLongPressUp().
@@ -799,6 +812,10 @@ private:
   // This flag is set to true when we are in a axis-locked pan as a result of
   // the touch-action CSS property.
   bool mPanDirRestricted;
+
+  // This flag is set to true when we are in a pinch-locked state. ie: user
+  // is performing a two-finger pan rather than a pinch gesture
+  bool mPinchLocked;
 
   // Most up-to-date constraints on zooming. These should always be reasonable
   // values; for example, allowing a min zoom of 0.0 can cause very bad things

@@ -34,6 +34,7 @@ class GridItem extends PureComponent {
     this.setGridColor = this.setGridColor.bind(this);
     this.translateNodeFrontToGrip = this.translateNodeFrontToGrip.bind(this);
     this.onGridCheckboxClick = this.onGridCheckboxClick.bind(this);
+    this.onGridInspectIconClick = this.onGridInspectIconClick.bind(this);
   }
 
   componentDidMount() {
@@ -114,10 +115,15 @@ class GridItem extends PureComponent {
     onToggleGridHighlighter(grid.nodeFront);
   }
 
+  onGridInspectIconClick(nodeFront) {
+    let { setSelectedNode } = this.props;
+    setSelectedNode(nodeFront, "layout-panel").catch(e => console.error(e));
+    nodeFront.scrollIntoView().catch(e => console.error(e));
+  }
+
   render() {
     let {
       grid,
-      setSelectedNode,
       onHideBoxModelHighlighter,
       onShowBoxModelHighlighterForNode,
     } = this.props;
@@ -142,7 +148,7 @@ class GridItem extends PureComponent {
             object: this.translateNodeFrontToGrip(nodeFront),
             onDOMNodeMouseOut: () => onHideBoxModelHighlighter(),
             onDOMNodeMouseOver: () => onShowBoxModelHighlighterForNode(nodeFront),
-            onInspectIconClick: () => setSelectedNode(nodeFront, "layout-panel"),
+            onInspectIconClick: () => this.onGridInspectIconClick(nodeFront),
           }
         )
       ),

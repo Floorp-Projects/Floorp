@@ -5,40 +5,45 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=806506
 -->
 <head>
   <title>Test for inert elements in ShadowRoot</title>
+  <script type="text/javascript" src="head.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="runChecks();">
-<div id="grabme"></div>
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=806506">Bug 806506</a>
 <script>
 
-var element = document.getElementById("grabme");
-var shadow = element.createShadowRoot();
-
-// Check that <base> is inert.
-shadow.innerHTML = '<base href="http://www.example.org/" />';
-isnot(document.baseURI, "http://www.example.org/", "Base element should be inert in ShadowRoot.");
-
 SimpleTest.waitForExplicitFinish();
 
-// Check that <link> is inert.
-var numStyleBeforeLoad = document.styleSheets.length;
+var content = '<div id="grabme"></div>';
+setWebComponentsPrefAndCreateIframe(content)
+  .then((aDocument) => {
+    function runChecks() {
+      isnot(aDocument.defaultView.getComputedStyle(shadowSpan, null).getPropertyValue("padding-top"), "10px", "Link element should be inert.");
+      is(aDocument.styleSheets.length, numStyleBeforeLoad, "Document style count should remain the same because the style should not be in the doucment.");
+      is(shadow.styleSheets.length, 0, "Inert link should not add style to ShadowRoot.");
+      // Remove link to make sure we don't get assertions.
+      shadow.removeChild(shadowStyle);
+      SimpleTest.finish();
+    };
 
-shadow.innerHTML = '<link id="shadowlink" rel="stylesheet" type="text/css" href="inert_style.css" /><span id="shadowspan"></span>';
-shadow.applyAuthorStyles = true;
-var shadowSpan = shadow.getElementById("shadowspan");
-var shadowStyle = shadow.getElementById("shadowlink");
+    var element = aDocument.getElementById("grabme");
+    var shadow = element.attachShadow({mode: "open"});
 
-function runChecks() {
-  isnot(getComputedStyle(shadowSpan, null).getPropertyValue("padding-top"), "10px", "Link element should be inert.");
-  is(document.styleSheets.length, numStyleBeforeLoad, "Document style count should remain the same because the style should not be in the doucment.");
-  is(shadow.styleSheets.length, 0, "Inert link should not add style to ShadowRoot.");
-  // Remove link to make sure we don't get assertions.
-  shadow.removeChild(shadowStyle);
-  SimpleTest.finish();
-};
+    // Check that <base> is inert.
+    shadow.innerHTML = '<base href="http://www.example.org/" />';
+    isnot(aDocument.baseURI, "http://www.example.org/", "Base element should be inert in ShadowRoot.");
 
+    // Check that <link> is inert.
+    var numStyleBeforeLoad = aDocument.styleSheets.length;
+
+    shadow.innerHTML = '<link id="shadowlink" rel="stylesheet" type="text/css" href="inert_style.css" /><span id="shadowspan"></span>';
+    shadow.applyAuthorStyles = true;
+    var shadowSpan = shadow.getElementById("shadowspan");
+    var shadowStyle = shadow.getElementById("shadowlink");
+
+    runChecks();
+  });
 </script>
 </body>
 </html>

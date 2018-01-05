@@ -11,13 +11,15 @@
 namespace mozilla {
 namespace wr {
 
-Vec_u8::Vec_u8(mozilla::ipc::ByteBuf&& aSrc) {
-  inner.data = aSrc.mData;
-  inner.length = aSrc.mLen;
-  inner.capacity = aSrc.mCapacity;
-  aSrc.mData = nullptr;
-  aSrc.mLen = 0;
-  aSrc.mCapacity = 0;
+void
+Assign_WrVecU8(wr::WrVecU8& aVec, mozilla::ipc::ByteBuf&& aOther)
+{
+  aVec.data = aOther.mData;
+  aVec.length = aOther.mLen;
+  aVec.capacity = aOther.mCapacity;
+  aOther.mData = nullptr;
+  aOther.mLen = 0;
+  aOther.mCapacity = 0;
 }
 
 } // namespace wr

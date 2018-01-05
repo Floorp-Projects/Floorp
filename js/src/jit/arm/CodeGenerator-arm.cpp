@@ -7,6 +7,7 @@
 #include "jit/arm/CodeGenerator-arm.h"
 
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Maybe.h"
 
 #include "jscntxt.h"
 #include "jscompartment.h"
@@ -1429,11 +1430,22 @@ CodeGeneratorARM::visitUnbox(LUnbox* unbox)
     MUnbox* mir = unbox->mir();
     Register type = ToRegister(unbox->type());
 
-    ScratchRegisterScope scratch(masm);
+    mozilla::Maybe<ScratchRegisterScope> scratch;
+    scratch.emplace(masm);
 
+    JSValueTag tag = MIRTypeToTag(mir->type());
     if (mir->fallible()) {
-        masm.ma_cmp(type, Imm32(MIRTypeToTag(mir->type())), scratch);
+        masm.ma_cmp(type, Imm32(tag), *scratch);
         bailoutIf(Assembler::NotEqual, unbox->snapshot());
+    } else {
+#ifdef DEBUG
+        Label ok;
+        masm.ma_cmp(type, Imm32(tag), *scratch);
+        masm.ma_b(&ok, Assembler::Equal);
+        scratch.reset();
+        masm.assumeUnreachable("Infallible unbox type mismatch");
+        masm.bind(&ok);
+#endif
     }
 }
 

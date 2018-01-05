@@ -11,9 +11,11 @@ add_task(async function() {
   // reload.
   await addBreakpoint(dbg, "scripts.html", 18);
   reload(dbg);
+
+  await waitForDispatch(dbg, "NAVIGATE");
+  await waitForSelectedSource(dbg, "doc-scripts.html");
   await waitForPaused(dbg);
 
-  await waitForLoadedSource(dbg, "doc-scripts.html");
   assertPausedLocation(dbg);
   await resume(dbg);
 

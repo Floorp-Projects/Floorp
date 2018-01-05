@@ -68,3 +68,7 @@ groupbox description {
 menulist label {
   font-weight: unset;
 }
+
+.dialog-button-box {
+  padding: 0;
+}
