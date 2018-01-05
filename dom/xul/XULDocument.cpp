@@ -581,11 +581,10 @@ ClearBroadcasterMapEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 static bool
 CanBroadcast(int32_t aNameSpaceID, nsAtom* aAttribute)
 {
-    // Don't push changes to the |id|, |ref|, |persist|, |command| or
+    // Don't push changes to the |id|, |persist|, |command| or
     // |observes| attribute.
     if (aNameSpaceID == kNameSpaceID_None) {
         if ((aAttribute == nsGkAtoms::id) ||
-            (aAttribute == nsGkAtoms::ref) ||
             (aAttribute == nsGkAtoms::persist) ||
             (aAttribute == nsGkAtoms::command) ||
             (aAttribute == nsGkAtoms::observes)) {
