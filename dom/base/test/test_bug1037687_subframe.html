@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="application/javascript">
+  var SimpleTest = window.parent.SimpleTest;
+  var ok = window.parent.ok;
+  var is = window.parent.is;
+
+  var host;
+  var sr;
+  var embed;
+  var object;
+  var iframe;
+  var resourceLoadCount = 0;
+
+  function resourceLoaded(event) {
+    ++resourceLoadCount;
+    ok(true, event.target + " got " + event.load);
+    if (resourceLoadCount == 3) {
+      SimpleTest.finish();
+    }
+  }
+
+  function createResource(sr, type) {
+    var el = document.createElement(type);
+    var attrName = type == "object" ? "data" : "src";
+    el.setAttribute(attrName, "file_mozfiledataurl_img.jpg");
+    el.onload = resourceLoaded;
+    var info = document.createElement("div");
+    info.textContent = type;
+    sr.appendChild(info);
+    sr.appendChild(el);
+  }
+
+  function test() {
+    host = document.getElementById("host");
+    sr = host.attachShadow({mode: 'open'});
+    embed = createResource(sr, "embed");
+    object = createResource(sr, "object");
+    iframe = createResource(sr, "iframe");
+  }
+</script>
+</head>
+<body onload="test()">
+<div id="host"></div>
+</body>
+</html>

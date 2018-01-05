@@ -5,12 +5,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=806506
 -->
 <head>
   <title>Test for ShadowRoot styling</title>
+  <script type="text/javascript" src="head.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<div class="tall" id="bodydiv"></div>
-<div id="container"></div>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=806506">Bug 806506</a>
 <script>
 
@@ -18,70 +17,80 @@ if (!SpecialPowers.DOMWindowUtils.isStyledByServo) {
   SimpleTest.expectAssertions(3, 3); // GeckoRestyleManager stuff.
 }
 
-// Create ShadowRoot.
-var container = document.getElementById("container");
-var elem = document.createElement("div");
-container.appendChild(elem); // Put ShadowRoot host in document.
-var root = elem.createShadowRoot();
+SimpleTest.waitForExplicitFinish();
 
-// A style element that will be appended into the ShadowRoot.
-var shadowStyle = document.createElement("style");
-shadowStyle.innerHTML = ".tall { height: 100px; } .fat { padding-left: inherit; }";
+var content = '<div class="tall" id="bodydiv"></div>' +
+              '<div id="container"></div>';
+setWebComponentsPrefAndCreateIframe(content)
+  .then((aDocument) => {
+    var iframeWin = aDocument.defaultView;
 
-root.innerHTML = '<div id="divtostyle" class="tall fat"></div>';
-var divToStyle = root.getElementById("divtostyle");
+    // Create ShadowRoot.
+    var container = aDocument.getElementById("container");
+    var elem = aDocument.createElement("div");
+    container.appendChild(elem); // Put ShadowRoot host in document.
+    var root = elem.attachShadow({mode: "open"});
 
-// Make sure styleSheet counts are correct after appending a style to the ShadowRoot.
-is(document.styleSheets.length, 1, "There should only be one style sheet on the document from the test style sheet.");
-is(root.styleSheets.length, 0, "The ShadowRoot should have no style sheets.");
-root.appendChild(shadowStyle);
-is(document.styleSheets.length, 1, "Styles in the ShadowRoot element should not be accessible from the document.");
-is(root.styleSheets.length, 1, "ShadowRoot should have one style sheet from the appened style.");
-is(root.styleSheets[0].ownerNode, shadowStyle, "First style in ShadowRoot should match the style that was just appended.");
+    // A style element that will be appended into the ShadowRoot.
+    var shadowStyle = aDocument.createElement("style");
+    shadowStyle.innerHTML = ".tall { height: 100px; } .fat { padding-left: inherit; }";
 
-var dummyStyle = document.createElement("style");
-root.appendChild(dummyStyle);
-is(root.styleSheets.length, 2, "ShadowRoot should have an additional style from appending dummyStyle.");
-is(root.styleSheets[1].ownerNode, dummyStyle, "Second style in ShadowRoot should be the dummyStyle.");
-root.removeChild(dummyStyle);
-is(root.styleSheets.length, 1, "Removing dummyStyle should remove it from the ShadowRoot style sheets.");
-is(root.styleSheets[0].ownerNode, shadowStyle, "The style sheet remaining in the ShadowRoot should be shadowStyle.");
+    root.innerHTML = '<div id="divtostyle" class="tall fat"></div>';
+    var divToStyle = root.getElementById("divtostyle");
 
-// Make sure that elements outside of the ShadowRoot are not affected by the ShadowRoot style.
-isnot(getComputedStyle(document.getElementById("bodydiv"), null).getPropertyValue("height"), "100px", "Style sheets in ShadowRoot should not apply to elements no in the ShadowRoot.");
+    // Make sure styleSheet counts are correct after appending a style to the ShadowRoot.
+    is(aDocument.styleSheets.length, 0, "There shouldn't be any style sheet in the test frame document.");
+    is(root.styleSheets.length, 0, "The ShadowRoot should have no style sheets.");
+    root.appendChild(shadowStyle);
+    is(aDocument.styleSheets.length, 0, "Styles in the ShadowRoot element should not be accessible from the document.");
+    is(root.styleSheets.length, 1, "ShadowRoot should have one style sheet from the appened style.");
+    is(root.styleSheets[0].ownerNode, shadowStyle, "First style in ShadowRoot should match the style that was just appended.");
 
-// Make sure that elements in the ShadowRoot are styled according to the ShadowRoot style.
-is(getComputedStyle(divToStyle, null).getPropertyValue("height"), "100px", "ShadowRoot style sheets should apply to elements in ShadowRoot.");
+    var dummyStyle = aDocument.createElement("style");
+    root.appendChild(dummyStyle);
+    is(root.styleSheets.length, 2, "ShadowRoot should have an additional style from appending dummyStyle.");
+    is(root.styleSheets[1].ownerNode, dummyStyle, "Second style in ShadowRoot should be the dummyStyle.");
+    root.removeChild(dummyStyle);
+    is(root.styleSheets.length, 1, "Removing dummyStyle should remove it from the ShadowRoot style sheets.");
+    is(root.styleSheets[0].ownerNode, shadowStyle, "The style sheet remaining in the ShadowRoot should be shadowStyle.");
 
-// Tests for applyAuthorStyles.
-var authorStyle = document.createElement("style");
-authorStyle.innerHTML = ".fat { padding-right: 20px; padding-left: 30px; }";
-document.body.appendChild(authorStyle);
+    // Make sure that elements outside of the ShadowRoot are not affected by the ShadowRoot style.
+    isnot(iframeWin.getComputedStyle(aDocument.getElementById("bodydiv"), null).getPropertyValue("height"), "100px", "Style sheets in ShadowRoot should not apply to elements no in the ShadowRoot.");
 
-is(root.applyAuthorStyles, false, "applyAuthorStyles defaults to false.");
-isnot(getComputedStyle(divToStyle, null).getPropertyValue("padding-right"), "20px", "Author styles should not apply to ShadowRoot when ShadowRoot.applyAuthorStyles is false.");
-root.applyAuthorStyles = true;
-is(root.applyAuthorStyles, true, "applyAuthorStyles was set to true.");
-is(getComputedStyle(divToStyle, null).getPropertyValue("padding-right"), "20px", "Author styles should apply to ShadowRoot when ShadowRoot.applyAuthorStyles is true.");
-root.applyAuthorStyles = false;
-is(root.applyAuthorStyles, false, "applyAuthorStyles was set to false.");
-isnot(getComputedStyle(divToStyle, null).getPropertyValue("padding-right"), "20px", "Author styles should not apply to ShadowRoot when ShadowRoot.applyAuthorStyles is false.");
+    // Make sure that elements in the ShadowRoot are styled according to the ShadowRoot style.
+    is(iframeWin.getComputedStyle(divToStyle, null).getPropertyValue("height"), "100px", "ShadowRoot style sheets should apply to elements in ShadowRoot.");
 
-// Test dynamic changes to style in ShadowRoot.
-root.innerHTML = '<div id="divtostyle" class="dummy"></div>';
-divToStyle = root.getElementById("divtostyle");
-var dummyShadowStyle = document.createElement("style");
-dummyShadowStyle.innerHTML = ".dummy { height: 300px; }";
-root.appendChild(dummyShadowStyle);
-is(getComputedStyle(divToStyle, null).getPropertyValue("height"), "300px", "Dummy element in ShadowRoot should be styled by style in ShadowRoot.");
-dummyShadowStyle.innerHTML = ".dummy { height: 200px; }";
-is(getComputedStyle(divToStyle, null).getPropertyValue("height"), "200px", "Dynamic changes to styles in ShadowRoot should change style of affected elements.");
+    // Tests for applyAuthorStyles.
+    var authorStyle = aDocument.createElement("style");
+    authorStyle.innerHTML = ".fat { padding-right: 20px; padding-left: 30px; }";
+    aDocument.body.appendChild(authorStyle);
 
-// Test id selector in ShadowRoot style.
-root.innerHTML = '<style>#divtostyle { padding-top: 10px; }</style><div id="divtostyle"></div>';
-divToStyle = root.getElementById("divtostyle");
-is(getComputedStyle(divToStyle, null).getPropertyValue("padding-top"), "10px", "ID selector in style selector should match element.");
+    is(root.applyAuthorStyles, false, "applyAuthorStyles defaults to false.");
+    isnot(iframeWin.getComputedStyle(divToStyle, null).getPropertyValue("padding-right"), "20px", "Author styles should not apply to ShadowRoot when ShadowRoot.applyAuthorStyles is false.");
+    root.applyAuthorStyles = true;
+    is(root.applyAuthorStyles, true, "applyAuthorStyles was set to true.");
+    is(iframeWin.getComputedStyle(divToStyle, null).getPropertyValue("padding-right"), "20px", "Author styles should apply to ShadowRoot when ShadowRoot.applyAuthorStyles is true.");
+    root.applyAuthorStyles = false;
+    is(root.applyAuthorStyles, false, "applyAuthorStyles was set to false.");
+    isnot(iframeWin.getComputedStyle(divToStyle, null).getPropertyValue("padding-right"), "20px", "Author styles should not apply to ShadowRoot when ShadowRoot.applyAuthorStyles is false.");
 
+    // Test dynamic changes to style in ShadowRoot.
+    root.innerHTML = '<div id="divtostyle" class="dummy"></div>';
+    divToStyle = root.getElementById("divtostyle");
+    var dummyShadowStyle = aDocument.createElement("style");
+    dummyShadowStyle.innerHTML = ".dummy { height: 300px; }";
+    root.appendChild(dummyShadowStyle);
+    is(iframeWin.getComputedStyle(divToStyle, null).getPropertyValue("height"), "300px", "Dummy element in ShadowRoot should be styled by style in ShadowRoot.");
+    dummyShadowStyle.innerHTML = ".dummy { height: 200px; }";
+    is(iframeWin.getComputedStyle(divToStyle, null).getPropertyValue("height"), "200px", "Dynamic changes to styles in ShadowRoot should change style of affected elements.");
+
+    // Test id selector in ShadowRoot style.
+    root.innerHTML = '<style>#divtostyle { padding-top: 10px; }</style><div id="divtostyle"></div>';
+    divToStyle = root.getElementById("divtostyle");
+    is(iframeWin.getComputedStyle(divToStyle, null).getPropertyValue("padding-top"), "10px", "ID selector in style selector should match element.");
+
+    SimpleTest.finish();
+  });
 </script>
 </body>
 </html>

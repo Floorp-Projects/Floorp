@@ -10,32 +10,44 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1150308
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<div id="host"><span id="distributeme">Foo</span></div>
 <script type="application/javascript">
 
 /** Test for Bug 1150308 **/
-SimpleTest.waitForExplicitFinish();
 
-SimpleTest.waitForFocus(function() {
-  var host = document.getElementById("host");
-  var shadow = host.createShadowRoot();
-  shadow.innerHTML = '<style>.bar:active { color: rgb(0, 255, 0); }</style><div class="bar" id="inner"><content></content></div>';
+function runTests() {
+  var iframe = document.createElement('iframe');
+  document.body.appendChild(iframe);
+  iframe.contentDocument.body.innerHTML =
+    '<div id="host"><span id="distributeme">Foo</span></div>';
+
+  var host = iframe.contentDocument.getElementById("host");
+  var shadow = host.attachShadow({mode: 'open'});
+  shadow.innerHTML = '<style>.bar:active { color: rgb(0, 255, 0); }</style><div class="bar" id="inner"><slot></slot></div>';
   var inner = shadow.getElementById("inner");
-  var distributed = document.getElementById("distributeme");
+  var distributed = iframe.contentDocument.getElementById("distributeme");
+  var iframeWin = iframe.contentWindow;
 
-  is(window.getComputedStyle(inner).color, "rgb(0, 0, 0)", "The div inside the shadow root should not be active.");
+  is(iframeWin.getComputedStyle(inner).color, "rgb(0, 0, 0)", "The div inside the shadow root should not be active.");
 
-  synthesizeMouseAtCenter(distributed, { type: "mousedown" });
+  synthesizeMouseAtCenter(distributed, { type: "mousedown" }, iframeWin);
 
-  is(window.getComputedStyle(inner).color, "rgb(0, 255, 0)", "Div inside shadow root should be active.");
+  is(iframeWin.getComputedStyle(inner).color, "rgb(0, 255, 0)", "Div inside shadow root should be active.");
 
-  synthesizeMouseAtCenter(distributed, { type: "mouseup" });
+  synthesizeMouseAtCenter(distributed, { type: "mouseup" }, iframeWin);
 
-  is(window.getComputedStyle(inner).color, "rgb(0, 0, 0)", "Div inside shadow root should no longer be active.");
+  is(iframeWin.getComputedStyle(inner).color, "rgb(0, 0, 0)", "Div inside shadow root should no longer be active.");
 
   SimpleTest.finish();
-});
+};
 
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.webcomponents.enabled", true]
+    ]
+  }, runTests);
+});
 </script>
 </body>
 </html>

@@ -15,12 +15,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1025933
   SimpleTest.waitForExplicitFinish();
 
   function test() {
-    var s = document.getElementById("host").createShadowRoot();
-    s.innerHTML = '<div style="width:100px;height:100px;background:red"></div>';
-    var el = s.firstElementChild;
-    is(el.clientWidth, 100);
-    is(el.clientHeight, 100);
-    SimpleTest.finish();
+    SpecialPowers.pushPrefEnv({
+      set: [
+        ["dom.webcomponents.enabled", true]
+      ]
+    }, function() {
+      var iframe = document.createElement('iframe');
+      iframe.srcdoc = '<div id="content"> <div id="host"></div </div>';
+
+      iframe.onload = function() {
+        var s = iframe.contentDocument.getElementById("host").attachShadow({mode: 'open'});
+        s.innerHTML = '<div style="width:100px;height:100px;background:red"></div>';
+        var el = s.firstElementChild;
+        is(el.clientWidth, 100);
+        is(el.clientHeight, 100);
+        SimpleTest.finish();
+      }
+
+      document.body.appendChild(iframe);
+    });
   }
 
   </script>
@@ -28,9 +41,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1025933
 <body onload="test()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1025933">Mozilla Bug 1025933</a>
 <p id="display"></p>
-<div id="content">
-  <div id="host"></div>
-</div>
 <pre id="test">
 </pre>
 </body>

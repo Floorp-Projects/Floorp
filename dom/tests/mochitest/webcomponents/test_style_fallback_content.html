@@ -5,24 +5,35 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=806506
 -->
 <head>
   <title>Test for styling fallback content</title>
+  <script type="text/javascript" src="head.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<div id="grabme"></div>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=806506">Bug 806506</a>
 <script>
-var host = document.getElementById("grabme");
-var shadow = host.createShadowRoot();
-shadow.innerHTML = '<style id="innerstyle"></style><span id="container"><content><span id="innerspan">Hello</span></content></span>';
-var innerStyle = shadow.getElementById("innerstyle");
 
-innerStyle.innerHTML = '#innerspan { margin-top: 10px; }';
-var innerSpan = shadow.getElementById("innerspan");
-is(getComputedStyle(innerSpan, null).getPropertyValue("margin-top"), "10px", "Default content should be style by id selector.");
+SimpleTest.waitForExplicitFinish();
 
-innerStyle.innerHTML = '#container > content > #innerspan { margin-top: 30px; }';
-is(getComputedStyle(innerSpan, null).getPropertyValue("margin-top"), "30px", "Default content should be style by child combinators.");
+var content = '<div id="grabme"></div>';
+setWebComponentsPrefAndCreateIframe(content)
+  .then((aDocument) => {
+    var iframeWin = aDocument.defaultView;
+
+    var host = aDocument.getElementById("grabme");
+    var shadow = host.attachShadow({mode: "open"});
+    shadow.innerHTML = '<style id="innerstyle"></style><span id="container"><slot><span id="innerspan">Hello</span></slot></span>';
+    var innerStyle = shadow.getElementById("innerstyle");
+
+    innerStyle.innerHTML = '#innerspan { margin-top: 10px; }';
+    var innerSpan = shadow.getElementById("innerspan");
+    is(iframeWin.getComputedStyle(innerSpan, null).getPropertyValue("margin-top"), "10px", "Default content should be style by id selector.");
+
+    innerStyle.innerHTML = '#container > slot > #innerspan { margin-top: 30px; }';
+    is(iframeWin.getComputedStyle(innerSpan, null).getPropertyValue("margin-top"), "30px", "Default content should be style by child combinators.");
+
+    SimpleTest.finish();
+  });
 </script>
 </body>
 </html>
