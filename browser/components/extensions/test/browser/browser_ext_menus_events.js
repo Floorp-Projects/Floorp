@@ -26,6 +26,12 @@ async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
       return new Promise(resolve => {
         browser.test.log(`Waiting for message: ${expectedId}`);
         browser.test.onMessage.addListener(function listener(id, msg) {
+          // Temporary work-around for https://bugzil.la/1428213
+          // TODO Bug 1428213: remove workaround for onMessage.removeListener
+          if (listener._wasCalled) {
+            return;
+          }
+          listener._wasCalled = true;
           browser.test.assertEq(expectedId, id, "Expected message");
           browser.test.onMessage.removeListener(listener);
           resolve(msg);
@@ -109,7 +115,7 @@ async function testShowHideEvent({menuCreateParams, doOpenMenu, doCloseMenu,
     extension.sendMessage("optional-menu-shown-with-permissions");
     let shownEvent2 = await extension.awaitMessage("onShown-event-data2");
     Assert.deepEqual(shownEvent2, expectedShownEventWithPermissions,
-      "expected onShown info when host permissions are enabled");
+                     "expected onShown info when host permissions are enabled");
     await doCloseMenu();
   }
 
@@ -126,7 +132,7 @@ add_task(async function test_no_show_hide_for_unsupported_menu() {
       browser.menus.onHidden.addListener(() => events.push("onHidden"));
       browser.test.onMessage.addListener(() => {
         browser.test.assertEq("[]", JSON.stringify(events),
-          "Should not have any events when the context is unsupported.");
+                              "Should not have any events when the context is unsupported.");
         browser.test.notifyPass("done listening to menu events");
       });
     },
