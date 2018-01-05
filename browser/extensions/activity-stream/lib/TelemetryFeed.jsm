@@ -246,7 +246,7 @@ this.TelemetryFeed = class TelemetryFeed {
    */
   handleNewTabInit(action) {
     const session = this.addSession(au.getPortIdOfSender(action), action.data.url);
-    session.perf.is_preloaded = action.data.browser.getAttribute("isPreloadBrowser") === "true";
+    session.perf.is_preloaded = action.data.browser.getAttribute("preloadedState") === "preloaded";
   }
 
   /**

@@ -1016,7 +1016,7 @@ function formatDate(datestr, unknown) {
   if (!date.valueOf())
     return unknown;
 
-  const dateTimeFormatter = Services.intl.createDateTimeFormat(undefined, {
+  const dateTimeFormatter = new Services.intl.DateTimeFormat(undefined, {
     dateStyle: "long", timeStyle: "long"
   });
   return dateTimeFormatter.format(date);

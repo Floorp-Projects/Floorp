@@ -157,7 +157,6 @@ public:
 #endif
 
 #ifdef DEBUG
-  nsFrameState GetDebugStateBits() const override;
   const char* LineReflowStatusToString(LineReflowStatus aLineReflowStatus) const;
 #endif
 

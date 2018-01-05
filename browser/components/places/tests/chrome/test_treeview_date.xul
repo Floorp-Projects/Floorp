@@ -138,7 +138,7 @@
                   // a redirecting uri could be put in the tree while we test.
                   break;
                 }
-                let timeStr = Services.intl.createDateTimeFormat(undefined, dtOptions).format(timeObj);
+                let timeStr = new Services.intl.DateTimeFormat(undefined, dtOptions).format(timeObj);
 
                 is(text, timeStr, "Date format is correct");
                 break;

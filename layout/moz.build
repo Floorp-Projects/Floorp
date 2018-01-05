@@ -37,7 +37,7 @@ TEST_DIRS += [
 
 DIRS += ['build', 'media']
 
-if CONFIG['MOZ_DEBUG']:
+if CONFIG['MOZ_DEBUG'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     TEST_DIRS += ['tools/layout-debug']
 
 CRASHTEST_MANIFESTS += ['../testing/crashtest/crashtests.list']
