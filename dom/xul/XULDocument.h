@@ -46,39 +46,6 @@ class nsIObjectOutputStream;
 #include "nsURIHashKey.h"
 #include "nsInterfaceHashtable.h"
 
-class nsRefMapEntry : public nsStringHashKey
-{
-public:
-  explicit nsRefMapEntry(const nsAString& aKey) :
-    nsStringHashKey(&aKey)
-  {
-  }
-  explicit nsRefMapEntry(const nsAString* aKey) :
-    nsStringHashKey(aKey)
-  {
-  }
-  nsRefMapEntry(const nsRefMapEntry& aOther) :
-    nsStringHashKey(&aOther.GetKey())
-  {
-    NS_ERROR("Should never be called");
-  }
-
-  mozilla::dom::Element* GetFirstElement();
-  void AppendAll(nsCOMArray<mozilla::dom::Element>* aElements);
-  /**
-   * @return true if aElement was added, false if we failed due to OOM
-   */
-  bool AddElement(mozilla::dom::Element* aElement);
-  /**
-   * @return true if aElement was removed and it was the last content for
-   * this ref, so this entry should be removed from the map
-   */
-  bool RemoveElement(mozilla::dom::Element* aElement);
-
-private:
-  nsTArray<mozilla::dom::Element*> mRefContentList;
-};
-
 /**
  * The XUL document class
  */
@@ -122,7 +89,6 @@ public:
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
-    NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE
 
     // nsIXULDocument interface
     virtual void GetElementsForID(const nsAString& aID,
@@ -152,9 +118,6 @@ public:
     using nsDocument::GetLastStyleSheetSet;
     using nsDocument::MozSetImageElement;
     using nsIDocument::GetLocation;
-
-    // Helper for StyleScope::GetElementById.
-    Element* GetRefById(const nsAString & elementId);
 
     // nsIDOMXULDocument interface
     NS_DECL_NSIDOMXULDOCUMENT
@@ -232,11 +195,6 @@ protected:
 
     nsresult Init(void) override;
     nsresult StartLayout(void);
-
-    nsresult
-    AddElementToRefMap(Element* aElement);
-    void
-    RemoveElementFromRefMap(Element* aElement);
 
     nsresult GetViewportSize(int32_t* aWidth, int32_t* aHeight);
 
@@ -318,9 +276,6 @@ protected:
 
     XULDocument*             mNextSrcLoadWaiter;  // [OWNER] but not COMPtr
 
-    // Tracks elements with a 'ref' attribute, or an 'id' attribute where
-    // the element's namespace has no registered ID attribute name.
-    nsTHashtable<nsRefMapEntry> mRefMap;
     nsCOMPtr<nsIXULStore>       mLocalStore;
     bool                        mApplyingPersistedAttrs;
     bool                        mIsWritingFastLoad;
