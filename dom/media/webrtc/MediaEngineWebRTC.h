@@ -59,7 +59,6 @@
 #include "webrtc/modules/video_capture/video_capture_defines.h"
 
 #include "NullTransport.h"
-#include "AudioOutputObserver.h"
 
 namespace mozilla {
 
@@ -522,10 +521,10 @@ private:
   static int sChannelsOpen;
 
   const UniquePtr<webrtc::AudioProcessing> mAudioProcessing;
-  const RefPtr<AudioOutputObserver> mAudioOutputObserver;
 
-  // accessed from the GraphDriver thread except for deletion
+  // accessed from the GraphDriver thread except for deletion.
   nsAutoPtr<AudioPacketizer<AudioDataValue, float>> mPacketizerInput;
+  nsAutoPtr<AudioPacketizer<AudioDataValue, float>> mPacketizerOutput;
 
   // mMonitor protects mSources[] and mPrinicpalIds[] access/changes, and
   // transitions of mState from kStarted to kStopped (which are combined with
@@ -557,9 +556,12 @@ private:
   // To only update microphone when needed, we keep track of previous settings.
   MediaEnginePrefs mLastPrefs;
 
+  // Stores the mixed audio output for the reverse-stream of the AEC.
+  AlignedFloatBuffer mOutputBuffer;
+
   AlignedFloatBuffer mInputBuffer;
   AlignedFloatBuffer mDeinterleavedBuffer;
-  AlignedAudioBuffer mInputDownmixBuffer;
+  AlignedFloatBuffer mInputDownmixBuffer;
 };
 
 class MediaEngineWebRTC : public MediaEngine

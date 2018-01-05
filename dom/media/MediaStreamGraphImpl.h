@@ -32,9 +32,6 @@ class ShutdownTicket;
 
 template <typename T>
 class LinkedList;
-#ifdef MOZ_WEBRTC
-class AudioOutputObserver;
-#endif
 
 /**
  * A per-stream update message passed from the media graph thread to the
@@ -818,9 +815,6 @@ public:
   AudioMixer mMixer;
   const RefPtr<AbstractThread> mAbstractMainThread;
   RefPtr<SharedThreadPool> mThreadPool;
-#ifdef MOZ_WEBRTC
-  RefPtr<AudioOutputObserver> mFarendObserverRef;
-#endif
 
   // used to limit graph shutdown time
   // Only accessed on the main thread.
