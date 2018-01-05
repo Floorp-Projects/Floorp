@@ -26,6 +26,7 @@
 <p id="status"></p>
 
 <script type="text/javascript">
+        localStorage.setItem('focusLocalStorageTest', 'testValue');
         navigator.serviceWorker.register('service-worker.js', {scope: './'}).then(function(registration) {
             document.querySelector('#status').textContent = 'Service worker installed';
         }).catch(function(error) {
