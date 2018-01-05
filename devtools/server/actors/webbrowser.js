@@ -774,7 +774,7 @@ BrowserTabActor.prototype = {
 
     let form = await new Promise(resolve => {
       let onFormUpdate = msg => {
-        // There may be more than just one childtab.js up and running
+        // There may be more than just one content.js (ContentActor) up and running
         if (this._form.actor != msg.json.actor) {
           return;
         }
