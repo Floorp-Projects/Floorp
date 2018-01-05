@@ -110,7 +110,10 @@ add_task(async function() {
          condition: r => r.h == 13 && inRange(r.w, 14, 16) && // icon size
                          inRange(r.y1, 40, 80) && // in the toolbar
                          // near the left side of the screen
-                         inRange(r.x1, 65, 100)
+                         // The reload icon is shifted on devedition builds
+                         // where there's an additional devtools toolbar icon.
+                         AppConstants.MOZ_DEV_EDITION ? inRange(r.x1, 100, 120) :
+                                                        inRange(r.x1, 65, 100)
         },
 
         {name: "bug 1401955 - about:home favicon should be visible at first paint",

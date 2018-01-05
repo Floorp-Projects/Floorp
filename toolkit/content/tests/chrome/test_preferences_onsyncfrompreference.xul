@@ -37,7 +37,7 @@
       for (let pref of PREFS) {
         // The `value` field of each <preference> element should be initialized by now.
 
-        is(SpecialPowers.getIntPref(pref), prefWindow.document.getElementById(pref).value,
+        is(SpecialPowers.getIntPref(pref), prefWindow.Preferences.get(pref).value,
            "Pref constructor was called correctly")
       }
 

@@ -359,6 +359,15 @@ public:
                               nscoord* aSnappedEndEdge);
 
   /**
+   * Return true if this box has some text to display.
+   * It returns false if at least one of these conditions are met:
+   * a. the frame hasn't been reflowed yet
+   * b. GetContentLength() == 0
+   * c. it contains only non-significant white-space
+   */
+  bool HasNonSuppressedText();
+
+  /**
    * Object with various callbacks for PaintText() to invoke for different parts
    * of the frame's text rendering, when we're generating paths rather than
    * painting.

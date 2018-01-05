@@ -17,7 +17,6 @@ toolkit.jar:
    skin/classic/global/menulist.css                        (global/empty.css)
    skin/classic/global/numberbox.css                       (global/empty.css)
    skin/classic/global/popup.css                           (global/empty.css)
-   skin/classic/global/preferences.css                     (global/empty.css)
    skin/classic/global/progressmeter.css                   (global/empty.css)
    skin/classic/global/radio.css                           (global/empty.css)
    skin/classic/global/resizer.css                         (global/empty.css)
