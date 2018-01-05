@@ -4550,11 +4550,6 @@ public:
 
   virtual nsresult  GetFrameName(nsAString& aResult) const = 0;
 #endif
-
-#ifdef DEBUG
-public:
-  virtual nsFrameState  GetDebugStateBits() const = 0;
-#endif
 };
 
 //----------------------------------------------------------------------

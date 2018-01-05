@@ -172,10 +172,6 @@ public:
   void ToCString(nsCString& aBuf, int32_t* aTotalContentLength) const;
 #endif
 
-#ifdef DEBUG
-  nsFrameState GetDebugStateBits() const override;
-#endif
-
   ContentOffsets CalcContentOffsetsFromFramePoint(const nsPoint& aPoint) override;
   ContentOffsets GetCharacterOffsetAtFramePoint(const nsPoint& aPoint);
 

@@ -58,7 +58,7 @@ add_task(function* () {
   let serviceWorkersElement = document.getElementById("service-workers");
 
   // Open a tab that registers a push service worker.
-  let swTab = yield addTab(TAB_URL);
+  let swTab = yield addTab(TAB_URL, { background: true });
 
   info("Wait until the service worker appears in about:debugging");
   yield waitUntilServiceWorkerContainer(SERVICE_WORKER, document);

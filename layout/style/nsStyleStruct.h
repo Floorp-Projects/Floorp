@@ -2260,11 +2260,6 @@ struct StyleTransition
   nsCSSPropertyID GetProperty() const { return mProperty; }
   nsAtom* GetUnknownProperty() const { return mUnknownProperty; }
 
-  float GetCombinedDuration() const {
-    // http://dev.w3.org/csswg/css-transitions/#combined-duration
-    return std::max(mDuration, 0.0f) + mDelay;
-  }
-
   void SetTimingFunction(const nsTimingFunction& aTimingFunction)
     { mTimingFunction = aTimingFunction; }
   void SetDelay(float aDelay) { mDelay = aDelay; }
@@ -2610,6 +2605,31 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
            mTransitionDelayCount,
            mTransitionPropertyCount;
 
+  nsCSSPropertyID GetTransitionProperty(uint32_t aIndex) const
+  {
+    return mTransitions[aIndex % mTransitionPropertyCount].GetProperty();
+  }
+  float GetTransitionDelay(uint32_t aIndex) const
+  {
+    return mTransitions[aIndex % mTransitionDelayCount].GetDelay();
+  }
+  float GetTransitionDuration(uint32_t aIndex) const
+  {
+    return mTransitions[aIndex % mTransitionDurationCount].GetDuration();
+  }
+  const nsTimingFunction& GetTransitionTimingFunction(uint32_t aIndex) const
+  {
+    return mTransitions[aIndex % mTransitionTimingFunctionCount].GetTimingFunction();
+  }
+  float GetTransitionCombinedDuration(uint32_t aIndex) const
+  {
+    // https://drafts.csswg.org/css-transitions/#transition-combined-duration
+    return
+      std::max(mTransitions[aIndex % mTransitionDurationCount].GetDuration(),
+               0.0f)
+        + mTransitions[aIndex % mTransitionDelayCount].GetDelay();
+  }
+
   nsStyleAutoArray<mozilla::StyleAnimation> mAnimations; // [reset]
 
   // The number of elements in mAnimations that are not from repeating
@@ -2623,6 +2643,38 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
            mAnimationPlayStateCount,
            mAnimationIterationCountCount;
 
+  nsAtom* GetAnimationName(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationNameCount].GetName();
+  }
+  float GetAnimationDelay(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationDelayCount].GetDelay();
+  }
+  float GetAnimationDuration(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationDurationCount].GetDuration();
+  }
+  mozilla::dom::PlaybackDirection GetAnimationDirection(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationDirectionCount].GetDirection();
+  }
+  mozilla::dom::FillMode GetAnimationFillMode(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationFillModeCount].GetFillMode();
+  }
+  uint8_t GetAnimationPlayState(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationPlayStateCount].GetPlayState();
+  }
+  float GetAnimationIterationCount(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationIterationCountCount].GetIterationCount();
+  }
+  const nsTimingFunction& GetAnimationTimingFunction(uint32_t aIndex) const
+  {
+    return mAnimations[aIndex % mAnimationTimingFunctionCount].GetTimingFunction();
+  }
 
   // The threshold used for extracting a shape from shape-outside: <image>.
   float mShapeImageThreshold = 0.0f; // [reset]
