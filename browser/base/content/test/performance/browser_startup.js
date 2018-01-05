@@ -142,9 +142,10 @@ if (!gBrowser.selectedBrowser.isRemoteBrowser) {
 }
 
 add_task(async function() {
-  if (!AppConstants.NIGHTLY_BUILD && !AppConstants.DEBUG) {
+  if (!AppConstants.NIGHTLY_BUILD && !AppConstants.MOZ_DEV_EDITION && !AppConstants.DEBUG) {
     ok(!("@mozilla.org/test/startuprecorder;1" in Cc),
-       "the startup recorder component shouldn't exist in this non-nightly non-debug build.");
+       "the startup recorder component shouldn't exist in this non-nightly/non-devedition/" +
+       "non-debug build.");
     return;
   }
 
@@ -153,7 +154,7 @@ add_task(async function() {
 
   let loader = Cc["@mozilla.org/moz/jsloader;1"].getService(Ci.xpcIJSModuleLoader);
   let componentStacks = new Map();
-  let data = startupRecorder.data.code;
+  let data = Cu.cloneInto(startupRecorder.data.code, {});
   // Keep only the file name for components, as the path is an absolute file
   // URL rather than a resource:// URL like for modules.
   for (let phase in data) {

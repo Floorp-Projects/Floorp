@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace gl {
 
-class GLContextWGL : public GLContext
+class GLContextWGL final : public GLContext
 {
 public:
     MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextWGL, override)
@@ -38,27 +38,13 @@ public:
 
     virtual GLContextType GetContextType() const override { return GLContextType::WGL; }
 
-    static GLContextWGL* Cast(GLContext* gl) {
-        MOZ_ASSERT(gl->GetContextType() == GLContextType::WGL);
-        return static_cast<GLContextWGL*>(gl);
-    }
-
     bool Init() override;
-
     virtual bool MakeCurrentImpl() const override;
-
     virtual bool IsCurrentImpl() const override;
-
-    void SetIsDoubleBuffered(bool aIsDB);
-
-    virtual bool IsDoubleBuffered() const override;
-
+    virtual bool IsDoubleBuffered() const override { return mIsDoubleBuffered; }
     virtual bool SwapBuffers() override;
-
     virtual bool SetupLookupFunction() override;
-
     virtual void GetWSIInfo(nsCString* const out) const override;
-
     HGLRC Context() { return mContext; }
 
 protected:
@@ -69,6 +55,7 @@ protected:
     HWND mWnd;
     HANDLE mPBuffer;
     int mPixelFormat;
+public:
     bool mIsDoubleBuffered;
 };
 

@@ -6,53 +6,47 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
 <?xml-stylesheet href="chrome://browser/skin/sanitizeDialog.css"?>
 
 
 <?xml-stylesheet href="chrome://browser/content/sanitizeDialog.css"?>
 
-<!DOCTYPE prefwindow [
+<!DOCTYPE dialog [
+  <!ENTITY % preferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
+  <!ENTITY % globalKeysDTD SYSTEM "chrome://global/locale/globalKeys.dtd">
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
   <!ENTITY % sanitizeDTD SYSTEM "chrome://browser/locale/sanitize.dtd">
+  %preferencesDTD;
+  %globalKeysDTD;
   %brandDTD;
   %sanitizeDTD;
 ]>
 
-<prefwindow id="SanitizeDialog" type="child"
-            xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-            dlgbuttons="accept,cancel"
-            title="&sanitizeDialog2.title;"
-            noneverythingtitle="&sanitizeDialog2.title;"
-            style="width: &sanitizeDialog2.width;;"
-            ondialogaccept="return gSanitizePromptDialog.sanitize();">
+<dialog id="SanitizeDialog" class="prefwindow" type="child"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        buttons="accept,cancel"
+        persist="lastSelected screenX screenY"
+        closebuttonlabel="&preferencesCloseButton.label;"
+        closebuttonaccesskey="&preferencesCloseButton.accesskey;"
+        role="dialog"
+        title="&sanitizeDialog2.title;"
+        noneverythingtitle="&sanitizeDialog2.title;"
+        style="width: &sanitizeDialog2.width;;"
+        onload="gSanitizePromptDialog.init();"
+        ondialogaccept="return gSanitizePromptDialog.sanitize();">
 
-  <prefpane id="SanitizeDialogPane" onpaneload="gSanitizePromptDialog.init();">
+  <vbox id="SanitizeDialogPane" class="prefpane">
     <stringbundle id="bundleBrowser"
                   src="chrome://browser/locale/browser.properties"/>
 
     <script type="application/javascript"
             src="chrome://browser/content/sanitize.js"/>
 
-
+    <script type="application/javascript"
+            src="chrome://global/content/preferencesBindings.js"/>
     <script type="application/javascript"
             src="chrome://browser/content/sanitizeDialog.js"/>
-
-    <preferences id="sanitizePreferences">
-      <preference id="privacy.cpd.history"               name="privacy.cpd.history"               type="bool"/>
-      <preference id="privacy.cpd.formdata"              name="privacy.cpd.formdata"              type="bool"/>
-      <preference id="privacy.cpd.downloads"             name="privacy.cpd.downloads"             type="bool" disabled="true"/>
-      <preference id="privacy.cpd.cookies"               name="privacy.cpd.cookies"               type="bool"/>
-      <preference id="privacy.cpd.cache"                 name="privacy.cpd.cache"                 type="bool"/>
-      <preference id="privacy.cpd.sessions"              name="privacy.cpd.sessions"              type="bool"/>
-      <preference id="privacy.cpd.offlineApps"           name="privacy.cpd.offlineApps"           type="bool"/>
-      <preference id="privacy.cpd.siteSettings"          name="privacy.cpd.siteSettings"          type="bool"/>
-    </preferences>
-    
-    <preferences id="nonItemPreferences">
-      <preference id="privacy.sanitize.timeSpan"
-                  name="privacy.sanitize.timeSpan"
-                  type="int"/>
-    </preferences>
 
     <hbox id="SanitizeDurationBox" align="center">
       <label value="&clearTimeDuration.label;"
@@ -144,5 +138,5 @@
                 onsyncfrompreference="return gSanitizePromptDialog.onReadGeneric();"/>
     </listbox>
 
-  </prefpane>
-</prefwindow>
+  </vbox>
+</dialog>

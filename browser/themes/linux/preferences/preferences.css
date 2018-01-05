@@ -5,6 +5,33 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
+/* Pref Window & Pane */
+.prefwindow {
+  padding: 0px;
+}
+
+.prefwindow[type="child"] {
+  padding: 8px;
+}
+
+.prefpane {
+  padding: 8px;
+}
+
+.prefwindow[type="child"] > .prefpane {
+  padding: 0px;
+}
+
+.dialog-button-box {
+  padding-bottom: 8px;
+  padding-inline-start: 8px;
+  padding-inline-end: 8px;
+}
+
+.prefwindow[type="child"] .dialog-button-box {
+  padding: 0px;
+}
+
 /* General Pane */
 #useFirefoxSync,
 #getStarted {
@@ -23,7 +50,7 @@
 
 /* Modeless Window Dialogs */
 .windowDialog,
-.windowDialog prefpane {
+.windowDialog .prefpane {
   padding: 0px;
 }
 

@@ -237,16 +237,21 @@ SVGMarkerElement::ParseAttribute(int32_t aNameSpaceID, nsAtom* aName,
 }
 
 nsresult
-SVGMarkerElement::UnsetAttr(int32_t aNamespaceID, nsAtom* aName,
-                            bool aNotify)
+SVGMarkerElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                                const nsAttrValue* aValue,
+                                const nsAttrValue* aOldValue,
+                                nsIPrincipal* aMaybeScriptedPrincipal,
+                                bool aNotify)
 {
-  if (aNamespaceID == kNameSpaceID_None) {
-    if (aName == nsGkAtoms::orient) {
-      mOrientType.SetBaseValue(SVG_MARKER_ORIENT_ANGLE);
-    }
+  if (!aValue && aNamespaceID == kNameSpaceID_None &&
+      aName == nsGkAtoms::orient) {
+    mOrientType.SetBaseValue(SVG_MARKER_ORIENT_ANGLE);
   }
 
-  return nsSVGElement::UnsetAttr(aNamespaceID, aName, aNotify);
+  return SVGMarkerElementBase::AfterSetAttr(aNamespaceID, aName,
+                                            aValue, aOldValue,
+                                            aMaybeScriptedPrincipal,
+                                            aNotify);
 }
 
 //----------------------------------------------------------------------

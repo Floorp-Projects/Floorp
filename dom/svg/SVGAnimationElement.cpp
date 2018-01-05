@@ -291,6 +291,14 @@ SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                   nsIPrincipal* aSubjectPrincipal,
                                   bool aNotify)
 {
+  if (!aValue && aNamespaceID == kNameSpaceID_None) {
+    // Attribute is being removed.
+    if (AnimationFunction().UnsetAttr(aName) ||
+        mTimedElement.UnsetAttr(aName)) {
+      AnimationNeedsResample();
+    }
+  }
+
   nsresult rv =
     SVGAnimationElementBase::AfterSetAttr(aNamespaceID, aName, aValue,
                                           aOldValue, aSubjectPrincipal, aNotify);
@@ -337,24 +345,6 @@ SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
     // next BindToTree call.
 
   return rv;
-}
-
-nsresult
-SVGAnimationElement::UnsetAttr(int32_t aNamespaceID,
-                               nsAtom* aAttribute, bool aNotify)
-{
-  nsresult rv = SVGAnimationElementBase::UnsetAttr(aNamespaceID, aAttribute,
-                                                   aNotify);
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  if (aNamespaceID == kNameSpaceID_None) {
-    if (AnimationFunction().UnsetAttr(aAttribute) ||
-        mTimedElement.UnsetAttr(aAttribute)) {
-      AnimationNeedsResample();
-    }
-  }
-
-  return NS_OK;
 }
 
 bool

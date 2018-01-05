@@ -82,7 +82,7 @@ class TestAnonymousNodes(WindowManagerMixin, MarionetteTestCase):
 
     def test_find_anonymous_children(self):
         self.assertEquals(HTMLElement, type(self.marionette.find_element(By.ANON, None)))
-        self.assertEquals(2, len(self.marionette.find_elements(By.ANON, None)))
+        self.assertEquals(3, len(self.marionette.find_elements(By.ANON, None)))
 
         frame = self.marionette.find_element(By.ID, "framebox")
         with self.assertRaises(NoSuchElementException):

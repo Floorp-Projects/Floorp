@@ -48,9 +48,6 @@ public:
                               bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
 
-  virtual nsresult UnsetAttr(int32_t aNamespaceID, nsAtom* aAttribute,
-                             bool aNotify) override;
-
   virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
   // Element specializations

@@ -200,6 +200,12 @@ partial interface Navigator {
   void removeIdleObserver(MozIdleObserver aIdleObserver);
 };
 
+// nsIDOMNavigatorDesktopNotification
+partial interface Navigator {
+  [Throws, Pref="notification.feature.enabled", UnsafeInPrerendering]
+  readonly attribute DesktopNotificationCenter mozNotification;
+};
+
 // NetworkInformation
 partial interface Navigator {
   [Throws, Pref="dom.netinfo.enabled"]
