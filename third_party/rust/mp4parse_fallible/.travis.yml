@@ -1,0 +1,18 @@
+language: rust
+rust:
+  - stable
+  - nightly
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-5
+
+env:
+  global:
+    - CXX=g++-5
+
+script:
+  - cargo test --all --verbose

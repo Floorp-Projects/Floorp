@@ -3,8 +3,6 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
-#![cfg_attr(feature = "fuzz", feature(plugin))]
-#![cfg_attr(feature = "fuzz", plugin(afl_plugin))]
 #[cfg(feature = "fuzz")]
 extern crate afl;
 
@@ -1422,7 +1420,7 @@ fn find_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
 
 fn read_ds_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
     let frequency_table =
-        vec![(0x1, 96000), (0x1, 88200), (0x2, 64000), (0x3, 48000),
+        vec![(0x0, 96000), (0x1, 88200), (0x2, 64000), (0x3, 48000),
              (0x4, 44100), (0x5, 32000), (0x6, 24000), (0x7, 22050),
              (0x8, 16000), (0x9, 12000), (0xa, 11025), (0xb, 8000),
              (0xc, 7350)];
