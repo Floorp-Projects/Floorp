@@ -8,7 +8,6 @@ const { Component } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const Editor = require("devtools/client/sourceeditor/editor");
-const { SOURCE_EDITOR_SYNTAX_HIGHLIGHT_MAX_SIZE } = require("../constants");
 
 const { div } = dom;
 
@@ -18,7 +17,7 @@ const { div } = dom;
 class SourceEditor extends Component {
   static get propTypes() {
     return {
-      // Source editor syntax hightligh mode, which is a mime type defined in CodeMirror
+      // Source editor syntax highlight mode, which is a mime type defined in CodeMirror
       mode: PropTypes.string,
       // Source editor content
       text: PropTypes.string,
@@ -31,33 +30,49 @@ class SourceEditor extends Component {
     this.editor = new Editor({
       lineNumbers: true,
       lineWrapping: false,
-      mode: text.length < SOURCE_EDITOR_SYNTAX_HIGHLIGHT_MAX_SIZE ? mode : null,
+      mode: null, // Disable auto syntax detection, but then we set mode asynchronously
       readOnly: true,
       theme: "mozilla",
       value: text,
     });
 
-    // Delay to CodeMirror initialization content to prevent UI freezed
+    // Delay to CodeMirror initialization content to prevent UI freezing
     this.editorTimeout = setTimeout(() => {
       this.editor.appendToLocalElement(this.refs.editorElement);
+      // CodeMirror's setMode() (syntax highlight) is the performance bottleneck when
+      // processing large content, so we enable it asynchronously within the setTimeout
+      // to avoid UI blocking. (rendering source code -> drawing syntax highlight)
+      this.editorSetModeTimeout = setTimeout(() => {
+        this.editor.setMode(mode);
+      });
     });
+  }
+
+  shouldComponentUpdate(nextProps) {
+    return nextProps.mode !== this.props.mode || nextProps.text !== this.props.text;
   }
 
   componentDidUpdate(prevProps) {
     const { mode, text } = this.props;
 
-    if (prevProps.mode !== mode &&
-        text.length < SOURCE_EDITOR_SYNTAX_HIGHLIGHT_MAX_SIZE) {
-      this.editor.setMode(mode);
-    }
-
     if (prevProps.text !== text) {
+      // Reset the existed 'mode' attribute in order to make setText() process faster
+      // to prevent drawing unnecessary syntax highlight.
+      this.editor.setMode(null);
       this.editor.setText(text);
+
+      // CodeMirror's setMode() (syntax highlight) is the performance bottleneck when
+      // processing large content, so we enable it asynchronously within the setTimeout
+      // to avoid UI blocking. (rendering source code -> drawing syntax highlight)
+      this.editorSetModeTimeout = setTimeout(() => {
+        this.editor.setMode(mode);
+      });
     }
   }
 
   componentWillUnmount() {
     clearTimeout(this.editorTimeout);
+    clearTimeout(this.editorSetModeTimeout);
     this.editor.destroy();
   }
 

@@ -9,7 +9,7 @@ import json
 import os
 import platform
 import re
-import shutil
+from mozfile.mozfile import remove as mozfileremove
 import subprocess
 import sys
 from distutils.version import LooseVersion
@@ -80,7 +80,11 @@ def eslint_setup(should_clobber=False):
     if should_clobber:
         node_modules_path = os.path.join(project_root, "node_modules")
         print("Clobbering node_modules...")
-        shutil.rmtree(node_modules_path)
+        if sys.platform.startswith('win') and have_winrm():
+            process = subprocess.Popen(['winrm', '-rf', node_modules_path])
+            process.wait()
+        else:
+            mozfileremove(node_modules_path)
 
     npm_path = get_node_or_npm_path("npm")
     if not npm_path:
@@ -384,3 +388,14 @@ def check_node_executables_valid():
         return False
 
     return True
+
+
+def have_winrm():
+    # `winrm -h` should print 'winrm version ...' and exit 1
+    try:
+        p = subprocess.Popen(['winrm.exe', '-h'],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT)
+        return p.wait() == 1 and p.stdout.read().startswith('winrm')
+    except:
+        return False

@@ -1581,7 +1581,7 @@ impl FragmentDisplayListBuilding for Fragment {
         let mut tile_size = compute_background_image_size(bg_size, bounds.size, intrinsic_size);
 
         let mut tile_spacing = Size2D::zero();
-        let own_position = bounds.size - intrinsic_size.unwrap_or(Size2D::zero());
+        let own_position = bounds.size - tile_size;
         let pos_x = bg_position_x.to_used_value(own_position.width);
         let pos_y = bg_position_y.to_used_value(own_position.height);
         tile_image_axis(
@@ -3566,8 +3566,6 @@ impl InlineFlowDisplayListBuilding for InlineFlow {
     }
 
     fn build_display_list_for_inline(&mut self, state: &mut DisplayListBuildState) {
-        // TODO(#228): Once we form lines and have their cached bounds, we can be smarter and
-        // not recurse on a line if nothing in it can intersect the dirty region.
         debug!(
             "Flow: building display list for {} inline fragments",
             self.fragments.len()

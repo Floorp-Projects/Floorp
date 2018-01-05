@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<style>
+fieldset::first-letter {
+  color: red;
+}
+fieldset.f::first-letter {
+  color: green;
+}
+</style>
+<fieldset>Text</fieldset>
+<script>
+window.onload = function() {
+  document.querySelector('fieldset').classList.add('f');
+}
+</script>

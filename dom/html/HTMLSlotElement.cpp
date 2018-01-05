@@ -179,6 +179,7 @@ HTMLSlotElement::AssignedNodes() const
 void
 HTMLSlotElement::InsertAssignedNode(uint32_t aIndex, nsINode* aNode)
 {
+  MOZ_ASSERT(!aNode->AsContent()->GetAssignedSlot(), "Losing track of a slot");
   mAssignedNodes.InsertElementAt(aIndex, aNode);
   aNode->AsContent()->SetAssignedSlot(this);
 }
@@ -186,6 +187,7 @@ HTMLSlotElement::InsertAssignedNode(uint32_t aIndex, nsINode* aNode)
 void
 HTMLSlotElement::AppendAssignedNode(nsINode* aNode)
 {
+  MOZ_ASSERT(!aNode->AsContent()->GetAssignedSlot(), "Losing track of a slot");
   mAssignedNodes.AppendElement(aNode);
   aNode->AsContent()->SetAssignedSlot(this);
 }
@@ -193,6 +195,10 @@ HTMLSlotElement::AppendAssignedNode(nsINode* aNode)
 void
 HTMLSlotElement::RemoveAssignedNode(nsINode* aNode)
 {
+  // This one runs from unlinking, so we can't guarantee that the slot pointer
+  // hasn't been cleared.
+  MOZ_ASSERT(!aNode->AsContent()->GetAssignedSlot() ||
+             aNode->AsContent()->GetAssignedSlot() == this, "How exactly?");
   mAssignedNodes.RemoveElement(aNode);
   aNode->AsContent()->SetAssignedSlot(nullptr);
 }
@@ -200,8 +206,10 @@ HTMLSlotElement::RemoveAssignedNode(nsINode* aNode)
 void
 HTMLSlotElement::ClearAssignedNodes()
 {
-  for (uint32_t i = 0; i < mAssignedNodes.Length(); i++) {
-    mAssignedNodes[i]->AsContent()->SetAssignedSlot(nullptr);
+  for (RefPtr<nsINode>& node : mAssignedNodes) {
+    MOZ_ASSERT(!node->AsContent()->GetAssignedSlot() ||
+               node->AsContent()->GetAssignedSlot() == this, "How exactly?");
+    node->AsContent()->SetAssignedSlot(nullptr);
   }
 
   mAssignedNodes.Clear();
