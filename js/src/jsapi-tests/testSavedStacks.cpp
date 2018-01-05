@@ -86,20 +86,6 @@ BEGIN_TEST(testSavedStacks_RangeBasedForLoops)
     CHECK(obj->is<js::SavedFrame>());
     JS::Rooted<js::SavedFrame*> savedFrame(cx, &obj->as<js::SavedFrame>());
 
-    js::SavedFrame* f = savedFrame.get();
-    for (auto& frame : *savedFrame.get()) {
-        CHECK(&frame == f);
-        f = f->getParent();
-    }
-    CHECK(f == nullptr);
-
-    const js::SavedFrame* cf = savedFrame.get();
-    for (const auto& frame : *savedFrame.get()) {
-        CHECK(&frame == cf);
-        cf = cf->getParent();
-    }
-    CHECK(cf == nullptr);
-
     JS::Rooted<js::SavedFrame*> rf(cx, savedFrame);
     for (JS::Handle<js::SavedFrame*> frame : js::SavedFrame::RootedRange(cx, rf)) {
         JS_GC(cx);
