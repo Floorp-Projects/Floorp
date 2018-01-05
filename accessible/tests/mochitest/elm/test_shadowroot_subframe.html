@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>ShadowRoot tests</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="application/javascript" src="../common.js"></script>
+  <script type="application/javascript" src="../role.js"></script>
+
+  <script type="application/javascript">
+    let SimpleTest = window.parent.SimpleTest;
+    let ok = window.parent.ok;
+    let is = window.parent.is;
+
+    function doTest() {
+      testElm("component", {
+        role: ROLE_GROUPING,
+        children: [
+        {
+          role: ROLE_PUSHBUTTON,
+        },
+        {
+          role: ROLE_LINK,
+        },
+        ]
+      });
+
+      SimpleTest.finish();
+    }
+
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+<body>
+  <div role="group" id="component"></div>
+  <script>
+    var component = document.getElementById("component");
+    var shadow = component.attachShadow({mode: "open"});
+
+    shadow.innerHTML = "<button>Hello</button>" +
+      '<a href="#"> World</a>';
+  </script>
+</body>

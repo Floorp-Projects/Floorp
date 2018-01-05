@@ -507,7 +507,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "HTMLSelectElement",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "HTMLSlotElement",
+    {name: "HTMLSlotElement", disabled: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "HTMLSourceElement",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -843,7 +843,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     {name: "ScopedCredentialInfo", disabled: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "ShadowRoot", // Bogus, but the test harness forces it on.  See bug 1159768.
+    {name: "ShadowRoot", disabled: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "SharedWorker",
 // IMPORTANT: Do not change this list without review from a DOM peer!

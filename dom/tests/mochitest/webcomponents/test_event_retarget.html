@@ -5,6 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887541
 -->
 <head>
   <title>Test for event retargeting in web components</title>
+  <script type="text/javascript" src="head.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -12,136 +13,141 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887541
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=887541">Bug 887541</a>
 <script>
 
-/*
- * Creates an event listener with an expected event target.
- */
-function createEventListener(expectedTarget, msg) {
-  return function(e) {
-    is(e.target, expectedTarget, msg);
-  };
-}
+SimpleTest.waitForExplicitFinish();
+setWebComponentsPrefAndCreateIframe()
+  .then((aDocument) => {
+    /*
+     * Creates an event listener with an expected event target.
+     */
+    function createEventListener(expectedTarget, msg) {
+      return function(e) {
+        is(e.target, expectedTarget, msg);
+      };
+    }
 
-/*
- * Test of event retargeting through a basic ShadowRoot with a content insertion point.
- *
- * <div elemThree> ---- <shadow-root shadowOne>
- *        |                        |
- * <div elemOne>            <content elemTwo>
- *
- * Dispatch event on elemOne
- */
+    /*
+     * Test of event retargeting through a basic ShadowRoot with a content insertion point.
+     *
+     * <div elemThree> ---- <shadow-root shadowOne>
+     *        |                        |
+     * <div elemOne>            <content elemTwo>
+     *
+     * Dispatch event on elemOne
+     */
 
-var elemOne = document.createElement("div");
-var elemTwo = document.createElement("content");
-var elemThree = document.createElement("div");
-var shadowOne = elemThree.createShadowRoot();
+    var elemOne = aDocument.createElement("div");
+    var elemTwo = aDocument.createElement("content");
+    var elemThree = aDocument.createElement("div");
+    var shadowOne = elemThree.attachShadow({mode: "open"});
 
-elemThree.appendChild(elemOne);
-shadowOne.appendChild(elemTwo);
+    elemThree.appendChild(elemOne);
+    shadowOne.appendChild(elemTwo);
 
-elemOne.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemOne."));
-elemTwo.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemTwo."));
-elemThree.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemThree."));
-shadowOne.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of shadowOne."));
+    elemOne.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemOne."));
+    elemTwo.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemTwo."));
+    elemThree.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemThree."));
+    shadowOne.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of shadowOne."));
 
-var customEvent = new CustomEvent("custom", { "bubbles" : true });
-elemOne.dispatchEvent(customEvent);
+    var customEvent = new CustomEvent("custom", { "bubbles" : true });
+    elemOne.dispatchEvent(customEvent);
 
-/*
- * Test of event retargeting through a basic ShadowRoot with a content insertion point.
- *
- * <div elemThree> ---- <shadow-root shadowOne>
- *        |                        |
- * <div elemOne>            <content elemTwo>
- *
- * Dispatch event on elemTwo
- */
+    /*
+     * Test of event retargeting through a basic ShadowRoot with a content insertion point.
+     *
+     * <div elemThree> ---- <shadow-root shadowOne>
+     *        |                        |
+     * <div elemOne>            <content elemTwo>
+     *
+     * Dispatch event on elemTwo
+     */
 
-elemOne = document.createElement("div");
-elemTwo = document.createElement("content");
-elemThree = document.createElement("div");
-shadowOne = elemThree.createShadowRoot();
+    elemOne = aDocument.createElement("div");
+    elemTwo = aDocument.createElement("content");
+    elemThree = aDocument.createElement("div");
+    shadowOne = elemThree.attachShadow({mode: "open"});
 
-elemThree.appendChild(elemOne);
-shadowOne.appendChild(elemTwo);
+    elemThree.appendChild(elemOne);
+    shadowOne.appendChild(elemTwo);
 
-elemTwo.addEventListener("custom", createEventListener(elemTwo, "elemTwo is in common ancestor tree of elemTwo."));
-elemThree.addEventListener("custom", createEventListener(elemThree, "elemThree is in common ancestor tree of elemThree."));
-shadowOne.addEventListener("custom", createEventListener(elemTwo, "elemTwo is in common ancestor tree of shadowOne."));
+    elemTwo.addEventListener("custom", createEventListener(elemTwo, "elemTwo is in common ancestor tree of elemTwo."));
+    elemThree.addEventListener("custom", createEventListener(elemThree, "elemThree is in common ancestor tree of elemThree."));
+    shadowOne.addEventListener("custom", createEventListener(elemTwo, "elemTwo is in common ancestor tree of shadowOne."));
 
-customEvent = new CustomEvent("custom", { "bubbles" : true });
-elemTwo.dispatchEvent(customEvent);
+    customEvent = new CustomEvent("custom", { "bubbles" : true });
+    elemTwo.dispatchEvent(customEvent);
 
-/*
- * Test of event retargeting through a nested ShadowRoots with content insertion points.
- *
- * <div elemFive> --- <shadow-root shadowTwo>
- *       |                       |
- * <div elemOne>          <div elemFour> ----- <shadow-root shadowOne>
- *                               |                        |
- *                       <content elemTwo>       <content elemThree>
- *
- * Dispatch custom event on elemOne.
- */
+    /*
+     * Test of event retargeting through a nested ShadowRoots with content insertion points.
+     *
+     * <div elemFive> --- <shadow-root shadowTwo>
+     *       |                       |
+     * <div elemOne>          <div elemFour> ----- <shadow-root shadowOne>
+     *                               |                        |
+     *                       <content elemTwo>       <content elemThree>
+     *
+     * Dispatch custom event on elemOne.
+     */
 
-elemOne = document.createElement("div");
-elemTwo = document.createElement("content");
-elemThree = document.createElement("content");
-var elemFour = document.createElement("div");
-var elemFive = document.createElement("div");
-var shadowTwo = elemFive.createShadowRoot();
-shadowOne = elemFour.createShadowRoot();
+    elemOne = aDocument.createElement("div");
+    elemTwo = aDocument.createElement("content");
+    elemThree = aDocument.createElement("content");
+    var elemFour = aDocument.createElement("div");
+    var elemFive = aDocument.createElement("div");
+    var shadowTwo = elemFive.attachShadow({mode: "open"});
+    shadowOne = elemFour.attachShadow({mode: "open"});
 
-elemFive.appendChild(elemOne);
-shadowTwo.appendChild(elemFour);
-elemFour.appendChild(elemTwo);
-shadowOne.appendChild(elemThree);
+    elemFive.appendChild(elemOne);
+    shadowTwo.appendChild(elemFour);
+    elemFour.appendChild(elemTwo);
+    shadowOne.appendChild(elemThree);
 
-elemOne.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemOne."));
-elemTwo.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemTwo."));
-elemThree.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemThree."));
-elemFour.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemFour."));
-elemFive.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemFive."));
-shadowOne.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of shadowOne."));
-shadowTwo.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of shadowTwo."));
+    elemOne.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemOne."));
+    elemTwo.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemTwo."));
+    elemThree.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemThree."));
+    elemFour.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemFour."));
+    elemFive.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of elemFive."));
+    shadowOne.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of shadowOne."));
+    shadowTwo.addEventListener("custom", createEventListener(elemOne, "elemOne is in common ancestor tree of shadowTwo."));
 
-customEvent = new CustomEvent("custom", { "bubbles" : true });
-elemOne.dispatchEvent(customEvent);
+    customEvent = new CustomEvent("custom", { "bubbles" : true });
+    elemOne.dispatchEvent(customEvent);
 
-/*
- * Test of event retargeting through a nested ShadowRoots with content insertion points.
- *
- * <div elemFive> --- <shadow-root shadowTwo>
- *       |                       |
- * <div elemOne>          <div elemFour> ----- <shadow-root shadowOne>
- *                               |                        |
- *                       <content elemTwo>       <content elemThree>
- *
- * Dispatch custom event on elemThree.
- */
+    /*
+     * Test of event retargeting through a nested ShadowRoots with content insertion points.
+     *
+     * <div elemFive> --- <shadow-root shadowTwo>
+     *       |                       |
+     * <div elemOne>          <div elemFour> ----- <shadow-root shadowOne>
+     *                               |                        |
+     *                       <content elemTwo>       <content elemThree>
+     *
+     * Dispatch custom event on elemThree.
+     */
 
-elemOne = document.createElement("div");
-elemTwo = document.createElement("content");
-elemThree = document.createElement("content");
-elemFour = document.createElement("div");
-elemFive = document.createElement("div");
-shadowTwo = elemFive.createShadowRoot();
-shadowOne = elemFour.createShadowRoot();
+    elemOne = aDocument.createElement("div");
+    elemTwo = aDocument.createElement("content");
+    elemThree = aDocument.createElement("content");
+    elemFour = aDocument.createElement("div");
+    elemFive = aDocument.createElement("div");
+    shadowTwo = elemFive.attachShadow({mode: "open"});
+    shadowOne = elemFour.attachShadow({mode: "open"});
 
-elemFive.appendChild(elemOne);
-shadowTwo.appendChild(elemFour);
-elemFour.appendChild(elemTwo);
-shadowOne.appendChild(elemThree);
+    elemFive.appendChild(elemOne);
+    shadowTwo.appendChild(elemFour);
+    elemFour.appendChild(elemTwo);
+    shadowOne.appendChild(elemThree);
 
-elemThree.addEventListener("custom", createEventListener(elemThree, "elemThree is in common ancestor tree of elemThree."));
-elemFour.addEventListener("custom", createEventListener(elemFour, "elemFour is in common ancestor tree of elemFour."));
-elemFive.addEventListener("custom", createEventListener(elemFive, "elemFive is in common ancestor tree of elemFive."));
-shadowOne.addEventListener("custom", createEventListener(elemThree, "elemThree is in common ancestor tree of shadowOne."));
-shadowTwo.addEventListener("custom", createEventListener(elemFour, "elemFour is in common ancestor tree of shadowTwo."));
+    elemThree.addEventListener("custom", createEventListener(elemThree, "elemThree is in common ancestor tree of elemThree."));
+    elemFour.addEventListener("custom", createEventListener(elemFour, "elemFour is in common ancestor tree of elemFour."));
+    elemFive.addEventListener("custom", createEventListener(elemFive, "elemFive is in common ancestor tree of elemFive."));
+    shadowOne.addEventListener("custom", createEventListener(elemThree, "elemThree is in common ancestor tree of shadowOne."));
+    shadowTwo.addEventListener("custom", createEventListener(elemFour, "elemFour is in common ancestor tree of shadowTwo."));
 
-customEvent = new CustomEvent("custom", { "bubbles" : true });
-elemThree.dispatchEvent(customEvent);
+    customEvent = new CustomEvent("custom", { "bubbles" : true });
+    elemThree.dispatchEvent(customEvent);
 
+    SimpleTest.finish();
+  });
 </script>
 </body>
 </html>
