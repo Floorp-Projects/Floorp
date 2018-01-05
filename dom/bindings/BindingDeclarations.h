@@ -443,6 +443,7 @@ public:
   }
 
 protected:
+  // ptr is left uninitialized for optimization purposes.
   T* ptr;
 #ifdef DEBUG
   bool inited;
