@@ -5,6 +5,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1177991
 -->
 <head>
   <title>Test for Bug 1177991</title>
+  <script type="text/javascript" src="head.js"></script>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -18,18 +19,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1177991
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var thrownException = false;
-var shadowRoot = document.createElement('a').createShadowRoot();
+SimpleTest.waitForExplicitFinish();
+setWebComponentsPrefAndCreateIframe()
+  .then((aDocument) => {
+    var thrownException = false;
+    var shadowRoot = aDocument.createElement('div').attachShadow({mode: "open"});
 
-try {
-  document.adoptNode(shadowRoot);
-} catch(err) {
-  thrownException = err;
-}
+    try {
+      aDocument.adoptNode(shadowRoot);
+    } catch(err) {
+      thrownException = err;
+    }
 
-ok(thrownException !== false, "A HierarchyRequestError");
-is(thrownException.name, "HierarchyRequestError", "A HierarchyRequestError should've been thrown");
+    ok(thrownException !== false, "A HierarchyRequestError");
+    is(thrownException.name, "HierarchyRequestError", "A HierarchyRequestError should've been thrown");
 
+    SimpleTest.finish();
+  });
 </script>
 </pre>
 </body>

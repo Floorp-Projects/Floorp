@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<style>
+html[dir="rtl"] {
+  direction: rtl;
+}
+.outer {
+  border: 1px solid blue;
+  margin: 1em;
+  padding: 5px 0;
+  clear: left;
+  float: left;
+}
+.before {
+  margin-left: 20px;
+  border: 5px solid green;
+}
+.after {
+  margin-right: 20px;
+  border: 5px solid red;
+}
+.test1::before {
+  content: "";
+  margin-left: 20px;
+  border: 5px solid green;
+}
+.test1::after {
+  content: "";
+  margin-right: 20px;
+  border: 5px solid red;
+}
+.test2::before {
+  content: "\200b";
+  margin-left: 20px;
+  border: 5px solid green;
+}
+.test2::after {
+  content: "\200b";
+  margin-right: 20px;
+  border: 5px solid red;
+}
+</style>
+</head>
+<body>
+<div dir="ltr">
+The text in all three boxes should be centered, with a green bar to the far right and a red bar to the far left:
+</div>
+<div class="outer">
+  <div><span class="before"></span><span>السلام عليكم</span><span class="after"></span></div>
+</div>
+<div class="outer">
+  <div class="test1"><span>السلام عليكم</span></div>
+</div>
+<div class="outer">
+  <div class="test2"><span>السلام عليكم</span></div>
+</div>
+</body>
+</html>

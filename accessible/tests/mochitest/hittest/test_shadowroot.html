@@ -8,26 +8,6 @@
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
-  <script type="application/javascript"
-          src="../common.js"></script>
-  <script type="application/javascript"
-          src="../layout.js"></script>
-
-  <script type="application/javascript">
-    function doTest() {
-      var componentAcc = getAccessible("component1");
-      testChildAtPoint(componentAcc, 1, 1, componentAcc.firstChild,
-                       componentAcc.firstChild);
-
-      componentAcc = getAccessible("component2");
-      testChildAtPoint(componentAcc, 1, 1, componentAcc.firstChild,
-                       componentAcc.firstChild);
-      SimpleTest.finish();
-    }
-
-    SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
-  </script>
 </head>
 <body>
 
@@ -41,31 +21,19 @@
   <pre id="test">
   </pre>
 
-  <div role="group" class="components" id="component1" style="display: inline-block;">
-  <!--
-    <div role="button" id="component-child"
-         style="width: 100px; height: 100px; background-color: pink;">
-    </div>
-  -->
-  </div>
-  <div role="group" class="components"  id="component2" style="display: inline-block;">
-  <!--
-    <button>Hello world</button>
-  -->
-  </div>
   <script>
-    // This routine adds the comment children of each 'component' to its
-    // shadow root.
-    var components = document.querySelectorAll(".components");
-    for (var i = 0; i < components.length; i++) {
-      var component = components[i];
-      var shadow = component.createShadowRoot();
-      for (var child = component.firstChild; child; child = child.nextSibling) {
-        if (child.nodeType === 8)
-          // eslint-disable-next-line no-unsanitized/property
-          shadow.innerHTML = child.data;
-      }
-    }
+    SimpleTest.waitForExplicitFinish();
+    SpecialPowers.pushPrefEnv({
+      set: [
+        ["dom.webcomponents.enabled", true]
+      ]
+    }, function() {
+      // This test loads in an iframe, to ensure that the element instance is
+      // loaded with the correct value of the preference.
+      var iframe = document.createElement("iframe");
+      iframe.src = "test_shadowroot_subframe.html";
+      document.body.appendChild(iframe);
+    });
   </script>
 
 </body>

@@ -366,6 +366,23 @@ typedef GenericFlingAnimation FlingAnimation;
  * the main thread doesn't actually need to do a repaint. This pref allows the
  * main thread to skip doing those repaints in cases where it doesn't need to.
  *
+ * \li\b apz.pinch_lock.mode
+ * The preferred pinch locking style. See PinchLockMode for possible values.
+ *
+ * \li\b apz.pinch_lock.scroll_lock_threshold
+ * Pinch locking is triggered if the user scrolls more than this distance
+ * and pinches less than apz.pinch_lock.span_lock_threshold.\n
+ * Units: (real-world, i.e. screen) inches
+ *
+ * \li\b apz.pinch_lock.span_breakout_threshold
+ * Distance in inches the user must pinch before lock can be broken.\n
+ * Units: (real-world, i.e. screen) inches measured between two touch points
+ *
+ * \li\b apz.pinch_lock.span_lock_threshold
+ * Pinch locking is triggered if the user pinches less than this distance
+ * and scrolls more than apz.pinch_lock.scroll_lock_threshold.\n
+ * Units: (real-world, i.e. screen) inches measured between two touch points
+ *
  * \li\b apz.popups.enabled
  * Determines whether APZ is used for XUL popup widgets with remote content.
  * Ideally, this should always be true, but it is currently not well tested, and
@@ -759,6 +776,7 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mX(this),
      mY(this),
      mPanDirRestricted(false),
+     mPinchLocked(false),
      mZoomConstraints(false, false,
         mFrameMetrics.GetDevPixelsPerCSSPixel() * kViewportMinScale / ParentLayerToScreenScale(1),
         mFrameMetrics.GetDevPixelsPerCSSPixel() * kViewportMaxScale / ParentLayerToScreenScale(1)),
@@ -862,6 +880,11 @@ AsyncPanZoomController::GetSecondTapTolerance()
 /* static */AsyncPanZoomController::AxisLockMode AsyncPanZoomController::GetAxisLockMode()
 {
   return static_cast<AxisLockMode>(gfxPrefs::APZAxisLockMode());
+}
+
+/* static */AsyncPanZoomController::PinchLockMode AsyncPanZoomController::GetPinchLockMode()
+{
+  return static_cast<PinchLockMode>(gfxPrefs::APZPinchLockMode());
 }
 
 bool
@@ -1328,6 +1351,7 @@ nsEventStatus AsyncPanZoomController::OnTouchCancel(const MultiTouchInput& aEven
 nsEventStatus AsyncPanZoomController::OnScaleBegin(const PinchGestureInput& aEvent) {
   APZC_LOG("%p got a scale-begin in state %d\n", this, mState);
 
+  mPinchLocked = false;
   mPinchPaintTimerSet = false;
   // Note that there may not be a touch block at this point, if we received the
   // PinchGestureEvent directly from widget code without any touch events.
@@ -1369,9 +1393,26 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
     return nsEventStatus_eConsumeNoDefault;
   }
 
+  ParentLayerCoord spanDistance = fabsf(aEvent.mPreviousSpan - aEvent.mCurrentSpan);
+  ParentLayerPoint focusPoint, focusChange;
+  {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+
+    focusPoint = aEvent.mLocalFocusPoint - mFrameMetrics.GetCompositionBounds().TopLeft();
+    focusChange = mLastZoomFocus - focusPoint;
+    mLastZoomFocus = focusPoint;
+  }
+
+  HandlePinchLocking(
+    ToScreenCoordinates(ParentLayerPoint(0, spanDistance), focusPoint).Length(),
+    ToScreenCoordinates(focusChange, focusPoint));
+  bool allowZoom = mZoomConstraints.mAllowZoom && !mPinchLocked;
+
   // If zooming is not allowed, this is a two-finger pan.
   // Tracking panning distance and velocity.
-  if (!mZoomConstraints.mAllowZoom) {
+  // UpdateWithTouchAtDevicePoint() acquires the tree lock, so
+  // it cannot be called while the mRecursiveMutex lock is held.
+  if (!allowZoom) {
     mX.UpdateWithTouchAtDevicePoint(aEvent.mLocalFocusPoint.x, 0, aEvent.mTime);
     mY.UpdateWithTouchAtDevicePoint(aEvent.mLocalFocusPoint.y, 0, aEvent.mTime);
   }
@@ -1397,11 +1438,8 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
 
     CSSToParentLayerScale userZoom = mFrameMetrics.GetZoom().ToScaleFactor();
-    ParentLayerPoint focusPoint = aEvent.mLocalFocusPoint - mFrameMetrics.GetCompositionBounds().TopLeft();
     CSSPoint cssFocusPoint = focusPoint / mFrameMetrics.GetZoom();
 
-    ParentLayerPoint focusChange = mLastZoomFocus - focusPoint;
-    mLastZoomFocus = focusPoint;
     // If displacing by the change in focus point will take us off page bounds,
     // then reduce the displacement such that it doesn't.
     focusChange.x -= mX.DisplacementWillOverscrollAmount(focusChange.x);
@@ -1439,12 +1477,9 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
       realMaxZoom = realMinZoom;
     }
 
-    bool doScale = (spanRatio > 1.0 && userZoom < realMaxZoom) ||
-                   (spanRatio < 1.0 && userZoom > realMinZoom);
-
-    if (!mZoomConstraints.mAllowZoom) {
-      doScale = false;
-    }
+    bool doScale = allowZoom && (
+                   (spanRatio > 1.0 && userZoom < realMaxZoom) ||
+                   (spanRatio < 1.0 && userZoom > realMinZoom));
 
     if (doScale) {
       spanRatio = clamped(spanRatio,
@@ -2596,6 +2631,24 @@ void AsyncPanZoomController::HandlePanningUpdate(const ScreenPoint& aPanDistance
           mX.SetAxisLocked(false);
           SetState(PANNING);
         }
+      }
+    }
+  }
+}
+
+void AsyncPanZoomController::HandlePinchLocking(ScreenCoord spanDistance, ScreenPoint focusChange) {
+  if (mPinchLocked) {
+    if (GetPinchLockMode() == PINCH_STICKY) {
+      ScreenCoord spanBreakoutThreshold = gfxPrefs::APZPinchLockSpanBreakoutThreshold() * APZCTreeManager::GetDPI();
+      mPinchLocked = !(spanDistance > spanBreakoutThreshold);
+    }
+  } else {
+    if (GetPinchLockMode() != PINCH_FREE) {
+      ScreenCoord spanLockThreshold = gfxPrefs::APZPinchLockSpanLockThreshold() * APZCTreeManager::GetDPI();
+      ScreenCoord scrollLockThreshold = gfxPrefs::APZPinchLockScrollLockThreshold() * APZCTreeManager::GetDPI();
+
+      if (spanDistance < spanLockThreshold && focusChange.Length() > scrollLockThreshold) {
+        mPinchLocked = true;
       }
     }
   }

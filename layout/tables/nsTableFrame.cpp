@@ -6473,6 +6473,7 @@ nsTableFrame::CalcBCBorders()
           // new segment
           if (iter.mCellMap) {
             tableCellMap->ResetBStartStart(eLogicalSideBEnd, *iter.mCellMap,
+                                           iter.mRowGroupStart,
                                            info.GetCellEndRowIndex(),
                                            info.GetCellEndColIndex() + 1);
           }

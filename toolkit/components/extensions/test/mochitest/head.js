@@ -56,3 +56,18 @@ function waitForLoad(win) {
   });
 }
 
+/* exported waitForState */
+
+function waitForState(sw, state) {
+  return new Promise(resolve => {
+    if (sw.state === state) {
+      return resolve();
+    }
+    sw.addEventListener("statechange", function onStateChange() {
+      if (sw.state === state) {
+        sw.removeEventListener("statechange", onStateChange);
+        resolve();
+      }
+    });
+  });
+}
