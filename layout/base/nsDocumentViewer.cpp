@@ -306,6 +306,8 @@ private:
                                    bool                 aStartAtTop);
 #endif // NS_PRINTING
 
+  void ReturnToGalleyPresentation();
+
   // Whether we should attach to the top level widget. This is true if we
   // are sharing/recycling a single base widget and not creating multiple
   // child widgets.
