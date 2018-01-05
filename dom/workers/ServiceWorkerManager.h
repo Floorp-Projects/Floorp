@@ -320,7 +320,7 @@ public:
                                   ServiceWorkerRegistrationListener* aListener);
 
   void
-  MaybeCheckNavigationUpdate(nsIDocument* aDoc);
+  MaybeCheckNavigationUpdate(const ClientInfo& aClientInfo);
 
   nsresult
   SendPushEvent(const nsACString& aOriginAttributes,
