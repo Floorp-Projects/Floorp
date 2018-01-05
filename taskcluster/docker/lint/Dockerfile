@@ -2,7 +2,7 @@ FROM          ubuntu:16.04
 MAINTAINER    Andrew Halberstadt <ahalberstadt@mozilla.com>
 
 RUN mkdir /builds
-RUN useradd -d /builds/worker -s /bin/bash -m worker -u 1000 -g 1000
+RUN useradd -d /builds/worker -s /bin/bash -m worker
 WORKDIR /builds/worker
 
 VOLUME /builds/worker/.cache

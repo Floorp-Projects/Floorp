@@ -35,7 +35,7 @@ ENV           HOSTNAME      taskcluster-worker
 ENV           LC_ALL        C
 
 # Create worker user
-RUN useradd -d /builds/worker -s /bin/bash -m worker -u 1000 -g 1000
+RUN useradd -d /builds/worker -s /bin/bash -m worker
 
 # Set some sane defaults
 WORKDIR /builds/worker/
