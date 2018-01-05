@@ -526,7 +526,6 @@ private:
 
   // accessed from the GraphDriver thread except for deletion
   nsAutoPtr<AudioPacketizer<AudioDataValue, float>> mPacketizerInput;
-  ScopedCustomReleasePtr<webrtc::VoEExternalMedia> mVoERenderListener;
 
   // mMonitor protects mSources[] and mPrinicpalIds[] access/changes, and
   // transitions of mState from kStarted to kStopped (which are combined with
