@@ -1021,18 +1021,6 @@ XULDocument::ContentRemoved(nsIDocument* aDocument,
 // nsIXULDocument interface
 //
 
-void
-XULDocument::GetElementsForID(const nsAString& aID,
-                              nsCOMArray<Element>& aElements)
-{
-    aElements.Clear();
-
-    nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aID);
-    if (entry) {
-        entry->AppendAllIdContent(&aElements);
-    }
-}
-
 nsresult
 XULDocument::AddForwardReference(nsForwardReference* aRef)
 {
@@ -1893,9 +1881,19 @@ XULDocument::ApplyPersistentAttributesInternal()
             continue;
         }
 
-        // This will clear the array if there are no elements.
-        GetElementsForID(id, elements);
-        if (!elements.Count()) {
+        nsIdentifierMapEntry* entry = mIdentifierMap.GetEntry(id);
+        if (!entry) {
+            continue;
+        }
+
+        // We want to hold strong refs to the elements while applying
+        // persistent attributes, just in case.
+        elements.Clear();
+        elements.SetCapacity(entry->GetIdElements().Length());
+        for (Element* element : entry->GetIdElements()) {
+            elements.AppendObject(element);
+        }
+        if (elements.IsEmpty()) {
             continue;
         }
 
