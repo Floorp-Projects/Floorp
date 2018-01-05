@@ -95,6 +95,8 @@ UNIFIED_SOURCES += [
     'nsDocShellTransferableHooks.cpp',
     'nsDocShellTreeOwner.cpp',
     'nsDSURIContentListener.cpp',
+    'nsPingListener.cpp',
+    'nsRefreshTimer.cpp',
     'nsWebNavigationInfo.cpp',
     'PendingGlobalHistoryEntry.cpp',
     'SerializedLoadContext.cpp',

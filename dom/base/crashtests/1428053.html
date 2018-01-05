@@ -1,0 +1,23 @@
+<script>
+  try { o1 = document.createElement("h1") } catch (e) {}
+  try { o2 = document.createElement("slot") } catch (e) {}
+  try { o3 = document.createElement("o") } catch (e) {}
+  try { document.documentElement.appendChild(o1) } catch (e) {}
+  try { document.documentElement.appendChild(o3) } catch (e) {}
+  try { o4 = o1.attachShadow({mode: "open"}) } catch (e) {}
+  try { o5 = new Range() } catch (e) {}
+  try { o6 = new MutationObserver(function(arg_0, arg_1) {
+      try { o4.append("", o2, "") } catch (e) {};
+  }) } catch (e) {}
+  try { o5.selectNode(o3); } catch (e) {}
+  try { customElements.define("custom-element_0", class extends HTMLElement {
+      connectedCallback() {
+          try { this.offsetHeight } catch (e) {}
+      }
+  }) } catch (e) {}
+  try { o8 = document.createElement("custom-element_0") } catch (e) {}
+  try { document.documentElement.appendChild(o8) } catch (e) {}
+  try { o6.observe(document, { "childList": [""] }); } catch (e) {}
+  try { document.replaceChild(o5.endContainer, document.documentElement); } catch (e) {}
+  try { o1.insertAdjacentHTML("afterBegin", "<</#"); } catch (e) {}
+</script>

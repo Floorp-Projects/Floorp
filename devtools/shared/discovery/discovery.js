@@ -57,11 +57,6 @@ XPCOMUtils.defineLazyGetter(this, "sysInfo", () => {
   return Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
 });
 
-XPCOMUtils.defineLazyGetter(this, "libcutils", function () {
-  let { libcutils } = Cu.import("resource://gre/modules/systemlibs.js", {});
-  return libcutils;
-});
-
 var logging = Services.prefs.getBoolPref("devtools.discovery.log");
 function log(msg) {
   if (logging) {
