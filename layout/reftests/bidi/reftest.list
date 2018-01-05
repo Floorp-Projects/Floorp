@@ -173,3 +173,4 @@ fuzzy-if(Android,254,231) == brackets-2c-rtl.html brackets-2c-rtl-ref.html
 == 1217833-2.html 1217833-2-ref.html
 == 1231175-1.html 1231175-1-ref.html
 == 1366623-1.html 1366623-1-ref.html
+fails == 1426042-1.html 1426042-1-ref.html
