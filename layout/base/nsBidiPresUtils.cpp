@@ -888,6 +888,13 @@ nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd)
     if (runLength <= 0) {
       // Get the next run of text from the Bidi engine
       if (++numRun >= runCount) {
+        // We've run out of runs of text; but don't forget to store bidi data
+        // to the frame before breaking out of the loop (bug 1426042).
+        storeBidiDataToFrame();
+        if (isTextFrame) {
+          frame->AdjustOffsetsForBidi(contentOffset,
+                                      contentOffset + fragmentLength);
+        }
         break;
       }
       int32_t lineOffset = logicalLimit;
