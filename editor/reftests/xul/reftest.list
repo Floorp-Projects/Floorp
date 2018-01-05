@@ -10,7 +10,6 @@ fails-if(Android) skip-if(winWidget) == emptytextbox-1.xul emptytextbox-ref.xul 
 fails-if(Android) skip-if(winWidget) == emptytextbox-2.xul emptytextbox-ref.xul # Windows: bug 1239170
 != emptytextbox-3.xul emptytextbox-ref.xul
 != emptytextbox-4.xul emptytextbox-ref.xul
-fails-if(Android) skip-if(winWidget) == emptytextbox-5.xul emptytextbox-ref.xul # Windows: bug 1239170
 # There is no way to simulate a number textbox in windows XP/Vista/7 default theme using CSS.
 # Therefore, the equlity tests below should be marked as failing.
 != number-1.xul number-ref.xul

@@ -778,10 +778,6 @@ textbox[resizable="true"] > .textbox-input-box > html|textarea.textbox-textarea 
   -moz-binding: url("chrome://global/content/bindings/textbox.xml#input-box-spell");
 }
 
-textbox[type="timed"] {
-  -moz-binding: url("chrome://global/content/bindings/textbox.xml#timed-textbox");
-}
-
 textbox[type="search"] {
   -moz-binding: url("chrome://global/content/bindings/textbox.xml#search-textbox");
 }
