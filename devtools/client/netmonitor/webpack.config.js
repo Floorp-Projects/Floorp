@@ -75,7 +75,6 @@ let webpackConfig = {
       "devtools/client/framework/menu": "devtools-modules/src/menu",
       "devtools/client/netmonitor/src/utils/menu": "devtools-contextmenu",
 
-      "devtools/client/shared/vendor/immutable": "immutable",
       "devtools/client/shared/vendor/react": "react",
       "devtools/client/shared/vendor/react-dom": "react-dom",
       "devtools/client/shared/vendor/react-redux": "react-redux",
