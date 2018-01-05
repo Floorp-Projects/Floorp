@@ -205,6 +205,8 @@ exports.ERROR_INVALID_PARAMETER              = "INVALID_PARAMETER";
 exports.ERROR_CODE_METHOD_NOT_ALLOWED        = 405;
 exports.ERROR_MSG_METHOD_NOT_ALLOWED         = "METHOD_NOT_ALLOWED";
 
+exports.DERIVED_KEYS_NAMES = ["kSync", "kXCS", "kExtSync", "kExtKbHash"];
+
 // FxAccounts has the ability to "split" the credentials between a plain-text
 // JSON file in the profile dir and in the login manager.
 // In order to prevent new fields accidentally ending up in the "wrong" place,
@@ -218,7 +220,7 @@ exports.FXA_PWDMGR_PLAINTEXT_FIELDS = new Set(
 
 // Fields we store in secure storage if it exists.
 exports.FXA_PWDMGR_SECURE_FIELDS = new Set(
-  ["kA", "kB", "keyFetchToken", "unwrapBKey", "assertion"]);
+  [...exports.DERIVED_KEYS_NAMES, "keyFetchToken", "unwrapBKey", "assertion"]);
 
 // Fields we keep in memory and don't persist anywhere.
 exports.FXA_PWDMGR_MEMORY_FIELDS = new Set(
