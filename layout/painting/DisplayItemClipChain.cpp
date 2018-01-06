@@ -39,10 +39,9 @@ DisplayItemClipChain::ToString(const DisplayItemClipChain* aClipChain)
   nsAutoCString str;
   for (auto* sc = aClipChain; sc; sc = sc->mParent) {
     if (sc->mASR) {
-      str.AppendPrintf("<%s> [0x%p]", sc->mClip.ToString().get(), sc->mASR->mScrollableFrame);
-
+      str.AppendPrintf("0x%p <%s> [0x%p]", sc, sc->mClip.ToString().get(), sc->mASR->mScrollableFrame);
     } else {
-      str.AppendPrintf("<%s> [root asr]", sc->mClip.ToString().get());
+      str.AppendPrintf("0x%p <%s> [root asr]", sc, sc->mClip.ToString().get());
     }
     if (sc->mParent) {
       str.AppendLiteral(", ");
