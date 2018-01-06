@@ -27,10 +27,11 @@ def fill_labels_tranform(_, jobs):
 def validate_jobs_schema_transform_partial(description_schema, transform_type, config, jobs):
     for job in jobs:
         label = job.get('label', '?no-label?')
-        yield validate_schema(
+        validate_schema(
             description_schema, job,
             "In {} ({!r} kind) task for {!r}:".format(transform_type, config.kind, label)
         )
+        yield job
 
 
 def validate_dependent_tasks_transform(_, jobs):

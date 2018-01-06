@@ -62,11 +62,11 @@ WebGL2Context::ValidateClearBuffer(const char* funcName, GLenum buffer, GLint dr
 
     ////
 
+    if (!BindCurFBForDraw(funcName))
+        return false;
+
     const auto& fb = mBoundDrawFramebuffer;
     if (fb) {
-        if (!fb->ValidateAndInitAttachments(funcName))
-            return false;
-
         if (!fb->ValidateClearBufferType(funcName, buffer, drawBuffer, funcType))
             return false;
     } else if (buffer == LOCAL_GL_COLOR) {
@@ -110,6 +110,13 @@ WebGL2Context::ClearBufferfv(GLenum buffer, GLint drawBuffer, const Float32Arr& 
         return;
     }
 
+    if (!mBoundDrawFramebuffer &&
+        buffer == LOCAL_GL_DEPTH &&
+        mNeedsFakeNoDepth)
+    {
+        return;
+    }
+
     ScopedDrawCallWrapper wrapper(*this);
     const auto ptr = src.elemBytes + srcElemOffset;
     gl->fClearBufferfv(buffer, drawBuffer, ptr);
@@ -132,6 +139,13 @@ WebGL2Context::ClearBufferiv(GLenum buffer, GLint drawBuffer, const Int32Arr& sr
 
     if (!ValidateClearBuffer(funcName, buffer, drawBuffer, src.elemCount, srcElemOffset,
                              LOCAL_GL_INT))
+    {
+        return;
+    }
+
+    if (!mBoundDrawFramebuffer &&
+        buffer == LOCAL_GL_STENCIL &&
+        mNeedsFakeNoStencil)
     {
         return;
     }
@@ -179,8 +193,18 @@ WebGL2Context::ClearBufferfi(GLenum buffer, GLint drawBuffer, GLfloat depth,
     if (!ValidateClearBuffer(funcName, buffer, drawBuffer, 2, 0, 0))
         return;
 
+    auto driverDepth = depth;
+    auto driverStencil = stencil;
+    if (!mBoundDrawFramebuffer) {
+        if (mNeedsFakeNoDepth) {
+            driverDepth = 1.0f;
+        } else if (mNeedsFakeNoStencil) {
+            driverStencil = 0;
+        }
+    }
+
     ScopedDrawCallWrapper wrapper(*this);
-    gl->fClearBufferfi(buffer, drawBuffer, depth, stencil);
+    gl->fClearBufferfi(buffer, drawBuffer, driverDepth, driverStencil);
 }
 
 } // namespace mozilla

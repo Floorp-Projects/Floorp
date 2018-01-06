@@ -1561,7 +1561,7 @@ WebGLContext::ReadPixelsImpl(GLint x, GLint y, GLsizei rawWidth, GLsizei rawHeig
     const webgl::FormatUsageInfo* srcFormat;
     uint32_t srcWidth;
     uint32_t srcHeight;
-    if (!ValidateCurFBForRead("readPixels", &srcFormat, &srcWidth, &srcHeight))
+    if (!BindCurFBForColorRead("readPixels", &srcFormat, &srcWidth, &srcHeight))
         return;
 
     //////
@@ -1605,8 +1605,6 @@ WebGLContext::ReadPixelsImpl(GLint x, GLint y, GLsizei rawWidth, GLsizei rawHeig
 
     ////////////////
     // Now that the errors are out of the way, on to actually reading!
-
-    OnBeforeReadCall();
 
     if (!rwWidth || !rwHeight) {
         // Disjoint rects, so we're done already.

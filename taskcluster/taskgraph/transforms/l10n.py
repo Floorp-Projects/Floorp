@@ -236,8 +236,9 @@ def copy_in_useful_magic(config, jobs):
 @transforms.add
 def validate_early(config, jobs):
     for job in jobs:
-        yield validate_schema(l10n_description_schema, job,
-                              "In job {!r}:".format(job.get('name', 'unknown')))
+        validate_schema(l10n_description_schema, job,
+                        "In job {!r}:".format(job.get('name', 'unknown')))
+        yield job
 
 
 @transforms.add
@@ -394,8 +395,9 @@ def chain_of_trust(config, jobs):
 @transforms.add
 def validate_again(config, jobs):
     for job in jobs:
-        yield validate_schema(l10n_description_schema, job,
-                              "In job {!r}:".format(job.get('name', 'unknown')))
+        validate_schema(l10n_description_schema, job,
+                        "In job {!r}:".format(job.get('name', 'unknown')))
+        yield job
 
 
 @transforms.add
