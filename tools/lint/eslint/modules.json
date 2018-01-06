@@ -193,6 +193,7 @@
   "subprocess_unix.jsm": ["SubprocessImpl"],
   "subprocess_win.jsm": ["SubprocessImpl"],
   "sync.jsm": ["Authentication"],
+  "SyncedBookmarksMirror.jsm": ["SyncedBookmarksMirror"],
   "tabs.js": ["TabEngine", "TabSetRecord"],
   "tabs.jsm": ["BrowserTabs"],
   "tcpsocket_test.jsm": ["createSocket", "createServer", "enablePrefsAndPermissions", "socketCompartmentInstanceOfArrayBuffer"],
