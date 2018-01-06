@@ -141,15 +141,11 @@ private:
   struct InsertionPoint
   {
     InsertionPoint()
-      : mParentFrame(nullptr)
-      , mContainer(nullptr)
-    {}
-
-    InsertionPoint(nsContainerFrame* aParentFrame, nsIContent* aContainer)
-      : mParentFrame(aParentFrame)
-      , mContainer(aContainer)
-    {}
-
+      : mParentFrame(nullptr), mContainer(nullptr), mMultiple(false) {}
+    InsertionPoint(nsContainerFrame* aParentFrame, nsIContent* aContainer,
+                   bool aMultiple = false)
+      : mParentFrame(aParentFrame), mContainer(aContainer),
+        mMultiple(aMultiple) {}
     /**
      * The parent frame to use if the inserted children needs to create
      * frame(s).  May be null, which signals that  we shouldn't try to
@@ -164,14 +160,12 @@ private:
      * It's undefined if mParentFrame is null.
      */
     nsIContent* mContainer;
-
     /**
-     * Whether it is required to insert children one-by-one instead of as a
-     * range.
+     * If true then there are multiple insertion points, which means consumers
+     * should insert children individually into the node's flattened tree parent.
      */
-    bool IsMultiple() const;
+    bool mMultiple;
   };
-
   /**
    * Checks if the children of aContainer in the range [aStartChild, aEndChild)
    * can be inserted/appended to one insertion point together. If so, returns
@@ -363,15 +357,9 @@ public:
   nsresult ReplicateFixedFrames(nsPageContentFrame* aParentFrame);
 
   /**
-   * Get the insertion point for aChild.
+   * Get the XBL insertion point for aChild in aContainer.
    */
-  InsertionPoint GetInsertionPoint(nsIContent* aChild);
-
-  /**
-   * Return the insertion frame of the primary frame of aContent, or its nearest
-   * ancestor that isn't display:contents.
-   */
-  nsContainerFrame* GetContentInsertionFrameFor(nsIContent* aContent);
+  InsertionPoint GetInsertionPoint(nsIContent* aContainer, nsIContent* aChild);
 
   void CreateListBoxContent(nsContainerFrame* aParentFrame,
                             nsIFrame*         aPrevFrame,
@@ -2190,6 +2178,12 @@ private:
                                     bool* aIsRangeInsertSafe,
                                     nsIContent* aStartSkipChild = nullptr,
                                     nsIContent *aEndSkipChild = nullptr);
+
+  /**
+   * Return the insertion frame of the primary frame of aContent, or its nearest
+   * ancestor that isn't display:contents.
+   */
+  nsContainerFrame* GetContentInsertionFrameFor(nsIContent* aContent);
 
   // see if aContent and aSibling are legitimate siblings due to restrictions
   // imposed by table columns
