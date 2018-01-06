@@ -33,14 +33,16 @@ public class HistoryDataAccessor extends
 
   @Override
   protected ContentValues getContentValues(Record record) {
-    ContentValues cv = new ContentValues();
-    HistoryRecord rec = (HistoryRecord) record;
+    // NB: these two sets of values (with or without visit information) must agree with the
+    // BrowserProvider#bulkInsertHistory implementation.
+    final ContentValues cv = new ContentValues();
+    final HistoryRecord rec = (HistoryRecord) record;
     cv.put(BrowserContract.History.GUID, rec.guid);
     cv.put(BrowserContract.History.TITLE, rec.title);
     cv.put(BrowserContract.History.URL, rec.histURI);
     if (rec.visits != null) {
-      JSONArray visits = rec.visits;
-      long mostRecent = getLastVisited(visits);
+      final JSONArray visits = rec.visits;
+      final long mostRecent = getLastVisited(visits);
 
       // Fennec stores history timestamps in milliseconds, and visit timestamps in microseconds.
       // The rest of Sync works in microseconds. This is the conversion point for records coming form Sync.
@@ -60,6 +62,8 @@ public class HistoryDataAccessor extends
   public Uri insert(Record record) {
     HistoryRecord rec = (HistoryRecord) record;
 
+    // TODO this could use BrowserContract.METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC, both for
+    // speed (one transaction instead of one), and for the benefit of data consistency concerns.
     Logger.debug(LOG_TAG, "Storing record " + record.guid);
     Uri newRecordUri = super.insert(record);
 
@@ -101,8 +105,8 @@ public class HistoryDataAccessor extends
   /**
    * Insert records.
    * <p>
-   * This inserts all the records (using <code>ContentProvider.bulkInsert</code>),
-   * then inserts all the visit information (also using <code>ContentProvider.bulkInsert</code>).
+   * This inserts all the records and their visit information using a custom ContentProvider interface.
+   * Underlying ContentProvider must handle "call" method {@link BrowserContract#METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC}.
    *
    * @param records
    *          the records to insert.
