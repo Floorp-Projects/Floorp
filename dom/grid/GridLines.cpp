@@ -137,15 +137,11 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
       // problem. We do the work here since this is only run when
       // requested by devtools, and slowness here will not affect
       // normal browsing.
-      nsTArray<nsString> possiblyDuplicateLineNames(
+      const nsTArray<nsString>& possiblyDuplicateLineNames(
         aLineInfo->mNames.SafeElementAt(i, nsTArray<nsString>()));
 
-      // Add the possiblyDuplicateLineNames one at a time to filter
-      // out the duplicates.
       nsTArray<nsString> lineNames;
-      for (const auto& name : possiblyDuplicateLineNames) {
-        AddLineNameIfNotPresent(lineNames, name);
-      }
+      AddLineNamesIfNotPresent(lineNames, possiblyDuplicateLineNames);
 
       // Add in names from grid areas where this line is used as a boundary.
       for (auto area : aAreas) {
@@ -185,6 +181,16 @@ GridLines::SetLineInfo(const ComputedGridTrackInfo* aTrackInfo,
                                                numRepeatTracks,
                                                leadingTrackCount,
                                                lineNames);
+      }
+
+      // If this line is the one that ends a repeat, then add
+      // in the mNamesFollowingRepeat names from aLineInfo.
+      if (numRepeatTracks > 0 &&
+          i == (aTrackInfo->mRepeatFirstTrack +
+                aTrackInfo->mNumLeadingImplicitTracks +
+                numRepeatTracks - numAddedLines)) {
+        AddLineNamesIfNotPresent(lineNames,
+                                 aLineInfo->mNamesFollowingRepeat);
       }
 
       RefPtr<GridLine> line = new GridLine(this);
