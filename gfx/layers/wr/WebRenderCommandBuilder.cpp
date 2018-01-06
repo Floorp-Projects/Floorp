@@ -111,7 +111,7 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
                                                                 wr::DisplayListBuilder& aBuilder,
                                                                 wr::IpcResourceUpdateQueue& aResources)
 {
-  mScrollingHelper.BeginList();
+  mScrollingHelper.BeginList(aSc);
 
   bool apzEnabled = mManager->AsyncPanZoomEnabled();
   EventRegions eventRegions;
@@ -261,7 +261,7 @@ WebRenderCommandBuilder::CreateWebRenderCommandsFromDisplayList(nsDisplayList* a
     mLayerScrollData.back().AddEventRegions(eventRegions);
   }
 
-  mScrollingHelper.EndList();
+  mScrollingHelper.EndList(aSc);
 }
 
 Maybe<wr::ImageKey>
