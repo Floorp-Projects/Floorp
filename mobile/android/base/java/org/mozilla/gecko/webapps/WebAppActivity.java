@@ -28,6 +28,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.AppConstants;
@@ -104,6 +105,45 @@ public class WebAppActivity extends AppCompatActivity
 
         mGeckoSession.setNavigationListener(this);
         mGeckoSession.setContentListener(this);
+        mGeckoSession.setProgressListener(new GeckoSession.ProgressListener() {
+            @Override
+            public void onPageStart(GeckoSession session, String url) {
+
+            }
+
+            @Override
+            public void onPageStop(GeckoSession session, boolean success) {
+
+            }
+
+            @Override
+            public void onSecurityChange(GeckoSession session, SecurityInformation security) {
+                int message;
+                if (!security.isSecure) {
+                    if (SecurityInformation.CONTENT_LOADED == security.mixedModeActive) {
+                        // Active Mixed Content loaded because user has disabled blocking.
+                        message = R.string.mixed_content_protection_disabled;
+                    } else if (SecurityInformation.CONTENT_LOADED == security.mixedModePassive) {
+                        // Passive Mixed Content loaded.
+                        if (SecurityInformation.CONTENT_BLOCKED == security.mixedModeActive) {
+                            message = R.string.mixed_content_blocked_some;
+                        } else {
+                            message = R.string.mixed_content_display_loaded;
+                        }
+                    } else {
+                        // Unencrypted connection with no mixed content.
+                        message = R.string.identity_connection_insecure;
+                    }
+                    fallbackToFennec(getString(message));
+                } else {
+                    if (security.isException) {
+                        message = R.string.identity_connection_insecure;
+                        fallbackToFennec(getString(message));
+                    }
+                }
+
+            }
+        });
 
         GeckoAccessibility.setDelegate(mGeckoView);
 
@@ -124,19 +164,8 @@ public class WebAppActivity extends AppCompatActivity
             mManifest = WebAppManifest.fromFile(getIntent().getStringExtra(MANIFEST_URL),
                                                 getIntent().getStringExtra(MANIFEST_PATH));
         } catch (Exception e) {
-            Log.w(LOGTAG, "Cannot retrieve manifest, launching in Firefox");
-            try {
-                Intent intent = new Intent(this, BrowserApp.class);
-                intent.setAction(Intent.ACTION_VIEW);
-                if (getIntent().getData() != null) {
-                    intent.setData(getIntent().getData());
-                    intent.setPackage(getPackageName());
-                    startActivity(intent);
-                }
-            } catch (Exception e2) {
-                Log.e(LOGTAG, "Failed to fall back to launching in Firefox");
-            }
-            finish();
+            Log.w(LOGTAG, "Cannot retrieve manifest, launching in Firefox:" + e);
+            fallbackToFennec(null);
             return;
         }
 
@@ -149,6 +178,25 @@ public class WebAppActivity extends AppCompatActivity
 
 
 
+    }
+
+    private void fallbackToFennec(String message) {
+        if (message != null) {
+            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        }
+
+        try {
+            Intent intent = new Intent(this, BrowserApp.class);
+            intent.setAction(Intent.ACTION_VIEW);
+            if (getIntent().getData() != null) {
+                intent.setData(getIntent().getData());
+                intent.setPackage(getPackageName());
+                startActivity(intent);
+            }
+        } catch (Exception e2) {
+            Log.e(LOGTAG, "Failed to fall back to launching in Firefox");
+        }
+        finish();
     }
 
     @Override
