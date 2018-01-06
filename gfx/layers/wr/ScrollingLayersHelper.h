@@ -73,16 +73,6 @@ private:
   const DisplayItemClipChain* ExtendChain(const DisplayItemClipChain* aClip);
   Maybe<ClipAndScroll> EnclosingClipAndScroll() const;
 
-  // Note: two DisplayItemClipChain* A and B might actually be "equal" (as per
-  // DisplayItemClipChain::Equal(A, B)) even though they are not the same pointer
-  // (A != B). In this hopefully-rare case, they will get separate entries
-  // in this map when in fact we could collapse them. However, to collapse
-  // them involves writing a custom hash function for the pointer type such that
-  // A and B hash to the same things whenever DisplayItemClipChain::Equal(A, B)
-  // is true, and that will incur a performance penalty for all the hashmap
-  // operations, so is probably not worth it. With the current code we might
-  // end up creating multiple clips in WR that are effectively identical but
-  // have separate clip ids. Hopefully this won't happen very often.
   typedef std::unordered_map<const DisplayItemClipChain*, wr::WrClipId> ClipIdMap;
 
   WebRenderLayerManager* MOZ_NON_OWNING_REF mManager;
@@ -97,9 +87,6 @@ private:
   // WR side we need to create different clips if they are in different
   // reference frames.
   std::vector<ClipIdMap> mCacheStack;
-
-  typedef std::unordered_map<FrameMetrics::ViewID, const DisplayItemClipChain*> ScrollParentMap;
-  ScrollParentMap mScrollParents;
 
   struct ItemClips {
     ItemClips(const ActiveScrolledRoot* aAsr,
