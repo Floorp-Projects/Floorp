@@ -11,7 +11,7 @@ add_task(function* () {
   let { L10N } = require("devtools/client/netmonitor/src/utils/l10n");
 
   // Set a higher panel height in order to get full CodeMirror content
-  Services.prefs.setIntPref("devtools.toolbox.footer.height", 400);
+  Services.prefs.setIntPref("devtools.toolbox.footer.height", 600);
 
   let { tab, monitor } = yield initNetMonitor(POST_DATA_URL);
   info("Starting test... ");
@@ -139,7 +139,13 @@ add_task(function* () {
 
       is(labels.length, 3, "There should be 3 param values displayed in this tabpanel.");
 
-      let text = document.querySelector(".CodeMirror-code").textContent;
+      // Collect code lines and combine into one text for checking
+      let text = "";
+      let lines = [...document.querySelectorAll(".CodeMirror-line")];
+
+      lines.forEach((line) => {
+        text += line.textContent + "\n";
+      });
 
       ok(text.includes("Content-Disposition: form-data; name=\"text\""),
         "The text shown in the source editor is incorrect (1.1).");

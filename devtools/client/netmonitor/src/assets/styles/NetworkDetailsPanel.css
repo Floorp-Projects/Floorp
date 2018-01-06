@@ -159,6 +159,7 @@
   display: block;
   height: 100%;
   flex: 1;
+  overflow-x: auto;
 }
 
 .network-monitor .source-editor-mount {
