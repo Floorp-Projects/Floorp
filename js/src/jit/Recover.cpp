@@ -1762,7 +1762,10 @@ RArrayState::recover(JSContext* cx, SnapshotIterator& iter) const
     uint32_t initLength = iter.read().toInt32();
 
     if (!object->denseElementsAreCopyOnWrite()) {
+        MOZ_ASSERT(object->getDenseInitializedLength() == 0,
+                   "initDenseElement call below relies on this");
         object->setDenseInitializedLength(initLength);
+
         for (size_t index = 0; index < numElements(); index++) {
             Value val = iter.read();
 
@@ -1774,12 +1777,16 @@ RArrayState::recover(JSContext* cx, SnapshotIterator& iter) const
             object->initDenseElement(index, val);
         }
     } else {
-        MOZ_ASSERT(object->getDenseInitializedLength() == numElements());
-        MOZ_ASSERT(initLength == numElements());
+        MOZ_RELEASE_ASSERT(object->getDenseInitializedLength() == numElements());
+        MOZ_RELEASE_ASSERT(initLength == numElements());
 
         for (size_t index = 0; index < numElements(); index++) {
             Value val = iter.read();
-            MOZ_RELEASE_ASSERT(object->getDenseElement(index) == val);
+            if (object->getDenseElement(index) == val)
+                continue;
+            if (!object->maybeCopyElementsForWrite(cx))
+                return false;
+            object->setDenseElement(index, val);
         }
     }
 

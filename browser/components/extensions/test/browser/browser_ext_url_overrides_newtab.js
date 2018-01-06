@@ -311,6 +311,11 @@ add_task(async function test_new_tab_restore_settings() {
   is(gBrowser.currentURI.spec, "about:newtab",
      "The user has been redirected to about:newtab");
 
+  // Wait for the next event tick to make sure the remaining part of the test
+  // is not executed inside tabbrowser's onLocationChange.
+  // See bug 1416153 for more details.
+  await TestUtils.waitForTick();
+
   // Reopen a browser tab and verify that there's no doorhanger.
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   let newTabOpened = waitForNewTab();
@@ -430,6 +435,11 @@ add_task(async function test_new_tab_restore_settings_multiple() {
   is(addonOne.userDisabled, true, "The extension is now disabled");
   is(gBrowser.currentURI.spec, "about:newtab",
      "The user is now on the original New Tab URL since all extensions are disabled");
+
+  // Wait for the next event tick to make sure the remaining part of the test
+  // is not executed inside tabbrowser's onLocationChange.
+  // See bug 1416153 for more details.
+  await TestUtils.waitForTick();
 
   // Reopen a browser tab and verify that there's no doorhanger.
   await BrowserTestUtils.removeTab(gBrowser.selectedTab);
