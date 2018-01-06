@@ -450,6 +450,17 @@ LIRGenerator::visitComputeThis(MComputeThis* ins)
 }
 
 void
+LIRGenerator::visitImplicitThis(MImplicitThis* ins)
+{
+    MDefinition* env = ins->envChain();
+    MOZ_ASSERT(env->type() == MIRType::Object);
+
+    LImplicitThis* lir = new(alloc()) LImplicitThis(useRegisterAtStart(env));
+    defineReturn(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitArrowNewTarget(MArrowNewTarget* ins)
 {
     MOZ_ASSERT(ins->type() == MIRType::Value);

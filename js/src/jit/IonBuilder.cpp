@@ -2341,9 +2341,13 @@ IonBuilder::inspectOpcode(JSOp op)
             pushConstant(UndefinedValue());
             return Ok();
         }
-
-        // Just fall through to the unsupported bytecode case.
-        break;
+        // Fallthrough to IMPLICITTHIS in non-syntactic scope case
+        MOZ_FALLTHROUGH;
+      case JSOP_IMPLICITTHIS:
+      {
+        PropertyName* name = info().getAtom(pc)->asPropertyName();
+        return jsop_implicitthis(name);
+      }
 
       case JSOP_NEWTARGET:
         return jsop_newtarget();
@@ -2443,7 +2447,6 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_FINALLY:
       case JSOP_GETRVAL:
       case JSOP_GOSUB:
-      case JSOP_IMPLICITTHIS:
       case JSOP_RETSUB:
       case JSOP_SETINTRINSIC:
       case JSOP_THROWMSG:
@@ -13210,6 +13213,18 @@ IonBuilder::jsop_debugger()
     // cx->compartment()->isDebuggee(). Resume in-place and have baseline
     // handle the details.
     return resumeAt(debugger, pc);
+}
+
+AbortReasonOr<Ok>
+IonBuilder::jsop_implicitthis(PropertyName* name)
+{
+    MOZ_ASSERT(usesEnvironmentChain());
+
+    MImplicitThis* implicitThis = MImplicitThis::New(alloc(), current->environmentChain(), name);
+    current->add(implicitThis);
+    current->push(implicitThis);
+
+    return resumeAfter(implicitThis);
 }
 
 MInstruction*
