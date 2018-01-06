@@ -70,14 +70,17 @@ struct ComputedGridLineInfo
 {
   explicit ComputedGridLineInfo(nsTArray<nsTArray<nsString>>&& aNames,
                                 const nsTArray<nsString>& aNamesBefore,
-                                const nsTArray<nsString>& aNamesAfter)
+                                const nsTArray<nsString>& aNamesAfter,
+                                nsTArray<nsString>&& aNamesFollowingRepeat)
     : mNames(aNames)
     , mNamesBefore(aNamesBefore)
     , mNamesAfter(aNamesAfter)
+    , mNamesFollowingRepeat(aNamesFollowingRepeat)
   {}
   nsTArray<nsTArray<nsString>> mNames;
   nsTArray<nsString> mNamesBefore;
   nsTArray<nsString> mNamesAfter;
+  nsTArray<nsString> mNamesFollowingRepeat;
 };
 } // namespace mozilla
 
