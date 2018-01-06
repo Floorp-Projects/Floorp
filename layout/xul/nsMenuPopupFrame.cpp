@@ -2090,8 +2090,12 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, bool& doAction
   doAction = false;
 
   // Enumerate over our list of frames.
-  nsContainerFrame* immediateParent =
-    nsXULPopupManager::ImmediateParentFrame(this);
+  auto insertion = PresShell()->
+    FrameConstructor()->GetInsertionPoint(GetContent(), nullptr);
+  nsContainerFrame* immediateParent = insertion.mParentFrame;
+  if (!immediateParent)
+    immediateParent = this;
+
   uint32_t matchCount = 0, matchShortcutCount = 0;
   bool foundActive = false;
   nsMenuFrame* frameBefore = nullptr;

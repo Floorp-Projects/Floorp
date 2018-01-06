@@ -7341,53 +7341,34 @@ nsCSSFrameConstructor::IssueSingleInsertNofications(nsIContent* aContainer,
   }
 }
 
-bool
-nsCSSFrameConstructor::InsertionPoint::IsMultiple() const
-{
-  if (!mParentFrame) {
-    return false;
-  }
-
-  // Fieldset frames have multiple normal flow child frame lists so handle it
-  // the same as if it had multiple content insertion points.
-  if (mParentFrame->IsFieldSetFrame()) {
-    return true;
-  }
-
-  // A details frame moves the first summary frame to be its first child, so we
-  // treat it as if it has multiple content insertion points.
-  if (mParentFrame->IsDetailsFrame()) {
-    return true;
-  }
-
-  return false;
-}
-
 nsCSSFrameConstructor::InsertionPoint
 nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aContainer,
                                               nsIContent* aStartChild,
                                               nsIContent* aEndChild)
 {
-  MOZ_ASSERT(aStartChild);
+  // See if we have an XBL insertion point. If so, then that's our
+  // real parent frame; if not, then the frame hasn't been built yet
+  // and we just bail.
+  InsertionPoint insertionPoint = GetInsertionPoint(aContainer, nullptr);
+  if (!insertionPoint.mParentFrame && !insertionPoint.mMultiple) {
+    return insertionPoint; // Don't build the frames.
+  }
 
-  // If the children of the container may be distributed to different insertion
-  // points, insert them separately and bail out, letting ContentInserted handle
-  // the mess.
-  if (aContainer->GetShadowRoot() || aContainer->GetXBLBinding()) {
+  if (insertionPoint.mMultiple || aStartChild->GetXBLInsertionPoint()) {
+    // If we have multiple insertion points or if we have an insertion point
+    // and the operation is not a true append or if the insertion point already
+    // has explicit children, then we must fall back.
+    if (insertionPoint.mMultiple || aEndChild ||
+        insertionPoint.mParentFrame->GetContent()->HasChildren()) {
+      // Now comes the fun part.  For each inserted child, make a
+      // ContentInserted call as if it had just gotten inserted and
+      // let ContentInserted handle the mess.
       IssueSingleInsertNofications(aContainer, aStartChild, aEndChild);
-      return { };
+      insertionPoint.mParentFrame = nullptr;
+    }
   }
 
-  // Now the flattened tree parent of all the siblings is the same, just use the
-  // same insertion point and take the fast path, unless it's a multiple
-  // insertion point.
-  InsertionPoint ip = GetInsertionPoint(aStartChild);
-  if (ip.IsMultiple()) {
-    IssueSingleInsertNofications(aContainer, aStartChild, aEndChild);
-    return { };
-  }
-
-  return ip;
+  return insertionPoint;
 }
 
 bool
@@ -8028,7 +8009,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aContainer,
     // See if we have an XBL insertion point. If so, then that's our
     // real parent frame; if not, then the frame hasn't been built yet
     // and we just bail.
-    insertion = GetInsertionPoint(aStartChild);
+    insertion = GetInsertionPoint(aContainer, aStartChild);
   } else {
     // Get our insertion point. If we need to issue single ContentInserted's
     // GetRangeInsertionPoint will take care of that for us.
@@ -9315,17 +9296,78 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
 }
 
 nsCSSFrameConstructor::InsertionPoint
-nsCSSFrameConstructor::GetInsertionPoint(nsIContent* aChild)
+nsCSSFrameConstructor::GetInsertionPoint(nsIContent* aContainer,
+                                         nsIContent* aChild)
 {
-  MOZ_ASSERT(aChild);
-  nsIContent* insertionElement = aChild->GetFlattenedTreeParent();
-  if (!insertionElement) {
-    // The element doesn't belong in the flattened tree, and thus we don't want
-    // to render it.
-    return { };
+  nsBindingManager* bindingManager = mDocument->BindingManager();
+
+  nsIContent* insertionElement;
+  if (aChild) {
+    // We've got an explicit insertion child. Check to see if it's
+    // anonymous.
+    if (aChild->GetBindingParent() == aContainer) {
+      // This child content is anonymous. Don't use the insertion
+      // point, since that's only for the explicit kids.
+      return InsertionPoint(GetContentInsertionFrameFor(aContainer), aContainer);
+    }
+
+    if (nsContentUtils::HasDistributedChildren(aContainer) ||
+        aContainer->IsShadowRoot()) {
+      // The container distributes nodes or is a shadow root, use the frame of
+      // the flattened tree parent.
+      //
+      // It may be the case that the node is distributed but not matched to any
+      // insertion points, so there is no flattened parent.
+      //
+      // FIXME(emilio): We should be able to use this path all the time.
+      nsIContent* flattenedParent = aChild->GetFlattenedTreeParent();
+      if (flattenedParent) {
+        return InsertionPoint(GetContentInsertionFrameFor(flattenedParent),
+                              flattenedParent);
+      }
+      return InsertionPoint();
+    }
+
+    insertionElement = bindingManager->FindNestedInsertionPoint(aContainer, aChild);
+  } else {
+    if (nsContentUtils::HasDistributedChildren(aContainer)) {
+      // The container distributes nodes to shadow DOM insertion points.
+      // Return with aMultiple set to true to induce callers to insert children
+      // individually into the node's flattened tree parent.
+      return InsertionPoint(nullptr, nullptr, true);
+    }
+
+    bool multiple;
+    insertionElement = bindingManager->FindNestedSingleInsertionPoint(aContainer, &multiple);
+    if (multiple) {
+      return InsertionPoint(nullptr, nullptr, true);
+    }
   }
 
-  return { GetContentInsertionFrameFor(insertionElement), insertionElement };
+  if (!insertionElement) {
+    // The FindNested{,Single}InsertionPoint methods return null in the case
+    // that there is a binding with anonymous content but no insertion point.
+    // In that case the element doesn't belong in the flattened tree, and we
+    // don't want to render it.
+    return InsertionPoint();
+  }
+
+  InsertionPoint insertion(GetContentInsertionFrameFor(insertionElement),
+                           insertionElement);
+
+  // Fieldset frames have multiple normal flow child frame lists so handle it
+  // the same as if it had multiple content insertion points.
+  if (insertion.mParentFrame && insertion.mParentFrame->IsFieldSetFrame()) {
+    insertion.mMultiple = true;
+  }
+
+  // A details frame moves the first summary frame to be its first child, so we
+  // treat it as if it has multiple content insertion points.
+  if (insertion.mParentFrame && insertion.mParentFrame->IsDetailsFrame()) {
+    insertion.mMultiple = true;
+  }
+
+  return insertion;
 }
 
 // Capture state for the frame tree rooted at the frame associated with the
@@ -11031,7 +11073,7 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
       TreeMatchContext::AutoAncestorPusher ancestorPusher(aState.mTreeMatchContext);
       if (parent != aContent && parent->IsElement()) {
         insertion.mContainer = child->GetFlattenedTreeParent();
-        MOZ_ASSERT(insertion.mContainer == GetInsertionPoint(child).mContainer);
+        MOZ_ASSERT(insertion.mContainer == GetInsertionPoint(parent, child).mContainer);
         if (aState.HasAncestorFilter()) {
           ancestorPusher.PushAncestorAndStyleScope(parent->AsElement());
         } else {
