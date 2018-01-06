@@ -16,6 +16,7 @@
 
 #define SLH_LOG(...)
 //#define SLH_LOG(...) printf_stderr("SLH: " __VA_ARGS__)
+//#define SLH_LOG(...) if (XRE_IsContentProcess()) printf_stderr("SLH: " __VA_ARGS__)
 
 namespace mozilla {
 namespace layers {
@@ -34,8 +35,8 @@ ScrollingLayersHelper::BeginBuild(WebRenderLayerManager* aManager,
   mManager = aManager;
   MOZ_ASSERT(!mBuilder);
   mBuilder = &aBuilder;
-  MOZ_ASSERT(mCache.empty());
-  MOZ_ASSERT(mScrollParents.empty());
+  MOZ_ASSERT(mCacheStack.empty());
+  mCacheStack.emplace_back();
   MOZ_ASSERT(mItemClipStack.empty());
 }
 
@@ -44,23 +45,29 @@ ScrollingLayersHelper::EndBuild()
 {
   mBuilder = nullptr;
   mManager = nullptr;
-  mCache.clear();
-  mScrollParents.clear();
+  mCacheStack.pop_back();
+  MOZ_ASSERT(mCacheStack.empty());
   MOZ_ASSERT(mItemClipStack.empty());
 }
 
 void
-ScrollingLayersHelper::BeginList()
+ScrollingLayersHelper::BeginList(const StackingContextHelper& aStackingContext)
 {
+  if (aStackingContext.IsReferenceFrame()) {
+    mCacheStack.emplace_back();
+  }
   mItemClipStack.emplace_back(nullptr, nullptr);
 }
 
 void
-ScrollingLayersHelper::EndList()
+ScrollingLayersHelper::EndList(const StackingContextHelper& aStackingContext)
 {
   MOZ_ASSERT(!mItemClipStack.empty());
   mItemClipStack.back().Unapply(mBuilder);
   mItemClipStack.pop_back();
+  if (aStackingContext.IsReferenceFrame()) {
+    mCacheStack.pop_back();
+  }
 }
 
 void
@@ -69,7 +76,10 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
 {
   SLH_LOG("processing item %p\n", aItem);
 
-  ItemClips clips(aItem->GetActiveScrolledRoot(), aItem->GetClipChain());
+  const DisplayItemClipChain* clip = aItem->GetClipChain();
+  clip = ExtendChain(clip);
+
+  ItemClips clips(aItem->GetActiveScrolledRoot(), clip);
   MOZ_ASSERT(!mItemClipStack.empty());
   if (clips.HasSameInputs(mItemClipStack.back())) {
     // Early-exit because if the clips are the same then we don't need to do
@@ -85,18 +95,17 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
 
   // There are two ASR chains here that we need to be fully defined. One is the
   // ASR chain pointed to by aItem->GetActiveScrolledRoot(). The other is the
-  // ASR chain pointed to by aItem->GetClipChain()->mASR. We pick the leafmost
+  // ASR chain pointed to by clip->mASR. We pick the leafmost
   // of these two chains because that one will include the other.
-  // The leafmost clip is trivially going to be aItem->GetClipChain().
+  // The leafmost clip is trivially going to be |clip|.
   // So we call DefineClipChain with these two leafmost things, and it will
   // recursively define all the clips and scroll layers with the appropriate
   // parents, but will not actually push anything onto the WR stack.
   const ActiveScrolledRoot* leafmostASR = aItem->GetActiveScrolledRoot();
-  if (aItem->GetClipChain()) {
-    leafmostASR = ActiveScrolledRoot::PickDescendant(leafmostASR,
-        aItem->GetClipChain()->mASR);
+  if (clip) {
+    leafmostASR = ActiveScrolledRoot::PickDescendant(leafmostASR, clip->mASR);
   }
-  auto ids = DefineClipChain(aItem, leafmostASR, aItem->GetClipChain(),
+  auto ids = DefineClipChain(aItem, leafmostASR, clip,
       auPerDevPixel, aStackingContext);
 
   // Now that stuff is defined, we need to ensure the right items are on the
@@ -140,7 +149,7 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
   }
   // And ensure the leafmost clip, if scrolled by that ASR, is at the top of the
   // stack.
-  if (ids.second && aItem->GetClipChain()->mASR == leafmostASR) {
+  if (ids.second && clip->mASR == leafmostASR) {
     clips.mClipId = ids.second;
   }
   // If we need the ClipAndScroll, we want to replace the topmost scroll layer
@@ -225,14 +234,15 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
   std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>> ids;
 
   if (mBuilder->HasExtraClip()) {
-    // We can't use mCache directly. However if there's an out-of-band clip that
+    // We can't use the clip cache directly. However if there's an out-of-band clip that
     // was pushed on top of aChain, we should return the id for that OOB clip,
     // so that anything we want to define as a descendant of aChain we actually
     // end up defining as a descendant of the OOB clip.
     ids.second = mBuilder->GetCacheOverride(aChain);
   } else {
-    auto it = mCache.find(aChain);
-    if (it != mCache.end()) {
+    const ClipIdMap& cache = mCacheStack.back();
+    auto it = cache.find(aChain);
+    if (it != cache.end()) {
       ids.second = Some(it->second);
     }
   }
@@ -327,7 +337,7 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
       ancestorIds.first, ancestorIds.second,
       aSc.ToRelativeLayoutRect(clip), &wrRoundedRects);
   if (!mBuilder->HasExtraClip()) {
-    mCache[aChain] = clipId;
+    mCacheStack.back()[aChain] = clipId;
   }
 
   ids.second = Some(clipId);
@@ -354,26 +364,9 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
       if (mBuilder->HasExtraClip()) {
         ids.second = mBuilder->GetCacheOverride(aChain);
       } else {
-        // Since the scroll layer was already defined, find the clip (if any)
-        // that it was previously defined as a child of. If that clip is
-        // equivalent to |aChain|, then we should use that one in the mCache
-        // lookup as it is more likely to produce a result. This happens because
-        // of how we can have two DisplayItemClipChain items that are ::Equal
-        // but not ==, and mCache only does == checking. In the hunk below,
-        // |canonicalChain| can be thought of as the clip chain instance that is
-        // equivalent to |aChain| but has the best chance of being found in
-        // mCache.
-        const DisplayItemClipChain* canonicalChain = aChain;
-        auto it = mScrollParents.find(scrollId);
-        if (it != mScrollParents.end()) {
-          const DisplayItemClipChain* scrollParent = it->second;
-          if (DisplayItemClipChain::Equal(scrollParent, aChain)) {
-            canonicalChain = scrollParent;
-          }
-        }
-
-        auto it2 = mCache.find(canonicalChain);
-        // If |it == mCache.end()| here then we have run into a case where the
+        const ClipIdMap& cache = mCacheStack.back();
+        auto it = cache.find(aChain);
+        // If |it == cache.end()| here then we have run into a case where the
         // scroll layer was previously defined with a specific parent clip, and
         // now here it has a different parent clip. Gecko can create display
         // lists like this because it treats the ASR chain and clipping chain
@@ -383,14 +376,8 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
         // supports multiple ancestors on a scroll layer we can deal with this
         // better. The layout/reftests/text/wordwrap-08.html has a Text display
         // item that exercises this case.
-        if (it2 == mCache.end()) {
-          // leave ids.second as Nothing(). This should only happen if we didn't
-          // pick up a better canonicalChain above, either because it didn't
-          // exist, or because it was not ::Equal to aChain. Therefore
-          // canonicalChain must still be equal to aChain here.
-          MOZ_ASSERT(canonicalChain == aChain);
-        } else {
-          ids.second = Some(it2->second);
+        if (it != cache.end()) {
+          ids.second = Some(it->second);
         }
       }
     }
@@ -436,11 +423,6 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
   // defining.
   MOZ_ASSERT(!(ancestorIds.first && ancestorIds.second));
 
-  if (ancestorIds.second) {
-    MOZ_ASSERT(aChain);
-    mScrollParents[scrollId] = aChain;
-  }
-
   LayoutDeviceRect contentRect =
       metrics.GetExpandedScrollableRect() * metrics.GetDevPixelsPerCSSPixel();
   // TODO: check coordinate systems are sane here
@@ -465,6 +447,71 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
   return ids;
 }
 
+const DisplayItemClipChain*
+ScrollingLayersHelper::ExtendChain(const DisplayItemClipChain* aClip)
+{
+  // The intent of this function is to handle Gecko display list scenarios
+  // like so:
+  // nsDisplayFixedPosition with clip chain A -> B -> nullptr
+  //   nsDisplayBackgroundColor with clip chain B -> nullptr
+  //
+  // The specific types are not relevant, but the important part is that there
+  // is a display item whose clip chain is a subchain of the enclosing display
+  // item.
+  //
+  // The semantics of the gecko display items means that the two clip chains
+  // should be intersected for the child display item; because one clip chain
+  // is a subset of the other the intersection comes out to be clip chain from
+  // the parent.
+  // However, WebRender doesn't let us (yet) intersect clip chains, so one of
+  // the jobs of ScrollingLayersHelper is to generate as-good-as-possible clip
+  // chains by merging the necessary clips into a new clip chain. In the example
+  // above, we really want the nsDisplayBackgroundColor to use the clip chain
+  // from A rather than from B in order to get the right clips, and this
+  // function "extends" an input of |B| and returns |A|.
+
+  if (!aClip) {
+    return aClip;
+  }
+  // mItemClipStack has the clips that we pushed for ancestor display items.
+  size_t clipDepth = mItemClipStack.size();
+  MOZ_ASSERT(clipDepth > 0);
+  while (--clipDepth > 0) {
+    const DisplayItemClipChain* enclosingClip = mItemClipStack[clipDepth - 1].mChain;
+    if (!enclosingClip) {
+      // This is a special case; if an item has a nullptr clipchain it basically
+      // inherits the clipchain from its ancestor, so let's skip to that.
+      continue;
+    }
+    if (aClip == enclosingClip) {
+      // The ancestor clip chain is the same as our item's clip chain, so
+      // we're done. Note that because this function will have run on the
+      // ancestor as well, we can be assured via induction that there is no
+      // ancestor beyond this one that has a longer superset-clipchain.
+      return aClip;
+    }
+    const ClipIdMap& cache = mCacheStack.back();
+    if (cache.find(enclosingClip) == cache.end()) {
+      // The ancestor clip chain isn't in our clip cache, which means there
+      // must be a reference frame between the ancestor item and this item.
+      // Therefore we cannot use the enclosing clip, so let's abort
+      return aClip;
+    }
+    for (const DisplayItemClipChain* i = enclosingClip->mParent; i; i = i->mParent) {
+      if (i == aClip) {
+        // aClip is contained inside the enclosingClip clipchain. Since the
+        // enclosingClip also applies to the item we're currently processing,
+        // we should use that as it is a better approximation to the real clip
+        // set that applies to the item.
+        SLH_LOG("extending clip %p to %p\n", aClip, enclosingClip);
+        return enclosingClip;
+      }
+    }
+    break;
+  }
+  return aClip;
+}
+
 Maybe<ScrollingLayersHelper::ClipAndScroll>
 ScrollingLayersHelper::EnclosingClipAndScroll() const
 {
@@ -485,7 +532,7 @@ ScrollingLayersHelper::EnclosingClipAndScroll() const
 ScrollingLayersHelper::~ScrollingLayersHelper()
 {
   MOZ_ASSERT(!mBuilder);
-  MOZ_ASSERT(mCache.empty());
+  MOZ_ASSERT(mCacheStack.empty());
   MOZ_ASSERT(mItemClipStack.empty());
 }
 

@@ -25,7 +25,7 @@ add_task(function* () {
 
   store.dispatch(Actions.batchEnable(false));
 
-  let wait = waitForNetworkEvents(monitor, 4);
+  let wait = waitForNetworkEvents(monitor, 5);
   yield ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, function* (url) {
     content.wrappedJSObject.performRequests(url);
   });
@@ -34,8 +34,9 @@ add_task(function* () {
   let requests = {
     get: getSortedRequests(store.getState()).get(0),
     post: getSortedRequests(store.getState()).get(1),
-    multipart: getSortedRequests(store.getState()).get(2),
-    multipartForm: getSortedRequests(store.getState()).get(3),
+    patch: getSortedRequests(store.getState()).get(2),
+    multipart: getSortedRequests(store.getState()).get(3),
+    multipartForm: getSortedRequests(store.getState()).get(4),
   };
 
   let data = yield createCurlData(requests.get, getLongString, requestData);
@@ -45,6 +46,10 @@ add_task(function* () {
   testIsUrlEncodedRequest(data);
   testWritePostDataTextParams(data);
   testWriteEmptyPostDataTextParams(data);
+  testDataArgumentOnGeneratedCommand(data);
+
+  data = yield createCurlData(requests.patch, getLongString, requestData);
+  testWritePostDataTextParams(data);
   testDataArgumentOnGeneratedCommand(data);
 
   data = yield createCurlData(requests.multipart, getLongString, requestData);

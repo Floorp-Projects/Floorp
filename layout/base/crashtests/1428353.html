@@ -1,0 +1,15 @@
+<script>
+  try { o1 = document.createTextNode('');  } catch(e) { }
+  try { o2 = document.createElement('slot') } catch(e) { }
+  try { o3 = document.createElement('s') } catch(e) { }
+  try { o4 = document.getSelection() } catch(e) { }
+  try { document.head.appendChild(o1) } catch(e) { }
+  try { document.documentElement.appendChild(o2) } catch(e) { }
+  try { document.head.appendChild(o3) } catch(e) { }
+  try { o1.after('', document.head) } catch(e) { }
+  try { document.designMode = 'on' } catch(e) { }
+  try { document.execCommand('formatblock', false, 'pre') } catch(e) { }
+  try { document.designMode = 'off' } catch(e) { }
+  try { o5 = o4.getRangeAt(0) } catch(e) { }
+  try { o5.selectNode(o3); } catch(e) { }
+</script>

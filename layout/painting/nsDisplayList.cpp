@@ -1437,6 +1437,7 @@ nsDisplayListBuilder::FreeClipChains()
     DisplayItemClipChain* clip = *it;
 
     if (!clip->mRefCount) {
+      mClipDeduplicator.erase(clip);
       it = mClipChainsToDestroy.erase(it);
       clip->DisplayItemClipChain::~DisplayItemClipChain();
       Destroy(DisplayItemType::TYPE_ZERO, clip);
@@ -1596,6 +1597,17 @@ nsDisplayListBuilder::AllocateDisplayItemClipChain(const DisplayItemClip& aClip,
 {
   void* p = Allocate(sizeof(DisplayItemClipChain), DisplayItemType::TYPE_ZERO);
   DisplayItemClipChain* c = new (KnownNotNull, p) DisplayItemClipChain(aClip, aASR, aParent);
+  auto result = mClipDeduplicator.insert(c);
+  if (!result.second) {
+    // An equivalent clip chain item was already created, so let's return that
+    // instead. Destroy the one we just created.
+    // Note that this can cause clip chains from different coordinate systems to
+    // collapse into the same clip chain object, because clip chains do not keep
+    // track of the reference frame that they were created in.
+    c->DisplayItemClipChain::~DisplayItemClipChain();
+    Destroy(DisplayItemType::TYPE_ZERO, c);
+    return *(result.first);
+  }
   mClipChainsToDestroy.emplace_front(c);
   return c;
 }
