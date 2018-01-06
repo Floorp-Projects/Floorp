@@ -10,9 +10,12 @@
 #include "gfxFontConstants.h"
 #include "gfxFontUtils.h"
 #include <algorithm>
+#include <dlfcn.h>
 
 #include FT_TRUETYPE_TAGS_H
 #include FT_TRUETYPE_TABLES_H
+#include FT_ADVANCES_H
+#include FT_MULTIPLE_MASTERS_H
 
 #ifndef FT_FACE_FLAG_COLOR
 #define FT_FACE_FLAG_COLOR ( 1L << 14 )
@@ -23,9 +26,11 @@ using namespace mozilla::gfx;
 gfxFT2FontBase::gfxFT2FontBase(const RefPtr<UnscaledFontFreeType>& aUnscaledFont,
                                cairo_scaled_font_t *aScaledFont,
                                gfxFontEntry *aFontEntry,
-                               const gfxFontStyle *aFontStyle)
+                               const gfxFontStyle *aFontStyle,
+                               bool aEmbolden)
     : gfxFont(aUnscaledFont, aFontEntry, aFontStyle, kAntialiasDefault, aScaledFont)
     , mSpaceGlyph(0)
+    , mEmbolden(aEmbolden)
 {
     cairo_scaled_font_reference(mScaledFont);
 
@@ -158,6 +163,22 @@ gfxFT2FontBase::GetCharExtents(char aChar, cairo_text_extents_t* aExtents)
     return gid;
 }
 
+/**
+ * Get glyph id and width for a simple character.
+ * The return value is the glyph id of that glyph or zero if no such glyph
+ * exists.  aWidth is only set when this returns a non-zero glyph id.
+ * This is just for use during initialization, and doesn't use the width cache.
+ */
+uint32_t
+gfxFT2FontBase::GetCharWidth(char aChar, gfxFloat* aWidth)
+{
+    FT_UInt gid = GetGlyph(aChar);
+    if (gid) {
+        *aWidth = FLOAT_FROM_16_16(GetFTGlyphAdvance(gid));
+    }
+    return gid;
+}
+
 void
 gfxFT2FontBase::InitMetrics()
 {
@@ -200,6 +221,23 @@ gfxFT2FontBase::InitMetrics()
 
         SanitizeMetrics(&mMetrics, false);
         return;
+    }
+
+    if (!mStyle.variationSettings.IsEmpty()) {
+        SetupVarCoords(face, mStyle.variationSettings, &mCoords);
+        if (!mCoords.IsEmpty()) {
+            typedef FT_UInt (*SetCoordsFunc)(FT_Face, FT_UInt, FT_Fixed*);
+            static SetCoordsFunc setCoords;
+            static bool firstTime = true;
+            if (firstTime) {
+                firstTime = false;
+                setCoords = (SetCoordsFunc)
+                    dlsym(RTLD_DEFAULT, "FT_Set_Var_Design_Coordinates");
+            }
+            if (setCoords) {
+                (*setCoords)(face, mCoords.Length(), mCoords.Elements());
+            }
+        }
     }
 
     const FT_Size_Metrics& ftMetrics = face->size->metrics;
@@ -354,16 +392,16 @@ gfxFT2FontBase::InitMetrics()
     // necessary without recursively locking.
     cairo_ft_scaled_font_unlock_face(GetCairoScaledFont());
 
-    cairo_text_extents_t extents;
-    mSpaceGlyph = GetCharExtents(' ', &extents);
+    gfxFloat width;
+    mSpaceGlyph = GetCharWidth(' ', &width);
     if (mSpaceGlyph) {
-        mMetrics.spaceWidth = extents.x_advance;
+        mMetrics.spaceWidth = width;
     } else {
         mMetrics.spaceWidth = mMetrics.maxAdvance; // guess
     }
 
-    if (GetCharExtents('0', &extents)) {
-        mMetrics.zeroOrAveCharWidth = extents.x_advance;
+    if (GetCharWidth('0', &width)) {
+        mMetrics.zeroOrAveCharWidth = width;
     } else {
         mMetrics.zeroOrAveCharWidth = 0.0;
     }
@@ -372,6 +410,7 @@ gfxFT2FontBase::InitMetrics()
     // hinting, but maybe the x extents are not quite right in some fancy
     // script fonts.  CSS 2.1 suggests possibly using the height of an "o",
     // which would have a more consistent glyph across fonts.
+    cairo_text_extents_t extents;
     if (GetCharExtents('x', &extents) && extents.y_bearing < 0.0) {
         mMetrics.xHeight = -extents.y_bearing;
         mMetrics.aveCharWidth =
@@ -468,13 +507,68 @@ gfxFT2FontBase::GetGlyph(uint32_t unicode, uint32_t variation_selector)
     return GetGlyph(unicode);
 }
 
+FT_Fixed
+gfxFT2FontBase::GetFTGlyphAdvance(uint16_t aGID)
+{
+    gfxFT2LockedFace face(this);
+    int32_t flags =
+        gfxPlatform::GetPlatform()->FontHintingEnabled()
+            ? FT_LOAD_ADVANCE_ONLY
+            : FT_LOAD_ADVANCE_ONLY | FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING;
+    FT_Fixed advance = 0;
+    // FT_Get_Advance is not reliable with variations until FreeType 2.8.2,
+    // so fall back to calling FT_Load_Glyph and reading the glyph slot's
+    // linearHoriAdvance.
+    // See https://savannah.nongnu.org/bugs/index.php?52683.
+    static uint32_t sFTVersion = 0;
+    if (!sFTVersion) {
+        FT_Int major, minor, patch;
+        FT_Library_Version(face.get()->glyph->library, &major, &minor, &patch);
+        sFTVersion = (major << 16) | (minor << 8) | patch;
+    }
+    if (sFTVersion < 0x020802 &&
+        (face.get()->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS)) {
+        mozilla::DebugOnly<FT_Error> ftError =
+            FT_Load_Glyph(face.get(), aGID, flags);
+        MOZ_ASSERT(!ftError);
+        advance = face.get()->glyph->linearHoriAdvance;
+    } else {
+        mozilla::DebugOnly<FT_Error> ftError =
+            FT_Get_Advance(face.get(), aGID, flags, &advance);
+        MOZ_ASSERT(!ftError);
+    }
+
+    // If freetype emboldening is being used, and it's not a zero-width glyph,
+    // adjust the advance to account for the increased width.
+    if (mEmbolden && advance > 0) {
+        // This is the embolden "strength" used by FT_GlyphSlot_Embolden,
+        // converted from 26.6 to 16.16
+        FT_Fixed strength = 1024 *
+            FT_MulFix(face.get()->units_per_EM,
+                      face.get()->size->metrics.y_scale) / 24;
+        advance += strength;
+    }
+
+    return advance;
+}
+
 int32_t
 gfxFT2FontBase::GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID)
 {
-    cairo_text_extents_t extents;
-    GetGlyphExtents(aGID, &extents);
-    // convert to 16.16 fixed point
-    return NS_lround(0x10000 * extents.x_advance);
+    if (!mGlyphWidths) {
+        mGlyphWidths =
+            mozilla::MakeUnique<nsDataHashtable<nsUint32HashKey,int32_t>>(128);
+    }
+
+    int32_t width;
+    if (mGlyphWidths->Get(aGID, &width)) {
+        return width;
+    }
+
+    width = GetFTGlyphAdvance(aGID);
+    mGlyphWidths->Put(aGID, width);
+
+    return width;
 }
 
 bool
@@ -514,4 +608,41 @@ gfxFT2FontBase::SetupCairoFont(DrawTarget* aDrawTarget)
     // font for pdf and ps surfaces (bug 403513).
     cairo_set_scaled_font(gfxFont::RefCairo(aDrawTarget), cairoFont);
     return true;
+}
+
+// For variation fonts, figure out the variation coordinates to be applied
+// for each axis, in freetype's order (which may not match the order of
+// axes in mStyle.variationSettings, so we need to search by axis tag).
+/*static*/
+void
+gfxFT2FontBase::SetupVarCoords(FT_Face aFace,
+                               const nsTArray<gfxFontVariation>& aVariations,
+                               nsTArray<FT_Fixed>* aCoords)
+{
+    aCoords->TruncateLength(0);
+    if (aFace->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
+        typedef FT_UInt (*GetVarFunc)(FT_Face, FT_MM_Var**);
+        static GetVarFunc getVar;
+        static bool firstTime = true;
+        if (firstTime) {
+            firstTime = false;
+            getVar = (GetVarFunc)dlsym(RTLD_DEFAULT, "FT_Get_MM_Var");
+        }
+        FT_MM_Var* ftVar;
+        if (getVar && FT_Err_Ok == (*getVar)(aFace, &ftVar)) {
+            for (unsigned i = 0; i < ftVar->num_axis; ++i) {
+                aCoords->AppendElement(ftVar->axis[i].def);
+                for (const auto& v : aVariations) {
+                    if (ftVar->axis[i].tag == v.mTag) {
+                        FT_Fixed val = v.mValue * 0x10000;
+                        val = std::min(val, ftVar->axis[i].maximum);
+                        val = std::max(val, ftVar->axis[i].minimum);
+                        (*aCoords)[i] = val;
+                        break;
+                    }
+                }
+            }
+            free(ftVar);
+        }
+    }
 }

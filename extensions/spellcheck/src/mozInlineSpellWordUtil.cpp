@@ -231,6 +231,14 @@ mozInlineSpellWordUtil::MakeRangeForWord(const RealWord& aWord, nsRange** aRange
   NodeOffset end = MapSoftTextOffsetToDOMPosition(aWord.EndOffset(), HINT_END);
   return MakeRange(begin, end, aRange);
 }
+void
+mozInlineSpellWordUtil::MakeNodeOffsetRangeForWord(const RealWord& aWord,
+                                         NodeOffsetRange* aNodeOffsetRange)
+{
+  NodeOffset begin = MapSoftTextOffsetToDOMPosition(aWord.mSoftTextOffset, HINT_BEGIN);
+  NodeOffset end = MapSoftTextOffsetToDOMPosition(aWord.EndOffset(), HINT_END);
+  *aNodeOffsetRange = NodeOffsetRange(begin, end);
+}
 
 // mozInlineSpellWordUtil::GetRangeForWord
 
@@ -289,7 +297,8 @@ NormalizeWord(const nsAString& aInput, int32_t aPos, int32_t aLen, nsAString& aO
 //    range unless the word was misspelled. This may or may not be possible.
 
 nsresult
-mozInlineSpellWordUtil::GetNextWord(nsAString& aText, nsRange** aRange,
+mozInlineSpellWordUtil::GetNextWord(nsAString& aText,
+                                    NodeOffsetRange* aNodeOffsetRange,
                                     bool* aSkipChecking)
 {
 #ifdef DEBUG_SPELLCHECK
@@ -299,14 +308,13 @@ mozInlineSpellWordUtil::GetNextWord(nsAString& aText, nsRange** aRange,
   if (mNextWordIndex < 0 ||
       mNextWordIndex >= int32_t(mRealWords.Length())) {
     mNextWordIndex = -1;
-    *aRange = nullptr;
+    *aNodeOffsetRange = NodeOffsetRange();
     *aSkipChecking = true;
     return NS_OK;
   }
 
   const RealWord& word = mRealWords[mNextWordIndex];
-  nsresult rv = MakeRangeForWord(word, aRange);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MakeNodeOffsetRangeForWord(word, aNodeOffsetRange);
   ++mNextWordIndex;
   *aSkipChecking = !word.mCheckableWord;
   ::NormalizeWord(mSoftText, word.mSoftTextOffset, word.mLength, aText);
@@ -965,7 +973,7 @@ FindLastNongreaterOffset(const nsTArray<T>& aContainer, int32_t aSoftTextOffset,
 
 } // namespace
 
-mozInlineSpellWordUtil::NodeOffset
+NodeOffset
 mozInlineSpellWordUtil::MapSoftTextOffsetToDOMPosition(int32_t aSoftTextOffset,
                                                        DOMMapHint aHint)
 {

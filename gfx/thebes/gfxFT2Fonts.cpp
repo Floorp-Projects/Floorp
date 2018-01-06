@@ -166,10 +166,11 @@ gfxFT2Font::gfxFT2Font(const RefPtr<UnscaledFontFreeType>& aUnscaledFont,
                        FT2FontEntry *aFontEntry,
                        const gfxFontStyle *aFontStyle,
                        bool aNeedsBold)
-    : gfxFT2FontBase(aUnscaledFont, aCairoFont, aFontEntry, aFontStyle)
+    : gfxFT2FontBase(aUnscaledFont, aCairoFont, aFontEntry, aFontStyle, false)
     , mCharGlyphCache(32)
 {
     NS_ASSERTION(mFontEntry, "Unable to find font entry for font.  Something is whack.");
+    // TODO: use FreeType emboldening instead of multi-strike?
     mApplySyntheticBold = aNeedsBold;
 }
 
