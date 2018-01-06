@@ -264,6 +264,49 @@ gfxFontconfigFontEntry::Clone() const
     return new gfxFontconfigFontEntry(Name(), mFontPattern, mIgnoreFcCharmap);
 }
 
+static FcPattern*
+CreatePatternForFace(FT_Face aFace)
+{
+    // Use fontconfig to fill out the pattern from the FTFace.
+    // The "file" argument cannot be nullptr (in fontconfig-2.6.0 at
+    // least). The dummy file passed here is removed below.
+    //
+    // When fontconfig scans the system fonts, FcConfigGetBlanks(nullptr)
+    // is passed as the "blanks" argument, which provides that unexpectedly
+    // blank glyphs are elided.  Here, however, we pass nullptr for
+    // "blanks", effectively assuming that, if the font has a blank glyph,
+    // then the author intends any associated character to be rendered
+    // blank.
+    FcPattern* pattern =
+        FcFreeTypeQueryFace(aFace, ToFcChar8Ptr(""), 0, nullptr);
+    // given that we have a FT_Face, not really sure this is possible...
+    if (!pattern) {
+        pattern = FcPatternCreate();
+    }
+    FcPatternDel(pattern, FC_FILE);
+    FcPatternDel(pattern, FC_INDEX);
+
+    // Make a new pattern and store the face in it so that cairo uses
+    // that when creating a cairo font face.
+    FcPatternAddFTFace(pattern, FC_FT_FACE, aFace);
+
+    return pattern;
+}
+
+static FT_Face
+CreateFaceForPattern(FcPattern* aPattern)
+{
+    FcChar8 *filename;
+    if (FcPatternGetString(aPattern, FC_FILE, 0, &filename) != FcResultMatch) {
+        return nullptr;
+    }
+    int index;
+    if (FcPatternGetInteger(aPattern, FC_INDEX, 0, &index) != FcResultMatch) {
+        index = 0; // default to 0 if not found in pattern
+    }
+    return Factory::NewFTFace(nullptr, ToCharPtr(filename), index);
+}
+
 gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
                                                uint16_t aWeight,
                                                int16_t aStretch,
@@ -281,27 +324,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
     mStretch = aStretch;
     mIsDataUserFont = true;
 
-    // Use fontconfig to fill out the pattern from the FTFace.
-    // The "file" argument cannot be nullptr (in fontconfig-2.6.0 at
-    // least). The dummy file passed here is removed below.
-    //
-    // When fontconfig scans the system fonts, FcConfigGetBlanks(nullptr)
-    // is passed as the "blanks" argument, which provides that unexpectedly
-    // blank glyphs are elided.  Here, however, we pass nullptr for
-    // "blanks", effectively assuming that, if the font has a blank glyph,
-    // then the author intends any associated character to be rendered
-    // blank.
-    mFontPattern = FcFreeTypeQueryFace(mFTFace, ToFcChar8Ptr(""), 0, nullptr);
-    // given that we have a FT_Face, not really sure this is possible...
-    if (!mFontPattern) {
-        mFontPattern = FcPatternCreate();
-    }
-    FcPatternDel(mFontPattern, FC_FILE);
-    FcPatternDel(mFontPattern, FC_INDEX);
-
-    // Make a new pattern and store the face in it so that cairo uses
-    // that when creating a cairo font face.
-    FcPatternAddFTFace(mFontPattern, FC_FT_FACE, mFTFace);
+    mFontPattern = CreatePatternForFace(mFTFace);
 
     mUserFontData = new FTUserFontData(mFTFace, mFontData);
 }
@@ -902,30 +925,27 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
     FT_Face face = mFTFace;
     FcPattern* fontPattern = mFontPattern;
     if (face && face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
-        // For variation fonts, we create a new FT_Face and FcPattern
+        // For variation fonts, we create a new FT_Face and FcPattern here
         // so that variation coordinates from the style can be applied
         // without affecting other font instances created from the same
         // entry (font resource).
         if (mFontData) {
+            // For user fonts: create a new FT_Face from the font data, and then
+            // make a pattern from that.
             face = Factory::NewFTFaceFromData(nullptr, mFontData, mLength, 0);
-            fontPattern = FcFreeTypeQueryFace(face, ToFcChar8Ptr(""), 0, nullptr);
-            if (!fontPattern) {
-                fontPattern = FcPatternCreate();
-            }
-            FcPatternDel(fontPattern, FC_FILE);
-            FcPatternDel(fontPattern, FC_INDEX);
-            FcPatternAddFTFace(fontPattern, FC_FT_FACE, face);
+            fontPattern = CreatePatternForFace(face);
         } else {
-            FcChar8 *filename;
-            if (FcPatternGetString(mFontPattern, FC_FILE, 0, &filename) == FcResultMatch) {
-                int index;
-                if (FcPatternGetInteger(mFontPattern, FC_INDEX, 0, &index) != FcResultMatch) {
-                    index = 0; // default to 0 if not found in pattern
-                }
-                face = Factory::NewFTFace(nullptr, ToCharPtr(filename), index);
-            }
+            // For system fonts: create a new FT_Face and store it in a copy of
+            // the original mFontPattern.
             fontPattern = FcPatternDuplicate(mFontPattern);
-            FcPatternAddFTFace(fontPattern, FC_FT_FACE, face);
+            face = CreateFaceForPattern(fontPattern);
+            if (face) {
+                FcPatternAddFTFace(fontPattern, FC_FT_FACE, face);
+            } else {
+                // I don't think CreateFaceForPattern above should ever fail,
+                // but just in case let's fall back here.
+                face = mFTFace;
+            }
         }
     }
 
@@ -979,15 +999,7 @@ gfxFontconfigFontEntry::GetFTFace()
 {
     if (!mFTFaceInitialized) {
         mFTFaceInitialized = true;
-        FcChar8 *filename;
-        if (FcPatternGetString(mFontPattern, FC_FILE, 0, &filename) != FcResultMatch) {
-            return nullptr;
-        }
-        int index;
-        if (FcPatternGetInteger(mFontPattern, FC_INDEX, 0, &index) != FcResultMatch) {
-            index = 0; // default to 0 if not found in pattern
-        }
-        mFTFace = Factory::NewFTFace(nullptr, ToCharPtr(filename), index);
+        mFTFace = CreateFaceForPattern(mFontPattern);
     }
     return mFTFace;
 }
