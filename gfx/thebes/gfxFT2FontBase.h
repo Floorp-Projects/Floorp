@@ -11,13 +11,16 @@
 #include "gfxFont.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/UnscaledFontFreeType.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
 
 class gfxFT2FontBase : public gfxFont {
 public:
     gfxFT2FontBase(const RefPtr<mozilla::gfx::UnscaledFontFreeType>& aUnscaledFont,
                    cairo_scaled_font_t *aScaledFont,
                    gfxFontEntry *aFontEntry,
-                   const gfxFontStyle *aFontStyle);
+                   const gfxFontStyle *aFontStyle,
+                   bool aEmbolden);
     virtual ~gfxFT2FontBase();
 
     uint32_t GetGlyph(uint32_t aCharCode);
@@ -35,8 +38,14 @@ public:
 
     virtual FontType GetType() const override { return FONT_TYPE_FT2; }
 
+    static void SetupVarCoords(FT_Face aFace,
+                               const nsTArray<gfxFontVariation>& aVariations,
+                               nsTArray<FT_Fixed>* aCoords);
+
 private:
     uint32_t GetCharExtents(char aChar, cairo_text_extents_t* aExtents);
+    uint32_t GetCharWidth(char aChar, gfxFloat* aWidth);
+    FT_Fixed GetFTGlyphAdvance(uint16_t aGID);
     void InitMetrics();
 
 protected:
@@ -44,6 +53,16 @@ protected:
 
     uint32_t mSpaceGlyph;
     Metrics mMetrics;
+    bool    mEmbolden;
+
+    // For variation/multiple-master fonts, this will be an array of the values
+    // for each axis, as specified by mStyle.variationSettings (or the font's
+    // default for axes not present in variationSettings). Values here are in
+    // freetype's 16.16 fixed-point format, and clamped to the valid min/max
+    // range reported by the face.
+    nsTArray<FT_Fixed> mCoords;
+
+    mozilla::UniquePtr<nsDataHashtable<nsUint32HashKey,int32_t>> mGlyphWidths;
 };
 
 #endif /* GFX_FT2FONTBASE_H */
