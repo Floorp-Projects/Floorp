@@ -223,8 +223,8 @@ public class ManualAddSearchEngineSettingsFragment extends SettingsFragment {
             connection.setConnectTimeout(SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS);
             connection.setReadTimeout(SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS);
 
-            // A non-error HTTP response is good enough as a sanity check, some search engines redirect to https.
-            return connection.getResponseCode() < 400;
+            // Now that redirects are followed, 300 is a better and stronger sanity check, checks for a non error and non redirect response
+            return connection.getResponseCode() < 300;
 
         } catch (final IOException e) {
             // Don't log exception to avoid leaking URL.
