@@ -21,6 +21,53 @@ namespace mozilla {
 class TextEditor;
 } // namespace mozilla
 
+struct NodeOffset
+{
+  nsINode* mNode;
+  int32_t  mOffset;
+
+  NodeOffset(): mNode(nullptr), mOffset(0) {}
+  NodeOffset(nsINode* aNode, int32_t aOffset)
+    : mNode(aNode), mOffset(aOffset) {}
+
+  bool operator==(const NodeOffset& aOther) const
+  {
+    return mNode == aOther.mNode && mOffset == aOther.mOffset;
+  }
+
+  bool operator!=(const NodeOffset& aOther) const
+  {
+    return !(*this == aOther);
+  }
+};
+
+class NodeOffsetRange
+{
+private:
+  NodeOffset mBegin;
+  NodeOffset mEnd;
+  bool mEmpty;
+public:
+  NodeOffsetRange() : mEmpty(true) {}
+  NodeOffsetRange(NodeOffset b, NodeOffset e)
+    : mBegin(b), mEnd(e), mEmpty(false) {}
+
+  NodeOffset Begin()
+  {
+    return mBegin;
+  }
+
+  NodeOffset End()
+  {
+    return mEnd;
+  }
+
+  bool Empty()
+  {
+    return mEmpty;
+  }
+};
+
 /**
  *    This class extracts text from the DOM and builds it into a single string.
  *    The string includes whitespace breaks whereever non-inline elements begin
@@ -44,22 +91,6 @@ class TextEditor;
 class mozInlineSpellWordUtil
 {
 public:
-  struct NodeOffset {
-    nsINode* mNode;
-    int32_t  mOffset;
-
-    NodeOffset(nsINode* aNode, int32_t aOffset) :
-      mNode(aNode), mOffset(aOffset) {}
-
-    bool operator==(const NodeOffset& aOther) const {
-      return mNode == aOther.mNode && mOffset == aOther.mOffset;
-    }
-
-    bool operator!=(const NodeOffset& aOther) const {
-      return !(*this == aOther);
-    }
-  };
-
   mozInlineSpellWordUtil()
     : mRootNode(nullptr),
       mSoftBegin(nullptr, 0), mSoftEnd(nullptr, 0),
@@ -85,11 +116,15 @@ public:
   nsresult GetRangeForWord(nsIDOMNode* aWordNode, int32_t aWordOffset,
                            nsRange** aRange);
 
+  // Convenience functions, object must be initialized
+  nsresult MakeRange(NodeOffset aBegin, NodeOffset aEnd, nsRange** aRange);
+
   // Moves to the the next word in the range, and retrieves it's text and range.
   // An empty word and a nullptr range are returned when we are done checking.
   // aSkipChecking will be set if the word is "special" and shouldn't be
   // checked (e.g., an email address).
-  nsresult GetNextWord(nsAString& aText, nsRange** aRange,
+  nsresult GetNextWord(nsAString& aText,
+                       NodeOffsetRange* aNodeOffsetRange,
                        bool* aSkipChecking);
 
   // Call to normalize some punctuation. This function takes an autostring
@@ -175,9 +210,9 @@ private:
 
   nsresult SplitDOMWord(int32_t aStart, int32_t aEnd);
 
-  // Convenience functions, object must be initialized
-  nsresult MakeRange(NodeOffset aBegin, NodeOffset aEnd, nsRange** aRange);
   nsresult MakeRangeForWord(const RealWord& aWord, nsRange** aRange);
+  void MakeNodeOffsetRangeForWord(const RealWord& aWord,
+                                  NodeOffsetRange* aNodeOffsetRange);
 };
 
 #endif
