@@ -397,7 +397,7 @@ ScaledFontFontconfig::CreateFromInstanceData(const InstanceData& aInstanceData,
   FcPatternAddDouble(pattern, FC_PIXEL_SIZE, aSize);
   aInstanceData.SetupPattern(pattern);
 
-  cairo_font_face_t* font = cairo_ft_font_face_create_for_pattern(pattern);
+  cairo_font_face_t* font = cairo_ft_font_face_create_for_pattern(pattern, nullptr, 0);
   if (cairo_font_face_status(font) != CAIRO_STATUS_SUCCESS) {
     gfxWarning() << "Failed creating Cairo font face for Fontconfig pattern";
     FcPatternDestroy(pattern);

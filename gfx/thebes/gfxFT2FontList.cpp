@@ -390,7 +390,7 @@ FT2FontEntry::CreateFontEntry(FT_Face aFace,
         int flags = gfxPlatform::GetPlatform()->FontHintingEnabled() ?
                     FT_LOAD_DEFAULT :
                     (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
-        fe->mFontFace = cairo_ft_font_face_create_for_ft_face(aFace, flags);
+        fe->mFontFace = cairo_ft_font_face_create_for_ft_face(aFace, flags, nullptr, 0);
         FTUserFontData *userFontData = new FTUserFontData(aFace, aFontData);
         cairo_font_face_set_user_data(fe->mFontFace, &sFTUserFontDataKey,
                                       userFontData, FTFontDestroyFunc);
@@ -434,7 +434,7 @@ FT2FontEntry::CairoFontFace()
         int flags = gfxPlatform::GetPlatform()->FontHintingEnabled() ?
                     FT_LOAD_DEFAULT :
                     (FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
-        mFontFace = cairo_ft_font_face_create_for_ft_face(face, flags);
+        mFontFace = cairo_ft_font_face_create_for_ft_face(face, flags, nullptr, 0);
         FTUserFontData *userFontData = new FTUserFontData(face, face.FontData());
         cairo_font_face_set_user_data(mFontFace, &sFTUserFontDataKey,
                                       userFontData, FTFontDestroyFunc);

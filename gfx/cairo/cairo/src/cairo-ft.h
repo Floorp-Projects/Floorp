@@ -54,7 +54,9 @@ CAIRO_BEGIN_DECLS
 
 cairo_public cairo_font_face_t *
 cairo_ft_font_face_create_for_ft_face (FT_Face         face,
-				       int             load_flags);
+				       int             load_flags,
+                                       const FT_Fixed *var_coords,
+                                       int             num_var_coords);
 
 cairo_public FT_Face
 cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *scaled_font);
@@ -65,7 +67,9 @@ cairo_ft_scaled_font_unlock_face (cairo_scaled_font_t *scaled_font);
 #if CAIRO_HAS_FC_FONT
 
 cairo_public cairo_font_face_t *
-cairo_ft_font_face_create_for_pattern (FcPattern *pattern);
+cairo_ft_font_face_create_for_pattern (FcPattern      *pattern,
+                                       const FT_Fixed *var_coords,
+                                       int             num_var_coords);
 
 cairo_public void
 cairo_ft_font_options_substitute (const cairo_font_options_t *options,

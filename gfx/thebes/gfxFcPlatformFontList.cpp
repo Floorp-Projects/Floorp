@@ -229,7 +229,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
         : gfxFontEntry(aFaceName), mFontPattern(aFontPattern),
           mFTFace(nullptr), mFTFaceInitialized(false),
           mIgnoreFcCharmap(aIgnoreFcCharmap),
-          mAspect(0.0), mFontData(nullptr)
+          mAspect(0.0), mFontData(nullptr), mLength(0)
 {
     // italic
     int slant;
@@ -264,22 +264,9 @@ gfxFontconfigFontEntry::Clone() const
     return new gfxFontconfigFontEntry(Name(), mFontPattern, mIgnoreFcCharmap);
 }
 
-gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
-                                               uint16_t aWeight,
-                                               int16_t aStretch,
-                                               uint8_t aStyle,
-                                               const uint8_t *aData,
-                                               FT_Face aFace)
-    : gfxFontEntry(aFaceName),
-      mFTFace(aFace), mFTFaceInitialized(true),
-      mIgnoreFcCharmap(true),
-      mAspect(0.0), mFontData(aData)
+static FcPattern*
+CreatePatternForFace(FT_Face aFace)
 {
-    mWeight = aWeight;
-    mStyle = aStyle;
-    mStretch = aStretch;
-    mIsDataUserFont = true;
-
     // Use fontconfig to fill out the pattern from the FTFace.
     // The "file" argument cannot be nullptr (in fontconfig-2.6.0 at
     // least). The dummy file passed here is removed below.
@@ -290,17 +277,54 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
     // "blanks", effectively assuming that, if the font has a blank glyph,
     // then the author intends any associated character to be rendered
     // blank.
-    mFontPattern = FcFreeTypeQueryFace(mFTFace, ToFcChar8Ptr(""), 0, nullptr);
+    FcPattern* pattern =
+        FcFreeTypeQueryFace(aFace, ToFcChar8Ptr(""), 0, nullptr);
     // given that we have a FT_Face, not really sure this is possible...
-    if (!mFontPattern) {
-        mFontPattern = FcPatternCreate();
+    if (!pattern) {
+        pattern = FcPatternCreate();
     }
-    FcPatternDel(mFontPattern, FC_FILE);
-    FcPatternDel(mFontPattern, FC_INDEX);
+    FcPatternDel(pattern, FC_FILE);
+    FcPatternDel(pattern, FC_INDEX);
 
     // Make a new pattern and store the face in it so that cairo uses
     // that when creating a cairo font face.
-    FcPatternAddFTFace(mFontPattern, FC_FT_FACE, mFTFace);
+    FcPatternAddFTFace(pattern, FC_FT_FACE, aFace);
+
+    return pattern;
+}
+
+static FT_Face
+CreateFaceForPattern(FcPattern* aPattern)
+{
+    FcChar8 *filename;
+    if (FcPatternGetString(aPattern, FC_FILE, 0, &filename) != FcResultMatch) {
+        return nullptr;
+    }
+    int index;
+    if (FcPatternGetInteger(aPattern, FC_INDEX, 0, &index) != FcResultMatch) {
+        index = 0; // default to 0 if not found in pattern
+    }
+    return Factory::NewFTFace(nullptr, ToCharPtr(filename), index);
+}
+
+gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
+                                               uint16_t aWeight,
+                                               int16_t aStretch,
+                                               uint8_t aStyle,
+                                               const uint8_t *aData,
+                                               uint32_t aLength,
+                                               FT_Face aFace)
+    : gfxFontEntry(aFaceName),
+      mFTFace(aFace), mFTFaceInitialized(true),
+      mIgnoreFcCharmap(true),
+      mAspect(0.0), mFontData(aData), mLength(aLength)
+{
+    mWeight = aWeight;
+    mStyle = aStyle;
+    mStretch = aStretch;
+    mIsDataUserFont = true;
+
+    mFontPattern = CreatePatternForFace(mFTFace);
 
     mUserFontData = new FTUserFontData(mFTFace, mFontData);
 }
@@ -312,7 +336,7 @@ gfxFontconfigFontEntry::gfxFontconfigFontEntry(const nsAString& aFaceName,
                                                uint8_t aStyle)
         : gfxFontEntry(aFaceName), mFontPattern(aFontPattern),
           mFTFace(nullptr), mFTFaceInitialized(false),
-          mAspect(0.0), mFontData(nullptr)
+          mAspect(0.0), mFontData(nullptr), mLength(0)
 {
     mWeight = aWeight;
     mStyle = aStyle;
@@ -694,8 +718,19 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
         FcPatternAddBool(aRenderPattern, FC_EMBEDDED_BITMAP, FcFalse);
     }
 
+    AutoTArray<FT_Fixed,8> coords;
+    if (!aStyle->variationSettings.IsEmpty()) {
+        FT_Face ftFace = GetFTFace();
+        if (ftFace) {
+            gfxFT2FontBase::SetupVarCoords(ftFace, aStyle->variationSettings,
+                                           &coords);
+        }
+    }
+
     cairo_font_face_t *face =
-        cairo_ft_font_face_create_for_pattern(aRenderPattern);
+        cairo_ft_font_face_create_for_pattern(aRenderPattern,
+                                              coords.Elements(),
+                                              coords.Length());
 
     if (mFontData) {
         // for data fonts, add the face/data pointer to the cairo font face
@@ -887,9 +922,40 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
     double size = ChooseFontSize(this, *aFontStyle);
     FcPatternAddDouble(pattern, FC_PIXEL_SIZE, size);
 
+    FT_Face face = mFTFace;
+    FcPattern* fontPattern = mFontPattern;
+    if (face && face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
+        // For variation fonts, we create a new FT_Face and FcPattern here
+        // so that variation coordinates from the style can be applied
+        // without affecting other font instances created from the same
+        // entry (font resource).
+        if (mFontData) {
+            // For user fonts: create a new FT_Face from the font data, and then
+            // make a pattern from that.
+            face = Factory::NewFTFaceFromData(nullptr, mFontData, mLength, 0);
+            fontPattern = CreatePatternForFace(face);
+        } else {
+            // For system fonts: create a new FT_Face and store it in a copy of
+            // the original mFontPattern.
+            fontPattern = FcPatternDuplicate(mFontPattern);
+            face = CreateFaceForPattern(fontPattern);
+            if (face) {
+                FcPatternAddFTFace(fontPattern, FC_FT_FACE, face);
+            } else {
+                // I don't think CreateFaceForPattern above should ever fail,
+                // but just in case let's fall back here.
+                face = mFTFace;
+            }
+        }
+    }
+
     PreparePattern(pattern, aFontStyle->printerFont);
     nsAutoRef<FcPattern> renderPattern
-        (FcFontRenderPrepare(nullptr, pattern, mFontPattern));
+        (FcFontRenderPrepare(nullptr, pattern, fontPattern));
+    if (fontPattern != mFontPattern) {
+        // Discard temporary pattern used for variation support
+        FcPatternDestroy(fontPattern);
+    }
     if (!renderPattern) {
         NS_WARNING("Failed to prepare Fontconfig pattern for font instance");
         return nullptr;
@@ -914,7 +980,7 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
     if (!unscaledFont) {
         unscaledFont =
             mFontData ?
-                new UnscaledFontFontconfig(mFTFace) :
+                new UnscaledFontFontconfig(face) :
                 new UnscaledFontFontconfig(ToCharPtr(file), index);
         mUnscaledFontCache.Add(unscaledFont);
     }
@@ -928,6 +994,16 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
     return newFont;
 }
 
+FT_Face
+gfxFontconfigFontEntry::GetFTFace()
+{
+    if (!mFTFaceInitialized) {
+        mFTFaceInitialized = true;
+        mFTFace = CreateFaceForPattern(mFontPattern);
+    }
+    return mFTFace;
+}
+
 nsresult
 gfxFontconfigFontEntry::CopyFontTable(uint32_t aTableTag,
                                       nsTArray<uint8_t>& aBuffer)
@@ -935,34 +1011,19 @@ gfxFontconfigFontEntry::CopyFontTable(uint32_t aTableTag,
     NS_ASSERTION(!mIsDataUserFont,
                  "data fonts should be reading tables directly from memory");
 
-    if (!mFTFaceInitialized) {
-        mFTFaceInitialized = true;
-        FcChar8 *filename;
-        if (FcPatternGetString(mFontPattern, FC_FILE, 0, &filename) != FcResultMatch) {
-            return NS_ERROR_FAILURE;
-        }
-        int index;
-        if (FcPatternGetInteger(mFontPattern, FC_INDEX, 0, &index) != FcResultMatch) {
-            index = 0; // default to 0 if not found in pattern
-        }
-        mFTFace = Factory::NewFTFace(nullptr, ToCharPtr(filename), index);
-        if (!mFTFace) {
-            return NS_ERROR_FAILURE;
-        }
-    }
-
-    if (!mFTFace) {
+    FT_Face face = GetFTFace();
+    if (!face) {
         return NS_ERROR_NOT_AVAILABLE;
     }
 
     FT_ULong length = 0;
-    if (FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, nullptr, &length) != 0) {
+    if (FT_Load_Sfnt_Table(face, aTableTag, 0, nullptr, &length) != 0) {
         return NS_ERROR_NOT_AVAILABLE;
     }
     if (!aBuffer.SetLength(length, fallible)) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
-    if (FT_Load_Sfnt_Table(mFTFace, aTableTag, 0, aBuffer.Elements(), &length) != 0) {
+    if (FT_Load_Sfnt_Table(face, aTableTag, 0, aBuffer.Elements(), &length) != 0) {
         aBuffer.Clear();
         return NS_ERROR_FAILURE;
     }
@@ -1229,7 +1290,7 @@ gfxFontconfigFont::gfxFontconfigFont(const RefPtr<UnscaledFontFontconfig>& aUnsc
                                      gfxFontEntry *aFontEntry,
                                      const gfxFontStyle *aFontStyle,
                                      bool aNeedsBold)
-    : gfxFT2FontBase(aUnscaledFont, aScaledFont, aFontEntry, aFontStyle)
+    : gfxFT2FontBase(aUnscaledFont, aScaledFont, aFontEntry, aFontStyle, aNeedsBold)
     , mPattern(aPattern)
 {
     mAdjustedSize = aAdjustedSize;
@@ -1691,7 +1752,7 @@ gfxFcPlatformFontList::MakePlatformFont(const nsAString& aFontName,
     }
 
     return new gfxFontconfigFontEntry(aFontName, aWeight, aStretch,
-                                      aStyle, aFontData, face);
+                                      aStyle, aFontData, aLength, face);
 }
 
 bool
