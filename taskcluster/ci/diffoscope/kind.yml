@@ -1,0 +1,59 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+kind-dependencies:
+  - build
+  - toolchain
+
+transforms:
+  - taskgraph.transforms.diffoscope:transforms
+  - taskgraph.transforms.use_toolchains:transforms
+  - taskgraph.transforms.job:transforms
+  - taskgraph.transforms.task:transforms
+
+# Note: --exclude-command .--line-numbers is because of
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=879003
+# That skips `objdump --disassemble --line-numbers` and falls back to
+# `objdump --disassemble`
+# Note: the .chk excludes are for files that are known to differ between
+# builds because they are signed with an ephemeral private key that is
+# generated for each build.
+job-defaults:
+  args: >-
+    --no-default-limits
+    --max-page-size 100000000
+    --max-page-diff-block-lines 10000
+    --exclude-directory-metadata
+    --exclude-command .--line-numbers
+    --exclude **/*freeblpriv3.chk
+    --exclude **/*nssdbm3.chk
+    --exclude **/*softokn3.chk
+
+# Make a task for each diff we might want. The following are just examples,
+# Both original and new can point to builds from the full set of tasks or
+# from other sets through an index-search. Other kinds than `build` can be
+# compared (for example, static-analysis), provided you adjust the
+# kind-dependencies above.
+
+# jobs:
+#   android-build-vs-previous-try:
+#     symbol: A
+#     new: build-android-api-16/opt
+#     original: {index-search: gecko.v2.try.revision.aabd5deb0156f9b55ab60ad6a01ebfc4580bf2e1.mobile.android-api-16-opt}
+#   linux64-build-vs-previous-try:
+#     symbol: L
+#     new: build-linux64/opt
+#     original: {index-search: gecko.v2.try.revision.aabd5deb0156f9b55ab60ad6a01ebfc4580bf2e1.firefox.linux64-opt}
+#     extra-args: >-
+#       --exclude-command .--hex-dump=.gnu_debuglink
+#   macosx-build-vs-previous-try:
+#     symbol: M
+#     new: build-macosx64/opt
+#     original: {index-search: gecko.v2.try.revision.aabd5deb0156f9b55ab60ad6a01ebfc4580bf2e1.firefox.macosx64-opt}
+#   win32-build-vs-previous-try:
+#     symbol: W
+#     new: build-win32/opt
+#     original: {index-search: gecko.v2.try.revision.aabd5deb0156f9b55ab60ad6a01ebfc4580bf2e1.firefox.win32-opt}

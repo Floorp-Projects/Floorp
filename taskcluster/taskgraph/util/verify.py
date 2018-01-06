@@ -149,7 +149,8 @@ def verify_dependency_tiers(task, taskgraph, scratch_pad):
                 continue
             tier = tiers[task.label]
             for d in task.dependencies.itervalues():
-                if taskgraph[d].task.get("workerType") == "buildbot-bridge":
+                if taskgraph[d].task.get("workerType") in ("buildbot-bridge",
+                                                           "always-optimized"):
                     continue
                 if "dummy" in taskgraph[d].kind:
                     continue
@@ -181,3 +182,14 @@ def verify_bbb_builders_valid(task, taskgraph, scratch_pad):
                 '{} uses an invalid buildbot buildername ("{}") '
                 ' - contact #releng for help'
                 .format(task.label, buildername))
+
+
+@verifications.add('optimized_task_graph')
+def verify_always_optimized(task, taskgraph, scratch_pad):
+    """
+        This function ensures that always-optimized tasks have been optimized.
+    """
+    if task is None:
+        return
+    if task.task.get('workerType') == 'always-optimized':
+        raise Exception('Could not optimize the task {!r}'.format(task.label))

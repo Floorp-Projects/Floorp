@@ -478,8 +478,12 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         final String sql;
         if (keepAfter > 0) {
+            // See Bug 1428165: 'modified' value might be missing; assume 0 if that's the case.
             sql = "DELETE FROM " + TABLE_HISTORY + " " +
-                  "WHERE MAX(" + History.DATE_LAST_VISITED + ", " + History.DATE_MODIFIED + ") < " + keepAfter + " " +
+                  "WHERE MAX("
+                    + History.DATE_LAST_VISITED + ", " +
+                    "COALESCE(" + History.DATE_MODIFIED + ", 0))" +
+                  " < " + keepAfter + " " +
                   " AND " + History._ID + " IN ( SELECT " +
                     History._ID + " FROM " + TABLE_HISTORY + " " +
                     "ORDER BY " + History.DATE_LAST_VISITED + " ASC LIMIT " + toRemove +
@@ -2829,6 +2833,10 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
     private int bulkInsertHistory(final SQLiteDatabase db, ContentValues[] values) {
         int inserted = 0;
+        // Set 'modified' and 'created' timestamps to current wall time.
+        // 'modified' specifically is used by Sync for change tracking, and so we must ensure it's
+        // set to our own clock (as opposed to record's modified timestamp as record by the server).
+        final long now = System.currentTimeMillis();
         final String fullInsertSqlStatement = "INSERT INTO " + History.TABLE_NAME + " (" +
                 History.GUID + "," +
                 History.TITLE + "," +
@@ -2836,11 +2844,15 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                 History.DATE_LAST_VISITED + "," +
                 History.REMOTE_DATE_LAST_VISITED + "," +
                 History.VISITS + "," +
-                History.REMOTE_VISITS + ") VALUES (?, ?, ?, ?, ?, ?, ?)";
+                History.REMOTE_VISITS + "," +
+                History.DATE_MODIFIED + "," +
+                History.DATE_CREATED + ") VALUES (?, ?, ?, ?, ?, ?, ?, " + now + "," + now + ")";
         final String shortInsertSqlStatement = "INSERT INTO " + History.TABLE_NAME + " (" +
                 History.GUID + "," +
                 History.TITLE + "," +
-                History.URL + ") VALUES (?, ?, ?)";
+                History.URL + "," +
+                History.DATE_MODIFIED + "," +
+                History.DATE_CREATED + ") VALUES (?, ?, ?, " + now + "," + now + ")";
         final SQLiteStatement compiledFullStatement = db.compileStatement(fullInsertSqlStatement);
         final SQLiteStatement compiledShortStatement = db.compileStatement(shortInsertSqlStatement);
         SQLiteStatement statementToExec;
@@ -2857,7 +2869,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
                 // If dateLastVisited is null, so will be remoteDateLastVisited and visits.
                 // We will use the short compiled statement in this case.
-                // See implementation in AndroidBrowserHistoryDataAccessor@getContentValues.
+                // See implementation in HistoryDataAccessor#getContentValues.
                 if (dateLastVisited == null) {
                     statementToExec = compiledShortStatement;
                 } else {

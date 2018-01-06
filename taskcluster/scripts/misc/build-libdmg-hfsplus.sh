@@ -13,7 +13,7 @@ UPLOAD_DIR=$HOME/artifacts
 # backport some patches.
 : LIBDMG_REPOSITORY    ${LIBDMG_REPOSITORY:=https://github.com/mozilla/libdmg-hfsplus}
 # The `mozilla` branch contains our fork.
-: LIBDMG_REV           ${LIBDMG_REV:=ba04b00435a0853f1499d751617177828ee8ec00}
+: LIBDMG_REV           ${LIBDMG_REV:=2ee327795680101d36f9700bd0fb618362237718}
 
 mkdir -p $UPLOAD_DIR $STAGE
 
@@ -24,7 +24,7 @@ git checkout $LIBDMG_REV
 
 # Make a source archive
 git archive --prefix=libdmg-hfsplus/ ${LIBDMG_REV} | xz > $UPLOAD_DIR/libdmg-hfsplus.tar.xz
-cmake .
+cmake -DOPENSSL_USE_STATIC_LIBS=1 .
 make -j$(getconf _NPROCESSORS_ONLN)
 
 # We only need the dmg and hfsplus tools.
