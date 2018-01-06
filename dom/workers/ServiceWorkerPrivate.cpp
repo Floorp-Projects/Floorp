@@ -1883,6 +1883,7 @@ ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   if (NS_WARN_IF(!info.mPrincipal)) {
     return NS_ERROR_FAILURE;
   }
+  info.mLoadingPrincipal = info.mPrincipal;
 
   nsContentUtils::StorageAccess access =
     nsContentUtils::StorageAllowedForPrincipal(info.mPrincipal);

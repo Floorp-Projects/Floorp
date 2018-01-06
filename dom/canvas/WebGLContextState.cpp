@@ -8,6 +8,7 @@
 #include "GLContext.h"
 #include "GLScreenBuffer.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "nsString.h"
 #include "WebGLBuffer.h"
@@ -22,45 +23,33 @@
 namespace mozilla {
 
 void
-WebGLContext::Disable(GLenum cap)
+WebGLContext::SetEnabled(const char* const funcName, const GLenum cap, const bool enabled)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateCapabilityEnum(cap, "disable"))
+    if (!ValidateCapabilityEnum(cap, funcName))
         return;
 
-    realGLboolean* trackingSlot = GetStateTrackingSlot(cap);
-
-    if (trackingSlot)
-    {
-        *trackingSlot = 0;
+    const auto& slot = GetStateTrackingSlot(cap);
+    if (slot) {
+        *slot = enabled;
     }
 
-    gl->fDisable(cap);
-}
+    switch (cap) {
+    case LOCAL_GL_DEPTH_TEST:
+    case LOCAL_GL_STENCIL_TEST:
+        break; // Lazily applied, so don't tell GL yet or we will desync.
 
-void
-WebGLContext::Enable(GLenum cap)
-{
-    if (IsContextLost())
-        return;
-
-    if (!ValidateCapabilityEnum(cap, "enable"))
-        return;
-
-    realGLboolean* trackingSlot = GetStateTrackingSlot(cap);
-
-    if (trackingSlot)
-    {
-        *trackingSlot = 1;
+    default:
+        // Non-lazy caps.
+        gl->SetEnabled(cap, enabled);
+        break;
     }
-
-    gl->fEnable(cap);
 }
 
 bool
-WebGLContext::GetStencilBits(GLint* const out_stencilBits)
+WebGLContext::GetStencilBits(GLint* const out_stencilBits) const
 {
     *out_stencilBits = 0;
     if (mBoundDrawFramebuffer) {
@@ -105,11 +94,7 @@ WebGLContext::GetChannelBits(const char* funcName, GLenum pname, GLint* const ou
             break;
 
         case LOCAL_GL_DEPTH_BITS:
-            if (mOptions.depth) {
-                *out_val = gl->Screen()->DepthBits();
-            } else {
-                *out_val = 0;
-            }
+            *out_val = (mOptions.depth ? 24 : 0);
             break;
 
         case LOCAL_GL_STENCIL_BITS:
@@ -190,7 +175,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             GLint ret = LOCAL_GL_NONE;
             if (!mBoundDrawFramebuffer) {
                 if (pname == LOCAL_GL_DRAW_BUFFER0) {
-                    ret = gl->Screen()->GetDrawBufferMode();
+                    ret = mDefaultFB_DrawBuffer0;
                 }
             } else {
                 gl->fGetIntegerv(pname, &ret);
@@ -342,7 +327,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE: {
             const webgl::FormatUsageInfo* usage;
             uint32_t width, height;
-            if (!ValidateCurFBForRead(funcName, &usage, &width, &height))
+            if (!BindCurFBForColorRead(funcName, &usage, &width, &height))
                 return JS::NullValue();
 
             const auto implPI = ValidImplementationColorReadPI(usage);
@@ -372,12 +357,34 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             return JS::Int32Value(refValue & stencilMask);
         }
 
+        case LOCAL_GL_SAMPLE_BUFFERS:
+        case LOCAL_GL_SAMPLES: {
+            const auto& fb = mBoundDrawFramebuffer;
+            auto samples = [&]() -> Maybe<uint32_t> {
+                if (!fb) {
+                    if (!EnsureDefaultFB(funcName))
+                        return Nothing();
+                    return Some(mDefaultFB->mSamples);
+                }
+
+                if (!fb->IsCheckFramebufferStatusComplete(funcName))
+                    return Some(0);
+
+                DoBindFB(fb, LOCAL_GL_FRAMEBUFFER);
+                return Some(gl->GetIntAs<uint32_t>(LOCAL_GL_SAMPLES));
+            }();
+            if (samples && pname == LOCAL_GL_SAMPLE_BUFFERS) {
+                samples = Some(uint32_t(bool(samples.value())));
+            }
+            if (!samples)
+                return JS::NullValue();
+            return JS::NumberValue(samples.value());
+        }
+
         case LOCAL_GL_STENCIL_CLEAR_VALUE:
         case LOCAL_GL_UNPACK_ALIGNMENT:
         case LOCAL_GL_PACK_ALIGNMENT:
-        case LOCAL_GL_SUBPIXEL_BITS:
-        case LOCAL_GL_SAMPLE_BUFFERS:
-        case LOCAL_GL_SAMPLES: {
+        case LOCAL_GL_SUBPIXEL_BITS: {
             GLint i = 0;
             gl->fGetIntegerv(pname, &i);
             return JS::Int32Value(i);
@@ -465,9 +472,12 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
 
         // bool
-        case LOCAL_GL_BLEND:
         case LOCAL_GL_DEPTH_TEST:
+            return JS::BooleanValue(mDepthTestEnabled);
         case LOCAL_GL_STENCIL_TEST:
+            return JS::BooleanValue(mStencilTestEnabled);
+
+        case LOCAL_GL_BLEND:
         case LOCAL_GL_CULL_FACE:
         case LOCAL_GL_DITHER:
         case LOCAL_GL_POLYGON_OFFSET_FILL:
@@ -556,10 +566,10 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
 
         // 4 bools
         case LOCAL_GL_COLOR_WRITEMASK: {
-            realGLboolean gl_bv[4] = { 0 };
-            gl->fGetBooleanv(pname, gl_bv);
-            bool vals[4] = { bool(gl_bv[0]), bool(gl_bv[1]),
-                             bool(gl_bv[2]), bool(gl_bv[3]) };
+            const bool vals[4] = { bool(mColorWriteMask & (1 << 0)),
+                                   bool(mColorWriteMask & (1 << 1)),
+                                   bool(mColorWriteMask & (1 << 2)),
+                                   bool(mColorWriteMask & (1 << 3)) };
             JS::Rooted<JS::Value> arr(cx);
             if (!dom::ToJSValue(cx, vals, &arr)) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
@@ -641,6 +651,10 @@ WebGLContext::IsEnabled(GLenum cap)
 
     if (!ValidateCapabilityEnum(cap, "isEnabled"))
         return false;
+
+    const auto& slot = GetStateTrackingSlot(cap);
+    if (slot)
+        return *slot;
 
     return gl->fIsEnabled(cap);
 }

@@ -3,11 +3,15 @@ export MOZ_STDCXX_COMPAT=1
 
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
 
-if [ -f "$TOOLTOOL_DIR/gcc/lib/libstdc++.so" ]; then
+# Depending whether GCC was built on a RedHat-based or a Debian-based system,
+# the directory containing 32-bits libraries can be either (respectively)
+# lib or lib32. The directory for 64-bits libraries is always lib64.
+if [ -f "$TOOLTOOL_DIR/gcc/lib64/libstdc++.so" ]; then
   # We put both 32-bits and 64-bits library path in LD_LIBRARY_PATH: ld.so
   # will prefer the files in the 32-bits path when loading 32-bits executables,
   # and the files in the 64-bits path when loading 64-bits executables.
-  LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/gcc/lib64:$TOOLTOOL_DIR/gcc/lib
+  # We also put both possible 32-bits library paths.
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/gcc/lib64:$TOOLTOOL_DIR/gcc/lib32:$TOOLTOOL_DIR/gcc/lib
 elif [ -f "$TOOLTOOL_DIR/clang/lib/libstdc++.so" ]; then
   LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/clang/lib
 fi

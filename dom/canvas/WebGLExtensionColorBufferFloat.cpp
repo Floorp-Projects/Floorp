@@ -34,6 +34,27 @@ WebGLExtensionColorBufferFloat::WebGLExtensionColorBufferFloat(WebGLContext* web
     FOO(RGBA32F);
 
 #undef FOO
+
+#ifdef DEBUG
+    const auto gl = webgl->gl;
+    float was[4] = {};
+    gl->fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, was);
+
+    const float test[4] = {-1.0, 0, 2.0, 255.0};
+    gl->fClearColor(test[0], test[1], test[2], test[3]);
+
+    float now[4] = {};
+    gl->fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, now);
+    const bool ok = now[0] == test[0] && now[1] == test[1] &&
+                    now[2] == test[2] && now[3] == test[3];
+    if (!ok) {
+        printf_stderr("COLOR_CLEAR_VALUE: now{%f,%f,%f,%f} != test{%f,%f,%f,%f}\n",
+                      test[0], test[1], test[2], test[3],
+                      now[0], now[1], now[2], now[3]);
+        MOZ_ASSERT(false);
+    }
+    gl->fClearColor(was[0], was[1], was[2], was[3]);
+#endif
 }
 
 WebGLExtensionColorBufferFloat::~WebGLExtensionColorBufferFloat()
@@ -43,13 +64,17 @@ WebGLExtensionColorBufferFloat::~WebGLExtensionColorBufferFloat()
 bool
 WebGLExtensionColorBufferFloat::IsSupported(const WebGLContext* webgl)
 {
-    gl::GLContext* gl = webgl->GL();
+    const auto& gl = webgl->gl;
+    if (gl->IsANGLE()) {
+        // ANGLE supports this, but doesn't have a way to advertize its support,
+        // since it's compliant with WEBGL_color_buffer_float's clamping, but not
+        // EXT_color_buffer_float.
+        // TODO: This probably isn't necessary anymore.
+        return true;
+    }
 
-    // ANGLE supports this, but doesn't have a way to advertize its support,
-    // since it's compliant with WEBGL_color_buffer_float's clamping, but not
-    // EXT_color_buffer_float.
-    return gl->IsSupported(gl::GLFeature::renderbuffer_color_float) ||
-           gl->IsANGLE();
+    return gl->IsSupported(gl::GLFeature::renderbuffer_color_float) &&
+           gl->IsSupported(gl::GLFeature::frag_color_float);
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionColorBufferFloat, WEBGL_color_buffer_float)

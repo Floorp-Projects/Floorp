@@ -6,7 +6,6 @@
 
 #include "DocumentOrShadowRoot.h"
 #include "mozilla/dom/StyleSheetList.h"
-#include "XULDocument.h"
 
 namespace mozilla {
 namespace dom {
@@ -42,11 +41,6 @@ DocumentOrShadowRoot::GetElementById(const nsAString& aElementId)
     if (Element* el = entry->GetIdElement()) {
       return el;
     }
-  }
-
-  if (MOZ_UNLIKELY(mKind == Kind::Document &&
-      static_cast<nsIDocument&>(AsNode()).IsXULDocument())) {
-    return static_cast<XULDocument&>(AsNode()).GetRefById(aElementId);
   }
 
   return nullptr;

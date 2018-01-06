@@ -5040,8 +5040,7 @@ WorkerPrivate::OverrideLoadInfoLoadGroup(WorkerLoadInfo& aLoadInfo,
                                          nsIPrincipal* aPrincipal)
 {
   MOZ_ASSERT(!aLoadInfo.mInterfaceRequestor);
-  MOZ_ASSERT(aLoadInfo.mPrincipal == aPrincipal /* service workers */ ||
-             aLoadInfo.mLoadingPrincipal == aPrincipal /* any other worker type */);
+  MOZ_ASSERT(aLoadInfo.mLoadingPrincipal == aPrincipal);
 
   aLoadInfo.mInterfaceRequestor =
     new WorkerLoadInfo::InterfaceRequestor(aPrincipal, aLoadInfo.mLoadGroup);

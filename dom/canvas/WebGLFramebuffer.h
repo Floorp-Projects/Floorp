@@ -195,7 +195,7 @@ protected:
         explicit ResolvedData(const WebGLFramebuffer& parent);
     };
 
-    UniquePtr<const ResolvedData> mResolvedCompleteData;
+    mutable UniquePtr<const ResolvedData> mResolvedCompleteData;
 
     ////
 
@@ -236,13 +236,13 @@ protected:
 public:
     void DetachTexture(const char* funcName, const WebGLTexture* tex);
     void DetachRenderbuffer(const char* funcName, const WebGLRenderbuffer* rb);
-    bool ValidateAndInitAttachments(const char* funcName);
+    bool ValidateAndInitAttachments(const char* funcName) const;
     bool ValidateClearBufferType(const char* funcName, GLenum buffer, uint32_t drawBuffer,
                                  GLenum funcType) const;
 
-    bool ValidateForRead(const char* info,
-                         const webgl::FormatUsageInfo** const out_format,
-                         uint32_t* const out_width, uint32_t* const out_height);
+    bool ValidateForColorRead(const char* funcName,
+                              const webgl::FormatUsageInfo** out_format,
+                              uint32_t* out_width, uint32_t* out_height) const;
 
     ////////////////
     // Getters
@@ -268,7 +268,11 @@ public:
     ////////////////
     // WebGL funcs
 
-    FBStatus CheckFramebufferStatus(const char* funcName);
+    bool IsCheckFramebufferStatusComplete(const char* const funcName) const {
+        return CheckFramebufferStatus(funcName) == LOCAL_GL_FRAMEBUFFER_COMPLETE;
+    }
+
+    FBStatus CheckFramebufferStatus(const char* funcName) const;
     void FramebufferRenderbuffer(const char* funcName, GLenum attachment, GLenum rbtarget,
                                  WebGLRenderbuffer* rb);
     void FramebufferTexture2D(const char* funcName, GLenum attachment,
@@ -283,10 +287,8 @@ public:
                                      ErrorResult* const out_error);
 
     static void BlitFramebuffer(WebGLContext* webgl,
-                                const WebGLFramebuffer* src, GLint srcX0, GLint srcY0,
-                                GLint srcX1, GLint srcY1,
-                                const WebGLFramebuffer* dst, GLint dstX0, GLint dstY0,
-                                GLint dstX1, GLint dstY1,
+                                GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
+                                GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
                                 GLbitfield mask, GLenum filter);
 };
 
