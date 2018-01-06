@@ -74,6 +74,7 @@ public:
   }
 
   bool IsBackfaceVisible() const { return mTransform.IsBackfaceVisible(); }
+  bool IsReferenceFrame() const { return !mTransform.IsIdentity(); }
 
 private:
   wr::DisplayListBuilder* mBuilder;

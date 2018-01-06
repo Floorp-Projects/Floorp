@@ -39,8 +39,8 @@ public:
                   wr::DisplayListBuilder& aBuilder);
   void EndBuild();
 
-  void BeginList();
-  void EndList();
+  void BeginList(const StackingContextHelper& aStackingContext);
+  void EndList(const StackingContextHelper& aStackingContext);
 
   void BeginItem(nsDisplayItem* aItem,
                  const StackingContextHelper& aStackingContext);
@@ -70,26 +70,23 @@ private:
                       int32_t aAppUnitsPerDevPixel,
                       const StackingContextHelper& aSc);
 
+  const DisplayItemClipChain* ExtendChain(const DisplayItemClipChain* aClip);
   Maybe<ClipAndScroll> EnclosingClipAndScroll() const;
 
-  // Note: two DisplayItemClipChain* A and B might actually be "equal" (as per
-  // DisplayItemClipChain::Equal(A, B)) even though they are not the same pointer
-  // (A != B). In this hopefully-rare case, they will get separate entries
-  // in this map when in fact we could collapse them. However, to collapse
-  // them involves writing a custom hash function for the pointer type such that
-  // A and B hash to the same things whenever DisplayItemClipChain::Equal(A, B)
-  // is true, and that will incur a performance penalty for all the hashmap
-  // operations, so is probably not worth it. With the current code we might
-  // end up creating multiple clips in WR that are effectively identical but
-  // have separate clip ids. Hopefully this won't happen very often.
   typedef std::unordered_map<const DisplayItemClipChain*, wr::WrClipId> ClipIdMap;
 
   WebRenderLayerManager* MOZ_NON_OWNING_REF mManager;
   wr::DisplayListBuilder* mBuilder;
-  ClipIdMap mCache;
-
-  typedef std::unordered_map<FrameMetrics::ViewID, const DisplayItemClipChain*> ScrollParentMap;
-  ScrollParentMap mScrollParents;
+  // Stack of clip caches. There is one entry in the stack for each reference
+  // frame that is currently pushed in WR (a reference frame is a stacking
+  // context with a non-identity transform). Each entry contains a map that
+  // maps gecko DisplayItemClipChain objects to webrender WrClipIds, which
+  // allows us to avoid redefining identical clips in WR. We need to keep a
+  // separate cache per reference frame because the DisplayItemClipChain items
+  // themselves get deduplicated without regard to reference frames, but on the
+  // WR side we need to create different clips if they are in different
+  // reference frames.
+  std::vector<ClipIdMap> mCacheStack;
 
   struct ItemClips {
     ItemClips(const ActiveScrolledRoot* aAsr,
