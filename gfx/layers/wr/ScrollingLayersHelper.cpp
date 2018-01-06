@@ -35,7 +35,8 @@ ScrollingLayersHelper::BeginBuild(WebRenderLayerManager* aManager,
   mManager = aManager;
   MOZ_ASSERT(!mBuilder);
   mBuilder = &aBuilder;
-  MOZ_ASSERT(mCache.empty());
+  MOZ_ASSERT(mCacheStack.empty());
+  mCacheStack.emplace_back();
   MOZ_ASSERT(mScrollParents.empty());
   MOZ_ASSERT(mItemClipStack.empty());
 }
@@ -45,23 +46,30 @@ ScrollingLayersHelper::EndBuild()
 {
   mBuilder = nullptr;
   mManager = nullptr;
-  mCache.clear();
+  mCacheStack.pop_back();
+  MOZ_ASSERT(mCacheStack.empty());
   mScrollParents.clear();
   MOZ_ASSERT(mItemClipStack.empty());
 }
 
 void
-ScrollingLayersHelper::BeginList()
+ScrollingLayersHelper::BeginList(const StackingContextHelper& aStackingContext)
 {
+  if (aStackingContext.IsReferenceFrame()) {
+    mCacheStack.emplace_back();
+  }
   mItemClipStack.emplace_back(nullptr, nullptr);
 }
 
 void
-ScrollingLayersHelper::EndList()
+ScrollingLayersHelper::EndList(const StackingContextHelper& aStackingContext)
 {
   MOZ_ASSERT(!mItemClipStack.empty());
   mItemClipStack.back().Unapply(mBuilder);
   mItemClipStack.pop_back();
+  if (aStackingContext.IsReferenceFrame()) {
+    mCacheStack.pop_back();
+  }
 }
 
 void
@@ -226,14 +234,15 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
   std::pair<Maybe<FrameMetrics::ViewID>, Maybe<wr::WrClipId>> ids;
 
   if (mBuilder->HasExtraClip()) {
-    // We can't use mCache directly. However if there's an out-of-band clip that
+    // We can't use the clip cache directly. However if there's an out-of-band clip that
     // was pushed on top of aChain, we should return the id for that OOB clip,
     // so that anything we want to define as a descendant of aChain we actually
     // end up defining as a descendant of the OOB clip.
     ids.second = mBuilder->GetCacheOverride(aChain);
   } else {
-    auto it = mCache.find(aChain);
-    if (it != mCache.end()) {
+    const ClipIdMap& cache = mCacheStack.back();
+    auto it = cache.find(aChain);
+    if (it != cache.end()) {
       ids.second = Some(it->second);
     }
   }
@@ -328,7 +337,7 @@ ScrollingLayersHelper::RecurseAndDefineClip(nsDisplayItem* aItem,
       ancestorIds.first, ancestorIds.second,
       aSc.ToRelativeLayoutRect(clip), &wrRoundedRects);
   if (!mBuilder->HasExtraClip()) {
-    mCache[aChain] = clipId;
+    mCacheStack.back()[aChain] = clipId;
   }
 
   ids.second = Some(clipId);
@@ -373,8 +382,9 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
           }
         }
 
-        auto it2 = mCache.find(canonicalChain);
-        // If |it == mCache.end()| here then we have run into a case where the
+        const ClipIdMap& cache = mCacheStack.back();
+        auto it2 = cache.find(canonicalChain);
+        // If |it2 == cache.end()| here then we have run into a case where the
         // scroll layer was previously defined with a specific parent clip, and
         // now here it has a different parent clip. Gecko can create display
         // lists like this because it treats the ASR chain and clipping chain
@@ -384,7 +394,7 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
         // supports multiple ancestors on a scroll layer we can deal with this
         // better. The layout/reftests/text/wordwrap-08.html has a Text display
         // item that exercises this case.
-        if (it2 == mCache.end()) {
+        if (it2 == cache.end()) {
           // leave ids.second as Nothing(). This should only happen if we didn't
           // pick up a better canonicalChain above, either because it didn't
           // exist, or because it was not ::Equal to aChain. Therefore
@@ -486,7 +496,7 @@ ScrollingLayersHelper::EnclosingClipAndScroll() const
 ScrollingLayersHelper::~ScrollingLayersHelper()
 {
   MOZ_ASSERT(!mBuilder);
-  MOZ_ASSERT(mCache.empty());
+  MOZ_ASSERT(mCacheStack.empty());
   MOZ_ASSERT(mItemClipStack.empty());
 }
 
