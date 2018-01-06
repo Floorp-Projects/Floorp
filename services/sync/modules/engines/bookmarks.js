@@ -128,7 +128,7 @@ PlacesItem.prototype = {
     };
     let dateAdded = PlacesSyncUtils.bookmarks.ratchetTimestampBackwards(
       this.dateAdded, +this.modified * 1000);
-    if (dateAdded !== undefined) {
+    if (dateAdded > 0) {
       result.dateAdded = dateAdded;
     }
     return result;
