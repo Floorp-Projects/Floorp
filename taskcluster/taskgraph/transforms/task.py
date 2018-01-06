@@ -557,6 +557,10 @@ task_description_schema = Schema({
         Extra: object,
 
     }, {
+        Required('implementation'): 'always-optimized',
+        Extra: object,
+
+    }, {
         Required('implementation'): 'push-apk',
 
         # list of artifact URLs for the artifacts that should be beetmoved
@@ -1069,6 +1073,11 @@ def build_push_apk_breakpoint_payload(config, task, task_def):
 @payload_builder('invalid')
 def build_invalid_payload(config, task, task_def):
     task_def['payload'] = 'invalid task - should never be created'
+
+
+@payload_builder('always-optimized')
+def build_always_optimized_payload(config, task, task_def):
+    task_def['payload'] = {}
 
 
 @payload_builder('native-engine')

@@ -387,9 +387,8 @@ class NonNull
 {
 public:
   NonNull()
-    : ptr(nullptr)
 #ifdef DEBUG
-    , inited(false)
+    : inited(false)
 #endif
   {}
 
@@ -444,6 +443,7 @@ public:
   }
 
 protected:
+  // ptr is left uninitialized for optimization purposes.
   T* ptr;
 #ifdef DEBUG
   bool inited;
