@@ -79,6 +79,8 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
   SLH_LOG("processing item %p\n", aItem);
 
   const DisplayItemClipChain* clip = aItem->GetClipChain();
+  clip = ExtendChain(clip);
+
   ItemClips clips(aItem->GetActiveScrolledRoot(), clip);
   MOZ_ASSERT(!mItemClipStack.empty());
   if (clips.HasSameInputs(mItemClipStack.back())) {
@@ -474,6 +476,71 @@ ScrollingLayersHelper::RecurseAndDefineAsr(nsDisplayItem* aItem,
 
   ids.first = Some(scrollId);
   return ids;
+}
+
+const DisplayItemClipChain*
+ScrollingLayersHelper::ExtendChain(const DisplayItemClipChain* aClip)
+{
+  // The intent of this function is to handle Gecko display list scenarios
+  // like so:
+  // nsDisplayFixedPosition with clip chain A -> B -> nullptr
+  //   nsDisplayBackgroundColor with clip chain B -> nullptr
+  //
+  // The specific types are not relevant, but the important part is that there
+  // is a display item whose clip chain is a subchain of the enclosing display
+  // item.
+  //
+  // The semantics of the gecko display items means that the two clip chains
+  // should be intersected for the child display item; because one clip chain
+  // is a subset of the other the intersection comes out to be clip chain from
+  // the parent.
+  // However, WebRender doesn't let us (yet) intersect clip chains, so one of
+  // the jobs of ScrollingLayersHelper is to generate as-good-as-possible clip
+  // chains by merging the necessary clips into a new clip chain. In the example
+  // above, we really want the nsDisplayBackgroundColor to use the clip chain
+  // from A rather than from B in order to get the right clips, and this
+  // function "extends" an input of |B| and returns |A|.
+
+  if (!aClip) {
+    return aClip;
+  }
+  // mItemClipStack has the clips that we pushed for ancestor display items.
+  size_t clipDepth = mItemClipStack.size();
+  MOZ_ASSERT(clipDepth > 0);
+  while (--clipDepth > 0) {
+    const DisplayItemClipChain* enclosingClip = mItemClipStack[clipDepth - 1].mChain;
+    if (!enclosingClip) {
+      // This is a special case; if an item has a nullptr clipchain it basically
+      // inherits the clipchain from its ancestor, so let's skip to that.
+      continue;
+    }
+    if (aClip == enclosingClip) {
+      // The ancestor clip chain is the same as our item's clip chain, so
+      // we're done. Note that because this function will have run on the
+      // ancestor as well, we can be assured via induction that there is no
+      // ancestor beyond this one that has a longer superset-clipchain.
+      return aClip;
+    }
+    const ClipIdMap& cache = mCacheStack.back();
+    if (cache.find(enclosingClip) == cache.end()) {
+      // The ancestor clip chain isn't in our clip cache, which means there
+      // must be a reference frame between the ancestor item and this item.
+      // Therefore we cannot use the enclosing clip, so let's abort
+      return aClip;
+    }
+    for (const DisplayItemClipChain* i = enclosingClip->mParent; i; i = i->mParent) {
+      if (i == aClip) {
+        // aClip is contained inside the enclosingClip clipchain. Since the
+        // enclosingClip also applies to the item we're currently processing,
+        // we should use that as it is a better approximation to the real clip
+        // set that applies to the item.
+        SLH_LOG("extending clip %p to %p\n", aClip, enclosingClip);
+        return enclosingClip;
+      }
+    }
+    break;
+  }
+  return aClip;
 }
 
 Maybe<ScrollingLayersHelper::ClipAndScroll>
