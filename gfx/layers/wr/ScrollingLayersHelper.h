@@ -39,8 +39,8 @@ public:
                   wr::DisplayListBuilder& aBuilder);
   void EndBuild();
 
-  void BeginList();
-  void EndList();
+  void BeginList(const StackingContextHelper& aStackingContext);
+  void EndList(const StackingContextHelper& aStackingContext);
 
   void BeginItem(nsDisplayItem* aItem,
                  const StackingContextHelper& aStackingContext);
@@ -86,7 +86,16 @@ private:
 
   WebRenderLayerManager* MOZ_NON_OWNING_REF mManager;
   wr::DisplayListBuilder* mBuilder;
-  ClipIdMap mCache;
+  // Stack of clip caches. There is one entry in the stack for each reference
+  // frame that is currently pushed in WR (a reference frame is a stacking
+  // context with a non-identity transform). Each entry contains a map that
+  // maps gecko DisplayItemClipChain objects to webrender WrClipIds, which
+  // allows us to avoid redefining identical clips in WR. We need to keep a
+  // separate cache per reference frame because the DisplayItemClipChain items
+  // themselves get deduplicated without regard to reference frames, but on the
+  // WR side we need to create different clips if they are in different
+  // reference frames.
+  std::vector<ClipIdMap> mCacheStack;
 
   typedef std::unordered_map<FrameMetrics::ViewID, const DisplayItemClipChain*> ScrollParentMap;
   ScrollParentMap mScrollParents;
