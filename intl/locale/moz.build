@@ -33,12 +33,14 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.intl += [
+    'Locale.h',
     'LocaleService.h',
     'OSPreferences.h',
 ]
 
 UNIFIED_SOURCES += [
     'DateTimeFormat.cpp',
+    'Locale.cpp',
     'LocaleService.cpp',
     'nsCollation.cpp',
     'nsCollationFactory.cpp',
