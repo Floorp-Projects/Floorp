@@ -39,6 +39,7 @@ public class BrowserProviderHistoryTest extends BrowserProviderHistoryVisitsTest
     public void setUp() throws Exception {
         super.setUp();
         final ShadowContentResolver cr = new ShadowContentResolver();
+
         thumbnailClient = cr.acquireContentProviderClient(BrowserContract.Thumbnails.CONTENT_URI);
         thumbnailTestUri = testUri(BrowserContract.Thumbnails.CONTENT_URI);
         expireHistoryNormalUri = testUri(BrowserContract.History.CONTENT_OLD_URI).buildUpon()
@@ -260,6 +261,70 @@ public class BrowserProviderHistoryTest extends BrowserProviderHistoryVisitsTest
         }
     }
 
+    private void assertHistoryValuesForGuidsFromSync(int expectedCount, String title, String url, Long remoteLastVisited, Integer visits) throws RemoteException {
+        final Cursor c = historyClient.query(historyTestUri, new String[] {
+                BrowserContract.History.TITLE,
+                BrowserContract.History.VISITS,
+                BrowserContract.History.URL,
+                BrowserContract.History.LOCAL_VISITS,
+                BrowserContract.History.REMOTE_VISITS,
+                BrowserContract.History.LOCAL_DATE_LAST_VISITED,
+                BrowserContract.History.REMOTE_DATE_LAST_VISITED,
+                BrowserContract.History.DATE_CREATED,
+                BrowserContract.History.DATE_MODIFIED
+        }, null, null, BrowserContract.History._ID + " DESC");
+
+        // 3m ago, since one of the tests manually rewinds timestamps to 2 months ago.
+        final long reasonablyRecentTimestamp = System.currentTimeMillis() - 1000L * 60L * 60L * 24L * 30L * 3L;
+
+        assertNotNull(c);
+        assertEquals(expectedCount, c.getCount());
+        try {
+            final int titleCol = c.getColumnIndexOrThrow(BrowserContract.History.TITLE);
+            final int urlCol = c.getColumnIndexOrThrow(BrowserContract.History.URL);
+            final int visitsCol = c.getColumnIndexOrThrow(BrowserContract.History.VISITS);
+            final int localVisitsCol = c.getColumnIndexOrThrow(BrowserContract.History.LOCAL_VISITS);
+            final int remoteVisitsCol = c.getColumnIndexOrThrow(BrowserContract.History.REMOTE_VISITS);
+            final int localDateLastVisitedCol = c.getColumnIndexOrThrow(BrowserContract.History.LOCAL_DATE_LAST_VISITED);
+            final int remoteDateLastVisitedCol = c.getColumnIndexOrThrow(BrowserContract.History.REMOTE_DATE_LAST_VISITED);
+            final int dateCreatedCol = c.getColumnIndexOrThrow(BrowserContract.History.DATE_CREATED);
+            final int dateModifiedCol = c.getColumnIndexOrThrow(BrowserContract.History.DATE_MODIFIED);
+
+            while (c.moveToNext()) {
+                assertEquals(title, c.getString(titleCol));
+                assertEquals(url, c.getString(urlCol));
+
+                // History is inserted 'from sync', so expect local visit counts and local visit dates
+                // to be null.
+                assertEquals(0, c.getInt(localVisitsCol));
+                assertEquals(0, c.getLong(localDateLastVisitedCol));
+
+                if (remoteLastVisited == null) {
+                    assertEquals(0, c.getInt(remoteDateLastVisitedCol));
+                } else {
+                    assertEquals(remoteLastVisited, (Long) c.getLong(remoteDateLastVisitedCol));
+                    assertEquals(visits, (Integer) c.getInt(remoteVisitsCol));
+                    assertEquals(visits, (Integer) c.getInt(visitsCol));
+                }
+
+                // Make sure 'modified' and 'created' timestamps are present.
+                assertFalse(c.isNull(dateCreatedCol));
+                assertFalse(c.isNull(dateModifiedCol));
+
+                // Make sure these timestamps are also reasonable. Hopefully this doesn't fail due
+                // to poorly timed clock drift.
+                final long createdTimestamp = c.getLong(dateCreatedCol);
+                final long modifiedTimestamp = c.getLong(dateModifiedCol);
+                assertTrue(createdTimestamp + " must be greater than " + reasonablyRecentTimestamp,
+                        reasonablyRecentTimestamp < createdTimestamp);
+                assertTrue(modifiedTimestamp + " must be greater than " + reasonablyRecentTimestamp,
+                        reasonablyRecentTimestamp < c.getLong(dateModifiedCol));
+            }
+        } finally {
+            c.close();
+        }
+    }
+
     @Test
     public void testBulkHistoryInsert() throws Exception {
         Bundle result;
@@ -267,7 +332,7 @@ public class BrowserProviderHistoryTest extends BrowserProviderHistoryVisitsTest
         // Test basic error conditions.
         String historyTestUriArg = historyTestUri.toString();
         try {
-            result = historyClient.call(BrowserContract.METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC, historyTestUriArg, new Bundle());
+            historyClient.call(BrowserContract.METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC, historyTestUriArg, new Bundle());
             fail();
         } catch (IllegalArgumentException e) {}
 
@@ -284,7 +349,7 @@ public class BrowserProviderHistoryTest extends BrowserProviderHistoryVisitsTest
         recordBundles = new Bundle[3];
         for (int i = 0; i < 3; i++) {
             final Bundle bundle = new Bundle();
-            bundle.putParcelable(BrowserContract.METHOD_PARAM_OBJECT, buildHistoryCV("guid" + i, "Test", "https://www.mozilla.org/" + i, 10L, 10L, 10));
+            bundle.putParcelable(BrowserContract.METHOD_PARAM_OBJECT, buildHistoryCV("guid" + i, "Test", "https://www.mozilla.org/", 10L, 10L, 10));
             bundle.putSerializable(BrowserContract.History.VISITS, buildHistoryVisitsCVs(10, "guid" + i, 1L, 3, false));
             recordBundles[i] = bundle;
         }
@@ -295,6 +360,9 @@ public class BrowserProviderHistoryTest extends BrowserProviderHistoryVisitsTest
         assertNull(result.getSerializable(BrowserContract.METHOD_RESULT));
         assertRowCount(historyClient, historyTestUri, 3);
         assertRowCount(visitsClient, visitsTestUri, 30);
+
+        // Ensure that bulk-inserted records look sane.
+        assertHistoryValuesForGuidsFromSync(3, "Test", "https://www.mozilla.org/", 10L, 10);
 
         // Test insert mixed data.
         recordBundles = new Bundle[3];
@@ -320,6 +388,108 @@ public class BrowserProviderHistoryTest extends BrowserProviderHistoryVisitsTest
 
         assertHistoryAggregates(BrowserContract.History.URL + " = ?", new String[] {"https://www.mozilla.org/3"},
                 5, 0, 0, 5, 5);
+    }
+
+    /**
+     * Tests that bulk-inserted history records without visits look correct.
+     */
+    @Test
+    public void testBulkHistoryInsertWithoutVisits() throws Exception {
+        final Bundle data = new Bundle();
+        // Test insert three history records with 10 visits each.
+        final int insertedRecordCount = 10;
+
+        Bundle[] recordBundles = new Bundle[insertedRecordCount];
+        for (int i = 0; i < insertedRecordCount; i++) {
+            final Bundle bundle = new Bundle();
+            bundle.putParcelable(BrowserContract.METHOD_PARAM_OBJECT, buildHistoryCV("guid" + i, "Test", "https://www.mozilla.org/", null, null, null));
+            bundle.putSerializable(BrowserContract.History.VISITS, new ContentValues[0]);
+            recordBundles[i] = bundle;
+        }
+        data.putSerializable(BrowserContract.METHOD_PARAM_DATA, recordBundles);
+
+        Bundle result = historyClient.call(BrowserContract.METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC, historyTestUri.toString(), data);
+        assertNotNull(result);
+        assertNull(result.getSerializable(BrowserContract.METHOD_RESULT));
+        assertRowCount(historyClient, historyTestUri, insertedRecordCount);
+        assertRowCount(visitsClient, visitsTestUri, 0);
+
+        assertHistoryValuesForGuidsFromSync(insertedRecordCount, "Test", "https://www.mozilla.org/", null, null);
+    }
+
+    /**
+     * Tests bulk-inserting history records, resetting modified/created timestamps to be older than
+     * the normal expiration 'keepAfter' threshold, and then running a normal expiration.
+     */
+    @Test
+    public void testBullkHistoryInsertThenNormalExpire() throws Exception {
+        final Bundle data = new Bundle();
+        // Test insert three history records with 10 visits each.
+        final int insertedRecordCount = 3000;
+
+        Bundle[] recordBundles = new Bundle[insertedRecordCount];
+        for (int i = 0; i < insertedRecordCount; i++) {
+            final Bundle bundle = new Bundle();
+            bundle.putParcelable(BrowserContract.METHOD_PARAM_OBJECT, buildHistoryCV("guid" + i, "Test", "https://www.mozilla.org/", 10L, 10L, 10));
+            bundle.putSerializable(BrowserContract.History.VISITS, buildHistoryVisitsCVs(10, "guid" + i, 1L, 3, false));
+            recordBundles[i] = bundle;
+        }
+        data.putSerializable(BrowserContract.METHOD_PARAM_DATA, recordBundles);
+
+        Bundle result = historyClient.call(BrowserContract.METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC, historyTestUri.toString(), data);
+        assertNotNull(result);
+        assertNull(result.getSerializable(BrowserContract.METHOD_RESULT));
+        assertRowCount(historyClient, historyTestUri, insertedRecordCount);
+        assertRowCount(visitsClient, visitsTestUri, insertedRecordCount * 10);
+
+        assertHistoryValuesForGuidsFromSync(insertedRecordCount, "Test", "https://www.mozilla.org/", 10L, 10);
+
+        long twoMonthsAgo = System.currentTimeMillis() - 1000L * 60 * 60 * 12 * 60;
+        // inserting a new entry sets the date created and modified automatically, so let's reset them
+        ContentValues cv = new ContentValues();
+        cv.put(BrowserContract.History.DATE_CREATED, twoMonthsAgo);
+        cv.put(BrowserContract.History.DATE_MODIFIED, twoMonthsAgo);
+        assertEquals(insertedRecordCount, historyClient.update(historyTestUri, cv, null, null));
+
+        historyClient.delete(expireHistoryNormalUri, null, null);
+
+        // Expect that we're left with just 2000 records.
+        assertHistoryValuesForGuidsFromSync(2000, "Test", "https://www.mozilla.org/", 10L, 10);
+        assertRowCount(visitsClient, visitsTestUri, 2000 * 10);
+    }
+
+    /**
+     * Tests bulk-inserting history records, and then running a aggressive expiration.
+     */
+    @Test
+    public void testBullkHistoryInsertThenAggressiveExpire() throws Exception {
+        final Bundle data = new Bundle();
+        // Test insert three history records with 10 visits each.
+        final int insertedRecordCount = 1000;
+
+        Bundle[] recordBundles = new Bundle[insertedRecordCount];
+        for (int i = 0; i < insertedRecordCount; i++) {
+            final Bundle bundle = new Bundle();
+            bundle.putParcelable(BrowserContract.METHOD_PARAM_OBJECT, buildHistoryCV("guid" + i, "Test", "https://www.mozilla.org/", 10L, 10L, 10));
+            bundle.putSerializable(BrowserContract.History.VISITS, buildHistoryVisitsCVs(10, "guid" + i, 1L, 3, false));
+            recordBundles[i] = bundle;
+        }
+        data.putSerializable(BrowserContract.METHOD_PARAM_DATA, recordBundles);
+
+        Bundle result = historyClient.call(BrowserContract.METHOD_INSERT_HISTORY_WITH_VISITS_FROM_SYNC, historyTestUri.toString(), data);
+        assertNotNull(result);
+        assertNull(result.getSerializable(BrowserContract.METHOD_RESULT));
+        assertRowCount(historyClient, historyTestUri, insertedRecordCount);
+        assertRowCount(visitsClient, visitsTestUri, insertedRecordCount * 10);
+
+        assertHistoryValuesForGuidsFromSync(insertedRecordCount, "Test", "https://www.mozilla.org/", 10L, 10);
+
+        // Aggressive expiration doesn't care about record timestamps.
+        historyClient.delete(expireHistoryAggressiveUri, null, null);
+
+        // Expect that we're left with just 500 records.
+        assertHistoryValuesForGuidsFromSync(500, "Test", "https://www.mozilla.org/", 10L, 10);
+        assertRowCount(visitsClient, visitsTestUri, 500 * 10);
     }
 
     private ContentValues[] buildHistoryVisitsCVs(int numberOfVisits, String guid, long baseDate, int visitType, boolean isLocal) {

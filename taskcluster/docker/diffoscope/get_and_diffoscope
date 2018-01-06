@@ -1,0 +1,52 @@
+#!/bin/sh
+
+set -e
+set -x
+
+cd /builds/worker
+
+mkdir a b
+
+# Until https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=879010 is
+# implemented, it's better to first manually extract the data.
+# Plus dmg files are not supported yet.
+
+case "$ORIG_URL" in
+*/target.zip|*/target.apk)
+	curl -sL "$ORIG_URL" > a.zip
+	curl -sL "$NEW_URL" > b.zip
+	unzip -d a a.zip
+	unzip -d b b.zip
+	;;
+*/target.tar.bz2)
+	curl -sL "$ORIG_URL" | tar -C a -jxf -
+	curl -sL "$NEW_URL" | tar -C b -jxf -
+	;;
+*/target.dmg)
+	# We don't have mach available to call mach artifact toolchain.
+	# This is the trivial equivalent for those toolchains we use here.
+	for t in $MOZ_TOOLCHAINS; do
+		curl -sL https://queue.taskcluster.net/v1/task/${t#*@}/artifacts/${t%@*} | tar -Jxf -
+	done
+	for tool in lipo otool; do
+		ln -s /builds/worker/cctools/bin/x86_64-apple-darwin*-$tool bin/$tool
+	done
+	export PATH=$PATH:/builds/worker/bin
+	curl -sL "$ORIG_URL" > a.dmg
+	curl -sL "$NEW_URL" > b.dmg
+	for i in a b; do
+		dmg/dmg extract $i.dmg $i.hfs
+		dmg/hfsplus $i.hfs extractall / $i
+	done
+	;;
+esac
+
+# Builds are 99% of the time differing in some small ways, so it's not
+# really useful to report a failure (at least not until we actually
+# care about the builds being 100% identical).
+diffoscope \
+	--html diff.html \
+	--text diff.txt \
+	--progress \
+	$DIFFOSCOPE_ARGS \
+	a b || true

@@ -19,8 +19,6 @@ namespace binding_detail {
 // for small strings and a nsStringBuffer for longer strings.
 struct FakeString {
   FakeString() :
-    mData(nsString::char_traits::sEmptyBuffer),
-    mLength(0),
     mDataFlags(nsString::DataFlags::TERMINATED),
     mClassFlags(nsString::ClassFlags(0))
   {
@@ -112,7 +110,9 @@ private:
     return reinterpret_cast<nsString*>(this);
   }
 
+  // mData is left uninitialized for optimization purposes.
   nsString::char_type* mData;
+  // mLength is left uninitialized for optimization purposes.
   nsString::size_type mLength;
   nsString::DataFlags mDataFlags;
   nsString::ClassFlags mClassFlags;
