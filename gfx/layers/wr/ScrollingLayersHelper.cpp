@@ -78,7 +78,8 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
 {
   SLH_LOG("processing item %p\n", aItem);
 
-  ItemClips clips(aItem->GetActiveScrolledRoot(), aItem->GetClipChain());
+  const DisplayItemClipChain* clip = aItem->GetClipChain();
+  ItemClips clips(aItem->GetActiveScrolledRoot(), clip);
   MOZ_ASSERT(!mItemClipStack.empty());
   if (clips.HasSameInputs(mItemClipStack.back())) {
     // Early-exit because if the clips are the same then we don't need to do
@@ -94,18 +95,17 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
 
   // There are two ASR chains here that we need to be fully defined. One is the
   // ASR chain pointed to by aItem->GetActiveScrolledRoot(). The other is the
-  // ASR chain pointed to by aItem->GetClipChain()->mASR. We pick the leafmost
+  // ASR chain pointed to by clip->mASR. We pick the leafmost
   // of these two chains because that one will include the other.
-  // The leafmost clip is trivially going to be aItem->GetClipChain().
+  // The leafmost clip is trivially going to be |clip|.
   // So we call DefineClipChain with these two leafmost things, and it will
   // recursively define all the clips and scroll layers with the appropriate
   // parents, but will not actually push anything onto the WR stack.
   const ActiveScrolledRoot* leafmostASR = aItem->GetActiveScrolledRoot();
-  if (aItem->GetClipChain()) {
-    leafmostASR = ActiveScrolledRoot::PickDescendant(leafmostASR,
-        aItem->GetClipChain()->mASR);
+  if (clip) {
+    leafmostASR = ActiveScrolledRoot::PickDescendant(leafmostASR, clip->mASR);
   }
-  auto ids = DefineClipChain(aItem, leafmostASR, aItem->GetClipChain(),
+  auto ids = DefineClipChain(aItem, leafmostASR, clip,
       auPerDevPixel, aStackingContext);
 
   // Now that stuff is defined, we need to ensure the right items are on the
@@ -149,7 +149,7 @@ ScrollingLayersHelper::BeginItem(nsDisplayItem* aItem,
   }
   // And ensure the leafmost clip, if scrolled by that ASR, is at the top of the
   // stack.
-  if (ids.second && aItem->GetClipChain()->mASR == leafmostASR) {
+  if (ids.second && clip->mASR == leafmostASR) {
     clips.mClipId = ids.second;
   }
   // If we need the ClipAndScroll, we want to replace the topmost scroll layer
