@@ -5236,6 +5236,8 @@
     "expires_in_version" : "never",
     "kind": "enumerated",
     "n_values": 4,
+    "alert_emails": ["fx-search@mozilla.com"],
+    "bug_numbers": [1053467],
     "description": "The possible types of the 'sizes' attribute for <link rel=icon>. 0: Attribute not specified, 1: 'any', 2: Integer dimensions, 3: Invalid value."
   },
   "LINK_ICON_SIZES_ATTR_DIMENSION": {
@@ -5244,6 +5246,8 @@
     "kind": "linear",
     "high": 513,
     "n_buckets" : 64,
+    "alert_emails": ["fx-search@mozilla.com"],
+    "bug_numbers": [1053467],
     "description": "The width dimension of the 'sizes' attribute for <link rel=icon>."
   },
   "PAGE_METADATA_SIZE": {
