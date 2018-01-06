@@ -309,8 +309,9 @@ add_task(async function onPermissionDisable() {
   checkbox = doc.getElementById("permissionsDisableCheckbox");
   Assert.equal(checkbox.checked, true);
 
-  // Close the dialog.
+  // Close the dialog and clean up.
   doc.getElementById("cancel").click();
+  Services.prefs.setIntPref("permissions.default.desktop-notification", SitePermissions.UNKNOWN);
 });
 
 add_task(async function checkDefaultPermissionState() {
@@ -334,6 +335,9 @@ add_task(async function checkDefaultPermissionState() {
   // Check if the default permission state is retained (and not automatically set to SitePermissions.UNKNOWN).
   let state = Services.prefs.getIntPref("permissions.default.desktop-notification");
   Assert.equal(state, SitePermissions.ALLOW);
+
+  // Clean up.
+  Services.prefs.setIntPref("permissions.default.desktop-notification", SitePermissions.UNKNOWN);
 });
 
 add_task(async function removeTab() {
