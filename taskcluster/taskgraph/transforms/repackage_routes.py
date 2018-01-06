@@ -18,9 +18,10 @@ transforms = TransformSequence()
 def validate(config, jobs):
     for job in jobs:
         label = job['label']
-        yield validate_schema(
+        validate_schema(
             job_description_schema, job,
             "In repackage-signing ({!r} kind) task for {!r}:".format(config.kind, label))
+        yield job
 
 
 @transforms.add

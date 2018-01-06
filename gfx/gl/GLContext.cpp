@@ -754,6 +754,30 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
             MarkUnsupported(GLFeature::depth_texture);
         }
 #endif
+        if (IsSupported(GLFeature::frag_color_float)) {
+            float was[4] = {};
+            fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, was);
+
+            const float test[4] = {-1.0, 0, 2.0, 255.0};
+            fClearColor(test[0], test[1], test[2], test[3]);
+
+            float now[4] = {};
+            fGetFloatv(LOCAL_GL_COLOR_CLEAR_VALUE, now);
+
+            fClearColor(was[0], was[1], was[2], was[3]);
+
+            const bool unclamped = now[0] == test[0] && now[1] == test[1] &&
+                                   now[2] == test[2] && now[3] == test[3];
+            if (!unclamped) {
+                printf_stderr("COLOR_CLEAR_VALUE: now{%f,%f,%f,%f} != test{%f,%f,%f,%f}\n",
+                              test[0], test[1], test[2], test[3],
+                              now[0], now[1], now[2], now[3]);
+                gfxCriticalNote << "GLFeature::frag_color_float failed support probe,"
+                                << " disabling. (RENDERER: "
+                                << (const char*)fGetString(LOCAL_GL_RENDERER) << ")";
+                MarkUnsupported(GLFeature::frag_color_float);
+            }
+        }
     }
 
     if (IsExtensionSupported(GLContext::ARB_pixel_buffer_object)) {
@@ -957,6 +981,8 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
     if (IsSupported(GLFeature::framebuffer_multisample)) {
         fGetIntegerv(LOCAL_GL_MAX_SAMPLES, (GLint*)&mMaxSamples);
     }
+
+    mMaxTexOrRbSize = std::min(mMaxTextureSize, mMaxRenderbufferSize);
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -2520,8 +2546,6 @@ GLContext::Readback(SharedSurface* src, gfx::DataSourceSurface* dest)
 {
     MOZ_ASSERT(src && dest);
     MOZ_ASSERT(dest->GetSize() == src->mSize);
-    MOZ_ASSERT(dest->GetFormat() == (src->mHasAlpha ? SurfaceFormat::B8G8R8A8
-                                                    : SurfaceFormat::B8G8R8X8));
 
     if (!MakeCurrent()) {
         return false;

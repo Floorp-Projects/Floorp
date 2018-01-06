@@ -70,18 +70,6 @@ ImageBitmapRenderingContext::TransferFromImageBitmap(ImageBitmap& aImageBitmap)
   Redraw(gfxRect(0, 0, mWidth, mHeight));
 }
 
-int32_t
-ImageBitmapRenderingContext::GetWidth() const
-{
-  return mWidth;
-}
-
-int32_t
-ImageBitmapRenderingContext::GetHeight() const
-{
-  return mHeight;
-}
-
 NS_IMETHODIMP
 ImageBitmapRenderingContext::SetDimensions(int32_t aWidth, int32_t aHeight)
 {

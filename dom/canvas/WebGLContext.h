@@ -67,6 +67,7 @@ class nsIDocShell;
 
 namespace mozilla {
 class ScopedCopyTexImageSource;
+class ScopedDrawCallWrapper;
 class ScopedResolveTexturesForDraw;
 class ScopedUnpackReset;
 class WebGLActiveInfo;
@@ -97,6 +98,10 @@ namespace gfx {
 class SourceSurface;
 class VRLayerChild;
 } // namespace gfx
+
+namespace gl {
+class MozFramebuffer;
+} // namespace gl
 
 namespace webgl {
 struct LinkedProgramInfo;
@@ -273,9 +278,9 @@ class WebGLContext
     , public nsICanvasRenderingContextInternal
     , public nsSupportsWeakReference
     , public WebGLContextUnchecked
-    , public WebGLRectangleObject
     , public nsWrapperCache
 {
+    friend class ScopedDrawCallWrapper;
     friend class ScopedDrawHelper;
     friend class ScopedDrawWithTransformFeedback;
     friend class ScopedFBRebinder;
@@ -337,8 +342,8 @@ public:
     virtual void OnMemoryPressure() override;
 
     // nsICanvasRenderingContextInternal
-    virtual int32_t GetWidth() const override;
-    virtual int32_t GetHeight() const override;
+    virtual int32_t GetWidth() override { return DrawingBufferWidth("get width"); }
+    virtual int32_t GetHeight() override { return DrawingBufferHeight("get height"); }
 
     NS_IMETHOD SetDimensions(int32_t width, int32_t height) override;
     NS_IMETHOD InitializeWithDrawTarget(nsIDocShell*,
@@ -361,7 +366,7 @@ public:
     GetSurfaceSnapshot(gfxAlphaType* out_alphaType) override;
 
     virtual void SetIsOpaque(bool) override {};
-    bool GetIsOpaque() override { return false; }
+    bool GetIsOpaque() override { return !mOptions.alpha; }
     NS_IMETHOD SetContextOptions(JSContext* cx,
                                  JS::Handle<JS::Value> options,
                                  ErrorResult& aRvForDictionaryInit) override;
@@ -381,22 +386,22 @@ public:
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    void SynthesizeGLError(GLenum err);
-    void SynthesizeGLError(GLenum err, const char* fmt, ...) MOZ_FORMAT_PRINTF(3, 4);
+    void SynthesizeGLError(GLenum err) const;
+    void SynthesizeGLError(GLenum err, const char* fmt, ...) const MOZ_FORMAT_PRINTF(3, 4);
 
-    void ErrorInvalidEnum(const char* fmt = 0, ...) MOZ_FORMAT_PRINTF(2, 3);
-    void ErrorInvalidOperation(const char* fmt = 0, ...) MOZ_FORMAT_PRINTF(2, 3);
-    void ErrorInvalidValue(const char* fmt = 0, ...) MOZ_FORMAT_PRINTF(2, 3);
-    void ErrorInvalidFramebufferOperation(const char* fmt = 0, ...) MOZ_FORMAT_PRINTF(2, 3);
-    void ErrorInvalidEnumInfo(const char* info, GLenum enumValue);
+    void ErrorInvalidEnum(const char* fmt = 0, ...) const MOZ_FORMAT_PRINTF(2, 3);
+    void ErrorInvalidOperation(const char* fmt = 0, ...) const MOZ_FORMAT_PRINTF(2, 3);
+    void ErrorInvalidValue(const char* fmt = 0, ...) const MOZ_FORMAT_PRINTF(2, 3);
+    void ErrorInvalidFramebufferOperation(const char* fmt = 0, ...) const MOZ_FORMAT_PRINTF(2, 3);
+    void ErrorInvalidEnumInfo(const char* info, GLenum enumValue) const;
     void ErrorInvalidEnumInfo(const char* info, const char* funcName,
-                              GLenum enumValue);
-    void ErrorOutOfMemory(const char* fmt = 0, ...) MOZ_FORMAT_PRINTF(2, 3);
-    void ErrorImplementationBug(const char* fmt = 0, ...) MOZ_FORMAT_PRINTF(2, 3);
+                              GLenum enumValue) const;
+    void ErrorOutOfMemory(const char* fmt = 0, ...) const MOZ_FORMAT_PRINTF(2, 3);
+    void ErrorImplementationBug(const char* fmt = 0, ...) const MOZ_FORMAT_PRINTF(2, 3);
 
-    void ErrorInvalidEnumArg(const char* funcName, const char* argName, GLenum val);
+    void ErrorInvalidEnumArg(const char* funcName, const char* argName, GLenum val) const;
 
-    const char* ErrorName(GLenum error);
+    static const char* ErrorName(GLenum error);
 
     /**
      * Return displayable name for GLenum.
@@ -477,11 +482,8 @@ public:
     // amount of work it does.
     // It only clears the buffers we specify, and can reset its state without
     // first having to query anything, as WebGL knows its state at all times.
-    void ForceClearFramebufferWithDefaultValues(GLbitfield bufferBits, bool fakeNoAlpha);
-
-    // Calls ForceClearFramebufferWithDefaultValues() for the Context's 'screen'.
-    void ClearScreen();
-    void ClearBackbufferIfNeeded();
+    void ForceClearFramebufferWithDefaultValues(GLbitfield bufferBits,
+                                                bool fakeNoAlpha) const;
 
     void RunContextLossTimer();
     void UpdateContextLossStatus();
@@ -489,8 +491,8 @@ public:
 
     bool TryToRestoreContext();
 
-    void AssertCachedBindings();
-    void AssertCachedGlobalState();
+    void AssertCachedBindings() const;
+    void AssertCachedGlobalState() const;
 
     dom::HTMLCanvasElement* GetCanvas() const { return mCanvasElement; }
     nsIDocument* GetOwnerDoc() const;
@@ -498,9 +500,14 @@ public:
     // WebIDL WebGLRenderingContext API
     void Commit();
     void GetCanvas(Nullable<dom::OwningHTMLCanvasElementOrOffscreenCanvas>& retval);
-    GLsizei DrawingBufferWidth() const { return IsContextLost() ? 0 : mWidth; }
-    GLsizei DrawingBufferHeight() const {
-        return IsContextLost() ? 0 : mHeight;
+private:
+    gfx::IntSize DrawingBufferSize(const char* funcName);
+public:
+    GLsizei DrawingBufferWidth(const char* const funcName = "drawingBufferWidth") {
+        return DrawingBufferSize(funcName).width;
+    }
+    GLsizei DrawingBufferHeight(const char* const funcName = "drawingBufferHeight") {
+        return DrawingBufferSize(funcName).height;
     }
 
     layers::LayersBackend GetCompositorBackendType() const;
@@ -983,10 +990,12 @@ public:
 
 // -----------------------------------------------------------------------------
 // State and State Requests (WebGLContextState.cpp)
+private:
+    void SetEnabled(const char* funcName, GLenum cap, bool enabled);
 public:
-    void Disable(GLenum cap);
-    void Enable(GLenum cap);
-    bool GetStencilBits(GLint* const out_stencilBits);
+    void Disable(GLenum cap) { SetEnabled("disabled", cap, false); }
+    void Enable(GLenum cap) { SetEnabled("enabled", cap, true); }
+    bool GetStencilBits(GLint* const out_stencilBits) const;
     bool GetChannelBits(const char* funcName, GLenum pname, GLint* const out_val);
     virtual JS::Value GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv);
 
@@ -1443,7 +1452,6 @@ protected:
     bool mCanLoseContextInForeground;
     bool mRestoreWhenVisible;
     bool mShouldPresent;
-    bool mBackbufferNeedsClear;
     bool mDisableFragHighP;
 
     template<typename WebGLObjectType>
@@ -1451,12 +1459,13 @@ protected:
 
     GLuint mActiveTexture;
     GLenum mDefaultFB_DrawBuffer0;
+    GLenum mDefaultFB_ReadBuffer;
 
     // glGetError sources:
     bool mEmitContextLostErrorOnce;
-    GLenum mWebGLError;
-    GLenum mUnderlyingGLError;
-    GLenum GetAndFlushUnderlyingGLErrors();
+    mutable GLenum mWebGLError;
+    mutable GLenum mUnderlyingGLError;
+    GLenum GetAndFlushUnderlyingGLErrors() const;
 
     bool mBypassShaderValidation;
 
@@ -1585,8 +1594,6 @@ protected:
     bool CreateAndInitGL(bool forceEnabled,
                          std::vector<FailureReason>* const out_failReasons);
 
-    bool ResizeBackbuffer(uint32_t width, uint32_t height);
-
     typedef already_AddRefed<gl::GLContext> FnCreateGL_T(const gl::SurfaceCaps& caps,
                                                          gl::CreateContextFlags flags,
                                                          WebGLContext* webgl,
@@ -1661,10 +1668,6 @@ protected:
     bool ValidateUniformLocationForProgram(WebGLUniformLocation* location,
                                            WebGLProgram* program,
                                            const char* funcName);
-
-    bool ValidateCurFBForRead(const char* funcName,
-                              const webgl::FormatUsageInfo** const out_format,
-                              uint32_t* const out_width, uint32_t* const out_height);
 
     bool HasDrawBuffers() const {
         return IsWebGL2() ||
@@ -1938,7 +1941,7 @@ protected:
     GLuint mStencilValueMaskBack;
     GLuint mStencilWriteMaskFront;
     GLuint mStencilWriteMaskBack;
-    realGLboolean mColorWriteMask[4];
+    uint8_t mColorWriteMask; // bitmask
     realGLboolean mDepthWriteMask;
     GLfloat mColorClearValue[4];
     GLint mStencilClearValue;
@@ -1962,7 +1965,7 @@ protected:
     // be Flushed while doing hundreds of draw calls.
     int mDrawCallsSinceLastFlush;
 
-    int mAlreadyGeneratedWarnings;
+    mutable int mAlreadyGeneratedWarnings;
     int mMaxWarnings;
     bool mAlreadyWarnedAboutFakeVertexAttrib0;
 
@@ -1977,7 +1980,11 @@ protected:
     bool mNeedsFakeNoAlpha;
     bool mNeedsFakeNoDepth;
     bool mNeedsFakeNoStencil;
-    bool mNeedsEmulatedLoneDepthStencil;
+    bool mNeedsFakeNoStencil_UserFBs;
+
+    mutable uint8_t mDriverColorMask;
+    bool mDriverDepthTest;
+    bool mDriverStencilTest;
 
     bool mNeedsIndexValidation;
 
@@ -1985,63 +1992,31 @@ protected:
 
     bool Has64BitTimestamps() const;
 
-    struct ScopedDrawCallWrapper final {
-        WebGLContext& mWebGL;
-        const bool mFakeNoAlpha;
-        const bool mFakeNoDepth;
-        const bool mFakeNoStencil;
+    // --
 
-        static bool ShouldFakeNoAlpha(WebGLContext& webgl) {
-            // We should only be doing this if we're about to draw to the backbuffer, but
-            // the backbuffer needs to have this fake-no-alpha workaround.
-            return !webgl.mBoundDrawFramebuffer &&
-                   webgl.mNeedsFakeNoAlpha &&
-                   webgl.mColorWriteMask[3] != false;
-        }
+    const uint8_t mMsaaSamples;
+    mutable gfx::IntSize mRequestedSize;
+    mutable UniquePtr<gl::MozFramebuffer> mDefaultFB;
+    mutable bool mDefaultFB_IsInvalid;
+    mutable UniquePtr<gl::MozFramebuffer> mResolvedDefaultFB;
 
-        static bool ShouldFakeNoDepth(WebGLContext& webgl) {
-            // We should only be doing this if we're about to draw to the backbuffer.
-            return !webgl.mBoundDrawFramebuffer &&
-                   webgl.mNeedsFakeNoDepth &&
-                   webgl.mDepthTestEnabled;
-        }
+    // --
 
-        static bool HasDepthButNoStencil(const WebGLFramebuffer* fb);
+    bool EnsureDefaultFB(const char* funcName);
+    bool ValidateAndInitFB(const char* funcName, const WebGLFramebuffer* fb);
+    void DoBindFB(const WebGLFramebuffer* fb, GLenum target = LOCAL_GL_FRAMEBUFFER) const;
 
-        static bool ShouldFakeNoStencil(WebGLContext& webgl) {
-            if (!webgl.mStencilTestEnabled)
-                return false;
+    bool BindCurFBForDraw(const char* funcName);
+    bool BindCurFBForColorRead(const char* funcName,
+                               const webgl::FormatUsageInfo** out_format,
+                               uint32_t* out_width, uint32_t* out_height);
+    void DoColorMask(uint8_t bitmask) const;
+    void BlitBackbufferToCurDriverFB() const;
+    bool BindDefaultFBForRead(const char* funcName);
 
-            if (!webgl.mBoundDrawFramebuffer) {
-                if (webgl.mNeedsFakeNoStencil)
-                    return true;
+    // --
 
-                if (webgl.mNeedsEmulatedLoneDepthStencil &&
-                    webgl.mOptions.depth && !webgl.mOptions.stencil)
-                {
-                    return true;
-                }
-
-                return false;
-            }
-
-            if (webgl.mNeedsEmulatedLoneDepthStencil &&
-                HasDepthButNoStencil(webgl.mBoundDrawFramebuffer))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        ////
-
-        explicit ScopedDrawCallWrapper(WebGLContext& webgl);
-        ~ScopedDrawCallWrapper();
-    };
-
-    void OnBeforeReadCall();
-
+public:
     void LoseOldestWebGLContextIfLimitExceeded();
     void UpdateLastUseIndex();
 
@@ -2063,8 +2038,8 @@ protected:
 
 public:
     // console logging helpers
-    void GenerateWarning(const char* fmt, ...) MOZ_FORMAT_PRINTF(2, 3);
-    void GenerateWarning(const char* fmt, va_list ap) MOZ_FORMAT_PRINTF(2, 0);
+    void GenerateWarning(const char* fmt, ...) const MOZ_FORMAT_PRINTF(2, 3);
+    void GenerateWarning(const char* fmt, va_list ap) const MOZ_FORMAT_PRINTF(2, 0);
 
     void GeneratePerfWarning(const char* fmt, ...) const MOZ_FORMAT_PRINTF(2, 3);
 
@@ -2187,6 +2162,17 @@ Intersect(int32_t srcSize, int32_t read0, int32_t readSize, int32_t* out_intRead
 uint64_t
 AvailGroups(uint64_t totalAvailItems, uint64_t firstItemOffset, uint32_t groupSize,
             uint32_t groupStride);
+
+////
+
+class ScopedDrawCallWrapper final
+{
+public:
+    WebGLContext& mWebGL;
+
+    explicit ScopedDrawCallWrapper(WebGLContext& webgl);
+    ~ScopedDrawCallWrapper();
+};
 
 ////
 

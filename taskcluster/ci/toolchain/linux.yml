@@ -144,7 +144,7 @@ linux64-gcc-6:
         tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
-        docker-image: {in-tree: desktop-build}
+        docker-image: {in-tree: toolchain-build}
         max-run-time: 36000
     run:
         using: toolchain-script

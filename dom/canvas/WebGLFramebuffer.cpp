@@ -889,7 +889,7 @@ WebGLFramebuffer::PrecheckFramebufferStatus(nsCString* const out_info) const
 // Validation
 
 bool
-WebGLFramebuffer::ValidateAndInitAttachments(const char* funcName)
+WebGLFramebuffer::ValidateAndInitAttachments(const char* funcName) const
 {
     MOZ_ASSERT(mContext->mBoundDrawFramebuffer == this ||
                mContext->mBoundReadFramebuffer == this);
@@ -942,13 +942,11 @@ WebGLFramebuffer::ValidateClearBufferType(const char* funcName, GLenum buffer,
 }
 
 bool
-WebGLFramebuffer::ValidateForRead(const char* funcName,
-                                  const webgl::FormatUsageInfo** const out_format,
-                                  uint32_t* const out_width, uint32_t* const out_height)
+WebGLFramebuffer::ValidateForColorRead(const char* funcName,
+                                       const webgl::FormatUsageInfo** const out_format,
+                                       uint32_t* const out_width,
+                                       uint32_t* const out_height) const
 {
-    if (!ValidateAndInitAttachments(funcName))
-        return false;
-
     if (!mColorReadBuffer) {
         mContext->ErrorInvalidOperation("%s: READ_BUFFER must not be NONE.", funcName);
         return false;
@@ -1185,7 +1183,7 @@ WebGLFramebuffer::RefreshResolvedData()
 // Entrypoints
 
 FBStatus
-WebGLFramebuffer::CheckFramebufferStatus(const char* funcName)
+WebGLFramebuffer::CheckFramebufferStatus(const char* const funcName) const
 {
     if (IsResolvedComplete())
         return LOCAL_GL_FRAMEBUFFER_COMPLETE;
@@ -1651,14 +1649,15 @@ GetBackbufferFormats(const WebGLContext* webgl,
 
 /*static*/ void
 WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
-                                  const WebGLFramebuffer* srcFB, GLint srcX0, GLint srcY0,
-                                  GLint srcX1, GLint srcY1,
-                                  const WebGLFramebuffer* dstFB, GLint dstX0, GLint dstY0,
-                                  GLint dstX1, GLint dstY1,
+                                  GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
+                                  GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
                                   GLbitfield mask, GLenum filter)
 {
     const char funcName[] = "blitFramebuffer";
     const auto& gl = webgl->gl;
+
+    const auto& srcFB = webgl->mBoundReadFramebuffer;
+    const auto& dstFB = webgl->mBoundDrawFramebuffer;
 
     ////
     // Collect data
@@ -1928,8 +1927,7 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
 
     ////
 
-    webgl->OnBeforeReadCall();
-    WebGLContext::ScopedDrawCallWrapper wrapper(*webgl);
+    const ScopedDrawCallWrapper wrapper(*webgl);
     gl->fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1,
                          dstX0, dstY0, dstX1, dstY1,
                          mask, filter);

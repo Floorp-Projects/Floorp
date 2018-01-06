@@ -43,7 +43,9 @@ WebGLExtensionColorBufferHalfFloat::~WebGLExtensionColorBufferHalfFloat()
 bool
 WebGLExtensionColorBufferHalfFloat::IsSupported(const WebGLContext* webgl)
 {
-    return webgl->GL()->IsSupported(gl::GLFeature::renderbuffer_color_half_float);
+    const auto& gl = webgl->gl;
+    return gl->IsSupported(gl::GLFeature::renderbuffer_color_half_float) &&
+           gl->IsSupported(gl::GLFeature::frag_color_float);
 }
 
 IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionColorBufferHalfFloat, EXT_color_buffer_half_float)
