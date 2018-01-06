@@ -899,15 +899,14 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
     double size = ChooseFontSize(this, *aFontStyle);
     FcPatternAddDouble(pattern, FC_PIXEL_SIZE, size);
 
-    FT_Face face = mFTFace; // may be null, if it's not a user font
+    FT_Face face = mFTFace;
     FcPattern* fontPattern = mFontPattern;
-    if (mFontData) {
-        MOZ_ASSERT(face, "face should not be null for user font");
-        if (face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
-            // For variation fonts, we create a new FT_Face and FcPattern
-            // so that variation coordinates from the style can be applied
-            // without affecting other font instances created from the same
-            // entry (font resource).
+    if (face && face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
+        // For variation fonts, we create a new FT_Face and FcPattern
+        // so that variation coordinates from the style can be applied
+        // without affecting other font instances created from the same
+        // entry (font resource).
+        if (mFontData) {
             face = Factory::NewFTFaceFromData(nullptr, mFontData, mLength, 0);
             fontPattern = FcFreeTypeQueryFace(face, ToFcChar8Ptr(""), 0, nullptr);
             if (!fontPattern) {
@@ -915,6 +914,17 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
             }
             FcPatternDel(fontPattern, FC_FILE);
             FcPatternDel(fontPattern, FC_INDEX);
+            FcPatternAddFTFace(fontPattern, FC_FT_FACE, face);
+        } else {
+            FcChar8 *filename;
+            if (FcPatternGetString(mFontPattern, FC_FILE, 0, &filename) == FcResultMatch) {
+                int index;
+                if (FcPatternGetInteger(mFontPattern, FC_INDEX, 0, &index) != FcResultMatch) {
+                    index = 0; // default to 0 if not found in pattern
+                }
+                face = Factory::NewFTFace(nullptr, ToCharPtr(filename), index);
+            }
+            fontPattern = FcPatternDuplicate(mFontPattern);
             FcPatternAddFTFace(fontPattern, FC_FT_FACE, face);
         }
     }
