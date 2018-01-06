@@ -1,0 +1,43 @@
+<html>
+  <head>
+    <title>VRDisplay onvrdisplayconnect test</title>
+    <meta name="timeout" content="long"/>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+    <script src="/resources/testharness.js"></script>
+    <script src="/resources/testharnessreport.js"></script>
+    <script src="VRSimulationDriver.js"></script>
+    <script src="WebVRHelpers.js"></script>
+    <script src="requestPresent.js"></script>
+    <script src="runVRTest.js"></script>
+  </head>
+  <body>
+    <script>
+
+      function eventAfterConnectedTest() {
+        async_test(function (test) {
+          window.addEventListener("vrdisplayconnect", () => {
+            test.done();
+          });
+        }, "vrdisplayconnect should fire as soon as content listens for it, \
+            even if the VR display was already connected.");
+      }
+
+      function startTest() {
+        promise_test((test) => {
+          return attachVRDisplay(test).then(() => {
+            return promise_test((test) => {
+              return setupVRDisplay(test).then(() => {
+                VRSimulationDriver.UpdateVRDisplay();
+                eventAfterConnectedTest();
+                VRSimulationDriver.UpdateVRDisplay();
+              });
+            });
+          });
+        });
+      }
+
+      runVRTest(startTest);
+    </script>
+    <iframe id="iframe1"></iframe>
+  </body>
+</html>
