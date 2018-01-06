@@ -29,6 +29,7 @@
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "nsDisplayListInvalidation.h"
+#include "DisplayItemClipChain.h"
 #include "DisplayListClipState.h"
 #include "LayerState.h"
 #include "FrameMetrics.h"
@@ -418,6 +419,8 @@ public:
   typedef mozilla::FrameLayerBuilder FrameLayerBuilder;
   typedef mozilla::DisplayItemClip DisplayItemClip;
   typedef mozilla::DisplayItemClipChain DisplayItemClipChain;
+  typedef mozilla::DisplayItemClipChainHasher DisplayItemClipChainHasher;
+  typedef mozilla::DisplayItemClipChainEqualer DisplayItemClipChainEqualer;
   typedef mozilla::DisplayListClipState DisplayListClipState;
   typedef mozilla::ActiveScrolledRoot ActiveScrolledRoot;
   typedef nsIWidget::ThemeGeometry ThemeGeometry;
@@ -1848,6 +1851,10 @@ private:
   // nsDisplayList class is defined below this class, so we can't use it here.
   nsDisplayList*                 mScrollInfoItemsForHoisting;
   nsTArray<RefPtr<ActiveScrolledRoot>>  mActiveScrolledRoots;
+  std::unordered_set<
+    const DisplayItemClipChain*,
+    DisplayItemClipChainHasher,
+    DisplayItemClipChainEqualer> mClipDeduplicator;
   std::list<DisplayItemClipChain*> mClipChainsToDestroy;
   nsTArray<nsDisplayItem*> mTemporaryItems;
   const ActiveScrolledRoot*      mActiveScrolledRootForRootScrollframe;

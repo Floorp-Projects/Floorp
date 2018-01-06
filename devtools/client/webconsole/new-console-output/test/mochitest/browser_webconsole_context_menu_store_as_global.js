@@ -16,14 +16,16 @@ const TEST_URI = `data:text/html;charset=utf-8,<script>
   console.log(window.array);
   window.longString = "foo" + "a".repeat(1e4);
   console.log(window.longString);
+  window.symbol = Symbol();
+  console.log("foo", window.symbol);
 </script>`;
 
 add_task(async function() {
   let hud = await openNewTabAndConsole(TEST_URI);
 
   let messages = await waitFor(() => findMessages(hud, "foo"));
-  is(messages.length, 4, "Four messages should have appeared");
-  let [msgWithText, msgWithObj, msgNested, msgLongStr] = messages;
+  is(messages.length, 5, "Five messages should have appeared");
+  let [msgWithText, msgWithObj, msgNested, msgLongStr, msgSymbol] = messages;
   let varIdx = 0;
 
   info("Check store as global variable is disabled for text only messages");
@@ -43,6 +45,9 @@ add_task(async function() {
 
   info("Check store as global variable is enabled for long strings");
   await storeAsVariable(hud, msgLongStr, "string", varIdx++, "window.longString");
+
+  info("Check store as global variable is enabled for symbols");
+  await storeAsVariable(hud, msgSymbol, "symbol", varIdx++, "window.symbol");
 
   info("Check store as global variable is enabled for invisible-to-debugger objects");
   let onMessageInvisible = waitForMessage(hud, "foo");
