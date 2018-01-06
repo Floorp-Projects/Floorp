@@ -35,12 +35,6 @@ const whitelist = [
     platforms: ["linux", "win", "macosx"],
   },
 
-  // Bug 1363040
-  {
-    file: "chrome://browser/skin/tracking-protection-16.svg#enabled",
-    platforms: ["linux", "win", "macosx"],
-  },
-
   {
     file: "chrome://browser/skin/tabbrowser/tabDragIndicator.png",
     hidpi: "chrome://browser/skin/tabbrowser/tabDragIndicator@2x.png",
