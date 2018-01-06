@@ -16,6 +16,7 @@
 
 #define SLH_LOG(...)
 //#define SLH_LOG(...) printf_stderr("SLH: " __VA_ARGS__)
+//#define SLH_LOG(...) if (XRE_IsContentProcess()) printf_stderr("SLH: " __VA_ARGS__)
 
 namespace mozilla {
 namespace layers {
