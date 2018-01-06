@@ -33,6 +33,27 @@ DisplayItemClipChain::Equal(const DisplayItemClipChain* aClip1, const DisplayIte
          Equal(aClip1->mParent, aClip2->mParent);
 }
 
+uint32_t
+DisplayItemClipChain::Hash(const DisplayItemClipChain* aClip)
+{
+  if (!aClip) {
+    return 0;
+  }
+
+  // We include the number of rounded rects in the hash but not their contents.
+  // This is to keep the hash fast, because most clips will not have rounded
+  // rects and including them will slow down the hash in the common case. Note
+  // that the ::Equal check still checks the rounded rect contents, so in case
+  // of hash collisions the clip chains can still be distinguished using that.
+  uint32_t hash = HashGeneric(aClip->mASR, aClip->mClip.GetRoundedRectCount());
+  if (aClip->mClip.HasClip()) {
+    const nsRect& rect = aClip->mClip.GetClipRect();
+    hash = AddToHash(hash, rect.x, rect.y, rect.width, rect.height);
+  }
+
+  return hash;
+}
+
 /* static */ nsCString
 DisplayItemClipChain::ToString(const DisplayItemClipChain* aClipChain)
 {
