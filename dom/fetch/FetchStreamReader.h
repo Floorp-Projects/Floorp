@@ -40,12 +40,8 @@ public:
   void
   RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
-  // Idempotently close the output stream and null out all state. If aCx is
-  // provided, the reader will also be canceled.  aStatus must be a DOM error
-  // as understood by DOMException because it will be provided as the
-  // cancellation reason.
   void
-  CloseAndRelease(JSContext* aCx, nsresult aStatus);
+  CloseAndRelease(nsresult aStatus);
 
   void
   StartConsuming(JSContext* aCx,
