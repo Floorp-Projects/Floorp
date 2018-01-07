@@ -1087,37 +1087,25 @@ FetchDriver::OnDataAvailable(nsIRequest* aRequest,
     }
   }
 
-  // Needs to be initialized to 0 because in some cases nsStringInputStream may
-  // not write to aRead.
-  uint32_t aRead = 0;
+  uint32_t aRead;
   MOZ_ASSERT(mResponse);
   MOZ_ASSERT(mPipeOutputStream);
 
   // From "Main Fetch" step 19: SRI-part2.
   // Note: Avoid checking the hidden opaque body.
-  nsresult rv;
   if (mResponse->Type() != ResponseType::Opaque &&
       ShouldCheckSRI(mRequest, mResponse)) {
     MOZ_ASSERT(mSRIDataVerifier);
 
     SRIVerifierAndOutputHolder holder(mSRIDataVerifier, mPipeOutputStream);
-    rv = aInputStream->ReadSegments(CopySegmentToStreamAndSRI,
-                                    &holder, aCount, &aRead);
-  } else {
-    rv = aInputStream->ReadSegments(NS_CopySegmentToStream,
-                                    mPipeOutputStream,
-                                    aCount, &aRead);
+    nsresult rv = aInputStream->ReadSegments(CopySegmentToStreamAndSRI,
+                                             &holder, aCount, &aRead);
+    return rv;
   }
 
-  // If no data was read, it's possible the output stream is closed but the
-  // ReadSegments call followed its contract of returning NS_OK despite write
-  // errors.  Unfortunately, nsIOutputStream has an ill-conceived contract when
-  // taken together with ReadSegments' contract, because the pipe will just
-  // NS_OK if we try and invoke its Write* functions ourselves with a 0 count.
-  // So we must just assume the pipe is broken.
-  if (aRead == 0 && aCount != 0) {
-    return NS_BASE_STREAM_CLOSED;
-  }
+  nsresult rv = aInputStream->ReadSegments(NS_CopySegmentToStream,
+                                           mPipeOutputStream,
+                                           aCount, &aRead);
   return rv;
 }
 
