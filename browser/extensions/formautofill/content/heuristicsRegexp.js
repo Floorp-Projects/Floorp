@@ -66,6 +66,7 @@ var HeuristicsRegExp = {
     ),
     "address-line1": new RegExp(
       "^address$|address[_-]?line(one)?|address1|addr1|street" +
+      "|addrline1|address_1" + // Extra rules by Firefox
       "|(?:shipping|billing)address$" +
       "|strasse|straße|hausnummer|housenumber" + // de-DE
       "|house.?name" + // en-GB
@@ -81,6 +82,7 @@ var HeuristicsRegExp = {
     ),
     "address-line2": new RegExp(
       "address[_-]?line(2|two)|address2|addr2|street|suite|unit" +
+      "|addrline2|address_2" + // Extra rules by Firefox
       "|adresszusatz|ergänzende.?angaben" + // de-DE
       "|direccion2|colonia|adicional" + // es
       "|addresssuppl|complementnom|appartement" + // fr-FR
@@ -94,6 +96,7 @@ var HeuristicsRegExp = {
     ),
     "address-line3": new RegExp(
       "address[_-]?line(3|three)|address3|addr3|street|suite|unit" +
+      "|addrline3|address_3" + // Extra rules by Firefox
       "|adresszusatz|ergänzende.?angaben" + // de-DE
       "|direccion3|colonia|adicional" + // es
       "|addresssuppl|complementnom|appartement" + // fr-FR
