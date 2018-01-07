@@ -3629,13 +3629,20 @@ nsCSSFrameConstructor::FindDataByTag(nsAtom* aTag,
                                      Element* aElement,
                                      nsStyleContext* aStyleContext,
                                      const FrameConstructionDataByTag* aDataPtr,
-                                     uint32_t aDataLength)
+                                     uint32_t aDataLength,
+                                     bool* aTagFound)
 {
+  if (aTagFound) {
+    *aTagFound = false;
+  }
   for (const FrameConstructionDataByTag *curData = aDataPtr,
          *endData = aDataPtr + aDataLength;
        curData != endData;
        ++curData) {
     if (*curData->mTag == aTag) {
+      if (aTagFound) {
+        *aTagFound = true;
+      }
       const FrameConstructionData* data = &curData->mData;
       if (data->mBits & FCDATA_FUNC_IS_DATA_GETTER) {
         return data->mFunc.mDataGetter(aElement, aStyleContext);
@@ -3739,8 +3746,29 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
     COMPLEX_TAG_CREATE(details, &nsCSSFrameConstructor::ConstructDetailsFrame)
   };
 
-  return FindDataByTag(aTag, aElement, aStyleContext, sHTMLData,
-                       ArrayLength(sHTMLData));
+  bool tagFound;
+  const FrameConstructionData* data =
+    FindDataByTag(aTag, aElement, aStyleContext, sHTMLData,
+                  ArrayLength(sHTMLData), &tagFound);
+
+  // https://drafts.csswg.org/css-display/#unbox-html
+  if (tagFound &&
+      MOZ_UNLIKELY(aStyleContext->StyleDisplay()->mDisplay ==
+                   StyleDisplay::Contents)) {
+    // <button>, <legend>, <details> and <fieldset> don’t have any special
+    // behavior; display: contents simply removes their principal box, and their
+    // contents render as normal.
+    if (aTag != nsGkAtoms::button &&
+        aTag != nsGkAtoms::legend &&
+        aTag != nsGkAtoms::details &&
+        aTag != nsGkAtoms::fieldset) {
+      // On the rest of unusual HTML elements, display: contents creates no box.
+      static const FrameConstructionData sSuppressData = SUPPRESS_FCDATA();
+      return &sSuppressData;
+    }
+  }
+
+  return data;
 }
 
 /* static */
@@ -4503,8 +4531,22 @@ nsCSSFrameConstructor::FindXULTagData(Element* aElement,
     SIMPLE_XUL_CREATE(scrollbarbutton, NS_NewScrollbarButtonFrame)
 };
 
-  return FindDataByTag(aTag, aElement, aStyleContext, sXULTagData,
-                       ArrayLength(sXULTagData));
+  bool tagFound;
+  const FrameConstructionData* data =
+    FindDataByTag(aTag, aElement, aStyleContext, sXULTagData,
+                  ArrayLength(sXULTagData), &tagFound);
+
+  // There's no spec that says what display: contents means for special XUL
+  // elements, but we do the same as for HTML "Unusual Elements", i.e. treat it
+  // as display:none.
+  if (tagFound &&
+      MOZ_UNLIKELY(aStyleContext->StyleDisplay()->mDisplay ==
+                   StyleDisplay::Contents)) {
+    static const FrameConstructionData sSuppressData = SUPPRESS_FCDATA();
+    return &sSuppressData;
+  }
+
+  return data;
 }
 
 #ifdef MOZ_XUL
@@ -4977,8 +5019,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
     FCDATA_FOR_DISPLAY(StyleDisplay::RubyTextContainer,
       FCDATA_DECL(FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeRuby),
                   NS_NewRubyTextContainerFrame)),
-    FCDATA_FOR_DISPLAY(StyleDisplay::Contents,
-      FULL_CTOR_FCDATA(FCDATA_IS_CONTENTS, nullptr/*never called*/)),
+    FCDATA_FOR_DISPLAY(StyleDisplay::Contents, UNREACHABLE_FCDATA()),
     FCDATA_FOR_DISPLAY(StyleDisplay::WebkitBox,
       FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame)),
     FCDATA_FOR_DISPLAY(StyleDisplay::WebkitInlineBox,
@@ -5564,6 +5605,23 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     return &sSuppressData;
   }
 
+  // https://drafts.csswg.org/css-display/#unbox-svg
+  if (aStyleContext->StyleDisplay()->mDisplay == StyleDisplay::Contents) {
+    // For root <svg> elements, display: contents behaves as display: none.
+    if (aTag == nsGkAtoms::svg && !parentIsSVG) {
+      return &sSuppressData;
+    }
+
+    // For nested <svg>, <g>, <use> and <tspan> behave normally, but any other
+    // element behaves as display: none as well.
+    if (aTag != nsGkAtoms::g &&
+        aTag != nsGkAtoms::use &&
+        aTag != nsGkAtoms::svg &&
+        aTag != nsGkAtoms::tspan) {
+      return &sSuppressData;
+    }
+  }
+
   if (aTag == nsGkAtoms::svg && !parentIsSVG) {
     // We need outer <svg> elements to have an nsSVGOuterSVGFrame regardless
     // of whether they fail conditional processing attributes, since various
@@ -6082,7 +6140,11 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     AddPageBreakItem(aContent, aItems);
   }
 
-  if (MOZ_UNLIKELY(bits & FCDATA_IS_CONTENTS)) {
+  // FIXME(emilio, https://github.com/w3c/csswg-drafts/issues/2167):
+  //
+  // Figure out what should happen for display: contents in MathML.
+  if (display->mDisplay == StyleDisplay::Contents &&
+      !aContent->IsMathMLElement()) {
     if (!GetDisplayContentsStyleFor(aContent)) {
       MOZ_ASSERT(styleContext->GetPseudo() || !isGeneratedContent,
                  "Should have had pseudo type");

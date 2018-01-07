@@ -35,8 +35,6 @@ jobs:
     symbol: I(idx)
   funsize-update-generator:
     symbol: I(pg)
-  google-play-strings:
-    symbol: I(gps)
   funsize-balrog-submitter:
     symbol: I(fbs)
   beet-mover:
