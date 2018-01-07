@@ -32,7 +32,6 @@ InterceptedHttpChannel::InterceptedHttpChannel(PRTime aCreationTime,
   , mResumeStartPos(0)
   , mSynthesizedOrReset(Invalid)
   , mCallingStatusAndProgress(false)
-  , mDiverting(false)
 {
   // Pre-set the creation and AsyncOpen times based on the original channel
   // we are intercepting.  We don't want our extra internal redirect to mask
@@ -499,15 +498,6 @@ InterceptedHttpChannel::Cancel(nsresult aStatus)
   MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(aStatus));
   if (NS_SUCCEEDED(mStatus)) {
     mStatus = aStatus;
-  }
-
-  // Everything is suspended during diversion until it completes.  Since the
-  // intercepted channel could be a long-running stream, we need to request that
-  // cancellation be triggered in the child, completing the diversion and
-  // allowing cancellation to run to completion.
-  if (mDiverting) {
-    Unused << mParentChannel->CancelDiversion();
-    // (We want the pump to be canceled as well, so don't directly return.)
   }
 
   if (mPump) {
@@ -1123,7 +1113,6 @@ InterceptedHttpChannel::MessageDiversionStarted(ADivertableParentChannel* aParen
 {
   MOZ_ASSERT(!mParentChannel);
   mParentChannel = aParentChannel;
-  mDiverting = true;
   uint32_t suspendCount = mSuspendCount;
   while(suspendCount--) {
     mParentChannel->SuspendMessageDiversion();
@@ -1136,7 +1125,6 @@ InterceptedHttpChannel::MessageDiversionStop()
 {
   MOZ_ASSERT(mParentChannel);
   mParentChannel = nullptr;
-  mDiverting = false;
   return NS_OK;
 }
 
