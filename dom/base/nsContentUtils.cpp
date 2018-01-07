@@ -9989,9 +9989,6 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
              "Can only create XUL or XHTML elements.");
 
   nsAtom *name = nodeInfo->NameAtom();
-  RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
-  RefPtr<nsAtom> typeAtom = aIs ? NS_Atomize(*aIs) : tagAtom;
-
   int32_t tag = eHTMLTag_unknown;
   bool isCustomElementName = false;
   if (nodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
@@ -10001,7 +9998,14 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
   } else {
     isCustomElementName = nsContentUtils::IsCustomElementName(name);
   }
+
+  RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
+  RefPtr<nsAtom> typeAtom;
   bool isCustomElement = isCustomElementName || aIs;
+  if (isCustomElement) {
+    typeAtom = isCustomElementName ? tagAtom : NS_Atomize(*aIs);
+  }
+
   MOZ_ASSERT_IF(aDefinition, isCustomElement);
 
   // https://dom.spec.whatwg.org/#concept-create-element
