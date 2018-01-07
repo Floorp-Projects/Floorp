@@ -738,10 +738,6 @@ private:
      an SVG text frame. */
 #define FCDATA_IS_SVG_TEXT 0x80000
   /**
-   * display:contents
-   */
-#define FCDATA_IS_CONTENTS 0x100000
-  /**
    * When FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS is set, this bit says
    * if we should create a grid/flex/columnset container instead of
    * a block wrapper when the styles says so.
@@ -831,16 +827,21 @@ private:
                   const FrameConstructionDataByInt* aDataPtr,
                   uint32_t aDataLength);
 
-  /* A function that takes a tag, content, style context, and array of
-     FrameConstructionDataByTags and finds the appropriate frame construction
-     data to use and returns it.  This can return null if none of the tags
-     match or if the matching tag has a FrameConstructionDataGetter that
-     returns null. */
+  /**
+   * A function that takes a tag, content, style context, and array of
+   * FrameConstructionDataByTags and finds the appropriate frame construction
+   * data to use and returns it.
+   *
+   * This can return null if none of the tags match or if the matching tag has a
+   * FrameConstructionDataGetter that returns null. In the case that the tags
+   * actually match, aTagFound will be true, even if the return value is null.
+   */
   static const FrameConstructionData*
     FindDataByTag(nsAtom* aTag, Element* aElement,
                   nsStyleContext* aStyleContext,
                   const FrameConstructionDataByTag* aDataPtr,
-                  uint32_t aDataLength);
+                  uint32_t aDataLength,
+                  bool* aTagFound = nullptr);
 
   /* A class representing a list of FrameConstructionItems.  Instances of this
      class are only created as AutoFrameConstructionItemList, or as a member

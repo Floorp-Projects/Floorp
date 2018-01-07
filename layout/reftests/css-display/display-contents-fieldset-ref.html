@@ -23,18 +23,18 @@ legend { border: 1px solid; }
 <fieldset><div class="test contents after"></div></fieldset>
 <fieldset><div class="test contents before"></div></fieldset>
 <fieldset><div class="test contents before after"></div></fieldset>
-<fieldset><legend class="test contents"></legend></fieldset>
-<fieldset><legend class="test contents" style="padding:0"></legend></fieldset>
-<fieldset><legend class="contents"><div class="test contents"></div></legend></fieldset>
+<fieldset><span></span></fieldset>
+<fieldset><span></span></fieldset>
+<fieldset><span></span></fieldset>
 <fieldset class="test2"></fieldset>
 <fieldset class="test2 after"></fieldset>
 <fieldset class="test2"><legend class="static"></legend></fieldset>
 <fieldset class="test2"><legend class="static contents"></legend></fieldset>
 <fieldset class="test2"><legend class="static" style="padding:0"></legend></fieldset>
 <fieldset class="test2 p0"></fieldset>
-<fieldset class="test2 p0"></fieldset>
+<fieldset class="test3 p0"></fieldset>
 <fieldset class="test2 p0"><legend class="static"></legend></fieldset>
-<fieldset class="test2 p0"><legend class="static"></legend></fieldset>
+<fieldset class="test3 p0"><legend class="static"></legend></fieldset>
 <script>
 document.body.offsetHeight;
 var tests = document.querySelectorAll('.test');
@@ -42,7 +42,15 @@ for (i=0; i < tests.length; ++i) {
   test = tests[i];
   test.appendChild(document.createElement('span'));
 }
-var tests = document.querySelectorAll('.test2,.test3');
+var tests = document.querySelectorAll('.test2');
+for (i=0; i < tests.length; ++i) {
+  test = tests[i];
+  let span = document.createElement('dummy-inline');
+  span.innerHTML = "legend";
+  test.appendChild(span);
+}
+
+var tests = document.querySelectorAll('.test3');
 for (i=0; i < tests.length; ++i) {
   test = tests[i];
   test.appendChild(document.createElement('legend'));
