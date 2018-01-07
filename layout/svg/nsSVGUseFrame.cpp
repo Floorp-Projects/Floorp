@@ -166,8 +166,10 @@ nsSVGUseFrame::NotifySVGChanged(uint32_t aFlags)
 nsresult
 nsSVGUseFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
-  SVGUseElement *use = static_cast<SVGUseElement*>(GetContent());
-
+  // FIXME(emilio): This should not be done at frame construction time, but
+  // using Shadow DOM or something like that instead, to support properly
+  // display: contents in <svg:use>.
+  auto use = static_cast<SVGUseElement*>(GetContent());
   mContentClone = use->CreateAnonymousContent();
   nsLayoutUtils::PostRestyleEvent(
     use, nsRestyleHint(0), nsChangeHint_InvalidateRenderingObservers);

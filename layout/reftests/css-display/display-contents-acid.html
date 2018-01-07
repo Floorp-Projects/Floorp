@@ -181,10 +181,11 @@
 <span class="c3">x<div class="contents c1" style="float:left">float:left</div></span>
 <span class="c3">y<div class="contents c1" style="position:absolute">position:absolute</div></span>
 
-<!-- Stuff below should simply ignore having display:contents -->
-
 <fieldset class="contents c1"><legend class="contents">Legend</legend>fieldset</fieldset>
-<button class="contents c1">but<span>ton</span></button>
+<button class="contents c1" style="font: inherit;">but<span>ton</span></button>
+
+<!-- Stuff below should simply behave as having display: none -->
+
 <select class="contents c1"><option>select</select>
 
 </body>
