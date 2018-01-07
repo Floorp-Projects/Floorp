@@ -534,17 +534,56 @@ this.FormAutofillHeuristics = {
    */
   _parseAddressFields(fieldScanner) {
     let parsedFields = false;
-    let addressLines = ["address-line1", "address-line2", "address-line3"];
-    for (let i = 0; !fieldScanner.parsingFinished && i < addressLines.length; i++) {
+    const addressLines = ["address-line1", "address-line2", "address-line3"];
+
+    // TODO: These address-line* regexps are for the lines with numbers, and
+    // they are the subset of the regexps in `heuristicsRegexp.js`. We have to
+    // find a better way to make them consistent.
+    const addressLineRegexps = {
+      "address-line1": new RegExp(
+        "address[_-]?line(1|one)|address1|addr1" +
+        "|addrline1|address_1" + // Extra rules by Firefox
+        "|indirizzo1" + // it-IT
+        "|住所1" + // ja-JP
+        "|地址1" + // zh-CN
+        "|주소.?1", // ko-KR
+        "iu"
+      ),
+      "address-line2": new RegExp(
+        "address[_-]?line(2|two)|address2|addr2" +
+        "|addrline2|address_2" + // Extra rules by Firefox
+        "|indirizzo2" + // it-IT
+        "|住所2" + // ja-JP
+        "|地址2" + // zh-CN
+        "|주소.?2", // ko-KR
+        "iu"
+      ),
+      "address-line3": new RegExp(
+        "address[_-]?line(3|three)|address3|addr3" +
+        "|addrline3|address_3" + // Extra rules by Firefox
+        "|indirizzo3" + // it-IT
+        "|住所3" + // ja-JP
+        "|地址3" + // zh-CN
+        "|주소.?3", // ko-KR
+        "iu"
+      ),
+    };
+    while (!fieldScanner.parsingFinished) {
       let detail = fieldScanner.getFieldDetailByIndex(fieldScanner.parsingIndex);
-      if (!detail || !addressLines.includes(detail.fieldName)) {
-        // When the field is not related to any address-line[1-3] fields, it
-        // means the parsing process can be terminated.
+      if (!detail || !addressLines.includes(detail.fieldName) || detail._reason == "autocomplete") {
+        // When the field is not related to any address-line[1-3] fields or
+        // determined by autocomplete attr, it means the parsing process can be
+        // terminated.
         break;
       }
-      fieldScanner.updateFieldName(fieldScanner.parsingIndex, addressLines[i]);
+      const elem = detail.elementWeakRef.get();
+      for (let regexp of Object.keys(addressLineRegexps)) {
+        if (this._matchRegexp(elem, addressLineRegexps[regexp])) {
+          fieldScanner.updateFieldName(fieldScanner.parsingIndex, regexp);
+          parsedFields = true;
+        }
+      }
       fieldScanner.parsingIndex++;
-      parsedFields = true;
     }
 
     return parsedFields;
