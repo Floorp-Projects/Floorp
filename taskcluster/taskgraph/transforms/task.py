@@ -93,8 +93,6 @@ task_description_schema = Schema({
     # method.
     Optional('dependencies'): {basestring: object},
 
-    Optional('requires'): Any('all-completed', 'all-resolved'),
-
     # expiration and deadline times, relative to task creation, with units
     # (e.g., "14 days").  Defaults are set based on the project.
     Optional('expires-after'): basestring,
@@ -573,9 +571,6 @@ task_description_schema = Schema({
 
             # Paths to the artifacts to sign
             Required('paths'): [basestring],
-
-            # Artifact is optional to run the task
-            Optional('optional', default=False): bool,
         }],
 
         # "Invalid" is a noop for try and other non-supported branches
@@ -1475,9 +1470,6 @@ def build_task(config, tasks):
             'tags': tags,
             'priority': task['priority'],
         }
-
-        if task.get('requires', None):
-            task_def['requires'] = task['requires']
 
         if task_th:
             # link back to treeherder in description
