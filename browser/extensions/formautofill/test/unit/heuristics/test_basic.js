@@ -32,6 +32,13 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
       ]],
+      [[
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level2"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line2"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "organization"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line3"},
+      ]],
     ],
   },
 ], "../../fixtures/");
