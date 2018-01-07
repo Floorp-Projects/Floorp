@@ -596,7 +596,7 @@ nsHostResolver::ClearPendingQueue(PRCList *aPendingQ)
     if (!PR_CLIST_IS_EMPTY(aPendingQ)) {
         PRCList *node = aPendingQ->next;
         while (node != aPendingQ) {
-            nsHostRecord *rec = static_cast<nsHostRecord *>(node);
+            RefPtr<nsHostRecord> rec = dont_AddRef(static_cast<nsHostRecord *>(node));
             node = node->next;
             CompleteLookup(rec, NS_ERROR_ABORT, nullptr);
         }
@@ -1386,8 +1386,6 @@ nsHostResolver::CompleteLookup(nsHostRecord* rec, nsresult status, AddrInfo* new
         c->OnResolveHostComplete(this, rec, status);
     }
 
-    NS_RELEASE(rec);
-
     return LOOKUP_OK;
 }
 
@@ -1470,10 +1468,10 @@ nsHostResolver::ThreadFunc(void *arg)
     nsResState rs;
 #endif
     RefPtr<nsHostResolver> resolver = dont_AddRef((nsHostResolver *)arg);
-    nsHostRecord *rec  = nullptr;
+    RefPtr<nsHostRecord> rec;
     AddrInfo *ai = nullptr;
 
-    while (rec || resolver->GetHostToLookup(&rec)) {
+    while (rec || resolver->GetHostToLookup(getter_AddRefs(rec))) {
         LOG(("DNS lookup thread - Calling getaddrinfo for host [%s%s%s].\n",
              LOG_HOST(rec->host.get(), rec->netInterface.get())));
 
@@ -1522,7 +1520,6 @@ nsHostResolver::ThreadFunc(void *arg)
             }
         }
 
-        // CompleteLookup may release "rec", long before we lose it.
         LOG(("DNS lookup thread - lookup completed for host [%s%s%s]: %s.\n",
              LOG_HOST(rec->host.get(), rec->netInterface.get()),
              ai ? "success" : "failure: unknown host"));
