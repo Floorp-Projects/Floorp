@@ -485,8 +485,11 @@ function do_test_mutate_ref(aTest, aSuffix) {
     var specWithSuffix = aTest.spec + aSuffix;
     do_info("testing that setting spec to " +
             specWithSuffix + " and then clearing ref does what we expect");
-    testURI.spec = specWithSuffix;
-    testURI.ref = "";
+
+    testURI = testURI.mutate()
+                     .setSpec(specWithSuffix)
+                     .setRef("")
+                     .finalize();
     do_check_uri_eq(testURI, refURIWithoutSuffix);
     do_check_uri_eqExceptRef(testURI, refURIWithSuffix);
 
