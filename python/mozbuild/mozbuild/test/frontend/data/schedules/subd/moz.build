@@ -1,5 +1,2 @@
 with Files('yaml.py'):
     SCHEDULES.inclusive += ['yaml-lint']
-
-with Files('win.js'):
-    SCHEDULES.exclusive = ['windows']
