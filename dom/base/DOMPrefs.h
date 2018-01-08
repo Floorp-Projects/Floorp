@@ -44,6 +44,10 @@ public:
   // set.
   static bool NotificationRIEnabled();
   static bool NotificationRIEnabled(JSContext* aCx, JSObject* aObj);
+
+  // Returns true if the dom.serviceWorkers.enabled pref is set.
+  static bool ServiceWorkersEnabled();
+  static bool ServiceWorkersEnabled(JSContext* aCx, JSObject* aObj);
 };
 
 } // dom namespace
