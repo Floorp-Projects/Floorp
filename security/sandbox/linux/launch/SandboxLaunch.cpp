@@ -46,7 +46,7 @@ void
 SandboxLaunchPrepare(GeckoProcessType aType,
 		     base::LaunchOptions* aOptions)
 {
-  PreloadSandboxLib(&aOptions->environ);
+  PreloadSandboxLib(&aOptions->env_map);
   AttachSandboxReporter(&aOptions->fds_to_remap);
 
   // aType will be used in bug 1401062 to take over the functionality
