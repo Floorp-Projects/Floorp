@@ -2637,6 +2637,9 @@ public:
 
   virtual nsISupports* GetCurrentContentSink() = 0;
 
+  virtual void SetAutoFocusElement(Element* aAutoFocusElement) = 0;
+  virtual void TriggerAutoFocus() = 0;
+
   virtual void SetScrollToRef(nsIURI *aDocumentURI) = 0;
   virtual void ScrollToRef() = 0;
   virtual void ResetScrolledToRefAlready() = 0;

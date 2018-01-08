@@ -1817,6 +1817,8 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
     NS_ENSURE_STATE(!mHaveShutDown);
   }
 
+  mDocument->TriggerAutoFocus();
+
   NS_ASSERTION(rootFrame, "How did that happen?");
 
   // Note: when the frame was created above it had the NS_FRAME_IS_DIRTY bit
