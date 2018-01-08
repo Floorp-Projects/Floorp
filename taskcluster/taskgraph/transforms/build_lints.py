@@ -51,8 +51,8 @@ def check_mozharness_perfherder_options(config, jobs):
             raise Exception('Non-unique Perfherder data collection for jobs '
                             '%s and %s: set PERFHERDER_EXTRA_OPTIONS in worker '
                             'environment variables or use different mozconfigs'
-                            % (job['name'], seen_configs[key]['name']))
+                            % (job['name'], seen_configs[key]))
 
-        seen_configs[key] = job
+        seen_configs[key] = job['name']
 
         yield job
