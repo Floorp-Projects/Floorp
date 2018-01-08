@@ -96,7 +96,7 @@ add_task(function* test_formdata() {
       // Create a new tab.
       let tab = gBrowserApp.addTab(URL);
       let browser = tab.browser;
-      yield promiseBrowserEvent(browser, "load");
+      yield promiseBrowserEvent(browser, "load", { resolveAtNextTick: true });
 
       // Modify form data.
       setInputValue(browser, {id: "txt", value: OUTER_VALUE});
@@ -151,7 +151,7 @@ add_task(function* test_formdata2() {
       // Create a new tab.
       let tab = gBrowserApp.addTab(URL);
       let browser = tab.browser;
-      yield promiseBrowserEvent(browser, "load");
+      yield promiseBrowserEvent(browser, "load", { resolveAtNextTick: true });
 
       // Modify form data.
       setInputValue(browser, {id: "txt", value: OUTER_VALUE});
@@ -172,7 +172,7 @@ add_task(function* test_formdata2() {
   // Restore the closed tab.
   let closedTabData = ss.getClosedTabs(gChromeWin)[0];
   let browser = ss.undoCloseTab(gChromeWin, closedTabData);
-  yield promiseBrowserEvent(browser, "load");
+  yield promiseBrowserEvent(browser, "load", { resolveAtNextTick: true });
 
   // Check the form data.
   is(getInputValue(browser, {id: "txt"}), OUTER_VALUE, "outer value restored correctly");
@@ -211,7 +211,7 @@ add_task(function* test_formdata_navigation() {
       // Create a new tab.
       let tab = gBrowserApp.addTab(URL);
       let browser = tab.browser;
-      yield promiseBrowserEvent(browser, "load");
+      yield promiseBrowserEvent(browser, "load", { resolveAtNextTick: true });
 
       // Modify form data.
       setInputValue(browser, {id: "txt", value: OUTER_VALUE});
@@ -251,7 +251,7 @@ add_task(function* test_formdata_navigation() {
   // Restore the closed tab.
   let closedTabData = ss.getClosedTabs(gChromeWin)[0];
   let browser = ss.undoCloseTab(gChromeWin, closedTabData);
-  yield promiseBrowserEvent(browser, "load");
+  yield promiseBrowserEvent(browser, "load", { resolveAtNextTick: true });
 
   // Check the form data.
   is(getInputValue(browser, {id: "txt"}), OUTER_VALUE, "outer value restored correctly");
