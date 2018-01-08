@@ -36,10 +36,7 @@ class FixedList
         if (length == 0)
             return true;
 
-        size_t bytes;
-        if (MOZ_UNLIKELY(!CalculateAllocSize<T>(length, &bytes)))
-            return false;
-        list_ = (T*)alloc.allocate(bytes);
+        list_ = alloc.allocateArray<T>(length);
         if (!list_)
             return false;
 
