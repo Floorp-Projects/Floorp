@@ -358,7 +358,7 @@ protected:
   int mMinFontSize;
 
   int16_t mNumURLStarts;
-  int16_t mDestroyRefCount;    // a second "refcount" for the document viewer's "destroy"
+  int16_t mDestroyBlockedCount;
 
   unsigned      mStopped : 1;
   unsigned      mLoaded : 1;
@@ -504,7 +504,7 @@ nsDocumentViewer::nsDocumentViewer()
     mOverrideDPPX(0.0),
     mMinFontSize(0),
     mNumURLStarts(0),
-    mDestroyRefCount(0),
+    mDestroyBlockedCount(0),
     mStopped(false),
     mLoaded(false),
     mDeferredWindowClose(false),
@@ -556,7 +556,7 @@ nsDocumentViewer::~nsDocumentViewer()
     mPrintJob = nullptr;
   }
 
-  MOZ_RELEASE_ASSERT(mDestroyRefCount == 0);
+  MOZ_RELEASE_ASSERT(mDestroyBlockedCount == 0);
   NS_ASSERTION(!mPresShell && !mPresContext,
                "User did not call nsIContentViewer::Destroy");
   if (mPresShell || mPresContext) {
@@ -1676,7 +1676,7 @@ nsDocumentViewer::Destroy()
   // this could happen if we hit the back button during printing.
   // We also keep the viewer from being cached in session history, since
   // we require all documents there to be sanitized.
-  if (mDestroyRefCount != 0) {
+  if (mDestroyBlockedCount != 0) {
     return NS_OK;
   }
 
@@ -4468,15 +4468,15 @@ nsDocumentViewer::SetIsPrintPreview(bool aIsPrintPreview)
 
 //------------------------------------------------------------
 void
-nsDocumentViewer::IncrementDestroyRefCount()
+nsDocumentViewer::IncrementDestroyBlockedCount()
 {
-  ++mDestroyRefCount;
+  ++mDestroyBlockedCount;
 }
 
 void
-nsDocumentViewer::DecrementDestroyRefCount()
+nsDocumentViewer::DecrementDestroyBlockedCount()
 {
-  --mDestroyRefCount;
+  --mDestroyBlockedCount;
 }
 
 //------------------------------------------------------------
