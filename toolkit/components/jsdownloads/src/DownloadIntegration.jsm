@@ -28,8 +28,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadStore",
                                   "resource://gre/modules/DownloadStore.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DownloadImport",
-                                  "resource://gre/modules/DownloadImport.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadUIHelper",
                                   "resource://gre/modules/DownloadUIHelper.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
