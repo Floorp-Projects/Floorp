@@ -744,7 +744,7 @@ TISInputSourceWrapper::IsForRTLLanguage()
     bool ret = TranslateToString(kVK_ANSI_A, 0, eKbdType_ANSI, str);
     NS_ENSURE_TRUE(ret, ret);
     char16_t ch = str.IsEmpty() ? char16_t(0) : str.CharAt(0);
-    mIsRTL = UCS2_CHAR_IS_BIDI(ch);
+    mIsRTL = UTF16_CODE_UNIT_IS_BIDI(ch);
   }
   return mIsRTL != 0;
 }
@@ -3297,12 +3297,12 @@ IMEInputHandler::GetRangeCount(NSAttributedString *aAttrString)
   NSRange effectiveRange;
   NSRange limitRange = NSMakeRange(0, [aAttrString length]);
   while (limitRange.length > 0) {
-    [aAttrString  attribute:NSUnderlineStyleAttributeName 
-                    atIndex:limitRange.location 
+    [aAttrString  attribute:NSUnderlineStyleAttributeName
+                    atIndex:limitRange.location
       longestEffectiveRange:&effectiveRange
                     inRange:limitRange];
     limitRange =
-      NSMakeRange(NSMaxRange(effectiveRange), 
+      NSMakeRange(NSMaxRange(effectiveRange),
                   NSMaxRange(limitRange) - NSMaxRange(effectiveRange));
     count++;
   }
@@ -3358,7 +3358,7 @@ IMEInputHandler::CreateTextRangeArray(NSAttributedString *aAttrString,
        ToChar(range.mRangeType)));
 
     limitRange =
-      NSMakeRange(NSMaxRange(effectiveRange), 
+      NSMakeRange(NSMaxRange(effectiveRange),
                   NSMaxRange(limitRange) - NSMaxRange(effectiveRange));
   }
 
