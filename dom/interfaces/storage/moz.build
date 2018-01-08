@@ -10,6 +10,7 @@ with Files("**"):
 XPIDL_SOURCES += [
     'nsIDOMStorage.idl',
     'nsIDOMStorageManager.idl',
+    'nsIStorageActivityService.idl',
 ]
 
 XPIDL_MODULE = 'dom_storage'
