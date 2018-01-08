@@ -26,6 +26,9 @@ public:
 
   // Returns true if the dom.caches.testing.enabled pref is set.
   static bool DOMCachesTestingEnabled();
+
+  // Returns true if the dom.performance.enable_user_timing_logging pref is set.
+  static bool PerformanceLoggingEnabled();
 };
 
 } // dom namespace

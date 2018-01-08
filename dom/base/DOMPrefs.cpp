@@ -37,6 +37,7 @@ DOMPrefs::DumpEnabled()
 PREF(ImageBitmapExtensionsEnabled, "canvas.imagebitmap_extensions.enabled")
 PREF(DOMCachesEnabled, "dom.caches.enabled")
 PREF(DOMCachesTestingEnabled, "dom.caches.testing.enabled")
+PREF(PerformanceLoggingEnabled, "dom.performance.enable_user_timing_logging")
 
 #undef PREF
 
