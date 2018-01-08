@@ -505,26 +505,3 @@ class VirtualenvManager(object):
         # self.python_path. However, this seems more risk than it's worth.
         subprocess.check_call([os.path.join(self.bin_path, 'pip')] + args,
             stderr=subprocess.STDOUT)
-
-
-if __name__ == '__main__':
-    if len(sys.argv) < 5:
-        print('Usage: populate_virtualenv.py /path/to/topsrcdir /path/to/topobjdir /path/to/virtualenv /path/to/virtualenv_manifest')
-        sys.exit(1)
-
-    topsrcdir, topobjdir, virtualenv_path, manifest_path = sys.argv[1:5]
-    populate = False
-
-    # This should only be called internally.
-    if sys.argv[1] == 'populate':
-        populate = True
-        topsrcdir, topobjdir, virtualenv_path, manifest_path = sys.argv[2:]
-
-    manager = VirtualenvManager(topsrcdir, topobjdir, virtualenv_path,
-        sys.stdout, manifest_path)
-
-    if populate:
-        manager.populate()
-    else:
-        manager.ensure()
-
