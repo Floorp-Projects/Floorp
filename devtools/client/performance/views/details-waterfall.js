@@ -15,7 +15,7 @@ const { TickUtils } = require("devtools/client/performance/modules/waterfall-tic
 /**
  * Waterfall view containing the timeline markers, controlled by DetailsView.
  */
-var WaterfallView = Heritage.extend(DetailsSubview, {
+var WaterfallView = extend(DetailsSubview, {
 
   // Smallest unit of time between two markers. Larger by 10x^3 than Number.EPSILON.
   MARKER_EPSILON: 0.000000000001,

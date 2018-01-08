@@ -149,7 +149,7 @@ public:
         // Adjust code sections offsets according to their size
         std::vector<ElfSection *>::iterator c = code.begin();
         (*c)->getShdr().sh_addr = 0;
-        for(ElfSection *last = *(c++); c != code.end(); c++) {
+        for(ElfSection *last = *(c++); c != code.end(); ++c) {
             unsigned int addr = last->getShdr().sh_addr + last->getSize();
             if (addr & ((*c)->getAddrAlign() - 1))
                 addr = (addr | ((*c)->getAddrAlign() - 1)) + 1;
@@ -162,7 +162,7 @@ public:
         shdr.sh_size = code.back()->getAddr() + code.back()->getSize();
         data = new char[shdr.sh_size];
         char *buf = data;
-        for (c = code.begin(); c != code.end(); c++) {
+        for (c = code.begin(); c != code.end(); ++c) {
             memcpy(buf, (*c)->getData(), (*c)->getSize());
             buf += (*c)->getSize();
         }
@@ -176,11 +176,11 @@ public:
     void serialize(std::ofstream &file, char ei_class, char ei_data)
     {
         // Readjust code offsets
-        for (std::vector<ElfSection *>::iterator c = code.begin(); c != code.end(); c++)
+        for (std::vector<ElfSection *>::iterator c = code.begin(); c != code.end(); ++c)
             (*c)->getShdr().sh_addr += getAddr();
 
         // Apply relocations
-        for (std::vector<ElfSection *>::iterator c = code.begin(); c != code.end(); c++) {
+        for (std::vector<ElfSection *>::iterator c = code.begin(); c != code.end(); ++c) {
             for (ElfSection *rel = elf->getSection(1); rel != nullptr; rel = rel->getNext())
                 if (((rel->getType() == SHT_REL) ||
                      (rel->getType() == SHT_RELA)) &&
@@ -237,7 +237,7 @@ private:
     void scan_relocs_for_code(ElfRel_Section<Rel_Type> *rel)
     {
         ElfSymtab_Section *symtab = (ElfSymtab_Section *)rel->getLink();
-        for (auto r = rel->rels.begin(); r != rel->rels.end(); r++) {
+        for (auto r = rel->rels.begin(); r != rel->rels.end(); ++r) {
             ElfSection *section = symtab->syms[ELF32_R_SYM(r->r_info)].value.getSection();
             add_code_section(section);
         }
@@ -350,7 +350,7 @@ private:
         char *buf = data + (the_code->getAddr() - code.front()->getAddr());
         // TODO: various checks on the sections
         ElfSymtab_Section *symtab = (ElfSymtab_Section *)rel->getLink();
-        for (typename std::vector<Rel_Type>::iterator r = rel->rels.begin(); r != rel->rels.end(); r++) {
+        for (typename std::vector<Rel_Type>::iterator r = rel->rels.begin(); r != rel->rels.end(); ++r) {
             // TODO: various checks on the symbol
             const char *name = symtab->syms[ELF32_R_SYM(r->r_info)].name;
             unsigned int addr;
@@ -476,7 +476,7 @@ void maybe_split_segment(Elf *elf, ElfSegment *segment, bool fill)
             for (; it != segment->end(); ++it) {
                 newSegment->addSection(*it);
             }
-            for (it = newSegment->begin(); it != newSegment->end(); it++) {
+            for (it = newSegment->begin(); it != newSegment->end(); ++it) {
                 segment->removeSection(*it);
             }
             // Fill the virtual address space gap left between the two PT_LOADs
@@ -576,7 +576,7 @@ int do_relocation_section(Elf *elf, unsigned int rel_type, unsigned int rel_type
     relhack_entry.r_offset = relhack_entry.r_info = 0;
     size_t init_array_reloc = 0;
     for (typename std::vector<Rel_Type>::iterator i = section->rels.begin();
-         i != section->rels.end(); i++) {
+         i != section->rels.end(); ++i) {
         // We don't need to keep R_*_NONE relocations
         if (!ELF32_R_TYPE(i->r_info))
             continue;

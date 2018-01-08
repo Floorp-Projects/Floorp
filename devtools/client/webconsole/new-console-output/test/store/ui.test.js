@@ -18,7 +18,14 @@ describe("Testing UI", () => {
 
   describe("Toggle sidebar", () => {
     it("sidebar is toggled on and off", () => {
-      store.dispatch(actions.sidebarClose());
+      const packet = stubPackets.get("inspect({a: 1})");
+      const message = stubPreparedMessages.get("inspect({a: 1})");
+      store.dispatch(actions.messageAdd(packet));
+
+      const actorId = message.parameters[0].actor;
+      const messageId = getFirstMessage(store.getState()).id;
+      store.dispatch(actions.showObjectInSidebar(actorId, messageId));
+
       expect(store.getState().ui.sidebarVisible).toEqual(true);
       store.dispatch(actions.sidebarClose());
       expect(store.getState().ui.sidebarVisible).toEqual(false);
@@ -27,7 +34,14 @@ describe("Testing UI", () => {
 
   describe("Hide sidebar on clear", () => {
     it("sidebar is hidden on clear", () => {
-      store.dispatch(actions.sidebarClose());
+      const packet = stubPackets.get("inspect({a: 1})");
+      const message = stubPreparedMessages.get("inspect({a: 1})");
+      store.dispatch(actions.messageAdd(packet));
+
+      const actorId = message.parameters[0].actor;
+      const messageId = getFirstMessage(store.getState()).id;
+      store.dispatch(actions.showObjectInSidebar(actorId, messageId));
+
       expect(store.getState().ui.sidebarVisible).toEqual(true);
       store.dispatch(actions.messagesClear());
       expect(store.getState().ui.sidebarVisible).toEqual(false);

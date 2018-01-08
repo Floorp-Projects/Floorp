@@ -8,7 +8,7 @@
  */
 
 const { Task } = require("devtools/shared/task");
-const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
+const { extend } = require("devtools/shared/extend");
 const LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 const MountainGraphWidget = require("devtools/client/shared/widgets/MountainGraphWidget");
 const { CanvasGraphUtils } = require("devtools/client/shared/widgets/Graphs");
@@ -59,7 +59,7 @@ function PerformanceGraph(parent, metric) {
   this.setTheme();
 }
 
-PerformanceGraph.prototype = Heritage.extend(LineGraphWidget.prototype, {
+PerformanceGraph.prototype = extend(LineGraphWidget.prototype, {
   strokeWidth: STROKE_WIDTH,
   dampenValuesFactor: DAMPEN_VALUES,
   fixedHeight: HEIGHT,
@@ -108,7 +108,7 @@ function FramerateGraph(parent) {
   PerformanceGraph.call(this, parent, ProfilerGlobal.L10N.getStr("graphs.fps"));
 }
 
-FramerateGraph.prototype = Heritage.extend(PerformanceGraph.prototype, {
+FramerateGraph.prototype = extend(PerformanceGraph.prototype, {
   mainColor: FRAMERATE_GRAPH_COLOR_NAME,
   setPerformanceData: function ({ duration, ticks }, resolution) {
     this.dataDuration = duration;
@@ -126,7 +126,7 @@ function MemoryGraph(parent) {
   PerformanceGraph.call(this, parent, ProfilerGlobal.L10N.getStr("graphs.memory"));
 }
 
-MemoryGraph.prototype = Heritage.extend(PerformanceGraph.prototype, {
+MemoryGraph.prototype = extend(PerformanceGraph.prototype, {
   mainColor: MEMORY_GRAPH_COLOR_NAME,
   setPerformanceData: function ({ duration, memory }) {
     this.dataDuration = duration;
@@ -138,7 +138,7 @@ function TimelineGraph(parent, filter) {
   MarkersOverview.call(this, parent, filter);
 }
 
-TimelineGraph.prototype = Heritage.extend(MarkersOverview.prototype, {
+TimelineGraph.prototype = extend(MarkersOverview.prototype, {
   headerHeight: MARKERS_GRAPH_HEADER_HEIGHT,
   rowHeight: MARKERS_GRAPH_ROW_HEIGHT,
   groupPadding: MARKERS_GROUP_VERTICAL_PADDING,
@@ -439,7 +439,7 @@ function OptimizationsGraph(parent) {
   this.setTheme();
 }
 
-OptimizationsGraph.prototype = Heritage.extend(MountainGraphWidget.prototype, {
+OptimizationsGraph.prototype = extend(MountainGraphWidget.prototype, {
 
   render: Task.async(function* (threadNode, frameNode) {
     // Regardless if we draw or clear the graph, wait

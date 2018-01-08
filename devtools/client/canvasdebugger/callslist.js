@@ -9,7 +9,7 @@
  * Functions handling details about a single recorded animation frame snapshot
  * (the calls list, rendering preview, thumbnails filmstrip etc.).
  */
-var CallsListView = Heritage.extend(WidgetMethods, {
+var CallsListView = extend(WidgetMethods, {
   /**
    * Initialization function, called when the tool is started.
    */

@@ -20,7 +20,7 @@ function StackFramesClassicListView(DebuggerController, DebuggerView) {
   this._onSelect = this._onSelect.bind(this);
 }
 
-StackFramesClassicListView.prototype = Heritage.extend(WidgetMethods, {
+StackFramesClassicListView.prototype = extend(WidgetMethods, {
   /**
    * Initialization function, called when the debugger is started.
    */

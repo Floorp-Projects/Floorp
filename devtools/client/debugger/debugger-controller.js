@@ -109,8 +109,9 @@ const { SideMenuWidget } = require("resource://devtools/client/shared/widgets/Si
 const { VariablesView } = require("resource://devtools/client/shared/widgets/VariablesView.jsm");
 const { VariablesViewController, StackFrameUtils } = require("resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 const EventEmitter = require("devtools/shared/old-event-emitter");
+const { extend } = require("devtools/shared/extend");
 const { gDevTools } = require("devtools/client/framework/devtools");
-const { ViewHelpers, Heritage, WidgetMethods, setNamedTimeout,
+const { ViewHelpers, WidgetMethods, setNamedTimeout,
         clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 
 // Use privileged promise in panel documents to prevent having them to freeze

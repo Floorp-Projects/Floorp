@@ -120,7 +120,8 @@ const TESTCASES = [
     }],
   },
   {
-    description: "Address form with street-address, address-line[1, 3]",
+    description: "Address form with street-address, address-line[1, 3]" +
+                 ", determined by autocomplete attr",
     document: `<form>
                <input id="street-addr" autocomplete="street-address">
                <input id="line1" autocomplete="address-line1">
@@ -131,8 +132,34 @@ const TESTCASES = [
       "guid": "123",
       "street-address": "2 Harrison St line2 line3",
       "-moz-street-address-one-line": "2 Harrison St line2 line3",
-      "address-line1": "2 Harrison St",
-      "address-line2": "line2 line3",
+      // Since the form is missing address-line2 field, the value of
+      // address-line1 should contain line2 value as well.
+      "address-line1": "2 Harrison St line2",
+      "address-line2": "line2",
+      "address-line3": "line3",
+      "address-level1": "CA",
+      "country": "US",
+      "tel": "+19876543210",
+      "tel-national": "9876543210",
+    }],
+  },
+  {
+    description: "Address form with street-address, address-line[1, 3]" +
+                 ", determined by heuristics",
+    document: `<form>
+               <input id="street-address">
+               <input id="address-line1">
+               <input id="address-line3">
+               </form>`,
+    profileData: [Object.assign({}, DEFAULT_ADDRESS_RECORD)],
+    expectedResult: [{
+      "guid": "123",
+      "street-address": "2 Harrison St line2 line3",
+      "-moz-street-address-one-line": "2 Harrison St line2 line3",
+      // Since the form is missing address-line2 field, the value of
+      // address-line1 should contain line2 value as well.
+      "address-line1": "2 Harrison St line2",
+      "address-line2": "line2",
       "address-line3": "line3",
       "address-level1": "CA",
       "country": "US",

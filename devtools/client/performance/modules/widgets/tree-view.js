@@ -9,7 +9,7 @@
  */
 
 const { L10N } = require("devtools/client/performance/modules/global");
-const { Heritage } = require("devtools/client/shared/widgets/view-helpers");
+const { extend } = require("devtools/shared/extend");
 const { AbstractTreeItem } = require("resource://devtools/client/shared/widgets/AbstractTreeItem.jsm");
 
 const URL_LABEL_TOOLTIP = L10N.getStr("table.url.tooltiptext");
@@ -174,7 +174,7 @@ function CallView({
   this._onUrlClick = this._onUrlClick.bind(this);
 }
 
-CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
+CallView.prototype = extend(AbstractTreeItem.prototype, {
   /**
    * Creates the view for this tree node.
    * @param nsIDOMNode document
