@@ -12,6 +12,7 @@
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const FLAG_RETURN_FALSE   = 1 << 0;
 const FLAG_WRONG_PASSWORD = 1 << 1;
@@ -227,15 +228,23 @@ function run_test() {
   httpserv.identity.add("http", "somesite", 80);
   httpserv.start(-1);
 
-  const prefs = Cc["@mozilla.org/preferences-service;1"]
-                         .getService(Ci.nsIPrefBranch);
-  prefs.setCharPref("network.proxy.http", "localhost");
-  prefs.setIntPref("network.proxy.http_port", httpserv.identity.primaryPort);
-  prefs.setCharPref("network.proxy.no_proxies_on", "");
-  prefs.setIntPref("network.proxy.type", 1);
+  Services.prefs.setCharPref("network.proxy.http", "localhost");
+  Services.prefs.setIntPref("network.proxy.http_port", httpserv.identity.primaryPort);
+  Services.prefs.setCharPref("network.proxy.no_proxies_on", "");
+  Services.prefs.setIntPref("network.proxy.type", 1);
 
   // Turn off the authentication dialog blocking for this test.
-  prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
+  Services.prefs.setIntPref("network.auth.subresource-http-auth-allow", 2);
+  Services.prefs.setBoolPref("network.auth.non-web-content-triggered-resources-http-auth-allow", true);
+
+  do_register_cleanup(() => {
+    Services.prefs.clearUserPref("network.proxy.http");
+    Services.prefs.clearUserPref("network.proxy.http_port");
+    Services.prefs.clearUserPref("network.proxy.no_proxies_on");
+    Services.prefs.clearUserPref("network.proxy.type");
+    Services.prefs.clearUserPref("network.auth.subresource-http-auth-allow");
+    Services.prefs.clearUserPref("network.auth.non-web-content-triggered-resources-http-auth-allow");
+  });
 
   tests[current_test]();
 }
