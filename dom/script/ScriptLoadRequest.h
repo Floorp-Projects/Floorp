@@ -150,6 +150,29 @@ public:
     return mDataType == DataType::Bytecode;
   }
 
+  enum class ScriptMode : uint8_t {
+    eBlocking,
+    eDeferred,
+    eAsync
+  };
+
+  void SetScriptMode(bool aDeferAttr, bool aAsyncAttr);
+
+  bool IsBlockingScript() const
+  {
+    return mScriptMode == ScriptMode::eBlocking;
+  }
+
+  bool IsDeferredScript() const
+  {
+    return mScriptMode == ScriptMode::eDeferred;
+  }
+
+  bool IsAsyncScript() const
+  {
+    return mScriptMode == ScriptMode::eAsync;
+  }
+
   void MaybeCancelOffThreadScript();
   void DropBytecodeCacheReferences();
 
@@ -161,12 +184,11 @@ public:
   bool mScriptFromHead;   // Synchronous head script block loading of other non js/css content.
   Progress mProgress;     // Are we still waiting for a load to complete?
   DataType mDataType;     // Does this contain Source or Bytecode?
+  ScriptMode mScriptMode; // Whether this is a blocking, defer or async script.
   bool mIsInline;         // Is the script inline or loaded?
   bool mHasSourceMapURL;  // Does the HTTP header have a source map url?
   bool mInDeferList;      // True if we live in mDeferRequests.
   bool mInAsyncList;      // True if we live in mLoadingAsyncRequests or mLoadedAsyncRequests.
-  bool mPreloadAsAsync;   // True if this is a preload request and the script is async
-  bool mPreloadAsDefer;   // True if this is a preload request and the script is defer
   bool mIsNonAsyncScriptInserted; // True if we live in mNonAsyncExternalScriptInsertedRequests
   bool mIsXSLT;           // True if we live in mXSLTRequests.
   bool mIsCanceled;       // True if we have been explicitly canceled.

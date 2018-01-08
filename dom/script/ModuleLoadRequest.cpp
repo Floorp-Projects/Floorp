@@ -68,6 +68,7 @@ ModuleLoadRequest::ModuleLoadRequest(nsIURI* aURI,
 
   mTriggeringPrincipal = aParent->mTriggeringPrincipal;
   mIsInline = false;
+  mScriptMode = aParent->mScriptMode;
 }
 
 void
