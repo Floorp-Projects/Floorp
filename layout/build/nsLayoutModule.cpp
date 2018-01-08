@@ -83,7 +83,6 @@
 #include "mozilla/dom/network/UDPSocketChild.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/dom/SessionStorageManager.h"
-#include "mozilla/dom/StorageActivityService.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
 #include "mozilla/dom/workers/WorkerDebuggerManager.h"
 #include "mozilla/dom/Notification.h"
@@ -253,8 +252,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ServiceWorkerManager,
                                          ServiceWorkerManager::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(WorkerDebuggerManager,
                                          WorkerDebuggerManager::GetInstance)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(StorageActivityService,
-                                         StorageActivityService::GetOrCreate)
 
 #ifdef MOZ_WEBSPEECH
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSynthVoiceRegistry,
@@ -628,7 +625,6 @@ NS_DEFINE_NAMED_CID(NS_TEXTEDITOR_CID);
 NS_DEFINE_NAMED_CID(DOMREQUEST_SERVICE_CID);
 NS_DEFINE_NAMED_CID(QUOTAMANAGER_SERVICE_CID);
 NS_DEFINE_NAMED_CID(SERVICEWORKERMANAGER_CID);
-NS_DEFINE_NAMED_CID(STORAGEACTIVITYSERVICE_CID);
 NS_DEFINE_NAMED_CID(NOTIFICATIONTELEMETRYSERVICE_CID);
 NS_DEFINE_NAMED_CID(PUSHNOTIFIER_CID);
 NS_DEFINE_NAMED_CID(WORKERDEBUGGERMANAGER_CID);
@@ -886,7 +882,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kDOMREQUEST_SERVICE_CID, false, nullptr, DOMRequestServiceConstructor },
   { &kQUOTAMANAGER_SERVICE_CID, false, nullptr, QuotaManagerServiceConstructor },
   { &kSERVICEWORKERMANAGER_CID, false, nullptr, ServiceWorkerManagerConstructor },
-  { &kSTORAGEACTIVITYSERVICE_CID, false, nullptr, StorageActivityServiceConstructor },
   { &kNOTIFICATIONTELEMETRYSERVICE_CID, false, nullptr, NotificationTelemetryServiceConstructor },
   { &kPUSHNOTIFIER_CID, false, nullptr, PushNotifierConstructor },
   { &kWORKERDEBUGGERMANAGER_CID, true, nullptr, WorkerDebuggerManagerConstructor },
@@ -1012,7 +1007,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { DOMREQUEST_SERVICE_CONTRACTID, &kDOMREQUEST_SERVICE_CID },
   { QUOTAMANAGER_SERVICE_CONTRACTID, &kQUOTAMANAGER_SERVICE_CID },
   { SERVICEWORKERMANAGER_CONTRACTID, &kSERVICEWORKERMANAGER_CID },
-  { STORAGE_ACTIVITY_SERVICE_CONTRACTID, &kSTORAGEACTIVITYSERVICE_CID },
   { NOTIFICATIONTELEMETRYSERVICE_CONTRACTID, &kNOTIFICATIONTELEMETRYSERVICE_CID },
   { PUSHNOTIFIER_CONTRACTID, &kPUSHNOTIFIER_CID },
   { WORKERDEBUGGERMANAGER_CONTRACTID, &kWORKERDEBUGGERMANAGER_CID },

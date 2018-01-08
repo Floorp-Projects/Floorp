@@ -17,14 +17,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   TelemetryStopwatch: "resource://gre/modules/TelemetryStopwatch.jsm",
   console: "resource://gre/modules/Console.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
-  ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
-  OfflineAppCacheHelper: "resource:///modules/offlineAppCache.jsm",
 });
 
 
-XPCOMUtils.defineLazyServiceGetter(this, "sas",
-                                   "@mozilla.org/storage/activity-service;1",
-                                   "nsIStorageActivityService");
+XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
+                                   "@mozilla.org/serviceworkers/manager;1",
+                                   "nsIServiceWorkerManager");
 XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
                                    "@mozilla.org/dom/quota-manager-service;1",
                                    "nsIQuotaManagerService");
@@ -286,48 +284,37 @@ Sanitizer.prototype = {
 
     offlineApps: {
       async clear(range) {
-        // AppCache: this doesn't wait for the cleanup to be complete.
+        // AppCache
+        Components.utils.import("resource:///modules/offlineAppCache.jsm");
+        // This doesn't wait for the cleanup to be complete.
         OfflineAppCacheHelper.clear();
-
-        if (range) {
-          let principals = sas.getActiveOrigins(range[0], range[1])
-                              .QueryInterface(Components.interfaces.nsIArray);
-
-          let promises = [];
-
-          for (let i = 0; i < principals.length; ++i) {
-            let principal = principals.queryElementAt(i, Components.interfaces.nsIPrincipal);
-
-            if (principal.URI.scheme != "http" &&
-                principal.URI.scheme != "https" &&
-                principal.URI.scheme != "file") {
-              continue;
-            }
-
-            // LocalStorage
-            Services.obs.notifyObservers(null, "browser:purge-domain-data", principal.URI.host);
-
-            // ServiceWorkers
-            await ServiceWorkerCleanUp.removeFromPrincipal(principal);
-
-            // QuotaManager
-            promises.push(new Promise(r => {
-              let req = quotaManagerService.clearStoragesForPrincipal(principal, null, false);
-              req.callback = () => { r(); };
-            }));
-          }
-
-          return Promise.all(promises);
-        }
 
         // LocalStorage
         Services.obs.notifyObservers(null, "extension:purge-localStorage");
 
         // ServiceWorkers
-        await ServiceWorkerCleanUp.removeAll();
+        let promises = [];
+        let serviceWorkers = serviceWorkerManager.getAllRegistrations();
+        for (let i = 0; i < serviceWorkers.length; i++) {
+          let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
+
+          promises.push(new Promise(resolve => {
+            let unregisterCallback = {
+              unregisterSucceeded: () => { resolve(true); },
+              // We don't care about failures.
+              unregisterFailed: () => { resolve(true); },
+              QueryInterface: XPCOMUtils.generateQI(
+                [Ci.nsIServiceWorkerUnregisterCallback])
+            };
+
+            serviceWorkerManager.propagateUnregister(sw.principal, unregisterCallback, sw.scope);
+          }));
+        }
+
+        await Promise.all(promises);
 
         // QuotaManager
-        let promises = [];
+        promises = [];
         await new Promise(resolve => {
           quotaManagerService.getUsage(request => {
             if (request.resultCode != Cr.NS_OK) {

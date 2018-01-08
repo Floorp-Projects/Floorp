@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const url = getRootDirectory(gTestPath).replace("chrome://mochitests/content", "http://example.org") + "dummy_page.html";
+const url = "http://example.org/browser/browser/base/content/test/general/dummy_page.html";
 
 add_task(async function purgeHistoryTest() {
   await BrowserTestUtils.withNewTab({

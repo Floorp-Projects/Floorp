@@ -56,7 +56,6 @@ private:
     , mPath(aPath)
     , mSize(aSize)
     , mQuotaCheckDisabled(false)
-    , mWritingDone(false)
   {
     MOZ_COUNT_CTOR(QuotaObject);
   }
@@ -87,7 +86,6 @@ private:
   int64_t mSize;
 
   bool mQuotaCheckDisabled;
-  bool mWritingDone;
 };
 
 END_QUOTA_NAMESPACE
