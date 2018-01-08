@@ -95,6 +95,10 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   aElements.AppendElement(mCustomContentContainer);
 
+  // Do not create an accessible object for the container.
+  mCustomContentContainer->SetAttr(kNameSpaceID_None, nsGkAtoms::role,
+                                   NS_LITERAL_STRING("presentation"), false);
+
   // XXX add :moz-native-anonymous or will that be automatically set?
   rv = mCustomContentContainer->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                                         NS_LITERAL_STRING("moz-custom-content-container"),
