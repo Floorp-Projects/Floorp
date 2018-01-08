@@ -42,7 +42,6 @@ namespace net {
 #define HTTP_AUTH_DIALOG_TOP_LEVEL_DOC 29
 #define HTTP_AUTH_DIALOG_SAME_ORIGIN_SUBRESOURCE 30
 #define HTTP_AUTH_DIALOG_SAME_ORIGIN_XHR 31
-#define HTTP_AUTH_DIALOG_NON_WEB_CONTENT 32
 
 #define HTTP_AUTH_BASIC_INSECURE 0
 #define HTTP_AUTH_BASIC_SECURE 1
@@ -96,7 +95,6 @@ uint32_t nsHttpChannelAuthProvider::sAuthAllowPref =
     SUBRESOURCE_AUTH_DIALOG_ALLOW_ALL;
 
 bool nsHttpChannelAuthProvider::sImgCrossOriginAuthAllowPref = true;
-bool nsHttpChannelAuthProvider::sNonWebContentTriggeredAuthAllow = false;
 
 void
 nsHttpChannelAuthProvider::InitializePrefs()
@@ -108,9 +106,6 @@ nsHttpChannelAuthProvider::InitializePrefs()
   mozilla::Preferences::AddBoolVarCache(&sImgCrossOriginAuthAllowPref,
                                         "network.auth.subresource-img-cross-origin-http-auth-allow",
                                         true);
-  mozilla::Preferences::AddBoolVarCache(&sNonWebContentTriggeredAuthAllow,
-                                        "network.auth.non-web-content-triggered-resources-http-auth-allow",
-                                        false);
 }
 
 NS_IMETHODIMP
@@ -917,10 +912,8 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
             // BlockPrompt will set mCrossOrigin parameter as well.
             if (BlockPrompt()) {
                 LOG(("nsHttpChannelAuthProvider::GetCredentialsForChallenge: "
-                     "Prompt is blocked [this=%p pref=%d img-pref=%d "
-                     "non-web-content-triggered-pref=%d]\n",
-                      this, sAuthAllowPref, sImgCrossOriginAuthAllowPref,
-                      sNonWebContentTriggeredAuthAllow));
+                     "Prompt is blocked [this=%p pref=%d img-pref=%d]\n",
+                      this, sAuthAllowPref, sImgCrossOriginAuthAllowPref));
                 return NS_ERROR_ABORT;
             }
 
@@ -990,15 +983,8 @@ nsHttpChannelAuthProvider::BlockPrompt()
     // We will treat loads w/o loadInfo as a top level document.
     bool topDoc = true;
     bool xhr = false;
-    bool nonWebContent = false;
 
     if (loadInfo) {
-        nsCOMPtr<nsIPrincipal> triggeringPrinc =
-            loadInfo->TriggeringPrincipal();
-        if (nsContentUtils::IsSystemPrincipal(triggeringPrinc)) {
-            nonWebContent = true;
-        }
-
         if (loadInfo->GetExternalContentPolicyType() !=
             nsIContentPolicy::TYPE_DOCUMENT) {
             topDoc = false;
@@ -1027,28 +1013,21 @@ nsHttpChannelAuthProvider::BlockPrompt()
     }
 
     if (gHttpHandler->IsTelemetryEnabled()) {
-        if (nonWebContent) {
-            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_3,
-                                  HTTP_AUTH_DIALOG_NON_WEB_CONTENT);
-        } else if (topDoc) {
-            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_3,
+        if (topDoc) {
+            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_2,
                                   HTTP_AUTH_DIALOG_TOP_LEVEL_DOC);
         } else if (!mCrossOrigin) {
             if (xhr) {
-                Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_3,
+                Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_2,
                                       HTTP_AUTH_DIALOG_SAME_ORIGIN_XHR);
             } else {
-                Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_3,
+                Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_2,
                                       HTTP_AUTH_DIALOG_SAME_ORIGIN_SUBRESOURCE);
             }
         } else {
-            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_3,
+            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS_2,
                                   loadInfo->GetExternalContentPolicyType());
         }
-    }
-
-    if (!sNonWebContentTriggeredAuthAllow && nonWebContent) {
-        return true;
     }
 
     switch (sAuthAllowPref) {
