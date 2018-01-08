@@ -304,6 +304,57 @@ GlobalObject::initBuiltinConstructor(JSContext* cx, Handle<GlobalObject*> global
     return true;
 }
 
+static bool
+ThrowTypeError(JSContext* cx, unsigned argc, Value* vp)
+{
+    ThrowTypeErrorBehavior(cx);
+    return false;
+}
+
+/* static */ JSObject*
+GlobalObject::getOrCreateThrowTypeError(JSContext* cx, Handle<GlobalObject*> global)
+{
+    Value v = global->getReservedSlot(THROWTYPEERROR);
+    if (v.isObject())
+        return &v.toObject();
+    MOZ_ASSERT(v.isUndefined());
+
+    // Construct the unique [[%ThrowTypeError%]] function object, used only for
+    // "callee" and "caller" accessors on strict mode arguments objects.  (The
+    // spec also uses this for "arguments" and "caller" on various functions,
+    // but we're experimenting with implementing them using accessors on
+    // |Function.prototype| right now.)
+
+    RootedFunction throwTypeError(cx, NewNativeFunction(cx, ThrowTypeError, 0, nullptr));
+    if (!throwTypeError || !PreventExtensions(cx, throwTypeError))
+        return nullptr;
+
+    // The "length" property of %ThrowTypeError% is non-configurable, adjust
+    // the default property attributes accordingly.
+    Rooted<PropertyDescriptor> nonConfigurableDesc(cx);
+    nonConfigurableDesc.setAttributes(JSPROP_PERMANENT | JSPROP_IGNORE_READONLY |
+                                      JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_VALUE);
+
+    RootedId lengthId(cx, NameToId(cx->names().length));
+    ObjectOpResult lengthResult;
+    if (!NativeDefineProperty(cx, throwTypeError, lengthId, nonConfigurableDesc, lengthResult))
+        return nullptr;
+    MOZ_ASSERT(lengthResult);
+
+    // Non-standard: Also change "name" to non-configurable. ECMAScript defines
+    // %ThrowTypeError% as an anonymous function, i.e. it shouldn't actually
+    // get an own "name" property. To be consistent with other built-in,
+    // anonymous functions, we don't delete %ThrowTypeError%'s "name" property.
+    RootedId nameId(cx, NameToId(cx->names().name));
+    ObjectOpResult nameResult;
+    if (!NativeDefineProperty(cx, throwTypeError, nameId, nonConfigurableDesc, nameResult))
+        return nullptr;
+    MOZ_ASSERT(nameResult);
+
+    global->setReservedSlot(THROWTYPEERROR, ObjectValue(*throwTypeError));
+    return throwTypeError;
+}
+
 GlobalObject*
 GlobalObject::createInternal(JSContext* cx, const Class* clasp)
 {

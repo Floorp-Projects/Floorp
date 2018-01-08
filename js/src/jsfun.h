@@ -796,6 +796,9 @@ FunctionHasDefaultHasInstance(JSFunction* fun, const WellKnownSymbols& symbols);
 extern bool
 fun_symbolHasInstance(JSContext* cx, unsigned argc, Value* vp);
 
+extern void
+ThrowTypeErrorBehavior(JSContext* cx);
+
 /*
  * Function extended with reserved slots for use by various kinds of functions.
  * Most functions do not have these extensions, but enough do that efficient
