@@ -894,21 +894,6 @@ NotificationTask::Run()
   return NS_OK;
 }
 
-bool
-Notification::RequireInteractionEnabled(JSContext* aCx, JSObject* aOjb)
-{
-  if (NS_IsMainThread()) {
-    return Preferences::GetBool("dom.webnotifications.requireinteraction.enabled", false);
-  }
-
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-  if (!workerPrivate) {
-    return false;
-  }
-
-  return workerPrivate->DOMWorkerNotificationRIEnabled();
-}
-
 // static
 bool
 Notification::PrefEnabled(JSContext* aCx, JSObject* aObj)
@@ -1739,7 +1724,7 @@ Notification::ShowInternal()
   bool inPrivateBrowsing = IsInPrivateBrowsing();
 
   bool requireInteraction = mRequireInteraction;
-  if (!Preferences::GetBool("dom.webnotifications.requireinteraction.enabled", false)) {
+  if (!DOMPrefs::NotificationRIEnabled()) {
     requireInteraction = false;
   }
 
