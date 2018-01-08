@@ -1879,6 +1879,7 @@ class DebugFrame
     Frame frame_;
 
   public:
+    static DebugFrame* from(Frame* fp);
     Frame& frame() { return frame_; }
     uint32_t funcIndex() const { return funcIndex_; }
     Instance* instance() const { return frame_.instance(); }

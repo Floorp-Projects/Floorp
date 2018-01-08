@@ -562,6 +562,15 @@ wasm::ComputeMappedSize(uint32_t maxSize)
 
 #endif  // WASM_HUGE_MEMORY
 
+/* static */ DebugFrame*
+DebugFrame::from(Frame* fp)
+{
+    MOZ_ASSERT(fp->tls->instance->code().metadata().debugEnabled);
+    auto* df = reinterpret_cast<DebugFrame*>((uint8_t*)fp - DebugFrame::offsetOfFrame());
+    MOZ_ASSERT(fp->instance() == df->instance());
+    return df;
+}
+
 void
 DebugFrame::alignmentStaticAsserts()
 {
