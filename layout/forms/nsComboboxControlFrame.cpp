@@ -307,6 +307,8 @@ nsComboboxControlFrame::SetFocus(bool aOn, bool aRepaint)
 void
 nsComboboxControlFrame::ShowPopup(bool aShowPopup)
 {
+  // TODO(kuoe0) Remove this function when content-select is enabled.
+
   nsView* view = mDropdownFrame->GetView();
   nsViewManager* viewManager = view->GetViewManager();
 
@@ -335,6 +337,16 @@ nsComboboxControlFrame::ShowPopup(bool aShowPopup)
 bool
 nsComboboxControlFrame::ShowList(bool aShowList)
 {
+
+  // TODO(kuoe0) Remove this function when content-select is enabled.
+  //
+  // This function is used to handle the widget/view stuff, so we just return
+  // when content-select is enabled. And the following callee, ShowPopup(), will
+  // also be ignored, it is only used to show and hide the widget.
+  if (nsLayoutUtils::IsContentSelectEnabled()) {
+    return true;
+  }
+
   nsView* view = mDropdownFrame->GetView();
   if (aShowList) {
     NS_ASSERTION(!view->HasWidget(),
@@ -452,7 +464,8 @@ nsComboboxControlFrame::ReflowDropdown(nsPresContext*  aPresContext,
                                          forcedISize));
 
   // ensure we start off hidden
-  if (!mDroppedDown && GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+  if (!nsLayoutUtils::IsContentSelectEnabled() &&
+      !mDroppedDown && GetStateBits() & NS_FRAME_FIRST_REFLOW) {
     nsView* view = mDropdownFrame->GetView();
     nsViewManager* viewManager = view->GetViewManager();
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
@@ -655,7 +668,7 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
   mLastDropDownAfterScreenBCoord = nscoord_MIN;
   GetAvailableDropdownSpace(wm, &before, &after, &translation);
   if (before <= 0 && after <= 0) {
-    if (IsDroppedDown()) {
+    if (!nsLayoutUtils::IsContentSelectEnabled() && IsDroppedDown()) {
       // Hide the view immediately to minimize flicker.
       nsView* view = mDropdownFrame->GetView();
       view->GetViewManager()->SetViewVisibility(view, nsViewVisibility_kHide);
@@ -1410,7 +1423,7 @@ nsComboboxControlFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aP
 
   nsCheckboxRadioFrame::RegUnRegAccessKey(static_cast<nsIFrame*>(this), false);
 
-  if (mDroppedDown) {
+  if (!nsLayoutUtils::IsContentSelectEnabled() && mDroppedDown) {
     MOZ_ASSERT(mDropdownFrame, "mDroppedDown without frame");
     nsView* view = mDropdownFrame->GetView();
     MOZ_ASSERT(view);
@@ -1489,7 +1502,8 @@ nsComboboxControlFrame::Rollup(uint32_t aCount, bool aFlush,
     mListControlFrame->CaptureMouseEvents(false);
   }
 
-  if (aFlush && weakFrame.IsAlive()) {
+  if (!nsLayoutUtils::IsContentSelectEnabled() &&
+      aFlush && weakFrame.IsAlive()) {
     // The popup's visibility doesn't update until the minimize animation has
     // finished, so call UpdateWidgetGeometry to update it right away.
     nsViewManager* viewManager = mDropdownFrame->GetView()->GetViewManager();
@@ -1509,6 +1523,10 @@ nsComboboxControlFrame::Rollup(uint32_t aCount, bool aFlush,
 nsIWidget*
 nsComboboxControlFrame::GetRollupWidget()
 {
+  if (nsLayoutUtils::IsContentSelectEnabled()) {
+    return nullptr;
+  }
+
   nsView* view = mDropdownFrame->GetView();
   MOZ_ASSERT(view);
   return view->GetWidget();
