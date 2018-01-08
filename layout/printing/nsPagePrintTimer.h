@@ -42,7 +42,7 @@ public:
     , mDone(false)
   {
     MOZ_ASSERT(aDocument);
-    mDocViewerPrint->IncrementDestroyRefCount();
+    mDocViewerPrint->IncrementDestroyBlockedCount();
   }
 
   NS_DECL_NSITIMERCALLBACK
