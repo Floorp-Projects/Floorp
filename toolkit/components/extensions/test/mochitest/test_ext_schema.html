@@ -2,12 +2,11 @@
 <html>
 <head>
   <title>Test for schema API creation</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="chrome_head.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
   <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="/SimpleTest/test.css"/>
 </head>
 <body>
 
@@ -49,23 +48,16 @@ add_task(async function testUnknownProperties() {
     background,
   });
 
-  let messages = [
+  consoleMonitor.start([
     {message: /processing permissions\.0: Value "unknownPermission"/},
     {message: /processing unknown_property: An unexpected property was found in the WebExtension manifest/},
-  ];
-
-  let waitForConsole = new Promise(resolve => {
-    SimpleTest.monitorConsole(resolve, messages);
-  });
+  ]);
 
   await extension.startup();
-
   await extension.awaitFinish("loaded");
 
+  await consoleMonitor.finished();
   await extension.unload();
-
-  SimpleTest.endMonitorConsole();
-  await waitForConsole;
 });
 </script>
 

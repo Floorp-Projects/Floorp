@@ -101,6 +101,7 @@ add_task(async function test_webRequest_mozextension_fetch() {
     manifest: {
       permissions: [
         "webRequest",
+        "webRequestBlocking",
         "tabs",
         "<all_urls>",
       ],
