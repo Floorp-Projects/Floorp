@@ -2245,6 +2245,8 @@ pref("network.http.tailing.delay-quantum-after-domcontentloaded", 100);
 // Upper limit for the calculated delay, prevents long standing and comet-like requests
 // tail forever.  This is in milliseconds as well.
 pref("network.http.tailing.delay-max", 6000);
+// Total limit we delay tailed requests since a page load beginning.
+pref("network.http.tailing.total-max", 45000);
 
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
 

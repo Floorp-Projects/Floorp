@@ -144,6 +144,7 @@ public:
       return aAfterDOMContentLoaded ? mTailDelayQuantumAfterDCL : mTailDelayQuantum;
     }
     uint32_t       TailBlockingDelayMax() { return mTailDelayMax; }
+    uint32_t       TailBlockingTotalMax() { return mTailTotalMax; }
 
     uint32_t       ThrottlingReadLimit() { return mThrottleVersion == 1 ? 0 : mThrottleReadLimit; }
 
@@ -508,6 +509,7 @@ private:
     uint32_t mTailDelayQuantum;
     uint32_t mTailDelayQuantumAfterDCL;
     uint32_t mTailDelayMax;
+    uint32_t mTailTotalMax;
 
     uint8_t  mRedirectionLimit;
 
