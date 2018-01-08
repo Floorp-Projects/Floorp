@@ -171,6 +171,13 @@ class VerifyToolsMixin(object):
 
         dirs = self.query_abs_dirs()
         mozinfo.find_and_update_from_json(dirs['abs_test_install_dir'])
+        e10s = self.config.get('e10s', False)
+        mozinfo.update({"e10s": e10s})
+        headless = self.config.get('headless', False)
+        mozinfo.update({"headless": headless})
+        stylo = self.config.get('enable_stylo', False)
+        mozinfo.update({'stylo': stylo})
+        self.info("Verification using mozinfo: %s" % str(mozinfo.info))
 
         # determine which files were changed on this push
         url = '%s/json-automationrelevance/%s' % (repository.rstrip('/'), revision)
