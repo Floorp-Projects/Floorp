@@ -95,9 +95,9 @@ ThreadInfo::StreamJSON(const ProfileBuffer& aBuffer,
                             mFirstSavedStreamedSampleTime,
                             mSavedStreamedMarkers.get(),
                             *mUniqueStacks);
-    mSavedStreamedSamples.reset();
+    mSavedStreamedSamples = nullptr;
     mFirstSavedStreamedSampleTime = 0.0;
-    mSavedStreamedMarkers.reset();
+    mSavedStreamedMarkers = nullptr;
 
     aWriter.StartObjectProperty("stackTable");
     {
@@ -258,24 +258,64 @@ ThreadInfo::FlushSamplesAndMarkers(const TimeStamp& aProcessStartTime,
   {
     SpliceableChunkedJSONWriter b;
     b.StartBareList();
+    bool haveSamples = false;
     {
-      aBuffer.StreamSamplesToJSON(b, ThreadId(), /* aSinceTime = */ 0,
-                                  &mFirstSavedStreamedSampleTime,
-                                  mContext, *mUniqueStacks);
+      if (mSavedStreamedSamples) {
+        b.Splice(mSavedStreamedSamples.get());
+        haveSamples = true;
+      }
+
+      // We deliberately use a new variable instead of writing something like
+      // `haveSamples || aBuffer.StreamSamplesToJSON(...)` because we don't want
+      // to short-circuit the call.
+      bool streamedNewSamples =
+        aBuffer.StreamSamplesToJSON(b, ThreadId(), /* aSinceTime = */ 0,
+                                    &mFirstSavedStreamedSampleTime,
+                                    mContext, *mUniqueStacks);
+      haveSamples = haveSamples || streamedNewSamples;
     }
     b.EndBareList();
-    mSavedStreamedSamples = b.WriteFunc()->CopyData();
+
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1428076
+    // If we don't have any data, keep mSavedStreamSamples set to null. That
+    // way we won't try to splice it into the JSON later on, which would
+    // result in an invalid JSON due to stray commas.
+    if (haveSamples) {
+      mSavedStreamedSamples = b.WriteFunc()->CopyData();
+    } else {
+      mSavedStreamedSamples = nullptr;
+    }
   }
 
   {
     SpliceableChunkedJSONWriter b;
     b.StartBareList();
+    bool haveMarkers = false;
     {
-      aBuffer.StreamMarkersToJSON(b, ThreadId(), aProcessStartTime,
-                                  /* aSinceTime = */ 0, *mUniqueStacks);
+      if (mSavedStreamedMarkers) {
+        b.Splice(mSavedStreamedMarkers.get());
+        haveMarkers = true;
+      }
+
+      // We deliberately use a new variable instead of writing something like
+      // `haveMarkers || aBuffer.StreamMarkersToJSON(...)` because we don't want
+      // to short-circuit the call.
+      bool streamedNewMarkers =
+        aBuffer.StreamMarkersToJSON(b, ThreadId(), aProcessStartTime,
+                                    /* aSinceTime = */ 0, *mUniqueStacks);
+      haveMarkers = haveMarkers || streamedNewMarkers;
     }
     b.EndBareList();
-    mSavedStreamedMarkers = b.WriteFunc()->CopyData();
+
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1428076
+    // If we don't have any data, keep mSavedStreamMarkers set to null. That
+    // way we won't try to splice it into the JSON later on, which would
+    // result in an invalid JSON due to stray commas.
+    if (haveMarkers) {
+      mSavedStreamedMarkers = b.WriteFunc()->CopyData();
+    } else {
+      mSavedStreamedMarkers = nullptr;
+    }
   }
 
   // Reset the buffer. Attempting to symbolicate JS samples after mContext has
