@@ -63,6 +63,10 @@ public:
   // Returns true if the dom.push.enabled pref is set.
   static bool PushEnabled();
   static bool PushEnabled(JSContext* aCx, JSObject* aObj);
+
+  // Returns true if the dom.streams.enabled pref is set.
+  static bool StreamsEnabled();
+  static bool StreamsEnabled(JSContext* aCx, JSObject* aObj);
 };
 
 } // dom namespace
