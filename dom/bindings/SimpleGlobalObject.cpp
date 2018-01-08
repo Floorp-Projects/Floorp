@@ -46,8 +46,10 @@ SimpleGlobal_finalize(js::FreeOp *fop, JSObject *obj)
 {
   SimpleGlobalObject* globalObject =
     static_cast<SimpleGlobalObject*>(JS_GetPrivate(obj));
-  globalObject->ClearWrapper(obj);
-  NS_RELEASE(globalObject);
+  if (globalObject) {
+    globalObject->ClearWrapper(obj);
+    NS_RELEASE(globalObject);
+  }
 }
 
 static size_t
@@ -55,7 +57,9 @@ SimpleGlobal_moved(JSObject *obj, JSObject *old)
 {
   SimpleGlobalObject* globalObject =
     static_cast<SimpleGlobalObject*>(JS_GetPrivate(obj));
-  globalObject->UpdateWrapper(obj, old);
+  if (globalObject) {
+    globalObject->UpdateWrapper(obj, old);
+  }
   return 0;
 }
 
