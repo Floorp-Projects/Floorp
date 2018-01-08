@@ -49,15 +49,6 @@ nsMIMEInfoUnix::GetHasDefaultHandler(bool *_retval)
   if (*_retval)
     return NS_OK;
 
-#if defined(MOZ_ENABLE_CONTENTACTION)
-  ContentAction::Action action = 
-    ContentAction::Action::defaultActionForFile(QUrl(), QString(mSchemeOrType.get()));
-  if (action.isValid()) {
-    *_retval = true;
-    return NS_OK;
-  }
-#endif
-
   return NS_OK;
 }
 
@@ -72,17 +63,6 @@ nsMIMEInfoUnix::LaunchDefaultWithFile(nsIFile *aFile)
 
   nsAutoCString nativePath;
   aFile->GetNativePath(nativePath);
-
-#if defined(MOZ_ENABLE_CONTENTACTION)
-  QUrl uri = QUrl::fromLocalFile(QString::fromUtf8(nativePath.get()));
-  ContentAction::Action action =
-    ContentAction::Action::defaultActionForFile(uri, QString(mSchemeOrType.get()));
-  if (action.isValid()) {
-    action.trigger();
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-#endif
 
   nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
   if (!giovfs) {
@@ -106,31 +86,4 @@ nsMIMEInfoUnix::LaunchDefaultWithFile(nsIFile *aFile)
 
   return app->Launch(uriSpec);
 }
-
-#if defined(MOZ_ENABLE_CONTENTACTION)
-NS_IMETHODIMP
-nsMIMEInfoUnix::GetPossibleApplicationHandlers(nsIMutableArray ** aPossibleAppHandlers)
-{
-  if (!mPossibleApplications) {
-    mPossibleApplications = do_CreateInstance(NS_ARRAY_CONTRACTID);
-
-    if (!mPossibleApplications)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    QList<ContentAction::Action> actions =
-      ContentAction::Action::actionsForFile(QUrl(), QString(mSchemeOrType.get()));
-
-    for (int i = 0; i < actions.size(); ++i) {
-      nsContentHandlerApp* app =
-        new nsContentHandlerApp(nsString((char16_t*)actions[i].name().data()), 
-                                mSchemeOrType, actions[i]);
-      mPossibleApplications->AppendElement(app);
-    }
-  }
-
-  *aPossibleAppHandlers = mPossibleApplications;
-  NS_ADDREF(*aPossibleAppHandlers);
-  return NS_OK;
-}
-#endif
 
