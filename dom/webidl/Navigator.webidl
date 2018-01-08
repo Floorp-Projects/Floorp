@@ -89,7 +89,7 @@ interface NavigatorContentUtils {
 
 [SecureContext, NoInterfaceObject, Exposed=(Window,Worker)]
 interface NavigatorStorage {
-  [Func="mozilla::dom::StorageManager::PrefEnabled"]
+  [Func="mozilla::dom::DOMPrefs::StorageManagerEnabled"]
   readonly attribute StorageManager storage;
 };
 
