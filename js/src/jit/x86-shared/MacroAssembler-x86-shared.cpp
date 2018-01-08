@@ -686,10 +686,10 @@ struct MOZ_RAII AutoHandleWasmTruncateToIntErrors
     ~AutoHandleWasmTruncateToIntErrors() {
         // Handle errors.
         masm.bind(&fail);
-        masm.jump(wasm::TrapDesc(off, wasm::Trap::IntegerOverflow, masm.framePushed()));
+        masm.jump(wasm::OldTrapDesc(off, wasm::Trap::IntegerOverflow, masm.framePushed()));
 
         masm.bind(&inputIsNaN);
-        masm.jump(wasm::TrapDesc(off, wasm::Trap::InvalidConversionToInteger, masm.framePushed()));
+        masm.jump(wasm::OldTrapDesc(off, wasm::Trap::InvalidConversionToInteger, masm.framePushed()));
     }
 };
 

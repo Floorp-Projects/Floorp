@@ -335,7 +335,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         branch(code);
     }
 
-    void jump(wasm::TrapDesc target) {
+    void jump(wasm::OldTrapDesc target) {
         ma_b(target);
     }
 
