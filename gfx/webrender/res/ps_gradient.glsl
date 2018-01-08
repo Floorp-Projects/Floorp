@@ -72,7 +72,7 @@ void main(void) {
                                            prim.local_clip_rect,
                                            vec4(1.0),
                                            prim.z,
-                                           prim.layer,
+                                           prim.scroll_node,
                                            prim.task);
     vLocalPos = vi.local_pos;
     vec2 f = (vi.local_pos.xy - prim.local_rect.p0) / prim.local_rect.size;
@@ -80,7 +80,7 @@ void main(void) {
     VertexInfo vi = write_vertex(segment_rect,
                                  prim.local_clip_rect,
                                  prim.z,
-                                 prim.layer,
+                                 prim.scroll_node,
                                  prim.task,
                                  prim.local_rect);
 

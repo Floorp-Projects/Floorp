@@ -34,7 +34,7 @@ void main(void) {
     VertexInfo vi = write_vertex(prim.local_rect,
                                  prim.local_clip_rect,
                                  prim.z,
-                                 prim.layer,
+                                 prim.scroll_node,
                                  prim.task,
                                  prim.local_rect);
     vLocalPos = vi.local_pos - prim.local_rect.p0;

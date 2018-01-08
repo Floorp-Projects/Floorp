@@ -3,13 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, ClipAndScrollInfo, FilterOp, MixBlendMode};
-use api::{device_length, DeviceIntRect, DeviceIntSize, PipelineId};
-use api::{BoxShadowClipMode, LayerPoint, LayerRect, LayerSize, LayerVector2D, Shadow};
+use api::{DeviceIntPoint, DeviceIntRect, LayerToWorldScale, PipelineId};
+use api::{BoxShadowClipMode, LayerPoint, LayerRect, LayerVector2D, Shadow};
 use api::{ClipId, PremultipliedColorF};
 use box_shadow::{BLUR_SAMPLE_SCALE, BoxShadowCacheKey};
 use frame_builder::PrimitiveContext;
 use gpu_cache::GpuDataRequest;
-use gpu_types::BrushImageKind;
+use gpu_types::{BrushImageKind, PictureType};
 use prim_store::{PrimitiveIndex, PrimitiveRun, PrimitiveRunLocalRect};
 use render_task::{ClearMode, RenderTask, RenderTaskId, RenderTaskTree};
 use scene::{FilterOpHelpers, SceneProperties};
@@ -38,13 +38,12 @@ pub enum PictureCompositeMode {
     Blit,
 }
 
-/// Configure whether the primitives on this picture
-/// should be rasterized in screen space or local space.
-#[repr(C)]
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum RasterizationSpace {
-    Local = 0,
-    Screen = 1,
+/// Configure whether the content to be drawn by a picture
+/// in local space rasterization or the screen space.
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum ContentOrigin {
+    Local(LayerPoint),
+    Screen(DeviceIntPoint),
 }
 
 #[derive(Debug)]
@@ -108,10 +107,6 @@ pub struct PicturePrimitive {
     // picture. For text shadows and box shadows, we want to
     // unconditionally draw them.
     pub cull_children: bool,
-
-    /// Configure whether the primitives on this picture
-    /// should be rasterized in screen space or local space.
-    pub rasterization_kind: RasterizationSpace,
 }
 
 impl PicturePrimitive {
@@ -127,7 +122,6 @@ impl PicturePrimitive {
             },
             pipeline_id,
             cull_children: false,
-            rasterization_kind: RasterizationSpace::Local,
         }
     }
 
@@ -175,7 +169,6 @@ impl PicturePrimitive {
             },
             pipeline_id,
             cull_children: false,
-            rasterization_kind: RasterizationSpace::Local,
         }
     }
 
@@ -185,7 +178,7 @@ impl PicturePrimitive {
         pipeline_id: PipelineId,
         reference_frame_id: ClipId,
         frame_output_pipeline_id: Option<PipelineId>,
-    ) -> PicturePrimitive {
+    ) -> Self {
         PicturePrimitive {
             runs: Vec::new(),
             render_task_id: None,
@@ -199,9 +192,6 @@ impl PicturePrimitive {
             },
             pipeline_id,
             cull_children: true,
-            // TODO(gw): Make this configurable based on an
-            //           exposed API parameter in StackingContext.
-            rasterization_kind: RasterizationSpace::Screen,
         }
     }
 
@@ -262,43 +252,45 @@ impl PicturePrimitive {
             }
             PictureKind::BoxShadow { blur_radius, clip_mode, image_kind, ref mut content_rect, .. } => {
                 // We need to inflate the content rect if outset.
-                match clip_mode {
+                *content_rect = match clip_mode {
                     BoxShadowClipMode::Outset => {
-                        let blur_offset = blur_radius * BLUR_SAMPLE_SCALE;
-
-                        // If the radii are uniform, we can render just the top
-                        // left corner and mirror it across the primitive. In
-                        // this case, shift the content rect to leave room
-                        // for the blur to take effect.
                         match image_kind {
                             BrushImageKind::Mirror => {
-                                let origin = LayerPoint::new(
-                                    local_content_rect.origin.x - blur_offset,
-                                    local_content_rect.origin.y - blur_offset,
-                                );
-                                let size = LayerSize::new(
-                                    local_content_rect.size.width + blur_offset,
-                                    local_content_rect.size.height + blur_offset,
-                                );
-                                *content_rect = LayerRect::new(origin, size);
+                                let half_offset = 0.5 * blur_radius * BLUR_SAMPLE_SCALE;
+                                // If the radii are uniform, we can render just the top
+                                // left corner and mirror it across the primitive. In
+                                // this case, shift the content rect to leave room
+                                // for the blur to take effect.
+                                local_content_rect
+                                    .translate(&-LayerVector2D::new(half_offset, half_offset))
+                                    .inflate(half_offset, half_offset)
                             }
                             BrushImageKind::NinePatch | BrushImageKind::Simple => {
+                                let full_offset = blur_radius * BLUR_SAMPLE_SCALE;
                                 // For a non-uniform radii, we need to expand
                                 // the content rect on all sides for the blur.
-                                *content_rect = local_content_rect.inflate(
-                                    blur_offset,
-                                    blur_offset,
-                                );
+                                local_content_rect.inflate(
+                                    full_offset,
+                                    full_offset,
+                                )
                             }
                         }
                     }
                     BoxShadowClipMode::Inset => {
-                        *content_rect = local_content_rect;
+                        local_content_rect
                     }
-                }
+                };
 
                 prim_local_rect
             }
+        }
+    }
+
+    pub fn picture_type(&self) -> PictureType {
+        match self.kind {
+            PictureKind::Image { .. } => PictureType::Image,
+            PictureKind::BoxShadow { .. } => PictureType::BoxShadow,
+            PictureKind::TextShadow { .. } => PictureType::TextShadow,
         }
     }
 
@@ -311,29 +303,30 @@ impl PicturePrimitive {
         child_tasks: Vec<RenderTaskId>,
         parent_tasks: &mut Vec<RenderTaskId>,
     ) {
+        let content_scale = LayerToWorldScale::new(1.0) * prim_context.device_pixel_scale;
+
         match self.kind {
             PictureKind::Image {
                 ref mut secondary_render_task_id,
                 composite_mode,
                 ..
             } => {
+                let content_origin = ContentOrigin::Screen(prim_screen_rect.origin);
                 match composite_mode {
                     Some(PictureCompositeMode::Filter(FilterOp::Blur(blur_radius))) => {
                         let picture_task = RenderTask::new_picture(
                             Some(prim_screen_rect.size),
                             prim_index,
                             RenderTargetKind::Color,
-                            prim_screen_rect.origin.x as f32,
-                            prim_screen_rect.origin.y as f32,
+                            content_origin,
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
-                            self.rasterization_kind,
                             child_tasks,
                             None,
+                            PictureType::Image,
                         );
 
-                        let blur_radius = device_length(blur_radius, prim_context.device_pixel_ratio);
-                        let blur_std_deviation = blur_radius.0 as f32;
+                        let blur_std_deviation = blur_radius * prim_context.device_pixel_scale.0;
                         let picture_task_id = render_tasks.add(picture_task);
 
                         let blur_render_task = RenderTask::new_blur(
@@ -351,24 +344,24 @@ impl PicturePrimitive {
                         self.render_task_id = Some(blur_render_task_id);
                     }
                     Some(PictureCompositeMode::Filter(FilterOp::DropShadow(offset, blur_radius, color))) => {
+                        let screen_offset = (offset * content_scale).round().to_i32();
                         let picture_task = RenderTask::new_picture(
                             Some(prim_screen_rect.size),
                             prim_index,
                             RenderTargetKind::Color,
-                            prim_screen_rect.origin.x as f32 - offset.x,
-                            prim_screen_rect.origin.y as f32 - offset.y,
+                            ContentOrigin::Screen(prim_screen_rect.origin - screen_offset),
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
-                            self.rasterization_kind,
                             child_tasks,
                             None,
+                            PictureType::Image,
                         );
 
-                        let blur_std_deviation = blur_radius * prim_context.device_pixel_ratio;
+                        let blur_std_deviation = blur_radius * prim_context.device_pixel_scale.0;
                         let picture_task_id = render_tasks.add(picture_task);
 
                         let blur_render_task = RenderTask::new_blur(
-                            blur_std_deviation,
+                            blur_std_deviation.round(),
                             picture_task_id,
                             render_tasks,
                             RenderTargetKind::Color,
@@ -386,13 +379,12 @@ impl PicturePrimitive {
                             Some(prim_screen_rect.size),
                             prim_index,
                             RenderTargetKind::Color,
-                            prim_screen_rect.origin.x as f32,
-                            prim_screen_rect.origin.y as f32,
+                            content_origin,
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
-                            self.rasterization_kind,
                             child_tasks,
                             None,
+                            PictureType::Image,
                         );
 
                         let readback_task_id = render_tasks.add(RenderTask::new_readback(*prim_screen_rect));
@@ -416,13 +408,12 @@ impl PicturePrimitive {
                                 Some(prim_screen_rect.size),
                                 prim_index,
                                 RenderTargetKind::Color,
-                                prim_screen_rect.origin.x as f32,
-                                prim_screen_rect.origin.y as f32,
+                                content_origin,
                                 PremultipliedColorF::TRANSPARENT,
                                 ClearMode::Transparent,
-                                self.rasterization_kind,
                                 child_tasks,
                                 None,
+                                PictureType::Image,
                             );
 
                             self.render_task_id = Some(render_tasks.add(picture_task));
@@ -433,13 +424,12 @@ impl PicturePrimitive {
                             Some(prim_screen_rect.size),
                             prim_index,
                             RenderTargetKind::Color,
-                            prim_screen_rect.origin.x as f32,
-                            prim_screen_rect.origin.y as f32,
+                            content_origin,
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
-                            self.rasterization_kind,
                             child_tasks,
                             None,
+                            PictureType::Image,
                         );
 
                         self.render_task_id = Some(render_tasks.add(picture_task));
@@ -456,35 +446,29 @@ impl PicturePrimitive {
                 // blur to that text run in order to build the actual primitive
                 // which will be blitted to the framebuffer.
 
-                let blur_radius = device_length(blur_radius, prim_context.device_pixel_ratio);
-
                 // TODO(gw): Rounding the content rect here to device pixels is not
                 // technically correct. Ideally we should ceil() here, and ensure that
                 // the extra part pixel in the case of fractional sizes is correctly
                 // handled. For now, just use rounding which passes the existing
                 // Gecko tests.
-                let cache_width =
-                    (content_rect.size.width * prim_context.device_pixel_ratio).round() as i32;
-                let cache_height =
-                    (content_rect.size.height * prim_context.device_pixel_ratio).round() as i32;
-                let cache_size = DeviceIntSize::new(cache_width, cache_height);
+                let cache_size = (content_rect.size * content_scale).round().to_i32();
 
                 // Quote from https://drafts.csswg.org/css-backgrounds-3/#shadow-blur
                 // "the image that would be generated by applying to the shadow a
                 // Gaussian blur with a standard deviation equal to half the blur radius."
-                let blur_std_deviation = blur_radius.0 as f32 * 0.5;
+                let device_radius = (blur_radius * prim_context.device_pixel_scale.0).round();
+                let blur_std_deviation = device_radius * 0.5;
 
                 let picture_task = RenderTask::new_picture(
                     Some(cache_size),
                     prim_index,
                     RenderTargetKind::Color,
-                    content_rect.origin.x,
-                    content_rect.origin.y,
+                    ContentOrigin::Local(content_rect.origin),
                     color.premultiplied(),
                     ClearMode::Transparent,
-                    self.rasterization_kind,
                     Vec::new(),
                     None,
+                    PictureType::TextShadow,
                 );
 
                 let picture_task_id = render_tasks.add(picture_task);
@@ -503,23 +487,18 @@ impl PicturePrimitive {
                 self.render_task_id = Some(render_tasks.add(render_task));
             }
             PictureKind::BoxShadow { blur_radius, clip_mode, ref blur_regions, color, content_rect, cache_key, .. } => {
-                let blur_radius = device_length(blur_radius, prim_context.device_pixel_ratio);
-
                 // TODO(gw): Rounding the content rect here to device pixels is not
                 // technically correct. Ideally we should ceil() here, and ensure that
                 // the extra part pixel in the case of fractional sizes is correctly
                 // handled. For now, just use rounding which passes the existing
                 // Gecko tests.
-                let cache_width =
-                    (content_rect.size.width * prim_context.device_pixel_ratio).round() as i32;
-                let cache_height =
-                    (content_rect.size.height * prim_context.device_pixel_ratio).round() as i32;
-                let cache_size = DeviceIntSize::new(cache_width, cache_height);
+                let cache_size = (content_rect.size * content_scale).round().to_i32();
 
                 // Quote from https://drafts.csswg.org/css-backgrounds-3/#shadow-blur
                 // "the image that would be generated by applying to the shadow a
                 // Gaussian blur with a standard deviation equal to half the blur radius."
-                let blur_std_deviation = blur_radius.0 as f32 * 0.5;
+                let device_radius = (blur_radius * prim_context.device_pixel_scale.0).round();
+                let blur_std_deviation = device_radius * 0.5;
 
                 let blur_clear_mode = match clip_mode {
                     BoxShadowClipMode::Outset => {
@@ -534,13 +513,12 @@ impl PicturePrimitive {
                     Some(cache_size),
                     prim_index,
                     RenderTargetKind::Alpha,
-                    content_rect.origin.x,
-                    content_rect.origin.y,
+                    ContentOrigin::Local(content_rect.origin),
                     color.premultiplied(),
                     ClearMode::Zero,
-                    self.rasterization_kind,
                     Vec::new(),
                     Some(cache_key),
+                    PictureType::BoxShadow,
                 );
 
                 let picture_task_id = render_tasks.add(picture_task);

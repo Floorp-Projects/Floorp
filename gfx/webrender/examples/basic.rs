@@ -256,7 +256,7 @@ impl Example for App {
         builder.push_border(&info, border_widths, border_details);
         builder.pop_clip_id();
 
-        if false {
+        if true {
             // draw text?
             let font_key = api.generate_font_key();
             let font_bytes = load_file("../wrench/reftests/text/FreeSans.ttf");

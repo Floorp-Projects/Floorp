@@ -263,6 +263,19 @@ pub fn main_wrapper<E: Example>(
                 ) => {
                     api.notify_memory_pressure();
                 }
+                #[cfg(feature = "capture")]
+                glutin::Event::KeyboardInput(
+                    glutin::ElementState::Pressed,
+                    _,
+                    Some(glutin::VirtualKeyCode::C),
+                ) => {
+                    let path: PathBuf = "captures/example".into();
+                    if path.is_dir() {
+                        api.load_capture(path);
+                    } else {
+                        api.save_capture(path);
+                    }
+                }
                 _ => if example.on_event(event, &api, document_id) {
                     let mut builder = DisplayListBuilder::new(pipeline_id, layout_size);
                     let mut resources = ResourceUpdates::new();
@@ -285,7 +298,7 @@ pub fn main_wrapper<E: Example>(
                         resources,
                     );
                     api.generate_frame(document_id, None);
-                },
+                }
             }
         }
 

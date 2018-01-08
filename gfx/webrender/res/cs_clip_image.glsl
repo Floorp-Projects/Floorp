@@ -24,13 +24,13 @@ ImageMaskData fetch_mask_data(ivec2 address) {
 void main(void) {
     ClipMaskInstance cmi = fetch_clip_item();
     ClipArea area = fetch_clip_area(cmi.render_task_address);
-    Layer layer = fetch_layer(cmi.layer_address, cmi.layer_address);
+    ClipScrollNode scroll_node = fetch_clip_scroll_node(cmi.scroll_node_id);
     ImageMaskData mask = fetch_mask_data(cmi.clip_data_address);
     RectWithSize local_rect = mask.local_rect;
     ImageResource res = fetch_image_resource_direct(cmi.resource_address);
 
     ClipVertexInfo vi = write_clip_tile_vertex(local_rect,
-                                               layer,
+                                               scroll_node,
                                                area);
 
     vPos = vi.local_pos;

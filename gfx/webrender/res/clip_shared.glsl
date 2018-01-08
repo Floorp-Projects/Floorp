@@ -11,13 +11,13 @@
 #define SEGMENT_CORNER_BR   4
 
 in int aClipRenderTaskAddress;
-in int aClipLayerAddress;
+in int aScrollNodeId;
 in int aClipSegment;
 in ivec4 aClipDataResourceAddress;
 
 struct ClipMaskInstance {
     int render_task_address;
-    int layer_address;
+    int scroll_node_id;
     int segment;
     ivec2 clip_data_address;
     ivec2 resource_address;
@@ -27,7 +27,7 @@ ClipMaskInstance fetch_clip_item() {
     ClipMaskInstance cmi;
 
     cmi.render_task_address = aClipRenderTaskAddress;
-    cmi.layer_address = aClipLayerAddress;
+    cmi.scroll_node_id = aScrollNodeId;
     cmi.segment = aClipSegment;
     cmi.clip_data_address = aClipDataResourceAddress.xy;
     cmi.resource_address = aClipDataResourceAddress.zw;
@@ -49,13 +49,13 @@ RectWithSize intersect_rect(RectWithSize a, RectWithSize b) {
 // The transformed vertex function that always covers the whole clip area,
 // which is the intersection of all clip instances of a given primitive
 ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
-                                      Layer layer,
+                                      ClipScrollNode scroll_node,
                                       ClipArea area) {
     vec2 actual_pos = area.screen_origin + aPosition.xy * area.common_data.task_rect.size;
 
-    vec4 layer_pos = get_layer_pos(actual_pos / uDevicePixelRatio, layer);
+    vec4 node_pos = get_node_pos(actual_pos / uDevicePixelRatio, scroll_node);
 
-    // compute the point position in side the layer, in CSS space
+    // compute the point position inside the scroll node, in CSS space
     vec2 vertex_pos = actual_pos +
                       area.common_data.task_rect.p0 -
                       area.screen_origin;
@@ -64,7 +64,7 @@ ClipVertexInfo write_clip_tile_vertex(RectWithSize local_clip_rect,
 
     vLocalBounds = vec4(local_clip_rect.p0, local_clip_rect.p0 + local_clip_rect.size);
 
-    ClipVertexInfo vi = ClipVertexInfo(layer_pos.xyw, actual_pos, local_clip_rect);
+    ClipVertexInfo vi = ClipVertexInfo(node_pos.xyw, actual_pos, local_clip_rect);
     return vi;
 }
 

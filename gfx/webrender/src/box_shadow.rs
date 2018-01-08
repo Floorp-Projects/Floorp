@@ -10,7 +10,7 @@ use app_units::Au;
 use clip::ClipSource;
 use frame_builder::FrameBuilder;
 use gpu_types::BrushImageKind;
-use prim_store::{BrushAntiAliasMode, PrimitiveContainer};
+use prim_store::{PrimitiveContainer};
 use prim_store::{BrushMaskKind, BrushKind, BrushPrimitive};
 use picture::PicturePrimitive;
 use util::RectHelpers;
@@ -136,7 +136,6 @@ impl FrameBuilder {
                             color: *color,
                         },
                         None,
-                        BrushAntiAliasMode::Primitive,
                     )
                 ),
             );
@@ -188,7 +187,6 @@ impl FrameBuilder {
                                 kind: BrushMaskKind::Corner(corner_size),
                             },
                             None,
-                            BrushAntiAliasMode::Primitive,
                         );
                     } else {
                         // Create a minimal size primitive mask to blur. In this
@@ -226,7 +224,6 @@ impl FrameBuilder {
                                 kind: BrushMaskKind::RoundedRect(clip_rect, shadow_radius),
                             },
                             None,
-                            BrushAntiAliasMode::Primitive,
                         );
                     };
 
@@ -301,7 +298,7 @@ impl FrameBuilder {
                     let mut inflate_size = 1.0;
                     while adjusted_blur_std_deviation > MAX_BLUR_STD_DEVIATION {
                         adjusted_blur_std_deviation *= 0.5;
-                        inflate_size += 1.0;
+                        inflate_size *= 2.0;
                     }
 
                     let brush_rect = brush_rect.inflate(inflate_size, inflate_size);
@@ -311,7 +308,6 @@ impl FrameBuilder {
                             kind: BrushMaskKind::RoundedRect(clip_rect, shadow_radius),
                         },
                         None,
-                        BrushAntiAliasMode::Primitive,
                     );
                     let brush_info = LayerPrimitiveInfo::new(brush_rect);
                     let brush_prim_index = self.create_primitive(

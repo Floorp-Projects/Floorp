@@ -12,6 +12,7 @@ use channel::{self, MsgSender, Payload, PayloadSender, PayloadSenderHelperMethod
 use std::cell::Cell;
 use std::fmt;
 use std::marker::PhantomData;
+use std::path::PathBuf;
 
 pub type TileSize = u16;
 /// Documents are rendered in the ascending order of their associated layer values.
@@ -267,6 +268,12 @@ pub enum DebugCommand {
     FetchRenderTasks,
     /// Fetch screenshot.
     FetchScreenshot,
+    /// Save a capture of all the documents state.
+    SaveCapture(PathBuf),
+    /// Load a capture of all the documents state.
+    LoadCapture(PathBuf),
+    /// Configure if dual-source blending is used, if available.
+    EnableDualSourceBlending(bool),
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -758,6 +765,23 @@ impl RenderApi {
         property_bindings: Option<DynamicProperties>,
     ) {
         self.send(document_id, DocumentMsg::GenerateFrame(property_bindings));
+    }
+
+    /// Save a capture of the current frame state for debugging.
+    pub fn save_capture(&self, path: PathBuf) {
+        let msg = ApiMsg::DebugCommand(DebugCommand::SaveCapture(path));
+        self.send_message(msg);
+    }
+
+    /// Load a capture of the current frame state for debugging.
+    pub fn load_capture(&self, path: PathBuf) {
+        let msg = ApiMsg::DebugCommand(DebugCommand::LoadCapture(path));
+        self.send_message(msg);
+    }
+
+    pub fn send_debug_cmd(&self, cmd: DebugCommand) {
+        let msg = ApiMsg::DebugCommand(cmd);
+        self.send_message(msg);
     }
 }
 

@@ -8,6 +8,10 @@
 #extension GL_OES_EGL_image_external_essl3 : require
 #endif
 
+#ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
+#extension GL_ARB_explicit_attrib_location : require
+#endif
+
 #include base
 
 // The textureLod() doesn't support samplerExternalOES for WR_FEATURE_TEXTURE_EXTERNAL.
@@ -46,7 +50,12 @@
     // Uniform inputs
 
     // Fragment shader outputs
-    out vec4 oFragColor;
+    #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
+        layout(location = 0, index = 0) out vec4 oFragColor;
+        layout(location = 0, index = 1) out vec4 oFragBlend;
+    #else
+        out vec4 oFragColor;
+    #endif
 #endif
 
 //======================================================================================

@@ -8,6 +8,9 @@ use {GlyphOptions, LayoutVector2D, PipelineId, PropertyBinding};
 use euclid::{SideOffsets2D, TypedRect};
 use std::ops::Not;
 
+#[cfg(feature = "debug-serialization")]
+use GlyphInstance;
+
 // NOTE: some of these structs have an "IMPLICIT" comment.
 // This indicates that the BuiltDisplayList will have serialized
 // a list of values nearby that this item consumes. The traversal
@@ -48,12 +51,16 @@ impl ClipAndScrollInfo {
 /// events.
 pub type ItemTag = (u64, u16);
 
+/// The DI is generic over the specifics, while allows to use
+/// the "complete" version of it for convenient serialization.
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
-pub struct DisplayItem {
-    pub item: SpecificDisplayItem,
+pub struct GenericDisplayItem<T> {
+    pub item: T,
     pub clip_and_scroll: ClipAndScrollInfo,
     pub info: LayoutPrimitiveInfo,
 }
+
+pub type DisplayItem = GenericDisplayItem<SpecificDisplayItem>;
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct PrimitiveInfo<T> {
@@ -108,6 +115,33 @@ pub enum SpecificDisplayItem {
     PushStackingContext(PushStackingContextDisplayItem),
     PopStackingContext,
     SetGradientStops,
+    PushShadow(Shadow),
+    PopAllShadows,
+}
+
+/// This is a "complete" version of the DI specifics,
+/// containing the auxiliary data within the corresponding
+/// enumeration variants, to be used for debug serialization.
+#[cfg(feature = "debug-serialization")]
+#[derive(Deserialize, Serialize)]
+pub enum CompletelySpecificDisplayItem {
+    Clip(ClipDisplayItem, Vec<ComplexClipRegion>),
+    ScrollFrame(ScrollFrameDisplayItem, Vec<ComplexClipRegion>),
+    StickyFrame(StickyFrameDisplayItem),
+    Rectangle(RectangleDisplayItem),
+    ClearRectangle,
+    Line(LineDisplayItem),
+    Text(TextDisplayItem, Vec<GlyphInstance>),
+    Image(ImageDisplayItem),
+    YuvImage(YuvImageDisplayItem),
+    Border(BorderDisplayItem),
+    BoxShadow(BoxShadowDisplayItem),
+    Gradient(GradientDisplayItem),
+    RadialGradient(RadialGradientDisplayItem),
+    Iframe(IframeDisplayItem),
+    PushStackingContext(PushStackingContextDisplayItem, Vec<FilterOp>),
+    PopStackingContext,
+    SetGradientStops(Vec<GradientStop>),
     PushShadow(Shadow),
     PopAllShadows,
 }
