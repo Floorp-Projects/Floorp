@@ -8,6 +8,8 @@
 
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/StaticPtr.h"
+#include "nsIMutableArray.h"
+#include "nsSupportsPrimitives.h"
 #include "nsXPCOM.h"
 
 // This const is used to know when origin activities should be purged because
@@ -25,6 +27,12 @@ StorageActivityService::SendActivity(nsIPrincipal* aPrincipal)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (!aPrincipal ||
+      BasePrincipal::Cast(aPrincipal)->Kind() != BasePrincipal::eCodebasePrincipal) {
+    // Only codebase principals.
+    return;
+  }
+
   RefPtr<StorageActivityService> service = GetOrCreate();
   if (NS_WARN_IF(!service)) {
     return;
@@ -36,6 +44,12 @@ StorageActivityService::SendActivity(nsIPrincipal* aPrincipal)
 /* static */ void
 StorageActivityService::SendActivity(const mozilla::ipc::PrincipalInfo& aPrincipalInfo)
 {
+  if (aPrincipalInfo.type() !=
+      mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) {
+    // only content principal.
+    return;
+  }
+
   RefPtr<Runnable> r = NS_NewRunnableFunction(
     "StorageActivityService::SendActivity",
     [aPrincipalInfo] () {
@@ -91,6 +105,7 @@ StorageActivityService::SendActivityInternal(nsIPrincipal* aPrincipal)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(BasePrincipal::Cast(aPrincipal)->Kind() == BasePrincipal::eCodebasePrincipal);
 
   if (!XRE_IsParentProcess()) {
     SendActivityToParent(aPrincipal);
@@ -103,7 +118,7 @@ StorageActivityService::SendActivityInternal(nsIPrincipal* aPrincipal)
     return;
   }
 
-  mActivities.Put(origin, TimeStamp::NowLoRes());
+  mActivities.Put(origin, PR_Now());
 
   MaybeStartTimer();
 }
@@ -178,10 +193,10 @@ StorageActivityService::Notify(nsITimer* aTimer)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mTimer == aTimer);
 
-  TimeStamp now = TimeStamp::NowLoRes();
+  uint64_t now = PR_Now();
 
   for (auto iter = mActivities.Iter(); !iter.Done(); iter.Next()) {
-    if ((now - iter.UserData()).ToSeconds() > TIME_MAX_SECS) {
+    if ((now - iter.UserData()) / PR_USEC_PER_SEC > TIME_MAX_SECS) {
       iter.Remove();
     }
   }
@@ -191,6 +206,40 @@ StorageActivityService::Notify(nsITimer* aTimer)
     MaybeStopTimer();
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+StorageActivityService::GetActiveOrigins(PRTime aFrom, PRTime aTo,
+                                         nsIArray** aRetval)
+{
+  uint64_t now = PR_Now();
+  if (((now - aFrom) / PR_USEC_PER_SEC) > TIME_MAX_SECS ||
+       aFrom >= aTo) {
+    return NS_ERROR_RANGE_ERR;
+  }
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMutableArray> devices =
+    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  for (auto iter = mActivities.Iter(); !iter.Done(); iter.Next()) {
+    if (iter.UserData() >= aFrom && iter.UserData() <= aTo) {
+      RefPtr<BasePrincipal> principal =
+        BasePrincipal::CreateCodebasePrincipal(iter.Key());
+      MOZ_ASSERT(principal);
+
+      rv = devices->AppendElement(principal);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+  }
+
+  devices.forget(aRetval);
   return NS_OK;
 }
 

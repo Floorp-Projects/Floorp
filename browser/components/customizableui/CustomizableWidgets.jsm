@@ -919,7 +919,7 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
       BrowserUITelemetry.countPanicEvent(group.selectedItem.id);
       group.selectedItem = doc.getElementById("PanelUI-panic-5min");
       let itemsToClear = [
-        "cookies", "history", "openWindows", "formdata", "sessions", "cache", "downloads"
+        "cookies", "history", "openWindows", "formdata", "sessions", "cache", "downloads", "offlineApps"
       ];
       let newWindowPrivateState = PrivateBrowsingUtils.isWindowPrivate(doc.defaultView) ?
                                   "private" : "non-private";
