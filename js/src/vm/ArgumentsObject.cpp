@@ -793,9 +793,13 @@ UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj, HandleId i
         if (!JSID_IS_ATOM(id, cx->names().callee))
             return true;
 
+        JSObject* throwTypeError = GlobalObject::getOrCreateThrowTypeError(cx, cx->global());
+        if (!throwTypeError)
+            return false;
+
         attrs = JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER;
-        getter = CastAsGetterOp(argsobj->global().getThrowTypeError());
-        setter = CastAsSetterOp(argsobj->global().getThrowTypeError());
+        getter = CastAsGetterOp(throwTypeError);
+        setter = CastAsSetterOp(throwTypeError);
     }
 
     attrs |= JSPROP_RESOLVING;
