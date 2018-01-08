@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 use std::{mem, ptr};
 use std::os::raw;
 use std::os::raw::c_char;
-use SignatureAlgorithm;
+use cose::SignatureAlgorithm;
 
 type SECItemType = raw::c_uint; // TODO: actually an enum - is this the right size?
 const SI_BUFFER: SECItemType = 0; // called siBuffer in NSS

@@ -264,15 +264,18 @@ dependencies = [
 
 [[package]]
 name = "cose"
-version = "0.1.2"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "moz_cbor 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "cose-c"
-version = "0.1.1"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "cose 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cose 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -561,7 +564,7 @@ version = "0.1.0"
 dependencies = [
  "audioipc-client 0.1.0",
  "audioipc-server 0.1.0",
- "cose-c 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cose-c 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "cubeb 0.3.0",
  "cubeb-backend 0.2.0",
  "cubeb-core 0.1.0",
@@ -802,6 +805,11 @@ dependencies = [
  "winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "ws2_32-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "moz_cbor"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "mp4parse"
@@ -1576,8 +1584,8 @@ dependencies = [
 "checksum core-foundation-sys 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "152195421a2e6497a8179195672e9d4ee8e45ed8c465b626f1606d27a08ebcd5"
 "checksum core-graphics 0.12.3 (registry+https://github.com/rust-lang/crates.io-index)" = "5dc0a78ab2ac23b6ea7b3fe5fe93b227900dc0956979735b8f68032417976dd4"
 "checksum core-text 8.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "bcad23756dd1dc4b47bf6a914ace27aadb8fa68889db5837af2308d018d0467c"
-"checksum cose 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "ec10816629f38fa557f08e199a3474fab954f4c8d2645550367235afa6e5646b"
-"checksum cose-c 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "07cc8bb85ec2e93541ef9369b85a4b6fb7732bc7f4854d317eab20e726b0fc2f"
+"checksum cose 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "72fa26cb151d3ae4b70f63d67d0fed57ce04220feafafbae7f503bef7aae590d"
+"checksum cose-c 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "49726015ab0ca765144fcca61e4a7a543a16b795a777fa53f554da2fffff9a94"
 "checksum cssparser 0.23.2 (registry+https://github.com/rust-lang/crates.io-index)" = "8a807ac3ab7a217829c2a3b65732b926b2befe6a35f33b4bf8b503692430f223"
 "checksum cssparser-macros 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "079adec4af52bb5275eadd004292028c79eb3c5f5b4ee8086a36d4197032f6df"
 "checksum darling 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9861a8495606435477df581bc858ccf15a3469747edf175b94a4704fd9aaedac"
@@ -1624,6 +1632,7 @@ dependencies = [
 "checksum mio 0.6.9 (registry+https://github.com/rust-lang/crates.io-index)" = "9e965267d4d58496fc4f740e9861118367f13570cadf66316ed2c3f2f14d87c7"
 "checksum mio-uds 0.6.4 (registry+https://github.com/rust-lang/crates.io-index)" = "1731a873077147b626d89cc6c2a0db6288d607496c5d10c0cfcf3adc697ec673"
 "checksum miow 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "8c1f2f3b1cf331de6896aabf6e9d55dca90356cc9960cca7eaaf408a355ae919"
+"checksum moz_cbor 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "9f0dc96d1e40041ad9e6f9986e72e65d45d70dc31cef9d852b47646b2970f238"
 "checksum mp4parse_fallible 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "6626c2aef76eb8f984eef02e475883d3fe9112e114720446c5810fc5f045cd30"
 "checksum net2 0.2.31 (registry+https://github.com/rust-lang/crates.io-index)" = "3a80f842784ef6c9a958b68b7516bc7e35883c614004dd94959a4dca1b716c09"
 "checksum nodrop 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)" = "9a2228dca57108069a5262f2ed8bd2e82496d2e074a06d1ccc7ce1687b6ae0a2"

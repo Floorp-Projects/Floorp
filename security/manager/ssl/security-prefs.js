@@ -68,10 +68,17 @@ pref("security.pki.cert_short_lifetime_in_days", 10);
 pref("security.pki.sha1_enforcement_level", 3);
 
 // This preference controls what signature algorithms are accepted for signed
-// apps (i.e. add-ons).
-// 0: SHA-1 and/or SHA-256 PKCS#7 allowed
-// 1: SHA-256 PKCS#7 allowed
-pref("security.signed_app_signatures.policy", 0);
+// apps (i.e. add-ons). The number is interpreted as a bit mask with the
+// following semantic:
+// The lowest order bit determines which PKCS#7 algorithms are accepted.
+// xxx_0_: SHA-1 and/or SHA-256 PKCS#7 allowed
+// xxx_1_: SHA-256 PKCS#7 allowed
+// The next two bits determine whether COSE is required and PKCS#7 is allowed
+// x_00_x: COSE disabled, ignore files, PKCS#7 must verify
+// x_01_x: COSE is verified if present, PKCS#7 must verify
+// x_10_x: COSE is required, PKCS#7 must verify if present
+// x_11_x: COSE is required, PKCS#7 disabled (fail when present)
+pref("security.signed_app_signatures.policy", 2);
 
 // security.pki.name_matching_mode controls how the platform matches hostnames
 // to name information in TLS certificates. The possible values are:
