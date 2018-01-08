@@ -59,12 +59,9 @@ PageThumbsProtocol::NewURI(const nsACString& aSpec,
                            const char *aOriginCharset,
                            nsIURI *aBaseURI, nsIURI **_retval)
 {
-  nsCOMPtr <nsIURI> uri = do_CreateInstance(NS_SIMPLEURI_CONTRACTID);
-  nsresult rv = uri->SetSpec(aSpec);
-  if (NS_WARN_IF(NS_FAILED(rv))) return rv;
-
-  uri.forget(_retval);
-  return rv;
+  return NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID)
+           .SetSpec(aSpec)
+           .Finalize(_retval);
 }
 
 // PageThumbsProtocol::NewChannel
