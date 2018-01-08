@@ -1436,7 +1436,6 @@ struct RuntimeService::IdleThreadInfo
 
 // This is only touched on the main thread. Initialized in Init() below.
 JSSettings RuntimeService::sDefaultJSSettings;
-bool RuntimeService::sDefaultPreferences[WORKERPREF_COUNT] = { false };
 
 RuntimeService::RuntimeService()
 : mMutex("RuntimeService::mMutex"), mObserved(false),
@@ -1960,17 +1959,17 @@ RuntimeService::Init()
                                              PREF_JS_OPTIONS_PREFIX PREF_GCZEAL)) ||
 #endif
 
-#define WORKER_SIMPLE_PREF(name, getter, NAME)                                \
-      NS_FAILED(Preferences::RegisterCallbackAndCall(                         \
-                  WorkerPrefChanged,                                          \
-                  name,                                                       \
-                  reinterpret_cast<void*>(WORKERPREF_##NAME))) ||
 #define WORKER_PREF(name, callback)                                           \
       NS_FAILED(Preferences::RegisterCallbackAndCall(                         \
                   callback,                                                   \
                   name)) ||
-#include "WorkerPrefs.h"
-#undef WORKER_SIMPLE_PREF
+      WORKER_PREF("intl.accept_languages", PrefLanguagesChanged)
+      WORKER_PREF("general.appname.override", AppNameOverrideChanged)
+      WORKER_PREF("general.appversion.override", AppVersionOverrideChanged)
+      WORKER_PREF("general.platform.override", PlatformOverrideChanged)
+#ifdef JS_GC_ZEAL
+      WORKER_PREF("dom.workers.options.gcZeal", LoadGCZealOptions)
+#endif
 #undef WORKER_PREF
 
       NS_FAILED(Preferences::RegisterPrefixCallbackAndCall(
@@ -2259,17 +2258,17 @@ RuntimeService::Cleanup()
         NS_FAILED(Preferences::UnregisterPrefixCallback(LoadContextOptions,
                                                         PREF_WORKERS_OPTIONS_PREFIX)) ||
 
-#define WORKER_SIMPLE_PREF(name, getter, NAME)                                \
-      NS_FAILED(Preferences::UnregisterCallback(                              \
-                  WorkerPrefChanged,                                          \
-                  name,                                                       \
-                  reinterpret_cast<void*>(WORKERPREF_##NAME))) ||
 #define WORKER_PREF(name, callback)                                           \
       NS_FAILED(Preferences::UnregisterCallback(                              \
                   callback,                                                   \
                   name)) ||
-#include "WorkerPrefs.h"
-#undef WORKER_SIMPLE_PREF
+      WORKER_PREF("intl.accept_languages", PrefLanguagesChanged)
+      WORKER_PREF("general.appname.override", AppNameOverrideChanged)
+      WORKER_PREF("general.appversion.override", AppVersionOverrideChanged)
+      WORKER_PREF("general.platform.override", PlatformOverrideChanged)
+#ifdef JS_GC_ZEAL
+      WORKER_PREF("dom.workers.options.gcZeal", LoadGCZealOptions)
+#endif
 #undef WORKER_PREF
 
 #ifdef JS_GC_ZEAL
@@ -2695,12 +2694,6 @@ RuntimeService::UpdatePlatformOverridePreference(const nsAString& aValue)
 }
 
 void
-RuntimeService::UpdateAllWorkerPreference(WorkerPreference aPref, bool aValue)
-{
-  BROADCAST_ALL_WORKERS(UpdatePreference, aPref, aValue);
-}
-
-void
 RuntimeService::UpdateAllWorkerLanguages(const nsTArray<nsString>& aLanguages)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -2817,34 +2810,6 @@ RuntimeService::Observe(nsISupports* aSubject, const char* aTopic,
 
   NS_NOTREACHED("Unknown observer topic!");
   return NS_OK;
-}
-
-/* static */ void
-RuntimeService::WorkerPrefChanged(const char* aPrefName, void* aClosure)
-{
-  AssertIsOnMainThread();
-
-  const WorkerPreference key =
-    static_cast<WorkerPreference>(reinterpret_cast<uintptr_t>(aClosure));
-
-  switch (key) {
-#define WORKER_SIMPLE_PREF(name, getter, NAME) case WORKERPREF_##NAME:
-#define WORKER_PREF(name, callback)
-#include "WorkerPrefs.h"
-#undef WORKER_SIMPLE_PREF
-#undef WORKER_PREF
-      sDefaultPreferences[key] = Preferences::GetBool(aPrefName, false);
-      break;
-
-    default:
-      MOZ_ASSERT_UNREACHABLE("Invalid pref key");
-      break;
-  }
-
-  RuntimeService* rts = RuntimeService::GetService();
-  if (rts) {
-    rts->UpdateAllWorkerPreference(key, sDefaultPreferences[key]);
-  }
 }
 
 bool
