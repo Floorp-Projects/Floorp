@@ -47,7 +47,7 @@ Cu.import("chrome://marionette/content/session.js");
 
 Cu.importGlobalProperties(["URL"]);
 
-let listenerId = null; // unique ID of this listener
+let outerWindowID = null;
 let curContainer = {frame: content, shadowRoot: null};
 
 // Listen for click event to indicate one click has happened, so actions
@@ -69,7 +69,13 @@ const SUPPORTED_STRATEGIES = new Set([
   element.Strategy.XPath,
 ]);
 
-let capabilities;
+Object.defineProperty(this, "capabilities", {
+  get() {
+    let payload = sendSyncMessage("Marionette:WebDriver:GetCapabilities");
+    return session.Capabilities.fromJSON(payload[0]);
+  },
+  configurable: true,
+});
 
 let legacyactions = new legacyaction.Chain();
 
@@ -447,15 +453,11 @@ function registerSelf() {
 
   // register will have the ID and a boolean describing if this is the
   // main process or not
-  let register = sendSyncMessage("Marionette:register", msg);
+  let register = sendSyncMessage("Marionette:Register", msg);
   if (register[0]) {
-    listenerId = register[0][0];
-    capabilities = session.Capabilities.fromJSON(register[0][1]);
-    if (typeof listenerId != "undefined") {
-      startListeners();
-      sendAsyncMessage("Marionette:listenersAttached",
-          {"listenerId": listenerId});
-    }
+    outerWindowID = register[0].outerWindowID;
+    startListeners();
+    sendAsyncMessage("Marionette:ListenersAttached", {outerWindowID});
   }
 }
 
@@ -490,18 +492,12 @@ function dispatch(fn) {
   };
 }
 
-/**
- * Add a message listener that's tied to our listenerId.
- */
 function addMessageListenerId(messageName, handler) {
-  addMessageListener(messageName + listenerId, handler);
+  addMessageListener(messageName + outerWindowID, handler);
 }
 
-/**
- * Remove a message listener that's tied to our listenerId.
- */
 function removeMessageListenerId(messageName, handler) {
-  removeMessageListener(messageName + listenerId, handler);
+  removeMessageListener(messageName + outerWindowID, handler);
 }
 
 let getPageSourceFn = dispatch(getPageSource);
@@ -582,9 +578,12 @@ function startListeners() {
  * Called when we start a new session. It registers the
  * current environment, and resets all values
  */
-function newSession(msg) {
-  capabilities = session.Capabilities.fromJSON(msg.json);
-  resetValues();
+function newSession() {
+  sandboxes.clear();
+  curContainer = {frame: content, shadowRoot: null};
+  legacyactions.mouseEventsOnly = false;
+  action.inputStateMap = new Map();
+  action.inputsToCancel = [];
 }
 
 /**
@@ -704,17 +703,6 @@ function sendOk(uuid) {
  */
 function sendError(err, uuid) {
   sendToServer(uuid, err);
-}
-
-/**
- * Clear test values after completion of test
- */
-function resetValues() {
-  sandboxes.clear();
-  curContainer = {frame: content, shadowRoot: null};
-  legacyactions.mouseEventsOnly = false;
-  action.inputStateMap = new Map();
-  action.inputsToCancel = [];
 }
 
 async function execute(script, args, timeout, opts) {

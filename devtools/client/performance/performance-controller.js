@@ -14,10 +14,11 @@ var { loader, require } = BrowserLoaderModule.BrowserLoader({
   window
 });
 var { Task } = require("devtools/shared/task");
-/* exported Heritage, ViewHelpers, WidgetMethods, setNamedTimeout, clearNamedTimeout */
-var { Heritage, ViewHelpers, WidgetMethods, setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
+/* exported ViewHelpers, WidgetMethods, setNamedTimeout, clearNamedTimeout */
+var { ViewHelpers, WidgetMethods, setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 var { PrefObserver } = require("devtools/client/shared/prefs");
-
+/* exported extend */
+const { extend } = require("devtools/shared/extend");
 // Use privileged promise in panel documents to prevent having them to freeze
 // during toolbox destruction. See bug 1402779.
 var Promise = require("Promise");

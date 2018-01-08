@@ -5,39 +5,39 @@
 loader: taskgraph.loader.push_apk:loader
 
 transforms:
-    - taskgraph.transforms.push_apk:transforms
-    - taskgraph.transforms.task:transforms
+   - taskgraph.transforms.push_apk:transforms
+   - taskgraph.transforms.task:transforms
 
 kind-dependencies:
-    - build-signing
-    - push-apk-breakpoint
+   - build-signing
+   - google-play-strings
+   - push-apk-breakpoint
 
 jobs:
-    push-apk/opt:
-        description: Publishes APK onto Google Play Store
-        attributes:
-            build_platform: android-nightly
-            nightly: true
-        shipping-phase: ship
-        shipping-product: fennec
-        worker-type:
-            by-project:
-                mozilla-central: scriptworker-prov-v1/pushapk-v1
-                mozilla-beta: scriptworker-prov-v1/pushapk-v1
-                mozilla-release: scriptworker-prov-v1/pushapk-v1
-                default: scriptworker-prov-v1/dep-pushapk
-        worker:
-            upstream-artifacts:  # see transforms
-            google-play-track:  # see transforms
-            implementation: push-apk
-            commit:  # see transforms
-        scopes:  # see transforms
-        treeherder:
-            symbol: pub(gp)
-            platform: Android/opt
-            tier: 2
-            kind: other
-        run-on-projects: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-        deadline-after: 5 days
-        extra:
-            product: fennec
+   push-apk/opt:
+      description: Publishes APK onto Google Play Store
+      attributes:
+         build_platform: android-nightly
+         nightly: true
+      shipping-phase: ship
+      shipping-product: fennec
+      worker-type:
+         by-project:
+            mozilla-central: scriptworker-prov-v1/pushapk-v1
+            mozilla-beta: scriptworker-prov-v1/pushapk-v1
+            mozilla-release: scriptworker-prov-v1/pushapk-v1
+            default: scriptworker-prov-v1/dep-pushapk
+      worker:
+         upstream-artifacts:  # see transforms
+         google-play-track:  # see transforms
+         implementation: push-apk
+         commit:  # see transforms
+      requires: all-resolved
+      scopes:  # see transforms
+      treeherder:
+         symbol: pub(gp)
+         platform: Android/opt
+         tier: 2
+         kind: other
+      run-on-projects: ['mozilla-central', 'mozilla-beta', 'mozilla-release', 'maple']
+      deadline-after: 5 days

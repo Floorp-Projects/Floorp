@@ -9,7 +9,7 @@
 /**
  * CallTree view containing profiler call tree, controlled by DetailsView.
  */
-var JsCallTreeView = Heritage.extend(DetailsSubview, {
+var JsCallTreeView = extend(DetailsSubview, {
 
   rerenderPrefs: [
     "invert-call-tree",

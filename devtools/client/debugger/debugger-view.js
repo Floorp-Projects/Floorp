@@ -846,7 +846,7 @@ var DebuggerView = {
 function ResultsPanelContainer() {
 }
 
-ResultsPanelContainer.prototype = Heritage.extend(WidgetMethods, {
+ResultsPanelContainer.prototype = extend(WidgetMethods, {
   /**
    * Sets the anchor node for this container panel.
    * @param nsIDOMNode aNode

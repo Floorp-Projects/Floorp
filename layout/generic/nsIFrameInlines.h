@@ -170,7 +170,7 @@ nsIFrame::PropagateRootElementWritingMode(mozilla::WritingMode aRootElemWM)
 }
 
 nsContainerFrame*
-nsIFrame::GetInFlowParent()
+nsIFrame::GetInFlowParent() const
 {
   if (GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
     nsIFrame* ph = FirstContinuation()->GetProperty(nsIFrame::PlaceholderFrameProperty());

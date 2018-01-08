@@ -423,6 +423,12 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *         If an error occurs, the promise is rejected with that error.
    */
   fetchStylesheet: Task.async(function* (href) {
+    // Check if network monitor observed this load, and if so, use that.
+    let result = this.fetchStylesheetFromNetworkMonitor(href);
+    if (result) {
+      return result;
+    }
+
     let options = {
       loadFromCache: true,
       policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
@@ -442,7 +448,6 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
       options.principal = this.ownerDocument.nodePrincipal;
     }
 
-    let result;
     try {
       result = yield fetch(this.href, options);
     } catch (e) {
@@ -457,6 +462,43 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
 
     return result;
   }),
+
+  /**
+   * Try to locate the console actor if it exists via our parent actor (the tab).
+   */
+  get _consoleActor() {
+    if (this.parentActor.exited) {
+      return null;
+    }
+    let form = this.parentActor.form();
+    return this.conn._getOrCreateActor(form.consoleActor);
+  },
+
+  /**
+   * Try to fetch the stylesheet text from the network monitor.  If it was enabled during
+   * the load, it should have a copy of the text saved.
+   *
+   * @param string href
+   *        The URL of the sheet to fetch.
+   */
+  fetchStylesheetFromNetworkMonitor(href) {
+    let consoleActor = this._consoleActor;
+    if (!consoleActor) {
+      return null;
+    }
+    let request = consoleActor.getNetworkEventActorForURL(href);
+    if (!request) {
+      return null;
+    }
+    let content = request._response.content;
+    if (request._discardResponseBody || !content) {
+      return null;
+    }
+    return {
+      content: content.text,
+      contentType: content.mimeType,
+    };
+  },
 
   /**
    * Protocol method to get the media rules for the stylesheet.

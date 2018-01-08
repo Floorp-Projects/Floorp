@@ -888,7 +888,7 @@ public:
    * Gets the parent of a frame, using the parent of the placeholder for
    * out-of-flow frames.
    */
-  inline nsContainerFrame* GetInFlowParent();
+  inline nsContainerFrame* GetInFlowParent() const;
 
   /**
    * Gets the primary frame of the Content's flattened tree

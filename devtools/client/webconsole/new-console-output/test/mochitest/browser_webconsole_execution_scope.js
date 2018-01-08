@@ -8,30 +8,20 @@
 "use strict";
 
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-console.html";
+                 "new-console-output/test/mochitest/test-console.html";
 
-add_task(function* () {
-  yield loadTab(TEST_URI);
-  let hud = yield openConsole();
-  hud.jsterm.clearOutput();
-  hud.jsterm.execute("window.location.href;");
+add_task(async function () {
+  const hud = await openNewTabAndConsole(TEST_URI);
+  const {jsterm} = hud;
+  jsterm.clearOutput();
 
-  let [input, output] = yield waitForMessages({
-    webconsole: hud,
-    messages: [{
-      text: "window.location.href;",
-      category: CATEGORY_INPUT,
-    },
-      {
-        text: TEST_URI,
-        category: CATEGORY_OUTPUT,
-      }],
-  });
+  const onInputMessage = waitForMessage(hud, "window.location.href;", ".message.command");
+  const onEvaluationResultMessage = waitForMessage(hud, TEST_URI, ".message.result");
+  jsterm.execute("window.location.href;");
 
-  let inputNode = [...input.matched][0];
-  let outputNode = [...output.matched][0];
-  is(inputNode.getAttribute("category"), "input",
-     "input node category is correct");
-  is(outputNode.getAttribute("category"), "output",
-     "output node category is correct");
+  let message = await onInputMessage;
+  ok(message, "Input message is displayed with the expected class");
+
+  message = await onEvaluationResultMessage;
+  ok(message, "EvaluationResult message is displayed with the expected class");
 });
