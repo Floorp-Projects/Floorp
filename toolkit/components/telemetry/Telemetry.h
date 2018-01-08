@@ -59,6 +59,13 @@ void Init();
 void Accumulate(HistogramID id, uint32_t sample);
 
 /**
+ * Adds an array of samples to a histogram defined in TelemetryHistograms.h
+ * @param id - histogram id
+ * @param samples - values to record.
+ */
+void Accumulate(HistogramID id, const nsTArray<uint32_t>& samples);
+
+/**
  * Adds sample to a keyed histogram defined in TelemetryHistogramEnums.h
  *
  * @param id - keyed histogram id
