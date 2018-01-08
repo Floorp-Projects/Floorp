@@ -5244,6 +5244,8 @@
     "expires_in_version" : "never",
     "kind": "enumerated",
     "n_values": 4,
+    "alert_emails": ["fx-search@mozilla.com"],
+    "bug_numbers": [1053467],
     "description": "The possible types of the 'sizes' attribute for <link rel=icon>. 0: Attribute not specified, 1: 'any', 2: Integer dimensions, 3: Invalid value."
   },
   "LINK_ICON_SIZES_ATTR_DIMENSION": {
@@ -5252,6 +5254,8 @@
     "kind": "linear",
     "high": 513,
     "n_buckets" : 64,
+    "alert_emails": ["fx-search@mozilla.com"],
+    "bug_numbers": [1053467],
     "description": "The width dimension of the 'sizes' attribute for <link rel=icon>."
   },
   "PAGE_METADATA_SIZE": {
@@ -7812,14 +7816,6 @@
     "kind": "boolean",
     "description": "New tab page is enhanced (showing suggestions)."
   },
-  "NEWTAB_PAGE_LIFE_SPAN": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
-    "kind": "exponential",
-    "high": 1200,
-    "n_buckets": 100,
-    "description": "Life-span of a new tab without suggested tile: time delta between first-visible and unload events (half-seconds)."
-  },
   "NEWTAB_PAGE_PINNED_SITES_COUNT": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "default",
@@ -7834,19 +7830,6 @@
     "high": 100,
     "n_buckets": 10,
     "description": "Number of sites blocked from the new tab page."
-  },
-  "NEWTAB_PAGE_SHOWN": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "35",
-    "kind": "boolean",
-    "description": "Number of times about:newtab was shown from opening a new tab or window. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "NEWTAB_PAGE_SITE_CLICKED": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "Track click count on about:newtab tiles per index (0-8). For non-default row or column configurations all clicks into the '9' bucket. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
   "BROWSERPROVIDER_XUL_IMPORT_BOOKMARKS": {
     "record_in_processes": ["main", "content"],

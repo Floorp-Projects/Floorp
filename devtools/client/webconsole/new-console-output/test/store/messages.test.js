@@ -698,7 +698,7 @@ describe("Message reducer:", () => {
       dispatch(actions.networkMessageUpdate(updatePacket.networkInfo));
 
       let networkUpdates = getAllNetworkMessagesUpdateById(getState());
-      expect(Object.keys(networkUpdates).length).toBe(1);
+      expect(Object.keys(networkUpdates).length > 0).toBe(true);
 
       dispatch(actions.messagesClear());
 

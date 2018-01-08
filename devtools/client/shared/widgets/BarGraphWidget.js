@@ -1,6 +1,7 @@
 "use strict";
 
-const { Heritage, setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
+const { extend } = require("devtools/shared/extend");
+const { setNamedTimeout, clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 const { AbstractCanvasGraph, CanvasGraphUtils } = require("devtools/client/shared/widgets/Graphs");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -77,7 +78,7 @@ this.BarGraphWidget = function (parent, ...args) {
   });
 };
 
-BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
+BarGraphWidget.prototype = extend(AbstractCanvasGraph.prototype, {
   clipheadLineColor: GRAPH_CLIPHEAD_LINE_COLOR,
   selectionLineColor: GRAPH_SELECTION_LINE_COLOR,
   selectionBackgroundColor: GRAPH_SELECTION_BACKGROUND_COLOR,

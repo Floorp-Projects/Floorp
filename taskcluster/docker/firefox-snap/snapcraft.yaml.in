@@ -3,6 +3,7 @@ version: @VERSION@-@BUILD_NUMBER@
 summary: Mozilla Firefox web browser
 description:  Firefox is a powerful, extensible web browser with support for modern web application technologies.
 confinement: strict
+grade: stable
 
 apps:
   firefox:
@@ -11,8 +12,10 @@ apps:
     environment:
       DISABLE_WAYLAND: 1
     plugs:
+      - avahi-observe
       - browser-sandbox
       - camera
+      - cups-control
       - desktop
       - desktop-legacy
       - gsettings
@@ -41,4 +44,7 @@ parts:
       - libgl1-mesa-dri
       - libgl1-mesa-glx
       - libmirclient9
+      - desktop-file-utils
+      - xdg-utils
+      - ffmpeg
     after: [desktop-gtk3]

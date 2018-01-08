@@ -125,10 +125,38 @@ describe("ConsoleAPICall component:", () => {
 
   describe("console.count", () => {
     it("renders", () => {
-      const message = stubPreparedMessages.get("console.count('bar')");
-      const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+      const messages = [{
+        key: "console.count('bar')",
+        expectedBodyText: "bar: 1",
+      }, {
+        key: "console.count | default: 1",
+        expectedBodyText: "default: 1",
+      }, {
+        key: "console.count | default: 2",
+        expectedBodyText: "default: 2",
+      }, {
+        key: "console.count | test counter: 1",
+        expectedBodyText: "test counter: 1",
+      }, {
+        key: "console.count | test counter: 2",
+        expectedBodyText: "test counter: 2",
+      }, {
+        key: "console.count | default: 3",
+        expectedBodyText: "default: 3",
+      }, {
+        key: "console.count | default: 4",
+        expectedBodyText: "default: 4",
+      }, {
+        key: "console.count | test counter: 3",
+        expectedBodyText: "test counter: 3",
+      }];
 
-      expect(wrapper.find(".message-body").text()).toBe("bar: 1");
+      for (const {key, expectedBodyText} of messages) {
+        const message = stubPreparedMessages.get(key);
+        const wrapper = render(ConsoleApiCall({ message, serviceContainer }));
+
+        expect(wrapper.find(".message-body").text()).toBe(expectedBodyText);
+      }
     });
   });
 

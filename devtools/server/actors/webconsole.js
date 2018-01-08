@@ -68,6 +68,7 @@ function WebConsoleActor(connection, parentActor) {
   this.dbg = this.parentActor.makeDebugger();
 
   this._netEvents = new Map();
+  this._networkEventActorsByURL = new Map();
   this._gripDepth = 0;
   this._listeners = new Set();
   this._lastConsoleInputEvaluation = undefined;
@@ -124,12 +125,22 @@ WebConsoleActor.prototype =
 
   /**
    * Holds a map between nsIChannel objects and NetworkEventActors for requests
-   * created with sendHTTPRequest.
+   * created with sendHTTPRequest or found via the network listener.
    *
    * @private
    * @type Map
    */
   _netEvents: null,
+
+  /**
+   * Holds a map from URL to NetworkEventActors for requests noticed by the network
+   * listener.  Requests are added when they start, so the actor might not yet have all
+   * data for the request until it has completed.
+   *
+   * @private
+   * @type Map
+   */
+  _networkEventActorsByURL: null,
 
   /**
    * Holds a set of all currently registered listeners.
@@ -1632,6 +1643,8 @@ WebConsoleActor.prototype =
     let actor = this.getNetworkEventActor(event.channelId);
     actor.init(event);
 
+    this._networkEventActorsByURL.set(actor._request.url, actor);
+
     let packet = {
       from: this.actorID,
       type: "networkEvent",
@@ -1663,6 +1676,18 @@ WebConsoleActor.prototype =
     actor = new NetworkEventActor(this);
     this._actorPool.addActor(actor);
     return actor;
+  },
+
+  /**
+   * Get the NetworkEventActor for a given URL that may have been noticed by the network
+   * listener.  Requests are added when they start, so the actor might not yet have all
+   * data for the request until it has completed.
+   *
+   * @param string url
+   *        The URL of the request to search for.
+   */
+  getNetworkEventActorForURL(url) {
+    return this._networkEventActorsByURL.get(url);
   },
 
   /**
@@ -1992,6 +2017,9 @@ NetworkEventActor.prototype =
     }
     this._longStringActors = new Set();
 
+    if (this._request.url) {
+      this.parent._networkEventActorsByURL.delete(this._request.url);
+    }
     if (this.channel) {
       this.parent._netEvents.delete(this.channel);
     }
