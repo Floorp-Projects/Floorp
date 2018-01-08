@@ -8478,7 +8478,7 @@
     "record_in_processes": ["main"],
     "alert_emails": ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"],
     "bug_numbers": [1412029],
-    "expires_in_version": "60",
+    "expires_in_version": "63",
     "kind": "categorical",
     "labels": ["toggleToolbox", "toggleToolboxF12", "inspector", "webconsole", "jsdebugger", "netmonitor", "toggleToolbar", "webide", "browserToolbox", "browserConsole", "responsiveDesignMode", "scratchpad", "styleeditor", "performance", "storage", "dom"],
     "description": "Records the key shortcut passed to open the about:devtools page."
@@ -8487,7 +8487,7 @@
     "record_in_processes": ["main"],
     "alert_emails": ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"],
     "bug_numbers": [1412029],
-    "expires_in_version": "60",
+    "expires_in_version": "63",
     "kind": "categorical",
     "labels": ["KeyShortcut", "SystemMenu", "HamburgerMenu", "ContextMenu", "CommandLine"],
     "description": "Records the reason for opening the about:devtools page."
