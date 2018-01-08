@@ -7,7 +7,7 @@
 #include "WorkletGlobalScope.h"
 #include "mozilla/dom/WorkletGlobalScopeBinding.h"
 #include "mozilla/dom/Console.h"
-#include "nsContentUtils.h"
+#include "mozilla/dom/DOMPrefs.h"
 
 namespace mozilla {
 namespace dom {
@@ -71,7 +71,7 @@ WorkletGlobalScope::GetConsole(ErrorResult& aRv)
 void
 WorkletGlobalScope::Dump(const Optional<nsAString>& aString) const
 {
-  if (!nsContentUtils::DOMWindowDumpEnabled()) {
+  if (!DOMPrefs::DumpEnabled()) {
     return;
   }
 
