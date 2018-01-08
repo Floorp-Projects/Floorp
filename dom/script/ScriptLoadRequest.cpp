@@ -49,8 +49,8 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind,
   : mKind(aKind)
   , mElement(aElement)
   , mScriptFromHead(false)
-  , mProgress(Progress::Loading)
-  , mDataType(DataType::Unknown)
+  , mProgress(Progress::eLoading)
+  , mDataType(DataType::eUnknown)
   , mScriptMode(ScriptMode::eBlocking)
   , mIsInline(true)
   , mHasSourceMapURL(false)
@@ -92,8 +92,8 @@ ScriptLoadRequest::~ScriptLoadRequest()
 void
 ScriptLoadRequest::SetReady()
 {
-  MOZ_ASSERT(mProgress != Progress::Ready);
-  mProgress = Progress::Ready;
+  MOZ_ASSERT(mProgress != Progress::eReady);
+  mProgress = Progress::eReady;
 }
 
 void
