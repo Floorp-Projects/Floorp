@@ -5,9 +5,9 @@
 use api::{ApiMsg, BlobImageRenderer, BuiltDisplayList, DebugCommand, DeviceIntPoint};
 #[cfg(feature = "debugger")]
 use api::{BuiltDisplayListIter, SpecificDisplayItem};
-use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize};
+use api::{DevicePixelScale, DeviceUintPoint, DeviceUintRect, DeviceUintSize};
 use api::{DocumentId, DocumentLayer, DocumentMsg};
-use api::{IdNamespace, LayerPoint, PipelineId, RenderNotifier};
+use api::{IdNamespace, PipelineId, RenderNotifier};
 use api::channel::{MsgReceiver, PayloadReceiver, PayloadReceiverHelperMethods};
 use api::channel::{PayloadSender, PayloadSenderHelperMethods};
 #[cfg(feature = "debugger")]
@@ -16,13 +16,21 @@ use frame::FrameContext;
 use frame_builder::{FrameBuilder, FrameBuilderConfig};
 use gpu_cache::GpuCache;
 use internal_types::{DebugOutput, FastHashMap, FastHashSet, RenderedDocument, ResultMsg};
+#[cfg(feature = "capture")]
+use internal_types::ExternalCaptureImage;
 use profiler::{BackendProfileCounters, ResourceProfileCounters};
 use rayon::ThreadPool;
 use record::ApiRecordingReceiver;
 use resource_cache::ResourceCache;
+#[cfg(feature = "capture")]
+use resource_cache::PlainResources;
 use scene::Scene;
+#[cfg(feature = "serialize")]
+use serde::{Serialize, Serializer};
 #[cfg(feature = "debugger")]
 use serde_json;
+#[cfg(feature = "capture")]
+use std::path::PathBuf;
 use std::sync::atomic::{ATOMIC_USIZE_INIT, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::sync::mpsc::Sender;
@@ -30,11 +38,9 @@ use std::u32;
 use texture_cache::TextureCache;
 use time::precise_time_ns;
 
-struct Document {
-    scene: Scene,
-    frame_ctx: FrameContext,
-    // the `Option` here is only to deal with borrow checker
-    frame_builder: Option<FrameBuilder>,
+
+#[cfg_attr(feature = "capture", derive(Clone, Serialize, Deserialize))]
+struct DocumentView {
     window_size: DeviceUintSize,
     inner_rect: DeviceUintRect,
     layer: DocumentLayer,
@@ -42,6 +48,24 @@ struct Document {
     device_pixel_ratio: f32,
     page_zoom_factor: f32,
     pinch_zoom_factor: f32,
+}
+
+impl DocumentView {
+    fn accumulated_scale_factor(&self) -> DevicePixelScale {
+        DevicePixelScale::new(
+            self.device_pixel_ratio *
+            self.page_zoom_factor *
+            self.pinch_zoom_factor
+        )
+    }
+}
+
+struct Document {
+    scene: Scene,
+    view: DocumentView,
+    frame_ctx: FrameContext,
+    // the `Option` here is only to deal with borrow checker
+    frame_builder: Option<FrameBuilder>,
     // A set of pipelines that the caller has requested be
     // made available as output textures.
     output_pipelines: FastHashSet<PipelineId>,
@@ -68,36 +92,31 @@ impl Document {
         };
         Document {
             scene: Scene::new(),
+            view: DocumentView {
+                window_size,
+                inner_rect: DeviceUintRect::new(DeviceUintPoint::zero(), window_size),
+                layer,
+                pan: DeviceIntPoint::zero(),
+                page_zoom_factor: 1.0,
+                pinch_zoom_factor: 1.0,
+                device_pixel_ratio: default_device_pixel_ratio,
+            },
             frame_ctx: FrameContext::new(config),
             frame_builder: Some(FrameBuilder::empty()),
-            window_size,
-            inner_rect: DeviceUintRect::new(DeviceUintPoint::zero(), window_size),
-            layer,
-            pan: DeviceIntPoint::zero(),
-            page_zoom_factor: 1.0,
-            pinch_zoom_factor: 1.0,
-            device_pixel_ratio: default_device_pixel_ratio,
             render_on_scroll,
             output_pipelines: FastHashSet::default(),
         }
     }
 
-    fn accumulated_scale_factor(&self) -> f32 {
-        self.device_pixel_ratio *
-        self.page_zoom_factor *
-        self.pinch_zoom_factor
-    }
-
     fn build_scene(&mut self, resource_cache: &mut ResourceCache) {
-        let accumulated_scale_factor = self.accumulated_scale_factor();
         // this code is why we have `Option`, which is never `None`
         let frame_builder = self.frame_ctx.create(
             self.frame_builder.take().unwrap(),
             &self.scene,
             resource_cache,
-            self.window_size,
-            self.inner_rect,
-            accumulated_scale_factor,
+            self.view.window_size,
+            self.view.inner_rect,
+            self.view.accumulated_scale_factor(),
             &self.output_pipelines,
         );
         self.frame_builder = Some(frame_builder);
@@ -109,18 +128,15 @@ impl Document {
         gpu_cache: &mut GpuCache,
         resource_profile: &mut ResourceProfileCounters,
     ) -> RenderedDocument {
-        let accumulated_scale_factor = self.accumulated_scale_factor();
-        let pan = LayerPoint::new(
-            self.pan.x as f32 / accumulated_scale_factor,
-            self.pan.y as f32 / accumulated_scale_factor,
-        );
+        let accumulated_scale_factor = self.view.accumulated_scale_factor();
+        let pan = self.view.pan.to_f32() / accumulated_scale_factor;
         self.frame_ctx.build_rendered_document(
             self.frame_builder.as_mut().unwrap(),
             resource_cache,
             gpu_cache,
             &self.scene.pipelines,
             accumulated_scale_factor,
-            self.layer,
+            self.view.layer,
             pan,
             &mut resource_profile.texture_cache,
             &mut resource_profile.gpu_cache,
@@ -139,6 +155,16 @@ enum DocumentOp {
 
 /// The unique id for WR resource identification.
 static NEXT_NAMESPACE_ID: AtomicUsize = ATOMIC_USIZE_INIT;
+
+#[cfg(feature = "capture")]
+#[derive(Serialize, Deserialize)]
+struct PlainRenderBackend {
+    default_device_pixel_ratio: f32,
+    enable_render_on_scroll: bool,
+    frame_config: FrameBuilderConfig,
+    documents: FastHashMap<DocumentId, DocumentView>,
+    resources: PlainResources,
+}
 
 /// The render backend is responsible for transforming high level display lists into
 /// GPU-friendly work which is then submitted to the renderer in the form of a frame::Frame.
@@ -210,8 +236,9 @@ impl RenderBackend {
         let doc = self.documents.get_mut(&document_id).expect("No document?");
 
         match message {
+            //TODO: move view-related messages in a separate enum?
             DocumentMsg::SetPageZoom(factor) => {
-                doc.page_zoom_factor = factor.get();
+                doc.view.page_zoom_factor = factor.get();
                 DocumentOp::Nop
             }
             DocumentMsg::EnableFrameOutput(pipeline_id, enable) => {
@@ -223,11 +250,11 @@ impl RenderBackend {
                 DocumentOp::Nop
             }
             DocumentMsg::SetPinchZoom(factor) => {
-                doc.pinch_zoom_factor = factor.get();
+                doc.view.pinch_zoom_factor = factor.get();
                 DocumentOp::Nop
             }
             DocumentMsg::SetPan(pan) => {
-                doc.pan = pan;
+                doc.view.pan = pan;
                 DocumentOp::Nop
             }
             DocumentMsg::SetWindowParameters {
@@ -235,9 +262,9 @@ impl RenderBackend {
                 inner_rect,
                 device_pixel_ratio,
             } => {
-                doc.window_size = window_size;
-                doc.inner_rect = inner_rect;
-                doc.device_pixel_ratio = device_pixel_ratio;
+                doc.view.window_size = window_size;
+                doc.view.inner_rect = inner_rect;
+                doc.view.device_pixel_ratio = device_pixel_ratio;
                 DocumentOp::Nop
             }
             DocumentMsg::SetDisplayList {
@@ -550,6 +577,34 @@ impl RenderBackend {
                             let json = self.get_clip_scroll_tree_for_debugger();
                             ResultMsg::DebugOutput(DebugOutput::FetchClipScrollTree(json))
                         }
+                        #[cfg(feature = "capture")]
+                        DebugCommand::SaveCapture(root) => {
+                            let deferred = self.save_capture(&root);
+                            ResultMsg::DebugOutput(DebugOutput::SaveCapture(root, deferred))
+                        },
+                        #[cfg(feature = "capture")]
+                        DebugCommand::LoadCapture(root) => {
+                            NEXT_NAMESPACE_ID.fetch_add(1, Ordering::Relaxed);
+                            frame_counter += 1;
+                            self.load_capture(&root, &mut profile_counters);
+                            ResultMsg::DebugOutput(DebugOutput::LoadCapture)
+                        },
+                        DebugCommand::EnableDualSourceBlending(enable) => {
+                            // Set in the config used for any future documents
+                            // that are created.
+                            self.frame_config
+                                .dual_source_blending_is_enabled = enable;
+
+                            // Set for any existing documents.
+                            for (_, doc) in &mut self.documents {
+                                doc.frame_ctx
+                                   .frame_builder_config
+                                   .dual_source_blending_is_enabled = enable;
+                            }
+
+                            // We don't want to forward this message to the renderer.
+                            continue;
+                        }
                         _ => ResultMsg::DebugCommand(option),
                     };
                     self.result_tx.send(msg).unwrap();
@@ -714,6 +769,110 @@ impl ToDebugString for SpecificDisplayItem {
             SpecificDisplayItem::PopStackingContext => String::from("pop_stacking_context"),
             SpecificDisplayItem::PushShadow(..) => String::from("push_shadow"),
             SpecificDisplayItem::PopAllShadows => String::from("pop_all_shadows"),
+        }
+    }
+}
+
+
+#[cfg(feature = "capture")]
+impl RenderBackend {
+    // Note: the mutable `self` is only needed here for resolving blob images
+    fn save_capture(&mut self, root: &PathBuf) -> Vec<ExternalCaptureImage> {
+        use ron::ser::pretty;
+        use std::fs;
+        use std::io::Write;
+
+        info!("capture: saving {}", root.to_string_lossy());
+        let (resources, deferred) = self.resource_cache.save_capture(root);
+
+        for (&id, doc) in &self.documents {
+            info!("\tdocument {:?}", id);
+            let ron = pretty::to_string(&doc.scene).unwrap();
+            let file_name = format!("scene-{}-{}.ron", (id.0).0, id.1);
+            let ron_path = root.clone().join(file_name);
+            let mut file = fs::File::create(ron_path).unwrap();
+            write!(file, "{}\n", ron).unwrap();
+        }
+
+        info!("\tbackend");
+        let serial = PlainRenderBackend {
+            default_device_pixel_ratio: self.default_device_pixel_ratio,
+            enable_render_on_scroll: self.enable_render_on_scroll,
+            frame_config: self.frame_config.clone(),
+            documents: self.documents
+                .iter()
+                .map(|(id, doc)| (*id, doc.view.clone()))
+                .collect(),
+            resources,
+        };
+
+        let ron = pretty::to_string(&serial).unwrap();
+        let ron_path = root.clone().join("backend.ron");
+        let mut file = fs::File::create(ron_path).unwrap();
+        write!(file, "{}\n", ron).unwrap();
+
+        deferred
+    }
+
+    fn load_capture(
+        &mut self,
+        root: &PathBuf,
+        profile_counters: &mut BackendProfileCounters,
+    ) {
+        use ron::de;
+        use std::fs::File;
+        use std::io::Read;
+
+        let mut string = String::new();
+        info!("capture: loading {}", root.to_string_lossy());
+
+        File::open(root.join("backend.ron"))
+            .unwrap()
+            .read_to_string(&mut string)
+            .unwrap();
+        let backend: PlainRenderBackend = de::from_str(&string)
+            .unwrap();
+
+        // Note: it would be great to have RenderBackend to be split
+        // rather explicitly on what's used before and after scene building
+        // so that, for example, we never miss anything in the code below:
+
+        self.resource_cache.load_capture(backend.resources, root);
+        self.gpu_cache = GpuCache::new();
+        self.documents.clear();
+        self.default_device_pixel_ratio = backend.default_device_pixel_ratio;
+        self.frame_config = backend.frame_config;
+        self.enable_render_on_scroll = backend.enable_render_on_scroll;
+
+        for (id, view) in backend.documents {
+            info!("\tdocument {:?}", id);
+            string.clear();
+            let file_name = format!("scene-{}-{}.ron", (id.0).0, id.1);
+            File::open(root.join(file_name))
+                .expect(&format!("Unable to open scene {:?}", id))
+                .read_to_string(&mut string)
+                .unwrap();
+            let scene: Scene = de::from_str(&string)
+                .unwrap();
+
+            let mut doc = Document {
+                scene,
+                view,
+                frame_ctx: FrameContext::new(self.frame_config.clone()),
+                frame_builder: Some(FrameBuilder::empty()),
+                output_pipelines: FastHashSet::default(),
+                render_on_scroll: None,
+            };
+
+            doc.build_scene(&mut self.resource_cache);
+            let render_doc = doc.render(
+                &mut self.resource_cache,
+                &mut self.gpu_cache,
+                &mut profile_counters.resources,
+            );
+            self.publish_document_and_notify_compositor(id, render_doc, profile_counters);
+
+            self.documents.insert(id, doc);
         }
     }
 }

@@ -2,15 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ClipId, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixel};
-use api::{LayerPoint, LayerRect, PremultipliedColorF};
+use api::{ClipId, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use api::{LayerRect, PremultipliedColorF};
 use box_shadow::BoxShadowCacheKey;
 use clip::{ClipSourcesWeakHandle};
 use clip_scroll_tree::CoordinateSystemId;
-use euclid::TypedSize2D;
-use gpu_types::{ClipScrollNodeIndex};
+use gpu_types::{ClipScrollNodeIndex, PictureType};
 use internal_types::RenderPassIndex;
-use picture::RasterizationSpace;
+use picture::ContentOrigin;
 use prim_store::{PrimitiveIndex};
 #[cfg(feature = "debugger")]
 use print_tree::{PrintTreePrinter};
@@ -41,10 +40,57 @@ pub type ClipChain = Option<Rc<ClipChainNode>>;
 #[derive(Debug)]
 pub struct ClipChainNode {
     pub work_item: ClipWorkItem,
+    pub local_clip_rect: LayerRect,
+    pub screen_outer_rect: DeviceIntRect,
     pub screen_inner_rect: DeviceIntRect,
     pub combined_outer_screen_rect: DeviceIntRect,
     pub combined_inner_screen_rect: DeviceIntRect,
     pub prev: ClipChain,
+}
+
+impl ClipChainNode {
+    pub fn new(
+        work_item: ClipWorkItem,
+        local_clip_rect: LayerRect,
+        screen_outer_rect: DeviceIntRect,
+        screen_inner_rect: DeviceIntRect,
+        parent_chain: ClipChain,
+    ) -> ClipChainNode {
+        let mut node = ClipChainNode {
+            work_item,
+            local_clip_rect,
+            screen_outer_rect,
+            screen_inner_rect,
+            combined_outer_screen_rect: screen_outer_rect,
+            combined_inner_screen_rect: screen_inner_rect,
+            prev: None,
+        };
+        node.set_parent(parent_chain);
+        node
+    }
+
+    fn set_parent(&mut self, new_parent: ClipChain) {
+        self.prev = new_parent.clone();
+
+        let parent_node = match new_parent {
+            Some(ref parent_node) => parent_node,
+            None => return,
+        };
+
+        // If this clip's outer rectangle is completely enclosed by the clip
+        // chain's inner rectangle, then the only clip that matters from this point
+        // on is this clip. We can disconnect this clip from the parent clip chain.
+        if parent_node.combined_inner_screen_rect.contains_rect(&self.screen_outer_rect) {
+            self.prev = None;
+        }
+
+        self.combined_outer_screen_rect =
+            parent_node.combined_outer_screen_rect.intersection(&self.screen_outer_rect)
+            .unwrap_or_else(DeviceIntRect::zero);
+        self.combined_inner_screen_rect =
+            parent_node.combined_inner_screen_rect.intersection(&self.screen_inner_rect)
+            .unwrap_or_else(DeviceIntRect::zero);
+    }
 }
 
 pub struct ClipChainNodeIter {
@@ -154,7 +200,7 @@ impl ops::IndexMut<RenderTaskId> for RenderTaskTree {
 pub enum RenderTaskKey {
     /// Draw the alpha mask for a shared clip.
     CacheMask(ClipId),
-    CacheScaling(BoxShadowCacheKey, TypedSize2D<i32, DevicePixel>),
+    CacheScaling(BoxShadowCacheKey, DeviceIntSize),
     CacheBlur(BoxShadowCacheKey, i32),
     CachePicture(BoxShadowCacheKey),
 }
@@ -183,9 +229,9 @@ pub struct CacheMaskTask {
 pub struct PictureTask {
     pub prim_index: PrimitiveIndex,
     pub target_kind: RenderTargetKind,
-    pub content_origin: LayerPoint,
+    pub content_origin: ContentOrigin,
     pub color: PremultipliedColorF,
-    pub rasterization_kind: RasterizationSpace,
+    pub pic_type: PictureType,
 }
 
 #[derive(Debug)]
@@ -250,13 +296,12 @@ impl RenderTask {
         size: Option<DeviceIntSize>,
         prim_index: PrimitiveIndex,
         target_kind: RenderTargetKind,
-        content_origin_x: f32,
-        content_origin_y: f32,
+        content_origin: ContentOrigin,
         color: PremultipliedColorF,
         clear_mode: ClearMode,
-        rasterization_kind: RasterizationSpace,
         children: Vec<RenderTaskId>,
         box_shadow_cache_key: Option<BoxShadowCacheKey>,
+        pic_type: PictureType,
     ) -> Self {
         let location = match size {
             Some(size) => RenderTaskLocation::Dynamic(None, size),
@@ -273,9 +318,9 @@ impl RenderTask {
             kind: RenderTaskKind::Picture(PictureTask {
                 prim_index,
                 target_kind,
-                content_origin: LayerPoint::new(content_origin_x, content_origin_y),
+                content_origin,
                 color,
-                rasterization_kind,
+                pic_type,
             }),
             clear_mode,
             pass_index: None,
@@ -443,11 +488,20 @@ impl RenderTask {
         let (data1, data2) = match self.kind {
             RenderTaskKind::Picture(ref task) => {
                 (
-                    [
-                        task.content_origin.x,
-                        task.content_origin.y,
-                        task.rasterization_kind as u32 as f32,
-                    ],
+                    // Note: has to match `PICTURE_TYPE_*` in shaders
+                    // TODO(gw): Instead of using the sign of the picture
+                    //           type here, we should consider encoding it
+                    //           as a set of flags that get casted here
+                    //           and in the shader. This is a bit tidier
+                    //           and allows for future expansion of flags.
+                    match task.content_origin {
+                        ContentOrigin::Local(point) => [
+                            point.x, point.y, task.pic_type as u32 as f32,
+                        ],
+                        ContentOrigin::Screen(point) => [
+                            point.x as f32, point.y as f32, -(task.pic_type as u32 as f32),
+                        ],
+                    },
                     task.color.to_array()
                 )
             }
@@ -592,7 +646,6 @@ impl RenderTask {
             RenderTaskKind::Picture(ref task) => {
                 pt.new_level(format!("Picture of {:?}", task.prim_index));
                 pt.add_item(format!("kind: {:?}", task.target_kind));
-                pt.add_item(format!("space: {:?}", task.rasterization_kind));
             }
             RenderTaskKind::CacheMask(ref task) => {
                 pt.new_level(format!("CacheMask with {} clips", task.clips.len()));

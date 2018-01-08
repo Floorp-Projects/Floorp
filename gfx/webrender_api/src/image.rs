@@ -52,7 +52,6 @@ pub struct ExternalImageData {
 pub enum ImageFormat {
     Invalid = 0,
     A8 = 1,
-    RGB8 = 2,
     BGRA8 = 3,
     RGBAF32 = 4,
     RG8 = 5,
@@ -62,7 +61,6 @@ impl ImageFormat {
     pub fn bytes_per_pixel(self) -> u32 {
         match self {
             ImageFormat::A8 => 1,
-            ImageFormat::RGB8 => 3,
             ImageFormat::BGRA8 => 4,
             ImageFormat::RGBAF32 => 16,
             ImageFormat::RG8 => 2,
