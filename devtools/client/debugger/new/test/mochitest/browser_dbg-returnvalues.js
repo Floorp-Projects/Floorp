@@ -6,10 +6,6 @@ function getValue(dbg, index) {
   return findElement(dbg, "scopeValue", index).innerText;
 }
 
-function toggleScopes(dbg) {
-  return findElement(dbg, "scopesHeader").click();
-}
-
 async function testReturnValue(dbg, val) {
   invokeInTab("return_something", val);
   await waitForPaused(dbg);
@@ -61,7 +57,6 @@ async function testThrowValue(dbg, val) {
 
 add_task(async function() {
   const dbg = await initDebugger("doc-return-values.html");
-  toggleScopes(dbg);
   await togglePauseOnExceptions(dbg, true, false);
 
   await testReturnValue(dbg, "to sender");

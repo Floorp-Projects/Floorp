@@ -722,7 +722,7 @@ MacroAssembler::storeUnboxedValue(const ConstantOrRegister& value, MIRType value
 void
 MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr, AnyRegister out)
 {
-    memoryBarrier(access.barrierBefore());
+    memoryBarrierBefore(access.sync());
 
     size_t loadOffset = size();
     switch (access.type()) {
@@ -784,13 +784,13 @@ MacroAssembler::wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr, 
     }
     append(access, loadOffset, framePushed());
 
-    memoryBarrier(access.barrierAfter());
+    memoryBarrierAfter(access.sync());
 }
 
 void
 MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAddr, Register64 out)
 {
-    memoryBarrier(access.barrierBefore());
+    memoryBarrierBefore(access.sync());
 
     MOZ_ASSERT(!access.isSimd());
 
@@ -831,13 +831,13 @@ MacroAssembler::wasmLoadI64(const wasm::MemoryAccessDesc& access, Operand srcAdd
     }
     append(access, loadOffset, framePushed());
 
-    memoryBarrier(access.barrierAfter());
+    memoryBarrierAfter(access.sync());
 }
 
 void
 MacroAssembler::wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister value, Operand dstAddr)
 {
-    memoryBarrier(access.barrierBefore());
+    memoryBarrierBefore(access.sync());
 
     size_t storeOffset = size();
     switch (access.type()) {
@@ -896,7 +896,7 @@ MacroAssembler::wasmStore(const wasm::MemoryAccessDesc& access, AnyRegister valu
     }
     append(access, storeOffset, framePushed());
 
-    memoryBarrier(access.barrierAfter());
+    memoryBarrierAfter(access.sync());
 }
 
 void
@@ -921,6 +921,104 @@ MacroAssembler::wasmTruncateFloat32ToUInt32(FloatRegister input, Register output
     move32(Imm32(0xffffffff), scratch);
     cmpq(scratch, output);
     j(Assembler::Above, oolEntry);
+}
+
+// ========================================================================
+// Primitive atomic operations.
+
+void
+MacroAssembler::compareExchange64(const Synchronization&, const Address& mem, Register64 expected,
+                                  Register64 replacement, Register64 output)
+{
+    MOZ_ASSERT(output.reg == rax);
+    if (expected != output)
+        movq(expected.reg, output.reg);
+    lock_cmpxchgq(replacement.reg, Operand(mem));
+}
+
+void
+MacroAssembler::compareExchange64(const Synchronization&, const BaseIndex& mem, Register64 expected,
+                                  Register64 replacement, Register64 output)
+{
+    MOZ_ASSERT(output.reg == rax);
+    if (expected != output)
+        movq(expected.reg, output.reg);
+    lock_cmpxchgq(replacement.reg, Operand(mem));
+}
+
+void
+MacroAssembler::atomicExchange64(const Synchronization& sync, const Address& mem, Register64 value, Register64 output)
+{
+    if (value != output)
+        movq(value.reg, output.reg);
+    xchgq(output.reg, Operand(mem));
+}
+
+void
+MacroAssembler::atomicExchange64(const Synchronization& sync, const BaseIndex& mem, Register64 value, Register64 output)
+{
+    if (value != output)
+        movq(value.reg, output.reg);
+    xchgq(output.reg, Operand(mem));
+}
+
+template<typename T>
+static void
+AtomicFetchOp64(MacroAssembler& masm, AtomicOp op, Register value, const T& mem, Register temp,
+                Register output)
+{
+    if (op == AtomicFetchAddOp) {
+        if (value != output)
+            masm.movq(value, output);
+        masm.lock_xaddq(output, Operand(mem));
+    } else if (op == AtomicFetchSubOp) {
+        if (value != output)
+            masm.movq(value, output);
+        masm.negq(output);
+        masm.lock_xaddq(output, Operand(mem));
+    } else {
+        Label again;
+        MOZ_ASSERT(output == rax);
+        masm.movq(Operand(mem), rax);
+        masm.bind(&again);
+        masm.movq(rax, temp);
+        switch (op) {
+          case AtomicFetchAndOp: masm.andq(value, temp); break;
+          case AtomicFetchOrOp:  masm.orq(value, temp); break;
+          case AtomicFetchXorOp: masm.xorq(value, temp); break;
+          default:               MOZ_CRASH();
+        }
+        masm.lock_cmpxchgq(temp, Operand(mem));
+        masm.j(MacroAssembler::NonZero, &again);
+    }
+}
+
+void
+MacroAssembler::atomicFetchOp64(const Synchronization&, AtomicOp op, Register64 value,
+                                const Address& mem, Register64 temp, Register64 output)
+{
+    AtomicFetchOp64(*this, op, value.reg, mem, temp.reg, output.reg);
+}
+
+void
+MacroAssembler::atomicFetchOp64(const Synchronization&, AtomicOp op, Register64 value,
+                                const BaseIndex& mem, Register64 temp, Register64 output)
+{
+    AtomicFetchOp64(*this, op, value.reg, mem, temp.reg, output.reg);
+}
+
+void
+MacroAssembler::atomicEffectOp64(const Synchronization&, AtomicOp op, Register64 value,
+                                 const BaseIndex& mem)
+{
+    switch (op) {
+      case AtomicFetchAddOp: lock_addq(value.reg, Operand(mem)); break;
+      case AtomicFetchSubOp: lock_subq(value.reg, Operand(mem)); break;
+      case AtomicFetchAndOp: lock_andq(value.reg, Operand(mem)); break;
+      case AtomicFetchOrOp:  lock_orq(value.reg, Operand(mem)); break;
+      case AtomicFetchXorOp: lock_xorq(value.reg, Operand(mem)); break;
+      default:               MOZ_CRASH();
+    }
 }
 
 //}}} check_macroassembler_style

@@ -4,10 +4,13 @@
 "use strict";
 
 const { Task } = require("devtools/shared/task");
-var { LocalizationHelper } = require("devtools/shared/l10n");
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const { gDevTools } = require("devtools/client/framework/devtools");
+const { TargetFactory } = require("devtools/client/framework/target");
+const { Toolbox } = require("devtools/client/framework/toolbox");
 
 const DBG_STRINGS_URI = "devtools/client/locales/debugger.properties";
-var L10N = new LocalizationHelper(DBG_STRINGS_URI);
+const L10N = new LocalizationHelper(DBG_STRINGS_URI);
 
 function DebuggerPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
@@ -33,7 +36,8 @@ DebuggerPanel.prototype = {
       sourceMaps: this.toolbox.sourceMapService,
       toolboxActions: {
         // Open a link in a new browser tab.
-        openLink: this.openLink.bind(this)
+        openLink: this.openLink.bind(this),
+        openWorkerToolbox: this.openWorkerToolbox.bind(this)
       }
     });
 
@@ -75,6 +79,20 @@ DebuggerPanel.prototype = {
     }
 
     top.openUILinkIn(url, "tab");
+  },
+
+  openWorkerToolbox: function(worker) {
+    this.toolbox.target.client.attachWorker(
+      worker.actor,
+      (response, workerClient) => {
+        const workerTarget = TargetFactory.forWorker(workerClient);
+        gDevTools
+          .showToolbox(workerTarget, "jsdebugger", Toolbox.HostType.WINDOW)
+          .then(toolbox => {
+            toolbox.once("destroy", () => workerClient.detach());
+          });
+      }
+    );
   },
 
   getFrames: function() {

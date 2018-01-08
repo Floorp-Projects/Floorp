@@ -527,6 +527,8 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
   public:
     // The following functions are exposed for use in platform-shared code.
 
+    // TODO: These are no longer used in platform code.
+  private:
     template<typename T>
     void compareExchange8SignExtend(const T& mem, Register oldval, Register newval, Register valueTemp,
                                     Register offsetTemp, Register maskTemp, Register output)
@@ -834,6 +836,7 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
         atomicEffectOp(4, AtomicFetchXorOp, value, mem, flagTemp, valueTemp, offsetTemp, maskTemp);
     }
 
+  public:
     template<typename T>
     void compareExchangeToTypedIntArray(Scalar::Type arrayType, const T& mem, Register oldval, Register newval,
                                         Register temp, Register valueTemp, Register offsetTemp, Register maskTemp,

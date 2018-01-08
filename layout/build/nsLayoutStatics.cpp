@@ -319,6 +319,13 @@ nsLayoutStatics::Initialize()
   mozilla::dom::IPCBlobInputStreamStorage::Initialize();
 
   mozilla::dom::U2FTokenManager::Initialize();
+
+  if (XRE_IsParentProcess()) {
+    // On content process we initialize DOMPrefs when PContentChild is fully
+    // initialized.
+    mozilla::dom::DOMPrefs::Initialize();
+  }
+
   return NS_OK;
 }
 
