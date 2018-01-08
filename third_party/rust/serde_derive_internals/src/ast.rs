@@ -55,29 +55,26 @@ impl<'a> Container<'a> {
         let attrs = attr::Container::from_ast(cx, item);
 
         let mut body = match item.body {
-            syn::Body::Enum(ref variants) => enum_from_ast(cx, item, variants),
+            syn::Body::Enum(ref variants) => {
+                let (repr, variants) = enum_from_ast(cx, item, variants, &attrs.default());
+                Body::Enum(repr, variants)
+            }
             syn::Body::Struct(ref variant_data) => {
-                let (style, fields) = struct_from_ast(cx, variant_data, None);
+                let (style, fields) = struct_from_ast(cx, variant_data, None, &attrs.default());
                 Body::Struct(style, fields)
             }
         };
 
         match body {
-            Body::Enum(_, ref mut variants) => {
-                for ref mut variant in variants {
-                    variant.attrs.rename_by_rule(attrs.rename_all());
-                    for ref mut field in &mut variant.fields {
-                        field.attrs.rename_by_rule(variant.attrs.rename_all());
-                    }
+            Body::Enum(_, ref mut variants) => for ref mut variant in variants {
+                variant.attrs.rename_by_rule(attrs.rename_all());
+                for ref mut field in &mut variant.fields {
+                    field.attrs.rename_by_rule(variant.attrs.rename_all());
                 }
-
-                
-            }
-            Body::Struct(_, ref mut fields) => {
-                for field in fields {
-                    field.attrs.rename_by_rule(attrs.rename_all());
-                }
-            }
+            },
+            Body::Struct(_, ref mut fields) => for field in fields {
+                field.attrs.rename_by_rule(attrs.rename_all());
+            },
         }
 
         let item = Container {
@@ -126,13 +123,19 @@ impl Repr {
     }
 }
 
-fn enum_from_ast<'a>(cx: &Ctxt, item: &'a syn::DeriveInput, variants: &'a [syn::Variant]) -> Body<'a> {
+fn enum_from_ast<'a>(
+    cx: &Ctxt, 
+    item: &'a syn::DeriveInput, 
+    variants: &'a [syn::Variant], 
+    container_default: &attr::Default
+) -> (Repr, Vec<Variant<'a>>) {
     let variants = variants
         .iter()
         .map(
             |variant| {
                 let attrs = attr::Variant::from_ast(cx, variant);
-                let (style, fields) = struct_from_ast(cx, &variant.data, Some(&attrs));
+                let (style, fields) = 
+                    struct_from_ast(cx, &variant.data, Some(&attrs), container_default);
                 Variant {
                     ident: variant.ident.clone(),
                     attrs: attrs,
@@ -162,11 +165,11 @@ fn enum_from_ast<'a>(cx: &Ctxt, item: &'a syn::DeriveInput, variants: &'a [syn::
                         if repr == "C" {
                             c_repr = true;
                         } else if let Some(int_type) = INT_TYPES.iter().cloned().find(|int_type| repr == int_type) {
-                            if int_repr.is_some() { 
+                            if int_repr.is_some() {
                                 // This shouldn't happen, but we shouldn't crash if we see it.
                                 // So just treat the enum as having a mysterious other repr,
                                 // which makes us discard any attempt to optimize based on layout.
-                                other_repr = true; 
+                                other_repr = true;
                             }
                             int_repr = Some(int_type);
                         } else {
@@ -182,32 +185,45 @@ fn enum_from_ast<'a>(cx: &Ctxt, item: &'a syn::DeriveInput, variants: &'a [syn::
 
     let repr = Repr { int_repr, c_repr, other_repr };
 
-    Body::Enum(repr, variants)
+    (repr, variants)
 }
 
-fn struct_from_ast<'a>(cx: &Ctxt, data: &'a syn::VariantData, attrs: Option<&attr::Variant>) -> (Style, Vec<Field<'a>>) {
+fn struct_from_ast<'a>(
+    cx: &Ctxt,
+    data: &'a syn::VariantData,
+    attrs: Option<&attr::Variant>,
+    container_default: &attr::Default,
+) -> (Style, Vec<Field<'a>>) {
     match *data {
-        syn::VariantData::Struct(ref fields) => (Style::Struct, fields_from_ast(cx, fields, attrs)),
-        syn::VariantData::Tuple(ref fields) if fields.len() == 1 => {
-            (Style::Newtype, fields_from_ast(cx, fields, attrs))
-        }
-        syn::VariantData::Tuple(ref fields) => (Style::Tuple, fields_from_ast(cx, fields, attrs)),
+        syn::VariantData::Struct(ref fields) => (
+            Style::Struct,
+            fields_from_ast(cx, fields, attrs, container_default),
+        ),
+        syn::VariantData::Tuple(ref fields) if fields.len() == 1 => (
+            Style::Newtype,
+            fields_from_ast(cx, fields, attrs, container_default),
+        ),
+        syn::VariantData::Tuple(ref fields) => (
+            Style::Tuple,
+            fields_from_ast(cx, fields, attrs, container_default),
+        ),
         syn::VariantData::Unit => (Style::Unit, Vec::new()),
     }
 }
 
-fn fields_from_ast<'a>(cx: &Ctxt, fields: &'a [syn::Field], attrs: Option<&attr::Variant>) -> Vec<Field<'a>> {
+fn fields_from_ast<'a>(
+    cx: &Ctxt,
+    fields: &'a [syn::Field],
+    attrs: Option<&attr::Variant>,
+    container_default: &attr::Default,
+) -> Vec<Field<'a>> {
     fields
         .iter()
         .enumerate()
-        .map(
-            |(i, field)| {
-                Field {
-                    ident: field.ident.clone(),
-                    attrs: attr::Field::from_ast(cx, i, field, attrs),
-                    ty: &field.ty,
-                }
-            },
-        )
+        .map(|(i, field)| Field {
+            ident: field.ident.clone(),
+            attrs: attr::Field::from_ast(cx, i, field, attrs, container_default),
+            ty: &field.ty,
+        })
         .collect()
 }
