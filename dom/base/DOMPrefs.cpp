@@ -42,6 +42,7 @@ PREF(NotificationEnabled, "dom.webnotifications.enabled")
 PREF(NotificationEnabledInServiceWorkers, "dom.webnotifications.serviceworker.enabled")
 PREF(NotificationRIEnabled, "dom.webnotifications.requireinteraction.enabled")
 PREF(ServiceWorkersEnabled, "dom.serviceWorkers.enabled")
+PREF(ServiceWorkersTestingEnabled, "dom.serviceWorkers.testing.enabled")
 
 #undef PREF
 
