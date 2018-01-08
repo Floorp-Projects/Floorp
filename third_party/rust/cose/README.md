@@ -13,3 +13,14 @@ If NSS is not installed in the path, use `NSS_LIB_DIR` to set the library path w
 we can find the NSS libraries.
 
     cargo build
+
+### Run Tests and Examples
+
+To run tests and examples you need NSS in your library path. Tests can be run
+with
+
+    cargo test
+
+and examples with
+
+    cargo run --example sign_verify

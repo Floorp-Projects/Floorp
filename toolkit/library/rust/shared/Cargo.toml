@@ -25,7 +25,7 @@ u2fhid = { path = "../../../../dom/webauthn/u2f-hid-rs" }
 # We have these to enforce common feature sets for said crates.
 log = {version = "0.3", features = ["release_max_level_info"]}
 syn = { version = "0.11", features = ["full", "visit", "parsing"] }
-cose-c = { version = "0.1.1" }
+cose-c = { version = "0.1.5" }
 
 [features]
 default = []
