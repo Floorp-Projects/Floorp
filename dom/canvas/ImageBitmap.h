@@ -152,12 +152,6 @@ public:
                        nsTArray<RefPtr<gfx::DataSourceSurface>>& aClonedSurfaces,
                        ImageBitmap* aImageBitmap);
 
-  // Mozilla Extensions
-  // aObj is an optional argument that isn't used by ExtensionsEnabled() and
-  // only exists because the bindings layer insists on passing it to us.  All
-  // other consumers of this function should only call it passing one argument.
-  static bool ExtensionsEnabled(JSContext* aCx, JSObject* aObj = nullptr);
-
   friend CreateImageBitmapFromBlob;
   friend CreateImageBitmapFromBlobTask;
   friend CreateImageBitmapFromBlobWorkerTask;

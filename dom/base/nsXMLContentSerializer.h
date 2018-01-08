@@ -243,7 +243,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * by setting aForceFormat to true.
    * @return boolean  true if the element can be output
    */
-  virtual bool CheckElementStart(Element* aElement,
+  virtual bool CheckElementStart(mozilla::dom::Element* aElement,
                                  bool & aForceFormat,
                                  nsAString& aStr,
                                  nsresult& aResult);

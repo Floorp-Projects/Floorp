@@ -1899,7 +1899,7 @@ CodeGeneratorMIPSShared::emitWasmLoad(T* lir)
       default: MOZ_CRASH("unexpected array type");
     }
 
-    masm.memoryBarrier(mir->access().barrierBefore());
+    masm.memoryBarrierBefore(mir->access().sync());
 
     BaseIndex address(HeapReg, ptr, TimesOne);
 
@@ -1919,7 +1919,7 @@ CodeGeneratorMIPSShared::emitWasmLoad(T* lir)
                                    isSigned ? SignExtend : ZeroExtend);
         }
 
-        masm.memoryBarrier(mir->access().barrierAfter());
+        masm.memoryBarrierAfter(mir->access().sync());
         return;
     }
 
@@ -1938,7 +1938,8 @@ CodeGeneratorMIPSShared::emitWasmLoad(T* lir)
                      isSigned ? SignExtend : ZeroExtend);
     }
     masm.append(mir->access(), masm.size() - 4, masm.framePushed());
-    masm.memoryBarrier(mir->access().barrierAfter());
+
+    masm.memoryBarrierAfter(mir->access().sync());
 }
 
 void
@@ -1990,7 +1991,7 @@ CodeGeneratorMIPSShared::emitWasmStore(T* lir)
       default: MOZ_CRASH("unexpected array type");
     }
 
-    masm.memoryBarrier(mir->access().barrierBefore());
+    masm.memoryBarrierBefore(mir->access().sync());
 
     BaseIndex address(HeapReg, ptr, TimesOne);
 
@@ -2010,7 +2011,7 @@ CodeGeneratorMIPSShared::emitWasmStore(T* lir)
                                     isSigned ? SignExtend : ZeroExtend);
         }
 
-        masm.memoryBarrier(mir->access().barrierAfter());
+        masm.memoryBarrierAfter(mir->access().sync());
         return;
     }
 
@@ -2032,7 +2033,8 @@ CodeGeneratorMIPSShared::emitWasmStore(T* lir)
     }
     // Only the last emitted instruction is a memory access.
     masm.append(mir->access(), masm.size() - 4, masm.framePushed());
-    masm.memoryBarrier(mir->access().barrierAfter());
+
+    masm.memoryBarrierAfter(mir->access().sync());
 }
 
 void

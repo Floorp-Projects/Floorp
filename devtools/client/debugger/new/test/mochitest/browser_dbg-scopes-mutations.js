@@ -15,18 +15,12 @@ function expandNode(dbg, index) {
   return onLoadProperties;
 }
 
-function toggleScopes(dbg) {
-  return findElement(dbg, "scopesHeader").click();
-}
-
 function onLoadObjectProperties(dbg) {
   return waitForDispatch(dbg, "LOAD_OBJECT_PROPERTIES");
 }
 
 add_task(async function() {
   const dbg = await initDebugger("doc-script-mutate.html");
-
-  toggleScopes(dbg);
 
   let onPaused = waitForPaused(dbg);
   invokeInTab("mutate");

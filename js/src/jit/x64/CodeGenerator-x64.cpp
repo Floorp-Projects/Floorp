@@ -400,7 +400,7 @@ CodeGeneratorX64::wasmStore(const wasm::MemoryAccessDesc& access, const LAllocat
     if (value->isConstant()) {
         MOZ_ASSERT(!access.isSimd());
 
-        masm.memoryBarrier(access.barrierBefore());
+        masm.memoryBarrierBefore(access.sync());
 
         const MConstant* mir = value->toConstant();
         Imm32 cst = Imm32(mir->type() == MIRType::Int32 ? mir->toInt32() : mir->toInt64());
@@ -432,7 +432,7 @@ CodeGeneratorX64::wasmStore(const wasm::MemoryAccessDesc& access, const LAllocat
         }
         masm.append(access, storeOffset, masm.framePushed());
 
-        masm.memoryBarrier(access.barrierAfter());
+        masm.memoryBarrierAfter(access.sync());
     } else {
         masm.wasmStore(access, ToAnyRegister(value), dstAddr);
     }
@@ -562,15 +562,11 @@ CodeGeneratorX64::visitWasmCompareExchangeHeap(LWasmCompareExchangeHeap* ins)
 
     if (accessType == Scalar::Int64) {
         MOZ_ASSERT(!mir->access().isPlainAsmJS());
-        masm.compareExchange64(srcAddr, Register64(oldval), Register64(newval),
-                               ToOutRegister64(ins));
+        masm.compareExchange64(Synchronization::Full(), srcAddr, Register64(oldval),
+                               Register64(newval), ToOutRegister64(ins));
     } else {
-        masm.compareExchangeToTypedIntArray(accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
-                                            srcAddr,
-                                            oldval,
-                                            newval,
-                                            InvalidReg,
-                                            ToAnyRegister(ins->output()));
+        masm.compareExchange(accessType, Synchronization::Full(), srcAddr, oldval, newval,
+                             ToRegister(ins->output()));
     }
 }
 
@@ -589,13 +585,11 @@ CodeGeneratorX64::visitWasmAtomicExchangeHeap(LWasmAtomicExchangeHeap* ins)
 
     if (accessType == Scalar::Int64) {
         MOZ_ASSERT(!mir->access().isPlainAsmJS());
-        masm.atomicExchange64(srcAddr, Register64(value), ToOutRegister64(ins));
+        masm.atomicExchange64(Synchronization::Full(), srcAddr, Register64(value),
+                              ToOutRegister64(ins));
     } else {
-        masm.atomicExchangeToTypedIntArray(accessType == Scalar::Uint32 ? Scalar::Int32 : accessType,
-                                           srcAddr,
-                                           value,
-                                           InvalidReg,
-                                           ToAnyRegister(ins->output()));
+        masm.atomicExchange(accessType, Synchronization::Full(), srcAddr, value,
+                            ToRegister(ins->output()));
     }
 }
 
@@ -608,7 +602,7 @@ CodeGeneratorX64::visitWasmAtomicBinopHeap(LWasmAtomicBinopHeap* ins)
     Register ptr = ToRegister(ins->ptr());
     const LAllocation* value = ins->value();
     Register temp = ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
-    AnyRegister output = ToAnyRegister(ins->output());
+    Register output = ToRegister(ins->output());
     MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
     Scalar::Type accessType = mir->access().type();
@@ -620,22 +614,15 @@ CodeGeneratorX64::visitWasmAtomicBinopHeap(LWasmAtomicBinopHeap* ins)
 
     if (accessType == Scalar::Int64) {
         Register64 val = Register64(ToRegister(value));
-        Register64 out = Register64(output.gpr());
+        Register64 out = Register64(output);
         Register64 tmp = Register64(temp);
-        switch (op) {
-          case AtomicFetchAddOp: masm.atomicFetchAdd64(val, srcAddr, tmp, out); break;
-          case AtomicFetchSubOp: masm.atomicFetchSub64(val, srcAddr, tmp, out); break;
-          case AtomicFetchAndOp: masm.atomicFetchAnd64(val, srcAddr, tmp, out); break;
-          case AtomicFetchOrOp:  masm.atomicFetchOr64(val, srcAddr, tmp, out);  break;
-          case AtomicFetchXorOp: masm.atomicFetchXor64(val, srcAddr, tmp, out); break;
-          default:               MOZ_CRASH("Invalid typed array atomic operation");
-        }
+        masm.atomicFetchOp64(Synchronization::Full(), op, val, srcAddr, tmp, out);
     } else if (value->isConstant()) {
-        atomicBinopToTypedIntArray(op, accessType, Imm32(ToInt32(value)), srcAddr, temp, InvalidReg,
-                                   output);
+        masm.atomicFetchOp(accessType, Synchronization::Full(), op, Imm32(ToInt32(value)),
+                           srcAddr, temp, output);
     } else {
-        atomicBinopToTypedIntArray(op, accessType, ToRegister(value), srcAddr, temp, InvalidReg,
-                                   output);
+        masm.atomicFetchOp(accessType, Synchronization::Full(), op, ToRegister(value),
+                           srcAddr, temp, output);
     }
 }
 
@@ -656,23 +643,17 @@ CodeGeneratorX64::visitWasmAtomicBinopHeapForEffect(LWasmAtomicBinopHeapForEffec
 
     if (accessType == Scalar::Int64) {
         Register64 val = Register64(ToRegister(value));
-        switch (op) {
-          case AtomicFetchAddOp: masm.atomicAdd64(srcAddr, val); break;
-          case AtomicFetchSubOp: masm.atomicSub64(srcAddr, val); break;
-          case AtomicFetchAndOp: masm.atomicAnd64(srcAddr, val); break;
-          case AtomicFetchOrOp:  masm.atomicOr64(srcAddr, val);  break;
-          case AtomicFetchXorOp: masm.atomicXor64(srcAddr, val); break;
-          default:               MOZ_CRASH("Invalid typed array atomic operation");
-        }
+        masm.atomicEffectOp64(Synchronization::Full(), op, val, srcAddr);
     } else if (value->isConstant()) {
         Imm32 c(0);
         if (value->toConstant()->type() == MIRType::Int64)
             c = Imm32(ToInt64(value));
         else
             c = Imm32(ToInt32(value));
-        atomicBinopToTypedIntArray(op, accessType, c, srcAddr);
+        masm.atomicEffectOp(accessType, Synchronization::Full(), op, c, srcAddr, InvalidReg);
     } else {
-        atomicBinopToTypedIntArray(op, accessType, ToRegister(value), srcAddr);
+        masm.atomicEffectOp(accessType, Synchronization::Full(), op, ToRegister(value), srcAddr,
+                            InvalidReg);
     }
 }
 

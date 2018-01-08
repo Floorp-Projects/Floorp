@@ -21,6 +21,7 @@ EXPORTS.mozilla.ipc += [
     'CrashReporterMetadataShmem.h',
     'CrossProcessMutex.h',
     'CrossProcessSemaphore.h',
+    'EnvironmentMap.h',
     'FileDescriptor.h',
     'FileDescriptorSetChild.h',
     'FileDescriptorSetParent.h',

@@ -8,13 +8,14 @@
 # linux) to the information; I certainly wouldn't want anyone parsing this
 # information and having behaviour depend on it
 
-import json
+from __future__ import absolute_import, print_function
+
 import os
 import platform
 import re
 import sys
-
-import mozfile
+from .string_version import StringVersion
+from ctypes.util import find_library
 
 # keep a copy of the os module since updating globals overrides this
 _os = os
@@ -32,11 +33,40 @@ class unknown(object):
 
 unknown = unknown()  # singleton
 
+
+def get_windows_version():
+    import ctypes
+
+    class OSVERSIONINFOEXW(ctypes.Structure):
+        _fields_ = [('dwOSVersionInfoSize', ctypes.c_ulong),
+                    ('dwMajorVersion', ctypes.c_ulong),
+                    ('dwMinorVersion', ctypes.c_ulong),
+                    ('dwBuildNumber', ctypes.c_ulong),
+                    ('dwPlatformId', ctypes.c_ulong),
+                    ('szCSDVersion', ctypes.c_wchar * 128),
+                    ('wServicePackMajor', ctypes.c_ushort),
+                    ('wServicePackMinor', ctypes.c_ushort),
+                    ('wSuiteMask', ctypes.c_ushort),
+                    ('wProductType', ctypes.c_byte),
+                    ('wReserved', ctypes.c_byte)]
+
+    os_version = OSVERSIONINFOEXW()
+    os_version.dwOSVersionInfoSize = ctypes.sizeof(os_version)
+    retcode = ctypes.windll.Ntdll.RtlGetVersion(ctypes.byref(os_version))
+    if retcode != 0:
+        raise OSError
+
+    return os_version.dwMajorVersion, os_version.dwMinorVersion, os_version.dwBuildNumber
+
+
 # get system information
 info = {'os': unknown,
         'processor': unknown,
         'version': unknown,
-        'bits': unknown}
+        'os_version': unknown,
+        'bits': unknown,
+        'has_sandbox': unknown,
+        'webrender': bool(os.environ.get("MOZ_WEBRENDER", False))}
 (system, node, release, version, machine, processor) = platform.uname()
 (bits, linkage) = platform.architecture()
 
@@ -50,28 +80,58 @@ if system in ["Microsoft", "Windows"]:
     else:
         processor = os.environ.get('PROCESSOR_ARCHITECTURE', processor)
     system = os.environ.get("OS", system).replace('_', ' ')
-    service_pack = os.sys.getwindowsversion()[4]
+    (major, minor, _, _, service_pack) = os.sys.getwindowsversion()
     info['service_pack'] = service_pack
+    if major >= 6 and minor >= 2:
+        # On windows >= 8.1 the system call that getwindowsversion uses has
+        # been frozen to always return the same values. In this case we call
+        # the RtlGetVersion API directly, which still provides meaningful
+        # values, at least for now.
+        major, minor, build_number = get_windows_version()
+        version = "%d.%d.%d" % (major, minor, build_number)
+
+    os_version = "%d.%d" % (major, minor)
+elif system.startswith(('MINGW', 'MSYS_NT')):
+    # windows/mingw python build (msys)
+    info['os'] = 'win'
+    os_version = version = unknown
 elif system == "Linux":
     if hasattr(platform, "linux_distribution"):
-        (distro, version, codename) = platform.linux_distribution()
+        (distro, os_version, codename) = platform.linux_distribution()
     else:
-        (distro, version, codename) = platform.dist()
-    version = "%s %s" % (distro, version)
+        (distro, os_version, codename) = platform.dist()
     if not processor:
         processor = machine
+    version = "%s %s" % (distro, os_version)
+
+    # Bug in Python 2's `platform` library:
+    # It will return a triple of empty strings if the distribution is not supported.
+    # It works on Python 3. If we don't have an OS version,
+    # the unit tests fail to run.
+    if not distro and not os_version and not codename:
+        distro = 'lfs'
+        version = release
+        os_version = release
+
     info['os'] = 'linux'
+    info['linux_distro'] = distro
 elif system in ['DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD']:
     info['os'] = 'bsd'
-    version = sys.platform
+    version = os_version = sys.platform
 elif system == "Darwin":
     (release, versioninfo, machine) = platform.mac_ver()
     version = "OS X %s" % release
+    versionNums = release.split('.')[:2]
+    os_version = "%s.%s" % (versionNums[0], versionNums[1])
     info['os'] = 'mac'
 elif sys.platform in ('solaris', 'sunos5'):
     info['os'] = 'unix'
-    version = sys.platform
-info['version'] = version  # os version
+    os_version = version = sys.platform
+else:
+    os_version = version = unknown
+
+info['version'] = version
+info['os_version'] = StringVersion(os_version)
 
 # processor type and bits
 if processor in ["i386", "i686"]:
@@ -88,6 +148,16 @@ bits = re.search('(\d+)bit', bits).group(1)
 info.update({'processor': processor,
              'bits': int(bits),
              })
+
+if info['os'] == 'linux':
+    import ctypes
+    import errno
+    PR_SET_SECCOMP = 22
+    SECCOMP_MODE_FILTER = 2
+    ctypes.CDLL(find_library("c"), use_errno=True).prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, 0)
+    info['has_sandbox'] = ctypes.get_errno() == errno.EFAULT
+else:
+    info['has_sandbox'] = True
 
 # standard value of choices, for easy inspection
 choices = {'os': ['linux', 'bsd', 'win', 'mac', 'unix'],
@@ -107,8 +177,9 @@ def sanitize(info):
             info["processor"] = "x86"
             info["bits"] = 32
 
-
 # method for updating information
+
+
 def update(new_info):
     """
     Update the info.
@@ -117,7 +188,15 @@ def update(new_info):
                      to a json file containing the new info.
     """
 
-    if isinstance(new_info, basestring):
+    PY3 = sys.version_info[0] == 3
+    if PY3:
+        string_types = str,
+    else:
+        string_types = basestring,
+    if isinstance(new_info, string_types):
+        # lazy import
+        import mozfile
+        import json
         f = mozfile.load(new_info)
         new_info = json.loads(f.read())
         f.close()
@@ -147,13 +226,16 @@ def find_and_update_from_json(*dirs):
     """
     # First, see if we're in an objdir
     try:
-        from mozbuild.base import MozbuildObject
+        from mozbuild.base import MozbuildObject, BuildEnvironmentNotFoundException
+        from mozbuild.mozconfig import MozconfigFindException
         build = MozbuildObject.from_environment()
         json_path = _os.path.join(build.topobjdir, "mozinfo.json")
         if _os.path.isfile(json_path):
             update(json_path)
             return json_path
     except ImportError:
+        pass
+    except (BuildEnvironmentNotFoundException, MozconfigFindException):
         pass
 
     for d in dirs:
@@ -166,10 +248,16 @@ def find_and_update_from_json(*dirs):
     return None
 
 
+def output_to_file(path):
+    import json
+    with open(path, 'w') as f:
+        f.write(json.dumps(info))
+
+
 update({})
 
 # exports
-__all__ = info.keys()
+__all__ = list(info.keys())
 __all__ += ['is' + os_name.title() for os_name in choices['os']]
 __all__ += [
     'info',
@@ -178,7 +266,9 @@ __all__ += [
     'choices',
     'update',
     'find_and_update_from_json',
-    ]
+    'output_to_file',
+    'StringVersion',
+]
 
 
 def main(args=None):
@@ -194,9 +284,11 @@ def main(args=None):
 
     # args are JSON blobs to override info
     if args:
+        # lazy import
+        import json
         for arg in args:
             if _os.path.exists(arg):
-                string = file(arg).read()
+                string = open(arg).read()
             else:
                 string = arg
             update(json.loads(string))
@@ -205,15 +297,15 @@ def main(args=None):
     flag = False
     for key, value in options.__dict__.items():
         if value is True:
-            print '%s choices: %s' % (key, ' '.join([str(choice)
-                                                     for choice in choices[key]]))
+            print('%s choices: %s' % (key, ' '.join([str(choice)
+                                                     for choice in choices[key]])))
             flag = True
     if flag:
         return
 
     # otherwise, print out all info
     for key, value in info.items():
-        print '%s: %s' % (key, value)
+        print('%s: %s' % (key, value))
 
 
 if __name__ == '__main__':

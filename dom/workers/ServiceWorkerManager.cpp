@@ -40,6 +40,7 @@
 #include "mozilla/dom/ClientHandle.h"
 #include "mozilla/dom/ClientManager.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/InternalHeaders.h"
@@ -825,7 +826,7 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
     outerWindow->GetServiceWorkersTestingEnabled();
 
   bool authenticatedOrigin;
-  if (Preferences::GetBool("dom.serviceWorkers.testing.enabled") ||
+  if (DOMPrefs::ServiceWorkersTestingEnabled() ||
       serviceWorkersTestingEnabled) {
     authenticatedOrigin = true;
   } else {

@@ -116,8 +116,8 @@ AdvanceToActiveCallLinear(JSContext* cx, NonBuiltinScriptFrameIter& iter, Handle
     return false;
 }
 
-static void
-ThrowTypeErrorBehavior(JSContext* cx)
+void
+js::ThrowTypeErrorBehavior(JSContext* cx)
 {
     JS_ReportErrorFlagsAndNumberASCII(cx, JSREPORT_ERROR, GetErrorMessage, nullptr,
                                      JSMSG_THROW_TYPE_ERROR);
@@ -814,13 +814,6 @@ fun_trace(JSTracer* trc, JSObject* obj)
     obj->as<JSFunction>().trace(trc);
 }
 
-static bool
-ThrowTypeError(JSContext* cx, unsigned argc, Value* vp)
-{
-    ThrowTypeErrorBehavior(cx);
-    return false;
-}
-
 static JSObject*
 CreateFunctionConstructor(JSContext* cx, JSProtoKey key)
 {
@@ -905,51 +898,6 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
      */
     if (!JSObject::setNewGroupUnknown(cx, &JSFunction::class_, functionProto))
         return nullptr;
-
-    // Set the prototype before we call NewFunctionWithProto below. This
-    // ensures EmptyShape::getInitialShape can share function shapes.
-    self->setPrototype(key, ObjectValue(*functionProto));
-
-    // Construct the unique [[%ThrowTypeError%]] function object, used only for
-    // "callee" and "caller" accessors on strict mode arguments objects.  (The
-    // spec also uses this for "arguments" and "caller" on various functions,
-    // but we're experimenting with implementing them using accessors on
-    // |Function.prototype| right now.)
-    //
-    // Note that we can't use NewFunction here, even though we want the normal
-    // Function.prototype for our proto, because we're still in the middle of
-    // creating that as far as the world is concerned, so things will get all
-    // confused.
-    RootedFunction throwTypeError(cx,
-      NewFunctionWithProto(cx, ThrowTypeError, 0, JSFunction::NATIVE_FUN,
-                           nullptr, nullptr, functionProto, AllocKind::FUNCTION,
-                           SingletonObject));
-    if (!throwTypeError || !PreventExtensions(cx, throwTypeError))
-        return nullptr;
-
-    // The "length" property of %ThrowTypeError% is non-configurable, adjust
-    // the default property attributes accordingly.
-    Rooted<PropertyDescriptor> nonConfigurableDesc(cx);
-    nonConfigurableDesc.setAttributes(JSPROP_PERMANENT | JSPROP_IGNORE_READONLY |
-                                      JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_VALUE);
-
-    RootedId lengthId(cx, NameToId(cx->names().length));
-    ObjectOpResult lengthResult;
-    if (!NativeDefineProperty(cx, throwTypeError, lengthId, nonConfigurableDesc, lengthResult))
-        return nullptr;
-    MOZ_ASSERT(lengthResult);
-
-    // Non-standard: Also change "name" to non-configurable. ECMAScript defines
-    // %ThrowTypeError% as an anonymous function, i.e. it shouldn't actually
-    // get an own "name" property. To be consistent with other built-in,
-    // anonymous functions, we don't delete %ThrowTypeError%'s "name" property.
-    RootedId nameId(cx, NameToId(cx->names().name));
-    ObjectOpResult nameResult;
-    if (!NativeDefineProperty(cx, throwTypeError, nameId, nonConfigurableDesc, nameResult))
-        return nullptr;
-    MOZ_ASSERT(nameResult);
-
-    self->setThrowTypeError(throwTypeError);
 
     return functionProto;
 }
