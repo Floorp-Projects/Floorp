@@ -8887,25 +8887,6 @@ nsContentUtils::GetReferrerPolicyFromHeader(const nsAString& aHeader)
 
 // static
 bool
-nsContentUtils::PromiseRejectionEventsEnabled(JSContext* aCx, JSObject* aObj)
-{
-  if (NS_IsMainThread()) {
-    return Preferences::GetBool("dom.promise_rejection_events.enabled", false);
-  }
-
-  using namespace workers;
-
-  // Otherwise, check the pref via the WorkerPrivate
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-  if (!workerPrivate) {
-    return false;
-  }
-
-  return workerPrivate->PromiseRejectionEventsEnabled();
-}
-
-// static
-bool
 nsContentUtils::PushEnabled(JSContext* aCx, JSObject* aObj)
 {
   if (NS_IsMainThread()) {
