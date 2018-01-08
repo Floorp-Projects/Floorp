@@ -30,7 +30,7 @@ ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
                                            bool aIsPrivateBrowsing)
   : BaseMediaResource(aCallback, aChannel, aURI)
   , mCacheStream(this, aIsPrivateBrowsing)
-  , mSuspendAgent(mCacheStream, !aChannel /*aSuspended*/)
+  , mSuspendAgent(mCacheStream)
 {
 }
 
@@ -651,13 +651,10 @@ ChannelMediaResource::Suspend(bool aCloseImmediately)
 
   if (mChannel && aCloseImmediately && mIsTransportSeekable) {
     CloseChannel();
-    element->DownloadSuspended();
   }
 
   if (mSuspendAgent.Suspend()) {
-    if (mChannel) {
-      element->DownloadSuspended();
-    }
+    element->DownloadSuspended();
   }
 }
 
