@@ -15,6 +15,7 @@
 
 namespace mozilla {
 namespace dom {
+class DomGroup;
 class Element;
 } // namespace dom
 } // namespace mozilla
@@ -39,7 +40,7 @@ public:
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent) override;
 
   virtual nsINode* GetParentObject() override;
-  virtual DocGroup* GetDocGroup() const override;
+  virtual mozilla::dom::DocGroup* GetDocGroup() const override;
 
   NS_IMETHOD SetPropertyValue(const nsCSSPropertyID aPropID,
                               const nsAString& aValue,
