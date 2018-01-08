@@ -3077,6 +3077,11 @@ public:
   // Return true if document has interacted by specific user gestures.
   bool HasBeenUserActivated();
 
+  void MaybeNotifyUserActivation(nsIPrincipal* aPrincipal);
+
+  // Return the same type parent docuement if exists, or return null.
+  nsIDocument* GetSameTypeParentDocument();
+
   // Return the first parent document with same pricipal, return nullptr if we
   // can't find it.
   nsIDocument* GetFirstParentDocumentWithSamePrincipal(nsIPrincipal* aPrincipal);
@@ -3269,9 +3274,6 @@ protected:
 
   // Helper for GetScrollingElement/IsScrollingElement.
   bool IsPotentiallyScrollable(mozilla::dom::HTMLBodyElement* aBody);
-
-  // Return the same type parent docuement if exists, or return null.
-  nsIDocument* GetSameTypeParentDocument(const nsIDocument* aDoc);
 
   // Helpers for GetElementsByName.
   static bool MatchNameAttribute(mozilla::dom::Element* aElement,

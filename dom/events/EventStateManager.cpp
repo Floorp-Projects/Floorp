@@ -925,11 +925,10 @@ EventStateManager::NotifyTargetUserActivation(WidgetEvent* aEvent,
 
   // Activate parent document which has same principle on the parent chain.
   nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
-  nsCOMPtr<nsIDocument> parent =
-    doc->GetFirstParentDocumentWithSamePrincipal(principal);
+  nsCOMPtr<nsIDocument> parent = doc->GetSameTypeParentDocument();
   while (parent) {
-    parent->NotifyUserActivation();
-    parent = parent->GetFirstParentDocumentWithSamePrincipal(principal);
+    parent->MaybeNotifyUserActivation(principal);
+    parent = parent->GetSameTypeParentDocument();
   }
 }
 
