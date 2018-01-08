@@ -553,15 +553,6 @@ LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */)
       continue;
     }
 
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "gc_refresh_frame_slices_enabled");
-    if (memPrefName == matchName ||
-        (gRuntimeServiceDuringInit && index == 15)) {
-      bool prefValue = GetWorkerPref(matchName, false);
-      UpdateOtherJSGCMemoryOption(rts, JSGC_REFRESH_FRAME_SLICES_ENABLED,
-                                 prefValue ? 0 : 1);
-      continue;
-    }
-
 #ifdef DEBUG
     nsAutoCString message("Workers don't support the 'mem.");
     message.Append(memPrefName);
