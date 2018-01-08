@@ -99,10 +99,13 @@ add_task(async function testSocksProxy() {
 
 add_task(async function testDirectProxy() {
   // Do what |WebSocketChannel::AsyncOpen| do, but do not prefer https proxy.
-  let proxyURI = Cc["@mozilla.org/network/standard-url;1"].createInstance(Ci.nsIURI);
-  proxyURI.spec = "wss://ws.mozilla.org/";
-  let uri = proxyURI.clone();
-  uri.scheme = "https";
+  let proxyURI = Cc["@mozilla.org/network/standard-url-mutator;1"]
+                   .createInstance(Ci.nsIURIMutator)
+                   .setSpec("wss://ws.mozilla.org/")
+                   .finalize();
+  let uri = proxyURI.mutate()
+                    .setScheme("https")
+                    .finalize();
 
   let ioService = Cc["@mozilla.org/network/io-service;1"].
                     getService(Ci.nsIIOService);
@@ -122,10 +125,13 @@ add_task(async function testDirectProxy() {
 
 add_task(async function testWebSocketProxy() {
   // Do what |WebSocketChannel::AsyncOpen| do
-  let proxyURI = Cc["@mozilla.org/network/standard-url;1"].createInstance(Ci.nsIURI);
-  proxyURI.spec = "wss://ws.mozilla.org/";
-  let uri = proxyURI.clone();
-  uri.scheme = "https";
+  let proxyURI = Cc["@mozilla.org/network/standard-url-mutator;1"]
+                   .createInstance(Ci.nsIURIMutator)
+                   .setSpec("wss://ws.mozilla.org/")
+                   .finalize();
+  let uri = proxyURI.mutate()
+                    .setScheme("https")
+                    .finalize();
 
   let proxyFlags = Ci.nsIProtocolProxyService.RESOLVE_PREFER_HTTPS_PROXY |
                    Ci.nsIProtocolProxyService.RESOLVE_ALWAYS_TUNNEL;

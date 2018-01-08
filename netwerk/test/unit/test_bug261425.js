@@ -6,7 +6,7 @@ function run_test() {
 
   var success = false;
   try {
-    newURI.spec = "http: //foo.com";
+    newURI = newURI.mutate().setSpec("http: //foo.com").finalize();
   }
   catch (e) {
     success = e.result == Cr.NS_ERROR_MALFORMED_URI;

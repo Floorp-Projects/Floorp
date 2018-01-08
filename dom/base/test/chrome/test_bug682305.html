@@ -32,7 +32,6 @@ var Cr = Components.results;
 var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-var SimpleURI = Cc["@mozilla.org/network/simple-uri;1"];
 var ios = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService);
 var contentSecManager = Cc["@mozilla.org/contentsecuritymanager;1"]
@@ -120,9 +119,10 @@ CustomProtocol.prototype = {
     return false;
   },
   newURI: function newURI(spec, charset, baseURI) {
-    var uri = SimpleURI.createInstance(Ci.nsIURI)
-    uri.spec = spec;
-    return uri.QueryInterface(Ci.nsIURI);
+    return Cc["@mozilla.org/network/simple-uri-mutator;1"]
+             .createInstance(Ci.nsIURIMutator)
+             .setSpec(spec)
+             .finalize();
   },
   newChannel2: function newChannel2(URI, loadInfo) {
     return new CustomChannel(URI, loadInfo);

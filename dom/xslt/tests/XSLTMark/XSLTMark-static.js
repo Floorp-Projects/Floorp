@@ -9,8 +9,8 @@ const nsIIOService    = Components.interfaces.nsIIOService;
 const SIS_CTRID       = "@mozilla.org/scriptableinputstream;1";
 const nsISIS          = Components.interfaces.nsIScriptableInputStream;
 const nsIFilePicker   = Components.interfaces.nsIFilePicker;
-const STDURL_CTRID    = "@mozilla.org/network/standard-url;1";
-const nsIURI          = Components.interfaces.nsIURI;
+const STDURLMUT_CTRID = "@mozilla.org/network/standard-url-mutator;1";
+const nsIURIMutator   = Components.interfaces.nsIURIMutator;
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 

@@ -11,9 +11,10 @@ var contentSecManager = Cc["@mozilla.org/contentsecuritymanager;1"]
                           .getService(Ci.nsIContentSecurityManager);
 
 function ProtocolHandler() {
-  this.uri = Cc["@mozilla.org/network/simple-uri;1"].
-               createInstance(Ci.nsIURI);
-  this.uri.spec = this.scheme + ":dummy";
+  this.uri = Cc["@mozilla.org/network/simple-uri-mutator;1"]
+               .createInstance(Ci.nsIURIMutator)
+               .setSpec(this.scheme + ":dummy")
+               .finalize();
   this.uri.QueryInterface(Ci.nsIMutable).mutable = false;
 }
 
