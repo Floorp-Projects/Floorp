@@ -83,6 +83,10 @@ public:
   // Returns true if the dom.netinfo.enabled pref is set.
   static bool NetworkInformationEnabled();
   static bool NetworkInformationEnabled(JSContext* aCx, JSObject* aObj);
+
+  // Returns true if the dom.fetchObserver.enabled pref is set.
+  static bool FetchObserverEnabled();
+  static bool FetchObserverEnabled(JSContext* aCx, JSObject* aObj);
 };
 
 } // dom namespace
