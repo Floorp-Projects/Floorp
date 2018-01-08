@@ -446,7 +446,7 @@ wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, const
     // Generate table entry:
     offsets->begin = masm.currentOffset();
     BytecodeOffset trapOffset(0);  // ignored by masm.wasmEmitTrapOutOfLineCode
-    TrapDesc trap(trapOffset, Trap::IndirectCallBadSig, masm.framePushed());
+    OldTrapDesc trap(trapOffset, Trap::IndirectCallBadSig, masm.framePushed());
     switch (sigId.kind()) {
       case SigIdDesc::Kind::Global: {
         Register scratch = WasmTableCallScratchReg;
@@ -635,7 +635,7 @@ ProfilingFrameIterator::initFromExitFP(const Frame* fp)
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
       case CodeRange::BuiltinThunk:
-      case CodeRange::TrapExit:
+      case CodeRange::OldTrapExit:
       case CodeRange::DebugTrap:
       case CodeRange::OutOfBoundsExit:
       case CodeRange::UnalignedExit:
@@ -714,7 +714,7 @@ js::wasm::StartUnwinding(const RegisterState& registers, UnwindState* unwindStat
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
       case CodeRange::BuiltinThunk:
-      case CodeRange::TrapExit:
+      case CodeRange::OldTrapExit:
       case CodeRange::DebugTrap:
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         if ((offsetFromEntry >= BeforePushRetAddr && offsetFromEntry < PushedFP) || codeRange->isThunk()) {
@@ -913,7 +913,7 @@ ProfilingFrameIterator::operator++()
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
       case CodeRange::BuiltinThunk:
-      case CodeRange::TrapExit:
+      case CodeRange::OldTrapExit:
       case CodeRange::DebugTrap:
       case CodeRange::OutOfBoundsExit:
       case CodeRange::UnalignedExit:
@@ -941,7 +941,7 @@ ThunkedNativeToDescription(SymbolicAddress func)
       case SymbolicAddress::HandleExecutionInterrupt:
       case SymbolicAddress::HandleDebugTrap:
       case SymbolicAddress::HandleThrow:
-      case SymbolicAddress::ReportTrap:
+      case SymbolicAddress::OldReportTrap:
       case SymbolicAddress::ReportOutOfBounds:
       case SymbolicAddress::ReportUnalignedAccess:
       case SymbolicAddress::CallImport_Void:
@@ -1071,7 +1071,7 @@ ProfilingFrameIterator::label() const
       case CodeRange::ImportJitExit:     return importJitDescription;
       case CodeRange::BuiltinThunk:      return builtinNativeDescription;
       case CodeRange::ImportInterpExit:  return importInterpDescription;
-      case CodeRange::TrapExit:          return trapDescription;
+      case CodeRange::OldTrapExit:       return trapDescription;
       case CodeRange::DebugTrap:         return debugTrapDescription;
       case CodeRange::OutOfBoundsExit:   return "out-of-bounds stub (in wasm)";
       case CodeRange::UnalignedExit:     return "unaligned trap stub (in wasm)";

@@ -234,7 +234,7 @@ WasmHandleThrow()
 }
 
 static void
-WasmReportTrap(int32_t trapIndex)
+WasmOldReportTrap(int32_t trapIndex)
 {
     JSContext* cx = TlsContext.get();
 
@@ -439,9 +439,9 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
       case SymbolicAddress::HandleThrow:
         *abiType = Args_General0;
         return FuncCast(WasmHandleThrow, *abiType);
-      case SymbolicAddress::ReportTrap:
+      case SymbolicAddress::OldReportTrap:
         *abiType = Args_General1;
-        return FuncCast(WasmReportTrap, *abiType);
+        return FuncCast(WasmOldReportTrap, *abiType);
       case SymbolicAddress::ReportOutOfBounds:
         *abiType = Args_General0;
         return FuncCast(WasmReportOutOfBounds, *abiType);
@@ -595,7 +595,7 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
       case SymbolicAddress::HandleExecutionInterrupt: // GenerateInterruptExit
       case SymbolicAddress::HandleDebugTrap:          // GenerateDebugTrapStub
       case SymbolicAddress::HandleThrow:              // GenerateThrowStub
-      case SymbolicAddress::ReportTrap:               // GenerateTrapExit
+      case SymbolicAddress::OldReportTrap:            // GenerateOldTrapExit
       case SymbolicAddress::ReportOutOfBounds:        // GenerateOutOfBoundsExit
       case SymbolicAddress::ReportUnalignedAccess:    // GeneratesUnalignedExit
       case SymbolicAddress::CallImport_Void:          // GenerateImportInterpExit
@@ -891,8 +891,8 @@ wasm::EnsureBuiltinThunksInitialized()
     MOZ_ASSERT(masm.callSites().empty());
     MOZ_ASSERT(masm.callSiteTargets().empty());
     MOZ_ASSERT(masm.callFarJumps().empty());
-    MOZ_ASSERT(masm.trapSites().empty());
-    MOZ_ASSERT(masm.trapFarJumps().empty());
+    MOZ_ASSERT(masm.oldTrapSites().empty());
+    MOZ_ASSERT(masm.oldTrapFarJumps().empty());
     MOZ_ASSERT(masm.callFarJumps().empty());
     MOZ_ASSERT(masm.memoryAccesses().empty());
     MOZ_ASSERT(masm.symbolicAccesses().empty());

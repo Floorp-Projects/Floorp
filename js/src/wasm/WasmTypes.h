@@ -1011,7 +1011,7 @@ class CodeRange
         ImportJitExit,     // fast-path calling from wasm into JIT code
         ImportInterpExit,  // slow-path calling from wasm into C++ interp
         BuiltinThunk,      // fast-path calling from wasm into a C++ native
-        TrapExit,          // calls C++ to report and jumps to throw stub
+        OldTrapExit,       // calls C++ to report and jumps to throw stub
         DebugTrap,         // calls C++ to handle debug event
         FarJumpIsland,     // inserted to connect otherwise out-of-range insns
         OutOfBoundsExit,   // stub jumped to by non-standard asm.js SIMD/Atomics
@@ -1087,7 +1087,7 @@ class CodeRange
         return kind() == ImportJitExit;
     }
     bool isTrapExit() const {
-        return kind() == TrapExit;
+        return kind() == OldTrapExit;
     }
     bool isDebugTrap() const {
         return kind() == DebugTrap;
@@ -1187,12 +1187,12 @@ LookupInSorted(const CodeRangeVector& codeRanges, CodeRange::OffsetInCode target
 struct BytecodeOffset
 {
     static const uint32_t INVALID = -1;
-    uint32_t bytecodeOffset;
+    uint32_t offset;
 
-    BytecodeOffset() : bytecodeOffset(INVALID) {}
-    explicit BytecodeOffset(uint32_t bytecodeOffset) : bytecodeOffset(bytecodeOffset) {}
+    BytecodeOffset() : offset(INVALID) {}
+    explicit BytecodeOffset(uint32_t offset) : offset(offset) {}
 
-    bool isValid() const { return bytecodeOffset != INVALID; }
+    bool isValid() const { return offset != INVALID; }
 };
 
 // While the frame-pointer chain allows the stack to be unwound without
@@ -1210,7 +1210,7 @@ class CallSiteDesc
         Func,       // pc-relative call to a specific function
         Dynamic,    // dynamic callee called via register
         Symbolic,   // call to a single symbolic callee
-        TrapExit,   // call to a trap exit
+        OldTrapExit,// call to a trap exit (being removed)
         EnterFrame, // call to a enter frame handler
         LeaveFrame, // call to a leave frame handler
         Breakpoint  // call to instruction breakpoint
@@ -1333,7 +1333,7 @@ enum class SymbolicAddress
     HandleExecutionInterrupt,
     HandleDebugTrap,
     HandleThrow,
-    ReportTrap,
+    OldReportTrap,
     ReportOutOfBounds,
     ReportUnalignedAccess,
     CallImport_Void,
