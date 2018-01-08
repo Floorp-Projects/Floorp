@@ -1,0 +1,51 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "DOMPrefs.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/Preferences.h"
+
+namespace mozilla {
+namespace dom {
+
+#define PREF(name, pref)                                             \
+  /* static */ bool                                                  \
+  DOMPrefs::name()                                                   \
+  {                                                                  \
+    static bool initialized = false;                                 \
+    static Atomic<bool> cachedValue;                                 \
+    if (!initialized) {                                              \
+      initialized = true;                                            \
+      Preferences::AddAtomicBoolVarCache(&cachedValue, pref, false); \
+    }                                                                \
+    return cachedValue;                                              \
+  }
+
+#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
+PREF(DumpEnabled, "browser.dom.window.dump.enabled")
+#else
+/* static */ bool
+DOMPrefs::DumpEnabled()
+{
+  return true;
+}
+#endif
+
+#undef PREF
+
+#define PREF_WEBIDL(name)                        \
+  /* static */ bool                              \
+  DOMPrefs::name(JSContext* aCx, JSObject* aObj) \
+  {                                              \
+    return DOMPrefs::name();                     \
+  }
+
+// It will be useful, eventually.
+
+#undef PREF_WEBIDL
+
+} // dom namespace
+} // mozilla namespace

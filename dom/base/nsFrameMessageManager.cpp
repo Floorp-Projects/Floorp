@@ -36,6 +36,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ScriptPreloader.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/ContentParent.h"
@@ -805,7 +806,7 @@ nsFrameMessageManager::ReleaseCachedProcesses()
 NS_IMETHODIMP
 nsFrameMessageManager::Dump(const nsAString& aStr)
 {
-  if (!nsContentUtils::DOMWindowDumpEnabled()) {
+  if (!DOMPrefs::DumpEnabled()) {
     return NS_OK;
   }
 
