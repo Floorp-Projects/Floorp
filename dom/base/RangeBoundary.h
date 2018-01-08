@@ -287,8 +287,14 @@ public:
   template<typename A, typename B>
   RangeBoundaryBase& operator=(const RangeBoundaryBase<A,B>& aOther)
   {
-    mParent = aOther.mParent;
-    mRef = aOther.mRef;
+    // mParent and mRef can be strong pointers, so better to try to avoid any
+    // extra AddRef/Release calls.
+    if (mParent != aOther.mParent) {
+      mParent = aOther.mParent;
+    }
+    if (mRef != aOther.mRef) {
+      mRef = aOther.mRef;
+    }
     mOffset = aOther.mOffset;
     return *this;
   }
