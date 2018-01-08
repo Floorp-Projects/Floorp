@@ -163,7 +163,7 @@ std::ofstream* UIOpenWrite(const string& filename,
   return new std::ofstream(filename.c_str(), mode);
 }
 
-string UIGetEnv(const string name)
+string UIGetEnv(const string& name)
 {
   const char *var = getenv(name.c_str());
   if (var && *var) {
