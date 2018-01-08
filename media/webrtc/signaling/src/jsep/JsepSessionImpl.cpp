@@ -1131,9 +1131,14 @@ JsepSessionImpl::InitTransport(const SdpMediaSection& msection,
     transport->mTransportId = msection.GetAttributeList().GetMid();
   } else {
     std::ostringstream os;
-    os << "level_" << msection.GetLevel() << "(no mid)";
+    os << "no_mid_lvl_" << msection.GetLevel();
+    // This works providing we don't have an msection level higher than 99999.
+    // We need to fit inside the 16 character mid limitation that results from
+    // not having two-byte rtp header extensions support in webrtc.org yet.
     transport->mTransportId = os.str();
   }
+  // This assert can go away when webrtc.org supports 2-byte rtp header exts.
+  MOZ_ASSERT(transport->mTransportId.length() <= 16);
 }
 
 nsresult
@@ -1288,6 +1293,14 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
 
     const SdpMediaSection& msection(parsed->GetMediaSection(i));
     auto& mediaAttrs = msection.GetAttributeList();
+
+    if (mediaAttrs.HasAttribute(SdpAttribute::kMidAttribute) &&
+        mediaAttrs.GetMid().length() > 16) {
+      JSEP_SET_ERROR("Invalid description, mid length greater than 16 "
+                     "unsupported until 2-byte rtp header extensions are "
+                     "supported in webrtc.org");
+      return NS_ERROR_INVALID_ARG;
+    }
 
     if (mediaAttrs.GetIceUfrag().empty()) {
       JSEP_SET_ERROR("Invalid description, no ice-ufrag attribute");
