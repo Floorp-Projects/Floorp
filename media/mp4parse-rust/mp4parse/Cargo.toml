@@ -1,6 +1,6 @@
 [package]
 name = "mp4parse"
-version = "0.9.0"
+version = "0.9.1"
 authors = [
   "Ralph Giles <giles@mozilla.com>",
   "Matthew Gregan <kinetik@flim.org>",
@@ -24,7 +24,7 @@ exclude = [
 byteorder = "1.0.0"
 bitreader = { version = "0.3.0" }
 num-traits = "0.1.37"
-mp4parse_fallible = { path = "../mp4parse_fallible", optional = true }
+mp4parse_fallible = { version = "0.0.1", optional = true }
 
 [dev-dependencies]
 test-assembler = "0.1.2"

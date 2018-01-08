@@ -1,6 +1,6 @@
 [package]
 name = "mp4parse_capi"
-version = "0.9.0"
+version = "0.9.1"
 authors = [
   "Ralph Giles <giles@mozilla.com>",
   "Matthew Gregan <kinetik@flim.org>",
@@ -25,6 +25,6 @@ byteorder = "1.0.0"
 
 # To enable fallible memory allocation, add 'features = ["mp4parse_fallible"]'
 # in mp4parse brace.
-mp4parse = {version = "0.9.0", path = "../mp4parse", features = ["mp4parse_fallible"]}
+mp4parse = {version = "0.9.1", path = "../mp4parse", features = ["mp4parse_fallible"]}
 num-traits = "0.1.37"
 
