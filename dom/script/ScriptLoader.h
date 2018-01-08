@@ -478,8 +478,6 @@ private:
   JS::SourceBufferHolder GetScriptSource(ScriptLoadRequest* aRequest,
                                          nsAutoString& inlineData);
 
-  bool ModuleScriptsEnabled();
-
   void SetModuleFetchStarted(ModuleLoadRequest *aRequest);
   void SetModuleFetchFinishedAndResumeWaitingRequests(ModuleLoadRequest* aRequest,
                                                       nsresult aResult);

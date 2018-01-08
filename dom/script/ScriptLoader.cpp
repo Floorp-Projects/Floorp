@@ -328,19 +328,6 @@ ScriptLoader::CheckContentPolicy(nsIDocument* aDocument,
 }
 
 bool
-ScriptLoader::ModuleScriptsEnabled()
-{
-  static bool sEnabledForContent = false;
-  static bool sCachedPref = false;
-  if (!sCachedPref) {
-    sCachedPref = true;
-    Preferences::AddBoolVarCache(&sEnabledForContent, "dom.moduleScripts.enabled", false);
-  }
-
-  return nsContentUtils::IsChromeDoc(mDocument) || sEnabledForContent;
-}
-
-bool
 ScriptLoader::ModuleMapContainsURL(nsIURI* aURL) const
 {
   // Returns whether we have fetched, or are currently fetching, a module script
@@ -1315,14 +1302,11 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
 
   nsCOMPtr<nsIContent> scriptContent = do_QueryInterface(aElement);
 
-  // Determine whether this is a classic script or a module script.
   nsAutoString type;
   bool hasType = aElement->GetScriptType(type);
-  ScriptKind scriptKind = ScriptKind::eClassic;
-  if (ModuleScriptsEnabled() &&
-      !type.IsEmpty() && type.LowerCaseEqualsASCII("module")) {
-    scriptKind = ScriptKind::eModule;
-  }
+
+  ScriptKind scriptKind =
+    aElement->GetScriptIsModule() ? ScriptKind::eModule : ScriptKind::eClassic;
 
   // Step 13. Check that the script is not an eventhandler
   if (IsScriptEventHandler(scriptKind, scriptContent)) {
@@ -1358,7 +1342,7 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
   // the nomodule attribute will be ignored".
   // "The nomodule attribute must not be specified on module scripts (and will
   // be ignored if it is)."
-  if (ModuleScriptsEnabled() &&
+  if (mDocument->ModuleScriptsEnabled() &&
       scriptKind == ScriptKind::eClassic &&
       scriptContent->IsHTMLElement() &&
       scriptContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::nomodule)) {
@@ -1590,6 +1574,12 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
   request->mDataType = ScriptLoadRequest::DataType::eSource;
   TRACE_FOR_TEST_BOOL(request->mElement, "scriptloader_load_source");
   CollectScriptTelemetry(nullptr, request);
+
+  // Only the 'async' attribute is heeded on an inline module script and
+  // inline classic scripts ignore both these attributes.
+  MOZ_ASSERT(!aElement->GetScriptDeferred());
+  MOZ_ASSERT_IF(!request->IsModuleRequest(), !aElement->GetScriptAsync());
+  request->SetScriptMode(false, aElement->GetScriptAsync());
 
   LOG(("ScriptLoadRequest (%p): Created request for inline script",
        request.get()));
@@ -3203,7 +3193,7 @@ ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
   }
 
   // TODO: Preload module scripts.
-  if (ModuleScriptsEnabled() && aType.LowerCaseEqualsASCII("module")) {
+  if (mDocument->ModuleScriptsEnabled() && aType.LowerCaseEqualsASCII("module")) {
     return;
   }
 
