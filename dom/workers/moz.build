@@ -19,7 +19,6 @@ EXPORTS.mozilla.dom += [
     'ServiceWorkerRegistration.h',
     'WorkerLocation.h',
     'WorkerNavigator.h',
-    'WorkerPrefs.h',
     'WorkerPrivate.h',
     'WorkerRunnable.h',
     'WorkerScope.h',

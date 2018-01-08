@@ -5021,6 +5021,16 @@ template nsresult
 Preferences::AddAtomicBoolVarCache(Atomic<bool, Relaxed>*, const char*, bool);
 
 template nsresult
+Preferences::AddAtomicBoolVarCache(Atomic<bool, ReleaseAcquire>*,
+                                   const char*,
+                                   bool);
+
+template nsresult
+Preferences::AddAtomicBoolVarCache(Atomic<bool, SequentiallyConsistent>*,
+                                   const char*,
+                                   bool);
+
+template nsresult
 Preferences::AddAtomicIntVarCache(Atomic<int32_t, Relaxed>*,
                                   const char*,
                                   int32_t);
