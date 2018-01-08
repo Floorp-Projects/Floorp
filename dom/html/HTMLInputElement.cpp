@@ -11,6 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Date.h"
 #include "mozilla/dom/Directory.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/GetFilesHelper.h"
@@ -685,7 +686,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
   RefPtr<DispatchChangeEventCallback> dispatchChangeEventCallback =
     new DispatchChangeEventCallback(mInput);
 
-  if (IsWebkitDirPickerEnabled() &&
+  if (DOMPrefs::WebkitBlinkDirectoryPickerEnabled() &&
       mInput->HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory)) {
     ErrorResult error;
     GetFilesHelper* helper = mInput->GetOrCreateGetFilesHelper(true, error);
@@ -2746,7 +2747,7 @@ HTMLInputElement::GetDisplayFileName(nsAString& aValue) const
 
   if (mFileData->mFilesOrDirectories.IsEmpty()) {
     if ((IsDirPickerEnabled() && Allowdirs()) ||
-        (IsWebkitDirPickerEnabled() &&
+        (DOMPrefs::WebkitBlinkDirectoryPickerEnabled() &&
          HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory))) {
       nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
                                          "NoDirSelected", value);
@@ -2839,7 +2840,7 @@ HTMLInputElement::MozSetDndFilesAndDirectories(const nsTArray<OwningFileOrDirect
   RefPtr<DispatchChangeEventCallback> dispatchChangeEventCallback =
     new DispatchChangeEventCallback(this);
 
-  if (IsWebkitDirPickerEnabled() &&
+  if (DOMPrefs::WebkitBlinkDirectoryPickerEnabled() &&
       HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory)) {
     ErrorResult rv;
     GetFilesHelper* helper = GetOrCreateGetFilesHelper(true /* recursionFlag */,
@@ -2921,7 +2922,7 @@ HTMLInputElement::GetFiles()
   }
 
   if (IsDirPickerEnabled() && Allowdirs() &&
-      (!IsWebkitDirPickerEnabled() ||
+      (!DOMPrefs::WebkitBlinkDirectoryPickerEnabled() ||
        !HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory))) {
     return nullptr;
   }
@@ -4172,7 +4173,7 @@ HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor)
     if (target &&
         target->FindFirstNonChromeOnlyAccessContent() == this &&
         ((IsDirPickerEnabled() && Allowdirs()) ||
-         (IsWebkitDirPickerEnabled() &&
+         (DOMPrefs::WebkitBlinkDirectoryPickerEnabled() &&
           HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory)))) {
       type = FILE_PICKER_DIRECTORY;
     }
@@ -5631,21 +5632,6 @@ HTMLInputElement::IsDateTimeTypeSupported(uint8_t aDateTimeInputType)
            aDateTimeInputType == NS_FORM_INPUT_WEEK ||
            aDateTimeInputType == NS_FORM_INPUT_DATETIME_LOCAL) &&
           IsInputDateTimeOthersEnabled());
-}
-
-/* static */ bool
-HTMLInputElement::IsWebkitDirPickerEnabled()
-{
-  static bool sWebkitDirPickerEnabled = false;
-  static bool sWebkitDirPickerPrefCached = false;
-  if (!sWebkitDirPickerPrefCached) {
-    sWebkitDirPickerPrefCached = true;
-    Preferences::AddBoolVarCache(&sWebkitDirPickerEnabled,
-                                 "dom.webkitBlink.dirPicker.enabled",
-                                 false);
-  }
-
-  return sWebkitDirPickerEnabled;
 }
 
 /* static */ bool

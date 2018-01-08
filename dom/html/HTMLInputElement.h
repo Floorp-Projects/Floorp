@@ -1728,13 +1728,6 @@ private:
   IsDateTimeTypeSupported(uint8_t aDateTimeInputType);
 
   /**
-   * Checks preference "dom.webkitBlink.dirPicker.enabled" to determine if
-   * webkitdirectory should be supported.
-   */
-  static bool
-  IsWebkitDirPickerEnabled();
-
-  /**
    * Checks preference "dom.webkitBlink.filesystem.enabled" to determine if
    * webkitEntries should be supported.
    */
