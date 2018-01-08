@@ -95,7 +95,6 @@ struct JSSettings
     JSSettings_JSGC_SLICE_TIME_BUDGET,
     JSSettings_JSGC_DYNAMIC_HEAP_GROWTH,
     JSSettings_JSGC_DYNAMIC_MARK_SLICE,
-    JSSettings_JSGC_REFRESH_FRAME_SLICES,
     // JSGC_MODE not supported
 
     // This must be last so that we get an accurate count.
