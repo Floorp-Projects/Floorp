@@ -3,12 +3,11 @@
 <head>
   <title>Test for simple WebExtension</title>
   <meta charset="utf-8">
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="chrome_head.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
   <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 
@@ -56,28 +55,14 @@ add_task(async function test_versioned_js() {
     },
   });
 
-  let messages = [/Versioned JavaScript.*not supported in WebExtension.*developer\.mozilla\.org/,
-                  /Versioned JavaScript.*not supported in WebExtension.*developer\.mozilla\.org/];
-
-  let waitForConsole = new Promise(resolve => {
-    SimpleTest.monitorConsole(resolve, messages);
-  });
-
-  info("loading extension");
+  consoleMonitor.start([{message: /Versioned JavaScript.*not supported in WebExtension.*developer\.mozilla\.org/},
+                        {message: /Versioned JavaScript.*not supported in WebExtension.*developer\.mozilla\.org/}]);
 
   await Promise.all([extension.startup(),
                      extension.awaitMessage("finished")]);
 
-  info("waiting for console");
-
-  SimpleTest.endMonitorConsole();
-  await waitForConsole;
-
-  info("unloading extension");
-
+  await consoleMonitor.finished();
   await extension.unload();
-
-  info("test complete");
 });
 
 </script>
