@@ -26,6 +26,7 @@
 #include "mozilla/dom/ClientOpenWindowOpActors.h"
 #include "mozilla/dom/ContentBridgeChild.h"
 #include "mozilla/dom/ContentBridgeParent.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/VideoDecoderManagerChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -1228,6 +1229,8 @@ ContentChild::InitXPCOM(const XPCOMInitData& aXPCOMInit,
 
   // Set the dynamic scalar definitions for this process.
   TelemetryIPC::AddDynamicScalarDefinitions(aXPCOMInit.dynamicScalarDefs());
+
+  DOMPrefs::Initialize();
 }
 
 mozilla::ipc::IPCResult

@@ -94,47 +94,30 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     template <typename T>
-    void add64(const T& address, Register64 dest) {
+    void add64FromMemory(const T& address, Register64 dest) {
         addl(Operand(LowWord(address)), dest.low);
         adcl(Operand(HighWord(address)), dest.high);
     }
     template <typename T>
-    void sub64(const T& address, Register64 dest) {
+    void sub64FromMemory(const T& address, Register64 dest) {
         subl(Operand(LowWord(address)), dest.low);
         sbbl(Operand(HighWord(address)), dest.high);
     }
     template <typename T>
-    void and64(const T& address, Register64 dest) {
+    void and64FromMemory(const T& address, Register64 dest) {
         andl(Operand(LowWord(address)), dest.low);
         andl(Operand(HighWord(address)), dest.high);
     }
     template <typename T>
-    void or64(const T& address, Register64 dest) {
+    void or64FromMemory(const T& address, Register64 dest) {
         orl(Operand(LowWord(address)), dest.low);
         orl(Operand(HighWord(address)), dest.high);
     }
     template <typename T>
-    void xor64(const T& address, Register64 dest) {
+    void xor64FromMemory(const T& address, Register64 dest) {
         xorl(Operand(LowWord(address)), dest.low);
         xorl(Operand(HighWord(address)), dest.high);
     }
-
-    // Here, `value` is an address to an Int64 because we don't have enough
-    // registers for all the operands.  It is allowed to be SP-relative.
-    template <typename T, typename U>
-    void atomicFetchAdd64(const T& value, const U& address, Register64 temp, Register64 output);
-
-    template <typename T, typename U>
-    void atomicFetchSub64(const T& value, const U& address, Register64 temp, Register64 output);
-
-    template <typename T, typename U>
-    void atomicFetchAnd64(const T& value, const U& address, Register64 temp, Register64 output);
-
-    template <typename T, typename U>
-    void atomicFetchOr64(const T& value, const U& address, Register64 temp, Register64 output);
-
-    template <typename T, typename U>
-    void atomicFetchXor64(const T& value, const U& address, Register64 temp, Register64 output);
 
     /////////////////////////////////////////////////////////////////
     // X86/X64-common interface.
@@ -673,50 +656,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void store64(Imm64 imm, Address address) {
         movl(imm.low(), Operand(LowWord(address)));
         movl(imm.hi(), Operand(HighWord(address)));
-    }
-
-    template <typename T>
-    void atomicLoad64(const T& address, Register64 temp, Register64 output) {
-        MOZ_ASSERT(temp.low == ebx);
-        MOZ_ASSERT(temp.high == ecx);
-        MOZ_ASSERT(output.high == edx);
-        MOZ_ASSERT(output.low == eax);
-
-        // In the event edx:eax matches what's in memory, ecx:ebx will be
-        // stored.  The two pairs must therefore have the same values.
-        movl(edx, ecx);
-        movl(eax, ebx);
-
-        lock_cmpxchg8b(edx, eax, ecx, ebx, Operand(address));
-    }
-
-    template <typename T>
-    void atomicExchange64(const T& address, Register64 value, Register64 output) {
-        MOZ_ASSERT(value.low == ebx);
-        MOZ_ASSERT(value.high == ecx);
-        MOZ_ASSERT(output.high == edx);
-        MOZ_ASSERT(output.low == eax);
-
-        // edx:eax has garbage initially, and that is the best we can do unless
-        // we can guess with high probability what's in memory.
-
-        Label again;
-        bind(&again);
-        lock_cmpxchg8b(edx, eax, ecx, ebx, Operand(address));
-        j(Assembler::Condition::NonZero, &again);
-    }
-
-    template <typename T>
-    void compareExchange64(const T& address, Register64 expected, Register64 replacement,
-                           Register64 output)
-    {
-        MOZ_ASSERT(expected == output);
-        MOZ_ASSERT(expected.high == edx);
-        MOZ_ASSERT(expected.low == eax);
-        MOZ_ASSERT(replacement.high == ecx);
-        MOZ_ASSERT(replacement.low == ebx);
-
-        lock_cmpxchg8b(edx, eax, ecx, ebx, Operand(address));
     }
 
     void setStackArg(Register reg, uint32_t arg) {

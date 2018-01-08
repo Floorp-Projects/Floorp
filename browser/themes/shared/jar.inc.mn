@@ -176,8 +176,6 @@
   skin/classic/browser/zoom-out.svg                   (../shared/icons/zoom-out.svg)
 
 
-  skin/classic/browser/badge-add-engine.png                    (../shared/search/badge-add-engine.png)
-  skin/classic/browser/badge-add-engine@2x.png                 (../shared/search/badge-add-engine@2x.png)
   skin/classic/browser/search-engine-placeholder.png           (../shared/search/search-engine-placeholder.png)
   skin/classic/browser/search-engine-placeholder@2x.png        (../shared/search/search-engine-placeholder@2x.png)
   skin/classic/browser/search-indicator-badge-add.svg          (../shared/search/search-indicator-badge-add.svg)

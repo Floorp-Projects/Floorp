@@ -35,7 +35,7 @@ ModuleLoadRequest::ModuleLoadRequest(nsIURI* aURI,
                                      nsIURI* aReferrer,
                                      mozilla::net::ReferrerPolicy aReferrerPolicy,
                                      ScriptLoader* aLoader)
-  : ScriptLoadRequest(ScriptKind::Module,
+  : ScriptLoadRequest(ScriptKind::eModule,
                       aURI,
                       aElement,
                       aValidJSVersion,
@@ -52,7 +52,7 @@ ModuleLoadRequest::ModuleLoadRequest(nsIURI* aURI,
 
 ModuleLoadRequest::ModuleLoadRequest(nsIURI* aURI,
                                      ModuleLoadRequest* aParent)
-  : ScriptLoadRequest(ScriptKind::Module,
+  : ScriptLoadRequest(ScriptKind::eModule,
                       aURI,
                       aParent->mElement,
                       aParent->mValidJSVersion,
@@ -68,6 +68,7 @@ ModuleLoadRequest::ModuleLoadRequest(nsIURI* aURI,
 
   mTriggeringPrincipal = aParent->mTriggeringPrincipal;
   mIsInline = false;
+  mScriptMode = aParent->mScriptMode;
 }
 
 void
@@ -75,7 +76,7 @@ ModuleLoadRequest::Cancel()
 {
   ScriptLoadRequest::Cancel();
   mModuleScript = nullptr;
-  mProgress = ScriptLoadRequest::Progress::Ready;
+  mProgress = ScriptLoadRequest::Progress::eReady;
   CancelImports();
   mReady.RejectIfExists(NS_ERROR_DOM_ABORT_ERR, __func__);
 }

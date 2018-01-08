@@ -76,6 +76,12 @@ private:
   // is set, we tail requests
   TimeStamp mUntailAt;
 
+  // Timestamp of the navigation start time, set to Now() in BeginLoad().
+  // This is used to progressively lower the maximum delay time so that
+  // we can't get to a situation when a number of repetitive requests
+  // on the page causes forever tailing.
+  TimeStamp mBeginLoadTime;
+
   // This member is true only between DOMContentLoaded notification and
   // next document load beginning for this request context.
   // Top level request contexts are recycled.
@@ -117,6 +123,7 @@ RequestContext::BeginLoad()
   }
 
   mAfterDOMContentLoaded = false;
+  mBeginLoadTime = TimeStamp::NowLoRes();
   return NS_OK;
 }
 
@@ -251,6 +258,21 @@ RequestContext::ScheduleUnblock()
 
   uint32_t quantum = gHttpHandler->TailBlockingDelayQuantum(mAfterDOMContentLoaded);
   uint32_t delayMax = gHttpHandler->TailBlockingDelayMax();
+  uint32_t totalMax = gHttpHandler->TailBlockingTotalMax();
+
+  if (!mBeginLoadTime.IsNull()) {
+    // We decrease the maximum delay progressively with the time since the page load
+    // begin.  This seems like a reasonable and clear heuristic allowing us to start
+    // loading tailed requests in a deterministic time after the load has started.
+
+    uint32_t sinceBeginLoad = static_cast<uint32_t>(
+      (TimeStamp::NowLoRes() - mBeginLoadTime).ToMilliseconds());
+    uint32_t tillTotal = totalMax - std::min(sinceBeginLoad, totalMax);
+    uint32_t proportion = totalMax // values clamped between 0 and 60'000
+      ? (delayMax * tillTotal) / totalMax
+      : 0;
+    delayMax = std::min(delayMax, proportion);
+  }
 
   CheckedInt<uint32_t> delay = quantum * mNonTailRequests;
 

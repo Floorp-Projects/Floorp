@@ -1377,28 +1377,6 @@ private:
   }
 };
 
-class UpdatePreferenceRunnable final : public WorkerControlRunnable
-{
-  WorkerPreference mPref;
-  bool mValue;
-
-public:
-  UpdatePreferenceRunnable(WorkerPrivate* aWorkerPrivate,
-                           WorkerPreference aPref,
-                           bool aValue)
-    : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
-      mPref(aPref),
-      mValue(aValue)
-  { }
-
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
-    aWorkerPrivate->UpdatePreferenceInternal(mPref, mValue);
-    return true;
-  }
-};
-
 class UpdateLanguagesRunnable final : public WorkerRunnable
 {
   nsTArray<nsString> mLanguages;
@@ -3514,20 +3492,6 @@ WorkerPrivateParent<Derived>::UpdateContextOptions(
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::UpdatePreference(WorkerPreference aPref, bool aValue)
-{
-  AssertIsOnParentThread();
-  MOZ_ASSERT(aPref >= 0 && aPref < WORKERPREF_COUNT);
-
-  RefPtr<UpdatePreferenceRunnable> runnable =
-    new UpdatePreferenceRunnable(ParentAsWorkerPrivate(), aPref, aValue);
-  if (!runnable->Dispatch()) {
-    NS_WARNING("Failed to update worker preferences!");
-  }
-}
-
-template <class Derived>
-void
 WorkerPrivateParent<Derived>::UpdateLanguages(const nsTArray<nsString>& aLanguages)
 {
   AssertIsOnParentThread();
@@ -4540,12 +4504,10 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
 {
   if (aParent) {
     aParent->AssertIsOnWorkerThread();
-    aParent->GetAllPreferences(mPreferences);
     mOnLine = aParent->OnLine();
   }
   else {
     AssertIsOnMainThread();
-    RuntimeService::GetDefaultPreferences(mPreferences);
     mOnLine = !NS_IsOffline();
   }
 
@@ -6859,19 +6821,6 @@ WorkerPrivate::UpdateLanguagesInternal(const nsTArray<nsString>& aLanguages)
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
     mChildWorkers[index]->UpdateLanguages(aLanguages);
-  }
-}
-
-void
-WorkerPrivate::UpdatePreferenceInternal(WorkerPreference aPref, bool aValue)
-{
-  AssertIsOnWorkerThread();
-  MOZ_ASSERT(aPref >= 0 && aPref < WORKERPREF_COUNT);
-
-  mPreferences[aPref] = aValue;
-
-  for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
-    mChildWorkers[index]->UpdatePreference(aPref, aValue);
   }
 }
 

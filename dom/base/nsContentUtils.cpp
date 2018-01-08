@@ -292,11 +292,9 @@ bool nsContentUtils::sIsFrameTimingPrefEnabled = false;
 bool nsContentUtils::sIsPerformanceTimingEnabled = false;
 bool nsContentUtils::sIsResourceTimingEnabled = false;
 bool nsContentUtils::sIsPerformanceNavigationTimingEnabled = false;
-bool nsContentUtils::sIsUserTimingLoggingEnabled = false;
 bool nsContentUtils::sIsFormAutofillAutocompleteEnabled = false;
 bool nsContentUtils::sIsWebComponentsEnabled = false;
 bool nsContentUtils::sIsCustomElementsEnabled = false;
-bool nsContentUtils::sDevToolsEnabled = false;
 bool nsContentUtils::sSendPerformanceTimingNotifications = false;
 bool nsContentUtils::sUseActivityCursor = false;
 bool nsContentUtils::sAnimationsAPICoreEnabled = false;
@@ -333,10 +331,6 @@ nsHtml5StringParser* nsContentUtils::sHTMLFragmentParser = nullptr;
 nsIParser* nsContentUtils::sXMLFragmentParser = nullptr;
 nsIFragmentContentSink* nsContentUtils::sXMLFragmentSink = nullptr;
 bool nsContentUtils::sFragmentParsingActive = false;
-
-#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-bool nsContentUtils::sDOMWindowDumpEnabled;
-#endif
 
 bool nsContentUtils::sDoNotTrackEnabled = false;
 
@@ -653,9 +647,6 @@ nsContentUtils::Init()
   Preferences::AddBoolVarCache(&sIsPerformanceNavigationTimingEnabled,
                                "dom.enable_performance_navigation_timing", true);
 
-  Preferences::AddBoolVarCache(&sIsUserTimingLoggingEnabled,
-                               "dom.performance.enable_user_timing_logging", false);
-
   Preferences::AddBoolVarCache(&sIsFrameTimingPrefEnabled,
                                "dom.enable_frame_timing", false);
 
@@ -667,9 +658,6 @@ nsContentUtils::Init()
 
   Preferences::AddBoolVarCache(&sIsCustomElementsEnabled,
                                "dom.webcomponents.customelements.enabled", false);
-
-  Preferences::AddBoolVarCache(&sDevToolsEnabled,
-                               "devtools.enabled");
 
   Preferences::AddIntVarCache(&sPrivacyMaxInnerWidth,
                               "privacy.window.maxInnerWidth",
@@ -693,11 +681,6 @@ nsContentUtils::Init()
   Preferences::AddUintVarCache(&sCookiesBehavior,
                                "network.cookie.cookieBehavior",
                                nsICookieService::BEHAVIOR_ACCEPT);
-
-#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-  Preferences::AddBoolVarCache(&sDOMWindowDumpEnabled,
-                               "browser.dom.window.dump.enabled");
-#endif
 
   Preferences::AddBoolVarCache(&sDoNotTrackEnabled,
                                "privacy.donottrackheader.enabled", false);
@@ -2364,17 +2347,7 @@ nsContentUtils::IsCallerChrome()
 bool
 nsContentUtils::ShouldResistFingerprinting()
 {
-  if (NS_IsMainThread()) {
-    return nsRFPService::IsResistFingerprintingEnabled();
-  }
-
-  workers::WorkerPrivate* workerPrivate = workers::GetCurrentThreadWorkerPrivate();
-  if (NS_WARN_IF(!workerPrivate)) {
-    return false;
-  }
-  workerPrivate->AssertIsOnWorkerThread();
-
-  return workerPrivate->ResistFingerprintingEnabled();
+  return DOMPrefs::ResistFingerprintingEnabled();
 }
 
 bool
@@ -7587,19 +7560,6 @@ nsContentUtils::IsAllowedNonCorsContentType(const nsACString& aHeaderValue)
 }
 
 bool
-nsContentUtils::DOMWindowDumpEnabled()
-{
-#if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
-  // In optimized builds we check a pref that controls if we should
-  // enable output from dump() or not, in debug builds it's always
-  // enabled.
-  return nsContentUtils::sDOMWindowDumpEnabled;
-#else
-  return true;
-#endif
-}
-
-bool
 nsContentUtils::DoNotTrackEnabled()
 {
   return nsContentUtils::sDoNotTrackEnabled;
@@ -8913,63 +8873,6 @@ nsContentUtils::GetReferrerPolicyFromHeader(const nsAString& aHeader)
 
 // static
 bool
-nsContentUtils::PromiseRejectionEventsEnabled(JSContext* aCx, JSObject* aObj)
-{
-  if (NS_IsMainThread()) {
-    return Preferences::GetBool("dom.promise_rejection_events.enabled", false);
-  }
-
-  using namespace workers;
-
-  // Otherwise, check the pref via the WorkerPrivate
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-  if (!workerPrivate) {
-    return false;
-  }
-
-  return workerPrivate->PromiseRejectionEventsEnabled();
-}
-
-// static
-bool
-nsContentUtils::PushEnabled(JSContext* aCx, JSObject* aObj)
-{
-  if (NS_IsMainThread()) {
-    return Preferences::GetBool("dom.push.enabled", false);
-  }
-
-  using namespace workers;
-
-  // Otherwise, check the pref via the WorkerPrivate
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-  if (!workerPrivate) {
-    return false;
-  }
-
-  return workerPrivate->PushEnabled();
-}
-
-// static
-bool
-nsContentUtils::StreamsEnabled(JSContext* aCx, JSObject* aObj)
-{
-  if (NS_IsMainThread()) {
-    return Preferences::GetBool("dom.streams.enabled", false);
-  }
-
-  using namespace workers;
-
-  // Otherwise, check the pref via the WorkerPrivate
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-  if (!workerPrivate) {
-    return false;
-  }
-
-  return workerPrivate->StreamsEnabled();
-}
-
-// static
-bool
 nsContentUtils::IsNonSubresourceRequest(nsIChannel* aChannel)
 {
   nsLoadFlags loadFlags = 0;
@@ -10086,9 +9989,6 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
              "Can only create XUL or XHTML elements.");
 
   nsAtom *name = nodeInfo->NameAtom();
-  RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
-  RefPtr<nsAtom> typeAtom = aIs ? NS_Atomize(*aIs) : tagAtom;
-
   int32_t tag = eHTMLTag_unknown;
   bool isCustomElementName = false;
   if (nodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
@@ -10098,7 +9998,14 @@ nsContentUtils::NewXULOrHTMLElement(Element** aResult, mozilla::dom::NodeInfo* a
   } else {
     isCustomElementName = nsContentUtils::IsCustomElementName(name);
   }
+
+  RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
+  RefPtr<nsAtom> typeAtom;
   bool isCustomElement = isCustomElementName || aIs;
+  if (isCustomElement) {
+    typeAtom = isCustomElementName ? tagAtom : NS_Atomize(*aIs);
+  }
+
   MOZ_ASSERT_IF(aDefinition, isCustomElement);
 
   // https://dom.spec.whatwg.org/#concept-create-element
@@ -11111,21 +11018,6 @@ nsContentUtils::ExtractErrorValues(JSContext* aCx,
 }
 
 #undef EXTRACT_EXN_VALUES
-
-/* static */ bool
-nsContentUtils::DevToolsEnabled(JSContext* aCx)
-{
-  if (NS_IsMainThread()) {
-    return sDevToolsEnabled;
-  }
-
-  workers::WorkerPrivate* workerPrivate = workers::GetWorkerPrivateFromContext(aCx);
-  if (!workerPrivate) {
-    return false;
-  }
-
-  return workerPrivate->DevToolsEnabled();
-}
 
 /* static */ bool
 nsContentUtils::ContentIsLink(nsIContent* aContent)

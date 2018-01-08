@@ -36,7 +36,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
   }
   argv_copy[argv.size()] = NULL;
 
-  EnvironmentArray vars = BuildEnvironmentArray(options.environ);
+  EnvironmentArray vars = BuildEnvironmentArray(options.env_map);
 
   posix_spawn_file_actions_t file_actions;
   if (posix_spawn_file_actions_init(&file_actions) != 0) {

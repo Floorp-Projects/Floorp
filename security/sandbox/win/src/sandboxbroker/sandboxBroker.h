@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include <windows.h>
 
+#include "build/build_config.h"
+#include "mozilla/ipc/EnvironmentMap.h"
 #include "nsXULAppAPI.h"
 
 namespace sandbox {
@@ -34,6 +36,7 @@ public:
 
   bool LaunchApp(const wchar_t *aPath,
                  const wchar_t *aArguments,
+                 base::EnvironmentMap& aEnvironment,
                  GeckoProcessType aProcessType,
                  const bool aEnableLogging,
                  void **aProcessHandle);
