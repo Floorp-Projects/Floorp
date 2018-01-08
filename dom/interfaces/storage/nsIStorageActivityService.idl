@@ -32,6 +32,9 @@ interface nsIStorageActivityService : nsISupports
   // NOTE: This method is meant to be used for testing only.
   // The activity of |origin| is moved to the specified timestamp |when|.
   void moveOriginInTime(in nsIPrincipal origin, in PRTime when);
+
+  // TEST-ONLY method to support clearing all previously known activity.
+  void testOnlyReset();
 };
 
 %{ C++
