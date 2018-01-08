@@ -238,3 +238,114 @@ TEST_F(TelemetryTestFixture, AccumulateKeyedCategoricalHistogram)
   JS::ToUint32(cx.GetJSContext(), otherValue, &uOtherValue);
   ASSERT_EQ(uOtherValue, kOtherSampleExpectedValue) << "The other-sample histogram is not returning expected value";
 }
+
+TEST_F(TelemetryTestFixture, AccumulateCountHistogram_MultipleSamples)
+{
+  nsTArray<uint32_t> samples({4,4,4});
+  const uint32_t kExpectedSum = 12;
+
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  GetAndClearHistogram(cx.GetJSContext(), mTelemetry, NS_LITERAL_CSTRING("TELEMETRY_TEST_COUNT"),
+                        false);
+
+  // Accumulate in histogram
+  Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_COUNT, samples);
+
+  // Get a snapshot of all the histograms
+  JS::RootedValue snapshot(cx.GetJSContext());
+  GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_COUNT", &snapshot, false);
+
+  // Get histogram from snapshot
+  JS::RootedValue histogram(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_COUNT", snapshot, &histogram);
+
+  // Get "sum" from histogram
+  JS::RootedValue sum(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "sum", histogram, &sum);
+
+  // Check that sum matches with aValue
+  uint32_t uSum = 0;
+  JS::ToUint32(cx.GetJSContext(), sum, &uSum);
+  ASSERT_EQ(uSum, kExpectedSum) << "This histogram is not returning expected value";
+}
+
+TEST_F(TelemetryTestFixture, AccumulateLinearHistogram_MultipleSamples)
+{
+  nsTArray<uint32_t> samples({4,4,4});
+  const uint32_t kExpectedCount = 3;
+
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  GetAndClearHistogram(cx.GetJSContext(), mTelemetry, NS_LITERAL_CSTRING("TELEMETRY_TEST_LINEAR"),
+                        false);
+
+  // Accumulate in the histogram
+  Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_LINEAR, samples);
+
+  // Get a snapshot of all the histograms
+  JS::RootedValue snapshot(cx.GetJSContext());
+  GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_LINEAR", &snapshot, false);
+
+  // Get histogram from snapshot
+  JS::RootedValue histogram(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_LINEAR", snapshot, &histogram);
+
+  // Get "counts" array from histogram
+  JS::RootedValue counts(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "counts", histogram, &counts);
+
+  // Index 0 is only for values less than 'low'. Values within range start at index 1
+  JS::RootedValue count(cx.GetJSContext());
+  const uint32_t index = 1;
+  GetElement(cx.GetJSContext(), index, counts, &count);
+
+  // Check that this count matches with nSamples
+  uint32_t uCount = 0;
+  JS::ToUint32(cx.GetJSContext(), count, &uCount);
+  ASSERT_EQ(uCount, kExpectedCount) << "The histogram did not accumulate the correct number of values";
+}
+
+TEST_F(TelemetryTestFixture, AccumulateLinearHistogram_DifferentSamples)
+{
+  nsTArray<uint32_t> samples({4, 8, 2147483646});
+
+  AutoJSContextWithGlobal cx(mCleanGlobal);
+
+  GetAndClearHistogram(cx.GetJSContext(), mTelemetry, NS_LITERAL_CSTRING("TELEMETRY_TEST_LINEAR"),
+                        false);
+
+  // Accumulate in histogram
+  Telemetry::Accumulate(Telemetry::TELEMETRY_TEST_LINEAR, samples);
+
+  // Get a snapshot of all histograms
+  JS::RootedValue snapshot(cx.GetJSContext());
+  GetSnapshots(cx.GetJSContext(), mTelemetry, "TELEMETRY_TEST_LINEAR", &snapshot, false);
+
+  // Get histogram from snapshot
+  JS::RootedValue histogram(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "TELEMETRY_TEST_LINEAR", snapshot, &histogram);
+
+  // Get counts array from histogram
+  JS::RootedValue counts(cx.GetJSContext());
+  GetProperty(cx.GetJSContext(), "counts", histogram, &counts);
+
+  // Get counts in first and last buckets
+  JS::RootedValue countFirst(cx.GetJSContext());
+  JS::RootedValue countLast(cx.GetJSContext());
+  const uint32_t firstIndex = 1;
+  const uint32_t lastIndex = 9;
+  GetElement(cx.GetJSContext(), firstIndex, counts, &countFirst);
+  GetElement(cx.GetJSContext(), lastIndex, counts, &countLast);
+
+  // Check that the counts match
+  uint32_t uCountFirst = 0;
+  uint32_t uCountLast = 0;
+  JS::ToUint32(cx.GetJSContext(), countFirst, &uCountFirst);
+  JS::ToUint32(cx.GetJSContext(), countLast, &uCountLast);
+
+  const uint32_t kExpectedCountFirst = 2;
+  const uint32_t kExpectedCountLast = 1;
+  ASSERT_EQ(uCountFirst, kExpectedCountFirst) << "The first bucket did not accumulate the correct number of values";
+  ASSERT_EQ(uCountLast, kExpectedCountLast) << "The last bucket did not accumulate the correct number of values";
+}
