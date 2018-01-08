@@ -19,6 +19,7 @@
 #include "mozilla/dom/AppNotificationServiceOptionsBinding.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/NotificationEvent.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/Promise.h"
@@ -912,20 +913,18 @@ Notification::RequireInteractionEnabled(JSContext* aCx, JSObject* aOjb)
 bool
 Notification::PrefEnabled(JSContext* aCx, JSObject* aObj)
 {
-  if (NS_IsMainThread()) {
-    return Preferences::GetBool("dom.webnotifications.enabled", false);
+  if (!NS_IsMainThread()) {
+    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+    if (!workerPrivate) {
+      return false;
+    }
+
+    if (workerPrivate->IsServiceWorker()) {
+      return DOMPrefs::NotificationEnabledInServiceWorkers();
+    }
   }
 
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-  if (!workerPrivate) {
-    return false;
-  }
-
-  if (workerPrivate->IsServiceWorker()) {
-    return workerPrivate->DOMServiceWorkerNotificationEnabled();
-  }
-
-  return workerPrivate->DOMWorkerNotificationEnabled();
+  return DOMPrefs::NotificationEnabled();
 }
 
 // static
