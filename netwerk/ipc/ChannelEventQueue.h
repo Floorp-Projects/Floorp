@@ -318,6 +318,11 @@ ChannelEventQueue::MaybeFlushQueue()
     MutexAutoLock lock(mMutex);
     flushQueue = !mForcedCount && !mFlushing && !mSuspended &&
                  !mEventQueue.IsEmpty();
+
+    // Only one thread is allowed to run FlushQueue at a time.
+    if (flushQueue) {
+      mFlushing = true;
+    }
   }
 
   if (flushQueue) {

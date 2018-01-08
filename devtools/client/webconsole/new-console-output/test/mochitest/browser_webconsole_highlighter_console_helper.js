@@ -1,5 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
@@ -7,102 +5,75 @@
 
 "use strict";
 
-var inspector, h1, outputNode;
+const TEST_URI = `data:text/html;charset=utf-8,
+<head>
+  <title>Inspector Tree Selection Test</title>
+</head>
+<body>
+  <div>
+    <h1>Inspector Tree Selection Test</h1>
+    <p>This is some example text</p>
+    <p>${loremIpsum()}</p>
+  </div>
+  <div>
+    <p>${loremIpsum()}</p>
+  </div>
+</body>`.replace("\n", "");
 
-function createDocument() {
-  let doc = content.document;
-  let div = doc.createElement("div");
-  h1 = doc.createElement("h1");
-  let p1 = doc.createElement("p");
-  let p2 = doc.createElement("p");
-  let div2 = doc.createElement("div");
-  let p3 = doc.createElement("p");
-  doc.title = "Inspector Tree Selection Test";
-  h1.textContent = "Inspector Tree Selection Test";
-  p1.textContent = "This is some example text";
-  p2.textContent = "Lorem ipsum dolor sit amet, consectetur adipisicing " +
-    "elit, sed do eiusmod tempor incididunt ut labore et dolore magna " +
-    "aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco " +
-    "laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure " +
-    "dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
-    "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non " +
-    "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-  p3.textContent = "Lorem ipsum dolor sit amet, consectetur adipisicing " +
-    "elit, sed do eiusmod tempor incididunt ut labore et dolore magna " +
-    "aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco " +
-    "laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure " +
-    "dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
-    "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non " +
-    "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-  div.appendChild(h1);
-  div.appendChild(p1);
-  div.appendChild(p2);
-  div2.appendChild(p3);
-  doc.body.appendChild(div);
-  doc.body.appendChild(div2);
-  setupHighlighterTests();
-}
+add_task(async function () {
+  const toolbox = await openNewTabAndToolbox(TEST_URI, "inspector");
+  const inspector = toolbox.getPanel("inspector");
 
-function setupHighlighterTests() {
-  ok(h1, "we have the header node");
-  openInspector().then(runSelectionTests);
-}
-
-var runSelectionTests = Task.async(function* (aInspector) {
-  inspector = aInspector;
+  await registerTestActor(toolbox.target.client);
+  let testActor = await getTestActor(toolbox);
 
   let onPickerStarted = inspector.toolbox.once("picker-started");
   inspector.toolbox.highlighterUtils.startPicker();
-  yield onPickerStarted;
+  await onPickerStarted;
 
-  info("Picker mode started, now clicking on H1 to select that node");
-  h1.scrollIntoView();
-  let onPickerStopped = inspector.toolbox.once("picker-stopped");
+  info("Picker mode started, now clicking on <h1> to select that node");
+  let onPickerStopped = toolbox.once("picker-stopped");
   let onInspectorUpdated = inspector.once("inspector-updated");
-  EventUtils.synthesizeMouseAtCenter(h1, {}, content);
-  yield onPickerStopped;
-  yield onInspectorUpdated;
 
-  info("Picker mode stopped, H1 selected, now switching to the console");
-  let hud = yield openConsole(gBrowser.selectedTab);
+  testActor.synthesizeMouse({
+    selector: "h1",
+    center: true,
+    options: {}
+  });
 
-  performWebConsoleTests(hud);
-});
+  await onPickerStopped;
+  await onInspectorUpdated;
 
-function performWebConsoleTests(hud) {
-  let jsterm = hud.jsterm;
-  outputNode = hud.outputNode;
+  info("Picker mode stopped, <h1> selected, now switching to the console");
+  const hud = await openConsole();
+  const {jsterm} = hud;
 
   jsterm.clearOutput();
-  jsterm.execute("$0", onNodeOutput);
 
-  function onNodeOutput(node) {
-    isnot(node.textContent.indexOf("<h1>"), -1, "correct output for $0");
+  let onEvaluationResult = waitForMessage(hud, "<h1>");
+  jsterm.execute("$0");
+  await onEvaluationResult;
+  ok(true, "correct output for $0");
 
-    jsterm.clearOutput();
-    jsterm.execute("$0.textContent = 'bug653531'", onNodeUpdate);
-  }
+  jsterm.clearOutput();
 
-  function onNodeUpdate(node) {
-    isnot(node.textContent.indexOf("bug653531"), -1,
-          "correct output for $0.textContent");
-    is(inspector.selection.node.textContent, "bug653531",
-       "node successfully updated");
+  const newH1Content = "newH1Content";
+  let onAssignmentResult = waitForMessage(hud, "<h1>");
+  jsterm.execute(`$0.textContent = "${newH1Content}";$0`);
+  await onAssignmentResult;
 
-    inspector = h1 = outputNode = null;
-    gBrowser.removeCurrentTab();
-    finishTest();
-  }
-}
+  ok(true, "correct output for $0 after setting $0.textContent");
+  const {textContent} = await testActor.getNodeInfo("h1");
+  is(textContent, newH1Content, "node successfully updated");
+});
 
-function test() {
-  waitForExplicitFinish();
-
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
-  gBrowser.selectedBrowser.addEventListener("load", function () {
-    waitForFocus(createDocument, content);
-  }, {capture: true, once: true});
-
-  BrowserTestUtils.loadURI(gBrowser.selectedBrowser,
-    "data:text/html;charset=utf-8,test for highlighter helper in web console");
+function loremIpsum() {
+  return `Lorem ipsum dolor sit amet, consectetur adipisicing
+elit, sed do eiusmod tempor incididunt ut labore et dolore magna
+aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure
+dolor in reprehenderit in voluptate velit esse cillum dolore eu
+fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`
+  .replace("\n", "");
 }
