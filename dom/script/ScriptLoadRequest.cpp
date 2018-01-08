@@ -51,12 +51,11 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind,
   , mScriptFromHead(false)
   , mProgress(Progress::Loading)
   , mDataType(DataType::Unknown)
+  , mScriptMode(ScriptMode::eBlocking)
   , mIsInline(true)
   , mHasSourceMapURL(false)
   , mInDeferList(false)
   , mInAsyncList(false)
-  , mPreloadAsAsync(false)
-  , mPreloadAsDefer(false)
   , mIsNonAsyncScriptInserted(false)
   , mIsXSLT(false)
   , mIsCanceled(false)
@@ -139,6 +138,18 @@ ScriptLoadRequest::AsModuleRequest()
 {
   MOZ_ASSERT(IsModuleRequest());
   return static_cast<ModuleLoadRequest*>(this);
+}
+
+void
+ScriptLoadRequest::SetScriptMode(bool aDeferAttr, bool aAsyncAttr)
+{
+  if (aAsyncAttr) {
+    mScriptMode = ScriptMode::eAsync;
+  } else if (aDeferAttr || IsModuleRequest()) {
+    mScriptMode = ScriptMode::eDeferred;
+  } else {
+    mScriptMode = ScriptMode::eBlocking;
+  }
 }
 
 //////////////////////////////////////////////////////////////
