@@ -18,6 +18,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/dom/StorageActivityService.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -258,6 +259,7 @@ ServiceWorkerRegistrar::RegisterServiceWorker(
   }
 
   ScheduleSaveData();
+  StorageActivityService::SendActivity(aData.principal());
 }
 
 void
@@ -293,6 +295,7 @@ ServiceWorkerRegistrar::UnregisterServiceWorker(
 
   if (deleted) {
     ScheduleSaveData();
+    StorageActivityService::SendActivity(aPrincipalInfo);
   }
 }
 
@@ -308,16 +311,26 @@ ServiceWorkerRegistrar::RemoveAll()
 
   bool deleted = false;
 
+  nsTArray<ServiceWorkerRegistrationData> data;
   {
     MonitorAutoLock lock(mMonitor);
     MOZ_ASSERT(mDataLoaded);
+
+    // Let's take a copy in order to inform StorageActivityService.
+    data = mData;
 
     deleted = !mData.IsEmpty();
     mData.Clear();
   }
 
-  if (deleted) {
-    ScheduleSaveData();
+  if (!deleted) {
+    return;
+  }
+
+  ScheduleSaveData();
+
+  for (uint32_t i = 0, len = data.Length(); i < len; ++i) {
+    StorageActivityService::SendActivity(data[i].principal());
   }
 }
 
