@@ -8,7 +8,7 @@ function countTabs(dbg) {
 }
 
 add_task(async function() {
-  let dbg = await initDebugger("doc-scripts.html");
+  const dbg = await initDebugger("doc-scripts.html");
 
   await selectSource(dbg, "simple1");
   await selectSource(dbg, "simple2");
@@ -26,7 +26,7 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  let dbg = await initDebugger("doc-scripts.html", "simple1", "simple2");
+  const dbg = await initDebugger("doc-scripts.html", "simple1", "simple2");
 
   await selectSource(dbg, "simple1");
   await selectSource(dbg, "simple2");
