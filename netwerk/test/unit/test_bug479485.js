@@ -19,7 +19,7 @@ function run_test() {
     exception_threw = false;
     newURI = ios.newURI("http://foo.com");
     try {
-      newURI.spec = "http://foo.com"+port;
+      newURI = newURI.mutate().setSpec("http://foo.com"+port).finalize();
     }
     catch (e) {
       exception_threw = e.result == Cr.NS_ERROR_MALFORMED_URI;
