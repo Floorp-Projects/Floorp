@@ -25,8 +25,11 @@ use std::mem;
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use texture_cache::{TextureCache, TextureCacheHandle};
+#[cfg(test)]
+use thread_profiler::register_thread_with_profiler;
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "capture", derive(Serialize, Deserialize))]
 pub struct FontTransform {
     pub scale_x: f32,
     pub skew_x: f32,
@@ -99,25 +102,17 @@ impl FontTransform {
         )
     }
 
-    #[allow(dead_code)]
-    pub fn inverse(&self) -> Option<Self> {
-        let det = self.determinant();
-        if det != 0.0 {
-            let inv_det = det.recip() as f32;
-            Some(FontTransform::new(
-                self.scale_y * inv_det,
-                -self.skew_x * inv_det,
-                -self.skew_y * inv_det,
-                self.scale_x * inv_det
-            ))
-        } else {
-            None
-        }
+    pub fn invert_scale(&self, x_scale: f64, y_scale: f64) -> Self {
+        self.pre_scale(x_scale.recip() as f32, y_scale.recip() as f32)
     }
 
-    #[allow(dead_code)]
-    pub fn apply(&self, x: f32, y: f32) -> (f32, f32) {
-        (self.scale_x * x + self.skew_x * y, self.skew_y * x + self.scale_y * y)
+    pub fn synthesize_italics(&self, skew_factor: f32) -> Self {
+        FontTransform::new(
+            self.scale_x,
+            self.skew_x - self.scale_x * skew_factor,
+            self.skew_y,
+            self.scale_y - self.skew_y * skew_factor,
+        )
     }
 }
 
@@ -128,6 +123,7 @@ impl<'a> From<&'a LayerToWorldTransform> for FontTransform {
 }
 
 #[derive(Clone, Hash, PartialEq, Eq, Debug, Ord, PartialOrd)]
+#[cfg_attr(feature = "capture", derive(Serialize, Deserialize))]
 pub struct FontInstance {
     pub font_key: FontKey,
     // The font size is in *device* pixels, not logical pixels.
@@ -567,6 +563,13 @@ impl GlyphRasterizer {
             });
         }
     }
+
+    #[cfg(feature = "capture")]
+    pub fn reset(&mut self) {
+        //TODO: any signals need to be sent to the workers?
+        self.pending_glyphs.clear();
+        self.fonts_to_remove.clear();
+    }
 }
 
 impl FontContext {
@@ -603,7 +606,7 @@ struct GlyphRasterJob {
 }
 
 #[test]
-fn raterize_200_glyphs() {
+fn rasterize_200_glyphs() {
     // This test loads a font from disc, the renders 4 requests containing
     // 50 glyphs each, deletes the font and waits for the result.
 
@@ -611,7 +614,12 @@ fn raterize_200_glyphs() {
     use std::fs::File;
     use std::io::Read;
 
-    let workers = Arc::new(ThreadPool::new(Configuration::new()).unwrap());
+    let worker_config = Configuration::new()
+        .thread_name(|idx|{ format!("WRWorker#{}", idx) })
+        .start_handler(move |idx| {
+            register_thread_with_profiler(format!("WRWorker#{}", idx));
+        });
+    let workers = Arc::new(ThreadPool::new(worker_config).unwrap());
     let mut glyph_rasterizer = GlyphRasterizer::new(workers);
     let mut glyph_cache = GlyphCache::new();
     let mut gpu_cache = GpuCache::new();

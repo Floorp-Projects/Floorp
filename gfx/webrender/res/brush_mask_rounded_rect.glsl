@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#define VECS_PER_SPECIFIC_BRUSH 4
+
 #include shared,prim_shared,ellipse,brush
 
 flat varying float vClipMode;
@@ -39,7 +41,8 @@ void brush_vs(
     int prim_address,
     vec2 local_pos,
     RectWithSize local_rect,
-    ivec2 user_data
+    ivec2 user_data,
+    PictureTask pic_task
 ) {
     // Load the specific primitive.
     RoundedRectPrimitive prim = fetch_rounded_rect_primitive(prim_address);

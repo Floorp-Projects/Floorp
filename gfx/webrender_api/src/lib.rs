@@ -15,8 +15,9 @@ extern crate core;
 extern crate euclid;
 #[cfg(feature = "ipc")]
 extern crate ipc_channel;
-#[macro_use]
 extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 extern crate time;
 
 #[cfg(target_os = "macos")]
