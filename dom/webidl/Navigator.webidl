@@ -78,7 +78,7 @@ interface NavigatorContentUtils {
   // content handler registration
   [Throws]
   void registerProtocolHandler(DOMString scheme, DOMString url, DOMString title);
-  [Throws]
+  [Pref="dom.registerContentHandler.enabled", Throws]
   void registerContentHandler(DOMString mimeType, DOMString url, DOMString title);
   // NOT IMPLEMENTED
   //DOMString isProtocolHandlerRegistered(DOMString scheme, DOMString url);
