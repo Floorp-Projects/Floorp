@@ -206,8 +206,8 @@ ModuleGenerator::init(Metadata* maybeAsmJSMetadata)
     if (!metadataTier_->codeRanges.reserve(2 * env_->numFuncDefs()))
         return false;
 
-    const size_t CallSitesPerByteCode = 10;
-    if (!metadataTier_->callSites.reserve(codeSectionSize / CallSitesPerByteCode))
+    const size_t ByteCodesPerCallSite = 10;
+    if (!metadataTier_->callSites.reserve(codeSectionSize / ByteCodesPerCallSite))
         return false;
 
     const size_t MemoryAccessesPerByteCode = 10;
