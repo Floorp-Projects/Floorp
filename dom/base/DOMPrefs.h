@@ -15,6 +15,10 @@ class DOMPrefs final
 public:
   // Returns true if the browser.dom.window.dump.enabled pref is set.
   static bool DumpEnabled();
+
+  // Returns true if the canvas.imagebitmap_extensions.enabled pref is set.
+  static bool ImageBitmapExtensionsEnabled();
+  static bool ImageBitmapExtensionsEnabled(JSContext* aCx, JSObject* aObj);
 };
 
 } // dom namespace
