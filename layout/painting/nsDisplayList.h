@@ -1550,8 +1550,7 @@ public:
 
   static OutOfFlowDisplayData* GetOutOfFlowData(nsIFrame* aFrame)
   {
-    if (!(aFrame->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) ||
-        !aFrame->GetParent()) {
+    if (!aFrame->GetParent()) {
       return nullptr;
     }
     return aFrame->GetParent()->GetProperty(OutOfFlowDisplayDataProperty());
