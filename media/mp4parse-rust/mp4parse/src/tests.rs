@@ -1107,6 +1107,28 @@ fn read_esds_invalid_descriptor() {
     }
 }
 
+#[test]
+fn read_esds_redundant_descriptor() {
+    // the '2' at the end is redundant data.
+    let esds =
+        vec![  3, 25,   0, 1, 0, 4, 19, 64,
+              21,  0,   0, 0, 0, 0,  0,  0,
+               0,  1, 119, 0, 5, 2, 18, 16,
+               6,  1,   2,
+            ];
+
+    let mut stream = make_box(BoxSize::Auto, b"esds", |s| {
+        s.B32(0) // reserved
+         .append_bytes(esds.as_slice())
+    });
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+
+    match super::read_esds(&mut stream) {
+        Ok(esds) => assert_eq!(esds.audio_codec, super::CodecType::AAC),
+        _ => panic!("unexpected result with invalid descriptor"),
+    }
+}
 
 #[test]
 fn read_invalid_pssh() {

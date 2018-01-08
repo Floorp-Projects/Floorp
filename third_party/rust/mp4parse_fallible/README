@@ -1,0 +1,7 @@
+This is from https://github.com/servo/servo/tree/master/components/fallible
+with modificaion for mp4 demuxer.
+
+The purpose of this crate is to solve infallible memory allocation problem
+which causes OOM easily on win32. This is more like a temporary solution.
+Once rust supports fallible memory allocation in its stdlib, this can be
+retired.
