@@ -9,7 +9,7 @@
  * https://notifications.spec.whatwg.org/
  */
 
-[Func="mozilla::dom::ServiceWorkerRegistration::Visible",
+[Func="mozilla::dom::DOMPrefs::ServiceWorkersEnabled",
  Exposed=(Window,Worker)]
 interface ServiceWorkerRegistration : EventTarget {
   [Unforgeable] readonly attribute ServiceWorker? installing;
