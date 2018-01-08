@@ -39,6 +39,11 @@ public:
   static bool NotificationEnabledInServiceWorkers();
   static bool NotificationEnabledInServiceWorkers(JSContext* aCx,
                                                   JSObject* aObj);
+
+  // Returns true if the dom.webnotifications.requireinteraction.enabled pref is
+  // set.
+  static bool NotificationRIEnabled();
+  static bool NotificationRIEnabled(JSContext* aCx, JSObject* aObj);
 };
 
 } // dom namespace
