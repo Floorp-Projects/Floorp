@@ -508,7 +508,8 @@ gfxMacFont::GetScaledFont(DrawTarget *aTarget)
                                                 GetUnscaledFont(),
                                                 GetAdjustedSize(),
                                                 Color::FromABGR(mFontSmoothingBackgroundColor),
-                                                !mStyle.useGrayscaleAntialiasing);
+                                                !mStyle.useGrayscaleAntialiasing,
+                                                IsSyntheticBold());
         if (!mAzureScaledFont) {
             return nullptr;
         }
