@@ -16,7 +16,7 @@ enum FetchState {
 };
 
 [Exposed=(Window,Worker),
- Func="FetchObserver::IsEnabled"]
+ Func="mozilla::dom::DOMPrefs::FetchObserverEnabled"]
 interface FetchObserver : EventTarget {
   readonly attribute FetchState state;
 

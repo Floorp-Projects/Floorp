@@ -51,6 +51,7 @@ PREF(RequestContextEnabled, "dom.requestcontext.enabled")
 PREF(OffscreenCanvasEnabled, "gfx.offscreencanvas.enabled")
 PREF(WebkitBlinkDirectoryPickerEnabled, "dom.webkitBlink.dirPicker.enabled")
 PREF(NetworkInformationEnabled, "dom.netinfo.enabled")
+PREF(FetchObserverEnabled, "dom.fetchObserver.enabled")
 
 #undef PREF
 
@@ -74,6 +75,7 @@ PREF_WEBIDL(RequestContextEnabled)
 PREF_WEBIDL(OffscreenCanvasEnabled)
 PREF_WEBIDL(WebkitBlinkDirectoryPickerEnabled)
 PREF_WEBIDL(NetworkInformationEnabled)
+PREF_WEBIDL(FetchObserverEnabled)
 
 #undef PREF_WEBIDL
 
