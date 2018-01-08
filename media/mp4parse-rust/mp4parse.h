@@ -44,7 +44,6 @@ typedef enum {
   MP4PARSE_TRACK_TYPE_AUDIO = 1,
 } Mp4parseTrackType;
 
-struct Mp4parseParser;
 typedef struct Mp4parseParser Mp4parseParser;
 
 typedef struct {
