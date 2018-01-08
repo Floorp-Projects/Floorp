@@ -53,6 +53,7 @@ PREF(WebkitBlinkDirectoryPickerEnabled, "dom.webkitBlink.dirPicker.enabled")
 PREF(NetworkInformationEnabled, "dom.netinfo.enabled")
 PREF(FetchObserverEnabled, "dom.fetchObserver.enabled")
 PREF(ResistFingerprintingEnabled, "privacy.resistFingerprinting")
+PREF(DevToolsEnabled, "devtools.enabled")
 
 #undef PREF
 
