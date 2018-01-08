@@ -1875,6 +1875,22 @@ TelemetryHistogram::Accumulate(HistogramID aID,
 }
 
 void
+TelemetryHistogram::Accumulate(HistogramID aID, const nsTArray<uint32_t>& aSamples)
+{
+  if (NS_WARN_IF(!internal_IsHistogramEnumId(aID))) {
+    MOZ_ASSERT_UNREACHABLE("Histogram usage requires valid ids.");
+    return;
+  }
+
+  MOZ_ASSERT(!gHistogramInfos[aID].keyed, "Cannot accumulate into a keyed histogram. No key given.");
+
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  for(uint32_t sample: aSamples){
+    internal_Accumulate(aID, sample);
+  }
+}
+
+void
 TelemetryHistogram::Accumulate(HistogramID aID,
                                const nsCString& aKey, uint32_t aSample)
 {
