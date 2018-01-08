@@ -171,6 +171,8 @@ public:
   virtual uint64_t CodecPluginID() override { return 0; }
   virtual void SetPCHandle(const std::string& aPCHandle) override {}
 
+  virtual void DeleteStreams() override {}
+
   explicit WebrtcAudioConduit():
                       mVoiceEngine(nullptr),
                       mFakeAudioDevice(new webrtc::FakeAudioDeviceModule()),
