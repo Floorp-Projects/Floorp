@@ -1,0 +1,54 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+loader: taskgraph.loader.transform:loader
+
+transforms:
+   - taskgraph.transforms.google_play_strings:transforms
+   - taskgraph.transforms.task:transforms
+
+jobs:
+   google-play-strings:
+      description: Download strings to display on Google Play from https://l10n.mozilla-community.org/stores_l10n/
+      attributes:
+         build_type: google_play_strings
+         build_platform: android-nightly
+         nightly: true
+      shipping-phase: promote
+      shipping-product: fennec
+      worker-type: aws-provisioner-v1/gecko-{level}-b-android
+      worker:
+         implementation: docker-worker
+         os: linux
+         docker-image: {in-tree: google-play-strings}
+         chain-of-trust: true
+         max-run-time: 600
+         artifacts:
+            - name: 'public/google_play_strings.json'
+              # XXX The folder depends on the one defined in the Dockerfile
+              path: /builds/worker/google_play_strings.json
+              type: 'file'
+         env:
+            # TODO Use the branch name instead of the android package name
+            PACKAGE_NAME:
+               by-project:
+                  mozilla-central: org.mozilla.fennec_aurora
+                  mozilla-beta: org.mozilla.firefox_beta
+                  mozilla-release: org.mozilla.firefox_beta
+                  default: org.mozilla.fennec_aurora  # Fetches strings for mozilla-central
+            # XXX The folder depends on the one defined in the Dockerfile
+            GOOGLE_PLAY_STRING_FILE: /builds/worker/google_play_strings.json
+         command:
+            - bash
+            - -cx
+            - >
+              python3 ./mozapkpublisher/get_l10n_strings.py
+              --package-name "${PACKAGE_NAME}"
+              --output-file "${GOOGLE_PLAY_STRING_FILE}"
+      treeherder:
+         symbol: pub(gps)
+         platform: Android/opt
+         tier: 2
+         kind: other
+      run-on-projects: ['maple', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
