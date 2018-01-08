@@ -20,7 +20,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "quotaManagerService",
 
 const oneHour = 3600000000;
 const fiveHours = oneHour * 5;
-
+const itemsToClear = [ "cookies", "offlineApps" ];
 
 function waitForUnregister(host) {
   return new Promise(resolve => {
@@ -111,29 +111,26 @@ add_task(async function testWithRange() {
     ["dom.serviceWorkers.testing.enabled", true]
   ]});
 
+  // The service may have picked up activity from prior tests in this run.
+  // Clear it.
+  sas.testOnlyReset();
+
+  let endDate = Date.now() * 1000;
+  let principals = sas.getActiveOrigins(endDate - oneHour, endDate);
+  is(principals.length, 0, "starting from clear activity state");
+
   let s = new Sanitizer();
   s.ignoreTimespan = false;
   s.prefDomain = "privacy.cpd.";
 
-  await SpecialPowers.pushPrefEnv({"set": [
-    [s.prefDomain + "history", false],
-    [s.prefDomain + "downloads", false],
-    [s.prefDomain + "cache", false],
-    [s.prefDomain + "cookies", false],
-    [s.prefDomain + "formdata", false],
-    [s.prefDomain + "offlineApps", true],
-    [s.prefDomain + "passwords", false],
-    [s.prefDomain + "sessions", false],
-    [s.prefDomain + "siteSettings", false],
-  ]});
-
-  s.sanitize();
+  info("sanitize: " + itemsToClear.join(", "));
+  await s.sanitize(itemsToClear);
 
   await createData("example.org");
   await createData("example.com");
 
-  let endDate = Date.now() * 1000;
-  let principals = sas.getActiveOrigins(endDate - oneHour, endDate);
+  endDate = Date.now() * 1000;
+  principals = sas.getActiveOrigins(endDate - oneHour, endDate);
   ok(!!principals, "We have an active origin.");
   ok(principals.length >= 2, "We have an active origin.");
 
@@ -164,7 +161,8 @@ add_task(async function testWithRange() {
   let p = waitForUnregister("example.org");
 
   // Clear it
-  await s.sanitize();
+  info("sanitize: " + itemsToClear.join(", "));
+  await s.sanitize(itemsToClear);
   await p;
 
   let dataPost = await getData("example.org");
@@ -182,15 +180,13 @@ add_task(async function testWithRange() {
   ok(moveOriginInTime(principals, endDate, "example.com"), "Operation completed!");
 
   // Let's call the clean up again.
-  await s.sanitize();
+  info("sanitize again to ensure clearing doesn't expand the activity scope");
+  await s.sanitize(itemsToClear);
 
   dataPost = await getData("example.com");
   ok(dataPost.localStorage, "We still have localStorage data");
   ok(dataPost.indexedDB, "We still have indexedDB data");
   ok(dataPost.serviceWorker, "We still have serviceWorker data");
 
-  dataPost = await getData("example.org");
-  ok(!dataPost.localStorage, "We don't have localStorage data");
-  ok(!dataPost.indexedDB, "We don't have indexedDB data");
-  ok(!dataPost.serviceWorker, "We don't have serviceWorker data");
+  sas.testOnlyReset();
 });
