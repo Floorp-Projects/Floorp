@@ -35,8 +35,8 @@ using mozilla::Swap;
 WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
   : activation_(activation),
     code_(nullptr),
-    callsite_(nullptr),
     codeRange_(nullptr),
+    lineOrBytecode_(0),
     fp_(fp ? fp : activation->wasmExitFP()),
     unwind_(Unwind::False)
 {
@@ -56,6 +56,8 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
 
         codeRange_ = code_->lookupRange(activation->wasmUnwindPC());
         MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
+
+        lineOrBytecode_ = codeRange_->funcLineOrBytecode();
 
         MOZ_ASSERT(!done());
         return;
@@ -112,7 +114,6 @@ WasmFrameIter::popFrame()
     if (!fp_) {
         code_ = nullptr;
         codeRange_ = nullptr;
-        callsite_ = nullptr;
 
         if (unwind_ == Unwind::True) {
             // TODO with bug 1319203, there may be other JIT frames above.
@@ -132,8 +133,10 @@ WasmFrameIter::popFrame()
     codeRange_ = code_->lookupRange(returnAddress);
     MOZ_ASSERT(codeRange_->kind() == CodeRange::Function);
 
-    callsite_ = code_->lookupCallSite(returnAddress);
-    MOZ_ASSERT(callsite_);
+    const CallSite* callsite = code_->lookupCallSite(returnAddress);
+    MOZ_ASSERT(callsite);
+
+    lineOrBytecode_ = callsite->lineOrBytecode();
 
     MOZ_ASSERT(!done());
 }
@@ -178,8 +181,7 @@ unsigned
 WasmFrameIter::lineOrBytecode() const
 {
     MOZ_ASSERT(!done());
-    MOZ_ASSERT_IF(!callsite_, activation_->isWasmInterrupted());
-    return callsite_ ? callsite_->lineOrBytecode() : codeRange_->funcLineOrBytecode();
+    return lineOrBytecode_;
 }
 
 Instance*
