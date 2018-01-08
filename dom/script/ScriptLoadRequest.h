@@ -25,13 +25,13 @@ class ModuleLoadRequest;
 class ScriptLoadRequestList;
 
 enum class ScriptKind {
-  Classic,
-  Module
+  eClassic,
+  eModule
 };
 
 enum class ValidJSVersion : bool {
-  Invalid,
-  Valid
+  eInvalid,
+  eValid
 };
 
 /*
@@ -65,7 +65,7 @@ public:
 
   bool IsModuleRequest() const
   {
-    return mKind == ScriptKind::Module;
+    return mKind == ScriptKind::eModule;
   }
 
   ModuleLoadRequest* AsModuleRequest();
@@ -111,43 +111,73 @@ public:
   }
 
   enum class Progress : uint8_t {
-    Loading,        // Request either source or bytecode
-    Loading_Source, // Explicitly Request source stream
-    Compiling,
-    FetchingImports,
-    Ready
+    eLoading,        // Request either source or bytecode
+    eLoading_Source, // Explicitly Request source stream
+    eCompiling,
+    eFetchingImports,
+    eReady
   };
 
-  bool IsReadyToRun() const {
-    return mProgress == Progress::Ready;
+  bool IsReadyToRun() const
+  {
+    return mProgress == Progress::eReady;
   }
-  bool IsLoading() const {
-    return mProgress == Progress::Loading ||
-           mProgress == Progress::Loading_Source;
+  bool IsLoading() const
+  {
+    return mProgress == Progress::eLoading ||
+           mProgress == Progress::eLoading_Source;
   }
-  bool IsLoadingSource() const {
-    return mProgress == Progress::Loading_Source;
+  bool IsLoadingSource() const
+  {
+    return mProgress == Progress::eLoading_Source;
   }
-  bool InCompilingStage() const {
-    return mProgress == Progress::Compiling ||
+  bool InCompilingStage() const
+  {
+    return mProgress == Progress::eCompiling ||
            (IsReadyToRun() && mWasCompiledOMT);
   }
 
   // Type of data provided by the nsChannel.
   enum class DataType : uint8_t {
-    Unknown,
-    Source,
-    Bytecode
+    eUnknown,
+    eSource,
+    eBytecode
   };
 
-  bool IsUnknownDataType() const {
-    return mDataType == DataType::Unknown;
+  bool IsUnknownDataType() const
+  {
+    return mDataType == DataType::eUnknown;
   }
-  bool IsSource() const {
-    return mDataType == DataType::Source;
+  bool IsSource() const
+  {
+    return mDataType == DataType::eSource;
   }
-  bool IsBytecode() const {
-    return mDataType == DataType::Bytecode;
+  bool IsBytecode() const
+  {
+    return mDataType == DataType::eBytecode;
+  }
+
+  enum class ScriptMode : uint8_t {
+    eBlocking,
+    eDeferred,
+    eAsync
+  };
+
+  void SetScriptMode(bool aDeferAttr, bool aAsyncAttr);
+
+  bool IsBlockingScript() const
+  {
+    return mScriptMode == ScriptMode::eBlocking;
+  }
+
+  bool IsDeferredScript() const
+  {
+    return mScriptMode == ScriptMode::eDeferred;
+  }
+
+  bool IsAsyncScript() const
+  {
+    return mScriptMode == ScriptMode::eAsync;
   }
 
   void MaybeCancelOffThreadScript();
@@ -161,12 +191,11 @@ public:
   bool mScriptFromHead;   // Synchronous head script block loading of other non js/css content.
   Progress mProgress;     // Are we still waiting for a load to complete?
   DataType mDataType;     // Does this contain Source or Bytecode?
+  ScriptMode mScriptMode; // Whether this is a blocking, defer or async script.
   bool mIsInline;         // Is the script inline or loaded?
   bool mHasSourceMapURL;  // Does the HTTP header have a source map url?
-  bool mIsDefer;          // True if we live in mDeferRequests.
-  bool mIsAsync;          // True if we live in mLoadingAsyncRequests or mLoadedAsyncRequests.
-  bool mPreloadAsAsync;   // True if this is a preload request and the script is async
-  bool mPreloadAsDefer;   // True if this is a preload request and the script is defer
+  bool mInDeferList;      // True if we live in mDeferRequests.
+  bool mInAsyncList;      // True if we live in mLoadingAsyncRequests or mLoadedAsyncRequests.
   bool mIsNonAsyncScriptInserted; // True if we live in mNonAsyncExternalScriptInsertedRequests
   bool mIsXSLT;           // True if we live in mXSLTRequests.
   bool mIsCanceled;       // True if we have been explicitly canceled.

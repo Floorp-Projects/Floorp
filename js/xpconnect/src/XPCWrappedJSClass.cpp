@@ -9,7 +9,6 @@
 #include "xpcprivate.h"
 #include "jsprf.h"
 #include "nsArrayEnumerator.h"
-#include "nsContentUtils.h"
 #include "nsINamed.h"
 #include "nsIScriptError.h"
 #include "nsWrapperCache.h"
@@ -20,6 +19,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 
 #include "jsapi.h"
@@ -948,7 +948,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
             }
 
             if (reportable) {
-                if (nsContentUtils::DOMWindowDumpEnabled()) {
+                if (DOMPrefs::DumpEnabled()) {
                     static const char line[] =
                         "************************************************************\n";
                     static const char preamble[] =

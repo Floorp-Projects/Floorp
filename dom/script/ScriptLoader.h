@@ -470,14 +470,13 @@ private:
                                 nsresult aStatus);
 
   void AddDeferRequest(ScriptLoadRequest* aRequest);
+  void AddAsyncRequest(ScriptLoadRequest* aRequest);
   bool MaybeRemovedDeferRequests();
 
   void MaybeMoveToLoadedList(ScriptLoadRequest* aRequest);
 
   JS::SourceBufferHolder GetScriptSource(ScriptLoadRequest* aRequest,
                                          nsAutoString& inlineData);
-
-  bool ModuleScriptsEnabled();
 
   void SetModuleFetchStarted(ModuleLoadRequest *aRequest);
   void SetModuleFetchFinishedAndResumeWaitingRequests(ModuleLoadRequest* aRequest,

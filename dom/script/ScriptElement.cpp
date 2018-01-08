@@ -126,11 +126,11 @@ ScriptElement::MaybeProcessScript()
     return false;
   }
 
-  FreezeUriAsyncDefer();
+  nsIDocument* ownerDoc = cont->OwnerDoc();
+  FreezeExecutionAttrs(ownerDoc);
 
   mAlreadyStarted = true;
 
-  nsIDocument* ownerDoc = cont->OwnerDoc();
   nsCOMPtr<nsIParser> parser = ((nsIScriptElement*) this)->GetCreatorParser();
   if (parser) {
     nsCOMPtr<nsIContentSink> sink = parser->GetContentSink();

@@ -10,7 +10,7 @@
 
 [SecureContext,
  Exposed=(Window,Worker),
- Func="mozilla::dom::StorageManager::PrefEnabled"]
+ Func="mozilla::dom::DOMPrefs::StorageManagerEnabled"]
 interface StorageManager {
   [Throws]
   Promise<boolean> persisted();

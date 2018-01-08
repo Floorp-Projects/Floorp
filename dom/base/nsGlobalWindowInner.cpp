@@ -17,6 +17,7 @@
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/LocalStorage.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/IdleRequest.h"
@@ -3520,7 +3521,7 @@ nsGlobalWindowInner::GetFullScreen()
 void
 nsGlobalWindowInner::Dump(const nsAString& aStr)
 {
-  if (!nsContentUtils::DOMWindowDumpEnabled()) {
+  if (!DOMPrefs::DumpEnabled()) {
     return;
   }
 
@@ -7737,7 +7738,7 @@ nsGlobalWindowInner::CreateImageBitmap(JSContext* aCx,
                                        const Sequence<ChannelPixelLayout>& aLayout,
                                        ErrorResult& aRv)
 {
-  if (!ImageBitmap::ExtensionsEnabled(aCx)) {
+  if (!DOMPrefs::ImageBitmapExtensionsEnabled()) {
     aRv.Throw(NS_ERROR_TYPE_ERR);
     return nullptr;
   }

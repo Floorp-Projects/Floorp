@@ -190,11 +190,19 @@ HTMLScriptElement::GetScriptCharset(nsAString& charset)
 }
 
 void
-HTMLScriptElement::FreezeUriAsyncDefer()
+HTMLScriptElement::FreezeExecutionAttrs(nsIDocument* aOwnerDoc)
 {
   if (mFrozen) {
     return;
   }
+
+  MOZ_ASSERT(!mIsModule && !mAsync && !mDefer && !mExternal);
+
+  // Determine whether this is a classic script or a module script.
+  nsAutoString type;
+  GetScriptType(type);
+  mIsModule = aOwnerDoc->ModuleScriptsEnabled() &&
+              !type.IsEmpty() && type.LowerCaseEqualsASCII("module");
 
   // variation of this code in nsSVGScriptElement - check if changes
   // need to be transfered when modifying.  Note that we don't use GetSrc here
@@ -228,13 +236,13 @@ HTMLScriptElement::FreezeUriAsyncDefer()
 
     // At this point mUri will be null for invalid URLs.
     mExternal = true;
-
-    bool async = Async();
-    bool defer = Defer();
-
-    mDefer = !async && defer;
-    mAsync = async;
   }
+
+  bool async = (mExternal || mIsModule) && Async();
+  bool defer = mExternal && Defer();
+
+  mDefer = !async && defer;
+  mAsync = async;
 
   mFrozen = true;
 }
