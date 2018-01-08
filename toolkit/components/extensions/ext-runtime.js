@@ -11,6 +11,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionParent",
                                   "resource://gre/modules/ExtensionParent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DevToolsShim",
+                                  "chrome://devtools-shim/content/DevToolsShim.jsm");
 
 this.runtime = class extends ExtensionAPI {
   getAPI(context) {
@@ -135,6 +137,15 @@ this.runtime = class extends ExtensionAPI {
 
           extension.uninstallURL = url;
           return Promise.resolve();
+        },
+
+        // This function is not exposed to the extension js code and it is only
+        // used by the alert function redefined into the background pages to be
+        // able to open the BrowserConsole from the main process.
+        openBrowserConsole() {
+          if (AppConstants.platform !== "android") {
+            DevToolsShim.openBrowserConsole();
+          }
         },
       },
     };
