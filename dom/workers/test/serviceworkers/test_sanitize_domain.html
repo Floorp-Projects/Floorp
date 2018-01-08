@@ -38,7 +38,7 @@
         is(body, "intercepted", "Expected serviceworker to intercept request");
       });
     }).then(function() {
-      SpecialPowers.removeServiceWorkerDataForExampleDomain();
+      return SpecialPowers.removeServiceWorkerDataForExampleDomain();
     }).then(function() {
       return checkDomainRegistration("prefixexample.com", true /* exists */)
         .then(function(e) {
