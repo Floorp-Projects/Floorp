@@ -68,8 +68,6 @@ public:
        const CacheQueryOptions& aParams, ErrorResult& aRv);
 
   // binding methods
-  static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
-
   nsISupports* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto) override;
 
