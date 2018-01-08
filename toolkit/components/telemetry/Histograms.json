@@ -9452,7 +9452,7 @@
     "record_in_processes": ["main"],
     "bug_numbers": [1378863],
     "alert_emails": ["dev-developer-tools@lists.mozilla.org", "apoirot@mozilla.com"],
-    "expires_in_version": "60",
+    "expires_in_version": "never",
     "kind": "categorical",
     "labels": ["KeyShortcut", "SystemMenu", "HamburgerMenu", "ContextMenu", "CommandLine"],
     "releaseChannelCollection": "opt-out",
