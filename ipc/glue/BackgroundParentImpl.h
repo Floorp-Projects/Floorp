@@ -271,6 +271,9 @@ protected:
 
   virtual mozilla::ipc::IPCResult
   RecvPClientManagerConstructor(PClientManagerParent* aActor) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvStorageActivity(const PrincipalInfo& aPrincipalInfo) override;
 };
 
 } // namespace ipc
