@@ -423,7 +423,7 @@ js::ErrorFromException(JSContext* cx, HandleObject objArg)
 }
 
 JS_PUBLIC_API(JSObject*)
-ExceptionStackOrNull(HandleObject objArg)
+JS::ExceptionStackOrNull(HandleObject objArg)
 {
     JSObject* obj = CheckedUnwrap(objArg);
     if (!obj || !obj->is<ErrorObject>()) {

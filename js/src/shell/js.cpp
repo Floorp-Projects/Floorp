@@ -848,7 +848,8 @@ DrainJobQueue(JSContext* cx, unsigned argc, Value* vp)
 
 static void
 ForwardingPromiseRejectionTrackerCallback(JSContext* cx, JS::HandleObject promise,
-                                          PromiseRejectionHandlingState state, void* data)
+                                          JS::PromiseRejectionHandlingState state,
+                                          void* data)
 {
     RootedValue callback(cx, GetShellContext(cx)->promiseRejectionTrackerCallback);
     if (callback.isNull()) {
