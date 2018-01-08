@@ -1604,7 +1604,7 @@ bool UIRunProgram(const string& exename,
 }
 
 string
-UIGetEnv(const string name)
+UIGetEnv(const string& name)
 {
   const wchar_t *var = _wgetenv(UTF8ToWide(name).c_str());
   if (var && *var) {
