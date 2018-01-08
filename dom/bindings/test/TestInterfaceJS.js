@@ -84,13 +84,8 @@ TestInterfaceJS.prototype = {
 
   testThrowNsresultFromNative: function(x) {
     // We want to throw an exception that we generate from an nsresult thrown
-    // by a C++ component.  Ideally we'd have one explicitly for testing, but
-    // for now just piggyback on nsStandardURL.
-    var url = Components.classes["@mozilla.org/network/standard-url;1"]
-                        .createInstance(Ci.nsIURI);
-    url.QueryInterface(Ci.nsIMutable);
-    url.mutable = false;
-    url.spec = "http://example.com";
+    // by a C++ component.
+    Services.netUtils.notImplemented();
   },
 
   testThrowCallbackError: function(callback) {

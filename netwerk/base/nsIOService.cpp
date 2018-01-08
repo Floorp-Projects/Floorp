@@ -1909,5 +1909,11 @@ nsIOService::BlockToplevelDataUriNavigations()
   return sBlockToplevelDataUriNavigations;
 }
 
+NS_IMETHODIMP
+nsIOService::NotImplemented()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 } // namespace net
 } // namespace mozilla
