@@ -66,8 +66,8 @@ class WasmFrameIter
   private:
     jit::JitActivation* activation_;
     const Code* code_;
-    const CallSite* callsite_;
     const CodeRange* codeRange_;
+    unsigned lineOrBytecode_;
     Frame* fp_;
     Unwind unwind_;
     void** unwoundAddressOfReturnAddress_;
