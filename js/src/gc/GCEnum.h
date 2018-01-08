@@ -60,9 +60,7 @@ enum class AbortReason {
 #define JS_FOR_EACH_ZEAL_MODE(D)       \
     D(RootsChange, 1)                  \
     D(Alloc, 2)                        \
-    D(FrameGC, 3)                      \
     D(VerifierPre, 4)                  \
-    D(FrameVerifierPre, 5)             \
     D(GenerationalGC, 7)               \
     D(IncrementalRootsThenFinish, 8)   \
     D(IncrementalMarkAllThenFinish, 9) \

@@ -1490,9 +1490,6 @@ pref("javascript.options.mem.gc_dynamic_heap_growth", true);
 // Override SpiderMonkey default (false).
 pref("javascript.options.mem.gc_dynamic_mark_slice", true);
 
-// JSGC_REFRESH_FRAME_SLICES_ENABLED
-pref("javascript.options.mem.gc_refresh_frame_slices_enabled", true);
-
 // JSGC_ALLOCATION_THRESHOLD
 pref("javascript.options.mem.gc_allocation_threshold_mb", 30);
 

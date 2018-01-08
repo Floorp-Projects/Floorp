@@ -370,8 +370,7 @@ MinorGC(JSContext* cx, unsigned argc, Value* vp)
     _("allocationThreshold",        JSGC_ALLOCATION_THRESHOLD,           true)  \
     _("minEmptyChunkCount",         JSGC_MIN_EMPTY_CHUNK_COUNT,          true)  \
     _("maxEmptyChunkCount",         JSGC_MAX_EMPTY_CHUNK_COUNT,          true)  \
-    _("compactingEnabled",          JSGC_COMPACTING_ENABLED,             true)  \
-    _("refreshFrameSlicesEnabled",  JSGC_REFRESH_FRAME_SLICES_ENABLED,   true)
+    _("compactingEnabled",          JSGC_COMPACTING_ENABLED,             true)
 
 static const struct ParamInfo {
     const char*     name;
