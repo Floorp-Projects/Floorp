@@ -9,7 +9,6 @@ XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 EXTRA_JS_MODULES += [
     'ForgetAboutSite.jsm',
-    'ServiceWorkerCleanUp.jsm',
 ]
 
 with Files('**'):
