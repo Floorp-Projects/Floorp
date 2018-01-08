@@ -22,6 +22,7 @@
 #include "SerializedLoadContext.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "nsIPrompt.h"
+#include "nsIURIMutator.h"
 
 using mozilla::dom::ContentChild;
 using namespace mozilla::ipc;
@@ -328,7 +329,10 @@ FTPChannelChild::DoOnStartRequest(const nsresult& aChannelStatus,
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   nsresult rv = uri->GetSpec(spec);
   if (NS_SUCCEEDED(rv)) {
-    rv = nsBaseChannel::URI()->SetSpec(spec);
+    // Changes nsBaseChannel::URI()
+    rv = NS_MutateURI(mURI)
+           .SetSpec(spec)
+           .Finalize(mURI);
     if (NS_FAILED(rv)) {
       Cancel(rv);
     }
