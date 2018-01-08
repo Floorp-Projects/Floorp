@@ -9,7 +9,7 @@ add_task(async function() {
   await selectSource(dbg, "math.min.js", 2);
   clickElement(dbg, "prettyPrintButton");
 
-  await waitForSource(dbg, "math.min.js:formatted");
+  await waitForSelectedSource(dbg, "math.min.js:formatted");
   const ppSrc = findSource(dbg, "math.min.js:formatted");
 
   ok(ppSrc, "Pretty-printed source exists");

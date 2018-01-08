@@ -67,6 +67,37 @@ static constexpr MemoryBarrierBits MembarAfterLoad = MembarLoadLoad|MembarLoadSt
 static constexpr MemoryBarrierBits MembarBeforeStore = MembarStoreStore;
 static constexpr MemoryBarrierBits MembarAfterStore = MembarStoreLoad;
 
+struct Synchronization
+{
+    const MemoryBarrierBits barrierBefore;
+    const MemoryBarrierBits barrierAfter;
+
+    constexpr Synchronization(MemoryBarrierBits before, MemoryBarrierBits after)
+        : barrierBefore(before),
+          barrierAfter(after)
+    {}
+
+    static Synchronization None() {
+        return Synchronization(MemoryBarrierBits(MembarNobits), MemoryBarrierBits(MembarNobits));
+    }
+
+    static Synchronization Full() {
+        return Synchronization(MembarFull, MembarFull);
+    }
+
+    static Synchronization Load() {
+        return Synchronization(MembarBeforeLoad, MembarAfterLoad);
+    }
+
+    static Synchronization Store() {
+        return Synchronization(MembarBeforeStore, MembarAfterStore);
+    }
+
+    bool isNone() const {
+        return (barrierBefore | barrierAfter) == MembarNobits;
+    }
+};
+
 } // namespace jit
 } // namespace js
 

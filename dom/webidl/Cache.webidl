@@ -11,7 +11,7 @@
 // https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#cache
 
 [Exposed=(Window,Worker),
- Func="mozilla::dom::cache::Cache::PrefEnabled"]
+ Func="mozilla::dom::DOMPrefs::DOMCachesEnabled"]
 interface Cache {
   [NewObject]
   Promise<Response> match(RequestInfo request, optional CacheQueryOptions options);

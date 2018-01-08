@@ -409,7 +409,7 @@ nsHtml5TreeOperation::CreateHTMLElement(
     if (isCustomElement && aFromParser != dom::FROM_PARSER_FRAGMENT) {
       RefPtr<nsAtom> tagAtom = nodeInfo->NameAtom();
       RefPtr<nsAtom> typeAtom =
-        isValue.IsEmpty() ? tagAtom : NS_Atomize(isValue);
+        (aCreator == NS_NewCustomElement) ? tagAtom : NS_Atomize(isValue);
 
       definition = nsContentUtils::LookupCustomElementDefinition(document,
         nodeInfo->LocalName(), nodeInfo->NamespaceID(), typeAtom);
@@ -1057,7 +1057,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(node);
       if (sele) {
         sele->SetScriptLineNumber(mFour.integer);
-        sele->FreezeUriAsyncDefer();
+        sele->FreezeExecutionAttrs(node->OwnerDoc());
       } else {
         MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled, "Node didn't QI to script, but SVG wasn't disabled.");
       }

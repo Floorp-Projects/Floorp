@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/StructuredCloneTags.h"
@@ -1432,18 +1433,6 @@ ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   Factory::CopyDataSourceSurface(snapshot, dstDataSurface);
   aClonedSurfaces.AppendElement(dstDataSurface);
   return true;
-}
-
-/*static*/ bool
-ImageBitmap::ExtensionsEnabled(JSContext* aCx, JSObject*)
-{
-  if (NS_IsMainThread()) {
-    return Preferences::GetBool("canvas.imagebitmap_extensions.enabled");
-  } else {
-    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-    MOZ_ASSERT(workerPrivate);
-    return workerPrivate->ImageBitmapExtensionsEnabled();
-  }
 }
 
 // ImageBitmap extensions.

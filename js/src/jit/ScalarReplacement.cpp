@@ -456,8 +456,8 @@ ObjectMemoryView::mergeIntoSuccessorState(MBasicBlock* curr, MBasicBlock* succ,
 
         size_t numPreds = succ->numPredecessors();
         for (size_t slot = 0; slot < state_->numSlots(); slot++) {
-            MPhi* phi = MPhi::New(alloc_);
-            if (!phi->reserveLength(numPreds))
+            MPhi* phi = MPhi::New(alloc_.fallible());
+            if (!phi || !phi->reserveLength(numPreds))
                 return false;
 
             // Fill the input of the successors Phi with undefined
@@ -1228,8 +1228,8 @@ ArrayMemoryView::mergeIntoSuccessorState(MBasicBlock* curr, MBasicBlock* succ,
 
         size_t numPreds = succ->numPredecessors();
         for (size_t index = 0; index < state_->numElements(); index++) {
-            MPhi* phi = MPhi::New(alloc_);
-            if (!phi->reserveLength(numPreds))
+            MPhi* phi = MPhi::New(alloc_.fallible());
+            if (!phi || !phi->reserveLength(numPreds))
                 return false;
 
             // Fill the input of the successors Phi with undefined

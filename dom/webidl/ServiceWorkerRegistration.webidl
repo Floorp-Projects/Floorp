@@ -9,7 +9,7 @@
  * https://notifications.spec.whatwg.org/
  */
 
-[Func="mozilla::dom::ServiceWorkerRegistration::Visible",
+[Func="mozilla::dom::DOMPrefs::ServiceWorkersEnabled",
  Exposed=(Window,Worker)]
 interface ServiceWorkerRegistration : EventTarget {
   [Unforgeable] readonly attribute ServiceWorker? installing;
@@ -38,14 +38,14 @@ enum ServiceWorkerUpdateViaCache {
 
 // https://w3c.github.io/push-api/
 partial interface ServiceWorkerRegistration {
-  [Throws, Exposed=(Window,Worker), Func="nsContentUtils::PushEnabled"]
+  [Throws, Exposed=(Window,Worker), Func="mozilla::dom::DOMPrefs::PushEnabled"]
   readonly attribute PushManager pushManager;
 };
 
 // https://notifications.spec.whatwg.org/
 partial interface ServiceWorkerRegistration {
-  [Throws, Func="mozilla::dom::ServiceWorkerRegistration::NotificationAPIVisible"]
+  [Throws, Func="mozilla::dom::DOMPrefs::NotificationEnabledInServiceWorkers"]
   Promise<void> showNotification(DOMString title, optional NotificationOptions options);
-  [Throws, Func="mozilla::dom::ServiceWorkerRegistration::NotificationAPIVisible"]
+  [Throws, Func="mozilla::dom::DOMPrefs::NotificationEnabledInServiceWorkers"]
   Promise<sequence<Notification>> getNotifications(optional GetNotificationOptions filter);
 };

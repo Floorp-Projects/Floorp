@@ -403,10 +403,10 @@ dictionary ChannelPixelLayout {
 typedef sequence<ChannelPixelLayout> ImagePixelLayout;
 
 partial interface ImageBitmap {
-    [Throws, Func="mozilla::dom::ImageBitmap::ExtensionsEnabled"]
+    [Throws, Func="mozilla::dom::DOMPrefs::ImageBitmapExtensionsEnabled"]
     ImageBitmapFormat               findOptimalFormat (optional sequence<ImageBitmapFormat> aPossibleFormats);
-    [Throws, Func="mozilla::dom::ImageBitmap::ExtensionsEnabled"]
+    [Throws, Func="mozilla::dom::DOMPrefs::ImageBitmapExtensionsEnabled"]
     long                            mappedDataLength (ImageBitmapFormat aFormat);
-    [Throws, Func="mozilla::dom::ImageBitmap::ExtensionsEnabled"]
+    [Throws, Func="mozilla::dom::DOMPrefs::ImageBitmapExtensionsEnabled"]
     Promise<ImagePixelLayout> mapDataInto (ImageBitmapFormat aFormat, BufferSource aBuffer, long aOffset);
 };

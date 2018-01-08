@@ -481,7 +481,7 @@ CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
         default: MOZ_CRASH("unexpected array type");
     }
 
-    masm.memoryBarrier(mir->access().barrierBefore());
+    masm.memoryBarrierBefore(mir->access().sync());
 
     MOZ_ASSERT(INT64LOW_OFFSET == 0);
     if (IsUnaligned(mir->access())) {
@@ -503,10 +503,7 @@ CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
                                    BaseIndex(HeapReg, ptr, TimesOne, INT64HIGH_OFFSET), temp,
                                    SizeWord, SignExtend);
         }
-        return;
-    }
-
-    if (byteSize <= 4) {
+    } else if (byteSize <= 4) {
         masm.ma_load(output.low, BaseIndex(HeapReg, ptr, TimesOne),
                      static_cast<LoadStoreSize>(8 * byteSize), isSigned ? SignExtend : ZeroExtend);
         masm.append(mir->access(), masm.size() - 4 , masm.framePushed());
@@ -522,7 +519,7 @@ CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
         masm.append(mir->access(), masm.size() - 4 , masm.framePushed());
     }
 
-    masm.memoryBarrier(mir->access().barrierAfter());
+    masm.memoryBarrierAfter(mir->access().sync());
 }
 
 void
@@ -570,7 +567,7 @@ CodeGeneratorMIPS::emitWasmStoreI64(T* lir)
         default: MOZ_CRASH("unexpected array type");
     }
 
-    masm.memoryBarrier(mir->access().barrierBefore());
+    masm.memoryBarrierBefore(mir->access().sync());
 
     MOZ_ASSERT(INT64LOW_OFFSET == 0);
     if (IsUnaligned(mir->access())) {
@@ -587,10 +584,7 @@ CodeGeneratorMIPS::emitWasmStoreI64(T* lir)
             masm.ma_store_unaligned(mir->access(), value.low, BaseIndex(HeapReg, ptr, TimesOne),
                                     temp, SizeWord, ZeroExtend);
         }
-        return;
-    }
-
-    if (byteSize <= 4) {
+    } else if (byteSize <= 4) {
         masm.ma_store(value.low, BaseIndex(HeapReg, ptr, TimesOne),
                       static_cast<LoadStoreSize>(8 * byteSize));
         masm.append(mir->access(), masm.size() - 4, masm.framePushed());
@@ -601,7 +595,7 @@ CodeGeneratorMIPS::emitWasmStoreI64(T* lir)
         masm.ma_store(value.low, BaseIndex(HeapReg, ptr, TimesOne), SizeWord);
     }
 
-    masm.memoryBarrier(mir->access().barrierAfter());
+    masm.memoryBarrierAfter(mir->access().sync());
 }
 
 void
