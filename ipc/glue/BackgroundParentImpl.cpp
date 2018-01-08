@@ -24,6 +24,7 @@
 #include "mozilla/dom/PGamepadTestChannelParent.h"
 #include "mozilla/dom/MessagePortParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
+#include "mozilla/dom/StorageActivityService.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
@@ -984,6 +985,13 @@ mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPClientManagerConstructor(mozilla::dom::PClientManagerParent* aActor)
 {
   mozilla::dom::InitClientManagerParent(aActor);
+  return IPC_OK();
+}
+
+IPCResult
+BackgroundParentImpl::RecvStorageActivity(const PrincipalInfo& aPrincipalInfo)
+{
+  dom::StorageActivityService::SendActivity(aPrincipalInfo);
   return IPC_OK();
 }
 
