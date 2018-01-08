@@ -163,8 +163,8 @@ public:
   DataType mDataType;     // Does this contain Source or Bytecode?
   bool mIsInline;         // Is the script inline or loaded?
   bool mHasSourceMapURL;  // Does the HTTP header have a source map url?
-  bool mIsDefer;          // True if we live in mDeferRequests.
-  bool mIsAsync;          // True if we live in mLoadingAsyncRequests or mLoadedAsyncRequests.
+  bool mInDeferList;      // True if we live in mDeferRequests.
+  bool mInAsyncList;      // True if we live in mLoadingAsyncRequests or mLoadedAsyncRequests.
   bool mPreloadAsAsync;   // True if this is a preload request and the script is async
   bool mPreloadAsDefer;   // True if this is a preload request and the script is defer
   bool mIsNonAsyncScriptInserted; // True if we live in mNonAsyncExternalScriptInsertedRequests
