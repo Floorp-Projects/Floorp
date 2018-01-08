@@ -12,43 +12,37 @@
  * STRs: Open Library, select an history entry in History, close Library.
  * ISSUE: We were adding a bookmarks observer when editing a bookmark, when
  *        selecting an history entry the panel was not un-initialized, and
- *        since an histroy entry does not have an itemId, the observer was
+ *        since an history entry does not have an itemId, the observer was
  *        never removed.
  */
 
 const TEST_URI = "http://www.mozilla.org/";
 
-function test() {
-  function onLibraryReady(organizer) {
-    let contentTree = organizer.document.getElementById("placeContent");
-    isnot(contentTree, null, "Sanity check: placeContent tree should exist");
-    isnot(organizer.PlacesOrganizer, null, "Sanity check: PlacesOrganizer should exist");
-    isnot(organizer.gEditItemOverlay, null, "Sanity check: gEditItemOverlay should exist");
-
-    ok(organizer.gEditItemOverlay.initialized, "gEditItemOverlay is initialized");
-    isnot(organizer.gEditItemOverlay.itemId, -1, "Editing a bookmark");
-
-    // Select History in the left pane.
-    organizer.PlacesOrganizer.selectLeftPaneBuiltIn("History");
-    // Select the first history entry.
-    let selection = contentTree.view.selection;
-    selection.clearSelection();
-    selection.rangedSelect(0, 0, true);
-    // Check the panel is editing the history entry.
-    is(organizer.gEditItemOverlay.itemId, -1, "Editing an history entry");
-    // Close Library window.
-    organizer.close();
-    // Clean up history.
-    PlacesTestUtils.clearHistory().then(finish);
-  }
-
-  waitForExplicitFinish();
+add_task(async function test_no_leak_closing_library_with_history_selected() {
   // Add an history entry.
-  ok(PlacesUtils, "checking PlacesUtils, running in chrome context?");
-  PlacesTestUtils.addVisits(
-    {uri: Services.io.newURI(TEST_URI), visitDate: Date.now() * 1000,
-      transition: PlacesUtils.history.TRANSITION_TYPED}
-    ).then(() => {
-      openLibrary(onLibraryReady);
-    });
-}
+  await PlacesTestUtils.addVisits(TEST_URI);
+
+  let organizer = await promiseLibrary();
+
+  let contentTree = organizer.document.getElementById("placeContent");
+  Assert.notEqual(contentTree, null, "Sanity check: placeContent tree should exist");
+  Assert.notEqual(organizer.PlacesOrganizer, null, "Sanity check: PlacesOrganizer should exist");
+  Assert.notEqual(organizer.gEditItemOverlay, null, "Sanity check: gEditItemOverlay should exist");
+
+  Assert.ok(organizer.gEditItemOverlay.initialized, "gEditItemOverlay is initialized");
+  Assert.notEqual(organizer.gEditItemOverlay._paneInfo.itemGuid, "", "Editing a bookmark");
+
+  // Select History in the left pane.
+  organizer.PlacesOrganizer.selectLeftPaneBuiltIn("History");
+  // Select the first history entry.
+  let selection = contentTree.view.selection;
+  selection.clearSelection();
+  selection.rangedSelect(0, 0, true);
+  // Check the panel is editing the history entry.
+  Assert.equal(organizer.gEditItemOverlay._paneInfo.itemGuid, "", "Editing an history entry");
+  // Close Library window.
+  organizer.close();
+
+  // Clean up history.
+  await PlacesUtils.history.clear();
+});
