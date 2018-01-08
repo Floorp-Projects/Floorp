@@ -19,6 +19,10 @@ public:
   // Returns true if the canvas.imagebitmap_extensions.enabled pref is set.
   static bool ImageBitmapExtensionsEnabled();
   static bool ImageBitmapExtensionsEnabled(JSContext* aCx, JSObject* aObj);
+
+  // Returns true if the dom.caches.enabled pref is set.
+  static bool DOMCachesEnabled();
+  static bool DOMCachesEnabled(JSContext* aCx, JSObject* aObj);
 };
 
 } // dom namespace
