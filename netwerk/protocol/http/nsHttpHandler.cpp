@@ -1755,6 +1755,10 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         Unused << prefs->GetIntPref(HTTP_PREF("tailing.delay-max"), &val);
         mTailDelayMax = (uint32_t)clamped(val, 0, 60000);
     }
+    if (PREF_CHANGED(HTTP_PREF("tailing.total-max"))) {
+        Unused << prefs->GetIntPref(HTTP_PREF("tailing.total-max"), &val);
+        mTailTotalMax = (uint32_t)clamped(val, 0, 60000);
+    }
 
     if (PREF_CHANGED(HTTP_PREF("focused_window_transaction_ratio"))) {
         float ratio = 0;
