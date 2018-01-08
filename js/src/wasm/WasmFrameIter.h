@@ -91,7 +91,6 @@ class WasmFrameIter
     void** unwoundAddressOfReturnAddress() const;
     bool debugEnabled() const;
     DebugFrame* debugFrame() const;
-    const CallSite* debugTrapCallsite() const;
 };
 
 enum class SymbolicAddress;

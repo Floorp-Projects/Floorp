@@ -96,17 +96,24 @@ static bool
 WasmHandleDebugTrap()
 {
     JitActivation* activation = CallingActivation();
-    MOZ_ASSERT(activation);
     JSContext* cx = activation->cx();
+    Frame* fp = activation->wasmExitFP();
+    Instance* instance = fp->tls->instance;
+    const Code& code = instance->code();
+    MOZ_ASSERT(code.metadata().debugEnabled);
 
-    WasmFrameIter frame(activation);
-    MOZ_ASSERT(frame.debugEnabled());
-    const CallSite* site = frame.debugTrapCallsite();
+    // The debug trap stub is the innermost frame. It's return address is the
+    // actual trap site.
+    const CallSite* site = code.lookupCallSite(fp->returnAddress);
     MOZ_ASSERT(site);
+
+    // Advance to the actual trapping frame.
+    fp = fp->callerFP;
+    DebugFrame* debugFrame = DebugFrame::from(fp);
+
     if (site->kind() == CallSite::EnterFrame) {
-        if (!frame.instance()->enterFrameTrapsEnabled())
+        if (!instance->enterFrameTrapsEnabled())
             return true;
-        DebugFrame* debugFrame = frame.debugFrame();
         debugFrame->setIsDebuggee();
         debugFrame->observe(cx);
         // TODO call onEnterFrame
@@ -121,15 +128,13 @@ WasmHandleDebugTrap()
         return status == JSTRAP_CONTINUE;
     }
     if (site->kind() == CallSite::LeaveFrame) {
-        DebugFrame* debugFrame = frame.debugFrame();
         debugFrame->updateReturnJSValue();
         bool ok = Debugger::onLeaveFrame(cx, debugFrame, nullptr, true);
         debugFrame->leave(cx);
         return ok;
     }
 
-    DebugFrame* debugFrame = frame.debugFrame();
-    DebugState& debug = frame.instance()->debug();
+    DebugState& debug = instance->debug();
     MOZ_ASSERT(debug.hasBreakpointTrapAtOffset(site->lineOrBytecode()));
     if (debug.stepModeEnabled(debugFrame->funcIndex())) {
         RootedValue result(cx, UndefinedValue());

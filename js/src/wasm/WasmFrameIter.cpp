@@ -216,20 +216,7 @@ DebugFrame*
 WasmFrameIter::debugFrame() const
 {
     MOZ_ASSERT(!done());
-    MOZ_ASSERT(debugEnabled());
-    return reinterpret_cast<DebugFrame*>((uint8_t*)fp_ - DebugFrame::offsetOfFrame());
-}
-
-const CallSite*
-WasmFrameIter::debugTrapCallsite() const
-{
-    MOZ_ASSERT(!done());
-    MOZ_ASSERT(callsite_);
-    MOZ_ASSERT(debugEnabled());
-    MOZ_ASSERT(callsite_->kind() == CallSite::EnterFrame ||
-               callsite_->kind() == CallSite::LeaveFrame ||
-               callsite_->kind() == CallSite::Breakpoint);
-    return callsite_;
+    return DebugFrame::from(fp_);
 }
 
 /*****************************************************************************/
