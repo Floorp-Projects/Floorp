@@ -19,4 +19,5 @@ NS_MutateURI::NS_MutateURI(nsIURI* aURI)
 NS_MutateURI::NS_MutateURI(const char * aContractID)
 {
   mMutator = do_CreateInstance(aContractID, &mStatus);
+  MOZ_ASSERT(NS_SUCCEEDED(mStatus), "Called with wrong aContractID");
 }

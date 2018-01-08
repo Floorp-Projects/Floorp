@@ -19,6 +19,7 @@
 #include "nsIStringBundle.h"
 #include "nsIPrefService.h"
 #include "nsIPrompt.h"
+#include "nsIURIMutator.h"
 #include "nsNetUtil.h"
 #include "nsContentSecurityManager.h"
 #include "nsExternalHelperAppService.h"
@@ -541,15 +542,9 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewURI(const nsACString &aSpec,
                                                 nsIURI *aBaseURI,
                                                 nsIURI **_retval)
 {
-  nsresult rv;
-  nsCOMPtr<nsIURI> uri = do_CreateInstance(NS_SIMPLEURI_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  rv = uri->SetSpec(aSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_ADDREF(*_retval = uri);
-  return NS_OK;
+  return NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID)
+           .SetSpec(aSpec)
+           .Finalize(_retval);
 }
 
 NS_IMETHODIMP

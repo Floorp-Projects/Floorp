@@ -136,6 +136,7 @@
 #include "nsIUploadChannel.h"
 #include "nsIURIFixup.h"
 #include "nsIURILoader.h"
+#include "nsIURIMutator.h"
 #include "nsIURL.h"
 #include "nsIViewSourceChannel.h"
 #include "nsIWebBrowserChrome.h"
@@ -1041,13 +1042,11 @@ nsDocShell::LoadStream(nsIInputStream* aStream, nsIURI* aURI,
   if (!uri) {
     // HACK ALERT
     nsresult rv = NS_OK;
-    uri = do_CreateInstance(NS_SIMPLEURI_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
     // Make sure that the URI spec "looks" like a protocol and path...
     // For now, just use a bogus protocol called "internal"
-    rv = uri->SetSpec(NS_LITERAL_CSTRING("internal:load-stream"));
+    rv = NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID)
+           .SetSpec(NS_LITERAL_CSTRING("internal:load-stream"))
+           .Finalize(uri);
     if (NS_FAILED(rv)) {
       return rv;
     }

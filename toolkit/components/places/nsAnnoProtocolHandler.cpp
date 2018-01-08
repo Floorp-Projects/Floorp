@@ -23,6 +23,7 @@
 #include "nsIInputStream.h"
 #include "nsISupportsUtils.h"
 #include "nsIURI.h"
+#include "nsIURIMutator.h"
 #include "nsNetUtil.h"
 #include "nsIOutputStream.h"
 #include "nsInputStreamPump.h"
@@ -225,15 +226,10 @@ nsAnnoProtocolHandler::NewURI(const nsACString& aSpec,
                               const char *aOriginCharset,
                               nsIURI *aBaseURI, nsIURI **_retval)
 {
-  nsCOMPtr <nsIURI> uri = do_CreateInstance(NS_SIMPLEURI_CONTRACTID);
-  if (!uri)
-    return NS_ERROR_OUT_OF_MEMORY;
-  nsresult rv = uri->SetSpec(aSpec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   *_retval = nullptr;
-  uri.swap(*_retval);
-  return NS_OK;
+  return NS_MutateURI(NS_SIMPLEURIMUTATOR_CONTRACTID)
+           .SetSpec(aSpec)
+           .Finalize(_retval);
 }
 
 
