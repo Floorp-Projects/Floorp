@@ -64,6 +64,34 @@ StorageActivityService::SendActivity(const mozilla::ipc::PrincipalInfo& aPrincip
   SystemGroup::Dispatch(TaskCategory::Other, r.forget());
 }
 
+/* static */ void
+StorageActivityService::SendActivity(const nsACString& aOrigin)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  nsCString origin;
+  origin.Assign(aOrigin);
+
+  RefPtr<Runnable> r = NS_NewRunnableFunction(
+    "StorageActivityService::SendActivity",
+    [origin] () {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      RefPtr<StorageActivityService> service = GetOrCreate();
+      if (NS_WARN_IF(!service)) {
+        return;
+      }
+
+      service->SendActivityInternal(origin);
+    });
+
+  if (NS_IsMainThread()) {
+    Unused << r->Run();
+  } else {
+    SystemGroup::Dispatch(TaskCategory::Other, r.forget());
+  }
+}
+
 /* static */ already_AddRefed<StorageActivityService>
 StorageActivityService::GetOrCreate()
 {
@@ -118,8 +146,15 @@ StorageActivityService::SendActivityInternal(nsIPrincipal* aPrincipal)
     return;
   }
 
-  mActivities.Put(origin, PR_Now());
+  SendActivityInternal(origin);
+}
 
+void
+StorageActivityService::SendActivityInternal(const nsACString& aOrigin)
+{
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  mActivities.Put(aOrigin, PR_Now());
   MaybeStartTimer();
 }
 
