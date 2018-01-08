@@ -13141,7 +13141,7 @@
   "MAIN_THREAD_RUNNABLE_MS": {
     "record_in_processes": ["main", "content", "gpu"],
     "alert_emails": ["wmccloskey@mozilla.com", "farre@mozilla.com"],
-    "expires_in_version": "60",
+    "expires_in_version": "70",
     "kind": "exponential",
     "keyed": true,
     "high": 10000,
@@ -13489,7 +13489,7 @@
   "TIME_BETWEEN_UNLABELED_RUNNABLES_MS": {
     "record_in_processes": ["content"],
     "alert_emails": ["wmccloskey@mozilla.com", "farre@mozilla.com"],
-    "expires_in_version": "60",
+    "expires_in_version": "70",
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 30,
