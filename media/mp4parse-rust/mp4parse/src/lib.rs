@@ -1376,7 +1376,8 @@ fn find_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
 
     let mut remains = data;
 
-    while !remains.is_empty() {
+    // Descriptor length should be more than 2 bytes.
+    while remains.len() > 2 {
         let des = &mut Cursor::new(remains);
         let tag = des.read_u8()?;
 
