@@ -38,6 +38,18 @@ this.ServiceWorkerCleanUp = {
     return Promise.all(promises);
   },
 
+  removeFromPrincipal(aPrincipal) {
+    let promises = [];
+    let serviceWorkers = serviceWorkerManager.getAllRegistrations();
+    for (let i = 0; i < serviceWorkers.length; i++) {
+      let sw = serviceWorkers.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
+      if (sw.principal.equals(aPrincipal)) {
+        promises.push(unregisterServiceWorker(sw));
+      }
+    }
+    return Promise.all(promises);
+  },
+
   removeAll() {
     let promises = [];
     let serviceWorkers = serviceWorkerManager.getAllRegistrations();
