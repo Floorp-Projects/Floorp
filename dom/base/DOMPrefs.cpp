@@ -48,6 +48,7 @@ PREF(PromiseRejectionEventsEnabled, "dom.promise_rejection_events.enabled")
 PREF(PushEnabled, "dom.push.enabled")
 PREF(StreamsEnabled, "dom.streams.enabled")
 PREF(RequestContextEnabled, "dom.requestcontext.enabled")
+PREF(OffscreenCanvasEnabled, "gfx.offscreencanvas.enabled")
 
 #undef PREF
 
@@ -68,6 +69,7 @@ PREF_WEBIDL(PromiseRejectionEventsEnabled)
 PREF_WEBIDL(PushEnabled)
 PREF_WEBIDL(StreamsEnabled)
 PREF_WEBIDL(RequestContextEnabled)
+PREF_WEBIDL(OffscreenCanvasEnabled)
 
 #undef PREF_WEBIDL
 
