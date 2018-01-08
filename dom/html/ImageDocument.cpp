@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageDocument.h"
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/ImageDocumentBinding.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "nsRect.h"
@@ -49,7 +50,7 @@
 //XXX A hack needed for Firefox's site specific zoom.
 static bool IsSiteSpecific()
 {
-  return !mozilla::Preferences::GetBool("privacy.resistFingerprinting", false) &&
+  return !mozilla::dom::DOMPrefs::ResistFingerprintingEnabled() &&
          mozilla::Preferences::GetBool("browser.zoom.siteSpecific", false);
 }
 
