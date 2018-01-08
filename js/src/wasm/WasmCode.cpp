@@ -767,46 +767,6 @@ struct CallSiteRetAddrOffset
     }
 };
 
-size_t
-Code::serializedSize() const
-{
-    return metadata().serializedSize() +
-           segment(Tier::Serialized).serializedSize();
-}
-
-uint8_t*
-Code::serialize(uint8_t* cursor, const LinkData& linkData) const
-{
-    MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
-
-    cursor = metadata().serialize(cursor);
-    cursor = segment(Tier::Serialized).serialize(cursor, linkData.linkData(Tier::Serialized));
-    return cursor;
-}
-
-const uint8_t*
-Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const LinkData& linkData,
-                  Metadata& metadata)
-{
-    cursor = metadata.deserialize(cursor);
-    if (!cursor)
-        return nullptr;
-
-    UniqueCodeSegment codeSegment = js::MakeUnique<CodeSegment>();
-    if (!codeSegment)
-        return nullptr;
-
-    cursor = codeSegment->deserialize(cursor, *bytecode, linkData.linkData(Tier::Serialized),
-                                      metadata);
-    if (!cursor)
-        return nullptr;
-
-    segment1_ = takeOwnership(Move(codeSegment));
-    metadata_ = &metadata;
-
-    return cursor;
-}
-
 const CallSite*
 Code::lookupCallSite(void* returnAddress) const
 {
@@ -958,4 +918,44 @@ Code::addSizeOfMiscIfNotSeen(MallocSizeOf mallocSizeOf,
 
     for (auto t : tiers())
         segment(t).addSizeOfMisc(mallocSizeOf, code, data);
+}
+
+size_t
+Code::serializedSize() const
+{
+    return metadata().serializedSize() +
+           segment(Tier::Serialized).serializedSize();
+}
+
+uint8_t*
+Code::serialize(uint8_t* cursor, const LinkData& linkData) const
+{
+    MOZ_RELEASE_ASSERT(!metadata().debugEnabled);
+
+    cursor = metadata().serialize(cursor);
+    cursor = segment(Tier::Serialized).serialize(cursor, linkData.linkData(Tier::Serialized));
+    return cursor;
+}
+
+const uint8_t*
+Code::deserialize(const uint8_t* cursor, const SharedBytes& bytecode, const LinkData& linkData,
+                  Metadata& metadata)
+{
+    cursor = metadata.deserialize(cursor);
+    if (!cursor)
+        return nullptr;
+
+    UniqueCodeSegment codeSegment = js::MakeUnique<CodeSegment>();
+    if (!codeSegment)
+        return nullptr;
+
+    cursor = codeSegment->deserialize(cursor, *bytecode, linkData.linkData(Tier::Serialized),
+                                      metadata);
+    if (!cursor)
+        return nullptr;
+
+    segment1_ = takeOwnership(Move(codeSegment));
+    metadata_ = &metadata;
+
+    return cursor;
 }

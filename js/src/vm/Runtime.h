@@ -22,9 +22,6 @@
 #include "jsatom.h"
 #include "jsscript.h"
 
-#ifdef XP_DARWIN
-# include "wasm/WasmSignalHandlers.h"
-#endif
 #include "builtin/AtomicsObject.h"
 #include "builtin/Intl.h"
 #include "builtin/Promise.h"

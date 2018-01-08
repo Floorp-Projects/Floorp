@@ -41,8 +41,6 @@
 
 namespace js {
 
-class PropertyName;
-class WasmFunctionCallObject;
 namespace jit {
     struct BaselineScript;
     enum class RoundingMode;

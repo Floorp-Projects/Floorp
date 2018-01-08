@@ -1709,7 +1709,7 @@ jit::JitActivation::startWasmInterrupt(const JS::ProfilingFrameIterator::Registe
 
     bool ignoredUnwound;
     wasm::UnwindState unwindState;
-    MOZ_ALWAYS_TRUE(wasm::StartUnwinding(*this, state, &unwindState, &ignoredUnwound));
+    MOZ_ALWAYS_TRUE(wasm::StartUnwinding(state, &unwindState, &ignoredUnwound));
 
     void* pc = unwindState.pc;
     MOZ_ASSERT(wasm::LookupCode(pc)->lookupRange(pc)->isFunction());

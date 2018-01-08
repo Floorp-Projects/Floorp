@@ -160,7 +160,6 @@ class ExitReason
 // asynchronously-interrupted thread's state.
 class ProfilingFrameIterator
 {
-    const jit::JitActivation* activation_;
     const Code* code_;
     const CodeRange* codeRange_;
     Frame* callerFP_;
@@ -253,8 +252,8 @@ typedef JS::ProfilingFrameIterator::RegisterState RegisterState;
 // frame should be ignored.
 
 bool
-StartUnwinding(const jit::JitActivation& activation, const RegisterState& registers,
-               UnwindState* unwindState, bool* unwoundCaller);
+StartUnwinding(const RegisterState& registers, UnwindState* unwindState,
+               bool* unwoundCaller);
 
 } // namespace wasm
 } // namespace js
