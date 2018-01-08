@@ -6,7 +6,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use quote::{Tokens, ToTokens};
+use quote::{ToTokens, Tokens};
 
 pub enum Fragment {
     /// Tokens that can be used as an expression.
@@ -70,6 +70,15 @@ impl ToTokens for Match {
                 block.to_tokens(out);
                 out.append("}");
             }
+        }
+    }
+}
+
+impl AsRef<Tokens> for Fragment {
+    fn as_ref(&self) -> &Tokens {
+        match *self {
+            Fragment::Expr(ref expr) => expr,
+            Fragment::Block(ref block) => block,
         }
     }
 }
