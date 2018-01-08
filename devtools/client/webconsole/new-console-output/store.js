@@ -200,7 +200,7 @@ function enableNetProvider(hud) {
       if (type == MESSAGE_OPEN) {
         let updates = getAllNetworkMessagesUpdateById(newState);
         let message = updates[action.id];
-        if (!message.openedOnce && message.source == "network") {
+        if (message && !message.openedOnce && message.source == "network") {
           dataProvider.onNetworkEvent(null, message);
           message.updates.forEach(updateType => {
             dataProvider.onNetworkEventUpdate(null, {
