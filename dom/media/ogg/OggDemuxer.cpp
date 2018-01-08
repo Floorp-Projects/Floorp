@@ -1364,6 +1364,7 @@ OggTrackDemuxer::NextSample()
     // This will also update mSharedAudioTrackInfo.
     mParent->ReadOggChain(data->GetEndTime());
   }
+  data->mOffset = mParent->Resource(mType)->Tell();
   // We adjust the start time of the sample to account for the potential ogg chaining.
   data->mTime += totalDuration;
   return data;
