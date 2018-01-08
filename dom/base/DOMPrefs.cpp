@@ -45,6 +45,7 @@ PREF(ServiceWorkersEnabled, "dom.serviceWorkers.enabled")
 PREF(ServiceWorkersTestingEnabled, "dom.serviceWorkers.testing.enabled")
 PREF(StorageManagerEnabled, "dom.storageManager.enabled")
 PREF(PromiseRejectionEventsEnabled, "dom.promise_rejection_events.enabled")
+PREF(PushEnabled, "dom.push.enabled")
 
 #undef PREF
 
@@ -62,6 +63,7 @@ PREF_WEBIDL(NotificationRIEnabled)
 PREF_WEBIDL(ServiceWorkersEnabled)
 PREF_WEBIDL(StorageManagerEnabled)
 PREF_WEBIDL(PromiseRejectionEventsEnabled)
+PREF_WEBIDL(PushEnabled)
 
 #undef PREF_WEBIDL
 
