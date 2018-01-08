@@ -1099,7 +1099,10 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
       int32_t budget = maxHeightScreenPx - screenRect.height;
       // Scale the margins down to fit into the budget if necessary, maintaining
       // their relative ratio.
-      float scale = std::min(1.0f, float(budget) / margins.TopBottom());
+      float scale = 1.0f;
+      if (float(budget) < margins.TopBottom()) {
+        scale = float(budget) / margins.TopBottom();
+      }
       float top = margins.top * scale;
       float bottom = margins.bottom * scale;
       screenRect.y -= top;
@@ -1107,7 +1110,10 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
     }
     if (screenRect.width < maxWidthScreenPx) {
       int32_t budget = maxWidthScreenPx - screenRect.width;
-      float scale = std::min(1.0f, float(budget) / margins.LeftRight());
+      float scale = 1.0f;
+      if (float(budget) < margins.LeftRight()) {
+        scale = float(budget) / margins.LeftRight();
+      }
       float left = margins.left * scale;
       float right = margins.right * scale;
       screenRect.x -= left;
