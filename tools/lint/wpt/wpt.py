@@ -28,6 +28,9 @@ def lint(files, config, **kwargs):
         data["path"] = os.path.relpath(os.path.join(tests_dir, data["path"]), kwargs['root'])
         results.append(result.from_config(config, **data))
 
+    if files == [tests_dir]:
+        print >> sys.stderr, "No specific files specified, running the full wpt lint (this is slow)"
+        files = ["--all"]
     cmd = [os.path.join(tests_dir, 'wpt'), 'lint', '--json'] + files
     if platform.system() == 'Windows':
         cmd.insert(0, sys.executable)
@@ -36,6 +39,11 @@ def lint(files, config, **kwargs):
     proc.run()
     try:
         proc.wait()
+        if proc.returncode != 0:
+            results.append(
+                result.from_config(config,
+                                   message="Lint process exited with return code %s" %
+                                   proc.returncode))
     except KeyboardInterrupt:
         proc.kill()
 
