@@ -20,24 +20,6 @@ IS_NATIVE_WIN = (sys.platform == 'win32' and os.sep == '\\')
 IS_MSYS2 = (sys.platform == 'win32' and os.sep == '/')
 IS_CYGWIN = (sys.platform == 'cygwin')
 
-# Minimum version of Python required to build.
-MINIMUM_PYTHON_VERSION = LooseVersion('2.7.3')
-MINIMUM_PYTHON_MAJOR = 2
-
-
-UPGRADE_WINDOWS = '''
-Please upgrade to the latest MozillaBuild development environment. See
-https://developer.mozilla.org/en-US/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites
-'''.lstrip()
-
-UPGRADE_OTHER = '''
-Run |mach bootstrap| to ensure your system is up to date.
-
-If you still receive this error, your shell environment is likely detecting
-another Python version. Ensure a modern Python can be found in the paths
-defined by the $PATH environment variable and try again.
-'''.lstrip()
-
 
 class VirtualenvManager(object):
     """Contains logic for managing virtualenvs for building the tree."""
@@ -525,31 +507,10 @@ class VirtualenvManager(object):
             stderr=subprocess.STDOUT)
 
 
-def verify_python_version(log_handle):
-    """Ensure the current version of Python is sufficient."""
-    major, minor, micro = sys.version_info[:3]
-
-    our = LooseVersion('%d.%d.%d' % (major, minor, micro))
-
-    if major != MINIMUM_PYTHON_MAJOR or our < MINIMUM_PYTHON_VERSION:
-        log_handle.write('Python %s or greater (but not Python 3) is '
-            'required to build. ' % MINIMUM_PYTHON_VERSION)
-        log_handle.write('You are running Python %s.\n' % our)
-
-        if os.name in ('nt', 'ce'):
-            log_handle.write(UPGRADE_WINDOWS)
-        else:
-            log_handle.write(UPGRADE_OTHER)
-
-        sys.exit(1)
-
-
 if __name__ == '__main__':
     if len(sys.argv) < 5:
         print('Usage: populate_virtualenv.py /path/to/topsrcdir /path/to/topobjdir /path/to/virtualenv /path/to/virtualenv_manifest')
         sys.exit(1)
-
-    verify_python_version(sys.stdout)
 
     topsrcdir, topobjdir, virtualenv_path, manifest_path = sys.argv[1:5]
     populate = False
