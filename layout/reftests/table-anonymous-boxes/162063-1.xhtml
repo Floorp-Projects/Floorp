@@ -19,12 +19,14 @@ function remove(n)
 {
   n.parentNode.removeChild(n);
 }
+
+window.addEventListener("MozReftestInvalidate", boom);
 /* ]]> */
 </script>
 <title> test for pseudo removal</title>
 </head>
 
-<body onload="boom();">
+<body>
  <div style="display:table; border-spacing:10px; background-color:red">
  <div id="target1">target</div>
  </div>
