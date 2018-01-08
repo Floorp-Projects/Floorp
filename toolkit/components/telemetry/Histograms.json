@@ -13588,7 +13588,7 @@
   "IDLE_RUNNABLE_BUDGET_OVERUSE_MS": {
     "record_in_processes": ["main", "content", "gpu"],
     "alert_emails": ["farre@mozilla.com"],
-    "expires_in_version": "60",
+    "expires_in_version": "70",
     "kind": "exponential",
     "keyed": true,
     "high": 10000,
