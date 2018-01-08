@@ -2,12 +2,11 @@
 <html>
 <head>
   <title>Test for protocol handlers</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="chrome_head.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
   <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 
@@ -172,15 +171,12 @@ add_task(async function test_protocolHandler_restricted_protocol() {
     },
   };
 
-  let waitForConsole = new Promise(resolve => {
-    SimpleTest.monitorConsole(resolve, [{message: /processing protocol_handlers\.0\.protocol/}]);
-  });
+  consoleMonitor.start([{message: /processing protocol_handlers\.0\.protocol/}]);
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await Assert.rejects(extension.startup(), "unable to register restricted handler protocol");
 
-  SimpleTest.endMonitorConsole();
-  await waitForConsole;
+  await consoleMonitor.finished();
 });
 
 add_task(async function test_protocolHandler_restricted_uriTemplate() {
@@ -196,15 +192,12 @@ add_task(async function test_protocolHandler_restricted_uriTemplate() {
     },
   };
 
-  let waitForConsole = new Promise(resolve => {
-    SimpleTest.monitorConsole(resolve, [{message: /processing protocol_handlers\.0\.uriTemplate/}]);
-  });
+  consoleMonitor.start([{message: /processing protocol_handlers\.0\.uriTemplate/}]);
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await Assert.rejects(extension.startup(), "unable to register restricted handler uriTemplate");
 
-  SimpleTest.endMonitorConsole();
-  await waitForConsole;
+  await consoleMonitor.finished();
 });
 
 add_task(async function test_protocolHandler_duplicate() {
