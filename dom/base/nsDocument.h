@@ -813,6 +813,9 @@ public:
   // Only BlockOnload should call this!
   void AsyncBlockOnload();
 
+  virtual void SetAutoFocusElement(Element* aAutoFocusElement) override;
+  virtual void TriggerAutoFocus() override;
+
   virtual void SetScrollToRef(nsIURI *aDocumentURI) override;
   virtual void ScrollToRef() override;
   virtual void ResetScrolledToRefAlready() override;
@@ -1318,6 +1321,8 @@ private:
 
   RefPtr<nsContentList> mImageMaps;
 
+  nsWeakPtr mAutoFocusElement;
+
   nsCString mScrollToRef;
   uint8_t mScrolledToRefAlready : 1;
   uint8_t mChangeScrollPosWhenScrollingToRef : 1;
@@ -1368,6 +1373,7 @@ private:
   bool mDOMLoadingSet : 1;
   bool mDOMInteractiveSet : 1;
   bool mDOMCompleteSet : 1;
+  bool mAutoFocusFired : 1;
 };
 
 class nsDocumentOnStack
