@@ -1,21 +1,18 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests pretty-printing a source that is currently paused.
+// Tests re-opening pretty printed tabs on load
 
 add_task(async function() {
   const dbg = await initDebugger("doc-minified.html");
 
   await selectSource(dbg, "math.min.js");
-  await addBreakpoint(dbg, "math.min.js", 2);
-
-  invokeInTab("arithmetic");
-  await waitForPaused(dbg);
-  assertPausedLocation(dbg);
-
   clickElement(dbg, "prettyPrintButton");
+  await waitForSource(dbg, "math.min.js:formatted");
+  // Test reloading the debugger
   await waitForSelectedSource(dbg, "math.min.js:formatted");
-  assertPausedLocation(dbg);
+  await reload(dbg);
 
-  await resume(dbg);
+  await waitForSelectedSource(dbg, "math.min.js:formatted");
+  ok(true, "Pretty printed source is selected on reload");
 });

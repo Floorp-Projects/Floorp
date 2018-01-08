@@ -29,8 +29,6 @@ add_task(async function() {
   const dbg = await initDebugger("doc-sourcemaps3.html");
   const { selectors: { getBreakpoint, getBreakpoints }, getState } = dbg;
 
-  toggleScopes(dbg);
-
   await waitForSources(dbg, "bundle.js", "sorted.js", "test.js");
 
   ok(true, "Original sources exist");
