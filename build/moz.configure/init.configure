@@ -203,7 +203,6 @@ option(env='PYTHON', nargs=1, help='Python interpreter')
 @imports('subprocess')
 @imports(_from='mozbuild.configure.util', _import='LineIO')
 @imports(_from='mozbuild.virtualenv', _import='VirtualenvManager')
-@imports(_from='mozbuild.virtualenv', _import='verify_python_version')
 @imports('distutils.sysconfig')
 def virtualenv_python(env_python, build_env, mozconfig, help):
     if help:
@@ -224,8 +223,28 @@ def virtualenv_python(env_python, build_env, mozconfig, help):
         elif 'PYTHON' in mozconfig['vars']['modified']:
             python = mozconfig['vars']['modified']['PYTHON'][1]
 
-    with LineIO(lambda l: log.error(l)) as out:
-        verify_python_version(out)
+    minimum_version = Version('2.7.3')
+    major, minor, micro = sys.version_info[:3]
+    our_version = Version('%d.%d.%d' % (major, minor, micro))
+
+    if major != 2 or our_version < minimum_version:
+        msg = ('Python %s or greater (but not Python 3) is required to build. '
+              'You are running Python %s. ' % (minimum_version, our_version))
+
+        if os.name == 'nt':
+            msg += ('Please upgrade to the latest MozillaBuild development '
+                   'environment. See https://developer.mozilla.org/en-US/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites')
+        else:
+            msg += ('Run `mach bootstrap` to ensure your system is up to date. '
+                   'If you still receive this error afterwards, your shell '
+                   'environment is likely detecting another Python version. '
+                   'Ensure a modern Python can be found in the paths defined '
+                   'by the $PATH environment variable. Or set the PYTHON '
+                   'environment or mozconfig variable to specify which Python '
+                   'interpreter to use.')
+
+        die(msg)
+
     topsrcdir, topobjdir = build_env.topsrcdir, build_env.topobjdir
     if topobjdir.endswith('/js/src'):
         topobjdir = topobjdir[:-7]
