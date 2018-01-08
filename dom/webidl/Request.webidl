@@ -17,7 +17,7 @@ interface Request {
   readonly attribute USVString url;
   [SameObject] readonly attribute Headers headers;
 
-  [Func="mozilla::dom::Request::RequestContextEnabled"]
+  [Func="mozilla::dom::DOMPrefs::RequestContextEnabled"]
   readonly attribute RequestContext context;
   readonly attribute USVString referrer;
   readonly attribute ReferrerPolicy referrerPolicy;
