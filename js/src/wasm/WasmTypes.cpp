@@ -728,7 +728,7 @@ CodeRange::CodeRange(Kind kind, CallableOffsets offsets)
     PodZero(&u);
 #ifdef DEBUG
     switch (kind_) {
-      case TrapExit:
+      case OldTrapExit:
       case DebugTrap:
       case BuiltinThunk:
         break;
@@ -773,7 +773,7 @@ CodeRange::CodeRange(Trap trap, CallableOffsets offsets)
   : begin_(offsets.begin),
     ret_(offsets.ret),
     end_(offsets.end),
-    kind_(TrapExit)
+    kind_(OldTrapExit)
 {
     MOZ_ASSERT(begin_ < ret_);
     MOZ_ASSERT(ret_ < end_);

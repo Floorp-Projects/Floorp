@@ -47,9 +47,9 @@ CompiledCode::swap(MacroAssembler& masm)
 
     callSites.swap(masm.callSites());
     callSiteTargets.swap(masm.callSiteTargets());
-    trapSites.swap(masm.trapSites());
+    oldTrapSites.swap(masm.oldTrapSites());
     callFarJumps.swap(masm.callFarJumps());
-    trapFarJumps.swap(masm.trapFarJumps());
+    oldTrapFarJumps.swap(masm.oldTrapFarJumps());
     memoryAccesses.swap(masm.memoryAccesses());
     symbolicAccesses.swap(masm.symbolicAccesses());
     codeLabels.swap(masm.codeLabels());
@@ -75,7 +75,7 @@ ModuleGenerator::ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
     masmAlloc_(&lifo_),
     masm_(MacroAssembler::WasmToken(), masmAlloc_),
-    trapCodeOffsets_(),
+    oldTrapCodeOffsets_(),
     debugTrapCodeOffset_(),
     lastPatchedCallSite_(0),
     startOfUnpatchedCallsites_(0),
@@ -86,7 +86,7 @@ ModuleGenerator::ModuleGenerator(const CompileArgs& args, ModuleEnvironment* env
     finishedFuncDefs_(false)
 {
     MOZ_ASSERT(IsCompilingWasm());
-    std::fill(trapCodeOffsets_.begin(), trapCodeOffsets_.end(), 0);
+    std::fill(oldTrapCodeOffsets_.begin(), oldTrapCodeOffsets_.end(), 0);
 }
 
 ModuleGenerator::~ModuleGenerator()
@@ -436,14 +436,14 @@ ModuleGenerator::linkCallSites()
             masm_.patchCall(callerOffset, p->value());
             break;
           }
-          case CallSiteDesc::TrapExit: {
+          case CallSiteDesc::OldTrapExit: {
             if (!existingTrapFarJumps[target.trap()]) {
-                // See MacroAssembler::wasmEmitTrapOutOfLineCode for why we must
+                // See MacroAssembler::wasmEmitOldTrapOutOfLineCode for why we must
                 // reload the TLS register on this path.
                 Offsets offsets;
                 offsets.begin = masm_.currentOffset();
                 masm_.loadPtr(Address(FramePointer, offsetof(Frame, tls)), WasmTlsReg);
-                if (!trapFarJumps_.emplaceBack(target.trap(), masm_.farJumpWithPatch()))
+                if (!oldTrapFarJumps_.emplaceBack(target.trap(), masm_.farJumpWithPatch()))
                     return false;
                 offsets.end = masm_.currentOffset();
                 if (masm_.oom())
@@ -503,9 +503,9 @@ ModuleGenerator::noteCodeRange(uint32_t codeRangeIndex, const CodeRange& codeRan
       case CodeRange::ImportInterpExit:
         metadataTier_->funcImports[codeRange.funcIndex()].initInterpExitOffset(codeRange.begin());
         break;
-      case CodeRange::TrapExit:
-        MOZ_ASSERT(!trapCodeOffsets_[codeRange.trap()]);
-        trapCodeOffsets_[codeRange.trap()] = codeRange.begin();
+      case CodeRange::OldTrapExit:
+        MOZ_ASSERT(!oldTrapCodeOffsets_[codeRange.trap()]);
+        oldTrapCodeOffsets_[codeRange.trap()] = codeRange.begin();
         break;
       case CodeRange::DebugTrap:
         MOZ_ASSERT(!debugTrapCodeOffset_);
@@ -580,10 +580,10 @@ ModuleGenerator::linkCompiledCode(const CompiledCode& code)
     if (!callSiteTargets_.appendAll(code.callSiteTargets))
         return false;
 
-    MOZ_ASSERT(code.trapSites.empty());
+    MOZ_ASSERT(code.oldTrapSites.empty());
 
-    auto trapFarJumpOp = [=](uint32_t, TrapFarJump* tfj) { tfj->offsetBy(offsetInModule); };
-    if (!AppendForEach(&trapFarJumps_, code.trapFarJumps, trapFarJumpOp))
+    auto trapFarJumpOp = [=](uint32_t, OldTrapFarJump* tfj) { tfj->offsetBy(offsetInModule); };
+    if (!AppendForEach(&oldTrapFarJumps_, code.oldTrapFarJumps, trapFarJumpOp))
         return false;
 
     auto callFarJumpOp = [=](uint32_t, CallFarJump* cfj) { cfj->offsetBy(offsetInModule); };
@@ -788,8 +788,8 @@ ModuleGenerator::finishCode()
     for (CallFarJump far : callFarJumps_)
         masm_.patchFarJump(far.jump, funcCodeRange(far.funcIndex).funcNormalEntry());
 
-    for (TrapFarJump far : trapFarJumps_)
-        masm_.patchFarJump(far.jump, trapCodeOffsets_[far.trap]);
+    for (OldTrapFarJump far : oldTrapFarJumps_)
+        masm_.patchFarJump(far.jump, oldTrapCodeOffsets_[far.trap]);
 
     for (CodeOffset farJump : debugTrapFarJumps_)
         masm_.patchFarJump(farJump, debugTrapCodeOffset_);
@@ -798,8 +798,8 @@ ModuleGenerator::finishCode()
 
     MOZ_ASSERT(masm_.callSites().empty());
     MOZ_ASSERT(masm_.callSiteTargets().empty());
-    MOZ_ASSERT(masm_.trapSites().empty());
-    MOZ_ASSERT(masm_.trapFarJumps().empty());
+    MOZ_ASSERT(masm_.oldTrapSites().empty());
+    MOZ_ASSERT(masm_.oldTrapFarJumps().empty());
     MOZ_ASSERT(masm_.callFarJumps().empty());
     MOZ_ASSERT(masm_.memoryAccesses().empty());
     MOZ_ASSERT(masm_.symbolicAccesses().empty());
