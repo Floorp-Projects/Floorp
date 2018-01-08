@@ -2729,10 +2729,6 @@ nsJSContext::EnsureStatics()
                                        (void *)JSGC_DYNAMIC_MARK_SLICE);
 
   Preferences::RegisterCallbackAndCall(SetMemoryPrefChangedCallbackBool,
-                                       "javascript.options.mem.gc_refresh_frame_slices_enabled",
-                                       (void *)JSGC_REFRESH_FRAME_SLICES_ENABLED);
-
-  Preferences::RegisterCallbackAndCall(SetMemoryPrefChangedCallbackBool,
                                        "javascript.options.mem.gc_dynamic_heap_growth",
                                        (void *)JSGC_DYNAMIC_HEAP_GROWTH);
 
