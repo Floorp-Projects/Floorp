@@ -1578,6 +1578,7 @@ nsDocument::nsDocument(const char* aContentType)
   , mDOMLoadingSet(false)
   , mDOMInteractiveSet(false)
   , mDOMCompleteSet(false)
+  , mAutoFocusFired(false)
 {
   SetContentTypeInternal(nsDependentCString(aContentType));
 
@@ -9963,6 +9964,118 @@ nsDocument::GetTemplateContentsOwner()
   return mTemplateContentsOwner;
 }
 
+
+/**
+ * nsAutoFocusEvent is used to dispatch a focus event for an
+ * nsGenericHTMLFormElement with the autofocus attribute enabled.
+ */
+class nsAutoFocusEvent : public Runnable
+{
+public:
+  explicit nsAutoFocusEvent(already_AddRefed<Element>&& aElement,
+                            already_AddRefed<nsPIDOMWindowOuter>&& aRootWindow)
+    : mozilla::Runnable("nsAutoFocusEvent")
+    , mElement(aElement)
+    , mRootWindow(aRootWindow)
+  {
+  }
+
+  NS_IMETHOD Run() override
+  {
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (!fm) {
+      return NS_ERROR_NULL_POINTER;
+    }
+
+    nsIDocument* document = mElement->OwnerDoc();
+
+    // Don't steal focus from the user.
+    if (mRootWindow->GetFocusedNode()) {
+      return NS_OK;
+    }
+
+    // If something is focused in the same document, ignore autofocus.
+    if (!fm->GetFocusedContent() ||
+        fm->GetFocusedContent()->OwnerDoc() != document) {
+      mozilla::ErrorResult rv;
+      mElement->Focus(rv);
+      return rv.StealNSResult();
+    }
+
+    return NS_OK;
+  }
+private:
+  nsCOMPtr<Element> mElement;
+  nsCOMPtr<nsPIDOMWindowOuter> mRootWindow;
+};
+
+void
+nsDocument::SetAutoFocusElement(Element* aAutoFocusElement)
+{
+  if (mAutoFocusFired) {
+    // Too late.
+    return;
+  }
+
+  if (mAutoFocusElement) {
+    // The spec disallows multiple autofocus elements, so we consider only the
+    // first one to preserve the old behavior.
+    return;
+  }
+
+  mAutoFocusElement = do_GetWeakReference(aAutoFocusElement);
+  TriggerAutoFocus();
+}
+
+static nsCOMPtr<nsPIDOMWindowOuter>
+GetRootWindow(nsIDocument* aDoc)
+{
+  nsIDocShell* docShell = aDoc->GetDocShell();
+  if (!docShell) {
+    return nullptr;
+  }
+  nsCOMPtr<nsIDocShellTreeItem> rootItem;
+  docShell->GetRootTreeItem(getter_AddRefs(rootItem));
+  return rootItem ? rootItem->GetWindow() : nullptr;
+}
+
+void
+nsDocument::TriggerAutoFocus()
+{
+  if (mAutoFocusFired) {
+    return;
+  }
+
+  if (!mPresShell || !mPresShell->DidInitialize()) {
+    // Delay autofocus until frames are constructed so that we don't thrash
+    // style and layout calculations.
+    return;
+  }
+
+  nsCOMPtr<Element> autoFocusElement = do_QueryReferent(mAutoFocusElement);
+  if (autoFocusElement) {
+    mAutoFocusFired = true;
+
+    nsCOMPtr<nsPIDOMWindowOuter> rootWindow = GetRootWindow(this);
+    if (!rootWindow) {
+      return;
+    }
+
+    // NOTE: This may be removed in the future since the spec technically
+    // allows autofocus after load.
+    nsCOMPtr<nsIDocument> rootDoc = rootWindow->GetExtantDoc();
+    if (rootDoc &&
+        rootDoc->GetReadyStateEnum() == nsIDocument::READYSTATE_COMPLETE) {
+      return;
+    }
+
+    nsCOMPtr<nsIRunnable> event =
+      new nsAutoFocusEvent(autoFocusElement.forget(), rootWindow.forget());
+    nsresult rv = NS_DispatchToCurrentThread(event.forget());
+    NS_ENSURE_SUCCESS_VOID(rv);
+  }
+}
+
 void
 nsDocument::SetScrollToRef(nsIURI *aDocumentURI)
 {
@@ -11754,18 +11867,6 @@ private:
 };
 
 /* static */ LinkedList<FullscreenRequest> PendingFullscreenRequestList::sList;
-
-static nsCOMPtr<nsPIDOMWindowOuter>
-GetRootWindow(nsIDocument* aDoc)
-{
-  nsIDocShell* docShell = aDoc->GetDocShell();
-  if (!docShell) {
-    return nullptr;
-  }
-  nsCOMPtr<nsIDocShellTreeItem> rootItem;
-  docShell->GetRootTreeItem(getter_AddRefs(rootItem));
-  return rootItem ? rootItem->GetWindow() : nullptr;
-}
 
 static bool
 ShouldApplyFullscreenDirectly(nsIDocument* aDoc,
