@@ -111,7 +111,7 @@ public:
   virtual void MacroExpands(const Token &Tok, const MacroDefinition &Md,
                             SourceRange Range, const MacroArgs *Ma) override;
 #if CLANG_VERSION_MAJOR >= 5
-  virtual void MacroUndefined(const Token &tok, const MacroDefinition &md,
+  virtual void MacroUndefined(const Token &Tok, const MacroDefinition &Md,
                               const MacroDirective *Undef) override;
 #else
   virtual void MacroUndefined(const Token &Tok,
@@ -1421,8 +1421,8 @@ void PreprocessorHook::MacroExpands(const Token &Tok, const MacroDefinition &Md,
 }
 
 #if CLANG_VERSION_MAJOR >= 5
-void PreprocessorHook::MacroUndefined(const Token &tok,
-                                      const MacroDefinition &md,
+void PreprocessorHook::MacroUndefined(const Token &Tok,
+                                      const MacroDefinition &Md,
                                       const MacroDirective *Undef)
 #else
 void PreprocessorHook::MacroUndefined(const Token &Tok,
