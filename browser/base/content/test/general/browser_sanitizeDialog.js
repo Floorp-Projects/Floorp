@@ -852,7 +852,7 @@ WindowHelper.prototype = {
 };
 
 function promiseSanitizationComplete() {
-  return TestUtils.topicObserved("sanitizer-sanitization-complete");
+  return promiseTopicObserved("sanitizer-sanitization-complete");
 }
 
 /**

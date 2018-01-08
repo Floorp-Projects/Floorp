@@ -36,7 +36,6 @@
 #include "mozilla/dom/quota/PQuotaParent.h"
 #include "mozilla/dom/quota/PQuotaRequestParent.h"
 #include "mozilla/dom/quota/PQuotaUsageRequestParent.h"
-#include "mozilla/dom/StorageActivityService.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/IntegerRange.h"
@@ -3021,11 +3020,6 @@ QuotaObject::LockedMaybeUpdateSize(int64_t aSize, bool aTruncate)
   MOZ_ASSERT(quotaManager);
 
   quotaManager->mQuotaMutex.AssertCurrentThreadOwns();
-
-  if (mWritingDone == false && mOriginInfo) {
-    mWritingDone = true;
-    StorageActivityService::SendActivity(mOriginInfo->mOrigin);
-  }
 
   if (mQuotaCheckDisabled) {
     return true;

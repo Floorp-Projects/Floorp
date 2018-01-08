@@ -24,7 +24,6 @@
 #include "mozilla/dom/PGamepadTestChannelParent.h"
 #include "mozilla/dom/MessagePortParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
-#include "mozilla/dom/StorageActivityService.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
@@ -288,9 +287,6 @@ BackgroundParentImpl::RecvBroadcastLocalStorageChange(
                                             const PrincipalInfo& aPrincipalInfo,
                                             const bool& aIsPrivate)
 {
-  // Let's inform the StorageActivityService about this change.
-  dom::StorageActivityService::SendActivity(aPrincipalInfo);
-
   nsTArray<PBackgroundParent*> liveActorArray;
   if (NS_WARN_IF(!BackgroundParent::GetLiveActorArray(this, liveActorArray))) {
     return IPC_FAIL_NO_REASON(this);
@@ -988,13 +984,6 @@ mozilla::ipc::IPCResult
 BackgroundParentImpl::RecvPClientManagerConstructor(mozilla::dom::PClientManagerParent* aActor)
 {
   mozilla::dom::InitClientManagerParent(aActor);
-  return IPC_OK();
-}
-
-IPCResult
-BackgroundParentImpl::RecvStorageActivity(const PrincipalInfo& aPrincipalInfo)
-{
-  dom::StorageActivityService::SendActivity(aPrincipalInfo);
   return IPC_OK();
 }
 
