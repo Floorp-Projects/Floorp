@@ -64,6 +64,10 @@ public class BrowserMenuAdapter extends RecyclerView.Adapter<BrowserMenuViewHold
 
         this.items = new ArrayList<>();
 
+        if (customTabConfig != null) {
+            items.add(new MenuItem(R.id.open_in_firefox_focus, resources.getString(R.string.menu_open_in_firefox_focus)));
+        }
+
         if (customTabConfig == null || customTabConfig.showShareMenuItem) {
             items.add(new MenuItem(R.id.share, resources.getString(R.string.menu_share)));
         }

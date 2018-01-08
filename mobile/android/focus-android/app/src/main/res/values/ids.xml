@@ -13,4 +13,5 @@
     <item name="add_to_homescreen" type="id" />
     <item name="help" type="id" />
     <item name="whats_new" type="id" />
+    <item name="open_in_firefox_focus" type="id" />
 </resources>

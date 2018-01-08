@@ -260,4 +260,17 @@ public class SessionManager {
 
         this.sessions.setValue(sessions);
     }
+
+    // Replaces a (custom-tab) session by its no custom-tab version
+    public void replaceSessionWithNoCustomTab(Session session) {
+        if (!session.isCustomTab()) {
+            return;
+        }
+
+        Session noCustomTabSession = new Session(Source.MENU, session.getUrl().getValue());
+        noCustomTabSession.setBlockingEnabled(session.isBlockingEnabled());
+
+        this.addSession(noCustomTabSession);
+        this.removeSession(session.getUUID());
+    }
 }
