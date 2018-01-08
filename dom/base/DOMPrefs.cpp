@@ -38,6 +38,8 @@ PREF(ImageBitmapExtensionsEnabled, "canvas.imagebitmap_extensions.enabled")
 PREF(DOMCachesEnabled, "dom.caches.enabled")
 PREF(DOMCachesTestingEnabled, "dom.caches.testing.enabled")
 PREF(PerformanceLoggingEnabled, "dom.performance.enable_user_timing_logging")
+PREF(NotificationEnabled, "dom.webnotifications.enabled")
+PREF(NotificationEnabledInServiceWorkers, "dom.webnotifications.serviceworker.enabled")
 
 #undef PREF
 
@@ -50,6 +52,7 @@ PREF(PerformanceLoggingEnabled, "dom.performance.enable_user_timing_logging")
 
 PREF_WEBIDL(ImageBitmapExtensionsEnabled)
 PREF_WEBIDL(DOMCachesEnabled)
+PREF_WEBIDL(NotificationEnabledInServiceWorkers)
 
 #undef PREF_WEBIDL
 
