@@ -28,6 +28,10 @@ class TemplateError(JSONTemplateError):
     pass
 
 
+class InterpreterError(JSONTemplateError):
+    pass
+
+
 # Regular expression matching: X days Y hours Z minutes
 # todo: support hr, wk, yr
 FROMNOW_RE = re.compile(''.join([
@@ -109,7 +113,13 @@ def to_str(v):
 
 def stringDate(date):
     # Convert to isoFormat
-    string = date.isoformat()
+    try:
+        string = date.isoformat(timespec='microseconds')
+    # py2.7 to py3.5 does not have timespec
+    except TypeError as e:
+        string = date.isoformat()
+        if string.find('.') == -1:
+            string += '.000'
     string = datefmt_re.sub(r'\1Z', string)
     return string
 
