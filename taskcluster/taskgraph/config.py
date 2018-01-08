@@ -5,7 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 from .util.schema import validate_schema, Schema
-from voluptuous import Required, Optional
+from voluptuous import Required
 
 graph_config_schema = Schema({
     # The trust-domain for this graph.
@@ -18,8 +18,6 @@ graph_config_schema = Schema({
     Required('index'): {
 
         Required('products'): [basestring],
-        # A whitelist of gecko.v2 index route job names.
-        Optional('job-names'): [basestring],
     },
     Required('try'): {
         # We have a few platforms for which we want to do some "extra" builds, or at
