@@ -14,10 +14,8 @@ add_task(async function() {
   assertPausedLocation(dbg);
 
   clickElement(dbg, "prettyPrintButton");
-  await waitForDispatch(dbg, "SELECT_SOURCE");
-
-  // this doesnt work yet
-  // assertPausedLocation(dbg);
+  await waitForSelectedSource(dbg, "math.min.js:formatted");
+  assertPausedLocation(dbg);
 
   await resume(dbg);
 });

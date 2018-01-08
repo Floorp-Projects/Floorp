@@ -207,6 +207,9 @@ public: /* internal necko use only */
     }
 
     MOZ_MUST_USE nsresult OpenCacheEntry(bool usingSSL);
+    MOZ_MUST_USE nsresult OpenCacheEntryInternal(bool isHttps,
+                                                 nsIApplicationCache *applicationCache,
+                                                 bool noAppCache);
     MOZ_MUST_USE nsresult ContinueConnect();
 
     // If the load is mixed-content, build and send an HSTS priming request.

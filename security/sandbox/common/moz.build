@@ -17,4 +17,6 @@ XPIDL_MODULE = 'sandbox'
 
 FINAL_LIBRARY = 'xul'
 
-EXPORTS.mozilla += ['SandboxSettings.h']
+EXPORTS.mozilla += [
+    'SandboxSettings.h'
+]

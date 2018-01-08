@@ -185,16 +185,6 @@ struct JSSettings
   }
 };
 
-enum WorkerPreference
-{
-#define WORKER_SIMPLE_PREF(name, getter, NAME) WORKERPREF_ ## NAME,
-#define WORKER_PREF(name, callback)
-#include "mozilla/dom/WorkerPrefs.h"
-#undef WORKER_SIMPLE_PREF
-#undef WORKER_PREF
-  WORKERPREF_COUNT
-};
-
 // Implemented in WorkerPrivate.cpp
 
 struct WorkerLoadInfo

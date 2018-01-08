@@ -322,15 +322,6 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIntCheck* ool);
     void generateInvalidateEpilogue();
 
-    // Generating a result.
-    template<typename S, typename T>
-    void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value,
-                                    const T& mem, Register temp1, Register temp2, AnyRegister output);
-
-    // Generating no result.
-    template<typename S, typename T>
-    void atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value, const T& mem);
-
     void setReturnDoubleRegs(LiveRegisterSet* regs);
 
     void canonicalizeIfDeterministic(Scalar::Type type, const LAllocation* value);

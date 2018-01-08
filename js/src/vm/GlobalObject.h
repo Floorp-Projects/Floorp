@@ -124,11 +124,6 @@ class GlobalObject : public NativeObject
     LexicalEnvironmentObject& lexicalEnvironment() const;
     GlobalScope& emptyGlobalScope() const;
 
-    void setThrowTypeError(JSFunction* fun) {
-        MOZ_ASSERT(getSlotRef(THROWTYPEERROR).isUndefined());
-        setSlot(THROWTYPEERROR, ObjectValue(*fun));
-    }
-
     void setOriginalEval(JSObject* evalobj) {
         MOZ_ASSERT(getSlotRef(EVAL).isUndefined());
         setSlot(EVAL, ObjectValue(*evalobj));
@@ -743,12 +738,7 @@ class GlobalObject : public NativeObject
                                            Handle<GlobalObject*> global);
     RegExpStatics* getAlreadyCreatedRegExpStatics() const;
 
-    JSObject* getThrowTypeError() const {
-        const Value v = getReservedSlot(THROWTYPEERROR);
-        MOZ_ASSERT(v.isObject(),
-                   "attempting to access [[ThrowTypeError]] too early");
-        return &v.toObject();
-    }
+    static JSObject* getOrCreateThrowTypeError(JSContext* cx, Handle<GlobalObject*> global);
 
     static bool isRuntimeCodeGenEnabled(JSContext* cx, Handle<GlobalObject*> global);
 

@@ -1084,7 +1084,7 @@ Console::IsEnabled(JSContext* aCx) const
   }
 
   // Make all Console API no-op if DevTools aren't enabled.
-  return nsContentUtils::DevToolsEnabled(aCx);
+  return DOMPrefs::DevToolsEnabled();
 }
 
 void

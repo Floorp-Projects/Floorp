@@ -3167,6 +3167,7 @@ html .breakpoints-list .breakpoint.paused {
   line-height: 1em;
   position: relative;
   transition: all 0.25s ease;
+  cursor: pointer;
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -3602,20 +3603,16 @@ img.ignore-exceptions {
   display: inline-block;
 }
 
-.welcomebox .toggle-button-end {
-  position: absolute;
-  top: auto;
-  bottom: 0;
-  offset-inline-end: 0;
-  offset-inline-start: auto;
-}
-
-.welcomebox .small-size-layout {
+.welcomebox .normal-layout {
   display: none;
 }
 
-.welcomebox .normal-layout {
-  display: inline-block;
+.welcomebox .command-bar-button {
+  position: absolute;
+  top: auto;
+  offset-inline-end: 0;
+  offset-inline-start: auto;
+  bottom: 0;
 }
 
 .shortcutKeys {

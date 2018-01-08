@@ -47,24 +47,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Directory)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-/* static */ bool
-Directory::WebkitBlinkDirectoryPickerEnabled(JSContext* aCx, JSObject* aObj)
-{
-  if (NS_IsMainThread()) {
-    return Preferences::GetBool("dom.webkitBlink.dirPicker.enabled", false);
-  }
-
-  // aCx can be null when this function is called by something else than WebIDL
-  // binding code.
-  workers::WorkerPrivate* workerPrivate =
-    workers::GetCurrentThreadWorkerPrivate();
-  if (!workerPrivate) {
-    return false;
-  }
-
-  return workerPrivate->WebkitBlinkDirectoryPickerEnabled();
-}
-
 /* static */ already_AddRefed<Directory>
 Directory::Constructor(const GlobalObject& aGlobal,
                        const nsAString& aRealPath,

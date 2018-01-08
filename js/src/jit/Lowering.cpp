@@ -3565,8 +3565,9 @@ LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins)
     if (ins->readType() == Scalar::Uint32 && IsFloatingPointType(ins->type()))
         tempDef = temp();
 
+    Synchronization sync = Synchronization::Load();
     if (ins->requiresMemoryBarrier()) {
-        LMemoryBarrier* fence = new(alloc()) LMemoryBarrier(MembarBeforeLoad);
+        LMemoryBarrier* fence = new(alloc()) LMemoryBarrier(sync.barrierBefore);
         add(fence, ins);
     }
     LLoadUnboxedScalar* lir = new(alloc()) LLoadUnboxedScalar(elements, index, tempDef);
@@ -3574,7 +3575,7 @@ LIRGenerator::visitLoadUnboxedScalar(MLoadUnboxedScalar* ins)
         assignSnapshot(lir, Bailout_Overflow);
     define(lir, ins);
     if (ins->requiresMemoryBarrier()) {
-        LMemoryBarrier* fence = new(alloc()) LMemoryBarrier(MembarAfterLoad);
+        LMemoryBarrier* fence = new(alloc()) LMemoryBarrier(sync.barrierAfter);
         add(fence, ins);
     }
 }
@@ -3675,13 +3676,14 @@ LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins)
     // is a store instruction that incorporates the necessary
     // barriers, and we could use that instead of separate barrier and
     // store instructions.  See bug #1077027.
+    Synchronization sync = Synchronization::Store();
     if (ins->requiresMemoryBarrier()) {
-        LMemoryBarrier* fence = new(alloc()) LMemoryBarrier(MembarBeforeStore);
+        LMemoryBarrier* fence = new(alloc()) LMemoryBarrier(sync.barrierBefore);
         add(fence, ins);
     }
     add(new(alloc()) LStoreUnboxedScalar(elements, index, value), ins);
     if (ins->requiresMemoryBarrier()) {
-        LMemoryBarrier* fence = new(alloc()) LMemoryBarrier(MembarAfterStore);
+        LMemoryBarrier* fence = new(alloc()) LMemoryBarrier(sync.barrierAfter);
         add(fence, ins);
     }
 }
