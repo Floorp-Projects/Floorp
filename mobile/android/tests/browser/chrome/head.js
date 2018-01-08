@@ -5,7 +5,7 @@ function fuzzyEquals(a, b) {
   return (Math.abs(a - b) < 1e-6);
 }
 
-function promiseBrowserEvent(browser, eventType) {
+function promiseBrowserEvent(browser, eventType, options) {
   return new Promise((resolve) => {
     function handle(event) {
       // Since we'll be redirecting, don't make assumptions about the given URL and the loaded URL
@@ -15,7 +15,11 @@ function promiseBrowserEvent(browser, eventType) {
       }
       info("Received event " + eventType + " from browser");
       browser.removeEventListener(eventType, handle, true);
-      resolve(event);
+      if (options && options.resolveAtNextTick) {
+        setTimeout(() => resolve(event), 0);
+      } else {
+        resolve(event);
+      }
     }
 
     browser.addEventListener(eventType, handle, true);
