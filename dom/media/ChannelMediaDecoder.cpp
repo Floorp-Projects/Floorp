@@ -413,6 +413,8 @@ ChannelMediaDecoder::DownloadProgressed()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
 
+  GetOwner()->DownloadProgressed();
+
   using StatsPromise = MozPromise<MediaStatistics, bool, true>;
   InvokeAsync(GetStateMachine()->OwnerThread(),
               __func__,
@@ -438,7 +440,8 @@ ChannelMediaDecoder::DownloadProgressed()
         GetStateMachine()->DispatchCanPlayThrough(mCanPlayThrough);
         mResource->ThrottleReadahead(ShouldThrottleDownload(aStats));
         AbstractThread::AutoEnter context(AbstractMainThread());
-        GetOwner()->DownloadProgressed();
+        // Update readyState since mCanPlayThrough might have changed.
+        GetOwner()->UpdateReadyState();
       },
       []() { MOZ_ASSERT_UNREACHABLE("Promise not resolved"); });
 }
