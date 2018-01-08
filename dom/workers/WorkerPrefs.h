@@ -21,7 +21,6 @@
 //   * First argument is the name of the pref.
 //   * The name of the function that updates the new value of a pref.
 
-WORKER_SIMPLE_PREF("gfx.offscreencanvas.enabled", OffscreenCanvasEnabled, OFFSCREENCANVAS_ENABLED)
 WORKER_SIMPLE_PREF("dom.webkitBlink.dirPicker.enabled", WebkitBlinkDirectoryPickerEnabled, DOM_WEBKITBLINK_DIRPICKER_WEBKITBLINK)
 WORKER_SIMPLE_PREF("dom.netinfo.enabled", NetworkInformationEnabled, NETWORKINFORMATION_ENABLED)
 WORKER_SIMPLE_PREF("dom.fetchObserver.enabled", FetchObserverEnabled, FETCHOBSERVER_ENABLED)
