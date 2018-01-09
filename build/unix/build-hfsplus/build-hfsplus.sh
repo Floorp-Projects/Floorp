@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -e
 set -x
 
 hfplus_version=540.1.linux3
