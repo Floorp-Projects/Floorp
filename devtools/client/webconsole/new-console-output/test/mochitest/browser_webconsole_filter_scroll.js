@@ -5,78 +5,74 @@
 
 "use strict";
 
-// See Bug 597460.
+const TEST_URI =
+`data:text/html;charset=utf-8,
+  <p>Web Console test for scroll when filtering.</p>
+  <script>
+  for (let i = 0; i < 100; i++) {
+    console.log("init-" + i);
+  }
+  </script>
+`;
+add_task(async function () {
+  const hud = await openNewTabAndConsole(TEST_URI);
+  let {ui} = hud;
+  const outputContainer = ui.outputNode.querySelector(".webconsole-output");
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-network.html";
-const PREF = "devtools.webconsole.persistlog";
+  info("Console should be scrolled to bottom on initial load from page logs");
+  await waitFor(() => findMessage(hud, "init-99"));
+  ok(hasVerticalOverflow(outputContainer), "There is a vertical overflow");
+  ok(isScrolledToBottom(outputContainer), "The console is scrolled to the bottom");
 
-add_task(function* () {
-  Services.prefs.setBoolPref(PREF, true);
+  info("Filter out some messages and check that the scroll position is not impacted");
+  const filterInput = hud.ui.outputNode.querySelector(".text-filter");
 
-  yield loadTab(TEST_URI);
-  let hud = yield openConsole();
+  filterInput.value = "init-";
+  filterInput.focus();
+  let onMessagesFiltered = waitFor(() => !findMessage(hud, "init-1"), null, 200);
+  EventUtils.synthesizeKey("9", {});
+  await onMessagesFiltered;
+  ok(isScrolledToBottom(outputContainer),
+    "The console is still scrolled to the bottom after filtering");
 
-  let results = yield consoleOpened(hud);
+  info("Clear the text filter and check that the scroll position is not impacted");
+  let onMessagesUnFiltered = waitFor(() => findMessage(hud, "init-1"), null, 200);
+  filterInput.select();
+  EventUtils.synthesizeKey("VK_DELETE", {});
+  await onMessagesUnFiltered;
+  ok(isScrolledToBottom(outputContainer),
+    "The console is still scrolled to the bottom after clearing the filter");
 
-  testScroll(results, hud);
+  info("Scroll up");
+  outputContainer.scrollTop = 0;
 
-  Services.prefs.clearUserPref(PREF);
+  filterInput.value = "init-";
+  filterInput.focus();
+  onMessagesFiltered = waitFor(() => !findMessage(hud, "init-1"), null, 200);
+  EventUtils.synthesizeKey("9", {});
+  await onMessagesFiltered;
+  is(outputContainer.scrollTop, 0,
+    "The console is still scrolled to the top after filtering");
+
+  info("Clear the text filter and check that the scroll position is not impacted");
+  onMessagesUnFiltered = waitFor(() => findMessage(hud, "init-1"), null, 200);
+  filterInput.select();
+  EventUtils.synthesizeKey("VK_DELETE", {});
+  await onMessagesUnFiltered;
+  is(outputContainer.scrollTop, 0,
+    "The console is still scrolled to the top after clearing the filter");
+
 });
 
-function consoleOpened(hud) {
-  let deferred = defer();
-
-  for (let i = 0; i < 200; i++) {
-    content.console.log("test message " + i);
-  }
-
-  hud.setFilterState("network", false);
-  hud.setFilterState("networkinfo", false);
-
-  hud.ui.filterBox.value = "test message";
-  hud.ui.adjustVisibilityOnSearchStringChange();
-
-  waitForMessages({
-    webconsole: hud,
-    messages: [{
-      name: "console messages displayed",
-      text: "test message 199",
-      category: CATEGORY_WEBDEV,
-      severity: SEVERITY_LOG,
-    }],
-  }).then(() => {
-    waitForMessages({
-      webconsole: hud,
-      messages: [{
-        text: "test-network.html",
-        category: CATEGORY_NETWORK,
-        severity: SEVERITY_LOG,
-      }],
-    }).then(deferred.resolve);
-
-    content.location.reload();
-  });
-
-  return deferred.promise;
+function hasVerticalOverflow(container) {
+  return container.scrollHeight > container.clientHeight;
 }
 
-function testScroll([result], hud) {
-  let scrollNode = hud.ui.outputWrapper;
-  let msgNode = [...result.matched][0];
-  ok(msgNode.classList.contains("filtered-by-type"),
-    "network message is filtered by type");
-  ok(msgNode.classList.contains("filtered-by-string"),
-    "network message is filtered by string");
-
-  ok(scrollNode.scrollTop > 0, "scroll location is not at the top");
-
-  // Make sure the Web Console output is scrolled as near as possible to the
-  // bottom.
-  let nodeHeight = msgNode.clientHeight;
-  ok(scrollNode.scrollTop >= scrollNode.scrollHeight - scrollNode.clientHeight -
-     nodeHeight * 2, "scroll location is correct");
-
-  hud.setFilterState("network", true);
-  hud.setFilterState("networkinfo", true);
+function isScrolledToBottom(container) {
+  if (!container.lastChild) {
+    return true;
+  }
+  let lastNodeHeight = container.lastChild.clientHeight;
+  return container.scrollTop + container.clientHeight >=
+         container.scrollHeight - lastNodeHeight / 2;
 }

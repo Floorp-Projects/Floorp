@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 1407085</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+
+<div id="content">
+  <input id="input" value="original value">
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+
+function runTests() {
+  let input = document.getElementById("input");
+  input.focus();
+  input.addEventListener("keydown", () => {
+    input.value = "new value";
+  }, { once: true });
+  synthesizeKey("KEY_Escape", { code: "Escape" });
+  is(input.value, "new value",
+     "New <input> value changed by an Escape key event listener shouldn't be " +
+     "overwritten by original value even if Escape key is pressed");
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

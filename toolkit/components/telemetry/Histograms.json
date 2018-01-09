@@ -1639,8 +1639,11 @@
     "description": "system fallback font can't be used"
   },
   "SHUTDOWN_OK": {
-    "record_in_processes": ["main", "content"],
-    "expires_in_version": "default",
+    "record_in_processes": ["main"],
+    "expires_in_version": "never",
+    "alert_emails": ["chutten@mozilla.com"],
+    "bug_numbers": [1421688],
+    "releaseChannelCollection": "opt-out",
     "kind": "boolean",
     "description": "Did the browser start after a successful shutdown"
   },
@@ -8486,7 +8489,7 @@
     "record_in_processes": ["main"],
     "alert_emails": ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"],
     "bug_numbers": [1412029],
-    "expires_in_version": "60",
+    "expires_in_version": "63",
     "kind": "categorical",
     "labels": ["toggleToolbox", "toggleToolboxF12", "inspector", "webconsole", "jsdebugger", "netmonitor", "toggleToolbar", "webide", "browserToolbox", "browserConsole", "responsiveDesignMode", "scratchpad", "styleeditor", "performance", "storage", "dom"],
     "description": "Records the key shortcut passed to open the about:devtools page."
@@ -8495,7 +8498,7 @@
     "record_in_processes": ["main"],
     "alert_emails": ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"],
     "bug_numbers": [1412029],
-    "expires_in_version": "60",
+    "expires_in_version": "63",
     "kind": "categorical",
     "labels": ["KeyShortcut", "SystemMenu", "HamburgerMenu", "ContextMenu", "CommandLine"],
     "description": "Records the reason for opening the about:devtools page."

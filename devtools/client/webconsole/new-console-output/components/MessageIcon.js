@@ -24,6 +24,7 @@ function getIconElement(level) {
   return dom.span({
     className: "icon",
     title: l10n.getStr(level),
+    "aria-live": "off",
   });
 }
 

@@ -14,7 +14,7 @@ const { l10n } =
   require("devtools/client/webconsole/new-console-output/utils/messages");
 const actions =
   require("devtools/client/webconsole/new-console-output/actions/index");
-const { MESSAGE_SOURCE } =
+const { MESSAGE_SOURCE, MESSAGE_TYPE } =
   require("devtools/client/webconsole/new-console-output/constants");
 const CollapseButton =
   require("devtools/client/webconsole/new-console-output/components/CollapseButton");
@@ -245,7 +245,8 @@ class Message extends Component {
       onContextMenu: this.onContextMenu,
       ref: node => {
         this.messageNode = node;
-      }
+      },
+      "aria-live": type === MESSAGE_TYPE.COMMAND ? "off" : "polite"
     },
       timestampEl,
       MessageIndent({indent}),
