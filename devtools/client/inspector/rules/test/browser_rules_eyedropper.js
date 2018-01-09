@@ -34,10 +34,31 @@ const ORIGINAL_COLOR = "rgb(255, 0, 153)";
 // #ff5
 const EXPECTED_COLOR = "rgb(255, 255, 85)";
 
+registerCleanupFunction(() => {
+  // Restore the default Toolbox host position after the test.
+  Services.prefs.clearUserPref("devtools.toolbox.host");
+});
+
 add_task(function* () {
   info("Add the test tab, open the rule-view and select the test node");
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
-  let {testActor, inspector, view} = yield openRuleView();
+
+  let url = "data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI);
+  yield addTab(url);
+
+  let {testActor, inspector, view, toolbox} = yield openRuleView();
+
+  yield runTest(testActor, inspector, view);
+
+  info("Reload the page to restore the initial state");
+  yield navigateTo(inspector, url);
+
+  info("Change toolbox host to WINDOW");
+  yield toolbox.switchHost("window");
+
+  yield runTest(testActor, inspector, view);
+});
+
+function* runTest(testActor, inspector, view) {
   yield selectNode("#div2", inspector);
 
   info("Get the background-color property from the rule-view");
@@ -66,7 +87,7 @@ add_task(function* () {
   ok(!tooltip.isVisible(), "color picker tooltip is closed");
 
   yield waitForTick();
-});
+}
 
 function* testESC(swatch, inspector, testActor) {
   info("Press escape");
