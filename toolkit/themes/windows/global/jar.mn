@@ -32,6 +32,10 @@ toolkit.jar:
   skin/classic/global/toolbarbutton.css
 * skin/classic/global/tree.css
 * skin/classic/global/alerts/alert.css                     (alerts/alert.css)
+  skin/classic/global/arrow/arrow-lft.gif                  (arrow/arrow-lft.gif)
+  skin/classic/global/arrow/arrow-lft-dis.gif              (arrow/arrow-lft-dis.gif)
+  skin/classic/global/arrow/arrow-rit.gif                  (arrow/arrow-rit.gif)
+  skin/classic/global/arrow/arrow-rit-dis.gif              (arrow/arrow-rit-dis.gif)
   skin/classic/global/dirListing/folder.png                (dirListing/folder.png)
   skin/classic/global/dirListing/up.png                    (dirListing/up.png)
   skin/classic/global/icons/blacklist_favicon.png          (icons/blacklist_favicon.png)
@@ -54,8 +58,8 @@ toolkit.jar:
 * skin/classic/global/in-content/common.css                (in-content/common.css)
 * skin/classic/global/in-content/info-pages.css            (in-content/info-pages.css)
   skin/classic/global/toolbar/spring.png                   (toolbar/spring.png)
-  skin/classic/global/tree/twisty.svg                            (tree/twisty.svg)
-  skin/classic/global/tree/twisty-preWin10.svg                   (tree/twisty-preWin10.svg)
+  skin/classic/global/tree/twisty.svg                      (tree/twisty.svg)
+  skin/classic/global/tree/twisty-preWin10.svg             (tree/twisty-preWin10.svg)
 
 #if MOZ_BUILD_APP == browser
 [browser/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
