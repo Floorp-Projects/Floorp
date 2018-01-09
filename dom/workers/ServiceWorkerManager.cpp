@@ -3233,8 +3233,8 @@ already_AddRefed<GenericPromise>
 ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDocument,
                                        ServiceWorkerRegistrationInfo* aWorkerRegistration)
 {
-  MOZ_ASSERT(aWorkerRegistration);
-  MOZ_ASSERT(aWorkerRegistration->GetActive());
+  MOZ_DIAGNOSTIC_ASSERT(aWorkerRegistration);
+  MOZ_DIAGNOSTIC_ASSERT(aWorkerRegistration->GetActive());
 
   RefPtr<GenericPromise> ref;
 
@@ -3286,7 +3286,13 @@ ServiceWorkerManager::MaybeClaimClient(nsIDocument* aDoc,
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     GetRegistration(principal, aServiceWorker.Scope());
-  if (!registration) {
+
+  // While ServiceWorkerManager is distributed across child processes its
+  // possible for us to sometimes get a claim for a new worker that has
+  // not propagated to this process yet.  For now, simply note that we
+  // are done.  The fix for this is to move the SWM to the parent process
+  // so there are no consistency errors.
+  if (NS_WARN_IF(!registration) || NS_WARN_IF(!registration->GetActive())) {
     ref = GenericPromise::CreateAndResolve(false, __func__);
     return ref.forget();
   }
