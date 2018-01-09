@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 import os
+import sys
 from argparse import Namespace
 from functools import partial
 
@@ -19,6 +20,11 @@ parser = None
 
 def run_mochitest(context, **kwargs):
     from mochitest_options import ALL_FLAVORS
+    from mozlog.commandline import setup_logging
+
+    if not kwargs.get('log'):
+        kwargs['log'] = setup_logging('mochitest', kwargs, {'mach': sys.stdout})
+
     flavor = kwargs.get('flavor') or 'mochitest'
     if flavor not in ALL_FLAVORS:
         for fname, fobj in ALL_FLAVORS.iteritems():
