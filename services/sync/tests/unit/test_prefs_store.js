@@ -57,16 +57,24 @@ add_task(async function run_test() {
     Assert.equal(record.value["testing.default"], null);
     Assert.equal(false, "testing.turned.off" in record.value);
     Assert.equal(false, "testing.not.turned.on" in record.value);
+    // Prefs we consider unsyncable (since they are URLs that won't be stable on
+    // another firefox) shouldn't be included
+    Assert.equal(record.value["testing.unsynced.url"], null);
+    // Other URLs with user prefs should be synced, though.
+    Assert.equal(record.value["testing.synced.url"], "https://www.example.com");
 
     _("Prefs record contains non-default pref sync prefs too.");
     Assert.equal(record.value["services.sync.prefs.sync.testing.int"], null);
     Assert.equal(record.value["services.sync.prefs.sync.testing.string"], null);
     Assert.equal(record.value["services.sync.prefs.sync.testing.bool"], null);
     Assert.equal(record.value["services.sync.prefs.sync.testing.dont.change"], null);
+    Assert.equal(record.value["services.sync.prefs.sync.testing.synced.url"], null);
     // but this one is a user_pref so *will* be synced.
     Assert.equal(record.value["services.sync.prefs.sync.testing.turned.off"], false);
     Assert.equal(record.value["services.sync.prefs.sync.testing.nonexistent"], null);
     Assert.equal(record.value["services.sync.prefs.sync.testing.default"], null);
+    // This is a user pref, but shouldn't be synced since it refers to an invalid url
+    Assert.equal(record.value["services.sync.prefs.sync.testing.unsynced.url"], null);
 
     _("Update some prefs, including one that's to be reset/deleted.");
     Svc.Prefs.set("testing.deleteme", "I'm going to be deleted!");
@@ -77,7 +85,12 @@ add_task(async function run_test() {
       "testing.bool": false,
       "testing.deleteme": null,
       "testing.somepref": "im a new pref from other device",
-      "services.sync.prefs.sync.testing.somepref": true
+      "services.sync.prefs.sync.testing.somepref": true,
+      // Pretend some a stale remote client is overwriting it with a value
+      // we consider unsyncable.
+      "testing.synced.url": "blob:ebeb707a-502e-40c6-97a5-dd4bda901463",
+      // Make sure we can replace the unsynced URL with a valid URL.
+      "testing.unsynced.url": "https://www.example.com/2",
     };
     await store.update(record);
     Assert.equal(prefs.get("testing.int"), 42);
@@ -86,6 +99,8 @@ add_task(async function run_test() {
     Assert.equal(prefs.get("testing.deleteme"), undefined);
     Assert.equal(prefs.get("testing.dont.change"), "Please don't change me.");
     Assert.equal(prefs.get("testing.somepref"), "im a new pref from other device");
+    Assert.equal(prefs.get("testing.synced.url"), "https://www.example.com");
+    Assert.equal(prefs.get("testing.unsynced.url"), "https://www.example.com/2");
     Assert.equal(Svc.Prefs.get("prefs.sync.testing.somepref"), true);
 
     _("Enable persona");

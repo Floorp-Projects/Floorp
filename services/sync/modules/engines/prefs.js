@@ -72,6 +72,18 @@ PrefsEngine.prototype = {
   }
 };
 
+// We don't use services.sync.engine.tabs.filteredUrls since it includes
+// about: pages and the like, which we want to be syncable in preferences.
+// Blob and moz-extension uris are never safe to sync, so we limit our check
+// to those.
+const UNSYNCABLE_URL_REGEXP = /^(moz-extension|blob):/i;
+function isUnsyncableURLPref(prefName) {
+  if (Services.prefs.getPrefType(prefName) != Ci.nsIPrefBranch.PREF_STRING) {
+    return false;
+  }
+  const prefValue = Services.prefs.getStringPref(prefName, "");
+  return UNSYNCABLE_URL_REGEXP.test(prefValue);
+}
 
 function PrefStore(name, engine) {
   Store.call(this, name, engine);
@@ -92,7 +104,8 @@ PrefStore.prototype = {
 
   _getSyncPrefs() {
     let syncPrefs = Services.prefs.getBranch(PREF_SYNC_PREFS_PREFIX)
-                                  .getChildList("", {});
+                                  .getChildList("", {})
+                                  .filter(pref => !isUnsyncableURLPref(pref));
     // Also sync preferences that determine which prefs get synced.
     let controlPrefs = syncPrefs.map(pref => PREF_SYNC_PREFS_PREFIX + pref);
     return controlPrefs.concat(syncPrefs);
@@ -106,7 +119,10 @@ PrefStore.prototype = {
   _getAllPrefs() {
     let values = {};
     for (let pref of this._getSyncPrefs()) {
-      if (this._isSynced(pref)) {
+      // Note: _isSynced doesn't call isUnsyncableURLPref since it would cause
+      // us not to apply (syncable) changes to preferences that are set locally
+      // which have unsyncable urls.
+      if (this._isSynced(pref) && !isUnsyncableURLPref(pref)) {
         // Missing and default prefs get the null value.
         values[pref] = this._prefs.isSet(pref) ? this._prefs.get(pref, null) : null;
       }
@@ -136,6 +152,10 @@ PrefStore.prototype = {
       }
 
       let value = values[pref];
+      if (typeof value == "string" && UNSYNCABLE_URL_REGEXP.test(value)) {
+        this._log.trace(`Skipping incoming unsyncable url for pref: ${pref}`);
+        continue;
+      }
 
       switch (pref) {
         // Some special prefs we don't want to set directly.
