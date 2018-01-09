@@ -555,10 +555,14 @@ Renderer11::Renderer11(egl::Display *display)
         ASSERT(mEGLDevice != nullptr);
         mCreatedWithDeviceEXT = true;
 
+        const auto &attributes = mDisplay->getAttributeMap();
+        const EGLenum presentPath = static_cast<EGLenum>(attributes.get(
+            EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE, EGL_EXPERIMENTAL_PRESENT_PATH_COPY_ANGLE));
+        mPresentPathFastEnabled = (presentPath == EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE);
+
         // Also set EGL_PLATFORM_ANGLE_ANGLE variables, in case they're used elsewhere in ANGLE
         // mAvailableFeatureLevels defaults to empty
         mRequestedDriverType    = D3D_DRIVER_TYPE_UNKNOWN;
-        mPresentPathFastEnabled = false;
     }
 
 // The D3D11 renderer must choose the D3D9 debug annotator because the D3D11 interface
