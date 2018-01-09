@@ -541,6 +541,10 @@
   text-decoration-color: var(--theme-content-color3);
 }
 
+.ruleview-font-family.used-font {
+  text-decoration: underline;
+}
+
 .styleinspector-propertyeditor {
   border: 1px solid #CCC;
   padding: 0;
