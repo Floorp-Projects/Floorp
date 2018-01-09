@@ -26,7 +26,8 @@
 <p id="status"></p>
 
 <script type="text/javascript">
-        // Add a key value pair to local storage since WebViewDataTest asserts that the local storage directory should exist.
+        // Add a key value pair to local storage. This is required by WebViewDataTest which asserts
+        // that the local storage directory should exist
         localStorage.setItem('focusLocalStorageTest', 'testValue');
 
         navigator.serviceWorker.register('service-worker.js', {scope: './'}).then(function(registration) {
