@@ -492,14 +492,6 @@ function dispatch(fn) {
   };
 }
 
-function addMessageListenerId(messageName, handler) {
-  addMessageListener(messageName + outerWindowID, handler);
-}
-
-function removeMessageListenerId(messageName, handler) {
-  removeMessageListener(messageName + outerWindowID, handler);
-}
-
 let getPageSourceFn = dispatch(getPageSource);
 let getActiveElementFn = dispatch(getActiveElement);
 let getElementAttributeFn = dispatch(getElementAttribute);
@@ -530,46 +522,46 @@ let reftestWaitFn = dispatch(reftestWait);
  * Start all message listeners
  */
 function startListeners() {
-  addMessageListenerId("Marionette:newSession", newSession);
-  addMessageListenerId("Marionette:execute", executeFn);
-  addMessageListenerId("Marionette:executeInSandbox", executeInSandboxFn);
-  addMessageListenerId("Marionette:singleTap", singleTapFn);
-  addMessageListenerId("Marionette:performActions", performActionsFn);
-  addMessageListenerId("Marionette:releaseActions", releaseActionsFn);
-  addMessageListenerId("Marionette:actionChain", actionChainFn);
-  addMessageListenerId("Marionette:multiAction", multiActionFn);
-  addMessageListenerId("Marionette:get", get);
-  addMessageListenerId("Marionette:waitForPageLoaded", waitForPageLoaded);
-  addMessageListenerId("Marionette:cancelRequest", cancelRequest);
-  addMessageListenerId("Marionette:getPageSource", getPageSourceFn);
-  addMessageListenerId("Marionette:goBack", goBack);
-  addMessageListenerId("Marionette:goForward", goForward);
-  addMessageListenerId("Marionette:refresh", refresh);
-  addMessageListenerId("Marionette:findElementContent", findElementContentFn);
-  addMessageListenerId(
+  addMessageListener("Marionette:newSession", newSession);
+  addMessageListener("Marionette:execute", executeFn);
+  addMessageListener("Marionette:executeInSandbox", executeInSandboxFn);
+  addMessageListener("Marionette:singleTap", singleTapFn);
+  addMessageListener("Marionette:performActions", performActionsFn);
+  addMessageListener("Marionette:releaseActions", releaseActionsFn);
+  addMessageListener("Marionette:actionChain", actionChainFn);
+  addMessageListener("Marionette:multiAction", multiActionFn);
+  addMessageListener("Marionette:get", get);
+  addMessageListener("Marionette:waitForPageLoaded", waitForPageLoaded);
+  addMessageListener("Marionette:cancelRequest", cancelRequest);
+  addMessageListener("Marionette:getPageSource", getPageSourceFn);
+  addMessageListener("Marionette:goBack", goBack);
+  addMessageListener("Marionette:goForward", goForward);
+  addMessageListener("Marionette:refresh", refresh);
+  addMessageListener("Marionette:findElementContent", findElementContentFn);
+  addMessageListener(
       "Marionette:findElementsContent", findElementsContentFn);
-  addMessageListenerId("Marionette:getActiveElement", getActiveElementFn);
-  addMessageListenerId("Marionette:clickElement", clickElement);
-  addMessageListenerId(
+  addMessageListener("Marionette:getActiveElement", getActiveElementFn);
+  addMessageListener("Marionette:clickElement", clickElement);
+  addMessageListener(
       "Marionette:getElementAttribute", getElementAttributeFn);
-  addMessageListenerId("Marionette:getElementProperty", getElementPropertyFn);
-  addMessageListenerId("Marionette:getElementText", getElementTextFn);
-  addMessageListenerId("Marionette:getElementTagName", getElementTagNameFn);
-  addMessageListenerId("Marionette:isElementDisplayed", isElementDisplayedFn);
-  addMessageListenerId(
+  addMessageListener("Marionette:getElementProperty", getElementPropertyFn);
+  addMessageListener("Marionette:getElementText", getElementTextFn);
+  addMessageListener("Marionette:getElementTagName", getElementTagNameFn);
+  addMessageListener("Marionette:isElementDisplayed", isElementDisplayedFn);
+  addMessageListener(
       "Marionette:getElementValueOfCssProperty",
       getElementValueOfCssPropertyFn);
-  addMessageListenerId("Marionette:getElementRect", getElementRectFn);
-  addMessageListenerId("Marionette:isElementEnabled", isElementEnabledFn);
-  addMessageListenerId("Marionette:isElementSelected", isElementSelectedFn);
-  addMessageListenerId("Marionette:sendKeysToElement", sendKeysToElementFn);
-  addMessageListenerId("Marionette:clearElement", clearElementFn);
-  addMessageListenerId("Marionette:switchToFrame", switchToFrame);
-  addMessageListenerId("Marionette:switchToParentFrame", switchToParentFrame);
-  addMessageListenerId("Marionette:switchToShadowRoot", switchToShadowRootFn);
-  addMessageListenerId("Marionette:deleteSession", deleteSession);
-  addMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
-  addMessageListenerId("Marionette:reftestWait", reftestWaitFn);
+  addMessageListener("Marionette:getElementRect", getElementRectFn);
+  addMessageListener("Marionette:isElementEnabled", isElementEnabledFn);
+  addMessageListener("Marionette:isElementSelected", isElementSelectedFn);
+  addMessageListener("Marionette:sendKeysToElement", sendKeysToElementFn);
+  addMessageListener("Marionette:clearElement", clearElementFn);
+  addMessageListener("Marionette:switchToFrame", switchToFrame);
+  addMessageListener("Marionette:switchToParentFrame", switchToParentFrame);
+  addMessageListener("Marionette:switchToShadowRoot", switchToShadowRootFn);
+  addMessageListener("Marionette:deleteSession", deleteSession);
+  addMessageListener("Marionette:takeScreenshot", takeScreenshotFn);
+  addMessageListener("Marionette:reftestWait", reftestWaitFn);
   addMessageListener("Marionette:DOM:AddEventListener", domAddEventListener);
   addMessageListener("Marionette:DOM:RemoveEventListener", domRemoveEventListener);
 }
@@ -590,54 +582,54 @@ function newSession() {
  * Removes all listeners
  */
 function deleteSession() {
-  removeMessageListenerId("Marionette:newSession", newSession);
-  removeMessageListenerId("Marionette:execute", executeFn);
-  removeMessageListenerId("Marionette:executeInSandbox", executeInSandboxFn);
-  removeMessageListenerId("Marionette:singleTap", singleTapFn);
-  removeMessageListenerId("Marionette:performActions", performActionsFn);
-  removeMessageListenerId("Marionette:releaseActions", releaseActionsFn);
-  removeMessageListenerId("Marionette:actionChain", actionChainFn);
-  removeMessageListenerId("Marionette:multiAction", multiActionFn);
-  removeMessageListenerId("Marionette:get", get);
-  removeMessageListenerId("Marionette:waitForPageLoaded", waitForPageLoaded);
-  removeMessageListenerId("Marionette:cancelRequest", cancelRequest);
-  removeMessageListenerId("Marionette:getPageSource", getPageSourceFn);
-  removeMessageListenerId("Marionette:goBack", goBack);
-  removeMessageListenerId("Marionette:goForward", goForward);
-  removeMessageListenerId("Marionette:refresh", refresh);
-  removeMessageListenerId(
+  removeMessageListener("Marionette:newSession", newSession);
+  removeMessageListener("Marionette:execute", executeFn);
+  removeMessageListener("Marionette:executeInSandbox", executeInSandboxFn);
+  removeMessageListener("Marionette:singleTap", singleTapFn);
+  removeMessageListener("Marionette:performActions", performActionsFn);
+  removeMessageListener("Marionette:releaseActions", releaseActionsFn);
+  removeMessageListener("Marionette:actionChain", actionChainFn);
+  removeMessageListener("Marionette:multiAction", multiActionFn);
+  removeMessageListener("Marionette:get", get);
+  removeMessageListener("Marionette:waitForPageLoaded", waitForPageLoaded);
+  removeMessageListener("Marionette:cancelRequest", cancelRequest);
+  removeMessageListener("Marionette:getPageSource", getPageSourceFn);
+  removeMessageListener("Marionette:goBack", goBack);
+  removeMessageListener("Marionette:goForward", goForward);
+  removeMessageListener("Marionette:refresh", refresh);
+  removeMessageListener(
       "Marionette:findElementContent", findElementContentFn);
-  removeMessageListenerId(
+  removeMessageListener(
       "Marionette:findElementsContent", findElementsContentFn);
-  removeMessageListenerId("Marionette:getActiveElement", getActiveElementFn);
-  removeMessageListenerId("Marionette:clickElement", clickElement);
-  removeMessageListenerId(
+  removeMessageListener("Marionette:getActiveElement", getActiveElementFn);
+  removeMessageListener("Marionette:clickElement", clickElement);
+  removeMessageListener(
       "Marionette:getElementAttribute", getElementAttributeFn);
-  removeMessageListenerId(
+  removeMessageListener(
       "Marionette:getElementProperty", getElementPropertyFn);
-  removeMessageListenerId(
+  removeMessageListener(
       "Marionette:getElementText", getElementTextFn);
-  removeMessageListenerId(
+  removeMessageListener(
       "Marionette:getElementTagName", getElementTagNameFn);
-  removeMessageListenerId(
+  removeMessageListener(
       "Marionette:isElementDisplayed", isElementDisplayedFn);
-  removeMessageListenerId(
+  removeMessageListener(
       "Marionette:getElementValueOfCssProperty",
       getElementValueOfCssPropertyFn);
-  removeMessageListenerId("Marionette:getElementRect", getElementRectFn);
-  removeMessageListenerId("Marionette:isElementEnabled", isElementEnabledFn);
-  removeMessageListenerId(
+  removeMessageListener("Marionette:getElementRect", getElementRectFn);
+  removeMessageListener("Marionette:isElementEnabled", isElementEnabledFn);
+  removeMessageListener(
       "Marionette:isElementSelected", isElementSelectedFn);
-  removeMessageListenerId(
+  removeMessageListener(
       "Marionette:sendKeysToElement", sendKeysToElementFn);
-  removeMessageListenerId("Marionette:clearElement", clearElementFn);
-  removeMessageListenerId("Marionette:switchToFrame", switchToFrame);
-  removeMessageListenerId(
+  removeMessageListener("Marionette:clearElement", clearElementFn);
+  removeMessageListener("Marionette:switchToFrame", switchToFrame);
+  removeMessageListener(
       "Marionette:switchToParentFrame", switchToParentFrame);
-  removeMessageListenerId(
+  removeMessageListener(
       "Marionette:switchToShadowRoot", switchToShadowRootFn);
-  removeMessageListenerId("Marionette:deleteSession", deleteSession);
-  removeMessageListenerId("Marionette:takeScreenshot", takeScreenshotFn);
+  removeMessageListener("Marionette:deleteSession", deleteSession);
+  removeMessageListener("Marionette:takeScreenshot", takeScreenshotFn);
 
   seenEls.clear();
   // reset container frame to the top-most frame
