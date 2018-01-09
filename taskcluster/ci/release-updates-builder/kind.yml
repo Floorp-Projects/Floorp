@@ -102,6 +102,7 @@ jobs:
                   default: "default"
             repo_path:
                by-project:
+                  birch: "projects/birch"
                   jamun: "projects/jamun"
                   maple: "projects/maple"
                   mozilla-beta: "releases/mozilla-beta"

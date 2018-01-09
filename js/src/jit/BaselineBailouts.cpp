@@ -1900,7 +1900,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
     RootedScript outerScript(cx, nullptr);
 
     MOZ_ASSERT(cx->currentlyRunningInJit());
-    JSJitFrameIter iter(cx);
+    JSJitFrameIter iter(cx->activation()->asJit());
     uint8_t* outerFp = nullptr;
 
     // Iter currently points at the exit frame.  Get the previous frame
@@ -1962,7 +1962,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
     // on.
     JitActivation* act = cx->activation()->asJit();
     if (act->hasRematerializedFrame(outerFp)) {
-        JSJitFrameIter iter(cx);
+        JSJitFrameIter iter(cx->activation()->asJit());
         size_t inlineDepth = numFrames;
         bool ok = true;
         while (inlineDepth > 0) {

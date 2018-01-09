@@ -1794,6 +1794,12 @@ public:
 
     bool IsSyntheticBold() { return mApplySyntheticBold; }
 
+    bool IsSyntheticOblique() {
+        return mFontEntry->IsUpright() &&
+               mStyle.style != NS_FONT_STYLE_NORMAL &&
+               mStyle.allowSyntheticStyle;
+    }
+
     // Amount by which synthetic bold "fattens" the glyphs:
     // For size S up to a threshold size T, we use (0.25 + 3S / 4T),
     // so that the result ranges from 0.25 to 1.0; thereafter,

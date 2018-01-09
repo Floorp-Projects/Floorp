@@ -18,7 +18,6 @@ INDENT TABS: pointerlock/*
 INDENT TABS: shadow-dom/*
 INDENT TABS: svg/import/*
 INDENT TABS: tools/*
-INDENT TABS: touch-events/*
 INDENT TABS: web-animations/*
 INDENT TABS: webaudio/*
 INDENT TABS: webvtt/*
@@ -74,6 +73,9 @@ W3C-TEST.ORG: README.md
 W3C-TEST.ORG: */README.md
 W3C-TEST.ORG: docs/*
 SET TIMEOUT: docs/*
+WEB-PLATFORM.TEST:README.md
+WEB-PLATFORM.TEST:*/README.md
+WEB-PLATFORM.TEST:docs/*
 
 ## Helper scripts ##
 
@@ -97,8 +99,8 @@ AHEM COPY: css/vendor-imports/mozilla/mozilla-central-reftests/*/Ahem.ttf
 # Intentional use of CRLF
 CR AT EOL: WebIDL/valid/idl/documentation-dos.widl
 CR AT EOL: cors/resources/cors-headers.asis
-CR AT EOL: html/form-elements/the-textarea-element/multiline-placefolder-cr.html
-CR AT EOL: html/form-elements/the-textarea-element/multiline-placefolder-crlf.html
+CR AT EOL: html/form-elements/the-textarea-element/multiline-placeholder-cr.html
+CR AT EOL: html/form-elements/the-textarea-element/multiline-placeholder-crlf.html
 CR AT EOL: html/input/the-placeholder-attribute/multiline-cr.html
 CR AT EOL: html/input/the-placeholder-attribute/multiline-crlf.html
 CR AT EOL: html/semantics/embedded-content/the-canvas-element/size.attributes.parse.whitespace.html
@@ -113,6 +115,9 @@ PRINT STATEMENT: encrypted-media/polyfill/make-polyfill-tests.py
 
 # semi-legitimate use of console.*
 CONSOLE: console/*
+CONSOLE: resources/check-layout-th.js
+CONSOLE: resources/chromium/*
+CONSOLE: resources/idlharness.js
 CONSOLE: streams/resources/test-utils.js
 CONSOLE: service-workers/service-worker/resources/navigation-redirect-other-origin.html
 CONSOLE: service-workers/service-worker/navigation-redirect.https.html
@@ -123,9 +128,6 @@ CONSOLE: service-workers/service-worker/resources/clients-get-other-origin.html
 CONSOLE: annotation-model/scripts/ajv.min.js
 CONSOLE: annotation-model/scripts/showdown.min.js
 CR AT EOL: annotation-model/scripts/showdown.min.js
-
-# Lint doesn't know about sub.svg I guess
-PARSE-FAILED: content-security-policy/svg/including.sub.svg
 
 # Helper files that aren't valid XML
 PARSE-FAILED: acid/acid3/empty.xml
@@ -150,7 +152,6 @@ SET TIMEOUT: css/selectors/selector-placeholder-shown-type-change-002.html
 SET TIMEOUT: css/selectors/selector-placeholder-shown-type-change-003.html
 SET TIMEOUT: css/selectors/selector-read-write-type-change-002.html
 SET TIMEOUT: css/selectors/selector-required-type-change-002.html
-SET TIMEOUT: css/css-fonts/font-display/font-display.html
 SET TIMEOUT: encrypted-media/polyfill/chrome-polyfill.js
 SET TIMEOUT: encrypted-media/polyfill/clearkey-polyfill.js
 SET TIMEOUT: encrypted-media/scripts/playback-temporary-events.js
@@ -232,6 +233,10 @@ SET TIMEOUT: workers/*
 SET TIMEOUT: XMLHttpRequest/resources/init.htm
 SET TIMEOUT: XMLHttpRequest/resources/xmlhttprequest-timeout.js
 
+# generate_tests implementation and sample usage
+GENERATE_TESTS: resources/test/tests/generate-callback.html
+GENERATE_TESTS: resources/testharness.js
+
 # generate_tests usage (should be got rid of)
 GENERATE_TESTS: 2dcontext/drawing-images-to-the-canvas/*
 GENERATE_TESTS: css/css-shapes/shape-outside/values/*
@@ -302,21 +307,34 @@ GENERATE_TESTS: shadow-dom/untriaged/shadow-trees/upper-boundary-encapsulation/w
 GENERATE_TESTS: shadow-dom/untriaged/shadow-trees/upper-boundary-encapsulation/window-named-properties-003.html
 
 # Intentional use of setTimeout
+SET TIMEOUT: css/css-fonts/font-display/font-display.html
+SET TIMEOUT: css/css-fonts/font-display/font-display-change.html
+SET TIMEOUT: css/css-fonts/font-display/font-display-change-ref.html
 SET TIMEOUT: html/browsers/windows/auxiliary-browsing-contexts/resources/close-opener.html
 SET TIMEOUT: html/dom/documents/dom-tree-accessors/Document.currentScript.html
 SET TIMEOUT: html/webappapis/timers/*
+SET TIMEOUT: resources/chromium/*
+SET TIMEOUT: resources/test/tests/add_cleanup.html
+SET TIMEOUT: resources/test/tests/api-tests-1.html
+SET TIMEOUT: resources/test/tests/worker.js
+SET TIMEOUT: resources/testharness.js
 
 # setTimeout use in reftests
 SET TIMEOUT: acid/acid3/test.html
 
 # Travis
 W3C-TEST.ORG: .travis.yml
+WEB-PLATFORM.TEST: .travis.yml
 
-# Git submodules are not currently scanned
-*: tools/*
-*: resources/*
+# Config
+WEB-PLATFORM.TEST: config.default.json
+WEB-PLATFORM.TEST: resources/test/config.test.json
+
+# Third party code
 *: css/tools/apiclient/*
 *: css/tools/w3ctestlib/*
+*: resources/webidl2/*
+*: tools/*
 
 # Build system virtualenv
 *: css/tools/_virtualenv/*
@@ -324,6 +342,7 @@ W3C-TEST.ORG: .travis.yml
 
 ## Third party data files
 TRAILING WHITESPACE: css/css-writing-modes/tools/generators/ucd/Blocks.txt
+TRAILING WHITESPACE: resources/chromium/*
 
 
 ## Test generation files
@@ -924,6 +943,7 @@ MISSING-LINK: css/cssom-view/scrolling-quirks-vs-nonquirks.html
 MISSING-LINK: css/cssom-view/scrollingElement.html
 MISSING-LINK: css/cssom-view/scrollIntoView-shadow.html
 MISSING-LINK: css/cssom-view/scrollIntoView-smooth.html
+MISSING-LINK: css/cssom-view/scrollTop-display-change.html
 CSS-COLLIDING-TEST-NAME: css/cssom-view/interfaces.html
 CSS-COLLIDING-TEST-NAME: css/cssom/interfaces.html
 
@@ -937,3 +957,24 @@ CONSOLE: payment-request/payment-request-response-id.html
 
 # Tests that use WebKit/Blink testing APIs
 LAYOUTTESTS APIS: css/css-regions/interactivity/*
+
+# Existing use of WEB-PLATFORM.TEST
+WEB-PLATFORM.TEST: clear-site-data/support/test_utils.sub.js
+WEB-PLATFORM.TEST: content-security-policy/base-uri/report-uri-does-not-respect-base-uri.sub.html
+WEB-PLATFORM.TEST: content-security-policy/generic/generic-0_8.sub.html
+WEB-PLATFORM.TEST: content-security-policy/generic/generic-0_8_1.sub.html
+WEB-PLATFORM.TEST: content-security-policy/nonce-hiding/script-nonces-hidden-meta.tentative.html
+WEB-PLATFORM.TEST: content-security-policy/nonce-hiding/svgscript-nonces-hidden-meta.tentative.html
+WEB-PLATFORM.TEST: fetch/api/request/request-structure.html
+WEB-PLATFORM.TEST: html/browsers/origin/relaxing-the-same-origin-restriction/document_domain_setter.html
+WEB-PLATFORM.TEST: html/semantics/embedded-content/the-iframe-element/cross_origin_parentage.html
+WEB-PLATFORM.TEST: html/semantics/forms/the-label-element/label-attributes.html
+WEB-PLATFORM.TEST: longtask-timing/longtask-in-childiframe-crossorigin.html
+WEB-PLATFORM.TEST: longtask-timing/longtask-in-sibling-iframe-crossorigin.html
+WEB-PLATFORM.TEST: navigation-timing/nav2_test_attributes_values.html
+WEB-PLATFORM.TEST: navigation-timing/nav2_test_instance_accessors.html
+WEB-PLATFORM.TEST: service-workers/service-worker/update-bytecheck.https.html
+WEB-PLATFORM.TEST: webdriver/tests/cookies/add_cookie.py
+WEB-PLATFORM.TEST: webdriver/tests/cookies/get_named_cookie.py
+WEB-PLATFORM.TEST: webrtc/RTCPeerConnection-getIdentityAssertion.html
+WEB-PLATFORM.TEST: webrtc/identity-helper.js

@@ -1916,12 +1916,14 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, const gfx::Point& aPt,
     gfx::Point devPt(ToDeviceUnits(aPt.x, runParams.devPerApp),
                      ToDeviceUnits(aPt.y, runParams.devPerApp));
 
-    gfxContextMatrixAutoSaveRestore matrixRestore;
-
     if (FC == FontComplexityT::ComplexFont) {
         const FontDrawParams& fontParams(aBuffer.mFontParams);
 
-        if (fontParams.needsOblique && fontParams.isVerticalFont) {
+        auto* textDrawer = runParams.context->GetTextDrawer();
+
+        gfxContextMatrixAutoSaveRestore matrixRestore;
+
+        if (fontParams.needsOblique && fontParams.isVerticalFont && !textDrawer) {
             // We have to flush each glyph individually when doing
             // synthetic-oblique for vertical-upright text, because
             // the skew transform needs to be applied to a separate
@@ -1958,12 +1960,9 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, const gfx::Point& aPt,
                              aGlyphID)) {
             return;
         }
-    }
 
-    aBuffer.OutputGlyph(aGlyphID, devPt);
+        aBuffer.OutputGlyph(aGlyphID, devPt);
 
-    if (FC == FontComplexityT::ComplexFont) {
-        const FontDrawParams& fontParams(aBuffer.mFontParams);
         // Synthetic bolding (if required) by multi-striking.
         for (int32_t i = 0; i < fontParams.extraStrikes; ++i) {
             if (fontParams.isVerticalFont) {
@@ -1974,9 +1973,11 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, const gfx::Point& aPt,
             aBuffer.OutputGlyph(aGlyphID, devPt);
         }
 
-        if (fontParams.needsOblique && fontParams.isVerticalFont) {
+        if (fontParams.needsOblique && fontParams.isVerticalFont && !textDrawer) {
             aBuffer.Flush();
         }
+    } else {
+        aBuffer.OutputGlyph(aGlyphID, devPt);
     }
 
     *aEmittedGlyphs = true;
@@ -1992,7 +1993,8 @@ gfxFont::DrawMissingGlyph(const TextRunDrawParams&            aRunParams,
     // we don't have to draw the hexbox for them.
     float advance = aDetails->mAdvance;
     if (aRunParams.drawMode != DrawMode::GLYPH_PATH && advance > 0) {
-        if (auto* textDrawer = aRunParams.context->GetTextDrawer()) {
+        auto* textDrawer = aRunParams.context->GetTextDrawer();
+        if (textDrawer) {
             textDrawer->FoundUnsupportedFeature();
             return false;
         }
@@ -2012,7 +2014,7 @@ gfxFont::DrawMissingGlyph(const TextRunDrawParams&            aRunParams,
         // of the drawTarget's transform, we need to undo
         // this before drawing the hexbox. (Bug 983985)
         gfxContextMatrixAutoSaveRestore matrixRestore;
-        if (aFontParams.needsOblique && !aFontParams.isVerticalFont) {
+        if (aFontParams.needsOblique && !aFontParams.isVerticalFont && !textDrawer) {
             matrixRestore.SetContext(aRunParams.context);
             gfx::Matrix mat =
                 aRunParams.context->CurrentMatrix().
@@ -2096,12 +2098,10 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
 
     auto* textDrawer = aRunParams.context->GetTextDrawer();
 
-    fontParams.needsOblique = mFontEntry->IsUpright() &&
-                              mStyle.style != NS_FONT_STYLE_NORMAL &&
-                              mStyle.allowSyntheticStyle;
+    fontParams.needsOblique = IsSyntheticOblique();
     fontParams.haveSVGGlyphs = GetFontEntry()->TryGetSVGData(this);
 
-    if ((fontParams.needsOblique || fontParams.haveSVGGlyphs) && textDrawer) {
+    if (fontParams.haveSVGGlyphs && textDrawer) {
         textDrawer->FoundUnsupportedFeature();
         return;
     }
@@ -2156,7 +2156,7 @@ gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         aRunParams.context->SetMatrixDouble(mat);
     }
 
-    if (fontParams.needsOblique && !fontParams.isVerticalFont) {
+    if (fontParams.needsOblique && !fontParams.isVerticalFont && !textDrawer) {
         // Adjust matrix for synthetic-oblique, except if we're doing vertical-
         // upright text, in which case this will be handled for each glyph
         // individually in DrawOneGlyph.

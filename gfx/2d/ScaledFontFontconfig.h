@@ -22,7 +22,8 @@ class ScaledFontFontconfig : public ScaledFontBase
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontFontconfig, override)
   ScaledFontFontconfig(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern,
-                       const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize);
+                       const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
+                       bool aNeedsOblique = false);
   ~ScaledFontFontconfig();
 
   FontType GetType() const override { return FontType::FONTCONFIG; }
@@ -75,6 +76,7 @@ private:
                            NativeFontResource* aNativeFontResource = nullptr);
 
   FcPattern* mPattern;
+  bool mNeedsOblique;
 };
 
 }

@@ -144,7 +144,7 @@ EditorEventListener::InstallToEditor()
 {
   NS_PRECONDITION(mEditorBase, "The caller must set mEditorBase");
 
-  nsCOMPtr<EventTarget> piTarget = mEditorBase->GetDOMEventTarget();
+  EventTarget* piTarget = mEditorBase->GetDOMEventTarget();
   NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
   // register the event listeners with the listener manager
@@ -1093,7 +1093,7 @@ EditorEventListener::Focus(InternalFocusEvent* aFocusEvent)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target = aFocusEvent->GetDOMEventTarget();
+  nsIDOMEventTarget* target = aFocusEvent->GetDOMEventTarget();
   nsCOMPtr<nsINode> node = do_QueryInterface(target);
   NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
 
@@ -1221,7 +1221,7 @@ EditorEventListener::ShouldHandleNativeKeyBindings(
   // unnecessary.  IsAcceptableInputEvent currently makes a similar check for
   // mouse events.
 
-  nsCOMPtr<nsIDOMEventTarget> target = aKeyboardEvent->GetDOMEventTarget();
+  nsIDOMEventTarget* target = aKeyboardEvent->GetDOMEventTarget();
   nsCOMPtr<nsIContent> targetContent = do_QueryInterface(target);
   if (!targetContent) {
     return false;

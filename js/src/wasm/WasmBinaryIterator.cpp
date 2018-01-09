@@ -177,7 +177,7 @@ wasm::Classify(OpBytes op)
       case Op::F64ConvertUI64:
       case Op::F64ReinterpretI64:
       case Op::F64PromoteF32:
-#ifdef ENABLE_WASM_THREAD_OPS
+#ifdef ENABLE_WASM_SIGNEXTEND_OPS
       case Op::I32Extend8S:
       case Op::I32Extend16S:
       case Op::I64Extend8S:
