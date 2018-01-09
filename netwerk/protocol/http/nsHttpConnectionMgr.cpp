@@ -1148,6 +1148,30 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent, bool consid
           LOG(("  %p", info->mTransaction.get()));
         }
       }
+      LOG(("] active urgent conns ["));
+      for (nsHttpConnection* conn : ent->mActiveConns) {
+        if (conn->IsUrgentStartPreferred()) {
+          LOG(("  %p", conn));
+        }
+      }
+      LOG(("] active regular conns ["));
+      for (nsHttpConnection* conn : ent->mActiveConns) {
+        if (!conn->IsUrgentStartPreferred()) {
+          LOG(("  %p", conn));
+        }
+      }
+      LOG(("] idle urgent conns ["));
+      for (nsHttpConnection* conn : ent->mIdleConns) {
+        if (conn->IsUrgentStartPreferred()) {
+          LOG(("  %p", conn));
+        }
+      }
+      LOG(("] idle regular conns ["));
+      for (nsHttpConnection* conn : ent->mIdleConns) {
+        if (!conn->IsUrgentStartPreferred()) {
+          LOG(("  %p", conn));
+        }
+      }
       LOG(("]"));
     }
 
@@ -1341,7 +1365,8 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
 
     uint32_t halfOpenLength = ent->mHalfOpens.Length();
     for (uint32_t i = 0; i < halfOpenLength; i++) {
-        if (ent->mHalfOpens[i]->Claim()) {
+        auto halfOpen = ent->mHalfOpens[i];
+        if (halfOpen->AcceptsTransaction(trans) && halfOpen->Claim()) {
             // We've found a speculative connection or a connection that
             // is free to be used in the half open list.
             // A free to be used connection is a connection that was
@@ -1448,6 +1473,7 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
         return NS_ERROR_NOT_AVAILABLE;
 
     nsresult rv = CreateTransport(ent, trans, trans->Caps(), false, false,
+                                  trans->ClassOfService() & nsIClassOfService::UrgentStart,
                                   true, pendingTransInfo);
     if (NS_FAILED(rv)) {
         /* hard failure */
@@ -1579,35 +1605,11 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
 
     // step 2
     // consider an idle persistent connection
+    bool idleConnsAllUrgent = false;
     if (caps & NS_HTTP_ALLOW_KEEPALIVE) {
-        RefPtr<nsHttpConnection> conn;
-        while (!conn && (ent->mIdleConns.Length() > 0)) {
-            conn = ent->mIdleConns[0];
-            ent->mIdleConns.RemoveElementAt(0);
-            mNumIdleConns--;
-
-            // we check if the connection can be reused before even checking if
-            // it is a "matching" connection.
-            if (!conn->CanReuse()) {
-                LOG(("   dropping stale connection: [conn=%p]\n", conn.get()));
-                conn->Close(NS_ERROR_ABORT);
-                conn = nullptr;
-            }
-            else {
-                LOG(("   reusing connection [conn=%p]\n", conn.get()));
-                conn->EndIdleMonitoring();
-            }
-
-            // If there are no idle connections left at all, we need to make
-            // sure that we are not pruning dead connections anymore.
-            ConditionallyStopPruneDeadConnectionsTimer();
-        }
-        if (conn) {
-            // This will update the class of the connection to be the class of
-            // the transaction dispatched on it.
-            AddActiveConn(conn, ent);
-            nsresult rv = DispatchTransaction(ent, trans, conn);
-            NS_ENSURE_SUCCESS(rv, rv);
+        nsresult rv = TryDispatchTransactionOnIdleConn(ent, pendingTransInfo,
+                                                       true, &idleConnsAllUrgent);
+        if (NS_SUCCEEDED(rv)) {
             LOG(("   dispatched step 2 (idle) trans=%p\n", trans));
             return NS_OK;
         }
@@ -1633,6 +1635,21 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
                  static_cast<uint32_t>(rv), trans));
             return rv;
         }
+
+        // repeat step 2 when there are only idle connections and all are urgent,
+        // don't respect urgency so that non-urgent transaction will be allowed
+        // to dispatch on an urgent-start-only marked connection to avoid
+        // dispatch deadlocks
+        if (!(trans->ClassOfService() & nsIClassOfService::UrgentStart) &&
+            idleConnsAllUrgent &&
+            ent->mActiveConns.Length() < MaxPersistConnections(ent))
+        {
+            rv = TryDispatchTransactionOnIdleConn(ent, pendingTransInfo, false);
+            if (NS_SUCCEEDED(rv)) {
+                LOG(("   dispatched step 2a (idle, reuse urgent) trans=%p\n", trans));
+                return NS_OK;
+            }
+        }
     } else if (trans->TunnelProvider() && trans->TunnelProvider()->MaybeReTunnel(trans)) {
         LOG(("   sort of dispatched step 4a tunnel requeue trans=%p\n", trans));
         // the tunnel provider took responsibility for making a new tunnel
@@ -1652,6 +1669,72 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
 
     LOG(("   not dispatched (queued) trans=%p\n", trans));
     return NS_ERROR_NOT_AVAILABLE;                /* queue it */
+}
+
+nsresult
+nsHttpConnectionMgr::TryDispatchTransactionOnIdleConn(
+    nsConnectionEntry * ent, PendingTransactionInfo * pendingTransInfo,
+    bool respectUrgency, bool *allUrgent)
+{
+    bool onlyUrgent = !!ent->mIdleConns.Length();
+
+    nsHttpTransaction *trans = pendingTransInfo->mTransaction;
+    bool urgentTrans = trans->ClassOfService() & nsIClassOfService::UrgentStart;
+
+    LOG(("nsHttpConnectionMgr::TryDispatchTransactionOnIdleConn, ent=%p, trans=%p, urgent=%d",
+         ent, trans, urgentTrans));
+
+    RefPtr<nsHttpConnection> conn;
+    size_t index = 0;
+    while (!conn && (ent->mIdleConns.Length() > index)) {
+        conn = ent->mIdleConns[index];
+
+        // non-urgent transactions can only be dispatched on non-urgent
+        // started or used connections.
+        if (respectUrgency && conn->IsUrgentStartPreferred() && !urgentTrans) {
+            LOG(("  skipping urgent: [conn=%p]", conn.get()));
+            conn = nullptr;
+            ++index;
+            continue;
+        }
+
+        onlyUrgent = false;
+
+        ent->mIdleConns.RemoveElementAt(index);
+        mNumIdleConns--;
+
+        // we check if the connection can be reused before even checking if
+        // it is a "matching" connection.
+        if (!conn->CanReuse()) {
+            LOG(("   dropping stale connection: [conn=%p]\n", conn.get()));
+            conn->Close(NS_ERROR_ABORT);
+            conn = nullptr;
+        }
+        else {
+            LOG(("   reusing connection: [conn=%p]\n", conn.get()));
+            conn->EndIdleMonitoring();
+        }
+
+        // If there are no idle connections left at all, we need to make
+        // sure that we are not pruning dead connections anymore.
+        ConditionallyStopPruneDeadConnectionsTimer();
+    }
+
+    if (allUrgent) {
+        *allUrgent = onlyUrgent;
+    }
+
+    if (conn) {
+        // This will update the class of the connection to be the class of
+        // the transaction dispatched on it.
+        AddActiveConn(conn, ent);
+        nsresult rv = DispatchTransaction(ent, trans, conn);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        return NS_OK;
+    }
+
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 nsresult
@@ -1964,6 +2047,7 @@ nsHttpConnectionMgr::CreateTransport(nsConnectionEntry *ent,
                                      uint32_t caps,
                                      bool speculative,
                                      bool isFromPredictor,
+                                     bool urgentStart,
                                      bool allow1918,
                                      PendingTransactionInfo *pendingTransInfo)
 {
@@ -1973,7 +2057,8 @@ nsHttpConnectionMgr::CreateTransport(nsConnectionEntry *ent,
 
     RefPtr<nsHalfOpenSocket> sock = new nsHalfOpenSocket(ent, trans, caps,
                                                          speculative,
-                                                         isFromPredictor);
+                                                         isFromPredictor,
+                                                         urgentStart);
 
     if (speculative) {
         sock->SetAllow1918(allow1918);
@@ -3787,8 +3872,8 @@ nsHttpConnectionMgr::OnMsgSpeculativeConnect(int32_t, ARefBase *param)
         !AtActiveConnectionLimit(ent, args->mTrans->Caps())) {
         DebugOnly<nsresult> rv = CreateTransport(ent, args->mTrans,
                                                  args->mTrans->Caps(), true,
-                                                 isFromPredictor, allow1918,
-                                                 nullptr);
+                                                 isFromPredictor, false,
+                                                 allow1918, nullptr);
         MOZ_ASSERT(NS_SUCCEEDED(rv));
     } else {
         LOG(("OnMsgSpeculativeConnect Transport "
@@ -3845,11 +3930,13 @@ nsHalfOpenSocket::nsHalfOpenSocket(nsConnectionEntry *ent,
                                    nsAHttpTransaction *trans,
                                    uint32_t caps,
                                    bool speculative,
-                                   bool isFromPredictor)
+                                   bool isFromPredictor,
+                                   bool urgentStart)
     : mTransaction(trans)
     , mDispatchedMTransaction(false)
     , mCaps(caps)
     , mSpeculative(speculative)
+    , mUrgentStart(urgentStart)
     , mIsFromPredictor(isFromPredictor)
     , mAllow1918(true)
     , mHasConnected(false)
@@ -4668,6 +4755,15 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
     // scheduled (e.g. how to negotiate false start)
     conn->SetTransactionCaps(mTransaction->Caps());
 
+    if (mUrgentStart) {
+        // We deliberately leave this flag unset on the connection when
+        // this half-open was not marked urgent to let the first transaction
+        // dispatched on the connection set it.  Then we don't need to update
+        // all the speculative connect APIs to pass the urgency flag while
+        // we still get nearly (if not exactly) the same result.
+        conn->SetUrgentStartPreferred(true);
+    }
+
     NetAddr peeraddr;
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     mTransaction->GetSecurityCallbacks(getter_AddRefs(callbacks));
@@ -4841,7 +4937,7 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
         }
     }
 
-    // If this halfOpenConn was speculative, but at the ende the conn got a
+    // If this halfOpenConn was speculative, but at the end the conn got a
     // non-null transaction than this halfOpen is not speculative anymore!
     if (conn->Transaction() && !conn->Transaction()->IsNullTransaction()) {
         Claim();
@@ -5004,6 +5100,14 @@ nsHttpConnectionMgr::nsHalfOpenSocket::GetInterface(const nsIID &iid,
             return callbacks->GetInterface(iid, result);
     }
     return NS_ERROR_NO_INTERFACE;
+}
+
+bool
+nsHttpConnectionMgr::nsHalfOpenSocket::AcceptsTransaction(nsHttpTransaction * trans)
+{
+    // When marked as urgent start, only accept urgent start marked transactions.
+    // Otherwise, accept any kind of transaction.
+    return !mUrgentStart || (trans->Caps() & nsIClassOfService::UrgentStart);
 }
 
 bool
