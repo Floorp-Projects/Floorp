@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::shader_source;
-use api::{ColorF, ImageFormat};
+use api::{ColorF, ImageDescriptor, ImageFormat};
 use api::{DeviceIntPoint, DeviceIntRect, DeviceUintRect, DeviceUintSize};
 use euclid::Transform3D;
 use gleam::gl;
@@ -222,21 +222,6 @@ pub fn build_shader_strings(
 
     vs_source.push_str(&shared_result);
     fs_source.push_str(&shared_result);
-
-    // Append legacy (.vs and .fs) files if they exist.
-    // TODO(gw): Once all shaders are ported to just use the
-    //           .glsl file, we can remove this code.
-    let vs_name = format!("{}.vs", base_filename);
-    if let Some(old_vs_source) = get_shader_source(&vs_name, override_path) {
-        vs_source.push_str(SHADER_LINE_MARKER);
-        vs_source.push_str(&old_vs_source);
-    }
-
-    let fs_name = format!("{}.fs", base_filename);
-    if let Some(old_fs_source) = get_shader_source(&fs_name, override_path) {
-        fs_source.push_str(SHADER_LINE_MARKER);
-        fs_source.push_str(&old_fs_source);
-    }
 
     (vs_source, fs_source)
 }
@@ -473,7 +458,6 @@ impl Texture {
     pub fn get_bpp(&self) -> u32 {
         match self.format {
             ImageFormat::A8 => 1,
-            ImageFormat::RGB8 => 3,
             ImageFormat::BGRA8 => 4,
             ImageFormat::RG8 => 2,
             ImageFormat::RGBAF32 => 16,
@@ -675,6 +659,9 @@ pub struct Device {
     // Frame counter. This is used to map between CPU
     // frames and GPU frames.
     frame_id: FrameId,
+
+    // GL extensions
+    extensions: Vec<String>,
 }
 
 impl Device {
@@ -687,6 +674,12 @@ impl Device {
     ) -> Device {
         let max_texture_size = gl.get_integer_v(gl::MAX_TEXTURE_SIZE) as u32;
         let renderer_name = gl.get_string(gl::RENDERER);
+
+        let mut extensions = Vec::new();
+        let extension_count = gl.get_integer_v(gl::NUM_EXTENSIONS) as gl::GLuint;
+        for i in 0 .. extension_count {
+            extensions.push(gl.get_string_i(gl::EXTENSIONS, i));
+        }
 
         Device {
             gl,
@@ -713,6 +706,7 @@ impl Device {
             renderer_name,
             cached_programs,
             frame_id: FrameId(0),
+            extensions,
         }
     }
 
@@ -1495,12 +1489,16 @@ impl Device {
         }
     }
 
-    pub fn read_pixels(&mut self, width: i32, height: i32) -> Vec<u8> {
+    pub fn read_pixels(&mut self, desc: &ImageDescriptor) -> Vec<u8> {
+        let (_, gl_format) = gl_texture_formats_for_image_format(self.gl(), desc.format);
+        let type_ = gl_type_for_texture_format(desc.format);
+
         self.gl.read_pixels(
             0, 0,
-            width as i32, height as i32,
-            gl::RGBA,
-            gl::UNSIGNED_BYTE
+            desc.width as i32,
+            desc.height as i32,
+            gl_format,
+            type_,
         )
     }
 
@@ -1911,6 +1909,13 @@ impl Device {
             .blend_func(gl::CONSTANT_COLOR, gl::ONE_MINUS_SRC_COLOR);
         self.gl.blend_equation(gl::FUNC_ADD);
     }
+    pub fn set_blend_mode_subpixel_dual_source(&self) {
+        self.gl.blend_func(gl::ONE, gl::ONE_MINUS_SRC1_COLOR);
+    }
+
+    pub fn supports_extension(&self, extension: &str) -> bool {
+        self.extensions.iter().any(|s| s == extension)
+    }
 }
 
 /// return (gl_internal_format, gl_format)
@@ -1924,7 +1929,6 @@ fn gl_texture_formats_for_image_format(
         } else {
             (GL_FORMAT_A as gl::GLint, GL_FORMAT_A)
         },
-        ImageFormat::RGB8 => (gl::RGB as gl::GLint, gl::RGB),
         ImageFormat::BGRA8 => match gl.get_type() {
             gl::GlType::Gl => (gl::RGBA as gl::GLint, get_gl_format_bgra(gl)),
             gl::GlType::Gles => (get_gl_format_bgra(gl) as gl::GLint, get_gl_format_bgra(gl)),
@@ -2050,7 +2054,6 @@ impl<'a> UploadTarget<'a> {
     fn update_impl(&mut self, chunk: UploadChunk) {
         let (gl_format, bpp, data_type) = match self.texture.format {
             ImageFormat::A8 => (GL_FORMAT_A, 1, gl::UNSIGNED_BYTE),
-            ImageFormat::RGB8 => (gl::RGB, 3, gl::UNSIGNED_BYTE),
             ImageFormat::BGRA8 => (get_gl_format_bgra(self.gl), 4, gl::UNSIGNED_BYTE),
             ImageFormat::RG8 => (gl::RG, 2, gl::UNSIGNED_BYTE),
             ImageFormat::RGBAF32 => (gl::RGBA, 16, gl::FLOAT),

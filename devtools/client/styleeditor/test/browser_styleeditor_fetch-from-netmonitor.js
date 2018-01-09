@@ -3,15 +3,12 @@
 
 "use strict";
 
-// A test to ensure Style Editor doesn't bybass cache when loading style sheet
-// contents (bug 978688).
+// A test to ensure Style Editor only issues 1 request for a stylesheet (instead of 2) by
+// using the network monitor's request history (bug 1306892).
 
 const TEST_URL = TEST_BASE_HTTP + "doc_uncached.html";
 
 add_task(function* () {
-  // Disable rcwn to make cache behavior deterministic.
-  yield pushPref("network.http.rcwn.enabled", false);
-
   info("Opening netmonitor");
   let tab = yield addTab("about:blank");
   let target = TargetFactory.forTab(tab);

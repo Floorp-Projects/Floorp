@@ -25,7 +25,7 @@ random-if(d2d) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
 fuzzy(2,440) fails-if(webrender) == boxshadow-skiprect.html boxshadow-skiprect-ref.html
 == boxshadow-opacity.html boxshadow-opacity-ref.html
 == boxshadow-color-rounding.html boxshadow-color-rounding-ref.html
-fuzzy-if(webrender,1-1,7284-7284) == boxshadow-color-rounding-middle.html boxshadow-color-rounding-middle-ref.html
+== boxshadow-color-rounding-middle.html boxshadow-color-rounding-middle-ref.html
 fuzzy(3,500) fuzzy-if(d2d,2,1080) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
 == boxshadow-inset-neg-spread.html about:blank
 == boxshadow-inset-neg-spread2.html boxshadow-inset-neg-spread2-ref.html

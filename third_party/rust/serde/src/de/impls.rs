@@ -15,7 +15,7 @@ use de::{Deserialize, Deserializer, EnumAccess, Error, SeqAccess, Unexpected, Va
 use de::MapAccess;
 
 use de::from_primitive::FromPrimitive;
-use private::de::DeserializeFromSeed;
+use private::de::InPlaceSeed;
 
 #[cfg(any(feature = "std", feature = "alloc"))]
 use private::de::size_hint;
@@ -51,7 +51,6 @@ impl<'de> Deserialize<'de> for () {
 ////////////////////////////////////////////////////////////////////////////////
 
 struct BoolVisitor;
-
 
 impl<'de> Visitor<'de> for BoolVisitor {
     type Value = bool;
@@ -213,7 +212,7 @@ impl<'de> Deserialize<'de> for char {
 #[cfg(any(feature = "std", feature = "alloc"))]
 struct StringVisitor;
 #[cfg(any(feature = "std", feature = "alloc"))]
-struct StringFromVisitor<'a>(&'a mut String);
+struct StringInPlaceVisitor<'a>(&'a mut String);
 
 #[cfg(any(feature = "std", feature = "alloc"))]
 impl<'de> Visitor<'de> for StringVisitor {
@@ -253,13 +252,16 @@ impl<'de> Visitor<'de> for StringVisitor {
     {
         match String::from_utf8(v) {
             Ok(s) => Ok(s),
-            Err(e) => Err(Error::invalid_value(Unexpected::Bytes(&e.into_bytes()), &self),),
+            Err(e) => Err(Error::invalid_value(
+                Unexpected::Bytes(&e.into_bytes()),
+                &self,
+            )),
         }
     }
 }
 
 #[cfg(any(feature = "std", feature = "alloc"))]
-impl<'a, 'de> Visitor<'de> for StringFromVisitor<'a> {
+impl<'a, 'de> Visitor<'de> for StringInPlaceVisitor<'a> {
     type Value = ();
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -306,7 +308,10 @@ impl<'a, 'de> Visitor<'de> for StringFromVisitor<'a> {
                 *self.0 = s;
                 Ok(())
             }
-            Err(e) => Err(Error::invalid_value(Unexpected::Bytes(&e.into_bytes()), &self),),
+            Err(e) => Err(Error::invalid_value(
+                Unexpected::Bytes(&e.into_bytes()),
+                &self,
+            )),
         }
     }
 }
@@ -320,11 +325,11 @@ impl<'de> Deserialize<'de> for String {
         deserializer.deserialize_string(StringVisitor)
     }
 
-    fn deserialize_from<D>(&mut self, deserializer: D) -> Result<(), D::Error>
+    fn deserialize_in_place<D>(deserializer: D, place: &mut Self) -> Result<(), D::Error>
     where
         D: Deserializer<'de>,
     {
-        deserializer.deserialize_string(StringFromVisitor(self))
+        deserializer.deserialize_string(StringInPlaceVisitor(place))
     }
 }
 
@@ -485,7 +490,6 @@ forwarded_impl!((), Box<CStr>, CString::into_boxed_c_str);
 struct OptionVisitor<T> {
     marker: PhantomData<T>,
 }
-struct OptionFromVisitor<'a, T: 'a>(&'a mut Option<T>);
 
 impl<'de, T> Visitor<'de> for OptionVisitor<T>
 where
@@ -522,49 +526,6 @@ where
     }
 }
 
-impl<'a, 'de, T> Visitor<'de> for OptionFromVisitor<'a, T>
-where
-    T: Deserialize<'de>,
-{
-    type Value = ();
-
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.write_str("option")
-    }
-
-    #[inline]
-    fn visit_unit<E>(self) -> Result<(), E>
-    where
-        E: Error,
-    {
-        *self.0 = None;
-        Ok(())
-    }
-
-    #[inline]
-    fn visit_none<E>(self) -> Result<(), E>
-    where
-        E: Error,
-    {
-        *self.0 = None;
-        Ok(())
-    }
-
-    #[inline]
-    fn visit_some<D>(self, deserializer: D) -> Result<(), D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        // The some enum's repr is opaque, so we can't play cute tricks with
-        // its tag to build this in place unconditionally.
-        //
-        // FIXME: investigate whether branching on the old value being Some to
-        // deserialize_from the value is profitable (probably data-dependent?)
-        *self.0 = try!(T::deserialize(deserializer).map(Some));
-        Ok(())
-    }
-}
-
 impl<'de, T> Deserialize<'de> for Option<T>
 where
     T: Deserialize<'de>,
@@ -573,24 +534,25 @@ where
     where
         D: Deserializer<'de>,
     {
-        deserializer.deserialize_option(OptionVisitor { marker: PhantomData })
+        deserializer.deserialize_option(OptionVisitor {
+            marker: PhantomData,
+        })
     }
 
-    fn deserialize_from<D>(&mut self, deserializer: D) -> Result<(), D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        deserializer.deserialize_option(OptionFromVisitor(self))
-    }
+    // The Some variant's repr is opaque, so we can't play cute tricks with its
+    // tag to have deserialize_in_place build the content in place unconditionally.
+    //
+    // FIXME: investigate whether branching on the old value being Some to
+    // deserialize_in_place the value is profitable (probably data-dependent?)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct PhantomDataVisitor<T> {
+struct PhantomDataVisitor<T: ?Sized> {
     marker: PhantomData<T>,
 }
 
-impl<'de, T> Visitor<'de> for PhantomDataVisitor<T> {
+impl<'de, T: ?Sized> Visitor<'de> for PhantomDataVisitor<T> {
     type Value = PhantomData<T>;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -606,12 +568,14 @@ impl<'de, T> Visitor<'de> for PhantomDataVisitor<T> {
     }
 }
 
-impl<'de, T> Deserialize<'de> for PhantomData<T> {
+impl<'de, T: ?Sized> Deserialize<'de> for PhantomData<T> {
     fn deserialize<D>(deserializer: D) -> Result<PhantomData<T>, D::Error>
     where
         D: Deserializer<'de>,
     {
-        let visitor = PhantomDataVisitor { marker: PhantomData };
+        let visitor = PhantomDataVisitor {
+            marker: PhantomData,
+        };
         deserializer.deserialize_unit_struct("PhantomData", visitor)
     }
 }
@@ -672,13 +636,13 @@ macro_rules! seq_impl {
                 deserializer.deserialize_seq(visitor)
             }
 
-            fn deserialize_from<D>(&mut self, deserializer: D) -> Result<(), D::Error>
+            fn deserialize_in_place<D>(deserializer: D, place: &mut Self) -> Result<(), D::Error>
             where
                 D: Deserializer<'de>,
             {
-                struct SeqVisitor<'a, T: 'a $(, $typaram: 'a)*>(&'a mut $ty<T $(, $typaram)*>);
+                struct SeqInPlaceVisitor<'a, T: 'a $(, $typaram: 'a)*>(&'a mut $ty<T $(, $typaram)*>);
 
-                impl<'a, 'de, T $(, $typaram)*> Visitor<'de> for SeqVisitor<'a, T $(, $typaram)*>
+                impl<'a, 'de, T $(, $typaram)*> Visitor<'de> for SeqInPlaceVisitor<'a, T $(, $typaram)*>
                 where
                     T: Deserialize<'de> $(+ $tbound1 $(+ $tbound2)*)*,
                     $($typaram: $bound1 $(+ $bound2)*,)*
@@ -706,7 +670,7 @@ macro_rules! seq_impl {
                     }
                 }
 
-                deserializer.deserialize_seq(SeqVisitor(self))
+                deserializer.deserialize_seq(SeqInPlaceVisitor(place))
             }
         }
     }
@@ -714,7 +678,7 @@ macro_rules! seq_impl {
 
 // Dummy impl of reserve
 #[cfg(any(feature = "std", feature = "alloc"))]
-fn nop_reserve<T, U>(_x: T, _y: U) { }
+fn nop_reserve<T>(_seq: T, _n: usize) {}
 
 #[cfg(any(feature = "std", feature = "alloc"))]
 seq_impl!(
@@ -744,7 +708,8 @@ seq_impl!(
     LinkedList::clear,
     LinkedList::new(),
     nop_reserve,
-    LinkedList::push_back);
+    LinkedList::push_back
+);
 
 #[cfg(feature = "std")]
 seq_impl!(
@@ -764,7 +729,8 @@ seq_impl!(
     Vec::clear,
     Vec::with_capacity(size_hint::cautious(seq.size_hint())),
     Vec::reserve,
-    Vec::push);
+    Vec::push
+);
 
 #[cfg(any(feature = "std", feature = "alloc"))]
 seq_impl!(
@@ -774,18 +740,21 @@ seq_impl!(
     VecDeque::clear,
     VecDeque::with_capacity(size_hint::cautious(seq.size_hint())),
     VecDeque::reserve,
-    VecDeque::push_back);
+    VecDeque::push_back
+);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 struct ArrayVisitor<A> {
     marker: PhantomData<A>,
 }
-struct ArrayFromVisitor<'a, A: 'a>(&'a mut A);
+struct ArrayInPlaceVisitor<'a, A: 'a>(&'a mut A);
 
 impl<A> ArrayVisitor<A> {
     fn new() -> Self {
-        ArrayVisitor { marker: PhantomData }
+        ArrayVisitor {
+            marker: PhantomData,
+        }
     }
 }
 
@@ -844,7 +813,7 @@ macro_rules! array_impls {
                 }
             }
 
-            impl<'a, 'de, T> Visitor<'de> for ArrayFromVisitor<'a, [T; $len]>
+            impl<'a, 'de, T> Visitor<'de> for ArrayInPlaceVisitor<'a, [T; $len]>
             where
                 T: Deserialize<'de>,
             {
@@ -861,7 +830,7 @@ macro_rules! array_impls {
                 {
                     let mut fail_idx = None;
                     for (idx, dest) in self.0[..].iter_mut().enumerate() {
-                        if try!(seq.next_element_seed(DeserializeFromSeed(dest))).is_none() {
+                        if try!(seq.next_element_seed(InPlaceSeed(dest))).is_none() {
                             fail_idx = Some(idx);
                             break;
                         }
@@ -884,11 +853,11 @@ macro_rules! array_impls {
                     deserializer.deserialize_tuple($len, ArrayVisitor::<[T; $len]>::new())
                 }
 
-                fn deserialize_from<D>(&mut self, deserializer: D) -> Result<(), D::Error>
+                fn deserialize_in_place<D>(deserializer: D, place: &mut Self) -> Result<(), D::Error>
                 where
                     D: Deserializer<'de>,
                 {
-                    deserializer.deserialize_tuple($len, ArrayFromVisitor(self))
+                    deserializer.deserialize_tuple($len, ArrayInPlaceVisitor(place))
                 }
             }
         )+
@@ -973,13 +942,13 @@ macro_rules! tuple_impls {
                 }
 
                 #[inline]
-                fn deserialize_from<D>(&mut self, deserializer: D) -> Result<(), D::Error>
+                fn deserialize_in_place<D>(deserializer: D, place: &mut Self) -> Result<(), D::Error>
                 where
                     D: Deserializer<'de>,
                 {
-                    struct TupleVisitor<'a, $($name: 'a,)+>(&'a mut ($($name,)+));
+                    struct TupleInPlaceVisitor<'a, $($name: 'a,)+>(&'a mut ($($name,)+));
 
-                    impl<'a, 'de, $($name: Deserialize<'de>),+> Visitor<'de> for TupleVisitor<'a, $($name,)+> {
+                    impl<'a, 'de, $($name: Deserialize<'de>),+> Visitor<'de> for TupleInPlaceVisitor<'a, $($name,)+> {
                         type Value = ();
 
                         fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -993,7 +962,7 @@ macro_rules! tuple_impls {
                             A: SeqAccess<'de>,
                         {
                             $(
-                                if try!(seq.next_element_seed(DeserializeFromSeed(&mut (self.0).$n))).is_none() {
+                                if try!(seq.next_element_seed(InPlaceSeed(&mut (self.0).$n))).is_none() {
                                     return Err(Error::invalid_length($n, &self));
                                 }
                             )+
@@ -1002,7 +971,7 @@ macro_rules! tuple_impls {
                         }
                     }
 
-                    deserializer.deserialize_tuple($len, TupleVisitor(self))
+                    deserializer.deserialize_tuple($len, TupleInPlaceVisitor(place))
                 }
             }
         )+
@@ -1302,7 +1271,12 @@ impl<'de> Deserialize<'de> for net::SocketAddr {
 parse_socket_impl!(net::SocketAddrV4, net::SocketAddrV4::new);
 
 #[cfg(feature = "std")]
-parse_socket_impl!(net::SocketAddrV6, |ip, port| net::SocketAddrV6::new(ip, port, 0, 0));
+parse_socket_impl!(net::SocketAddrV6, |ip, port| net::SocketAddrV6::new(
+    ip,
+    port,
+    0,
+    0
+));
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1413,7 +1387,9 @@ impl<'de> Visitor<'de> for OsStringVisitor {
 
         match try!(data.variant()) {
             (OsStringKind::Unix, v) => v.newtype_variant().map(OsString::from_vec),
-            (OsStringKind::Windows, _) => Err(Error::custom("cannot deserialize Windows OS string on Unix",),),
+            (OsStringKind::Windows, _) => Err(Error::custom(
+                "cannot deserialize Windows OS string on Unix",
+            )),
         }
     }
 
@@ -1425,11 +1401,11 @@ impl<'de> Visitor<'de> for OsStringVisitor {
         use std::os::windows::ffi::OsStringExt;
 
         match try!(data.variant()) {
-            (OsStringKind::Windows, v) => {
-                v.newtype_variant::<Vec<u16>>()
-                    .map(|vec| OsString::from_wide(&vec))
-            }
-            (OsStringKind::Unix, _) => Err(Error::custom("cannot deserialize Unix OS string on Windows",),),
+            (OsStringKind::Windows, v) => v.newtype_variant::<Vec<u16>>()
+                .map(|vec| OsString::from_wide(&vec)),
+            (OsStringKind::Unix, _) => Err(Error::custom(
+                "cannot deserialize Unix OS string on Windows",
+            )),
         }
     }
 }
@@ -1755,13 +1731,17 @@ impl<'de> Deserialize<'de> for SystemTime {
                     match key {
                         Field::Secs => {
                             if secs.is_some() {
-                                return Err(<A::Error as Error>::duplicate_field("secs_since_epoch"));
+                                return Err(<A::Error as Error>::duplicate_field(
+                                    "secs_since_epoch",
+                                ));
                             }
                             secs = Some(try!(map.next_value()));
                         }
                         Field::Nanos => {
                             if nanos.is_some() {
-                                return Err(<A::Error as Error>::duplicate_field("nanos_since_epoch"));
+                                return Err(<A::Error as Error>::duplicate_field(
+                                    "nanos_since_epoch",
+                                ));
                             }
                             nanos = Some(try!(map.next_value()));
                         }
@@ -1925,7 +1905,13 @@ where
         }
 
         const FIELDS: &'static [&'static str] = &["start", "end"];
-        deserializer.deserialize_struct("Range", FIELDS, RangeVisitor { phantom: PhantomData })
+        deserializer.deserialize_struct(
+            "Range",
+            FIELDS,
+            RangeVisitor {
+                phantom: PhantomData,
+            },
+        )
     }
 }
 
@@ -1990,9 +1976,10 @@ where
                         match value {
                             0 => Ok(Field::Ok),
                             1 => Ok(Field::Err),
-                            _ => {
-                                Err(Error::invalid_value(Unexpected::Unsigned(value as u64), &self),)
-                            }
+                            _ => Err(Error::invalid_value(
+                                Unexpected::Unsigned(value as u64),
+                                &self,
+                            )),
                         }
                     }
 
@@ -2014,14 +2001,12 @@ where
                         match value {
                             b"Ok" => Ok(Field::Ok),
                             b"Err" => Ok(Field::Err),
-                            _ => {
-                                match str::from_utf8(value) {
-                                    Ok(value) => Err(Error::unknown_variant(value, VARIANTS)),
-                                    Err(_) => {
-                                        Err(Error::invalid_value(Unexpected::Bytes(value), &self))
-                                    }
+                            _ => match str::from_utf8(value) {
+                                Ok(value) => Err(Error::unknown_variant(value, VARIANTS)),
+                                Err(_) => {
+                                    Err(Error::invalid_value(Unexpected::Bytes(value), &self))
                                 }
-                            }
+                            },
                         }
                     }
                 }
@@ -2065,7 +2050,7 @@ where
 #[cfg(feature = "std")]
 impl<'de, T> Deserialize<'de> for Wrapping<T>
 where
-    T: Deserialize<'de>
+    T: Deserialize<'de>,
 {
     fn deserialize<D>(deserializer: D) -> Result<Wrapping<T>, D::Error>
     where

@@ -4,8 +4,6 @@ Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "DevToolsShim",
-                                  "chrome://devtools-shim/content/DevToolsShim.jsm");
 
 // These are defined on "global" which is used for the same scopes as the other
 // ext-c-*.js files.
@@ -13,24 +11,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "DevToolsShim",
 /* global EventManager: false */
 
 global.EventManager = ExtensionCommon.EventManager;
-
-global.initializeBackgroundPage = (contentWindow) => {
-  // Override the `alert()` method inside background windows;
-  // we alias it to console.log().
-  // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1203394
-  let alertDisplayedWarning = false;
-  let alertOverwrite = text => {
-    if (!alertDisplayedWarning) {
-      DevToolsShim.openBrowserConsole();
-      contentWindow.console.warn("alert() is not supported in background windows; please use console.log instead.");
-
-      alertDisplayedWarning = true;
-    }
-
-    contentWindow.console.log(text);
-  };
-  Cu.exportFunction(alertOverwrite, contentWindow, {defineAs: "alert"});
-};
 
 extensions.registerModules({
   backgroundPage: {

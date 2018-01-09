@@ -57,6 +57,7 @@
 #include "FrameLayerBuilder.h"
 #include "nsISelectionController.h"
 #include "nsISelection.h"
+#include "nsIURIMutator.h"
 
 #include "imgIContainer.h"
 #include "imgLoader.h"
@@ -2109,7 +2110,9 @@ nsImageFrame::HandleEvent(nsPresContext* aPresContext,
           NS_ENSURE_SUCCESS(rv, rv);
 
           spec += nsPrintfCString("?%d,%d", p.x, p.y);
-          rv = uri->SetSpec(spec);
+          rv = NS_MutateURI(uri)
+                 .SetSpec(spec)
+                 .Finalize(uri);
           NS_ENSURE_SUCCESS(rv, rv);
 
           bool clicked = false;

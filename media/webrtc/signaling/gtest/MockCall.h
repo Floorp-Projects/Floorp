@@ -70,7 +70,10 @@ public:
     return nullptr;
   }
 
-  void ReconfigureVideoEncoder(VideoEncoderConfig config) override {}
+  void ReconfigureVideoEncoder(VideoEncoderConfig config) override
+  {
+    mEncoderConfig = config.Copy();
+  }
 
   Stats GetStats() override
   {
@@ -82,6 +85,7 @@ public:
 
   virtual ~MockVideoSendStream() {}
 
+  VideoEncoderConfig mEncoderConfig;
   VideoSendStream::Stats mStats;
 };
 
@@ -117,7 +121,8 @@ public:
   MockCall()
     : mAudioSendConfig(nullptr)
     , mVideoReceiveConfig(nullptr)
-    , mVideoSendConfig(nullptr) {}
+    , mVideoSendConfig(nullptr)
+    , mCurrentVideoSendStream(nullptr) {}
 
   AudioSendStream* CreateAudioSendStream(const AudioSendStream::Config& config) override
   {
@@ -142,13 +147,17 @@ public:
 
   VideoSendStream* CreateVideoSendStream(VideoSendStream::Config config,
                                          VideoEncoderConfig encoder_config) override {
+    MOZ_RELEASE_ASSERT(!mCurrentVideoSendStream);
     mVideoSendConfig = config.Copy();
     mEncoderConfig = encoder_config.Copy();
-    return new MockVideoSendStream;
+    mCurrentVideoSendStream = new MockVideoSendStream;
+    return mCurrentVideoSendStream;
   }
 
   void DestroyVideoSendStream(VideoSendStream* send_stream) override
   {
+    MOZ_RELEASE_ASSERT(mCurrentVideoSendStream == send_stream);
+    mCurrentVideoSendStream = nullptr;
     delete static_cast<MockVideoSendStream*>(send_stream);
   }
 
@@ -208,6 +217,7 @@ public:
   VideoSendStream::Config mVideoSendConfig;
   VideoEncoderConfig mEncoderConfig;
   Call::Stats mStats;
+  MockVideoSendStream* mCurrentVideoSendStream;
 };
 
 }

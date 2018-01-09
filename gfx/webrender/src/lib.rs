@@ -48,7 +48,11 @@ extern crate lazy_static;
 extern crate log;
 #[macro_use]
 extern crate thread_profiler;
+#[cfg(any(feature = "debugger", feature = "capture"))]
+#[macro_use]
+extern crate serde;
 
+mod batch;
 mod border;
 mod box_shadow;
 mod clip;
@@ -83,6 +87,7 @@ mod render_task;
 mod renderer;
 mod resource_cache;
 mod scene;
+mod segment;
 mod spring;
 mod texture_allocator;
 mod texture_cache;
@@ -139,9 +144,8 @@ extern crate gleam;
 extern crate num_traits;
 extern crate plane_split;
 extern crate rayon;
-#[cfg(feature = "debugger")]
-#[macro_use]
-extern crate serde_derive;
+#[cfg(feature = "capture")]
+extern crate ron;
 #[cfg(feature = "debugger")]
 extern crate serde_json;
 extern crate smallvec;

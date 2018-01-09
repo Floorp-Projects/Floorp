@@ -11,3 +11,9 @@ for header in ('GCAnnotations.h', 'GCAPI.h', 'HeapAPI.h', 'RootingAPI.h', 'Slice
 
 with Files('public/TrackedOptimizationInfo.h'):
     BUG_COMPONENT = component_jit
+
+with Files("src/**"):
+    SCHEDULES.inclusive += ['jittest', 'jsreftest']
+
+with Files("public/**"):
+    SCHEDULES.inclusive += ['jittest', 'jsreftest']

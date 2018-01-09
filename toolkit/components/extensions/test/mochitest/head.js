@@ -56,6 +56,34 @@ function waitForLoad(win) {
   });
 }
 
+/* exported loadChromeScript */
+function loadChromeScript(fn) {
+  let wrapper = `
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+(${fn.toString()})();`;
+
+  return SpecialPowers.loadChromeScript(new Function(wrapper));
+}
+
+/* exported consoleMonitor */
+let consoleMonitor = {
+  start(messages) {
+    this.chromeScript = SpecialPowers.loadChromeScript(
+      SimpleTest.getTestFileURL("mochitest_console.js"));
+    this.chromeScript.sendAsyncMessage("consoleStart", messages);
+  },
+
+  async finished() {
+    let done = this.chromeScript.promiseOneMessage("consoleDone").then(done => {
+      this.chromeScript.destroy();
+      return done;
+    });
+    this.chromeScript.sendAsyncMessage("waitForConsole");
+    let test = await done;
+    ok(test.ok, test.message);
+  },
+};
 /* exported waitForState */
 
 function waitForState(sw, state) {

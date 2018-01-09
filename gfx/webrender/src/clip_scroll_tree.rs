@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ClipId, DeviceIntRect, LayerPoint, LayerRect};
+use api::{ClipId, DeviceIntRect, DevicePixelScale, LayerPoint, LayerRect};
 use api::{LayerToWorldTransform, LayerVector2D, PipelineId, ScrollClamping, ScrollEventPhase};
 use api::{PropertyBinding, LayoutTransform, ScrollLayerState, ScrollLocation, WorldPoint};
 use clip::ClipStore;
@@ -14,7 +14,7 @@ use print_tree::{PrintTree, PrintTreePrinter};
 use render_task::ClipChain;
 use resource_cache::ResourceCache;
 use scene::SceneProperties;
-use util::MaxRect;
+use util::TransformOrOffset;
 
 pub type ScrollStates = FastHashMap<ClipId, ScrollingState>;
 
@@ -26,11 +26,11 @@ pub type ScrollStates = FastHashMap<ClipId, ScrollingState>;
 pub struct CoordinateSystemId(pub u32);
 
 impl CoordinateSystemId {
-    pub fn root() -> CoordinateSystemId {
+    pub fn root() -> Self {
         CoordinateSystemId(0)
     }
 
-    pub fn next(&self) -> CoordinateSystemId {
+    pub fn next(&self) -> Self {
         let CoordinateSystemId(id) = *self;
         CoordinateSystemId(id + 1)
     }
@@ -69,19 +69,24 @@ pub struct ClipScrollTree {
 #[derive(Clone)]
 pub struct TransformUpdateState {
     pub parent_reference_frame_transform: LayerToWorldTransform,
-    pub parent_combined_viewport_rect: LayerRect,
     pub parent_accumulated_scroll_offset: LayerVector2D,
     pub nearest_scrolling_ancestor_offset: LayerVector2D,
     pub nearest_scrolling_ancestor_viewport: LayerRect,
     pub parent_clip_chain: ClipChain,
-    pub combined_outer_clip_bounds: DeviceIntRect,
-    pub combined_inner_clip_bounds: DeviceIntRect,
 
     /// An id for keeping track of the axis-aligned space of this node. This is used in
     /// order to to track what kinds of clip optimizations can be done for a particular
     /// display list item, since optimizations can usually only be done among
     /// coordinate systems which are relatively axis aligned.
     pub current_coordinate_system_id: CoordinateSystemId,
+
+    /// Transform from the coordinate system that started this compatible coordinate system.
+    pub coordinate_system_relative_transform: TransformOrOffset,
+
+    /// True if this node is transformed by an invertible transform.  If not, display items
+    /// transformed by this node will not be displayed and display items not transformed by this
+    /// node will not be clipped by clips that are transformed by this node.
+    pub invertible: bool,
 }
 
 impl ClipScrollTree {
@@ -197,11 +202,6 @@ impl ClipScrollTree {
                 return true;
             }
         };
-
-        if !node.local_clip_rect.contains(&transformed_point) {
-            cache.insert(*node_id, None);
-            return false;
-        }
 
         for &(ref clip, _) in clip_store.get(&clip_sources_handle).clips() {
             if !clip.contains(&transformed_point) {
@@ -337,11 +337,11 @@ impl ClipScrollTree {
     pub fn update_tree(
         &mut self,
         screen_rect: &DeviceIntRect,
-        device_pixel_ratio: f32,
+        device_pixel_scale: DevicePixelScale,
         clip_store: &mut ClipStore,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
-        pan: LayerPoint,
+        pan: WorldPoint,
         node_data: &mut Vec<ClipScrollNodeData>,
         scene_properties: &SceneProperties,
     ) {
@@ -350,29 +350,27 @@ impl ClipScrollTree {
         }
 
         let root_reference_frame_id = self.root_reference_frame_id();
-        let root_viewport = self.nodes[&root_reference_frame_id].local_clip_rect;
-
         let mut state = TransformUpdateState {
             parent_reference_frame_transform: LayerToWorldTransform::create_translation(
                 pan.x,
                 pan.y,
                 0.0,
             ),
-            parent_combined_viewport_rect: root_viewport,
             parent_accumulated_scroll_offset: LayerVector2D::zero(),
             nearest_scrolling_ancestor_offset: LayerVector2D::zero(),
             nearest_scrolling_ancestor_viewport: LayerRect::zero(),
             parent_clip_chain: None,
-            combined_outer_clip_bounds: *screen_rect,
-            combined_inner_clip_bounds: DeviceIntRect::max_rect(),
             current_coordinate_system_id: CoordinateSystemId::root(),
+            coordinate_system_relative_transform: TransformOrOffset::zero(),
+            invertible: true,
         };
         let mut next_coordinate_system_id = state.current_coordinate_system_id.next();
         self.update_node(
             root_reference_frame_id,
             &mut state,
             &mut next_coordinate_system_id,
-            device_pixel_ratio,
+            screen_rect,
+            device_pixel_scale,
             clip_store,
             resource_cache,
             gpu_cache,
@@ -386,7 +384,8 @@ impl ClipScrollTree {
         layer_id: ClipId,
         state: &mut TransformUpdateState,
         next_coordinate_system_id: &mut CoordinateSystemId,
-        device_pixel_ratio: f32,
+        screen_rect: &DeviceIntRect,
+        device_pixel_scale: DevicePixelScale,
         clip_store: &mut ClipStore,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
@@ -408,29 +407,32 @@ impl ClipScrollTree {
             node.update(
                 &mut state,
                 next_coordinate_system_id,
-                device_pixel_ratio,
+                screen_rect,
+                device_pixel_scale,
                 clip_store,
                 resource_cache,
                 gpu_cache,
                 scene_properties,
             );
 
-            node.push_gpu_node_data(&state, gpu_node_data);
+            node.push_gpu_node_data(gpu_node_data);
 
             if node.children.is_empty() {
                 return;
             }
 
-            node.prepare_state_for_children(&mut state, gpu_node_data);
+
+            node.prepare_state_for_children(&mut state);
             node.children.clone()
         };
 
-        for child_layer_id in node_children {
+        for child_node_id in node_children {
             self.update_node(
-                child_layer_id,
+                child_node_id,
                 &mut state,
                 next_coordinate_system_id,
-                device_pixel_ratio,
+                screen_rect,
+                device_pixel_scale,
                 clip_store,
                 resource_cache,
                 gpu_cache,
@@ -566,7 +568,6 @@ impl ClipScrollTree {
             "local_viewport_rect: {:?}",
             node.local_viewport_rect
         ));
-        pt.add_item(format!("local_clip_rect: {:?}", node.local_clip_rect));
         pt.add_item(format!(
             "world_viewport_transform: {:?}",
             node.world_viewport_transform
@@ -574,6 +575,10 @@ impl ClipScrollTree {
         pt.add_item(format!(
             "world_content_transform: {:?}",
             node.world_content_transform
+        ));
+        pt.add_item(format!(
+            "coordinate_system_id: {:?}",
+            node.coordinate_system_id
         ));
 
         for child_id in &node.children {

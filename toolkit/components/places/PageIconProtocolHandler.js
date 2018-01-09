@@ -73,9 +73,10 @@ PageIconProtocolHandler.prototype = {
   },
 
   newURI(spec, originCharset, baseURI) {
-    let uri = Cc["@mozilla.org/network/simple-uri;1"].createInstance(Ci.nsIURI);
-    uri.spec = spec;
-    return uri;
+    return Cc["@mozilla.org/network/simple-uri-mutator;1"]
+             .createInstance(Ci.nsIURIMutator)
+             .setSpec(spec)
+             .finalize();
   },
 
   newChannel2(uri, loadInfo) {

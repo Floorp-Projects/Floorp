@@ -2,17 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include shared,prim_shared
+#define VECS_PER_SPECIFIC_BRUSH 2
 
-varying vec4 vColor;
+#include shared,prim_shared,brush
+
+varying vec2 vLocalPos;
+
+flat varying vec4 vColor;
 flat varying int vStyle;
 flat varying float vAxisSelect;
 flat varying vec4 vParams;
 flat varying vec2 vLocalOrigin;
 
-varying vec2 vLocalPos;
-
 #ifdef WR_VERTEX_SHADER
+
 #define LINE_ORIENTATION_VERTICAL       0
 #define LINE_ORIENTATION_HORIZONTAL     1
 
@@ -28,22 +31,38 @@ Line fetch_line(int address) {
     return Line(data[0], data[1].x, data[1].y, data[1].z);
 }
 
-void main(void) {
-    Primitive prim = load_primitive();
-    Line line = fetch_line(prim.specific_prim_address);
+void brush_vs(
+    int prim_address,
+    vec2 local_pos,
+    RectWithSize local_rect,
+    ivec2 user_data,
+    PictureTask pic_task
+) {
+    vLocalPos = local_pos;
+
+    Line line = fetch_line(prim_address);
+
+    switch (int(abs(pic_task.pic_kind_and_raster_mode))) {
+        case PIC_TYPE_TEXT_SHADOW:
+            vColor = pic_task.color;
+            break;
+        default:
+            vColor = line.color;
+            break;
+    }
 
     vec2 pos, size;
 
     switch (int(line.orientation)) {
         case LINE_ORIENTATION_HORIZONTAL:
             vAxisSelect = 0.0;
-            pos = prim.local_rect.p0;
-            size = prim.local_rect.size;
+            pos = local_rect.p0;
+            size = local_rect.size;
             break;
         case LINE_ORIENTATION_VERTICAL:
             vAxisSelect = 1.0;
-            pos = prim.local_rect.p0.yx;
-            size = prim.local_rect.size.yx;
+            pos = local_rect.p0.yx;
+            size = local_rect.size.yx;
             break;
     }
 
@@ -89,39 +108,6 @@ void main(void) {
             break;
         }
     }
-
-#ifdef WR_FEATURE_CACHE
-    vec2 device_origin = prim.task.common_data.task_rect.p0 +
-                         uDevicePixelRatio * (prim.local_rect.p0 - prim.task.content_origin);
-    vec2 device_size = uDevicePixelRatio * prim.local_rect.size;
-
-    vec2 device_pos = mix(device_origin,
-                          device_origin + device_size,
-                          aPosition.xy);
-
-    vColor = prim.task.color;
-    vLocalPos = mix(prim.local_rect.p0,
-                    prim.local_rect.p0 + prim.local_rect.size,
-                    aPosition.xy);
-
-    gl_Position = uTransform * vec4(device_pos, 0.0, 1.0);
-#else
-    vColor = line.color;
-
-    #ifdef WR_FEATURE_TRANSFORM
-        VertexInfo vi = write_transform_vertex_primitive(prim);
-    #else
-        VertexInfo vi = write_vertex(prim.local_rect,
-                                     prim.local_clip_rect,
-                                     prim.z,
-                                     prim.layer,
-                                     prim.task,
-                                     prim.local_rect);
-    #endif
-
-    vLocalPos = vi.local_pos;
-    write_clip(vi.screen_pos, prim.clip_area);
-#endif
 }
 #endif
 
@@ -160,22 +146,11 @@ float approx_distance(vec2 p, vec2 b0, vec2 b1, vec2 b2) {
     return length(get_distance_vector(b0 - p, b1 - p, b2 - p));
 }
 
-void main(void) {
-    float alpha = 1.0;
-
-    vec2 local_pos = vLocalPos;
-
-#ifdef WR_FEATURE_CACHE
-#else
-    #ifdef WR_FEATURE_TRANSFORM
-        alpha = init_transform_fs(vLocalPos);
-    #endif
-
-        alpha *= do_clip();
-#endif
-
+vec4 brush_fs() {
     // Find the appropriate distance to apply the step over.
+    vec2 local_pos = vLocalPos;
     float aa_range = compute_aa_range(local_pos);
+    float alpha = 1.0;
 
     // Select the x/y coord, depending on which axis this edge is.
     vec2 pos = mix(local_pos.xy, local_pos.yx, vAxisSelect);
@@ -189,7 +164,7 @@ void main(void) {
             float x = mod(pos.x - vLocalOrigin.x, vParams.x);
 
             // Calculate dash alpha (on/off) based on dash length
-            alpha = min(alpha, step(x, vParams.y));
+            alpha = step(x, vParams.y);
             break;
         }
         case LINE_STYLE_DOTTED: {
@@ -199,7 +174,7 @@ void main(void) {
             // Get the dot alpha
             vec2 dot_relative_pos = vec2(x, pos.y) - vParams.yz;
             float dot_distance = length(dot_relative_pos) - vParams.y;
-            alpha = min(alpha, distance_aa(aa_range, dot_distance));
+            alpha = distance_aa(aa_range, dot_distance);
             // Clip off partial dots
             alpha *= step(pos.x - vLocalOrigin.x, vParams.w);
             break;
@@ -249,6 +224,6 @@ void main(void) {
         }
     }
 
-    oFragColor = vColor * alpha;
+    return vColor * alpha;
 }
 #endif

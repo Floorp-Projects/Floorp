@@ -60,6 +60,40 @@ const {
 
 var ExtensionPageChild;
 
+const initializeBackgroundPage = (context) => {
+  // Override the `alert()` method inside background windows;
+  // we alias it to console.log().
+  // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1203394
+  let alertDisplayedWarning = false;
+  const innerWindowID = getInnerWindowID(context.contentWindow);
+
+  function logWarningMessage({text, filename, lineNumber, columnNumber}) {
+    let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
+    consoleMsg.initWithWindowID(text, filename, null, lineNumber, columnNumber,
+                                Ci.nsIScriptError.warningFlag, "webextension",
+                                innerWindowID);
+    Services.console.logMessage(consoleMsg);
+  }
+
+  let alertOverwrite = text => {
+    const {filename, columnNumber, lineNumber} = Components.stack.caller;
+
+    if (!alertDisplayedWarning) {
+      context.childManager.callParentAsyncFunction("runtime.openBrowserConsole", []);
+
+      logWarningMessage({
+        text: "alert() is not supported in background windows; please use console.log instead.",
+        filename, lineNumber, columnNumber,
+      });
+
+      alertDisplayedWarning = true;
+    }
+
+    logWarningMessage({text, filename, lineNumber, columnNumber});
+  };
+  Cu.exportFunction(alertOverwrite, context.contentWindow, {defineAs: "alert"});
+};
+
 function getFrameData(global) {
   return processScript.getFrameData(global, true);
 }
@@ -253,7 +287,7 @@ defineLazyGetter(ExtensionPageContextChild.prototype, "childManager", function()
   this.callOnClose(childManager);
 
   if (this.viewType == "background") {
-    apiManager.global.initializeBackgroundPage(this.contentWindow);
+    initializeBackgroundPage(this);
   }
 
   return childManager;

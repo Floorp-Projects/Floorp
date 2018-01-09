@@ -20,13 +20,14 @@ mozProtocolHandler.prototype = {
   protocolFlags: Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
 
   newURI(spec, charset, base) {
-    let uri = Cc["@mozilla.org/network/simple-uri;1"].createInstance(Ci.nsIURI);
+    let mutator = Cc["@mozilla.org/network/simple-uri-mutator;1"]
+                    .createInstance(Ci.nsIURIMutator);
     if (base) {
-      uri.spec = base.resolve(spec);
+      mutator.setSpec(base.resolve(spec));
     } else {
-      uri.spec = spec;
+      mutator.setSpec(spec);
     }
-    return uri;
+    return mutator.finalize();
   },
 
   newChannel2(uri, loadInfo) {

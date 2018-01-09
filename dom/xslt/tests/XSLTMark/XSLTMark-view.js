@@ -20,8 +20,10 @@ var view =
         var res = fp.show();
 
         if (res == nsIFilePicker.returnOK) {
-            this.configUrl = Components.classes[STDURL_CTRID].createInstance(nsIURI);
-            this.configUrl.spec = fp.fileURL.spec;
+            this.configUrl = Components.classes[STDURLMUT_CTRID]
+                                       .createInstance(nsIURIMutator)
+                                       .setSpec(fp.fileURL.spec)
+                                       .finalize();
             document.getElementById('config').setAttribute('value', this.configUrl.spec);
         }
         this.parseConfig();
@@ -153,8 +155,11 @@ var view =
         enablePrivilege('UniversalXPConnect');
         if (!this.testArray) {
             if (!this.configUrl) {
-                this.configUrl = Components.classes[STDURL_CTRID].createInstance(nsIURI);
-                this.configUrl.spec = document.getElementById('config').value;
+                this.configUrl =
+                    Components.classes[STDURLMUT_CTRID]
+                              .createInstance(nsIURIMutator)
+                              .setSpec(document.getElementById('config').value)
+                              .finalize();
             }
             this.parseConfig();
         }

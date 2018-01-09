@@ -22,17 +22,18 @@ varying vec4 vUvClip;
 #define MODE_SUBPX_BG_PASS0     4
 #define MODE_SUBPX_BG_PASS1     5
 #define MODE_SUBPX_BG_PASS2     6
-#define MODE_BITMAP             7
-#define MODE_COLOR_BITMAP       8
+#define MODE_SUBPX_DUAL_SOURCE  7
+#define MODE_BITMAP             8
+#define MODE_COLOR_BITMAP       9
 
 VertexInfo write_text_vertex(vec2 clamped_local_pos,
                              RectWithSize local_clip_rect,
                              float z,
-                             Layer layer,
+                             ClipScrollNode scroll_node,
                              PictureTask task,
                              RectWithSize snap_rect) {
     // Transform the current vertex to world space.
-    vec4 world_pos = layer.transform * vec4(clamped_local_pos, 0.0, 1.0);
+    vec4 world_pos = scroll_node.transform * vec4(clamped_local_pos, 0.0, 1.0);
 
     // Convert the world positions to device pixel space.
     vec2 device_pos = world_pos.xy / world_pos.w * uDevicePixelRatio;
@@ -44,12 +45,12 @@ VertexInfo write_text_vertex(vec2 clamped_local_pos,
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
     // For transformed subpixels, we just need to align the glyph origin to a device pixel.
-    // Only check the layer transform's translation since the scales and axes match.
-    vec2 world_snap_p0 = snap_rect.p0 + layer.transform[3].xy * uDevicePixelRatio;
+    // Only check the scroll node transform's translation since the scales and axes match.
+    vec2 world_snap_p0 = snap_rect.p0 + scroll_node.transform[3].xy * uDevicePixelRatio;
     final_pos += floor(world_snap_p0 + 0.5) - world_snap_p0;
 #elif !defined(WR_FEATURE_TRANSFORM)
-    // Compute the snapping offset only if the layer transform is axis-aligned.
-    final_pos += compute_snap_offset(clamped_local_pos, layer, snap_rect);
+    // Compute the snapping offset only if the scroll node transform is axis-aligned.
+    final_pos += compute_snap_offset(clamped_local_pos, scroll_node, snap_rect);
 #endif
 
     gl_Position = uTransform * vec4(final_pos, z, 1.0);
@@ -73,7 +74,7 @@ void main(void) {
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
     // Transform from local space to glyph space.
-    mat2 transform = mat2(prim.layer.transform) * uDevicePixelRatio;
+    mat2 transform = mat2(prim.scroll_node.transform) * uDevicePixelRatio;
 
     // Compute the glyph rect in glyph space.
     RectWithSize glyph_rect = RectWithSize(res.offset + transform * (text.offset + glyph.offset),
@@ -86,15 +87,12 @@ void main(void) {
     // Select the corner of the glyph's local space rect that we are processing.
     vec2 local_pos = local_rect.p0 + local_rect.size * aPosition.xy;
 
-    // Calculate a combined local clip rect.
-    RectWithSize local_clip_rect = intersect_rects(prim.local_clip_rect, prim.layer.local_clip_rect);
-
     // If the glyph's local rect would fit inside the local clip rect, then select a corner from
     // the device space glyph rect to reduce overdraw of clipped pixels in the fragment shader.
     // Otherwise, fall back to clamping the glyph's local rect to the local clip rect.
-    local_pos = rect_inside_rect(local_rect, local_clip_rect) ?
+    local_pos = rect_inside_rect(local_rect, prim.local_clip_rect) ?
                     inv * (glyph_rect.p0 + glyph_rect.size * aPosition.xy) :
-                    clamp_rect(local_pos, local_clip_rect);
+                    clamp_rect(local_pos, prim.local_clip_rect);
 #else
     // Scale from glyph space to local space.
     float scale = res.scale / uDevicePixelRatio;
@@ -106,14 +104,14 @@ void main(void) {
     // Select the corner of the glyph rect that we are processing.
     vec2 local_pos = glyph_rect.p0 + glyph_rect.size * aPosition.xy;
 
-    // Clamp to the two local clip rects.
-    local_pos = clamp_rect(clamp_rect(local_pos, prim.local_clip_rect), prim.layer.local_clip_rect);
+    // Clamp to the local clip rect.
+    local_pos = clamp_rect(local_pos, prim.local_clip_rect);
 #endif
 
     VertexInfo vi = write_text_vertex(local_pos,
                                       prim.local_clip_rect,
                                       prim.z,
-                                      prim.layer,
+                                      prim.scroll_node,
                                       prim.task,
                                       glyph_rect);
 
@@ -134,6 +132,7 @@ void main(void) {
             break;
         case MODE_SUBPX_PASS1:
         case MODE_SUBPX_BG_PASS2:
+        case MODE_SUBPX_DUAL_SOURCE:
             vMaskSwizzle = vec2(1.0, 0.0);
             vColor = text.color;
             break;
@@ -170,6 +169,12 @@ void main(void) {
     alpha *= float(all(greaterThanEqual(vUvClip, vec4(0.0))));
 #endif
 
+#ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
+    vec4 alpha_mask = mask * alpha;
+    oFragColor = vColor * alpha_mask;
+    oFragBlend = alpha_mask * vColor.a;
+#else
     oFragColor = vColor * mask * alpha;
+#endif
 }
 #endif
