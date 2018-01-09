@@ -62,13 +62,8 @@
               oncommand="gSitePermissionsManager.onAllPermissionsDelete();"/>
     </hbox>
     <spacer flex="1"/>
-    <vbox align="start">
-      <hbox align="start">
-        <checkbox id="permissionsDisableCheckbox"/>
-        <label for="permissionsDisableCheckbox" id="permissionsDisableLabel"/>
-      </hbox>
-      <description id="permissionsDisableDescription"/>
-    </vbox>
+    <checkbox id="permissionsDisableCheckbox"/>
+    <description id="permissionsDisableDescription"/>
     <spacer flex="1"/>
     <hbox class="actionButtons" align="right" flex="1">
       <button oncommand="close();" icon="close" id="cancel"
