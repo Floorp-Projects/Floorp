@@ -111,12 +111,14 @@ ScaledFontMac::ScaledFontMac(CGFontRef aFont,
                              bool aOwnsFont,
                              const Color &aFontSmoothingBackgroundColor,
                              bool aUseFontSmoothing,
-                             bool aApplySyntheticBold)
+                             bool aApplySyntheticBold,
+                             bool aNeedsOblique)
   : ScaledFontBase(aUnscaledFont, aSize)
   , mFont(aFont)
   , mFontSmoothingBackgroundColor(aFontSmoothingBackgroundColor)
   , mUseFontSmoothing(aUseFontSmoothing)
   , mApplySyntheticBold(aApplySyntheticBold)
+  , mNeedsOblique(aNeedsOblique)
 {
   if (!sSymbolLookupDone) {
     CTFontDrawGlyphsPtr =
@@ -417,6 +419,9 @@ ScaledFontMac::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutOpti
   }
   if (mApplySyntheticBold) {
     options.flags |= wr::FontInstanceFlags::SYNTHETIC_BOLD;
+  }
+  if (mNeedsOblique) {
+    options.flags |= wr::FontInstanceFlags::SYNTHETIC_ITALICS;
   }
   options.bg_color = wr::ToColorU(mFontSmoothingBackgroundColor);
   *aOutOptions = Some(options);
