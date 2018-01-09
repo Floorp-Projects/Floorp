@@ -109,26 +109,30 @@ class SwatchBasedEditorTooltip {
 
     if (tooltipAnchor) {
       let onShown = this.tooltip.once("shown");
+
       this.tooltip.show(tooltipAnchor, "topcenter bottomleft");
-
-      // When the tooltip is closed by clicking outside the panel we want to
-      // commit any changes.
-      this.tooltip.once("hidden", () => {
-        if (!this._reverted && !this.eyedropperOpen) {
-          this.commit();
-        }
-        this._reverted = false;
-
-        // Once the tooltip is hidden we need to clean up any remaining objects.
-        if (!this.eyedropperOpen) {
-          this.activeSwatch = null;
-        }
-      });
+      this.tooltip.once("hidden", () => this.onTooltipHidden());
 
       return onShown;
     }
 
     return Promise.resolve();
+  }
+
+  /**
+   * Can be overridden by subclasses if implementation specific behavior is needed on
+   * tooltip hidden.
+   */
+  onTooltipHidden() {
+    // When the tooltip is closed by clicking outside the panel we want to commit any
+    // changes.
+    if (!this._reverted) {
+      this.commit();
+    }
+    this._reverted = false;
+
+    // Once the tooltip is hidden we need to clean up any remaining objects.
+    this.activeSwatch = null;
   }
 
   hide() {
