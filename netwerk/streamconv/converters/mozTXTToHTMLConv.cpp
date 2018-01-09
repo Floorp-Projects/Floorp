@@ -116,22 +116,22 @@ mozTXTToHTMLConv::UnescapeStr(const char16_t * aInString, int32_t aStartPos, int
     if (aInString[i] == '&')
     {
       subString = &aInString[i];
-      if (!nsCRT::strncmp(subString, u"&lt;", std::min(4, aLength - remainingChars)))
+      if (!NS_strncmp(subString, u"&lt;", std::min(4, aLength - remainingChars)))
       {
         aOutString.Append(char16_t('<'));
         i += 4;
       }
-      else if (!nsCRT::strncmp(subString, u"&gt;", std::min(4, aLength - remainingChars)))
+      else if (!NS_strncmp(subString, u"&gt;", std::min(4, aLength - remainingChars)))
       {
         aOutString.Append(char16_t('>'));
         i += 4;
       }
-      else if (!nsCRT::strncmp(subString, u"&amp;", std::min(5, aLength - remainingChars)))
+      else if (!NS_strncmp(subString, u"&amp;", std::min(5, aLength - remainingChars)))
       {
         aOutString.Append(char16_t('&'));
         i += 5;
       }
-      else if (!nsCRT::strncmp(subString, u"&quot;", std::min(6, aLength - remainingChars)))
+      else if (!NS_strncmp(subString, u"&quot;", std::min(6, aLength - remainingChars)))
       {
         aOutString.Append(char16_t('"'));
         i += 6;
@@ -194,7 +194,7 @@ mozTXTToHTMLConv::FindURLStart(const char16_t * aInString, int32_t aInLength,
   { // no breaks, because end of blocks is never reached
   case RFC1738:
   {
-    if (!nsCRT::strncmp(&aInString[std::max(int32_t(pos - 4), 0)], u"<URL:", 5))
+    if (!NS_strncmp(&aInString[std::max(int32_t(pos - 4), 0)], u"<URL:", 5))
     {
       start = pos + 1;
       return true;

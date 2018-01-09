@@ -216,7 +216,7 @@ public:
   static bool MatchesLanguagePrefix(const char16_t* aLang, size_t aLen,
                                     const char16_t (&aPrefix)[N])
   {
-    return !nsCRT::strncmp(aLang, aPrefix, N - 1) &&
+    return !NS_strncmp(aLang, aPrefix, N - 1) &&
            (aLen == N - 1 || aLang[N - 1] == '-');
   }
 
