@@ -2714,8 +2714,7 @@ var SessionStoreInternal = {
       if (activePageData.title &&
           activePageData.title != activePageData.url) {
         win.gBrowser.setInitialTabTitle(tab, activePageData.title, { isContentTitle: true });
-      } else if (activePageData.url != "about:blank" &&
-                 activePageData.url != "about:newtab") {
+      } else if (activePageData.url != "about:blank") {
         win.gBrowser.setInitialTabTitle(tab, activePageData.url);
       }
     }
