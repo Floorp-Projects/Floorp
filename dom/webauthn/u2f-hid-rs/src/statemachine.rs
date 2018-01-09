@@ -10,6 +10,10 @@ use std::time::Duration;
 use util::{io_err, OnceCallback};
 use u2fprotocol::{u2f_init_device, u2f_is_keyhandle_valid, u2f_register, u2f_sign};
 
+fn is_valid_transport(transports: ::AuthenticatorTransports) -> bool {
+    transports.is_empty() || transports.contains(::AuthenticatorTransports::USB)
+}
+
 #[derive(Default)]
 pub struct StateMachine {
     transaction: Option<Transaction>,
@@ -26,7 +30,7 @@ impl StateMachine {
         timeout: u64,
         challenge: Vec<u8>,
         application: Vec<u8>,
-        key_handles: Vec<Vec<u8>>,
+        key_handles: Vec<::KeyHandle>,
         callback: OnceCallback<Vec<u8>>,
     ) {
         // Abort any prior register/sign calls.
@@ -60,8 +64,9 @@ impl StateMachine {
             // Iterate the exclude list and see if there are any matches.
             // Abort the state machine if we found a valid key handle.
             if key_handles.iter().any(|key_handle| {
-                u2f_is_keyhandle_valid(dev, &challenge, &application, key_handle)
-                    .unwrap_or(false) /* no match on failure */
+                is_valid_transport(key_handle.transports) &&
+                    u2f_is_keyhandle_valid(dev, &challenge, &application, &key_handle.credential)
+                        .unwrap_or(false) /* no match on failure */
             })
             {
                 return;
@@ -85,10 +90,11 @@ impl StateMachine {
 
     pub fn sign(
         &mut self,
+        flags: ::SignFlags,
         timeout: u64,
         challenge: Vec<u8>,
         application: Vec<u8>,
-        key_handles: Vec<Vec<u8>>,
+        key_handles: Vec<::KeyHandle>,
         callback: OnceCallback<(Vec<u8>, Vec<u8>)>,
     ) {
         // Abort any prior register/sign calls.
@@ -108,14 +114,37 @@ impl StateMachine {
                 return;
             }
 
+            // We currently don't support user verification because we can't
+            // ask tokens whether they do support that. If the flag is set,
+            // ignore all tokens for now.
+            //
+            // Technically, this is a ConstraintError because we shouldn't talk
+            // to this authenticator in the first place. But the result is the
+            // same anyway.
+            if !flags.is_empty() {
+                return;
+            }
+
             // Find all matching key handles.
             let key_handles = key_handles
                 .iter()
                 .filter(|key_handle| {
-                    u2f_is_keyhandle_valid(dev, &challenge, &application, key_handle)
+                    u2f_is_keyhandle_valid(dev, &challenge, &application, &key_handle.credential)
                         .unwrap_or(false) /* no match on failure */
                 })
                 .collect::<Vec<_>>();
+
+            // Aggregate distinct transports from all given credentials.
+            let transports = key_handles.iter().fold(
+                ::AuthenticatorTransports::empty(),
+                |t, k| t | k.transports,
+            );
+
+            // We currently only support USB. If the RP specifies transports
+            // and doesn't include USB it's probably lying.
+            if !is_valid_transport(transports) {
+                return;
+            }
 
             while alive() {
                 // If the device matches none of the given key handles
@@ -129,8 +158,14 @@ impl StateMachine {
                 } else {
                     // Otherwise, try to sign.
                     for key_handle in &key_handles {
-                        if let Ok(bytes) = u2f_sign(dev, &challenge, &application, key_handle) {
-                            callback.call(Ok((key_handle.to_vec(), bytes)));
+                        if let Ok(bytes) = u2f_sign(
+                            dev,
+                            &challenge,
+                            &application,
+                            &key_handle.credential,
+                        )
+                        {
+                            callback.call(Ok((key_handle.credential.clone(), bytes)));
                             break;
                         }
                     }

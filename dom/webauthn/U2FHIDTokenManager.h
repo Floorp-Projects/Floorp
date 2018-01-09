@@ -20,12 +20,15 @@ namespace dom {
 
 class U2FKeyHandles {
 public:
-  explicit U2FKeyHandles(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors)
+  explicit U2FKeyHandles(const nsTArray<WebAuthnScopedCredential>& aCredentials)
   {
     mKeyHandles = rust_u2f_khs_new();
 
-    for (auto desc: aDescriptors) {
-      rust_u2f_khs_add(mKeyHandles, desc.id().Elements(), desc.id().Length());
+    for (auto cred: aCredentials) {
+      rust_u2f_khs_add(mKeyHandles,
+                       cred.id().Elements(),
+                       cred.id().Length(),
+                       cred.transports());
     }
   }
 
@@ -91,16 +94,17 @@ public:
   explicit U2FHIDTokenManager();
 
   virtual RefPtr<U2FRegisterPromise>
-  Register(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
+  Register(const nsTArray<WebAuthnScopedCredential>& aCredentials,
            const WebAuthnAuthenticatorSelection &aAuthenticatorSelection,
            const nsTArray<uint8_t>& aApplication,
            const nsTArray<uint8_t>& aChallenge,
            uint32_t aTimeoutMS) override;
 
   virtual RefPtr<U2FSignPromise>
-  Sign(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
+  Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials,
        const nsTArray<uint8_t>& aApplication,
        const nsTArray<uint8_t>& aChallenge,
+       bool aRequireUserVerification,
        uint32_t aTimeoutMS) override;
 
   void Cancel() override;
