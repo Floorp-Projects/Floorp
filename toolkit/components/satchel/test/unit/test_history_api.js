@@ -60,6 +60,47 @@ function promiseUpdateEntry(op, name, value) {
   return promiseUpdate(change);
 }
 
+function promiseUpdate(change) {
+  return new Promise((resolve, reject) => {
+    FormHistory.update(change, {
+      handleError(error) {
+        this._error = error;
+      },
+      handleCompletion(reason) {
+        if (reason) {
+          reject(this._error);
+        } else {
+          resolve();
+        }
+      },
+    });
+  });
+}
+
+function promiseSearchEntries(terms, params) {
+  return new Promise((resolve, reject) => {
+    let results = [];
+    FormHistory.search(terms, params,
+                       { handleResult: result => results.push(result),
+                         handleError(error) {
+                           do_throw("Error occurred searching form history: " + error);
+                           reject(error);
+                         },
+                         handleCompletion(reason) {
+                           if (!reason) {
+                             resolve(results);
+                           }
+                         },
+                       });
+  });
+}
+
+function promiseCountEntries(name, value, checkFn) {
+  return new Promise(resolve => {
+    countEntries(name, value, function(result) { checkFn(result); resolve(); });
+  });
+}
+
 add_task(async function() {
   let oldSupportsDeletedTable = FormHistory._supportsDeletedTable;
   FormHistory._supportsDeletedTable = true;
@@ -234,8 +275,8 @@ add_task(async function() {
       return undefined;
     };
 
-    let results = await FormHistory.search(["timesUsed", "firstUsed", "lastUsed"],
-                                           { fieldname: "field1", value: "value1" });
+    let results = await promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
+                                             { fieldname: "field1", value: "value1" });
     let [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
     Assert.equal(1, timesUsed);
     Assert.ok(firstUsed > 0);
@@ -254,7 +295,7 @@ add_task(async function() {
     // Update a single entry
     testnum++;
 
-    results = await FormHistory.search(["guid"], { fieldname: "field1", value: "value1" });
+    results = await promiseSearchEntries(["guid"], { fieldname: "field1", value: "value1" });
     let guid = processFirstResult(results)[3];
 
     await promiseUpdate({ op: "update", guid, value: "modifiedValue" });
@@ -269,8 +310,8 @@ add_task(async function() {
     await promiseUpdate({ op: "add", fieldname: "field2", value: "value2",
       timesUsed: 20, firstUsed: 100, lastUsed: 500 });
 
-    results = await FormHistory.search(["timesUsed", "firstUsed", "lastUsed"],
-                                       { fieldname: "field2", value: "value2" });
+    results = await promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
+                                         { fieldname: "field2", value: "value2" });
     [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
 
     Assert.equal(20, timesUsed);
@@ -283,8 +324,8 @@ add_task(async function() {
     testnum++;
     await promiseUpdate({ op: "bump", fieldname: "field2", value: "value2",
       timesUsed: 20, firstUsed: 100, lastUsed: 500 });
-    results = await FormHistory.search(["timesUsed", "firstUsed", "lastUsed"],
-                                       { fieldname: "field2", value: "value2" });
+    results = await promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
+                                         { fieldname: "field2", value: "value2" });
     [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
     Assert.equal(21, timesUsed);
     Assert.equal(100, firstUsed);
@@ -296,8 +337,8 @@ add_task(async function() {
     testnum++;
     await promiseUpdate({ op: "bump", fieldname: "field3", value: "value3",
       timesUsed: 10, firstUsed: 50, lastUsed: 400 });
-    results = await FormHistory.search(["timesUsed", "firstUsed", "lastUsed"],
-                                       { fieldname: "field3", value: "value3" });
+    results = await promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
+                                         { fieldname: "field3", value: "value3" });
     [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
     Assert.equal(10, timesUsed);
     Assert.equal(50, firstUsed);
@@ -307,11 +348,11 @@ add_task(async function() {
     // ===== 16 =====
     // Bump an entry with a guid
     testnum++;
-    results = await FormHistory.search(["guid"], { fieldname: "field3", value: "value3" });
+    results = await promiseSearchEntries(["guid"], { fieldname: "field3", value: "value3" });
     guid = processFirstResult(results)[3];
     await promiseUpdate({ op: "bump", guid, timesUsed: 20, firstUsed: 55, lastUsed: 400 });
-    results = await FormHistory.search(["timesUsed", "firstUsed", "lastUsed"],
-                                       { fieldname: "field3", value: "value3" });
+    results = await promiseSearchEntries(["timesUsed", "firstUsed", "lastUsed"],
+                                         { fieldname: "field3", value: "value3" });
     [timesUsed, firstUsed, lastUsed] = processFirstResult(results);
     Assert.equal(11, timesUsed);
     Assert.equal(50, firstUsed);
@@ -323,7 +364,7 @@ add_task(async function() {
     testnum++;
     await countDeletedEntries(7);
 
-    results = await FormHistory.search(["guid"], { fieldname: "field1", value: "value1b" });
+    results = await promiseSearchEntries(["guid"], { fieldname: "field1", value: "value1b" });
     guid = processFirstResult(results)[3];
 
     await promiseUpdate({ op: "remove", guid});
@@ -365,7 +406,7 @@ add_task(async function() {
     await promiseUpdate([
       { op: "bump", fieldname: "field5", value: "value5" },
       { op: "bump", fieldname: "field6", value: "value6" }]);
-    results = await FormHistory.search(["fieldname", "timesUsed", "firstUsed", "lastUsed"], { });
+    results = await promiseSearchEntries(["fieldname", "timesUsed", "firstUsed", "lastUsed"], { });
 
     Assert.equal(6, results[2].timesUsed);
     Assert.equal(13, results[3].timesUsed);

@@ -11,7 +11,18 @@
  * Part B tests this when the columns do *not* match, so the DB is reset.
  */
 
-add_task(async function() {
+var iter = tests();
+
+function run_test() {
+  do_test_pending();
+  iter.next();
+}
+
+function next_test() {
+  iter.next();
+}
+
+function* tests() {
   let testnum = 0;
 
   try {
@@ -33,7 +44,10 @@ add_task(async function() {
     }
 
     testfile.copyTo(profileDir, "formhistory.sqlite");
-    Assert.equal(999, getDBVersion(destFile));
+    Assert.equal(999, getDBVersion(testfile));
+
+    let checkZero = function(num) { Assert.equal(num, 0); next_test(); };
+    let checkOne = function(num) { Assert.equal(num, 1); next_test(); };
 
     // ===== 1 =====
     testnum++;
@@ -42,7 +56,7 @@ add_task(async function() {
     // DB init is done lazily so the DB shouldn't be created yet.
     Assert.ok(!bakFile.exists());
     // Doing any request to the DB should create it.
-    await promiseCountEntries("", "");
+    yield countEntries("", "", next_test);
 
     Assert.ok(bakFile.exists());
     bakFile.remove(false);
@@ -50,25 +64,27 @@ add_task(async function() {
     // ===== 2 =====
     testnum++;
     // File should be empty
-    Assert.ok(!await promiseCountEntries(null, null));
-    Assert.equal(0, await promiseCountEntries("name-A", "value-A"));
+    yield countEntries(null, null, function(num) { Assert.ok(!num); next_test(); });
+    yield countEntries("name-A", "value-A", checkZero);
     // check for current schema.
-    Assert.equal(CURRENT_SCHEMA, getDBVersion(destFile));
+    Assert.equal(CURRENT_SCHEMA, FormHistory.schemaVersion);
 
     // ===== 3 =====
     testnum++;
     // Try adding an entry
-    await promiseUpdateEntry("add", "name-A", "value-A");
-    Assert.equal(1, await promiseCountEntries(null, null));
-    Assert.equal(1, await promiseCountEntries("name-A", "value-A"));
+    yield updateEntry("add", "name-A", "value-A", next_test);
+    yield countEntries(null, null, checkOne);
+    yield countEntries("name-A", "value-A", checkOne);
 
     // ===== 4 =====
     testnum++;
     // Try removing an entry
-    await promiseUpdateEntry("remove", "name-A", "value-A");
-    Assert.equal(0, await promiseCountEntries(null, null));
-    Assert.equal(0, await promiseCountEntries("name-A", "value-A"));
+    yield updateEntry("remove", "name-A", "value-A", next_test);
+    yield countEntries(null, null, checkZero);
+    yield countEntries("name-A", "value-A", checkZero);
   } catch (e) {
     throw new Error(`FAILED in test #${testnum} -- ${e}`);
   }
-});
+
+  do_test_finished();
+}
