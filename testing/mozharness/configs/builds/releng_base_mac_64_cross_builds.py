@@ -7,7 +7,6 @@ config = {
     # note: overridden by MOZHARNESS_ACTIONS in TaskCluster tasks
     'default_actions': [
         'clobber',
-        'clone-tools',
         'checkout-sources',
         'build',
         'update',  # decided by query_is_nightly()
