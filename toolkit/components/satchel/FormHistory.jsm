@@ -637,13 +637,10 @@ this.DB = {
       try {
         this._instance = await this._establishConn();
       } catch (e) {
-        log("Failed to establish database connection.");
+        log("Failed to establish database connection: " + e);
         reject(e);
         return;
       }
-
-      AsyncShutdown.profileBeforeChange.addBlocker(
-        "Closing FormHistory database.", () => this._instance.close());
 
       resolve(this._instance);
     });
@@ -674,6 +671,8 @@ this.DB = {
     let conn;
     try {
       conn = await Sqlite.openConnection({ path: this.path });
+      Sqlite.shutdown.addBlocker(
+        "Closing FormHistory database.", () => conn.close());
     } catch (e) {
       // Bug 1423729 - We should check the reason for the connection failure,
       // in case this is due to the disk being full or the database file being
