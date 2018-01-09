@@ -38,9 +38,7 @@
 #include "ScreenHelperGTK.h"
 
 #include <gtk/gtk.h>
-#if (MOZ_WIDGET_GTK == 3)
 #include <gtk/gtkx.h>
-#endif
 
 #ifdef MOZ_WAYLAND
 #include <gdk/gdkwayland.h>
@@ -51,9 +49,7 @@
 #include <X11/Xatom.h>
 #include <X11/extensions/XShm.h>
 #include <X11/extensions/shape.h>
-#if (MOZ_WIDGET_GTK == 3)
 #include <gdk/gdkkeysyms-compat.h>
-#endif
 #if (MOZ_WIDGET_GTK == 2)
 #include "gtk2xtbin.h"
 #endif
@@ -236,11 +232,9 @@ static void     screen_composited_changed_cb     (GdkScreen* screen,
 static void     widget_composited_changed_cb     (GtkWidget* widget,
                                                   gpointer user_data);
 
-#if (MOZ_WIDGET_GTK == 3)
 static void     scale_changed_cb          (GtkWidget* widget,
                                            GParamSpec* aPSpec,
                                            gpointer aPointer);
-#endif
 #if GTK_CHECK_VERSION(3,4,0)
 static gboolean touch_event_cb            (GtkWidget* aWidget,
                                            GdkEventTouch* aEvent);
@@ -518,11 +512,7 @@ nsWindow::ReleaseGlobals()
 {
   for (auto & cursor : gCursorCache) {
     if (cursor) {
-#if (MOZ_WIDGET_GTK == 3)
       g_object_unref(cursor);
-#else
-      gdk_cursor_unref(cursor);
-#endif
       cursor = nullptr;
     }
   }
@@ -1689,11 +1679,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
             gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(mContainer)), cursor);
             rv = NS_OK;
         }
-#if (MOZ_WIDGET_GTK == 3)
         g_object_unref(cursor);
-#else
-        gdk_cursor_unref(cursor);
-#endif
     }
 
     return rv;
@@ -3815,7 +3801,6 @@ nsWindow::Create(nsIWidget* aParent,
         GtkWidget *container = moz_container_new();
         mContainer = MOZ_CONTAINER(container);
 
-#if (MOZ_WIDGET_GTK == 3)
         // "csd" style is set when widget is realized so we need to call
         // it explicitly now.
         gtk_widget_realize(mShell);
@@ -3836,7 +3821,6 @@ nsWindow::Create(nsIWidget* aParent,
             !mIsX11Display ||
             (mIsCSDAvailable && GetCSDSupportLevel() == CSD_SUPPORT_FLAT ) ||
             gtk_style_context_has_class(style, "csd");
-#endif
         eventWidget = (drawToContainer) ? container : mShell;
 
         gtk_widget_add_events(eventWidget, kEvents);
@@ -3985,10 +3969,8 @@ nsWindow::Create(nsIWidget* aParent,
                                G_CALLBACK(size_allocate_cb), nullptr);
         g_signal_connect(mContainer, "hierarchy-changed",
                          G_CALLBACK(hierarchy_changed_cb), nullptr);
-#if (MOZ_WIDGET_GTK == 3)
         g_signal_connect(mContainer, "notify::scale-factor",
                          G_CALLBACK(scale_changed_cb), nullptr);
-#endif
         // Initialize mHasMappedToplevel.
         hierarchy_changed_cb(GTK_WIDGET(mContainer), nullptr);
         // Expose, focus, key, and drag events are sent even to GTK_NO_WINDOW
@@ -6049,7 +6031,6 @@ widget_composited_changed_cb (GtkWidget* widget, gpointer user_data)
     window->OnCompositedChanged();
 }
 
-#if (MOZ_WIDGET_GTK == 3)
 static void
 scale_changed_cb (GtkWidget* widget, GParamSpec* aPSpec, gpointer aPointer)
 {
@@ -6065,7 +6046,6 @@ scale_changed_cb (GtkWidget* widget, GParamSpec* aPSpec, gpointer aPointer)
     gtk_widget_get_allocation(widget, &allocation);
     window->OnSizeAllocate(&allocation);
 }
-#endif
 
 #if GTK_CHECK_VERSION(3,4,0)
 static gboolean
@@ -6888,11 +6868,9 @@ nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
     event.button.window = mGdkWindow;
     event.button.time = GDK_CURRENT_TIME;
 
-#if (MOZ_WIDGET_GTK == 3)
     // Get device for event source
     GdkDeviceManager *device_manager = gdk_display_get_device_manager(display);
     event.button.device = gdk_device_manager_get_client_pointer(device_manager);
-#endif
 
     event.button.x_root = DevicePixelsToGdkCoordRoundDown(aPoint.x);
     event.button.y_root = DevicePixelsToGdkCoordRoundDown(aPoint.y);
@@ -6935,12 +6913,10 @@ nsWindow::SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
   event.type = GDK_SCROLL;
   event.scroll.window = mGdkWindow;
   event.scroll.time = GDK_CURRENT_TIME;
-#if (MOZ_WIDGET_GTK == 3)
   // Get device for event source
   GdkDisplay* display = gdk_window_get_display(mGdkWindow);
   GdkDeviceManager *device_manager = gdk_display_get_device_manager(display);
   event.scroll.device = gdk_device_manager_get_client_pointer(device_manager);
-#endif
   event.scroll.x_root = DevicePixelsToGdkCoordRoundDown(aPoint.x);
   event.scroll.y_root = DevicePixelsToGdkCoordRoundDown(aPoint.y);
 

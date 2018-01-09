@@ -515,7 +515,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
     aGtkWidgetType = MOZ_GTK_ENTRY;
     break;
   case NS_THEME_TEXTFIELD_MULTILINE:
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
     aGtkWidgetType = MOZ_GTK_TEXT_VIEW;
 #else
     aGtkWidgetType = MOZ_GTK_ENTRY;
@@ -1648,7 +1648,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
       aResult->height += border.top + border.bottom;
     }
     break;
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
   case NS_THEME_NUMBER_INPUT:
   case NS_THEME_TEXTFIELD:
     {
@@ -1896,7 +1896,7 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_SPLITTER:
   case NS_THEME_WINDOW:
   case NS_THEME_DIALOG:
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
   case NS_THEME_GTK_INFO_BAR:
 #endif
     return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
@@ -1978,7 +1978,7 @@ nsNativeThemeGTK::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
     return eOpaque;
   case NS_THEME_SCROLLBAR_VERTICAL:
   case NS_THEME_SCROLLBAR_HORIZONTAL:
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
     // Make scrollbar tracks opaque on the window's scroll frame to prevent
     // leaf layers from overlapping. See bug 1179780.
     if (!(CheckBooleanAttr(aFrame, nsGkAtoms::root_) &&

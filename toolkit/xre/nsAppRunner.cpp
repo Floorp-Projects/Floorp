@@ -2982,7 +2982,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
     g_free(theme_name);
   }
 
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
   // A workaround for https://bugzilla.gnome.org/show_bug.cgi?id=703257
   if (gtk_check_version(3,9,8) != NULL)
     skip_display_close = true;
@@ -3878,7 +3878,7 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
 
   // Initialize GTK here for splash.
 
-#if (MOZ_WIDGET_GTK == 3) && defined(MOZ_X11)
+#if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
   // Disable XInput2 support due to focus bugginess. See bugs 1182700, 1170342.
   const char* useXI2 = PR_GetEnv("MOZ_USE_XINPUT2");
   if (!useXI2 || (*useXI2 == '0'))
@@ -3970,7 +3970,7 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
 #endif
       }
     }
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
     else {
       mGdkDisplay = gdk_display_manager_open_display(gdk_display_manager_get(),
                                                      nullptr);

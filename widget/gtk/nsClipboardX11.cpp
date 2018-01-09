@@ -67,7 +67,7 @@ nsRetrievalContextX11::nsRetrievalContextX11()
 {
     // A custom event filter to workaround attempting to dereference a null
     // selection requestor in GTK3 versions before 3.11.3. See bug 1178799.
-#if (MOZ_WIDGET_GTK == 3) && defined(MOZ_X11)
+#if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
     if (gtk_check_version(3, 11, 3))
         gdk_window_add_filter(nullptr, selection_request_filter, nullptr);
 #endif

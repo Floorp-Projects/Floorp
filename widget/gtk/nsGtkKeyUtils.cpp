@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
 #include <gdk/gdkkeysyms-compat.h>
 #endif
 #include <X11/XKBlib.h>

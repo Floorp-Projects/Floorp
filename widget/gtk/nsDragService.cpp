@@ -379,13 +379,13 @@ nsDragService::InvokeDragSessionImpl(nsIArray* aArrayTransferables,
     gtk_window_group_add_window(window_group,
                                 GTK_WINDOW(mHiddenWidget));
 
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
     // Get device for event source
     GdkDisplay *display = gdk_display_get_default();
     GdkDeviceManager *device_manager = gdk_display_get_device_manager(display);
     event.button.device = gdk_device_manager_get_client_pointer(device_manager);
 #endif
-  
+
     // start our drag.
     GdkDragContext *context = gtk_drag_begin(mHiddenWidget,
                                              sourceList,
