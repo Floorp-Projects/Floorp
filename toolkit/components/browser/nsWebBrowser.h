@@ -82,31 +82,12 @@ class nsWebBrowser final : public nsIWebBrowser,
                            public nsIWebBrowserPersist,
                            public nsIWebBrowserFocus,
                            public nsIWebProgressListener,
+                           public nsIWidgetListener,
                            public nsSupportsWeakReference
 {
   friend class nsDocShellTreeOwner;
 
 public:
-
-  // The implementation of non-refcounted nsIWidgetListener, which would hold a
-  // strong reference on stack before calling nsWebBrowser's
-  // MOZ_CAN_RUN_SCRIPT methods.
-  class WidgetListenerDelegate : public nsIWidgetListener
-  {
-  public:
-    WidgetListenerDelegate(nsWebBrowser* aWebBrowser)
-      : mWebBrowser(aWebBrowser) {}
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void WindowActivated() override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual void WindowDeactivated() override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual bool PaintWindow(
-      nsIWidget* aWidget, mozilla::LayoutDeviceIntRegion aRegion) override;
-
-  private:
-    // The lifetime of WidgetListenerDelegate is bound to nsWebBrowser so we
-    // just use raw pointer here.
-    nsWebBrowser* mWebBrowser;
-  };
-
   nsWebBrowser();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -136,11 +117,11 @@ protected:
   NS_IMETHOD UnBindListener(nsISupports* aListener, const nsIID& aIID);
   NS_IMETHOD EnableGlobalHistory(bool aEnable);
 
-  // nsIWidgetListener methods for WidgetListenerDelegate.
-  MOZ_CAN_RUN_SCRIPT void WindowActivated();
-  MOZ_CAN_RUN_SCRIPT void WindowDeactivated();
-  MOZ_CAN_RUN_SCRIPT bool PaintWindow(
-    nsIWidget* aWidget, mozilla::LayoutDeviceIntRegion aRegion);
+  // nsIWidgetListener
+  virtual void WindowActivated() override;
+  virtual void WindowDeactivated() override;
+  virtual bool PaintWindow(nsIWidget* aWidget,
+                           mozilla::LayoutDeviceIntRegion aRegion) override;
 
 protected:
   RefPtr<nsDocShellTreeOwner> mDocShellTreeOwner;
@@ -164,8 +145,6 @@ protected:
   nsCOMPtr<nsIWebProgress> mWebProgress;
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
-
-  WidgetListenerDelegate mWidgetListenerDelegate;
 
   // cached background color
   nscolor mBackgroundColor;
