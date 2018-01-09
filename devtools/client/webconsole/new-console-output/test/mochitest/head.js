@@ -451,3 +451,46 @@ function openNewBrowserWindow() {
     }, "browser-delayed-startup-finished");
   });
 }
+
+/**
+ * Open a network request logged in the webconsole in the netmonitor panel.
+ *
+ * @param {Object} toolbox
+ * @param {Object} hud
+ * @param {String} url
+ *        URL of the request as logged in the netmonitor.
+ * @param {String} urlInConsole
+ *        (optional) Use if the logged URL in webconsole is different from the real URL.
+ */
+async function openMessageInNetmonitor(toolbox, hud, url, urlInConsole) {
+  // By default urlInConsole should be the same as the complete url.
+  urlInConsole = urlInConsole || url;
+
+  let message = await waitFor(() => findMessage(hud, urlInConsole));
+
+  let onNetmonitorSelected = toolbox.once("netmonitor-selected", (event, panel) => {
+    return panel;
+  });
+
+  let menuPopup = await openContextMenu(hud, message);
+  let openInNetMenuItem = menuPopup.querySelector("#console-menu-open-in-network-panel");
+  ok(openInNetMenuItem, "open in network panel item is enabled");
+  openInNetMenuItem.click();
+
+  const {panelWin} = await onNetmonitorSelected;
+  ok(true, "The netmonitor panel is selected when clicking on the network message");
+
+  let { store, windowRequire } = panelWin;
+  let actions = windowRequire("devtools/client/netmonitor/src/actions/index");
+  let { getSelectedRequest } =
+    windowRequire("devtools/client/netmonitor/src/selectors/index");
+
+  store.dispatch(actions.batchEnable(false));
+
+  await waitUntil(() => {
+    const selected = getSelectedRequest(store.getState());
+    return selected && selected.url === url;
+  });
+
+  ok(true, "The attached url is correct.");
+}
