@@ -14,8 +14,6 @@ include('updater-common.build')
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['updater-xpcshell']
 
-CXXFLAGS += CONFIG['MOZ_BZ2_CFLAGS']
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LDFLAGS += ['-sectcreate',
                 '__TEXT',
