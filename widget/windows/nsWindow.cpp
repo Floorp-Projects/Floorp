@@ -847,6 +847,14 @@ nsWindow::Create(nsIWidget* aParent,
     NS_WARNING("nsWindow CreateWindowEx failed.");
     return NS_ERROR_FAILURE;
   }
+  // If mDefaultScale is set before mWnd has been set, it will have the scale of the
+  // primary monitor, rather than the monitor that the window is actually on. For
+  // non-popup windows this gets corrected by the WM_DPICHANGED message which resets
+  // mDefaultScale, but for popup windows we don't reset mDefaultScale on that message.
+  // In order to ensure that popup windows spawned on a non-primary monitor end up
+  // with the correct scale, we reset mDefaultScale here so that it gets recomputed
+  // using the correct monitor now that we have a mWnd.
+  mDefaultScale = -1.0;
 
   if (mIsRTL) {
     DWORD dwAttribute = TRUE;    
