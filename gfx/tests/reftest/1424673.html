@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+body {
+  overflow:hidden;
+}
+
+.container {
+  background-color: lime;
+}
+
+.text_shadow {
+  color: #fff;
+  text-shadow: 0px 0px 10px #fff;
+  line-height: 0;
+  top: 300px;
+  width: 300px;
+  height: 300px;
+  font-size: 300px;
+}
+</style>
+<script>
+function shadow(){
+  document.write('<div class="text_shadow" style="position: absolute; top: 30px; left: 10px;">.</div>');
+  document.write('<div class="text_shadow" style="position: absolute; top: 30px; left: 10px;">.</div>');
+  document.write('<div class="text_shadow" style="position: absolute; top: 30px; left: 10px;">.</div>');
+}
+
+function run_Test(){
+  document.write('<div style="position: relative; top: 160px; left: 0px;"><script>shadow();<\/script></div>');
+  document.write('<div style="position: relative; top: 160px; left: -90px;"><script>shadow();<\/script></div>');
+  document.write('<div style="position: relative; top: 160px; left: 70px;"><script>shadow();<\/script></div>');
+  document.documentElement.classList.remove("reftest-wait");
+}
+
+run_Test();
+</script>
+<div class="container" style="width: 200px; height: 200px;">
+</html>
