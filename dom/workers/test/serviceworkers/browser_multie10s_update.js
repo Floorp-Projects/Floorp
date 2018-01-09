@@ -38,6 +38,11 @@ add_task(async function test_update() {
 
   info("Let's start the test...");
   let status = await ContentTask.spawn(browser1, sw, function(url) {
+    // Let the SW be served immediately once by triggering a relase immediately.
+    // We don't need to await this.  We do this from a frame script because
+    // it has fetch.
+    content.fetch(url + "?release");
+
     // Registration of the SW
     return content.navigator.serviceWorker.register(url)
 
@@ -56,21 +61,50 @@ add_task(async function test_update() {
 
     // Waiting for the result.
     .then(() => {
-      return new content.window.Promise(resolve => {
-        let results = [];
-        let bc = new content.window.BroadcastChannel('result');
-        bc.onmessage = function(e) {
-          results.push(e.data);
-          if (results.length != 2) {
-            return;
-          }
+      return new content.window.Promise(resolveResults => {
+        // Once both updates have been issued and a single update has failed, we
+        // can tell the .sjs to release a single copy of the SW script.
+        let updateCount = 0;
+        const uc = new content.window.BroadcastChannel('update');
+        // This promise tracks the updates tally.
+        const updatesIssued = new Promise(resolveUpdatesIssued => {
+          uc.onmessage = function(e) {
+            updateCount++;
+            console.log("got update() number", updateCount);
+            if (updateCount === 2) {
+              resolveUpdatesIssued();
+            }
+          };
+        });
 
-          resolve(results[0] + results[1]);
-        }
+        let results = [];
+        const rc = new content.window.BroadcastChannel('result');
+        // This promise resolves when an update has failed.
+        const oneFailed = new Promise(resolveOneFailed => {
+          rc.onmessage = function(e) {
+            console.log("got result", e.data);
+            results.push(e.data);
+            if (e.data === 1) {
+              resolveOneFailed();
+            }
+            if (results.length != 2) {
+              return;
+            }
+
+            resolveResults(results[0] + results[1]);
+          }
+        });
+
+        Promise.all([updatesIssued, oneFailed]).then(() => {
+          console.log("releasing update");
+          content.fetch(url + "?release").catch((ex) => {
+            console.error("problem releasing:", ex);
+          });
+        });
 
         // Let's inform the tabs.
-        bc = new content.window.BroadcastChannel('start');
-        bc.postMessage('go');
+        const sc = new content.window.BroadcastChannel('start');
+        sc.postMessage('go');
       });
     });
   });
@@ -83,12 +117,17 @@ add_task(async function test_update() {
     ok(false, "both failed. This is definitely wrong.");
   }
 
-  // let's clean up the registration
-  await ContentTask.spawn(browser1, null, function() {
+  // let's clean up the registration and get the fetch count.  The count
+  // should be 1 for the initial fetch and 1 for the update.
+  const count = await ContentTask.spawn(browser1, sw, async function(url) {
     // We stored the registration on the frame script's wrapper, hence directly
     // accesss content without using wrappedJSObject.
-    return content.registration.unregister();
+    await content.registration.unregister();
+    const { count } =
+      await content.fetch(url + "?get-and-clear-count").then(r => r.json());
+    return count;
   });
+  is(count, 2, "SW should have been fetched only twice");
 
   await BrowserTestUtils.removeTab(tab1);
   await BrowserTestUtils.removeTab(tab2);
