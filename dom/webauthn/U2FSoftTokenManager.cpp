@@ -625,7 +625,7 @@ U2FSoftTokenManager::IsRegistered(const nsTArray<uint8_t>& aKeyHandle,
 // *      attestation signature
 //
 RefPtr<U2FRegisterPromise>
-U2FSoftTokenManager::Register(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
+U2FSoftTokenManager::Register(const nsTArray<WebAuthnScopedCredential>& aCredentials,
                               const WebAuthnAuthenticatorSelection &aAuthenticatorSelection,
                               const nsTArray<uint8_t>& aApplication,
                               const nsTArray<uint8_t>& aChallenge,
@@ -652,9 +652,9 @@ U2FSoftTokenManager::Register(const nsTArray<WebAuthnScopedCredentialDescriptor>
   }
 
   // Optional exclusion list.
-  for (auto desc: aDescriptors) {
+  for (auto cred: aCredentials) {
     bool isRegistered = false;
-    nsresult rv = IsRegistered(desc.id(), aApplication, isRegistered);
+    nsresult rv = IsRegistered(cred.id(), aApplication, isRegistered);
     if (NS_FAILED(rv)) {
       return U2FRegisterPromise::CreateAndReject(rv, __func__);
     }
@@ -758,9 +758,10 @@ U2FSoftTokenManager::Register(const nsTArray<WebAuthnScopedCredentialDescriptor>
 //  *     Signature
 //
 RefPtr<U2FSignPromise>
-U2FSoftTokenManager::Sign(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
+U2FSoftTokenManager::Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials,
                           const nsTArray<uint8_t>& aApplication,
                           const nsTArray<uint8_t>& aChallenge,
+                          bool aRequireUserVerification,
                           uint32_t aTimeoutMS)
 {
   nsNSSShutDownPreventionLock locker;
@@ -768,12 +769,17 @@ U2FSoftTokenManager::Sign(const nsTArray<WebAuthnScopedCredentialDescriptor>& aD
     return U2FSignPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE, __func__);
   }
 
+  // The U2F softtoken doesn't support user verification.
+  if (aRequireUserVerification) {
+    return U2FSignPromise::CreateAndReject(NS_ERROR_DOM_NOT_ALLOWED_ERR, __func__);
+  }
+
   nsTArray<uint8_t> keyHandle;
-  for (auto desc: aDescriptors) {
+  for (auto cred: aCredentials) {
     bool isRegistered = false;
-    nsresult rv = IsRegistered(desc.id(), aApplication, isRegistered);
+    nsresult rv = IsRegistered(cred.id(), aApplication, isRegistered);
     if (NS_SUCCEEDED(rv) && isRegistered) {
-      keyHandle.Assign(desc.id());
+      keyHandle.Assign(cred.id());
       break;
     }
   }
