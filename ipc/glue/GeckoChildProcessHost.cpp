@@ -279,15 +279,17 @@ GeckoChildProcessHost::PrepareLaunch()
                           || !!PR_GetEnv("MOZ_SANDBOX_LOGGING");
 #endif
 #elif defined(XP_LINUX)
+#if defined(MOZ_CONTENT_SANDBOX)
   // Get and remember the path to the per-content-process tmpdir
   if (ShouldHaveDirectoryService()) {
     nsCOMPtr<nsIFile> contentTempDir;
     nsresult rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
-                                        getter_AddRefs(contentTempDir));
+                                         getter_AddRefs(contentTempDir));
     if (NS_SUCCEEDED(rv)) {
       contentTempDir->GetNativePath(mTmpDirName);
     }
   }
+#endif
 #endif
 }
 
