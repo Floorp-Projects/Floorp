@@ -50,25 +50,12 @@ public:
   ServoStyleContext* GetCachedInheritingAnonBoxStyle(nsAtom* aAnonBox) const
   {
     MOZ_ASSERT(nsCSSAnonBoxes::IsInheritingAnonBox(aAnonBox));
-
-    // This restriction is no longer necessary. We remove it in the next patch.
-    if (IsInheritingAnonBox()) {
-      return nullptr;
-    }
-
     return mInheritingAnonBoxStyles.Lookup(aAnonBox);
   }
 
-  void SetCachedInheritedAnonBoxStyle(nsAtom* aAnonBox,
-                                      ServoStyleContext* aStyle)
+  void SetCachedInheritedAnonBoxStyle(nsAtom* aAnonBox, ServoStyleContext* aStyle)
   {
     MOZ_ASSERT(!GetCachedInheritingAnonBoxStyle(aAnonBox));
-
-    // This restriction is no longer necessary. We remove it in the next patch.
-    if (IsInheritingAnonBox()) {
-      return;
-    }
-
     mInheritingAnonBoxStyles.Insert(aStyle);
   }
 
