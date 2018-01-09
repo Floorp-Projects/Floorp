@@ -977,7 +977,7 @@ XRE_ShutdownTestShell()
 void
 XRE_InstallX11ErrorHandler()
 {
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
   InstallGdkErrorHandler();
 #else
   InstallX11ErrorHandler();
