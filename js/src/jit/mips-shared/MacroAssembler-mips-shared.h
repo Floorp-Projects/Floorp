@@ -164,11 +164,11 @@ class MacroAssemblerMIPSShared : public Assembler
         ma_b(lhs, ScratchRegister, l, c, jumpKind);
     }
     template <typename T>
-    void ma_b(Register lhs, T rhs, wasm::TrapDesc target, Condition c,
+    void ma_b(Register lhs, T rhs, wasm::OldTrapDesc target, Condition c,
               JumpKind jumpKind = LongJump);
 
     void ma_b(Label* l, JumpKind jumpKind = LongJump);
-    void ma_b(wasm::TrapDesc target, JumpKind jumpKind = LongJump);
+    void ma_b(wasm::OldTrapDesc target, JumpKind jumpKind = LongJump);
 
     // fp instructions
     void ma_lis(FloatRegister dest, float value);

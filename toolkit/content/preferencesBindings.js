@@ -302,6 +302,7 @@ const Preferences = window.Preferences = (function() {
       // preferences, to pick up any edits a user may have made.
 
       if (Preferences.type == "child" && window.opener &&
+          window.opener.Preferences &&
           Services.scriptSecurityManager.isSystemPrincipal(window.opener.document.nodePrincipal)) {
         // Try to find the preference in the parent window.
         const preference = window.opener.Preferences.get(this.name);

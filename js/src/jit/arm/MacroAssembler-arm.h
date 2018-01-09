@@ -346,7 +346,7 @@ class MacroAssemblerARM : public Assembler
 
     // Branches when done from within arm-specific code.
     BufferOffset ma_b(Label* dest, Condition c = Always);
-    BufferOffset ma_b(wasm::TrapDesc target, Condition c = Always);
+    BufferOffset ma_b(wasm::OldTrapDesc target, Condition c = Always);
     void ma_b(void* target, Condition c = Always);
     void ma_bx(Register dest, Condition c = Always);
 
@@ -677,7 +677,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_ldr(addr, scratch, scratch2);
         ma_bx(scratch);
     }
-    void jump(wasm::TrapDesc target) {
+    void jump(wasm::OldTrapDesc target) {
         as_b(target);
     }
 

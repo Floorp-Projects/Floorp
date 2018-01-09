@@ -2441,6 +2441,14 @@
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "bug_numbers": [1390881]
   },
+  "NETWORK_HTTP_BACKUP_CONN_WON_1" : {
+    "record_in_processes": ["main"],
+    "expires_in_version": "61",
+    "kind": "boolean",
+    "description": "For connection where TFO has not be use, collect telemetry on whether the backup connection or the primary connection was faster.",
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "bug_numbers": [1426710]
+  },
   "TLS_EARLY_DATA_NEGOTIATED": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "62",

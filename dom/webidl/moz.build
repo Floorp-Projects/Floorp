@@ -97,9 +97,6 @@ with Files("DelayNode.webidl"):
 with Files("DynamicsCompressorNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
-with Files("DesktopNotification.webidl"):
-    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
-
 with Files("FakePluginTagInit.webidl"):
     BUG_COMPONENT = ("Core", "Plug-ins")
 
@@ -478,7 +475,6 @@ WEBIDL_FILES = [
     'DecoderDoctorNotification.webidl',
     'DedicatedWorkerGlobalScope.webidl',
     'DelayNode.webidl',
-    'DesktopNotification.webidl',
     'DeviceMotionEvent.webidl',
     'Directory.webidl',
     'Document.webidl',

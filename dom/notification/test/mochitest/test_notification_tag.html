@@ -91,12 +91,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=782211
       // Load two frames with the same origin that create notification with the same tag.
       // Both pages should generate notifications with the same name, and thus the second
       // notification should replace the first.
-      frames["sameDomain"].location.href = "http://test1.example.org:80/tests/dom/tests/mochitest/notification/create_notification.html";
-      frames["anotherSameDomain"].location.href = "http://test1.example.org:80/tests/dom/tests/mochitest/notification/create_notification.html";
-
+      frames["sameDomain"].location.href = "http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
+      frames["anotherSameDomain"].location.href = "http://test1.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
       // Load a frame with a different origin that creates a notification with the same tag.
       // The notification name should be different and thus no notifications should be replaced.
-      frames["crossDomain"].location.href = "http://test2.example.org:80/tests/dom/tests/mochitest/notification/create_notification.html";
+      frames["crossDomain"].location.href = "http://test2.example.org:80/tests/dom/notification/test/mochitest/create_notification.html";
     }
 
     SpecialPowers.pushPrefEnv({'set': [["notification.prompt.testing", true],

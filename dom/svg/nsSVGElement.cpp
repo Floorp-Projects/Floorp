@@ -2385,12 +2385,12 @@ nsSVGElement::DidAnimateTransformList(int32_t aModType)
                             transformAttr,
                             aModType);
     // When script changes the 'transform' attribute, Element::SetAttrAndNotify
-    // will call nsNodeUtills::AttributeChanged, under which
+    // will call nsNodeUtils::AttributeChanged, under which
     // SVGTransformableElement::GetAttributeChangeHint will be called and an
     // appropriate change event posted to update our frame's overflow rects.
     // The SetAttrAndNotify doesn't happen for transform changes caused by
     // 'animateTransform' though (and sending out the mutation events that
-    // nsNodeUtills::AttributeChanged dispatches would be inappropriate
+    // nsNodeUtils::AttributeChanged dispatches would be inappropriate
     // anyway), so we need to post the change event ourself.
     nsChangeHint changeHint = GetAttributeChangeHint(transformAttr, aModType);
     if (changeHint) {

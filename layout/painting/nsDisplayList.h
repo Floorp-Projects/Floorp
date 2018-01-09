@@ -1458,6 +1458,23 @@ public:
     nsRect mVisibleRect;
     nsRect mDirtyRect;
 
+    static bool
+    AnyContentAncestorModified(nsIFrame* aFrame,
+                               nsIFrame* aStopAtFrame = nullptr)
+    {
+      for (nsIFrame* f = aFrame; f;
+           f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
+        if (f->IsFrameModified()) {
+          return true;
+        }
+
+        if (aStopAtFrame && f == aStopAtFrame) {
+          break;
+        }
+      }
+
+      return false;
+    }
 
     static nsRect ComputeVisibleRectForFrame(nsDisplayListBuilder* aBuilder,
                                              nsIFrame* aFrame,
@@ -1503,6 +1520,14 @@ public:
 
       visible.IntersectRect(visible, overflowRect);
       aOutDirtyRect->IntersectRect(*aOutDirtyRect, overflowRect);
+
+      // If the nearest stacking context for the modified frame is an ancestor of
+      // of it, and if the stacking context is a descendant of the containing block
+      // of this OOF frame, we override the dirty rect to ensure that the frame will
+      // get marked.
+      if (AnyContentAncestorModified(aFrame, aFrame->GetParent())) {
+        *aOutDirtyRect = visible;
+      }
       return visible;
     }
 
@@ -1525,8 +1550,7 @@ public:
 
   static OutOfFlowDisplayData* GetOutOfFlowData(nsIFrame* aFrame)
   {
-    if (!(aFrame->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) ||
-        !aFrame->GetParent()) {
+    if (!aFrame->GetParent()) {
       return nullptr;
     }
     return aFrame->GetParent()->GetProperty(OutOfFlowDisplayDataProperty());

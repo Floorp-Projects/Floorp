@@ -100,7 +100,7 @@ U2FHIDTokenManager::~U2FHIDTokenManager()
 // *      attestation signature
 //
 RefPtr<U2FRegisterPromise>
-U2FHIDTokenManager::Register(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
+U2FHIDTokenManager::Register(const nsTArray<WebAuthnScopedCredential>& aCredentials,
                              const WebAuthnAuthenticatorSelection &aAuthenticatorSelection,
                              const nsTArray<uint8_t>& aApplication,
                              const nsTArray<uint8_t>& aChallenge,
@@ -130,7 +130,7 @@ U2FHIDTokenManager::Register(const nsTArray<WebAuthnScopedCredentialDescriptor>&
                                          aChallenge.Length(),
                                          aApplication.Elements(),
                                          aApplication.Length(),
-                                         U2FKeyHandles(aDescriptors).Get());
+                                         U2FKeyHandles(aCredentials).Get());
 
   if (mTransactionId == 0) {
     return U2FRegisterPromise::CreateAndReject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
@@ -156,22 +156,31 @@ U2FHIDTokenManager::Register(const nsTArray<WebAuthnScopedCredentialDescriptor>&
 //  *     Signature
 //
 RefPtr<U2FSignPromise>
-U2FHIDTokenManager::Sign(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
+U2FHIDTokenManager::Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials,
                          const nsTArray<uint8_t>& aApplication,
                          const nsTArray<uint8_t>& aChallenge,
+                         bool aRequireUserVerification,
                          uint32_t aTimeoutMS)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == gPBackgroundThread);
 
+  uint64_t signFlags = 0;
+
+  // Set flags for credential requests.
+  if (aRequireUserVerification) {
+    signFlags |= U2F_FLAG_REQUIRE_USER_VERIFICATION;
+  }
+
   ClearPromises();
   mTransactionId = rust_u2f_mgr_sign(mU2FManager,
+                                     signFlags,
                                      (uint64_t)aTimeoutMS,
                                      u2f_sign_callback,
                                      aChallenge.Elements(),
                                      aChallenge.Length(),
                                      aApplication.Elements(),
                                      aApplication.Length(),
-                                     U2FKeyHandles(aDescriptors).Get());
+                                     U2FKeyHandles(aCredentials).Get());
   if (mTransactionId == 0) {
     return U2FSignPromise::CreateAndReject(NS_ERROR_DOM_UNKNOWN_ERR, __func__);
   }

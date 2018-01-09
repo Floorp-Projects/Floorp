@@ -819,7 +819,16 @@ WindowHelper.prototype = {
       });
     }
     Services.ww.registerNotification(windowObserver);
-    Services.ww.openWindow(null,
+
+    let browserWin = null;
+    if (Services.appinfo.OS !== "Darwin") {
+      // Retrieve the browser window so we can specify it as the parent
+      // of the dialog to simulate the way the user opens the dialog
+      // on Windows and Linux.
+      browserWin = Services.wm.getMostRecentWindow("navigator:browser");
+    }
+
+    Services.ww.openWindow(browserWin,
                            "chrome://browser/content/sanitize.xul",
                            "SanitizeDialog",
                            "chrome,titlebar,dialog,centerscreen,modal",

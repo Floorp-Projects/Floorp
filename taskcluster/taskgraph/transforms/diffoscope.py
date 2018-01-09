@@ -53,9 +53,10 @@ diff_description_schema = Schema({
 @transforms.add
 def validate(config, tasks):
     for task in tasks:
-        yield validate_schema(
+        validate_schema(
             diff_description_schema, task,
             "In diff task {!r}:".format(task.get('name', 'unknown')))
+        yield task
 
 
 @transforms.add
