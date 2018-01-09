@@ -40,6 +40,13 @@ function setupActions() {
  * Prepare the store for use in testing.
  */
 function setupStore(input = [], hud, options, wrappedActions) {
+  if (!hud) {
+    hud = {
+      proxy: {
+        releaseActor: () => {}
+      }
+    };
+  }
   const store = configureStore(hud, options);
 
   // Add the messages from the input commands to the store.

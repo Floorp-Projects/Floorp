@@ -271,7 +271,11 @@ function reactGetListeners(node, boolOnEventFound) {
   function getProps() {
     for (let key of Object.keys(node)) {
       if (key.startsWith("__reactInternalInstance$")) {
-        return node[key]._currentElement.props;
+        let value = node[key];
+        if (value.memoizedProps) {
+          return value.memoizedProps; // React 16
+        }
+        return value._currentElement.props; // React 15
       }
     }
     return null;
