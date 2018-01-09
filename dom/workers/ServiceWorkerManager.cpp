@@ -2347,7 +2347,8 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
   // Verify there are no controlled clients for the purged registration.
   for (auto iter = swm->mControlledClients.Iter(); !iter.Done(); iter.Next()) {
     auto& reg = iter.UserData()->mRegistrationInfo;
-    if (reg->mScope.Equals(aRegistration->mScope)) {
+    if (reg->mScope.Equals(aRegistration->mScope) &&
+        reg->mPrincipal->Equals(aRegistration->mPrincipal)) {
       MOZ_DIAGNOSTIC_ASSERT(false,
                             "controlled client when removing registration");
       iter.Remove();
@@ -2360,7 +2361,8 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
   // set when the registration is destroyed.
   for (auto iter = swm->mControlledDocuments.Iter(); !iter.Done(); iter.Next()) {
     ServiceWorkerRegistrationInfo* reg = iter.UserData();
-    if (reg->mScope.Equals(aRegistration->mScope)) {
+    if (reg->mScope.Equals(aRegistration->mScope) &&
+        reg->mPrincipal->Equals(aRegistration->mPrincipal)) {
       iter.Remove();
       break;
     }
