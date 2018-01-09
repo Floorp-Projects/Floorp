@@ -105,7 +105,6 @@ element.Strategy = {
 element.Store = class {
   constructor() {
     this.els = {};
-    this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   }
 
   clear() {
