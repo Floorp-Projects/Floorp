@@ -1655,6 +1655,14 @@ nsDocumentViewer::Destroy()
 {
   NS_ASSERTION(mDocument, "No document in Destroy()!");
 
+  // Don't let the document get unloaded while we are printing.
+  // this could happen if we hit the back button during printing.
+  // We also keep the viewer from being cached in session history, since
+  // we require all documents there to be sanitized.
+  if (mDestroyBlockedCount != 0) {
+    return NS_OK;
+  }
+
 #ifdef NS_PRINTING
   // Here is where we check to see if the document was still being prepared
   // for printing when it was asked to be destroy from someone externally
@@ -1671,14 +1679,6 @@ nsDocumentViewer::Destroy()
   // Dispatch the 'afterprint' event now, if pending:
   mAutoBeforeAndAfterPrint = nullptr;
 #endif
-
-  // Don't let the document get unloaded while we are printing.
-  // this could happen if we hit the back button during printing.
-  // We also keep the viewer from being cached in session history, since
-  // we require all documents there to be sanitized.
-  if (mDestroyBlockedCount != 0) {
-    return NS_OK;
-  }
 
   // If we were told to put ourselves into session history instead of destroy
   // the presentation, do that now.
