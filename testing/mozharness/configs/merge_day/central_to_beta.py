@@ -29,17 +29,6 @@ config = {
                   "browser/config/mozconfigs/macosx64/l10n-mozconfig"]
     ] + [
         # File, from, to
-        (f, "ac_add_options --enable-profiling", "") for f in
-        ["mobile/android/config/mozconfigs/android-api-16/nightly",
-         "mobile/android/config/mozconfigs/android-x86/nightly",
-         "mobile/android/config/mozconfigs/android-aarch64/nightly",
-         "browser/config/mozconfigs/linux32/nightly",
-         "browser/config/mozconfigs/linux64/nightly",
-         "browser/config/mozconfigs/macosx64/nightly",
-         "browser/config/mozconfigs/win32/nightly",
-         "browser/config/mozconfigs/win64/nightly"]
-    ] + [
-        # File, from, to
         ("browser/confvars.sh",
          "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-central",
          "ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-beta,firefox-mozilla-release"),
