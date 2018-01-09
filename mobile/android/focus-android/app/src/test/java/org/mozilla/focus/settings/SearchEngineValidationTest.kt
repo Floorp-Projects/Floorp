@@ -24,9 +24,9 @@ class SearchEngineValidationTest {
     }
 
     @Test
-    fun `URL using HTTP redirect is valid`() = withMockWebServer(responseWithStatus(301)) {
-        // Currently we accept redirects as valid. We might want to follow the redirect (Issue #1976)
-        assertTrue(isValidSearchQueryURL(it.rootUrl()))
+    fun `URL using HTTP redirect is invalid`() = withMockWebServer(responseWithStatus(301)) {
+        // We now follow redirects(Issue #1976). This test now asserts false.
+        assertFalse(isValidSearchQueryURL(it.rootUrl()))
     }
 
     @Test
