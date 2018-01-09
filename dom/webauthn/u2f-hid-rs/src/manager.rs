@@ -17,14 +17,15 @@ enum QueueAction {
         timeout: u64,
         challenge: Vec<u8>,
         application: Vec<u8>,
-        key_handles: Vec<Vec<u8>>,
+        key_handles: Vec<::KeyHandle>,
         callback: OnceCallback<Vec<u8>>,
     },
     Sign {
+        flags: ::SignFlags,
         timeout: u64,
         challenge: Vec<u8>,
         application: Vec<u8>,
-        key_handles: Vec<Vec<u8>>,
+        key_handles: Vec<::KeyHandle>,
         callback: OnceCallback<(Vec<u8>, Vec<u8>)>,
     },
     Cancel,
@@ -64,6 +65,7 @@ impl U2FManager {
                         );
                     }
                     Ok(QueueAction::Sign {
+                           flags,
                            timeout,
                            challenge,
                            application,
@@ -71,7 +73,14 @@ impl U2FManager {
                            callback,
                        }) => {
                         // This must not block, otherwise we can't cancel.
-                        sm.sign(timeout, challenge, application, key_handles, callback);
+                        sm.sign(
+                            flags,
+                            timeout,
+                            challenge,
+                            application,
+                            key_handles,
+                            callback,
+                        );
                     }
                     Ok(QueueAction::Cancel) => {
                         // Cancelling must block so that we don't start a new
@@ -101,7 +110,7 @@ impl U2FManager {
         timeout: u64,
         challenge: Vec<u8>,
         application: Vec<u8>,
-        key_handles: Vec<Vec<u8>>,
+        key_handles: Vec<::KeyHandle>,
         callback: F,
     ) -> io::Result<()>
     where
@@ -116,7 +125,7 @@ impl U2FManager {
         }
 
         for key_handle in &key_handles {
-            if key_handle.len() > 256 {
+            if key_handle.credential.len() > 256 {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidInput,
                     "Key handle too large",
@@ -138,10 +147,11 @@ impl U2FManager {
 
     pub fn sign<F>(
         &self,
+        flags: ::SignFlags,
         timeout: u64,
         challenge: Vec<u8>,
         application: Vec<u8>,
-        key_handles: Vec<Vec<u8>>,
+        key_handles: Vec<::KeyHandle>,
         callback: F,
     ) -> io::Result<()>
     where
@@ -163,7 +173,7 @@ impl U2FManager {
         }
 
         for key_handle in &key_handles {
-            if key_handle.len() > 256 {
+            if key_handle.credential.len() > 256 {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidInput,
                     "Key handle too large",
@@ -173,6 +183,7 @@ impl U2FManager {
 
         let callback = OnceCallback::new(callback);
         let action = QueueAction::Sign {
+            flags,
             timeout,
             challenge,
             application,

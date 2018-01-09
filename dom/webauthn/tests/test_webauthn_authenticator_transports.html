@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>W3C Web Authentication - Authenticator Transports</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+  <h1>W3C Web Authentication - Authenticator Transports</h1>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1406467">Mozilla Bug 1406467</a>
+
+  <script class="testbody" type="text/javascript">
+    "use strict";
+
+    function arrivingHereIsGood(aResult) {
+      ok(true, "Good result! Received a: " + aResult);
+    }
+
+    function arrivingHereIsBad(aResult) {
+      ok(false, "Bad result! Received a: " + aResult);
+    }
+
+    function expectNotAllowedError(aResult) {
+      ok(aResult.toString().startsWith("NotAllowedError"), "Expecting a NotAllowedError, got " + aResult);
+    }
+
+    // Store the credential of the first successful make credential
+    // operation so we can use it to get assertions later.
+    let gCredential;
+
+    add_task(() => {
+      // Enable the softtoken.
+      return SpecialPowers.pushPrefEnv({"set": [
+        ["security.webauth.webauthn", true],
+        ["security.webauth.webauthn_enable_softtoken", true],
+        ["security.webauth.webauthn_enable_usbtoken", false],
+      ]});
+    });
+
+    // Start a new MakeCredential() request.
+    function requestMakeCredential(excludeCredentials) {
+      let publicKey = {
+        rp: {id: document.domain, name: "none", icon: "none"},
+        user: {id: new Uint8Array(), name: "none", icon: "none", displayName: "none"},
+        challenge: crypto.getRandomValues(new Uint8Array(16)),
+        timeout: 5000, // the minimum timeout is actually 15 seconds
+        pubKeyCredParams: [{type: "public-key", alg: cose_alg_ECDSA_w_SHA256}],
+        excludeCredentials
+      };
+
+      return navigator.credentials.create({publicKey});
+    }
+
+    // Start a new GetAssertion() request.
+    function requestGetAssertion(allowCredentials) {
+      let publicKey = {
+        challenge: crypto.getRandomValues(new Uint8Array(16)),
+        timeout: 5000, // the minimum timeout is actually 15 seconds
+        rpId: document.domain,
+        allowCredentials
+      };
+
+      return navigator.credentials.get({publicKey});
+    }
+
+    // Test make credential behavior.
+    add_task(async () => {
+      // Make a credential.
+      await requestMakeCredential([])
+         // Save the credential for later.
+        .then(res => gCredential = res.rawId)
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+
+      // Pass a random credential to exclude.
+      await requestMakeCredential([{
+        type: "public-key",
+        id: crypto.getRandomValues(new Uint8Array(16)),
+        transports: ["usb"],
+      }]).then(arrivingHereIsGood)
+         .catch(arrivingHereIsBad);
+
+      // Pass gCredential with transport=usb.
+      await requestMakeCredential([{
+        type: "public-key",
+        id: gCredential,
+        transports: ["usb"],
+      }]).then(arrivingHereIsBad)
+         .catch(expectNotAllowedError);
+
+      // Pass gCredential with transport=nfc.
+      // The softoken pretends to support all transports.
+      await requestMakeCredential([{
+        type: "public-key",
+        id: gCredential,
+        transports: ["nfc"],
+      }]).then(arrivingHereIsBad)
+         .catch(expectNotAllowedError);
+
+      // Pass gCredential with an empty transports list.
+      await requestMakeCredential([{
+        type: "public-key",
+        id: gCredential,
+        transports: [],
+      }]).then(arrivingHereIsBad)
+         .catch(expectNotAllowedError);
+    });
+
+    // Test get assertion behavior.
+    add_task(async () => {
+      // Request an assertion for gCredential.
+      await requestGetAssertion([{
+        type: "public-key",
+        id: gCredential,
+        transports: ["usb"],
+      }]).then(arrivingHereIsGood)
+         .catch(arrivingHereIsBad);
+
+      // Request an assertion for a random credential.
+      await requestGetAssertion([{
+        type: "public-key",
+        id: crypto.getRandomValues(new Uint8Array(16)),
+        transports: ["usb"],
+      }]).then(arrivingHereIsBad)
+         .catch(expectNotAllowedError);
+
+      // Request an assertion for gCredential with transport=nfc.
+      // The softoken pretends to support all transports.
+      await requestGetAssertion([{
+        type: "public-key",
+        id: gCredential,
+        transports: ["nfc"],
+      }]).then(arrivingHereIsGood)
+         .catch(arrivingHereIsBad);
+
+      // Request an assertion for gCredential with an empty transports list.
+      await requestGetAssertion([{
+        type: "public-key",
+        id: gCredential,
+        transports: [],
+      }]).then(arrivingHereIsGood)
+         .catch(arrivingHereIsBad);
+    });
+  </script>
+
+</body>
+</html>
