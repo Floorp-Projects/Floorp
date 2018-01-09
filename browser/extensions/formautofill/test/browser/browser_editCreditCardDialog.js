@@ -62,6 +62,41 @@ add_task(async function test_saveCreditCard() {
   ok(creditCards[0]["cc-number-encrypted"], "cc-number-encrypted exists");
 });
 
+add_task(async function test_saveCreditCardWithMaxYear() {
+  await new Promise(resolve => {
+    let win = window.openDialog(EDIT_CREDIT_CARD_DIALOG_URL);
+    win.addEventListener("load", () => {
+      win.addEventListener("unload", () => {
+        ok(true, "Edit credit card dialog is closed");
+        resolve();
+      }, {once: true});
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey(TEST_CREDIT_CARD_2["cc-number"], {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey(TEST_CREDIT_CARD_2["cc-name"], {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey(TEST_CREDIT_CARD_2["cc-exp-month"].toString(), {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey(TEST_CREDIT_CARD_2["cc-exp-year"].toString(), {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      EventUtils.synthesizeKey("VK_TAB", {}, win);
+      info("saving credit card");
+      EventUtils.synthesizeKey("VK_RETURN", {}, win);
+    }, {once: true});
+  });
+  let creditCards = await getCreditCards();
+
+  is(creditCards.length, 2, "Two credit card is in storage");
+  for (let [fieldName, fieldValue] of Object.entries(TEST_CREDIT_CARD_2)) {
+    if (fieldName === "cc-number") {
+      fieldValue = "*".repeat(fieldValue.length - 4) + fieldValue.substr(-4);
+    }
+    is(creditCards[1][fieldName], fieldValue, "check " + fieldName);
+  }
+  ok(creditCards[1]["cc-number-encrypted"], "cc-number-encrypted exists");
+  await removeCreditCards([creditCards[1].guid]);
+});
+
 add_task(async function test_editCreditCard() {
   let creditCards = await getCreditCards();
   is(creditCards.length, 1, "only one credit card is in storage");
@@ -92,7 +127,7 @@ add_task(async function test_editCreditCard() {
 add_task(async function test_addInvalidCreditCard() {
   await new Promise(resolve => {
     let win = window.openDialog(EDIT_CREDIT_CARD_DIALOG_URL);
-    win.addEventListener("FormReady", () => {
+    win.addEventListener("load", () => {
       const unloadHandler = () => ok(false, "Edit credit card dialog shouldn't be closed");
       win.addEventListener("unload", unloadHandler);
 
