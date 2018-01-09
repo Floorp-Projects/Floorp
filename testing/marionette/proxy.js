@@ -21,8 +21,11 @@ this.EXPORTED_SYMBOLS = ["proxy"];
 
 XPCOMUtils.defineLazyServiceGetter(
     this, "uuidgen", "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
+XPCOMUtils.defineLazyServiceGetter(
+    this, "globalMessageManager", "@mozilla.org/globalmessagemanager;1",
+    "nsIMessageBroadcaster");
 
-const logger = Log.repository.getLogger("Marionette");
+const log = Log.repository.getLogger("Marionette");
 
 // Proxy handler that traps requests to get a property.  Will prioritise
 // properties that exist on the object's own prototype.
@@ -50,14 +53,13 @@ this.proxy = {};
  * passed literally.  The latter specialisation is temporary to achieve
  * backwards compatibility with listener.js.
  *
- * @param {function(): (nsIMessageSender|nsIMessageBroadcaster)} mmFn
- *     Closure function returning the current message manager.
  * @param {function(string, Object, number)} sendAsyncFn
  *     Callback for sending async messages.
+ * @param {function(): browser.Context} browserFn
+ *     Closure that returns the current browsing context.
  */
-proxy.toListener = function(mmFn, sendAsyncFn, browserFn) {
-  let sender = new proxy.AsyncMessageChannel(
-      mmFn, sendAsyncFn, browserFn);
+proxy.toListener = function(sendAsyncFn, browserFn) {
+  let sender = new proxy.AsyncMessageChannel(sendAsyncFn, browserFn);
   return new Proxy(sender, ownPriorityGetterTrap);
 };
 
@@ -71,8 +73,7 @@ proxy.toListener = function(mmFn, sendAsyncFn, browserFn) {
  * <code>.reply(...)</code>.
  */
 proxy.AsyncMessageChannel = class {
-  constructor(mmFn, sendAsyncFn, browserFn) {
-    this.mmFn_ = mmFn;
+  constructor(sendAsyncFn, browserFn) {
     this.sendAsync = sendAsyncFn;
     this.browserFn_ = browserFn;
 
@@ -86,10 +87,6 @@ proxy.AsyncMessageChannel = class {
 
   get browser() {
     return this.browserFn_();
-  }
-
-  get mm() {
-    return this.mmFn_();
   }
 
   /**
@@ -150,7 +147,7 @@ proxy.AsyncMessageChannel = class {
       // The currently selected tab or window has been closed. No clean-up
       // is necessary to do because all loaded listeners are gone.
       this.closeHandler = ({type, target}) => {
-        logger.debug(`Received DOM event ${type} for ${target}`);
+        log.debug(`Received DOM event ${type} for ${target}`);
 
         switch (type) {
           case "TabClose":
@@ -165,7 +162,7 @@ proxy.AsyncMessageChannel = class {
       // the active command has to be aborted. Therefore remove all handlers,
       // and cancel any ongoing requests in the listener.
       this.dialogueObserver_ = (subject, topic) => {
-        logger.debug(`Received observer notification ${topic}`);
+        log.debug(`Received observer notification ${topic}`);
 
         this.removeAllListeners_();
         // TODO(ato): It's not ideal to have listener specific behaviour here:
@@ -294,7 +291,7 @@ proxy.AsyncMessageChannel = class {
       callback(msg);
     };
 
-    this.mm.addMessageListener(path, autoRemover);
+    globalMessageManager.addMessageListener(path, autoRemover);
     this.listeners_.set(path, autoRemover);
   }
 
@@ -304,7 +301,7 @@ proxy.AsyncMessageChannel = class {
     }
 
     let l = this.listeners_.get(path);
-    this.mm.removeMessageListener(path, l[1]);
+    globalMessageManager.removeMessageListener(path, l[1]);
     return this.listeners_.delete(path);
   }
 
