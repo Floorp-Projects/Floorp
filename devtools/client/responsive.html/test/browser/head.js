@@ -90,17 +90,17 @@ var closeRDM = async function (tab, options) {
  *
  * Example usage:
  *
- *   addRDMTask(TEST_URL, function*({ ui, manager }) {
+ *   addRDMTask(TEST_URL, async function ({ ui, manager }) {
  *     // Your tests go here...
  *   });
  */
-function addRDMTask(url, generator) {
+function addRDMTask(url, task) {
   add_task(async function () {
     const tab = await addTab(url);
     const results = await openRDM(tab);
 
     try {
-      await generator(results);
+      await task(results);
     } catch (err) {
       ok(false, "Got an error: " + DevToolsUtils.safeErrorString(err));
     }
@@ -174,6 +174,12 @@ var setViewportSize = async function (ui, manager, width, height) {
     await resized;
   }
 };
+
+function getViewportDevicePixelRatio(ui) {
+  return ContentTask.spawn(ui.getViewportBrowser(), {}, async function () {
+    return content.devicePixelRatio;
+  });
+}
 
 function getElRect(selector, win) {
   let el = win.document.querySelector(selector);

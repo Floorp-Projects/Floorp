@@ -18,7 +18,7 @@ add_task(async function () {
   });
 
   // This flag is set at the end of `ResponsiveUI.destroy`.  If it is true
-  // without yielding on `closeRDM` above, then we must have closed
+  // without waiting for `closeRDM` above, then we must have closed
   // synchronously.
   is(ui.destroyed, true, "RDM closed synchronously");
 
@@ -35,7 +35,7 @@ add_task(async function () {
   await removeTab(tab);
 
   // This flag is set at the end of `ResponsiveUI.destroy`.  If it is true without
-  // yielding on `closeRDM` itself and only removing the tab, then we must have closed
+  // waiting for `closeRDM` itself and only removing the tab, then we must have closed
   // synchronously in response to tab closing.
   is(ui.destroyed, true, "RDM closed synchronously");
 

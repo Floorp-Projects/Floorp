@@ -9,7 +9,7 @@ const { addViewport, changePixelRatio } =
   require("devtools/client/responsive.html/actions/viewports");
 const NEW_PIXEL_RATIO = 5.5;
 
-add_task(function* () {
+add_task(async function () {
   let store = Store();
   const { getState, dispatch } = store;
 

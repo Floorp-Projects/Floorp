@@ -6,7 +6,6 @@
 
 const { Ci, Cu } = require("chrome");
 const Services = require("Services");
-const { Task } = require("devtools/shared/task");
 const { BrowserElementWebNavigation } = require("./web-navigation");
 const { getStack } = require("devtools/shared/platform/stack");
 
