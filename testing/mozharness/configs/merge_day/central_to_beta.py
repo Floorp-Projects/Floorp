@@ -17,7 +17,7 @@ config = {
         for d in ["mobile/android/config/mozconfigs/android-api-16/",
                   "mobile/android/config/mozconfigs/android-x86/",
                   "mobile/android/config/mozconfigs/android-aarch64/"]
-        for f in ["debug", "nightly", "l10n-nightly"]
+        for f in ["debug", "nightly"]
     ] + [
         # File, from, to
         (f, "ac_add_options --with-branding=browser/branding/nightly",
