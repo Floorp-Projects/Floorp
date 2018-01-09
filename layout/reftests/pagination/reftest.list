@@ -74,7 +74,7 @@ fuzzy-if(skiaContent,1,23) == resize-reflow-001.html resize-reflow-001.ref.html
 # == table-caption-splitaftercaption-10.html blank.html # bug 672654
 # == table-caption-splitaftercaption-11.html blank.html # bug 672654
 == column-balancing-break-inside-avoid-2.html column-balancing-break-inside-avoid-2-ref.html
-== combobox-page-break-inside.html combobox-page-break-inside-ref.html
+fuzzy-if(Android,1,2) == combobox-page-break-inside.html combobox-page-break-inside-ref.html
 == table-nested-1308876-1.xhtml table-nested-1308876-1-ref.html
 
 # Bugs
