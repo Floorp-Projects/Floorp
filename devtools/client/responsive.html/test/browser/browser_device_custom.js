@@ -26,12 +26,12 @@ const unicodeDevice = {
 const TEST_URL = "data:text/html;charset=utf-8,";
 const Types = require("devtools/client/responsive.html/types");
 
-addRDMTask(TEST_URL, function* ({ ui }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
-  yield waitUntilState(store, state => state.viewports.length == 1
+  await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.deviceListState.LOADED);
 
   let deviceSelector = document.querySelector(".viewport-device-selector");
@@ -52,7 +52,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   });
 
   info("Fill out device adder form and save");
-  yield addDeviceInModal(ui, device);
+  await addDeviceInModal(ui, device);
 
   info("Verify device defaults to enabled in modal");
   let deviceCb = [...document.querySelectorAll(".device-input-checkbox")].find(cb => {
@@ -67,19 +67,19 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   ok(selectorOption, "Custom device option added to device selector");
 });
 
-addRDMTask(TEST_URL, function* ({ ui }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
-  yield waitUntilState(store, state => state.viewports.length == 1
+  await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.deviceListState.LOADED);
 
   let deviceSelector = document.querySelector(".viewport-device-selector");
   let submitButton = document.querySelector("#device-submit-button");
 
   info("Select existing device from the selector");
-  yield selectDevice(ui, "Test Device");
+  await selectDevice(ui, "Test Device");
 
   openDeviceModal(ui);
 
@@ -97,25 +97,25 @@ addRDMTask(TEST_URL, function* ({ ui }) {
     once(ui, "device-association-removed")
   ]);
   deviceRemoveButton.click();
-  yield removed;
+  await removed;
   submitButton.click();
 
   info("Ensure custom device was removed from device selector");
-  yield waitUntilState(store, state => state.viewports[0].device == "");
+  await waitUntilState(store, state => state.viewports[0].device == "");
   is(deviceSelector.value, "", "Device selector reset to no device");
   let selectorOption = [...deviceSelector.options].find(opt => opt.value == device.name);
   ok(!selectorOption, "Custom device option removed from device selector");
 
   info("Ensure device properties like UA have been reset");
-  yield testUserAgent(ui, navigator.userAgent);
+  await testUserAgent(ui, navigator.userAgent);
 });
 
-addRDMTask(TEST_URL, function* ({ ui }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
-  yield waitUntilState(store, state => state.viewports.length == 1
+  await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.deviceListState.LOADED);
 
   let deviceSelector = document.querySelector(".viewport-device-selector");
@@ -128,7 +128,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   adderShow.click();
 
   info("Fill out device adder form by setting details to unicode device and save");
-  yield addDeviceInModal(ui, unicodeDevice);
+  await addDeviceInModal(ui, unicodeDevice);
 
   info("Verify unicode device defaults to enabled in modal");
   let deviceCb = [...document.querySelectorAll(".device-input-checkbox")].find(cb => {
@@ -144,12 +144,12 @@ addRDMTask(TEST_URL, function* ({ ui }) {
   ok(selectorOption, "Custom unicode device option added to device selector");
 });
 
-addRDMTask(TEST_URL, function* ({ ui }) {
+addRDMTask(TEST_URL, async function ({ ui }) {
   let { toolWindow } = ui;
   let { store, document } = toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
-  yield waitUntilState(store, state => state.viewports.length == 1
+  await waitUntilState(store, state => state.viewports.length == 1
     && state.devices.listState == Types.deviceListState.LOADED);
 
   let deviceSelector = document.querySelector(".viewport-device-selector");

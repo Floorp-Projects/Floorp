@@ -10,18 +10,18 @@ const TEST_URL = `${URL_ROOT}doc_page_state.html`;
 const DUMMY_2_URL = "http://example.com/browser/";
 const DUMMY_3_URL = "http://example.com/browser/devtools/";
 
-add_task(function* () {
+add_task(async function () {
   // Load up a sequence of pages:
   // 0. DUMMY_1_URL
   // 1. TEST_URL
   // 2. DUMMY_2_URL
-  let tab = yield addTab(DUMMY_1_URL);
+  let tab = await addTab(DUMMY_1_URL);
   let browser = tab.linkedBrowser;
-  yield load(browser, TEST_URL);
-  yield load(browser, DUMMY_2_URL);
+  await load(browser, TEST_URL);
+  await load(browser, DUMMY_2_URL);
 
   // Check session history state
-  let history = yield getSessionHistory(browser);
+  let history = await getSessionHistory(browser);
   is(history.index - 1, 2, "At page 2 in history");
   is(history.entries.length, 3, "3 pages in history");
   is(history.entries[0].url, DUMMY_1_URL, "Page 0 URL matches");
@@ -29,32 +29,32 @@ add_task(function* () {
   is(history.entries[2].url, DUMMY_2_URL, "Page 2 URL matches");
 
   // Go back one so we're at the test page
-  yield back(browser);
+  await back(browser);
 
   // Check session history state
-  history = yield getSessionHistory(browser);
+  history = await getSessionHistory(browser);
   is(history.index - 1, 1, "At page 1 in history");
   is(history.entries.length, 3, "3 pages in history");
   is(history.entries[0].url, DUMMY_1_URL, "Page 0 URL matches");
   is(history.entries[1].url, TEST_URL, "Page 1 URL matches");
   is(history.entries[2].url, DUMMY_2_URL, "Page 2 URL matches");
 
-  yield openRDM(tab);
+  await openRDM(tab);
 
   ok(browser.webNavigation.canGoBack, "Going back is allowed");
   ok(browser.webNavigation.canGoForward, "Going forward is allowed");
   is(browser.documentURI.spec, TEST_URL, "documentURI matches page 1");
   is(browser.contentTitle, "Page State Test", "contentTitle matches page 1");
 
-  yield forward(browser);
+  await forward(browser);
 
   ok(browser.webNavigation.canGoBack, "Going back is allowed");
   ok(!browser.webNavigation.canGoForward, "Going forward is not allowed");
   is(browser.documentURI.spec, DUMMY_2_URL, "documentURI matches page 2");
   is(browser.contentTitle, "mochitest index /browser/", "contentTitle matches page 2");
 
-  yield back(browser);
-  yield back(browser);
+  await back(browser);
+  await back(browser);
 
   ok(!browser.webNavigation.canGoBack, "Going back is not allowed");
   ok(browser.webNavigation.canGoForward, "Going forward is allowed");
@@ -76,8 +76,8 @@ add_task(function* () {
     };
     gBrowser.addProgressListener(progressListener);
   });
-  yield load(browser, DUMMY_3_URL);
-  yield receivedStatusChanges;
+  await load(browser, DUMMY_3_URL);
+  await receivedStatusChanges;
 
   ok(browser.webNavigation.canGoBack, "Going back is allowed");
   ok(!browser.webNavigation.canGoForward, "Going forward is not allowed");
@@ -85,14 +85,14 @@ add_task(function* () {
   is(browser.contentTitle, "mochitest index /browser/devtools/",
      "contentTitle matches page 3");
 
-  yield closeRDM(tab);
+  await closeRDM(tab);
 
   // Check session history state
-  history = yield getSessionHistory(browser);
+  history = await getSessionHistory(browser);
   is(history.index - 1, 1, "At page 1 in history");
   is(history.entries.length, 2, "2 pages in history");
   is(history.entries[0].url, DUMMY_1_URL, "Page 0 URL matches");
   is(history.entries[1].url, DUMMY_3_URL, "Page 1 URL matches");
 
-  yield removeTab(tab);
+  await removeTab(tab);
 });

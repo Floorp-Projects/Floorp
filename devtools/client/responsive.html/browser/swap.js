@@ -92,7 +92,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
 
   return {
 
-    start: Task.async(function* () {
+    async start() {
       tab.isResponsiveDesignMode = true;
 
       // Hide the browser content temporarily while things move around to avoid displaying
@@ -151,9 +151,9 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // The calling application will use container page loaded into the tab to
       // do whatever it needs to create the inner browser.
       debug("Yield to container tab loaded");
-      yield tabLoaded(containerTab);
+      await tabLoaded(containerTab);
       debug("Yield to get inner browser");
-      innerBrowser = yield getInnerBrowser(containerBrowser);
+      innerBrowser = await getInnerBrowser(containerBrowser);
       addXULBrowserDecorations(innerBrowser);
       if (innerBrowser.isRemoteBrowser != tab.linkedBrowser.isRemoteBrowser) {
         throw new Error("The inner browser's remoteness must match the " +
@@ -184,7 +184,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       //    the content in the viewport, instead of the tool page.
       tunnel = tunnelToInnerBrowser(tab.linkedBrowser, innerBrowser);
       debug("Yield to tunnel start");
-      yield tunnel.start();
+      await tunnel.start();
 
       // Swapping browsers disconnects the find bar UI from the browser.
       // If the find bar has been initialized, reconnect it.
@@ -204,7 +204,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
 
       // Show the browser content again now that the move is done.
       tab.linkedBrowser.style.visibility = "";
-    }),
+    },
 
     stop() {
       // Hide the browser content temporarily while things move around to avoid displaying

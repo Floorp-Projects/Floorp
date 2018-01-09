@@ -7,10 +7,10 @@
 
 const TEST_URL = "http://example.com/";
 
-add_task(function* () {
-  let tab = yield addTab(TEST_URL);
+add_task(async function () {
+  let tab = await addTab(TEST_URL);
 
-  let { ui } = yield openRDM(tab);
+  let { ui } = await openRDM(tab);
   let clientClosed = waitForClientClose(ui);
 
   closeRDM(tab, {
@@ -22,24 +22,24 @@ add_task(function* () {
   // synchronously.
   is(ui.destroyed, true, "RDM closed synchronously");
 
-  yield clientClosed;
-  yield removeTab(tab);
+  await clientClosed;
+  await removeTab(tab);
 });
 
-add_task(function* () {
-  let tab = yield addTab(TEST_URL);
+add_task(async function () {
+  let tab = await addTab(TEST_URL);
 
-  let { ui } = yield openRDM(tab);
+  let { ui } = await openRDM(tab);
   let clientClosed = waitForClientClose(ui);
 
   // Load URL that requires the main process, forcing a remoteness flip
-  yield load(tab.linkedBrowser, "about:robots");
+  await load(tab.linkedBrowser, "about:robots");
 
   // This flag is set at the end of `ResponsiveUI.destroy`.  If it is true without
   // yielding on `closeRDM` itself and only removing the tab, then we must have closed
   // synchronously in response to tab closing.
   is(ui.destroyed, true, "RDM closed synchronously");
 
-  yield clientClosed;
-  yield removeTab(tab);
+  await clientClosed;
+  await removeTab(tab);
 });
