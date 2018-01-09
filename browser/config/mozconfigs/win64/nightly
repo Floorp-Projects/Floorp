@@ -2,7 +2,6 @@
 . "$topsrcdir/browser/config/mozconfigs/win64/common-win64"
 . "$topsrcdir/browser/config/mozconfigs/win64/common-opt"
 
-ac_add_options --enable-profiling
 ac_add_options --enable-verify-mar
 
 ac_add_options --with-branding=browser/branding/nightly
