@@ -2430,7 +2430,7 @@ EmitTruncate(FunctionCompiler& f, ValType operandType, ValType resultType,
     return true;
 }
 
-#ifdef ENABLE_WASM_THREAD_OPS
+#ifdef ENABLE_WASM_SIGNEXTEND_OPS
 static bool
 EmitSignExtend(FunctionCompiler& f, uint32_t srcSize, uint32_t targetSize)
 {
@@ -3965,7 +3965,7 @@ EmitBodyExprs(FunctionCompiler& f)
             CHECK(EmitReinterpret(f, ValType::F64, ValType::I64, MIRType::Double));
 
           // Sign extensions
-#ifdef ENABLE_WASM_THREAD_OPS
+#ifdef ENABLE_WASM_SIGNEXTEND_OPS
           case uint16_t(Op::I32Extend8S):
             CHECK(EmitSignExtend(f, 1, 4));
           case uint16_t(Op::I32Extend16S):

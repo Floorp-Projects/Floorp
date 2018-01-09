@@ -238,7 +238,7 @@ testTrap('i64', 'trunc_u', 'f32', "-infinity");
 testConversion('i64', 'reinterpret', 'f64', 40.09999999999968, "0x40440ccccccccca0");
 testConversion('f64', 'reinterpret', 'i64', "0x40440ccccccccca0", 40.09999999999968);
 
-if (wasmThreadsSupported()) {
+if (wasmSignExtensionSupported()) {
     testSignExtension('i32', 'extend8_s', 'i32', 0x7F, 0x7F);
     testSignExtension('i32', 'extend8_s', 'i32', 0x80, -0x80);
     testSignExtension('i32', 'extend16_s', 'i32', 0x7FFF, 0x7FFF);
