@@ -74,6 +74,15 @@ jobs:
       run:
          product: firefox
          buildername: release-{branch}-firefox_schedule_publishing_in_balrog
+         channels:
+            by-project:
+               birch: release
+               maple: beta
+               mozilla-beta: beta
+               mozilla-release: release
+               mozilla-esr52: esr
+               mozilla-esr59: esr
+               default: unknown
       index:
          product: firefox
    devedition:
@@ -82,5 +91,6 @@ jobs:
       run:
          product: devedition
          buildername: release-{branch}-devedition_schedule_publishing_in_balrog
+         channels: aurora
       index:
          product: devedition
