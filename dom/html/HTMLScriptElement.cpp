@@ -171,20 +171,9 @@ HTMLScriptElement::SetText(const nsAString& aValue, ErrorResult& aRv)
 // need to be transfered when modifying
 
 bool
-HTMLScriptElement::GetScriptType(nsAString& aType)
+HTMLScriptElement::GetScriptType(nsAString& type)
 {
-  nsAutoString type;
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::type, type)) {
-    return false;
-  }
-
-  // ASCII whitespace https://infra.spec.whatwg.org/#ascii-whitespace:
-  // U+0009 TAB, U+000A LF, U+000C FF, U+000D CR, or U+0020 SPACE.
-  static const char kASCIIWhitespace[] = "\t\n\f\r ";
-  type.Trim(kASCIIWhitespace);
-
-  aType.Assign(type);
-  return true;
+  return GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
 }
 
 void

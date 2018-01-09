@@ -105,13 +105,21 @@ function report(testName, success) {
 }
 ]]>
 </script>
+<script type="text/javascript; version=1.7"><![CDATA[
+  try {
+    eval("let x = 1;");
+    var success = true;
+  }
+  catch (e) { success = false; }
+  report("HTML script tags with explicit version", success)
+]]></script>
 <script type="text/javascript"><![CDATA[
   try {
     eval("let x = 1;");
     var success = true;
   }
   catch (e) { success = false; }
-  is(success, true, "let should work in HTML script tags");
+  is(success, true, "let should work in versionless HTML script tags");
 ]]></script>
 </pre>
 </body>
