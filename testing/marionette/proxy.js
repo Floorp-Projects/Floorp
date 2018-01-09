@@ -4,10 +4,11 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {
   error,
@@ -18,8 +19,8 @@ Cu.import("chrome://marionette/content/modal.js");
 
 this.EXPORTED_SYMBOLS = ["proxy"];
 
-const uuidgen = Cc["@mozilla.org/uuid-generator;1"]
-    .getService(Ci.nsIUUIDGenerator);
+XPCOMUtils.defineLazyServiceGetter(
+    this, "uuidgen", "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
 
 const logger = Log.repository.getLogger("Marionette");
 
