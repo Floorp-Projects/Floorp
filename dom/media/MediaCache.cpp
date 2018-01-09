@@ -472,6 +472,16 @@ protected:
   // True if we've tried to init sThread. Note we try once only so it is safe
   // to access sThread on all threads.
   static bool sThreadInit;
+
+private:
+  // Used by MediaCacheStream::GetDebugInfo() only for debugging.
+  // Don't add new callers to this function.
+  friend nsCString MediaCacheStream::GetDebugInfo();
+  mozilla::Monitor& GetMonitorOnTheMainThread()
+  {
+    MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+    return mMonitor;
+  }
 };
 
 // Initialized to nullptr by non-local static initialization.
@@ -2984,7 +2994,7 @@ MediaCacheStream::GetDownloadRate(bool* aIsReliable)
 nsCString
 MediaCacheStream::GetDebugInfo()
 {
-  AutoLock lock(mMediaCache->Monitor());
+  AutoLock lock(mMediaCache->GetMonitorOnTheMainThread());
   return nsPrintfCString("mStreamLength=%" PRId64 " mChannelOffset=%" PRId64
                          " mCacheSuspended=%d mChannelEnded=%d mLoadID=%u",
                          mStreamLength,
