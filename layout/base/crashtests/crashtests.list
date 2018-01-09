@@ -520,3 +520,4 @@ load 1420533.html
 load 1425959.html
 load 1425893.html
 load 1428353.html
+pref(dom.webcomponents.enabled,true) load 1429088.html
