@@ -145,6 +145,12 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "AudioStreamTrack",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "AuthenticatorAssertionResponse", isSecureContext:true, nightly: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "AuthenticatorAttestationResponse", isSecureContext:true, nightly: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "AuthenticatorResponse", isSecureContext:true, nightly: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "BarProp",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "BaseAudioContext",
@@ -200,6 +206,10 @@ var interfaceNamesInGlobalScope =
     "ConstantSourceNode",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "ConvolverNode",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "Credential", isSecureContext:true, nightly: true},
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "CredentialsContainer", isSecureContext:true, nightly: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Crypto",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -772,6 +782,8 @@ var interfaceNamesInGlobalScope =
     "ProcessingInstruction",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "ProgressEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    {name: "PublicKeyCredential", isSecureContext:true, nightly: true},
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "PushManager",
 // IMPORTANT: Do not change this list without review from a DOM peer!
