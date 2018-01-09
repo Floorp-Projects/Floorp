@@ -2731,8 +2731,8 @@ imgLoader::GetMimeTypeFromContent(const char* aContents,
                                   nsACString& aContentType)
 {
   /* Is it a GIF? */
-  if (aLength >= 6 && (!nsCRT::strncmp(aContents, "GIF87a", 6) ||
-                       !nsCRT::strncmp(aContents, "GIF89a", 6))) {
+  if (aLength >= 6 && (!strncmp(aContents, "GIF87a", 6) ||
+                       !strncmp(aContents, "GIF89a", 6))) {
     aContentType.AssignLiteral(IMAGE_GIF);
 
   /* or a PNG? */
@@ -2769,7 +2769,7 @@ imgLoader::GetMimeTypeFromContent(const char* aContents,
              ((unsigned char) aContents[4])==0x00 ) {
     aContentType.AssignLiteral(IMAGE_ART);
 
-  } else if (aLength >= 2 && !nsCRT::strncmp(aContents, "BM", 2)) {
+  } else if (aLength >= 2 && !strncmp(aContents, "BM", 2)) {
     aContentType.AssignLiteral(IMAGE_BMP);
 
   // ICOs always begin with a 2-byte 0 followed by a 2-byte 1.

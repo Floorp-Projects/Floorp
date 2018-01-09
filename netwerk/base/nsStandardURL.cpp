@@ -2524,8 +2524,7 @@ nsStandardURL::Resolve(const nsACString &in, nsACString &out)
         if (SegmentIs(mScheme, relpath, scheme, true)) {
             // mScheme and Scheme are the same
             // but this can still be relative
-            if (nsCRT::strncmp(relpath + scheme.mPos + scheme.mLen,
-                               "://",3) == 0) {
+            if (strncmp(relpath + scheme.mPos + scheme.mLen, "://", 3) == 0) {
                 // now this is really absolute
                 // because a :// follows the scheme
                 result = NS_strdup(relpath);
