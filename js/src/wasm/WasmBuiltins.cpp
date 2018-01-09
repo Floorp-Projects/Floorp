@@ -96,17 +96,24 @@ static bool
 WasmHandleDebugTrap()
 {
     JitActivation* activation = CallingActivation();
-    MOZ_ASSERT(activation);
     JSContext* cx = activation->cx();
+    Frame* fp = activation->wasmExitFP();
+    Instance* instance = fp->tls->instance;
+    const Code& code = instance->code();
+    MOZ_ASSERT(code.metadata().debugEnabled);
 
-    WasmFrameIter frame(activation);
-    MOZ_ASSERT(frame.debugEnabled());
-    const CallSite* site = frame.debugTrapCallsite();
+    // The debug trap stub is the innermost frame. It's return address is the
+    // actual trap site.
+    const CallSite* site = code.lookupCallSite(fp->returnAddress);
     MOZ_ASSERT(site);
+
+    // Advance to the actual trapping frame.
+    fp = fp->callerFP;
+    DebugFrame* debugFrame = DebugFrame::from(fp);
+
     if (site->kind() == CallSite::EnterFrame) {
-        if (!frame.instance()->enterFrameTrapsEnabled())
+        if (!instance->enterFrameTrapsEnabled())
             return true;
-        DebugFrame* debugFrame = frame.debugFrame();
         debugFrame->setIsDebuggee();
         debugFrame->observe(cx);
         // TODO call onEnterFrame
@@ -121,15 +128,13 @@ WasmHandleDebugTrap()
         return status == JSTRAP_CONTINUE;
     }
     if (site->kind() == CallSite::LeaveFrame) {
-        DebugFrame* debugFrame = frame.debugFrame();
         debugFrame->updateReturnJSValue();
         bool ok = Debugger::onLeaveFrame(cx, debugFrame, nullptr, true);
         debugFrame->leave(cx);
         return ok;
     }
 
-    DebugFrame* debugFrame = frame.debugFrame();
-    DebugState& debug = frame.instance()->debug();
+    DebugState& debug = instance->debug();
     MOZ_ASSERT(debug.hasBreakpointTrapAtOffset(site->lineOrBytecode()));
     if (debug.stepModeEnabled(debugFrame->funcIndex())) {
         RootedValue result(cx, UndefinedValue());
@@ -234,7 +239,7 @@ WasmHandleThrow()
 }
 
 static void
-WasmReportTrap(int32_t trapIndex)
+WasmOldReportTrap(int32_t trapIndex)
 {
     JSContext* cx = TlsContext.get();
 
@@ -439,9 +444,9 @@ AddressOf(SymbolicAddress imm, ABIFunctionType* abiType)
       case SymbolicAddress::HandleThrow:
         *abiType = Args_General0;
         return FuncCast(WasmHandleThrow, *abiType);
-      case SymbolicAddress::ReportTrap:
+      case SymbolicAddress::OldReportTrap:
         *abiType = Args_General1;
-        return FuncCast(WasmReportTrap, *abiType);
+        return FuncCast(WasmOldReportTrap, *abiType);
       case SymbolicAddress::ReportOutOfBounds:
         *abiType = Args_General0;
         return FuncCast(WasmReportOutOfBounds, *abiType);
@@ -595,7 +600,7 @@ wasm::NeedsBuiltinThunk(SymbolicAddress sym)
       case SymbolicAddress::HandleExecutionInterrupt: // GenerateInterruptExit
       case SymbolicAddress::HandleDebugTrap:          // GenerateDebugTrapStub
       case SymbolicAddress::HandleThrow:              // GenerateThrowStub
-      case SymbolicAddress::ReportTrap:               // GenerateTrapExit
+      case SymbolicAddress::OldReportTrap:            // GenerateOldTrapExit
       case SymbolicAddress::ReportOutOfBounds:        // GenerateOutOfBoundsExit
       case SymbolicAddress::ReportUnalignedAccess:    // GeneratesUnalignedExit
       case SymbolicAddress::CallImport_Void:          // GenerateImportInterpExit
@@ -891,8 +896,8 @@ wasm::EnsureBuiltinThunksInitialized()
     MOZ_ASSERT(masm.callSites().empty());
     MOZ_ASSERT(masm.callSiteTargets().empty());
     MOZ_ASSERT(masm.callFarJumps().empty());
-    MOZ_ASSERT(masm.trapSites().empty());
-    MOZ_ASSERT(masm.trapFarJumps().empty());
+    MOZ_ASSERT(masm.oldTrapSites().empty());
+    MOZ_ASSERT(masm.oldTrapFarJumps().empty());
     MOZ_ASSERT(masm.callFarJumps().empty());
     MOZ_ASSERT(masm.memoryAccesses().empty());
     MOZ_ASSERT(masm.symbolicAccesses().empty());

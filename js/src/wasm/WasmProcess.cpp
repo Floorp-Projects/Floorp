@@ -235,7 +235,7 @@ const Code*
 wasm::LookupCode(const void* pc)
 {
     const CodeSegment* found = LookupCodeSegment(pc);
-    return found ? found->code() : nullptr;
+    return found ? &found->code() : nullptr;
 }
 
 void

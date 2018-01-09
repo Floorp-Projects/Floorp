@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://www.w3.org/TR/webauthn/
+ * https://w3c.github.io/webauthn/
  */
 
 /***** Interfaces to Data *****/
@@ -94,6 +94,7 @@ dictionary PublicKeyCredentialRequestOptions {
     unsigned long                        timeout;
     USVString                            rpId;
     sequence<PublicKeyCredentialDescriptor> allowCredentials = [];
+    UserVerificationRequirement          userVerification = "preferred";
     // Extensions are not supported yet.
     // AuthenticationExtensions             extensions; // Add in Bug 1406458
 };

@@ -1432,9 +1432,8 @@ wasm::InInterruptibleCode(JSContext* cx, uint8_t* pc, const CodeSegment** cs)
     if (!*cs)
         return false;
 
-    const Code* code = (*cs)->code();
-
-    const CodeRange* codeRange = code->lookupRange(pc);
+    const Code& code = (*cs)->code();
+    const CodeRange* codeRange = code.lookupRange(pc);
     return codeRange && codeRange->isFunction();
 }
 

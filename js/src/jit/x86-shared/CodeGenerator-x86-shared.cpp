@@ -435,7 +435,7 @@ CodeGeneratorX86Shared::visitWasmAddOffset(LWasmAddOffset* lir)
         masm.move32(base, out);
     masm.add32(Imm32(mir->offset()), out);
 
-    masm.j(Assembler::CarrySet, trap(mir, wasm::Trap::OutOfBounds));
+    masm.j(Assembler::CarrySet, oldTrap(mir, wasm::Trap::OutOfBounds));
 }
 
 void
@@ -1026,7 +1026,7 @@ CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod* ins)
         masm.test32(rhs, rhs);
         if (ins->mir()->isTruncated()) {
             if (ins->trapOnError()) {
-                masm.j(Assembler::Zero, trap(ins, wasm::Trap::IntegerDivideByZero));
+                masm.j(Assembler::Zero, oldTrap(ins, wasm::Trap::IntegerDivideByZero));
             } else {
                 ool = new(alloc()) ReturnZero(output);
                 masm.j(Assembler::Zero, ool->entry());
@@ -1074,7 +1074,7 @@ CodeGeneratorX86Shared::visitUDivOrModConstant(LUDivOrModConstant *ins) {
     if (d == 0) {
         if (ins->mir()->isTruncated()) {
             if (ins->trapOnError())
-                masm.jump(trap(ins, wasm::Trap::IntegerDivideByZero));
+                masm.jump(oldTrap(ins, wasm::Trap::IntegerDivideByZero));
             else
                 masm.xorl(output, output);
         } else {
@@ -1213,7 +1213,7 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI* ins)
         if (!mir->isTruncated())
             bailoutIf(Assembler::Overflow, ins->snapshot());
         else if (mir->trapOnError())
-            masm.j(Assembler::Overflow, trap(mir, wasm::Trap::IntegerOverflow));
+            masm.j(Assembler::Overflow, oldTrap(mir, wasm::Trap::IntegerOverflow));
     } else if (mir->isUnsigned() && !mir->isTruncated()) {
         // Unsigned division by 1 can overflow if output is not
         // truncated.
@@ -1332,7 +1332,7 @@ CodeGeneratorX86Shared::visitDivI(LDivI* ins)
     if (mir->canBeDivideByZero()) {
         masm.test32(rhs, rhs);
         if (mir->trapOnError()) {
-            masm.j(Assembler::Zero, trap(mir, wasm::Trap::IntegerDivideByZero));
+            masm.j(Assembler::Zero, oldTrap(mir, wasm::Trap::IntegerDivideByZero));
         } else if (mir->canTruncateInfinities()) {
             // Truncated division by zero is zero (Infinity|0 == 0)
             if (!ool)
@@ -1351,7 +1351,7 @@ CodeGeneratorX86Shared::visitDivI(LDivI* ins)
         masm.j(Assembler::NotEqual, &notmin);
         masm.cmp32(rhs, Imm32(-1));
         if (mir->trapOnError()) {
-            masm.j(Assembler::Equal, trap(mir, wasm::Trap::IntegerOverflow));
+            masm.j(Assembler::Equal, oldTrap(mir, wasm::Trap::IntegerOverflow));
         } else if (mir->canTruncateOverflow()) {
             // (-INT32_MIN)|0 == INT32_MIN and INT32_MIN is already in the
             // output register (lhs == eax).
@@ -1501,7 +1501,7 @@ CodeGeneratorX86Shared::visitModI(LModI* ins)
         masm.test32(rhs, rhs);
         if (mir->isTruncated()) {
             if (mir->trapOnError()) {
-                masm.j(Assembler::Zero, trap(mir, wasm::Trap::IntegerDivideByZero));
+                masm.j(Assembler::Zero, oldTrap(mir, wasm::Trap::IntegerDivideByZero));
             } else {
                 if (!ool)
                     ool = new(alloc()) ReturnZero(edx);
@@ -2523,7 +2523,7 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
     masm.jump(ool->rejoin());
 
     if (gen->compilingWasm()) {
-        masm.bindLater(&onConversionError, trap(ool, wasm::Trap::ImpreciseSimdConversion));
+        masm.bindLater(&onConversionError, oldTrap(ool, wasm::Trap::ImpreciseSimdConversion));
     } else {
         masm.bind(&onConversionError);
         bailout(ool->ins()->snapshot());
@@ -2603,7 +2603,7 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
     masm.cmp32(temp, Imm32(0));
 
     if (gen->compilingWasm())
-        masm.j(Assembler::NotEqual, trap(mir, wasm::Trap::ImpreciseSimdConversion));
+        masm.j(Assembler::NotEqual, oldTrap(mir, wasm::Trap::ImpreciseSimdConversion));
     else
         bailoutIf(Assembler::NotEqual, ins->snapshot());
 }

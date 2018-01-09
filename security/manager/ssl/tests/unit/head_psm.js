@@ -339,9 +339,9 @@ function run_test() {
 }
 */
 
-function add_tls_server_setup(serverBinName, certsPath) {
+function add_tls_server_setup(serverBinName, certsPath, addDefaultRoot = true) {
   add_test(function() {
-    _setupTLSServerTest(serverBinName, certsPath);
+    _setupTLSServerTest(serverBinName, certsPath, addDefaultRoot);
   });
 }
 
@@ -491,11 +491,13 @@ function _getBinaryUtil(binaryUtilName) {
 }
 
 // Do not call this directly; use add_tls_server_setup
-function _setupTLSServerTest(serverBinName, certsPath) {
+function _setupTLSServerTest(serverBinName, certsPath, addDefaultRoot) {
   let certdb = Cc["@mozilla.org/security/x509certdb;1"]
                   .getService(Ci.nsIX509CertDB);
   // The trusted CA that is typically used for "good" certificates.
-  addCertFromFile(certdb, `${certsPath}/test-ca.pem`, "CTu,u,u");
+  if (addDefaultRoot) {
+    addCertFromFile(certdb, `${certsPath}/test-ca.pem`, "CTu,u,u");
+  }
 
   const CALLBACK_PORT = 8444;
 
