@@ -94,7 +94,7 @@ win64-clang-tidy:
             - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
 
-win64-rust-1.23:
+win64-rust-1.22:
     description: "rust repack"
     treeherder:
         kind: build
@@ -111,7 +111,7 @@ win64-rust-1.23:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.23.0',
+            '--channel', '1.22.1',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
@@ -142,7 +142,7 @@ win64-rust-1.19:
         ]
         toolchain-artifact: public/build/rustc.tar.bz2
 
-win32-rust-1.23:
+win32-rust-1.23.0-beta.2:
     description: "rust repack"
     treeherder:
         kind: build
@@ -159,14 +159,14 @@ win32-rust-1.23:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.23.0',
+            '--channel', 'beta-2017-12-08',
             '--host', 'i686-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
         ]
         toolchain-alias: win32-rust
         toolchain-artifact: public/build/rustc.tar.bz2
 
-mingw32-rust-1.23:
+mingw32-rust-1.22:
     description: "rust repack"
     treeherder:
         kind: build
@@ -183,7 +183,7 @@ mingw32-rust-1.23:
         using: toolchain-script
         script: repack_rust.py
         arguments: [
-            '--channel', '1.23.0',
+            '--channel', '1.22.1',
             '--host', 'i686-unknown-linux-gnu',
             '--target', 'i686-pc-windows-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
