@@ -13,7 +13,6 @@ const { require } = BrowserLoader({
   baseURI: "resource://devtools/client/responsive.html/",
   window
 });
-const { Task } = require("devtools/shared/task");
 const Telemetry = require("devtools/client/shared/telemetry");
 const { loadAgentSheet } = require("./utils/css");
 

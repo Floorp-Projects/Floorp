@@ -121,12 +121,6 @@ async function testDevicePixelRatio(ui, expected) {
   is(dppx, expected, `devicePixelRatio should be: ${expected}`);
 }
 
-async function getViewportDevicePixelRatio(ui) {
-  return await ContentTask.spawn(ui.getViewportBrowser(), {}, async function () {
-    return content.devicePixelRatio;
-  });
-}
-
 function onceDevicePixelRatioChange(ui) {
   return ContentTask.spawn(ui.getViewportBrowser(), {}, async function () {
     info(`Listening for a pixel ratio change (current: ${content.devicePixelRatio}dppx)`);
