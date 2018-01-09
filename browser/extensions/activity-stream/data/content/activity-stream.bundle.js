@@ -2513,13 +2513,10 @@ class TopSite_TopSiteLink extends external__React__default.a.PureComponent {
    * Helper to determine whether the drop zone should allow a drop. We only allow
    * dropping top sites for now.
    */
-  _allowDrop(e, index) {
-    let draggedIndex = parseInt(e.dataTransfer.getData("text/topsite-index"), 10);
-    if (!isNaN(draggedIndex) && draggedIndex !== index) {
-      return true;
-    }
-    return false;
+  _allowDrop(e) {
+    return e.dataTransfer.types.includes("text/topsite-index");
   }
+
   onDragEvent(event) {
     switch (event.type) {
       case "dragstart":
@@ -2531,11 +2528,10 @@ class TopSite_TopSiteLink extends external__React__default.a.PureComponent {
       case "dragend":
         this.props.onDragEvent(event);
         break;
-      case "dragover":
       case "dragenter":
-      case "dragleave":
+      case "dragover":
       case "drop":
-        if (this._allowDrop(event, this.props.index)) {
+        if (this._allowDrop(event)) {
           event.preventDefault();
           this.props.onDragEvent(event, this.props.index);
         }
@@ -2585,7 +2581,7 @@ class TopSite_TopSiteLink extends external__React__default.a.PureComponent {
     }
     return external__React__default.a.createElement(
       "li",
-      _extends({ className: topSiteOuterClassName, key: link.guid || link.url, onDrop: this.onDragEvent, onDragOver: this.onDragEvent, onDragEnter: this.onDragEvent, onDragLeave: this.onDragEvent }, draggableProps),
+      _extends({ className: topSiteOuterClassName, onDrop: this.onDragEvent, onDragOver: this.onDragEvent, onDragEnter: this.onDragEvent, onDragLeave: this.onDragEvent }, draggableProps),
       external__React__default.a.createElement(
         "div",
         { className: "top-site-inner" },
@@ -2773,14 +2769,9 @@ class TopSite_TopSitePlaceholder extends external__React__default.a.PureComponen
     return external__React__default.a.createElement(
       TopSite_TopSiteLink,
       _extends({ className: "placeholder", isDraggable: false }, this.props),
-      external__React__default.a.createElement(
-        "div",
-        { className: "edit-menu" },
-        external__React__default.a.createElement("button", {
-          className: "icon icon-edit",
-          title: this.props.intl.formatMessage({ id: "edit_topsites_edit_button" }),
-          onClick: this.onEditButtonClick })
-      )
+      external__React__default.a.createElement("button", { className: "context-menu-button edit-button icon",
+        title: this.props.intl.formatMessage({ id: "edit_topsites_edit_button" }),
+        onClick: this.onEditButtonClick })
     );
   }
 }
@@ -2827,19 +2818,20 @@ class TopSite__TopSiteList extends external__React__default.a.PureComponent {
         this.setState(this.DEFAULT_STATE);
         break;
       case "dragenter":
-        this.setState({ topSitesPreview: this._makeTopSitesPreview(index) });
-        break;
-      case "dragleave":
-        this.setState({ topSitesPreview: null });
+        if (index === this.state.draggedIndex) {
+          this.setState({ topSitesPreview: null });
+        } else {
+          this.setState({ topSitesPreview: this._makeTopSitesPreview(index) });
+        }
         break;
       case "drop":
-        this.props.dispatch(Actions["actionCreators"].SendToMain({
-          type: Actions["actionTypes"].TOP_SITES_INSERT,
-          data: { site: { url: this.state.draggedSite.url, label: this.state.draggedTitle }, index }
-        }));
-        this.userEvent("DROP", index);
-        break;
-      default:
+        if (index !== this.state.draggedIndex) {
+          this.props.dispatch(Actions["actionCreators"].SendToMain({
+            type: Actions["actionTypes"].TOP_SITES_INSERT,
+            data: { site: { url: this.state.draggedSite.url, label: this.state.draggedTitle }, index }
+          }));
+          this.userEvent("DROP", index);
+        }
         break;
     }
   }
@@ -2907,10 +2899,15 @@ class TopSite__TopSiteList extends external__React__default.a.PureComponent {
       dispatch: props.dispatch,
       intl: props.intl
     };
+    // We assign a key to each placeholder slot. We need it to be independent
+    // of the slot index (i below) so that the keys used stay the same during
+    // drag and drop reordering and the underlying DOM nodes are reused.
+    // This mostly (only?) affects linux so be sure to test on linux before changing.
+    let holeIndex = 0;
     for (let i = 0, l = props.TopSitesCount; i < l; i++) {
       const link = topSites[i];
       const slotProps = {
-        key: i,
+        key: link ? link.url : holeIndex++,
         index: i
       };
       topSitesUI.push(!link ? external__React__default.a.createElement(TopSite_TopSitePlaceholder, _extends({}, slotProps, commonProps)) : external__React__default.a.createElement(TopSite_TopSite, _extends({

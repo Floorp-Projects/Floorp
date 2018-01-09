@@ -107,6 +107,7 @@
 #include "nsTransitionManager.h"
 #include "DetailsFrame.h"
 #include "nsThemeConstants.h"
+#include "mozilla/Preferences.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
@@ -134,6 +135,7 @@ using namespace mozilla::dom;
 
 // An alias for convenience.
 static const nsIFrame::ChildListID kPrincipalList = nsIFrame::kPrincipalList;
+static const char* kPrefSelectPopupInContent = "dom.select_popup_in_content.enabled";
 
 nsIFrame*
 NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -3234,10 +3236,16 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
     // Notify combobox that it should use the listbox as it's popup
     comboboxFrame->SetDropDown(listFrame);
 
-    NS_ASSERTION(!listFrame->IsAbsPosContainingBlock(),
-                 "Ended up with positioned dropdown list somehow.");
+    if (!Preferences::GetBool(kPrefSelectPopupInContent)) {
+      // TODO(kuoe0) Remove this assertion when content-select is shipped.
+      NS_ASSERTION(!listFrame->IsAbsPosContainingBlock(),
+                   "Ended up with positioned dropdown list somehow.");
+    }
     NS_ASSERTION(!listFrame->IsFloating(),
                  "Ended up with floating dropdown list somehow.");
+
+    // child frames of combobox frame
+    nsFrameItems childItems;
 
     // Initialize the scroll frame positioned. Note that it is NOT
     // initialized as absolutely positioned.
@@ -3246,15 +3254,14 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
 
     InitializeSelectFrame(aState, listFrame, scrolledFrame, content,
                           comboboxFrame, listStyle, true,
-                          aItem.mPendingBinding, aFrameItems);
+                          aItem.mPendingBinding, childItems);
 
     NS_ASSERTION(listFrame->GetView(), "ListFrame's view is nullptr");
 
     // Create display and button frames from the combobox's anonymous content.
     // The anonymous content is appended to existing anonymous content for this
     // element (the scrollbars).
-    nsFrameItems childItems;
-
+    //
     // nsComboboxControlFrame needs special frame creation behavior for its first
     // piece of anonymous content, which means that we can't take the normal
     // ProcessChildren path.
@@ -3281,12 +3288,14 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
 
     comboboxFrame->SetInitialChildList(kPrincipalList, childItems);
 
-    // Initialize the additional popup child list which contains the
-    // dropdown list frame.
-    nsFrameItems popupItems;
-    popupItems.AddChild(listFrame);
-    comboboxFrame->SetInitialChildList(nsIFrame::kSelectPopupList,
-                                       popupItems);
+    if (!Preferences::GetBool(kPrefSelectPopupInContent)) {
+      // Initialize the additional popup child list which contains the
+      // dropdown list frame.
+      nsFrameItems popupItems;
+      popupItems.AddChild(listFrame);
+      comboboxFrame->SetInitialChildList(nsIFrame::kSelectPopupList,
+                                         popupItems);
+    }
 
     aState.mFrameState = historyState;
     if (aState.mFrameState) {
@@ -3338,7 +3347,7 @@ nsCSSFrameConstructor::InitializeSelectFrame(nsFrameConstructorState& aState,
 
   scrollFrame->Init(aContent, geometricParent, nullptr);
 
-  if (!aBuildCombobox) {
+  if (!aBuildCombobox || Preferences::GetBool(kPrefSelectPopupInContent)) {
     aState.AddChild(scrollFrame, aFrameItems, aContent, aParentFrame);
   }
 

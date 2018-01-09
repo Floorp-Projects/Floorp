@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for WebExtension EventPage Warning</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+function createEventPageExtension(eventPage) {
+  function eventPageScript() {
+    browser.test.log("running event page as background script");
+    browser.test.sendMessage("running", 1);
+  }
+
+  return ExtensionTestUtils.loadExtension({
+    manifest: {
+      "background": eventPage,
+    },
+    files: {
+      "event-page-script.js": eventPageScript,
+      "event-page.html": `<html><head>
+        <meta charset="utf-8">
+        <script src="event-page-script.js"><\/script>
+      </head></html>`,
+    },
+  });
+}
+
+add_task(async function test_eventpages() {
+  let testCases = [
+    {
+      message: "testing event page running as a background page",
+      eventPage: {
+        "page": "event-page.html",
+        "persistent": false,
+      },
+    },
+    {
+      message: "testing event page scripts running as a background page",
+      eventPage: {
+        "scripts": ["event-page-script.js"],
+        "persistent": false,
+      },
+    },
+    {
+      message: "testing additional unrecognized properties on background page",
+      eventPage: {
+        "scripts": ["event-page-script.js"],
+        "nonExistentProp": true,
+      },
+    },
+  ];
+
+  // Wait for the expected logged warnings from the manifest validation.
+  consoleMonitor.start([{message: /Event pages are not currently supported./},
+                        {message: /Event pages are not currently supported./},
+                        {message: /Reading manifest: Error processing background.nonExistentProp: An unexpected property was found/}]);
+  for (let test of testCases) {
+    info(test.message);
+
+    let extension = createEventPageExtension(test.eventPage);
+    let [, x] = await Promise.all([extension.startup(), extension.awaitMessage("running")]);
+    is(x, 1, "got correct value from extension");
+    await extension.unload();
+  }
+  await consoleMonitor.finished();
+});
+
+</script>
+
+</body>
+</html>

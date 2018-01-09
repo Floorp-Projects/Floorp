@@ -99,6 +99,10 @@ with Files("*.py"):
 with Files("tests/*.md"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 
+with Files("tests/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+    SCHEDULES.inclusive += ['test-verify-wpt']
+
 with Files("tests/LICENSE"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
 

@@ -28,12 +28,12 @@ TestTerminal = partial(Terminal, kind='xterm-256color')
 
 def unicode_cap(cap):
     """Return the result of ``tigetstr`` except as Unicode."""
-    return tigetstr(cap).decode('utf-8')
+    return tigetstr(cap).decode('latin1')
 
 
 def unicode_parm(cap, *parms):
     """Return the result of ``tparm(tigetstr())`` except as Unicode."""
-    return tparm(tigetstr(cap), *parms).decode('utf-8')
+    return tparm(tigetstr(cap), *parms).decode('latin1')
 
 
 def test_capability():
@@ -57,7 +57,8 @@ def test_capability_without_tty():
 
 
 def test_capability_with_forced_tty():
-    """If we force styling, capabilities had better not (generally) be empty."""
+    """If we force styling, capabilities had better not (generally) be
+    empty."""
     t = TestTerminal(stream=StringIO(), force_styling=True)
     eq_(t.save, unicode_cap('sc'))
 
@@ -67,15 +68,16 @@ def test_parametrization():
     eq_(TestTerminal().cup(3, 4), unicode_parm('cup', 3, 4))
 
 
-def height_and_width():
+def test_height_and_width():
     """Assert that ``height_and_width()`` returns ints."""
     t = TestTerminal()  # kind shouldn't matter.
-    assert isinstance(int, t.height)
-    assert isinstance(int, t.width)
+    assert isinstance(t.height, int)
+    assert isinstance(t.width, int)
 
 
 def test_stream_attr():
-    """Make sure Terminal exposes a ``stream`` attribute that defaults to something sane."""
+    """Make sure Terminal exposes a ``stream`` attribute that defaults to
+    something sane."""
     eq_(Terminal().stream, sys.__stdout__)
 
 
@@ -99,6 +101,25 @@ def test_horizontal_location():
         pass
     eq_(t.stream.getvalue(), unicode_cap('sc') +
                              unicode_parm('hpa', 5) +
+                             unicode_cap('rc'))
+
+
+def test_null_location():
+    """Make sure ``location()`` with no args just does position restoration."""
+    t = TestTerminal(stream=StringIO(), force_styling=True)
+    with t.location():
+        pass
+    eq_(t.stream.getvalue(), unicode_cap('sc') +
+                             unicode_cap('rc'))
+
+
+def test_zero_location():
+    """Make sure ``location()`` pays attention to 0-valued args."""
+    t = TestTerminal(stream=StringIO(), force_styling=True)
+    with t.location(0, 0):
+        pass
+    eq_(t.stream.getvalue(), unicode_cap('sc') +
+                             unicode_parm('cup', 0, 0) +
                              unicode_cap('rc'))
 
 
@@ -178,7 +199,8 @@ def test_number_of_colors_with_tty():
 def test_formatting_functions():
     """Test crazy-ass formatting wrappers, both simple and compound."""
     t = TestTerminal()
-    # By now, it should be safe to use sugared attributes. Other tests test those.
+    # By now, it should be safe to use sugared attributes. Other tests test
+    # those.
     eq_(t.bold(u'hi'), t.bold + u'hi' + t.normal)
     eq_(t.green('hi'), t.green + u'hi' + t.normal)  # Plain strs for Python 2.x
     # Test some non-ASCII chars, probably not necessary:
@@ -187,7 +209,8 @@ def test_formatting_functions():
         t.bold + t.underline + t.green + t.on_red + u'boo' + t.normal)
     # Don't spell things like this:
     eq_(t.on_bright_red_bold_bright_green_underline('meh'),
-        t.on_bright_red + t.bold + t.bright_green + t.underline + u'meh' + t.normal)
+        t.on_bright_red + t.bold + t.bright_green + t.underline + u'meh' +
+                          t.normal)
 
 
 def test_formatting_functions_without_tty():
@@ -229,3 +252,19 @@ def test_init_descriptor_always_initted():
     """We should be able to get a height and width even on no-tty Terminals."""
     t = Terminal(stream=StringIO())
     eq_(type(t.height), int)
+
+
+def test_force_styling_none():
+    """If ``force_styling=None`` is passed to the constructor, don't ever do
+    styling."""
+    t = TestTerminal(force_styling=None)
+    eq_(t.save, '')
+
+
+def test_null_callable_string():
+    """Make sure NullCallableString tolerates all numbers and kinds of args it
+    might receive."""
+    t = TestTerminal(stream=StringIO())
+    eq_(t.clear, '')
+    eq_(t.move(1, 2), '')
+    eq_(t.move_x(1), '')

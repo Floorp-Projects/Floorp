@@ -20,3 +20,5 @@ UNIFIED_SOURCES += [
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']

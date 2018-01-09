@@ -12,6 +12,8 @@ use api::{FontInstanceOptions, FontInstancePlatformOptions, FontVariation};
 use api::{GlyphDimensions, GlyphKey, IdNamespace};
 use api::{ImageData, ImageDescriptor, ImageKey, ImageRendering};
 use api::{TileOffset, TileSize};
+#[cfg(feature = "capture")]
+use api::{NativeFontHandle};
 use app_units::Au;
 use device::TextureFilter;
 use frame::FrameId;
@@ -19,6 +21,8 @@ use glyph_cache::GlyphCache;
 use glyph_rasterizer::{FontInstance, GlyphFormat, GlyphRasterizer, GlyphRequest};
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use internal_types::{FastHashMap, FastHashSet, SourceTexture, TextureUpdateList};
+#[cfg(feature = "capture")]
+use internal_types::ExternalCaptureImage;
 use profiler::{ResourceProfileCounters, TextureCacheProfileCounters};
 use rayon::ThreadPool;
 use std::collections::hash_map::Entry::{self, Occupied, Vacant};
@@ -26,8 +30,11 @@ use std::cmp;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::mem;
+#[cfg(feature = "capture")]
+use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use texture_cache::{TextureCache, TextureCacheHandle};
+
 
 const DEFAULT_TILE_SIZE: TileSize = 512;
 
@@ -236,7 +243,7 @@ impl ResourceCache {
         texture_cache: TextureCache,
         workers: Arc<ThreadPool>,
         blob_image_renderer: Option<Box<BlobImageRenderer>>,
-    ) -> ResourceCache {
+    ) -> Self {
         ResourceCache {
             cached_glyphs: GlyphCache::new(),
             cached_images: ResourceClassCache::new(),
@@ -525,8 +532,10 @@ impl ResourceCache {
         // valid to use as-is.
         let (entry, needs_update) = match self.cached_images.entry(request) {
             Occupied(entry) => {
-                let needs_update = entry.get().as_ref().unwrap().epoch != template.epoch;
-                (entry.into_mut(), needs_update)
+                let info = entry.into_mut();
+                let needs_update = info.as_mut().unwrap().epoch != template.epoch;
+                info.as_mut().unwrap().epoch = template.epoch;
+                (info, needs_update)
             }
             Vacant(entry) => (
                 entry.insert(Ok(
@@ -549,43 +558,41 @@ impl ResourceCache {
         // We can start a worker thread rasterizing right now, if:
         //  - The image is a blob.
         //  - The blob hasn't already been requested this frame.
-        if self.pending_image_requests.insert(request) {
-            if template.data.is_blob() {
-                if let Some(ref mut renderer) = self.blob_image_renderer {
-                    let (offset, w, h) = match template.tiling {
-                        Some(tile_size) => {
-                            let tile_offset = request.tile.unwrap();
-                            let (w, h) = compute_tile_size(
-                                &template.descriptor,
-                                tile_size,
-                                tile_offset,
-                            );
-                            let offset = DevicePoint::new(
-                                tile_offset.x as f32 * tile_size as f32,
-                                tile_offset.y as f32 * tile_size as f32,
-                            );
+        if self.pending_image_requests.insert(request) && template.data.is_blob() {
+            if let Some(ref mut renderer) = self.blob_image_renderer {
+                let (offset, w, h) = match template.tiling {
+                    Some(tile_size) => {
+                        let tile_offset = request.tile.unwrap();
+                        let (w, h) = compute_tile_size(
+                            &template.descriptor,
+                            tile_size,
+                            tile_offset,
+                        );
+                        let offset = DevicePoint::new(
+                            tile_offset.x as f32 * tile_size as f32,
+                            tile_offset.y as f32 * tile_size as f32,
+                        );
 
-                            (offset, w, h)
-                        }
-                        None => (
-                            DevicePoint::zero(),
-                            template.descriptor.width,
-                            template.descriptor.height,
-                        ),
-                    };
+                        (offset, w, h)
+                    }
+                    None => (
+                        DevicePoint::zero(),
+                        template.descriptor.width,
+                        template.descriptor.height,
+                    ),
+                };
 
-                    renderer.request(
-                        &self.resources,
-                        request.into(),
-                        &BlobImageDescriptor {
-                            width: w,
-                            height: h,
-                            offset,
-                            format: template.descriptor.format,
-                        },
-                        template.dirty_rect,
-                    );
-                }
+                renderer.request(
+                    &self.resources,
+                    request.into(),
+                    &BlobImageDescriptor {
+                        width: w,
+                        height: h,
+                        offset,
+                        format: template.descriptor.format,
+                    },
+                    template.dirty_rect,
+                );
             }
         }
     }
@@ -931,4 +938,268 @@ pub fn compute_tile_size(
     };
 
     (actual_width, actual_height)
+}
+
+#[cfg(feature = "capture")]
+#[derive(Serialize, Deserialize)]
+enum PlainFontTemplate {
+    Raw {
+        data: String,
+        index: u32,
+    },
+    Native(NativeFontHandle),
+}
+
+#[cfg(feature = "capture")]
+#[derive(Serialize, Deserialize)]
+struct PlainImageTemplate {
+    data: String,
+    descriptor: ImageDescriptor,
+    tiling: Option<TileSize>,
+}
+
+#[cfg(feature = "capture")]
+#[derive(Serialize, Deserialize)]
+pub struct PlainResources {
+    font_templates: FastHashMap<FontKey, PlainFontTemplate>,
+    font_instances: FastHashMap<FontInstanceKey, FontInstance>,
+    image_templates: FastHashMap<ImageKey, PlainImageTemplate>,
+}
+
+#[cfg(feature = "capture")]
+impl ResourceCache {
+    pub fn save_capture(
+        &mut self, root: &PathBuf
+    ) -> (PlainResources, Vec<ExternalCaptureImage>) {
+        use std::fs;
+        use std::io::Write;
+
+        info!("saving resource cache");
+        let res = &self.resources;
+        if !root.is_dir() {
+            fs::create_dir_all(&root).unwrap()
+        }
+        let path_fonts = root.clone().join("fonts");
+        if !path_fonts.is_dir() {
+            fs::create_dir(&path_fonts).unwrap();
+        }
+        let path_images = root.clone().join("images");
+        if !path_images.is_dir() {
+            fs::create_dir(&path_images).unwrap();
+        }
+        let path_blobs = root.clone().join("blobs");
+        if !path_blobs.is_dir() {
+            fs::create_dir(&path_blobs).unwrap();
+        }
+
+        info!("\tfont templates");
+        let mut font_paths = FastHashMap::default();
+        let mut num_fonts = 0;
+        for template in res.font_templates.values() {
+            let data: &[u8] = match *template {
+                FontTemplate::Raw(ref arc, _) => arc,
+                FontTemplate::Native(_) => continue,
+            };
+            let entry = match font_paths.entry(data.as_ptr()) {
+                Entry::Occupied(_) => continue,
+                Entry::Vacant(e) => e,
+            };
+            num_fonts += 1;
+            let file_name = format!("{}.raw", num_fonts);
+            let short_path = format!("fonts/{}", file_name);
+            let full_path = path_fonts.clone().join(&file_name);
+            fs::File::create(full_path)
+                .expect(&format!("Unable to create {}", short_path))
+                .write_all(data)
+                .unwrap();
+            entry.insert(short_path);
+        }
+
+        info!("\timage templates");
+        let mut image_paths = FastHashMap::default();
+        let mut other_paths = FastHashMap::default();
+        let mut num_images = 0;
+        let mut external_images = Vec::new();
+        for (&key, template) in res.image_templates.images.iter() {
+            let desc = &template.descriptor;
+            match template.data {
+                ImageData::Raw(ref arc) => {
+                    let entry = match image_paths.entry(arc.as_ptr()) {
+                        Entry::Occupied(_) => continue,
+                        Entry::Vacant(e) => e,
+                    };
+
+                    //TODO: option to save as PNG
+                    num_images += 1;
+                    let file_name = format!("{}.raw", num_images);
+                    let short_path = format!("images/{}", file_name);
+                    let full_path = path_images.clone().join(&file_name);
+                    fs::File::create(full_path)
+                        .expect(&format!("Unable to create {}", short_path))
+                        .write_all(&*arc)
+                        .unwrap();
+                    entry.insert(short_path);
+                }
+                ImageData::Blob(_) => {
+                    assert_eq!(template.tiling, None);
+                    let request = BlobImageRequest {
+                        key,
+                        tile: None, //TODO: tiled blob images
+                    };
+
+                    let renderer = self.blob_image_renderer.as_mut().unwrap();
+                    renderer.request(
+                        &self.resources,
+                        request,
+                        &BlobImageDescriptor {
+                            width: desc.width,
+                            height: desc.height,
+                            offset: DevicePoint::zero(),
+                            format: desc.format,
+                        },
+                        None,
+                    );
+                    let result = renderer.resolve(request)
+                        .expect("Blob resolve failed");
+                    assert_eq!((result.width, result.height), (desc.width, desc.height));
+
+                    let file_name = format!("{}.raw", other_paths.len() + 1);
+                    let short_path = format!("blobs/{}", file_name);
+                    let full_path = path_blobs.clone().join(&file_name);
+                    fs::File::create(full_path)
+                        .expect(&format!("Unable to create {}", short_path))
+                        .write_all(&result.data)
+                        .unwrap();
+                    other_paths.insert(key, short_path);
+                }
+                ImageData::External(ref ext) => {
+                    let short_path = format!("blobs/{}.raw", other_paths.len() + 1);
+                    other_paths.insert(key, short_path.clone());
+                    external_images.push(ExternalCaptureImage {
+                        short_path,
+                        descriptor: desc.clone(),
+                        external: ext.clone(),
+                    });
+                }
+            }
+        }
+
+        let resources = PlainResources {
+            font_templates: res.font_templates
+                .iter()
+                .map(|(key, template)| {
+                    (*key, match *template {
+                        FontTemplate::Raw(ref arc, index) => {
+                            PlainFontTemplate::Raw {
+                                data: font_paths[&arc.as_ptr()].clone(),
+                                index,
+                            }
+                        }
+                        FontTemplate::Native(ref native) => {
+                            PlainFontTemplate::Native(native.clone())
+                        }
+                    })
+                })
+                .collect(),
+            font_instances: res.font_instances.read().unwrap().clone(),
+            image_templates: res.image_templates.images
+                .iter()
+                .map(|(key, template)| {
+                    (*key, PlainImageTemplate {
+                        data: match template.data {
+                            ImageData::Raw(ref arc) => image_paths[&arc.as_ptr()].clone(),
+                            _ => other_paths[key].clone(),
+                        },
+                        descriptor: template.descriptor.clone(),
+                        tiling: template.tiling,
+                    })
+                })
+                .collect(),
+        };
+
+        (resources, external_images)
+    }
+
+    pub fn load_capture(&mut self, resources: PlainResources, root: &PathBuf) {
+        use std::fs::File;
+        use std::io::Read;
+
+        info!("loading resource cache");
+        self.cached_glyphs.clear();
+        self.cached_images.clear();
+
+        self.state = State::Idle;
+        self.current_frame_id = FrameId(0);
+
+        let max_texture_size = self.texture_cache.max_texture_size();
+        self.texture_cache = TextureCache::new(max_texture_size);
+
+        self.cached_glyph_dimensions.clear();
+        self.glyph_rasterizer.reset();
+        self.pending_image_requests.clear();
+
+        let res = &mut self.resources;
+        res.font_templates.clear();
+        *res.font_instances.write().unwrap() = resources.font_instances;
+        res.image_templates.images.clear();
+        let mut raw_map = FastHashMap::<String, Arc<Vec<u8>>>::default();
+
+        info!("\tfont templates...");
+        for (key, plain_template) in resources.font_templates {
+            let template = match plain_template {
+                PlainFontTemplate::Raw { data, index } => {
+                    let arc = match raw_map.entry(data) {
+                        Entry::Occupied(e) => {
+                            e.get().clone()
+                        }
+                        Entry::Vacant(e) => {
+                            let path = format!("{}/{}", root.to_string_lossy(), e.key());
+                            let mut buffer = Vec::new();
+                            File::open(path)
+                                .expect(&format!("Unable to open {}", e.key()))
+                                .read_to_end(&mut buffer)
+                                .unwrap();
+                            e.insert(Arc::new(buffer))
+                                .clone()
+                        }
+                    };
+                    FontTemplate::Raw(arc, index)
+                }
+                PlainFontTemplate::Native(native) => {
+                    FontTemplate::Native(native)
+                }
+            };
+
+            self.glyph_rasterizer.add_font(key, template.clone());
+            res.font_templates.insert(key, template);
+        }
+
+        info!("\timage templates...");
+        for (key, template) in resources.image_templates {
+            let arc = match raw_map.entry(template.data) {
+                Entry::Occupied(e) => {
+                    e.get().clone()
+                }
+                Entry::Vacant(e) => {
+                    //TODO: consider merging the code path with font loading
+                    let path = format!("{}/{}", root.to_string_lossy(), e.key());
+                    let mut buffer = Vec::new();
+                    File::open(path)
+                        .expect(&format!("Unable to open {}", e.key()))
+                        .read_to_end(&mut buffer)
+                        .unwrap();
+                    e.insert(Arc::new(buffer))
+                        .clone()
+                }
+            };
+
+            res.image_templates.images.insert(key, ImageResource {
+                data: ImageData::Raw(arc),
+                descriptor: template.descriptor,
+                tiling: template.tiling,
+                epoch: Epoch(0),
+                dirty_rect: None,
+            });
+        }
+    }
 }

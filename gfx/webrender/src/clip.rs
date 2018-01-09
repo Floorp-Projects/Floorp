@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{BorderRadius, ClipMode, ComplexClipRegion, DeviceIntRect, ImageMask, ImageRendering};
-use api::{LayerPoint, LayerRect, LayerToWorldTransform, LayoutPoint, LayoutVector2D, LocalClip};
+use api::{LayerPoint, LayerRect, LayoutPoint, LayoutVector2D, LocalClip};
+use api::{DevicePixelScale, LayerToWorldTransform};
 use border::{BorderCornerClipSource, ensure_no_corner_overlap};
 use ellipse::Ellipse;
 use freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
@@ -168,21 +169,18 @@ impl ClipSources {
         let mut local_outer = Some(LayerRect::max_rect());
         let mut local_inner = local_outer;
         let mut can_calculate_inner_rect = true;
-        let mut can_calculate_outer_rect = true;
+        let mut can_calculate_outer_rect = false;
         for source in clips {
             match *source {
                 ClipSource::Image(ref mask) => {
                     if !mask.repeat {
+                        can_calculate_outer_rect = true;
                         local_outer = local_outer.and_then(|r| r.intersection(&mask.rect));
-                        can_calculate_inner_rect = false;
-                    } else {
-                        can_calculate_inner_rect = false;
-                        can_calculate_outer_rect = false;
-                        break;
                     }
                     local_inner = None;
                 }
                 ClipSource::Rectangle(rect) => {
+                    can_calculate_outer_rect = true;
                     local_outer = local_outer.and_then(|r| r.intersection(&rect));
                     local_inner = local_inner.and_then(|r| r.intersection(&rect));
                 }
@@ -191,10 +189,10 @@ impl ClipSources {
                     // case clip mask size, for now.
                     if mode == ClipMode::ClipOut {
                         can_calculate_inner_rect = false;
-                        can_calculate_outer_rect = false;
                         break;
                     }
 
+                    can_calculate_outer_rect = true;
                     local_outer = local_outer.and_then(|r| r.intersection(rect));
 
                     let inner_rect = extract_inner_rect_safe(rect, radius);
@@ -203,19 +201,18 @@ impl ClipSources {
                 }
                 ClipSource::BorderCorner { .. } => {
                     can_calculate_inner_rect = false;
-                    can_calculate_outer_rect = false;
                     break;
                 }
             }
         }
 
         let outer = match can_calculate_outer_rect {
-            true => local_outer,
+            true => Some(local_outer.unwrap_or_else(LayerRect::zero)),
             false => None,
         };
 
         let inner = match can_calculate_inner_rect {
-            true => local_inner.unwrap_or(LayerRect::zero()),
+            true => local_inner.unwrap_or_else(LayerRect::zero),
             false => LayerRect::zero(),
         };
 
@@ -262,7 +259,7 @@ impl ClipSources {
     pub fn get_screen_bounds(
         &self,
         transform: &LayerToWorldTransform,
-        device_pixel_ratio: f32,
+        device_pixel_scale: DevicePixelScale,
     ) -> (DeviceIntRect, Option<DeviceIntRect>) {
         // If this translation isn't axis aligned or has a perspective component, don't try to
         // calculate the inner rectangle. The rectangle that we produce would include potentially
@@ -273,13 +270,13 @@ impl ClipSources {
         let can_calculate_inner_rect =
             transform.preserves_2d_axis_alignment() && !transform.has_perspective_component();
         let screen_inner_rect = if can_calculate_inner_rect {
-            calculate_screen_bounding_rect(transform, &self.local_inner_rect, device_pixel_ratio)
+            calculate_screen_bounding_rect(transform, &self.local_inner_rect, device_pixel_scale)
         } else {
             DeviceIntRect::zero()
         };
 
         let screen_outer_rect = self.local_outer_rect.map(|outer_rect|
-            calculate_screen_bounding_rect(transform, &outer_rect, device_pixel_ratio)
+            calculate_screen_bounding_rect(transform, &outer_rect, device_pixel_scale)
         );
 
         (screen_inner_rect, screen_outer_rect)

@@ -6,7 +6,7 @@
 #include "WebGLContext.h"
 
 #include "GeckoProfiler.h"
-#include "gfx/gl/MozFramebuffer.h"
+#include "MozFramebuffer.h"
 #include "GLContext.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/UniquePtrExtensions.h"

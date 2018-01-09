@@ -9,18 +9,17 @@
 //!
 //! [renderer]: struct.Renderer.html
 
-use api::{channel, BlobImageRenderer, FontRenderMode};
-use api::{ColorF, DocumentId, Epoch, PipelineId, RenderApiSender, RenderNotifier};
-use api::{DevicePixel, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
-use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, ColorU};
-use api::{ExternalImageId, ExternalImageType, ImageFormat};
-use api::{YUV_COLOR_SPACES, YUV_FORMATS};
-use api::{YuvColorSpace, YuvFormat};
+use api::{BlobImageRenderer, ColorF, ColorU, DeviceIntPoint, DeviceIntRect, DeviceIntSize};
+use api::{DeviceUintPoint, DeviceUintRect, DeviceUintSize, DocumentId, Epoch, ExternalImageId};
+use api::{ExternalImageType, FontRenderMode, ImageFormat, PipelineId, RenderApiSender};
+use api::{RenderNotifier, YUV_COLOR_SPACES, YUV_FORMATS, YuvColorSpace, YuvFormat, channel};
 #[cfg(not(feature = "debugger"))]
 use api::ApiMsg;
 use api::DebugCommand;
 #[cfg(not(feature = "debugger"))]
 use api::channel::MsgSender;
+use batch::{BatchKey, BatchKind, BatchTextures, BrushBatchKind};
+use batch::{BrushImageSourceKind, TransformBatchKind};
 use debug_colors;
 use debug_render::DebugRenderer;
 #[cfg(feature = "debugger")]
@@ -32,15 +31,16 @@ use device::{get_gl_format_bgra, ExternalTexture, FBOId, TextureSlot, VertexAttr
 use device::{FileWatcherHandler, ShaderError, TextureFilter, TextureTarget,
              VertexUsageHint, VAO, VBO, CustomVAO};
 use device::ProgramCache;
-use euclid::{rect, TypedScale, Transform3D};
+use euclid::{rect, Transform3D};
 use frame_builder::FrameBuilderConfig;
 use gleam::gl;
 use glyph_rasterizer::GlyphFormat;
 use gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use gpu_types::PrimitiveInstance;
-use internal_types::{BatchTextures, SourceTexture, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE};
+use internal_types::{SourceTexture, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE};
 use internal_types::{CacheTextureId, FastHashMap, RenderedDocument, ResultMsg, TextureUpdateOp};
 use internal_types::{DebugOutput, RenderPassIndex, RenderTargetInfo, TextureUpdateList, TextureUpdateSource};
+use picture::ContentOrigin;
 use profiler::{BackendProfileCounters, Profiler};
 use profiler::{GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
 use query::{GpuProfiler, GpuTimer};
@@ -66,7 +66,7 @@ use texture_cache::TextureCache;
 use thread_profiler::{register_thread_with_profiler, write_profile};
 use tiling::{AlphaRenderTarget, ColorRenderTarget};
 use tiling::{RenderPass, RenderPassKind, RenderTargetList};
-use tiling::{BatchKey, BatchKind, BrushBatchKind, BrushImageSourceKind, Frame, RenderTarget, ScalingInfo, TransformBatchKind};
+use tiling::{Frame, RenderTarget, ScalingInfo};
 use time::precise_time_ns;
 use util::TransformedRectKind;
 
@@ -91,6 +91,10 @@ const GPU_TAG_BRUSH_IMAGE: GpuProfileTag = GpuProfileTag {
     label: "B_Image",
     color: debug_colors::SILVER,
 };
+const GPU_TAG_BRUSH_LINE: GpuProfileTag = GpuProfileTag {
+    label: "Line",
+    color: debug_colors::DARKRED,
+};
 const GPU_TAG_CACHE_CLIP: GpuProfileTag = GpuProfileTag {
     label: "C_Clip",
     color: debug_colors::PURPLE,
@@ -110,10 +114,6 @@ const GPU_TAG_SETUP_TARGET: GpuProfileTag = GpuProfileTag {
 const GPU_TAG_SETUP_DATA: GpuProfileTag = GpuProfileTag {
     label: "data init",
     color: debug_colors::LIGHTGREY,
-};
-const GPU_TAG_PRIM_LINE: GpuProfileTag = GpuProfileTag {
-    label: "Line",
-    color: debug_colors::DARKRED,
 };
 const GPU_TAG_PRIM_IMAGE: GpuProfileTag = GpuProfileTag {
     label: "Image",
@@ -198,13 +198,11 @@ impl TransformBatchKind {
             TransformBatchKind::RadialGradient => "RadialGradient",
             TransformBatchKind::BorderCorner => "BorderCorner",
             TransformBatchKind::BorderEdge => "BorderEdge",
-            TransformBatchKind::Line => "Line",
         }
     }
 
     fn gpu_sampler_tag(&self) -> GpuProfileTag {
         match *self {
-            TransformBatchKind::Line => GPU_TAG_PRIM_LINE,
             TransformBatchKind::TextRun(..) => GPU_TAG_PRIM_TEXT_RUN,
             TransformBatchKind::Image(..) => GPU_TAG_PRIM_IMAGE,
             TransformBatchKind::YuvImage(..) => GPU_TAG_PRIM_YUV_IMAGE,
@@ -229,6 +227,7 @@ impl BatchKind {
                 match kind {
                     BrushBatchKind::Image(..) => "Brush (Image)",
                     BrushBatchKind::Solid => "Brush (Solid)",
+                    BrushBatchKind::Line => "Brush (Line)",
                 }
             }
             BatchKind::Transformable(_, batch_kind) => batch_kind.debug_name(),
@@ -245,6 +244,7 @@ impl BatchKind {
                 match kind {
                     BrushBatchKind::Image(..) => GPU_TAG_BRUSH_IMAGE,
                     BrushBatchKind::Solid => GPU_TAG_BRUSH_SOLID,
+                    BrushBatchKind::Line => GPU_TAG_BRUSH_LINE,
                 }
             }
             BatchKind::Transformable(_, batch_kind) => batch_kind.gpu_sampler_tag(),
@@ -288,8 +288,9 @@ enum TextShaderMode {
     SubpixelWithBgColorPass0 = 4,
     SubpixelWithBgColorPass1 = 5,
     SubpixelWithBgColorPass2 = 6,
-    Bitmap = 7,
-    ColorBitmap = 8,
+    SubpixelDualSource = 7,
+    Bitmap = 8,
+    ColorBitmap = 9,
 }
 
 impl Into<ShaderMode> for TextShaderMode {
@@ -326,6 +327,7 @@ enum TextureSampler {
     // the *first* pass. Items rendered in this target are
     // available as inputs to tasks in any subsequent pass.
     SharedCacheA8,
+    LocalClipRects
 }
 
 impl TextureSampler {
@@ -354,6 +356,7 @@ impl Into<TextureSlot> for TextureSampler {
             TextureSampler::RenderTasks => TextureSlot(7),
             TextureSampler::Dither => TextureSlot(8),
             TextureSampler::SharedCacheA8 => TextureSlot(9),
+            TextureSampler::LocalClipRects => TextureSlot(10),
         }
     }
 }
@@ -433,7 +436,7 @@ const DESC_CLIP: VertexDescriptor = VertexDescriptor {
             kind: VertexAttributeKind::I32,
         },
         VertexAttribute {
-            name: "aClipLayerAddress",
+            name: "aScrollNodeId",
             count: 1,
             kind: VertexAttributeKind::I32,
         },
@@ -768,6 +771,7 @@ pub enum BlendMode {
     None,
     PremultipliedAlpha,
     PremultipliedDestOut,
+    SubpixelDualSource,
     SubpixelConstantTextColor(ColorF),
     SubpixelWithBgColor,
     SubpixelVariableTextColor,
@@ -1297,6 +1301,7 @@ impl BrushShader {
             }
             BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
+            BlendMode::SubpixelDualSource |
             BlendMode::SubpixelConstantTextColor(..) |
             BlendMode::SubpixelVariableTextColor |
             BlendMode::SubpixelWithBgColor => {
@@ -1491,6 +1496,7 @@ fn create_prim_shader(
                 ("sRenderTasks", TextureSampler::RenderTasks),
                 ("sResourceCache", TextureSampler::ResourceCache),
                 ("sSharedCacheA8", TextureSampler::SharedCacheA8),
+                ("sLocalClipRects", TextureSampler::LocalClipRects),
             ],
         );
     }
@@ -1518,6 +1524,7 @@ fn create_clip_shader(name: &'static str, device: &mut Device) -> Result<Program
                 ("sRenderTasks", TextureSampler::RenderTasks),
                 ("sResourceCache", TextureSampler::ResourceCache),
                 ("sSharedCacheA8", TextureSampler::SharedCacheA8),
+                ("sLocalClipRects", TextureSampler::LocalClipRects),
             ],
         );
     }
@@ -1570,7 +1577,6 @@ pub struct Renderer {
     // draw intermediate results to cache targets. The results
     // of these shaders are then used by the primitive shaders.
     cs_text_run: LazilyCompiledShader,
-    cs_line: LazilyCompiledShader,
     cs_blur_a8: LazilyCompiledShader,
     cs_blur_rgba8: LazilyCompiledShader,
 
@@ -1581,6 +1587,7 @@ pub struct Renderer {
     brush_image_rgba8_alpha_mask: BrushShader,
     brush_image_a8: BrushShader,
     brush_solid: BrushShader,
+    brush_line: BrushShader,
 
     /// These are "cache clip shaders". These shaders are used to
     /// draw clip instances into the cached clip mask. The results
@@ -1597,6 +1604,7 @@ pub struct Renderer {
     // output, and the cache_image shader blits the results of
     // a cache shader (e.g. blur) to the screen.
     ps_text_run: TextShader,
+    ps_text_run_dual_source: TextShader,
     ps_image: Vec<Option<PrimitiveShader>>,
     ps_yuv_image: Vec<Option<PrimitiveShader>>,
     ps_border_corner: PrimitiveShader,
@@ -1604,7 +1612,6 @@ pub struct Renderer {
     ps_gradient: PrimitiveShader,
     ps_angle_gradient: PrimitiveShader,
     ps_radial_gradient: PrimitiveShader,
-    ps_line: PrimitiveShader,
 
     ps_blend: LazilyCompiledShader,
     ps_hw_composite: LazilyCompiledShader,
@@ -1629,6 +1636,7 @@ pub struct Renderer {
     clip_vao: VAO,
 
     node_data_texture: VertexDataTexture,
+    local_clip_rects_texture: VertexDataTexture,
     render_task_texture: VertexDataTexture,
     gpu_cache_texture: CacheTexture,
 
@@ -1724,6 +1732,9 @@ impl Renderer {
             options.cached_programs,
         );
 
+        let ext_dual_source_blending = !options.disable_dual_source_blending &&
+            device.supports_extension("GL_ARB_blend_func_extended");
+
         let device_max_size = device.max_texture_size();
         // 512 is the minimum that the texture cache can work with.
         // Broken GL contexts can return a max texture size of zero (See #1260). Better to
@@ -1756,14 +1767,6 @@ impl Renderer {
                                       options.precache_shaders)
         };
 
-        let cs_line = try!{
-            LazilyCompiledShader::new(ShaderKind::Cache(VertexArrayKind::Primitive),
-                                      "ps_line",
-                                      &["CACHE"],
-                                      &mut device,
-                                      options.precache_shaders)
-        };
-
         let brush_mask_corner = try!{
             LazilyCompiledShader::new(ShaderKind::Brush,
                                       "brush_mask_corner",
@@ -1782,6 +1785,13 @@ impl Renderer {
 
         let brush_solid = try!{
             BrushShader::new("brush_solid",
+                             &mut device,
+                             &[],
+                             options.precache_shaders)
+        };
+
+        let brush_line = try!{
+            BrushShader::new("brush_line",
                              &mut device,
                              &[],
                              options.precache_shaders)
@@ -1848,18 +1858,18 @@ impl Renderer {
                                       options.precache_shaders)
         };
 
-        let ps_line = try!{
-            PrimitiveShader::new("ps_line",
-                                 &mut device,
-                                 &[],
-                                 options.precache_shaders)
-        };
-
         let ps_text_run = try!{
             TextShader::new("ps_text_run",
                             &mut device,
                             &[],
-                           options.precache_shaders)
+                            options.precache_shaders)
+        };
+
+        let ps_text_run_dual_source = try!{
+            TextShader::new("ps_text_run",
+                            &mut device,
+                            &["DUAL_SOURCE_BLENDING"],
+                            options.precache_shaders)
         };
 
         // All image configuration.
@@ -2129,6 +2139,7 @@ impl Renderer {
         let texture_resolver = SourceTextureResolver::new(&mut device);
 
         let node_data_texture = VertexDataTexture::new(&mut device);
+        let local_clip_rects_texture = VertexDataTexture::new(&mut device);
         let render_task_texture = VertexDataTexture::new(&mut device);
 
         let gpu_cache_texture = CacheTexture::new(
@@ -2150,6 +2161,8 @@ impl Renderer {
             enable_scrollbars: options.enable_scrollbars,
             default_font_render_mode,
             debug: options.debug,
+            dual_source_blending_is_enabled: true,
+            dual_source_blending_is_supported: ext_dual_source_blending,
         };
 
         let device_pixel_ratio = options.device_pixel_ratio;
@@ -2223,7 +2236,6 @@ impl Renderer {
             pending_gpu_cache_updates: Vec::new(),
             pending_shader_updates: Vec::new(),
             cs_text_run,
-            cs_line,
             cs_blur_a8,
             cs_blur_rgba8,
             brush_mask_corner,
@@ -2232,10 +2244,12 @@ impl Renderer {
             brush_image_rgba8_alpha_mask,
             brush_image_a8,
             brush_solid,
+            brush_line,
             cs_clip_rectangle,
             cs_clip_border,
             cs_clip_image,
             ps_text_run,
+            ps_text_run_dual_source,
             ps_image,
             ps_yuv_image,
             ps_border_corner,
@@ -2247,7 +2261,6 @@ impl Renderer {
             ps_hw_composite,
             ps_split_composite,
             ps_composite,
-            ps_line,
             debug: debug_renderer,
             debug_flags,
             backend_profile_counters: BackendProfileCounters::new(),
@@ -2263,6 +2276,7 @@ impl Renderer {
             blur_vao,
             clip_vao,
             node_data_texture,
+            local_clip_rects_texture,
             render_task_texture,
             pipeline_epoch_map: FastHashMap::default(),
             dither_matrix_texture,
@@ -2376,6 +2390,48 @@ impl Renderer {
                     DebugOutput::FetchClipScrollTree(string) => {
                         self.debug_server.send(string);
                     }
+                    #[cfg(feature = "capture")]
+                    DebugOutput::SaveCapture(path, deferred)=> {
+                        use std::fs::File;
+                        use std::io::Write;
+                        use api::ExternalImageData;
+
+                        if deferred.is_empty() {
+                            continue
+                        }
+
+                        info!("saving external images");
+                        let handler = self.external_image_handler
+                            .as_mut()
+                            .expect("Unable to lock the external image handler!");
+                        for def in deferred {
+                            let ExternalImageData { id, channel_index, .. } = def.external;
+                            let data = match handler.lock(id, channel_index).source {
+                                ExternalImageSource::RawData(data) => data.to_vec(),
+                                ExternalImageSource::NativeTexture(_gl_id) => {
+                                    //TODO: make a read FBO with this GL texture
+                                    //self.device.read_pixels(&def.descriptor);
+                                    unimplemented!()
+                                }
+                                ExternalImageSource::Invalid => {
+                                    // Create a dummy buffer...
+                                    let stride = def.descriptor.compute_stride();
+                                    let total_size = def.descriptor.height * stride;
+                                    vec![0xFF; total_size as usize]
+                                }
+                            };
+                            handler.unlock(id, channel_index);
+
+                            let full_path = format!("{}/{}",
+                                path.to_string_lossy(), def.short_path);
+                            File::create(full_path)
+                                .expect(&format!("Unable to create {}", def.short_path))
+                                .write_all(&data)
+                                .unwrap();
+                        }
+                    }
+                    #[cfg(feature = "capture")]
+                    DebugOutput::LoadCapture => {}
                 },
                 ResultMsg::DebugCommand(command) => {
                     self.handle_debug_command(command);
@@ -2394,8 +2450,11 @@ impl Renderer {
 
     #[cfg(feature = "debugger")]
     fn get_screenshot_for_debugger(&mut self) -> String {
-        let data = self.device.read_pixels(1024, 768);
-        let screenshot = debug_server::Screenshot::new(1024, 768, data);
+        use api::ImageDescriptor;
+
+        let desc = ImageDescriptor::new(1024, 768, ImageFormat::BGRA8, true);
+        let data = self.device.read_pixels(&desc);
+        let screenshot = debug_server::Screenshot::new(desc.width, desc.height, data);
 
         serde_json::to_string(&screenshot).unwrap()
     }
@@ -2467,7 +2526,7 @@ impl Renderer {
             "Horizontal Blur",
             target.horizontal_blurs.len(),
         );
-        for (_, batch) in &target.text_run_cache_prims {
+        for (_, batch) in &target.alpha_batcher.text_run_cache_prims {
             debug_target.add(
                 debug_server::BatchKind::Cache,
                 "Text Shadow",
@@ -2477,7 +2536,7 @@ impl Renderer {
         debug_target.add(
             debug_server::BatchKind::Cache,
             "Lines",
-            target.line_cache_prims.len(),
+            target.alpha_batcher.line_cache_prims.len(),
         );
 
         for batch in target
@@ -2588,6 +2647,13 @@ impl Renderer {
             DebugCommand::FetchScreenshot => {
                 let json = self.get_screenshot_for_debugger();
                 self.debug_server.send(json);
+            }
+            DebugCommand::SaveCapture(_) |
+            DebugCommand::LoadCapture(_) => {
+                panic!("Capture commands are not welcome here!")
+            }
+            DebugCommand::EnableDualSourceBlending(_) => {
+                panic!("Should be handled by render backend");
             }
         }
     }
@@ -3053,18 +3119,18 @@ impl Renderer {
                             &mut self.renderer_errors,
                         );
                     }
+                    BrushBatchKind::Line => {
+                        self.brush_line.bind(
+                            &mut self.device,
+                            key.blend_mode,
+                            projection,
+                            0,
+                            &mut self.renderer_errors,
+                        );
+                    }
                 }
             }
             BatchKind::Transformable(transform_kind, batch_kind) => match batch_kind {
-                TransformBatchKind::Line => {
-                    self.ps_line.bind(
-                        &mut self.device,
-                        transform_kind,
-                        projection,
-                        0,
-                        &mut self.renderer_errors,
-                    );
-                }
                 TransformBatchKind::TextRun(..) => {
                     unreachable!("bug: text batches are special cased");
                 }
@@ -3160,19 +3226,18 @@ impl Renderer {
 
             let (readback_rect, readback_layer) = readback.get_target_rect();
             let (backdrop_rect, _) = backdrop.get_target_rect();
-            let content_to_device_scale = TypedScale::<_, _, DevicePixel>::new(1i32);
             let backdrop_screen_origin = match backdrop.kind {
-                RenderTaskKind::Picture(ref task_info) => task_info
-                    .content_origin
-                    .to_i32()
-                    * content_to_device_scale,
+                RenderTaskKind::Picture(ref task_info) => match task_info.content_origin {
+                    ContentOrigin::Local(_) => panic!("bug: composite from a local-space rasterized picture?"),
+                    ContentOrigin::Screen(p) => p,
+                },
                 _ => panic!("bug: composite on non-picture?"),
             };
             let source_screen_origin = match source.kind {
-                RenderTaskKind::Picture(ref task_info) => task_info
-                    .content_origin
-                    .to_i32()
-                    * content_to_device_scale,
+                RenderTaskKind::Picture(ref task_info) => match task_info.content_origin {
+                    ContentOrigin::Local(_) => panic!("bug: composite from a local-space rasterized picture?"),
+                    ContentOrigin::Screen(p) => p,
+                },
                 _ => panic!("bug: composite on non-picture?"),
             };
 
@@ -3343,14 +3408,14 @@ impl Renderer {
         // considering using this for (some) other text runs, since
         // it removes the overhead of submitting many small glyphs
         // to multiple tiles in the normal text run case.
-        if !target.text_run_cache_prims.is_empty() {
+        if !target.alpha_batcher.text_run_cache_prims.is_empty() {
             self.device.set_blend(true);
             self.device.set_blend_mode_premultiplied_alpha();
 
             let _timer = self.gpu_profile.start_timer(GPU_TAG_CACHE_TEXT_RUN);
             self.cs_text_run
                 .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
-            for (texture_id, instances) in &target.text_run_cache_prims {
+            for (texture_id, instances) in &target.alpha_batcher.text_run_cache_prims {
                 self.draw_instanced_batch(
                     instances,
                     VertexArrayKind::Primitive,
@@ -3359,17 +3424,22 @@ impl Renderer {
                 );
             }
         }
-        if !target.line_cache_prims.is_empty() {
+        if !target.alpha_batcher.line_cache_prims.is_empty() {
             // TODO(gw): Technically, we don't need blend for solid
             //           lines. We could check that here?
             self.device.set_blend(true);
             self.device.set_blend_mode_premultiplied_alpha();
 
             let _timer = self.gpu_profile.start_timer(GPU_TAG_CACHE_LINE);
-            self.cs_line
-                .bind(&mut self.device, projection, 0, &mut self.renderer_errors);
+            self.brush_line.bind(
+                &mut self.device,
+                BlendMode::PremultipliedAlpha,
+                projection,
+                0,
+                &mut self.renderer_errors,
+            );
             self.draw_instanced_batch(
-                &target.line_cache_prims,
+                &target.alpha_batcher.line_cache_prims,
                 VertexArrayKind::Primitive,
                 &BatchTextures::no_texture(),
                 stats,
@@ -3427,6 +3497,7 @@ impl Renderer {
                         BlendMode::SubpixelConstantTextColor(..) => debug_colors::GREEN,
                         BlendMode::SubpixelVariableTextColor => debug_colors::RED,
                         BlendMode::SubpixelWithBgColor => debug_colors::BLUE,
+                        BlendMode::SubpixelDualSource => debug_colors::YELLOW,
                     }.into();
                     for item_rect in &batch.item_rects {
                         self.debug.add_rect(item_rect, color);
@@ -3456,6 +3527,25 @@ impl Renderer {
                                     transform_kind,
                                     projection,
                                     TextShaderMode::from(glyph_format),
+                                    &mut self.renderer_errors,
+                                );
+
+                                self.draw_instanced_batch(
+                                    &batch.instances,
+                                    VertexArrayKind::Primitive,
+                                    &batch.key.textures,
+                                    stats,
+                                );
+                            }
+                            BlendMode::SubpixelDualSource => {
+                                self.device.set_blend_mode_subpixel_dual_source();
+
+                                self.ps_text_run_dual_source.bind(
+                                    &mut self.device,
+                                    glyph_format,
+                                    transform_kind,
+                                    projection,
+                                    TextShaderMode::SubpixelDualSource,
                                     &mut self.renderer_errors,
                                 );
 
@@ -3606,7 +3696,8 @@ impl Renderer {
                                 }
                                 BlendMode::SubpixelConstantTextColor(..) |
                                 BlendMode::SubpixelVariableTextColor |
-                                BlendMode::SubpixelWithBgColor => {
+                                BlendMode::SubpixelWithBgColor |
+                                BlendMode::SubpixelDualSource => {
                                     unreachable!("bug: subpx text handled earlier");
                                 }
                             }
@@ -4018,10 +4109,17 @@ impl Renderer {
             }
         }
 
-        self.node_data_texture
-            .update(&mut self.device, &mut frame.node_data);
-        self.device
-            .bind_texture(TextureSampler::ClipScrollNodes, &self.node_data_texture.texture);
+        self.node_data_texture.update(&mut self.device, &mut frame.node_data);
+        self.device.bind_texture(TextureSampler::ClipScrollNodes, &self.node_data_texture.texture);
+
+        self.local_clip_rects_texture.update(
+            &mut self.device,
+            &mut frame.clip_chain_local_clip_rects
+        );
+        self.device.bind_texture(
+            TextureSampler::LocalClipRects,
+            &self.local_clip_rects_texture.texture
+        );
 
         self.render_task_texture
             .update(&mut self.device, &mut frame.render_tasks.task_data);
@@ -4407,6 +4505,7 @@ impl Renderer {
             self.device.delete_texture(dither_matrix_texture);
         }
         self.node_data_texture.deinit(&mut self.device);
+        self.local_clip_rects_texture.deinit(&mut self.device);
         self.render_task_texture.deinit(&mut self.device);
         self.device.delete_pbo(self.texture_cache_upload_pbo);
         self.texture_resolver.deinit(&mut self.device);
@@ -4415,7 +4514,6 @@ impl Renderer {
         self.device.delete_vao(self.blur_vao);
         self.debug.deinit(&mut self.device);
         self.cs_text_run.deinit(&mut self.device);
-        self.cs_line.deinit(&mut self.device);
         self.cs_blur_a8.deinit(&mut self.device);
         self.cs_blur_rgba8.deinit(&mut self.device);
         self.brush_mask_rounded_rect.deinit(&mut self.device);
@@ -4424,10 +4522,12 @@ impl Renderer {
         self.brush_image_rgba8_alpha_mask.deinit(&mut self.device);
         self.brush_image_a8.deinit(&mut self.device);
         self.brush_solid.deinit(&mut self.device);
+        self.brush_line.deinit(&mut self.device);
         self.cs_clip_rectangle.deinit(&mut self.device);
         self.cs_clip_image.deinit(&mut self.device);
         self.cs_clip_border.deinit(&mut self.device);
         self.ps_text_run.deinit(&mut self.device);
+        self.ps_text_run_dual_source.deinit(&mut self.device);
         for shader in self.ps_image {
             if let Some(shader) = shader {
                 shader.deinit(&mut self.device);
@@ -4446,7 +4546,6 @@ impl Renderer {
         self.ps_gradient.deinit(&mut self.device);
         self.ps_angle_gradient.deinit(&mut self.device);
         self.ps_radial_gradient.deinit(&mut self.device);
-        self.ps_line.deinit(&mut self.device);
         self.ps_blend.deinit(&mut self.device);
         self.ps_hw_composite.deinit(&mut self.device);
         self.ps_split_composite.deinit(&mut self.device);
@@ -4533,6 +4632,7 @@ pub struct RendererOptions {
     pub cached_programs: Option<Rc<ProgramCache>>,
     pub debug_flags: DebugFlags,
     pub renderer_id: Option<u64>,
+    pub disable_dual_source_blending: bool,
 }
 
 impl Default for RendererOptions {
@@ -4564,6 +4664,7 @@ impl Default for RendererOptions {
             enable_render_on_scroll: true,
             renderer_id: None,
             cached_programs: None,
+            disable_dual_source_blending: false,
         }
     }
 }

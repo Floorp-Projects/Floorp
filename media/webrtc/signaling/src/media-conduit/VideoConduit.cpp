@@ -808,6 +808,11 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   // Recreating on PayloadType change may be overkill, but is safe.
   if (mSendStream) {
     if (!RequiresNewSendStream(*codecConfig)) {
+      {
+        MutexAutoLock lock(mCodecMutex);
+        mCurSendCodecConfig->mEncodingConstraints = codecConfig->mEncodingConstraints;
+        mCurSendCodecConfig->mSimulcastEncodings = codecConfig->mSimulcastEncodings;
+      }
       mSendStream->ReconfigureVideoEncoder(mEncoderConfig.CopyConfig());
       return kMediaConduitNoError;
     }
@@ -1397,6 +1402,11 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     if (use_fec) {
       mRecvStreamConfig.rtp.ulpfec.ulpfec_payload_type = ulpfec_payload_type;
       mRecvStreamConfig.rtp.ulpfec.red_payload_type = red_payload_type;
+      mRecvStreamConfig.rtp.ulpfec.red_rtx_payload_type = -1;
+    } else {
+      // Reset to defaults
+      mRecvStreamConfig.rtp.ulpfec.ulpfec_payload_type = -1;
+      mRecvStreamConfig.rtp.ulpfec.red_payload_type = -1;
       mRecvStreamConfig.rtp.ulpfec.red_rtx_payload_type = -1;
     }
 

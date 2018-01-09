@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{BorderRadius, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePoint, DeviceRect};
-use api::{DeviceSize, LayerPoint, LayerRect, LayerSize, LayerToWorldTransform, WorldRect};
-use euclid::{Point2D, Rect, TypedScale, Size2D, TypedPoint2D, TypedRect, TypedSize2D};
-use euclid::{TypedTransform2D, TypedTransform3D};
+use api::{BorderRadius, DeviceIntPoint, DeviceIntRect, DeviceIntSize, DevicePixelScale};
+use api::{DevicePoint, DeviceRect, DeviceSize, LayerPoint, LayerRect, LayerSize};
+use api::{LayerToWorldTransform, LayerTransform, LayerVector2D, WorldRect};
+use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D, TypedTransform2D};
+use euclid::TypedTransform3D;
 use num_traits::Zero;
 use std::{i32, f32};
 
@@ -20,6 +21,7 @@ pub trait MatrixHelpers<Src, Dst> {
     fn inverse_project(&self, target: &TypedPoint2D<f32, Dst>) -> Option<TypedPoint2D<f32, Src>>;
     fn inverse_rect_footprint(&self, rect: &TypedRect<f32, Dst>) -> TypedRect<f32, Src>;
     fn transform_kind(&self) -> TransformedRectKind;
+    fn is_simple_translation(&self) -> bool;
 }
 
 impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
@@ -92,6 +94,17 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
             TransformedRectKind::Complex
         }
     }
+
+    fn is_simple_translation(&self) -> bool {
+        if self.m11 != 1. || self.m22 != 1. || self.m33 != 1. {
+            return false;
+        }
+        self.m12.abs() < NEARLY_ZERO && self.m13.abs() < NEARLY_ZERO &&
+            self.m14.abs() < NEARLY_ZERO && self.m21.abs() < NEARLY_ZERO &&
+            self.m23.abs() < NEARLY_ZERO && self.m24.abs() < NEARLY_ZERO &&
+            self.m31.abs() < NEARLY_ZERO && self.m32.abs() < NEARLY_ZERO &&
+            self.m34.abs() < NEARLY_ZERO
+    }
 }
 
 pub trait RectHelpers<U>
@@ -140,7 +153,7 @@ pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
 pub fn calculate_screen_bounding_rect(
     transform: &LayerToWorldTransform,
     rect: &LayerRect,
-    device_pixel_ratio: f32
+    device_pixel_scale: DevicePixelScale,
 ) -> DeviceIntRect {
     let points = [
         transform.transform_point2d(&rect.origin),
@@ -149,9 +162,7 @@ pub fn calculate_screen_bounding_rect(
         transform.transform_point2d(&rect.bottom_right()),
     ];
 
-    let scale = TypedScale::new(device_pixel_ratio);
-    let rect: DeviceRect = WorldRect::from_points(&points) * scale;
-
+    let rect = WorldRect::from_points(&points) * device_pixel_scale;
     let max_rect = DeviceRect::max_rect();
     rect
         .round_out()
@@ -322,5 +333,76 @@ impl MaxRect for DeviceRect {
             DevicePoint::new(-MAX_COORD, -MAX_COORD),
             DeviceSize::new(2.0 * MAX_COORD, 2.0 * MAX_COORD),
         )
+    }
+}
+
+/// An enum that tries to avoid expensive transformation matrix calculations
+/// when possible when dealing with non-perspective axis-aligned transformations.
+#[derive(Debug, Clone)]
+pub enum TransformOrOffset {
+    /// A simple offset, which can be used without doing any matrix math.
+    Offset(LayerVector2D),
+
+    /// A transformation with an inverse. If the inverse isn't present, this isn't a 2D
+    /// transformation, which means we need to fall back to using inverse_rect_footprint.
+    /// Since this operation is so expensive, we avoid it for the 2D case.
+    Transform {
+        transform: LayerTransform,
+        inverse: Option<LayerTransform>,
+    }
+}
+
+impl TransformOrOffset {
+    pub fn zero() -> TransformOrOffset {
+        TransformOrOffset::Offset(LayerVector2D::zero())
+    }
+
+    fn new_transform(transform: LayerTransform) -> TransformOrOffset {
+        if transform.is_2d() {
+            TransformOrOffset::Transform {
+                transform,
+                inverse: Some(transform.inverse().expect("Expected invertible matrix."))
+            }
+        } else {
+            TransformOrOffset::Transform { transform, inverse: None }
+        }
+    }
+
+    pub fn apply(&self, rect: &LayerRect) -> LayerRect {
+        match *self {
+            TransformOrOffset::Offset(offset) => rect.translate(&offset),
+            TransformOrOffset::Transform {transform, .. } => transform.transform_rect(&rect),
+        }
+    }
+
+    pub fn unapply(&self, rect: &LayerRect) -> LayerRect {
+        match *self {
+            TransformOrOffset::Offset(offset) => rect.translate(&-offset),
+            TransformOrOffset::Transform { inverse: Some(inverse), .. }  =>
+                inverse.transform_rect(&rect),
+            TransformOrOffset::Transform { transform, inverse: None } =>
+                transform.inverse_rect_footprint(rect),
+        }
+    }
+
+    pub fn offset(&self, new_offset: LayerVector2D) -> TransformOrOffset {
+        match *self {
+            TransformOrOffset::Offset(offset) => TransformOrOffset::Offset(offset + new_offset),
+            TransformOrOffset::Transform { transform, .. } => {
+                let transform = transform.pre_translate(new_offset.to_3d());
+                TransformOrOffset::new_transform(transform)
+            }
+        }
+    }
+
+    pub fn update(&self, transform: LayerTransform) -> Option<TransformOrOffset> {
+        if transform.is_simple_translation() {
+            let offset = LayerVector2D::new(transform.m41, transform.m42);
+            Some(self.offset(offset))
+        } else {
+            // If we break 2D axis alignment or have a perspective component, we need to start a
+            // new incompatible coordinate system with which we cannot share clips without masking.
+            None
+        }
     }
 }

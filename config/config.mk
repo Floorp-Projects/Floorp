@@ -167,8 +167,9 @@ endif
 endif # MOZ_PROFILE_USE
 endif # NO_PROFILE_GUIDED_OPTIMIZE
 
+LOCALE_TOPDIR ?= $(topsrcdir)
 MAKE_JARS_FLAGS = \
-	-t $(topsrcdir) \
+	-t $(LOCALE_TOPDIR) \
 	-f $(MOZ_JAR_MAKER_FILE_FORMAT) \
 	$(NULL)
 
@@ -354,14 +355,18 @@ ifndef L10NBASEDIR
   L10NBASEDIR = $(error L10NBASEDIR not defined by configure)
 endif
 
-EXPAND_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/$(1)/en-US,$(or $(realpath $(L10NBASEDIR)),$(abspath $(L10NBASEDIR)))/$(AB_CD)/$(subst /locales,,$(1)))
+EXPAND_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(LOCALE_TOPDIR)/$(1)/en-US,$(or $(realpath $(L10NBASEDIR)),$(abspath $(L10NBASEDIR)))/$(AB_CD)/$(subst /locales,,$(1)))
 
 ifdef relativesrcdir
-LOCALE_SRCDIR ?= $(call EXPAND_LOCALE_SRCDIR,$(relativesrcdir))
+LOCALE_RELATIVEDIR ?= $(relativesrcdir)
+endif
+
+ifdef LOCALE_RELATIVEDIR
+LOCALE_SRCDIR ?= $(call EXPAND_LOCALE_SRCDIR,$(LOCALE_RELATIVEDIR))
 endif
 
 ifdef relativesrcdir
-MAKE_JARS_FLAGS += --relativesrcdir=$(relativesrcdir)
+MAKE_JARS_FLAGS += --relativesrcdir=$(LOCALE_RELATIVEDIR)
 ifneq (en-US,$(AB_CD))
 ifdef IS_LANGUAGE_REPACK
 MAKE_JARS_FLAGS += --locale-mergedir=$(REAL_LOCALE_MERGEDIR)
@@ -378,7 +383,7 @@ endif # ! relativesrcdir
 
 ifdef IS_LANGUAGE_REPACK
 MERGE_FILE = $(firstword \
-  $(wildcard $(REAL_LOCALE_MERGEDIR)/$(subst /locales,,$(relativesrcdir))/$(1)) \
+  $(wildcard $(REAL_LOCALE_MERGEDIR)/$(subst /locales,,$(LOCALE_RELATIVEDIR))/$(1)) \
   $(wildcard $(LOCALE_SRCDIR)/$(1)) \
   $(srcdir)/en-US/$(1) )
 else

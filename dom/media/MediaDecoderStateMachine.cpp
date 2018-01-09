@@ -290,8 +290,7 @@ protected:
     // the elements of the Tuple into the final function call.
     auto copiedArgs = MakeTuple(Forward<Ts>(aArgs)...);
 
-    // keep mMaster in a local object because mMaster will become invalid after
-    // the current state object is deleted.
+    // Copy mMaster which will reset to null.
     auto master = mMaster;
 
     auto* s = new S(master);
@@ -302,6 +301,14 @@ protected:
     SLOG("change state to: %s", ToStateStr(s->GetState()));
 
     Exit();
+
+    // Delete the old state asynchronously to avoid UAF if the caller tries to
+    // access its members after SetState() returns.
+    master->OwnerThread()->DispatchDirectTask(
+      NS_NewRunnableFunction("MDSM::StateObject::DeleteOldState",
+                             [toDelete = Move(master->mStateObj)](){}));
+    // Also reset mMaster to catch potentail UAF.
+    mMaster = nullptr;
 
     master->mStateObj.reset(s);
     return CallEnterMemberFunction(s, copiedArgs,

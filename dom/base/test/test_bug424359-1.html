@@ -24,9 +24,10 @@ function loadFileContent(aFile, aCharset) {
     if(aCharset == undefined)
         aCharset = 'UTF-8';
 
-    var baseUri = SpecialPowers.Cc['@mozilla.org/network/standard-url;1']
-                   .createInstance(SpecialPowers.Ci.nsIURI);
-    baseUri.spec = window.location.href;
+    var baseUri = SpecialPowers.Cc['@mozilla.org/network/standard-url-mutator;1']
+                                  .createInstance(SpecialPowers.Ci.nsIURIMutator)
+                                  .setSpec(window.location.href)
+                                  .finalize();
 
     var ios = SpecialPowers.Cc['@mozilla.org/network/io-service;1']
             .getService(SpecialPowers.Ci.nsIIOService);

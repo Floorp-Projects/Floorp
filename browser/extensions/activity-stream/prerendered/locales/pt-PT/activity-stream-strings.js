@@ -52,7 +52,7 @@ window.gActivityStreamStrings = {
   "settings_pane_header": "Preferências de novo separador",
   "settings_pane_body2": "Escolha o que vê nesta página.",
   "settings_pane_search_header": "Pesquisa",
-  "settings_pane_search_body": "Pesquise na Web a partir do seu 'Novo separador'.",
+  "settings_pane_search_body": "Pesquise na Web a partir do seu novo separador.",
   "settings_pane_topsites_header": "Sites mais visitados",
   "settings_pane_topsites_body": "Aceda aos websites que mais visita.",
   "settings_pane_topsites_options_showmore": "Mostrar duas linhas",

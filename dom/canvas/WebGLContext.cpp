@@ -14,7 +14,7 @@
 #include "gfxPattern.h"
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
-#include "gfx/gl/MozFramebuffer.h"
+#include "MozFramebuffer.h"
 #include "GLBlitHelper.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"

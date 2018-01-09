@@ -95,9 +95,10 @@ function starttest(){
   // Try some basic stuff with XHR.
   var xhr2 = SpecialPowers.Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(SpecialPowers.Ci.nsIXMLHttpRequest);
   is(xhr2.readyState, XMLHttpRequest.UNSENT, "Should be able to get props off privileged objects");
-  var testURI = SpecialPowers.Cc['@mozilla.org/network/standard-url;1']
-                                              .createInstance(SpecialPowers.Ci.nsIURI);
-  testURI.spec = "http://www.foobar.org/";
+  var testURI = SpecialPowers.Cc['@mozilla.org/network/standard-url-mutator;1']
+                             .createInstance(SpecialPowers.Ci.nsIURIMutator)
+                             .setSpec("http://www.foobar.org/")
+                             .finalize();
   is(testURI.spec, "http://www.foobar.org/", "Getters/Setters should work correctly");
   is(SpecialPowers.wrap(document).getElementsByTagName('details').length, 0, "Should work with proxy-based DOM bindings.");
 

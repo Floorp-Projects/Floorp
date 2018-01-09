@@ -11,7 +11,7 @@ class SyntaxError(TemplateError):
     @classmethod
     def unexpected(cls, got, exp):
         exp = ', '.join(sorted(exp))
-        return cls('Found {}, expected {}'.format(got, exp))
+        return cls('Found {}, expected {}'.format(got.value, exp))
 
 
 Token = namedtuple('Token', ['kind', 'value', 'start', 'end'])
@@ -92,7 +92,7 @@ class PrattParser(with_metaclass(PrattParserMeta, object)):
         # if there are any tokens remaining, that's an error..
         token = pc.attempt()
         if token:
-            raise SyntaxError.unexpected(token.kind, self.infix_rules)
+            raise SyntaxError.unexpected(token, self.infix_rules)
         return result
 
     def parseUntilTerminator(self, source, terminator):
@@ -100,7 +100,7 @@ class PrattParser(with_metaclass(PrattParserMeta, object)):
         result = pc.parse()
         token = pc.attempt()
         if token.kind != terminator:
-            raise SyntaxError.unexpected(token.kind, [terminator])
+            raise SyntaxError.unexpected(token, [terminator])
         return (result, token.start)
 
     def _generate_tokens(self, source):
@@ -169,7 +169,7 @@ class ParseContext(object):
         if not token:
             raise SyntaxError('Unexpected end of input')
         if kinds and token.kind not in kinds:
-            raise SyntaxError.unexpected(token.kind, kinds)
+            raise SyntaxError.unexpected(token, kinds)
         return token
 
     def parse(self, precedence=None):
@@ -178,7 +178,7 @@ class ParseContext(object):
         token = self.require()
         prefix_rule = parser.prefix_rules.get(token.kind)
         if not prefix_rule:
-            raise SyntaxError.unexpected(token.kind, parser.prefix_rules)
+            raise SyntaxError.unexpected(token, parser.prefix_rules)
         left = prefix_rule(parser, token, self)
         while self.next_token:
             kind = self.next_token.kind
