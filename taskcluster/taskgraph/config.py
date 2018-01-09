@@ -26,6 +26,10 @@ graph_config_schema = Schema({
         # all"
         Required('ridealong-builds', default={}): {basestring: [basestring]},
     },
+    Required('scriptworker'): {
+        # Mapping of scriptworker types to scopes they accept
+        Required('worker-types'): {basestring: [basestring]}
+    },
 })
 
 

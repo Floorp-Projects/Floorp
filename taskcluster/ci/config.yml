@@ -96,3 +96,11 @@ try:
         'win32':
             - 'sm-plain-win32'
             - 'sm-compacting-win32'
+
+scriptworker:
+    worker-types:
+        'scriptworker-prov-v1/signing-linux-v1':
+            - 'project:releng:signing:cert:release-signing'
+            - 'project:releng:signing:cert:nightly-signing'
+        'scriptworker-prov-v1/depsigning':
+            - 'project:releng:signing:cert:dep-signing'

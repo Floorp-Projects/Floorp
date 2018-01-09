@@ -12,6 +12,8 @@ project branch, and merge day uplifts more user friendly.
 In the future, we may adjust scopes by other settings as well, e.g. different
 scopes for `push-to-candidates` rather than `push-to-releases`, even if both
 happen on mozilla-beta and mozilla-release.
+
+Additional configuration is found in the :ref:`graph config <taskgraph-graph-config>`.
 """
 from __future__ import absolute_import, print_function, unicode_literals
 import functools
@@ -296,7 +298,7 @@ def get_scope_from_project(alias_to_project_map, alias_to_scope_map, config):
         alias_to_project_map (list of lists): each list pair contains the
             alias and the set of projects that match.  This is ordered.
         alias_to_scope_map (dict): the alias alias to scope
-        config (dict): the task config that defines the project.
+        config (TransformConfig): The configuration for the kind being transformed.
 
     Returns:
         string: the scope to use.
@@ -314,7 +316,7 @@ def get_scope_from_target_method(alias_to_tasks_map, alias_to_scope_map, config)
         alias_to_tasks_map (list of lists): each list pair contains the
             alias and the set of target methods that match. This is ordered.
         alias_to_scope_map (dict): the alias alias to scope
-        config (dict): the task config that defines the target task method.
+        config (TransformConfig): The configuration for the kind being transformed.
 
     Returns:
         string: the scope to use.
@@ -340,7 +342,7 @@ def get_scope_from_target_method_and_project(alias_to_tasks_map, alias_to_projec
         alias_to_project_map (list of lists): each list pair contains the
             alias and the set of projects that match.  This is ordered.
         aliases_to_scope_map (dict of dicts): the task alias to project alias to scope
-        config (dict): the task config that defines the target task method and project.
+        config (TransformConfig): The configuration for the kind being transformed.
 
     Returns:
         string: the scope to use.
@@ -436,7 +438,7 @@ def get_release_config(config):
     Currently only applies to beetmover tasks.
 
     Args:
-        config (dict): the task config that defines the target task method.
+        config (TransformConfig): The configuration for the kind being transformed.
 
     Returns:
         dict: containing both `build_number` and `version`.  This can be used to
@@ -484,3 +486,28 @@ def get_signing_cert_scope_per_platform(build_platform, is_nightly, config):
         return get_signing_cert_scope(config)
     else:
         return 'project:releng:signing:cert:dep-signing'
+
+
+def get_worker_type_for_scope(config, scope):
+    """Get the scriptworker type that will accept the given scope.
+
+    Args:
+        config (TransformConfig): The configuration for the kind being transformed.
+        scope (string): The scope being used.
+
+    Returns:
+        string: The worker-type to use.
+    """
+    for worker_type, scopes in config.graph_config['scriptworker']['worker-types'].items():
+        if scope in scopes:
+            return worker_type
+    raise RuntimeError(
+        "Unsupported scriptworker scope {scope}. (supported scopes: {available_scopes})".format(
+            scope=scope,
+            available_scopes=sorted(
+                scope
+                for scopes in config.graph_config['scriptworker']['worker-types'].values()
+                for scope in scopes
+            ),
+        )
+    )
