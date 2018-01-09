@@ -39,21 +39,49 @@ https://trac.torproject.org/projects/tor/ticket/1517
     "new File([], \"\").lastModifiedDate.getTime()",
   ];
 
-  const kExpectedResolution = 100;
+  let isRounded = (x, expectedPrecision) => {
+    let rounded = (Math.floor(x / expectedPrecision) * expectedPrecision);
+    // First we do the perfectly normal check that should work just fine
+    if (rounded === x || x === 0)
+      return true;
 
-  function* checkWorker(worker, prefname) {
+    // When we're diving by non-whole numbers, we may not get perfect
+    // multiplication/division because of floating points
+    if (Math.abs(rounded - x + expectedPrecision) < .0000001) {
+      return true;
+    } else if (Math.abs(rounded - x) < .0000001) {
+      return true;
+    }
+
+    // Then we handle the case where you're sub-millisecond and the timer is not
+    // We check that the timer is not sub-millisecond by assuming it is not if it
+    // returns an even number of milliseconds
+    if (expectedPrecision < 1 && Math.round(x) == x) {
+      if (Math.round(rounded) == x) {
+        return true;
+      }
+    }
+
+    ok(false, "Looming Test Failure, Additional Debugging Info: Expected Precision: " + expectedPrecision + " Measured Value: " + x +
+      " Rounded Vaue: " + rounded + " Fuzzy1: " + Math.abs(rounded - x + expectedPrecision) +
+      " Fuzzy 2: " + Math.abs(rounded - x));
+
+    return false;
+  };
+
+  async function checkWorker(worker, prefname, expectedPrecision) {
     // The child worker will send the results back.
-    let checkTimeStamps = () => new Promise(function(resolve) {
+    let checkWorkerTimeStamps = () => new Promise(function(resolve) {
       let onMessage = function(event) {
         worker.removeEventListener("message", onMessage);
 
         let timeStamps = event.data;
         for (let i = 0; i < timeStampCodes.length; i++) {
           let timeStamp = timeStamps[i];
-          is(timeStamp % kExpectedResolution, 0,
+          ok(isRounded(timeStamp, expectedPrecision),
             "pref: " + prefname + " - '" +
              "'" + timeStampCodes[i] +
-             "' should be rounded to nearest 100 ms in workers; saw " +
+             "' should be rounded to nearest " + expectedPrecision + " us in workers; saw " +
              timeStamp);
         }
         resolve();
@@ -65,83 +93,205 @@ https://trac.torproject.org/projects/tor/ticket/1517
     worker.postMessage(timeStampCodes);
 
     // First, check the child's results.
-    yield checkTimeStamps();
+    await checkWorkerTimeStamps();
     // Then, check the grandchild's results.
-    yield checkTimeStamps();
+    await checkWorkerTimeStamps();
 
     worker.terminate();
   }
 
-  add_task(async function testWorkerRFP() {
-    // Create one worker before setting the pref, and one after, in order to
-    // check that the resolution is updated whether or not the worker was
-    // already started
-    let worker1 = new Worker("worker_child.js");
-    await SpecialPowers.pushPrefEnv({
-      "set": [["privacy.resistFingerprinting", true],
-              ["privacy.reduceTimerPrecision", false]]});
-    let worker2 = new Worker("worker_child.js");
-    // Allow ~550 ms to elapse, so we can get non-zero
-    // time values for all elements.
-    await new Promise(resolve => window.setTimeout(resolve, 550));
-    await checkWorker(worker1, "privacy.resistFingerprinting");
-    await checkWorker(worker2, "privacy.resistFingerprinting");
-  });
-
-  add_task(async function testWorkerRTP() {
-    // Create one worker before setting the pref, and one after, in order to
-    // check that the resolution is updated whether or not the worker was
-    // already started
-    let worker1 = new Worker("worker_child.js");
-    await SpecialPowers.pushPrefEnv({
-      "set": [["privacy.resistFingerprinting", false],
-              ["privacy.reduceTimerPrecision", true]]});
-    let worker2 = new Worker("worker_child.js");
-    // Allow ~550 ms to elapse, so we can get non-zero
-    // time values for all elements.
-    await new Promise(resolve => window.setTimeout(resolve, 550));
-    await checkWorker(worker1, "privacy.reduceTimerPrecision");
-    await checkWorker(worker2, "privacy.reduceTimerPrecision");
-  });
-
-  add_task(async function testDOMRFP() {
-    await SpecialPowers.pushPrefEnv({
-      "set": [["privacy.resistFingerprinting", true],
-              ["privacy.reduceTimerPrecision", false]]});
+  function checkTimestamps(pref, expectedPrecision) {
+    // These are measured in seconds, so we need to scale them up
     let timeStampCodesDOM = timeStampCodes.concat([
       "audioContext.currentTime * 1000",
       "canvasStream.currentTime * 1000",
     ]);
     // Loop through each timeStampCode, evaluate it,
-    // and check if it is rounded to the nearest 100 ms.
+    // and check if it is rounded
     for (let timeStampCode of timeStampCodesDOM) {
       let timeStamp = eval(timeStampCode);
-      is(timeStamp % kExpectedResolution, 0,
-        "pref: privacy.resistFingerprinting - '" +
+      ok(isRounded(timeStamp, expectedPrecision),
+        "pref: " + pref + " - '" +
          "'" + timeStampCode +
-         "' should be rounded to nearest 100 ms; saw " +
+         "' should be rounded to nearest " +
+         expectedPrecision + " us; saw " +
          timeStamp);
     }
+  }
+
+
+  add_task(async function testWorkerRFP1() {
+    // Create one worker before setting the pref, and one after, in order to
+    // check that the resolution is updated whether or not the worker was
+    // already started
+    let expectedPrecision = 100;
+    let worker1 = new Worker("worker_child.js");
+    await SpecialPowers.pushPrefEnv({
+      "set": [["privacy.resistFingerprinting", true],
+              ["privacy.reduceTimerPrecision", false],
+              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+              ]});
+    let worker2 = new Worker("worker_child.js");
+    // Allow ~550 ms to elapse, so we can get non-zero
+    // time values for all elements.
+    await new Promise(resolve => window.setTimeout(resolve, 550));
+    await checkWorker(worker1, "privacy.resistFingerprinting", expectedPrecision);
+    await checkWorker(worker2, "privacy.resistFingerprinting", expectedPrecision);
   });
 
-  add_task(async function testDOMRTP() {
+  add_task(async function testWorkerRFP2() {
+    // Create one worker before setting the pref, and one after, in order to
+    // check that the resolution is updated whether or not the worker was
+    // already started
+    let expectedPrecision = 13;
+    let worker1 = new Worker("worker_child.js");
+    await SpecialPowers.pushPrefEnv({
+      "set": [["privacy.resistFingerprinting", true],
+              ["privacy.reduceTimerPrecision", false],
+              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+              ]});
+    let worker2 = new Worker("worker_child.js");
+    // Allow ~550 ms to elapse, so we can get non-zero
+    // time values for all elements.
+    await new Promise(resolve => window.setTimeout(resolve, 550));
+    await checkWorker(worker1, "privacy.resistFingerprinting", expectedPrecision);
+    await checkWorker(worker2, "privacy.resistFingerprinting", expectedPrecision);
+  });
+
+  add_task(async function testWorkerRFP3() {
+    // Create one worker before setting the pref, and one after, in order to
+    // check that the resolution is updated whether or not the worker was
+    // already started
+    let expectedPrecision = .13;
+    let worker1 = new Worker("worker_child.js");
+    await SpecialPowers.pushPrefEnv({
+      "set": [["privacy.resistFingerprinting", true],
+              ["privacy.reduceTimerPrecision", false],
+              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+              ]});
+    let worker2 = new Worker("worker_child.js");
+    // Allow ~550 ms to elapse, so we can get non-zero
+    // time values for all elements.
+    await new Promise(resolve => window.setTimeout(resolve, 550));
+    await checkWorker(worker1, "privacy.resistFingerprinting", expectedPrecision);
+    await checkWorker(worker2, "privacy.resistFingerprinting", expectedPrecision);
+  });
+
+  add_task(async function testWorkerRTP1() {
+    // Create one worker before setting the pref, and one after, in order to
+    // check that the resolution is updated whether or not the worker was
+    // already started
+    let expectedPrecision = 100;
+    let worker1 = new Worker("worker_child.js");
     await SpecialPowers.pushPrefEnv({
       "set": [["privacy.resistFingerprinting", false],
-              ["privacy.reduceTimerPrecision", true]]});
-    let timeStampCodesDOM = timeStampCodes.concat([
-      "audioContext.currentTime * 1000",
-      "canvasStream.currentTime * 1000",
-    ]);
-    // Loop through each timeStampCode, evaluate it,
-    // and check if it is rounded to the nearest 100 ms.
-    for (let timeStampCode of timeStampCodesDOM) {
-      let timeStamp = eval(timeStampCode);
-      is(timeStamp % kExpectedResolution, 0,
-         "pref: privacy.reduceTimerPrecision - '" +
-         timeStampCode +
-         "' should be rounded to nearest 100 ms; saw " +
-         timeStamp);
-    }
+              ["privacy.reduceTimerPrecision", true],
+              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+              ]});
+    let worker2 = new Worker("worker_child.js");
+    // Allow ~550 ms to elapse, so we can get non-zero
+    // time values for all elements.
+    await new Promise(resolve => window.setTimeout(resolve, 550));
+    await checkWorker(worker1, "privacy.reduceTimerPrecision", expectedPrecision);
+    await checkWorker(worker2, "privacy.reduceTimerPrecision", expectedPrecision);
+  });
+
+  add_task(async function testWorkerRTP2() {
+    // Create one worker before setting the pref, and one after, in order to
+    // check that the resolution is updated whether or not the worker was
+    // already started
+    let expectedPrecision = 13;
+    let worker1 = new Worker("worker_child.js");
+    await SpecialPowers.pushPrefEnv({
+      "set": [["privacy.resistFingerprinting", false],
+              ["privacy.reduceTimerPrecision", true],
+              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+              ]});
+    let worker2 = new Worker("worker_child.js");
+    // Allow ~550 ms to elapse, so we can get non-zero
+    // time values for all elements.
+    await new Promise(resolve => window.setTimeout(resolve, 550));
+    await checkWorker(worker1, "privacy.reduceTimerPrecision", expectedPrecision);
+    await checkWorker(worker2, "privacy.reduceTimerPrecision", expectedPrecision);
+  });
+
+  add_task(async function testWorkerRTP3() {
+    // Create one worker before setting the pref, and one after, in order to
+    // check that the resolution is updated whether or not the worker was
+    // already started
+    let expectedPrecision = .13;
+    let worker1 = new Worker("worker_child.js");
+    await SpecialPowers.pushPrefEnv({
+      "set": [["privacy.resistFingerprinting", false],
+              ["privacy.reduceTimerPrecision", true],
+              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+              ]});
+    let worker2 = new Worker("worker_child.js");
+    // Allow ~550 ms to elapse, so we can get non-zero
+    // time values for all elements.
+    await new Promise(resolve => window.setTimeout(resolve, 550));
+    await checkWorker(worker1, "privacy.reduceTimerPrecision", expectedPrecision);
+    await checkWorker(worker2, "privacy.reduceTimerPrecision", expectedPrecision);
+  });
+
+  add_task(async function testDOMRFP1() {
+    let expectedPrecision = 100;
+    await SpecialPowers.pushPrefEnv({
+      "set": [["privacy.resistFingerprinting", true],
+              ["privacy.reduceTimerPrecision", false],
+              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+              ]});
+    checkTimestamps("privacy.resistFingerprinting", expectedPrecision);
+  });
+
+  add_task(async function testDOMRFP2() {
+    let expectedPrecision = 13;
+    await SpecialPowers.pushPrefEnv({
+      "set": [["privacy.resistFingerprinting", true],
+              ["privacy.reduceTimerPrecision", false],
+              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+              ]});
+    checkTimestamps("privacy.resistFingerprinting", expectedPrecision);
+  });
+
+  add_task(async function testDOMRFP3() {
+    let expectedPrecision = .13;
+    await SpecialPowers.pushPrefEnv({
+      "set": [["privacy.resistFingerprinting", true],
+              ["privacy.reduceTimerPrecision", false],
+              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+              ]});
+    checkTimestamps("privacy.resistFingerprinting", expectedPrecision);
+  });
+
+  add_task(async function testDOMRTP1() {
+    let expectedPrecision = 100;
+    await SpecialPowers.pushPrefEnv({
+      "set": [["privacy.resistFingerprinting", false],
+              ["privacy.reduceTimerPrecision", true],
+              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+              ]});
+    checkTimestamps("privacy.reduceTimerPrecision", expectedPrecision);
+  });
+
+  add_task(async function testDOMRTP2() {
+    let expectedPrecision = 13;
+    await SpecialPowers.pushPrefEnv({
+      "set": [["privacy.resistFingerprinting", false],
+              ["privacy.reduceTimerPrecision", true],
+              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+              ]});
+    checkTimestamps("privacy.reduceTimerPrecision", expectedPrecision);
+  });
+
+  add_task(async function testDOMRTP3() {
+    let expectedPrecision = .13;
+    await SpecialPowers.pushPrefEnv({
+      "set": [["privacy.resistFingerprinting", false],
+              ["privacy.reduceTimerPrecision", true],
+              ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", expectedPrecision * 1000]
+              ]});
+    checkTimestamps("privacy.reduceTimerPrecision", expectedPrecision);
   });
 
 </script>
