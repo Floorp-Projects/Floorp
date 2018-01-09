@@ -93,6 +93,7 @@ OutputParser.prototype = {
     options.expectShape = name === "clip-path" ||
                           (name === "shape-outside"
                            && Services.prefs.getBoolPref(CSS_SHAPE_OUTSIDE_ENABLED_PREF));
+    options.expectFont = name === "font-family";
     options.supportsColor = this.supportsType(name, CSS_TYPES.COLOR) ||
                             this.supportsType(name, CSS_TYPES.GRADIENT);
 
@@ -285,6 +286,7 @@ OutputParser.prototype = {
   _doParse: function (text, options, tokenStream, stopAtCloseParen) {
     let parenDepth = stopAtCloseParen ? 1 : 0;
     let outerMostFunctionTakesColor = false;
+    let fontFamilyNameParts = [];
 
     let colorOK = function () {
       return options.supportsColor ||
@@ -302,6 +304,9 @@ OutputParser.prototype = {
     while (!done) {
       let token = tokenStream.nextToken();
       if (!token) {
+        if (options.expectFont && fontFamilyNameParts.length !== 0) {
+          this._appendFontFamily(fontFamilyNameParts.join(""), options);
+        }
         break;
       }
 
@@ -383,6 +388,8 @@ OutputParser.prototype = {
             this._appendColor(token.text, options);
           } else if (angleOK(token.text)) {
             this._appendAngle(token.text, options);
+          } else if (options.expectFont) {
+            fontFamilyNameParts.push(token.text);
           } else {
             this._appendTextNode(text.substring(token.startOffset,
                                                 token.endOffset));
@@ -418,6 +425,24 @@ OutputParser.prototype = {
                           token.text, options);
           break;
 
+        case "string":
+          if (options.expectFont) {
+            fontFamilyNameParts.push(text.substring(token.startOffset, token.endOffset));
+          } else {
+            this._appendTextNode(
+              text.substring(token.startOffset, token.endOffset));
+          }
+          break;
+
+        case "whitespace":
+          if (options.expectFont) {
+            fontFamilyNameParts.push(" ");
+          } else {
+            this._appendTextNode(
+              text.substring(token.startOffset, token.endOffset));
+          }
+          break;
+
         case "symbol":
           if (token.text === "(") {
             ++parenDepth;
@@ -432,6 +457,10 @@ OutputParser.prototype = {
             if (parenDepth === 0) {
               outerMostFunctionTakesColor = false;
             }
+          } else if (token.text === "," &&
+                     options.expectFont && fontFamilyNameParts.length !== 0) {
+            this._appendFontFamily(fontFamilyNameParts.join(""), options);
+            fontFamilyNameParts = [];
           }
           // falls through
         default:
@@ -1330,6 +1359,58 @@ OutputParser.prototype = {
   },
 
   /**
+   * Append a font family to the output.
+   *
+   * @param  {String} fontFamily
+   *         Font family to append
+   * @param  {Object} options
+   *         Options object. For valid options and default values see
+   *         _mergeOptions().
+   */
+  _appendFontFamily: function (fontFamily, options) {
+    let spanContents = fontFamily;
+    let quoteChar = null;
+    let trailingWhitespace = false;
+
+    // Before appending the actual font-family span, we need to trim
+    // down the actual contents by removing any whitespace before and
+    // after, and any quotation characters in the passed string.  Any
+    // such characters are preserved in the actual output, but just
+    // not inside the span element.
+
+    if (spanContents[0] === " ") {
+      this._appendTextNode(" ");
+      spanContents = spanContents.slice(1);
+    }
+
+    if (spanContents[spanContents.length - 1] === " ") {
+      spanContents = spanContents.slice(0, -1);
+      trailingWhitespace = true;
+    }
+
+    if (spanContents[0] === "'" || spanContents[0] === "\"") {
+      quoteChar = spanContents[0];
+    }
+
+    if (quoteChar) {
+      this._appendTextNode(quoteChar);
+      spanContents = spanContents.slice(1, -1);
+    }
+
+    this._appendNode("span", {
+      class: options.fontFamilyClass
+    }, spanContents);
+
+    if (quoteChar) {
+      this._appendTextNode(quoteChar);
+    }
+
+    if (trailingWhitespace) {
+      this._appendTextNode(" ");
+    }
+  },
+
+  /**
    * Create a node.
    *
    * @param  {String} tagName
@@ -1440,6 +1521,7 @@ OutputParser.prototype = {
    *           - shapeClass: ""         // The class to use for the shape icon.
    *           - supportsColor: false   // Does the CSS property support colors?
    *           - urlClass: ""           // The class to be used for url() links.
+   *           - fontFamilyClass: ""    // The class to be used for font families.
    *           - baseURI: undefined     // A string used to resolve
    *                                    // relative links.
    *           - isVariableInUse        // A function taking a single
@@ -1468,6 +1550,7 @@ OutputParser.prototype = {
       shapeClass: "",
       supportsColor: false,
       urlClass: "",
+      fontFamilyClass: "",
       baseURI: undefined,
       isVariableInUse: null,
       unmatchedVariableClass: null,
