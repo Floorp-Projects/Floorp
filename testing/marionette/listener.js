@@ -448,14 +448,22 @@ const loadListener = {
  * an ID, we start the listeners. Otherwise, nothing happens.
  */
 function registerSelf() {
-  let msg = {value: winUtil.outerWindowID};
-  logger.debug(`Register listener.js for window ${msg.value}`);
+  outerWindowID = winUtil.outerWindowID;
+  logger.debug(`Register listener.js for window ${outerWindowID}`);
+
+  sandboxes.clear();
+  curContainer = {
+    frame: content,
+    shadowRoot: null,
+  };
+  legacyactions.mouseEventsOnly = false;
+  action.inputStateMap = new Map();
+  action.inputsToCancel = [];
 
   // register will have the ID and a boolean describing if this is the
   // main process or not
-  let register = sendSyncMessage("Marionette:Register", msg);
-  if (register[0]) {
-    outerWindowID = register[0].outerWindowID;
+  let register = sendSyncMessage("Marionette:Register", {outerWindowID});
+  if (register[0].outerWindowID === outerWindowID) {
     startListeners();
     sendAsyncMessage("Marionette:ListenersAttached", {outerWindowID});
   }
@@ -523,7 +531,7 @@ function startListeners() {
   addMessageListener("Marionette:cancelRequest", cancelRequest);
   addMessageListener("Marionette:clearElement", clearElementFn);
   addMessageListener("Marionette:clickElement", clickElement);
-  addMessageListener("Marionette:deleteSession", deleteSession);
+  addMessageListener("Marionette:Deregister", deregister);
   addMessageListener("Marionette:DOM:AddEventListener", domAddEventListener);
   addMessageListener("Marionette:DOM:RemoveEventListener", domRemoveEventListener);
   addMessageListener("Marionette:execute", executeFn);
@@ -545,7 +553,6 @@ function startListeners() {
   addMessageListener("Marionette:isElementEnabled", isElementEnabledFn);
   addMessageListener("Marionette:isElementSelected", isElementSelectedFn);
   addMessageListener("Marionette:multiAction", multiActionFn);
-  addMessageListener("Marionette:newSession", newSession);
   addMessageListener("Marionette:performActions", performActionsFn);
   addMessageListener("Marionette:refresh", refresh);
   addMessageListener("Marionette:reftestWait", reftestWaitFn);
@@ -559,24 +566,12 @@ function startListeners() {
   addMessageListener("Marionette:waitForPageLoaded", waitForPageLoaded);
 }
 
-/**
- * Called when we start a new session. It registers the
- * current environment, and resets all values
- */
-function newSession() {
-  sandboxes.clear();
-  curContainer = {frame: content, shadowRoot: null};
-  legacyactions.mouseEventsOnly = false;
-  action.inputStateMap = new Map();
-  action.inputsToCancel = [];
-}
-
-function deleteSession() {
+function deregister() {
   removeMessageListener("Marionette:actionChain", actionChainFn);
   removeMessageListener("Marionette:cancelRequest", cancelRequest);
   removeMessageListener("Marionette:clearElement", clearElementFn);
   removeMessageListener("Marionette:clickElement", clickElement);
-  removeMessageListener("Marionette:deleteSession", deleteSession);
+  removeMessageListener("Marionette:Deregister", deregister);
   removeMessageListener("Marionette:execute", executeFn);
   removeMessageListener("Marionette:executeInSandbox", executeInSandboxFn);
   removeMessageListener("Marionette:findElementContent", findElementContentFn);
@@ -596,7 +591,6 @@ function deleteSession() {
   removeMessageListener("Marionette:isElementEnabled", isElementEnabledFn);
   removeMessageListener("Marionette:isElementSelected", isElementSelectedFn);
   removeMessageListener("Marionette:multiAction", multiActionFn);
-  removeMessageListener("Marionette:newSession", newSession);
   removeMessageListener("Marionette:performActions", performActionsFn);
   removeMessageListener("Marionette:refresh", refresh);
   removeMessageListener("Marionette:releaseActions", releaseActionsFn);
