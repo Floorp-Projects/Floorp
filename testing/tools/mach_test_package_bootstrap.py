@@ -36,6 +36,8 @@ SEARCH_PATHS = [
     'mozbase/mozversion',
     'reftest',
     'tools/mach',
+    'tools/mozterm',
+    'tools/six',
     'tools/wptserve',
     'web-platform',
     'web-platform/tests/tools/wptrunner',
