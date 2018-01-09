@@ -2834,10 +2834,14 @@ nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal)
     return;
   }
 
+  nsCOMPtr<nsIURI> uri;
+  MOZ_ALWAYS_SUCCEEDS(
+    NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("about:blank")));
+
   // We're done if there is no parent controller or if this docshell
   // is not permitted to control for some reason.
   Maybe<ServiceWorkerDescriptor> controller(parentInner->GetController());
-  if (controller.isNothing() || !ServiceWorkerAllowedToControlWindow(nullptr)) {
+  if (controller.isNothing() || !ServiceWorkerAllowedToControlWindow(principal, uri)) {
     return;
   }
 
@@ -11354,6 +11358,20 @@ nsDocShell::ScrollToAnchor(bool aCurHasRef, bool aNewHasRef,
                              nsIPresShell::SCROLL_SMOOTH_AUTO);
     }
 
+    if (NS_FAILED(rv)) {
+      char* str = ToNewCString(aNewHash);
+      if (!str) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      nsUnescape(str);
+      NS_ConvertUTF8toUTF16 utf16Str(str);
+      if (!utf16Str.IsEmpty()) {
+        rv = shell->GoToAnchor(utf16Str, scroll,
+                               nsIPresShell::SCROLL_SMOOTH_AUTO);
+      }
+      free(str);
+    }
+
     // Above will fail if the anchor name is not UTF-8.  Need to
     // convert from document charset to unicode.
     if (NS_FAILED(rv)) {
@@ -14098,51 +14116,26 @@ nsDocShell::CanSetOriginAttributes()
 }
 
 bool
-nsDocShell::ServiceWorkerAllowedToControlWindow(nsIURI* aURI)
+nsDocShell::ServiceWorkerAllowedToControlWindow(nsIPrincipal* aPrincipal,
+                                                nsIURI* aURI)
 {
-  // NOTE: Ideally this method would call one of the
-  //       nsContentUtils::StorageAllowed*() methods to determine if the
-  //       interception is allowed.  Unfortunately we cannot safely do this
-  //       before the first window loads in the child process because the
-  //       permission manager might not have all its data yet.  Therefore,
-  //       we use this somewhat lame alternate implementation here.  Once
-  //       interception is moved to the parent process we should switch
-  //       to calling nsContentUtils::StorageAllowed*().  See bug 1428130.
+  MOZ_ASSERT(aPrincipal);
+  MOZ_ASSERT(aURI);
 
   if (UsePrivateBrowsing() || mSandboxFlags) {
     return false;
   }
 
-  uint32_t cookieBehavior = nsContentUtils::CookiesBehavior();
-  uint32_t lifetimePolicy = nsContentUtils::CookiesLifetimePolicy();
-  if (cookieBehavior == nsICookieService::BEHAVIOR_REJECT ||
-      lifetimePolicy == nsICookieService::ACCEPT_SESSION) {
-    return false;
-  }
-
-  if (!aURI || cookieBehavior == nsICookieService::BEHAVIOR_ACCEPT) {
-    return true;
-  }
-
   nsCOMPtr<nsIDocShellTreeItem> parent;
   GetSameTypeParent(getter_AddRefs(parent));
-  nsCOMPtr<nsPIDOMWindowOuter> parentWindow = parent ? parent->GetWindow()
-                                                     : nullptr;
-  if (parentWindow) {
-    nsresult rv = NS_OK;
-    nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
-      do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
-    if (thirdPartyUtil) {
-      bool isThirdPartyURI = true;
-      rv = thirdPartyUtil->IsThirdPartyWindow(parentWindow, aURI,
-                                              &isThirdPartyURI);
-      if (NS_SUCCEEDED(rv) && isThirdPartyURI) {
-        return false;
-      }
-    }
-  }
+  nsPIDOMWindowOuter* parentOuter = parent ? parent->GetWindow() : nullptr;
+  nsPIDOMWindowInner* parentInner =
+    parentOuter ? parentOuter->GetCurrentInnerWindow() : nullptr;
 
-  return true;
+  nsContentUtils::StorageAccess storage =
+    nsContentUtils::StorageAllowedForNewWindow(aPrincipal, aURI, parentInner);
+
+  return storage == nsContentUtils::StorageAccess::eAllow;
 }
 
 nsresult
@@ -14369,9 +14362,12 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
     return NS_OK;
   }
 
+  nsCOMPtr<nsIPrincipal> principal =
+    BasePrincipal::CreateCodebasePrincipal(aURI, mOriginAttributes);
+
   // For navigations, first check to see if we are allowed to control a
   // window with the given URL.
-  if (!ServiceWorkerAllowedToControlWindow(aURI)) {
+  if (!ServiceWorkerAllowedToControlWindow(principal, aURI)) {
     return NS_OK;
   }
 
@@ -14382,8 +14378,6 @@ nsDocShell::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNonSubresourceReques
 
   // We're allowed to control a window, so check with the ServiceWorkerManager
   // for a matching service worker.
-  nsCOMPtr<nsIPrincipal> principal =
-    BasePrincipal::CreateCodebasePrincipal(aURI, mOriginAttributes);
   *aShouldIntercept = swm->IsAvailable(principal, aURI);
   return NS_OK;
 }

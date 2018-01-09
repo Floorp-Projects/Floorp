@@ -1931,6 +1931,12 @@ Accumulate(HistogramID aHistogram, uint32_t aSample)
 }
 
 void
+Accumulate(HistogramID aHistogram, const nsTArray<uint32_t>& aSamples)
+{
+  TelemetryHistogram::Accumulate(aHistogram, aSamples);
+}
+
+void
 Accumulate(HistogramID aID, const nsCString& aKey, uint32_t aSample)
 {
   TelemetryHistogram::Accumulate(aID, aKey, aSample);

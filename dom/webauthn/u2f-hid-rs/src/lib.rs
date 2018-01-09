@@ -56,6 +56,24 @@ bitflags! {
         const REQUIRE_PLATFORM_ATTACHMENT = 4;
     }
 }
+bitflags! {
+    pub struct SignFlags: u64 {
+        const REQUIRE_USER_VERIFICATION = 1;
+    }
+}
+bitflags! {
+    pub struct AuthenticatorTransports: u8 {
+        const USB = 1;
+        const NFC = 2;
+        const BLE = 4;
+    }
+}
+
+#[derive(Clone)]
+pub struct KeyHandle {
+    pub credential: Vec<u8>,
+    pub transports: AuthenticatorTransports,
+}
 
 #[cfg(fuzzing)]
 pub use u2fprotocol::*;

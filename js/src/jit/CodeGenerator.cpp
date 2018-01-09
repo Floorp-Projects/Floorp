@@ -9478,7 +9478,7 @@ CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::BytecodeOffset trapOffs
         // Since we just overflowed the stack, to be on the safe side, pop the
         // stack so that, when the trap exit stub executes, it is a safe
         // distance away from the end of the native stack.
-        wasm::TrapDesc trap(trapOffset, wasm::Trap::StackOverflow, /* framePushed = */ 0);
+        wasm::OldTrapDesc trap(trapOffset, wasm::Trap::StackOverflow, /* framePushed = */ 0);
         if (frameSize() > 0) {
             masm.bind(&onOverflow);
             masm.addToStackPtr(Imm32(frameSize()));
@@ -9496,7 +9496,7 @@ CodeGenerator::generateWasm(wasm::SigIdDesc sigId, wasm::BytecodeOffset trapOffs
     if (!generateOutOfLineCode())
         return false;
 
-    masm.wasmEmitTrapOutOfLineCode();
+    masm.wasmEmitOldTrapOutOfLineCode();
 
     masm.flush();
     if (masm.oom())
@@ -12350,7 +12350,7 @@ CodeGenerator::visitWasmTrap(LWasmTrap* lir)
     MOZ_ASSERT(gen->compilingWasm());
     const MWasmTrap* mir = lir->mir();
 
-    masm.jump(trap(mir, mir->trap()));
+    masm.jump(oldTrap(mir, mir->trap()));
 }
 
 void
@@ -12363,7 +12363,7 @@ CodeGenerator::visitWasmBoundsCheck(LWasmBoundsCheck* ins)
     Register ptr = ToRegister(ins->ptr());
     Register boundsCheckLimit = ToRegister(ins->boundsCheckLimit());
     masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, boundsCheckLimit,
-                         trap(mir, wasm::Trap::OutOfBounds));
+                         oldTrap(mir, wasm::Trap::OutOfBounds));
 #endif
 }
 
@@ -12373,7 +12373,7 @@ CodeGenerator::visitWasmAlignmentCheck(LWasmAlignmentCheck* ins)
     const MWasmAlignmentCheck* mir = ins->mir();
     Register ptr = ToRegister(ins->ptr());
     masm.branchTest32(Assembler::NonZero, ptr, Imm32(mir->byteSize() - 1),
-                      trap(mir, wasm::Trap::UnalignedAccess));
+                      oldTrap(mir, wasm::Trap::UnalignedAccess));
 }
 
 void

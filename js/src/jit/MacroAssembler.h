@@ -1506,7 +1506,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Emit the out-of-line trap code to which trapping jumps/branches are
     // bound. This should be called once per function after all other codegen,
     // including "normal" OutOfLineCode.
-    void wasmEmitTrapOutOfLineCode();
+    void wasmEmitOldTrapOutOfLineCode();
 
     // Perform a stack-overflow test, branching to the given Label on overflow.
     void wasmEmitStackCheck(Register sp, Register scratch, Label* onOverflow);

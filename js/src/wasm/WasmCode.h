@@ -130,7 +130,7 @@ class CodeSegment
         code_ = code;
     }
 
-    const Code* code() const { MOZ_ASSERT(code_); return code_; }
+    const Code& code() const { MOZ_ASSERT(code_); return *code_; }
     Tier tier() const { return tier_; }
 
     uint8_t* base() const { return bytes_.get(); }

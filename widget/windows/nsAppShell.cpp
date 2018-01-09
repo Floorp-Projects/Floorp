@@ -170,6 +170,8 @@ nsAppShell::~nsAppShell()
 
 static ULONG gUiaMsg;
 static HHOOK gUiaHook;
+static uint32_t gUiaAttempts;
+static const uint32_t kMaxUiaAttempts = 5;
 
 static void InitUIADetection();
 
@@ -182,17 +184,29 @@ UiaHookProc(int aCode, WPARAM aWParam, LPARAM aLParam)
 
   auto cwp = reinterpret_cast<CWPSTRUCT*>(aLParam);
   if (gUiaMsg && cwp->message == gUiaMsg) {
-    Maybe<bool> shouldCallNextHook =
-      a11y::Compatibility::OnUIAMessage(cwp->wParam, cwp->lParam);
+    if (gUiaAttempts < kMaxUiaAttempts) {
+      ++gUiaAttempts;
 
-    // Unconditionally remove the hook, as UIA detection is too expensive to
-    // leave running for every single request.
-    if (::UnhookWindowsHookEx(gUiaHook)) {
-      gUiaHook = nullptr;
-    }
+      Maybe<bool> shouldCallNextHook =
+        a11y::Compatibility::OnUIAMessage(cwp->wParam, cwp->lParam);
+      if (shouldCallNextHook.isSome()) {
+        // We've got an instantiator, disconnect this hook.
+        if (::UnhookWindowsHookEx(gUiaHook)) {
+          gUiaHook = nullptr;
+        }
 
-    if (shouldCallNextHook.isSome() && !shouldCallNextHook.value()) {
-      return 0;
+        if (!shouldCallNextHook.value()) {
+          return 0;
+        }
+      } else {
+        // Our hook might be firing after UIA; let's try reinstalling ourselves.
+        InitUIADetection();
+      }
+    } else {
+      // We've maxed out our attempts. Let's unhook.
+      if (::UnhookWindowsHookEx(gUiaHook)) {
+        gUiaHook = nullptr;
+      }
     }
   }
 
