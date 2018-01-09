@@ -87,4 +87,8 @@ async function showSidebar(hud) {
   openInSidebar.click();
   await onSidebarShown;
   await hideContextMenu(hud);
+
+  // Let's wait for the object inside the sidebar to be expanded.
+  await waitFor(() =>
+    wrapper.querySelectorAll(".sidebar .tree-node").length > 1, null, 100);
 }

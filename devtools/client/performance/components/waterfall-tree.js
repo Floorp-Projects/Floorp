@@ -5,7 +5,7 @@
 
 const { Component, createFactory } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const Tree = createFactory(require("devtools/client/shared/components/Tree"));
+const Tree = createFactory(require("devtools/client/shared/components/VirtualizedTree"));
 const WaterfallTreeRow = createFactory(require("./waterfall-tree-row"));
 
 // Keep in sync with var(--waterfall-tree-row-height) in performance.css

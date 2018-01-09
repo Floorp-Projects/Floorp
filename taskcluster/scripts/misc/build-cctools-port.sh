@@ -32,7 +32,7 @@ cd $WORKSPACE/build/src
 cd $CROSSTOOLS_CCTOOLS_DIR
 export CC=$CLANG_DIR/bin/clang
 export CXX=$CLANG_DIR/bin/clang++
-export LDFLAGS=/lib64/libpthread.so.0
+export LDFLAGS=-lpthread
 ./autogen.sh
 ./configure --prefix=$CROSSTOOLS_BUILD_DIR --target=x86_64-apple-darwin11 --with-llvm-config=$CLANG_DIR/bin/llvm-config
 
