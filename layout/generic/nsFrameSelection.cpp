@@ -1403,6 +1403,7 @@ nsFrameSelection::TakeFocus(nsIContent*        aNewFocus,
 
     NS_ENSURE_STATE(mShell);
     bool editableCell = false;
+    mCellParent = nullptr;
     RefPtr<nsPresContext> context = mShell->GetPresContext();
     if (context) {
       RefPtr<HTMLEditor> htmlEditor = nsContentUtils::GetHTMLEditor(context);
