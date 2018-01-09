@@ -99,8 +99,8 @@ AHEM COPY: css/vendor-imports/mozilla/mozilla-central-reftests/*/Ahem.ttf
 # Intentional use of CRLF
 CR AT EOL: WebIDL/valid/idl/documentation-dos.widl
 CR AT EOL: cors/resources/cors-headers.asis
-CR AT EOL: html/form-elements/the-textarea-element/multiline-placefolder-cr.html
-CR AT EOL: html/form-elements/the-textarea-element/multiline-placefolder-crlf.html
+CR AT EOL: html/form-elements/the-textarea-element/multiline-placeholder-cr.html
+CR AT EOL: html/form-elements/the-textarea-element/multiline-placeholder-crlf.html
 CR AT EOL: html/input/the-placeholder-attribute/multiline-cr.html
 CR AT EOL: html/input/the-placeholder-attribute/multiline-crlf.html
 CR AT EOL: html/semantics/embedded-content/the-canvas-element/size.attributes.parse.whitespace.html
@@ -943,6 +943,7 @@ MISSING-LINK: css/cssom-view/scrolling-quirks-vs-nonquirks.html
 MISSING-LINK: css/cssom-view/scrollingElement.html
 MISSING-LINK: css/cssom-view/scrollIntoView-shadow.html
 MISSING-LINK: css/cssom-view/scrollIntoView-smooth.html
+MISSING-LINK: css/cssom-view/scrollTop-display-change.html
 CSS-COLLIDING-TEST-NAME: css/cssom-view/interfaces.html
 CSS-COLLIDING-TEST-NAME: css/cssom/interfaces.html
 
