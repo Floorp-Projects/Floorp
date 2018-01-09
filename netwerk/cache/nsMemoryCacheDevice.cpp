@@ -463,7 +463,7 @@ EntryMatchesClientID(nsCacheEntry* entry, void* args)
     const char * clientID = static_cast<ClientIDArgs*>(args)->clientID;
     uint32_t prefixLength = static_cast<ClientIDArgs*>(args)->prefixLength;
     const char * key = entry->Key()->get();
-    return !clientID || nsCRT::strncmp(clientID, key, prefixLength) == 0;
+    return !clientID || strncmp(clientID, key, prefixLength) == 0;
 }
 
 nsresult
