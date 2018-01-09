@@ -14,6 +14,7 @@
 
 #include "mozilla/GenericSpecifiedValues.h"
 #include "mozilla/ServoBindingTypes.h"
+#include "nsStyleStruct.h"
 
 namespace mozilla {
 
