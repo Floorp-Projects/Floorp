@@ -1513,7 +1513,7 @@ AstDecodeExpr(AstDecodeContext& c)
         if (!AstDecodeConversion(c, ValType::F32, ValType::F64, Op(op.b0)))
             return false;
         break;
-#ifdef ENABLE_WASM_THREAD_OPS
+#ifdef ENABLE_WASM_SIGNEXTEND_OPS
       case uint16_t(Op::I32Extend8S):
       case uint16_t(Op::I32Extend16S):
         if (!AstDecodeConversion(c, ValType::I32, ValType::I32, Op(op.b0)))
