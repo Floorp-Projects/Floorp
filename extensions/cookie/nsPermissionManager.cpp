@@ -126,7 +126,13 @@ static const char* kPreloadPermissions[] = {
   "beacon",
   "fetch",
   "image",
-  "manifest"
+  "manifest",
+
+  // This permission is preloaded to support properly blocking service worker
+  // interception when a user has disabled storage for a specific site.  Once
+  // service worker interception moves to the parent process this should be
+  // removed.  See bug 1428130.
+  "cookie"
 };
 
 // A list of permissions that can have a fallback default permission
