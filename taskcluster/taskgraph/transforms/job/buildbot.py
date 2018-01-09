@@ -11,7 +11,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import slugid
 from urlparse import urlparse
 
-from taskgraph.util.schema import Schema
+from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.scriptworker import get_release_config
 from voluptuous import Optional, Required, Any
 
@@ -28,6 +28,8 @@ buildbot_run_schema = Schema({
     # the product to use
     Required('product'): Any('firefox', 'mobile', 'fennec', 'devedition', 'thunderbird'),
 
+    Optional('channels'): optionally_keyed_by('project', basestring),
+
     Optional('release-promotion'): bool,
 })
 
@@ -37,21 +39,6 @@ def _get_balrog_api_root(branch):
         return 'https://aus4-admin.mozilla.org/api'
     else:
         return 'https://balrog-admin.stage.mozaws.net/api'
-
-
-def _get_balrog_channel(product, branch):
-    if product == 'devedition':
-        return 'aurora'
-    elif product == 'firefox':
-        if branch in ('mozilla-beta', 'maple'):
-            return 'beta'
-        elif branch == 'mozilla-release':
-            return 'release'
-        elif branch.startswith('mozilla-esr'):
-            return 'esr'
-    # Unsupported channels are filtered out after the task is generated. Then, we must
-    # provide a dummy value for them, otherwise the Decision task breaks.
-    return 'unknown'
 
 
 def bb_release_worker(config, worker, run):
@@ -68,9 +55,12 @@ def bb_release_worker(config, worker, run):
         'revision': revision,
     })
 
+    if 'channels' in run:
+        release_props['channels'] = run['channels']
+        resolve_keyed_by(release_props, 'channels', 'channels', **config.params)
+
     if product in ('devedition', 'firefox'):
         release_props['balrog_api_root'] = _get_balrog_api_root(branch)
-        release_props['channels'] = _get_balrog_channel(product, branch)
 
     worker['properties'].update(release_props)
     # Setting script_repo_revision to the gecko revision doesn't work for
