@@ -137,7 +137,7 @@ add_task(async function test_submit_changed_subset_creditCard_form() {
 
         form.querySelector("#cc-number").setUserInput("1234567812345678");
         form.querySelector("#cc-exp-month").setUserInput("4");
-        form.querySelector("#cc-exp-year").setUserInput("2017");
+        form.querySelector("#cc-exp-year").setUserInput(new Date().getFullYear());
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 1000));
         form.querySelector("input[type=submit]").click();
@@ -175,7 +175,7 @@ add_task(async function test_submit_duplicate_creditCard_form() {
         name.setUserInput("John Doe");
         form.querySelector("#cc-number").setUserInput("1234567812345678");
         form.querySelector("#cc-exp-month").setUserInput("4");
-        form.querySelector("#cc-exp-year").setUserInput("2017");
+        form.querySelector("#cc-exp-year").setUserInput(new Date().getFullYear());
 
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -212,7 +212,7 @@ add_task(async function test_submit_unnormailzed_creditCard_form() {
         form.querySelector("#cc-number").setUserInput("1234567812345678");
         form.querySelector("#cc-exp-month").setUserInput("4");
         // Set unnormalized year
-        form.querySelector("#cc-exp-year").setUserInput("17");
+        form.querySelector("#cc-exp-year").setUserInput(new Date().getFullYear().toString().substr(2, 2));
 
         // Wait 1000ms before submission to make sure the input value applied
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -226,7 +226,7 @@ add_task(async function test_submit_unnormailzed_creditCard_form() {
 
   creditCards = await getCreditCards();
   is(creditCards.length, 1, "Still 1 credit card in storage");
-  is(creditCards[0]["cc-exp-year"], "2017", "Verify the expiry year field");
+  is(creditCards[0]["cc-exp-year"], new Date().getFullYear(), "Verify the expiry year field");
   await removeAllRecords();
 });
 
