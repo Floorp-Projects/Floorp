@@ -31,11 +31,6 @@ JSJitFrameIter::JSJitFrameIter(const JitActivation* activation)
     }
 }
 
-JSJitFrameIter::JSJitFrameIter(JSContext* cx)
-  : JSJitFrameIter(cx->activation()->asJit())
-{
-}
-
 bool
 JSJitFrameIter::checkInvalidation() const
 {
