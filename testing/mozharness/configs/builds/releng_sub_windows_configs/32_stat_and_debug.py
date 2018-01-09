@@ -3,7 +3,6 @@ import os
 config = {
     'default_actions': [
         'clobber',
-        'clone-tools',
         'checkout-sources',
         'build',
         'update',  # decided by query_is_nightly()

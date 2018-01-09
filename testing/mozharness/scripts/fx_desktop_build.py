@@ -35,7 +35,6 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
             'all_actions': [
                 'get-secrets',
                 'clobber',
-                'clone-tools',
                 'checkout-sources',
                 'build',
                 'upload-files',  # upload from BB to TC

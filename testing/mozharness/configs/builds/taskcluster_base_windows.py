@@ -2,7 +2,6 @@ import os
 
 config = {
     'default_actions': [
-        'clone-tools',
         'build',
         'check-test',
     ],

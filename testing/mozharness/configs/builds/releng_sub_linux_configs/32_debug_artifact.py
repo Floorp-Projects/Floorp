@@ -11,7 +11,6 @@ config = {
     # note: overridden by MOZHARNESS_ACTIONS in TaskCluster tasks
     'default_actions': [
         'clobber',
-        'clone-tools',
         'checkout-sources',
         'build',
         'sendchange',
