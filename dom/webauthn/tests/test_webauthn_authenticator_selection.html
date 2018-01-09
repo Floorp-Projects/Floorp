@@ -11,6 +11,7 @@
 
   <h1>W3C Web Authentication - Authenticator Selection Criteria</h1>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1406462">Mozilla Bug 1406462</a>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1406467">Mozilla Bug 1406467</a>
 
   <script class="testbody" type="text/javascript">
     "use strict";
@@ -26,6 +27,10 @@
     function expectNotAllowedError(aResult) {
       ok(aResult.toString().startsWith("NotAllowedError"), "Expecting a NotAllowedError, got " + aResult);
     }
+
+    // We store the credential of the first successful make credential
+    // operation so we can use it for get assertion tests later.
+    let gCredential;
 
     add_task(() => {
       // Enable the softtoken.
@@ -50,10 +55,34 @@
       return navigator.credentials.create({publicKey});
     }
 
-    // Test success cases.
+    // Start a new GetAssertion() request.
+    function requestGetAssertion(userVerification) {
+      let newCredential = {
+        type: "public-key",
+        id: gCredential,
+        transports: ["usb"],
+      };
+
+      let publicKey = {
+        challenge: crypto.getRandomValues(new Uint8Array(16)),
+        timeout: 5000, // the minimum timeout is actually 15 seconds
+        rpId: document.domain,
+        allowCredentials: [newCredential]
+      };
+
+      if (userVerification) {
+        publicKey.userVerification = userVerification;
+      }
+
+      return navigator.credentials.get({publicKey});
+    }
+
+    // Test success cases for make credential.
     add_task(async () => {
       // No selection criteria.
       await requestMakeCredential({})
+         // Save the credential so we can use it for sign success tests.
+        .then(res => gCredential = res.rawId)
         .then(arrivingHereIsGood)
         .catch(arrivingHereIsBad);
 
@@ -78,7 +107,25 @@
         .catch(arrivingHereIsBad);
     });
 
-    // Test the failure cases.
+    // Test success cases for get assertion.
+    add_task(async () => {
+      // No selection criteria.
+      await requestGetAssertion()
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+
+      // Prefer user verification.
+      await requestGetAssertion("preferred")
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+
+      // Discourage user verification.
+      await requestGetAssertion("discouraged")
+        .then(arrivingHereIsGood)
+        .catch(arrivingHereIsBad);
+    });
+
+    // Test failure cases for make credential.
     add_task(async () => {
       // Request a platform authenticator.
       await requestMakeCredential({authenticatorAttachment: "platform"})
@@ -92,6 +139,14 @@
 
       // Require user verification.
       await requestMakeCredential({userVerification: "required"})
+        .then(arrivingHereIsBad)
+        .catch(expectNotAllowedError);
+    });
+
+    // Test failure cases for get assertion.
+    add_task(async () => {
+      // Require user verification.
+      await requestGetAssertion("required")
         .then(arrivingHereIsBad)
         .catch(expectNotAllowedError);
     });

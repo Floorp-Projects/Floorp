@@ -63,16 +63,17 @@ public:
   U2FTokenTransport() {}
 
   virtual RefPtr<U2FRegisterPromise>
-  Register(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
+  Register(const nsTArray<WebAuthnScopedCredential>& aCredentials,
            const WebAuthnAuthenticatorSelection &aAuthenticatorSelection,
            const nsTArray<uint8_t>& aApplication,
            const nsTArray<uint8_t>& aChallenge,
            uint32_t aTimeoutMS) = 0;
 
   virtual RefPtr<U2FSignPromise>
-  Sign(const nsTArray<WebAuthnScopedCredentialDescriptor>& aDescriptors,
+  Sign(const nsTArray<WebAuthnScopedCredential>& aCredentials,
        const nsTArray<uint8_t>& aApplication,
        const nsTArray<uint8_t>& aChallenge,
+       bool aRequireUserVerification,
        uint32_t aTimeoutMS) = 0;
 
   virtual void Cancel() = 0;

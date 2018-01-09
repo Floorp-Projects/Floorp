@@ -2913,16 +2913,6 @@ public:
 
   static bool IsNonSubresourceRequest(nsIChannel* aChannel);
 
-  static uint32_t CookiesBehavior()
-  {
-    return sCookiesBehavior;
-  }
-
-  static uint32_t CookiesLifetimePolicy()
-  {
-    return sCookiesLifetimePolicy;
-  }
-
   // The order of these entries matters, as we use std::min for total ordering
   // of permissions. Private Browsing is considered to be more limiting
   // then session scoping
@@ -2960,6 +2950,14 @@ public:
    * StorageAllowedForWindow(), however, will not work in these cases.
    */
   static StorageAccess StorageAllowedForDocument(nsIDocument* aDoc);
+
+  /*
+   * Checks if storage should be allowed for a new window with the given
+   * principal, load URI, and parent.
+   */
+  static StorageAccess StorageAllowedForNewWindow(nsIPrincipal* aPrincipal,
+                                                  nsIURI* aURI,
+                                                  nsPIDOMWindowInner* aParent);
 
   /*
    * Checks if storage for the given principal is permitted by the user's
@@ -3338,13 +3336,15 @@ private:
    * Checks if storage for a given principal is permitted by the user's
    * preferences. If aWindow is non-null, its principal must be passed as
    * aPrincipal, and the third-party iframe and sandboxing status of the window
-   * are also checked.
+   * are also checked.  If aURI is non-null, then it is used as the comparison
+   * against aWindow to determine if this is a third-party load.
    *
    * Used in the implementation of StorageAllowedForWindow and
    * StorageAllowedForPrincipal.
    */
   static StorageAccess InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
-                                                          nsPIDOMWindowInner* aWindow);
+                                                          nsPIDOMWindowInner* aWindow,
+                                                          nsIURI* aURI);
 
   static nsINode* GetCommonAncestorHelper(nsINode* aNode1, nsINode* aNode2);
   static nsIContent* GetCommonFlattenedTreeAncestorHelper(nsIContent* aContent1,

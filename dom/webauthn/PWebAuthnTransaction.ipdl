@@ -20,13 +20,14 @@ namespace mozilla {
 namespace dom {
 
 struct WebAuthnAuthenticatorSelection {
-    bool requireResidentKey;
-    bool requireUserVerification;
-    bool requirePlatformAttachment;
+  bool requireResidentKey;
+  bool requireUserVerification;
+  bool requirePlatformAttachment;
 };
 
-struct WebAuthnScopedCredentialDescriptor {
+struct WebAuthnScopedCredential {
   uint8_t[] id;
+  uint8_t transports;
 };
 
 struct WebAuthnExtension {
@@ -37,7 +38,7 @@ struct WebAuthnMakeCredentialInfo {
   uint8_t[] RpIdHash;
   uint8_t[] ClientDataHash;
   uint32_t TimeoutMS;
-  WebAuthnScopedCredentialDescriptor[] ExcludeList;
+  WebAuthnScopedCredential[] ExcludeList;
   WebAuthnExtension[] Extensions;
   WebAuthnAuthenticatorSelection AuthenticatorSelection;
 };
@@ -46,7 +47,8 @@ struct WebAuthnGetAssertionInfo {
   uint8_t[] RpIdHash;
   uint8_t[] ClientDataHash;
   uint32_t TimeoutMS;
-  WebAuthnScopedCredentialDescriptor[] AllowList;
+  WebAuthnScopedCredential[] AllowList;
+  bool RequireUserVerification;
   WebAuthnExtension[] Extensions;
 };
 

@@ -531,7 +531,7 @@ CodeGeneratorARM::divICommon(MDiv* mir, Register lhs, Register rhs, Register out
         masm.ma_cmp(rhs, Imm32(-1), scratch, Assembler::Equal);
         if (mir->canTruncateOverflow()) {
             if (mir->trapOnError()) {
-                masm.ma_b(trap(mir, wasm::Trap::IntegerOverflow), Assembler::Equal);
+                masm.ma_b(oldTrap(mir, wasm::Trap::IntegerOverflow), Assembler::Equal);
             } else {
                 // (-INT32_MIN)|0 = INT32_MIN
                 Label skip;
@@ -551,7 +551,7 @@ CodeGeneratorARM::divICommon(MDiv* mir, Register lhs, Register rhs, Register out
         masm.as_cmp(rhs, Imm8(0));
         if (mir->canTruncateInfinities()) {
             if (mir->trapOnError()) {
-                masm.ma_b(trap(mir, wasm::Trap::IntegerDivideByZero), Assembler::Equal);
+                masm.ma_b(oldTrap(mir, wasm::Trap::IntegerDivideByZero), Assembler::Equal);
             } else {
                 // Infinity|0 == 0
                 Label skip;
@@ -714,7 +714,7 @@ CodeGeneratorARM::modICommon(MMod* mir, Register lhs, Register rhs, Register out
             // wasm allows negative lhs and return 0 in this case.
             MOZ_ASSERT(mir->isTruncated());
             masm.as_cmp(rhs, Imm8(0));
-            masm.ma_b(trap(mir, wasm::Trap::IntegerDivideByZero), Assembler::Equal);
+            masm.ma_b(oldTrap(mir, wasm::Trap::IntegerDivideByZero), Assembler::Equal);
             return;
         }
 
@@ -2120,7 +2120,7 @@ CodeGeneratorARM::visitWasmAddOffset(LWasmAddOffset* lir)
     ScratchRegisterScope scratch(masm);
     masm.ma_add(base, Imm32(mir->offset()), out, scratch, SetCC);
 
-    masm.ma_b(trap(mir, wasm::Trap::OutOfBounds), Assembler::CarrySet);
+    masm.ma_b(oldTrap(mir, wasm::Trap::OutOfBounds), Assembler::CarrySet);
 }
 
 template <typename T>
@@ -2417,7 +2417,7 @@ CodeGeneratorARM::generateUDivModZeroCheck(Register rhs, Register output, Label*
         masm.as_cmp(rhs, Imm8(0));
         if (mir->isTruncated()) {
             if (mir->trapOnError()) {
-                masm.ma_b(trap(mir, wasm::Trap::IntegerDivideByZero), Assembler::Equal);
+                masm.ma_b(oldTrap(mir, wasm::Trap::IntegerDivideByZero), Assembler::Equal);
             } else {
                 Label skip;
                 masm.ma_b(&skip, Assembler::NotEqual);
@@ -2768,7 +2768,7 @@ CodeGeneratorARM::visitDivOrModI64(LDivOrModI64* lir)
     if (lir->canBeDivideByZero()) {
         Register temp = WasmGetTemporaryForDivOrMod(lhs, rhs);
         masm.branchTest64(Assembler::Zero, rhs, rhs, temp,
-                          trap(lir, wasm::Trap::IntegerDivideByZero));
+                          oldTrap(lir, wasm::Trap::IntegerDivideByZero));
     }
 
     auto* mir = lir->mir();
@@ -2781,7 +2781,7 @@ CodeGeneratorARM::visitDivOrModI64(LDivOrModI64* lir)
         if (mir->isMod())
             masm.xor64(output, output);
         else
-            masm.jump(trap(lir, wasm::Trap::IntegerOverflow));
+            masm.jump(oldTrap(lir, wasm::Trap::IntegerOverflow));
         masm.jump(&done);
         masm.bind(&notmin);
     }
@@ -2814,7 +2814,7 @@ CodeGeneratorARM::visitUDivOrModI64(LUDivOrModI64* lir)
     if (lir->canBeDivideByZero()) {
         Register temp = WasmGetTemporaryForDivOrMod(lhs, rhs);
         masm.branchTest64(Assembler::Zero, rhs, rhs, temp,
-                          trap(lir, wasm::Trap::IntegerDivideByZero));
+                          oldTrap(lir, wasm::Trap::IntegerDivideByZero));
     }
 
     masm.setupWasmABICall();

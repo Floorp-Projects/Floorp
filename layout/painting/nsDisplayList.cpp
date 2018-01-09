@@ -1169,24 +1169,6 @@ nsDisplayListBuilder::FindAnimatedGeometryRootFor(nsDisplayItem* aItem)
   return FindAnimatedGeometryRootFor(aItem->Frame());
 }
 
-static bool
-AnyContentAncestorModified(nsIFrame* aFrame,
-                           nsIFrame* aStopAtFrame = nullptr)
-{
-  for (nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
-    if (f->IsFrameModified()) {
-      return true;
-    }
-
-    if (aStopAtFrame && f == aStopAtFrame) {
-      break;
-    }
-  }
-
-  return false;
-}
-
 bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
                                                         nsIFrame* aFrame)
 {
@@ -1200,14 +1182,6 @@ bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
     return false;
   }
 
-  // If the nearest stacking context for the modified frame is an ancestor of
-  // of it, and if the stacking context is a descendant of the containing block
-  // of this OOF frame, we override the dirty rect to ensure that the frame will
-  // get marked.
-  if (AnyContentAncestorModified(aFrame, aDirtyFrame)) {
-    dirty = visible;
-  }
-
   // Only MarkFrameForDisplay if we're dirty. If this is a nested out-of-flow frame, then it will
   // also mark any outer frames to ensure that building reaches the dirty feame.
   if (!dirty.IsEmpty() ||
@@ -1215,7 +1189,7 @@ bool nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
     MarkFrameForDisplay(aFrame, aDirtyFrame);
   }
 
-  return (aFrame->GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO);
+  return true;
 }
 
 static void UnmarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {

@@ -13,6 +13,11 @@
     SimpleTest.waitForExplicitFinish();
     SpecialPowers.pushPrefEnv({"set":[["browser.preferences.instantApply", false]]}, function() {
 
+    SimpleTest.registerCleanupFunction(() => {
+      SpecialPowers.clearUserPref("tests.beforeaccept.dialogShown");
+      SpecialPowers.clearUserPref("tests.beforeaccept.called");
+    });
+
     // No instant-apply for this test
     var prefWindow = openDialog("window_preferences_beforeaccept.xul", "", "", windowOnload);
 

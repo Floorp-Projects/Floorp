@@ -4335,10 +4335,10 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
         // connection. We want to collect this telemetry only for cases where
         // TFO is not used.
         mBackupConnStatsSet = true;
-        Telemetry::ScalarSet(Telemetry::ScalarID::NETWORK_HTTP_BACKUP_CONN_WON,
-                             (out == mBackupStreamOut));
+        Telemetry::Accumulate(Telemetry::NETWORK_HTTP_BACKUP_CONN_WON_1,
+                              (out == mBackupStreamOut));
     }
-        
+
     nsresult rv =  SetupConn(out, false);
     if (mEnt) {
         mEnt->mDoNotDestroy = false;

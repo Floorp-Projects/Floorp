@@ -285,7 +285,7 @@ CodeGeneratorX64::visitDivOrModI64(LDivOrModI64* lir)
 
     // Handle divide by zero.
     if (lir->canBeDivideByZero()) {
-        masm.branchTestPtr(Assembler::Zero, rhs, rhs, trap(lir, wasm::Trap::IntegerDivideByZero));
+        masm.branchTestPtr(Assembler::Zero, rhs, rhs, oldTrap(lir, wasm::Trap::IntegerDivideByZero));
     }
 
     // Handle an integer overflow exception from INT64_MIN / -1.
@@ -296,7 +296,7 @@ CodeGeneratorX64::visitDivOrModI64(LDivOrModI64* lir)
         if (lir->mir()->isMod())
             masm.xorl(output, output);
         else
-            masm.jump(trap(lir, wasm::Trap::IntegerOverflow));
+            masm.jump(oldTrap(lir, wasm::Trap::IntegerOverflow));
         masm.jump(&done);
         masm.bind(&notmin);
     }
@@ -328,7 +328,7 @@ CodeGeneratorX64::visitUDivOrModI64(LUDivOrModI64* lir)
 
     // Prevent divide by zero.
     if (lir->canBeDivideByZero())
-        masm.branchTestPtr(Assembler::Zero, rhs, rhs, trap(lir, wasm::Trap::IntegerDivideByZero));
+        masm.branchTestPtr(Assembler::Zero, rhs, rhs, oldTrap(lir, wasm::Trap::IntegerDivideByZero));
 
     // Zero extend the lhs into rdx to make (rdx:rax).
     masm.xorl(rdx, rdx);

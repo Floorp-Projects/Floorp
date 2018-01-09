@@ -3020,7 +3020,7 @@ class BaseCompiler final : public BaseCompilerInterface
         if (fr.initialSize() > debugFrameReserved)
             masm.addToStackPtr(Imm32(fr.initialSize() - debugFrameReserved));
         BytecodeOffset prologueTrapOffset(func_.lineOrBytecode);
-        masm.jump(TrapDesc(prologueTrapOffset, Trap::StackOverflow, debugFrameReserved));
+        masm.jump(OldTrapDesc(prologueTrapOffset, Trap::StackOverflow, debugFrameReserved));
 
         masm.bind(&returnLabel_);
 
@@ -3045,7 +3045,7 @@ class BaseCompiler final : public BaseCompilerInterface
         if (!generateOutOfLineCode())
             return false;
 
-        masm.wasmEmitTrapOutOfLineCode();
+        masm.wasmEmitOldTrapOutOfLineCode();
 
         offsets_.end = masm.currentOffset();
 
@@ -3453,12 +3453,12 @@ class BaseCompiler final : public BaseCompilerInterface
     }
 
     void checkDivideByZeroI32(RegI32 rhs, RegI32 srcDest, Label* done) {
-        masm.branchTest32(Assembler::Zero, rhs, rhs, trap(Trap::IntegerDivideByZero));
+        masm.branchTest32(Assembler::Zero, rhs, rhs, oldTrap(Trap::IntegerDivideByZero));
     }
 
     void checkDivideByZeroI64(RegI64 r) {
         ScratchI32 scratch(*this);
-        masm.branchTest64(Assembler::Zero, r, r, scratch, trap(Trap::IntegerDivideByZero));
+        masm.branchTest64(Assembler::Zero, r, r, scratch, oldTrap(Trap::IntegerDivideByZero));
     }
 
     void checkDivideSignedOverflowI32(RegI32 rhs, RegI32 srcDest, Label* done, bool zeroOnOverflow) {
@@ -3469,7 +3469,7 @@ class BaseCompiler final : public BaseCompilerInterface
             moveImm32(0, srcDest);
             masm.jump(done);
         } else {
-            masm.branch32(Assembler::Equal, rhs, Imm32(-1), trap(Trap::IntegerOverflow));
+            masm.branch32(Assembler::Equal, rhs, Imm32(-1), oldTrap(Trap::IntegerOverflow));
         }
         masm.bind(&notMin);
     }
@@ -3482,7 +3482,7 @@ class BaseCompiler final : public BaseCompilerInterface
             masm.xor64(srcDest, srcDest);
             masm.jump(done);
         } else {
-            masm.jump(trap(Trap::IntegerOverflow));
+            masm.jump(oldTrap(Trap::IntegerOverflow));
         }
         masm.bind(&notmin);
     }
@@ -3809,7 +3809,7 @@ class BaseCompiler final : public BaseCompilerInterface
 
     void unreachableTrap()
     {
-        masm.jump(trap(Trap::Unreachable));
+        masm.jump(oldTrap(Trap::Unreachable));
 #ifdef DEBUG
         masm.breakpoint();
 #endif
@@ -3940,7 +3940,7 @@ class BaseCompiler final : public BaseCompilerInterface
             (access->isAtomic() && !check->omitAlignmentCheck && !check->onlyPointerAlignment))
         {
             masm.branchAdd32(Assembler::CarrySet, Imm32(access->offset()), ptr,
-                             trap(Trap::OutOfBounds));
+                             oldTrap(Trap::OutOfBounds));
             access->clearOffset();
             check->onlyPointerAlignment = true;
         }
@@ -3951,7 +3951,7 @@ class BaseCompiler final : public BaseCompilerInterface
             MOZ_ASSERT(check->onlyPointerAlignment);
             // We only care about the low pointer bits here.
             masm.branchTest32(Assembler::NonZero, ptr, Imm32(access->byteSize() - 1),
-                              trap(Trap::UnalignedAccess));
+                              oldTrap(Trap::UnalignedAccess));
         }
 
         // Ensure no tls if we don't need it.
@@ -3972,7 +3972,7 @@ class BaseCompiler final : public BaseCompilerInterface
         if (!check->omitBoundsCheck) {
             masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr,
                                  Address(tls, offsetof(TlsData, boundsCheckLimit)),
-                                 trap(Trap::OutOfBounds));
+                                 oldTrap(Trap::OutOfBounds));
         }
 #endif
     }
@@ -4905,11 +4905,11 @@ class BaseCompiler final : public BaseCompilerInterface
         return iter_.bytecodeOffset();
     }
 
-    TrapDesc trap(Trap t) const {
+    OldTrapDesc oldTrap(Trap t) const {
         // Use masm.framePushed() because the value needed by the trap machinery
         // is the size of the frame overall, not the height of the stack area of
         // the frame.
-        return TrapDesc(bytecodeOffset(), t, masm.framePushed());
+        return OldTrapDesc(bytecodeOffset(), t, masm.framePushed());
     }
 
     ////////////////////////////////////////////////////////////
@@ -8395,7 +8395,7 @@ BaseCompiler::emitWait(ValType type, uint32_t byteSize)
       default:
         MOZ_CRASH();
     }
-    masm.branchTest32(Assembler::Signed, ReturnReg, ReturnReg, trap(Trap::ThrowReported));
+    masm.branchTest32(Assembler::Signed, ReturnReg, ReturnReg, oldTrap(Trap::ThrowReported));
 
     return true;
 }
@@ -8414,7 +8414,7 @@ BaseCompiler::emitWake()
         return true;
 
     emitInstanceCall(lineOrBytecode, SigPII_, ExprType::I32, SymbolicAddress::Wake);
-    masm.branchTest32(Assembler::Signed, ReturnReg, ReturnReg, trap(Trap::ThrowReported));
+    masm.branchTest32(Assembler::Signed, ReturnReg, ReturnReg, oldTrap(Trap::ThrowReported));
 
     return true;
 }
