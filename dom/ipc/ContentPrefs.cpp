@@ -285,6 +285,8 @@ const char* mozilla::dom::ContentPrefs::gEarlyPrefs[] = {
   "privacy.donottrackheader.enabled",
   "privacy.firstparty.isolate",
   "privacy.firstparty.isolate.restrict_opener_access",
+  "privacy.reduceTimerPrecision",
+  "privacy.reduceTimerPrecision.microseconds",
   "privacy.resistFingerprinting",
   "privacy.resistFingerprinting.target_video_res",
   "privacy.resistFingerprinting.video_dropped_ratio",
