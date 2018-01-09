@@ -28,7 +28,36 @@
   }
 
   function runTest() {
-    const isRounded = x => (Math.floor(x / 100) * 100) === x;
+    let expectedPrecision = opener.expectedPrecision / 1000;
+    let isRounded = (x) => {
+      let rounded = (Math.floor(x / expectedPrecision) * expectedPrecision);
+      // First we do the perfectly normal check that should work just fine
+      if (rounded === x || x === 0)
+        return true;
+
+      // When we're diving by non-whole numbers, we may not get perfect
+      // multiplication/division because of floating points
+      if (Math.abs(rounded - x + expectedPrecision) < .0000001) {
+        return true;
+      } else if (Math.abs(rounded - x) < .0000001) {
+        return true;
+      }
+
+      // Then we handle the case where you're sub-millisecond and the timer is not
+      // We check that the timer is not sub-millisecond by assuming it is not if it
+      // returns an even number of milliseconds
+      if (expectedPrecision < 1 && Math.round(x) == x) {
+        if (Math.round(rounded) == x) {
+          return true;
+        }
+      }
+
+      ok(false, "Looming Test Failure, Additional Debugging Info: Expected Precision: " + expectedPrecision + " Measured Value: " + x +
+        " Rounded Vaue: " + rounded + " Fuzzy1: " + Math.abs(rounded - x + expectedPrecision) +
+        " Fuzzy 2: " + Math.abs(rounded - x));
+
+      return false;
+    };
     const testDiv = document.getElementById("testDiv");
     const animation = testDiv.animate({ opacity: [0, 1] }, 100000);
     animation.play();
@@ -37,14 +66,14 @@
       () => animation.currentTime > 100,
         () => {
           opener.ok(isRounded(animation.startTime),
-             "pref: " + opener.currentPref + " - animation.startTime is not rounded");
+             "pref: " + opener.currentPref + " - animation.startTime with precision " + expectedPrecision + " is not rounded: " + animation.startTime);
           opener.ok(isRounded(animation.currentTime),
-             "pref: " + opener.currentPref + " - animation.currentTime is not rounded");
+             "pref: " + opener.currentPref + " - animation.currentTime with precision " + expectedPrecision + " is not rounded: " + animation.currentTime);
           opener.ok(isRounded(animation.timeline.currentTime),
-             "pref: " + opener.currentPref + " - animation.timeline.currentTime is not rounded");
+             "pref: " + opener.currentPref + " - animation.timeline.currentTime with precision " + expectedPrecision + " is not rounded: " + animation.timeline.currentTime);
           if (document.timeline) {
             opener.ok(isRounded(document.timeline.currentTime),
-               "pref: " + opener.currentPref + " - document.timeline.currentTime is not rounded");
+               "pref: " + opener.currentPref + " - document.timeline.currentTime with precision " + expectedPrecision + " is not rounded: " + document.timeline.currentTime);
           }
           opener.done();
           window.close();
