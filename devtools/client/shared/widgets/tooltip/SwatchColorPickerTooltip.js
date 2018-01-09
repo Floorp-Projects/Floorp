@@ -157,6 +157,19 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     }
   }
 
+  /**
+   * Override the implementation from SwatchBasedEditorTooltip.
+   */
+  onTooltipHidden() {
+    // If the tooltip is hidden while the eyedropper is being used, we should not commit
+    // the changes.
+    if (this.eyedropperOpen) {
+      return;
+    }
+
+    super.onTooltipHidden();
+  }
+
   _openEyeDropper() {
     let {inspector, toolbox, telemetry} = this.inspector;
     telemetry.toolOpened("pickereyedropper");
