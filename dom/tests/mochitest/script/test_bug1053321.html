@@ -23,8 +23,8 @@ are unexpectedly blocked.
 
 <body>
   <script>
-    // No need for an async test, we make it all before window.onload.
-    //
+    SimpleTest.waitForExplicitFinish();
+
     // We can't test whether the two scripts have not been executed here, since
     // preloads of the two images below (that unblock the two tested <head>
     // scripts) may happen sooner than this script executes.
@@ -33,6 +33,7 @@ are unexpectedly blocked.
     });
     window.addEventListener("load", function() {
       ok(window.script_executed_async, "Async script executed before onload");
+      SimpleTest.finish();
     }, true);
   </script>
   <img src="file_blocked_script.sjs?unblock&defer"/>
