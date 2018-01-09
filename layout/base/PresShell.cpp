@@ -6905,12 +6905,10 @@ PresShell::HandleEvent(nsIFrame* aFrame,
 
   NS_ASSERTION(aFrame, "aFrame should be not null");
 
-  // Update the latest focus sequence number with this new sequence number
+  // Update the latest focus sequence number with this new sequence number;
+  // the next transasction that gets sent to the compositor will carry this over
   if (mAPZFocusSequenceNumber < aEvent->mFocusSequenceNumber) {
     mAPZFocusSequenceNumber = aEvent->mFocusSequenceNumber;
-
-    // Schedule an empty transaction to transmit this focus update
-    aFrame->SchedulePaint(nsIFrame::PAINT_COMPOSITE_ONLY, false);
   }
 
   if (mIsDestroying ||
