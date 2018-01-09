@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_workers_serviceworkerevents_h__
 #define mozilla_dom_workers_serviceworkerevents_h__
 
+#include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ExtendableEventBinding.h"
 #include "mozilla/dom/ExtendableMessageEventBinding.h"
