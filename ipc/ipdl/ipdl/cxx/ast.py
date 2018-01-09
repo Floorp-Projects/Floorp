@@ -467,17 +467,23 @@ class FriendClassDecl(Node):
         Node.__init__(self)
         self.friend = friend
 
+# Python2 polyfill for Python3's Enum() functional API.
+def make_enum(name, members_str):
+    members_list = members_str.split()
+    members_dict = {}
+    member_value = 1
+    for member in members_list:
+        members_dict[member] = member_value
+        member_value += 1
+    return type(name, (), members_dict)
+
+MethodSpec = make_enum('MethodSpec', 'NONE VIRTUAL PURE OVERRIDE STATIC')
+
 class MethodDecl(Node):
     def __init__(self, name, params=[ ], ret=Type('void'),
-                 virtual=0, const=0, pure=0, static=0, warn_unused=0,
+                 methodspec=MethodSpec.NONE, const=0, warn_unused=0,
                  inline=0, force_inline=0, never_inline=0,
-                 typeop=None, override=0,
-                 T=None):
-        assert not (virtual and static)
-        assert not pure or virtual      # pure => virtual
-        assert not override or virtual  # override => virtual
-        assert not (override and pure)
-        assert not (static and typeop)
+                 typeop=None, T=None):
         assert not (name and typeop)
         assert name is None or isinstance(name, str)
         assert not isinstance(ret, list)
@@ -487,17 +493,15 @@ class MethodDecl(Node):
         assert not (force_inline and never_inline)
 
         if typeop is not None:
+            assert methodspec == MethodSpec.NONE
             ret = None
 
         Node.__init__(self)
         self.name = name
         self.params = params            # [ Param ]
         self.ret = ret                  # Type or None
-        self.virtual = virtual          # bool
+        self.methodspec = methodspec    # enum
         self.const = const              # bool
-        self.pure = pure                # bool
-        self.override = override        # bool
-        self.static = static            # bool
         self.warn_unused = warn_unused  # bool
         self.force_inline = (force_inline or T) # bool
         self.inline = inline            # bool
@@ -511,11 +515,8 @@ class MethodDecl(Node):
             self.name,
             params=copy.deepcopy(self.params, memo),
             ret=copy.deepcopy(self.ret, memo),
-            virtual=self.virtual,
+            methodspec=self.methodspec,
             const=self.const,
-            pure=self.pure,
-            override=self.override,
-            static=self.static,
             warn_unused=self.warn_unused,
             inline=self.inline,
             force_inline=self.force_inline,
@@ -530,11 +531,12 @@ class MethodDefn(Block):
 
 class FunctionDecl(MethodDecl):
     def __init__(self, name, params=[ ], ret=Type('void'),
-                 static=0, warn_unused=0,
+                 methodspec=MethodSpec.NONE, warn_unused=0,
                  inline=0, force_inline=0,
                  T=None):
+        assert methodspec == MethodSpec.NONE or methodspec == MethodSpec.STATIC
         MethodDecl.__init__(self, name, params=params, ret=ret,
-                            static=static, warn_unused=warn_unused,
+                            methodspec=methodspec, warn_unused=warn_unused,
                             inline=inline, force_inline=force_inline,
                             T=T)
 
@@ -559,18 +561,19 @@ class ConstructorDefn(MethodDefn):
         self.memberinits = memberinits
 
 class DestructorDecl(MethodDecl):
-    def __init__(self, name, virtual=0, override=0, force_inline=0, inline=0):
+    def __init__(self, name, methodspec=MethodSpec.NONE, force_inline=0, inline=0):
+        # C++ allows pure or override destructors, but ipdl cgen does not.
+        assert methodspec == MethodSpec.NONE or methodspec == MethodSpec.VIRTUAL
         MethodDecl.__init__(self, name, params=[ ], ret=None,
-                            virtual=virtual,
+                            methodspec=methodspec,
                             force_inline=force_inline, inline=inline)
 
     def __deepcopy__(self, memo):
         return DestructorDecl(self.name,
-                              virtual=self.virtual,
+                              methodspec=self.methodspec,
                               force_inline=self.force_inline,
                               inline=self.inline)
 
-        
 class DestructorDefn(MethodDefn):
     def __init__(self, decl):  MethodDefn.__init__(self, decl)
 
