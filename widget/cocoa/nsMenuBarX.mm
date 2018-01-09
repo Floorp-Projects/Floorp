@@ -163,11 +163,9 @@ nsresult nsMenuBarX::Create(nsIWidget* aParent, Element* aContent)
 
 void nsMenuBarX::ConstructNativeMenus()
 {
-  uint32_t count = mContent->GetChildCount();
-  for (uint32_t i = 0; i < count; i++) {
-    nsIContent *menuContent = mContent->GetChildAt_Deprecated(i);
-    if (menuContent &&
-        menuContent->IsXULElement(nsGkAtoms::menu)) {
+  for (nsIContent* menuContent = mContent->GetFirstChild();
+       menuContent; menuContent = menuContent->GetNextSibling()) {
+    if (menuContent->IsXULElement(nsGkAtoms::menu)) {
       nsMenuX* newMenu = new nsMenuX();
       if (newMenu) {
         nsresult rv = newMenu->Create(this, this, menuContent->AsElement());

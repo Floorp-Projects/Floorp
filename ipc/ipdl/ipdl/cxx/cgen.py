@@ -192,6 +192,9 @@ class CxxCodeGen(CodePrinter, Visitor):
 
     def visitMethodDecl(self, md):
         assert not (md.static and md.virtual)
+        assert not (md.override and md.pure)
+        assert not md.pure or md.virtual        # pure => virtual
+        assert not md.override or md.virtual    # override => virtual
 
         if md.T:
             self.write('template<')
@@ -208,7 +211,7 @@ class CxxCodeGen(CodePrinter, Visitor):
             self.write('MOZ_NEVER_INLINE ')
         if md.static:
             self.write('static ')
-        if md.virtual:
+        if md.virtual and not md.override:
             self.write('virtual ')
         if md.ret:
             if md.only_for_definition:
@@ -232,6 +235,9 @@ class CxxCodeGen(CodePrinter, Visitor):
         if md.ret and md.only_for_definition:
             self.write(' -> ')
             md.ret.accept(self)
+
+        if md.override:
+            self.write(' override')
         if md.pure:
             self.write(' = 0')
 

@@ -77,19 +77,10 @@ gfxDWriteFont::gfxDWriteFont(const RefPtr<UnscaledFontDWrite>& aUnscaledFont,
     , mCairoFontFace(nullptr)
     , mMetrics(nullptr)
     , mSpaceGlyph(0)
-    , mNeedsOblique(false)
     , mNeedsBold(aNeedsBold)
     , mUseSubpixelPositions(false)
     , mAllowManualShowGlyphs(true)
 {
-    if ((GetStyle()->style != NS_FONT_STYLE_NORMAL) &&
-        aFontEntry->IsUpright() &&
-        GetStyle()->allowSyntheticStyle) {
-            // For this we always use the font_matrix for uniformity. Not the
-            // DWrite simulation.
-            mNeedsOblique = true;
-    }
-
     mFontFace = aUnscaledFont->GetFontFace();
 
     // If the IDWriteFontFace1 interface is available, we can use that for
@@ -695,6 +686,7 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
                                                    GetAdjustedSize(),
                                                    useEmbeddedBitmap,
                                                    forceGDI,
+                                                   IsSyntheticOblique(),
                                                    params,
                                                    params->GetGamma(),
                                                    params->GetEnhancedContrast());

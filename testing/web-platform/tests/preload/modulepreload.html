@@ -53,8 +53,8 @@ promise_test(function(t) {
     link.rel = 'modulepreload';
     link.href = 'resources/module1.js';
     return attachAndWaitForLoad(link).then(() => {
-        // Currently, modulepreload doesn't perform submodules fetch.
         verifyNumberOfDownloads('resources/module1.js', 1);
+        // The load event fires before (optional) submodules fetch.
         verifyNumberOfDownloads('resources/module2.js', 0);
 
         var script = document.createElement('script');
@@ -71,7 +71,7 @@ promise_test(function(t) {
     var link = document.createElement('link');
     link.rel = 'modulepreload';
     link.href = 'resources/syntax-error.js';
-    return attachAndWaitForError(link);
+    return attachAndWaitForLoad(link);
 }, 'link rel=modulepreload for a module with syntax error');
 
 promise_test(function(t) {

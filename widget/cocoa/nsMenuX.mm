@@ -438,17 +438,14 @@ void nsMenuX::MenuConstruct()
   }
 
   // Iterate over the kids
-  uint32_t count = menuPopup->GetChildCount();
-  for (uint32_t i = 0; i < count; i++) {
-    nsIContent *child = menuPopup->GetChildAt_Deprecated(i);
-    if (child) {
-      // depending on the type, create a menu item, separator, or submenu
-      if (child->IsAnyOfXULElements(nsGkAtoms::menuitem,
-                                    nsGkAtoms::menuseparator)) {
-        LoadMenuItem(child);
-      } else if (child->IsXULElement(nsGkAtoms::menu)) {
-        LoadSubMenu(child);
-      }
+  for (nsIContent* child = menuPopup->GetFirstChild();
+       child; child = child->GetNextSibling()) {
+    // depending on the type, create a menu item, separator, or submenu
+    if (child->IsAnyOfXULElements(nsGkAtoms::menuitem,
+                                  nsGkAtoms::menuseparator)) {
+      LoadMenuItem(child);
+    } else if (child->IsXULElement(nsGkAtoms::menu)) {
+      LoadSubMenu(child);
     }
   } // for each menu item
 
@@ -642,9 +639,10 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
     return;
   *aResult = nullptr;
 
+  int32_t dummy;
+
   // Check to see if we are a "menupopup" node (if we are a native menu).
   {
-    int32_t dummy;
     RefPtr<nsAtom> tag = mContent->OwnerDoc()->BindingManager()->ResolveTag(mContent, &dummy);
     if (tag == nsGkAtoms::menupopup) {
       NS_ADDREF(*aResult = mContent);
@@ -654,11 +652,8 @@ void nsMenuX::GetMenuPopupContent(nsIContent** aResult)
 
   // Otherwise check our child nodes.
 
-  uint32_t count = mContent->GetChildCount();
-
-  for (uint32_t i = 0; i < count; i++) {
-    int32_t dummy;
-    nsIContent *child = mContent->GetChildAt_Deprecated(i);
+  for (nsIContent* child = mContent->GetFirstChild();
+       child; child = child->GetNextSibling()) {
     RefPtr<nsAtom> tag = child->OwnerDoc()->BindingManager()->ResolveTag(child, &dummy);
     if (tag == nsGkAtoms::menupopup) {
       *aResult = child;

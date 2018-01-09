@@ -20,7 +20,10 @@
 #include "nsIGfxInfo.h"
 #include "nsPrintfCString.h"
 #ifdef XP_WIN
+#include "mozilla/gfx/DeviceManagerDx.h"
 #include "nsWindowsHelpers.h"
+
+#include <d3d11.h>
 #endif
 #include "OGLShaderProgram.h"
 #include "prenv.h"
@@ -149,16 +152,26 @@ GetAndInitWARPDisplay(GLLibraryEGL& egl, void* displayType)
 static EGLDisplay
 GetAndInitDisplayForWebRender(GLLibraryEGL& egl, void* displayType)
 {
-    const EGLint attrib_list[] = {  LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE,
-                                    LOCAL_EGL_PLATFORM_ANGLE_DEVICE_TYPE_HARDWARE_ANGLE,
-                                    LOCAL_EGL_PLATFORM_ANGLE_TYPE_ANGLE,
-                                    LOCAL_EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
-                                    LOCAL_EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE,
+#ifdef XP_WIN
+    const EGLint attrib_list[] = {  LOCAL_EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE,
                                     LOCAL_EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE,
                                     LOCAL_EGL_NONE };
-    EGLDisplay display = egl.fGetPlatformDisplayEXT(LOCAL_EGL_PLATFORM_ANGLE_ANGLE,
-                                                    displayType,
-                                                    attrib_list);
+    RefPtr<ID3D11Device> d3d11Device = gfx::DeviceManagerDx::Get()->GetCompositorDevice();
+    if (!d3d11Device) {
+        gfxCriticalNote << "Failed to get compositor device for EGLDisplay";
+        return EGL_NO_DISPLAY;
+    }
+    EGLDeviceEXT eglDevice = egl.fCreateDeviceANGLE(LOCAL_EGL_D3D11_DEVICE_ANGLE, reinterpret_cast<void *>(d3d11Device.get()), nullptr);
+    if (!eglDevice) {
+        gfxCriticalNote << "Failed to get EGLDeviceEXT of D3D11Device";
+        return EGL_NO_DISPLAY;
+    }
+    // Create an EGLDisplay using the EGLDevice
+    EGLDisplay display = egl.fGetPlatformDisplayEXT(LOCAL_EGL_PLATFORM_DEVICE_EXT, eglDevice, attrib_list);
+    if (!display) {
+        gfxCriticalNote << "Failed to get EGLDisplay of D3D11Device";
+        return EGL_NO_DISPLAY;
+    }
 
     if (display == EGL_NO_DISPLAY) {
         const EGLint err = egl.fGetError();
@@ -169,10 +182,13 @@ GetAndInitDisplayForWebRender(GLLibraryEGL& egl, void* displayType)
         return EGL_NO_DISPLAY;
     }
 
-    if (!egl.fInitialize(display, nullptr, nullptr))
+    if (!egl.fInitialize(display, nullptr, nullptr)) {
         return EGL_NO_DISPLAY;
-
+    }
     return display;
+#else
+    return EGL_NO_DISPLAY;
+#endif
 }
 
 static bool
@@ -492,6 +508,16 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
             gfxCriticalError() << "Failed to load ANGLE symbols!";
             return false;
         }
+        MOZ_ASSERT(IsExtensionSupported(ANGLE_platform_angle_d3d));
+        const GLLibraryLoader::SymLoadStruct createDeviceSymbols[] = {
+            SYMBOL(CreateDeviceANGLE),
+            SYMBOL(ReleaseDeviceANGLE),
+            END_OF_SYMBOLS
+        };
+        if (!fnLoadSymbols(createDeviceSymbols)) {
+            NS_ERROR("EGL supports ANGLE_device_creation without exposing its functions!");
+            MarkExtensionUnsupported(ANGLE_device_creation);
+        }
     }
 
     if (IsExtensionSupported(ANGLE_platform_angle_d3d)) {
@@ -680,18 +706,6 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId
         if (!fnLoadSymbols(nvStreamSymbols)) {
             NS_ERROR("EGL supports ANGLE_stream_producer_d3d_texture_nv12 without exposing its functions!");
             MarkExtensionUnsupported(ANGLE_stream_producer_d3d_texture_nv12);
-        }
-    }
-
-    if (IsExtensionSupported(ANGLE_device_creation)) {
-        const GLLibraryLoader::SymLoadStruct createDeviceSymbols[] = {
-            SYMBOL(CreateDeviceANGLE),
-            SYMBOL(ReleaseDeviceANGLE),
-            END_OF_SYMBOLS
-        };
-        if (!fnLoadSymbols(createDeviceSymbols)) {
-            NS_ERROR("EGL supports ANGLE_device_creation without exposing its functions!");
-            MarkExtensionUnsupported(ANGLE_device_creation);
         }
     }
 

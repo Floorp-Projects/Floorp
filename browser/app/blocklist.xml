@@ -969,10 +969,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
-    <emItem blockID="i258" id="helperbar@helperbar.com">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="1.0" severity="1"/>
-    </emItem>
     <emItem blockID="i96" id="youtubeee@youtuber3.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -1461,6 +1457,10 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i492" id="{af95cc15-3b9b-45ae-8d9b-98d08eda3111}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="674b6e19-f087-4706-a91d-1e723ed6f79e" id="{1490068c-d8b7-4bd2-9621-a648942b312c}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
@@ -2150,6 +2150,10 @@
     <emItem blockID="i117" id="{ce7e73df-6a44-4028-8079-5927a588c948}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="1.0.8" severity="1"/>
+    </emItem>
+    <emItem blockID="i258" id="helperbar@helperbar.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.0" severity="1"/>
     </emItem>
   </emItems>
   <pluginItems>

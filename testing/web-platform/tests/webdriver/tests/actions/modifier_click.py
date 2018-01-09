@@ -71,7 +71,6 @@ def test_modifier_click(mod_click_session,
         e.update(defaults)
         if e["type"] != "mousemove":
             e[prop] = True
-    print get_events(mod_click_session)
     filtered_events = [filter_dict(e, expected[0]) for e in get_events(mod_click_session)]
     assert expected == filtered_events
 
