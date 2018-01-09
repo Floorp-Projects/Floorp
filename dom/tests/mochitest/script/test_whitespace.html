@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for ScriptLoader and type with whitespaces</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript">
+let passed = false;
+
+let tests = [
+  [ " application/javascript", true ],
+  [ "\tapplication/javascript\n\r \t", true ],
+];
+
+for (let i = 0; i < tests.length; ++i) {
+  passed = false;
+
+  let script = document.createElement('script');
+  script.setAttribute('type', tests[i][0]);
+  script.innerText = "passed = true;";
+  document.body.appendChild(script);
+
+  ok (passed, tests[i][1], "Test " + tests[i][0] + " passed");
+}
+</script>
+
+</body>
+</html>
