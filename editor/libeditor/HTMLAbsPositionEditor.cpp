@@ -407,7 +407,7 @@ HTMLEditor::GrabberClicked()
     mMouseMotionListenerP = new ResizerMouseMotionListener(*this);
     if (!mMouseMotionListenerP) {return NS_ERROR_NULL_POINTER;}
 
-    nsCOMPtr<nsIDOMEventTarget> piTarget = GetDOMEventTarget();
+    nsIDOMEventTarget* piTarget = GetDOMEventTarget();
     NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
     rv = piTarget->AddEventListener(NS_LITERAL_STRING("mousemove"),
