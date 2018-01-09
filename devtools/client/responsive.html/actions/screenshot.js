@@ -41,7 +41,7 @@ function createScreenshotFor(node) {
 }
 
 function saveToFile(data, filename) {
-  return spawn(function* () {
+  return spawn(function () {
     const chromeWindow = getToplevelWindow(window);
     const chromeDocument = chromeWindow.document;
 
@@ -65,19 +65,19 @@ function simulateCameraEffects(node) {
 module.exports = {
 
   takeScreenshot() {
-    return function* (dispatch, getState) {
-      yield dispatch({ type: TAKE_SCREENSHOT_START });
+    return async function (dispatch, getState) {
+      await dispatch({ type: TAKE_SCREENSHOT_START });
 
       // Waiting the next repaint, to ensure the react components
       // can be properly render after the action dispatched above
-      yield animationFrame();
+      await animationFrame();
 
       let iframe = document.querySelector("iframe");
-      let data = yield createScreenshotFor(iframe);
+      let data = await createScreenshotFor(iframe);
 
       simulateCameraEffects(iframe);
 
-      yield saveToFile(data, getFileName());
+      await saveToFile(data, getFileName());
 
       dispatch({ type: TAKE_SCREENSHOT_END });
     };
