@@ -520,27 +520,12 @@ promise_test(() => {
   return promise;
 }, 'ReadableStream with byte source: Push source that doesn\'t understand pull signal');
 
-promise_test(t => {
-  const stream = new ReadableStream({
+test(() => {
+  assert_throws(new TypeError(), () => new ReadableStream({
     pull: 'foo',
     type: 'bytes'
-  });
-
-  const reader = stream.getReader();
-
-  return promise_rejects(t, new TypeError(), reader.read(), 'read() must fail');
-}, 'ReadableStream with byte source: read(), but pull() function is not callable');
-
-promise_test(t => {
-  const stream = new ReadableStream({
-    pull: 'foo',
-    type: 'bytes'
-  });
-
-  const reader = stream.getReader({ mode: 'byob' });
-
-  return promise_rejects(t, new TypeError(), reader.read(new Uint8Array(1)), 'read() must fail');
-}, 'ReadableStream with byte source: read(view), but pull() function is not callable');
+  }), 'constructor should throw');
+}, 'ReadableStream with byte source: pull() function is not callable');
 
 promise_test(() => {
   const stream = new ReadableStream({

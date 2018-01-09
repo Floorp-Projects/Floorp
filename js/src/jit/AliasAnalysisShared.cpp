@@ -144,6 +144,7 @@ GetObject(const MDefinition* ins)
       case MDefinition::Opcode::WasmStore:
       case MDefinition::Opcode::WasmCompareExchangeHeap:
       case MDefinition::Opcode::WasmAtomicBinopHeap:
+      case MDefinition::Opcode::WasmAtomicExchangeHeap:
       case MDefinition::Opcode::WasmLoadGlobalVar:
       case MDefinition::Opcode::WasmStoreGlobalVar:
       case MDefinition::Opcode::ArrayJoin:

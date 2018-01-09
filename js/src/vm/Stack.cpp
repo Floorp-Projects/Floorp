@@ -482,6 +482,7 @@ JitFrameIter::operator=(const JitFrameIter& another)
     MOZ_ASSERT(this != &another);
 
     act_ = another.act_;
+    mustUnwindActivation_ = another.mustUnwindActivation_;
 
     if (isSome())
         iter_.destroy();
@@ -498,9 +499,10 @@ JitFrameIter::operator=(const JitFrameIter& another)
     return *this;
 }
 
-JitFrameIter::JitFrameIter(jit::JitActivation* act)
+JitFrameIter::JitFrameIter(jit::JitActivation* act, bool mustUnwindActivation)
 {
     act_ = act;
+    mustUnwindActivation_ = mustUnwindActivation;
     MOZ_ASSERT(act->hasExitFP(), "packedExitFP is used to determine if JSJit or wasm");
     if (act->hasJSExitFP()) {
         iter_.construct<jit::JSJitFrameIter>(act);
@@ -557,6 +559,10 @@ JitFrameIter::settle()
         // popped.
 
         wasm::Frame* prevFP = (wasm::Frame*) jitFrame.prevFp();
+
+        if (mustUnwindActivation_)
+            act_->setWasmExitFP(prevFP);
+
         iter_.destroy();
         iter_.construct<wasm::WasmFrameIter>(act_, prevFP);
         MOZ_ASSERT(!asWasm().done());
@@ -568,12 +574,28 @@ void
 JitFrameIter::operator++()
 {
     MOZ_ASSERT(isSome());
-    if (isJSJit())
+    if (isJSJit()) {
+        const jit::JSJitFrameIter& jitFrame = asJSJit();
+
+        jit::JitFrameLayout* prevFrame = nullptr;
+        if (mustUnwindActivation_ && jitFrame.isScripted())
+            prevFrame = jitFrame.jsFrame();
+
         ++asJSJit();
-    else if (isWasm())
+
+        if (prevFrame) {
+            // Unwind the frame by updating packedExitFP. This is necessary
+            // so that (1) debugger exception unwind and leave frame hooks
+            // don't see this frame when they use ScriptFrameIter, and (2)
+            // ScriptFrameIter does not crash when accessing an IonScript
+            // that's destroyed by the ionScript->decref call.
+            EnsureBareExitFrame(act_, prevFrame);
+        }
+    } else if (isWasm()) {
         ++asWasm();
-    else
+    } else {
         MOZ_CRASH("unhandled case");
+    }
     settle();
 }
 

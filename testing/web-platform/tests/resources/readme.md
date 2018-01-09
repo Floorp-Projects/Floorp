@@ -22,5 +22,5 @@ For detailed API documentation please visit [http://web-platform-tests.org/writi
 
 ### Tutorials
 
-You can also read a tutorial on 
+You can also read a tutorial on
 [Using testharness.js](http://darobin.github.com/test-harness-tutorial/docs/using-testharness.html).
