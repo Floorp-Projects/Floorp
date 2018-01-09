@@ -26,37 +26,37 @@ const isMenuChecked = () => {
   return menu.getAttribute("checked") === "true";
 };
 
-add_task(function* () {
-  yield startup(window);
+add_task(async function () {
+  await startup(window);
 
   ok(!isMenuChecked(),
     "RDM menu item is unchecked by default");
 
-  const tab = yield addTab(TEST_URL);
+  const tab = await addTab(TEST_URL);
 
   ok(!isMenuChecked(),
     "RDM menu item is unchecked for new tab");
 
-  yield openRDM(tab);
+  await openRDM(tab);
 
   ok(isMenuChecked(),
     "RDM menu item is checked with RDM open");
 
-  const tab2 = yield addTab(TEST_URL);
+  const tab2 = await addTab(TEST_URL);
 
   ok(!isMenuChecked(),
     "RDM menu item is unchecked for new tab");
 
-  yield activateTab(tab);
+  await activateTab(tab);
 
   ok(isMenuChecked(),
     "RDM menu item is checked for the tab where RDM is open");
 
-  yield closeRDM(tab);
+  await closeRDM(tab);
 
   ok(!isMenuChecked(),
     "RDM menu item is unchecked after RDM is closed");
 
-  yield removeTab(tab);
-  yield removeTab(tab2);
+  await removeTab(tab);
+  await removeTab(tab2);
 });
