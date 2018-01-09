@@ -54,7 +54,7 @@ telemetry-tests-client:
 
 test-verify:
     description: "Extra verification of tests modified on this push"
-    suite: test-verification
+    suite: test-verify
     treeherder-symbol: tc(TV)
     loopback-video: true
     instance-size:
@@ -92,9 +92,3 @@ test-verify:
         no-read-buildbot-config: true
         extra-options:
             - --verify
-    when:
-        files-changed:
-            - '**/*.js'
-            - '**/*.html'
-            - '**/*.xhtml'
-            - '**/*.xul'

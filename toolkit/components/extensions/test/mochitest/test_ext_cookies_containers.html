@@ -2,12 +2,12 @@
 <html>
 <head>
   <title>WebExtension test</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="chrome_head.js"></script>
+  <meta charset="utf-8">
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
   <script type="text/javascript" src="head.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 
@@ -16,13 +16,16 @@
 
 add_task(async function setup() {
   // make sure userContext is enabled.
-  return SpecialPowers.pushPrefEnv({"set": [
+  await SpecialPowers.pushPrefEnv({"set": [
     ["privacy.userContext.enabled", true],
   ]});
 });
 
 add_task(async function test_cookie_containers() {
   async function background() {
+    // Sometimes there is a cookie without name/value when running tests.
+    let cookiesAtStart = await browser.cookies.getAll({storeId: "firefox-default"});
+
     function assertExpected(expected, cookie) {
       for (let key of Object.keys(cookie)) {
         browser.test.assertTrue(key in expected, `found property ${key}`);
@@ -61,7 +64,7 @@ add_task(async function test_cookie_containers() {
     assertExpected(expected, cookie);
 
     let cookies = await browser.cookies.getAll({storeId: "firefox-default"});
-    browser.test.assertEq(0, cookies.length, "getAll() with default storeId returns an empty array");
+    browser.test.assertEq(0, cookiesAtStart.length - cookies.length, "getAll() with default storeId hasn't added cookies");
 
     cookies = await browser.cookies.getAll({storeId: "firefox-container-1"});
     browser.test.assertEq(1, cookies.length, "one cookie found for matching domain");

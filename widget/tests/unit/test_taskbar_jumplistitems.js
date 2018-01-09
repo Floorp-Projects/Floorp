@@ -58,44 +58,51 @@ function test_hashes()
 {
   var link = Cc["@mozilla.org/windows-jumplistlink;1"]
              .createInstance(Ci.nsIJumpListLink);
-  var uri1 = Cc["@mozilla.org/network/simple-uri;1"]
-            .createInstance(Ci.nsIURI);
-  var uri2 = Cc["@mozilla.org/network/simple-uri;1"]
-            .createInstance(Ci.nsIURI);
-
-  uri1.spec = "http://www.123.com/";
-  uri2.spec = "http://www.123.com/";
+  var uri1 = Cc["@mozilla.org/network/simple-uri-mutator;1"]
+               .createInstance(Ci.nsIURIMutator)
+               .setSpec("http://www.123.com/")
+               .finalize();
+  var uri2 = Cc["@mozilla.org/network/simple-uri-mutator;1"]
+               .createInstance(Ci.nsIURIMutator)
+               .setSpec("http://www.123.com/")
+               .finalize();
 
   link.uri = uri1;
 
   Assert.ok(link.compareHash(uri2))
-  uri2.spec = "http://www.456.com/";
+  uri2 = uri2.mutate().setSpec("http://www.456.com/").finalize();
   Assert.ok(!link.compareHash(uri2))
-  uri2.spec = "http://www.123.com/";
+  uri2 = uri2.mutate().setSpec("http://www.123.com/").finalize();
   Assert.ok(link.compareHash(uri2))
-  uri2.spec = "https://www.123.com/";
+  uri2 = uri2.mutate().setSpec("https://www.123.com/").finalize();
   Assert.ok(!link.compareHash(uri2))
-  uri2.spec = "http://www.123.com/test/";
+  uri2 = uri2.mutate().setSpec("http://www.123.com/test/").finalize();
   Assert.ok(!link.compareHash(uri2))
-  uri1.spec = "http://www.123.com/test/";
-  uri2.spec = "http://www.123.com/test/";
+  uri1 = uri1.mutate().setSpec("http://www.123.com/test/").finalize();
+  link.uri = uri1;
+  uri2 = uri2.mutate().setSpec("http://www.123.com/test/").finalize();
   Assert.ok(link.compareHash(uri2))
-  uri1.spec = "https://www.123.com/test/";
-  uri2.spec = "https://www.123.com/test/";
+  uri1 = uri1.mutate().setSpec("https://www.123.com/test/").finalize();
+  link.uri = uri1;
+  uri2 = uri2.mutate().setSpec("https://www.123.com/test/").finalize();
   Assert.ok(link.compareHash(uri2))
-  uri2.spec = "ftp://www.123.com/test/";
+  uri2 = uri2.mutate().setSpec("ftp://www.123.com/test/").finalize();
   Assert.ok(!link.compareHash(uri2))
-  uri2.spec = "http://123.com/test/";
+  uri2 = uri2.mutate().setSpec("http://123.com/test/").finalize();
   Assert.ok(!link.compareHash(uri2))
-  uri1.spec = "https://www.123.com/test/";
-  uri2.spec = "https://www.123.com/Test/";
+  uri1 = uri1.mutate().setSpec("https://www.123.com/test/").finalize();
+  link.uri = uri1;
+  uri2 = uri2.mutate().setSpec("https://www.123.com/Test/").finalize();
   Assert.ok(!link.compareHash(uri2))
 
-  uri1.spec = "http://www.123.com/";
+  uri1 = uri1.mutate().setSpec("http://www.123.com/").finalize();
+  link.uri = uri1;
   Assert.equal(link.uriHash, "QGLmWuwuTozr3tOfXSf5mg==");
-  uri1.spec = "http://www.123.com/test/";
+  uri1 = uri1.mutate().setSpec("http://www.123.com/test/").finalize();
+  link.uri = uri1;
   Assert.equal(link.uriHash, "AG87Ls+GmaUYSUJFETRr3Q==");
-  uri1.spec = "https://www.123.com/";
+  uri1 = uri1.mutate().setSpec("https://www.123.com/").finalize();
+  link.uri = uri1;
   Assert.equal(link.uriHash, "iSx6UH1a9enVPzUA9JZ42g==");
 
   var uri3 = Cc["@mozilla.org/network/simple-uri;1"]
@@ -112,13 +119,14 @@ function test_links()
   var link2 = Cc["@mozilla.org/windows-jumplistlink;1"]
               .createInstance(Ci.nsIJumpListLink);
 
-  var uri1 = Cc["@mozilla.org/network/simple-uri;1"]
-            .createInstance(Ci.nsIURI);
-  var uri2 = Cc["@mozilla.org/network/simple-uri;1"]
-            .createInstance(Ci.nsIURI);
-
-  uri1.spec = "http://www.test.com/";
-  uri2.spec = "http://www.test.com/";
+  var uri1 = Cc["@mozilla.org/network/simple-uri-mutator;1"]
+               .createInstance(Ci.nsIURIMutator)
+               .setSpec("http://www.test.com/")
+               .finalize();
+  var uri2 = Cc["@mozilla.org/network/simple-uri-mutator;1"]
+               .createInstance(Ci.nsIURIMutator)
+               .setSpec("http://www.test.com/")
+               .finalize();
 
   link1.uri = uri1;
   link1.uriTitle = "Test";
@@ -132,7 +140,8 @@ function test_links()
   Assert.ok(!link1.equals(link2));
 
   link2.uriTitle = "Test";
-  uri2.spec = "http://www.testing.com/";
+  uri2 = uri2.mutate().setSpec("http://www.testing.com/").finalize();
+  link2.uri = uri2;
 
   Assert.ok(!link1.equals(link2));
 }
@@ -153,9 +162,10 @@ function test_shortcuts()
   sc.iconIndex = 1;
   Assert.equal(sc.iconIndex, 1);
 
-  var faviconPageUri = Cc["@mozilla.org/network/simple-uri;1"]
-                    .createInstance(Ci.nsIURI);
-  faviconPageUri.spec = "http://www.123.com/";
+  var faviconPageUri = Cc["@mozilla.org/network/simple-uri-mutator;1"]
+                         .createInstance(Ci.nsIURIMutator)
+                         .setSpec("http://www.123.com/")
+                         .finalize();
   sc.faviconPageUri = faviconPageUri;
   Assert.equal(sc.faviconPageUri, faviconPageUri);
 

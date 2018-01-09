@@ -18,14 +18,14 @@ add_task(async function() {
 
     await withBookmarksDialog(true, AddKeywordForSearchField, async function(dialogWin) {
       let acceptBtn = dialogWin.document.documentElement.getButton("accept");
-      ok(acceptBtn.disabled, "Accept button is disabled");
+      Assert.ok(acceptBtn.disabled, "Accept button is disabled");
 
       let promiseKeywordNotification = PlacesTestUtils.waitForNotification(
         "onItemChanged", (itemId, prop, isAnno, val) => prop == "keyword" && val == "kw");
 
       fillBookmarkTextField("editBMPanel_keywordField", "kw", dialogWin);
 
-      ok(!acceptBtn.disabled, "Accept button is enabled");
+      Assert.ok(!acceptBtn.disabled, "Accept button is enabled");
 
       // The dialog is instant apply.
       await promiseKeywordNotification;
@@ -37,18 +37,18 @@ add_task(async function() {
         entry = await PlacesUtils.keywords.fetch("kw");
         return !!entry;
       }, "Unable to find the expected keyword");
-      is(entry.keyword, "kw", "keyword is correct");
-      is(entry.url.href, TEST_URL, "URL is correct");
-      is(entry.postData, "accenti%3D%E0%E8%EC%F2%F9&search%3D%25s", "POST data is correct");
+      Assert.equal(entry.keyword, "kw", "keyword is correct");
+      Assert.equal(entry.url.href, TEST_URL, "URL is correct");
+      Assert.equal(entry.postData, "accenti%3D%E0%E8%EC%F2%F9&search%3D%25s", "POST data is correct");
 
       info("Check the charset has been saved");
       let charset = await PlacesUtils.getCharsetForURI(NetUtil.newURI(TEST_URL));
-      is(charset, "windows-1252", "charset is correct");
+      Assert.equal(charset, "windows-1252", "charset is correct");
 
       // Now check getShortcutOrURI.
       let data = await getShortcutOrURIAndPostData("kw test");
-      is(getPostDataString(data.postData), "accenti=\u00E0\u00E8\u00EC\u00F2\u00F9&search=test", "getShortcutOrURI POST data is correct");
-      is(data.url, TEST_URL, "getShortcutOrURI URL is correct");
+      Assert.equal(getPostDataString(data.postData), "accenti=\u00E0\u00E8\u00EC\u00F2\u00F9&search=test", "getShortcutOrURI POST data is correct");
+      Assert.equal(data.url, TEST_URL, "getShortcutOrURI URL is correct");
     }, closeHandler);
   });
 });

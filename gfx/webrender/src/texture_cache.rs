@@ -166,13 +166,9 @@ impl TextureCacheHandle {
 pub struct TextureCache {
     // A lazily allocated, fixed size, texture array for
     // each format the texture cache supports.
-    // TODO(gw): Do we actually need RG8 and RGB8 or
-    // are they only used by external textures?
     array_rgba8_nearest: TextureArray,
     array_a8_linear: TextureArray,
     array_rgba8_linear: TextureArray,
-    array_rg8_linear: TextureArray,
-    array_rgb8_linear: TextureArray,
 
     // Maximum texture size supported by hardware.
     max_texture_size: u32,
@@ -219,16 +215,6 @@ impl TextureCache {
                 TextureFilter::Linear,
                 TEXTURE_ARRAY_LAYERS_LINEAR,
             ),
-            array_rg8_linear: TextureArray::new(
-                ImageFormat::RG8,
-                TextureFilter::Linear,
-                TEXTURE_ARRAY_LAYERS_LINEAR,
-            ),
-            array_rgb8_linear: TextureArray::new(
-                ImageFormat::RGB8,
-                TextureFilter::Linear,
-                TEXTURE_ARRAY_LAYERS_LINEAR,
-            ),
             array_rgba8_nearest: TextureArray::new(
                 ImageFormat::BGRA8,
                 TextureFilter::Nearest,
@@ -252,10 +238,6 @@ impl TextureCache {
 
         self.array_a8_linear
             .update_profile(&mut texture_cache_profile.pages_a8_linear);
-        self.array_rg8_linear
-            .update_profile(&mut texture_cache_profile.pages_rg8_linear);
-        self.array_rgb8_linear
-            .update_profile(&mut texture_cache_profile.pages_rgb8_linear);
         self.array_rgba8_linear
             .update_profile(&mut texture_cache_profile.pages_rgba8_linear);
         self.array_rgba8_nearest
@@ -386,13 +368,10 @@ impl TextureCache {
             (ImageFormat::A8, TextureFilter::Linear) => &mut self.array_a8_linear,
             (ImageFormat::BGRA8, TextureFilter::Linear) => &mut self.array_rgba8_linear,
             (ImageFormat::BGRA8, TextureFilter::Nearest) => &mut self.array_rgba8_nearest,
-            (ImageFormat::RGB8, TextureFilter::Linear) => &mut self.array_rgb8_linear,
-            (ImageFormat::RG8, TextureFilter::Linear) => &mut self.array_rg8_linear,
             (ImageFormat::Invalid, _) |
             (ImageFormat::RGBAF32, _) |
-            (ImageFormat::A8, TextureFilter::Nearest) |
-            (ImageFormat::RG8, TextureFilter::Nearest) |
-            (ImageFormat::RGB8, TextureFilter::Nearest) => unreachable!(),
+            (ImageFormat::RG8, _) |
+            (ImageFormat::A8, TextureFilter::Nearest) => unreachable!(),
         };
 
         &mut texture_array.regions[region_index as usize]
@@ -561,13 +540,10 @@ impl TextureCache {
             (ImageFormat::A8, TextureFilter::Linear) => &mut self.array_a8_linear,
             (ImageFormat::BGRA8, TextureFilter::Linear) => &mut self.array_rgba8_linear,
             (ImageFormat::BGRA8, TextureFilter::Nearest) => &mut self.array_rgba8_nearest,
-            (ImageFormat::RGB8, TextureFilter::Linear) => &mut self.array_rgb8_linear,
-            (ImageFormat::RG8, TextureFilter::Linear) => &mut self.array_rg8_linear,
             (ImageFormat::Invalid, _) |
             (ImageFormat::RGBAF32, _) |
             (ImageFormat::A8, TextureFilter::Nearest) |
-            (ImageFormat::RG8, TextureFilter::Nearest) |
-            (ImageFormat::RGB8, TextureFilter::Nearest) => unreachable!(),
+            (ImageFormat::RG8, _) => unreachable!(),
         };
 
         // Lazy initialize this texture array if required.

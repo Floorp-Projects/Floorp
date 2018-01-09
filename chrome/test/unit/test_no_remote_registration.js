@@ -23,14 +23,14 @@ ProtocolHandler.prototype =
   defaultPort: -1,
   allowPort: () => false,
   newURI(aSpec, aCharset, aBaseURI) {
-    let uri = Cc["@mozilla.org/network/standard-url;1"].
-              createInstance(Ci.nsIURI);
-    uri.spec = aSpec;
-    if (!uri.scheme) {
-      // We got a partial uri, so let's resolve it with the base one
-      uri.spec = aBaseURI.resolve(aSpec);
+    let mutator = Cc["@mozilla.org/network/standard-url-mutator;1"]
+                    .createInstance(Ci.nsIURIMutator);
+    if (aBaseURI) {
+      mutator.setSpec(aBaseURI.resolve(aSpec));
+    } else {
+      mutator.setSpec(aSpec);
     }
-    return uri;
+    return mutator.finalize();
   },
   newChannel2() { throw Cr.NS_ERROR_NOT_IMPLEMENTED; },
   newChannel() { throw Cr.NS_ERROR_NOT_IMPLEMENTED; },

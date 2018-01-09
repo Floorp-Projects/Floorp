@@ -6,7 +6,7 @@ use api::{FontInstanceFlags, FontKey, FontRenderMode};
 use api::{ColorU, GlyphDimensions, GlyphKey, SubpixelDirection};
 use dwrote;
 use gamma_lut::{ColorLut, GammaLut};
-use glyph_rasterizer::{FontInstance, GlyphFormat, RasterizedGlyph};
+use glyph_rasterizer::{FontInstance, FontTransform, GlyphFormat, RasterizedGlyph};
 use internal_types::FastHashMap;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
@@ -86,6 +86,9 @@ fn is_bitmap_font(font: &FontInstance) -> bool {
         font.flags.contains(FontInstanceFlags::EMBEDDED_BITMAPS)
 }
 
+// Skew factor matching Gecko/DWrite.
+const OBLIQUE_SKEW_FACTOR: f32 = 0.3;
+
 impl FontContext {
     pub fn new() -> FontContext {
         // These are the default values we use in Gecko.
@@ -160,16 +163,10 @@ impl FontContext {
         &mut self,
         font: &FontInstance,
     ) -> &dwrote::FontFace {
-        if !font.flags.intersects(FontInstanceFlags::SYNTHETIC_BOLD | FontInstanceFlags::SYNTHETIC_ITALICS) {
+        if !font.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) {
             return self.fonts.get(&font.font_key).unwrap();
         }
-        let mut sims = dwrote::DWRITE_FONT_SIMULATIONS_NONE;
-        if font.flags.contains(FontInstanceFlags::SYNTHETIC_BOLD) {
-            sims = sims | dwrote::DWRITE_FONT_SIMULATIONS_BOLD;
-        }
-        if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
-            sims = sims | dwrote::DWRITE_FONT_SIMULATIONS_OBLIQUE;
-        }
+        let sims = dwrote::DWRITE_FONT_SIMULATIONS_BOLD;
         match self.simulations.entry((font.font_key, sims)) {
             Entry::Occupied(entry) => entry.into_mut(),
             Entry::Vacant(entry) => {
@@ -239,7 +236,20 @@ impl FontContext {
     ) -> Option<GlyphDimensions> {
         let size = font.size.to_f32_px();
         let bitmaps = is_bitmap_font(font);
-        let analysis = self.create_glyph_analysis(font, key, size, None, bitmaps);
+        let transform = if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
+            let shape = FontTransform::identity().synthesize_italics(OBLIQUE_SKEW_FACTOR);
+            Some(dwrote::DWRITE_MATRIX {
+                m11: shape.scale_x,
+                m12: shape.skew_y,
+                m21: shape.skew_x,
+                m22: shape.scale_y,
+                dx: 0.0,
+                dy: 0.0,
+            })
+        } else {
+            None
+        };
+        let analysis = self.create_glyph_analysis(font, key, size, transform, bitmaps);
 
         let texture_type = dwrite_texture_type(font.render_mode);
 
@@ -344,11 +354,15 @@ impl FontContext {
         let (.., y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
         let size = (font.size.to_f64_px() * y_scale) as f32;
         let bitmaps = is_bitmap_font(font);
-        let transform = if bitmaps {
-            None
+        let (mut shape, (x_offset, y_offset)) = if bitmaps {
+            (FontTransform::identity(), (0.0, 0.0))
         } else {
-            let (x_offset, y_offset) = font.get_subpx_offset(key);
-            let shape = font.transform.pre_scale(y_scale.recip() as f32, y_scale.recip() as f32);
+            (font.transform.invert_scale(y_scale, y_scale), font.get_subpx_offset(key))
+        };
+        if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
+            shape = shape.synthesize_italics(OBLIQUE_SKEW_FACTOR);
+        }
+        let transform = if !shape.is_identity() || (x_offset, y_offset) != (0.0, 0.0) {
             Some(dwrote::DWRITE_MATRIX {
                 m11: shape.scale_x,
                 m12: shape.skew_y,
@@ -357,6 +371,8 @@ impl FontContext {
                 dx: x_offset as f32,
                 dy: y_offset as f32,
             })
+        } else {
+            None
         };
 
         let analysis = self.create_glyph_analysis(font, key, size, transform, bitmaps);

@@ -66,8 +66,16 @@ protected:
 
   MOZ_MUST_USE nsresult InitFromSpec(const nsACString& aSpec)
   {
-    RefPtr<T> uri = new T();
-    nsresult rv = uri->SetSpec(aSpec);
+    nsresult rv = NS_OK;
+    RefPtr<T> uri;
+    if (mURI) {
+      // This only works because all other Init methods create a new object
+      mURI.swap(uri);
+    } else {
+      uri = new T();
+    }
+
+    rv = uri->SetSpec(aSpec);
     if (NS_FAILED(rv)) {
       return rv;
     }

@@ -22,7 +22,7 @@ use core_text;
 use core_text::font::{CTFont, CTFontRef};
 use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTrait};
 use gamma_lut::{ColorLut, GammaLut};
-use glyph_rasterizer::{FontInstance, GlyphFormat, RasterizedGlyph};
+use glyph_rasterizer::{FontInstance, FontTransform, GlyphFormat, RasterizedGlyph};
 use internal_types::FastHashMap;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
@@ -264,6 +264,9 @@ fn is_bitmap_font(ct_font: &CTFont) -> bool {
     (traits & kCTFontColorGlyphsTrait) != 0
 }
 
+// Skew factor matching Gecko/CG.
+const OBLIQUE_SKEW_FACTOR: f32 = 0.25;
+
 impl FontContext {
     pub fn new() -> FontContext {
         debug!("Test for subpixel AA support: {}", supports_subpixel_aa());
@@ -358,7 +361,28 @@ impl FontContext {
                 let glyph = key.index as CGGlyph;
                 let bitmap = is_bitmap_font(ct_font);
                 let (x_offset, y_offset) = if bitmap { (0.0, 0.0) } else { font.get_subpx_offset(key) };
-                let metrics = get_glyph_metrics(ct_font, None, glyph, x_offset, y_offset, 0.0);
+                let transform = if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
+                    let shape = FontTransform::identity().synthesize_italics(OBLIQUE_SKEW_FACTOR);
+                    Some(CGAffineTransform {
+                        a: shape.scale_x as f64,
+                        b: -shape.skew_y as f64,
+                        c: -shape.skew_x as f64,
+                        d: shape.scale_y as f64,
+                        tx: 0.0,
+                        ty: 0.0,
+                    })
+                } else {
+                    None
+                };
+                let extra_strikes = font.get_extra_strikes(1.0);
+                let metrics = get_glyph_metrics(
+                    ct_font,
+                    transform.as_ref(),
+                    glyph,
+                    x_offset,
+                    y_offset,
+                    extra_strikes as f64,
+                );
                 if metrics.rasterized_width == 0 || metrics.rasterized_height == 0 {
                     None
                 } else {
@@ -454,22 +478,28 @@ impl FontContext {
         };
 
         let bitmap = is_bitmap_font(&ct_font);
-        let shape = font.transform.pre_scale(y_scale.recip() as f32, y_scale.recip() as f32);
-        let transform = if bitmap || shape.is_identity() {
-            None
+        let (mut shape, (x_offset, y_offset)) = if bitmap {
+            (FontTransform::identity(), (0.0, 0.0))
         } else {
+            (font.transform.invert_scale(y_scale, y_scale), font.get_subpx_offset(key))
+        };
+        if font.flags.contains(FontInstanceFlags::SYNTHETIC_ITALICS) {
+            shape = shape.synthesize_italics(OBLIQUE_SKEW_FACTOR);
+        }
+        let transform = if !shape.is_identity() {
             Some(CGAffineTransform {
                 a: shape.scale_x as f64,
                 b: -shape.skew_y as f64,
                 c: -shape.skew_x as f64,
                 d: shape.scale_y as f64,
                 tx: 0.0,
-                ty: 0.0
+                ty: 0.0,
             })
+        } else {
+            None
         };
 
         let glyph = key.index as CGGlyph;
-        let (x_offset, y_offset) = if bitmap { (0.0, 0.0) } else { font.get_subpx_offset(key) };
         let (strike_scale, pixel_step) = if bitmap { (y_scale, 1.0) } else { (x_scale, y_scale / x_scale) };
         let extra_strikes = font.get_extra_strikes(strike_scale);
         let metrics = get_glyph_metrics(

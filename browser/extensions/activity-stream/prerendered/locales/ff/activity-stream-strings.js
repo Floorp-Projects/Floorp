@@ -45,7 +45,7 @@ window.gActivityStreamStrings = {
   "welcome_body": "Firefox will use this space to show your most relevant bookmarks, articles, videos, and pages you’ve recently visited, so you can get back to them easily.",
   "welcome_label": "Heɓtinde Jalbine maa",
   "time_label_less_than_minute": "<1m",
-  "time_label_minute": "{number}m",
+  "time_label_minute": "{number} m",
   "time_label_hour": "{number}h",
   "time_label_day": "{number}d",
   "settings_pane_button_label": "Customize your New Tab page",

@@ -108,7 +108,7 @@ random-if(winWidget) == 305643-1.html 305643-1-ref.html # depends on windows ver
 == 588739-1.html 588739-ref.html
 == 588739-2.html 588739-ref.html
 == 588739-3.html 588739-ref.html
-fails-if(webrender) == 612843-1.html 612843-1-ref.html
+== 612843-1.html 612843-1-ref.html
 == 613149-1a.html 613149-1-ref.html
 == 613149-1b.html 613149-1-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,36,2) == 613149-2a.html 613149-2-ref.html

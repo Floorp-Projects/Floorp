@@ -49,10 +49,10 @@ TestProtocolHandler.prototype = {
                  Components.interfaces.nsIProtocolHandler.ALLOWS_PROXY |
                  Components.interfaces.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD,
   newURI: function(spec, originCharset, baseURI) {
-    var uri = Components.classes["@mozilla.org/network/simple-uri;1"]
-                        .createInstance(Components.interfaces.nsIURI);
-    uri.spec = spec;
-    return uri;
+    return Components.classes["@mozilla.org/network/simple-uri-mutator;1"]
+                     .createInstance(Components.interfaces.nsIURIMutator)
+                     .setSpec(spec)
+                     .finalize();
   },
   newChannel2: function(uri, aLoadInfo) {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;

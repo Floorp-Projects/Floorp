@@ -221,13 +221,13 @@ void main(void) {
                                            prim.local_clip_rect,
                                            vec4(1.0),
                                            prim.z,
-                                           prim.layer,
+                                           prim.scroll_node,
                                            prim.task);
 #else
     VertexInfo vi = write_vertex(segment_rect,
                                  prim.local_clip_rect,
                                  prim.z,
-                                 prim.layer,
+                                 prim.scroll_node,
                                  prim.task,
                                  prim.local_rect);
 #endif

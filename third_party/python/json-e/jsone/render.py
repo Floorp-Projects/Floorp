@@ -72,7 +72,10 @@ def checkUndefinedProperties(template, allowed):
 
 @operator('$eval')
 def eval(template, context):
-    return evaluateExpression(renderValue(template['$eval'], context), context)
+    checkUndefinedProperties(template, ['\$eval'])
+    if not isinstance(template['$eval'], string):
+        raise TemplateError("$eval must be given a string expression")
+    return evaluateExpression(template['$eval'], context)
 
 
 @operator('$flatten')
@@ -140,21 +143,21 @@ def ifConstruct(template, context):
 def jsonConstruct(template, context):
     checkUndefinedProperties(template, ['\$json'])
     value = renderValue(template['$json'], context)
-    return json.dumps(value, separators=(',', ':'))
+    return json.dumps(value, separators=(',', ':'), sort_keys=True)
 
 
 @operator('$let')
 def let(template, context):
     checkUndefinedProperties(template, ['\$let', 'in'])
-    variables = renderValue(template['$let'], context)
-    if not isinstance(variables, dict):
-        raise TemplateError("$let value must evaluate to an object")
-    else:
-        if not all(IDENTIFIER_RE.match(variableNames) for variableNames in variables.keys()):
-            raise TemplateError('top level keys of $let must follow /[a-zA-Z_][a-zA-Z0-9_]*/')
+    if not isinstance(template['$let'], dict):
+        raise TemplateError("$let value must be an object")
 
     subcontext = context.copy()
-    subcontext.update(variables)
+    for k, v in template['$let'].items():
+        if not IDENTIFIER_RE.match(k):
+            raise TemplateError('top level keys of $let must follow /[a-zA-Z_][a-zA-Z0-9_]*/')
+        subcontext[k] = renderValue(v, context)
+
     try:
         in_expression = template['in']
     except KeyError:
@@ -243,7 +246,7 @@ def reverse(template, context):
     checkUndefinedProperties(template, ['\$reverse'])
     value = renderValue(template['$reverse'], context)
     if not isinstance(value, list):
-        raise TemplateError("$reverse value must evaluate to an array")
+        raise TemplateError("$reverse value must evaluate to an array of objects")
     return list(reversed(value))
 
 
@@ -253,7 +256,7 @@ def sort(template, context):
     checkUndefinedProperties(template, ['\$sort', BY_RE])
     value = renderValue(template['$sort'], context)
     if not isinstance(value, list):
-        raise TemplateError("$sort value must evaluate to an array")
+        raise TemplateError('$sorted values to be sorted must have the same type')
 
     # handle by(..) if given, applying the schwartzian transform
     by_keys = [k for k in template if k.startswith('by(')]
@@ -279,9 +282,9 @@ def sort(template, context):
     except IndexError:
         return []
     if eltype in (list, dict, bool, type(None)):
-        raise TemplateError('$sort values must be sortable')
+        raise TemplateError('$sorted values to be sorted must have the same type')
     if not all(isinstance(e[0], eltype) for e in to_sort):
-        raise TemplateError('$sorted values must all have the same type')
+        raise TemplateError('$sorted values to be sorted must have the same type')
 
     # unzip the schwartzian transform
     return list(e[1] for e in sorted(to_sort))
