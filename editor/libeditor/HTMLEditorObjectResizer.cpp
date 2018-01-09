@@ -537,7 +537,7 @@ HTMLEditor::StartResizing(nsIDOMElement* aHandle)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsCOMPtr<nsIDOMEventTarget> target = GetDOMEventTarget();
+    nsIDOMEventTarget* target = GetDOMEventTarget();
     NS_ENSURE_TRUE(target, NS_ERROR_FAILURE);
 
     result = target->AddEventListener(NS_LITERAL_STRING("mousemove"),

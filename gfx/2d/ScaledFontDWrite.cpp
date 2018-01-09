@@ -110,6 +110,7 @@ ScaledFontDWrite::ScaledFontDWrite(IDWriteFontFace *aFontFace,
                                    Float aSize,
                                    bool aUseEmbeddedBitmap,
                                    bool aForceGDIMode,
+                                   bool aNeedsOblique,
                                    IDWriteRenderingParams* aParams,
                                    Float aGamma,
                                    Float aContrast,
@@ -118,6 +119,7 @@ ScaledFontDWrite::ScaledFontDWrite(IDWriteFontFace *aFontFace,
     , mFontFace(aFontFace)
     , mUseEmbeddedBitmap(aUseEmbeddedBitmap)
     , mForceGDIMode(aForceGDIMode)
+    , mNeedsOblique(aNeedsOblique)
     , mParams(aParams)
     , mGamma(aGamma)
     , mContrast(aContrast)
@@ -404,6 +406,9 @@ ScaledFontDWrite::GetWRFontInstanceOptions(Maybe<wr::FontInstanceOptions>* aOutO
   if (ForceGDIMode()) {
     options.flags |= wr::FontInstanceFlags::FORCE_GDI;
   }
+  if (mNeedsOblique) {
+    options.flags |= wr::FontInstanceFlags::SYNTHETIC_ITALICS;
+  }
   options.bg_color = wr::ToColorU(Color());
   *aOutOptions = Some(options);
   return true;
@@ -427,6 +432,7 @@ UnscaledFontDWrite::CreateScaledFont(Float aGlyphSize,
     new ScaledFontDWrite(mFontFace, this, aGlyphSize,
                          instanceData->mUseEmbeddedBitmap,
                          instanceData->mForceGDIMode,
+                         false,
                          nullptr,
                          instanceData->mGamma,
                          instanceData->mContrast);

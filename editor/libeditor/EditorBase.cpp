@@ -5353,10 +5353,10 @@ EditorBase::IsModifiableNode(nsINode* aNode)
   return true;
 }
 
-already_AddRefed<nsIContent>
+nsIContent*
 EditorBase::GetFocusedContent()
 {
-  nsCOMPtr<nsIDOMEventTarget> piTarget = GetDOMEventTarget();
+  nsIDOMEventTarget* piTarget = GetDOMEventTarget();
   if (!piTarget) {
     return nullptr;
   }
@@ -5367,20 +5367,20 @@ EditorBase::GetFocusedContent()
   nsIContent* content = fm->GetFocusedContent();
   MOZ_ASSERT((content == piTarget) == SameCOMIdentity(content, piTarget));
 
-  return (content == piTarget) ?
-    piTarget.forget().downcast<nsIContent>() : nullptr;
+  return (content == piTarget) ? content : nullptr;
 }
 
 already_AddRefed<nsIContent>
 EditorBase::GetFocusedContentForIME()
 {
-  return GetFocusedContent();
+  nsCOMPtr<nsIContent> content = GetFocusedContent();
+  return content.forget();
 }
 
 bool
 EditorBase::IsActiveInDOMWindow()
 {
-  nsCOMPtr<nsIDOMEventTarget> piTarget = GetDOMEventTarget();
+  nsIDOMEventTarget* piTarget = GetDOMEventTarget();
   if (!piTarget) {
     return false;
   }
@@ -5412,7 +5412,7 @@ EditorBase::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent)
   // If this is dispatched by using cordinates but this editor doesn't have
   // focus, we shouldn't handle it.
   if (aGUIEvent->IsUsingCoordinates()) {
-    nsCOMPtr<nsIContent> focusedContent = GetFocusedContent();
+    nsIContent* focusedContent = GetFocusedContent();
     if (!focusedContent) {
       return false;
     }
