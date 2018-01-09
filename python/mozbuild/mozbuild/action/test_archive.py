@@ -227,6 +227,12 @@ ARCHIVE_FILES = {
             'dest': 'tools/mozterm',
         },
         {
+            'source': buildconfig.topsrcdir,
+            'base': 'third_party/python/six',
+            'pattern': '**',
+            'dest': 'tools/six',
+        },
+        {
             'source': buildconfig.topobjdir,
             'base': '',
             'pattern': 'mozinfo.json',
