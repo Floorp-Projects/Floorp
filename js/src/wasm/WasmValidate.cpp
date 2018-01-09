@@ -607,7 +607,7 @@ DecodeFunctionBodyExprs(const ModuleEnvironment& env, const Sig& sig, const ValT
             CHECK(iter.readConversion(ValType::I64, ValType::F64, &nothing));
           case uint16_t(Op::F64PromoteF32):
             CHECK(iter.readConversion(ValType::F32, ValType::F64, &nothing));
-#ifdef ENABLE_WASM_THREAD_OPS
+#ifdef ENABLE_WASM_SIGNEXTEND_OPS
           case uint16_t(Op::I32Extend8S):
           case uint16_t(Op::I32Extend16S):
             CHECK(iter.readConversion(ValType::I32, ValType::I32, &nothing));

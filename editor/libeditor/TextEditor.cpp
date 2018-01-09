@@ -1712,11 +1712,10 @@ TextEditor::SelectEntireDocument(Selection* aSelection)
   return NS_OK;
 }
 
-already_AddRefed<EventTarget>
+EventTarget*
 TextEditor::GetDOMEventTarget()
 {
-  nsCOMPtr<EventTarget> copy = mEventTarget;
-  return copy.forget();
+  return mEventTarget;
 }
 
 

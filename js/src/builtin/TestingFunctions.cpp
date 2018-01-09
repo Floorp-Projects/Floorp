@@ -554,6 +554,19 @@ WasmThreadsSupported(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+WasmSignExtensionSupported(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+#ifdef ENABLE_WASM_SIGNEXTEND_OPS
+    bool isSupported = true;
+#else
+    bool isSupported = false;
+#endif
+    args.rval().setBoolean(isSupported);
+    return true;
+}
+
+static bool
 WasmCompileMode(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2527,7 +2540,7 @@ testingFunc_inIon(JSContext* cx, unsigned argc, Value* vp)
     ScriptFrameIter iter(cx);
     if (!iter.done() && iter.isIon()) {
         // Reset the counter of the IonScript's script.
-        jit::JSJitFrameIter jitIter(cx);
+        jit::JSJitFrameIter jitIter(cx->activation()->asJit());
         ++jitIter;
         jitIter.script()->resetWarmUpResetCounter();
     } else {
@@ -5259,6 +5272,11 @@ gc::ZealModeHelpText),
     JS_FN_HELP("wasmThreadsSupported", WasmThreadsSupported, 0, 0,
 "wasmThreadsSupported()",
 "  Returns a boolean indicating whether the WebAssembly threads proposal is\n"
+"  supported on the current device."),
+
+    JS_FN_HELP("wasmSignExtensionSupported", WasmSignExtensionSupported, 0, 0,
+"wasmSignExtensionSupported()",
+"  Returns a boolean indicating whether the WebAssembly sign extension opcodes are\n"
 "  supported on the current device."),
 
     JS_FN_HELP("wasmCompileMode", WasmCompileMode, 0, 0,

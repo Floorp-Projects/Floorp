@@ -81,7 +81,7 @@ jobs:
          env:
             FINAL_VERIFY_CONFIGS:
                by-project:
-                  mozilla-beta: "beta-firefox-linux.cfg beta-firefox-linux64.cfg beta-firefox-macosx64.cfg beta-firefox-win32.cfg beta-firefox-win64.cfg"
+                  mozilla-release: "beta-firefox-linux.cfg beta-firefox-linux64.cfg beta-firefox-macosx64.cfg beta-firefox-win32.cfg beta-firefox-win64.cfg"
                   default: ""
       treeherder:
          platform: linux64/opt

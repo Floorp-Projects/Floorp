@@ -1186,7 +1186,7 @@ JitRuntime::generateBaselineDebugModeOSRHandler(JSContext* cx, uint32_t* noFrame
 
 /* static */ void
 DebugModeOSRVolatileJitFrameIter::forwardLiveIterators(const CooperatingContext& cx,
-                                                         uint8_t* oldAddr, uint8_t* newAddr)
+                                                       uint8_t* oldAddr, uint8_t* newAddr)
 {
     DebugModeOSRVolatileJitFrameIter* iter;
     for (iter = cx.context()->liveVolatileJitFrameIter_; iter; iter = iter->prev)

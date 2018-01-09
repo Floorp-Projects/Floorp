@@ -2787,23 +2787,23 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 MethodDecl(p.processingErrorVar().name,
                            params=[ Param(_Result.Type(), 'aCode'),
                                     Param(Type('char', const=1, ptr=1), 'aReason') ],
-                           virtual=1))
+                           virtual=1, override=1))
 
             # bool ShouldContinueFromReplyTimeout(); default to |true|
             shouldcontinue = MethodDefn(
                 MethodDecl(p.shouldContinueFromTimeoutVar().name,
-                           ret=Type.BOOL, virtual=1))
+                           ret=Type.BOOL, virtual=1, override=1))
             shouldcontinue.addstmt(StmtReturn.TRUE)
 
             # void Entered*()/Exited*(); default to no-op
             entered = MethodDefn(
-                MethodDecl(p.enteredCxxStackVar().name, virtual=1))
+                MethodDecl(p.enteredCxxStackVar().name, virtual=1, override=1))
             exited = MethodDefn(
-                MethodDecl(p.exitedCxxStackVar().name, virtual=1))
+                MethodDecl(p.exitedCxxStackVar().name, virtual=1, override=1))
             enteredcall = MethodDefn(
-                MethodDecl(p.enteredCallVar().name, virtual=1))
+                MethodDecl(p.enteredCallVar().name, virtual=1, override=1))
             exitedcall = MethodDefn(
-                MethodDecl(p.exitedCallVar().name, virtual=1))
+                MethodDecl(p.exitedCallVar().name, virtual=1, override=1))
 
             self.cls.addstmts([ processingerror,
                                 shouldcontinue,
@@ -2948,7 +2948,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 params.append(Decl(Type('Message', ref=1, ptr=1),
                                    replyvar.name))
 
-            method = MethodDefn(MethodDecl(name, virtual=True,
+            method = MethodDefn(MethodDecl(name, virtual=1, override=1,
                                            params=params, ret=_Result.Type()))
 
             if not switch:
@@ -3028,13 +3028,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         # int32_t GetProtocolTypeId() { return PFoo; }
         gettypetag = MethodDefn(
-            MethodDecl('GetProtocolTypeId', ret=_actorTypeTagType()))
+            MethodDecl('GetProtocolTypeId', ret=_actorTypeTagType(), virtual=1, override=1))
         gettypetag.addstmt(StmtReturn(_protocolId(ptype)))
         self.cls.addstmts([ gettypetag, Whitespace.NL ])
 
         if ptype.isToplevel():
             # OnChannelClose()
-            onclose = MethodDefn(MethodDecl('OnChannelClose'))
+            onclose = MethodDefn(MethodDecl('OnChannelClose', virtual=1, override=1))
             onclose.addstmts([
                 StmtExpr(ExprCall(destroysubtreevar,
                                   args=[ _DestroyReason.NormalShutdown ])),
@@ -3045,7 +3045,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmts([ onclose, Whitespace.NL ])
 
             # OnChannelError()
-            onerror = MethodDefn(MethodDecl('OnChannelError'))
+            onerror = MethodDefn(MethodDecl('OnChannelError', virtual=1, override=1))
             onerror.addstmts([
                 StmtExpr(ExprCall(destroysubtreevar,
                                   args=[ _DestroyReason.AbnormalShutdown ])),
@@ -3079,7 +3079,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         actorname = _actorName(p.name, self.side)
         protocolname = MethodDefn(MethodDecl(
             'ProtocolName', params=[],
-            const=1, virtual=1, ret=Type('char', const=1, ptr=1)))
+            const=1, virtual=1, override=1, ret=Type('char', const=1, ptr=1)))
         protocolname.addstmts([
             StmtReturn(ExprLiteral.String(actorname))
         ])
@@ -3242,13 +3242,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             getchannel = MethodDefn(MethodDecl(
                 p.getChannelMethod().name,
                 ret=Type('MessageChannel', ptr=1),
-                virtual=1))
+                virtual=1, override=1))
             getchannel.addstmt(StmtReturn(ExprAddrOf(p.channelVar())))
 
             getchannelconst = MethodDefn(MethodDecl(
                 p.getChannelMethod().name,
                 ret=Type('MessageChannel', ptr=1, const=1),
-                virtual=1, const=1))
+                virtual=1, override=1, const=1))
             getchannelconst.addstmt(StmtReturn(ExprAddrOf(p.channelVar())))
 
             methods += [ getchannel,
@@ -3296,7 +3296,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             p.removeManageeMethod().name,
             params=[ Decl(_protocolIdType(), pvar.name),
                      Decl(protocolbase, listenervar.name) ],
-            virtual=1))
+            virtual=1, override=1))
 
         if not len(p.managesStmts):
             removemanagee.addstmts([ _fatalError('unreached'), StmtReturn() ])
@@ -4893,6 +4893,7 @@ def _splitMethodDefn(md, clsname):
     saveddecl = deepcopy(md.decl)
     md.decl.name = (clsname +'::'+ md.decl.name)
     md.decl.virtual = 0
+    md.decl.override = 0
     md.decl.static = 0
     md.decl.warn_unused = 0
     md.decl.never_inline = 0

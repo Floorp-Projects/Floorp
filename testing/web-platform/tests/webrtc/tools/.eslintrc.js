@@ -129,6 +129,7 @@ module.exports = {
     // RTCStats-helper.js
     validateStatsReport: true,
     assert_stats_report_has_stats: true,
+    findStatsFromReport: true,
     getRequiredStats: true,
     getStatsById: true,
     validateIdField: true,

@@ -570,3 +570,16 @@ for (let addr of [1,2,3,5,6,7]) {
 					     (atomic.wake (get_local 0) (i32.const 1))))`).exports.f(addr),
 		       RuntimeError, unaligned);
 }
+
+// Ensure alias analysis works even if atomic and non-atomic accesses are
+// mixed.
+assertErrorMessage(() => wasmEvalText(`(module
+  (memory 0 1 shared)
+  (func (export "main")
+    i32.const 1
+    i32.const 2816
+    i32.atomic.rmw16_u.xchg align=2
+    i32.load16_s offset=83 align=1
+    drop
+  )
+)`).exports.main(), RuntimeError, unaligned);

@@ -112,7 +112,6 @@ class JSJitFrameIter
   public:
     // See comment above the class.
     explicit JSJitFrameIter(const JitActivation* activation);
-    explicit JSJitFrameIter(JSContext* cx);
 
     // Used only by DebugModeOSRVolatileJitFrameIter.
     void exchangeReturnAddressIfMatch(uint8_t* oldAddr, uint8_t* newAddr) {
