@@ -321,51 +321,6 @@ proxy.AsyncMessageChannel.ReplyType = {
   Error: 2,
 };
 
-/**
- * Creates a transparent interface from the content- to the chrome context.
- *
- * Calls to this object will be proxied via the frame's sendSyncMessage
- * ({@link nsISyncMessageSender}) function.  Since the message is
- * synchronous, the return value is presented as a return value.
- *
- * Example on how to use from a frame content script:
- *
- * <pre><code>
- *     let chrome = proxy.toChrome(sendSyncMessage.bind(this));
- *     let cookie = chrome.getCookie("foo");
- * </code></pre>
- *
- * @param {nsISyncMessageSender} sendSyncMessageFn
- *     The frame message manager's sendSyncMessage function.
- */
-proxy.toChrome = function(sendSyncMessageFn) {
-  let sender = new proxy.SyncChromeSender(sendSyncMessageFn);
-  return new Proxy(sender, ownPriorityGetterTrap);
-};
-
-/**
- * The SyncChromeSender sends synchronous RPC messages to the chrome
- * context, using a frame's sendSyncMessage ({@link nsISyncMessageSender})
- * function.
- *
- * Example on how to use from a frame content script:
- *
- * <pre><code>
- *     let sender = new SyncChromeSender(sendSyncMessage.bind(this));
- *     let res = sender.send("addCookie", cookie);
- * </code></pre>
- */
-proxy.SyncChromeSender = class {
-  constructor(sendSyncMessage) {
-    this.sendSyncMessage_ = sendSyncMessage;
-  }
-
-  send(func, args) {
-    let name = "Marionette:" + func.toString();
-    return this.sendSyncMessage_(name, marshal(args));
-  }
-};
-
 function marshal(args) {
   if (args.length == 1 && typeof args[0] == "object") {
     return args[0];
