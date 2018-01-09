@@ -1390,7 +1390,7 @@ MacroAssemblerARM::ma_b(Label* dest, Assembler::Condition c)
 }
 
 BufferOffset
-MacroAssemblerARM::ma_b(wasm::TrapDesc target, Assembler::Condition c)
+MacroAssemblerARM::ma_b(wasm::OldTrapDesc target, Assembler::Condition c)
 {
     return as_b(target, c);
 }
@@ -5751,12 +5751,12 @@ MacroAssemblerARM::outOfLineWasmTruncateToIntCheck(FloatRegister input, MIRType 
 
     // Handle errors.
     bind(&fail);
-    asMasm().jump(wasm::TrapDesc(trapOffset, wasm::Trap::IntegerOverflow,
-                                 asMasm().framePushed()));
+    asMasm().jump(wasm::OldTrapDesc(trapOffset, wasm::Trap::IntegerOverflow,
+                                    asMasm().framePushed()));
 
     bind(&inputIsNaN);
-    asMasm().jump(wasm::TrapDesc(trapOffset, wasm::Trap::InvalidConversionToInteger,
-                                 asMasm().framePushed()));
+    asMasm().jump(wasm::OldTrapDesc(trapOffset, wasm::Trap::InvalidConversionToInteger,
+                                    asMasm().framePushed()));
 }
 
 void

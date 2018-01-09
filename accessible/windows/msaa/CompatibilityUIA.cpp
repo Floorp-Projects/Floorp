@@ -7,10 +7,13 @@
 #include "Compatibility.h"
 
 #include "mozilla/Telemetry.h"
+#include "mozilla/WindowsVersion.h"
 
+#include "nsDataHashtable.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
+#include "nsTHashtable.h"
 #include "nsUnicharUtils.h"
 #include "nsWinUtils.h"
 
@@ -31,32 +34,102 @@
 
 #endif // defined(UIA_LOGGING)
 
-static bool
-GetLocalObjectHandle(DWORD aSrcPid, HANDLE aSrcHandle, nsAutoHandle& aProcess,
-                     nsAutoHandle& aLocal)
+struct ByteArrayDeleter
 {
-  aLocal.reset();
-
-  if (!aProcess) {
-    HANDLE rawProcess = ::OpenProcess(PROCESS_DUP_HANDLE, FALSE, aSrcPid);
-    if (!rawProcess) {
-      LOG_ERROR(OpenProcess);
-      return false;
-    }
-
-    aProcess.own(rawProcess);
+  void operator()(void* aBuf)
+  {
+    delete[] reinterpret_cast<char*>(aBuf);
   }
+};
 
-  HANDLE rawDuped;
-  if (!::DuplicateHandle(aProcess.get(), aSrcHandle, ::GetCurrentProcess(),
-                         &rawDuped, GENERIC_READ, FALSE, 0)) {
-    LOG_ERROR(DuplicateHandle);
+typedef UniquePtr<OBJECT_DIRECTORY_INFORMATION, ByteArrayDeleter> ObjDirInfoPtr;
+
+// ComparatorFnT returns true to continue searching, or else false to indicate
+// search completion.
+template <typename ComparatorFnT>
+static bool
+FindNamedObject(ComparatorFnT aComparator)
+{
+  // We want to enumerate every named kernel object in our session. We do this
+  // by opening a directory object using a path constructed using the session
+  // id under which our process resides.
+  DWORD sessionId;
+  if (!::ProcessIdToSessionId(::GetCurrentProcessId(), &sessionId)) {
     return false;
   }
 
-  aLocal.own(rawDuped);
+  nsAutoString path;
+  path.AppendPrintf("\\Sessions\\%u\\BaseNamedObjects", sessionId);
 
-  return true;
+  UNICODE_STRING baseNamedObjectsName;
+  ::RtlInitUnicodeString(&baseNamedObjectsName, path.get());
+
+  OBJECT_ATTRIBUTES attributes;
+  InitializeObjectAttributes(&attributes, &baseNamedObjectsName, 0,
+                             nullptr, nullptr);
+
+  HANDLE rawBaseNamedObjects;
+  NTSTATUS ntStatus = ::NtOpenDirectoryObject(&rawBaseNamedObjects,
+                                              DIRECTORY_QUERY | DIRECTORY_TRAVERSE,
+                                              &attributes);
+  if (!NT_SUCCESS(ntStatus)) {
+    return false;
+  }
+
+  nsAutoHandle baseNamedObjects(rawBaseNamedObjects);
+
+  ULONG context = 0, returnedLen;
+
+  ULONG objDirInfoBufLen = 1024 * sizeof(OBJECT_DIRECTORY_INFORMATION);
+  ObjDirInfoPtr objDirInfo(
+    reinterpret_cast<OBJECT_DIRECTORY_INFORMATION*>(new char[objDirInfoBufLen]));
+
+  // Now query that directory object for every named object that it contains.
+
+  BOOL firstCall = TRUE;
+
+  do {
+    ntStatus = ::NtQueryDirectoryObject(baseNamedObjects, objDirInfo.get(),
+                                        objDirInfoBufLen, FALSE, firstCall,
+                                        &context, &returnedLen);
+#if defined(HAVE_64BIT_BUILD)
+    if (!NT_SUCCESS(ntStatus)) {
+      return false;
+    }
+#else
+    if (ntStatus == STATUS_BUFFER_TOO_SMALL) {
+      // This case only occurs on 32-bit builds running atop WOW64.
+      // (See https://bugzilla.mozilla.org/show_bug.cgi?id=1423999#c3)
+      objDirInfo.reset(reinterpret_cast<OBJECT_DIRECTORY_INFORMATION*>(new char[returnedLen]));
+      objDirInfoBufLen = returnedLen;
+      continue;
+    } else if (!NT_SUCCESS(ntStatus)) {
+      return false;
+    }
+#endif
+
+    // NtQueryDirectoryObject gave us an array of OBJECT_DIRECTORY_INFORMATION
+    // structures whose final entry is zeroed out.
+    OBJECT_DIRECTORY_INFORMATION* curDir = objDirInfo.get();
+    while (curDir->mName.Length && curDir->mTypeName.Length) {
+      // We use nsDependentSubstring here because UNICODE_STRINGs are not
+      // guaranteed to be null-terminated.
+      nsDependentSubstring objName(curDir->mName.Buffer,
+                                   curDir->mName.Length / sizeof(wchar_t));
+      nsDependentSubstring typeName(curDir->mTypeName.Buffer,
+                                    curDir->mTypeName.Length / sizeof(wchar_t));
+
+      if (!aComparator(objName, typeName)) {
+        return true;
+      }
+
+      ++curDir;
+    }
+
+    firstCall = FALSE;
+  } while (ntStatus == STATUS_MORE_ENTRIES);
+
+  return false;
 }
 
 namespace mozilla {
@@ -74,15 +147,6 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
 
   Telemetry::AutoTimer<Telemetry::A11Y_UIA_DETECTION_TIMING_MS> timer;
 
-  static auto pNtQuerySystemInformation =
-    reinterpret_cast<decltype(&::NtQuerySystemInformation)>(
-      ::GetProcAddress(::GetModuleHandleW(L"ntdll.dll"),
-                       "NtQuerySystemInformation"));
-
-  static auto pNtQueryObject =
-    reinterpret_cast<decltype(&::NtQueryObject)>(
-      ::GetProcAddress(::GetModuleHandleW(L"ntdll.dll"), "NtQueryObject"));
-
   // UIA creates a section containing the substring "HOOK_SHMEM_"
   NS_NAMED_LITERAL_STRING(kStrHookShmem, "HOOK_SHMEM_");
 
@@ -90,7 +154,27 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
   // current thread id and the UIA message's WPARAM and LPARAM.
   nsAutoString partialSectionSuffix;
   partialSectionSuffix.AppendPrintf("_%08x_%08x_%08x", ::GetCurrentThreadId(),
-                                    aLParam, aWParam);
+                                    static_cast<DWORD>(aLParam), aWParam);
+
+  // Find any named Section that matches the naming convention of the UIA shared
+  // memory.
+  nsAutoHandle section;
+  auto comparator = [&](const nsDependentSubstring& aName,
+                        const nsDependentSubstring& aType) -> bool {
+    if (aType.Equals(NS_LITERAL_STRING("Section")) &&
+        FindInReadable(kStrHookShmem, aName) &&
+        StringEndsWith(aName, partialSectionSuffix)) {
+      section.own(::OpenFileMapping(GENERIC_READ, FALSE,
+                                    PromiseFlatString(aName).get()));
+      return false;
+    }
+
+    return true;
+  };
+
+  if (!FindNamedObject(comparator) || !section) {
+    return Nothing();
+  }
 
   NTSTATUS ntStatus;
 
@@ -105,7 +189,7 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
   while (true) {
     handleInfoBuf = MakeUnique<char[]>(handleInfoBufLen);
 
-    ntStatus = pNtQuerySystemInformation(
+    ntStatus = ::NtQuerySystemInformation(
                  (SYSTEM_INFORMATION_CLASS) SystemExtendedHandleInformation,
                  handleInfoBuf.get(), handleInfoBufLen, &handleInfoBufLen);
     if (ntStatus == STATUS_INFO_LENGTH_MISMATCH) {
@@ -119,160 +203,98 @@ Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam)
     break;
   }
 
-  // Now we iterate through the system handle list, searching for a section
-  // handle whose name matches the section name used by UIA.
-
-  static Maybe<USHORT> sSectionObjTypeIndex;
-
   const DWORD ourPid = ::GetCurrentProcessId();
-
   Maybe<PVOID> kernelObject;
-
-  ULONG lastPid = 0;
-  nsAutoHandle process;
+  static Maybe<USHORT> sectionObjTypeIndex;
+  nsTHashtable<nsUint32HashKey> nonSectionObjTypes;
+  nsDataHashtable<nsVoidPtrHashKey, DWORD> objMap;
 
   auto handleInfo = reinterpret_cast<SYSTEM_HANDLE_INFORMATION_EX*>(handleInfoBuf.get());
 
   for (ULONG index = 0; index < handleInfo->mHandleCount; ++index) {
     SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX& curHandle = handleInfo->mHandles[index];
 
-    if (lastPid && lastPid == curHandle.mPid && !process) {
-      // During the previous iteration, we could not obtain a handle for this
-      // pid. Skip any remaining handles belonging to that pid.
+    HANDLE handle = reinterpret_cast<HANDLE>(curHandle.mHandle);
+
+    // The mapping of the curHandle.mObjectTypeIndex field depends on the
+    // underlying OS kernel. As we scan through the handle list, we record the
+    // type indices such that we may use those values to skip over handles that
+    // refer to non-section objects.
+    if (sectionObjTypeIndex) {
+      // If we know the type index for Sections, that's the fastest check...
+      if (sectionObjTypeIndex.value() != curHandle.mObjectTypeIndex) {
+        // Not a section
+        continue;
+      }
+    } else if (nonSectionObjTypes.Contains(static_cast<uint32_t>(
+                                             curHandle.mObjectTypeIndex))) {
+      // Otherwise we check whether or not the object type is definitely _not_
+      // a Section...
       continue;
-    }
-
-    // As a perf optimization, we reuse the same process handle as long as we're
-    // still looking at the same pid. Once the pid changes, we need to reset
-    // process so that we open a new handle to the newly-seen process.
-    if (lastPid != curHandle.mPid) {
-      process.reset();
-    }
-
-    nsAutoHandle handle;
-
-    if (kernelObject.isSome() && kernelObject.value() == curHandle.mObject) {
-      // If we know the value of the underlying kernel object, we can immediately
-      // check for equality by comparing against curHandle.mObject
-      remotePid = Some(static_cast<DWORD>(curHandle.mPid));
-      break;
-    } else if (sSectionObjTypeIndex.isSome()) {
-      // Otherwise, if we know which object type value corresponds to a Section
-      // object, we can use that to eliminate any handles that are not sections.
-      if (curHandle.mObjectTypeIndex != sSectionObjTypeIndex.value()) {
-        // Not a section handle
-        continue;
-      }
-    } else {
-      // Otherwise we need to query the handle to determine its type. Note that
-      // each handle in the system list is relative to its owning process, so
-      // we cannot do anything with it until we duplicate the handle into our
-      // own process.
-
-      lastPid = curHandle.mPid;
-
-      if (!GetLocalObjectHandle((DWORD) curHandle.mPid,
-                                (HANDLE) curHandle.mHandle,
-                                process, handle)) {
-        // We don't have access to do this, assume this handle isn't relevant
-        continue;
-      }
-
-      // Now we have our own handle to the object, lets find out what type of
-      // object this handle represents. Any handle whose type is not "Section"
-      // is of no interest to us.
+    } else if (ourPid == curHandle.mPid) {
+      // Otherwise we need to issue some system calls to find out the object
+      // type corresponding to the current handle's type index.
       ULONG objTypeBufLen;
-      ntStatus = pNtQueryObject(handle, ObjectTypeInformation, nullptr,
-                                0, &objTypeBufLen);
+      ntStatus = ::NtQueryObject(handle, ObjectTypeInformation,
+                                 nullptr, 0, &objTypeBufLen);
       if (ntStatus != STATUS_INFO_LENGTH_MISMATCH) {
         continue;
       }
 
       auto objTypeBuf = MakeUnique<char[]>(objTypeBufLen);
-      ntStatus = pNtQueryObject(handle, ObjectTypeInformation, objTypeBuf.get(),
-                                objTypeBufLen, &objTypeBufLen);
+      ntStatus = ::NtQueryObject(handle, ObjectTypeInformation, objTypeBuf.get(),
+                                 objTypeBufLen, &objTypeBufLen);
       if (!NT_SUCCESS(ntStatus)) {
-        // We don't have access to do this, assume this handle isn't relevant
         continue;
       }
 
       auto objType =
         reinterpret_cast<PUBLIC_OBJECT_TYPE_INFORMATION*>(objTypeBuf.get());
 
-      nsDependentString objTypeName(objType->TypeName.Buffer,
-                                    objType->TypeName.Length / sizeof(wchar_t));
+      // Now we check whether the object's type name matches "Section"
+      nsDependentSubstring objTypeName(objType->TypeName.Buffer,
+                                       objType->TypeName.Length / sizeof(wchar_t));
       if (!objTypeName.Equals(NS_LITERAL_STRING("Section"))) {
-        // Not a section, so we don't care about this handle anymore.
+        nonSectionObjTypes.PutEntry(static_cast<uint32_t>(curHandle.mObjectTypeIndex));
         continue;
       }
 
-      // We have a section, save this handle's type code so that we can go
-      // faster in future iterations.
-      sSectionObjTypeIndex = Some(curHandle.mObjectTypeIndex);
+      sectionObjTypeIndex = Some(curHandle.mObjectTypeIndex);
     }
 
-    // If we reached this point without needing to query the handle, then we
-    // need to open it here so that we can query its name.
-    lastPid = curHandle.mPid;
+    // At this point we know that curHandle references a Section object.
+    // Now we can do some actual tests on it.
 
-    if ((!process || !handle) &&
-        !GetLocalObjectHandle((DWORD) curHandle.mPid, (HANDLE) curHandle.mHandle,
-                              process, handle)) {
-      // We don't have access to do this, assume this handle isn't relevant
-      continue;
-    }
+    if (ourPid != curHandle.mPid) {
+      if (kernelObject && kernelObject.value() == curHandle.mObject) {
+        // The kernel objects match -- we have found the remote pid!
+        remotePid = Some(curHandle.mPid);
+        break;
+      }
 
-    // At this point, |handle| is a valid section handle. Let's try to find
-    // out the name of its underlying object.
-    ULONG objNameBufLen;
-    ntStatus = pNtQueryObject(handle,
-                              (OBJECT_INFORMATION_CLASS)ObjectNameInformation,
-                              nullptr, 0, &objNameBufLen);
-    if (ntStatus != STATUS_INFO_LENGTH_MISMATCH) {
-      continue;
-    }
-
-    auto objNameBuf = MakeUnique<char[]>(objNameBufLen);
-    ntStatus = pNtQueryObject(handle,
-                              (OBJECT_INFORMATION_CLASS)ObjectNameInformation,
-                              objNameBuf.get(), objNameBufLen, &objNameBufLen);
-    if (!NT_SUCCESS(ntStatus)) {
-      continue;
-    }
-
-    auto objNameInfo = reinterpret_cast<OBJECT_NAME_INFORMATION*>(objNameBuf.get());
-    if (!objNameInfo->mName.Length) {
-      // This section is unnamed. We don't care about those.
-      continue;
-    }
-
-    nsDependentString objName(objNameInfo->mName.Buffer,
-                              objNameInfo->mName.Length / sizeof(wchar_t));
-
-    // Check to see if the section's name matches our expected name.
-    if (!FindInReadable(kStrHookShmem, objName) ||
-        !StringEndsWith(objName, partialSectionSuffix)) {
-      // The names don't match, continue searching.
-      continue;
-    }
-
-    // At this point we have a section handle whose name matches the one that
-    // we're looking for.
-
-    if (curHandle.mPid == ourPid) {
-      // Our own process also has a handle to the section of interest. While we
-      // don't want our own pid, this *does* give us an opportunity to speed up
-      // future iterations by examining each handle for its kernel object (which
-      // is the same for all processes) instead of searching by name.
+      // An object that is not ours. Since we do not yet know which kernel
+      // object we're interested in, we'll save the current object for later.
+      objMap.Put(curHandle.mObject, curHandle.mPid);
+    } else if (handle == section.get()) {
+      // This is the file mapping that we opened above. We save this mObject
+      // in order to compare to Section objects opened by other processes.
       kernelObject = Some(curHandle.mObject);
-      continue;
     }
-
-    // Bingo! We want this pid!
-    remotePid = Some(static_cast<DWORD>(curHandle.mPid));
-
-    break;
   }
+
+  if (!kernelObject) {
+    return Nothing();
+  }
+
+  if (!remotePid) {
+    // We found kernelObject *after* we saw the remote process's copy. Now we
+    // must look it up in objMap.
+    DWORD pid;
+    if (objMap.Get(kernelObject.value(), &pid)) {
+      remotePid = Some(pid);
+    }
+  }
+
 
   if (!remotePid) {
     return Nothing();

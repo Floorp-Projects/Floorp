@@ -9,8 +9,20 @@
 
 #include <winternl.h>
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #ifndef STATUS_INFO_LENGTH_MISMATCH
 #define STATUS_INFO_LENGTH_MISMATCH ((NTSTATUS)0xC0000004L)
+#endif
+
+#ifndef STATUS_BUFFER_TOO_SMALL
+#define STATUS_BUFFER_TOO_SMALL ((NTSTATUS)0xC0000023L)
+#endif
+
+#ifndef STATUS_MORE_ENTRIES
+#define STATUS_MORE_ENTRIES ((NTSTATUS)0x00000105L)
 #endif
 
 enum UndocSystemInformationClass
@@ -46,5 +58,37 @@ struct OBJECT_NAME_INFORMATION
 {
   UNICODE_STRING  mName;
 };
+
+// The following declarations are documented on MSDN but are not included in
+// public user-mode headers.
+
+enum DirectoryObjectAccessFlags
+{
+  DIRECTORY_QUERY = 0x0001,
+  DIRECTORY_TRAVERSE = 0x0002,
+  DIRECTORY_CREATE_OBJECT = 0x0004,
+  DIRECTORY_CREATE_SUBDIRECTORY = 0x0008,
+  DIRECTORY_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED | 0x000F
+};
+
+NTSTATUS WINAPI
+NtOpenDirectoryObject(PHANDLE aDirectoryHandle, ACCESS_MASK aDesiredAccess,
+                      POBJECT_ATTRIBUTES aObjectAttributes);
+
+struct OBJECT_DIRECTORY_INFORMATION
+{
+  UNICODE_STRING  mName;
+  UNICODE_STRING  mTypeName;
+};
+
+NTSTATUS WINAPI
+NtQueryDirectoryObject(HANDLE aDirectoryHandle, PVOID aOutBuffer,
+                       ULONG aBufferLength, BOOLEAN aReturnSingleEntry,
+                       BOOLEAN aRestartScan, PULONG aContext,
+                       PULONG aOutReturnLength);
+
+#if defined(__cplusplus)
+} // extern "C"
+#endif
 
 #endif // mozilla_NtUndoc_h

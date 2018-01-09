@@ -96,7 +96,7 @@ AssembleClientData(const nsAString& aOrigin, const nsAString& aTyp,
 static void
 RegisteredKeysToScopedCredentialList(const nsAString& aAppId,
   const nsTArray<RegisteredKey>& aKeys,
-  nsTArray<WebAuthnScopedCredentialDescriptor>& aList)
+  nsTArray<WebAuthnScopedCredential>& aList)
 {
   for (const RegisteredKey& key : aKeys) {
     // Check for required attributes
@@ -116,7 +116,7 @@ RegisteredKeysToScopedCredentialList(const nsAString& aAppId,
       continue;
     }
 
-    WebAuthnScopedCredentialDescriptor c;
+    WebAuthnScopedCredential c;
     c.id() = keyHandle;
     aList.AppendElement(c);
   }
@@ -392,7 +392,7 @@ U2F::Register(const nsAString& aAppId,
   }
 
   // Build the exclusion list, if any
-  nsTArray<WebAuthnScopedCredentialDescriptor> excludeList;
+  nsTArray<WebAuthnScopedCredential> excludeList;
   RegisteredKeysToScopedCredentialList(adjustedAppId, aRegisteredKeys,
                                        excludeList);
 
@@ -540,7 +540,7 @@ U2F::Sign(const nsAString& aAppId,
   }
 
   // Build the key list, if any
-  nsTArray<WebAuthnScopedCredentialDescriptor> permittedList;
+  nsTArray<WebAuthnScopedCredential> permittedList;
   RegisteredKeysToScopedCredentialList(adjustedAppId, aRegisteredKeys,
                                        permittedList);
 
@@ -573,6 +573,7 @@ U2F::Sign(const nsAString& aAppId,
                                 clientDataHash,
                                 adjustedTimeoutMillis,
                                 permittedList,
+                                false, /* requireUserVerification */
                                 extensions);
 
   MOZ_ASSERT(mTransaction.isNothing());

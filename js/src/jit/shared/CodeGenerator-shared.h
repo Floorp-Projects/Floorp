@@ -503,8 +503,8 @@ class CodeGeneratorShared : public LElementVisitor
 #endif
 
     template <class T>
-    wasm::TrapDesc trap(T* mir, wasm::Trap trap) {
-        return wasm::TrapDesc(mir->bytecodeOffset(), trap, masm.framePushed());
+    wasm::OldTrapDesc oldTrap(T* mir, wasm::Trap trap) {
+        return wasm::OldTrapDesc(mir->bytecodeOffset(), trap, masm.framePushed());
     }
 
   private:
