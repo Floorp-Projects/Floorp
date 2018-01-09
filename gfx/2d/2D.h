@@ -1555,14 +1555,15 @@ public:
 #ifdef MOZ_WIDGET_GTK
   static already_AddRefed<ScaledFont>
     CreateScaledFontForFontconfigFont(cairo_scaled_font_t* aScaledFont, FcPattern* aPattern,
-                                      const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize);
+                                      const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
+                                      bool aNeedsOblique = false);
 #endif
 
 #ifdef XP_DARWIN
   static already_AddRefed<ScaledFont>
     CreateScaledFontForMacFont(CGFontRef aCGFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
                                const Color& aFontSmoothingBackgroundColor, bool aUseFontSmoothing = true,
-                               bool aApplySyntheticBold = false);
+                               bool aApplySyntheticBold = false, bool aNeedsOblique = false);
 #endif
 
   /**
@@ -1728,6 +1729,7 @@ public:
                                   Float aSize,
                                   bool aUseEmbeddedBitmap,
                                   bool aForceGDIMode,
+                                  bool aNeedsOblique,
                                   IDWriteRenderingParams *aParams,
                                   Float aGamma,
                                   Float aContrast);
