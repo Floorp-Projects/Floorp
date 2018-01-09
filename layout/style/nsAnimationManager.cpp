@@ -35,6 +35,7 @@
 using namespace mozilla;
 using namespace mozilla::css;
 using mozilla::dom::Animation;
+using mozilla::dom::AnimationEffectReadOnly;
 using mozilla::dom::AnimationPlayState;
 using mozilla::dom::KeyframeEffectReadOnly;
 using mozilla::dom::CSSAnimation;
