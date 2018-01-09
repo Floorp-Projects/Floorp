@@ -62,7 +62,7 @@ async function checkControlled(browser) {
 
 async function checkUncontrolled(browser) {
   let controlled = await isControlled(browser);
-  ok(!controller, "window should not be controlled");
+  ok(!controlled, "window should not be controlled");
 }
 
 add_task(async function test() {
