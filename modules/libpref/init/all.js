@@ -5849,7 +5849,11 @@ pref("prompts.authentication_dialog_abuse_limit", 3);
 pref("dom.IntersectionObserver.enabled", true);
 
 // Whether module scripts (<script type="module">) are enabled for content.
+#ifdef NIGHTLY_BUILD
+pref("dom.moduleScripts.enabled", true);
+#else
 pref("dom.moduleScripts.enabled", false);
+#endif
 
 // Maximum amount of time in milliseconds consecutive setTimeout()/setInterval()
 // callback are allowed to run before yielding the event loop.
