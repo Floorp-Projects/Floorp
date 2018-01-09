@@ -5,7 +5,7 @@
 import sys
 
 from ipdl.cgen import CodePrinter
-from ipdl.cxx.ast import TypeArray, Visitor
+from ipdl.cxx.ast import MethodSpec, TypeArray, Visitor
 
 class CxxCodeGen(CodePrinter, Visitor):
     def __init__(self, outf=sys.stdout, indentCols=4):
@@ -191,11 +191,6 @@ class CxxCodeGen(CodePrinter, Visitor):
 
 
     def visitMethodDecl(self, md):
-        assert not (md.static and md.virtual)
-        assert not (md.override and md.pure)
-        assert not md.pure or md.virtual        # pure => virtual
-        assert not md.override or md.virtual    # override => virtual
-
         if md.T:
             self.write('template<')
             self.write('typename ')
@@ -209,10 +204,13 @@ class CxxCodeGen(CodePrinter, Visitor):
             self.write('inline ')
         if md.never_inline:
             self.write('MOZ_NEVER_INLINE ')
-        if md.static:
+
+        if md.methodspec == MethodSpec.STATIC:
             self.write('static ')
-        if md.virtual and not md.override:
+        elif md.methodspec == MethodSpec.VIRTUAL or \
+             md.methodspec == MethodSpec.PURE:
             self.write('virtual ')
+
         if md.ret:
             if md.only_for_definition:
                 self.write('auto ')
@@ -236,14 +234,14 @@ class CxxCodeGen(CodePrinter, Visitor):
             self.write(' -> ')
             md.ret.accept(self)
 
-        if md.override:
+        if md.methodspec == MethodSpec.OVERRIDE:
             self.write(' override')
-        if md.pure:
+        elif md.methodspec == MethodSpec.PURE:
             self.write(' = 0')
 
 
     def visitMethodDefn(self, md):
-        if md.decl.pure:
+        if md.decl.methodspec == MethodSpec.PURE:
             return
 
         self.printdent()
@@ -291,7 +289,8 @@ class CxxCodeGen(CodePrinter, Visitor):
     def visitDestructorDecl(self, dd):
         if dd.inline:
             self.write('inline ')
-        if dd.virtual:
+
+        if dd.methodspec == MethodSpec.VIRTUAL:
             self.write('virtual ')
 
         # hack alert
