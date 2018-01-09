@@ -2740,14 +2740,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     md.recvMethod().name,
                     params=md.makeCxxParams(paramsems='move', returnsems=returnsems,
                                             side=self.side, implicit=implicit),
-                    ret=Type('mozilla::ipc::IPCResult'), virtual=1)
+                    ret=Type('mozilla::ipc::IPCResult'),
+                    methodspec=MethodSpec.VIRTUAL)
 
                 if isctor or isdtor:
                     defaultRecv = MethodDefn(recvDecl)
                     defaultRecv.addstmt(StmtReturn(ExprCall(ExprVar('IPC_OK'))))
                     self.cls.addstmt(defaultRecv)
                 else:
-                    recvDecl.pure = 1
+                    recvDecl.methodspec = MethodSpec.PURE
                     self.cls.addstmt(StmtDecl(recvDecl))
 
         for md in p.messageDecls:
@@ -2761,23 +2762,25 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmt(StmtDecl(MethodDecl(
                 _allocMethod(managed, self.side).name,
                 params=md.makeCxxParams(side=self.side, implicit=0),
-                ret=actortype,
-                virtual=1, pure=1)))
+                ret=actortype, methodspec=MethodSpec.PURE)))
 
             self.cls.addstmt(StmtDecl(MethodDecl(
                 _deallocMethod(managed, self.side).name,
                 params=[ Decl(actortype, 'aActor') ],
-                ret=Type.BOOL,
-                virtual=1, pure=1)))
+                ret=Type.BOOL, methodspec=MethodSpec.PURE)))
 
         # ActorDestroy() method; default is no-op
+        if self.side == 'parent':
+            methodspec = MethodSpec.PURE
+        else:
+            methodspec = MethodSpec.VIRTUAL
+
         self.cls.addstmts([
             Whitespace.NL,
             MethodDefn(MethodDecl(
                 _destroyMethod().name,
                 params=[ Decl(_DestroyReason.Type(), 'aWhy') ],
-                ret=Type.VOID,
-                virtual=1, pure=(self.side == 'parent'))),
+                ret=Type.VOID, methodspec=methodspec)),
             Whitespace.NL
         ])
 
@@ -2787,23 +2790,23 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 MethodDecl(p.processingErrorVar().name,
                            params=[ Param(_Result.Type(), 'aCode'),
                                     Param(Type('char', const=1, ptr=1), 'aReason') ],
-                           virtual=1, override=1))
+                           methodspec=MethodSpec.OVERRIDE))
 
             # bool ShouldContinueFromReplyTimeout(); default to |true|
             shouldcontinue = MethodDefn(
                 MethodDecl(p.shouldContinueFromTimeoutVar().name,
-                           ret=Type.BOOL, virtual=1, override=1))
+                           ret=Type.BOOL, methodspec=MethodSpec.OVERRIDE))
             shouldcontinue.addstmt(StmtReturn.TRUE)
 
             # void Entered*()/Exited*(); default to no-op
             entered = MethodDefn(
-                MethodDecl(p.enteredCxxStackVar().name, virtual=1, override=1))
+                MethodDecl(p.enteredCxxStackVar().name, methodspec=MethodSpec.OVERRIDE))
             exited = MethodDefn(
-                MethodDecl(p.exitedCxxStackVar().name, virtual=1, override=1))
+                MethodDecl(p.exitedCxxStackVar().name, methodspec=MethodSpec.OVERRIDE))
             enteredcall = MethodDefn(
-                MethodDecl(p.enteredCallVar().name, virtual=1, override=1))
+                MethodDecl(p.enteredCallVar().name, methodspec=MethodSpec.OVERRIDE))
             exitedcall = MethodDefn(
-                MethodDecl(p.exitedCallVar().name, virtual=1, override=1))
+                MethodDecl(p.exitedCallVar().name, methodspec=MethodSpec.OVERRIDE))
 
             self.cls.addstmts([ processingerror,
                                 shouldcontinue,
@@ -2845,7 +2848,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         # ~Actor()
         dtor = DestructorDefn(
-            DestructorDecl(self.clsname, virtual=True))
+            DestructorDecl(self.clsname, methodspec=MethodSpec.VIRTUAL))
         dtor.addstmt(StmtExpr(ExprCall(ExprVar('MOZ_COUNT_DTOR'),
                                                [ ExprVar(self.clsname) ])))
 
@@ -2948,7 +2951,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 params.append(Decl(Type('Message', ref=1, ptr=1),
                                    replyvar.name))
 
-            method = MethodDefn(MethodDecl(name, virtual=1, override=1,
+            method = MethodDefn(MethodDecl(name, methodspec=MethodSpec.OVERRIDE,
                                            params=params, ret=_Result.Type()))
 
             if not switch:
@@ -3028,13 +3031,15 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         # int32_t GetProtocolTypeId() { return PFoo; }
         gettypetag = MethodDefn(
-            MethodDecl('GetProtocolTypeId', ret=_actorTypeTagType(), virtual=1, override=1))
+            MethodDecl('GetProtocolTypeId', ret=_actorTypeTagType(),
+                       methodspec=MethodSpec.OVERRIDE))
         gettypetag.addstmt(StmtReturn(_protocolId(ptype)))
         self.cls.addstmts([ gettypetag, Whitespace.NL ])
 
         if ptype.isToplevel():
             # OnChannelClose()
-            onclose = MethodDefn(MethodDecl('OnChannelClose', virtual=1, override=1))
+            onclose = MethodDefn(MethodDecl('OnChannelClose',
+                                            methodspec=MethodSpec.OVERRIDE))
             onclose.addstmts([
                 StmtExpr(ExprCall(destroysubtreevar,
                                   args=[ _DestroyReason.NormalShutdown ])),
@@ -3045,7 +3050,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmts([ onclose, Whitespace.NL ])
 
             # OnChannelError()
-            onerror = MethodDefn(MethodDecl('OnChannelError', virtual=1, override=1))
+            onerror = MethodDefn(MethodDecl('OnChannelError',
+                                            methodspec=MethodSpec.OVERRIDE))
             onerror.addstmts([
                 StmtExpr(ExprCall(destroysubtreevar,
                                   args=[ _DestroyReason.AbnormalShutdown ])),
@@ -3079,7 +3085,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         actorname = _actorName(p.name, self.side)
         protocolname = MethodDefn(MethodDecl(
             'ProtocolName', params=[],
-            const=1, virtual=1, override=1, ret=Type('char', const=1, ptr=1)))
+            const=1, methodspec=MethodSpec.OVERRIDE, ret=Type('char', const=1, ptr=1)))
         protocolname.addstmts([
             StmtReturn(ExprLiteral.String(actorname))
         ])
@@ -3204,7 +3210,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.cls.addstmts([ deallocsubtree, Whitespace.NL ])
 
         if ptype.isToplevel():
-            deallocself = MethodDefn(MethodDecl(deallocselfvar.name, virtual=1))
+            deallocself = MethodDefn(MethodDecl(deallocselfvar.name, methodspec=MethodSpec.VIRTUAL))
             self.cls.addstmts([ deallocself, Whitespace.NL ])
 
         self.implementPickling()
@@ -3242,13 +3248,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             getchannel = MethodDefn(MethodDecl(
                 p.getChannelMethod().name,
                 ret=Type('MessageChannel', ptr=1),
-                virtual=1, override=1))
+                methodspec=MethodSpec.OVERRIDE))
             getchannel.addstmt(StmtReturn(ExprAddrOf(p.channelVar())))
 
             getchannelconst = MethodDefn(MethodDecl(
                 p.getChannelMethod().name,
                 ret=Type('MessageChannel', ptr=1, const=1),
-                virtual=1, override=1, const=1))
+                methodspec=MethodSpec.OVERRIDE, const=1))
             getchannelconst.addstmt(StmtReturn(ExprAddrOf(p.channelVar())))
 
             methods += [ getchannel,
@@ -3296,7 +3302,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             p.removeManageeMethod().name,
             params=[ Decl(_protocolIdType(), pvar.name),
                      Decl(protocolbase, listenervar.name) ],
-            virtual=1, override=1))
+            methodspec=MethodSpec.OVERRIDE))
 
         if not len(p.managesStmts):
             removemanagee.addstmts([ _fatalError('unreached'), StmtReturn() ])
@@ -4755,7 +4761,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def makeDtorMethodDecl(self, md):
         decl = self.makeSendMethodDecl(md)
-        decl.static = 1
+        decl.methodspec = MethodSpec.STATIC
         return decl
 
     def makeSendMethodDecl(self, md, promise=False):
@@ -4892,9 +4898,7 @@ methodDefns."""
 def _splitMethodDefn(md, clsname):
     saveddecl = deepcopy(md.decl)
     md.decl.name = (clsname +'::'+ md.decl.name)
-    md.decl.virtual = 0
-    md.decl.override = 0
-    md.decl.static = 0
+    md.decl.methodspec = MethodSpec.NONE
     md.decl.warn_unused = 0
     md.decl.never_inline = 0
     md.decl.only_for_definition = True
@@ -4944,10 +4948,10 @@ class _GenerateSkeletonImpl(Visitor):
         Visitor.visitClass(self, cls)
 
     def visitMethodDecl(self, md):
-        if not md.pure:
+        if md.methodspec != MethodSpec.PURE:
             return
         decl = deepcopy(md)
-        decl.pure = 0
+        decl.methodspec = MethodSpec.OVERRIDE
         impl = MethodDefn(MethodDecl(self.implname(md.name),
                                              params=md.params,
                                              ret=md.ret))
@@ -4968,7 +4972,7 @@ class _GenerateSkeletonImpl(Visitor):
 
     def visitDestructorDecl(self, dd):
         self.cls.addstmt(
-            StmtDecl(DestructorDecl(self.name, virtual=1)))
+            StmtDecl(DestructorDecl(self.name, methodspec=MethodSpec.VIRTUAL)))
         # FIXME/cjones: hack!
         dtor = DestructorDefn(ConstructorDecl(self.implname('~' +self.name)))
         dtor.addstmt(StmtExpr(ExprCall(ExprVar( 'MOZ_COUNT_DTOR'),
