@@ -117,9 +117,3 @@ async function testDevicePixelRatio(ui, expected) {
   let dppx = await getViewportDevicePixelRatio(ui);
   is(dppx, expected, `devicePixelRatio should be set to ${expected}`);
 }
-
-async function getViewportDevicePixelRatio(ui) {
-  return await ContentTask.spawn(ui.getViewportBrowser(), {}, async function () {
-    return content.devicePixelRatio;
-  });
-}

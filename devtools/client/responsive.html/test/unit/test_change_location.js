@@ -10,7 +10,7 @@ const { changeLocation } =
 
 const TEST_URL = "http://example.com";
 
-add_task(function* () {
+add_task(async function () {
   let store = Store();
   const { getState, dispatch } = store;
 

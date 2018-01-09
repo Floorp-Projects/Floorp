@@ -5,7 +5,6 @@
 "use strict";
 
 const { Ci } = require("chrome");
-const { Task } = require("devtools/shared/task");
 const { tunnelToInnerBrowser } = require("./tunnel");
 
 function debug(msg) {
@@ -150,9 +149,9 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       // 3. Create the initial viewport inside the tool UI.
       // The calling application will use container page loaded into the tab to
       // do whatever it needs to create the inner browser.
-      debug("Yield to container tab loaded");
+      debug("Wait until container tab loaded");
       await tabLoaded(containerTab);
-      debug("Yield to get inner browser");
+      debug("Wait until inner browser available");
       innerBrowser = await getInnerBrowser(containerBrowser);
       addXULBrowserDecorations(innerBrowser);
       if (innerBrowser.isRemoteBrowser != tab.linkedBrowser.isRemoteBrowser) {
@@ -183,7 +182,7 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       //    so that some browser UI functions, like navigation, are connected to
       //    the content in the viewport, instead of the tool page.
       tunnel = tunnelToInnerBrowser(tab.linkedBrowser, innerBrowser);
-      debug("Yield to tunnel start");
+      debug("Wait until tunnel start");
       await tunnel.start();
 
       // Swapping browsers disconnects the find bar UI from the browser.
