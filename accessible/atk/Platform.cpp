@@ -19,7 +19,7 @@
 #endif
 #include <gtk/gtk.h>
 
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
 extern "C" __attribute__((weak,visibility("default"))) int atk_bridge_adaptor_init(int*, char **[]);
 #endif
 
@@ -188,7 +188,7 @@ a11y::PlatformInit()
 
   // Init atk-bridge now
   PR_SetEnv("NO_AT_BRIDGE=0");
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
   if (atk_bridge_adaptor_init) {
     atk_bridge_adaptor_init(nullptr, nullptr);
   } else

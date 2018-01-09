@@ -222,7 +222,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget *aWidget,
 }
 
 static void
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
 print_callback(GtkPrintJob *aJob, gpointer aData, const GError *aError) {
 #else
 print_callback(GtkPrintJob *aJob, gpointer aData, GError *aError) {
