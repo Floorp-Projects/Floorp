@@ -476,13 +476,6 @@ function TopSites(prevState = INITIAL_STATE.TopSites, action) {
         return site;
       });
       return Object.assign({}, prevState, { rows: newRows });
-    case at.BLOCK_URL:
-    case at.DELETE_HISTORY_URL:
-      // Optimistically update the UI by responding to the context menu action
-      // events and removing the site that was blocked/deleted with an empty slot.
-      // Once refresh() finishes, we update the UI again with a new site
-      newRows = prevState.rows.filter(val => val && val.url !== action.data.url);
-      return Object.assign({}, prevState, { rows: newRows });
     default:
       return prevState;
   }
