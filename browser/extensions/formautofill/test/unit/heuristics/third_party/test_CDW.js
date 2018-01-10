@@ -42,6 +42,7 @@ runHeuristicsTest([
 
         // FIXME: bug 1392932 - misdetect ZIP ext string
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel-extension"},
+      ], [
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-type"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"}, // ac-off
         {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},

@@ -276,6 +276,14 @@ RemotePrintJobParent::ActorDestroy(ActorDestroyReason aWhy)
   }
 
   mIsDoingPrinting = false;
+
+  // If progress dialog is opened, notify closing it.
+  for (auto listener : mPrintProgressListeners) {
+    listener->OnStateChange(nullptr,
+                            nullptr,
+                            nsIWebProgressListener::STATE_STOP,
+                            NS_OK);
+  }
 }
 
 } // namespace layout

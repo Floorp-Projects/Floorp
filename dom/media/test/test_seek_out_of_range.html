@@ -10,51 +10,11 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 10);
-}
-
 var manager = new MediaTestManager;
 
 // Test if the ended event works correctly.
 
-function startTest(e) {
-  var v = e.target;
-  checkMetadata(v._name, v, v._test);
-  is(v._loadedMetadata, false, "Should only receive one loadedmetadata event for " + v._name);
-  v._loadedMetadata = true;
-  v.currentTime = 3.0 * v.duration;
-}
-
-function playbackEnded(e) {
-  var v = e.target;
-  // We should have dispatched an ended event when we seeked to the end of
-  // media, but we want the ended event which dispatches once playback has
-  // completed after the seek to the beginning.
-  if (!v._played)
-    return;
-  ok(v.ended, "Checking ended set after seeking to EOF and playing for " + v._name);
-  ok(!v._finished, "Should only hit the end once for " + v._name);
-  v._finished = true;
-  removeNodeAndSource(v);
-  manager.finished(v.token);
-}
-
-function endSeek(e) {
-  var v = e.target;
-  if (v._seeked)
-    return;
-  v._seeked = true;
-  ok(Math.abs(v.duration - v.currentTime) < 0.1,
-     "Should be at end of media for " + v._name + " t=" + v.currentTime + " d=" + v.duration);
-  v.play();
-}
-
-function playing(e) {
-  e.target._played = true;
-}
-
-function initTest(test, token) {
+async function initTest(test, token) {
   var type = getMajorMimeType(test.type);
   var v = document.createElement(type);
   v.preload = "auto";
@@ -62,16 +22,22 @@ function initTest(test, token) {
   manager.started(token);
   v.src = test.name;
   v._name = test.name;
-  v._finished = false;
-  v._test = test;
-  v._loadedMetadata = false;
-  v._seeked = false;
-  v._played = false;
-  v.addEventListener("loadedmetadata", startTest);
-  v.addEventListener("playing", playing);
-  v.addEventListener("seeked", endSeek);
-  v.addEventListener("ended", playbackEnded);
   document.body.appendChild(v);
+
+  await once(v, "loadedmetadata");
+  info(`${v._name}: seeking to the end of the media.`);
+  v.currentTime = 3.0 * v.duration;
+  // Wait for 'seeked' and 'ended' to be fired.
+  await Promise.all([once(v, "seeked"), once(v, "ended")]);
+  // Check currentTime is near the end of the media.
+  ok(Math.abs(v.duration - v.currentTime) < 0.1,
+     "Should be at end of media for " + v._name + " t=" + v.currentTime + " d=" + v.duration);
+  // Call play() to start playback from the beginning.
+  v.play();
+  await once(v, "ended");
+  ok(v.ended, "Checking ended set after seeking to EOF and playing for " + v._name);
+  removeNodeAndSource(v);
+  manager.finished(v.token);
 }
 
 manager.runTests(gSmallTests, initTest);

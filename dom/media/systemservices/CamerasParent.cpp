@@ -472,7 +472,7 @@ CamerasParent::RecvNumberOfCaptureDevices(const CaptureEngine& aCapEngine)
       }
       RefPtr<nsIRunnable> ipc_runnable =
         media::NewRunnableFrom([self, num]() -> nsresult {
-          if (self->IsShuttingDown()) {
+          if (!self->mChildIsAlive) {
             return NS_ERROR_FAILURE;
           }
           if (num < 0) {
@@ -504,7 +504,7 @@ CamerasParent::RecvEnsureInitialized(const CaptureEngine& aCapEngine)
 
       RefPtr<nsIRunnable> ipc_runnable =
         media::NewRunnableFrom([self, result]() -> nsresult {
-          if (self->IsShuttingDown()) {
+          if (!self->mChildIsAlive) {
             return NS_ERROR_FAILURE;
           }
           if (!result) {
@@ -542,7 +542,7 @@ CamerasParent::RecvNumberOfCapabilities(const CaptureEngine& aCapEngine,
       }
       RefPtr<nsIRunnable> ipc_runnable =
         media::NewRunnableFrom([self, num]() -> nsresult {
-          if (self->IsShuttingDown()) {
+          if (!self->mChildIsAlive) {
             return NS_ERROR_FAILURE;
           }
           if (num < 0) {
@@ -593,7 +593,7 @@ CamerasParent::RecvGetCaptureCapability(const CaptureEngine& aCapEngine,
       }
       RefPtr<nsIRunnable> ipc_runnable =
         media::NewRunnableFrom([self, webrtcCaps, error]() -> nsresult {
-          if (self->IsShuttingDown()) {
+          if (!self->mChildIsAlive) {
             return NS_ERROR_FAILURE;
           }
           VideoCaptureCapability capCap(webrtcCaps.width,
@@ -653,7 +653,7 @@ CamerasParent::RecvGetCaptureDevice(const CaptureEngine& aCapEngine,
       }
       RefPtr<nsIRunnable> ipc_runnable =
         media::NewRunnableFrom([self, error, name, uniqueId, devicePid]() {
-          if (self->IsShuttingDown()) {
+          if (!self->mChildIsAlive) {
             return NS_ERROR_FAILURE;
           }
           if (error) {
@@ -764,7 +764,7 @@ CamerasParent::RecvAllocateCaptureDevice(const CaptureEngine& aCapEngine,
         }
         RefPtr<nsIRunnable> ipc_runnable =
           media::NewRunnableFrom([self, numdev, error]() -> nsresult {
-            if (self->IsShuttingDown()) {
+            if (!self->mChildIsAlive) {
               return NS_ERROR_FAILURE;
             }
             if (error) {
@@ -810,8 +810,7 @@ CamerasParent::RecvReleaseCaptureDevice(const CaptureEngine& aCapEngine,
       int error = self->ReleaseCaptureDevice(aCapEngine, numdev);
       RefPtr<nsIRunnable> ipc_runnable =
         media::NewRunnableFrom([self, error, numdev]() -> nsresult {
-          if (self->IsShuttingDown()) {
-            LOG(("In Shutdown, not Releasing"));
+          if (!self->mChildIsAlive) {
             return NS_ERROR_FAILURE;
           }
           if (error) {
@@ -933,7 +932,7 @@ CamerasParent::RecvStartCapture(const CaptureEngine& aCapEngine,
       }
       RefPtr<nsIRunnable> ipc_runnable =
         media::NewRunnableFrom([self, error]() -> nsresult {
-          if (self->IsShuttingDown()) {
+          if (!self->mChildIsAlive) {
             return NS_ERROR_FAILURE;
           }
           if (!error) {
@@ -994,7 +993,7 @@ CamerasParent::RecvStopCapture(const CaptureEngine& aCapEngine,
       return NS_OK;
     });
   nsresult rv = DispatchToVideoCaptureThread(webrtc_runnable);
-  if (self->IsShuttingDown()) {
+  if (!self->mChildIsAlive) {
     if (NS_FAILED(rv)) {
       return IPC_FAIL_NO_REASON(this);
     }

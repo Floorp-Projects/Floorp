@@ -14,7 +14,7 @@ browser.jar:
   skin/classic/browser/monitor_16-10.png
   skin/classic/browser/pageInfo.css
   skin/classic/browser/pageInfo.png
-  skin/classic/browser/searchbar.css
+* skin/classic/browser/searchbar.css
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/slowStartup-16.png
   skin/classic/browser/sync-desktopIcon.svg  (../shared/sync-desktopIcon.svg)
