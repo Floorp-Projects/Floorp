@@ -1624,7 +1624,11 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
   }
 
   if (mReferrerPolicy == REFERRER_POLICY_UNSET) {
-    mReferrerPolicy = NS_GetDefaultReferrerPolicy();
+    if (mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0) {
+      mReferrerPolicy = NS_GetDefaultReferrerPolicy(true);
+    } else {
+      mReferrerPolicy = NS_GetDefaultReferrerPolicy();
+    }
   }
 
   if (!referrer) {
