@@ -98,6 +98,61 @@ wasm::HasSupport(JSContext* cx)
     return cx->options().wasm() && HasCompilerSupport(cx);
 }
 
+bool
+wasm::ToWebAssemblyValue(JSContext* cx, ValType targetType, HandleValue v, Val* val)
+{
+    switch (targetType) {
+      case ValType::I32: {
+        int32_t i32;
+        if (!ToInt32(cx, v, &i32))
+            return false;
+        *val = Val(uint32_t(i32));
+        return true;
+      }
+      case ValType::F32: {
+        double d;
+        if (!ToNumber(cx, v, &d))
+            return false;
+        *val = Val(float(d));
+        return true;
+      }
+      case ValType::F64: {
+        double d;
+        if (!ToNumber(cx, v, &d))
+            return false;
+        *val = Val(d);
+        return true;
+      }
+      default: {
+        MOZ_CRASH("unexpected import value type, caller must guard");
+      }
+    }
+}
+
+void
+wasm::ToJSValue(const Val& val, MutableHandleValue value)
+{
+    switch (val.type()) {
+      case ValType::I32: {
+        value.set(Int32Value(val.i32()));
+        return;
+      }
+      case ValType::F32: {
+        float f = val.f32();
+        value.set(DoubleValue(JS::CanonicalizeNaN(double(f))));
+        return;
+      }
+      case ValType::F64: {
+        double d = val.f64();
+        value.set(DoubleValue(JS::CanonicalizeNaN(d)));
+        return;
+      }
+      default: {
+        MOZ_CRASH("unexpected type when translating to a JS value");
+      }
+    }
+}
+
 // ============================================================================
 // Imports
 
@@ -187,42 +242,22 @@ GetImports(JSContext* cx,
             const GlobalDesc& global = globals[globalIndex++];
             MOZ_ASSERT(global.importIndex() == globalIndex - 1);
             MOZ_ASSERT(!global.isMutable());
-            switch (global.type()) {
-              case ValType::I32: {
-                if (!v.isNumber())
-                    return ThrowBadImportType(cx, import.field.get(), "Number");
-                int32_t i32;
-                if (!ToInt32(cx, v, &i32))
-                    return false;
-                val = Val(uint32_t(i32));
-                break;
-              }
-              case ValType::I64: {
+
+#ifdef ENABLE_WASM_GLOBAL
+            if (v.isObject() && v.toObject().is<WasmGlobalObject>())
+                v.set(v.toObject().as<WasmGlobalObject>().value());
+#endif
+
+            if (global.type() == ValType::I64) {
                 JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_LINK);
                 return false;
-              }
-              case ValType::F32: {
-                if (!v.isNumber())
-                    return ThrowBadImportType(cx, import.field.get(), "Number");
-                double d;
-                if (!ToNumber(cx, v, &d))
-                    return false;
-                val = Val(float(d));
-                break;
-              }
-              case ValType::F64: {
-                if (!v.isNumber())
-                    return ThrowBadImportType(cx, import.field.get(), "Number");
-                double d;
-                if (!ToNumber(cx, v, &d))
-                    return false;
-                val = Val(d);
-                break;
-              }
-              default: {
-                MOZ_CRASH("unexpected import value type");
-              }
             }
+            if (!v.isNumber())
+                return ThrowBadImportType(cx, import.field.get(), "Number");
+
+            if (!ToWebAssemblyValue(cx, global.type(), v, &val))
+                return false;
+
             if (!globalImports->append(val))
                 return false;
         }
@@ -1885,6 +1920,204 @@ WasmTableObject::table() const
 }
 
 // ============================================================================
+// WebAssembly.global class and methods
+
+#ifdef ENABLE_WASM_GLOBAL
+
+const ClassOps WasmGlobalObject::classOps_ =
+{
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* enumerate */
+    nullptr, /* newEnumerate */
+    nullptr, /* resolve */
+    nullptr, /* mayResolve */
+    nullptr, /* finalize */
+    nullptr, /* call */
+    nullptr, /* hasInstance */
+    nullptr, /* construct */
+    nullptr  /* trace */
+};
+
+const Class WasmGlobalObject::class_ =
+{
+    "WebAssembly.Global",
+    JSCLASS_HAS_RESERVED_SLOTS(WasmGlobalObject::RESERVED_SLOTS),
+    &WasmGlobalObject::classOps_
+};
+
+/* static */ WasmGlobalObject*
+WasmGlobalObject::create(JSContext* cx, wasm::ValType type, bool isMutable, HandleValue val)
+{
+    RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmGlobal).toObject());
+
+    AutoSetNewObjectMetadata metadata(cx);
+    Rooted<WasmGlobalObject*> obj(cx, NewObjectWithGivenProto<WasmGlobalObject>(cx, proto));
+    if (!obj)
+        return nullptr;
+
+    obj->initReservedSlot(TYPE_SLOT, Int32Value(int32_t(type)));
+    obj->initReservedSlot(MUTABLE_SLOT, JS::BooleanValue(isMutable));
+    obj->initReservedSlot(VALUE_SLOT, val);
+
+    return obj;
+}
+
+/* static */ bool
+WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!ThrowIfNotConstructing(cx, args, "Global"))
+        return false;
+
+    if (!args.requireAtLeast(cx, "WebAssembly.Global", 1))
+        return false;
+
+    if (!args.get(0).isObject()) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_DESC_ARG, "global");
+        return false;
+    }
+
+    RootedObject obj(cx, &args[0].toObject());
+
+    RootedValue typeVal(cx);
+    if (!JS_GetProperty(cx, obj, "type", &typeVal))
+        return false;
+
+    RootedString typeStr(cx, ToString(cx, typeVal));
+    if (!typeStr)
+        return false;
+
+    RootedLinearString typeLinearStr(cx, typeStr->ensureLinear(cx));
+    if (!typeLinearStr)
+        return false;
+
+    ValType globalType;
+    if (StringEqualsAscii(typeLinearStr, "i32")) {
+        globalType = ValType::I32;
+    } else if (StringEqualsAscii(typeLinearStr, "f32")) {
+        globalType = ValType::F32;
+    } else if (StringEqualsAscii(typeLinearStr, "f64")) {
+        globalType = ValType::F64;
+    } else {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_GLOBAL_TYPE);
+        return false;
+    }
+
+    RootedValue mutableVal(cx);
+    if (!JS_GetProperty(cx, obj, "mutable", &mutableVal))
+        return false;
+
+    bool isMutable = ToBoolean(mutableVal);
+
+    RootedValue valueVal(cx);
+    if (!JS_GetProperty(cx, obj, "value", &valueVal))
+        return false;
+
+    Val globalVal;
+    if (!ToWebAssemblyValue(cx, globalType, valueVal, &globalVal))
+        return false;
+
+    RootedValue globalValue(cx);
+    ToJSValue(globalVal, &globalValue);
+
+    Rooted<WasmGlobalObject*> global(cx, WasmGlobalObject::create(cx, globalType, isMutable,
+                                                                  globalValue));
+    if (!global)
+        return false;
+
+    args.rval().setObject(*global);
+    return true;
+}
+
+static bool
+IsGlobal(HandleValue v)
+{
+    return v.isObject() && v.toObject().is<WasmGlobalObject>();
+}
+
+/* static */ bool
+WasmGlobalObject::valueGetterImpl(JSContext* cx, const CallArgs& args)
+{
+    switch (args.thisv().toObject().as<WasmGlobalObject>().type()) {
+      case ValType::I32:
+      case ValType::F32:
+      case ValType::F64:
+        args.rval().set(args.thisv().toObject().as<WasmGlobalObject>().value());
+        return true;
+      case ValType::I64:
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_I64_TYPE);
+        return false;
+      default:
+        MOZ_CRASH();
+    }
+}
+
+/* static */ bool
+WasmGlobalObject::valueGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsGlobal, valueGetterImpl>(cx, args);
+}
+
+/* static */ bool
+WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args)
+{
+    if (!args.thisv().toObject().as<WasmGlobalObject>().isMutable()) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr, JSMSG_WASM_GLOBAL_IMMUTABLE);
+        return false;
+    }
+
+    // TODO - implement this, we probably need a different representation for
+    // mutable globals.
+    JS_ReportErrorASCII(cx, "Value setter not yet implemented");
+    return false;
+}
+
+/* static */ bool
+WasmGlobalObject::valueSetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsGlobal, valueSetterImpl>(cx, args);
+}
+
+const JSPropertySpec WasmGlobalObject::properties[] =
+{
+    JS_PSGS("value", WasmGlobalObject::valueGetter, WasmGlobalObject::valueSetter, 0),
+    JS_PS_END
+};
+
+const JSFunctionSpec WasmGlobalObject::methods[] =
+{
+    JS_SYM_FN(toPrimitive, WasmGlobalObject::valueGetter, 1, JSPROP_READONLY),
+    JS_FS_END
+};
+
+const JSFunctionSpec WasmGlobalObject::static_methods[] =
+{ JS_FS_END };
+
+ValType
+WasmGlobalObject::type() const
+{
+    return static_cast<ValType>(getReservedSlot(TYPE_SLOT).toInt32());
+}
+
+bool
+WasmGlobalObject::isMutable() const
+{
+    return getReservedSlot(MUTABLE_SLOT).toBoolean();
+}
+
+Value
+WasmGlobalObject::value() const
+{
+    return getReservedSlot(VALUE_SLOT);
+}
+
+#endif // ENABLE_WASM_GLOBAL
+
+// ============================================================================
 // WebAssembly class and static methods
 
 #if JS_HAS_TOSOURCE
@@ -2717,6 +2950,9 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
         return nullptr;
 
     RootedObject moduleProto(cx), instanceProto(cx), memoryProto(cx), tableProto(cx);
+#ifdef ENABLE_WASM_GLOBAL
+    RootedObject globalProto(cx);
+#endif
     if (!InitConstructor<WasmModuleObject>(cx, wasm, "Module", &moduleProto))
         return nullptr;
     if (!InitConstructor<WasmInstanceObject>(cx, wasm, "Instance", &instanceProto))
@@ -2725,6 +2961,10 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
         return nullptr;
     if (!InitConstructor<WasmTableObject>(cx, wasm, "Table", &tableProto))
         return nullptr;
+#ifdef ENABLE_WASM_GLOBAL
+    if (!InitConstructor<WasmGlobalObject>(cx, wasm, "Global", &globalProto))
+        return nullptr;
+#endif
     if (!InitErrorClass(cx, wasm, "CompileError", JSEXN_WASMCOMPILEERROR))
         return nullptr;
     if (!InitErrorClass(cx, wasm, "LinkError", JSEXN_WASMLINKERROR))
@@ -2744,6 +2984,9 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
     global->setPrototype(JSProto_WasmInstance, ObjectValue(*instanceProto));
     global->setPrototype(JSProto_WasmMemory, ObjectValue(*memoryProto));
     global->setPrototype(JSProto_WasmTable, ObjectValue(*tableProto));
+#ifdef ENABLE_WASM_GLOBAL
+    global->setPrototype(JSProto_WasmGlobal, ObjectValue(*globalProto));
+#endif
     global->setConstructor(JSProto_WebAssembly, ObjectValue(*wasm));
 
     MOZ_ASSERT(global->isStandardClassResolved(JSProto_WebAssembly));
