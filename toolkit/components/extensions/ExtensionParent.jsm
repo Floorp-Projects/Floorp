@@ -135,6 +135,7 @@ let apiManager = new class extends SchemaAPIManager {
 
       this.initModuleData(await modulesPromise);
 
+      this.initGlobal();
       for (let script of scripts) {
         script.executeInGlobal(this.global);
       }

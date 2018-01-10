@@ -107,6 +107,7 @@ var apiManager = new class extends SchemaAPIManager {
   lazyInit() {
     if (!this.initialized) {
       this.initialized = true;
+      this.initGlobal();
       for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_ADDON)) {
         this.loadScript(value);
       }
@@ -123,6 +124,7 @@ var devtoolsAPIManager = new class extends SchemaAPIManager {
   lazyInit() {
     if (!this.initialized) {
       this.initialized = true;
+      this.initGlobal();
       for (let [/* name */, value] of XPCOMUtils.enumerateCategoryEntries(CATEGORY_EXTENSION_SCRIPTS_DEVTOOLS)) {
         this.loadScript(value);
       }
