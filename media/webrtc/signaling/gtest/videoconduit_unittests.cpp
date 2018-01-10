@@ -74,8 +74,10 @@ public:
   void OnFrame(const webrtc::VideoFrame& frame) override
   {
     mVideoFrame = frame;
+    ++mOnFrameCount;
   }
 
+  size_t mOnFrameCount = 0;
   webrtc::VideoFrame mVideoFrame;
 };
 
@@ -985,16 +987,19 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodec)
   ASSERT_EQ(sink->mVideoFrame.width(), 1280);
   ASSERT_EQ(sink->mVideoFrame.height(), 720);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 1000U);
+  ASSERT_EQ(sink->mOnFrameCount, 1U);
 
   SendVideoFrame(640, 360, 2);
   ASSERT_EQ(sink->mVideoFrame.width(), 640);
   ASSERT_EQ(sink->mVideoFrame.height(), 360);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 2000U);
+  ASSERT_EQ(sink->mOnFrameCount, 2U);
 
   SendVideoFrame(1920, 1280, 3);
   ASSERT_EQ(sink->mVideoFrame.width(), 960);
   ASSERT_EQ(sink->mVideoFrame.height(), 640);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 3000U);
+  ASSERT_EQ(sink->mOnFrameCount, 3U);
   mVideoConduit->StopTransmitting();
 }
 
@@ -1076,16 +1081,19 @@ TEST_F(VideoConduitTest, TestReconfigureSendMediaCodecWhileTransmitting)
   ASSERT_EQ(sink->mVideoFrame.width(), 1280);
   ASSERT_EQ(sink->mVideoFrame.height(), 720);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 1000U);
+  ASSERT_EQ(sink->mOnFrameCount, 1U);
 
   SendVideoFrame(640, 360, 2);
   ASSERT_EQ(sink->mVideoFrame.width(), 640);
   ASSERT_EQ(sink->mVideoFrame.height(), 360);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 2000U);
+  ASSERT_EQ(sink->mOnFrameCount, 2U);
 
   SendVideoFrame(1920, 1280, 3);
   ASSERT_EQ(sink->mVideoFrame.width(), 960);
   ASSERT_EQ(sink->mVideoFrame.height(), 640);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 3000U);
+  ASSERT_EQ(sink->mOnFrameCount, 3U);
 
   mVideoConduit->StopTransmitting();
 }
@@ -1111,16 +1119,19 @@ TEST_F(VideoConduitTest, TestVideoEncode)
   ASSERT_EQ(sink->mVideoFrame.width(), 1280);
   ASSERT_EQ(sink->mVideoFrame.height(), 720);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 1000U);
+  ASSERT_EQ(sink->mOnFrameCount, 1U);
 
   SendVideoFrame(640, 360, 2);
   ASSERT_EQ(sink->mVideoFrame.width(), 640);
   ASSERT_EQ(sink->mVideoFrame.height(), 360);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 2000U);
+  ASSERT_EQ(sink->mOnFrameCount, 2U);
 
   SendVideoFrame(1920, 1280, 3);
   ASSERT_EQ(sink->mVideoFrame.width(), 1920);
   ASSERT_EQ(sink->mVideoFrame.height(), 1280);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 3000U);
+  ASSERT_EQ(sink->mOnFrameCount, 3U);
 
   mVideoConduit->StopTransmitting();
   mVideoConduit->RemoveSink(sink.get());
@@ -1148,16 +1159,19 @@ TEST_F(VideoConduitTest, TestVideoEncodeMaxFs)
   ASSERT_EQ(sink->mVideoFrame.width(), 1280);
   ASSERT_EQ(sink->mVideoFrame.height(), 720);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 1000U);
+  ASSERT_EQ(sink->mOnFrameCount, 1U);
 
   SendVideoFrame(640, 360, 2);
   ASSERT_EQ(sink->mVideoFrame.width(), 640);
   ASSERT_EQ(sink->mVideoFrame.height(), 360);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 2000U);
+  ASSERT_EQ(sink->mOnFrameCount, 2U);
 
   SendVideoFrame(1920, 1280, 3);
   ASSERT_EQ(sink->mVideoFrame.width(), 960);
   ASSERT_EQ(sink->mVideoFrame.height(), 640);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 3000U);
+  ASSERT_EQ(sink->mOnFrameCount, 3U);
 
   // maxFs should not force pixel count above what a sink has requested.
   // We set 3600 macroblocks (16x16 pixels), so we request 3500 here.
@@ -1168,16 +1182,19 @@ TEST_F(VideoConduitTest, TestVideoEncodeMaxFs)
   ASSERT_EQ(sink->mVideoFrame.width(), 960);
   ASSERT_EQ(sink->mVideoFrame.height(), 540);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 4000U);
+  ASSERT_EQ(sink->mOnFrameCount, 4U);
 
   SendVideoFrame(640, 360, 5);
   ASSERT_EQ(sink->mVideoFrame.width(), 640);
   ASSERT_EQ(sink->mVideoFrame.height(), 360);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 5000U);
+  ASSERT_EQ(sink->mOnFrameCount, 5U);
 
   SendVideoFrame(1920, 1280, 6);
   ASSERT_EQ(sink->mVideoFrame.width(), 960);
   ASSERT_EQ(sink->mVideoFrame.height(), 640);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 6000U);
+  ASSERT_EQ(sink->mOnFrameCount, 6U);
 
   mVideoConduit->StopTransmitting();
   mVideoConduit->RemoveSink(sink.get());
@@ -1207,16 +1224,19 @@ TEST_F(VideoConduitTest, DISABLED_TestVideoEncodeMaxWidthAndHeight)
   ASSERT_EQ(sink->mVideoFrame.width(), 1280);
   ASSERT_EQ(sink->mVideoFrame.height(), 720);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 1000U);
+  ASSERT_EQ(sink->mOnFrameCount, 1U);
 
   SendVideoFrame(640, 360, 2);
   ASSERT_EQ(sink->mVideoFrame.width(), 640);
   ASSERT_EQ(sink->mVideoFrame.height(), 360);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 2000U);
+  ASSERT_EQ(sink->mOnFrameCount, 2U);
 
   SendVideoFrame(1920, 1280, 3);
   ASSERT_EQ(sink->mVideoFrame.width(), 1080);
   ASSERT_EQ(sink->mVideoFrame.height(), 720);
   ASSERT_EQ(sink->mVideoFrame.timestamp_us(), 3000U);
+  ASSERT_EQ(sink->mOnFrameCount, 3U);
 
   mVideoConduit->StopTransmitting();
   mVideoConduit->RemoveSink(sink.get());
