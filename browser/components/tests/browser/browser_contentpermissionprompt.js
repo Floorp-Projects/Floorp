@@ -61,6 +61,7 @@ MockContentPermissionRequest.prototype = {
     this.cancelled = true;
   },
   cancelled: false,
+  principal: Services.scriptSecurityManager.getSystemPrincipal(),
 };
 
 /**

@@ -2856,6 +2856,32 @@ ContentPermissionPrompt.prototype = {
       }
 
       permissionPrompt.prompt();
+
+      let schemeHistogram = Services.telemetry.getKeyedHistogramById("PERMISSION_REQUEST_ORIGIN_SCHEME");
+      let scheme = 0;
+      // URI is null for system principals.
+      if (request.principal.URI) {
+        switch (request.principal.URI.scheme) {
+          case "http":
+            scheme = 1;
+            break;
+          case "https":
+            scheme = 2;
+            break;
+        }
+      }
+      schemeHistogram.add(type, scheme);
+
+      // request.element should be the browser element in e10s.
+      if (request.element && request.element.contentPrincipal) {
+        let thirdPartyHistogram = Services.telemetry.getKeyedHistogramById("PERMISSION_REQUEST_THIRD_PARTY_ORIGIN");
+        let isThirdParty = request.principal.origin != request.element.contentPrincipal.origin;
+        thirdPartyHistogram.add(type, isThirdParty);
+      }
+
+      let userInputHistogram = Services.telemetry.getKeyedHistogramById("PERMISSION_REQUEST_HANDLING_USER_INPUT");
+      userInputHistogram.add(type, request.isHandlingUserInput);
+
     } catch (ex) {
       Cu.reportError(ex);
       request.cancel();
