@@ -161,7 +161,7 @@ HTTP == background-referrer.html background-referrer-ref.html
 == attachment-local-clipping-color-3.html attachment-local-clipping-color-3-ref.html
 fuzzy-if(skiaContent,1,300) == attachment-local-clipping-color-4.html attachment-local-clipping-color-4-ref.html
 fuzzy-if(skiaContent,1,400) == attachment-local-clipping-color-5.html attachment-local-clipping-color-4-ref.html
-fuzzy(50,500) fuzzy-if(skiaContent,51,320) fails-if(webrender) == attachment-local-clipping-color-6.html attachment-local-clipping-color-6-ref.html
+fuzzy(50,500) fuzzy-if(skiaContent,51,320) == attachment-local-clipping-color-6.html attachment-local-clipping-color-6-ref.html
 
 == attachment-local-clipping-image-1.html attachment-local-clipping-image-1-ref.html
 == attachment-local-clipping-image-2.html attachment-local-clipping-image-1-ref.html  # Same ref as the previous test.
@@ -169,7 +169,7 @@ fuzzy(50,500) fuzzy-if(skiaContent,51,320) fails-if(webrender) == attachment-loc
 # The next three tests are fuzzy due to bug 1128229.
 fuzzy(16,69) fuzzy-if(skiaContent,95,2206) == attachment-local-clipping-image-4.html attachment-local-clipping-image-4-ref.html
 fuzzy(16,69) fuzzy-if(skiaContent,95,2206) == attachment-local-clipping-image-5.html attachment-local-clipping-image-4-ref.html
-fuzzy(80,500) fuzzy-if(skiaContent,109,908) fails-if(webrender) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html
+fuzzy(80,500) fuzzy-if(skiaContent,109,908) == attachment-local-clipping-image-6.html attachment-local-clipping-image-6-ref.html
 
 fuzzy-if(skiaContent,1,8) fuzzy-if(webrender,1,84) == background-multiple-with-border-radius.html background-multiple-with-border-radius-ref.html
 == background-repeat-large-area.html background-repeat-large-area-ref.html

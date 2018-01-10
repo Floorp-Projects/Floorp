@@ -1802,7 +1802,7 @@ fuzzy-if(skiaContent,1,3) == 931464-1.html 931464-1-ref.html
 == 936670-1.svg 936670-1-ref.svg
 == 941940-1.html 941940-1-ref.html
 fails == 942017.html 942017-ref.html # bug 942017
-fuzzy-if(Android,1,1) fuzzy-if(skiaContent,1,160000) fails-if(webrender) == 942672-1.html 942672-1-ref.html
+fuzzy-if(Android,1,1) fuzzy-if(skiaContent,1,160000) == 942672-1.html 942672-1-ref.html
 == 953334-win32-clipping.html 953334-win32-clipping-ref.html
 fuzzy-if(skiaContent,1,5) == 956513-1.svg 956513-1-ref.svg
 == 944291-1.html 944291-1-ref.html
@@ -1988,7 +1988,7 @@ fuzzy(2,20000) == 1315113-2.html 1315113-2-ref.html
 == 1315632-1.html 1315632-1-ref.html
 fuzzy(2,40000) fails-if(webrender) == 1316719-1a.html 1316719-1-ref.html
 fuzzy(2,40000) fails-if(webrender) == 1316719-1b.html 1316719-1-ref.html
-fuzzy(2,40000) fails-if(webrender) == 1316719-1c.html 1316719-1-ref.html
+fuzzy(2,40000) == 1316719-1c.html 1316719-1-ref.html
 skip-if(Android) != 1318769-1.html 1318769-1-ref.html
 == 1322512-1.html 1322512-1-ref.html
 skip-if((stylo||styloVsGecko)&&isDebugBuild&&winWidget) == 1330051.svg 1330051-ref.svg

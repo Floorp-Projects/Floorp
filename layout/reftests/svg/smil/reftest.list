@@ -284,7 +284,7 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-0
 == anim-change-display-none-for-dynamically-appended-elem.html lime.html
 == anim-change-display-block-for-dynamically-appended-elem.html anim-standard-ref.html
 
-fuzzy(63,146) fails-if(webrender) == anim-clipPath-viewBox.svg anim-clipPath-viewBox-ref.svg
+fuzzy(63,146) == anim-clipPath-viewBox.svg anim-clipPath-viewBox-ref.svg
 
 # Test animations for overflow.
 == anim-overflow-shorthand.svg anim-overflow-shorthand-ref.svg
