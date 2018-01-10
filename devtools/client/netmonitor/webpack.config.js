@@ -14,7 +14,7 @@ const { getConfig } = require("./bin/configure");
 
 let webpackConfig = {
   entry: {
-    netmonitor: [path.join(__dirname, "index.js")]
+    netmonitor: [path.join(__dirname, "launchpad.js")]
   },
 
   module: {
