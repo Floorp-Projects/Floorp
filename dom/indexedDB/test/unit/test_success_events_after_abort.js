@@ -45,12 +45,8 @@ function* testSteps()
   is(sawError, true, "Saw get() error");
   if (this.window) {
     // Make sure the success event isn't queued somehow.
-    let comp = SpecialPowers.wrap(Components);
-    let tm = comp.classes["@mozilla.org/thread-manager;1"]
-                 .getService(comp.interfaces.nsIThreadManager);
-    tm.spinEventLoopUntilEmpty();
+    SpecialPowers.Services.tm.spinEventLoopUntilEmpty();
   }
 
   finishTest();
 }
-
