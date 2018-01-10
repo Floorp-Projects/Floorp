@@ -519,6 +519,9 @@ public:
     MOZ_ASSERT(aCallData);
     mWorkerPrivate->AssertIsOnWorkerThread();
     mCallData->AssertIsOnOwningThread();
+
+    // Marking this CallData as in use.
+    mCallData->mStatus = ConsoleCallData::eInUse;
   }
 
 private:
@@ -556,7 +559,6 @@ private:
       return false;
     }
 
-    mCallData->mStatus = ConsoleCallData::eInUse;
     return true;
   }
 
