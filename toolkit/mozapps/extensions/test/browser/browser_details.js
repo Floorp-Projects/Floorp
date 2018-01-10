@@ -192,8 +192,6 @@ add_test(function() {
     is(get("detail-fulldesc").textContent, "Longer description", "Full description should be correct");
 
     is_element_visible(get("detail-contributions"), "Contributions section should be visible");
-    is_element_visible(get("detail-contrib-suggested"), "Contributions amount should be visible");
-    ok(get("detail-contrib-suggested").value, "$0.99");
 
     is_element_visible(get("detail-updates-row"), "Updates should not be hidden");
     is_element_hidden(get("detail-dateUpdated"), "Update date should be hidden");
@@ -210,8 +208,6 @@ add_test(function() {
     is_element_hidden(get("detail-repository-row"), "Repository profile should not be visible");
 
     is_element_hidden(get("detail-size"), "Size should be hidden");
-
-    is_element_hidden(get("detail-downloads"), "Downloads should be hidden");
 
     is_element_visible(get("detail-autoUpdate"), "Updates should not be hidden");
     ok(get("detail-autoUpdate").childNodes[1].selected, "Updates ahould be automatic");
@@ -301,7 +297,6 @@ add_test(function() {
     is_element_hidden(get("detail-fulldesc"), "Full description should be hidden");
 
     is_element_visible(get("detail-contributions"), "Contributions section should be visible");
-    is_element_hidden(get("detail-contrib-suggested"), "Contributions amount should be hidden");
 
     is_element_visible(get("detail-dateUpdated"), "Update date should not be hidden");
     is(get("detail-dateUpdated").value, formatDate(gDate), "Update date should be correct");
@@ -312,8 +307,6 @@ add_test(function() {
     is_element_hidden(get("detail-repository-row"), "Repository profile should not be visible");
 
     is_element_hidden(get("detail-size"), "Size should be hidden");
-
-    is_element_hidden(get("detail-downloads"), "Downloads should be hidden");
 
     is_element_hidden(get("detail-updates-row"), "Updates should be hidden");
 
@@ -367,8 +360,6 @@ add_test(function() {
     is(get("detail-reviews").value, "1 review", "Review text should be correct");
 
     is_element_hidden(get("detail-size"), "Size should be hidden");
-
-    is_element_hidden(get("detail-downloads"), "Downloads should be hidden");
 
     is_element_visible(get("detail-autoUpdate"), "Updates should not be hidden");
     ok(get("detail-autoUpdate").lastChild.selected, "Updates should be manual");
@@ -976,8 +967,6 @@ add_test(function() {
     is_element_hidden(get("detail-homepage-row"), "Homepage should be hidden");
 
     is_element_hidden(get("detail-size"), "Size should be hidden");
-
-    is_element_hidden(get("detail-downloads"), "Downloads should be hidden");
 
     is_element_hidden(get("detail-prefs-btn"), "Preferences button should be hidden");
     is_element_hidden(get("detail-enable-btn"), "Enable button should be hidden");
