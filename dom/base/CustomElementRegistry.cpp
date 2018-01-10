@@ -1061,8 +1061,6 @@ CustomElementReactionsStack::Enqueue(Element* aElement,
   // Add element to the backup element queue.
   MOZ_ASSERT(mReactionsStack.IsEmpty(),
              "custom element reactions stack should be empty");
-  MOZ_ASSERT(!GetIncumbentGlobal(),
-             "Custom element reaction should not be scheduled to backup queue if it is from author code");
   MOZ_ASSERT(!aReaction->IsUpgradeReaction(),
              "Upgrade reaction should not be scheduled to backup queue");
   mBackupQueue.AppendElement(aElement);
