@@ -583,7 +583,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'uikit'):
         'skia/src/jumper/SkJumper_generated.S',
         'skia/src/ports/SkFontHost_mac.cpp',
     ]
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
     UNIFIED_SOURCES += [
         'skia/src/ports/SkDebug_stdio.cpp',
         'skia/src/ports/SkOSFile_posix.cpp',
@@ -782,11 +782,11 @@ if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
         '-Wno-unused-private-field',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'android'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk3', 'android'):
     CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
     CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
 
 if CONFIG['MOZ_ENABLE_SKIA_PDF_SFNTLY']:

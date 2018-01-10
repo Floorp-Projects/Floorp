@@ -54,13 +54,13 @@ DEFINES['MOZ_APP_VERSION_DISPLAY'] = CONFIG['MOZ_APP_VERSION_DISPLAY']
 
 DEFINES['APP_LICENSE_BLOCK'] = '%s/content/overrides/app-license.html' % SRCDIR
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3', 'cocoa'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk3', 'cocoa'):
     DEFINES['CONTEXT_COPY_IMAGE_CONTENTS'] = 1
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'cocoa', 'gtk3'):
     DEFINES['CAN_DRAW_IN_TITLEBAR'] = 1
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk2', 'gtk3'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gtk3'):
     DEFINES['MENUBAR_CAN_AUTOHIDE'] = 1
 
 JAR_MANIFESTS += ['jar.mn']
