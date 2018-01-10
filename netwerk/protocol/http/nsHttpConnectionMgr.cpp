@@ -3986,7 +3986,7 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
         tmpFlags |= nsISocketTransport::DISABLE_RFC1918;
     }
 
-    if (!isBackup) {
+    if ((mFastOpenStatus != TFO_HTTP) && !isBackup) {
         if (mEnt->mUseFastOpen) {
             socketTransport->SetFastOpenCallback(this);
         } else {
@@ -4719,6 +4719,13 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
         LOG(("nsHalfOpenSocket::SetupConn "
              "conn->init (%p) failed %" PRIx32 "\n",
              conn.get(), static_cast<uint32_t>(rv)));
+
+        // Set TFO status.
+        if (mFastOpenStatus == TFO_HTTP) {
+            conn->SetFastOpenStatus(TFO_HTTP);
+        } else {
+            conn->SetFastOpenStatus(TFO_INIT_FAILED);
+        }
         return rv;
     }
 
@@ -4822,13 +4829,16 @@ nsHalfOpenSocket::SetupConn(nsIAsyncOutputStream *out,
             mConnectionNegotiatingFastOpen = conn;
         } else {
             conn->SetFastOpen(false);
+            conn->SetFastOpenStatus(TFO_INIT_FAILED);
         }
     } else {
         conn->SetFastOpenStatus(mFastOpenStatus);
-        mFastOpenStatus = TFO_BACKUP_CONN; // Set this to TFO_BACKUP_CONN so
-                                           // that if a backup connection is
-                                           // established we do not report
-                                           // values twice.
+        if (mFastOpenStatus != TFO_HTTP) {
+            mFastOpenStatus = TFO_BACKUP_CONN; // Set this to TFO_BACKUP_CONN
+                                               // so that if a backup
+                                               // connection is established we
+                                               // do not report values twice.
+        }
     }
 
     // If this halfOpenConn was speculative, but at the ende the conn got a
