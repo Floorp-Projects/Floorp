@@ -138,11 +138,4 @@ InsertNodeTransaction::UndoTransaction()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-InsertNodeTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("InsertNodeTransaction");
-  return NS_OK;
-}
-
 } // namespace mozilla

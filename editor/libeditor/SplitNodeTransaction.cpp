@@ -185,14 +185,6 @@ SplitNodeTransaction::RedoTransaction()
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-SplitNodeTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("SplitNodeTransaction");
-  return NS_OK;
-}
-
 nsIContent*
 SplitNodeTransaction::GetNewNode()
 {
