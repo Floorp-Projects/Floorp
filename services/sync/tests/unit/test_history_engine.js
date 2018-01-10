@@ -69,7 +69,7 @@ add_task(async function test_history_download_limit() {
   let ping = await sync_engine_and_validate_telem(engine, false);
   deepEqual(ping.engines[0].incoming, { applied: 5 });
 
-  let backlogAfterFirstSync = engine.toFetch.slice(0);
+  let backlogAfterFirstSync = Array.from(engine.toFetch).sort();
   deepEqual(backlogAfterFirstSync, ["place0000000", "place0000001",
     "place0000002", "place0000003", "place0000004", "place0000005",
     "place0000006", "place0000007", "place0000008", "place0000009"]);
@@ -84,7 +84,7 @@ add_task(async function test_history_download_limit() {
   // After the second sync, our backlog still contains the same GUIDs: we
   // weren't able to make progress on fetching them, since our
   // `guidFetchBatchSize` is 0.
-  let backlogAfterSecondSync = engine.toFetch.slice(0);
+  let backlogAfterSecondSync = Array.from(engine.toFetch).sort();
   deepEqual(backlogAfterFirstSync, backlogAfterSecondSync);
 
   // Now add a newer record to the server.
@@ -105,7 +105,7 @@ add_task(async function test_history_download_limit() {
   deepEqual(ping.engines[0].incoming, { applied: 1 });
 
   // Our backlog should remain the same.
-  let backlogAfterThirdSync = engine.toFetch.slice(0);
+  let backlogAfterThirdSync = Array.from(engine.toFetch).sort();
   deepEqual(backlogAfterSecondSync, backlogAfterThirdSync);
 
   equal(engine.lastSync, lastSync + 20);
@@ -118,15 +118,16 @@ add_task(async function test_history_download_limit() {
   ping = await sync_engine_and_validate_telem(engine, false);
   deepEqual(ping.engines[0].incoming, { applied: 5 });
 
-  deepEqual(engine.toFetch, ["place0000005", "place0000006", "place0000007",
-    "place0000008", "place0000009"]);
+  deepEqual(
+    Array.from(engine.toFetch).sort(),
+    ["place0000005", "place0000006", "place0000007", "place0000008", "place0000009"]);
 
   // Sync again to clear out the backlog.
   engine.lastModified = collection.modified;
   ping = await sync_engine_and_validate_telem(engine, false);
   deepEqual(ping.engines[0].incoming, { applied: 5 });
 
-  deepEqual(engine.toFetch, []);
+  deepEqual(Array.from(engine.toFetch), []);
   await PlacesTestUtils.clearHistory();
 });
 

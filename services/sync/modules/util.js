@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["Utils", "Svc"];
+this.EXPORTED_SYMBOLS = ["Utils", "Svc", "SerializableSet"];
 
 var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
@@ -524,6 +524,47 @@ this.Utils = {
     return foo.concat(Utils.arraySub(bar, foo));
   },
 
+  /**
+   * Add all the items in `items` to the provided Set in-place.
+   *
+   * @return The provided set.
+   */
+  setAddAll(set, items) {
+    for (let item of items) {
+      set.add(item);
+    }
+    return set;
+  },
+
+  /**
+   * Delete every items in `items` to the provided Set in-place.
+   *
+   * @return The provided set.
+   */
+  setDeleteAll(set, items) {
+    for (let item of items) {
+      set.delete(item);
+    }
+    return set;
+  },
+
+  /**
+   * Take the first `size` items from the Set `items`.
+   *
+   * @return A Set of size at most `size`
+   */
+  subsetOfSize(items, size) {
+    let result = new Set();
+    let count = 0;
+    for (let item of items) {
+      if (count++ == size) {
+        return result;
+      }
+      result.add(item);
+    }
+    return result;
+  },
+
   bind2: function Async_bind2(object, method) {
     return function innerBind() { return method.apply(object, arguments); };
   },
@@ -702,6 +743,15 @@ this.Utils = {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   }
 };
+
+/**
+ * A subclass of Set that serializes as an Array when passed to JSON.stringify.
+ */
+class SerializableSet extends Set {
+  toJSON() {
+    return Array.from(this);
+  }
+}
 
 XPCOMUtils.defineLazyGetter(Utils, "_utf8Converter", function() {
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
