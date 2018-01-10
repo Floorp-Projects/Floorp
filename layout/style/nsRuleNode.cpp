@@ -2474,7 +2474,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   AutoCSSValueArray dataArray(dataStorage, nprops);
 
   nsRuleData ruleData(nsCachedStyleData::GetBitForSID(aSID),
-                      dataArray.get(), mPresContext, aContext);
+                      dataArray.get(), aContext);
   ruleData.mValueOffsets[aSID] = 0;
 
   // We start at the most specific rule in the tree.
@@ -4084,8 +4084,7 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
     GeckoStyleContext* context = contextPath[i];
     AutoCSSValueArray dataArray(dataStorage, nprops);
 
-    nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Font), dataArray.get(),
-                        aPresContext, context);
+    nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Font), dataArray.get(), context);
     ruleData.mValueOffsets[eStyleStruct_Font] = 0;
 
     // Trimmed down version of ::WalkRuleTree() to re-apply the style rules
@@ -10193,8 +10192,7 @@ nsRuleNode::HasAuthorSpecifiedRules(GeckoStyleContext* aStyleContext,
   AutoCSSValueArray dataArray(dataStorage, nprops);
 
   /* We're relying on the use of |styleContext| not mutating it! */
-  nsRuleData ruleData(inheritBits, dataArray.get(),
-                      styleContext->PresContext(), styleContext);
+  nsRuleData ruleData(inheritBits, dataArray.get(), styleContext);
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
     ruleData.mValueOffsets[eStyleStruct_Background] = backgroundOffset;
@@ -10387,8 +10385,7 @@ nsRuleNode::ComputePropertiesOverridingAnimation(
   AutoCSSValueArray dataArray(dataStorage, nprops);
 
   // We're relying on the use of |aStyleContext| not mutating it!
-  nsRuleData ruleData(structBits, dataArray.get(),
-                      aStyleContext->PresContext(), aStyleContext);
+  nsRuleData ruleData(structBits, dataArray.get(), aStyleContext);
   for (nsStyleStructID sid = nsStyleStructID(0);
        sid < nsStyleStructID_Length; sid = nsStyleStructID(sid + 1)) {
     if (structBits & nsCachedStyleData::GetBitForSID(sid)) {

@@ -12,6 +12,7 @@ DevToolsModules(
     'autocomplete.js',
     'css-autocompleter.js',
     'debugger.js',
+    'editor-commands-controller.js',
     'editor.js',
     'wasm.js'
 )

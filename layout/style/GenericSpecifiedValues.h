@@ -16,33 +16,42 @@
 #include "mozilla/ServoUtils.h"
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
-#include "nsPresContext.h"
+#include "StyleBackendType.h"
 
+class nsAttrValue;
 struct nsRuleData;
 
 namespace mozilla {
 
 class ServoSpecifiedValues;
 
-// This provides a common interface for attribute mappers (MapAttributesIntoRule)
-// to use regardless of the style backend. If the style backend is Gecko,
-// this will contain an nsRuleData. If it is Servo, it will be a PropertyDeclarationBlock.
+// This provides a common interface for attribute mappers
+// (MapAttributesIntoRule) to use regardless of the style backend. If the style
+// backend is Gecko, this will contain an nsRuleData. If it is Servo, it will be
+// a PropertyDeclarationBlock.
 class GenericSpecifiedValues
 {
 protected:
-  explicit GenericSpecifiedValues(StyleBackendType aType,
-                                  nsPresContext* aPresContext,
-                                  uint32_t aSIDs)
+  explicit GenericSpecifiedValues(StyleBackendType aType, nsIDocument* aDoc, uint32_t aSIDs)
     : mType(aType)
-    , mPresContext(aPresContext)
+    , mDocument(aDoc)
     , mSIDs(aSIDs)
   {}
 
 public:
   MOZ_DECL_STYLO_METHODS(nsRuleData, ServoSpecifiedValues)
 
+  nsIDocument* Document()
+  {
+    return mDocument;
+  }
+
+  // Whether we should ignore document colors.
+  inline bool ShouldIgnoreColors() const;
+
   // Check if we already contain a certain longhand
   inline bool PropertyIsSet(nsCSSPropertyID aId);
+
   // Check if we are able to hold longhands from a given
   // style struct. Pass the result of NS_STYLE_INHERIT_BIT to this
   // function. Can accept multiple inherit bits or'd together.
@@ -50,8 +59,6 @@ public:
   {
     return aInheritBits & mSIDs;
   }
-
-  inline nsPresContext* PresContext() { return mPresContext; }
 
   // Set a property to an identifier (string)
   inline void SetIdentStringValue(nsCSSPropertyID aId, const nsString& aValue);
@@ -116,7 +123,7 @@ public:
   inline void SetBackgroundImage(nsAttrValue& value);
 
   const mozilla::StyleBackendType mType;
-  nsPresContext* const mPresContext;
+  nsIDocument* const mDocument;
   const uint32_t mSIDs;
 };
 

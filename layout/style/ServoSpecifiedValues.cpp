@@ -7,24 +7,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoSpecifiedValues.h"
 
-namespace {
-
-#define STYLE_STRUCT(name, checkdata_cb) | NS_STYLE_INHERIT_BIT(name)
-const uint64_t ALL_SIDS = 0
-#include "nsStyleStructList.h"
-  ;
-#undef STYLE_STRUCT
-
-} // anonymous namespace
-
 using namespace mozilla;
-
-ServoSpecifiedValues::ServoSpecifiedValues(nsPresContext* aContext,
-                                           RawServoDeclarationBlock* aDecl)
-
-  : GenericSpecifiedValues(StyleBackendType::Servo, aContext, ALL_SIDS)
-  , mDecl(aDecl)
-{}
 
 bool
 ServoSpecifiedValues::PropertyIsSet(nsCSSPropertyID aId)
@@ -45,9 +28,17 @@ ServoSpecifiedValues::SetIdentAtomValue(nsCSSPropertyID aId, nsAtom* aValue)
 {
   Servo_DeclarationBlock_SetIdentStringValue(mDecl, aId, aValue);
   if (aId == eCSSProperty__x_lang) {
-    // This forces the lang prefs result to be cached
-    // so that we can access them off main thread during traversal
-    mPresContext->ForceCacheLang(aValue);
+    // This forces the lang prefs result to be cached so that we can access them
+    // off main thread during traversal.
+    //
+    // FIXME(emilio): Can we move mapped attribute declarations across
+    // documents? Isn't this wrong in that case? This is pretty out of place
+    // anyway.
+    if (nsIPresShell* shell = mDocument->GetShell()) {
+      if (nsPresContext* pc = shell->GetPresContext()) {
+        pc->ForceCacheLang(aValue);
+      }
+    }
   }
 }
 
@@ -129,5 +120,5 @@ ServoSpecifiedValues::SetBackgroundImage(nsAttrValue& aValue)
   nsAutoString str;
   aValue.ToString(str);
   Servo_DeclarationBlock_SetBackgroundImage(
-    mDecl, str, mPresContext->Document()->DefaultStyleAttrURLData());
+    mDecl, str, mDocument->DefaultStyleAttrURLData());
 }

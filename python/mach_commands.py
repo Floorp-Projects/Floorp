@@ -62,7 +62,7 @@ class MachCommands(MachCommandBase):
 
     @Command('python-test', category='testing',
              description='Run Python unit tests with an appropriate test runner.')
-    @CommandArgument('--verbose',
+    @CommandArgument('-v', '--verbose',
                      default=False,
                      action='store_true',
                      help='Verbose output.')

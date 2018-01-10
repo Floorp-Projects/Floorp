@@ -310,7 +310,8 @@ linux64-android-gradle-dependencies:
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
             - 'taskcluster/scripts/misc/android-gradle-dependencies/**'
-            - '**/*.gradle'
+            - '*.gradle'
+            - 'mobile/android/**/*.gradle'
             - 'mobile/android/config/mozconfigs/android-api-16-gradle-dependencies/**'
             - 'mobile/android/config/mozconfigs/common*'
             - 'mobile/android/gradle.configure'
