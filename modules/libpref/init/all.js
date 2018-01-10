@@ -1702,7 +1702,7 @@ pref("network.http.sendRefererHeader",      2);
 // Set the default Referrer Policy; to be used unless overriden by the site
 // 0=no-referrer, 1=same-origin, 2=strict-origin-when-cross-origin,
 // 3=no-referrer-when-downgrade
-pref("network.http.referer.userControlPolicy", 3);
+pref("network.http.referer.defaultPolicy", 3);
 // Set the Private Browsing Defaul Referrer Policy;
 // to be used unless overriden by the site;
 // values are identical to defaultPolicy above

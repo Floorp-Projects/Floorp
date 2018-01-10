@@ -11,7 +11,7 @@
 
   const testCases = [
     {ACTION: ["generate-fetch-user-control-policy-test"],
-      PREFS: [['network.http.referer.userControlPolicy', 0]],
+      PREFS: [['network.http.referer.defaultPolicy', 0]],
       TESTS: [
          // 0. No referrer.
         {NAME: 'default-policy-value-no-referrer-https-http',
@@ -26,7 +26,7 @@
          RESULT: 'none'}],
     },
     {ACTION: ["generate-fetch-user-control-policy-test"],
-      PREFS: [['network.http.referer.userControlPolicy', 1]],
+      PREFS: [['network.http.referer.defaultPolicy', 1]],
       TESTS: [
          // 1. Same origin.
         {NAME: 'default-policy-value-same-origin-https-http',
@@ -46,7 +46,7 @@
          RESULT: 'full'}],
     },
     {ACTION: ["generate-fetch-user-control-policy-test"],
-      PREFS: [['network.http.referer.userControlPolicy', 2]],
+      PREFS: [['network.http.referer.defaultPolicy', 2]],
       TESTS: [
          // 2. strict-origin-when-cross-origin.
         {NAME: 'default-policy-value-strict-origin-when-cross-origin-https-http',
@@ -66,7 +66,7 @@
          RESULT: 'full'}],
     },
     {ACTION: ["generate-fetch-user-control-policy-test"],
-      PREFS: [['network.http.referer.userControlPolicy', 3]],
+      PREFS: [['network.http.referer.defaultPolicy', 3]],
       TESTS: [
          // 3. Default no-referrer-when-downgrade.
         {NAME: 'default-policy-value-no-referrer-when-downgrade-https-http',
