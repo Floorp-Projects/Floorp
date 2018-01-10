@@ -28,9 +28,6 @@
 #include "mozilla/NullPtr.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/ipc/FileDescriptor.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsAppDirectoryServiceDefs.h"
-#include "SpecialSystemDirectory.h"
 #include "sandbox/linux/system_headers/linux_syscalls.h"
 
 namespace mozilla {
@@ -518,34 +515,6 @@ SandboxBroker::ConvertToRealPath(char* aPath, size_t aBufSize, size_t aPathLen)
   return aPathLen;
 }
 
-size_t
-SandboxBroker::RemapTempDirs(char* aPath, size_t aBufSize, size_t aPathLen)
-{
-  nsAutoCString path(aPath);
-  static const nsLiteralCString tempPrefix(NS_LITERAL_CSTRING("/tmp"));
-
-  if (StringBeginsWith(path, tempPrefix)) {
-    size_t prefixLen = tempPrefix.Length();
-    const nsDependentCSubstring cutPath =
-      Substring(path, prefixLen, path.Length() - prefixLen);
-    // Only now try to get the content process temp dir
-    nsCOMPtr<nsIFile> tmpDir;
-    nsresult rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
-                                          getter_AddRefs(tmpDir));
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoCString tmpPath;
-      rv = tmpDir->GetNativePath(tmpPath);
-      if (NS_SUCCEEDED(rv)) {
-        tmpPath.Append(cutPath);
-        base::strlcpy(aPath, tmpPath.get(), aBufSize);
-        return strlen(aPath);
-      }
-    }
-  }
-
-  return aPathLen;
-}
-
 nsCString
 SandboxBroker::ReverseSymlinks(const nsACString& aPath)
 {
@@ -709,19 +678,14 @@ SandboxBroker::ThreadMain(void)
       perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
 
       // We don't have read permissions on the requested dir.
+      // Did we arrive from a symlink in a path that is not writable?
+      // Then try to figure out the original path and see if that is readable.
       if (!(perms & MAY_READ)) {
-          // Was it a tempdir that we can remap?
-          pathLen = RemapTempDirs(pathBuf, sizeof(pathBuf), pathLen);
-          perms = mPolicy->Lookup(nsDependentCString(pathBuf, pathLen));
-          if (!(perms & MAY_READ)) {
-            // Did we arrive from a symlink in a path that is not writable?
-            // Then try to figure out the original path and see if that is
-            // readable. Work on the original path, this reverses
-            // ConvertToRealPath above.
-            int symlinkPerms = SymlinkPermissions(recvBuf, first_len);
-            if (symlinkPerms > 0) {
-              perms = symlinkPerms;
-            }
+          // Work on the original path,
+          // this reverses ConvertToRealPath above.
+          int symlinkPerms = SymlinkPermissions(recvBuf, first_len);
+          if (symlinkPerms > 0) {
+            perms = symlinkPerms;
           }
       }
 

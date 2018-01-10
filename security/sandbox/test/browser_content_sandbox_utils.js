@@ -41,6 +41,10 @@ function fileInHomeDir() {
 // Returns a file object for a new file in the content temp dir (.../<UUID>).
 function fileInTempDir() {
   let contentTempKey = "ContentTmpD";
+  if (Services.appinfo.OS == "Linux") {
+    // Linux builds don't use the content-specific temp key
+    contentTempKey = "TmpD";
+  }
 
   // get the content temp dir, make sure it exists
   let ctmp = Services.dirsvc.get(contentTempKey, Ci.nsIFile);
