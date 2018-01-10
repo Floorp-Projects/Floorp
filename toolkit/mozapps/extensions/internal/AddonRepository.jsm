@@ -185,13 +185,6 @@ AddonSearchResult.prototype = {
   fullDescription: null,
 
   /**
-   * The developer comments for the add-on. This includes any information
-   * that may be helpful to end users that isn't necessarily applicable to
-   * the add-on description (e.g. known major bugs)
-   */
-  developerComments: null,
-
-  /**
    * The end-user licensing agreement (EULA) of the add-on
    */
   eula: null,
@@ -237,22 +230,6 @@ AddonSearchResult.prototype = {
    * The suggested contribution amount
    */
   contributionAmount: null,
-
-  /**
-   * The URL to visit in order to purchase the add-on
-   */
-  purchaseURL: null,
-
-  /**
-   * The numerical cost of the add-on in some currency, for sorting purposes
-   * only
-   */
-  purchaseAmount: null,
-
-  /**
-   * The display cost of the add-on, for display purposes only
-   */
-  purchaseDisplayAmount: null,
 
   /**
    * The rating of the add-on, 0-5
@@ -311,102 +288,10 @@ AddonSearchResult.prototype = {
   updateDate: null,
 
   /**
-   * True or false depending on whether the add-on is compatible with the
-   * current version of the application
-   */
-  isCompatible: true,
-
-  /**
-   * True or false depending on whether the add-on is compatible with the
-   * current platform
-   */
-  isPlatformCompatible: true,
-
-  /**
    * Array of AddonCompatibilityOverride objects, that describe overrides for
    * compatibility with an application versions.
    **/
   compatibilityOverrides: null,
-
-  /**
-   * True if the add-on has a secure means of updating
-   */
-  providesUpdatesSecurely: true,
-
-  /**
-   * The current blocklist state of the add-on
-   */
-  blocklistState: Ci.nsIBlocklistService.STATE_NOT_BLOCKED,
-
-  /**
-   * True if this add-on cannot be used in the application based on version
-   * compatibility, dependencies and blocklisting
-   */
-  appDisabled: false,
-
-  /**
-   * True if the user wants this add-on to be disabled
-   */
-  userDisabled: false,
-
-  /**
-   * Indicates what scope the add-on is installed in, per profile, user,
-   * system or application
-   */
-  scope: AddonManager.SCOPE_PROFILE,
-
-  /**
-   * True if the add-on is currently functional
-   */
-  isActive: true,
-
-  /**
-   * A bitfield holding all of the current operations that are waiting to be
-   * performed for this add-on
-   */
-  pendingOperations: AddonManager.PENDING_NONE,
-
-  /**
-   * A bitfield holding all the the operations that can be performed on
-   * this add-on
-   */
-  permissions: 0,
-
-  /**
-   * Tests whether this add-on is known to be compatible with a
-   * particular application and platform version.
-   *
-   * @param  appVersion
-   *         An application version to test against
-   * @param  platformVersion
-   *         A platform version to test against
-   * @return Boolean representing if the add-on is compatible
-   */
-  isCompatibleWith(aAppVersion, aPlatformVersion) {
-    return true;
-  },
-
-  /**
-   * Starts an update check for this add-on. This will perform
-   * asynchronously and deliver results to the given listener.
-   *
-   * @param  aListener
-   *         An UpdateListener for the update process
-   * @param  aReason
-   *         A reason code for performing the update
-   * @param  aAppVersion
-   *         An application version to check for updates for
-   * @param  aPlatformVersion
-   *         A platform version to check for updates for
-   */
-  findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
-    if ("onNoCompatibilityUpdateAvailable" in aListener)
-      aListener.onNoCompatibilityUpdateAvailable(this);
-    if ("onNoUpdateAvailable" in aListener)
-      aListener.onNoUpdateAvailable(this);
-    if ("onUpdateFinished" in aListener)
-      aListener.onUpdateFinished(this);
-  },
 
   toJSON() {
     let json = {};
@@ -512,12 +397,7 @@ var AddonRepository = {
     let now = Math.round(Date.now() / 1000);
 
     let lastUpdate = Services.prefs.getIntPref(PREF_METADATA_LASTUPDATE, 0);
-
-    // Handle clock jumps
-    if (now < lastUpdate) {
-      return now;
-    }
-    return now - lastUpdate;
+    return Math.max(0, now - lastUpdate);
   },
 
   isMetadataStale() {

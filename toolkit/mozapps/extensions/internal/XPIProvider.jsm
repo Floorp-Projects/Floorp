@@ -5755,10 +5755,9 @@ function defineAddonWrapperProperty(name, getter) {
    });
 });
 
-["fullDescription", "developerComments", "eula", "supportURL",
- "contributionURL", "contributionAmount", "averageRating", "reviewCount",
- "reviewURL", "totalDownloads", "weeklyDownloads", "dailyUsers",
- "repositoryStatus"].forEach(function(aProp) {
+["fullDescription", "developerComments", "supportURL",
+ "contributionURL", "averageRating", "reviewCount",
+ "reviewURL"].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
     if (addon._repositoryAddon)

@@ -8,9 +8,6 @@ ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
                                "resource://gre/modules/AddonManager.jsm");
 
-ChromeUtils.defineModuleGetter(this, "AddonRepository",
-                               "resource://gre/modules/addons/AddonRepository.jsm");
-
 ChromeUtils.defineModuleGetter(this, "GMPInstallManager",
                                "resource://gre/modules/GMPInstallManager.jsm");
 
