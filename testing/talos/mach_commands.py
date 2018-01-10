@@ -48,6 +48,13 @@ class TalosRunner(MozbuildObject):
         self.talos_args = talos_args
 
     def make_config(self):
+        default_actions = ['populate-webroot']
+        if not os.path.exists(self.virtualenv_path):
+            default_actions.append('create-virtualenv')
+        default_actions.extend([
+            'setup-mitmproxy',
+            'run-tests',
+        ])
         self.config = {
             'run_local': True,
             'talos_json': self.talos_json,
@@ -63,12 +70,7 @@ class TalosRunner(MozbuildObject):
                 'virtualenv': [self.python_interp, self.virtualenv_script]
             },
             'title': socket.gethostname(),
-            'default_actions': [
-                'populate-webroot',
-                'create-virtualenv',
-                'setup-mitmproxy',
-                'run-tests',
-            ],
+            'default_actions': default_actions,
             'download_tooltool': True,
             'talos_extra_options': ['--develop'] + self.talos_args,
             'python3_manifest': {
