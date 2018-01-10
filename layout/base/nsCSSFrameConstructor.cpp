@@ -7217,21 +7217,22 @@ nsCSSFrameConstructor::CheckBitsForLazyFrameConstruction(nsIContent* aParent)
 //
 // But we disable lazy frame construction for shadow trees... We should fix
 // that, too.
+//
+// NOTE(emilio): The IsXULElement check is pretty unfortunate, but there's tons
+// of browser chrome code that rely on XBL bindings getting synchronously loaded
+// as soon as the elements get inserted in the DOM.
 bool
 nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
                                             nsIContent* aContainer,
                                             nsIContent* aChild)
 {
-  if (mPresShell->GetPresContext()->IsChrome() || !aContainer ||
-      aContainer->IsInNativeAnonymousSubtree() || aContainer->IsXULElement()) {
+  if (!aContainer || aContainer->IsInNativeAnonymousSubtree() ||
+      aContainer->IsXULElement()) {
     return false;
   }
 
   if (aOperation == CONTENTINSERT) {
-    if (aChild->IsRootOfAnonymousSubtree() ||
-        (aChild->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
-         !aChild->IsInNativeAnonymousSubtree()) ||
-        aChild->IsXULElement()) {
+    if (aChild->IsRootOfAnonymousSubtree() || aChild->IsXULElement()) {
       return false;
     }
   } else { // CONTENTAPPEND
@@ -7239,7 +7240,7 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
                  "operation should be either insert or append");
     for (nsIContent* child = aChild; child; child = child->GetNextSibling()) {
       NS_ASSERTION(!child->IsRootOfAnonymousSubtree(),
-                   "Should be coming through the CONTENTAPPEND case");
+                   "Should be coming through the CONTENTINSERT case");
       if (child->IsXULElement()) {
         return false;
       }

@@ -2,7 +2,10 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!DOCTYPE html>
+<!DOCTYPE html [
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+]>
 <html xmlns="http://www.w3.org/1999/xhtml" width="620">
 <head>
   <title data-localization="addNewAddressTitle"/>
@@ -11,7 +14,7 @@
   <link rel="stylesheet" href="chrome://formautofill/skin/editDialog.css"/>
   <script src="chrome://formautofill/content/editDialog.js"></script>
 </head>
-<body>
+<body dir="&locale.dir;">
   <form id="form" autocomplete="off">
     <div>
       <div id="name-container">

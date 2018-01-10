@@ -15,10 +15,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=686942
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 2);
-}
-
 var manager = new MediaTestManager;
 
 function onloaded(event) {

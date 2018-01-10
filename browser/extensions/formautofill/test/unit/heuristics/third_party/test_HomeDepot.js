@@ -14,7 +14,7 @@ runHeuristicsTest([
           {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
           {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
           {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
-
+        ], [
           // FIXME: bug 1392944 - the uncommented cc-exp-month and cc-exp-year are
           // both invisible <input> elements, and the following two <select>
           // elements are the correct ones. BTW, they are both applied

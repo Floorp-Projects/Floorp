@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -e
 set -x
 
 hfplus_version=540.1.linux3
@@ -30,6 +31,19 @@ tar xzf $TMPDIR/${filename} -C hfsplus-source --strip-components=1
 
 # Build
 cd hfsplus-source
+# We want to statically link against libcrypto. On CentOS, that requires zlib
+# and libdl, because of FIPS functions pulling in more than necessary from
+# libcrypto (only SHA1 functions are used), but not on Debian, thus
+# --as-needed.
+patch -p1 << 'EOF'
+--- a/newfs_hfs.tproj/Makefile.lnx
++++ b/newfs_hfs.tproj/Makefile.lnx
+@@ -6,3 +6,3 @@
+ newfs_hfs: $(OFILES)
+-	${CC} ${CFLAGS} ${LDFLAGS} -o newfs_hfs ${OFILES} -lcrypto
++	${CC} ${CFLAGS} ${LDFLAGS} -o newfs_hfs ${OFILES} -Wl,-Bstatic -lcrypto -Wl,-Bdynamic,--as-needed,-lz,-ldl
+ 
+EOF
 make $make_flags || exit 1
 cd ..
 

@@ -30,11 +30,12 @@ runHeuristicsTest([
         [
           {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "given-name"},
           {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "family-name"},
+          {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "tel"},
+        ], [
           {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "cc-number"},
           {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"},
           {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"},
 //        {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "cc-csc"},
-          {"section": "section-payment", "addressType": "", "contactType": "", "fieldName": "tel"},
         ], [
           // FIXME bug 1392932 - the following field shouldn't be recognized as
           // "tel-extension".

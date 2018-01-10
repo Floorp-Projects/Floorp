@@ -346,9 +346,15 @@ function getTestName() { // returns tp5n
 }
 
 function getCurrentPageShortName() {
+  // this is also used by gecko profiling for the profile
+  // file name; so ensure it is valid on Windows/Linux/OSX
   var pageName = pages[pageIndex].url.spec;
   let parts = pageName.split("/");
   if (parts.length > 5) {
+    if (parts[5].indexOf("?" != -1)) {
+      // page name is something like 'tpaint.html?auto=1'
+      return parts[5].split("?")[0];
+    }
     return parts[5];
   }
   return "page_" + pageIndex;

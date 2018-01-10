@@ -50,7 +50,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["maxHistoricalSearchSuggestions", 0],
   ["usepreloadedtopurls.enabled", true],
   ["usepreloadedtopurls.expire_days", 14],
-  ["matchBuckets", "general:5,suggestion:Infinity"],
+  ["matchBuckets", "suggestion:4,general:Infinity"],
   ["matchBucketsSearch", ""],
   ["insertMethod", INSERTMETHOD.MERGE_RELATED],
 ]);

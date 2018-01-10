@@ -3,10 +3,10 @@
 
 "use strict";
 
-// A test to ensure Style Editor only issues 1 request for a stylesheet (instead of 2) by
-// using the network monitor's request history (bug 1306892).
+// A test to ensure Style Editor only issues 1 request for each stylesheet (instead of 2)
+// by using the network monitor's request history (bug 1306892).
 
-const TEST_URL = TEST_BASE_HTTP + "doc_uncached.html";
+const TEST_URL = TEST_BASE_HTTP + "doc_fetch_from_netmonitor.html";
 
 add_task(function* () {
   info("Opening netmonitor");
@@ -27,18 +27,27 @@ add_task(function* () {
 
   info("Opening Style Editor");
   let styleeditor = yield toolbox.selectTool("styleeditor");
+  let ui = styleeditor.UI;
 
-  info("Waiting for the source to be loaded.");
-  yield styleeditor.UI.editors[0].getSourceEditor();
+  info("Waiting for the sources to be loaded.");
+  yield ui.editors[0].getSourceEditor();
+  yield ui.selectStyleSheet(ui.editors[1].styleSheet);
+  yield ui.editors[1].getSourceEditor();
 
   info("Checking Netmonitor contents.");
-  let items = [];
+  let shortRequests = [];
+  let longRequests = [];
   for (let item of getSortedRequests(store.getState())) {
-    if (item.url.endsWith("doc_uncached.css")) {
-      items.push(item);
+    if (item.url.endsWith("doc_short_string.css")) {
+      shortRequests.push(item);
+    }
+    if (item.url.endsWith("doc_long_string.css")) {
+      longRequests.push(item);
     }
   }
 
-  is(items.length, 1,
-     "Got one request for doc_uncached.css after Style Editor was loaded.");
+  is(shortRequests.length, 1,
+     "Got one request for doc_short_string.css after Style Editor was loaded.");
+  is(longRequests.length, 1,
+     "Got one request for doc_long_string.css after Style Editor was loaded.");
 });

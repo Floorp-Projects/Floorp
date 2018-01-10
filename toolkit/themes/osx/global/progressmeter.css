@@ -11,12 +11,8 @@ progressmeter {
   height: 12px;
 }
 
-.progress-remainder[flex="100"], .progress-remainder[flex="0"] {
+.progress-remainder[flex="100"],
+.progress-remainder[flex="0"] {
   background-image: none !important;
   -moz-appearance: none;
-}
-
-.progressmeter-statusbar {
-  margin: 0;
-  border-width: 1px;
 }

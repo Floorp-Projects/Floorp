@@ -80,6 +80,8 @@ PrintProgressDialogParent::RecvDocURLChange(const nsString& newURL)
 void
 PrintProgressDialogParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  // If IPC actor is destroyed, we can't send to child via IPC.
+  mActive = false;
 }
 
 mozilla::ipc::IPCResult
@@ -96,15 +98,15 @@ NS_IMETHODIMP
 PrintProgressDialogParent::Observe(nsISupports *aSubject, const char *aTopic,
                                    const char16_t *aData)
 {
-  if (aTopic && !strcmp(aTopic, "cancelled")) {
-    Unused << SendCancelledCurrentJob();
-  } else {
-    if (mActive) {
-      Unused << SendDialogOpened();
+  if (mActive) {
+    if (aTopic && !strcmp(aTopic, "cancelled")) {
+      Unused << SendCancelledCurrentJob();
     } else {
-      NS_WARNING("The print progress dialog finished opening, but communications "
-                 "with the child have been closed.");
+      Unused << SendDialogOpened();
     }
+  } else {
+    NS_WARNING("The print progress dialog finished opening, but communications "
+               "with the child have been closed.");
   }
 
   return NS_OK;

@@ -12,7 +12,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
 
 public class GeckoHLSResourceWrapper {
     private static final String LOGTAG = "GeckoHLSResourceWrapper";
-    private static final boolean DEBUG = BuildConfig.NIGHTLY_BUILD || BuildConfig.DEBUG_BUILD;
+    private static final boolean DEBUG = !BuildConfig.MOZILLA_OFFICIAL;
     private BaseHlsPlayer mPlayer = null;
     private boolean mDestroy = false;
 
