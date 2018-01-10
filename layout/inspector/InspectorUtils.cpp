@@ -769,6 +769,9 @@ InspectorUtils::GetCSSValuesForProperty(GlobalObject& aGlobalObject,
     GetColorsForProperty(propertyParserVariant, aResult);
     GetKeywordsForProperty(propertyID, aResult);
     GetOtherValuesForProperty(propertyParserVariant, aResult);
+  } else if (propertyID == eCSSProperty_all) {
+    // We don't want to pick up everything from gAllSubpropTable, so
+    // special-case this here.
   } else {
     // Property is shorthand.
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(subproperty, propertyID,
