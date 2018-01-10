@@ -64,6 +64,7 @@ struct CompiledCode
     CodeRangeVector      codeRanges;
     CallSiteVector       callSites;
     CallSiteTargetVector callSiteTargets;
+    TrapSiteVectorArray  trapSites;
     OldTrapSiteVector    oldTrapSites;
     OldTrapFarJumpVector oldTrapFarJumps;
     CallFarJumpVector    callFarJumps;
@@ -78,6 +79,7 @@ struct CompiledCode
         codeRanges.clear();
         callSites.clear();
         callSiteTargets.clear();
+        trapSites.clear();
         oldTrapSites.clear();
         oldTrapFarJumps.clear();
         callFarJumps.clear();
@@ -92,6 +94,7 @@ struct CompiledCode
                codeRanges.empty() &&
                callSites.empty() &&
                callSiteTargets.empty() &&
+               trapSites.empty() &&
                oldTrapSites.empty() &&
                oldTrapFarJumps.empty() &&
                callFarJumps.empty() &&
