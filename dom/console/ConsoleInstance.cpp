@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/ConsoleInstance.h"
 #include "mozilla/dom/ConsoleBinding.h"
+#include "ConsoleCommon.h"
 
 namespace mozilla {
 namespace dom {
@@ -132,7 +133,7 @@ ConsoleInstance::TimeEnd(JSContext* aCx, const nsAString& aLabel)
 void
 ConsoleInstance::TimeStamp(JSContext* aCx, const JS::Handle<JS::Value> aData)
 {
-  ClearException ce(aCx);
+  ConsoleCommon::ClearException ce(aCx);
 
   Sequence<JS::Value> data;
   SequenceRooter<JS::Value> rooter(aCx, &data);
