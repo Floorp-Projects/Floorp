@@ -4480,10 +4480,10 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
   }
 
   // IMEs don't like empty rects, fix here
-  if (event.mReply.mRect.width <= 0)
-    event.mReply.mRect.width = 1;
-  if (event.mReply.mRect.height <= 0)
-    event.mReply.mRect.height = 1;
+  if (event.mReply.mRect.Width() <= 0)
+    event.mReply.mRect.SetWidth(1);
+  if (event.mReply.mRect.Height() <= 0)
+    event.mReply.mRect.SetHeight(1);
 
   // convert to unclipped screen rect
   nsWindow* refWindow = static_cast<nsWindow*>(
@@ -4509,7 +4509,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
 
   // clip text rect to bounding rect
   RECT textRect;
-  ::SetRect(&textRect, event.mReply.mRect.x, event.mReply.mRect.y,
+  ::SetRect(&textRect, event.mReply.mRect.X(), event.mReply.mRect.Y(),
             event.mReply.mRect.XMost(), event.mReply.mRect.YMost());
   if (!::IntersectRect(prc, prc, &textRect))
     // Text is not visible
@@ -4621,7 +4621,7 @@ TSFTextStore::GetScreenExtInternal(RECT& aScreenExt)
   boundRect.IntersectRect(event.mReply.mRect, boundRect);
   if (!boundRect.IsEmpty()) {
     boundRect.MoveBy(refWindow->WidgetToScreenOffset());
-    ::SetRect(&aScreenExt, boundRect.x, boundRect.y,
+    ::SetRect(&aScreenExt, boundRect.X(), boundRect.Y(),
               boundRect.XMost(), boundRect.YMost());
   } else {
     ::SetRectEmpty(&aScreenExt);
@@ -5941,9 +5941,9 @@ TSFTextStore::OnMouseButtonEventInternal(
   nsIntPoint cursorPos =
     aIMENotification.mMouseButtonEventData.mCursorPos.AsIntPoint();
   ULONG quadrant = 1;
-  if (charRect.width > 0) {
-    int32_t cursorXInChar = cursorPos.x - charRect.x;
-    quadrant = cursorXInChar * 4 / charRect.width;
+  if (charRect.Width() > 0) {
+    int32_t cursorXInChar = cursorPos.x - charRect.X();
+    quadrant = cursorXInChar * 4 / charRect.Width();
     quadrant = (quadrant + 2) % 4;
   }
   ULONG edge = quadrant < 2 ? offset + 1 : offset;
@@ -6038,7 +6038,7 @@ TSFTextStore::CreateNativeCaret()
 
   LayoutDeviceIntRect& caretRect = queryCaretRect.mReply.mRect;
   mNativeCaretIsCreated = ::CreateCaret(mWidget->GetWindowHandle(), nullptr,
-                                        caretRect.width, caretRect.height);
+                                        caretRect.Width(), caretRect.Height());
   if (!mNativeCaretIsCreated) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
       ("0x%p   TSFTextStore::CreateNativeCaret() FAILED due to "
@@ -6060,7 +6060,7 @@ TSFTextStore::CreateNativeCaret()
     caretRect.MoveBy(-window->WidgetToScreenOffset());
   }
 
-  ::SetCaretPos(caretRect.x, caretRect.y);
+  ::SetCaretPos(caretRect.X(), caretRect.Y());
 }
 
 void

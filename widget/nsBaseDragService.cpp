@@ -543,9 +543,9 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   *aPresContext = nullptr;
 
   // use a default size, in case of an error.
-  aScreenDragRect->MoveTo(aScreenPosition.x - mImageOffset.x,
-                          aScreenPosition.y - mImageOffset.y);
-  aScreenDragRect->SizeTo(1, 1);
+  aScreenDragRect->SetRect(aScreenPosition.x - mImageOffset.x,
+                           aScreenPosition.y - mImageOffset.y,
+                           1, 1);
 
   // if a drag image was specified, use that, otherwise, use the source node
   nsCOMPtr<nsIDOMNode> dragNode = mImage ? mImage.get() : aDOMNode;
@@ -581,8 +581,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   screenPosition.x -= mImageOffset.x;
   screenPosition.y -= mImageOffset.y;
   LayoutDeviceIntPoint screenPoint = ConvertToUnscaledDevPixels(*aPresContext, screenPosition);
-  aScreenDragRect->x = screenPoint.x;
-  aScreenDragRect->y = screenPoint.y;
+  aScreenDragRect->MoveTo(screenPoint.x, screenPoint.y);
 
   // check if drag images are disabled
   bool enableDragImages = Preferences::GetBool(DRAGIMAGES_PREF, true);
@@ -594,7 +593,9 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     CSSIntRect dragRect;
     if (aRegion) {
       // the region's coordinates are relative to the root frame
-      aRegion->GetBoundingBox(&dragRect.x, &dragRect.y, &dragRect.width, &dragRect.height);
+      int32_t dragRectX, dragRectY, dragRectW, dragRectH;
+      aRegion->GetBoundingBox(&dragRectX, &dragRectY, &dragRectW, &dragRectH);
+      dragRect.SetRect(dragRectX, dragRectY, dragRectW, dragRectH);
 
       nsIFrame* rootFrame = presShell->GetRootFrame();
       CSSIntRect screenRect = rootFrame->GetScreenRect();
@@ -613,7 +614,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
     nsIntRect dragRectDev =
       ToAppUnits(dragRect, nsPresContext::AppUnitsPerCSSPixel()).
       ToOutsidePixels((*aPresContext)->AppUnitsPerDevPixel());
-    aScreenDragRect->SizeTo(dragRectDev.width, dragRectDev.height);
+    aScreenDragRect->SizeTo(dragRectDev.Width(), dragRectDev.Height());
     return NS_OK;
   }
 
@@ -698,8 +699,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 
   // If an image was specified, reset the position from the offset that was supplied.
   if (mImage) {
-    aScreenDragRect->x = screenPoint.x;
-    aScreenDragRect->y = screenPoint.y;
+    aScreenDragRect->MoveTo(screenPoint.x, screenPoint.y);
   }
 
   return NS_OK;
@@ -734,20 +734,19 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     rv = imgContainer->GetHeight(&imageHeight);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    aScreenDragRect->width = aPresContext->CSSPixelsToDevPixels(imageWidth);
-    aScreenDragRect->height = aPresContext->CSSPixelsToDevPixels(imageHeight);
+    aScreenDragRect->SizeTo(aPresContext->CSSPixelsToDevPixels(imageWidth),
+                            aPresContext->CSSPixelsToDevPixels(imageHeight));
   }
   else {
     // XXX The canvas size should be converted to dev pixels.
     NS_ASSERTION(aCanvas, "both image and canvas are null");
     nsIntSize sz = aCanvas->GetSize();
-    aScreenDragRect->width = sz.width;
-    aScreenDragRect->height = sz.height;
+    aScreenDragRect->SizeTo(sz.width, sz.height);
   }
 
   nsIntSize destSize;
-  destSize.width = aScreenDragRect->width;
-  destSize.height = aScreenDragRect->height;
+  destSize.width = aScreenDragRect->Width();
+  destSize.height = aScreenDragRect->Height();
   if (destSize.width == 0 || destSize.height == 0)
     return NS_ERROR_FAILURE;
 

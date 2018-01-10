@@ -156,7 +156,7 @@ ScreenManager::ScreenForRect(int32_t aX, int32_t aY,
     // calculate the surface area
     DesktopIntRect screenRect(x, y, width, height);
     screenRect.IntersectRect(screenRect, windowRect);
-    uint32_t tempArea = screenRect.width * screenRect.height;
+    uint32_t tempArea = screenRect.Area();
     if (tempArea > area) {
       which = screen.get();
       area = tempArea;

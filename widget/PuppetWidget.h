@@ -108,11 +108,10 @@ public:
                       double aHeight,
                       bool   aRepaint) override
   {
-    if (mBounds.x != aX || mBounds.y != aY) {
+    if (!mBounds.IsEqualXY(aX, aY)) {
       NotifyWindowMoved(aX, aY);
     }
-    mBounds.x = aX;
-    mBounds.y = aY;
+    mBounds.MoveTo(aX, aY);
     return Resize(aWidth, aHeight, aRepaint);
   }
 

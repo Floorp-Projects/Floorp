@@ -51,8 +51,8 @@ CollectMonitors(HMONITOR aMon, HDC hDCScreen, LPRECT, LPARAM ioParam)
   float dpi = WinUtils::MonitorDPI(aMon);
   MOZ_LOG(sScreenLog, LogLevel::Debug,
            ("New screen [%d %d %d %d (%d %d %d %d) %d %f %f %f]",
-            rect.x, rect.y, rect.width, rect.height,
-            availRect.x, availRect.y, availRect.width, availRect.height,
+            rect.X(), rect.Y(), rect.Width(), rect.Height(),
+            availRect.X(), availRect.Y(), availRect.Width(), availRect.Height(),
             pixelDepth, contentsScaleFactor.scale, defaultCssScaleFactor.scale,
             dpi));
   auto screen = new Screen(rect, availRect,

@@ -87,7 +87,7 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
   if (!surface)
     return false;
 
-  uint32_t bmWidth = dragRect.width, bmHeight = dragRect.height;
+  uint32_t bmWidth = dragRect.Width(), bmHeight = dragRect.Height();
 
   if (bmWidth == 0 || bmHeight == 0)
     return false;
@@ -152,8 +152,8 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
 
     LayoutDeviceIntPoint screenPoint =
       ConvertToUnscaledDevPixels(pc, mScreenPosition);
-    psdi->ptOffset.x = screenPoint.x - dragRect.x;
-    psdi->ptOffset.y = screenPoint.y - dragRect.y;
+    psdi->ptOffset.x = screenPoint.x - dragRect.X();
+    psdi->ptOffset.y = screenPoint.y - dragRect.Y();
 
     DeleteDC(hdcSrc);
   }

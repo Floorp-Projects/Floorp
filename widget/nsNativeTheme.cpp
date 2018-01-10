@@ -482,7 +482,7 @@ nsNativeTheme::IsLastTreeHeaderCell(nsIFrame* aFrame)
     return false;
 
   while ((aFrame = aFrame->GetNextSibling())) {
-    if (aFrame->GetRect().width > 0)
+    if (aFrame->GetRect().Width() > 0)
       return false;
   }
   return true;
@@ -512,7 +512,7 @@ nsNativeTheme::IsFirstTab(nsIFrame* aFrame)
     return false;
 
   for (nsIFrame* first : aFrame->GetParent()->PrincipalChildList()) {
-    if (first->GetRect().width > 0 &&
+    if (first->GetRect().Width() > 0 &&
         first->GetContent()->IsXULElement(nsGkAtoms::tab))
       return (first == aFrame);
   }
@@ -547,7 +547,7 @@ nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, int32_t aOffset)
 
   nsIFrame* currentTab = aFrame->GetParent()->PrincipalChildList().FirstChild();
   for (int32_t i = 0; currentTab; currentTab = currentTab->GetNextSibling()) {
-    if (currentTab->GetRect().width == 0)
+    if (currentTab->GetRect().Width() == 0)
       continue;
     if (aFrame == currentTab)
       thisTabIndex = i;
@@ -625,7 +625,7 @@ nsNativeTheme::IsSubmenu(nsIFrame* aFrame, bool* aLeftOfParent)
         LayoutDeviceIntRect selfBounds, parentBounds;
         selfBounds = aFrame->GetNearestWidget()->GetScreenBounds();
         parentBounds = parent->GetNearestWidget()->GetScreenBounds();
-        *aLeftOfParent = selfBounds.x < parentBounds.x;
+        *aLeftOfParent = selfBounds.X() < parentBounds.X();
       }
       return true;
     }
@@ -733,13 +733,13 @@ nsNativeTheme::GetAdjacentSiblingFrameWithSameAppearance(nsIFrame* aFrame,
   nsIFrame* sibling = aFrame;
   do {
     sibling = aNextSibling ? sibling->GetNextSibling() : sibling->GetPrevSibling();
-  } while (sibling && sibling->GetRect().width == 0);
+  } while (sibling && sibling->GetRect().Width() == 0);
 
   // Check same appearance and adjacency.
   if (!sibling ||
       sibling->StyleDisplay()->mAppearance != aFrame->StyleDisplay()->mAppearance ||
-      (sibling->GetRect().XMost() != aFrame->GetRect().x &&
-       aFrame->GetRect().XMost() != sibling->GetRect().x))
+      (sibling->GetRect().XMost() != aFrame->GetRect().X() &&
+       aFrame->GetRect().XMost() != sibling->GetRect().X()))
     return nullptr;
   return sibling;
 }

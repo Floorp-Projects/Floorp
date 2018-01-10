@@ -660,10 +660,7 @@ struct IMENotification final
 
     void Set(const nsIntRect& aRect)
     {
-      mX = aRect.x;
-      mY = aRect.y;
-      mWidth = aRect.Width();
-      mHeight = aRect.Height();
+      aRect.GetRect(&mX, &mY, &mWidth, &mHeight);
     }
     nsIntRect AsIntRect() const
     {
