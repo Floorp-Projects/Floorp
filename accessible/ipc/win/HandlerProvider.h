@@ -15,6 +15,7 @@
 #include "mozilla/mscom/StructStream.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
+#include "HandlerData.h"
 
 struct NEWEST_IA2_INTERFACE;
 
