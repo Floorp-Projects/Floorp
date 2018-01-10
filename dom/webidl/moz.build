@@ -725,7 +725,6 @@ WEBIDL_FILES = [
     'PerformanceObserver.webidl',
     'PerformanceObserverEntryList.webidl',
     'PerformanceResourceTiming.webidl',
-    'PerformanceServerTiming.webidl',
     'PerformanceTiming.webidl',
     'PeriodicWave.webidl',
     'Permissions.webidl',
