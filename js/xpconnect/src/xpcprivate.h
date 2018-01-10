@@ -2353,18 +2353,6 @@ xpc_JSObjectToID(JSContext* cx, JSObject* obj);
 extern bool
 xpc_JSObjectIsID(JSContext* cx, JSObject* obj);
 
-/***************************************************************************/
-// in XPCDebug.cpp
-
-extern bool
-xpc_DumpJSStack(bool showArgs, bool showLocals, bool showThisProps);
-
-// Return a newly-allocated string containing a representation of the
-// current JS stack.
-extern JS::UniqueChars
-xpc_PrintJSStack(JSContext* cx, bool showArgs, bool showLocals,
-                 bool showThisProps);
-
 /******************************************************************************
  * Handles pre/post script processing.
  */
