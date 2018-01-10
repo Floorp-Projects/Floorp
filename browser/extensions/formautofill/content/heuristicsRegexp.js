@@ -222,6 +222,7 @@ var HeuristicsRegExp = {
     ),
     "cc-number": new RegExp(
       "(add)?(?:card|cc|acct).?(?:number|#|no|num|field)" +
+      "|(cc|kk)nr" + // Extra rules by Firefox for de-DE
       "|nummer" + // de-DE
       "|credito|numero|número" + // es
       "|numéro" + // fr-FR
@@ -234,6 +235,7 @@ var HeuristicsRegExp = {
     ),
     "cc-exp-month": new RegExp(
       "expir|exp.*mo|exp.*date|ccmonth|cardmonth|addmonth" +
+      "|(cc|kk)month" + // Extra rules by Firefox for de-DE
       "|gueltig|gültig|monat" + // de-DE
       "|fecha" + // es
       "|date.*exp" + // fr-FR
@@ -246,6 +248,7 @@ var HeuristicsRegExp = {
     ),
     "cc-exp-year": new RegExp(
       "exp|^/|(add)?year" +
+      "|(cc|kk)year" + // Extra rules by Firefox for de-DE
       "|ablaufdatum|gueltig|gültig|jahr" + // de-DE
       "|fecha" + // es
       "|scadenza" + // it-IT
