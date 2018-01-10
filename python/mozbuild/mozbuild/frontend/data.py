@@ -17,6 +17,7 @@ structures.
 
 from __future__ import absolute_import, unicode_literals
 
+from mozbuild.frontend.context import ObjDirPath
 from mozbuild.util import StrictOrderingOnAppendList
 from mozpack.chrome.manifest import ManifestEntry
 
@@ -84,6 +85,10 @@ class ContextDerived(TreeMetadata):
     @property
     def install_target(self):
         return self._context['FINAL_TARGET']
+
+    @property
+    def installed(self):
+        return self._context['DIST_INSTALL'] is not False
 
     @property
     def defines(self):
@@ -471,6 +476,13 @@ class BaseProgram(Linkable):
             program += bin_suffix
         self.program = program
         self.is_unit_test = is_unit_test
+
+    @property
+    def output_path(self):
+        if self.installed:
+            return ObjDirPath(self._context, '!/' + mozpath.join(self.install_target, self.program))
+        else:
+            return ObjDirPath(self._context, '!' + self.program)
 
     def __repr__(self):
         return '<%s: %s/%s>' % (type(self).__name__, self.relobjdir, self.program)

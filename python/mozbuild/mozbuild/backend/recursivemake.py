@@ -1129,7 +1129,7 @@ class RecursiveMakeBackend(CommonBackend):
         ))
 
     def _process_program(self, obj, backend_file):
-        backend_file.write('PROGRAM = %s\n' % obj.program)
+        backend_file.write('PROGRAM = %s\n' % self._pretty_path(obj.output_path, backend_file))
         if not obj.cxx_link and not self.environment.bin_suffix:
             backend_file.write('PROG_IS_C_ONLY_%s := 1\n' % obj.program)
 
