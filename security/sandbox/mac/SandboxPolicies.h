@@ -334,6 +334,10 @@ static const char contentSandboxRules[] = R"(
   ; bug 1404919
   ; Read access (recursively) within directories ending in .fontvault
   (allow file-read* (regex #"\.fontvault/"))
+
+  ; bug 1429133
+  ; Read access to the default FontExplorer font directory
+  (allow file-read* (home-subpath "/FontExplorer X/Font Library"))
 )";
 
 static const char fileContentProcessAddend[] = R"(
