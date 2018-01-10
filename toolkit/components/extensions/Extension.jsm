@@ -704,6 +704,13 @@ class ExtensionData {
   getAPIManager() {
     let apiManagers = [Management];
 
+    for (let id of this.dependencies) {
+      let policy = WebExtensionPolicy.getByID(id);
+      if (policy) {
+        apiManagers.push(policy.extension.experimentAPIManager);
+      }
+    }
+
     if (this.modules) {
       this.experimentAPIManager =
         new ExtensionCommon.LazyAPIManager("main", this.modules.parent, this.schemaURLs);
@@ -1329,7 +1336,9 @@ class Extension extends ExtensionData {
         Array.from(this.apiNames, api => ExtensionCommon.ExtensionAPIs.load(api)));
 
       for (let API of apis) {
-        this.apis.push(new API(this));
+        if (API) {
+          this.apis.push(new API(this));
+        }
       }
     }
 
@@ -1354,6 +1363,7 @@ class Extension extends ExtensionData {
       whiteListedHosts: this.whiteListedHosts.patterns.map(pat => pat.pattern),
       localeData: this.localeData.serialize(),
       childModules: this.modules && this.modules.child,
+      dependencies: this.dependencies,
       permissions: this.permissions,
       principal: this.principal,
       optionalPermissions: this.manifest.optional_permissions,
@@ -1539,6 +1549,8 @@ class Extension extends ExtensionData {
       this.policy.active = true;
     }
 
+    this.policy.extension = this;
+
     TelemetryStopwatch.start("WEBEXT_EXTENSION_STARTUP_MS", this);
     try {
       await this.loadManifest();
@@ -1559,6 +1571,7 @@ class Extension extends ExtensionData {
 
       this.policy.active = false;
       this.policy = processScript.initExtension(this);
+      this.policy.extension = this;
 
       this.updatePermissions(this.startupReason);
 
