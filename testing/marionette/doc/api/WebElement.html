@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Namespace: addon</title>
+    <title>JSDoc: Class: WebElement</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Namespace: addon</h1>
+    <h1 class="page-title">Class: WebElement</h1>
 
     
 
@@ -28,7 +28,12 @@
 
 <header>
     
-        <h2>addon</h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>WebElement<span class="signature">(uuid)</span><span class="type-signature"></span></h2>
+        
+            <div class="class-description"><p>A web element is an abstraction used to identify an element when
+it is transported via the protocol, between remote- and local ends.</p>
+<p>In Marionette this abstraction can represent DOM elements,
+WindowProxies, and XUL elements.</p></div>
         
     
 </header>
@@ -38,7 +43,78 @@
     
         
 
+    
+    <h2>Constructor</h2>
+    
+
+    
+    <h4 class="name" id="WebElement"><span class="type-signature"></span>new WebElement<span class="signature">(uuid)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
         
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>uuid</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Identifier that must be unique across all browsing contexts
+    for the contract to be upheld.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
 
 
 <dl class="details">
@@ -70,7 +146,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addon.js.html">addon.js</a>, <a href="addon.js.html#line17">line 17</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1329">line 1329</a>
     </li></ul></dd>
     
 
@@ -82,7 +158,22 @@
 </dl>
 
 
-        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     </div>
 
@@ -109,7 +200,7 @@
     
 
     
-    <h4 class="name" id=".install"><span class="type-signature">(static) </span>install<span class="signature">(path, temporary<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Promise.&lt;string>}</span></h4>
+    <h4 class="name" id=".from"><span class="type-signature">(static) </span>from<span class="signature">(node)</span><span class="type-signature"> &rarr; {<a href="ContentWebElement.html">ContentWebElement</a>|<a href="ChromeWebElement.html">ChromeWebElement</a>}</span></h4>
     
 
     
@@ -117,11 +208,8 @@
 
 
 <div class="description">
-    <p>Install a Firefox addon.</p>
-<p>If the addon is restartless, it can be used right away.  Otherwise a
-restart is required.</p>
-<p>Temporary addons will automatically be uninstalled on shutdown and
-do not need to be signed, though they must be restartless.</p>
+    <p>Returns a new <a href="WebElement.html"><code>WebElement</code></a> reference for a DOM element,
+<code>WindowProxy</code>, or XUL element.</p>
 </div>
 
 
@@ -145,8 +233,6 @@ do not need to be signed, though they must be restartless.</p>
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
         
 
@@ -159,64 +245,29 @@ do not need to be signed, though they must be restartless.</p>
 
         <tr>
             
-                <td class="name"><code>path</code></td>
+                <td class="name"><code>node</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">string</span>
+<span class="param-type">Element</span>
+|
+
+<span class="param-type">WindowProxy</span>
+|
+
+<span class="param-type">XULElement</span>
 
 
             
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
-            <td class="description last"><p>Full path to the extension package archive.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>temporary</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last"><p>True to install the addon temporarily, false (default) otherwise.</p></td>
+            <td class="description last"><p>Node to construct a web element reference for.</p></td>
         </tr>
 
     
@@ -257,7 +308,7 @@ do not need to be signed, though they must be restartless.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addon.js.html">addon.js</a>, <a href="addon.js.html#line90">line 90</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1372">line 1372</a>
     </li></ul></dd>
     
 
@@ -285,7 +336,8 @@ do not need to be signed, though they must be restartless.</p>
 <dl>
     <dt>
         <div class="param-desc">
-        <p>If there is a problem installing the addon.</p>
+        <p>If <var>node</var> is neither a <code>WindowProxy</code>,
+    DOM element, or a XUL element.</p>
         </div>
     </dt>
     <dd></dd>
@@ -296,7 +348,7 @@ do not need to be signed, though they must be restartless.</p>
             </dt>
             <dd>
                 
-<span class="param-type">UnknownError</span>
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
 
 
             </dd>
@@ -313,7 +365,7 @@ do not need to be signed, though they must be restartless.</p>
 
         
 <div class="param-desc">
-    <p>Addon ID.</p>
+    <p>Web element reference for <var>el</var>.</p>
 </div>
 
 
@@ -324,7 +376,10 @@ do not need to be signed, though they must be restartless.</p>
     </dt>
     <dd>
         
-<span class="param-type">Promise.&lt;string></span>
+<span class="param-type"><a href="ContentWebElement.html">ContentWebElement</a></span>
+|
+
+<span class="param-type"><a href="ChromeWebElement.html">ChromeWebElement</a></span>
 
 
     </dd>
@@ -342,7 +397,7 @@ do not need to be signed, though they must be restartless.</p>
     
 
     
-    <h4 class="name" id=".uninstall"><span class="type-signature">(static) </span>uninstall<span class="signature">(id)</span><span class="type-signature"> &rarr; {Promise}</span></h4>
+    <h4 class="name" id=".fromJSON"><span class="type-signature">(static) </span>fromJSON<span class="signature">(json)</span><span class="type-signature"> &rarr; {<a href="WebElement.html">WebElement</a>}</span></h4>
     
 
     
@@ -350,9 +405,9 @@ do not need to be signed, though they must be restartless.</p>
 
 
 <div class="description">
-    <p>Uninstall a Firefox addon.</p>
-<p>If the addon is restartless it will be uninstalled right away.
-Otherwise, Firefox must be restarted for the change to take effect.</p>
+    <p>Unmarshals a JSON Object to one of <a href="ContentWebElement.html"><code>ContentWebElement</code></a>,
+<a href="ContentWebWindow.html"><code>ContentWebWindow</code></a>, <a href="ContentWebFrame.html"><code>ContentWebFrame</code></a>, or
+<a href="ChromeWebElement.html"><code>ChromeWebElement</code></a>.</p>
 </div>
 
 
@@ -388,13 +443,13 @@ Otherwise, Firefox must be restarted for the change to take effect.</p>
 
         <tr>
             
-                <td class="name"><code>id</code></td>
+                <td class="name"><code>json</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">string</span>
+<span class="param-type">Object.&lt;string, string></span>
 
 
             
@@ -404,7 +459,9 @@ Otherwise, Firefox must be restarted for the change to take effect.</p>
 
             
 
-            <td class="description last"><p>ID of the addon to uninstall.</p></td>
+            <td class="description last"><p>Web element reference, which is supposed to be a JSON Object
+    where the key is one of the <a href="WebElement.html"><code>WebElement</code></a> concrete
+    classes' UUID identifiers.</p></td>
         </tr>
 
     
@@ -445,7 +502,7 @@ Otherwise, Firefox must be restarted for the change to take effect.</p>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="addon.js.html">addon.js</a>, <a href="addon.js.html#line132">line 132</a>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1406">line 1406</a>
     </li></ul></dd>
     
 
@@ -473,7 +530,7 @@ Otherwise, Firefox must be restarted for the change to take effect.</p>
 <dl>
     <dt>
         <div class="param-desc">
-        <p>If there is a problem uninstalling the addon.</p>
+        <p>If <var>json</var> is not a web element reference.</p>
         </div>
     </dt>
     <dd></dd>
@@ -484,7 +541,7 @@ Otherwise, Firefox must be restarted for the change to take effect.</p>
             </dt>
             <dd>
                 
-<span class="param-type">UnknownError</span>
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
 
 
             </dd>
@@ -500,6 +557,10 @@ Otherwise, Firefox must be restarted for the change to take effect.</p>
 <h5>Returns:</h5>
 
         
+<div class="param-desc">
+    <p>Representation of the web element.</p>
+</div>
+
 
 
 <dl>
@@ -508,7 +569,652 @@ Otherwise, Firefox must be restarted for the change to take effect.</p>
     </dt>
     <dd>
         
-<span class="param-type">Promise</span>
+<span class="param-type"><a href="WebElement.html">WebElement</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".fromUUID"><span class="type-signature">(static) </span>fromUUID<span class="signature">(uuid, context)</span><span class="type-signature"> &rarr; {<a href="WebElement.html">WebElement</a>}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Constructs a <a href="ContentWebElement.html"><code>ContentWebElement</code></a> or <a href="ChromeWebElement.html"><code>ChromeWebElement</code></a>
+from a a string <var>uuid</var>.</p>
+<p>This whole function is a workaround for the fact that clients
+to Marionette occasionally pass <code>{id: <uuid>}</code> JSON
+Objects instead of web element representations.  For that reason
+we need the <var>context</var> argument to determine what kind of
+<a href="WebElement.html"><code>WebElement</code></a> to return.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>uuid</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>UUID to be associated with the web element.</p></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>context</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Context.html">Context</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Context, which is used to determine if the returned type
+    should be a content web element or a chrome web element.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1455">line 1455</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Throws:</h5>
+
+        
+
+<dl>
+    <dt>
+        <div class="param-desc">
+        <p>If <var>uuid</var> is not a string or <var>context</var>
+    is an invalid context.</p>
+        </div>
+    </dt>
+    <dd></dd>
+    <dt>
+        <dl>
+            <dt>
+                Type
+            </dt>
+            <dd>
+                
+<span class="param-type"><a href="InvalidArgumentError.html">InvalidArgumentError</a></span>
+
+
+            </dd>
+        </dl>
+    </dt>
+    <dd></dd>
+</dl>
+
+
+    
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>One of <a href="ContentWebElement.html"><code>ContentWebElement</code></a> or <a href="ChromeWebElement.html"><code>ChromeWebElement</code></a>,
+    based on <var>context</var>.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="WebElement.html">WebElement</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".generateUUID"><span class="type-signature">(static) </span>generateUUID<span class="signature">()</span><span class="type-signature"> &rarr; {string}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Generates a unique identifier.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1502">line 1502</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>UUID.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">string</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id=".isReference"><span class="type-signature">(static) </span>isReference<span class="signature">(obj)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Checks if <var>ref<var> is a <a href="WebElement.html"><code>WebElement</code></a> reference,
+i.e. if it has <code>ContentWebElement.Identifier</code>,
+<code>ContentWebElement.LegacyIdentifier</code>, or
+<code>ChromeWebElement.Identifier</code> as properties.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>obj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object.&lt;string, string></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Object that represents a reference to a <a href="WebElement.html"><code>WebElement</code></a>.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1481">line 1481</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>True if <var>obj</var> is a <a href="WebElement.html"><code>WebElement</code></a>, false otherwise.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="is"><span class="type-signature"></span>is<span class="signature">(other)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    <p>Performs an equality check between this web element and
+<var>other</var>.</p>
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>other</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="WebElement.html">WebElement</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"><p>Web element to compare with this.</p></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="element.js.html">element.js</a>, <a href="element.js.html#line1350">line 1350</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <p>True if this and <var>other</var> are the same.  False
+    otherwise.</p>
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
 
 
     </dd>

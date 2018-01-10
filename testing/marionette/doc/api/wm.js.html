@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Namespace: proxy</title>
+    <title>JSDoc: Source: wm.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,273 +17,69 @@
 
 <div id="main">
 
-    <h1 class="page-title">Namespace: proxy</h1>
+    <h1 class="page-title">Source: wm.js</h1>
 
     
 
 
 
-
-<section>
-
-<header>
     
-        <h2>proxy</h2>
-        
-    
-</header>
-
-<article>
-    <div class="container-overview">
-    
-        
-
-        
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="proxy.js.html">proxy.js</a>, <a href="proxy.js.html#line42">line 42</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-        
-    
-    </div>
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Classes</h3>
-
-        <dl>
-            <dt><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></dt>
-            <dd></dd>
-        </dl>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id=".toListener"><span class="type-signature">(static) </span>toListener<span class="signature">(sendAsyncFn, browserFn)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Creates a transparent interface between the chrome- and content
-contexts.</p>
-<p>Calls to this object will be proxied via the message manager to a
-content frame script, and responses are returend as promises.</p>
-<p>The argument sequence is serialised and passed as an array, unless it
-consists of a single object type that isn't null, in which case it's
-passed literally.  The latter specialisation is temporary to achieve
-backwards compatibility with listener.js.</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>sendAsyncFn</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Callback for sending async messages.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>browserFn</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Closure that returns the current browsing context.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="proxy.js.html">proxy.js</a>, <a href="proxy.js.html#line61">line 61</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-    
-
-    
-
-    
-</article>
-
-</section>
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+this.EXPORTED_SYMBOLS = ["WindowState"];
+
+/**
+ * Marionette representation of the {@link ChromeWindow} window state.
+ *
+ * @enum {string}
+ */
+const WindowState = {
+  Maximized: "maximized",
+  Minimized: "minimized",
+  Normal: "normal",
+  Fullscreen: "fullscreen",
+
+  /**
+   * Converts {@link nsIDOMChromeWindow.windowState} to WindowState.
+   *
+   * @param {number} windowState
+   *     Attribute from {@link nsIDOMChromeWindow.windowState}.
+   *
+   * @return {WindowState}
+   *     JSON representation.
+   *
+   * @throws {TypeError}
+   *     If &lt;var>windowState&lt;/var> was unknown.
+   */
+  from(windowState) {
+    switch (windowState) {
+      case 1:
+        return WindowState.Maximized;
+
+      case 2:
+        return WindowState.Minimized;
+
+      case 3:
+        return WindowState.Normal;
+
+      case 4:
+        return WindowState.Fullscreen;
+
+      default:
+        throw new TypeError(`Unknown window state: ${windowState}`);
+    }
+  },
+};
+this.WindowState = WindowState;
+</code></pre>
+        </article>
+    </section>
 
 
 
