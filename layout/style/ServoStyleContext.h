@@ -12,7 +12,7 @@
 #include "nsWindowSizes.h"
 #include <algorithm>
 
-#include "mozilla/CachedAnonBoxStyles.h"
+#include "mozilla/CachedInheritingStyles.h"
 
 namespace mozilla {
 
@@ -50,13 +50,13 @@ public:
   ServoStyleContext* GetCachedInheritingAnonBoxStyle(nsAtom* aAnonBox) const
   {
     MOZ_ASSERT(nsCSSAnonBoxes::IsInheritingAnonBox(aAnonBox));
-    return mInheritingAnonBoxStyles.Lookup(aAnonBox);
+    return mCachedInheritingStyles.Lookup(aAnonBox);
   }
 
   void SetCachedInheritedAnonBoxStyle(nsAtom* aAnonBox, ServoStyleContext* aStyle)
   {
     MOZ_ASSERT(!GetCachedInheritingAnonBoxStyle(aAnonBox));
-    mInheritingAnonBoxStyles.Insert(aStyle);
+    mCachedInheritingStyles.Insert(aStyle);
   }
 
   ServoStyleContext* GetCachedLazyPseudoStyle(CSSPseudoElementType aPseudo) const;
@@ -103,7 +103,7 @@ public:
     // clearly identify in DMD's output the memory measured here.
     *aCVsSize += ServoComputedValuesMallocEnclosingSizeOf(this);
     mSource.AddSizeOfExcludingThis(aSizes);
-    mInheritingAnonBoxStyles.AddSizeOfIncludingThis(aSizes, aCVsSize);
+    mCachedInheritingStyles.AddSizeOfIncludingThis(aSizes, aCVsSize);
 
     if (mNextLazyPseudoStyle &&
         !aSizes.mState.HaveSeenPtr(mNextLazyPseudoStyle)) {
@@ -115,9 +115,8 @@ private:
   nsPresContext* mPresContext;
   ServoComputedData mSource;
 
-  // A cache of inheriting anon boxes inheriting from this style _if the style
-  // isn't an inheriting anon-box_.
-  CachedAnonBoxStyles mInheritingAnonBoxStyles;
+  // A cache of anonymous box and lazy pseudo styles inheriting from this style.
+  CachedInheritingStyles mCachedInheritingStyles;
 
   // A linked-list cache of lazy pseudo styles inheriting from this style _if
   // the style isn't a lazy pseudo style itself_.
