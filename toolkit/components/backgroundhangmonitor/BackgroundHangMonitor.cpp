@@ -473,12 +473,22 @@ BackgroundHangThread::ReportHang(PRIntervalTime aHangTime)
   // Recovered from a hang; called on the monitor thread
   // mManager->mLock IS locked
 
-  HangDetails hangDetails(aHangTime,
-                          XRE_GetProcessType(),
-                          mThreadName,
-                          mRunnableName,
-                          Move(mHangStack),
-                          Move(mAnnotations));
+  nsTArray<HangAnnotation> annotations;
+  for (auto& annotation : mAnnotations) {
+    HangAnnotation annot(annotation.mName, annotation.mValue);
+    annotations.AppendElement(mozilla::Move(annot));
+  }
+
+  HangDetails hangDetails(
+    aHangTime,
+    nsDependentCString(XRE_ChildProcessTypeToString(XRE_GetProcessType())),
+    VoidString(),
+    mThreadName,
+    mRunnableName,
+    Move(mHangStack),
+    Move(annotations)
+  );
+
   // If we have the stream transport service avaliable, we can process the
   // native stack on it. Otherwise, we are unable to report a native stack, so
   // we just report without one.

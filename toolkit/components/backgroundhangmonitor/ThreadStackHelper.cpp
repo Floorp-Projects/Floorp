@@ -22,7 +22,7 @@
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Sprintf.h"
 #include "nsThread.h"
-#include "mozilla/HangStack.h"
+#include "mozilla/HangTypes.h"
 
 #ifdef __GNUC__
 # pragma GCC diagnostic push
@@ -68,7 +68,7 @@ namespace mozilla {
 
 ThreadStackHelper::ThreadStackHelper()
   : mStackToFill(nullptr)
-  , mMaxStackSize(HangStack::sMaxInlineStorage)
+  , mMaxStackSize(16)
   , mMaxBufferSize(512)
   , mDesiredStackSize(0)
   , mDesiredBufferSize(0)
@@ -90,12 +90,16 @@ ThreadStackHelper::PrepareStackBuffer(HangStack& aStack)
   mDesiredBufferSize = 0;
   mDesiredStackSize = 0;
 
-  // Return false to skip getting the stack and return an empty stack
-  aStack.clear();
+  // Clear all of the stack entries.
+  aStack.stack().ClearAndRetainStorage();
+  aStack.strbuffer().ClearAndRetainStorage();
+  aStack.modules().Clear();
+
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
-  if (!aStack.reserve(mMaxStackSize) ||
-      !aStack.reserve(aStack.capacity()) || // reserve up to the capacity
-      !aStack.EnsureBufferCapacity(mMaxBufferSize)) {
+  // Ensure we have enough space in our stack and string buffers for the data we
+  // want to collect.
+  if (!aStack.stack().SetCapacity(mMaxStackSize, fallible) ||
+      !aStack.strbuffer().SetCapacity(mMaxBufferSize, fallible)) {
     return false;
   }
   return true;
@@ -161,17 +165,19 @@ ThreadStackHelper::SetIsMainThread()
 }
 
 void
-ThreadStackHelper::TryAppendFrame(HangStack::Frame aFrame)
+ThreadStackHelper::TryAppendFrame(HangEntry aFrame)
 {
   MOZ_RELEASE_ASSERT(mStackToFill);
 
-  // We deduplicate identical frames of kind CONTENT, JIT, WASM, and SUPPRESSED.
-  switch (aFrame.GetKind()) {
-    case HangStack::Frame::Kind::CONTENT:
-    case HangStack::Frame::Kind::JIT:
-    case HangStack::Frame::Kind::WASM:
-    case HangStack::Frame::Kind::SUPPRESSED:
-      if (!mStackToFill->empty() && mStackToFill->back().GetKind() == aFrame.GetKind()) {
+  // We deduplicate identical Content, Jit, Wasm, ChromeScript and Suppressed frames.
+  switch (aFrame.type()) {
+    case HangEntry::THangEntryContent:
+    case HangEntry::THangEntryJit:
+    case HangEntry::THangEntryWasm:
+    case HangEntry::THangEntryChromeScript:
+    case HangEntry::THangEntrySuppressed:
+      if (!mStackToFill->stack().IsEmpty() &&
+          mStackToFill->stack().LastElement().type() == aFrame.type()) {
         return;
       }
       break;
@@ -184,8 +190,8 @@ ThreadStackHelper::TryAppendFrame(HangStack::Frame aFrame)
   mDesiredStackSize += 1;
 
   // Perform the append if we have enough space to do so.
-  if (mStackToFill->canAppendWithoutRealloc(1)) {
-    mStackToFill->infallibleAppend(aFrame);
+  if (mStackToFill->stack().Capacity() > mStackToFill->stack().Length()) {
+    mStackToFill->stack().AppendElement(mozilla::Move(aFrame));
   }
 }
 
@@ -193,14 +199,14 @@ void
 ThreadStackHelper::CollectNativeLeafAddr(void* aAddr)
 {
   MOZ_RELEASE_ASSERT(mStackToFill);
-  TryAppendFrame(HangStack::Frame(reinterpret_cast<uintptr_t>(aAddr)));
+  TryAppendFrame(HangEntryProgCounter(reinterpret_cast<uintptr_t>(aAddr)));
 }
 
 void
 ThreadStackHelper::CollectJitReturnAddr(void* aAddr)
 {
   MOZ_RELEASE_ASSERT(mStackToFill);
-  TryAppendFrame(HangStack::Frame::Jit());
+  TryAppendFrame(HangEntryJit());
 }
 
 void
@@ -209,7 +215,7 @@ ThreadStackHelper::CollectWasmFrame(const char* aLabel)
   MOZ_RELEASE_ASSERT(mStackToFill);
   // We don't want to collect WASM frames, as they are probably for content, so
   // we just add a "(content wasm)" frame.
-  TryAppendFrame(HangStack::Frame::Wasm());
+  TryAppendFrame(HangEntryWasm());
 }
 
 namespace {
@@ -263,18 +269,39 @@ ThreadStackHelper::CollectPseudoEntry(const js::ProfileEntry& aEntry)
 {
   // For non-js frames we just include the raw label.
   if (!aEntry.isJs()) {
-    const char* label = aEntry.label();
-    TryAppendFrame(HangStack::Frame(label));
+    const char* entryLabel = aEntry.label();
+
+    // entryLabel is a statically allocated string, so we want to store a
+    // reference to it without performing any allocations. This is important, as
+    // we aren't allowed to allocate within this function.
+    //
+    // The variant for this kind of label in our HangStack object is a
+    // `nsCString`, which normally contains heap allocated string data. However,
+    // `nsCString` has an optimization for literal strings which causes the
+    // backing data to not be copied when being copied between nsCString
+    // objects.
+    //
+    // We take advantage of that optimization by creating a nsCString object
+    // which has the LITERAL flag set. Without this optimization, this code
+    // would be incorrect.
+    nsCString label;
+    label.AssignLiteral(entryLabel, strlen(entryLabel));
+
+    // Let's make sure we don't deadlock here, by asserting that `label`'s
+    // backing data matches.
+    MOZ_RELEASE_ASSERT(label.BeginReading() == entryLabel,
+        "String copy performed during ThreadStackHelper::CollectPseudoEntry");
+    TryAppendFrame(label);
     return;
   }
 
   if (!aEntry.script()) {
-    TryAppendFrame(HangStack::Frame::Suppressed());
+    TryAppendFrame(HangEntrySuppressed());
     return;
   }
 
   if (!IsChromeJSScript(aEntry.script())) {
-    TryAppendFrame(HangStack::Frame::Content());
+    TryAppendFrame(HangEntryContent());
     return;
   }
 
@@ -313,21 +340,25 @@ ThreadStackHelper::CollectPseudoEntry(const js::ProfileEntry& aEntry)
     }
   }
 
-  mDesiredStackSize += 1;
   char buffer[128]; // Enough to fit longest js file name from the tree
   size_t len = SprintfLiteral(buffer, "%s:%u", basename, lineno);
   if (len < sizeof(buffer)) {
     mDesiredBufferSize += len + 1;
-    if (mStackToFill->canAppendWithoutRealloc(1) &&
-        mStackToFill->AvailableBufferSize() >= len + 1) {
-      mStackToFill->InfallibleAppendViaBuffer(buffer, len);
+
+    if (mStackToFill->stack().Capacity() > mStackToFill->stack().Length() &&
+        (mStackToFill->strbuffer().Capacity() -
+         mStackToFill->strbuffer().Length()) > len + 1) {
+      // NOTE: We only increment this if we're going to successfully append.
+      mDesiredStackSize += 1;
+      uint32_t start = mStackToFill->strbuffer().Length();
+      mStackToFill->strbuffer().AppendElements(buffer, len);
+      mStackToFill->strbuffer().AppendElement('\0');
+      mStackToFill->stack().AppendElement(HangEntryBufOffset(start));
       return;
     }
   }
 
-  if (mStackToFill->canAppendWithoutRealloc(1)) {
-    mStackToFill->infallibleAppend(HangStack::Frame("(chrome script)"));
-  }
+  TryAppendFrame(HangEntryChromeScript());
 }
 
 } // namespace mozilla

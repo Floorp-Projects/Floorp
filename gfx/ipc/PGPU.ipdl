@@ -5,6 +5,7 @@
 
 include GraphicsMessages;
 include MemoryReportTypes;
+include HangTypes;
 include protocol PCompositorManager;
 include protocol PImageBridge;
 include protocol PProfiler;
@@ -23,7 +24,6 @@ using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::gfx::Feature from "gfxFeature.h";
 using mozilla::gfx::Fallback from "gfxFallback.h";
-using mozilla::HangDetails from "mozilla/HangDetails.h";
 
 namespace mozilla {
 namespace gfx {
