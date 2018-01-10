@@ -943,7 +943,10 @@ nsComboboxControlFrame::GetFrameName(nsAString& aResult) const
 void
 nsComboboxControlFrame::ShowDropDown(bool aDoDropDown)
 {
-  MOZ_ASSERT(!XRE_IsContentProcess());
+  if (!nsLayoutUtils::IsContentSelectEnabled()) {
+    // TODO(kuoe0) remove this assertion after content-select is enabled
+    MOZ_ASSERT(!XRE_IsContentProcess());
+  }
   mDelayedShowDropDown = false;
   EventStates eventStates = mContent->AsElement()->State();
   if (aDoDropDown && eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
