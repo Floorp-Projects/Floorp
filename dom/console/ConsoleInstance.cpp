@@ -7,6 +7,7 @@
 #include "mozilla/dom/ConsoleInstance.h"
 #include "mozilla/dom/ConsoleBinding.h"
 #include "ConsoleCommon.h"
+#include "ConsoleUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -183,6 +184,19 @@ ConsoleInstance::Clear(JSContext* aCx)
   const Sequence<JS::Value> data;
   mConsole->MethodInternal(aCx, Console::MethodClear,
                            NS_LITERAL_STRING("clear"), data);
+}
+
+void
+ConsoleInstance::ReportForServiceWorkerScope(const nsAString& aScope,
+                                             const nsAString& aMessage,
+                                             const nsAString& aFilename,
+                                             uint32_t aLineNumber,
+                                             uint32_t aColumnNumber)
+{
+  if (NS_IsMainThread()) {
+    ConsoleUtils::ReportForServiceWorkerScope(aScope, aMessage, aFilename,
+                                              aLineNumber, aColumnNumber);
+  }
 }
 
 } // namespace dom
