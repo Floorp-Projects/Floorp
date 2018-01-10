@@ -116,14 +116,6 @@
                 onset="this.setAttribute('minresultsforpopup', val); return val;"
                 onget="var m = parseInt(this.getAttribute('minresultsforpopup')); return isNaN(m) ? 1 : m;"/>
 
-      <property name="showCommentColumn"
-                onset="this.setAttribute('showcommentcolumn', val); return val;"
-                onget="return this.getAttribute('showcommentcolumn') == 'true';"/>
-
-      <property name="showImageColumn"
-                onset="this.setAttribute('showimagecolumn', val); return val;"
-                onget="return this.getAttribute('showimagecolumn') == 'true';"/>
-
       <property name="timeout"
                 onset="this.setAttribute('timeout', val); return val;">
         <getter><![CDATA[

@@ -745,9 +745,6 @@
             // clear any previous selection, see bugs 400671 and 488357
             popup.selectedIndex = -1;
 
-            popup.showCommentColumn = this.showCommentColumn;
-            popup.showImageColumn = this.showImageColumn;
-
             document.popupNode = null;
 
             const isRTL = getComputedStyle(this, "").direction == "rtl";

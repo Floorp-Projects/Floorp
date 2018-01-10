@@ -60,18 +60,6 @@ interface nsIAutoCompleteInput : nsISupports
   attribute unsigned long maxRows;
 
   /*
-   * Option to show a second column in the popup which contains
-   * the comment for each autocomplete result
-   */
-  attribute boolean showCommentColumn;
-
-  /*
-   * Option to show a third column in the popup which contains
-   * an additional image for each autocomplete result
-   */
-  attribute boolean showImageColumn;
-
-  /*
    * Number of milliseconds after a keystroke before a search begins
    */
   attribute unsigned long timeout;

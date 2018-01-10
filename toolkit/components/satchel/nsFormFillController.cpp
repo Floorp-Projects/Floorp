@@ -519,31 +519,6 @@ nsFormFillController::SetMaxRows(uint32_t aMaxRows)
 }
 
 NS_IMETHODIMP
-nsFormFillController::GetShowImageColumn(bool *aShowImageColumn)
-{
-  *aShowImageColumn = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFormFillController::SetShowImageColumn(bool aShowImageColumn)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
-nsFormFillController::GetShowCommentColumn(bool *aShowCommentColumn)
-{
-  *aShowCommentColumn = false;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsFormFillController::SetShowCommentColumn(bool aShowCommentColumn)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsFormFillController::GetTimeout(uint32_t *aTimeout)
 {
   *aTimeout = mTimeout;

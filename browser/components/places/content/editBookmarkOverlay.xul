@@ -126,7 +126,6 @@
                      autocompletepopup="PopupAutoComplete"
                      completedefaultindex="true"
                      tabscrolling="true"
-                     showcommentcolumn="true"
                      placeholder="&editBookmarkOverlay.tagsEmptyDesc.label;"
                      onchange="gEditItemOverlay.onTagsFieldChange();"/>
             <button id="editBMPanel_tagsSelectorExpander"
