@@ -1,6 +1,6 @@
 # © 2016 and later: Unicode, Inc. and others.
 # License & terms of use: http://www.unicode.org/copyright.html#License
-COLLATION_CLDR_VERSION = 32
+COLLATION_CLDR_VERSION = 32.0.1
 # A list of txt's to build
 # Note:
 #

@@ -598,13 +598,11 @@ function waitForLoadedSources(dbg) {
  * @static
  */
 function selectSource(dbg, url, line) {
-  info(`Selecting source: ${url}`);
   const source = findSource(dbg, url);
   return dbg.actions.selectLocation({ sourceId: source.id, line });
 }
 
 function closeTab(dbg, url) {
-  info(`Closing tab: ${url}`);
   const source = findSource(dbg, url);
   return dbg.actions.closeTab(source.url);
 }
@@ -618,7 +616,6 @@ function closeTab(dbg, url) {
  * @static
  */
 async function stepOver(dbg) {
-  info("Stepping over");
   await dbg.actions.stepOver();
   return waitForPaused(dbg);
 }
