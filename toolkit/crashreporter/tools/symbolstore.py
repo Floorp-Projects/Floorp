@@ -612,6 +612,26 @@ class Dumper:
 # Platform-specific subclasses.  For the most part, these just have
 # logic to determine what files to extract symbols from.
 
+def locate_pdb(path):
+    '''Given a path to a binary, attempt to locate the matching pdb file with simple heuristics:
+    * Look for a pdb file with the same base name next to the binary
+    * Look for a pdb file with the same base name in the cwd
+
+    Returns the path to the pdb file if it exists, or None if it could not be located.
+    '''
+    path, ext = os.path.splitext(path)
+    pdb = path + '.pdb'
+    if os.path.isfile(pdb):
+        return pdb
+    # If there's no pdb next to the file, see if there's a pdb with the same root name
+    # in the cwd. We build some binaries directly into dist/bin, but put the pdb files
+    # in the relative objdir, which is the cwd when running this script.
+    base = os.path.basename(pdb)
+    pdb = os.path.join(os.getcwd(), base)
+    if os.path.isfile(pdb):
+        return pdb
+    return None
+
 class Dumper_Win32(Dumper):
     fixedFilenameCaseCache = {}
 
@@ -619,14 +639,13 @@ class Dumper_Win32(Dumper):
         """This function will allow processing of exe or dll files that have pdb
         files with the same base name next to them."""
         if file.endswith(".exe") or file.endswith(".dll"):
-            path, ext = os.path.splitext(file)
-            if os.path.isfile(path + ".pdb"):
+            if locate_pdb(file) is not None:
                 return True
         return False
 
 
     def CopyDebug(self, file, debug_file, guid, code_file, code_id):
-        file = "%s.pdb" % os.path.splitext(file)[0]
+        file = locate_pdb(file)
         def compress(path):
             compressed_file = path[:-1] + '_'
             # ignore makecab's output
