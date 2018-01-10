@@ -1500,7 +1500,9 @@ HttpChannelChild::OverrideRunnable::Run()
       mCallback = nullptr;
     }
     mChannel->CleanupRedirectingChannel(rv);
-    mNewChannel->Cancel(rv);
+    if (mNewChannel) {
+      mNewChannel->Cancel(rv);
+    }
     return NS_OK;
   }
 
