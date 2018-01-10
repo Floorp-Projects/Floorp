@@ -143,8 +143,6 @@ class SandboxBroker final
   void AuditDenial(int aOp, int aFlags, int aPerms, const char* aPath);
   // Remap relative paths to absolute paths.
   size_t ConvertToRealPath(char* aPath, size_t aBufSize, size_t aPathLen);
-  // Remap references to /tmp and friends to the content process tempdir
-  size_t RemapTempDirs(char* aPath, size_t aBufSize, size_t aPathLen);
   nsCString ReverseSymlinks(const nsACString& aPath);
   // Retrieves permissions for the path the original symlink sits in.
   int SymlinkPermissions(const char* aPath, const size_t aPathLen);

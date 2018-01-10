@@ -188,6 +188,25 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   policy->AddDir(rdwrcr, "/dev/shm");
   // Write permssions
   //
+  // Add write permissions on the temporary directory. This can come
+  // from various environment variables (TMPDIR,TMP,TEMP,...) so
+  // make sure to use the full logic.
+  nsCOMPtr<nsIFile> tmpDir;
+  nsresult rv = GetSpecialSystemDirectory(OS_TemporaryDirectory,
+                                          getter_AddRefs(tmpDir));
+
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoCString tmpPath;
+    rv = tmpDir->GetNativePath(tmpPath);
+    if (NS_SUCCEEDED(rv)) {
+      policy->AddDir(rdwrcr, tmpPath.get());
+    }
+  }
+  // If the above fails at any point, fall back to a very good guess.
+  if (NS_FAILED(rv)) {
+    policy->AddDir(rdwrcr, "/tmp");
+  }
+
   // Bug 1308851: NVIDIA proprietary driver when using WebGL
   policy->AddFilePrefix(rdwr, "/dev", "nvidia");
 
@@ -233,6 +252,8 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
 #endif
   policy->AddDir(rdonly, "/usr/share");
   policy->AddDir(rdonly, "/usr/local/share");
+  policy->AddDir(rdonly, "/usr/tmp");
+  policy->AddDir(rdonly, "/var/tmp");
   // Various places where fonts reside
   policy->AddDir(rdonly, "/usr/X11R6/lib/X11/fonts");
   policy->AddDir(rdonly, "/nix/store");
@@ -287,8 +308,7 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   };
 
   nsCOMPtr<nsIFile> homeDir;
-  nsresult rv = GetSpecialSystemDirectory(Unix_HomeDirectory,
-                                          getter_AddRefs(homeDir));
+  rv = GetSpecialSystemDirectory(Unix_HomeDirectory, getter_AddRefs(homeDir));
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIFile> confDir;
 
@@ -386,22 +406,6 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
     }
   }
 
-#ifdef DEBUG
-  char *bloatLog = PR_GetEnv("XPCOM_MEM_BLOAT_LOG");
-  // XPCOM_MEM_BLOAT_LOG has the format
-  // /tmp/tmpd0YzFZ.mozrunner/runtests_leaks.log
-  // but stores into /tmp/tmpd0YzFZ.mozrunner/runtests_leaks_tab_pid3411.log
-  // So cut the .log part and whitelist the prefix.
-  if (bloatLog != nullptr) {
-    size_t bloatLen = strlen(bloatLog);
-    if (bloatLen >= 4) {
-      nsAutoCString bloatStr(bloatLog);
-      bloatStr.Truncate(bloatLen - 4);
-      policy->AddPrefix(rdwrcr, bloatStr.get());
-    }
-  }
-#endif
-
   mCommonContentPolicy.reset(policy);
 #endif
 }
@@ -459,34 +463,25 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid, bool aFileProcess)
   // to get_mempolicy if this fails
   policy->AddPath(rdonly, nsPrintfCString("/proc/%d/status", aPid).get());
 
-  // Add write permissions on the content process specific temporary dir.
-  nsCOMPtr<nsIFile> tmpDir;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_CONTENT_PROCESS_TEMP_DIR,
-                                       getter_AddRefs(tmpDir));
-  if (NS_SUCCEEDED(rv)) {
-    nsAutoCString tmpPath;
-    rv = tmpDir->GetNativePath(tmpPath);
-    if (NS_SUCCEEDED(rv)) {
-      policy->AddDir(rdwrcr, tmpPath.get());
-    }
-  }
-
   // userContent.css and the extensions dir sit in the profile, which is
   // normally blocked and we can't get the profile dir earlier in startup,
   // so this must happen here.
   nsCOMPtr<nsIFile> profileDir;
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                              getter_AddRefs(profileDir));
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(profileDir));
   if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIFile> workDir;
       rv = profileDir->Clone(getter_AddRefs(workDir));
       if (NS_SUCCEEDED(rv)) {
         rv = workDir->AppendNative(NS_LITERAL_CSTRING("chrome"));
         if (NS_SUCCEEDED(rv)) {
-          nsAutoCString tmpPath;
-          rv = workDir->GetNativePath(tmpPath);
+          rv = workDir->AppendNative(NS_LITERAL_CSTRING("userContent.css"));
           if (NS_SUCCEEDED(rv)) {
-            policy->AddDir(rdonly, tmpPath.get());
+            nsAutoCString tmpPath;
+            rv = workDir->GetNativePath(tmpPath);
+            if (NS_SUCCEEDED(rv)) {
+              policy->AddPath(rdonly, tmpPath.get());
+            }
           }
         }
       }
