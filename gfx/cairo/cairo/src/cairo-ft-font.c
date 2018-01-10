@@ -2705,21 +2705,23 @@ _cairo_ft_font_face_destroy (void *abstract_face)
      *    font_face <------- unscaled
      */
 
-    if (font_face->unscaled &&
-	font_face->unscaled->from_face &&
-	font_face->next == NULL &&
-	font_face->unscaled->faces == font_face &&
-	CAIRO_REFERENCE_COUNT_GET_VALUE (&font_face->unscaled->base.ref_count) > 1)
+    if (font_face->unscaled)
     {
-	cairo_font_face_reference (&font_face->base);
+	CAIRO_MUTEX_LOCK (font_face->unscaled->mutex);
 
-	_cairo_unscaled_font_destroy (&font_face->unscaled->base);
-	font_face->unscaled = NULL;
+	if (font_face->unscaled->from_face &&
+	    font_face->next == NULL &&
+	    font_face->unscaled->faces == font_face &&
+	    CAIRO_REFERENCE_COUNT_GET_VALUE (&font_face->unscaled->base.ref_count) > 1)
+	{
+	    cairo_font_face_reference (&font_face->base);
 
-	return;
-    }
+	    CAIRO_MUTEX_UNLOCK (font_face->unscaled->mutex);
+	    _cairo_unscaled_font_destroy (&font_face->unscaled->base);
+	    font_face->unscaled = NULL;
+	    return;
+	}
 
-    if (font_face->unscaled) {
 	cairo_ft_font_face_t *tmp_face = NULL;
 	cairo_ft_font_face_t *last_face = NULL;
 
@@ -2738,6 +2740,7 @@ _cairo_ft_font_face_destroy (void *abstract_face)
 	    last_face = tmp_face;
 	}
 
+	CAIRO_MUTEX_UNLOCK (font_face->unscaled->mutex);
 	_cairo_unscaled_font_destroy (&font_face->unscaled->base);
 	font_face->unscaled = NULL;
     }
@@ -2855,6 +2858,8 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
 {
     cairo_ft_font_face_t *font_face, **prev_font_face;
 
+    CAIRO_MUTEX_LOCK (unscaled->mutex);
+
     /* Looked for an existing matching font face */
     for (font_face = unscaled->faces, prev_font_face = &unscaled->faces;
 	 font_face;
@@ -2876,15 +2881,19 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
 		 * from owner to ownee. */
 		font_face->unscaled = unscaled;
 		_cairo_unscaled_font_reference (&unscaled->base);
-		return &font_face->base;
-	    } else
-		return cairo_font_face_reference (&font_face->base);
+	    } else {
+		cairo_font_face_reference (&font_face->base);
+	    }
+
+	    CAIRO_MUTEX_UNLOCK (unscaled->mutex);
+	    return &font_face->base;
 	}
     }
 
     /* No match found, create a new one */
     font_face = malloc (sizeof (cairo_ft_font_face_t));
     if (unlikely (!font_face)) {
+	CAIRO_MUTEX_UNLOCK (unscaled->mutex);
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_font_face_t *)&_cairo_font_face_nil;
     }
@@ -2911,6 +2920,7 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
 
     _cairo_font_face_init (&font_face->base, &_cairo_ft_font_face_backend);
 
+    CAIRO_MUTEX_UNLOCK (unscaled->mutex);
     return &font_face->base;
 }
 

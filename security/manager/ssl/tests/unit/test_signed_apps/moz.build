@@ -37,8 +37,8 @@ def SignedAppFile(name, flags):
 #
 # Temporarily disabled. See bug 1256495.
 #signed_app_files = (
-#    ['unknown_issuer_app.zip', '-i', 'unknown issuer'],
-#    ['unsigned_app.zip', '-n'],
+#    ['unknown_issuer_app.zip', '-i', 'unknown issuer', '-p', 'sha256'],
+#    ['unsigned_app.zip'],
 #    ['empty_signerInfos.zip', '-e'],
 #)
 #
@@ -60,7 +60,10 @@ def SignedAppFile(name, flags):
 #                args.append('-p')
 #                args.append('sha%s' % p7_alg)
 #            SignedAppFile(filename, args)
-
+#
 # COSE test-cases
-#SignedAppFile('cose_signed.zip', ['-c', 'ES256'])
-#SignedAppFile('cose_multiple_signed.zip', ['-c', 'ES256', '-c', 'ES384'])
+#SignedAppFile('cose_signed_with_pkcs7.zip', ['-c', 'ES256', '-p', 'sha256'])
+#SignedAppFile('cose_int_signed_with_pkcs7.zip', ['-c', 'ES256', '-r', 'xpcshell signed apps test root', '-p', 'sha256'])
+#SignedAppFile('cose_multiple_signed_with_pkcs7.zip', ['-c', 'ES256', '-c', 'ES384', '-p', 'sha256'])
+#SignedAppFile('only_cose_signed.zip', ['-c', 'ES256'])
+#SignedAppFile('only_cose_multiple_signed.zip', ['-c', 'ES384', '-c', 'ES256'])
