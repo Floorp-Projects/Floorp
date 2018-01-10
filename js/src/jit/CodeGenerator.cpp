@@ -12350,7 +12350,7 @@ CodeGenerator::visitWasmTrap(LWasmTrap* lir)
     MOZ_ASSERT(gen->compilingWasm());
     const MWasmTrap* mir = lir->mir();
 
-    masm.jump(oldTrap(mir, mir->trap()));
+    masm.wasmTrap(mir->trap(), mir->bytecodeOffset());
 }
 
 void
