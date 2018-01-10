@@ -22,4 +22,5 @@ interface GetUserMediaRequest {
   readonly attribute DOMString mediaSource;
   MediaStreamConstraints getConstraints();
   readonly attribute boolean isSecure;
+  readonly attribute boolean isHandlingUserInput;
 };
