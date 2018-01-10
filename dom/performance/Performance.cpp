@@ -136,7 +136,8 @@ Performance::TimeOrigin()
   }
 
   MOZ_ASSERT(mPerformanceService);
-  return mPerformanceService->TimeOrigin(CreationTimeStamp());
+  return nsRFPService::ReduceTimePrecisionAsMSecs(
+    mPerformanceService->TimeOrigin(CreationTimeStamp()));
 }
 
 JSObject*
