@@ -36,7 +36,6 @@ toolkit.jar:
   skin/classic/global/tabprompts.css
   skin/classic/global/tabbox.css
   skin/classic/global/textbox.css
-  skin/classic/global/datetimepicker.css
   skin/classic/global/toolbar.css
   skin/classic/global/toolbarbutton.css
 * skin/classic/global/tree.css
@@ -48,11 +47,8 @@ toolkit.jar:
   skin/classic/global/arrow/arrow-dn.gif                             (arrow/arrow-dn.gif)
   skin/classic/global/arrow/arrow-dn.png                             (arrow/arrow-dn.png)
   skin/classic/global/arrow/arrow-lft-dis.gif                        (arrow/arrow-lft-dis.gif)
-  skin/classic/global/arrow/arrow-lft-hov.gif                        (arrow/arrow-lft-hov.gif)
   skin/classic/global/arrow/arrow-lft-sharp.gif                      (arrow/arrow-lft-sharp.gif)
-  skin/classic/global/arrow/arrow-lft.gif                            (arrow/arrow-lft.gif)
   skin/classic/global/arrow/arrow-rit-dis.gif                        (arrow/arrow-rit-dis.gif)
-  skin/classic/global/arrow/arrow-rit-hov.gif                        (arrow/arrow-rit-hov.gif)
   skin/classic/global/arrow/arrow-rit-sharp.gif                      (arrow/arrow-rit-sharp.gif)
   skin/classic/global/arrow/arrow-rit.gif                            (arrow/arrow-rit.gif)
   skin/classic/global/arrow/arrow-up-dis.gif                         (arrow/arrow-up-dis.gif)

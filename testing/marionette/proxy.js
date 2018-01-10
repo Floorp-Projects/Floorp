@@ -4,10 +4,11 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const {
   error,
@@ -18,8 +19,8 @@ Cu.import("chrome://marionette/content/modal.js");
 
 this.EXPORTED_SYMBOLS = ["proxy"];
 
-const uuidgen = Cc["@mozilla.org/uuid-generator;1"]
-    .getService(Ci.nsIUUIDGenerator);
+XPCOMUtils.defineLazyServiceGetter(
+    this, "uuidgen", "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
 
 const logger = Log.repository.getLogger("Marionette");
 
@@ -319,123 +320,6 @@ proxy.AsyncMessageChannel.ReplyType = {
   Ok: 0,
   Value: 1,
   Error: 2,
-};
-
-/**
- * A transparent content-to-chrome RPC interface where responses are
- * presented as promises.
- *
- * @param {nsIFrameMessageManager} frameMessageManager
- *     The content frame's message manager, which itself is usually an
- *     implementor of.
- */
-proxy.toChromeAsync = function(frameMessageManager) {
-  let sender = new AsyncChromeSender(frameMessageManager);
-  return new Proxy(sender, ownPriorityGetterTrap);
-};
-
-/**
- * Sends asynchronous RPC messages to chrome space using a frame's
- * sendAsyncMessage (nsIAsyncMessageSender) function.
- *
- * Example on how to use from a frame content script:
- *
- *     let sender = new AsyncChromeSender(messageManager);
- *     let promise = sender.send("runEmulatorCmd", "my command");
- *     let rv = await promise;
- */
-class AsyncChromeSender {
-  constructor(frameMessageManager) {
-    this.mm = frameMessageManager;
-  }
-
-  /**
-   * Call registered function in chrome context.
-   *
-   * @param {string} name
-   *     Function to call in the chrome, e.g. for <tt>Marionette:foo</tt>,
-   *     use <tt>foo</tt>.
-   * @param {*} args
-   *     Argument list to pass the function.  Must be JSON serialisable.
-   *
-   * @return {Promise}
-   *     A promise that resolves to the value sent back.
-   */
-  send(name, args) {
-    let uuid = uuidgen.generateUUID().toString();
-
-    let proxy = new Promise((resolve, reject) => {
-      let responseListener = msg => {
-        if (msg.json.id != uuid) {
-          return;
-        }
-
-        this.mm.removeMessageListener(
-            "Marionette:listenerResponse", responseListener);
-
-        if ("value" in msg.json) {
-          resolve(msg.json.value);
-        } else if ("error" in msg.json) {
-          reject(msg.json.error);
-        } else {
-          throw new TypeError(
-              `Unexpected response: ${msg.name} ${JSON.stringify(msg.json)}`);
-        }
-      };
-
-      let msg = {arguments: marshal(args), id: uuid};
-      this.mm.addMessageListener(
-          "Marionette:listenerResponse", responseListener);
-      this.mm.sendAsyncMessage("Marionette:" + name, msg);
-    });
-
-    return proxy;
-  }
-}
-
-/**
- * Creates a transparent interface from the content- to the chrome context.
- *
- * Calls to this object will be proxied via the frame's sendSyncMessage
- * ({@link nsISyncMessageSender}) function.  Since the message is
- * synchronous, the return value is presented as a return value.
- *
- * Example on how to use from a frame content script:
- *
- * <pre><code>
- *     let chrome = proxy.toChrome(sendSyncMessage.bind(this));
- *     let cookie = chrome.getCookie("foo");
- * </code></pre>
- *
- * @param {nsISyncMessageSender} sendSyncMessageFn
- *     The frame message manager's sendSyncMessage function.
- */
-proxy.toChrome = function(sendSyncMessageFn) {
-  let sender = new proxy.SyncChromeSender(sendSyncMessageFn);
-  return new Proxy(sender, ownPriorityGetterTrap);
-};
-
-/**
- * The SyncChromeSender sends synchronous RPC messages to the chrome
- * context, using a frame's sendSyncMessage ({@link nsISyncMessageSender})
- * function.
- *
- * Example on how to use from a frame content script:
- *
- * <pre><code>
- *     let sender = new SyncChromeSender(sendSyncMessage.bind(this));
- *     let res = sender.send("addCookie", cookie);
- * </code></pre>
- */
-proxy.SyncChromeSender = class {
-  constructor(sendSyncMessage) {
-    this.sendSyncMessage_ = sendSyncMessage;
-  }
-
-  send(func, args) {
-    let name = "Marionette:" + func.toString();
-    return this.sendSyncMessage_(name, marshal(args));
-  }
 };
 
 function marshal(args) {

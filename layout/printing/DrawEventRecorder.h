@@ -24,12 +24,14 @@ class PRFileDescStream : public mozilla::gfx::EventStream {
 public:
   PRFileDescStream() : mFd(nullptr), mBuffer(nullptr), mBufferPos(0),
                        mGood(true) {}
+  PRFileDescStream(const PRFileDescStream& other) = delete;
+  ~PRFileDescStream() { Close(); }
 
   void OpenFD(PRFileDesc* aFd)
   {
     MOZ_ASSERT(!IsOpen());
     mFd = aFd;
-    mGood = true;
+    mGood = !!mFd;
     mBuffer.reset(new uint8_t[kBufferSize]);
     mBufferPos = 0;
   }
@@ -53,33 +55,41 @@ public:
   void Flush() {
     // See comment in Close().
     if (IsOpen() && mBufferPos > 0) {
-      PR_Write(mFd, static_cast<const void*>(mBuffer.get()), mBufferPos);
+      PRInt32 length =
+        PR_Write(mFd, static_cast<const void*>(mBuffer.get()), mBufferPos);
+      mGood = length >= 0 && static_cast<size_t>(length) == mBufferPos;
       mBufferPos = 0;
     }
   }
 
-  void Seek(PRInt32 aOffset, PRSeekWhence aWhence) {
+  void Seek(PRInt64 aOffset, PRSeekWhence aWhence)
+  {
     Flush();
-    PR_Seek(mFd, aOffset, aWhence);
+    PRInt64 pos = PR_Seek64(mFd, aOffset, aWhence);
+    mGood = pos != -1;
   }
 
   void write(const char* aData, size_t aSize) {
+    if (!good()) {
+      return;
+    }
+
     // See comment in Close().
     if (IsOpen()) {
       // If we're writing more data than could ever fit in our buffer, flush the
       // buffer and write directly.
       if (aSize > kBufferSize) {
         Flush();
-        PR_Write(mFd, static_cast<const void*>(aData), aSize);
-      // If our write could fit in our buffer, but doesn't because the buffer is
-      // partially full, write to the buffer, flush the buffer, and then write
-      // the rest of the data to the buffer.
+        PRInt32 length = PR_Write(mFd, static_cast<const void*>(aData), aSize);
+        mGood = length >= 0 && static_cast<size_t>(length) == aSize;
+      // If our write could fit in our buffer, but doesn't because the buffer
+      // is partially full, write to the buffer, flush the buffer, and then
+      // write the rest of the data to the buffer.
       } else if (aSize > AvailableBufferSpace()) {
         size_t length = AvailableBufferSpace();
         WriteToBuffer(aData, length);
         Flush();
 
-        MOZ_ASSERT(aSize <= kBufferSize);
         WriteToBuffer(aData + length, aSize - length);
       // Write fits in the buffer.
       } else {
@@ -89,9 +99,13 @@ public:
   }
 
   void read(char* aOut, size_t aSize) {
+    if (!good()) {
+      return;
+    }
+
     Flush();
     PRInt32 res = PR_Read(mFd, static_cast<void*>(aOut), aSize);
-    mGood = res >= 0 && ((size_t)res == aSize);
+    mGood = res >= 0 && (static_cast<size_t>(res) == aSize);
   }
 
   bool good() {

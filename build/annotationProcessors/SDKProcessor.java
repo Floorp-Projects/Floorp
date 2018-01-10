@@ -333,7 +333,19 @@ public class SDKProcessor {
         Arrays.sort(members, new Comparator<Member>() {
             @Override
             public int compare(Member a, Member b) {
-                return a.getName().compareTo(b.getName());
+                int result = a.getName().compareTo(b.getName());
+                if (result == 0) {
+                    if (a instanceof Constructor && b instanceof Constructor) {
+                        String sa = Arrays.toString(((Constructor) a).getParameterTypes());
+                        String sb = Arrays.toString(((Constructor) b).getParameterTypes());
+                        result = sa.compareTo(sb);
+                    } else if (a instanceof Method && b instanceof Method) {
+                        String sa = Arrays.toString(((Method) a).getParameterTypes());
+                        String sb = Arrays.toString(((Method) b).getParameterTypes());
+                        result = sa.compareTo(sb);
+                    }
+                }
+                return result;
             }
         });
 

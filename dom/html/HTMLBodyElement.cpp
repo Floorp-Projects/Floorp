@@ -167,7 +167,7 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // if marginwidth or marginheight is set in the <frame> and not set in the <body>
     // reflect them as margin in the <body>
     if (bodyMarginWidth == -1 || bodyMarginHeight == -1) {
-      nsCOMPtr<nsIDocShell> docShell(aData->mPresContext->GetDocShell());
+      nsCOMPtr<nsIDocShell> docShell(aData->Document()->GetDocShell());
       if (docShell) {
         nscoord frameMarginWidth=-1;  // default value
         nscoord frameMarginHeight=-1; // default value
@@ -197,41 +197,35 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
 
   if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Display))) {
     // When display if first asked for, go ahead and get our colors set up.
-    nsIPresShell *presShell = aData->PresContext()->GetPresShell();
-    if (presShell) {
-      nsIDocument *doc = presShell->GetDocument();
-      if (doc) {
-        nsHTMLStyleSheet* styleSheet = doc->GetAttributeStyleSheet();
-        if (styleSheet) {
-          const nsAttrValue* value;
-          nscolor color;
-          value = aAttributes->GetAttr(nsGkAtoms::link);
-          if (value && value->GetColorValue(color)) {
-            styleSheet->SetLinkColor(color);
-          }
+    if (nsHTMLStyleSheet* styleSheet = aData->Document()->GetAttributeStyleSheet()) {
+      const nsAttrValue* value;
+      nscolor color;
+      value = aAttributes->GetAttr(nsGkAtoms::link);
+      if (value && value->GetColorValue(color)) {
+        styleSheet->SetLinkColor(color);
+      }
 
-          value = aAttributes->GetAttr(nsGkAtoms::alink);
-          if (value && value->GetColorValue(color)) {
-            styleSheet->SetActiveLinkColor(color);
-          }
+      value = aAttributes->GetAttr(nsGkAtoms::alink);
+      if (value && value->GetColorValue(color)) {
+        styleSheet->SetActiveLinkColor(color);
+      }
 
-          value = aAttributes->GetAttr(nsGkAtoms::vlink);
-          if (value && value->GetColorValue(color)) {
-            styleSheet->SetVisitedLinkColor(color);
-          }
-        }
+      value = aAttributes->GetAttr(nsGkAtoms::vlink);
+      if (value && value->GetColorValue(color)) {
+        styleSheet->SetVisitedLinkColor(color);
       }
     }
   }
 
   if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Color))) {
     if (!aData->PropertyIsSet(eCSSProperty_color) &&
-        aData->PresContext()->UseDocumentColors()) {
+        !aData->ShouldIgnoreColors()) {
       // color: color
       nscolor color;
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::text);
-      if (value && value->GetColorValue(color))
+      if (value && value->GetColorValue(color)) {
         aData->SetColorValue(eCSSProperty_color, color);
+      }
     }
   }
 

@@ -19,8 +19,6 @@ ac_add_options --disable-tests
 
 # From here on, like ../android-api-16/nightly.
 
-ac_add_options --enable-profiling
-
 # Android
 # Warning: Before increasing the with-android-min-sdk value, please note several places in and out
 # of tree have to be changed. Otherwise, places like Treeherder or archive.mozilla.org will

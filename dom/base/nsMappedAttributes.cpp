@@ -360,14 +360,14 @@ nsMappedAttributes::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 void
-nsMappedAttributes::LazilyResolveServoDeclaration(nsPresContext* aContext)
+nsMappedAttributes::LazilyResolveServoDeclaration(nsIDocument* aDoc)
 {
 
   MOZ_ASSERT(!mServoStyle,
              "LazilyResolveServoDeclaration should not be called if mServoStyle is already set");
   if (mRuleMapper) {
     mServoStyle = Servo_DeclarationBlock_CreateEmpty().Consume();
-    ServoSpecifiedValues servo = ServoSpecifiedValues(aContext, mServoStyle.get());
+    ServoSpecifiedValues servo = ServoSpecifiedValues(aDoc, mServoStyle.get());
     (*mRuleMapper)(this, &servo);
   }
 }

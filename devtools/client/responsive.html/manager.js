@@ -373,7 +373,7 @@ ResponsiveUI.prototype = {
    *         Whether this call is actually destroying.  False means destruction
    *         was already in progress.
    */
-  destroy: Task.async(function* (options) {
+  async destroy(options) {
     if (this.destroying) {
       return false;
     }
@@ -389,7 +389,7 @@ ResponsiveUI.prototype = {
 
     // Ensure init has finished before starting destroy
     if (!isTabContentDestroying) {
-      yield this.inited;
+      await this.inited;
     }
 
     this.tab.removeEventListener("TabClose", this);
@@ -399,7 +399,20 @@ ResponsiveUI.prototype = {
 
     if (!isTabContentDestroying) {
       // Notify the inner browser to stop the frame script
-      yield message.request(this.toolWindow, "stop-frame-script");
+      await message.request(this.toolWindow, "stop-frame-script");
+    }
+
+    // Ensure the tab is reloaded if required when exiting RDM so that no emulated
+    // settings are left in a customized state.
+    if (!isTabContentDestroying) {
+      let reloadNeeded = false;
+      reloadNeeded |= await this.updateDPPX();
+      reloadNeeded |= await this.updateNetworkThrottling();
+      reloadNeeded |= await this.updateUserAgent();
+      reloadNeeded |= await this.updateTouchSimulation();
+      if (reloadNeeded) {
+        this.getViewportBrowser().reload();
+      }
     }
 
     // Destroy local state
@@ -415,7 +428,7 @@ ResponsiveUI.prototype = {
     // anything on shutdown client side.
     let clientClosed = this.client.close();
     if (!isTabContentDestroying) {
-      yield clientClosed;
+      await clientClosed;
     }
     this.client = this.emulationFront = null;
 
@@ -427,7 +440,7 @@ ResponsiveUI.prototype = {
     this.destroyed = true;
 
     return true;
-  }),
+  },
 
   connectToServer: Task.async(function* () {
     DebuggerServer.init();
@@ -487,9 +500,13 @@ ResponsiveUI.prototype = {
 
   onChangeDevice: Task.async(function* (event) {
     let { userAgent, pixelRatio, touch } = event.data.device;
+    // Bug 1428799: Should we reload on UA change as well?
     yield this.updateUserAgent(userAgent);
     yield this.updateDPPX(pixelRatio);
-    yield this.updateTouchSimulation(touch);
+    let reloadNeeded = yield this.updateTouchSimulation(touch);
+    if (reloadNeeded) {
+      this.getViewportBrowser().reload();
+    }
     // Used by tests
     this.emit("device-changed");
   }),
@@ -506,9 +523,12 @@ ResponsiveUI.prototype = {
     this.updateDPPX(pixelRatio);
   },
 
-  onChangeTouchSimulation(event) {
+  async onChangeTouchSimulation(event) {
     let { enabled } = event.data;
-    this.updateTouchSimulation(enabled);
+    let reloadNeeded = await this.updateTouchSimulation(enabled);
+    if (reloadNeeded) {
+      this.getViewportBrowser().reload();
+    }
     // Used by tests
     this.emit("touch-simulation-changed");
   },
@@ -527,25 +547,44 @@ ResponsiveUI.prototype = {
   },
 
   onRemoveDeviceAssociation: Task.async(function* (event) {
+    // Bug 1428799: Should we reload on UA change as well?
     yield this.updateUserAgent();
     yield this.updateDPPX();
-    yield this.updateTouchSimulation();
+    let reloadNeeded = yield this.updateTouchSimulation();
+    if (reloadNeeded) {
+      this.getViewportBrowser().reload();
+    }
     // Used by tests
     this.emit("device-association-removed");
   }),
 
+  /**
+   * Set or clear the emulated device pixel ratio.
+   *
+   * @return boolean
+   *         Whether a reload is needed to apply the change.
+   *         (This is always immediate, so it's always false.)
+   */
   updateDPPX: Task.async(function* (dppx) {
     if (!dppx) {
       yield this.emulationFront.clearDPPXOverride();
-      return;
+      return false;
     }
     yield this.emulationFront.setDPPXOverride(dppx);
+    return false;
   }),
 
+  /**
+   * Set or clear network throttling.
+   *
+   * @return boolean
+   *         Whether a reload is needed to apply the change.
+   *         (This is always immediate, so it's always false.)
+   */
   updateNetworkThrottling: Task.async(function* (enabled, profile) {
     if (!enabled) {
       yield this.emulationFront.clearNetworkThrottling();
-      return;
+      return false;
     }
     let data = throttlingProfiles.find(({ id }) => id == profile);
     let { download, upload, latency } = data;
@@ -554,29 +593,36 @@ ResponsiveUI.prototype = {
       uploadThroughput: upload,
       latency,
     });
+    return false;
   }),
 
-  updateUserAgent: Task.async(function* (userAgent) {
+  /**
+   * Set or clear the emulated user agent.
+   *
+   * @return boolean
+   *         Whether a reload is needed to apply the change.
+   */
+  updateUserAgent(userAgent) {
     if (!userAgent) {
-      yield this.emulationFront.clearUserAgentOverride();
-      return;
+      return this.emulationFront.clearUserAgentOverride();
     }
-    yield this.emulationFront.setUserAgentOverride(userAgent);
-  }),
+    return this.emulationFront.setUserAgentOverride(userAgent);
+  },
 
-  updateTouchSimulation: Task.async(function* (enabled) {
-    let reloadNeeded;
-    if (enabled) {
-      reloadNeeded = yield this.emulationFront.setTouchEventsOverride(
-        Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED
-      );
-    } else {
-      reloadNeeded = yield this.emulationFront.clearTouchEventsOverride();
+  /**
+   * Set or clear touch simulation.
+   *
+   * @return boolean
+   *         Whether a reload is needed to apply the change.
+   */
+  updateTouchSimulation(enabled) {
+    if (!enabled) {
+      return this.emulationFront.clearTouchEventsOverride();
     }
-    if (reloadNeeded) {
-      this.getViewportBrowser().reload();
-    }
-  }),
+    return this.emulationFront.setTouchEventsOverride(
+      Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED
+    );
+  },
 
   /**
    * Helper for tests. Assumes a single viewport for now.
