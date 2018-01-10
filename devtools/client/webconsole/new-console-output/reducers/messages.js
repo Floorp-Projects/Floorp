@@ -197,10 +197,6 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
 
       return limitTopLevelMessageCount(newState, logLimit);
 
-    case constants.MESSAGE_ADD:
-      newState = addMessage(state, filtersState, prefsState, action.message);
-      return limitTopLevelMessageCount(newState, logLimit);
-
     case constants.MESSAGES_CLEAR:
       return MessageState({
         // Store all actors from removed messages. This array is used by
