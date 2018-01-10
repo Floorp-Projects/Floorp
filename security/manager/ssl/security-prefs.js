@@ -129,22 +129,3 @@ pref("security.ssl.errorReporting.automatic", false);
 // blacking themselves out by setting a bad pin.  (60 days by default)
 // https://tools.ietf.org/html/rfc7469#section-4.1
 pref("security.cert_pinning.max_max_age_seconds", 5184000);
-
-// HSTS Priming
-// If a request is mixed-content, send an HSTS priming request to attempt to
-// see if it is available over HTTPS.
-// Don't change the order of evaluation of mixed-content and HSTS upgrades in
-// order to be most compatible with current standards in Release
-pref("security.mixed_content.send_hsts_priming", false);
-pref("security.mixed_content.use_hsts", false);
-#ifdef EARLY_BETA_OR_EARLIER
-// Change the order of evaluation so HSTS upgrades happen before
-// mixed-content blocking
-pref("security.mixed_content.send_hsts_priming", true);
-pref("security.mixed_content.use_hsts", true);
-#endif
-// Approximately 1 week default cache for HSTS priming failures, in seconds
-pref ("security.mixed_content.hsts_priming_cache_timeout", 604800);
-// Force the channel to timeout in 2 seconds if we have not received
-// expects a time in milliseconds
-pref ("security.mixed_content.hsts_priming_request_timeout", 2000);

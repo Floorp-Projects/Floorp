@@ -38,15 +38,10 @@ let tests = [
   function setup() {
     Services.prefs.setBoolPref("browser.send_pings", true);
     Services.prefs.setIntPref("browser.send_pings.max_per_link", -1);
-    Services.prefs.setBoolPref("security.mixed_content.block_active_content", false);
-    // The server we create can't handle the priming HEAD requests
-    Services.prefs.setBoolPref("security.mixed_content.send_hsts_priming", false);
 
     SimpleTest.registerCleanupFunction(() => {
       Services.prefs.clearUserPref("browser.send_pings");
       Services.prefs.clearUserPref("browser.send_pings.max_per_link");
-      Services.prefs.clearUserPref("security.mixed_content.block_active_content");
-      Services.prefs.clearUserPref("security.mixed_content.send_hsts_priming");
     });
   },
 
@@ -149,7 +144,7 @@ let tests = [
 
     // The referrer will be loaded using a secure channel.
     navigate("https://example.com/chrome/dom/html/test/" +
-             "file_anchor_ping.html?" + "http://localhost:" +
+             "file_anchor_ping.html?" + "http://127.0.0.1:" +
              server.identity.primaryPort + ping);
 
     // Wait until the ping has been sent.
