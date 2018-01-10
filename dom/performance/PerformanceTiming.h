@@ -169,6 +169,8 @@ public:
     return mTimingAllowed;
   }
 
+  already_AddRefed<nsIArray> GetServerTiming() const;
+
 private:
   // Checks if the resource is either same origin as the page that started
   // the load, or if the response contains the Timing-Allow-Origin header
@@ -176,6 +178,7 @@ private:
   bool CheckAllowedOrigin(nsIHttpChannel* aResourceChannel,
                           nsITimedChannel* aChannel);
 
+  nsCOMPtr<nsIArray> mServerTiming;
   nsString mNextHopProtocol;
 
   TimeStamp mAsyncOpen;
