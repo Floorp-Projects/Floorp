@@ -18,7 +18,7 @@ browser.jar:
   skin/classic/browser/panel-plus-sign.png
   skin/classic/browser/page-livemarks.png
 * skin/classic/browser/pageInfo.css
-  skin/classic/browser/searchbar.css
+* skin/classic/browser/searchbar.css
   skin/classic/browser/slowStartup-16.png
   skin/classic/browser/toolbarbutton-dropmarker.png
   skin/classic/browser/toolbarbutton-dropmarker@2x.png
