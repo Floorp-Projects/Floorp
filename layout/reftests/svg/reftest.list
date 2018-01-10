@@ -261,12 +261,12 @@ fuzzy-if(skiaContent,1,800000) == markers-and-group-opacity-01.svg markers-and-g
 == marker-dynamic-opacity.html marker-dynamic-opacity-ref.html
 == marker-effects-01.svg marker-effects-01-ref.svg
 fuzzy-if(skiaContent,1,100) == marker-viewBox-01.svg marker-viewBox-01-ref.svg
-fuzzy-if(skiaContent,1,100) fails-if(webrender) == marker-orientation-01.svg marker-orientation-01-ref.svg
-fuzzy-if(skiaContent,1,5) pref(svg.marker-improvements.enabled,true) fails-if(webrender) == marker-orientation-02.svg marker-orientation-02-ref.svg
+fuzzy-if(skiaContent,1,100) == marker-orientation-01.svg marker-orientation-01-ref.svg
+fuzzy-if(skiaContent,1,5) pref(svg.marker-improvements.enabled,true) == marker-orientation-02.svg marker-orientation-02-ref.svg
 == marker-orientation-03.svg pass.svg
 == marker-orientation-04.svg pass.svg
 
-fuzzy(28,28) fails-if(webrender) == mask-and-clipPath.html mask-and-clipPath-ref.html
+fuzzy(28,28) == mask-and-clipPath.html mask-and-clipPath-ref.html
 == mask-and-clipPath-2.svg pass.svg
 == mask-ref-loop-01.svg pass.svg
 == mask-basic-01.svg pass.svg
@@ -298,7 +298,7 @@ fuzzy-if(d2d||skiaContent,1,6400) == mask-type-04.svg mask-type-01-ref.svg
 == nested-viewBox-01.svg pass.svg
 fuzzy-if(skiaContent,3,448000) == nesting-invalid-01.svg nesting-invalid-01-ref.svg
 
-fuzzy-if(d2d&&/^Windows\x20NT\x20(6\.1|10\.0)/.test(http.oscpu),63,168) fuzzy-if(cocoaWidget,1,122) fuzzy-if(skiaContent,2,1000) fails-if(webrender) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg # bug 1074161 for Win7 and OSX 10.8
+fuzzy-if(d2d&&/^Windows\x20NT\x20(6\.1|10\.0)/.test(http.oscpu),63,168) fuzzy-if(cocoaWidget,1,122) fuzzy-if(skiaContent,2,1000) == non-scaling-stroke-01.svg non-scaling-stroke-01-ref.svg # bug 1074161 for Win7 and OSX 10.8
 fuzzy-if(gtkWidget,1,99) fuzzy-if(!contentSameGfxBackendAsCanvas,9,99) fuzzy-if(Android,9,586) == non-scaling-stroke-02.svg non-scaling-stroke-02-ref.svg
 == non-scaling-stroke-03.svg non-scaling-stroke-03-ref.svg
 

@@ -85,7 +85,7 @@ fuzzy(1,10000) == opacity-preserve3d-4.html opacity-preserve3d-4-ref.html
 == mask-layer-3.html mask-layer-ref.html
 == split-intersect1.html split-intersect1-ref.html
 fuzzy(255,150) == split-intersect2.html split-intersect2-ref.html
-fuzzy(255,100) fails-if(webrender) == split-non-ortho1.html split-non-ortho1-ref.html
+fuzzy(255,100) == split-non-ortho1.html split-non-ortho1-ref.html
 fuzzy-if(winWidget,150,120) == component-alpha-1.html component-alpha-1-ref.html
 == nested-transform-1.html nested-transform-1-ref.html
 == transform-geometry-1.html transform-geometry-1-ref.html
