@@ -551,6 +551,14 @@ this.tabs = class extends ExtensionAPI {
                             tab => tab.convert());
         },
 
+        async captureTab(tabId, options) {
+          let nativeTab = getTabOrActive(tabId);
+          await tabListener.awaitTabReady(nativeTab);
+
+          let tab = tabManager.wrapTab(nativeTab);
+          return tab.capture(context, options);
+        },
+
         async captureVisibleTab(windowId, options) {
           let window = windowId == null ?
             windowTracker.topWindow :
