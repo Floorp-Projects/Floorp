@@ -15,6 +15,7 @@ Preferences.addAll([
   { id: "browser.urlbar.suggest.searches", type: "bool" },
   { id: "browser.search.hiddenOneOffs", type: "unichar" },
   { id: "browser.search.widget.inNavBar", type: "bool" },
+  { id: "browser.urlbar.matchBuckets", type: "string" },
 ]);
 
 const ENGINE_FLAVOR = "text/x-moz-search-engine";
@@ -60,6 +61,47 @@ var gSearchPane = {
     let suggestsPref = Preferences.get("browser.search.suggest.enabled");
     suggestsPref.on("change", this.updateSuggestsCheckbox.bind(this));
     this.updateSuggestsCheckbox();
+
+    this._initShowSearchSuggestionsFirst();
+  },
+
+  _initShowSearchSuggestionsFirst() {
+    let pref = Preferences.get("browser.urlbar.matchBuckets");
+    let checkbox =
+      document.getElementById("showSearchSuggestionsFirstCheckbox");
+
+    pref.on("change", () => {
+      this.syncFromShowSearchSuggestionsFirstPref(checkbox, pref);
+    });
+    this._syncFromShowSearchSuggestionsFirstPref(checkbox, pref);
+
+    checkbox.addEventListener("command", () => {
+      this._syncToShowSearchSuggestionsFirstPref(checkbox.checked, pref);
+    });
+  },
+
+  _syncFromShowSearchSuggestionsFirstPref(checkbox, pref) {
+    if (!pref.value) {
+      // The pref is cleared, meaning search suggestions are shown first.
+      checkbox.checked = true;
+      return;
+    }
+    // The pref has a value.  If the first bucket in the pref is search
+    // suggestions, then check the checkbox.
+    let bucketPair = pref.value.split(",")[0];
+    let bucketName = bucketPair.split(":")[0];
+    checkbox.checked = bucketName == "suggestion";
+  },
+
+  _syncToShowSearchSuggestionsFirstPref(checked, pref) {
+    if (checked) {
+      // Show search suggestions first, so clear the pref since that's the
+      // default.
+      pref.reset();
+      return;
+    }
+    // Show history first.
+    pref.value = "general:5,suggestion:Infinity";
   },
 
   updateSuggestsCheckbox() {
