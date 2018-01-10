@@ -88,7 +88,11 @@ function startTest(test) {
 // Linux. See bug 1084185.
 var testVideo = getPlayableVideo(gSmallTests);
 if (testVideo) {
-  startTest(testVideo);
+  SpecialPowers.pushPrefEnv(
+    { "set": [["privacy.reduceTimerPrecision", false]]},
+    function() {
+      startTest(testVideo);
+    });
 } else {
   todo(false, "No playable video");
 }
