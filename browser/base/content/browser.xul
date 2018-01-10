@@ -779,8 +779,6 @@
                      completeselectedindex="true"
                      shrinkdelay="250"
                      tabscrolling="true"
-                     showcommentcolumn="true"
-                     showimagecolumn="true"
                      newlines="stripsurroundingwhitespace"
                      ontextentered="this.handleCommand(param);"
                      ontextreverted="return this.handleRevert();"
