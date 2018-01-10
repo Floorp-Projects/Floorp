@@ -146,8 +146,8 @@
               accesskey="&ctrlTabRecentlyUsedOrder.accesskey;"
               preference="browser.ctrlTab.previews"/>
 
-    <checkbox id="linkTargeting" label="&newWindowsAsTabs2.label;"
-              accesskey="&newWindowsAsTabs2.accesskey;"
+    <checkbox id="linkTargeting" label="&newWindowsAsTabs3.label;"
+              accesskey="&newWindowsAsTabs3.accesskey;"
               preference="browser.link.open_newwindow"
               onsyncfrompreference="return gMainPane.readLinkTarget();"
               onsynctopreference="return gMainPane.writeLinkTarget();"/>

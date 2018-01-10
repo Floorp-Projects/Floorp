@@ -5,8 +5,8 @@
 <!ENTITY ctrlTabRecentlyUsedOrder.label       "Ctrl+Tab cycles through tabs in recently used order">
 <!ENTITY ctrlTabRecentlyUsedOrder.accesskey   "T">
 
-<!ENTITY newWindowsAsTabs2.label       "Open links as tabs instead of new windows">
-<!ENTITY newWindowsAsTabs2.accesskey   "w">
+<!ENTITY newWindowsAsTabs3.label       "Open links in tabs instead of new windows">
+<!ENTITY newWindowsAsTabs3.accesskey   "w">
 
 <!ENTITY warnOnCloseMultipleTabs.label      "Warn you when closing multiple tabs">
 <!ENTITY warnOnCloseMultipleTabs.accesskey  "m">
