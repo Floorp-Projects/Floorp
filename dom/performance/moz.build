@@ -17,6 +17,7 @@ EXPORTS.mozilla.dom += [
     'PerformanceObserver.h',
     'PerformanceObserverEntryList.h',
     'PerformanceResourceTiming.h',
+    'PerformanceServerTiming.h',
     'PerformanceService.h',
     'PerformanceTiming.h',
 ]
@@ -32,6 +33,7 @@ UNIFIED_SOURCES += [
     'PerformanceObserver.cpp',
     'PerformanceObserverEntryList.cpp',
     'PerformanceResourceTiming.cpp',
+    'PerformanceServerTiming.cpp',
     'PerformanceService.cpp',
     'PerformanceTiming.cpp',
     'PerformanceWorker.cpp',

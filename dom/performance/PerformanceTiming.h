@@ -260,6 +260,8 @@ public:
     return GetDOMTiming()->GetTimeToNonBlankPaint();
   }
 
+  already_AddRefed<nsIArray> GetServerTiming() const;
+
 private:
   ~PerformanceTiming();
 
@@ -307,6 +309,7 @@ private:
   bool mReportCrossOriginRedirect;
 
   bool mSecureConnection;
+  nsCOMPtr<nsIArray> mServerTiming;
 };
 
 } // namespace dom
