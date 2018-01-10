@@ -560,6 +560,9 @@ class BrowserExtensionContent extends EventEmitter {
     this.uuid = data.uuid;
     this.instanceId = data.instanceId;
 
+    this.childModules = data.childModules;
+    this.schemaURLs = data.schemaURLs;
+
     this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
     Services.cpmm.addMessageListener(this.MESSAGE_EMIT_EVENT, this);
 
@@ -573,7 +576,7 @@ class BrowserExtensionContent extends EventEmitter {
     this.optionalPermissions = data.optionalPermissions;
     this.principal = data.principal;
 
-    this.apiManager = ExtensionPageChild.apiManager;
+    this.apiManager = this.getAPIManager();
 
     this.localeData = new LocaleData(data.localeData);
 
@@ -632,6 +635,23 @@ class BrowserExtensionContent extends EventEmitter {
     /* eslint-enable mozilla/balanced-listeners */
 
     ExtensionManager.extensions.set(this.id, this);
+  }
+
+  getAPIManager() {
+    let apiManagers = [ExtensionPageChild.apiManager];
+
+    if (this.childModules) {
+      this.experimentAPIManager =
+        new ExtensionCommon.LazyAPIManager("addon", this.childModules, this.schemaURLs);
+
+      apiManagers.push(this.experimentAPIManager);
+    }
+
+    if (apiManagers.length == 1) {
+      return apiManagers[0];
+    }
+
+    return new ExtensionCommon.MultiAPIManager("addon", apiManagers.reverse());
   }
 
   shutdown() {

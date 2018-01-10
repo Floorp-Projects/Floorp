@@ -27,6 +27,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
+  SchemaRoot: "resource://gre/modules/Schemas.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "styleSheetService",
@@ -753,6 +754,17 @@ function getPath(map, path) {
   return map;
 }
 
+function mergePaths(dest, source) {
+  for (let name of source.modules) {
+    dest.modules.add(name);
+  }
+
+  for (let [name, child] of source.children.entries()) {
+    mergePaths(getChild(dest, name),
+               child);
+  }
+}
+
 /**
  * Manages loading and accessing a set of APIs for a specific extension
  * context.
@@ -967,7 +979,9 @@ class SchemaAPIManager extends EventEmitter {
     super();
     this.processType = processType;
     this.global = null;
-    this.schema = schema;
+    if (schema) {
+      this.schema = schema;
+    }
 
     this.modules = new Map();
     this.modulePaths = {children: new Map(), modules: new Set()};
@@ -997,11 +1011,13 @@ class SchemaAPIManager extends EventEmitter {
   }
 
   async loadModuleJSON(urls) {
-    function fetchJSON(url) {
-      return fetch(url).then(resp => resp.json());
-    }
+    let promises = urls.map(url => fetch(url).then(resp => resp.json()));
 
-    for (let json of await Promise.all(urls.map(fetchJSON))) {
+    return this.initModuleJSON(await Promise.all(promises));
+  }
+
+  initModuleJSON(blobs) {
+    for (let json of blobs) {
       this.registerModules(json);
     }
 
@@ -1244,6 +1260,10 @@ class SchemaAPIManager extends EventEmitter {
     return module.asyncLoaded;
   }
 
+  getModule(name) {
+    return this.modules.get(name);
+  }
+
   /**
    * Checks whether the given API module may be loaded for the given
    * extension, in the given scope.
@@ -1260,7 +1280,7 @@ class SchemaAPIManager extends EventEmitter {
    *        Whether the module may be loaded.
    */
   _checkGetAPI(name, extension, scope = null) {
-    let module = this.modules.get(name);
+    let module = this.getModule(name);
 
     if (module.permissions && !module.permissions.some(perm => extension.hasPermission(perm))) {
       return false;
@@ -1380,6 +1400,96 @@ class SchemaAPIManager extends EventEmitter {
     }
   }
 }
+
+class LazyAPIManager extends SchemaAPIManager {
+  constructor(processType, moduleData, schemaURLs) {
+    super(processType);
+
+    this.initialized = false;
+
+    this.initModuleData(moduleData);
+
+    this.schemaURLs = schemaURLs;
+  }
+}
+
+defineLazyGetter(LazyAPIManager.prototype, "schema", function() {
+  let root = new SchemaRoot(Schemas.rootSchema, this.schemaURLs);
+  root.parseSchemas();
+  return root;
+});
+
+class MultiAPIManager extends SchemaAPIManager {
+  constructor(processType, children) {
+    super(processType);
+
+    this.initialized = false;
+
+    this.children = children;
+  }
+
+  async lazyInit() {
+    if (!this.initialized) {
+      this.initialized = true;
+
+      for (let child of this.children) {
+        if (child.lazyInit) {
+          let res = child.lazyInit();
+          if (res && typeof res.then === "function") {
+            await res;
+          }
+        }
+
+        mergePaths(this.modulePaths, child.modulePaths);
+      }
+    }
+  }
+
+  onStartup(extension) {
+    return Promise.all(this.children.map(
+      child => child.onStartup(extension)));
+  }
+
+  getModule(name) {
+    for (let child of this.children) {
+      if (child.modules.has(name)) {
+        return child.modules.get(name);
+      }
+    }
+  }
+
+  loadModule(name) {
+    for (let child of this.children) {
+      if (child.modules.has(name)) {
+        return child.loadModule(name);
+      }
+    }
+  }
+
+  asyncLoadModule(name) {
+    for (let child of this.children) {
+      if (child.modules.has(name)) {
+        return child.asyncLoadModule(name);
+      }
+    }
+  }
+}
+
+defineLazyGetter(MultiAPIManager.prototype, "schema", function() {
+  let bases = this.children.map(child => child.schema);
+
+  // All API manager schema roots should derive from the global schema root,
+  // so it doesn't need its own entry.
+  if (bases[bases.length - 1] === Schemas) {
+    bases.pop();
+  }
+
+  if (bases.length === 1) {
+    bases = bases[0];
+  }
+  return new SchemaRoot(bases, new Map());
+});
+
 
 function LocaleData(data) {
   this.defaultLocale = data.defaultLocale;
@@ -1754,4 +1864,7 @@ ExtensionCommon = {
   SpreadArgs,
   ignoreEvent,
   stylesheetMap,
+
+  MultiAPIManager,
+  LazyAPIManager,
 };

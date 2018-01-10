@@ -98,15 +98,19 @@ function stripDescriptions(json, stripThis = true) {
   return result;
 }
 
-async function readJSONAndBlobbify(url) {
-  let json = await readJSON(url);
-
+function blobbify(json) {
   // We don't actually use descriptions at runtime, and they make up about a
   // third of the size of our structured clone data, so strip them before
   // blobbifying.
   json = stripDescriptions(json);
 
   return new StructuredCloneHolder(json);
+}
+
+async function readJSONAndBlobbify(url) {
+  let json = await readJSON(url);
+
+  return blobbify(json);
 }
 
 /**
@@ -917,13 +921,16 @@ const FORMATS = {
   },
 
   strictRelativeUrl(string, context) {
-    // Do not accept a string which resolves as an absolute URL, or any
-    // protocol-relative URL.
+    void FORMATS.unresolvedRelativeUrl(string, context);
+    return FORMATS.relativeUrl(string, context);
+  },
+
+  unresolvedRelativeUrl(string, context) {
     if (!string.startsWith("//")) {
       try {
         new URL(string);
       } catch (e) {
-        return FORMATS.relativeUrl(string, context);
+        return string;
       }
     }
 
@@ -2987,6 +2994,14 @@ this.Schemas = {
     }
 
     this.flushSchemas();
+  },
+
+  fetch(url) {
+    return readJSONAndBlobbify(url);
+  },
+
+  processSchema(json) {
+    return blobbify(json);
   },
 
   async load(url, content = false) {
