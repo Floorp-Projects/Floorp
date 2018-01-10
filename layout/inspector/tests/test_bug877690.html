@@ -211,6 +211,12 @@ function do_test() {
   var expected = [ "inherit", "initial", "unset", "contain", "cover" ];
   ok(testValues(values, expected), "property background-size's values.");
 
+  // Regression test for bug 1255401.
+  var prop = "all"
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
+  var expected = [ "inherit", "initial", "unset" ];
+  ok(testValues(values, expected), "property all's values.");
+
   SimpleTest.finish();
 }
 
