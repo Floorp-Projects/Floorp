@@ -16,6 +16,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/PodOperations.h"
+#include "prenv.h"
 #include "sandbox/linux/bpf_dsl/seccomp_macros.h"
 #ifdef ANDROID
 #include "sandbox/linux/system_headers/linux_ucontext.h"
@@ -35,6 +36,12 @@ SandboxReporterClient::SandboxReporterClient(SandboxReport::ProcType aProcType,
   // of in-band handshake.  However, the crash reporter (which also
   // uses a "magic number" fd) doesn't do any kind of checking either,
   // so it's probably okay to skip it here.
+}
+
+SandboxReporterClient::SandboxReporterClient(SandboxReport::ProcType aProcType)
+  : SandboxReporterClient(aProcType, kSandboxReporterFileDesc)
+{
+  MOZ_RELEASE_ASSERT(PR_GetEnv("MOZ_SANDBOXED") != nullptr);
 }
 
 SandboxReport
