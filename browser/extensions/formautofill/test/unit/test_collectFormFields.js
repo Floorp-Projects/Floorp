@@ -173,6 +173,14 @@ const TESTCASES = [
     validFieldDetails: [],
   },
   {
+    description: "An invalid credit card form due to non-autocomplete-attr cc-number only",
+    document: `<form>
+               <input id="cc-number" name="cc-number">
+               </form>`,
+    sections: [[]],
+    validFieldDetails: [],
+  },
+  {
     description: "An invalid credit card form due to omitted cc-number.",
     document: `<form>
                <input id="cc-name" autocomplete="cc-name">
@@ -183,13 +191,25 @@ const TESTCASES = [
     validFieldDetails: [],
   },
   {
-    description: "An invalid credit card form due to non-autocomplete-attr cc-number and omitted cc-exp-*.",
+    description: "A valid credit card form with non-autocomplete-attr cc-number and cc-name.",
     document: `<form>
                <input id="cc-name" autocomplete="cc-name">
                <input id="cc-number" name="card-number">
                </form>`,
-    sections: [[]],
-    validFieldDetails: [],
+    sections: [
+      [
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"},
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+      ],
+    ],
+    validFieldDetails: [
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-name"},
+      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
+    ],
+    ids: [
+      "cc-name",
+      "cc-number",
+    ],
   },
   {
     description: "A valid credit card form with autocomplete-attr cc-number only.",
