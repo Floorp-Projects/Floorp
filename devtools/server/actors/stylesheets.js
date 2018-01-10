@@ -494,8 +494,20 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
     if (request._discardResponseBody || !content) {
       return null;
     }
+    if (content.text.type != "longString") {
+      // For short strings, the text is available directly.
+      return {
+        content: content.text,
+        contentType: content.mimeType,
+      };
+    }
+    // For long strings, look up the actor that holds the full text.
+    let longStringActor = this.conn._getOrCreateActor(content.text.actor);
+    if (!longStringActor) {
+      return null;
+    }
     return {
-      content: content.text,
+      content: longStringActor.rawValue(),
       contentType: content.mimeType,
     };
   },
