@@ -3864,10 +3864,6 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   // in nsAppShell::Create, but we need to get in before gtk
   // has been initialized to make sure everything is running
   // consistently.
-#if (MOZ_WIDGET_GTK == 2)
-  if (CheckArg("install"))
-    gdk_rgb_set_install(TRUE);
-#endif
 
   // Set program name to the one defined in application.ini.
   {
@@ -4072,9 +4068,6 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
   g_set_application_name(mAppData->name);
   gtk_window_set_auto_startup_notification(false);
 
-#if (MOZ_WIDGET_GTK == 2)
-  gtk_widget_set_default_colormap(gdk_rgb_get_colormap());
-#endif /* (MOZ_WIDGET_GTK == 2) */
 #endif /* defined(MOZ_WIDGET_GTK) */
 #ifdef MOZ_X11
   // Do this after initializing GDK, or GDK will install its own handler.
@@ -4716,25 +4709,6 @@ XREMain::XRE_mainRun()
   return rv;
 }
 
-#if MOZ_WIDGET_GTK == 2
-void XRE_GlibInit()
-{
-  static bool ran_once = false;
-
-  // glib < 2.24 doesn't want g_thread_init to be invoked twice, so ensure
-  // we only do it once. No need for thread safety here, since this is invoked
-  // well before any thread is spawned.
-  if (!ran_once) {
-    // glib version < 2.36 doesn't initialize g_slice in a static initializer.
-    // Ensure this happens through g_thread_init (glib version < 2.32) or
-    // g_type_init (2.32 <= gLib version < 2.36)."
-    g_thread_init(nullptr);
-    g_type_init();
-    ran_once = true;
-  }
-}
-#endif
-
 /*
  * XRE_main - A class based main entry point used by most platforms.
  *            Note that on OSX, aAppData->xreDirectory will point to
@@ -4840,10 +4814,6 @@ XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
   // stability, we should instantiate COM ASAP so that we can ensure that these
   // global settings are configured before anything can interfere.
   mozilla::mscom::MainThreadRuntime msCOMRuntime;
-#endif
-
-#if MOZ_WIDGET_GTK == 2
-  XRE_GlibInit();
 #endif
 
   // init

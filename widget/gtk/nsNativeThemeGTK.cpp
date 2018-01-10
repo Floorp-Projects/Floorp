@@ -732,50 +732,6 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
   return true;
 }
 
-#if (MOZ_WIDGET_GTK == 2)
-class ThemeRenderer : public gfxGdkNativeRenderer {
-public:
-  ThemeRenderer(GtkWidgetState aState, WidgetNodeType aGTKWidgetType,
-                gint aFlags, GtkTextDirection aDirection,
-                const GdkRectangle& aGDKRect, const GdkRectangle& aGDKClip)
-    : mState(aState), mGTKWidgetType(aGTKWidgetType), mFlags(aFlags),
-      mDirection(aDirection), mGDKRect(aGDKRect), mGDKClip(aGDKClip) {}
-  nsresult DrawWithGDK(GdkDrawable * drawable, gint offsetX, gint offsetY,
-                       GdkRectangle * clipRects, uint32_t numClipRects);
-private:
-  GtkWidgetState mState;
-  WidgetNodeType mGTKWidgetType;
-  gint mFlags;
-  GtkTextDirection mDirection;
-  const GdkRectangle& mGDKRect;
-  const GdkRectangle& mGDKClip;
-};
-
-nsresult
-ThemeRenderer::DrawWithGDK(GdkDrawable * drawable, gint offsetX, 
-        gint offsetY, GdkRectangle * clipRects, uint32_t numClipRects)
-{
-  GdkRectangle gdk_rect = mGDKRect;
-  gdk_rect.x += offsetX;
-  gdk_rect.y += offsetY;
-
-  GdkRectangle gdk_clip = mGDKClip;
-  gdk_clip.x += offsetX;
-  gdk_clip.y += offsetY;
-
-  GdkRectangle surfaceRect;
-  surfaceRect.x = 0;
-  surfaceRect.y = 0;
-  gdk_drawable_get_size(drawable, &surfaceRect.width, &surfaceRect.height);
-  gdk_rectangle_intersect(&gdk_clip, &surfaceRect, &gdk_clip);
-  
-  NS_ASSERTION(numClipRects == 0, "We don't support clipping!!!");
-  moz_gtk_widget_paint(mGTKWidgetType, drawable, &gdk_rect, &gdk_clip,
-                       &mState, mFlags, mDirection);
-
-  return NS_OK;
-}
-#else
 class SystemCairoClipper : public ClipExporter {
 public:
   explicit SystemCairoClipper(cairo_t* aContext) : mContext(aContext)
@@ -1024,7 +980,6 @@ DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
     }
   }
 }
-#endif
 
 bool
 nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame, uint8_t aWidgetType,
@@ -1172,42 +1127,10 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext,
   // translate everything so (0,0) is the top left of the drawingRect
   gfxPoint origin = rect.TopLeft() + drawingRect.TopLeft();
 
-#if (MOZ_WIDGET_GTK == 2)
-  gfxContextAutoSaveRestore autoSR(ctx);
-  gfxMatrix matrix;
-  if (!snapped) { // else rects are in device coords
-    matrix = ctx->CurrentMatrixDouble();
-  }
-  matrix.Translate(origin);
-  matrix.Scale(scaleFactor, scaleFactor); // Draw in GDK coords
-  ctx->SetMatrixDouble(matrix);
-
-  // The gdk_clip is just advisory here, meaning "you don't
-  // need to draw outside this rect if you don't feel like it!"
-  GdkRectangle gdk_clip = {0, 0, drawingRect.width, drawingRect.height};
-
-  ThemeRenderer renderer(state, gtkWidgetType, flags, direction,
-                         gdk_rect, gdk_clip);
-
-  // Some themes (e.g. Clearlooks) just don't clip properly to any
-  // clip rect we provide, so we cannot advertise support for clipping within
-  // the widget bounds.
-  uint32_t rendererFlags = 0;
-  if (transparency == eOpaque) {
-    rendererFlags |= gfxGdkNativeRenderer::DRAW_IS_OPAQUE;
-  }
-
-  // GtkStyles (used by the widget drawing backend) are created for a
-  // particular colormap/visual.
-  GdkColormap* colormap = moz_gtk_widget_get_colormap();
-
-  renderer.Draw(ctx, drawingRect.Size(), rendererFlags, colormap);
-#else 
   DrawThemeWithCairo(ctx, aContext->GetDrawTarget(),
                      state, gtkWidgetType, flags, direction, scaleFactor,
                      snapped, ToPoint(origin), drawingRect.Size(),
                      gdk_rect, transparency);
-#endif
 
   if (!safeState) {
     gdk_flush();
@@ -1968,10 +1891,6 @@ nsNativeThemeGTK::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
 {
   switch (aWidgetType) {
   // These widgets always draw a default background.
-#if (MOZ_WIDGET_GTK == 2)
-  case NS_THEME_TOOLBAR:
-  case NS_THEME_MENUBAR:
-#endif
   case NS_THEME_MENUPOPUP:
   case NS_THEME_WINDOW:
   case NS_THEME_DIALOG:
@@ -1990,11 +1909,7 @@ nsNativeThemeGTK::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
   // Tooltips use gtk_paint_flat_box() on Gtk2
   // but are shaped on Gtk3
   case NS_THEME_TOOLTIP:
-#if (MOZ_WIDGET_GTK == 2)
-    return eOpaque;
-#else
     return eTransparent;
-#endif
   }
 
   return eUnknownTransparency;

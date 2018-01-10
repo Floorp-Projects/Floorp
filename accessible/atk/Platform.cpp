@@ -69,14 +69,6 @@ static GnomeAccessibilityModule sAtkBridge = {
     "gnome_accessibility_module_shutdown", nullptr
 };
 
-#if (MOZ_WIDGET_GTK == 2)
-static GnomeAccessibilityModule sGail = {
-    "libgail.so", nullptr,
-    "gnome_accessibility_module_init", nullptr,
-    "gnome_accessibility_module_shutdown", nullptr
-};
-#endif
-
 static nsresult
 LoadGtkModule(GnomeAccessibilityModule& aModule)
 {
@@ -102,11 +94,7 @@ LoadGtkModule(GnomeAccessibilityModule& aModule)
             else
                 subLen = loc2 - loc1;
             nsAutoCString sub(Substring(libPath, loc1, subLen));
-#if (MOZ_WIDGET_GTK == 2)
-            sub.AppendLiteral("/gtk-2.0/modules/");
-#else
             sub.AppendLiteral("/gtk-3.0/modules/");
-#endif
             sub.Append(aModule.libName);
             aModule.lib = PR_LoadLibrary(sub.get());
             if (aModule.lib)
@@ -176,13 +164,6 @@ a11y::PlatformInit()
     }
   }
 
-#if (MOZ_WIDGET_GTK == 2)
-  // Load and initialize gail library.
-  nsresult rv = LoadGtkModule(sGail);
-  if (NS_SUCCEEDED(rv))
-    (*sGail.init)();
-#endif
-
   // Initialize the MAI Utility class, it will overwrite gail_util.
   g_type_class_unref(g_type_class_ref(mai_util_get_type()));
 
@@ -236,19 +217,6 @@ a11y::PlatformShutdown()
         sAtkBridge.init = nullptr;
         sAtkBridge.shutdown = nullptr;
     }
-#if (MOZ_WIDGET_GTK == 2)
-    if (sGail.lib) {
-        // Do not shutdown gail because
-        // 1) Maybe it's not init-ed by us. e.g. GtkEmbed
-        // 2) We need it to avoid assert in spi_atk_tidy_windows
-        // if (sGail.shutdown)
-        //   (*sGail.shutdown)();
-        // PR_UnloadLibrary(sGail.lib);
-        sGail.lib = nullptr;
-        sGail.init = nullptr;
-        sGail.shutdown = nullptr;
-    }
-#endif
     // if (sATKLib) {
     //     PR_UnloadLibrary(sATKLib);
     //     sATKLib = nullptr;

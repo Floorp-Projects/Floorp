@@ -360,13 +360,8 @@ NativeKeyBindings::GetEditCommandsInternal(const WidgetKeyboardEvent& aEvent,
   gCurrentCommands = &aCommands;
 
   gHandled = false;
-#if (MOZ_WIDGET_GTK == 2)
-  gtk_bindings_activate(GTK_OBJECT(mNativeTarget),
-                        aKeyval, GdkModifierType(modifiers));
-#else
   gtk_bindings_activate(G_OBJECT(mNativeTarget),
                         aKeyval, GdkModifierType(modifiers));
-#endif
 
   gCurrentCommands = nullptr;
 

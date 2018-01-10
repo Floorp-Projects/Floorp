@@ -151,7 +151,7 @@ public:
     virtual ~GetTextRangeStyleText() {};
 };
 
-const static bool kUseSimpleContextDefault = MOZ_WIDGET_GTK == 2;
+const static bool kUseSimpleContextDefault = false;
 
 /******************************************************************************
  * IMContextWrapper
@@ -432,12 +432,7 @@ IMContextWrapper::OnDestroyWindow(nsWindow* aWindow)
 void
 IMContextWrapper::PrepareToDestroyContext(GtkIMContext* aContext)
 {
-#if (MOZ_WIDGET_GTK == 2)
-    GtkIMMulticontext *multicontext = GTK_IM_MULTICONTEXT(aContext);
-    GtkIMContext *slave = multicontext->slave;
-#else
     GtkIMContext *slave = nullptr; //TODO GTK3
-#endif
     if (!slave) {
         return;
     }
