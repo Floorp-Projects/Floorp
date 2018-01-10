@@ -3580,7 +3580,7 @@ CSS_PROP_LIST(
     Quotes,
     CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    0,
+    VARIANT_HOS,
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Discrete)
