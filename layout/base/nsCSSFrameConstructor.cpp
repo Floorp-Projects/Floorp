@@ -7217,6 +7217,10 @@ nsCSSFrameConstructor::CheckBitsForLazyFrameConstruction(nsIContent* aParent)
 //
 // But we disable lazy frame construction for shadow trees... We should fix
 // that, too.
+//
+// NOTE(emilio): The IsXULElement check is pretty unfortunate, but there's tons
+// of browser chrome code that rely on XBL bindings getting synchronously loaded
+// as soon as the elements get inserted in the DOM.
 bool
 nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
                                             nsIContent* aContainer,
