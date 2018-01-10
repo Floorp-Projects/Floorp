@@ -40728,8 +40728,6 @@ var _source = __webpack_require__(1356);
 
 var _pause = __webpack_require__(1400);
 
-var _devtoolsContextmenu = __webpack_require__(1413);
-
 var _Close = __webpack_require__(1374);
 
 var _Close2 = _interopRequireDefault(_Close);
@@ -40737,6 +40735,10 @@ var _Close2 = _interopRequireDefault(_Close);
 __webpack_require__(1334);
 
 var _lodash = __webpack_require__(2);
+
+var _BreakpointsContextMenu = __webpack_require__(1805);
+
+var _BreakpointsContextMenu2 = _interopRequireDefault(_BreakpointsContextMenu);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -40791,181 +40793,6 @@ class Breakpoints extends _react.PureComponent {
     }
   }
 
-  showContextMenu(e, breakpoint) {
-    const {
-      removeBreakpoint,
-      removeBreakpoints,
-      removeAllBreakpoints,
-      toggleBreakpoints,
-      toggleAllBreakpoints,
-      toggleDisabledBreakpoint,
-      setBreakpointCondition,
-      openConditionalPanel,
-      breakpoints
-    } = this.props;
-
-    e.preventDefault();
-
-    const deleteSelfLabel = L10N.getStr("breakpointMenuItem.deleteSelf2.label");
-    const deleteAllLabel = L10N.getStr("breakpointMenuItem.deleteAll2.label");
-    const deleteOthersLabel = L10N.getStr("breakpointMenuItem.deleteOthers2.label");
-    const enableSelfLabel = L10N.getStr("breakpointMenuItem.enableSelf2.label");
-    const enableAllLabel = L10N.getStr("breakpointMenuItem.enableAll2.label");
-    const enableOthersLabel = L10N.getStr("breakpointMenuItem.enableOthers2.label");
-    const disableSelfLabel = L10N.getStr("breakpointMenuItem.disableSelf2.label");
-    const disableAllLabel = L10N.getStr("breakpointMenuItem.disableAll2.label");
-    const disableOthersLabel = L10N.getStr("breakpointMenuItem.disableOthers2.label");
-    const removeConditionLabel = L10N.getStr("breakpointMenuItem.removeCondition2.label");
-    const addConditionLabel = L10N.getStr("breakpointMenuItem.addCondition2.label");
-    const editConditionLabel = L10N.getStr("breakpointMenuItem.editCondition2.label");
-
-    const deleteSelfKey = L10N.getStr("breakpointMenuItem.deleteSelf2.accesskey");
-    const deleteAllKey = L10N.getStr("breakpointMenuItem.deleteAll2.accesskey");
-    const deleteOthersKey = L10N.getStr("breakpointMenuItem.deleteOthers2.accesskey");
-    const enableSelfKey = L10N.getStr("breakpointMenuItem.enableSelf2.accesskey");
-    const enableAllKey = L10N.getStr("breakpointMenuItem.enableAll2.accesskey");
-    const enableOthersKey = L10N.getStr("breakpointMenuItem.enableOthers2.accesskey");
-    const disableSelfKey = L10N.getStr("breakpointMenuItem.disableSelf2.accesskey");
-    const disableAllKey = L10N.getStr("breakpointMenuItem.disableAll2.accesskey");
-    const disableOthersKey = L10N.getStr("breakpointMenuItem.disableOthers2.accesskey");
-    const removeConditionKey = L10N.getStr("breakpointMenuItem.removeCondition2.accesskey");
-    const editConditionKey = L10N.getStr("breakpointMenuItem.editCondition2.accesskey");
-    const addConditionKey = L10N.getStr("breakpointMenuItem.addCondition2.accesskey");
-
-    const otherBreakpoints = breakpoints.filter(b => b !== breakpoint);
-    const enabledBreakpoints = breakpoints.filter(b => !b.disabled);
-    const disabledBreakpoints = breakpoints.filter(b => b.disabled);
-    const otherEnabledBreakpoints = breakpoints.filter(b => !b.disabled && b !== breakpoint);
-    const otherDisabledBreakpoints = breakpoints.filter(b => b.disabled && b !== breakpoint);
-
-    const deleteSelf = {
-      id: "node-menu-delete-self",
-      label: deleteSelfLabel,
-      accesskey: deleteSelfKey,
-      disabled: false,
-      click: () => removeBreakpoint(breakpoint.location)
-    };
-
-    const deleteAll = {
-      id: "node-menu-delete-all",
-      label: deleteAllLabel,
-      accesskey: deleteAllKey,
-      disabled: false,
-      click: () => removeAllBreakpoints()
-    };
-
-    const deleteOthers = {
-      id: "node-menu-delete-other",
-      label: deleteOthersLabel,
-      accesskey: deleteOthersKey,
-      disabled: false,
-      click: () => removeBreakpoints(otherBreakpoints)
-    };
-
-    const enableSelf = {
-      id: "node-menu-enable-self",
-      label: enableSelfLabel,
-      accesskey: enableSelfKey,
-      disabled: false,
-      click: () => toggleDisabledBreakpoint(breakpoint.location.line)
-    };
-
-    const enableAll = {
-      id: "node-menu-enable-all",
-      label: enableAllLabel,
-      accesskey: enableAllKey,
-      disabled: false,
-      click: () => toggleAllBreakpoints(false)
-    };
-
-    const enableOthers = {
-      id: "node-menu-enable-others",
-      label: enableOthersLabel,
-      accesskey: enableOthersKey,
-      disabled: false,
-      click: () => toggleBreakpoints(false, otherDisabledBreakpoints)
-    };
-
-    const disableSelf = {
-      id: "node-menu-disable-self",
-      label: disableSelfLabel,
-      accesskey: disableSelfKey,
-      disabled: false,
-      click: () => toggleDisabledBreakpoint(breakpoint.location.line)
-    };
-
-    const disableAll = {
-      id: "node-menu-disable-all",
-      label: disableAllLabel,
-      accesskey: disableAllKey,
-      disabled: false,
-      click: () => toggleAllBreakpoints(true)
-    };
-
-    const disableOthers = {
-      id: "node-menu-disable-others",
-      label: disableOthersLabel,
-      accesskey: disableOthersKey,
-      click: () => toggleBreakpoints(true, otherEnabledBreakpoints)
-    };
-
-    const removeCondition = {
-      id: "node-menu-remove-condition",
-      label: removeConditionLabel,
-      accesskey: removeConditionKey,
-      disabled: false,
-      click: () => setBreakpointCondition(breakpoint.location)
-    };
-
-    const addCondition = {
-      id: "node-menu-add-condition",
-      label: addConditionLabel,
-      accesskey: addConditionKey,
-      click: () => {
-        this.selectBreakpoint(breakpoint);
-        openConditionalPanel(breakpoint.location.line);
-      }
-    };
-
-    const editCondition = {
-      id: "node-menu-edit-condition",
-      label: editConditionLabel,
-      accesskey: editConditionKey,
-      click: () => {
-        this.selectBreakpoint(breakpoint);
-        openConditionalPanel(breakpoint.location.line);
-      }
-    };
-
-    const hideEnableSelf = !breakpoint.disabled;
-    const hideEnableAll = disabledBreakpoints.size === 0;
-    const hideEnableOthers = otherDisabledBreakpoints.size === 0;
-    const hideDisableAll = enabledBreakpoints.size === 0;
-    const hideDisableOthers = otherEnabledBreakpoints.size === 0;
-    const hideDisableSelf = breakpoint.disabled;
-
-    const items = [{ item: enableSelf, hidden: () => hideEnableSelf }, { item: enableAll, hidden: () => hideEnableAll }, { item: enableOthers, hidden: () => hideEnableOthers }, {
-      item: { type: "separator" },
-      hidden: () => hideEnableSelf && hideEnableAll && hideEnableOthers
-    }, { item: deleteSelf }, { item: deleteAll }, { item: deleteOthers, hidden: () => breakpoints.size === 1 }, {
-      item: { type: "separator" },
-      hidden: () => hideDisableSelf && hideDisableAll && hideDisableOthers
-    }, { item: disableSelf, hidden: () => hideDisableSelf }, { item: disableAll, hidden: () => hideDisableAll }, { item: disableOthers, hidden: () => hideDisableOthers }, {
-      item: { type: "separator" }
-    }, {
-      item: addCondition,
-      hidden: () => breakpoint.condition
-    }, {
-      item: editCondition,
-      hidden: () => !breakpoint.condition
-    }, {
-      item: removeCondition,
-      hidden: () => !breakpoint.condition
-    }];
-
-    (0, _devtoolsContextmenu.showMenu)(e, (0, _devtoolsContextmenu.buildMenu)(items));
-  }
-
   selectBreakpoint(breakpoint) {
     this.props.selectLocation(breakpoint.location);
   }
@@ -41000,7 +40827,7 @@ class Breakpoints extends _react.PureComponent {
         }),
         key: locationId,
         onClick: () => this.selectBreakpoint(breakpoint),
-        onContextMenu: e => this.showContextMenu(e, breakpoint)
+        onContextMenu: e => (0, _BreakpointsContextMenu2.default)(_extends({}, this.props, { breakpoint, contextMenuEvent: e }))
       },
       _react2.default.createElement("input", {
         type: "checkbox",
@@ -44172,8 +43999,6 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactRedux = __webpack_require__(1189);
 
-var _redux = __webpack_require__(3);
-
 var _fuzzaldrinPlus = __webpack_require__(161);
 
 var _actions = __webpack_require__(1354);
@@ -44211,8 +44036,7 @@ class QuickOpenModal extends _react.Component {
     this.searchSources = query => {
       if (query == "") {
         const results = this.props.sources;
-        this.setState({ results });
-        return;
+        return this.setState({ results });
       }
 
       if (this.isGotoSourceQuery()) {
@@ -44233,8 +44057,7 @@ class QuickOpenModal extends _react.Component {
         results = variables;
       }
       if (query === "@" || query === "#") {
-        this.setState({ results });
-        return;
+        return this.setState({ results });
       }
 
       results = (0, _fuzzaldrinPlus.filter)(results, query.slice(1), {
@@ -44268,26 +44091,23 @@ class QuickOpenModal extends _react.Component {
       if (item == null) {
         return;
       }
-      const { selectLocation, selectedSource, query } = this.props;
+
       if (this.isShortcutQuery()) {
-        this.setModifier(item);
-        return;
-      } else if (this.isGotoSourceQuery()) {
-        const location = (0, _quickOpen.parseLineColumn)(query);
-        if (location != null) {
-          selectLocation(_extends({}, location, { sourceId: item.id }));
-        }
-      } else if (this.isSymbolSearch()) {
-        if (selectedSource == null) {
-          return;
-        }
-        const line = item.location && item.location.start ? item.location.start.line : 0;
-        selectLocation({ sourceId: selectedSource.get("id"), line });
-      } else {
-        selectLocation({ sourceId: item.id, line: 0 });
+        return this.setModifier(item);
       }
 
-      this.closeModal();
+      if (this.isGotoSourceQuery()) {
+        const location = (0, _quickOpen.parseLineColumn)(this.props.query);
+        return this.gotoLocation(_extends({}, location, { sourceId: item.id }));
+      }
+
+      if (this.isSymbolSearch()) {
+        return this.gotoLocation({
+          line: item.location && item.location.start ? item.location.start.line : 0
+        });
+      }
+
+      this.gotoLocation({ sourceId: item.id, line: 0 });
     };
 
     this.onSelectResultItem = item => {
@@ -44298,19 +44118,24 @@ class QuickOpenModal extends _react.Component {
 
       if (this.isVariableQuery()) {
         const line = item.location && item.location.start ? item.location.start.line : 0;
-        selectLocation({ sourceId: selectedSource.get("id"), line });
+        return selectLocation({
+          sourceId: selectedSource.get("id"),
+          line,
+          column: null
+        });
       }
 
       if (this.isFunctionQuery()) {
-        highlightLineRange(_extends({}, item.location != null ? { start: item.location.start.line, end: item.location.end.line } : {}, {
+        return highlightLineRange(_extends({}, item.location != null ? { start: item.location.start.line, end: item.location.end.line } : {}, {
           sourceId: selectedSource.get("id")
         }));
       }
     };
 
-    this.traverseResults = direction => {
+    this.traverseResults = e => {
+      const direction = e.key === "ArrowUp" ? -1 : 1;
       const { selectedIndex, results } = this.state;
-      const resultCount = this.resultCount();
+      const resultCount = this.getResultCount();
       const index = selectedIndex + direction;
       const nextIndex = (index + resultCount) % resultCount;
 
@@ -44318,6 +44143,20 @@ class QuickOpenModal extends _react.Component {
 
       if (results != null) {
         this.onSelectResultItem(results[nextIndex]);
+      }
+    };
+
+    this.gotoLocation = location => {
+      const { selectLocation, selectedSource } = this.props;
+      const selectedSourceId = selectedSource ? selectedSource.get("id") : "";
+      if (location != null) {
+        const sourceId = location.sourceId ? location.sourceId : selectedSourceId;
+        selectLocation({
+          sourceId,
+          line: location.line,
+          column: location.column || null
+        });
+        this.closeModal();
       }
     };
 
@@ -44332,46 +44171,38 @@ class QuickOpenModal extends _react.Component {
     };
 
     this.onKeyDown = e => {
-      const { selectLocation, selectedSource, enabled, query } = this.props;
+      const { enabled, query } = this.props;
       const { results, selectedIndex } = this.state;
 
       if (!enabled || !results) {
         return;
       }
 
-      const canTraverse = !this.isGotoQuery();
-      if (e.key === "ArrowUp" && canTraverse) {
-        return this.traverseResults(-1);
-      } else if (e.key === "ArrowDown" && canTraverse) {
-        return this.traverseResults(1);
-      } else if (e.key === "Enter") {
+      if (e.key === "Enter") {
         if (this.isGotoQuery()) {
-          if (!selectedSource) {
-            return;
-          }
           const location = (0, _quickOpen.parseLineColumn)(query);
-          if (location != null) {
-            selectLocation(_extends({}, location, { sourceId: selectedSource.get("id") }));
-          }
-        } else if (this.isShortcutQuery()) {
-          this.setModifier(results[selectedIndex]);
-          return;
-        } else {
-          this.selectResultItem(e, results[selectedIndex]);
+          return this.gotoLocation(location);
         }
+
+        if (this.isShortcutQuery()) {
+          return this.setModifier(results[selectedIndex]);
+        }
+
+        return this.selectResultItem(e, results[selectedIndex]);
+      }
+
+      if (e.key === "Tab") {
         return this.closeModal();
-      } else if (e.key === "Tab") {
-        return this.closeModal();
+      }
+
+      if (["ArrowUp", "ArrowDown"].includes(e.key)) {
+        return this.traverseResults(e);
       }
     };
 
-    this.resultCount = () => {
+    this.getResultCount = () => {
       const results = this.state.results;
-
-      if (results && results.length) {
-        return results.length;
-      }
-      return 0;
+      return results && results.length ? results.length : 0;
     };
 
     this.isFunctionQuery = () => this.props.searchType === "functions";
@@ -44408,59 +44239,46 @@ class QuickOpenModal extends _react.Component {
     }
   }
 
-  renderResults() {
-    const { enabled, searchType } = this.props;
-    const { selectedIndex, results } = this.state;
-    if (!enabled || !results) {
-      return null;
-    }
+  // Query helpers
 
-    return _react2.default.createElement(_ResultList2.default, _extends({
-      key: "results",
-      items: results,
-      selected: selectedIndex,
-      selectItem: this.selectResultItem,
-      ref: "resultList"
-    }, searchType === "sources" || searchType === "gotoSource" ? { size: "big" } : {}));
-  }
 
-  renderInput() {
-    const { query, searchType } = this.props;
-    const summaryMsg = L10N.getFormatStr("sourceSearch.resultsSummary1", this.resultCount());
-
-    const showSummary = searchType === "sources" || searchType === "functions" || searchType === "variables" || searchType === "shortcuts";
-
-    return _react2.default.createElement(
-      "div",
-      { key: "input", className: "input-wrapper" },
-      _react2.default.createElement(_SearchInput2.default, _extends({
-        query: query,
-        count: this.resultCount(),
-        placeholder: L10N.getStr("sourceSearch.search")
-      }, showSummary === true ? { summaryMsg } : {}, {
-        onChange: this.onChange,
-        onKeyDown: this.onKeyDown,
-        handleClose: this.closeModal
-      }))
-    );
-  }
   render() {
-    const { enabled } = this.props;
+    const { enabled, query, searchType } = this.props;
+    const { selectedIndex, results } = this.state;
 
     if (!enabled) {
       return null;
     }
 
+    const summaryMsg = L10N.getFormatStr("sourceSearch.resultsSummary1", this.getResultCount());
+
+    const showSummary = searchType === "sources" || searchType === "functions" || searchType === "variables" || searchType === "shortcuts";
+
     return _react2.default.createElement(
       _Modal2.default,
       { "in": enabled, handleClose: this.closeModal },
-      this.renderInput(),
-      this.renderResults()
+      _react2.default.createElement(_SearchInput2.default, _extends({
+        query: query,
+        count: this.getResultCount(),
+        placeholder: L10N.getStr("sourceSearch.search")
+      }, showSummary === true ? { summaryMsg } : {}, {
+        onChange: this.onChange,
+        onKeyDown: this.onKeyDown,
+        handleClose: this.closeModal
+      })),
+      results && _react2.default.createElement(_ResultList2.default, _extends({
+        key: "results",
+        items: results,
+        selected: selectedIndex,
+        selectItem: this.selectResultItem,
+        ref: "resultList"
+      }, searchType === "sources" || searchType === "gotoSource" ? { size: "big" } : {}))
     );
   }
 }
 
-exports.QuickOpenModal = QuickOpenModal;
+exports.QuickOpenModal = QuickOpenModal; /* istanbul ignore next: ignoring testing of redux connection stuff */
+
 function mapStateToProps(state) {
   const selectedSource = (0, _selectors.getSelectedSource)(state);
   let symbols = null;
@@ -44477,7 +44295,8 @@ function mapStateToProps(state) {
   };
 }
 
-exports.default = (0, _reactRedux.connect)(mapStateToProps, dispatch => (0, _redux.bindActionCreators)(_actions2.default, dispatch))(QuickOpenModal);
+/* istanbul ignore next: ignoring testing of redux connection stuff */
+exports.default = (0, _reactRedux.connect)(mapStateToProps, _actions2.default)(QuickOpenModal);
 
 /***/ }),
 /* 1653 */
@@ -49657,6 +49476,198 @@ function mapFrames() {
       frames: mappedFrames
     });
   };
+}
+
+/***/ }),
+/* 1805 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = showContextMenu;
+
+var _devtoolsContextmenu = __webpack_require__(1413);
+
+function showContextMenu(props) {
+  const {
+    removeBreakpoint,
+    removeBreakpoints,
+    removeAllBreakpoints,
+    toggleBreakpoints,
+    toggleAllBreakpoints,
+    toggleDisabledBreakpoint,
+    selectLocation,
+    setBreakpointCondition,
+    openConditionalPanel,
+    breakpoints,
+    breakpoint,
+    contextMenuEvent
+  } = props;
+
+  contextMenuEvent.preventDefault();
+
+  const deleteSelfLabel = L10N.getStr("breakpointMenuItem.deleteSelf2.label");
+  const deleteAllLabel = L10N.getStr("breakpointMenuItem.deleteAll2.label");
+  const deleteOthersLabel = L10N.getStr("breakpointMenuItem.deleteOthers2.label");
+  const enableSelfLabel = L10N.getStr("breakpointMenuItem.enableSelf2.label");
+  const enableAllLabel = L10N.getStr("breakpointMenuItem.enableAll2.label");
+  const enableOthersLabel = L10N.getStr("breakpointMenuItem.enableOthers2.label");
+  const disableSelfLabel = L10N.getStr("breakpointMenuItem.disableSelf2.label");
+  const disableAllLabel = L10N.getStr("breakpointMenuItem.disableAll2.label");
+  const disableOthersLabel = L10N.getStr("breakpointMenuItem.disableOthers2.label");
+  const removeConditionLabel = L10N.getStr("breakpointMenuItem.removeCondition2.label");
+  const addConditionLabel = L10N.getStr("breakpointMenuItem.addCondition2.label");
+  const editConditionLabel = L10N.getStr("breakpointMenuItem.editCondition2.label");
+
+  const deleteSelfKey = L10N.getStr("breakpointMenuItem.deleteSelf2.accesskey");
+  const deleteAllKey = L10N.getStr("breakpointMenuItem.deleteAll2.accesskey");
+  const deleteOthersKey = L10N.getStr("breakpointMenuItem.deleteOthers2.accesskey");
+  const enableSelfKey = L10N.getStr("breakpointMenuItem.enableSelf2.accesskey");
+  const enableAllKey = L10N.getStr("breakpointMenuItem.enableAll2.accesskey");
+  const enableOthersKey = L10N.getStr("breakpointMenuItem.enableOthers2.accesskey");
+  const disableSelfKey = L10N.getStr("breakpointMenuItem.disableSelf2.accesskey");
+  const disableAllKey = L10N.getStr("breakpointMenuItem.disableAll2.accesskey");
+  const disableOthersKey = L10N.getStr("breakpointMenuItem.disableOthers2.accesskey");
+  const removeConditionKey = L10N.getStr("breakpointMenuItem.removeCondition2.accesskey");
+  const editConditionKey = L10N.getStr("breakpointMenuItem.editCondition2.accesskey");
+  const addConditionKey = L10N.getStr("breakpointMenuItem.addCondition2.accesskey");
+
+  const otherBreakpoints = breakpoints.filter(b => b !== breakpoint);
+  const enabledBreakpoints = breakpoints.filter(b => !b.disabled);
+  const disabledBreakpoints = breakpoints.filter(b => b.disabled);
+  const otherEnabledBreakpoints = breakpoints.filter(b => !b.disabled && b !== breakpoint);
+  const otherDisabledBreakpoints = breakpoints.filter(b => b.disabled && b !== breakpoint);
+
+  const deleteSelf = {
+    id: "node-menu-delete-self",
+    label: deleteSelfLabel,
+    accesskey: deleteSelfKey,
+    disabled: false,
+    click: () => removeBreakpoint(breakpoint.location)
+  };
+
+  const deleteAll = {
+    id: "node-menu-delete-all",
+    label: deleteAllLabel,
+    accesskey: deleteAllKey,
+    disabled: false,
+    click: () => removeAllBreakpoints()
+  };
+
+  const deleteOthers = {
+    id: "node-menu-delete-other",
+    label: deleteOthersLabel,
+    accesskey: deleteOthersKey,
+    disabled: false,
+    click: () => removeBreakpoints(otherBreakpoints)
+  };
+
+  const enableSelf = {
+    id: "node-menu-enable-self",
+    label: enableSelfLabel,
+    accesskey: enableSelfKey,
+    disabled: false,
+    click: () => toggleDisabledBreakpoint(breakpoint.location.line)
+  };
+
+  const enableAll = {
+    id: "node-menu-enable-all",
+    label: enableAllLabel,
+    accesskey: enableAllKey,
+    disabled: false,
+    click: () => toggleAllBreakpoints(false)
+  };
+
+  const enableOthers = {
+    id: "node-menu-enable-others",
+    label: enableOthersLabel,
+    accesskey: enableOthersKey,
+    disabled: false,
+    click: () => toggleBreakpoints(false, otherDisabledBreakpoints)
+  };
+
+  const disableSelf = {
+    id: "node-menu-disable-self",
+    label: disableSelfLabel,
+    accesskey: disableSelfKey,
+    disabled: false,
+    click: () => toggleDisabledBreakpoint(breakpoint.location.line)
+  };
+
+  const disableAll = {
+    id: "node-menu-disable-all",
+    label: disableAllLabel,
+    accesskey: disableAllKey,
+    disabled: false,
+    click: () => toggleAllBreakpoints(true)
+  };
+
+  const disableOthers = {
+    id: "node-menu-disable-others",
+    label: disableOthersLabel,
+    accesskey: disableOthersKey,
+    click: () => toggleBreakpoints(true, otherEnabledBreakpoints)
+  };
+
+  const removeCondition = {
+    id: "node-menu-remove-condition",
+    label: removeConditionLabel,
+    accesskey: removeConditionKey,
+    disabled: false,
+    click: () => setBreakpointCondition(breakpoint.location)
+  };
+
+  const addCondition = {
+    id: "node-menu-add-condition",
+    label: addConditionLabel,
+    accesskey: addConditionKey,
+    click: () => {
+      selectLocation(breakpoint.location);
+      openConditionalPanel(breakpoint.location.line);
+    }
+  };
+
+  const editCondition = {
+    id: "node-menu-edit-condition",
+    label: editConditionLabel,
+    accesskey: editConditionKey,
+    click: () => {
+      selectLocation(breakpoint.location);
+      openConditionalPanel(breakpoint.location.line);
+    }
+  };
+
+  const hideEnableSelf = !breakpoint.disabled;
+  const hideEnableAll = disabledBreakpoints.size === 0;
+  const hideEnableOthers = otherDisabledBreakpoints.size === 0;
+  const hideDisableAll = enabledBreakpoints.size === 0;
+  const hideDisableOthers = otherEnabledBreakpoints.size === 0;
+  const hideDisableSelf = breakpoint.disabled;
+
+  const items = [{ item: enableSelf, hidden: () => hideEnableSelf }, { item: enableAll, hidden: () => hideEnableAll }, { item: enableOthers, hidden: () => hideEnableOthers }, {
+    item: { type: "separator" },
+    hidden: () => hideEnableSelf && hideEnableAll && hideEnableOthers
+  }, { item: deleteSelf }, { item: deleteAll }, { item: deleteOthers, hidden: () => breakpoints.size === 1 }, {
+    item: { type: "separator" },
+    hidden: () => hideDisableSelf && hideDisableAll && hideDisableOthers
+  }, { item: disableSelf, hidden: () => hideDisableSelf }, { item: disableAll, hidden: () => hideDisableAll }, { item: disableOthers, hidden: () => hideDisableOthers }, {
+    item: { type: "separator" }
+  }, {
+    item: addCondition,
+    hidden: () => breakpoint.condition
+  }, {
+    item: editCondition,
+    hidden: () => !breakpoint.condition
+  }, {
+    item: removeCondition,
+    hidden: () => !breakpoint.condition
+  }];
+
+  (0, _devtoolsContextmenu.showMenu)(contextMenuEvent, (0, _devtoolsContextmenu.buildMenu)(items));
 }
 
 /***/ })

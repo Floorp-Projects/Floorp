@@ -512,6 +512,8 @@ WebGLContext::DrawArraysInstanced(GLenum mode, GLint first, GLsizei vertCount,
     if (IsContextLost())
         return;
 
+    const gl::GLContext::TlsScope inTls(gl);
+
     Maybe<uint32_t> lastVert;
     if (!DrawArrays_check(funcName, first, vertCount, instanceCount, &lastVert))
         return;
@@ -667,6 +669,8 @@ WebGLContext::DrawElementsInstanced(GLenum mode, GLsizei indexCount, GLenum type
     AUTO_PROFILER_LABEL("WebGLContext::DrawElementsInstanced", GRAPHICS);
     if (IsContextLost())
         return;
+
+    const gl::GLContext::TlsScope inTls(gl);
 
     Maybe<uint32_t> lastVert;
     if (!DrawElements_check(funcName, indexCount, type, byteOffset, instanceCount,

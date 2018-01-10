@@ -579,6 +579,7 @@ HTMLFormElement::DoSubmitOrReset(WidgetEvent* aEvent,
 nsresult
 HTMLFormElement::DoReset()
 {
+  mEverTriedInvalidSubmit = false;
   // JBK walk the elements[] array instead of form frame controls - bug 34297
   uint32_t numElements = GetElementCount();
   for (uint32_t elementX = 0; elementX < numElements; ++elementX) {

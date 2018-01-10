@@ -4,9 +4,9 @@ use nss;
 use {CoseError, Signature, SignatureAlgorithm, SignatureParameters};
 use std::collections::BTreeMap;
 use cbor::CborType;
-use util::get_sig_struct_bytes;
-use decoder::decode_signature;
-use decoder::{COSE_TYPE_ES256, COSE_TYPE_ES384, COSE_TYPE_ES512, COSE_TYPE_PS256};
+use cose::util::get_sig_struct_bytes;
+use cose::decoder::decode_signature;
+use cose::decoder::{COSE_TYPE_ES256, COSE_TYPE_ES384, COSE_TYPE_ES512, COSE_TYPE_PS256};
 
 /// Converts a `SignatureAlgorithm` to its corresponding `CborType`.
 /// See RFC 8152 section 8.1 and RFC 8230 section 5.1.

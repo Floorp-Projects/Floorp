@@ -264,9 +264,9 @@ ChooseDebugFlags(CreateContextFlags createFlags)
 GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
                      GLContext* sharedContext, bool isOffscreen, bool useTLSIsCurrent)
   : mImplicitMakeCurrent(false),
+    mUseTLSIsCurrent(ShouldUseTLSIsCurrent(useTLSIsCurrent)),
     mIsOffscreen(isOffscreen),
     mContextLost(false),
-    mUseTLSIsCurrent(ShouldUseTLSIsCurrent(useTLSIsCurrent)),
     mVersion(0),
     mProfile(ContextProfile::Unknown),
     mShadingLanguageVersion(0),
@@ -3074,9 +3074,7 @@ GLContext::MakeCurrent(bool aForce) const
     if (!MakeCurrentImpl())
         return false;
 
-    if (mUseTLSIsCurrent) {
-        sCurrentContext.set(reinterpret_cast<uintptr_t>(this));
-    }
+    sCurrentContext.set(reinterpret_cast<uintptr_t>(this));
     return true;
 }
 

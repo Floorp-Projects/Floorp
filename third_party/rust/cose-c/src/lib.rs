@@ -7,6 +7,7 @@ extern crate cose;
 use std::slice;
 use cose::decoder::decode_signature;
 use cose::SignatureAlgorithm;
+use std::os::raw;
 
 unsafe fn from_raw(ptr: *const u8, len: usize) -> Vec<u8> {
     slice::from_raw_parts(ptr, len).to_vec()
@@ -21,7 +22,8 @@ type VerifyCallback = extern "C" fn(*const u8, /* payload */
                                     usize, /* signer cert len */
                                     *const u8, /* signature bytes */
                                     usize, /* signature len */
-                                    u8 /* signature algorithm */)
+                                    u8, /* signature algorithm */
+                                    *const raw::c_void /* some context of the app */)
                                     -> bool;
 
 #[no_mangle]
@@ -30,6 +32,7 @@ pub extern "C" fn verify_cose_signature_ffi(
     payload_len: usize,
     cose_signature: *const u8,
     cose_signature_len: usize,
+    ctx: *const raw::c_void,
     verify_callback: VerifyCallback,
 ) -> bool {
     if payload.is_null() || cose_signature.is_null() || payload_len == 0 ||
@@ -80,6 +83,7 @@ pub extern "C" fn verify_cose_signature_ffi(
             signature_bytes.as_ptr(),
             signature_bytes.len(),
             signature_type,
+            ctx,
         )
     });
 }

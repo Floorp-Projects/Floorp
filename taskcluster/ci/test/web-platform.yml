@@ -22,6 +22,7 @@ web-platform-tests:
         by-test-platform:
             macosx64/opt: 5
             macosx64/debug: 10
+            windows10-64-ccov/debug: 15
             default: 12
     max-run-time: 7200
     e10s:
