@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsIChannel.h"
 #include "nsITimedChannel.h"
+#include "nsRFPService.h"
 #include "mozilla/dom/PerformanceResourceTiming.h"
 #include "mozilla/dom/PerformanceNavigationTimingBinding.h"
 #include "nsIHttpChannel.h"
@@ -39,7 +40,7 @@ public:
 
   DOMHighResTimeStamp Duration() const override
   {
-    return LoadEventEnd() - StartTime();
+    return nsRFPService::ReduceTimePrecisionAsMSecs(LoadEventEnd() - StartTime());
   }
 
   DOMHighResTimeStamp StartTime() const override

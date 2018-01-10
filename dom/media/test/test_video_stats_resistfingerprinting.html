@@ -26,6 +26,7 @@ https://trac.torproject.org/projects/tor/ticket/15757
   // will be set during MediaTestManager.runTests().
   gTestPrefs.push(
     ["privacy.resistFingerprinting", true],
+    ["privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 100000],
     // We use 240p as the target resoultion since 480p is greater than every video
     // source in our test suite, so we need to use 240p here for allowing us to
     // test dropped rate here.

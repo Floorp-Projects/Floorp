@@ -5009,13 +5009,24 @@ Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
 
 // Since the definition of this template function is not in a header file, we
 // need to explicitly specify the instantiations that are required. Currently
-// only the order=Relaxed variant is needed.
+// limited orders are needed and therefore implemented.
 template nsresult
 Preferences::AddAtomicBoolVarCache(Atomic<bool, Relaxed>*,
                                    const char*,
                                    bool);
+
+template nsresult
+Preferences::AddAtomicBoolVarCache(Atomic<bool, ReleaseAcquire>*,
+                                   const char*,
+                                   bool);
+
 template nsresult
 Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Relaxed>*,
+                                   const char*,
+                                   uint32_t);
+
+template nsresult
+Preferences::AddAtomicUintVarCache(Atomic<uint32_t, ReleaseAcquire>*,
                                    const char*,
                                    uint32_t);
 
