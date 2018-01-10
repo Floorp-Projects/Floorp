@@ -9,7 +9,6 @@ const { Component, createFactory } = require("devtools/client/shared/vendor/reac
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const I = require("devtools/client/shared/vendor/immutable");
 
 const Actions = require("../actions/index");
 const { FILTER_SEARCH_DELAY, FILTER_TAGS } = require("../constants");
@@ -98,7 +97,7 @@ class Toolbar extends Component {
     || this.props.persistentLogsEnabled !== nextProps.persistentLogsEnabled
     || this.props.browserCacheDisabled !== nextProps.browserCacheDisabled
     || this.props.recording !== nextProps.recording
-    || !I.is(this.props.requestFilterTypes, nextProps.requestFilterTypes)
+    || !Object.is(this.props.requestFilterTypes, nextProps.requestFilterTypes)
 
     // Filtered requests are useful only when searchbox is focused
     || !!(this.refs.searchbox && this.refs.searchbox.focused);

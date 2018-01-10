@@ -105,11 +105,6 @@ if CONFIG['MOZ_ENABLE_DBUS']:
         'DBusHelpers.h',
     ]
 
-if CONFIG['MOZ_ENABLE_CONTENTACTION']:
-    UNIFIED_SOURCES += [
-        'nsContentHandlerApp.cpp',
-    ]
-
 EXTRA_COMPONENTS += [
     'nsHandlerService-json.js',
     'nsHandlerService-json.manifest',
