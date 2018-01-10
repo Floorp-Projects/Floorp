@@ -31,12 +31,12 @@ source_definition = {
 run_schema = Schema({
     Required('using'): 'debian-package',
     # Debian distribution
-    Optional('dist'): basestring,
+    Required('dist'): basestring,
 
     # Date of the snapshot (from snapshot.debian.org) to use, in the format
     # YYYYMMDDTHHMMSSZ. The same date is used for the base docker-image name
     # (only the YYYYMMDD part).
-    Optional('snapshot'): basestring,
+    Required('snapshot'): basestring,
 
     # URL/SHA256 of a source file to build, which can either be a source
     # control (.dsc), or a tarball.
@@ -53,8 +53,6 @@ run_schema = Schema({
 @run_job_using("docker-worker", "debian-package", schema=run_schema)
 def docker_worker_debian_package(config, job, taskdesc):
     run = job['run']
-    run.setdefault('dist', 'wheezy')
-    run.setdefault('snapshot', '20171210T214726Z')
 
     worker = taskdesc['worker']
     worker['artifacts'] = []
