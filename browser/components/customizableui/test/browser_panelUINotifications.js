@@ -192,15 +192,6 @@ add_task(async function testMultipleBadges() {
     AppMenuNotifications.showBadgeOnlyNotification("update-failed");
     is(menuButton.getAttribute("badge-status"), "update-failed", "Should have update-failed badge status");
 
-    AppMenuNotifications.showBadgeOnlyNotification("download-severe");
-    is(menuButton.getAttribute("badge-status"), "download-severe", "Should have download-severe badge status");
-
-    AppMenuNotifications.showBadgeOnlyNotification("download-warning");
-    is(menuButton.getAttribute("badge-status"), "download-warning", "Should have download-warning badge status");
-
-    AppMenuNotifications.removeNotification(/^download-/);
-    is(menuButton.getAttribute("badge-status"), "update-failed", "Should have update-failed badge status");
-
     AppMenuNotifications.removeNotification(/^update-/);
     is(menuButton.getAttribute("badge-status"), "fxa-needs-authentication", "Should have fxa-needs-authentication badge status");
 

@@ -113,7 +113,7 @@ static int printHelp(int argc, char* argv[]){
     fprintf(stderr,
         "\t-d or --destdir          destination directory, followed by the path\n"
         "\t-s or --sourcedir        source directory of ICU data, followed by the path\n"
-        "\t-b or --bundle-name      generate the ouput data file with the name specified\n"
+        "\t-b or --bundle-name      generate the output data file with the name specified\n"
         "\t-i or --icudatadir       directory for locating any needed intermediate data files,\n"
         "\t                         followed by path, defaults to %s\n",
         u_getDataDirectory());

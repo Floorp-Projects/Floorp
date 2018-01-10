@@ -316,7 +316,7 @@ root{
                 "< 🏴󠁧󠁢󠁳󠁣󠁴󠁿"
                 "< 🏴󠁧󠁢󠁷󠁬󠁳󠁿"
             }
-            Version{"32"}
+            Version{"32.0.1"}
         }
         eor{
             Sequence{
@@ -856,7 +856,7 @@ root{
                 "&ք"
                 "<և"
             }
-            Version{"32"}
+            Version{"32.0.1"}
         }
         private-unihan{
             Sequence{
@@ -1099,7 +1099,7 @@ root{
                 "&龟=\uFDD0龟"
                 "&龠=\uFDD0龠"
             }
-            Version{"32"}
+            Version{"32.0.1"}
         }
         search{
             Sequence{
@@ -1218,11 +1218,11 @@ root{
                 "&ᅳᅵ"
                 "=ᅴ"
             }
-            Version{"32"}
+            Version{"32.0.1"}
         }
         standard{
             Sequence{""}
-            Version{"32"}
+            Version{"32.0.1"}
         }
     }
     depends:process(dependency){"ucadata.icu"}

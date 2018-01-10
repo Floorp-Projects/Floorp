@@ -34,7 +34,7 @@ ta{
                 "&[before 1]ஹ<ஹ்"
                 "&[before 1]க்ஷ<க்ஷ்"
             }
-            Version{"32"}
+            Version{"32.0.1"}
         }
     }
 }
