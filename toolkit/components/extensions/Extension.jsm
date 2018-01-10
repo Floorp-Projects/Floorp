@@ -628,6 +628,7 @@ class ExtensionData {
     this.permissions = manifestData.permissions;
     this.type = manifestData.type;
 
+    await this.apiManager.lazyInit();
     this.webAccessibleResources = manifestData.webAccessibleResources.map(res => new MatchGlob(res));
     this.whiteListedHosts = new MatchPatternSet(manifestData.originPermissions);
 

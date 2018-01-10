@@ -957,7 +957,7 @@ class SchemaAPIManager extends EventEmitter {
   constructor(processType, schema) {
     super();
     this.processType = processType;
-    this.global = this._createExtGlobal();
+    this.global = null;
     this.schema = schema;
 
     this.modules = new Map();
@@ -1195,6 +1195,8 @@ class SchemaAPIManager extends EventEmitter {
 
     this._checkLoadModule(module, name);
 
+    this.initGlobal();
+
     Services.scriptloader.loadSubScript(module.url, this.global, "UTF-8");
 
     module.loaded = true;
@@ -1222,6 +1224,7 @@ class SchemaAPIManager extends EventEmitter {
     this._checkLoadModule(module, name);
 
     module.asyncLoaded = ChromeUtils.compileScript(module.url).then(script => {
+      this.initGlobal();
       script.executeInGlobal(this.global);
 
       module.loaded = true;
@@ -1276,7 +1279,7 @@ class SchemaAPIManager extends EventEmitter {
     if (module.asyncLoaded) {
       throw new Error(`Module '${name}' currently being lazily loaded`);
     }
-    if (this.global[name]) {
+    if (this.global && this.global[name]) {
       throw new Error(`Module '${name}' conflicts with existing global property`);
     }
   }
@@ -1322,6 +1325,12 @@ class SchemaAPIManager extends EventEmitter {
     });
 
     return global;
+  }
+
+  initGlobal() {
+    if (!this.global) {
+      this.global = this._createExtGlobal();
+    }
   }
 
   /**
