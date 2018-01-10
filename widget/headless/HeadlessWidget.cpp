@@ -278,13 +278,12 @@ HeadlessWidget::Move(double aX, double aY)
   // Since a popup window's x/y coordinates are in relation to
   // the parent, the parent might have moved so we always move a
   // popup window.
-  if (x == mBounds.x && y == mBounds.y &&
+  if (mBounds.IsEqualXY(x, y) &&
       mWindowType != eWindowType_popup) {
     return;
   }
 
-  mBounds.x = x;
-  mBounds.y = y;
+  mBounds.MoveTo(x, y);
   NotifyRollupGeometryChange();
 }
 
@@ -325,13 +324,13 @@ HeadlessWidget::Resize(double aWidth,
   mBounds.SizeTo(LayoutDeviceIntSize(width, height));
 
   if (mCompositorWidget) {
-    mCompositorWidget->NotifyClientSizeChanged(LayoutDeviceIntSize(mBounds.width, mBounds.height));
+    mCompositorWidget->NotifyClientSizeChanged(LayoutDeviceIntSize(mBounds.Width(), mBounds.Height()));
   }
   if (mWidgetListener) {
-    mWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
+    mWidgetListener->WindowResized(this, mBounds.Width(), mBounds.Height());
   }
   if (mAttachedWidgetListener) {
-    mAttachedWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
+    mAttachedWidgetListener->WindowResized(this, mBounds.Width(), mBounds.Height());
   }
 }
 
@@ -342,7 +341,7 @@ HeadlessWidget::Resize(double aX,
                        double aHeight,
                        bool   aRepaint)
 {
-  if (mBounds.x != aX || mBounds.y != aY) {
+  if (!mBounds.IsEqualXY(aX, aY)) {
     NotifyWindowMoved(aX, aY);
   }
   return Resize(aWidth, aHeight, aRepaint);
@@ -380,7 +379,7 @@ HeadlessWidget::ApplySizeModeSideEffects()
 
   switch(mSizeMode) {
   case nsSizeMode_Normal: {
-    Resize(mRestoreBounds.x, mRestoreBounds.y, mRestoreBounds.width, mRestoreBounds.height, false);
+    Resize(mRestoreBounds.X(), mRestoreBounds.Y(), mRestoreBounds.Width(), mRestoreBounds.Height(), false);
     break;
   }
   case nsSizeMode_Minimized:

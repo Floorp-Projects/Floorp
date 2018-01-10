@@ -673,10 +673,10 @@ WinUtils::MonitorFromRect(const gfx::Rect& rect)
     IsPerMonitorDPIAware() ? 1.0 : LogToPhysFactor(GetPrimaryMonitor());
 
   RECT globalWindowBounds = {
-    NSToIntRound(dpiScale * rect.x),
-    NSToIntRound(dpiScale * rect.y),
-    NSToIntRound(dpiScale * (rect.x + rect.width)),
-    NSToIntRound(dpiScale * (rect.y + rect.height))
+    NSToIntRound(dpiScale * rect.X()),
+    NSToIntRound(dpiScale * rect.Y()),
+    NSToIntRound(dpiScale * (rect.XMost())),
+    NSToIntRound(dpiScale * (rect.YMost()))
   };
 
   return ::MonitorFromRect(&globalWindowBounds, MONITOR_DEFAULTTONEAREST);
@@ -1174,8 +1174,8 @@ WinUtils::InvalidatePluginAsWorkaround(nsIWidget* aWidget,
 
   if (windowRect.top == 0 && windowRect.left == 0) {
     RECT rect;
-    rect.left   = aRect.x;
-    rect.top    = aRect.y;
+    rect.left   = aRect.X();
+    rect.top    = aRect.Y();
     rect.right  = aRect.XMost();
     rect.bottom = aRect.YMost();
 

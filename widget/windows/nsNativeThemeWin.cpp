@@ -1584,8 +1584,8 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext,
   gfxFloat p2a = gfxFloat(aFrame->PresContext()->AppUnitsPerDevPixel());
   RECT widgetRect;
   RECT clipRect;
-  gfxRect tr(aRect.x, aRect.y, aRect.width, aRect.height),
-          dr(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  gfxRect tr(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height()),
+          dr(aDirtyRect.X(), aDirtyRect.Y(), aDirtyRect.Width(), aDirtyRect.Height());
 
   tr.Scale(1.0 / (p2a * themeScale));
   dr.Scale(1.0 / (p2a * themeScale));
@@ -3551,8 +3551,8 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(gfxContext* aContext,
 
   gfxFloat p2a = gfxFloat(aFrame->PresContext()->AppUnitsPerDevPixel());
   RECT widgetRect;
-  gfxRect tr(aRect.x, aRect.y, aRect.width, aRect.height),
-          dr(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  gfxRect tr(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height()),
+          dr(aDirtyRect.X(), aDirtyRect.Y(), aDirtyRect.Width(), aDirtyRect.Height());
 
   tr.Scale(1.0 / p2a);
   dr.Scale(1.0 / p2a);
