@@ -109,6 +109,8 @@ PerformanceTiming::InitializeTimingInfo(nsITimedChannel* aChannel)
     //       ServiceWorker interception responseStart?
     aChannel->GetHandleFetchEventEnd(&mWorkerResponseEnd);
 
+    aChannel->GetServerTiming(getter_AddRefs(mServerTiming));
+
     // The performance timing api essentially requires that the event timestamps
     // have a strict relation with each other. The truth, however, is the browser
     // engages in a number of speculative activities that sometimes mean connections
@@ -518,6 +520,18 @@ PerformanceTiming::IsTopLevelContentDocument() const
     return false;
   }
   return rootItem->ItemType() == nsIDocShellTreeItem::typeContent;
+}
+
+already_AddRefed<nsIArray>
+PerformanceTiming::GetServerTiming() const
+{
+  if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized() ||
+      nsContentUtils::ShouldResistFingerprinting()) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIArray> serverTiming = mServerTiming;
+  return serverTiming.forget();
 }
 
 } // dom namespace
