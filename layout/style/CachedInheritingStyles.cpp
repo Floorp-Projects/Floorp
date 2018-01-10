@@ -14,7 +14,7 @@ void
 CachedInheritingStyles::Insert(ServoStyleContext* aStyle)
 {
   MOZ_ASSERT(aStyle);
-  MOZ_ASSERT(aStyle->IsInheritingAnonBox());
+  MOZ_ASSERT(aStyle->IsInheritingAnonBox() || aStyle->IsLazilyCascadedPseudoElement());
 
   if (IsEmpty()) {
     RefPtr<ServoStyleContext> s = aStyle;
@@ -34,7 +34,8 @@ CachedInheritingStyles::Insert(ServoStyleContext* aStyle)
 ServoStyleContext*
 CachedInheritingStyles::Lookup(nsAtom* aPseudoTag) const
 {
-  MOZ_ASSERT(nsCSSAnonBoxes::IsInheritingAnonBox(aPseudoTag));
+  MOZ_ASSERT(nsCSSAnonBoxes::IsInheritingAnonBox(aPseudoTag) ||
+             nsCSSPseudoElements::IsPseudoElement(aPseudoTag));
   if (IsIndirect()) {
     for (auto& style : *AsIndirect()) {
       if (style->GetPseudo() == aPseudoTag) {

@@ -65,7 +65,6 @@ public:
   {
     MOZ_ASSERT(aStyle->GetPseudo() && !aStyle->IsAnonBox());
     MOZ_ASSERT(!GetCachedLazyPseudoStyle(aStyle->GetPseudoType()));
-    MOZ_ASSERT(!aStyle->mNextLazyPseudoStyle);
     MOZ_ASSERT(!IsLazilyCascadedPseudoElement(), "lazy pseudos can't inherit lazy pseudos");
     MOZ_ASSERT(aStyle->IsLazilyCascadedPseudoElement());
 
@@ -82,8 +81,7 @@ public:
       return;
     }
 
-    mNextLazyPseudoStyle.swap(aStyle->mNextLazyPseudoStyle);
-    mNextLazyPseudoStyle = aStyle;
+    mCachedInheritingStyles.Insert(aStyle);
   }
 
   /**
@@ -104,11 +102,6 @@ public:
     *aCVsSize += ServoComputedValuesMallocEnclosingSizeOf(this);
     mSource.AddSizeOfExcludingThis(aSizes);
     mCachedInheritingStyles.AddSizeOfIncludingThis(aSizes, aCVsSize);
-
-    if (mNextLazyPseudoStyle &&
-        !aSizes.mState.HaveSeenPtr(mNextLazyPseudoStyle)) {
-      mNextLazyPseudoStyle->AddSizeOfIncludingThis(aSizes, aCVsSize);
-    }
   }
 
 private:
@@ -117,17 +110,6 @@ private:
 
   // A cache of anonymous box and lazy pseudo styles inheriting from this style.
   CachedInheritingStyles mCachedInheritingStyles;
-
-  // A linked-list cache of lazy pseudo styles inheriting from this style _if
-  // the style isn't a lazy pseudo style itself_.
-  //
-  // Otherwise it represents the next entry in the cache of the parent style
-  // context.
-  //
-  // Note that we store these separately from inheriting anonymous boxes so that
-  // text nodes inheriting from lazy pseudo styles can share styles, which is
-  // very important on some pages.
-  RefPtr<ServoStyleContext> mNextLazyPseudoStyle;
 };
 
 } // namespace mozilla

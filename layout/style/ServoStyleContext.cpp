@@ -45,13 +45,7 @@ ServoStyleContext::GetCachedLazyPseudoStyle(CSSPseudoElementType aPseudo) const
     return nullptr;
   }
 
-  auto* current = mNextLazyPseudoStyle.get();
-
-  while (current && current->GetPseudoType() != aPseudo) {
-    current = current->mNextLazyPseudoStyle.get();
-  }
-
-  return current;
+  return mCachedInheritingStyles.Lookup(nsCSSPseudoElements::GetPseudoAtom(aPseudo));
 }
 
 } // namespace mozilla
