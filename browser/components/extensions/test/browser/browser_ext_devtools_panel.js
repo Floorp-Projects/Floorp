@@ -40,6 +40,35 @@ async function testThemeSwitching(extension, locations = ["page"]) {
   }
 }
 
+add_task(async function setup_blank_panel() {
+  // Create a blank custom tool so that we don't need to wait the webconsole
+  // to be fully loaded/unloaded to prevent intermittent failures (related
+  // to a webconsole that is still loading when the test has been completed).
+  const testBlankPanel = {
+    id: "testBlankPanel",
+    url: "about:blank",
+    label: "Blank Tool",
+    isTargetSupported() {
+      return true;
+    },
+    build(iframeWindow, toolbox) {
+      return Promise.resolve({
+        target: toolbox.target,
+        toolbox: toolbox,
+        isReady: true,
+        panelDoc: iframeWindow.document,
+        destroy() {},
+      });
+    },
+  };
+
+  registerCleanupFunction(() => {
+    gDevTools.unregisterTool(testBlankPanel.id);
+  });
+
+  gDevTools.registerTool(testBlankPanel);
+});
+
 add_task(async function test_theme_name_no_panel() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "http://mochi.test:8888/");
 
@@ -76,7 +105,7 @@ add_task(async function test_theme_name_no_panel() {
   await extension.startup();
 
   let target = gDevTools.getTargetForTab(tab);
-  await gDevTools.showToolbox(target, "webconsole");
+  await gDevTools.showToolbox(target, "testBlankPanel");
   info("developer toolbox opened");
 
   is(await extension.awaitMessage("initial_theme"),
@@ -196,7 +225,7 @@ add_task(async function test_devtools_page_panels_create() {
 
   let target = gDevTools.getTargetForTab(tab);
 
-  const toolbox = await gDevTools.showToolbox(target, "webconsole");
+  const toolbox = await gDevTools.showToolbox(target, "testBlankPanel");
   info("developer toolbox opened");
 
   await extension.awaitMessage("devtools_panel_created");
@@ -226,7 +255,7 @@ add_task(async function test_devtools_page_panels_create() {
 
   await testThemeSwitching(extension, ["page", "panel"]);
 
-  await gDevTools.showToolbox(target, "webconsole");
+  await gDevTools.showToolbox(target, "testBlankPanel");
   const results = await extension.awaitMessage("devtools_panel_hidden");
   info("Addon Devtools Panel hidden");
 
@@ -238,7 +267,7 @@ add_task(async function test_devtools_page_panels_create() {
   await extension.awaitMessage("devtools_panel_shown");
   info("Addon Devtools Panel shown - second cycle");
 
-  await gDevTools.showToolbox(target, "webconsole");
+  await gDevTools.showToolbox(target, "testBlankPanel");
   const secondCycleResults = await extension.awaitMessage("devtools_panel_hidden");
   info("Addon Devtools Panel hidden - second cycle");
 
@@ -291,7 +320,7 @@ add_task(async function test_devtools_page_panels_create() {
   is(panelTabIdAfterToggle, devtoolsPageTabId,
      "Got the same devtools.inspectedWindow.tabId from devtools panel after visibility toggled");
 
-  await gDevTools.showToolbox(target, "webconsole");
+  await gDevTools.showToolbox(target, "testBlankPanel");
   const toolToggledResults = await extension.awaitMessage("devtools_panel_hidden");
   info("Addon Devtools Panel hidden - after visibilityswitch toggled");
 
@@ -369,7 +398,7 @@ add_task(async function test_devtools_page_panels_switch_toolbox_host() {
 
   let target = gDevTools.getTargetForTab(tab);
 
-  const toolbox = await gDevTools.showToolbox(target, "webconsole");
+  const toolbox = await gDevTools.showToolbox(target, "testBlankPanel");
   info("developer toolbox opened");
 
   await extension.awaitMessage("devtools_panel_created");
@@ -438,8 +467,8 @@ add_task(async function test_devtools_page_invalid_panel_urls() {
     const matchInvalidPanelURL = /must be a relative URL/;
     const matchInvalidIconURL = /be one of \[""\], or match the format "strictRelativeUrl"/;
 
-    const test_cases = [
-      // Invalid panel urls (validated by the schema wrappers, throws on invalid urls).
+    // Invalid panel urls (validated by the schema wrappers, throws on invalid urls).
+    const invalid_panels = [
       {panel: "about:about", icon: "icon.png", expectError: matchInvalidPanelURL},
       {panel: "about:addons", icon: "icon.png", expectError: matchInvalidPanelURL},
       {panel: "http://mochi.test:8888", icon: "icon.png", expectError: matchInvalidPanelURL},
@@ -447,12 +476,18 @@ add_task(async function test_devtools_page_invalid_panel_urls() {
       // which have to be resolved to the default icon, reject the returned promise).
       {panel: "panel.html", icon: "about:about", expectError: matchInvalidIconURL},
       {panel: "panel.html", icon: "http://mochi.test:8888", expectError: matchInvalidIconURL},
-      // Valid panel urls
+    ];
+
+    const valid_panels = [
       {panel: "panel.html", icon: "icon.png"},
       {panel: "./panel.html", icon: "icon.png"},
       {panel: "/panel.html", icon: "icon.png"},
       {panel: "/panel.html", icon: ""},
     ];
+
+    let valid_panels_length = valid_panels.length;
+
+    const test_cases = [].concat(invalid_panels, valid_panels);
 
     browser.test.onMessage.addListener(async msg => {
       if (msg !== "start_test_panel_create") {
@@ -476,6 +511,8 @@ add_task(async function test_devtools_page_invalid_panel_urls() {
           try {
             const pane = await browser.devtools.panels.create("Test Panel", icon, panel);
 
+            valid_panels_length--;
+
             // Wait the panel to be loaded.
             const oncePanelLoaded = new Promise(resolve => {
               pane.onShown.addListener(paneWin => {
@@ -487,11 +524,13 @@ add_task(async function test_devtools_page_invalid_panel_urls() {
             });
 
             // Ask the privileged code to select the last created panel.
-            browser.test.sendMessage("select-devtools-panel");
+            const done = valid_panels_length === 0;
+            browser.test.sendMessage("select-devtools-panel", done);
             await oncePanelLoaded;
           } catch (err) {
             browser.test.fail("Unexpected failure on creating a devtools panel with " +
                               `panel url ${panel} and icon ${icon}`);
+            throw err;
           }
         }
       }
@@ -538,20 +577,26 @@ add_task(async function test_devtools_page_invalid_panel_urls() {
 
   let target = gDevTools.getTargetForTab(tab);
 
-  let toolbox = await gDevTools.showToolbox(target, "webconsole");
-
-  extension.onMessage("select-devtools-panel", () => {
-    const toolboxAdditionalTools = toolbox.getAdditionalTools();
-    const lastTool = toolboxAdditionalTools[toolboxAdditionalTools.length - 1];
-
-    gDevTools.showToolbox(target, lastTool.id);
-  });
+  let toolbox = await gDevTools.showToolbox(target, "testBlankPanel");
 
   info("developer toolbox opened");
 
   await extension.awaitMessage("devtools_page_ready");
 
   extension.sendMessage("start_test_panel_create");
+
+  let done = false;
+
+  while (!done) {
+    info("Waiting test extension request to select the last created panel");
+    done = await extension.awaitMessage("select-devtools-panel");
+
+    const toolboxAdditionalTools = toolbox.getAdditionalTools();
+    const lastTool = toolboxAdditionalTools[toolboxAdditionalTools.length - 1];
+
+    gDevTools.showToolbox(target, lastTool.id);
+    info("Last created panel selected");
+  }
 
   await extension.awaitMessage("test_invalid_devtools_panel_urls_done");
 

@@ -306,6 +306,7 @@ const nsAString& GfxDriverInfo::GetDeviceVendor(DeviceVendor id)
     DECLARE_VENDOR_ID(VendorAMD, "0x1022");
     DECLARE_VENDOR_ID(VendorATI, "0x1002");
     DECLARE_VENDOR_ID(VendorMicrosoft, "0x1414");
+    DECLARE_VENDOR_ID(VendorParallels, "0x1ab8");
     // Suppress a warning.
     DECLARE_VENDOR_ID(DeviceVendorMax, "");
   }

@@ -30,9 +30,6 @@
 #include "VideoFrameContainer.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Unused.h"
-#ifdef MOZ_WEBRTC
-#include "AudioOutputObserver.h"
-#endif
 #include "mtransport/runnable_utils.h"
 #include "VideoUtils.h"
 
@@ -3569,9 +3566,6 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
   , mLatencyLog(AsyncLatencyLogger::Get())
   , mAbstractMainThread(aMainThread)
   , mThreadPool(GetMediaThreadPool(MediaThreadType::MSG_CONTROL))
-#ifdef MOZ_WEBRTC
-  , mFarendObserverRef(nullptr)
-#endif
   , mSelfRef(this)
   , mOutputChannels(std::min<uint32_t>(8, CubebUtils::MaxNumberOfChannels()))
 #ifdef DEBUG

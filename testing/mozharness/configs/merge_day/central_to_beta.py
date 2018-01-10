@@ -17,7 +17,7 @@ config = {
         for d in ["mobile/android/config/mozconfigs/android-api-16/",
                   "mobile/android/config/mozconfigs/android-x86/",
                   "mobile/android/config/mozconfigs/android-aarch64/"]
-        for f in ["debug", "nightly", "l10n-nightly"]
+        for f in ["debug", "nightly"]
     ] + [
         # File, from, to
         (f, "ac_add_options --with-branding=browser/branding/nightly",
@@ -27,17 +27,6 @@ config = {
                   "browser/config/mozconfigs/win32/l10n-mozconfig",
                   "browser/config/mozconfigs/win64/l10n-mozconfig",
                   "browser/config/mozconfigs/macosx64/l10n-mozconfig"]
-    ] + [
-        # File, from, to
-        (f, "ac_add_options --enable-profiling", "") for f in
-        ["mobile/android/config/mozconfigs/android-api-16/nightly",
-         "mobile/android/config/mozconfigs/android-x86/nightly",
-         "mobile/android/config/mozconfigs/android-aarch64/nightly",
-         "browser/config/mozconfigs/linux32/nightly",
-         "browser/config/mozconfigs/linux64/nightly",
-         "browser/config/mozconfigs/macosx64/nightly",
-         "browser/config/mozconfigs/win32/nightly",
-         "browser/config/mozconfigs/win64/nightly"]
     ] + [
         # File, from, to
         ("browser/confvars.sh",
