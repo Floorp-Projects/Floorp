@@ -383,6 +383,9 @@ this.ExtensionTestCommon = class ExtensionTestCommon {
       id,
       resourceURI: jarURI,
       cleanupFile: file,
+      signedState: data.isPrivileged ? AddonManager.SIGNEDSTATE_PRIVILEGED
+                                     : AddonManager.SIGNEDSTATE_SIGNED,
+      temporarilyInstalled: !!data.temporarilyInstalled,
     });
   }
 };
