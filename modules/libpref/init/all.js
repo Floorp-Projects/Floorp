@@ -869,6 +869,7 @@ pref("gfx.logging.peak-texture-usage.enabled", false);
 
 pref("gfx.ycbcr.accurate-conversion", false);
 
+pref("gfx.webrender.all", false);
 #ifdef MOZ_ENABLE_WEBRENDER
 pref("gfx.webrender.enabled", true);
 #else
@@ -880,7 +881,7 @@ pref("gfx.webrender.program-binary", true);
 #endif
 
 pref("gfx.webrender.highlight-painted-layers", false);
-pref("gfx.webrender.blob-images", false);
+pref("gfx.webrender.blob-images", 2);
 pref("gfx.webrender.hit-test", false);
 
 // WebRender debugging utilities.
@@ -4679,7 +4680,7 @@ pref("image.mem.animated.discardable", true);
 
 // Decodes images into shared memory to allow direct use in separate
 // rendering processes.
-pref("image.mem.shared", false);
+pref("image.mem.shared", 2);
 
 // Allows image locking of decoded image data in content processes.
 pref("image.mem.allow_locking_in_content_processes", true);
