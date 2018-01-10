@@ -1916,12 +1916,6 @@ JSStructuredCloneReader::readTypedArray(uint32_t arrayType, uint32_t nelems, Mut
             return false;
         byteOffset = n;
     }
-    if (!v.isObject() || !v.toObject().is<ArrayBufferObject>()) {
-        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
-                                  "typed array must be backed by an ArrayBuffer");
-        return false;
-    }
-
     RootedObject buffer(context(), &v.toObject());
     RootedObject obj(context(), nullptr);
 
@@ -1979,11 +1973,6 @@ JSStructuredCloneReader::readDataView(uint32_t byteLength, MutableHandleValue vp
     RootedValue v(context());
     if (!startRead(&v))
         return false;
-    if (!v.isObject() || !v.toObject().is<ArrayBufferObject>()) {
-        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
-                                  "DataView must be backed by an ArrayBuffer");
-        return false;
-    }
 
     // Read byteOffset.
     uint64_t n;
@@ -2039,11 +2028,8 @@ JSStructuredCloneReader::readSharedArrayBuffer(uint32_t nbytes, MutableHandleVal
 
     // We must not transfer buffer pointers cross-process.  The cloneDataPolicy
     // in the sender should guard against this; check that it does.
-    if (storedScope > JS::StructuredCloneScope::SameProcessDifferentThread) {
-        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
-                                  "can't transfer SharedArrayBuffer cross-process");
-        return false;
-    }
+
+    MOZ_RELEASE_ASSERT(storedScope <= JS::StructuredCloneScope::SameProcessDifferentThread);
 
     // The new object will have a new reference to the rawbuf.
 
@@ -2065,11 +2051,7 @@ JSStructuredCloneReader::readSharedArrayBuffer(uint32_t nbytes, MutableHandleVal
 bool
 JSStructuredCloneReader::readSharedWasmMemory(uint32_t nbytes, MutableHandleValue vp)
 {
-    if (nbytes != 0) {
-        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
-                                  "invalid shared wasm memory tag");
-        return false;
-    }
+    MOZ_ASSERT(nbytes == 0);
 
     JSContext* cx = context();
 
@@ -2077,11 +2059,6 @@ JSStructuredCloneReader::readSharedWasmMemory(uint32_t nbytes, MutableHandleValu
     RootedValue payload(cx);
     if (!startRead(&payload))
         return false;
-    if (!payload.isObject() || !payload.toObject().is<SharedArrayBufferObject>()) {
-        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
-                                  "shared wasm memory must be backed by a SharedArrayBuffer");
-        return false;
-    }
 
     Rooted<ArrayBufferObjectMaybeShared*> sab(
         cx, &payload.toObject().as<SharedArrayBufferObject>());
@@ -2104,23 +2081,10 @@ bool
 JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems,
                                            MutableHandleValue vp)
 {
-    if (arrayType > Scalar::Uint8Clamped) {
-        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
-                                  "invalid TypedArray type");
-        return false;
-    }
+    MOZ_ASSERT(arrayType <= Scalar::Uint8Clamped);
 
-    mozilla::CheckedInt<size_t> nbytes =
-        mozilla::CheckedInt<size_t>(nelems) *
-        TypedArrayElemSize(static_cast<Scalar::Type>(arrayType));
-    if (!nbytes.isValid() || nbytes.value() > UINT32_MAX) {
-        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                                  JSMSG_SC_BAD_SERIALIZED_DATA,
-                                  "invalid typed array size");
-        return false;
-    }
-
-    JSObject* obj = ArrayBufferObject::create(context(), nbytes.value());
+    uint32_t nbytes = nelems << TypedArrayShift(static_cast<Scalar::Type>(arrayType));
+    JSObject* obj = ArrayBufferObject::create(context(), nbytes);
     if (!obj)
         return false;
     vp.setObject(*obj);
@@ -2380,14 +2344,6 @@ JSStructuredCloneReader::readHeader()
     }
 
     MOZ_ALWAYS_TRUE(in.readPair(&tag, &data));
-    if (data != uint32_t(JS::StructuredCloneScope::SameProcessSameThread) &&
-        data != uint32_t(JS::StructuredCloneScope::SameProcessDifferentThread) &&
-        data != uint32_t(JS::StructuredCloneScope::DifferentProcess))
-    {
-        JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
-                                  "invalid structured clone scope");
-        return false;
-    }
     storedScope = JS::StructuredCloneScope(data);
     if (storedScope < allowedScope) {
         JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
