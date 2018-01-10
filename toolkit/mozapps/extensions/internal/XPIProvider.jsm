@@ -3934,8 +3934,8 @@ var XPIProvider = {
       }
 
       for (let addon of aAddons) {
-        AddonRepository.getCachedAddonByID(addon.id, aRepoAddon => {
-          if (aRepoAddon) {
+        AddonRepository.getCachedAddonByID(addon.id).then(aRepoAddon => {
+          if (aRepoAddon || AddonRepository.getCompatibilityOverridesSync(addon.id)) {
             logger.debug("updateAddonRepositoryData got info for " + addon.id);
             addon._repositoryAddon = aRepoAddon;
             this.updateAddonDisabledState(addon);
@@ -5756,7 +5756,7 @@ function defineAddonWrapperProperty(name, getter) {
 
 ["fullDescription", "developerComments", "supportURL",
  "contributionURL", "averageRating", "reviewCount",
- "reviewURL"].forEach(function(aProp) {
+ "reviewURL", "weeklyDownloads"].forEach(function(aProp) {
   defineAddonWrapperProperty(aProp, function() {
     let addon = addonFor(this);
     if (addon._repositoryAddon)
