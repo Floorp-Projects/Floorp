@@ -733,8 +733,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "PerformanceResourceTiming",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "PerformanceServerTiming",
-// IMPORTANT: Do not change this list without review from a DOM peer!
     "PerformanceTiming",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "PeriodicWave",

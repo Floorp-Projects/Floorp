@@ -12,7 +12,6 @@
 #include "nsITimedChannel.h"
 #include "Performance.h"
 #include "PerformanceEntry.h"
-#include "PerformanceServerTiming.h"
 #include "PerformanceTiming.h"
 
 namespace mozilla {
@@ -178,8 +177,6 @@ public:
 
   size_t
   SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
-
-  void GetServerTiming(nsTArray<RefPtr<PerformanceServerTiming>>& aRetval);
 
 protected:
   virtual ~PerformanceResourceTiming();
