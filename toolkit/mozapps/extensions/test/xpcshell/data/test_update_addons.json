@@ -1,0 +1,14 @@
+{
+    "page_size": 25,
+    "page_count": 1,
+    "count": 1,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "name": "Ttest Addon 9",
+            "type": "extension",
+            "guid": "addon9@tests.mozilla.org"
+        }
+    ]
+}
