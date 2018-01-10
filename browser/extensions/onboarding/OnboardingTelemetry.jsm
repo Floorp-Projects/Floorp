@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
 
 // Flag to control if we want to send new/old telemetry
 // TODO: remove this flag and the legacy code in Bug 1419996
-const NEW_TABLE = true;
+const NEW_TABLE = false;
 
 // Validate the content has non-empty string
 function hasString(str) {
@@ -138,7 +138,6 @@ const EVENT_WHITELIST = {
   "notification-appear": {
     topic: "firefox-onboarding-event2",
     category: "notification-interactions",
-    parent: "notification-session",
     validators: Object.assign({}, BASIC_EVENT_SCHEMA, {
       bubble_state: isValidBubbleState,
       current_tour_id: hasString,
@@ -152,7 +151,6 @@ const EVENT_WHITELIST = {
   "notification-close-button-click": {
     topic: "firefox-onboarding-event2",
     category: "notification-interactions",
-    parent: "notification-session",
     validators: Object.assign({}, BASIC_EVENT_SCHEMA, {
       bubble_state: isValidBubbleState,
       current_tour_id: hasString,
@@ -166,7 +164,6 @@ const EVENT_WHITELIST = {
   "notification-cta-click": {
     topic: "firefox-onboarding-event2",
     category: "notification-interactions",
-    parent: "notification-session",
     validators: Object.assign({}, BASIC_EVENT_SCHEMA, {
       bubble_state: isValidBubbleState,
       current_tour_id: hasString,
@@ -180,7 +177,6 @@ const EVENT_WHITELIST = {
   "notification-session": {
     topic: "firefox-onboarding-session2",
     category: "notification-interactions",
-    parent: "onboarding-session",
     validators: BASIC_SESSION_SCHEMA,
   },
   // track the start of a notification
@@ -191,7 +187,6 @@ const EVENT_WHITELIST = {
   "onboarding-logo-click": {
     topic: "firefox-onboarding-event2",
     category: "logo-interactions",
-    parent: "onboarding-session",
     validators: Object.assign({}, BASIC_EVENT_SCHEMA, {
       bubble_state: isValidBubbleState,
       current_tour_id: isEmptyString,
@@ -205,7 +200,6 @@ const EVENT_WHITELIST = {
   "onboarding-noshow-smallscreen": {
     topic: "firefox-onboarding-event2",
     category: "onboarding-interactions",
-    parent: "onboarding-session",
     validators: Object.assign({}, BASIC_EVENT_SCHEMA, {
       bubble_state: isEmptyString,
       current_tour_id: isEmptyString,
@@ -221,7 +215,6 @@ const EVENT_WHITELIST = {
   "onboarding-session": {
     topic: "firefox-onboarding-session2",
     category: "onboarding-interactions",
-    parent: "onboarding-session",
     validators: BASIC_SESSION_SCHEMA,
   },
   // track onboarding start time (when user loads about:home or about:newtab)
@@ -232,7 +225,6 @@ const EVENT_WHITELIST = {
   "overlay-close-button-click": {
     topic: "firefox-onboarding-event2",
     category: "overlay-interactions",
-    parent: "overlay-session",
     validators: Object.assign({}, BASIC_EVENT_SCHEMA, {
       bubble_state: isEmptyString,
       current_tour_id: hasString,
@@ -246,7 +238,6 @@ const EVENT_WHITELIST = {
   "overlay-close-outside-click": {
     topic: "firefox-onboarding-event2",
     category: "overlay-interactions",
-    parent: "overlay-session",
     validators: Object.assign({}, BASIC_EVENT_SCHEMA, {
       bubble_state: isEmptyString,
       current_tour_id: hasString,
@@ -260,7 +251,6 @@ const EVENT_WHITELIST = {
   "overlay-cta-click": {
     topic: "firefox-onboarding-event2",
     category: "overlay-interactions",
-    parent: "overlay-session",
     validators: Object.assign({}, BASIC_EVENT_SCHEMA, {
       bubble_state: isEmptyString,
       current_tour_id: hasString,
@@ -274,7 +264,6 @@ const EVENT_WHITELIST = {
   "overlay-current-tour": {
     topic: "firefox-onboarding-event2",
     category: "overlay-interactions",
-    parent: "overlay-session",
     validators: Object.assign({}, BASIC_EVENT_SCHEMA, {
       bubble_state: isEmptyString,
       current_tour_id: hasString,
@@ -288,7 +277,6 @@ const EVENT_WHITELIST = {
   "overlay-disapear-resize": {
     topic: "firefox-onboarding-event2",
     category: "overlay-interactions",
-    parent: "overlay-session",
     validators: Object.assign({}, BASIC_EVENT_SCHEMA, {
       bubble_state: isEmptyString,
       current_tour_id: isEmptyString,
@@ -302,7 +290,6 @@ const EVENT_WHITELIST = {
   "overlay-nav-click": {
     topic: "firefox-onboarding-event2",
     category: "overlay-interactions",
-    parent: "overlay-session",
     validators: Object.assign({}, BASIC_EVENT_SCHEMA, {
       bubble_state: isEmptyString,
       current_tour_id: hasString,
@@ -316,7 +303,6 @@ const EVENT_WHITELIST = {
   "overlay-session": {
     topic: "firefox-onboarding-session2",
     category: "overlay-interactions",
-    parent: "onboarding-session",
     validators:  BASIC_SESSION_SCHEMA,
   },
   // track the start of an overlay session
@@ -327,7 +313,6 @@ const EVENT_WHITELIST = {
   "overlay-skip-tour": {
     topic: "firefox-onboarding-event2",
     category: "overlay-interactions",
-    parent: "overlay-session",
     validators: Object.assign({}, BASIC_EVENT_SCHEMA, {
       bubble_state: isEmptyString,
       current_tour_id: hasString,
@@ -387,13 +372,8 @@ let OnboardingTelemetry = {
   },
 
   init(startupData) {
-    if (NEW_TABLE) {
-      this.sessionProbe = new PingCentre({topic: "firefox-onboarding-session2"});
-      this.eventProbe = new PingCentre({topic: "firefox-onboarding-event2"});
-    } else {
-      this.sessionProbe = new PingCentre({topic: "firefox-onboarding-session"});
-      this.eventProbe = new PingCentre({topic: "firefox-onboarding-event"});
-    }
+    this.sessionProbe = new PingCentre({topic: "firefox-onboarding-session"});
+    this.eventProbe = new PingCentre({topic: "firefox-onboarding-event"});
     this.state.addon_version = startupData.version;
   },
 
@@ -415,209 +395,11 @@ let OnboardingTelemetry = {
     };
   },
 
-  // register per tab session data
-  registerNewOnboardingSession(data) {
-    let { page, session_key, tour_type } = data;
-    if (this.state.sessions[session_key]) {
-      return;
-    }
-    // session_key and page url are must have
-    if (!session_key || !page || !tour_type) {
-      throw new Error("session_key, page url, and tour_type are required for onboarding-register-session");
-    }
-    let onboarding_session_id = gUUIDGenerator.generateUUID().toString();
-    this.state.sessions[session_key] = {
-      onboarding_session_id,
-      overlay_session_id: "",
-      notification_session_id: "",
-      page,
-      tour_type,
-    };
-  },
-
   process(data) {
     if (NEW_TABLE) {
-      this.processPings(data);
+      throw new Error("Will implement in bug 1413830");
     } else {
       this.processOldPings(data);
-    }
-  },
-
-  processPings(data) {
-    let { type, session_key } = data;
-    if (type === "onboarding-register-session") {
-      this.registerNewOnboardingSession(data);
-      return;
-    }
-
-    if (!this.state.sessions[session_key]) {
-      throw new Error(`${type} should pass valid session_key`);
-    }
-
-    switch (type) {
-      case "onboarding-session-begin":
-        if (!this.state.sessions[session_key].onboarding_session_id) {
-          throw new Error(`should fire onboarding-register-session event before ${type}`);
-        }
-        this.state.sessions[session_key].onboarding_session_begin = Date.now();
-        return;
-      case "onboarding-session-end":
-        data = Object.assign({}, data, {
-          type: "onboarding-session"
-        });
-        this.state.sessions[session_key].onboarding_session_end = Date.now();
-        break;
-      case "overlay-session-begin":
-        this.state.sessions[session_key].overlay_session_id = gUUIDGenerator.generateUUID().toString();
-        this.state.sessions[session_key].overlay_session_begin = Date.now();
-        return;
-      case "overlay-session-end":
-        data = Object.assign({}, data, {
-          type: "overlay-session"
-        });
-        this.state.sessions[session_key].overlay_session_end = Date.now();
-        break;
-      case "notification-session-begin":
-        this.state.sessions[session_key].notification_session_id = gUUIDGenerator.generateUUID().toString();
-        this.state.sessions[session_key].notification_session_begin = Date.now();
-        return;
-      case "notification-session-end":
-        data = Object.assign({}, data, {
-          type: "notification-session"
-        });
-        this.state.sessions[session_key].notification_session_end = Date.now();
-        break;
-    }
-    let topic = EVENT_WHITELIST[data.type] && EVENT_WHITELIST[data.type].topic;
-    if (!topic) {
-      throw new Error(`ping-centre doesn't know ${type} after processPings, only knows ${Object.keys(EVENT_WHITELIST)}`);
-    }
-    this._sendPing(topic, data);
-  },
-
-  // send out pings by topic
-  _sendPing(topic, data) {
-    if (topic === "internal") {
-      throw new Error(`internal ping ${data.type} should be processed within processPings`);
-    }
-
-    let {
-      addon_version,
-    } = this.state;
-    let {
-      bubble_state = "",
-      current_tour_id = "",
-      logo_state = "",
-      notification_impression = -1,
-      notification_state = "",
-      session_key,
-      target_tour_id = "",
-      type,
-      width,
-    } = data;
-    let {
-      notification_session_begin,
-      notification_session_end,
-      notification_session_id,
-      onboarding_session_begin,
-      onboarding_session_end,
-      onboarding_session_id,
-      overlay_session_begin,
-      overlay_session_end,
-      overlay_session_id,
-      page,
-      tour_type,
-    } = this.state.sessions[session_key];
-    let {
-      category,
-      parent,
-    } = EVENT_WHITELIST[type];
-    let parent_session_id;
-    let payload;
-    let session_begin;
-    let session_end;
-    let session_id;
-    let root_session_id = onboarding_session_id;
-
-    // assign parent_session_id
-    switch (parent) {
-      case "onboarding-session":
-        parent_session_id = onboarding_session_id;
-        break;
-      case "overlay-session":
-        parent_session_id = overlay_session_id;
-        break;
-      case "notification-session":
-        parent_session_id = notification_session_id;
-        break;
-    }
-    if (!parent_session_id) {
-      throw new Error(`Unable to find the ${parent} parent session for the event ${type}`);
-    }
-
-    switch (topic) {
-      case "firefox-onboarding-session2":
-        switch (type) {
-          case "onboarding-session":
-            session_id = onboarding_session_id;
-            session_begin = onboarding_session_begin;
-            session_end = onboarding_session_end;
-            delete this.state.sessions[session_key];
-            break;
-          case "overlay-session":
-            session_id = overlay_session_id;
-            session_begin = overlay_session_begin;
-            session_end = overlay_session_end;
-            break;
-          case "notification-session":
-            session_id = notification_session_id;
-            session_begin = notification_session_begin;
-            session_end = notification_session_end;
-            break;
-        }
-        if (!session_id || !session_begin || !session_end) {
-          throw new Error(`should fire ${type}-begin and ${type}-end event before ${type}`);
-        }
-
-        payload = {
-          addon_version,
-          category,
-          page,
-          parent_session_id,
-          root_session_id,
-          session_begin,
-          session_end,
-          session_id,
-          tour_type,
-          type,
-        };
-        this._validatePayload(payload);
-        this.sessionProbe && this.sessionProbe.sendPing(payload,
-          {filter: ONBOARDING_ID});
-        break;
-      case "firefox-onboarding-event2":
-        let timestamp = Date.now();
-        payload = {
-          addon_version,
-          bubble_state,
-          category,
-          current_tour_id,
-          logo_state,
-          notification_impression,
-          notification_state,
-          page,
-          parent_session_id,
-          root_session_id,
-          target_tour_id,
-          timestamp,
-          tour_type,
-          type,
-          width,
-        };
-        this._validatePayload(payload);
-        this.eventProbe && this.eventProbe.sendPing(payload,
-          {filter: ONBOARDING_ID});
-        break;
     }
   },
 
@@ -740,15 +522,15 @@ let OnboardingTelemetry = {
 
   // validate data sanitation and make sure correct ping params are sent
   _validatePayload(payload) {
-    let type = payload.type;
-    let { validators } = EVENT_WHITELIST[type];
+    let event = payload.type;
+    let { validators } = EVENT_WHITELIST[event];
     if (!validators) {
-      throw new Error(`Event ${type} without validators should not be sent.`);
+      throw new Error(`Event ${event} without validators should not be sent.`);
     }
     let validatorKeys = Object.keys(validators);
     // Not send with undefined column
     if (Object.keys(payload).length > validatorKeys.length) {
-      throw new Error(`Event ${type} want to send more columns than expect, should not be sent.`);
+      throw new Error(`Event ${event} want to send more columns than expect, should not be sent.`);
     }
     let results = {};
     let failed = false;
@@ -765,7 +547,7 @@ let OnboardingTelemetry = {
       }
     }
     if (failed) {
-      throw new Error(`Event ${type} contains incorrect data: ${JSON.stringify(results)}, should not be sent.`);
+      throw new Error(`Event ${event} contains incorrect data: ${JSON.stringify(results)}, should not be sent.`);
     }
   }
 };
