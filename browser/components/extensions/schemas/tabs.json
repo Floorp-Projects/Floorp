@@ -937,6 +937,27 @@
         ]
       },
       {
+        "name": "captureTab",
+        "type": "function",
+        "description": "Captures the visible area of a specified tab. You must have $(topic:declare_permissions)[&lt;all_urls&gt;] permission to use this method.",
+        "permissions": ["<all_urls>"],
+        "async": true,
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "tabId",
+            "minimum": 0,
+            "optional": true,
+            "description": "The tab to capture. Defaults to the active tab of the current window."
+          },
+          {
+            "$ref": "extensionTypes.ImageDetails",
+            "name": "options",
+            "optional": true
+          }
+        ]
+      },
+      {
         "name": "captureVisibleTab",
         "type": "function",
         "description": "Captures the visible area of the currently active tab in the specified window. You must have $(topic:declare_permissions)[&lt;all_urls&gt;] permission to use this method.",
