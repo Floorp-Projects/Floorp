@@ -193,11 +193,6 @@ private:
   // FIXME/cjones: this strongly indicates bad design.  Shame on us.
   std::queue<IPC::Message> mQueue;
 
-  // Set this up before we're called from a different thread.
-#if defined(OS_LINUX)
-  nsCString mTmpDirName;
-#endif
-
   static uint32_t sNextUniqueID;
 
   static bool sRunSelfAsContentProc;
