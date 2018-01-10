@@ -115,9 +115,6 @@ void
 SandboxLaunchPrepare(GeckoProcessType aType,
 		     base::LaunchOptions* aOptions)
 {
-  PreloadSandboxLib(&aOptions->env_map);
-  AttachSandboxReporter(&aOptions->fds_to_remap);
-
   auto info = SandboxInfo::Get();
 
   // We won't try any kind of sandboxing without seccomp-bpf.
@@ -130,6 +127,13 @@ SandboxLaunchPrepare(GeckoProcessType aType,
   if (level == 0) {
     return;
   }
+
+  // At this point, we know we'll be using sandboxing; generic
+  // sandboxing support goes here.  The MOZ_SANDBOXED env var tells
+  // the child process whether this is the case.
+  aOptions->env_map["MOZ_SANDBOXED"] = "1";
+  PreloadSandboxLib(&aOptions->env_map);
+  AttachSandboxReporter(&aOptions->fds_to_remap);
 
   // Anything below this requires unprivileged user namespaces.
   if (!info.Test(SandboxInfo::kHasUserNamespaces)) {
