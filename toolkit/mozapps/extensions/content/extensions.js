@@ -2794,15 +2794,6 @@ var gDetailView = {
     var contributions = document.getElementById("detail-contributions");
     if ("contributionURL" in aAddon && aAddon.contributionURL) {
       contributions.hidden = false;
-      var amount = document.getElementById("detail-contrib-suggested");
-      if (aAddon.contributionAmount) {
-        amount.value = gStrings.ext.formatStringFromName("contributionAmount2",
-                                                         [aAddon.contributionAmount],
-                                                         1);
-        amount.hidden = false;
-      } else {
-        amount.hidden = true;
-      }
     } else {
       contributions.hidden = true;
     }
@@ -2864,14 +2855,6 @@ var gDetailView = {
       sizeRow.value = formatted;
     } else {
       sizeRow.value = null;
-    }
-
-    var downloadsRow = document.getElementById("detail-downloads");
-    if (aAddon.totalDownloads && aIsRemote) {
-      var downloads = aAddon.totalDownloads;
-      downloadsRow.value = downloads;
-    } else {
-      downloadsRow.value = null;
     }
 
     var canUpdate = !aIsRemote && hasPermission(aAddon, "upgrade");
@@ -3150,7 +3133,7 @@ var gDetailView = {
   },
 
   emptySettingsRows() {
-    var lastRow = document.getElementById("detail-downloads");
+    var lastRow = document.getElementById("detail-rating-row");
     var rows = lastRow.parentNode;
     while (lastRow.nextSibling)
       rows.removeChild(rows.lastChild);
@@ -3191,7 +3174,7 @@ var gDetailView = {
       });
     };
 
-    var rows = document.getElementById("detail-downloads").parentNode;
+    var rows = document.getElementById("detail-rows");
 
     if (this._addon.optionsType == AddonManager.OPTIONS_TYPE_INLINE_BROWSER) {
       whenViewLoaded(async () => {
