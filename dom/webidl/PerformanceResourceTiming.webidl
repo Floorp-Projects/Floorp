@@ -32,5 +32,10 @@ interface PerformanceResourceTiming : PerformanceEntry
   readonly attribute unsigned long long encodedBodySize;
   readonly attribute unsigned long long decodedBodySize;
 
+  // TODO: Use FrozenArray once available. (Bug 1236777)
+  // readonly attribute FrozenArray<PerformanceServerTiming> serverTiming;
+  [Frozen, Cached, Pure]
+  readonly attribute sequence<PerformanceServerTiming> serverTiming;
+
   jsonifier;
 };
