@@ -121,7 +121,7 @@ ResizerMouseMotionListener::HandleEvent(nsIDOMEvent* aMouseEvent)
   RefPtr<HTMLEditor> htmlEditor = mHTMLEditorWeak.get();
   if (htmlEditor) {
     // check if we have to redisplay a resizing shadow
-    htmlEditor->MouseMove(mouseEvent);
+    htmlEditor->OnMouseMove(mouseEvent);
   }
 
   return NS_OK;
@@ -548,11 +548,11 @@ HTMLEditor::StartResizing(nsIDOMElement* aHandle)
   return result;
 }
 
-NS_IMETHODIMP
-HTMLEditor::MouseDown(int32_t aClientX,
-                      int32_t aClientY,
-                      nsIDOMElement* aTarget,
-                      nsIDOMEvent* aEvent)
+nsresult
+HTMLEditor::OnMouseDown(int32_t aClientX,
+                        int32_t aClientY,
+                        nsIDOMElement* aTarget,
+                        nsIDOMEvent* aEvent)
 {
   bool anonElement = false;
   if (aTarget && NS_SUCCEEDED(aTarget->HasAttribute(NS_LITERAL_STRING("_moz_anonclass"), &anonElement)))
@@ -580,10 +580,10 @@ HTMLEditor::MouseDown(int32_t aClientX,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLEditor::MouseUp(int32_t aClientX,
-                    int32_t aClientY,
-                    nsIDOMElement* aTarget)
+nsresult
+HTMLEditor::OnMouseUp(int32_t aClientX,
+                      int32_t aClientY,
+                      nsIDOMElement* aTarget)
 {
   if (mIsResizing) {
     // we are resizing and release the mouse button, so let's
@@ -805,18 +805,8 @@ HTMLEditor::GetNewResizingHeight(int32_t aX,
   return std::max(resized, 1);
 }
 
-NS_IMETHODIMP
-HTMLEditor::MouseMove(nsIDOMEvent* aMouseEvent)
-{
-  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
-  if (NS_WARN_IF(!mouseEvent)) {
-    return NS_OK;
-  }
-  return MouseMove(mouseEvent);
-}
-
 nsresult
-HTMLEditor::MouseMove(nsIDOMMouseEvent* aMouseEvent)
+HTMLEditor::OnMouseMove(nsIDOMMouseEvent* aMouseEvent)
 {
   MOZ_ASSERT(aMouseEvent);
 
