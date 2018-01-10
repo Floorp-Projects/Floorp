@@ -1496,9 +1496,7 @@ nsIDocument::nsIDocument()
     mType(eUnknown),
     mDefaultElementType(0),
     mAllowXULXBL(eTriUnset),
-#ifdef DEBUG
     mIsLinkUpdateRegistrationsForbidden(false),
-#endif
     mBidiOptions(IBMBIDI_DEFAULT_BIDI_OPTIONS),
     mSandboxFlags(0),
     mPartID(0),
@@ -10117,7 +10115,7 @@ nsIDocument::EnumerateActivityObservers(ActivityObserverEnumerator aEnumerator,
 void
 nsIDocument::RegisterPendingLinkUpdate(Link* aLink)
 {
-  MOZ_ASSERT(!mIsLinkUpdateRegistrationsForbidden);
+  MOZ_RELEASE_ASSERT(!mIsLinkUpdateRegistrationsForbidden);
 
   if (aLink->HasPendingLinkUpdate()) {
     return;
@@ -10156,14 +10154,12 @@ nsIDocument::FlushPendingLinkUpdatesFromRunnable()
 void
 nsIDocument::FlushPendingLinkUpdates()
 {
-  MOZ_ASSERT(!mIsLinkUpdateRegistrationsForbidden);
+  MOZ_RELEASE_ASSERT(!mIsLinkUpdateRegistrationsForbidden);
   if (!mHasLinksToUpdate)
     return;
 
-#ifdef DEBUG
   AutoRestore<bool> saved(mIsLinkUpdateRegistrationsForbidden);
   mIsLinkUpdateRegistrationsForbidden = true;
-#endif
   for (auto iter = mLinksToUpdate.Iter(); !iter.Done(); iter.Next()) {
     Link* link = iter.Get();
     Element* element = link->GetElement();
