@@ -1,5 +1,5 @@
-use cbor::decoder::*;
-use cbor::*;
+use {CborError, CborType};
+use decoder::{MAX_ARRAY_SIZE, decode};
 use std::collections::BTreeMap;
 
 // First test all the basic types

@@ -12,17 +12,19 @@
 
 [package]
 name = "cose"
-version = "0.1.2"
+version = "0.1.4"
 authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>", "David Keeler <dkeeler@mozilla.com>"]
 build = "build.rs"
 description = "Library to use COSE (https://tools.ietf.org/html/rfc8152) in Rust"
-keywords = ["cose", "jose", "cbor"]
+keywords = ["cose", "jose"]
 license = "MPL-2.0"
 repository = "https://github.com/franziskuskiefer/cose-rust"
 
 [lib]
 name = "cose"
 path = "src/cose.rs"
+[dependencies.moz_cbor]
+version = "0.1.0"
 [dev-dependencies.scopeguard]
 version = "0.3"
 

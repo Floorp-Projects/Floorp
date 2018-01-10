@@ -12,7 +12,7 @@
 
 [package]
 name = "cose-c"
-version = "0.1.1"
+version = "0.1.5"
 authors = ["Franziskus Kiefer <franziskuskiefer@gmail.com>"]
 description = "C API for the cose crate"
 keywords = ["cose", "jose", "cbor"]
@@ -23,4 +23,4 @@ repository = "https://github.com/franziskuskiefer/cose-c-api"
 name = "cosec"
 path = "src/lib.rs"
 [dependencies.cose]
-version = "0.1.2"
+version = "0.1.4"

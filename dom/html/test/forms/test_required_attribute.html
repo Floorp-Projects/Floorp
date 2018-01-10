@@ -119,6 +119,13 @@ function checkTextareaRequiredValidity()
   element.form.reset();
   checkSufferingFromBeingMissing(element, false);
 
+  SpecialPowers.wrap(element).value = '';
+  element.form.reportValidity();
+  checkSufferingFromBeingMissing(element, true);
+
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
   // TODO: for the moment, a textarea outside of a document is mutable.
   SpecialPowers.wrap(element).value = ''; // To make -moz-ui-valid apply.
   element.required = false;
@@ -191,6 +198,13 @@ function checkInputRequiredValidity(type)
   element.form.reset();
   checkSufferingFromBeingMissing(element, false);
 
+  SpecialPowers.wrap(element).value = '';
+  element.form.reportValidity();
+  checkSufferingFromBeingMissing(element, true);
+
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
   element.required = true;
   SpecialPowers.wrap(element).value = ''; // To make :-moz-ui-valid apply.
   checkSufferingFromBeingMissing(element, true);
@@ -225,6 +239,14 @@ function checkInputRequiredValidityForCheckbox()
   element.required = true;
   element.checked = true;
   element.blur();
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
+  element.required = true;
+  element.checked = false;
+  element.form.reportValidity();
+  checkSufferingFromBeingMissing(element, true);
+
   element.form.reset();
   checkSufferingFromBeingMissing(element, false);
 
@@ -306,6 +328,14 @@ function checkInputRequiredValidityForRadio()
 
   element2.required = true;
   element2.checked = false;
+  element2.form.reportValidity();
+  checkSufferingFromBeingMissing(element2, true);
+
+  element2.form.reset();
+  checkSufferingFromBeingMissing(element2, false);
+
+  element2.required = true;
+  element2.checked = false;
   document.forms[0].removeChild(element2);
   checkSufferingFromBeingMissing(element2, true);
 }
@@ -338,6 +368,14 @@ function checkInputRequiredValidityForFile()
   SpecialPowers.wrap(element).mozSetFileArray([file]);
   element.required = true;
   element.blur();
+  element.form.reset();
+  checkSufferingFromBeingMissing(element, false);
+
+  element.required = true;
+  SpecialPowers.wrap(element).value = '';
+  element.form.reportValidity();
+  checkSufferingFromBeingMissing(element, true);
+
   element.form.reset();
   checkSufferingFromBeingMissing(element, false);
 

@@ -1059,12 +1059,11 @@ ScriptLoader::StartLoad(ScriptLoadRequest* aRequest)
 
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // To avoid decoding issues, the JSVersion is explicitly guarded here, and the
-  // build-id is part of the JSBytecodeMimeType constant.
+  // To avoid decoding issues, the build-id is part of the JSBytecodeMimeType
+  // constant.
   aRequest->mCacheInfo = nullptr;
   nsCOMPtr<nsICacheInfoChannel> cic(do_QueryInterface(channel));
-  if (cic && nsContentUtils::IsBytecodeCacheEnabled() &&
-      aRequest->mValidJSVersion == ValidJSVersion::eValid) {
+  if (cic && nsContentUtils::IsBytecodeCacheEnabled()) {
     if (!aRequest->IsLoadingSource()) {
       // Inform the HTTP cache that we prefer to have information coming from the
       // bytecode cache instead of the sources, if such entry is already registered.
@@ -1174,63 +1173,6 @@ ScriptLoader::PreloadURIComparator::Equals(const PreloadInfo& aPi,
          same;
 }
 
-/**
- * Returns ValidJSVersion::eValid if aVersionStr is a string of the form '1.n',
- * n = 0, ..., 8, and ValidJSVersion::eInvalid for other strings.
- */
-static ValidJSVersion
-ParseJavascriptVersion(const nsAString& aVersionStr)
-{
-  if (aVersionStr.Length() != 3 || aVersionStr[0] != '1' ||
-      aVersionStr[1] != '.') {
-    return ValidJSVersion::eInvalid;
-  }
-  if ('0' <= aVersionStr[2] && aVersionStr[2] <= '8') {
-    return ValidJSVersion::eValid;
-  }
-  return ValidJSVersion::eInvalid;
-}
-
-static inline bool
-ParseTypeAttribute(const nsAString& aType, ValidJSVersion* aVersion)
-{
-  MOZ_ASSERT(!aType.IsEmpty());
-  MOZ_ASSERT(aVersion);
-  MOZ_ASSERT(*aVersion == ValidJSVersion::eValid);
-
-  nsContentTypeParser parser(aType);
-
-  nsAutoString mimeType;
-  nsresult rv = parser.GetType(mimeType);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (!nsContentUtils::IsJavascriptMIMEType(mimeType)) {
-    return false;
-  }
-
-  // Get the version string, and ensure the language supports it.
-  nsAutoString versionName;
-  rv = parser.GetParameter("version", versionName);
-
-  if (rv == NS_ERROR_INVALID_ARG) {
-    Telemetry::Accumulate(Telemetry::SCRIPT_LOADED_WITH_VERSION, false);
-    // Argument not set.
-    return true;
-  }
-
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  *aVersion = ParseJavascriptVersion(versionName);
-  if (*aVersion == ValidJSVersion::eValid) {
-    Telemetry::Accumulate(Telemetry::SCRIPT_LOADED_WITH_VERSION, true);
-    return true;
-  }
-
-  return true;
-}
-
 static bool
 CSPAllowsInlineScript(nsIScriptElement* aElement, nsIDocument* aDocument)
 {
@@ -1263,7 +1205,6 @@ ScriptLoadRequest*
 ScriptLoader::CreateLoadRequest(ScriptKind aKind,
                                 nsIURI* aURI,
                                 nsIScriptElement* aElement,
-                                ValidJSVersion aValidJSVersion,
                                 CORSMode aCORSMode,
                                 const SRIMetadata& aIntegrity,
                                 mozilla::net::ReferrerPolicy aReferrerPolicy)
@@ -1272,7 +1213,7 @@ ScriptLoader::CreateLoadRequest(ScriptKind aKind,
 
   if (aKind == ScriptKind::eClassic) {
     ScriptLoadRequest* slr = new ScriptLoadRequest(aKind, aURI, aElement,
-                                                   aValidJSVersion, aCORSMode, aIntegrity,
+                                                   aCORSMode, aIntegrity,
                                                    referrer, aReferrerPolicy);
 
     LOG(("ScriptLoader %p creates ScriptLoadRequest %p", this, slr));
@@ -1280,8 +1221,8 @@ ScriptLoader::CreateLoadRequest(ScriptKind aKind,
   }
 
   MOZ_ASSERT(aKind == ScriptKind::eModule);
-  return new ModuleLoadRequest(aURI, aElement, aValidJSVersion, aCORSMode,
-                               aIntegrity, referrer, aReferrerPolicy, this);
+  return new ModuleLoadRequest(aURI, aElement, aCORSMode, aIntegrity, referrer,
+                               aReferrerPolicy, this);
 }
 
 bool
@@ -1310,13 +1251,11 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
     return false;
   }
 
-  ValidJSVersion validJSVersion = ValidJSVersion::eValid;
-
   // For classic scripts, check the type attribute to determine language and
   // version. If type exists, it trumps the deprecated 'language='
   if (scriptKind == ScriptKind::eClassic) {
     if (!type.IsEmpty()) {
-      NS_ENSURE_TRUE(ParseTypeAttribute(type, &validJSVersion), false);
+      NS_ENSURE_TRUE(nsContentUtils::IsJavascriptMIMEType(type), false);
     } else if (!hasType) {
       // no 'type=' element
       // "language" is a deprecated attribute of HTML, so we check it only for
@@ -1429,9 +1368,8 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
         principal = scriptContent->NodePrincipal();
       }
 
-      request = CreateLoadRequest(scriptKind, scriptURI, aElement,
-                                  validJSVersion, ourCORSMode, sriMetadata,
-                                  ourRefPolicy);
+      request = CreateLoadRequest(scriptKind, scriptURI, aElement, ourCORSMode,
+                                  sriMetadata, ourRefPolicy);
       request->mTriggeringPrincipal = Move(principal);
       request->mIsInline = false;
       request->SetScriptMode(aElement->GetScriptDeferred(),
@@ -1455,8 +1393,6 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
     // Should still be in loading stage of script.
     NS_ASSERTION(!request->InCompilingStage(),
                  "Request should not yet be in compiling stage.");
-
-    request->mValidJSVersion = validJSVersion;
 
     if (request->IsAsyncScript()) {
       AddAsyncRequest(request);
@@ -1560,10 +1496,9 @@ ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement)
   }
 
   request = CreateLoadRequest(scriptKind, mDocument->GetDocumentURI(), aElement,
-                              validJSVersion, corsMode,
+                              corsMode,
                               SRIMetadata(), // SRI doesn't apply
                               ourRefPolicy);
-  request->mValidJSVersion = validJSVersion;
   request->mIsInline = true;
   request->mTriggeringPrincipal = mDocument->NodePrincipal();
   request->mLineNo = aElement->GetScriptLineNumber();
@@ -2190,10 +2125,6 @@ ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest)
   nsCOMPtr<nsIScriptContext> context = globalObject->GetScriptContext();
   if (!context) {
     return NS_ERROR_FAILURE;
-  }
-
-  if (aRequest->mValidJSVersion == ValidJSVersion::eInvalid) {
-    return NS_OK;
   }
 
   // New script entry point required, due to the "Create a script" sub-step of
@@ -3210,7 +3141,7 @@ ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
   }
 
   RefPtr<ScriptLoadRequest> request =
-    CreateLoadRequest(ScriptKind::eClassic, aURI, nullptr, ValidJSVersion::eValid,
+    CreateLoadRequest(ScriptKind::eClassic, aURI, nullptr,
                       Element::StringToCORSMode(aCrossOrigin), sriMetadata,
                       aReferrerPolicy);
   request->mTriggeringPrincipal = mDocument->NodePrincipal();
