@@ -4,8 +4,6 @@ eslint:
     # ESLint infra handles its own path filtering, so just include cwd
     include: ['.']
     exclude: []
-    # Make sure these are defined on the same line until the hack
-    # in hook_helper.py is fixed.
     extensions: ['js', 'jsm', 'jsx', 'xml', 'html', 'xhtml']
     type: external
     payload: eslint:lint
