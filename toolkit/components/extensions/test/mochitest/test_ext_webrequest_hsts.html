@@ -12,28 +12,10 @@
 <script>
 "use strict";
 
-function getExtension(background) {
-  let manifest = {
-    "permissions": [
-      "tabs",
-      "webRequest",
-      "webRequestBlocking",
-      "<all_urls>",
-    ],
-  };
-  return ExtensionTestUtils.loadExtension({
-    manifest,
-    background,
-  });
-}
-
-// This test makes a request against a server that redirects with a 302.
-add_task(async function test_hsts_request() {
-  const testPath = "example.org/tests/toolkit/components/extensions/test/mochitest";
-
-  let expect;
-  let extension = getExtension(async function() {
-    let urls = ["*://example.org/tests/*"];
+function getExtension() {
+  async function background() {
+    let expect;
+    let urls = ["*://*.example.org/tests/*"];
     browser.webRequest.onBeforeRequest.addListener(details => {
       browser.test.assertEq(expect.shift(), "onBeforeRequest");
     }, {urls}, ["blocking"]);
@@ -45,6 +27,19 @@ add_task(async function test_hsts_request() {
     }, {urls}, ["requestHeaders"]);
     browser.webRequest.onHeadersReceived.addListener(details => {
       browser.test.assertEq(expect.shift(), "onHeadersReceived");
+
+      let headers = details.responseHeaders || [];
+      for (let header of headers) {
+        if (header.name.toLowerCase() === "strict-transport-security") {
+          return;
+        }
+      }
+
+      headers.push({
+        name: "Strict-Transport-Security",
+        value: "max-age=31536000000",
+      });
+      return {responseHeaders: headers};
     }, {urls}, ["blocking", "responseHeaders"]);
     browser.webRequest.onBeforeRedirect.addListener(details => {
       browser.test.assertEq(expect.shift(), "onBeforeRedirect");
@@ -73,7 +68,27 @@ add_task(async function test_hsts_request() {
       browser.tabs.onUpdated.addListener(onUpdated);
       browser.tabs.create({url});
     });
+  }
+
+  let manifest = {
+    "permissions": [
+      "tabs",
+      "webRequest",
+      "webRequestBlocking",
+      "<all_urls>",
+    ],
+  };
+  return ExtensionTestUtils.loadExtension({
+    manifest,
+    background,
   });
+}
+
+// This test makes a request against a server that redirects with a 302.
+add_task(async function test_hsts_request() {
+  const testPath = "example.org/tests/toolkit/components/extensions/test/mochitest";
+
+  let extension = getExtension();
   await extension.startup();
 
   // simple redirect
@@ -110,6 +125,37 @@ add_task(async function test_hsts_request() {
      "hsts upgraded");
   is(await extension.awaitMessage("onCompleted"),
      "https://example.org/tests/toolkit/components/extensions/test/mochitest/hsts.sjs");
+
+  await extension.unload();
+});
+
+// This test makes a priming request and adds the STS header, then tests the upgrade.
+add_task(async function test_hsts_header() {
+  const testPath = "test1.example.org/tests/toolkit/components/extensions/test/mochitest";
+
+  let extension = getExtension();
+  await extension.startup();
+
+  // priming hsts, this time there is no STS header, onHeadersReceived adds it.
+  let completed = extension.awaitMessage("onCompleted");
+  let tabdone = extension.awaitMessage("tabs-done");
+  extension.sendMessage(
+    `https://${testPath}/file_sample.html`,
+    ["onBeforeRequest", "onBeforeSendHeaders", "onSendHeaders",
+     "onHeadersReceived", "onResponseStarted", "onCompleted"]);
+  is(await tabdone, `https://${testPath}/file_sample.html`, "priming request done");
+  is(await completed, `https://${testPath}/file_sample.html`, "priming request done");
+
+  // test upgrade from http to https due to onHeadersReceived adding STS header
+  completed = extension.awaitMessage("onCompleted");
+  tabdone = extension.awaitMessage("tabs-done");
+  extension.sendMessage(
+    `http://${testPath}/file_sample.html`,
+    ["onBeforeRequest", "onBeforeRedirect", "onBeforeRequest",
+     "onBeforeSendHeaders", "onSendHeaders", "onHeadersReceived",
+     "onResponseStarted", "onCompleted"]);
+  is(await tabdone, `https://${testPath}/file_sample.html`, "hsts upgraded");
+  is(await completed, `https://${testPath}/file_sample.html`, "request upgraded");
 
   await extension.unload();
 });
