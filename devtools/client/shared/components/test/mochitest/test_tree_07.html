@@ -23,7 +23,7 @@ window.onload = Task.async(function* () {
     const React = browserRequire("devtools/client/shared/vendor/react");
     const dom = require("devtools/client/shared/vendor/react-dom-factories");
     const Tree =
-      React.createFactory(browserRequire("devtools/client/shared/components/Tree"));
+      React.createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
 
     const treeProps = Object.assign({}, TEST_TREE_INTERFACE, {
       renderItem: (item, depth, focused, arrow) => {

@@ -38,33 +38,66 @@ const { RESPONSE_HEADERS } = require("../constants");
   RequestListColumnWaterfall
 */
 
-const COLUMNS = [
-  "Cause",
-  "ContentSize",
-  "Cookies",
-  "Domain",
-  "Duration",
-  "EndTime",
-  "File",
-  "Latency",
-  "Method",
-  "Protocol",
-  "RemoteIP",
-  "ResponseHeader",
-  "ResponseTime",
-  "Scheme",
-  "SetCookies",
-  "StartTime",
-  "Status",
-  "TransferredSize",
-  "Type",
-  "Waterfall"
-];
-for (let name of COLUMNS) {
-  loader.lazyGetter(this, "RequestListColumn" + name, function () {
-    return createFactory(require("./RequestListColumn" + name));
-  });
-}
+loader.lazyGetter(this, "RequestListColumnCause", function () {
+  return createFactory(require("./RequestListColumnCause"));
+});
+loader.lazyGetter(this, "RequestListColumnContentSize", function () {
+  return createFactory(require("./RequestListColumnContentSize"));
+});
+loader.lazyGetter(this, "RequestListColumnCookies", function () {
+  return createFactory(require("./RequestListColumnCookies"));
+});
+loader.lazyGetter(this, "RequestListColumnDomain", function () {
+  return createFactory(require("./RequestListColumnDomain"));
+});
+loader.lazyGetter(this, "RequestListColumnDuration", function () {
+  return createFactory(require("./RequestListColumnDuration"));
+});
+loader.lazyGetter(this, "RequestListColumnEndTime", function () {
+  return createFactory(require("./RequestListColumnEndTime"));
+});
+loader.lazyGetter(this, "RequestListColumnFile", function () {
+  return createFactory(require("./RequestListColumnFile"));
+});
+loader.lazyGetter(this, "RequestListColumnLatency", function () {
+  return createFactory(require("./RequestListColumnLatency"));
+});
+loader.lazyGetter(this, "RequestListColumnMethod", function () {
+  return createFactory(require("./RequestListColumnMethod"));
+});
+loader.lazyGetter(this, "RequestListColumnProtocol", function () {
+  return createFactory(require("./RequestListColumnProtocol"));
+});
+loader.lazyGetter(this, "RequestListColumnRemoteIP", function () {
+  return createFactory(require("./RequestListColumnRemoteIP"));
+});
+loader.lazyGetter(this, "RequestListColumnResponseHeader", function () {
+  return createFactory(require("./RequestListColumnResponseHeader"));
+});
+loader.lazyGetter(this, "RequestListColumnResponseTime", function () {
+  return createFactory(require("./RequestListColumnResponseTime"));
+});
+loader.lazyGetter(this, "RequestListColumnScheme", function () {
+  return createFactory(require("./RequestListColumnScheme"));
+});
+loader.lazyGetter(this, "RequestListColumnSetCookies", function () {
+  return createFactory(require("./RequestListColumnSetCookies"));
+});
+loader.lazyGetter(this, "RequestListColumnStartTime", function () {
+  return createFactory(require("./RequestListColumnStartTime"));
+});
+loader.lazyGetter(this, "RequestListColumnStatus", function () {
+  return createFactory(require("./RequestListColumnStatus"));
+});
+loader.lazyGetter(this, "RequestListColumnTransferredSize", function () {
+  return createFactory(require("./RequestListColumnTransferredSize"));
+});
+loader.lazyGetter(this, "RequestListColumnType", function () {
+  return createFactory(require("./RequestListColumnType"));
+});
+loader.lazyGetter(this, "RequestListColumnWaterfall", function () {
+  return createFactory(require("./RequestListColumnWaterfall"));
+});
 
 /**
  * Used by shouldComponentUpdate: compare two items, and compare only properties

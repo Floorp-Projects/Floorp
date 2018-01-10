@@ -42,6 +42,21 @@ public:
 protected:
   virtual ~nsAutoCompleteController();
 
+  /**
+   * SetValueOfInputTo() sets value of mInput to aValue and notifies the input
+   * of setting reason.
+   */
+  void SetValueOfInputTo(const nsString& aValue, uint16_t aReason);
+
+  /**
+   * SetSearchStringInternal() sets both mSearchString and mSetValue to
+   * aSearchString.
+   */
+  void SetSearchStringInternal(const nsAString& aSearchString)
+  {
+    mSearchString = mSetValue = aSearchString;
+  }
+
   nsresult OpenPopup();
   nsresult ClosePopup();
 
@@ -138,8 +153,19 @@ protected:
   nsCOMPtr<nsITreeSelection> mSelection;
   nsCOMPtr<nsITreeBoxObject> mTree;
 
+  // mSearchString stores value which is the original value of the input or
+  // typed by the user.  When user is choosing an item from the popup, this
+  // is NOT modified by the item because this is used for reverting the input
+  // value when user cancels choosing an item from the popup.
+  // This should be set through only SetSearchStringInternal().
   nsString mSearchString;
   nsString mPlaceholderCompletionString;
+  // mSetValue stores value which is expected in the input.  So, if input's
+  // value and mSetValue are different, it means somebody has changed the
+  // value like JS of the web content.
+  // This is set only by SetValueOfInputTo() or when modifying mSearchString
+  // through SetSearchStringInternal().
+  nsString mSetValue;
   bool mDefaultIndexCompleted;
   bool mPopupClosedByCompositionStart;
 

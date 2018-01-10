@@ -543,6 +543,45 @@ describe("Message reducer:", () => {
       const expanded = getAllMessagesUiById(getState());
       expect(expanded.length).toBe(0);
     });
+
+    it("reacts to messageClose/messageOpen actions on console.group", () => {
+      const { dispatch, getState } = setupStore(["console.group('bar')"]);
+      const firstMessageId = getFirstMessage(getState()).id;
+
+      let expanded = getAllMessagesUiById(getState());
+      expect(expanded.length).toBe(1);
+      expect(expanded[0]).toBe(firstMessageId);
+
+      dispatch(actions.messageClose(firstMessageId));
+
+      expanded = getAllMessagesUiById(getState());
+      expect(expanded.length).toBe(0);
+
+      dispatch(actions.messageOpen(firstMessageId));
+
+      expanded = getAllMessagesUiById(getState());
+      expect(expanded.length).toBe(1);
+      expect(expanded[0]).toBe(firstMessageId);
+    });
+
+    it("reacts to messageClose/messageOpen actions on exception", () => {
+      const { dispatch, getState } = setupStore(["ReferenceError: asdf is not defined"]);
+      const firstMessageId = getFirstMessage(getState()).id;
+
+      let expanded = getAllMessagesUiById(getState());
+      expect(expanded.length).toBe(0);
+
+      dispatch(actions.messageOpen(firstMessageId));
+
+      expanded = getAllMessagesUiById(getState());
+      expect(expanded.length).toBe(1);
+      expect(expanded[0]).toBe(firstMessageId);
+
+      dispatch(actions.messageClose(firstMessageId));
+
+      expanded = getAllMessagesUiById(getState());
+      expect(expanded.length).toBe(0);
+    });
   });
 
   describe("currentGroup", () => {
@@ -673,7 +712,8 @@ describe("Message reducer:", () => {
       packet.actor = "message1";
       updatePacket.networkInfo.actor = "message1";
       dispatch(actions.messagesAdd([packet]));
-      dispatch(actions.networkMessageUpdate(updatePacket.networkInfo));
+      dispatch(
+        actions.networkMessageUpdate(updatePacket.networkInfo, null, updatePacket));
 
       let networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(Object.keys(networkUpdates)).toEqual(["message1"]);
@@ -683,7 +723,8 @@ describe("Message reducer:", () => {
       packet.actor = "message2";
       updatePacket.networkInfo.actor = "message2";
       dispatch(actions.messagesAdd([packet]));
-      dispatch(actions.networkMessageUpdate(updatePacket.networkInfo));
+      dispatch(
+        actions.networkMessageUpdate(updatePacket.networkInfo, null, updatePacket));
 
       networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(Object.keys(networkUpdates)).toEqual(["message1", "message2"]);
@@ -695,7 +736,8 @@ describe("Message reducer:", () => {
       ]);
 
       const updatePacket = stubPackets.get("XHR GET request update");
-      dispatch(actions.networkMessageUpdate(updatePacket.networkInfo));
+      dispatch(
+        actions.networkMessageUpdate(updatePacket.networkInfo, null, updatePacket));
 
       let networkUpdates = getAllNetworkMessagesUpdateById(getState());
       expect(Object.keys(networkUpdates).length > 0).toBe(true);
@@ -717,17 +759,20 @@ describe("Message reducer:", () => {
       packet.actor = "message1";
       updatePacket.networkInfo.actor = "message1";
       dispatch(actions.messagesAdd([packet]));
-      dispatch(actions.networkMessageUpdate(updatePacket.networkInfo));
+      dispatch(
+        actions.networkMessageUpdate(updatePacket.networkInfo, null, updatePacket));
 
       packet.actor = "message2";
       updatePacket.networkInfo.actor = "message2";
       dispatch(actions.messagesAdd([packet]));
-      dispatch(actions.networkMessageUpdate(updatePacket.networkInfo));
+      dispatch(
+        actions.networkMessageUpdate(updatePacket.networkInfo, null, updatePacket));
 
       packet.actor = "message3";
       updatePacket.networkInfo.actor = "message3";
       dispatch(actions.messagesAdd([packet]));
-      dispatch(actions.networkMessageUpdate(updatePacket.networkInfo));
+      dispatch(
+        actions.networkMessageUpdate(updatePacket.networkInfo, null, updatePacket));
 
       // Check that we have the expected data.
       let messages = getAllMessagesById(getState());

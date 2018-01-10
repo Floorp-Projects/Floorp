@@ -61,15 +61,6 @@ BGRA32ToBGR24(const uint8_t* aSrcBuffer, int aSrcStride,
  * Among RGB family.
  */
 int
-RGB24Copy(const uint8_t* aSrcBuffer, int aSrcStride,
-          uint8_t* aDstBuffer, int aDstStride,
-          int aWidth, int aHeight);
-
-#define BGR24Copy RGB24Copy
-#define RGB24ToRGB24 RGB24Copy
-#define BGR24ToBGR24 BGR24Copy
-
-int
 RGB24ToBGR24(const uint8_t* aSrcBuffer, int aSrcStride,
              uint8_t* aDstBuffer, int aDstStride,
              int aWidth, int aHeight);
