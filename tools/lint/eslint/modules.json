@@ -208,7 +208,7 @@
   "Traversal.jsm": ["TraversalRules", "TraversalHelper"],
   "UpdateTelemetry.jsm": ["AUSTLMY"],
   "UpdateTopLevelContentWindowIDHelper.jsm": ["trackBrowserWindow"],
-  "util.js": ["getChromeWindow", "Utils", "Svc"],
+  "util.js": ["getChromeWindow", "Utils", "Svc", "SerializableSet"],
   "utils.js": ["btoa", "encryptPayload", "makeIdentityConfig", "makeFxAccountsInternalMock", "configureFxAccountIdentity", "configureIdentity", "SyncTestingInfrastructure", "waitForZeroTimer", "Promise", "MockFxaStorageManager", "AccountState", "sumHistogram", "CommonUtils", "CryptoUtils", "TestingUtils", "promiseZeroTimer", "promiseNamedTimer", "getLoginTelemetryScalar", "syncTestLogging"],
   "Utils.jsm": ["Utils", "Logger", "PivotContext", "PrefCache"],
   "VariablesView.jsm": ["VariablesView", "escapeHTML"],

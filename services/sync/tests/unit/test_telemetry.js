@@ -122,7 +122,7 @@ add_task(async function test_processIncoming_error() {
     // Make the 10 minutes old so it will only be synced in the toFetch phase.
     bogus_record.modified = Date.now() / 1000 - 60 * 10;
     engine.lastSync = Date.now() / 1000 - 60;
-    engine.toFetch = [BOGUS_GUID];
+    engine.toFetch = new SerializableSet([BOGUS_GUID]);
 
     let error, pingPayload, fullPing;
     try {
