@@ -65,6 +65,7 @@ typedef enum {
   TFO_FAILED_BACKUP_CONNECTION_NO_TFO_FAILED_TOO,
   TFO_BACKUP_CONN, // This is a backup conn, for a halfOpenSock that was used
                    // TFO.
+  TFO_INIT_FAILED, // nsHalfOpenSocket::SetupConn failed.
   TFO_FAILED,
   TFO_HTTP // TFO is disabled for non-secure connections.
 } TFOResult;

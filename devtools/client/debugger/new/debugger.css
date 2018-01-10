@@ -3161,13 +3161,17 @@ html .breakpoints-list .breakpoint.paused {
 }
 
 .workers-list .worker {
-  font-size: 12px;
+  font-size: 1rem;
   color: var(--theme-content-color1);
-  padding: 0.5em 1em 0.5em 0.5em;
-  line-height: 1em;
+  padding: 0 1em;
+  line-height: 31px;
   position: relative;
   transition: all 0.25s ease;
   cursor: pointer;
+}
+
+.worker-list .worker:hover {
+  background-color: var(--search-overlays-semitransparent);
 }
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this

@@ -67,6 +67,7 @@ nsWebBrowser::nsWebBrowser()
   , mIsActive(true)
   , mParentNativeWindow(nullptr)
   , mProgressListener(nullptr)
+  , mWidgetListenerDelegate(this)
   , mBackgroundColor(0)
   , mPersistCurrentState(nsIWebBrowserPersist::PERSIST_STATE_READY)
   , mPersistResult(NS_OK)
@@ -1200,7 +1201,7 @@ nsWebBrowser::Create()
     LayoutDeviceIntRect bounds(mInitInfo->x, mInitInfo->y,
                                mInitInfo->cx, mInitInfo->cy);
 
-    mInternalWidget->SetWidgetListener(this);
+    mInternalWidget->SetWidgetListener(&mWidgetListenerDelegate);
     rv = mInternalWidget->Create(nullptr, mParentNativeWindow, bounds,
                                  &widgetInit);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1902,4 +1903,26 @@ nsWebBrowser::SetFocusedElement(nsIDOMElement* aFocusedElement)
 {
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   return fm ? fm->SetFocus(aFocusedElement, 0) : NS_OK;
+}
+
+void
+nsWebBrowser::WidgetListenerDelegate::WindowActivated()
+{
+  RefPtr<nsWebBrowser> holder = mWebBrowser;
+  holder->WindowActivated();
+}
+
+void
+nsWebBrowser::WidgetListenerDelegate::WindowDeactivated()
+{
+  RefPtr<nsWebBrowser> holder = mWebBrowser;
+  holder->WindowDeactivated();
+}
+
+bool
+nsWebBrowser::WidgetListenerDelegate::PaintWindow(
+  nsIWidget* aWidget, mozilla::LayoutDeviceIntRegion aRegion)
+{
+  RefPtr<nsWebBrowser> holder = mWebBrowser;
+  return holder->PaintWindow(aWidget, aRegion);
 }
