@@ -75,10 +75,6 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
 
-        // FIXME: bug 1392950 - the bank routing number should not be detected
-        // as cc-number.
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
-
         // FIXME: bug 1392934 - this should be detected as address-level1 since
         // it's for Driver's license or state identification.
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-level1"},
@@ -86,6 +82,10 @@ runHeuristicsTest([
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-month"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-day"},
 //      {"section": "", "addressType": "", "contactType": "", "fieldName": "bday-year"},
+      ], [
+        // FIXME: bug 1392950 - the bank routing number should not be detected
+        // as cc-number.
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"},
       ]],
       [[
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},

@@ -2,8 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-.searchbar-textbox {
-  border-radius: 10000px;
+%include ../shared/searchbar.inc.css
+
+.search-panel-header,
+.addengine-item {
+  font-size: 10px;
 }
 
 .searchbar-popup {
@@ -11,237 +14,14 @@
   margin-inline-start: 3px;
 }
 
-.searchbar-engine-image {
-  width: 16px;
-  height: 16px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
+#PopupSearchAutoComplete {
+  border-radius: 4px;
 }
 
 .search-panel-current-engine {
   border-radius: 4px 4px 0 0;
 }
 
-/**
- * The borders of the various elements are specified as follows.
- *
- * The current engine always has a bottom border.
- * The search results never have a border.
- *
- * When the search results are not collapsed:
- * - The elements underneath the search results all have a top border.
- *
- * When the search results are collapsed:
- * - The elements underneath the search results all have a bottom border, except
- *   the lowest one: search-setting-button.
- */
-
-.search-panel-current-engine {
-  border-top: none !important;
-  border-bottom: 1px solid var(--panel-separator-color);
-}
-
-.search-panel-tree[collapsed=true] + .search-one-offs > .search-panel-header,
-.search-panel-tree[collapsed=true] + .search-one-offs > .search-panel-one-offs,
-.search-panel-tree[collapsed=true] + .search-one-offs > vbox > .addengine-item:first-of-type {
-  border-top: none;
-}
-
-.search-panel-tree[collapsed=true] + .search-one-offs > .searchbar-engine-one-off-item,
-.search-panel-tree[collapsed=true] + .search-one-offs > .search-panel-current-input,
-.search-panel-tree[collapsed=true] + .search-one-offs > .search-panel-one-offs,
-.search-panel-tree[collapsed=true] + .search-one-offs > vbox > .addengine-item:last-of-type {
-  border-bottom: 1px solid var(--panel-separator-color);
-}
-
-.search-panel-header {
-  font-size: 10px;
-  font-weight: normal;
-  background-color: var(--arrowpanel-dimmed);
-  border-top: 1px solid var(--panel-separator-color);
-  margin: 0;
-  padding: 3px 6px;
-  color: GrayText;
-}
-
-.search-panel-header > label {
-  margin-top: 2px !important;
-  margin-bottom: 2px !important;
-}
-
-.search-panel-current-input > label {
-  margin: 2px 0 !important;
-}
-
-.search-panel-input-value {
-  color: -moz-fieldtext;
-}
-
-.search-panel-one-offs {
-  margin: 0 !important;
-  border-top: 1px solid var(--panel-separator-color);
-  background-color: var(--arrowpanel-dimmed);
-}
-
-.searchbar-engine-one-off-item {
-  -moz-appearance: none;
-  display: inline-block;
-  min-width: 48px;
-  height: 32px;
-  margin: 0;
-  padding: 0;
-  background: linear-gradient(transparent 15%, var(--panel-separator-color) 15%, var(--panel-separator-color) 85%, transparent 85%);
-  background-size: 1px auto;
-  background-repeat: no-repeat;
-  background-position: right center;
-  color: GrayText;
-}
-
-.searchbar-engine-one-off-item:-moz-locale-dir(rtl) {
-  background-position: left center;
-}
-
-.searchbar-engine-one-off-item:not(.last-row) {
-  box-sizing: content-box;
-  border-bottom: 1px solid var(--panel-separator-color);
-}
-
-.search-setting-button-compact {
-  border-bottom: none !important;
-}
-
-.search-panel-one-offs:not([compact=true]) > .searchbar-engine-one-off-item.last-of-row,
-.search-panel-one-offs[compact=true] > .searchbar-engine-one-off-item.last-of-row:not(.dummy),
-.search-panel-one-offs[compact=true] > .searchbar-engine-one-off-item.dummy:not(.last-of-row),
-.search-panel-one-offs[compact=true] > .searchbar-engine-one-off-item.last-engine,
-.search-setting-button-compact {
-  background-image: none;
-}
-
-.searchbar-engine-one-off-item:not([selected]):not(.dummy):hover,
-.addengine-item:hover {
-  background-color: var(--arrowpanel-dimmed-further);
-  color: inherit;
-}
-
-.searchbar-engine-one-off-item[selected] {
-  background-color: Highlight;
-  background-image: none;
-  color: HighlightText;
-}
-
-.searchbar-engine-one-off-item > .button-box > .button-text {
-  display: none;
-}
-
-.searchbar-engine-one-off-item > .button-box > .button-icon {
-  margin-inline-start: 0;
-  width: 16px;
-  height: 16px;
-}
-
-.search-add-engines {
-  background-color: var(--arrowpanel-dimmed);
-}
-
-.addengine-item {
-  -moz-appearance: none;
-  font-size: 10px;
-  height: 32px;
-  margin: 0;
-  padding: 0 10px;
-}
-
-.addengine-item:first-of-type {
-  border-top: 1px solid var(--panel-separator-color);
-}
-
-.addengine-item[selected] {
-  background-color: Highlight;
-  color: HighlightText;
-}
-
-.addengine-item[type=menu][selected] {
-  color: inherit;
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
-.addengine-item > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  width: 16px;
-  height: 16px;
-}
-
-.addengine-item > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  display: -moz-box;
-  background: url(chrome://browser/skin/search-indicator-badge-add.svg) no-repeat center;
-  box-shadow: none;
-  /* "!important" is necessary to override the rule in toolbarbutton.css */
-  margin: -4px 0 0 !important;
-  margin-inline-end: -4px !important;
-  width: 11px;
-  height: 11px;
-  min-width: 11px;
-  min-height: 11px;
-}
-
-.addengine-item > .toolbarbutton-text {
-  text-align: start;
-  padding-inline-start: 10px;
-}
-
-.addengine-item:not([image]) {
-  list-style-image: url("chrome://browser/skin/search-engine-placeholder.png");
-}
-
-@media (min-resolution: 2dppx) {
-  .addengine-item:not([image]) {
-    list-style-image: url("chrome://browser/skin/search-engine-placeholder@2x.png");
-  }
-}
-
-.addengine-item[type=menu] > .toolbarbutton-menu-dropmarker {
-  display: -moz-box;
-  -moz-appearance: menuarrow !important;
-  list-style-image: none;
-}
-
-.search-panel-tree > .autocomplete-treebody::-moz-tree-cell {
-  border-top: none !important;
-}
-
-.search-panel-tree > .autocomplete-treebody::-moz-tree-image {
-  padding-inline-start: 4px;
-  padding-inline-end: 2px;
-  width: 14px;
-  height: 14px;
-}
-
-.search-panel-tree > .autocomplete-treebody::-moz-tree-image(fromhistory) {
-  list-style-image: url("chrome://browser/skin/history.svg");
-  -moz-context-properties: fill;
-  fill: graytext;
-}
-
-.search-panel-tree > .autocomplete-treebody::-moz-tree-image(fromhistory, selected) {
-  fill: HighlightText;
-}
-
-#PopupSearchAutoComplete {
-  border-radius: 4px;
-}
-
 .search-setting-button {
-  -moz-appearance: none;
   border-radius: 0 0 4px 4px;
-  min-height: 32px;
-}
-
-.search-setting-button:hover,
-.search-setting-button[selected] {
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
-.search-setting-button-compact > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/settings.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
 }

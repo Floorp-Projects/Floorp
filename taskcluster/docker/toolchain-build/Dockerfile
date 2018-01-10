@@ -51,13 +51,18 @@ RUN apt-get -o Acquire::Check-Valid-Until=false update -q && \
       bison \
       build-essential \
       curl \
+      cmake \
       flex \
       gawk \
       gcc-multilib \
       git \
       gnupg \
+      libbz2-dev \
+      libssl-dev \
       libtool \
+      libx11-dev:i386 \
       make \
+      ninja-build \
       p7zip-full \
       procps \
       pxz/wheezy-backports \
@@ -65,13 +70,16 @@ RUN apt-get -o Acquire::Check-Valid-Until=false update -q && \
       python-pip \
       python-setuptools \
       python-virtualenv \
+      scons \
       subversion \
       tar \
       unzip \
       uuid \
+      uuid-dev \
       wget \
       xz-utils \
       zip \
+      zlib1g-dev \
     && \
     apt-get clean
 

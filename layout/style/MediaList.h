@@ -9,6 +9,7 @@
 #ifndef mozilla_dom_MediaList_h
 #define mozilla_dom_MediaList_h
 
+#include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/ServoUtils.h"
 #include "mozilla/StyleBackendType.h"

@@ -16,7 +16,6 @@ const TESTCASES = [
                <input id='email'><input id="tel"></form>`,
     focusedInputId: "given-name",
     profileData: {},
-    expectedFillingForm: "address",
     expectedResult: {
       "street-addr": "",
       "city": "",
@@ -47,7 +46,6 @@ const TESTCASES = [
       "email": "foo@mozilla.com",
       "tel": "1234567",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "street-addr": "2 Harrison St line2",
       "city": "San Francisco",
@@ -77,7 +75,6 @@ const TESTCASES = [
       "email": "foo@mozilla.com",
       "tel": "1234567",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "street-addr": "2 Harrison St",
       "city": "San Francisco",
@@ -104,7 +101,6 @@ const TESTCASES = [
       "email": "",
       "tel": "",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "street-addr": "2 Harrison St",
       "city": "San Francisco",
@@ -131,7 +127,6 @@ const TESTCASES = [
       "email": "foo@mozilla.com",
       "tel": "1234567",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "street-addr": "",
       "city": "",
@@ -160,7 +155,6 @@ const TESTCASES = [
       "country": "US",
       "address-level1": "CA",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "country": "US",
       "state": "CA",
@@ -186,7 +180,6 @@ const TESTCASES = [
       "country": "United States",
       "address-level1": "California",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "country": "US",
       "state": "CA",
@@ -220,7 +213,6 @@ const TESTCASES = [
       "email": "foo@mozilla.com",
       "tel": "1234567",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "street-addr": "2 Harrison St line2",
       "city": "San Francisco",
@@ -259,7 +251,6 @@ const TESTCASES = [
       "cc-exp-month": "06",
       "cc-exp-year": "25",
     },
-    expectedFillingForm: "creditCard",
     expectedResult: {
       "street-addr": "",
       "city": "",
@@ -296,7 +287,6 @@ const TESTCASES_INPUT_UNCHANGED = [
       "country": "US",
       "address-level1": "unknown state",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "country": "US",
       "state": "",
@@ -321,7 +311,6 @@ const TESTCASES_FILL_SELECT = [
       "country": "US",
       "address-level1": "CA",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "state": "CA",
     },
@@ -341,7 +330,6 @@ const TESTCASES_FILL_SELECT = [
       "country": "US",
       "address-level1": "CA",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "state": "ca",
     },
@@ -361,7 +349,6 @@ const TESTCASES_FILL_SELECT = [
       "country": "US",
       "address-level1": " California ",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "state": "CA",
     },
@@ -381,7 +368,6 @@ const TESTCASES_FILL_SELECT = [
       "country": "US",
       "address-level1": "WA",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "state": "US-WA",
     },
@@ -402,7 +388,6 @@ const TESTCASES_FILL_SELECT = [
       "guid": "123",
       "country": "US",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "country": "US",
     },
@@ -421,7 +406,6 @@ const TESTCASES_FILL_SELECT = [
       "guid": "123",
       "country": "US",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "country": "us",
     },
@@ -440,7 +424,6 @@ const TESTCASES_FILL_SELECT = [
       "guid": "123",
       "country": "US",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "country": "XX",
     },
@@ -459,7 +442,6 @@ const TESTCASES_FILL_SELECT = [
       "guid": "123",
       "country": "US",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "country": "XX",
     },
@@ -478,7 +460,6 @@ const TESTCASES_FILL_SELECT = [
       "guid": "123",
       "country": "US",
     },
-    expectedFillingForm: "address",
     expectedResult: {
       "country": "XX",
     },
@@ -518,15 +499,15 @@ function do_test(testcases, testFn) {
         };
 
         handler.collectFormFields();
+
+        let focusedInput = doc.getElementById(testcase.focusedInputId);
+        handler.focusedInput = focusedInput;
+
         for (let section of handler.sections) {
           section._decrypt = decryptHelper;
         }
 
-        // TODO [Bug 1415077] We can assume all test cases with only one section
-        // should be filled. Eventually, the test needs to verify the filling
-        // feature in a multiple section case.
-        let handlerInfo = handler.sections[0][testcase.expectedFillingForm];
-        handlerInfo.fieldDetails.forEach(field => {
+        handler.activeSection.fieldDetails.forEach(field => {
           let element = field.elementWeakRef.get();
           if (!testcase.profileData[field.fieldName]) {
             // Avoid waiting for `change` event of a input with a blank value to
@@ -536,11 +517,9 @@ function do_test(testcases, testFn) {
           promises.push(...testFn(testcase, element));
         });
 
-        let focusedInput = doc.getElementById(testcase.focusedInputId);
-        handler.focusedInput = focusedInput;
         let [adaptedProfile] = handler.activeSection.getAdaptedProfiles([testcase.profileData]);
         await handler.autofillFormFields(adaptedProfile, focusedInput);
-        Assert.equal(handlerInfo.filledRecordGUID, testcase.profileData.guid,
+        Assert.equal(handler.activeSection.filledRecordGUID, testcase.profileData.guid,
                      "Check if filledRecordGUID is set correctly");
         await Promise.all(promises);
       });

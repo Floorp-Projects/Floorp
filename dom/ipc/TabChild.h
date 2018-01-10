@@ -983,8 +983,20 @@ private:
 #endif
   bool mCoalesceMouseMoveEvents;
 
+  // In some circumstances, a DocShell might be in a state where it is
+  // "blocked", and we should not attempt to change its active state or
+  // the underlying PresShell state until the DocShell becomes unblocked.
+  // It is possible, however, for the parent process to send commands to
+  // change those states while the DocShell is blocked. We store those
+  // states temporarily as "pending", and only apply them once the DocShell
+  // is no longer blocked.
   bool mPendingDocShellIsActive;
   bool mPendingDocShellReceivedMessage;
+  bool mPendingRenderLayers;
+  bool mPendingRenderLayersReceivedMessage;
+  uint64_t mPendingLayerObserverEpoch;
+  // When mPendingDocShellBlockers is greater than 0, the DocShell is blocked,
+  // and once it reaches 0, it is no longer blocked.
   uint32_t mPendingDocShellBlockers;
 
   WindowsHandle mWidgetNativeData;

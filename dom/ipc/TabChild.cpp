@@ -437,6 +437,9 @@ TabChild::TabChild(nsIContentChild* aManager,
 #endif
   , mPendingDocShellIsActive(false)
   , mPendingDocShellReceivedMessage(false)
+  , mPendingRenderLayers(false)
+  , mPendingRenderLayersReceivedMessage(false)
+  , mPendingLayerObserverEpoch(0)
   , mPendingDocShellBlockers(0)
   , mWidgetNativeData(0)
 {
@@ -2663,6 +2666,10 @@ TabChild::RemovePendingDocShellBlocker()
     mPendingDocShellReceivedMessage = false;
     InternalSetDocShellIsActive(mPendingDocShellIsActive);
   }
+  if (!mPendingDocShellBlockers && mPendingRenderLayersReceivedMessage) {
+    mPendingRenderLayersReceivedMessage = false;
+    RecvRenderLayers(mPendingRenderLayers, mPendingLayerObserverEpoch);
+  }
 }
 
 void
@@ -2696,6 +2703,13 @@ TabChild::RecvSetDocShellIsActive(const bool& aIsActive)
 mozilla::ipc::IPCResult
 TabChild::RecvRenderLayers(const bool& aEnabled, const uint64_t& aLayerObserverEpoch)
 {
+  if (mPendingDocShellBlockers > 0) {
+    mPendingRenderLayersReceivedMessage = true;
+    mPendingRenderLayers = aEnabled;
+    mPendingLayerObserverEpoch = aLayerObserverEpoch;
+    return IPC_OK();
+  }
+
   // Since requests to change the rendering state come in from both the hang
   // monitor channel and the PContent channel, we have an ordering problem. This
   // code ensures that we respect the order in which the requests were made and

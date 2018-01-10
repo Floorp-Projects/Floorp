@@ -12,6 +12,8 @@
 #include "nsWindowSizes.h"
 #include <algorithm>
 
+#include "mozilla/CachedAnonBoxStyles.h"
+
 namespace mozilla {
 
 namespace dom {
@@ -45,26 +47,16 @@ public:
            !nsCSSPseudoElements::IsEagerlyCascadedInServo(GetPseudoType());
   }
 
-  ServoStyleContext* GetCachedInheritingAnonBoxStyle(nsAtom* aAnonBox) const;
+  ServoStyleContext* GetCachedInheritingAnonBoxStyle(nsAtom* aAnonBox) const
+  {
+    MOZ_ASSERT(nsCSSAnonBoxes::IsInheritingAnonBox(aAnonBox));
+    return mInheritingAnonBoxStyles.Lookup(aAnonBox);
+  }
 
-  void SetCachedInheritedAnonBoxStyle(nsAtom* aAnonBox,
-                                      ServoStyleContext* aStyle)
+  void SetCachedInheritedAnonBoxStyle(nsAtom* aAnonBox, ServoStyleContext* aStyle)
   {
     MOZ_ASSERT(!GetCachedInheritingAnonBoxStyle(aAnonBox));
-    MOZ_ASSERT(!aStyle->mNextInheritingAnonBoxStyle);
-
-    // NOTE(emilio): Since we use it to cache inheriting anon boxes in a linked
-    // list, we can't use that cache if the style we're inheriting from is an
-    // inheriting anon box itself, since otherwise our parent would mistakenly
-    // think that the style we're caching inherits from it.
-    //
-    // See the documentation of mNextInheritingAnonBoxStyle.
-    if (IsInheritingAnonBox()) {
-      return;
-    }
-
-    mNextInheritingAnonBoxStyle.swap(aStyle->mNextInheritingAnonBoxStyle);
-    mNextInheritingAnonBoxStyle = aStyle;
+    mInheritingAnonBoxStyles.Insert(aStyle);
   }
 
   ServoStyleContext* GetCachedLazyPseudoStyle(CSSPseudoElementType aPseudo) const;
@@ -111,11 +103,7 @@ public:
     // clearly identify in DMD's output the memory measured here.
     *aCVsSize += ServoComputedValuesMallocEnclosingSizeOf(this);
     mSource.AddSizeOfExcludingThis(aSizes);
-
-    if (mNextInheritingAnonBoxStyle &&
-        !aSizes.mState.HaveSeenPtr(mNextInheritingAnonBoxStyle)) {
-      mNextInheritingAnonBoxStyle->AddSizeOfIncludingThis(aSizes, aCVsSize);
-    }
+    mInheritingAnonBoxStyles.AddSizeOfIncludingThis(aSizes, aCVsSize);
 
     if (mNextLazyPseudoStyle &&
         !aSizes.mState.HaveSeenPtr(mNextLazyPseudoStyle)) {
@@ -127,12 +115,9 @@ private:
   nsPresContext* mPresContext;
   ServoComputedData mSource;
 
-  // A linked-list cache of inheriting anon boxes inheriting from this style _if
-  // the style isn't an inheriting anon-box_.
-  //
-  // Otherwise it represents the next entry in the cache of the parent style
-  // context.
-  RefPtr<ServoStyleContext> mNextInheritingAnonBoxStyle;
+  // A cache of inheriting anon boxes inheriting from this style _if the style
+  // isn't an inheriting anon-box_.
+  CachedAnonBoxStyles mInheritingAnonBoxStyles;
 
   // A linked-list cache of lazy pseudo styles inheriting from this style _if
   // the style isn't a lazy pseudo style itself_.
