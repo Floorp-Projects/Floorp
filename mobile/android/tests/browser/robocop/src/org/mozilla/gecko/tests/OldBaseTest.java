@@ -14,6 +14,7 @@ import java.util.HashSet;
 
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.Element;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoThread;
@@ -59,6 +60,7 @@ abstract class OldBaseTest extends BaseRobocopTest {
     public static final int MAX_WAIT_MS = 4500;
     public static final int LONG_PRESS_TIME = 6000;
     private static final int GECKO_READY_WAIT_MS = 180000;
+    private static final int FORMHISTORY_READY_WAIT_MS = 180000;
 
     protected static final String URL_HTTP_PREFIX = "http://";
 
@@ -89,6 +91,18 @@ abstract class OldBaseTest extends BaseRobocopTest {
             geckoReadyExpector.unregisterListener();
         } catch (Exception e) {
             mAsserter.dumpLog("Exception in blockForGeckoReady", e);
+        }
+    }
+
+    protected void blockForFormHistoryReady() {
+        try {
+            Actions.EventExpecter formHistoryReadyExpector =
+                    mActions.expectGlobalEvent(Actions.EventType.UI, "FormHistory:Ready");
+            EventDispatcher.getInstance().dispatch("FormHistory:Init", null);
+            formHistoryReadyExpector.blockForEvent(FORMHISTORY_READY_WAIT_MS, true);
+            formHistoryReadyExpector.unregisterListener();
+        } catch (Exception e) {
+            mAsserter.dumpLog("Exception in blockForFormHistoryReady", e);
         }
     }
 
