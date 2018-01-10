@@ -935,6 +935,10 @@
       <Command>copy "%(FullPath)" ..\..\include\unicode</Command>
       <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
     </CustomBuild>
+    <CustomBuild Include="unicode\stringoptions.h">
+      <Command>copy "%(FullPath)" ..\..\include\unicode </Command>
+      <Outputs>..\..\include\unicode\%(Filename)%(Extension);%(Outputs)</Outputs>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="common.rc" />

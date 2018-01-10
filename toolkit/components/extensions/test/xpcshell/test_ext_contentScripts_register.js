@@ -126,7 +126,7 @@ add_task(async function test_contentscripts_register_css() {
   extension.sendMessage("unregister-file");
   await extension.awaitMessage("unregister-file:done");
 
-  contentPage.loadURL(`${BASE_URL}/file_sample_registered_styles.html`);
+  await contentPage.loadURL(`${BASE_URL}/file_sample_registered_styles.html`);
 
   const unregisteredURLStylesResults = await extension.awaitMessage("registered-styles-results");
 
@@ -138,7 +138,7 @@ add_task(async function test_contentscripts_register_css() {
   extension.sendMessage("unregister-text");
   await extension.awaitMessage("unregister-text:done");
 
-  contentPage.loadURL(`${BASE_URL}/file_sample_registered_styles.html`);
+  await contentPage.loadURL(`${BASE_URL}/file_sample_registered_styles.html`);
 
   const unregisteredBlobStylesResults = await extension.awaitMessage("registered-styles-results");
 
@@ -178,6 +178,8 @@ add_task(async function test_contentscripts_unregister_on_context_unload() {
       matches: ["http://localhost/*/file_sample_registered_styles.html"],
       runAt: "document_start",
     });
+
+    browser.test.sendMessage("background_frame_ready");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -218,6 +220,10 @@ add_task(async function test_contentscripts_unregister_on_context_unload() {
   await extension.startup();
 
   await extension.awaitMessage("background_ready");
+
+  // Wait the background frame to have been loaded and its script
+  // executed.
+  await extension.awaitMessage("background_frame_ready");
 
   // Ensure that a content page running in a content process and which has been
   // started after the content scripts has been registered, it still receives
@@ -394,7 +400,7 @@ add_task(async function test_contentscripts_register_js() {
   await extension.startup();
   await extension.awaitMessage("background-ready");
 
-  contentPage.loadURL(`${BASE_URL}/file_sample.html`);
+  await contentPage.loadURL(`${BASE_URL}/file_sample.html`);
 
   await Promise.all([completePromise, chromeNamespacePromise]);
 
