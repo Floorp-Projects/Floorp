@@ -843,7 +843,8 @@ class CanOfAPIs {
     let obj = this.root;
     let modules = this.apiManager.modulePaths;
 
-    for (let key of path.split(".")) {
+    let parts = path.split(".");
+    for (let [i, key] of parts.entries()) {
       if (!obj) {
         return;
       }
@@ -855,6 +856,9 @@ class CanOfAPIs {
         }
       }
 
+      if (!(key in obj) && i < parts.length - 1) {
+        obj[key] = {};
+      }
       obj = obj[key];
     }
 
@@ -879,7 +883,8 @@ class CanOfAPIs {
     let obj = this.root;
     let modules = this.apiManager.modulePaths;
 
-    for (let key of path.split(".")) {
+    let parts = path.split(".");
+    for (let [i, key] of parts.entries()) {
       if (!obj) {
         return;
       }
@@ -889,6 +894,10 @@ class CanOfAPIs {
         if (!this.apis.has(name)) {
           await this.asyncLoadAPI(name);
         }
+      }
+
+      if (!(key in obj) && i < parts.length - 1) {
+        obj[key] = {};
       }
 
       if (typeof obj[key] === "function") {
