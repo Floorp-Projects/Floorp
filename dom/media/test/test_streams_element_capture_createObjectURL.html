@@ -64,7 +64,11 @@ function startTest(test, token) {
   };
 }
 
-manager.runTests([getPlayableVideo(gSmallTests)], startTest);
+SpecialPowers.pushPrefEnv(
+  { "set": [["privacy.reduceTimerPrecision", false]]},
+  function() {
+    manager.runTests([getPlayableVideo(gSmallTests)], startTest);
+  });
 </script>
 </pre>
 </body>
