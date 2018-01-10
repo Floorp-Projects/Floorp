@@ -447,8 +447,8 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
 
   nsRect shellArea = presContext->GetVisibleArea();
 
-  int32_t browserCX = presContext->AppUnitsToDevPixels(shellArea.width);
-  int32_t browserCY = presContext->AppUnitsToDevPixels(shellArea.height);
+  int32_t browserCX = presContext->AppUnitsToDevPixels(shellArea.Width());
+  int32_t browserCY = presContext->AppUnitsToDevPixels(shellArea.Height());
 
   return webBrowserChrome->SizeBrowserTo(browserCX, browserCY);
 }
