@@ -240,7 +240,7 @@ ur{
         minimumGroupingDigits{"1"}
         native{"arabext"}
     }
-    Version{"2.1.37.28"}
+    Version{"2.1.37.69"}
     calendar{
         buddhist{
             eras{
@@ -1204,13 +1204,13 @@ ur{
         islamic{
             eras{
                 abbreviated{
-                    "ق م",
+                    "ہجری",
                 }
                 narrow{
-                    "ق م",
+                    "ہجری",
                 }
                 wide{
-                    "ق م",
+                    "ہجری",
                 }
             }
             monthNames{

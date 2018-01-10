@@ -41,8 +41,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NetUtil: "resource://gre/modules/NetUtil.jsm",
   PluralForm: "resource://gre/modules/PluralForm.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
-  AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.jsm",
-  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
   DownloadHistory: "resource://gre/modules/DownloadHistory.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
   DownloadUIHelper: "resource://gre/modules/DownloadUIHelper.jsm",
@@ -1059,6 +1057,19 @@ const DownloadsViewPrototype = {
   _updateView() {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
+
+  /**
+   * Computes aggregate values and propagates the changes to our views.
+   */
+  _updateViews() {
+    // Do not update the status indicators during batch loads of download items.
+    if (this._loading) {
+      return;
+    }
+
+    this._refreshProperties();
+    this._views.forEach(this._updateView, this);
+  },
 };
 
 // DownloadsIndicatorData
@@ -1171,31 +1182,6 @@ DownloadsIndicatorDataCtor.prototype = {
     return aValue;
   },
   _attentionSuppressed: false,
-
-  /**
-   * Computes aggregate values and propagates the changes to our views.
-   */
-  _updateViews() {
-    // Do not update the status indicators during batch loads of download items.
-    if (this._loading) {
-      return;
-    }
-
-    this._refreshProperties();
-
-    let widgetGroup = CustomizableUI.getWidget("downloads-button");
-    let inMenu = widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL;
-    if (inMenu) {
-      if (this._attention == DownloadsCommon.ATTENTION_NONE) {
-        AppMenuNotifications.removeNotification(/^download-/);
-      } else {
-        let badgeClass = "download-" + this._attention;
-        AppMenuNotifications.showBadgeOnlyNotification(badgeClass);
-      }
-    }
-
-    this._views.forEach(this._updateView, this);
-  },
 
   /**
    * Updates the specified view with the current aggregate values.
@@ -1355,19 +1341,6 @@ DownloadsSummaryData.prototype = {
   },
 
   // Propagation of properties to our views
-
-  /**
-   * Computes aggregate values and propagates the changes to our views.
-   */
-  _updateViews() {
-    // Do not update the status indicators during batch loads of download items.
-    if (this._loading) {
-      return;
-    }
-
-    this._refreshProperties();
-    this._views.forEach(this._updateView, this);
-  },
 
   /**
    * Updates the specified view with the current aggregate values.

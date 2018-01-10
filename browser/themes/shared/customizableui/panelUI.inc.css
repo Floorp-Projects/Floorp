@@ -74,29 +74,9 @@
   list-style-image: url(chrome://branding/content/icon16.png);
 }
 
-#PanelUI-menu-button[badge-status="download-warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
 #PanelUI-menu-button[badge-status="fxa-needs-authentication"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   box-shadow: none;
   filter: drop-shadow(0 1px 0 hsla(206, 50%, 10%, .15));
-}
-
-#PanelUI-menu-button[badge-status="download-warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
-#PanelUI-menu-button[badge-status="download-severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  width: 7px;
-  height: 7px;
-  min-width: 0;
-  border-radius: 50%;
-  /* "!important" is necessary to override the rule in toolbarbutton.css */
-  margin-top: -1px !important;
-  margin-right: -2px !important;
-}
-
-#PanelUI-menu-button[badge-status="download-warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background: #FFBF00;
-}
-
-#PanelUI-menu-button[badge-status="download-severe"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
-  background: #D90000;
 }
 
 #PanelUI-menu-button[badge-status="fxa-needs-authentication"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
@@ -104,7 +84,6 @@
   background: transparent url(chrome://browser/skin/warning.svg) no-repeat center;
 }
 
-#PanelUI-menu-button[badge-status="download-warning"] > .toolbarbutton-badge-stack > .toolbarbutton-badge:-moz-window-inactive,
 #PanelUI-menu-button[badge-status="fxa-needs-authentication"] > .toolbarbutton-badge-stack > .toolbarbutton-badge:-moz-window-inactive {
   filter: none;
 }

@@ -14,7 +14,7 @@ cy{
                 "&R<rh<<<Rh<<<RH"
                 "&T<th<<<Th<<<TH"
             }
-            Version{"32"}
+            Version{"32.0.1"}
         }
     }
 }

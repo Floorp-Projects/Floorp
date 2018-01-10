@@ -24,9 +24,6 @@ protected:
   virtual nsresult LoadUriInternal(nsIURI *aURI);
 
   virtual nsresult LaunchDefaultWithFile(nsIFile *aFile);
-#if defined(MOZ_ENABLE_CONTENTACTION)
-  NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleAppHandlers);
-#endif
 };
 
 #endif // nsMIMEInfoUnix_h_

@@ -828,6 +828,21 @@ NS_IMETHODIMP_(void) _class::DeleteCycleCollectable(void)                     \
   delete this;                                                                \
 }
 
+#define NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE(_class)            \
+NS_IMETHODIMP_(MozExternalRefCountType) _class::Release(void)                \
+{                                                                            \
+  MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                           \
+  NS_ASSERT_OWNINGTHREAD(_class);                                            \
+  nsISupports *base = NS_CYCLE_COLLECTION_CLASSNAME(_class)::Upcast(this);   \
+  nsrefcnt count = mRefCnt.decr<NS_CycleCollectorSuspectUsingNursery>(base); \
+  NS_LOG_RELEASE(this, count, #_class);                                      \
+  return count;                                                              \
+}                                                                            \
+NS_IMETHODIMP_(void) _class::DeleteCycleCollectable(void)                    \
+{                                                                            \
+  delete this;                                                               \
+}
+
 // _LAST_RELEASE can be useful when certain resources should be released
 // as soon as we know the object will be deleted.
 #define NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(_class, _last)  \
