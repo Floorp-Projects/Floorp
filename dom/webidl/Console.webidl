@@ -186,3 +186,11 @@ dictionary ConsoleInstanceOptions {
   // specified).
   DOMString maxLogLevelPref = "";
 };
+
+// this interface is just for testing
+partial interface ConsoleInstance {
+  [ChromeOnly]
+  void reportForServiceWorkerScope(DOMString scope, DOMString message,
+                                   DOMString filename, unsigned long lineNumber,
+                                   unsigned long columnNumber);
+};
