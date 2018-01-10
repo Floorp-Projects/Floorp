@@ -254,6 +254,17 @@ xpc_TryUnmarkWrappedGrayObject(nsISupports* aWrappedJS);
 extern void
 xpc_UnmarkSkippableJSHolders();
 
+// Defined in XPCDebug.cpp.
+extern bool
+xpc_DumpJSStack(bool showArgs, bool showLocals, bool showThisProps);
+
+// Return a newly-allocated string containing a representation of the
+// current JS stack. Defined in XPCDebug.cpp.
+extern JS::UniqueChars
+xpc_PrintJSStack(JSContext* cx, bool showArgs, bool showLocals,
+                 bool showThisProps);
+
+
 // readable string conversions, static methods and members only
 class XPCStringConvert
 {
