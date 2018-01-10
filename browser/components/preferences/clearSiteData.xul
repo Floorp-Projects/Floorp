@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/preferences/clearSiteData.css" type="text/css"?>
+
+<!DOCTYPE dialog [
+ <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+ <!ENTITY % clearSiteDataDTD SYSTEM "chrome://browser/locale/preferences/clearSiteData.dtd">
+ %brandDTD;
+ %clearSiteDataDTD;
+]>
+
+<window id="ClearSiteDataDialog" class="windowDialog"
+        windowtype="Browser:ClearSiteData"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        style="width: &window.width;;"
+        title="&window.title;"
+        persist="screenX screenY width height">
+
+  <script src="chrome://browser/content/preferences/clearSiteData.js"/>
+
+  <stringbundle id="bundlePreferences"
+                src="chrome://browser/locale/preferences/preferences.properties"/>
+
+  <keyset>
+    <key key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
+  </keyset>
+
+  <vbox class="contentPane largeDialogContainer" flex="1">
+    <description control="url">&window.description;</description>
+    <separator class="thin"/>
+    <vbox class="options-container">
+      <hbox class="option">
+        <checkbox id="clearSiteData" checked="true"
+                  accesskey="&clearSiteData.accesskey;" />
+        <vbox>
+          <label for="clearSiteData" id="clearSiteDataLabel" value="&clearSiteData.label;" />
+          <description class="option-description">&clearSiteData.description;</description>
+        </vbox>
+      </hbox>
+      <hbox class="option">
+        <checkbox id="clearCache" checked="true"
+                  accesskey="&clearCache.accesskey;" />
+        <vbox>
+          <label for="clearCache" id="clearCacheLabel" value="&clearCache.label;" />
+          <description class="option-description">&clearCache.description;</description>
+        </vbox>
+      </hbox>
+    </vbox>
+  </vbox>
+  <vbox>
+    <hbox class="actionButtons" align="right" flex="1">
+      <button id="cancelButton" icon="close"
+              label="&button.cancel.label;" accesskey="&button.cancel.accesskey;" />
+      <button id="clearButton" icon="save"
+              label="&button.clear.label;" accesskey="&button.clear.accesskey;"/>
+    </hbox>
+  </vbox>
+</window>
