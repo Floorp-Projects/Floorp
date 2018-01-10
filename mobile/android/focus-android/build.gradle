@@ -57,6 +57,7 @@ task clean(type: Delete) {
 configurations {
     ktlint
 }
+
 // To ensure unit tests and instrumentation tests remain consistent after the introduction of leakcanary
 configurations.all { config ->
     if (config.name.contains('UnitTest') || config.name.contains('AndroidTest')) {

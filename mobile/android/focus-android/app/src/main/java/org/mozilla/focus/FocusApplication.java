@@ -27,6 +27,7 @@ import java.util.List;
 
 public class FocusApplication extends LocaleAwareApplication {
     private VisibilityLifeCycleCallback visibilityLifeCycleCallback;
+
     @Override
     public void onCreate() {
         if (LeakCanary.isInAnalyzerProcess(this)) {
