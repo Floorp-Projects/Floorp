@@ -2300,18 +2300,9 @@ nsHttpChannel::ProcessResponse()
                                                     lci, mIsTrackingResource);
     }
 
-    if (mTransaction && mTransaction->ProxyConnectFailed()) {
-        // Only allow 407 (authentication required) to continue
-        if (httpStatus != 407) {
-            return ProcessFailedProxyConnect(httpStatus);
-        }
-        // If proxy CONNECT response needs to complete, wait to process connection
-        // for Strict-Transport-Security.
-    } else {
-        // Given a successful connection, process any STS or PKP data that's
-        // relevant.
-        DebugOnly<nsresult> rv = ProcessSecurityHeaders();
-        MOZ_ASSERT(NS_SUCCEEDED(rv), "ProcessSTSHeader failed, continuing load.");
+    // Only allow 407 (authentication required) to continue
+    if (mTransaction && mTransaction->ProxyConnectFailed() && httpStatus != 407) {
+        return ProcessFailedProxyConnect(httpStatus);
     }
 
     MOZ_ASSERT(!mCachedContentIsValid || mRaceCacheWithNetwork,
@@ -2359,14 +2350,20 @@ nsHttpChannel::ContinueProcessResponse1()
 
     uint32_t httpStatus = mResponseHead->Status();
 
-    // Cookies and Alt-Service should not be handled on proxy failure either.
-    // This would be consolidated with ProcessSecurityHeaders but it should
-    // happen after OnExamineResponse.
+    // STS, Cookies and Alt-Service should not be handled on proxy failure.
+    // If proxy CONNECT response needs to complete, wait to process connection
+    // for Strict-Transport-Security.
     if (!(mTransaction && mTransaction->ProxyConnectFailed()) && (httpStatus != 407)) {
         nsAutoCString cookie;
         if (NS_SUCCEEDED(mResponseHead->GetHeader(nsHttp::Set_Cookie, cookie))) {
             SetCookie(cookie.get());
         }
+
+        // Given a successful connection, process any STS or PKP data that's
+        // relevant.
+        DebugOnly<nsresult> rv = ProcessSecurityHeaders();
+        MOZ_ASSERT(NS_SUCCEEDED(rv), "ProcessSTSHeader failed, continuing load.");
+
         if ((httpStatus < 500) && (httpStatus != 421)) {
             ProcessAltService();
         }
