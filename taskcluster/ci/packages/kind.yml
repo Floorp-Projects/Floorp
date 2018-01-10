@@ -18,6 +18,9 @@ job-defaults:
   worker:
     max-run-time: 1800
   run-on-projects: []
+  run:
+    dist: wheezy
+    snapshot: 20171210T214726Z
 
 jobs:
   deb7-python:
