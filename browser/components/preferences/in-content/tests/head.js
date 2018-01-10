@@ -3,6 +3,8 @@
 
 ChromeUtils.import("resource://gre/modules/Promise.jsm", this);
 
+XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager", "@mozilla.org/serviceworkers/manager;1", "nsIServiceWorkerManager");
+
 const kDefaultWait = 2000;
 
 function is_hidden(aElement) {
@@ -163,12 +165,6 @@ function promiseAlertDialogOpen(buttonAction) {
   return promiseWindowDialogOpen(buttonAction, "chrome://global/content/commonDialog.xul");
 }
 
-function addPersistentStoragePerm(origin) {
-  let uri = NetUtil.newURI(origin);
-  let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-  Services.perms.addFromPrincipal(principal, "persistent-storage", Ci.nsIPermissionManager.ALLOW_ACTION);
-}
-
 function promiseSiteDataManagerSitesUpdated() {
   return TestUtils.topicObserved("sitedatamanager:sites-updated", () => true);
 }
@@ -259,3 +255,52 @@ const mockSiteDataManager = {
     this._SiteDataManager._removeQuotaUsage = this._originalRemoveQuotaUsage;
   }
 };
+
+function getQuotaUsage(origin) {
+  return new Promise(resolve => {
+    let uri = NetUtil.newURI(origin);
+    let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+    Services.qms.getUsageForPrincipal(principal, request => resolve(request.result.usage));
+  });
+}
+
+function promiseCookiesCleared() {
+  return TestUtils.topicObserved("cookie-changed", (subj, data) => {
+    return data === "cleared";
+  });
+}
+
+async function loadServiceWorkerTestPage(url) {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+  await BrowserTestUtils.waitForCondition(() => {
+    return ContentTask.spawn(tab.linkedBrowser, {}, () =>
+      content.document.body.getAttribute("data-test-service-worker-registered") === "true");
+  }, `Fail to load service worker test ${url}`);
+  await BrowserTestUtils.removeTab(tab);
+}
+
+function promiseServiceWorkersCleared() {
+  return BrowserTestUtils.waitForCondition(() => {
+    let serviceWorkers = serviceWorkerManager.getAllRegistrations();
+    if (serviceWorkers.length == 0) {
+      ok(true, "Cleared all service workers");
+      return true;
+    }
+    return false;
+  }, "Should clear all service workers");
+}
+
+function promiseServiceWorkerRegisteredFor(url) {
+  return BrowserTestUtils.waitForCondition(() => {
+    try {
+      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(url);
+      let sw = serviceWorkerManager.getRegistrationByPrincipal(principal, principal.URI.spec);
+      if (sw) {
+        ok(true, `Found the service worker registered for ${url}`);
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }, `Should register service worker for ${url}`);
+}
+
