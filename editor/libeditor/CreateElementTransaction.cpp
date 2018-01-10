@@ -180,14 +180,6 @@ CreateElementTransaction::RedoTransaction()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-CreateElementTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("CreateElementTransaction: ");
-  aString += nsDependentAtomString(mTag);
-  return NS_OK;
-}
-
 already_AddRefed<Element>
 CreateElementTransaction::GetNewNode()
 {
