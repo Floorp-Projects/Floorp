@@ -443,14 +443,30 @@ OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
                         ? GetOrthogonalAxis(aAbsPosCBAxis)
                         : aAbsPosCBAxis);
 
+  const bool placeholderContainerIsContainingBlock =
+    aPlaceholderContainer == aKidReflowInput.mCBReflowInput->mFrame;
+
   LayoutFrameType parentType = aPlaceholderContainer->Type();
   LogicalSize alignAreaSize(pcWM);
   if (parentType == LayoutFrameType::FlexContainer) {
-    // The alignment container is the flex container's content box:
-    alignAreaSize = aPlaceholderContainer->GetLogicalSize(pcWM);
-    LogicalMargin pcBorderPadding =
-      aPlaceholderContainer->GetLogicalUsedBorderAndPadding(pcWM);
-    alignAreaSize -= pcBorderPadding.Size(pcWM);
+    // We store the frame rect in FinishAndStoreOverflow, which runs _after_
+    // reflowing the absolute frames, so handle the special case of the frame
+    // being the actual containing block here, by getting the size from
+    // aAbsPosCBSize.
+    //
+    // The alignment container is the flex container's content box.
+    if (placeholderContainerIsContainingBlock) {
+      alignAreaSize = aAbsPosCBSize.ConvertTo(pcWM, aAbsPosCBWM);
+      // aAbsPosCBSize is the padding-box, so substract the padding to get the
+      // content box.
+      alignAreaSize -=
+        aPlaceholderContainer->GetLogicalUsedPadding(pcWM).Size(pcWM);
+    } else {
+      alignAreaSize = aPlaceholderContainer->GetLogicalSize(pcWM);
+      LogicalMargin pcBorderPadding =
+        aPlaceholderContainer->GetLogicalUsedBorderAndPadding(pcWM);
+      alignAreaSize -= pcBorderPadding.Size(pcWM);
+    }
   } else if (parentType == LayoutFrameType::GridContainer) {
     // This abspos elem's parent is a grid container. Per CSS Grid 10.1 & 10.2:
     //  - If the grid container *also* generates the abspos containing block (a
@@ -458,7 +474,7 @@ OffsetToAlignedStaticPos(const ReflowInput& aKidReflowInput,
     // the alignment container, too. (And its size is aAbsPosCBSize.)
     //  - Otherwise, we use the grid's padding box as the alignment container.
     // https://drafts.csswg.org/css-grid/#static-position
-    if (aPlaceholderContainer == aKidReflowInput.mCBReflowInput->mFrame) {
+    if (placeholderContainerIsContainingBlock) {
       // The alignment container is the grid area that we're using as the
       // absolute containing block.
       alignAreaSize = aAbsPosCBSize.ConvertTo(pcWM, aAbsPosCBWM);

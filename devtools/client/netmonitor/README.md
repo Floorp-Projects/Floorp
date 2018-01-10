@@ -95,7 +95,7 @@ Files used to run the Network Monitor in the browser tab
 
 * `bin/` files to launch test server.
 * `configs/` dev configs.
-* `index.js` the entry point, equivalent to `index.html`.
+* `launchpad.js` the entry point, equivalent to `index.html`.
 * `webpack.config.js` the webpack config file, including plenty of module alias map to shims and polyfills.
 * `package.json` declare every required packages and available commands.
 

@@ -241,8 +241,19 @@ protected:
    *
    * @param aStorage
    *        mozStorage service instance.
+   * @param aTryToClone
+   *        whether we should try to clone a corrupt database.
    */
-  nsresult BackupAndReplaceDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage);
+  nsresult BackupAndReplaceDatabaseFile(nsCOMPtr<mozIStorageService>& aStorage,
+                                        bool aTryToClone);
+
+  /**
+   * Tries to recover tables and their contents from a corrupt database.
+   *
+   * @param aStorage
+   *        mozStorage service instance.
+   */
+  nsresult TryToCloneTablesFromCorruptDatabase(nsCOMPtr<mozIStorageService>& aStorage);
 
   /**
    * Set up the connection environment through PRAGMAs.

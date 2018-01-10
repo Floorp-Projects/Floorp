@@ -18,6 +18,8 @@
         <radio id="searchBarShownRadio" value="true" label="&searchBar.shown.label;"/>
         <image class="searchBarImage searchBarShownImage" role="presentation"/>
       </radiogroup>
+      <checkbox id="showSearchSuggestionsFirstCheckbox"
+                label="&showSearchSuggestionsAboveHistory.label;"/>
     </groupbox>
 
     <!-- Default Search Engine -->

@@ -81,6 +81,7 @@ EXPORTS += [
 EXPORTS.mozilla += [
     'AnimationCollection.h',
     'BindingStyleRule.h',
+    'CachedAnonBoxStyles.h',
     'CSSEnabledState.h',
     'CSSStyleSheet.h',
     'CSSVariableDeclarations.h',
@@ -179,6 +180,7 @@ EXPORTS.mozilla.css += [
 UNIFIED_SOURCES += [
     'AnimationCollection.cpp',
     'BindingStyleRule.cpp',
+    'CachedAnonBoxStyles.cpp',
     'CounterStyleManager.cpp',
     'CSS.cpp',
     'CSSFontFeatureValuesRule.cpp',

@@ -103,7 +103,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
     let isAddressField = FormAutofillUtils.isAddressField(activeFieldDetail.fieldName);
     let isInputAutofilled = activeFieldDetail.state == FIELD_STATES.AUTO_FILLED;
     let allFieldNames = activeSection.allFieldNames;
-    let filledRecordGUID = activeSection.getFilledRecordGUID();
+    let filledRecordGUID = activeSection.filledRecordGUID;
     let searchPermitted = isAddressField ?
                           FormAutofillUtils.isAutofillAddressesEnabled :
                           FormAutofillUtils.isAutofillCreditCardsEnabled;
