@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Namespace: proxy</title>
+    <title>JSDoc: Source: sync.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,273 +17,193 @@
 
 <div id="main">
 
-    <h1 class="page-title">Namespace: proxy</h1>
+    <h1 class="page-title">Source: sync.js</h1>
 
     
 
 
 
-
-<section>
-
-<header>
     
-        <h2>proxy</h2>
-        
-    
-</header>
-
-<article>
-    <div class="container-overview">
-    
-        
-
-        
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="proxy.js.html">proxy.js</a>, <a href="proxy.js.html#line42">line 42</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-        
-    
-    </div>
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Classes</h3>
-
-        <dl>
-            <dt><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></dt>
-            <dd></dd>
-        </dl>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id=".toListener"><span class="type-signature">(static) </span>toListener<span class="signature">(sendAsyncFn, browserFn)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Creates a transparent interface between the chrome- and content
-contexts.</p>
-<p>Calls to this object will be proxied via the message manager to a
-content frame script, and responses are returend as promises.</p>
-<p>The argument sequence is serialised and passed as an array, unless it
-consists of a single object type that isn't null, in which case it's
-passed literally.  The latter specialisation is temporary to achieve
-backwards compatibility with listener.js.</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>sendAsyncFn</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Callback for sending async messages.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>browserFn</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Closure that returns the current browsing context.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="proxy.js.html">proxy.js</a>, <a href="proxy.js.html#line61">line 61</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-    
-
-    
-
-    
-</article>
-
-</section>
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+const {
+  error,
+  TimeoutError,
+} = Cu.import("chrome://marionette/content/error.js", {});
+
+/* exported PollPromise, TimedPromise */
+this.EXPORTED_SYMBOLS = ["PollPromise", "TimedPromise"];
+
+const {TYPE_ONE_SHOT, TYPE_REPEATING_SLACK} = Ci.nsITimer;
+
+/**
+ * @callback Condition
+ *
+ * @param {function(*)} resolve
+ *     To be called when the condition has been met.  Will return the
+ *     resolved value.
+ * @param {function} reject
+ *     To be called when the condition has not been met.  Will cause
+ *     the condition to be revaluated or time out.
+ *
+ * @return {*}
+ *     The value from calling &lt;code>resolve&lt;/code>.
+ */
+
+/**
+ * Runs a promise-like function off the main thread until it is resolved
+ * through &lt;code>resolve&lt;/code> or &lt;code>rejected&lt;/code> callbacks.
+ * The function is guaranteed to be run at least once, irregardless of
+ * the timeout.
+ *
+ * The &lt;var>func&lt;/var> is evaluated every &lt;var>interval&lt;/var> for as
+ * long as its runtime duration does not exceed &lt;var>interval&lt;/var>.
+ * Evaluations occur sequentially, meaning that evaluations of
+ * &lt;var>func&lt;/var> are queued if the runtime evaluation duration of
+ * &lt;var>func&lt;/var> is greater than &lt;var>interval&lt;/var>.
+ *
+ * &lt;var>func&lt;/var> is given two arguments, &lt;code>resolve&lt;/code> and
+ * &lt;code>reject&lt;/code>, of which one must be called for the evaluation
+ * to complete.  Calling &lt;code>resolve&lt;/code> with an argument
+ * indicates that the expected wait condition was met and will return
+ * the passed value to the caller.  Conversely, calling
+ * &lt;code>reject&lt;/code> will evaluate &lt;var>func&lt;/var> again until
+ * the &lt;var>timeout&lt;/var> duration has elapsed or &lt;var>func&lt;/var>
+ * throws.  The passed value to &lt;code>reject&lt;/code> will also be
+ * returned to the caller once the wait has expired.
+ *
+ * Usage:
+ *
+ * &lt;pre>&lt;code>
+ *     let els = new PollPromise((resolve, reject) => {
+ *       let res = document.querySelectorAll("p");
+ *       if (res.length > 0) {
+ *         resolve(Array.from(res));
+ *       } else {
+ *         reject([]);
+ *       }
+ *     });
+ * &lt;/pre>&lt;/code>
+ *
+ * @param {Condition} func
+ *     Function to run off the main thread.
+ * @param {number=} [timeout=2000] timeout
+ *     Desired timeout.  If 0 or less than the runtime evaluation
+ *     time of &lt;var>func&lt;/var>, &lt;var>func&lt;/var> is guaranteed to run
+ *     at least once.  The default is 2000 milliseconds.
+ * @param {number=} [interval=10] interval
+ *     Duration between each poll of &lt;var>func&lt;/var> in milliseconds.
+ *     Defaults to 10 milliseconds.
+ *
+ * @return {Promise.&lt;*>}
+ *     Yields the value passed to &lt;var>func&lt;/var>'s
+ *     &lt;code>resolve&lt;/code> or &lt;code>reject&lt;/code> callbacks.
+ *
+ * @throws {*}
+ *     If &lt;var>func&lt;/var> throws, its error is propagated.
+ */
+function PollPromise(func, {timeout = 2000, interval = 10} = {}) {
+  const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
+  return new Promise((resolve, reject) => {
+    const start = new Date().getTime();
+    const end = start + timeout;
+
+    let evalFn = () => {
+      new Promise(func).then(resolve, rejected => {
+        if (error.isError(rejected)) {
+          throw rejected;
+        }
+
+        // return if timeout is 0, allowing |func| to be evaluated at
+        // least once
+        if (start == end || new Date().getTime() >= end) {
+          resolve(rejected);
+        }
+      }).catch(reject);
+    };
+
+    // the repeating slack timer waits |interval|
+    // before invoking |evalFn|
+    evalFn();
+
+    timer.init(evalFn, interval, TYPE_REPEATING_SLACK);
+
+  }).then(res => {
+    timer.cancel();
+    return res;
+  }, err => {
+    timer.cancel();
+    throw err;
+  });
+}
+
+/**
+ * The &lt;code>TimedPromise&lt;/code> object represents the timed, eventual
+ * completion (or failure) of an asynchronous operation, and its
+ * resulting value.
+ *
+ * In contrast to a regular {@link Promise}, it times out after
+ * &lt;var>timeout&lt;/var>.
+ *
+ * @param {Condition} func
+ *     Function to run, which will have its &lt;code>reject&lt;/code>
+ *     callback invoked after the &lt;var>timeout&lt;/var> duration is reached.
+ *     It is given two callbacks: &lt;code>resolve(value)&lt;/code> and
+ *     &lt;code>reject(error)&lt;/code>.
+ * @param {timeout=} [timeout=1500] timeout
+ *     &lt;var>condition&lt;/var>'s &lt;code>reject&lt;/code> callback will be called
+ *     after this timeout.
+ * @param {Error=} [throws=TimeoutError] throws
+ *     When the &lt;var>timeout&lt;/var> is hit, this error class will be
+ *     thrown.  If it is null, no error is thrown and the promise is
+ *     instead resolved on timeout.
+ *
+ * @return {Promise.&lt;*>}
+ *     Timed promise.
+ */
+function TimedPromise(fn, {timeout = 1500, throws = TimeoutError} = {}) {
+  const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
+  return new Promise((resolve, reject) => {
+    // Reject only if |throws| is given.  Otherwise it is assumed that
+    // the user is OK with the promise timing out.
+    let bail = () => {
+      if (throws !== null) {
+        let err = new throws();
+        reject(err);
+      } else {
+        resolve();
+      }
+    };
+
+    timer.initWithCallback({notify: bail}, timeout, TYPE_ONE_SHOT);
+
+    try {
+      fn(resolve, reject);
+    } catch (e) {
+      reject(e);
+    }
+
+  }).then(res => {
+    timer.cancel();
+    return res;
+  }, err => {
+    timer.cancel();
+    throw err;
+  });
+}
+</code></pre>
+        </article>
+    </section>
 
 
 

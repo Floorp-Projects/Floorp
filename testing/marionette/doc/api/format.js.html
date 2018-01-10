@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Namespace: proxy</title>
+    <title>JSDoc: Source: format.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,273 +17,191 @@
 
 <div id="main">
 
-    <h1 class="page-title">Namespace: proxy</h1>
+    <h1 class="page-title">Source: format.js</h1>
 
     
 
 
 
-
-<section>
-
-<header>
     
-        <h2>proxy</h2>
-        
-    
-</header>
-
-<article>
-    <div class="container-overview">
-    
-        
-
-        
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="proxy.js.html">proxy.js</a>, <a href="proxy.js.html#line42">line 42</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-        
-    
-    </div>
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Classes</h3>
-
-        <dl>
-            <dt><a href="proxy.AsyncMessageChannel.html">AsyncMessageChannel</a></dt>
-            <dd></dd>
-        </dl>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-        <h3 class="subsection-title">Methods</h3>
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id=".toListener"><span class="type-signature">(static) </span>toListener<span class="signature">(sendAsyncFn, browserFn)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    <p>Creates a transparent interface between the chrome- and content
-contexts.</p>
-<p>Calls to this object will be proxied via the message manager to a
-content frame script, and responses are returend as promises.</p>
-<p>The argument sequence is serialised and passed as an array, unless it
-consists of a single object type that isn't null, in which case it's
-passed literally.  The latter specialisation is temporary to achieve
-backwards compatibility with listener.js.</p>
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>sendAsyncFn</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Callback for sending async messages.</p></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>browserFn</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last"><p>Closure that returns the current browsing context.</p></td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="proxy.js.html">proxy.js</a>, <a href="proxy.js.html#line61">line 61</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-    
-
-    
-
-    
-</article>
-
-</section>
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+const {utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/Log.jsm");
+
+this.EXPORTED_SYMBOLS = ["pprint", "truncate"];
+
+const log = Log.repository.getLogger("Marionette");
+
+const MAX_STRING_LENGTH = 250;
+
+/**
+ * Pretty-print values passed to template strings.
+ *
+ * Usage:
+ *
+ * &lt;pre>&lt;code>
+ *     const {pprint} = Cu.import("chrome://marionette/content/error.js", {});
+ *     let bool = {value: true};
+ *     pprint`Expected boolean, got ${bool}`;
+ *     => 'Expected boolean, got [object Object] {"value": true}'
+ *
+ *     let htmlElement = document.querySelector("input#foo");
+ *     pprint`Expected element ${htmlElement}`;
+ *     => 'Expected element &lt;input id="foo" class="bar baz" type="input">'
+ *
+ *     pprint`Current window: ${window}`;
+ *     => '[object Window https://www.mozilla.org/]'
+ * &lt;/code>&lt;/pre>
+ */
+function pprint(ss, ...values) {
+  function pretty(val) {
+    let proto = Object.prototype.toString.call(val);
+
+    if (val &amp;&amp; val.nodeType === 1) {
+      return prettyElement(val);
+    } else if (["[object Window]", "[object ChromeWindow]"].includes(proto)) {
+      return prettyWindowGlobal(val);
+    }
+    return prettyObject(val);
+  }
+
+  function prettyElement(el) {
+    let attrs = ["id", "class", "href", "name", "src", "type"];
+
+    let idents = "";
+    for (let attr of attrs) {
+      if (el.hasAttribute(attr)) {
+        idents += ` ${attr}="${el.getAttribute(attr)}"`;
+      }
+    }
+
+    return `&lt;${el.localName}${idents}>`;
+  }
+
+  function prettyWindowGlobal(win) {
+    let proto = Object.prototype.toString.call(win);
+    return `[${proto.substring(1, proto.length - 1)} ${win.location}]`;
+  }
+
+  function prettyObject(obj) {
+    let proto = Object.prototype.toString.call(obj);
+    let s = "";
+    try {
+      s = JSON.stringify(obj);
+    } catch (e) {
+      if (e instanceof TypeError) {
+        s = `&lt;${e.message}>`;
+      } else {
+        throw e;
+      }
+    }
+    return `${proto} ${s}`;
+  }
+
+  let res = [];
+  for (let i = 0; i &lt; ss.length; i++) {
+    res.push(ss[i]);
+    if (i &lt; values.length) {
+      let s;
+      try {
+        s = pretty(values[i]);
+      } catch (e) {
+        log.warn("Problem pretty printing:", e);
+        s = typeof values[i];
+      }
+      res.push(s);
+    }
+  }
+  return res.join("");
+}
+this.pprint = pprint;
+
+/**
+ * Template literal that truncates string values in arbitrary objects.
+ *
+ * Given any object, the template will walk the object and truncate
+ * any strings it comes across to a reasonable limit.  This is suitable
+ * when you have arbitrary data and data integrity is not important.
+ *
+ * The strings are truncated in the middle so that the beginning and
+ * the end is preserved.  This will make a long, truncated string look
+ * like "X &lt;...> Y", where X and Y are half the number of characters
+ * of the maximum string length from either side of the string.
+ *
+ * Usage:
+ *
+ * &lt;pre>&lt;code>
+ *     truncate`Hello ${"x".repeat(260)}!`;
+ *     // Hello xxx ... xxx!
+ * &lt;/code>&lt;/pre>
+ *
+ * Functions named &lt;code>toJSON&lt;/code> or &lt;code>toString&lt;/code>
+ * on objects will be called.
+ */
+function truncate(strings, ...values) {
+  function walk(obj) {
+    const typ = Object.prototype.toString.call(obj);
+
+    switch (typ) {
+      case "[object Undefined]":
+      case "[object Null]":
+      case "[object Boolean]":
+      case "[object Number]":
+        return obj;
+
+      case "[object String]":
+        if (obj.length > MAX_STRING_LENGTH) {
+          let s1 = obj.substring(0, (MAX_STRING_LENGTH / 2));
+          let s2 = obj.substring(obj.length - (MAX_STRING_LENGTH / 2));
+          return `${s1} ... ${s2}`;
+        }
+        return obj;
+
+      case "[object Array]":
+        return obj.map(walk);
+
+      // arbitrary object
+      default:
+        if (Object.getOwnPropertyNames(obj).includes("toString") &amp;&amp;
+          typeof obj.toString == "function") {
+          return walk(obj.toString());
+        }
+
+        let rv = {};
+        for (let prop in obj) {
+          rv[prop] = walk(obj[prop]);
+        }
+        return rv;
+    }
+  }
+
+  let res = [];
+  for (let i = 0; i &lt; strings.length; ++i) {
+    res.push(strings[i]);
+    if (i &lt; values.length) {
+      let obj = walk(values[i]);
+      let t = Object.prototype.toString.call(obj);
+      if (t == "[object Array]" || t == "[object Object]") {
+        res.push(JSON.stringify(obj));
+      } else {
+        res.push(obj);
+      }
+    }
+  }
+  return res.join("");
+}
+this.truncate = truncate;
+</code></pre>
+        </article>
+    </section>
 
 
 
