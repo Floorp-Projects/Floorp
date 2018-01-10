@@ -19,6 +19,11 @@ from taskgraph.util.hash import hash_paths
 from taskgraph import GECKO
 from taskgraph.util.cached_tasks import add_optimization
 
+source_definition = {
+    Required('url'): basestring,
+    Required('sha256'): basestring,
+}
+
 run_schema = Schema({
     Required('using'): 'debian-package',
     # Debian distribution
@@ -29,11 +34,8 @@ run_schema = Schema({
     # (only the YYYYMMDD part).
     Optional('snapshot'): basestring,
 
-    # URL of the source control (.dsc) file to build.
-    Required('dsc'): basestring,
-
-    # SHA256 of the source control (.dsc) file.
-    Required('dsc-sha256'): basestring,
+    # URL/SHA256 of the source control (.dsc) file to build.
+    Required('dsc'): source_definition,
 
     # Patch to apply to the extracted source.
     Optional('patch'): basestring,
@@ -57,7 +59,7 @@ def docker_worker_debian_package(config, job, taskdesc):
 
     add_public_artifacts(config, job, taskdesc, path='/tmp/artifacts')
 
-    dsc_file = os.path.basename(run['dsc'])
+    dsc_file = os.path.basename(run['dsc']['url'])
     package = dsc_file[:dsc_file.index('_')]
 
     adjust = ''
@@ -115,9 +117,9 @@ def docker_worker_debian_package(config, job, taskdesc):
             package=package,
             snapshot=run['snapshot'],
             dist=run['dist'],
-            dsc=run['dsc'],
+            dsc=run['dsc']['url'],
             dsc_file=dsc_file,
-            dsc_sha256=run['dsc-sha256'],
+            dsc_sha256=run['dsc']['sha256'],
             adjust=adjust,
             artifacts='/tmp/artifacts',
         )
@@ -131,8 +133,9 @@ def docker_worker_debian_package(config, job, taskdesc):
     if 'patch' in run:
         files.append('build/debian-packages/{}'.format(run['patch']))
     data = [hash_paths(GECKO, files)]
-    for k in ('snapshot', 'dist', 'dsc-sha256', 'pre-build-command'):
+    for k in ('snapshot', 'dist', 'pre-build-command'):
         if k in run:
             data.append(run[k])
+    data.append(run['dsc']['sha256'])
     add_optimization(config, taskdesc, cache_type='packages.v1',
                      cache_name=name, digest_data=data)
