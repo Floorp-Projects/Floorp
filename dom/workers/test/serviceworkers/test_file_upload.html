@@ -1,0 +1,56 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1424701 - Test for service worker + file upload</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<input id="input" type="file">
+<script class="testbody" type="text/javascript">
+
+async function onOpened(message) {
+  let input = document.getElementById("input");
+  SpecialPowers.wrap(input).mozSetFileArray([message.file]);
+  script.destroy();
+
+  let registration = await navigator.serviceWorker.register('sw_file_upload.js',
+                                                            {scope: "." });
+
+  let worker = registration.installing || registration.active;
+  await waitForState(worker, 'activated');
+  worker.postMessage('claim');
+  await waitForControlled(window);
+
+  let res = await fetch('server_file_upload.sjs', {
+    method: 'POST',
+    body: input.files[0],
+  });
+
+  let data = await res.clone().text();
+  ok(data.length > 0, "We have data!");
+
+  await registration.unregister();
+  SimpleTest.finish();
+}
+
+let url = SimpleTest.getTestFileURL("script_file_upload.js");
+let script = SpecialPowers.loadChromeScript(url);
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+  ["dom.serviceWorkers.enabled", true],
+  ["dom.serviceWorkers.testing.enabled", true]
+]}).then(() => {
+  script.addMessageListener("file.opened", onOpened);
+  script.sendAsyncMessage("file.open");
+});
+</script>
+</body>
+</html>
