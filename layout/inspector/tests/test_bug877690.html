@@ -217,6 +217,11 @@ function do_test() {
   var expected = [ "inherit", "initial", "unset" ];
   ok(testValues(values, expected), "property all's values.");
 
+  var prop = "quotes"
+  var values = InspectorUtils.getCSSValuesForProperty(prop);
+  var expected = [ "inherit", "initial", "unset", "none" ];
+  ok(testValues(values, expected), "property quotes's values.");
+
   SimpleTest.finish();
 }
 

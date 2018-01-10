@@ -8127,6 +8127,7 @@ exports.CSS_PROPERTIES = {
     "values": [
       "inherit",
       "initial",
+      "none",
       "unset"
     ]
   },
