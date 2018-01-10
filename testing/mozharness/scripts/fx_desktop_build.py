@@ -35,14 +35,9 @@ class FxDesktopBuild(BuildScript, TryToolsMixin, object):
             'all_actions': [
                 'get-secrets',
                 'clobber',
-                'checkout-sources',
                 'build',
-                'upload-files',  # upload from BB to TC
-                'sendchange',
                 'check-test',
                 'valgrind-test',
-                'package-source',
-                'generate-source-signing-manifest',
                 'multi-l10n',
                 'update',
             ],

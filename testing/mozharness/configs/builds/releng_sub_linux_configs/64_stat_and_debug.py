@@ -4,7 +4,6 @@ config = {
     # note: overridden by MOZHARNESS_ACTIONS in TaskCluster tasks
     'default_actions': [
         'clobber',
-        'checkout-sources',
         'build',
     ],
     "buildbot_json_path": "buildprops.json",
@@ -13,7 +12,6 @@ config = {
     'enable_signing': False,
     'vcs_share_base': '/builds/hg-shared',
     'enable_count_ctors': True,
-    'enable_unittest_sendchange': False,
     'perfherder_extra_options': ['static-analysis'],
     #########################################################################
 

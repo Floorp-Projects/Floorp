@@ -13,7 +13,6 @@ config = {
         "graph_server_branch_name": "MozillaTest",
         'graph_server': 'graphs.allizom.org',
         'stage_server': 'upload.ffxbld.productdelivery.stage.mozaws.net',
-        "sendchange_masters": ["dev-master1.srv.releng.scl3.mozilla.com:9038"],
         'taskcluster_index': 'index.garbage.staging',
         'post_upload_extra': ['--bucket-prefix', 'net-mozaws-stage-delivery',
                               '--url-prefix', 'http://ftp.stage.mozaws.net/',
@@ -27,7 +26,6 @@ config = {
         'graph_server': 'graphs.mozilla.org',
         # bug 1216907, set this at branch level
         # 'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
-        "sendchange_masters": ["buildbot-master81.build.mozilla.org:9301"],
         'taskcluster_index': 'index',
     },
     "taskcluster": {

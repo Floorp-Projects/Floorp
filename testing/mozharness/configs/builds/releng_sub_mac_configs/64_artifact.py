@@ -6,10 +6,7 @@ config = {
 
     'default_actions': [
         'clobber',
-        'checkout-sources',
         'build',
-        'upload-files',
-        'sendchange',
     ],
     "buildbot_json_path": "buildprops.json",
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
@@ -18,7 +15,6 @@ config = {
     'vcs_share_base': '/builds/hg-shared',
     'enable_count_ctors': False,
     # allows triggering of dependent jobs when --artifact try syntax is detected on buildbot
-    'enable_unittest_sendchange': False,
     'perfherder_extra_options': ['artifact'],
     #########################################################################
 
