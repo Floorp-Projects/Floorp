@@ -7,6 +7,9 @@ browser.jar:
     content/browser/preferences/applicationManager.js
     content/browser/preferences/blocklists.xul
     content/browser/preferences/blocklists.js
+    content/browser/preferences/clearSiteData.css
+    content/browser/preferences/clearSiteData.js
+    content/browser/preferences/clearSiteData.xul
 *   content/browser/preferences/colors.xul
     content/browser/preferences/colors.js
 *   content/browser/preferences/cookies.xul
