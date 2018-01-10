@@ -716,13 +716,6 @@ def superseder_url(config, task):
     )
 
 
-JOB_NAME_WHITELIST_ERROR = """\
-The gecko-v2 job name {job_name} is not in the whitelist in `taskcluster/ci/config.yml`.
-If this job runs on Buildbot, please ensure that the job names match between
-Buildbot and TaskCluster, then add the job name to the whitelist.  If this is a
-new job, there is nothing to check -- just add the job to the whitelist.
-"""
-
 UNSUPPORTED_PRODUCT_ERROR = """\
 The gecko-v2 product {product} is not in the list of configured products in
 `taskcluster/ci/config.yml'.
@@ -730,11 +723,6 @@ The gecko-v2 product {product} is not in the list of configured products in
 
 
 def verify_index(config, index):
-    if 'job-names' in config.graph_config['index']:
-        job_name = index['job-name']
-        if job_name not in config.graph_config['index']['job-names']:
-            raise Exception(JOB_NAME_WHITELIST_ERROR.format(job_name=job_name))
-
     product = index['product']
     if product not in config.graph_config['index']['products']:
         raise Exception(UNSUPPORTED_PRODUCT_ERROR.format(product=product))

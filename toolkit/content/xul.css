@@ -1027,24 +1027,6 @@ richlistbox > listheader {
   -moz-box-ordinal-group: 1;
 }
 
-/********** datepicker and timepicker ********/
-
-datepicker {
-  -moz-binding: url('chrome://global/content/bindings/datetimepicker.xml#datepicker');
-}
-
-datepicker[type="popup"] {
-  -moz-binding: url('chrome://global/content/bindings/datetimepicker.xml#datepicker-popup');
-}
-
-datepicker[type="grid"] {
-  -moz-binding: url('chrome://global/content/bindings/datetimepicker.xml#datepicker-grid');
-}
-
-timepicker {
-  -moz-binding: url('chrome://global/content/bindings/datetimepicker.xml#timepicker');
-}
-
 
 /*********** findbar ************/
 findbar {
