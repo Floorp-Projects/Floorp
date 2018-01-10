@@ -23,12 +23,7 @@ if ((!c.value || c.writable) && typeof SpecialPowers === "object") {
 
 function executeSoon(aFun)
 {
-  let comp = SpecialPowers.wrap(Components);
-
-  let tm = comp.classes["@mozilla.org/thread-manager;1"]
-               .getService(comp.interfaces.nsIThreadManager);
-
-  tm.dispatchToMainThread({
+  SpecialPowers.Services.tm.dispatchToMainThread({
     run() {
       aFun();
     }
