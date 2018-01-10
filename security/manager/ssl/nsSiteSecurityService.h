@@ -47,7 +47,6 @@ enum SecurityPropertySource {
   SourceUnknown = nsISiteSecurityService::SOURCE_UNKNOWN,
   SourcePreload = nsISiteSecurityService::SOURCE_PRELOAD_LIST,
   SourceOrganic = nsISiteSecurityService::SOURCE_ORGANIC_REQUEST,
-  SourceHSTSPriming = nsISiteSecurityService::SOURCE_HSTS_PRIMING,
 };
 
 /**
