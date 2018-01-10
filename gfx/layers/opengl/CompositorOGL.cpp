@@ -520,9 +520,9 @@ CompositorOGL::PrepareViewport(CompositingRenderTargetOGL* aRenderTarget)
 already_AddRefed<CompositingRenderTarget>
 CompositorOGL::CreateRenderTarget(const IntRect &aRect, SurfaceInitMode aInit)
 {
-  MOZ_ASSERT(!aRect.IsZero(), "Trying to create a render target of invalid size");
+  MOZ_ASSERT(!aRect.IsZeroArea(), "Trying to create a render target of invalid size");
 
-  if (aRect.IsZero()) {
+  if (aRect.IsZeroArea()) {
     return nullptr;
   }
 
@@ -547,9 +547,9 @@ CompositorOGL::CreateRenderTargetFromSource(const IntRect &aRect,
                                             const CompositingRenderTarget *aSource,
                                             const IntPoint &aSourcePoint)
 {
-  MOZ_ASSERT(!aRect.IsZero(), "Trying to create a render target of invalid size");
+  MOZ_ASSERT(!aRect.IsZeroArea(), "Trying to create a render target of invalid size");
 
-  if (aRect.IsZero()) {
+  if (aRect.IsZeroArea()) {
     return nullptr;
   }
 
