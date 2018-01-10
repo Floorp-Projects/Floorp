@@ -107,12 +107,8 @@ nsDragService::nsDragService()
     obsServ->AddObserver(this, "quit-application", false);
 
     // our hidden source widget
-#if (MOZ_WIDGET_GTK == 2)
-    mHiddenWidget = gtk_window_new(GTK_WINDOW_POPUP);
-#else
     // Using an offscreen window works around bug 983843.
     mHiddenWidget = gtk_offscreen_window_new();
-#endif
     // make sure that the widget is realized so that
     // we can use it as a drag source.
     gtk_widget_realize(mHiddenWidget);
@@ -435,42 +431,6 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
     if (!gdk_screen_is_composited(screen))
       return false;
 
-#if (MOZ_WIDGET_GTK == 2)
-    GdkColormap* alphaColormap = gdk_screen_get_rgba_colormap(screen);
-    if (!alphaColormap)
-      return false;
-
-    GdkPixmap* pixmap = gdk_pixmap_new(nullptr, dragRect.width, dragRect.height,
-                                       gdk_colormap_get_visual(alphaColormap)->depth);
-    if (!pixmap)
-      return false;
-
-    gdk_drawable_set_colormap(GDK_DRAWABLE(pixmap), alphaColormap);
-
-    // Make a DrawTarget wrapped around the pixmap to render on
-    RefPtr<DrawTarget> dt =
-         nsWindow::GetDrawTargetForGdkDrawable(GDK_DRAWABLE(pixmap),
-                                               IntSize(dragRect.width,
-                                                       dragRect.height));
-    if (!dt)
-      return false;
-
-    // Clear it...
-    dt->ClearRect(Rect(0, 0, dragRect.width, dragRect.height));
-
-    // ...and paint the drag image with translucency
-    dt->DrawSurface(aSurface,
-                    Rect(0, 0, dragRect.width, dragRect.height),
-                    Rect(0, 0, dragRect.width, dragRect.height),
-                    DrawSurfaceOptions(),
-                    DrawOptions(DRAG_IMAGE_ALPHA_LEVEL, CompositionOp::OP_SOURCE));
-
-    // The drag transaction addrefs the pixmap, so we can just unref it from us here
-    gtk_drag_set_icon_pixmap(aContext, alphaColormap, pixmap, nullptr,
-                             aXOffset, aYOffset);
-    g_object_unref(pixmap);
-    return true;
-#else
 #ifdef cairo_image_surface_create
 #error "Looks like we're including Mozilla's cairo instead of system cairo"
 #endif
@@ -518,7 +478,6 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
     gtk_drag_set_icon_surface(aContext, surf);
     cairo_surface_destroy(surf);
     return true;
-#endif
 }
 
 NS_IMETHODIMP

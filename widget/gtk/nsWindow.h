@@ -175,11 +175,7 @@ public:
     GdkRectangle DevicePixelsToGdkRectRoundOut(LayoutDeviceIntRect aRect);
 
     // event callbacks
-#if (MOZ_WIDGET_GTK == 2)
-    gboolean           OnExposeEvent(GdkEventExpose *aEvent);
-#else
     gboolean           OnExposeEvent(cairo_t *cr);
-#endif
     gboolean           OnConfigureEvent(GtkWidget *aWidget,
                                         GdkEventConfigure *aEvent);
     void               OnContainerUnrealize();
@@ -318,10 +314,6 @@ public:
    nsresult            UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                             uint8_t* aAlphas, int32_t aStride);
 
-#if (MOZ_WIDGET_GTK == 2)
-    static already_AddRefed<DrawTarget> GetDrawTargetForGdkDrawable(GdkDrawable* aDrawable,
-                                                                    const mozilla::gfx::IntSize& aSize);
-#endif
     virtual void       ReparentNativeWidget(nsIWidget* aNewParent) override;
 
     virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
