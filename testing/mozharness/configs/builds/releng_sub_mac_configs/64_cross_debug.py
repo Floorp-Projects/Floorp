@@ -3,10 +3,7 @@ import os
 config = {
     'default_actions': [
         'clobber',
-        'checkout-sources',
         'build',
-        'upload-files',
-        'sendchange',
         'update',  # decided by query_is_nightly()
     ],
     'stage_platform': 'macosx64-debug',

@@ -3,10 +3,7 @@ import os
 config = {
     'default_actions': [
         'clobber',
-        'checkout-sources',
         'build',
-        'upload-files',
-        'sendchange',
         'check-test',
         'update',  # decided by query_is_nightly()
     ],

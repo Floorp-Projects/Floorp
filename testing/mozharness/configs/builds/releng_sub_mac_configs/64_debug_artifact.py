@@ -6,9 +6,7 @@ config = {
 
     'default_actions': [
         'clobber',
-        'checkout-sources',
         'build',
-        'sendchange',
     ],
     "buildbot_json_path": "buildprops.json",
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
@@ -18,7 +16,6 @@ config = {
     # debug specific
     'debug_build': True,
     # allows triggering of test jobs when --artifact try syntax is detected on buildbot
-    'enable_unittest_sendchange': True,
     'perfherder_extra_options': ['artifact'],
     #########################################################################
 

@@ -10,10 +10,7 @@ config = {
 
     'default_actions': [
         'clobber',
-        'checkout-sources',
         'build',
-        'upload-files',
-        'sendchange',
         'check-test',
         'update',  # decided by query_is_nightly()
     ],
@@ -37,7 +34,6 @@ config = {
     ],
     'vcs_share_base': '/builds/hg-shared',
     'enable_count_ctors': True,
-    'enable_unittest_sendchange': True,
     #########################################################################
 
 
