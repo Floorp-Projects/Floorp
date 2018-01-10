@@ -18,6 +18,7 @@ add_task(async function() {
         Assert.ok(obj.filename === "filename", "The filename matches");
         Assert.ok(obj.lineNumber === 42, "The lineNumber matches");
         Assert.ok(obj.columnNumber === 24, "The columnNumber matches");
+        Assert.ok(obj.level === "error", "The level is correct");
 
         Services.obs.removeObserver(this, "console-api-log-event");
         resolve();
@@ -28,6 +29,6 @@ add_task(async function() {
   });
 
   let ci = console.createInstance();
-  ci.reportForServiceWorkerScope("scope", "Hello world!", "filename", 42, 24);
+  ci.reportForServiceWorkerScope("scope", "Hello world!", "filename", 42, 24, "error");
   await p;
 });
