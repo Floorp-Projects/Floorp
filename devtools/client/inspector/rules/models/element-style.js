@@ -138,6 +138,26 @@ ElementStyle.prototype = {
   },
 
   /**
+   * Get the font families in use by the element.
+   *
+   * Returns a promise that will be resolved to a list of CSS family
+   * names.  The list might have duplicates.
+   */
+  getUsedFontFamilies: function () {
+    return new Promise((resolve, reject) => {
+      this.ruleView.styleWindow.requestIdleCallback(async () => {
+        try {
+          let fonts = await this.pageStyle.getUsedFontFaces(
+            this.element, { includePreviews: false });
+          resolve(fonts.map(font => font.CSSFamilyName));
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+  },
+
+  /**
    * Put pseudo elements in front of others.
    */
   _sortRulesForPseudoElement: function () {

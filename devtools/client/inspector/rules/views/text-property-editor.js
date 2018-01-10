@@ -28,6 +28,7 @@ const BEZIER_SWATCH_CLASS = "ruleview-bezierswatch";
 const FILTER_SWATCH_CLASS = "ruleview-filterswatch";
 const ANGLE_SWATCH_CLASS = "ruleview-angleswatch";
 const INSET_POINT_TYPES = ["top", "right", "bottom", "left"];
+const FONT_FAMILY_CLASS = "ruleview-font-family";
 
 /*
  * An actionable element is an element which on click triggers a specific action
@@ -39,6 +40,21 @@ const ACTIONABLE_ELEMENTS_SELECTORS = [
   `.${FILTER_SWATCH_CLASS}`,
   `.${ANGLE_SWATCH_CLASS}`,
   "a"
+];
+
+// In order to highlight the used fonts in font-family properties, we
+// retrieve the list of used fonts from the server. That always
+// returns the actually used font family name(s). If the property's
+// authored value is sans-serif for instance, the used font might be
+// arial instead.  So we need the list of all generic font family
+// names to underline those when we find them.
+const GENERIC_FONT_FAMILIES = [
+  "serif",
+  "sans-serif",
+  "cursive",
+  "fantasy",
+  "monospace",
+  "system-ui"
 ];
 
 /**
@@ -365,6 +381,7 @@ TextPropertyEditor.prototype = {
       shapeClass: "ruleview-shape",
       defaultColorType: !propDirty,
       urlClass: "theme-link",
+      fontFamilyClass: FONT_FAMILY_CLASS,
       baseURI: this.sheetHref,
       unmatchedVariableClass: "ruleview-unmatched-variable",
       matchedVariableClass: "ruleview-variable",
@@ -375,6 +392,39 @@ TextPropertyEditor.prototype = {
     this.valueSpan.appendChild(frag);
 
     this.ruleView.emit("property-value-updated", this.valueSpan);
+
+    // Highlight the currently used font in font-family properties.
+    // If we cannot find a match, highlight the first generic family instead.
+    let fontFamilySpans = this.valueSpan.querySelectorAll("." + FONT_FAMILY_CLASS);
+    if (fontFamilySpans.length && this.prop.enabled && !this.prop.overridden) {
+      this.rule.elementStyle.getUsedFontFamilies().then(families => {
+        const usedFontFamilies = families.map(font => font.toLowerCase());
+        let foundMatchingFamily = false;
+        let firstGenericSpan = null;
+
+        for (let span of fontFamilySpans) {
+          const authoredFont = span.textContent.toLowerCase();
+
+          if (!firstGenericSpan && GENERIC_FONT_FAMILIES.includes(authoredFont)) {
+            firstGenericSpan = span;
+          }
+
+          if (usedFontFamilies.includes(authoredFont)) {
+            span.classList.add("used-font");
+            foundMatchingFamily = true;
+            // We found the span to style, no need to continue with
+            // the remaining ones
+            break;
+          }
+        }
+
+        if (!foundMatchingFamily && firstGenericSpan) {
+          firstGenericSpan.classList.add("used-font");
+        }
+
+        this.ruleView.emit("font-highlighted", this.valueSpan);
+      }).catch(e => console.error("Could not get the list of font families", e));
+    }
 
     // Attach the color picker tooltip to the color swatches
     this._colorSwatchSpans =

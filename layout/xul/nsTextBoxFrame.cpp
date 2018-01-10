@@ -701,7 +701,7 @@ nsTextBoxFrame::CalculateTitleForWidth(gfxContext&          aRenderingContext,
                     break;
                 }
 
-                if (UCS2_CHAR_IS_BIDI(*pos)) {
+                if (UTF16_CODE_UNIT_IS_BIDI(*pos)) {
                     AddStateBits(NS_FRAME_IS_BIDI);
                 }
                 pos = nextPos;
@@ -738,7 +738,7 @@ nsTextBoxFrame::CalculateTitleForWidth(gfxContext&          aRenderingContext,
                     break;
                 }
 
-                if (UCS2_CHAR_IS_BIDI(*pos)) {
+                if (UTF16_CODE_UNIT_IS_BIDI(*pos)) {
                     AddStateBits(NS_FRAME_IS_BIDI);
                 }
                 prevPos = pos;
@@ -790,7 +790,7 @@ nsTextBoxFrame::CalculateTitleForWidth(gfxContext&          aRenderingContext,
                     break;
                 }
 
-                if (UCS2_CHAR_IS_BIDI(*leftPos)) {
+                if (UTF16_CODE_UNIT_IS_BIDI(*leftPos)) {
                     AddStateBits(NS_FRAME_IS_BIDI);
                 }
 
@@ -812,7 +812,7 @@ nsTextBoxFrame::CalculateTitleForWidth(gfxContext&          aRenderingContext,
                     break;
                 }
 
-                if (UCS2_CHAR_IS_BIDI(*pos)) {
+                if (UTF16_CODE_UNIT_IS_BIDI(*pos)) {
                     AddStateBits(NS_FRAME_IS_BIDI);
                 }
 

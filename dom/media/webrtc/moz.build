@@ -22,8 +22,7 @@ EXPORTS += [
 ]
 
 if CONFIG['MOZ_WEBRTC']:
-    EXPORTS += ['AudioOutputObserver.h',
-                'MediaEngineRemoteVideoSource.h',
+    EXPORTS += ['MediaEngineRemoteVideoSource.h',
                 'MediaEngineWebRTC.h']
     EXPORTS.mozilla.dom += [ 'RTCIdentityProviderRegistrar.h' ]
     UNIFIED_SOURCES += [

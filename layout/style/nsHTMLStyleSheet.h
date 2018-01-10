@@ -77,7 +77,7 @@ public:
   // For each mapped presentation attribute in the cache, resolve
   // the attached ServoDeclarationBlock by running the mapping
   // and converting the ruledata to Servo specified values.
-  void CalculateMappedServoDeclarations(nsPresContext* aPresContext);
+  void CalculateMappedServoDeclarations();
 
   nsIStyleRule* LangRuleFor(const nsAtom* aLanguage);
 
