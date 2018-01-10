@@ -428,7 +428,6 @@ linux64-sccache:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/sccache2.tar.xz
     toolchains:
-        - linux64-gcc-4.9
         - linux64-rust-1.19
 
 linux64-gn:
