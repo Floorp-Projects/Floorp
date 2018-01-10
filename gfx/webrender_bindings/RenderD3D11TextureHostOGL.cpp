@@ -209,7 +209,7 @@ RenderDXGITextureHostOGL::DeleteTextureHandle()
     mSurface = 0;
   }
   if (mStream) {
-    egl->fStreamConsumerReleaseKHR(egl->Display(), mStream);
+    egl->fDestroyStreamKHR(egl->Display(), mStream);
     mStream = 0;
   }
 
@@ -417,7 +417,7 @@ RenderDXGIYCbCrTextureHostOGL::DeleteTextureHandle()
       mSurfaces[i] = 0;
     }
     if (mStreams[i]) {
-      egl->fStreamConsumerReleaseKHR(egl->Display(), mStreams[i]);
+      egl->fDestroyStreamKHR(egl->Display(), mStreams[i]);
       mStreams[i] = 0;
     }
   }

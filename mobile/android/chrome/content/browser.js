@@ -1279,6 +1279,9 @@ var BrowserApp = {
       }
     }
 
+    // Retrieve updated tabIndex again for the removal because the index could
+    // be changed if a new tab is added by the event listener.
+    tabIndex = this._tabs.indexOf(aTab);
     aTab.destroy();
     this._tabs.splice(tabIndex, 1);
   },
