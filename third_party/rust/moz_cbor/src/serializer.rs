@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use cbor::CborType;
+use CborType;
 
 /// Given a vector of bytes to append to, a tag to use, and an unsigned value to encode, uses the
 /// CBOR unsigned integer encoding to represent the given value.

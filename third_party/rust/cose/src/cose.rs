@@ -30,11 +30,10 @@
 //!     }
 //! }
 //!```
+extern crate moz_cbor as cbor;
 
-#[macro_use]
 pub mod decoder;
-mod cbor;
-mod util;
+pub mod util;
 
 /// Errors that can be returned from COSE functions.
 #[derive(Debug, PartialEq)]
@@ -68,31 +67,6 @@ pub enum SignatureAlgorithm {
 }
 
 #[cfg(test)]
-#[macro_use(defer)]
-extern crate scopeguard;
-
-#[cfg(test)]
-mod nss;
-#[cfg(test)]
 mod test_setup;
 #[cfg(test)]
-mod test_nss;
-#[cfg(test)]
-mod util_test;
-#[cfg(test)]
 mod test_cose;
-
-#[derive(Debug)]
-#[cfg(test)]
-pub struct SignatureParameters<'a> {
-    certificate: &'a [u8],
-    algorithm: SignatureAlgorithm,
-    pkcs8: &'a [u8],
-}
-
-#[derive(Debug)]
-#[cfg(test)]
-pub struct Signature<'a> {
-    parameter: &'a SignatureParameters<'a>,
-    signature_bytes: Vec<u8>,
-}

@@ -121,6 +121,26 @@ def addManifestEntry(filename, hashes, contents, entries):
         entry += '%s-Digest: %s\n' % (name, base64hash)
     entries.append(entry)
 
+def getCert(subject, keyName, issuerName, ee, issuerKey=""):
+    """Helper function to create an X509 cert from a specification.
+    Takes the subject, the subject key name to use, the issuer name,
+    a bool whether this is an EE cert or not, and optionally an issuer key
+    name."""
+    certSpecification = 'issuer:%s\n' % issuerName + \
+        'subject:' + subject + '\n' + \
+        'subjectKey:%s\n' % keyName
+    if ee:
+        certSpecification += 'extension:keyUsage:digitalSignature'
+    else:
+        certSpecification += 'extension:basicConstraints:cA,\n' + \
+            'extension:keyUsage:cRLSign,keyCertSign'
+    if issuerKey:
+        certSpecification += '\nissuerKey:%s' % issuerKey
+    certSpecificationStream = StringIO.StringIO()
+    print >>certSpecificationStream, certSpecification
+    certSpecificationStream.seek(0)
+    return pycert.Certificate(certSpecificationStream)
+
 def coseAlgorithmToSignatureParams(coseAlgorithm, issuerName):
     """Given a COSE algorithm ('ES256', 'ES384', 'ES512') and an issuer
     name, returns a (algorithm id, pykey.ECCKey, encoded certificate)
@@ -138,26 +158,20 @@ def coseAlgorithmToSignatureParams(coseAlgorithm, issuerName):
     else:
         raise UnknownCOSEAlgorithmError(coseAlgorithm)
     key = pykey.ECCKey(keyName)
-    certSpecification = 'issuer:%s\n' % issuerName + \
-        'subject: xpcshell signed app test signer\n' + \
-        'subjectKey:%s\n' % keyName + \
-        'extension:keyUsage:digitalSignature'
-    certSpecificationStream = StringIO.StringIO()
-    print >>certSpecificationStream, certSpecification
-    certSpecificationStream.seek(0)
-    cert = pycert.Certificate(certSpecificationStream)
-    return (algId, key, cert.toDER())
+    # The subject must differ to avoid errors when importing into NSS later.
+    ee = getCert('xpcshell signed app test signer ' + keyName, keyName, issuerName, True, 'default')
+    return (algId, key, ee.toDER())
 
-def signZip(appDirectory, outputFile, issuerName, manifestHashes,
-            signatureHashes, pkcs7Hashes, doSign, coseAlgorithms):
+def signZip(appDirectory, outputFile, issuerName, rootName, manifestHashes,
+            signatureHashes, pkcs7Hashes, coseAlgorithms, emptySignerInfos):
     """Given a directory containing the files to package up,
     an output filename to write to, the name of the issuer of
-    the signing certificate, a list of hash algorithms to use in
-    the manifest file, a similar list for the signature file,
-    a similar list for the pkcs#7 signature, whether or not to
-    actually sign the resulting package, and a list of COSE
-    signature algorithms to include, packages up the files in the
-    directory and creates the output as appropriate."""
+    the signing certificate, the name of trust anchor, a list of hash algorithms
+    to use in the manifest file, a similar list for the signature file,
+    a similar list for the pkcs#7 signature, a list of COSE signature algorithms
+    to include, and whether the pkcs#7 signer info should be kept empty,
+    packages up the files in the directory and creates the output
+    as appropriate."""
     # This ensures each manifest file starts with the magic string and
     # then a blank line.
     mfEntries = ['Manifest-Version: 1.0', '']
@@ -171,46 +185,50 @@ def signZip(appDirectory, outputFile, issuerName, manifestHashes,
             # Add the entry to the manifest we're building
             addManifestEntry(internalPath, manifestHashes, contents, mfEntries)
 
-        # Just exit early if we're not actually signing.
-        if not doSign:
-            return
-
         if len(coseAlgorithms) > 0:
             coseManifest = '\n'.join(mfEntries)
             outZip.writestr('META-INF/cose.manifest', coseManifest)
             addManifestEntry('META-INF/cose.manifest', manifestHashes,
                              coseManifest, mfEntries)
+            intermediates = []
+            coseIssuerName = issuerName
+            if rootName:
+                coseIssuerName = 'xpcshell signed app test issuer'
+                intermediate = getCert(coseIssuerName, 'default', rootName, False)
+                intermediate = intermediate.toDER()
+                intermediates.append(intermediate)
             signatures = map(lambda coseAlgorithm:
-                coseAlgorithmToSignatureParams(coseAlgorithm, issuerName),
+                coseAlgorithmToSignatureParams(coseAlgorithm, coseIssuerName),
                 coseAlgorithms)
-            coseSignatureBytes = coseSig(coseManifest, [], signatures)
+            coseSignatureBytes = coseSig(coseManifest, intermediates, signatures)
             outZip.writestr('META-INF/cose.sig', coseSignatureBytes)
             addManifestEntry('META-INF/cose.sig', manifestHashes,
                              coseSignatureBytes, mfEntries)
 
-        mfContents = '\n'.join(mfEntries)
-        sfContents = 'Signature-Version: 1.0\n'
-        for (hashFunc, name) in signatureHashes:
-            base64hash = b64encode(hashFunc(mfContents).digest())
-            sfContents += '%s-Digest-Manifest: %s\n' % (name, base64hash)
+        if len(pkcs7Hashes) != 0 or emptySignerInfos:
+            mfContents = '\n'.join(mfEntries)
+            sfContents = 'Signature-Version: 1.0\n'
+            for (hashFunc, name) in signatureHashes:
+                base64hash = b64encode(hashFunc(mfContents).digest())
+                sfContents += '%s-Digest-Manifest: %s\n' % (name, base64hash)
 
-        cmsSpecification = ''
-        for name in pkcs7Hashes:
-            hashFunc, _ = hashNameToFunctionAndIdentifier(name)
-            cmsSpecification += '%s:%s\n' % (name,
-                                             hashFunc(sfContents).hexdigest())
-        cmsSpecification += 'signer:\n' + \
-            'issuer:%s\n' % issuerName + \
-            'subject:xpcshell signed app test signer\n' + \
-            'extension:keyUsage:digitalSignature'
-        cmsSpecificationStream = StringIO.StringIO()
-        print >>cmsSpecificationStream, cmsSpecification
-        cmsSpecificationStream.seek(0)
-        cms = pycms.CMS(cmsSpecificationStream)
-        p7 = cms.toDER()
-        outZip.writestr('META-INF/A.RSA', p7)
-        outZip.writestr('META-INF/A.SF', sfContents)
-        outZip.writestr('META-INF/MANIFEST.MF', mfContents)
+            cmsSpecification = ''
+            for name in pkcs7Hashes:
+                hashFunc, _ = hashNameToFunctionAndIdentifier(name)
+                cmsSpecification += '%s:%s\n' % (name,
+                                                 hashFunc(sfContents).hexdigest())
+            cmsSpecification += 'signer:\n' + \
+                'issuer:%s\n' % issuerName + \
+                'subject:xpcshell signed app test signer\n' + \
+                'extension:keyUsage:digitalSignature'
+            cmsSpecificationStream = StringIO.StringIO()
+            print >>cmsSpecificationStream, cmsSpecification
+            cmsSpecificationStream.seek(0)
+            cms = pycms.CMS(cmsSpecificationStream)
+            p7 = cms.toDER()
+            outZip.writestr('META-INF/A.RSA', p7)
+            outZip.writestr('META-INF/A.SF', sfContents)
+            outZip.writestr('META-INF/MANIFEST.MF', mfContents)
 
 class Error(Exception):
     """Base class for exceptions in this module."""
@@ -252,10 +270,10 @@ def main(outputFile, appPath, *args):
     optional arguments, signs the contents of the directory and
     writes the resulting package to the 'file'."""
     parser = argparse.ArgumentParser(description='Sign an app.')
-    parser.add_argument('-n', '--no-sign', action='store_true',
-                        help='Don\'t actually sign - only create zip')
     parser.add_argument('-i', '--issuer', action='store', help='Issuer name',
                         default='xpcshell signed apps test root')
+    parser.add_argument('-r', '--root', action='store', help='Root name',
+                        default='')
     parser.add_argument('-m', '--manifest-hash', action='append',
                         help='Hash algorithms to use in manifest',
                         default=[])
@@ -277,9 +295,7 @@ def main(outputFile, appPath, *args):
         parsed.manifest_hash.append('sha256')
     if len(parsed.signature_hash) == 0:
         parsed.signature_hash.append('sha256')
-    if len(parsed.pkcs7_hash) == 0 and not parsed.empty_signerInfos:
-        parsed.pkcs7_hash.append('sha256')
-    signZip(appPath, outputFile, parsed.issuer,
+    signZip(appPath, outputFile, parsed.issuer, parsed.root,
             map(hashNameToFunctionAndIdentifier, parsed.manifest_hash),
             map(hashNameToFunctionAndIdentifier, parsed.signature_hash),
-            parsed.pkcs7_hash, not parsed.no_sign, parsed.cose_sign)
+            parsed.pkcs7_hash, parsed.cose_sign, parsed.empty_signerInfos)

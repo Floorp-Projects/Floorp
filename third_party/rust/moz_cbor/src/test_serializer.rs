@@ -1,4 +1,4 @@
-use cbor::CborType;
+use CborType;
 use std::collections::BTreeMap;
 
 #[test]

@@ -342,7 +342,6 @@ private:
   ScriptLoadRequest* CreateLoadRequest(ScriptKind aKind,
                                        nsIURI* aURI,
                                        nsIScriptElement* aElement,
-                                       ValidJSVersion aValidJSVersion,
                                        mozilla::CORSMode aCORSMode,
                                        const SRIMetadata& aIntegrity,
                                        mozilla::net::ReferrerPolicy aReferrerPolicy);

@@ -1,0 +1,24 @@
+sudo: true
+language: rust
+cache: cargo
+rust:
+  - stable
+  - beta
+  - nightly
+
+addons:
+  apt:
+    packages:
+      - build-essential
+
+install:
+# Apparently cargo install returns a nonzero exit status if
+# caching succeeds, so just make this always "succeed".
+  - (cargo install rustfmt || true)
+
+script:
+- |
+  cargo fmt -- --write-mode=diff
+- |
+  cargo build &&
+  cargo test
