@@ -99,7 +99,8 @@ public:
                                    const nsAString& aMessage,
                                    const nsAString& aFilename,
                                    uint32_t aLineNumber,
-                                   uint32_t aColumnNumber);
+                                   uint32_t aColumnNumber,
+                                   ConsoleLevel aLevel);
 
 private:
   ~ConsoleInstance();
