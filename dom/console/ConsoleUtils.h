@@ -19,13 +19,20 @@ class ConsoleUtils final
 public:
   NS_INLINE_DECL_REFCOUNTING(ConsoleUtils)
 
+  enum Level {
+    eLog,
+    eWarning,
+    eError,
+  };
+
   // Main-thread only, reports a console message from a ServiceWorker.
   static void
   ReportForServiceWorkerScope(const nsAString& aScope,
                               const nsAString& aMessage,
                               const nsAString& aFilename,
                               uint32_t aLineNumber,
-                              uint32_t aColumnNumber);
+                              uint32_t aColumnNumber,
+                              Level aLevel);
 
 private:
   ConsoleUtils();
@@ -42,7 +49,8 @@ private:
                                       const nsAString& aMessage,
                                       const nsAString& aFilename,
                                       uint32_t aLineNumber,
-                                      uint32_t aColumnNumber);
+                                      uint32_t aColumnNumber,
+                                      Level aLevel);
 
   RefPtr<JSObjectHolder> mSandbox;
 };

@@ -47,6 +47,23 @@ PrefToValue(const nsCString& aPref)
   return static_cast<ConsoleLogLevel>(index);
 }
 
+ConsoleUtils::Level
+WebIDLevelToConsoleUtilsLevel(ConsoleLevel aLevel)
+{
+  switch (aLevel) {
+    case ConsoleLevel::Log:
+      return ConsoleUtils::eLog;
+    case ConsoleLevel::Warning:
+      return ConsoleUtils::eWarning;
+    case ConsoleLevel::Error:
+      return ConsoleUtils::eError;
+    default:
+      break;
+  }
+
+  return ConsoleUtils::eLog;
+}
+
 } // anonymous
 
 ConsoleInstance::ConsoleInstance(const ConsoleInstanceOptions& aOptions)
@@ -191,12 +208,16 @@ ConsoleInstance::ReportForServiceWorkerScope(const nsAString& aScope,
                                              const nsAString& aMessage,
                                              const nsAString& aFilename,
                                              uint32_t aLineNumber,
-                                             uint32_t aColumnNumber)
+                                             uint32_t aColumnNumber,
+                                             ConsoleLevel aLevel)
 {
-  if (NS_IsMainThread()) {
-    ConsoleUtils::ReportForServiceWorkerScope(aScope, aMessage, aFilename,
-                                              aLineNumber, aColumnNumber);
+  if (!NS_IsMainThread()) {
+    return;
   }
+
+  ConsoleUtils::ReportForServiceWorkerScope(aScope, aMessage, aFilename,
+                                            aLineNumber, aColumnNumber,
+                                            WebIDLevelToConsoleUtilsLevel(aLevel));
 }
 
 } // namespace dom

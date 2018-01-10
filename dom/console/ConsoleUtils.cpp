@@ -40,7 +40,8 @@ ConsoleUtils::ReportForServiceWorkerScope(const nsAString& aScope,
                                           const nsAString& aMessage,
                                           const nsAString& aFilename,
                                           uint32_t aLineNumber,
-                                          uint32_t aColumnNumber)
+                                          uint32_t aColumnNumber,
+                                          Level aLevel)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -50,7 +51,8 @@ ConsoleUtils::ReportForServiceWorkerScope(const nsAString& aScope,
   }
 
   service->ReportForServiceWorkerScopeInternal(aScope, aMessage, aFilename,
-                                               aLineNumber, aColumnNumber);
+                                               aLineNumber, aColumnNumber,
+                                               aLevel);
 }
 
 void
@@ -58,7 +60,8 @@ ConsoleUtils::ReportForServiceWorkerScopeInternal(const nsAString& aScope,
                                                   const nsAString& aMessage,
                                                   const nsAString& aFilename,
                                                   uint32_t aLineNumber,
-                                                  uint32_t aColumnNumber)
+                                                  uint32_t aColumnNumber,
+                                                  Level aLevel)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -87,7 +90,20 @@ ConsoleUtils::ReportForServiceWorkerScopeInternal(const nsAString& aScope,
   event.mInnerID.Construct();
   event.mInnerID.Value().SetAsString() = NS_LITERAL_STRING("ServiceWorker");
 
-  event.mLevel = NS_LITERAL_STRING("log");
+  switch (aLevel) {
+    case eLog:
+      event.mLevel = NS_LITERAL_STRING("log");
+      break;
+
+    case eWarning:
+      event.mLevel = NS_LITERAL_STRING("warn");
+      break;
+
+    case eError:
+      event.mLevel = NS_LITERAL_STRING("error");
+      break;
+  }
+
   event.mFilename = aFilename;
   event.mLineNumber = aLineNumber;
   event.mColumnNumber = aColumnNumber;
