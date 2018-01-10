@@ -13,31 +13,14 @@
 progressmeter {
   -moz-appearance: progressbar;
   margin: 2px 4px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
-  -moz-border-right-colors: ThreeDHighlight -moz-Dialog;
-  -moz-border-bottom-colors: ThreeDHighlight -moz-Dialog;
-  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
+  border: 1px solid ThreeDShadow;
   background-color: -moz-Dialog;
   min-width: 128px;
   min-height: 15px;
 }
 
-.progress-bar 
-{
+.progress-bar {
   -moz-appearance: progresschunk;
-  min-width: 0px;
+  min-width: 0;
   background-color: ThreeDShadow;
-}
-
-/* ::::: statusbar progressmeter ::::: */
-
-.progressmeter-statusbar {
-  margin: 0;
-  border: 0px;
-  -moz-border-top-colors: ThreeDHighlight -moz-Dialog;
-  -moz-border-right-colors: ThreeDShadow -moz-Dialog;
-  -moz-border-bottom-colors: ThreeDShadow -moz-Dialog;
-  -moz-border-left-colors: ThreeDHighlight -moz-Dialog;
-  min-width: 96px;
 }
