@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import re
 
 from taskgraph.transforms.base import TransformSequence
 from .. import GECKO
@@ -21,6 +22,8 @@ from voluptuous import (
     Optional,
     Required,
 )
+
+DIGEST_RE = re.compile('^[0-9a-f]{64}$')
 
 transforms = TransformSequence()
 
@@ -65,7 +68,10 @@ def fill_template(config, tasks):
         name = task.label.replace('packages-', '')
         for route in task.task.get('routes', []):
             if route.startswith('index.') and '.hash.' in route:
-                available_packages[name] = route
+                # Only keep the hash part of the route.
+                h = route.rsplit('.', 1)[1]
+                assert DIGEST_RE.match(h)
+                available_packages[name] = h
                 break
     for task in tasks:
         image_name = task.pop('name')

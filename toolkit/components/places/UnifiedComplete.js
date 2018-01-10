@@ -330,6 +330,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "textURIService",
                                    "@mozilla.org/intl/texttosuburi;1",
                                    "nsITextToSubURI");
 
+XPCOMUtils.defineLazyPreferenceGetter(this, "syncUsernamePref",
+                                      "services.sync.username");
+
 function setTimeout(callback, ms) {
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback(callback, ms, timer.TYPE_ONE_SHOT);
@@ -1680,6 +1683,10 @@ Search.prototype = {
   },
 
   async _matchRemoteTabs() {
+    // Bail out early for non-sync users.
+    if (!syncUsernamePref) {
+      return;
+    }
     let matches = await PlacesRemoteTabsAutocompleteProvider.getMatches(this._originalSearchString);
     for (let {url, title, icon, deviceName} of matches) {
       // It's rare that Sync supplies the icon for the page (but if it does, it

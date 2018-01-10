@@ -55,9 +55,7 @@ var gSitePermissionsManager = {
       permissionsText.firstChild.remove();
     permissionsText.appendChild(document.createTextNode(params.introText));
 
-    let permissionsDisableLabel = document.getElementById("permissionsDisableLabel");
-    permissionsDisableLabel.value = params.disablePermissionsLabel;
-
+    this._checkbox.setAttribute("label", params.disablePermissionsLabel);
     let permissionsDisableDescription = document.getElementById("permissionsDisableDescription");
     permissionsDisableDescription.appendChild(document.createTextNode(params.disablePermissionsDescription));
 
@@ -72,7 +70,6 @@ var gSitePermissionsManager = {
 
     if (this._currentDefaultPermissionsState === null) {
       this._checkbox.setAttribute("hidden", true);
-      permissionsDisableLabel.setAttribute("hidden", true);
       permissionsDisableDescription.setAttribute("hidden", true);
     } else if (this._currentDefaultPermissionsState == SitePermissions.BLOCK) {
       this._checkbox.checked = true;

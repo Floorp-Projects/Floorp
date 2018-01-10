@@ -22,13 +22,8 @@
   margin-inline-end: 5px;
 }
 
-#permissionsDisableLabel {
-  padding-top: 14px;
-  font-weight: bold;
-}
-
 #permissionsDisableDescription {
-  margin-inline-start: 37px;
+  margin-inline-start: 32px;
   color: #737373;
   line-height: 110%;
 }

@@ -76,7 +76,7 @@ HTMLFontElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   }
   if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Color))) {
     if (!aData->PropertyIsSet(eCSSProperty_color) &&
-        aData->PresContext()->UseDocumentColors()) {
+        !aData->ShouldIgnoreColors()) {
       // color: color
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::color);
       nscolor color;
@@ -86,7 +86,7 @@ HTMLFontElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     }
   }
   if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(TextReset)) &&
-      aData->PresContext()->CompatibilityMode() == eCompatibility_NavQuirks) {
+      aData->Document()->GetCompatibilityMode() == eCompatibility_NavQuirks) {
     // Make <a><font color="red">text</font></a> give the text a red underline
     // in quirks mode.  The NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL flag only
     // affects quirks mode rendering.

@@ -1544,7 +1544,7 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
     return;
 
   if (!aData->PropertyIsSet(eCSSProperty_background_image) &&
-      aData->PresContext()->UseDocumentColors()) {
+      !aData->ShouldIgnoreColors()) {
     // background
     nsAttrValue* value =
       const_cast<nsAttrValue*>(aAttributes->GetAttr(nsGkAtoms::background));
@@ -1562,7 +1562,7 @@ nsGenericHTMLElement::MapBGColorInto(const nsMappedAttributes* aAttributes,
     return;
 
   if (!aData->PropertyIsSet(eCSSProperty_background_color) &&
-      aData->PresContext()->UseDocumentColors()) {
+      !aData->ShouldIgnoreColors()) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::bgcolor);
     nscolor color;
     if (value && value->GetColorValue(color)) {

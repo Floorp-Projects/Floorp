@@ -363,6 +363,13 @@ public:
   // if a popup manager could not be allocated
   static nsXULPopupManager* GetInstance();
 
+  // Returns the immediate parent frame of inserted children of aFrame's
+  // content.
+  //
+  // FIXME(emilio): Or something like that, because this is kind of broken in a
+  // variety of situations like multiple insertion points.
+  static nsContainerFrame* ImmediateParentFrame(nsContainerFrame* aFrame);
+
   // This should be called when a window is moved or resized to adjust the
   // popups accordingly.
   void AdjustPopupsOnWindowChange(nsPIDOMWindowOuter* aWindow);

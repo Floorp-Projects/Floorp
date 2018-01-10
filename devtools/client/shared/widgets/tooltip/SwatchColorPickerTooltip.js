@@ -157,6 +157,19 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     }
   }
 
+  /**
+   * Override the implementation from SwatchBasedEditorTooltip.
+   */
+  onTooltipHidden() {
+    // If the tooltip is hidden while the eyedropper is being used, we should not commit
+    // the changes.
+    if (this.eyedropperOpen) {
+      return;
+    }
+
+    super.onTooltipHidden();
+  }
+
   _openEyeDropper() {
     let {inspector, toolbox, telemetry} = this.inspector;
     telemetry.toolOpened("pickereyedropper");
@@ -164,9 +177,12 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
     // cancelling picker(if it is already selected) on opening eye-dropper
     toolbox.highlighterUtils.cancelPicker();
 
-    inspector.pickColorFromPage(toolbox, {copyOnSelect: false}).then(() => {
-      this.eyedropperOpen = true;
+    // pickColorFromPage will focus the content document. If the devtools are in a
+    // separate window, the colorpicker tooltip will be closed before pickColorFromPage
+    // resolves. Flip the flag early to avoid issues with onTooltipHidden().
+    this.eyedropperOpen = true;
 
+    inspector.pickColorFromPage(toolbox, {copyOnSelect: false}).then(() => {
       // close the colorpicker tooltip so that only the eyedropper is open.
       this.hide();
 

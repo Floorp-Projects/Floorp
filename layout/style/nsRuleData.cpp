@@ -8,6 +8,8 @@
 
 #include "nsAttrValueInlines.h"
 #include "nsCSSParser.h"
+#include "nsPresContext.h"
+#include "mozilla/GeckoStyleContext.h"
 #include "mozilla/Poison.h"
 #include <stdint.h>
 
@@ -31,10 +33,10 @@ nsRuleData::GetPoisonOffset()
 
 nsRuleData::nsRuleData(uint32_t aSIDs,
                        nsCSSValue* aValueStorage,
-                       nsPresContext* aContext,
                        GeckoStyleContext* aStyleContext)
-  : GenericSpecifiedValues(StyleBackendType::Gecko, aContext, aSIDs)
+  : GenericSpecifiedValues(StyleBackendType::Gecko, aStyleContext->PresContext()->Document(), aSIDs)
   , mStyleContext(aStyleContext)
+  , mPresContext(aStyleContext->PresContext())
   , mValueStorage(aValueStorage)
 {
 #ifndef MOZ_VALGRIND
@@ -71,7 +73,7 @@ nsRuleData::SetBackgroundImage(nsAttrValue& aValue)
   // If the value is an image, or it is a URL and we attempted a load,
   // put it in the style tree.
   if (aValue.Type() == nsAttrValue::eURL) {
-    aValue.LoadImage(mPresContext->Document());
+    aValue.LoadImage(mDocument);
   }
   if (aValue.Type() == nsAttrValue::eImage) {
     nsCSSValueList* list = backImage->SetListValue();

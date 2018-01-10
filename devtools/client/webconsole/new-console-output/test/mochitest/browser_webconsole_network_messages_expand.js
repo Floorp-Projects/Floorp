@@ -10,6 +10,8 @@ const TEST_URI = TEST_PATH + TEST_FILE;
 const NET_PREF = "devtools.webconsole.filter.net";
 const XHR_PREF = "devtools.webconsole.filter.netxhr";
 
+requestLongerTimeout(2);
+
 Services.prefs.setBoolPref(NET_PREF, false);
 Services.prefs.setBoolPref(XHR_PREF, true);
 registerCleanupFunction(() => {
