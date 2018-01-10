@@ -927,7 +927,7 @@ devtools.aboutdevtools:
       - 1412029
     description: >
       Number of times about:devtools was opened.
-    expires: "60"
+    expires: "63"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org, jdescottes@mozilla.com
@@ -938,7 +938,7 @@ devtools.aboutdevtools:
       - 1412029
     description: >
       Number of times devtools were enabled/installed in about:devtools.
-    expires: "60"
+    expires: "63"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org, jdescottes@mozilla.com
@@ -949,7 +949,7 @@ devtools.aboutdevtools:
       - 1412029
     description: >
       Number of times the user left about:devtools without enabling devtools.
-    expires: "60"
+    expires: "63"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org, jdescottes@mozilla.com
@@ -962,7 +962,7 @@ devtools.onboarding:
       - 1408339
     description: >
       How many users are flagged as existing devtools users.
-    expires: "60"
+    expires: "63"
     kind: boolean
     notification_emails:
       - dev-developer-tools@lists.mozilla.org, jdescottes@mozilla.com

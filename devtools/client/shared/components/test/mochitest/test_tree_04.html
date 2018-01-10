@@ -29,7 +29,7 @@ window.onload = Task.async(function* () {
 
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
     const React = browserRequire("devtools/client/shared/vendor/react");
-    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/Tree"));
+    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
 
     const tree = ReactDOM.render(
       Tree(Object.assign({}, TEST_TREE_INTERFACE, { itemHeight: ITEM_HEIGHT })),

@@ -252,9 +252,11 @@ def get_tool(config, key):
 
 
 # This function is intended to be called on the final build directory when
-# building clang-tidy.  Its job is to remove all of the files which won't
-# be used for clang-tidy to reduce the download size.  Currently when this
-# function finishes its job, it will leave final_dir with a layout like this:
+# building clang-tidy. Also clang-format binaries are included that can be used
+# in conjunction with clang-tidy.
+# Its job is to remove all of the files which won't be used for clang-tidy or
+# clang-format to reduce the download size.  Currently when this function
+# finishes its job, it will leave final_dir with a layout like this:
 #
 # clang/
 #   bin/
@@ -270,6 +272,7 @@ def get_tool(config, key):
 #           * (nothing will be deleted here)
 #   share/
 #     clang/
+#       clang-format-diff.py
 #       clang-tidy-diff.py
 #       run-clang-tidy.py
 def prune_final_dir_for_clang_tidy(final_dir):
@@ -311,7 +314,7 @@ def prune_final_dir_for_clang_tidy(final_dir):
             shutil.rmtree(d)
 
     # In share/, only keep share/clang/*tidy*
-    re_clang_tidy = re.compile(r"tidy", re.I)
+    re_clang_tidy = re.compile(r"format|tidy", re.I)
     for f in glob.glob("%s/share/*" % final_dir):
         if os.path.basename(f) != "clang":
             delete(f)

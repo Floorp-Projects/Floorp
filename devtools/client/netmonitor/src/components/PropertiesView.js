@@ -15,7 +15,6 @@ const { FILTER_SEARCH_DELAY } = require("../constants");
 // Components
 const TreeViewClass = require("devtools/client/shared/components/tree/TreeView");
 const TreeView = createFactory(TreeViewClass);
-const SearchBox = createFactory(require("devtools/client/shared/components/SearchBox"));
 
 loader.lazyGetter(this, "SearchBox", function () {
   return createFactory(require("devtools/client/shared/components/SearchBox"));
