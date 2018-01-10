@@ -65,7 +65,7 @@ window.gActivityStreamStrings = {
   "settings_pane_highlights_options_bookmarks": "სანიშნები",
   "settings_pane_highlights_options_visited": "მონახულებული საიტები",
   "settings_pane_snippets_header": "ცნობები",
-  "settings_pane_snippets_body": "გაეცანით მოკლე, საინტერესო სიახლეებს Mozilla-სგან, Firefox-ის, ინტერნეტ სამყაროს მიღწევებისა და სხვა დასამახსოვრებელი ფაქტების შესახებ.",
+  "settings_pane_snippets_body": "გაეცანით მოკლე, საინტერესო სიახლეებს Mozilla-სგან, Firefox-ის, ინტერნეტსამყაროს მიღწევებისა და სხვა დასამახსოვრებელი ფაქტების შესახებ.",
   "settings_pane_done_button": "მზადაა",
   "settings_pane_topstories_options_sponsored": "დარეკლამებული სტატიების ჩვენება",
   "edit_topsites_button_text": "ჩასწორება",

@@ -47,7 +47,7 @@ window.gActivityStreamStrings = {
   "time_label_less_than_minute": "< 1 min",
   "time_label_minute": "{number} m",
   "time_label_hour": "{number} h",
-  "time_label_day": "",
+  "time_label_day": "{number}d",
   "settings_pane_button_label": "Stronu wašeho noweho rajtarka přiměrić",
   "settings_pane_header": "Nastajenja noweho rajtarka",
   "settings_pane_body2": "Wubjerće, štož so na tutej stronje pokazuje.",
