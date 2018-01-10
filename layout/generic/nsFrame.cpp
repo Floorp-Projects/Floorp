@@ -851,6 +851,21 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot, PostDestroyData& aPostDestroyData)
   nsQueryFrame::FrameIID id = GetFrameId();
   this->~nsFrame();
 
+#ifdef DEBUG
+  {  
+    nsIFrame* rootFrame = shell->GetRootFrame();
+    MOZ_ASSERT(rootFrame);
+    if (this != rootFrame) {
+      nsTArray<nsIFrame*>* modifiedFrames =
+        rootFrame->GetProperty(nsIFrame::ModifiedFrameList());
+      if (modifiedFrames) {
+        MOZ_ASSERT(!modifiedFrames->Contains(this),
+                   "A dtor added this frame to ModifiedFrameList");
+      }
+    }
+  }
+#endif
+
   // Now that we're totally cleaned out, we need to add ourselves to
   // the presshell's recycler.
   shell->FreeFrame(id, this);

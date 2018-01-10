@@ -22,6 +22,9 @@ public:
 
   friend nsIFrame* NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) override;
+
   virtual void
   SetAdditionalStyleContext(int32_t          aIndex,
                             nsStyleContext*  aStyleContext) override;
@@ -102,8 +105,6 @@ protected:
     , mSeparatorsChar(nullptr)
     , mSeparatorsCount(0)
   {}
-
-  virtual ~nsMathMLmfencedFrame();
 
   nsMathMLChar* mOpenChar;
   nsMathMLChar* mCloseChar;
