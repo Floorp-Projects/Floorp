@@ -54,7 +54,7 @@ fuzzy-if(webrender,64-64,1106-1106) == clip-path-ellipse-008.html clip-path-elli
 fuzzy(64,146) == clip-path-inset-002a.html clip-path-inset-002-ref.html
 fuzzy(64,146) == clip-path-inset-002b.html clip-path-inset-002-ref.html
 fuzzy(64,146) == clip-path-inset-002c.html clip-path-inset-002-ref.html
-fuzzy(64,340) fails-if(webrender) == clip-path-inset-003.html clip-path-inset-003-ref.html
+fuzzy(64,340) fuzzy-if(webrender,72-72,292-292) == clip-path-inset-003.html clip-path-inset-003-ref.html
 
 fuzzy-if(webrender,4-4,304-304) == clip-path-stroke-001.html clip-path-stroke-001-ref.html
 
