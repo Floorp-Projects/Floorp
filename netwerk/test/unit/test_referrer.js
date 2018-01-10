@@ -47,19 +47,19 @@ function run_test() {
   // test that https ref is not sent to http
   Assert.equal(null, getTestReferrer(server_uri_2, referer_uri_https));
 
-  // tests for referer.userControlPolicy
-  prefs.setIntPref("network.http.referer.userControlPolicy", 0);
+  // tests for referer.defaultPolicy
+  prefs.setIntPref("network.http.referer.defaultPolicy", 0);
   Assert.equal(null, getTestReferrer(server_uri, referer_uri));
-  prefs.setIntPref("network.http.referer.userControlPolicy", 1);
+  prefs.setIntPref("network.http.referer.defaultPolicy", 1);
   Assert.equal(null, getTestReferrer(server_uri, referer_uri));
   Assert.equal(getTestReferrer(server_uri, referer_uri_2), referer_uri_2);
-  prefs.setIntPref("network.http.referer.userControlPolicy", 2);
+  prefs.setIntPref("network.http.referer.defaultPolicy", 2);
   Assert.equal(null, getTestReferrer(server_uri, referer_uri_https));
   Assert.equal(getTestReferrer(server_uri_https, referer_uri_https), referer_uri_https);
   Assert.equal(getTestReferrer(server_uri_https, referer_uri_2_https), "https://bar.examplesite.com/");
   Assert.equal(getTestReferrer(server_uri, referer_uri_2), referer_uri_2);
   Assert.equal(getTestReferrer(server_uri, referer_uri), "http://foo.example.com/");
-  prefs.setIntPref("network.http.referer.userControlPolicy", 3);
+  prefs.setIntPref("network.http.referer.defaultPolicy", 3);
   Assert.equal(getTestReferrer(server_uri, referer_uri), referer_uri);
   Assert.equal(null, getTestReferrer(server_uri_2, referer_uri_https));
 
