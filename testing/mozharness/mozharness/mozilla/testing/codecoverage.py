@@ -159,9 +159,9 @@ class CodeCoverageMixin(object):
         if not self.ccov_upload_disabled:
             dirs = self.query_abs_dirs()
 
-            # Package GCOV coverage data.
-            file_path_gcda = os.path.join(dirs['abs_blob_upload_dir'], 'code-coverage-gcda.zip')
-            self.run_command(['zip', '-r', file_path_gcda, '.'], cwd=self.gcov_dir)
+            # Zip gcda files (will be given in input to grcov).
+            file_path_gcda = 'code-coverage-gcda.zip'
+            self.run_command(['zip', '-q', '-0', '-r', file_path_gcda, '.'], cwd=self.gcov_dir)
 
             # Package JSVM coverage data.
             file_path_jsvm = os.path.join(dirs['abs_blob_upload_dir'], 'code-coverage-jsvm.zip')

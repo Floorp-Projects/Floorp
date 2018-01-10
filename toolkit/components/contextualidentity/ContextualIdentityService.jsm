@@ -483,12 +483,8 @@ _ContextualIdentityService.prototype = {
 
   migrate2to3(data) {
     // migrating from 2 to 3 is basically just increasing the version id.
+    // This migration was needed for bug 1419591. See bug 1419591 to know more.
     data.version = 3;
-
-    // *Only in nightly* we delete data of the all non-default containers.
-    if (AppConstants.NIGHTLY_BUILD) {
-      this.deleteContainerData();
-    }
 
     return data;
   },

@@ -199,6 +199,23 @@ public:
     static MOZ_THREAD_LOCAL(uintptr_t) sCurrentContext;
 
     bool mImplicitMakeCurrent;
+    bool mUseTLSIsCurrent;
+
+    class TlsScope final {
+        GLContext* const mGL;
+        const bool mWasTlsOk;
+    public:
+        explicit TlsScope(GLContext* const gl)
+            : mGL(gl)
+            , mWasTlsOk(gl->mUseTLSIsCurrent)
+        {
+            mGL->mUseTLSIsCurrent = true;
+        }
+
+        ~TlsScope() {
+            mGL->mUseTLSIsCurrent = mWasTlsOk;
+        }
+    };
 
 // -----------------------------------------------------------------------------
 // basic getters
@@ -320,7 +337,6 @@ public:
 protected:
     bool mIsOffscreen;
     mutable bool mContextLost;
-    const bool mUseTLSIsCurrent;
 
     /**
      * mVersion store the OpenGL's version, multiplied by 100. For example, if

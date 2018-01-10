@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 use std::io::{Cursor, Read, Seek, SeekFrom};
-use cbor::{CborError, CborType};
+use {CborError, CborType};
 
 // We limit the length of any cbor byte array to 128MiB. This is a somewhat
 // arbitrary limit that should work on all platforms and is large enough for

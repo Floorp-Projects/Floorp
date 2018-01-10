@@ -33,7 +33,7 @@ AppendToList(JSContext* cx, HandleNativeObject list, HandleValue value)
         return false;
 
     list->ensureDenseInitializedLength(cx, length, 1);
-    list->setDenseElement(length, value);
+    list->setDenseElementWithType(cx, length, value);
 
     return true;
 }

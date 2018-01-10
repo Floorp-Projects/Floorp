@@ -3,8 +3,7 @@ use nss;
 use nss::NSSError;
 use SignatureAlgorithm;
 
-#[test]
-fn test_nss_sign_verify() {
+pub fn test_nss_sign_verify() {
     test::setup();
     let payload = b"sample";
 
@@ -24,8 +23,7 @@ fn test_nss_sign_verify() {
     );
 }
 
-#[test]
-fn test_nss_sign_verify_different_payload() {
+pub fn test_nss_sign_verify_different_payload() {
     test::setup();
     let payload = b"sample";
 
@@ -46,8 +44,7 @@ fn test_nss_sign_verify_different_payload() {
     assert_eq!(verify_result, Err(NSSError::SignatureVerificationFailed));
 }
 
-#[test]
-fn test_nss_sign_verify_wrong_cert() {
+pub fn test_nss_sign_verify_wrong_cert() {
     test::setup();
     let payload = b"sample";
 
