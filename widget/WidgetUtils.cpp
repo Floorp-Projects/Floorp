@@ -33,15 +33,15 @@ ComputeTransformForRotation(const nsIntRect& aBounds,
     case ROTATION_0:
         break;
     case ROTATION_90:
-        transform.PreTranslate(aBounds.width, 0);
+        transform.PreTranslate(aBounds.Width(), 0);
         transform.PreRotate(floatPi / 2);
         break;
     case ROTATION_180:
-        transform.PreTranslate(aBounds.width, aBounds.height);
+        transform.PreTranslate(aBounds.Width(), aBounds.Height());
         transform.PreRotate(floatPi);
         break;
     case ROTATION_270:
-        transform.PreTranslate(0, aBounds.height);
+        transform.PreTranslate(0, aBounds.Height());
         transform.PreRotate(floatPi * 3 / 2);
         break;
     default:
@@ -61,15 +61,15 @@ ComputeTransformForUnRotation(const nsIntRect& aBounds,
     case ROTATION_0:
         break;
     case ROTATION_90:
-        transform.PreTranslate(0, aBounds.height);
+        transform.PreTranslate(0, aBounds.Height());
         transform.PreRotate(floatPi * 3 / 2);
         break;
     case ROTATION_180:
-        transform.PreTranslate(aBounds.width, aBounds.height);
+        transform.PreTranslate(aBounds.Width(), aBounds.Height());
         transform.PreRotate(floatPi);
         break;
     case ROTATION_270:
-        transform.PreTranslate(aBounds.width, 0);
+        transform.PreTranslate(aBounds.Width(), 0);
         transform.PreRotate(floatPi / 2);
         break;
     default:
@@ -86,17 +86,17 @@ nsIntRect RotateRect(nsIntRect aRect,
     case ROTATION_0:
       return aRect;
     case ROTATION_90:
-      return nsIntRect(aRect.y,
-                       aBounds.width - aRect.x - aRect.width,
-                       aRect.height, aRect.width);
+      return nsIntRect(aRect.Y(),
+                       aBounds.Width() - aRect.XMost(),
+                       aRect.Height(), aRect.Width());
     case ROTATION_180:
-      return nsIntRect(aBounds.width - aRect.x - aRect.width,
-                       aBounds.height - aRect.y - aRect.height,
-                       aRect.width, aRect.height);
+      return nsIntRect(aBounds.Width() - aRect.XMost(),
+                       aBounds.Height() - aRect.YMost(),
+                       aRect.Width(), aRect.Height());
     case ROTATION_270:
-      return nsIntRect(aBounds.height - aRect.y - aRect.height,
-                       aRect.x,
-                       aRect.height, aRect.width);
+      return nsIntRect(aBounds.Height() - aRect.YMost(),
+                       aRect.X(),
+                       aRect.Height(), aRect.Width());
     default:
       MOZ_CRASH("Unknown rotation");
   }
