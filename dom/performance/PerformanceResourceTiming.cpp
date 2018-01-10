@@ -7,6 +7,7 @@
 #include "PerformanceResourceTiming.h"
 #include "mozilla/dom/PerformanceResourceTimingBinding.h"
 #include "nsNetUtil.h"
+#include "nsArrayUtils.h"
 
 using namespace mozilla::dom;
 
@@ -85,6 +86,36 @@ PerformanceResourceTiming::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSize
          (mTimingData
             ? mTimingData->NextHopProtocol().SizeOfExcludingThisIfUnshared(aMallocSizeOf)
             : 0);
+}
+
+void
+PerformanceResourceTiming::GetServerTiming(
+                            nsTArray<RefPtr<PerformanceServerTiming>>& aRetval,
+                            Maybe<nsIPrincipal*>& aSubjectPrincipal)
+{
+  aRetval.Clear();
+  if (!TimingAllowedForCaller(aSubjectPrincipal)) {
+    return;
+  }
+
+  nsCOMPtr<nsIArray> serverTimingArray = mTimingData->GetServerTiming();
+  if (!serverTimingArray) {
+    return;
+  }
+
+  uint32_t length = 0;
+  if (NS_WARN_IF(NS_FAILED(serverTimingArray->GetLength(&length)))) {
+    return;
+  }
+
+  for (uint32_t index = 0; index < length; ++index) {
+    nsCOMPtr<nsIServerTiming> serverTiming =
+      do_QueryElementAt(serverTimingArray, index);
+    MOZ_ASSERT(serverTiming);
+
+    aRetval.AppendElement(
+      new PerformanceServerTiming(GetParentObject(), serverTiming));
+  }
 }
 
 bool
