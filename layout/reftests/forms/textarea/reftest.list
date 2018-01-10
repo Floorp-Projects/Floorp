@@ -5,7 +5,7 @@ skip-if(Android) != ltr.html rtl.html
 skip-if(Android) != ltr-scrollbar.html rtl-scrollbar.html
 skip-if(Android) != in-ltr-doc-scrollbar.html in-rtl-doc-scrollbar.html
 skip-if(Android) != ltr.html no-resize.html
-skip-if(Android) fails-if(xulRuntime.widgetToolkit=="gtk2") != rtl.html no-resize.html # bug 834724
+skip-if(Android) != rtl.html no-resize.html # bug 834724
 fuzzy-if(skiaContent,1,1) == rtl.html rtl-dynamic-attr.html
 fuzzy-if(skiaContent,1,1) == rtl.html rtl-dynamic-style.html
 == rtl.html in-dynamic-rtl-doc.html
