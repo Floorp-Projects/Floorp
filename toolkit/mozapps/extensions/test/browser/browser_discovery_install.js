@@ -12,8 +12,6 @@ const BAD_FRAMED_URL = "https://example.org/" + RELATIVE_DIR + "discovery_frame.
 
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
 
-// Temporarily enable caching
-Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
 // Allow SSL from non-built-in certs
 Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, false);
 // Allow installs from the test site

@@ -60,10 +60,10 @@ add_task(async function setup_to_default_browserish_state() {
     name: "Bling",
     description: "SO MUCH BLING!",
     author: "Pixel Pusher",
-    homepageURL: "http://mochi.test:8888/data/index.html",
-    headerURL: "http://mochi.test:8888/data/header.png",
-    previewURL: "http://mochi.test:8888/data/preview.png",
-    iconURL: "http://mochi.test:8888/data/icon.png",
+    homepageURL: "http://localhost:8888/data/index.html",
+    headerURL: "http://localhost:8888/data/header.png",
+    previewURL: "http://localhost:8888/data/preview.png",
+    iconURL: "http://localhost:8888/data/icon.png",
     textcolor: Math.random().toString(),
     accentcolor: Math.random().toString()
   };
