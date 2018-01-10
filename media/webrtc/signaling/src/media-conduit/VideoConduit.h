@@ -171,19 +171,8 @@ public:
    * @param width, height: dimensions of the frame
    * @param frame: optional frame to submit for encoding after reconfig
    */
-  bool SelectSendResolution(unsigned short width,
-                            unsigned short height,
-                            const webrtc::VideoFrame* frame);
-
-  /**
-   * Function to reconfigure the current send codec for a different
-   * width/height/framerate/etc.
-   * @param width, height: dimensions of the frame
-   * @param frame: optional frame to submit for encoding after reconfig
-   */
-  nsresult ReconfigureSendCodec(unsigned short width,
-                                unsigned short height,
-                                const webrtc::VideoFrame* frame);
+  void SelectSendResolution(unsigned short width,
+                            unsigned short height);
 
   /**
    * Function to select and change the encoding frame rate based on incoming frame rate
@@ -506,10 +495,9 @@ private:
   //Local database of currently applied receive codecs
   nsTArray<UniquePtr<VideoCodecConfig>> mRecvCodecList;
 
-  // protects mCurSendCodecConfig, mInReconfig,mVideoSend/RecvStreamStats, mSend/RecvStreams, mSendPacketCounts, mRecvPacketCounts
+  // protects mCurSendCodecConfig, mVideoSend/RecvStreamStats, mSend/RecvStreams, mSendPacketCounts, mRecvPacketCounts
   Mutex mCodecMutex;
   nsAutoPtr<VideoCodecConfig> mCurSendCodecConfig;
-  bool mInReconfig;
   SendStreamStatistics mSendStreamStats;
   ReceiveStreamStatistics mRecvStreamStats;
   webrtc::RtcpPacketTypeCounter mSendPacketCounts;

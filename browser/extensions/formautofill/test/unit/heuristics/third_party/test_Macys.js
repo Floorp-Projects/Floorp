@@ -22,12 +22,6 @@ runHeuristicsTest([
     fixturePath: "Checkout_Payment.html",
     expectedResult: [
       [[
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-type"}, // ac-off
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"}, // ac-off
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"}, // ac-off
-        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"}, // ac-off
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"}, // ac-off
-//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"}, // ac-off
         {"section": "", "addressType": "", "contactType": "", "fieldName": "given-name"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "family-name"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "address-line1"},
@@ -37,6 +31,13 @@ runHeuristicsTest([
         {"section": "", "addressType": "", "contactType": "", "fieldName": "postal-code"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "tel"},
         {"section": "", "addressType": "", "contactType": "", "fieldName": "email"},
+      ], [
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-type"}, // ac-off
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-number"}, // ac-off
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-month"}, // ac-off
+        {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-exp-year"}, // ac-off
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"}, // ac-off
+//      {"section": "", "addressType": "", "contactType": "", "fieldName": "cc-csc"}, // ac-off
       ]],
       [],
     ],

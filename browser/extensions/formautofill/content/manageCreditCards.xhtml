@@ -2,7 +2,10 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!DOCTYPE html>
+<!DOCTYPE html [
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+]>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title data-localization="manageCreditCardsTitle"/>
@@ -10,7 +13,7 @@
   <link rel="stylesheet" href="chrome://formautofill/content/manageDialog.css" />
   <script src="chrome://formautofill/content/manageDialog.js"></script>
 </head>
-<body>
+<body dir="&locale.dir;">
   <fieldset>
     <legend data-localization="creditCardsListHeader"/>
     <select id="credit-cards" size="9" multiple="multiple"/>

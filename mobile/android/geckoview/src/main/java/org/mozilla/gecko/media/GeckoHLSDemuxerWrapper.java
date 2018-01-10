@@ -15,7 +15,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
 
 public final class GeckoHLSDemuxerWrapper {
     private static final String LOGTAG = "GeckoHLSDemuxerWrapper";
-    private static final boolean DEBUG = BuildConfig.NIGHTLY_BUILD || BuildConfig.DEBUG_BUILD;;
+    private static final boolean DEBUG = !BuildConfig.MOZILLA_OFFICIAL;
 
     // NOTE : These TRACK definitions should be synced with Gecko.
     public enum TrackType {
