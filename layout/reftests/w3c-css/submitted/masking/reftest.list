@@ -89,7 +89,7 @@ fails == mask-origin-2.html mask-origin-2-ref.html # bug 1260094
 
 fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) fuzzy-if(webrender,64,371) == clip-path-contentBox-1a.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) == clip-path-contentBox-1b.html clip-path-geometryBox-1-ref.html
-fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) fails-if(webrender) == clip-path-contentBox-1c.html clip-path-geometryBox-1-ref.html
+fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) fuzzy-if(webrender,64-64,371-371) == clip-path-contentBox-1c.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) fuzzy-if(webrender,64,371) == clip-path-paddingBox-1a.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) == clip-path-paddingBox-1b.html clip-path-geometryBox-1-ref.html
 fuzzy-if(winWidget,1,21) fuzzy-if(skiaContent,1,60) fuzzy-if(webrender,64,371) == clip-path-paddingBox-1c.html clip-path-geometryBox-1-ref.html
