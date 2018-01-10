@@ -1235,38 +1235,6 @@ or run without that action (ie: --no-{action})"
                 )
         return revision.encode('ascii', 'replace') if revision else None
 
-    def _checkout_source(self):
-        """use vcs_checkout to grab source needed for build."""
-        # TODO make this method its own action
-        c = self.config
-        dirs = self.query_abs_dirs()
-        repo = self._query_repo()
-        vcs_checkout_kwargs = {
-            'repo': repo,
-            'dest': dirs['abs_src_dir'],
-            'revision': self.query_revision(),
-            'env': self.query_build_env()
-        }
-        if c.get('clone_by_revision'):
-            vcs_checkout_kwargs['clone_by_revision'] = True
-
-        if c.get('clone_with_purge'):
-            vcs_checkout_kwargs['clone_with_purge'] = True
-        vcs_checkout_kwargs['clone_upstream_url'] = c.get('clone_upstream_url')
-        rev = self.vcs_checkout(**vcs_checkout_kwargs)
-        if c.get('is_automation'):
-            changes = self.buildbot_config['sourcestamp']['changes']
-            if changes:
-                comments = changes[0].get('comments', '')
-                self.set_buildbot_property('comments',
-                                           comments,
-                                           write_to_file=True)
-            else:
-                self.warning(ERROR_MSGS['comments_undetermined'])
-            self.set_buildbot_property('got_revision',
-                                       rev,
-                                       write_to_file=True)
-
     def _count_ctors(self):
         """count num of ctors and set testresults."""
         dirs = self.query_abs_dirs()
@@ -1621,19 +1589,6 @@ or run without that action (ie: --no-{action})"
                                    hash_prop.strip().split(' ', 2)[1],
                                    write_to_file=True)
 
-    def clone_tools(self):
-        """clones the tools repo."""
-        self._assert_cfg_valid_for_action(['tools_repo'], 'clone_tools')
-        c = self.config
-        dirs = self.query_abs_dirs()
-        repo = {
-            'repo': c['tools_repo'],
-            'vcs': 'hg',
-            'dest': dirs['abs_tools_dir'],
-            'output_timeout': 1200,
-        }
-        self.vcs_checkout(**repo)
-
     def _create_mozbuild_dir(self, mozbuild_path=None):
         if not mozbuild_path:
             env = self.query_build_env()
@@ -1643,9 +1598,6 @@ or run without that action (ie: --no-{action})"
         else:
             self.warning("mozbuild_path could not be determined. skipping "
                          "creating it.")
-
-    def checkout_sources(self):
-        self._checkout_source()
 
     def preflight_build(self):
         """set up machine state for a complete build."""
@@ -1820,58 +1772,6 @@ or run without that action (ie: --no-{action})"
             env=env, output_timeout=self.config.get('max_build_output_timeout', 60 * 20),
             halt_on_failure=True,
         )
-
-    def preflight_package_source(self):
-        self._get_mozconfig()
-
-    def package_source(self):
-        """generates source archives and uploads them"""
-        env = self.query_build_env()
-        env.update(self.query_mach_build_env())
-        dirs = self.query_abs_dirs()
-
-        self.run_command(
-            command=[sys.executable, 'mach', '--log-no-times', 'configure'],
-            cwd=dirs['abs_src_dir'],
-            env=env, output_timeout=60*3, halt_on_failure=True,
-        )
-        self.run_command(
-            command=[
-                'make', 'source-package', 'hg-bundle', 'source-upload',
-                'HG_BUNDLE_REVISION=%s' % self.query_revision(),
-                'UPLOAD_HG_BUNDLE=1',
-            ],
-            cwd=dirs['abs_obj_dir'],
-            env=env, output_timeout=60*45, halt_on_failure=True,
-        )
-
-    def generate_source_signing_manifest(self):
-        """Sign source checksum file"""
-        env = self.query_build_env()
-        env.update(self.query_mach_build_env())
-        if env.get("UPLOAD_HOST") != "localhost":
-            self.warning("Skipping signing manifest generation. Set "
-                         "UPLOAD_HOST to `localhost' to enable.")
-            return
-
-        if not env.get("UPLOAD_PATH"):
-            self.warning("Skipping signing manifest generation. Set "
-                         "UPLOAD_PATH to enable.")
-            return
-
-        dirs = self.query_abs_dirs()
-        objdir = dirs['abs_obj_dir']
-
-        output = self.get_output_from_command(
-            command=['make', 'echo-variable-SOURCE_CHECKSUM_FILE'],
-            cwd=objdir,
-        )
-        files = shlex.split(output)
-        abs_files = [os.path.abspath(os.path.join(objdir, f)) for f in files]
-        manifest_file = os.path.join(env["UPLOAD_PATH"],
-                                     "signing_manifest.json")
-        self.write_to_file(manifest_file,
-                           self.generate_signing_manifest(abs_files))
 
     def check_test(self):
         if self.config.get('forced_artifact_build'):
@@ -2176,97 +2076,6 @@ or run without that action (ie: --no-{action})"
 
         if perfherder_data["suites"]:
             self.info('PERFHERDER_DATA: %s' % json.dumps(perfherder_data))
-
-    def sendchange(self):
-        if os.environ.get('TASK_ID'):
-            self.info("We are not running this in buildbot; skipping")
-            return
-
-        if self.config.get('enable_unittest_sendchange'):
-            self._do_sendchange('unittest')
-        else:
-            self.info("'enable_unittest_sendchange' is false; skipping")
-
-    def _do_sendchange(self, test_type):
-        c = self.config
-
-        # grab any props available from this or previous unclobbered runs
-        self.generate_build_props(console_output=False,
-                                  halt_on_failure=False)
-
-        installer_url = self.query_buildbot_property('packageUrl')
-        if not installer_url:
-            # don't burn the job but we should turn orange
-            self.error("could not determine packageUrl property to use "
-                       "against sendchange. Was it set after 'mach build'?")
-            self.return_code = self.worst_level(
-                1,  self.return_code, AUTOMATION_EXIT_CODES[::-1]
-            )
-            self.return_code = 1
-            return
-        tests_url = self.query_buildbot_property('testsUrl')
-        # Contains the url to a manifest describing the test packages required
-        # for each unittest harness.
-        # For the moment this property is only set on desktop builds. Android
-        # builds find the packages manifest based on the upload
-        # directory of the installer.
-        test_packages_url = self.query_buildbot_property('testPackagesUrl')
-        pgo_build = c.get('pgo_build', False) or self._compile_against_pgo()
-
-        # these cmds are sent to mach through env vars. We won't know the
-        # packageUrl or testsUrl until mach runs upload target so we let mach
-        #  fill in the rest of the cmd
-        sendchange_props = {
-            'buildid': self.query_buildid(),
-            'builduid': self.query_builduid(),
-            'pgo_build': pgo_build,
-        }
-        if self.query_is_nightly():
-            sendchange_props['nightly_build'] = True
-        if test_type == 'talos':
-            if pgo_build:
-                build_type = 'pgo-'
-            else:  # we don't do talos sendchange for debug so no need to check
-                build_type = ''  # leave 'opt' out of branch for talos
-            talos_branch = "%s-%s-%s%s" % (self.branch,
-                                           self.stage_platform,
-                                           build_type,
-                                           'talos')
-            self.invoke_sendchange(downloadables=[installer_url],
-                            branch=talos_branch,
-                            username='sendchange',
-                            sendchange_props=sendchange_props)
-        elif test_type == 'unittest':
-            # do unittest sendchange
-            if c.get('debug_build'):
-                build_type = ''  # for debug builds we append nothing
-            elif pgo_build:
-                build_type = '-pgo'
-            else:  # generic opt build
-                build_type = '-opt'
-
-            if c.get('unittest_platform'):
-                platform = c['unittest_platform']
-            else:
-                platform = self.stage_platform
-
-            platform_and_build_type = "%s%s" % (platform, build_type)
-            unittest_branch = "%s-%s-%s" % (self.branch,
-                                            platform_and_build_type,
-                                            'unittest')
-
-            downloadables = [installer_url]
-            if test_packages_url:
-                downloadables.append(test_packages_url)
-            else:
-                downloadables.append(tests_url)
-
-            self.invoke_sendchange(downloadables=downloadables,
-                                   branch=unittest_branch,
-                                   sendchange_props=sendchange_props)
-        else:
-            self.fatal('type: "%s" is unknown for sendchange type. valid '
-                       'strings are "unittest" or "talos"' % test_type)
 
     def update(self):
         """ submit balrog update steps. """

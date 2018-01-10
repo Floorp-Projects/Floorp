@@ -7,7 +7,6 @@ config = {
     # note: overridden by MOZHARNESS_ACTIONS in TaskCluster tasks
     'default_actions': [
         'clobber',
-        'checkout-sources',
         'build',
         'update',  # decided by query_is_nightly()
     ],
@@ -26,7 +25,6 @@ config = {
     'enable_check_test': False,
     'vcs_share_base': '/builds/hg-shared',
     'enable_count_ctors': False,
-    'enable_unittest_sendchange': False,
     #########################################################################
 
 

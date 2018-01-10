@@ -7,10 +7,7 @@ config = {
     # note: overridden by MOZHARNESS_ACTIONS in TaskCluster tasks
     'default_actions': [
         'clobber',
-        'checkout-sources',
         'build',
-        'upload-files',
-        'sendchange',
         'multi-l10n',
         'update',  # decided by query_is_nightly()
     ],
@@ -55,7 +52,6 @@ config = {
     'vcs_share_base': '/builds/hg-shared',
     'objdir': 'obj-firefox',
     'enable_count_ctors': False,
-    'enable_unittest_sendchange': True,
     'multi_locale': True,
     #########################################################################
 

@@ -4,9 +4,7 @@ config = {
     # note: overridden by MOZHARNESS_ACTIONS in TaskCluster tasks
     'default_actions': [
         'clobber',
-        'checkout-sources',
         'build',
-        'sendchange',
     ],
     "buildbot_json_path": "buildprops.json",
     'app_ini_path': '%(obj_dir)s/dist/bin/application.ini',
@@ -17,7 +15,6 @@ config = {
     # decides whether we want to use moz_sign_cmd in env
     'enable_signing': False,
     # allows triggering of test jobs when --artifact try syntax is detected on buildbot
-    'enable_unittest_sendchange': True,
     'perfherder_extra_options': ['artifact'],
     #########################################################################
 
