@@ -57,11 +57,7 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
 
   printBundle->GetStringFromName("headerFooterCustom", intlString);
   GtkWidget* prompt_dialog = gtk_dialog_new_with_buttons(NS_ConvertUTF16toUTF8(intlString).get(), printDialog,
-#if (MOZ_WIDGET_GTK == 2)
-                                                         (GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_NO_SEPARATOR),
-#else
                                                          (GtkDialogFlags)(GTK_DIALOG_MODAL),
-#endif
                                                          GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                                          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
                                                          nullptr);
@@ -467,23 +463,15 @@ nsPrintDialogWidgetGTK::ExportSettings(nsIPrintSettings *aNSSettings)
 GtkWidget*
 nsPrintDialogWidgetGTK::ConstructHeaderFooterDropdown(const char16_t *currentString)
 {
-#if (MOZ_WIDGET_GTK == 2)
-  GtkWidget* dropdown = gtk_combo_box_new_text();
-#else
   GtkWidget* dropdown = gtk_combo_box_text_new();
-#endif
   const char hf_options[][22] = {"headerFooterBlank", "headerFooterTitle",
                                  "headerFooterURL", "headerFooterDate",
                                  "headerFooterPage", "headerFooterPageTotal",
                                  "headerFooterCustom"};
 
   for (unsigned int i = 0; i < ArrayLength(hf_options); i++) {
-#if (MOZ_WIDGET_GTK == 2)
-    gtk_combo_box_append_text(GTK_COMBO_BOX(dropdown), GetUTF8FromBundle(hf_options[i]).get());
-#else
-    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(dropdown), nullptr, 
+    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(dropdown), nullptr,
                               GetUTF8FromBundle(hf_options[i]).get());
-#endif
   }
 
   bool shouldBeCustom = true;
