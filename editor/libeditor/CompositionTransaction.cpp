@@ -202,14 +202,6 @@ CompositionTransaction::MarkFixed()
   mFixed = true;
 }
 
-NS_IMETHODIMP
-CompositionTransaction::GetTxnDescription(nsAString& aString)
-{
-  aString.AssignLiteral("CompositionTransaction: ");
-  aString += mStringToInsert;
-  return NS_OK;
-}
-
 /* ============ private methods ================== */
 
 nsresult
