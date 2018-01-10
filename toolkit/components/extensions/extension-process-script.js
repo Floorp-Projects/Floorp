@@ -500,6 +500,13 @@ ExtensionProcessScript.prototype = {
     }
   },
 
+  getExtensionChild(id) {
+    let policy = WebExtensionPolicy.getByID(id);
+    if (policy) {
+      return extensions.get(policy);
+    }
+  },
+
   preloadContentScript(contentScript) {
     contentScripts.get(contentScript).preload();
   },

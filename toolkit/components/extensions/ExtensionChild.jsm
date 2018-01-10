@@ -37,6 +37,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
 });
 
+XPCOMUtils.defineLazyGetter(
+  this, "processScript",
+  () => Cc["@mozilla.org/webextensions/extension-process-script;1"]
+          .getService().wrappedJSObject);
+
 Cu.import("resource://gre/modules/ExtensionCommon.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
@@ -561,6 +566,7 @@ class BrowserExtensionContent extends EventEmitter {
     this.instanceId = data.instanceId;
 
     this.childModules = data.childModules;
+    this.dependencies = data.dependencies;
     this.schemaURLs = data.schemaURLs;
 
     this.MESSAGE_EMIT_EVENT = `Extension:EmitEvent:${this.instanceId}`;
@@ -639,6 +645,13 @@ class BrowserExtensionContent extends EventEmitter {
 
   getAPIManager() {
     let apiManagers = [ExtensionPageChild.apiManager];
+
+    for (let id of this.dependencies) {
+      let extension = processScript.getExtensionChild(id);
+      if (extension) {
+        apiManagers.push(extension.experimentAPIManager);
+      }
+    }
 
     if (this.childModules) {
       this.experimentAPIManager =

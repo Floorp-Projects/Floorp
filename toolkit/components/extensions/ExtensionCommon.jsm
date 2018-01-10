@@ -121,6 +121,9 @@ var ExtensionAPIs = {
 
   load(apiName) {
     let api = this.apis.get(apiName);
+    if (!api) {
+      return null;
+    }
 
     if (api.loadPromise) {
       return api.loadPromise;
