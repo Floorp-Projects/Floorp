@@ -19,6 +19,7 @@
 #include "mozilla/ipc/CrashReporterHost.h"
 #include "mozilla/layers/LayerTreeOwnerTracker.h"
 #include "mozilla/Unused.h"
+#include "mozilla/HangDetails.h"
 #include "nsIObserverService.h"
 
 #ifdef MOZ_GECKO_PROFILER
