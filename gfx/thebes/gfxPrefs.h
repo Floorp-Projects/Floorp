@@ -504,7 +504,9 @@ private:
   DECL_GFX_PREF(Live, "gfx.vsync.collect-scroll-transforms",   CollectScrollTransforms, bool, false);
   DECL_GFX_PREF(Once, "gfx.vsync.compositor.unobserve-count",  CompositorUnobserveCount, int32_t, 10);
 
-  DECL_GFX_PREF(Live, "gfx.webrender.blob-images",             WebRenderBlobImages, bool, false);
+  DECL_GFX_PREF(Once, "gfx.webrender.all",                     WebRenderAll, bool, false);
+  DECL_GFX_PREF(Once, "gfx.webrender.enabled",                 WebRenderEnabledDoNotUseDirectly, bool, false);
+  DECL_OVERRIDE_PREF(Live, "gfx.webrender.blob-images",        WebRenderBlobImages, gfxPrefs::WebRenderAll());
   DECL_GFX_PREF(Live, "gfx.webrender.highlight-painted-layers",WebRenderHighlightPaintedLayers, bool, false);
   DECL_GFX_PREF(Live, "gfx.webrender.hit-test",                WebRenderHitTest, bool, false);
 
@@ -529,7 +531,7 @@ private:
   DECL_GFX_PREF(Once, "image.mem.decode_bytes_at_a_time",      ImageMemDecodeBytesAtATime, uint32_t, 200000);
   DECL_GFX_PREF(Live, "image.mem.discardable",                 ImageMemDiscardable, bool, false);
   DECL_GFX_PREF(Once, "image.mem.animated.discardable",        ImageMemAnimatedDiscardable, bool, false);
-  DECL_GFX_PREF(Live, "image.mem.shared",                      ImageMemShared, bool, false);
+  DECL_OVERRIDE_PREF(Live, "image.mem.shared",                 ImageMemShared, gfxPrefs::WebRenderAll());
   DECL_GFX_PREF(Once, "image.mem.surfacecache.discard_factor", ImageMemSurfaceCacheDiscardFactor, uint32_t, 1);
   DECL_GFX_PREF(Once, "image.mem.surfacecache.max_size_kb",    ImageMemSurfaceCacheMaxSizeKB, uint32_t, 100 * 1024);
   DECL_GFX_PREF(Once, "image.mem.surfacecache.min_expiration_ms", ImageMemSurfaceCacheMinExpirationMS, uint32_t, 60*1000);
