@@ -66,7 +66,6 @@ public:
                          const nsAString& priority,
                          nsIPrincipal* aSubjectPrincipal) override;
   NS_IMETHOD GetLength(uint32_t *aLength) override;
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) override = 0;
 
   // WebIDL interface for CSS2Properties
 #define CSS_PROP_PUBLIC_OR_PRIVATE(publicname_, privatename_) publicname_

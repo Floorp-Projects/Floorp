@@ -188,7 +188,7 @@ public class ActionBarPresenter {
         @SuppressWarnings("deprecation")
         final Drawable icon = mActionBar.getThemedContext()
                 .getResources()
-                .getDrawable(R.drawable.ic_close_light);
+                .getDrawable(R.drawable.close);
 
         Drawable wrapped = DrawableCompat.wrap(icon);
         DrawableCompat.setTint(wrapped, mTextPrimaryColor);

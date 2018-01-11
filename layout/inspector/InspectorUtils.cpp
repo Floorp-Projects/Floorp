@@ -24,7 +24,6 @@
 #include "nsRuleNode.h"
 #include "nsIStyleRule.h"
 #include "mozilla/css/StyleRule.h"
-#include "nsICSSStyleRuleDOMWrapper.h"
 #include "nsIDOMWindow.h"
 #include "nsXBLBinding.h"
 #include "nsXBLPrototypeBinding.h"

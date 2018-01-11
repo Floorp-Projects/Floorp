@@ -11,21 +11,6 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ADDREF_INHERITED(CSSPageRule, css::Rule)
-NS_IMPL_RELEASE_INHERITED(CSSPageRule, css::Rule)
-
-// QueryInterface implementation for CSSPageRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CSSPageRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSPageRule)
-NS_INTERFACE_MAP_END_INHERITING(css::Rule)
-
-NS_IMETHODIMP
-CSSPageRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
-{
-  NS_ADDREF(*aStyle = Style());
-  return NS_OK;
-}
-
 JSObject*
 CSSPageRule::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {

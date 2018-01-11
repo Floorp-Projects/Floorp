@@ -24,6 +24,10 @@ wr::WrExternalImage LockExternalImage(void* aObj, wr::WrExternalImageId aId, uin
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);
   MOZ_ASSERT(texture);
+  if (!texture) {
+    gfxCriticalNote << "Failed to lock ExternalImage for extId:" << AsUint64(aId);
+    return InvalidToWrExternalImage();
+  }
   return texture->Lock(aChannelIndex, renderer->mGL);
 }
 
@@ -32,6 +36,9 @@ void UnlockExternalImage(void* aObj, wr::WrExternalImageId aId, uint8_t aChannel
   RendererOGL* renderer = reinterpret_cast<RendererOGL*>(aObj);
   RenderTextureHost* texture = renderer->GetRenderTexture(aId);
   MOZ_ASSERT(texture);
+  if (!texture) {
+    return;
+  }
   texture->Unlock();
 }
 

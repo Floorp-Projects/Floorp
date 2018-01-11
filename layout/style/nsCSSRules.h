@@ -29,11 +29,6 @@
 #include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
 #include "nsDOMCSSDeclaration.h"
-#include "nsIDOMCSSConditionRule.h"
-#include "nsIDOMCSSFontFeatureValuesRule.h"
-#include "nsIDOMCSSGroupingRule.h"
-#include "nsIDOMCSSMozDocumentRule.h"
-#include "nsIDOMCSSSupportsRule.h"
 #include "nsTArray.h"
 
 class nsMediaList;
@@ -72,9 +67,6 @@ public:
   }
   virtual already_AddRefed<Rule> Clone() const override;
 
-  // nsIDOMCSSConditionRule interface
-  NS_DECL_NSIDOMCSSCONDITIONRULE
-
   // rest of GroupRule
   virtual bool UseForPresentation(nsPresContext* aPresContext,
                                     nsMediaQueryResultCacheKey& aKey) override;
@@ -83,9 +75,11 @@ public:
   nsresult SetMedia(nsMediaList* aMedia);
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const override;
-  using CSSMediaRule::SetConditionText;
-  dom::MediaList* Media() override;
+  void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetConditionText(nsAString& aConditionText) final;
+  void SetConditionText(const nsAString& aConditionText,
+                        ErrorResult& aRv) final;
+  dom::MediaList* Media() final;
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override MOZ_MUST_OVERRIDE;
@@ -113,9 +107,6 @@ public:
 #endif
   virtual already_AddRefed<Rule> Clone() const override;
 
-  // nsIDOMCSSConditionRule interface
-  NS_DECL_NSIDOMCSSCONDITIONRULE
-
   // rest of GroupRule
   virtual bool UseForPresentation(nsPresContext* aPresContext,
                                   nsMediaQueryResultCacheKey& aKey) override;
@@ -140,8 +131,10 @@ public:
   void SetURLs(URL *aURLs) { mURLs = aURLs; }
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const override;
-  using dom::CSSMozDocumentRule::SetConditionText;
+  void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetConditionText(nsAString& aConditionText) final;
+  void SetConditionText(const nsAString& aConditionText,
+                        ErrorResult& aRv) final;
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override MOZ_MUST_OVERRIDE;
@@ -172,18 +165,17 @@ public:
   {
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
-
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
   already_AddRefed<mozilla::css::Rule> Clone() const final;
 
-  // nsIDOMCSSFontFeatureValuesRule interface
-  NS_DECL_NSIDOMCSSFONTFEATUREVALUESRULE
-
   // WebIDL interface
   void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetFontFamily(nsAString& aFamily) final;
+  void SetFontFamily(const nsAString& aFamily, mozilla::ErrorResult& aRv) final;
+  void GetValueText(nsAString& aValueText) final;
+  void SetValueText(const nsAString& aValueText, mozilla::ErrorResult& aRv) final;
 
   mozilla::SharedFontList* GetFamilyList() const { return mFamilyList; }
   void SetFamilyList(mozilla::SharedFontList* aFamilyList)
@@ -215,7 +207,7 @@ class nsCSSKeyframeStyleDeclaration final : public nsDOMCSSDeclaration
 public:
   explicit nsCSSKeyframeStyleDeclaration(nsCSSKeyframeRule *aRule);
 
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent) override;
+  mozilla::css::Rule* GetParentRule() override;
   void DropReference() { mRule = nullptr; }
   virtual mozilla::DeclarationBlock* GetCSSDeclaration(Operation aOperation) override;
   virtual nsresult SetCSSDeclaration(mozilla::DeclarationBlock* aDecl) override;
@@ -267,12 +259,10 @@ public:
 #endif
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
 
-  // nsIDOMCSSKeyframeRule interface
-  NS_IMETHOD GetKeyText(nsAString& aKeyText) final;
-  NS_IMETHOD SetKeyText(const nsAString& aKeyText) final;
-
   // WebIDL interface
   void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetKeyText(nsAString& aKeyText) final;
+  void SetKeyText(const nsAString& aKeyText) final;
   nsICSSDeclaration* Style() final;
 
   const nsTArray<float>& GetKeys() const     { return mKeys; }
@@ -304,24 +294,19 @@ private:
   nsCSSKeyframesRule(const nsCSSKeyframesRule& aCopy);
   ~nsCSSKeyframesRule();
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   // Rule methods
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
 
-  // nsIDOMCSSKeyframesRule interface
-  NS_IMETHOD GetName(nsAString& aName) final;
-  NS_IMETHOD SetName(const nsAString& aName) final;
-  NS_IMETHOD AppendRule(const nsAString& aRule) final;
-  NS_IMETHOD DeleteRule(const nsAString& aKey) final;
-  using nsIDOMCSSKeyframesRule::FindRule;
-
   // WebIDL interface
   void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetName(nsAString& aName) const final;
+  void SetName(const nsAString& aName) final;
   mozilla::dom::CSSRuleList* CssRules() final { return GroupRule::CssRules(); }
+  void AppendRule(const nsAString& aRule) final;
+  void DeleteRule(const nsAString& aKey) final;
   nsCSSKeyframeRule* FindRule(const nsAString& aKey) final;
 
   const nsAtom* GetName() const { return mName; }
@@ -341,7 +326,7 @@ class nsCSSPageStyleDeclaration final : public nsDOMCSSDeclaration
 public:
   explicit nsCSSPageStyleDeclaration(nsCSSPageRule *aRule);
 
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent) override;
+  mozilla::css::Rule* GetParentRule() override;
   void DropReference() { mRule = nullptr; }
   virtual mozilla::DeclarationBlock* GetCSSDeclaration(Operation aOperation) override;
   virtual nsresult SetCSSDeclaration(mozilla::DeclarationBlock* aDecl) override;
@@ -424,12 +409,11 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIDOMCSSConditionRule interface
-  NS_DECL_NSIDOMCSSCONDITIONRULE
-
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const override;
-  using dom::CSSSupportsRule::SetConditionText;
+  void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetConditionText(nsAString& aConditionText) final;
+  void SetConditionText(const nsAString& aConditionText,
+                        ErrorResult& aRv) final;
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
