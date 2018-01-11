@@ -8,9 +8,8 @@
 #define mozilla_dom_StyleSheetList_h
 
 #include "mozilla/dom/DocumentOrShadowRoot.h"
-#include "nsIDOMStyleSheetList.h"
+#include "nsStubMutationObserver.h"
 #include "nsWrapperCache.h"
-#include "nsStubDocumentObserver.h"
 
 class nsINode;
 
@@ -19,15 +18,12 @@ class StyleSheet;
 
 namespace dom {
 
-class StyleSheetList final : public nsIDOMStyleSheetList
+class StyleSheetList final : public nsStubMutationObserver
                            , public nsWrapperCache
-                           , public nsStubDocumentObserver
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(StyleSheetList, nsIDOMStyleSheetList)
-
-  NS_DECL_NSIDOMSTYLESHEETLIST
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(StyleSheetList)
 
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
