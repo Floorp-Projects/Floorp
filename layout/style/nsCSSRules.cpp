@@ -323,17 +323,16 @@ MediaRule::GetCssTextImpl(nsAString& aCssText) const
   GroupRule::AppendRulesToCssText(aCssText);
 }
 
-// nsIDOMCSSConditionRule methods
-NS_IMETHODIMP
+void
 MediaRule::GetConditionText(nsAString& aConditionText)
 {
   aConditionText.Truncate(0);
   AppendConditionText(aConditionText);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-MediaRule::SetConditionText(const nsAString& aConditionText)
+void
+MediaRule::SetConditionText(const nsAString& aConditionText,
+                            ErrorResult& aRv)
 {
   if (!mMedia) {
     RefPtr<nsMediaList> media = new nsMediaList();
@@ -341,11 +340,13 @@ MediaRule::SetConditionText(const nsAString& aConditionText)
     nsresult rv = media->SetMediaText(aConditionText);
     if (NS_SUCCEEDED(rv)) {
       mMedia = media;
+    } else {
+      aRv.Throw(rv);
     }
-    return rv;
+    return;
   }
 
-  return mMedia->SetMediaText(aConditionText);
+  aRv = mMedia->SetMediaText(aConditionText);
 }
 
 // GroupRule interface
@@ -460,19 +461,18 @@ DocumentRule::GetCssTextImpl(nsAString& aCssText) const
   GroupRule::AppendRulesToCssText(aCssText);
 }
 
-// nsIDOMCSSConditionRule methods
-NS_IMETHODIMP
+void
 DocumentRule::GetConditionText(nsAString& aConditionText)
 {
   aConditionText.Truncate(0);
   AppendConditionText(aConditionText);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-DocumentRule::SetConditionText(const nsAString& aConditionText)
+void
+DocumentRule::SetConditionText(const nsAString& aConditionText,
+                               ErrorResult& aRv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 // GroupRule interface
@@ -1546,18 +1546,17 @@ CSSSupportsRule::GetCssTextImpl(nsAString& aCssText) const
   css::GroupRule::AppendRulesToCssText(aCssText);
 }
 
-// nsIDOMCSSConditionRule methods
-NS_IMETHODIMP
+void
 CSSSupportsRule::GetConditionText(nsAString& aConditionText)
 {
   aConditionText.Assign(mCondition);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-CSSSupportsRule::SetConditionText(const nsAString& aConditionText)
+void
+CSSSupportsRule::SetConditionText(const nsAString& aConditionText,
+                                  ErrorResult& aRv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 /* virtual */ size_t

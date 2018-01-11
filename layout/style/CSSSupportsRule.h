@@ -8,13 +8,13 @@
 #define mozilla_dom_CSSSupportsRule_h
 
 #include "mozilla/css/GroupRule.h"
-#include "nsIDOMCSSConditionRule.h"
+#include "nsIDOMCSSGroupingRule.h"
 
 namespace mozilla {
 namespace dom {
 
 class CSSSupportsRule : public css::ConditionRule
-                      , public nsIDOMCSSConditionRule
+                      , public nsIDOMCSSGroupingRule
 {
 protected:
   using ConditionRule::ConditionRule;
@@ -29,14 +29,8 @@ public:
   // nsIDOMCSSGroupingRule interface
   NS_DECL_NSIDOMCSSGROUPINGRULE
 
-  // nsIDOMCSSConditionRule interface
-  NS_IMETHOD SetConditionText(const nsAString& aConditionText) override = 0;
-
   // WebIDL interface
   uint16_t Type() const override { return nsIDOMCSSRule::SUPPORTS_RULE; }
-  // Our XPCOM GetConditionText is OK
-  void SetConditionText(const nsAString& aConditionText,
-                        ErrorResult& aRv) final;
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;

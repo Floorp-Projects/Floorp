@@ -29,7 +29,6 @@
 #include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
 #include "nsDOMCSSDeclaration.h"
-#include "nsIDOMCSSConditionRule.h"
 #include "nsIDOMCSSFontFeatureValuesRule.h"
 #include "nsIDOMCSSGroupingRule.h"
 #include "nsTArray.h"
@@ -70,9 +69,6 @@ public:
   }
   virtual already_AddRefed<Rule> Clone() const override;
 
-  // nsIDOMCSSConditionRule interface
-  NS_DECL_NSIDOMCSSCONDITIONRULE
-
   // rest of GroupRule
   virtual bool UseForPresentation(nsPresContext* aPresContext,
                                     nsMediaQueryResultCacheKey& aKey) override;
@@ -81,9 +77,11 @@ public:
   nsresult SetMedia(nsMediaList* aMedia);
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const override;
-  using CSSMediaRule::SetConditionText;
-  dom::MediaList* Media() override;
+  void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetConditionText(nsAString& aConditionText) final;
+  void SetConditionText(const nsAString& aConditionText,
+                        ErrorResult& aRv) final;
+  dom::MediaList* Media() final;
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override MOZ_MUST_OVERRIDE;
@@ -111,9 +109,6 @@ public:
 #endif
   virtual already_AddRefed<Rule> Clone() const override;
 
-  // nsIDOMCSSConditionRule interface
-  NS_DECL_NSIDOMCSSCONDITIONRULE
-
   // rest of GroupRule
   virtual bool UseForPresentation(nsPresContext* aPresContext,
                                   nsMediaQueryResultCacheKey& aKey) override;
@@ -138,8 +133,10 @@ public:
   void SetURLs(URL *aURLs) { mURLs = aURLs; }
 
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const override;
-  using dom::CSSMozDocumentRule::SetConditionText;
+  void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetConditionText(nsAString& aConditionText) final;
+  void SetConditionText(const nsAString& aConditionText,
+                        ErrorResult& aRv) final;
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override MOZ_MUST_OVERRIDE;
@@ -422,12 +419,11 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIDOMCSSConditionRule interface
-  NS_DECL_NSIDOMCSSCONDITIONRULE
-
   // WebIDL interface
-  void GetCssTextImpl(nsAString& aCssText) const override;
-  using dom::CSSSupportsRule::SetConditionText;
+  void GetCssTextImpl(nsAString& aCssText) const final;
+  void GetConditionText(nsAString& aConditionText) final;
+  void SetConditionText(const nsAString& aConditionText,
+                        ErrorResult& aRv) final;
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
