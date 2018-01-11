@@ -249,7 +249,6 @@ public:
   NS_IMETHOD GetMedia(nsIDOMMediaList** aMedia) final;
 
   // nsIDOMCSSStyleSheet
-  NS_IMETHOD GetOwnerRule(nsIDOMCSSRule** aOwnerRule) final;
   NS_IMETHOD GetCssRules(nsIDOMCSSRuleList** aCssRules) final;
   NS_IMETHOD InsertRule(const nsAString& aRule, uint32_t aIndex,
                       uint32_t* aReturn) final;

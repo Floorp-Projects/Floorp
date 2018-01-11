@@ -33,7 +33,6 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
   virtual int32_t GetType() const override;
-  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
 
   // WebIDL interface

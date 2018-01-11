@@ -46,6 +46,12 @@ partial interface CSSRule {
     const unsigned short SUPPORTS_RULE = 12;
 };
 
+// Non-standard extension for @-moz-document rules.
+partial interface CSSRule {
+    [ChromeOnly]
+    const unsigned short DOCUMENT_RULE = 13;
+};
+
 // https://drafts.csswg.org/css-fonts-3/#om-fontfeaturevalues
 partial interface CSSRule {
   const unsigned short FONT_FEATURE_VALUES_RULE = 14;

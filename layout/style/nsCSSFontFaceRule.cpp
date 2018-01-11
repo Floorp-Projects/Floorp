@@ -271,11 +271,10 @@ nsCSSFontFaceStyleDecl::IndexedGetter(uint32_t index, bool& aFound, nsAString & 
   aFound = false;
 }
 
-NS_IMETHODIMP
-nsCSSFontFaceStyleDecl::GetParentRule(nsIDOMCSSRule** aParentRule)
+css::Rule*
+nsCSSFontFaceStyleDecl::GetParentRule()
 {
-  NS_IF_ADDREF(*aParentRule = ContainingRule());
-  return NS_OK;
+  return ContainingRule();
 }
 
 NS_IMETHODIMP
@@ -404,7 +403,7 @@ nsCSSFontFaceRule::GetType() const
 uint16_t
 nsCSSFontFaceRule::Type() const
 {
-  return nsIDOMCSSRule::FONT_FACE_RULE;
+  return CSSRuleBinding::FONT_FACE_RULE;
 }
 
 void

@@ -40,5 +40,4 @@ interface nsIDOMCSSStyleDeclaration : nsISupports
 
   readonly attribute unsigned long    length;
   DOMString          item(in unsigned long index);
-  readonly attribute nsIDOMCSSRule    parentRule;
 };

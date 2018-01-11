@@ -31,6 +31,7 @@
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/CSSBinding.h"
+#include "mozilla/dom/CSSRuleBinding.h"
 #include "mozilla/dom/DirectoryBinding.h"
 #include "mozilla/dom/DOMPrefs.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
@@ -910,6 +911,8 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             return false;
         if (!strcmp(name.ptr(), "CSS")) {
             CSS = true;
+        } else if (!strcmp(name.ptr(), "CSSRule")) {
+            CSSRule = true;
         } else if (!strcmp(name.ptr(), "indexedDB")) {
             indexedDB = true;
         } else if (!strcmp(name.ptr(), "XMLHttpRequest")) {
@@ -966,6 +969,9 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
     // to be requested either in |Cu.importGlobalProperties| or
     // |wantGlobalProperties| of a sandbox.
     if (CSS && !dom::CSSBinding::GetConstructorObject(cx))
+        return false;
+
+    if (CSSRule && !dom::CSSRuleBinding::GetConstructorObject(cx))
         return false;
 
     if (XMLHttpRequest &&

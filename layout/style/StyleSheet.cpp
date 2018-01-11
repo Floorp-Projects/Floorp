@@ -386,13 +386,6 @@ StyleSheet::GetMedia(nsIDOMMediaList** aMedia)
 }
 
 NS_IMETHODIMP
-StyleSheet::GetOwnerRule(nsIDOMCSSRule** aOwnerRule)
-{
-  NS_IF_ADDREF(*aOwnerRule = GetDOMOwnerRule());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 StyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
 {
   ErrorResult rv;

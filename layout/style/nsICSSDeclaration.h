@@ -26,7 +26,6 @@
 #include "mozilla/dom/CSSValue.h"
 #include "nsWrapperCache.h"
 #include "nsString.h"
-#include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSValue.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
@@ -34,6 +33,9 @@
 class nsINode;
 class nsIPrincipal;
 namespace mozilla {
+namespace css {
+class Rule;
+} // namespace css
 namespace dom {
 class DocGroup;
 } // namespace dom
@@ -109,7 +111,6 @@ public:
     }
     return NS_OK;
   }
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) override = 0;
 
   // WebIDL interface for CSSStyleDeclaration
   void SetCssText(const nsAString& aString, nsIPrincipal* aSubjectPrincipal,
@@ -149,11 +150,7 @@ public:
                       mozilla::ErrorResult& rv) {
     rv = RemoveProperty(aPropName, aRetval);
   }
-  already_AddRefed<nsIDOMCSSRule> GetParentRule() {
-    nsCOMPtr<nsIDOMCSSRule> rule;
-    GetParentRule(getter_AddRefs(rule));
-    return rule.forget();
-  }
+  virtual mozilla::css::Rule* GetParentRule() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
@@ -178,6 +175,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
                          nsIPrincipal* aSubjectPrincipal = nullptr) override; \
   NS_IMETHOD GetLength(uint32_t *aLength) override; \
   NS_IMETHOD Item(uint32_t index, nsAString & _retval) override; \
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) override;
+  mozilla::css::Rule* GetParentRule() override;
 
 #endif // nsICSSDeclaration_h__

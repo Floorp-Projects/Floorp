@@ -20,10 +20,9 @@ protected:
 
 public:
   int32_t GetType() const override { return css::Rule::SUPPORTS_RULE; }
-  using Rule::GetType;
 
   // WebIDL interface
-  uint16_t Type() const override { return nsIDOMCSSRule::SUPPORTS_RULE; }
+  uint16_t Type() const override { return CSSRuleBinding::SUPPORTS_RULE; }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;

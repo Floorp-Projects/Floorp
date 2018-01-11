@@ -21,7 +21,6 @@ protected:
 
 public:
   int32_t GetType() const final override { return css::Rule::DOCUMENT_RULE; }
-  using Rule::GetType;
 
   static bool Match(nsIDocument* aDoc,
                     nsIURI* aDocURI,
@@ -30,9 +29,7 @@ public:
                     css::URLMatchingFunction aUrlMatchingFunction);
 
   // WebIDL interface
-  uint16_t Type() const final override {
-    return nsIDOMCSSRule::DOCUMENT_RULE;
-  }
+  uint16_t Type() const final override { return CSSRuleBinding::DOCUMENT_RULE; }
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;

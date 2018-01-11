@@ -8,7 +8,6 @@
 #define mozilla_dom_CSSKeyframesRule_h
 
 #include "mozilla/css/GroupRule.h"
-
 #include "mozilla/dom/CSSKeyframeRule.h"
 
 namespace mozilla {
@@ -22,10 +21,9 @@ protected:
 
 public:
   int32_t GetType() const final { return Rule::KEYFRAMES_RULE; }
-  using Rule::GetType;
 
   // WebIDL interface
-  uint16_t Type() const final { return nsIDOMCSSRule::KEYFRAMES_RULE; }
+  uint16_t Type() const final { return CSSRuleBinding::KEYFRAMES_RULE; }
   virtual void GetName(nsAString& aName) const = 0;
   virtual void SetName(const nsAString& aName) = 0;
   virtual CSSRuleList* CssRules() = 0;
