@@ -49,7 +49,7 @@ prepare() {
     mpc-*.tar.*)
       # If download_prerequisites wants 0.8.1, use 0.8.2 instead.
       file=${file/0.8.1/0.8.2}
-      download_and_check http://www.multiprecision.org/download $file.asc
+      download_and_check http://www.multiprecision.org/mpc/download $file.asc
       ;;
     *)
       download $(dirname $url) $file
