@@ -190,6 +190,10 @@ public:
       nsINode& aNode,
       bool aShowingAnonymousContent);
 
+  static void GetBindingURLs(GlobalObject& aGlobal,
+                             Element& aElement,
+                             nsTArray<nsString>& aResult);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);
