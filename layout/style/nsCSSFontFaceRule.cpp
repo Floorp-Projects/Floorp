@@ -45,7 +45,6 @@ CSSFontFaceDescriptors::Get(nsCSSFontDesc aFontDescID)
 // QueryInterface implementation for nsCSSFontFaceStyleDecl
 NS_INTERFACE_MAP_BEGIN(nsCSSFontFaceStyleDecl)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
   NS_INTERFACE_MAP_ENTRY(nsICSSDeclaration)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   // We forward the cycle collection interfaces to ContainingRule(), which is
@@ -238,17 +237,6 @@ nsCSSFontFaceStyleDecl::GetLength(uint32_t *aLength)
       len++;
 
   *aLength = len;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCSSFontFaceStyleDecl::Item(uint32_t aIndex, nsAString& aReturn)
-{
-  bool found;
-  IndexedGetter(aIndex, found, aReturn);
-  if (!found) {
-    aReturn.Truncate();
-  }
   return NS_OK;
 }
 

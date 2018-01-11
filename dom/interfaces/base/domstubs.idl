@@ -56,9 +56,6 @@ interface nsIDOMHTMLElement;
 interface nsIDOMHTMLFormElement;
 interface nsIDOMHTMLHeadElement;
 
-// CSS
-interface nsIDOMCSSStyleDeclaration;
-
 // Range
 interface nsIDOMRange;
 

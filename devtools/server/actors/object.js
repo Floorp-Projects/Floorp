@@ -1802,7 +1802,8 @@ DebuggerServer.ObjectActorPreviewers.Object = [
 
   function CSSStyleDeclaration({obj, hooks}, grip, rawObj) {
     if (isWorker || !rawObj ||
-        !(rawObj instanceof Ci.nsIDOMCSSStyleDeclaration)) {
+        (obj.class != "CSSStyleDeclaration" &&
+         obj.class != "CSS2Properties")) {
       return false;
     }
 

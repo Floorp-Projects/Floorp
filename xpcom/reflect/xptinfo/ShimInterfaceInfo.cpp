@@ -19,7 +19,6 @@
 #include "nsIDOMClipboardEvent.h"
 #include "nsIDOMCommandEvent.h"
 #include "nsIDOMComment.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCustomEvent.h"
 #ifdef MOZ_WEBRTC
 #include "nsIDOMDataChannel.h"
@@ -255,7 +254,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(CommandEvent),
   DEFINE_SHIM(Comment),
   DEFINE_SHIM_WITH_CUSTOM_INTERFACE(nsIContainerBoxObject, ContainerBoxObject),
-  DEFINE_SHIM(CSSStyleDeclaration),
   DEFINE_SHIM(CustomEvent),
 #ifdef MOZ_WEBRTC
   DEFINE_SHIM(DataChannel),
