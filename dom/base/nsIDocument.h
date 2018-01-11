@@ -3149,6 +3149,7 @@ public:
   }
 
   inline void SetServoRestyleRoot(nsINode* aRoot, uint32_t aDirtyBits);
+  inline void SetServoRestyleRootDirtyBits(uint32_t aDirtyBits);
 
   bool ShouldThrowOnDynamicMarkupInsertion()
   {
