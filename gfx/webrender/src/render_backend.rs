@@ -145,12 +145,33 @@ impl Document {
     }
 }
 
-enum DocumentOp {
-    Nop,
-    Built,
-    ScrolledNop,
-    Scrolled(RenderedDocument),
-    Rendered(RenderedDocument),
+struct DocumentOps {
+    scroll: bool,
+    build: bool,
+    render: bool,
+}
+
+impl DocumentOps {
+    fn nop() -> Self {
+        DocumentOps {
+            scroll: false,
+            build: false,
+            render: false,
+        }
+    }
+
+    fn build() -> Self {
+        DocumentOps {
+            build: true,
+            ..DocumentOps::nop()
+        }
+    }
+
+    fn combine(&mut self, other: Self) {
+        self.scroll = self.scroll || other.scroll;
+        self.build = self.build || other.build;
+        self.render = self.render || other.render;
+    }
 }
 
 /// The unique id for WR resource identification.
@@ -232,14 +253,14 @@ impl RenderBackend {
         message: DocumentMsg,
         frame_counter: u32,
         profile_counters: &mut BackendProfileCounters,
-    ) -> DocumentOp {
+    ) -> DocumentOps {
         let doc = self.documents.get_mut(&document_id).expect("No document?");
 
         match message {
             //TODO: move view-related messages in a separate enum?
             DocumentMsg::SetPageZoom(factor) => {
                 doc.view.page_zoom_factor = factor.get();
-                DocumentOp::Nop
+                DocumentOps::nop()
             }
             DocumentMsg::EnableFrameOutput(pipeline_id, enable) => {
                 if enable {
@@ -247,15 +268,15 @@ impl RenderBackend {
                 } else {
                     doc.output_pipelines.remove(&pipeline_id);
                 }
-                DocumentOp::Nop
+                DocumentOps::nop()
             }
             DocumentMsg::SetPinchZoom(factor) => {
                 doc.view.pinch_zoom_factor = factor.get();
-                DocumentOp::Nop
+                DocumentOps::nop()
             }
             DocumentMsg::SetPan(pan) => {
                 doc.view.pan = pan;
-                DocumentOp::Nop
+                DocumentOps::nop()
             }
             DocumentMsg::SetWindowParameters {
                 window_size,
@@ -265,7 +286,7 @@ impl RenderBackend {
                 doc.view.window_size = window_size;
                 doc.view.inner_rect = inner_rect;
                 doc.view.device_pixel_ratio = device_pixel_ratio;
-                DocumentOp::Nop
+                DocumentOps::nop()
             }
             DocumentMsg::SetDisplayList {
                 epoch,
@@ -277,10 +298,13 @@ impl RenderBackend {
                 preserve_frame_state,
                 resources,
             } => {
-                profile_scope!("SetDisplayList");
+                // TODO: this will be removed from the SetDisplayList message soon.
+                self.resource_cache.update_resources(
+                    resources,
+                    &mut profile_counters.resources
+                );
 
-                self.resource_cache
-                    .update_resources(resources, &mut profile_counters.resources);
+                profile_scope!("SetDisplayList");
 
                 let mut data;
                 while {
@@ -316,7 +340,6 @@ impl RenderBackend {
                         viewport_size,
                         content_size,
                     );
-                    doc.build_scene(&mut self.resource_cache);
                 }
 
                 if let Some(ref mut ros) = doc.render_on_scroll {
@@ -337,7 +360,22 @@ impl RenderBackend {
                     display_list_len,
                 );
 
-                DocumentOp::Built
+                DocumentOps::build()
+            }
+            DocumentMsg::UpdateResources(updates) => {
+                profile_scope!("UpdateResources");
+
+                self.resource_cache.update_resources(
+                    updates,
+                    &mut profile_counters.resources
+                );
+
+                DocumentOps::nop()
+            }
+            DocumentMsg::UpdateEpoch(pipeline_id, epoch) => {
+                doc.scene.update_epoch(pipeline_id, epoch);
+                doc.frame_ctx.update_epoch(pipeline_id, epoch);
+                DocumentOps::nop()
             }
             DocumentMsg::UpdatePipelineResources { resources, pipeline_id, epoch } => {
                 profile_scope!("UpdateResources");
@@ -348,40 +386,35 @@ impl RenderBackend {
                 doc.scene.update_epoch(pipeline_id, epoch);
                 doc.frame_ctx.update_epoch(pipeline_id, epoch);
 
-                DocumentOp::Nop
+                DocumentOps::nop()
             }
             DocumentMsg::SetRootPipeline(pipeline_id) => {
                 profile_scope!("SetRootPipeline");
 
                 doc.scene.set_root_pipeline_id(pipeline_id);
                 if doc.scene.pipelines.get(&pipeline_id).is_some() {
-                    let _timer = profile_counters.total_time.timer();
-                    doc.build_scene(&mut self.resource_cache);
-                    DocumentOp::Built
+                    DocumentOps::build()
                 } else {
-                    DocumentOp::Nop
+                    DocumentOps::nop()
                 }
             }
             DocumentMsg::RemovePipeline(pipeline_id) => {
                 profile_scope!("RemovePipeline");
 
                 doc.scene.remove_pipeline(pipeline_id);
-                DocumentOp::Nop
+                DocumentOps::nop()
             }
             DocumentMsg::Scroll(delta, cursor, move_phase) => {
                 profile_scope!("Scroll");
                 let _timer = profile_counters.total_time.timer();
 
-                if doc.frame_ctx.scroll(delta, cursor, move_phase) && doc.render_on_scroll == Some(true)
-                {
-                    let frame = doc.render(
-                        &mut self.resource_cache,
-                        &mut self.gpu_cache,
-                        &mut profile_counters.resources,
-                    );
-                    DocumentOp::Scrolled(frame)
-                } else {
-                    DocumentOp::ScrolledNop
+                let should_render = doc.frame_ctx.scroll(delta, cursor, move_phase)
+                    && doc.render_on_scroll == Some(true);
+
+                DocumentOps {
+                    scroll: true,
+                    build: false,
+                    render: should_render,
                 }
             }
             DocumentMsg::HitTest(pipeline_id, point, flags, tx) => {
@@ -392,21 +425,19 @@ impl RenderBackend {
                     .unwrap()
                     .hit_test(cst, pipeline_id, point, flags);
                 tx.send(result).unwrap();
-                DocumentOp::Nop
+                DocumentOps::nop()
             }
             DocumentMsg::ScrollNodeWithId(origin, id, clamp) => {
                 profile_scope!("ScrollNodeWithScrollId");
                 let _timer = profile_counters.total_time.timer();
 
-                if doc.frame_ctx.scroll_node(origin, id, clamp) && doc.render_on_scroll == Some(true) {
-                    let frame = doc.render(
-                        &mut self.resource_cache,
-                        &mut self.gpu_cache,
-                        &mut profile_counters.resources,
-                    );
-                    DocumentOp::Scrolled(frame)
-                } else {
-                    DocumentOp::ScrolledNop
+                let should_render = doc.frame_ctx.scroll_node(origin, id, clamp)
+                    && doc.render_on_scroll == Some(true);
+
+                DocumentOps {
+                    scroll: true,
+                    build: false,
+                    render: should_render,
                 }
             }
             DocumentMsg::TickScrollingBounce => {
@@ -414,44 +445,46 @@ impl RenderBackend {
                 let _timer = profile_counters.total_time.timer();
 
                 doc.frame_ctx.tick_scrolling_bounce_animations();
-                if doc.render_on_scroll == Some(true) {
-                    let frame = doc.render(
-                        &mut self.resource_cache,
-                        &mut self.gpu_cache,
-                        &mut profile_counters.resources,
-                    );
-                    DocumentOp::Scrolled(frame)
-                } else {
-                    DocumentOp::ScrolledNop
+
+                DocumentOps {
+                    scroll: true,
+                    build: false,
+                    render: doc.render_on_scroll == Some(true),
                 }
             }
             DocumentMsg::GetScrollNodeState(tx) => {
                 profile_scope!("GetScrollNodeState");
                 tx.send(doc.frame_ctx.get_scroll_node_state()).unwrap();
-                DocumentOp::Nop
+                DocumentOps::nop()
             }
-            DocumentMsg::GenerateFrame(property_bindings) => {
-                profile_scope!("GenerateFrame");
+            DocumentMsg::UpdateDynamicProperties(property_bindings) => {
+                // Ideally, when there are property bindings present,
+                // we won't need to rebuild the entire frame here.
+                // However, to avoid conflicts with the ongoing work to
+                // refactor how scroll roots + transforms work, this
+                // just rebuilds the frame if there are animated property
+                // bindings present for now.
+                // TODO(gw): Once the scrolling / reference frame changes
+                //           are completed, optimize the internals of
+                //           animated properties to not require a full
+                //           rebuild of the frame!
+                doc.scene.properties.set_properties(property_bindings);
+                DocumentOps::build()
+            }
+            DocumentMsg::GenerateFrame => {
                 let _timer = profile_counters.total_time.timer();
 
-                if let Some(property_bindings) = property_bindings {
-                    doc.scene.properties.set_properties(property_bindings);
-                }
+                let mut op = DocumentOps::nop();
 
                 if let Some(ref mut ros) = doc.render_on_scroll {
                     *ros = true;
                 }
 
                 if doc.scene.root_pipeline_id.is_some() {
-                    let frame = doc.render(
-                        &mut self.resource_cache,
-                        &mut self.gpu_cache,
-                        &mut profile_counters.resources,
-                    );
-                    DocumentOp::Rendered(frame)
-                } else {
-                    DocumentOp::ScrolledNop
+                    op.render = true;
                 }
+
+                op
             }
         }
     }
@@ -515,30 +548,6 @@ impl RenderBackend {
                     );
                     self.documents.insert(document_id, document);
                 }
-                ApiMsg::UpdateDocument(document_id, doc_msg) => match self.process_document(
-                    document_id,
-                    doc_msg,
-                    frame_counter,
-                    &mut profile_counters,
-                ) {
-                    DocumentOp::Nop => {}
-                    DocumentOp::Built => {}
-                    DocumentOp::ScrolledNop => {
-                        self.notify_compositor_of_new_scroll_document(document_id, false);
-                    }
-                    DocumentOp::Scrolled(doc) => {
-                        self.publish_document(document_id, doc, &mut profile_counters);
-                        self.notify_compositor_of_new_scroll_document(document_id, true);
-                    }
-                    DocumentOp::Rendered(doc) => {
-                        frame_counter += 1;
-                        self.publish_document_and_notify_compositor(
-                            document_id,
-                            doc,
-                            &mut profile_counters,
-                        );
-                    }
-                },
                 ApiMsg::DeleteDocument(document_id) => {
                     self.documents.remove(&document_id);
                 }
@@ -614,41 +623,70 @@ impl RenderBackend {
                     self.notifier.shut_down();
                     break;
                 }
+                ApiMsg::UpdateDocument(document_id, doc_msgs) => {
+                    self.update_document(
+                        document_id,
+                        doc_msgs,
+                        &mut frame_counter,
+                        &mut profile_counters
+                    )
+                }
             }
         }
     }
 
-    fn publish_document(
+    fn update_document(
         &mut self,
         document_id: DocumentId,
-        document: RenderedDocument,
+        doc_msgs: Vec<DocumentMsg>,
+        frame_counter: &mut u32,
         profile_counters: &mut BackendProfileCounters,
     ) {
-        let pending_update = self.resource_cache.pending_updates();
-        let msg = ResultMsg::PublishDocument(document_id, document, pending_update, profile_counters.clone());
-        self.result_tx.send(msg).unwrap();
-        profile_counters.reset();
+        let mut op = DocumentOps::nop();
+        for doc_msg in doc_msgs {
+            op.combine(
+                self.process_document(
+                    document_id,
+                    doc_msg,
+                    *frame_counter,
+                    profile_counters,
+                )
+            );
+        }
+
+        let doc = self.documents.get_mut(&document_id).unwrap();
+
+        if op.build {
+            profile_scope!("build scene");
+            doc.build_scene(&mut self.resource_cache);
+        }
+
+        if op.render {
+            profile_scope!("generate frame");
+
+            *frame_counter += 1;
+            let rendered_document = doc.render(
+                &mut self.resource_cache,
+                &mut self.gpu_cache,
+                &mut profile_counters.resources,
+            );
+
+            // Publish the frame
+            let pending_update = self.resource_cache.pending_updates();
+            let msg = ResultMsg::PublishDocument(
+                document_id,
+                rendered_document,
+                pending_update,
+                profile_counters.clone()
+            );
+            self.result_tx.send(msg).unwrap();
+            profile_counters.reset();
+        }
+
+        if op.render || op.scroll {
+            self.notifier.new_document_ready(document_id, op.scroll, op.render);
+        }
     }
-
-    fn publish_document_and_notify_compositor(
-        &mut self,
-        document_id: DocumentId,
-        document: RenderedDocument,
-        profile_counters: &mut BackendProfileCounters,
-    ) {
-        self.publish_document(document_id, document, profile_counters);
-
-        self.notifier.new_document_ready(document_id, false, true);
-    }
-
-    fn notify_compositor_of_new_scroll_document(
-        &self,
-        document_id: DocumentId,
-        composite_needed: bool,
-    ) {
-        self.notifier.new_document_ready(document_id, true, composite_needed);
-    }
-
 
     #[cfg(not(feature = "debugger"))]
     fn get_docs_for_debugger(&self) -> String {
@@ -870,7 +908,18 @@ impl RenderBackend {
                 &mut self.gpu_cache,
                 &mut profile_counters.resources,
             );
-            self.publish_document_and_notify_compositor(id, render_doc, profile_counters);
+
+            let pending_update = self.resource_cache.pending_updates();
+            let msg = ResultMsg::PublishDocument(
+                id,
+                render_doc,
+                pending_update,
+                profile_counters.clone()
+            );
+            self.result_tx.send(msg).unwrap();
+            profile_counters.reset();
+
+            self.notifier.new_document_ready(id, false, true);
 
             self.documents.insert(id, doc);
         }
