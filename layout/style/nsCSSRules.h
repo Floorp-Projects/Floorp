@@ -32,7 +32,6 @@
 #include "nsIDOMCSSConditionRule.h"
 #include "nsIDOMCSSFontFeatureValuesRule.h"
 #include "nsIDOMCSSGroupingRule.h"
-#include "nsIDOMCSSSupportsRule.h"
 #include "nsTArray.h"
 
 class nsMediaList;
