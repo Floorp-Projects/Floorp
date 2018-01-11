@@ -20,8 +20,6 @@ interface nsIDOMCSSStyleSheet;
 [scriptable, uuid(362e98c3-82c2-4ad8-8dcb-00e8e4eab497)]
 interface inIDOMUtils : nsISupports
 {
-  // DOM Node utilities
-  boolean isIgnorableWhitespace(in nsIDOMCharacterData aDataNode);
   // Returns the "parent" of a node.  The parent of a document node is the
   // frame/iframe containing that document.  aShowingAnonymousContent says
   // whether we are showing anonymous content.
