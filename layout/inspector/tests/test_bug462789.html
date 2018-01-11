@@ -43,7 +43,7 @@ function do_test() {
   catch(e) { ok(false, "got an unexpected exception:" + e); }
 
   try {
-    var res = utils.getRuleLine(rule);
+    var res = InspectorUtils.getRuleLine(rule);
     is(res, 1, "getRuleLine");
   }
   catch(e) { ok(false, "got an unexpected exception:" + e); }

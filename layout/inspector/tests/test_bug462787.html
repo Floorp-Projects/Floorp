@@ -35,12 +35,11 @@ function do_test() {
   }
 
   try {
-    utils.getRuleLine(null); 
+    InspectorUtils.getRuleLine(null);
     ok(false, "expected an exception"); 
   }
   catch(e) {
-    e = SpecialPowers.wrap(e);
-    is(e.result, INVALID_POINTER, "got the expected exception");
+    is(e.name, "TypeError", "got the expected exception");
   }
 
   try {

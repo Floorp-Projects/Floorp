@@ -84,8 +84,8 @@ var MediaRuleActor = protocol.ActorClassWithSpec(mediaRuleSpec, {
 
     this._matchesChange = this._matchesChange.bind(this);
 
-    this.line = DOMUtils.getRuleLine(mediaRule);
-    this.column = DOMUtils.getRuleColumn(mediaRule);
+    this.line = InspectorUtils.getRuleLine(mediaRule);
+    this.column = InspectorUtils.getRuleColumn(mediaRule);
 
     try {
       this.mql = this.window.matchMedia(mediaRule.media.mediaText);
@@ -254,7 +254,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
 
     for (let i = 0; i < rules.length; i++) {
       let rule = rules[i];
-      if (DOMUtils.getRelativeRuleLine(rule) === 0) {
+      if (InspectorUtils.getRelativeRuleLine(rule) === 0) {
         return false;
       }
     }

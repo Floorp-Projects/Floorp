@@ -6,6 +6,8 @@
 
 /**
  * A collection of utility methods for use by devtools.
+ *
+ * See InspectorUtils.h for documentation on these methods.
  */
 [ChromeOnly]
 namespace InspectorUtils {
@@ -13,6 +15,9 @@ namespace InspectorUtils {
   sequence<CSSRule> getCSSStyleRules(
     Element element,
     [TreatNullAs=EmptyString] optional DOMString pseudo = "");
+  unsigned long getRuleLine(CSSRule rule);
+  unsigned long getRuleColumn(CSSRule rule);
+  unsigned long getRelativeRuleLine(CSSRule rule);
 };
 
 dictionary InspectorRGBTriple {
