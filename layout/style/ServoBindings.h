@@ -720,6 +720,12 @@ const nsTArray<mozilla::dom::Element*>* Gecko_GetElementsWithId(
 // be null-terminated.
 bool Gecko_GetBoolPrefValue(const char* pref_name);
 
+// Returns true if we're currently performing the servo traversal.
+bool Gecko_IsInServoTraversal();
+
+// Returns true if we're currently on the main thread.
+bool Gecko_IsMainThread();
+
 } // extern "C"
 
 #endif // mozilla_ServoBindings_h
