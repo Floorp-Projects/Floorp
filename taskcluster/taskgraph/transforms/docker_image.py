@@ -167,7 +167,7 @@ def fill_template(config, tasks):
             cache_name = 'imagebuilder-v1'
         else:
             worker['docker-image'] = {'in-tree': 'image_builder'}
-            cache_name = 'imagebuilder-{}'.format(_run_task_suffix())
+            cache_name = 'imagebuilder-sparse-{}'.format(_run_task_suffix())
 
         worker['caches'] = [{
             'type': 'persistent',
