@@ -876,33 +876,25 @@ InspectorUtils::IsValidCSSColor(GlobalObject& aGlobalObject,
 #endif
 }
 
-} // namespace dom
-} // namespace mozilla
-
-NS_IMETHODIMP
-inDOMUtils::GetBindingURLs(nsIDOMElement *aElement, nsIArray **_retval)
+void
+InspectorUtils::GetBindingURLs(GlobalObject& aGlobalObject,
+                               Element& aElement,
+                               nsTArray<nsString>& aResult)
 {
-  NS_ENSURE_ARG_POINTER(aElement);
-
-  *_retval = nullptr;
-
-  nsCOMPtr<nsIMutableArray> urls = do_CreateInstance(NS_ARRAY_CONTRACTID);
-  if (!urls)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  NS_ENSURE_ARG_POINTER(content);
-
-  nsXBLBinding *binding = content->GetXBLBinding();
+  nsXBLBinding* binding = aElement.GetXBLBinding();
 
   while (binding) {
-    urls->AppendElement(binding->PrototypeBinding()->BindingURI());
+    nsCString spec;
+    nsCOMPtr<nsIURI> bindingURI = binding->PrototypeBinding()->BindingURI();
+    bindingURI->GetSpec(spec);
+    nsString* resultURI = aResult.AppendElement();
+    CopyASCIItoUTF16(spec, *resultURI);
     binding = binding->GetBaseBinding();
   }
-
-  urls.forget(_retval);
-  return NS_OK;
 }
+
+} // namespace dom
+} // namespace mozilla
 
 NS_IMETHODIMP
 inDOMUtils::SetContentState(nsIDOMElement* aElement,

@@ -64,7 +64,7 @@ function do_test() {
   }
   catch(e) {
     e = SpecialPowers.wrap(e);
-    is(e.result, INVALID_POINTER, "got the expected exception");
+    is(e.name, "TypeError", "got the expected exception");
   }
 
   try {
