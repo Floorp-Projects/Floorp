@@ -11,6 +11,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 
 class nsAtom;
+class nsGenericDOMDataNode;
 class nsIDocument;
 class nsStyleContext;
 
@@ -158,6 +159,13 @@ public:
                                       const nsAString& aProperty,
                                       uint32_t aType,
                                       ErrorResult& aRv);
+
+  static bool IsIgnorableWhitespace(GlobalObject& aGlobalObject,
+                                    nsGenericDOMDataNode& aDataNode)
+  {
+    return IsIgnorableWhitespace(aDataNode);
+  }
+  static bool IsIgnorableWhitespace(nsGenericDOMDataNode& aDataNode);
 
 private:
   static already_AddRefed<nsStyleContext>

@@ -1228,11 +1228,6 @@ inDOMView::AppendKidsToArray(nsIDOMNodeList* aKids,
   nsCOMPtr<nsIDOMNode> kid;
   uint16_t nodeType = 0;
 
-  // Try and get DOM Utils in case we don't have one yet.
-  if (!mShowWhitespaceNodes && !mDOMUtils) {
-    mDOMUtils = services::GetInDOMUtils();
-  }
-
   for (uint32_t i = 0; i < l; ++i) {
     aKids->Item(i, getter_AddRefs(kid));
     kid->GetNodeType(&nodeType);
@@ -1250,12 +1245,11 @@ inDOMView::AppendKidsToArray(nsIDOMNodeList* aKids,
     if (mWhatToShow & filterForNodeType) {
       if ((nodeType == nsIDOMNode::TEXT_NODE ||
            nodeType == nsIDOMNode::COMMENT_NODE) &&
-          !mShowWhitespaceNodes && mDOMUtils) {
-        nsCOMPtr<nsIDOMCharacterData> data = do_QueryInterface(kid);
+          !mShowWhitespaceNodes) {
+        nsCOMPtr<nsIContent> content = do_QueryInterface(kid);
+        auto data = static_cast<nsGenericDOMDataNode*>(content.get());
         NS_ASSERTION(data, "Does not implement nsIDOMCharacterData!");
-        bool ignore;
-        mDOMUtils->IsIgnorableWhitespace(data, &ignore);
-        if (ignore) {
+        if (InspectorUtils::IsIgnorableWhitespace(*data)) {
           continue;
         }
       }
