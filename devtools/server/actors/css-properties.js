@@ -53,7 +53,7 @@ function generateCssProperties() {
     // Get the list of CSS types this property supports.
     let supports = [];
     for (let type in CSS_TYPES) {
-      if (safeCssPropertySupportsType(name, DOMUtils["TYPE_" + type])) {
+      if (safeCssPropertySupportsType(name, InspectorUtils["TYPE_" + type])) {
         supports.push(CSS_TYPES[type]);
       }
     }
@@ -100,7 +100,7 @@ function isCssPropertyKnown(name) {
 exports.isCssPropertyKnown = isCssPropertyKnown;
 
 /**
- * A wrapper for DOMUtils.cssPropertySupportsType that ignores invalid
+ * A wrapper for InspectorUtils.cssPropertySupportsType that ignores invalid
  * properties.
  *
  * @param {String} name The property name.
@@ -110,7 +110,7 @@ exports.isCssPropertyKnown = isCssPropertyKnown;
  */
 function safeCssPropertySupportsType(name, type) {
   try {
-    return DOMUtils.cssPropertySupportsType(name, type);
+    return InspectorUtils.cssPropertySupportsType(name, type);
   } catch (e) {
     return false;
   }
