@@ -247,6 +247,18 @@ public:
                                  const nsAString& aPseudoClass);
   static void ClearPseudoClassLocks(GlobalObject& aGlobal, Element& aElement);
 
+  /**
+   * Parse CSS and update the style sheet in place.
+   *
+   * @param DOMCSSStyleSheet aSheet
+   * @param DOMString aInput
+   *        The new source string for the style sheet.
+   */
+  static void ParseStyleSheet(GlobalObject& aGlobal,
+                              StyleSheet& aSheet,
+                              const nsAString& aInput,
+                              ErrorResult& aRv);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);

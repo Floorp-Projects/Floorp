@@ -25,8 +25,6 @@ loader.lazyRequireGetter(this, "removePseudoClassLock",
   "devtools/server/actors/highlighters/utils/markup", true);
 loader.lazyRequireGetter(this, "loadSheet", "devtools/shared/layout/utils", true);
 
-loader.lazyServiceGetter(this, "DOMUtils", "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
-
 var TRANSITION_PSEUDO_CLASS = ":-moz-styleeditor-transitioning";
 var TRANSITION_DURATION_MS = 500;
 var TRANSITION_BUFFER_MS = 1000;
@@ -595,7 +593,7 @@ var StyleSheetActor = protocol.ActorClassWithSpec(styleSheetSpec, {
    *         'kind' - either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
    */
   update: function (text, transition, kind = UPDATE_GENERAL) {
-    DOMUtils.parseStyleSheet(this.rawSheet, text);
+    InspectorUtils.parseStyleSheet(this.rawSheet, text);
 
     modifiedStyleSheets.set(this.rawSheet, text);
 

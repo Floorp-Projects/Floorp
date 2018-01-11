@@ -71,6 +71,7 @@ namespace InspectorUtils {
   void removePseudoClassLock(Element element, DOMString pseudoClass);
   boolean hasPseudoClassLock(Element element, DOMString pseudoClass);
   void clearPseudoClassLocks(Element element);
+  [Throws] void parseStyleSheet(CSSStyleSheet sheet, DOMString input);
 };
 
 dictionary PropertyNamesOptions {

@@ -17,16 +17,13 @@
     <script type="application/javascript">
 const InspectorUtils = SpecialPowers.InspectorUtils;
 
-var domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-               .getService(SpecialPowers.Ci.inIDOMUtils);
-
 var sheet = document.styleSheets[1];
 is(InspectorUtils.getRelativeRuleLine(sheet.cssRules[0]), 2,
    "initial relative rule line");
 is(InspectorUtils.getRuleLine(sheet.cssRules[0]), 11,
    "initial rule line");
 
-domUtils.parseStyleSheet(sheet, "\nbody {\n  color: blue;\n}\n");
+InspectorUtils.parseStyleSheet(sheet, "\nbody {\n  color: blue;\n}\n");
 is(InspectorUtils.getRelativeRuleLine(sheet.cssRules[0]), 2,
    "relative rule line after reparsing");
 is(InspectorUtils.getRuleLine(sheet.cssRules[0]), 11,
