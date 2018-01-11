@@ -30,7 +30,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 // but this whole file is in strict mode.  So instead fall back on
 // returning "this" from indirect eval, which returns the global.
 if (!(function() { var e = eval; return e("this"); })().File) { // eslint-disable-line no-eval
-    Cu.importGlobalProperties(["File"]);
+    Cu.importGlobalProperties(["File", "InspectorUtils"]);
 }
 
 // Allow stuff from this scope to be accessed from non-privileged scopes. This
@@ -669,6 +669,8 @@ SpecialPowersAPI.prototype = {
 
     return bindDOMWindowUtils(aWindow);
   },
+
+  get InspectorUtils() { return wrapPrivileged(InspectorUtils); },
 
   waitForCrashes(aExpectingProcessCrash) {
     return new Promise((resolve, reject) => {

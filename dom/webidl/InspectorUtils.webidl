@@ -3,6 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
+
+/**
+ * A collection of utility methods for use by devtools.
+ */
+[ChromeOnly]
+namespace InspectorUtils {
+};
+
 dictionary InspectorRGBTriple {
   /*
    * NOTE: Using octet for RGB components is not generally OK, because

@@ -23,9 +23,9 @@ const { PromiseDebugging, ChromeUtils, HeapSnapshot,
 
 // Create a single Sandbox to access global properties needed in this module.
 // Sandbox are memory expensive, so we should create as little as possible.
-const { CSS, FileReader, indexedDB, URL } =
+const { CSS, FileReader, indexedDB, InspectorUtils, URL } =
     Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(), {
-      wantGlobalProperties: ["CSS", "FileReader", "indexedDB", "URL"]
+      wantGlobalProperties: ["CSS", "FileReader", "indexedDB", "InspectorUtils", "URL"]
     });
 
 /**
@@ -179,6 +179,7 @@ exports.modules = {
   PromiseDebugging,
   ChromeUtils,
   HeapSnapshot,
+  InspectorUtils,
   FileReader,
 };
 

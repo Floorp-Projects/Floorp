@@ -30,6 +30,10 @@ EXPORTS.mozilla += [
     'ServoStyleRuleMap.h',
 ]
 
+EXPORTS.mozilla.dom += [
+    'InspectorUtils.h',
+]
+
 UNIFIED_SOURCES += [
     'inCSSValueSearch.cpp',
     'inDeepTreeWalker.cpp',
