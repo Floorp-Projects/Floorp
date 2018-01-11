@@ -20,14 +20,6 @@ interface nsIDOMCSSStyleSheet;
 [scriptable, uuid(362e98c3-82c2-4ad8-8dcb-00e8e4eab497)]
 interface inIDOMUtils : nsISupports
 {
-  // Utilities for obtaining information about a CSS property.
-
-  // Get a list of the longhands corresponding to the given CSS property.  If
-  // the property is a longhand already, just returns the property itself.
-  // Throws on unsupported property names.
-  void getSubpropertiesForCSSProperty(in AString aProperty,
-                                      [optional] out unsigned long aLength,
-                                      [array, size_is(aLength), retval] out wstring aValues);
   // Check whether a given CSS property is a shorthand.  Throws on unsupported
   // property names.
   bool cssPropertyIsShorthand(in AString aProperty);

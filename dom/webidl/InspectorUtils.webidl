@@ -35,6 +35,7 @@ namespace InspectorUtils {
   [Throws] DOMString rgbToColorName(octet r, octet g, octet b);
   InspectorRGBATuple? colorToRGBA(DOMString colorString);
   boolean isValidCSSColor(DOMString colorString);
+  [Throws] sequence<DOMString> getSubpropertiesForCSSProperty(DOMString property);
 };
 
 dictionary PropertyNamesOptions {
