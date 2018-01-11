@@ -136,7 +136,7 @@ StyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
   StyleSheet* childSheet = GetFirstChild();
   while (childSheet) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "child sheet");
-    cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMStyleSheet*, childSheet));
+    cb.NoteXPCOMChild(childSheet);
     childSheet = childSheet->mNext;
   }
 }
@@ -145,7 +145,7 @@ StyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(StyleSheet)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheet)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(StyleSheet)
@@ -313,68 +313,40 @@ StyleSheet::ChildSheetListBuilder::ReparentChildList(StyleSheet* aPrimarySheet,
   }
 }
 
-// nsIDOMStyleSheet interface
-
-NS_IMETHODIMP
+void
 StyleSheet::GetType(nsAString& aType)
 {
   aType.AssignLiteral("text/css");
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-StyleSheet::GetDisabled(bool* aDisabled)
-{
-  *aDisabled = Disabled();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 StyleSheet::SetDisabled(bool aDisabled)
 {
   // DOM method, so handle BeginUpdate/EndUpdate
   MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_STYLE, true);
   SetEnabled(!aDisabled);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-StyleSheet::GetOwnerNode(nsIDOMNode** aOwnerNode)
-{
-  nsCOMPtr<nsIDOMNode> ownerNode = do_QueryInterface(GetOwnerNode());
-  ownerNode.forget(aOwnerNode);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-StyleSheet::GetHref(nsAString& aHref)
+void
+StyleSheet::GetHref(nsAString& aHref, ErrorResult& aRv)
 {
   if (nsIURI* sheetURI = SheetInfo().mOriginalSheetURI) {
     nsAutoCString str;
     nsresult rv = sheetURI->GetSpec(str);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return;
+    }
     CopyUTF8toUTF16(str, aHref);
   } else {
     SetDOMStringToNull(aHref);
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 StyleSheet::GetTitle(nsAString& aTitle)
 {
   aTitle.Assign(mTitle);
-  return NS_OK;
-}
-
-// nsIDOMStyleSheet interface
-
-NS_IMETHODIMP
-StyleSheet::GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)
-{
-  NS_ENSURE_ARG_POINTER(aParentStyleSheet);
-  NS_IF_ADDREF(*aParentStyleSheet = GetParentStyleSheet());
-  return NS_OK;
 }
 
 void

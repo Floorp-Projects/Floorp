@@ -40,9 +40,6 @@ class DOMException;
 }
 %}
 
-// Style Sheets
-interface nsIDOMStyleSheet;
-
 // Base
 interface nsIDOMWindow;
 interface nsIDOMWindowCollection;
