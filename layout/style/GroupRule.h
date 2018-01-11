@@ -231,10 +231,7 @@ protected:
   using GroupRule::GroupRule;
 
 public:
-  // GetConditionText signature matches nsIDOMCSSConditionRule, so subclasses
-  // can implement this easily.  The implementations should never return
-  // anything other than NS_OK.
-  NS_IMETHOD GetConditionText(nsAString& aConditionText) = 0;
+  virtual void GetConditionText(nsAString& aConditionText) = 0;
   virtual void SetConditionText(const nsAString& aConditionText,
                                 ErrorResult& aRv) = 0;
 };

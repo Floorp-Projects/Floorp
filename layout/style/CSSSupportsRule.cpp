@@ -19,7 +19,6 @@ NS_IMPL_RELEASE_INHERITED(mozilla::dom::CSSSupportsRule, css::ConditionRule)
 // QueryInterface implementation for CSSSupportsRule
 NS_INTERFACE_MAP_BEGIN(CSSSupportsRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
 NS_INTERFACE_MAP_END_INHERITING(ConditionRule)
 
 // nsIDOMCSSGroupingRule methods
@@ -39,13 +38,6 @@ NS_IMETHODIMP
 CSSSupportsRule::DeleteRule(uint32_t aIndex)
 {
   return GroupRule::DeleteRule(aIndex);
-}
-
-void
-CSSSupportsRule::SetConditionText(const nsAString& aConditionText,
-                                  ErrorResult& aRv)
-{
-  aRv = SetConditionText(aConditionText);
 }
 
 /* virtual */ JSObject*

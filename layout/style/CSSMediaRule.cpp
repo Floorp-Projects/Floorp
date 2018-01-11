@@ -18,7 +18,6 @@ NS_IMPL_RELEASE_INHERITED(CSSMediaRule, css::ConditionRule)
 // QueryInterface implementation for CSSMediaRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CSSMediaRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
 NS_INTERFACE_MAP_END_INHERITING(css::ConditionRule)
 
 // nsIDOMCSSGroupingRule methods
@@ -39,17 +38,6 @@ NS_IMETHODIMP
 CSSMediaRule::DeleteRule(uint32_t aIndex)
 {
   return GroupRule::DeleteRule(aIndex);
-}
-
-void
-CSSMediaRule::SetConditionText(const nsAString& aConditionText,
-                               ErrorResult& aRv)
-{
-  nsresult rv = static_cast<nsIDOMCSSConditionRule*>(this)->
-    SetConditionText(aConditionText);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-  }
 }
 
 /* virtual */ JSObject*
