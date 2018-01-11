@@ -869,6 +869,8 @@ private: // member functions
   nsresult EnsureFind();
   nsresult EnsureCommandHandler();
   nsresult RefreshURIFromQueue();
+  nsresult Embed(nsIContentViewer* aContentViewer,
+                 const char* aCommand, nsISupports* aExtraInfo);
   nsresult GetEldestPresContext(nsPresContext** aPresContext);
   nsresult CheckLoadingPermissions();
   nsresult PersistLayoutHistoryState();
