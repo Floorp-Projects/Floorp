@@ -18,12 +18,14 @@
 
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 
 #include "webrtc/config.h"
 
 #include "signaling/src/jsep/JsepTrack.h"
 #include "signaling/src/jsep/JsepTransport.h"
+#include "signaling/src/sdp/RsdparsaSdpParser.h"
 #include "signaling/src/sdp/Sdp.h"
 #include "signaling/src/sdp/SipccSdp.h"
 #include "signaling/src/sdp/SipccSdpParser.h"
@@ -64,6 +66,8 @@ JsepSessionImpl::Init()
 
   SetupDefaultCodecs();
   SetupDefaultRtpExtensions();
+
+  mRunRustParser = Preferences::GetBool("media.webrtc.rsdparsa_enabled", false);
 
   return NS_OK;
 }
@@ -1259,10 +1263,13 @@ JsepSessionImpl::CopyPreviousMsid(const Sdp& oldLocal, Sdp* newLocal)
 nsresult
 JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
 {
-  UniquePtr<Sdp> parsed = mParser.Parse(sdp);
+  UniquePtr<Sdp> parsed = mSipccParser.Parse(sdp);
+  if (mRunRustParser) {
+    UniquePtr<Sdp> rustParsed = mRsdparsaParser.Parse(sdp);
+  }
   if (!parsed) {
     std::string error = "Failed to parse SDP: ";
-    mSdpHelper.appendSdpParseErrors(mParser.GetParseErrors(), &error);
+    mSdpHelper.appendSdpParseErrors(mSipccParser.GetParseErrors(), &error);
     JSEP_SET_ERROR(error);
     return NS_ERROR_INVALID_ARG;
   }
