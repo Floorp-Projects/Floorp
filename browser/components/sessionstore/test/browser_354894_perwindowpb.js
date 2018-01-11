@@ -141,7 +141,7 @@ let setupTest = async function(options, testFunction) {
   let private = options.private || false;
   let newWin = await promiseNewWindowLoaded({ private });
 
-  await injectTestTabs(newWin);
+  injectTestTabs(newWin);
 
   await testFunction(newWin, observing);
 
@@ -163,9 +163,9 @@ let setupTest = async function(options, testFunction) {
  *        The browser window to load the tabs in
  */
 function injectTestTabs(win) {
-  let promises = TEST_URLS.map(url => win.gBrowser.addTab(url))
-                          .map(tab => BrowserTestUtils.browserLoaded(tab.linkedBrowser));
-  return Promise.all(promises);
+  TEST_URLS.forEach(function(url) {
+    win.gBrowser.addTab(url);
+  });
 }
 
 /**
