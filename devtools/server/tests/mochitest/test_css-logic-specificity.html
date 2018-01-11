@@ -13,12 +13,10 @@ Test that css-logic calculates CSS specificity properly
   "use strict";
 
   window.onload = function () {
-    const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
+    const {utils: Cu} = Components;
 
     const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
     const {CssLogic, CssSelector} = require("devtools/server/css-logic");
-    const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
-                       .getService(Ci.inIDOMUtils);
     const InspectorUtils = SpecialPowers.InspectorUtils;
 
     const TEST_DATA = [
@@ -54,7 +52,7 @@ Test that css-logic calculates CSS specificity properly
     SimpleTest.waitForExplicitFinish();
 
     createDocument();
-    let cssLogic = new CssLogic(DOMUtils.isInheritedProperty);
+    let cssLogic = new CssLogic(InspectorUtils.isInheritedProperty);
 
     cssLogic.highlight(document.body);
     let cssSheet = cssLogic.sheets[0];

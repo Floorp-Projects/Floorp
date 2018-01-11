@@ -4,7 +4,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=699592
 -->
 <head>
-  <title>Test for nsIDOMUtils::isInheritedProperty</title>
+  <title>Test for InspectorUtils::isInheritedProperty</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -12,18 +12,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=699592
 <pre id="test">
 <script type="application/javascript">
 
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
 function do_test() {
-  var utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-    .getService(SpecialPowers.Ci.inIDOMUtils);
+  is(InspectorUtils.isInheritedProperty("font-size"), true, "font-size is inherited.");
 
-  is(utils.isInheritedProperty("font-size"), true, "font-size is inherited.");
+  is(InspectorUtils.isInheritedProperty("min-width"), false, "min-width is not inherited.");
 
-  is(utils.isInheritedProperty("min-width"), false, "min-width is not inherited.");
+  is(InspectorUtils.isInheritedProperty("font"), true, "shorthand font property is inherited.");
 
-  is(utils.isInheritedProperty("font"), true, "shorthand font property is inherited.");
-
-  is(utils.isInheritedProperty("border"), false, "shorthand border property not inherited.");
-  is(utils.isInheritedProperty("garbage"), false, "Unknown property isn't inherited.");
+  is(InspectorUtils.isInheritedProperty("border"), false, "shorthand border property not inherited.");
+  is(InspectorUtils.isInheritedProperty("garbage"), false, "Unknown property isn't inherited.");
 
   SimpleTest.finish();
 }

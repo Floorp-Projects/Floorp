@@ -29,6 +29,7 @@ namespace InspectorUtils {
       CSSStyleRule rule,
       unsigned long selectorIndex,
       [TreatNullAs=EmptyString] optional DOMString pseudo = "");
+  boolean isInheritedProperty(DOMString property);
 };
 
 dictionary InspectorRGBTriple {
