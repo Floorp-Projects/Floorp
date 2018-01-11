@@ -12,7 +12,7 @@
 #include "mozilla/Preferences.h"
 
 #include "nsError.h"
-#include "nsIDOMCSSPrimitiveValue.h"
+#include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsStyleContext.h"
@@ -1549,7 +1549,7 @@ nsComputedDOMStyle::DoGetContent()
         nsAutoString str;
         nsStyleUtil::AppendEscapedCSSIdent(
           nsDependentString(data.GetString()), str);
-        val->SetString(str, nsIDOMCSSPrimitiveValue::CSS_ATTR);
+        val->SetString(str, CSSPrimitiveValueBinding::CSS_ATTR);
         break;
       }
       case eStyleContentType_Counter:
@@ -1574,7 +1574,7 @@ nsComputedDOMStyle::DoGetContent()
         }
 
         str.Append(char16_t(')'));
-        val->SetString(str, nsIDOMCSSPrimitiveValue::CSS_COUNTER);
+        val->SetString(str, CSSPrimitiveValueBinding::CSS_COUNTER);
         break;
       }
       case eStyleContentType_OpenQuote:
