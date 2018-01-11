@@ -859,27 +859,6 @@ InspectorUtils::GetCSSValuesForProperty(GlobalObject& aGlobalObject,
 } // namespace mozilla
 
 NS_IMETHODIMP
-inDOMUtils::ColorNameToRGB(const nsAString& aColorName, JSContext* aCx,
-                           JS::MutableHandle<JS::Value> aValue)
-{
-  nscolor color;
-  if (!NS_ColorNameToRGB(aColorName, &color)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  InspectorRGBTriple triple;
-  triple.mR = NS_GET_R(color);
-  triple.mG = NS_GET_G(color);
-  triple.mB = NS_GET_B(color);
-
-  if (!ToJSValue(aCx, triple, aValue)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 inDOMUtils::RgbToColorName(uint8_t aR, uint8_t aG, uint8_t aB,
                            nsAString& aColorName)
 {

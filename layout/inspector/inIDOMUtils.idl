@@ -21,8 +21,6 @@ interface nsIDOMCSSStyleSheet;
 interface inIDOMUtils : nsISupports
 {
   // Utilities for working with CSS colors
-  [implicit_jscontext]
-  jsval colorNameToRGB(in DOMString aColorName);
   AString rgbToColorName(in octet aR, in octet aG, in octet aB);
 
   // Convert a given CSS color string to rgba. Returns null on failure or an

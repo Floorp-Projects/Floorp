@@ -38,18 +38,6 @@ dictionary PropertyNamesOptions {
   boolean includeAliases = false;
 };
 
-dictionary InspectorRGBTriple {
-  /*
-   * NOTE: Using octet for RGB components is not generally OK, because
-   * they can be outside the 0-255 range, but for backwards-compatible
-   * named colors (which is what we use this dictionary for) the 0-255
-   * assumption is fine.
-   */
-  octet r = 0;
-  octet g = 0;
-  octet b = 0;
-};
-
 dictionary InspectorRGBATuple {
   /*
    * NOTE: This tuple is in the normal 0-255-sized RGB space but can be
