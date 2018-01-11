@@ -71,14 +71,16 @@ async function test() {
     Services.prefs.clearUserPref("privacy.firstparty.isolate");
   });
 
-  let url = "https://example.com/browser/browser/base/content/test/pageinfo/image.html";
-  gBrowser.selectedBrowser.loadURI(url);
-  await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, url);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  content.location = "https://example.com/browser/browser/base/content/test/pageinfo/image.html";
+  await waitForEvent(gBrowser.selectedBrowser, "load");
+
+  let spec = gBrowser.selectedBrowser.currentURI.spec;
 
   // Pass a dummy imageElement, if there isn't an imageElement, pageInfo.js
   // will do a preview, however this sometimes will cause intermittent failures,
   // see bug 1403365.
-  let pageInfo = BrowserPageInfo(url, "mediaTab", {});
+  let pageInfo = BrowserPageInfo(spec, "mediaTab", {});
   info("waitForEvent pageInfo");
   await waitForEvent(pageInfo, "load");
 
