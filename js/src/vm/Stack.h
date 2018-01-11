@@ -1666,18 +1666,11 @@ class JitActivation : public Activation
     // Interrupts are started from the interrupt signal handler (or the ARM
     // simulator) and cleared by WasmHandleExecutionInterrupt or WasmHandleThrow
     // when the interrupt is handled.
-
     void startWasmInterrupt(const JS::ProfilingFrameIterator::RegisterState& state);
     void finishWasmInterrupt();
     bool isWasmInterrupted() const;
-    void* wasmInterruptUnwindPC() const;
-    void* wasmInterruptResumePC() const;
-
-    void startWasmTrap(wasm::Trap trap, uint32_t bytecodeOffset, void* pc, void* fp);
-    void finishWasmTrap();
-    bool isWasmTrapping() const;
-    void* wasmTrapPC() const;
-    uint32_t wasmTrapBytecodeOffset() const;
+    void* wasmUnwindPC() const;
+    void* wasmResumePC() const;
 };
 
 // A filtering of the ActivationIterator to only stop at JitActivations.

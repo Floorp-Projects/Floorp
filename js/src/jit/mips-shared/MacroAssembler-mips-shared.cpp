@@ -1863,14 +1863,6 @@ MacroAssembler::comment(const char* msg)
     Assembler::comment(msg);
 }
 
-// ===============================================================
-// WebAssembly
-
-CodeOffset
-MacroAssembler::illegalInstruction()
-{
-    MOZ_CRASH("NYI");
-}
 
 void
 MacroAssembler::wasmTruncateDoubleToInt32(FloatRegister input, Register output, Label* oolEntry)

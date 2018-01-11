@@ -1552,7 +1552,6 @@ jit::JitActivation::~JitActivation()
     MOZ_ASSERT(!bailoutData_);
 
     MOZ_ASSERT(!isWasmInterrupted());
-    MOZ_ASSERT(!isWasmTrapping());
 
     clearRematerializedFrames();
     js_delete(rematerializedFrames_);
@@ -1726,8 +1725,9 @@ jit::JitActivation::startWasmInterrupt(const JS::ProfilingFrameIterator::Registe
     MOZ_ASSERT(state.fp);
 
     // Execution can only be interrupted in function code. Afterwards, control
-    // flow does not reenter function code and thus there can be no
+    // flow does not reenter function code and thus there should be no
     // interrupt-during-interrupt.
+    MOZ_ASSERT(!isWasmInterrupted());
 
     bool ignoredUnwound;
     wasm::UnwindState unwindState;
@@ -1736,7 +1736,7 @@ jit::JitActivation::startWasmInterrupt(const JS::ProfilingFrameIterator::Registe
     void* pc = unwindState.pc;
     MOZ_ASSERT(wasm::LookupCode(pc)->lookupRange(pc)->isFunction());
 
-    cx_->runtime()->wasmUnwindData.ref().construct<wasm::InterruptData>(pc, state.pc);
+    cx_->runtime()->startWasmInterrupt(state.pc, pc);
     setWasmExitFP(unwindState.fp);
 
     MOZ_ASSERT(compartment() == unwindState.fp->tls->instance->compartment());
@@ -1746,17 +1746,18 @@ jit::JitActivation::startWasmInterrupt(const JS::ProfilingFrameIterator::Registe
 void
 jit::JitActivation::finishWasmInterrupt()
 {
+    MOZ_ASSERT(hasWasmExitFP());
     MOZ_ASSERT(isWasmInterrupted());
 
-    cx_->runtime()->wasmUnwindData.ref().destroy();
+    cx_->runtime()->finishWasmInterrupt();
     packedExitFP_ = nullptr;
 }
 
 bool
 jit::JitActivation::isWasmInterrupted() const
 {
-    JSRuntime* rt = cx_->runtime();
-    if (!rt->wasmUnwindData.ref().constructed<wasm::InterruptData>())
+    void* pc = cx_->runtime()->wasmUnwindPC();
+    if (!pc)
         return false;
 
     Activation* act = cx_->activation();
@@ -1767,76 +1768,24 @@ jit::JitActivation::isWasmInterrupted() const
         return false;
 
     DebugOnly<const wasm::Frame*> fp = wasmExitFP();
-    DebugOnly<void*> unwindPC = rt->wasmInterruptData().unwindPC;
-    MOZ_ASSERT(fp->instance()->code().containsCodePC(unwindPC));
+    MOZ_ASSERT(fp && fp->instance()->code().containsCodePC(pc));
     return true;
 }
 
 void*
-jit::JitActivation::wasmInterruptUnwindPC() const
+jit::JitActivation::wasmUnwindPC() const
 {
+    MOZ_ASSERT(hasWasmExitFP());
     MOZ_ASSERT(isWasmInterrupted());
-    return cx_->runtime()->wasmInterruptData().unwindPC;
+    return cx_->runtime()->wasmUnwindPC();
 }
 
 void*
-jit::JitActivation::wasmInterruptResumePC() const
+jit::JitActivation::wasmResumePC() const
 {
+    MOZ_ASSERT(hasWasmExitFP());
     MOZ_ASSERT(isWasmInterrupted());
-    return cx_->runtime()->wasmInterruptData().resumePC;
-}
-
-void
-jit::JitActivation::startWasmTrap(wasm::Trap trap, uint32_t bytecodeOffset, void* pc, void* fp)
-{
-    MOZ_ASSERT(pc);
-    MOZ_ASSERT(fp);
-
-    cx_->runtime()->wasmUnwindData.ref().construct<wasm::TrapData>(pc, trap, bytecodeOffset);
-    setWasmExitFP((wasm::Frame*)fp);
-}
-
-void
-jit::JitActivation::finishWasmTrap()
-{
-    MOZ_ASSERT(isWasmTrapping());
-
-    cx_->runtime()->wasmUnwindData.ref().destroy();
-    packedExitFP_ = nullptr;
-}
-
-bool
-jit::JitActivation::isWasmTrapping() const
-{
-    JSRuntime* rt = cx_->runtime();
-    if (!rt->wasmUnwindData.ref().constructed<wasm::TrapData>())
-        return false;
-
-    Activation* act = cx_->activation();
-    while (act && !act->hasWasmExitFP())
-        act = act->prev();
-
-    if (act != this)
-        return false;
-
-    DebugOnly<const wasm::Frame*> fp = wasmExitFP();
-    DebugOnly<void*> unwindPC = rt->wasmTrapData().pc;
-    MOZ_ASSERT(fp->instance()->code().containsCodePC(unwindPC));
-    return true;
-}
-
-void*
-jit::JitActivation::wasmTrapPC() const
-{
-    MOZ_ASSERT(isWasmTrapping());
-    return cx_->runtime()->wasmTrapData().pc;
-}
-
-uint32_t
-jit::JitActivation::wasmTrapBytecodeOffset() const
-{
-    MOZ_ASSERT(isWasmTrapping());
-    return cx_->runtime()->wasmTrapData().bytecodeOffset;
+    return cx_->runtime()->wasmResumePC();
 }
 
 InterpreterFrameIterator&
