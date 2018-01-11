@@ -1943,6 +1943,12 @@ Accumulate(HistogramID aID, const nsCString& aKey, uint32_t aSample)
 }
 
 void
+Accumulate(HistogramID aID, const nsCString& aKey, const nsTArray<uint32_t>& aSamples)
+{
+  TelemetryHistogram::Accumulate(aID, aKey, aSamples);
+}
+
+void
 Accumulate(const char* name, uint32_t sample)
 {
   TelemetryHistogram::Accumulate(name, sample);
