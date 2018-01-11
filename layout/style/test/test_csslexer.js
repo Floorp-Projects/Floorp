@@ -3,8 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-function test_lexer(domutils, cssText, tokenTypes) {
-  let lexer = domutils.getCSSLexer(cssText);
+Components.utils.importGlobalProperties(["InspectorUtils"]);
+
+function test_lexer(cssText, tokenTypes) {
+  let lexer = InspectorUtils.getCSSLexer(cssText);
   let reconstructed = '';
   let lastTokenEnd = 0;
   let i = 0;
@@ -76,8 +78,8 @@ var LEX_TESTS = [
   ["/* bad comment", ["comment"]]
 ];
 
-function test_lexer_linecol(domutils, cssText, locations) {
-  let lexer = domutils.getCSSLexer(cssText);
+function test_lexer_linecol(cssText, locations) {
+  let lexer = InspectorUtils.getCSSLexer(cssText);
   let i = 0;
   while (true) {
     let token = lexer.nextToken();
@@ -101,9 +103,9 @@ function test_lexer_linecol(domutils, cssText, locations) {
   equal(i, locations.length);
 }
 
-function test_lexer_eofchar(domutils, cssText, argText, expectedAppend,
+function test_lexer_eofchar(cssText, argText, expectedAppend,
                             expectedNoAppend) {
-  let lexer = domutils.getCSSLexer(cssText);
+  let lexer = InspectorUtils.getCSSLexer(cssText);
   while (lexer.nextToken()) {
     // Nothing.
   }
@@ -144,27 +146,24 @@ var EOFCHAR_TESTS = [
 
 function run_test()
 {
-  let domutils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
-                           .getService(Components.interfaces.inIDOMUtils);
-
   let text, result;
   for ([text, result] of LEX_TESTS) {
-    test_lexer(domutils, text, result);
+    test_lexer(text, result);
   }
 
   for ([text, result] of LINECOL_TESTS) {
-    test_lexer_linecol(domutils, text, result);
+    test_lexer_linecol(text, result);
   }
 
   for ([text, expectedAppend, expectedNoAppend] of EOFCHAR_TESTS) {
     if (!expectedNoAppend) {
       expectedNoAppend = expectedAppend;
     }
-    test_lexer_eofchar(domutils, text, text, expectedAppend, expectedNoAppend);
+    test_lexer_eofchar(text, text, expectedAppend, expectedNoAppend);
   }
 
   // Ensure that passing a different inputString to performEOFFixup
   // doesn't cause an assertion trying to strip a backslash from the
   // end of an empty string.
-  test_lexer_eofchar(domutils, "'\\", "", "\\'", "'");
+  test_lexer_eofchar("'\\", "", "\\'", "'");
 }

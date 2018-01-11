@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "inDOMView.h"
-#include "inIDOMUtils.h"
 
 #include "inLayoutUtils.h"
 
@@ -26,6 +25,7 @@
 #include "nsITreeBoxObject.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Services.h"
+#include "mozilla/dom/InspectorUtils.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -776,6 +776,16 @@ inDOMView::ContentAppended(nsIDocument *aDocument,
   }
 }
 
+static already_AddRefed<nsIDOMNode>
+GetParentForNode(nsINode* aChild, bool aShowAnonymous)
+{
+  MOZ_ASSERT(aChild);
+  nsINode* parent = InspectorUtils::GetParentForNode(*aChild, aShowAnonymous);
+
+  nsCOMPtr<nsIDOMNode> parentDOMNode = do_QueryInterface(parent);
+  return parentDOMNode.forget();
+}
+
 void
 inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
                            nsIContent* aChild)
@@ -785,15 +795,7 @@ inDOMView::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
 
   nsresult rv;
   nsCOMPtr<nsIDOMNode> childDOMNode(do_QueryInterface(aChild));
-  nsCOMPtr<nsIDOMNode> parent;
-  if (!mDOMUtils) {
-    mDOMUtils = services::GetInDOMUtils();
-    if (!mDOMUtils) {
-      return;
-    }
-  }
-  mDOMUtils->GetParentForNode(childDOMNode, mShowAnonymous,
-                              getter_AddRefs(parent));
+  nsCOMPtr<nsIDOMNode> parent = GetParentForNode(aChild, mShowAnonymous);
 
   // find the inDOMViewNode for the parent of the inserted content
   int32_t parentRow = 0;
@@ -1183,17 +1185,11 @@ inDOMView::GetChildNodesFor(nsIDOMNode* aNode, nsCOMArray<nsIDOMNode>& aResult)
   }
 
   if (mWhatToShow & nsIDOMNodeFilter::SHOW_ELEMENT) {
-    nsCOMPtr<nsIDOMNodeList> kids;
-    if (!mDOMUtils) {
-      mDOMUtils = services::GetInDOMUtils();
-      if (!mDOMUtils) {
-        return NS_ERROR_FAILURE;
-      }
-    }
+    nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+    MOZ_ASSERT(node);
 
-    mDOMUtils->GetChildrenForNode(aNode, mShowAnonymous,
-                                  getter_AddRefs(kids));
-
+    nsCOMPtr<nsINodeList> kids =
+      InspectorUtils::GetChildrenForNode(*node, mShowAnonymous);
     if (kids) {
       AppendKidsToArray(kids, aResult);
     }
@@ -1220,22 +1216,12 @@ inDOMView::GetRealPreviousSibling(nsIDOMNode* aNode, nsIDOMNode* aRealParent, ns
 }
 
 nsresult
-inDOMView::AppendKidsToArray(nsIDOMNodeList* aKids,
+inDOMView::AppendKidsToArray(nsINodeList* aKids,
                              nsCOMArray<nsIDOMNode>& aArray)
 {
-  uint32_t l = 0;
-  aKids->GetLength(&l);
-  nsCOMPtr<nsIDOMNode> kid;
-  uint16_t nodeType = 0;
-
-  // Try and get DOM Utils in case we don't have one yet.
-  if (!mShowWhitespaceNodes && !mDOMUtils) {
-    mDOMUtils = services::GetInDOMUtils();
-  }
-
-  for (uint32_t i = 0; i < l; ++i) {
-    aKids->Item(i, getter_AddRefs(kid));
-    kid->GetNodeType(&nodeType);
+  for (uint32_t i = 0, len = aKids->Length(); i < len; ++i) {
+    nsIContent* kid = aKids->Item(i);
+    uint16_t nodeType = kid->NodeType();
 
     NS_ASSERTION(nodeType && nodeType <= nsIDOMNode::NOTATION_NODE,
                  "Unknown node type. "
@@ -1250,17 +1236,17 @@ inDOMView::AppendKidsToArray(nsIDOMNodeList* aKids,
     if (mWhatToShow & filterForNodeType) {
       if ((nodeType == nsIDOMNode::TEXT_NODE ||
            nodeType == nsIDOMNode::COMMENT_NODE) &&
-          !mShowWhitespaceNodes && mDOMUtils) {
-        nsCOMPtr<nsIDOMCharacterData> data = do_QueryInterface(kid);
+          !mShowWhitespaceNodes) {
+        nsCOMPtr<nsIContent> content = do_QueryInterface(kid);
+        auto data = static_cast<nsGenericDOMDataNode*>(content.get());
         NS_ASSERTION(data, "Does not implement nsIDOMCharacterData!");
-        bool ignore;
-        mDOMUtils->IsIgnorableWhitespace(data, &ignore);
-        if (ignore) {
+        if (InspectorUtils::IsIgnorableWhitespace(*data)) {
           continue;
         }
       }
 
-      aArray.AppendElement(kid.forget());
+      nsCOMPtr<nsIDOMNode> node = do_QueryInterface(kid);
+      aArray.AppendElement(node.forget());
     }
   }
 

@@ -450,10 +450,6 @@ with modules["NETWORK"]:
     # Generic error for non-specific failures during service worker interception
     errors["NS_ERROR_INTERCEPTION_FAILED"] = FAILURE(100)
 
-    # nsIHstsPrimingListener
-    # Error code for HSTS priming timeout to distinguish from blocking
-    errors["NS_ERROR_HSTS_PRIMING_TIMEOUT"] = FAILURE(110)
-
 
 
 # =======================================================================

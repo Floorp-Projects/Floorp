@@ -1552,7 +1552,7 @@ static bool strings_equal(bool aIgnoreCase,
                           const char* aS1, const char* aS2, uint32_t aLen)
 {
   return aIgnoreCase
-    ? !nsCRT::strncasecmp(aS1, aS2, aLen) : !nsCRT::strncmp(aS1, aS2, aLen);
+    ? !nsCRT::strncasecmp(aS1, aS2, aLen) : !strncmp(aS1, aS2, aLen);
 }
 
 NS_IMETHODIMP

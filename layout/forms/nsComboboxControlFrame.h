@@ -230,6 +230,9 @@ protected:
   void ReflowDropdown(nsPresContext*          aPresContext,
                       const ReflowInput& aReflowInput);
 
+  // Return true if we should render a dropdown button.
+  bool HasDropDownButton() const;
+
   enum DropDownPositionState {
     // can't show the dropdown at its current position
     eDropDownPositionSuppressed,

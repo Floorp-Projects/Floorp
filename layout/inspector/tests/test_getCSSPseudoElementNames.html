@@ -2,12 +2,11 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test inDOMUtils::getCSSPseudoElementNames</title>
+  <title>Test InspectorUtils::getCSSPseudoElementNames</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
-  let utils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
-                           .getService(SpecialPowers.Ci.inIDOMUtils);
+  const InspectorUtils = SpecialPowers.InspectorUtils;
 
   let expected = new Set([
     ":after",
@@ -32,7 +31,7 @@
     ":-moz-selection",
   ]);
 
-  let names = utils.getCSSPseudoElementNames();
+  let names = InspectorUtils.getCSSPseudoElementNames();
   for (let name of names) {
     ok(expected.has(name), name + " is included");
     expected.delete(name);
@@ -49,7 +48,7 @@
   </script>
 </head>
 <body>
-<h1>Test inDOMUtils::getCSSPseudoElementNames</h1>
+<h1>Test InspectorUtils::getCSSPseudoElementNames</h1>
 <p id="display"></p>
 <div id="content" style="display: none">
 

@@ -6,6 +6,8 @@
 
 #include "mozilla/dom/ConsoleInstance.h"
 #include "mozilla/dom/ConsoleBinding.h"
+#include "ConsoleCommon.h"
+#include "ConsoleUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -43,6 +45,23 @@ PrefToValue(const nsCString& aPref)
 
   MOZ_ASSERT(index < (int)ConsoleLogLevel::EndGuard_);
   return static_cast<ConsoleLogLevel>(index);
+}
+
+ConsoleUtils::Level
+WebIDLevelToConsoleUtilsLevel(ConsoleLevel aLevel)
+{
+  switch (aLevel) {
+    case ConsoleLevel::Log:
+      return ConsoleUtils::eLog;
+    case ConsoleLevel::Warning:
+      return ConsoleUtils::eWarning;
+    case ConsoleLevel::Error:
+      return ConsoleUtils::eError;
+    default:
+      break;
+  }
+
+  return ConsoleUtils::eLog;
 }
 
 } // anonymous
@@ -132,7 +151,7 @@ ConsoleInstance::TimeEnd(JSContext* aCx, const nsAString& aLabel)
 void
 ConsoleInstance::TimeStamp(JSContext* aCx, const JS::Handle<JS::Value> aData)
 {
-  ClearException ce(aCx);
+  ConsoleCommon::ClearException ce(aCx);
 
   Sequence<JS::Value> data;
   SequenceRooter<JS::Value> rooter(aCx, &data);
@@ -182,6 +201,23 @@ ConsoleInstance::Clear(JSContext* aCx)
   const Sequence<JS::Value> data;
   mConsole->MethodInternal(aCx, Console::MethodClear,
                            NS_LITERAL_STRING("clear"), data);
+}
+
+void
+ConsoleInstance::ReportForServiceWorkerScope(const nsAString& aScope,
+                                             const nsAString& aMessage,
+                                             const nsAString& aFilename,
+                                             uint32_t aLineNumber,
+                                             uint32_t aColumnNumber,
+                                             ConsoleLevel aLevel)
+{
+  if (!NS_IsMainThread()) {
+    return;
+  }
+
+  ConsoleUtils::ReportForServiceWorkerScope(aScope, aMessage, aFilename,
+                                            aLineNumber, aColumnNumber,
+                                            WebIDLevelToConsoleUtilsLevel(aLevel));
 }
 
 } // namespace dom

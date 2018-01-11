@@ -130,8 +130,6 @@ public:
   using EditorBase::RemoveAttributeOrEquivalent;
   using EditorBase::SetAttributeOrEquivalent;
 
-  nsresult MouseMove(nsIDOMMouseEvent* aMouseEvent);
-
   // nsStubMutationObserver overrides
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
@@ -443,6 +441,30 @@ public:
   {
     mDefaultParagraphSeparator = aSep;
   }
+
+  /**
+   * event callback when a mouse button is pressed
+   * @param aX      [IN] horizontal position of the pointer
+   * @param aY      [IN] vertical position of the pointer
+   * @param aTarget [IN] the element triggering the event
+   * @param aMouseEvent [IN] the event
+   */
+  nsresult OnMouseDown(int32_t aX, int32_t aY, nsIDOMElement* aTarget,
+                       nsIDOMEvent* aMouseEvent);
+
+  /**
+   * event callback when a mouse button is released
+   * @param aX      [IN] horizontal position of the pointer
+   * @param aY      [IN] vertical position of the pointer
+   * @param aTarget [IN] the element triggering the event
+   */
+  nsresult OnMouseUp(int32_t aX, int32_t aY, nsIDOMElement* aTarget);
+
+  /**
+   * event callback when the mouse pointer is moved
+   * @param aMouseEvent [IN] the event
+   */
+  nsresult OnMouseMove(nsIDOMMouseEvent* aMouseEvent);
 
 protected:
   class BlobReader final : public nsIEditorBlobListener

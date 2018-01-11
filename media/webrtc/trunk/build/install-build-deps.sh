@@ -5,126 +5,26 @@
 # found in the LICENSE file.
 
 # Script to install everything needed to build chromium (well, ideally, anyway)
-# See http://code.google.com/p/chromium/wiki/LinuxBuildInstructions
-# and http://code.google.com/p/chromium/wiki/LinuxBuild64Bit
+# See https://chromium.googlesource.com/chromium/src/+/master/docs/linux_build_instructions.md
 
 usage() {
   echo "Usage: $0 [--options]"
   echo "Options:"
   echo "--[no-]syms: enable or disable installation of debugging symbols"
-  echo "--[no-]lib32: enable or disable installation of 32 bit libraries"
+  echo "--lib32: enable installation of 32-bit libraries, e.g. for V8 snapshot"
+  echo "--[no-]arm: enable or disable installation of arm cross toolchain"
+  echo "--[no-]chromeos-fonts: enable or disable installation of Chrome OS"\
+       "fonts"
+  echo "--[no-]nacl: enable or disable installation of prerequisites for"\
+       "building standalone NaCl and all its toolchains"
   echo "--no-prompt: silently select standard options/defaults"
+  echo "--quick-check: quickly try to determine if dependencies are installed"
+  echo "               (this avoids interactive prompts and sudo commands,"
+  echo "               so might not be 100% accurate)"
+  echo "--unsupported: attempt installation even on unsupported systems"
   echo "Script will prompt interactively if options not given."
   exit 1
 }
-
-while test "$1" != ""
-do
-  case "$1" in
-  --syms)                   do_inst_syms=1;;
-  --no-syms)                do_inst_syms=0;;
-  --lib32)                  do_inst_lib32=1;;
-  --no-lib32)               do_inst_lib32=0;;
-  --no-prompt)              do_default=1
-                            do_quietly="-qq --assume-yes"
-    ;;
-  *) usage;;
-  esac
-  shift
-done
-
-if ! egrep -q \
-    'Ubuntu (10\.04|10\.10|11\.04|11\.10|12\.04|lucid|maverick|natty|oneiric|precise)' \
-    /etc/issue; then
-  echo "Only Ubuntu 10.04 (lucid) through 12.04 (precise) are currently" \
-      "supported" >&2
-  exit 1
-fi
-
-if ! uname -m | egrep -q "i686|x86_64"; then
-  echo "Only x86 architectures are currently supported" >&2
-  exit
-fi
-
-if [ "x$(id -u)" != x0 ]; then
-  echo "Running as non-root user."
-  echo "You might have to enter your password one or more times for 'sudo'."
-  echo
-fi
-
-# Packages needed for chromeos only
-chromeos_dev_list="libbluetooth-dev libpulse-dev"
-
-# Packages need for development
-dev_list="apache2.2-bin bison curl elfutils fakeroot flex g++ gperf
-          language-pack-fr libapache2-mod-php5 libasound2-dev libbz2-dev
-          libcairo2-dev libcups2-dev libcurl4-gnutls-dev libdbus-glib-1-dev
-          libelf-dev libgconf2-dev libgl1-mesa-dev libglib2.0-dev
-          libglu1-mesa-dev libgnome-keyring-dev libgtk2.0-dev
-          libkrb5-dev libnspr4-dev libnss3-dev libpam0g-dev libsctp-dev
-          libsqlite3-dev libssl-dev libudev-dev libwww-perl libxslt1-dev
-          libxss-dev libxt-dev libxtst-dev mesa-common-dev patch
-          perl php5-cgi pkg-config python python-cherrypy3 python-dev
-          python-psutil rpm ruby subversion ttf-dejavu-core ttf-indic-fonts
-          ttf-kochi-gothic ttf-kochi-mincho ttf-thai-tlwg wdiff git-core
-          $chromeos_dev_list"
-
-# 64-bit systems need a minimum set of 32-bit compat packages for the pre-built
-# NaCl binaries. These are always needed, regardless of whether or not we want
-# the full 32-bit "cross-compile" support (--lib32).
-if [ "$(uname -m)" = "x86_64" ]; then
-  dev_list="${dev_list} libc6-i386 lib32gcc1 lib32stdc++6"
-fi
-
-# Run-time libraries required by chromeos only
-chromeos_lib_list="libpulse0 libbz2-1.0 libcurl4-gnutls-dev"
-
-# Full list of required run-time libraries
-lib_list="libatk1.0-0 libc6 libasound2 libcairo2 libcups2 libdbus-glib-1-2
-          libexpat1 libfontconfig1 libfreetype6 libglib2.0-0 libgnome-keyring0
-          libgtk2.0-0 libpam0g libpango1.0-0 libpcre3 libpixman-1-0
-          libpng12-0 libstdc++6 libsqlite3-0 libudev0 libx11-6 libxau6 libxcb1
-          libxcomposite1 libxcursor1 libxdamage1 libxdmcp6 libxext6 libxfixes3
-          libxi6 libxinerama1 libxrandr2 libxrender1 libxtst6 zlib1g
-          $chromeos_lib_list"
-
-# Debugging symbols for all of the run-time libraries
-dbg_list="libatk1.0-dbg libc6-dbg libcairo2-dbg libdbus-glib-1-2-dbg
-          libfontconfig1-dbg libglib2.0-0-dbg libgtk2.0-0-dbg
-          libpango1.0-0-dbg libpcre3-dbg libpixman-1-0-dbg
-          libsqlite3-0-dbg
-          libx11-6-dbg libxau6-dbg libxcb1-dbg libxcomposite1-dbg
-          libxcursor1-dbg libxdamage1-dbg libxdmcp6-dbg libxext6-dbg
-          libxfixes3-dbg libxi6-dbg libxinerama1-dbg libxrandr2-dbg
-          libxrender1-dbg libxtst6-dbg zlib1g-dbg"
-
-# Plugin lists needed for tests.
-plugin_list="flashplugin-installer"
-
-# Some package names have changed over time
-if apt-cache show ttf-mscorefonts-installer >/dev/null 2>&1; then
-  dev_list="${dev_list} ttf-mscorefonts-installer"
-else
-  dev_list="${dev_list} msttcorefonts"
-fi
-if apt-cache show libnspr4-dbg >/dev/null 2>&1; then
-  dbg_list="${dbg_list} libnspr4-dbg libnss3-dbg"
-  lib_list="${lib_list} libnspr4 libnss3"
-else
-  dbg_list="${dbg_list} libnspr4-0d-dbg libnss3-1d-dbg"
-  lib_list="${lib_list} libnspr4-0d libnss3-1d"
-fi
-if apt-cache show libjpeg-dev >/dev/null 2>&1; then
- dev_list="${dev_list} libjpeg-dev"
-else
- dev_list="${dev_list} libjpeg62-dev"
-fi
-
-# Some packages are only needed, if the distribution actually supports
-# installing them.
-if apt-cache show appmenu-gtk >/dev/null 2>&1; then
-  lib_list="$lib_list appmenu-gtk"
-fi
 
 # Waits for the user to press 'Y' or 'N'. Either uppercase of lowercase is
 # accepted. Returns 0 for 'Y' and 1 for 'N'. If an optional parameter has
@@ -134,6 +34,7 @@ fi
 # Users can abort the function by pressing CTRL-C. This will call "exit 1".
 yes_no() {
   if [ 0 -ne "${do_default-0}" ] ; then
+    [ $1 -eq 0 ] && echo "Y" || echo "N"
     return $1
   fi
   local c
@@ -164,7 +65,456 @@ yes_no() {
   done
 }
 
-if test "$do_inst_syms" = ""
+# Checks whether a particular package is available in the repos.
+# USAGE: $ package_exists <package name>
+package_exists() {
+  [ ! -z "`apt-cache search --names-only "$1"`" ]
+}
+
+# These default to on because (some) bots need them and it keeps things
+# simple for the bot setup if all bots just run the script in its default
+# mode.  Developers who don't want stuff they don't need installed on their
+# own workstations can pass --no-arm --no-nacl when running the script.
+do_inst_arm=1
+do_inst_nacl=1
+
+while test "$1" != ""
+do
+  case "$1" in
+  --syms)                   do_inst_syms=1;;
+  --no-syms)                do_inst_syms=0;;
+  --lib32)                  do_inst_lib32=1;;
+  --arm)                    do_inst_arm=1;;
+  --no-arm)                 do_inst_arm=0;;
+  --chromeos-fonts)         do_inst_chromeos_fonts=1;;
+  --no-chromeos-fonts)      do_inst_chromeos_fonts=0;;
+  --nacl)                   do_inst_nacl=1;;
+  --no-nacl)                do_inst_nacl=0;;
+  --no-prompt)              do_default=1
+                            do_quietly="-qq --assume-yes"
+    ;;
+  --quick-check)            do_quick_check=1;;
+  --unsupported)            do_unsupported=1;;
+  *) usage;;
+  esac
+  shift
+done
+
+if test "$do_inst_arm" = "1"; then
+  do_inst_lib32=1
+fi
+
+# Check for lsb_release command in $PATH
+if ! which lsb_release > /dev/null; then
+  echo "ERROR: lsb_release not found in \$PATH" >&2
+  exit 1;
+fi
+
+distro_codename=$(lsb_release --codename --short)
+distro_id=$(lsb_release --id --short)
+supported_codenames="(trusty|xenial|yakkety)"
+supported_ids="(Debian)"
+if [ 0 -eq "${do_unsupported-0}" ] && [ 0 -eq "${do_quick_check-0}" ] ; then
+  if [[ ! $distro_codename =~ $supported_codenames &&
+        ! $distro_id =~ $supported_ids ]]; then
+    echo -e "ERROR: The only supported distros are\n" \
+      "\tUbuntu 14.04 (trusty)\n" \
+      "\tUbuntu 16.04 (xenial)\n" \
+      "\tUbuntu 16.10 (yakkety)\n" \
+      "\tDebian 8 (jessie) or later" >&2
+    exit 1
+  fi
+
+  if ! uname -m | egrep -q "i686|x86_64"; then
+    echo "Only x86 architectures are currently supported" >&2
+    exit
+  fi
+fi
+
+if [ "x$(id -u)" != x0 ] && [ 0 -eq "${do_quick_check-0}" ]; then
+  echo "Running as non-root user."
+  echo "You might have to enter your password one or more times for 'sudo'."
+  echo
+fi
+
+# Packages needed for chromeos only
+chromeos_dev_list="libbluetooth-dev libxkbcommon-dev realpath"
+
+# Packages needed for development
+dev_list="\
+  bison
+  cdbs
+  curl
+  dpkg-dev
+  elfutils
+  devscripts
+  fakeroot
+  flex
+  fonts-ipafont
+  fonts-thai-tlwg
+  g++
+  git-core
+  git-svn
+  gperf
+  libasound2-dev
+  libbrlapi-dev
+  libav-tools
+  libbz2-dev
+  libcairo2-dev
+  libcap-dev
+  libcups2-dev
+  libcurl4-gnutls-dev
+  libdrm-dev
+  libelf-dev
+  libffi-dev
+  libgconf2-dev
+  libglib2.0-dev
+  libglu1-mesa-dev
+  libgnome-keyring-dev
+  libgtk2.0-dev
+  libgtk-3-dev
+  libkrb5-dev
+  libnspr4-dev
+  libnss3-dev
+  libpam0g-dev
+  libpci-dev
+  libpulse-dev
+  libsctp-dev
+  libspeechd-dev
+  libsqlite3-dev
+  libssl-dev
+  libudev-dev
+  libwww-perl
+  libxslt1-dev
+  libxss-dev
+  libxt-dev
+  libxtst-dev
+  openbox
+  patch
+  perl
+  pkg-config
+  python
+  python-cherrypy3
+  python-crypto
+  python-dev
+  python-numpy
+  python-opencv
+  python-openssl
+  python-psutil
+  python-yaml
+  rpm
+  ruby
+  subversion
+  ttf-dejavu-core
+  wdiff
+  xcompmgr
+  zip
+  $chromeos_dev_list
+"
+
+# 64-bit systems need a minimum set of 32-bit compat packages for the pre-built
+# NaCl binaries.
+if file -L /sbin/init | grep -q 'ELF 64-bit'; then
+  dev_list="${dev_list} libc6-i386 lib32gcc1 lib32stdc++6"
+fi
+
+# Run-time libraries required by chromeos only
+chromeos_lib_list="libpulse0 libbz2-1.0"
+
+# Full list of required run-time libraries
+lib_list="\
+  libatk1.0-0
+  libc6
+  libasound2
+  libcairo2
+  libcap2
+  libcups2
+  libexpat1
+  libffi6
+  libfontconfig1
+  libfreetype6
+  libglib2.0-0
+  libgnome-keyring0
+  libgtk2.0-0
+  libgtk-3-0
+  libpam0g
+  libpango1.0-0
+  libpci3
+  libpcre3
+  libpixman-1-0
+  libspeechd2
+  libstdc++6
+  libsqlite3-0
+  libx11-6
+  libx11-xcb1
+  libxau6
+  libxcb1
+  libxcomposite1
+  libxcursor1
+  libxdamage1
+  libxdmcp6
+  libxext6
+  libxfixes3
+  libxi6
+  libxinerama1
+  libxrandr2
+  libxrender1
+  libxtst6
+  zlib1g
+  $chromeos_lib_list
+"
+
+# Debugging symbols for all of the run-time libraries
+dbg_list="\
+  libatk1.0-dbg
+  libc6-dbg
+  libcairo2-dbg
+  libffi6-dbg
+  libfontconfig1-dbg
+  libglib2.0-0-dbg
+  libgtk2.0-0-dbg
+  libgtk-3-0-dbg
+  libpango1.0-0-dbg
+  libpcre3-dbg
+  libpixman-1-0-dbg
+  libsqlite3-0-dbg
+  libx11-6-dbg
+  libx11-xcb1-dbg
+  libxau6-dbg
+  libxcb1-dbg
+  libxcomposite1-dbg
+  libxcursor1-dbg
+  libxdamage1-dbg
+  libxdmcp6-dbg
+  libxext6-dbg
+  libxi6-dbg
+  libxinerama1-dbg
+  libxrandr2-dbg
+  libxrender1-dbg
+  libxtst6-dbg
+  zlib1g-dbg
+"
+
+if [[ ! $distro_codename =~ "yakkety" ]]; then
+  dbg_list="${dbg_list} libxfixes3-dbg"
+fi
+
+# Find the proper version of libstdc++6-4.x-dbg.
+if [ "x$distro_codename" = "xtrusty" ]; then
+  dbg_list="${dbg_list} libstdc++6-4.8-dbg"
+else
+  dbg_list="${dbg_list} libstdc++6-4.9-dbg"
+fi
+
+# 32-bit libraries needed e.g. to compile V8 snapshot for Android or armhf
+lib32_list="linux-libc-dev:i386"
+
+# arm cross toolchain packages needed to build chrome on armhf
+EM_REPO="deb http://emdebian.org/tools/debian/ jessie main"
+EM_SOURCE=$(cat <<EOF
+# Repo added by Chromium $0
+${EM_REPO}
+# deb-src http://emdebian.org/tools/debian/ jessie main
+EOF
+)
+EM_ARCHIVE_KEY_FINGER="084C6C6F39159EDB67969AA87DE089671804772E"
+GPP_ARM_PACKAGE="g++-arm-linux-gnueabihf"
+case $distro_codename in
+  jessie)
+    eval $(apt-config shell APT_SOURCESDIR 'Dir::Etc::sourceparts/d')
+    CROSSTOOLS_LIST="${APT_SOURCESDIR}/crosstools.list"
+    arm_list="libc6-dev:armhf
+              linux-libc-dev:armhf"
+    if test "$do_inst_arm" = "1"; then
+      if $(dpkg-query -W ${GPP_ARM_PACKAGE} &>/dev/null); then
+        arm_list+=" ${GPP_ARM_PACKAGE}"
+      else
+        echo "The Debian Cross-toolchains repository is necessary to"
+        echo "cross-compile Chromium for arm."
+        echo -n "Do you want me to add it for you (y/N) "
+        if yes_no 1; then
+          gpg --keyserver pgp.mit.edu --recv-keys ${EM_ARCHIVE_KEY_FINGER}
+          gpg -a --export ${EM_ARCHIVE_KEY_FINGER} | sudo apt-key add -
+          if ! grep "^${EM_REPO}" "${CROSSTOOLS_LIST}" &>/dev/null; then
+            echo "${EM_SOURCE}" | sudo tee -a "${CROSSTOOLS_LIST}" >/dev/null
+          fi
+          arm_list+=" ${GPP_ARM_PACKAGE}"
+        fi
+      fi
+    fi
+    ;;
+  # All necessary ARM packages are available on the default repos on
+  # Debian 9 and later.
+  *)
+    arm_list="binutils-aarch64-linux-gnu
+              libc6-dev-armhf-cross
+              linux-libc-dev-armhf-cross
+              ${GPP_ARM_PACKAGE}"
+    ;;
+esac
+
+# Work around for dependency issue Ubuntu/Trusty: http://crbug.com/435056
+case $distro_codename in
+  trusty)
+    arm_list+=" g++-4.8-multilib-arm-linux-gnueabihf
+                gcc-4.8-multilib-arm-linux-gnueabihf"
+    ;;
+  xenial|yakkety)
+    arm_list+=" g++-5-multilib-arm-linux-gnueabihf
+                gcc-5-multilib-arm-linux-gnueabihf
+                gcc-arm-linux-gnueabihf"
+    ;;
+esac
+
+# Packages to build NaCl, its toolchains, and its ports.
+naclports_list="ant autoconf bison cmake gawk intltool xutils-dev xsltproc"
+nacl_list="\
+  g++-mingw-w64-i686
+  lib32z1-dev
+  libasound2:i386
+  libcap2:i386
+  libelf-dev:i386
+  libfontconfig1:i386
+  libgconf-2-4:i386
+  libglib2.0-0:i386
+  libgpm2:i386
+  libgtk2.0-0:i386
+  libgtk-3-0:i386
+  libncurses5:i386
+  lib32ncurses5-dev
+  libnss3:i386
+  libpango1.0-0:i386
+  libssl-dev:i386
+  libtinfo-dev
+  libtinfo-dev:i386
+  libtool
+  libxcomposite1:i386
+  libxcursor1:i386
+  libxdamage1:i386
+  libxi6:i386
+  libxrandr2:i386
+  libxss1:i386
+  libxtst6:i386
+  texinfo
+  xvfb
+  ${naclports_list}
+"
+
+if package_exists libssl1.0.0; then
+  nacl_list="${nacl_list} libssl1.0.0:i386"
+else
+  nacl_list="${nacl_list} libssl1.0.2:i386"
+fi
+
+# Find the proper version of packages that depend on mesa. Only one -lts variant
+# of mesa can be installed and everything that depends on it must match.
+
+# Query for the name and status of all mesa LTS variants, filter for only
+# installed packages, extract just the name, and eliminate duplicates (there can
+# be more than one with the same name in the case of multiarch). Expand into an
+# array.
+mesa_packages=($(dpkg-query -Wf'${package} ${status}\n' \
+                            libgl1-mesa-glx-lts-\* 2>/dev/null | \
+                 grep " ok installed" | cut -d " " -f 1 | sort -u))
+if [ "${#mesa_packages[@]}" -eq 0 ]; then
+  mesa_variant=""
+elif [ "${#mesa_packages[@]}" -eq 1 ]; then
+  # Strip the base package name and leave just "-lts-whatever"
+  mesa_variant="${mesa_packages[0]#libgl1-mesa-glx}"
+else
+  echo "ERROR: unable to determine which libgl1-mesa-glx variant is installed."
+  exit 1
+fi
+dev_list="${dev_list} libgbm-dev${mesa_variant}
+          libgles2-mesa-dev${mesa_variant} libgl1-mesa-dev${mesa_variant}
+          mesa-common-dev${mesa_variant}"
+nacl_list="${nacl_list} libgl1-mesa-glx${mesa_variant}:i386"
+
+# Some package names have changed over time
+if package_exists libpng12-0; then
+  lib_list="${lib_list} libpng12-0"
+else
+  lib_list="${lib_list} libpng16-16"
+fi
+if package_exists libnspr4-dbg; then
+  dbg_list="${dbg_list} libnspr4-dbg libnss3-dbg"
+  lib_list="${lib_list} libnspr4 libnss3"
+else
+  dbg_list="${dbg_list} libnspr4-0d-dbg libnss3-1d-dbg"
+  lib_list="${lib_list} libnspr4-0d libnss3-1d"
+fi
+if package_exists libjpeg-dev; then
+  dev_list="${dev_list} libjpeg-dev"
+else
+  dev_list="${dev_list} libjpeg62-dev"
+fi
+if package_exists libudev1; then
+  dev_list="${dev_list} libudev1"
+  nacl_list="${nacl_list} libudev1:i386"
+else
+  dev_list="${dev_list} libudev0"
+  nacl_list="${nacl_list} libudev0:i386"
+fi
+if package_exists libbrlapi0.6; then
+  dev_list="${dev_list} libbrlapi0.6"
+else
+  dev_list="${dev_list} libbrlapi0.5"
+fi
+if package_exists apache2-bin; then
+  dev_list="${dev_list} apache2-bin"
+else
+  dev_list="${dev_list} apache2.2-bin"
+fi
+if package_exists xfonts-mathml; then
+  dev_list="${dev_list} xfonts-mathml"
+fi
+if package_exists fonts-indic; then
+  dev_list="${dev_list} fonts-indic"
+else
+  dev_list="${dev_list} ttf-indic-fonts"
+fi
+if package_exists php7.0-cgi; then
+  dev_list="${dev_list} php7.0-cgi libapache2-mod-php7.0"
+else
+  dev_list="${dev_list} php5-cgi libapache2-mod-php5"
+fi
+# ttf-mscorefonts-installer is in the Debian contrib repo, which has
+# dependencies on non-free software.  Install it only if the user has already
+# enabled contrib.
+if package_exists ttf-mscorefonts-installer; then
+  dev_list="${dev_list} ttf-mscorefonts-installer"
+elif package_exists msttcorefonts; then
+  dev_list="${dev_list} msttcorefonts"
+fi
+# Ubuntu 16.04 has this package deleted.
+if package_exists ttf-kochi-gothic; then
+  dev_list="${dev_list} ttf-kochi-gothic"
+fi
+# Ubuntu 16.04 has this package deleted.
+if package_exists ttf-kochi-mincho; then
+  dev_list="${dev_list} ttf-kochi-mincho"
+fi
+
+# Some packages are only needed if the distribution actually supports
+# installing them.
+if package_exists appmenu-gtk; then
+  lib_list="$lib_list appmenu-gtk"
+fi
+
+# When cross building for arm/Android on 64-bit systems the host binaries
+# that are part of v8 need to be compiled with -m32 which means
+# that basic multilib support is needed.
+if file -L /sbin/init | grep -q 'ELF 64-bit'; then
+  # gcc-multilib conflicts with the arm cross compiler (at least in trusty) but
+  # g++-X.Y-multilib gives us the 32-bit support that we need. Find out the
+  # appropriate value of X and Y by seeing what version the current
+  # distribution's g++-multilib package depends on.
+  multilib_package=$(apt-cache depends g++-multilib --important | \
+      grep -E --color=never --only-matching '\bg\+\+-[0-9.]+-multilib\b')
+  lib32_list="$lib32_list $multilib_package"
+fi
+
+if test "$do_inst_syms" = "" && test 0 -eq ${do_quick_check-0}
 then
   echo "This script installs all tools and libraries needed to build Chromium."
   echo ""
@@ -177,12 +527,81 @@ then
   fi
 fi
 if test "$do_inst_syms" = "1"; then
-  echo "Installing debugging symbols."
+  echo "Including debugging symbols."
+  # Many debug packages are not available in Debian stretch,
+  # so exclude the ones that are missing.
+  available_dbg_packages=""
+  for package in ${dbg_list}; do
+    if package_exists ${package}; then
+      available_dbg_packages="${available_dbg_packages} ${package}"
+    fi
+  done
+  dbg_list="${available_dbg_packages}"
 else
-  echo "Skipping installation of debugging symbols."
+  echo "Skipping debugging symbols."
   dbg_list=
 fi
 
+if test "$do_inst_lib32" = "1" ; then
+  echo "Including 32-bit libraries for ARM/Android."
+else
+  echo "Skipping 32-bit libraries for ARM/Android."
+  lib32_list=
+fi
+
+if test "$do_inst_arm" = "1" ; then
+  echo "Including ARM cross toolchain."
+else
+  echo "Skipping ARM cross toolchain."
+  arm_list=
+fi
+
+if test "$do_inst_nacl" = "1"; then
+  echo "Including NaCl, NaCl toolchain, NaCl ports dependencies."
+else
+  echo "Skipping NaCl, NaCl toolchain, NaCl ports dependencies."
+  nacl_list=
+fi
+
+# The `sort -r -s -t: -k2` sorts all the :i386 packages to the front, to avoid
+# confusing dpkg-query (crbug.com/446172).
+packages="$(
+  echo "${dev_list} ${lib_list} ${dbg_list} ${lib32_list} ${arm_list}"\
+       "${nacl_list}" | tr " " "\n" | sort -u | sort -r -s -t: -k2 | tr "\n" " "
+)"
+
+if [ 1 -eq "${do_quick_check-0}" ] ; then
+  if ! missing_packages="$(dpkg-query -W -f ' ' ${packages} 2>&1)"; then
+    # Distinguish between packages that actually aren't available to the
+    # system (i.e. not in any repo) and packages that just aren't known to
+    # dpkg (i.e. managed by apt).
+    missing_packages="$(echo "${missing_packages}" | awk '{print $NF}')"
+    not_installed=""
+    unknown=""
+    for p in ${missing_packages}; do
+      if apt-cache show ${p} > /dev/null 2>&1; then
+        not_installed="${p}\n${not_installed}"
+      else
+        unknown="${p}\n${unknown}"
+      fi
+    done
+    if [ -n "${not_installed}" ]; then
+      echo "WARNING: The following packages are not installed:"
+      echo -e "${not_installed}" | sed -e "s/^/  /"
+    fi
+    if [ -n "${unknown}" ]; then
+      echo "WARNING: The following packages are unknown to your system"
+      echo "(maybe missing a repo or need to 'sudo apt-get update'):"
+      echo -e "${unknown}" | sed -e "s/^/  /"
+    fi
+    exit 1
+  fi
+  exit 0
+fi
+
+if test "$do_inst_lib32" = "1" || test "$do_inst_nacl" = "1"; then
+  sudo dpkg --add-architecture i386
+fi
 sudo apt-get update
 
 # We initially run "apt-get" with the --reinstall option and parse its output.
@@ -190,14 +609,13 @@ sudo apt-get update
 # without accidentally promoting any packages from "auto" to "manual".
 # We then re-run "apt-get" with just the list of missing packages.
 echo "Finding missing packages..."
-packages="${dev_list} ${lib_list} ${dbg_list} ${plugin_list}"
 # Intentionally leaving $packages unquoted so it's more readable.
 echo "Packages required: " $packages
 echo
 new_list_cmd="sudo apt-get install --reinstall $(echo $packages)"
-if new_list="$(yes n | LANG=C $new_list_cmd)"; then
+if new_list="$(yes n | LANGUAGE=en LANG=C $new_list_cmd)"; then
   # We probably never hit this following line.
-  echo "No missing packages, and the packages are up-to-date."
+  echo "No missing packages, and the packages are up to date."
 elif [ $? -eq 1 ]; then
   # We expect apt-get to have exit status of 1.
   # This indicates that we cancelled the install with "yes n|".
@@ -205,7 +623,7 @@ elif [ $? -eq 1 ]; then
     sed -e '1,/The following NEW packages will be installed:/d;s/^  //;t;d')
   new_list=$(echo "$new_list" | sed 's/ *$//')
   if [ -z "$new_list" ] ; then
-    echo "No missing packages, and the packages are up-to-date."
+    echo "No missing packages, and the packages are up to date."
   else
     echo "Installing missing packages: $new_list."
     sudo apt-get install ${do_quietly-} ${new_list}
@@ -226,189 +644,44 @@ else
   exit 100
 fi
 
-# Install 32bit backwards compatibility support for 64bit systems
-if [ "$(uname -m)" = "x86_64" ]; then
-  if test "$do_inst_lib32" = ""
-  then
-    echo "We no longer recommend that you use this script to install"
-    echo "32bit libraries on a 64bit system. Instead, consider using"
-    echo "the install-chroot.sh script to help you set up a 32bit"
-    echo "environment for building and testing 32bit versions of Chrome."
-    echo
-    echo "If you nonetheless want to try installing 32bit libraries"
-    echo "directly, you can do so by explicitly passing the --lib32"
-    echo "option to install-build-deps.sh."
-  fi
-  if test "$do_inst_lib32" != "1"
-  then
-    echo "Exiting without installing any 32bit libraries."
-    exit 0
-  fi
-
-  echo "N.B. the code for installing 32bit libraries on a 64bit"
-  echo "     system is no longer actively maintained and might"
-  echo "     not work with modern versions of Ubuntu or Debian."
+# Install the Chrome OS default fonts. This must go after running
+# apt-get, since install-chromeos-fonts depends on curl.
+if test "$do_inst_chromeos_fonts" != "0"; then
   echo
-
-  # Standard 32bit compatibility libraries
-  echo "First, installing the limited existing 32-bit support..."
-  cmp_list="ia32-libs lib32asound2-dev lib32stdc++6 lib32z1
-            lib32z1-dev libc6-dev-i386 libc6-i386 g++-multilib"
-  if [ -n "`apt-cache search lib32readline-gplv2-dev 2>/dev/null`" ]; then
-    cmp_list="${cmp_list} lib32readline-gplv2-dev"
-  else
-    cmp_list="${cmp_list} lib32readline5-dev"
+  echo "Installing Chrome OS fonts."
+  dir=`echo $0 | sed -r -e 's/\/[^/]+$//'`
+  if ! sudo $dir/linux/install-chromeos-fonts.py; then
+    echo "ERROR: The installation of the Chrome OS default fonts failed."
+    if [ `stat -f -c %T $dir` == "nfs" ]; then
+      echo "The reason is that your repo is installed on a remote file system."
+    else
+      echo "This is expected if your repo is installed on a remote file system."
+    fi
+    echo "It is recommended to install your repo on a local file system."
+    echo "You can skip the installation of the Chrome OS default founts with"
+    echo "the command line option: --no-chromeos-fonts."
+    exit 1
   fi
-  sudo apt-get install ${do_quietly-} $cmp_list
+else
+  echo "Skipping installation of Chrome OS fonts."
+fi
 
-  tmp=/tmp/install-32bit.$$
-  trap 'rm -rf "${tmp}"' EXIT INT TERM QUIT
-  mkdir -p "${tmp}/apt/lists/partial" "${tmp}/cache" "${tmp}/partial"
-  touch "${tmp}/status"
-
-  [ -r /etc/apt/apt.conf ] && cp /etc/apt/apt.conf "${tmp}/apt/"
-  cat >>"${tmp}/apt/apt.conf" <<EOF
-        Apt::Architecture "i386";
-        Dir::Cache "${tmp}/cache";
-        Dir::Cache::Archives "${tmp}/";
-        Dir::State::Lists "${tmp}/apt/lists/";
-        Dir::State::status "${tmp}/status";
-EOF
-
-  # Download 32bit packages
-  echo "Computing list of available 32bit packages..."
-  sudo apt-get -c="${tmp}/apt/apt.conf" update
-
-  echo "Downloading available 32bit packages..."
-  sudo apt-get -c="${tmp}/apt/apt.conf" \
-          --yes --download-only --force-yes --reinstall install \
-          ${lib_list} ${dbg_list}
-
-  # Open packages, remove everything that is not a library, move the
-  # library to a lib32 directory and package everything as a *.deb file.
-  echo "Repackaging and installing 32bit packages for use on 64bit systems..."
-  for i in ${lib_list} ${dbg_list}; do
-    orig="$(echo "${tmp}/${i}"_*_i386.deb)"
-    compat="$(echo "${orig}" |
-              sed -e 's,\(_[^_/]*_\)i386\(.deb\),-ia32\1amd64\2,')"
-    rm -rf "${tmp}/staging"
-    msg="$(fakeroot -u sh -exc '
-      # Unpack 32bit Debian archive
-      umask 022
-      mkdir -p "'"${tmp}"'/staging/dpkg/DEBIAN"
-      cd "'"${tmp}"'/staging"
-      ar x "'${orig}'"
-      tar zCfx dpkg data.tar.gz
-      tar zCfx dpkg/DEBIAN control.tar.gz
-
-      # Create a posix extended regular expression fragment that will
-      # recognize the includes which have changed. Should be rare,
-      # will almost always be empty.
-      includes=`sed -n -e "s/^[0-9a-z]*  //g" \
-                       -e "\,usr/include/,p" dpkg/DEBIAN/md5sums |
-                  xargs -n 1 -I FILE /bin/sh -c \
-                    "cmp -s dpkg/FILE /FILE || echo FILE" |
-                  tr "\n" "|" |
-                  sed -e "s,|$,,"`
-
-      # If empty, set it to not match anything.
-      test -z "$includes" && includes="^//"
-
-      # Turn the conflicts into an extended RE for removal from the
-      # Provides line.
-      conflicts=`sed -n -e "/Conflicts/s/Conflicts: *//;T;s/, */|/g;p" \
-                   dpkg/DEBIAN/control`
-
-      # Rename package, change architecture, remove conflicts and dependencies
-      sed -r -i                              \
-          -e "/Package/s/$/-ia32/"           \
-          -e "/Architecture/s/:.*$/: amd64/" \
-          -e "/Depends/s/:.*/: ia32-libs/"   \
-          -e "/Provides/s/($conflicts)(, *)?//g;T1;s/, *$//;:1"   \
-          -e "/Recommends/d"                 \
-          -e "/Conflicts/d"                  \
-        dpkg/DEBIAN/control
-
-      # Only keep files that live in "lib" directories or the includes
-      # that have changed.
-      sed -r -i                                                               \
-          -e "/\/lib64\//d" -e "/\/.?bin\//d"                                 \
-          -e "\,$includes,s,[ /]include/,&32/,g;s,include/32/,include32/,g"   \
-          -e "s, lib/, lib32/,g"                                              \
-          -e "s,/lib/,/lib32/,g"                                              \
-          -e "t;d"                                                            \
-          -e "\,^/usr/lib32/debug\(.*/lib32\),s,^/usr/lib32/debug,/usr/lib/debug," \
-        dpkg/DEBIAN/md5sums
-
-      # Re-run ldconfig after installation/removal
-      { echo "#!/bin/sh"; echo "[ \"x\$1\" = xconfigure ]&&ldconfig||:"; } \
-        >dpkg/DEBIAN/postinst
-      { echo "#!/bin/sh"; echo "[ \"x\$1\" = xremove ]&&ldconfig||:"; } \
-        >dpkg/DEBIAN/postrm
-      chmod 755 dpkg/DEBIAN/postinst dpkg/DEBIAN/postrm
-
-      # Remove any other control files
-      find dpkg/DEBIAN -mindepth 1 "(" -name control -o -name md5sums -o \
-                       -name postinst -o -name postrm ")" -o -print |
-        xargs -r rm -rf
-
-      # Remove any files/dirs that live outside of "lib" directories,
-      # or are not in our list of changed includes.
-      find dpkg -mindepth 1 -regextype posix-extended \
-          "(" -name DEBIAN -o -name lib -o -regex "dpkg/($includes)" ")" \
-          -prune -o -print | tac |
-        xargs -r -n 1 sh -c "rm \$0 2>/dev/null || rmdir \$0 2>/dev/null || : "
-      find dpkg -name lib64 -o -name bin -o -name "?bin" |
-        tac | xargs -r rm -rf
-
-      # Remove any symbolic links that were broken by the above steps.
-      find -L dpkg -type l -print | tac | xargs -r rm -rf
-
-      # Rename lib to lib32, but keep debug symbols in /usr/lib/debug/usr/lib32
-      # That is where gdb looks for them.
-      find dpkg -type d -o -path "*/lib/*" -print |
-        xargs -r -n 1 sh -c "
-          i=\$(echo \"\${0}\" |
-               sed -e s,/lib/,/lib32/,g \
-               -e s,/usr/lib32/debug\\\\\(.*/lib32\\\\\),/usr/lib/debug\\\\1,);
-          mkdir -p \"\${i%/*}\";
-          mv \"\${0}\" \"\${i}\""
-
-      # Rename include to include32.
-      [ -d "dpkg/usr/include" ] && mv "dpkg/usr/include" "dpkg/usr/include32"
-
-      # Prune any empty directories
-      find dpkg -type d | tac | xargs -r -n 1 rmdir 2>/dev/null || :
-
-      # Create our own Debian package
-      cd ..
-      dpkg --build staging/dpkg .' 2>&1)"
-    compat="$(eval echo $(echo "${compat}" |
-                          sed -e 's,_[^_/]*_amd64.deb,_*_amd64.deb,'))"
-    [ -r "${compat}" ] || {
-      echo "${msg}" >&2
-      echo "Failed to build new Debian archive!" >&2
-      exit 1
-    }
-
-    msg="$(sudo dpkg -i "${compat}" 2>&1)" && {
-        echo "Installed ${compat##*/}"
-      } || {
-        # echo "${msg}" >&2
-        echo "Skipped ${compat##*/}"
-      }
+echo "Installing locales."
+CHROMIUM_LOCALES="da_DK.UTF-8 fr_FR.UTF-8 he_IL.UTF-8 zh_TW.UTF-8"
+LOCALE_GEN=/etc/locale.gen
+if [ -e ${LOCALE_GEN} ]; then
+  OLD_LOCALE_GEN="$(cat /etc/locale.gen)"
+  for CHROMIUM_LOCALE in ${CHROMIUM_LOCALES}; do
+    sudo sed -i "s/^# ${CHROMIUM_LOCALE}/${CHROMIUM_LOCALE}/" ${LOCALE_GEN}
   done
-
-  # Add symbolic links for developing 32bit code
-  echo "Adding missing symbolic links, enabling 32bit code development..."
-  for i in $(find /lib32 /usr/lib32 -maxdepth 1 -name \*.so.\* |
-             sed -e 's/[.]so[.][0-9].*/.so/' |
-             sort -u); do
-    [ "x${i##*/}" = "xld-linux.so" ] && continue
-    [ -r "$i" ] && continue
-    j="$(ls "$i."* | sed -e 's/.*[.]so[.]\([^.]*\)$/\1/;t;d' |
-         sort -n | tail -n 1)"
-    [ -r "$i.$j" ] || continue
-    sudo ln -s "${i##*/}.$j" "$i"
+  # Regenerating locales can take a while, so only do it if we need to.
+  if (echo "${OLD_LOCALE_GEN}" | cmp -s ${LOCALE_GEN}); then
+    echo "Locales already up-to-date."
+  else
+    sudo locale-gen
+  fi
+else
+  for CHROMIUM_LOCALE in ${CHROMIUM_LOCALES}; do
+    sudo locale-gen ${CHROMIUM_LOCALE}
   done
 fi

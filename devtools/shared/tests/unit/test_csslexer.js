@@ -10,14 +10,13 @@
 "use strict";
 
 const jsLexer = require("devtools/shared/css/lexer");
-const domutils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
-                           .getService(Components.interfaces.inIDOMUtils);
+const InspectorUtils = require("InspectorUtils");
 
 // An object that acts like a CSSLexer but verifies that the DOM lexer
 // and the JS lexer do the same thing.
 function DoubleLexer(input) {
   info("DoubleLexer input: " + input);
-  this.domLexer = domutils.getCSSLexer(input);
+  this.domLexer = InspectorUtils.getCSSLexer(input);
   this.jsLexer = jsLexer.getCSSLexer(input);
 }
 

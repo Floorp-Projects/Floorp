@@ -29,11 +29,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=609549
 /** Test for Bug 609549 **/
 SimpleTest.waitForExplicitFinish();
 
+const InspectorUtils = SpecialPowers.InspectorUtils;
+
 addLoadEvent(function() {
-  var domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"].
-                   getService(SpecialPowers.Ci.inIDOMUtils);
-  ok("getChildrenForNode" in domUtils, "domUtils has no getChildrenForNode");
-  var withoutAnons = SpecialPowers.unwrap(domUtils.getChildrenForNode($("bound"), false));
+  ok("getChildrenForNode" in InspectorUtils, "InspectorUtils has no getChildrenForNode");
+  var withoutAnons =
+    SpecialPowers.unwrap(InspectorUtils.getChildrenForNode($("bound"), false));
 
   is(withoutAnons.length, $("bound").childNodes.length,
      "withoutAnons should be the same length as childNodes");
@@ -41,7 +42,7 @@ addLoadEvent(function() {
   is(withoutAnons[1], $("sandwiched"),
      "didn't get sandwiched span - without anons");
 
-  var withAnons = domUtils.getChildrenForNode($("bound"), true);
+  var withAnons = InspectorUtils.getChildrenForNode($("bound"), true);
 
   is(withAnons.length, 4, "bad withAnons.length");
   is(withAnons[0].getAttribute("anonid"), "box-A",
@@ -52,7 +53,7 @@ addLoadEvent(function() {
      "didn't get anonymous box-C");
   is(withAnons[3].id, "p", "didn't get paragraph - with anons");
 
-  var bKids = domUtils.getChildrenForNode(withAnons[1], true);
+  var bKids = InspectorUtils.getChildrenForNode(withAnons[1], true);
   is(bKids.length, 1, "bKids.length is bad");
   is(SpecialPowers.unwrap(bKids[0]), $("sandwiched"),
      "didn't get sandwiched span inserted into box-B");

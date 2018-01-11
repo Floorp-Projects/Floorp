@@ -396,7 +396,8 @@ private:
                          nsAHttpTransaction *trans,
                          uint32_t caps,
                          bool speculative,
-                         bool isFromPredictor);
+                         bool isFromPredictor,
+                         bool urgentStart);
 
         MOZ_MUST_USE nsresult SetupStreams(nsISocketTransport **,
                                            nsIAsyncInputStream **,
@@ -424,6 +425,10 @@ private:
 
         void PrintDiagnostics(nsCString &log);
 
+        // Checks whether the transaction can be dispatched using this
+        // half-open's connection.  If this half-open is marked as urgent-start,
+        // it only accepts urgent start transactions.  Call only before Claim().
+        bool AcceptsTransaction(nsHttpTransaction* trans);
         bool Claim();
         void Unclaim();
 
@@ -459,6 +464,10 @@ private:
         // match up - but it prevents a speculative connection from opening
         // more connections that are needed.)
         bool                           mSpeculative;
+
+        // If created with a non-null urgent transaction, remember it, so we can
+        // mark the connection as urgent rightaway it's created.
+        bool                           mUrgentStart;
 
         // mIsFromPredictor is set if the socket originated from the network
         // Predictor. It is used to gather telemetry data on used speculative
@@ -583,6 +592,10 @@ private:
     MOZ_MUST_USE nsresult TryDispatchTransaction(nsConnectionEntry *ent,
                                                  bool onlyReusedConnection,
                                                  PendingTransactionInfo *pendingTransInfo);
+    MOZ_MUST_USE nsresult TryDispatchTransactionOnIdleConn(nsConnectionEntry *ent,
+                                                           PendingTransactionInfo *pendingTransInfo,
+                                                           bool respectUrgency,
+                                                           bool *allUrgent = nullptr);
     MOZ_MUST_USE nsresult DispatchTransaction(nsConnectionEntry *,
                                               nsHttpTransaction *,
                                               nsHttpConnection *);
@@ -598,7 +611,7 @@ private:
     void     ReportProxyTelemetry(nsConnectionEntry *ent);
     MOZ_MUST_USE nsresult CreateTransport(nsConnectionEntry *,
                                           nsAHttpTransaction *, uint32_t, bool,
-                                          bool, bool,
+                                          bool, bool, bool,
                                           PendingTransactionInfo *pendingTransInfo);
     void     AddActiveConn(nsHttpConnection *, nsConnectionEntry *);
     void     DecrementActiveConnCount(nsHttpConnection *);

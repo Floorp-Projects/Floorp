@@ -23,9 +23,12 @@ NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsMathMLmfencedFrame)
 
-nsMathMLmfencedFrame::~nsMathMLmfencedFrame()
+void
+nsMathMLmfencedFrame::DestroyFrom(nsIFrame* aDestructRoot,
+                                  PostDestroyData& aPostDestroyData)
 {
   RemoveFencesAndSeparators();
+  nsMathMLContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
 NS_IMETHODIMP
