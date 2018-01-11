@@ -426,6 +426,16 @@ nsCSPContext::AppendPolicy(const nsAString& aPolicyString,
                                                                 aReportOnly, this,
                                                                 aDeliveredViaMetaTag);
   if (policy) {
+    if (policy->hasDirective(nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE)) {
+      nsAutoCString selfURIspec, referrer;
+      if (mSelfURI) {
+        mSelfURI->GetAsciiSpec(selfURIspec);
+      }
+      referrer = NS_ConvertUTF16toUTF8(mReferrer);
+      CSPCONTEXTLOG(("nsCSPContext::AppendPolicy added UPGRADE_IF_INSECURE_DIRECTIVE self-uri=%s referrer=%s",
+                     selfURIspec.get(), referrer.get()));
+    }
+
     mPolicies.AppendElement(policy);
     // reset cache since effective policy changes
     mShouldLoadCache.Clear();
