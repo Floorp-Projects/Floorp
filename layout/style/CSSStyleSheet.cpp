@@ -149,18 +149,9 @@ CSSStyleSheet::RebuildChildList(css::Rule* aRule,
     return false;
   }
 
-  // XXXbz We really need to decomtaminate all this stuff.  Is there a reason
-  // that I can't just QI to ImportRule and get a CSSStyleSheet
-  // directly from it?
-  nsCOMPtr<nsIDOMCSSImportRule> importRule(do_QueryInterface(aRule));
-  NS_ASSERTION(importRule, "GetType lied");
+  css::ImportRule* importRule = static_cast<css::ImportRule*>(aRule);
+  StyleSheet* sheet = importRule->GetStyleSheet();
 
-  nsCOMPtr<nsIDOMCSSStyleSheet> childSheet;
-  importRule->GetStyleSheet(getter_AddRefs(childSheet));
-
-  // Have to do this QI to be safe, since XPConnect can fake
-  // nsIDOMCSSStyleSheets
-  RefPtr<CSSStyleSheet> sheet = do_QueryObject(childSheet);
   if (!sheet) {
     return true;
   }
@@ -898,15 +889,10 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
     Inner()->mOrderedRules.RemoveObjectAt(ruleCount - 1);
     rule->SetStyleSheet(nullptr);
     if (rule->GetType() == css::Rule::IMPORT_RULE) {
-      nsCOMPtr<nsIDOMCSSImportRule> importRule(do_QueryInterface(rule));
-      NS_ASSERTION(importRule, "GetType lied");
-
-      nsCOMPtr<nsIDOMCSSStyleSheet> childSheet;
-      importRule->GetStyleSheet(getter_AddRefs(childSheet));
-
-      RefPtr<CSSStyleSheet> cssSheet = do_QueryObject(childSheet);
-      if (cssSheet && cssSheet->GetOriginalURI()) {
-        reusableSheets.AddReusableSheet(cssSheet);
+      auto importRule = static_cast<css::ImportRule*>(rule.get());
+      RefPtr<StyleSheet> sheet = importRule->GetStyleSheet();
+      if (sheet && sheet->GetOriginalURI()) {
+        reusableSheets.AddReusableSheet(sheet);
       }
     }
     RuleRemoved(*rule);

@@ -1314,8 +1314,7 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       document = this.rawNode.ownerDocument;
     } else {
       let parentStyleSheet = this._parentSheet;
-      while (parentStyleSheet.ownerRule &&
-          parentStyleSheet.ownerRule instanceof Ci.nsIDOMCSSImportRule) {
+      while (parentStyleSheet.ownerRule) {
         parentStyleSheet = parentStyleSheet.ownerRule.parentStyleSheet;
       }
 
