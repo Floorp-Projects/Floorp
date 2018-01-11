@@ -62,10 +62,10 @@ fails css-writing-modes-3/float-rgt-orthog-vrl-in-htb-003.xht
 fails css-writing-modes-3/sizing-orthog-htb-in-vrl-001.xht
 fails css-writing-modes-3/sizing-orthog-htb-in-vrl-004.xht
 fails css-writing-modes-3/sizing-orthog-htb-in-vrl-013.xht
-fails-if(OSX||winWidget||Android) css-writing-modes-3/sizing-orthog-htb-in-vlr-008.xht
-fails-if(OSX||winWidget||Android) css-writing-modes-3/sizing-orthog-htb-in-vlr-020.xht
-fails-if(OSX||winWidget||Android) css-writing-modes-3/sizing-orthog-htb-in-vrl-008.xht
-fails-if(OSX||winWidget||Android) css-writing-modes-3/sizing-orthog-htb-in-vrl-020.xht
+fails-if(OSX||winWidget) css-writing-modes-3/sizing-orthog-htb-in-vlr-008.xht
+fails-if(OSX||winWidget) css-writing-modes-3/sizing-orthog-htb-in-vlr-020.xht
+fails-if(OSX||winWidget) css-writing-modes-3/sizing-orthog-htb-in-vrl-008.xht
+fails-if(OSX||winWidget) css-writing-modes-3/sizing-orthog-htb-in-vrl-020.xht
 css-writing-modes-3/sizing-orthog-vlr-in-htb-008.xht
 css-writing-modes-3/sizing-orthog-vlr-in-htb-020.xht
 css-writing-modes-3/sizing-orthog-vrl-in-htb-008.xht
