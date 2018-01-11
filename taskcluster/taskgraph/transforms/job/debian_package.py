@@ -112,6 +112,8 @@ def docker_worker_debian_package(config, job, taskdesc):
         '/{snapshot}/ {dist} main" > /etc/apt/sources.list && '
         'echo "deb http://snapshot.debian.org/archive/debian'
         '/{snapshot}/ {dist}-updates main" >> /etc/apt/sources.list && '
+        'echo "deb http://snapshot.debian.org/archive/debian'
+        '/{snapshot}/ {dist}-backports main" >> /etc/apt/sources.list && '
         'echo "deb http://snapshot.debian.org/archive/debian-security'
         '/{snapshot}/ {dist}/updates main" >> /etc/apt/sources.list && '
         # Install the base utilities required to build debian packages.
