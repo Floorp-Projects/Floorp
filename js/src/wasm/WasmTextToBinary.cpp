@@ -1665,15 +1665,12 @@ struct WasmParseContext
     LifoAlloc& lifo;
     UniqueChars* error;
     DtoaState* dtoaState;
-    uintptr_t stackLimit;
 
-    WasmParseContext(const char16_t* text, uintptr_t stackLimit, LifoAlloc& lifo,
-                     UniqueChars* error)
+    WasmParseContext(const char16_t* text, LifoAlloc& lifo, UniqueChars* error)
       : ts(text, error),
         lifo(lifo),
         error(error),
-        dtoaState(NewDtoaState()),
-        stackLimit(stackLimit)
+        dtoaState(NewDtoaState())
     {}
 
     ~WasmParseContext() {
@@ -2872,8 +2869,6 @@ ParseGrowMemory(WasmParseContext& c, bool inParens)
 static AstExpr*
 ParseExprBody(WasmParseContext& c, WasmToken token, bool inParens)
 {
-    if (!CheckRecursionLimitDontReport(c.stackLimit))
-        return nullptr;
     switch (token.kind()) {
       case WasmToken::Unreachable:
         return new(c.lifo) AstUnreachable;
@@ -3733,10 +3728,9 @@ ParseBinaryModule(WasmParseContext& c, AstModule* module)
 }
 
 static AstModule*
-ParseModule(const char16_t* text, uintptr_t stackLimit, LifoAlloc& lifo, UniqueChars* error,
-            bool* binary)
+ParseModule(const char16_t* text, LifoAlloc& lifo, UniqueChars* error, bool* binary)
 {
-    WasmParseContext c(text, stackLimit, lifo, error);
+    WasmParseContext c(text, lifo, error);
 
     *binary = false;
 
@@ -5442,12 +5436,12 @@ EncodeBinaryModule(const AstModule& module, Bytes* bytes)
 /*****************************************************************************/
 
 bool
-wasm::TextToBinary(const char16_t* text, uintptr_t stackLimit, Bytes* bytes, UniqueChars* error)
+wasm::TextToBinary(const char16_t* text, Bytes* bytes, UniqueChars* error)
 {
     LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
 
     bool binary = false;
-    AstModule* module = ParseModule(text, stackLimit, lifo, error, &binary);
+    AstModule* module = ParseModule(text, lifo, error, &binary);
     if (!module)
         return false;
 
