@@ -5256,6 +5256,7 @@ exports.CSS_PROPERTIES = {
     "values": [
       "inherit",
       "initial",
+      "none",
       "unset"
     ]
   },
@@ -5268,6 +5269,7 @@ exports.CSS_PROPERTIES = {
     "values": [
       "inherit",
       "initial",
+      "none",
       "unset"
     ]
   },
