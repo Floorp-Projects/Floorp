@@ -29,8 +29,7 @@
 
 "use strict";
 
-const { Cc, Ci, Cu } = require("chrome");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const { Cu } = require("chrome");
 const nodeConstants = require("devtools/shared/dom-node-constants");
 const {
   getBindingElementAndPseudo,
@@ -475,7 +474,7 @@ CssLogic.prototype = {
   selectorMatchesElement: function (domRule, idx) {
     let element = this.viewedElement;
     do {
-      if (domUtils.selectorMatchesElement(element, domRule, idx)) {
+      if (InspectorUtils.selectorMatchesElement(element, domRule, idx)) {
         return true;
       }
     } while ((element = element.parentNode) &&
@@ -641,9 +640,9 @@ CssLogic.getShortName = function (element) {
 CssLogic.getSelectors = function (domRule) {
   let selectors = [];
 
-  let len = domUtils.getSelectorCount(domRule);
+  let len = InspectorUtils.getSelectorCount(domRule);
   for (let i = 0; i < len; i++) {
-    let text = domUtils.getSelectorText(domRule, i);
+    let text = InspectorUtils.getSelectorText(domRule, i);
     selectors.push(text);
   }
   return selectors;
@@ -1130,8 +1129,8 @@ CssSelector.prototype = {
       return this._specificity;
     }
 
-    this._specificity = domUtils.getSpecificity(this.cssRule.domRule,
-                                                this.selectorIndex);
+    this._specificity = InspectorUtils.getSpecificity(this.cssRule.domRule,
+                                                      this.selectorIndex);
 
     return this._specificity;
   },
@@ -1484,7 +1483,3 @@ CssSelectorInfo.prototype = {
     return this.selector + " -> " + this.value;
   },
 };
-
-DevToolsUtils.defineLazyGetter(this, "domUtils", function () {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-});

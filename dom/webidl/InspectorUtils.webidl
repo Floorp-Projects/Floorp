@@ -19,6 +19,16 @@ namespace InspectorUtils {
   unsigned long getRuleColumn(CSSRule rule);
   unsigned long getRelativeRuleLine(CSSRule rule);
   [NewObject] CSSLexer getCSSLexer(DOMString text);
+  unsigned long getSelectorCount(CSSStyleRule rule);
+  [Throws] DOMString getSelectorText(CSSStyleRule rule,
+                                     unsigned long selectorIndex);
+  [Throws] unsigned long long getSpecificity(CSSStyleRule rule,
+                                             unsigned long selectorIndex);
+  [Throws] boolean selectorMatchesElement(
+      Element element,
+      CSSStyleRule rule,
+      unsigned long selectorIndex,
+      [TreatNullAs=EmptyString] optional DOMString pseudo = "");
 };
 
 dictionary InspectorRGBTriple {

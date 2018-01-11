@@ -20,25 +20,6 @@ interface nsIDOMCSSStyleSheet;
 [scriptable, uuid(362e98c3-82c2-4ad8-8dcb-00e8e4eab497)]
 interface inIDOMUtils : nsISupports
 {
-  // Utilities for working with selectors.  We don't have a JS OM representation
-  // of a single selector or a selector list yet, but given a rule we can index
-  // into the selector list.
-  //
-  // This is a somewhat backwards API; once we move StyleRule to WebIDL we
-  // should consider using [ChromeOnly] APIs on that.
-  unsigned long getSelectorCount(in nsIDOMCSSStyleRule aRule);
-  // For all three functions below, aSelectorIndex is 0-based
-  AString getSelectorText(in nsIDOMCSSStyleRule aRule,
-                          in unsigned long aSelectorIndex);
-  unsigned long long getSpecificity(in nsIDOMCSSStyleRule aRule,
-                                    in unsigned long aSelectorIndex);
-  // Note: This does not handle scoped selectors correctly, because it has no
-  // idea what the right scope is.
-  bool selectorMatchesElement(in nsIDOMElement aElement,
-                              in nsIDOMCSSStyleRule aRule,
-                              in unsigned long aSelectorIndex,
-                              [optional] in DOMString aPseudo);
-
   // Utilities for working with CSS properties
   //
   // Returns true if the string names a property that is inherited by default.
