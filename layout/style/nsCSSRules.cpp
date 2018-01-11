@@ -1109,13 +1109,6 @@ nsCSSKeyframesRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(nsCSSKeyframesRule, dom::CSSKeyframesRule)
-NS_IMPL_RELEASE_INHERITED(nsCSSKeyframesRule, dom::CSSKeyframesRule)
-
-// QueryInterface implementation for nsCSSKeyframesRule
-NS_INTERFACE_MAP_BEGIN(nsCSSKeyframesRule)
-NS_INTERFACE_MAP_END_INHERITING(dom::CSSKeyframesRule)
-
 #ifdef DEBUG
 void
 nsCSSKeyframesRule::List(FILE* out, int32_t aIndent) const
@@ -1149,18 +1142,17 @@ nsCSSKeyframesRule::GetCssTextImpl(nsAString& aCssText) const
   aCssText.Append('}');
 }
 
-NS_IMETHODIMP
-nsCSSKeyframesRule::GetName(nsAString& aName)
+void
+nsCSSKeyframesRule::GetName(nsAString& aName) const
 {
   mName->ToString(aName);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsCSSKeyframesRule::SetName(const nsAString& aName)
 {
   if (mName->Equals(aName)) {
-    return NS_OK;
+    return;
   }
 
   nsIDocument* doc = GetDocument();
@@ -1171,11 +1163,9 @@ nsCSSKeyframesRule::SetName(const nsAString& aName)
   if (StyleSheet* sheet = GetStyleSheet()) {
     sheet->RuleChanged(this);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsCSSKeyframesRule::AppendRule(const nsAString& aRule)
 {
   // The spec is confusing, and I think we should just append the rule,
@@ -1196,8 +1186,6 @@ nsCSSKeyframesRule::AppendRule(const nsAString& aRule)
       sheet->RuleChanged(this);
     }
   }
-
-  return NS_OK;
 }
 
 static const uint32_t RULE_NOT_FOUND = uint32_t(-1);
@@ -1226,7 +1214,7 @@ nsCSSKeyframesRule::FindRuleIndexForKey(const nsAString& aKey)
   return RULE_NOT_FOUND;
 }
 
-NS_IMETHODIMP
+void
 nsCSSKeyframesRule::DeleteRule(const nsAString& aKey)
 {
   uint32_t index = FindRuleIndexForKey(aKey);
@@ -1240,7 +1228,6 @@ nsCSSKeyframesRule::DeleteRule(const nsAString& aKey)
       sheet->RuleChanged(this);
     }
   }
-  return NS_OK;
 }
 
 nsCSSKeyframeRule*
