@@ -15,7 +15,7 @@
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsStringEnumerator.h"
-#include "nsIServiceManager.h" 
+#include "nsIServiceManager.h"
 #include "nsThreadUtils.h"
 
 #include "nsPSPrinters.h"
@@ -222,7 +222,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(nsIWidget *aWidget,
 }
 
 static void
-#if (MOZ_WIDGET_GTK == 3)
+#ifdef MOZ_WIDGET_GTK
 print_callback(GtkPrintJob *aJob, gpointer aData, const GError *aError) {
 #else
 print_callback(GtkPrintJob *aJob, gpointer aData, GError *aError) {
@@ -370,7 +370,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::GetPrinterNameList(nsIStringEnumerator **a
 {
   NS_ENSURE_ARG_POINTER(aPrinterNameList);
   *aPrinterNameList = nullptr;
-  
+
   nsresult rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
   if (NS_FAILED(rv)) {
     return rv;
@@ -382,7 +382,7 @@ NS_IMETHODIMP nsPrinterEnumeratorGTK::GetPrinterNameList(nsIStringEnumerator **a
     GlobalPrinters::GetInstance()->FreeGlobalPrinters();
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  
+
   uint32_t count = 0;
   while( count < numPrinters )
   {
@@ -434,7 +434,7 @@ nsPrinterEnumeratorGTK::InitPrintSettingsFromPrinter(const nsAString& aPrinterNa
 
   aPrintSettings->SetIsInitializedFromPrinter(true);
 
-  return NS_OK;    
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -478,16 +478,16 @@ void GlobalPrinters::FreeGlobalPrinters()
   if (mGlobalPrinterList) {
     delete mGlobalPrinterList;
     mGlobalPrinterList = nullptr;
-  }  
+  }
 }
 
-void 
+void
 GlobalPrinters::GetDefaultPrinterName(nsAString& aDefaultPrinterName)
 {
   aDefaultPrinterName.Truncate();
-  
+
   bool allocate = !GlobalPrinters::GetInstance()->PrintersAreAllocated();
-  
+
   if (allocate) {
     nsresult rv = GlobalPrinters::GetInstance()->InitializeGlobalPrinters();
     if (NS_FAILED(rv)) {
@@ -498,11 +498,11 @@ GlobalPrinters::GetDefaultPrinterName(nsAString& aDefaultPrinterName)
 
   if (GlobalPrinters::GetInstance()->GetNumPrinters() == 0)
     return;
-  
+
   aDefaultPrinterName = *GlobalPrinters::GetInstance()->GetStringAt(0);
 
-  if (allocate) {  
+  if (allocate) {
     GlobalPrinters::GetInstance()->FreeGlobalPrinters();
-  }  
+  }
 }
 

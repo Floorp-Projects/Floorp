@@ -10,7 +10,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     DIRS += ['mac']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     DIRS += ['android']
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3'):
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
     DIRS += ['unix']
 else:
     DIRS += ['emacs']

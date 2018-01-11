@@ -300,6 +300,7 @@ impl PicturePrimitive {
         prim_context: &PrimitiveContext,
         render_tasks: &mut RenderTaskTree,
         prim_screen_rect: &DeviceIntRect,
+        prim_local_rect: &LayerRect,
         child_tasks: Vec<RenderTaskId>,
         parent_tasks: &mut Vec<RenderTaskId>,
     ) {
@@ -344,12 +345,12 @@ impl PicturePrimitive {
                         self.render_task_id = Some(blur_render_task_id);
                     }
                     Some(PictureCompositeMode::Filter(FilterOp::DropShadow(offset, blur_radius, color))) => {
-                        let screen_offset = (offset * content_scale).round().to_i32();
+                        let rect = (prim_local_rect.translate(&-offset) * content_scale).round().to_i32();
                         let picture_task = RenderTask::new_picture(
-                            Some(prim_screen_rect.size),
+                            Some(rect.size),
                             prim_index,
                             RenderTargetKind::Color,
-                            ContentOrigin::Screen(prim_screen_rect.origin - screen_offset),
+                            ContentOrigin::Screen(rect.origin),
                             PremultipliedColorF::TRANSPARENT,
                             ClearMode::Transparent,
                             child_tasks,

@@ -56,8 +56,8 @@ X11DataTextureSourceBasic::Update(gfx::DataSourceSurface* aSurface,
   if (aDestRegion) {
     for (auto iter = aDestRegion->RectIter(); !iter.Done(); iter.Next()) {
       const IntRect& rect = iter.Get();
-      IntRect srcRect(rect.x, rect.y, rect.width, rect.height);
-      IntPoint dstPoint(rect.x, rect.y);
+      IntRect srcRect(rect.X(), rect.Y(), rect.Width(), rect.Height());
+      IntPoint dstPoint(rect.X(), rect.Y());
 
       // We're uploading regions to our buffer, so let's just copy contents over
       mBufferDrawTarget->CopySurface(aSurface, srcRect, dstPoint);

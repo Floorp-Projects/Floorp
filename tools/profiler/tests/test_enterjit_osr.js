@@ -2,21 +2,17 @@
 // usable by a native unwinder to resume unwinding after encountering
 // JIT code, is pushed as expected.
 function run_test() {
-    let p = Cc["@mozilla.org/tools/profiler;1"];
-    // Just skip the test if the profiler component isn't present.
-    if (!p)
-        return;
-    p = p.getService(Ci.nsIProfiler);
-    if (!p)
-        return;
+    if (!AppConstants.MOZ_GECKO_PROFILER) {
+      return;
+    }
 
     // This test assumes that it's starting on an empty profiler stack.
     // (Note that the other profiler tests also assume the profiler
     // isn't already started.)
-    Assert.ok(!p.IsActive());
+    Assert.ok(!Services.profiler.IsActive());
 
     const ms = 5;
-    p.StartProfiler(100, ms, ["js"], 1);
+    Services.profiler.StartProfiler(100, ms, ["js"], 1);
 
     function arbitrary_name() {
         // A frame for |arbitrary_name| has been pushed.  Do a sequence of
@@ -30,7 +26,7 @@ function run_test() {
                 while (--n); // OSR happens here
                 // Spin in the hope of getting a sample.
             } while (Date.now() - then < delayMS);
-            let pr = p.getProfileData().threads[0];
+            let pr = Services.profiler.getProfileData().threads[0];
             if (pr.samples.data.length > 0 || delayMS > 30000)
                 return pr;
             delayMS *= 2;
@@ -55,5 +51,5 @@ function run_test() {
     }
     Assert.equal(gotName, true);
 
-    p.StopProfiler();
+    Services.profiler.StopProfiler();
 }

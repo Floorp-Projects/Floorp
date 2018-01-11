@@ -16,7 +16,7 @@
 #ifdef ACCESSIBILITY
 #include <atk/atk.h>
 #include "maiRedundantObjectFactory.h"
-#endif 
+#endif
 
 /* init methods */
 static void moz_container_class_init          (MozContainerClass *klass);
@@ -296,7 +296,7 @@ moz_container_map (GtkWidget *widget)
     tmp_list = container->children;
     while (tmp_list) {
         tmp_child = ((MozContainerChild *)tmp_list->data)->widget;
-    
+
         if (gtk_widget_get_visible(tmp_child)) {
             if (!gtk_widget_get_mapped(tmp_child))
                 gtk_widget_map(tmp_child);
@@ -350,19 +350,8 @@ moz_container_realize (GtkWidget *widget)
         attributes.visual = gtk_widget_get_visual (widget);
         attributes.window_type = GDK_WINDOW_CHILD;
 
-#if (MOZ_WIDGET_GTK == 2)
-        attributes.colormap = gtk_widget_get_colormap (widget);
-        attributes_mask |= GDK_WA_COLORMAP;
-#endif
-
         window = gdk_window_new (parent, &attributes, attributes_mask);
         gdk_window_set_user_data (window, widget);
-#if (MOZ_WIDGET_GTK == 2)
-        /* TODO GTK3? */
-        /* set the back pixmap to None so that you don't end up with the gtk
-           default which is BlackPixel */
-        gdk_window_set_back_pixmap (window, NULL, FALSE);
-#endif
     } else {
         window = parent;
         g_object_ref (window);
@@ -370,9 +359,6 @@ moz_container_realize (GtkWidget *widget)
 
     gtk_widget_set_window (widget, window);
 
-#if (MOZ_WIDGET_GTK == 2)
-    widget->style = gtk_style_attach (widget->style, widget->window);
-#endif
 }
 
 void
@@ -481,7 +467,7 @@ moz_container_forall (GtkContainer *container, gboolean include_internals,
 {
     MozContainer *moz_container;
     GList *tmp_list;
-  
+
     g_return_if_fail (IS_MOZ_CONTAINER(container));
     g_return_if_fail (callback != NULL);
 
@@ -517,7 +503,7 @@ moz_container_get_child (MozContainer *container, GtkWidget *child_widget)
     tmp_list = container->children;
     while (tmp_list) {
         MozContainerChild *child;
-    
+
         child = static_cast<MozContainerChild*>(tmp_list->data);
         tmp_list = tmp_list->next;
 
@@ -528,7 +514,7 @@ moz_container_get_child (MozContainer *container, GtkWidget *child_widget)
     return NULL;
 }
 
-static void 
+static void
 moz_container_add(GtkContainer *container, GtkWidget *widget)
 {
     moz_container_put(MOZ_CONTAINER(container), widget, 0, 0);

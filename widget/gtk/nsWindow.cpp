@@ -38,9 +38,7 @@
 #include "ScreenHelperGTK.h"
 
 #include <gtk/gtk.h>
-#if (MOZ_WIDGET_GTK == 3)
 #include <gtk/gtkx.h>
-#endif
 
 #ifdef MOZ_WAYLAND
 #include <gdk/gdkwayland.h>
@@ -51,18 +49,10 @@
 #include <X11/Xatom.h>
 #include <X11/extensions/XShm.h>
 #include <X11/extensions/shape.h>
-#if (MOZ_WIDGET_GTK == 3)
 #include <gdk/gdkkeysyms-compat.h>
-#endif
-#if (MOZ_WIDGET_GTK == 2)
-#include "gtk2xtbin.h"
-#endif
 #endif /* MOZ_X11 */
 
 #include <gdk/gdkkeysyms.h>
-#if (MOZ_WIDGET_GTK == 2)
-#include <gtk/gtkprivate.h>
-#endif
 
 #if defined(MOZ_WAYLAND)
 #include <gdk/gdkwayland.h>
@@ -132,6 +122,9 @@ using namespace mozilla::widget;
 #include "WindowSurfaceX11SHM.h"
 #include "WindowSurfaceXRender.h"
 #endif // MOZ_X11
+#ifdef MOZ_WAYLAND
+#include "nsIClipboard.h"
+#endif
 
 #include "nsShmImage.h"
 
@@ -181,13 +174,8 @@ static int    is_parent_ungrab_enter(GdkEventCrossing *aEvent);
 static int    is_parent_grab_leave(GdkEventCrossing *aEvent);
 
 /* callbacks from widgets */
-#if (MOZ_WIDGET_GTK == 2)
-static gboolean expose_event_cb           (GtkWidget *widget,
-                                           GdkEventExpose *event);
-#else
 static gboolean expose_event_cb           (GtkWidget *widget,
                                            cairo_t *rect);
-#endif
 static gboolean configure_event_cb        (GtkWidget *widget,
                                            GdkEventConfigure *event);
 static void     container_unrealize_cb    (GtkWidget *widget);
@@ -233,11 +221,9 @@ static void     screen_composited_changed_cb     (GdkScreen* screen,
 static void     widget_composited_changed_cb     (GtkWidget* widget,
                                                   gpointer user_data);
 
-#if (MOZ_WIDGET_GTK == 3)
 static void     scale_changed_cb          (GtkWidget* widget,
                                            GParamSpec* aPSpec,
                                            gpointer aPointer);
-#endif
 #if GTK_CHECK_VERSION(3,4,0)
 static gboolean touch_event_cb            (GtkWidget* aWidget,
                                            GdkEventTouch* aEvent);
@@ -393,7 +379,7 @@ static guint gButtonState;
 static inline int32_t
 GetBitmapStride(int32_t width)
 {
-#if defined(MOZ_X11) || (MOZ_WIDGET_GTK == 2)
+#if defined(MOZ_X11)
   return (width+7)/8;
 #else
   return cairo_format_stride_for_width(CAIRO_FORMAT_A1, width);
@@ -461,11 +447,23 @@ nsWindow::nsWindow()
     mXVisual  = nullptr;
     mXDepth   = 0;
 #endif /* MOZ_X11 */
+
     if (!gGlobalsInitialized) {
         gGlobalsInitialized = true;
 
         // It's OK if either of these fail, but it may not be one day.
         initialize_prefs();
+
+#ifdef MOZ_WAYLAND
+        // Wayland provides clipboard data to application on focus-in event
+        // so we need to init our clipboard hooks before we create window
+        // and get focus.
+        if (!mIsX11Display) {
+            nsCOMPtr<nsIClipboard> clipboard =
+                do_GetService("@mozilla.org/widget/clipboard;1");
+            NS_ASSERTION(clipboard, "Failed to init clipboard!");
+        }
+#endif
     }
 
     mLastMotionPressure = 0;
@@ -503,11 +501,7 @@ nsWindow::ReleaseGlobals()
 {
   for (auto & cursor : gCursorCache) {
     if (cursor) {
-#if (MOZ_WIDGET_GTK == 3)
       g_object_unref(cursor);
-#else
-      gdk_cursor_unref(cursor);
-#endif
       cursor = nullptr;
     }
   }
@@ -1674,11 +1668,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
             gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(mContainer)), cursor);
             rv = NS_OK;
         }
-#if (MOZ_WIDGET_GTK == 3)
         g_object_unref(cursor);
-#else
-        gdk_cursor_unref(cursor);
-#endif
     }
 
     return rv;
@@ -1985,11 +1975,7 @@ gdk_window_flash(GdkWindow *    aGdkWindow,
   GdkGC *      gc = 0;
   GdkColor     white;
 
-#if (MOZ_WIDGET_GTK == 2)
-  gdk_window_get_geometry(aGdkWindow,nullptr,nullptr,&width,&height,nullptr);
-#else
   gdk_window_get_geometry(aGdkWindow,nullptr,nullptr,&width,&height);
-#endif
 
   gdk_window_get_origin (aGdkWindow,
                          &x,
@@ -2033,30 +2019,6 @@ gdk_window_flash(GdkWindow *    aGdkWindow,
 #endif // DEBUG
 #endif
 
-#if (MOZ_WIDGET_GTK == 2)
-static bool
-ExtractExposeRegion(LayoutDeviceIntRegion& aRegion, GdkEventExpose* aEvent)
-{
-  GdkRectangle* rects;
-  gint nrects;
-  gdk_region_get_rectangles(aEvent->region, &rects, &nrects);
-
-  if (nrects > MAX_RECTS_IN_REGION) {
-      // Just use the bounding box
-      rects[0] = aEvent->area;
-      nrects = 1;
-  }
-
-  for (GdkRectangle* r = rects; r < rects + nrects; r++) {
-      aRegion.Or(aRegion, LayoutDeviceIntRect(r->x, r->y, r->width, r->height));
-      LOGDRAW(("\t%d %d %d %d\n", r->x, r->y, r->width, r->height));
-  }
-
-  g_free(rects);
-  return true;
-}
-
-#else
 # ifdef cairo_copy_clip_rectangle_list
 #  error "Looks like we're including Mozilla's cairo instead of system cairo"
 # endif
@@ -2078,15 +2040,9 @@ ExtractExposeRegion(LayoutDeviceIntRegion& aRegion, cairo_t* cr)
   cairo_rectangle_list_destroy(rects);
   return true;
 }
-#endif
 
-#if (MOZ_WIDGET_GTK == 2)
-gboolean
-nsWindow::OnExposeEvent(GdkEventExpose *aEvent)
-#else
 gboolean
 nsWindow::OnExposeEvent(cairo_t *cr)
-#endif
 {
     // Send any pending resize events so that layout can update.
     // May run event loop.
@@ -2105,11 +2061,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         return FALSE;
 
     LayoutDeviceIntRegion exposeRegion;
-#if (MOZ_WIDGET_GTK == 2)
-    if (!ExtractExposeRegion(exposeRegion, aEvent)) {
-#else
     if (!ExtractExposeRegion(exposeRegion, cr)) {
-#endif
         return FALSE;
     }
 
@@ -2313,19 +2265,11 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     listener->DidPaintWindow();
 
     // Synchronously flush any new dirty areas
-#if (MOZ_WIDGET_GTK == 2)
-    GdkRegion* dirtyArea = gdk_window_get_update_area(mGdkWindow);
-#else
     cairo_region_t* dirtyArea = gdk_window_get_update_area(mGdkWindow);
-#endif
 
     if (dirtyArea) {
         gdk_window_invalidate_region(mGdkWindow, dirtyArea, false);
-#if (MOZ_WIDGET_GTK == 2)
-        gdk_region_destroy(dirtyArea);
-#else
         cairo_region_destroy(dirtyArea);
-#endif
         gdk_window_process_updates(mGdkWindow, false);
     }
 
@@ -3559,20 +3503,8 @@ CreateGdkWindow(GdkWindow *parent, GtkWidget *widget)
     attributes.visual = gtk_widget_get_visual(widget);
     attributes.window_type = GDK_WINDOW_CHILD;
 
-#if (MOZ_WIDGET_GTK == 2)
-    attributes_mask |= GDK_WA_COLORMAP;
-    attributes.colormap = gtk_widget_get_colormap(widget);
-#endif
-
     GdkWindow *window = gdk_window_new(parent, &attributes, attributes_mask);
     gdk_window_set_user_data(window, widget);
-
-// GTK3 TODO?
-#if (MOZ_WIDGET_GTK == 2)
-    /* set the default pixmap to None so that you don't end up with the
-       gtk default which is BlackPixel. */
-    gdk_window_set_back_pixmap(window, nullptr, FALSE);
-#endif
 
     return window;
 }
@@ -3687,13 +3619,8 @@ nsWindow::Create(nsIWidget* aParent,
         if (useAlphaVisual) {
             GdkScreen *screen = gtk_widget_get_screen(mShell);
             if (gdk_screen_is_composited(screen)) {
-#if (MOZ_WIDGET_GTK == 2)
-                GdkColormap *colormap = gdk_screen_get_rgba_colormap(screen);
-                gtk_widget_set_colormap(mShell, colormap);
-#else
                 GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
                 gtk_widget_set_visual(mShell, visual);
-#endif
             }
         }
 
@@ -3800,7 +3727,6 @@ nsWindow::Create(nsIWidget* aParent,
         GtkWidget *container = moz_container_new();
         mContainer = MOZ_CONTAINER(container);
 
-#if (MOZ_WIDGET_GTK == 3)
         // "csd" style is set when widget is realized so we need to call
         // it explicitly now.
         gtk_widget_realize(mShell);
@@ -3821,7 +3747,6 @@ nsWindow::Create(nsIWidget* aParent,
             !mIsX11Display ||
             (mIsCSDAvailable && GetCSDSupportLevel() == CSD_SUPPORT_FLAT ) ||
             gtk_style_context_has_class(style, "csd");
-#endif
         eventWidget = (drawToContainer) ? container : mShell;
 
         gtk_widget_add_events(eventWidget, kEvents);
@@ -3863,19 +3788,11 @@ nsWindow::Create(nsIWidget* aParent,
 
             // If the popup ignores mouse events, set an empty input shape.
             if (aInitData->mMouseTransparent) {
-#if (MOZ_WIDGET_GTK == 2)
-              GdkRectangle rect = { 0, 0, 0, 0 };
-              GdkRegion *region = gdk_region_rectangle(&rect);
-
-              gdk_window_input_shape_combine_region(mGdkWindow, region, 0, 0);
-              gdk_region_destroy(region);
-#else
               cairo_rectangle_int_t rect = { 0, 0, 0, 0 };
               cairo_region_t *region = cairo_region_create_rectangle(&rect);
 
               gdk_window_input_shape_combine_region(mGdkWindow, region, 0, 0);
               cairo_region_destroy(region);
-#endif
             }
         }
     }
@@ -3970,21 +3887,14 @@ nsWindow::Create(nsIWidget* aParent,
                                G_CALLBACK(size_allocate_cb), nullptr);
         g_signal_connect(mContainer, "hierarchy-changed",
                          G_CALLBACK(hierarchy_changed_cb), nullptr);
-#if (MOZ_WIDGET_GTK == 3)
         g_signal_connect(mContainer, "notify::scale-factor",
                          G_CALLBACK(scale_changed_cb), nullptr);
-#endif
         // Initialize mHasMappedToplevel.
         hierarchy_changed_cb(GTK_WIDGET(mContainer), nullptr);
         // Expose, focus, key, and drag events are sent even to GTK_NO_WINDOW
         // widgets.
-#if (MOZ_WIDGET_GTK == 2)
-        g_signal_connect(mContainer, "expose_event",
-                         G_CALLBACK(expose_event_cb), nullptr);
-#else
         g_signal_connect(G_OBJECT(mContainer), "draw",
                          G_CALLBACK(expose_event_cb), nullptr);
-#endif
         g_signal_connect(mContainer, "focus_in_event",
                          G_CALLBACK(focus_in_event_cb), nullptr);
         g_signal_connect(mContainer, "focus_out_event",
@@ -4036,10 +3946,6 @@ nsWindow::Create(nsIWidget* aParent,
     }
 
     if (eventWidget) {
-#if (MOZ_WIDGET_GTK == 2)
-        // Don't let GTK mess with the shapes of our GdkWindows
-        GTK_PRIVATE_SET_FLAG(eventWidget, GTK_HAS_SHAPE_MASK);
-#endif
 
         // These events are sent to the owning widget of the relevant window
         // and propagate up to the first widget that handles the events, so we
@@ -4562,17 +4468,6 @@ nsWindow::SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
     if (!mGdkWindow)
         return NS_OK;
 
-#if (MOZ_WIDGET_GTK == 2)
-    GdkRegion *region = gdk_region_new(); // aborts on OOM
-    for (uint32_t i = 0; i < newRects->Length(); ++i) {
-        const LayoutDeviceIntRect& r = newRects->ElementAt(i);
-        GdkRectangle rect = { r.x, r.y, r.width, r.height };
-        gdk_region_union_with_rect(region, &rect);
-    }
-
-    gdk_window_shape_combine_region(mGdkWindow, region, 0, 0);
-    gdk_region_destroy(region);
-#else
     cairo_region_t *region = cairo_region_create();
     for (uint32_t i = 0; i < newRects->Length(); ++i) {
         const LayoutDeviceIntRect& r = newRects->ElementAt(i);
@@ -4582,7 +4477,6 @@ nsWindow::SetWindowClipRegion(const nsTArray<LayoutDeviceIntRect>& aRects,
 
     gdk_window_shape_combine_region(mGdkWindow, region, 0, 0);
     cairo_region_destroy(region);
-#endif
 
     return NS_OK;
 }
@@ -4691,17 +4585,6 @@ nsWindow::ApplyTransparencyBitmap()
                       maskPixmap, ShapeSet);
     XFreePixmap(xDisplay, maskPixmap);
 #else
-#if (MOZ_WIDGET_GTK == 2)
-    gtk_widget_reset_shapes(mShell);
-    GdkBitmap* maskBitmap = gdk_bitmap_create_from_data(mGdkWindow,
-            mTransparencyBitmap,
-            mTransparencyBitmapWidth, mTransparencyBitmapHeight);
-    if (!maskBitmap)
-        return;
-
-    gtk_widget_shape_combine_mask(mShell, maskBitmap, 0, 0);
-    g_object_unref(maskBitmap);
-#else
     cairo_surface_t *maskBitmap;
     maskBitmap = cairo_image_surface_create_for_data((unsigned char*)mTransparencyBitmap,
                                                      CAIRO_FORMAT_A1,
@@ -4715,7 +4598,6 @@ nsWindow::ApplyTransparencyBitmap()
     gtk_widget_shape_combine_region(mShell, maskRegion);
     cairo_region_destroy(maskRegion);
     cairo_surface_destroy(maskBitmap);
-#endif // MOZ_WIDGET_GTK == 2
 #endif // MOZ_X11
 }
 
@@ -5291,12 +5173,8 @@ is_mouse_in_window (GdkWindow* aWindow, gdouble aMouseX, gdouble aMouseY)
         window = gdk_window_get_parent(window);
     }
 
-#if (MOZ_WIDGET_GTK == 2)
-    gdk_drawable_get_size(aWindow, &w, &h);
-#else
     w = gdk_window_get_width(aWindow);
     h = gdk_window_get_height(aWindow);
-#endif
 
     if (aMouseX > x && aMouseX < x + w &&
         aMouseY > y && aMouseY < y + h)
@@ -5552,18 +5430,6 @@ get_gtk_cursor(nsCursor aCursor)
 
 // gtk callbacks
 
-#if (MOZ_WIDGET_GTK == 2)
-static gboolean
-expose_event_cb(GtkWidget *widget, GdkEventExpose *event)
-{
-    RefPtr<nsWindow> window = get_window_for_gdk_window(event->window);
-    if (!window)
-        return FALSE;
-
-    window->OnExposeEvent(event);
-    return FALSE;
-}
-#else
 void
 draw_window_of_widget(GtkWidget *widget, GdkWindow *aWindow, cairo_t *cr)
 {
@@ -5615,7 +5481,6 @@ expose_event_cb(GtkWidget *widget, cairo_t *cr)
 
     return FALSE;
 }
-#endif //MOZ_WIDGET_GTK == 2
 
 static gboolean
 configure_event_cb(GtkWidget *widget,
@@ -6034,7 +5899,6 @@ widget_composited_changed_cb (GtkWidget* widget, gpointer user_data)
     window->OnCompositedChanged();
 }
 
-#if (MOZ_WIDGET_GTK == 3)
 static void
 scale_changed_cb (GtkWidget* widget, GParamSpec* aPSpec, gpointer aPointer)
 {
@@ -6050,7 +5914,6 @@ scale_changed_cb (GtkWidget* widget, GParamSpec* aPSpec, gpointer aPointer)
     gtk_widget_get_allocation(widget, &allocation);
     window->OnSizeAllocate(&allocation);
 }
-#endif
 
 #if GTK_CHECK_VERSION(3,4,0)
 static gboolean
@@ -6228,11 +6091,7 @@ get_inner_gdk_window (GdkWindow *aWindow,
          child = g_list_previous(child)) {
         auto *childWindow = (GdkWindow *) child->data;
         if (get_window_for_gdk_window(childWindow)) {
-#if (MOZ_WIDGET_GTK == 2)
-            gdk_window_get_geometry(childWindow, &cx, &cy, &cw, &ch, nullptr);
-#else
             gdk_window_get_geometry(childWindow, &cx, &cy, &cw, &ch);
-#endif
             if ((cx < x) && (x < (cx + cw)) &&
                 (cy < y) && (y < (cy + ch)) &&
                 gdk_window_is_visible(childWindow)) {
@@ -6439,53 +6298,6 @@ nsWindow::GetEditCommands(NativeKeyBindingsType aType,
     NativeKeyBindings* keyBindings = NativeKeyBindings::GetInstance(aType);
     keyBindings->GetEditCommands(aEvent, aCommands);
 }
-
-#if defined(MOZ_X11) && (MOZ_WIDGET_GTK == 2)
-/* static */ already_AddRefed<DrawTarget>
-nsWindow::GetDrawTargetForGdkDrawable(GdkDrawable* aDrawable,
-                                      const IntSize& aSize)
-{
-    GdkVisual* visual = gdk_drawable_get_visual(aDrawable);
-    Screen* xScreen =
-        gdk_x11_screen_get_xscreen(gdk_drawable_get_screen(aDrawable));
-    Display* xDisplay = DisplayOfScreen(xScreen);
-    Drawable xDrawable = gdk_x11_drawable_get_xid(aDrawable);
-
-    RefPtr<gfxASurface> surface;
-
-    if (visual) {
-        Visual* xVisual = gdk_x11_visual_get_xvisual(visual);
-
-        surface = new gfxXlibSurface(xDisplay, xDrawable, xVisual, aSize);
-    } else {
-        // no visual? we must be using an xrender format.  Find a format
-        // for this depth.
-        XRenderPictFormat *pf = nullptr;
-        switch (gdk_drawable_get_depth(aDrawable)) {
-            case 32:
-                pf = XRenderFindStandardFormat(xDisplay, PictStandardARGB32);
-                break;
-            case 24:
-                pf = XRenderFindStandardFormat(xDisplay, PictStandardRGB24);
-                break;
-            default:
-                NS_ERROR("Don't know how to handle the given depth!");
-                break;
-        }
-
-        surface = new gfxXlibSurface(xScreen, xDrawable, pf, aSize);
-    }
-
-    RefPtr<DrawTarget> dt =
-        gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surface, aSize);
-
-    if (!dt || !dt->IsValid()) {
-        return nullptr;
-    }
-
-    return dt.forget();
-}
-#endif
 
 already_AddRefed<DrawTarget>
 nsWindow::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion, BufferMode* aBufferMode)
@@ -6873,11 +6685,9 @@ nsWindow::SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
     event.button.window = mGdkWindow;
     event.button.time = GDK_CURRENT_TIME;
 
-#if (MOZ_WIDGET_GTK == 3)
     // Get device for event source
     GdkDeviceManager *device_manager = gdk_display_get_device_manager(display);
     event.button.device = gdk_device_manager_get_client_pointer(device_manager);
-#endif
 
     event.button.x_root = DevicePixelsToGdkCoordRoundDown(aPoint.x);
     event.button.y_root = DevicePixelsToGdkCoordRoundDown(aPoint.y);
@@ -6920,12 +6730,10 @@ nsWindow::SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
   event.type = GDK_SCROLL;
   event.scroll.window = mGdkWindow;
   event.scroll.time = GDK_CURRENT_TIME;
-#if (MOZ_WIDGET_GTK == 3)
   // Get device for event source
   GdkDisplay* display = gdk_window_get_display(mGdkWindow);
   GdkDeviceManager *device_manager = gdk_display_get_device_manager(display);
   event.scroll.device = gdk_device_manager_get_client_pointer(device_manager);
-#endif
   event.scroll.x_root = DevicePixelsToGdkCoordRoundDown(aPoint.x);
   event.scroll.y_root = DevicePixelsToGdkCoordRoundDown(aPoint.y);
 

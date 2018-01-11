@@ -21,12 +21,11 @@
 %define inAnyPanel :-moz-any(:not([cui-areatype="toolbar"]), [overflowedItem=true])
 %define panelPaletteIconSize 16px
 
-:root {
-  --appmenu-yellow-warning-border-color: hsl(45, 100%, 77%);
-  --appmenu-yellow-warning-color: #FFEFBF;
-  --appmenu-yellow-warning-hover-color: #FFE8A2;
-  --appmenu-yellow-warning-active-color: #FFE38F;
-}
+%define appmenuWarningBackgroundColor #FFEFBF
+%define appmenuWarningBackgroundColorHover #FFE8A2
+%define appmenuWarningBackgroundColorActive #FFE38F
+%define appmenuWarningColor black
+%define appmenuWarningBorderColor hsl(45,100%,77%)
 
 :root:not([uidensity=compact]):not([chromehidden~="toolbar"]) #PanelUI-button {
   margin-inline-start: 3px;
@@ -437,9 +436,10 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 .addon-banner-item {
-  background-color: var(--appmenu-yellow-warning-color);
+  background-color: @appmenuWarningBackgroundColor@;
+  color: @appmenuWarningColor@;
   /* Force border to override `.addon-banner-item` selector below */
-  border-top: 1px solid var(--appmenu-yellow-warning-border-color) !important;
+  border-top: 1px solid @appmenuWarningBorderColor@ !important;
   display: flex;
   flex: 1 1 0%;
   width: calc(@menuPanelWidth@ + 30px);
@@ -449,11 +449,11 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 .addon-banner-item:hover {
-  background-color: var(--appmenu-yellow-warning-hover-color);
+  background-color: @appmenuWarningBackgroundColorHover@;
 }
 
-.addon-banner-item:active {
-  background-color: var(--appmenu-yellow-warning-active-color);
+.addon-banner-item:hover:active {
+  background-color: @appmenuWarningBackgroundColorActive@;
 }
 
 .addon-banner-item > .toolbarbutton-icon {
@@ -564,19 +564,20 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 #appMenu-fxa-container[fxastatus="login-failed"],
 #appMenu-fxa-container[fxastatus="unverified"] {
-  background-color: var(--appmenu-yellow-warning-color);
-  border-top: 1px solid var(--appmenu-yellow-warning-border-color);
-  border-bottom: 1px solid var(--appmenu-yellow-warning-border-color);
+  background-color: @appmenuWarningBackgroundColor@;
+  color: @appmenuWarningColor@;
+  border-top: 1px solid @appmenuWarningBorderColor@;
+  border-bottom: 1px solid @appmenuWarningBorderColor@;
 }
 
 #appMenu-fxa-container[fxastatus="login-failed"] > #appMenu-fxa-status:hover,
 #appMenu-fxa-container[fxastatus="unverified"] > #appMenu-fxa-status:hover {
-  background-color: var(--appmenu-yellow-warning-hover-color);
+  background-color: @appmenuWarningBackgroundColorHover@;
 }
 
 #appMenu-fxa-container[fxastatus="login-failed"] > #appMenu-fxa-status:hover:active,
 #appMenu-fxa-container[fxastatus="unverified"] > #appMenu-fxa-status:hover:active {
-  background-color: var(--appmenu-yellow-warning-active-color);
+  background-color: @appmenuWarningBackgroundColorActive@;
 }
 
 .addon-banner-item > .toolbarbutton-text,

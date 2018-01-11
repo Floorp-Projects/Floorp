@@ -327,9 +327,9 @@ already_AddRefed<CompositingRenderTarget>
 CompositorD3D11::CreateRenderTarget(const gfx::IntRect& aRect,
                                     SurfaceInitMode aInit)
 {
-  MOZ_ASSERT(!aRect.IsZero());
+  MOZ_ASSERT(!aRect.IsZeroArea());
 
-  if (aRect.IsZero()) {
+  if (aRect.IsZeroArea()) {
     return nullptr;
   }
 
@@ -359,9 +359,9 @@ CompositorD3D11::CreateTexture(const gfx::IntRect& aRect,
                                const CompositingRenderTarget* aSource,
                                const gfx::IntPoint& aSourcePoint)
 {
-  MOZ_ASSERT(!aRect.IsZero());
+  MOZ_ASSERT(!aRect.IsZeroArea());
 
-  if (aRect.IsZero()) {
+  if (aRect.IsZeroArea()) {
     return nullptr;
   }
 
