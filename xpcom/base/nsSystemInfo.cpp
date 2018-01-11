@@ -715,17 +715,6 @@ nsSystemInfo::Init()
   char gtkver[64];
   ssize_t gtkver_len = 0;
 
-#if MOZ_WIDGET_GTK == 2
-  extern int gtk_read_end_of_the_pipe;
-
-  if (gtk_read_end_of_the_pipe != -1) {
-    do {
-      gtkver_len = read(gtk_read_end_of_the_pipe, &gtkver, sizeof(gtkver));
-    } while (gtkver_len < 0 && errno == EINTR);
-    close(gtk_read_end_of_the_pipe);
-  }
-#endif
-
   if (gtkver_len <= 0) {
     gtkver_len = SprintfLiteral(gtkver, "GTK %u.%u.%u", gtk_major_version,
                                 gtk_minor_version, gtk_micro_version);

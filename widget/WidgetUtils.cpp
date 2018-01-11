@@ -16,7 +16,7 @@
 #ifdef XP_WIN
 #include "WinUtils.h"
 #endif
-#if MOZ_WIDGET_GTK == 3
+#ifdef MOZ_WIDGET_GTK
 #include "mozilla/WidgetUtilsGtk.h"
 #endif
 
@@ -109,7 +109,7 @@ WidgetUtils::IsTouchDeviceSupportPresent()
 {
 #ifdef XP_WIN
   return WinUtils::IsTouchDeviceSupportPresent();
-#elif MOZ_WIDGET_GTK == 3
+#elif defined(MOZ_WIDGET_GTK)
   return WidgetUtilsGTK::IsTouchDeviceSupportPresent();
 #else
   return 0;
