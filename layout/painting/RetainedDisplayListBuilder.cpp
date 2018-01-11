@@ -779,6 +779,10 @@ ProcessFrame(nsIFrame* aFrame, nsDisplayListBuilder& aBuilder,
                                                            /* aStopAtStackingContextAndDisplayPortAndOOFFrame = */ true,
                                                            &currentFrame);
     MOZ_ASSERT(currentFrame);
+    aOverflow.IntersectRect(aOverflow, currentFrame->GetVisualOverflowRectRelativeToSelf());
+    if (aOverflow.IsEmpty()) {
+      break;
+    }
 
     if (nsLayoutUtils::FrameHasDisplayPort(currentFrame)) {
       CRR_LOG("Frame belongs to displayport frame %p\n", currentFrame);
@@ -935,18 +939,20 @@ RetainedDisplayListBuilder::ComputeRebuildRegion(nsTArray<nsIFrame*>& aModifiedF
     ProcessFrame(f, mBuilder, &agr, overflow, mBuilder.RootReferenceFrame(),
                  aOutFramesWithProps, true);
 
-    aOutDirty->UnionRect(*aOutDirty, overflow);
-    CRR_LOG("Adding area to root draw area: %d %d %d %d\n",
-            overflow.x, overflow.y, overflow.width, overflow.height);
+    if (!overflow.IsEmpty()) {
+      aOutDirty->UnionRect(*aOutDirty, overflow);
+      CRR_LOG("Adding area to root draw area: %d %d %d %d\n",
+              overflow.x, overflow.y, overflow.width, overflow.height);
 
-    // If we get changed frames from multiple AGRS, then just give up as it gets really complex to
-    // track which items would need to be marked in MarkFramesForDifferentAGR.
-    if (!*aOutModifiedAGR) {
-      CRR_LOG("Setting %p as root stacking context AGR\n", agr);
-      *aOutModifiedAGR = agr;
-    } else if (agr && *aOutModifiedAGR != agr) {
-      CRR_LOG("Found multiple AGRs in root stacking context, giving up\n");
-      return false;
+      // If we get changed frames from multiple AGRS, then just give up as it gets really complex to
+      // track which items would need to be marked in MarkFramesForDifferentAGR.
+      if (!*aOutModifiedAGR) {
+        CRR_LOG("Setting %p as root stacking context AGR\n", agr);
+        *aOutModifiedAGR = agr;
+      } else if (agr && *aOutModifiedAGR != agr) {
+        CRR_LOG("Found multiple AGRs in root stacking context, giving up\n");
+        return false;
+      }
     }
   }
 
