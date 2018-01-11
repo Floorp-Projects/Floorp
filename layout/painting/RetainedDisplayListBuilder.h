@@ -25,7 +25,13 @@ struct RetainedDisplayListBuilder {
 
   nsDisplayList* List() { return &mList; }
 
-  bool AttemptPartialUpdate(nscolor aBackstop);
+  enum class PartialUpdateResult {
+    Failed,
+    NoChange,
+    Updated
+  };
+
+  PartialUpdateResult AttemptPartialUpdate(nscolor aBackstop);
 
   /**
    * Iterates through the display list builder reference frame document and
@@ -38,9 +44,9 @@ struct RetainedDisplayListBuilder {
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(Cached, RetainedDisplayListBuilder)
 
 private:
-  void PreProcessDisplayList(nsDisplayList* aList, AnimatedGeometryRoot* aAGR);
+  bool PreProcessDisplayList(nsDisplayList* aList, AnimatedGeometryRoot* aAGR);
 
-  void MergeDisplayLists(nsDisplayList* aNewList,
+  bool MergeDisplayLists(nsDisplayList* aNewList,
                          nsDisplayList* aOldList,
                          nsDisplayList* aOutList,
                          mozilla::Maybe<const mozilla::ActiveScrolledRoot*>& aOutContainerASR);

@@ -3635,6 +3635,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
                           PaintFrameFlags aFlags)
 {
   AUTO_PROFILER_LABEL("nsLayoutUtils::PaintFrame", GRAPHICS);
+  typedef RetainedDisplayListBuilder::PartialUpdateResult PartialUpdateResult;
 
 #ifdef MOZ_DUMP_PAINTING
   if (!gPaintCountStack) {
@@ -3792,6 +3793,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
   }
 
   nsRect visibleRect = visibleRegion.GetBounds();
+  PartialUpdateResult updateState = PartialUpdateResult::Failed;
 
   {
     AUTO_PROFILER_LABEL("nsLayoutUtils::PaintFrame:BuildDisplayList",
@@ -3840,21 +3842,19 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
       // Attempt to do a partial build and merge into the existing list.
       // This calls BuildDisplayListForStacking context on a subset of the
       // viewport.
-      bool merged = false;
-
       if (useRetainedBuilder) {
         if (gfxPrefs::LayoutVerifyRetainDisplayList()) {
           beforeMergeChecker.Set(&list, "BM");
         }
-        merged = retainedBuilder->AttemptPartialUpdate(aBackstop);
-        if (merged && beforeMergeChecker) {
+        updateState = retainedBuilder->AttemptPartialUpdate(aBackstop);
+        if ((updateState != PartialUpdateResult::Failed) && beforeMergeChecker) {
           afterMergeChecker.Set(&list, "AM");
         }
       }
 
-      if (merged &&
+      if ((updateState != PartialUpdateResult::Failed) &&
           (gfxPrefs::LayoutDisplayListBuildTwice() || afterMergeChecker)) {
-        merged = false;
+        updateState = PartialUpdateResult::Failed;
         if (gfxPrefs::LayersDrawFPS()) {
           if (RefPtr<LayerManager> lm = builder.GetWidgetLayerManager()) {
             if (PaintTiming* pt = ClientLayerManager::MaybeGetPaintTiming(lm)) {
@@ -3865,7 +3865,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
         dlStart = TimeStamp::Now();
       }
 
-      if (!merged) {
+      if (updateState == PartialUpdateResult::Failed) {
         list.DeleteAll(&builder);
         builder.EnterPresShell(aFrame);
         builder.SetDirtyRect(visibleRect);
@@ -3874,6 +3874,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
         AddExtraBackgroundItems(builder, list, aFrame, canvasArea, visibleRegion, aBackstop);
 
         builder.LeavePresShell(aFrame, &list);
+        updateState = PartialUpdateResult::Updated;
 
         if (afterMergeChecker) {
           DisplayListChecker nonRetainedChecker(&list, "NR");
@@ -3909,6 +3910,7 @@ nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext, nsIFrame* aFrame,
     }
   }
 
+  MOZ_ASSERT(updateState != PartialUpdateResult::Failed);
   builder.Check();
 
   Telemetry::AccumulateTimeDelta(Telemetry::PAINT_BUILD_DISPLAYLIST_TIME,
