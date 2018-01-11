@@ -22,7 +22,6 @@
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSSValue.h"
-#include "nsIDOMCSSValueList.h"
 #include "nsIDOMCustomEvent.h"
 #ifdef MOZ_WEBRTC
 #include "nsIDOMDataChannel.h"
@@ -261,7 +260,6 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(CSSPrimitiveValue),
   DEFINE_SHIM(CSSStyleDeclaration),
   DEFINE_SHIM(CSSValue),
-  DEFINE_SHIM(CSSValueList),
   DEFINE_SHIM(CustomEvent),
 #ifdef MOZ_WEBRTC
   DEFINE_SHIM(DataChannel),
