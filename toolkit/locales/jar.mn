@@ -42,9 +42,6 @@
   locale/@AB_CD@/global/extensions.properties           (%chrome/global/extensions.properties)
   locale/@AB_CD@/global/fallbackMenubar.properties      (%chrome/global/fallbackMenubar.properties)
   locale/@AB_CD@/global/filefield.properties            (%chrome/global/filefield.properties)
-#ifdef MOZ_GTK
-  locale/@AB_CD@/global/filepicker.dtd                  (%chrome/global/filepicker.dtd)
-#endif
   locale/@AB_CD@/global/filepicker.properties           (%chrome/global/filepicker.properties)
 #ifndef MOZ_FENNEC
   locale/@AB_CD@/global/findbar.dtd                     (%chrome/global/findbar.dtd)
