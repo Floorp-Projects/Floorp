@@ -6,12 +6,8 @@
 "use strict";
 
 var Cu = Components.utils;
-var Ci = Components.interfaces;
-var Cc = Components.classes;
 
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-
-const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 
 const {colorUtils} = require("devtools/shared/css/color");
 const {cssColors} = require("devtools/shared/css/color-db");
@@ -20,8 +16,8 @@ const InspectorUtils = require("InspectorUtils");
 function isValid(colorName) {
   ok(colorUtils.isValidCSSColor(colorName),
      colorName + " is valid in database");
-  ok(DOMUtils.isValidCSSColor(colorName),
-     colorName + " is valid in DOMUtils");
+  ok(InspectorUtils.isValidCSSColor(colorName),
+     colorName + " is valid in InspectorUtils");
 }
 
 function checkOne(colorName, checkName) {

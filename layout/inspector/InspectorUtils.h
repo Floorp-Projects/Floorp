@@ -130,6 +130,10 @@ public:
                           const nsAString& aColorString,
                           Nullable<InspectorRGBATuple>& aResult);
 
+  // Check whether a given color is a valid CSS color.
+  static bool IsValidCSSColor(GlobalObject& aGlobal,
+                              const nsAString& aColorString);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);
