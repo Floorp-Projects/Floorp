@@ -789,12 +789,6 @@ html|span.ac-emphasize-text-url {
   z-index: 3;
 }
 
-/* Tab close button */
-.tab-close-button {
-  -moz-appearance: none;
-  border: none;
-}
-
 /* All tabs menupopup */
 
 .alltabs-item[selected="true"] {
