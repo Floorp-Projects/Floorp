@@ -871,45 +871,40 @@ InspectorUtils::RgbToColorName(GlobalObject& aGlobalObject,
   aColorName.AssignASCII(color);
 }
 
-} // namespace dom
-} // namespace mozilla
-
-NS_IMETHODIMP
-inDOMUtils::ColorToRGBA(const nsAString& aColorString, JSContext* aCx,
-                        JS::MutableHandle<JS::Value> aValue)
+/* static */ void
+InspectorUtils::ColorToRGBA(GlobalObject& aGlobalObject,
+                            const nsAString& aColorString,
+                            Nullable<InspectorRGBATuple>& aResult)
 {
   nscolor color = NS_RGB(0, 0, 0);
 
 #ifdef MOZ_STYLO
   if (!ServoCSSParser::ComputeColor(nullptr, NS_RGB(0, 0, 0), aColorString,
                                     &color)) {
-    aValue.setNull();
-    return NS_OK;
+    aResult.SetNull();
+    return;
   }
 #else
   nsCSSParser cssParser;
   nsCSSValue cssValue;
 
   if (!cssParser.ParseColorString(aColorString, nullptr, 0, cssValue, true)) {
-    aValue.setNull();
-    return NS_OK;
+    aResult.SetNull();
+    return;
   }
 
   nsRuleNode::ComputeColor(cssValue, nullptr, nullptr, color);
 #endif
 
-  InspectorRGBATuple tuple;
+  InspectorRGBATuple& tuple = aResult.SetValue();
   tuple.mR = NS_GET_R(color);
   tuple.mG = NS_GET_G(color);
   tuple.mB = NS_GET_B(color);
   tuple.mA = nsStyleUtil::ColorComponentToFloat(NS_GET_A(color));
-
-  if (!ToJSValue(aCx, tuple, aValue)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
 }
+
+} // namespace dom
+} // namespace mozilla
 
 NS_IMETHODIMP
 inDOMUtils::IsValidCSSColor(const nsAString& aColorString, bool *_retval)

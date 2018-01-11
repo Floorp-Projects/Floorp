@@ -6,15 +6,10 @@
 "use strict";
 
 var Cu = Components.utils;
-var Ci = Components.interfaces;
-var Cc = Components.classes;
 
-var {require, loader} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {colorUtils} = require("devtools/shared/css/color");
-
-loader.lazyGetter(this, "DOMUtils", function () {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-});
+const InspectorUtils = require("InspectorUtils");
 
 const CLASSIFY_TESTS = [
   { input: "rgb(255,0,192)", output: "rgb" },
@@ -34,10 +29,10 @@ const CLASSIFY_TESTS = [
   { input: "orange", output: "name" }
 ];
 
-function compareWithDomutils(input, isColor) {
+function compareWithInspectorUtils(input, isColor) {
   let ours = colorUtils.colorToRGBA(input);
-  let platform = DOMUtils.colorToRGBA(input);
-  deepEqual(ours, platform, "color " + input + " matches DOMUtils");
+  let platform = InspectorUtils.colorToRGBA(input);
+  deepEqual(ours, platform, "color " + input + " matches InspectorUtils");
   if (isColor) {
     ok(ours !== null, "'" + input + "' is a color");
   } else {
@@ -55,12 +50,12 @@ function run_test() {
     equal(obj.colorUnit, test.output,
           "test setAuthoredUnitFromColor(" + test.input + ")");
 
-    // Check that our implementation matches DOMUtils.
-    compareWithDomutils(test.input, true);
+    // Check that our implementation matches InspectorUtils.
+    compareWithInspectorUtils(test.input, true);
 
     // And check some obvious errors.
-    compareWithDomutils("mumble" + test.input, false);
-    compareWithDomutils(test.input + "trailingstuff", false);
+    compareWithInspectorUtils("mumble" + test.input, false);
+    compareWithInspectorUtils(test.input + "trailingstuff", false);
   }
 
   // Regression test for bug 1303826.
