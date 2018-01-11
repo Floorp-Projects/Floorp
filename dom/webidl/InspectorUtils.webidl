@@ -18,6 +18,7 @@ namespace InspectorUtils {
   unsigned long getRuleLine(CSSRule rule);
   unsigned long getRuleColumn(CSSRule rule);
   unsigned long getRelativeRuleLine(CSSRule rule);
+  [NewObject] CSSLexer getCSSLexer(DOMString text);
 };
 
 dictionary InspectorRGBTriple {
