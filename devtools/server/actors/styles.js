@@ -28,10 +28,8 @@ loader.lazyRequireGetter(this, "UPDATE_PRESERVING_RULES",
 loader.lazyRequireGetter(this, "UPDATE_GENERAL",
   "devtools/server/actors/stylesheets", true);
 
-loader.lazyServiceGetter(this, "DOMUtils", "@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
-
 loader.lazyGetter(this, "PSEUDO_ELEMENTS", () => {
-  return DOMUtils.getCSSPseudoElementNames();
+  return InspectorUtils.getCSSPseudoElementNames();
 });
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
