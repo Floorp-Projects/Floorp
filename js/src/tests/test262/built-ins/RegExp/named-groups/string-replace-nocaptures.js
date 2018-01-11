@@ -6,7 +6,7 @@
 description: If there are no named captures, don't replace $<>
 esid: sec-getsubstitution
 features: [regexp-named-groups]
-info: >
+info: |
   Runtime Semantics: GetSubstitution( matched, str, position, captures, namedCaptures, replacement )
 
   Table: Replacement Text Symbol Substitutions

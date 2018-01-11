@@ -3,7 +3,7 @@
 /*---
 esid: sec-statement-semantics-runtime-semantics-evaluation
 description: Generator declaration completion value is empty.
-info: >
+info: |
     GeneratorDeclaration[Yield, Await, Default]:
 
         function * BindingIdentifier[?Yield, ?Await] ( FormalParameters[+Yield, ~Await] ) { GeneratorBody }

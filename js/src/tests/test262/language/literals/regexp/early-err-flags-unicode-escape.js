@@ -10,7 +10,7 @@ info: |
 description: >
   It is a Syntax Error if IdentifierPart contains a Unicode escape sequence.
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

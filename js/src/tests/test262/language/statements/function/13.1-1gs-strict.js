@@ -10,7 +10,7 @@ description: >
     appears within a FormalParameterList of a strict mode
     FunctionDeclaration
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 flags: [onlyStrict]
 ---*/

@@ -5,7 +5,7 @@
 esid: sec-template-literal-lexical-components
 description: Invalid unicode escape sequence
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 
