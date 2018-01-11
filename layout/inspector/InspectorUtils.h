@@ -115,6 +115,12 @@ public:
                                       nsTArray<nsString>& aResult,
                                       ErrorResult& aRv);
 
+  // Utilities for working with CSS colors
+  static void RgbToColorName(GlobalObject& aGlobal,
+                             uint8_t aR, uint8_t aG, uint8_t aB,
+                             nsAString& aResult,
+                             ErrorResult& aRv);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);

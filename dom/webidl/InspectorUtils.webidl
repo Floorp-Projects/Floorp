@@ -32,6 +32,7 @@ namespace InspectorUtils {
   boolean isInheritedProperty(DOMString property);
   sequence<DOMString> getCSSPropertyNames(optional PropertyNamesOptions options);
   [Throws] sequence<DOMString> getCSSValuesForProperty(DOMString property);
+  [Throws] DOMString rgbToColorName(octet r, octet g, octet b);
 };
 
 dictionary PropertyNamesOptions {

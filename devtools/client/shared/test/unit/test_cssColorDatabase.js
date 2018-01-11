@@ -38,7 +38,7 @@ function checkOne(colorName, checkName) {
     // implementation should agree with DOMUtils about which name is
     // canonical.
     let ourName = colorUtils.rgbToColorName(r, g, b);
-    let domName = DOMUtils.rgbToColorName(r, g, b);
+    let domName = InspectorUtils.rgbToColorName(r, g, b);
 
     equal(ourName, domName,
           colorName + " canonical name agrees with DOMUtils");
