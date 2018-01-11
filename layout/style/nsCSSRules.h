@@ -30,7 +30,6 @@
 #include "nsCSSValue.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsIDOMCSSFontFeatureValuesRule.h"
-#include "nsIDOMCSSGroupingRule.h"
 #include "nsTArray.h"
 
 class nsMediaList;
