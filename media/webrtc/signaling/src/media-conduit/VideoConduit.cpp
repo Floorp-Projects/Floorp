@@ -665,6 +665,7 @@ WebrtcVideoConduit::VideoStreamFactory::CreateEncoderStreams(int width, int heig
     video_stream.SetRid(simulcastEncoding.rid);
 
     // leave vector temporal_layer_thresholds_bps empty for non-simulcast
+    video_stream.temporal_layer_thresholds_bps.clear();
     if (config.number_of_streams > 1) {
       // XXX Note: in simulcast.cc in upstream code, the array value is
       // 3(-1) for all streams, though it's in an array, except for screencasts,
@@ -676,7 +677,6 @@ WebrtcVideoConduit::VideoStreamFactory::CreateEncoderStreams(int width, int heig
       // For VideoEncoderConfig::ContentType::kScreen, though, in
       // video_codec_initializer.cc it uses [0] to set the target bitrate
       // for the screenshare.
-      video_stream.temporal_layer_thresholds_bps.clear();
       if (mConduit->mCodecMode == webrtc::VideoCodecMode::kScreensharing) {
         video_stream.temporal_layer_thresholds_bps.push_back(video_stream.target_bitrate_bps);
       } else {
@@ -684,8 +684,6 @@ WebrtcVideoConduit::VideoStreamFactory::CreateEncoderStreams(int width, int heig
       }
       // XXX Bug 1390215 investigate using more of
       // simulcast.cc:GetSimulcastConfig() or our own algorithm to replace it
-    } else {
-      video_stream.temporal_layer_thresholds_bps.clear();
     }
 
     if (mConduit->mCurSendCodecConfig->mName == "H264") {
