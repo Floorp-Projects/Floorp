@@ -421,7 +421,7 @@ void ViEEncoder::ReconfigureEncoder() {
                      static_cast<uint32_t>(max_data_payload_length_)) == VCM_OK;
   if (!success) {
     LOG(LS_ERROR) << "Failed to configure encoder.";
-    RTC_DCHECK(success);
+    RTC_CHECK(success);
   }
 
   video_sender_.UpdateChannelParemeters(rate_allocator_.get(),
