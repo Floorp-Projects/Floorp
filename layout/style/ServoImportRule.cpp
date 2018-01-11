@@ -96,11 +96,10 @@ ServoImportRule::GetStyleSheet() const
   return mChildSheet;
 }
 
-NS_IMETHODIMP
-ServoImportRule::GetHref(nsAString& aHref)
+void
+ServoImportRule::GetHref(nsAString& aHref) const
 {
   Servo_ImportRule_GetHref(mRawRule, &aHref);
-  return NS_OK;
 }
 
 /* virtual */ void
