@@ -150,6 +150,15 @@ public:
                                      const nsAString& aProperty,
                                      ErrorResult& aRv);
 
+  // Check whether values of the given type are valid values for the property.
+  // For shorthands, checks whether there's a corresponding longhand property
+  // that accepts values of this type.  Throws on unsupported properties or
+  // unknown types.
+  static bool CssPropertySupportsType(GlobalObject& aGlobal,
+                                      const nsAString& aProperty,
+                                      uint32_t aType,
+                                      ErrorResult& aRv);
+
 private:
   static already_AddRefed<nsStyleContext>
     GetCleanStyleContextForElement(Element* aElement, nsAtom* aPseudo);
