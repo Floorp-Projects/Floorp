@@ -30,7 +30,7 @@ public class SearchEngine {
     private static final String OS_PARAM_OUTPUT_ENCODING = "\\{outputEncoding\\??\\}";
     private static final String OS_PARAM_OPTIONAL = "\\{(?:\\w+:)?\\w+\\?\\}";
 
-    private final String identifier;
+    private final String identifier; // For custom search engines, this is the same as name.
     /* package */ String name;
     /* package */ Bitmap icon;
     /* package */ List<Uri> resultsUris;

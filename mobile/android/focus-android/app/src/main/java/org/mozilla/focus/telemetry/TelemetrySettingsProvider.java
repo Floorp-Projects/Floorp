@@ -61,6 +61,9 @@ import org.mozilla.telemetry.measurement.SettingsMeasurement;
                 // However we still want to report the current search engine of the user.
                 // Therefore we inject this value at runtime.
                 value = SearchEngineManager.getInstance().getDefaultSearchEngine(context).getName();
+            } else if (SearchEngineManager.getInstance().isCustomSearchEngine((String) value, context)) {
+                // Don't collect possibly sensitive info for custom search engines, send "custom" instead
+                value = SearchEngineManager.ENGINE_TYPE_CUSTOM;
             }
             return value;
         }
