@@ -83,6 +83,10 @@ CK_RV s_open(const char *directory, const char *certPrefix,
              int flags, SDB **certdb, SDB **keydb, int *newInit);
 CK_RV s_shutdown();
 
+#if defined(_WIN32)
+wchar_t *sdb_UTF8ToWide(const char *buf);
+#endif
+
 /* flags */
 #define SDB_RDONLY 1
 #define SDB_RDWR 2
