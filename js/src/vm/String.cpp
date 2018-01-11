@@ -14,7 +14,6 @@
 #include "mozilla/Unused.h"
 
 #include "gc/Marking.h"
-#include "gc/Nursery.h"
 #include "js/UbiNode.h"
 #include "vm/GeckoProfiler.h"
 
@@ -91,9 +90,9 @@ JS::ubi::Concrete<JSString>::size(mozilla::MallocSizeOf mallocSizeOf) const
     else
         size = str.isFatInline() ? sizeof(JSFatInlineString) : sizeof(JSString);
 
-    if (IsInsideNursery(&str))
-        size += Nursery::stringHeaderSize();
-
+    // We can't use mallocSizeof on things in the nursery. At the moment,
+    // strings are never in the nursery, but that may change.
+    MOZ_ASSERT(!IsInsideNursery(&str));
     size += str.sizeOfExcludingThis(mallocSizeOf);
 
     return size;
@@ -209,11 +208,10 @@ JSString::dumpRepresentationHeader(js::GenericPrinter& out, int indent, const ch
     if (flags & FLAT_BIT)               out.put(" FLAT");
     if (flags & HAS_BASE_BIT)           out.put(" HAS_BASE");
     if (flags & INLINE_CHARS_BIT)       out.put(" INLINE_CHARS");
-    if (flags & NON_ATOM_BIT)           out.put(" NON_ATOM");
+    if (flags & ATOM_BIT)               out.put(" ATOM");
     if (isPermanentAtom())              out.put(" PERMANENT");
     if (flags & LATIN1_CHARS_BIT)       out.put(" LATIN1");
     if (flags & INDEX_VALUE_BIT)        out.put(" INDEX_VALUE(%u)", getIndexValue());
-    if (!isTenured())                   out.put(" NURSERY");
     out.putChar('\n');
 }
 
@@ -486,7 +484,6 @@ JSRope::flattenInternal(JSContext* maybecx)
                     JSString::writeBarrierPre(str->d.s.u3.right);
                 }
                 JSString* child = str->d.s.u2.left;
-                js::BarrierMethods<JSString*>::postBarrier(&str->d.s.u2.left, child, nullptr);
                 MOZ_ASSERT(child->isRope());
                 str->setNonInlineChars(left.nonInlineChars<CharT>(nogc));
                 child->d.u1.flattenData = uintptr_t(str) | Tag_VisitRightChild;
@@ -500,31 +497,19 @@ JSRope::flattenInternal(JSContext* maybecx)
             wholeCapacity = capacity;
             wholeChars = const_cast<CharT*>(left.nonInlineChars<CharT>(nogc));
             pos = wholeChars + left.d.u1.length;
-            static_assert((EXTENSIBLE_FLAGS & DEPENDENT_FLAGS) == NON_ATOM_BIT,
-                          "extensible and dependent flags must only overlap on NON_ATOM_BIT");
-            left.d.u1.flags ^= (EXTENSIBLE_FLAGS | DEPENDENT_FLAGS) & ~NON_ATOM_BIT;
+            JS_STATIC_ASSERT(!(EXTENSIBLE_FLAGS & DEPENDENT_FLAGS));
+            left.d.u1.flags ^= (EXTENSIBLE_FLAGS | DEPENDENT_FLAGS);
             left.d.s.u3.base = (JSLinearString*)this;  /* will be true on exit */
-            MOZ_ASSERT(!static_cast<JSString&>(left).isExtensible());
-            MOZ_ASSERT(left.isDependent());
-            MOZ_ASSERT(!left.isAtom());
-            BarrierMethods<JSString*>::postBarrier((JSString**)&left.d.s.u3.base, nullptr, this);
+            StringWriteBarrierPostRemove(maybecx, &left.d.s.u2.left);
+            StringWriteBarrierPost(maybecx, (JSString**)&left.d.s.u3.base);
             goto visit_right_child;
         }
-   }
+    }
 
     if (!AllocChars(this, wholeLength, &wholeChars, &wholeCapacity)) {
         if (maybecx)
             ReportOutOfMemory(maybecx);
         return nullptr;
-    }
-
-    if (!isTenured() && maybecx) {
-        JSRuntime* rt = maybecx->runtime();
-        if (!rt->gc.nursery().registerMallocedBuffer(wholeChars)) {
-            js_free(wholeChars);
-            ReportOutOfMemory(maybecx);
-            return nullptr;
-        }
     }
 
     pos = wholeChars;
@@ -535,8 +520,8 @@ JSRope::flattenInternal(JSContext* maybecx)
         }
 
         JSString& left = *str->d.s.u2.left;
-        js::BarrierMethods<JSString*>::postBarrier(&str->d.s.u2.left, &left, nullptr);
         str->setNonInlineChars(pos);
+        StringWriteBarrierPostRemove(maybecx, &str->d.s.u2.left);
         if (left.isRope()) {
             /* Return to this node when 'left' done, then goto visit_right_child. */
             left.d.u1.flattenData = uintptr_t(str) | Tag_VisitRightChild;
@@ -548,7 +533,6 @@ JSRope::flattenInternal(JSContext* maybecx)
     }
     visit_right_child: {
         JSString& right = *str->d.s.u3.right;
-        BarrierMethods<JSString*>::postBarrier(&str->d.s.u3.right, &right, nullptr);
         if (right.isRope()) {
             /* Return to this node when 'right' done, then goto finish_node. */
             right.d.u1.flattenData = uintptr_t(str) | Tag_FinishNode;
@@ -558,7 +542,6 @@ JSRope::flattenInternal(JSContext* maybecx)
         CopyChars(pos, right.asLinear());
         pos += right.length();
     }
-
     finish_node: {
         if (str == this) {
             MOZ_ASSERT(pos == wholeChars + wholeLength);
@@ -570,6 +553,8 @@ JSRope::flattenInternal(JSContext* maybecx)
                 str->d.u1.flags = EXTENSIBLE_FLAGS | LATIN1_CHARS_BIT;
             str->setNonInlineChars(wholeChars);
             str->d.s.u3.capacity = wholeCapacity;
+            StringWriteBarrierPostRemove(maybecx, &str->d.s.u2.left);
+            StringWriteBarrierPostRemove(maybecx, &str->d.s.u3.right);
             return &this->asFlat();
         }
         uintptr_t flattenData = str->d.u1.flattenData;
@@ -579,7 +564,7 @@ JSRope::flattenInternal(JSContext* maybecx)
             str->d.u1.flags = DEPENDENT_FLAGS | LATIN1_CHARS_BIT;
         str->d.u1.length = pos - str->asLinear().nonInlineChars<CharT>(nogc);
         str->d.s.u3.base = (JSLinearString*)this;       /* will be true on exit */
-        BarrierMethods<JSString*>::postBarrier((JSString**)&str->d.s.u3.base, nullptr, this);
+        StringWriteBarrierPost(maybecx, (JSString**)&str->d.s.u3.base);
         str = (JSString*)(flattenData & ~Tag_Mask);
         if ((flattenData & Tag_Mask) == Tag_VisitRightChild)
             goto visit_right_child;
@@ -1131,11 +1116,9 @@ JSExternalString::ensureFlat(JSContext* cx)
     // Release the external chars.
     finalize(cx->runtime()->defaultFreeOp());
 
-    // Transform the string into a non-external, flat string. Note that the
-    // resulting string will still be in an AllocKind::EXTERNAL_STRING arena,
-    // but will no longer be an external string.
+    // Transform the string into a non-external, flat string.
     setNonInlineChars<char16_t>(s);
-    d.u1.flags = FLAT_FLAGS;
+    d.u1.flags = FLAT_BIT;
 
     return &this->asFlat();
 }

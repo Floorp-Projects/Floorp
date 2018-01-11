@@ -75,9 +75,8 @@ template JSObject* js::Allocate<JSObject, CanGC>(JSContext* cx, gc::AllocKind ki
                                                  size_t nDynamicSlots, gc::InitialHeap heap,
                                                  const Class* clasp);
 
-// Attempt to allocate a new JSObject out of the nursery. If there is not
-// enough room in the nursery or there is an OOM, this method will return
-// nullptr.
+// Attempt to allocate a new GC thing out of the nursery. If there is not enough
+// room in the nursery or there is an OOM, this method will return nullptr.
 template <AllowGC allowGC>
 JSObject*
 GCRuntime::tryNewNurseryObject(JSContext* cx, size_t thingSize, size_t nDynamicSlots, const Class* clasp)
@@ -128,84 +127,6 @@ GCRuntime::tryNewTenuredObject(JSContext* cx, AllocKind kind, size_t thingSize,
     return obj;
 }
 
-// Attempt to allocate a new string out of the nursery. If there is not enough
-// room in the nursery or there is an OOM, this method will return nullptr.
-template <AllowGC allowGC>
-JSString*
-GCRuntime::tryNewNurseryString(JSContext* cx, size_t thingSize, AllocKind kind)
-{
-    MOZ_ASSERT(IsNurseryAllocable(kind));
-    MOZ_ASSERT(cx->isNurseryAllocAllowed());
-    MOZ_ASSERT(!cx->helperThread());
-    MOZ_ASSERT(!IsAtomsCompartment(cx->compartment()));
-
-    Cell* cell = cx->nursery().allocateString(cx, cx->zone(), thingSize, kind);
-    if (cell)
-        return static_cast<JSString*>(cell);
-
-    if (allowGC && !cx->suppressGC) {
-        cx->runtime()->gc.minorGC(JS::gcreason::OUT_OF_NURSERY);
-
-        // Exceeding gcMaxBytes while tenuring can disable the Nursery.
-        if (cx->nursery().isEnabled()) {
-            cell = cx->nursery().allocateString(cx, cx->zone(), thingSize, kind);
-            MOZ_ASSERT(cell);
-            return static_cast<JSString*>(cell);
-        }
-    }
-    return nullptr;
-}
-
-template <typename StringAllocT, AllowGC allowGC /* = CanGC */>
-StringAllocT*
-js::AllocateString(JSContext* cx, InitialHeap heap)
-{
-    static_assert(mozilla::IsConvertible<StringAllocT*, JSString*>::value, "must be JSString derived");
-
-    AllocKind kind = MapTypeToFinalizeKind<StringAllocT>::kind;
-    size_t size = sizeof(StringAllocT);
-    MOZ_ASSERT(size == Arena::thingSize(kind));
-    MOZ_ASSERT(size == sizeof(JSString) || size == sizeof(JSFatInlineString));
-
-    // Off-thread alloc cannot trigger GC or make runtime assertions.
-    if (cx->helperThread()) {
-        StringAllocT* str = GCRuntime::tryNewTenuredThing<StringAllocT, NoGC>(cx, kind, size);
-        if (MOZ_UNLIKELY(allowGC && !str))
-            ReportOutOfMemory(cx);
-        return str;
-    }
-
-    JSRuntime* rt = cx->runtime();
-    if (!rt->gc.checkAllocatorState<allowGC>(cx, kind))
-        return nullptr;
-
-    if (cx->nursery().isEnabled() &&
-        heap != TenuredHeap &&
-        cx->nursery().canAllocateStrings() &&
-        cx->zone()->allocNurseryStrings)
-    {
-        auto str = static_cast<StringAllocT*>(rt->gc.tryNewNurseryString<allowGC>(cx, size, kind));
-        if (str)
-            return str;
-
-        // Our most common non-jit allocation path is NoGC; thus, if we fail the
-        // alloc and cannot GC, we *must* return nullptr here so that the caller
-        // will do a CanGC allocation to clear the nursery. Failing to do so will
-        // cause all allocations on this path to land in Tenured, and we will not
-        // get the benefit of the nursery.
-        if (!allowGC)
-            return nullptr;
-    }
-
-    return GCRuntime::tryNewTenuredThing<StringAllocT, allowGC>(cx, kind, size);
-}
-
-#define DECL_ALLOCATOR_INSTANCES(allocKind, traceKind, type, sizedType, bgfinal, nursery) \
-    template type* js::AllocateString<type, NoGC>(JSContext* cx, InitialHeap heap);\
-    template type* js::AllocateString<type, CanGC>(JSContext* cx, InitialHeap heap);
-FOR_EACH_NURSERY_STRING_ALLOCKIND(DECL_ALLOCATOR_INSTANCES)
-#undef DECL_ALLOCATOR_INSTANCES
-
 template <typename T, AllowGC allowGC /* = CanGC */>
 T*
 js::Allocate(JSContext* cx)
@@ -229,7 +150,7 @@ js::Allocate(JSContext* cx)
 #define DECL_ALLOCATOR_INSTANCES(allocKind, traceKind, type, sizedType, bgFinal, nursery) \
     template type* js::Allocate<type, NoGC>(JSContext* cx);\
     template type* js::Allocate<type, CanGC>(JSContext* cx);
-FOR_EACH_NONOBJECT_NONNURSERY_ALLOCKIND(DECL_ALLOCATOR_INSTANCES)
+FOR_EACH_NONOBJECT_ALLOCKIND(DECL_ALLOCATOR_INSTANCES)
 #undef DECL_ALLOCATOR_INSTANCES
 
 template <typename T, AllowGC allowGC>

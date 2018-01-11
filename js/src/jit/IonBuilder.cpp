@@ -7393,14 +7393,9 @@ IonBuilder::loadStaticSlot(JSObject* staticObject, BarrierKind barrier, Temporar
 bool
 IonBuilder::needsPostBarrier(MDefinition* value)
 {
-    CompileZone* zone = compartment->zone();
-    if (!zone->nurseryExists())
+    if (!compartment->zone()->nurseryExists())
         return false;
-    if (value->mightBeType(MIRType::Object))
-        return true;
-    if (value->mightBeType(MIRType::String) && zone->canNurseryAllocateStrings())
-        return true;
-    return false;
+    return value->mightBeType(MIRType::Object);
 }
 
 AbortReasonOr<Ok>
@@ -11923,7 +11918,7 @@ IonBuilder::storeUnboxedValue(MDefinition* obj, MDefinition* elements, int32_t e
         break;
 
       case JSVAL_TYPE_STRING:
-        store = MStoreUnboxedString::New(alloc(), elements, scaledOffset, value, obj,
+        store = MStoreUnboxedString::New(alloc(), elements, scaledOffset, value,
                                          elementsOffset, preBarrier);
         break;
 
@@ -13636,9 +13631,9 @@ IonBuilder::setPropTryReferenceTypedObjectValue(bool* emitted,
         store = MStoreUnboxedObjectOrNull::New(alloc(), elements, scaledOffset, value, typedObj, adjustment);
         break;
       case ReferenceTypeDescr::TYPE_STRING:
-        // See previous comment. The StoreUnboxedString type policy may insert
-        // ToString instructions that require a post barrier.
-        store = MStoreUnboxedString::New(alloc(), elements, scaledOffset, value, typedObj, adjustment);
+        // Strings are not nursery allocated, so these writes do not need post
+        // barriers.
+        store = MStoreUnboxedString::New(alloc(), elements, scaledOffset, value, adjustment);
         break;
     }
 

@@ -542,15 +542,6 @@ MacroAssembler::moveValue(const Value& src, const ValueOperand& dest)
 // Branch functions
 
 void
-MacroAssembler::loadStoreBuffer(Register ptr, Register buffer)
-{
-    if (ptr != buffer)
-        movePtr(ptr, buffer);
-    orPtr(Imm32(gc::ChunkMask), buffer);
-    loadPtr(Address(buffer, gc::ChunkStoreBufferOffsetFromLastByte), buffer);
-}
-
-void
 MacroAssembler::branchPtrInNurseryChunk(Condition cond, Register ptr, Register temp,
                                         Label* label)
 {
@@ -580,6 +571,20 @@ MacroAssembler::branchPtrInNurseryChunkImpl(Condition cond, Register ptr, Label*
 }
 
 void
+MacroAssembler::branchValueIsNurseryObject(Condition cond, const Address& address, Register temp,
+                                           Label* label)
+{
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
+    Label done;
+
+    branchTestObject(Assembler::NotEqual, address, cond == Assembler::Equal ? &done : label);
+    branchPtrInNurseryChunk(cond, address, temp, label);
+
+    bind(&done);
+}
+
+void
 MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
                                            Label* label)
 {
@@ -588,40 +593,6 @@ MacroAssembler::branchValueIsNurseryObject(Condition cond, ValueOperand value, R
     Label done;
 
     branchTestObject(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
-    branchPtrInNurseryChunk(cond, value.payloadReg(), temp, label);
-
-    bind(&done);
-}
-
-void
-MacroAssembler::branchValueIsNurseryCell(Condition cond, const Address& address, Register temp,
-                                         Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    Label done, checkAddress;
-
-    Register tag = extractTag(address, temp);
-    MOZ_ASSERT(tag == temp);
-    branchTestObject(Assembler::Equal, tag, &checkAddress);
-    branchTestString(Assembler::NotEqual, tag, cond == Assembler::Equal ? &done : label);
-
-    bind(&checkAddress);
-    branchPtrInNurseryChunk(cond, ToPayload(address), temp, label);
-
-    bind(&done);
-}
-
-void
-MacroAssembler::branchValueIsNurseryCell(Condition cond, ValueOperand value, Register temp,
-                                         Label* label)
-{
-    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    Label done, checkAddress;
-
-    branchTestObject(Assembler::Equal, value, &checkAddress);
-    branchTestString(Assembler::NotEqual, value, cond == Assembler::Equal ? &done : label);
-
-    bind(&checkAddress);
     branchPtrInNurseryChunk(cond, value.payloadReg(), temp, label);
 
     bind(&done);

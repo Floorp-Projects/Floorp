@@ -73,10 +73,6 @@
     shortStrings.push(str);
   }
 
-  // Strings in the nursery are not reported, so make sure the above test
-  // strings are tenured.
-  Components.utils.forceGC();
-
   let mySandbox = Components.utils.Sandbox(document.nodePrincipal,
                     { sandboxName: "this-is-a-sandbox-name" });
 

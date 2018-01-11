@@ -41,9 +41,6 @@ JITFLAGS = {
          '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3', '--no-threads'],
         ['--no-asmjs', '--no-wasm', '--no-baseline', '--no-ion'],
     ],
-    'baseline': [
-        ['--no-ion'],
-    ],
     # Interpreter-only, for tools that cannot handle binary code generation.
     'interp': [
         ['--no-baseline', '--no-asmjs', '--no-wasm', '--no-native-regexp']

@@ -1065,10 +1065,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void branchPtr(Condition cond, wasm::SymbolicAddress lhs, Register rhs, Label* label)
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
 
-    // Given a pointer to a GC Cell, retrieve the StoreBuffer pointer from its
-    // chunk trailer, or nullptr if it is in the tenured heap.
-    void loadStoreBuffer(Register ptr, Register buffer) PER_ARCH;
-
     template <typename T>
     inline CodeOffsetJump branchPtrWithPatch(Condition cond, Register lhs, T rhs, RepatchLabel* label) PER_SHARED_ARCH;
     template <typename T>
@@ -1078,9 +1074,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         DEFINED_ON(arm, arm64, mips_shared, x86, x64);
     void branchPtrInNurseryChunk(Condition cond, const Address& address, Register temp, Label* label)
         DEFINED_ON(x86);
+    void branchValueIsNurseryObject(Condition cond, const Address& address, Register temp, Label* label) PER_ARCH;
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp, Label* label) PER_ARCH;
-    void branchValueIsNurseryCell(Condition cond, const Address& address, Register temp, Label* label) PER_ARCH;
-    void branchValueIsNurseryCell(Condition cond, ValueOperand value, Register temp, Label* label) PER_ARCH;
 
     // This function compares a Value (lhs) which is having a private pointer
     // boxed inside a js::Value, with a raw pointer (rhs).
@@ -1149,10 +1144,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     // Branches to |label| if |reg| is true. |reg| should be a C++ bool.
     inline void branchIfTrueBool(Register reg, Label* label);
 
-    inline void branchIfRope(Register str, Register temp, Label* label);
+    inline void branchIfRope(Register str, Label* label);
     inline void branchIfRopeOrExternal(Register str, Register temp, Label* label);
 
-    inline void branchIfNotRope(Register str, Register temp, Label* label);
+    inline void branchIfNotRope(Register str, Label* label);
 
     inline void branchLatin1String(Register string, Label* label);
     inline void branchTwoByteString(Register string, Label* label);
@@ -1299,7 +1294,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void branchPtrInNurseryChunkImpl(Condition cond, Register ptr, Label* label)
         DEFINED_ON(x86);
     template <typename T>
-    void branchValueIsNurseryCellImpl(Condition cond, const T& value, Register temp, Label* label)
+    void branchValueIsNurseryObjectImpl(Condition cond, const T& value, Register temp, Label* label)
         DEFINED_ON(arm64, mips64, x64);
 
     template <typename T>
@@ -1779,7 +1774,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadStringChars(Register str, Register dest);
-    void loadStringChar(Register str, Register index, Register temp, Register output, Label* fail);
+    void loadStringChar(Register str, Register index, Register output, Label* fail);
 
     void loadStringIndexValue(Register str, Register dest, Label* fail);
 
@@ -2020,15 +2015,11 @@ class MacroAssembler : public MacroAssemblerSpecific
   private:
     void checkAllocatorState(Label* fail);
     bool shouldNurseryAllocate(gc::AllocKind allocKind, gc::InitialHeap initialHeap);
-    void nurseryAllocateObject(Register result, Register temp, gc::AllocKind allocKind,
-                               size_t nDynamicSlots, Label* fail);
+    void nurseryAllocate(Register result, Register temp, gc::AllocKind allocKind,
+                         size_t nDynamicSlots, gc::InitialHeap initialHeap, Label* fail);
     void freeListAllocate(Register result, Register temp, gc::AllocKind allocKind, Label* fail);
     void allocateObject(Register result, Register temp, gc::AllocKind allocKind,
                         uint32_t nDynamicSlots, gc::InitialHeap initialHeap, Label* fail);
-    void nurseryAllocateString(Register result, Register temp, gc::AllocKind allocKind,
-                               Label* fail);
-    void allocateString(Register result, Register temp, gc::AllocKind allocKind,
-                        gc::InitialHeap initialHeap, Label* fail);
     void allocateNonObject(Register result, Register temp, gc::AllocKind allocKind, Label* fail);
     void copySlotsFromTemplate(Register obj, const NativeObject* templateObj,
                                uint32_t start, uint32_t end);
@@ -2054,8 +2045,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void initUnboxedObjectContents(Register object, UnboxedPlainObject* templateObject);
 
-    void newGCString(Register result, Register temp, Label* fail, bool attemptNursery);
-    void newGCFatInlineString(Register result, Register temp, Label* fail, bool attemptNursery);
+    void newGCString(Register result, Register temp, Label* fail);
+    void newGCFatInlineString(Register result, Register temp, Label* fail);
 
     // Compares two strings for equality based on the JSOP.
     // This checks for identical pointers, atoms and length and fails for everything else.

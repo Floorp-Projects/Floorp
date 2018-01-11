@@ -226,7 +226,7 @@ class CrossCompartmentKey
             using ReturnType = bool;
             ReturnType operator()(JSObject** tp) { return !IsInsideNursery(*tp); }
             ReturnType operator()(JSScript** tp) { return true; }
-            ReturnType operator()(JSString** tp) { return !IsInsideNursery(*tp); }
+            ReturnType operator()(JSString** tp) { return true; }
         };
         return const_cast<CrossCompartmentKey*>(this)->applyToWrapped(IsTenuredFunctor());
     }

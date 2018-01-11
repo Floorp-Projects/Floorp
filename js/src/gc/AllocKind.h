@@ -51,7 +51,7 @@ namespace gc {
     D(OBJECT16,            Object,       JSObject,          JSObject_Slots16,  false,  false) \
     D(OBJECT16_BACKGROUND, Object,       JSObject,          JSObject_Slots16,  true,   true)
 
-#define FOR_EACH_NONOBJECT_NONNURSERY_ALLOCKIND(D) \
+#define FOR_EACH_NONOBJECT_ALLOCKIND(D) \
  /* AllocKind              TraceKind     TypeName           SizedType          BGFinal Nursery */ \
     D(SCRIPT,              Script,       JSScript,          JSScript,          false,  false) \
     D(LAZY_SCRIPT,         LazyScript,   js::LazyScript,    js::LazyScript,    true,   false) \
@@ -59,6 +59,8 @@ namespace gc {
     D(ACCESSOR_SHAPE,      Shape,        js::AccessorShape, js::AccessorShape, true,   false) \
     D(BASE_SHAPE,          BaseShape,    js::BaseShape,     js::BaseShape,     true,   false) \
     D(OBJECT_GROUP,        ObjectGroup,  js::ObjectGroup,   js::ObjectGroup,   true,   false) \
+    D(FAT_INLINE_STRING,   String,       JSFatInlineString, JSFatInlineString, true,   false) \
+    D(STRING,              String,       JSString,          JSString,          true,   false) \
     D(EXTERNAL_STRING,     String,       JSExternalString,  JSExternalString,  true,   false) \
     D(FAT_INLINE_ATOM,     String,       js::FatInlineAtom, js::FatInlineAtom, true,   false) \
     D(ATOM,                String,       js::NormalAtom,    js::NormalAtom,    true,   false) \
@@ -67,15 +69,7 @@ namespace gc {
     D(SCOPE,               Scope,        js::Scope,         js::Scope,         true,   false) \
     D(REGEXP_SHARED,       RegExpShared, js::RegExpShared,  js::RegExpShared,  true,   false)
 
-#define FOR_EACH_NURSERY_STRING_ALLOCKIND(D) \
-    D(FAT_INLINE_STRING,   String,        JSFatInlineString, JSFatInlineString, true,   true) \
-    D(STRING,              String,        JSString,          JSString,          true,   true)
-
-#define FOR_EACH_NONOBJECT_ALLOCKIND(D) \
-    FOR_EACH_NONOBJECT_NONNURSERY_ALLOCKIND(D) \
-    FOR_EACH_NURSERY_STRING_ALLOCKIND(D)
-
-#define FOR_EACH_ALLOCKIND(D)    \
+#define FOR_EACH_ALLOCKIND(D) \
     FOR_EACH_OBJECT_ALLOCKIND(D) \
     FOR_EACH_NONOBJECT_ALLOCKIND(D)
 

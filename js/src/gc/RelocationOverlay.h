@@ -15,11 +15,6 @@
 
 #include <stdint.h>
 
-#include "jsobj.h"
-
-#include "js/HeapAPI.h"
-#include "vm/Shape.h"
-
 namespace js {
 namespace gc {
 
@@ -31,22 +26,11 @@ struct Cell;
  */
 class RelocationOverlay
 {
-    /* See comment in js/public/HeapAPI.h. */
-    static const uint32_t Relocated = js::gc::Relocated;
-
-#if MOZ_LITTLE_ENDIAN
-    /*
-     * Keep the low 32 bits untouched. Use them to distinguish strings from
-     * objects in the nursery.
-     */
-    uint32_t preserve_;
+    /* The low bit is set so this should never equal a normal pointer. */
+    static const uintptr_t Relocated = uintptr_t(0xbad0bad1);
 
     /* Set to Relocated when moved. */
-    uint32_t magic_;
-#else
-    uint32_t magic_;
-    uint32_t preserve_;
-#endif
+    uintptr_t magic_;
 
     /* The location |this| was moved to. */
     Cell* newLocation_;
@@ -55,16 +39,11 @@ class RelocationOverlay
     RelocationOverlay* next_;
 
   public:
-    static const RelocationOverlay* fromCell(const Cell* cell) {
-        return reinterpret_cast<const RelocationOverlay*>(cell);
-    }
-
     static RelocationOverlay* fromCell(Cell* cell) {
         return reinterpret_cast<RelocationOverlay*>(cell);
     }
 
     bool isForwarded() const {
-        (void) preserve_; // Suppress warning
         return magic_ == Relocated;
     }
 
@@ -85,7 +64,7 @@ class RelocationOverlay
         return next_;
     }
 
-    static bool isCellForwarded(const Cell* cell) {
+    static bool isCellForwarded(Cell* cell) {
         return fromCell(cell)->isForwarded();
     }
 };

@@ -625,7 +625,7 @@ js::TraceProcessGlobalRoot(JSTracer* trc, T* thing, const char* name)
     // permanent atoms, so likewise require no subsquent marking.
     CheckTracedThing(trc, *ConvertToBase(&thing));
     if (trc->isMarkingTracer())
-        thing->asTenured().markIfUnmarked(gc::MarkColor::Black);
+        thing->markIfUnmarked(gc::MarkColor::Black);
     else
         DoCallback(trc->asCallbackTracer(), ConvertToBase(&thing), name);
 }
@@ -795,18 +795,6 @@ ShouldMark<JSObject*>(GCMarker* gcmarker, JSObject* obj)
     // faster to check our own arena, which we can do since we know that
     // the object is tenured.
     return obj->asTenured().zone()->shouldMarkInZone();
-}
-
-// JSStrings can also be in the nursery. See ShouldMark<JSObject*> for comments.
-template <>
-bool
-ShouldMark<JSString*>(GCMarker* gcmarker, JSString* str)
-{
-    if (IsOwnedByOtherRuntime(gcmarker->runtime(), str))
-        return false;
-    if (IsInsideNursery(str))
-        return false;
-    return str->asTenured().zone()->shouldMarkInZone();
 }
 
 template <typename T>
@@ -2706,31 +2694,18 @@ TenuringTracer::traverse(JSObject** objp)
     // We only ever visit the internals of objects after moving them to tenured.
     MOZ_ASSERT(!nursery().isInside(objp));
 
-    Cell** cellp = reinterpret_cast<Cell**>(objp);
-    if (!IsInsideNursery(*cellp) || nursery().getForwardedPointer(cellp))
+    JSObject* obj = *objp;
+    if (!IsInsideNursery(obj) || nursery().getForwardedPointer(objp))
         return;
 
     // Take a fast path for tenuring a plain object which is by far the most
     // common case.
-    JSObject* obj = *objp;
     if (obj->is<PlainObject>()) {
         *objp = movePlainObjectToTenured(&obj->as<PlainObject>());
         return;
     }
 
     *objp = moveToTenuredSlow(obj);
-}
-
-template <>
-void
-TenuringTracer::traverse(JSString** strp)
-{
-    // We only ever visit the internals of strings after moving them to tenured.
-    MOZ_ASSERT(!nursery().isInside(strp));
-
-    Cell** cellp = reinterpret_cast<Cell**>(strp);
-    if (IsInsideNursery(*cellp) && !nursery().getForwardedPointer(cellp))
-        *strp = moveToTenured(*strp);
 }
 
 template <typename S>
@@ -2822,12 +2797,6 @@ TraceWholeCell(TenuringTracer& mover, JSObject* object)
 }
 
 static inline void
-TraceWholeCell(TenuringTracer& mover, JSString* str)
-{
-    str->traceChildren(&mover);
-}
-
-static inline void
 TraceWholeCell(TenuringTracer& mover, JSScript* script)
 {
     script->traceChildren(&mover);
@@ -2866,9 +2835,6 @@ js::gc::StoreBuffer::traceWholeCells(TenuringTracer& mover)
           case JS::TraceKind::Object:
             TraceBufferedCells<JSObject>(mover, arena, cells);
             break;
-          case JS::TraceKind::String:
-            TraceBufferedCells<JSString>(mover, arena, cells);
-            break;
           case JS::TraceKind::Script:
             TraceBufferedCells<JSScript>(mover, arena, cells);
             break;
@@ -2890,22 +2856,8 @@ js::gc::StoreBuffer::CellPtrEdge::trace(TenuringTracer& mover) const
         return;
 
     MOZ_ASSERT(IsCellPointerValid(*edge));
-
-#ifdef DEBUG
-    auto traceKind = (*edge)->getTraceKind();
-    MOZ_ASSERT(traceKind == JS::TraceKind::Object || traceKind == JS::TraceKind::String);
-#endif
-
-    // Bug 1376646: Make separate store buffers for strings and objects, and
-    // only check IsInsideNursery once.
-
-    if (!IsInsideNursery(*edge))
-        return;
-
-    if (JSString::nurseryCellIsString(*edge))
-        mover.traverse(reinterpret_cast<JSString**>(edge));
-    else
-        mover.traverse(reinterpret_cast<JSObject**>(edge));
+    MOZ_ASSERT((*edge)->getTraceKind() == JS::TraceKind::Object);
+    mover.traverse(reinterpret_cast<JSObject**>(edge));
 }
 
 void
@@ -2914,7 +2866,6 @@ js::gc::StoreBuffer::ValueEdge::trace(TenuringTracer& mover) const
     if (deref())
         mover.traverse(edge);
 }
-
 
 struct TenuringFunctor
 {
@@ -2973,12 +2924,6 @@ js::TenuringTracer::traceSlots(JS::Value* vp, uint32_t nslots)
     traceSlots(vp, vp + nslots);
 }
 
-void
-js::TenuringTracer::traceString(JSString* str)
-{
-    str->traceChildren(this);
-}
-
 #ifdef DEBUG
 static inline ptrdiff_t
 OffsetToChunkEnd(void* p)
@@ -2989,10 +2934,10 @@ OffsetToChunkEnd(void* p)
 
 /* Insert the given relocation entry into the list of things to visit. */
 inline void
-js::TenuringTracer::insertIntoObjectFixupList(RelocationOverlay* entry) {
-    *objTail = entry;
-    objTail = &entry->nextRef();
-    *objTail = nullptr;
+js::TenuringTracer::insertIntoFixupList(RelocationOverlay* entry) {
+    *tail = entry;
+    tail = &entry->nextRef();
+    *tail = nullptr;
 }
 
 template <typename T>
@@ -3079,7 +3024,7 @@ js::TenuringTracer::moveToTenuredSlow(JSObject* src)
 
     RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
     overlay->forwardTo(dst);
-    insertIntoObjectFixupList(overlay);
+    insertIntoFixupList(overlay);
 
     TracePromoteToTenured(src, dst);
     return dst;
@@ -3111,7 +3056,7 @@ js::TenuringTracer::movePlainObjectToTenured(PlainObject* src)
 
     RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
     overlay->forwardTo(dst);
-    insertIntoObjectFixupList(overlay);
+    insertIntoFixupList(overlay);
 
     TracePromoteToTenured(src, dst);
     return dst;
@@ -3195,44 +3140,10 @@ js::TenuringTracer::moveElementsToTenured(NativeObject* dst, NativeObject* src, 
     return nslots * sizeof(HeapSlot);
 }
 
-inline void
-js::TenuringTracer::insertIntoStringFixupList(RelocationOverlay* entry) {
-    *stringTail = entry;
-    stringTail = &entry->nextRef();
-    *stringTail = nullptr;
-}
-
-JSString*
-js::TenuringTracer::moveToTenured(JSString* src)
-{
-    MOZ_ASSERT(IsInsideNursery(src));
-    MOZ_ASSERT(!src->zone()->usedByHelperThread());
-
-    AllocKind dstKind = src->getAllocKind();
-    Zone* zone = src->zone();
-
-    TenuredCell* t = zone->arenas.allocateFromFreeList(dstKind, Arena::thingSize(dstKind));
-    if (!t) {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
-        t = runtime()->gc.refillFreeListInGC(zone, dstKind);
-        if (!t)
-            oomUnsafe.crash(ChunkSize, "Failed to allocate string while tenuring.");
-    }
-    JSString* dst = reinterpret_cast<JSString*>(t);
-    tenuredSize += moveStringToTenured(dst, src, dstKind);
-
-    RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
-    overlay->forwardTo(dst);
-    insertIntoStringFixupList(overlay);
-
-    TracePromoteToTenured(src, dst);
-    return dst;
-}
-
 void
 js::Nursery::collectToFixedPoint(TenuringTracer& mover, TenureCountCache& tenureCounts)
 {
-    for (RelocationOverlay* p = mover.objHead; p; p = p->next()) {
+    for (RelocationOverlay* p = mover.head; p; p = p->next()) {
         JSObject* obj = static_cast<JSObject*>(p->forwardingAddress());
         mover.traceObject(obj);
 
@@ -3244,30 +3155,6 @@ js::Nursery::collectToFixedPoint(TenuringTracer& mover, TenureCountCache& tenure
             entry.count = 1;
         }
     }
-
-    for (RelocationOverlay* p = mover.stringHead; p; p = p->next())
-        mover.traceString(static_cast<JSString*>(p->forwardingAddress()));
-}
-
-size_t
-js::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src, AllocKind dstKind)
-{
-    size_t size = Arena::thingSize(dstKind);
-
-    // At the moment, strings always have the same AllocKind between src and
-    // dst. This may change in the future.
-    MOZ_ASSERT(dst->asTenured().getAllocKind() == src->getAllocKind());
-
-    // Copy the Cell contents.
-    MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(size));
-    js_memcpy(dst, src, size);
-
-    if (src->isLinear() && !src->isInline() && !src->hasBase()) {
-        void* chars = src->asLinear().nonInlineCharsRaw();
-        nursery().removeMallocedBuffer(chars);
-    }
-
-    return size;
 }
 
 
@@ -3333,8 +3220,7 @@ IsMarkedInternal(JSRuntime* rt, JSObject** thingp)
 
     if (IsInsideNursery(*thingp)) {
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-        Cell** cellp = reinterpret_cast<Cell**>(thingp);
-        return Nursery::getForwardedPointer(cellp);
+        return Nursery::getForwardedPointer(thingp);
     }
     return IsMarkedInternalCommon(thingp);
 }
@@ -3380,7 +3266,7 @@ IsAboutToBeFinalizedInternal(T** thingp)
 
     if (IsInsideNursery(thing)) {
         return JS::CurrentThreadIsHeapMinorCollecting() &&
-               !Nursery::getForwardedPointer(reinterpret_cast<Cell**>(thingp));
+               !Nursery::getForwardedPointer(reinterpret_cast<JSObject**>(thingp));
     }
 
     Zone* zone = thing->asTenured().zoneFromAnyThread();

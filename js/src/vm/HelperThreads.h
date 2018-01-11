@@ -502,7 +502,6 @@ struct CompilationsUsingNursery { JSRuntime* runtime; };
 
 using CompilationSelector = mozilla::Variant<JSScript*,
                                              JSCompartment*,
-                                             Zone*,
                                              ZonesInState,
                                              JSRuntime*,
                                              CompilationsUsingNursery,
@@ -524,12 +523,6 @@ inline void
 CancelOffThreadIonCompile(JSCompartment* comp)
 {
     CancelOffThreadIonCompile(CompilationSelector(comp), true);
-}
-
-inline void
-CancelOffThreadIonCompile(Zone* zone)
-{
-    CancelOffThreadIonCompile(CompilationSelector(zone), true);
 }
 
 inline void

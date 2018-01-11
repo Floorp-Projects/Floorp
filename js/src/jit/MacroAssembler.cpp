@@ -726,6 +726,7 @@ MacroAssembler::checkAllocatorState(Label* fail)
         jump(fail);
 }
 
+// Inline version of ShouldNurseryAllocate.
 bool
 MacroAssembler::shouldNurseryAllocate(gc::AllocKind allocKind, gc::InitialHeap initialHeap)
 {
@@ -740,10 +741,11 @@ MacroAssembler::shouldNurseryAllocate(gc::AllocKind allocKind, gc::InitialHeap i
 // Inline version of Nursery::allocateObject. If the object has dynamic slots,
 // this fills in the slots_ pointer.
 void
-MacroAssembler::nurseryAllocateObject(Register result, Register temp, gc::AllocKind allocKind,
-                                      size_t nDynamicSlots, Label* fail)
+MacroAssembler::nurseryAllocate(Register result, Register temp, gc::AllocKind allocKind,
+                                size_t nDynamicSlots, gc::InitialHeap initialHeap, Label* fail)
 {
     MOZ_ASSERT(IsNurseryAllocable(allocKind));
+    MOZ_ASSERT(initialHeap != gc::TenuredHeap);
 
     // We still need to allocate in the nursery, per the comment in
     // shouldNurseryAllocate; however, we need to insert into the
@@ -863,10 +865,8 @@ MacroAssembler::allocateObject(Register result, Register temp, gc::AllocKind all
 
     checkAllocatorState(fail);
 
-    if (shouldNurseryAllocate(allocKind, initialHeap)) {
-        MOZ_ASSERT(initialHeap == gc::DefaultHeap);
-        return nurseryAllocateObject(result, temp, allocKind, nDynamicSlots, fail);
-    }
+    if (shouldNurseryAllocate(allocKind, initialHeap))
+        return nurseryAllocate(result, temp, allocKind, nDynamicSlots, initialHeap, fail);
 
     if (!nDynamicSlots)
         return freeListAllocate(result, temp, allocKind, fail);
@@ -926,82 +926,16 @@ MacroAssembler::allocateNonObject(Register result, Register temp, gc::AllocKind 
     freeListAllocate(result, temp, allocKind, fail);
 }
 
-// Inline version of Nursery::allocateString.
 void
-MacroAssembler::nurseryAllocateString(Register result, Register temp, gc::AllocKind allocKind,
-                                      Label* fail)
+MacroAssembler::newGCString(Register result, Register temp, Label* fail)
 {
-    MOZ_ASSERT(IsNurseryAllocable(allocKind));
-
-    // No explicit check for nursery.isEnabled() is needed, as the comparison
-    // with the nursery's end will always fail in such cases.
-
-    CompileZone* zone = GetJitContext()->compartment->zone();
-    int thingSize = int(gc::Arena::thingSize(allocKind));
-    int totalSize = js::Nursery::stringHeaderSize() + thingSize;
-    MOZ_ASSERT(totalSize % gc::CellAlignBytes == 0);
-
-    // The nursery position (allocation pointer) and the nursery end are stored
-    // very close to each other. In practice, the zone will probably be close
-    // (within 32 bits) as well. If so, use relative offsets between them, to
-    // avoid multiple 64-bit immediate loads.
-    auto nurseryPosAddr = intptr_t(zone->addressOfStringNurseryPosition());
-    auto nurseryEndAddr = intptr_t(zone->addressOfStringNurseryCurrentEnd());
-    auto zoneAddr = intptr_t(zone);
-
-    intptr_t maxOffset = std::max(std::abs(nurseryPosAddr - zoneAddr),
-                                  std::abs(nurseryEndAddr - zoneAddr));
-    if (maxOffset < (1 << 31)) {
-        movePtr(ImmPtr(zone), temp); // temp holds the Zone pointer from here on.
-        loadPtr(Address(temp, nurseryPosAddr - zoneAddr), result);
-        addPtr(Imm32(totalSize), result); // result points past this allocation.
-        branchPtr(Assembler::Below, Address(temp, nurseryEndAddr - zoneAddr), result, fail);
-        storePtr(result, Address(temp, nurseryPosAddr - zoneAddr)); // Update position.
-        subPtr(Imm32(thingSize), result); // Point result at Cell data.
-        storePtr(temp, Address(result, -js::Nursery::stringHeaderSize())); // Store Zone*
-    } else {
-        // Otherwise, the zone is far from the nursery pointers. But the
-        // nursery pos/end pointers are still near each other.
-        movePtr(ImmPtr(zone->addressOfNurseryPosition()), temp);
-        loadPtr(Address(temp, 0), result);
-        addPtr(Imm32(totalSize), result);
-        branchPtr(Assembler::Below, Address(temp, nurseryEndAddr - nurseryPosAddr), result, fail);
-        storePtr(result, Address(temp, 0));
-        subPtr(Imm32(thingSize), result);
-        storePtr(ImmPtr(zone), Address(result, -js::Nursery::stringHeaderSize()));
-    }
-}
-
-// Inlined equivalent of gc::AllocateString, jumping to fail if nursery
-// allocation requested but unsuccessful.
-void
-MacroAssembler::allocateString(Register result, Register temp, gc::AllocKind allocKind,
-                               gc::InitialHeap initialHeap, Label* fail)
-{
-    MOZ_ASSERT(allocKind == gc::AllocKind::STRING || allocKind == gc::AllocKind::FAT_INLINE_STRING);
-
-    checkAllocatorState(fail);
-
-    if (shouldNurseryAllocate(allocKind, initialHeap)) {
-        MOZ_ASSERT(initialHeap == gc::DefaultHeap);
-        return nurseryAllocateString(result, temp, allocKind, fail);
-    }
-
-    freeListAllocate(result, temp, allocKind, fail);
+    allocateNonObject(result, temp, js::gc::AllocKind::STRING, fail);
 }
 
 void
-MacroAssembler::newGCString(Register result, Register temp, Label* fail, bool attemptNursery)
+MacroAssembler::newGCFatInlineString(Register result, Register temp, Label* fail)
 {
-    allocateString(result, temp, js::gc::AllocKind::STRING,
-                   attemptNursery ? gc::DefaultHeap : gc::TenuredHeap, fail);
-}
-
-void
-MacroAssembler::newGCFatInlineString(Register result, Register temp, Label* fail, bool attemptNursery)
-{
-    allocateString(result, temp, js::gc::AllocKind::FAT_INLINE_STRING,
-                   attemptNursery ? gc::DefaultHeap : gc::TenuredHeap, fail);
+    allocateNonObject(result, temp, js::gc::AllocKind::FAT_INLINE_STRING, fail);
 }
 
 void
@@ -1409,9 +1343,9 @@ MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register 
 
     Label notAtom;
     // Optimize the equality operation to a pointer compare for two atoms.
-    Imm32 nonAtomBit(JSString::NON_ATOM_BIT);
-    branchTest32(Assembler::NonZero, Address(left, JSString::offsetOfFlags()), nonAtomBit, &notAtom);
-    branchTest32(Assembler::NonZero, Address(right, JSString::offsetOfFlags()), nonAtomBit, &notAtom);
+    Imm32 atomBit(JSString::ATOM_BIT);
+    branchTest32(Assembler::Zero, Address(left, JSString::offsetOfFlags()), atomBit, &notAtom);
+    branchTest32(Assembler::Zero, Address(right, JSString::offsetOfFlags()), atomBit, &notAtom);
 
     cmpPtrSet(JSOpToCondition(MCompare::Compare_String, op), left, right, result);
     jump(&done);
@@ -1442,7 +1376,7 @@ MacroAssembler::loadStringChars(Register str, Register dest)
 }
 
 void
-MacroAssembler::loadStringChar(Register str, Register index, Register temp, Register output, Label* fail)
+MacroAssembler::loadStringChar(Register str, Register index, Register output, Label* fail)
 {
     MOZ_ASSERT(str != output);
     MOZ_ASSERT(index != output);
@@ -1451,7 +1385,7 @@ MacroAssembler::loadStringChar(Register str, Register index, Register temp, Regi
 
     // This follows JSString::getChar.
     Label notRope;
-    branchIfNotRope(str, temp, &notRope);
+    branchIfNotRope(str, &notRope);
 
     // Load leftChild.
     loadPtr(Address(str, JSRope::offsetOfLeft()), output);
@@ -1461,7 +1395,7 @@ MacroAssembler::loadStringChar(Register str, Register index, Register temp, Regi
     branch32(Assembler::BelowOrEqual, Address(output, JSString::offsetOfLength()), index, fail);
 
     // If the left side is another rope, give up.
-    branchIfRope(output, temp, fail);
+    branchIfRope(output, fail);
 
     bind(&notRope);
 
@@ -3225,7 +3159,7 @@ MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type, Register tem
     andPtr(temp1, temp2);
 
     // If the GC thing is in the nursery, we don't need to barrier it.
-    if (type == MIRType::Value || type == MIRType::Object || type == MIRType::String) {
+    if (type == MIRType::Value || type == MIRType::Object) {
         branch32(Assembler::Equal, Address(temp2, gc::ChunkLocationOffset),
                  Imm32(int32_t(gc::ChunkLocation::Nursery)), noBarrier);
     } else {

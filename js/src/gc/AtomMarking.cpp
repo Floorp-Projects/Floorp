@@ -223,7 +223,7 @@ AtomMarkingRuntime::atomIsMarked(Zone* zone, T* thing)
             return true;
     }
 
-    size_t bit = GetAtomBit(&thing->asTenured());
+    size_t bit = GetAtomBit(thing);
     return zone->markedAtoms().getBit(bit);
 }
 
@@ -239,9 +239,7 @@ AtomMarkingRuntime::atomIsMarked(Zone* zone, TenuredCell* thing)
 
     if (thing->is<JSString>()) {
         JSString* str = thing->as<JSString>();
-        if (!str->isAtom())
-            return true;
-        return atomIsMarked(zone, &str->asAtom());
+        return str->isAtom() ? atomIsMarked(zone, &str->asAtom()) : true;
     }
 
     if (thing->is<JS::Symbol>())

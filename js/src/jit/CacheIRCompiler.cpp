@@ -1835,7 +1835,7 @@ CacheIRCompiler::emitLoadStringCharResult()
     // Bounds check, load string char.
     masm.branch32(Assembler::BelowOrEqual, Address(str, JSString::offsetOfLength()),
                   index, failure->label());
-    masm.loadStringChar(str, index, scratch2, scratch1, failure->label());
+    masm.loadStringChar(str, index, scratch1, failure->label());
 
     // Load StaticString for this char.
     masm.branch32(Assembler::AboveOrEqual, scratch1, Imm32(StaticStrings::UNIT_STATIC_LIMIT),
@@ -2339,8 +2339,6 @@ void
 CacheIRCompiler::emitStoreTypedObjectReferenceProp(ValueOperand val, ReferenceTypeDescr::Type type,
                                                    const Address& dest, Register scratch)
 {
-    // Callers will post-barrier this store.
-
     switch (type) {
       case ReferenceTypeDescr::TYPE_ANY:
         EmitPreBarrier(masm, dest, MIRType::Value);
@@ -2393,19 +2391,18 @@ CacheIRCompiler::emitPostBarrierShared(Register obj, const ConstantOrRegister& v
         return;
 
     if (val.constant()) {
-        MOZ_ASSERT_IF(val.value().isGCThing(), !IsInsideNursery(val.value().toGCThing()));
+        MOZ_ASSERT_IF(val.value().isObject(), !IsInsideNursery(&val.value().toObject()));
         return;
     }
 
     TypedOrValueRegister reg = val.reg();
-    if (reg.hasTyped()) {
-        if (reg.type() != MIRType::Object && reg.type() != MIRType::String)
-            return;
-    }
+    if (reg.hasTyped() && reg.type() != MIRType::Object)
+        return;
 
     Label skipBarrier;
     if (reg.hasValue()) {
-        masm.branchValueIsNurseryCell(Assembler::NotEqual, reg.valueReg(), scratch, &skipBarrier);
+        masm.branchValueIsNurseryObject(Assembler::NotEqual, reg.valueReg(), scratch,
+                                        &skipBarrier);
     } else {
         masm.branchPtrInNurseryChunk(Assembler::NotEqual, reg.typedReg().gpr(), scratch,
                                      &skipBarrier);
