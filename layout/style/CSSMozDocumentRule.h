@@ -14,15 +14,12 @@ namespace mozilla {
 namespace dom {
 
 class CSSMozDocumentRule : public css::ConditionRule
-                         , public nsIDOMCSSGroupingRule
 {
 protected:
   using ConditionRule::ConditionRule;
   virtual ~CSSMozDocumentRule() {}
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   int32_t GetType() const final override { return css::Rule::DOCUMENT_RULE; }
   using Rule::GetType;
 
@@ -31,9 +28,6 @@ public:
                     const nsACString& aDocURISpec,
                     const nsACString& aPattern,
                     css::URLMatchingFunction aUrlMatchingFunction);
-
-  // nsIDOMCSSGroupingRule interface
-  NS_DECL_NSIDOMCSSGROUPINGRULE
 
   // WebIDL interface
   uint16_t Type() const final override {

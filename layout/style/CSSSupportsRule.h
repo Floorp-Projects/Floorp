@@ -8,26 +8,19 @@
 #define mozilla_dom_CSSSupportsRule_h
 
 #include "mozilla/css/GroupRule.h"
-#include "nsIDOMCSSGroupingRule.h"
 
 namespace mozilla {
 namespace dom {
 
 class CSSSupportsRule : public css::ConditionRule
-                      , public nsIDOMCSSGroupingRule
 {
 protected:
   using ConditionRule::ConditionRule;
   virtual ~CSSSupportsRule() {}
 
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
   int32_t GetType() const override { return css::Rule::SUPPORTS_RULE; }
   using Rule::GetType;
-
-  // nsIDOMCSSGroupingRule interface
-  NS_DECL_NSIDOMCSSGROUPINGRULE
 
   // WebIDL interface
   uint16_t Type() const override { return nsIDOMCSSRule::SUPPORTS_RULE; }
