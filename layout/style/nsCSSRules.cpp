@@ -23,7 +23,6 @@
 #include "nsCSSProps.h"
 
 #include "nsCOMPtr.h"
-#include "nsIDOMCSSStyleSheet.h"
 #include "nsMediaList.h"
 #include "mozilla/dom/CSSRuleList.h"
 #include "nsIDocument.h"

@@ -165,8 +165,8 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
   },
 
   /**
-   * Return or create a StyleSheetActor for the given nsIDOMCSSStyleSheet.
-   * @param  {DOMStyleSheet} sheet
+   * Return or create a StyleSheetActor for the given CSSStyleSheet.
+   * @param  {CSSStyleSheet} sheet
    *         The style sheet to create an actor for.
    * @return {StyleSheetActor}
    *         The actor for this style sheet
