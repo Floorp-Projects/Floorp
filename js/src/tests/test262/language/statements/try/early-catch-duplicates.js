@@ -8,7 +8,7 @@ description: >
     It is a Syntax Error if BoundNames of CatchParameter contains any duplicate
     elements.
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

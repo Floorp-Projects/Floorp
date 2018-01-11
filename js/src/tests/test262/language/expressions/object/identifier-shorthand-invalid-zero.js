@@ -14,7 +14,7 @@ info: |
     PropertyName : AssignmentExpression
     MethodDefinition
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

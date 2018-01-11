@@ -15,7 +15,7 @@ description: >
   A RegularExpressionBackslashSequence may not contain a <LF>
 
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

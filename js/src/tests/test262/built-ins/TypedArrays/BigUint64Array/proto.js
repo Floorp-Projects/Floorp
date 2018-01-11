@@ -5,7 +5,7 @@
 /*---
 esid: sec-properties-of-the-typedarray-constructors
 description: BigUint64Array prototype internal slot
-info: >
+info: |
   22.2.5 Properties of the TypedArray Constructors
 
   The value of the [[Prototype]] internal slot of each TypedArray

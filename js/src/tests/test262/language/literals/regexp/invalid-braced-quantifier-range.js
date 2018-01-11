@@ -17,7 +17,7 @@ info: |
     pattern with a higher precedence. This makes the SyntaxError for such
     patterns consistent between Annex-B and non-Annex-B environments.
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

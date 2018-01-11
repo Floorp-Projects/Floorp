@@ -5,7 +5,7 @@
 /*---
 esid: sec-typedarray.prototype.constructor
 description: BigUint64Array.prototype.constructor property descriptor
-info: >
+info: |
   22.2.6.2 TypedArray.prototype.constructor
 
   The initial value of a TypedArray.prototype.constructor is the

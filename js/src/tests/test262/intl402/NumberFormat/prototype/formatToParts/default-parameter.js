@@ -3,7 +3,7 @@
 /*---
 esid: #sec-intl.numberformat.prototype.formattoparts
 description: Intl.NumberFormat.prototype.formatToParts called with no parameters
-info: >
+info: |
   Intl.NumberFormat.prototype.formatToParts ([ value ])
 
   3. If value is not provided, let value be undefined.

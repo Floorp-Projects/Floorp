@@ -29,56 +29,40 @@ info: |
     ...
 
 ---*/
-var x = 0;
+var x = 1;
 
 
 class C {
-  static [x++] = x++;
   [x++] = x++;
-  static [x++] = x++;
   [x++] = x++;
 }
 
 var c1 = new C();
 var c2 = new C();
 
-verifyProperty(C, "0", {
+verifyProperty(c1, "1", {
+  value: 3,
+  enumerable: true,
+  configurable: true,
+  writable: true,
+});
+
+verifyProperty(c1, "2", {
   value: 4,
   enumerable: true,
   configurable: true,
   writable: true,
 });
 
-verifyProperty(C, "2", {
+verifyProperty(c2, "1", {
   value: 5,
   enumerable: true,
   configurable: true,
   writable: true,
 });
 
-verifyProperty(c1, "1", {
+verifyProperty(c2, "2", {
   value: 6,
-  enumerable: true,
-  configurable: true,
-  writable: true,
-});
-
-verifyProperty(c1, "3", {
-  value: 7,
-  enumerable: true,
-  configurable: true,
-  writable: true,
-});
-
-verifyProperty(c2, "1", {
-  value: 8,
-  enumerable: true,
-  configurable: true,
-  writable: true,
-});
-
-verifyProperty(c2, "3", {
-  value: 9,
   enumerable: true,
   configurable: true,
   writable: true,

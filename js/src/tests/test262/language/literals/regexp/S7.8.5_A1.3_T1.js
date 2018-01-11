@@ -21,7 +21,7 @@ info: |
 description: >
   The first character of a regular expression may not be a <LF> (\u000A)
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

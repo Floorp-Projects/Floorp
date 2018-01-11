@@ -19,7 +19,7 @@ info: |
     . DecimalDigits
 features: [BigInt]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 ---*/
 

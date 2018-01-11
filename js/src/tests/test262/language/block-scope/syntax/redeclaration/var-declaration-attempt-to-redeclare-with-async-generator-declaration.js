@@ -8,7 +8,7 @@ esid: sec-block-static-semantics-early-errors
 features: [async-iteration]
 flags: [generated]
 negative:
-  phase: early
+  phase: parse
   type: SyntaxError
 info: |
     Block : { StatementList }
