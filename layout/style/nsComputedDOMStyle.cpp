@@ -12,7 +12,7 @@
 #include "mozilla/Preferences.h"
 
 #include "nsError.h"
-#include "nsIDOMCSSPrimitiveValue.h"
+#include "mozilla/dom/CSSPrimitiveValueBinding.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
 #include "nsStyleContext.h"
@@ -463,12 +463,10 @@ nsComputedDOMStyle::GetLength(uint32_t* aLength)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsComputedDOMStyle::GetParentRule(nsIDOMCSSRule** aParentRule)
+css::Rule*
+nsComputedDOMStyle::GetParentRule()
 {
-  *aParentRule = nullptr;
-
-  return NS_OK;
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -1218,12 +1216,6 @@ nsComputedDOMStyle::SetProperty(const nsAString& aPropertyName,
   return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
-NS_IMETHODIMP
-nsComputedDOMStyle::Item(uint32_t aIndex, nsAString& aReturn)
-{
-  return nsDOMCSSDeclaration::Item(aIndex, aReturn);
-}
-
 void
 nsComputedDOMStyle::IndexedGetter(uint32_t   aIndex,
                                   bool&      aFound,
@@ -1551,7 +1543,7 @@ nsComputedDOMStyle::DoGetContent()
         nsAutoString str;
         nsStyleUtil::AppendEscapedCSSIdent(
           nsDependentString(data.GetString()), str);
-        val->SetString(str, nsIDOMCSSPrimitiveValue::CSS_ATTR);
+        val->SetString(str, CSSPrimitiveValueBinding::CSS_ATTR);
         break;
       }
       case eStyleContentType_Counter:
@@ -1576,7 +1568,7 @@ nsComputedDOMStyle::DoGetContent()
         }
 
         str.Append(char16_t(')'));
-        val->SetString(str, nsIDOMCSSPrimitiveValue::CSS_COUNTER);
+        val->SetString(str, CSSPrimitiveValueBinding::CSS_COUNTER);
         break;
       }
       case eStyleContentType_OpenQuote:

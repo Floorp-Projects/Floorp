@@ -12,35 +12,11 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ADDREF_INHERITED(CSSImportRule, css::Rule)
-NS_IMPL_RELEASE_INHERITED(CSSImportRule, css::Rule)
-
-// QueryInterface implementation for CSSImportRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CSSImportRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSImportRule)
-NS_INTERFACE_MAP_END_INHERITING(css::Rule)
-
 bool
 CSSImportRule::IsCCLeaf() const
 {
   // We're not a leaf.
   return false;
-}
-
-NS_IMETHODIMP
-CSSImportRule::GetMedia(nsIDOMMediaList** aMedia)
-{
-  NS_ENSURE_ARG_POINTER(aMedia);
-  NS_IF_ADDREF(*aMedia = GetMedia());
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CSSImportRule::GetStyleSheet(nsIDOMCSSStyleSheet** aStyleSheet)
-{
-  NS_ENSURE_ARG_POINTER(aStyleSheet);
-  NS_IF_ADDREF(*aStyleSheet = GetStyleSheet());
-  return NS_OK;
 }
 
 /* virtual */ JSObject*

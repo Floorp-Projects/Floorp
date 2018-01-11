@@ -9831,8 +9831,12 @@ BytecodeEmitter::emitArrayLiteral(ParseNode* pn)
 
         // If the array consists entirely of primitive values, make a
         // template object with copy on write elements that can be reused
-        // every time the initializer executes.
-        if (emitterMode != BytecodeEmitter::SelfHosting && pn->pn_count != 0) {
+        // every time the initializer executes. Don't do this if the array is
+        // small: copying the elements lazily is not worth it in that case.
+        static const size_t MinElementsForCopyOnWrite = 5;
+        if (emitterMode != BytecodeEmitter::SelfHosting &&
+            pn->pn_count >= MinElementsForCopyOnWrite)
+        {
             RootedValue value(cx);
             if (!pn->getConstantValue(cx, ParseNode::ForCopyOnWriteArray, &value))
                 return false;

@@ -23,7 +23,7 @@
 #include "nsGkAtoms.h"
 #include "nsAtom.h"
 #include "nsIContent.h"
-#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsICSSDeclaration.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocument.h"
@@ -1268,7 +1268,7 @@ CSSEditUtils::ElementsSameStyle(Element* aFirstElement,
     return false;
   }
 
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> firstCSSDecl, secondCSSDecl;
+  nsCOMPtr<nsICSSDeclaration> firstCSSDecl, secondCSSDecl;
   uint32_t firstLength, secondLength;
   nsresult rv = GetInlineStyles(aFirstElement,  getter_AddRefs(firstCSSDecl),  &firstLength);
   if (NS_FAILED(rv) || !firstCSSDecl) {
@@ -1313,7 +1313,7 @@ CSSEditUtils::ElementsSameStyle(Element* aFirstElement,
 
 nsresult
 CSSEditUtils::GetInlineStyles(Element* aElement,
-                              nsIDOMCSSStyleDeclaration** aCssDecl,
+                              nsICSSDeclaration** aCssDecl,
                               uint32_t* aLength)
 {
   NS_ENSURE_TRUE(aElement && aLength, NS_ERROR_NULL_POINTER);
@@ -1321,8 +1321,7 @@ CSSEditUtils::GetInlineStyles(Element* aElement,
   nsCOMPtr<nsStyledElement> inlineStyles = do_QueryInterface(aElement);
   NS_ENSURE_TRUE(inlineStyles, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl =
-    do_QueryInterface(inlineStyles->Style());
+  nsCOMPtr<nsICSSDeclaration> cssDecl = inlineStyles->Style();
   MOZ_ASSERT(cssDecl);
 
   cssDecl.forget(aCssDecl);

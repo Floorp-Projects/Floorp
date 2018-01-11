@@ -11,7 +11,7 @@
 #include <functional>
 #include <windows.h>
 
-#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsICSSDeclaration.h"
 #include "nsCOMPtr.h"
 
 class nsIContent;
@@ -35,7 +35,7 @@ public:
    * @note Please use it carefully since it can shutdown the accessible tree
    *       you operate on.
    */
-  static already_AddRefed<nsIDOMCSSStyleDeclaration>
+  static already_AddRefed<nsICSSDeclaration>
     GetComputedStyleDeclaration(nsIContent* aContent);
 
   /**

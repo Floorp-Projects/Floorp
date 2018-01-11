@@ -134,7 +134,6 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebBrowserFind.h"  // For window.find()
 #include "nsIWindowMediator.h"  // For window.find()
-#include "nsComputedDOMStyle.h"
 #include "nsDOMCID.h"
 #include "nsDOMWindowUtils.h"
 #include "nsIWindowWatcher.h"
@@ -169,6 +168,7 @@
 #include "nsIJARChannel.h"
 #include "nsIScreenManager.h"
 #include "nsIEffectiveTLDService.h"
+#include "nsICSSDeclaration.h"
 
 #include "xpcprivate.h"
 
@@ -4933,7 +4933,7 @@ nsresult
 nsGlobalWindowInner::GetComputedStyleHelper(nsIDOMElement* aElt,
                                             const nsAString& aPseudoElt,
                                             bool aDefaultStylesOnly,
-                                            nsIDOMCSSStyleDeclaration** aReturn)
+                                            nsICSSDeclaration** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nullptr;
@@ -4944,9 +4944,9 @@ nsGlobalWindowInner::GetComputedStyleHelper(nsIDOMElement* aElt,
   }
 
   ErrorResult rv;
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> declaration =
+  nsCOMPtr<nsICSSDeclaration> cs =
     GetComputedStyleHelper(*element, aPseudoElt, aDefaultStylesOnly, rv);
-  declaration.forget(aReturn);
+  cs.forget(aReturn);
 
   return rv.StealNSResult();
 }
